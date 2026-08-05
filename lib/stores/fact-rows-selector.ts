@@ -45,7 +45,21 @@
 // NOTE exists — i.e. the row reached `complete` (terminal: note text present OR
 // deliberately skipped for a sub-threshold-reason row). `reason_pending` rows
 // (scored, note still generating) stay hidden; the status accordion narrates the
-// wait. Sub-render-gate (≤ 0.3) and out-of-window rows never render.
+// wait. Sub-render-gate (< 0.4, see RENDER_GATE) and out-of-window rows never
+// render.
+//
+// RELEVANCE V3 gate raise (2026-08-05): RENDER_GATE moved 0.3 → 0.4 and became
+// INCLUSIVE (`relevance >= RENDER_GATE`, was strict `>`), so it now sits at
+// EXACTLY `discardFloor` (feed-select/ownership.ts) instead of being looser than
+// it. That closes the historic gap Rule 1 (`isSectionMemberEligible`) existed to
+// patch: a row could previously clear RENDER_GATE (0.3) while still being
+// `UNSCORED` per `bucketOf` (discardFloor 0.4), reach the visible pool, and then
+// get silently excluded from its fact section. With the two gates numerically
+// identical, no row can pass `passesRenderGate` while sub-`discardFloor` any
+// more — Rule 1 is now a no-op safety net rather than a live rejection path
+// (kept in place; a future divergence of the two constants would reopen the gap
+// it guards against). The 0.4-bucketed LOW rows still render and still claim
+// their section, unaffected by this change.
 
 import {
   bucketOf,
@@ -101,8 +115,15 @@ import type { ForYouSuggestion } from './for-you-store';
 export const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
 
 /** The render gate — a scored row must clear this to be shown. Exported so the
- *  swipe-stack selector reuses the exact same threshold. */
-export const RENDER_GATE = 0.3;
+ *  swipe-stack selector reuses the exact same threshold.
+ *
+ *  RELEVANCE V3 (2026-08-05): raised 0.3 → 0.4 and made INCLUSIVE (see
+ *  {@link passesRenderGate}) — the LOW bucket floor (`discardFloor` in
+ *  feed-select/ownership.ts, also 0.4) and the render gate are now the SAME
+ *  cutoff on purpose, closing the gap where a 0.31–0.38 row was feed-visible
+ *  but already discarded by the scoring pipeline. Moves in lockstep with
+ *  `REASON_RELEVANCE_THRESHOLD` (lib/services/inference-results.ts). */
+export const RENDER_GATE = 0.4;
 
 const BREAKING_EVENT_TYPES = new Set(['disaster', 'weather', 'conflict']);
 
@@ -227,9 +248,10 @@ export function isComplete(s: ForYouSuggestion): boolean {
   return s.status === ArticleSuggestionStatus.Complete;
 }
 
-/** The render gate — strictly above `RENDER_GATE`. */
+/** The render gate — INCLUSIVE at `RENDER_GATE` (relevance v3: was strict `>`,
+ *  now `>=`, so the 0.4-bucketed LOW rows stay included). */
 export function passesRenderGate(s: ForYouSuggestion): boolean {
-  return (s.relevance ?? 0) > RENDER_GATE;
+  return (s.relevance ?? 0) >= RENDER_GATE;
 }
 
 /** The publication window (`cutoffMs = nowMs - FEED_WINDOW_MS`, 48h). */
@@ -579,10 +601,13 @@ export function buildFactRows(
   for (const { rep, group } of assignable) {
     // RULE 1 (see feed-select/ownership): the pipeline already discarded this
     // row — its relevance never cleared `discardFloor` — so its fact match is
-    // not relevance-backed and it must not claim a section. `RENDER_GATE` (0.3)
-    // is looser than `discardFloor` (0.4), which is how these rows got here.
-    // Applied to headline sections IDENTICALLY, per the brief: the bar is the
-    // existing one, not a new one.
+    // not relevance-backed and it must not claim a section. Historically
+    // `RENDER_GATE` (0.3) was looser than `discardFloor` (0.4), so a row could
+    // reach `group` here while still `UNSCORED`; relevance v3 raised
+    // `RENDER_GATE` to 0.4 — the SAME cutoff as `discardFloor` — so this branch
+    // is no longer reachable in practice (kept as the safety net for if the two
+    // constants ever diverge again). Applied to headline sections IDENTICALLY,
+    // per the brief: the bar is the existing one, not a new one.
     if (!isSectionMemberEligible(group.bucket)) continue;
     const projection = ownershipProjection(rep);
     const factId = resolveOwningFactLenient(

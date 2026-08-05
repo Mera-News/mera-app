@@ -76,6 +76,17 @@ const mockFetchResults = jest.fn();
 const mockDiscardLowRelevance = jest.fn();
 const mockToBatchResult = jest.fn((...args: any[]) => ({ id: args[0].id, output: 'out' }));
 const mockReconstructLookups = jest.fn((..._args: any[]) => ({ chunkIdToCandidates: new Map() }));
+// Story-grouping gate + post-results sibling propagation. Mocked wholesale:
+// the real module reaches the WatermelonDB graph at import time, and every
+// assertion here is about how the ORCHESTRATOR uses the gate, not about the
+// election rules (which score-propagation's own suite covers).
+const mockGateUnscoredForScoring = jest.fn();
+const mockPropagateToUnscoredSiblings = jest.fn();
+// v3 merged pass: the user's fact bank (lazy-required) + the hard-filter sweep
+// the gate reconcile runs + the geo/language context the election reads.
+const mockGetFacts = jest.fn();
+const mockPurgeHardFilteredSuggestions = jest.fn();
+const mockLoadUserGeoLanguageContext = jest.fn();
 const mockGetExpoPushToken = jest.fn(() => 'ExponentPushToken[test]');
 const mockSetAsyncJobPhase = jest.fn();
 const mockSetBatchProgress = jest.fn();
@@ -195,6 +206,24 @@ jest.mock('@/lib/mera-protocol/scoring-service', () => ({
   REASON_MIN_RAW_SCORE: 0.3,
 }));
 
+jest.mock('@/lib/feed-grouping/score-propagation', () => ({
+  gateUnscoredForScoring: (...args: any[]) => mockGateUnscoredForScoring(...args),
+  propagateToUnscoredSiblings: (...args: any[]) => mockPropagateToUnscoredSiblings(...args),
+}));
+
+jest.mock('@/lib/database/services/fact-service', () => ({
+  getFacts: (...args: any[]) => mockGetFacts(...args),
+}));
+
+jest.mock('@/lib/services/suppression-sweep', () => ({
+  purgeHardFilteredSuggestions: (...args: any[]) => mockPurgeHardFilteredSuggestions(...args),
+  purgeHardFilteredByIds: jest.fn(async () => undefined),
+}));
+
+jest.mock('@/lib/user-context/user-geo-language-context', () => ({
+  loadUserGeoLanguageContext: (...args: any[]) => mockLoadUserGeoLanguageContext(...args),
+}));
+
 jest.mock('@/lib/stores/user-store', () => ({
   useUserStore: {
     getState: jest.fn(() => ({
@@ -227,7 +256,10 @@ jest.mock('@/lib/services/inference-results', () => ({
     /Record\s+\S+\s+not\s+found/i.test(err instanceof Error ? err.message : String(err)),
   reconstructLookups: (...args: any[]) => mockReconstructLookups(...args),
   toBatchResult: (...args: any[]) => mockToBatchResult(...args),
-  REASON_RELEVANCE_THRESHOLD: 0.3,
+  // Mirrors the REAL constant (relevance v3 raised it 0.3 → 0.4 in lockstep with
+  // RENDER_GATE). Keep the two in sync: a stale value here silently tests a
+  // reason/discard boundary the app no longer has.
+  REASON_RELEVANCE_THRESHOLD: 0.4,
 }));
 
 // ---- in-memory scoring-pipeline-store ----
@@ -283,6 +315,13 @@ import {
 } from '@/lib/services/scoring-pipeline';
 import type { PipelineRun } from '@/lib/database/services/scoring-pipeline-store';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+// v3: the REAL blend + prompts are used (both are pure), so these tests pin the
+// orchestration against the same functions production runs.
+import { blendToScore } from '@/lib/news-harness/article-pipeline/scoring';
+import {
+  CLOUD_SCORE_V3_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT,
+} from '@/lib/news-harness/prompts/prompts';
 import { ModelKeyValidationError } from '@/lib/e2ee/e2ee-service';
 import logger from '@/lib/logger';
 
@@ -367,6 +406,17 @@ beforeEach(() => {
   mockBatchMarkReasonSkipped.mockResolvedValue(undefined);
   mockBatchMarkExcluded.mockResolvedValue(undefined);
   mockBucketScores.mockImplementation(() => undefined); // no-op: raw == bucketed
+  // Restore the ALL-BACKSTOP default explicitly: jest.clearAllMocks() clears
+  // recorded calls but NOT implementations, so a test that installed a math-mode
+  // (or v3) stage would otherwise leak its candidate filter into every test
+  // after it — which silently marks unrelated batches "fully hard-filtered".
+  mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+    persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+    stage: candidates.map((c) => ({ input: { id: c.id } })),
+    computedScoreMap: new Map(),
+    componentsMap: new Map(),
+    modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
+  }));
   mockEffectiveHarnessConfig.mockResolvedValue(undefined); // → DEFAULT (v2 off)
   mockBuildRelevanceCalls.mockImplementation(async (subset: any[]) => ({
     calls: Array.from(
@@ -402,6 +452,20 @@ beforeEach(() => {
     factStatements: new Map(),
     hasTopics: false,
   });
+  // Gate default: no duplicates anywhere — every unscored row is its own
+  // singleton representative, which is the pre-gate-routing behaviour every
+  // existing enqueue assertion in this file was written against.
+  mockGateUnscoredForScoring.mockImplementation(async () => {
+    const rows = await mockGetUnscored();
+    const enqueueIds = rows.map((c: any) => c.id);
+    const coveredIdsByRep: Record<string, string[]> = {};
+    for (const id of enqueueIds) coveredIdsByRep[id] = [id];
+    return { enqueueIds, propagatedCount: 0, heldBackCount: 0, coveredIdsByRep };
+  });
+  mockPropagateToUnscoredSiblings.mockResolvedValue(0);
+  mockGetFacts.mockResolvedValue([{ statement: 'I live in Amsterdam' }]);
+  mockPurgeHardFilteredSuggestions.mockResolvedValue(undefined);
+  mockLoadUserGeoLanguageContext.mockResolvedValue(null);
   mockRecordOverrides.mockResolvedValue({ count: 0, notified: false });
   mockBuildCalibrationCase.mockImplementation((id: string, computed: number, judge: number) => ({
     id,
@@ -1873,11 +1937,16 @@ describe('top-headline cull — judge path', () => {
 
     expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
     const saved = mockBatchSaveMathScores.mock.calls[0][0] as any[];
+    // BOUNDARY (relevance v3 gate raise): the render gate AND the reason gate
+    // are both INCLUSIVE at 0.4 — a row exactly ON the LOW cutoff renders and
+    // stays reason-eligible (it enters the judged subset), so every rendered
+    // row can still earn a note. The row not being CULLED is what this test
+    // exists to pin; the inclusive reason boundary is asserted alongside so a
+    // future strictness regression is visible here rather than in the field.
     expect(saved).toEqual([
       expect.objectContaining({ id: 't0', relevance: 0.4, reasonSkipped: false }),
     ]);
-    const judgeStage = mockBuildJudgeCalls.mock.calls[0][0] as any[];
-    expect(judgeStage.map((c) => c.input.id)).toEqual(['t0']);
+    expect(mockBuildJudgeCalls).toHaveBeenCalled();
   });
 });
 
@@ -1981,7 +2050,19 @@ describe('top-headline cull — legacy path', () => {
       't0',
       expect.objectContaining({ relevance: 0.4 }),
     );
-    expect(currentRun().batches[0].reasonCandidateIds).toEqual(['t0']);
+    // Same BOUNDARY as the judge path: the reason gate is INCLUSIVE at 0.4, so
+    // a row exactly on the LOW cutoff DOES get a reason round trip (renders ⇒
+    // reason-eligible) — the batch advances to the reasons phase instead of
+    // finalizing at relevance.
+    expect(mockBuildReasonCallsForSubset).toHaveBeenCalledWith(
+      [expect.objectContaining({ id: 't0', relevance: 0.4 })],
+      { t0: 0.4 },
+      0.4,
+    );
+    const run = currentRun();
+    expect(run).not.toBeNull();
+    expect(run!.batches[0].phase).toBe('waiting-reasons');
+    expect(run!.batches[0].reasonCandidateIds).toEqual(['t0']);
   });
 });
 
@@ -2396,5 +2477,401 @@ describe('P4b — headline batch partitioning + chunk-size round trip', () => {
     const run = currentRun();
     expect(run.batches).toHaveLength(1);
     expect(run.batches[0].candidateIds).toHaveLength(MIN_DISPATCH);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// RELEVANCE_V3 — ONE merged score+impact+conditional-reason pass.
+//
+// The flag off is covered by every test above (they all run the legacy paths);
+// these pin what changes when it is ON: one batch kind for math and backstop
+// rows alike, a continuous blended score, the interest-evidence rescue floor,
+// the math pre-gate, and NO reasons phase.
+// ---------------------------------------------------------------------------
+
+function v3Config(overrides: Record<string, unknown> = {}) {
+  return {
+    ...DEFAULT_HARNESS_CONFIG,
+    scoringEngine: {
+      ...DEFAULT_HARNESS_CONFIG.scoringEngine,
+      RELEVANCE_V3: true,
+      ...overrides,
+    },
+  };
+}
+
+/** computeMathStage stand-in for the v3 path: per-id computed score, component
+ *  bundle and matched topics (the two things the rescue floor reads). */
+function mockMathForV3(
+  rows: Record<
+    string,
+    {
+      computed: number;
+      topicComp?: number;
+      vectorScore?: number;
+      suppressPenalty?: number;
+      headlineScope?: string | null;
+      mode?: 'math' | 'backstop';
+    }
+  >,
+) {
+  mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => {
+    const present = candidates.filter((c) => rows[c.id]);
+    return {
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: present.map((c) => ({
+        input: {
+          id: c.id,
+          headlineScope: rows[c.id].headlineScope ?? null,
+          matchedTopics:
+            rows[c.id].vectorScore !== undefined
+              ? [{ topicId: 't1', effectiveWeight: 1, vectorScore: rows[c.id].vectorScore }]
+              : [],
+        },
+      })),
+      computedScoreMap: new Map(present.map((c) => [c.id, rows[c.id].computed])),
+      componentsMap: new Map(
+        present.map((c) => [
+          c.id,
+          {
+            geoAlignment: 'NONE',
+            topicComp: rows[c.id].topicComp ?? 0,
+            suppressPenalty: rows[c.id].suppressPenalty ?? 0,
+          },
+        ]),
+      ),
+      modeMap: new Map(present.map((c) => [c.id, rows[c.id].mode ?? 'math'])),
+    };
+  });
+}
+
+/** Drive the batch's decode with a v3 JSON payload per `score:N` call. */
+async function decodeV3(batch: any, payloadByCall: Record<string, unknown>) {
+  mockToBatchResult.mockImplementation((row: any) => ({
+    id: row.id,
+    output: row.output ?? '',
+    ...(row.ok === false ? { error: 'boom' } : {}),
+  }));
+  mockFetchResults.mockResolvedValue({
+    requestId: batch.requestId,
+    results: Object.entries(payloadByCall).map(([id, payload]) => ({
+      id,
+      ok: true,
+      output: typeof payload === 'string' ? payload : JSON.stringify(payload),
+    })),
+  });
+  await handlePush(batch.requestId, 'foreground');
+}
+
+describe('RELEVANCE_V3 — merged submit', () => {
+  beforeEach(() => {
+    mockEffectiveHarnessConfig.mockResolvedValue(v3Config());
+  });
+
+  it('sends ONE merged call kind for math AND backstop rows — no legacy relevance bundle, no judge job', async () => {
+    mockMathForV3({
+      a0: { computed: 0.5, mode: 'math' },
+      a1: { computed: 0.6, mode: 'backstop' },
+    });
+
+    await enqueueCandidates(['a0', 'a1']);
+
+    expect(mockBuildRelevanceCalls).not.toHaveBeenCalled();
+    expect(mockBuildJudgeCalls).not.toHaveBeenCalled();
+    const bundle = mockSendInferenceRequest.mock.calls[0][0].bundle;
+    expect(bundle.calls).toHaveLength(1);
+    expect(bundle.calls[0].id).toBe('score:0');
+    expect(bundle.calls[0].system).toBe(CLOUD_SCORE_V3_SYSTEM_PROMPT);
+    expect(bundle.calls[0].maxTokens).toBe(
+      DEFAULT_HARNESS_CONFIG.articlePipeline.v3ScoreBatchMaxTokens,
+    );
+    // The user message is the UNCHANGED payload builder, carrying the fact bank.
+    expect(bundle.calls[0].prompt).toContain('I live in Amsterdam');
+
+    const batch = currentRun().batches[0];
+    expect(batch.phase).toBe('waiting-relevance');
+    expect(batch.v3Mode).toBe(true);
+    expect(batch.judgeMode).toBeUndefined();
+    expect(batch.candidateIds).toEqual(['a0', 'a1']);
+    // Nothing is persisted at submit: a failed v3 batch must leave its rows
+    // unscored and re-runnable.
+    expect(mockBatchSaveMathScores).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+  });
+
+  it('uses the headline v3 prompt + headline chunk size for an all-headline batch', async () => {
+    const headlineIds = ids(MIN_DISPATCH_HEADLINE, 'h');
+    mockGetStageRowsByIds.mockResolvedValue(
+      headlineIds.map((id) => ({ id, headlineScope: 'GLOBAL' })),
+    );
+    mockMathForV3(
+      Object.fromEntries(
+        headlineIds.map((id) => [id, { computed: 0.5, headlineScope: 'GLOBAL' }]),
+      ),
+    );
+
+    await enqueueCandidates(headlineIds);
+
+    const bundle = mockSendInferenceRequest.mock.calls[0][0].bundle;
+    expect(bundle.calls[0].system).toBe(CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT);
+    expect(currentRun().batches[0].scoreChunkSize).toBe(
+      DEFAULT_HARNESS_CONFIG.articlePipeline.headlineArticlesPerScorePrompt,
+    );
+  });
+
+  it('math pre-gate: sub-floor rows are terminal (never submitted, never re-unscored)', async () => {
+    mockMathForV3({
+      a0: { computed: 0.5 },
+      a1: { computed: 0.14 }, // below V3_MATH_PREGATE_FLOOR
+    });
+
+    await enqueueCandidates(['a0', 'a1']);
+
+    expect(mockBatchSaveMathScores).toHaveBeenCalledTimes(1);
+    const saved = mockBatchSaveMathScores.mock.calls[0][0] as any[];
+    expect(saved).toEqual([
+      expect.objectContaining({ id: 'a1', relevance: 0.14, reasonSkipped: true }),
+    ]);
+    // Only the survivor reaches the LLM.
+    const bundle = mockSendInferenceRequest.mock.calls[0][0].bundle;
+    expect(bundle.eligibleCandidates.map((c: any) => c.id)).toEqual(['a0']);
+    expect(currentRun().batches[0].candidateIds).toEqual(['a0']);
+  });
+
+  it('marks the batch done without any cloud call when the pre-gate empties it', async () => {
+    mockMathForV3({ a0: { computed: 0.1 }, a1: { computed: 0.02 } });
+    mockSendInferenceRequest.mockClear();
+
+    await enqueueCandidates(['a0', 'a1']);
+
+    expect(mockSendInferenceRequest).not.toHaveBeenCalled();
+    expect(mockBatchSaveMathScores).toHaveBeenCalledTimes(1);
+    // single batch, no cloud job → finalized + cleared
+    expect(currentRun()).toBeNull();
+  });
+});
+
+describe('RELEVANCE_V3 — merged decode', () => {
+  beforeEach(() => {
+    mockEffectiveHarnessConfig.mockResolvedValue(v3Config());
+  });
+
+  it('persists the interest-leaning blend (continuous, never bucketed) with the math audit', async () => {
+    mockMathForV3({ a0: { computed: 0.5 } });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    await decodeV3(batch, {
+      'score:0': [{ i: 1, rel: 90, impact: 40, why: 'It hits your commute' }],
+    });
+
+    expect(mockBucketScores).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).toHaveBeenCalledWith('a0', {
+      relevance: blendToScore(90, 40),
+      reason: 'It hits your commute',
+      reasonSkipped: false,
+      computedScore: 0.5,
+      rawScore: blendToScore(90, 40),
+      scoreComponentsJson: expect.stringContaining('topicComp'),
+    });
+    // One merged pass ⇒ no reasons round trip at all.
+    expect(mockBuildReasonCallsForSubset).not.toHaveBeenCalled();
+    expect(currentRun()).toBeNull(); // batch done → run finalized
+  });
+
+  it('marks an above-threshold row WITHOUT a why as reason_pending for the existing sweep', async () => {
+    mockMathForV3({ a0: { computed: 0.5 } });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    await decodeV3(batch, { 'score:0': [{ i: 1, rel: 80, impact: 60 }] });
+
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'a0',
+      expect.objectContaining({ reason: '', reasonSkipped: false }),
+    );
+  });
+
+  it('marks a sub-threshold row reason-skipped and discards it', async () => {
+    mockMathForV3({ a0: { computed: 0.5 } });
+    mockDiscardLowRelevance.mockResolvedValue(1);
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    await decodeV3(batch, { 'score:0': [{ i: 1, rel: 5, impact: 0 }] });
+
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'a0',
+      expect.objectContaining({ reason: '', reasonSkipped: true }),
+    );
+    expect(mockDiscardLowRelevance).toHaveBeenCalledWith(
+      ['a0'],
+      expect.objectContaining({ a0: expect.any(Number) }),
+    );
+  });
+
+  it('applies the interest-evidence rescue floor and logs when it fires', async () => {
+    mockMathForV3({
+      a0: { computed: 0.5, topicComp: 0.8, vectorScore: 0.95 }, // rescuable
+      a1: { computed: 0.5, topicComp: 0.1, vectorScore: 0.95 }, // weak evidence
+    });
+    await enqueueCandidates(['a0', 'a1']);
+    const batch = currentRun().batches[0];
+
+    // Both score away (blend ≈ 0.14) — only a0 has the evidence to be rescued.
+    await decodeV3(batch, {
+      'score:0': [
+        { i: 1, rel: 8, impact: 8 },
+        { i: 2, rel: 8, impact: 8 },
+      ],
+    });
+
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'a0',
+      expect.objectContaining({
+        relevance: DEFAULT_HARNESS_CONFIG.articlePipeline.discardFloor,
+      }),
+    );
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'a1',
+      expect.objectContaining({ relevance: blendToScore(8, 8) }),
+    );
+    expect(logger.info).toHaveBeenCalledWith(
+      expect.stringContaining('interest-rescue floor'),
+      expect.objectContaining({ rescued: 1 }),
+    );
+  });
+
+  it('subtracts a soft-suppression penalty AFTER the rescue floor (the user filter is the last word)', async () => {
+    mockMathForV3({ a0: { computed: 0.5, topicComp: 0.8, vectorScore: 0.95, suppressPenalty: 0.1 } });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    await decodeV3(batch, { 'score:0': [{ i: 1, rel: 8, impact: 8 }] });
+
+    const floor = DEFAULT_HARNESS_CONFIG.articlePipeline.discardFloor;
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'a0',
+      expect.objectContaining({ relevance: expect.closeTo(floor - 0.1, 6) }),
+    );
+  });
+
+  it('leaves a chunk unscored when the response is unparseable — the batch still terminates', async () => {
+    mockMathForV3({ a0: { computed: 0.5 } });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    await decodeV3(batch, { 'score:0': 'not json at all' });
+
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+    expect(currentRun()).toBeNull();
+  });
+
+  it('decodes a v3 batch by its PERSISTED marker even after the flag is turned off', async () => {
+    mockMathForV3({ a0: { computed: 0.5 } });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    // Toggle v3 off between submit and decode — the batch must still decode the
+    // way it was submitted.
+    mockEffectiveHarnessConfig.mockResolvedValue(undefined);
+
+    await decodeV3(batch, { 'score:0': [{ i: 1, rel: 70, impact: 70, why: 'note' }] });
+
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'a0',
+      expect.objectContaining({ relevance: blendToScore(70, 70), reason: 'note' }),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Gate-bypass fix — enqueueUnscoredEligible now routes through the SAME
+// story-grouping gate feed-sync and the background scoring pass use.
+// ---------------------------------------------------------------------------
+
+describe('enqueueUnscoredEligible — story-grouping gate routing', () => {
+  it('enqueues only the elected representatives, not every eligible row', async () => {
+    mockGetUnscored.mockResolvedValue([candidate('rep'), candidate('dup')]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['rep'],
+      propagatedCount: 0,
+      heldBackCount: 1,
+      coveredIdsByRep: { rep: ['rep', 'dup'] },
+    });
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(1);
+    expect(currentRun().batches[0].candidateIds).toEqual(['rep']);
+    // The held-back sibling is still COUNTED (the "Analysing X of Y" header).
+    expect(currentRun().batches[0].coveredIds).toEqual(['rep', 'dup']);
+  });
+
+  it('drops gate ids that are not scorable here (headline-vs-fact predicate still applies)', async () => {
+    mockGetUnscored.mockResolvedValue([
+      { ...candidate('ok'), relatedFacts: [{ id: 'f', statement: 'f' }] },
+      { ...candidate('factless'), relatedFacts: [], meta: { headlineScope: null } },
+    ]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['ok', 'factless'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+      coveredIdsByRep: { ok: ['ok'], factless: ['factless'] },
+    });
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(1);
+    expect(currentRun().batches[0].candidateIds).toEqual(['ok']);
+  });
+
+  it('reconciles hard filters + refreshes when the gate propagated scores', async () => {
+    mockGetUnscored.mockResolvedValue([candidate('a0')]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['a0'],
+      propagatedCount: 3,
+      heldBackCount: 0,
+      coveredIdsByRep: { a0: ['a0'] },
+    });
+
+    await enqueueUnscoredEligible();
+
+    expect(mockPurgeHardFilteredSuggestions).toHaveBeenCalledTimes(1);
+    expect(mockRefresh).toHaveBeenCalled();
+  });
+
+  it('enqueues nothing when the gate elects nothing (everything propagated)', async () => {
+    mockGetUnscored.mockResolvedValue([candidate('a0')]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: [],
+      propagatedCount: 1,
+      heldBackCount: 0,
+      coveredIdsByRep: {},
+    });
+
+    const res = await enqueueUnscoredEligible();
+
+    expect(res.enqueued).toBe(0);
+    expect(currentRun()).toBeNull();
+  });
+
+  it('still honours the MIN_DISPATCH floor unless flushRemainder is set', async () => {
+    // One row, fresh (no staleness escape) → deferred without a flush…
+    mockGetOldestUnscoredCreatedAt.mockResolvedValue(NOW - 1_000);
+    mockGetUnscored.mockResolvedValue([candidate('a0')]);
+    mockGateUnscoredForScoring.mockResolvedValue({
+      enqueueIds: ['a0'],
+      propagatedCount: 0,
+      heldBackCount: 0,
+      coveredIdsByRep: { a0: ['a0'] },
+    });
+
+    await enqueueUnscoredEligible();
+    expect(currentRun()).toBeNull();
+
+    // …and dispatched with one.
+    await enqueueUnscoredEligible({ flushRemainder: true });
+    expect(currentRun().batches[0].candidateIds).toEqual(['a0']);
   });
 });

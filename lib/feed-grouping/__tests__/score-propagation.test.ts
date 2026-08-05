@@ -18,8 +18,21 @@ jest.mock('@/lib/logger', () => ({
   default: {
     info: jest.fn(),
     warn: jest.fn(),
+    debug: jest.fn(),
     captureException: (...args: any[]) => mockCaptureException(...args),
   },
+}));
+
+// The already-read gate's two DB seams. The MATCHER itself is deliberately NOT
+// mocked — these tests exercise the real title/id matching through the gate.
+jest.mock('@/lib/database', () => {
+  const { makeDatabaseMock } = require('@/lib/__test-helpers__/mockDatabase');
+  return makeDatabaseMock();
+});
+
+const mockGetAllImpressions = jest.fn();
+jest.mock('@/lib/database/services/story-impression-service', () => ({
+  getAll: (...args: any[]) => mockGetAllImpressions(...args),
 }));
 
 import {
@@ -28,6 +41,11 @@ import {
 } from '../score-propagation';
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
 import type { SuggestionGroupingRow } from '@/lib/database/services/article-suggestion-service';
+import database from '@/lib/database';
+import { makeRecord, type MockDatabase } from '@/lib/__test-helpers__/mockDatabase';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+
+const db = database as unknown as MockDatabase;
 
 // A single shared clusterId (confidence ≥ 0.5) unions every row that carries it
 // into one story group regardless of title — the simplest deterministic edge.
@@ -56,6 +74,10 @@ beforeEach(() => {
   mockGetUnscoredGroupingRows.mockResolvedValue([]);
   mockGetScoredDonorRows.mockResolvedValue([]);
   mockBatchPropagateScores.mockResolvedValue(undefined);
+  // No reads recorded ⇒ the already-read gate is inert, so every pre-existing
+  // test below keeps its exact prior behaviour.
+  mockGetAllImpressions.mockResolvedValue([]);
+  db._setRows('article_suggestions', []);
 });
 
 // ===========================================================================
@@ -350,6 +372,7 @@ describe('gateUnscoredForScoring — in-flight + edge cases', () => {
       propagatedCount: 0,
       heldBackCount: 0,
       coveredIdsByRep: {},
+      readCount: 0,
     });
     expect(mockGetScoredDonorRows).not.toHaveBeenCalled();
   });
@@ -448,5 +471,153 @@ describe('propagateToUnscoredSiblings', () => {
       expect.any(Error),
       { tags: { module: 'score-propagation' } },
     );
+  });
+});
+
+// ===========================================================================
+// gateUnscoredForScoring — already-read exclusion (relevance v3 §3)
+// ===========================================================================
+
+describe('gateUnscoredForScoring — already-read exclusion', () => {
+  /** Seed the suggestion rows `batchMarkAlreadyRead` will find + mutate. */
+  function seedSuggestionRows(...ids: string[]) {
+    const rows = ids.map((id) => makeRecord({ id, relevance: 0, reason: '', scoredAt: null }));
+    db._setRows('article_suggestions', rows);
+    return rows;
+  }
+
+  it('drops a candidate whose article id was already opened, and marks it already_read', async () => {
+    const [readRow] = seedSuggestionRows('read-1', 'fresh-1');
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      loneRow('read-1', { title: 'Something the user opened' }),
+      loneRow('fresh-1', { title: 'A wholly different item' }),
+    ]);
+    mockGetAllImpressions.mockResolvedValue([
+      { articleId: 'read-1', stableClusterId: null, titleNorm: null, opened: true },
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.readCount).toBe(1);
+    expect(result.enqueueIds).toEqual(['fresh-1']);
+    expect(result.coveredIdsByRep).toEqual({ 'fresh-1': ['fresh-1'] });
+    expect(readRow.status).toBe(ArticleSuggestionStatus.AlreadyRead);
+  });
+
+  it('drops a re-serve matched only by title, while a new development still enqueues', async () => {
+    seedSuggestionRows('reserve', 'development');
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      // Same story, new article id + new cluster generation — only the title
+      // gives it away.
+      loneRow('reserve', {
+        title: 'Anthropic launches Claude Opus for enterprise customers today',
+      }),
+      loneRow('development', {
+        title: 'Anthropic faces EU antitrust probe model pricing',
+      }),
+    ]);
+    mockGetAllImpressions.mockResolvedValue([
+      {
+        articleId: 'some-other-id',
+        stableClusterId: null,
+        titleNorm: 'anthropic launches claude opus for enterprise customers',
+        opened: true,
+      },
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.readCount).toBe(1);
+    expect(result.enqueueIds).toEqual(['development']);
+  });
+
+  it('matches on stable_cluster_id, ungated by membership confidence', async () => {
+    seedSuggestionRows('fringe');
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      row({
+        id: 'fringe',
+        title: 'Unrelated headline text',
+        // Confidence far below the propagation gate — irrelevant here: the id
+        // came from the user's own read.
+        clusters: [{ clusterId: 'c-fringe', confidence: 1e-38, stableClusterId: 'story-7' }],
+      }),
+    ]);
+    mockGetAllImpressions.mockResolvedValue([
+      { articleId: 'other', stableClusterId: 'story-7', titleNorm: null, opened: true },
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.readCount).toBe(1);
+    expect(result.enqueueIds).toEqual([]);
+  });
+
+  it('never lets an already-read row donate to or represent its siblings', async () => {
+    seedSuggestionRows('read-rep', 'sibling');
+    // Both rows share `c1` (the `row()` default) so they form ONE group; the
+    // read one must be gone BEFORE election, leaving the sibling to be scored
+    // on its own merits rather than inheriting a read story's fate.
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      row({ id: 'read-rep', title: 'Shared story headline' }),
+      row({ id: 'sibling', title: 'Shared story headline' }),
+    ]);
+    mockGetAllImpressions.mockResolvedValue([
+      { articleId: 'read-rep', stableClusterId: null, titleNorm: null, opened: true },
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.readCount).toBe(1);
+    expect(result.enqueueIds).toEqual(['sibling']);
+    expect(result.heldBackCount).toBe(0);
+  });
+
+  it('returns early — no donor query — when every candidate was already read', async () => {
+    seedSuggestionRows('read-1');
+    mockGetUnscoredGroupingRows.mockResolvedValue([loneRow('read-1')]);
+    mockGetAllImpressions.mockResolvedValue([
+      { articleId: 'read-1', stableClusterId: null, titleNorm: null, opened: true },
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result).toEqual({
+      enqueueIds: [],
+      propagatedCount: 0,
+      heldBackCount: 0,
+      coveredIdsByRep: {},
+      readCount: 1,
+    });
+    expect(mockGetScoredDonorRows).not.toHaveBeenCalled();
+  });
+
+  it('ignores impressions that were never opened', async () => {
+    seedSuggestionRows('cand');
+    mockGetUnscoredGroupingRows.mockResolvedValue([loneRow('cand')]);
+    mockGetAllImpressions.mockResolvedValue([
+      { articleId: 'cand', stableClusterId: null, titleNorm: null, opened: false },
+    ]);
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.readCount).toBe(0);
+    expect(result.enqueueIds).toEqual(['cand']);
+  });
+
+  it('fail-open after the read gate never re-enqueues a row it just wrote terminal', async () => {
+    seedSuggestionRows('read-1', 'fresh-1');
+    mockGetUnscoredGroupingRows.mockResolvedValue([
+      loneRow('read-1'),
+      loneRow('fresh-1'),
+    ]);
+    mockGetAllImpressions.mockResolvedValue([
+      { articleId: 'read-1', stableClusterId: null, titleNorm: null, opened: true },
+    ]);
+    mockGetScoredDonorRows.mockRejectedValue(new Error('db down'));
+
+    const result = await gateUnscoredForScoring(new Set());
+
+    expect(result.enqueueIds).toEqual(['fresh-1']);
+    expect(result.coveredIdsByRep).toEqual({ 'fresh-1': ['fresh-1'] });
   });
 });

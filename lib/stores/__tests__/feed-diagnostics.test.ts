@@ -124,7 +124,7 @@ function mixedPool(): ForYouSuggestion[] {
     sugg({ _id: 'vis', relevance: 0.6 }),
     sugg({ _id: 'unscored', status: ArticleSuggestionStatus.Unscored }),
     sugg({ _id: 'pending', status: ArticleSuggestionStatus.ReasonPending }),
-    sugg({ _id: 'subgate', relevance: 0.3 }), // must be strictly > 0.3
+    sugg({ _id: 'subgate', relevance: 0.3 }), // below RENDER_GATE (0.4, inclusive)
     sugg({ _id: 'stale', firstPubDate: new Date(NOW - FEED_WINDOW_MS - H).toISOString() }),
     // Two axes at once: unscored AND outside the publication window.
     sugg({

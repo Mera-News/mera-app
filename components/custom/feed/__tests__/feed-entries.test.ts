@@ -69,15 +69,18 @@ const skipped = (at = 1): CardStateRecord => ({ state: 'skipped', at });
 const viewed = (at = 1): CardStateRecord => ({ state: 'viewed', at });
 
 describe('relevanceBandRank', () => {
+  // relevance v3 (2026-08-05) band-ladder unification: cutoffs moved off the
+  // old private 0.53/0.77 pair onto the unified `bandOf` cutoffs (0.4 RENDER_GATE
+  // / 0.6 / 0.8) — see lib/feed-ordering/priority-order.ts.
   it('mirrors the getRelevanceColors thresholds', () => {
     expect(relevanceBandRank(1.2)).toBe(0); // emergency
     expect(relevanceBandRank(0.9)).toBe(1); // high
-    expect(relevanceBandRank(0.77)).toBe(1); // high (inclusive edge)
-    expect(relevanceBandRank(0.6)).toBe(2); // medium
-    expect(relevanceBandRank(0.53)).toBe(2); // medium (inclusive edge)
-    expect(relevanceBandRank(0.4)).toBe(3); // low
-    expect(relevanceBandRank(0.31)).toBe(3); // low
-    expect(relevanceBandRank(0.3)).toBe(4); // irrelevant (exclusive edge)
+    expect(relevanceBandRank(0.8)).toBe(1); // high (inclusive edge)
+    expect(relevanceBandRank(0.7)).toBe(2); // medium
+    expect(relevanceBandRank(0.6)).toBe(2); // medium (inclusive edge)
+    expect(relevanceBandRank(0.4)).toBe(3); // low (RENDER_GATE, inclusive edge)
+    expect(relevanceBandRank(0.5)).toBe(3); // low
+    expect(relevanceBandRank(0.39)).toBe(4); // irrelevant (just below the gate)
     expect(relevanceBandRank(0)).toBe(4);
   });
 });

@@ -16,6 +16,25 @@
 // it twice would guarantee divergence — and the failure would be silent and
 // user-visible: the same story ranked differently on two screens, or a "High"
 // chip rendered below a "Medium" one.
+//
+// BAND-LADDER UNIFICATION (relevance v3, 2026-08-05): there used to be TWO
+// independent band ladders — `bucketOf` (feed-select/ownership.ts, 0.4/0.6/0.8,
+// Dashboard section viability only) and this module's own `relevanceBandRank`
+// (0.53/0.77, re-hardcoded in lib/relevance-utils.ts + RelevanceChip.tsx for the
+// card pill, feed ordering, and the importance filter). An article at 0.53–0.60
+// was MEDIUM on the pill but LOW for Dashboard sections — the exact "medium
+// falls in low" misclassification the ladders' drift guaranteed. `bandOf` /
+// `bandRank` (feed-select/ownership.ts) are now the ONE source of truth for
+// both; `relevanceBandRank` below is a thin adapter onto them, not a second
+// ladder. An article's band must be IDENTICAL on every surface — card pill,
+// feed ordering, importance filter, Dashboard sections — that is the entire
+// point of this change.
+
+// `bandOf`/`bandRank` are the unified band source of truth (see above).
+// `feed-select/ownership` is itself a pure, RN-free module (no DB/expo/
+// react-native imports), so importing it here does not break this module's own
+// RN-free invariant.
+import { bandOf, bandRank } from '@/lib/news-harness/feed-select/ownership';
 
 /**
  * How far a story has got through the user's attention. LOWER sorts first.
@@ -56,20 +75,21 @@ export interface PriorityFacts {
  * Relevance band rank, LOWER sorts first: 0 emergency, 1 high, 2 medium, 3 low,
  * 4 irrelevant/unscored.
  *
- * Thresholds mirror `getRelevanceColors` (lib/relevance-utils.ts) EXACTLY, and
- * must keep doing so: that function decides the worded chip printed on the card,
- * so any drift would render a "High" card below a "Medium" one — a contradiction
- * the user can see.
+ * A thin adapter onto the unified `bandOf`/`bandRank` (feed-select/ownership.ts,
+ * the single source of truth as of relevance v3 — see the module header): those
+ * export EMERGENCY=4 … SUB_GATE=0 (higher = more prominent), so this function
+ * just flips the scale to the LOWER-sorts-first convention every caller here
+ * already depends on. `getRelevanceColors` (lib/relevance-utils.ts) and
+ * `RelevanceChip`'s icon selection read `bandOf` directly rather than
+ * re-deriving cutoffs, so all three — pill, ordering, importance filter — are
+ * now driven by the exact same cutoffs and can never disagree on a story's
+ * band.
  *
  * Band off the scored relevance, NOT a composite score: the Feed's
  * `FeedListItem.score` folds in a recency decay the chip knows nothing about.
  */
 export function relevanceBandRank(relevance: number): number {
-  if (relevance > 1.0) return 0;
-  if (relevance >= 0.77) return 1;
-  if (relevance >= 0.53) return 2;
-  if (relevance > 0.3) return 3;
-  return 4;
+  return 4 - bandRank(bandOf(relevance));
 }
 
 /**

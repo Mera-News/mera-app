@@ -309,7 +309,7 @@ export async function runArticlePipeline(
   const impactfulIds = new Set(
     Object.keys(relevanceMap).filter(
       (id) =>
-        relevanceMap[id] > config.reasonRelevanceThreshold &&
+        relevanceMap[id] >= config.reasonRelevanceThreshold &&
         (rawRelevanceMap[id] ?? 0) >= REASON_MIN_RAW_SCORE,
     ),
   );

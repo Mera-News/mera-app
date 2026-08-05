@@ -1312,6 +1312,67 @@ describe('getScoredDonorRows', () => {
     const rows = await getScoredDonorRows(sinceMs);
     expect(rows).toEqual([]);
   });
+
+  // --- Bug-fix coverage: scored_at OR created_at (was created_at only) ---
+  // Prod logs showed `propagated 0, held back N` every cycle because a row
+  // scored recently but created outside the lookback window never qualified.
+
+  it('is a donor when scored recently but created 3 days ago (the fixed bug)', async () => {
+    const threeDaysAgo = sinceMs - 3 * 24 * 60 * 60 * 1000;
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        status: 'complete',
+        relevance: 0.6,
+        createdAt: new Date(threeDaysAgo),
+        scoredAt: sinceMs + 1000,
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows.map((r) => r.id)).toEqual(['s1']);
+  });
+
+  it('is a donor when created recently with scored_at null (propagated-row shape)', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        status: 'reason_pending',
+        relevance: 0.5,
+        createdAt: new Date(sinceMs + 1000),
+        scoredAt: null,
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows.map((r) => r.id)).toEqual(['s1']);
+  });
+
+  it('is not a donor when unscored, even with scored_at and created_at both recent', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        status: 'unscored',
+        relevance: 0.5,
+        createdAt: new Date(sinceMs + 1000),
+        scoredAt: sinceMs + 1000,
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows).toEqual([]);
+  });
+
+  it('is not a donor when relevance is 0, even with scored_at recent', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        status: 'complete',
+        relevance: 0,
+        createdAt: new Date(sinceMs - 3 * 24 * 60 * 60 * 1000),
+        scoredAt: sinceMs + 1000,
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows).toEqual([]);
+  });
 });
 
 describe('getCullableLowHeadlineIds', () => {

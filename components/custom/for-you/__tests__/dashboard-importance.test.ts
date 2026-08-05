@@ -25,13 +25,16 @@ describe('filterGroupsByImportance', () => {
     expect(filterGroupsByImportance(groups, 'low')).toBe(groups);
   });
 
-  it("'medium' band edge: 0.529 fails, 0.53 passes", () => {
-    const groups = [group('below', 0.529), group('at', 0.53)];
+  // relevance v3 (2026-08-05) band-ladder unification: the edges this filter
+  // reads (via relevanceBandRank) moved off the old private 0.53/0.77 pair onto
+  // the unified `bandOf` cutoffs — 0.6 / 0.8.
+  it("'medium' band edge: 0.59 fails, 0.6 passes", () => {
+    const groups = [group('below', 0.59), group('at', 0.6)];
     expect(filterGroupsByImportance(groups, 'medium').map((g) => g.data._id)).toEqual(['at']);
   });
 
-  it("'high' band edge: 0.769 fails, 0.77 passes", () => {
-    const groups = [group('below', 0.769), group('at', 0.77)];
+  it("'high' band edge: 0.79 fails, 0.8 passes", () => {
+    const groups = [group('below', 0.79), group('at', 0.8)];
     expect(filterGroupsByImportance(groups, 'high').map((g) => g.data._id)).toEqual(['at']);
   });
 

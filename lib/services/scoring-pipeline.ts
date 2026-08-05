@@ -46,7 +46,32 @@ import {
 // Imported from the harness DIRECTLY (not via the mera-protocol shim): this is
 // the one definition of "headline-sourced", shared with the prompt/chunk-size
 // selection the shim's builders run.
-import { isHeadlineScope, isScorableCandidate } from '@/lib/news-harness/article-pipeline/scoring';
+//
+// RELEVANCE_V3 adds three more harness primitives to the same import: the
+// interest+impact blend (`blendToScore`) and the two pure prompt-payload helpers
+// the merged single-pass call builds its user message from. They live in the
+// harness for the same reason `isHeadlineScope` does — one definition, shared
+// with harness-local replay.
+import {
+  isHeadlineScope,
+  isScorableCandidate,
+  blendToScore,
+  buildUserContext,
+  resolveCountryName,
+} from '@/lib/news-harness/article-pipeline/scoring';
+// RELEVANCE_V3 — the merged score+impact+conditional-reason prompt pair and its
+// parser. The v1/v2 prompts stay where they are; nothing here is shared with
+// them beyond the (unchanged) user-message payload builder.
+import {
+  CLOUD_SCORE_V3_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT,
+  parseScoreV3Response,
+  buildBatchScoringUserMessage,
+} from '@/lib/news-harness/prompts/prompts';
+// RELEVANCE_V3 — interest-evidence rescue floor (strong topic evidence keeps a
+// row at the LOW band even when the LLM scored it away). Lives beside `bandOf`
+// in the harness's single band authority.
+import { applyInterestRescueFloor } from '@/lib/news-harness/feed-select/ownership';
 // The one definition of "this headline scored too low to exist" — expressed over
 // relevanceBandRank so the cull can never disagree with the band a card prints.
 import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter';
@@ -87,11 +112,19 @@ import {
   type PipelineRun,
 } from '@/lib/database/services/scoring-pipeline-store';
 import type { BatchCompletionResult } from '@/lib/llm/cloudComplete';
+import type { BatchCall } from '@/lib/llm/types';
+import type {
+  MatchedTopicInput,
+  RelevanceComponents,
+} from '@/lib/news-harness/scoring-engine';
 // Static import is safe: score-propagation imports only the DB service + the
 // pure story-grouping utility + the logger — it never imports scoring-pipeline,
 // so there is no cycle (this module already statically imports the same DB
 // service). In-flight ids are passed IN, so it never reaches back here.
-import { propagateToUnscoredSiblings } from '@/lib/feed-grouping/score-propagation';
+import {
+  gateUnscoredForScoring,
+  propagateToUnscoredSiblings,
+} from '@/lib/feed-grouping/score-propagation';
 // The cold-start predicate reuses the SAME 48h donor lookback the score
 // propagation uses — a table with zero scored donors in that window is exactly
 // a "cold" feed (no scores to render, no siblings to propagate from).
@@ -149,6 +182,18 @@ export const MIN_RUN_CANDIDATES = MIN_DISPATCH;
  *  the sub-MIN_DISPATCH remainder too — unscored articles don't render, so the
  *  floor could otherwise hide a 1-4 article day indefinitely. */
 export const MAX_UNSCORED_WAIT_MS = 30 * 60_000;
+/**
+ * RELEVANCE_V3 math pre-gate. A candidate whose deterministic math score lands
+ * below this never reaches the LLM: nothing the gold set judged must-show or
+ * nice-to-have scored under it, so the call would only ever buy a discard.
+ *
+ * Pre-gated rows are NOT left `unscored` — that would re-elect them on every
+ * later gate pass, an unbounded churn loop. They are written with the SAME
+ * terminal treatment `discardLowRelevance` applies to a sub-gate score (status
+ * `complete`, reason skipped), with their math score + components persisted for
+ * audit, so the Observability funnel can still account for them.
+ */
+export const V3_MATH_PREGATE_FLOOR = 0.15;
 const SUBMIT_STUCK_MS = 60_000;
 const BATCH_STALE_MS = 15 * 60_000;
 /** A run whose `startedAt` is older than this is treated as wedged: the
@@ -193,6 +238,52 @@ const MIN_POLL_AGE_MS = 0;
  *  batch isn't artificially held back — with MAX_IN_FLIGHT = 3 and a 3s limiter
  *  slot, the limiter still decides actual cadence. */
 const PER_BATCH_POLL_SPACING_MS = POLL_INTERVAL_MS;
+
+// ---------------------------------------------------------------------------
+// RELEVANCE_V3 — persisted batch annotations
+//
+// A v3 batch reuses the EXISTING phase names (`submitting-relevance` →
+// `waiting-relevance` → `done`); the needs-reasons chain simply never engages,
+// because the one merged call already returned the note. So no new BatchPhase is
+// introduced and every phase predicate / UI projection below keeps working
+// unchanged.
+//
+// The extra per-batch fields live in this local intersection type rather than in
+// `PipelineBatch` (scoring-pipeline-store): the store persists the run as plain
+// JSON and reads it back with `JSON.parse`, so unknown fields round-trip
+// untouched, and a legacy run — which carries none of them — parses exactly as
+// before. `v3Mode` absent ⇒ the pre-v3 decode path, which is what makes a
+// mid-flight legacy run resume correctly after an OTA that flips the flag on.
+// ---------------------------------------------------------------------------
+
+/** The math audit a v3 batch carries from submit to decode. Components are the
+ *  same object persisted as `score_components_json`; `matchedTopics` is what the
+ *  interest-evidence rescue floor reads. Both are already computed at submit —
+ *  re-running `computeMathStage` at decode would re-read the persona and could
+ *  silently score against a different one. */
+interface V3AuditEntry {
+  /** Deterministic math score (persisted as `computed_score`). */
+  computed: number;
+  components: RelevanceComponents;
+  /** Trimmed to `{topicId, effectiveWeight, vectorScore?}` — the topic TEXT is
+   *  never persisted here (the run row is unencrypted). */
+  matchedTopics: MatchedTopicInput[];
+}
+
+interface V3BatchFields {
+  /** True when this batch was submitted as ONE merged v3 score+impact+reason
+   *  call. Absent/false ⇒ the legacy relevance→reasons or judge path. */
+  v3Mode?: boolean;
+  /** id → math audit carried from submit (see {@link V3AuditEntry}). */
+  v3Audit?: Record<string, V3AuditEntry>;
+}
+
+type V3Batch = PipelineBatch & V3BatchFields;
+
+/** Read the v3 marker off a batch of unknown vintage. */
+function isV3Batch(b: PipelineBatch): boolean {
+  return (b as V3Batch).v3Mode === true;
+}
 
 // ---------------------------------------------------------------------------
 // Phase predicates
@@ -797,7 +888,7 @@ export async function enqueueOrphanedReasons(): Promise<void> {
   const qualified = scored.filter(
     (c) =>
       typeof c.relevance === 'number' &&
-      c.relevance > REASON_RELEVANCE_THRESHOLD &&
+      c.relevance >= REASON_RELEVANCE_THRESHOLD &&
       !covered.has(c.id),
   );
   if (qualified.length === 0) {
@@ -1077,6 +1168,14 @@ async function doSubmitRelevance(
     (c) => math.modeMap.get(c.input.id) === 'backstop',
   );
 
+  // The calibration-overrides-aware config. Read ONCE here (it used to be read
+  // only on the judge branch) because RELEVANCE_V3 decides which branch we take
+  // at all; the judge branch below consumes this same object, so a judge batch
+  // still costs exactly one config read. A backstop batch now costs one where it
+  // previously cost none — a pure read of an already-cached settings row, and
+  // the only way to ask "is v3 on?" without a second source of truth.
+  const cfg = await judgeHarnessConfig();
+
   // Push-token policy (a): attach the run's token only when this is the LAST
   // relevance-needing batch — no other relevance batch is queued or submitting.
   const otherRelevancePending = run.batches.some(
@@ -1086,6 +1185,24 @@ async function doSubmitRelevance(
       (b.phase === 'queued' || b.phase === 'submitting-relevance'),
   );
   const token = otherRelevancePending ? null : run.expoPushToken;
+
+  // --- RELEVANCE_V3 — ONE merged batch kind for EVERY candidate. -----------
+  // Math and backstop rows, headline and standard, all take the same
+  // score+impact+conditional-reason call. The math is still computed (above) and
+  // still persisted for audit at decode — it just no longer decides the score.
+  if (cfg.scoringEngine?.RELEVANCE_V3 === true) {
+    await doSubmitV3({
+      run,
+      batch,
+      privKeyHex,
+      context,
+      math,
+      active,
+      token,
+      cfg,
+    });
+    return;
+  }
 
   // --- BACKSTOP PATH (any untagged candidate) — unchanged legacy flow. ------
   // Mixed/untagged batches keep the two-phase tiered LLM scoring exactly as
@@ -1182,9 +1299,9 @@ async function doSubmitRelevance(
   // bucketScores leaves anything under discardFloor (0.4) untouched and maps
   // everything at/above it to ≥0.4, so no value ever crosses
   // REASON_RELEVANCE_THRESHOLD (0.3) by being bucketed — only the spacing
-  // between survivors changes. Read once, here (the backstop path returned
-  // above, so it gains no config I/O), and reused for buildJudgeCalls.
-  const judgeCfg = await judgeHarnessConfig();
+  // between survivors changes. Read once, above the v3 branch (which needs the
+  // same object to test its flag), and reused here for buildJudgeCalls.
+  const judgeCfg = cfg;
   const relevanceV2 = judgeCfg.scoringEngine?.RELEVANCE_V2 === true;
 
   // ONE map for all three consumers — persisted `relevance`/`reasonSkipped`, the
@@ -1231,7 +1348,7 @@ async function doSubmitRelevance(
       return {
         id,
         relevance,
-        reasonSkipped: relevance <= REASON_RELEVANCE_THRESHOLD,
+        reasonSkipped: relevance < REASON_RELEVANCE_THRESHOLD,
         computedScore: math.computedScoreMap.get(id)!,
         rawScore: math.computedScoreMap.get(id)!,
         scoreComponentsJson: JSON.stringify(math.componentsMap.get(id)!),
@@ -1261,7 +1378,7 @@ async function doSubmitRelevance(
   const judgedStage = math.stage.filter(
     (c) =>
       !culledHeadlineIds.has(c.input.id) &&
-      (relevanceScores.get(c.input.id) ?? 0) > REASON_RELEVANCE_THRESHOLD,
+      (relevanceScores.get(c.input.id) ?? 0) >= REASON_RELEVANCE_THRESHOLD,
   );
   const judgedIds = judgedStage.map((c) => c.input.id);
 
@@ -1349,6 +1466,233 @@ async function doSubmitRelevance(
   }
 }
 
+// ---------------------------------------------------------------------------
+// RELEVANCE_V3 — single merged pass (submit)
+// ---------------------------------------------------------------------------
+
+/**
+ * The user's full fact bank, for the v3 user-context block.
+ *
+ * Lazy `require` for the same reason `refreshUi` uses one: this module is
+ * imported by bare background wakes, and fact-service drags the WatermelonDB
+ * graph in at load time. Fail-open to `[]` — `buildUserContext` degrades to an
+ * empty fact list, which is a weaker prompt but never a failed batch.
+ */
+async function loadFactStatementsForV3(): Promise<string[]> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('@/lib/database/services/fact-service') as typeof import('@/lib/database/services/fact-service');
+    const facts = await mod.getFacts();
+    return facts
+      .map((f) => f.statement)
+      .filter((s): s is string => typeof s === 'string' && s.trim().length > 0);
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'v3-load-facts' },
+    });
+    return [];
+  }
+}
+
+/**
+ * RELEVANCE_V3 submit: ONE merged score+impact+conditional-reason call covering
+ * EVERY candidate in the batch — math-mode and backstop, headline and standard.
+ *
+ * Differences from the two paths it replaces, all deliberate:
+ *   - no judge job and no reasons round trip: the same call returns the note,
+ *     so a kept row's content is sent to the LLM once instead of twice;
+ *   - the math is computed and persisted for audit exactly as before, but the
+ *     LLM's blended score is what lands in `relevance` — so nothing is persisted
+ *     HERE (a failed batch must leave its rows `unscored` and re-runnable),
+ *     except the pre-gated sub-floor rows, which are terminal by definition;
+ *   - no bucketing anywhere: the blend is continuous by design.
+ */
+async function doSubmitV3(args: {
+  run: PipelineRun;
+  batch: PipelineBatch;
+  privKeyHex: string;
+  context: ExecutionContext;
+  math: Awaited<ReturnType<typeof computeMathStage>>;
+  /** Candidates surviving the hard "not interested" screen. */
+  active: ScoringCandidate[];
+  token: string | null;
+  cfg: HarnessConfig;
+}): Promise<void> {
+  const { run, batch, privKeyHex, context, math, active, token, cfg } = args;
+  const a = cfg.articlePipeline;
+  const inputById = new Map(math.stage.map((c) => [c.input.id, c.input]));
+
+  // --- 1. MATH PRE-GATE ----------------------------------------------------
+  // Sub-floor rows never reach the LLM. They are written terminal (the same
+  // outcome discardLowRelevance produces) WITH their math audit, so they can
+  // never loop back into `unscored` and re-elect themselves next pass.
+  const preGated = math.stage.filter(
+    (c) => (math.computedScoreMap.get(c.input.id) ?? 0) < V3_MATH_PREGATE_FLOOR,
+  );
+  if (preGated.length > 0) {
+    logger.info(
+      `${TAG} batch ${batch.batchId} v3 math pre-gate: discarded ${preGated.length}/${math.stage.length} below ${V3_MATH_PREGATE_FLOOR}`,
+      { batchId: batch.batchId, preGated: preGated.length, of: math.stage.length },
+    );
+    await batchSaveMathScores(
+      preGated.map((c) => {
+        const id = c.input.id;
+        const computed = math.computedScoreMap.get(id) ?? 0;
+        return {
+          id,
+          relevance: computed,
+          // Terminal: no note is owed to a row that will never render.
+          reasonSkipped: true,
+          computedScore: computed,
+          rawScore: computed,
+          scoreComponentsJson: JSON.stringify(math.componentsMap.get(id) ?? {}),
+        };
+      }),
+    );
+    await refreshUi();
+  }
+
+  const preGatedIds = new Set(preGated.map((c) => c.input.id));
+  // `isScorableCandidate`, not `isEligible` — a TOP-HEADLINE row is factless by
+  // design (the same predicate buildRelevanceCalls applies).
+  const eligible = active.filter(
+    (c) => !preGatedIds.has(c.id) && inputById.has(c.id) && isScorableCandidate(c),
+  );
+  if (eligible.length === 0) {
+    logger.debug(
+      `${TAG} batch ${batch.batchId} v3: nothing left to submit — marking done`,
+    );
+    // Terminal transition inside the drain loop; doDrain's maybeFinalize
+    // handles the run finalize.
+    await markBatchDone(batch.batchId);
+    return;
+  }
+
+  // --- 2. BUILD THE ONE MERGED BUNDLE -------------------------------------
+  // Batches are homogeneous by construction (partitionFreshIds), so "every
+  // eligible row is headline-sourced" is the same test the legacy variant
+  // resolver makes — and the fallback (standard prompt at the standard chunk
+  // size) is the safe one either way.
+  const headline = eligible.every((c) =>
+    isHeadlineScope(inputById.get(c.id)?.headlineScope),
+  );
+  const scoreChunkSize = headline
+    ? a.headlineArticlesPerScorePrompt
+    : a.articlesPerScorePrompt;
+  const system = headline
+    ? CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT
+    : CLOUD_SCORE_V3_SYSTEM_PROMPT;
+  // The merged call must fit scores AND the conditional reasons, so it gets its
+  // own budget — never the two-pass `scoreBatchMaxTokens`.
+  const maxTokens = a.v3ScoreBatchMaxTokens ?? a.scoreBatchMaxTokens;
+
+  const userContext = buildUserContext(await loadFactStatementsForV3());
+  const calls: BatchCall[] = [];
+  const promptsById = new Map<string, string>();
+  const chunkIdToCandidates = new Map<string, ScoringCandidate[]>();
+  const eligibleChunks: ScoringCandidate[][] = [];
+  for (let i = 0; i < eligible.length; i += scoreChunkSize) {
+    eligibleChunks.push(eligible.slice(i, i + scoreChunkSize));
+  }
+  eligibleChunks.forEach((chunkCandidates, idx) => {
+    const prompt = buildBatchScoringUserMessage({
+      userContext,
+      articles: chunkCandidates.map((c) => ({
+        title: c.titleEn ?? '',
+        description: c.descriptionEn ?? '',
+        country: resolveCountryName(c.countryCode),
+        relatedFacts: c.relatedFacts.map((f) => f.statement),
+      })),
+      v3: true,
+    });
+    const scoreId = `score:${idx}`;
+    promptsById.set(scoreId, prompt);
+    chunkIdToCandidates.set(scoreId, chunkCandidates);
+    calls.push({
+      id: scoreId,
+      system,
+      prompt,
+      temperature: a.scoreTemperature,
+      maxTokens,
+    });
+  });
+  const bundle: CloudCallBundle = {
+    calls,
+    promptsById,
+    chunkIdToCandidates,
+    eligibleCandidates: eligible,
+    scoreChunkSize,
+  };
+
+  // SOFT suppression ("shown less"): the LLM knows nothing about the user's
+  // filters and its score REPLACES the math score that carried the penalty, so
+  // — exactly as on the legacy backstop path — carry the penalty on the batch
+  // and subtract it at decode.
+  const suppressPenaltyMap: Record<string, number> = {};
+  for (const c of eligible) {
+    const penalty = math.componentsMap.get(c.id)?.suppressPenalty ?? 0;
+    if (penalty > 0) suppressPenaltyMap[c.id] = penalty;
+  }
+  const penalisedCount = Object.keys(suppressPenaltyMap).length;
+
+  // Math audit carried to decode: the components persisted for audit, and the
+  // matched topics the interest-evidence rescue floor reads. Re-deriving these
+  // at decode would mean re-running computeMathStage against a persona that may
+  // have changed under us.
+  //
+  // The topics are TRIMMED to the three numeric/id fields the floor and its
+  // audit need. `text` (the user's own topic wording) is dropped on purpose: the
+  // run lives in the UNENCRYPTED settings row, which by this store's doctrine
+  // never holds prompt/user text — and dropping it also keeps the row small.
+  const v3Audit: Record<string, V3AuditEntry> = {};
+  for (const c of eligible) {
+    const components = math.componentsMap.get(c.id);
+    if (!components) continue;
+    v3Audit[c.id] = {
+      computed: math.computedScoreMap.get(c.id) ?? 0,
+      components,
+      matchedTopics: (inputById.get(c.id)?.matchedTopics ?? []).map((t) => ({
+        topicId: t.topicId,
+        effectiveWeight: t.effectiveWeight,
+        ...(typeof t.vectorScore === 'number' ? { vectorScore: t.vectorScore } : {}),
+      })),
+    };
+  }
+
+  const eligibleIds = eligible.map((c) => c.id);
+  const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
+  logger.debug(
+    `${TAG} batch ${batch.batchId} submit v3 merged: ${eligibleIds.length} ids in ${calls.length} calls, chunk=${scoreChunkSize}, headline=${headline}, penalised=${penalisedCount} (token=${token ? 'yes' : 'no'})`,
+  );
+  const outcome = await sendInferenceRequest({
+    bundle,
+    ctx,
+    token,
+    model: SMALL_MODEL,
+    context,
+  });
+
+  if (outcome.status === 'ok') {
+    await transitionToWaitingRelevance(
+      batch.batchId,
+      outcome,
+      eligibleIds,
+      undefined,
+      penalisedCount > 0 ? suppressPenaltyMap : undefined,
+      scoreChunkSize,
+      { v3Mode: true, v3Audit },
+    );
+    logger.debug(
+      `${TAG} batch ${batch.batchId} → waiting-relevance (v3) requestId=${outcome.requestId}`,
+    );
+  } else if (outcome.status === 'throttled') {
+    await requeueThrottled(batch.batchId, 'submitting-relevance');
+  } else {
+    // Inside the drain loop — doDrain's maybeFinalize covers the terminal case.
+    await failOrRetrySubmit(batch.batchId, 'submitting-relevance');
+  }
+}
+
 async function doSubmitReasonsOnly(
   run: PipelineRun,
   batch: PipelineBatch,
@@ -1422,13 +1766,20 @@ async function transitionToWaitingRelevance(
    *  subtract from the LLM scores at decode. Never passed with `judge` (there
    *  the applied score is the math score, penalty already included). */
   suppressPenaltyMap?: Record<string, number>,
-  /** BACKSTOP/legacy batches only — the chunk size the `score:N` calls were
+  /** BACKSTOP/legacy AND v3 batches — the chunk size the `score:N` calls were
    *  built with, so decode re-chunks candidateIds identically. */
   scoreChunkSize?: number,
+  /** RELEVANCE_V3 batches only — the v3 marker + the math audit decode needs.
+   *  Assigned unconditionally (like the two maps above) so a retry can never
+   *  inherit the previous attempt's annotations, and so a legacy batch always
+   *  clears them. */
+  v3?: V3BatchFields,
 ): Promise<void> {
   await mutatePipeline((run) => {
-    const b = run.batches.find((x) => x.batchId === batchId);
+    const b = run.batches.find((x) => x.batchId === batchId) as V3Batch | undefined;
     if (!b || b.phase !== 'submitting-relevance') return null;
+    b.v3Mode = v3?.v3Mode === true ? true : undefined;
+    b.v3Audit = v3?.v3Mode === true ? v3.v3Audit : undefined;
     b.phase = 'waiting-relevance';
     b.requestId = outcome.requestId;
     b.capabilityToken = outcome.capabilityToken || undefined;
@@ -1767,11 +2118,199 @@ async function handleJudgeResults(
   await afterTerminal(context);
 }
 
+/**
+ * Decode a RELEVANCE_V3 batch — the ONE merged pass.
+ *
+ * Per article the model returned `rel` + `impact` (committed BEFORE any prose,
+ * which is what keeps the merged call's scores honest) and, only above the
+ * reason threshold, a `why`. Here that becomes:
+ *
+ *   persisted relevance = interestRescueFloor(blend(rel, impact)) − softPenalty
+ *
+ * — continuous, never bucketed (the whole point of the two-axis prompt is the
+ * resolution bucketing throws away). The math components computed at submit are
+ * persisted alongside for audit, exactly as the judge path persists them.
+ *
+ * A row that cleared the threshold but came back WITHOUT a `why` is saved
+ * `reason_pending`, so the existing orphaned-reasons sweep backfills its note —
+ * no new retry machinery, and no second content round trip for the rows that
+ * did answer.
+ */
+async function handleV3Results(
+  batch: PipelineBatch,
+  server: ServerResults,
+  context: ExecutionContext,
+): Promise<void> {
+  const { batchResults } = await decodeBatch(batch, server);
+  const cfg = await judgeHarnessConfig();
+  const audit = (batch as V3Batch).v3Audit ?? {};
+
+  // Re-chunk with the size the SUBMIT actually used (persisted on the batch) —
+  // the same join key rule the legacy score decode follows.
+  const scoreChunkSize = batch.scoreChunkSize ?? CLOUD_SCORE_CHUNK_SIZE;
+  const chunks = chunkIds(batch.candidateIds, scoreChunkSize);
+  const resultByCallId = new Map(batchResults.map((r) => [r.id, r]));
+
+  const scoreMap = new Map<string, number>();
+  const whyById = new Map<string, string>();
+  const failedIds = new Set<string>();
+  let rescuedCount = 0;
+
+  chunks.forEach((chunkIdList, idx) => {
+    const res = resultByCallId.get(`score:${idx}`);
+    // A missing/errored call, or output the parser rejects, fails the WHOLE
+    // chunk: its rows keep no score, stay `unscored`, and re-enter the next run.
+    const parsed =
+      res && !res.error
+        ? parseScoreV3Response(res.output, chunkIdList.length)
+        : null;
+    if (!parsed) {
+      for (const id of chunkIdList) failedIds.add(id);
+      return;
+    }
+    chunkIdList.forEach((id, i) => {
+      const row = parsed[i];
+      if (!row) {
+        failedIds.add(id);
+        return;
+      }
+      const blended = blendToScore(row.rel, row.impact);
+      let score = blended;
+      const entry = audit[id];
+      if (entry) {
+        // INTEREST-EVIDENCE RESCUE FLOOR — applied BEFORE the soft penalty on
+        // purpose: the floor is an automatic safety net for strong stated-
+        // interest evidence, while "shown less" is an explicit user
+        // instruction, and the user's instruction must always be the last word.
+        const { score: floored, rescued } = applyInterestRescueFloor(
+          blended,
+          entry.components,
+          entry.matchedTopics,
+          cfg.scoringEngine,
+        );
+        score = floored;
+        if (rescued) rescuedCount += 1;
+      }
+      const penalty = batch.suppressPenaltyMap?.[id] ?? 0;
+      if (penalty > 0) score = Math.max(0, score - penalty);
+      scoreMap.set(id, score);
+      const why = typeof row.why === 'string' ? row.why.trim() : '';
+      if (why.length > 0) whyById.set(id, why);
+    });
+  });
+
+  if (rescuedCount > 0) {
+    logger.info(`${TAG} batch ${batch.batchId} v3 interest-rescue floor fired`, {
+      batchId: batch.batchId,
+      rescued: rescuedCount,
+      scored: scoreMap.size,
+    });
+  }
+
+  // TOP-HEADLINE CULL (same rule as every other path): a headline-sourced row
+  // scoring below the MEDIUM band is terminally `excluded` rather than saved.
+  const culledHeadlineIds = new Set<string>();
+  const headlineIds = await lookupHeadlineIds(batch.candidateIds);
+  if (headlineIds.size > 0) {
+    for (const id of headlineIds) {
+      if (failedIds.has(id)) continue;
+      const relevance = scoreMap.get(id);
+      if (relevance === undefined) continue;
+      if (isCulledHeadlineRelevance(relevance)) culledHeadlineIds.add(id);
+    }
+    if (culledHeadlineIds.size > 0) {
+      logger.debug(
+        `${TAG} batch ${batch.batchId} culled ${culledHeadlineIds.size}/${headlineIds.size} sub-MEDIUM headlines`,
+      );
+      await batchMarkExcluded([...culledHeadlineIds]);
+    }
+  }
+
+  // Persist: score + (conditional) note + the math audit, one row at a time so
+  // a row deleted underneath us is skipped rather than failing the batch.
+  const relevanceMap: Record<string, number> = {};
+  let reasonPending = 0;
+  for (const id of batch.candidateIds) {
+    if (failedIds.has(id) || culledHeadlineIds.has(id)) continue;
+    const relevance = scoreMap.get(id);
+    if (relevance === undefined) continue;
+    relevanceMap[id] = relevance;
+    const reason = whyById.get(id) ?? '';
+    // No note AND above the threshold ⇒ `reason_pending` (reasonSkipped false),
+    // which is exactly what the orphaned-reasons sweep looks for. At or below
+    // the threshold the row owes no note at all and goes terminal.
+    const reasonSkipped = relevance < REASON_RELEVANCE_THRESHOLD;
+    if (!reason && !reasonSkipped) reasonPending += 1;
+    const entry = audit[id];
+    try {
+      await saveScoringResult(id, {
+        relevance,
+        reason,
+        reasonSkipped,
+        ...(entry
+          ? {
+              computedScore: entry.computed,
+              rawScore: relevance,
+              scoreComponentsJson: JSON.stringify(entry.components),
+            }
+          : {}),
+      });
+    } catch (err) {
+      if (isRecordNotFoundError(err)) continue;
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'save-v3-relevance' },
+        extra: { candidateId: id },
+      });
+    }
+  }
+  await refreshUi();
+
+  logger.debug(
+    `${TAG} batch ${batch.batchId} v3 decoded: scored=${Object.keys(relevanceMap).length} withNote=${whyById.size} reasonPending=${reasonPending} failed=${failedIds.size} rescued=${rescuedCount}`,
+  );
+
+  // Fresh donors — copy the scores onto held-back unscored siblings (same hook,
+  // same fail-open, as the legacy relevance path).
+  try {
+    const inFlight = await getNonTerminalCandidateIds();
+    const propagated = await propagateToUnscoredSiblings(inFlight, reconcileHardFilters);
+    if (propagated > 0) await refreshUi();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'propagate-siblings' },
+    });
+  }
+
+  // One merged pass ⇒ no reasons sub-phase. Store the maps for the recovery
+  // readers, terminate, discard the sub-gate rows, finalize.
+  await mutatePipeline((run) => {
+    const b = run.batches.find((x) => x.batchId === batch.batchId);
+    if (!b || b.phase !== 'waiting-relevance') return null;
+    b.relevanceMap = relevanceMap;
+    b.rawRelevanceMap = relevanceMap;
+    b.reasonCandidateIds = [];
+    b.phase = 'done';
+    return true;
+  });
+  const discarded = await discardLowRelevance(batch.candidateIds, relevanceMap);
+  if (discarded > 0) await refreshUi();
+  await afterTerminal(context);
+}
+
 async function handleRelevanceResults(
   batch: PipelineBatch,
   server: ServerResults,
   context: ExecutionContext,
 ): Promise<void> {
+  // RELEVANCE_V3 batches carry scores, impact AND the conditional note in one
+  // result — decode + save + terminate in one pass, no reasons sub-phase. The
+  // marker is read off the BATCH (not the live flag) so a run submitted before
+  // the toggle moved still decodes the way it was submitted.
+  if (isV3Batch(batch)) {
+    await handleV3Results(batch, server, context);
+    return;
+  }
+
   // Judge-mode batches carry the combined judge+reason result — decode + save +
   // terminate in one pass (no reasons sub-phase). Backstop/legacy batches fall
   // through to the tiered relevance→reasons flow below.
@@ -1903,7 +2442,7 @@ async function handleRelevanceResults(
 
   const impactfulIds = Object.keys(relevanceMap).filter(
     (id) =>
-      relevanceMap[id] > REASON_RELEVANCE_THRESHOLD &&
+      relevanceMap[id] >= REASON_RELEVANCE_THRESHOLD &&
       (rawRelevanceMap[id] ?? 0) >= REASON_MIN_RAW_SCORE,
   );
 
@@ -2297,6 +2836,25 @@ async function runPostFinalizeKick(): Promise<void> {
   }
 }
 
+/** The user's geo/language context, which steers WHICH sibling of a duplicate
+ *  group the gate elects. Lazy-required (like refreshUi) so this module keeps no
+ *  static edge into the persona/store graph, and fail-open to null — the legacy,
+ *  geo-blind election — because an enqueue must never die on a context read. */
+async function loadGateUserContext(): Promise<
+  Parameters<typeof gateUnscoredForScoring>[1]
+> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const mod = require('@/lib/user-context/user-geo-language-context') as typeof import('@/lib/user-context/user-geo-language-context');
+    return await mod.loadUserGeoLanguageContext();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'gate-user-context' },
+    });
+    return null;
+  }
+}
+
 /**
  * Re-elect every still-unscored eligible row from the DB and enqueue it.
  *
@@ -2304,6 +2862,17 @@ async function runPostFinalizeKick(): Promise<void> {
  * both face the same question: rows exist that nothing has dispatched, and we
  * need to know whether to respect the MIN_DISPATCH floor or push the remainder
  * through. Pass `flushRemainder` when the caller knows no more rows are coming.
+ *
+ * GATE-BYPASS FIX: this used to enqueue EVERY eligible unscored row with no
+ * story grouping at all — the one enqueue path that skipped
+ * `gateUnscoredForScoring`. Duplicates of an already-scored story therefore paid
+ * for their own LLM pass instead of inheriting a donor's score, and every
+ * same-sync duplicate of a fresh story was scored N times instead of once. Both
+ * of the other enqueue sites (feed-sync, the background scoring pass) route
+ * through the gate; this one now does too, with the SAME shape they use:
+ * propagate → reconcile hard filters → refresh → enqueue only the elected
+ * representatives that are also scorable. The gate is imported, never
+ * reimplemented, so there is exactly one election/propagation rule.
  */
 export async function enqueueUnscoredEligible(
   opts: { flushRemainder?: boolean } = {},
@@ -2315,10 +2884,46 @@ export async function enqueueUnscoredEligible(
   // fact requirement here would have enqueued headlines only on syncs that
   // happened to hydrate new articles — an intermittent bug that reads as
   // "sometimes works" and is unfalsifiable in QA.
-  const eligibleIds = candidates.filter(isScorableCandidate).map((c) => c.id);
-  if (eligibleIds.length === 0) return { enqueued: 0 };
-  await enqueueCandidates(eligibleIds, opts.flushRemainder === true);
-  return { enqueued: eligibleIds.length };
+  const eligible = new Set(
+    candidates.filter(isScorableCandidate).map((c) => c.id),
+  );
+  if (eligible.size === 0) return { enqueued: 0 };
+
+  const inFlight = await getNonTerminalCandidateIds();
+  const gate = await gateUnscoredForScoring(inFlight, await loadGateUserContext());
+
+  if (gate.propagatedCount > 0) {
+    // P9: propagated rows are written terminal `complete` WITHOUT ever meeting
+    // the scoring stage's hard screen (score-propagation's HARD FILTERS note).
+    // The gate reports only a COUNT, so the reconcile is the FULL sweep — the
+    // gate propagates over ALL unscored rows, not just this call's ids. Never
+    // fails the enqueue: the propagation is already committed.
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
+      await sweep.purgeHardFilteredSuggestions();
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'reconcile-hard-filters' },
+      });
+    }
+    await refreshUi();
+  }
+
+  // Only elected representatives, and only the ones this path is allowed to
+  // score. `flushRemainder` semantics are unchanged — it is still the caller's
+  // "no more rows are coming" signal, passed straight through.
+  const toEnqueue = gate.enqueueIds.filter((id) => eligible.has(id));
+  logger.debug(
+    `${TAG} enqueueUnscoredEligible: ${eligible.size} eligible → gate propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, enqueue ${toEnqueue.length}`,
+  );
+  if (toEnqueue.length === 0) return { enqueued: 0 };
+  await enqueueCandidates(
+    toEnqueue,
+    opts.flushRemainder === true,
+    gate.coveredIdsByRep,
+  );
+  return { enqueued: toEnqueue.length };
 }
 
 // ---------------------------------------------------------------------------

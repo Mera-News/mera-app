@@ -20,14 +20,12 @@ interface MeraProtocolState {
   // discards clusters that only matched noisy topics at sync time.
   injectNoise: boolean;
 
-  // Relevance fetching v2 — when true, candidates carrying server tags route
-  // through the deterministic math scoring engine (geo / event / entity
-  // components + the judge pass) and keep an unbucketed score. Off is the
-  // legacy two-pass LLM tier path, byte-identical to before this flag existed.
-  // Inert until the server's article-tagging stage populates geo_tags /
-  // entities / event_type — untagged candidates stay on the legacy path either
-  // way (see `isBackstop` in scoring-engine/relevance.ts).
-  relevanceV2: boolean;
+  // Relevance scoring v3 — when true, routes scoring through the single-pass,
+  // two-axis (interest + impact) cloud prompt instead of the classic two-pass
+  // cloud path (separate relevance-score and reason round trips). Replaces
+  // the retired relevance-v2 math-authoritative toggle (`mera_relevance_v2`,
+  // now swept in `reset()`/`hydrateFromDb`). Default false.
+  relevanceV3: boolean;
 
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
@@ -44,7 +42,7 @@ interface MeraProtocolState {
   // Actions — protocol
   setProcessingMode: (mode: ProcessingMode) => void;
   setInjectNoise: (enabled: boolean) => void;
-  setRelevanceV2: (enabled: boolean) => void;
+  setRelevanceV3: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -66,16 +64,21 @@ const DEFAULT_PROCESSING_MODE: ProcessingMode = ProcessingMode.Cloud;
 
 const SETTING_PROCESSING_MODE = 'mera_processing_mode';
 const SETTING_INJECT_NOISE = 'mera_inject_noise';
-const SETTING_RELEVANCE_V2 = 'mera_relevance_v2';
+const SETTING_RELEVANCE_V3 = 'mera_relevance_v3';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
  *  only so `reset()` clears the orphaned row from devices that persisted it. */
 const RETIRED_SETTING_LEGACY_PERSONA_UPDATE = 'mera_legacy_persona_update';
+/** Retired with the relevance-v2 math-authoritative toggle (superseded by v3).
+ *  Never read — v3 starts off regardless of what v2 was set to — kept only so
+ *  `reset()`/`hydrateFromDb` clear the orphaned row from devices that
+ *  persisted it. */
+const RETIRED_SETTING_RELEVANCE_V2 = 'mera_relevance_v2';
 
 const initialState = {
   processingMode: DEFAULT_PROCESSING_MODE,
   injectNoise: false,
-  relevanceV2: false,
+  relevanceV3: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -99,9 +102,9 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     setSetting(SETTING_INJECT_NOISE, injectNoise ? 'true' : 'false').catch(() => { });
   },
 
-  setRelevanceV2: (relevanceV2) => {
-    set({ relevanceV2 });
-    setSetting(SETTING_RELEVANCE_V2, relevanceV2 ? 'true' : 'false').catch(() => { });
+  setRelevanceV3: (relevanceV3) => {
+    set({ relevanceV3 });
+    setSetting(SETTING_RELEVANCE_V3, relevanceV3 ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -144,21 +147,25 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(LEGACY_SETTING_PROTOCOL_ENABLED).catch(() => { });
     deleteSetting('mera_selected_model_id').catch(() => { });
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
-    deleteSetting(SETTING_RELEVANCE_V2).catch(() => { });
+    deleteSetting(SETTING_RELEVANCE_V3).catch(() => { });
+    deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
     deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
     deleteSetting('e2ee_enabled').catch(() => { });
   },
 
   hydrateFromDb: async () => {
     try {
-      const [modeValue, legacyEnabledValue, modelIdValue, injectNoiseValue, relevanceV2Value] =
+      const [modeValue, legacyEnabledValue, modelIdValue, injectNoiseValue, relevanceV3Value] =
         await Promise.all([
           getSetting(SETTING_PROCESSING_MODE),
           getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
           getSetting('mera_selected_model_id'),
           getSetting(SETTING_INJECT_NOISE),
-          getSetting(SETTING_RELEVANCE_V2),
+          getSetting(SETTING_RELEVANCE_V3),
         ]);
+      // One-shot cleanup: the retired v2 key is never read — v3 starts off
+      // regardless of what v2 was set to — just swept so it doesn't linger.
+      deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
       const updates: Partial<MeraProtocolState> = {};
       if (modeValue === ProcessingMode.OnDevice || modeValue === ProcessingMode.Cloud) {
         updates.processingMode = modeValue;
@@ -180,10 +187,10 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (injectNoiseValue === 'false') {
         updates.injectNoise = false;
       }
-      if (relevanceV2Value === 'true') {
-        updates.relevanceV2 = true;
-      } else if (relevanceV2Value === 'false') {
-        updates.relevanceV2 = false;
+      if (relevanceV3Value === 'true') {
+        updates.relevanceV3 = true;
+      } else if (relevanceV3Value === 'false') {
+        updates.relevanceV3 = false;
       }
       if (Object.keys(updates).length > 0) {
         set(updates);
@@ -204,8 +211,8 @@ export const useIsOnDeviceProcessing = () =>
 export const useInjectNoise = () =>
   useMeraProtocolStore((state) => state.injectNoise);
 
-export const useRelevanceV2 = () =>
-  useMeraProtocolStore((state) => state.relevanceV2);
+export const useRelevanceV3 = () =>
+  useMeraProtocolStore((state) => state.relevanceV3);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

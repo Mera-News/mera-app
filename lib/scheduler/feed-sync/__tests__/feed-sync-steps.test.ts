@@ -90,6 +90,19 @@ jest.mock('@/lib/feed-grouping/score-propagation', () => ({
   gateUnscoredForScoring: (...args: any[]) => mockGateUnscoredForScoring(...args),
 }));
 
+// PARTIAL mock: the two DB-touching exports are stubbed, but the pure matcher
+// (`buildReadStoryIndex` / `matchesReadStory`) runs for REAL, so these tests
+// exercise the actual already-read matching rather than a boolean stand-in.
+// `requireActual` is safe here — the module's static graph is deliberately
+// database-free (see its lazy-require note).
+const mockLoadReadStoryIndex = jest.fn();
+const mockBatchMarkAlreadyRead = jest.fn();
+jest.mock('@/lib/feed-grouping/read-story-filter', () => ({
+  ...jest.requireActual('@/lib/feed-grouping/read-story-filter'),
+  loadReadStoryIndex: (...args: any[]) => mockLoadReadStoryIndex(...args),
+  batchMarkAlreadyRead: (...args: any[]) => mockBatchMarkAlreadyRead(...args),
+}));
+
 jest.mock('@/lib/user-context/user-geo-language-context', () => ({
   loadUserGeoLanguageContext: (...args: any[]) => mockLoadUserGeoLanguageContext(...args),
 }));
@@ -128,6 +141,10 @@ import type {
   HydratePersistEnqueueOptions,
 } from '../feed-sync-steps';
 import { DEFAULT_HEADLINE_LIMIT_PER_SCOPE } from '@/lib/news-harness/scoring-engine/retrieval-profile';
+import {
+  buildReadStoryIndex,
+  EMPTY_READ_STORY_INDEX,
+} from '@/lib/feed-grouping/read-story-filter';
 
 function makeCtx(aborted = false) {
   const controller = new AbortController();
@@ -185,7 +202,12 @@ beforeEach(() => {
     propagatedCount: 0,
     heldBackCount: 0,
     coveredIdsByRep: {},
+    readCount: 0,
   });
+  // Default: nothing has been read, so the already-read gate is inert and every
+  // pre-existing test in this file keeps its exact prior behaviour.
+  mockLoadReadStoryIndex.mockResolvedValue(EMPTY_READ_STORY_INDEX);
+  mockBatchMarkAlreadyRead.mockResolvedValue(undefined);
   mockReconcileTrackedStories.mockResolvedValue(undefined);
   mockMigrateLegacyTrackedStories.mockResolvedValue(0);
   mockLoadUserGeoLanguageContext.mockResolvedValue(null);
@@ -1723,3 +1745,152 @@ describe('stepScore', () => {
 });
 
 export {};
+
+// ── already-read exclusion (relevance v3 §3) ────────────────────────────────
+
+describe('stepHydratePersistEnqueue — already-read exclusion', () => {
+  const openedImpression = (
+    overrides: Record<string, unknown> = {},
+  ) => ({ articleId: 'x', stableClusterId: null, titleNorm: null, opened: true, ...overrides });
+
+  it('never persists a hydrated article the user already opened', async () => {
+    mockLoadReadStoryIndex.mockResolvedValue(
+      buildReadStoryIndex([openedImpression({ articleId: 'art-read' })]),
+    );
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-read' }, { _id: 'art-fresh' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-read', 'art-fresh'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-read', 'art-fresh'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    // Only the fresh article reaches the DB — the read one is never a row, so
+    // it is never scored, never rendered, and never needs evicting.
+    expect(mockPersistAndLinkV2Suggestions).toHaveBeenCalledWith(
+      [{ _id: 'art-fresh' }],
+      expect.any(Map),
+      undefined,
+    );
+  });
+
+  it('matches a re-serve on the stored title even when the article id is new', async () => {
+    mockLoadReadStoryIndex.mockResolvedValue(
+      buildReadStoryIndex([
+        openedImpression({
+          articleId: 'old-id',
+          titleNorm: 'anthropic launches claude opus for enterprise customers',
+        }),
+      ]),
+    );
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [
+        {
+          _id: 'new-id',
+          title_en: 'Anthropic launches Claude Opus for enterprise customers today',
+        },
+        { _id: 'development', title_en: 'Anthropic faces EU antitrust probe model pricing' },
+      ],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+
+    const diffResult: DiffResult = {
+      serverArticleIds: ['new-id', 'development'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['new-id', 'development'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    // The genuinely new development survives; only the re-serve is dropped.
+    const persisted = mockPersistAndLinkV2Suggestions.mock.calls[0][0];
+    expect(persisted.map((a: any) => a._id)).toEqual(['development']);
+  });
+
+  it('marks an ALREADY-SYNCED unscored row already_read and withholds it from enqueue', async () => {
+    mockLoadReadStoryIndex.mockResolvedValue(
+      buildReadStoryIndex([openedImpression({ articleId: 'art-old' })]),
+    );
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-new' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    // `art-old` was synced on an EARLIER cycle — the pre-persist screen above
+    // never sees it, so the global unscored scan is its only defense.
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'art-old', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+      { id: 'art-new', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+    ]);
+
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-new'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-new'],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockBatchMarkAlreadyRead).toHaveBeenCalledWith(['art-old']);
+    // Not tombstoned as "ineligible" — that would misreport WHY it is invisible.
+    expect(mockBatchMarkAsScoredByIds).not.toHaveBeenCalled();
+    // ...and the gate still ran for the fresh row.
+    expect(mockGateUnscoredForScoring).toHaveBeenCalled();
+  });
+
+  it('a chunk that is entirely already-read is still a DELIVERED chunk (no daily-limit throw)', async () => {
+    mockLoadReadStoryIndex.mockResolvedValue(
+      buildReadStoryIndex([openedImpression({ articleId: 'art-read' })]),
+    );
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-read' }],
+      dailyLimitReached: true,
+      resetAt: '2026-08-06T00:00:00.000Z',
+    });
+
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-read'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-read'],
+    };
+
+    const result = await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(result.dailyLimitReached).toBe(true);
+    expect(result.insertedCount).toBe(0);
+    expect(mockPersistAndLinkV2Suggestions).not.toHaveBeenCalled();
+  });
+
+  it('a failed already_read write never fails the sync', async () => {
+    mockLoadReadStoryIndex.mockResolvedValue(
+      buildReadStoryIndex([openedImpression({ articleId: 'art-old' })]),
+    );
+    mockBatchMarkAlreadyRead.mockRejectedValue(new Error('db down'));
+    mockGetArticlesForTopicsByIds.mockResolvedValue({
+      articles: [{ _id: 'art-new' }],
+      dailyLimitReached: false,
+    });
+    mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 1, linkedCount: 1 });
+    mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([
+      { id: 'art-old', titleEn: 't', descriptionEn: 'd', relatedFacts: [{}] },
+    ]);
+
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-new'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-new'],
+    };
+
+    await expect(
+      stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts()),
+    ).resolves.toBeDefined();
+    expect(mockCaptureException).toHaveBeenCalled();
+  });
+});

@@ -13,16 +13,40 @@
 import {
   DEFAULT_HARNESS_CONFIG,
   type HarnessConfig,
+  type ScoringEngineConfig,
 } from '../core/config';
+import type {
+  MatchedTopicInput,
+  RelevanceComponents,
+} from '../scoring-engine/relevance';
 
-// --- Bucket (display tier) ------------------------------------------------
+// --- Band (the ONE relevance ladder) --------------------------------------
+//
+// relevance v3, §2: there used to be TWO independent ladders. `bucketOf` below
+// (0.4 / 0.6 / 0.8 / 1.0) fed Dashboard section viability, while the card pill,
+// the feed ordering, and the importance filter read a SECOND set of cutoffs
+// (0.53 / 0.77 / 1.0) declared in lib/feed-ordering/priority-order.ts and
+// re-hardcoded in lib/relevance-utils.ts and RelevanceChip.tsx. An article at
+// 0.53–0.60 was therefore MEDIUM on its own card and LOW for the section that
+// contained it — "medium falls in low", guaranteed by code, not by tuning.
+//
+// `bandOf` is the single source of truth that replaces both. It is expressed on
+// the persisted `relevance` value and reads its cutoffs from the SAME
+// articlePipeline config `bucketScores` uses, so the band a score lands in and
+// the value the legacy path buckets it to can never disagree.
 
-/** The four persisted relevance tiers + an UNSCORED sentinel for rows that
- *  never cleared scoring (progressive-render placeholders / discarded). */
-export type FeedBucket = 'EMERGENCY' | 'HIGH' | 'MEDIUM' | 'LOW' | 'UNSCORED';
+/** The one relevance ladder. `SUB_GATE` = below the render gate / discardFloor:
+ *  discarded, unscored, or a progressive-render placeholder. */
+export type RelevanceBand =
+  | 'EMERGENCY'
+  | 'HIGH'
+  | 'MEDIUM'
+  | 'LOW'
+  | 'SUB_GATE';
 
-/** Total-order rank for a bucket (higher = more prominent). */
-export function bucketRank(b: FeedBucket): number {
+/** Total-order rank for a band (higher = more prominent). EMERGENCY 4 …
+ *  SUB_GATE 0. */
+export function bandRank(b: RelevanceBand): number {
   switch (b) {
     case 'EMERGENCY':
       return 4;
@@ -38,21 +62,113 @@ export function bucketRank(b: FeedBucket): number {
 }
 
 /**
- * Derive the display bucket from a persisted `relevance` value using the same
- * cutoffs `bucketScores` uses. `relevance` is the bucketed display score (0.4 /
- * 0.6 / 0.8 / 1.1 representative values, or a sub-floor raw for discards, or a
- * negative sentinel for unscored). Anything below the discard floor → UNSCORED.
+ * Derive the band from a persisted `relevance` value. Cutoffs (config literals
+ * in parentheses):
+ *   > 1.0  (emergencyPriorityCutoff) → EMERGENCY
+ *   ≥ 0.8  (highPriorityCutoff)      → HIGH
+ *   ≥ 0.6  (mediumPriorityCutoff)    → MEDIUM
+ *   ≥ 0.4  (discardFloor)            → LOW
+ *   below, null, or negative         → SUB_GATE
+ *
+ * Works for BOTH score shapes: the legacy path's four representative values
+ * (0.4 / 0.6 / 0.8 / 1.1) land on their own cutoffs by construction, and the v3
+ * path's continuous {@link blendToScore} value lands in the band its magnitude
+ * implies.
+ */
+export function bandOf(
+  relevance: number | null | undefined,
+  config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
+): RelevanceBand {
+  const a = config.articlePipeline;
+  if (relevance == null || !Number.isFinite(relevance)) return 'SUB_GATE';
+  if (relevance < a.discardFloor) return 'SUB_GATE';
+  if (relevance > a.emergencyPriorityCutoff) return 'EMERGENCY';
+  if (relevance >= a.highPriorityCutoff) return 'HIGH';
+  if (relevance >= a.mediumPriorityCutoff) return 'MEDIUM';
+  return 'LOW';
+}
+
+// --- Bucket (display tier) — compatibility alias over the band ladder ------
+
+/** The four persisted relevance tiers + an UNSCORED sentinel for rows that
+ *  never cleared scoring (progressive-render placeholders / discarded).
+ *
+ *  DEPRECATE(v3): the same ladder as {@link RelevanceBand} under an older name
+ *  (`UNSCORED` = `SUB_GATE`). Kept so existing section/selector call sites keep
+ *  compiling; new code uses `RelevanceBand`. */
+export type FeedBucket = 'EMERGENCY' | 'HIGH' | 'MEDIUM' | 'LOW' | 'UNSCORED';
+
+/** Total-order rank for a bucket (higher = more prominent). Delegates to
+ *  {@link bandRank} so the two names can never rank differently. */
+export function bucketRank(b: FeedBucket): number {
+  return bandRank(b === 'UNSCORED' ? 'SUB_GATE' : b);
+}
+
+/**
+ * Thin compatibility alias over {@link bandOf}: same cutoffs, same inputs, with
+ * `SUB_GATE` reported under its older name `UNSCORED`.
  */
 export function bucketOf(
   relevance: number | null | undefined,
   config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
 ): FeedBucket {
-  const a = config.articlePipeline;
-  if (relevance == null || relevance < a.discardFloor) return 'UNSCORED';
-  if (relevance > a.emergencyPriorityCutoff) return 'EMERGENCY';
-  if (relevance >= a.highPriorityCutoff) return 'HIGH';
-  if (relevance >= a.mediumPriorityCutoff) return 'MEDIUM';
-  return 'LOW';
+  const band = bandOf(relevance, config);
+  return band === 'SUB_GATE' ? 'UNSCORED' : band;
+}
+
+// --- Interest-evidence rescue floor ---------------------------------------
+
+/** The floor a rescued row is lifted to — the LOW band's own cutoff, i.e. the
+ *  render gate, so a rescue admits the row and nothing more. Read from the
+ *  harness default rather than from a parameter because the contract hands this
+ *  function only the `scoringEngine` slice (it needs VS_HI from there). */
+const RESCUE_FLOOR = DEFAULT_HARNESS_CONFIG.articlePipeline.discardFloor;
+
+/** `topicComp` at or above which the math's topic evidence counts as STRONG.
+ *  0.7 = a matched topic whose effective weight is ~0.7+ after vectorScore
+ *  modulation; below that the evidence is the tail of a similarity search. */
+const RESCUE_TOPIC_COMP_MIN = 0.7;
+
+/**
+ * Interest-evidence rescue floor — the cheap safety net under the v3 scorer.
+ *
+ * The 2026-08-05 gold set showed 8 of 37 judge-must-shows scored 0.31–0.38 by
+ * the LLM (nearly all frontier-AI / EU-AI-regulation stories: a DECLARED
+ * interest, penalised for carrying no direct personal consequence), while the
+ * math path's topic evidence put several of the same rows at 0.4–0.6. The two
+ * signals disagree COMPLEMENTARILY, so when the math is confident and the LLM is
+ * not, the row is admitted at the gate rather than discarded.
+ *
+ * Fires only when ALL of:
+ *   - the LLM score is below the render gate (< 0.4), AND
+ *   - `components.topicComp` ≥ 0.7 (strong strongest-matched-topic weight), AND
+ *   - some matched topic carries `vectorScore` ≥ `VS_HI` (a strong SEMANTIC
+ *     match, not just a heavily-weighted topic).
+ *
+ * The two conditions are deliberately conjunctive: topicComp alone is a
+ * statement about the user's weights, vectorScore alone a statement about the
+ * retrieval — only together do they mean "this really is about a stated
+ * interest". The lift is to the floor exactly, never higher, so a rescued row
+ * enters at LOW and competes on its merits.
+ *
+ * Pure and side-effect-free; the caller logs `rescued` so the hit-rate is
+ * observable (per the plan: the floor must be measurable, not invisible).
+ */
+export function applyInterestRescueFloor(
+  llmScore: number,
+  components: RelevanceComponents | null,
+  matchedTopics: MatchedTopicInput[],
+  cfg: ScoringEngineConfig,
+): { score: number; rescued: boolean } {
+  if (!Number.isFinite(llmScore) || llmScore >= RESCUE_FLOOR)
+    return { score: llmScore, rescued: false };
+  if (components == null || !(components.topicComp >= RESCUE_TOPIC_COMP_MIN))
+    return { score: llmScore, rescued: false };
+  const strongVector = (matchedTopics ?? []).some(
+    (t) => typeof t.vectorScore === 'number' && t.vectorScore >= cfg.VS_HI,
+  );
+  if (!strongVector) return { score: llmScore, rescued: false };
+  return { score: RESCUE_FLOOR, rescued: true };
 }
 
 // --- Section membership: the fact link must be RELEVANCE-BACKED -----------

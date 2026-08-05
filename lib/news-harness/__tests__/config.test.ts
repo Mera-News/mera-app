@@ -35,7 +35,8 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.discardFloor).toBe(0.4);
     expect(a.fallbackRelevance).toBe(0.3);
     expect(a.ineligibleRelevance).toBe(0.2);
-    expect(a.reasonRelevanceThreshold).toBe(0.3);
+    // Lockstep with RENDER_GATE (v3 wave: 0.3 -> 0.4, inclusive comparisons).
+    expect(a.reasonRelevanceThreshold).toBe(0.4);
   });
 
   it('pins the bucket cutoffs and representative values', () => {

@@ -638,7 +638,7 @@ describe('useForYouStore', () => {
         const state = useForYouStore.getState();
         expect(state.suggestions[0]._id).toBe('s1'); // sorted by relevance desc
         expect(state.articleCount).toBe(2);
-        expect(state.relevantArticleCount).toBe(1); // only scored > 0.3
+        expect(state.relevantArticleCount).toBe(1); // only scored >= RENDER_GATE (0.4)
         expect(mockPersistFeedMetadata).toHaveBeenCalledWith(
             expect.objectContaining({ articleCount: 2, relevantArticleCount: 1 }),
         );
