@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "업데이트 준비 완료",
-    "updateDescription": "탭하여 재시작하고 최신 버전을 적용하세요"
+    "modalBody": "Mera의 새 버전이 다운로드되어 준비되었습니다. 모든 것이 원활하게 실행되도록 지금 업데이트하세요.",
+    "updateNow": "지금 업데이트"
   },
   "feedback": {
     "fabLabel": "버그 신고",

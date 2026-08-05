@@ -717,7 +717,8 @@
   },
   "ota": {
     "updateReady": "Mise à jour disponible",
-    "updateDescription": "Appuyez pour redémarrer et appliquer la dernière version"
+    "modalBody": "Une nouvelle version de Mera a été téléchargée et est prête à l'emploi. Mettez à jour maintenant pour que tout fonctionne correctement.",
+    "updateNow": "Mettre à jour"
   },
   "feedback": {
     "fabLabel": "Signaler un bug",

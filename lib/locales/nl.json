@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "Update gereed",
-    "updateDescription": "Tik om opnieuw te starten en de nieuwste versie toe te passen"
+    "modalBody": "Een nieuwe versie van Mera is gedownload en klaar voor gebruik. Update nu om alles soepel te laten werken.",
+    "updateNow": "Nu updaten"
   },
   "feedback": {
     "fabLabel": "Bug melden",

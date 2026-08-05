@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "Atualização disponível",
-    "updateDescription": "Toque para reiniciar e aplicar a versão mais recente"
+    "modalBody": "Uma nova versão do Mera foi baixada e está pronta. Atualize agora para manter tudo funcionando perfeitamente.",
+    "updateNow": "Atualizar agora"
   },
   "feedback": {
     "fabLabel": "Relatar um problema",

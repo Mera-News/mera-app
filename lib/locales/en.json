@@ -512,10 +512,10 @@
     "injectNoiseTitle": "Inject Noise",
     "injectNoiseDescription": "Submits decoy topics alongside your real interests so the backend can't triangulate who you are from your topic list. Articles matching only decoy topics are dropped before they reach you.",
     "injectNoiseBeta": "Beta: may slow down topic generation and reduce feed relevance.",
-    "relevanceV2Title": "Use relevance fetching v2",
-    "relevanceV2On": "Scoring on device, where the story happened counts",
-    "relevanceV2Off": "Scoring in the cloud, using the original method",
-    "relevanceV2Description": "Beta — scores articles on your device using where a story happened and what kind of event it is, instead of asking the cloud model alone. Needs articles that carry location tags, so you may see little change at first. Turn it off at any time to go back.",
+    "relevanceV3Title": "Use relevance scoring v3",
+    "relevanceV3On": "Single-pass scoring: interests and impact, balanced",
+    "relevanceV3Off": "Classic two-pass cloud scoring",
+    "relevanceV3Description": "Beta — scores each article once on two axes: how close it is to your stated interests, and how much it could affect you. Fewer, better-separated suggestions and about a third less AI processing. Turn it off at any time to go back.",
     "privacyTitle": "Your data stays private",
     "privacyDescription": "Mera Protocol is always on. On-device mode runs inference fully offline on your phone. Cloud mode uses end-to-end encrypted inference: your data is encrypted on your device and only decrypted inside a secure enclave we can't read into. Your facts, your profile and your reading history never leave this device. To fetch news we send only broad topic phrases, carrying no user ID.",
     "deviceSupported": "Device Supported",
@@ -849,7 +849,8 @@
   },
   "ota": {
     "updateReady": "Update ready",
-    "updateDescription": "Tap to restart and apply the latest version"
+    "modalBody": "A new version of Mera has been downloaded and is ready to go. Update now to keep everything running smoothly.",
+    "updateNow": "Update now"
   },
   "feedback": {
     "fabLabel": "Report a bug",

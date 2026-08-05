@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "更新已就绪",
-    "updateDescription": "点击重启以应用最新版本"
+    "modalBody": "Mera 的新版本已下载，准备就绪。立即更新以确保一切顺利运行。",
+    "updateNow": "立即更新"
   },
   "feedback": {
     "fabLabel": "报告问题",
