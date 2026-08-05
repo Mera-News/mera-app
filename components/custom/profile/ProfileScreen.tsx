@@ -11,6 +11,7 @@ import { Heading } from '@/components/ui/heading';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Text } from '@/components/ui/text';
 import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
+import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
@@ -155,6 +156,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     // App-wide: lifts the free-tier state the moment the purchase lands.
                     useSubscriptionStore.getState().setServerBilling(fresh);
                     setActivationPending(false);
+                    showSubscriptionActivatedToast(fresh.subscriptionTier);
                     return;
                 }
 
@@ -177,6 +179,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     if (later.billing) {
                         setBilling(later.billing);
                         useSubscriptionStore.getState().setServerBilling(later.billing);
+                    }
+                    // The late webhook DID land — the user is still sitting on
+                    // "activating…", so they get the same acknowledgment now
+                    // rather than being left to notice the plan changed.
+                    // Gated on `confirmed`, not on `later.billing`: this branch
+                    // deliberately commits an unconfirmed snapshot (a deferred
+                    // App Store plan change never changes the tier at all), and
+                    // that snapshot is the PRE-purchase tier.
+                    if (later.confirmed) {
+                        showSubscriptionActivatedToast(later.billing?.subscriptionTier);
                     }
                     // Cleared whether or not it resolved. A deferred App Store
                     // plan change never changes the tier at all, so an

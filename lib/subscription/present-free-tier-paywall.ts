@@ -20,6 +20,7 @@ import logger from '@/lib/logger';
 import { getOfferingSafe } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
+import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 /**
@@ -75,6 +76,10 @@ export async function presentFreeTierPaywall(source: string): Promise<void> {
 
         if (confirmed && billing) {
             useSubscriptionStore.getState().setServerBilling(billing);
+            // Only here — the server has agreed. On the unconfirmed branch below
+            // the snapshot is the PRE-purchase tier, so a toast there would
+            // announce a plan the app is still not showing.
+            showSubscriptionActivatedToast(billing.subscriptionTier);
             return;
         }
 

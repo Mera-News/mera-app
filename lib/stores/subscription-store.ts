@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { CustomerInfo } from 'react-native-purchases';
 import { getActiveTier, type SubscriptionTier } from '@/lib/revenuecat';
 import { deriveAiAccess, type AiAccess } from '@/lib/subscription/ai-access';
+import { clearJwtSubscriptionLock } from '@/lib/subscription/jwt-subscription-gate';
 
 /** The subset of `userBilling` this store mirrors. */
 export interface ServerBillingSnapshot {
@@ -69,6 +70,24 @@ export const useSubscriptionStore = create<SubscriptionState>()((set) => ({
 
   setServerBilling: (billing) => {
     if (!billing) return;
+    // The ONE signal that lifts the /token 403 latch, and it is deliberately
+    // this one: every path that can end a refusal — a purchase
+    // (refreshUserBillingAfterPurchase on all four call sites),
+    // presentFreeTierPaywall, and the periodic/foreground syncEntitlement —
+    // lands here, and three of them never call syncEntitlement at all.
+    //
+    // Requires an EXPLICIT paid tier, using the same `undefined`-ignoring rule
+    // as the setter below: the lapse-state query does not select
+    // subscriptionTier, and `'none'` is the refusal, not a lift. This mirrors
+    // the server's own `hasActiveSubscription` check, so the next getJwtToken()
+    // is only re-armed when the gate it faces will actually pass.
+    if (
+      billing.subscriptionTier !== undefined &&
+      billing.subscriptionTier !== null &&
+      billing.subscriptionTier !== 'none'
+    ) {
+      clearJwtSubscriptionLock();
+    }
     set({
       // `undefined` (a query that didn't select the field) must not erase a
       // value we already know; only an explicit value overwrites.
@@ -92,7 +111,12 @@ export const useSubscriptionStore = create<SubscriptionState>()((set) => ({
   // hand user B user A's entitlement for the rest of the session, and resetting
   // it to `'none'` rather than `null` would flash Mera News Free across a
   // logout → login round trip. `null` = "unknown", which is the truth here.
-  reset: () => set({ ...initialState }),
+  reset: () => {
+    // Otherwise user B inherits user A's /token refusal for the whole session
+    // and never gets a JWT, whatever they are subscribed to.
+    clearJwtSubscriptionLock();
+    set({ ...initialState });
+  },
 }));
 
 /** Reactive selector: is the user on any paid tier (RevenueCat's view). */

@@ -10,8 +10,15 @@ import logger from '@/lib/logger';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { syncEntitlement } from './entitlement-sync';
 
-/** Which guarded query hit the 402. Diagnostics only — the verdict is shared. */
-export type AiLockSource = 'topics' | 'persona' | 'hydrate' | 'stories';
+/**
+ * Which refusal we are recording. Diagnostics only — the verdict is shared.
+ *
+ * `'token'` is the auth service refusing the Mera-bubble JWT with a 403
+ * `SUBSCRIPTION_REQUIRED` (`lib/subscription/jwt-subscription-gate.ts`). Same
+ * verdict about the same user as the four 402s, from the same `subscriptionTier`
+ * — so it belongs on the same shared flag, not a second one.
+ */
+export type AiLockSource = 'topics' | 'persona' | 'hydrate' | 'stories' | 'token';
 
 /**
  * Record that the AI layer is locked and go re-read the real entitlement.
@@ -31,9 +38,9 @@ export function recordAiLocked(source: AiLockSource): void {
 
     useSubscriptionStore.getState().markServerLocked();
 
-    // Breadcrumb, not an exception: a 402 on Mera News Free is the system
-    // working. Only the first one per transition is worth recording — a locked
-    // device can produce several before the surfaces settle.
+    // Breadcrumb, not an exception: a 402 (or the /token 403) on Mera News Free
+    // is the system working. Only the first one per transition is worth
+    // recording — a locked device can produce several before the surfaces settle.
     if (!already) {
         logger.addBreadcrumb(
             '[ai-lock] AI layer locked by a 402',

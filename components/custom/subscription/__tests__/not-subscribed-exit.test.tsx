@@ -26,6 +26,11 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     const R = require('react/jsx-dev-runtime');
     return { jsxDEV: R.jsxDEV, Fragment: R.Fragment };
 });
+// The glass plate reaches expo-glass-effect (a native module) at import time.
+jest.mock('@/components/custom/cards/CardGlassPlate', () => ({ CardGlassPlate: () => null }));
+// RN's real ScrollView pulls in an untransformed Android spec file under this
+// jest config; the screen imports it through the ui layer so one stub suffices.
+jest.mock('@/components/ui/scroll-view', () => { const { View } = require('react-native'); return { ScrollView: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/box', () => { const { View } = require('react-native'); return { Box: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/heading', () => { const { Text } = require('react-native'); return { Heading: (p: any) => <Text {...p} /> }; });
@@ -56,17 +61,20 @@ jest.mock('@/lib/account-service', () => ({
     AccountService: { getUserPersona: (...a: any[]) => mockGetUserPersona(...(a as [])) },
 }));
 
-// `isRevenueCatConfigured: false` keeps the auto-present effect inert, so these
-// tests exercise the EXIT path in isolation.
+// RevenueCat's configured-ness is togglable per test: the exit-path tests leave
+// it off, and the "no auto-present" test turns it ON — which is the only state
+// in which the removed effect could ever have fired.
+const mockRcState = { configured: false };
 jest.mock('@/lib/revenuecat', () => ({
     getCustomerInfoSafe: jest.fn(async () => null),
     getOfferingSafe: jest.fn(async () => null),
-    isRevenueCatConfigured: () => false,
+    isRevenueCatConfigured: () => mockRcState.configured,
     logRevenueCatDiagnostics: jest.fn(async () => {}),
 }));
+const mockPresentPaywall = jest.fn(async () => 'CANCELLED');
 jest.mock('react-native-purchases-ui', () => ({
     __esModule: true,
-    default: { presentPaywall: jest.fn() },
+    default: { presentPaywall: (...a: any[]) => mockPresentPaywall(...(a as [])) },
     PAYWALL_RESULT: { PURCHASED: 'PURCHASED', RESTORED: 'RESTORED' },
 }));
 
@@ -86,8 +94,51 @@ import NotSubscribedScreen from '@/components/custom/auth/NotSubscribedScreen';
 beforeEach(() => {
     jest.clearAllMocks();
     order.length = 0;
+    mockRcState.configured = false;
+    mockPresentPaywall.mockResolvedValue('CANCELLED');
     mockReplace.mockImplementation((...a: any[]) => { order.push(`replace:${a[0]}`); });
     mockGetUserPersona.mockResolvedValue({});
+});
+
+// The screen used to open the RevenueCat sheet on mount for every non-`lapsed`
+// entry. That was a deliberate choice (the first-open case was called "the
+// primary conversion moment") and it has been deliberately REVERSED: the screen
+// carries its own visible plans CTA, so a modal stacked on top of it fires
+// before the user can read the page meant to convince them.
+describe('the purchase sheet opens only on an explicit tap', () => {
+    it('does not auto-present on mount, even with RevenueCat configured', async () => {
+        mockRcState.configured = true;
+
+        render(<NotSubscribedScreen />);
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(mockPresentPaywall).not.toHaveBeenCalled();
+    });
+
+    it('presents when the primary CTA is tapped', async () => {
+        mockRcState.configured = true;
+        const { getByTestId } = render(<NotSubscribedScreen />);
+
+        await act(async () => {
+            fireEvent.press(getByTestId('not-subscribed-plans'));
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(mockPresentPaywall).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not auto-present on the lapsed entry either', async () => {
+        mockRcState.configured = true;
+
+        render(<NotSubscribedScreen reason="lapsed" />);
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(mockPresentPaywall).not.toHaveBeenCalled();
+    });
 });
 
 describe('leaving the paywall for /logged-in', () => {

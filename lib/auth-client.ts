@@ -6,6 +6,12 @@ import { secureStore } from "./utils/secure-store-adapter";
 import { AUTH_ENDPOINT } from "./config/endpoints";
 import { logoutRevenueCat } from "./revenuecat";
 import logger from "./logger";
+import {
+    clearJwtSubscriptionLock,
+    isJwtSubscriptionLocked,
+    isSubscriptionRequiredAuthError,
+    recordJwtSubscriptionLocked,
+} from "./subscription/jwt-subscription-gate";
 
 // Scheme/slug track whatever app.config.js resolves (env override or app.json
 // default). The 'app' fallbacks only fire if expoConfig is null; they are
@@ -67,6 +73,12 @@ export const invalidateJwtCache = () => {
 
 export const getJwtToken = async (): Promise<string | null> => {
     if (_cachedJwt && Date.now() < _cachedJwtExpiry) return _cachedJwt;
+    // TERMINAL for this session, checked before ANY network call — including the
+    // `getSession()` below, which is the request that actually tripped
+    // better-auth's rate limiter into 429s on staging. A 403
+    // SUBSCRIPTION_REQUIRED cannot change until the user buys something, and the
+    // purchase paths lift the latch themselves (see jwt-subscription-gate.ts).
+    if (isJwtSubscriptionLocked()) return null;
     if (_pendingJwtRequest) return _pendingJwtRequest;
 
     _pendingJwtRequest = (async () => {
@@ -75,12 +87,27 @@ export const getJwtToken = async (): Promise<string | null> => {
             if (!session?.data?.session) return null;
 
             const { data, error } = await authClient.token();
-            if (error || !data?.token) return null;
+            if (error) {
+                // Not captured to Sentry: an unsubscribed user being refused a
+                // JWT is the system working, exactly as ai-lock.ts says of a
+                // 402. Every OTHER error stays exactly as retryable as it was —
+                // a lapsed session must still be able to recover.
+                if (isSubscriptionRequiredAuthError(error)) recordJwtSubscriptionLocked();
+                return null;
+            }
+            if (!data?.token) return null;
 
             _cachedJwt = data.token;
             _cachedJwtExpiry = Date.now() + JWT_CACHE_TTL_MS;
             return data.token;
         } catch (e) {
+            // The same verdict can arrive as a throw (a client configured with
+            // `throw: true`, or a plugin that rethrows) — classify both paths or
+            // the storm simply moves.
+            if (isSubscriptionRequiredAuthError(e)) {
+                recordJwtSubscriptionLocked();
+                return null;
+            }
             logger.captureException(e, { tags: { service: 'auth-client', method: 'getJwtToken' } });
             return null;
         }
@@ -98,6 +125,10 @@ export const getJwtToken = async (): Promise<string | null> => {
 // explicit user-initiated logout flows.
 export const clearAuthStorage = async () => {
     invalidateJwtCache();
+    // The refusal belonged to the user who just left. Not folded into
+    // invalidateJwtCache(), which every 401-recovery path calls — see
+    // clearJwtSubscriptionLock's note.
+    clearJwtSubscriptionLock();
     // Reset the RevenueCat customer to anonymous so the next signed-in user
     // doesn't inherit the previous user's entitlements.
     await logoutRevenueCat();

@@ -49,7 +49,16 @@ jest.mock('../config/endpoints', () => ({
   DUMP_QUERIES_ENABLED: false,
 }));
 
+// The gate lazily requires this on the first refusal; stubbing it keeps the real
+// subscription store (and react-native-purchases behind it) out of this suite,
+// while letting us assert the lock is recorded through the SHARED mechanism.
+jest.mock('../subscription/ai-lock', () => ({ recordAiLocked: jest.fn() }));
+
 import { sendOTP, getJwtToken, invalidateJwtCache, clearAuthStorage } from '../auth-client';
+import { _resetJwtSubscriptionGateForTests } from '../subscription/jwt-subscription-gate';
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const mockRecordAiLocked: jest.Mock = require('../subscription/ai-lock').recordAiLocked;
 
 // Grab mock fn references via require() — same module cache that auth-client uses
 // internally, guaranteeing we reference the EXACT same jest.fn() instances.
@@ -174,6 +183,119 @@ describe('getJwtToken', () => {
       expect.any(Error),
       expect.objectContaining({ tags: { service: 'auth-client', method: 'getJwtToken' } }),
     );
+  });
+});
+
+// The /token subscription gate. Its whole job is to make ONE class of failure
+// terminal without making any other class terminal.
+describe('getJwtToken + the /token subscription gate', () => {
+  // The shape better-fetch returns for the auth service's
+  // `throw new APIError('FORBIDDEN', { code: 'SUBSCRIPTION_REQUIRED', ... })`:
+  // the parsed JSON body, with `status`/`statusText` stamped on.
+  const subscriptionRequired = {
+    code: 'SUBSCRIPTION_REQUIRED',
+    message: 'Active subscription required',
+    status: 403,
+    statusText: 'FORBIDDEN',
+  };
+  const expiredSession = {
+    code: 'UNAUTHORIZED',
+    message: 'Unauthorized',
+    status: 401,
+    statusText: 'UNAUTHORIZED',
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    invalidateJwtCache();
+    _resetJwtSubscriptionGateForTests();
+  });
+
+  afterEach(() => {
+    // Session-scoped module state — leaving it armed (or leaving a JWT cached
+    // from the "lock lifted" case) would silently change what later suites in
+    // this file observe.
+    _resetJwtSubscriptionGateForTests();
+    invalidateJwtCache();
+  });
+
+  it('stops asking after a 403 SUBSCRIPTION_REQUIRED — no second /token, no second /get-session', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { id: 's1' } } });
+    mockToken.mockResolvedValue({ error: subscriptionRequired, data: null });
+
+    expect(await getJwtToken()).toBeNull();
+    expect(await getJwtToken()).toBeNull();
+    expect(await getJwtToken()).toBeNull();
+
+    // One refusal, then silence. THIS is the storm fix: three calls, one round
+    // trip — and the /get-session that tripped the rate limiter is skipped too.
+    expect(mockToken).toHaveBeenCalledTimes(1);
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('records the lock through recordAiLocked, not a parallel flag', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { id: 's1' } } });
+    mockToken.mockResolvedValue({ error: subscriptionRequired, data: null });
+
+    await getJwtToken();
+
+    expect(mockRecordAiLocked).toHaveBeenCalledWith('token');
+  });
+
+  it('does not treat it as an expired session or a fault (no Sentry event)', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { id: 's1' } } });
+    mockToken.mockResolvedValue({ error: subscriptionRequired, data: null });
+
+    await getJwtToken();
+
+    // An unsubscribed user being refused a JWT is the system working — the same
+    // stance ai-lock.ts takes on a 402.
+    expect(mockLoggerCaptureException).not.toHaveBeenCalled();
+  });
+
+  it('classifies the same verdict when it arrives as a THROW', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { id: 's1' } } });
+    mockToken.mockRejectedValueOnce(
+      Object.assign(new Error('Active subscription required'), {
+        status: 403,
+        error: { code: 'SUBSCRIPTION_REQUIRED' },
+      }),
+    );
+
+    expect(await getJwtToken()).toBeNull();
+    expect(await getJwtToken()).toBeNull();
+
+    expect(mockToken).toHaveBeenCalledTimes(1);
+    expect(mockRecordAiLocked).toHaveBeenCalledWith('token');
+    expect(mockLoggerCaptureException).not.toHaveBeenCalled();
+  });
+
+  // THE regression guard that matters. Too broad a predicate and a user whose
+  // session merely lapsed can never re-auth.
+  it('KEEPS RETRYING after a generic 401 (expired session)', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { id: 's1' } } });
+    mockToken.mockResolvedValue({ error: expiredSession, data: null });
+
+    expect(await getJwtToken()).toBeNull();
+    expect(await getJwtToken()).toBeNull();
+
+    expect(mockToken).toHaveBeenCalledTimes(2);
+    expect(mockRecordAiLocked).not.toHaveBeenCalled();
+  });
+
+  it('mints a real JWT again once the lock is lifted — no app restart', async () => {
+    mockGetSession.mockResolvedValue({ data: { session: { id: 's1' } } });
+    mockToken.mockResolvedValueOnce({ error: subscriptionRequired, data: null });
+
+    expect(await getJwtToken()).toBeNull();
+
+    // What a confirmed purchase does: the server reports a paid tier, which
+    // `setServerBilling` turns into `clearJwtSubscriptionLock()`.
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('../subscription/jwt-subscription-gate').clearJwtSubscriptionLock();
+
+    mockToken.mockResolvedValueOnce({ error: null, data: { token: 'jwt-after-purchase' } });
+    expect(await getJwtToken()).toBe('jwt-after-purchase');
   });
 });
 

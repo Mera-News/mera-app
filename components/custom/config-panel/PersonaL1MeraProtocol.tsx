@@ -29,6 +29,7 @@ import { generateTopicsForFact, mergeTopicsAppend } from '@/lib/mera-protocol/to
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
@@ -442,6 +443,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                     setBilling(fresh);
                     // App-wide: lifts the free-tier state the moment the purchase lands.
                     useSubscriptionStore.getState().setServerBilling(fresh);
+                    showSubscriptionActivatedToast(fresh.subscriptionTier);
                 }
             }
         } catch (error) {
