@@ -39,6 +39,7 @@ import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
 import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import {
@@ -229,6 +230,15 @@ const MeraNewsScreen: React.FC = () => {
     const suggestions = useForYouSuggestions();
 
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
+    // Mera News Free: `DashboardSectionsFeed`'s list header already renders
+    // `FreeTierCard`, which explains this mode. NoGeneratedInterestsCard would
+    // sit right under it saying a blunter version of the same thing ("Mera
+    // cannot analyze news for you"), pointing the user at building a persona
+    // when a plan — not a persona — is what's missing. Same gate as FreeTierCard
+    // itself (`=== 'locked'`, never `!== 'entitled'`) so that during the
+    // `'unknown'` window of a cold start, where FreeTierCard renders null, this
+    // card is still there.
+    const freeTierCardShown = useAiAccess() === 'locked';
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const asyncJobPhase = useForYouAsyncJobPhase();
     const unscoredCount = useForYouUnscoredCount();
@@ -454,13 +464,13 @@ const MeraNewsScreen: React.FC = () => {
             );
         }
         if (!hasGeneratedInterests) {
-            return <NoGeneratedInterestsCard />;
+            return freeTierCardShown ? null : <NoGeneratedInterestsCard />;
         }
         if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
             return <FeedPreparingCard />;
         }
         return <AllCaughtUpCard />;
-    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
+    }, [showOnboardingWait, isLoading, hasGeneratedInterests, freeTierCardShown, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
 
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.

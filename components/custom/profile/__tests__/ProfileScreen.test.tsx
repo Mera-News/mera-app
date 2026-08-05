@@ -107,7 +107,30 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
 
 const mockPresentPaywall = jest.fn();
 jest.mock('react-native-purchases-ui', () => ({ __esModule: true, default: { presentPaywall: (...a: unknown[]) => mockPresentPaywall(...a) } }));
-jest.mock('@/lib/revenuecat', () => ({ getOfferingSafe: () => Promise.resolve(null) }));
+// `getActiveTier` is missing here is why this whole suite used to fail to run
+// ("getActiveTier is not a function") — ProfileScreen calls it on every render
+// for the RevenueCat fallback tier.
+jest.mock('@/lib/revenuecat', () => ({
+    getOfferingSafe: () => Promise.resolve(null),
+    getActiveTier: () => null,
+}));
+
+// Entitlement, switchable per test. MeraChatInvite reads `useAiAccess()`;
+// ProfileScreen uses `useSubscriptionStore` BOTH as a selector hook
+// (serverTier, customerInfo) and imperatively (`getState().setServerBilling`),
+// so the mock has to be a callable carrying `getState` — a plain object breaks
+// the render.
+let mockAiAccess: 'unknown' | 'locked' | 'entitled' = 'unknown';
+const mockSetServerBilling = jest.fn();
+jest.mock('@/lib/stores/subscription-store', () => {
+    const useSubscriptionStore: any = (selector: any) =>
+        selector({ serverTier: null, customerInfo: null });
+    useSubscriptionStore.getState = () => ({ setServerBilling: mockSetServerBilling });
+    return {
+        useAiAccess: () => mockAiAccess,
+        useSubscriptionStore,
+    };
+});
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 
 jest.mock('@/lib/haptics', () => ({ hapticMedium: jest.fn() }));
@@ -132,6 +155,7 @@ import ProfileScreen from '../ProfileScreen';
 beforeEach(() => {
     jest.clearAllMocks();
     mockFetchUserBilling.mockResolvedValue(null);
+    mockAiAccess = 'unknown';
 });
 
 describe('ProfileScreen', () => {
@@ -171,6 +195,51 @@ describe('ProfileScreen', () => {
         const { getByText } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
         fireEvent.press(getByText('profile.meraInvite'));
+        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
+    });
+
+    // ── Mera News Free ────────────────────────────────────────────────────
+    // The row must stay the SAME row an entitled user sees — same speech
+    // bubble, same logo — with Mera saying the free-tier line instead of the
+    // invite, and nothing to tap.
+    it('locked → Mera says the free-tier line in the same bubble (invite copy gone)', async () => {
+        mockAiAccess = 'locked';
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByText, queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('mera-chat-invite-locked')).toBeTruthy());
+        expect(getByText('freeTier.chatBubble')).toBeTruthy();
+        expect(queryByText('profile.meraInvite')).toBeNull();
+        // Same presentation, not a substitute card: the logo is still there.
+        expect(getByTestId('mera-logo')).toBeTruthy();
+    });
+
+    it('locked → the Mera row is inert: no press target, chat never opens', async () => {
+        mockAiAccess = 'locked';
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByTestId('mera-chat-invite-locked')).toBeTruthy());
+        // The Pressable wrapper is GONE, not just handler-less — so there is no
+        // ripple/opacity feedback on a target that does nothing.
+        expect(queryByTestId('mera-chat-invite')).toBeNull();
+        expect(getByTestId('mera-chat-invite-locked').props.onPress).toBeUndefined();
+        expect(mockExpand).not.toHaveBeenCalled();
+    });
+
+    it('locked → the About-you facts heading and list still render', async () => {
+        mockAiAccess = 'locked';
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'Lives in Pune' }]);
+        const { getByText } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByText('ABOUT YOU')).toBeTruthy());
+        expect(getByText('facts-list')).toBeTruthy();
+    });
+
+    it('entitled → the invite copy and its press target come back', async () => {
+        mockAiAccess = 'entitled';
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        const { getByText, getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() => expect(getByText('profile.meraInvite')).toBeTruthy());
+        expect(queryByTestId('mera-chat-invite-locked')).toBeNull();
+        fireEvent.press(getByTestId('mera-chat-invite'));
         expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
     });
 

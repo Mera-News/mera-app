@@ -1,6 +1,5 @@
 import { GLASS_AVAILABLE, GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
-import FreeTierInlineNotice from '@/components/custom/subscription/FreeTierInlineNotice';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -19,7 +18,9 @@ const LOGO_SIZE = 56;
 /**
  * Static, in-flow Mera CTA on the Profile tab — a comic speech bubble on the
  * left with the Mera logo on the right, reading as dialogue coming out of the
- * icon. Tapping the row opens the persona chat.
+ * icon. Tapping the row opens the persona chat — except on Mera News Free,
+ * where the same row renders inert and Mera says the free-tier sentence
+ * instead (see the `locked` branch below).
  *
  * Replaces the former draggable FloatingMeraBubble (removed from ProfileTabScreen
  * in this wave). Because ChatPopover morphs the chat open from the store's
@@ -52,51 +53,70 @@ const MeraChatInvite: React.FC = () => {
         useFloatingChatStore.getState().expand({ kind: 'persona' });
     }, [publishCenter]);
 
-    // Mera News Free: this row is the chat entry point, so it can't just
-    // vanish (that would read as a bug) or keep opening a chat the
-    // floating-chat-store chokepoint would silently no-op — swap in the
-    // one-sentence free-tier notice instead, in the same slot.
-    if (aiAccess === 'locked') {
+    // Mera News Free: the row itself is UNCHANGED — same speech bubble, same
+    // animated logo, same layout an entitled user sees. Only two things differ,
+    // and both are about the chat that isn't there:
+    //   1. Mera says the free-tier sentence instead of the invite, so the mode
+    //      is explained in Mera's own voice rather than by a different-looking
+    //      card appearing where the invite used to be.
+    //   2. The row is inert — a plain View, not a Pressable. `FloatingChatHost`
+    //      renders nothing when locked, so opening the chat here would morph
+    //      into a popover that isn't mounted. It is deliberately a NO-OP and not
+    //      a paywall: nothing about a speech bubble advertises a purchase, and
+    //      the usage card directly above already carries the Upgrade pill.
+    //      Dropping the Pressable is what makes that honest — no ripple or
+    //      opacity feedback on a target that does nothing.
+    const locked = aiAccess === 'locked';
+
+    const content = (
+        <HStack className="items-center" space="md">
+            {/* Speech bubble (left) — comic dialogue coming out of the logo. Glass
+                bubble body; the tail sits OUTSIDE the panel (a sibling, not a
+                child) because GlassPlate's clipping parent would cut off the
+                tail's -6px overflow otherwise. */}
+            <View className="flex-1" style={styles.bubbleWrap}>
+                <GlassPanel
+                    className="flex-1"
+                    radius={16}
+                    contentClassName="px-3.5 py-3"
+                    fallbackClassName="bg-black"
+                    edge={false}
+                    style={styles.bubbleBorder}
+                >
+                    <Text className="text-white" style={styles.bubbleText}>
+                        {locked ? t('freeTier.chatBubble') : t('profile.meraInvite')}
+                    </Text>
+                </GlassPanel>
+                {/* Right-edge tail pointing at the logo (rotated square whose
+                    top+right bordered edges form the arrow). Not glass itself —
+                    a rotated 12px diamond is too small to host a clean GlassPlate
+                    — tinted to read as part of the glass bubble instead of a
+                    pure-black cutout when glass is active. */}
+                <View style={styles.tail} />
+            </View>
+
+            {/* Mera logo (right). */}
+            <View ref={iconRef} onLayout={publishCenter} style={styles.icon}>
+                <MeraLogo size={LOGO_SIZE} animated />
+            </View>
+        </HStack>
+    );
+
+    // The measured `bubbleCenter` keeps being published while locked. It costs
+    // one store write nothing currently reads (ChatPopover is unmounted), and
+    // it means the morph origin is already correct the instant a purchase
+    // unlocks the chat, with no first-tap-from-the-corner artefact.
+    if (locked) {
         return (
-            <View className="mx-4 mb-5">
-                <FreeTierInlineNotice surface="chat" />
+            <View testID="mera-chat-invite-locked" className="mx-4 mb-5">
+                {content}
             </View>
         );
     }
 
     return (
-        <Pressable onPress={openChat} className="mx-4 mb-5">
-            <HStack className="items-center" space="md">
-                {/* Speech bubble (left) — comic dialogue coming out of the logo. Glass
-                    bubble body; the tail sits OUTSIDE the panel (a sibling, not a
-                    child) because GlassPlate's clipping parent would cut off the
-                    tail's -6px overflow otherwise. */}
-                <View className="flex-1" style={styles.bubbleWrap}>
-                    <GlassPanel
-                        className="flex-1"
-                        radius={16}
-                        contentClassName="px-3.5 py-3"
-                        fallbackClassName="bg-black"
-                        edge={false}
-                        style={styles.bubbleBorder}
-                    >
-                        <Text className="text-white" style={styles.bubbleText}>
-                            {t('profile.meraInvite')}
-                        </Text>
-                    </GlassPanel>
-                    {/* Right-edge tail pointing at the logo (rotated square whose
-                        top+right bordered edges form the arrow). Not glass itself —
-                        a rotated 12px diamond is too small to host a clean GlassPlate
-                        — tinted to read as part of the glass bubble instead of a
-                        pure-black cutout when glass is active. */}
-                    <View style={styles.tail} />
-                </View>
-
-                {/* Mera logo (right). */}
-                <View ref={iconRef} onLayout={publishCenter} style={styles.icon}>
-                    <MeraLogo size={LOGO_SIZE} animated />
-                </View>
-            </HStack>
+        <Pressable testID="mera-chat-invite" onPress={openChat} className="mx-4 mb-5">
+            {content}
         </Pressable>
     );
 };

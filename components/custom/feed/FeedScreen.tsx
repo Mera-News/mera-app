@@ -97,6 +97,7 @@ import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggesti
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import FreeTierCard from '@/components/custom/subscription/FreeTierCard';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
@@ -750,6 +751,15 @@ const FeedScreen: React.FC = () => {
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
+  // Mera News Free: `FreeTierCard` (the list header) already explains, at
+  // length, that Mera isn't building this feed right now. NoGeneratedInterestsCard
+  // would sit directly under it saying a blunter version of the same thing
+  // ("Mera cannot analyze news for you" / "create your user persona"), which is
+  // both redundant and wrong advice here — a persona would not help, a plan
+  // would. Gated on `=== 'locked'` and NOT `!== 'entitled'` deliberately: during
+  // the `'unknown'` window of a cold start `FreeTierCard` renders null, so this
+  // card must still render or the screen is empty for that first second.
+  const freeTierCardShown = useAiAccess() === 'locked';
   const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
   // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
   // for the empty-state chain and the header auto-reveal. The header indicator
@@ -791,7 +801,7 @@ const FeedScreen: React.FC = () => {
       );
     }
     if (!hasGeneratedInterests) {
-      return <NoGeneratedInterestsCard />;
+      return freeTierCardShown ? null : <NoGeneratedInterestsCard />;
     }
     // Caught-up flash guard: only show AllCaughtUpCard once hydrated AND not
     // processing; otherwise the feed is still preparing.

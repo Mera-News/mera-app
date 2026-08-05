@@ -1336,6 +1336,7 @@
     "trackDismiss": "Not now",
     "readOnlyBanner": "Everything here is yours to read, plan or no plan. These settings only change what Mera does while a plan is active.",
     "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
+    "chatBubble": "Everything I know about you stays right here on this device. An active plan switches me back on, so we can talk and I can tune your feed again.",
     "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
     "trackedStoriesEmptyBody": "Nothing followed yet. Following a story comes with a plan — and whatever you follow later stays on this device, yours to keep.",
     "lapseTitle": "Your Mera plan has ended",
