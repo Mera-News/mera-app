@@ -812,7 +812,7 @@
     "autoRenew": "Renovación automática",
     "customerCenter": "Gestionar / cancelar suscripción",
     "dailyArticleLimit": "Límite diario de artículos",
-    "description": "Suscríbete para obtener tu feed de noticias personalizado en el dispositivo.",
+    "description": "Mera lee las noticias para ti: un feed personalizado según lo que realmente te importa, un resumen del día, las historias que eliges seguir, y un chat que continúa aprendiendo qué te importa.",
     "detailsSection": "Detalles de la suscripción",
     "expiresOn": "Caduca el",
     "lifetime": "De por vida",
@@ -837,13 +837,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "Promocional",
     "subscribe": "Suscribirse",
-    "title": "Desbloquea Mera News",
+    "title": "Enciende Mera News",
     "usageSection": "Uso",
     "usedToday": "Analizados hoy",
     "viewPlans": "Ver planes",
     "active": "Activo",
     "freePlan": "Plan gratuito",
-    "upgrade": "Mejorar plan"
+    "upgrade": "Mejorar plan",
+    "activatedBody": "Tu feed personalizado, panel, historias seguidas y chat están listos.",
+    "activatedTitle": "{{plan}} está activo",
+    "allPlansHint": "Todos los planes están en la siguiente pantalla.",
+    "lapsedFreeNote": "Mera News Gratis es tuyo mientras lo desees. Un plan es lo que hace que Mera vuelva a trabajar en tus noticias.",
+    "manageBadge": "Gestionar",
+    "startWithStarter": "Comienza con Starter",
+    "starterRecommendation": "Starter es el lugar para comenzar. Mera News Gratis está ahí para mantener lo que ya has construido en tu dispositivo, pero en el primer día no hay nada que mantener aún.",
+    "turnMeraBackOn": "Reactivar Mera"
   },
   "tabs": {
     "deck": "Noticias",
@@ -1363,5 +1371,21 @@
     "subtitle": "Personaliza cómo Mera muestra los elementos visuales en este dispositivo",
     "staticGradientTitle": "Fondo estático",
     "staticGradientDescription": "Usa un gradiente fijo en lugar del fondo animado — más fácil para la batería y dispositivos antiguos"
+  },
+  "freeTier": {
+    "cardBody": "Por ahora, la parte de IA de Mera está desactivada. Todo lo que has guardado, seguido o leído permanece en este dispositivo, y Explorar sigue teniendo los titulares de hoy. Sin un plan, Mera no construirá tu feed, no responderá tus preguntas ni seguirá nuevas historias. Comienza un plan y todo vuelve.",
+    "cardTitle": "Estás usando Mera News Gratis",
+    "chatBubble": "Todo lo que sé de ti permanece en este dispositivo, y nada de lo que has guardado o seguido desaparece. Sin un plan, sin embargo, no puedo construir tu feed, responder tus preguntas ni seguir nuevas historias para ti. Comienza uno y continuaré justo donde nos quedamos.",
+    "chatNotice": "Mera chat viene con un plan. Tu persona y hechos se quedan en este dispositivo de todas formas.",
+    "continueWithoutPlan": "Continuar sin un plan",
+    "lapseBody": "Nada ha sido eliminado. Todo lo que has guardado, seguido o leído es tuyo, en este dispositivo, siempre. Estás usando Mera News Gratis de aquí en adelante. Lo que se pausa es la capa de IA en sí, así que tu feed personalizado, panel, seguimiento de nuevas historias y chat de Mera se quedan apagados hasta que comiences un plan de nuevo.",
+    "lapseTitle": "Tu plan de Mera ha finalizado",
+    "readOnlyBanner": "Todo aquí es tuyo para leer, tengas plan o no. Estos ajustes solo cambian lo que Mera hace mientras un plan está activo.",
+    "seePlans": "Ver planes",
+    "storiesNotice": "Las historias que ya sigues mantienen todo lo que han recopilado. Comenzar una nueva requiere un plan activo.",
+    "trackBody": "Las historias que ya sigues mantienen todo lo que han recopilado. Comenzar una nueva requiere un plan activo.",
+    "trackDismiss": "Ahora no",
+    "trackTitle": "El seguimiento de historias viene con un plan",
+    "trackedStoriesEmptyBody": "Ninguna historia seguida aún. Seguir una historia viene con un plan, y lo que sigas más tarde se queda en este dispositivo, tuyo para mantener."
   }
 }

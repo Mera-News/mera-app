@@ -824,7 +824,7 @@
     "autoRenew": "Automatyczne odnawianie",
     "customerCenter": "Zarządzaj / anuluj subskrypcję",
     "dailyArticleLimit": "Dzienny limit artykułów",
-    "description": "Subskrybuj, aby uzyskać spersonalizowany kanał wiadomości działający na urządzeniu.",
+    "description": "Mera czyta wiadomości dla ciebie: kanał dostosowany do tego, co naprawdę cię interesuje, podsumowanie dnia, historie, które chcesz śledzić, i czat, który ciągle uczy się, co dla ciebie ważne.",
     "detailsSection": "Szczegóły subskrypcji",
     "expiresOn": "Wygasa",
     "lifetime": "Dożywotnia",
@@ -849,13 +849,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "Promocyjny",
     "subscribe": "Subskrybuj",
-    "title": "Odblokuj Mera News",
+    "title": "Włącz Mera News",
     "usageSection": "Wykorzystanie",
     "usedToday": "Przeanalizowano dzisiaj",
     "viewPlans": "Zobacz plany",
     "active": "Aktywny",
     "freePlan": "Plan darmowy",
-    "upgrade": "Ulepsz"
+    "upgrade": "Ulepsz",
+    "activatedBody": "Twój spersonalizowany kanał, pulpit, śledzone historie i chat są gotowe.",
+    "activatedTitle": "{{plan}} jest aktywny",
+    "allPlansHint": "Wszystkie plany są na następnym ekranie.",
+    "lapsedFreeNote": "Mera News Darmowa jest Twoja na zawsze. Plan to to, co uruchamia pracę Mery nad Twoimi wiadomościami.",
+    "manageBadge": "Zarządzaj",
+    "startWithStarter": "Zacznij ze Starterem",
+    "starterRecommendation": "Starter to dobry punkt wyjścia. Mera News Darmowa zachowuje to, co już zbudowałeś na tym urządzeniu, ale na początku nie masz nic do przechowywania.",
+    "turnMeraBackOn": "Włącz Merę ponownie"
   },
   "tabs": {
     "deck": "Strumień",
@@ -1389,5 +1397,21 @@
     "subtitle": "Dostosuj sposób renderowania elementów wizualnych Mery na tym urządzeniu",
     "staticGradientTitle": "Statyczne tło",
     "staticGradientDescription": "Używaj stałego gradientu zamiast animowanego tła — łatwiej dla baterii i starszych urządzeń"
+  },
+  "freeTier": {
+    "cardBody": "Część AI w Mera jest teraz wyłączona. Wszystko, co zapisałeś, śledziłeś lub czytałeś, zostaje na tym urządzeniu, a zakładka Odkrywaj wciąż zawiera dzisiejsze nagłówki. Bez planu Mera nie będzie budować Twojego kanału, odpowiadać na Twoje pytania ani śledzić nowych historii. Zacznij plan, a wszystko wróci do normy.",
+    "cardTitle": "Jesteś na Mera News Darmowa",
+    "chatBubble": "Wszystko, co o Tobie wiem, zostaje na tym urządzeniu, a nic, co zapisałeś lub śledziłeś, nie znika. Bez planu nie mogę jednak budować Twojego kanału, odpowiadać na Twoje pytania ani śledzić nowych historii dla Ciebie. Zacznij plan, a wznowię pracę tam, gdzie skończyliśmy.",
+    "chatNotice": "Chat Mera jest dostępny z planem. Twoja persona i fakty pozostają na tym urządzeniu w każdym przypadku.",
+    "continueWithoutPlan": "Kontynuuj bez planu",
+    "lapseBody": "Nic nie zostało odebrane. Wszystko, co zapisałeś, śledziłeś lub czytałeś, jest Twoje, na tym urządzeniu, zawsze. Od teraz jesteś na Mera News Darmowa. To, co się wstrzymuje, to warstwa AI, dlatego Twój spersonalizowany kanał, pulpit, śledzenie nowych historii i chat Mera pozostają wyłączone, dopóki znowu nie zaczniesz planu.",
+    "lapseTitle": "Twój plan się skończył",
+    "readOnlyBanner": "Wszystko tutaj jest Twoje do przeczytania, z planem lub bez. Te ustawienia zmieniają tylko to, co robi Mera, gdy plan jest aktywny.",
+    "seePlans": "Pokaż plany",
+    "storiesNotice": "Historie, które już śledzisz, zachowują wszystko, co zebrały. Aby śledzić nową, potrzebujesz aktywnego planu.",
+    "trackBody": "Historie, które już śledzisz, zachowują wszystko, co zebrały. Aby śledzić nową, potrzebujesz aktywnego planu.",
+    "trackDismiss": "Nie teraz",
+    "trackTitle": "Śledzenie historii wymaga planu",
+    "trackedStoriesEmptyBody": "Jeszcze nic nie śledziłeś. Śledzenie historii wymaga planu, ale wszystko, co będziesz śledzić, zostaje na tym urządzeniu, zawsze Twoje."
   }
 }

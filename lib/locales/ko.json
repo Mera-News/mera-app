@@ -812,7 +812,7 @@
     "autoRenew": "자동 갱신",
     "customerCenter": "구독 관리 / 취소",
     "dailyArticleLimit": "일일 기사 한도",
-    "description": "구독하고 기기에서 맞춤형 뉴스 피드를 받아보세요.",
+    "description": "Mera가 당신을 위해 뉴스를 읽습니다. 당신이 실제로 관심 있는 것으로 만든 피드, 오늘의 대시보드, 당신이 선택한 이야기, 그리고 당신에게 중요한 것을 계속 배우는 채팅.",
     "detailsSection": "구독 상세 정보",
     "expiresOn": "만료일",
     "lifetime": "평생",
@@ -837,13 +837,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "프로모션",
     "subscribe": "구독하기",
-    "title": "Mera News 잠금 해제",
+    "title": "Mera 켜기",
     "usageSection": "사용량",
     "usedToday": "오늘 분석함",
     "viewPlans": "요금제 보기",
     "active": "활성",
     "freePlan": "무료 플랜",
-    "upgrade": "업그레이드"
+    "upgrade": "업그레이드",
+    "activatedBody": "맞춤 피드, 대시보드, 팔로우한 스토리, 채팅이 준비되었습니다.",
+    "activatedTitle": "{{plan}}이(가) 활성화되었습니다",
+    "allPlansHint": "모든 플랜이 다음 화면에 있습니다.",
+    "lapsedFreeNote": "Mera News 무료는 원하는 기간 동안 사용할 수 있습니다. 플랜을 시작하면 Mera가 다시 뉴스를 처리하기 시작합니다.",
+    "manageBadge": "관리",
+    "startWithStarter": "Starter로 시작",
+    "starterRecommendation": "Starter는 시작할 수 있는 곳입니다. Mera News 무료는 이미 이 기기에서 만든 것을 유지합니다. 첫 날에는 아직 유지할 것이 없습니다.",
+    "turnMeraBackOn": "Mera 다시 켜기"
   },
   "tabs": {
     "deck": "피드",
@@ -1363,5 +1371,21 @@
     "subtitle": "이 장치에서 Mera가 시각 요소를 렌더링하는 방식을 맞춤설정하세요",
     "staticGradientTitle": "정적 배경",
     "staticGradientDescription": "애니메이션 배경 대신 고정 그래디언트를 사용합니다 — 배터리와 오래된 장치에 더 친절합니다"
+  },
+  "freeTier": {
+    "cardBody": "Mera의 AI 기능이 지금 꺼져 있습니다. 저장했거나 팔로우한 기사, 읽은 기사는 이 기기에 그대로 남아 있으며 탐색에서 오늘의 헤드라인을 확인할 수 있습니다. 플랜이 없으면 Mera가 피드를 만들거나 질문에 답하거나 새로운 기사를 팔로우하지 않습니다. 플랜을 시작하면 모든 기능이 다시 작동합니다.",
+    "cardTitle": "Mera News 무료를 사용 중입니다",
+    "chatBubble": "제가 알고 있는 모든 정보는 이 기기에만 머물러 있으며, 저장했거나 팔로우한 기사는 사라지지 않습니다. 하지만 플랜 없이는 피드를 만들거나 질문에 답하거나 새로운 기사를 팔로우해 드릴 수 없습니다. 플랜을 시작하면 중단한 곳에서 바로 이어서 도와드리겠습니다.",
+    "chatNotice": "Mera 채팅은 플랜에 포함됩니다. 페르소나와 정보는 어떤 경우든 이 기기에 남아 있습니다.",
+    "continueWithoutPlan": "플랜 없이 계속",
+    "lapseBody": "아무것도 사라지지 않았습니다. 저장했거나 팔로우한 기사, 읽은 기사는 모두 이 기기에 있으며 항상 당신의 것입니다. 이제부터 Mera News 무료를 사용하게 됩니다. 일시 중지되는 것은 AI 레이어 자체이므로 맞춤 피드, 대시보드, 새로운 기사 추적, Mera 채팅은 다시 플랜을 시작할 때까지 꺼진 상태입니다.",
+    "lapseTitle": "Mera 플랜이 종료되었습니다",
+    "readOnlyBanner": "여기의 모든 콘텐츠는 플랜 여부와 관계없이 읽을 수 있습니다. 이 설정은 플랜이 활성일 때 Mera가 하는 일만 바꿉니다.",
+    "seePlans": "플랜 보기",
+    "storiesNotice": "이미 팔로우하고 있는 스토리는 수집한 모든 정보를 유지합니다. 새로운 스토리를 시작하려면 활성 플랜이 필요합니다.",
+    "trackBody": "이미 팔로우하고 있는 스토리는 수집한 모든 정보를 유지합니다. 새로운 스토리를 시작하려면 활성 플랜이 필요합니다.",
+    "trackDismiss": "나중에",
+    "trackTitle": "스토리 추적은 플랜에 포함됩니다",
+    "trackedStoriesEmptyBody": "아직 팔로우한 스토리가 없습니다. 스토리를 팔로우하려면 플랜이 필요하며, 나중에 팔로우하는 모든 스토리는 이 기기에 머물러 있습니다."
   }
 }

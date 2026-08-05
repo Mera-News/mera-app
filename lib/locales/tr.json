@@ -812,7 +812,7 @@
     "autoRenew": "Otomatik yenileme",
     "customerCenter": "Aboneliği yönet / iptal et",
     "dailyArticleLimit": "Günlük makale sınırı",
-    "description": "Kişiselleştirilmiş, cihaz içi haber akışınızı almak için abone olun.",
+    "description": "Mera sizin için haberleri okuyor: ilgi alanlarınıza göre şekillendirilen bir akış, günün özeti, takip ettiğiniz hikayeler ve sizin için neyin önemli olduğunu öğrenmeye devam eden sohbet.",
     "detailsSection": "Abonelik ayrıntıları",
     "expiresOn": "Bitiş tarihi",
     "lifetime": "Ömür boyu",
@@ -837,13 +837,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "Promosyon",
     "subscribe": "Abone ol",
-    "title": "Mera News'in kilidini açın",
+    "title": "Mera'yı aç",
     "usageSection": "Kullanım",
     "usedToday": "Bugün analiz edilen",
     "viewPlans": "Planları görüntüle",
     "freePlan": "Ücretsiz plan",
     "active": "Aktif",
-    "upgrade": "Yükselt"
+    "upgrade": "Yükselt",
+    "activatedBody": "Kişiselleştirilmiş akışınız, paneliniz, takip ettiğiniz haberler ve sohbet hazır.",
+    "activatedTitle": "{{plan}} aktif",
+    "allPlansHint": "Her plan bir sonraki ekranda.",
+    "lapsedFreeNote": "Mera News Free istediğiniz sürece sizindir. Bir plan, Mera'nın haberlerde yeniden çalışmaya başlamasını sağlayan şey.",
+    "manageBadge": "Yönet",
+    "startWithStarter": "Starter ile başlayın",
+    "starterRecommendation": "Starter başlamak için seçilecek yerdir. Mera News Free ise bu cihazda zaten oluşturduğunuz şeyi korumak içindir, ancak ilk gün henüz korunacak bir şey yoktur.",
+    "turnMeraBackOn": "Mera'yı tekrar açın"
   },
   "tabs": {
     "deck": "Akış",
@@ -1365,5 +1373,21 @@
     "subtitle": "Mera'nın bu cihazda görsel öğeleri nasıl işlediğini özelleştirin",
     "staticGradientTitle": "Sabit arka plan",
     "staticGradientDescription": "Hareketli arka plan yerine sabit bir gradyan kullanın — pil ve eski cihazlar için daha kolay"
+  },
+  "freeTier": {
+    "cardBody": "Mera'nın yapay zeka kısmı şu an kapalı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey bu cihazda kalıyor ve Keşfet sekmesinde hâlâ bugünün haberlerine erişebilirsiniz. Bir plan olmadan Mera sizin akışınızı oluşturamaz, sorularınızı cevaplayamaz ya da yeni haberleri takip edemez. Bir plan başlatın ve her şey geri gelir.",
+    "cardTitle": "Mera News Free'desiniz",
+    "chatBubble": "Hakkınızda bildiğim her şey bu cihazda kalıyor, kaydettiğiniz ya da takip ettiğiniz hiçbir şey yok olmaz. Fakat bir plan olmadan sizin için akış oluşturamam, sorularınızı cevaplayamam ya da yeni haberleri takip edemem. Bir plan başlatın ve tam olarak kaldığımız yerden devam edeceğim.",
+    "chatNotice": "Mera sohbeti bir plan ile birlikte geliyor. Profiliniz ve gerçekleriniz her zaman bu cihazda kalıyor.",
+    "continueWithoutPlan": "Plan olmadan devam edin",
+    "lapseBody": "Hiçbir şey alınmadı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey sizindir, bu cihazda, daima. Buradan itibaren Mera News Free'desiniz. Yapay zeka katmanı duruyor, yani kişiselleştirilmiş akışınız, paneliniz, haber takibiniz ve Mera sohbetiniz yeni bir plan başlatana kadar kapalı kalacak.",
+    "lapseTitle": "Mera planınız sona erdi",
+    "readOnlyBanner": "Buradaki her şey sizindir ve okuyabilirsiniz, plan olsun ya da olmasın. Bu ayarlar sadece bir plan aktif olduğunda Mera'nın ne yaptığını değiştirir.",
+    "seePlans": "Planları görün",
+    "storiesNotice": "Zaten takip ettiğiniz haberler, topladıkları her şeyi koruyor. Yenisini başlatmak aktif bir plan gerektirir.",
+    "trackBody": "Zaten takip ettiğiniz haberler, topladıkları her şeyi koruyor. Yenisini başlatmak aktif bir plan gerektirir.",
+    "trackDismiss": "Şimdi değil",
+    "trackTitle": "Haber takibi bir plan ile birlikte geliyor",
+    "trackedStoriesEmptyBody": "Henüz takip edilen haber yok. Bir haberi takip etmek bir plan gerektirir, takip ettiğiniz her şey bu cihazda kalıyor, sizindir."
   }
 }

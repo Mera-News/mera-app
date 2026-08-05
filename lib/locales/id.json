@@ -812,7 +812,7 @@
     "autoRenew": "Perpanjang otomatis",
     "customerCenter": "Kelola / batalkan langganan",
     "dailyArticleLimit": "Batas artikel harian",
-    "description": "Berlangganan untuk mendapatkan feed berita yang dipersonalisasi di perangkat Anda.",
+    "description": "Mera membaca berita untuk Anda: feed yang dibentuk oleh apa yang benar-benar Anda pedulikan, dasbor hari itu, cerita yang Anda pilih untuk diikuti, dan obrolan yang terus belajar apa yang penting bagi Anda.",
     "detailsSection": "Detail langganan",
     "expiresOn": "Berakhir pada",
     "lifetime": "Seumur hidup",
@@ -837,13 +837,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "Promosi",
     "subscribe": "Berlangganan",
-    "title": "Buka Mera News",
+    "title": "Nyalakan Mera",
     "usageSection": "Penggunaan",
     "usedToday": "Dianalisis hari ini",
     "viewPlans": "Lihat paket",
     "freePlan": "Paket gratis",
     "active": "Aktif",
-    "upgrade": "Tingkatkan"
+    "upgrade": "Tingkatkan",
+    "activatedBody": "Feed personal Anda, dasbor, cerita yang diikuti, dan obrolan siap digunakan.",
+    "activatedTitle": "{{plan}} aktif",
+    "allPlansHint": "Semua paket ada di layar berikutnya.",
+    "lapsedFreeNote": "Mera News Free adalah milik Anda selama yang Anda inginkan. Paket adalah apa yang membuat Mera kembali bekerja untuk Anda.",
+    "manageBadge": "Kelola",
+    "startWithStarter": "Mulai dengan Starter",
+    "starterRecommendation": "Starter adalah tempat untuk memulai. Mera News Free ada untuk menyimpan apa yang sudah Anda bangun di perangkat ini. Pada hari pertama, belum ada apa pun untuk disimpan.",
+    "turnMeraBackOn": "Aktifkan Mera kembali"
   },
   "tabs": {
     "deck": "Umpan",
@@ -1363,5 +1371,21 @@
     "subtitle": "Sesuaikan cara Mera merender visual pada perangkat ini",
     "staticGradientTitle": "Latar belakang statis",
     "staticGradientDescription": "Gunakan gradien tetap alih-alih latar belakang animasi — lebih mudah di baterai dan perangkat lama"
+  },
+  "freeTier": {
+    "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",
+    "cardTitle": "Anda menggunakan Mera News Free",
+    "chatBubble": "Semua yang aku tahu tentang Anda tetap di perangkat ini, dan tidak ada yang telah Anda simpan atau ikuti yang hilang. Tanpa paket, aku tidak bisa membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru untuk Anda. Mulai paket dan aku akan melanjutkan dari tempat kami berhenti.",
+    "chatNotice": "Obrolan Mera memerlukan paket. Persona dan fakta Anda tetap di perangkat ini, bagaimanapun.",
+    "continueWithoutPlan": "Lanjutkan tanpa paket",
+    "lapseBody": "Tidak ada yang diambil. Apa pun yang telah Anda simpan, ikuti, atau baca adalah milik Anda, di perangkat ini, selamanya. Anda menggunakan Mera News Free sekarang. Yang berhenti adalah lapisan AI itu sendiri, jadi feed personal Anda, dasbor, pelacakan cerita baru, dan obrolan Mera tetap tidak aktif sampai Anda memulai paket lagi.",
+    "lapseTitle": "Paket Anda telah berakhir",
+    "readOnlyBanner": "Semuanya di sini milik Anda untuk dibaca, dengan atau tanpa paket. Pengaturan ini hanya mengubah apa yang dilakukan Mera saat paket aktif.",
+    "seePlans": "Lihat paket",
+    "storiesNotice": "Cerita yang sudah Anda ikuti tetap menyimpan semua yang telah dikumpulkan. Mengikuti cerita baru memerlukan paket aktif.",
+    "trackBody": "Cerita yang sudah Anda ikuti tetap menyimpan semua yang telah dikumpulkan. Mengikuti cerita baru memerlukan paket aktif.",
+    "trackDismiss": "Nanti saja",
+    "trackTitle": "Pelacakan cerita memerlukan paket",
+    "trackedStoriesEmptyBody": "Belum ada cerita yang diikuti. Mengikuti cerita memerlukan paket, dan apa pun yang Anda ikuti kemudian tetap di perangkat ini untuk Anda simpan."
   }
 }

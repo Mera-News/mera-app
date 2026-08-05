@@ -812,7 +812,7 @@
     "autoRenew": "自動續訂",
     "customerCenter": "管理／取消訂閱",
     "dailyArticleLimit": "每日文章上限",
-    "description": "訂閱以取得個人化的裝置端新聞資訊流。",
+    "description": "Mera 為你閱讀新聞：根據你關心的內容定制的資訊流、每日摘要、你選擇關注的故事，以及持續學習什麼對你重要的聊天。",
     "detailsSection": "訂閱詳情",
     "expiresOn": "到期日",
     "lifetime": "終身",
@@ -837,13 +837,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "促銷",
     "subscribe": "訂閱",
-    "title": "解鎖 Mera News",
+    "title": "啟用 Mera",
     "usageSection": "使用量",
     "usedToday": "今日已分析",
     "viewPlans": "查看方案",
     "freePlan": "免費方案",
     "active": "生效中",
-    "upgrade": "升級"
+    "upgrade": "升級",
+    "activatedBody": "您的個人化動態、儀表板、已追蹤的報導和聊天已準備就緒。",
+    "activatedTitle": "{{plan}} 已啟用",
+    "allPlansHint": "所有方案都在下一個畫面上。",
+    "lapsedFreeNote": "Mera News 免費版只要您想使用就能一直使用。訂閱方案是讓 Mera 重新為您處理新聞的方式。",
+    "manageBadge": "管理",
+    "startWithStarter": "從入門版開始",
+    "starterRecommendation": "入門版是開始的最佳選擇。Mera News 免費版用來保留您已在此裝置上建立的內容，但第一天時還沒有任何內容需要保留。",
+    "turnMeraBackOn": "重新開啟 Mera"
   },
   "tabs": {
     "deck": "資訊流",
@@ -1364,5 +1372,21 @@
     "subtitle": "自訂Mera在此設備上如何呈現視覺效果",
     "staticGradientTitle": "靜態背景",
     "staticGradientDescription": "使用固定漸變代替動畫背景 — 對電池和舊設備更友善"
+  },
+  "freeTier": {
+    "cardBody": "Mera 的 AI 部分現已關閉。您已儲存、追蹤或閱讀的任何內容都保留在此裝置上，「探索」仍有今日頭條。沒有訂閱方案時，Mera 無法為您建立動態、回答問題或追蹤新報導。訂閱方案後，一切都會恢復。",
+    "cardTitle": "您正在使用 Mera News 免費版",
+    "chatBubble": "我對您的所有認識都保留在此裝置上，您已儲存或追蹤的任何內容都不會消失。不過沒有訂閱方案，我無法為您建立動態、回答問題或追蹤新報導。訂閱方案，我會從我們停下的地方繼續。",
+    "chatNotice": "Mera 聊天需要訂閱方案。您的人物誌和事實無論如何都會保留在此裝置上。",
+    "continueWithoutPlan": "先不訂閱方案",
+    "lapseBody": "沒有任何內容被移除。您已儲存、追蹤或閱讀的任何內容都屬於您，永遠保留在此裝置上。從這裡開始，您使用的是 Mera News 免費版。暫停的是 AI 層本身，所以您的個人化動態、儀表板、新報導追蹤和 Mera 聊天將保持關閉，直到您再次訂閱方案。",
+    "lapseTitle": "您的 Mera 訂閱方案已結束",
+    "readOnlyBanner": "您可以閱讀這裡的所有內容，無論是否訂閱方案。這些設定只會在訂閱方案有效時改變 Mera 的功能。",
+    "seePlans": "查看方案",
+    "storiesNotice": "您已追蹤的報導會保留它們收集的所有內容。開始追蹤新報導需要有效的訂閱方案。",
+    "trackBody": "您已追蹤的報導會保留它們收集的所有內容。開始追蹤新報導需要有效的訂閱方案。",
+    "trackDismiss": "暫時不用",
+    "trackTitle": "報導追蹤需要訂閱方案",
+    "trackedStoriesEmptyBody": "還沒有追蹤任何報導。追蹤報導需要訂閱方案，您之後追蹤的任何內容都會保留在此裝置上供您保管。"
   }
 }
