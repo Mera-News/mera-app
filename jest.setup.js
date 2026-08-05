@@ -242,6 +242,10 @@ jest.mock('react-native-purchases', () => ({
       }),
     ),
     logOut: jest.fn(() => Promise.resolve({ entitlements: { active: {} } })),
+    // Defaults to an IDENTIFIED customer: `logoutRevenueCat()` short-circuits
+    // when anonymous, so a mock missing this would make every logout test pass
+    // for the wrong reason — the call throwing and being swallowed.
+    isAnonymous: jest.fn(() => Promise.resolve(false)),
     getCustomerInfo: jest.fn(() =>
       Promise.resolve({ entitlements: { active: {} } }),
     ),

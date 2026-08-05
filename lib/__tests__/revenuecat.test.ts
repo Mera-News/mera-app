@@ -131,6 +131,24 @@ describe('revenuecat', () => {
       Purchases.logOut.mockRejectedValueOnce(new Error('anonymous'));
       await expect(rc.logoutRevenueCat()).resolves.toBeUndefined();
     });
+
+    // A logout calls this twice — clearAuthStorage() and wipeAllLocalUserData()
+    // each reset RevenueCat. The second call must be a silent no-op rather than
+    // a thrown-and-caught "current user is anonymous".
+    it('is a no-op when the customer is already anonymous', async () => {
+      const { rc, Purchases } = load();
+      rc.configureRevenueCat();
+      Purchases.isAnonymous.mockResolvedValueOnce(true);
+      await rc.logoutRevenueCat();
+      expect(Purchases.logOut).not.toHaveBeenCalled();
+    });
+
+    it('stays resolved when the anonymity check itself fails', async () => {
+      const { rc, Purchases } = load();
+      rc.configureRevenueCat();
+      Purchases.isAnonymous.mockRejectedValueOnce(new Error('bridge down'));
+      await expect(rc.logoutRevenueCat()).resolves.toBeUndefined();
+    });
   });
 
   describe('getCustomerInfoSafe', () => {

@@ -140,13 +140,24 @@ export async function loginRevenueCat(
   }
 }
 
-/** Reset to an anonymous customer so the next sign-in starts clean. */
+/**
+ * Reset to an anonymous customer so the next sign-in starts clean.
+ *
+ * Idempotent on purpose: a logout runs this TWICE — once via
+ * `clearAuthStorage()` and once via `wipeAllLocalUserData()`, which clear
+ * overlapping sets of local state and are each independently correct to call.
+ * `Purchases.logOut()` throws when the customer is already anonymous, so the
+ * second call used to log a warning on every single sign-out. Checking first
+ * makes the repeat a genuine no-op rather than a caught error.
+ */
 export async function logoutRevenueCat(): Promise<void> {
   if (!configured) return;
   try {
+    if (await Purchases.isAnonymous()) return;
     await Purchases.logOut();
   } catch (e) {
-    // logOut throws if the current user is already anonymous — non-fatal.
+    // Still caught: isAnonymous() is a bridge call and can itself fail, and a
+    // logout must never be the thing that breaks signing out.
     logger.warn('[revenuecat] logOut failed', { error: String(e) });
   }
 }
