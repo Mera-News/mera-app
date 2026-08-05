@@ -37,8 +37,9 @@ interface ImportanceFilterDropdownProps {
 /**
  * The importance-threshold control as a compact dropdown: a rounded gluestack
  * Select whose trigger chip shows the current minimum band (`Med ⌄`) and opens
- * the standard select actionsheet. Fits INSIDE a screen-title row, which the
- * three-pill variant (ImportanceFilterPills) cannot in the longer languages.
+ * the standard select actionsheet. Compact enough to sit inside a screen-title
+ * row even in the longer languages — one chip where a spelled-out pill row
+ * would overrun it. Used by both the Feed and Dashboard headers.
  */
 const ImportanceFilterDropdown: React.FC<ImportanceFilterDropdownProps> = ({
     value,
