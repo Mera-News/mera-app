@@ -398,17 +398,35 @@ export async function getUnscoredGroupingRows(): Promise<SuggestionGroupingRow[]
 }
 
 /**
- * Score donors for sibling propagation: status != Unscored, created_at >= sinceMs,
- * relevance > 0. The relevance > 0 filter excludes the ineligible tombstones
- * written by `batchMarkAsScoredByIds` (relevance=0), which carry no real
- * scoring signal and would otherwise look like a confident "not relevant" donor.
+ * Score donors for sibling propagation: status != Unscored, relevance > 0, AND
+ * (scored_at >= sinceMs OR created_at >= sinceMs). The relevance > 0 filter
+ * excludes the ineligible tombstones written by `batchMarkAsScoredByIds`
+ * (relevance=0), which carry no real scoring signal and would otherwise look
+ * like a confident "not relevant" donor.
+ *
+ * BUG FIX (was `created_at >= sinceMs` only): prod logs showed
+ * `propagated 0, held back N` every cycle — a row scored minutes ago but
+ * created before the 48h lookback window never qualified as a donor, so no
+ * group ever had one. The two clauses now cover both cases a donor can arise
+ * from:
+ *   - `scored_at >= sinceMs`  — the fix. A row scored recently is a fresh,
+ *     trustworthy signal regardless of how old the underlying article is.
+ *   - `created_at >= sinceMs` — kept for rows that themselves inherited a
+ *     score via propagation (`batchPropagateScores`), which may leave
+ *     `scored_at` null (see that function's status handling) while still
+ *     carrying a copied relevance + reason. These were eligible donors before
+ *     this fix and must stay eligible — the `OR` makes the change strictly
+ *     additive: no row that qualified before now fails to qualify.
  */
 export async function getScoredDonorRows(sinceMs: number): Promise<SuggestionGroupingRow[]> {
   const rows = await articleSuggestionsCol
     .query(
       Q.where('status', Q.notEq(ArticleSuggestionStatus.Unscored)),
-      Q.where('created_at', Q.gte(sinceMs)),
       Q.where('relevance', Q.gt(0)),
+      Q.or(
+        Q.where('scored_at', Q.gte(sinceMs)),
+        Q.where('created_at', Q.gte(sinceMs)),
+      ),
     )
     .fetch();
   // Same defensive re-filter as above — the fake query() ignores Q.where.
@@ -416,8 +434,9 @@ export async function getScoredDonorRows(sinceMs: number): Promise<SuggestionGro
     .filter(
       (r) =>
         r.status !== ArticleSuggestionStatus.Unscored &&
-        r.createdAt.getTime() >= sinceMs &&
-        r.relevance > 0,
+        r.relevance > 0 &&
+        ((typeof r.scoredAt === 'number' && r.scoredAt >= sinceMs) ||
+          r.createdAt.getTime() >= sinceMs),
     )
     .map(toGroupingRow);
 }

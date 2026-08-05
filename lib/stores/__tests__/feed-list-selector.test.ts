@@ -544,11 +544,11 @@ describe('filterByImportance — display-only band gate', () => {
     expect(filterByImportance(data, 'low')).toBe(data);
   });
 
-  it("'medium' hides the low band and keeps 0.53 and above", () => {
+  it("'medium' hides the low band and keeps 0.6 and above (relevance v3 cutoff)", () => {
     const data = [
       item({ _id: 'lo', relevance: 0.31 }),
-      item({ _id: 'lo2', relevance: 0.529 }),
-      item({ _id: 'med', relevance: 0.53 }),
+      item({ _id: 'lo2', relevance: 0.59 }),
+      item({ _id: 'med', relevance: 0.6 }),
       item({ _id: 'hi', relevance: 0.9 }),
     ];
     expect(filterByImportance(data, 'medium').map((it) => it.suggestion._id)).toEqual([
@@ -557,11 +557,11 @@ describe('filterByImportance — display-only band gate', () => {
     ]);
   });
 
-  it("'high' hides the medium band and keeps 0.77 and above", () => {
+  it("'high' hides the medium band and keeps 0.8 and above (relevance v3 cutoff)", () => {
     const data = [
       item({ _id: 'med', relevance: 0.6 }),
-      item({ _id: 'med2', relevance: 0.769 }),
-      item({ _id: 'hi', relevance: 0.77 }),
+      item({ _id: 'med2', relevance: 0.79 }),
+      item({ _id: 'hi', relevance: 0.8 }),
     ];
     expect(filterByImportance(data, 'high').map((it) => it.suggestion._id)).toEqual(['hi']);
   });

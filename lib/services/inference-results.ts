@@ -36,7 +36,13 @@ const RESULTS_FETCH_TIMEOUT_MS = 30_000;
 // old code defaulted to so behaviour is unchanged for users who never moved
 // the slider. Consumed by the pipelined-batch orchestrator's impactful-subset
 // gate.
-export const REASON_RELEVANCE_THRESHOLD = 0.3;
+//
+// RELEVANCE V3 (2026-08-05): 0.3 → 0.4, moving in LOCKSTEP with
+// `RENDER_GATE` (lib/stores/fact-rows-selector.ts) — the two gates are meant to
+// stay numerically identical (closing the historic gap where a row could be
+// feed-visible without ever getting a reason queued, or vice versa). If you
+// change one, change the other.
+export const REASON_RELEVANCE_THRESHOLD = 0.4;
 
 // ---------------------------------------------------------------------------
 // Result shape

@@ -19,9 +19,13 @@ const H = 3_600_000;
 
 // Bucket boundaries this suite leans on (articlePipeline defaults):
 //   < 0.4 UNSCORED · [0.4,0.6) LOW · [0.6,0.8) MEDIUM · [0.8,1.0] HIGH
-// and RENDER_GATE = 0.3, which is LOOSER than discardFloor — that gap is exactly
-// what Rule 1 exists to close.
-const REL_UNSCORED = 0.35; // visible, but below discardFloor
+// RENDER_GATE is now 0.4 (relevance v3, 2026-08-05) — numerically identical to
+// discardFloor, closing the historic gap where a row could clear RENDER_GATE
+// (0.3) while still being sub-discardFloor. REL_UNSCORED below is therefore
+// sub-RENDER_GATE too: it never reaches even the visible pool any more (it used
+// to reach it and then get caught by Rule 1 — the observable outcome, "not a
+// section member", is unchanged either way).
+const REL_UNSCORED = 0.35; // below RENDER_GATE (0.4) and discardFloor alike
 const REL_LOW = 0.5;
 const REL_MEDIUM = 0.7;
 
@@ -285,7 +289,7 @@ describe('headline sections — the denominator counts', () => {
       headline('GLOBAL', null, { relevance: REL_MEDIUM }),
       headline('GLOBAL', null, { relevance: REL_MEDIUM }),
       headline('GLOBAL', null, { relevance: REL_LOW }),
-      headline('GLOBAL', null, { relevance: REL_UNSCORED }), // Rule 1 rejects
+      headline('GLOBAL', null, { relevance: REL_UNSCORED }), // below RENDER_GATE now
       // Never even reached the render gate / is still awaiting its note — Mera
       // read it all the same.
       headline('GLOBAL', null, { relevance: 0.1 }),
@@ -480,8 +484,8 @@ describe('headline denominator — co-matched rows excluded (P8 site 4)', () => 
 // The verification that matters: a pure headline must survive all the way to a
 // RENDERED CARD, not merely into rows[]. The operative bars are 0.4
 // (isSectionMemberEligible, step 4) and 0.6 (isFactSectionViable, step 5b) —
-// NOT the 0.3 render gate. A test asserting only "the row reached rows[]"
-// passes on the empty-shell case and proves nothing.
+// NOT merely RENDER_GATE (now also 0.4, see above). A test asserting only "the
+// row reached rows[]" passes on the empty-shell case and proves nothing.
 describe('headline section — end-to-end to a rendered card', () => {
   it('a pure headline at MEDIUM clears BOTH bars and produces a card', () => {
     const { rows } = build([headline('GLOBAL', null, { relevance: REL_MEDIUM })]);

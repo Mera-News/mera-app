@@ -7,6 +7,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import database from '@/lib/database';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type Setting from '@/lib/database/models/Setting';
 import type { TaskProgress } from '@/lib/scheduler/scheduler-types';
 import schema from '@/lib/database/schema';
@@ -141,7 +142,16 @@ async function loadDbStats(): Promise<DbStats> {
 // Feed-funnel rows, ordered by the stage an article passes through: stored →
 // gated → grouped → laid out → read. Every nullable field is rendered as '—'
 // rather than the literal "null".
-function feedFunnelRows(r: FeedFunnelReport, t: TFunction): KVRow[] {
+// `alreadyReadCount` is counted straight off `article_suggestions` rather than
+// read from the funnel report: `already_read` rows are terminal-invisible, so the
+// For-You store snapshot the report is computed from does not necessarily carry
+// them, and a diagnostic about rows that were removed must not depend on those
+// rows still being in memory. `null` ⇒ the count query failed → '—'.
+function feedFunnelRows(
+    r: FeedFunnelReport,
+    t: TFunction,
+    alreadyReadCount: number | null,
+): KVRow[] {
     const L = FEED_FUNNEL_LABELS;
     const rows: KVRow[] = [];
 
@@ -166,6 +176,15 @@ function feedFunnelRows(r: FeedFunnelReport, t: TFunction): KVRow[] {
             'Filtered out — you said not interested',
             String(r.totals.status.excluded),
             'funnel-row-status-excluded',
+        ],
+        // Sibling of the row above and deliberately a SEPARATE line: both are
+        // terminal-invisible, but "not interested" is a standing preference
+        // while this is simply a story you already opened. Collapsing them
+        // would make the feed's size unexplainable.
+        [
+            'Skipped — you already read these',
+            alreadyReadCount === null ? '—' : String(alreadyReadCount),
+            'funnel-row-already-read',
         ],
         [L.headerRelevant, String(r.header.relevantCount)],
         [L.visible, String(r.visibleCount)],
@@ -391,6 +410,9 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
     const [loadingDb, setLoadingDb] = useState(false);
     const [selectedTable, setSelectedTable] = useState<string | null>(null);
     const [funnel, setFunnel] = useState<FeedFunnelReport | null>(null);
+    // Terminal `already_read` rows — the pre-scoring already-read gate's output.
+    // `null` until counted (or when the count query failed) → rendered '—'.
+    const [alreadyReadCount, setAlreadyReadCount] = useState<number | null>(null);
 
     // The header numbers the funnel reconciles against, held in a ref so
     // `refresh` can read them without a dependency (it must stay `[]` — a new
@@ -416,7 +438,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         // never hydrates, ingests, or marks anything. Its own try/catch so a
         // diagnostic failure can never take the rest of the screen down.
         try {
-            const [breakdown, userCtx, scoringModes, effectiveCfg] = await Promise.all([
+            const [breakdown, userCtx, scoringModes, effectiveCfg, alreadyRead] = await Promise.all([
                 getOpenedSeenBreakdown().catch(() => null),
                 loadUserGeoLanguageContext(),
                 // Its own catch: this walks every scored row's audit JSON, and a
@@ -429,7 +451,15 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 // on. Fail-open to the base so a diagnostic read can't break the
                 // funnel.
                 effectiveHarnessConfig().catch(() => HARNESS_CONFIG_BASE),
+                // Counted here rather than in `loadDbStats` so it lands in the
+                // same pass as the rest of the funnel. Own catch → '—'.
+                database
+                    .get('article_suggestions')
+                    .query(Q.where('status', ArticleSuggestionStatus.AlreadyRead))
+                    .fetchCount()
+                    .catch(() => null),
             ]);
+            setAlreadyReadCount(alreadyRead);
             const fo = useFeedOrderStore.getState();
             const os = useOpenedStoriesStore.getState();
             const counts = feedCountsRef.current;
@@ -481,6 +511,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 articleCount,
                 relevantArticleCount,
                 unscoredCount,
+                alreadyReadCount,
                 asyncJobPhase,
                 lastSyncAt,
                 syncState: syncStatusMessage?.state ?? 'idle',
@@ -515,6 +546,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         pendingCount, articleCount, relevantArticleCount, unscoredCount,
         asyncJobPhase, lastSyncAt, syncStatusMessage, processingMode, modelState,
         downloadProgress, isProcessing, isConnected, dbReady, userId, funnel,
+        alreadyReadCount,
     ]);
 
     const relevantPct = articleCount > 0 ? Math.round((relevantArticleCount / articleCount) * 100) : 0;
@@ -817,7 +849,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     `refresh` (mount + the header button), never on render. */}
                 <SectionHeader title={t('observability.feedFunnel')} />
                 {funnel ? (
-                    <KVTable rows={feedFunnelRows(funnel, t)} />
+                    <KVTable rows={feedFunnelRows(funnel, t, alreadyReadCount)} />
                 ) : (
                     <Text size="sm" className="text-gray-600 py-2">
                         {loadingDb ? t('common.loading') : t('observability.notLoaded')}

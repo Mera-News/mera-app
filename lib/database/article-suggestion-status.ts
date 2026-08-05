@@ -54,11 +54,41 @@
 //
 // A row can be written `excluded` from `unscored` (the scoring orchestrators)
 // or from any status (the retroactive purge sweep).
+//
+//   unscored ─┐ the user ALREADY READ this story
+//             ▼
+//   already_read    TERMINAL — "this must never render", and deliberately NOT
+//                   `excluded`, even though both are terminal-invisible:
+//                   `excluded` means the user asked never to see this KIND of
+//                   thing (a hard "not interested" filter), whereas this means
+//                   they already tapped THIS story open and do not need it again.
+//                   Keeping them apart is what lets the Observability funnel
+//                   answer "why is the feed smaller?" — a hard filter is a
+//                   standing preference, a read is a one-off — and stops the
+//                   un-exclude sweep (which re-screens against still-active hard
+//                   filters) from resurrecting rows it has no business touching.
+//
+//                   Written PRE-SCORING, by the two apply points of the
+//                   already-read gate — feed-sync hydration and
+//                   `gateUnscoredForScoring` — so the row is never sent to the
+//                   LLM at all (see lib/feed-grouping/read-story-filter.ts for
+//                   the matching rules and the measurements behind them). Like
+//                   (a) above it carries relevance 0, no reason and no scores.
+//
+//                   NO EXIT. A read is a fact about the past; re-scoring the row
+//                   would only re-derive the same "already read" verdict. The
+//                   underlying impression TTLs out after 30 days, but the
+//                   suggestion row is deleted by the 48h suggestion TTL long
+//                   before that, so nothing accumulates.
+//
+// NOTE FOR SCHEMA WORK: `status` is a plain text column, so adding a value here
+// needs NO migration — do not DROP+recreate `article_suggestions` for it.
 export const ArticleSuggestionStatus = {
   Unscored: 'unscored',
   ReasonPending: 'reason_pending',
   Complete: 'complete',
   Excluded: 'excluded',
+  AlreadyRead: 'already_read',
 } as const;
 
 export type ArticleSuggestionStatus =

@@ -12,11 +12,24 @@
  *   (b) among a batch of same-sync duplicates with no donor yet, score only ONE
  *       elected representative and hold its siblings back until its score lands.
  *
- * IMPORT-CYCLE CONSTRAINT (do not violate): this module imports ONLY the DB
- * service, the pure story-grouping utility, and the logger — NEVER
- * scoring-pipeline. The set of in-flight candidate ids is passed IN by callers
- * so we never have to reach back into the pipeline. The `onPropagated` hook
- * below follows the same rule for the same reason (see HARD FILTERS).
+ * IMPORT-CYCLE CONSTRAINT (do not violate): this module imports ONLY DB
+ * services, the pure story-grouping/read-filter utilities, and the logger —
+ * NEVER scoring-pipeline. The set of in-flight candidate ids is passed IN by
+ * callers so we never have to reach back into the pipeline. The `onPropagated`
+ * hook below follows the same rule for the same reason (see HARD FILTERS).
+ * (`read-story-filter` is inside the line: it reaches only the DB singleton, the
+ * story-impression service and the pure story-grouping utility, and has no edge
+ * back into scoring.)
+ *
+ * ALREADY-READ GATE (relevance v3 §3): before any grouping or election,
+ * `gateUnscoredForScoring` drops candidates that re-serve a story the user
+ * already TAPPED OPEN and writes them terminal `already_read`. Feed-sync
+ * hydration screens the same way one step earlier (never inserting the row at
+ * all), so why do it twice? Because the two windows differ: a suggestion synced
+ * on Monday and still `unscored` on Tuesday was inserted BEFORE the impression
+ * existed, and only this gate — which re-derives from ALL unscored rows every
+ * pass — will ever see it. Cheapest defense first, backstop second; both are
+ * pre-LLM, so every match is also one scoring pass saved.
  *
  * HARD FILTERS (P9): propagation is DELIBERATELY DUMB about "not interested"
  * filters, and that is a hole unless callers close it. A propagated row is
@@ -71,6 +84,12 @@ import {
     type UserGeoLanguageContext,
 } from '@/lib/feed-grouping/geo-language-priority';
 import {
+    batchMarkAlreadyRead,
+    loadReadStoryIndex,
+    matchesReadStory,
+    type ReadStoryIndex,
+} from '@/lib/feed-grouping/read-story-filter';
+import {
     buildStoryGroups,
     pickRepresentative,
     CLUSTER_CORE_CONFIDENCE_THRESHOLD,
@@ -103,6 +122,60 @@ export interface GateResult {
      * alone, which undercounts by the duplicate factor of the feed.
      */
     coveredIdsByRep: Record<string, string[]>;
+    /**
+     * How many candidates were dropped as ALREADY READ and written terminal
+     * `already_read` (see the gate note at the top). Purely observational — the
+     * ids are gone from `enqueueIds`/`coveredIdsByRep` by the time this is
+     * reported, so no caller has to act on it. Additive: existing consumers that
+     * destructure the four original fields are unaffected.
+     */
+    readCount: number;
+}
+
+/**
+ * Test one grouping row against the read index. A row's WMDB `id` IS the server
+ * article id (`persistAndLinkV2Suggestions` sets `_raw.id = a._id`), so it feeds
+ * the article-id axis directly.
+ *
+ * Every membership's `stableClusterId` is offered, UNGATED by confidence, and the
+ * asymmetry with `PROPAGATION_OPTIONS` below is deliberate. There the gate exists
+ * because a fringe member must not INHERIT a stranger's verdict; here the id came
+ * from the user's own read — `use-open-suggestion` snapshots
+ * `clusters.find(c => c.stableClusterId)` with no confidence test — so gating
+ * would just mean failing to recognise the very story they opened.
+ */
+function readCandidateOf(row: SuggestionGroupingRow): {
+    articleId: string;
+    stableClusterId: string | null;
+    title: string | null;
+} {
+    let stableClusterId: string | null = null;
+    for (const m of row.clusters ?? []) {
+        if (m?.stableClusterId) {
+            stableClusterId = m.stableClusterId;
+            break;
+        }
+    }
+    return { articleId: row.id, stableClusterId, title: row.title };
+}
+
+/**
+ * Split candidates into "already read" and "still scorable". Pure; the caller
+ * owns the write. Returns the input untouched when the index is inert, so the
+ * no-reads case costs one integer comparison.
+ */
+function partitionAlreadyRead(
+    candidates: SuggestionGroupingRow[],
+    index: ReadStoryIndex,
+): { alreadyReadIds: string[]; scorable: SuggestionGroupingRow[] } {
+    if (index.impressionCount === 0) return { alreadyReadIds: [], scorable: candidates };
+    const alreadyReadIds: string[] = [];
+    const scorable: SuggestionGroupingRow[] = [];
+    for (const c of candidates) {
+        if (matchesReadStory(readCandidateOf(c), index)) alreadyReadIds.push(c.id);
+        else scorable.push(c);
+    }
+    return { alreadyReadIds, scorable };
 }
 
 /**
@@ -245,14 +318,44 @@ export async function gateUnscoredForScoring(
     // Captured before any throwing step so the fail-open path can enqueue them.
     let candidateIds: string[] = [];
     try {
-        const candidates = (await getUnscoredGroupingRows()).filter((r) => !inFlightIds.has(r.id));
-        candidateIds = candidates.map((c) => c.id);
+        const allCandidates = (await getUnscoredGroupingRows()).filter(
+            (r) => !inFlightIds.has(r.id),
+        );
+        candidateIds = allCandidates.map((c) => c.id);
+        if (allCandidates.length === 0) {
+            return {
+                enqueueIds: [],
+                propagatedCount: 0,
+                heldBackCount: 0,
+                coveredIdsByRep: {},
+                readCount: 0,
+            };
+        }
+
+        // ALREADY-READ GATE — runs BEFORE grouping/election so a read story can
+        // neither be enqueued nor be elected representative for siblings that are
+        // NOT read (which would have handed the whole group a verdict derived
+        // from an article the user is done with). `loadReadStoryIndex` fails open
+        // to an inert index, so a read failure degrades to the previous behaviour
+        // rather than hiding anything.
+        const readIndex = await loadReadStoryIndex();
+        const { alreadyReadIds, scorable: candidates } = partitionAlreadyRead(
+            allCandidates,
+            readIndex,
+        );
+        if (alreadyReadIds.length > 0) {
+            await batchMarkAlreadyRead(alreadyReadIds);
+            // Re-point the fail-open set at what survived: rows just written
+            // terminal must never be enqueued by a later step's catch.
+            candidateIds = candidates.map((c) => c.id);
+        }
         if (candidates.length === 0) {
             return {
                 enqueueIds: [],
                 propagatedCount: 0,
                 heldBackCount: 0,
                 coveredIdsByRep: {},
+                readCount: alreadyReadIds.length,
             };
         }
 
@@ -308,18 +411,21 @@ export async function gateUnscoredForScoring(
         }
 
         console.log(
-            `[score-propagation] propagated ${propagateEntries.length}, held back ${heldBackCount}, enqueue ${enqueueIds.length}`,
+            `[score-propagation] propagated ${propagateEntries.length}, held back ${heldBackCount}, enqueue ${enqueueIds.length}, read ${alreadyReadIds.length}`,
         );
         return {
             enqueueIds,
             propagatedCount: propagateEntries.length,
             heldBackCount,
             coveredIdsByRep,
+            readCount: alreadyReadIds.length,
         };
     } catch (err) {
         logger.captureException(err, { tags: { module: 'score-propagation' } });
         // Fail open: enqueue every candidate we knew about, propagate nothing.
-        // No election happened, so every id covers exactly itself.
+        // No election happened, so every id covers exactly itself. `candidateIds`
+        // already excludes anything the already-read gate wrote terminal, so this
+        // path cannot resurrect a read story.
         const coveredIdsByRep: Record<string, string[]> = {};
         for (const id of candidateIds) coveredIdsByRep[id] = [id];
         return {
@@ -327,6 +433,7 @@ export async function gateUnscoredForScoring(
             propagatedCount: 0,
             heldBackCount: 0,
             coveredIdsByRep,
+            readCount: 0,
         };
     }
 }

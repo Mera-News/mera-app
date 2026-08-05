@@ -1,3 +1,15 @@
+// BAND-LADDER UNIFICATION (relevance v3, 2026-08-05): the thresholds below used
+// to be a private, hardcoded copy of the band cutoffs (0.53/0.77), independent
+// of `bucketOf` (feed-select/ownership.ts, 0.4/0.6/0.8 — Dashboard section
+// viability) and of `relevanceBandRank` (lib/feed-ordering/priority-order.ts,
+// its own hardcoded 0.53/0.77 copy). An article at 0.53-0.60 was MEDIUM here
+// but LOW for Dashboard sections — a real, user-visible misclassification.
+// `bandOf`/`bandRank` (feed-select/ownership.ts) are now the ONE source of
+// truth for all three; this file reads cutoffs from `bandOf` instead of
+// re-hardcoding them, so the worded chip can never again disagree with feed
+// ordering, the importance filter, or a Dashboard section about a story's band.
+import { bandOf } from '@/lib/news-harness/feed-select/ownership';
+
 export interface RelevanceColors {
     backgroundColor: string;
     borderColor: string;
@@ -31,11 +43,13 @@ export const reasonBoxColors = {
 export const aiDisclosureColor = '#D1D5DB';
 
 export const getRelevanceLabel = (relevance: number): string => {
-    if (relevance > 1.0) return 'Emergency Priority Articles';
-    if (relevance >= 0.77) return 'High Priority Articles';
-    if (relevance >= 0.53) return 'Medium Priority Articles';
-    if (relevance > 0.3) return 'Low Priority Articles';
-    return 'Irrelevant Articles';
+    switch (bandOf(relevance)) {
+        case 'EMERGENCY': return 'Emergency Priority Articles';
+        case 'HIGH': return 'High Priority Articles';
+        case 'MEDIUM': return 'Medium Priority Articles';
+        case 'LOW': return 'Low Priority Articles';
+        default: return 'Irrelevant Articles'; // SUB_GATE (incl. negative sentinels)
+    }
 };
 
 const DISPLAY_SECTION_LABELS: Record<string, string> = {
@@ -50,6 +64,9 @@ export const getDisplaySectionLabel = (label: string): string =>
     DISPLAY_SECTION_LABELS[label] ?? label;
 
 export const getRelevanceColors = (relevance: number): RelevanceColors => {
+    // Negative sentinel ("not yet processed") is this file's own concept, not a
+    // relevance band — checked before `bandOf`, which only knows about actual
+    // scores.
     if (relevance < 0) {
         return {
             backgroundColor: '#1F2937',
@@ -58,40 +75,41 @@ export const getRelevanceColors = (relevance: number): RelevanceColors => {
             label: 'relevance.unprocessed'
         };
     }
-    if (relevance > 1.0) {
-        return {
-            backgroundColor: '#F3E5F5',
-            borderColor: '#6A1B9A',
-            textColor: '#6A1B9A',
-            label: 'relevance.emergency'
-        };
-    } else if (relevance >= 0.77) {
-        return {
-            backgroundColor: '#FFEBEE',
-            borderColor: '#C62828',
-            textColor: '#C62828',
-            label: 'relevance.high'
-        };
-    } else if (relevance >= 0.53) {
-        return {
-            backgroundColor: '#FFF3E0',
-            borderColor: '#E65100',
-            textColor: '#E65100',
-            label: 'relevance.medium'
-        };
-    } else if (relevance > 0.3) {
-        return {
-            backgroundColor: '#FFFDE7',
-            borderColor: '#F57F17',
-            textColor: '#F57F17',
-            label: 'relevance.low'
-        };
-    } else {
-        return {
-            backgroundColor: '#F5F5F5',
-            borderColor: '#616161',
-            textColor: '#616161',
-            label: 'relevance.irrelevant'
-        };
+    switch (bandOf(relevance)) {
+        case 'EMERGENCY':
+            return {
+                backgroundColor: '#F3E5F5',
+                borderColor: '#6A1B9A',
+                textColor: '#6A1B9A',
+                label: 'relevance.emergency'
+            };
+        case 'HIGH':
+            return {
+                backgroundColor: '#FFEBEE',
+                borderColor: '#C62828',
+                textColor: '#C62828',
+                label: 'relevance.high'
+            };
+        case 'MEDIUM':
+            return {
+                backgroundColor: '#FFF3E0',
+                borderColor: '#E65100',
+                textColor: '#E65100',
+                label: 'relevance.medium'
+            };
+        case 'LOW':
+            return {
+                backgroundColor: '#FFFDE7',
+                borderColor: '#F57F17',
+                textColor: '#F57F17',
+                label: 'relevance.low'
+            };
+        default: // SUB_GATE
+            return {
+                backgroundColor: '#F5F5F5',
+                borderColor: '#616161',
+                textColor: '#616161',
+                label: 'relevance.irrelevant'
+            };
     }
 };

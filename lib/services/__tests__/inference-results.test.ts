@@ -453,7 +453,7 @@ describe('hexToBytes', () => {
 });
 
 describe('REASON_RELEVANCE_THRESHOLD', () => {
-  it('is the documented 0.3 gate', () => {
-    expect(REASON_RELEVANCE_THRESHOLD).toBe(0.3);
+  it('is the documented 0.4 gate (relevance v3 — moves in lockstep with RENDER_GATE)', () => {
+    expect(REASON_RELEVANCE_THRESHOLD).toBe(0.4);
   });
 });

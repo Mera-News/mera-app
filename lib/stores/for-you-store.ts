@@ -13,6 +13,11 @@ import {
     type ArticleSuggestionStatus as ArticleSuggestionStatusType,
 } from '@/lib/database/article-suggestion-status';
 import type { ScoringErrorKind } from '@/lib/services/scoring-error';
+// RENDER_GATE (relevance v3: 0.4, inclusive) — the single source of truth the
+// pre-filter below is kept in lockstep with, rather than a second hardcoded
+// copy of the cutoff. Only a type import flows the other way (fact-rows-selector
+// takes `ForYouSuggestion` as a type), so this is not a runtime cycle.
+import { effectiveRenderGate } from '@/lib/stores/fact-rows-selector';
 
 /** Article-keyed feed row hydrated from local WatermelonDB. Populated by the
  *  sync service from articlesForTopicsByIds, with client-side scoring fields.
@@ -332,7 +337,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
         const nextSuggestions = state.suggestions.filter((s) => s._id !== serverId);
         const wasImpactful =
-            target.status !== ArticleSuggestionStatus.Unscored && target.relevance > 0.3;
+            target.status !== ArticleSuggestionStatus.Unscored && target.relevance >= effectiveRenderGate();
         const nextRelevantCount = wasImpactful
             ? Math.max(0, state.relevantArticleCount - 1)
             : state.relevantArticleCount;
@@ -499,7 +504,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             const rows = await loadSuggestions();
             rows.sort(byRelevanceDesc);
             const relevantCount = rows.filter(
-                (s) => s.status !== ArticleSuggestionStatus.Unscored && s.relevance > 0.3,
+                (s) => s.status !== ArticleSuggestionStatus.Unscored && s.relevance >= effectiveRenderGate(),
             ).length;
             const state = get();
             set({
@@ -555,7 +560,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
             const current = get().suggestions;
             const impactfulCount = current.filter(
-                (s) => s.status !== ArticleSuggestionStatus.Unscored && s.relevance > 0.3,
+                (s) => s.status !== ArticleSuggestionStatus.Unscored && s.relevance >= effectiveRenderGate(),
             ).length;
 
             set({

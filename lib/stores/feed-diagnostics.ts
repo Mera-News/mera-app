@@ -21,7 +21,7 @@
 
 import {
   FEED_WINDOW_MS,
-  RENDER_GATE,
+  effectiveRenderGate,
   isComplete,
   isOpenedId,
   isVisible,
@@ -550,7 +550,7 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
     generatedAtMs: nowMs,
     hydrated: { order: input.orderHydrated, opened: input.openedHydrated },
     gates: {
-      renderGate: RENDER_GATE,
+      renderGate: effectiveRenderGate(),
       renderWindowMs: FEED_WINDOW_MS,
       renderCutoffMs: cutoffMs,
     },

@@ -32,6 +32,13 @@ import {
   type PersonaQueryInput,
 } from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
+import {
+  batchMarkAlreadyRead,
+  loadReadStoryIndex,
+  matchesReadStory,
+  type ReadStoryCandidate,
+  type ReadStoryIndex,
+} from '@/lib/feed-grouping/read-story-filter';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import logger from '@/lib/logger';
 import { withRetry } from '@/lib/utils/retry';
@@ -111,6 +118,59 @@ const cullLowHeadlines = async (): Promise<void> => {
   useFeedOrderStore.getState().removeIds(ids);
   logger.info(`[feed-sync-steps] culled ${ids.length} LOW-band headline rows`);
 };
+
+/**
+ * ALREADY-READ SCREEN, cheapest apply point (relevance v3 §3). A server-returned
+ * article that re-serves a story the user already TAPPED OPEN is never persisted
+ * at all: no suggestion row, no scoring pass, nothing to render or evict later.
+ * The matching rules (article_id ∪ stable_cluster_id ∪ normalized-title Jaccard
+ * ≥ 0.55) and the measurements behind them live in
+ * `lib/feed-grouping/read-story-filter.ts`.
+ *
+ * The stable-cluster id is read from the article's own memberships first and
+ * falls back to the persona metadata's per-article map, because the two sources
+ * disagree in practice: `matchMeta.stableClusterId` (persona path) is populated
+ * for retrieval hits whose membership list may arrive empty, and headline results
+ * carry theirs in a parallel array. Taking whichever exists costs one lookup and
+ * closes that gap.
+ */
+function articleReadCandidate(
+  a: ArticleWithClusters,
+  personaMeta: PersonaPersistMeta | undefined,
+): ReadStoryCandidate {
+  let stableClusterId: string | null = null;
+  for (const m of a.clusters ?? []) {
+    if (m?.stableClusterId) {
+      stableClusterId = m.stableClusterId;
+      break;
+    }
+  }
+  return {
+    articleId: a._id,
+    stableClusterId: stableClusterId ?? personaMeta?.stableClusterId?.get(a._id) ?? null,
+    title: a.title_en ?? a.title ?? null,
+  };
+}
+
+/**
+ * Split a hydrated chunk into "persist these" and "the user already read these".
+ * Pure. Returns the input array identity when the index is inert so the common
+ * (no reads recorded) case allocates nothing.
+ */
+export function splitAlreadyReadArticles(
+  articles: ArticleWithClusters[],
+  index: ReadStoryIndex,
+  personaMeta: PersonaPersistMeta | undefined,
+): { toPersist: ArticleWithClusters[]; readCount: number } {
+  if (index.impressionCount === 0) return { toPersist: articles, readCount: 0 };
+  const toPersist: ArticleWithClusters[] = [];
+  let readCount = 0;
+  for (const a of articles) {
+    if (matchesReadStory(articleReadCandidate(a, personaMeta), index)) readCount += 1;
+    else toPersist.push(a);
+  }
+  return { toPersist, readCount };
+}
 
 export interface FetchTopicIdsResult {
   articleToTopicTexts: Map<string, string[]>;
@@ -622,6 +682,15 @@ export async function stepHydratePersistEnqueue(
   // null (legacy, geo/language-blind election).
   const userCtx = await loadUserGeoLanguageContext();
 
+  // Already-read index: ONE read of `story_impressions` for the whole run,
+  // shared by the pre-persist screen (per chunk) and the unscored-backfill
+  // screen inside `markIneligibleAndCollectEligible`. A sync is short relative
+  // to the 30-day impression TTL, so a snapshot taken here cannot go
+  // meaningfully stale mid-run; rebuilding per chunk would just re-read the same
+  // table N times. Fails open to an inert index (nothing excluded).
+  const readIndex = await loadReadStoryIndex();
+  let readSkippedTotal = 0;
+
   // The gate re-derives its candidates from ALL unscored, not-in-flight rows —
   // not just this chunk's eligible ids — so any sibling held back or missed by a
   // failed batch on a prior chunk/sync is re-considered. Self-healing with no
@@ -668,15 +737,13 @@ export async function stepHydratePersistEnqueue(
       pendingCoveredIdsByRep = gate.coveredIdsByRep ?? {};
     }
     if (!opts.suppressEnqueue) enqueuedCount += gate.enqueueIds.length;
+    readSkippedTotal += gate.readCount;
     const enqueuedLabel = opts.suppressEnqueue
       ? `${gate.enqueueIds.length} left unscored (enqueue suppressed)`
       : `enqueued ${gate.enqueueIds.length}`;
-    ctx.log(
-      `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}`,
-    );
-    logger.debug(
-      `[feed-sync-steps] gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}`,
-    );
+    const gateLine = `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}, read ${gate.readCount}`;
+    ctx.log(gateLine);
+    logger.debug(`[feed-sync-steps] ${gateLine}`);
   };
 
   let nextChunk = 0;
@@ -715,21 +782,43 @@ export async function stepHydratePersistEnqueue(
         resetAt = resetAt ?? response.resetAt;
       }
 
+      // ALREADY-READ SCREEN. Deliberately NOT folded into the `deliveredAny` /
+      // daily-limit bookkeeping below, which stays on the RAW response length:
+      // the server delivered (and charged for) these articles, so a chunk that
+      // is entirely already-read is a delivered chunk, not the dry chunk that
+      // signals the cap.
+      const { toPersist, readCount: chunkReadSkipped } = splitAlreadyReadArticles(
+        chunkArticles,
+        readIndex,
+        personaMeta,
+      );
+      readSkippedTotal += chunkReadSkipped;
+      if (chunkReadSkipped > 0) {
+        ctx.log(`skipped ${chunkReadSkipped} already-read articles`);
+      }
+
       if (chunkArticles.length > 0) {
         deliveredAny = true;
+      }
+
+      if (toPersist.length > 0) {
         const { insertedCount: chunkInserted } =
           await persistAndLinkV2Suggestions(
-            chunkArticles,
+            toPersist,
             articleToTopicTexts,
             personaMeta,
           );
         insertedCount += chunkInserted;
 
-        const chunkIdSet = new Set(chunkArticles.map((a) => a._id));
-        const { ineligibleCount, eligibleIds } =
-          await markIneligibleAndCollectEligible(chunkIdSet);
+        const chunkIdSet = new Set(toPersist.map((a) => a._id));
+        const { ineligibleCount, alreadyReadCount, eligibleIds } =
+          await markIneligibleAndCollectEligible(chunkIdSet, readIndex);
         if (ineligibleCount > 0) {
           ctx.log(`pre-scored ${ineligibleCount} ineligible articles`);
+        }
+        if (alreadyReadCount > 0) {
+          readSkippedTotal += alreadyReadCount;
+          ctx.log(`marked ${alreadyReadCount} already-synced rows as already read`);
         }
 
         // Progressive rendering: newly-persisted (unscored) articles appear now.
@@ -747,9 +836,9 @@ export async function stepHydratePersistEnqueue(
 
       completedIds += chunk.length;
       opts.onProgress(completedIds);
-      ctx.log(`chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`);
+      ctx.log(`chunk ${i + 1}/${chunks.length}: persisted ${toPersist.length}`);
       logger.debug(
-        `[feed-sync-steps] chunk ${i + 1}/${chunks.length}: persisted ${chunkArticles.length}`,
+        `[feed-sync-steps] chunk ${i + 1}/${chunks.length}: persisted ${toPersist.length}`,
       );
 
       // Daily cap ran dry for this chunk (nothing delivered) — stop launching
@@ -820,7 +909,10 @@ export async function stepHydratePersistEnqueue(
     });
   }
 
-  ctx.log(`hydrated+persisted ${insertedCount} records, enqueued ${enqueuedCount}`);
+  ctx.log(
+    `hydrated+persisted ${insertedCount} records, enqueued ${enqueuedCount}` +
+      (readSkippedTotal > 0 ? `, already read ${readSkippedTotal}` : ''),
+  );
 
   // Fire-and-forget: first upgrade any legacy stable-cluster follows to the
   // topic model (one-shot + idempotent — a cheap no-op once none remain), THEN
@@ -893,11 +985,53 @@ async function getLocalTopicTextsForPersona(): Promise<string[]> {
  * headline terminal (`relevance 0`, `reason ''`, `status complete`) before any
  * scoring existed, with no timing window to escape through. Rows missing
  * title/description are still tombstoned: no prompt can score empty text.
+ *
+ * ALREADY-READ BACKFILL (relevance v3 §3). The pre-persist screen upstream only
+ * sees THIS run's server response; it cannot help a row synced on an earlier
+ * cycle and still `unscored` when the user finally read that story. This global
+ * unscored scan is exactly where such a row is visible, so it doubles as the
+ * backfill: matches are written terminal `already_read` (never enqueued, never
+ * scored) instead of being marked ineligible-`complete`, which would be a lie
+ * about why they are invisible. The read screen runs FIRST — a row that is both
+ * already-read and ineligible is more usefully counted as already-read, and it
+ * keeps the two counts from double-billing the same id.
  */
 async function markIneligibleAndCollectEligible(
   chunkIds: Set<string>,
-): Promise<{ ineligibleCount: number; eligibleIds: string[] }> {
-  const candidates = await getUnscoredSuggestionsWithFacts();
+  readIndex: ReadStoryIndex,
+): Promise<{ ineligibleCount: number; alreadyReadCount: number; eligibleIds: string[] }> {
+  const all = await getUnscoredSuggestionsWithFacts();
+
+  const alreadyRead =
+    readIndex.impressionCount === 0
+      ? []
+      : all.filter((c) =>
+          matchesReadStory(
+            {
+              // A suggestion's WMDB row id IS the server article id.
+              articleId: c.id,
+              stableClusterId: c.meta?.stableClusterId ?? null,
+              title: c.titleEn,
+            },
+            readIndex,
+          ),
+        );
+  if (alreadyRead.length > 0) {
+    // Never fails the sync. If the write is lost these rows simply stay
+    // `unscored` and the gate — which re-derives from ALL unscored rows on the
+    // very next pass — marks them then. Self-healing, so swallowing is safe;
+    // they are still withheld from THIS chunk's eligible ids either way.
+    try {
+      await batchMarkAlreadyRead(alreadyRead.map((c) => c.id));
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { component: 'feed-sync-steps', method: 'batchMarkAlreadyRead' },
+      });
+    }
+  }
+  const alreadyReadIds = new Set(alreadyRead.map((c) => c.id));
+  const candidates = alreadyReadIds.size === 0 ? all : all.filter((c) => !alreadyReadIds.has(c.id));
+
   const ineligible = candidates.filter((c) => !isScorableCandidate(c));
   if (ineligible.length > 0) {
     await batchMarkAsScoredByIds(ineligible.map((c) => c.id));
@@ -906,5 +1040,9 @@ async function markIneligibleAndCollectEligible(
     .filter(isScorableCandidate)
     .filter((c) => chunkIds.has(c.id))
     .map((c) => c.id);
-  return { ineligibleCount: ineligible.length, eligibleIds };
+  return {
+    ineligibleCount: ineligible.length,
+    alreadyReadCount: alreadyRead.length,
+    eligibleIds,
+  };
 }

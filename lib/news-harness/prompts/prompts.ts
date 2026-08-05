@@ -566,7 +566,13 @@ export function buildPersonaUpdateContext(params: {
  * without re-running the golden eval. Anchors carry the calibration; keep
  * their density even across all three tiers.
  */
-const CLOUD_SCORING_BASE_PROMPT = `Score news relevance for one user. Every article lands in exactly one of three product tiers; the score encodes the tier and the strength within it.
+// Split into PRE/ANCHORS/POST so size-constrained variants can drop the
+// worked-example anchor table: the gateway caps the E2EE sharedSystem at
+// 65,536 chars and the hex envelope DOUBLES plaintext, so a system prompt
+// must stay under ~32.5KB. The v3 HEADLINE prompt (base+impact+two-axis)
+// was 35.1KB and every headline batch 400'd at submit (2026-08-05).
+// CLOUD_SCORING_BASE_PROMPT is the byte-identical reassembly.
+const CLOUD_SCORING_BASE_PRE_ANCHORS = `Score news relevance for one user. Every article lands in exactly one of three product tiers; the score encodes the tier and the strength within it.
 
 ## Product tiers (hard boundaries — the tier decision matters more than the exact value)
 - **FEED — 0.40 to 1.10.** The article affects the user's life directly or indirectly: their city or country, their family's cities, an active trip, their professional/venture domain, or an event they could attend.
@@ -611,7 +617,9 @@ A stake → score 0.40–1.10 using the FEED gates below. No stake → Step 3.
 - **0.80–0.94** — direct: a change to the user's exact work, product, home, or family (a disaster or area-wide/large-scale danger in a family city — flood, epidemic, gas leak, riot, mass-casualty or area-wide safety emergency that could reach the user's loved ones; a safety incident in the user's OWN home city; city policy hitting their profession; regulation their product must comply with now). Individual/routine crime in a FAMILY city does NOT belong here — it is 0.40–0.59.
 - **0.95–1.10** — immediate, time-sensitive personal stake: danger at the user's or family's city NOW, act today. 1.0+ ONLY for immediate danger + user/family city + action required.
 
-## Anchors (example user: software engineer in Amsterdam building an AI news app; parents in Bhopal and currently traveling in Chhindwara; partner's family in Porto Santo; Berlin trip next weekend; interests: journalism+AI, privacy-safe AI, on-device small language models, tech/journalism conferences; NO investments)
+`;
+
+const CLOUD_SCORING_BASE_ANCHORS = `## Anchors (example user: software engineer in Amsterdam building an AI news app; parents in Bhopal and currently traveling in Chhindwara; partner's family in Porto Santo; Berlin trip next weekend; interests: journalism+AI, privacy-safe AI, on-device small language models, tech/journalism conferences; NO investments)
 FEED:
 - 1.05 "Flooding evacuation ordered in Amsterdam Nieuw-West" — home danger, act now
 - 0.85 "Flash floods submerge low-lying areas of Bhopal, rescue teams deployed" — family-city disaster, loved ones at risk
@@ -664,13 +672,17 @@ EXCLUDE:
 
 Use the full continuous range with fine-grained values between anchors (0.47, 0.63, 0.71) — never round to .05/.10 increments. When torn between two tiers, re-run the stake test: a real stake means ≥ 0.40, no stake means < 0.40.
 
-## Priority
+`;
+
+const CLOUD_SCORING_BASE_POST_ANCHORS = `## Priority
 City > region > country. Family locations: the named city only. Exact interest area > interest category > generic tech.
 
 ## Critical
 - Don't override an explicit location in the body with the publication's country.
 - Multi-location users count multiply ("from Johannesburg, now in London" = both matter; "parents in New York" = connected).
 - Tabloid/clickbait −0.1. Spam → EXCLUDE.`;
+
+const CLOUD_SCORING_BASE_PROMPT = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCORING_BASE_ANCHORS}${CLOUD_SCORING_BASE_POST_ANCHORS}`;
 
 /**
  * The second-person voice rule for every user-facing reason string.
@@ -690,6 +702,10 @@ const CLOUD_REASON_VOICE_RULE = `Voice. The reason is read BY the user, so write
 /**
  * Pass 1 — Relevance score only.
  * Returns a single number 0.0-1.1. No reason text, minimal output tokens.
+ *
+ * DEPRECATE(v3): superseded by CLOUD_SCORE_V3_SYSTEM_PROMPT (single merged
+ * two-axis score+reason call). Kept — and still the DEFAULT — because the legacy
+ * two-pass path runs whenever `scoringEngine.RELEVANCE_V3` is off.
  */
 export const CLOUD_RELEVANCE_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
@@ -707,6 +723,10 @@ Example for 3 articles: [{"k":"domain","s":0.62},{"k":"none","s":0.12},{"k":"int
  * Generates a short user-facing "Why this matters to you" string.
  * Receives the relevance score in the user message — use the shared scale
  * above to calibrate tone and specificity.
+ *
+ * DEPRECATE(v3): superseded by CLOUD_SCORE_V3_SYSTEM_PROMPT, which emits the
+ * reason inside the SAME call that scores (conditional on the blended score
+ * clearing the gate). Kept for the flag-off legacy path.
  */
 export const CLOUD_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
@@ -823,6 +843,9 @@ When the chain DOES hold, the article is a Home stake — the chain terminates a
  * Headline Pass 1 — relevance score for TOP-HEADLINE articles.
  * Same base, same decision procedure, same `{"k","s"}` contract as
  * CLOUD_RELEVANCE_SYSTEM_PROMPT; adds the indirect-impact route.
+ *
+ * DEPRECATE(v3): superseded by CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT. Kept for
+ * the flag-off legacy path.
  */
 export const CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
@@ -847,6 +870,9 @@ Example for 3 articles: [{"k":"home","s":0.71},{"k":"none","s":0.13},{"k":"inter
  *
  * Wider word budget than the standard reason (≤35 vs ≤25): an impact reason has
  * to carry a mechanism AND its effect, which does not fit in 25 words.
+ *
+ * DEPRECATE(v3): superseded by CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT, which
+ * scores and (conditionally) reasons in one call. Kept for the legacy path.
  *
  * The wider cap still fits reasonMaxTokens (64) — measured, not assumed: the
  * worked positive example is 24 words / 32 est tokens (1.33 tok/word) and the
@@ -881,6 +907,268 @@ Never fabricate a connection. Never echo "[User facts]", "Relevance Score:", "Wh
 Examples. High: "A fifth of the world's seaborne oil passes Hormuz, so a closure raises what you pay at the pump and for heating in Amsterdam." Low: "Chile's copper royalty is a small change in a well-supplied global market; it does not affect your costs in Amsterdam."
 
 Output: single plain string, no prefixes, no markdown.`;
+
+// ---------------------------------------------------------------------------
+// RELEVANCE v3 — ONE call per batch, TWO axes, conditional reason.
+//
+// Replaces the (relevance pass → reason pass) PAIR above with a single system
+// prompt. Three measured problems drove it (2026-08-05 gold-set A/B, 348 judged
+// articles):
+//   1. COMPRESSION — the legacy prompt emits effectively three usable values
+//      (0.4 / 0.6 / 0.8); 90 of 466 scored rows tied at exactly 0.6, which makes
+//      "show fewer, better" impossible. Fix: two continuous 0–100 axes plus
+//      explicit spread instructions and few-shot anchors.
+//   2. THE RUBRIC FIGHTS STATED INTERESTS — 8 of 37 judge-must-shows were
+//      under-scored to 0.31–0.38, nearly all frontier-AI / EU-AI-regulation
+//      stories, i.e. a DECLARED interest penalised for carrying no personal
+//      consequence. Fix: `rel` measures closeness to stated interests on its own
+//      axis, and a strong stated-interest match alone earns rel ≥ 60 (the
+//      interest-leaning blend is the user's decision, 2026-08-05).
+//   3. COST — every kept article's content was sent twice (1.63 passes/article
+//      measured). Fix: the reason is emitted by the SAME call, only when the
+//      blended score clears the gate.
+//
+// The base rubric is REUSED verbatim (CLOUD_SCORING_BASE_PROMPT) — its stake
+// radii and Hard rules are the part that was validated against the golden
+// 1000-article run and they still decide what is TRUE about an article. Only the
+// OUTPUT changes, which is why the block below states, in the model's own view,
+// that the base's 0.05–1.10 values and {"k","s"} objects are the old format.
+//
+// Field order is load-bearing: `rel` and `impact` are emitted BEFORE `why`, so
+// the numbers are committed before any prose can anchor them — the same property
+// the two-pass design had for free (its reason pass treats the score as given).
+// ---------------------------------------------------------------------------
+
+/**
+ * The two-axis output contract + calibration anchors. Appended to
+ * CLOUD_SCORING_BASE_PROMPT in BOTH v3 prompts (never retyped) so the standard
+ * and headline variants cannot disagree about the axes, the spread rule, the
+ * `why` gate, or the JSON shape.
+ *
+ * DESIGN NOTE (for humans — do NOT explain to the model): this block deliberately
+ * overrides ONE thing in the base — the tier assignment that caps an
+ * interest-only match at TANGENTIAL (0.25–0.39). That cap is exactly what
+ * under-scored the AI-regulation must-shows, and it is named explicitly here
+ * rather than left to later-instruction-wins ordering. Nothing else is
+ * suspended: every Hard rule (no holdings, foreign-domestic, origin ≠ residence,
+ * place-keyword-alone, digests, island/metro radius) still applies in full, on
+ * BOTH axes.
+ *
+ * The `why` gate is stated as arithmetic on the two axes rather than as "when
+ * the score clears 0.4" because the model never sees the blend: persisted score
+ * = clamp(0.05 + 1.05·((0.65·rel + 0.35·impact)/100), 0.05, 1.10), so
+ * score ≥ 0.4 ⟺ 0.65·rel + 0.35·impact ≥ 33.33. The prompt rounds that to 34 and
+ * tells the model to include the reason when in doubt — a missing reason on a
+ * kept row is a visible defect, an extra one costs ~30 output tokens.
+ */
+const CLOUD_TWO_AXIS_BLOCK = `## Two-axis output (this REPLACES the single score above)
+
+Everything above still decides what is TRUE about an article: Step 1's bridge test, Step 2's stake radii, Step 3's interest test, and every Hard rule — no holdings, foreign-domestic, origin is not residence, a place keyword alone, digests and junk, island/metro radius, flagship-industry disputes. Those are unchanged and they bind both numbers below.
+
+What changes is what you EMIT. Instead of one 0.05–1.10 value and a stake tag, you emit TWO INTEGERS in 0–100 per article. The 0.05–1.10 numbers, the tier names, and the {"k","s"} objects above are the OLD output format: never emit them. Read the anchor table above only as ordering intuition — which articles beat which.
+
+### rel (0–100) — closeness to this user's stated life
+How squarely the article's SUBJECT sits on something [User facts] actually name: an interest area, their city, their country, a family place, an active trip, their profession, employer, or venture. rel answers "is this about something they told us they care about?" — NOT "does this change anything for them". That is the other axis.
+- **90–100** — the subject IS one of their named interest areas, their own city, a family city, their trip city, their employer, or their venture.
+- **70–89** — squarely inside their named field or their country, and specific: a concrete event, ruling, release, or change they would recognise as their territory.
+- **45–69** — their broader industry, region, or category. Recognisable overlap, not their exact named interest.
+- **20–44** — adjacent only: a neighbouring field, their origin country in general, a profession-adjacent think piece.
+- **0–19** — no overlap with anything in [User facts].
+**A strong stated-interest match alone earns rel ≥ 60, with or without any personal consequence.** This is the ONE thing that overrides the tiers above, which cap an interest-only match at TANGENTIAL: a frontier-model release, enforceable regulation, or a substantive finding inside a NAMED interest area is a direct hit on what this user asked for, and rel must say so even when impact is near zero. It does NOT license bridging: a story that matches no named interest scores low on rel no matter how important it is in the world.
+
+### impact (0–100) — concrete consequence for THIS user
+What actually changes for their life, work, city, money, safety, or plans.
+- **90–100** — immediate danger or a decision they must act on today, where they or their family are.
+- **70–89** — a direct change to their own work, product, home, family, or trip that they must respond to.
+- **45–69** — a real effect on their costs, work, plans, or environment within weeks; something to track or react to.
+- **20–44** — a distant or ambient effect: their sector, their city's background conditions, nothing to do.
+- **0–19** — nothing changes for them. This is the NORMAL value. Most articles, including interesting ones, belong here.
+An article can be a perfect interest match with impact 10 (rel high, impact low) or a mundane national-structural story with impact 60 and rel 40. Score the two independently — do not let one drag the other along.
+
+### Spread is mandatory
+Your scores are used to RANK, so identical numbers destroy the product. A typical batch has AT MOST 1–2 articles that deserve rel ≥ 70 and often none, and at most 1 that deserves impact ≥ 70. Use the full range with fine-grained values (12, 37, 48, 63, 88) — never give two articles in one batch the same pair unless they genuinely are equally relevant, and never park a batch on round repeated values (50, 50, 60, 60). If every article in a batch looks the same to you, they are almost certainly all LOW — push them down, do not park them in the middle.
+
+### Calibration anchors (example user: AI researcher and builder in Amsterdam; named interests AI research and AI policy; family in Bhopal; no investments)
+- "EU announces major new AI Act obligations for model developers" → {"i":1,"rel":88,"impact":70,"why":"New EU obligations apply directly to the AI systems your research and product work depend on."} — named interest AND enforceable where he is.
+- "Chip supplier raises quarterly forecast on AI demand" → {"i":2,"rel":50,"impact":35,"why":"An AI-demand forecast touches your AI-research interest, but nothing here changes your own work."} — industry-category signal, no holdings, nothing to act on.
+- "National chess tournament opens in another country" → {"i":3,"rel":12,"impact":5} — no interest match, no stake, no reason emitted.
+
+### The "why" field — conditional
+Emit "why" ONLY when (0.65 × rel) + (0.35 × impact) is at least 34. Below that, OMIT the key entirely — do not emit an empty string, "n/a", or a null. When you are within a point or two of the line, include it.
+When you do emit it: ONE plain sentence, 25 words or fewer, containing (a) a specific detail from the article — the event, entity, place, policy, or product, never "this topic" — and (b) the specific user fact that creates the link — city, profession, employer, family location, named interest — never "your interests". Match the tone to your own numbers: confident when both are high, one hedge word in the middle, and plainly stating the limit when rel is high but impact is low ("matches your AI-research interest, but changes nothing for your work").
+
+${CLOUD_REASON_VOICE_RULE}
+
+Never fabricate a connection: if the article is about holiday homes, the reason is about holiday homes. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.
+
+### Field order is load-bearing
+Always emit "i", then "rel", then "impact", then (if it qualifies) "why". Decide the two numbers first and let the sentence explain them. Never revise a number to fit a sentence you have already written.`;
+
+/**
+ * v3 — the merged two-axis score + conditional reason system prompt for STANDARD
+ * (topic-retrieved) articles. Replaces the CLOUD_RELEVANCE_SYSTEM_PROMPT +
+ * CLOUD_REASON_SYSTEM_PROMPT pair when `scoringEngine.RELEVANCE_V3` is on.
+ * Pairs with {@link buildBatchScoringUserMessage} (unchanged) and is decoded by
+ * {@link parseScoreV3Response}.
+ */
+export const CLOUD_SCORE_V3_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_TWO_AXIS_BLOCK}
+
+## Task
+You will be given N articles framed as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … For EACH article independently, run the decision procedure (Steps 1–4) and the Hard rules, then express your judgement as the two axes above.
+
+Output ONE JSON array of exactly N objects, in input order, and nothing else — no prose before or after, no markdown fence. There are TWO object shapes and most articles take the short one:
+{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}            ← the DEFAULT shape
+{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>, "why": "<25 words or fewer>"}  ← ONLY when (0.65 × rel) + (0.35 × impact) ≥ 34
+- \`"i"\` is 1 for \`===== Article 0 =====\`, 2 for \`===== Article 1 =====\`, and so on.
+- \`"rel"\` and \`"impact"\` are INTEGERS (never decimals) and always come before \`"why"\`.
+- A low-scoring article with a \`"why"\` is a FORMAT ERROR — the chess-tournament anchor above shows the correct low-score shape.
+- \`"why"\` is present ONLY when (0.65 × rel) + (0.35 × impact) ≥ 34; otherwise the key is absent.
+- The user message ends with a legacy line asking for "a JSON array of N numbers". IGNORE it — return the N objects described here.
+
+Example for 3 articles: [{"i":1,"rel":88,"impact":70,"why":"New EU obligations apply directly to the AI systems your product work depends on."},{"i":2,"rel":50,"impact":35,"why":"An AI-demand forecast touches your AI-research interest, but nothing here changes your own work."},{"i":3,"rel":12,"impact":5}]`;
+
+/**
+ * v3 — the merged two-axis prompt for TOP-HEADLINE articles: the same base and
+ * the same indirect-impact rubric as the legacy headline pair, plus the two-axis
+ * output contract. Replaces CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT +
+ * CLOUD_HEADLINE_REASON_SYSTEM_PROMPT when `RELEVANCE_V3` is on.
+ *
+ * The impact block's own numbers are stated on the legacy 0.05–1.10 scale; the
+ * Task below restates its one binding ceiling ("an indirect chain never exceeds
+ * 0.79") on the impact axis, so the rule survives the scale change instead of
+ * being silently dropped.
+ */
+// Anchors dropped HERE ONLY (size cap above): the two-axis block carries its
+// own 0-100 anchors, and the impact block overrides the tier examples anyway.
+export const CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCORING_BASE_POST_ANCHORS}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+${CLOUD_TWO_AXIS_BLOCK}
+
+## Task
+You will be given N top-headline articles framed as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … For EACH article independently, run the decision procedure (Steps 1–4) WITH the headline override available at Step 2, then express your judgement as the two axes above.
+
+Reading the impact override onto the two axes:
+- Before crediting an impact chain, check all four gates in order: channel from the closed list → user exposed to it → magnitude passes → mechanism stated in the article. Any failure ⇒ there is no chain, and \`impact\` is 0–19.
+- A chain that HOLDS is worth \`impact\` 45–79, never more: the 80+ range is reserved for a DIRECT change to this user's own work, home, family, or trip. A price or supply effect arriving through a chain, however large the event in its own place, does not outrank a flood in their family's city.
+- A failed chain does NOT lift \`rel\`. \`rel\` measures only how close the article's subject is to what [User facts] name — a major world event this user has no stated connection to scores low on both axes, and saying so plainly is the correct answer.
+
+Output ONE JSON array of exactly N objects, in input order, and nothing else — no prose before or after, no markdown fence. There are TWO object shapes and most articles take the short one:
+{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}            ← the DEFAULT shape
+{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>, "why": "<25 words or fewer>"}  ← ONLY when (0.65 × rel) + (0.35 × impact) ≥ 34
+- \`"rel"\` and \`"impact"\` are INTEGERS and always come before \`"why"\`. A low-scoring article carrying a \`"why"\` is a FORMAT ERROR.
+- When the reason explains a chain, name the MECHANISM in the article's own terms and end at THIS user; never use the rubric's private vocabulary ("channel", "chain", "magnitude", "absorbed", "propagate", "hop", "exposure", "universal household").
+- The user message ends with a legacy line asking for "a JSON array of N numbers". IGNORE it — return the N objects described here.
+
+Example for 3 articles: [{"i":1,"rel":62,"impact":72,"why":"A fifth of the world's seaborne oil passes Hormuz, so a closure raises what you pay at the pump in Amsterdam."},{"i":2,"rel":30,"impact":10},{"i":3,"rel":15,"impact":5}]`;
+
+/** One decoded v3 article verdict: two 0–100 integers plus the conditional
+ *  user-facing reason. `why` is absent (not empty) below the reason gate. */
+export interface ScoreV3Entry {
+  rel: number;
+  impact: number;
+  why?: string;
+}
+
+/** Clamp + integerise one 0–100 axis value; NaN for anything unusable. */
+function coerceAxis(v: unknown): number {
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
+  if (!Number.isFinite(n)) return NaN;
+  return Math.max(0, Math.min(100, Math.round(n)));
+}
+
+/** Strip the markdown/prefix noise the reason parser also strips, collapse
+ *  whitespace, and cap the length (same 200-char cap as parseReasonResponse, so
+ *  a v3 reason cannot exceed what the legacy path could persist). */
+function cleanWhy(raw: string): string {
+  return raw
+    .replace(/\*?\*?\[User facts\]\*?\*?.*$/gm, '')
+    .replace(/\*?\*?Relevance Score:?\s*[\d.]+\*?\*?/gi, '')
+    .replace(/\*?\*?Why this matters to you:?\*?\*?\s*/gi, '')
+    .replace(/[*#]+/g, '')
+    .replace(/\n+/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+    .slice(0, 200);
+}
+
+/**
+ * Decode a v3 batch response: a JSON array of exactly `expectedCount` objects
+ * `{"i":1,"rel":0-100,"impact":0-100,"why"?:string}` in input order.
+ *
+ * TOLERANT about framing, STRICT about structure — deliberately, and differently
+ * from {@link parseBatchRelevanceResponse}, which pads with a fallback score.
+ * Padding is the right failure mode for a score-only call (a fallback relevance
+ * is a defined product state); it is the WRONG one here, because a padded row
+ * would also lose its reason and there is no second pass left to recover it. So
+ * this returns `null` on any structural mismatch — wrong length, a non-object
+ * entry, a missing or unusable axis — and the caller decides whether to retry
+ * the batch or fall back.
+ *
+ * Tolerances applied: surrounding prose or a markdown fence (the outermost
+ * `[ … ]` is extracted), numeric strings for the axes, and `"i"` ordering — when
+ * every entry carries a distinct integer `i` in 1..N the entries are placed by
+ * it, so a model that emits them out of order still decodes correctly; otherwise
+ * plain array order is used.
+ */
+export function parseScoreV3Response(
+  text: string,
+  expectedCount: number,
+): ScoreV3Entry[] | null {
+  if (!Number.isInteger(expectedCount) || expectedCount <= 0) return null;
+  const trimmed = (text ?? '').trim();
+  const start = trimmed.indexOf('[');
+  const end = trimmed.lastIndexOf(']');
+  if (start === -1 || end <= start) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || parsed.length !== expectedCount) return null;
+
+  const entries: ScoreV3Entry[] = [];
+  const positions: number[] = [];
+  for (const raw of parsed) {
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return null;
+    const o = raw as Record<string, unknown>;
+    const rel = coerceAxis(o.rel);
+    const impact = coerceAxis(o.impact);
+    if (isNaN(rel) || isNaN(impact)) return null;
+    const entry: ScoreV3Entry = { rel, impact };
+    if (typeof o.why === 'string') {
+      const why = cleanWhy(o.why);
+      if (why.length > 0) entry.why = why;
+    }
+    entries.push(entry);
+    const i = typeof o.i === 'number' ? o.i : Number(o.i);
+    positions.push(Number.isInteger(i) ? i : NaN);
+  }
+
+  // Reorder by "i" only when EVERY entry declares a distinct 1..N position;
+  // a partial or duplicated numbering is ignored rather than half-applied.
+  const seen = new Set<number>();
+  const usable = positions.every((p) => {
+    if (!Number.isInteger(p) || p < 1 || p > expectedCount || seen.has(p))
+      return false;
+    seen.add(p);
+    return true;
+  });
+  if (!usable) return entries;
+
+  const ordered = new Array<ScoreV3Entry | undefined>(expectedCount);
+  entries.forEach((e, idx) => {
+    ordered[positions[idx] - 1] = e;
+  });
+  return ordered.every((e): e is ScoreV3Entry => e !== undefined)
+    ? (ordered as ScoreV3Entry[])
+    : entries;
+}
 
 /**
  * Second-pass FEED verifier (cloud). Runs ONLY over the articles the first pass
@@ -1057,8 +1345,12 @@ export function buildBatchScoringUserMessage(params: {
     country?: string;
     relatedFacts?: string[];
   }[];
+  /** v3 merged path: the trailer must ask for the two-axis OBJECT schema, not
+   *  the legacy "N numbers" line — a contradictory trailer is the last thing
+   *  the model reads and wins format fights against the system prompt. */
+  v3?: boolean;
 }): string {
-  const { userContext, articles } = params;
+  const { userContext, articles, v3 } = params;
   const blocks = articles.map((a, i) => {
     // Omit the Article Country line entirely when the publication has no real
     // country scope — a missing value or a 'GLOBAL' placeholder carries no
@@ -1072,7 +1364,10 @@ export function buildBatchScoringUserMessage(params: {
       .join('; ') || 'none';
     return `===== Article ${i} =====\nNews Title: ${sanitizeForPrompt(a.title)}\nNews Description: ${sanitizeForPrompt(a.description)}${countryLine}\nRelated User Fact: ${related}`;
   });
-  return `User Context: ${userContext}\n\n${blocks.join('\n\n')}\n\nReturn a JSON array of ${articles.length} numbers (one per article, in order).`;
+  const trailer = v3
+    ? `Return a JSON array of ${articles.length} objects ({"i","rel","impact","why"?}), one per article, in order.`
+    : `Return a JSON array of ${articles.length} numbers (one per article, in order).`;
+  return `User Context: ${userContext}\n\n${blocks.join('\n\n')}\n\n${trailer}`;
 }
 
 /**

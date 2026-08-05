@@ -124,21 +124,33 @@ describe('buildFactRows ownership', () => {
   // claimed it. Ownership answers "which fact did this MATCH?" from topic
   // weights alone; these two rules add the missing relevance backing.
 
-  it('RULE 1: a sub-discardFloor row never claims a section, even though it clears RENDER_GATE', () => {
+  it('RENDER_GATE == discardFloor (relevance v3): the historic sub-discardFloor gap is CLOSED', () => {
+    // Pre-v3, RENDER_GATE (0.3) was looser than discardFloor (0.4): a row at
+    // 0.35 was feed-"visible" yet already discarded by the pipeline
+    // (bucketOf → UNSCORED), and Rule 1 (isSectionMemberEligible) existed to
+    // catch exactly that gap before it could claim a fact section. RENDER_GATE
+    // is now 0.4 — numerically identical to discardFloor — so nothing
+    // sub-discardFloor can reach `buildFactRows` at all any more: the gap Rule 1
+    // guarded against no longer has a way to occur.
     const snap = snapshots(
       [['t1', { factId: 'f1' }]],
       [['f1', { statement: 'Learning Dutch' }]],
     );
-    // 0.35 sits in the gap the bug lived in: above RENDER_GATE (0.3) so it is
-    // "visible", but below discardFloor (0.4) so the pipeline already discarded
-    // it — bucketOf → UNSCORED.
-    const discarded = sugg({ _id: 'sub', relevance: 0.35, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    const subGate = sugg({ _id: 'sub', relevance: 0.39, matchedTopics: [{ topicId: 't1', text: 'x' }] });
+    // Exactly at the (now-shared) gate/floor cutoff: renders, buckets LOW, and
+    // — per the "0.4-bucketed LOW rows must stay included" decision — still
+    // claims its section (Rule 1 no longer excludes it). A HIGH-bucketed sibling
+    // (`real`) is included purely to satisfy Rule 2's section-viability floor
+    // (isFactSectionViable — a section with only LOW members is dropped
+    // entirely; that is a SEPARATE rule from the one this test targets, see
+    // `RULE 2` below).
+    const atGate = sugg({ _id: 'at-gate', relevance: 0.4, matchedTopics: [{ topicId: 't1', text: 'x' }] });
     const real = sugg({ _id: 'real', relevance: 0.8, matchedTopics: [{ topicId: 't1', text: 'x' }] });
-    expect(passesRenderGate(discarded)).toBe(true); // it IS feed-visible
-    const { rows } = buildFactRows([discarded, real], snap, new Set(), NOW);
+    expect(passesRenderGate(subGate)).toBe(false); // never reaches the visible pool
+    expect(passesRenderGate(atGate)).toBe(true);
+    const { rows } = buildFactRows([subGate, atGate, real], snap, new Set(), NOW);
     const f1 = rows.find((r) => r.factId === 'f1');
-    // The section exists (the HIGH story backs it) but the discard is not in it.
-    expect(f1?.groups.map((g) => g.data._id)).toEqual(['real']);
+    expect(f1?.groups.map((g) => g.data._id).sort()).toEqual(['at-gate', 'real']);
   });
 
   it('RULE 2: a fact whose every match is LOW gets NO section', () => {
@@ -214,10 +226,47 @@ describe('buildFactRows ownership', () => {
 
 // --- render gate + note-gated visibility ----------------------------------
 
+describe('effectiveRenderGate (v3 calibration)', () => {
+  afterEach(() => jest.resetModules());
+
+  function gateWithFlag(relevanceV3: boolean): number {
+    jest.isolateModules(() => {
+      jest.doMock('@/lib/stores/mera-protocol-store', () => ({
+        useMeraProtocolStore: { getState: () => ({ relevanceV3 }) },
+      }));
+    });
+    jest.doMock('@/lib/stores/mera-protocol-store', () => ({
+      useMeraProtocolStore: { getState: () => ({ relevanceV3 }) },
+    }));
+    // effectiveRenderGate lazy-requires the store, so the doMock above is
+    // what it sees on the next call.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { effectiveRenderGate } = require('@/lib/stores/fact-rows-selector');
+    return effectiveRenderGate();
+  }
+
+  it('is V3_RENDER_GATE (0.55) while the v3 scorer is active', () => {
+    expect(gateWithFlag(true)).toBe(0.55);
+  });
+
+  it('is RENDER_GATE (0.4) for legacy scoring', () => {
+    expect(gateWithFlag(false)).toBe(0.4);
+  });
+
+  it('fails open to the legacy gate when the store is unavailable', () => {
+    jest.doMock('@/lib/stores/mera-protocol-store', () => {
+      throw new Error('store unavailable');
+    });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { effectiveRenderGate } = require('@/lib/stores/fact-rows-selector');
+    expect(effectiveRenderGate()).toBe(0.4);
+  });
+});
+
 describe('buildFactRows visibility', () => {
   const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
 
-  it('drops sub-render-gate (relevance ≤ 0.3) rows', () => {
+  it('drops sub-render-gate (relevance < RENDER_GATE, 0.4) rows', () => {
     const lo = sugg({ _id: 'lo', relevance: 0.28, matchedTopics: [{ topicId: 't1', text: 'x' }] });
     const { rows } = buildFactRows([lo], snap, new Set(), NOW);
     expect(rows).toHaveLength(0);
@@ -585,14 +634,14 @@ describe('isVisible composition (drift guard)', () => {
     expect(seen.filter(Boolean)).toHaveLength(1); // exactly one visible combination
   });
 
-  it('EXCLUDES relevance exactly at RENDER_GATE (the gate is strictly >)', () => {
+  it('INCLUDES relevance exactly at RENDER_GATE (relevance v3: the gate is inclusive, >=)', () => {
     const at = sugg({ _id: 'gate-at', relevance: RENDER_GATE });
-    expect(passesRenderGate(at)).toBe(false);
-    expect(isVisible(at, CUTOFF)).toBe(false);
+    expect(passesRenderGate(at)).toBe(true);
+    expect(isVisible(at, CUTOFF)).toBe(true);
 
-    const just = sugg({ _id: 'gate-over', relevance: RENDER_GATE + 0.01 });
-    expect(passesRenderGate(just)).toBe(true);
-    expect(isVisible(just, CUTOFF)).toBe(true);
+    const under = sugg({ _id: 'gate-under', relevance: RENDER_GATE - 0.01 });
+    expect(passesRenderGate(under)).toBe(false);
+    expect(isVisible(under, CUTOFF)).toBe(false);
   });
 
   it('INCLUDES firstPubDate exactly at the cutoff (the window is >=)', () => {

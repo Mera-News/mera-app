@@ -31,6 +31,16 @@ export interface ArticlePipelineConfig {
   articlesPerScorePrompt: number;
   /** Output token ceiling for one batched score call. */
   scoreBatchMaxTokens: number;
+  /** Output token ceiling for one batched RELEVANCE v3 score call — the merged
+   *  two-axis pass, which writes scores AND (conditionally) the user-facing
+   *  reason in the same response. Bigger than `scoreBatchMaxTokens` because the
+   *  output now carries prose: per article `{"i":1,"rel":88,"impact":70,"why":…}`
+   *  is ~12 tokens of scaffold + up to 25 words (~34 tokens) of reason ≈ 46, so
+   *  5 articles ≈ 230 worst case; 640 leaves ~2.7× headroom so a verbose model
+   *  never truncates mid-array (a truncated array decodes to null → the whole
+   *  batch retries or falls back). Used INSTEAD OF scoreBatchMaxTokens on the v3
+   *  path only; the legacy two-pass path keeps 320. */
+  v3ScoreBatchMaxTokens: number;
   /** Sampling temperature for relevance-score calls. */
   scoreTemperature: number;
   /** Sampling temperature for reason-generation calls. */
@@ -223,8 +233,33 @@ export interface ScoringEngineConfig {
    *  LLM path runs and bucketing there is untouched.
    *
    *  Bound from the Zustand store field `relevanceV2` in that composition root;
-   *  the harness itself never reads the store or `process.env`. */
+   *  the harness itself never reads the store or `process.env`.
+   *
+   *  DEPRECATE(v3): superseded by {@link RELEVANCE_V3}, which retires the
+   *  math-authoritative path this flag selects. The key stays declared (and
+   *  false) until the runtime layering that reads it is removed. */
   RELEVANCE_V2: boolean;
+  /** Relevance v3 — the single-pass two-axis scoring path. Like the two flags
+   *  above this is a ROUTING SWITCH, not a tunable, and is deliberately absent
+   *  from `calibration::TUNABLE_CONSTANTS` (a boolean cannot ride a
+   *  `base × (1 + delta)` layer).
+   *
+   *  `false` (the default) ⇒ exactly today's behaviour: the legacy two-pass
+   *  cloud path (CLOUD_RELEVANCE_SYSTEM_PROMPT → CLOUD_REASON_SYSTEM_PROMPT),
+   *  scores bucketed to the four representative values.
+   *
+   *  `true` ⇒ ONE call per batch with CLOUD_SCORE_V3_SYSTEM_PROMPT (or the
+   *  headline variant) returning `{"i","rel","impact","why"?}` per article; the
+   *  persisted score is the CONTINUOUS blend
+   *  `clamp(0.05 + 1.05·((0.65·rel + 0.35·impact)/100), 0.05, 1.10)`
+   *  (`article-pipeline/scoring::blendToScore`) — `bucketScores` is NOT applied
+   *  on this path, so ranking keeps its resolution, and `v3ScoreBatchMaxTokens`
+   *  is used instead of `scoreBatchMaxTokens`.
+   *
+   *  Bound from the Zustand store field `relevanceV3` in the composition root
+   *  (`mera-protocol/stage-scoring::effectiveHarnessConfig`); the harness itself
+   *  never reads the store or `process.env`. */
+  RELEVANCE_V3: boolean;
   // --- affinity component weights (positive contributors sum ≈ 1) ---------
   /** Explicit topic interest (magnitude of the strongest matched topic). */
   W_TOPIC: number;
@@ -339,13 +374,18 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // verbose model never truncates mid-array (truncation = whole batch falls
     // back to fallbackRelevance).
     scoreBatchMaxTokens: 320,
+    // Merged v3 pass: scores + conditional reasons for ~5 articles in one
+    // response (see the field's doc comment for the arithmetic).
+    v3ScoreBatchMaxTokens: 640,
     scoreTemperature: 0.1,
     reasonTemperature: 0.2,
     reasonMaxTokens: 64,
     discardFloor: 0.4,
     fallbackRelevance: 0.3,
     ineligibleRelevance: 0.2,
-    reasonRelevanceThreshold: 0.3,
+    // Lockstep with RENDER_GATE / inference-results.REASON_RELEVANCE_THRESHOLD
+    // (0.3 -> 0.4 in the v3 wave); comparisons are INCLUSIVE (>=).
+    reasonRelevanceThreshold: 0.4,
     mediumPriorityCutoff: 0.6,
     highPriorityCutoff: 0.8,
     emergencyPriorityCutoff: 1.0,
@@ -426,6 +466,10 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // runtime from the store in `effectiveHarnessConfig`; the harness default
     // must always describe today's shipped behaviour.
     RELEVANCE_V2: false,
+    // Relevance v3 (single-pass two-axis scoring) is OFF by default, in the same
+    // style and for the same reason: an explicit literal, not an absent key read
+    // as falsy. Layered in at runtime from the store in `effectiveHarnessConfig`.
+    RELEVANCE_V3: false,
     // affinity component weights (positives sum to ≈ 1.0 at full saturation).
     // Wave 7b rebalance: W_TOPIC 0.42→0.32, the freed 0.10 → W_BREADTH.
     // Round-3 A2: freshness decay removed (W_FRESH 0.08 deleted). The remaining

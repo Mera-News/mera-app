@@ -30,7 +30,7 @@ import {
     useMeraProtocolStore,
     useModelState as useModelStateSelector,
     useProcessingMode,
-    useRelevanceV2,
+    useRelevanceV3,
     useSelectedModelId,
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
@@ -106,7 +106,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const modelState = useModelStateSelector();
     const downloadProgress = useDownloadProgress();
     const store = useMeraProtocolStore();
-    const relevanceV2 = useRelevanceV2();
+    const relevanceV3 = useRelevanceV3();
 
     const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
     const hasModelUpdate = selectedModelId !== LATEST_MODEL.modelId;
@@ -637,36 +637,36 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </>
             )}
 
-            {/* Relevance fetching v2 toggle */}
-            <Box className="px-5 mb-6" testID="mera-protocol-relevance-v2">
+            {/* Relevance scoring v3 toggle */}
+            <Box className="px-5 mb-6" testID="mera-protocol-relevance-v3">
                 <HStack space="md" className="items-center justify-between">
                     <HStack space="md" className="items-center flex-1">
                         <MaterialIcons
                             name="tune"
                             size={24}
-                            color={relevanceV2 ? "#10b981" : "#9ca3af"}
+                            color={relevanceV3 ? "#10b981" : "#9ca3af"}
                         />
                         <VStack className="flex-1">
                             <Text className="text-white text-base font-semibold">
-                                {t('meraProtocol.relevanceV2Title')}
+                                {t('meraProtocol.relevanceV3Title')}
                             </Text>
                             <Text className="text-typography-500 text-sm mt-0.5">
-                                {relevanceV2
-                                    ? t('meraProtocol.relevanceV2On')
-                                    : t('meraProtocol.relevanceV2Off')}
+                                {relevanceV3
+                                    ? t('meraProtocol.relevanceV3On')
+                                    : t('meraProtocol.relevanceV3Off')}
                             </Text>
                         </VStack>
                     </HStack>
                     <Switch
-                        value={relevanceV2}
-                        onToggle={() => store.setRelevanceV2(!relevanceV2)}
+                        value={relevanceV3}
+                        onToggle={() => store.setRelevanceV3(!relevanceV3)}
                         size="md"
                         disabled={readOnly}
-                        testID="mera-protocol-relevance-v2-switch"
+                        testID="mera-protocol-relevance-v3-switch"
                     />
                 </HStack>
                 <Text className="text-typography-500 text-xs mt-2">
-                    {t('meraProtocol.relevanceV2Description')}
+                    {t('meraProtocol.relevanceV3Description')}
                 </Text>
             </Box>
 

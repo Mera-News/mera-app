@@ -2,6 +2,7 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { getRelevanceColors } from '@/lib/relevance-utils';
+import { bandOf } from '@/lib/news-harness/feed-select/ownership';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,14 +14,20 @@ interface RelevanceChipProps {
 /**
  * Per-tier icon so the chip is never color-only (a11y decision, Wave 7c N2):
  * emergency `warning`, high `arrow-upward`, medium `remove`, low
- * `arrow-downward`. Thresholds mirror `getRelevanceColors`.
+ * `arrow-downward`. Reads the band from `bandOf` (feed-select/ownership.ts) —
+ * the unified band source of truth as of relevance v3 (2026-08-05) — instead of
+ * a private hardcoded copy of the cutoffs, so this icon can never fall out of
+ * step with `getRelevanceColors`'s label/color or the Dashboard/feed-ordering
+ * band for the SAME relevance value.
  */
 function tierIcon(relevance: number): keyof typeof MaterialIcons.glyphMap {
-    if (relevance > 1.0) return 'warning';
-    if (relevance >= 0.77) return 'arrow-upward';
-    if (relevance >= 0.53) return 'remove';
-    if (relevance > 0.3) return 'arrow-downward';
-    return 'remove';
+    switch (bandOf(relevance)) {
+        case 'EMERGENCY': return 'warning';
+        case 'HIGH': return 'arrow-upward';
+        case 'MEDIUM': return 'remove';
+        case 'LOW': return 'arrow-downward';
+        default: return 'remove'; // SUB_GATE (incl. negative/unprocessed)
+    }
 }
 
 const RelevanceChip: React.FC<RelevanceChipProps> = ({ relevance }) => {

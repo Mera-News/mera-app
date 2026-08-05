@@ -10,18 +10,54 @@ import {
   sortByPriority,
   type PriorityFacts,
 } from '../priority-order';
+import { bandOf, bandRank, bucketOf, bucketRank } from '@/lib/news-harness/feed-select/ownership';
 
+// relevance v3 (2026-08-05) band-ladder unification: `relevanceBandRank` moved
+// off its own private 0.53/0.77 cutoffs onto the unified `bandOf`/`bandRank`
+// (feed-select/ownership.ts), whose cutoffs are 0.6/0.8 (EMERGENCY >1.0, HIGH
+// >=0.8, MEDIUM >=0.6, LOW >=0.4, else SUB_GATE).
 describe('relevanceBandRank', () => {
-  it('mirrors the getRelevanceColors thresholds', () => {
+  it('mirrors the unified bandOf cutoffs (0.6/0.8, not the old 0.53/0.77)', () => {
     expect(relevanceBandRank(1.2)).toBe(0); // emergency
     expect(relevanceBandRank(0.9)).toBe(1); // high
-    expect(relevanceBandRank(0.77)).toBe(1); // inclusive edge
-    expect(relevanceBandRank(0.6)).toBe(2); // medium
-    expect(relevanceBandRank(0.53)).toBe(2); // inclusive edge
-    expect(relevanceBandRank(0.4)).toBe(3); // low
-    expect(relevanceBandRank(0.3)).toBe(4); // exclusive edge → irrelevant
+    expect(relevanceBandRank(0.8)).toBe(1); // inclusive edge
+    expect(relevanceBandRank(0.7)).toBe(2); // medium
+    expect(relevanceBandRank(0.6)).toBe(2); // inclusive edge
+    expect(relevanceBandRank(0.4)).toBe(3); // low, inclusive edge (RENDER_GATE)
+    expect(relevanceBandRank(0.39)).toBe(4); // just below → irrelevant/sub-gate
     expect(relevanceBandRank(0)).toBe(4);
   });
+});
+
+// Band-purity contract: the SAME relevance value must resolve to the SAME band
+// everywhere — the card pill (RelevanceChip / getRelevanceColors), feed
+// ordering + the importance filter (this module), and the Dashboard's section
+// viability (`bucketOf`). Both `relevanceBandRank` (via `bandOf`) and
+// `bucketOf` are driven by the same fixed cutoffs (0.4/0.6/0.8/1.0, matching
+// DEFAULT_HARNESS_CONFIG's articlePipeline cutoffs), so probing the same
+// boundary scores through both must agree once the two ranking scales — LOWER
+// sorts first (`relevanceBandRank`) vs HIGHER is more prominent
+// (`bucketOf`/`bucketRank`) — are reconciled (`4 - bucketRank === bandRank`,
+// which is exactly what `relevanceBandRank` computes).
+describe('band unification — pill/ordering band matches the Dashboard bucketOf band', () => {
+  it.each([0.4, 0.55, 0.6, 0.79, 0.8, 1.05])(
+    'relevance %s resolves to the same band via bandOf and bucketOf',
+    (relevance) => {
+      const band = bandOf(relevance);
+      const bucket = bucketOf(relevance);
+      // bandOf names the sub-floor tier SUB_GATE; bucketOf (config-driven) names
+      // it UNSCORED. Every probe above is >= discardFloor (0.4), so neither
+      // sentinel should ever be hit here — asserted explicitly so a cutoff typo
+      // in either function fails loudly instead of silently matching on the
+      // sentinel value.
+      expect(band).not.toBe('SUB_GATE');
+      expect(bucket).not.toBe('UNSCORED');
+      expect(bandRank(band)).toBe(bucketRank(bucket));
+      // And the pill's own rank (what RelevanceChip/getRelevanceColors and feed
+      // ordering actually use) matches too.
+      expect(relevanceBandRank(relevance)).toBe(4 - bucketRank(bucket));
+    },
+  );
 });
 
 describe('isViewedArticle', () => {

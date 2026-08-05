@@ -22,7 +22,7 @@ import {
   passesImportanceThreshold,
   type ImportanceThreshold,
 } from '@/lib/feed-ordering/importance-filter';
-import { isBreaking, RENDER_GATE } from '@/lib/stores/fact-rows-selector';
+import { effectiveRenderGate, isBreaking } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useForYouCounts, useForYouSuggestions } from '@/lib/stores/selectors';
@@ -36,11 +36,15 @@ import { useForYouCounts, useForYouSuggestions } from '@/lib/stores/selectors';
 // this window in step with that constant without a second hardcoded copy;
 // keep it in step with SUGGESTION_TTL_MS too (not exported, currently 48h).
 const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
-/** A scored suggestion counts as "relevant" above this bar. Imported rather
- *  than copied: this header number sits next to the feed's own count in the
- *  funnel diagnostic, and a silently-diverged private copy would make that
- *  comparison a lie. */
-const RELEVANT_GATE = RENDER_GATE;
+/** A scored suggestion counts as "relevant" at or above this bar. Imported
+ *  rather than copied: this header number sits next to the feed's own count in
+ *  the funnel diagnostic, and a silently-diverged private copy would make that
+ *  comparison a lie.
+ *
+ *  RELEVANCE V3 (2026-08-05): `RENDER_GATE` is now INCLUSIVE (`relevance >=
+ *  RENDER_GATE`, was strict `>`), so the comparison below matches — see the
+ *  comment there. */
+const relevantGate = () => effectiveRenderGate();
 
 export interface FeedCounts {
   /** Total articles published this cycle (store-tracked). */
@@ -109,8 +113,11 @@ export function computeFeedCounts(
     // Same two-part rule the Feed list applies (`filterByImportance`): band, or
     // breaking regardless of band. `isBreaking` reads only rawScore/eventType,
     // hence the downcast rather than a second copy of the rule here.
+    // `>=`, not `>`: RENDER_GATE is inclusive as of relevance v3 (see the
+    // comment on `RELEVANT_GATE` above) — a strict comparison here would silently
+    // undercount the header relative to what the feed itself renders.
     if (
-      s.relevance > RELEVANT_GATE &&
+      s.relevance >= relevantGate() &&
       (passesImportanceThreshold(s.relevance, threshold) ||
         isBreaking(s as ForYouSuggestion))
     ) {

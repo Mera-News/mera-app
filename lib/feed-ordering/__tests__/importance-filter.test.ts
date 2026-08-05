@@ -7,26 +7,29 @@ import {
   passesImportanceThreshold,
 } from '../importance-filter';
 
+// relevance v3 (2026-08-05) band-ladder unification: `relevanceBandRank` (which
+// this module is built on) moved off its own 0.53/0.77 cutoffs onto the unified
+// `bandOf` cutoffs — 0.4 (RENDER_GATE, also the LOW floor) / 0.6 / 0.8.
 describe('passesImportanceThreshold', () => {
-  // Band edges from relevanceBandRank: emergency >1.0, high ≥0.77,
-  // medium ≥0.53, low >0.3.
-  it("'low' reproduces the 0.3 render gate exactly", () => {
-    expect(passesImportanceThreshold(0.3, 'low')).toBe(false);
-    expect(passesImportanceThreshold(0.301, 'low')).toBe(true);
-    expect(passesImportanceThreshold(0.52, 'low')).toBe(true);
+  // Band edges from relevanceBandRank: emergency >1.0, high ≥0.8, medium ≥0.6,
+  // low ≥0.4 (RENDER_GATE, inclusive).
+  it("'low' reproduces the 0.4 render gate exactly", () => {
+    expect(passesImportanceThreshold(0.39, 'low')).toBe(false);
+    expect(passesImportanceThreshold(0.4, 'low')).toBe(true);
+    expect(passesImportanceThreshold(0.59, 'low')).toBe(true);
     expect(passesImportanceThreshold(1.1, 'low')).toBe(true);
   });
 
   it("'medium' admits medium and above only", () => {
-    expect(passesImportanceThreshold(0.529, 'medium')).toBe(false);
-    expect(passesImportanceThreshold(0.53, 'medium')).toBe(true);
-    expect(passesImportanceThreshold(0.77, 'medium')).toBe(true);
+    expect(passesImportanceThreshold(0.59, 'medium')).toBe(false);
+    expect(passesImportanceThreshold(0.6, 'medium')).toBe(true);
+    expect(passesImportanceThreshold(0.79, 'medium')).toBe(true);
     expect(passesImportanceThreshold(0.4, 'medium')).toBe(false);
   });
 
   it("'high' admits high and emergency only", () => {
-    expect(passesImportanceThreshold(0.769, 'high')).toBe(false);
-    expect(passesImportanceThreshold(0.77, 'high')).toBe(true);
+    expect(passesImportanceThreshold(0.79, 'high')).toBe(false);
+    expect(passesImportanceThreshold(0.8, 'high')).toBe(true);
     expect(passesImportanceThreshold(0.6, 'high')).toBe(false);
   });
 
@@ -47,15 +50,15 @@ describe('passesImportanceThreshold', () => {
 
 describe('isCulledHeadlineRelevance', () => {
   it('culls the LOW band and below', () => {
-    expect(isCulledHeadlineRelevance(0.529)).toBe(true);
+    expect(isCulledHeadlineRelevance(0.59)).toBe(true);
     expect(isCulledHeadlineRelevance(0.4)).toBe(true);
     expect(isCulledHeadlineRelevance(0.2)).toBe(true);
     expect(isCulledHeadlineRelevance(0)).toBe(true);
   });
 
   it('keeps medium and above', () => {
-    expect(isCulledHeadlineRelevance(0.53)).toBe(false);
-    expect(isCulledHeadlineRelevance(0.77)).toBe(false);
+    expect(isCulledHeadlineRelevance(0.6)).toBe(false);
+    expect(isCulledHeadlineRelevance(0.8)).toBe(false);
     expect(isCulledHeadlineRelevance(1.1)).toBe(false);
   });
 

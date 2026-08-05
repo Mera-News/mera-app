@@ -68,20 +68,20 @@ describe('computeFeedCounts', () => {
         expect(counts.relevantCount).toBe(1);
     });
 
-    it('counts as relevant only what is strictly above the render gate', () => {
+    it('counts as relevant everything at or above the render gate (relevance v3: inclusive)', () => {
         const counts = computeFeedCounts(
             [
                 row('above', { relevance: RENDER_GATE + 0.01 }),
-                // Exactly at the gate is NOT relevant — the feed's own filter is
-                // `> RENDER_GATE`, and these two numbers get compared side by
+                // Exactly at the gate IS relevant — the feed's own filter is
+                // `>= RENDER_GATE`, and these two numbers get compared side by
                 // side in the funnel diagnostic.
                 row('at', { relevance: RENDER_GATE }),
-                row('below', { relevance: 0 }),
+                row('below', { relevance: RENDER_GATE - 0.01 }),
             ],
             { nowMs: NOW },
         );
         expect(counts.analysedCount).toBe(3);
-        expect(counts.relevantCount).toBe(1);
+        expect(counts.relevantCount).toBe(2);
     });
 
     it('counts as read only rows that are BOTH relevant and opened', () => {
