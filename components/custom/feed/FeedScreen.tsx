@@ -92,7 +92,7 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
-import ImportanceFilterPills from '@/components/custom/ImportanceFilterPills';
+import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
@@ -975,29 +975,32 @@ const FeedScreen: React.FC = () => {
           pointerEvents="box-none"
           style={{ paddingTop: insets.top + 16 }}
         >
-          <HStack className="items-start justify-between" pointerEvents="box-none">
-            <VStack className="flex-1 min-w-0 mr-3" pointerEvents="none">
-              <Heading size="3xl" className="text-white" numberOfLines={1}>
-                {t('swipeFeed.yourDeck')}
-              </Heading>
-            </VStack>
+          <HStack className="items-center justify-between" pointerEvents="box-none">
+            {/* The importance DROPDOWN (one chip, not three pills) is what
+                makes an in-title-row control viable in the longer languages:
+                "Nachrichten" + a single "Mittel ▾" chip fits where the full
+                pill row did not. The heading still truncates first
+                (flex-shrink min-w-0, numberOfLines={1}) if a locale needs it. */}
+            <HStack
+              className="flex-1 min-w-0 mr-3 items-center"
+              space="sm"
+              pointerEvents="box-none"
+            >
+              <View pointerEvents="none" className="flex-shrink min-w-0">
+                <Heading size="3xl" className="text-white" numberOfLines={1}>
+                  {t('swipeFeed.yourDeck')}
+                </Heading>
+              </View>
+              <ImportanceFilterDropdown
+                value={feedThreshold}
+                onChange={setFeedThreshold}
+                testIDPrefix="feed-importance"
+              />
+            </HStack>
             <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
               <NotificationBellButton />
             </HStack>
           </HStack>
-          {/* Importance pills on their OWN line, not in the title row. The
-              heading truncates (flex-1 min-w-0, numberOfLines={1}) and three
-              localized pills plus the bell overrun the row in the longer
-              languages — "Nachrichten"/"Лента" with High/Med/Low spelled out in
-              full leave no space at 375-390pt. `box-none`, per the
-              pull-to-refresh rule above: only the pills themselves take touches. */}
-          <View pointerEvents="box-none">
-            <ImportanceFilterPills
-              value={feedThreshold}
-              onChange={setFeedThreshold}
-              testIDPrefix="feed-importance"
-            />
-          </View>
           <View pointerEvents="none">
             {/* Brighter + a little heavier than the muted body step: this line
                 sits on glass with content moving under it, where
