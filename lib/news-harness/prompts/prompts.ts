@@ -566,7 +566,13 @@ export function buildPersonaUpdateContext(params: {
  * without re-running the golden eval. Anchors carry the calibration; keep
  * their density even across all three tiers.
  */
-const CLOUD_SCORING_BASE_PROMPT = `Score news relevance for one user. Every article lands in exactly one of three product tiers; the score encodes the tier and the strength within it.
+// Split into PRE/ANCHORS/POST so size-constrained variants can drop the
+// worked-example anchor table: the gateway caps the E2EE sharedSystem at
+// 65,536 chars and the hex envelope DOUBLES plaintext, so a system prompt
+// must stay under ~32.5KB. The v3 HEADLINE prompt (base+impact+two-axis)
+// was 35.1KB and every headline batch 400'd at submit (2026-08-05).
+// CLOUD_SCORING_BASE_PROMPT is the byte-identical reassembly.
+const CLOUD_SCORING_BASE_PRE_ANCHORS = `Score news relevance for one user. Every article lands in exactly one of three product tiers; the score encodes the tier and the strength within it.
 
 ## Product tiers (hard boundaries — the tier decision matters more than the exact value)
 - **FEED — 0.40 to 1.10.** The article affects the user's life directly or indirectly: their city or country, their family's cities, an active trip, their professional/venture domain, or an event they could attend.
@@ -611,7 +617,9 @@ A stake → score 0.40–1.10 using the FEED gates below. No stake → Step 3.
 - **0.80–0.94** — direct: a change to the user's exact work, product, home, or family (a disaster or area-wide/large-scale danger in a family city — flood, epidemic, gas leak, riot, mass-casualty or area-wide safety emergency that could reach the user's loved ones; a safety incident in the user's OWN home city; city policy hitting their profession; regulation their product must comply with now). Individual/routine crime in a FAMILY city does NOT belong here — it is 0.40–0.59.
 - **0.95–1.10** — immediate, time-sensitive personal stake: danger at the user's or family's city NOW, act today. 1.0+ ONLY for immediate danger + user/family city + action required.
 
-## Anchors (example user: software engineer in Amsterdam building an AI news app; parents in Bhopal and currently traveling in Chhindwara; partner's family in Porto Santo; Berlin trip next weekend; interests: journalism+AI, privacy-safe AI, on-device small language models, tech/journalism conferences; NO investments)
+`;
+
+const CLOUD_SCORING_BASE_ANCHORS = `## Anchors (example user: software engineer in Amsterdam building an AI news app; parents in Bhopal and currently traveling in Chhindwara; partner's family in Porto Santo; Berlin trip next weekend; interests: journalism+AI, privacy-safe AI, on-device small language models, tech/journalism conferences; NO investments)
 FEED:
 - 1.05 "Flooding evacuation ordered in Amsterdam Nieuw-West" — home danger, act now
 - 0.85 "Flash floods submerge low-lying areas of Bhopal, rescue teams deployed" — family-city disaster, loved ones at risk
@@ -664,13 +672,17 @@ EXCLUDE:
 
 Use the full continuous range with fine-grained values between anchors (0.47, 0.63, 0.71) — never round to .05/.10 increments. When torn between two tiers, re-run the stake test: a real stake means ≥ 0.40, no stake means < 0.40.
 
-## Priority
+`;
+
+const CLOUD_SCORING_BASE_POST_ANCHORS = `## Priority
 City > region > country. Family locations: the named city only. Exact interest area > interest category > generic tech.
 
 ## Critical
 - Don't override an explicit location in the body with the publication's country.
 - Multi-location users count multiply ("from Johannesburg, now in London" = both matter; "parents in New York" = connected).
 - Tabloid/clickbait −0.1. Spam → EXCLUDE.`;
+
+const CLOUD_SCORING_BASE_PROMPT = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCORING_BASE_ANCHORS}${CLOUD_SCORING_BASE_POST_ANCHORS}`;
 
 /**
  * The second-person voice rule for every user-facing reason string.
@@ -1028,7 +1040,9 @@ Example for 3 articles: [{"i":1,"rel":88,"impact":70,"why":"New EU obligations a
  * 0.79") on the impact axis, so the rule survives the scale change instead of
  * being silently dropped.
  */
-export const CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
+// Anchors dropped HERE ONLY (size cap above): the two-axis block carries its
+// own 0-100 anchors, and the impact block overrides the tier examples anyway.
+export const CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCORING_BASE_POST_ANCHORS}
 
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 
