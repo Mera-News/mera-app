@@ -1,13 +1,12 @@
 import { GLASS_AVAILABLE, GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
-import CyclingTypewriterText from '@/components/custom/subscription/CyclingTypewriterText';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticMedium } from '@/lib/haptics';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { useFreeTierLines } from '@/lib/subscription/use-free-tier-lines';
+import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef } from 'react';
@@ -35,10 +34,6 @@ const MeraChatInvite: React.FC = () => {
     const { t } = useTranslation();
     const iconRef = useRef<View>(null);
     const aiAccess = useAiAccess();
-    // Called unconditionally (rules of hooks), but the counts are only read when
-    // they will actually be spoken — the entitled branch renders a fixed
-    // sentence and needs none of this.
-    const freeTierLines = useFreeTierLines(aiAccess === 'locked');
 
     const publishCenter = useCallback(() => {
         iconRef.current?.measureInWindow((x, y, w, h) => {
@@ -60,19 +55,25 @@ const MeraChatInvite: React.FC = () => {
     }, [publishCenter]);
 
     // Mera News Free: the row itself is UNCHANGED — same speech bubble, same
-    // animated logo, same layout an entitled user sees. Only two things differ,
-    // and both are about the chat that isn't there:
-    //   1. Mera says the free-tier sentence instead of the invite, so the mode
+    // animated logo, same layout an entitled user sees. Two things differ, and
+    // both are about the chat that isn't there:
+    //   1. Mera says the free-tier paragraph instead of the invite, so the mode
     //      is explained in Mera's own voice rather than by a different-looking
     //      card appearing where the invite used to be.
-    //   2. The row is inert — a plain View, not a Pressable. `FloatingChatHost`
-    //      renders nothing when locked, so opening the chat here would morph
-    //      into a popover that isn't mounted. It is deliberately a NO-OP and not
-    //      a paywall: nothing about a speech bubble advertises a purchase, and
-    //      the usage card directly above already carries the Upgrade pill.
-    //      Dropping the Pressable is what makes that honest — no ripple or
-    //      opacity feedback on a target that does nothing.
+    //   2. Tapping opens the PAYWALL rather than the chat. It cannot open the
+    //      chat: `FloatingChatHost` renders nothing when locked, so the morph
+    //      would target a popover that isn't mounted. An earlier revision made
+    //      the row inert instead, on the reasoning that a speech bubble should
+    //      not advertise a purchase — that was overruled, and the paywall is the
+    //      better answer anyway: the bubble is the one surface that has just
+    //      finished saying "a plan switches me back on", so a tap landing on
+    //      nothing reads as a bug rather than as restraint.
     const locked = aiAccess === 'locked';
+
+    const openPaywall = useCallback(() => {
+        void hapticMedium();
+        void presentFreeTierPaywall('MeraChatInvite');
+    }, []);
 
     const content = (
         <HStack className="items-center" space="md">
@@ -89,22 +90,19 @@ const MeraChatInvite: React.FC = () => {
                     edge={false}
                     style={styles.bubbleBorder}
                 >
-                    {/* Locked: Mera cycles through what is still true and what
-                        she cannot do right now — the SAME script FreeTierCard
-                        speaks (lib/subscription/free-tier-lines.ts), so the two
-                        surfaces cannot drift. Entitled: the invite is a single
-                        fixed sentence and stays a plain Text. */}
-                    {locked ? (
-                        <CyclingTypewriterText
-                            testID="mera-chat-invite-lines"
-                            lines={freeTierLines}
-                            style={styles.bubbleTypewriter}
-                        />
-                    ) : (
-                        <Text className="text-white" style={styles.bubbleText}>
-                            {t('profile.meraInvite')}
-                        </Text>
-                    )}
+                    {/* Same node either way, only the string differs. Locked,
+                        Mera explains the mode in her own first-person voice
+                        (what stays, what she can't do, how to switch her back
+                        on); entitled, it's the ordinary invite. Both are
+                        phrased so they hold for a user who has saved and
+                        followed nothing — see the note on freeTier.cardBody. */}
+                    <Text
+                        testID={locked ? 'mera-chat-invite-bubble-locked' : undefined}
+                        className="text-white"
+                        style={styles.bubbleText}
+                    >
+                        {t(locked ? 'freeTier.chatBubble' : 'profile.meraInvite')}
+                    </Text>
                 </GlassPanel>
                 {/* Right-edge tail pointing at the logo (rotated square whose
                     top+right bordered edges form the arrow). Not glass itself —
@@ -125,16 +123,17 @@ const MeraChatInvite: React.FC = () => {
     // one store write nothing currently reads (ChatPopover is unmounted), and
     // it means the morph origin is already correct the instant a purchase
     // unlocks the chat, with no first-tap-from-the-corner artefact.
-    if (locked) {
-        return (
-            <View testID="mera-chat-invite-locked" className="mx-4 mb-5">
-                {content}
-            </View>
-        );
-    }
-
+    //
+    // Both branches are a Pressable, so the row keeps its press feedback in
+    // either state; only the destination differs. The locked testID stays
+    // `mera-chat-invite-locked` — it is what the free-tier tests key on to tell
+    // the two states apart, and both are now pressable.
     return (
-        <Pressable testID="mera-chat-invite" onPress={openChat} className="mx-4 mb-5">
+        <Pressable
+            testID={locked ? 'mera-chat-invite-locked' : 'mera-chat-invite'}
+            onPress={locked ? openPaywall : openChat}
+            className="mx-4 mb-5"
+        >
             {content}
         </Pressable>
     );
@@ -155,15 +154,6 @@ const styles = StyleSheet.create({
         borderColor: PRIMARY,
     },
     bubbleText: {
-        fontSize: 14,
-        lineHeight: 19,
-        fontWeight: '500',
-    },
-    // Same metrics as bubbleText, with the colour inlined: CyclingTypewriterText
-    // renders bare RN `Text` nodes, so the `className="text-white"` the entitled
-    // branch relies on would not reach them.
-    bubbleTypewriter: {
-        color: '#FFFFFF',
         fontSize: 14,
         lineHeight: 19,
         fontWeight: '500',

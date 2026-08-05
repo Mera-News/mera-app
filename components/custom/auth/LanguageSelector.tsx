@@ -15,7 +15,6 @@ import { VStack } from '@/components/ui/vstack';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useLanguageSwitch, LanguageSwitchResult } from '@/lib/hooks/use-language-switch';
 import LanguageSwitchProgress from '@/components/custom/config-mera/LanguageSwitchProgress';
-import LanguageDownloadHint from '@/components/custom/config-mera/LanguageDownloadHint';
 import { getLanguageName, SUPPORTED_LANGUAGES } from '@/lib/translation-service';
 
 const RTL_CODES = new Set(['ar', 'he']);
@@ -176,20 +175,17 @@ const LanguageSelector: React.FC = () => {
                 </Pressable>
             </HStack>
 
-            {/* Below the selector, never beside it — the ticker and the
-                selector share one centred row, and prose in that row would
-                fight the animation for the reader's eye. Its own margins
-                rather than a wrapper View, so that on Android — where the
-                component renders nothing, there being no download sheet —
-                it leaves no gap behind. The 20pt gutter is the progress
-                card's, so the guidance and the card that replaces it line up.
-                Vertical spacing comes from the cluster's VStack gap, not from
-                a margin here. */}
-            <LanguageDownloadHint
-                testID="auth-language-download-hint"
-                className="text-center mx-5"
-            />
-
+            {/* NO standing download hint here, deliberately. "After you pick a
+                language, iOS may ask you to download it…" used to render
+                unconditionally on this screen, which meant every visitor read a
+                paragraph about a sheet they had not opened and mostly never
+                would — on the one screen whose job is an email field. The same
+                guidance is not lost: the moment a switch actually starts,
+                `LanguageSwitchProgress` below says "Tap the ⊙↓ next to each
+                language in the sheet below", which is the same instruction at
+                the only moment it is actionable.
+                LanguageSettingsScreen still shows the standing hint, and should
+                — someone who navigated to Language settings is there on purpose. */}
             {busy && pendingCode ? (
                 <View style={styles.progressWrap}>
                     <LanguageSwitchProgress code={pendingCode} onCancel={cancel} />

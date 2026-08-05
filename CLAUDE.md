@@ -112,9 +112,16 @@ prompts for an Apple Account — current iOS has no separate Settings → App St
 Account" row anymore. A freshly-created sandbox tester can reject its own correct password for
 up to ~30 min after creation (known Apple flakiness, not a bug here).
 
-Reach the purchase flow via **Profile tab → the "Upgrade" pill on the usage card**
-(`handleUpgrade` in `components/custom/profile/ProfileScreen.tsx`) — no need to flip the
-server-side `FORCE_SUBSCRIPTIONS` flag or deep-link to `/logged-in/not-subscribed`.
+Reach the purchase flow via **Profile tab → the "Manage" pill on the usage card → "Upgrade"**
+(`handleViewPlans` in `components/custom/config-mera/ManageSubscriptionScreen.tsx`) — no need to
+flip the server-side `FORCE_SUBSCRIPTIONS` flag or deep-link to `/logged-in/not-subscribed`.
+
+That pill used to say "Upgrade" and open the paywall directly from Profile
+(`handleUpgrade`); it now navigates to Manage-subscription instead, and the Profile-side copy of
+the post-purchase logic was deleted rather than left dead. Nothing was lost in the move —
+`ManageSubscriptionScreen`'s `load(previousTier)` carries the same bounded
+`refreshUserBillingAfterPurchase` retry, the same `confirmed` gate, `setServerBilling`, the
+activation toast, and the same 20-attempt background poll behind the "activating…" notice.
 
 Xcode's Run (⌘R) is **not required** — verified by `simctl terminate` + a plain `simctl launch`
 (bypassing Xcode entirely) and confirming a pending sandbox transaction still resolved. The

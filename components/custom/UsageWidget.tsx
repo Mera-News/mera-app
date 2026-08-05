@@ -34,6 +34,14 @@ interface UsageWidgetProps {
     onUpgrade?: () => void;
     /** Text for the upgrade button, e.g. "Upgrade". */
     upgradeLabel?: string;
+    /**
+     * Glyph inside that button. Defaults to the upgrade arrow, so the two call
+     * sites that really do open a paywall (ManageSubscriptionScreen, the persona
+     * tab) are unchanged. Profile overrides it because its pill navigates to
+     * subscription management rather than selling anything, and an up-arrow on a
+     * "Manage" button points at an action that isn't happening.
+     */
+    upgradeIcon?: React.ComponentProps<typeof MaterialIcons>['name'];
     /** ISO reset timestamp; formatted with the active locale. Row hidden unless resetLabel is also set. */
     resetAt?: string | null;
     /** Label for the reset row, e.g. "Resets". */
@@ -56,6 +64,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
     planLabel,
     onUpgrade,
     upgradeLabel,
+    upgradeIcon = 'arrow-upward',
     resetAt,
     resetLabel,
     onInfoPress,
@@ -120,7 +129,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                                     className="bg-primary-500 rounded-full px-2.5 py-1"
                                 >
                                     <HStack className="items-center" space="xs">
-                                        <MaterialIcons name="arrow-upward" size={12} color="#ffffff" />
+                                        <MaterialIcons name={upgradeIcon} size={12} color="#ffffff" />
                                         {upgradeLabel ? (
                                             <Text size="xs" className="text-white font-semibold">{upgradeLabel}</Text>
                                         ) : null}

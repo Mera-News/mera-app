@@ -130,15 +130,6 @@ export async function loadSavedItems(): Promise<SavedItem[]> {
   );
 }
 
-/**
- * How many saved rows exist. `fetchCount` runs as a SQL COUNT — it never
- * materialises or maps the rows, which is why this is safe to call from a list
- * header (see lib/subscription/use-free-tier-lines.ts).
- */
-export async function countSavedItems(): Promise<number> {
-  return savedSuggestionsCol.query().fetchCount();
-}
-
 // --- Delete ---
 
 export async function deleteSavedSuggestion(serverId: string): Promise<boolean> {

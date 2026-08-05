@@ -10,14 +10,12 @@ import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Text } from '@/components/ui/text';
-import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
-import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
+import { fetchUserBilling } from '@/lib/billing-service';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
-import logger from '@/lib/logger';
-import { getActiveTier, getOfferingSafe } from '@/lib/revenuecat';
+import { getActiveTier } from '@/lib/revenuecat';
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -26,7 +24,6 @@ import { router, useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
-import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 interface ProfileScreenProps {
     readonly userId: string;
@@ -63,7 +60,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     // A purchase completed but the server has not confirmed the new tier yet.
     // Mirrors NotSubscribedScreen's `activationDelayed` handling: an honest
     // "still working on it" beats committing a snapshot we know is stale.
-    const [activationPending, setActivationPending] = useState(false);
 
     // Fact count (drives the empty-persona state) + persona (blocked banner).
     const refreshFactCount = useCallback(() => {
@@ -136,77 +132,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         }
     }, [factMutationVersion, refreshFactCount]);
 
-    const handleUpgrade = useCallback(async () => {
-        try {
-            const offering = await getOfferingSafe();
-            const result = await RevenueCatUI.presentPaywall({
-                ...(offering ? { offering } : {}),
-                displayCloseButton: true,
-            });
-            // A purchase is a discrete event — refresh the usage card on it
-            // rather than leaving the old plan on screen until the next focus.
-            // The webhook is async, so this retries briefly (bounded).
-            if (result === PAYWALL_RESULT.PURCHASED || result === PAYWALL_RESULT.RESTORED) {
-                const previousTier = billing?.subscriptionTier ?? null;
-                const { billing: fresh, confirmed } =
-                    await refreshUserBillingAfterPurchase(previousTier);
-
-                if (confirmed && fresh) {
-                    setBilling(fresh);
-                    // App-wide: lifts the free-tier state the moment the purchase lands.
-                    useSubscriptionStore.getState().setServerBilling(fresh);
-                    setActivationPending(false);
-                    showSubscriptionActivatedToast(previousTier, fresh.subscriptionTier);
-                    return;
-                }
-
-                // UNRESOLVED — the poll gave up still reading the old tier.
-                // Committing this snapshot is the pre-existing bug: it says
-                // "purchase successful" and then shows the previous plan, with
-                // nothing guaranteed to correct it (the purchase flow STARTS on
-                // this tab, so there is no focus transition coming to trigger
-                // the focus-effect refresh).
-                //
-                // So: say we're still activating, and keep looking in the
-                // background on a longer, still-bounded budget.
-                setActivationPending(true);
-                void (async () => {
-                    const later = await refreshUserBillingAfterPurchase(previousTier, {
-                        attempts: 20,
-                        intervalMs: 5000,
-                        backoffFactor: 1,
-                    });
-                    if (later.billing) {
-                        setBilling(later.billing);
-                        useSubscriptionStore.getState().setServerBilling(later.billing);
-                    }
-                    // The late webhook DID land — the user is still sitting on
-                    // "activating…", so they get the same acknowledgment now
-                    // rather than being left to notice the plan changed.
-                    // Gated on `confirmed`, not on `later.billing`: this branch
-                    // deliberately commits an unconfirmed snapshot (a deferred
-                    // App Store plan change never changes the tier at all), and
-                    // that snapshot is the PRE-purchase tier.
-                    if (later.confirmed) {
-                        showSubscriptionActivatedToast(
-                            previousTier,
-                            later.billing?.subscriptionTier,
-                        );
-                    }
-                    // Cleared whether or not it resolved. A deferred App Store
-                    // plan change never changes the tier at all, so an
-                    // "activating…" line that waits for one would never go away
-                    // — a dead end is worse than settling on the truth we have.
-                    setActivationPending(false);
-                })();
-            }
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { component: 'ProfileScreen', method: 'upgrade' },
-            });
-        }
-    }, [billing?.subscriptionTier]);
-
     const isBlocked = userPersona?.blockedByLlm ?? false;
     const isEmptyPersona = factCount === 0;
 
@@ -265,26 +190,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                                         // for the now-common no-plan case.
                                         : t('subscription.freePlan')
                     }
-                    onUpgrade={effectiveTier === 'professional' ? undefined : handleUpgrade}
-                    upgradeLabel={t('subscription.upgrade')}
+                    // "Manage", not "Upgrade": this pill now opens subscription
+                    // management instead of the paywall, so it is NOT gated on
+                    // tier the way the paywall version was. A professional
+                    // subscriber had nothing to upgrade to and so got no pill at
+                    // all — but they still have a plan to manage, and this tab
+                    // was their only route to it besides Settings.
+                    onUpgrade={() =>
+                        router.push('/logged-in/preferences/manage-subscription' as any)
+                    }
+                    upgradeLabel={t('subscription.manageBadge')}
+                    upgradeIcon="credit-card"
                     resetAt={billing?.resetAt}
                     resetLabel={t('configPanel.resetsOn')}
                     onInfoPress={() => setShowArticleCountInfo(true)}
                 />
-
-                {/* The purchase went through but our server has not caught up.
-                    Shown INSTEAD of silently committing the old plan above —
-                    same copy NotSubscribedScreen already uses for the same
-                    situation, so the two paths read alike. Always clears. */}
-                {activationPending ? (
-                    <Text
-                        testID="profile-activation-pending"
-                        size="sm"
-                        className="text-primary-400 mx-4 -mt-3 mb-5"
-                    >
-                        {t('subscription.activationDelayed')}
-                    </Text>
-                ) : null}
 
                 {/* Mera chat invite — static comic speech bubble + logo, replaces
                     the former floating bubble. Taps open the persona chat. */}

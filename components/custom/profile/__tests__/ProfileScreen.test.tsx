@@ -141,6 +141,11 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
     useFloatingChatStore: { getState: () => ({ expand: mockExpand }) },
 }));
 
+const mockPresentFreeTierPaywall = jest.fn((..._a: unknown[]) => Promise.resolve());
+jest.mock('@/lib/subscription/present-free-tier-paywall', () => ({
+    presentFreeTierPaywall: (...a: unknown[]) => mockPresentFreeTierPaywall(...a),
+}));
+
 jest.mock('@/lib/stores/user-store', () => ({
     useUserStore: () => ({ userPersona: { blockedByLlm: false }, fetchUserPersona: jest.fn() }),
 }));
@@ -202,33 +207,34 @@ describe('ProfileScreen', () => {
     // The row must stay the SAME row an entitled user sees — same speech
     // bubble, same logo — with Mera speaking the free-tier script instead of
     // the invite, and nothing to tap.
-    it('locked → Mera speaks the cycling free-tier script (invite copy gone)', async () => {
+    it('locked → Mera speaks the free-tier paragraph (invite copy gone)', async () => {
         mockAiAccess = 'locked';
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('mera-chat-invite-locked')).toBeTruthy());
 
-        // The bubble is the cycling typewriter, not a static sentence. Asserted
-        // via the accessible label rather than the visible text: the visible
-        // string is a partially-typed prefix (empty on the very first frame),
-        // while the label is always the COMPLETE current line.
-        const line = getByTestId('mera-chat-invite-lines-text');
-        expect(line.props.accessibilityLabel).toMatch(/^freeTier\.meraLines\./);
+        // One static paragraph in the bubble, not the former cycling script.
+        expect(getByTestId('mera-chat-invite-bubble-locked')).toBeTruthy();
+        expect(queryByText('freeTier.chatBubble')).toBeTruthy();
 
         expect(queryByText('profile.meraInvite')).toBeNull();
         // Same presentation, not a substitute card: the logo is still there.
         expect(getByTestId('mera-logo')).toBeTruthy();
     });
 
-    it('locked → the Mera row is inert: no press target, chat never opens', async () => {
+    it('locked → tapping the Mera row opens the paywall, never the chat', async () => {
         mockAiAccess = 'locked';
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('mera-chat-invite-locked')).toBeTruthy());
-        // The Pressable wrapper is GONE, not just handler-less — so there is no
-        // ripple/opacity feedback on a target that does nothing.
+        // The entitled testID must NOT be present — the two states have to stay
+        // distinguishable now that both are pressable.
         expect(queryByTestId('mera-chat-invite')).toBeNull();
-        expect(getByTestId('mera-chat-invite-locked').props.onPress).toBeUndefined();
+
+        fireEvent.press(getByTestId('mera-chat-invite-locked'));
+        expect(mockPresentFreeTierPaywall).toHaveBeenCalledWith('MeraChatInvite');
+        // `FloatingChatHost` renders nothing while locked, so a morph here would
+        // target an unmounted popover.
         expect(mockExpand).not.toHaveBeenCalled();
     });
 

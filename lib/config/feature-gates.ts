@@ -78,6 +78,11 @@ export const HEADLINE_DEPTH_UI_ENABLED = false;
  * Flipping this to `true` is the entire app-side activation step; it needs its
  * own OTA, timed with the server flag.
  */
+// TEMP(staging-paywall-test): revert to `false` before committing.
+// Local, uncommitted change only — exercises the real server-driven paywall
+// against STAGING (FORCE_SUBSCRIPTIONS="true" there).
+// This must NOT reach a commit or an OTA: prod still has the flag off, so a
+// committed `true` would put the entire prod user base onto Mera News Free.
 export const FREE_TIER_MODE_ENABLED = false;
 
 /**

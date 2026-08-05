@@ -3,16 +3,13 @@ import {
     CardGlassPlate,
 } from '@/components/custom/cards/CardGlassPlate';
 import MeraLogo from '@/components/custom/MeraLogo';
-import CyclingTypewriterText from '@/components/custom/subscription/CyclingTypewriterText';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
-import { useFreeTierLines } from '@/lib/subscription/use-free-tier-lines';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
 
 /** Which list this card is pinned to. Diagnostics + testID only — copy is shared. */
 export type FreeTierSurface = 'dashboard' | 'feed' | 'stories' | 'facts';
@@ -54,10 +51,6 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
 }) => {
     const { t } = useTranslation();
     const aiAccess = useAiAccess();
-    // Called unconditionally (rules of hooks) but gated on `locked`: this card
-    // is mounted on both the Feed and the Dashboard for EVERY user, and an
-    // entitled one renders null below — it must not pay for the counts.
-    const lines = useFreeTierLines(aiAccess === 'locked');
 
     const handleSeePlans = useCallback(async () => {
         if (onSeePlans) {
@@ -101,15 +94,29 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
                         {t('freeTier.cardTitle')}
                     </Text>
 
-                    {/* Mera speaking, cycling — replaces the single static
-                        paragraph. The lines and their truth-gating live in
-                        lib/subscription/free-tier-lines.ts; this card only
-                        renders them. */}
-                    <CyclingTypewriterText
-                        testID={`free-tier-card-lines-${surface}`}
-                        lines={lines}
-                        style={styles.line}
-                    />
+                    {/* One paragraph, deliberately CATEGORY-shaped and never
+                        possession-shaped. This card renders for a brand-new
+                        locked user who has saved nothing and follows nothing, so
+                        "anything you've saved ... stays on this device" is true
+                        for them (vacuously) while "your saved articles stay"
+                        would assert content they do not own. The earlier cycling
+                        version needed a whole truth-gating module to keep that
+                        straight; the phrasing carries it now, so keep it.
+
+                        The paragraph is also what makes the card ~30% taller
+                        than the one-line-at-a-time version it replaced —
+                        MEASURED on an iPhone 17 Pro: 306.67pt before, 401.33pt
+                        after (+30.9%), at UNCHANGED padding. Do not "help" that
+                        along with extra py-*: bumping this row to py-14 measured
+                        429.33pt (+40%), which is why the padding here is
+                        deliberately still the original. */}
+                    <Text
+                        testID={`free-tier-card-body-${surface}`}
+                        size="md"
+                        className="text-gray-400 text-center leading-relaxed"
+                    >
+                        {t('freeTier.cardBody')}
+                    </Text>
 
                     <Button
                         testID="free-tier-card-cta"
@@ -126,17 +133,5 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
         </Box>
     );
 };
-
-const styles = StyleSheet.create({
-    // Plain styles, not NativeWind classes: CyclingTypewriterText renders bare
-    // RN `Text` nodes (it has to absolutely position one over the other), and a
-    // `className` would not reach them.
-    line: {
-        color: '#A3A3A3', // text-gray-400
-        fontSize: 15,
-        lineHeight: 21,
-        textAlign: 'center',
-    },
-});
 
 export default FreeTierCard;

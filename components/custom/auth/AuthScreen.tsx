@@ -4,7 +4,6 @@ import LanguageSelector from '@/components/custom/auth/LanguageSelector';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
 import PolicyPill from '@/components/custom/PolicyPill';
-import VideoPlayerModal from '@/components/custom/VideoPlayerModal';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -15,14 +14,13 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { sendOTP } from '@/lib/auth-client';
-import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, TRANSLATION_GUIDE_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import logger from '@/lib/logger';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import validator from 'validator';
 
@@ -34,7 +32,6 @@ interface EmailInputViewProps {
 const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail }) => {
     const [email, setEmail] = useState(initialEmail ?? '');
     const [loading, setLoading] = useState(false);
-    const [showGuideVideo, setShowGuideVideo] = useState(false);
     const toast = useToast();
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
@@ -192,27 +189,14 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
             <VStack space="sm" className="mb-6">
                 <LanguageSelector />
 
-                {/* Deliberately small. It is a help affordance for the iOS
-                    download sheet, so it borrows the footer pills' vocabulary
-                    (rounded-full, hairline border, xs text) instead of the
-                    full-width filled bar it used to be, which outweighed the
-                    email field it sat under. */}
-                {Platform.OS === 'ios' && (
-                    <Pressable
-                        testID="auth-language-guide"
-                        onPress={() => setShowGuideVideo(true)}
-                        // 26pt drawn + 10pt each side = a 46pt target. The
-                        // chip is deliberately small; the hitSlop is what
-                        // keeps it above the 44pt minimum anyway.
-                        hitSlop={10}
-                        className="flex-row items-center self-center px-3 py-1.5 rounded-full border border-gray-700"
-                    >
-                        <MaterialIcons name="play-circle-filled" size={14} color="#a78bfa" style={{ marginRight: 6 }} />
-                        <Text size="xs" className="text-violet-400 font-medium">
-                            {t('language.watchGuideShort')}
-                        </Text>
-                    </Pressable>
-                )}
+                {/* The "How to add a language" video chip lived here and is
+                    gone on purpose. It taught the iOS Required-Downloads sheet
+                    to someone who has not opened that sheet and, on this
+                    screen, is trying to type an email — the same reason the
+                    standing download hint came out of LanguageSelector. The
+                    video is still one tap away where it belongs, in Settings →
+                    Language (`language.watchGuide`), for someone who went
+                    looking for it. */}
             </VStack>
 
             {/* Policy buttons at bottom */}
@@ -238,12 +222,6 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                     © {new Date().getFullYear()} Mera Labs B.V.
                 </Text>
             </Box>
-
-            <VideoPlayerModal
-                visible={showGuideVideo}
-                uri={TRANSLATION_GUIDE_URL}
-                onClose={() => setShowGuideVideo(false)}
-            />
         </Box>
     );
 };
