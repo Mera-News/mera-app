@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "Güncelleme hazır",
-    "updateDescription": "Yeniden başlatmak ve en son sürümü uygulamak için dokun"
+    "modalBody": "Mera'nın yeni bir sürümü indirildi ve kullanıma hazır. Her şeyin sorunsuz çalışmasını sağlamak için şimdi güncelleyin.",
+    "updateNow": "Şimdi Güncelle"
   },
   "feedback": {
     "fabLabel": "Hata bildir",

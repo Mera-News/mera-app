@@ -1,8 +1,11 @@
 // Supplemental tests for toast-manager.ts.
 // The primary toast-manager.test.ts verifies show() is called and opts.render
 // is a function, but does NOT invoke the render callbacks.
-// These tests invoke the render functions to cover lines 80, 112, 138
-// (the React.createElement bodies).
+// These tests invoke the render functions to cover the React.createElement
+// bodies. Since the 2026-08-05 fix, the simple toasts render plain RN `Text`
+// children (title first, body second) instead of ToastTitle/ToastDescription —
+// those className-styled primitives render invisibly from createElement trees
+// (see showPlainToast in toast-manager.ts).
 
 jest.mock('@/components/ui/toast', () => ({
   Toast: 'MockToast',
@@ -55,6 +58,12 @@ jest.mock('../logger', () => ({
 
 import { toastManager } from '../toast-manager';
 
+
+// The simple toasts render [<Text>{title}</Text>, <Text>{body}</Text> | null]
+// as the Toast's children — address them positionally.
+const titleTextOf = (result: any) => result.children[0]?.children?.[0];
+const bodyTextOf = (result: any) => result.children[1]?.children?.[0];
+
 function makeToastFn() {
   return {
     show: jest.fn((..._args: any[]) => 'toast-id'),
@@ -96,19 +105,14 @@ describe('ToastManager render callback bodies', () => {
       toastManager.showNetworkError();
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-1' }) as any;
-      // One of the children should contain the ToastDescription with the default message
-      const descElement = result.children.find((c: any) => c?.type === 'MockToastDescription');
-      expect(descElement).toBeDefined();
-      expect(descElement.children[0]).toContain('Unable to connect');
+      expect(bodyTextOf(result)).toContain('Unable to connect');
     });
 
     it('render function uses custom message when provided', () => {
       toastManager.showNetworkError('Custom network error message');
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-2' }) as any;
-      const descElement = result.children.find((c: any) => c?.type === 'MockToastDescription');
-      expect(descElement).toBeDefined();
-      expect(descElement.children[0]).toBe('Custom network error message');
+      expect(bodyTextOf(result)).toBe('Custom network error message');
     });
 
     it('render function root has action=error prop', () => {
@@ -129,9 +133,7 @@ describe('ToastManager render callback bodies', () => {
       toastManager.showNetworkError();
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-5' }) as any;
-      const titleElement = result.children.find((c: any) => c?.type === 'MockToastTitle');
-      expect(titleElement).toBeDefined();
-      expect(titleElement.children[0]).toBe('Network Error');
+      expect(titleTextOf(result)).toBe('Network Error');
     });
   });
 
@@ -162,18 +164,14 @@ describe('ToastManager render callback bodies', () => {
       toastManager.showError('My Error', 'My Message');
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-8' }) as any;
-      const titleElement = result.children.find((c: any) => c?.type === 'MockToastTitle');
-      expect(titleElement).toBeDefined();
-      expect(titleElement.children[0]).toBe('My Error');
+      expect(titleTextOf(result)).toBe('My Error');
     });
 
     it('render function includes ToastDescription with the provided message', () => {
       toastManager.showError('My Error', 'My Message');
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-9' }) as any;
-      const descElement = result.children.find((c: any) => c?.type === 'MockToastDescription');
-      expect(descElement).toBeDefined();
-      expect(descElement.children[0]).toBe('My Message');
+      expect(bodyTextOf(result)).toBe('My Message');
     });
   });
 
@@ -204,18 +202,14 @@ describe('ToastManager render callback bodies', () => {
       toastManager.showSuccess('Great Job!', 'Everything is fine');
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-13' }) as any;
-      const titleElement = result.children.find((c: any) => c?.type === 'MockToastTitle');
-      expect(titleElement).toBeDefined();
-      expect(titleElement.children[0]).toBe('Great Job!');
+      expect(titleTextOf(result)).toBe('Great Job!');
     });
 
     it('render function includes ToastDescription with the provided message', () => {
       toastManager.showSuccess('Great Job!', 'Everything is fine');
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-14' }) as any;
-      const descElement = result.children.find((c: any) => c?.type === 'MockToastDescription');
-      expect(descElement).toBeDefined();
-      expect(descElement.children[0]).toBe('Everything is fine');
+      expect(bodyTextOf(result)).toBe('Everything is fine');
     });
   });
 
@@ -240,26 +234,21 @@ describe('ToastManager render callback bodies', () => {
       toastManager.showInfo('For You');
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-17' }) as any;
-      const titleElement = result.children.find((c: any) => c?.type === 'MockToastTitle');
-      expect(titleElement).toBeDefined();
-      expect(titleElement.children[0]).toBe('For You');
+      expect(titleTextOf(result)).toBe('For You');
     });
 
     it('render function omits ToastDescription when no message is given', () => {
       toastManager.showInfo('For You');
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-18' }) as any;
-      const descElement = result.children.find((c: any) => c?.type === 'MockToastDescription');
-      expect(descElement).toBeUndefined();
+      expect(result.children[1]).toBeNull();
     });
 
     it('render function includes ToastDescription when a message is given', () => {
       toastManager.showInfo('For You', 'Long-press hint');
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-19' }) as any;
-      const descElement = result.children.find((c: any) => c?.type === 'MockToastDescription');
-      expect(descElement).toBeDefined();
-      expect(descElement.children[0]).toBe('Long-press hint');
+      expect(bodyTextOf(result)).toBe('Long-press hint');
     });
   });
 });

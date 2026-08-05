@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "Cập nhật sẵn sàng",
-    "updateDescription": "Chạm để khởi động lại và áp dụng phiên bản mới nhất"
+    "modalBody": "Phiên bản mới của Mera đã được tải xuống và sẵn sàng. Cập nhật ngay bây giờ để mọi thứ hoạt động trơn tru.",
+    "updateNow": "Cập nhật Ngay"
   },
   "feedback": {
     "fabLabel": "Báo cáo lỗi",

@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "Pembaruan siap",
-    "updateDescription": "Ketuk untuk memulai ulang dan menerapkan versi terbaru"
+    "modalBody": "Versi baru Mera telah diunduh dan siap digunakan. Perbarui sekarang untuk menjaga semuanya berjalan lancar.",
+    "updateNow": "Perbarui Sekarang"
   },
   "feedback": {
     "fabLabel": "Laporkan bug",

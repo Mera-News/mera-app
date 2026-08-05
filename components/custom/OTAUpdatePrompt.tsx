@@ -1,54 +1,28 @@
-import { useEffect, useRef } from 'react';
-import { AppState, AppStateStatus, Pressable } from 'react-native';
+import { useEffect } from 'react';
+import { AppState, AppStateStatus } from 'react-native';
 import * as Updates from 'expo-updates';
-import { useTranslation } from 'react-i18next';
 
-import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
+import OTAUpdateModal from '@/components/custom/OTAUpdateModal';
 import logger from '@/lib/logger';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 
+/**
+ * Dev-only preview override for the update modal (there is no real pending
+ * update in a dev client — `Updates.isEnabled` is false). Flip to true to see
+ * the modal in the simulator; never ships true.
+ */
+const DEV_FORCE_UPDATE_MODAL = false;
+
+/**
+ * Watches for a fetched-and-pending OTA update and takes over the screen with
+ * the mandatory-update modal (OTAUpdateModal). This used to be a tappable
+ * toast; it became a takeover deliberately — the toast was ignorable, so
+ * users sat on stale JS until their next cold start (and the toast itself
+ * shipped broken as an icon-only panel, see lib/toast-manager.ts's note on
+ * className-styled primitives).
+ */
 export default function OTAUpdatePrompt() {
   const { isUpdatePending } = Updates.useUpdates();
-  const toast = useToast();
-  const { t } = useTranslation();
-  const shownToastIdRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!isUpdatePending) return;
-    if (shownToastIdRef.current && toast.isActive(shownToastIdRef.current)) return;
-
-    const id = `ota-update-${Date.now()}`;
-    shownToastIdRef.current = id;
-
-    toast.show({
-      id,
-      placement: 'top',
-      duration: null,
-      render: ({ id: toastId }: { id: string }) => (
-        <Pressable
-          onPress={() => {
-            Updates.reloadAsync().catch((error) => {
-              if (isTransientNetworkError(error)) return;
-              logger.captureException(error, {
-                tags: { component: 'OTAUpdatePrompt', method: 'reloadAsync' },
-              });
-            });
-          }}
-        >
-          {/* `persistent` because of the `duration: null` above — it is a cost
-              flag, not a look one: an indefinitely-mounted glass panel
-              re-blurs the animated backdrop every frame forever. See the prop's
-              doc comment in components/ui/toast. */}
-          <Toast nativeID={toastId} action="info" variant="solid" persistent>
-            <ToastTitle>{t('ota.updateReady')}</ToastTitle>
-            <ToastDescription>
-              {t('ota.updateDescription')}
-            </ToastDescription>
-          </Toast>
-        </Pressable>
-      ),
-    });
-  }, [isUpdatePending, toast, t]);
 
   useEffect(() => {
     if (!Updates.isEnabled || __DEV__) return;
@@ -81,5 +55,9 @@ export default function OTAUpdatePrompt() {
     return () => subscription.remove();
   }, []);
 
-  return null;
+  return (
+    <OTAUpdateModal
+      visible={isUpdatePending || (__DEV__ && DEV_FORCE_UPDATE_MODAL)}
+    />
+  );
 }

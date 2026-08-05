@@ -190,7 +190,13 @@ const styles = StyleSheet.create({
     paddingLeft: 12,
   },
   content: {
-    flex: 1,
+    // `flexShrink`, NOT `flex: 1`. The overlay centers each toast at its
+    // INTRINSIC width (ToastList: alignItems 'center', nothing stretches the
+    // panel), so a flex-basis-0 column here measured ZERO wide and every toast
+    // collapsed to an icon-only sliver — the 2026-08-05 prod incident. Shrink
+    // lets long text yield to the Root's maxWidth cap and wrap, while short
+    // toasts stay snug to their text.
+    flexShrink: 1,
     paddingVertical: 16,
     paddingRight: 16,
     gap: 4,

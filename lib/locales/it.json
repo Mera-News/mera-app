@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "Aggiornamento pronto",
-    "updateDescription": "Tocca per riavviare e applicare l'ultima versione"
+    "modalBody": "Una nuova versione di Mera è stata scaricata ed è pronta. Aggiorna ora per mantenere tutto funzionante senza problemi.",
+    "updateNow": "Aggiorna ora"
   },
   "feedback": {
     "fabLabel": "Segnala un bug",

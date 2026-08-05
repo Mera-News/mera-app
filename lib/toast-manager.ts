@@ -56,6 +56,21 @@ type ToastFunction = {
     isActive: (id: string) => boolean;
 };
 
+/**
+ * Explicit colours for toast text built via `React.createElement`. The
+ * gluestack `ToastTitle` / `ToastDescription` primitives are NativeWind
+ * className-styled, and className resolves through the JSX transform — a
+ * hand-written `React.createElement` tree bypasses it, so their text renders
+ * invisibly (the toast collapses to an icon-only panel). Every method in this
+ * manager builds its tree with `createElement`, so they all use plain RN
+ * `Text` with these explicit styles instead. Values mirror the dark ramp's
+ * typography-900 / typography-600 — what ToastTitle and ToastDescription
+ * resolve to under JSX. Device-verified for showUndoToast; the other methods
+ * shipped the broken primitives until 2026-08-05 (icon-only error toasts).
+ */
+const TOAST_TITLE_COLOR = '#F5F5F5';
+const TOAST_BODY_COLOR = '#D4D4D4';
+
 class ToastManager {
     private toastInstance: ToastFunction | null = null;
     private lastErrorTime = 0;
@@ -125,22 +140,45 @@ class ToastManager {
         }
 
         const message = customMessage || 'Unable to connect. Please check your internet connection.';
+        this.showPlainToast('error', 'Network Error', message, 4000);
+    }
 
-        // Import React for JSX
+    /**
+     * Shared renderer for the simple title+body toasts. Plain RN `Text` with
+     * explicit styles, NOT ToastTitle/ToastDescription — see the note on
+     * TOAST_TITLE_COLOR above (createElement bypasses className styling).
+     */
+    private showPlainToast(
+        action: 'error' | 'success' | 'info',
+        title: string,
+        message: string | undefined,
+        duration: number,
+        placement: 'top' | 'bottom' = 'top',
+    ) {
         const React = require('react');
-        const { Toast, ToastTitle, ToastDescription } = require('@/components/ui/toast');
+        const { Toast } = require('@/components/ui/toast');
+        const { Text } = require('react-native');
 
-        this.toastInstance.show({
-            placement: 'top',
-            duration: 4000,
-            render: ({ id }: { id: string }) => {
-                return React.createElement(
+        this.toastInstance!.show({
+            placement,
+            duration,
+            render: () =>
+                React.createElement(
                     Toast,
-                    { action: 'error', variant: 'solid' },
-                    React.createElement(ToastTitle, null, 'Network Error'),
-                    React.createElement(ToastDescription, null, message)
-                );
-            },
+                    { action, variant: 'solid' },
+                    React.createElement(
+                        Text,
+                        { style: { color: TOAST_TITLE_COLOR, fontWeight: '700', fontSize: 15 } },
+                        title,
+                    ),
+                    message
+                        ? React.createElement(
+                              Text,
+                              { style: { color: TOAST_BODY_COLOR, fontSize: 13, paddingTop: 2 } },
+                              message,
+                          )
+                        : null,
+                ),
         });
     }
 
@@ -159,21 +197,7 @@ class ToastManager {
             return;
         }
 
-        const React = require('react');
-        const { Toast, ToastTitle, ToastDescription } = require('@/components/ui/toast');
-
-        this.toastInstance.show({
-            placement: 'top',
-            duration: 4000,
-            render: ({ id }: { id: string }) => {
-                return React.createElement(
-                    Toast,
-                    { action: 'error', variant: 'solid' },
-                    React.createElement(ToastTitle, null, title),
-                    React.createElement(ToastDescription, null, message)
-                );
-            },
-        });
+        this.showPlainToast('error', title, message, 4000);
     }
 
     /**
@@ -185,21 +209,7 @@ class ToastManager {
             return;
         }
 
-        const React = require('react');
-        const { Toast, ToastTitle, ToastDescription } = require('@/components/ui/toast');
-
-        this.toastInstance.show({
-            placement: 'top',
-            duration: 3000,
-            render: ({ id }: { id: string }) => {
-                return React.createElement(
-                    Toast,
-                    { action: 'success', variant: 'solid' },
-                    React.createElement(ToastTitle, null, title),
-                    React.createElement(ToastDescription, null, message)
-                );
-            },
-        });
+        this.showPlainToast('success', title, message, 3000);
     }
 
     /**
@@ -213,21 +223,7 @@ class ToastManager {
             return;
         }
 
-        const React = require('react');
-        const { Toast, ToastTitle, ToastDescription } = require('@/components/ui/toast');
-
-        this.toastInstance.show({
-            placement: 'bottom',
-            duration: TOAST_MIN_DURATION_MS,
-            render: ({ id }: { id: string }) => {
-                return React.createElement(
-                    Toast,
-                    { action: 'info', variant: 'solid' },
-                    React.createElement(ToastTitle, null, title),
-                    message ? React.createElement(ToastDescription, null, message) : null,
-                );
-            },
-        });
+        this.showPlainToast('info', title, message, TOAST_MIN_DURATION_MS, 'bottom');
     }
 
     /**
@@ -257,18 +253,10 @@ class ToastManager {
         const { Toast, TOAST_ACCENT } = require('@/components/ui/toast');
         const { Text, Pressable } = require('react-native');
 
-        // These colours are hardcoded because the children below are built with
-        // `React.createElement` and therefore get NO NativeWind className
-        // styling (see the note further down). They were near-black (#1a1a1a),
-        // which was right while a toast was a light pastel pill — the toast is
-        // now a dark frosted panel, so they have to be light or the whole toast
-        // renders as an empty pane. Values mirror the dark ramp's
-        // typography-900 / typography-600, i.e. what ToastTitle and
-        // ToastDescription resolve to.
-        const TITLE_COLOR = '#F5F5F5';
-        const BODY_COLOR = '#D4D4D4';
-        // The Undo takes the toast's own success accent so it reads as the
-        // control it is rather than a third line of prose.
+        // Text colours come from the module-level TOAST_TITLE_COLOR /
+        // TOAST_BODY_COLOR (see the note there). The Undo takes the toast's own
+        // success accent so it reads as the control it is rather than a third
+        // line of prose.
         const UNDO_COLOR = TOAST_ACCENT.success;
 
         // VERIFIED ON DEVICE, and the shape matters more than it looks:
@@ -292,13 +280,13 @@ class ToastManager {
                     { action: 'success', variant: 'solid' },
                     React.createElement(
                         Text,
-                        { style: { color: TITLE_COLOR, fontWeight: '700', fontSize: 15 } },
+                        { style: { color: TOAST_TITLE_COLOR, fontWeight: '700', fontSize: 15 } },
                         opts.title,
                     ),
                     opts.body
                         ? React.createElement(
                               Text,
-                              { style: { color: BODY_COLOR, fontSize: 13, paddingTop: 2 } },
+                              { style: { color: TOAST_BODY_COLOR, fontSize: 13, paddingTop: 2 } },
                               opts.body,
                           )
                         : null,

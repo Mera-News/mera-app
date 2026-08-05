@@ -712,7 +712,8 @@
   },
   "ota": {
     "updateReady": "Update bereit",
-    "updateDescription": "Tippen Sie, um neu zu starten und die neueste Version zu installieren"
+    "modalBody": "Eine neue Version von Mera wurde heruntergeladen und ist einsatzbereit. Aktualisiere jetzt, um alles reibungslos zu halten.",
+    "updateNow": "Jetzt aktualisieren"
   },
   "feedback": {
     "fabLabel": "Fehler melden",
