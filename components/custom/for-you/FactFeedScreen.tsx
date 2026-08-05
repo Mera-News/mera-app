@@ -2,6 +2,8 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
 import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
+import { filterGroupsByImportance } from '@/components/custom/for-you/dashboard-importance';
+import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
   GLASS_HEADER_SCRIM,
@@ -105,20 +107,26 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   // which `buildFactRows` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
 
+  // Same Dashboard-only importance filter as the section preview (P2), so
+  // tapping into a section's drill-down never shows MORE stories than the
+  // preview promised. See DashboardSectionsFeed / dashboard-importance.
+  const dashboardThreshold = useImportanceFilterStore((s) => s.dashboardThreshold);
+
   const groups: FactRowGroup[] = useMemo(() => {
     if (!snapshots) return [];
     const { rows } = buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
     const found = rows.find((r) => r.factId === factId)?.groups ?? [];
+    const filtered = filterGroupsByImportance(found, dashboardThreshold);
     // Order this screen by article publication freshness — newest PUBLISHED on
     // top (`pubDateMs`), not suggestion-creation time (the shared `cardCompare`
     // the Dashboard uses). Copy before sorting so the selector's array is left
     // untouched. Tiebreak on `_id` for a stable order.
-    return [...found].sort(
+    return [...filtered].sort(
       (a, b) =>
         b.pubDateMs - a.pubDateMs ||
         (a.data._id < b.data._id ? -1 : a.data._id > b.data._id ? 1 : 0),
     );
-  }, [snapshots, suggestions, factId, openedIds, userGeoLanguageCtx]);
+  }, [snapshots, suggestions, factId, openedIds, userGeoLanguageCtx, dashboardThreshold]);
 
   // ── Scroll-to-top FAB ──
   const listRef = useRef<FlatList<FactRowGroup>>(null);

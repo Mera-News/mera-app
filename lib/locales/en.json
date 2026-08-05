@@ -219,6 +219,10 @@
     "irrelevant": "Irrelevant",
     "unprocessed": "Unprocessed"
   },
+  "importanceFilter": {
+    "a11yLabel": "Minimum story priority",
+    "a11yOption": "Show {{level}} priority and above"
+  },
   "aiDisclosure": {
     "caption": "AI-generated note",
     "short": "AI-generated",

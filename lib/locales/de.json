@@ -215,6 +215,10 @@
     "irrelevant": "Nicht relevant",
     "unprocessed": "Nicht verarbeitet"
   },
+  "importanceFilter": {
+    "a11yLabel": "Minimale Story-Priorität",
+    "a11yOption": "Zeige {{level}}-Priorität und höher"
+  },
   "aiDisclosure": {
     "caption": "KI-generierter Hinweis",
     "short": "KI-generiert",

@@ -215,6 +215,10 @@
     "irrelevant": "無關",
     "unprocessed": "未處理"
   },
+  "importanceFilter": {
+    "a11yLabel": "最低故事優先級",
+    "a11yOption": "顯示{{level}}優先級及以上"
+  },
   "aiDisclosure": {
     "caption": "由 AI 產生的說明",
     "short": "由 AI 產生",

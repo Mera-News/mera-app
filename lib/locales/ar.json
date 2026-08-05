@@ -239,6 +239,10 @@
     "irrelevant": "غير ذي صلة",
     "unprocessed": "لم تتم معالجته"
   },
+  "importanceFilter": {
+    "a11yLabel": "الحد الأدنى لأولوية القصة",
+    "a11yOption": "اعرض الأولوية {{level}} والأعلى"
+  },
   "aiDisclosure": {
     "caption": "ملاحظة مولّدة بالذكاء الاصطناعي",
     "short": "مولّد بالذكاء الاصطناعي",

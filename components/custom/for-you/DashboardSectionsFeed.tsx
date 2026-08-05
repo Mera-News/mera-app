@@ -5,12 +5,14 @@ import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPan
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
 import SectionDenominatorLine from '@/components/custom/for-you/SectionDenominatorLine';
 import { sectionTitle } from '@/components/custom/for-you/section-title';
+import { filterGroupsByImportance } from '@/components/custom/for-you/dashboard-importance';
 import { ArticleSuggestionCompactCard } from '@/components/custom/cards/ArticleSuggestionCompactCard';
 import { Box } from '@/components/ui/box';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import { isViewedArticle, sortByPriority } from '@/lib/feed-ordering/priority-order';
 import { SECTION_PREVIEW_COUNT } from '@/lib/stores/dashboard-section-selector';
+import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import {
   isHeadlineRow,
   isSuggestionOpened,
@@ -132,10 +134,23 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   // changes the instant a card is tapped, which would re-rank the section under
   // the user's finger. `openedIds` still drives the per-card read styling, which
   // is allowed to update immediately because it moves nothing.
+  const dashboardThreshold = useImportanceFilterStore((s) => s.dashboardThreshold);
+
   const sectionData = useMemo(() => {
     const data: SectionItem[] = [];
     for (const row of rows) {
-      const ordered = sortByPriority(row.groups, (g) => ({
+      // Display-only importance filter, applied BEFORE ordering/slicing so the
+      // preview, the total, and the "+N"/denominator counts all agree on what
+      // actually renders. At 'low' (default) this is `row.groups` unchanged —
+      // see filterGroupsByImportance — reproducing today's output exactly.
+      const filteredGroups = filterGroupsByImportance(row.groups, dashboardThreshold);
+      // A row that had groups but the filter hid all of them is dropped
+      // entirely, same as a fact section that never qualifies for a section in
+      // the first place. A row that had NO groups to begin with (a headline
+      // shell whose denominator line IS its content) is untouched — there is
+      // nothing for the filter to have hidden.
+      if (row.groups.length > 0 && filteredGroups.length === 0) continue;
+      const ordered = sortByPriority(filteredGroups, (g) => ({
         relevance: g.data.relevance ?? 0,
         viewed: isViewedArticle(
           g.data.articleId,
@@ -152,13 +167,13 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         key: `s:${row.factId}`,
         row,
         preview: ordered.slice(0, SECTION_PREVIEW_COUNT),
-        total: row.groups.length,
+        total: filteredGroups.length,
         title: sectionTitle(t, row),
         headline: isHeadlineRow(row),
       });
     }
     return data;
-  }, [rows, sortSnapshot, t]);
+  }, [rows, sortSnapshot, t, dashboardThreshold]);
 
   const openFactFeed = useCallback((row: FactRow, title: string) => {
     router.push({

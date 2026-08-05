@@ -23,6 +23,7 @@ export function hydrateAllStores(): Promise<void> {
   const { useForYouPrefsStore } = require('../stores/for-you-prefs-store');
   const { useBlurImagesStore } = require('../stores/blur-images-store');
   const { useDisplayPrefsStore } = require('../stores/display-prefs-store');
+  const { useImportanceFilterStore } = require('../stores/importance-filter-store');
 
   // Paint-critical: load cached article_suggestions and push them to the
   // store first. No metadata, no expired-cleanup, no other-store gating.
@@ -51,6 +52,7 @@ export function hydrateAllStores(): Promise<void> {
     useForYouPrefsStore.getState().hydrate(),
     useBlurImagesStore.getState().hydrate(),
     useDisplayPrefsStore.getState().hydrate(),
+    useImportanceFilterStore.getState().hydrate(),
   ])
     .then(() => {
       // Fire-and-forget: back-fill the persona's primary language_codes from the

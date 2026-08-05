@@ -16,6 +16,8 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
+import ImportanceFilterPills from '@/components/custom/ImportanceFilterPills';
+import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
@@ -188,6 +190,10 @@ const MeraNewsScreen: React.FC = () => {
     // mounted after their first visit (display-toggled) so scroll state
     // survives a switch.
     const [activeSubTab, setActiveSubTab] = useState<ForYouSubTab>('feed');
+    // Display-only importance filter (header pills). Default 'low' shows
+    // everything — see lib/stores/importance-filter-store.
+    const dashboardThreshold = useImportanceFilterStore((s) => s.dashboardThreshold);
+    const setDashboardThreshold = useImportanceFilterStore((s) => s.setDashboardThreshold);
     const [storiesVisited, setStoriesVisited] = useState(false);
     const [savedVisited, setSavedVisited] = useState(false);
     const [historyVisited, setHistoryVisited] = useState(false);
@@ -638,6 +644,22 @@ const MeraNewsScreen: React.FC = () => {
                     <View pointerEvents="box-none">
                         <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
                     </View>
+
+                    {/* Dashboard importance filter — only meaningful on the
+                        sectioned "feed" sub-tab (Stories/Saved/History are
+                        unrelated lists this dial does not touch), so it is shown
+                        only there rather than as dead chrome on every sub-tab.
+                        box-none for the same pull-to-refresh reason as every
+                        other row here — see the header note above. */}
+                    {activeSubTab === 'feed' && (
+                        <View pointerEvents="box-none" className="mt-2">
+                            <ImportanceFilterPills
+                                value={dashboardThreshold}
+                                onChange={setDashboardThreshold}
+                                testIDPrefix="dashboard-importance"
+                            />
+                        </View>
+                    )}
 
                     {/* Shared sync surface — indeterminate bar + expand accordion.
                         Identical to the Feed tab's, and it goes up on the same

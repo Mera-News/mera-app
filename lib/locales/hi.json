@@ -215,6 +215,10 @@
     "irrelevant": "अप्रासंगिक",
     "unprocessed": "अप्रोसेस्ड"
   },
+  "importanceFilter": {
+    "a11yLabel": "न्यूनतम कहानी प्राथमिकता",
+    "a11yOption": "{{level}} प्राथमिकता और ऊपर दिखाएं"
+  },
   "aiDisclosure": {
     "caption": "AI द्वारा तैयार किया गया नोट",
     "short": "AI द्वारा तैयार",

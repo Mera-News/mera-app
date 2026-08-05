@@ -215,6 +215,10 @@
     "irrelevant": "Tidak relevan",
     "unprocessed": "Belum diproses"
   },
+  "importanceFilter": {
+    "a11yLabel": "Prioritas cerita minimum",
+    "a11yOption": "Tampilkan prioritas {{level}} dan di atasnya"
+  },
   "aiDisclosure": {
     "caption": "Catatan yang dibuat oleh AI",
     "short": "Dibuat oleh AI",

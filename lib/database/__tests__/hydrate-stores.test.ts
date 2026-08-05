@@ -11,6 +11,7 @@ const mockAppStateHydrateFromDb = jest.fn(() => Promise.resolve());
 const mockForYouPrefsHydrate = jest.fn(() => Promise.resolve());
 const mockBlurImagesHydrate = jest.fn(() => Promise.resolve());
 const mockDisplayPrefsHydrate = jest.fn(() => Promise.resolve());
+const mockImportanceFilterHydrate = jest.fn(() => Promise.resolve());
 const mockSetReady = jest.fn();
 
 jest.mock('@/lib/stores/for-you-store', () => ({
@@ -86,6 +87,14 @@ jest.mock('@/lib/stores/display-prefs-store', () => ({
   },
 }));
 
+jest.mock('@/lib/stores/importance-filter-store', () => ({
+  useImportanceFilterStore: {
+    getState: jest.fn(() => ({
+      hydrate: mockImportanceFilterHydrate,
+    })),
+  },
+}));
+
 jest.mock('@/lib/stores/database-store', () => ({
   useDatabaseStore: {
     getState: jest.fn(() => ({
@@ -128,6 +137,7 @@ describe('hydrateAllStores', () => {
     expect(mockForYouPrefsHydrate).toHaveBeenCalledTimes(1);
     expect(mockBlurImagesHydrate).toHaveBeenCalledTimes(1);
     expect(mockDisplayPrefsHydrate).toHaveBeenCalledTimes(1);
+    expect(mockImportanceFilterHydrate).toHaveBeenCalledTimes(1);
   });
 
   it('calls pruneStaleVisits after hydration', async () => {

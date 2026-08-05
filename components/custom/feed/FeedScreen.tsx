@@ -72,7 +72,8 @@
 // a verdict and reveals the card's inline feedback surface
 // (CardFeedbackSurface). Every one of those interactions — plus opening the card
 // — marks it `viewed`.
-// The header is the "Feed" heading + notification bell + 24h stats sentence.
+// The header is the "Feed" heading + notification bell, the importance-filter
+// pills, and the 24h stats sentence.
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
@@ -91,6 +92,7 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
+import ImportanceFilterPills from '@/components/custom/ImportanceFilterPills';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
@@ -127,8 +129,10 @@ import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refre
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
+  filterByImportance,
   type FeedListItem,
 } from '@/lib/stores/feed-list-selector';
+import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import {
   useFeedOrderStore,
   type CardStateRecord,
@@ -249,6 +253,13 @@ const FeedScreen: React.FC = () => {
   // makes representative election tier-aware. Null while loading/on failure,
   // which `buildFeedList` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
+
+  // Minimum band this screen renders. DISPLAY-ONLY and deliberately applied as
+  // far downstream as possible (see `visibleData` below): candidates, ingest and
+  // the persisted order all stay threshold-blind, so lowering the pill reveals
+  // rows immediately instead of waiting for the next sync to re-admit them.
+  const feedThreshold = useImportanceFilterStore((s) => s.feedThreshold);
+  const setFeedThreshold = useImportanceFilterStore((s) => s.setFeedThreshold);
 
   // Candidates keep opened items in (they back frozen rows + survive hydrate) —
   // no exclusion here; opened-filtering happens only for NEW ids in ingest.
@@ -452,6 +463,16 @@ const FeedScreen: React.FC = () => {
     [order, itemsById],
   );
 
+  // The importance filter, applied at the LAST possible point: everything above
+  // (candidates → ingest → persisted order) keeps seeing every render-gated
+  // story, so a row hidden here is only hidden, never dropped. At 'low' this is
+  // the identity function and returns `data` itself, so the sort below memoises
+  // exactly as it did before the filter existed.
+  const visibleData = useMemo(
+    () => filterByImportance(data, feedThreshold),
+    [data, feedThreshold],
+  );
+
   // Display list: the STATIC pinned prefix (what the user has already read past,
   // in reading order), then the DYNAMIC region — unviewed (high → med → low),
   // then viewed (high → med → low). Nothing is ever removed; a viewed card sinks
@@ -460,13 +481,13 @@ const FeedScreen: React.FC = () => {
   const { rows: listData, pinnedCount } = useMemo(
     () =>
       sortFeedEntries(
-        data,
+        visibleData,
         partitionSnapshot.cardStates,
         partitionSnapshot.openedArticleIds,
         pinnedIds,
         partitionSnapshot.at,
       ),
-    [data, partitionSnapshot, pinnedIds],
+    [visibleData, partitionSnapshot, pinnedIds],
   );
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
@@ -510,7 +531,7 @@ const FeedScreen: React.FC = () => {
 
   // DEV-only Metro log of the whole funnel + the rendered cards. Compiled out of
   // release builds; throttled and count-gated in dev (see the hook).
-  useFeedFunnelLog(listData, unviewedCount, userGeoLanguageCtx);
+  useFeedFunnelLog(listData, unviewedCount, userGeoLanguageCtx, feedThreshold, data.length - visibleData.length);
 
   // ── Feedback sheet (shared plumbing) ──
   // The verdict store is `feed-order-store`, keyed by the rep-switch-safe
@@ -964,13 +985,31 @@ const FeedScreen: React.FC = () => {
               <NotificationBellButton />
             </HStack>
           </HStack>
+          {/* Importance pills on their OWN line, not in the title row. The
+              heading truncates (flex-1 min-w-0, numberOfLines={1}) and three
+              localized pills plus the bell overrun the row in the longer
+              languages — "Nachrichten"/"Лента" with High/Med/Low spelled out in
+              full leave no space at 375-390pt. `box-none`, per the
+              pull-to-refresh rule above: only the pills themselves take touches. */}
+          <View pointerEvents="box-none">
+            <ImportanceFilterPills
+              value={feedThreshold}
+              onChange={setFeedThreshold}
+              testIDPrefix="feed-importance"
+            />
+          </View>
           <View pointerEvents="none">
             {/* Brighter + a little heavier than the muted body step: this line
                 sits on glass with content moving under it, where
                 typography-400 was barely legible. `leading-6` is repeated
                 because the prop REPLACES FeedStatsSentence's default class
                 string rather than merging with it. */}
-            <FeedStatsSentence className="text-typography-700 font-medium leading-6" />
+            {/* `importanceAware`: the "K relevant" clause must not advertise
+                more stories than the filtered list below actually shows. */}
+            <FeedStatsSentence
+              importanceAware
+              className="text-typography-700 font-medium leading-6"
+            />
           </View>
 
           {/* Shared sync surface — the same indeterminate bar the Dashboard

@@ -215,6 +215,10 @@
     "irrelevant": "Irrelevante",
     "unprocessed": "Não processado"
   },
+  "importanceFilter": {
+    "a11yLabel": "Prioridade mínima de história",
+    "a11yOption": "Mostrar prioridade {{level}} e acima"
+  },
   "aiDisclosure": {
     "caption": "Nota gerada por IA",
     "short": "Gerada por IA",

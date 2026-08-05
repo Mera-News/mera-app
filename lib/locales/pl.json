@@ -227,6 +227,10 @@
     "irrelevant": "Nieistotne",
     "unprocessed": "Nieprzetworzone"
   },
+  "importanceFilter": {
+    "a11yLabel": "Minimum priorytetu artykułu",
+    "a11yOption": "Pokaż {{level}} priorytet i wyżej"
+  },
   "aiDisclosure": {
     "caption": "Notatka wygenerowana przez AI",
     "short": "Wygenerowane przez AI",

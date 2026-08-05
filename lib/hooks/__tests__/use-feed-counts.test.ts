@@ -25,7 +25,13 @@ const HOUR = 3_600_000;
 /** A scored, in-window, comfortably-relevant row unless overridden. */
 function row(
     articleId: string,
-    over: Partial<{ status: string; firstPubDate: string; relevance: number }> = {},
+    over: Partial<{
+        status: string;
+        firstPubDate: string;
+        relevance: number;
+        rawScore: number | null;
+        eventType: string | null;
+    }> = {},
 ) {
     return {
         articleId,
@@ -107,5 +113,45 @@ describe('computeFeedCounts', () => {
             openedArticleIds: new Set(['dull']),
         });
         expect(counts).toEqual({ analysedCount: 1, relevantCount: 0, readCount: 0 });
+    });
+});
+
+// The Feed's stats sentence is threshold-aware (FeedStatsSentence
+// `importanceAware`) so it can never advertise more stories than the filtered
+// list under it renders. Same two-part rule as `filterByImportance`: band, or
+// breaking regardless of band.
+describe('computeFeedCounts — importance threshold', () => {
+    const rows = [
+        row('med', { relevance: 0.6 }),
+        row('high', { relevance: 0.8 }),
+        row('breaking-med', { relevance: 0.6, rawScore: 0.85, eventType: 'disaster' }),
+    ];
+
+    it("defaults to 'low', which is identical to omitting the option", () => {
+        const base = computeFeedCounts(rows, { nowMs: NOW });
+        expect(base).toEqual(
+            computeFeedCounts(rows, { nowMs: NOW, importanceThreshold: 'low' }),
+        );
+        expect(base.relevantCount).toBe(3);
+    });
+
+    it("'high' drops medium-band rows from `relevant` but never from `analysed`", () => {
+        const counts = computeFeedCounts(rows, { nowMs: NOW, importanceThreshold: 'high' });
+        // The reader hiding stories does not un-analyse them.
+        expect(counts.analysedCount).toBe(3);
+        // 'med' is gone; 'high' clears the band, 'breaking-med' is exempt.
+        expect(counts.relevantCount).toBe(2);
+    });
+
+    it("keeps a breaking row relevant (and readable) at 'high' from the medium band", () => {
+        const counts = computeFeedCounts(
+            [row('brk', { relevance: 0.6, rawScore: 0.85, eventType: 'disaster' })],
+            {
+                nowMs: NOW,
+                importanceThreshold: 'high',
+                openedArticleIds: new Set(['brk']),
+            },
+        );
+        expect(counts).toEqual({ analysedCount: 1, relevantCount: 1, readCount: 1 });
     });
 });
