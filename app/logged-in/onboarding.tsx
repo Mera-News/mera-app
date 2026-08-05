@@ -74,11 +74,11 @@ export default function Onboarding() {
         navigateToPaywall();
     };
 
-    // No active plan, already dismissed → companion mode, onboarding skipped.
+    // No active plan, already dismissed → Mera News Free, onboarding skipped.
     // The feed, not `handleComplete`'s Dashboard-with-fromOnboarding: the
     // wizard never ran, and this is where "Continue without a plan" already
     // lands.
-    const handleCompanionMode = () => {
+    const handleFreeTierMode = () => {
         router.replace("/logged-in/app_container/feed");
     };
 
@@ -108,7 +108,7 @@ export default function Onboarding() {
                 onLoginRedirect={handleLoginRedirect}
                 onComplete={handleComplete}
                 onPaywall={handlePaywall}
-                onCompanionMode={handleCompanionMode}
+                onFreeTierMode={handleFreeTierMode}
             />
         </ErrorBoundary>
     );

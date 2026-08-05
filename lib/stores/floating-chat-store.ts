@@ -127,7 +127,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     ...initialState,
 
     expand: (context) => {
-        // Companion mode: chat must not open anywhere in the app. This is the
+        // Mera News Free: chat must not open anywhere in the app. This is the
         // single chokepoint every call site (article actions, track button,
         // notifications, ...) funnels through, so gating here covers all of
         // them without touching each call site. A silent no-op is correct —
@@ -154,7 +154,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     },
 
     openArticleFeedback: (context, initialMessage) => {
-        // Same companion-mode chokepoint as `expand` above.
+        // Same free-tier chokepoint as `expand` above.
         if (getAiAccess() === 'locked') return;
         set(() => ({
             context,
@@ -173,7 +173,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     openOptimisationPlan: () => {
         // Same chokepoint: this opens the same chat popover as expand/
         // openArticleFeedback (just pre-staged on the plan-card context), so a
-        // companion-mode user must not be able to reach it either.
+        // free-tier user must not be able to reach it either.
         if (getAiAccess() === 'locked') return;
         set(() => ({
             // Fresh thread showing only the plan card (no auto-send). Null id is

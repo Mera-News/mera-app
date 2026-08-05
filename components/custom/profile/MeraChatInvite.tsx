@@ -1,6 +1,6 @@
 import { GLASS_AVAILABLE, GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
-import CompanionInlineNotice from '@/components/custom/subscription/CompanionInlineNotice';
+import FreeTierInlineNotice from '@/components/custom/subscription/FreeTierInlineNotice';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -52,14 +52,14 @@ const MeraChatInvite: React.FC = () => {
         useFloatingChatStore.getState().expand({ kind: 'persona' });
     }, [publishCenter]);
 
-    // Companion mode: this row is the chat entry point, so it can't just
+    // Mera News Free: this row is the chat entry point, so it can't just
     // vanish (that would read as a bug) or keep opening a chat the
     // floating-chat-store chokepoint would silently no-op — swap in the
-    // one-sentence companion notice instead, in the same slot.
+    // one-sentence free-tier notice instead, in the same slot.
     if (aiAccess === 'locked') {
         return (
             <View className="mx-4 mb-5">
-                <CompanionInlineNotice surface="chat" />
+                <FreeTierInlineNotice surface="chat" />
             </View>
         );
     }

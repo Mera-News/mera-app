@@ -116,8 +116,8 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         // secondary poll below settle it.
         if (confirmed) {
             setBilling(billingInfo);
-            // Mirror the server's verdict into the store so companion mode
-            // lifts (or falls) app-wide, not just on this screen's usage card.
+            // Mirror the server's verdict into the store so the free-tier
+            // state lifts (or falls) app-wide, not just on this screen's usage card.
             useSubscriptionStore.getState().setServerBilling(billingInfo);
         }
         setActivationPending(isPostPurchase && !confirmed);

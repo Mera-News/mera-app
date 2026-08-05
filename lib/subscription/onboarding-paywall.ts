@@ -29,7 +29,7 @@
 //
 // ## Ship gate
 //
-// While `COMPANION_MODE_ENABLED` is false, `deriveAiAccess` short-circuits to
+// While `FREE_TIER_MODE_ENABLED` is false, `deriveAiAccess` short-circuits to
 // `'entitled'`, so `resolveEntitlementForOnboarding` returns on its FIRST
 // statement — no network wait, no store subscription, no behaviour change.
 // Everything here is inert until that flag flips. `DEV_FORCE_AI_ACCESS` sits
@@ -57,8 +57,8 @@ export const ONBOARDING_ENTITLEMENT_WAIT_MS = 8_000;
 export type OnboardingEntry =
     /** No active plan, never dismissed → the existing paywall screen. */
     | 'paywall'
-    /** No active plan, already dismissed → companion mode, onboarding skipped. */
-    | 'companion'
+    /** No active plan, already dismissed → Mera News Free, onboarding skipped. */
+    | 'free-tier'
     /** Active plan (or an unresolvable verdict) → the wizard, as before. */
     | 'onboarding';
 
@@ -109,7 +109,7 @@ export function decideOnboardingEntry({
     // un-onboarded either: this branch is only reached while `locked`, so the
     // moment they subscribe the verdict becomes `'entitled'` and onboarding
     // runs on the next pass.
-    return firstOpenDismissed ? 'companion' : 'paywall';
+    return firstOpenDismissed ? 'free-tier' : 'paywall';
 }
 
 /**

@@ -91,7 +91,7 @@ jest.mock('@/lib/subscription/onboarding-paywall', () => ({
 }));
 const mockReadFirstOpenDismissed = jest.fn(async () => false);
 jest.mock('@/lib/subscription/first-open-dismissal', () => ({
-    FIRST_OPEN_DISMISSED_SETTING_KEY: 'companion_first_open_dismissed',
+    FIRST_OPEN_DISMISSED_SETTING_KEY: 'free_tier_first_open_dismissed',
     readFirstOpenDismissed: () => mockReadFirstOpenDismissed(),
 }));
 
@@ -273,10 +273,10 @@ describe('cold-start paywall ordering', () => {
         expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
     });
 
-    it('a locked, already-dismissed user lands in companion mode, not onboarding', async () => {
+    it('a locked, already-dismissed user lands on Mera News Free, not onboarding', async () => {
         mockHasAnyFacts.mockResolvedValue(false);
         mockResolveEntitlement.mockResolvedValue('locked');
-        mockDecideEntry.mockReturnValue('companion');
+        mockDecideEntry.mockReturnValue('free-tier');
         render(<LoggedInIndex />);
 
         await waitFor(() =>

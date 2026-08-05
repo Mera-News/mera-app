@@ -1,21 +1,21 @@
 // ai-access.test.ts — tests for the pure derive functions in ai-access.ts.
 //
 // `feature-gates.ts` exports plain module-level consts, so exercising both
-// sides of COMPANION_MODE_ENABLED (currently `false` in ship state — see the
+// sides of FREE_TIER_MODE_ENABLED (currently `false` in ship state — see the
 // module's own comment) requires jest.resetModules() + jest.doMock() per test,
 // the same pattern lib/config/__tests__/branding.test.ts uses for env-driven
 // modules. `require` (not `import`) after the mock so we get a fresh module
 // graph reading the mocked constants.
 
 function loadAiAccess(gates: {
-    COMPANION_MODE_ENABLED?: boolean;
+    FREE_TIER_MODE_ENABLED?: boolean;
     DEV_FORCE_AI_ACCESS?: 'entitled' | 'locked' | null;
     DEV_FORCE_LAPSED?: boolean;
 } = {}) {
     jest.resetModules();
     jest.doMock('@/lib/config/feature-gates', () => ({
         __esModule: true,
-        COMPANION_MODE_ENABLED: gates.COMPANION_MODE_ENABLED ?? false,
+        FREE_TIER_MODE_ENABLED: gates.FREE_TIER_MODE_ENABLED ?? false,
         DEV_FORCE_AI_ACCESS: gates.DEV_FORCE_AI_ACCESS ?? null,
         DEV_FORCE_LAPSED: gates.DEV_FORCE_LAPSED ?? false,
     }));
@@ -31,9 +31,9 @@ afterEach(() => {
 });
 
 describe('deriveAiAccess', () => {
-    describe('ship gate OFF (COMPANION_MODE_ENABLED = false, current ship state)', () => {
+    describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false, current ship state)', () => {
         it('returns entitled for every input, regardless of server/RevenueCat signals', () => {
-            const { deriveAiAccess } = loadAiAccess({ COMPANION_MODE_ENABLED: false });
+            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: false });
 
             expect(
                 deriveAiAccess({ serverTier: 'none', hasCustomerInfo: false, isPremium: false }),
@@ -51,7 +51,7 @@ describe('deriveAiAccess', () => {
 
         it('the dev override still wins over the ship gate (it sits above it)', () => {
             const { deriveAiAccess } = loadAiAccess({
-                COMPANION_MODE_ENABLED: false,
+                FREE_TIER_MODE_ENABLED: false,
                 DEV_FORCE_AI_ACCESS: 'locked',
             });
             expect(
@@ -60,10 +60,10 @@ describe('deriveAiAccess', () => {
         });
     });
 
-    describe('ship gate ON (COMPANION_MODE_ENABLED = true — simulates post-cutover)', () => {
+    describe('ship gate ON (FREE_TIER_MODE_ENABLED = true — simulates post-cutover)', () => {
         it('__DEV__ override takes precedence over everything else', () => {
             const { deriveAiAccess } = loadAiAccess({
-                COMPANION_MODE_ENABLED: true,
+                FREE_TIER_MODE_ENABLED: true,
                 DEV_FORCE_AI_ACCESS: 'locked',
             });
             // Server says entitled, RevenueCat says entitled — override still wins.
@@ -74,7 +74,7 @@ describe('deriveAiAccess', () => {
 
         it('__DEV__ override is only consulted in dev builds', () => {
             const { deriveAiAccess } = loadAiAccess({
-                COMPANION_MODE_ENABLED: true,
+                FREE_TIER_MODE_ENABLED: true,
                 DEV_FORCE_AI_ACCESS: 'locked',
             });
             (global as any).__DEV__ = false;
@@ -85,7 +85,7 @@ describe('deriveAiAccess', () => {
         });
 
         it('serverTier wins over RevenueCat when the server has answered', () => {
-            const { deriveAiAccess } = loadAiAccess({ COMPANION_MODE_ENABLED: true });
+            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
             expect(
                 deriveAiAccess({ serverTier: 'none', hasCustomerInfo: true, isPremium: true }),
             ).toBe('locked');
@@ -95,7 +95,7 @@ describe('deriveAiAccess', () => {
         });
 
         it('falls back to RevenueCat when the server has not answered yet', () => {
-            const { deriveAiAccess } = loadAiAccess({ COMPANION_MODE_ENABLED: true });
+            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
             expect(
                 deriveAiAccess({ serverTier: null, hasCustomerInfo: true, isPremium: true }),
             ).toBe('entitled');
@@ -105,7 +105,7 @@ describe('deriveAiAccess', () => {
         });
 
         it('returns unknown — never locked — when neither the server nor RevenueCat has answered', () => {
-            const { deriveAiAccess } = loadAiAccess({ COMPANION_MODE_ENABLED: true });
+            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
             const result = deriveAiAccess({
                 serverTier: null,
                 hasCustomerInfo: false,

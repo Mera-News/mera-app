@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import { COMPANION_MODE_ENABLED } from './config/feature-gates';
+import { FREE_TIER_MODE_ENABLED } from './config/feature-gates';
 import client from './apollo-client';
 import { UserBillingInfo } from './generated/graphql-types';
 import logger from './logger';
@@ -49,13 +49,13 @@ const GET_USER_BILLING_LAPSE_STATE = gql`
  * user, until the server change reaches prod.
  */
 export async function fetchUserBillingLapseState(): Promise<UserBillingInfo | null> {
-    // Not merely tolerated — not SENT at all while companion mode is inert.
+    // Not merely tolerated — not SENT at all while Mera News Free is inert.
     // Verified against prod: the request does fail safely, but the global
     // apollo error-link logs every GraphQL error before this function's catch
     // can see it, so an un-gated call would put a red toast on screen in dev
     // and a Sentry event in prod on every foreground, login and Profile focus.
     // Nothing reads these fields while the ship gate is false anyway.
-    if (!COMPANION_MODE_ENABLED) return null;
+    if (!FREE_TIER_MODE_ENABLED) return null;
 
     try {
         const { data } = await client.query<UserBillingResponse>({

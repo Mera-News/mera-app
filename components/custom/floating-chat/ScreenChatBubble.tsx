@@ -36,7 +36,7 @@ interface ScreenChatBubbleProps {
  *
  * Visibility is gated on the same store flags the old app-level host used:
  * hidden while the popover is expanded or while chat is suppressed. Also
- * hidden in companion mode ('locked') — this component is effectively dead
+ * hidden on Mera News Free ('locked') — this component is effectively dead
  * today (FloatingChatHost/ScreenChatBubble callers were superseded), but the
  * gate costs nothing and guards a future remount from offering chat to a
  * user with no plan. 'unknown' (cold-start) is intentionally NOT gated —

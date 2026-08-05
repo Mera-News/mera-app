@@ -1327,19 +1327,19 @@
     "staticGradientTitle": "Static background",
     "staticGradientDescription": "Use a fixed gradient instead of the animated background — easier on battery and older devices."
   },
-  "companion": {
-    "cardTitle": "You're in companion mode",
-    "cardBody": "Mera isn't building your feed right now. Everything you've already saved, tracked, and read stays exactly where it is. For today's headlines, Explore is open and free.",
+  "freeTier": {
+    "cardTitle": "You're on Mera News Free",
+    "cardBody": "Mera isn't building your feed right now. Everything you've already saved, tracked, and read stays exactly where it is. For today's headlines, Explore is open to you.",
     "seePlans": "See plans",
-    "trackTitle": "Story tracking is part of Mera",
+    "trackTitle": "Story tracking comes with a plan",
     "trackBody": "The stories you already follow keep everything they've collected — starting a new one needs an active plan.",
     "trackDismiss": "Not now",
     "readOnlyBanner": "Everything here is yours to read, plan or no plan. These settings only change what Mera does while a plan is active.",
     "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
     "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
-    "trackedStoriesEmptyBody": "Nothing followed yet. Following a story is part of Mera — and whatever you follow later stays on this device, yours to keep.",
+    "trackedStoriesEmptyBody": "Nothing followed yet. Following a story comes with a plan — and whatever you follow later stays on this device, yours to keep.",
     "lapseTitle": "Your Mera plan has ended",
-    "lapseBody": "Nothing has been taken away. Your saved articles, tracked stories, and reading history are yours, on this device, always. What pauses is the AI layer itself: your personalized feed, dashboard, new story tracking, and Mera chat.",
+    "lapseBody": "Nothing has been taken away. Your saved articles, tracked stories, and reading history are yours, on this device, always. You're on Mera News Free from here: what pauses is the AI layer itself — your personalized feed, dashboard, new story tracking, and Mera chat.",
     "continueWithoutPlan": "Continue without a plan"
   }
 }

@@ -73,14 +73,14 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
      * with the server we just proved is subscribed.
      *
      * The forced sync is load-bearing, and it is the same trap
-     * `present-companion-paywall.ts` documents at length: `deriveAiAccess`
+     * `present-free-tier-paywall.ts` documents at length: `deriveAiAccess`
      * consults `serverTier` FIRST and reads 'none' as locked, so a store still
      * holding the PRE-purchase 'none' outranks RevenueCat's freshly-updated
      * customerInfo. Without this, a user who has genuinely just paid arrives at
      * /logged-in still looking locked — and the pre-onboarding paywall gate
      * would send them straight back to this screen, in a loop.
      *
-     * No retry budget needed here, unlike the companion path: we only get here
+     * No retry budget needed here, unlike the free-tier path: we only get here
      * once `checkServerSubscribed()` has already returned true, which means the
      * webhook has landed and a single read sees the real tier.
      */
@@ -151,7 +151,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
         }
     }, [isLapsed, userId, presentPaywall]);
 
-    // Drop into the app in companion mode. `replace`, not `push`: this screen
+    // Drop into the app on Mera News Free. `replace`, not `push`: this screen
     // must not sit on the back stack waiting to be swiped back into.
     const handleContinueWithoutPlan = useCallback(async () => {
         // Default mode = the first-open push. Record the dismissal BEFORE
@@ -214,11 +214,11 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                           <MeraLogo size={150} />
                       </Box>
                       <Heading size="2xl" className="text-white text-center">
-                          {isLapsed ? t('companion.lapseTitle') : t('subscription.title')}
+                          {isLapsed ? t('freeTier.lapseTitle') : t('subscription.title')}
                       </Heading>
 
                       <Text size="lg" className="text-gray-300 text-center leading-relaxed">
-                          {isLapsed ? t('companion.lapseBody') : t('subscription.description')}
+                          {isLapsed ? t('freeTier.lapseBody') : t('subscription.description')}
                       </Text>
 
                       {message ? (
@@ -254,7 +254,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                               {/* The way out. This screen had NO exit at all,
                                   which was defensible while the app was
                                   unusable without a plan and is not now:
-                                  companion mode is a legitimate place to be,
+                                  Mera News Free is a legitimate place to be,
                                   and a dead end here would strand a user who
                                   has chosen it. */}
                               <Button
@@ -265,7 +265,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                   size="lg"
                               >
                                   <ButtonText className="text-gray-400">
-                                      {t('companion.continueWithoutPlan')}
+                                      {t('freeTier.continueWithoutPlan')}
                                   </ButtonText>
                               </Button>
                           </VStack>

@@ -186,7 +186,7 @@ export default function LoggedInIndex() {
                     case 'paywall':
                         navigateToPaywall();
                         return;
-                    case 'companion':
+                    case 'free-tier':
                         router.replace('/logged-in/app_container/feed');
                         return;
                     default:

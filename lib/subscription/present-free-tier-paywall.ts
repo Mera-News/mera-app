@@ -1,8 +1,8 @@
-// The one way a companion-mode surface opens the paywall.
+// The one way a free-tier surface opens the paywall.
 //
 // Friction this removes (the repo rule: name it or don't add the pattern):
-// four surfaces — CompanionModeCard, CompanionInlineNotice,
-// CompanionReadOnlyBanner and useTrackButton — each carried a byte-identical
+// four surfaces — FreeTierCard, FreeTierInlineNotice,
+// FreeTierReadOnlyBanner and useTrackButton — each carried a byte-identical
 // resolve-offering → presentPaywall → try/catch block. That is not three
 // similar lines; it is four copies of one behaviour, and all four had drifted
 // into the same bug: none of them re-read entitlement afterwards.
@@ -12,7 +12,7 @@
 // pins it to 'none' on any 402 from a guarded AI query. RevenueCat's
 // `addCustomerInfoUpdateListener` therefore CANNOT heal the state after a
 // purchase — the server tier outranks it. Without this, a user who buys from a
-// companion surface stays in companion mode until the app backgrounds and
+// free-tier surface stays on Mera News Free until the app backgrounds and
 // foregrounds.
 
 import { refreshUserBillingAfterPurchase } from '@/lib/billing-service';
@@ -23,7 +23,7 @@ import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 /**
- * Present the companion paywall, then refresh entitlement so the lock lifts.
+ * Present the free-tier paywall, then refresh entitlement so the lock lifts.
  *
  * @param source Which surface asked. Carried into Sentry as the `method` tag,
  *               so the per-site diagnostics the four inlined copies had are not
@@ -51,7 +51,7 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
  * refreshed when `presentPaywall` itself throws: nothing was presented, so
  * nothing can have changed.
  */
-export async function presentCompanionPaywall(source: string): Promise<void> {
+export async function presentFreeTierPaywall(source: string): Promise<void> {
     try {
         const offering = await getOfferingSafe();
         const result = await RevenueCatUI.presentPaywall({
@@ -81,7 +81,7 @@ export async function presentCompanionPaywall(source: string): Promise<void> {
         void syncEntitlement({ force: true });
     } catch (error) {
         logger.captureException(error, {
-            tags: { component: 'presentCompanionPaywall', method: source },
+            tags: { component: 'presentFreeTierPaywall', method: source },
         });
     }
 }

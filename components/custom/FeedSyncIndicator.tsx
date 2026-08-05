@@ -174,13 +174,13 @@ export function useFeedSyncRefresh(
             return;
         }
 
-        // Companion mode. `trigger()` bypasses `_conditionsMet`, so the task's
+        // Mera News Free. `trigger()` bypasses `_conditionsMet`, so the task's
         // own aiAccess condition does NOT cover this path — without the check
-        // here, every pull would run a doomed sync that 402s. The companion
+        // here, every pull would run a doomed sync that 402s. The free-tier
         // card pinned at the top of the list is the explanation; the spinner
         // has nothing to add.
         if (getAiAccess() === 'locked') {
-            logger.info('[FeedSyncIndicator] pull-to-refresh skipped — companion mode');
+            logger.info('[FeedSyncIndicator] pull-to-refresh skipped — Mera News Free');
             return;
         }
 

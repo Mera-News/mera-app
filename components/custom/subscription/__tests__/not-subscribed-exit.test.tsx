@@ -2,8 +2,8 @@
 // not-subscribed-exit.test.tsx — leaving the paywall must leave the
 // subscription store AGREEING with the server.
 //
-// The trap, which `lib/subscription/present-companion-paywall.ts` already
-// documents for the companion surfaces: `deriveAiAccess` consults `serverTier`
+// The trap, which `lib/subscription/present-free-tier-paywall.ts` already
+// documents for the free-tier surfaces: `deriveAiAccess` consults `serverTier`
 // FIRST and reads 'none' as locked, so a store still holding the PRE-purchase
 // 'none' outranks RevenueCat's freshly-updated customerInfo. This screen used to
 // `router.replace('/logged-in')` without re-reading billing at all.
@@ -118,18 +118,18 @@ describe('leaving the paywall for /logged-in', () => {
         expect(mockReplace).not.toHaveBeenCalled();
     });
 
-    it('"Continue without a plan" records the dismissal and drops into companion mode', async () => {
+    it('"Continue without a plan" records the dismissal and drops onto Mera News Free', async () => {
         const { getByText } = render(<NotSubscribedScreen />);
 
         await act(async () => {
-            fireEvent.press(getByText('companion.continueWithoutPlan'));
+            fireEvent.press(getByText('freeTier.continueWithoutPlan'));
             for (let i = 0; i < 8; i++) await Promise.resolve();
         });
 
         const { setSetting } = require('@/lib/database/services/setting-service');
-        // The flag the pre-onboarding gate reads to decide 'companion' rather
+        // The flag the pre-onboarding gate reads to decide 'free-tier' rather
         // than looping back to this screen.
-        expect(setSetting).toHaveBeenCalledWith('companion_first_open_dismissed', 'true');
+        expect(setSetting).toHaveBeenCalledWith('free_tier_first_open_dismissed', 'true');
         expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed');
     });
 });

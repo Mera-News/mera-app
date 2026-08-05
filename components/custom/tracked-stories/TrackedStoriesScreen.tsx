@@ -1,6 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
-import CompanionInlineNotice from '@/components/custom/subscription/CompanionInlineNotice';
+import FreeTierInlineNotice from '@/components/custom/subscription/FreeTierInlineNotice';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -270,10 +270,10 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
             <Text size="sm" className="text-typography-400 text-center mt-2">
                 {/* Monetization wave: the default body sends the user to go
                     track a story, which fails while locked — starting a NEW
-                    story needs an active plan. The companion copy explains that
+                    story needs an active plan. The free-tier copy explains that
                     instead. Stories already tracked are unaffected; this is
                     purely the zero-state message. */}
-                {locked ? t('companion.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
+                {locked ? t('freeTier.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
             </Text>
             {/* The empty body used to stop at "how" without saying "where". QA's
                 filed wording ("feed card → 👍 → the 'More like this' panel")
@@ -291,9 +291,9 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
 
                 Locked: both the hint and the "go to feed" CTA below exist only
                 to walk the user through STARTING a new track, which the
-                companion body above just said needs a plan — showing them
+                free-tier body above just said needs a plan — showing them
                 would repeat a broken instruction. Suppressed rather than
-                relabeled; `CompanionModeCard`/`CompanionInlineNotice` already
+                relabeled; `FreeTierCard`/`FreeTierInlineNotice` already
                 own "See plans" messaging elsewhere and this empty state isn't
                 the place to duplicate it. */}
             {!locked && (
@@ -363,7 +363,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             </Heading>
                         </VStack>
                         <Box style={{ height: 12 }} />
-                        {/* Companion mode: the one sentence that explains why
+                        {/* Mera News Free: the one sentence that explains why
                             the track affordances elsewhere are refusing. It
                             self-gates on `useAiAccess()` and renders null
                             unless locked, so entitlement is deliberately NOT
@@ -383,7 +383,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             padding and would otherwise sit edge-to-edge. */}
                         {stories.length > 0 && (
                             <Box className="px-5 pb-2">
-                                <CompanionInlineNotice surface="stories-header" />
+                                <FreeTierInlineNotice surface="stories-header" />
                             </Box>
                         )}
                         {ListHeader}

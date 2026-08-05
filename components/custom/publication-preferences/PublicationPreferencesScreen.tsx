@@ -1,5 +1,5 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import CompanionReadOnlyBanner, { useCompanionReadOnly } from '@/components/custom/subscription/CompanionReadOnlyBanner';
+import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -62,7 +62,7 @@ const SET_SOURCE_SCOPE_PREF_ACTION_TYPE = 'set_source_scope_pref';
  */
 const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const readOnly = useCompanionReadOnly();
+    const readOnly = useFreeTierReadOnly();
     const [items, setItems] = useState<PublicationPreferenceModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     // Keyed on `pref.id`, not the display name/label — a scope row's label
@@ -190,7 +190,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                 pref={item}
                 // `busy` is PublicationPrefRow's only disable input (drives
                 // `disabled=` on the clear/kind Pressables), so folding
-                // companion read-only into it disables the row without
+                // free-tier read-only into it disables the row without
                 // threading a new prop into that child.
                 busy={busyId === item.id || readOnly}
                 onSetKind={handleSetKind}
@@ -234,7 +234,7 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
 
             {/* Pinned outside the FlatList (not a scrolled child) so it stays on
                 screen and explains why boost/downrank/mute/clear are frozen. */}
-            <CompanionReadOnlyBanner surface="publications" />
+            <FreeTierReadOnlyBanner surface="publications" />
         </Box>
     );
 };

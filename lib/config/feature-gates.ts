@@ -34,7 +34,7 @@
 export const HEADLINE_DEPTH_UI_ENABLED = false;
 
 // ───────────────────────────────────────────────────────────────────────────
-// Companion-mode dev overrides
+// Free-tier dev overrides
 // ───────────────────────────────────────────────────────────────────────────
 //
 // `FORCE_SUBSCRIPTIONS` is off server-side, so none of the three entitlement
@@ -45,13 +45,13 @@ export const HEADLINE_DEPTH_UI_ENABLED = false;
 //
 // BOTH ARE READ ONLY INSIDE `if (__DEV__)` (see lib/subscription/ai-access.ts)
 // and BOTH MUST BE COMMITTED INERT (`null` / `false`). A committed
-// `DEV_FORCE_AI_ACCESS = 'locked'` would ship companion mode to every user on
+// `DEV_FORCE_AI_ACCESS = 'locked'` would ship Mera News Free to every user on
 // the next OTA, and dead-code elimination of `__DEV__` in release bundles will
 // NOT save you — the constant is still what production logic reads in dev
 // builds handed to testers.
 
 /**
- * Companion mode itself — the whole of this wave's user-visible behaviour.
+ * Mera News Free itself — the whole of this wave's user-visible behaviour.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * MUST STAY `false` UNTIL `FORCE_SUBSCRIPTIONS` IS FLIPPED TO `"true"` IN
@@ -62,23 +62,23 @@ export const HEADLINE_DEPTH_UI_ENABLED = false;
  * is derived from `subscriptionTier`, and today essentially every user is
  * `'none'` (prod has no active subscriptions, and most users have no
  * `UserBilling` doc at all) — so `deriveAiAccess` would return `'locked'` for
- * everyone the moment they took the update, putting the entire user base into
- * companion mode before trials even exist in the App Store and Play Console.
+ * everyone the moment they took the update, putting the entire user base onto
+ * Mera News Free before trials even exist in the App Store and Play Console.
  *
  * The rollout plan is explicit that it must go the other way: the app OTA ships
  * FIRST and must be a no-op ("prod code deploys with FORCE_SUBSCRIPTIONS still
  * false — zero behavior change"), then the server flag flips once the UI is
- * live and adopted, so nobody meets a bare 402 with no companion UI to catch
+ * live and adopted, so nobody meets a bare 402 with no free-tier UI to catch
  * it. This constant is what makes the OTA inert in the meantime.
  *
  * While `false`, `deriveAiAccess` short-circuits to `'entitled'` — exactly the
  * app's behaviour before this wave. `DEV_FORCE_AI_ACCESS` still overrides it,
- * so all of the companion UI stays drivable from the simulator harness.
+ * so all of the free-tier UI stays drivable from the simulator harness.
  *
  * Flipping this to `true` is the entire app-side activation step; it needs its
  * own OTA, timed with the server flag.
  */
-export const COMPANION_MODE_ENABLED = false;
+export const FREE_TIER_MODE_ENABLED = false;
 
 /**
  * Force the derived `aiAccess` verdict, bypassing the ship gate above, the

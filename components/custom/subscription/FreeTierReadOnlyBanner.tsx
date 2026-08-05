@@ -3,19 +3,19 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { presentCompanionPaywall } from '@/lib/subscription/present-companion-paywall';
+import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export type CompanionReadOnlySurface =
+export type FreeTierReadOnlySurface =
     | 'mera-protocol'
     | 'persona'
     | 'facts'
     | 'publications';
 
-export interface CompanionReadOnlyBannerProps {
-    readonly surface: CompanionReadOnlySurface;
+export interface FreeTierReadOnlyBannerProps {
+    readonly surface: FreeTierReadOnlySurface;
     /** Defaults to presenting the RevenueCat paywall. */
     readonly onSeePlans?: () => void;
 }
@@ -32,36 +32,36 @@ export interface CompanionReadOnlyBannerProps {
  * `'unknown'` is not read-only: a paying user must not find their switches
  * frozen for the first second of a cold start.
  */
-export function useCompanionReadOnly(): boolean {
+export function useFreeTierReadOnly(): boolean {
     return useAiAccess() === 'locked';
 }
 
 /**
- * Pinned-bottom explanation for a screen whose controls `useCompanionReadOnly`
+ * Pinned-bottom explanation for a screen whose controls `useFreeTierReadOnly`
  * has just disabled. Renders `null` when not locked, so screens can mount it
  * unconditionally.
  */
-const CompanionReadOnlyBanner: React.FC<CompanionReadOnlyBannerProps> = ({
+const FreeTierReadOnlyBanner: React.FC<FreeTierReadOnlyBannerProps> = ({
     surface,
     onSeePlans,
 }) => {
     const { t } = useTranslation();
-    const readOnly = useCompanionReadOnly();
+    const readOnly = useFreeTierReadOnly();
 
     const handleSeePlans = useCallback(async () => {
         if (onSeePlans) {
             onSeePlans();
             return;
         }
-        await presentCompanionPaywall('CompanionReadOnlyBanner');
+        await presentFreeTierPaywall('FreeTierReadOnlyBanner');
     }, [onSeePlans]);
 
     if (!readOnly) return null;
 
     return (
         <HStack
-            testID="companion-readonly-banner"
-            accessibilityLabel={`companion-readonly-${surface}`}
+            testID="free-tier-readonly-banner"
+            accessibilityLabel={`free-tier-readonly-${surface}`}
             space="sm"
             className="items-start px-4 py-3 border-t border-white/10 bg-black/60"
         >
@@ -73,11 +73,11 @@ const CompanionReadOnlyBanner: React.FC<CompanionReadOnlyBannerProps> = ({
             />
             <VStack space="xs" className="flex-1">
                 <Text size="sm" className="text-gray-300">
-                    {t('companion.readOnlyBanner')}
+                    {t('freeTier.readOnlyBanner')}
                 </Text>
                 <Pressable onPress={handleSeePlans} hitSlop={8}>
                     <Text size="sm" className="text-primary-400 font-medium">
-                        {t('companion.seePlans')}
+                        {t('freeTier.seePlans')}
                     </Text>
                 </Pressable>
             </VStack>
@@ -85,4 +85,4 @@ const CompanionReadOnlyBanner: React.FC<CompanionReadOnlyBannerProps> = ({
     );
 };
 
-export default CompanionReadOnlyBanner;
+export default FreeTierReadOnlyBanner;

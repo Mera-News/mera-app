@@ -3,15 +3,15 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { presentCompanionPaywall } from '@/lib/subscription/present-companion-paywall';
+import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export type CompanionNoticeSurface = 'chat' | 'stories-header';
+export type FreeTierNoticeSurface = 'chat' | 'stories-header';
 
-export interface CompanionInlineNoticeProps {
-    readonly surface: CompanionNoticeSurface;
+export interface FreeTierInlineNoticeProps {
+    readonly surface: FreeTierNoticeSurface;
     /** Defaults to presenting the RevenueCat paywall. */
     readonly onSeePlans?: () => void;
 }
@@ -31,11 +31,11 @@ export interface CompanionInlineNoticeProps {
  * a typo'd key would render as a raw path on a device instead of failing here.
  */
 const NOTICE_KEY = {
-    chat: 'companion.chatNotice',
-    'stories-header': 'companion.storiesNotice',
-} as const satisfies Record<CompanionNoticeSurface, string>;
+    chat: 'freeTier.chatNotice',
+    'stories-header': 'freeTier.storiesNotice',
+} as const satisfies Record<FreeTierNoticeSurface, string>;
 
-const CompanionInlineNotice: React.FC<CompanionInlineNoticeProps> = ({
+const FreeTierInlineNotice: React.FC<FreeTierInlineNoticeProps> = ({
     surface,
     onSeePlans,
 }) => {
@@ -47,14 +47,14 @@ const CompanionInlineNotice: React.FC<CompanionInlineNoticeProps> = ({
             onSeePlans();
             return;
         }
-        await presentCompanionPaywall('CompanionInlineNotice');
+        await presentFreeTierPaywall('FreeTierInlineNotice');
     }, [onSeePlans]);
 
     if (aiAccess !== 'locked') return null;
 
     return (
         <HStack
-            testID={`companion-notice-${surface}`}
+            testID={`free-tier-notice-${surface}`}
             space="sm"
             className="items-start px-4 py-3 rounded-xl border border-white/10 bg-white/5"
         >
@@ -70,7 +70,7 @@ const CompanionInlineNotice: React.FC<CompanionInlineNoticeProps> = ({
                 </Text>
                 <Pressable onPress={handleSeePlans} hitSlop={8}>
                     <Text size="sm" className="text-primary-400 font-medium">
-                        {t('companion.seePlans')}
+                        {t('freeTier.seePlans')}
                     </Text>
                 </Pressable>
             </VStack>
@@ -78,4 +78,4 @@ const CompanionInlineNotice: React.FC<CompanionInlineNoticeProps> = ({
     );
 };
 
-export default CompanionInlineNotice;
+export default FreeTierInlineNotice;

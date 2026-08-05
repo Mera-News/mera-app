@@ -15,7 +15,7 @@
 // Behaviour (Q13):
 //   untracked → the unchanged proposal flow (floating chat + auto-sent seed),
 //               UNLESS entitlement is locked — starting a NEW story needs an
-//               active plan, so that case shows the companion dialog below
+//               active plan, so that case shows the free-tier dialog below
 //               instead.
 //   tracked   → a dialog explaining that re-following isn't possible and that
 //               untracking deletes everything for the story, offering
@@ -43,7 +43,7 @@ import { Text } from '@/components/ui/text';
 import type { FeedbackSubject } from '@/components/custom/cards/feedback-subject';
 import { useTrackedSubject } from '@/lib/tracking/use-tracked-subject';
 import { getAiAccess } from '@/lib/stores/subscription-store';
-import { presentCompanionPaywall } from '@/lib/subscription/present-companion-paywall';
+import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -54,7 +54,7 @@ export interface UseTrackButton {
   tracked: boolean;
   /** Single press handler — routes to the proposal flow, the "already
    *  tracking" dialog, or (locked entitlement, untracked subject) the
-   *  companion "See plans" dialog. */
+   *  free-tier "See plans" dialog. */
   onPress: () => void;
   /** Render this next to the button; null-safe to place unconditionally.
    *  A fragment of both dialogs — only one is ever open at a time. */
@@ -95,7 +95,7 @@ export function useTrackButton(
 
   const seePlans = useCallback(async () => {
     setLockedDialogOpen(false);
-    await presentCompanionPaywall('useTrackButton');
+    await presentFreeTierPaywall('useTrackButton');
   }, []);
 
   const goToStory = useCallback(() => {
@@ -139,12 +139,12 @@ export function useTrackButton(
       <ModalContent>
         <ModalHeader>
           <Heading size="md" className="text-white" testID="track-locked-title">
-            {t('companion.trackTitle')}
+            {t('freeTier.trackTitle')}
           </Heading>
         </ModalHeader>
         <ModalBody>
           <Text size="sm" className="text-typography-300">
-            {t('companion.trackBody')}
+            {t('freeTier.trackBody')}
           </Text>
         </ModalBody>
         <ModalFooter>
@@ -155,10 +155,10 @@ export function useTrackButton(
             className="mr-3"
             testID="track-locked-dismiss"
           >
-            <ButtonText>{t('companion.trackDismiss')}</ButtonText>
+            <ButtonText>{t('freeTier.trackDismiss')}</ButtonText>
           </Button>
           <Button onPress={seePlans} testID="track-locked-see-plans">
-            <ButtonText>{t('companion.seePlans')}</ButtonText>
+            <ButtonText>{t('freeTier.seePlans')}</ButtonText>
           </Button>
         </ModalFooter>
       </ModalContent>

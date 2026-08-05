@@ -43,14 +43,14 @@ interface OnboardingScreenProps {
      */
     onPaywall: () => void;
     /**
-     * No active plan, but the paywall was already dismissed → companion mode
+     * No active plan, but the paywall was already dismissed → Mera News Free
      * with onboarding skipped. Deliberately NOT `onComplete`: that one carries
      * `fromOnboarding: "1"` and lands on the Dashboard, which is a claim about
-     * a wizard that never ran. Companion mode's established destination is the
+     * a wizard that never ran. Mera News Free's established destination is the
      * feed — the same one `NotSubscribedScreen`'s "Continue without a plan"
      * uses.
      */
-    onCompanionMode: () => void;
+    onFreeTierMode: () => void;
 }
 
 /**
@@ -68,7 +68,7 @@ interface OnboardingScreenProps {
  * Consequence: this gate needs no network at all. It works offline and a dead
  * server session can no longer bounce a user through onboarding.
  */
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onPaywall, onCompanionMode }) => {
+const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onPaywall, onFreeTierMode }) => {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
 
@@ -189,7 +189,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 // Leave the spinner mounted: both callbacks replace this route,
                 // so rendering anything else here would only flash.
                 if (entry === 'paywall') onPaywall();
-                else onCompanionMode();
+                else onFreeTierMode();
                 return;
             }
 

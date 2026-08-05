@@ -3,7 +3,7 @@ import UsageWidget from '@/components/custom/UsageWidget';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import HubRow from '@/components/custom/profile-hub/HubRow';
-import { useCompanionReadOnly } from '@/components/custom/subscription/CompanionReadOnlyBanner';
+import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -53,7 +53,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     // ProfileScreen is only reached via the main tab navigator (after
     // onboarding, a separate route) — no isOnboarding exemption needed here,
     // unlike MeraProtocolSettingsScreen which is also mounted mid-onboarding.
-    const readOnly = useCompanionReadOnly();
+    const readOnly = useFreeTierReadOnly();
 
     const [factCount, setFactCount] = useState<number | null>(null);
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
@@ -80,7 +80,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         fetchUserBilling()
             .then((fresh) => {
                 setBilling(fresh);
-                // Mirror into the store too, so companion mode lifts app-wide
+                // Mirror into the store too, so the free-tier state lifts app-wide
                 // and not just on this card. This focus-driven refresh is also
                 // the backstop that eventually heals a purchase whose webhook
                 // outlived every poll below.
@@ -152,7 +152,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
 
                 if (confirmed && fresh) {
                     setBilling(fresh);
-                    // App-wide: lifts companion mode the moment the purchase lands.
+                    // App-wide: lifts the free-tier state the moment the purchase lands.
                     useSubscriptionStore.getState().setServerBilling(fresh);
                     setActivationPending(false);
                     return;

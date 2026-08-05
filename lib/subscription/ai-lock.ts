@@ -1,7 +1,7 @@
 // What the app does when the server refuses a guarded AI query with a 402.
 //
 // The old behaviour was to yank the user to the paywall from wherever they
-// were. That is wrong now: companion mode is a legitimate place to be, and
+// were. That is wrong now: Mera News Free is a legitimate place to be, and
 // everything already on the device stays usable — a hard redirect out of an
 // article the user was reading would take away exactly what this wave promises
 // not to take away.
@@ -31,7 +31,7 @@ export function recordAiLocked(source: AiLockSource): void {
 
     useSubscriptionStore.getState().markServerLocked();
 
-    // Breadcrumb, not an exception: a 402 in companion mode is the system
+    // Breadcrumb, not an exception: a 402 on Mera News Free is the system
     // working. Only the first one per transition is worth recording — a locked
     // device can produce several before the surfaces settle.
     if (!already) {

@@ -15,7 +15,7 @@
 
 import { getSetting } from '@/lib/database/services/setting-service';
 
-export const FIRST_OPEN_DISMISSED_SETTING_KEY = 'companion_first_open_dismissed';
+export const FIRST_OPEN_DISMISSED_SETTING_KEY = 'free_tier_first_open_dismissed';
 
 /**
  * Has this device already dismissed the first-open paywall?

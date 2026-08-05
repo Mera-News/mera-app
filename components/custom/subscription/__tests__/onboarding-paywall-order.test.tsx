@@ -19,7 +19,7 @@
 // leaves are stubbed: RevenueCat (native), entitlement-sync (Apollo), the local
 // DB services, and the wizard itself.
 //
-// ## Driving COMPANION_MODE_ENABLED
+// ## Driving FREE_TIER_MODE_ENABLED
 //
 // lib/subscription/__tests__/ai-access.test.ts flips the ship gate with
 // jest.resetModules() + jest.doMock(). That pattern is unusable in a suite that
@@ -36,13 +36,13 @@ import React from 'react';
 
 // ── ship gate, flippable per test ──────────────────────────────────────────
 const gates = {
-    COMPANION_MODE_ENABLED: true,
+    FREE_TIER_MODE_ENABLED: true,
     DEV_FORCE_AI_ACCESS: null as 'entitled' | 'locked' | null,
     DEV_FORCE_LAPSED: false,
 };
 jest.mock('@/lib/config/feature-gates', () => ({
     __esModule: true,
-    get COMPANION_MODE_ENABLED() { return gates.COMPANION_MODE_ENABLED; },
+    get FREE_TIER_MODE_ENABLED() { return gates.FREE_TIER_MODE_ENABLED; },
     get DEV_FORCE_AI_ACCESS() { return gates.DEV_FORCE_AI_ACCESS; },
     get DEV_FORCE_LAPSED() { return gates.DEV_FORCE_LAPSED; },
     get HEADLINE_DEPTH_UI_ENABLED() { return false; },
@@ -131,7 +131,7 @@ function renderGate() {
     const onComplete = jest.fn();
     const onLoginRedirect = jest.fn();
     const onPaywall = jest.fn();
-    const onCompanionMode = jest.fn();
+    const onFreeTierMode = jest.fn();
     const utils = render(
         <OnboardingScreen
             userId="u1"
@@ -139,10 +139,10 @@ function renderGate() {
             onLoginRedirect={onLoginRedirect}
             onComplete={onComplete}
             onPaywall={onPaywall}
-            onCompanionMode={onCompanionMode}
+            onFreeTierMode={onFreeTierMode}
         />,
     );
-    return { ...utils, onComplete, onLoginRedirect, onPaywall, onCompanionMode };
+    return { ...utils, onComplete, onLoginRedirect, onPaywall, onFreeTierMode };
 }
 
 /**
@@ -158,7 +158,7 @@ async function flush() {
 
 beforeEach(() => {
     jest.clearAllMocks();
-    gates.COMPANION_MODE_ENABLED = true;
+    gates.FREE_TIER_MODE_ENABLED = true;
     gates.DEV_FORCE_AI_ACCESS = null;
     mockIsConnected = true;
     mockSettings = { cached_user_id: 'u1' };
@@ -170,26 +170,26 @@ describe('paywall before onboarding', () => {
     it('no active tier + no local facts → the paywall, NOT onboarding', async () => {
         mockServerAnswer = { subscriptionTier: 'none' };
 
-        const { onPaywall, onCompanionMode, onComplete, queryByTestId } = renderGate();
+        const { onPaywall, onFreeTierMode, onComplete, queryByTestId } = renderGate();
         await flush();
 
         expect(onPaywall).toHaveBeenCalledTimes(1);
         // The whole point: the wizard — whose step 2 is the Mera chat that 401s
         // without an entitlement — never mounts.
         expect(queryByTestId('onboarding-wizard')).toBeNull();
-        expect(onCompanionMode).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onComplete).not.toHaveBeenCalled();
     });
 
     it('active tier + no local facts → onboarding, and no paywall', async () => {
         mockServerAnswer = { subscriptionTier: 'professional' };
 
-        const { onPaywall, onCompanionMode, queryByTestId } = renderGate();
+        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         expect(queryByTestId('onboarding-wizard')).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
-        expect(onCompanionMode).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
     });
 
     // An active TRIAL needs no handling of its own: the server's `resolveTier`
@@ -211,13 +211,13 @@ describe('paywall before onboarding', () => {
         // The server never answers, so aiAccess stays 'unknown'.
         mockServerAnswer = null;
 
-        const { onPaywall, onCompanionMode, onComplete, queryByTestId } = renderGate();
+        const { onPaywall, onFreeTierMode, onComplete, queryByTestId } = renderGate();
         await flush();
 
         // NEITHER. No lock flashed at a possible subscriber, no onboarding
         // flashed at a possible non-subscriber — just the existing spinner.
         expect(onPaywall).not.toHaveBeenCalled();
-        expect(onCompanionMode).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onComplete).not.toHaveBeenCalled();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
         expect(queryByTestId('onboarding-gate-spinner')).toBeTruthy();
@@ -239,14 +239,14 @@ describe('paywall before onboarding', () => {
         jest.useRealTimers();
     });
 
-    it('dismissed + no tier → companion mode, onboarding skipped, no paywall loop', async () => {
+    it('dismissed + no tier → Mera News Free, onboarding skipped, no paywall loop', async () => {
         mockServerAnswer = { subscriptionTier: 'none' };
         mockSettings[FIRST_OPEN_DISMISSED_SETTING_KEY] = 'true';
 
-        const { onPaywall, onCompanionMode, onComplete, queryByTestId } = renderGate();
+        const { onPaywall, onFreeTierMode, onComplete, queryByTestId } = renderGate();
         await flush();
 
-        expect(onCompanionMode).toHaveBeenCalledTimes(1);
+        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
         // Not back to the paywall they just dismissed...
         expect(onPaywall).not.toHaveBeenCalled();
         // ...and not into onboarding either, whose chat cannot work here.
@@ -260,27 +260,27 @@ describe('paywall before onboarding', () => {
         mockSettings[FIRST_OPEN_DISMISSED_SETTING_KEY] = 'true';
         mockServerAnswer = { subscriptionTier: 'professional' };
 
-        const { onPaywall, onCompanionMode, queryByTestId } = renderGate();
+        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         expect(queryByTestId('onboarding-wizard')).toBeTruthy();
-        expect(onCompanionMode).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onPaywall).not.toHaveBeenCalled();
     });
 });
 
-describe('ship gate OFF (COMPANION_MODE_ENABLED = false — the state this commits in)', () => {
+describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commits in)', () => {
     it("behaves exactly as today: straight to onboarding, and doesn't even ask the server", async () => {
-        gates.COMPANION_MODE_ENABLED = false;
+        gates.FREE_TIER_MODE_ENABLED = false;
         // Deliberately the state that WOULD lock a user with the gate on.
         mockServerAnswer = { subscriptionTier: 'none' };
 
-        const { onPaywall, onCompanionMode, queryByTestId } = renderGate();
+        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         expect(queryByTestId('onboarding-wizard')).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
-        expect(onCompanionMode).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
         // The zero-cost property: deriveAiAccess short-circuits to 'entitled',
         // so resolveEntitlementForOnboarding returns on its first statement —
         // no round trip, no store subscription, no added splash latency.
@@ -290,7 +290,7 @@ describe('ship gate OFF (COMPANION_MODE_ENABLED = false — the state this commi
     it('the dev override still reaches the paywall with the ship gate off', async () => {
         // DEV_FORCE_AI_ACCESS sits ABOVE the ship gate, so the simulator harness
         // can drive this reorder before the flag flips.
-        gates.COMPANION_MODE_ENABLED = false;
+        gates.FREE_TIER_MODE_ENABLED = false;
         gates.DEV_FORCE_AI_ACCESS = 'locked';
 
         const { onPaywall, queryByTestId } = renderGate();
@@ -309,7 +309,7 @@ describe('decideOnboardingEntry', () => {
 
     it('locked splits on the device-local dismissal', () => {
         expect(decideOnboardingEntry({ aiAccess: 'locked', firstOpenDismissed: false })).toBe('paywall');
-        expect(decideOnboardingEntry({ aiAccess: 'locked', firstOpenDismissed: true })).toBe('companion');
+        expect(decideOnboardingEntry({ aiAccess: 'locked', firstOpenDismissed: true })).toBe('free-tier');
     });
 
     it("an expired wait ('unknown') falls back to today's behaviour, never to a paywall", () => {

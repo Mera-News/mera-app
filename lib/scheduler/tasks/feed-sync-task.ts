@@ -21,7 +21,7 @@ AppScheduler.register({
       type: 'custom',
       check: () => !getCurrentPathname().includes('not-subscribed'),
     },
-    // Companion mode: every one of the four queries this task runs is behind
+    // Mera News Free: every one of the four queries this task runs is behind
     // SubscriptionGuard, so a locked device would fire four 402s a minute,
     // forever, and get nothing back. Gating here stops the requests, not just
     // the notice.

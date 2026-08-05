@@ -422,7 +422,7 @@ class FeedSyncMachine {
     } catch (err) {
       const errorCode = classifyError(err);
 
-      // `not-subscribed` is companion mode, not a fault. The user has no plan,
+      // `not-subscribed` is Mera News Free, not a fault. The user has no plan,
       // the four AI queries 402, and that is the designed outcome — so this
       // exits the quietest way the machine can: straight to idle, no status
       // message at all (publishSyncStatus('idle') CLEARS it), no error chrome,

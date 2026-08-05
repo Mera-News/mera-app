@@ -90,7 +90,7 @@ export const useSubscriptionStore = create<SubscriptionState>()((set) => ({
 
   // Every server-sourced field resets too. Leaving `serverTier` behind would
   // hand user B user A's entitlement for the rest of the session, and resetting
-  // it to `'none'` rather than `null` would flash companion mode across a
+  // it to `'none'` rather than `null` would flash Mera News Free across a
   // logout → login round trip. `null` = "unknown", which is the truth here.
   reset: () => set({ ...initialState }),
 }));

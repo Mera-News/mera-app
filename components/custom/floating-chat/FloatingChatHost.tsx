@@ -34,7 +34,7 @@ const FloatingChatHost: React.FC = () => {
     // the OPPOSITE polarity from the render gate below (`=== 'locked'`):
     // `aiAccess` starts 'unknown' for EVERY user including locked ones, so
     // gating on `!== 'locked'` would fire prewarm during that unknown window
-    // and 403 server-side for a companion-mode user. Waiting for a CONFIRMED
+    // and 403 server-side for a free-tier user. Waiting for a CONFIRMED
     // 'entitled' costs a subscriber nothing (still fires the moment
     // entitlement resolves) and keeps a locked user's token request off the
     // wire entirely.
@@ -43,7 +43,7 @@ const FloatingChatHost: React.FC = () => {
         prewarmCloudChat();
     }, [aiAccess]);
 
-    // Companion mode: no chat surface anywhere. `'unknown'` (cold-start, not
+    // Mera News Free: no chat surface anywhere. `'unknown'` (cold-start, not
     // yet heard from RevenueCat/server) must fall through to rendering — only
     // a confirmed 'locked' hides the host.
     if (aiAccess === 'locked') return null;

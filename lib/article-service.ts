@@ -683,7 +683,7 @@ export class ArticleService {
         } catch (error) {
             // When the server forces subscriptions these queries 402
             // (PAYMENT_REQUIRED). This no longer yanks the user to the paywall:
-            // companion mode is a legitimate place to be, and a redirect out of
+            // Mera News Free is a legitimate place to be, and a redirect out of
             // whatever they were reading would take away exactly what this mode
             // promises to keep. Record the verdict; the surfaces react to it.
             if (isNotSubscribedError(error)) {

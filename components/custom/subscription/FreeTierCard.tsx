@@ -7,15 +7,15 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { presentCompanionPaywall } from '@/lib/subscription/present-companion-paywall';
+import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
 /** Which list this card is pinned to. Diagnostics + testID only — copy is shared. */
-export type CompanionSurface = 'dashboard' | 'feed' | 'stories' | 'facts';
+export type FreeTierSurface = 'dashboard' | 'feed' | 'stories' | 'facts';
 
-export interface CompanionModeCardProps {
-    readonly surface: CompanionSurface;
+export interface FreeTierCardProps {
+    readonly surface: FreeTierSurface;
     /** Tighter padding for a list that is already dense. */
     readonly compact?: boolean;
     /** Defaults to presenting the RevenueCat paywall. */
@@ -23,7 +23,7 @@ export interface CompanionModeCardProps {
 }
 
 /**
- * The one big card that explains companion mode, pinned to the TOP of the
+ * The one big card that explains Mera News Free, pinned to the TOP of the
  * Dashboard/Feed list.
  *
  * It is a HEADER, never an empty state. Everything already on the device keeps
@@ -44,7 +44,7 @@ export interface CompanionModeCardProps {
  * non-clipping Box and the rounded/clipped surface is the inner one. No blur
  * infra is introduced; `CardGlassPlate` is a translucent fill, not a GlassView.
  */
-const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
+const FreeTierCard: React.FC<FreeTierCardProps> = ({
     surface,
     compact = false,
     onSeePlans,
@@ -57,14 +57,14 @@ const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
             onSeePlans();
             return;
         }
-        await presentCompanionPaywall('CompanionModeCard');
+        await presentFreeTierPaywall('FreeTierCard');
     }, [onSeePlans]);
 
     if (aiAccess !== 'locked') return null;
 
     return (
         <Box
-            testID={`companion-card-${surface}`}
+            testID={`free-tier-card-${surface}`}
             className="mb-4 rounded-2xl shadow-hard-2"
         >
             <Box
@@ -86,21 +86,21 @@ const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
                         size={compact ? 'lg' : 'xl'}
                         className="text-white text-center mb-3 font-semibold"
                     >
-                        {t('companion.cardTitle')}
+                        {t('freeTier.cardTitle')}
                     </Text>
 
                     <Text size="md" className="text-gray-400 text-center">
-                        {t('companion.cardBody')}
+                        {t('freeTier.cardBody')}
                     </Text>
 
                     <Button
-                        testID="companion-card-cta"
+                        testID="free-tier-card-cta"
                         onPress={handleSeePlans}
                         className="bg-primary-500 mt-6"
                         size="md"
                     >
                         <ButtonText className="text-white">
-                            {t('companion.seePlans')}
+                            {t('freeTier.seePlans')}
                         </ButtonText>
                     </Button>
                 </Box>
@@ -109,4 +109,4 @@ const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
     );
 };
 
-export default CompanionModeCard;
+export default FreeTierCard;

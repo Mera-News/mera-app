@@ -96,7 +96,7 @@ import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdo
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
-import CompanionModeCard from '@/components/custom/subscription/CompanionModeCard';
+import FreeTierCard from '@/components/custom/subscription/FreeTierCard';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
@@ -886,15 +886,15 @@ const FeedScreen: React.FC = () => {
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
-        // Companion-mode upsell — a locked user's plan-explainer, pinned above
+        // Free-tier upsell — a locked user's plan-explainer, pinned above
         // the rows. The card reads entitlement itself and renders nothing once
-        // unlocked, so this mount is unconditional; see CompanionModeCard.
+        // unlocked, so this mount is unconditional; see FreeTierCard.
         // Plain header, not `stickyHeaderIndices`: this list grows upward via
         // `maintainVisibleContentPosition` + `autoscrollToTopThreshold` (prepend
         // on ingest, reset-to-top on refresh), and sticky headers are known to
         // fight that anchoring. Not worth forcing for a header that already
         // sits at the visual top on first paint.
-        ListHeaderComponent={<CompanionModeCard surface="feed" />}
+        ListHeaderComponent={<FreeTierCard surface="feed" />}
         ListFooterComponent={listFooter}
         initialNumToRender={4}
         // 7 → 5 (Area B). Feed cards are tall — roughly one per screen — so 7

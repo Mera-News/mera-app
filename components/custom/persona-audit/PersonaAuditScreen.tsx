@@ -8,7 +8,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import CompanionReadOnlyBanner, { useCompanionReadOnly } from '@/components/custom/subscription/CompanionReadOnlyBanner';
+import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import type PersonaChangeLogModel from '@/lib/database/models/PersonaChangeLog';
 import {
     observeRecent,
@@ -34,7 +34,7 @@ interface PersonaAuditScreenProps {
 
 const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const readOnly = useCompanionReadOnly();
+    const readOnly = useFreeTierReadOnly();
     const [items, setItems] = useState<PersonaChangeLogModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [confirmRow, setConfirmRow] = useState<PersonaChangeLogModel | null>(null);
@@ -181,7 +181,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
 
             {/* Pinned outside the FlatList (not a scrolled child) so it stays on
                 screen and explains why revert is frozen. */}
-            <CompanionReadOnlyBanner surface="persona" />
+            <FreeTierReadOnlyBanner surface="persona" />
 
             <Modal isOpen={confirmRow !== null} onClose={() => setConfirmRow(null)} size="sm">
                 <ModalBackdrop />

@@ -146,7 +146,7 @@ jest.mock('@/components/custom/for-you/BreakingStrip', () => ({
 // Same reason as BreakingStrip: it's list-header chrome this suite doesn't
 // assert on. It also reaches MeraLogo, whose `createAnimatedComponent(G)` the
 // reanimated mock above deliberately doesn't provide.
-jest.mock('@/components/custom/subscription/CompanionModeCard', () => ({
+jest.mock('@/components/custom/subscription/FreeTierCard', () => ({
     __esModule: true,
     default: () => null,
 }));

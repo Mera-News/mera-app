@@ -1,5 +1,5 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import CompanionReadOnlyBanner, { useCompanionReadOnly } from '@/components/custom/subscription/CompanionReadOnlyBanner';
+import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -44,7 +44,7 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
     const { fetchUserPersona } = useUserStore();
     const { t } = useTranslation();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
-    const readOnly = useCompanionReadOnly();
+    const readOnly = useFreeTierReadOnly();
 
     const [refreshing, setRefreshing] = useState(false);
     const [screenFacts, setScreenFacts] = useState<Fact[] | null>(null);
@@ -134,7 +134,7 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
             {/* Pinned outside the inner Box (which hosts the absolute-inset
                 loading/empty overlays) so it stays on screen and explains why
                 fact/topic editing is frozen. */}
-            <CompanionReadOnlyBanner surface="facts" />
+            <FreeTierReadOnlyBanner surface="facts" />
 
             {/* Privacy notice */}
             <Modal isOpen={showPrivacyInfo} onClose={() => setShowPrivacyInfo(false)} size="sm">

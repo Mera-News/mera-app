@@ -36,9 +36,9 @@ interface FactsListProps {
      *  doesn't need it since it already gates visibility via its own
      *  fact-count check. */
     readonly onFactsChange?: (facts: Fact[] | null) => void;
-    /** Companion-mode read-only flag (see CompanionReadOnlyBanner). Both
+    /** Free-tier read-only flag (see FreeTierReadOnlyBanner). Both
      *  consumers (FactsScreen and ProfileScreen) pass their own
-     *  `useCompanionReadOnly()` result; defaults to false only for callers
+     *  `useFreeTierReadOnly()` result; defaults to false only for callers
      *  that don't wire it up. Threaded down to FactAccordion, which owns the
      *  only mutating control (influence nudge) this component has no handler
      *  for. */

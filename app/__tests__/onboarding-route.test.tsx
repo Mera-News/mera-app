@@ -43,16 +43,16 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 
 // Stand-in for the gate: immediately pulls whichever escape hatch the test asks
 // for, so the route's handlers are exercised without the real gate's DB reads.
-let mockInvoke: 'login' | 'complete' | 'paywall' | 'companion' | null = null;
+let mockInvoke: 'login' | 'complete' | 'paywall' | 'free-tier' | null = null;
 jest.mock('@/components/custom/onboarding/OnboardingScreen', () => {
     const React2 = require('react');
-    const GateStub = ({ onLoginRedirect, onComplete, onPaywall, onCompanionMode }: any) => {
+    const GateStub = ({ onLoginRedirect, onComplete, onPaywall, onFreeTierMode }: any) => {
         React2.useEffect(() => {
             if (mockInvoke === 'login') onLoginRedirect();
             if (mockInvoke === 'complete') onComplete();
             if (mockInvoke === 'paywall') onPaywall();
-            if (mockInvoke === 'companion') onCompanionMode();
-        }, [onLoginRedirect, onComplete, onPaywall, onCompanionMode]);
+            if (mockInvoke === 'free-tier') onFreeTierMode();
+        }, [onLoginRedirect, onComplete, onPaywall, onFreeTierMode]);
         return null;
     };
     return { __esModule: true, default: GateStub };
@@ -107,8 +107,8 @@ describe('onboarding route', () => {
         expect(mockReplace).not.toHaveBeenCalled();
     });
 
-    it('onCompanionMode lands on the FEED, not the fromOnboarding dashboard', async () => {
-        mockInvoke = 'companion';
+    it('onFreeTierMode lands on the FEED, not the fromOnboarding dashboard', async () => {
+        mockInvoke = 'free-tier';
         render(<Onboarding />);
 
         // fromOnboarding:'1' would be a claim about a wizard that never ran.

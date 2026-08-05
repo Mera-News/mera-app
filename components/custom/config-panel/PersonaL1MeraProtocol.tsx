@@ -440,7 +440,7 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                     await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
                 if (confirmed && fresh) {
                     setBilling(fresh);
-                    // App-wide: lifts companion mode the moment the purchase lands.
+                    // App-wide: lifts the free-tier state the moment the purchase lands.
                     useSubscriptionStore.getState().setServerBilling(fresh);
                 }
             }
