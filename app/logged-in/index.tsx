@@ -9,7 +9,13 @@ import { useUserStore } from "@/lib/stores/user-store";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
+import { navigateToPaywall } from "@/lib/nav-state";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
+import { readFirstOpenDismissed } from "@/lib/subscription/first-open-dismissal";
+import {
+    decideOnboardingEntry,
+    resolveEntitlementForOnboarding,
+} from "@/lib/subscription/onboarding-paywall";
 import { router } from "expo-router";
 import { useEffect } from "react";
 
@@ -145,10 +151,47 @@ export default function LoggedInIndex() {
                 }
 
                 if (cancelled) return;
-                if (!hasFacts) {
-                    router.replace('/logged-in/onboarding');
-                } else {
+                if (hasFacts) {
+                    // Untouched, and deliberately so: an already-onboarded user
+                    // pays for none of the entitlement wait below.
                     router.replace('/logged-in/app_container/feed');
+                    return;
+                }
+
+                // ── PAYWALL BEFORE ONBOARDING ────────────────────────────
+                //
+                // Zero facts ⇒ the wizard is next, and the wizard's step 2 is a
+                // Mera chat that cannot work without an entitlement (see
+                // lib/subscription/onboarding-paywall.ts). Resolve billing
+                // BEFORE the redirect so a user with no plan meets the paywall
+                // rather than a 401.
+                //
+                // The same decision is enforced again in OnboardingScreen,
+                // which is the actual chokepoint — app/login.tsx redirects a
+                // fresh session straight to /logged-in/onboarding and never
+                // reaches this file. This copy exists so the cold-start path
+                // resolves in place instead of bouncing through that route.
+                // Both call the same two functions; the logic has one home.
+                const aiAccess = await resolveEntitlementForOnboarding({
+                    userId,
+                    isConnected: useNetworkStore.getState().isConnected,
+                });
+                if (cancelled) return;
+
+                const firstOpenDismissed =
+                    aiAccess === 'locked' ? await readFirstOpenDismissed() : false;
+                if (cancelled) return;
+
+                switch (decideOnboardingEntry({ aiAccess, firstOpenDismissed })) {
+                    case 'paywall':
+                        navigateToPaywall();
+                        return;
+                    case 'companion':
+                        router.replace('/logged-in/app_container/feed');
+                        return;
+                    default:
+                        router.replace('/logged-in/onboarding');
+                        return;
                 }
             } catch {
                 if (!cancelled) router.replace('/logged-in/app_container/feed');

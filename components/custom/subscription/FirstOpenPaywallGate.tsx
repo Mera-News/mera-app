@@ -3,21 +3,19 @@ import { navigateToPaywall } from '@/lib/nav-state';
 import { ROUTE_SETTLE_MS } from './LapseInterstitialGate';
 import { getAiAccess, useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { deriveHasEverSubscribed } from '@/lib/subscription/ai-access';
+import { FIRST_OPEN_DISMISSED_SETTING_KEY } from '@/lib/subscription/first-open-dismissal';
 import { usePathname } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 
 /**
  * Local, DEVICE-ONLY record that the user dismissed the first-open push.
  *
- * Deliberately not server-side, unlike the lapse interstitial. The two look
- * similar and want opposite things:
- *  - the lapse latch exists to AVOID re-nagging a genuine subscriber across
- *    devices and reinstalls after a single-device event, so it must survive;
- *  - this one should reasonably re-arm on a reinstall — a fresh install is a
- *    legitimate second first impression, and the direction here is that
- *    everyone is asked.
+ * The definition moved to `lib/subscription/first-open-dismissal.ts` once the
+ * pre-onboarding paywall gate started reading it too — a lib module must not
+ * import a component to get a constant. Re-exported here so every existing
+ * importer (and this gate's own tests) keeps working unchanged.
  */
-export const FIRST_OPEN_DISMISSED_SETTING_KEY = 'companion_first_open_dismissed';
+export { FIRST_OPEN_DISMISSED_SETTING_KEY };
 
 /**
  * Shows the paywall the first time a never-subscribed user reaches the app

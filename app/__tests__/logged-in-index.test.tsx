@@ -75,6 +75,26 @@ jest.mock('@/lib/revenuecat', () => ({ loginRevenueCat: jest.fn(async () => null
 // cannot be constructed in this environment. Routing is what's under test here.
 jest.mock('@/lib/subscription/entitlement-sync', () => ({ syncEntitlement: jest.fn(async () => undefined) }));
 
+// Pre-onboarding paywall gate. Stubbed for the same reason as the two mocks
+// above (its real graph reaches react-native-purchases and Apollo) and so this
+// suite stays about identity + facts. Its behaviour is covered end-to-end in
+// components/custom/subscription/__tests__/onboarding-paywall-order.test.tsx.
+// The default verdict is the pass-through one, so every pre-existing assertion
+// here describes an entitled user and is unchanged.
+const mockNavigateToPaywall = jest.fn();
+jest.mock('@/lib/nav-state', () => ({ navigateToPaywall: () => mockNavigateToPaywall() }));
+const mockResolveEntitlement = jest.fn(async () => 'entitled' as string);
+const mockDecideEntry = jest.fn(() => 'onboarding' as string);
+jest.mock('@/lib/subscription/onboarding-paywall', () => ({
+    resolveEntitlementForOnboarding: (...a: any[]) => mockResolveEntitlement(...(a as [])),
+    decideOnboardingEntry: (...a: any[]) => mockDecideEntry(...(a as [])),
+}));
+const mockReadFirstOpenDismissed = jest.fn(async () => false);
+jest.mock('@/lib/subscription/first-open-dismissal', () => ({
+    FIRST_OPEN_DISMISSED_SETTING_KEY: 'companion_first_open_dismissed',
+    readFirstOpenDismissed: () => mockReadFirstOpenDismissed(),
+}));
+
 import LoggedInIndex from '../logged-in/index';
 
 beforeEach(() => {
@@ -84,6 +104,9 @@ beforeEach(() => {
     mockResolveIdentity.mockReturnValue('coherent');
     mockHasIdentityFault.mockResolvedValue(false);
     mockHasAnyFacts.mockResolvedValue(true);
+    mockResolveEntitlement.mockResolvedValue('entitled');
+    mockDecideEntry.mockReturnValue('onboarding');
+    mockReadFirstOpenDismissed.mockResolvedValue(false);
 });
 
 describe('cold-start identity gate', () => {
@@ -216,5 +239,68 @@ describe('cold-start fact gate', () => {
         mockHasAnyFacts.mockRejectedValue(new Error('db unreadable'));
         render(<LoggedInIndex />);
         await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Pre-onboarding paywall ordering
+// ---------------------------------------------------------------------------
+// The decision itself lives in OnboardingScreen (the only mounter of the
+// wizard, and the one place BOTH doorways pass through — app/login.tsx
+// redirects a fresh session straight to /logged-in/onboarding and never reaches
+// this file). What is asserted here is the WIRING of the cold-start copy: that
+// the resolve happens before the onboarding redirect, and never on the
+// has-facts path.
+describe('cold-start paywall ordering', () => {
+    it('resolves entitlement BEFORE redirecting to onboarding', async () => {
+        mockHasAnyFacts.mockResolvedValue(false);
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
+        expect(mockResolveEntitlement).toHaveBeenCalledTimes(1);
+        expect(mockResolveEntitlement.mock.invocationCallOrder[0]).toBeLessThan(
+            mockReplace.mock.invocationCallOrder[0],
+        );
+    });
+
+    it('a locked, never-dismissed user gets the paywall instead of onboarding', async () => {
+        mockHasAnyFacts.mockResolvedValue(false);
+        mockResolveEntitlement.mockResolvedValue('locked');
+        mockDecideEntry.mockReturnValue('paywall');
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockNavigateToPaywall).toHaveBeenCalledTimes(1));
+        expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
+    });
+
+    it('a locked, already-dismissed user lands in companion mode, not onboarding', async () => {
+        mockHasAnyFacts.mockResolvedValue(false);
+        mockResolveEntitlement.mockResolvedValue('locked');
+        mockDecideEntry.mockReturnValue('companion');
+        render(<LoggedInIndex />);
+
+        await waitFor(() =>
+            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
+        );
+        expect(mockNavigateToPaywall).not.toHaveBeenCalled();
+        expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
+    });
+
+    it('reads the dismissal flag ONLY when the verdict is locked', async () => {
+        mockHasAnyFacts.mockResolvedValue(false);
+        render(<LoggedInIndex />);
+        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
+        expect(mockReadFirstOpenDismissed).not.toHaveBeenCalled();
+    });
+
+    it('an already-onboarded user pays for none of it (requirement: no regression)', async () => {
+        mockHasAnyFacts.mockResolvedValue(true);
+        render(<LoggedInIndex />);
+
+        await waitFor(() =>
+            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
+        );
+        expect(mockResolveEntitlement).not.toHaveBeenCalled();
+        expect(mockNavigateToPaywall).not.toHaveBeenCalled();
     });
 });

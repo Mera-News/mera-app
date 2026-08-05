@@ -10,7 +10,11 @@ import { AccountService } from "@/lib/account-service";
 import { authClient } from "@/lib/auth-client";
 import { SUPPORT_EMAIL } from "@/lib/config/branding";
 import { setSetting } from "@/lib/database/services/setting-service";
-import { FIRST_OPEN_DISMISSED_SETTING_KEY } from "@/components/custom/subscription/FirstOpenPaywallGate";
+// From the leaf module, NOT from FirstOpenPaywallGate: that component pulls in
+// LapseInterstitialGate → billing-service → apollo-client → the WatermelonDB
+// singleton, an entire dependency chain this screen imported solely to read one
+// string constant.
+import { FIRST_OPEN_DISMISSED_SETTING_KEY } from "@/lib/subscription/first-open-dismissal";
 import logger from "@/lib/logger";
 import {
     getCustomerInfoSafe,
@@ -19,6 +23,7 @@ import {
     logRevenueCatDiagnostics,
 } from "@/lib/revenuecat";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
+import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -63,18 +68,39 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
         }
     }, [userId]);
 
+    /**
+     * Leave for the router gate, having first made the subscription store agree
+     * with the server we just proved is subscribed.
+     *
+     * The forced sync is load-bearing, and it is the same trap
+     * `present-companion-paywall.ts` documents at length: `deriveAiAccess`
+     * consults `serverTier` FIRST and reads 'none' as locked, so a store still
+     * holding the PRE-purchase 'none' outranks RevenueCat's freshly-updated
+     * customerInfo. Without this, a user who has genuinely just paid arrives at
+     * /logged-in still looking locked — and the pre-onboarding paywall gate
+     * would send them straight back to this screen, in a loop.
+     *
+     * No retry budget needed here, unlike the companion path: we only get here
+     * once `checkServerSubscribed()` has already returned true, which means the
+     * webhook has landed and a single read sees the real tier.
+     */
+    const leaveForRouterGate = useCallback(async () => {
+        await syncEntitlement({ force: true });
+        router.replace('/logged-in');
+    }, [router]);
+
     // After a purchase, the RevenueCat webhook updates the server tier
     // asynchronously — poll a few times before falling back to a manual refresh.
     const pollUntilSubscribed = useCallback(async (): Promise<boolean> => {
         for (let i = 0; i < 6; i++) {
             if (await checkServerSubscribed()) {
-                router.replace('/logged-in');
+                await leaveForRouterGate();
                 return true;
             }
             await new Promise((resolve) => setTimeout(resolve, 2000));
         }
         return false;
-    }, [checkServerSubscribed, router]);
+    }, [checkServerSubscribed, leaveForRouterGate]);
 
     const presentPaywall = useCallback(async () => {
         if (!isRevenueCatConfigured()) return;
@@ -152,7 +178,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
         setBusy(true);
         setMessage(null);
         if (await checkServerSubscribed()) {
-            router.replace('/logged-in');
+            await leaveForRouterGate();
         } else {
             setBusy(false);
         }
