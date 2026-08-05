@@ -43,6 +43,7 @@ import {
   getGroupingRowsByIds,
   getUnscoredGroupingRows,
   getScoredDonorRows,
+  getCullableLowHeadlineIds,
   saveReason,
   getSuggestionByServerId,
   clearSuggestions,
@@ -1310,6 +1311,49 @@ describe('getScoredDonorRows', () => {
     ]);
     const rows = await getScoredDonorRows(sinceMs);
     expect(rows).toEqual([]);
+  });
+});
+
+describe('getCullableLowHeadlineIds', () => {
+  // Band edges come from priority-order::relevanceBandRank — LOW is
+  // [0.3, 0.53), MEDIUM starts at 0.53.
+  const LOW = 0.4;
+  const MEDIUM = 0.6;
+
+  it('returns scored headline rows below the MEDIUM band', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', status: 'complete', relevance: LOW, headlineScope: 'COUNTRY' }),
+      makeSuggestion({
+        id: 's2',
+        status: 'reason_pending',
+        relevance: LOW,
+        headlineScope: 'GLOBAL',
+      }),
+    ]);
+    expect(await getCullableLowHeadlineIds()).toEqual(['s1', 's2']);
+  });
+
+  it('ignores medium-and-above headlines', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', status: 'complete', relevance: MEDIUM, headlineScope: 'COUNTRY' }),
+      makeSuggestion({ id: 's2', status: 'complete', relevance: 0.9, headlineScope: 'GLOBAL' }),
+    ]);
+    expect(await getCullableLowHeadlineIds()).toEqual([]);
+  });
+
+  it('ignores non-headline LOW rows (topic matches keep their LOW band)', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', status: 'complete', relevance: LOW, headlineScope: null }),
+    ]);
+    expect(await getCullableLowHeadlineIds()).toEqual([]);
+  });
+
+  it('ignores rows already excluded, and unscored rows (no verdict yet)', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({ id: 's1', status: 'excluded', relevance: 0, headlineScope: 'COUNTRY' }),
+      makeSuggestion({ id: 's2', status: 'unscored', relevance: 0, headlineScope: 'COUNTRY' }),
+    ]);
+    expect(await getCullableLowHeadlineIds()).toEqual([]);
   });
 });
 

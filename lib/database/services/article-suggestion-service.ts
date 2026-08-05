@@ -20,6 +20,11 @@ import type {
   HeadlineScope,
   RelevanceComponents,
 } from '@/lib/news-harness/scoring-engine';
+// The ONE LOW-band top-headline cull predicate. Safe to import from a database
+// service: `importance-filter` → `priority-order` is a two-module, PURE, RN-free
+// leaf (no DB / expo / react-native imports and no edge back into this module),
+// so it closes no cycle and drags nothing native into a harness-adjacent graph.
+import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 import { getFacts } from './fact-service';
 import logger from '../../logger';
@@ -822,6 +827,39 @@ export async function getStageRowsByIds(ids: string[]): Promise<StageCandidateRo
   return rows
     .filter((r) => idSet.has(r.id) && r.status !== ArticleSuggestionStatus.Excluded)
     .map(toStageRow);
+}
+
+/**
+ * The CONVERGENCE half of the LOW-band top-headline cull: the ids of stored
+ * headline rows (`headline_scope` set) that carry a scored relevance below the
+ * MEDIUM band and are still renderable. Feed to `batchMarkExcluded`.
+ *
+ * The persist-time culls in the scoring paths are the primary gate; this exists
+ * because two classes of row never pass through them:
+ *   1. BACKFILL — rows persisted before the cull shipped are already on device
+ *      and live out the full 48h TTL.
+ *   2. PROPAGATION — `propagateToUnscoredSiblings` copies a donor's relevance
+ *      onto a headline sibling and writes it terminal `complete` directly,
+ *      bypassing the persist-time cull entirely.
+ *
+ * Scored statuses only: `unscored` has no verdict to judge yet, and `excluded`
+ * is already terminal (re-marking it would be a pointless write).
+ */
+export async function getCullableLowHeadlineIds(): Promise<string[]> {
+  const rows = await articleSuggestionsCol
+    .query(Q.where('headline_scope', Q.notEq(null)))
+    .fetch();
+  // Defensive re-filter — the unit-test fake DB layer ignores Q.where (see
+  // mockDatabase.ts), same shape as getStageRowsForScreening.
+  return rows
+    .filter(
+      (r) =>
+        r.headlineScope != null &&
+        (r.status === ArticleSuggestionStatus.Complete ||
+          r.status === ArticleSuggestionStatus.ReasonPending) &&
+        isCulledHeadlineRelevance(r.relevance),
+    )
+    .map((r) => r.id);
 }
 
 /**

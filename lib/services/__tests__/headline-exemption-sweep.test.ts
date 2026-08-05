@@ -218,18 +218,39 @@ describe('refreshHardFilterLabels — the card label', () => {
   });
 });
 
-describe('unexcludeRetiredHardFilters — headline rows are released', () => {
-  it('releases a previously-excluded headline row even while its filter is still active', async () => {
-    // Rows excluded by a PRE-P6 build: the filter still matches, but a headline
-    // is no longer a reason to keep it out, so it goes back to `unscored` and
-    // the next pass scores it demoted.
+describe('unexcludeRetiredHardFilters — headline rows are never released', () => {
+  // SUPERSEDED. This case used to assert the opposite: a headline excluded by a
+  // PRE-P6 build was released back to `unscored` even while its filter still
+  // matched, because after P6 a headline is no longer a reason to keep a row
+  // out. That migration is over — `article_suggestions` are hard-deleted at
+  // SUGGESTION_TTL_MS (48h, lib/scheduler/tasks/data-cleanup-task.ts), so no
+  // pre-P6 excluded row can exist on any device any more.
+  //
+  // What the same shape means now is the LOW-band top-headline cull, which
+  // writes `excluded` for a SCORING OUTCOME rather than a filter. Releasing one
+  // would re-score it, reproduce the identical LOW verdict, and cull it again —
+  // an inference-paid churn loop fired by retiring any unrelated filter. Since
+  // P6 makes headlines exempt from hard-filter exclusion, `excluded` +
+  // `headlineScope != null` is unambiguously the cull, and the sweep skips it.
+  it('leaves a culled headline excluded even when every filter is retired', async () => {
+    mockLoadPersona.mockResolvedValue(persona([]));
+    mockGetStageRows.mockResolvedValue(bothRows());
+
+    const r = await unexcludeRetiredHardFilters();
+
+    expect(r.resetIds).toEqual(['normal']);
+    expect(mockBatchResetToUnscored).toHaveBeenCalledWith(['normal']);
+  });
+
+  it('leaves it excluded while its filter is still active, too', async () => {
     mockLoadPersona.mockResolvedValue(persona(NVIDIA));
     mockGetStageRows.mockResolvedValue(bothRows());
 
     const r = await unexcludeRetiredHardFilters();
 
-    expect(r.resetIds).toEqual(['head']);
+    expect(r.resetIds).toEqual([]);
+    // Only the non-headline row was screened; the filter still matches it.
     expect(r.stillExcluded).toBe(1);
-    expect(mockBatchResetToUnscored).toHaveBeenCalledWith(['head']);
+    expect(mockBatchResetToUnscored).not.toHaveBeenCalled();
   });
 });

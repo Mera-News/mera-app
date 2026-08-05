@@ -214,4 +214,34 @@ describe('unexcludeRetiredHardFilters', () => {
     expect(mockLoadPersona).not.toHaveBeenCalled();
     expect(mockBatchResetToUnscored).not.toHaveBeenCalled();
   });
+
+  // HEADLINE GUARD. Headline rows are P6-exempt from hard-filter exclusion, so
+  // an excluded one can only be the LOW-band cull. It matches no active filter
+  // — precisely this sweep's release condition — so without the guard retiring
+  // ANY unrelated filter would resurrect every culled headline and start a
+  // re-score/re-cull churn loop.
+  it('never resurrects a culled headline row', async () => {
+    mockGetStageRows.mockResolvedValue([
+      row('h', { titleEn: 'Country headline', headlineScope: 'COUNTRY' }),
+    ]);
+    mockLoadPersona.mockResolvedValue(persona([])); // every filter retired
+
+    const r = await unexcludeRetiredHardFilters();
+
+    expect(r.resetIds).toEqual([]);
+    expect(mockBatchResetToUnscored).not.toHaveBeenCalled();
+  });
+
+  it('still releases a matching non-headline row alongside a culled headline', async () => {
+    mockGetStageRows.mockResolvedValue([
+      row('h', { titleEn: 'Country headline', headlineScope: 'GLOBAL' }),
+      row('a', { titleEn: 'Nvidia ships a GPU' }),
+    ]);
+    mockLoadPersona.mockResolvedValue(persona([]));
+
+    const r = await unexcludeRetiredHardFilters();
+
+    expect(r.resetIds).toEqual(['a']);
+    expect(mockBatchResetToUnscored).toHaveBeenCalledWith(['a']);
+  });
 });

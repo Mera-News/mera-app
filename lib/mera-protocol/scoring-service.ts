@@ -29,6 +29,7 @@ import {
   type ScoringCandidate,
 } from '../database/services/article-suggestion-service';
 import { getFacts } from '../database/services/fact-service';
+import { isCulledHeadlineRelevance } from '../feed-ordering/importance-filter';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { ProcessingMode } from '../generated/graphql-types';
 import type { BatchCall } from '../llm/types';
@@ -164,6 +165,35 @@ async function generateReasonForCandidate(
   return parseReasonResponse(output, candidate.id, userMessage, appHarnessLogger);
 }
 
+/**
+ * The unconditional top-headline cull: a headline-sourced row that lands in the
+ * LOW band or below is terminal (`excluded`), never a saved suggestion —
+ * headlines exist to surface what matters in a region, so a LOW one is noise on
+ * every surface. Non-headline rows are NEVER culled.
+ *
+ * `bucketedScoreMap` must hold POST-`bucketScores` values: the predicate reads
+ * the band, and raw scores don't map to bands one-to-one (a raw 0.45 buckets to
+ * LOW ⇒ culled, a raw 0.55 to MEDIUM ⇒ kept).
+ *
+ * `candidates` must ALREADY exclude ineligible and failed rows. Both carry a
+ * placeholder score (INELIGIBLE_RELEVANCE / FALLBACK_RELEVANCE) that lands in
+ * the culled band, but neither is a verdict this path is entitled to make
+ * terminal: an ineligible (e.g. factless) headline was never scored, and a
+ * failed one must stay retryable.
+ */
+function collectCulledHeadlineIds(
+  candidates: ScoringCandidate[],
+  bucketedScoreMap: Map<string, number>,
+): Set<string> {
+  const culled = new Set<string>();
+  for (const c of candidates) {
+    if (!isHeadlineCandidate(c)) continue;
+    const relevance = bucketedScoreMap.get(c.id);
+    if (relevance !== undefined && isCulledHeadlineRelevance(relevance)) culled.add(c.id);
+  }
+  return culled;
+}
+
 export interface BatchScoreResult {
   /** Raw score per id (pre-bucket). Ineligible rows get INELIGIBLE_RELEVANCE. */
   scoreMap: Map<string, number>;
@@ -179,6 +209,11 @@ export interface BatchScoreResult {
   excludedIds: Set<string>;
   /** excluded id → display value of the filter that matched it (logging). */
   excludedValueById: Map<string, string>;
+  /** Top-headline rows this batch scored into the LOW band or below. Like
+   *  `excludedIds` they get NO scoreMap-driven persist — the caller marks them
+   *  terminally `excluded`. Computed here (not by the caller) because this is
+   *  where the eligible/failed split lives; see collectCulledHeadlineIds. */
+  culledHeadlineIds: Set<string>;
 }
 
 /**
@@ -205,6 +240,7 @@ export async function batchScoreAndReason(
   const componentsJsonMap = new Map<string, string>();
   let excludedIds = new Set<string>();
   let excludedValueById = new Map<string, string>();
+  let culledHeadlineIds = new Set<string>();
 
   // Ineligible ones get a fixed low score, never hit the engine/LLM.
   const eligible: ScoringCandidate[] = [];
@@ -221,6 +257,7 @@ export async function batchScoreAndReason(
       componentsJsonMap,
       excludedIds,
       excludedValueById,
+      culledHeadlineIds,
     };
   }
 
@@ -245,6 +282,7 @@ export async function batchScoreAndReason(
       componentsJsonMap,
       excludedIds,
       excludedValueById,
+      culledHeadlineIds,
     };
   }
 
@@ -311,13 +349,25 @@ export async function batchScoreAndReason(
 
   // ---- Reason pass: only survivors ≥ reasonRelevanceThreshold that the judge
   //      didn't already caption (backstop rows + un-captioned math rows). ----
+  // Top-headline cull, decided here and carried out by the caller. Dropping the
+  // culled rows from the survivor set spends no reason tokens on a row that
+  // ends up terminally `excluded` (its reason would be discarded with it).
+  // `scoreMap` is RAW at this point, so the cull needs its own bucketed copy.
+  const bucketedForCull = new Map(scoreMap);
+  bucketScores(bucketedForCull);
+  culledHeadlineIds = collectCulledHeadlineIds(
+    active.filter((c) => !failedIds.has(c.id)),
+    bucketedForCull,
+  );
+
   const survivors = active.filter((c) => {
     const r = scoreMap.get(c.id);
     return (
       typeof r === 'number' &&
       r >= ARTICLE_CFG.reasonRelevanceThreshold &&
       !reasonMap.has(c.id) &&
-      !failedIds.has(c.id)
+      !failedIds.has(c.id) &&
+      !culledHeadlineIds.has(c.id)
     );
   });
 
@@ -358,6 +408,7 @@ export async function batchScoreAndReason(
     componentsJsonMap,
     excludedIds,
     excludedValueById,
+    culledHeadlineIds,
   };
 }
 
@@ -629,6 +680,7 @@ export async function processAllUnscored(
       computedMap,
       componentsJsonMap,
       excludedIds,
+      culledHeadlineIds,
     } = await batchScoreAndReason(batch);
 
     // Snapshot RAW (post-judge) scores before bucketing — persisted as
@@ -640,12 +692,13 @@ export async function processAllUnscored(
 
     const succeeded: { id: string; relevance: number; reason: string | null }[] = [];
 
-    // Hard-filtered rows: ONE terminal write, no scoring result. They count as
-    // processed (they DID leave `unscored`, so the loop still terminates and
-    // onProgress's denominator stays honest) and are emitted to
+    // Hard-filtered + culled-headline rows: ONE terminal write, no scoring
+    // result (saveScoringResult would overwrite the terminal Excluded status).
+    // They count as processed (they DID leave `unscored`, so the loop still
+    // terminates and onProgress's denominator stays honest) and are emitted to
     // onBatchComplete exactly like a discarded row so the store refreshes.
-    if (excludedIds.size > 0) {
-      const ids = [...excludedIds];
+    if (excludedIds.size > 0 || culledHeadlineIds.size > 0) {
+      const ids = [...new Set([...excludedIds, ...culledHeadlineIds])];
       try {
         await batchMarkExcluded(ids);
         for (const id of ids) succeeded.push({ id, relevance: 0, reason: null });
@@ -655,10 +708,21 @@ export async function processAllUnscored(
         });
       }
     }
+    if (culledHeadlineIds.size > 0) {
+      logger.info('[processAllUnscored] culled low-band top headlines', {
+        culled: culledHeadlineIds.size,
+        of: batch.length,
+      });
+    }
 
     await Promise.all(
       batch.map(async (candidate) => {
-        if (failedIds.has(candidate.id) || excludedIds.has(candidate.id)) return;
+        if (
+          failedIds.has(candidate.id) ||
+          excludedIds.has(candidate.id) ||
+          culledHeadlineIds.has(candidate.id)
+        )
+          return;
         const relevance = scoreMap.get(candidate.id) ?? 0.3;
         const reason = reasonMap.get(candidate.id) ?? '';
         // REASON_THRESHOLD = 0 → reasons generated for every row, including

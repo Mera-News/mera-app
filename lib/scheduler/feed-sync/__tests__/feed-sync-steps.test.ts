@@ -4,6 +4,8 @@ const mockGetFacts = jest.fn();
 const mockGetLocalSuggestionServerIds = jest.fn();
 const mockGetUnscoredSuggestionsWithFacts = jest.fn();
 const mockBatchMarkAsScoredByIds = jest.fn();
+const mockBatchMarkExcluded = jest.fn();
+const mockGetCullableLowHeadlineIds = jest.fn();
 const mockPersistAndLinkV2Suggestions = jest.fn();
 const mockGetFactWeightById = jest.fn();
 const mockGetArticleIdsForTopics = jest.fn();
@@ -56,6 +58,8 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   getLocalSuggestionServerIds: (...args: any[]) => mockGetLocalSuggestionServerIds(...args),
   getUnscoredSuggestionsWithFacts: (...args: any[]) => mockGetUnscoredSuggestionsWithFacts(...args),
   batchMarkAsScoredByIds: (...args: any[]) => mockBatchMarkAsScoredByIds(...args),
+  batchMarkExcluded: (...args: any[]) => mockBatchMarkExcluded(...args),
+  getCullableLowHeadlineIds: (...args: any[]) => mockGetCullableLowHeadlineIds(...args),
   persistAndLinkV2Suggestions: (...args: any[]) => mockPersistAndLinkV2Suggestions(...args),
   getFactWeightById: (...args: any[]) => mockGetFactWeightById(...args),
 }));
@@ -163,6 +167,8 @@ beforeEach(() => {
   mockGetLocalSuggestionServerIds.mockResolvedValue([]);
   mockGetUnscoredSuggestionsWithFacts.mockResolvedValue([]);
   mockBatchMarkAsScoredByIds.mockResolvedValue(undefined);
+  mockBatchMarkExcluded.mockResolvedValue(undefined);
+  mockGetCullableLowHeadlineIds.mockResolvedValue([]);
   mockPersistAndLinkV2Suggestions.mockResolvedValue({ insertedCount: 0, linkedCount: 0 });
   mockGetArticleIdsForTopics.mockResolvedValue({ results: [] });
   mockGetArticlesForTopicsByIds.mockResolvedValue({ articles: [], dailyLimitReached: false });
@@ -1394,6 +1400,55 @@ describe('stepHydratePersistEnqueue', () => {
       ['art-1'],
       expect.any(Function),
     );
+  });
+
+  // ── LOW-band headline cull convergence sweep ─────────────────────────────
+  //
+  // The persist-time culls in the scoring paths miss two classes of row:
+  // pre-feature rows already on device, and rows score propagation stamped
+  // terminal `complete` without ever entering the scoring stage. This sweep is
+  // what makes the cull converge, so it must run exactly once per step —
+  // independent of how many chunks hydrated or whether anything propagated —
+  // and must never be able to wedge the step.
+  it('sweeps cullable LOW headlines once per step and excludes them', async () => {
+    mockGetCullableLowHeadlineIds.mockResolvedValue(['h-1', 'h-2']);
+    const diffResult: DiffResult = {
+      serverArticleIds: [],
+      articleToTopicTexts: new Map(),
+      missingIds: [],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockGetCullableLowHeadlineIds).toHaveBeenCalledTimes(1);
+    expect(mockBatchMarkExcluded).toHaveBeenCalledWith(['h-1', 'h-2']);
+  });
+
+  it('does not write when there is nothing to cull', async () => {
+    const diffResult: DiffResult = {
+      serverArticleIds: [],
+      articleToTopicTexts: new Map(),
+      missingIds: [],
+    };
+
+    await stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts());
+
+    expect(mockGetCullableLowHeadlineIds).toHaveBeenCalledTimes(1);
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+  });
+
+  it('a failing cull sweep is reported but never fails the step', async () => {
+    mockGetCullableLowHeadlineIds.mockRejectedValue(new Error('db gone'));
+    const diffResult: DiffResult = {
+      serverArticleIds: ['art-1'],
+      articleToTopicTexts: new Map(),
+      missingIds: ['art-1'],
+    };
+
+    await expect(
+      stepHydratePersistEnqueue(diffResult, makeCtx(), makeOpts()),
+    ).resolves.toBeDefined();
+    expect(mockCaptureException).toHaveBeenCalled();
   });
 
   it('the quota-exempt hydrator can never trip the daily-limit flag', async () => {

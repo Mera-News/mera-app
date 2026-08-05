@@ -4,6 +4,8 @@
 import { ArticleService } from '@/lib/article-service';
 import {
   batchMarkAsScoredByIds,
+  batchMarkExcluded,
+  getCullableLowHeadlineIds,
   getLocalSuggestionServerIds,
   getUnscoredSuggestionsWithFacts,
   persistAndLinkV2Suggestions,
@@ -71,6 +73,43 @@ const reconcileHardFilters = async (): Promise<void> => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const sweep = require('@/lib/services/suppression-sweep') as typeof import('@/lib/services/suppression-sweep');
   await sweep.purgeHardFilteredSuggestions();
+};
+
+/**
+ * Convergence sweep for the LOW-band top-headline cull. The scoring paths cull
+ * at score-persist time; this catches the two classes of row that never reach
+ * that gate:
+ *
+ *   1. BACKFILL — LOW headlines persisted before the cull shipped are already
+ *      on device and live out the full 48h TTL.
+ *   2. PROPAGATION — `propagateToUnscoredSiblings` stamps a donor's relevance
+ *      onto a headline sibling as terminal `complete` without ever entering the
+ *      scoring stage, so a LOW donor score arrives pre-culled.
+ *
+ * Called ONCE per hydrate step, at the gate-drain point — not inside
+ * `gateAndEnqueue`'s `propagatedCount > 0` branch, where the existing
+ * `reconcileHardFilters` sits. That branch runs per CHUNK and only when
+ * something propagated, so it would both repeat the sweep needlessly and skip
+ * the backfill half entirely on a sync that propagated nothing. After the chain
+ * drains, every propagation write of this run is committed.
+ *
+ * Not reached on a sync that found no new articles — FeedSyncMachine
+ * short-circuits to `scoring` before this step. Harmless: that path can produce
+ * no propagation leak (nothing propagated), and the backfill it defers is
+ * deleted outright at the 48h TTL anyway.
+ */
+const cullLowHeadlines = async (): Promise<void> => {
+  const ids = await getCullableLowHeadlineIds();
+  if (ids.length === 0) return;
+  await batchMarkExcluded(ids);
+  // Unlike the persist-time culls (which fire before a row was ever visible),
+  // rows reached here were `complete` and may already be laid out in the
+  // persisted feed order — evict them the same filter-scoped way the
+  // suppression sweep does: exactly these ids, nothing inferred.
+  const { useFeedOrderStore } =
+    require('@/lib/stores/feed-order-store') as typeof import('@/lib/stores/feed-order-store');
+  useFeedOrderStore.getState().removeIds(ids);
+  logger.info(`[feed-sync-steps] culled ${ids.length} LOW-band headline rows`);
 };
 
 export interface FetchTopicIdsResult {
@@ -730,6 +769,18 @@ export async function stepHydratePersistEnqueue(
   // Drain any still-pending serialized gate invocation before deciding the
   // outcome / returning.
   await gateChain;
+
+  // Every propagation write of this run is now committed — sweep the LOW-band
+  // headline cull to convergence (backfill + propagation leak; see
+  // `cullLowHeadlines`). Never fails the sync: the rows are already persisted
+  // and the next sync sweeps them again.
+  try {
+    await cullLowHeadlines();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { component: 'feed-sync-steps', method: 'cullLowHeadlines' },
+    });
+  }
 
   // Tail flush: the whole lot is now hydrated and we won't refetch until it's
   // scored, so dispatch the sub-MIN_DISPATCH remainder the gate held back

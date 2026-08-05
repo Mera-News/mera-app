@@ -139,6 +139,16 @@ export function suppressionMatchesCandidate(
  * relevance.ts::computeRelevance, which folds the matching hard filters into the
  * ONE capped `suppressionPenalty` and floors the result at HEADLINE_BASE_FLOOR
  * so the row lands at the bottom of what renders rather than vanishing.
+ *
+ * SCOPE — HARD-FILTER EXCLUSION ONLY. The LOW-band headline cull
+ * (feed-ordering/importance-filter::isCulledHeadlineRelevance) is a scoring
+ * OUTCOME, not a user-authored filter, and is deliberately outside this
+ * exemption: a headline that scored below the MEDIUM band is noise on every
+ * surface, exemption or not. That split is what makes an excluded headline
+ * unambiguous downstream — no filter can ever have excluded one, so
+ * `excluded && headlineScope != null` is by construction the cull. The
+ * un-exclude sweep (services/suppression-sweep::unexcludeRetiredHardFilters)
+ * relies on exactly that to avoid resurrecting culled headlines.
  */
 export function isHardFilterExempt(candidate: ScoredCandidateInput): boolean {
   return candidate.headlineScope != null;
