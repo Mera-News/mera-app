@@ -226,6 +226,43 @@ describe('buildFactRows ownership', () => {
 
 // --- render gate + note-gated visibility ----------------------------------
 
+describe('effectiveRenderGate (v3 calibration)', () => {
+  afterEach(() => jest.resetModules());
+
+  function gateWithFlag(relevanceV3: boolean): number {
+    jest.isolateModules(() => {
+      jest.doMock('@/lib/stores/mera-protocol-store', () => ({
+        useMeraProtocolStore: { getState: () => ({ relevanceV3 }) },
+      }));
+    });
+    jest.doMock('@/lib/stores/mera-protocol-store', () => ({
+      useMeraProtocolStore: { getState: () => ({ relevanceV3 }) },
+    }));
+    // effectiveRenderGate lazy-requires the store, so the doMock above is
+    // what it sees on the next call.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { effectiveRenderGate } = require('@/lib/stores/fact-rows-selector');
+    return effectiveRenderGate();
+  }
+
+  it('is V3_RENDER_GATE (0.55) while the v3 scorer is active', () => {
+    expect(gateWithFlag(true)).toBe(0.55);
+  });
+
+  it('is RENDER_GATE (0.4) for legacy scoring', () => {
+    expect(gateWithFlag(false)).toBe(0.4);
+  });
+
+  it('fails open to the legacy gate when the store is unavailable', () => {
+    jest.doMock('@/lib/stores/mera-protocol-store', () => {
+      throw new Error('store unavailable');
+    });
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { effectiveRenderGate } = require('@/lib/stores/fact-rows-selector');
+    expect(effectiveRenderGate()).toBe(0.4);
+  });
+});
+
 describe('buildFactRows visibility', () => {
   const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
 

@@ -125,6 +125,46 @@ export const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
  *  `REASON_RELEVANCE_THRESHOLD` (lib/services/inference-results.ts). */
 export const RENDER_GATE = 0.4;
 
+/** Render gate while relevance v3 is scoring — judge-calibrated on the
+ *  2026-08-05 two-sim A/B (321 blind-judged articles): v3's continuous scores
+ *  spread instead of piling at the buckets, so the shared 0.4 gate admits
+ *  roughly twice v1's volume at ~50% judge-rated junk. At 0.55 the v3 feed
+ *  matches the legacy path's volume (226 vs 212 measured) and its must-show
+ *  recall (27/35) with cleaner ranking. Legacy scoring keeps RENDER_GATE —
+ *  its bucketed LOW rows sit at exactly 0.4 and would vanish under this.
+ *
+ *  TOP-K FOLLOW-UP (documented, deliberately not built — needs UI work):
+ *  the path from ~226 to the ~100-120 target is a feed BUDGET, not a higher
+ *  gate: rank by the continuous v3 score and cap at K (~120), keeping this
+ *  gate as the quality floor ("floor + cap"). Measured on the A/B gold set:
+ *  top-151 → 28% judge-skip at v1-equivalent size; gate 0.6 alone would cost
+ *  recall (25/35). v3's continuous scores make the ranking well-defined —
+ *  v1's four-value buckets could not break its 125-way tie at 0.6. The cap
+ *  belongs where visible rows are already ranked (buildFeedList /
+ *  feed-list-selector for the Feed tab; section assembly here for the
+ *  Dashboard) plus UI: a "show more" affordance / per-surface budget setting,
+ *  and the header sentence must count the CAPPED set, not everything above
+ *  the floor. */
+export const V3_RENDER_GATE = 0.55;
+
+/** The effective render gate: V3_RENDER_GATE while the v3 scorer is active,
+ *  RENDER_GATE otherwise. Read via getState (not a hook) — selectors here are
+ *  plain functions, and the flag flips only from the Mera Protocol screen. */
+export function effectiveRenderGate(): number {
+  try {
+    // Lazy require: keeps this module's static import graph free of the
+    // protocol store (mirrors read-story-filter's pattern for jest suites
+    // that mock neither).
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useMeraProtocolStore } = require('@/lib/stores/mera-protocol-store');
+    return useMeraProtocolStore.getState().relevanceV3 === true
+      ? V3_RENDER_GATE
+      : RENDER_GATE;
+  } catch {
+    return RENDER_GATE;
+  }
+}
+
 const BREAKING_EVENT_TYPES = new Set(['disaster', 'weather', 'conflict']);
 
 /** One breaking-strip entry (representative + collapsed members). Consumed by
@@ -248,10 +288,12 @@ export function isComplete(s: ForYouSuggestion): boolean {
   return s.status === ArticleSuggestionStatus.Complete;
 }
 
-/** The render gate — INCLUSIVE at `RENDER_GATE` (relevance v3: was strict `>`,
- *  now `>=`, so the 0.4-bucketed LOW rows stay included). */
+/** The render gate — INCLUSIVE (relevance v3: was strict `>`, now `>=`, so
+ *  rows at exactly the cutoff stay included). Uses the EFFECTIVE gate: 0.55
+ *  while the v3 scorer is active, 0.4 for legacy scoring (see
+ *  {@link V3_RENDER_GATE}). */
 export function passesRenderGate(s: ForYouSuggestion): boolean {
-  return (s.relevance ?? 0) >= RENDER_GATE;
+  return (s.relevance ?? 0) >= effectiveRenderGate();
 }
 
 /** The publication window (`cutoffMs = nowMs - FEED_WINDOW_MS`, 48h). */

@@ -22,7 +22,7 @@ import {
   passesImportanceThreshold,
   type ImportanceThreshold,
 } from '@/lib/feed-ordering/importance-filter';
-import { isBreaking, RENDER_GATE } from '@/lib/stores/fact-rows-selector';
+import { effectiveRenderGate, isBreaking } from '@/lib/stores/fact-rows-selector';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useForYouCounts, useForYouSuggestions } from '@/lib/stores/selectors';
@@ -44,7 +44,7 @@ const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
  *  RELEVANCE V3 (2026-08-05): `RENDER_GATE` is now INCLUSIVE (`relevance >=
  *  RENDER_GATE`, was strict `>`), so the comparison below matches — see the
  *  comment there. */
-const RELEVANT_GATE = RENDER_GATE;
+const relevantGate = () => effectiveRenderGate();
 
 export interface FeedCounts {
   /** Total articles published this cycle (store-tracked). */
@@ -117,7 +117,7 @@ export function computeFeedCounts(
     // comment on `RELEVANT_GATE` above) — a strict comparison here would silently
     // undercount the header relative to what the feed itself renders.
     if (
-      s.relevance >= RELEVANT_GATE &&
+      s.relevance >= relevantGate() &&
       (passesImportanceThreshold(s.relevance, threshold) ||
         isBreaking(s as ForYouSuggestion))
     ) {
