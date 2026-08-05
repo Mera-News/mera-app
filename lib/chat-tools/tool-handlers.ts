@@ -33,6 +33,69 @@ import { syncLlmTopicsForFact } from '../database/services/topic-service';
 // here so existing importers of it from tool-handlers keep working.
 export { MAX_FACT_LENGTH } from '@/lib/news-harness/persona-management/fact-rules';
 
+/** How many sections one `explainMera` call may return.
+ *
+ *  A 3-section answer is already the single largest entry the CLOUD history
+ *  budget will carry, so a model asking for all eight is capped rather than
+ *  refused: an error there would burn a whole round trip to teach the model
+ *  something the first three sections already answer. */
+const MAX_EXPLAINER_SECTIONS = 3;
+
+/**
+ * `explainMera` — returns Mera's own reference documentation for the model to
+ * answer from, so a question about privacy, encryption, the licence or the
+ * known gaps is answered from sourced text instead of from memory.
+ *
+ * Pure read: no database, no network, no side effects. The ~15KB prose module
+ * is `require`d LAZILY here (mirroring PersonaUpdateAgent.loadKnownPublicationNames)
+ * so it never enters app startup evaluation — it is only ever needed on a turn
+ * where the user actually asked.
+ *
+ * An unknown id returns `{ error, availableTopics }` rather than a partial
+ * answer or an empty list: the model can then retry with a real id, which is
+ * strictly better than it inventing a guarantee to fill the gap. That is also
+ * why a missing/empty `topics` is an error and not a silent default.
+ */
+export async function handleExplainMera(
+  args: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const { MERA_EXPLAINER_SECTIONS } =
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    require('./mera-explainer-content') as typeof import('./mera-explainer-content');
+  const availableTopics = Object.keys(MERA_EXPLAINER_SECTIONS);
+
+  const requested = args.topics;
+  if (!Array.isArray(requested) || requested.length === 0) {
+    return {
+      error: 'topics must be a non-empty array of topic ids',
+      availableTopics,
+    };
+  }
+
+  const capped = requested.slice(0, MAX_EXPLAINER_SECTIONS);
+  const unknown = capped.filter(
+    (t) => typeof t !== 'string' || !availableTopics.includes(t),
+  );
+  if (unknown.length > 0) {
+    return {
+      error: `Unknown topic(s): ${unknown.map((t) => String(t)).join(', ')}`,
+      availableTopics,
+    };
+  }
+
+  // De-duplicated, order preserved: a repeated id would otherwise pay for the
+  // same section twice out of a budget where these are the largest entries.
+  const seen = new Set<string>();
+  const sections = (capped as string[])
+    .filter((t) => (seen.has(t) ? false : (seen.add(t), true)))
+    .map((topic) => ({
+      topic,
+      text: MERA_EXPLAINER_SECTIONS[topic as keyof typeof MERA_EXPLAINER_SECTIONS],
+    }));
+
+  return { sections };
+}
+
 /** Resolves userId from Zustand store (warm) or WatermelonDB (cold). */
 async function getStoredUserId(): Promise<string | null> {
   let userId = useUserStore.getState().userId;

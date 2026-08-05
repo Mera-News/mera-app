@@ -283,6 +283,15 @@ export function observeUnseenTotal() {
     );
 }
 
+/**
+ * How many stories are currently followed. A SQL COUNT (`fetchCount`), not a
+ * fetch — nothing is materialised. Used to decide whether Mera may truthfully
+ * say anything about followed stories at all.
+ */
+export async function countActive(): Promise<number> {
+  return collection.query(Q.where('status', 'active')).fetchCount();
+}
+
 /** Clear a story's unseen badge (user viewed its updates). Never throws. */
 export async function markSeen(id: string): Promise<void> {
   try {

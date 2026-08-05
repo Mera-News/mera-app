@@ -122,70 +122,102 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
     };
 
     return (
+        // Three bands, top to bottom: the logo's air, the email row, and the
+        // language cluster sitting on the policy footer. The two <Box>es with
+        // a raw `flex` split ALL the slack the cluster and footer leave over,
+        // 5:1 — that ratio, not a hardcoded offset, is what puts the mark in
+        // the upper half and the input near the vertical centre, and it holds
+        // on any screen height. Measured on a 874pt screen: logo 114–264,
+        // input 383–422 (screen centre 437). On an SE-height 667pt screen the
+        // same ratio gives logo ~52–202 and input ~254–310 — the logo keeps
+        // its full 150pt (RN flexShrink defaults to 0) and nothing clips.
+        // Raw style flex, not `flex-[5]`: no arbitrary flex class exists
+        // anywhere else in this app, so it is unproven under NativeWind here.
         <Box className="flex-1 px-5">
-            {/* Main content centered */}
-            <Box className="flex-1 justify-center">
-                {/* Logo */}
-                <Box className="items-center mb-8">
-                    <MeraLogo size={150} animated />
-                </Box>
-
-                <Box className="mb-8">
-                    <HStack className="items-center" space="md">
-                        <Box className="flex-1">
-                            <Input size="lg">
-                                <InputField
-                                    testID="auth-email-input"
-                                    placeholder={t('auth.emailPlaceholder')}
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    keyboardType="email-address"
-                                    autoCapitalize="none"
-                                    autoCorrect={false}
-                                />
-                            </Input>
-                        </Box>
-                        <Pressable
-                            testID="auth-send-otp"
-                            onPress={handleSendOTP}
-                            disabled={loading || !email || !validator.isEmail(email)}
-                            className={`w-14 h-14 rounded-full items-center justify-center ${email && validator.isEmail(email) && !loading ? 'bg-primary-500' : 'bg-gray-700'
-                                }`}
-                        >
-                            {loading ? (
-                                <Spinner size="small" color="white" />
-                            ) : (
-                                <MaterialIcons
-                                    name="arrow-forward"
-                                    size={28}
-                                    color="#000000"
-                                />
-                            )}
-                        </Pressable>
-                    </HStack>
-                </Box>
-
-                {/* Language Selector */}
-                <LanguageSelector />
-
-                {Platform.OS === 'ios' && (
-                    <VStack space="sm" className="mt-4">
-                        <Pressable
-                            onPress={() => setShowGuideVideo(true)}
-                            className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
-                        >
-                            <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
-                            <Text className="text-violet-400 text-sm font-medium flex-1">
-                                {t('language.watchGuide')}
-                            </Text>
-                        </Pressable>
-                    </VStack>
-                )}
+            {/* Upper band — the logo owns it and is centred in it. */}
+            <Box className="items-center justify-center" style={{ flex: 5 }}>
+                <MeraLogo size={150} animated />
             </Box>
 
+            {/* The primary action. Intrinsic height: the bands above and below
+                are what position it. */}
+            <HStack className="items-center" space="md">
+                <Box className="flex-1">
+                    <Input size="lg">
+                        <InputField
+                            testID="auth-email-input"
+                            placeholder={t('auth.emailPlaceholder')}
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+                    </Input>
+                </Box>
+                <Pressable
+                    testID="auth-send-otp"
+                    onPress={handleSendOTP}
+                    disabled={loading || !email || !validator.isEmail(email)}
+                    className={`w-14 h-14 rounded-full items-center justify-center ${email && validator.isEmail(email) && !loading ? 'bg-primary-500' : 'bg-gray-700'
+                        }`}
+                >
+                    {loading ? (
+                        <Spinner size="small" color="white" />
+                    ) : (
+                        <MaterialIcons
+                            name="arrow-forward"
+                            size={28}
+                            color="#000000"
+                        />
+                    )}
+                </Pressable>
+            </HStack>
+
+            {/* Lower band — the gap between the input and the cluster. */}
+            <Box style={{ flex: 1 }} />
+
+            {/* Language cluster. The word ticker, the selector, the download
+                hint and the guide link are ONE group and must read as one:
+                8pt between them, 24pt to the policy row below and the whole
+                lower band above. The 24pt matters — the guide link borrows the
+                policy pills' shape, so at an equal gap it would read as a
+                fifth pill instead of the last line of this group. Grouping is
+                by proximity alone — no card, no border — because this screen's
+                only chrome is the gradient backdrop, and a container here
+                would compete with it.
+                Anchored at the bottom rather than floating in the middle: it
+                is a pre-flight setting, not the reason anyone opened this
+                screen. */}
+            <VStack space="sm" className="mb-6">
+                <LanguageSelector />
+
+                {/* Deliberately small. It is a help affordance for the iOS
+                    download sheet, so it borrows the footer pills' vocabulary
+                    (rounded-full, hairline border, xs text) instead of the
+                    full-width filled bar it used to be, which outweighed the
+                    email field it sat under. */}
+                {Platform.OS === 'ios' && (
+                    <Pressable
+                        testID="auth-language-guide"
+                        onPress={() => setShowGuideVideo(true)}
+                        // 26pt drawn + 10pt each side = a 46pt target. The
+                        // chip is deliberately small; the hitSlop is what
+                        // keeps it above the 44pt minimum anyway.
+                        hitSlop={10}
+                        className="flex-row items-center self-center px-3 py-1.5 rounded-full border border-gray-700"
+                    >
+                        <MaterialIcons name="play-circle-filled" size={14} color="#a78bfa" style={{ marginRight: 6 }} />
+                        <Text size="xs" className="text-violet-400 font-medium">
+                            {t('language.watchGuideShort')}
+                        </Text>
+                    </Pressable>
+                )}
+            </VStack>
+
             {/* Policy buttons at bottom */}
-            <Box className="items-center" style={{ paddingBottom: insets.bottom + 32 }}>
-                <HStack space="sm" className="items-center justify-center flex-wrap">
+            <Box className="items-center" style={{ paddingBottom: insets.bottom + 16 }}>
+                <HStack space="xs" className="items-center justify-center flex-wrap">
                     <PolicyPill label={t('auth.privacyPolicy')} onPress={handlePrivacyPolicyPress} />
                     <PolicyPill label={t('auth.termsOfService')} onPress={handleTermsOfServicePress} />
                     <PolicyPill label={t('auth.contentPolicy')} onPress={handleContentPolicyPress} />

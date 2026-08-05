@@ -598,7 +598,7 @@
     "inferenceError": "Al momento stiamo riscontrando problemi nel raggiungere il servizio di inferenza Mera. Per favore riprova tra un momento."
   },
   "personaChat": {
-    "introMessage": "Ciao! Sono Mera, la tua assistente personale di notizie. Se vuoi, raccontami qualcosa di te: dove vivi, di cosa ti occupi, gli hobby che segui, le azioni che monitori, dove vive la tua famiglia. Oppure di' semplicemente 'aiutami a configurarlo' e ti guido io."
+    "introMessage": "Ciao! Sono Mera, la tua assistente personale di notizie.\n\nPer trovare notizie che contano davvero per te, ho bisogno di conoscerti un po'. Dove vivi, di cosa ti occupi, hobby che segui, azioni che monitori, dove vive la tua famiglia. Condividi tutto o poco, come preferisci.\n\nSe questo ti preoccupa, è un buon istinto. Non è saggio affidare dati personali a una società che sviluppa app. Mera è costruita diversamente: tutto quello che mi dici viene salvato sul tuo dispositivo, non sui nostri server. Chiedimi come funziona, o di' semplicemente 'aiutami a configurarlo' e iniziamo."
   },
   "floatingChat": {
     "bubbleHint": "Chatta con Mera",
@@ -618,6 +618,8 @@
     "chipShowFactsMessage": "Cosa sai attualmente di me?",
     "chipHelpSetup": "Aiutami a configurare",
     "chipHelpSetupMessage": "Aiutami a configurare il mio profilo",
+    "chipDataHandlingMessage": "Come Mera gestisce i miei dati?",
+    "chipDataHandling": "Come gestisci i miei dati?",
     "thinking": "Sto pensando…",
     "newChat": "Nuova chat",
     "inputPlaceholder": "Scrivi un messaggio...",

@@ -59,8 +59,11 @@ jest.mock('../AddTopicModal', () => ({ __esModule: true, default: () => null }))
 jest.mock('../GenerateMoreModal', () => ({ __esModule: true, default: () => null }));
 
 // --- services / stores ------------------------------------------------------
+// Settable so a test can reproduce the state this component has to survive:
+// signed in, but the server session could not be fetched.
+const mockSessionRef = { current: { user: { id: 'u1' } } as { user: { id: string } } | null };
 jest.mock('@/lib/auth-client', () => ({
-    authClient: { useSession: () => ({ data: { user: { id: 'u1' } } }) },
+    authClient: { useSession: () => ({ data: mockSessionRef.current }) },
 }));
 
 const mockGetFacts = jest.fn();
@@ -106,9 +109,15 @@ jest.mock('@/lib/stores/mera-protocol-store', () => ({
     useIsOnDeviceProcessing: () => false,
 }));
 
+// Selector-shaped: the component reads the LOCAL identity via
+// `useUserStore((s) => s.userId)` AND destructures actions off a bare call.
 const mockFetchUserPersona = jest.fn();
+const mockLocalUserIdRef = { current: 'u1' as string | null };
 jest.mock('@/lib/stores/user-store', () => ({
-    useUserStore: () => ({ fetchUserPersona: mockFetchUserPersona }),
+    useUserStore: (selector?: (s: unknown) => unknown) => {
+        const state = { userId: mockLocalUserIdRef.current, fetchUserPersona: mockFetchUserPersona };
+        return selector ? selector(state) : state;
+    },
 }));
 
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { error: jest.fn(), warn: jest.fn() } }));
@@ -117,6 +126,8 @@ import FactsList from '../FactsList';
 
 beforeEach(() => {
     jest.clearAllMocks();
+    mockSessionRef.current = { user: { id: 'u1' } };
+    mockLocalUserIdRef.current = 'u1';
 });
 
 describe('FactsList', () => {
@@ -145,6 +156,45 @@ describe('FactsList', () => {
 
         await waitFor(() => expect(mockDeleteFact).toHaveBeenCalledWith('f1'));
         await waitFor(() => expect(queryByText('confirm-delete:f1')).toBeNull());
+    });
+
+    // Offline / keychain-locked wake / 401 blip. Facts are device-local and the
+    // user never logged out, so their own facts must stay editable — the delete
+    // used to return silently because it was gated on `session.user.id`.
+    it('deletes a fact while the server session cannot be fetched', async () => {
+        mockSessionRef.current = null;
+        mockGetFacts.mockResolvedValueOnce([{ id: 'f1', statement: 'Lives in Pune' }]);
+        mockDeleteFact.mockResolvedValue(undefined);
+        mockGetFacts.mockResolvedValueOnce([]);
+
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('delete-f1'));
+        fireEvent.press(getByLabelText('confirm-delete'));
+
+        await waitFor(() => expect(mockDeleteFact).toHaveBeenCalledWith('f1'));
+        // The persona refresh still runs — off the LOCAL id, not the session.
+        expect(mockFetchUserPersona).toHaveBeenCalledWith('u1', true);
+    });
+
+    // No identity anywhere (a genuinely logged-out device): the local write is
+    // still allowed, only the server-side persona refresh is skipped.
+    it('deletes locally without a persona refresh when no identity exists at all', async () => {
+        mockSessionRef.current = null;
+        mockLocalUserIdRef.current = null;
+        mockGetFacts.mockResolvedValueOnce([{ id: 'f1', statement: 'Lives in Pune' }]);
+        mockDeleteFact.mockResolvedValue(undefined);
+        mockGetFacts.mockResolvedValueOnce([]);
+
+        const { getByText, getByLabelText } = render(<FactsList />);
+        await waitFor(() => expect(getByText('Lives in Pune')).toBeTruthy());
+
+        fireEvent.press(getByLabelText('delete-f1'));
+        fireEvent.press(getByLabelText('confirm-delete'));
+
+        await waitFor(() => expect(mockDeleteFact).toHaveBeenCalledWith('f1'));
+        expect(mockFetchUserPersona).not.toHaveBeenCalled();
     });
 
     it('reports loading/loaded facts back via onFactsChange', async () => {

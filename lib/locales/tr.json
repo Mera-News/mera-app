@@ -598,7 +598,7 @@
     "inferenceError": "Şu anda Mera çıkarım hizmetine ulaşmakta sorun yaşıyoruz. Lütfen bir süre sonra tekrar dene."
   },
   "personaChat": {
-    "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın. İstersen kendin hakkında ne olursa paylaş: nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. Ya da sadece 'kurulumda yardım et' de, sana adım adım rehberlik edeyim."
+    "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nEğer bu seni biraz şüpheye düşürürse, içgüdün doğru. Kişisel verileri bir uygulama şirketi vermeye akıllıca demek değil. Mera farklı şekilde inşa edildi: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana nasıl çalıştığını sorabilirsin, ya da 'kurulumda bana yardım et' de ve başlayalım."
   },
   "floatingChat": {
     "bubbleHint": "Mera ile sohbet et",
@@ -618,6 +618,8 @@
     "chipShowFactsMessage": "Şu anda benim hakkımda ne biliyorsun?",
     "chipHelpSetup": "Kurulumda bana yardım et",
     "chipHelpSetupMessage": "Profilimi kurmama yardım et",
+    "chipDataHandlingMessage": "Mera verilerimle nasıl çalışıyor?",
+    "chipDataHandling": "Verilerim nasıl işleniyor?",
     "thinking": "Düşünüyor…",
     "newChat": "Yeni sohbet",
     "inputPlaceholder": "Bir mesaj yaz...",

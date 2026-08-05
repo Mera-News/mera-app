@@ -598,7 +598,7 @@
     "inferenceError": "Kami mengalami masalah dalam menjangkau layanan inferensi Mera saat ini. Silakan coba lagi sesaat lagi."
   },
   "personaChat": {
-    "introMessage": "Hai! Aku Mera, asisten berita pribadimu. Jika mau, ceritakan apa saja tentang dirimu: tinggal di mana, kerja apa, hobi yang diikuti, saham yang dipantau, tempat tinggal keluarga. Atau cukup bilang 'bantu aku menyiapkannya' dan aku akan membimbingmu langkah demi langkah."
+    "introMessage": "Hai! Aku Mera, asisten berita pribadimu.\n\nUntuk mencari berita yang benar-benar penting bagi kamu, aku perlu tahu sedikit tentang dirimu. Di mana kamu tinggal, apa pekerjaan kamu, hobi yang kamu ikuti, saham yang kamu pantau, di mana keluargamu tinggal. Ceritakan sebanyak atau sesedikit yang kamu mau.\n\nJika ini membuatmu ragu-ragu, itu adalah naluri yang baik. Tidak bijak memberikan data pribadi kepada perusahaan pengembang aplikasi. Mera dibangun berbeda: semua yang kamu ceritakan kepada aku disimpan di perangkatmu, bukan di server kami. Tanya padaku cara kerjanya, atau bilang 'bantu aku menyiapkannya' dan kita akan mulai."
   },
   "floatingChat": {
     "bubbleHint": "Ngobrol dengan Mera",
@@ -618,6 +618,8 @@
     "chipShowFactsMessage": "Apa yang Anda ketahui tentang saya saat ini?",
     "chipHelpSetup": "Bantu saya menyiapkan",
     "chipHelpSetupMessage": "Bantu saya menyiapkan profil saya",
+    "chipDataHandlingMessage": "Bagaimana Mera menangani dataku?",
+    "chipDataHandling": "Bagaimana dataku ditangani?",
     "thinking": "Berpikir…",
     "newChat": "Obrolan baru",
     "inputPlaceholder": "Ketik pesan...",

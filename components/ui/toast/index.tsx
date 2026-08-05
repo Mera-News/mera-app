@@ -22,12 +22,6 @@ import {
   MotionComponentProps,
 } from '@legendapp/motion';
 import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
-import {
-  GLASS_AVAILABLE,
-  GLASS_HEADER_SCRIM,
-  GLASS_HEADER_TINT,
-  GlassPlate,
-} from '@/components/custom/GlassSurface';
 
 type IMotionViewProps = React.ComponentProps<typeof View> &
   MotionComponentProps<typeof View, ViewStyle, unknown, unknown, unknown>;
@@ -40,26 +34,30 @@ const SCOPE = 'TOAST';
 cssInterop(MotionView, { className: 'style' });
 
 /**
- * ## Why a toast carries NO background colour any more
+ * ## Why a toast carries no PER-SEVERITY background
  *
  * Every action used to be a saturated pastel pill (`bg-error-800` and friends —
  * light fills, because the dark ramp is inverted — with near-black text on top).
- * They read as a different design language from the rest of the app, which is
- * frosted panels over an animated gradient.
+ * They read as a different design language from the rest of the app. One
+ * neutral surface for every severity replaced them, which deleted the ONLY
+ * thing that told an error apart from a confirmation — so the severity signal
+ * MOVED rather than disappearing: see `TOAST_ACCENT` / `TOAST_ICON` below.
  *
- * A toast is now an Apple-Notification-Center-style frosted panel: one neutral
- * material for every severity. That deletes the ONLY thing that told an error
- * apart from a confirmation, so the severity signal MOVED rather than
- * disappearing — see `TOAST_ACCENT` / `TOAST_ICON` below.
+ * That neutral surface was briefly LIQUID GLASS. It is not any more — the owner
+ * called it ugly, and it now uses the same flat grey panel as the feed's
+ * importance-filter dropdown (`MENU_PANEL_FILL`). Do not reintroduce
+ * `GlassPlate` here; `components/ui/menu/index.tsx` records that a glass menu
+ * was tried and rejected for the same surface, because page text read through
+ * the labels even at a denser scrim.
  *
  * The `action` / `variant` variants are kept with EMPTY classes on purpose:
  * they still type `VariantProps` and still feed the style context that
  * `ToastTitle` / `ToastDescription` read, they just no longer paint anything.
- * Re-adding a `bg-*` here would sit an opaque fill on top of the glass and
- * cancel it.
+ * The fill lives on `styles.surface`, one layer in, so the Root stays free to
+ * carry the shadow (a view that clips cannot cast one).
  */
 const toastStyle = tva({
-  base: 'm-1 web:pointer-events-auto',
+  base: 'm-1 web:pointer-events-auto shadow-hard-5',
   variants: {
     action: {
       error: '',
@@ -84,13 +82,24 @@ export const TOAST_RADIUS = 16;
 const ACCENT_WIDTH = 4;
 
 /**
- * Near-opaque panel fill for platforms where glass does not paint at all
- * (Android, iOS < 26 — `GlassPlate` renders `null` there). Deliberately not
- * fully opaque, so the surface still reads as a floating panel rather than a
- * slab, but far denser than the glass branch's scrim because nothing is
- * frosting the content behind it.
+ * The panel fill, taken verbatim from the feed's importance-filter dropdown —
+ * `menuStyle`'s `bg-[#45434A]` in `components/ui/menu/index.tsx`, the grey the
+ * owner picked to match the app's frosted header tone.
+ *
+ * COPIED, not shared: the menu expresses it as a Tailwind arbitrary class, which
+ * cannot reference a TS constant. So the two can drift, and the only thing
+ * stopping them is the cross-reference in each file — if you change one grey,
+ * change the other.
+ *
+ * Flat and opaque on every platform: no `GLASS_AVAILABLE` branch, so a toast
+ * looks identical on iOS 26, iOS 25 and Android, and a `persistent` banner
+ * costs nothing to keep on screen.
  */
-const TOAST_OPAQUE_FALLBACK = 'rgba(20,20,22,0.94)';
+export const MENU_PANEL_FILL = '#45434A';
+
+/** `border-outline-100` in the dark ramp (rgb(65,65,65)) — the same hairline
+ *  the menu panel carries. */
+const MENU_PANEL_BORDER = 'rgb(65,65,65)';
 
 export type ToastAction = 'error' | 'warning' | 'success' | 'info' | 'muted';
 
@@ -137,40 +146,25 @@ export const TOAST_ICON: Record<
 
 const styles = StyleSheet.create({
   /**
-   * The lift. Replaces the old `shadow-hard-5` class, which is a hard, offset
-   * shadow that suited a solid pill and reads as a smudge under a translucent
-   * one. These are the ScrollToTopFab's numbers verbatim — the app's other
-   * floating glass surface — so the two lift off the page identically.
+   * Android's elevation only. The iOS lift is `shadow-hard-5` on the Root's
+   * className — the SAME class the filter menu's panel uses, so the two
+   * surfaces sit off the page identically. It moved back to the class when the
+   * glass went away: the softer inline shadow existed because a hard, offset
+   * shadow reads as a smudge under a TRANSLUCENT panel, and this panel is
+   * opaque again.
    */
   root: {
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
     elevation: 8, // Android
   },
-  /** The clipped, rounded surface. Separate from the Root because RN drops a
-   *  view's shadow the moment that same view sets `overflow: hidden` — so the
-   *  shadow lives on the Root and the clipping lives here. */
+  /** The clipped, rounded, FILLED surface. Separate from the Root because RN
+   *  drops a view's shadow the moment that same view sets `overflow: hidden` —
+   *  so the shadow lives on the Root and the clipping + fill live here. */
   surface: {
     borderRadius: TOAST_RADIUS,
     overflow: 'hidden',
+    backgroundColor: MENU_PANEL_FILL,
     borderWidth: 1,
-    // Matches GLASS_EDGE (`border-white/10`): glass has no outline of its own
-    // against a dark page and reads as a smudge without one.
-    borderColor: 'rgba(255,255,255,0.10)',
-  },
-  /** Painted BEHIND the glass plate — the glass samples it, and that is what
-   *  actually cuts see-through. Raising the plate's white tint alone would only
-   *  wash the panel out and make light text worse. Same pairing as
-   *  `StatusBarScrim`. */
-  scrim: {
-    backgroundColor: GLASS_HEADER_SCRIM,
-  },
-  /** The no-glass fill: Android, iOS < 26, and `persistent` toasts. Denser,
-   *  because nothing is frosting the content behind it. */
-  flatFill: {
-    backgroundColor: TOAST_OPAQUE_FALLBACK,
+    borderColor: MENU_PANEL_BORDER,
   },
   accent: {
     position: 'absolute',
@@ -320,20 +314,19 @@ type IToastProps = React.ComponentProps<typeof Root> & {
   className?: string;
   /**
    * This toast is shown with `duration: null` — it stays on screen until
-   * something closes it.
+   * something closes it. Set by `OTAUpdatePrompt` and
+   * `TranslationUnavailablePrompt`.
    *
-   * It exists for a COST reason, not a look one. Real glass is a
-   * `UIVisualEffectView`, and a blur re-samples its backdrop every frame that
-   * backdrop changes; this app's backdrop animates continuously, so a
-   * permanently-mounted glass panel recomputes a full-screen blur forever, even
-   * while the user sits still. That is the measured regression documented in
-   * `GlassSurface.tsx`, and a transient 2–6s toast is fine precisely because it
-   * goes away. A persistent one is not.
+   * NOW PURELY DECLARATIVE. It used to force the flat fill instead of glass, for
+   * a COST reason: a `UIVisualEffectView` re-samples its backdrop every frame
+   * that backdrop changes, this app's backdrop animates continuously, and a
+   * permanently-mounted glass panel therefore re-blurred forever (the measured
+   * regression in `GlassSurface.tsx`). Every toast is a flat opaque panel now,
+   * so there is no glass branch left to opt out of and the concern is moot.
    *
-   * So persistent toasts take the flat translucent fill instead — the same
-   * surface every Android and iOS-25 user already sees. Over the animated
-   * gradient the two are near-indistinguishable (again, `GlassSurface.tsx`), so
-   * this costs almost nothing visually.
+   * Kept rather than deleted: both callers pass it, it still documents which
+   * toasts never dismiss themselves, and it is the natural hook if a future
+   * surface change reintroduces a per-lifetime distinction.
    */
   persistent?: boolean;
 } & VariantProps<typeof toastStyle>;
@@ -355,17 +348,16 @@ type IToastProps = React.ComponentProps<typeof Root> & {
 export const TOAST_EDGE_INSET_RATIO = 0.2;
 
 /**
- * A frosted, rounded notification panel.
+ * A flat grey, rounded notification panel — the filter menu's surface.
  *
  * Layering, outside in — the order is load-bearing:
  *
- *  - `Root` owns the margin, the shadow and the width cap, and must NOT clip.
- *  - `styles.surface` is the rounded, clipping box. It carries no fill of its
- *    own: an opaque background here would sit on top of the glass and cancel it.
- *  - the scrim and the glass plate are absolute fills inside it. BOTH are
+ *  - `Root` owns the margin, the shadow and the width cap, and must NOT clip
+ *    (a clipping view casts no shadow).
+ *  - `styles.surface` is the rounded, clipping box, and carries the fill.
+ *  - the accent bar is inside the clip, so it picks up the corner radius. It is
  *    `pointerEvents="none"` — `showUndoToast` puts a real `Pressable` in
- *    `children`, and a plate that swallowed taps would silently kill it.
- *  - the accent bar is inside the clip, so it picks up the corner radius.
+ *    `children`, and an overlay that swallowed taps would silently kill it.
  *
  * Children are rendered untouched into `styles.content`. `showUndoToast` builds
  * its children with `React.createElement` (no NativeWind JSX transform), so its
@@ -389,7 +381,9 @@ const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
     const maxWidth = Math.round(width * (1 - 2 * TOAST_EDGE_INSET_RATIO));
     const accent = TOAST_ACCENT[action as ToastAction] ?? null;
     const Glyph = TOAST_ICON[action as ToastAction] ?? null;
-    const useGlass = GLASS_AVAILABLE && !persistent;
+    // `persistent` is read only so it is not forwarded onto the host View as an
+    // unknown prop; it no longer changes what is painted (see its doc above).
+    void persistent;
     return (
       <Root
         ref={ref}
@@ -399,13 +393,7 @@ const Toast = React.forwardRef<React.ComponentRef<typeof Root>, IToastProps>(
         style={[styles.root, { maxWidth, borderRadius: TOAST_RADIUS }, style]}
         {...props}
       >
-        <View style={styles.surface}>
-          <View
-            testID={useGlass ? 'toast-glass-scrim' : 'toast-flat-fill'}
-            pointerEvents="none"
-            style={[StyleSheet.absoluteFill, useGlass ? styles.scrim : styles.flatFill]}
-          />
-          {useGlass ? <GlassPlate tint={GLASS_HEADER_TINT} /> : null}
+        <View testID="toast-surface" style={styles.surface}>
           {accent ? (
             <View
               testID="toast-accent-bar"

@@ -52,8 +52,19 @@ jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({ useRouter: () => ({ replace: (...a: any[]) => mockReplace(...a) }) }));
 
+const mockSessionRef = { current: { user: { id: 'u1' } } as { user: { id: string } } | null };
 jest.mock('@/lib/auth-client', () => ({
-    authClient: { useSession: () => ({ data: { user: { id: 'u1' } }, isPending: false }) },
+    authClient: { useSession: () => ({ data: mockSessionRef.current, isPending: false }) },
+}));
+
+// Identity is LOCAL-first here (see the screen). Selector-shaped mock, which
+// also keeps the real user-store's WatermelonDB adapter out of this suite.
+const mockLocalUserIdRef = { current: 'u1' as string | null };
+jest.mock('@/lib/stores/user-store', () => ({
+    useUserStore: (selector?: (s: unknown) => unknown) => {
+        const state = { userId: mockLocalUserIdRef.current };
+        return selector ? selector(state) : state;
+    },
 }));
 
 const mockGetUserPersona = jest.fn(async () => ({}));
@@ -78,10 +89,27 @@ jest.mock('react-native-purchases-ui', () => ({
     PAYWALL_RESULT: { PURCHASED: 'PURCHASED', RESTORED: 'RESTORED' },
 }));
 
+const mockSetServerBilling = jest.fn();
 jest.mock('@/lib/stores/subscription-store', () => ({
-    useSubscriptionStore: { getState: () => ({ setCustomerInfo: jest.fn() }) },
+    useSubscriptionStore: {
+        getState: () => ({
+            setCustomerInfo: jest.fn(),
+            setServerBilling: mockSetServerBilling,
+            serverTier: 'none',
+        }),
+    },
 }));
 jest.mock('@/lib/database/services/setting-service', () => ({ setSetting: jest.fn(async () => {}) }));
+
+const mockRefreshAfterPurchase = jest.fn();
+jest.mock('@/lib/billing-service', () => ({
+    refreshUserBillingAfterPurchase: (...a: any[]) => mockRefreshAfterPurchase(...(a as [])),
+}));
+
+const mockShowActivatedToast = jest.fn();
+jest.mock('@/lib/subscription/activation-toast', () => ({
+    showSubscriptionActivatedToast: (...a: any[]) => mockShowActivatedToast(...a),
+}));
 
 const order: string[] = [];
 const mockSyncEntitlement = jest.fn(async () => { order.push('sync'); });
@@ -94,10 +122,13 @@ import NotSubscribedScreen from '@/components/custom/auth/NotSubscribedScreen';
 beforeEach(() => {
     jest.clearAllMocks();
     order.length = 0;
+    mockSessionRef.current = { user: { id: 'u1' } };
+    mockLocalUserIdRef.current = 'u1';
     mockRcState.configured = false;
     mockPresentPaywall.mockResolvedValue('CANCELLED');
     mockReplace.mockImplementation((...a: any[]) => { order.push(`replace:${a[0]}`); });
     mockGetUserPersona.mockResolvedValue({});
+    mockRefreshAfterPurchase.mockResolvedValue({ billing: null, confirmed: false });
 });
 
 // The screen used to open the RevenueCat sheet on mount for every non-`lapsed`
@@ -154,6 +185,25 @@ describe('leaving the paywall for /logged-in', () => {
         // Ordering is the whole point: replacing first would hand /logged-in a
         // store that still says 'none'.
         expect(order).toEqual(['sync', 'replace:/logged-in']);
+    });
+
+
+    // Offline / keychain-locked wake / 401 blip. Refresh is one of only two ways
+    // off this screen, and with the id read off the session `checkServerSubscribed`
+    // short-circuited to false WITHOUT asking the server at all — so a user who
+    // had genuinely just paid tapped Refresh and nothing happened. The query is
+    // authorised by the auth cookie, not by the session object.
+    it('Refresh still asks the server, off the LOCAL id, when the session cannot be fetched', async () => {
+        mockSessionRef.current = null;
+        const { getByText } = render(<NotSubscribedScreen />);
+
+        await act(async () => {
+            fireEvent.press(getByText('account.refresh'));
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(mockGetUserPersona).toHaveBeenCalledWith('u1');
+        expect(mockReplace).toHaveBeenCalledWith('/logged-in');
     });
 
     it('does not sync or leave while the server still refuses', async () => {

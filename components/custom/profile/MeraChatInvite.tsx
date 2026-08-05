@@ -1,11 +1,13 @@
 import { GLASS_AVAILABLE, GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
+import CyclingTypewriterText from '@/components/custom/subscription/CyclingTypewriterText';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticMedium } from '@/lib/haptics';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useAiAccess } from '@/lib/stores/subscription-store';
+import { useFreeTierLines } from '@/lib/subscription/use-free-tier-lines';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef } from 'react';
@@ -33,6 +35,10 @@ const MeraChatInvite: React.FC = () => {
     const { t } = useTranslation();
     const iconRef = useRef<View>(null);
     const aiAccess = useAiAccess();
+    // Called unconditionally (rules of hooks), but the counts are only read when
+    // they will actually be spoken — the entitled branch renders a fixed
+    // sentence and needs none of this.
+    const freeTierLines = useFreeTierLines(aiAccess === 'locked');
 
     const publishCenter = useCallback(() => {
         iconRef.current?.measureInWindow((x, y, w, h) => {
@@ -83,9 +89,22 @@ const MeraChatInvite: React.FC = () => {
                     edge={false}
                     style={styles.bubbleBorder}
                 >
-                    <Text className="text-white" style={styles.bubbleText}>
-                        {locked ? t('freeTier.chatBubble') : t('profile.meraInvite')}
-                    </Text>
+                    {/* Locked: Mera cycles through what is still true and what
+                        she cannot do right now — the SAME script FreeTierCard
+                        speaks (lib/subscription/free-tier-lines.ts), so the two
+                        surfaces cannot drift. Entitled: the invite is a single
+                        fixed sentence and stays a plain Text. */}
+                    {locked ? (
+                        <CyclingTypewriterText
+                            testID="mera-chat-invite-lines"
+                            lines={freeTierLines}
+                            style={styles.bubbleTypewriter}
+                        />
+                    ) : (
+                        <Text className="text-white" style={styles.bubbleText}>
+                            {t('profile.meraInvite')}
+                        </Text>
+                    )}
                 </GlassPanel>
                 {/* Right-edge tail pointing at the logo (rotated square whose
                     top+right bordered edges form the arrow). Not glass itself —
@@ -136,6 +155,15 @@ const styles = StyleSheet.create({
         borderColor: PRIMARY,
     },
     bubbleText: {
+        fontSize: 14,
+        lineHeight: 19,
+        fontWeight: '500',
+    },
+    // Same metrics as bubbleText, with the colour inlined: CyclingTypewriterText
+    // renders bare RN `Text` nodes, so the `className="text-white"` the entitled
+    // branch relies on would not reach them.
+    bubbleTypewriter: {
+        color: '#FFFFFF',
         fontSize: 14,
         lineHeight: 19,
         fontWeight: '500',

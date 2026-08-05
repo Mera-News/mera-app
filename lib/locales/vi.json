@@ -598,7 +598,7 @@
     "inferenceError": "Chúng tôi đang gặp sự cố khi kết nối đến dịch vụ suy luận Mera. Vui lòng thử lại sau ít phút."
   },
   "personaChat": {
-    "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn. Nếu muốn, hãy kể bất cứ điều gì về bản thân: bạn sống ở đâu, làm nghề gì, sở thích, cổ phiếu đang theo dõi, gia đình sống ở đâu. Hoặc chỉ cần nói 'giúp mình thiết lập' và mình sẽ hướng dẫn bạn từng bước."
+    "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nĐể tìm những tin tức thực sự quan trọng với bạn, mình cần biết một chút về bạn. Bạn sống ở đâu, làm nghề gì, những sở thích nào, theo dõi những cổ phiếu nào, gia đình sống ở đâu. Chia sẻ bao nhiêu hay bao ít tùy bạn.\n\nNếu điều này khiến bạn do dự, đó là bản năng tốt. Không nên trao dữ liệu cá nhân cho một công ty làm ứng dụng. Mera được xây dựng khác: mọi thứ bạn kể cho mình đều được lưu trên thiết bị của bạn, không phải trên máy chủ của chúng mình. Hỏi mình cách nó hoạt động, hoặc nói 'giúp mình thiết lập' và chúng ta sẽ bắt đầu."
   },
   "floatingChat": {
     "bubbleHint": "Trò chuyện với Mera",
@@ -618,6 +618,8 @@
     "chipShowFactsMessage": "Hiện tại bạn biết gì về tôi?",
     "chipHelpSetup": "Giúp tôi thiết lập",
     "chipHelpSetupMessage": "Giúp tôi thiết lập hồ sơ của tôi",
+    "chipDataHandlingMessage": "Mera xử lý dữ liệu của tôi như thế nào?",
+    "chipDataHandling": "Dữ liệu của tôi được xử lý như thế nào?",
     "thinking": "Đang suy nghĩ…",
     "newChat": "Trò chuyện mới",
     "inputPlaceholder": "Nhập tin nhắn...",

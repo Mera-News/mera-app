@@ -103,6 +103,37 @@ Rules that save time (details + more traps in the README):
   Fast Refresh that stomps their input. The resident account is the user's to log in; never log it
   out.
 
+### Testing In-App Purchases (RevenueCat / StoreKit)
+
+Test purchases only with the sandbox tester `sandboxuser@mera.news` (App Store Connect →
+Users and Access → Sandbox → Testers) — never a real Apple ID, and never assume a purchase is
+free of consequence without it. Sign-in happens **inside the purchase sheet itself** when it
+prompts for an Apple Account — current iOS has no separate Settings → App Store → "Sandbox
+Account" row anymore. A freshly-created sandbox tester can reject its own correct password for
+up to ~30 min after creation (known Apple flakiness, not a bug here).
+
+Reach the purchase flow via **Profile tab → the "Upgrade" pill on the usage card**
+(`handleUpgrade` in `components/custom/profile/ProfileScreen.tsx`) — no need to flip the
+server-side `FORCE_SUBSCRIPTIONS` flag or deep-link to `/logged-in/not-subscribed`.
+
+Xcode's Run (⌘R) is **not required** — verified by `simctl terminate` + a plain `simctl launch`
+(bypassing Xcode entirely) and confirming a pending sandbox transaction still resolved. The
+sandbox Apple ID lives at the simulator/OS level, independent of how the app process was
+started. The confirmation alert reads `[Environment: Xcode]` even on this real-network sandbox
+path — that's this iOS version's label for any development-signed build, not a sign the local
+StoreKit Configuration File is (mis)attached.
+
+The `ios/Mera News.storekit` local StoreKit Configuration File approach (Apple's
+["Testing In-App Purchases in Xcode"](https://developer.apple.com/documentation/storekit/testing-in-app-purchases-in-xcode)
+doc) never reliably attached even after fixing a relative-path bug in the scheme and a full
+Stop+Rerun — it's currently **not** wired into the `Mera` scheme's Run action. Don't re-add it
+without solving why local testing wasn't engaging; sandbox testing above is the working path.
+
+Don't kill/terminate the app before the native purchase confirmation ("You're all set") is
+dismissed — doing so appears to interrupt the JS-side billing refresh (`refreshBilling()` after
+`RevenueCatUI.presentPaywall()` resolves), leaving the Profile tab showing the old ("Promo")
+tier even though the purchase itself went through.
+
 ## Architecture
 
 ### Core Patterns

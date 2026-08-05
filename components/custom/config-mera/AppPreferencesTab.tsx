@@ -15,6 +15,7 @@ import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TE
 import { showFeedback } from '@/lib/feedback';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
@@ -42,7 +43,15 @@ const AppPreferencesTab: React.FC = () => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const { data: session } = authClient.useSession();
-    const userEmail = session?.user?.email;
+    // LOCAL first. This used to be `session?.user?.email` alone, so any window
+    // where better-auth could not produce a session — offline, a keychain-locked
+    // background wake, a 401 blip — dropped the email row entirely and made a
+    // still-signed-in user look logged out. The store's copy comes from the
+    // `cached_user_email` row written at sign-in and is cleared only by an
+    // explicit logout. Session is kept as the fallback for installs that signed
+    // in before that row was hydrated here.
+    const cachedEmail = useUserStore((s) => s.userEmail);
+    const userEmail = cachedEmail ?? session?.user?.email;
     const maskedEmail = React.useMemo(() => {
         if (!userEmail) return null;
         const atIdx = userEmail.lastIndexOf('@');

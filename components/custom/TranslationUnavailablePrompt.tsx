@@ -99,10 +99,10 @@ const TranslationUnavailablePrompt: React.FC = () => {
         const language = getNativeLanguageName(appLanguage) ?? appLanguage;
 
         const body = (
-            // `persistent` because of the `duration: null` below — it is a cost
-            // flag, not a look one: an indefinitely-mounted glass panel re-blurs
-            // the animated backdrop every frame forever. See the prop's doc
-            // comment in components/ui/toast.
+            // `persistent` marks the `duration: null` below — this banner stays
+            // until something closes it. It no longer changes the surface (every
+            // toast is a flat panel now); see the prop's doc in
+            // components/ui/toast.
             <Toast nativeID={id} action="info" variant="solid" persistent>
                 <ToastTitle>{t('language.translationUnavailableTitle')}</ToastTitle>
                 <ToastDescription>

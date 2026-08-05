@@ -2,6 +2,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import ProfileScreen from '@/components/custom/profile/ProfileScreen';
 import { Box } from '@/components/ui/box';
 import { authClient } from '@/lib/auth-client';
+import { useUserStore } from '@/lib/stores/user-store';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,8 +19,22 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 const ProfileTabScreen: React.FC = () => {
     const insets = useSafeAreaInsets();
     const { data: session } = authClient.useSession();
-    const userId = session?.user?.id;
+    // LOCAL identity first, server session only as a fallback.
+    //
+    // This gate used to read `session?.user?.id` alone, so a server session the
+    // app could not fetch — offline, a keychain-locked background wake, a 401
+    // blip — rendered the ENTIRE tab as null. That also took out the only entry
+    // point to the persona chat (MeraChatInvite lives inside ProfileScreen),
+    // so a network wobble silently removed a feature from the app.
+    //
+    // Identity here is a local fact, exactly as lib/security/launch-route.ts
+    // already treats it: only an explicit logout clears it. Offline state is
+    // communicated by the existing banner, not by blanking the screen.
+    const localUserId = useUserStore((s) => s.userId);
+    const userId = localUserId ?? session?.user?.id;
 
+    // Genuinely no identity on this device (pre-login). The launch gate routes
+    // these users to /login; rendering nothing is only the interim frame.
     if (!userId) return null;
 
     return (

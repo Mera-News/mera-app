@@ -39,8 +39,15 @@ interface FactsScreenProps {
  * "Your facts" heading + privacy notice, and the pull-to-refresh wiring.
  */
 const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
+    // Identity is a LOCAL fact (lib/security/launch-route.ts). Facts live on
+    // this device and ARE the product, so nothing here may wait on a server
+    // session: reading the id off the session meant pull-to-refresh silently
+    // did nothing (see `onRefresh`) whenever /get-session could not be reached.
+    // The persisted id survives that; the session is only the fallback for the
+    // window before hydrateFromDb() has run.
     const { data: session } = authClient.useSession();
-    const userId = session?.user?.id;
+    const localUserId = useUserStore((s) => s.userId);
+    const userId = localUserId ?? session?.user?.id;
     const { fetchUserPersona } = useUserStore();
     const { t } = useTranslation();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
@@ -56,12 +63,15 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
         if (userId) fetchUserPersona(userId).catch(() => { /* offline */ });
     }, [userId, fetchUserPersona]);
 
+    // The facts reload is unconditional — it reads the local DB and owes the
+    // server nothing. Only the persona refresh needs an id, so an unknown
+    // identity degrades this to a local-only refresh instead of a no-op
+    // spinner that never even reloads the list.
     const onRefresh = useCallback(async () => {
-        if (!userId) return;
         setRefreshing(true);
         await Promise.all([
             factsListRef.current?.refresh() ?? Promise.resolve(),
-            fetchUserPersona(userId, true),
+            userId ? fetchUserPersona(userId, true) : Promise.resolve(null),
         ]);
         setRefreshing(false);
     }, [userId, fetchUserPersona]);

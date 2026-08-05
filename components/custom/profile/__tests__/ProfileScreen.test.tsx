@@ -200,14 +200,21 @@ describe('ProfileScreen', () => {
 
     // ── Mera News Free ────────────────────────────────────────────────────
     // The row must stay the SAME row an entitled user sees — same speech
-    // bubble, same logo — with Mera saying the free-tier line instead of the
-    // invite, and nothing to tap.
-    it('locked → Mera says the free-tier line in the same bubble (invite copy gone)', async () => {
+    // bubble, same logo — with Mera speaking the free-tier script instead of
+    // the invite, and nothing to tap.
+    it('locked → Mera speaks the cycling free-tier script (invite copy gone)', async () => {
         mockAiAccess = 'locked';
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
-        const { getByText, queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
+        const { queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('mera-chat-invite-locked')).toBeTruthy());
-        expect(getByText('freeTier.chatBubble')).toBeTruthy();
+
+        // The bubble is the cycling typewriter, not a static sentence. Asserted
+        // via the accessible label rather than the visible text: the visible
+        // string is a partially-typed prefix (empty on the very first frame),
+        // while the label is always the COMPLETE current line.
+        const line = getByTestId('mera-chat-invite-lines-text');
+        expect(line.props.accessibilityLabel).toMatch(/^freeTier\.meraLines\./);
+
         expect(queryByText('profile.meraInvite')).toBeNull();
         // Same presentation, not a substitute card: the logo is still there.
         expect(getByTestId('mera-logo')).toBeTruthy();

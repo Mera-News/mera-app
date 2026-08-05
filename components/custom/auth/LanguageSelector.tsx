@@ -135,7 +135,11 @@ const LanguageSelector: React.FC = () => {
 
     return (
         <>
-            <HStack className="items-center justify-center mt-6" space="lg">
+            {/* No own top margin: this component is one member of the login
+                screen's language cluster, and the cluster's VStack owns the
+                rhythm between its members. A margin here would open a gap the
+                grouping cannot close. */}
+            <HStack className="items-center justify-center" space="lg">
                 <View style={styles.tickerContainer} pointerEvents="none">
                     <Carousel
                         vertical
@@ -178,10 +182,12 @@ const LanguageSelector: React.FC = () => {
                 rather than a wrapper View, so that on Android — where the
                 component renders nothing, there being no download sheet —
                 it leaves no gap behind. The 20pt gutter is the progress
-                card's, so the guidance and the card that replaces it line up. */}
+                card's, so the guidance and the card that replaces it line up.
+                Vertical spacing comes from the cluster's VStack gap, not from
+                a margin here. */}
             <LanguageDownloadHint
                 testID="auth-language-download-hint"
-                className="text-center mt-3 mx-5"
+                className="text-center mx-5"
             />
 
             {busy && pendingCode ? (

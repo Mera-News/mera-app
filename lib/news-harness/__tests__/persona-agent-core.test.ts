@@ -11,6 +11,8 @@ import {
   formatPendingProposal,
   getPersonaToolDefinitions,
   FILTERS_BLOCK_TOKEN_CEILING,
+  KNOWLEDGE_TOOL_NAMES,
+  MERA_EXPLAINER_TOPIC_IDS,
   MAX_FACTS_IN_CONTEXT,
   MAX_FILTERS_IN_CONTEXT,
   PERSONA_INPUT_TOKEN_BUDGET,
@@ -182,7 +184,58 @@ describe('getPersonaToolDefinitions', () => {
     const result = getPersonaToolDefinitions('CONFIG', mockBuildDefs as never);
 
     expect(mockBuildDefs).toHaveBeenCalledWith('CONFIG');
-    expect(result).toEqual([{ type: 'function', function: { name: 'x' } }]);
+    // The builder's own output passes through untouched; the CLOUD-only
+    // knowledge tool is APPENDED here (it is not built by buildToolDefinitions,
+    // so the LOCAL XML prompt block derived from that builder gains no bytes).
+    expect(result[0]).toEqual({ type: 'function', function: { name: 'x' } });
+    expect(result.map((d) => d.function.name)).toEqual(['x', 'explainMera']);
+  });
+
+  // The LOCAL path executes tools but never pushes a role:'tool' message back to
+  // the model, so a knowledge tool there is called and never read.
+  describe('explainMera (knowledge tool)', () => {
+    it('is present on CLOUD, for BOTH surfaces', () => {
+      for (const surface of ['ONBOARDING', 'CONFIG'] as const) {
+        const names = getPersonaToolDefinitions(surface, buildToolDefinitions, 'full', 'CLOUD')
+          .map((d) => d.function.name);
+        expect(names).toContain('explainMera');
+      }
+    });
+
+    it('is absent on LOCAL, for BOTH surfaces', () => {
+      for (const surface of ['ONBOARDING', 'CONFIG'] as const) {
+        const names = getPersonaToolDefinitions(surface, buildToolDefinitions, 'full', 'LOCAL')
+          .map((d) => d.function.name);
+        expect(names).not.toContain('explainMera');
+      }
+    });
+
+    it('defaults to CLOUD when no mode is passed', () => {
+      const names = getPersonaToolDefinitions('ONBOARDING').map((d) => d.function.name);
+      expect(names).toContain('explainMera');
+    });
+
+    it('survives the `off` filter rung — it is not a filter tool', () => {
+      const names = getPersonaToolDefinitions('CONFIG', buildToolDefinitions, 'off', 'CLOUD')
+        .map((d) => d.function.name);
+      expect(names).toContain('explainMera');
+      expect(names).not.toContain('proposeChanges');
+    });
+
+    it('advertises exactly the shipped topic ids', () => {
+      const def = getPersonaToolDefinitions('ONBOARDING')
+        .find((d) => d.function.name === 'explainMera')!;
+      const topics = def.function.parameters.properties.topics as { description: string };
+      for (const id of MERA_EXPLAINER_TOPIC_IDS) {
+        expect(topics.description).toContain(id);
+      }
+      expect(def.function.parameters.required).toEqual(['topics']);
+    });
+
+    it('is a KNOWLEDGE tool — the cloud turn loop keys off this set', () => {
+      expect(KNOWLEDGE_TOOL_NAMES.has('explainMera')).toBe(true);
+      expect(KNOWLEDGE_TOOL_NAMES.has('saveExtractedFacts')).toBe(false);
+    });
   });
 
   it('defaults to the real harness builder, including deleteUserFacts + runCalibration for CONFIG', () => {

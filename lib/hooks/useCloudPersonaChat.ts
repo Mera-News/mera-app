@@ -16,6 +16,7 @@ import { selectHistoryWindow } from '../news-harness/persona-management/history-
 import { normalizeToolName } from '../news-harness/persona-management/tool-names';
 import {
   CLOUD_HISTORY_BUDGET_TOKENS,
+  KNOWLEDGE_TOOL_NAMES,
   MAX_HISTORY_USER_TURNS,
 } from '../news-harness/persona-management/persona-agent-core';
 
@@ -452,22 +453,72 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         await executeToolsAndPushResults(assistantId, first.toolCalls);
       }
 
+      // ---------- Knowledge tools ----------
+      // A knowledge tool (explainMera) returns REFERENCE TEXT that only matters
+      // if the model gets to read it, so it changes two decisions below. Names
+      // are resolved through normalizeToolName against the agent's OWN live
+      // definitions — the same repair every other name comparison in this file
+      // uses, so a model that emits `explain_mera` is still recognised.
+      // NAME only — deliberately blind to `malformed`. The two consumers below
+      // want opposite things from a malformed knowledge call, so the split is
+      // made at the call site rather than baked in here:
+      //
+      //  - extraction: a malformed explainMera is still NOT extraction. Folding
+      //    the malformed check in here would let a truncated knowledge call fall
+      //    through both predicates, flip `extractedSomething` true, and disable
+      //    the very safety net fix (ii) exists to protect — the same silent
+      //    fact loss, reached by the other door. Malformed calls are real:
+      //    finalizeToolCalls keeps them and captureMessage reports them.
+      //  - continuation: a malformed call IS excluded (see below), because it
+      //    never reached the wire and produced no result to read back.
+      const isKnowledgeName = (tc: { name: string }): boolean => {
+        const known = (agentRef.current.getToolDefinitions?.() ?? []).map(
+          (d) => d.function.name,
+        );
+        return KNOWLEDGE_TOOL_NAMES.has(normalizeToolName(tc.name, known) ?? tc.name);
+      };
+
       // Did the turn actually extract anything? Zero tool calls and an EMPTY
       // saveExtractedFacts call both mean no — see isEmptyExtractionCall.
-      const extractedSomething = first.toolCalls.some((tc) => !isEmptyExtractionCall(tc));
-
-      // The user already has their reply, but nothing was extracted: guarantee
-      // extraction in the background without blocking that reply. Runs at most
-      // once — 'required' obliges >=1 call and this branch is never re-entered.
       //
-      // Gated on text being present: with NO text the continuation pass below
-      // is the better instrument, because it gives the user a visible reply AND
-      // another chance to call the tool, where a hidden forced pass would leave
-      // the bubble blank.
-      if (!extractedSomething && first.accContent.trim() !== '') {
-        // Gate (P0): only run when the agent supplies a payload of tools that
-        // are safe to be FORCED. Empty => skip entirely. See
-        // forcedExtractionTools above.
+      // A knowledge call is not extraction either. Left counted, a turn whose
+      // only tool call was explainMera would flip this true and silently skip
+      // the forced-extraction safety net — so the user states a fact while
+      // asking a question about Mera, and the fact is lost. Excluded HERE at the
+      // call site rather than inside isEmptyExtractionCall, whose name and
+      // production-incident docstring are specifically about saveExtractedFacts.
+      const extractedSomething = first.toolCalls.some(
+        (tc) => !isEmptyExtractionCall(tc) && !isKnowledgeName(tc),
+      );
+
+      // Malformed IS excluded here: such a call never reached the wire
+      // (pushAssistantToWire drops it) and was never executed, so no `tool`
+      // result is owed and there is nothing for a continuation to read.
+      const calledKnowledgeTool = first.toolCalls.some(
+        (tc) => !tc.malformed && isKnowledgeName(tc),
+      );
+
+      // ---------- Which passes does this turn owe? ----------
+      //
+      // The continuation pass posts the tool results back so the model can
+      // actually USE them. It fires when the model returned no text (the
+      // original trigger — the bubble would otherwise stay blank) and ALSO
+      // whenever a knowledge tool ran, regardless of text: a knowledge result
+      // that is pushed to the wire and never read means the model answers the
+      // user's question from memory, which is the single failure that tool
+      // exists to prevent. It is NOT solvable by prompting the model to emit
+      // empty text — the CLOUD prompt hard-requires text in every response.
+      const needsContinuation = calledKnowledgeTool || first.accContent.trim() === '';
+
+      // Forced extraction is owed on the original condition, unchanged: the user
+      // already has a reply but nothing was extracted. With no text the
+      // continuation is the better instrument (visible reply AND another chance
+      // at the tool), where a hidden forced pass would leave the bubble blank.
+      const needsForcedExtraction = !extractedSomething && first.accContent.trim() !== '';
+
+      // Gate (P0): only run when the agent supplies a payload of tools that are
+      // safe to be FORCED. Empty => skip entirely. See forcedExtractionTools.
+      const startForcedExtraction = () => {
         const forcedTools = forcedExtractionTools();
         if (forcedTools.length > 0) {
           void runForcedExtraction(assistantId, forcedTools);
@@ -478,28 +529,46 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
               : 'agent supplies no forced-extraction tools',
           });
         }
+      };
+
+      // ---------- Continuation pass ----------
+      // When the model returns tool calls but no conversational text — or ran a
+      // knowledge tool — post the tool results back and let it produce a real
+      // reply in a fresh bubble. Capped at one continuation: if the second turn
+      // also drops text, leave the bubble blank rather than looping, and a
+      // knowledge tool re-called there is a wasted call, not a recursion.
+      //
+      // EXCLUSIVE AND ORDERED with forced extraction. Both branches can now be
+      // owed by the same turn (knowledge call + text + nothing extracted), and
+      // runForcedExtraction is deliberately un-awaited — two streams in flight
+      // at once would interleave pushWireMessage / pushAssistantToWire against
+      // the same store. So the continuation takes precedence, is awaited, and
+      // forced extraction runs only afterwards and only if still warranted.
+      if (needsContinuation) {
+        const followUpId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        logger.debug(`${TAG} sending follow-up turn`, {
+          reason: calledKnowledgeTool ? 'knowledge tool result' : 'no text from LLM',
+          wireMessages: useCloudChatStore.getState().wireMessages.length,
+        });
+        const followUpPlaceholder: ConversationMessage = { id: followUpId, role: 'assistant', content: '' };
+        useCloudChatStore.getState().setMessages((prev) => [...prev, followUpPlaceholder]);
+
+        const second = await streamOne(followUpId, true, 'auto');
+        pushAssistantToWire(second.accContent, second.toolCalls);
+        if (second.toolCalls.length > 0) {
+          await executeToolsAndPushResults(followUpId, second.toolCalls);
+        }
+
+        // "Still warranted": the continuation gets its own shot at the tool, so
+        // an extraction there discharges the debt the first pass left.
+        const secondExtracted = second.toolCalls.some(
+          (tc) => !isEmptyExtractionCall(tc) && !isKnowledgeName(tc),
+        );
+        if (needsForcedExtraction && !secondExtracted) startForcedExtraction();
         return;
       }
 
-      // ---------- Continuation pass ----------
-      // When the model returns tool calls but no conversational text, post the
-      // tool results back and let it produce a real reply in a fresh bubble.
-      // Capped at one continuation — if the second turn also drops text, leave
-      // the bubble blank rather than looping.
-      if (first.accContent.trim() !== '') return;
-
-      const followUpId = `asst-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      logger.debug(`${TAG} no text from LLM, sending follow-up turn`, {
-        wireMessages: useCloudChatStore.getState().wireMessages.length,
-      });
-      const followUpPlaceholder: ConversationMessage = { id: followUpId, role: 'assistant', content: '' };
-      useCloudChatStore.getState().setMessages((prev) => [...prev, followUpPlaceholder]);
-
-      const second = await streamOne(followUpId, true, 'auto');
-      pushAssistantToWire(second.accContent, second.toolCalls);
-      if (second.toolCalls.length > 0) {
-        await executeToolsAndPushResults(followUpId, second.toolCalls);
-      }
+      if (needsForcedExtraction) startForcedExtraction();
     },
     [],
   );

@@ -123,7 +123,12 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
             // `isPostPurchase &&` is load-bearing: the non-purchase branch above
             // hardcodes `confirmed: true`, so `if (confirmed)` alone would toast
             // on every mount and after every customer-center dismissal.
-            if (isPostPurchase) showSubscriptionActivatedToast(billingInfo?.subscriptionTier);
+            if (isPostPurchase) {
+                showSubscriptionActivatedToast(
+                    awaitTierChangeFrom,
+                    billingInfo?.subscriptionTier,
+                );
+            }
         }
         setActivationPending(isPostPurchase && !confirmed);
 
@@ -146,7 +151,10 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                 // `confirmed`, never on `later.billing` — this branch commits
                 // unconfirmed snapshots on purpose.
                 if (later.confirmed) {
-                    showSubscriptionActivatedToast(later.billing?.subscriptionTier);
+                    showSubscriptionActivatedToast(
+                        awaitTierChangeFrom,
+                        later.billing?.subscriptionTier,
+                    );
                 }
                 setActivationPending(false);
             })();

@@ -24,6 +24,7 @@ import {
     logRevenueCatDiagnostics,
 } from "@/lib/revenuecat";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
+import { useUserStore } from "@/lib/stores/user-store";
 import { showSubscriptionActivatedToast } from "@/lib/subscription/activation-toast";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { useRouter } from "expo-router";
@@ -62,7 +63,16 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
-    const userId = session?.user?.id;
+    // Local-first, per lib/security/launch-route.ts. `checkServerSubscribed`
+    // below is the only way off this screen other than Mera News Free, and with
+    // the id read off the session it returned false WITHOUT asking the server
+    // whenever /get-session could not be reached — so Refresh did nothing at
+    // all for a user who had genuinely just paid. The query it makes is
+    // authorised by the auth cookie, not by this object, so the persisted id is
+    // the right key for it; the session remains the fallback for the window
+    // before hydrateFromDb() has run.
+    const localUserId = useUserStore((s) => s.userId);
+    const userId = localUserId ?? session?.user?.id;
 
     // The server is the source of truth: getUserPersona succeeds (200) only once
     // the user's tier has been synced from RevenueCat. A 402/other error means
@@ -94,6 +104,10 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
      * webhook has landed and a single read sees the real tier.
      */
     const leaveForRouterGate = useCallback(async () => {
+        // Captured BEFORE the sync, which overwrites serverTier with the
+        // post-purchase value — read after, the pair would be the same value
+        // twice and the toast's own none→paid check could never fire.
+        const previousTier = useSubscriptionStore.getState().serverTier;
         await syncEntitlement({ force: true });
         // ONE outcome per confirmation, never two. Reaching here means
         // `checkServerSubscribed()` already returned 200 — the same standard as
@@ -103,6 +117,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
         // toast while "your purchase is being confirmed" was still on screen.
         setMessage(null);
         showSubscriptionActivatedToast(
+            previousTier,
             useSubscriptionStore.getState().serverTier,
         );
         router.replace('/logged-in');

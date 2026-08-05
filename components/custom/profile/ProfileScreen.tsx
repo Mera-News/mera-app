@@ -156,7 +156,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     // App-wide: lifts the free-tier state the moment the purchase lands.
                     useSubscriptionStore.getState().setServerBilling(fresh);
                     setActivationPending(false);
-                    showSubscriptionActivatedToast(fresh.subscriptionTier);
+                    showSubscriptionActivatedToast(previousTier, fresh.subscriptionTier);
                     return;
                 }
 
@@ -188,7 +188,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     // App Store plan change never changes the tier at all), and
                     // that snapshot is the PRE-purchase tier.
                     if (later.confirmed) {
-                        showSubscriptionActivatedToast(later.billing?.subscriptionTier);
+                        showSubscriptionActivatedToast(
+                            previousTier,
+                            later.billing?.subscriptionTier,
+                        );
                     }
                     // Cleared whether or not it resolved. A deferred App Store
                     // plan change never changes the tier at all, so an

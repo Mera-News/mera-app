@@ -468,6 +468,7 @@
     "packMissingIosPath": "Settings → General → Language & Region",
     "retry": "Retry",
     "watchGuide": "Watch how to add language to your device",
+    "watchGuideShort": "How to add a language",
     "googleTranslateAlways": "You can read any article in any language with \"Read on Google Translate\" on the article page — that always works, with nothing to download.",
     "onDeviceTranslationHint": "If you'd rather your device did the translating, make sure your language is available in your iOS settings; the video below shows how to enable it.",
     "advanced": "Advanced",
@@ -728,7 +729,7 @@
     "inferenceError": "We're having trouble reaching the Mera inference service right now. Please try again in a moment."
   },
   "personaChat": {
-    "introMessage": "Hi! I'm Mera, your personal news assistant. If you'd like, share anything about yourself: where you live, what you do for work, hobbies you follow, stocks you track, places your family lives. Or just say 'help me set up' and I'll walk you through it."
+    "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."
   },
   "floatingChat": {
     "bubbleHint": "Chat with Mera",
@@ -748,6 +749,8 @@
     "chipShowFactsMessage": "What do you currently know about me?",
     "chipHelpSetup": "Help me set up",
     "chipHelpSetupMessage": "Help me set up my persona",
+    "chipDataHandling": "How is my data handled?",
+    "chipDataHandlingMessage": "How does Mera handle my data?",
     "thinking": "Thinking…",
     "newChat": "New chat",
     "inputPlaceholder": "Type a message...",
@@ -1345,6 +1348,17 @@
     "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
     "chatBubble": "Everything I know about you stays right here on this device. An active plan switches me back on, so we can talk and I can tune your feed again.",
     "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
+    "meraLines": {
+      "exploreOpen": "Explore is open to you — today's headlines, whenever you want them.",
+      "cannotRead": "What I can't do right now is read the news for you.",
+      "savedStay": "The articles you saved are still saved. Nothing of yours goes away.",
+      "cannotProfile": "I can't help you build out your profile either.",
+      "followedKeep": "The stories you follow keep everything they've already collected.",
+      "cannotAnswer": "And if you have a question for me, I can't answer it yet.",
+      "deviceIsYours": "Everything I know about you stays right here on this device.",
+      "cannotTrack": "I can't start following anything new for you at the moment.",
+      "planSwitchesMeOn": "A plan is what switches me back on."
+    },
     "trackedStoriesEmptyBody": "Nothing followed yet. Following a story comes with a plan — and whatever you follow later stays on this device, yours to keep.",
     "lapseTitle": "Your Mera plan has ended",
     "lapseBody": "Nothing has been taken away. Your saved articles, tracked stories, and reading history are yours, on this device, always. You're on Mera News Free from here: what pauses is the AI layer itself — your personalized feed, dashboard, new story tracking, and Mera chat.",

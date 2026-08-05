@@ -73,7 +73,9 @@ describe('presentFreeTierPaywall', () => {
 
         expect(mockSetServerBilling).toHaveBeenCalledWith(billing('starter'));
         expect(mockShowToast).toHaveBeenCalledTimes(1);
-        expect(mockShowToast).toHaveBeenCalledWith('starter');
+        // The pair, not just the new tier: 'none' (the store's pre-purchase
+        // serverTier) -> 'starter' is the transition being announced.
+        expect(mockShowToast).toHaveBeenCalledWith('none', 'starter');
     });
 
     it('does NOT toast on confirmed:false — that snapshot is the PRE-purchase tier', async () => {

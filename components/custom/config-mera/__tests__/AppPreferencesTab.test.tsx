@@ -20,6 +20,15 @@ jest.mock('@/lib/auth-client', () => ({
     clearAuthStorage: () => mockClearAuthStorage(),
 }));
 
+// The tab now reads the signed-in email from the LOCAL store rather than the
+// server session. Mocked as a selector because the real module pulls in
+// account-service → apollo-client → WatermelonDB's native SQLite adapter, which
+// cannot initialize under Jest.
+jest.mock('@/lib/stores/user-store', () => ({
+    useUserStore: (selector: (s: { userId: string | null; userEmail: string | null }) => unknown) =>
+        selector({ userId: 'u1', userEmail: 'someone@example.com' }),
+}));
+
 const mockSetLockEnabled = jest.fn(async (_v: boolean) => { calls.push('setLockEnabled'); });
 jest.mock('@/lib/stores/pin-store', () => ({
     usePinStore: { getState: () => ({ setLockEnabled: (v: boolean) => mockSetLockEnabled(v) }) },
@@ -231,5 +240,19 @@ describe('Settings → Logout', () => {
         expect(mockDeleteSetting).not.toHaveBeenCalled();
         expect(mockWipeAll).not.toHaveBeenCalled();
         expect(mockReplace).not.toHaveBeenCalled();
+    });
+});
+
+describe('Settings → signed-in email', () => {
+    // Regression guard for a reported bug: the email row read
+    // `session?.user?.email`, so any window where better-auth could not produce
+    // a session blanked it — and a still-signed-in user read that as "I have
+    // been logged out". The auth-client mock above returns `data: null` for
+    // useSession, so EVERY render in this file is that offline case.
+    it('renders the masked email from the local store while the server session is unavailable', () => {
+        const { getByText } = render(<AppPreferencesTab />);
+        // 't' is mocked to the key, so the interpolated email is not in the
+        // output — assert the row exists at all, which is what vanished.
+        expect(getByText('preferences.user')).toBeTruthy();
     });
 });

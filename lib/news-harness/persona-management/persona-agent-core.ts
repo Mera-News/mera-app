@@ -634,18 +634,105 @@ const FILTER_TOOL_NAMES: ReadonlySet<string> = new Set([
   'cancelProposal',
 ]);
 
+// ---------------------------------------------------------------------------
+// explainMera — the KNOWLEDGE tool (CLOUD only)
+// ---------------------------------------------------------------------------
+
+/**
+ * The section ids `explainMera` can return.
+ *
+ * Declared HERE, next to the tool definition, because they are part of the
+ * tool's contract: the model reads them out of the tool description and the
+ * handler validates against them. The prose itself lives in
+ * `lib/chat-tools/mera-explainer-content.ts`, which types its record as
+ * `Record<MeraExplainerTopicId, string>` — so a section added there without an
+ * id here (or an id here with no section) is a compile error, and this file
+ * still costs nothing at startup beyond the string array.
+ */
+export const MERA_EXPLAINER_TOPIC_IDS = [
+  'what_is_mera',
+  'privacy_what_leaves_device',
+  'privacy_what_we_store',
+  'encryption_and_inference',
+  'how_news_works',
+  'source_available',
+  'plans_and_limits',
+  'known_gaps',
+] as const;
+
+export type MeraExplainerTopicId = (typeof MERA_EXPLAINER_TOPIC_IDS)[number];
+
+/**
+ * Tools that return REFERENCE TEXT for the model to answer from, and change
+ * nothing.
+ *
+ * Two turn-loop rules in useCloudPersonaChat key off this set, and both exist
+ * because a knowledge tool is the first persona tool whose RESULT is the point:
+ *
+ *  1. A turn that called one must run the continuation pass even though it
+ *     produced text, or the tool result is pushed to the wire and never read —
+ *     the model would answer from memory, which is the exact failure the tool
+ *     exists to prevent.
+ *  2. Calling one is NOT extraction. Left uncounted, a bare `explainMera` call
+ *     would flip `extractedSomething` true and silently disable the
+ *     forced-extraction safety net for that turn.
+ */
+export const KNOWLEDGE_TOOL_NAMES: ReadonlySet<string> = new Set(['explainMera']);
+
+/**
+ * CLOUD ONLY, and that is structural rather than a preference.
+ *
+ * The LOCAL path (lib/llm/useLocalLLM.ts) executes tool calls but never pushes a
+ * `role:'tool'` message back to the model — the local turn is one-shot. A
+ * knowledge tool the model calls but whose answer it can never read is strictly
+ * worse than no tool at all: it spends output tokens and returns nothing.
+ *
+ * Appended at THIS seam rather than inside `buildToolDefinitions` for a second
+ * reason: `buildToolFormatSection` derives the LOCAL XML tool block straight
+ * from that builder, and the LOCAL path has a hard 3072-token input budget that
+ * errors the turn when exceeded. Adding the tool here means the LOCAL prompt
+ * gains exactly zero bytes, by construction.
+ */
+const EXPLAIN_MERA_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'explainMera',
+    description:
+      'Answer a user question about Mera itself — privacy, what data leaves the device, encryption, how news is found, the licence, plans, or known limitations. Returns Mera\'s own reference documentation. ALWAYS call this before answering such a question; never answer from memory.',
+    parameters: {
+      type: 'object',
+      properties: {
+        topics: {
+          type: 'array',
+          description: `1-3 of: ${MERA_EXPLAINER_TOPIC_IDS.join(', ')}`,
+          items: { type: 'string' },
+        },
+      },
+      required: ['topics'],
+    },
+  },
+};
+
 /** Tool definitions for the persona-update agent (OpenAI JSON Schema, cloud).
  *
  *  `filterTools` is applied by FILTERING the builder's output rather than by
  *  passing a second argument to `buildDefs` — that keeps the injected-seam call
  *  exactly `buildDefs(surface)`, which the frozen PersonaUpdateAgent.test.ts
- *  asserts on with an exact-arity toHaveBeenCalledWith. */
+ *  asserts on with an exact-arity toHaveBeenCalledWith.
+ *
+ *  `mode` is applied the same way, and for the same reason: `explainMera` is
+ *  APPENDED to the builder's output rather than built by it. Defaults to
+ *  'CLOUD' — the one production caller passes it explicitly, and tests that
+ *  predate the parameter keep observing the cloud payload. */
 export function getPersonaToolDefinitions(
   surface: PersonaSurface,
   buildDefs: BuildToolDefinitionsFn = buildToolDefinitions,
   filterTools: FilterToolsVariant = 'full',
+  mode: PersonaMode = 'CLOUD',
 ): ToolDefinition[] {
-  const defs = buildDefs(surface).map(withStagedCalibrationDescription);
+  const built = buildDefs(surface).map(withStagedCalibrationDescription);
+  // Both surfaces: "how do you handle my data?" gets asked in settings chat too.
+  const defs = mode === 'CLOUD' ? [...built, EXPLAIN_MERA_TOOL] : built;
   if (filterTools !== 'off') return defs;
   return defs.filter((d) => !FILTER_TOOL_NAMES.has(d.function.name));
 }

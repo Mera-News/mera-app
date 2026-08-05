@@ -24,6 +24,7 @@ import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useFeedbackStore, useFeedbackVisible } from '@/lib/stores/feedback-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { useUserStore } from '@/lib/stores/user-store';
 
 // Diagnostic context attached to each feedback submission. captureFeedback
 // applies the current scope's contexts/tags, and beforeSend (lib/sentry-init.ts)
@@ -95,9 +96,18 @@ const FeedbackWidgetModal: React.FC = () => {
     const visible = useFeedbackVisible();
     const hide = useFeedbackStore((s) => s.hide);
 
+    // Local-first, same rule as Settings (config-mera/AppPreferencesTab) and the
+    // launch gate. A bug report is most likely to be filed when something is
+    // wrong — which is exactly when /get-session is least likely to answer — and
+    // reading identity off the session meant those reports arrived with no
+    // Sentry user id and an empty email box, the ones we can least afford to
+    // lose. The persisted values survive a session we cannot reach; the session
+    // stays as the fallback for installs that pre-date the cached_user_email row.
     const { data: session } = authClient.useSession();
-    const userId = session?.user?.id;
-    const userEmail = session?.user?.email;
+    const localUserId = useUserStore((s) => s.userId);
+    const localUserEmail = useUserStore((s) => s.userEmail);
+    const userId = localUserId ?? session?.user?.id;
+    const userEmail = localUserEmail ?? session?.user?.email;
 
     // On open, set the feedback identifier (user id) + diagnostic metadata so it's
     // on the scope before the user submits. See attachFeedbackMetadata for why

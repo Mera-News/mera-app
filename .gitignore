@@ -95,3 +95,9 @@ qa/*raw*.json
 # QA scratch dumps (snapshot greps, card-id lists). Only S0-BASELINE-v45.json,
 # the one-shot pre-migration baseline, is tracked under qa/.
 qa/*.txt
+
+
+*.storekit
+
+# Simulator-harness screenshot dump — QA artifacts, not app assets.
+harness/out/

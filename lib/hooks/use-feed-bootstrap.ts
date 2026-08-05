@@ -15,7 +15,9 @@
 // DOUBLE-MOUNT SAFE: the persona fetch is guarded by a MODULE-LEVEL in-flight
 // key (the two feed tabs stay mounted simultaneously under NativeTabs, so both
 // call this hook). Only one fetch runs per user id; a different user id (re-login)
-// is allowed through once the first settles.
+// is allowed through once the first settles. The key is the LOCAL id, which is
+// stable across session flaps — the session id used to drop to undefined and
+// back, re-keying the guard mid-flight.
 
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +42,15 @@ export interface FeedBootstrapState {
 export function useFeedBootstrap(): FeedBootstrapState {
   const { t } = useTranslation();
   const { data: session } = authClient.useSession();
+  // Identity is a LOCAL fact (lib/security/launch-route.ts). Keying the
+  // bootstrap on the SERVER session meant a session we could not fetch —
+  // offline, a keychain-locked background wake, a 401 blip — skipped the
+  // bootstrap entirely, so `hasGeneratedTopics` was never derived and the feed
+  // sat on its "Mera cannot analyze news for you" empty state for a
+  // perfectly signed-in user. The persona request itself is authorised by the
+  // auth COOKIE, not by this object, and Apollo soft-fails a 401 by design, so
+  // the local id is a safe key for a server fetch too.
+  const localUserId = useUserStore((s) => s.userId);
   const { fetchUserPersonaOrThrow } = useUserStore();
   const isFocused = useIsFocused();
   // Reactive subscription: a persisted-false flag (e.g. from a prior transient
@@ -66,7 +77,7 @@ export function useFeedBootstrap(): FeedBootstrapState {
   // and rate-bounded by the user-store's 5-min cache + in-flight dedupe so
   // this does not hammer the server on every focus.
   useEffect(() => {
-    const userId = session?.user?.id;
+    const userId = localUserId ?? session?.user?.id;
     if (!userId) return;
     if (!isFocused) return;
     const suggestionsEmpty = useForYouStore.getState().suggestions.length === 0;
@@ -118,7 +129,7 @@ export function useFeedBootstrap(): FeedBootstrapState {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id, isFocused, hasGeneratedTopics]);
+  }, [localUserId, session?.user?.id, isFocused, hasGeneratedTopics]);
 
   return { isLoading, errorMessage };
 }

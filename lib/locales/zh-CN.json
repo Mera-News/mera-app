@@ -598,7 +598,7 @@
     "inferenceError": "我们目前无法连接到 Mera 推理服务，请稍后重试。"
   },
   "personaChat": {
-    "introMessage": "你好！我是 Mera，你的个人新闻助手。如果你愿意，随便告诉我一些关于你的事——住在哪里、做什么工作、有什么爱好、关注哪些股票、家人住哪里。或者直接说「帮我设置一下」，我会一步步带你走。"
+    "introMessage": "你好！我是 Mera，你的个人新闻助手。\n\n为了找到真正对你重要的新闻，我需要了解一些关于你的情况。你住在哪里、做什么工作、关注的兴趣是什么、追踪哪些股票、家人住在哪里。随你愿意分享多少。\n\n如果这让你有些顾虑，那是很好的本能。把个人数据交给做应用的公司并不明智。Mera 的构建方式不同：你告诉我的一切都保存在你的设备上，而不是在我们的服务器上。问我它如何工作，或者说「帮我设置一下」，我们就开始吧。"
   },
   "floatingChat": {
     "bubbleHint": "与 Mera 聊天",
@@ -618,6 +618,8 @@
     "chipShowFactsMessage": "你现在对我了解多少？",
     "chipHelpSetup": "帮我设置",
     "chipHelpSetupMessage": "帮我设置我的档案",
+    "chipDataHandlingMessage": "Mera 如何处理我的数据？",
+    "chipDataHandling": "我的数据如何处理？",
     "thinking": "思考中…",
     "newChat": "新对话",
     "inputPlaceholder": "输入消息...",
