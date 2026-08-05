@@ -7,9 +7,9 @@ import { Heading } from "@/components/ui/heading";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
-import { AccountService } from "@/lib/account-service";
 import { authClient } from "@/lib/auth-client";
 import { SUPPORT_EMAIL } from "@/lib/config/branding";
+import { fetchUserBilling } from "@/lib/billing-service";
 import { setSetting } from "@/lib/database/services/setting-service";
 // From the leaf module, NOT from FirstOpenPaywallGate: that component pulls in
 // LapseInterstitialGate → billing-service → apollo-client → the WatermelonDB
@@ -74,17 +74,33 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
     const localUserId = useUserStore((s) => s.userId);
     const userId = localUserId ?? session?.user?.id;
 
-    // The server is the source of truth: getUserPersona succeeds (200) only once
-    // the user's tier has been synced from RevenueCat. A 402/other error means
-    // "not subscribed yet".
+    // The server is the source of truth — but it has to be ASKED ABOUT BILLING.
+    //
+    // This used to call `getUserPersona()` and return true whenever it did not
+    // throw, on the theory that the query 402s until the tier syncs. It does
+    // not: `userPersonaByUserId` carries NO SubscriptionGuard server-side and is
+    // declared `nullable: true`, so it answers 200 for everyone, and
+    // `AccountService.getUserPersona` returns `null` rather than throwing when
+    // no persona exists. So this predicate was true for EVERY caller, including
+    // a brand-new user who had just paid and whose webhook had not landed yet.
+    //
+    // That is what made a successful purchase bounce straight back to this
+    // screen. The sequence: poll says "subscribed" on its first tick →
+    // `leaveForRouterGate()` → `/logged-in` → the pre-onboarding gate re-reads
+    // `aiAccess`, still `'locked'` because the tier genuinely had not arrived →
+    // `decideOnboardingEntry` returns `'paywall'` → back here. `leaveForRouterGate`
+    // even documents that exact loop and calls `syncEntitlement` to prevent it,
+    // but no sync can invent a tier the server has not written yet. The bug was
+    // never the sync; it was leaving too early on a predicate that never said no.
+    //
+    // Reading `userBilling` directly is the honest question, and it is the same
+    // fact `deriveAiAccess` keys on, so "we may leave" and "the gate will let us
+    // through" can no longer disagree. `fetchUserBilling` returns null (never
+    // throws) on a failed read, which correctly reads as "not yet".
     const checkServerSubscribed = useCallback(async (): Promise<boolean> => {
         if (!userId) return false;
-        try {
-            await AccountService.getUserPersona(userId);
-            return true;
-        } catch {
-            return false;
-        }
+        const billing = await fetchUserBilling();
+        return billing != null && billing.subscriptionTier !== 'none';
     }, [userId]);
 
     /**
@@ -125,8 +141,18 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
 
     // After a purchase, the RevenueCat webhook updates the server tier
     // asynchronously — poll a few times before falling back to a manual refresh.
+    // This budget only started mattering when `checkServerSubscribed` was fixed:
+    // while that predicate was unconditionally true, the loop always returned on
+    // its FIRST tick and the remaining attempts were dead code. Now the loop
+    // genuinely waits for the webhook, so the budget is the difference between
+    // landing in onboarding and landing on "your purchase is being confirmed".
+    //
+    // Sized to match `refreshUserBillingAfterPurchase`'s ~25s envelope rather
+    // than the 12s this had, and for the same reason billing-service documents:
+    // the server makes its own outbound REST call back to RevenueCat before it
+    // writes Mongo, on top of RevenueCat's dispatch delay.
     const pollUntilSubscribed = useCallback(async (): Promise<boolean> => {
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 12; i++) {
             if (await checkServerSubscribed()) {
                 await leaveForRouterGate();
                 return true;

@@ -67,10 +67,6 @@ jest.mock('@/lib/stores/user-store', () => ({
     },
 }));
 
-const mockGetUserPersona = jest.fn(async () => ({}));
-jest.mock('@/lib/account-service', () => ({
-    AccountService: { getUserPersona: (...a: any[]) => mockGetUserPersona(...(a as [])) },
-}));
 
 // RevenueCat's configured-ness is togglable per test: the exit-path tests leave
 // it off, and the "no auto-present" test turns it ON — which is the only state
@@ -102,8 +98,10 @@ jest.mock('@/lib/stores/subscription-store', () => ({
 jest.mock('@/lib/database/services/setting-service', () => ({ setSetting: jest.fn(async () => {}) }));
 
 const mockRefreshAfterPurchase = jest.fn();
+const mockFetchUserBilling = jest.fn();
 jest.mock('@/lib/billing-service', () => ({
     refreshUserBillingAfterPurchase: (...a: any[]) => mockRefreshAfterPurchase(...(a as [])),
+    fetchUserBilling: (...a: any[]) => mockFetchUserBilling(...(a as [])),
 }));
 
 const mockShowActivatedToast = jest.fn();
@@ -127,7 +125,8 @@ beforeEach(() => {
     mockRcState.configured = false;
     mockPresentPaywall.mockResolvedValue('CANCELLED');
     mockReplace.mockImplementation((...a: any[]) => { order.push(`replace:${a[0]}`); });
-    mockGetUserPersona.mockResolvedValue({});
+    // Default: the webhook HAS landed and the server reports a paid tier.
+    mockFetchUserBilling.mockResolvedValue({ subscriptionTier: 'starter' });
     mockRefreshAfterPurchase.mockResolvedValue({ billing: null, confirmed: false });
 });
 
@@ -202,12 +201,35 @@ describe('leaving the paywall for /logged-in', () => {
             for (let i = 0; i < 8; i++) await Promise.resolve();
         });
 
-        expect(mockGetUserPersona).toHaveBeenCalledWith('u1');
+        expect(mockFetchUserBilling).toHaveBeenCalled();
         expect(mockReplace).toHaveBeenCalledWith('/logged-in');
     });
 
     it('does not sync or leave while the server still refuses', async () => {
-        mockGetUserPersona.mockRejectedValue(new Error('402'));
+        mockFetchUserBilling.mockResolvedValue(null);
+        const { getByText } = render(<NotSubscribedScreen />);
+
+        await act(async () => {
+            fireEvent.press(getByText('account.refresh'));
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(mockSyncEntitlement).not.toHaveBeenCalled();
+        expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    // THE REGRESSION. `checkServerSubscribed` used to call `getUserPersona()`
+    // and return true whenever it did not throw — but `userPersonaByUserId`
+    // carries no SubscriptionGuard, is `nullable: true`, and the client returns
+    // `null` instead of throwing when no persona exists. So the predicate was
+    // true for everyone, including a brand-new user whose webhook had not landed.
+    //
+    // The screen therefore left immediately, /logged-in re-read `aiAccess`, saw
+    // a still-'locked' tier, and routed straight back here: purchase → paywall,
+    // observed on a real device. Leaving must require a PAID TIER, not merely a
+    // reachable server.
+    it('does not leave on a reachable server that still reports no tier', async () => {
+        mockFetchUserBilling.mockResolvedValue({ subscriptionTier: 'none' });
         const { getByText } = render(<NotSubscribedScreen />);
 
         await act(async () => {
