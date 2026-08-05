@@ -8,6 +8,8 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
+import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
+import { deleteSetting } from '@/lib/database/services/setting-service';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
@@ -67,13 +69,80 @@ const AppPreferencesTab: React.FC = () => {
 
             await authClient.signOut();
             await clearAuthStorage();
-            // Explicit logout clears the local PIN and the opt-in flag with it
-            // — the next user on this device starts with the lock off, and
-            // must turn it on themselves to get one.
-            await usePinStore.getState().setLockEnabled(false);
+            // ── PAST THIS LINE NOTHING MAY THROW ──────────────────────────
+            // clearAuthStorage() has already deleted the cookie, so the device
+            // is half-signed-out. Every remaining step is individually guarded
+            // so the flow ALWAYS reaches wipeAllLocalUserData() — that wipe is
+            // what drops the settings table and makes the state self-healing.
+            // Bailing out in the middle would strand the device with no
+            // credentials but a live `cached_user_id`, which reads as
+            // 'present' to the launch gate: the orphan purge would never fire,
+            // and the previous user's data would keep being served offline
+            // forever. That is the original bug, so it must be unreachable.
 
-            router.dismissAll();
-            router.replace('/');
+            // Explicit logout clears the local PIN and the opt-in flag with it
+            // — the next user on this device starts with the lock off, and must
+            // turn it on themselves to get one. Kept ahead of the wipe rather
+            // than folded into it: this is the path that runs while the user is
+            // watching, and setLockEnabled() also drops the in-memory lock state
+            // the tab shell is still rendering against. Non-fatal: it persists
+            // to the keychain and THROWS on a write failure, and the wipe below
+            // deletes the same three keys anyway.
+            try {
+                await usePinStore.getState().setLockEnabled(false);
+            } catch {
+                // Covered by wipeAllLocalUserData().
+            }
+
+            // Drop the local identity sentinel BEFORE navigating rather than
+            // leaving it to the wipe below. `cached_user_id` is what
+            // hasLocalIdentity() reads, and app/logged-in/index.tsx re-WRITES
+            // it via setUserId() — so any gate that runs while the row still
+            // exists routes back into the app AND re-poisons the identity we
+            // are clearing. Deleting one settings row unmounts nothing (no
+            // screen renders from it), so the "navigate before the wipe"
+            // ordering below is preserved.
+            //
+            // NOTE: only an *explicit* logout does this. A dead server session
+            // must keep its local identity — that asymmetry is the whole point
+            // of the offline-first gate in lib/security/launch-route.ts.
+            //
+            // Non-fatal for the reason above: deleteSetting rethrows anything
+            // that isn't a benign "deleted record" race, and the wipe drops the
+            // whole settings table regardless.
+            try {
+                await deleteSetting('cached_user_id');
+            } catch {
+                // Covered by wipeAllLocalUserData().
+            }
+
+            // dismissAll() pops a stack back to its first screen. Logout is
+            // reached from the Settings TAB, which has nothing pushed above it,
+            // so there the call is a no-op whose only effect is the
+            // "POP_TO_TOP was not handled by any navigator" warning. Guarded
+            // rather than deleted: the same tab pushes preference screens, and
+            // a logout reached from one of those still needs the pop.
+            if (router.canDismiss()) router.dismissAll();
+
+            // Straight to /login, NOT '/'. The launch gate (app/index.tsx)
+            // counts a live useSession() as identity, and better-auth does not
+            // clear that atom synchronously on signOut(): it toggles
+            // $sessionSignal on a 10ms timer and only nulls `data` once
+            // /get-session round-trips. Routing through '/' inside that window
+            // sends the just-signed-out user straight back in. `signedOut: '1'`
+            // suppresses login.tsx's mirror-image session shortcut for the same
+            // window (it releases itself once the session actually clears).
+            router.replace({ pathname: '/login', params: { signedOut: '1' } });
+
+            // Yield a tick so the screens above unmount before their data
+            // disappears underneath them, then erase EVERYTHING local —
+            // keychain secrets (incl. the E2EE pipeline key), the legacy
+            // AsyncStorage key, RevenueCat identity, the PIN state and the whole
+            // WatermelonDB + Zustand layer. Logout leaves nothing to serve, so
+            // there is no offline mode afterwards. Same navigate-then-wipe shape
+            // as handleDeleteAccount in ManageDataScreen.tsx.
+            await new Promise((resolve) => setTimeout(resolve, 0));
+            await wipeAllLocalUserData();
 
             toast.show({
                 placement: 'top',

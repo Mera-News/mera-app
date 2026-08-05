@@ -1,7 +1,8 @@
 import { Box } from "@/components/ui/box";
 import MeraLogo from "@/components/custom/MeraLogo";
 import { authClient } from "@/lib/auth-client";
-import { hasLocalIdentity, resolveLaunchRoute, type LaunchRoute } from "@/lib/security/launch-route";
+import { readLocalIdentityState, resolveLaunchRoute, type LaunchRoute } from "@/lib/security/launch-route";
+import { purgeOrphanedLocalData } from "@/lib/security/local-wipe";
 import { usePinStore } from "@/lib/stores/pin-store";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
@@ -24,10 +25,27 @@ export default function Index() {
         await pin.init();
       }
 
-      let hasIdentity = await hasLocalIdentity();
+      const identityState = await readLocalIdentityState();
+      let hasIdentity = identityState === 'present';
       // Enhancement: a live session with no persisted identity yet (very first
       // launch after login before /logged-in ran) still counts as identified.
       if (!hasIdentity && session?.user?.id) hasIdentity = true;
+
+      // Offline mode is served IFF the credentials are still here. They are
+      // provably gone, so anything still on disk is the previous user's data
+      // left by a logout that died between clearing the credentials and
+      // clearing the data — finish it before any screen can read it.
+      //
+      // 'absent' ONLY, never 'unknown': an unreadable keychain (cold start
+      // before first unlock) must not be mistaken for a signed-out device, or
+      // a transient failure would destroy a logged-in user's library.
+      //
+      // Safe to call on every pass — purgeOrphanedLocalData() latches itself to
+      // once per process, which matters because this effect keys on `session`
+      // and that changes at least twice on a cold start.
+      if (!hasIdentity && identityState === 'absent') {
+        await purgeOrphanedLocalData();
+      }
 
       const { pinSet, lockEnabled, locked } = usePinStore.getState();
       const target = resolveLaunchRoute({ hasIdentity, lockEnabled, pinSet, locked });

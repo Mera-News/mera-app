@@ -594,7 +594,7 @@
     "deleteAccount": "Delete Account",
     "logout": "Log Out",
     "signOutModalTitle": "Sign Out",
-    "signOutConfirm": "Are you sure you want to sign out of your account?",
+    "signOutConfirm": "Signing out erases everything stored on this device — your saved articles, reading history, tracked stories and personalization. You'll need to sign in again to use Mera.",
     "signingOut": "Signing Out...",
     "signOut": "Sign Out",
     "deleteAccountConfirm": "Are you sure you want to permanently delete your account?",

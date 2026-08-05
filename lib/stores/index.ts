@@ -69,6 +69,7 @@ export const clearAllStores = async () => {
     const { useCloudChatStore } = require('./cloud-chat-store');
     const { useSubscriptionStore } = require('./subscription-store');
     const { useFeedOrderStore } = require('./feed-order-store');
+    const { useImportanceFilterStore } = require('./importance-filter-store');
     const { clearAttestationCache } = require('../e2ee/e2ee-cache');
 
     // Wipe all WatermelonDB data (drops and recreates all tables)
@@ -89,6 +90,7 @@ export const clearAllStores = async () => {
     useCloudChatStore.getState().reset();
     useSubscriptionStore.getState().reset();
     useFeedOrderStore.getState().reset();
+    useImportanceFilterStore.getState().reset();
     clearAttestationCache();
 };
 
