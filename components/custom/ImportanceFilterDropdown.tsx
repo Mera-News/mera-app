@@ -1,22 +1,14 @@
-import { ChevronDownIcon } from '@/components/ui/icon';
-import {
-    Select,
-    SelectBackdrop,
-    SelectContent,
-    SelectDragIndicator,
-    SelectDragIndicatorWrapper,
-    SelectIcon,
-    SelectInput,
-    SelectItem,
-    SelectPortal,
-    SelectTrigger,
-} from '@/components/ui/select';
+import { CheckIcon, ChevronDownIcon, Icon } from '@/components/ui/icon';
+import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
+import { Pressable } from '@/components/ui/pressable';
+import { Text } from '@/components/ui/text';
 import {
     IMPORTANCE_THRESHOLDS,
     type ImportanceThreshold,
 } from '@/lib/feed-ordering/importance-filter';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 
 // Same label keys as RelevanceChip, for the same reason: the control and the
 // worded chip on each card must never disagree.
@@ -35,11 +27,11 @@ interface ImportanceFilterDropdownProps {
 }
 
 /**
- * The importance-threshold control as a compact dropdown: a rounded gluestack
- * Select whose trigger chip shows the current minimum band (`Med ⌄`) and opens
- * the standard select actionsheet. Compact enough to sit inside a screen-title
- * row even in the longer languages — one chip where a spelled-out pill row
- * would overrun it. Used by both the Feed and Dashboard headers.
+ * The importance-threshold control: a rounded chip (`Med ⌄`) that opens a
+ * FLOATING menu anchored to it — gluestack Menu, not Select, by explicit user
+ * choice: Select's native presentation is a bottom actionsheet, and the wanted
+ * look is the web-style anchored dropdown. The chip itself keeps the Select
+ * rounded-md trigger dimensions. Used by both the Feed and Dashboard headers.
  */
 const ImportanceFilterDropdown: React.FC<ImportanceFilterDropdownProps> = ({
     value,
@@ -49,42 +41,57 @@ const ImportanceFilterDropdown: React.FC<ImportanceFilterDropdownProps> = ({
     const { t } = useTranslation();
 
     return (
-        <Select
-            // Remount on external value/locale changes: the Select tracks its
-            // displayed label in internal state that only item presses update,
-            // so `initialLabel` alone would go stale.
-            key={`${value}-${t(LABEL_KEYS[value] as any)}`}
-            selectedValue={value}
-            initialLabel={t(LABEL_KEYS[value] as any)}
-            onValueChange={(v) => onChange(v as ImportanceThreshold)}
-            accessibilityLabel={t('importanceFilter.a11yLabel')}
+        <Menu
+            placement="bottom left"
+            offset={6}
+            closeOnSelect
+            // Selection rides on each MenuItem's own `onPress` (composed into
+            // the item Pressable by the creator), NOT the aria selection layer:
+            // both selectionMode/onSelectionChange and onAction never fired on
+            // native here (sim-verified) — only the plain Pressable press does.
+            trigger={(triggerProps) => (
+                <Pressable
+                    {...triggerProps}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('importanceFilter.a11yLabel')}
+                    accessibilityValue={{ text: t(LABEL_KEYS[value] as any) }}
+                    testID={`${testIDPrefix}-trigger`}
+                    // The Select rounded/md trigger's dimensions, hand-carried:
+                    // min-h-10, rounded-full, px-4, text-base.
+                    className="flex-row items-center rounded-full border border-primary-500 min-h-10 px-4"
+                >
+                    <Text size="md" numberOfLines={1} className="text-primary-500 font-semibold">
+                        {t(LABEL_KEYS[value] as any)}
+                    </Text>
+                    <Icon as={ChevronDownIcon} size="sm" className="ml-1.5 text-primary-400" />
+                </Pressable>
+            )}
         >
-            <SelectTrigger
-                variant="rounded"
-                size="md"
-                className="border-primary-500"
-                testID={`${testIDPrefix}-trigger`}
-            >
-                <SelectInput className="text-primary-500 font-semibold" />
-                <SelectIcon className="mr-3 text-primary-400" as={ChevronDownIcon} />
-            </SelectTrigger>
-            <SelectPortal>
-                <SelectBackdrop />
-                <SelectContent>
-                    <SelectDragIndicatorWrapper>
-                        <SelectDragIndicator />
-                    </SelectDragIndicatorWrapper>
-                    {IMPORTANCE_THRESHOLDS.map((threshold) => (
-                        <SelectItem
-                            key={threshold}
-                            value={threshold}
-                            label={t(LABEL_KEYS[threshold] as any)}
-                            testID={`${testIDPrefix}-${threshold}`}
-                        />
-                    ))}
-                </SelectContent>
-            </SelectPortal>
-        </Select>
+            {IMPORTANCE_THRESHOLDS.map((threshold) => {
+                const selected = threshold === value;
+                return (
+                    <MenuItem
+                        key={threshold}
+                        textValue={t(LABEL_KEYS[threshold] as any)}
+                        testID={`${testIDPrefix}-${threshold}`}
+                        onPress={() => onChange(threshold)}
+                    >
+                        <MenuItemLabel
+                            size="sm"
+                            className={selected ? 'text-primary-400 font-semibold' : ''}
+                        >
+                            {t(LABEL_KEYS[threshold] as any)}
+                        </MenuItemLabel>
+                        {/* Fixed-width slot so labels align checked or not */}
+                        <View style={{ width: 24, alignItems: 'flex-end' }}>
+                            {selected && (
+                                <Icon as={CheckIcon} size="sm" className="text-primary-400" />
+                            )}
+                        </View>
+                    </MenuItem>
+                );
+            })}
+        </Menu>
     );
 };
 
