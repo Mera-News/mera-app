@@ -21,6 +21,9 @@ const mockGetScoredWithoutReasons = jest.fn();
 const mockSaveScoringResult = jest.fn();
 const mockSaveReason = jest.fn();
 const mockBatchMarkReasonSkipped = jest.fn();
+// Terminal `excluded` write — hard "not interested" filters AND the top-headline
+// cull both land here.
+const mockBatchMarkExcluded = jest.fn();
 const mockBatchSaveMathScores = jest.fn();
 const mockGetComputedComponentsByIds = jest.fn((..._args: any[]) => Promise.resolve(new Map()));
 // P4b: stage-row lookup behind the headline/standard enqueue partition.
@@ -152,6 +155,7 @@ jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   saveScoringResult: (...args: any[]) => mockSaveScoringResult(...args),
   saveReason: (...args: any[]) => mockSaveReason(...args),
   batchMarkReasonSkipped: (...args: any[]) => mockBatchMarkReasonSkipped(...args),
+  batchMarkExcluded: (...args: any[]) => mockBatchMarkExcluded(...args),
   batchSaveMathScores: (...args: any[]) => mockBatchSaveMathScores(...args),
   getComputedComponentsByIds: (...args: any[]) => mockGetComputedComponentsByIds(...args),
   getStageRowsByIds: (...args: any[]) => mockGetStageRowsByIds(...args),
@@ -361,6 +365,7 @@ beforeEach(() => {
   mockSaveScoringResult.mockResolvedValue(undefined);
   mockSaveReason.mockResolvedValue(undefined);
   mockBatchMarkReasonSkipped.mockResolvedValue(undefined);
+  mockBatchMarkExcluded.mockResolvedValue(undefined);
   mockBucketScores.mockImplementation(() => undefined); // no-op: raw == bucketed
   mockEffectiveHarnessConfig.mockResolvedValue(undefined); // → DEFAULT (v2 off)
   mockBuildRelevanceCalls.mockImplementation(async (subset: any[]) => ({
@@ -1779,6 +1784,204 @@ describe('judge mode (advisory)', () => {
     expect(mockRecordOverrides).toHaveBeenCalledTimes(1);
     // single batch → finalized
     expect(currentRun()).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Top-headline cull — a headline-sourced row scoring below the MEDIUM band
+// (relevanceBandRank >= 3, i.e. < 0.53) is terminally `excluded` instead of
+// persisted. Topic-matched rows are never culled. Both scoring paths.
+// ---------------------------------------------------------------------------
+
+/** mockMathMode + a headline scope on the stage input of `headlineIds` — the
+ *  field the judge-path cull reads (c.input.headlineScope). */
+function mockMathModeWithHeadlines(
+  scores: Record<string, number>,
+  headlineIds: string[],
+) {
+  const headline = new Set(headlineIds);
+  mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+    persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+    stage: candidates.map((c) => ({
+      input: {
+        id: c.id,
+        headlineScope: headline.has(c.id) ? 'GLOBAL' : null,
+      },
+    })),
+    computedScoreMap: new Map(Object.entries(scores)),
+    componentsMap: new Map(candidates.map((c) => [c.id, { geoAlignment: 'NONE' }])),
+    modeMap: new Map(candidates.map((c) => [c.id, 'math'])),
+  }));
+}
+
+describe('top-headline cull — judge path', () => {
+  beforeEach(() => {
+    mockBuildJudgeCalls.mockReturnValue({
+      calls: [{ id: 'judge:0', system: 's', prompt: 'p' }],
+      chunkIds: new Map(),
+    });
+    mockDecodeJudgeResults.mockReturnValue({
+      rawScoreMap: new Map(),
+      judgeScoreMap: new Map(),
+      reasonMap: new Map(),
+      overrideMap: new Map(),
+      adjustedIds: new Set(),
+    });
+  });
+
+  it('excludes a LOW headline and keeps it out of the math persist, the judge job and the discard map', async () => {
+    // h0 = headline at 0.4 (band rank 3 → culled). t0 = topic-matched survivor,
+    // so a judge job is still built and the run reaches waiting-relevance.
+    mockMathModeWithHeadlines({ h0: 0.4, t0: 0.8 }, ['h0']);
+    await enqueueCandidates(['h0', 't0']);
+
+    expect(mockBatchMarkExcluded).toHaveBeenCalledWith(['h0']);
+
+    // A math score persisted after the exclusion would overwrite the terminal
+    // status — h0 must not be in the payload at all.
+    const saved = mockBatchSaveMathScores.mock.calls[0][0] as any[];
+    expect(saved.map((s) => s.id)).toEqual(['t0']);
+
+    // 0.4 clears the raw `> 0.3` judged filter, so the cull is what keeps it out.
+    const judgeStage = mockBuildJudgeCalls.mock.calls[0][0] as any[];
+    expect(judgeStage.map((c) => c.input.id)).toEqual(['t0']);
+
+    const batch = currentRun().batches[0];
+    expect(batch.judgedIds).toEqual(['t0']);
+    // relevanceMap drives discardLowRelevance at decode; a culled id present
+    // here would be flipped back from `excluded` to reason-skipped `complete`.
+    expect(batch.relevanceMap).toEqual({ t0: 0.8 });
+  });
+
+  it('leaves a MEDIUM headline alone (persisted + judged as normal)', async () => {
+    mockMathModeWithHeadlines({ h0: 0.6 }, ['h0']);
+    await enqueueCandidates(['h0']);
+
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    const saved = mockBatchSaveMathScores.mock.calls[0][0] as any[];
+    expect(saved).toEqual([
+      expect.objectContaining({ id: 'h0', relevance: 0.6, reasonSkipped: false }),
+    ]);
+    const judgeStage = mockBuildJudgeCalls.mock.calls[0][0] as any[];
+    expect(judgeStage.map((c) => c.input.id)).toEqual(['h0']);
+    expect(currentRun().batches[0].relevanceMap).toEqual({ h0: 0.6 });
+  });
+
+  it('never culls a topic-matched row at the same LOW score', async () => {
+    mockMathModeWithHeadlines({ t0: 0.4 }, []);
+    await enqueueCandidates(['t0']);
+
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    const saved = mockBatchSaveMathScores.mock.calls[0][0] as any[];
+    expect(saved).toEqual([
+      expect.objectContaining({ id: 't0', relevance: 0.4, reasonSkipped: false }),
+    ]);
+    const judgeStage = mockBuildJudgeCalls.mock.calls[0][0] as any[];
+    expect(judgeStage.map((c) => c.input.id)).toEqual(['t0']);
+  });
+});
+
+describe('top-headline cull — legacy path', () => {
+  // Force the BACKSTOP relevance path (see the apply-step describe: the global
+  // beforeEach does not reset computeMathStage, so a prior judge-mode test would
+  // otherwise route decode to handleJudgeResults).
+  beforeEach(() => {
+    mockComputeMathStage.mockImplementation(async (candidates: any[] = []) => ({
+      persona: { locations: [], pubPrefs: new Map(), softSuppressions: [] },
+      stage: candidates.map((c) => ({ input: { id: c.id } })),
+      computedScoreMap: new Map(),
+      componentsMap: new Map(),
+      modeMap: new Map(candidates.map((c) => [c.id, 'backstop'])),
+    }));
+  });
+
+  /** Enqueue with NO headline rows visible (one standard partition = one batch),
+   *  then reveal the scopes so only the decode's lookupHeadlineIds sees them. */
+  async function waitingBatchWithHeadlines(
+    batchIds: string[],
+    headlineIds: string[],
+  ) {
+    await enqueueCandidates(batchIds);
+    const batch = currentRun().batches[0];
+    expect(batch.phase).toBe('waiting-relevance');
+    mockGetStageRowsByIds.mockResolvedValue(
+      batchIds.map((id) => ({
+        id,
+        headlineScope: headlineIds.includes(id) ? 'GLOBAL' : null,
+      })),
+    );
+    mockFetchResults.mockResolvedValue({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+    return batch;
+  }
+
+  it('excludes a LOW headline instead of saving it, and keeps it out of the reason + discard maps', async () => {
+    const batch = await waitingBatchWithHeadlines(['h0', 't0'], ['h0']);
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['h0', 0.4], ['t0', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([
+      { ...candidate('t0'), relevance: 0.8 },
+    ]);
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockBatchMarkExcluded).toHaveBeenCalledWith(['h0']);
+    expect(mockSaveScoringResult).not.toHaveBeenCalledWith('h0', expect.anything());
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      't0',
+      expect.objectContaining({ relevance: 0.8 }),
+    );
+    const b = currentRun().batches[0];
+    expect(b.relevanceMap).toEqual({ t0: 0.8 });
+    expect(b.rawRelevanceMap).toEqual({ t0: 0.8 });
+    expect(b.reasonCandidateIds).toEqual(['t0']);
+  });
+
+  it('leaves a MEDIUM headline alone (saved + reason-eligible as normal)', async () => {
+    const batch = await waitingBatchWithHeadlines(['h0'], ['h0']);
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['h0', 0.6]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([
+      { ...candidate('h0'), relevance: 0.6 },
+    ]);
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'h0',
+      expect.objectContaining({ relevance: 0.6, reason: '' }),
+    );
+    expect(currentRun().batches[0].reasonCandidateIds).toEqual(['h0']);
+  });
+
+  it('never culls a topic-matched row at the same LOW score', async () => {
+    const batch = await waitingBatchWithHeadlines(['t0'], []);
+    mockDecodeResults.mockReturnValue({
+      scoreMap: new Map([['t0', 0.4]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([
+      { ...candidate('t0'), relevance: 0.4 },
+    ]);
+
+    await handlePush(batch.requestId, 'foreground');
+
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      't0',
+      expect.objectContaining({ relevance: 0.4 }),
+    );
+    expect(currentRun().batches[0].reasonCandidateIds).toEqual(['t0']);
   });
 });
 

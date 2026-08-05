@@ -215,6 +215,10 @@
     "irrelevant": "ไม่เกี่ยวข้อง",
     "unprocessed": "ยังไม่ประมวลผล"
   },
+  "importanceFilter": {
+    "a11yLabel": "ความสำคัญของเรื่องราวขั้นต่ำ",
+    "a11yOption": "แสดงความสำคัญ {{level}} ขึ้นไป"
+  },
   "aiDisclosure": {
     "caption": "หมายเหตุที่สร้างโดย AI",
     "short": "สร้างโดย AI",

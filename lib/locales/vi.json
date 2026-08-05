@@ -215,6 +215,10 @@
     "irrelevant": "Không liên quan",
     "unprocessed": "Chưa xử lý"
   },
+  "importanceFilter": {
+    "a11yLabel": "Mức ưu tiên câu chuyện tối thiểu",
+    "a11yOption": "Hiển thị mức ưu tiên {{level}} và cao hơn"
+  },
   "aiDisclosure": {
     "caption": "Ghi chú do AI tạo",
     "short": "Do AI tạo",

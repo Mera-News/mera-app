@@ -215,6 +215,10 @@
     "irrelevant": "無関係",
     "unprocessed": "未処理"
   },
+  "importanceFilter": {
+    "a11yLabel": "最小ストーリー優先度",
+    "a11yOption": "{{level}}優先度以上を表示"
+  },
   "aiDisclosure": {
     "caption": "AIが生成したメモ",
     "short": "AI生成",

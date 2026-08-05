@@ -227,6 +227,10 @@
     "irrelevant": "Нерелевантно",
     "unprocessed": "Не обработано"
   },
+  "importanceFilter": {
+    "a11yLabel": "Минимальный приоритет истории",
+    "a11yOption": "Показать приоритет {{level}} и выше"
+  },
   "aiDisclosure": {
     "caption": "Сгенерированная ИИ заметка",
     "short": "Сгенерировано ИИ",

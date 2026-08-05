@@ -72,7 +72,8 @@
 // a verdict and reveals the card's inline feedback surface
 // (CardFeedbackSurface). Every one of those interactions — plus opening the card
 // — marks it `viewed`.
-// The header is the "Feed" heading + notification bell + 24h stats sentence.
+// The header is the "Feed" heading + notification bell, the importance-filter
+// pills, and the 24h stats sentence.
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
@@ -91,9 +92,11 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
+import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
+import CompanionModeCard from '@/components/custom/subscription/CompanionModeCard';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
@@ -126,8 +129,10 @@ import { useTabPressScrollRefresh } from '@/lib/hooks/use-tab-press-scroll-refre
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import {
   buildFeedList,
+  filterByImportance,
   type FeedListItem,
 } from '@/lib/stores/feed-list-selector';
+import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import {
   useFeedOrderStore,
   type CardStateRecord,
@@ -248,6 +253,13 @@ const FeedScreen: React.FC = () => {
   // makes representative election tier-aware. Null while loading/on failure,
   // which `buildFeedList` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
+
+  // Minimum band this screen renders. DISPLAY-ONLY and deliberately applied as
+  // far downstream as possible (see `visibleData` below): candidates, ingest and
+  // the persisted order all stay threshold-blind, so lowering the pill reveals
+  // rows immediately instead of waiting for the next sync to re-admit them.
+  const feedThreshold = useImportanceFilterStore((s) => s.feedThreshold);
+  const setFeedThreshold = useImportanceFilterStore((s) => s.setFeedThreshold);
 
   // Candidates keep opened items in (they back frozen rows + survive hydrate) —
   // no exclusion here; opened-filtering happens only for NEW ids in ingest.
@@ -451,6 +463,16 @@ const FeedScreen: React.FC = () => {
     [order, itemsById],
   );
 
+  // The importance filter, applied at the LAST possible point: everything above
+  // (candidates → ingest → persisted order) keeps seeing every render-gated
+  // story, so a row hidden here is only hidden, never dropped. At 'low' this is
+  // the identity function and returns `data` itself, so the sort below memoises
+  // exactly as it did before the filter existed.
+  const visibleData = useMemo(
+    () => filterByImportance(data, feedThreshold),
+    [data, feedThreshold],
+  );
+
   // Display list: the STATIC pinned prefix (what the user has already read past,
   // in reading order), then the DYNAMIC region — unviewed (high → med → low),
   // then viewed (high → med → low). Nothing is ever removed; a viewed card sinks
@@ -459,13 +481,13 @@ const FeedScreen: React.FC = () => {
   const { rows: listData, pinnedCount } = useMemo(
     () =>
       sortFeedEntries(
-        data,
+        visibleData,
         partitionSnapshot.cardStates,
         partitionSnapshot.openedArticleIds,
         pinnedIds,
         partitionSnapshot.at,
       ),
-    [data, partitionSnapshot, pinnedIds],
+    [visibleData, partitionSnapshot, pinnedIds],
   );
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
@@ -509,7 +531,7 @@ const FeedScreen: React.FC = () => {
 
   // DEV-only Metro log of the whole funnel + the rendered cards. Compiled out of
   // release builds; throttled and count-gated in dev (see the hook).
-  useFeedFunnelLog(listData, unviewedCount, userGeoLanguageCtx);
+  useFeedFunnelLog(listData, unviewedCount, userGeoLanguageCtx, feedThreshold, data.length - visibleData.length);
 
   // ── Feedback sheet (shared plumbing) ──
   // The verdict store is `feed-order-store`, keyed by the rep-switch-safe
@@ -864,6 +886,15 @@ const FeedScreen: React.FC = () => {
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
+        // Companion-mode upsell — a locked user's plan-explainer, pinned above
+        // the rows. The card reads entitlement itself and renders nothing once
+        // unlocked, so this mount is unconditional; see CompanionModeCard.
+        // Plain header, not `stickyHeaderIndices`: this list grows upward via
+        // `maintainVisibleContentPosition` + `autoscrollToTopThreshold` (prepend
+        // on ingest, reset-to-top on refresh), and sticky headers are known to
+        // fight that anchoring. Not worth forcing for a header that already
+        // sits at the visual top on first paint.
+        ListHeaderComponent={<CompanionModeCard surface="feed" />}
         ListFooterComponent={listFooter}
         initialNumToRender={4}
         // 7 → 5 (Area B). Feed cards are tall — roughly one per screen — so 7
@@ -944,12 +975,28 @@ const FeedScreen: React.FC = () => {
           pointerEvents="box-none"
           style={{ paddingTop: insets.top + 16 }}
         >
-          <HStack className="items-start justify-between" pointerEvents="box-none">
-            <VStack className="flex-1 min-w-0 mr-3" pointerEvents="none">
-              <Heading size="3xl" className="text-white" numberOfLines={1}>
-                {t('swipeFeed.yourDeck')}
-              </Heading>
-            </VStack>
+          <HStack className="items-center justify-between" pointerEvents="box-none">
+            {/* The importance DROPDOWN (one chip, not three pills) is what
+                makes an in-title-row control viable in the longer languages:
+                "Nachrichten" + a single "Mittel ▾" chip fits where the full
+                pill row did not. The heading still truncates first
+                (flex-shrink min-w-0, numberOfLines={1}) if a locale needs it. */}
+            <HStack
+              className="flex-1 min-w-0 mr-3 items-center"
+              space="sm"
+              pointerEvents="box-none"
+            >
+              <View pointerEvents="none" className="flex-shrink min-w-0">
+                <Heading size="3xl" className="text-white" numberOfLines={1}>
+                  {t('swipeFeed.yourDeck')}
+                </Heading>
+              </View>
+              <ImportanceFilterDropdown
+                value={feedThreshold}
+                onChange={setFeedThreshold}
+                testIDPrefix="feed-importance"
+              />
+            </HStack>
             <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
               <NotificationBellButton />
             </HStack>
@@ -960,7 +1007,12 @@ const FeedScreen: React.FC = () => {
                 typography-400 was barely legible. `leading-6` is repeated
                 because the prop REPLACES FeedStatsSentence's default class
                 string rather than merging with it. */}
-            <FeedStatsSentence className="text-typography-700 font-medium leading-6" />
+            {/* `importanceAware`: the "K relevant" clause must not advertise
+                more stories than the filtered list below actually shows. */}
+            <FeedStatsSentence
+              importanceAware
+              className="text-typography-700 font-medium leading-6"
+            />
           </View>
 
           {/* Shared sync surface — the same indeterminate bar the Dashboard

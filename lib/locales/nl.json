@@ -215,6 +215,10 @@
     "irrelevant": "Niet relevant",
     "unprocessed": "Onverwerkt"
   },
+  "importanceFilter": {
+    "a11yLabel": "Minimale verhaalprioriteit",
+    "a11yOption": "Toon {{level}}-prioriteit en hoger"
+  },
   "aiDisclosure": {
     "caption": "Door AI gegenereerde notitie",
     "short": "Door AI gegenereerd",

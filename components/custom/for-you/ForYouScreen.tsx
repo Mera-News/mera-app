@@ -16,6 +16,8 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
+import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
+import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
@@ -188,6 +190,10 @@ const MeraNewsScreen: React.FC = () => {
     // mounted after their first visit (display-toggled) so scroll state
     // survives a switch.
     const [activeSubTab, setActiveSubTab] = useState<ForYouSubTab>('feed');
+    // Display-only importance filter (header pills). Default 'low' shows
+    // everything — see lib/stores/importance-filter-store.
+    const dashboardThreshold = useImportanceFilterStore((s) => s.dashboardThreshold);
+    const setDashboardThreshold = useImportanceFilterStore((s) => s.setDashboardThreshold);
     const [storiesVisited, setStoriesVisited] = useState(false);
     const [savedVisited, setSavedVisited] = useState(false);
     const [historyVisited, setHistoryVisited] = useState(false);
@@ -597,14 +603,26 @@ const MeraNewsScreen: React.FC = () => {
                 >
                     <HStack className="items-start justify-between mb-2" pointerEvents="box-none">
                         <VStack className="flex-1 min-w-0 mr-3" pointerEvents="box-none">
-                            <Heading
-                                size="3xl"
-                                className="text-white"
-                                numberOfLines={1}
-                                pointerEvents="none"
-                            >
-                                {t('feed.dashboardTitle')}
-                            </Heading>
+                            {/* Same in-title dropdown as the Feed. It only
+                                filters the Overview sub-tab's sections —
+                                title-row placement is a deliberate user call
+                                (consistency with Feed over strict scoping). */}
+                            <HStack className="items-center min-w-0" space="sm" pointerEvents="box-none">
+                                <View pointerEvents="none" className="flex-shrink min-w-0">
+                                    <Heading
+                                        size="3xl"
+                                        className="text-white"
+                                        numberOfLines={1}
+                                    >
+                                        {t('feed.dashboardTitle')}
+                                    </Heading>
+                                </View>
+                                <ImportanceFilterDropdown
+                                    value={dashboardThreshold}
+                                    onChange={setDashboardThreshold}
+                                    testIDPrefix="dashboard-importance"
+                                />
+                            </HStack>
                             {lastProcessedLabel && (
                                 <Pressable
                                     onPress={openStatusSheet}

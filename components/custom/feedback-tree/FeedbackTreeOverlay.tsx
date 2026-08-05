@@ -29,6 +29,7 @@ import {
 import { useFeedbackTreeEngine } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { getAiAccess } from '@/lib/stores/subscription-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -161,16 +162,27 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       const leaf = node.leaf;
       if (!leaf) return;
 
+      // Every non-openChat leaf is terminal — tell the host so it can persist
+      // the tapped path onto the verdict row (D15's commit discriminator).
+      const leafPath = [...pathIds, node.id];
+
       // Escalate into the Mera chat.
       if (leaf.openChat) {
+        // Companion mode: `openArticleFeedback` is a no-op, so this leaf has
+        // nowhere to escalate TO. Without this branch it would return here
+        // having recorded nothing, and the tapped path — the user's actual
+        // feedback — would be silently dropped. Persist it the same way the
+        // nudge leaves do (a suggestion, weight 0, no persona mutation
+        // claimed), which is the honest reading of a tap that opened nothing.
+        if (getAiAccess() === 'locked') {
+          onLeafPicked?.(leafPath, 0, true);
+          onClose();
+          return;
+        }
         onClose();
         useFloatingChatStore.getState().openArticleFeedback(chatContext, chatMessage);
         return;
       }
-
-      // Every non-openChat leaf is terminal — tell the host so it can persist
-      // the tapped path onto the verdict row (D15's commit discriminator).
-      const leafPath = [...pathIds, node.id];
 
       // Nudge — a SUGGESTION, not a persona mutation.
       if (leaf.nudge) {

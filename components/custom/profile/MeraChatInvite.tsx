@@ -1,10 +1,12 @@
 import { GLASS_AVAILABLE, GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
+import CompanionInlineNotice from '@/components/custom/subscription/CompanionInlineNotice';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticMedium } from '@/lib/haptics';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef } from 'react';
@@ -29,6 +31,7 @@ const LOGO_SIZE = 56;
 const MeraChatInvite: React.FC = () => {
     const { t } = useTranslation();
     const iconRef = useRef<View>(null);
+    const aiAccess = useAiAccess();
 
     const publishCenter = useCallback(() => {
         iconRef.current?.measureInWindow((x, y, w, h) => {
@@ -48,6 +51,18 @@ const MeraChatInvite: React.FC = () => {
         publishCenter(); // freshest origin right before the morph
         useFloatingChatStore.getState().expand({ kind: 'persona' });
     }, [publishCenter]);
+
+    // Companion mode: this row is the chat entry point, so it can't just
+    // vanish (that would read as a bug) or keep opening a chat the
+    // floating-chat-store chokepoint would silently no-op — swap in the
+    // one-sentence companion notice instead, in the same slot.
+    if (aiAccess === 'locked') {
+        return (
+            <View className="mx-4 mb-5">
+                <CompanionInlineNotice surface="chat" />
+            </View>
+        );
+    }
 
     return (
         <Pressable onPress={openChat} className="mx-4 mb-5">

@@ -34,6 +34,7 @@ import {
     useSelectedModelId,
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
+import CompanionReadOnlyBanner, { useCompanionReadOnly } from '@/components/custom/subscription/CompanionReadOnlyBanner';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView } from 'react-native';
@@ -85,6 +86,11 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     onModeChange,
 }) => {
     const { t } = useTranslation();
+    // Onboarding never has a plan yet — `useAiAccess()` can read 'locked' there
+    // for reasons that have nothing to do with companion mode. Forcing readOnly
+    // off during onboarding is load-bearing: freezing the mode pills here would
+    // strand a new user before they can even finish setup.
+    const readOnly = useCompanionReadOnly() && !isOnboarding;
     const [isLoading, setIsLoading] = useState(!isOnboarding);
     const [isUpdatingMode, setIsUpdatingMode] = useState(false);
     const [requirementsResult, setRequirementsResult] = useState<SystemRequirementsResult | null>(null);
@@ -485,7 +491,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             <Pressable
                 key={mode}
                 onPress={() => selectMode(mode)}
-                disabled={isUpdatingMode}
+                disabled={isUpdatingMode || readOnly}
                 className={baseClass + stateClass}
             >
                 <VStack space="xs" className="items-center">
@@ -539,6 +545,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             {(modelState === 'downloaded' || modelState === 'ready') && (
                                 <Pressable
                                     onPress={handleDeleteModel}
+                                    disabled={readOnly}
                                     className="bg-red-950 rounded-full p-2"
                                 >
                                     <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
@@ -575,12 +582,16 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     variant="solid"
                                     size="md"
                                     onPress={handleDownloadModel}
+                                    isDisabled={readOnly}
                                 >
                                     <MaterialIcons name="cloud-download" size={18} color="#ffffff" style={{ marginRight: 8 }} />
                                     <ButtonText>{t('meraProtocol.downloadModel')}</ButtonText>
                                 </Button>
                             )}
 
+                            {/* Cancel Download stays enabled even when read-only: it aborts a
+                                transfer the user already started (up to ~2.8GB), not a settings
+                                change — disabling it would strand them mid-download. */}
                             {modelState === 'downloading' && (
                                 <Button
                                     action="negative"
@@ -599,6 +610,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     variant="solid"
                                     size="md"
                                     onPress={handleDownloadModel}
+                                    isDisabled={readOnly}
                                 >
                                     <MaterialIcons name="refresh" size={18} color="#ffffff" style={{ marginRight: 8 }} />
                                     <ButtonText>{t('meraProtocol.retryDownload')}</ButtonText>
@@ -612,7 +624,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     variant="outline"
                                     size="md"
                                     onPress={() => setShowUpdateModelConfirm(true)}
-                                    isDisabled={isUpdatingModel}
+                                    isDisabled={isUpdatingModel || readOnly}
                                 >
                                     <MaterialIcons name="system-update" size={18} color="#a78bfa" style={{ marginRight: 8 }} />
                                     <ButtonText className="text-purple-400">
@@ -649,6 +661,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         value={relevanceV2}
                         onToggle={() => store.setRelevanceV2(!relevanceV2)}
                         size="md"
+                        disabled={readOnly}
                         testID="mera-protocol-relevance-v2-switch"
                     />
                 </HStack>
@@ -904,9 +917,13 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
                 </VStack>
 
-                <ScrollView className="flex-1 pt-1">
+                <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
                     {renderContent()}
                 </ScrollView>
+
+                {/* Pinned outside the ScrollView (not a scrolled child) so it stays
+                    on screen and explains why the controls above are frozen. */}
+                <CompanionReadOnlyBanner surface="mera-protocol" />
             </Box>
         </GluestackUIProvider>
     );

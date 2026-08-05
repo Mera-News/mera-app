@@ -15,12 +15,18 @@
 import { Text } from '@/components/ui/text';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { useAppLanguage } from '@/lib/stores/app-language-store';
+import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import { formatCount } from '@/lib/utils/format-count';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface FeedStatsSentenceProps {
   className?: string;
+  /** Count "relevant" against the FEED's importance threshold, so the sentence
+   *  can't advertise more stories than the filtered list under it shows. Opt-in
+   *  because the Dashboard persists its own (different) threshold and must keep
+   *  the unfiltered counts. */
+  importanceAware?: boolean;
 }
 
 /** The five clause keys, spelled out as literals so the typed `t()` still
@@ -35,10 +41,14 @@ type StatsClauseKey =
 
 const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   className = 'text-typography-400 leading-6',
+  importanceAware = false,
 }) => {
   const { t } = useTranslation();
   const appLanguage = useAppLanguage();
-  const { articleCount, analysedCount, relevantCount, readCount } = useFeedCounts();
+  const feedThreshold = useImportanceFilterStore((s) => s.feedThreshold);
+  const { articleCount, analysedCount, relevantCount, readCount } = useFeedCounts(
+    importanceAware ? feedThreshold : undefined,
+  );
 
   const clause = (key: StatsClauseKey, count: number) =>
     t(key, { count, formatted: formatCount(count, appLanguage) });

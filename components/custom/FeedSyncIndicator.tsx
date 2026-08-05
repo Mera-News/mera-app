@@ -37,6 +37,7 @@ import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
+import { getAiAccess } from '@/lib/stores/subscription-store';
 import {
     useForYouAsyncJobPhase,
     useForYouDailyLimitResetAt,
@@ -170,6 +171,16 @@ export function useFeedSyncRefresh(
         // the offline notice this component already renders.
         if (!useNetworkStore.getState().isConnected) {
             logger.info('[FeedSyncIndicator] pull-to-refresh skipped — offline');
+            return;
+        }
+
+        // Companion mode. `trigger()` bypasses `_conditionsMet`, so the task's
+        // own aiAccess condition does NOT cover this path — without the check
+        // here, every pull would run a doomed sync that 402s. The companion
+        // card pinned at the top of the list is the explanation; the spinner
+        // has nothing to add.
+        if (getAiAccess() === 'locked') {
+            logger.info('[FeedSyncIndicator] pull-to-refresh skipped — companion mode');
             return;
         }
 

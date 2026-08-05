@@ -9,6 +9,8 @@ import { VStack } from "@/components/ui/vstack";
 import { AccountService } from "@/lib/account-service";
 import { authClient } from "@/lib/auth-client";
 import { SUPPORT_EMAIL } from "@/lib/config/branding";
+import { setSetting } from "@/lib/database/services/setting-service";
+import { FIRST_OPEN_DISMISSED_SETTING_KEY } from "@/components/custom/subscription/FirstOpenPaywallGate";
 import logger from "@/lib/logger";
 import {
     getCustomerInfoSafe,
@@ -24,7 +26,21 @@ import { Linking, TouchableOpacity, View } from "react-native";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function NotSubscribedScreen() {
+export interface NotSubscribedScreenProps {
+    /**
+     * `'lapsed'` — the user HAD a plan and it ended. Softened: no auto-presented
+     * purchase sheet, its own copy, and an explicit way out.
+     *
+     * `undefined` — the default, and deliberately unchanged from what it always
+     * was, including the auto-present on mount. This is also the mode the
+     * first-open push reuses: that is the primary conversion moment and is
+     * meant to be the more assertive of the two.
+     */
+    readonly reason?: 'lapsed';
+}
+
+export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps = {}) {
+    const isLapsed = reason === 'lapsed';
     const { data: session, isPending: isSessionPending } = authClient.useSession();
     const router = useRouter();
     const { t } = useTranslation();
@@ -96,12 +112,41 @@ export default function NotSubscribedScreen() {
     }, [pollUntilSubscribed, t]);
 
     // Auto-present the paywall once when the gate is reached.
+    //
+    // Skipped for `lapsed`: this user just lost something, and opening a
+    // purchase sheet over the explanation is the aggressive-funnel move the
+    // tone direction rejects. They read first and tap "View plans" if they want
+    // it. Every other entry point keeps the original behaviour.
     useEffect(() => {
+        if (isLapsed) return;
         if (!presentedRef.current && userId && isRevenueCatConfigured()) {
             presentedRef.current = true;
             void presentPaywall();
         }
-    }, [userId, presentPaywall]);
+    }, [isLapsed, userId, presentPaywall]);
+
+    // Drop into the app in companion mode. `replace`, not `push`: this screen
+    // must not sit on the back stack waiting to be swiped back into.
+    const handleContinueWithoutPlan = useCallback(async () => {
+        // Default mode = the first-open push. Record the dismissal BEFORE
+        // navigating, so it cannot be lost if the user kills the app on the way
+        // out and gets asked again on the next launch.
+        //
+        // Not written for `lapsed`: that one's "shown once" state is the
+        // server's, and a local flag here would be a second, conflicting
+        // source of truth for the same question.
+        if (!isLapsed) {
+            try {
+                await setSetting(FIRST_OPEN_DISMISSED_SETTING_KEY, 'true');
+            } catch (error) {
+                // Non-fatal: worst case the push appears once more.
+                logger.captureException(error, {
+                    tags: { component: 'NotSubscribedScreen', method: 'dismissFirstOpen' },
+                });
+            }
+        }
+        router.replace('/logged-in/app_container/feed');
+    }, [isLapsed, router]);
 
     const handleRefresh = async () => {
         setBusy(true);
@@ -143,11 +188,11 @@ export default function NotSubscribedScreen() {
                           <MeraLogo size={150} />
                       </Box>
                       <Heading size="2xl" className="text-white text-center">
-                          {t('subscription.title')}
+                          {isLapsed ? t('companion.lapseTitle') : t('subscription.title')}
                       </Heading>
 
                       <Text size="lg" className="text-gray-300 text-center leading-relaxed">
-                          {t('subscription.description')}
+                          {isLapsed ? t('companion.lapseBody') : t('subscription.description')}
                       </Text>
 
                       {message ? (
@@ -178,6 +223,23 @@ export default function NotSubscribedScreen() {
                               >
                                   <ButtonText className="text-white">
                                       {busy ? t('common.checking') : t('account.refresh')}
+                                  </ButtonText>
+                              </Button>
+                              {/* The way out. This screen had NO exit at all,
+                                  which was defensible while the app was
+                                  unusable without a plan and is not now:
+                                  companion mode is a legitimate place to be,
+                                  and a dead end here would strand a user who
+                                  has chosen it. */}
+                              <Button
+                                  testID="not-subscribed-continue"
+                                  onPress={handleContinueWithoutPlan}
+                                  variant="link"
+                                  className="w-full"
+                                  size="lg"
+                              >
+                                  <ButtonText className="text-gray-400">
+                                      {t('companion.continueWithoutPlan')}
                                   </ButtonText>
                               </Button>
                           </VStack>

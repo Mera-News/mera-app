@@ -227,6 +227,10 @@
     "irrelevant": "Нерелевантно",
     "unprocessed": "Не оброблено"
   },
+  "importanceFilter": {
+    "a11yLabel": "Мінімальний пріоритет історії",
+    "a11yOption": "Показати пріоритет {{level}} і вище"
+  },
   "aiDisclosure": {
     "caption": "Примітка, створена ШІ",
     "short": "Створено ШІ",

@@ -32,3 +32,69 @@
  * all already built and wired.
  */
 export const HEADLINE_DEPTH_UI_ENABLED = false;
+
+// ───────────────────────────────────────────────────────────────────────────
+// Companion-mode dev overrides
+// ───────────────────────────────────────────────────────────────────────────
+//
+// `FORCE_SUBSCRIPTIONS` is off server-side, so none of the three entitlement
+// states (entitled / locked / lapsed) are reachable from a real account — the
+// server hands every user a working AI layer. These two constants let the
+// simulator harness drive each state without flipping a server flag, logging
+// the resident account out, or standing up a second account.
+//
+// BOTH ARE READ ONLY INSIDE `if (__DEV__)` (see lib/subscription/ai-access.ts)
+// and BOTH MUST BE COMMITTED INERT (`null` / `false`). A committed
+// `DEV_FORCE_AI_ACCESS = 'locked'` would ship companion mode to every user on
+// the next OTA, and dead-code elimination of `__DEV__` in release bundles will
+// NOT save you — the constant is still what production logic reads in dev
+// builds handed to testers.
+
+/**
+ * Companion mode itself — the whole of this wave's user-visible behaviour.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * MUST STAY `false` UNTIL `FORCE_SUBSCRIPTIONS` IS FLIPPED TO `"true"` IN
+ * PROD TERRAFORM (mera-infra/cloud-run.tf, news_graphql then news_auth).
+ * ─────────────────────────────────────────────────────────────────────────
+ *
+ * Without this gate, shipping the OTA WOULD ITSELF BE THE CUTOVER. `aiAccess`
+ * is derived from `subscriptionTier`, and today essentially every user is
+ * `'none'` (prod has no active subscriptions, and most users have no
+ * `UserBilling` doc at all) — so `deriveAiAccess` would return `'locked'` for
+ * everyone the moment they took the update, putting the entire user base into
+ * companion mode before trials even exist in the App Store and Play Console.
+ *
+ * The rollout plan is explicit that it must go the other way: the app OTA ships
+ * FIRST and must be a no-op ("prod code deploys with FORCE_SUBSCRIPTIONS still
+ * false — zero behavior change"), then the server flag flips once the UI is
+ * live and adopted, so nobody meets a bare 402 with no companion UI to catch
+ * it. This constant is what makes the OTA inert in the meantime.
+ *
+ * While `false`, `deriveAiAccess` short-circuits to `'entitled'` — exactly the
+ * app's behaviour before this wave. `DEV_FORCE_AI_ACCESS` still overrides it,
+ * so all of the companion UI stays drivable from the simulator harness.
+ *
+ * Flipping this to `true` is the entire app-side activation step; it needs its
+ * own OTA, timed with the server flag.
+ */
+export const COMPANION_MODE_ENABLED = false;
+
+/**
+ * Force the derived `aiAccess` verdict, bypassing the ship gate above, the
+ * server tier, the RevenueCat mirror, and any recorded 402. `null` = no
+ * override (ship state).
+ */
+export const DEV_FORCE_AI_ACCESS: 'entitled' | 'locked' | null = null;
+
+/**
+ * Force `showLapseInterstitial` on, as if the server had reported a lapse the
+ * user has not acknowledged yet.
+ *
+ * Deliberately a SEED, not a clamp: the interstitial gate's acknowledge path
+ * writes a local dev-only ack flag, and this override stops applying once that
+ * flag is set. A clamp would make the interstitial reappear on every relaunch
+ * forever, which is precisely the "shown exactly once" behaviour under test.
+ * Clear the flag (see `DEV_LAPSE_ACK_SETTING_KEY`) to re-arm it.
+ */
+export const DEV_FORCE_LAPSED = false;

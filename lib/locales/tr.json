@@ -215,6 +215,10 @@
     "irrelevant": "İlgisiz",
     "unprocessed": "İşlenmemiş"
   },
+  "importanceFilter": {
+    "a11yLabel": "Minimum hikaye önceliği",
+    "a11yOption": "{{level}} önceliği ve üstünü göster"
+  },
   "aiDisclosure": {
     "caption": "AI tarafından oluşturulan not",
     "short": "AI tarafından oluşturuldu",

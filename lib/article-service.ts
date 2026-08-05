@@ -19,7 +19,7 @@ import {
 } from './generated/graphql-types';
 import logger from './logger';
 import { isNotSubscribedError } from './subscription/not-subscribed-error';
-import { navigateToPaywall } from './nav-state';
+import { recordAiLocked } from './subscription/ai-lock';
 
 // GraphQL Query for fetching articles for a cluster (excluding already shown articles)
 const GET_ARTICLES_FOR_CLUSTER = gql`
@@ -681,12 +681,13 @@ export class ArticleService {
             }
             return { results: merged };
         } catch (error) {
-            // The For You feed is the sole subscription gate: when the server
-            // forces subscriptions, these queries 402 (PAYMENT_REQUIRED) for
-            // unsubscribed users. Surface the paywall here so it's scoped to the
-            // For You screen and never interrupts login/onboarding.
+            // When the server forces subscriptions these queries 402
+            // (PAYMENT_REQUIRED). This no longer yanks the user to the paywall:
+            // companion mode is a legitimate place to be, and a redirect out of
+            // whatever they were reading would take away exactly what this mode
+            // promises to keep. Record the verdict; the surfaces react to it.
             if (isNotSubscribedError(error)) {
-                navigateToPaywall();
+                recordAiLocked('topics');
                 throw error;
             }
             // The apollo-error-link already captures this to Sentry; a
@@ -750,10 +751,10 @@ export class ArticleService {
 
             return { topicResults, headlineResults };
         } catch (error) {
-            // The For You feed is the sole subscription gate — surface the paywall
-            // here, scoped to For You (mirrors getArticleIdsForTopics).
+            // Same verdict, different query — see getArticleIdsForTopics. One
+            // shared flag, because SubscriptionGuard refused both for one reason.
             if (isNotSubscribedError(error)) {
-                navigateToPaywall();
+                recordAiLocked('persona');
                 throw error;
             }
             logger.addBreadcrumb(
@@ -859,10 +860,10 @@ export class ArticleService {
             await Promise.all(workers);
             return { articles: results, dailyLimitReached, resetAt };
         } catch (error) {
-            // See getArticleIdsForTopics: the paywall is triggered from the feed
-            // layer, scoped to For You.
+            // See getArticleIdsForTopics: the feed layer records the lock, it
+            // does not navigate.
             if (isNotSubscribedError(error)) {
-                navigateToPaywall();
+                recordAiLocked('hydrate');
                 throw error;
             }
             // apollo-error-link already captures this to Sentry — breadcrumb only
@@ -939,10 +940,10 @@ export class ArticleService {
             return { articles: results };
         } catch (error) {
             // Same policy as the metered sibling: SubscriptionGuard still
-            // applies to this query, so a NotSubscribed error must still route
-            // to the paywall.
+            // applies to this query, so a NotSubscribed error still records the
+            // lock (tracked stories the device already holds stay readable).
             if (isNotSubscribedError(error)) {
-                navigateToPaywall();
+                recordAiLocked('stories');
                 throw error;
             }
             logger.addBreadcrumb(

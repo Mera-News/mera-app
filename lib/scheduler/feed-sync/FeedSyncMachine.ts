@@ -422,6 +422,27 @@ class FeedSyncMachine {
     } catch (err) {
       const errorCode = classifyError(err);
 
+      // `not-subscribed` is companion mode, not a fault. The user has no plan,
+      // the four AI queries 402, and that is the designed outcome — so this
+      // exits the quietest way the machine can: straight to idle, no status
+      // message at all (publishSyncStatus('idle') CLEARS it), no error chrome,
+      // no toast, and no throw, so the scheduler marks the job complete and
+      // does not schedule its 3× retry. `recordAiLocked` has already flipped
+      // aiAccess, which is what stops the task firing again at all; this branch
+      // handles the run already in flight when the verdict landed.
+      if (errorCode === 'not-subscribed') {
+        this._state = 'idle'; // force reset — bypasses transition guard, valid from any state
+        publishSyncStatus('idle');
+        try {
+          await feedPersistence.clearMachineSnapshot();
+        } catch (snapErr) {
+          logger.captureException(snapErr, {
+            tags: { service: 'FeedSyncMachine', step: 'clearMachineSnapshot' },
+          });
+        }
+        return;
+      }
+
       // `no-topics-configured` is the normal state for a user who hasn't
       // generated interests yet — not a failure. Treat it as a clean, terminal
       // "no work" outcome: show the add-interests prompt, reset to idle, and

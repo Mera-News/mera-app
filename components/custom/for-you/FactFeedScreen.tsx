@@ -2,6 +2,10 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import { useFeedbackSheet, type VerdictStoreAdapter } from '@/components/custom/feed/use-feedback-sheet';
 import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
+import { filterGroupsByImportance } from '@/components/custom/for-you/dashboard-importance';
+import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
+import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
+import type { ImportanceThreshold } from '@/lib/feed-ordering/importance-filter';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
   GLASS_HEADER_SCRIM,
@@ -105,20 +109,28 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   // which `buildFactRows` treats as the legacy geo/language-blind pick.
   const userGeoLanguageCtx = useUserGeoLanguageContext();
 
+  // Seeded from the Dashboard's importance filter so tapping into a section
+  // never shows MORE stories than the preview promised — then LOCAL from
+  // there on: this screen's dropdown is deliberately ephemeral (plain state,
+  // no persistence), resetting to the Dashboard's value on every visit.
+  const dashboardThreshold = useImportanceFilterStore((s) => s.dashboardThreshold);
+  const [threshold, setThreshold] = useState<ImportanceThreshold>(dashboardThreshold);
+
   const groups: FactRowGroup[] = useMemo(() => {
     if (!snapshots) return [];
     const { rows } = buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
     const found = rows.find((r) => r.factId === factId)?.groups ?? [];
+    const filtered = filterGroupsByImportance(found, threshold);
     // Order this screen by article publication freshness — newest PUBLISHED on
     // top (`pubDateMs`), not suggestion-creation time (the shared `cardCompare`
     // the Dashboard uses). Copy before sorting so the selector's array is left
     // untouched. Tiebreak on `_id` for a stable order.
-    return [...found].sort(
+    return [...filtered].sort(
       (a, b) =>
         b.pubDateMs - a.pubDateMs ||
         (a.data._id < b.data._id ? -1 : a.data._id > b.data._id ? 1 : 0),
     );
-  }, [snapshots, suggestions, factId, openedIds, userGeoLanguageCtx]);
+  }, [snapshots, suggestions, factId, openedIds, userGeoLanguageCtx, threshold]);
 
   // ── Scroll-to-top FAB ──
   const listRef = useRef<FlatList<FactRowGroup>>(null);
@@ -257,6 +269,11 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
               />
             )}
           </Box>
+          <ImportanceFilterDropdown
+            value={threshold}
+            onChange={setThreshold}
+            testIDPrefix="fact-feed-importance"
+          />
         </HStack>
       </Box>
       <FlatList

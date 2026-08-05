@@ -344,6 +344,13 @@ export function computeRelevance(
   // Headline floor (BEFORE penalties): a COUNTRY/GLOBAL headline clears the 0.3
   // render gate even with topicComp 0 — but penalties still apply below, so a
   // suppressed or wrong-city headline still dies.
+  //
+  // The floor clears the RENDER GATE, not the MEDIUM band (0.53): capped at
+  // HEADLINE_BASE_FLOOR + HEADLINE_POP_LIFT, a floor-only headline lands in the
+  // LOW band and is therefore culled after scoring by
+  // feed-ordering/importance-filter::isCulledHeadlineRelevance. That is
+  // intended — the floor exists to keep a headline SCOREABLE (so real affinity
+  // can lift it), not to guarantee it a slot.
   const base = candidate.headlineScope
     ? Math.max(mathBase, config.HEADLINE_BASE_FLOOR + config.HEADLINE_POP_LIFT * popComp)
     : mathBase;

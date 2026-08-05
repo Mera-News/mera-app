@@ -201,6 +201,7 @@ input IssueLlmWarningInput {
 }
 
 type Mutation {
+  acknowledgeLapseInterstitial: UserBillingInfo!
   advanceOnboardingStage(stage: OnboardingStage!, userId: ID!): UserPersona!
   deleteExpoPushToken(input: DeleteExpoPushTokenInput!): UserPersona!
   issueLlmWarning(input: IssueLlmWarningInput!): UserPersona!
@@ -640,8 +641,18 @@ type UserBillingInfo {
   """
   entitlementExpiresAt: String
 
+  """
+  True if this user has ever held a paid tier (now or in the past). False is what selects the app's first-open paywall over the softer lapse interstitial.
+  """
+  hasEverSubscribed: Boolean!
+
   """ISO timestamp of the next UTC midnight — when usage resets."""
   resetAt: String!
+
+  """
+  True when the user has lapsed out of a paid tier and has not yet acknowledged the interstitial for THAT lapse. Call acknowledgeLapseInterstitial once it has been shown; a later lapse flips this back to true on its own.
+  """
+  showLapseInterstitial: Boolean!
 
   """Subscription tier: 'none' | 'starter' | 'individual' | 'professional'."""
   subscriptionTier: String!

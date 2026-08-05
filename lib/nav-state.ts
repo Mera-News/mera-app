@@ -40,9 +40,17 @@ export function getCurrentPathname(): string {
 /**
  * Idempotently route to the paywall. No-op if we're already there or a paywall
  * navigation is already in flight — callers can fire this on every 402 safely.
+ *
+ * `reason` is optional and additive: with no argument this behaves exactly as
+ * it always has, down to the `router.replace` argument, so every existing call
+ * site is untouched. `'lapsed'` selects the screen's softer mode — explanation
+ * first, no auto-presented purchase sheet. The in-flight guard above is the
+ * load-bearing part of this function and is deliberately unchanged.
  */
-export function navigateToPaywall(): void {
+export function navigateToPaywall(reason?: 'lapsed'): void {
   if (navigatingToPaywall || currentPathname.includes('not-subscribed')) return;
   navigatingToPaywall = true;
-  router.replace(PAYWALL_PATH as never);
+  router.replace(
+    (reason ? { pathname: PAYWALL_PATH, params: { reason } } : PAYWALL_PATH) as never,
+  );
 }

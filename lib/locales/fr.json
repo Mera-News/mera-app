@@ -220,6 +220,10 @@
     "irrelevant": "Non pertinent",
     "unprocessed": "Non traité"
   },
+  "importanceFilter": {
+    "a11yLabel": "Priorité minimale de l'histoire",
+    "a11yOption": "Afficher la priorité {{level}} et supérieure"
+  },
   "aiDisclosure": {
     "caption": "Note générée par l'IA",
     "short": "Générée par l'IA",

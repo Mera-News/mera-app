@@ -67,7 +67,7 @@ describe('refreshUserBillingAfterPurchase', () => {
         resolvesWith('professional');
         const promise = refreshUserBillingAfterPurchase('individual', { intervalMs: 10 });
         await tick(0);
-        await expect(promise).resolves.toEqual(billing('professional'));
+        await expect(promise).resolves.toEqual({ billing: billing('professional'), confirmed: true });
         expect(mockQuery).toHaveBeenCalledTimes(1);
     });
 
@@ -79,23 +79,28 @@ describe('refreshUserBillingAfterPurchase', () => {
             attempts: 5,
             intervalMs: 10,
         });
-        await tick(10);
-        await tick(10);
-        await tick(10);
-        await expect(promise).resolves.toEqual(billing('professional'));
+        await tick(10_000);
+        await tick(10_000);
+        await tick(10_000);
+        await expect(promise).resolves.toEqual({ billing: billing('professional'), confirmed: true });
         expect(mockQuery).toHaveBeenCalledTimes(3);
     });
 
-    it('gives up after the attempt budget and returns the last snapshot — the deferred-plan-change case, where the tier never changes', async () => {
+    it('gives up after the attempt budget and reports unconfirmed — the deferred-plan-change case, where the tier never changes', async () => {
         for (let i = 0; i < 3; i++) resolvesWith('individual');
         const promise = refreshUserBillingAfterPurchase('individual', {
             attempts: 3,
             intervalMs: 10,
         });
-        await tick(10);
-        await tick(10);
-        await tick(10);
-        await expect(promise).resolves.toEqual(billing('individual'));
+        await tick(10_000);
+        await tick(10_000);
+        await tick(10_000);
+        // Still the OLD tier — and now explicitly flagged as unresolved, so the
+        // caller can refuse to commit it instead of silently showing stale data.
+        await expect(promise).resolves.toEqual({
+            billing: billing('individual'),
+            confirmed: false,
+        });
         // Bounded: exactly `attempts` fetches, never an unbounded poll.
         expect(mockQuery).toHaveBeenCalledTimes(3);
     });
@@ -104,9 +109,9 @@ describe('refreshUserBillingAfterPurchase', () => {
         resolvesWith('none');
         resolvesWith('starter');
         const promise = refreshUserBillingAfterPurchase(null, { attempts: 3, intervalMs: 10 });
-        await tick(10);
-        await tick(10);
-        await expect(promise).resolves.toEqual(billing('starter'));
+        await tick(10_000);
+        await tick(10_000);
+        await expect(promise).resolves.toEqual({ billing: billing('starter'), confirmed: true });
         expect(mockQuery).toHaveBeenCalledTimes(2);
     });
 
@@ -117,19 +122,19 @@ describe('refreshUserBillingAfterPurchase', () => {
             attempts: 3,
             intervalMs: 10,
         });
-        await tick(10);
-        await tick(10);
-        await expect(promise).resolves.toEqual(billing('professional'));
+        await tick(10_000);
+        await tick(10_000);
+        await expect(promise).resolves.toEqual({ billing: billing('professional'), confirmed: true });
     });
 
-    it('returns null when every attempt fails', async () => {
+    it('reports unconfirmed with a null snapshot when every attempt fails', async () => {
         for (let i = 0; i < 2; i++) mockQuery.mockRejectedValueOnce(new Error('offline'));
         const promise = refreshUserBillingAfterPurchase('individual', {
             attempts: 2,
             intervalMs: 10,
         });
-        await tick(10);
-        await tick(10);
-        await expect(promise).resolves.toBeNull();
+        await tick(10_000);
+        await tick(10_000);
+        await expect(promise).resolves.toEqual({ billing: null, confirmed: false });
     });
 });

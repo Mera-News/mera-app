@@ -28,10 +28,12 @@ jest.mock('../../logger', () => ({
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
+    info: jest.fn(),
     captureException: jest.fn(),
   },
 }));
 jest.mock('../../database/services/article-suggestion-service', () => ({
+  batchMarkExcluded: jest.fn(),
   countUnscoredSuggestions: jest.fn(),
   getScoredSuggestionsWithoutReasons: jest.fn(),
   getUnscoredSuggestionsWithFacts: jest.fn(),
@@ -72,6 +74,7 @@ import type { ScoringCandidate } from '../../database/services/article-suggestio
 import { completeLocal } from '../../llm/completeLocal';
 import { cloudBatchComplete } from '../../llm/cloudComplete';
 import {
+  batchMarkExcluded,
   countUnscoredSuggestions,
   getScoredSuggestionsWithoutReasons,
   getUnscoredSuggestionsWithFacts,
@@ -89,6 +92,7 @@ const mockGetScoredWithoutReasons = getScoredSuggestionsWithoutReasons as jest.M
 const mockGetUnscored = getUnscoredSuggestionsWithFacts as jest.MockedFunction<typeof getUnscoredSuggestionsWithFacts>;
 const mockSaveReason = saveReason as jest.MockedFunction<typeof saveReason>;
 const mockSaveScoringResult = saveScoringResult as jest.MockedFunction<typeof saveScoringResult>;
+const mockBatchMarkExcluded = batchMarkExcluded as jest.MockedFunction<typeof batchMarkExcluded>;
 const mockGetFacts = getFacts as jest.MockedFunction<typeof getFacts>;
 const mockGetState = useMeraProtocolStore.getState as jest.MockedFunction<typeof useMeraProtocolStore.getState>;
 
@@ -136,6 +140,7 @@ beforeEach(() => {
   mockGetState.mockReturnValue({ processingMode: 'CLOUD' } as ReturnType<typeof useMeraProtocolStore.getState>);
   mockGetFacts.mockResolvedValue([]);
   mockSaveScoringResult.mockResolvedValue(undefined as never);
+  mockBatchMarkExcluded.mockResolvedValue(undefined as never);
   mockSaveReason.mockResolvedValue(undefined as never);
   mockGetScoredWithoutReasons.mockResolvedValue([]);
   mockGetUnscored.mockResolvedValue([]);
@@ -622,6 +627,176 @@ describe('processAllUnscored', () => {
       .mockResolvedValueOnce([{ id: 'reason:b', output: 'reason b' }]);
 
     const result = await processAllUnscored();
+    expect(result).toBe(2);
+  });
+});
+
+// ============================================================
+// processAllUnscored — top-headline cull
+// ============================================================
+
+/** A headline-sourced candidate — `meta.headlineScope` is what marks it. */
+function makeHeadlineCandidate(id: string): ScoringCandidate {
+  return makeCandidate(id, {
+    meta: {
+      id,
+      titleEn: `Title ${id}`,
+      descriptionEn: `Description ${id}`,
+      publicationName: null,
+      countryCode: null,
+      firstPubDateMs: null,
+      maxClusterSize: null,
+      eventType: null,
+      category: null,
+      geoTagsJson: null,
+      entitiesJson: null,
+      matchedTopicsJson: null,
+      headlineScope: 'COUNTRY',
+      stableClusterId: null,
+    },
+  });
+}
+
+describe('processAllUnscored — top-headline cull', () => {
+  beforeEach(() => {
+    mockComputeAndJudge.mockReset();
+    mockGetScoredWithoutReasons.mockResolvedValue([]);
+  });
+
+  it('marks a LOW-band headline terminally excluded instead of saving it', async () => {
+    mockCountUnscored.mockResolvedValue(1);
+    mockGetUnscored
+      .mockResolvedValueOnce([makeHeadlineCandidate('h')])
+      .mockResolvedValue([]);
+    // 0.4 buckets to the LOW band.
+    mockComputeAndJudge.mockResolvedValue(stageResult({ h: 0.4 }));
+
+    const onBatchComplete = jest.fn();
+    const result = await processAllUnscored(undefined, 20, onBatchComplete);
+
+    expect(mockBatchMarkExcluded).toHaveBeenCalledWith(['h']);
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+    // No reason tokens spent on a row that is about to be excluded.
+    expect(mockCloudBatchComplete).not.toHaveBeenCalled();
+    // Counted as handled: the batch completes and the loop terminates.
+    expect(result).toBe(1);
+    expect(onBatchComplete).toHaveBeenCalledWith([
+      { id: 'h', relevance: 0, reason: null },
+    ]);
+  });
+
+  it('culls a headline scoring below the discard floor too', async () => {
+    mockCountUnscored.mockResolvedValue(1);
+    mockGetUnscored
+      .mockResolvedValueOnce([makeHeadlineCandidate('h')])
+      .mockResolvedValue([]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ h: 0.2 }));
+
+    const result = await processAllUnscored();
+
+    expect(mockBatchMarkExcluded).toHaveBeenCalledWith(['h']);
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+    expect(result).toBe(1);
+  });
+
+  it('saves a MEDIUM-band headline normally, reason flow unchanged', async () => {
+    mockCountUnscored.mockResolvedValue(1);
+    mockGetUnscored
+      .mockResolvedValueOnce([makeHeadlineCandidate('h')])
+      .mockResolvedValue([]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ h: 0.6 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([
+      { id: 'reason:h', output: 'A headline reason.' },
+    ]);
+
+    const result = await processAllUnscored();
+
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'h',
+      expect.objectContaining({
+        relevance: 0.6,
+        reason: 'A headline reason.',
+        reasonSkipped: false,
+        rawScore: 0.6,
+      }),
+    );
+    expect(result).toBe(1);
+  });
+
+  it('never culls a non-headline row at the same LOW score', async () => {
+    mockCountUnscored.mockResolvedValue(1);
+    mockGetUnscored.mockResolvedValueOnce([makeCandidate('a')]).mockResolvedValue([]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ a: 0.4 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([
+      { id: 'reason:a', output: 'A reason.' },
+    ]);
+
+    const result = await processAllUnscored();
+
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'a',
+      expect.objectContaining({ relevance: 0.4, rawScore: 0.4 }),
+    );
+    expect(result).toBe(1);
+  });
+
+  it('leaves a headline whose stage FAILED retryable — never excluded', async () => {
+    mockCountUnscored.mockResolvedValue(1);
+    mockGetUnscored
+      .mockResolvedValueOnce([makeHeadlineCandidate('h')])
+      .mockResolvedValue([]);
+    // A stage failure hands the row FALLBACK_RELEVANCE (0.3), which sits in the
+    // culled band — but it is a transient failure, not a verdict.
+    mockComputeAndJudge.mockRejectedValue(new Error('stage failed'));
+
+    const result = await processAllUnscored();
+
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+    expect(result).toBe(0);
+  });
+
+  it('leaves a factless (ineligible) headline unculled — it was never scored', async () => {
+    mockCountUnscored.mockResolvedValue(1);
+    mockGetUnscored
+      .mockResolvedValueOnce([
+        makeCandidate('h', {
+          relatedFacts: [],
+          meta: makeHeadlineCandidate('h').meta,
+        }),
+      ])
+      .mockResolvedValue([]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({}));
+
+    const result = await processAllUnscored();
+
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    // INELIGIBLE_RELEVANCE (0.2) is below the discard floor, so it persists
+    // unbucketed exactly as it did before the cull existed.
+    expect(mockSaveScoringResult).toHaveBeenCalledWith(
+      'h',
+      expect.objectContaining({ relevance: 0.2 }),
+    );
+    expect(result).toBe(1);
+  });
+
+  it('culls only the headline half of a mixed batch', async () => {
+    mockCountUnscored.mockResolvedValue(2);
+    mockGetUnscored
+      .mockResolvedValueOnce([makeHeadlineCandidate('h'), makeCandidate('a')])
+      .mockResolvedValue([]);
+    mockComputeAndJudge.mockResolvedValue(stageResult({ h: 0.4, a: 0.4 }));
+    mockCloudBatchComplete.mockResolvedValueOnce([
+      { id: 'reason:a', output: 'A reason.' },
+    ]);
+
+    const result = await processAllUnscored();
+
+    expect(mockBatchMarkExcluded).toHaveBeenCalledWith(['h']);
+    expect(mockSaveScoringResult).toHaveBeenCalledTimes(1);
+    expect(mockSaveScoringResult).toHaveBeenCalledWith('a', expect.anything());
     expect(result).toBe(2);
   });
 });

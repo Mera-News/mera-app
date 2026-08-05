@@ -9,6 +9,7 @@ import {
   buildFeedList,
   feedCompare,
   feedScore,
+  filterByImportance,
   FEED_HALF_LIFE_HOURS,
   FEED_RECENCY_WEIGHT,
   FEED_BREAKING_RECENCY_BONUS,
@@ -519,5 +520,61 @@ describe('buildFeedList — source preferences (source-pref, D1/D3/D4)', () => {
     expect(buildFeedList(pool, new Set(), NOW, emptySets)).toEqual(
       buildFeedList(pool, new Set(), NOW, null),
     );
+  });
+});
+
+describe('filterByImportance — display-only band gate', () => {
+  /** A one-member list item around a suggestion. `breaking` is left false on
+   *  purpose: the filter must read the breaking PREDICATE off the suggestion,
+   *  not trust a flag that a persisted row could carry stale. */
+  function item(o: Partial<ForYouSuggestion> = {}): FeedListItem {
+    const s = sugg(o);
+    return {
+      id: s.articleId,
+      suggestion: s,
+      memberCount: 1,
+      memberIds: [s.articleId],
+      breaking: false,
+      score: 0,
+    };
+  }
+
+  it("'low' returns the SAME array reference (the no-op setting)", () => {
+    const data = [item({ relevance: 0.31 }), item({ relevance: 0.9 })];
+    expect(filterByImportance(data, 'low')).toBe(data);
+  });
+
+  it("'medium' hides the low band and keeps 0.53 and above", () => {
+    const data = [
+      item({ _id: 'lo', relevance: 0.31 }),
+      item({ _id: 'lo2', relevance: 0.529 }),
+      item({ _id: 'med', relevance: 0.53 }),
+      item({ _id: 'hi', relevance: 0.9 }),
+    ];
+    expect(filterByImportance(data, 'medium').map((it) => it.suggestion._id)).toEqual([
+      'med',
+      'hi',
+    ]);
+  });
+
+  it("'high' hides the medium band and keeps 0.77 and above", () => {
+    const data = [
+      item({ _id: 'med', relevance: 0.6 }),
+      item({ _id: 'med2', relevance: 0.769 }),
+      item({ _id: 'hi', relevance: 0.77 }),
+    ];
+    expect(filterByImportance(data, 'high').map((it) => it.suggestion._id)).toEqual(['hi']);
+  });
+
+  it("emergency (relevance > 1.0) passes 'high'", () => {
+    const data = [item({ _id: 'emg', relevance: 1.1 })];
+    expect(filterByImportance(data, 'high')).toHaveLength(1);
+  });
+
+  it("keeps a breaking story at 'high' even when its relevance sits in the medium band", () => {
+    // The exact shape the exemption exists for: a soft-suppression penalty
+    // dragged `relevance` to 0.6 while `rawScore` stayed at breaking level.
+    const data = [item({ _id: 'brk', relevance: 0.6, rawScore: 0.85, eventType: 'disaster' })];
+    expect(filterByImportance(data, 'high').map((it) => it.suggestion._id)).toEqual(['brk']);
   });
 });

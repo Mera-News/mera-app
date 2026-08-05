@@ -215,6 +215,10 @@
     "irrelevant": "无关",
     "unprocessed": "未处理"
   },
+  "importanceFilter": {
+    "a11yLabel": "最低故事优先级",
+    "a11yOption": "显示{{level}}优先级及以上"
+  },
   "aiDisclosure": {
     "caption": "AI 生成的说明",
     "short": "AI 生成",

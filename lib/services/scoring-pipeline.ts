@@ -47,6 +47,9 @@ import {
 // the one definition of "headline-sourced", shared with the prompt/chunk-size
 // selection the shim's builders run.
 import { isHeadlineScope, isScorableCandidate } from '@/lib/news-harness/article-pipeline/scoring';
+// The one definition of "this headline scored too low to exist" — expressed over
+// relevanceBandRank so the cull can never disagree with the band a card prints.
+import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter';
 import {
   bucketScores,
   buildReasonCallsForSubset,
@@ -1190,13 +1193,39 @@ async function doSubmitRelevance(
   // decode (or vice versa).
   const relevanceScores = new Map(math.computedScoreMap);
   if (!relevanceV2) bucketScores(relevanceScores);
+
+  // TOP-HEADLINE CULL. A headline-sourced row landing below the MEDIUM band is
+  // terminally `excluded` instead of persisted as a suggestion — headlines exist
+  // to surface what matters in a region, so a LOW one is noise on every surface.
+  // Unconditional (no user setting). Topic-matched rows are NEVER culled: their
+  // LOW band stays visible on the Dashboard. Runs BEFORE the math persist —
+  // writing a score afterwards would overwrite the terminal status.
+  const culledHeadlineIds = new Set<string>();
+  for (const c of math.stage) {
+    if (!isHeadlineScope(c.input.headlineScope)) continue;
+    if (isCulledHeadlineRelevance(relevanceScores.get(c.input.id) ?? 0)) {
+      culledHeadlineIds.add(c.input.id);
+    }
+  }
+  if (culledHeadlineIds.size > 0) {
+    logger.debug(
+      `${TAG} batch ${batch.batchId} culled ${culledHeadlineIds.size}/${math.stage.length} sub-MEDIUM headlines`,
+    );
+    await batchMarkExcluded([...culledHeadlineIds]);
+  }
+
   const relevanceRecord: Record<string, number> = {};
   for (const c of math.stage) {
     const id = c.input.id;
+    // Culled ids are DELIBERATELY absent from this map. It is the `relevanceMap`
+    // the decode hands to discardLowRelevance, which would otherwise read a
+    // culled row's sub-KEEP score and flip it from `excluded` back to a
+    // reason-skipped `complete` via batchMarkReasonSkipped.
+    if (culledHeadlineIds.has(id)) continue;
     relevanceRecord[id] = relevanceScores.get(id) ?? 0;
   }
   await batchSaveMathScores(
-    math.stage.map((c) => {
+    math.stage.filter((c) => !culledHeadlineIds.has(c.input.id)).map((c) => {
       const id = c.input.id;
       const relevance = relevanceScores.get(id) ?? 0;
       return {
@@ -1227,8 +1256,12 @@ async function doSubmitRelevance(
   // will render + earn a note). Sub-threshold rows are already terminal
   // (reasonSkipped). buildJudgeCalls chunks this subset in order → the `judge:N`
   // decode join key stored as judgedIds.
+  // Culled headlines are terminal, so they never earn a note — and a 0.4–0.52
+  // one clears the raw `> 0.3` filter, so the cull must be tested separately.
   const judgedStage = math.stage.filter(
-    (c) => (relevanceScores.get(c.input.id) ?? 0) > REASON_RELEVANCE_THRESHOLD,
+    (c) =>
+      !culledHeadlineIds.has(c.input.id) &&
+      (relevanceScores.get(c.input.id) ?? 0) > REASON_RELEVANCE_THRESHOLD,
   );
   const judgedIds = judgedStage.map((c) => c.input.id);
 
@@ -1263,9 +1296,12 @@ async function doSubmitRelevance(
     calls,
     promptsById: new Map(),
     chunkIdToCandidates: new Map(),
-    // Hard-filtered rows are already terminal (`excluded`) — never re-offer
-    // them to the judge/decode path.
-    eligibleCandidates: active,
+    // Hard-filtered AND culled-headline rows are already terminal (`excluded`)
+    // — never re-offer either to the judge/decode path.
+    eligibleCandidates:
+      culledHeadlineIds.size > 0
+        ? active.filter((c) => !culledHeadlineIds.has(c.id))
+        : active,
   };
 
   const ctx = await rebuildE2EEContext(SMALL_MODEL, privKeyHex, run.algo);
@@ -1802,11 +1838,36 @@ async function handleRelevanceResults(
   for (const [id, raw] of scoreMap) rawRelevanceMap[id] = raw;
   bucketScores(scoreMap);
 
+  // TOP-HEADLINE CULL (same rule as the judge path): a headline-sourced row that
+  // scored below the MEDIUM band is terminally `excluded` instead of saved.
+  // Topic-matched rows are never culled — their LOW band stays on the Dashboard.
+  // Before the save loop, so no score is written over the terminal status.
+  const culledHeadlineIds = new Set<string>();
+  const headlineIds = await lookupHeadlineIds(batch.candidateIds);
+  if (headlineIds.size > 0) {
+    for (const id of headlineIds) {
+      if (failedIds.has(id)) continue;
+      const relevance = scoreMap.get(id);
+      if (relevance === undefined) continue;
+      if (isCulledHeadlineRelevance(relevance)) culledHeadlineIds.add(id);
+    }
+    if (culledHeadlineIds.size > 0) {
+      logger.debug(
+        `${TAG} batch ${batch.batchId} culled ${culledHeadlineIds.size}/${headlineIds.size} sub-MEDIUM headlines`,
+      );
+      await batchMarkExcluded([...culledHeadlineIds]);
+      // Culled ids leave BOTH maps: relevanceMap feeds discardLowRelevance,
+      // which would flip a sub-KEEP row from `excluded` back to a reason-skipped
+      // `complete`; rawRelevanceMap is the reason-prompt score lookup.
+      for (const id of culledHeadlineIds) delete rawRelevanceMap[id];
+    }
+  }
+
   // DB writes FIRST (so the impactful subset query sees reason_pending rows),
   // then a single CAS storing the maps + next phase.
   const relevanceMap: Record<string, number> = {};
   for (const id of batch.candidateIds) {
-    if (failedIds.has(id)) continue;
+    if (failedIds.has(id) || culledHeadlineIds.has(id)) continue;
     const relevance = scoreMap.get(id);
     if (relevance === undefined) continue;
     relevanceMap[id] = relevance;

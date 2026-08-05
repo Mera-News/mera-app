@@ -18,7 +18,12 @@
 import { useMemo } from 'react';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { SCORE_PROPAGATION_LOOKBACK_MS } from '@/lib/feed-grouping/story-grouping';
-import { RENDER_GATE } from '@/lib/stores/fact-rows-selector';
+import {
+  passesImportanceThreshold,
+  type ImportanceThreshold,
+} from '@/lib/feed-ordering/importance-filter';
+import { isBreaking, RENDER_GATE } from '@/lib/stores/fact-rows-selector';
+import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { useForYouCounts, useForYouSuggestions } from '@/lib/stores/selectors';
 
@@ -59,7 +64,24 @@ export interface ComputeFeedCountsOptions {
    *  ⇒ `readCount` is 0 rather than an error, so non-UI callers can ask for
    *  just the analysed/relevant pair. */
   openedArticleIds?: ReadonlySet<string>;
+  /** Minimum band the SURFACE reading this sentence renders. Defaults to 'low'
+   *  — the no-op setting, so every existing caller keeps its exact counts. A
+   *  tighter value narrows `relevant`/`read` only, never `analysed`: the number
+   *  of stories we looked at does not change because the reader hid some. */
+  importanceThreshold?: ImportanceThreshold;
 }
+
+/** The minimal row projection the counters read. `rawScore`/`eventType` are here
+ *  solely for `isBreaking` (which is exempt from the importance threshold) and
+ *  stay optional so callers with a leaner row shape still type-check. */
+type FeedCountsRow = {
+  status: string;
+  firstPubDate: string;
+  relevance: number;
+  articleId: string;
+  rawScore?: number | null;
+  eventType?: string | null;
+};
 
 /**
  * The pure "analysed / relevant" counters behind the header sentence.
@@ -70,11 +92,12 @@ export interface ComputeFeedCountsOptions {
  * make the whole "header says 90, feed shows 23" reconciliation a lie.
  */
 export function computeFeedCounts(
-  suggestions: { status: string; firstPubDate: string; relevance: number; articleId: string }[],
+  suggestions: FeedCountsRow[],
   opts?: ComputeFeedCountsOptions,
 ): { analysedCount: number; relevantCount: number; readCount: number } {
   const cutoffMs = (opts?.nowMs ?? Date.now()) - FEED_WINDOW_MS;
   const opened = opts?.openedArticleIds;
+  const threshold = opts?.importanceThreshold ?? 'low';
   let analysed = 0;
   let relevant = 0;
   let read = 0;
@@ -83,7 +106,14 @@ export function computeFeedCounts(
     const pt = Date.parse(s.firstPubDate);
     if (!Number.isFinite(pt) || pt < cutoffMs) continue;
     analysed++;
-    if (s.relevance > RELEVANT_GATE) {
+    // Same two-part rule the Feed list applies (`filterByImportance`): band, or
+    // breaking regardless of band. `isBreaking` reads only rawScore/eventType,
+    // hence the downcast rather than a second copy of the rule here.
+    if (
+      s.relevance > RELEVANT_GATE &&
+      (passesImportanceThreshold(s.relevance, threshold) ||
+        isBreaking(s as ForYouSuggestion))
+    ) {
       relevant++;
       if (opened?.has(s.articleId)) read++;
     }
@@ -91,7 +121,7 @@ export function computeFeedCounts(
   return { analysedCount: analysed, relevantCount: relevant, readCount: read };
 }
 
-export function useFeedCounts(): FeedCounts {
+export function useFeedCounts(importanceThreshold?: ImportanceThreshold): FeedCounts {
   const suggestions = useForYouSuggestions();
   const { articleCount } = useForYouCounts();
   // Subscribed, not read via getState(): every open replaces the Set (see
@@ -100,8 +130,8 @@ export function useFeedCounts(): FeedCounts {
   const openedArticleIds = useOpenedStoriesStore((s) => s.articleIds);
 
   const { analysedCount, relevantCount, readCount } = useMemo(
-    () => computeFeedCounts(suggestions, { openedArticleIds }),
-    [suggestions, openedArticleIds],
+    () => computeFeedCounts(suggestions, { openedArticleIds, importanceThreshold }),
+    [suggestions, openedArticleIds, importanceThreshold],
   );
 
   return { articleCount, analysedCount, relevantCount, readCount };

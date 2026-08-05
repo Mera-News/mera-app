@@ -82,6 +82,9 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
     const [priceString, setPriceString] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
+    // A purchase completed but the server has not confirmed the new tier yet.
+    // Same situation, same copy, as NotSubscribedScreen's `activationDelayed`.
+    const [activationPending, setActivationPending] = useState(false);
     const customerInfo = useSubscriptionStore((s) => s.customerInfo);
     const setCustomerInfo = useSubscriptionStore((s) => s.setCustomerInfo);
 
@@ -96,14 +99,48 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
      * refreshUserBillingAfterPurchase).
      */
     const load = useCallback(async (awaitTierChangeFrom?: string | null) => {
-        const [billingInfo, freshCustomerInfo, offering] = await Promise.all([
-            awaitTierChangeFrom === undefined
-                ? fetchUserBilling()
-                : refreshUserBillingAfterPurchase(awaitTierChangeFrom),
+        const isPostPurchase = awaitTierChangeFrom !== undefined;
+        const [billingResult, freshCustomerInfo, offering] = await Promise.all([
+            isPostPurchase
+                ? refreshUserBillingAfterPurchase(awaitTierChangeFrom)
+                : fetchUserBilling().then((b) => ({ billing: b, confirmed: true })),
             getCustomerInfoSafe(),
             getOfferingSafe(),
         ]);
-        if (billingInfo || awaitTierChangeFrom === undefined) setBilling(billingInfo);
+        const { billing: billingInfo, confirmed } = billingResult;
+
+        // On an UNCONFIRMED post-purchase read, `billingInfo` is the tier the
+        // user had BEFORE they paid. Committing it here is the pre-existing bug
+        // — the screen says the purchase succeeded and then renders the old
+        // plan. Leave the panels showing what they already had and let the
+        // secondary poll below settle it.
+        if (confirmed) {
+            setBilling(billingInfo);
+            // Mirror the server's verdict into the store so companion mode
+            // lifts (or falls) app-wide, not just on this screen's usage card.
+            useSubscriptionStore.getState().setServerBilling(billingInfo);
+        }
+        setActivationPending(isPostPurchase && !confirmed);
+
+        if (isPostPurchase && !confirmed) {
+            // Longer, still-bounded second look. Always clears the notice, even
+            // unresolved: a DEFERRED App Store plan change never changes the
+            // tier at all, so waiting for one would strand the user in
+            // "activating…" forever.
+            void (async () => {
+                const later = await refreshUserBillingAfterPurchase(awaitTierChangeFrom, {
+                    attempts: 20,
+                    intervalMs: 5000,
+                    backoffFactor: 1,
+                });
+                if (later.billing) {
+                    setBilling(later.billing);
+                    useSubscriptionStore.getState().setServerBilling(later.billing);
+                }
+                setActivationPending(false);
+            })();
+        }
+
         if (freshCustomerInfo) setCustomerInfo(freshCustomerInfo);
 
         const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;
@@ -265,6 +302,19 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                     contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 24 }}
                     showsVerticalScrollIndicator={false}
                 >
+                    {/* The purchase went through but our server has not caught
+                        up. Shown INSTEAD of committing the pre-purchase plan to
+                        the panels below. Always clears. */}
+                    {activationPending ? (
+                        <Text
+                            testID="manage-activation-pending"
+                            size="sm"
+                            className="text-primary-400 mt-4"
+                        >
+                            {t('subscription.activationDelayed')}
+                        </Text>
+                    ) : null}
+
                     {/* Hero plan card */}
                     <Box className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mt-4">
                         <HStack className="items-center">
