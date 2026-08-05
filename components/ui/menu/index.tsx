@@ -17,7 +17,11 @@ type IMotionViewProps = React.ComponentProps<typeof View> &
 const MotionView = Motion.View as React.ComponentType<IMotionViewProps>;
 
 const menuStyle = tva({
-  base: 'rounded-md bg-background-0 border border-outline-100 p-1 shadow-hard-5',
+  // App customization: user-picked grey panel (matched to the app's frosted
+  // header tone) instead of the template's near-black bg-background-0. A
+  // glass (GlassPlate) version was tried and rejected — page text read
+  // through the item labels even at a denser scrim.
+  base: 'rounded-md bg-[#45434A] border border-outline-100 p-1 shadow-hard-5',
 });
 
 const menuItemStyle = tva({

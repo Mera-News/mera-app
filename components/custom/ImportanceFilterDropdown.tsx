@@ -6,9 +6,12 @@ import {
     IMPORTANCE_THRESHOLDS,
     type ImportanceThreshold,
 } from '@/lib/feed-ordering/importance-filter';
+import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
+
+const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 // Same label keys as RelevanceChip, for the same reason: the control and the
 // worded chip on each card must never disagree.
@@ -60,8 +63,16 @@ const ImportanceFilterDropdown: React.FC<ImportanceFilterDropdownProps> = ({
                     // min-h-10, rounded-full, px-4, text-base.
                     className="flex-row items-center rounded-full border border-primary-500 min-h-10 px-4"
                 >
+                    {/* The filter glyph is what tells the reader this chip
+                        FILTERS the list below (vs. being a mode/sort switch). */}
+                    <MaterialIcons
+                        name="filter-list"
+                        size={16}
+                        color={ACCENT}
+                        style={{ marginRight: 6 }}
+                    />
                     <Text size="md" numberOfLines={1} className="text-primary-500 font-semibold">
-                        {t(LABEL_KEYS[value] as any)}
+                        {`${t(LABEL_KEYS[value] as any)}+`}
                     </Text>
                     <Icon as={ChevronDownIcon} size="sm" className="ml-1.5 text-primary-400" />
                 </Pressable>
@@ -75,12 +86,18 @@ const ImportanceFilterDropdown: React.FC<ImportanceFilterDropdownProps> = ({
                         textValue={t(LABEL_KEYS[threshold] as any)}
                         testID={`${testIDPrefix}-${threshold}`}
                         onPress={() => onChange(threshold)}
+                        // Compact: the template's min-w-[200px] suits text-heavy
+                        // menus; three short band labels don't need it.
+                        className="min-w-28 p-2.5"
                     >
                         <MenuItemLabel
                             size="sm"
                             className={selected ? 'text-primary-400 font-semibold' : ''}
                         >
-                            {t(LABEL_KEYS[threshold] as any)}
+                            {/* "+" = "this band and above" — script-neutral, and it
+                                matches the trigger chip so the semantics are taught
+                                where the choice is made. */}
+                            {`${t(LABEL_KEYS[threshold] as any)}+`}
                         </MenuItemLabel>
                         {/* Fixed-width slot so labels align checked or not */}
                         <View style={{ width: 24, alignItems: 'flex-end' }}>
