@@ -17,6 +17,8 @@ import {
 import { blendToScore } from '../article-pipeline/scoring';
 import {
   parseScoreV3Response,
+  parseV3NoteResponse,
+  CLOUD_V3_NOTE_SYSTEM_PROMPT,
   CLOUD_SCORE_V3_SYSTEM_PROMPT,
   CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -252,6 +254,65 @@ describe('parseScoreV3Response', () => {
   });
 });
 
+// --- parseV3NoteResponse ---------------------------------------------------
+
+describe('parseV3NoteResponse', () => {
+  it('decodes a keep with its sentence', () => {
+    expect(
+      parseV3NoteResponse('{"keep": true, "why": "Bhopal heatwave alert affects your family."}'),
+    ).toEqual({ keep: true, why: 'Bhopal heatwave alert affects your family.' });
+  });
+
+  it('decodes a demote, which never carries a sentence', () => {
+    expect(parseV3NoteResponse('{"keep": false}')).toEqual({ keep: false, why: null });
+    // A demote that volunteers prose still yields none — the row is going away.
+    expect(parseV3NoteResponse('{"keep": false, "why": "ignored"}')).toEqual({
+      keep: false,
+      why: null,
+    });
+  });
+
+  it('tolerates surrounding prose and a markdown fence', () => {
+    expect(
+      parseV3NoteResponse('```json\n{"keep":true,"why":"Your city floods."}\n```'),
+    ).toEqual({ keep: true, why: 'Your city floods.' });
+  });
+
+  it('strips the leaked scaffolding the legacy reason parser also strips', () => {
+    const out = parseV3NoteResponse(
+      '{"keep":true,"why":"**Why this matters to you:** Your **city** floods."}',
+    );
+    expect(out).toEqual({ keep: true, why: 'Your city floods.' });
+  });
+
+  it('treats an empty or whitespace sentence as no sentence, not as a lie', () => {
+    expect(parseV3NoteResponse('{"keep":true,"why":"   "}')).toEqual({ keep: true, why: null });
+    expect(parseV3NoteResponse('{"keep":true}')).toEqual({ keep: true, why: null });
+  });
+
+  // Null means "unusable", and callers fail OPEN on it: the pass-1 score stands
+  // and the row still owes a note. An unreadable response is not evidence that
+  // the article deserves demoting.
+  it('returns null on anything it cannot read', () => {
+    expect(parseV3NoteResponse('')).toBeNull();
+    expect(parseV3NoteResponse('no json here')).toBeNull();
+    expect(parseV3NoteResponse('{"keep":true')).toBeNull(); // truncated
+    expect(parseV3NoteResponse('{"why":"no verdict"}')).toBeNull(); // missing keep
+    expect(parseV3NoteResponse('{"keep":"yes"}')).toBeNull(); // keep must be a boolean
+  });
+
+  it('unwraps a lone object the model wrapped in an array', () => {
+    // Same tolerance parseScoreV3Response applies to its outermost `[ … ]`: the
+    // wrapper is a harmless deviation, and the verdict inside is unambiguous.
+    expect(parseV3NoteResponse('[{"keep":true,"why":"Your city floods."}]')).toEqual({
+      keep: true,
+      why: 'Your city floods.',
+    });
+    // TWO objects are NOT unambiguous — this call covers exactly one article.
+    expect(parseV3NoteResponse('[{"keep":true},{"keep":false}]')).toBeNull();
+  });
+});
+
 // --- prompt shape ---------------------------------------------------------
 
 describe('v3 system prompts', () => {
@@ -262,14 +323,30 @@ describe('v3 system prompts', () => {
     ]) {
       expect(p).toContain('"rel"');
       expect(p).toContain('"impact"');
-      expect(p).toContain('"why"');
-      expect(p).toContain('(0.65 × rel) + (0.35 × impact)');
       expect(p).toContain('Field order is load-bearing');
-      // the second-person voice rule, shared with the legacy reason prompts
-      expect(p).toContain('The reason is read BY the user');
       // anti-compression calibration
       expect(p).toContain('Spread is mandatory');
       expect(p).toContain('rel ≥ 60');
+    }
+  });
+
+  // Pass 1 SCORES; it does not write. A merged batch that produced five
+  // sentences about five similar articles attached some of them to the wrong
+  // article — measured at 4.9% of notes on the 292-article gold set, with the
+  // array still correctly numbered 1..N. These assertions are the guard against
+  // quietly reintroducing prose here.
+  it('asks for numbers only — no user-facing sentence', () => {
+    for (const p of [
+      CLOUD_SCORE_V3_SYSTEM_PROMPT,
+      CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT,
+    ]) {
+      // The conditional-reason contract and its arithmetic gate are both gone.
+      expect(p).not.toContain('(0.65 × rel) + (0.35 × impact)');
+      expect(p).not.toContain('25 words or fewer');
+      expect(p).not.toContain('The reason is read BY the user');
+      // `"why"` survives only as the thing NOT to emit.
+      expect(p).toContain('is a FORMAT ERROR');
+      expect(p).toContain('and nothing else');
     }
   });
 
