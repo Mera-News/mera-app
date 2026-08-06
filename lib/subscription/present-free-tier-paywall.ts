@@ -21,6 +21,7 @@ import { getOfferingSafe } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
 import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
+import { rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 
 /**
@@ -76,6 +77,13 @@ export async function presentFreeTierPaywall(source: string): Promise<void> {
 
         if (confirmed && billing) {
             useSubscriptionStore.getState().setServerBilling(billing);
+            // This branch does NOT go through syncEntitlement, so it needs its
+            // own write of the device's last-known tier. It matters more than
+            // most: a purchase made from the PRE-ONBOARDING paywall is exactly
+            // how a device ends up with a real tier and zero local facts, i.e.
+            // the one profile that still meets the onboarding entitlement gate
+            // on its next cold start. See lib/subscription/last-known-tier.ts.
+            void rememberLastKnownTier(billing.subscriptionTier ?? 'none');
             // Only here — the server has agreed. On the unconfirmed branch below
             // the snapshot is the PRE-purchase tier, so a toast there would
             // announce a plan the app is still not showing.

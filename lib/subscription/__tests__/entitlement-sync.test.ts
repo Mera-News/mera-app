@@ -26,6 +26,13 @@ jest.mock('@/lib/billing-service', () => ({
     fetchUserBillingLapseState: (...a: any[]) => mockFetchUserBillingLapseState(...a),
 }));
 
+// The device-local tier memory. Mocked rather than exercised for real: it reads
+// and writes WatermelonDB, and this suite is about the debounce.
+const mockRememberLastKnownTier = jest.fn(async () => {});
+jest.mock('@/lib/subscription/last-known-tier', () => ({
+    rememberLastKnownTier: (...a: any[]) => mockRememberLastKnownTier(...(a as [])),
+}));
+
 import { syncEntitlement, resetEntitlementSyncState } from '../entitlement-sync';
 
 const billing = (subscriptionTier: string) => ({
@@ -57,6 +64,32 @@ describe('syncEntitlement', () => {
         await syncEntitlement();
         expect(mockFetchUserBilling).toHaveBeenCalledTimes(1);
         expect(mockSetServerBilling).toHaveBeenCalledWith(billing('individual'));
+    });
+
+    // ── The last-known-tier write (2026-08-06) ───────────────────────────────
+    //
+    // This is the highest-coverage write site for the device's memory of its own
+    // tier — foreground, login, purchase and a 402 all funnel through here — and
+    // that memory is what the pre-onboarding entitlement gate falls back on when
+    // billing cannot be reached on a cold start.
+    it('records the resolved tier on the device', async () => {
+        await syncEntitlement();
+        expect(mockRememberLastKnownTier).toHaveBeenCalledWith('individual');
+    });
+
+    it("records 'none' when the server answers with no tier — that IS a resolution", async () => {
+        // Distinguishing this from "never resolved" is the whole point: a
+        // never-resolved device is the only one that may fall through to the
+        // paywall on an unresolvable verdict.
+        mockFetchUserBilling.mockResolvedValue({ ...billing('none'), subscriptionTier: null });
+        await syncEntitlement();
+        expect(mockRememberLastKnownTier).toHaveBeenCalledWith('none');
+    });
+
+    it('records nothing when the fetch failed — a silent server is not a resolution', async () => {
+        mockFetchUserBilling.mockResolvedValue(null);
+        await syncEntitlement();
+        expect(mockRememberLastKnownTier).not.toHaveBeenCalled();
     });
 
     it('debounces a second call inside the 60s window', async () => {

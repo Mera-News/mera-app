@@ -12,7 +12,7 @@ import {
     decideOnboardingEntry,
     resolveEntitlementForOnboarding,
 } from "@/lib/subscription/onboarding-paywall";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface OnboardingScreenProps {
     /**
@@ -54,8 +54,8 @@ interface OnboardingScreenProps {
 }
 
 /**
- * Onboarding gate for the post-login path (login / deep-link verify →
- * /logged-in/onboarding).
+ * Onboarding gate for the /logged-in/onboarding route (reached from the
+ * cold-start gate and from deep-link verify).
  *
  * The gate is LOCAL FACTS, not the server's `onboardingStage`. The stage flag
  * lies — the wizard's Next button advances it to FINISHED whether or not the
@@ -71,6 +71,35 @@ interface OnboardingScreenProps {
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onPaywall, onFreeTierMode }) => {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
+
+    // ── WHY THE HANDLERS LIVE IN A REF ──────────────────────────────────────
+    //
+    // The gate below awaits `resolveEntitlementForOnboarding`, which holds for
+    // up to ONBOARDING_ENTITLEMENT_WAIT_MS. Its dep array used to include
+    // `onComplete`, and the parent (`app/logged-in/onboarding.tsx`) defines its
+    // handlers as plain inline functions — a new identity on EVERY render. Each
+    // re-render therefore tore the effect down, set `cancelled = true`, threw
+    // away the in-flight wait and started it again from zero. The better-auth
+    // session atom is documented to change at least twice on a cold start
+    // (app/index.tsx), so on the path that matters the wait essentially never
+    // completed and the gate decided on an unresolved verdict — the 2026-08-06
+    // regression.
+    //
+    // A ref rather than only `useCallback` in the parent: the fix has to hold at
+    // this chokepoint no matter which caller mounts the screen (there are two,
+    // and DeepLinkVerifyScreen's is not the one that was audited). The parent
+    // memoizes as well — cheap, and it stops needless re-renders — but this is
+    // what makes the property true. Reading a ref inside the effect also keeps
+    // `react-hooks/exhaustive-deps` satisfied WITHOUT a disable comment, which a
+    // bare dep removal would not.
+    //
+    // Written in an effect, never during render (React Compiler is enabled).
+    // `useRef`'s initializer already carries the mount-time identities, and this
+    // effect is declared BEFORE the gate's so the refresh always lands first.
+    const handlersRef = useRef({ onLoginRedirect, onComplete, onPaywall, onFreeTierMode });
+    useEffect(() => {
+        handlersRef.current = { onLoginRedirect, onComplete, onPaywall, onFreeTierMode };
+    });
 
     useEffect(() => {
         let cancelled = false;
@@ -107,7 +136,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                     // Unresolvable locally. onLoginRedirect routes to
                     // /login?reauth=1 — the reauth param is load-bearing, see
                     // app/logged-in/onboarding.tsx.
-                    if (!cancelled) onLoginRedirect();
+                    if (!cancelled) handlersRef.current.onLoginRedirect();
                     return;
                 }
 
@@ -151,7 +180,7 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
             if (hasFacts) {
                 // Leave the spinner mounted: onComplete() replaces this route,
                 // so rendering `null` here would only flash a blank screen.
-                onComplete();
+                handlersRef.current.onComplete();
                 return;
             }
 
@@ -159,11 +188,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
             //
             // This is the ordering fix, and it lives HERE rather than in
             // app/logged-in/index.tsx because this component is the only
-            // mounter of OnboardingWizard: app/login.tsx and
-            // DeepLinkVerifyScreen both redirect straight to
-            // /logged-in/onboarding and never touch the cold-start gate, so a
-            // check placed only there would be bypassed by every fresh login —
-            // which is precisely the user this fix is for.
+            // mounter of OnboardingWizard: DeepLinkVerifyScreen redirects
+            // straight to /logged-in/onboarding and never touches the
+            // cold-start gate, so a check placed only there would be bypassed
+            // by that doorway.
+            //
+            // 2026-08-06: app/login.tsx was a second such doorway and is no
+            // longer one — it now redirects to /logged-in, which resolves
+            // identity, local facts and entitlement like every other entry.
             //
             // Reached only with ZERO local facts, so an already-onboarded user
             // never pays for any of it. `isCheckingOnboarding` stays true for
@@ -179,17 +211,20 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
             if (cancelled) return;
 
             // Only consulted when it can change the outcome — no DB read on the
-            // subscriber path.
+            // subscriber path. `!== 'entitled'` rather than `=== 'locked'`:
+            // since 2026-08-06 `'unknown'` diverts too, and hard-coding `false`
+            // there would send a user who already dismissed the paywall straight
+            // back to it, forever.
             const firstOpenDismissed =
-                aiAccess === 'locked' ? await readFirstOpenDismissed() : false;
+                aiAccess !== 'entitled' ? await readFirstOpenDismissed() : false;
             if (cancelled) return;
 
             const entry = decideOnboardingEntry({ aiAccess, firstOpenDismissed });
             if (entry !== 'onboarding') {
                 // Leave the spinner mounted: both callbacks replace this route,
                 // so rendering anything else here would only flash.
-                if (entry === 'paywall') onPaywall();
-                else onFreeTierMode();
+                if (entry === 'paywall') handlersRef.current.onPaywall();
+                else handlersRef.current.onFreeTierMode();
                 return;
             }
 
@@ -202,10 +237,15 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
         return () => {
             cancelled = true;
         };
-    }, [userId, sessionUserId, onComplete]);
+        // IDENTITY ONLY. `onComplete` used to be here; see the ref above for
+        // what that cost. Re-running this gate is only ever correct when the
+        // user it is about changes.
+    }, [userId, sessionUserId]);
 
     const handleOnboardingComplete = () => {
         setShowOnboarding(false);
+        // Not via the ref: this is an event handler, not the long-lived effect,
+        // so the prop it closes over is by definition the current one.
         onComplete();
     };
 

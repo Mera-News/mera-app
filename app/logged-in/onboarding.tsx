@@ -8,7 +8,7 @@ import { authClient } from "@/lib/auth-client";
 import { getSetting } from "@/lib/database/services/setting-service";
 import { navigateToPaywall } from "@/lib/nav-state";
 import { Redirect, router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function Onboarding() {
     // useSession is a non-blocking ENHANCEMENT, never a gate — the same contract
@@ -51,36 +51,48 @@ export default function Onboarding() {
         };
     }, [session?.user?.id]);
 
+    // ── ALL FOUR HANDLERS ARE MEMOIZED ──────────────────────────────────────
+    //
+    // They were plain inline functions, so every render of this route handed
+    // OnboardingScreen four brand-new identities. Its gate effect listed
+    // `onComplete` as a dependency, and the session atom above changes at least
+    // twice on a cold start — so the effect kept tearing itself down and
+    // restarting the bounded entitlement wait from zero, which is half of the
+    // 2026-08-06 regression. OnboardingScreen now reads its handlers through a
+    // ref (that is the actual fix, and it holds for callers this file does not
+    // control), but stable identities here are the cheap half and stop the
+    // needless re-mounting on its own terms.
+    //
     // reauth:'1' is load-bearing. The onboarding gate calls this when session
     // and local identity are unresolvably out of sync, and the session is still
     // live — without the param, login.tsx short-circuits on that session and
-    // redirects straight back to /logged-in/onboarding, an infinite bounce.
-    const handleLoginRedirect = () => {
+    // redirects straight back into the app, an infinite bounce.
+    const handleLoginRedirect = useCallback(() => {
         router.replace({ pathname: "/login", params: { reauth: "1" } });
-    };
+    }, []);
 
-    const handleComplete = () => {
+    const handleComplete = useCallback(() => {
         router.replace({
             pathname: "/logged-in/app_container/for_you",
             params: { fromOnboarding: "1" },
         });
-    };
+    }, []);
 
     // No active plan, never dismissed. `navigateToPaywall()` with no argument
     // is deliberate — it selects the paywall screen's DEFAULT mode (purchase
     // sheet auto-presented), the same one the first-open push uses, and reuses
     // that function's in-flight guard rather than issuing a bare replace.
-    const handlePaywall = () => {
+    const handlePaywall = useCallback(() => {
         navigateToPaywall();
-    };
+    }, []);
 
     // No active plan, already dismissed → Mera News Free, onboarding skipped.
     // The feed, not `handleComplete`'s Dashboard-with-fromOnboarding: the
     // wizard never ran, and this is where "Continue without a plan" already
     // lands.
-    const handleFreeTierMode = () => {
+    const handleFreeTierMode = useCallback(() => {
         router.replace("/logged-in/app_container/feed");
-    };
+    }, []);
 
     if (!resolved) {
         return (

@@ -71,6 +71,7 @@ export const clearAllStores = async () => {
     const { useFeedOrderStore } = require('./feed-order-store');
     const { useImportanceFilterStore } = require('./importance-filter-store');
     const { clearAttestationCache } = require('../e2ee/e2ee-cache');
+    const { clearLastKnownTier } = require('../subscription/last-known-tier');
 
     // Wipe all WatermelonDB data (drops and recreates all tables)
     await database.write(async () => {
@@ -92,6 +93,25 @@ export const clearAllStores = async () => {
     useFeedOrderStore.getState().reset();
     useImportanceFilterStore.getState().reset();
     clearAttestationCache();
+
+    // LAST, and deliberately so. The device's memory of its last resolved
+    // subscription tier (lib/subscription/last-known-tier.ts). Without this,
+    // user B on user A's device inherits A's tier and walks past the
+    // pre-onboarding entitlement gate as a subscriber — the exact class of
+    // cross-user leak this codebase has been bitten by before.
+    //
+    // Why the END rather than next to the database reset above: the tier is
+    // written by a FIRE-AND-FORGET `recordResolvedTier()` inside
+    // `resolveEntitlementForOnboarding`, which reads the subscription store. A
+    // straggler from a gate pass that was already in flight when logout started
+    // can land at any point during this function, and until
+    // `useSubscriptionStore.reset()` above has run it would re-write the
+    // OUTGOING user's tier. Clearing after every reset closes that window.
+    //
+    // EXPLICIT rather than relying on `unsafeResetDatabase()`, which does drop
+    // the row today: the guarantee must not silently depend on that reset
+    // staying total, and this is the line a future reader greps for.
+    await clearLastKnownTier();
 };
 
 /**

@@ -87,12 +87,15 @@ let mockIsConnected = true;
 // the "about to onboard" path, which is what all six cases are about.
 jest.mock('@/lib/database/services/fact-service', () => ({ hasAnyFacts: async () => false }));
 
-// Keyed so `cached_user_id` and the first-open dismissal flag can be driven
-// independently — the dismissal cases turn on exactly that second key.
+// A real in-memory KV rather than a read-only stub: `cached_user_id`, the
+// first-open dismissal flag and the last-known tier are all rows in this table
+// and all three are driven independently by the cases below — and the
+// last-known-tier cases need WRITES to be observable, not just reads.
 let mockSettings: Record<string, string | null> = {};
 jest.mock('@/lib/database/services/setting-service', () => ({
     getSetting: jest.fn(async (k: string) => mockSettings[k] ?? null),
-    setSetting: jest.fn(async () => {}),
+    setSetting: jest.fn(async (k: string, v: string) => { mockSettings[k] = v; }),
+    deleteSetting: jest.fn(async (k: string) => { delete mockSettings[k]; }),
 }));
 
 // ── native / network leaves ────────────────────────────────────────────────
@@ -126,6 +129,7 @@ import {
     waitForAiAccessResolved,
 } from '@/lib/subscription/onboarding-paywall';
 import { FIRST_OPEN_DISMISSED_SETTING_KEY } from '@/lib/subscription/first-open-dismissal';
+import { LAST_KNOWN_TIER_SETTING_KEY } from '@/lib/subscription/last-known-tier';
 
 function renderGate() {
     const onComplete = jest.fn();
@@ -149,10 +153,14 @@ function renderGate() {
  * Drain the gate's promise chain. Deliberately NOT `waitFor`: under fake timers
  * waitFor advances them itself, which would blow straight past the "the loading
  * state holds" assertion this suite exists to make.
+ *
+ * The tick budget is generous because the unresolvable path is now the LONGEST
+ * one — timeout → readLastKnownTier() → readFirstOpenDismissed(), each a
+ * separate awaited settings read.
  */
 async function flush() {
     await act(async () => {
-        for (let i = 0; i < 12; i++) await Promise.resolve();
+        for (let i = 0; i < 24; i++) await Promise.resolve();
     });
 }
 
@@ -206,16 +214,41 @@ describe('paywall before onboarding', () => {
         expect(onPaywall).not.toHaveBeenCalled();
     });
 
-    it("aiAccess 'unknown' → neither paywall nor onboarding; the loading state holds", async () => {
+    // ── EXPECTATION CHANGED 2026-08-06 (owner decision) ─────────────────────
+    //
+    // This test used to assert that an expired wait falls through to
+    // ONBOARDING, and the two decideOnboardingEntry cases at the bottom of this
+    // file asserted the same thing. That was the DESIRED behaviour when the
+    // gate was inert: "a timeout can never leave a user worse off than before
+    // this change".
+    //
+    // It shipped, `FREE_TIER_MODE_ENABLED` flipped true, and the assumption
+    // failed in production. With the gate armed, `'unknown'` is the state of
+    // EVERY cold start before billing answers — not a rare degraded-network
+    // case — so a slow server dropped brand-new users into the persona chat
+    // (OnboardingWizard resumes at step 2 from the server's onboardingStage)
+    // instead of the "Switch Mera on" paywall.
+    //
+    // The replacement rule is HOLD, THEN TRUST A LAST-KNOWN TIER: hold for the
+    // same bounded window, then fall back to the tier this device last
+    // resolved, and only a device that has NEVER resolved one lands on the
+    // paywall. The "the paywall is useless offline" objection in the old
+    // comment is answered by that fallback, not by handing the wizard to
+    // everyone — see the two tests below.
+    it("aiAccess 'unknown' on a NEVER-RESOLVED device → the loading state holds, then the paywall", async () => {
         jest.useFakeTimers();
-        // The server never answers, so aiAccess stays 'unknown'.
+        // The server never answers, so aiAccess stays 'unknown'...
         mockServerAnswer = null;
+        // ...and this device has no tier on record. `beforeEach` seeds only
+        // `cached_user_id`, so the absence here is the point.
+        expect(mockSettings[LAST_KNOWN_TIER_SETTING_KEY]).toBeUndefined();
 
         const { onPaywall, onFreeTierMode, onComplete, queryByTestId } = renderGate();
         await flush();
 
-        // NEITHER. No lock flashed at a possible subscriber, no onboarding
-        // flashed at a possible non-subscriber — just the existing spinner.
+        // The HOLD is unchanged: nothing is decided while the wait is running.
+        // No lock flashed at a possible subscriber, no onboarding flashed at a
+        // possible non-subscriber — just the existing spinner.
         expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onComplete).not.toHaveBeenCalled();
@@ -228,13 +261,159 @@ describe('paywall before onboarding', () => {
         expect(onPaywall).not.toHaveBeenCalled();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
 
-        // Documented timeout fallback: an unresolvable verdict lands on today's
-        // behaviour (onboarding) rather than a paywall the user could not buy
-        // from anyway. See decideOnboardingEntry's comment.
+        // And still BOUNDED — the hold ends rather than running forever.
         act(() => { jest.advanceTimersByTime(2); });
         await flush();
+        expect(onPaywall).toHaveBeenCalledTimes(1);
+        // The regression, pinned: the wizard must NOT mount for a user whose
+        // entitlement was never established.
+        expect(queryByTestId('onboarding-wizard')).toBeNull();
+
+        jest.useRealTimers();
+    });
+
+    it('an unresolvable verdict trusts a last-known PAID tier → onboarding, offline and all', async () => {
+        // The subscriber case. This device resolved 'professional' at some
+        // earlier point; today the server is unreachable.
+        mockSettings[LAST_KNOWN_TIER_SETTING_KEY] = 'professional';
+        mockIsConnected = false;
+        mockServerAnswer = null;
+
+        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
+        await flush();
+
         expect(queryByTestId('onboarding-wizard')).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
+        // Offline is answered from memory, so nothing is even attempted.
+        expect(mockSyncEntitlement).not.toHaveBeenCalled();
+    });
+
+    // The companion to the offline case above, and the branch a real subscriber
+    // on a SLOW network actually takes. `resolveEntitlementForOnboarding` has
+    // two fallback exits — the early offline return and this one, after the
+    // bounded wait expires — and only this test covers the second: delete the
+    // post-timeout fallback and every other test in this file still passes.
+    it('trusts a last-known PAID tier after the WAIT EXPIRES, not just when offline', async () => {
+        jest.useFakeTimers();
+        mockSettings[LAST_KNOWN_TIER_SETTING_KEY] = 'professional';
+        // Connected, so the full wait is spent — and the server never answers.
+        mockIsConnected = true;
+        mockServerAnswer = null;
+
+        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
+        await flush();
+
+        // It really did hold: the answer is not being taken from memory early.
+        expect(queryByTestId('onboarding-gate-spinner')).toBeTruthy();
+        expect(queryByTestId('onboarding-wizard')).toBeNull();
+        expect(mockSyncEntitlement).toHaveBeenCalledTimes(1);
+
+        act(() => { jest.advanceTimersByTime(ONBOARDING_ENTITLEMENT_WAIT_MS + 1); });
+        await flush();
+
+        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(onPaywall).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
+
+        jest.useRealTimers();
+    });
+
+    it('an unresolvable verdict trusts a last-known tier of "none" → the paywall, not the wizard', async () => {
+        // 'none' IS a resolution — the server said this user has no plan — and
+        // it must read as locked rather than as "never resolved".
+        mockSettings[LAST_KNOWN_TIER_SETTING_KEY] = 'none';
+        mockIsConnected = false;
+
+        const { onPaywall, queryByTestId } = renderGate();
+        await flush();
+
+        expect(onPaywall).toHaveBeenCalledTimes(1);
+        expect(queryByTestId('onboarding-wizard')).toBeNull();
+    });
+
+    it('a never-resolved OFFLINE device lands on the paywall without waiting', async () => {
+        mockIsConnected = false;
+        mockServerAnswer = null;
+
+        const { onPaywall, queryByTestId } = renderGate();
+        await flush();
+
+        // No timers advanced: the offline branch returns immediately rather
+        // than holding the splash for a network that is known to be absent.
+        expect(onPaywall).toHaveBeenCalledTimes(1);
+        expect(queryByTestId('onboarding-wizard')).toBeNull();
+    });
+
+    it("an unresolvable verdict on a DISMISSED device goes to Mera News Free, never back to the paywall", async () => {
+        // The anti-loop rule. `'unknown'` now diverts like `'locked'`, so it has
+        // to honour the same device-local dismissal — otherwise a user who said
+        // no once meets the paywall on every launch with no way past it.
+        mockSettings[FIRST_OPEN_DISMISSED_SETTING_KEY] = 'true';
+        mockIsConnected = false;
+        mockServerAnswer = null;
+
+        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
+        await flush();
+
+        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
+        expect(onPaywall).not.toHaveBeenCalled();
+        expect(queryByTestId('onboarding-wizard')).toBeNull();
+    });
+
+    it('a resolved verdict is written to the device so a LATER cold start can trust it', async () => {
+        mockServerAnswer = { subscriptionTier: 'professional' };
+
+        renderGate();
+        await flush();
+
+        expect(mockSettings[LAST_KNOWN_TIER_SETTING_KEY]).toBe('professional');
+    });
+
+    it('the bounded wait survives a parent re-render with fresh handler identities', async () => {
+        jest.useFakeTimers();
+        // Never answers, so the whole wait window is spent holding.
+        mockServerAnswer = null;
+
+        const onPaywall = jest.fn();
+        const onComplete = jest.fn();
+        const onLoginRedirect = jest.fn();
+        const onFreeTierMode = jest.fn();
+        // Every render hands down BRAND-NEW function identities — exactly what
+        // app/logged-in/onboarding.tsx did with plain inline handlers, and what
+        // the better-auth session atom triggers at least twice on a cold start.
+        const tree = () => (
+            <OnboardingScreen
+                userId="u1"
+                sessionUserId="u1"
+                onLoginRedirect={() => onLoginRedirect()}
+                onComplete={() => onComplete()}
+                onPaywall={() => onPaywall()}
+                onFreeTierMode={() => onFreeTierMode()}
+            />
+        );
+
+        const { rerender } = render(tree());
+        await flush();
+        expect(mockSyncEntitlement).toHaveBeenCalledTimes(1);
+
+        for (let i = 0; i < 3; i++) {
+            rerender(tree());
+            await flush();
+        }
+
+        // STILL one. A torn-down effect sets `cancelled = true`, discards the
+        // in-flight wait and re-enters resolveEntitlementForOnboarding, which
+        // would fire these again — so the counts are a direct proof that the
+        // original wait is still the one running.
+        expect(mockSyncEntitlement).toHaveBeenCalledTimes(1);
+        expect(require('@/lib/revenuecat').loginRevenueCat).toHaveBeenCalledTimes(1);
+
+        // And it still terminates, on the ORIGINAL clock rather than one
+        // restarted by the last re-render.
+        act(() => { jest.advanceTimersByTime(ONBOARDING_ENTITLEMENT_WAIT_MS + 1); });
+        await flush();
+        expect(onPaywall).toHaveBeenCalledTimes(1);
 
         jest.useRealTimers();
     });
@@ -302,7 +481,7 @@ describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commi
 });
 
 describe('decideOnboardingEntry', () => {
-    it('only a locked verdict can divert; entitled always onboards', () => {
+    it('ONLY an entitled verdict opens the wizard', () => {
         expect(decideOnboardingEntry({ aiAccess: 'entitled', firstOpenDismissed: false })).toBe('onboarding');
         expect(decideOnboardingEntry({ aiAccess: 'entitled', firstOpenDismissed: true })).toBe('onboarding');
     });
@@ -312,9 +491,21 @@ describe('decideOnboardingEntry', () => {
         expect(decideOnboardingEntry({ aiAccess: 'locked', firstOpenDismissed: true })).toBe('free-tier');
     });
 
-    it("an expired wait ('unknown') falls back to today's behaviour, never to a paywall", () => {
-        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: false })).toBe('onboarding');
-        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: true })).toBe('onboarding');
+    // ── EXPECTATION CHANGED 2026-08-06 (owner decision) ─────────────────────
+    //
+    // These two lines used to read `.toBe('onboarding')`, on the reasoning that
+    // an expired wait should land on pre-change behaviour. Once
+    // FREE_TIER_MODE_ENABLED went true that reasoning inverted: `'unknown'` is
+    // every cold start that has not heard from billing yet, and sending those
+    // users into the wizard is the production regression. `'unknown'` now means
+    // something narrower — the wait expired AND this device has never once
+    // resolved a tier (resolveEntitlementForOnboarding consults its memory
+    // first) — and for such a device the paywall is the honest destination.
+    it("'unknown' means NEVER-RESOLVED and behaves like locked, dismissal and all", () => {
+        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: false })).toBe('paywall');
+        // Not 'paywall' again: the dismissal must break the loop here exactly as
+        // it does on the locked branch.
+        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: true })).toBe('free-tier');
     });
 });
 

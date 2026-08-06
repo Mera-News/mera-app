@@ -8,6 +8,7 @@
 import { fetchUserBilling, fetchUserBillingLapseState } from '@/lib/billing-service';
 import { syncRevenueCatAttributes } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
 
 /**
  * Foreground fires on every app-switch, and several surfaces may ask at once.
@@ -52,6 +53,16 @@ export async function syncEntitlement(
             ]);
             if (billing) {
                 useSubscriptionStore.getState().setServerBilling(billing);
+                // The device's memory of its own tier, for the cold start where
+                // nothing answers — see lib/subscription/last-known-tier.ts.
+                // This is the highest-coverage write site there is: foreground,
+                // login, purchase and a 402 all funnel through here. `?? 'none'`
+                // mirrors setServerBilling's own null handling — a server that
+                // answered with no tier HAS resolved, and recording that is what
+                // keeps such a device off the never-resolved branch.
+                // Fire-and-forget: a settings write must never delay or fail an
+                // entitlement sync.
+                void rememberLastKnownTier(billing.subscriptionTier ?? 'none');
                 // Only a successful read counts towards the debounce. A failed
                 // fetch that started the clock would leave a device that was
                 // briefly offline stuck on stale entitlement for a full minute
