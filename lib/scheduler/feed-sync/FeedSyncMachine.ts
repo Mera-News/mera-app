@@ -336,6 +336,22 @@ class FeedSyncMachine {
         await flushSuggestionsRefresh();
         this._transitionTo('done');
         useForYouStore.getState().setLastSyncAt(Date.now());
+        // A cycle that found nothing to do is still a processing run that
+        // FINISHED, and it has to say so. `lastProcessingRunFinishedAt` is what
+        // both feed surfaces read to choose between FeedPreparingCard and
+        // AllCaughtUpCard, and on this path nothing else can ever stamp it: no
+        // rows are enqueued, so no pipeline run exists, so `doFinalize` — the
+        // usual stamper — bails before reaching it. Without this, a window that
+        // legitimately holds no articles leaves "Mera is preparing your feed."
+        // on screen forever. Same remedy `abortRun` already applies for the same
+        // stated reason (scoring-pipeline.ts, `abortRun`).
+        //
+        // Skipped while suppressed: a live scoring run owns the unscored backlog
+        // and will stamp its own finalize, so claiming "finished" here would
+        // resolve the card while work is genuinely still in flight.
+        if (!suppressScoring) {
+          useForYouStore.getState().markProcessingRunFinished();
+        }
         try {
           await feedPersistence.clearMachineSnapshot();
         } catch (snapErr) {

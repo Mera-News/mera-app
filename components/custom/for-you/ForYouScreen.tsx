@@ -381,6 +381,13 @@ const MeraNewsScreen: React.FC = () => {
             hasGeneratedInterests &&
             !errorMessage &&
             syncStatusMessage?.errorCode !== 'no-topics-configured' &&
+            // Once a processing run has demonstrably finished, an empty feed is a
+            // legitimate empty state, not a silent failure — the window simply
+            // held nothing. Arming here would show "Couldn't load your feed /
+            // Something went wrong on our end" over a working app, and it sits
+            // ABOVE the caught-up branch below, so it would win. The watchdog
+            // keeps its real job: a device that never gets a run off the ground.
+            lastProcessingRunFinishedAt === null &&
             !isDailyLimited &&
             asyncJobPhase === 'idle' &&
             unscoredCount === 0;
@@ -409,7 +416,7 @@ const MeraNewsScreen: React.FC = () => {
 
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isFocused, session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, hasRenderableContent, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
+    }, [isFocused, session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, hasRenderableContent, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited, lastProcessingRunFinishedAt]);
 
     // Auto-reveal the header on error / offline / daily-limit conditions so the
     // status chrome (shimmer, offline row) is never hidden under a collapsed

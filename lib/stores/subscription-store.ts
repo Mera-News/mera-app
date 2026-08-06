@@ -60,10 +60,36 @@ const initialState = {
   showLapseInterstitial: null as boolean | null,
 };
 
-export const useSubscriptionStore = create<SubscriptionState>()((set) => ({
+export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
   ...initialState,
 
   setCustomerInfo: (info) => {
+    // Reject a CustomerInfo that has forgotten the user's purchase history.
+    //
+    // When RevenueCat's own backend is unreachable — a 522 from POST /v1/receipts
+    // when RevenueCat cannot reach Apple, observed on a real device — the SDK
+    // synthesises an offline CustomerInfo and pushes it through the update
+    // listener ("Computed offline CustomerInfo from 0 products with 0 active
+    // entitlements"). It carries no marker: there is no "was this computed
+    // offline" flag on the type. So key off the invariant instead. Purchase
+    // history is append-only, and a payload claiming the user has bought
+    // NOTHING when we already saw purchases has not observed a state
+    // transition — it has lost its data. Keep what we had; the SDK re-posts the
+    // receipt and the real answer arrives moments later.
+    //
+    // Narrow on purpose: a genuine expiry keeps allPurchasedProductIdentifiers
+    // populated and flips entitlements.active, so it still downgrades normally.
+    // `null` (the getCustomerInfoSafe failure path) still clears to 'unknown'.
+    // And `reset()` runs on logout/user-switch before any new info arrives, so
+    // there is no stale `prev` for user B to inherit.
+    const prev = get().customerInfo;
+    // `?? 0` rather than a bare `.length`: an older bridge payload missing the
+    // field must fall through to the normal path, never crash the listener.
+    const nextHistory = info?.allPurchasedProductIdentifiers?.length ?? 0;
+    const prevHistory = prev?.allPurchasedProductIdentifiers?.length ?? 0;
+    if (info && prev && nextHistory === 0 && prevHistory > 0) {
+      return;
+    }
     const tier = getActiveTier(info);
     set({ customerInfo: info, tier, isPremium: tier !== null });
   },
