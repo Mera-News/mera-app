@@ -68,9 +68,27 @@ function foldPlural(token: string): string {
 }
 
 /**
- * Lowercase → non-alphanumerics to spaces → split → keep tokens longer than 2
- * → drop stopwords → fold plurals. Null/empty input yields an empty set.
- * Never throws.
+ * Length at which two tokens sharing a leading run are treated as the same
+ * word. See {@link isReasonGrounded} for why prefix matching exists at all.
+ * Five is the measured floor: it unifies regulate/regulation and
+ * legislate/legislation while keeping unrelated pairs apart, and shortening it
+ * to four starts merging distinct words ("mine"/"mining" is fine, "part"/
+ * "party" is not).
+ */
+const PREFIX_MATCH_LEN = 5;
+
+/**
+ * Non-alphanumerics to spaces → split → keep content tokens → lowercase → fold
+ * plurals. Null/empty input yields an empty set. Never throws.
+ *
+ * TWO-CHARACTER TOKENS ARE KEPT ONLY WHEN THEY WERE UPPERCASE, which is how an
+ * acronym is told apart from a function word without a second word list. This
+ * matters more than it sounds: measured against the 292-article gold set, the
+ * single largest cause of a good note being flagged was that "EU", "AI" and
+ * "UK" — often the ONLY terms a note and its article share — were being dropped
+ * by a blanket 3-character floor. "of"/"in"/"to" are lowercase in real prose and
+ * still fall away. An all-caps headline can smuggle "IN"/"OF" past this; that
+ * only ever makes the check more permissive, which is the safe direction.
  *
  * ASCII-only by design: both sides of this comparison are English. Notes are
  * always generated in English, and the article fields fed in are `title_en` /
@@ -81,13 +99,46 @@ function foldPlural(token: string): string {
 export function groundingTokens(text: string | null | undefined): Set<string> {
   const tokens = new Set<string>();
   if (!text) return tokens;
-  const cleaned = text.toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+  // Case is preserved through the split so the acronym test below can run; each
+  // token is lowercased only once it has been admitted.
+  const cleaned = text.replace(/[^A-Za-z0-9]+/g, ' ');
   for (const raw of cleaned.split(/\s+/)) {
-    if (raw.length > 2 && !GROUNDING_STOPWORDS.has(raw)) {
-      tokens.add(foldPlural(raw));
+    if (raw.length < 2) continue;
+    if (raw.length === 2) {
+      // An acronym or a number ("EU", "AI", "18"), not a function word.
+      if (raw !== raw.toUpperCase()) continue;
+    } else if (GROUNDING_STOPWORDS.has(raw.toLowerCase())) {
+      continue;
     }
+    tokens.add(foldPlural(raw.toLowerCase()));
   }
   return tokens;
+}
+
+/**
+ * Do these two token sets share a word? Exact match first, then a shared
+ * {@link PREFIX_MATCH_LEN}-character prefix, which is a deliberately crude
+ * stand-in for stemming: a note explains an article in its own words, so
+ * "regulate" in a headline becomes "regulation" in the sentence about it, and
+ * an exact-match-only check reads that as a different subject entirely.
+ */
+function sharesAToken(a: Set<string>, b: Set<string>): boolean {
+  const [small, large] = a.size <= b.size ? [a, b] : [b, a];
+  for (const token of small) {
+    if (large.has(token)) return true;
+  }
+  // Index the larger set by prefix once rather than comparing every pair.
+  const prefixes = new Set<string>();
+  for (const token of large) {
+    if (token.length >= PREFIX_MATCH_LEN) prefixes.add(token.slice(0, PREFIX_MATCH_LEN));
+  }
+  if (prefixes.size === 0) return false;
+  for (const token of small) {
+    if (token.length >= PREFIX_MATCH_LEN && prefixes.has(token.slice(0, PREFIX_MATCH_LEN))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** The article side of the check. Every field is optional — callers pass what
@@ -132,15 +183,5 @@ export function isReasonGrounded(
   );
   if (articleTokens.size === 0) return true;
 
-  // Iterate the smaller set — groups are small, but this is called once per
-  // persisted reason and the cost is otherwise proportional to description
-  // length.
-  const [small, large] =
-    reasonTokens.size <= articleTokens.size
-      ? [reasonTokens, articleTokens]
-      : [articleTokens, reasonTokens];
-  for (const token of small) {
-    if (large.has(token)) return true;
-  }
-  return false;
+  return sharesAToken(reasonTokens, articleTokens);
 }

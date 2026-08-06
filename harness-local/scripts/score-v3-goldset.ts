@@ -37,6 +37,7 @@ import {
   CLOUD_SCORE_V3_SYSTEM_PROMPT,
   buildBatchScoringUserMessage,
   parseScoreV3Response,
+  isReasonGrounded,
   blendToScore,
   buildUserContext,
   resolveCountryName,
@@ -205,12 +206,28 @@ const FIELD_ORDER_NEW =
   'Always emit "i", then "rel", then "impact" — those three keys and nothing else. ' +
   'Decide the two numbers independently and emit no other field.';
 
+// The output contract collapses from TWO shapes to one. Rewritten as the whole
+// two-shape block rather than just the `why` object, so the derived prompt does
+// not keep announcing "there are TWO object shapes" while showing one.
+//
+// These strings track CLOUD_SCORE_V3_SYSTEM_PROMPT literally and WILL drift
+// again — `requireReplace` throws by design when they do, which is the intended
+// failure: a silently-unapplied surgery would leave `why` in a prompt whose
+// whole purpose is not having one.
 const CONTRACT_OLD =
-  '{"i": <1-based position of the article in this batch>, "rel": <integer 0-100>, ' +
-  '"impact": <integer 0-100>, "why": "<25 words or fewer>"}';
+  'There are TWO object shapes and most articles take the short one:\n' +
+  '{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}' +
+  '            \u2190 the DEFAULT shape\n' +
+  '{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>, ' +
+  '"why": "<25 words or fewer>"}  \u2190 ONLY when (0.65 \u00d7 rel) + (0.35 \u00d7 impact) \u2265 34';
 const CONTRACT_NEW =
-  '{"i": <1-based position of the article in this batch>, "rel": <integer 0-100>, ' +
-  '"impact": <integer 0-100>}';
+  'Each object has exactly this shape:\n' +
+  '{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}';
+
+// Only meaningful when a `why` can exist at all.
+const FORMAT_ERROR_BULLET =
+  '- A low-scoring article with a `"why"` is a FORMAT ERROR \u2014 the chess-tournament ' +
+  'anchor above shows the correct low-score shape.\n';
 
 const INTEGERS_OLD =
   '- `"rel"` and `"impact"` are INTEGERS (never decimals) and always come before `"why"`.';
@@ -261,6 +278,10 @@ const SURGERIES: Surgery[] = [
   {
     name: 'drop why-gate bullet',
     apply: (s) => requireReplace(s, WHY_GATE_BULLET, '', 'why-gate bullet'),
+  },
+  {
+    name: 'drop format-error bullet',
+    apply: (s) => requireReplace(s, FORMAT_ERROR_BULLET, '', 'format-error bullet'),
   },
   {
     // The calibration anchors and the Task example both carry inline whys.
@@ -572,6 +593,17 @@ interface VariantMetrics {
     aboveGateBelowWhyGate: number;
     belowGateWithWhy: number;
     belowGateTotal: number;
+    /** Emitted notes that share NO content token with their own article — the
+     *  measurement the original merged-vs-two-pass A/B never took. It compared
+     *  ranking quality (r) only, so a design that scores well while attaching
+     *  sentences to the wrong articles would have passed that gate silently,
+     *  which is exactly what shipped. Any non-zero value here is a defect the
+     *  correlation numbers cannot see. */
+    ungroundedWhy: number;
+    /** Denominator for the above: notes actually emitted, at any score. */
+    whyTotal: number;
+    /** Up to 5 offenders, so a non-zero count can be read rather than trusted. */
+    ungroundedSamples: { title: string; why: string; blend: number }[];
   } | null;
   cutoffFor130: { cutoff: number; n: number; recall: number } | null;
 }
@@ -648,6 +680,21 @@ function computeMetrics(res: VariantResult, mustShowTotal: number): VariantMetri
           aboveGateBelowWhyGate: included.filter((r) => r.blend < blendToScore(34, 34)).length,
           belowGateWithWhy: excluded.filter((r) => r.why).length,
           belowGateTotal: excluded.length,
+          ...(() => {
+            const withWhy = rows.filter((r) => r.why);
+            const ungrounded = withWhy.filter(
+              (r) => !isReasonGrounded(r.why, { title: r.title, description: r.description }),
+            );
+            return {
+              ungroundedWhy: ungrounded.length,
+              whyTotal: withWhy.length,
+              ungroundedSamples: ungrounded.slice(0, 5).map((r) => ({
+                title: r.title.slice(0, 90),
+                why: (r.why ?? '').slice(0, 120),
+                blend: r.blend,
+              })),
+            };
+          })(),
         }
       : null;
 
@@ -737,6 +784,17 @@ function printVariant(m: VariantMetrics): void {
       `<  ${GATE} with a why : ${m.reasons.belowGateWithWhy}/${m.reasons.belowGateTotal} ` +
         `(${fmt(pct(m.reasons.belowGateWithWhy, m.reasons.belowGateTotal), 1)}%) — wasteful`,
     );
+    // The measurement the original A/B never took. Ranking correlation is blind
+    // to it: a note can describe a completely different article while the two
+    // numbers beside it are perfectly calibrated.
+    log(
+      `notes about ANOTHER article : ${m.reasons.ungroundedWhy}/${m.reasons.whyTotal} ` +
+        `(${fmt(pct(m.reasons.ungroundedWhy, m.reasons.whyTotal), 1)}%) — shares no content token with its own article`,
+    );
+    for (const s of m.reasons.ungroundedSamples) {
+      log(`   [${fmt(s.blend)}] ${s.title}`);
+      log(`        ↳ ${s.why}`);
+    }
   }
 }
 

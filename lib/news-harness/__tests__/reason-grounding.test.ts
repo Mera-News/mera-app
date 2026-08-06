@@ -21,10 +21,26 @@ const AI_ACT_NOTE =
   "New AI Act rules on deepfakes directly impact your AI news app's compliance and content handling requirements.";
 
 describe('groundingTokens', () => {
-  it('lowercases, strips punctuation, and drops sub-3-character tokens', () => {
-    // 'eu' / 'ai' / 'a' are all 2 characters or fewer and drop out; 'act'
-    // survives at exactly 3, which is the intended floor.
-    expect(groundingTokens('EU AI Act: a Ruling!')).toEqual(new Set(['act', 'ruling']));
+  it('lowercases, strips punctuation, and keeps uppercase acronyms', () => {
+    // 'EU' and 'AI' survive at two characters BECAUSE they are uppercase — they
+    // are frequently the only terms a note and its article share. The lone 'a'
+    // is one character and goes.
+    expect(groundingTokens('EU AI Act: a Ruling!')).toEqual(
+      new Set(['eu', 'ai', 'act', 'ruling']),
+    );
+  });
+
+  it('drops two-letter function words, which are lowercase in real prose', () => {
+    const tokens = groundingTokens('a study of rules in the EU on AI');
+    expect(tokens.has('of')).toBe(false);
+    expect(tokens.has('in')).toBe(false);
+    expect(tokens.has('on')).toBe(false);
+    expect(tokens.has('eu')).toBe(true);
+    expect(tokens.has('ai')).toBe(true);
+  });
+
+  it('keeps two-digit numbers, which are content', () => {
+    expect(groundingTokens('down 18 percent').has('18')).toBe(true);
   });
 
   it('keeps "act" but drops stopwords', () => {
@@ -125,6 +141,55 @@ describe('isReasonGrounded — everything ambiguous resolves to keep', () => {
     expect(
       isReasonGrounded(AI_ACT_NOTE, { title: MP_WEATHER.title, entities: [], geoTags: [] }),
     ).toBe(false);
+  });
+});
+
+// Every one of these was flagged as ungrounded by the first version of this
+// check during a 292-article gold-set replay, and every one is a note that
+// plainly IS about its article. They are the reason the check grew acronym
+// handling and prefix matching, and they exist here so a future tightening has
+// to face them.
+describe('isReasonGrounded — false drops measured on the gold set', () => {
+  it('matches regulate/regulation through the shared prefix', () => {
+    expect(
+      isReasonGrounded('EU AI regulation directly impacts your consumer app work in Amsterdam.', {
+        title: 'The European Union launches new measures to regulate artificial intelligence',
+        description: '',
+      }),
+    ).toBe(true);
+  });
+
+  it('matches on the acronyms alone when nothing else overlaps', () => {
+    expect(
+      isReasonGrounded('EU AI legislation affects your consumer app development in the region.', {
+        title: 'After hacker attack, EU discusses AI laws with Anthropic and OpenAI',
+        description: '',
+      }),
+    ).toBe(true);
+  });
+
+  it('matches a bare AI mention against an AI headline', () => {
+    expect(
+      isReasonGrounded(
+        'Philosophical essay on AI regulation touches your technology interest, but offers no concrete change to your work.',
+        { title: "Mince Can't Be Undone: Why It's Impossible to Limit AI", description: '' },
+      ),
+    ).toBe(true);
+  });
+
+  it('matches regulating/regulation across the inflection', () => {
+    expect(
+      isReasonGrounded(
+        'UK AI regulation touches your interest, but it is foreign policy with no direct impact on your Amsterdam-based work.',
+        { title: 'UK considers regulating AI if voluntary safeguards prove insufficient', description: '' },
+      ),
+    ).toBe(true);
+  });
+
+  it('still rejects the AI-Act note on the rainfall article, which shares neither', () => {
+    // The acronyms that rescue the cases above are exactly what this article
+    // does NOT contain — no 'AI', no 'EU', and no prefix reaching 'regulat'.
+    expect(isReasonGrounded(AI_ACT_NOTE, MP_WEATHER)).toBe(false);
   });
 });
 
