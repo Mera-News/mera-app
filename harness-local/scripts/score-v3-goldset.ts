@@ -38,6 +38,8 @@ import {
   buildBatchScoringUserMessage,
   parseScoreV3Response,
   isReasonGrounded,
+  CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  buildReasonUserMessage,
   blendToScore,
   buildUserContext,
   resolveCountryName,
@@ -56,7 +58,7 @@ const DEFAULT_MATRIX = join(SCRATCH, 'matrix.json');
 const DEFAULT_FACTS = join(SCRATCH, 'persona_facts.json');
 const DEFAULT_DB = join(SCRATCH, 'frozen', 'v1.db');
 
-type VariantName = 'merged' | 'score-only';
+type VariantName = 'merged' | 'score-only' | 'split';
 
 interface Args {
   label: string;
@@ -66,6 +68,12 @@ interface Args {
   variants: VariantName[];
   limit?: number;
   dryRun: boolean;
+  /** Experiment knob: override the pass-1 scoring temperature. The shipped
+   *  value is 0.1, at which the score-only prompt degenerates structurally —
+   *  it emits `{"i": 2": 78, "impact": 50}`, collapsing `"i": 2, "rel": 78`
+   *  into one token run. Monotonous all-numeric output is where that happens;
+   *  the merged prompt's prose appears to break the model out of it. */
+  p1Temp?: number;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -85,9 +93,12 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--db') args.db = argv[++i] ?? args.db;
     else if (a === '--limit') args.limit = Number(argv[++i]);
     else if (a === '--dry-run') args.dryRun = true;
+    else if (a === '--p1-temp') args.p1Temp = Number(argv[++i]);
     else if (a === '--variants') {
       const raw = (argv[++i] ?? '').split(',').map((s) => s.trim());
-      const ok = raw.filter((s): s is VariantName => s === 'merged' || s === 'score-only');
+      const ok = raw.filter(
+        (s): s is VariantName => s === 'merged' || s === 'score-only' || s === 'split',
+      );
       if (ok.length > 0) args.variants = ok;
     }
   }
@@ -331,6 +342,8 @@ function buildUserMessage(
   articles: { title: string; description: string; country?: string; relatedFacts?: string[] }[],
 ): string {
   const msg = buildBatchScoringUserMessage({ userContext, articles, v3: true });
+  // 'split' shares pass 1 with 'score-only' — same prompt, same trailer, same
+  // chunking. The two differ only in what happens afterwards.
   if (variant === 'merged') return msg;
   if (!msg.includes(TRAILER_V3)) {
     throw new Error(
@@ -435,6 +448,10 @@ function bootstrapDeltaR(
 interface ScoredRow {
   articleId: string;
   title: string;
+  /** Carried so the grounding metric compares against title + description, the
+   *  same pair the app checks. Measuring on the title alone overstates the flag
+   *  rate badly — 11.3% vs 6.5% on the first run that had this bug. */
+  description: string;
   rel: number;
   impact: number;
   blend: number;
@@ -447,6 +464,7 @@ interface ScoredRow {
 interface VariantResult {
   variant: VariantName;
   systemPrompt: string;
+  /** Rewritten in place by `runSplitPass2` for the 'split' variant. */
   rows: ScoredRow[];
   unscored: string[];
   chunkAttempts: number;
@@ -465,6 +483,7 @@ async function scoreVariant(
   articles: GoldArticle[],
   userContext: string,
   llmFactory: (sink: LlmCallRecord[]) => ReturnType<typeof createNearAiLlm>,
+  scoreTemp: number = CFG.scoreTemperature,
 ): Promise<VariantResult> {
   const chunks = chunk(articles, CFG.articlesPerScorePrompt);
   const decoded = new Map<number, ScoreV3Entry[]>();
@@ -492,7 +511,7 @@ async function scoreVariant(
           relatedFacts: a.relatedFacts,
         })),
       ),
-      temperature: CFG.scoreTemperature,
+      temperature: scoreTemp,
       maxTokens: CFG.v3ScoreBatchMaxTokens,
     }));
     chunkAttempts += calls.length;
@@ -529,6 +548,7 @@ async function scoreVariant(
       rows.push({
         articleId: a.articleId,
         title: a.title,
+        description: a.description,
         rel: e.rel,
         impact: e.impact,
         blend: blendToScore(e.rel, e.impact),
@@ -552,6 +572,126 @@ async function scoreVariant(
     errorCalls: llmCalls.filter((c) => c.error).length,
     llmCalls,
   };
+}
+
+// --- Variant (c): the SPLIT design -----------------------------------------
+//
+// Pass 1 is the derived score-only prompt above (same batching, same chunk
+// size). Pass 2 visits ONE article per call and does two jobs at once: decide
+// whether the story really carries a stake, and — if so — write the sentence.
+//
+// WHY ONE ARTICLE PER CALL. The merged design's failure is not a parser bug and
+// not an indexing bug. Replaying this same gold set showed the model returning a
+// well-formed array with "i" = 1,2,3,4,5, in input order, while the PROSE in the
+// tail slots belonged to neighbouring articles — an "Apple removes Telegram over
+// CSAM" note on the AI-companies article and vice versa, an F1 note on an
+// AI-agents article, an Amsterdam-drought note on an Anthropic funding story.
+// The model emits the right index with the wrong sentence, so no index scheme —
+// not "i", not an opaque echoed token — can detect it. Only removing the
+// neighbours from the context does. (The on-device path already reached this
+// conclusion independently: LOCAL_ARTICLES_PER_SCORE_PROMPT is 1 because
+// "per-article attention still wins for calibration".)
+//
+// The precision half reuses CLOUD_FEED_VERIFIER_SYSTEM_PROMPT verbatim rather
+// than inventing new demote rules: its NO-patterns were validated against the
+// golden 1000-article run (FEED precision 73.2% -> 80.4%), and v3 dropped that
+// pass entirely when it merged everything into one call. Only the output
+// contract is replaced, since the verifier's own is written for a batch.
+const SPLIT_PASS2_SYSTEM = `${CLOUD_FEED_VERIFIER_SYSTEM_PROMPT}
+
+## This call covers exactly ONE article, and also writes its note
+
+You see one article, its pre-computed score, and the user's facts. Do both jobs:
+
+1. KEEP or DEMOTE, on the rules above. Default to keep; demote only on a clear NO pattern.
+2. If you keep it, write the one sentence the user reads under the headline: 25 words or fewer, containing (a) a specific detail from THIS article — the event, entity, place, policy or product, never "this topic" — and (b) the specific user fact that creates the link, never "your interests". Match the tone to the score: confident when it is high, one hedge word in the middle, and plainly state the limit when the topic matches but nothing changes for them.
+
+The sentence is read BY the user, so write it TO them — "you"/"your", never "the user" or any third person. Never fabricate a connection: if the article is about holiday homes, the sentence is about holiday homes. Never echo "[User facts]", "Relevance Score:", or any markdown.
+
+Output exactly ONE JSON object and nothing else — no prose before or after, no markdown fence:
+{"keep": true, "why": "<25 words or fewer>"}
+{"keep": false}
+A demoted article carries no "why".`;
+
+/** One decoded pass-2 verdict. `null` when the response was unusable, which the
+ *  caller fails open on — keeping the pass-1 score and simply owing no note. */
+function parseSplitPass2(output: string): { keep: boolean; why: string | null } | null {
+  const text = (output ?? '').trim();
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end <= start) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+  const o = parsed as Record<string, unknown>;
+  if (typeof o.keep !== 'boolean') return null;
+  const why = typeof o.why === 'string' && o.why.trim().length > 0 ? o.why.trim() : null;
+  return { keep: o.keep, why: o.keep ? why : null };
+}
+
+/**
+ * Run pass 2 over the rows pass 1 put at or above the gate. Rows below it are
+ * returned untouched and noteless — they are not rendered, so a note for them is
+ * spend with no reader. That is also where the split earns back some of its
+ * cost: pass 1 gets its `why` budget back, and pass 2 only visits the minority
+ * of articles that reached the feed.
+ */
+async function runSplitPass2(
+  rows: ScoredRow[],
+  articleById: Map<string, GoldArticle>,
+  userContext: string,
+  llm: ReturnType<typeof createNearAiLlm>,
+): Promise<{ rows: ScoredRow[]; demoted: number; unusable: number }> {
+  const eligible = rows.filter((r) => r.blend >= CFG.discardFloor);
+  const calls: BatchCall[] = eligible.map((r) => {
+    const a = articleById.get(r.articleId);
+    return {
+      id: `split:pass2:${r.articleId}`,
+      system: SPLIT_PASS2_SYSTEM,
+      prompt: buildReasonUserMessage({
+        userContext,
+        articleTitle: r.title,
+        articleDescription: r.description,
+        articleCountry: resolveCountryName(a?.countryCode ?? null),
+        relevance: r.blend,
+        relatedFacts: a?.relatedFacts ?? [],
+      }),
+      temperature: CFG.reasonTemperature,
+      // Room for the sentence plus the tiny JSON wrapper. The merged design gave
+      // each article ~128 tokens for BOTH its numbers and its prose.
+      maxTokens: CFG.reasonMaxTokens + 32,
+    };
+  });
+
+  const results = await llm.batchComplete(calls, { model: CFG.model });
+  const byId = new Map<string, { keep: boolean; why: string | null }>();
+  let unusable = 0;
+  results.forEach((res, k) => {
+    const verdict = parseSplitPass2(res.output ?? '');
+    if (!verdict) {
+      unusable++;
+      return;
+    }
+    byId.set(eligible[k].articleId, verdict);
+  });
+
+  let demoted = 0;
+  const out = rows.map((r) => {
+    const verdict = byId.get(r.articleId);
+    // Fail open: no verdict ⇒ the pass-1 score stands and the row owes a note,
+    // exactly as a failed reason call behaves in the app today.
+    if (!verdict) return r;
+    if (!verdict.keep) {
+      demoted++;
+      return { ...r, blend: CFG.feedVerifierDemoteScore, why: null };
+    }
+    return { ...r, why: verdict.why };
+  });
+  return { rows: out, demoted, unusable };
 }
 
 // --- Reporting --------------------------------------------------------------
@@ -669,7 +809,7 @@ function computeMetrics(res: VariantResult, mustShowTotal: number): VariantMetri
   const skipMedPlus = pct(skips.filter((r) => r.blend >= MED).length, skips.length);
 
   const reasons =
-    res.variant === 'merged'
+    res.variant === 'merged' || res.variant === 'split'
       ? {
           aboveGateWithWhy: included.filter((r) => r.why).length,
           aboveGateTotal: included.length,
@@ -950,6 +1090,7 @@ async function main(): Promise<number> {
       scoped,
       userContext,
       llmFactory,
+      args.p1Temp ?? CFG.scoreTemperature,
     );
     log(
       `[${variant}] done in ${Math.round((Date.now() - started) / 1000)}s — ` +
@@ -957,6 +1098,24 @@ async function main(): Promise<number> {
         `${res.chunkAttempts} calls, ${res.parseNullChunks} parse-nulls, ` +
         `${res.truncatedCalls} truncated, ${res.errorCalls} errors`,
     );
+    if (variant === 'split') {
+      const p2Started = Date.now();
+      const articleById = new Map(scoped.map((a) => [a.articleId, a]));
+      const p2Calls: LlmCallRecord[] = [];
+      const pass2 = await runSplitPass2(
+        res.rows,
+        articleById,
+        userContext,
+        llmFactory(p2Calls),
+      );
+      res.rows = pass2.rows;
+      res.llmCalls = [...res.llmCalls, ...p2Calls];
+      log(
+        `[${variant}] pass 2 done in ${Math.round((Date.now() - p2Started) / 1000)}s — ` +
+          `${p2Calls.length} per-article calls, ${pass2.demoted} demoted, ` +
+          `${pass2.unusable} unusable (kept pass-1 score)`,
+      );
+    }
     writer.writeJson(`scores-${variant}`, res.rows);
     writer.writeJson(`llm-calls-${variant}`, res.llmCalls);
     results.push(res);
