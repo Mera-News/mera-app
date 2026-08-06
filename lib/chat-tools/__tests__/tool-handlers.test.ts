@@ -69,6 +69,7 @@ import {
   handleSaveExtractedFacts,
   handleUpdateUserConfig,
   handleDeleteUserFacts,
+  handleExplainMera,
   handleIssueWarning,
   isTopicGenerationInFlight,
   retryTopicGeneration,
@@ -958,5 +959,84 @@ describe('retryTopicGeneration', () => {
     });
     expect(mockNotifyFactMutation).toHaveBeenCalled();
     expect(isTopicGenerationInFlight('f1')).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// handleExplainMera — the CLOUD knowledge tool. Pure read of a frozen reference
+// document: no DB, no network, no side effects. The point of it is that Mera
+// answers a privacy question from SOURCED TEXT rather than from model memory,
+// so an unknown id must come back as a retryable error and never as a partial
+// answer the model would then fill in itself.
+// ---------------------------------------------------------------------------
+
+describe('handleExplainMera', () => {
+  it('returns the requested sections, in order, with their text', async () => {
+    const result = await handleExplainMera({
+      topics: ['privacy_what_leaves_device', 'known_gaps'],
+    });
+
+    const sections = result.sections as { topic: string; text: string }[];
+    expect(sections.map((s) => s.topic)).toEqual([
+      'privacy_what_leaves_device',
+      'known_gaps',
+    ]);
+    for (const s of sections) expect(s.text.length).toBeGreaterThan(200);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('returns availableTopics on an unknown id so the model can retry', async () => {
+    const result = await handleExplainMera({ topics: ['how_do_you_make_money'] });
+
+    expect(result.sections).toBeUndefined();
+    expect(result.error).toContain('how_do_you_make_money');
+    expect(result.availableTopics).toContain('what_is_mera');
+    expect(result.availableTopics).toContain('known_gaps');
+  });
+
+  it('rejects rather than half-answers when ONE of several ids is unknown', async () => {
+    const result = await handleExplainMera({ topics: ['what_is_mera', 'nope'] });
+    expect(result.sections).toBeUndefined();
+    expect(result.availableTopics).toBeDefined();
+  });
+
+  it('errors with availableTopics when topics is missing, empty, or not an array', async () => {
+    for (const args of [{}, { topics: [] }, { topics: 'known_gaps' }]) {
+      const result = await handleExplainMera(args);
+      expect(result.sections).toBeUndefined();
+      expect(result.availableTopics).toBeDefined();
+    }
+  });
+
+  it('caps at 3 sections rather than erroring — an error would burn a round trip', async () => {
+    const result = await handleExplainMera({
+      topics: [
+        'what_is_mera',
+        'privacy_what_leaves_device',
+        'privacy_what_we_store',
+        'encryption_and_inference',
+        'how_news_works',
+      ],
+    });
+
+    const sections = result.sections as { topic: string }[];
+    expect(sections).toHaveLength(3);
+    expect(sections.map((s) => s.topic)).toEqual([
+      'what_is_mera',
+      'privacy_what_leaves_device',
+      'privacy_what_we_store',
+    ]);
+  });
+
+  it('de-duplicates a repeated id — these are the largest entries in the budget', async () => {
+    const result = await handleExplainMera({ topics: ['known_gaps', 'known_gaps'] });
+    expect(result.sections).toHaveLength(1);
+  });
+
+  it('touches no I/O at all', async () => {
+    await handleExplainMera({ topics: ['what_is_mera'] });
+    expect(mockGetFacts).not.toHaveBeenCalled();
+    expect(mockAddFact).not.toHaveBeenCalled();
+    expect(mockUpdateFact).not.toHaveBeenCalled();
   });
 });

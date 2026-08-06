@@ -7,11 +7,29 @@ import { clearPin } from "@/lib/security/pin-service";
 import { usePinStore } from "@/lib/stores/pin-store";
 import logger from "@/lib/logger";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 
 export default function LoginScreen() {
     const { data: session, isPending } = authClient.useSession();
-    const { reauth } = useLocalSearchParams<{ reauth?: string }>();
+    const { reauth, signedOut } = useLocalSearchParams<{ reauth?: string; signedOut?: string }>();
     const reauthMode = reauth === '1';
+
+    // Arrived here straight from an explicit logout. better-auth does NOT clear
+    // its session atom synchronously on signOut(): it toggles $sessionSignal on
+    // a 10ms timer and only nulls `data` once /get-session round-trips. For that
+    // window `session` still holds the user who just signed out, and the
+    // shortcut below would bounce them straight back into the app they left.
+    // `isPending` cannot stand in for this — the refetch sets it from
+    // `data === null`, so it stays false the whole time stale data is present.
+    //
+    // The suppression MUST release itself: outside reauth mode AuthScreen gets
+    // no onLoginSuccess, so the Redirect below is the ONLY thing that moves a
+    // freshly logged-in user off this screen. Release the moment the stale
+    // session actually clears — any session after that is a real login.
+    const [suppressSessionShortcut, setSuppressSessionShortcut] = useState(signedOut === '1');
+    useEffect(() => {
+        if (suppressSessionShortcut && !session) setSuppressSessionShortcut(false);
+    }, [session, suppressSessionShortcut]);
 
     // Routed through the logger (debug is __DEV__-gated + Sentry-aware) so we
     // don't leak session details to a raw console in any build.
@@ -20,7 +38,7 @@ export default function LoginScreen() {
     // In reauth mode (Forgot PIN, or a needs-reauth banner tap) we must NOT
     // shortcut on an existing session — the user has to re-verify OTP to prove
     // identity before the PIN can be reset.
-    if (session && !isPending && !reauthMode) {
+    if (session && !isPending && !reauthMode && !suppressSessionShortcut) {
         logger.debug('[Login] Session found, redirecting to /logged-in/onboarding');
         return <Redirect href="/logged-in/onboarding" />;
     }

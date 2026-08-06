@@ -11,7 +11,7 @@
 // would go stale the first time one of its three writers forgot to recompute.
 
 import {
-    COMPANION_MODE_ENABLED,
+    FREE_TIER_MODE_ENABLED,
     DEV_FORCE_AI_ACCESS,
     DEV_FORCE_LAPSED,
 } from '@/lib/config/feature-gates';
@@ -19,11 +19,11 @@ import {
 /**
  * - `unknown` — we have not heard from the server OR RevenueCat yet. Surfaces
  *   must keep showing their existing loading state. Treating it as `locked`
- *   flashes companion mode at a paying subscriber on every cold start;
+ *   flashes Mera News Free at a paying subscriber on every cold start;
  *   treating it as `entitled` flashes real chrome at a locked user. Both are
  *   wrong, which is why this state is distinct and load-bearing.
  * - `entitled` — the AI layer is on.
- * - `locked` — companion mode: no NEW AI content, everything already on the
+ * - `locked` — Mera News Free: no NEW AI content, everything already on the
  *   device stays visible, scrollable and interactable.
  */
 export type AiAccess = 'unknown' | 'entitled' | 'locked';
@@ -36,7 +36,12 @@ export interface AiAccessInputs {
      * means "never heard from the server", NOT "no subscription".
      */
     serverTier: string | null;
-    /** RevenueCat's `customerInfo`, reduced to "have we heard from it at all". */
+    /**
+     * Has RevenueCat answered **about this user** — i.e. we hold a CustomerInfo
+     * AND it belongs to an identified customer, not the anonymous one the SDK
+     * mints at configure time. An anonymous payload describes nobody, so it
+     * cannot be read as "this user is not subscribed".
+     */
     hasCustomerInfo: boolean;
     /** RevenueCat's own verdict. Only consulted when the server is silent. */
     isPremium: boolean;
@@ -57,18 +62,29 @@ export function deriveAiAccess(inputs: AiAccessInputs): AiAccess {
     if (__DEV__ && DEV_FORCE_AI_ACCESS !== null) return DEV_FORCE_AI_ACCESS;
 
     // Ship gate. While false this wave is inert and the app behaves exactly as
-    // it did before it — see COMPANION_MODE_ENABLED for why the OTA must not be
+    // it did before it — see FREE_TIER_MODE_ENABLED for why the OTA must not be
     // the cutover. Below the dev override so the harness can still drive every
     // state; above everything else so nothing can leak past it.
-    if (!COMPANION_MODE_ENABLED) return 'entitled';
+    if (!FREE_TIER_MODE_ENABLED) return 'entitled';
 
     if (inputs.serverTier !== null) {
         return inputs.serverTier === 'none' ? 'locked' : 'entitled';
     }
 
-    if (inputs.hasCustomerInfo) {
-        return inputs.isPremium ? 'entitled' : 'locked';
-    }
+    // Asymmetric on purpose: RevenueCat may GRANT on any evidence, but may only
+    // DENY on evidence about an identified customer.
+    //
+    // An active entitlement is a fact regardless of which customer record holds
+    // it — including a purchase made before `Purchases.logIn` runs, which is a
+    // real path (the pre-onboarding paywall). Granting on it is what lets a
+    // just-completed purchase work seconds before our webhook lands.
+    //
+    // The absence of an entitlement is only meaningful once RevenueCat knows who
+    // it is being asked about. While anonymous it knows nothing, and the honest
+    // answer is 'unknown' — surfaces hold their loading state instead of
+    // flashing Mera News Free at someone who has paid.
+    if (inputs.isPremium) return 'entitled';
+    if (inputs.hasCustomerInfo) return 'locked';
 
     return 'unknown';
 }
@@ -109,4 +125,4 @@ export function deriveHasEverSubscribed(serverValue: boolean | null): boolean | 
 }
 
 /** Local device setting recording a dev-only acknowledgement of `DEV_FORCE_LAPSED`. */
-export const DEV_LAPSE_ACK_SETTING_KEY = 'dev_companion_lapse_acked';
+export const DEV_LAPSE_ACK_SETTING_KEY = 'dev_free_tier_lapse_acked';

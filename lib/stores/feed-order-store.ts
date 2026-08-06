@@ -537,7 +537,42 @@ export const useFeedOrderStore = create<FeedOrderState>()((set, get) => ({
     // the blob moments after `deleteSetting` cleared it, leaking one user's
     // card states into the next user's feed.
     cancelCardStatePersist();
-    set({ ...initialState, itemsById: {}, verdicts: {}, cardStates: {}, hydrateStats: null });
+    // HYDRATED-AND-EMPTY — `hydrated: true` is deliberate and must not be
+    // "corrected" back to the `initialState` value.
+    //
+    // After a reset the in-memory state IS the reconciled state: there is no
+    // persisted order left to load, so "not yet hydrated" is a lie that costs
+    // the entire feed. `ingest` hard-returns on `!hydrated` (above), and the
+    // ONLY caller of `hydrate` is FeedScreen's once-per-mount effect (a
+    // `didHydrate` ref with deps `[dbReady]`). FeedScreen stays MOUNTED under
+    // NativeTabs while the user is on the pushed Manage Data screen, so that
+    // effect never re-fires — leaving `hydrated: false` here wedged the Feed
+    // permanently until the JS process restarted, while the Dashboard (which
+    // does not read this store) repopulated normally. That asymmetry is the
+    // entire bug: "the feed only had the new cards after I reopened the app".
+    //
+    // Re-running `hydrate()` instead is NOT the fix: the `deleteSetting` calls
+    // below are async, so a hydrate racing them reads the not-yet-deleted blob,
+    // and its empty-pool guard (see `hydrate`) would then restore the whole
+    // stale order — ids whose suggestions were just deleted — and re-persist it.
+    //
+    // Self-healing if `deleteSetting` throws: memory is empty-and-hydrated, the
+    // user gets the clean rebuild they asked for, and the next `ingest` →
+    // `persist()` overwrites the stale blob anyway.
+    //
+    // KNOWN, UNREACHABLE RACE, documented so it is not "fixed" twice: a
+    // `hydrate()` already IN FLIGHT when this lands would `set()` afterwards and
+    // resurrect the order. Reaching it needs navigation to Manage Data inside
+    // the few ms of two `getSetting` reads on the very first mount. No
+    // generation counter — the guard would cost more than the race.
+    set({
+      ...initialState,
+      itemsById: {},
+      verdicts: {},
+      cardStates: {},
+      hydrateStats: null,
+      hydrated: true,
+    });
     deleteSetting(FEED_ORDER_SETTING_KEY).catch((err) =>
       logger.captureException(err, { tags: { store: 'feed-order-store' } }),
     );

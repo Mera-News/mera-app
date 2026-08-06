@@ -1,8 +1,6 @@
 import { FeedbackWidget } from '@sentry/react-native';
 import * as Sentry from '@sentry/react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Application from 'expo-application';
-import * as Updates from 'expo-updates';
 import React, { useEffect } from 'react';
 import {
     KeyboardAvoidingView,
@@ -20,49 +18,26 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { authClient } from '@/lib/auth-client';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
-import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useFeedbackStore, useFeedbackVisible } from '@/lib/stores/feedback-store';
-import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
-import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { useUserStore } from '@/lib/stores/user-store';
 
-// Diagnostic context attached to each feedback submission. captureFeedback
-// applies the current scope's contexts/tags, and beforeSend (lib/sentry-init.ts)
-// only runs on ERROR events, so this rides along on the feedback. Deliberately
-// app-state only — NOTHING from the user facts table (or any personal content).
+// Set the feedback identifier so a submitted report can be tied back to the
+// account that filed it. captureFeedback applies the current scope's user.
+//
+// This function used to ALSO set `mera_app_state` and five tags (app_version,
+// ota_channel, subscription_tier, processing_mode, app_language) — on the GLOBAL
+// scope, from a modal, so they were never removed. beforeSend only touched
+// event.user, never event.tags or event.contexts, which meant that once a user
+// opened "Report a Bug", every subsequent error that session carried their
+// subscription tier and app state. That enrichment is now applied globally,
+// deliberately and from one place (lib/observability/sentry-scope.ts), for every
+// session — so setting it again here bought nothing and leaked by accident.
+// Do not re-add per-surface scope writes.
 function attachFeedbackMetadata(userId: string | undefined): void {
-    // Use the app's user id as the feedback identifier (id only — no email/ip/
-    // username, which the error-path scrubber strips anyway).
+    // Id only — no email/ip/username. lib/sentry-init.ts documents the contract.
     if (userId) {
         Sentry.setUser({ id: userId });
     }
-
-    // Non-reactive reads — this runs on open, not on every store change.
-    const { appLanguage } = useAppLanguageStore.getState();
-    const { tier, isPremium } = useSubscriptionStore.getState();
-    const { processingMode, modelState } = useMeraProtocolStore.getState();
-
-    Sentry.setContext('mera_app_state', {
-        appVersion: Application.nativeApplicationVersion,
-        buildVersion: Application.nativeBuildVersion,
-        otaUpdateId: Updates.updateId,
-        otaChannel: Updates.channel,
-        runtimeVersion: Updates.runtimeVersion,
-        isEmbeddedLaunch: Updates.isEmbeddedLaunch,
-        platform: Platform.OS,
-        platformVersion: String(Platform.Version),
-        appLanguage,
-        subscriptionTier: tier ?? 'free',
-        isPremium,
-        processingMode,
-        modelState,
-    });
-
-    // Indexed tags for filtering feedback in Sentry.
-    Sentry.setTag('app_version', Application.nativeApplicationVersion ?? 'unknown');
-    Sentry.setTag('ota_channel', Updates.channel ?? 'embedded');
-    Sentry.setTag('subscription_tier', tier ?? 'free');
-    Sentry.setTag('processing_mode', processingMode);
-    Sentry.setTag('app_language', appLanguage);
 }
 
 // Floating-card chrome, matched to the chat popover (components/custom/
@@ -95,13 +70,22 @@ const FeedbackWidgetModal: React.FC = () => {
     const visible = useFeedbackVisible();
     const hide = useFeedbackStore((s) => s.hide);
 
+    // Local-first, same rule as Settings (config-mera/AppPreferencesTab) and the
+    // launch gate. A bug report is most likely to be filed when something is
+    // wrong — which is exactly when /get-session is least likely to answer — and
+    // reading identity off the session meant those reports arrived with no
+    // Sentry user id and an empty email box, the ones we can least afford to
+    // lose. The persisted values survive a session we cannot reach; the session
+    // stays as the fallback for installs that pre-date the cached_user_email row.
     const { data: session } = authClient.useSession();
-    const userId = session?.user?.id;
-    const userEmail = session?.user?.email;
+    const localUserId = useUserStore((s) => s.userId);
+    const localUserEmail = useUserStore((s) => s.userEmail);
+    const userId = localUserId ?? session?.user?.id;
+    const userEmail = localUserEmail ?? session?.user?.email;
 
-    // On open, set the feedback identifier (user id) + diagnostic metadata so it's
-    // on the scope before the user submits. See attachFeedbackMetadata for why
-    // this is safe wrt the no-PII / no-user-facts invariants.
+    // On open, set the feedback identifier so it's on the scope before the user
+    // submits. The diagnostic tags/context that used to be set here now come
+    // from the global scope — see attachFeedbackMetadata.
     useEffect(() => {
         if (!SENTRY_ENABLED || !visible) {
             return;

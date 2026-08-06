@@ -76,6 +76,7 @@
 // pills, and the 24h stats sentence.
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
   GLASS_AVAILABLE,
   GLASS_HEADER_SCRIM,
@@ -96,7 +97,8 @@ import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdo
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
-import CompanionModeCard from '@/components/custom/subscription/CompanionModeCard';
+import FreeTierCard from '@/components/custom/subscription/FreeTierCard';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
@@ -515,6 +517,18 @@ const FeedScreen: React.FC = () => {
     [listData, pinnedCount, partitionSnapshot],
   );
 
+  // DEV-only: the FIRST commit at which this screen actually has cards. A
+  // useEFFECT, not the memo body above — the memo runs during render, BEFORE
+  // commit, so measuring there measures memo evaluation rather than paint.
+  // Deliberately not routed through useFeedFunnelLog: its 2500ms trailing
+  // debounce would misreport this by 2.5s, in exactly the direction that
+  // matters. `mark` is once-per-run, so the dep churn costs nothing.
+  useEffect(() => {
+    if (feedRows.length > 0) {
+      coldstartTimeline.mark('feed-first-paint', `rows=${feedRows.length}`);
+    }
+  }, [feedRows.length]);
+
   // How many rows sit in the unviewed block — now a RENDERED boundary again (the
   // caught-up divider). The funnel diagnostic reports it as its `dividerIdx`, and
   // is deliberately fed the STORY-only list, not `feedRows`: its index space must
@@ -750,6 +764,15 @@ const FeedScreen: React.FC = () => {
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
+  // Mera News Free: `FreeTierCard` (the list header) already explains, at
+  // length, that Mera isn't building this feed right now. NoGeneratedInterestsCard
+  // would sit directly under it saying a blunter version of the same thing
+  // ("Mera cannot analyze news for you" / "create your user persona"), which is
+  // both redundant and wrong advice here — a persona would not help, a plan
+  // would. Gated on `=== 'locked'` and NOT `!== 'entitled'` deliberately: during
+  // the `'unknown'` window of a cold start `FreeTierCard` renders null, so this
+  // card must still render or the screen is empty for that first second.
+  const freeTierCardShown = useAiAccess() === 'locked';
   const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
   // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
   // for the empty-state chain and the header auto-reveal. The header indicator
@@ -791,7 +814,7 @@ const FeedScreen: React.FC = () => {
       );
     }
     if (!hasGeneratedInterests) {
-      return <NoGeneratedInterestsCard />;
+      return freeTierCardShown ? null : <NoGeneratedInterestsCard />;
     }
     // Caught-up flash guard: only show AllCaughtUpCard once hydrated AND not
     // processing; otherwise the feed is still preparing.
@@ -886,15 +909,15 @@ const FeedScreen: React.FC = () => {
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
-        // Companion-mode upsell — a locked user's plan-explainer, pinned above
+        // Free-tier upsell — a locked user's plan-explainer, pinned above
         // the rows. The card reads entitlement itself and renders nothing once
-        // unlocked, so this mount is unconditional; see CompanionModeCard.
+        // unlocked, so this mount is unconditional; see FreeTierCard.
         // Plain header, not `stickyHeaderIndices`: this list grows upward via
         // `maintainVisibleContentPosition` + `autoscrollToTopThreshold` (prepend
         // on ingest, reset-to-top on refresh), and sticky headers are known to
         // fight that anchoring. Not worth forcing for a header that already
         // sits at the visual top on first paint.
-        ListHeaderComponent={<CompanionModeCard surface="feed" />}
+        ListHeaderComponent={<FreeTierCard surface="feed" />}
         ListFooterComponent={listFooter}
         initialNumToRender={4}
         // 7 → 5 (Area B). Feed cards are tall — roughly one per screen — so 7

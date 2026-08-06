@@ -3,30 +3,35 @@ import { navigateToPaywall } from '@/lib/nav-state';
 import { ROUTE_SETTLE_MS } from './LapseInterstitialGate';
 import { getAiAccess, useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { deriveHasEverSubscribed } from '@/lib/subscription/ai-access';
+import { FIRST_OPEN_DISMISSED_SETTING_KEY } from '@/lib/subscription/first-open-dismissal';
 import { usePathname } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 
 /**
  * Local, DEVICE-ONLY record that the user dismissed the first-open push.
  *
- * Deliberately not server-side, unlike the lapse interstitial. The two look
- * similar and want opposite things:
- *  - the lapse latch exists to AVOID re-nagging a genuine subscriber across
- *    devices and reinstalls after a single-device event, so it must survive;
- *  - this one should reasonably re-arm on a reinstall — a fresh install is a
- *    legitimate second first impression, and the direction here is that
- *    everyone is asked.
+ * The definition moved to `lib/subscription/first-open-dismissal.ts` once the
+ * pre-onboarding paywall gate started reading it too — a lib module must not
+ * import a component to get a constant. Re-exported here so every existing
+ * importer (and this gate's own tests) keeps working unchanged.
  */
-export const FIRST_OPEN_DISMISSED_SETTING_KEY = 'companion_first_open_dismissed';
+export { FIRST_OPEN_DISMISSED_SETTING_KEY };
 
 /**
  * Shows the paywall the first time a never-subscribed user reaches the app
  * shell without an active plan.
  *
  * Renders nothing. A THIRD mechanism, distinct from the lapse interstitial and
- * from the 402 handling — and deliberately the most assertive of the three: it
- * is the primary conversion moment, so it routes to the paywall screen in its
- * DEFAULT mode, whose auto-present-on-mount is left exactly as it always was.
+ * from the 402 handling. It routes to the paywall screen in its DEFAULT mode,
+ * which is the first-open copy — the one that recommends Starter, because a
+ * never-subscribed user has nothing accumulated for Mera News Free to keep yet.
+ *
+ * It used to be "the most assertive of the three" because the destination
+ * auto-presented the purchase sheet on mount. That auto-present has been
+ * removed (see NotSubscribedScreen's `presentPaywall`), so this gate now
+ * surfaces a PAGE, not a modal. That is still a job worth doing — nothing else
+ * brings a never-subscribed user to the plans screen — so the gate stays; only
+ * its assertiveness changed.
  *
  * Mutually exclusive with the lapse gate by construction: this requires
  * `hasEverSubscribed === false`, and a lapse can only happen to someone for
@@ -84,8 +89,8 @@ export default function FirstOpenPaywallGate() {
         // identity work, and a navigation issued inside that window is stomped.
         const timer = setTimeout(() => {
             firedRef.current = true;
-            // No `reason` argument: this deliberately gets the screen's original
-            // behaviour, purchase sheet and all.
+            // No `reason` argument: the first-open copy, which recommends
+            // Starter. (It no longer also means "and auto-open the sheet".)
             navigateToPaywall();
         }, ROUTE_SETTLE_MS);
 

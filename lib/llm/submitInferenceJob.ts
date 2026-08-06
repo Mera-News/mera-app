@@ -7,6 +7,7 @@
 
 import { fetch as expoFetch } from 'expo/fetch';
 import logger from '@/lib/logger';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { withRetry } from '@/lib/utils/retry';
 import { isTransientNetworkError } from '@/lib/utils/transient-error';
 import * as gatewayRateLimiter from './gateway-rate-limiter';
@@ -82,8 +83,30 @@ export async function sendInferenceRequest(args: {
    *  here. Required for background submits; optional JWT fallback in
    *  foreground. */
   capabilityToken?: string | null;
+  /** OPT-IN, default false. `true` means the CALLER has already paid this
+   *  request's rate-limiter slot with `gatewayRateLimiter.tryTakeImmediate()`,
+   *  so this call must not pay a second time.
+   *
+   *  The orchestrator's drain calls `tryTakeImmediate()` merely to decide
+   *  whether it may ADMIT another batch — and that call MUTATES `nextGrantAt`
+   *  to `now + MIN_GATEWAY_INTERVAL_MS`. The `acquire()` below would then wait
+   *  out the very slot the admission check just consumed: one HTTP request,
+   *  two grants, ~3s of dead time before the first POST leaves the device
+   *  (measured 3116ms on prod).
+   *
+   *  Defaults FALSE so every other caller keeps the FIFO queue. Never remove
+   *  the `acquire()` itself — this only decides WHO paid, not whether. */
+  grantAlreadyHeld?: boolean;
 }): Promise<SendInferenceOutcome> {
-  const { bundle, ctx, token, model, context, capabilityToken } = args;
+  const {
+    bundle,
+    ctx,
+    token,
+    model,
+    context,
+    capabilityToken,
+    grantAlreadyHeld = false,
+  } = args;
 
   if (DUMP_QUERIES_ENABLED) {
     dumpPromptsForDev(bundle.calls).catch((err: unknown) => {
@@ -195,7 +218,14 @@ export async function sendInferenceRequest(args: {
   // Serial FIFO gate shared by every inference-gateway HTTP call (submits and
   // polls) — enforces the gateway's per-IP throttle (30 req/60s counting
   // both) well under the limit before we even attempt the POST.
-  await gatewayRateLimiter.acquire();
+  //
+  // SKIPPED when the caller already holds a grant — the slot is paid either
+  // way, so charging twice only delays the POST (see `grantAlreadyHeld`).
+  if (!grantAlreadyHeld) await gatewayRateLimiter.acquire();
+
+  // Last thing before the bytes leave the device — one site covering every
+  // submit path.
+  coldstartTimeline.mark('first-batch-POST', `calls=${bundle.calls.length}`);
 
   // Hard wall-clock timeout per POST attempt. A hung submit socket would
   // otherwise pin the poller's drain/tick in-flight, leaving the pipeline stuck

@@ -29,6 +29,7 @@ import { generateTopicsForFact, mergeTopicsAppend } from '@/lib/mera-protocol/to
 import { getArticleCountByTopicTexts, getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
@@ -436,12 +437,17 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
                 // made a successful purchase keep showing the old plan. This
                 // screen is DEPRECATED with no live consumers, so it gets the
                 // correctness fix without the "activating…" affordance.
+                // Hoisted so the toast can compare against it: the toast
+                // announces a none→paid TRANSITION, not the mere existence of a
+                // plan (see activation-toast.ts).
+                const previousTier = billing?.subscriptionTier ?? null;
                 const { billing: fresh, confirmed } =
-                    await refreshUserBillingAfterPurchase(billing?.subscriptionTier ?? null);
+                    await refreshUserBillingAfterPurchase(previousTier);
                 if (confirmed && fresh) {
                     setBilling(fresh);
-                    // App-wide: lifts companion mode the moment the purchase lands.
+                    // App-wide: lifts the free-tier state the moment the purchase lands.
                     useSubscriptionStore.getState().setServerBilling(fresh);
+                    showSubscriptionActivatedToast(previousTier, fresh.subscriptionTier);
                 }
             }
         } catch (error) {

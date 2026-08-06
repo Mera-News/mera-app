@@ -1,5 +1,6 @@
 import { useNetworkStore } from '@/lib/stores/network-store';
 import logger from '@/lib/logger';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
   requestSuggestionsRefresh,
   flushSuggestionsRefresh,
@@ -224,6 +225,7 @@ class FeedSyncMachine {
 
   private async _run(personaId: string, ctx: TaskContext, runId: number): Promise<void> {
     logger.debug('[FeedSyncMachine] run start');
+    coldstartTimeline.mark('feed-sync-start');
     // Clear any prior scoring-pipeline error at the start of a fresh cycle — the
     // header status reflects this cycle's outcome. It re-appears if scoring fails
     // again, and resolves on its own if scoring succeeds.
@@ -293,6 +295,10 @@ class FeedSyncMachine {
           return 0;
         }),
       ]);
+      coldstartTimeline.mark(
+        'topic-ids-resolved',
+        `ids=${topicResult.serverArticleIds.length}`,
+      );
       // Record the server-wide 24h article count now so subsequent
       // refreshSuggestionsInStore calls (which only know about on-device rows)
       // don't overwrite it. Falls back to the topic-matched count if the query failed.
@@ -336,6 +342,22 @@ class FeedSyncMachine {
         await flushSuggestionsRefresh();
         this._transitionTo('done');
         useForYouStore.getState().setLastSyncAt(Date.now());
+        // A cycle that found nothing to do is still a processing run that
+        // FINISHED, and it has to say so. `lastProcessingRunFinishedAt` is what
+        // both feed surfaces read to choose between FeedPreparingCard and
+        // AllCaughtUpCard, and on this path nothing else can ever stamp it: no
+        // rows are enqueued, so no pipeline run exists, so `doFinalize` — the
+        // usual stamper — bails before reaching it. Without this, a window that
+        // legitimately holds no articles leaves "Mera is preparing your feed."
+        // on screen forever. Same remedy `abortRun` already applies for the same
+        // stated reason (scoring-pipeline.ts, `abortRun`).
+        //
+        // Skipped while suppressed: a live scoring run owns the unscored backlog
+        // and will stamp its own finalize, so claiming "finished" here would
+        // resolve the card while work is genuinely still in flight.
+        if (!suppressScoring) {
+          useForYouStore.getState().markProcessingRunFinished();
+        }
         try {
           await feedPersistence.clearMachineSnapshot();
         } catch (snapErr) {
@@ -422,7 +444,7 @@ class FeedSyncMachine {
     } catch (err) {
       const errorCode = classifyError(err);
 
-      // `not-subscribed` is companion mode, not a fault. The user has no plan,
+      // `not-subscribed` is Mera News Free, not a fault. The user has no plan,
       // the four AI queries 402, and that is the designed outcome — so this
       // exits the quietest way the machine can: straight to idle, no status
       // message at all (publishSyncStatus('idle') CLEARS it), no error chrome,

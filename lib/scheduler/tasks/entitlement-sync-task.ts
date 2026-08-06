@@ -1,3 +1,4 @@
+import { syncRevenueCatAttributes } from '@/lib/revenuecat';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
 import { AppScheduler } from '../AppScheduler';
 
@@ -23,5 +24,14 @@ AppScheduler.register({
     // `syncEntitlement` has its own 60s debounce, so a foreground trigger
     // arriving right after a login/purchase sync is a cheap no-op.
     await syncEntitlement();
+
+    // Also here, not only inside syncEntitlement's success path, precisely
+    // BECAUSE of that debounce: a debounced-out sync never reaches its success
+    // path, so this foreground seam would otherwise go silent for exactly the
+    // values that move mid-session. One set at login is not enough —
+    // `app_version` and `ota_update_id` change under the user when an OTA
+    // applies, and `onboarding_stage` / `app_language` change while the app is
+    // open. Unchanged payloads are skipped inside, so the repeat is free.
+    await syncRevenueCatAttributes();
   },
 });

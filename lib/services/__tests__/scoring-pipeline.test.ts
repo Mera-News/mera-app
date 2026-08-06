@@ -125,6 +125,11 @@ jest.mock('@/lib/llm/gateway-rate-limiter', () => ({
   tryTakeImmediate: (...args: any[]) => mockTryTakeImmediate(...args),
   pauseFor: (...args: any[]) => mockPauseFor(...args),
   acquire: (...args: any[]) => mockAcquire(...args),
+  // Read-only: startPollerTimer aligns its FIRST tick to this instead of a
+  // fixed POLL_INTERVAL_MS. 0 ⇒ "a grant is free now", which under fake timers
+  // keeps the first tick at ~0ms and leaves existing tick-count assertions
+  // (driven by advanceTimersByTime) unchanged.
+  msUntilNextGrant: () => 0,
 }));
 
 jest.mock('@/lib/llm/submitInferenceJob', () => ({
@@ -2058,6 +2063,10 @@ describe('top-headline cull — legacy path', () => {
       [expect.objectContaining({ id: 't0', relevance: 0.4 })],
       { t0: 0.4 },
       0.4,
+      // LEGACY batch ⇒ the legacy reason prompt, which only writes a note. The
+      // v3 note prompt may also DEMOTE, so routing a legacy batch to it would
+      // hand rows a verdict their scorer never asked for.
+      false,
     );
     const run = currentRun();
     expect(run).not.toBeNull();
@@ -2690,6 +2699,123 @@ describe('RELEVANCE_V3 — merged decode', () => {
       'a0',
       expect.objectContaining({ reason: '', reasonSkipped: false }),
     );
+  });
+
+  // --- pass 2: the note, one article per call ------------------------------
+  //
+  // v3 no longer writes the sentence in the scoring response. A merged batch
+  // asked to write five sentences about five similar articles attached some of
+  // them to the WRONG article — 4.9% of notes on the 292-article gold set, with
+  // the array still correctly numbered "i" 1..N. These pin the replacement:
+  // pass 1 scores, pass 2 visits one article and both judges and writes it.
+
+  /** Advance a v3 batch through pass 1 into `waiting-reasons`. */
+  async function v3ToNotePhase(id: string, rel: number, impact: number) {
+    mockMathForV3({ [id]: { computed: 0.5 } });
+    await enqueueCandidates([id]);
+    const batch = currentRun().batches[0];
+    mockGetScoredWithoutReasons.mockResolvedValue([
+      { ...candidate(id), relevance: blendToScore(rel, impact) },
+    ]);
+    await decodeV3(batch, { 'score:0': [{ i: 1, rel, impact }] });
+    return currentRun().batches[0];
+  }
+
+  it('sends an above-gate row to a per-article note pass instead of finishing', async () => {
+    const notes = await v3ToNotePhase('a0', 80, 60);
+
+    expect(notes.phase).toBe('waiting-reasons');
+    expect(notes.reasonCandidateIds).toEqual(['a0']);
+    // Routed to the v3 note prompt, which may also DEMOTE — not the legacy
+    // reason prompt, which only writes.
+    expect(mockBuildReasonCallsForSubset).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      true,
+    );
+  });
+
+  it('saves the sentence a kept article earns', async () => {
+    const notes = await v3ToNotePhase('a0', 80, 60);
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: notes.requestId,
+      results: [
+        {
+          id: 'reason:a0',
+          ok: true,
+          output: '{"keep":true,"why":"Bhopal flooding reaches your family."}',
+        },
+      ],
+    });
+
+    await handlePush(notes.requestId, 'foreground');
+
+    expect(mockSaveReason).toHaveBeenCalledWith('a0', 'Bhopal flooding reaches your family.');
+  });
+
+  it('demotes a rejected article below the gate, terminal and noteless', async () => {
+    const notes = await v3ToNotePhase('a0', 80, 60);
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: notes.requestId,
+      results: [{ id: 'reason:a0', ok: true, output: '{"keep":false}' }],
+    });
+
+    await handlePush(notes.requestId, 'foreground');
+
+    expect(mockSaveReason).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).toHaveBeenCalledWith('a0', {
+      relevance: DEFAULT_HARNESS_CONFIG.articlePipeline.feedVerifierDemoteScore,
+      reason: '',
+      // Terminal: below the render gate it owes no note, so leaving it
+      // reason_pending would strand it in the recovery sweep forever.
+      reasonSkipped: true,
+    });
+  });
+
+  // An unreadable answer is not evidence an article deserves demoting.
+  it('fails OPEN on an unusable verdict — score stands, note still owed', async () => {
+    const notes = await v3ToNotePhase('a0', 80, 60);
+    mockSaveScoringResult.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: notes.requestId,
+      results: [{ id: 'reason:a0', ok: true, output: 'I am not JSON' }],
+    });
+
+    await handlePush(notes.requestId, 'foreground');
+
+    expect(mockSaveReason).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+  });
+
+  it('treats a keep with no sentence as still-owed rather than terminal', async () => {
+    const notes = await v3ToNotePhase('a0', 80, 60);
+    mockSaveScoringResult.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: notes.requestId,
+      results: [{ id: 'reason:a0', ok: true, output: '{"keep":true}' }],
+    });
+
+    await handlePush(notes.requestId, 'foreground');
+
+    expect(mockSaveReason).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+  });
+
+  // Upgrade path: a batch submitted by the PREVIOUS build, whose pass-1 prompt
+  // still asked for a `why`, decoding under this one. Those rows are already
+  // complete, so pass 2 must not re-do them.
+  it('finishes without a note pass when pass 1 volunteered a why', async () => {
+    mockMathForV3({ a0: { computed: 0.5 } });
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+
+    await decodeV3(batch, {
+      'score:0': [{ i: 1, rel: 80, impact: 60, why: 'It hits your commute' }],
+    });
+
+    expect(mockBuildReasonCallsForSubset).not.toHaveBeenCalled();
+    expect(currentRun()).toBeNull();
   });
 
   it('marks a sub-threshold row reason-skipped and discards it', async () => {

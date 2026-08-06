@@ -23,7 +23,10 @@ import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { computeFeedFunnel, type FeedFunnelReport } from '@/lib/stores/feed-diagnostics';
 import { getOpenedSeenBreakdown } from '@/lib/database/services/story-impression-service';
-import { getScoringModeBreakdown } from '@/lib/database/services/article-suggestion-service';
+import {
+    getScoringModeBreakdown,
+    getSharedNoteBreakdown,
+} from '@/lib/database/services/article-suggestion-service';
 import { HARNESS_CONFIG_BASE } from '@/lib/mera-protocol/harness-config-base';
 import { effectiveHarnessConfig } from '@/lib/mera-protocol/stage-scoring';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
@@ -232,6 +235,32 @@ function feedFunnelRows(
         );
     }
 
+    // ARE ANY NOTES SHARED BETWEEN ARTICLES. Sits directly under the scorer rows
+    // because it answers the next question those raise: not "what produced this
+    // score" but "what produced the SENTENCE on the card". Only propagation
+    // copies a note verbatim between articles, so a shared string is its
+    // signature — a decode shift or a model working from its own prompt exemplar
+    // each yield a sentence that exists exactly once. Some sharing is normal and
+    // intended; a LARGE group is the thing to look at.
+    if (r.sharedNotes.available) {
+        rows.push([
+            'Notes shared between articles',
+            r.sharedNotes.sharedNoteGroups === 0
+                ? 'none'
+                : `${r.sharedNotes.sharedNoteGroups} shared by ${r.sharedNotes.rowsSharingANote} of ${r.sharedNotes.rowsWithNote}`,
+            'funnel-row-shared-notes',
+        ]);
+        if (r.sharedNotes.largestGroupSize > 1) {
+            rows.push([
+                'Largest shared note',
+                `${r.sharedNotes.largestGroupSize} articles`,
+                'funnel-row-shared-note-largest',
+            ]);
+        }
+    } else {
+        rows.push(['Notes shared between articles', '—', 'funnel-row-shared-notes']);
+    }
+
     rows.push(
         [L.groups, String(r.groups.count)],
         [L.collapseRatio, String(r.groups.collapseRatio)],
@@ -438,7 +467,14 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
         // never hydrates, ingests, or marks anything. Its own try/catch so a
         // diagnostic failure can never take the rest of the screen down.
         try {
-            const [breakdown, userCtx, scoringModes, effectiveCfg, alreadyRead] = await Promise.all([
+            const [
+                breakdown,
+                userCtx,
+                scoringModes,
+                effectiveCfg,
+                alreadyRead,
+                sharedNotes,
+            ] = await Promise.all([
                 getOpenedSeenBreakdown().catch(() => null),
                 loadUserGeoLanguageContext(),
                 // Its own catch: this walks every scored row's audit JSON, and a
@@ -458,6 +494,11 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     .query(Q.where('status', ArticleSuggestionStatus.AlreadyRead))
                     .fetchCount()
                     .catch(() => null),
+                // Fetches every row carrying a note, so it belongs here with the
+                // other on-demand reads rather than anywhere near render. Own
+                // catch → the shared-notes row renders '—' instead of a zero
+                // that would read as "nothing is shared".
+                getSharedNoteBreakdown().catch(() => null),
             ]);
             setAlreadyReadCount(alreadyRead);
             const fo = useFeedOrderStore.getState();
@@ -479,6 +520,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     headerRelevantCount: counts.relevantCount,
                     openedStats: breakdown?.stats ?? null,
                     scoringModes,
+                    sharedNotes,
                     useArticleTags: effectiveCfg.scoringEngine.USE_ARTICLE_TAGS,
                     userCtx,
                     nowMs: Date.now(),

@@ -1,5 +1,5 @@
 import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
-import CompanionModeCard from '@/components/custom/subscription/CompanionModeCard';
+import FreeTierCard from '@/components/custom/subscription/FreeTierCard';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
@@ -249,7 +249,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     [onPressSuggestion, openedIds, openFactFeed],
   );
 
-  // Composed, not replaced: the companion card sits ABOVE the breaking strip,
+  // Composed, not replaced: the free-tier card sits ABOVE the breaking strip,
   // and both are above the sections. Mounted here rather than threaded down
   // from ForYouScreen as a prop because this component is the Dashboard's list
   // and its only consumer — a prop would be indirection with one caller.
@@ -260,7 +260,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   const ListHeader = useMemo(
     () => (
       <>
-        <CompanionModeCard surface="dashboard" />
+        <FreeTierCard surface="dashboard" />
         {breaking.length > 0 ? (
           <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
         ) : null}

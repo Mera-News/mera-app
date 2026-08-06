@@ -18,6 +18,36 @@ describe('revenuecat', () => {
     jest.clearAllMocks();
   });
 
+  // The SDK is configured with no appUserID, so every cold start runs
+  // anonymously until `loginRevenueCat` aliases the customer. Observed on a real
+  // device: `👤 No initial App User ID`, then
+  // `GET /v1/subscribers/$RCAnonymousID%3A72f363cf…`. That payload's empty
+  // entitlements describe nobody and must never be read as a denial.
+  describe('isAnonymousCustomerInfo', () => {
+    it('is true for an SDK-minted anonymous customer', () => {
+      const { rc } = load();
+      expect(
+        rc.isAnonymousCustomerInfo({
+          originalAppUserId: '$RCAnonymousID:72f363cf86514c138a873e067020a196',
+        }),
+      ).toBe(true);
+    });
+
+    it('is false once logIn has attached our own user id', () => {
+      const { rc } = load();
+      expect(
+        rc.isAnonymousCustomerInfo({ originalAppUserId: '6a73cbcc19632e639560a9cb' }),
+      ).toBe(false);
+    });
+
+    it('is false for null/undefined/missing ids rather than throwing', () => {
+      const { rc } = load();
+      expect(rc.isAnonymousCustomerInfo(null)).toBe(false);
+      expect(rc.isAnonymousCustomerInfo(undefined)).toBe(false);
+      expect(rc.isAnonymousCustomerInfo({})).toBe(false);
+    });
+  });
+
   describe('getActiveTier', () => {
     it('returns professional when the professional entitlement is active', () => {
       const { rc } = load();
@@ -129,6 +159,24 @@ describe('revenuecat', () => {
       const { rc, Purchases } = load();
       rc.configureRevenueCat();
       Purchases.logOut.mockRejectedValueOnce(new Error('anonymous'));
+      await expect(rc.logoutRevenueCat()).resolves.toBeUndefined();
+    });
+
+    // A logout calls this twice — clearAuthStorage() and wipeAllLocalUserData()
+    // each reset RevenueCat. The second call must be a silent no-op rather than
+    // a thrown-and-caught "current user is anonymous".
+    it('is a no-op when the customer is already anonymous', async () => {
+      const { rc, Purchases } = load();
+      rc.configureRevenueCat();
+      Purchases.isAnonymous.mockResolvedValueOnce(true);
+      await rc.logoutRevenueCat();
+      expect(Purchases.logOut).not.toHaveBeenCalled();
+    });
+
+    it('stays resolved when the anonymity check itself fails', async () => {
+      const { rc, Purchases } = load();
+      rc.configureRevenueCat();
+      Purchases.isAnonymous.mockRejectedValueOnce(new Error('bridge down'));
       await expect(rc.logoutRevenueCat()).resolves.toBeUndefined();
     });
   });

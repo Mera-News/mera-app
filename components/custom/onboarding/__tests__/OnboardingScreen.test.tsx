@@ -80,6 +80,23 @@ jest.mock('@/lib/stores/network-store', () => ({
     probeServerReachable: () => mockProbeServerReachable(),
 }));
 
+// The pre-onboarding paywall gate is stubbed to its pass-through verdict here
+// so this suite stays about FACTS and IDENTITY. Its real graph reaches
+// react-native-purchases and Apollo, neither of which can be constructed in this
+// environment, and its own behaviour is covered end-to-end (with the real
+// feature-gates → ai-access → store chain) in
+// components/custom/subscription/__tests__/onboarding-paywall-order.test.tsx.
+const mockResolveEntitlement = jest.fn(async () => 'entitled' as string);
+const mockDecideEntry = jest.fn(() => 'onboarding' as string);
+jest.mock('@/lib/subscription/onboarding-paywall', () => ({
+    resolveEntitlementForOnboarding: (...a: any[]) => mockResolveEntitlement(...(a as [])),
+    decideOnboardingEntry: (...a: any[]) => mockDecideEntry(...(a as [])),
+}));
+jest.mock('@/lib/subscription/first-open-dismissal', () => ({
+    FIRST_OPEN_DISMISSED_SETTING_KEY: 'free_tier_first_open_dismissed',
+    readFirstOpenDismissed: jest.fn(async () => false),
+}));
+
 import OnboardingScreen from '../OnboardingScreen';
 
 beforeEach(() => {
@@ -92,6 +109,8 @@ beforeEach(() => {
     mockHasIdentityFault.mockResolvedValue(false);
     mockGetSetting.mockResolvedValue('u1');
     mockProbeServerReachable.mockResolvedValue(true);
+    mockResolveEntitlement.mockResolvedValue('entitled');
+    mockDecideEntry.mockReturnValue('onboarding');
 });
 
 // `userId` is the EFFECTIVE owner (session ?? cached); `sessionUserId` is the
@@ -102,15 +121,19 @@ function renderScreen(
     onLoginRedirect = jest.fn(),
     props: { userId?: string; sessionUserId?: string } = {},
 ) {
+    const onPaywall = jest.fn();
+    const onFreeTierMode = jest.fn();
     const utils = render(
         <OnboardingScreen
             userId={props.userId ?? 'u1'}
             sessionUserId={'sessionUserId' in props ? props.sessionUserId : 'u1'}
             onLoginRedirect={onLoginRedirect}
             onComplete={onComplete}
+            onPaywall={onPaywall}
+            onFreeTierMode={onFreeTierMode}
         />,
     );
-    return { ...utils, onComplete, onLoginRedirect };
+    return { ...utils, onComplete, onLoginRedirect, onPaywall, onFreeTierMode };
 }
 
 describe('OnboardingScreen fact gate', () => {

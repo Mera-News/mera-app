@@ -19,11 +19,20 @@ jest.mock('@/lib/stores/selectors', () => ({
   }),
 }));
 
+// Selector-shaped: the hook now reads the LOCAL identity via
+// `useUserStore((s) => s.userId)` as well as destructuring the actions off a
+// bare call, so the mock has to honour both call shapes. `mockLocalUserIdRef`
+// is a lazy ref for the same hoisting reason as the others above.
 const mockFetchUserPersonaOrThrow = jest.fn();
+const mockLocalUserIdRef = { current: 'user-1' as string | null };
 jest.mock('@/lib/stores/user-store', () => ({
-  useUserStore: () => ({
-    fetchUserPersonaOrThrow: (...args: unknown[]) => mockFetchUserPersonaOrThrow(...args),
-  }),
+  useUserStore: (selector?: (s: unknown) => unknown) => {
+    const state = {
+      userId: mockLocalUserIdRef.current,
+      fetchUserPersonaOrThrow: (...args: unknown[]) => mockFetchUserPersonaOrThrow(...args),
+    };
+    return selector ? selector(state) : state;
+  },
 }));
 
 const mockGetActive = jest.fn();
@@ -87,6 +96,7 @@ describe('useFeedBootstrap', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSessionRef.current = { user: { id: 'user-1' } };
+    mockLocalUserIdRef.current = 'user-1';
     mockIsFocusedRef.current = true;
     setForYouState({ suggestions: [], hasGeneratedTopics: true });
     mockFetchUserPersonaOrThrow.mockReset();
@@ -189,14 +199,34 @@ describe('useFeedBootstrap', () => {
     expect(mockFetchUserPersonaOrThrow).not.toHaveBeenCalled();
   });
 
-  it('does not fetch when there is no session user id', async () => {
+  it('does not fetch when there is no identity at all — neither local nor session', async () => {
     mockSessionRef.current = null;
+    mockLocalUserIdRef.current = null;
     setForYouState({ suggestions: [], hasGeneratedTopics: true });
 
     renderHook(() => useFeedBootstrap());
 
     await Promise.resolve();
     expect(mockFetchUserPersonaOrThrow).not.toHaveBeenCalled();
+  });
+
+  // Offline / keychain-locked wake / 401 blip: the server session is gone but
+  // the user never logged out. The bootstrap must still run off the persisted
+  // id — otherwise hasGeneratedTopics is never derived and the feed sits on its
+  // "Mera cannot analyze news for you" empty state for a signed-in user.
+  it('bootstraps off the LOCAL id when the session cannot be fetched', async () => {
+    mockSessionRef.current = null;
+    mockLocalUserIdRef.current = 'user-1';
+    setForYouState({ suggestions: [], hasGeneratedTopics: false });
+    mockFetchUserPersonaOrThrow.mockResolvedValueOnce({ _id: 'persona-1' });
+    mockGetActive.mockResolvedValueOnce([{ id: 't1' }]);
+
+    const { result } = renderHook(() => useFeedBootstrap());
+
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(mockFetchUserPersonaOrThrow).toHaveBeenCalledWith('user-1');
+    expect(mockSetHasGeneratedTopics).toHaveBeenCalledWith(true);
   });
 
   it('hydrates the opened-stories store on mount and on refocus', async () => {

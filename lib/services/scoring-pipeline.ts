@@ -17,6 +17,7 @@
 
 import { AppState } from 'react-native';
 import logger from '@/lib/logger';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import type { ExecutionContext } from '@/lib/llm/execution-context';
 import * as gatewayRateLimiter from '@/lib/llm/gateway-rate-limiter';
@@ -66,6 +67,7 @@ import {
   CLOUD_SCORE_V3_SYSTEM_PROMPT,
   CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT,
   parseScoreV3Response,
+  parseV3NoteResponse,
   buildBatchScoringUserMessage,
 } from '@/lib/news-harness/prompts/prompts';
 // RELEVANCE_V3 — interest-evidence rescue floor (strong topic evidence keeps a
@@ -326,6 +328,10 @@ let postFinalizeKickTimer: ReturnType<typeof setTimeout> | null = null;
 const lastPolledAt = new Map<number, number>();
 
 let pollerTimer: ReturnType<typeof setInterval> | null = null;
+/** One-shot timer for the FIRST poller tick, aligned to the rate limiter's next
+ *  grant rather than a fixed POLL_INTERVAL_MS. A separate handle from
+ *  `pollerTimer` so start/stop/reset can clear both unambiguously. */
+let pollerKickTimer: ReturnType<typeof setTimeout> | null = null;
 let appStateSub: { remove: () => void } | null = null;
 let pollTickRunning = false;
 /** Consecutive runPollerTick throws; reset on any clean tick. See
@@ -1020,7 +1026,8 @@ async function doDrain(context: ExecutionContext): Promise<void> {
     // requeued it every 60s — the MERA-APP-39 wedge. A throwing submit must
     // never abort the admission loop or strand a batch, whatever the cause.
     try {
-      await doSubmit(queued.batchId, context);
+      // The admission check above already spent this request's limiter slot.
+      await doSubmit(queued.batchId, context, true);
     } catch (err) {
       logger.captureException(err, {
         tags: { service: 'scoring-pipeline', step: 'submit' },
@@ -1066,6 +1073,7 @@ async function maybeFinalize(): Promise<void> {
 async function doSubmit(
   batchId: number,
   context: ExecutionContext,
+  grantAlreadyHeld = false,
 ): Promise<void> {
   const snap = await getPipeline();
   if (!snap) return;
@@ -1082,10 +1090,10 @@ async function doSubmit(
 
   try {
     if (batch.reasonsOnly) {
-      await doSubmitReasonsOnly(run, batch, privKeyHex, context);
+      await doSubmitReasonsOnly(run, batch, privKeyHex, context, grantAlreadyHeld);
       return;
     }
-    await doSubmitRelevance(run, batch, privKeyHex, context);
+    await doSubmitRelevance(run, batch, privKeyHex, context, grantAlreadyHeld);
   } catch (err) {
     // The E2EE context (re)build validates the model attestation key up front;
     // an off-curve ecdsa key throws ModelKeyValidationError here BEFORE any POST
@@ -1123,6 +1131,7 @@ async function doSubmitRelevance(
   batch: PipelineBatch,
   privKeyHex: string,
   context: ExecutionContext,
+  grantAlreadyHeld = false,
 ): Promise<void> {
   const all = await getUnscoredSuggestionsWithFacts();
   const idSet = new Set(batch.candidateIds);
@@ -1199,6 +1208,7 @@ async function doSubmitRelevance(
       math,
       active,
       token,
+      grantAlreadyHeld,
       cfg,
     });
     return;
@@ -1261,6 +1271,7 @@ async function doSubmitRelevance(
       token,
       model: SMALL_MODEL,
       context,
+      grantAlreadyHeld,
     });
 
     if (outcome.status === 'ok') {
@@ -1431,6 +1442,7 @@ async function doSubmitRelevance(
     token,
     model: SMALL_MODEL,
     context,
+    grantAlreadyHeld,
   });
 
   if (outcome.status === 'ok') {
@@ -1517,8 +1529,20 @@ async function doSubmitV3(args: {
   active: ScoringCandidate[];
   token: string | null;
   cfg: HarnessConfig;
+  /** See `grantAlreadyHeld` on sendInferenceRequest. */
+  grantAlreadyHeld?: boolean;
 }): Promise<void> {
-  const { run, batch, privKeyHex, context, math, active, token, cfg } = args;
+  const {
+    run,
+    batch,
+    privKeyHex,
+    context,
+    math,
+    active,
+    token,
+    cfg,
+    grantAlreadyHeld = false,
+  } = args;
   const a = cfg.articlePipeline;
   const inputById = new Map(math.stage.map((c) => [c.input.id, c.input]));
 
@@ -1612,7 +1636,13 @@ async function doSubmitV3(args: {
       id: scoreId,
       system,
       prompt,
-      temperature: a.scoreTemperature,
+      // NOT `a.scoreTemperature` (0.1). Now that pass 1 emits no prose, its
+      // response is a run of near-identical all-numeric objects, and at 0.1 the
+      // model degenerates inside that run — `{"i": 2": 78, "impact": 50}`,
+      // collapsing two keys into one token sequence. Measured on the gold set:
+      // 47 of 292 articles lost their score to chunks that failed every parse
+      // attempt. See the note on `v3ScoreTemperature`.
+      temperature: a.v3ScoreTemperature,
       maxTokens,
     });
   });
@@ -1670,6 +1700,7 @@ async function doSubmitV3(args: {
     token,
     model: SMALL_MODEL,
     context,
+    grantAlreadyHeld,
   });
 
   if (outcome.status === 'ok') {
@@ -1698,6 +1729,7 @@ async function doSubmitReasonsOnly(
   batch: PipelineBatch,
   privKeyHex: string,
   context: ExecutionContext,
+  grantAlreadyHeld = false,
 ): Promise<void> {
   const scored = await getScoredSuggestionsWithoutReasons();
   const idSet = new Set(batch.candidateIds);
@@ -1733,6 +1765,7 @@ async function doSubmitReasonsOnly(
     token,
     model: SMALL_MODEL,
     context,
+    grantAlreadyHeld,
   });
 
   if (outcome.status === 'ok') {
@@ -2024,6 +2057,7 @@ async function handleJudgeResults(
   context: ExecutionContext,
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
+  coldstartTimeline.mark('first-relevance-decode', `decoded=${batchResults.length}`);
 
   // Decode against the same calibration-overrides-aware config the submit path
   // built with. judgeChunkSize must equal the submit-time value for the chunk
@@ -2142,6 +2176,7 @@ async function handleV3Results(
   context: ExecutionContext,
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
+  coldstartTimeline.mark('first-relevance-decode', `decoded=${batchResults.length}`);
   const cfg = await judgeHarnessConfig();
   const audit = (batch as V3Batch).v3Audit ?? {};
 
@@ -2281,20 +2316,48 @@ async function handleV3Results(
     });
   }
 
-  // One merged pass ⇒ no reasons sub-phase. Store the maps for the recovery
-  // readers, terminate, discard the sub-gate rows, finalize.
+  // v3 pass 1 SCORES; it writes nothing the user reads. Every row that cleared
+  // the reason threshold now owes a note, and it earns one from a per-article
+  // pass 2 — the same `needs-reasons-submit` sub-phase the legacy path uses, so
+  // the crash-resume, rate-limit and recovery machinery is shared rather than
+  // duplicated. (The batch shape already carried this sub-phase; the merged
+  // design was the odd one out in skipping it.)
+  //
+  // `whyById` is normally empty here. It can be non-empty across an upgrade —
+  // a batch submitted by the previous build, whose prompt still asked for a
+  // `why`, decoding under this one. Those rows are already `complete`, so they
+  // are excluded and pass 2 does not re-do them.
+  const impactfulIds = Object.entries(relevanceMap)
+    .filter(([id, r]) => r >= REASON_RELEVANCE_THRESHOLD && !whyById.get(id))
+    .map(([id]) => id);
+
+  if (impactfulIds.length === 0) {
+    await mutatePipeline((run) => {
+      const b = run.batches.find((x) => x.batchId === batch.batchId);
+      if (!b || b.phase !== 'waiting-relevance') return null;
+      b.relevanceMap = relevanceMap;
+      b.rawRelevanceMap = relevanceMap;
+      b.reasonCandidateIds = [];
+      b.phase = 'done';
+      return true;
+    });
+    const discarded = await discardLowRelevance(batch.candidateIds, relevanceMap);
+    if (discarded > 0) await refreshUi();
+    await afterTerminal(context);
+    return;
+  }
+
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batch.batchId);
     if (!b || b.phase !== 'waiting-relevance') return null;
     b.relevanceMap = relevanceMap;
     b.rawRelevanceMap = relevanceMap;
-    b.reasonCandidateIds = [];
-    b.phase = 'done';
+    b.reasonCandidateIds = impactfulIds;
+    b.phase = 'needs-reasons-submit';
     return true;
   });
-  const discarded = await discardLowRelevance(batch.candidateIds, relevanceMap);
-  if (discarded > 0) await refreshUi();
-  await afterTerminal(context);
+
+  await submitNeedsReasons(batch.batchId, context);
 }
 
 async function handleRelevanceResults(
@@ -2320,6 +2383,7 @@ async function handleRelevanceResults(
   }
 
   const { batchResults } = await decodeBatch(batch, server);
+  coldstartTimeline.mark('first-relevance-decode', `decoded=${batchResults.length}`);
 
   // P4b: re-chunk with the size the SUBMIT actually used, persisted on the
   // batch. A headline batch was chunked at 3, a standard one at 5 — applying
@@ -2483,28 +2547,100 @@ async function handleRelevanceResults(
   await submitNeedsReasons(batch.batchId, context);
 }
 
+/**
+ * Apply a v3 pass-2 batch: per article, a keep-or-demote verdict and (when
+ * kept) the sentence the user reads.
+ *
+ * The decode is NOT `decodeResults`. That reader runs `parseReasonResponse`,
+ * which treats the whole response as prose — handed `{"keep":true,"why":"…"}` it
+ * would cheerfully persist the raw JSON as the note.
+ *
+ * FAIL OPEN, in both directions:
+ *   - an unusable response leaves the pass-1 score and `reason_pending`, so the
+ *     orphaned-reasons sweep retries it. An unreadable answer is not evidence
+ *     that an article deserves demoting;
+ *   - a KEEP with no sentence is the same state — scored, still owed a note —
+ *     rather than a row stamped terminal with nothing to show.
+ * Only an explicit `{"keep": false}` demotes, and it writes the score terminal
+ * with no note: the row is going below the render gate, so a note for it would
+ * be spend with no reader.
+ */
+async function applyV3NoteResults(
+  batch: PipelineBatch,
+  batchResults: { id: string; output: string; error?: string }[],
+): Promise<void> {
+  const demoteScore = DEFAULT_HARNESS_CONFIG.articlePipeline.feedVerifierDemoteScore;
+  let kept = 0;
+  let demoted = 0;
+  let unusable = 0;
+
+  for (const res of batchResults) {
+    if (!res.id.startsWith('reason:')) continue;
+    const id = res.id.slice('reason:'.length);
+    if (res.error) {
+      unusable += 1;
+      continue;
+    }
+    const verdict = parseV3NoteResponse(res.output ?? '');
+    if (!verdict) {
+      unusable += 1;
+      continue;
+    }
+    try {
+      if (!verdict.keep) {
+        demoted += 1;
+        await saveScoringResult(id, {
+          relevance: demoteScore,
+          reason: '',
+          // Terminal: below the gate it owes no note at all, so leaving it
+          // `reason_pending` would strand it in the recovery sweep forever.
+          reasonSkipped: true,
+        });
+      } else if (verdict.why) {
+        kept += 1;
+        await saveReason(id, verdict.why);
+      }
+    } catch (err) {
+      if (isRecordNotFoundError(err)) continue;
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'save-v3-note' },
+        extra: { candidateId: id },
+      });
+    }
+  }
+
+  logger.debug(
+    `${TAG} batch ${batch.batchId} v3 notes: kept=${kept} demoted=${demoted} unusable=${unusable}`,
+  );
+}
+
 async function handleReasonResults(
   batch: PipelineBatch,
   server: ServerResults,
   context: ExecutionContext,
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
-  const { reasonMap, failedIds } = decodeResults({
-    batchResults,
-    promptsById: new Map(),
-    chunkIdToCandidates: new Map(),
-  });
 
-  for (const [id, reason] of reasonMap) {
-    if (failedIds.has(id)) continue;
-    try {
-      await saveReason(id, reason);
-    } catch (err) {
-      if (isRecordNotFoundError(err)) continue;
-      logger.captureException(err, {
-        tags: { service: 'scoring-pipeline', step: 'save-reason' },
-        extra: { candidateId: id },
-      });
+  if (isV3Batch(batch)) {
+    await applyV3NoteResults(batch, batchResults);
+  } else {
+    const { reasonMap, failedIds } = decodeResults({
+      batchResults,
+      promptsById: new Map(),
+      chunkIdToCandidates: new Map(),
+    });
+
+    for (const [id, reason] of reasonMap) {
+      if (failedIds.has(id)) continue;
+      try {
+        await saveReason(id, reason);
+      } catch (err) {
+        if (isRecordNotFoundError(err)) continue;
+        logger.captureException(err, {
+          tags: { service: 'scoring-pipeline', step: 'save-reason' },
+          extra: { candidateId: id },
+        });
+      }
     }
   }
 
@@ -2545,6 +2681,10 @@ async function submitNeedsReasons(
     subset,
     batch.rawRelevanceMap ?? {},
     REASON_RELEVANCE_THRESHOLD,
+    // Read off the BATCH, not the live config: a batch submitted under v3 must
+    // decode under v3 even if the toggle flipped while it was in flight, or its
+    // responses would be parsed by the wrong reader.
+    isV3Batch(batch),
   );
 
   if (bundle.calls.length === 0) {
@@ -2622,6 +2762,9 @@ async function submitNeedsReasons(
     // POST. Required in background (no keychain); harmless JWT-first fallback
     // in foreground.
     capabilityToken: batch.capabilityToken ?? null,
+    // The admission check above (`tryTakeImmediate` before the CAS claim)
+    // already spent this request's limiter slot.
+    grantAlreadyHeld: true,
   });
 
   if (outcome.status === 'ok') {
@@ -3155,13 +3298,39 @@ function ensurePoller(): void {
 }
 
 function startPollerTimer(): void {
-  if (pollerTimer) return;
-  pollerTimer = setInterval(() => {
+  if (pollerTimer || pollerKickTimer) return;
+  // FIRST-TICK ALIGNMENT. The submit that just ran consumed a limiter slot, so
+  // a fixed POLL_INTERVAL_MS (= MIN_GATEWAY_INTERVAL_MS - POLL_TICK_LEAD_MS)
+  // first tick lands BEFORE `nextGrantAt` whenever the submit round trip was
+  // quicker than the lead — `tryTakeImmediate()` refuses and the very first
+  // GET /results slips a whole extra interval. Measured on prod before this
+  // change: 5533ms POST → first poll, with the server's results already
+  // waiting (the decode landed 118ms after the poll). Ask the limiter when the
+  // slot actually frees instead of guessing.
+  //
+  // The +1 is not cosmetic: a timer that fires one millisecond early costs a
+  // full POLL_INTERVAL_MS, which is precisely the off-by-a-hair failure this
+  // exists to remove.
+  const firstDelay = Math.min(
+    POLL_INTERVAL_MS,
+    gatewayRateLimiter.msUntilNextGrant() + 1,
+  );
+  pollerKickTimer = setTimeout(() => {
+    pollerKickTimer = null;
     void runPollerTick();
-  }, POLL_INTERVAL_MS);
+    if (!pollerTimer) {
+      pollerTimer = setInterval(() => {
+        void runPollerTick();
+      }, POLL_INTERVAL_MS);
+    }
+  }, firstDelay);
 }
 
 function stopPollerTimer(): void {
+  if (pollerKickTimer) {
+    clearTimeout(pollerKickTimer);
+    pollerKickTimer = null;
+  }
   if (pollerTimer) {
     clearInterval(pollerTimer);
     pollerTimer = null;
@@ -3231,6 +3400,10 @@ export function _resetForTests(): void {
   if (postFinalizeKickTimer) {
     clearTimeout(postFinalizeKickTimer);
     postFinalizeKickTimer = null;
+  }
+  if (pollerKickTimer) {
+    clearTimeout(pollerKickTimer);
+    pollerKickTimer = null;
   }
   if (pollerTimer) {
     clearInterval(pollerTimer);

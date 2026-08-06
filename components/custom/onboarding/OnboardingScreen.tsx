@@ -7,6 +7,11 @@ import { getSetting } from "@/lib/database/services/setting-service";
 import { hasIdentityFault, resolveIdentity } from "@/lib/security/identity-gate";
 import { clearPreviousUserData, useUserStore } from "@/lib/stores";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
+import { readFirstOpenDismissed } from "@/lib/subscription/first-open-dismissal";
+import {
+    decideOnboardingEntry,
+    resolveEntitlementForOnboarding,
+} from "@/lib/subscription/onboarding-paywall";
 import { useEffect, useState } from "react";
 
 interface OnboardingScreenProps {
@@ -31,6 +36,21 @@ interface OnboardingScreenProps {
     sessionUserId?: string;
     onLoginRedirect: () => void;
     onComplete: () => void;
+    /**
+     * No active plan and the first-open paywall has not been dismissed on this
+     * device → present the paywall INSTEAD of the wizard. See
+     * `lib/subscription/onboarding-paywall.ts` for why the order matters.
+     */
+    onPaywall: () => void;
+    /**
+     * No active plan, but the paywall was already dismissed → Mera News Free
+     * with onboarding skipped. Deliberately NOT `onComplete`: that one carries
+     * `fromOnboarding: "1"` and lands on the Dashboard, which is a claim about
+     * a wizard that never ran. Mera News Free's established destination is the
+     * feed — the same one `NotSubscribedScreen`'s "Continue without a plan"
+     * uses.
+     */
+    onFreeTierMode: () => void;
 }
 
 /**
@@ -48,7 +68,7 @@ interface OnboardingScreenProps {
  * Consequence: this gate needs no network at all. It works offline and a dead
  * server session can no longer bounce a user through onboarding.
  */
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete }) => {
+const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onPaywall, onFreeTierMode }) => {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
 
@@ -132,6 +152,44 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 // Leave the spinner mounted: onComplete() replaces this route,
                 // so rendering `null` here would only flash a blank screen.
                 onComplete();
+                return;
+            }
+
+            // ── PAYWALL BEFORE ONBOARDING ────────────────────────────────
+            //
+            // This is the ordering fix, and it lives HERE rather than in
+            // app/logged-in/index.tsx because this component is the only
+            // mounter of OnboardingWizard: app/login.tsx and
+            // DeepLinkVerifyScreen both redirect straight to
+            // /logged-in/onboarding and never touch the cold-start gate, so a
+            // check placed only there would be bypassed by every fresh login —
+            // which is precisely the user this fix is for.
+            //
+            // Reached only with ZERO local facts, so an already-onboarded user
+            // never pays for any of it. `isCheckingOnboarding` stays true for
+            // the whole await, which is what keeps the existing spinner up
+            // instead of flashing the wizard at someone who is about to be sent
+            // to the paywall.
+            const aiAccess = await resolveEntitlementForOnboarding({
+                userId,
+                // Re-read rather than reusing the value from the identity gate
+                // above: several awaits have happened since.
+                isConnected: useNetworkStore.getState().isConnected,
+            });
+            if (cancelled) return;
+
+            // Only consulted when it can change the outcome — no DB read on the
+            // subscriber path.
+            const firstOpenDismissed =
+                aiAccess === 'locked' ? await readFirstOpenDismissed() : false;
+            if (cancelled) return;
+
+            const entry = decideOnboardingEntry({ aiAccess, firstOpenDismissed });
+            if (entry !== 'onboarding') {
+                // Leave the spinner mounted: both callbacks replace this route,
+                // so rendering anything else here would only flash.
+                if (entry === 'paywall') onPaywall();
+                else onFreeTierMode();
                 return;
             }
 

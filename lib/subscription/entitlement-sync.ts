@@ -6,6 +6,7 @@
 // guarded query.
 
 import { fetchUserBilling, fetchUserBillingLapseState } from '@/lib/billing-service';
+import { syncRevenueCatAttributes } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 
 /**
@@ -63,6 +64,17 @@ export async function syncEntitlement(
             if (lapseState) {
                 useSubscriptionStore.getState().setServerBilling(lapseState);
             }
+
+            // This is the one moment `server_tier` is known to be fresh, and
+            // `server_tier` only earns its place as a RevenueCat attribute by
+            // being comparable against RevenueCat's own view — a stale copy is
+            // worse than none, because it manufactures drift that isn't there.
+            // Fire-and-forget on purpose: it never rejects (see
+            // syncRevenueCatAttributes), and awaiting a second network call
+            // here would hold `inFlight` open and delay every caller waiting on
+            // the entitlement itself. Cheap when nothing changed — the sync
+            // skips an unchanged payload.
+            void syncRevenueCatAttributes();
         } finally {
             inFlight = null;
         }

@@ -598,7 +598,7 @@
     "inferenceError": "Chúng tôi đang gặp sự cố khi kết nối đến dịch vụ suy luận Mera. Vui lòng thử lại sau ít phút."
   },
   "personaChat": {
-    "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn. Nếu muốn, hãy kể bất cứ điều gì về bản thân: bạn sống ở đâu, làm nghề gì, sở thích, cổ phiếu đang theo dõi, gia đình sống ở đâu. Hoặc chỉ cần nói 'giúp mình thiết lập' và mình sẽ hướng dẫn bạn từng bước."
+    "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nĐể tìm những tin tức thực sự quan trọng với bạn, mình cần biết một chút về bạn. Bạn sống ở đâu, làm nghề gì, những sở thích nào, theo dõi những cổ phiếu nào, gia đình sống ở đâu. Chia sẻ bao nhiêu hay bao ít tùy bạn.\n\nNếu điều này khiến bạn do dự, đó là bản năng tốt. Không nên trao dữ liệu cá nhân cho một công ty làm ứng dụng. Mera được xây dựng khác: mọi thứ bạn kể cho mình đều được lưu trên thiết bị của bạn, không phải trên máy chủ của chúng mình. Hỏi mình cách nó hoạt động, hoặc nói 'giúp mình thiết lập' và chúng ta sẽ bắt đầu."
   },
   "floatingChat": {
     "bubbleHint": "Trò chuyện với Mera",
@@ -618,6 +618,8 @@
     "chipShowFactsMessage": "Hiện tại bạn biết gì về tôi?",
     "chipHelpSetup": "Giúp tôi thiết lập",
     "chipHelpSetupMessage": "Giúp tôi thiết lập hồ sơ của tôi",
+    "chipDataHandlingMessage": "Mera xử lý dữ liệu của tôi như thế nào?",
+    "chipDataHandling": "Dữ liệu của tôi được xử lý như thế nào?",
     "thinking": "Đang suy nghĩ…",
     "newChat": "Trò chuyện mới",
     "inputPlaceholder": "Nhập tin nhắn...",
@@ -810,7 +812,7 @@
     "autoRenew": "Tự động gia hạn",
     "customerCenter": "Quản lý / hủy gói đăng ký",
     "dailyArticleLimit": "Giới hạn bài viết hằng ngày",
-    "description": "Đăng ký để nhận bảng tin cá nhân hóa, xử lý ngay trên thiết bị.",
+    "description": "Mera đọc tin tức cho bạn: một bảng tin được tạo hình theo những gì bạn quan tâm, bảng điều khiển hàng ngày, những câu chuyện bạn chọn theo dõi, và trò chuyện luôn học hỏi những gì quan trọng với bạn.",
     "detailsSection": "Chi tiết gói đăng ký",
     "expiresOn": "Hết hạn vào",
     "lifetime": "Trọn đời",
@@ -835,13 +837,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "Khuyến mãi",
     "subscribe": "Đăng ký",
-    "title": "Mở khóa Mera News",
+    "title": "Bật Mera",
     "usageSection": "Sử dụng",
     "usedToday": "Đã phân tích hôm nay",
     "viewPlans": "Xem các gói",
     "freePlan": "Gói miễn phí",
     "active": "Đang hoạt động",
-    "upgrade": "Nâng cấp"
+    "upgrade": "Nâng cấp",
+    "activatedBody": "Bảng tin cá nhân, bảng điều khiển, những câu chuyện theo dõi và trò chuyện đã sẵn sàng.",
+    "activatedTitle": "{{plan}} đã hoạt động",
+    "allPlansHint": "Tất cả các gói đều ở trên màn hình tiếp theo.",
+    "lapsedFreeNote": "Mera News Free là của bạn miễn là bạn muốn. Một gói là điều bắt đầu Mera hoạt động lại trên tin tức của bạn.",
+    "manageBadge": "Quản lý",
+    "startWithStarter": "Bắt đầu với Starter",
+    "starterRecommendation": "Starter là nơi để bắt đầu. Mera News Free ở đó để giữ những gì bạn đã xây dựng trên thiết bị này, chỉ là vào ngày đầu tiên thì không có gì để giữ.",
+    "turnMeraBackOn": "Bật Mera lại"
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -1362,5 +1372,21 @@
     "subtitle": "Tùy chỉnh cách Mera hiển thị các yếu tố hình ảnh trên thiết bị này",
     "staticGradientTitle": "Nền tĩnh",
     "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ"
+  },
+  "freeTier": {
+    "cardBody": "Phần AI của Mera đã bị tắt tạm thời. Mọi thứ bạn đã lưu, theo dõi hoặc đọc vẫn ở trên thiết bị này, và Khám phá vẫn có tin tức hôm nay. Nếu không có gói, Mera sẽ không tạo bảng tin, trả lời câu hỏi hoặc theo dõi câu chuyện mới. Hãy bắt đầu một gói và mọi thứ sẽ quay trở lại.",
+    "cardTitle": "Bạn đang dùng Mera News Free",
+    "chatBubble": "Mọi thứ tôi biết về bạn đều ở trên thiết bị này, và không có gì bạn đã lưu hoặc theo dõi sẽ biến mất. Tuy nhiên, nếu không có gói, tôi không thể tạo bảng tin, trả lời câu hỏi hoặc theo dõi những câu chuyện mới cho bạn. Hãy bắt đầu một gói và tôi sẽ tiếp tục từ chỗ chúng ta dừng lại.",
+    "chatNotice": "Trò chuyện Mera đi kèm với một gói. Hồ sơ và dữ kiện của bạn vẫn ở trên thiết bị này dù có gói hay không.",
+    "continueWithoutPlan": "Tiếp tục mà không cần gói",
+    "lapseBody": "Không có gì bị lấy đi. Mọi thứ bạn đã lưu, theo dõi hoặc đọc là của bạn, trên thiết bị này, luôn luôn. Từ đây bạn đang dùng Mera News Free. Điều bị dừng lại là lớp AI, vì vậy bảng tin cá nhân, bảng điều khiển, theo dõi câu chuyện mới và trò chuyện Mera vẫn tắt cho đến khi bạn bắt đầu một gói lần nữa.",
+    "lapseTitle": "Gói Mera của bạn đã hết hạn",
+    "readOnlyBanner": "Mọi thứ ở đây là của bạn để đọc, có gói hay không. Các cài đặt này chỉ thay đổi những gì Mera làm khi có gói hoạt động.",
+    "seePlans": "Xem gói",
+    "storiesNotice": "Những câu chuyện bạn đã theo dõi sẽ giữ mọi thứ chúng đã thu thập. Để bắt đầu một câu chuyện mới, bạn cần có một gói hoạt động.",
+    "trackBody": "Những câu chuyện bạn đã theo dõi sẽ giữ mọi thứ chúng đã thu thập. Để bắt đầu một câu chuyện mới, bạn cần có một gói hoạt động.",
+    "trackDismiss": "Để sau",
+    "trackTitle": "Theo dõi câu chuyện đi kèm với một gói",
+    "trackedStoriesEmptyBody": "Chưa theo dõi gì. Theo dõi một câu chuyện đi kèm với một gói, và bất cứ thứ gì bạn theo dõi sau này đều ở trên thiết bị này, của bạn để giữ."
   }
 }

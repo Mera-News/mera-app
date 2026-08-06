@@ -1,4 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedSyncIndicator, {
     useFeedSyncRefresh,
@@ -39,6 +40,7 @@ import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
 import { useForYouStore } from '@/lib/stores/for-you-store';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import {
@@ -229,6 +231,15 @@ const MeraNewsScreen: React.FC = () => {
     const suggestions = useForYouSuggestions();
 
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
+    // Mera News Free: `DashboardSectionsFeed`'s list header already renders
+    // `FreeTierCard`, which explains this mode. NoGeneratedInterestsCard would
+    // sit right under it saying a blunter version of the same thing ("Mera
+    // cannot analyze news for you"), pointing the user at building a persona
+    // when a plan — not a persona — is what's missing. Same gate as FreeTierCard
+    // itself (`=== 'locked'`, never `!== 'entitled'`) so that during the
+    // `'unknown'` window of a cold start, where FreeTierCard renders null, this
+    // card is still there.
+    const freeTierCardShown = useAiAccess() === 'locked';
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const asyncJobPhase = useForYouAsyncJobPhase();
     const unscoredCount = useForYouUnscoredCount();
@@ -317,6 +328,19 @@ const MeraNewsScreen: React.FC = () => {
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
 
+    // DEV-only twin of FeedScreen's paint mark. `hasRenderableContent` is the
+    // Dashboard's OWN "there is something to show" predicate (it already gates
+    // the waiting card and the empty-feed watchdog), which is what makes the two
+    // timestamps directly comparable.
+    useEffect(() => {
+        if (hasRenderableContent) {
+            coldstartTimeline.mark(
+                'dashboard-first-paint',
+                `rows=${feed.rows.length} breaking=${feed.breaking.length}`,
+            );
+        }
+    }, [hasRenderableContent, feed.rows.length, feed.breaking.length]);
+
     // First arrival from onboarding: show waiting card if user has any facts.
     useEffect(() => {
         if (fromOnboarding !== '1') return;
@@ -371,6 +395,13 @@ const MeraNewsScreen: React.FC = () => {
             hasGeneratedInterests &&
             !errorMessage &&
             syncStatusMessage?.errorCode !== 'no-topics-configured' &&
+            // Once a processing run has demonstrably finished, an empty feed is a
+            // legitimate empty state, not a silent failure — the window simply
+            // held nothing. Arming here would show "Couldn't load your feed /
+            // Something went wrong on our end" over a working app, and it sits
+            // ABOVE the caught-up branch below, so it would win. The watchdog
+            // keeps its real job: a device that never gets a run off the ground.
+            lastProcessingRunFinishedAt === null &&
             !isDailyLimited &&
             asyncJobPhase === 'idle' &&
             unscoredCount === 0;
@@ -399,7 +430,7 @@ const MeraNewsScreen: React.FC = () => {
 
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isFocused, session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, hasRenderableContent, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited]);
+    }, [isFocused, session?.user?.id, dbReady, hasGeneratedInterests, errorMessage, hasRenderableContent, asyncJobPhase, unscoredCount, syncStatusMessage?.errorCode, isDailyLimited, lastProcessingRunFinishedAt]);
 
     // Auto-reveal the header on error / offline / daily-limit conditions so the
     // status chrome (shimmer, offline row) is never hidden under a collapsed
@@ -454,13 +485,13 @@ const MeraNewsScreen: React.FC = () => {
             );
         }
         if (!hasGeneratedInterests) {
-            return <NoGeneratedInterestsCard />;
+            return freeTierCardShown ? null : <NoGeneratedInterestsCard />;
         }
         if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
             return <FeedPreparingCard />;
         }
         return <AllCaughtUpCard />;
-    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
+    }, [showOnboardingWait, isLoading, hasGeneratedInterests, freeTierCardShown, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
 
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.

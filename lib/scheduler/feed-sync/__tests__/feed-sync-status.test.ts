@@ -10,6 +10,8 @@ jest.mock('@/lib/stores/for-you-store', () => ({
   },
 }));
 
+import { CombinedGraphQLErrors } from '@apollo/client/errors';
+
 import {
   publishSyncStatus,
   publishSyncError,
@@ -311,6 +313,56 @@ describe('classifyError', () => {
 
   it('message matching is case-insensitive (Network uppercase)', () => {
     expect(classifyError(new Error('Network Error'))).toBe('server-unreachable');
+  });
+
+  // `isNotSubscribedError` is checked FIRST, above every substring heuristic —
+  // deliberately not mocked here, so this exercises the real precedence at
+  // feed-sync-status.ts:72 rather than an assumption about it.
+  describe('not-subscribed precedence (feed-sync-status.ts:72)', () => {
+    it('classifies a network-shaped 402 as not-subscribed even though its message would also match server-unreachable', () => {
+      // Message alone would hit the 'fetch'/'timeout' substring branch and
+      // return server-unreachable. The 402 must win.
+      const err = Object.assign(new Error('fetch failed: request timeout'), {
+        statusCode: 402,
+      });
+      expect(classifyError(err)).toBe('not-subscribed');
+    });
+
+    it('classifies a real CombinedGraphQLErrors PAYMENT_REQUIRED as not-subscribed even though its message would also match auth-expired', () => {
+      // The server maps NotSubscribedException to extensions.code
+      // 'PAYMENT_REQUIRED' (graphql-exception.filter.ts). Its message here
+      // deliberately contains "session", which alone would hit the
+      // 'session'/'401'/'unauthenticated' substring branch and return
+      // auth-expired. The 402 extension must win — that's the whole point of
+      // checking isNotSubscribedError before the instanceof Error substring
+      // chain runs at all.
+      const err = new CombinedGraphQLErrors(
+        { errors: [{ message: 'session expired' } as any] },
+        [{ message: 'session expired', extensions: { code: 'PAYMENT_REQUIRED' } } as any],
+      );
+      expect(classifyError(err)).toBe('not-subscribed');
+    });
+
+    it('classifies NOT_SUBSCRIBED extension code as not-subscribed', () => {
+      const err = new CombinedGraphQLErrors(
+        { errors: [{ message: 'no active plan' } as any] },
+        [{ message: 'no active plan', extensions: { code: 'NOT_SUBSCRIBED' } } as any],
+      );
+      expect(classifyError(err)).toBe('not-subscribed');
+    });
+  });
+});
+
+describe('publishSyncError — not-subscribed', () => {
+  it('is routed quietly: empty headline, not recoverable, no red sync chrome', () => {
+    publishSyncError('not-subscribed');
+    expect(mockSetSyncStatusMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        errorCode: 'not-subscribed',
+        headlineKey: '',
+        isRecoverable: false,
+      }),
+    );
   });
 });
 

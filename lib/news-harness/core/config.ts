@@ -9,6 +9,7 @@
 import {
   CLOUD_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT,
+  CLOUD_V3_NOTE_SYSTEM_PROMPT,
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
@@ -41,6 +42,20 @@ export interface ArticlePipelineConfig {
    *  batch retries or falls back). Used INSTEAD OF scoreBatchMaxTokens on the v3
    *  path only; the legacy two-pass path keeps 320. */
   v3ScoreBatchMaxTokens: number;
+  /** Sampling temperature for a v3 pass-1 (score-only) batch.
+   *
+   *  HIGHER than `scoreTemperature`, and that is measured, not taste. Score-only
+   *  output is a run of near-identical all-numeric objects, and at 0.1 the model
+   *  degenerates structurally inside it — emitting `{"i": 2": 78, "impact": 50}`,
+   *  collapsing `"i": 2, "rel": 78` into one token run. On the 292-article gold
+   *  set that cost 47 articles their score (chunks failing all three parse
+   *  attempts); at 0.35 every article scored. The merged prompt never hit this,
+   *  because its prose broke up the monotony. */
+  v3ScoreTemperature: number;
+  /** Output ceiling for one v3 pass-2 (note) call: one sentence plus a tiny JSON
+   *  wrapper. The merged design had to fit BOTH numbers and prose for a whole
+   *  chunk into `v3ScoreBatchMaxTokens`, ~128 tokens per article. */
+  v3NoteMaxTokens: number;
   /** Sampling temperature for relevance-score calls. */
   scoreTemperature: number;
   /** Sampling temperature for reason-generation calls. */
@@ -72,6 +87,11 @@ export interface ArticlePipelineConfig {
   relevanceSystemPrompt: string;
   /** System prompt for the cloud reason pass. */
   reasonSystemPrompt: string;
+  /** v3 pass 2 — combined precision + note, ONE article per call. Replaces
+   *  `reasonSystemPrompt` (and its headline twin) whenever RELEVANCE_V3 is on:
+   *  unlike the legacy reason prompt it may also DEMOTE, restoring the
+   *  downward pressure v3 lost when it absorbed the verifier pass. */
+  v3NoteSystemPrompt: string;
   /** Cloud model used for scoring + reason generation. */
   model: string;
   // --- Second-pass FEED verifier (validated 2026-07-16 multistage experiment,
@@ -149,16 +169,38 @@ export interface TopicGenConfig {
    *  retrievable + positively scored by the math engine. */
   llmTopicWeight: number;
   /**
-   * Output budget for CLOUD topic-generation calls that run with thinking on.
+   * Output budget for CLOUD topic-generation calls, which run with thinking OFF.
    *
-   * The reasoning trace shares `max_tokens` with the answer, so the old
-   * `Math.max(400, count * 30)` was far too small: a trace could consume the
-   * whole allowance and the response came back with an empty `content`. 2048
-   * leaves ~1600 tokens of trace headroom over the ~200-400 a 10-string answer
-   * needs — 4-5x the old ceiling without over-provisioning at $1.10/M output.
+   * Sized off measurement, not guesswork: with `enable_thinking: false` a
+   * 10-topic answer costs ~53-60 completion tokens end to end, so 400 is ~6x
+   * headroom. Generation ran with thinking ON at 2048 between r12 P4 and this
+   * change; a probe against Qwen3.6-35B-A3B showed the reasoning trace alone is
+   * ~2000+ tokens, so it consumed the entire budget and `content` came back
+   * EMPTY on 8 of 10 runs — the flow was failing, not merely slow. Thinking off
+   * is 0.8-1.0s and valid on every run.
    *
-   * CLOUD ONLY. The on-device path has its own, much smaller budget (n_ctx is
-   * 4096 there); do not reuse this constant for it.
+   * There is no middle setting to reach for: `reasoning_effort: 'low'` produced
+   * the same trace with worse variance, and `chat_template_kwargs.thinking_budget`
+   * is silently ignored (the stock Qwen3 template does not implement it — an
+   * unknown key there still returns 200, so "no error" proves nothing).
+   *
+   * CLOUD ONLY. The on-device path has its own budget (n_ctx is 4096 there); do
+   * not reuse this constant for it.
+   */
+  cloudMaxTokens: number;
+  /**
+   * Output budget for the fact-combination TOP-UP, which still runs with
+   * thinking ON (`topic-topup.ts`).
+   *
+   * The reasoning trace shares `max_tokens` with the answer, so this has to be
+   * far larger than `cloudMaxTokens`. NOT read by topic generation any more —
+   * that path is thinking-off and sized by `cloudMaxTokens`. Keep the two
+   * separate: collapsing them would silently drag one path into the other's
+   * regime.
+   *
+   * NOTE: the top-up sends a combo-only prompt, i.e. the same shape that failed
+   * at 2048 in generation. It has not been probed yet — see the plan's
+   * follow-ups.
    */
   cloudThinkingMaxTokens: number;
   /**
@@ -376,7 +418,13 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     scoreBatchMaxTokens: 320,
     // Merged v3 pass: scores + conditional reasons for ~5 articles in one
     // response (see the field's doc comment for the arithmetic).
+    // Pass 1 emits three integers per article and no prose, so the merged
+    // design's 640 is now roughly double what a chunk can use. Left at 640
+    // deliberately: it is a CEILING, not a reservation, and the headroom is what
+    // stops a chunk truncating mid-array into an unparseable run.
     v3ScoreBatchMaxTokens: 640,
+    v3ScoreTemperature: 0.35,
+    v3NoteMaxTokens: 96,
     scoreTemperature: 0.1,
     reasonTemperature: 0.2,
     reasonMaxTokens: 64,
@@ -397,6 +445,7 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     hydrateChunkSize: 25,
     relevanceSystemPrompt: CLOUD_RELEVANCE_SYSTEM_PROMPT,
     reasonSystemPrompt: CLOUD_REASON_SYSTEM_PROMPT,
+    v3NoteSystemPrompt: CLOUD_V3_NOTE_SYSTEM_PROMPT,
     model: SMALL_MODEL,
     // Wave 7b: verifier absorbed into the judge; flag-off one release then
     // deleted (its NO-patterns live in CLOUD_JUDGE_SYSTEM_PROMPT). Code stays.
@@ -451,6 +500,7 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     temperature: 0.3,
     maxFactLength: 200,
     llmTopicWeight: 0.75,
+    cloudMaxTokens: 400,
     cloudThinkingMaxTokens: 2048,
     topupTopicWeight: 0.5,
     factOnlySystemPrompt: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,

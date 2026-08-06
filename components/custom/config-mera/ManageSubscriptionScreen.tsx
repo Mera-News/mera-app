@@ -11,6 +11,7 @@ import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -116,9 +117,18 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         // secondary poll below settle it.
         if (confirmed) {
             setBilling(billingInfo);
-            // Mirror the server's verdict into the store so companion mode
-            // lifts (or falls) app-wide, not just on this screen's usage card.
+            // Mirror the server's verdict into the store so the free-tier
+            // state lifts (or falls) app-wide, not just on this screen's usage card.
             useSubscriptionStore.getState().setServerBilling(billingInfo);
+            // `isPostPurchase &&` is load-bearing: the non-purchase branch above
+            // hardcodes `confirmed: true`, so `if (confirmed)` alone would toast
+            // on every mount and after every customer-center dismissal.
+            if (isPostPurchase) {
+                showSubscriptionActivatedToast(
+                    awaitTierChangeFrom,
+                    billingInfo?.subscriptionTier,
+                );
+            }
         }
         setActivationPending(isPostPurchase && !confirmed);
 
@@ -136,6 +146,15 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                 if (later.billing) {
                     setBilling(later.billing);
                     useSubscriptionStore.getState().setServerBilling(later.billing);
+                }
+                // Same reasoning as ProfileScreen's late poll: gated on
+                // `confirmed`, never on `later.billing` — this branch commits
+                // unconfirmed snapshots on purpose.
+                if (later.confirmed) {
+                    showSubscriptionActivatedToast(
+                        awaitTierChangeFrom,
+                        later.billing?.subscriptionTier,
+                    );
                 }
                 setActivationPending(false);
             })();

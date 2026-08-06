@@ -37,6 +37,7 @@ const mockForYouStoreState = {
   setLastSyncAt: jest.fn(),
   setDailyLimitResetAt: jest.fn(),
   setDailyLimitNoticeDay: jest.fn(),
+  markProcessingRunFinished: jest.fn(),
   resetHydrationProgress: jest.fn(),
   setScoringError: jest.fn(),
   relevantArticleCount: 0,
@@ -171,6 +172,7 @@ beforeEach(() => {
   mockDeactivateKeepAwake.mockReturnValue(undefined);
   mockForYouStoreState.setCounts.mockReturnValue(undefined);
   mockForYouStoreState.setLastSyncAt.mockReturnValue(undefined);
+  mockForYouStoreState.markProcessingRunFinished.mockReturnValue(undefined);
   mockForYouStoreState.resetHydrationProgress.mockReturnValue(undefined);
   mockForYouStoreState.dailyLimitNoticeDay = null;
   // Mirrors the real store's persistence: setting the marker updates the
@@ -538,6 +540,40 @@ describe('FeedSyncMachine — no new articles path (diffResult.missingIds is emp
     expect(mockClearMachineSnapshot).toHaveBeenCalled();
     // Internal bookkeeping still reaches the terminal `done` state.
     expect(feedSyncMachine.state).toBe('done');
+  });
+
+  // A cycle that legitimately finds nothing IS a completed processing run, and
+  // it has to say so. `lastProcessingRunFinishedAt` is the only thing standing
+  // between FeedPreparingCard and AllCaughtUpCard on both feed surfaces
+  // (FeedScreen.tsx / ForYouScreen.tsx: `isFeedProcessing || lastProcessing-
+  // RunFinishedAt === null`), and on the zero-article path nothing else can
+  // ever stamp it: no rows are enqueued, so no pipeline run exists, so
+  // doFinalize (the usual stamper) bails before reaching it. Observed on a real
+  // device pointed at an empty window — "Mera is preparing your feed." forever.
+  it('stamps markProcessingRunFinished — a sync that found nothing still FINISHED', async () => {
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    // Takes no argument — the store stamps Date.now() itself and persists it.
+    expect(mockForYouStoreState.markProcessingRunFinished).toHaveBeenCalledTimes(1);
+  });
+
+  // The one case where the claim would be a lie: a live scoring run already
+  // owns the unscored backlog and will stamp its own finalize. Saying "finished"
+  // here would resolve the card while work is genuinely still in flight.
+  it('does NOT stamp it while a scoring run is already in flight', async () => {
+    mockGetPipelineStatus.mockResolvedValue('running');
+    mockGetRunStartedAt.mockResolvedValue(Date.now());
+
+    const ctx = makeCtx();
+    const startPromise = feedSyncMachine.start('persona-1', ctx);
+    await jest.advanceTimersByTimeAsync(0);
+    await startPromise;
+
+    expect(mockStepScore).not.toHaveBeenCalled();
+    expect(mockForYouStoreState.markProcessingRunFinished).not.toHaveBeenCalled();
   });
 });
 

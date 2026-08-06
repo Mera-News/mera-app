@@ -194,6 +194,13 @@ export default function ChatSessionView({
         label: t('floatingChat.chipHelpSetup'),
         message: t('floatingChat.chipHelpSetupMessage'),
       },
+      // The intro invites "ask me how that works" — this makes that invitation
+      // tappable. Routes to the explainMera tool like any typed question would.
+      {
+        key: 'data-handling',
+        label: t('floatingChat.chipDataHandling'),
+        message: t('floatingChat.chipDataHandlingMessage'),
+      },
     ];
   }, [t, context]);
 

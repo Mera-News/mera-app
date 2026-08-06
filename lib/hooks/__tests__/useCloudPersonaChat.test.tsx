@@ -24,6 +24,7 @@ import { useCloudPersonaChat } from '../../hooks/useCloudPersonaChat';
 import { useCloudChatStore } from '../../stores/cloud-chat-store';
 import type { IAgent, ToolExecutionResult } from '../../llm/types';
 import type { SseEvent } from '../../llm/cloudComplete';
+import { MERA_EXPLAINER_SECTIONS } from '../../chat-tools/mera-explainer-content';
 
 // ---- Helpers ----
 
@@ -1116,5 +1117,339 @@ describe('useCloudPersonaChat', () => {
 
       expect(result.current.error).toBeNull();
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Knowledge tools (explainMera)
+//
+// A knowledge tool returns REFERENCE TEXT that only matters if the model reads
+// it back. Three turn-loop rules exist for it, and without them the tool
+// silently does nothing:
+//
+//  (i)   a turn that called one must run the continuation pass EVEN THOUGH it
+//        produced text — otherwise the result is pushed to the wire and never
+//        read, and the model answers from memory;
+//  (ii)  calling one is NOT extraction, so it must not flip `extractedSomething`
+//        and disable the forced-extraction safety net for that turn;
+//  (iii) (i) and (ii) can now both be owed by one turn. They must be EXCLUSIVE
+//        AND ORDERED — two streams in flight would interleave pushWireMessage /
+//        pushAssistantToWire against the same store.
+// ---------------------------------------------------------------------------
+
+describe('useCloudPersonaChat — knowledge tools', () => {
+  const EXPLAIN_TOOL = {
+    type: 'function' as const,
+    function: {
+      name: 'explainMera',
+      description: 'Return Mera reference documentation',
+      parameters: { type: 'object', properties: {} },
+    },
+  };
+
+  /** Agent carrying BOTH tools — explainMera must be in getToolDefinitions() so
+   *  detection goes through normalizeToolName against the live list, exactly as
+   *  production does, rather than through the raw-name fallback. */
+  function makeKnowledgeAgent(overrides: Partial<IAgent> = {}): IAgent {
+    return makeAgent({
+      getToolDefinitions: jest.fn().mockReturnValue([SAVE_FACTS_TOOL, EXPLAIN_TOOL]),
+      getForcedExtractionTools: jest.fn().mockReturnValue([SAVE_FACTS_TOOL]),
+      ...overrides,
+    });
+  }
+
+  function knowledgeCallStream(text: string, name = 'explainMera'): SseEvent[] {
+    return [
+      ...(text ? [{ type: 'text-delta' as const, delta: text }] : []),
+      {
+        type: 'tool-call-delta' as const,
+        index: 0,
+        id: 'tc-explain',
+        name,
+        argumentsDelta: JSON.stringify({ topics: ['privacy_what_leaves_device'] }),
+      },
+      { type: 'finish' as const, reason: 'tool_calls' as const },
+    ];
+  }
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+  });
+
+  it('runs EXACTLY ONE continuation and NO concurrent forced pass', async () => {
+    // The race case: knowledge call + text + nothing extracted satisfies both
+    // branches. Exactly two streams may run, in order — the continuation, then
+    // nothing else, because the continuation extracted for us.
+    mockCloudChatStream
+      .mockImplementationOnce(() =>
+        makeSseStream(knowledgeCallStream('One moment.')),
+      )
+      .mockImplementationOnce(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Your facts never leave the device.' },
+          {
+            type: 'tool-call-delta',
+            index: 0,
+            id: 'tc-save',
+            name: 'saveExtractedFacts',
+            argumentsDelta: JSON.stringify({
+              extracted_user_information: [{ statement: 'Cares about privacy' }],
+            }),
+          },
+          { type: 'finish', reason: 'tool_calls' },
+        ]),
+      )
+      .mockImplementation(() => makeSseStream([{ type: 'finish', reason: 'stop' }]));
+
+    const agent = makeKnowledgeAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => {
+      result.current.sendMessage('how do you handle my data?');
+    });
+
+    await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+    // Let any stray un-awaited pass appear before asserting absence.
+    await new Promise((r) => setTimeout(r, 80));
+
+    expect(mockCloudChatStream).toHaveBeenCalledTimes(2);
+    // Both passes were 'auto'. A concurrent forced pass would show as 'required'.
+    const choices = mockCloudChatStream.mock.calls.map(
+      (c) => (c[0] as { toolChoice?: string }).toolChoice,
+    );
+    expect(choices).toEqual(['auto', 'auto']);
+  });
+
+  it('reads the tool result back: the continuation carries a role:"tool" message', async () => {
+    mockCloudChatStream
+      .mockImplementationOnce(() => makeSseStream(knowledgeCallStream('Let me check.')))
+      .mockImplementation(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Here is the sourced answer.' },
+          { type: 'finish', reason: 'stop' },
+        ]),
+      );
+
+    const executeTool = jest
+      .fn()
+      .mockResolvedValue({ result: { sections: [{ topic: 'privacy_what_leaves_device', text: 'x' }] } });
+    const agent = makeKnowledgeAgent({ executeTool });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => {
+      result.current.sendMessage('how do you handle my data?');
+    });
+
+    await waitFor(
+      () => expect(mockCloudChatStream.mock.calls.length).toBeGreaterThanOrEqual(2),
+      { timeout: 3000 },
+    );
+
+    const [secondArg] = mockCloudChatStream.mock.calls[1] as [
+      { messages: { role: string; content?: string }[] },
+    ];
+    const toolMsg = secondArg.messages.find((m) => m.role === 'tool');
+    expect(toolMsg).toBeDefined();
+    expect(toolMsg?.content).toContain('privacy_what_leaves_device');
+    // The answer lands in a SECOND bubble, after the holding line.
+    const bubbles = result.current.messages.filter((m) => m.role === 'assistant');
+    expect(bubbles.map((b) => b.content)).toEqual([
+      'Let me check.',
+      'Here is the sourced answer.',
+    ]);
+  });
+
+  it('detects a knowledge call through a misspelled name', async () => {
+    mockCloudChatStream
+      .mockImplementationOnce(() => makeSseStream(knowledgeCallStream('Sure.', 'explain_mera')))
+      .mockImplementation(() =>
+        makeSseStream([{ type: 'text-delta', delta: 'Answer.' }, { type: 'finish', reason: 'stop' }]),
+      );
+
+    const agent = makeKnowledgeAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => {
+      result.current.sendMessage('how does that work?');
+    });
+
+    await waitFor(
+      () => expect(mockCloudChatStream.mock.calls.length).toBeGreaterThanOrEqual(2),
+      { timeout: 3000 },
+    );
+    // Repaired against the live tool list before dispatch — a raw-name fallback
+    // would have executed (and reported) `explain_mera`.
+    expect(agent.executeTool).toHaveBeenCalledWith('explainMera', expect.anything());
+  });
+
+  it('does NOT let a bare knowledge call disable the forced-extraction net', async () => {
+    // (ii): the continuation extracts nothing either, so the safety net must
+    // still fire — AFTER the continuation, never alongside it.
+    mockCloudChatStream
+      .mockImplementationOnce(() => makeSseStream(knowledgeCallStream('One sec.')))
+      .mockImplementationOnce(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Sourced answer, no facts extracted.' },
+          { type: 'finish', reason: 'stop' },
+        ]),
+      )
+      .mockImplementation(() =>
+        makeSseStream([
+          {
+            type: 'tool-call-delta',
+            index: 0,
+            id: 'tc-forced',
+            name: 'saveExtractedFacts',
+            argumentsDelta: JSON.stringify({
+              extracted_user_information: [{ statement: 'Lives in Porto' }],
+            }),
+          },
+          { type: 'finish', reason: 'tool_calls' },
+        ]),
+      );
+
+    const agent = makeKnowledgeAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => {
+      result.current.sendMessage('I live in Porto — how do you handle my data?');
+    });
+
+    await waitFor(() => expect(mockCloudChatStream).toHaveBeenCalledTimes(3), { timeout: 3000 });
+    await new Promise((r) => setTimeout(r, 80));
+
+    const choices = mockCloudChatStream.mock.calls.map(
+      (c) => (c[0] as { toolChoice?: string }).toolChoice,
+    );
+    // Ordered: first pass, continuation, THEN the forced pass. Never 3 before 2.
+    expect(choices).toEqual(['auto', 'auto', 'required']);
+    expect(mockCloudChatStream).toHaveBeenCalledTimes(3);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Knowledge tools — the two edges that only bite in production
+// ---------------------------------------------------------------------------
+
+describe('useCloudPersonaChat — knowledge tools, hard cases', () => {
+  const EXPLAIN_TOOL = {
+    type: 'function' as const,
+    function: {
+      name: 'explainMera',
+      description: 'Return Mera reference documentation',
+      parameters: { type: 'object', properties: {} },
+    },
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+  });
+
+  it('a MALFORMED knowledge call still leaves the forced-extraction net armed', async () => {
+    // The other door onto the same silent fact loss: a truncated explainMera
+    // call is not extraction, so `extractedSomething` must stay false — while
+    // the continuation must NOT run, because a malformed call never reached the
+    // wire and there is no result to read back.
+    mockCloudChatStream
+      .mockImplementationOnce(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'One moment.' },
+          {
+            type: 'tool-call-delta',
+            index: 0,
+            id: 'tc-broken',
+            name: 'explainMera',
+            argumentsDelta: '{"topics": ["privacy_wha',
+          },
+          { type: 'finish', reason: 'tool_calls' },
+        ]),
+      )
+      .mockImplementation(() => makeSseStream([{ type: 'finish', reason: 'stop' }]));
+
+    const agent = makeAgent({
+      getToolDefinitions: jest.fn().mockReturnValue([SAVE_FACTS_TOOL, EXPLAIN_TOOL]),
+      getForcedExtractionTools: jest.fn().mockReturnValue([SAVE_FACTS_TOOL]),
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => {
+      result.current.sendMessage('I live in Porto — how do you handle my data?');
+    });
+
+    await waitFor(() => expect(mockCloudChatStream).toHaveBeenCalledTimes(2), { timeout: 3000 });
+    await new Promise((r) => setTimeout(r, 80));
+
+    const choices = mockCloudChatStream.mock.calls.map(
+      (c) => (c[0] as { toolChoice?: string }).toolChoice,
+    );
+    // Exactly two passes: the first, then the FORCED one. No continuation.
+    expect(choices).toEqual(['auto', 'required']);
+  });
+
+  it('keeps the assistant(tool_calls)/tool pair adjacent at REALISTIC result size', async () => {
+    // The stub-sized result in the tests above cannot exercise this: a real
+    // 3-section answer is the single largest entry the CLOUD history budget
+    // ever carries. selectHistoryWindow must still start the window on a `user`
+    // turn and never split the assistant(tool_calls) → tool pair — a split pair
+    // is a hard 400 from the gateway and a dead chat.
+    const bigResult = {
+      sections: (
+        ['what_is_mera', 'privacy_what_we_store', 'known_gaps'] as const
+      ).map((topic) => ({ topic, text: MERA_EXPLAINER_SECTIONS[topic] })),
+    };
+
+    mockCloudChatStream
+      .mockImplementationOnce(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Let me pull that up.' },
+          {
+            type: 'tool-call-delta',
+            index: 0,
+            id: 'tc-explain-big',
+            name: 'explainMera',
+            argumentsDelta: JSON.stringify({
+              topics: ['what_is_mera', 'privacy_what_we_store', 'known_gaps'],
+            }),
+          },
+          { type: 'finish', reason: 'tool_calls' },
+        ]),
+      )
+      .mockImplementation(() =>
+        makeSseStream([
+          { type: 'text-delta', delta: 'Full sourced answer.' },
+          { type: 'finish', reason: 'stop' },
+        ]),
+      );
+
+    const agent = makeAgent({
+      getToolDefinitions: jest.fn().mockReturnValue([SAVE_FACTS_TOOL, EXPLAIN_TOOL]),
+      getForcedExtractionTools: jest.fn().mockReturnValue([SAVE_FACTS_TOOL]),
+      executeTool: jest.fn().mockResolvedValue({ result: bigResult }),
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => {
+      result.current.sendMessage('how do you handle my data?');
+    });
+
+    await waitFor(
+      () => expect(mockCloudChatStream.mock.calls.length).toBeGreaterThanOrEqual(2),
+      { timeout: 3000 },
+    );
+
+    const [secondArg] = mockCloudChatStream.mock.calls[1] as [
+      { messages: { role: string; tool_calls?: unknown }[] },
+    ];
+    const roles = secondArg.messages.map((m) => m.role);
+    expect(roles[0]).toBe('system');
+    // Invariant 1: the window opens on a user turn.
+    expect(roles[1]).toBe('user');
+    // Invariant 2: the pair is intact and adjacent.
+    const toolIdx = roles.lastIndexOf('tool');
+    expect(toolIdx).toBeGreaterThan(0);
+    expect(roles[toolIdx - 1]).toBe('assistant');
+    expect(secondArg.messages[toolIdx - 1].tool_calls).toBeDefined();
   });
 });

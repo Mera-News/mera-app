@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import type { CustomerInfo } from 'react-native-purchases';
-import { getActiveTier, type SubscriptionTier } from '@/lib/revenuecat';
+import { getActiveTier, isAnonymousCustomerInfo, type SubscriptionTier } from '@/lib/revenuecat';
 import { deriveAiAccess, type AiAccess } from '@/lib/subscription/ai-access';
+import { clearJwtSubscriptionLock } from '@/lib/subscription/jwt-subscription-gate';
 
 /** The subset of `userBilling` this store mirrors. */
 export interface ServerBillingSnapshot {
@@ -59,16 +60,60 @@ const initialState = {
   showLapseInterstitial: null as boolean | null,
 };
 
-export const useSubscriptionStore = create<SubscriptionState>()((set) => ({
+export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
   ...initialState,
 
   setCustomerInfo: (info) => {
+    // Reject a CustomerInfo that has forgotten the user's purchase history.
+    //
+    // When RevenueCat's own backend is unreachable — a 522 from POST /v1/receipts
+    // when RevenueCat cannot reach Apple, observed on a real device — the SDK
+    // synthesises an offline CustomerInfo and pushes it through the update
+    // listener ("Computed offline CustomerInfo from 0 products with 0 active
+    // entitlements"). It carries no marker: there is no "was this computed
+    // offline" flag on the type. So key off the invariant instead. Purchase
+    // history is append-only, and a payload claiming the user has bought
+    // NOTHING when we already saw purchases has not observed a state
+    // transition — it has lost its data. Keep what we had; the SDK re-posts the
+    // receipt and the real answer arrives moments later.
+    //
+    // Narrow on purpose: a genuine expiry keeps allPurchasedProductIdentifiers
+    // populated and flips entitlements.active, so it still downgrades normally.
+    // `null` (the getCustomerInfoSafe failure path) still clears to 'unknown'.
+    // And `reset()` runs on logout/user-switch before any new info arrives, so
+    // there is no stale `prev` for user B to inherit.
+    const prev = get().customerInfo;
+    // `?? 0` rather than a bare `.length`: an older bridge payload missing the
+    // field must fall through to the normal path, never crash the listener.
+    const nextHistory = info?.allPurchasedProductIdentifiers?.length ?? 0;
+    const prevHistory = prev?.allPurchasedProductIdentifiers?.length ?? 0;
+    if (info && prev && nextHistory === 0 && prevHistory > 0) {
+      return;
+    }
     const tier = getActiveTier(info);
     set({ customerInfo: info, tier, isPremium: tier !== null });
   },
 
   setServerBilling: (billing) => {
     if (!billing) return;
+    // The ONE signal that lifts the /token 403 latch, and it is deliberately
+    // this one: every path that can end a refusal — a purchase
+    // (refreshUserBillingAfterPurchase on all four call sites),
+    // presentFreeTierPaywall, and the periodic/foreground syncEntitlement —
+    // lands here, and three of them never call syncEntitlement at all.
+    //
+    // Requires an EXPLICIT paid tier, using the same `undefined`-ignoring rule
+    // as the setter below: the lapse-state query does not select
+    // subscriptionTier, and `'none'` is the refusal, not a lift. This mirrors
+    // the server's own `hasActiveSubscription` check, so the next getJwtToken()
+    // is only re-armed when the gate it faces will actually pass.
+    if (
+      billing.subscriptionTier !== undefined &&
+      billing.subscriptionTier !== null &&
+      billing.subscriptionTier !== 'none'
+    ) {
+      clearJwtSubscriptionLock();
+    }
     set({
       // `undefined` (a query that didn't select the field) must not erase a
       // value we already know; only an explicit value overwrites.
@@ -90,9 +135,14 @@ export const useSubscriptionStore = create<SubscriptionState>()((set) => ({
 
   // Every server-sourced field resets too. Leaving `serverTier` behind would
   // hand user B user A's entitlement for the rest of the session, and resetting
-  // it to `'none'` rather than `null` would flash companion mode across a
+  // it to `'none'` rather than `null` would flash Mera News Free across a
   // logout → login round trip. `null` = "unknown", which is the truth here.
-  reset: () => set({ ...initialState }),
+  reset: () => {
+    // Otherwise user B inherits user A's /token refusal for the whole session
+    // and never gets a JWT, whatever they are subscribed to.
+    clearJwtSubscriptionLock();
+    set({ ...initialState });
+  },
 }));
 
 /** Reactive selector: is the user on any paid tier (RevenueCat's view). */
@@ -104,7 +154,13 @@ export const useSubscriptionTier = () => useSubscriptionStore((s) => s.tier);
 function selectAiAccess(s: SubscriptionState): AiAccess {
   return deriveAiAccess({
     serverTier: s.serverTier,
-    hasCustomerInfo: s.customerInfo !== null,
+    // Not merely "is it non-null". The SDK configures ANONYMOUSLY at app start
+    // (no appUserID is passed) and its empty CustomerInfo reaches this store
+    // seconds before `loginRevenueCat` identifies the user — so a plain
+    // null-check answers "yes, RevenueCat has spoken" for a payload about
+    // nobody, and a paying subscriber sees Mera News Free flash on every cold
+    // start. See `isAnonymousCustomerInfo`.
+    hasCustomerInfo: s.customerInfo !== null && !isAnonymousCustomerInfo(s.customerInfo),
     isPremium: s.isPremium,
   });
 }

@@ -1,22 +1,23 @@
 /**
  * The toast's SEVERITY MAPPING, pinned.
  *
- * Toasts used to carry severity in a saturated background fill. They are now
- * frosted neutral panels (Apple Notification Center), so the signal moved onto
- * a leading accent bar plus a shape-distinct glyph — and that signal is exactly
- * the kind of thing that regresses invisibly, because nothing crashes when an
- * error toast silently stops looking like an error.
+ * Toasts used to carry severity in a saturated background fill. They are now a
+ * single neutral panel for every severity, so the signal moved onto a leading
+ * accent bar plus a shape-distinct glyph — and that signal is exactly the kind
+ * of thing that regresses invisibly, because nothing crashes when an error toast
+ * silently stops looking like an error.
  *
  * These tests assert the two carriers exist, are the RIGHT colour, and are
- * absent for `muted`. They also guard the panel itself against the one change
- * that would quietly undo the whole look: an opaque background sat back on the
- * surface, which cancels glass.
+ * absent for `muted`. They also pin the panel surface itself: the flat grey the
+ * feed's importance-filter dropdown uses, on the SURFACE layer rather than the
+ * Root (which must stay unfilled and unclipped so it can cast the shadow).
  */
 import { render } from '@testing-library/react-native';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 
 import {
+  MENU_PANEL_FILL,
   TOAST_ACCENT,
   TOAST_ICON,
   TOAST_RADIUS,
@@ -145,8 +146,8 @@ describe('<Toast /> — how severity reaches the screen', () => {
   });
 });
 
-describe('<Toast /> — the frosted panel itself', () => {
-  it('carries no background colour on any severity — an opaque fill cancels glass', () => {
+describe('<Toast /> — the panel surface itself', () => {
+  it('keeps the fill OFF the Root — a clipping/filled Root would cast no shadow', () => {
     for (const action of [...SEVERITIES, 'muted' as const]) {
       const { getByTestId, unmount } = render(
         <Toast testID="toast-root" action={action} variant="solid">
@@ -159,28 +160,27 @@ describe('<Toast /> — the frosted panel itself', () => {
     }
   });
 
-  it('frosts by default, but a `persistent` toast takes the flat fill instead', () => {
-    // Not a look preference: a `duration: null` toast never goes away, and a
-    // permanently-mounted GlassView re-blurs the animated backdrop every frame
-    // forever. Both banner surfaces (OTAUpdatePrompt,
-    // TranslationUnavailablePrompt) rely on this.
-    const transient = render(
-      <Toast action="info" variant="solid">
-        <ToastTitle>Title</ToastTitle>
-      </Toast>,
-    );
-    // Off iOS 26 — which is where jest runs — even a transient toast falls back
-    // to the flat fill, because GlassPlate paints nothing there. What is being
-    // pinned is that `persistent` NEVER takes the glass branch.
-    transient.unmount();
+  it('paints the filter menu\u2019s flat grey fill, on every platform and lifetime', () => {
+    // The owner rejected the liquid-glass look. The surface is now the same
+    // flat panel as the feed's importance-filter dropdown
+    // (`menuStyle`'s bg-[#45434A]) \u2014 no GLASS_AVAILABLE branch, so iOS 26,
+    // iOS 25 and Android all get the identical surface, and a `persistent`
+    // banner no longer needs an opt-out to avoid a forever-re-blurring
+    // GlassView.
+    for (const persistent of [false, true]) {
+      const { getByTestId, queryByTestId, unmount } = render(
+        <Toast action="info" variant="solid" persistent={persistent}>
+          <ToastTitle>Title</ToastTitle>
+        </Toast>,
+      );
 
-    const { queryByTestId } = render(
-      <Toast action="info" variant="solid" persistent>
-        <ToastTitle>Title</ToastTitle>
-      </Toast>,
-    );
-    expect(queryByTestId('toast-glass-scrim')).toBeNull();
-    expect(queryByTestId('toast-flat-fill')).toBeTruthy();
+      expect(styleOf(getByTestId('toast-surface')).backgroundColor).toBe(MENU_PANEL_FILL);
+      expect(MENU_PANEL_FILL).toBe('#45434A');
+      // The glass layers are gone, not merely inert.
+      expect(queryByTestId('toast-glass-scrim')).toBeNull();
+      expect(queryByTestId('toast-flat-fill')).toBeNull();
+      unmount();
+    }
   });
 
   it('rounds to the article cards’ radius', () => {

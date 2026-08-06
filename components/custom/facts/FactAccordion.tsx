@@ -32,7 +32,7 @@ interface FactAccordionProps {
     readonly isExpanded: boolean;
     readonly articleCountByTopic: Map<string, number>;
     readonly isGeneratingMore: boolean;
-    /** Companion-mode read-only flag, threaded from FactsList. Disables every
+    /** Free-tier read-only flag, threaded from FactsList. Disables every
      *  mutating control on this row (delete fact/topic, add topic, generate
      *  more, influence nudge) while leaving expand/navigate untouched — the
      *  influence nudge in particular has no parent handler to gate, since

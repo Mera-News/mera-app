@@ -34,7 +34,10 @@ import {
   stableClusterIdOf,
   type FeedListItem,
 } from './feed-list-selector';
-import type { ScoringModeBreakdown } from '@/lib/database/services/article-suggestion-service';
+import type {
+  ScoringModeBreakdown,
+  SharedNoteBreakdown,
+} from '@/lib/database/services/article-suggestion-service';
 import type { CardStateRecord } from './feed-order-store';
 import type { ForYouSuggestion } from './for-you-store';
 import type { UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
@@ -61,6 +64,11 @@ export type FeedFunnelVisibilityReason =
    *  stale, not that the feed is broken. */
   | 'unknown-gate';
 
+/** Not a failure at all — the row rendered. Exists so the `visible` sample
+ *  array can reuse `FeedFunnelSample` rather than growing a near-duplicate
+ *  shape whose only difference is the missing reason. */
+export type FeedFunnelVisibleReason = 'visible';
+
 /** Why a candidate story has no exact-id entry in the persisted order.
  *  EXCLUSIVE, in the same precedence `feed-order-store.ingest` applies. */
 export type FeedFunnelOrderReason =
@@ -82,7 +90,12 @@ export interface FeedFunnelSample {
   relevance: number;
   ageHours: number;
   memberCount: number | null;
-  reason: FeedFunnelVisibilityReason | FeedFunnelOrderReason;
+  /** The AI-generated note as STORED on the row, truncated. This is the field
+   *  the whole "is the note about this article?" question is asked of — a
+   *  sample carrying a title and a note side by side lets a reader answer it by
+   *  eye, which no aggregate count can do. Empty when the row has none. */
+  note: string;
+  reason: FeedFunnelVisibilityReason | FeedFunnelOrderReason | FeedFunnelVisibleReason;
   /** For `opened-by-article-id` / `represented-under-other-id`: the key that
    *  matched, or the order id it folded into. */
   matchedKey: string | null;
@@ -141,6 +154,9 @@ export interface FeedFunnelInput {
    *  requested. Optional so the Feed tab's dev-only funnel log (which does not
    *  touch the database) keeps calling this with no change. */
   scoringModes?: ScoringModeBreakdown | null;
+  /** Shared-note counts from the DB. Null ⇒ the read failed or was not
+   *  requested, which the report distinguishes from "nothing is shared". */
+  sharedNotes?: SharedNoteBreakdown | null;
   /** Whether the app is currently honouring server article tags
    *  (`EXPO_PUBLIC_USE_ARTICLE_TAGS` → `ScoringEngineConfig.USE_ARTICLE_TAGS`).
    *  Passed in rather than imported: this module is pure and RN-free, and the
@@ -288,6 +304,26 @@ export interface FeedFunnelReport {
     available: boolean;
   };
 
+  /** ARE ANY NOTES SHARED BETWEEN ARTICLES — the readout that says which
+   *  mechanism put a foreign sentence on a card.
+   *
+   *  Only propagation copies a note verbatim, so a shared string is its
+   *  signature; a decode shift or a model confabulating from its own prompt
+   *  exemplar each produce a sentence that exists exactly once. Sharing in
+   *  moderation is normal (propagation is deliberate) — it is a LARGE group, or
+   *  one whose members are plainly different stories, that indicts grouping. */
+  sharedNotes: {
+    rowsWithNote: number;
+    distinctNotes: number;
+    sharedNoteGroups: number;
+    rowsSharingANote: number;
+    largestGroupSize: number;
+    largestGroup: { note: string; titles: string[] } | null;
+    /** False ⇒ the numbers above are zeroes by construction, not measurements.
+     *  Same reason `scoring.available` exists. */
+    available: boolean;
+  };
+
   hydrateProvenance: HydrateProvenance | null;
   /** The persisted READING ORDER was thrown away at launch. `ingest` refills the
    *  list so everything else reads healthy — this is the only visible symptom. */
@@ -302,6 +338,10 @@ export interface FeedFunnelReport {
 
   /** SHARE PAYLOAD ONLY. Capped and totally ordered so repeat runs match. */
   samples: {
+    /** Rows that RENDERED, highest relevance first — each with its stored note
+     *  next to its title, so "is this note about this article?" is answerable
+     *  by reading one row. */
+    visible: FeedFunnelSample[];
     droppedBeforeVisible: FeedFunnelSample[];
     missingFromOrder: FeedFunnelSample[];
   };
@@ -321,12 +361,13 @@ function ageHours(s: ForYouSuggestion, nowMs: number): number {
 
 function makeSample(
   s: ForYouSuggestion,
-  reason: FeedFunnelVisibilityReason | FeedFunnelOrderReason,
+  reason: FeedFunnelVisibilityReason | FeedFunnelOrderReason | FeedFunnelVisibleReason,
   nowMs: number,
   memberCount: number | null = null,
   matchedKey: string | null = null,
 ): FeedFunnelSample {
   const title = s.title_en ?? s.title_original ?? '';
+  const note = s.reason ?? '';
   return {
     suggestionId: s._id,
     articleId: s.articleId,
@@ -335,6 +376,7 @@ function makeSample(
     relevance: s.relevance ?? 0,
     ageHours: ageHours(s, nowMs),
     memberCount,
+    note: note.length > SAMPLE_TITLE_MAX ? `${note.slice(0, SAMPLE_TITLE_MAX)}…` : note,
     reason,
     matchedKey,
   };
@@ -349,6 +391,7 @@ function bySuggestionRecency(a: FeedFunnelSample, b: FeedFunnelSample): number {
 export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
   const { nowMs } = input;
   const modes = input.scoringModes ?? null;
+  const shared = input.sharedNotes ?? null;
   const cutoffMs = nowMs - FEED_WINDOW_MS;
 
   // ── Stage 1: visibility, with exclusive reason attribution ────────────────
@@ -362,6 +405,11 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
     unknownGate: 0,
   };
   const droppedSamples: FeedFunnelSample[] = [];
+  // The rows that rendered. Every other sample array in this report explains an
+  // ABSENCE, which is the right question when the feed is empty — but the
+  // question here is about a card the user is looking at, and nothing in the
+  // report could previously show one.
+  const visibleSamples: FeedFunnelSample[] = [];
   let visibleCount = 0;
 
   for (const s of input.suggestions) {
@@ -374,6 +422,7 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
 
     if (isVisible(s, cutoffMs)) {
       visibleCount++;
+      visibleSamples.push(makeSample(s, 'visible', nowMs));
       continue;
     }
 
@@ -615,6 +664,15 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
       scoredRows: modes ? modes.math + modes.backstop + modes.unknown : 0,
       available: modes != null,
     },
+    sharedNotes: {
+      rowsWithNote: shared?.rowsWithNote ?? 0,
+      distinctNotes: shared?.distinctNotes ?? 0,
+      sharedNoteGroups: shared?.sharedNoteGroups ?? 0,
+      rowsSharingANote: shared?.rowsSharingANote ?? 0,
+      largestGroupSize: shared?.largestGroupSize ?? 0,
+      largestGroup: shared?.largestGroup ?? null,
+      available: shared != null,
+    },
     hydrateProvenance: input.hydrateStats,
     launchWipeSuspected: !!input.hydrateStats?.emptyPoolGuardTripped,
     sumsCheck: {
@@ -623,6 +681,12 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
       orderReasonsSum: notInOrderTotal === pending.length,
     },
     samples: {
+      // Highest-scoring first: a note that misdescribes its article is most
+      // damaging on the cards that rank highest, and those are the ones the
+      // reader actually saw.
+      visible: visibleSamples
+        .sort((a, b) => b.relevance - a.relevance || bySuggestionRecency(a, b))
+        .slice(0, SAMPLE_LIMIT),
       droppedBeforeVisible: droppedSamples.sort(bySuggestionRecency).slice(0, SAMPLE_LIMIT),
       missingFromOrder: missingSamples.sort(bySuggestionRecency).slice(0, SAMPLE_LIMIT),
     },
@@ -679,6 +743,11 @@ export function feedFunnelScalars(r: FeedFunnelReport): Record<string, number | 
     scoredByMath: r.scoring.available ? r.scoring.math : -1,
     scoredByLlm: r.scoring.available ? r.scoring.legacy : -1,
     scoredByUnknown: r.scoring.available ? r.scoring.unknown : -1,
+    // Shared-note COUNTS only. `largestGroup` carries a note and article titles
+    // and must never come along — see the array/object prohibition above.
+    sharedNoteGroups: r.sharedNotes.available ? r.sharedNotes.sharedNoteGroups : -1,
+    rowsSharingANote: r.sharedNotes.available ? r.sharedNotes.rowsSharingANote : -1,
+    largestSharedNoteGroup: r.sharedNotes.available ? r.sharedNotes.largestGroupSize : -1,
     orderHydrated: r.hydrated.order,
     openedHydrated: r.hydrated.opened,
     launchWipeSuspected: r.launchWipeSuspected,

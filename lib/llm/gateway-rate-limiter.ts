@@ -49,6 +49,22 @@ export function tryTakeImmediate(): boolean {
 }
 
 /**
+ * Milliseconds until the next grant becomes available (0 when one is available
+ * right now). READ-ONLY — does not take the grant and does not touch the queue.
+ *
+ * Exists so a caller that SCHEDULES future work can align to the limiter
+ * instead of guessing a fixed interval. The scoring pipeline's results poller is
+ * the one such caller: its first tick used to land a hair BEFORE `nextGrantAt`
+ * whenever the submit round trip was quicker than the poller's lead, so
+ * `tryTakeImmediate()` refused and the first GET /results slipped a whole extra
+ * interval. Measured on prod: 5533ms from POST to the first poll, with the
+ * server's results already waiting (the decode landed 118ms later).
+ */
+export function msUntilNextGrant(): number {
+  return Math.max(0, nextGrantAt - Date.now());
+}
+
+/**
  * Pushes the next available grant at least `ms` into the future — used on
  * HTTP 429 to back off. Repeated calls don't stack: the next grant time is
  * the max of the current value and `now + ms`.

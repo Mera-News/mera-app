@@ -1,6 +1,6 @@
 // fact-rows-selector — the pure selector behind the Round-3 fact-rows For-You
 // view. Turns the render-gated suggestion pool into per-fact horizontal rows
-// (one row per owning fact) plus the breaking strip pinned above them.
+// (one row per owning fact) plus the emergency strip pinned above them.
 //
 // PURE: RN-free. It consumes the store's `ForYouSuggestion` rows + the persona
 // snapshots and returns plain data the screen renders verbatim; no DB / expo /
@@ -8,7 +8,8 @@
 //
 // Pipeline (mirrors the proven Wave-7 selector, minus the sectioned/two-zone
 // machinery): filter to visible → story-group → pick a representative per group
-// → pull breaking out → assign each remaining group to a fact section via
+// → pull EMERGENCY-band stories out into the strip → assign each remaining
+// group to a fact section via
 // `resolveOwningFactLenient` (a story folds into the fact it matched even at
 // zero signal, so low-priority suggestions live inside their fact section; a
 // negative/suppressed or factless match resolves to null and is DROPPED — there
@@ -330,6 +331,41 @@ export function isBreaking(s: ForYouSuggestion): boolean {
   return raw >= 0.8 && s.eventType != null && BREAKING_EVENT_TYPES.has(s.eventType);
 }
 
+/**
+ * The Dashboard emergency-strip predicate: the EMERGENCY band and nothing else.
+ *
+ * ## Why this is NOT `isBreaking`
+ *
+ * `isBreaking`'s second clause admits the HIGH band (raw 0.8–1.0) whenever the
+ * event type is disaster/weather/conflict, and that is what put ordinary
+ * high-relevance stories under a red "BREAKING" chip — a story about a region
+ * getting LESS rain than usual is `weather` at HIGH, and it was being fronted
+ * above every section as though it were an alert. The strip is the loudest
+ * surface in the app; it is reserved for the tier the rest of the app already
+ * calls EMERGENCY.
+ *
+ * The looseness in `isBreaking` is deliberate and stays: that predicate's job is
+ * exempting stories from the Med+/High importance dial and giving them a feed
+ * recency bonus, i.e. "never BURY this". Never burying a high-relevance disaster
+ * story and fronting it in a red alert strip are different decisions, so they
+ * get different predicates rather than one predicate serving both badly.
+ *
+ * Reads `rawScore`, not `relevance`, for the same reason `isBreaking` does:
+ * soft-suppression penalties can drag the persisted `relevance` below the tier
+ * the scorer actually assigned.
+ *
+ * A story that no longer qualifies is not lost — it falls through to its own
+ * fact/headline section like any other card.
+ */
+export function isEmergency(
+  s: ForYouSuggestion,
+  config: HarnessConfig = DEFAULT_HARNESS_CONFIG,
+): boolean {
+  const raw = s.rawScore;
+  if (raw == null || !Number.isFinite(raw)) return false;
+  return raw > config.articlePipeline.emergencyPriorityCutoff;
+}
+
 /** Minimal ownership projection from a store row. `matchedTopics` is what
  *  `resolveOwningFactLenient` reads; the headline scope/country ride along so the
  *  headline-section routing below reads ONE projection rather than reaching back
@@ -559,7 +595,9 @@ export function buildFactRows(
     const pubDateMs = all.reduce((mx, m) => Math.max(mx, parseMs(m.firstPubDate)), 0);
     const addedMs = all.reduce((mx, m) => Math.max(mx, addedMsOf(m)), 0);
 
-    if (isBreaking(rep)) {
+    // EMERGENCY band only — see `isEmergency`. Deliberately NOT `isBreaking`,
+    // which is the (looser) "never bury this" predicate.
+    if (isEmergency(rep, config)) {
       breaking.push({ data: rep, members });
       continue;
     }

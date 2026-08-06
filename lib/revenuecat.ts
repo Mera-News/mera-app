@@ -18,6 +18,7 @@ import {
   REVENUECAT_IOS_KEY,
   REVENUECAT_ANDROID_KEY,
 } from '@/lib/config/endpoints';
+import { getStaticAppContext } from '@/lib/observability/app-context';
 import logger from '@/lib/logger';
 
 // Resolve the platform-specific key, falling back to the generic key. Done at
@@ -51,11 +52,18 @@ function resolveApiKey(): string {
 }
 
 // Entitlement identifiers configured in the RevenueCat dashboard. Must match
-// the server (mera-server-auth REVENUECAT_ENTITLEMENT_* env vars). Store
-// purchases grant `mera-news-*-plan`; legacy promotional grants for the
-// individual/professional tiers used the bare tier name — accept both.
-// Starter is new and has no legacy bare alias. Professional outranks
-// individual outranks starter when more than one is active.
+// the server (mera-server-auth REVENUECAT_ENTITLEMENT_* env vars). Every real
+// subscriber holds `mera-news-*-plan` — that is the only form a store purchase
+// or a promotional grant produces.
+//
+// The bare `individual` / `professional` ids are NOT a legacy grant format, as
+// this comment used to claim. They are separate entitlements that only ever had
+// RevenueCat Test Store products behind them, and those products were archived
+// on 2026-08-06, so nothing can grant them now. They stay in these arrays
+// because accepting an id nobody holds costs nothing, while removing one that
+// turned out to be held would silently lock a paying user out. Starter never had
+// a bare alias. Professional outranks individual outranks starter when more than
+// one is active.
 export const INDIVIDUAL_ENTITLEMENT_IDS = [
   'mera-news-individual-plan',
   'individual',
@@ -119,6 +127,135 @@ export function configureRevenueCat(): void {
   }
 }
 
+// --- Subscriber attributes -------------------------------------------------
+//
+// A purpose-limited, PSEUDONYMOUS set of build/device/account facts attached to
+// the RevenueCat customer, so support can triage a paying customer from their
+// app_user_id alone ("which build? which OTA bundle? does our server agree they
+// are Professional?") without us ever asking them for a screenshot — and so the
+// dashboard can segment on them.
+//
+// WHAT MUST NEVER GO IN HERE, and why the list is closed rather than "obvious":
+//   * No `setEmail` / `setDisplayName` / `setPhoneNumber` / `setPushToken`, and
+//     no `collectDeviceIdentifiers()`. The join key already exists — the
+//     better-auth userId `Purchases.logIn` sets as `app_user_id` — so PII would
+//     buy nothing and cost a vendor copy of the user directory.
+//   * No `$`-prefixed reserved attribute. `NSPrivacyTracking = false` in the iOS
+//     privacy manifest structurally rules out $idfa/$idfv/$gpsAdId/$ip and the
+//     whole attribution family; sending them would make the manifest a lie.
+//   * Nothing derived from persona facts, topics, interests, locations, or
+//     reading history. That is the product's core invariant (no collection links
+//     a user to a topic) and it does not get an exception for a billing vendor.
+// Values EXCLUDED even though ./observability/runtime-context.ts hands them to
+// us for free: relevance_v3, free_tier_mode, model_state, network_connected,
+// server_reachable, runtime_version, is_embedded_launch. They are Sentry-side
+// debugging values with no support or segmentation use here, and `send it, it
+// might be handy` is how a purpose-limited set stops being one. Note
+// `subscription_tier` is excluded for the opposite reason: it IS RevenueCat's
+// own view, so echoing it back adds nothing — `server_tier` is the one that
+// carries information, because a disagreement between the two is the defect.
+//
+// RevenueCat's documented limits: max 50 attributes, key <= 40 chars, value <=
+// 500 chars, values must be strings. We send 11 of 50; the coercion below is
+// defensive so a future field can never silently blow a limit at runtime.
+const ATTRIBUTE_KEY_MAX = 40;
+const ATTRIBUTE_VALUE_MAX = 500;
+
+/**
+ * The last payload actually sent, serialized. `syncRevenueCatAttributes` runs on
+ * every foreground and every 15-minute scheduler tick, and
+ * `syncAttributesAndOfferingsIfNeeded` is a network call — re-sending eleven
+ * unchanged strings all day is pure waste. Skipping the unchanged case is why
+ * the login path forces: attributes are stored per `app_user_id`, so a second
+ * user signing in on the same device with a byte-identical map would otherwise
+ * be skipped and end up with no attributes at all.
+ */
+let lastAttributesSignature: string | null = null;
+
+function buildSubscriberAttributes(): Record<string, string> {
+  const app = getStaticAppContext();
+  // Deliberately `require`d at call time, not imported at module scope.
+  // ./observability/runtime-context.ts reads Zustand stores, and
+  // lib/stores/subscription-store.ts imports THIS file — a static import would
+  // close the cycle revenuecat → runtime-context → subscription-store →
+  // revenuecat. It also drags in lib/database (which constructs a SQLiteAdapter
+  // at import time, and dies outside a native runtime) for every consumer of
+  // this module, tests included.
+  const {
+    getRuntimeContext,
+  } = require('@/lib/observability/runtime-context') as typeof import('@/lib/observability/runtime-context');
+  const runtime = getRuntimeContext();
+
+  const raw: Record<string, unknown> = {
+    app_version: app.app_version,
+    app_build: app.app_build,
+    platform: app.platform,
+    os_version: app.os_version,
+    device_tier: app.device_tier,
+    ota_update_id: app.ota_update_id,
+    ota_channel: app.ota_channel,
+    app_language: runtime.app_language,
+    onboarding_stage: runtime.onboarding_stage,
+    processing_mode: runtime.processing_mode,
+    server_tier: runtime.server_tier,
+  };
+
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(raw)) {
+    out[key.slice(0, ATTRIBUTE_KEY_MAX)] = String(value ?? '').slice(
+      0,
+      ATTRIBUTE_VALUE_MAX,
+    );
+  }
+  return out;
+}
+
+export interface SyncRevenueCatAttributesOptions {
+  /** Bypass the unchanged-payload skip. Used by the login path — see above. */
+  force?: boolean;
+}
+
+/**
+ * Push the subscriber attributes above onto the CURRENT RevenueCat customer.
+ * No-op when the SDK isn't configured, and never throws: an attribute sync is
+ * telemetry, and telemetry must not be the thing that breaks a sign-in or a
+ * purchase.
+ */
+export async function syncRevenueCatAttributes(
+  opts: SyncRevenueCatAttributesOptions = {},
+): Promise<void> {
+  if (!configured) return;
+  try {
+    const attributes = buildSubscriberAttributes();
+    const signature = JSON.stringify(attributes);
+    if (!opts.force && signature === lastAttributesSignature) return;
+
+    // Recorded BEFORE the await, not after it. The entitlement-sync task calls
+    // `syncEntitlement()` — whose success path fires this without awaiting —
+    // and then calls this again itself. Assigning after the flush leaves the
+    // second call reading a stale signature while the first is still suspended
+    // on the network, so both send. That interleaving happens exactly when a
+    // value just CHANGED, i.e. the only case the skip is meant to protect, so
+    // the check has to be atomic with respect to the await.
+    lastAttributesSignature = signature;
+
+    Purchases.setAttributes(attributes);
+    // setAttributes only queues locally; this is what actually ships them. It
+    // also refreshes offerings, which is harmless — the paywall reads whatever
+    // is current at present time.
+    await Purchases.syncAttributesAndOfferingsIfNeeded();
+  } catch (e) {
+    // Roll the optimistic signature back so a send that failed (offline, bridge
+    // down) is retried on the next foreground rather than being remembered as
+    // delivered forever.
+    lastAttributesSignature = null;
+    logger.captureException(e, {
+      tags: { module: 'revenuecat', method: 'syncAttributes' },
+      extra: describeError(e),
+    });
+  }
+}
+
 /**
  * Identify the RevenueCat customer as our better-auth user so the webhook's
  * `app_user_id` maps back to the same user the server keys on. Returns the
@@ -130,6 +267,16 @@ export async function loginRevenueCat(
   if (!configured || !userId) return null;
   try {
     const { customerInfo } = await Purchases.logIn(userId);
+    // AFTER logIn resolves, never before — and `force`, never conditionally.
+    // `configureRevenueCat()` passes no appUserID, so on every cold start the
+    // SDK mints its own `$RCAnonymousID:…` customer (see
+    // isAnonymousCustomerInfo below for the observed device trace). Attributes
+    // set before this point land on that anonymous customer and are lost when
+    // the alias happens — support would then look up the real user and find
+    // nothing. Awaited rather than fired-and-forgotten because the call cannot
+    // throw by construction, so it costs correctness nothing to make the
+    // ordering deterministic.
+    await syncRevenueCatAttributes({ force: true });
     return customerInfo;
   } catch (e) {
     logger.captureException(e, {
@@ -140,13 +287,24 @@ export async function loginRevenueCat(
   }
 }
 
-/** Reset to an anonymous customer so the next sign-in starts clean. */
+/**
+ * Reset to an anonymous customer so the next sign-in starts clean.
+ *
+ * Idempotent on purpose: a logout runs this TWICE — once via
+ * `clearAuthStorage()` and once via `wipeAllLocalUserData()`, which clear
+ * overlapping sets of local state and are each independently correct to call.
+ * `Purchases.logOut()` throws when the customer is already anonymous, so the
+ * second call used to log a warning on every single sign-out. Checking first
+ * makes the repeat a genuine no-op rather than a caught error.
+ */
 export async function logoutRevenueCat(): Promise<void> {
   if (!configured) return;
   try {
+    if (await Purchases.isAnonymous()) return;
     await Purchases.logOut();
   } catch (e) {
-    // logOut throws if the current user is already anonymous — non-fatal.
+    // Still caught: isAnonymous() is a bridge call and can itself fail, and a
+    // logout must never be the thing that breaks signing out.
     logger.warn('[revenuecat] logOut failed', { error: String(e) });
   }
 }
@@ -162,6 +320,27 @@ export function getActiveTier(
   if (INDIVIDUAL_ENTITLEMENT_IDS.some((id) => active[id])) return 'individual';
   if (STARTER_ENTITLEMENT_IDS.some((id) => active[id])) return 'starter';
   return null;
+}
+
+/**
+ * Whether this CustomerInfo describes an ANONYMOUS RevenueCat customer — one
+ * the SDK minted for itself because `configureRevenueCat()` passes no
+ * appUserID and `loginRevenueCat()` has not run yet.
+ *
+ * It matters because an anonymous payload is an answer about *nobody*. On
+ * every cold start the SDK configures anonymously, fetches
+ * `/v1/subscribers/$RCAnonymousID:…` (observed on device), and that empty
+ * CustomerInfo lands in the store seconds before `Purchases.logIn` aliases it
+ * to the real user. Reading "no entitlements" off it as "this user is not
+ * subscribed" is what flashes Mera News Free at a paying subscriber — the exact
+ * failure `AiAccess`'s `'unknown'` state exists to prevent.
+ *
+ * `$RCAnonymousID:` is RevenueCat's own documented prefix for generated IDs.
+ */
+export function isAnonymousCustomerInfo(
+  info: CustomerInfo | null | undefined,
+): boolean {
+  return info?.originalAppUserId?.startsWith('$RCAnonymousID:') ?? false;
 }
 
 /** The active entitlement backing the highest tier, or null. */

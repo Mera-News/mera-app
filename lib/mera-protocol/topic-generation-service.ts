@@ -46,24 +46,29 @@ const DEFAULT_TOTAL_LOCAL = 14;
  * Output budget for the ON-DEVICE topic-generation calls (1024 = the on-device
  * max-output ceiling, CLAUDE.md § LLM Prompt Budget).
  *
- * These calls run with `enableThinking: true`, so the reasoning trace shares the
- * budget with the answer. At the previous 400 a trace could consume the whole
- * allowance and the completion came back mid-`<think>`; the topic parser then
- * found no JSON array and the user was told "no usable topics" for a fact that
- * had generated fine. `completeLocal` now also fails loudly on that shape (see
- * LocalTruncatedReasoningError) — this constant makes it rare, that guard makes
- * it visible.
+ * These calls run with thinking OFF, so the answer (~55-100 tokens) is the whole
+ * cost and this is a ceiling nothing gets near. Left at 1024 rather than lowered
+ * because an unused ceiling costs nothing, and because it keeps a margin for the
+ * larger `totalCount`s the local path can be asked for.
+ *
+ * Raised here from 400 in r12 P2, when these calls ran with `enableThinking:
+ * true` and a trace could consume the whole allowance — the completion came back
+ * mid-`<think>`, the parser found no JSON array, and the user was told "no
+ * usable topics" for a fact that had generated fine. Thinking is off again, but
+ * `completeLocal`'s LocalTruncatedReasoningError guard stays: it is what makes
+ * that shape visible rather than silent.
  *
  * NOT raised further: n_ctx is 4096 and the local topic-gen system prompts
- * already claim a large share of it. CLOUD budgets are deliberately untouched.
+ * already claim a large share of it.
  */
 const LOCAL_TOPIC_GEN_MAX_TOKENS = 1024;
 
 /** CLOUD topic-generation output budget. Sourced from the harness config so this
  *  (duplicate) generation path can never drift from the harness builder's value
- *  — both run with thinking on, where the trace shares the budget with the
- *  answer. See TopicGenConfig.cloudThinkingMaxTokens. */
-const cloudThinkingMaxTokens = DEFAULT_HARNESS_CONFIG.topicGen.cloudThinkingMaxTokens;
+ *  — both run with thinking OFF, so ~55 answer tokens are the whole cost.
+ *  See TopicGenConfig.cloudMaxTokens (and do NOT reach for
+ *  cloudThinkingMaxTokens, which now belongs to the top-up alone). */
+const cloudMaxTokens = DEFAULT_HARNESS_CONFIG.topicGen.cloudMaxTokens;
 
 /**
  * Merge the raw factOnly + combo outputs for a single fact into a deduped
@@ -114,15 +119,12 @@ export async function generateTopicsFromFact(
     systemPrompt: LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
     prompt: `Fact: "${sanitizeForPrompt(factStatement)}"\nGenerate 14 topics.`,
     // 1024 = the on-device max-output ceiling (see CLAUDE.md § LLM Prompt
-    // Budget). `enableThinking` below means the reasoning trace shares this
-    // budget with the answer; at the previous 400 a trace could consume the
-    // whole allowance, leaving the caller to parse a truncated <think> block
-    // and report "no usable topics". Not raised further: n_ctx is 4096 and the
-    // system prompt already claims a large share of it.
+    // Budget). Thinking is off, so this is a ceiling the ~55-100 token answer
+    // never approaches. Not raised further: n_ctx is 4096 and the system prompt
+    // already claims a large share of it.
     maxTokens: LOCAL_TOPIC_GEN_MAX_TOKENS,
     temperature: 0.3,
     responseFormat: 'json',
-    enableThinking: true,
   });
   return parseTopicsFromOutput(output, factStatement);
 }
@@ -154,8 +156,7 @@ export async function generateTopicsForFact(
           system: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
           prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
           temperature: 0.3,
-          maxTokens: cloudThinkingMaxTokens,
-          enableThinking: true,
+          maxTokens: cloudMaxTokens,
         });
       }
       if (comboCount > 0 && hasOthers) {
@@ -164,8 +165,7 @@ export async function generateTopicsForFact(
           system: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
           prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
           temperature: 0.3,
-          maxTokens: cloudThinkingMaxTokens,
-          enableThinking: true,
+          maxTokens: cloudMaxTokens,
         });
       }
       if (calls.length > 0) {
@@ -192,7 +192,6 @@ export async function generateTopicsForFact(
             maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, factOnlyCount * 30),
             temperature: 0.3,
             responseFormat: 'json',
-            enableThinking: true,
           });
         } catch (err) {
           logger.warn('[topic-gen] local factOnly failed', {
@@ -208,7 +207,6 @@ export async function generateTopicsForFact(
             maxTokens: Math.max(LOCAL_TOPIC_GEN_MAX_TOKENS, comboCount * 30),
             temperature: 0.3,
             responseFormat: 'json',
-            enableThinking: true,
           });
         } catch (err) {
           logger.warn('[topic-gen] local combo failed', {

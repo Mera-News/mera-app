@@ -65,6 +65,10 @@ const FeedStatusSheet: React.FC<FeedStatusSheetProps> = ({
                         noiseRemovedCount={noiseRemovedCount}
                         injectNoiseEnabled={injectNoiseEnabled}
                         lastProcessedLabel={lastProcessedLabel}
+                        // The body's daily-limit "Manage" pill navigates; this
+                        // modal must come down first or the pushed screen lands
+                        // behind the backdrop.
+                        onBeforeNavigate={onClose}
                     />
                 </ModalBody>
                 <ModalFooter>

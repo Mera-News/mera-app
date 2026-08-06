@@ -6,6 +6,7 @@ import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
 import { getSetting } from "@/lib/database/services/setting-service";
+import { navigateToPaywall } from "@/lib/nav-state";
 import { Redirect, router } from "expo-router";
 import { useEffect, useState } from "react";
 
@@ -65,6 +66,22 @@ export default function Onboarding() {
         });
     };
 
+    // No active plan, never dismissed. `navigateToPaywall()` with no argument
+    // is deliberate — it selects the paywall screen's DEFAULT mode (purchase
+    // sheet auto-presented), the same one the first-open push uses, and reuses
+    // that function's in-flight guard rather than issuing a bare replace.
+    const handlePaywall = () => {
+        navigateToPaywall();
+    };
+
+    // No active plan, already dismissed → Mera News Free, onboarding skipped.
+    // The feed, not `handleComplete`'s Dashboard-with-fromOnboarding: the
+    // wizard never ran, and this is where "Continue without a plan" already
+    // lands.
+    const handleFreeTierMode = () => {
+        router.replace("/logged-in/app_container/feed");
+    };
+
     if (!resolved) {
         return (
             <Box className="flex-1 justify-center items-center">
@@ -90,6 +107,8 @@ export default function Onboarding() {
                 sessionUserId={session?.user?.id}
                 onLoginRedirect={handleLoginRedirect}
                 onComplete={handleComplete}
+                onPaywall={handlePaywall}
+                onFreeTierMode={handleFreeTierMode}
             />
         </ErrorBoundary>
     );

@@ -598,7 +598,7 @@
     "inferenceError": "We hebben momenteel problemen om de Mera-inferentieservice te bereiken. Probeer het over een moment opnieuw."
   },
   "personaChat": {
-    "introMessage": "Hoi! Ik ben Mera, je persoonlijke nieuwsassistent. Vertel me gerust wat dan ook over jezelf: waar je woont, wat je voor werk doet, hobby's die je volgt, aandelen die je bijhoudt, plaatsen waar je familie woont. Of zeg gewoon 'help me met instellen' en ik begeleid je door het proces."
+    "introMessage": "Hoi! Ik ben Mera, je persoonlijke nieuwsassistent.\n\nOm nieuws te vinden dat werkelijk belangrijk voor je is, moet ik je wat beter kennen. Waar je woont, wat je doet, hobby's die je volgt, aandelen die je bijhoudt, waar je familie woont. Deel zoveel of zo weinig als je wilt.\n\nAls dit je even doet aarzelen, dat's een goed instinct. Het is niet verstandig persoonlijke gegevens aan een app-bedrijf toe te vertrouwen. Mera is anders opgebouwd: alles wat je me vertelt wordt opgeslagen op je apparaat, niet op onze servers. Vraag me hoe dat werkt, of zeg gewoon 'help me met instellen' en we beginnen."
   },
   "floatingChat": {
     "bubbleHint": "Chat met Mera",
@@ -618,6 +618,8 @@
     "chipShowFactsMessage": "Wat weet je momenteel over mij?",
     "chipHelpSetup": "Help me met instellen",
     "chipHelpSetupMessage": "Help me mijn profiel in te stellen",
+    "chipDataHandlingMessage": "Hoe verwerkt Mera mijn gegevens?",
+    "chipDataHandling": "Hoe worden mijn gegevens verwerkt?",
     "thinking": "Aan het denken…",
     "newChat": "Nieuwe chat",
     "inputPlaceholder": "Typ een bericht...",
@@ -810,7 +812,7 @@
     "autoRenew": "Automatisch verlengen",
     "customerCenter": "Abonnement beheren / opzeggen",
     "dailyArticleLimit": "Daglimiet voor artikelen",
-    "description": "Abonneer je om je gepersonaliseerde nieuwsfeed op je apparaat te ontvangen.",
+    "description": "Mera leest het nieuws voor je. Een feed gevormd door wat je echt interesseert, een dashboard van vandaag, de verhalen die je volgt, en een chat die leert wat voor jou belangrijk is.",
     "detailsSection": "Abonnementsgegevens",
     "expiresOn": "Verloopt op",
     "lifetime": "Levenslang",
@@ -835,13 +837,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "Promotioneel",
     "subscribe": "Abonneren",
-    "title": "Mera News ontgrendelen",
+    "title": "Zet Mera aan",
     "usageSection": "Gebruik",
     "usedToday": "Vandaag geanalyseerd",
     "viewPlans": "Abonnementen bekijken",
     "active": "Actief",
     "freePlan": "Gratis plan",
-    "upgrade": "Upgraden"
+    "upgrade": "Upgraden",
+    "activatedBody": "Je persoonlijke feed, dashboard, gevolgde verhalen en chat staan klaar.",
+    "activatedTitle": "{{plan}} is actief",
+    "allPlansHint": "Elk plan staat op het volgende scherm.",
+    "lapsedFreeNote": "Mera News Free is voor jou zolang je het wilt. Een plan brengt Mera aan de slag met je nieuws opnieuw.",
+    "manageBadge": "Beheren",
+    "startWithStarter": "Begin met Starter",
+    "starterRecommendation": "Starter is waar je begint. Mera News Free is er voor wat je al hebt opgebouwd op dit apparaat, en op dag één is er nog niets.",
+    "turnMeraBackOn": "Mera opnieuw inschakelen"
   },
   "tabs": {
     "deck": "Feed",
@@ -1361,5 +1371,21 @@
     "subtitle": "Pas aan hoe Mera visuele elementen op dit apparaat weergeeft",
     "staticGradientTitle": "Statische achtergrond",
     "staticGradientDescription": "Gebruik een vaste kleurverloping in plaats van de geanimeerde achtergrond — beter voor de batterij en oudere apparaten"
+  },
+  "freeTier": {
+    "cardBody": "Het AI-deel van Mera is voor nu uitgeschakeld. Alles wat je hebt opgeslagen, gevolgd of gelezen blijft op dit apparaat, en Verkennen toont nog steeds vandaags nieuws. Zonder een plan zal Mera je feed niet opbouwen, je vragen niet beantwoorden en geen nieuwe verhalen niet volgen. Start een plan en alles komt terug.",
+    "cardTitle": "Je bent op Mera News Free",
+    "chatBubble": "Alles wat ik van je weet blijft op dit apparaat, en niets wat je hebt opgeslagen of gevolgd verdwijnt. Zonder een plan kan ik je feed niet opbouwen, je vragen niet beantwoorden of nieuwe verhalen niet voor je volgen. Start er een en ik ga verder waar ik ben gebleven.",
+    "chatNotice": "Mera chat hoort bij een plan. Je persona en feiten blijven toch op dit apparaat.",
+    "continueWithoutPlan": "Doorgaan zonder plan",
+    "lapseBody": "Er is niets weggehaald. Alles wat je hebt opgeslagen, gevolgd of gelezen is van jou, op dit apparaat, altijd. Je bent op Mera News Free. Wat pauzeert is de AI-laag zelf, dus je persoonlijke feed, dashboard, volgen van nieuwe verhalen en Mera chat blijven uit totdat je weer een plan start.",
+    "lapseTitle": "Je Mera-plan is afgelopen",
+    "readOnlyBanner": "Alles hier kun je lezen, plan of geen plan. Deze instellingen veranderen alleen wat Mera doet terwijl een plan actief is.",
+    "seePlans": "Zie plannen",
+    "storiesNotice": "De verhalen die je al volgt houden alles wat ze hebben verzameld. Een nieuw verhaal starten heeft een actief plan nodig.",
+    "trackBody": "De verhalen die je al volgt houden alles wat ze hebben verzameld. Een nieuw verhaal starten heeft een actief plan nodig.",
+    "trackDismiss": "Niet nu",
+    "trackTitle": "Verhaalvolging hoort bij een plan",
+    "trackedStoriesEmptyBody": "Nog niets gevolgd. Een verhaal volgen hoort bij een plan, en wat je later volgt blijft op dit apparaat, voor jou."
   }
 }

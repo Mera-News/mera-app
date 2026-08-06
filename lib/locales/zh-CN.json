@@ -598,7 +598,7 @@
     "inferenceError": "我们目前无法连接到 Mera 推理服务，请稍后重试。"
   },
   "personaChat": {
-    "introMessage": "你好！我是 Mera，你的个人新闻助手。如果你愿意，随便告诉我一些关于你的事——住在哪里、做什么工作、有什么爱好、关注哪些股票、家人住哪里。或者直接说「帮我设置一下」，我会一步步带你走。"
+    "introMessage": "你好！我是 Mera，你的个人新闻助手。\n\n为了找到真正对你重要的新闻，我需要了解一些关于你的情况。你住在哪里、做什么工作、关注的兴趣是什么、追踪哪些股票、家人住在哪里。随你愿意分享多少。\n\n如果这让你有些顾虑，那是很好的本能。把个人数据交给做应用的公司并不明智。Mera 的构建方式不同：你告诉我的一切都保存在你的设备上，而不是在我们的服务器上。问我它如何工作，或者说「帮我设置一下」，我们就开始吧。"
   },
   "floatingChat": {
     "bubbleHint": "与 Mera 聊天",
@@ -618,6 +618,8 @@
     "chipShowFactsMessage": "你现在对我了解多少？",
     "chipHelpSetup": "帮我设置",
     "chipHelpSetupMessage": "帮我设置我的档案",
+    "chipDataHandlingMessage": "Mera 如何处理我的数据？",
+    "chipDataHandling": "我的数据如何处理？",
     "thinking": "思考中…",
     "newChat": "新对话",
     "inputPlaceholder": "输入消息...",
@@ -810,7 +812,7 @@
     "autoRenew": "自动续订",
     "customerCenter": "管理／取消订阅",
     "dailyArticleLimit": "每日文章上限",
-    "description": "订阅即可获得为你个性化定制的设备本地新闻信息流。",
+    "description": "Mera 为你阅读新闻：根据你关心的内容定制的信息流、每日摘要、你选择关注的故事，以及持续学习什么对你重要的聊天。",
     "detailsSection": "订阅详情",
     "expiresOn": "到期日",
     "lifetime": "永久",
@@ -835,13 +837,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "促销",
     "subscribe": "订阅",
-    "title": "解锁 Mera News",
+    "title": "启动 Mera",
     "usageSection": "用量",
     "usedToday": "今日已分析",
     "viewPlans": "查看方案",
     "freePlan": "免费版",
     "active": "生效中",
-    "upgrade": "升级"
+    "upgrade": "升级",
+    "activatedBody": "你的个性化资讯、仪表盘、已关注的报道和聊天已准备好。",
+    "activatedTitle": "{{plan}} 已激活",
+    "allPlansHint": "所有计划都在下一屏幕上。",
+    "lapsedFreeNote": "Mera News 免费版永远属于你。选择一个计划，Mera 就会重新开始处理你的新闻。",
+    "manageBadge": "管理",
+    "startWithStarter": "从入门版开始",
+    "starterRecommendation": "入门版是开始的地方。Mera News 免费版可保留你已在此设备上构建的所有内容，但初始时没有任何内容可保留。",
+    "turnMeraBackOn": "重新启用 Mera"
   },
   "tabs": {
     "deck": "信息流",
@@ -1362,5 +1372,21 @@
     "subtitle": "自定义Mera在此设备上如何呈现视觉效果",
     "staticGradientTitle": "静态背景",
     "staticGradientDescription": "使用固定渐变代替动画背景 — 对电池和旧设备更友好"
+  },
+  "freeTier": {
+    "cardBody": "Mera 的 AI 部分暂时已关闭。你保存、关注或阅读过的任何内容都会保留在此设备上，探索标签页仍有今日新闻。没有计划的情况下，Mera 无法生成你的资讯、回答你的问题或追踪新报道。选择一个计划，一切都会恢复。",
+    "cardTitle": "你正在使用 Mera News 免费版",
+    "chatBubble": "我所了解的关于你的一切都保留在此设备上，你保存或关注的内容不会消失。不过，没有计划的话，我无法为你生成资讯、回答你的问题或追踪新报道。选择一个计划，我会从上次的地方继续。",
+    "chatNotice": "Mera 聊天需要订阅计划。无论如何，你的用户画像和事实都保留在此设备上。",
+    "continueWithoutPlan": "暂不选择计划",
+    "lapseBody": "没有任何内容被删除。你保存、关注或阅读过的任何内容仍属于你，保留在此设备上，永远都在。从现在起你使用的是 Mera News 免费版。暂停的只是 AI 层，因此你的个性化资讯、仪表盘、新报道追踪和 Mera 聊天将保持关闭，直到你再次选择计划。",
+    "lapseTitle": "你的 Mera 订阅已结束",
+    "readOnlyBanner": "这里的所有内容都属于你，无论有无订阅计划。这些设置只改变 Mera 在订阅计划活跃时的行为。",
+    "seePlans": "查看计划",
+    "storiesNotice": "你已关注的报道会保留它们收集的所有内容。开始关注新报道需要有效的订阅计划。",
+    "trackBody": "你已关注的报道会保留它们收集的所有内容。开始关注新报道需要有效的订阅计划。",
+    "trackDismiss": "稍后",
+    "trackTitle": "报道追踪需要订阅计划",
+    "trackedStoriesEmptyBody": "还没有关注任何报道。关注报道需要有效的订阅计划。你之后关注的任何报道都会保留在此设备上，永远属于你。"
   }
 }

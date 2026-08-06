@@ -6,18 +6,16 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
-import logger from '@/lib/logger';
-import { getOfferingSafe } from '@/lib/revenuecat';
 import { useAiAccess } from '@/lib/stores/subscription-store';
+import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import RevenueCatUI from 'react-native-purchases-ui';
 
 /** Which list this card is pinned to. Diagnostics + testID only — copy is shared. */
-export type CompanionSurface = 'dashboard' | 'feed' | 'stories' | 'facts';
+export type FreeTierSurface = 'dashboard' | 'feed' | 'stories' | 'facts';
 
-export interface CompanionModeCardProps {
-    readonly surface: CompanionSurface;
+export interface FreeTierCardProps {
+    readonly surface: FreeTierSurface;
     /** Tighter padding for a list that is already dense. */
     readonly compact?: boolean;
     /** Defaults to presenting the RevenueCat paywall. */
@@ -25,7 +23,7 @@ export interface CompanionModeCardProps {
 }
 
 /**
- * The one big card that explains companion mode, pinned to the TOP of the
+ * The one big card that explains Mera News Free, pinned to the TOP of the
  * Dashboard/Feed list.
  *
  * It is a HEADER, never an empty state. Everything already on the device keeps
@@ -46,7 +44,7 @@ export interface CompanionModeCardProps {
  * non-clipping Box and the rounded/clipped surface is the inner one. No blur
  * infra is introduced; `CardGlassPlate` is a translucent fill, not a GlassView.
  */
-const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
+const FreeTierCard: React.FC<FreeTierCardProps> = ({
     surface,
     compact = false,
     onSeePlans,
@@ -59,26 +57,14 @@ const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
             onSeePlans();
             return;
         }
-        try {
-            const offering = await getOfferingSafe();
-            await RevenueCatUI.presentPaywall({
-                ...(offering ? { offering } : {}),
-                // Dismissible: this is an invitation from inside a mode the user
-                // is entitled to stay in, not a gate they must clear.
-                displayCloseButton: true,
-            });
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { component: 'CompanionModeCard', method: 'seePlans' },
-            });
-        }
+        await presentFreeTierPaywall('FreeTierCard');
     }, [onSeePlans]);
 
     if (aiAccess !== 'locked') return null;
 
     return (
         <Box
-            testID={`companion-card-${surface}`}
+            testID={`free-tier-card-${surface}`}
             className="mb-4 rounded-2xl shadow-hard-2"
         >
             <Box
@@ -92,29 +78,54 @@ const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
                 <Box
                     className={`w-full items-center ${compact ? 'py-6 px-5' : 'py-10 px-6'}`}
                 >
+                    {/* `animated`: the same spotlight sweep MeraChatInvite and
+                        NotSubscribedScreen already use — MeraLogo's own prop, not
+                        a second animation. It self-gates on focus + foreground
+                        (useAnimationsActive), which matters here because this card
+                        is a permanently-mounted list header on two tabs. */}
                     <Box className={compact ? 'mb-3' : 'mb-5'}>
-                        <MeraLogo size={compact ? 56 : 84} />
+                        <MeraLogo size={compact ? 56 : 84} animated />
                     </Box>
 
                     <Text
                         size={compact ? 'lg' : 'xl'}
                         className="text-white text-center mb-3 font-semibold"
                     >
-                        {t('companion.cardTitle')}
+                        {t('freeTier.cardTitle')}
                     </Text>
 
-                    <Text size="md" className="text-gray-400 text-center">
-                        {t('companion.cardBody')}
+                    {/* One paragraph, deliberately CATEGORY-shaped and never
+                        possession-shaped. This card renders for a brand-new
+                        locked user who has saved nothing and follows nothing, so
+                        "anything you've saved ... stays on this device" is true
+                        for them (vacuously) while "your saved articles stay"
+                        would assert content they do not own. The earlier cycling
+                        version needed a whole truth-gating module to keep that
+                        straight; the phrasing carries it now, so keep it.
+
+                        The paragraph is also what makes the card ~30% taller
+                        than the one-line-at-a-time version it replaced —
+                        MEASURED on an iPhone 17 Pro: 306.67pt before, 401.33pt
+                        after (+30.9%), at UNCHANGED padding. Do not "help" that
+                        along with extra py-*: bumping this row to py-14 measured
+                        429.33pt (+40%), which is why the padding here is
+                        deliberately still the original. */}
+                    <Text
+                        testID={`free-tier-card-body-${surface}`}
+                        size="md"
+                        className="text-gray-400 text-center leading-relaxed"
+                    >
+                        {t('freeTier.cardBody')}
                     </Text>
 
                     <Button
-                        testID="companion-card-cta"
+                        testID="free-tier-card-cta"
                         onPress={handleSeePlans}
                         className="bg-primary-500 mt-6"
                         size="md"
                     >
                         <ButtonText className="text-white">
-                            {t('companion.seePlans')}
+                            {t('freeTier.seePlans')}
                         </ButtonText>
                     </Button>
                 </Box>
@@ -123,4 +134,4 @@ const CompanionModeCard: React.FC<CompanionModeCardProps> = ({
     );
 };
 
-export default CompanionModeCard;
+export default FreeTierCard;

@@ -663,8 +663,30 @@ describe('reset', () => {
     expect(s.itemsById).toEqual({});
     expect(s.verdicts).toEqual({});
     expect(s.builtAt).toBeNull();
-    expect(s.hydrated).toBe(false);
+    // HYDRATED-AND-EMPTY: after a reset the in-memory state IS the reconciled
+    // state, so `ingest` must not be gated off. See the next test.
+    expect(s.hydrated).toBe(true);
     expect(mockDeleteSetting).toHaveBeenCalledWith(FEED_ORDER_SETTING_KEY);
+  });
+
+  it('leaves the store HYDRATED-AND-EMPTY, so a following ingest() repopulates the order with NO remount and NO re-hydrate', async () => {
+    seed([item('a'), item('b')]);
+    kv[FEED_ORDER_SETTING_KEY] = JSON.stringify({ order: ['a', 'b'], builtAt: 5 });
+
+    store().reset();
+    expect(store().hydrated).toBe(true);
+    expect(store().order).toEqual([]);
+
+    // The exact call FeedScreen's ingest effect makes once the post-clear
+    // re-sync lands new candidates. FeedScreen stays mounted across an in-app
+    // cache clear, so nothing re-runs `hydrate` — with `hydrated: false` this
+    // was a hard no-op and the Feed stayed empty until the app was restarted.
+    store().ingest([item('c'), item('d')], new Set<string>());
+    expect([...store().order].sort()).toEqual(['c', 'd']);
+
+    // And a stray hydrate() from a later remount must NOT resurrect the blob.
+    await store().hydrate([item('a'), item('b')]);
+    expect([...store().order].sort()).toEqual(['c', 'd']);
   });
 
   it('clears cardStates and deletes BOTH settings keys', () => {

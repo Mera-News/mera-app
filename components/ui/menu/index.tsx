@@ -21,6 +21,10 @@ const menuStyle = tva({
   // header tone) instead of the template's near-black bg-background-0. A
   // glass (GlassPlate) version was tried and rejected — page text read
   // through the item labels even at a denser scrim.
+  //
+  // THIS GREY IS DUPLICATED as `MENU_PANEL_FILL` in components/ui/toast/index.tsx
+  // — the toast surface was changed to match this menu, and a Tailwind arbitrary
+  // class cannot be referenced from TS. Change both or neither.
   base: 'rounded-md bg-[#45434A] border border-outline-100 p-1 shadow-hard-5',
 });
 

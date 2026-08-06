@@ -603,7 +603,7 @@
     "inferenceError": "Nous avons du mal à joindre le service d'inférence Mera pour le moment. Veuillez réessayer dans un instant."
   },
   "personaChat": {
-    "introMessage": "Bonjour ! Je suis Mera, votre assistante d'actualités personnelle. Si vous le souhaitez, partagez ce que vous voulez sur vous : où vous vivez, ce que vous faites, vos loisirs, les actions que vous suivez, où vit votre famille. Ou dites simplement « aide-moi à configurer » et je vous guide."
+    "introMessage": "Bonjour ! Je suis Mera, votre assistante d'actualités personnelle.\n\nPour trouver des actualités qui vous intéressent vraiment, j'ai besoin de connaître quelques détails vous concernant. Où vous vivez, ce que vous faites, les loisirs que vous aimez, les actions que vous suivez, où vit votre famille. Partagez ce que vous voulez, un peu ou beaucoup.\n\nSi cela vous fait hésiter, c'est un bon instinct. Il n'est pas judicieux de confier des données personnelles à une société d'applications. Mera est construite différemment : tout ce que vous me dites est enregistré sur votre appareil, pas sur nos serveurs. Demandez-moi comment cela fonctionne, ou dites « Aidez-moi à configurer » et nous commencerons."
   },
   "floatingChat": {
     "bubbleHint": "Discuter avec Mera",
@@ -623,6 +623,8 @@
     "chipShowFactsMessage": "Que savez-vous de moi actuellement ?",
     "chipHelpSetup": "Aidez-moi à configurer",
     "chipHelpSetupMessage": "Aidez-moi à configurer mon profil",
+    "chipDataHandlingMessage": "Comment Mera traite-t-elle mes données ?",
+    "chipDataHandling": "Comment mes données sont-elles traitées ?",
     "thinking": "Réflexion…",
     "newChat": "Nouvelle discussion",
     "inputPlaceholder": "Tapez un message...",
@@ -815,7 +817,7 @@
     "autoRenew": "Renouvellement automatique",
     "customerCenter": "Gérer / annuler l'abonnement",
     "dailyArticleLimit": "Limite quotidienne d'articles",
-    "description": "Abonnez-vous pour obtenir votre fil d'actualités personnalisé, sur l'appareil.",
+    "description": "Mera lit les actualités pour vous : un fil façonné par ce qui vous intéresse vraiment, un résumé du jour, les histoires que vous choisissez de suivre, et un chat qui apprend constamment ce qui vous importe.",
     "detailsSection": "Détails de l'abonnement",
     "expiresOn": "Expire le",
     "lifetime": "À vie",
@@ -840,13 +842,21 @@
     "storePlayStore": "Google Play",
     "storePromotional": "Promotionnel",
     "subscribe": "S'abonner",
-    "title": "Débloquez Mera News",
+    "title": "Activez Mera News",
     "usageSection": "Utilisation",
     "usedToday": "Analysés aujourd'hui",
     "viewPlans": "Voir les forfaits",
     "active": "Actif",
     "freePlan": "Forfait gratuit",
-    "upgrade": "Passer à un forfait supérieur"
+    "upgrade": "Passer à un forfait supérieur",
+    "activatedBody": "Votre fil personnalisé, votre tableau de bord, les histoires suivies et le chat sont prêts.",
+    "activatedTitle": "{{plan}} est actif",
+    "allPlansHint": "Tous les plans se trouvent sur l'écran suivant.",
+    "lapsedFreeNote": "Mera News Gratuit est à vous aussi longtemps que vous le souhaitez. Un plan est ce qui relance Mera pour travailler sur vos actualités.",
+    "manageBadge": "Gérer",
+    "startWithStarter": "Commencer avec Starter",
+    "starterRecommendation": "Starter est par où commencer. Mera News Gratuit est là pour conserver ce que vous avez déjà construit sur cet appareil, et le premier jour, il n'y a encore rien à conserver.",
+    "turnMeraBackOn": "Réactiver Mera"
   },
   "tabs": {
     "deck": "Fil d'actu",
@@ -1366,5 +1376,21 @@
     "subtitle": "Personnalisez la façon dont Mera affiche les éléments visuels sur cet appareil",
     "staticGradientTitle": "Fond statique",
     "staticGradientDescription": "Utilisez un dégradé fixe à la place du fond animé — plus facile pour la batterie et les appareils anciens"
+  },
+  "freeTier": {
+    "cardBody": "La partie IA de Mera est désactivée pour l'instant. Tout ce que vous avez enregistré, suivi ou lu reste sur cet appareil, et l'onglet Explorez affiche toujours les principales actualités du jour. Sans plan, Mera ne peut pas construire votre fil, répondre à vos questions ou suivre de nouvelles histoires. Commencez un plan et tout revient.",
+    "cardTitle": "Vous utilisez Mera News Gratuit",
+    "chatBubble": "Tout ce que je sais sur vous reste sur cet appareil, et rien de ce que vous avez enregistré ou suivi ne disparaît. Sans plan, je ne peux pas construire votre fil, répondre à vos questions ou suivre de nouvelles histoires pour vous. Commencez un plan et je reprendrai là où nous nous étions arrêtés.",
+    "chatNotice": "Mera chat est fourni avec un plan. Votre profil et vos informations restent sur cet appareil de toute façon.",
+    "continueWithoutPlan": "Continuer sans plan",
+    "lapseBody": "Rien n'a été supprimé. Tout ce que vous avez enregistré, suivi ou lu vous appartient, sur cet appareil, toujours. Vous utilisez Mera News Gratuit désormais. Ce qui s'arrête, c'est la couche IA elle-même, donc votre fil personnalisé, votre tableau de bord, le suivi des nouvelles histoires et Mera chat restent désactivés jusqu'à ce que vous recommenciez un plan.",
+    "lapseTitle": "Votre plan Mera a pris fin",
+    "readOnlyBanner": "Tout ici est à vous de lire, avec ou sans plan. Ces paramètres ne modifient que ce que fait Mera lorsqu'un plan est actif.",
+    "seePlans": "Voir les plans",
+    "storiesNotice": "Les histoires que vous suivez déjà conservent toutes leurs données. Suivre une nouvelle histoire nécessite un plan actif.",
+    "trackBody": "Les histoires que vous suivez déjà conservent toutes leurs données. Suivre une nouvelle histoire nécessite un plan actif.",
+    "trackDismiss": "Pas maintenant",
+    "trackTitle": "Le suivi des histoires nécessite un plan",
+    "trackedStoriesEmptyBody": "Rien de suivi pour l'instant. Suivre une histoire nécessite un plan, et tout ce que vous suivrez plus tard restera sur cet appareil, à vous de conserver."
   }
 }

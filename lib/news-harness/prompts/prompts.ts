@@ -399,6 +399,7 @@ ${isOnboarding
         ? '- A welcome message was already shown — jump straight to asking the first unanswered question from the list below.'
         : '- Respond to user messages directly. After extracting, confirm briefly and ask if there\'s more.'}
 - Stay on profile/news topics. Redirect off-topic politely.
+- **ABOUT MERA (in scope, always).** Questions about Mera itself — privacy, what data leaves the device, encryption, how news is found, the licence, plans, limitations — are NEVER off-topic and take precedence over resuming the questions below. Call \`explainMera\` with the relevant topics and answer only from what it returns; never answer from memory and never invent a guarantee. Keep your text in that turn to one short holding line — the real answer follows. On the FOLLOW-UP turn that carries the explainMera result, the <200 char limit does not apply: give the full answer there, in prose, then return to the questions.
 
 ## Questions to explore
 Ask one at a time, only if not already answered in Known Facts. These are guides — follow the user's lead and ask natural follow-ups when their answer opens something new.
@@ -965,7 +966,9 @@ const CLOUD_TWO_AXIS_BLOCK = `## Two-axis output (this REPLACES the single score
 
 Everything above still decides what is TRUE about an article: Step 1's bridge test, Step 2's stake radii, Step 3's interest test, and every Hard rule — no holdings, foreign-domestic, origin is not residence, a place keyword alone, digests and junk, island/metro radius, flagship-industry disputes. Those are unchanged and they bind both numbers below.
 
-What changes is what you EMIT. Instead of one 0.05–1.10 value and a stake tag, you emit TWO INTEGERS in 0–100 per article. The 0.05–1.10 numbers, the tier names, and the {"k","s"} objects above are the OLD output format: never emit them. Read the anchor table above only as ordering intuition — which articles beat which.
+What changes is what you EMIT. Instead of one 0.05–1.10 value and a stake tag, you emit TWO INTEGERS in 0–100 per article — and nothing else. The 0.05–1.10 numbers, the tier names, and the {"k","s"} objects above are the OLD output format: never emit them. Read the anchor table above only as ordering intuition — which articles beat which.
+
+You are NOT writing anything the user reads. A separate call, seeing ONE article at a time, writes the sentence shown under the headline. Emitting prose here does not help it and measurably hurts you: asked for five sentences about five similar articles in one response, a model reliably attaches some of them to the wrong article while still numbering every entry correctly. Numbers only.
 
 ### rel (0–100) — closeness to this user's stated life
 How squarely the article's SUBJECT sits on something [User facts] actually name: an interest area, their city, their country, a family place, an active trip, their profession, employer, or venture. rel answers "is this about something they told us they care about?" — NOT "does this change anything for them". That is the other axis.
@@ -989,20 +992,12 @@ An article can be a perfect interest match with impact 10 (rel high, impact low)
 Your scores are used to RANK, so identical numbers destroy the product. A typical batch has AT MOST 1–2 articles that deserve rel ≥ 70 and often none, and at most 1 that deserves impact ≥ 70. Use the full range with fine-grained values (12, 37, 48, 63, 88) — never give two articles in one batch the same pair unless they genuinely are equally relevant, and never park a batch on round repeated values (50, 50, 60, 60). If every article in a batch looks the same to you, they are almost certainly all LOW — push them down, do not park them in the middle.
 
 ### Calibration anchors (example user: AI researcher and builder in Amsterdam; named interests AI research and AI policy; family in Bhopal; no investments)
-- "EU announces major new AI Act obligations for model developers" → {"i":1,"rel":88,"impact":70,"why":"New EU obligations apply directly to the AI systems your research and product work depend on."} — named interest AND enforceable where he is.
-- "Chip supplier raises quarterly forecast on AI demand" → {"i":2,"rel":50,"impact":35,"why":"An AI-demand forecast touches your AI-research interest, but nothing here changes your own work."} — industry-category signal, no holdings, nothing to act on.
-- "National chess tournament opens in another country" → {"i":3,"rel":12,"impact":5} — no interest match, no stake, no reason emitted.
-
-### The "why" field — conditional
-Emit "why" ONLY when (0.65 × rel) + (0.35 × impact) is at least 34. Below that, OMIT the key entirely — do not emit an empty string, "n/a", or a null. When you are within a point or two of the line, include it.
-When you do emit it: ONE plain sentence, 25 words or fewer, containing (a) a specific detail from the article — the event, entity, place, policy, or product, never "this topic" — and (b) the specific user fact that creates the link — city, profession, employer, family location, named interest — never "your interests". Match the tone to your own numbers: confident when both are high, one hedge word in the middle, and plainly stating the limit when rel is high but impact is low ("matches your AI-research interest, but changes nothing for your work").
-
-${CLOUD_REASON_VOICE_RULE}
-
-Never fabricate a connection: if the article is about holiday homes, the reason is about holiday homes. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.
+- "EU announces major new AI Act obligations for model developers" → {"i":1,"rel":88,"impact":70} — named interest AND enforceable where he is.
+- "Chip supplier raises quarterly forecast on AI demand" → {"i":2,"rel":50,"impact":35} — industry-category signal, no holdings, nothing to act on.
+- "National chess tournament opens in another country" → {"i":3,"rel":12,"impact":5} — no interest match, no stake.
 
 ### Field order is load-bearing
-Always emit "i", then "rel", then "impact", then (if it qualifies) "why". Decide the two numbers first and let the sentence explain them. Never revise a number to fit a sentence you have already written.`;
+Always emit "i", then "rel", then "impact" — those three keys and nothing else. Decide the two numbers independently of each other, and emit no prose of any kind.`;
 
 /**
  * v3 — the merged two-axis score + conditional reason system prompt for STANDARD
@@ -1018,16 +1013,14 @@ ${CLOUD_TWO_AXIS_BLOCK}
 ## Task
 You will be given N articles framed as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … For EACH article independently, run the decision procedure (Steps 1–4) and the Hard rules, then express your judgement as the two axes above.
 
-Output ONE JSON array of exactly N objects, in input order, and nothing else — no prose before or after, no markdown fence. There are TWO object shapes and most articles take the short one:
-{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}            ← the DEFAULT shape
-{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>, "why": "<25 words or fewer>"}  ← ONLY when (0.65 × rel) + (0.35 × impact) ≥ 34
+Output ONE JSON array of exactly N objects, in input order, and nothing else — no prose before or after, no markdown fence. Every object has exactly this shape:
+{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}
 - \`"i"\` is 1 for \`===== Article 0 =====\`, 2 for \`===== Article 1 =====\`, and so on.
-- \`"rel"\` and \`"impact"\` are INTEGERS (never decimals) and always come before \`"why"\`.
-- A low-scoring article with a \`"why"\` is a FORMAT ERROR — the chess-tournament anchor above shows the correct low-score shape.
-- \`"why"\` is present ONLY when (0.65 × rel) + (0.35 × impact) ≥ 34; otherwise the key is absent.
+- \`"rel"\` and \`"impact"\` are INTEGERS, never decimals.
+- Emit no other key. A \`"why"\`, a \`"reason"\`, or any sentence is a FORMAT ERROR.
 - The user message ends with a legacy line asking for "a JSON array of N numbers". IGNORE it — return the N objects described here.
 
-Example for 3 articles: [{"i":1,"rel":88,"impact":70,"why":"New EU obligations apply directly to the AI systems your product work depends on."},{"i":2,"rel":50,"impact":35,"why":"An AI-demand forecast touches your AI-research interest, but nothing here changes your own work."},{"i":3,"rel":12,"impact":5}]`;
+Example for 3 articles: [{"i":1,"rel":88,"impact":70},{"i":2,"rel":50,"impact":35},{"i":3,"rel":12,"impact":5}]`;
 
 /**
  * v3 — the merged two-axis prompt for TOP-HEADLINE articles: the same base and
@@ -1056,14 +1049,13 @@ Reading the impact override onto the two axes:
 - A chain that HOLDS is worth \`impact\` 45–79, never more: the 80+ range is reserved for a DIRECT change to this user's own work, home, family, or trip. A price or supply effect arriving through a chain, however large the event in its own place, does not outrank a flood in their family's city.
 - A failed chain does NOT lift \`rel\`. \`rel\` measures only how close the article's subject is to what [User facts] name — a major world event this user has no stated connection to scores low on both axes, and saying so plainly is the correct answer.
 
-Output ONE JSON array of exactly N objects, in input order, and nothing else — no prose before or after, no markdown fence. There are TWO object shapes and most articles take the short one:
-{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}            ← the DEFAULT shape
-{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>, "why": "<25 words or fewer>"}  ← ONLY when (0.65 × rel) + (0.35 × impact) ≥ 34
-- \`"rel"\` and \`"impact"\` are INTEGERS and always come before \`"why"\`. A low-scoring article carrying a \`"why"\` is a FORMAT ERROR.
-- When the reason explains a chain, name the MECHANISM in the article's own terms and end at THIS user; never use the rubric's private vocabulary ("channel", "chain", "magnitude", "absorbed", "propagate", "hop", "exposure", "universal household").
+Output ONE JSON array of exactly N objects, in input order, and nothing else — no prose before or after, no markdown fence. Every object has exactly this shape:
+{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}
+- \`"rel"\` and \`"impact"\` are INTEGERS, never decimals.
+- Emit no other key. A \`"why"\`, a \`"reason"\`, or any sentence is a FORMAT ERROR.
 - The user message ends with a legacy line asking for "a JSON array of N numbers". IGNORE it — return the N objects described here.
 
-Example for 3 articles: [{"i":1,"rel":62,"impact":72,"why":"A fifth of the world's seaborne oil passes Hormuz, so a closure raises what you pay at the pump in Amsterdam."},{"i":2,"rel":30,"impact":10},{"i":3,"rel":15,"impact":5}]`;
+Example for 3 articles: [{"i":1,"rel":62,"impact":72},{"i":2,"rel":30,"impact":10},{"i":3,"rel":15,"impact":5}]`;
 
 /** One decoded v3 article verdict: two 0–100 integers plus the conditional
  *  user-facing reason. `why` is absent (not empty) below the reason gate. */
@@ -1097,7 +1089,14 @@ function cleanWhy(raw: string): string {
 
 /**
  * Decode a v3 batch response: a JSON array of exactly `expectedCount` objects
- * `{"i":1,"rel":0-100,"impact":0-100,"why"?:string}` in input order.
+ * `{"i":1,"rel":0-100,"impact":0-100}` in input order.
+ *
+ * `why` is VESTIGIAL. v3 pass 1 no longer asks for it — the note is written by a
+ * separate per-article call (see {@link CLOUD_V3_NOTE_SYSTEM_PROMPT}) because a
+ * batch that writes five sentences about five similar articles reliably attaches
+ * some of them to the wrong one. It is still decoded when present so a model
+ * that volunteers prose does not fail the whole chunk, and so batches submitted
+ * by an older build finish cleanly after an upgrade.
  *
  * TOLERANT about framing, STRICT about structure — deliberately, and differently
  * from {@link parseBatchRelevanceResponse}, which pads with a fallback score.
@@ -1365,7 +1364,7 @@ export function buildBatchScoringUserMessage(params: {
     return `===== Article ${i} =====\nNews Title: ${sanitizeForPrompt(a.title)}\nNews Description: ${sanitizeForPrompt(a.description)}${countryLine}\nRelated User Fact: ${related}`;
   });
   const trailer = v3
-    ? `Return a JSON array of ${articles.length} objects ({"i","rel","impact","why"?}), one per article, in order.`
+    ? `Return a JSON array of ${articles.length} objects ({"i","rel","impact"}), one per article, in order.`
     : `Return a JSON array of ${articles.length} numbers (one per article, in order).`;
   return `User Context: ${userContext}\n\n${blocks.join('\n\n')}\n\n${trailer}`;
 }
@@ -1398,6 +1397,95 @@ export function buildFeedVerifierUserMessage(params: {
     return `===== Article ${i} =====\nNews Title: ${sanitizeForPrompt(a.title)}\nNews Description: ${sanitizeForPrompt(a.description)}${countryLine}\nRelated User Fact: ${related}`;
   });
   return `User Context: ${userContext}\n\n${blocks.join('\n\n')}\n\nReturn a JSON array of ${articles.length} objects ({"v":"yes"} to keep or {"v":"no"} to demote), one per article, in order.`;
+}
+
+// ---------------------------------------------------------------------------
+// v3 PASS 2 — one article per call: keep-or-demote, and the sentence.
+//
+// WHY THIS IS A SEPARATE CALL. v3 originally merged scoring and the note into
+// one batched response. Replaying the frozen gold set showed the cost: 4.9% of
+// notes described a DIFFERENT article than the one they sat on — adjacent slots
+// literally holding each other's sentences — while the array came back
+// correctly numbered `"i"` 1..N, in input order. The model emits the RIGHT index
+// with the WRONG prose, so no index scheme can catch it; only removing the
+// neighbouring articles from the context does. Measured on 292 articles, moving
+// the note here took that from 4.9% to 0.5% (and the residue is a false positive
+// of the grounding check) while ranking held: r 0.493 -> 0.507, must_show recall
+// tied at 29/33. The on-device path reached the same conclusion independently —
+// LOCAL_ARTICLES_PER_SCORE_PROMPT is 1 because per-article attention wins.
+//
+// It also does a SECOND job, because it is already looking at exactly the right
+// population. v3 dropped the demote-only verifier pass when it merged everything
+// into one call, and nothing replaced the downward pressure: 45.1% of what
+// cleared the gate was judged "skip" by the blind panel. Folding the verifier in
+// here took that to 36.9% at no extra call — the same rows needed visiting
+// anyway.
+//
+// The precision half REUSES CLOUD_FEED_VERIFIER_SYSTEM_PROMPT verbatim rather
+// than restating its rules: those NO-patterns were validated against the golden
+// 1000-article run (FEED precision 73.2% -> 80.4%), and a second copy would drift
+// from them. Only the output contract is replaced, since the verifier's own is
+// written for a batch.
+// ---------------------------------------------------------------------------
+
+/**
+ * v3 pass 2 — the combined precision + note prompt, ONE article per call.
+ * Pairs with {@link buildReasonUserMessage} (unchanged — it already carries the
+ * article, its score and the retrieval facts) and is decoded by
+ * {@link parseV3NoteResponse}.
+ */
+export const CLOUD_V3_NOTE_SYSTEM_PROMPT = `${CLOUD_FEED_VERIFIER_SYSTEM_PROMPT}
+
+## This call covers exactly ONE article, and also writes its note
+
+You see one article, the score a first pass already gave it, and the user's facts. Do both jobs:
+
+1. KEEP or DEMOTE on the rules above. Default to keep; demote ONLY on a clear NO pattern.
+2. If you keep it, write the one sentence shown under the headline: 25 words or fewer, containing (a) a specific detail from THIS article — the event, entity, place, policy, or product, never "this topic" — and (b) the specific user fact that creates the link, never "your interests". Match the tone to the score: confident when it is high, one hedge word in the middle, and plainly state the limit when the topic matches but nothing actually changes for them.
+
+${CLOUD_REASON_VOICE_RULE}
+
+Never fabricate a connection: if the article is about holiday homes, the sentence is about holiday homes. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##).
+
+Output exactly ONE JSON object and nothing else — no prose before or after, no markdown fence:
+{"keep": true, "why": "<25 words or fewer>"}
+{"keep": false}
+A demoted article carries no "why".`;
+
+/** One decoded v3 pass-2 verdict. */
+export interface V3NoteVerdict {
+  /** False ⇒ the precision pass rejected it; the caller demotes the score. */
+  keep: boolean;
+  /** The user-facing sentence. Always null when `keep` is false. */
+  why: string | null;
+}
+
+/**
+ * Decode a v3 pass-2 response: one `{"keep":bool,"why"?:string}` object.
+ *
+ * Returns `null` on anything unusable, which callers FAIL OPEN on — the pass-1
+ * score stands and the row simply still owes a note, exactly as a failed reason
+ * call behaves today. That asymmetry is deliberate: an unreadable response is
+ * not evidence the article should be demoted, and treating it as one would let a
+ * transient decode failure silently hide a story.
+ */
+export function parseV3NoteResponse(text: string): V3NoteVerdict | null {
+  const trimmed = (text ?? '').trim();
+  const start = trimmed.indexOf('{');
+  const end = trimmed.lastIndexOf('}');
+  if (start === -1 || end <= start) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(trimmed.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
+  const o = parsed as Record<string, unknown>;
+  if (typeof o.keep !== 'boolean') return null;
+  if (!o.keep) return { keep: false, why: null };
+  const why = typeof o.why === 'string' ? cleanWhy(o.why) : '';
+  return { keep: true, why: why.length > 0 ? why : null };
 }
 
 /**

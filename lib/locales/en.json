@@ -63,14 +63,22 @@
     "refresh": "Refresh 🔄"
   },
   "subscription": {
-    "title": "Choose your Mera plan",
-    "description": "Mera is the AI layer: your personalized feed, your dashboard, followed stories, and chat. Without a plan you still have News — Explore stays open and free, and everything already on this device stays yours.",
+    "title": "Switch Mera on",
+    "description": "Mera reads the news for you: a feed shaped by what you actually care about, a dashboard of the day, the stories you choose to follow, and a chat that keeps learning what matters to you.",
     "viewPlans": "View plans",
+    "startWithStarter": "Start with Starter",
+    "allPlansHint": "Every plan is on the next screen.",
+    "starterRecommendation": "Starter is the place to begin. Mera News Free is there to keep what you have already built on this device, and on day one there is nothing to keep yet.",
+    "turnMeraBackOn": "Turn Mera back on",
+    "lapsedFreeNote": "Mera News Free is yours for as long as you want it. A plan is what starts Mera working on your news again.",
     "subscribe": "Subscribe",
     "managePlan": "Manage subscription",
+    "manageBadge": "Manage",
     "restore": "Restore purchases",
     "activating": "Activating your subscription…",
     "activationDelayed": "Your purchase is being confirmed. This can take a moment. Tap refresh if it doesn't continue.",
+    "activatedTitle": "{{plan}} is active",
+    "activatedBody": "Your personalized feed, dashboard, followed stories and chat are ready.",
     "planSection": "Your plan",
     "planLabel": "Plan",
     "priceLabel": "Price",
@@ -594,7 +602,7 @@
     "deleteAccount": "Delete Account",
     "logout": "Log Out",
     "signOutModalTitle": "Sign Out",
-    "signOutConfirm": "Are you sure you want to sign out of your account?",
+    "signOutConfirm": "Signing out erases everything stored on this device — your saved articles, reading history, tracked stories and personalization. You'll need to sign in again to use Mera.",
     "signingOut": "Signing Out...",
     "signOut": "Sign Out",
     "deleteAccountConfirm": "Are you sure you want to permanently delete your account?",
@@ -721,7 +729,7 @@
     "inferenceError": "We're having trouble reaching the Mera inference service right now. Please try again in a moment."
   },
   "personaChat": {
-    "introMessage": "Hi! I'm Mera, your personal news assistant. If you'd like, share anything about yourself: where you live, what you do for work, hobbies you follow, stocks you track, places your family lives. Or just say 'help me set up' and I'll walk you through it."
+    "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."
   },
   "floatingChat": {
     "bubbleHint": "Chat with Mera",
@@ -741,6 +749,8 @@
     "chipShowFactsMessage": "What do you currently know about me?",
     "chipHelpSetup": "Help me set up",
     "chipHelpSetupMessage": "Help me set up my persona",
+    "chipDataHandling": "How is my data handled?",
+    "chipDataHandlingMessage": "How does Mera handle my data?",
     "thinking": "Thinking…",
     "newChat": "New chat",
     "inputPlaceholder": "Type a message...",
@@ -1327,20 +1337,20 @@
     "staticGradientTitle": "Static background",
     "staticGradientDescription": "Use a fixed gradient instead of the animated background — easier on battery and older devices."
   },
-  "companion": {
-    "cardTitle": "You're in companion mode",
-    "cardBody": "Mera isn't building your feed right now. Everything you've already saved, tracked, and read stays exactly where it is. For today's headlines, Explore is open and free.",
+  "freeTier": {
+    "cardTitle": "You're on Mera News Free",
+    "cardBody": "The AI part of Mera is switched off for now. Anything you've saved, followed or read stays on this device, and Explore still has today's headlines. Without a plan, Mera won't build your feed, answer your questions, or follow new stories. Start a plan and it all comes back.",
     "seePlans": "See plans",
-    "trackTitle": "Story tracking is part of Mera",
-    "trackBody": "The stories you already follow keep everything they've collected — starting a new one needs an active plan.",
+    "trackTitle": "Story tracking comes with a plan",
+    "trackBody": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
     "trackDismiss": "Not now",
     "readOnlyBanner": "Everything here is yours to read, plan or no plan. These settings only change what Mera does while a plan is active.",
     "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
+    "chatBubble": "Everything I know about you stays on this device, and nothing you've saved or followed goes away. Without a plan though, I can't build your feed, answer your questions, or follow new stories for you. Start one and I'll pick up right where we left off.",
     "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
-    "settingsRowNotice": "Mera is paused. Everything here stays yours to read.",
-    "trackedStoriesEmptyBody": "Nothing followed yet. Following a story is part of Mera — and whatever you follow later stays on this device, yours to keep.",
+    "trackedStoriesEmptyBody": "Nothing followed yet. Following a story comes with a plan, and whatever you follow later stays on this device, yours to keep.",
     "lapseTitle": "Your Mera plan has ended",
-    "lapseBody": "Nothing has been taken away. Your saved articles, tracked stories, and reading history are yours, on this device, always. What pauses is the AI layer itself: your personalized feed, dashboard, new story tracking, and Mera chat.",
+    "lapseBody": "Nothing has been taken away. Anything you've saved, followed or read is yours, on this device, always. You're on Mera News Free from here. What pauses is the AI layer itself, so your personalized feed, dashboard, new story tracking and Mera chat stay off until you start a plan again.",
     "continueWithoutPlan": "Continue without a plan"
   }
 }

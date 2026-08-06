@@ -168,7 +168,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
 
       // Escalate into the Mera chat.
       if (leaf.openChat) {
-        // Companion mode: `openArticleFeedback` is a no-op, so this leaf has
+        // Mera News Free: `openArticleFeedback` is a no-op, so this leaf has
         // nowhere to escalate TO. Without this branch it would return here
         // having recorded nothing, and the tapped path — the user's actual
         // feedback — would be silently dropped. Persist it the same way the

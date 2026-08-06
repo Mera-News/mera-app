@@ -589,6 +589,9 @@ describe('computeFeedFunnel — samples', () => {
       relevance: 0.42,
       ageHours: 2,
       memberCount: null,
+      // The stored note travels with the sample, so a reader can check it
+      // against the title without a second lookup.
+      note: 'because',
       reason: 'not-complete',
       matchedKey: null,
     });
@@ -651,7 +654,7 @@ describe('computeFeedFunnel — edge cases', () => {
       },
     });
     expect(r.wouldBeBlockedByClusterGate).toBe(0);
-    expect(r.samples).toEqual({ droppedBeforeVisible: [], missingFromOrder: [] });
+    expect(r.samples).toEqual({ visible: [], droppedBeforeVisible: [], missingFromOrder: [] });
     expect(r.sumsCheck).toEqual({
       visibilityAttributionSums: true,
       memberSumMatchesVisible: true,

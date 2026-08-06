@@ -3,19 +3,35 @@ import {
     CardGlassPlate,
 } from '@/components/custom/cards/CardGlassPlate';
 import { Box } from '@/components/ui/box';
+import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
-import React from 'react';
+import { router } from 'expo-router';
+import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import MeraLogo from './MeraLogo';
 
 const NoGeneratedInterestsCard: React.FC = () => {
     const { t } = useTranslation();
 
+    // The card's whole message is "create your user persona", and the persona
+    // lives on Profile — so the card itself is the affordance rather than
+    // asking the user to work out which tab that means. `navigate`, not `push`:
+    // Profile is a TAB, and pushing it would stack a second copy on top of the
+    // tab the user can already reach from the bar (the same reason
+    // FeedPreparingCard and AllCaughtUpCard navigate to Explore).
+    const openProfile = useCallback(() => {
+        router.navigate('/logged-in/app_container/profile');
+    }, []);
+
     const innerContent = (
         <Box className="w-full py-20 px-6 items-center justify-center">
-            {/* Mera Logo */}
+            {/* `animated`: MeraLogo's own spotlight sweep, self-gated on focus +
+                foreground (useAnimationsActive), matching FreeTierCard and
+                MeraChatInvite. This card is a terminal state that can sit on
+                screen indefinitely, which is exactly where a still logo reads
+                as a dead end. */}
             <Box className="mb-6">
-                <MeraLogo size={100} />
+                <MeraLogo size={100} animated />
             </Box>
 
             {/* Main message */}
@@ -51,8 +67,16 @@ const NoGeneratedInterestsCard: React.FC = () => {
     // to GO rather than sit under it — a solid fill painted over glass cancels the
     // effect entirely. Where glass does not paint, the opaque `bg-background-0`
     // comes back (NOT the old `bg-black border-black`, which no other card uses).
+    // The outer node is a Pressable rather than a Box so the whole card is the
+    // target — but it keeps the SAME testID and className, because
+    // status-cards.test.tsx pins this element's surface classes (rounded-2xl,
+    // shadow-hard-2, and NOT overflow-hidden) and reads them off the testID.
     return (
-        <Box testID="no-interests-card" className="mb-4 rounded-2xl shadow-hard-2">
+        <Pressable
+            testID="no-interests-card"
+            onPress={openProfile}
+            className="mb-4 rounded-2xl shadow-hard-2"
+        >
             <Box
                 className={
                     CARDS_USE_GLASS
@@ -63,7 +87,7 @@ const NoGeneratedInterestsCard: React.FC = () => {
                 <CardGlassPlate />
                 {innerContent}
             </Box>
-        </Box>
+        </Pressable>
     );
 };
 

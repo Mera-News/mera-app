@@ -46,8 +46,8 @@ export function publishSyncError(
     'storage-error':       'sync.storageFull',
     'scoring-unavailable': 'sync.syncFailed',
     // Present only to satisfy exhaustiveness. FeedSyncMachine routes this code
-    // to a quiet `idle` and never reaches publishSyncError with it — companion
-    // mode must not paint red sync chrome.
+    // to a quiet `idle` and never reaches publishSyncError with it — Mera
+    // News Free must not paint red sync chrome.
     'not-subscribed':      '',
     unknown:               'sync.syncFailed',
   };
@@ -68,7 +68,7 @@ export function classifyError(err: unknown): SyncErrorCode {
   // a 402 falls straight into that block, and its message routinely contains
   // "session" or "fetch" — it would be misfiled as auth-expired or
   // server-unreachable and painted as a red sync failure, which is the exact
-  // outcome companion mode exists to avoid.
+  // outcome Mera News Free exists to avoid.
   if (isNotSubscribedError(err)) return 'not-subscribed';
 
   if (err instanceof Error) {

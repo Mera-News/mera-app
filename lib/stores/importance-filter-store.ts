@@ -22,6 +22,10 @@ interface ImportanceFilterState {
   hydrate: () => Promise<void>;
   setFeedThreshold: (threshold: ImportanceThreshold) => void;
   setDashboardThreshold: (threshold: ImportanceThreshold) => void;
+  /** Back to defaults, unhydrated. Called from clearAllStores() — the settings
+   *  rows behind these are dropped with the database, so the in-memory copy
+   *  must go too or the next user inherits the previous one's thresholds. */
+  reset: () => void;
 }
 
 // Optimistic set + background persist: the screens re-filter on the set()
@@ -39,6 +43,13 @@ export const useImportanceFilterStore = create<ImportanceFilterState>()(
     feedThreshold: DEFAULT_FEED_IMPORTANCE_THRESHOLD,
     dashboardThreshold: DEFAULT_DASHBOARD_IMPORTANCE_THRESHOLD,
     hydrated: false,
+
+    reset: () =>
+      set({
+        feedThreshold: DEFAULT_FEED_IMPORTANCE_THRESHOLD,
+        dashboardThreshold: DEFAULT_DASHBOARD_IMPORTANCE_THRESHOLD,
+        hydrated: false,
+      }),
 
     hydrate: async () => {
       try {

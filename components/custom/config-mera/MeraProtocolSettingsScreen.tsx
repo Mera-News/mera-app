@@ -34,7 +34,7 @@ import {
     useSelectedModelId,
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
-import CompanionReadOnlyBanner, { useCompanionReadOnly } from '@/components/custom/subscription/CompanionReadOnlyBanner';
+import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView } from 'react-native';
@@ -87,10 +87,10 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 }) => {
     const { t } = useTranslation();
     // Onboarding never has a plan yet — `useAiAccess()` can read 'locked' there
-    // for reasons that have nothing to do with companion mode. Forcing readOnly
+    // for reasons that have nothing to do with Mera News Free. Forcing readOnly
     // off during onboarding is load-bearing: freezing the mode pills here would
     // strand a new user before they can even finish setup.
-    const readOnly = useCompanionReadOnly() && !isOnboarding;
+    const readOnly = useFreeTierReadOnly() && !isOnboarding;
     const [isLoading, setIsLoading] = useState(!isOnboarding);
     const [isUpdatingMode, setIsUpdatingMode] = useState(false);
     const [requirementsResult, setRequirementsResult] = useState<SystemRequirementsResult | null>(null);
@@ -923,7 +923,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
                 {/* Pinned outside the ScrollView (not a scrolled child) so it stays
                     on screen and explains why the controls above are frozen. */}
-                <CompanionReadOnlyBanner surface="mera-protocol" />
+                <FreeTierReadOnlyBanner surface="mera-protocol" />
             </Box>
         </GluestackUIProvider>
     );

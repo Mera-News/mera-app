@@ -15,6 +15,7 @@ import { clearAllVisits } from '@/lib/database/services/publication-visit-servic
 import * as scoringPipeline from '@/lib/services/scoring-pipeline';
 import { clearAllStores, useForYouStore } from '@/lib/stores';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { useDeleteAccountModal, useUIStore } from '@/lib/stores/ui-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Q } from '@nozbe/watermelondb';
@@ -105,6 +106,12 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         const action = confirmAction;
         setConfirmAction(null);
         setIsProcessing(true);
+
+        // Re-anchor the DEV cold-start timeline: this clear is the new t0, so
+        // the repopulation that follows gets its own clean set of deltas.
+        if (action === 'feedCache' || action === 'factsTopics' || action === 'wipeAll') {
+            coldstartTimeline.arm(`cache-clear:${action}`);
+        }
 
         try {
             switch (action) {

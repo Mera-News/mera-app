@@ -4,6 +4,7 @@
 
 import {
   handleDeleteUserFacts,
+  handleExplainMera,
   handleIssueWarning,
   handleSaveExtractedFacts,
   handleUpdateUserConfig,
@@ -253,7 +254,22 @@ export class PersonaUpdateAgent implements IAgent {
 
   getToolDefinitions(): ToolDefinition[] {
     // The turn's plan also decides whether the cloud tool payload carries them.
-    return getPersonaToolDefinitions(this.surface, buildToolDefinitions, this.turnPlan.filterTools);
+    //
+    // `mode` gates the CLOUD-only knowledge tool (explainMera). Derived exactly
+    // as buildSystemPrompt derives it, from the same store — not cached from the
+    // last buildSystemPrompt call, because this method is also called
+    // standalone (executeTool's name normalisation, the forced-extraction
+    // payload) on an agent whose prompt was never built this turn.
+    const mode: PersonaMode =
+      useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
+        ? 'LOCAL'
+        : 'CLOUD';
+    return getPersonaToolDefinitions(
+      this.surface,
+      buildToolDefinitions,
+      this.turnPlan.filterTools,
+      mode,
+    );
   }
 
   /**
@@ -305,6 +321,15 @@ export class PersonaUpdateAgent implements IAgent {
 
       case 'deleteUserFacts': {
         const result = await handleDeleteUserFacts(args);
+        return { result };
+      }
+
+      // KNOWLEDGE tool (CLOUD only). Pure read of a frozen reference document —
+      // no database, no network, no sideEffects. Deliberately absent from
+      // getForcedExtractionTools(): that payload runs with tool_choice:'required'
+      // and must stay saveExtractedFacts-only.
+      case 'explainMera': {
+        const result = await handleExplainMera(args);
         return { result };
       }
 

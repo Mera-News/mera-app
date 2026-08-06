@@ -36,9 +36,9 @@ interface FactsListProps {
      *  doesn't need it since it already gates visibility via its own
      *  fact-count check. */
     readonly onFactsChange?: (facts: Fact[] | null) => void;
-    /** Companion-mode read-only flag (see CompanionReadOnlyBanner). Both
+    /** Free-tier read-only flag (see FreeTierReadOnlyBanner). Both
      *  consumers (FactsScreen and ProfileScreen) pass their own
-     *  `useCompanionReadOnly()` result; defaults to false only for callers
+     *  `useFreeTierReadOnly()` result; defaults to false only for callers
      *  that don't wire it up. Threaded down to FactAccordion, which owns the
      *  only mutating control (influence nudge) this component has no handler
      *  for. */
@@ -56,8 +56,17 @@ interface FactsListProps {
  * chrome and pull-to-refresh).
  */
 const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, readOnly = false }, ref) => {
+    // Identity is a LOCAL fact (lib/security/launch-route.ts). Every mutation
+    // below writes to the on-device DB; the id is wanted only for the persona
+    // refresh that follows. Read off the server session it went undefined
+    // whenever /get-session could not be reached — offline, a keychain-locked
+    // background wake, a 401 blip — and the `!userId` guards then froze the
+    // user out of their own facts: delete, add-topic and the post-chat reload
+    // all silently returned. The persisted id survives that; the session is the
+    // fallback for the window before hydrateFromDb() has run.
     const { data: session } = authClient.useSession();
-    const userId = session?.user?.id;
+    const localUserId = useUserStore((s) => s.userId);
+    const userId = localUserId ?? session?.user?.id;
     const { fetchUserPersona } = useUserStore();
     const toast = useToast();
     const { t } = useTranslation();
@@ -113,11 +122,14 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Real-time refresh when on-device LLM saves/deletes a fact or generates topics
+    // Real-time refresh when on-device LLM saves/deletes a fact or generates
+    // topics. The local reload is unconditional — the fact was just written to
+    // THIS device, so refusing to show it because we could not reach the
+    // session endpoint is never right. Only the persona refresh needs an id.
     useEffect(() => {
-        if (factMutationVersion > 0 && userId) {
+        if (factMutationVersion > 0) {
             loadLocalFacts();
-            fetchUserPersona(userId, true);
+            if (userId) fetchUserPersona(userId, true);
             useForYouStore.getState().setFeedNeedsRefresh(true);
         }
     }, [factMutationVersion, loadLocalFacts, fetchUserPersona, userId]);
@@ -125,9 +137,9 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
     // When the floating chat popover collapses (true→false transition), reload
     // facts + persona — the same refresh the old embedded chat's closeChat did.
     useEffect(() => {
-        if (wasChatExpandedRef.current && !isChatExpanded && userId) {
+        if (wasChatExpandedRef.current && !isChatExpanded) {
             loadLocalFacts();
-            fetchUserPersona(userId, true);
+            if (userId) fetchUserPersona(userId, true);
         }
         wasChatExpandedRef.current = isChatExpanded;
     }, [isChatExpanded, loadLocalFacts, fetchUserPersona, userId]);
@@ -150,14 +162,16 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
     }, []);
 
     const handleDeleteConfirm = useCallback(async () => {
-        if (!factToDelete || !userId) return;
+        // Deleting a fact is a purely local write. It must not be gated on an
+        // identity we may not have been able to confirm.
+        if (!factToDelete) return;
         setIsDeleting(true);
         try {
             await deleteFact(factToDelete.id);
 
             setFactToDelete(null);
             loadLocalFacts();
-            fetchUserPersona(userId, true);
+            if (userId) fetchUserPersona(userId, true);
             useForYouStore.getState().setFeedNeedsRefresh(true);
             toast.show({
                 placement: 'top',
@@ -207,7 +221,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
     }, []);
 
     const handleDeleteTopic = useCallback(async (fact: Fact, topicText: string) => {
-        if (!userId) return;
+        // Local write — see handleDeleteConfirm.
         const currentTopics = fact.metadata?.topics ?? [];
         const updatedTopics = currentTopics.filter(topic => topic !== topicText);
         try {
@@ -215,7 +229,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
                 metadata: { ...(fact.metadata ?? {}), topics: updatedTopics },
             });
             loadLocalFacts();
-            fetchUserPersona(userId, true);
+            if (userId) fetchUserPersona(userId, true);
             useForYouStore.getState().setFeedNeedsRefresh(true);
         } catch (error) {
             logger.error('[FactsList] deleteTopic failed', error, { factId: fact.id, topicText });
@@ -228,7 +242,8 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
     }, []);
 
     const handleAddTopicConfirm = useCallback(async () => {
-        if (!addTopicFact || !addTopicText.trim() || !userId) return;
+        // Local write — see handleDeleteConfirm.
+        if (!addTopicFact || !addTopicText.trim()) return;
         setIsAddingTopic(true);
         try {
             const currentTopics = addTopicFact.metadata?.topics ?? [];
@@ -242,7 +257,7 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
             });
             setAddTopicFact(null);
             loadLocalFacts();
-            fetchUserPersona(userId, true);
+            if (userId) fetchUserPersona(userId, true);
             useForYouStore.getState().setFeedNeedsRefresh(true);
         } catch (error) {
             logger.error('[FactsList] addTopic failed', error, { factId: addTopicFact?.id });
@@ -287,6 +302,12 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
 
     const handleGenerateMoreConfirm = useCallback(async () => {
         const fact = generateMoreFact;
+        // The lone survivor of the `!userId` guards above, deliberately: unlike
+        // delete/add-topic this is not a pure local write — it enqueues an
+        // inference job or calls the cloud, then refreshes the persona. With the
+        // id read local-first it is unreachable in the offline / dead-session
+        // cases anyway; it only stops a genuinely logged-out device spending an
+        // LLM call.
         if (!fact || generatingMoreFactIds.has(fact.id) || !userId) return;
         setGenerateMoreFact(null);
         setGeneratingMoreFactIds(prev => new Set(prev).add(fact.id));
