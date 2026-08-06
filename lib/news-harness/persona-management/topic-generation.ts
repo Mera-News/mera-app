@@ -98,12 +98,22 @@ export function buildCloudBatchCallsForFact(
     total,
     hasOthers,
   );
-  // Thinking is ON for both halves: deciding whether a candidate topic is
-  // genuinely good — rather than emitting N because N was asked for — is exactly
-  // the judgement a reasoning pass helps with. The budget MUST be raised with
-  // it (the trace shares max_tokens with the answer); shipping the flag without
-  // the budget yields silently empty topic lists.
-  const maxTokens = Math.max(TOPIC_CFG.cloudThinkingMaxTokens, total * 30);
+  // Thinking is OFF on both halves — `enableThinking` is omitted, and
+  // cloudComplete's batch path sends `enable_thinking: false` for an absent flag.
+  //
+  // It was ON here (r12 P4) on the argument that judging a candidate topic is
+  // reasoning work. Measured against Qwen3.6-35B-A3B, that cost far more than it
+  // bought: the trace runs ~2000+ tokens against a ~55-token answer, so it ate
+  // the whole 2048 budget and `content` came back EMPTY on 8 of 10 probe runs,
+  // at 8-10s each. Thinking off is 0.8-1.0s with a valid answer every time.
+  //
+  // Do NOT re-enable this without a fresh A/B. The contamination P4 was fixing
+  // ("Amsterdam cricket festival music tech") is handled by K-P1 — the ceiling
+  // wording below plus the entity cap and negative examples in the system
+  // prompt — which is independent of thinking and stays. There is also no
+  // cheaper middle setting: `reasoning_effort: 'low'` yields the same trace with
+  // worse variance, and `thinking_budget` is silently ignored by the template.
+  const maxTokens = Math.max(TOPIC_CFG.cloudMaxTokens, total * 30);
 
   const calls: BatchCall[] = [];
   if (factOnlyCount > 0) {
@@ -113,7 +123,6 @@ export function buildCloudBatchCallsForFact(
       prompt: `${buildBaseUserPrompt(inputs, false)}\nGenerate ${factOnlyCount} topics.`,
       temperature: 0.3,
       maxTokens,
-      enableThinking: true,
     });
   }
   if (comboCount > 0 && hasOthers) {
@@ -128,7 +137,6 @@ export function buildCloudBatchCallsForFact(
       prompt: `${buildBaseUserPrompt(inputs, true)}\nGenerate at most ${comboCount} topics — fewer is correct.`,
       temperature: 0.3,
       maxTokens,
-      enableThinking: true,
     });
   }
   return calls;

@@ -167,7 +167,7 @@ describe('parseTopicsFromOutput', () => {
 // r12 K-P1 / K-P2 — the count is a CEILING, and both halves reason.
 // ---------------------------------------------------------------------------
 
-describe('buildCloudBatchCallsForFact — ceiling + thinking (r12)', () => {
+describe('buildCloudBatchCallsForFact — combo ceiling + no thinking (r12)', () => {
   const inputs = {
     factStatement: 'Follows the Indian national cricket team',
     userLocation: 'Amsterdam, Netherlands',
@@ -194,16 +194,22 @@ describe('buildCloudBatchCallsForFact — ceiling + thinking (r12)', () => {
     expect(factOnly.prompt).not.toContain('at most');
   });
 
-  it('enables thinking on BOTH halves', () => {
+  it('leaves thinking OFF on both halves', () => {
+    // Measured, not preference. With thinking on, Qwen3.6-35B-A3B spends ~2000+
+    // tokens on the trace against a ~55-token answer: it exhausted the 2048
+    // budget and returned an EMPTY `content` on 8 of 10 probe runs, at 8-10s
+    // each. Off, it is 0.8-1.0s and valid every time. An absent flag is what
+    // cloudComplete turns into `enable_thinking: false`, so absent is the point
+    // — re-adding it here re-breaks the flow.
     for (const call of buildCloudBatchCallsForFact(inputs, 'f')) {
-      expect(call.enableThinking).toBe(true);
+      expect(call.enableThinking).toBeUndefined();
     }
   });
 
-  it('raises maxTokens with the flag — the trace shares the budget', () => {
-    // Shipping enableThinking without this is the silent-empty-topics failure.
+  it('sizes maxTokens for an answer-only budget', () => {
+    // 400 is ~6x the measured ~55-60 tokens a 10-topic answer costs.
     for (const call of buildCloudBatchCallsForFact(inputs, 'f')) {
-      expect(call.maxTokens).toBe(2048);
+      expect(call.maxTokens).toBe(400);
     }
   });
 

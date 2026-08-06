@@ -149,16 +149,38 @@ export interface TopicGenConfig {
    *  retrievable + positively scored by the math engine. */
   llmTopicWeight: number;
   /**
-   * Output budget for CLOUD topic-generation calls that run with thinking on.
+   * Output budget for CLOUD topic-generation calls, which run with thinking OFF.
    *
-   * The reasoning trace shares `max_tokens` with the answer, so the old
-   * `Math.max(400, count * 30)` was far too small: a trace could consume the
-   * whole allowance and the response came back with an empty `content`. 2048
-   * leaves ~1600 tokens of trace headroom over the ~200-400 a 10-string answer
-   * needs — 4-5x the old ceiling without over-provisioning at $1.10/M output.
+   * Sized off measurement, not guesswork: with `enable_thinking: false` a
+   * 10-topic answer costs ~53-60 completion tokens end to end, so 400 is ~6x
+   * headroom. Generation ran with thinking ON at 2048 between r12 P4 and this
+   * change; a probe against Qwen3.6-35B-A3B showed the reasoning trace alone is
+   * ~2000+ tokens, so it consumed the entire budget and `content` came back
+   * EMPTY on 8 of 10 runs — the flow was failing, not merely slow. Thinking off
+   * is 0.8-1.0s and valid on every run.
    *
-   * CLOUD ONLY. The on-device path has its own, much smaller budget (n_ctx is
-   * 4096 there); do not reuse this constant for it.
+   * There is no middle setting to reach for: `reasoning_effort: 'low'` produced
+   * the same trace with worse variance, and `chat_template_kwargs.thinking_budget`
+   * is silently ignored (the stock Qwen3 template does not implement it — an
+   * unknown key there still returns 200, so "no error" proves nothing).
+   *
+   * CLOUD ONLY. The on-device path has its own budget (n_ctx is 4096 there); do
+   * not reuse this constant for it.
+   */
+  cloudMaxTokens: number;
+  /**
+   * Output budget for the fact-combination TOP-UP, which still runs with
+   * thinking ON (`topic-topup.ts`).
+   *
+   * The reasoning trace shares `max_tokens` with the answer, so this has to be
+   * far larger than `cloudMaxTokens`. NOT read by topic generation any more —
+   * that path is thinking-off and sized by `cloudMaxTokens`. Keep the two
+   * separate: collapsing them would silently drag one path into the other's
+   * regime.
+   *
+   * NOTE: the top-up sends a combo-only prompt, i.e. the same shape that failed
+   * at 2048 in generation. It has not been probed yet — see the plan's
+   * follow-ups.
    */
   cloudThinkingMaxTokens: number;
   /**
@@ -451,6 +473,7 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     temperature: 0.3,
     maxFactLength: 200,
     llmTopicWeight: 0.75,
+    cloudMaxTokens: 400,
     cloudThinkingMaxTokens: 2048,
     topupTopicWeight: 0.5,
     factOnlySystemPrompt: CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
