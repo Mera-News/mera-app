@@ -45,6 +45,7 @@ import {
   getScoredDonorRows,
   getCullableLowHeadlineIds,
   saveReason,
+  getSharedNoteBreakdown,
   getSuggestionByServerId,
   clearSuggestions,
   pruneOrphanedSuggestions,
@@ -98,6 +99,16 @@ function makeSuggestion(overrides: Record<string, any> = {}) {
     ...overrides,
   });
 }
+
+/**
+ * A reason that is GROUNDED in `makeSuggestion`'s default article (titled
+ * "Test Title EN"). Every write path now runs the note past `isReasonGrounded`
+ * against the row's own article and drops one that shares no content token with
+ * it — so a placeholder like "Good match" no longer persists, and a test
+ * asserting that it does would be asserting the bug. Use this wherever a test
+ * needs a note to actually land.
+ */
+const GROUNDED_REASON = 'This test title matters to you.';
 
 function makeLink(overrides: Record<string, any> = {}) {
   return makeRecord({
@@ -603,18 +614,18 @@ describe('saveScoringResult', () => {
     const sug = makeSuggestion({ id: 'sug-1' });
     db._setRows('article_suggestions', [sug]);
 
-    await saveScoringResult('sug-1', { relevance: 0.8, reason: 'Good match', reasonSkipped: false });
+    await saveScoringResult('sug-1', { relevance: 0.8, reason: GROUNDED_REASON, reasonSkipped: false });
 
     expect(database.write).toHaveBeenCalledTimes(1);
     expect(sug.relevance).toBe(0.8);
-    expect(sug.reason).toBe('Good match');
+    expect(sug.reason).toBe(GROUNDED_REASON);
     expect(sug.status).toBe('complete');
   });
 
   it('sets status=complete when reason is non-empty', async () => {
     const sug = makeSuggestion({ id: 'sug-1' });
     db._setRows('article_suggestions', [sug]);
-    await saveScoringResult('sug-1', { relevance: 0.5, reason: 'some reason', reasonSkipped: false });
+    await saveScoringResult('sug-1', { relevance: 0.5, reason: GROUNDED_REASON, reasonSkipped: false });
     expect(sug.status).toBe('complete');
   });
 
@@ -749,14 +760,14 @@ describe('batchPropagateScores', () => {
     db._setRows('article_suggestions', [sug1, sug2]);
 
     await batchPropagateScores([
-      { id: 'sug-1', relevance: 0.72, reason: 'Same story as your donor article' },
-      { id: 'sug-2', relevance: 0.72, reason: 'Same story as your donor article' },
+      { id: 'sug-1', relevance: 0.72, reason: GROUNDED_REASON },
+      { id: 'sug-2', relevance: 0.72, reason: GROUNDED_REASON },
     ]);
 
     expect(database.write).toHaveBeenCalledTimes(1);
     expect(database.batch).toHaveBeenCalledTimes(1);
     expect(sug1.relevance).toBe(0.72);
-    expect(sug1.reason).toBe('Same story as your donor article');
+    expect(sug1.reason).toBe(GROUNDED_REASON);
     expect(sug1.status).toBe('complete');
     expect(sug2.relevance).toBe(0.72);
     expect(sug2.status).toBe('complete');
@@ -812,8 +823,8 @@ describe('batchPropagateScores', () => {
 
     await expect(
       batchPropagateScores([
-        { id: 'sug-1', relevance: 0.72, reason: 'Same story as your donor article' },
-        { id: 'sug-gone', relevance: 0.72, reason: 'Same story as your donor article' },
+        { id: 'sug-1', relevance: 0.72, reason: GROUNDED_REASON },
+        { id: 'sug-gone', relevance: 0.72, reason: GROUNDED_REASON },
       ]),
     ).resolves.toBeUndefined();
 
@@ -866,10 +877,10 @@ describe('saveReason', () => {
     const sug = makeSuggestion({ id: 'sug-1', reason: '' });
     db._setRows('article_suggestions', [sug]);
 
-    await saveReason('sug-1', 'This matters to you.');
+    await saveReason('sug-1', GROUNDED_REASON);
 
     expect(database.write).toHaveBeenCalledTimes(1);
-    expect(sug.reason).toBe('This matters to you.');
+    expect(sug.reason).toBe(GROUNDED_REASON);
     expect(sug.status).toBe('complete');
   });
 
@@ -879,6 +890,213 @@ describe('saveReason', () => {
     await saveReason('sug-1', '');
     expect(sug.status).toBe('reason_pending');
   });
+});
+
+// ===========================================================================
+// Reason grounding — every write path
+//
+// A note that describes a DIFFERENT article than the one it sits on is the
+// defect these cover: an MP-rainfall story that shipped with an EU-AI-Act
+// sentence on it. Three unrelated mechanisms can cause it (positional batch
+// decode, a propagated donor reason, a model echoing a prompt exemplar), so the
+// check lives at the one place they all converge — the writes in this file.
+// Each site must drop the sentence and leave the row owing a real one, WITHOUT
+// losing the score, which is independently useful.
+// ===========================================================================
+
+describe('reason grounding at the write sites', () => {
+  // Shares no content token with 'Test Title EN' / 'A description'.
+  const FOREIGN_REASON =
+    "New AI Act rules on deepfakes directly impact your AI news app's compliance requirements.";
+
+  it('saveScoringResult keeps the score but drops a note about another article', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', reason: '', status: 'unscored' });
+    db._setRows('article_suggestions', [sug]);
+
+    await saveScoringResult('sug-1', {
+      relevance: 0.9077,
+      reason: FOREIGN_REASON,
+      reasonSkipped: false,
+    });
+
+    expect(sug.relevance).toBe(0.9077);
+    expect(sug.reason).toBe('');
+    // Owed a real note, not terminal — the orphan sweep will retry it.
+    expect(sug.status).toBe('reason_pending');
+  });
+
+  it('saveScoringResult still lands terminal when no note was owed at all', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', reason: '', status: 'unscored' });
+    db._setRows('article_suggestions', [sug]);
+
+    await saveScoringResult('sug-1', {
+      relevance: 0.1,
+      reason: FOREIGN_REASON,
+      reasonSkipped: true,
+    });
+
+    expect(sug.reason).toBe('');
+    expect(sug.status).toBe('complete');
+  });
+
+  it('saveReason drops it and leaves the row for the next sweep', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', reason: '', status: 'reason_pending' });
+    db._setRows('article_suggestions', [sug]);
+
+    await saveReason('sug-1', FOREIGN_REASON);
+
+    expect(sug.reason).toBe('');
+    expect(sug.status).toBe('reason_pending');
+  });
+
+  it('batchPropagateScores rejects a donor sentence that is false on the recipient', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', relevance: 0, reason: '', status: 'unscored' });
+    db._setRows('article_suggestions', [sug]);
+
+    await batchPropagateScores([
+      { id: 'sug-1', relevance: 0.72, reason: FOREIGN_REASON },
+    ]);
+
+    // Relevance still propagates — grouping IS evidence about the story.
+    expect(sug.relevance).toBe(0.72);
+    expect(sug.reason).toBe('');
+    expect(sug.status).toBe('reason_pending');
+  });
+
+  it('batchPropagateScores still copies a donor sentence that fits the recipient', async () => {
+    const sug = makeSuggestion({ id: 'sug-1', relevance: 0, reason: '', status: 'unscored' });
+    db._setRows('article_suggestions', [sug]);
+
+    await batchPropagateScores([{ id: 'sug-1', relevance: 0.72, reason: GROUNDED_REASON }]);
+
+    expect(sug.reason).toBe(GROUNDED_REASON);
+    expect(sug.status).toBe('complete');
+  });
+
+  it('does not judge a row whose article text never arrived', async () => {
+    const sug = makeSuggestion({
+      id: 'sug-1',
+      reason: '',
+      status: 'unscored',
+      titleEn: null,
+      descriptionEn: null,
+    });
+    db._setRows('article_suggestions', [sug]);
+
+    await saveScoringResult('sug-1', {
+      relevance: 0.8,
+      reason: FOREIGN_REASON,
+      reasonSkipped: false,
+    });
+
+    // Nothing to compare against ⇒ keep. A rejection here would be a coin flip.
+    expect(sug.reason).toBe(FOREIGN_REASON);
+    expect(sug.status).toBe('complete');
+  });
+});
+
+// ===========================================================================
+// getSharedNoteBreakdown
+//
+// The readout that names the mechanism. Propagation is the ONLY writer that
+// copies a note verbatim between articles, so a shared string is its
+// fingerprint; a batch decode that zipped results to the wrong articles, or a
+// model echoing its own prompt exemplar, each produce a sentence that exists
+// exactly once. These pin that distinction.
+// ===========================================================================
+
+describe('getSharedNoteBreakdown', () => {
+    it('reports nothing shared when every note is unique', async () => {
+        db._setRows('article_suggestions', [
+            makeSuggestion({ id: 'a', reason: 'One note' }),
+            makeSuggestion({ id: 'b', reason: 'Another note' }),
+        ]);
+
+        const r = await getSharedNoteBreakdown();
+
+        expect(r.rowsWithNote).toBe(2);
+        expect(r.distinctNotes).toBe(2);
+        expect(r.sharedNoteGroups).toBe(0);
+        expect(r.rowsSharingANote).toBe(0);
+        expect(r.largestGroupSize).toBe(0);
+        expect(r.largestGroup).toBeNull();
+    });
+
+    it('finds a note copied across articles and names the group', async () => {
+        const copied = 'The Hormuz closure raises what you pay at the pump.';
+        db._setRows('article_suggestions', [
+            makeSuggestion({ id: 'a', reason: copied, titleEn: 'Strait closed' }),
+            makeSuggestion({ id: 'b', reason: copied, titleEn: 'Tanker traffic halts' }),
+            makeSuggestion({ id: 'c', reason: 'Its own note' }),
+        ]);
+
+        const r = await getSharedNoteBreakdown();
+
+        expect(r.rowsWithNote).toBe(3);
+        expect(r.distinctNotes).toBe(2);
+        expect(r.sharedNoteGroups).toBe(1);
+        expect(r.rowsSharingANote).toBe(2);
+        expect(r.largestGroupSize).toBe(2);
+        expect(r.largestGroup?.note).toBe(copied);
+        expect(r.largestGroup?.titles).toEqual(['Strait closed', 'Tanker traffic halts']);
+    });
+
+    it('treats whitespace-only notes as absent rather than as one shared group', async () => {
+        db._setRows('article_suggestions', [
+            makeSuggestion({ id: 'a', reason: '   ' }),
+            makeSuggestion({ id: 'b', reason: '   ' }),
+        ]);
+
+        const r = await getSharedNoteBreakdown();
+
+        expect(r.sharedNoteGroups).toBe(0);
+        expect(r.largestGroup).toBeNull();
+    });
+
+    it('returns the zeroed shape when no row carries a note', async () => {
+        db._setRows('article_suggestions', []);
+
+        const r = await getSharedNoteBreakdown();
+
+        expect(r).toEqual({
+            rowsWithNote: 0,
+            distinctNotes: 0,
+            sharedNoteGroups: 0,
+            rowsSharingANote: 0,
+            largestGroupSize: 0,
+            largestGroup: null,
+        });
+    });
+
+    it('truncates the sampled note and titles so the share payload stays bounded', async () => {
+        const longNote = 'n'.repeat(300);
+        db._setRows('article_suggestions', [
+            makeSuggestion({ id: 'a', reason: longNote, titleEn: 't'.repeat(300) }),
+            makeSuggestion({ id: 'b', reason: longNote, titleEn: 't'.repeat(300) }),
+        ]);
+
+        const r = await getSharedNoteBreakdown();
+
+        expect(r.largestGroup!.note).toHaveLength(120);
+        expect(r.largestGroup!.titles[0]).toHaveLength(80);
+    });
+
+    it('caps the sampled group at six members however large it really is', async () => {
+        const copied = 'Same sentence everywhere';
+        db._setRows(
+            'article_suggestions',
+            Array.from({ length: 9 }, (_, i) =>
+                makeSuggestion({ id: `s${i}`, reason: copied }),
+            ),
+        );
+
+        const r = await getSharedNoteBreakdown();
+
+        // The COUNT is honest about all nine; only the eyeball sample is capped.
+        expect(r.largestGroupSize).toBe(9);
+        expect(r.rowsSharingANote).toBe(9);
+        expect(r.largestGroup!.titles).toHaveLength(6);
+    });
 });
 
 // ===========================================================================

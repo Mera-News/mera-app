@@ -17,6 +17,7 @@ export * from './persona-management/persona-agent-core';
 export * from './article-pipeline/scoring';
 export * from './article-pipeline/candidates';
 export * from './article-pipeline/pipeline';
+export * from './article-pipeline/reason-grounding';
 export * from './article-feedback/agent-core';
 export * from './scoring-engine';
 export * from './feed-select';

@@ -25,6 +25,9 @@ import type {
 // leaf (no DB / expo / react-native imports and no edge back into this module),
 // so it closes no cycle and drags nothing native into a harness-adjacent graph.
 import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter';
+// The note-vs-article grounding check. Pure, RN-free, no edge back into this
+// module — same import-safety argument as `isCulledHeadlineRelevance` above.
+import { isReasonGrounded } from '@/lib/news-harness/article-pipeline/reason-grounding';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
 import { getFacts } from './fact-service';
 import logger from '../../logger';
@@ -499,6 +502,64 @@ export async function deleteOldSuggestions(cutoffMs: number): Promise<number> {
 // --- Write: score ---
 
 /**
+ * THE choke point for "may this sentence be persisted onto this row?".
+ *
+ * Every path that writes `reason` funnels through here, which is the whole
+ * design: the three ways a foreign sentence can reach a row (positional batch
+ * decode, propagated donor reason, a model echoing a prompt exemplar) have
+ * nothing in common upstream, but they all end at a `prepareUpdate` in this
+ * file. Checking here costs one comparison per write and cannot be bypassed by
+ * adding a fourth producer later.
+ *
+ * The article side is read off the ROW being written rather than passed in by
+ * the caller. That is deliberate — `saveScoringResult` and `saveReason` take
+ * only an id and a string, and threading title/description/tags through every
+ * call site (and through the E2EE job boundary) would be a wide change for a
+ * value the row already holds. It also means the comparison is against the
+ * article as PERSISTED, which is exactly the article the reader will see next
+ * to the note.
+ *
+ * Rejection is logged, not thrown: a wrong note is a product defect, not a
+ * write failure, and the row still needs its score. The caller's own
+ * empty-reason branch then lands it on `reason_pending`, where the existing
+ * orphaned-reason sweep can earn it a real one.
+ */
+function groundedReasonFor(
+  row: ArticleSuggestionModel,
+  reason: string,
+  /** Which writer is asking — carried into the log so a rejection tells you
+   *  WHICH mechanism produced the foreign sentence, which is the open question
+   *  this whole change exists to answer. */
+  source: 'score' | 'reason-sweep' | 'propagation',
+): string {
+  if (reason.length === 0) return reason;
+  const geoTags = parseJsonArray<{ city?: string; region?: string; countryCode?: string }>(
+    row.geoTagsJson,
+  ).flatMap((g) =>
+    [g?.city, g?.region, g?.countryCode].filter(
+      (v): v is string => typeof v === 'string' && v.length > 0,
+    ),
+  );
+  const entities = parseJsonArray<string>(row.entitiesJson).filter(
+    (e): e is string => typeof e === 'string' && e.length > 0,
+  );
+  const grounded = isReasonGrounded(reason, {
+    title: row.titleEn,
+    description: row.descriptionEn,
+    entities,
+    geoTags,
+  });
+  if (grounded) return reason;
+  logger.warn('[article-suggestion-service] dropped an ungrounded reason', {
+    source,
+    suggestionId: row.id,
+    title: (row.titleEn ?? '').slice(0, 80),
+    reason: reason.slice(0, 120),
+  });
+  return '';
+}
+
+/**
  * Persists the result of a scoring pass. Callers only invoke this when the
  * relevance step succeeded, so the row leaves `unscored`. The resulting `status`
  * captures where the reason step landed:
@@ -522,10 +583,14 @@ export async function saveScoringResult(
 ): Promise<void> {
   const { relevance, reason, reasonSkipped, computedScore, rawScore, scoreComponentsJson } = params;
   const row = await articleSuggestionsCol.find(localSuggestionId);
+  // An ungrounded note becomes '' here, which the status expression below then
+  // reads as "no reason yet" — so the row lands on `reason_pending` unless the
+  // caller already declared none was owed (`reasonSkipped`).
+  const grounded = groundedReasonFor(row, reason, 'score');
   await database.write(async () => {
     await row.update((r) => {
       r.relevance = relevance;
-      r.reason = reason;
+      r.reason = grounded;
       if (computedScore !== undefined) r.computedScore = computedScore;
       if (rawScore !== undefined) r.rawScore = rawScore;
       if (scoreComponentsJson !== undefined) r.scoreComponentsJson = scoreComponentsJson;
@@ -533,7 +598,7 @@ export async function saveScoringResult(
       // it once (a later reason write must not slide the "added" time forward).
       if (r.scoredAt == null) r.scoredAt = Date.now();
       r.status =
-        reason.length > 0 || reasonSkipped
+        grounded.length > 0 || reasonSkipped
           ? ArticleSuggestionStatus.Complete
           : ArticleSuggestionStatus.ReasonPending;
     });
@@ -612,6 +677,105 @@ export async function getComputedComponentsByIds(
     }
   }
   return out;
+}
+
+/**
+ * How many stored notes are SHARED between articles.
+ *
+ * WHY THIS IS THE READOUT THAT MATTERS. When a note turns up describing a
+ * different article than the one it sits on, there are three candidate causes
+ * and they are otherwise indistinguishable after the fact: a batch decode that
+ * zipped results to articles by array position, a propagated donor reason, or a
+ * model that echoed one of its prompt's worked examples. Only ONE of them
+ * duplicates a string — propagation copies the donor's sentence byte for byte,
+ * so its fingerprint is the same `reason` on two article ids. A decode shift or
+ * a confabulation produces a sentence that exists exactly once. So a non-zero
+ * `sharedNoteGroups` says "propagation", and a zero says "look at the decoder
+ * or the prompt" — without needing an extra column or a single write.
+ *
+ * Note that sharing is NORMAL and expected in moderation: propagation exists on
+ * purpose, so story siblings legitimately share a note. It is the SIZE and the
+ * membership of a group that indict it — a group spanning articles that are not
+ * the same story is a grouping false positive.
+ */
+export interface SharedNoteBreakdown {
+  /** Rows carrying a non-empty note at all (the denominator). */
+  rowsWithNote: number;
+  /** Distinct note strings among them. */
+  distinctNotes: number;
+  /** Notes appearing on 2+ article ids. Zero ⇒ nothing was propagated. */
+  sharedNoteGroups: number;
+  /** Rows whose note is shared with at least one other row. */
+  rowsSharingANote: number;
+  /** Size of the biggest shared group. */
+  largestGroupSize: number;
+  /** The biggest group, for eyeballing: is this really one story? Truncated —
+   *  the note to 120 chars, the titles to 80, and at most 6 members. */
+  largestGroup: { note: string; titles: string[] } | null;
+}
+
+/**
+ * Count how many stored notes are shared across articles. See
+ * {@link SharedNoteBreakdown} for why this is the diagnostic that discriminates
+ * propagation from a decode shift.
+ *
+ * ON-DEMAND ONLY (the Observability screen's refresh), like
+ * {@link getScoringModeBreakdown} beside it: it fetches every row carrying a
+ * note. Read-only, and it never throws — a caller renders '—' on failure.
+ */
+export async function getSharedNoteBreakdown(): Promise<SharedNoteBreakdown> {
+  const empty: SharedNoteBreakdown = {
+    rowsWithNote: 0,
+    distinctNotes: 0,
+    sharedNoteGroups: 0,
+    rowsSharingANote: 0,
+    largestGroupSize: 0,
+    largestGroup: null,
+  };
+  // `reason` is NOT NULL with '' for absent, so an inequality against '' is the
+  // whole predicate — no null branch needed.
+  const rows = await articleSuggestionsCol
+    .query(Q.where('reason', Q.notEq('')))
+    .fetch();
+  if (rows.length === 0) return empty;
+
+  const byNote = new Map<string, ArticleSuggestionModel[]>();
+  for (const row of rows) {
+    const note = (row.reason ?? '').trim();
+    if (note.length === 0) continue;
+    const bucket = byNote.get(note);
+    if (bucket) bucket.push(row);
+    else byNote.set(note, [row]);
+  }
+
+  let sharedNoteGroups = 0;
+  let rowsSharingANote = 0;
+  let largest: ArticleSuggestionModel[] = [];
+  let largestNote = '';
+  for (const [note, members] of byNote) {
+    if (members.length < 2) continue;
+    sharedNoteGroups++;
+    rowsSharingANote += members.length;
+    if (members.length > largest.length) {
+      largest = members;
+      largestNote = note;
+    }
+  }
+
+  return {
+    rowsWithNote: rows.length,
+    distinctNotes: byNote.size,
+    sharedNoteGroups,
+    rowsSharingANote,
+    largestGroupSize: largest.length,
+    largestGroup:
+      largest.length > 0
+        ? {
+            note: largestNote.slice(0, 120),
+            titles: largest.slice(0, 6).map((r) => (r.titleEn ?? '').slice(0, 80)),
+          }
+        : null,
+  };
 }
 
 /** Which scoring path actually produced each stored row's score. Counted from
@@ -940,6 +1104,11 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
  * reason-less donor can never CLEAR a reason the row already had. That keeps
  * reason-presence monotonic — a card can gain an explanation, never lose one.
  *
+ * A donor sentence that fails `groundedReasonFor` against the RECIPIENT's
+ * article is treated exactly like an empty one (see the note at the call site).
+ * The relevance still propagates either way — grouping is evidence about the
+ * story, and holding a score back would silently hide the row.
+ *
  * Mirrors batchMarkAsScoredByIds's prepareUpdate+batch shape.
  */
 export async function batchPropagateScores(
@@ -962,10 +1131,19 @@ export async function batchPropagateScores(
         // `?? ''` is defensive only — the type says string, but this value comes
         // from a donor ROW, and a partially-written row can carry null.
         const propagatedReason = (entry.reason ?? '').trim();
+        // The donor's sentence is checked against THIS row's article, not the
+        // donor's. That is the whole point: story grouping is union-find, so a
+        // transitive merge (A–B by cluster id, B–C by title overlap) can hand C
+        // a verdict written about A. The relevance still propagates — grouping
+        // is evidence about the STORY — but a sentence naming A's event, place
+        // or policy is simply false on C's card, and this is where that is
+        // caught. A rejected donor leaves the row exactly where a reason-less
+        // donor leaves it: `reason_pending`, owed its own call.
+        const grounded = groundedReasonFor(row, propagatedReason, 'propagation');
         return row.prepareUpdate((r) => {
           r.relevance = entry.relevance;
-          if (propagatedReason.length > 0) {
-            r.reason = entry.reason;
+          if (grounded.length > 0) {
+            r.reason = grounded;
             r.status = ArticleSuggestionStatus.Complete;
           } else {
             r.status = ArticleSuggestionStatus.ReasonPending;
@@ -986,11 +1164,15 @@ export async function saveReason(
   reason: string,
 ): Promise<void> {
   const row = await articleSuggestionsCol.find(localSuggestionId);
+  // Dropped here, the row simply stays `reason_pending` and the sweep that
+  // brought us here will try again — which is the right outcome: this path
+  // exists precisely to fill a missing note, so a wrong one is no progress.
+  const grounded = groundedReasonFor(row, reason, 'reason-sweep');
   await database.write(async () => {
     await row.update((r) => {
-      r.reason = reason;
+      r.reason = grounded;
       r.status =
-        reason.length > 0
+        grounded.length > 0
           ? ArticleSuggestionStatus.Complete
           : ArticleSuggestionStatus.ReasonPending;
     });
