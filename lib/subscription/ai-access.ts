@@ -36,7 +36,12 @@ export interface AiAccessInputs {
      * means "never heard from the server", NOT "no subscription".
      */
     serverTier: string | null;
-    /** RevenueCat's `customerInfo`, reduced to "have we heard from it at all". */
+    /**
+     * Has RevenueCat answered **about this user** — i.e. we hold a CustomerInfo
+     * AND it belongs to an identified customer, not the anonymous one the SDK
+     * mints at configure time. An anonymous payload describes nobody, so it
+     * cannot be read as "this user is not subscribed".
+     */
     hasCustomerInfo: boolean;
     /** RevenueCat's own verdict. Only consulted when the server is silent. */
     isPremium: boolean;
@@ -66,9 +71,20 @@ export function deriveAiAccess(inputs: AiAccessInputs): AiAccess {
         return inputs.serverTier === 'none' ? 'locked' : 'entitled';
     }
 
-    if (inputs.hasCustomerInfo) {
-        return inputs.isPremium ? 'entitled' : 'locked';
-    }
+    // Asymmetric on purpose: RevenueCat may GRANT on any evidence, but may only
+    // DENY on evidence about an identified customer.
+    //
+    // An active entitlement is a fact regardless of which customer record holds
+    // it — including a purchase made before `Purchases.logIn` runs, which is a
+    // real path (the pre-onboarding paywall). Granting on it is what lets a
+    // just-completed purchase work seconds before our webhook lands.
+    //
+    // The absence of an entitlement is only meaningful once RevenueCat knows who
+    // it is being asked about. While anonymous it knows nothing, and the honest
+    // answer is 'unknown' — surfaces hold their loading state instead of
+    // flashing Mera News Free at someone who has paid.
+    if (inputs.isPremium) return 'entitled';
+    if (inputs.hasCustomerInfo) return 'locked';
 
     return 'unknown';
 }

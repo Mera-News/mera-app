@@ -175,6 +175,27 @@ export function getActiveTier(
   return null;
 }
 
+/**
+ * Whether this CustomerInfo describes an ANONYMOUS RevenueCat customer — one
+ * the SDK minted for itself because `configureRevenueCat()` passes no
+ * appUserID and `loginRevenueCat()` has not run yet.
+ *
+ * It matters because an anonymous payload is an answer about *nobody*. On
+ * every cold start the SDK configures anonymously, fetches
+ * `/v1/subscribers/$RCAnonymousID:…` (observed on device), and that empty
+ * CustomerInfo lands in the store seconds before `Purchases.logIn` aliases it
+ * to the real user. Reading "no entitlements" off it as "this user is not
+ * subscribed" is what flashes Mera News Free at a paying subscriber — the exact
+ * failure `AiAccess`'s `'unknown'` state exists to prevent.
+ *
+ * `$RCAnonymousID:` is RevenueCat's own documented prefix for generated IDs.
+ */
+export function isAnonymousCustomerInfo(
+  info: CustomerInfo | null | undefined,
+): boolean {
+  return info?.originalAppUserId?.startsWith('$RCAnonymousID:') ?? false;
+}
+
 /** The active entitlement backing the highest tier, or null. */
 export function getActiveEntitlementInfo(
   info: CustomerInfo | null | undefined,

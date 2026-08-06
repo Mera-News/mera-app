@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { CustomerInfo } from 'react-native-purchases';
-import { getActiveTier, type SubscriptionTier } from '@/lib/revenuecat';
+import { getActiveTier, isAnonymousCustomerInfo, type SubscriptionTier } from '@/lib/revenuecat';
 import { deriveAiAccess, type AiAccess } from '@/lib/subscription/ai-access';
 import { clearJwtSubscriptionLock } from '@/lib/subscription/jwt-subscription-gate';
 
@@ -154,7 +154,13 @@ export const useSubscriptionTier = () => useSubscriptionStore((s) => s.tier);
 function selectAiAccess(s: SubscriptionState): AiAccess {
   return deriveAiAccess({
     serverTier: s.serverTier,
-    hasCustomerInfo: s.customerInfo !== null,
+    // Not merely "is it non-null". The SDK configures ANONYMOUSLY at app start
+    // (no appUserID is passed) and its empty CustomerInfo reaches this store
+    // seconds before `loginRevenueCat` identifies the user — so a plain
+    // null-check answers "yes, RevenueCat has spoken" for a payload about
+    // nobody, and a paying subscriber sees Mera News Free flash on every cold
+    // start. See `isAnonymousCustomerInfo`.
+    hasCustomerInfo: s.customerInfo !== null && !isAnonymousCustomerInfo(s.customerInfo),
     isPremium: s.isPremium,
   });
 }

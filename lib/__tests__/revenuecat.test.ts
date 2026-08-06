@@ -18,6 +18,36 @@ describe('revenuecat', () => {
     jest.clearAllMocks();
   });
 
+  // The SDK is configured with no appUserID, so every cold start runs
+  // anonymously until `loginRevenueCat` aliases the customer. Observed on a real
+  // device: `👤 No initial App User ID`, then
+  // `GET /v1/subscribers/$RCAnonymousID%3A72f363cf…`. That payload's empty
+  // entitlements describe nobody and must never be read as a denial.
+  describe('isAnonymousCustomerInfo', () => {
+    it('is true for an SDK-minted anonymous customer', () => {
+      const { rc } = load();
+      expect(
+        rc.isAnonymousCustomerInfo({
+          originalAppUserId: '$RCAnonymousID:72f363cf86514c138a873e067020a196',
+        }),
+      ).toBe(true);
+    });
+
+    it('is false once logIn has attached our own user id', () => {
+      const { rc } = load();
+      expect(
+        rc.isAnonymousCustomerInfo({ originalAppUserId: '6a73cbcc19632e639560a9cb' }),
+      ).toBe(false);
+    });
+
+    it('is false for null/undefined/missing ids rather than throwing', () => {
+      const { rc } = load();
+      expect(rc.isAnonymousCustomerInfo(null)).toBe(false);
+      expect(rc.isAnonymousCustomerInfo(undefined)).toBe(false);
+      expect(rc.isAnonymousCustomerInfo({})).toBe(false);
+    });
+  });
+
   describe('getActiveTier', () => {
     it('returns professional when the professional entitlement is active', () => {
       const { rc } = load();

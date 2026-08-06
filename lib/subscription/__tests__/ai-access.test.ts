@@ -114,6 +114,30 @@ describe('deriveAiAccess', () => {
             expect(result).toBe('unknown');
             expect(result).not.toBe('locked');
         });
+
+        // RevenueCat may GRANT on any evidence but may only DENY on evidence
+        // about an identified customer. The SDK configures anonymously at app
+        // start and its empty CustomerInfo reaches the store seconds before
+        // logIn — reading that as "not subscribed" is what flashed Mera News
+        // Free at a paying subscriber on every cold start.
+        it('an entitlement grants even while RevenueCat is still anonymous', () => {
+            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
+            expect(
+                deriveAiAccess({ serverTier: null, hasCustomerInfo: false, isPremium: true }),
+            ).toBe('entitled');
+        });
+
+        it('an ANONYMOUS empty answer is unknown, not locked', () => {
+            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
+            const result = deriveAiAccess({
+                // hasCustomerInfo: false is how the store reports "we hold a
+                // CustomerInfo, but it is the anonymous one".
+                serverTier: null,
+                hasCustomerInfo: false,
+                isPremium: false,
+            });
+            expect(result).toBe('unknown');
+        });
     });
 });
 
