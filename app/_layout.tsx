@@ -2,6 +2,9 @@
 // without rendering the React tree) still report errors. Must be before any
 // import that may throw or use logger.
 import '@/lib/sentry-init';
+// DEV-only cold-start timeline. Imported here for its module-eval side effect
+// (t0 = bundle evaluation) and compiled out of release builds.
+import '@/lib/diagnostics/coldstart-timeline';
 // Polyfill crypto.getRandomValues — must precede any @noble/* crypto usage
 import 'react-native-get-random-values';
 import { ApolloProvider } from '@apollo/client/react';

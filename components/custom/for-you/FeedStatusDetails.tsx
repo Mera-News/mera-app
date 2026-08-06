@@ -15,8 +15,10 @@ import {
 } from '@/lib/stores/selectors';
 import { formatCount } from '@/lib/utils/format-count';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Pressable } from '@/components/ui/pressable';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
@@ -34,6 +36,14 @@ export interface FeedStatusDetailsProps {
     readonly injectNoiseEnabled: boolean;
     /** Human relative label for the last finished processing run, or null. */
     readonly lastProcessedLabel: string | null;
+    /**
+     * Called right before the daily-limit "Manage" pill navigates. The sheet
+     * passes its `onClose` here: the body renders inside an RN Modal, and a
+     * `router.push` out of an open modal leaves the pushed screen stranded
+     * behind the backdrop. The inline shimmer accordion is not a modal, so it
+     * passes nothing.
+     */
+    readonly onBeforeNavigate?: () => void;
 }
 
 function StatRow({ label, value }: { label: string; value: string | number }) {
@@ -64,10 +74,12 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
     noiseRemovedCount,
     injectNoiseEnabled,
     lastProcessedLabel,
+    onBeforeNavigate,
 }) => {
     const { t } = useTranslation();
     const tAny = t as any;
     const appLanguage = useAppLanguage();
+    const router = useRouter();
 
     const syncStatusMessage = useForYouSyncStatusMessage();
     const asyncJobPhase = useForYouAsyncJobPhase();
@@ -161,6 +173,29 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                     <Text size="xs" className="text-typography-300 leading-4 mt-1">
                         {t('feed.dailyLimit.bodyWithTime', { time: dailyResetTime })}
                     </Text>
+                    {/* Same pill as the Profile usage card, and the same
+                        destination — the cap is a plan limit, so management (which
+                        is where Upgrade lives) is the one useful action here. */}
+                    <HStack className="justify-end mt-2">
+                        <Pressable
+                            onPress={() => {
+                                onBeforeNavigate?.();
+                                router.push('/logged-in/preferences/manage-subscription' as any);
+                            }}
+                            hitSlop={8}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('subscription.manageBadge')}
+                            testID="feed-status-manage-subscription"
+                            className="bg-primary-500 rounded-full px-2.5 py-1"
+                        >
+                            <HStack className="items-center" space="xs">
+                                <MaterialIcons name="credit-card" size={12} color="#ffffff" />
+                                <Text size="xs" className="text-white font-semibold">
+                                    {t('subscription.manageBadge')}
+                                </Text>
+                            </HStack>
+                        </Pressable>
+                    </HStack>
                 </Box>
             )}
 

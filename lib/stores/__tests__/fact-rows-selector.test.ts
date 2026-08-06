@@ -510,18 +510,43 @@ describe('buildFactRows section ordering', () => {
 
 // --- breaking extraction ---------------------------------------------------
 
-describe('buildFactRows breaking extraction', () => {
-  it('pulls raw>1.0 and hot-event raw≥0.8 out into the breaking strip', () => {
+describe('buildFactRows emergency extraction', () => {
+  // The strip is the loudest surface in the app and is reserved for the
+  // EMERGENCY band. It used to use `isBreaking`, whose second clause admits the
+  // HIGH band (raw 0.8–1.0) for disaster/weather/conflict — so a story about a
+  // region getting LESS rain than usual was fronted above every section under a
+  // red alert chip. `isBreaking` itself is unchanged; it still does its own job
+  // of exempting stories from the importance dial.
+  it('pulls ONLY raw>1.0 into the emergency strip', () => {
     const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
     const emg = sugg({ _id: 'emg', rawScore: 1.05, relevance: 1.1, matchedTopics: [{ topicId: 't1', text: 'a' }] });
     const wx = sugg({ _id: 'wx', rawScore: 0.85, relevance: 0.8, eventType: 'weather', matchedTopics: [{ topicId: 't1', text: 'b' }] });
     const plain = sugg({ _id: 'plain', rawScore: 0.9, relevance: 0.8, eventType: 'politics', matchedTopics: [{ topicId: 't1', text: 'c' }] });
     const { breaking, rows } = buildFactRows([emg, wx, plain], snap, new Set(), NOW);
-    expect(breaking.map((b) => b.data._id)).toEqual(['emg', 'wx']);
+    expect(breaking.map((b) => b.data._id)).toEqual(['emg']);
+
+    // The demoted HIGH weather story is NOT lost — it falls through to its own
+    // fact section like any other card. Losing it would be a worse bug than the
+    // one being fixed.
     const inRows = rows.flatMap((r) => r.groups.map((g) => g.data._id));
+    expect(inRows).toContain('wx');
     expect(inRows).toContain('plain');
     expect(inRows).not.toContain('emg');
-    expect(inRows).not.toContain('wx');
+  });
+
+  it('treats the emergency cutoff as strictly-greater-than, matching bandOf', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+    // Exactly 1.0 is the TOP of HIGH, not EMERGENCY — `bandOf` uses `> cutoff`.
+    const at = sugg({ _id: 'at', rawScore: 1.0, relevance: 1.0, matchedTopics: [{ topicId: 't1', text: 'a' }] });
+    const over = sugg({ _id: 'over', rawScore: 1.01, relevance: 1.1, matchedTopics: [{ topicId: 't1', text: 'b' }] });
+    const { breaking } = buildFactRows([at, over], snap, new Set(), NOW);
+    expect(breaking.map((b) => b.data._id)).toEqual(['over']);
+  });
+
+  it('never puts an unscored story in the strip', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+    const noScore = sugg({ _id: 'ns', rawScore: null, relevance: 1.1, matchedTopics: [{ topicId: 't1', text: 'a' }] });
+    expect(buildFactRows([noScore], snap, new Set(), NOW).breaking).toEqual([]);
   });
 });
 

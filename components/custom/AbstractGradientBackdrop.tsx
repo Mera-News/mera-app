@@ -5,7 +5,9 @@ import Animated, {
   makeMutable,
   useAnimatedStyle,
   useReducedMotion,
+  useSharedValue,
   withTiming,
+  type SharedValue,
 } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
 
@@ -280,6 +282,26 @@ function armCover() {
   outgoing.value = 1;
 }
 
+/**
+ * Opts THIS instance's base layer into the complementary fade, and back out.
+ *
+ * `outgoing` is module-global — every instance reads the same number — but the
+ * base layer must only respond to it on an instance that is actually running a
+ * cross-fade. Without this per-instance gate, one focused screen's fade would
+ * drag EVERY suppressed instance's background toward black: blurred tabs,
+ * static/reduce-motion mode, and any screen the focus gate misjudges. That is a
+ * worse artefact than the one the complementary fade exists to remove.
+ *
+ * Named functions for the same React Compiler reason as `armCover`.
+ */
+function armBase(coverOn: SharedValue<number>) {
+  coverOn.value = 1;
+}
+
+function disarmBase(coverOn: SharedValue<number>) {
+  coverOn.value = 0;
+}
+
 /** How long a colour change takes. Deliberately much shorter than
  *  `COLOR_STEP_MS`: the second gradient layer only exists for this long, so the
  *  app runs on a single backdrop layer the rest of the time.
@@ -528,6 +550,30 @@ export interface AbstractGradientBackdropProps {
  */
 const ANDROID_DISABLED = Platform.OS === 'android';
 
+/**
+ * The base layer's opacity for the commit that starts a fade — a PLAIN style
+ * object, deliberately, and it is load-bearing.
+ *
+ * `PropsFilter.filterNonAnimatedProps` (reanimated 4.x) treats the two kinds of
+ * entry in a style array very differently on a re-render:
+ *
+ *   • an ANIMATED style is replaced by `_initialPropsMap.get(handle)` — the
+ *     snapshot taken at that component's FIRST render, not a fresh worklet run.
+ *     The base layer first renders at rest, so its snapshot is `{opacity: 1}`,
+ *     and every later commit re-asserts that 1 no matter what the worklet would
+ *     now compute. The real value arrives afterwards, from the UI-thread mapper.
+ *   • a PLAIN style object is passed through verbatim, every render.
+ *
+ * So an animated style alone cannot put the base layer at 0 in the commit that
+ * first paints the new colours — it would commit 1 (the stacked-pop value) and
+ * correct itself a frame later. Appending this after `baseStyle` makes the
+ * safe value part of the commit itself; the mapper then drives the ramp from
+ * there. The cover needs no such thing because it is a FRESH mount each fade,
+ * which is the `initialUpdaterRun` path the long comment in the component
+ * describes.
+ */
+const BASE_HIDDEN = { opacity: 0 } as const;
+
 const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed }) => {
   const reduceMotion = useReducedMotion();
   const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
@@ -592,10 +638,31 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   // draws through the Canvas/Picture path rather than a cached CALayer, and it
   // was multiplied by every tab screen that stays mounted.
   //
-  // So: the CURRENT colours render underneath at full opacity, permanently. On
-  // a step change the PREVIOUS colours mount on top at full opacity and fade
-  // out, revealing the new ones, then unmount. The swap underneath is invisible
-  // because the outgoing layer covers it while it happens.
+  // So: the CURRENT colours render underneath, permanently. On a step change the
+  // PREVIOUS colours mount on top and the two swap opacity, then the cover
+  // unmounts.
+  //
+  // ## The two layers' opacities are COMPLEMENTARY, and that is the whole trick
+  //
+  // The obvious version of this — leave the base at opacity 1 and just fade the
+  // cover 1 → 0 — is what shipped, and it FLASHED. A `BlobField` is an `Svg`
+  // with no background fill whose blobs peak at alpha 0.38; it is translucent
+  // everywhere and opaque nowhere, so it never "covers" the layer beneath it.
+  // Two of them at full opacity therefore STACK: composite alpha at a blob
+  // centre jumps 0.38 → 0.38 + 0.38×0.62 ≈ 0.62 in the single frame the cover
+  // mounts, then decays back over `FADE_MS`. A full-magnitude one-frame pop
+  // followed by a decay is exactly what the eye reads as a flash, and shortening
+  // `FADE_MS` (2500 → 1200) made it read as one rather than as a slow bloom.
+  //
+  // Driving the base at `1 - outgoing` fixes it by construction:
+  //
+  //   • fade start (outgoing 1) → base 0: the screen is EXACTLY `blobs(previous)`,
+  //     bit-identical to the frame before the step. Nothing to see.
+  //   • fade end (outgoing 0)   → base 1: exactly `blobs(current)`.
+  //   • midpoint → 0.5 each, composite ≈ 0.345 against 0.38 — an imperceptible
+  //     dip, and crucially never ABOVE either endpoint.
+  //
+  // If you ever put the base back at a constant opacity 1, the flash returns.
   const at = (seq: string[], i: number, n: number) =>
     seq[(((n + i) % seq.length) + seq.length) % seq.length];
   const current = sequences.map((seq, i) => at(seq, i, step));
@@ -649,13 +716,30 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   // for every other mounted instance mid-fade.
   const [displayed, setDisplayed] = useState(() => ({ step, fading: false }));
 
+  /** Whether THIS instance's base layer follows `outgoing`. A fresh mount starts
+   *  at 0, so a backdrop mounted mid-fade (every navigation push mounts one)
+   *  renders at full density instead of adopting a stranger's in-flight fade. */
+  const coverOn = useSharedValue(0);
+
   if (displayed.step !== step) {
-    // See point 2 above: this must happen before the cover renders.
-    if (!coverSuppressed) armCover();
+    // See point 2 above: both of these must happen before the layers render.
+    // `armBase` is subject to the same constraint as `armCover` — the base
+    // layer's opacity has to be 0 in the very commit that first paints the new
+    // colours, or that commit shows the raw stacked pop this fade exists to
+    // avoid.
+    if (!coverSuppressed) {
+      armCover();
+      armBase(coverOn);
+    }
     setDisplayed({ step, fading: !coverSuppressed });
   } else if (displayed.fading && coverSuppressed) {
     // Static mode switched on, or this screen was blurred, mid-fade: drop the
     // cover in this same render so no animation is left stranded on screen.
+    // Releasing the base layer here is not optional — the cover is about to
+    // disappear, and a base still tracking `outgoing` would sit at whatever
+    // partial opacity the fade had reached, dimming this screen's background
+    // until the next step.
+    disarmBase(coverOn);
     setDisplayed({ step, fading: false });
   }
 
@@ -665,7 +749,14 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
     if (!fading) return;
     // Already armed by the render pass; re-asserted so the animation always
     // starts from a known, fully-covering value.
+    //
+    // `armBase` in particular MUST be re-asserted here. On a step that
+    // supersedes a fade in progress, React runs the previous effect's cleanup
+    // (which disarms) AFTER this render's arming — so without this line the
+    // base would be released mid-fade and sit at full opacity while the cover
+    // fades over it, which is the stacked pop again.
     armCover();
+    armBase(coverOn);
     noteCoverMounted();
     const mountedAt = Date.now();
     outgoing.value = withTiming(0, { duration: FADE_MS, easing: Easing.inOut(Easing.ease) });
@@ -680,12 +771,18 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
       clearTimeout(t);
       // Runs on the fade completing (deps change), on a superseding step, and
       // on unmount — every path by which this cover stops being rendered, so
-      // `liveCovers` cannot leak upward.
+      // `liveCovers` cannot leak upward. Releasing the base layer on the same
+      // paths is what guarantees it can never be stranded below full opacity;
+      // the superseding-step path re-arms it in the effect body above.
+      disarmBase(coverOn);
       noteCoverUnmounted(Date.now() - mountedAt);
     };
-  }, [displayed.step, fading]);
+  }, [coverOn, displayed.step, fading]);
 
   const outgoingStyle = useAnimatedStyle(() => ({ opacity: outgoing.value }));
+  /** The complement, gated per instance. `coverOn` at 0 pins this to 1, which is
+   *  the resting state and the state of every instance not cross-fading. */
+  const baseStyle = useAnimatedStyle(() => ({ opacity: 1 - outgoing.value * coverOn.value }));
 
   // `pointerEvents` goes on a plain RN View, NOT on the Svg. `Svg` is
   // `RNSVGSvgView`, which does its own hit-testing and does not reliably honour
@@ -695,9 +792,20 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
 
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-      <BlobField colors={current} idBase="bg-current" />
+      {/* Mounted UNCONDITIONALLY, even though its opacity only ever moves during
+          a fade. Wrapping it in `fading ? ... : ...` would unmount and remount
+          the whole `Svg` subtree at the END of every fade — three full-screen
+          radial gradients re-rasterised for no colour change, on every mounted
+          instance — which is precisely the cost the `COLOR_STEP_MS`
+          measurement exists to keep down. */}
+      <Animated.View
+        testID="backdrop-base"
+        style={[StyleSheet.absoluteFill, baseStyle, fading ? BASE_HIDDEN : null]}
+      >
+        <BlobField colors={current} idBase="bg-current" />
+      </Animated.View>
       {fading ? (
-        <Animated.View style={[StyleSheet.absoluteFill, outgoingStyle]}>
+        <Animated.View testID="backdrop-cover" style={[StyleSheet.absoluteFill, outgoingStyle]}>
           <BlobField colors={previous} idBase="bg-prev" />
         </Animated.View>
       ) : null}

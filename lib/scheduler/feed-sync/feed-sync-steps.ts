@@ -41,6 +41,7 @@ import {
 } from '@/lib/feed-grouping/read-story-filter';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import logger from '@/lib/logger';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { withRetry } from '@/lib/utils/retry';
 import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
@@ -744,6 +745,10 @@ export async function stepHydratePersistEnqueue(
     const gateLine = `gate: propagated ${gate.propagatedCount}, held back ${gate.heldBackCount}, ${enqueuedLabel}, read ${gate.readCount}`;
     ctx.log(gateLine);
     logger.debug(`[feed-sync-steps] ${gateLine}`);
+    coldstartTimeline.mark(
+      'first-gate-enqueue',
+      `enqueued=${gate.enqueueIds.length} heldBack=${gate.heldBackCount} propagated=${gate.propagatedCount}`,
+    );
   };
 
   let nextChunk = 0;
@@ -809,6 +814,10 @@ export async function stepHydratePersistEnqueue(
             personaMeta,
           );
         insertedCount += chunkInserted;
+        coldstartTimeline.mark(
+          'first-hydration-chunk-persisted',
+          `persisted=${chunkInserted}`,
+        );
 
         const chunkIdSet = new Set(toPersist.map((a) => a._id));
         const { ineligibleCount, alreadyReadCount, eligibleIds } =

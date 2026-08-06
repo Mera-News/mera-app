@@ -76,6 +76,7 @@
 // pills, and the 24h stats sentence.
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
   GLASS_AVAILABLE,
   GLASS_HEADER_SCRIM,
@@ -515,6 +516,18 @@ const FeedScreen: React.FC = () => {
       ),
     [listData, pinnedCount, partitionSnapshot],
   );
+
+  // DEV-only: the FIRST commit at which this screen actually has cards. A
+  // useEFFECT, not the memo body above — the memo runs during render, BEFORE
+  // commit, so measuring there measures memo evaluation rather than paint.
+  // Deliberately not routed through useFeedFunnelLog: its 2500ms trailing
+  // debounce would misreport this by 2.5s, in exactly the direction that
+  // matters. `mark` is once-per-run, so the dep churn costs nothing.
+  useEffect(() => {
+    if (feedRows.length > 0) {
+      coldstartTimeline.mark('feed-first-paint', `rows=${feedRows.length}`);
+    }
+  }, [feedRows.length]);
 
   // How many rows sit in the unviewed block — now a RENDERED boundary again (the
   // caught-up divider). The funnel diagnostic reports it as its `dividerIdx`, and

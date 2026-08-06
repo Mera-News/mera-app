@@ -30,6 +30,14 @@ jest.mock('react-native-reanimated', () => {
     makeMutable: (initial: unknown) => ({ value: initial }),
     useAnimatedStyle: (fn: () => unknown) => fn(),
     useReducedMotion: () => false,
+    // Real per-instance identity, not a fresh object per render — the base
+    // layer's gate is written during render and read by the style worklet, so a
+    // mock that forgot the value between renders would make every assertion
+    // below vacuous.
+    useSharedValue: (initial: number) => {
+      const { useRef } = require('react');
+      return useRef({ value: initial }).current;
+    },
     withTiming: (v: unknown) => v,
   };
 });
@@ -179,6 +187,92 @@ describe('focus gating (B1.2)', () => {
     advanceOneStep();
 
     expect(backdropMetrics.coverMounts).toBe(0);
+  });
+});
+
+describe('complementary cross-fade (the flash guard)', () => {
+  // A `BlobField` is translucent everywhere (peak stop alpha 0.38, no background
+  // fill), so the cover does NOT hide the layer beneath it. Leaving the base at
+  // opacity 1 while the cover mounts at 1 STACKS them — composite alpha at a
+  // blob centre jumps ~0.38 -> ~0.62 for one frame and then decays over
+  // FADE_MS. That one-frame pop is the "flash" this suite exists to prevent,
+  // and the ONLY thing that prevents it is the base layer being driven to the
+  // complement of the cover's opacity.
+  //
+  // Note these read the opacity as of the COMMIT that first paints the new
+  // colours — which is exactly the frame the bug lived in.
+
+  /** The rendered opacity of one of the two backdrop layers. */
+  const layerOpacity = (queryFn: (id: string) => any, testID: string): number | undefined => {
+    const style = queryFn(testID)?.props?.style;
+    const flat = Array.isArray(style) ? Object.assign({}, ...style.filter(Boolean)) : style;
+    return flat?.opacity;
+  };
+
+  it('drives the base layer to fully transparent in the commit that mounts the cover', () => {
+    const { getByTestId } = render(<Mounted focused />);
+    expect(layerOpacity(getByTestId, 'backdrop-base')).toBe(1);
+
+    advanceOneStep();
+
+    // Cover opaque + base transparent === the screen still shows exactly the
+    // previous colours. Nothing pops, because nothing was added.
+    expect(layerOpacity(getByTestId, 'backdrop-cover')).toBe(1);
+    expect(layerOpacity(getByTestId, 'backdrop-base')).toBe(0);
+  });
+
+  it('commits the base layer at 0 as a PLAIN style, not only an animated one', () => {
+    // reanimated's PropsFilter replaces an animated style entry with the
+    // snapshot taken at that component's FIRST render whenever the component
+    // re-renders. The base layer first renders at rest, so its snapshot is
+    // `{opacity: 1}` — every later commit re-asserts 1, the stacked-pop value,
+    // and the real value only lands afterwards via the UI-thread mapper. A
+    // plain object is passed through verbatim instead, so it is what actually
+    // makes the safe value part of the commit. An animated style alone here
+    // would leave one frame of the flash.
+    const { getByTestId } = render(<Mounted focused />);
+    advanceOneStep();
+
+    const entries = getByTestId('backdrop-base').props.style as any[];
+    const plain = entries.filter(
+      (e) => e && typeof e === 'object' && !Array.isArray(e) && e.opacity === 0,
+    );
+    expect(plain.length).toBeGreaterThan(0);
+    // ...and it must be LAST, or the animated entry's stale 1 flattens over it.
+    expect(entries[entries.length - 1]).toMatchObject({ opacity: 0 });
+  });
+
+  it('leaves a blurred instance at full density while the focused one cross-fades', () => {
+    // The regression this catches is specific: `outgoing` is module-global, so
+    // driving the base from it WITHOUT the per-instance gate would fade every
+    // resident tab's background toward black whenever any one of them stepped.
+    const { getByTestId } = render(
+      <RNView>
+        <Mounted focused={false} />
+      </RNView>,
+    );
+
+    render(<Mounted focused />);
+    advanceOneStep();
+
+    expect(layerOpacity(getByTestId, 'backdrop-base')).toBe(1);
+  });
+
+  it('releases the base layer when the cover is suppressed mid-fade', () => {
+    // Blurring a tab (or switching on "Static background") mid-fade drops the
+    // cover. If the base stayed gated it would be stranded at whatever partial
+    // opacity the fade had reached — a permanently dimmed background until the
+    // next step.
+    const { getByTestId, rerender } = render(<Mounted focused />);
+    advanceOneStep();
+    expect(layerOpacity(getByTestId, 'backdrop-base')).toBe(0);
+
+    mockStaticGradient.value = true;
+    act(() => {
+      rerender(<Mounted focused />);
+    });
+
+    expect(layerOpacity(getByTestId, 'backdrop-base')).toBe(1);
   });
 });
 

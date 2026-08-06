@@ -1,4 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedSyncIndicator, {
     useFeedSyncRefresh,
@@ -326,6 +327,19 @@ const MeraNewsScreen: React.FC = () => {
     }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx]);
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
+
+    // DEV-only twin of FeedScreen's paint mark. `hasRenderableContent` is the
+    // Dashboard's OWN "there is something to show" predicate (it already gates
+    // the waiting card and the empty-feed watchdog), which is what makes the two
+    // timestamps directly comparable.
+    useEffect(() => {
+        if (hasRenderableContent) {
+            coldstartTimeline.mark(
+                'dashboard-first-paint',
+                `rows=${feed.rows.length} breaking=${feed.breaking.length}`,
+            );
+        }
+    }, [hasRenderableContent, feed.rows.length, feed.breaking.length]);
 
     // First arrival from onboarding: show waiting card if user has any facts.
     useEffect(() => {

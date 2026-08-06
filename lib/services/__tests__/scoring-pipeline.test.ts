@@ -125,6 +125,11 @@ jest.mock('@/lib/llm/gateway-rate-limiter', () => ({
   tryTakeImmediate: (...args: any[]) => mockTryTakeImmediate(...args),
   pauseFor: (...args: any[]) => mockPauseFor(...args),
   acquire: (...args: any[]) => mockAcquire(...args),
+  // Read-only: startPollerTimer aligns its FIRST tick to this instead of a
+  // fixed POLL_INTERVAL_MS. 0 ⇒ "a grant is free now", which under fake timers
+  // keeps the first tick at ~0ms and leaves existing tick-count assertions
+  // (driven by advanceTimersByTime) unchanged.
+  msUntilNextGrant: () => 0,
 }));
 
 jest.mock('@/lib/llm/submitInferenceJob', () => ({

@@ -78,12 +78,21 @@ export const HEADLINE_DEPTH_UI_ENABLED = false;
  * Flipping this to `true` is the entire app-side activation step; it needs its
  * own OTA, timed with the server flag.
  */
-// TEMP(staging-paywall-test): revert to `false` before committing.
-// Local, uncommitted change only — exercises the real server-driven paywall
-// against STAGING (FORCE_SUBSCRIPTIONS="true" there).
-// This must NOT reach a commit or an OTA: prod still has the flag off, so a
-// committed `true` would put the entire prod user base onto Mera News Free.
-export const FREE_TIER_MODE_ENABLED = false;
+// ACTIVATED 2026-08-06. This is the cutover commit: prod `FORCE_SUBSCRIPTIONS`
+// was set to "true" on both news-graphql and news-auth, the server merge landed,
+// and this OTA is the app half. Everything the block above describes in the
+// future tense has now happened.
+//
+// One deviation from the plan above, recorded because it cost real users real
+// minutes: the SERVER FLAG WAS FLIPPED BEFORE THIS OTA SHIPPED, not after. For
+// the length of that window, prod users on the previous bundle met a bare 402
+// with no free-tier UI to catch it — exactly what the ordering above exists to
+// prevent. The reason the window could not simply be closed by flipping back is
+// that the server merge had already made the quota fallback 0 for any user with
+// no UserBilling row (49 of 52), so reverting the flag would have produced an
+// empty feed with no paywall at all — strictly worse. If this is ever rolled
+// back and re-run, ship the app OTA first.
+export const FREE_TIER_MODE_ENABLED = true;
 
 /**
  * Force the derived `aiAccess` verdict, bypassing the ship gate above, the

@@ -52,11 +52,18 @@ function resolveApiKey(): string {
 }
 
 // Entitlement identifiers configured in the RevenueCat dashboard. Must match
-// the server (mera-server-auth REVENUECAT_ENTITLEMENT_* env vars). Store
-// purchases grant `mera-news-*-plan`; legacy promotional grants for the
-// individual/professional tiers used the bare tier name — accept both.
-// Starter is new and has no legacy bare alias. Professional outranks
-// individual outranks starter when more than one is active.
+// the server (mera-server-auth REVENUECAT_ENTITLEMENT_* env vars). Every real
+// subscriber holds `mera-news-*-plan` — that is the only form a store purchase
+// or a promotional grant produces.
+//
+// The bare `individual` / `professional` ids are NOT a legacy grant format, as
+// this comment used to claim. They are separate entitlements that only ever had
+// RevenueCat Test Store products behind them, and those products were archived
+// on 2026-08-06, so nothing can grant them now. They stay in these arrays
+// because accepting an id nobody holds costs nothing, while removing one that
+// turned out to be held would silently lock a paying user out. Starter never had
+// a bare alias. Professional outranks individual outranks starter when more than
+// one is active.
 export const INDIVIDUAL_ENTITLEMENT_IDS = [
   'mera-news-individual-plan',
   'individual',

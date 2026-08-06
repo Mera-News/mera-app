@@ -17,6 +17,7 @@
 
 import { AppState } from 'react-native';
 import logger from '@/lib/logger';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { SMALL_MODEL } from '@/lib/llm/constants';
 import type { ExecutionContext } from '@/lib/llm/execution-context';
 import * as gatewayRateLimiter from '@/lib/llm/gateway-rate-limiter';
@@ -327,6 +328,10 @@ let postFinalizeKickTimer: ReturnType<typeof setTimeout> | null = null;
 const lastPolledAt = new Map<number, number>();
 
 let pollerTimer: ReturnType<typeof setInterval> | null = null;
+/** One-shot timer for the FIRST poller tick, aligned to the rate limiter's next
+ *  grant rather than a fixed POLL_INTERVAL_MS. A separate handle from
+ *  `pollerTimer` so start/stop/reset can clear both unambiguously. */
+let pollerKickTimer: ReturnType<typeof setTimeout> | null = null;
 let appStateSub: { remove: () => void } | null = null;
 let pollTickRunning = false;
 /** Consecutive runPollerTick throws; reset on any clean tick. See
@@ -1021,7 +1026,8 @@ async function doDrain(context: ExecutionContext): Promise<void> {
     // requeued it every 60s — the MERA-APP-39 wedge. A throwing submit must
     // never abort the admission loop or strand a batch, whatever the cause.
     try {
-      await doSubmit(queued.batchId, context);
+      // The admission check above already spent this request's limiter slot.
+      await doSubmit(queued.batchId, context, true);
     } catch (err) {
       logger.captureException(err, {
         tags: { service: 'scoring-pipeline', step: 'submit' },
@@ -1067,6 +1073,7 @@ async function maybeFinalize(): Promise<void> {
 async function doSubmit(
   batchId: number,
   context: ExecutionContext,
+  grantAlreadyHeld = false,
 ): Promise<void> {
   const snap = await getPipeline();
   if (!snap) return;
@@ -1083,10 +1090,10 @@ async function doSubmit(
 
   try {
     if (batch.reasonsOnly) {
-      await doSubmitReasonsOnly(run, batch, privKeyHex, context);
+      await doSubmitReasonsOnly(run, batch, privKeyHex, context, grantAlreadyHeld);
       return;
     }
-    await doSubmitRelevance(run, batch, privKeyHex, context);
+    await doSubmitRelevance(run, batch, privKeyHex, context, grantAlreadyHeld);
   } catch (err) {
     // The E2EE context (re)build validates the model attestation key up front;
     // an off-curve ecdsa key throws ModelKeyValidationError here BEFORE any POST
@@ -1124,6 +1131,7 @@ async function doSubmitRelevance(
   batch: PipelineBatch,
   privKeyHex: string,
   context: ExecutionContext,
+  grantAlreadyHeld = false,
 ): Promise<void> {
   const all = await getUnscoredSuggestionsWithFacts();
   const idSet = new Set(batch.candidateIds);
@@ -1200,6 +1208,7 @@ async function doSubmitRelevance(
       math,
       active,
       token,
+      grantAlreadyHeld,
       cfg,
     });
     return;
@@ -1262,6 +1271,7 @@ async function doSubmitRelevance(
       token,
       model: SMALL_MODEL,
       context,
+      grantAlreadyHeld,
     });
 
     if (outcome.status === 'ok') {
@@ -1432,6 +1442,7 @@ async function doSubmitRelevance(
     token,
     model: SMALL_MODEL,
     context,
+    grantAlreadyHeld,
   });
 
   if (outcome.status === 'ok') {
@@ -1518,8 +1529,20 @@ async function doSubmitV3(args: {
   active: ScoringCandidate[];
   token: string | null;
   cfg: HarnessConfig;
+  /** See `grantAlreadyHeld` on sendInferenceRequest. */
+  grantAlreadyHeld?: boolean;
 }): Promise<void> {
-  const { run, batch, privKeyHex, context, math, active, token, cfg } = args;
+  const {
+    run,
+    batch,
+    privKeyHex,
+    context,
+    math,
+    active,
+    token,
+    cfg,
+    grantAlreadyHeld = false,
+  } = args;
   const a = cfg.articlePipeline;
   const inputById = new Map(math.stage.map((c) => [c.input.id, c.input]));
 
@@ -1677,6 +1700,7 @@ async function doSubmitV3(args: {
     token,
     model: SMALL_MODEL,
     context,
+    grantAlreadyHeld,
   });
 
   if (outcome.status === 'ok') {
@@ -1705,6 +1729,7 @@ async function doSubmitReasonsOnly(
   batch: PipelineBatch,
   privKeyHex: string,
   context: ExecutionContext,
+  grantAlreadyHeld = false,
 ): Promise<void> {
   const scored = await getScoredSuggestionsWithoutReasons();
   const idSet = new Set(batch.candidateIds);
@@ -1740,6 +1765,7 @@ async function doSubmitReasonsOnly(
     token,
     model: SMALL_MODEL,
     context,
+    grantAlreadyHeld,
   });
 
   if (outcome.status === 'ok') {
@@ -2031,6 +2057,7 @@ async function handleJudgeResults(
   context: ExecutionContext,
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
+  coldstartTimeline.mark('first-relevance-decode', `decoded=${batchResults.length}`);
 
   // Decode against the same calibration-overrides-aware config the submit path
   // built with. judgeChunkSize must equal the submit-time value for the chunk
@@ -2149,6 +2176,7 @@ async function handleV3Results(
   context: ExecutionContext,
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
+  coldstartTimeline.mark('first-relevance-decode', `decoded=${batchResults.length}`);
   const cfg = await judgeHarnessConfig();
   const audit = (batch as V3Batch).v3Audit ?? {};
 
@@ -2355,6 +2383,7 @@ async function handleRelevanceResults(
   }
 
   const { batchResults } = await decodeBatch(batch, server);
+  coldstartTimeline.mark('first-relevance-decode', `decoded=${batchResults.length}`);
 
   // P4b: re-chunk with the size the SUBMIT actually used, persisted on the
   // batch. A headline batch was chunked at 3, a standard one at 5 — applying
@@ -2733,6 +2762,9 @@ async function submitNeedsReasons(
     // POST. Required in background (no keychain); harmless JWT-first fallback
     // in foreground.
     capabilityToken: batch.capabilityToken ?? null,
+    // The admission check above (`tryTakeImmediate` before the CAS claim)
+    // already spent this request's limiter slot.
+    grantAlreadyHeld: true,
   });
 
   if (outcome.status === 'ok') {
@@ -3266,13 +3298,39 @@ function ensurePoller(): void {
 }
 
 function startPollerTimer(): void {
-  if (pollerTimer) return;
-  pollerTimer = setInterval(() => {
+  if (pollerTimer || pollerKickTimer) return;
+  // FIRST-TICK ALIGNMENT. The submit that just ran consumed a limiter slot, so
+  // a fixed POLL_INTERVAL_MS (= MIN_GATEWAY_INTERVAL_MS - POLL_TICK_LEAD_MS)
+  // first tick lands BEFORE `nextGrantAt` whenever the submit round trip was
+  // quicker than the lead — `tryTakeImmediate()` refuses and the very first
+  // GET /results slips a whole extra interval. Measured on prod before this
+  // change: 5533ms POST → first poll, with the server's results already
+  // waiting (the decode landed 118ms after the poll). Ask the limiter when the
+  // slot actually frees instead of guessing.
+  //
+  // The +1 is not cosmetic: a timer that fires one millisecond early costs a
+  // full POLL_INTERVAL_MS, which is precisely the off-by-a-hair failure this
+  // exists to remove.
+  const firstDelay = Math.min(
+    POLL_INTERVAL_MS,
+    gatewayRateLimiter.msUntilNextGrant() + 1,
+  );
+  pollerKickTimer = setTimeout(() => {
+    pollerKickTimer = null;
     void runPollerTick();
-  }, POLL_INTERVAL_MS);
+    if (!pollerTimer) {
+      pollerTimer = setInterval(() => {
+        void runPollerTick();
+      }, POLL_INTERVAL_MS);
+    }
+  }, firstDelay);
 }
 
 function stopPollerTimer(): void {
+  if (pollerKickTimer) {
+    clearTimeout(pollerKickTimer);
+    pollerKickTimer = null;
+  }
   if (pollerTimer) {
     clearInterval(pollerTimer);
     pollerTimer = null;
@@ -3342,6 +3400,10 @@ export function _resetForTests(): void {
   if (postFinalizeKickTimer) {
     clearTimeout(postFinalizeKickTimer);
     postFinalizeKickTimer = null;
+  }
+  if (pollerKickTimer) {
+    clearTimeout(pollerKickTimer);
+    pollerKickTimer = null;
   }
   if (pollerTimer) {
     clearInterval(pollerTimer);

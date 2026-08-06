@@ -11,6 +11,7 @@
 import { fetch as expoFetch } from 'expo/fetch';
 import * as Sentry from '@sentry/react-native';
 import logger from '@/lib/logger';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { getJwtToken } from '@/lib/auth-client';
 import { decryptContent, type SigningAlgo } from '@/lib/e2ee/e2ee-service';
 import {
@@ -132,6 +133,8 @@ export async function fetchResults(
   //   Background: per-batch capability token only — never touch the keychain
   //     on a silent-push wake (locked-device → SecureStore throws).
   const authHeader = await pickResultsAuthHeader(context, requestId, capabilityToken);
+
+  coldstartTimeline.mark('first-GET-results');
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), RESULTS_FETCH_TIMEOUT_MS);

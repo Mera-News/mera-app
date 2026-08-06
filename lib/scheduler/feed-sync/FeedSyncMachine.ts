@@ -1,5 +1,6 @@
 import { useNetworkStore } from '@/lib/stores/network-store';
 import logger from '@/lib/logger';
+import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
   requestSuggestionsRefresh,
   flushSuggestionsRefresh,
@@ -224,6 +225,7 @@ class FeedSyncMachine {
 
   private async _run(personaId: string, ctx: TaskContext, runId: number): Promise<void> {
     logger.debug('[FeedSyncMachine] run start');
+    coldstartTimeline.mark('feed-sync-start');
     // Clear any prior scoring-pipeline error at the start of a fresh cycle — the
     // header status reflects this cycle's outcome. It re-appears if scoring fails
     // again, and resolves on its own if scoring succeeds.
@@ -293,6 +295,10 @@ class FeedSyncMachine {
           return 0;
         }),
       ]);
+      coldstartTimeline.mark(
+        'topic-ids-resolved',
+        `ids=${topicResult.serverArticleIds.length}`,
+      );
       // Record the server-wide 24h article count now so subsequent
       // refreshSuggestionsInStore calls (which only know about on-device rows)
       // don't overwrite it. Falls back to the topic-matched count if the query failed.

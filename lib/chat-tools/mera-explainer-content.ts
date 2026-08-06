@@ -117,7 +117,7 @@ None of that is finished. It is described in the future tense on purpose.`,
   // ---------------------------------------------------------------------------
   plans_and_limits: `There are three plans, and they differ in exactly one thing: how many candidate articles can be analysed for you per day.
 
-Starter is 2.19 euro a month, for 500 analyses per day. Individual is 4.99 euro a month, for 1,000 per day. Professional is 19.99 euro a month, for 10,000 per day. Starter and Individual include a one-month free trial for new users, and during the current launch promotion the app is free on the Individual plan for a limited time.
+Starter is 2.19 euro a month, for 500 analyses per day. Individual is 4.99 euro a month, for 1,000 per day. Professional is 19.99 euro a month, for 10,000 per day. Every plan starts with a one week free trial. The trial is once per account rather than once per plan, so choosing a different plan later does not start a second one.
 
 Every plan includes the complete Mera experience. There is no feature held back behind a higher tier: same personalisation, same alerts, same explanations, same languages. Only the daily analysis capacity changes.
 
