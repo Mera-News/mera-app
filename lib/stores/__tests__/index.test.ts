@@ -204,6 +204,26 @@ describe('clearAllStores', () => {
         await storeIndex.clearAllStores();
         expect(storeIndex.useFloatingChatStore.getState().isExpanded).toBe(false);
     });
+
+    // ── CROSS-USER LEAK GUARD (2026-08-06) ──────────────────────────────────
+    //
+    // `last_known_subscription_tier` is the device's memory of the last
+    // subscription tier it resolved, and the pre-onboarding entitlement gate
+    // TRUSTS it when billing cannot be reached. Left behind on a logout, user B
+    // on user A's device would inherit A's tier and walk straight past that gate
+    // as a subscriber.
+    //
+    // Asserted on the explicit call rather than on `unsafeResetDatabase()`:
+    // the reset does drop the row today, but this guarantee must not silently
+    // depend on that staying true.
+    it('clears the last-known subscription tier', async () => {
+        const { deleteSetting } = require('@/lib/database/services/setting-service');
+        (deleteSetting as jest.Mock).mockClear();
+
+        await storeIndex.clearAllStores();
+
+        expect(deleteSetting).toHaveBeenCalledWith('last_known_subscription_tier');
+    });
 });
 
 describe('clearPreviousUserData', () => {
@@ -229,5 +249,30 @@ describe('clearPreviousUserData', () => {
         await storeIndex.clearPreviousUserData('new-user');
         const database = require('@/lib/database').default;
         expect(database.write).toHaveBeenCalled();
+    });
+
+    // The USER-SWITCH half of the cross-user leak guard above. This is the path
+    // a fresh login on a used device takes, and it is the one that would hand
+    // user B user A's entitlement.
+    it("wipes the previous user's last-known subscription tier on a user switch", async () => {
+        const { getSetting, deleteSetting } = require('@/lib/database/services/setting-service');
+        (getSetting as jest.Mock).mockResolvedValueOnce('old-user');
+        (deleteSetting as jest.Mock).mockClear();
+
+        await storeIndex.clearPreviousUserData('new-user');
+
+        expect(deleteSetting).toHaveBeenCalledWith('last_known_subscription_tier');
+    });
+
+    it('leaves the last-known tier alone when the SAME user returns', async () => {
+        const { getSetting, deleteSetting } = require('@/lib/database/services/setting-service');
+        (getSetting as jest.Mock).mockResolvedValueOnce('same-user');
+        (deleteSetting as jest.Mock).mockClear();
+
+        await storeIndex.clearPreviousUserData('same-user');
+
+        // Otherwise every cold start would throw away the very memory the
+        // offline-subscriber fallback depends on.
+        expect(deleteSetting).not.toHaveBeenCalled();
     });
 });

@@ -167,19 +167,26 @@ export default function LoggedInIndex() {
                 // rather than a 401.
                 //
                 // The same decision is enforced again in OnboardingScreen,
-                // which is the actual chokepoint — app/login.tsx redirects a
-                // fresh session straight to /logged-in/onboarding and never
-                // reaches this file. This copy exists so the cold-start path
-                // resolves in place instead of bouncing through that route.
-                // Both call the same two functions; the logic has one home.
+                // which is the actual chokepoint — DeepLinkVerifyScreen
+                // redirects straight to /logged-in/onboarding and never reaches
+                // this file. (app/login.tsx used to do the same; since
+                // 2026-08-06 it redirects here instead.) This copy exists so the
+                // cold-start path resolves in place instead of bouncing through
+                // that route. Both call the same two functions; the logic has
+                // one home.
                 const aiAccess = await resolveEntitlementForOnboarding({
                     userId,
                     isConnected: useNetworkStore.getState().isConnected,
                 });
                 if (cancelled) return;
 
+                // `!== 'entitled'`, not `=== 'locked'`. Since 2026-08-06
+                // `'unknown'` (never-resolved device) diverts as well, and
+                // hard-coding `false` for it would push a user who already
+                // dismissed the paywall back into it on every launch. This
+                // guard and OnboardingScreen's must stay identical.
                 const firstOpenDismissed =
-                    aiAccess === 'locked' ? await readFirstOpenDismissed() : false;
+                    aiAccess !== 'entitled' ? await readFirstOpenDismissed() : false;
                 if (cancelled) return;
 
                 switch (decideOnboardingEntry({ aiAccess, firstOpenDismissed })) {

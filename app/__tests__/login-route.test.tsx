@@ -10,6 +10,18 @@
 // (and app/logged-in/index.tsx then re-writes `cached_user_id` and re-identifies
 // them to RevenueCat).
 //
+// ── DESTINATION CHANGED 2026-08-06 (owner decision) ─────────────────────────
+//
+// The shortcut used to target `/logged-in/onboarding` directly, and the
+// assertions below pinned that. It was a bypass: better-auth is allowed to serve
+// this session atom stale, and jumping to the onboarding route skipped every
+// gate in `app/logged-in/index.tsx` — the session↔local identity check and its
+// cross-user wipe, the local-fact check that decides whether onboarding is owed
+// at all, and the entitlement resolution that decides paywall vs wizard. It now
+// targets `/logged-in`, so this path resolves like every other entry. The
+// suppression contract itself is unchanged, and is still what these tests are
+// mainly about.
+//
 // The suppression MUST release. Outside reauth mode AuthScreen gets no
 // onLoginSuccess, so this Redirect is the ONLY thing that moves a freshly
 // logged-in user off the screen — a permanent suppression would strand them.
@@ -62,10 +74,14 @@ beforeEach(() => {
 });
 
 describe('login route — session shortcut', () => {
-    it('a live session normally short-circuits into the app', () => {
+    it('a live session short-circuits to /logged-in — the gate, never past it', () => {
         mockSession = { user: { id: 'u1' } };
         render(<LoginScreen />);
-        expect(mockRedirect).toHaveBeenCalledWith('/logged-in/onboarding');
+        expect(mockRedirect).toHaveBeenCalledWith('/logged-in');
+        // Pinned as an exclusion so the bypass cannot come back by accident:
+        // /logged-in/onboarding is downstream of the identity, local-fact and
+        // entitlement checks, and this route knows none of them.
+        expect(mockRedirect).not.toHaveBeenCalledWith('/logged-in/onboarding');
     });
 
     it('reauth mode never short-circuits (OTP must re-prove identity)', () => {
@@ -110,6 +126,6 @@ describe('login route — session shortcut', () => {
         // they would be stranded here — nothing else navigates away.
         mockSession = { user: { id: 'u2' } };
         rerender(<LoginScreen />);
-        expect(mockRedirect).toHaveBeenCalledWith('/logged-in/onboarding');
+        expect(mockRedirect).toHaveBeenCalledWith('/logged-in');
     });
 });

@@ -20,8 +20,15 @@
 // `components/custom/onboarding/OnboardingScreen.tsx` — the ONLY mounter of
 // `OnboardingWizard`, and therefore the real chokepoint. Both doorways into
 // onboarding pass through it: the cold-start route (`app/logged-in/index.tsx`)
-// and the fresh-login / deep-link-verify redirect, which goes straight to
-// `/logged-in/onboarding` and bypasses the cold-start gate entirely.
+// and the deep-link-verify redirect (`DeepLinkVerifyScreen`), which goes
+// straight to `/logged-in/onboarding` and bypasses the cold-start gate entirely.
+//
+// 2026-08-06: `app/login.tsx` used to be a THIRD doorway — it redirected a live
+// session straight to `/logged-in/onboarding`, skipping the identity, local-fact
+// and entitlement gates in `app/logged-in/index.tsx`. It now redirects to
+// `/logged-in`, so that path resolves like every other entry. The deep-link
+// verify redirect still bypasses the cold-start gate, so the chokepoint argument
+// above survives with one doorway fewer.
 //
 // `app/logged-in/index.tsx` calls the same two functions on its no-facts branch
 // so the cold-start path resolves the decision in place instead of bouncing
@@ -39,6 +46,11 @@ import { getAiAccess, useSubscriptionStore } from '@/lib/stores/subscription-sto
 import { loginRevenueCat } from '@/lib/revenuecat';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
 import type { AiAccess } from '@/lib/subscription/ai-access';
+import {
+    aiAccessFromLastKnownTier,
+    readLastKnownTier,
+    rememberLastKnownTier,
+} from '@/lib/subscription/last-known-tier';
 
 /**
  * How long the splash may hold waiting for the server's billing verdict.
@@ -65,11 +77,21 @@ export type OnboardingEntry =
 export interface OnboardingEntryInputs {
     /**
      * The resolved verdict. `'unknown'` here means the bounded wait below
-     * EXPIRED — callers must not pass a verdict they are still waiting on, or
-     * they will decide during the loading state this gate exists to hold.
+     * EXPIRED **and** this device has no last-known tier to fall back on — i.e.
+     * it has NEVER resolved entitlement. Callers must not pass a verdict they
+     * are still waiting on, or they will decide during the loading state this
+     * gate exists to hold.
      */
     aiAccess: AiAccess;
-    /** `readFirstOpenDismissed()` — only consulted on the locked branch. */
+    /**
+     * `readFirstOpenDismissed()` — consulted on every non-entitled branch.
+     *
+     * Callers MUST read it whenever `aiAccess !== 'entitled'`, not just on
+     * `'locked'`: since 2026-08-06 `'unknown'` also diverts, and a caller that
+     * hard-coded `false` there would send a user who already dismissed the
+     * paywall straight back to it — the dismiss → paywall → dismiss loop
+     * `first-open-dismissal.ts` exists to prevent.
+     */
     firstOpenDismissed: boolean;
 }
 
@@ -90,36 +112,46 @@ export function decideOnboardingEntry({
     aiAccess,
     firstOpenDismissed,
 }: OnboardingEntryInputs): OnboardingEntry {
-    // TIMEOUT FALLBACK — an explicit choice, and the one place this gate can be
-    // wrong. `'unknown'` only reaches here after the bounded wait expired, which
-    // in practice means offline or an unreachable server. Both directions
-    // violate something: falling through to onboarding can reproduce the
-    // original 401 on a badly degraded network, while falling through to the
-    // paywall would flash a purchase screen at a paying subscriber whose server
-    // simply did not answer in time.
+    // ONLY an affirmative verdict opens the wizard.
     //
-    // Onboarding wins because it is EXACTLY today's behaviour — a timeout can
-    // therefore never leave a user worse off than before this change — and
-    // because the paywall is useless in that state anyway: presenting a purchase
-    // sheet needs the network just as much as the chat does, so the alternative
-    // is a dead screen whose only exit is "Continue without a plan".
-    if (aiAccess !== 'locked') return 'onboarding';
+    // REVERSED 2026-08-06 (owner decision). This used to read
+    // `if (aiAccess !== 'locked') return 'onboarding'`, which lumped `'unknown'`
+    // in with `'entitled'` on the argument that a timeout should land on
+    // "exactly today's behaviour". That argument was wrong in production: with
+    // the ship gate on, `'unknown'` is the state of EVERY cold start before
+    // billing answers, so a slow or unreachable server dropped brand-new users
+    // into the persona chat (resumed at step 2 off the server's onboardingStage)
+    // instead of the "Switch Mera on" paywall.
+    //
+    // The old comment's other half — "the paywall is useless offline anyway" —
+    // is now handled upstream instead of here: `resolveEntitlementForOnboarding`
+    // falls back to this device's last-known tier, so an offline SUBSCRIBER
+    // arrives as `'entitled'` and never reaches this line. `'unknown'` therefore
+    // no longer means "offline"; it means "this device has never once resolved a
+    // tier", and the honest answer for such a device is the paywall.
+    if (aiAccess === 'entitled') return 'onboarding';
 
-    // Dismissal must NOT loop them back here, and must not strand them
-    // un-onboarded either: this branch is only reached while `locked`, so the
-    // moment they subscribe the verdict becomes `'entitled'` and onboarding
-    // runs on the next pass.
+    // `'locked'` and `'unknown'` share this branch on purpose. Dismissal must
+    // NOT loop them back to the paywall, and must not strand them un-onboarded
+    // either: neither state is reached once entitlement resolves affirmatively,
+    // so the moment they subscribe the verdict becomes `'entitled'` and
+    // onboarding runs on the next pass.
     return firstOpenDismissed ? 'free-tier' : 'paywall';
 }
 
 /**
  * Resolve `aiAccess` to something other than `'unknown'`, or give up.
  *
- * Kicks the fetches itself rather than assuming a caller did: the fresh-login
- * path reaches onboarding WITHOUT going through `app/logged-in/index.tsx`, so
- * on that path nothing has called `syncEntitlement` or `loginRevenueCat` yet.
- * `loginRevenueCat` matters beyond the verdict — without it a purchase made
- * from the pre-onboarding paywall would attach to an anonymous RevenueCat id.
+ * Kicks the fetches itself rather than assuming a caller did: the deep-link
+ * verify path reaches onboarding WITHOUT going through
+ * `app/logged-in/index.tsx`, so on that path nothing has called
+ * `syncEntitlement` or `loginRevenueCat` yet. `loginRevenueCat` matters beyond
+ * the verdict — without it a purchase made from the pre-onboarding paywall would
+ * attach to an anonymous RevenueCat id.
+ *
+ * `'unknown'` is returned ONLY by a device that has never resolved a tier. Any
+ * other unresolvable outcome is answered from this device's memory — see
+ * `lib/subscription/last-known-tier.ts`.
  */
 export async function resolveEntitlementForOnboarding(opts: {
     userId?: string;
@@ -130,11 +162,17 @@ export async function resolveEntitlementForOnboarding(opts: {
     // 'entitled' synchronously, so the gate costs nothing at all. It also
     // short-circuits the common case where billing is already known.
     const immediate = getAiAccess();
-    if (immediate !== 'unknown') return immediate;
+    if (immediate !== 'unknown') {
+        void recordResolvedTier();
+        return immediate;
+    }
 
-    // Offline: unresolvable, and no amount of waiting changes that. Return
-    // straight away rather than holding the splash for the full timeout.
-    if (!opts.isConnected) return 'unknown';
+    // Offline: unresolvable from the network, and no amount of waiting changes
+    // that. Return straight away rather than holding the splash for the full
+    // timeout — but consult this device's memory first, which is what lets an
+    // OFFLINE SUBSCRIBER keep working instead of meeting a purchase sheet they
+    // could not use anyway.
+    if (!opts.isConnected) return lastKnownFallback();
 
     if (opts.userId) {
         void loginRevenueCat(opts.userId)
@@ -150,7 +188,41 @@ export async function resolveEntitlementForOnboarding(opts: {
     // a brand-new user wait it out on the splash.
     void syncEntitlement({ force: true });
 
-    return waitForAiAccessResolved(opts.timeoutMs ?? ONBOARDING_ENTITLEMENT_WAIT_MS);
+    // BOUNDED, still. An unbounded hold is a worse failure mode than a wrong
+    // guess — it is a splash screen with no exit.
+    const waited = await waitForAiAccessResolved(
+        opts.timeoutMs ?? ONBOARDING_ENTITLEMENT_WAIT_MS,
+    );
+    if (waited !== 'unknown') {
+        void recordResolvedTier();
+        return waited;
+    }
+
+    // The wait expired. Trust what this device already learned; only a device
+    // that has NEVER resolved a tier stays 'unknown' from here.
+    return lastKnownFallback();
+}
+
+/**
+ * Persist whatever tier the store currently holds, so a LATER unresolvable cold
+ * start has something to fall back on.
+ *
+ * Reads the tier rather than the derived verdict — see `last-known-tier.ts` for
+ * why. `serverTier` first (the source of truth), then RevenueCat's mirror, which
+ * is the only signal present when a purchase has completed but our webhook has
+ * not landed yet. Both `null` means nothing was actually learned (a `'locked'`
+ * verdict derived purely from an identified-but-empty CustomerInfo), and
+ * `rememberLastKnownTier` no-ops on that — which also keeps the ship-gate-off
+ * path free of any database write.
+ */
+async function recordResolvedTier(): Promise<void> {
+    const state = useSubscriptionStore.getState();
+    await rememberLastKnownTier(state.serverTier ?? state.tier);
+}
+
+/** Re-derive a verdict from this device's memory. `'unknown'` ⇒ never resolved. */
+async function lastKnownFallback(): Promise<AiAccess> {
+    return aiAccessFromLastKnownTier(await readLastKnownTier());
 }
 
 /**

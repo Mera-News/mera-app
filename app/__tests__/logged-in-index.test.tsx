@@ -116,7 +116,7 @@ describe('cold-start identity gate', () => {
 
         await waitFor(() => expect(mockReplace).toHaveBeenCalled());
         // The param is load-bearing: login.tsx redirects a live session back to
-        // /logged-in/onboarding unless reauthMode is on.
+        // /logged-in (i.e. straight back here) unless reauthMode is on.
         expect(mockReplace).toHaveBeenCalledWith({ pathname: '/login', params: { reauth: '1' } });
         expect(mockReplace).toHaveBeenCalledTimes(1);
         // Nothing local was touched, and no personalized read happened.
@@ -246,9 +246,10 @@ describe('cold-start fact gate', () => {
 // Pre-onboarding paywall ordering
 // ---------------------------------------------------------------------------
 // The decision itself lives in OnboardingScreen (the only mounter of the
-// wizard, and the one place BOTH doorways pass through — app/login.tsx
-// redirects a fresh session straight to /logged-in/onboarding and never reaches
-// this file). What is asserted here is the WIRING of the cold-start copy: that
+// wizard, and the one place both doorways pass through — DeepLinkVerifyScreen
+// redirects straight to /logged-in/onboarding and never reaches this file;
+// app/login.tsx did too until 2026-08-06, and now redirects to /logged-in
+// instead). What is asserted here is the WIRING of the cold-start copy: that
 // the resolve happens before the onboarding redirect, and never on the
 // has-facts path.
 describe('cold-start paywall ordering', () => {
@@ -286,11 +287,58 @@ describe('cold-start paywall ordering', () => {
         expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
     });
 
-    it('reads the dismissal flag ONLY when the verdict is locked', async () => {
+    // Renamed and widened 2026-08-06. The guard was `aiAccess === 'locked'`; it
+    // is now `aiAccess !== 'entitled'`, because `'unknown'` diverts too.
+    it('skips the dismissal read on the entitled path — the subscriber pays for no DB read', async () => {
         mockHasAnyFacts.mockResolvedValue(false);
         render(<LoggedInIndex />);
         await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
         expect(mockReadFirstOpenDismissed).not.toHaveBeenCalled();
+    });
+
+    // ── THE ANTI-LOOP GUARD (2026-08-06) ────────────────────────────────────
+    //
+    // `'unknown'` now means "this device has never resolved a tier", and it
+    // diverts exactly like `'locked'`. If this copy of the guard were left at
+    // `=== 'locked'`, `firstOpenDismissed` would be hard-coded `false` for such
+    // a device — so a user who already dismissed the paywall would be sent back
+    // to it on every launch, forever. This guard and OnboardingScreen's must
+    // stay identical; the sibling assertion lives in
+    // components/custom/subscription/__tests__/onboarding-paywall-order.test.tsx.
+    it("reads the dismissal flag on an 'unknown' verdict too, not just 'locked'", async () => {
+        mockHasAnyFacts.mockResolvedValue(false);
+        mockResolveEntitlement.mockResolvedValue('unknown');
+        mockDecideEntry.mockReturnValue('paywall');
+
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockNavigateToPaywall).toHaveBeenCalledTimes(1));
+        expect(mockReadFirstOpenDismissed).toHaveBeenCalledTimes(1);
+        // And the real answer is what reaches the decision — not a hard-coded
+        // `false` that would defeat the dismissal.
+        expect(mockDecideEntry).toHaveBeenCalledWith({
+            aiAccess: 'unknown',
+            firstOpenDismissed: false,
+        });
+    });
+
+    it("an 'unknown' verdict on a DISMISSED device goes to Mera News Free, never back to the paywall", async () => {
+        mockHasAnyFacts.mockResolvedValue(false);
+        mockResolveEntitlement.mockResolvedValue('unknown');
+        mockReadFirstOpenDismissed.mockResolvedValue(true);
+        mockDecideEntry.mockReturnValue('free-tier');
+
+        render(<LoggedInIndex />);
+
+        await waitFor(() =>
+            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
+        );
+        expect(mockDecideEntry).toHaveBeenCalledWith({
+            aiAccess: 'unknown',
+            firstOpenDismissed: true,
+        });
+        expect(mockNavigateToPaywall).not.toHaveBeenCalled();
+        expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
     });
 
     it('an already-onboarded user pays for none of it (requirement: no regression)', async () => {

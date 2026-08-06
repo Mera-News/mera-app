@@ -47,6 +47,11 @@ jest.mock('@/lib/subscription/activation-toast', () => ({
     showSubscriptionActivatedToast: (...a: any[]) => mockShowToast(...a),
 }));
 
+const mockRememberLastKnownTier = jest.fn(async () => {});
+jest.mock('@/lib/subscription/last-known-tier', () => ({
+    rememberLastKnownTier: (...a: any[]) => mockRememberLastKnownTier(...(a as [])),
+}));
+
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
     default: { captureException: jest.fn() },
@@ -76,6 +81,14 @@ describe('presentFreeTierPaywall', () => {
         // The pair, not just the new tier: 'none' (the store's pre-purchase
         // serverTier) -> 'starter' is the transition being announced.
         expect(mockShowToast).toHaveBeenCalledWith('none', 'starter');
+        // ── 2026-08-06 ────────────────────────────────────────────────────
+        // This branch does NOT go through syncEntitlement, so it carries its
+        // own write of the device's last-known tier. It matters more than most:
+        // a purchase from the PRE-ONBOARDING paywall is exactly how a device
+        // ends up holding a real tier and zero local facts — the only profile
+        // that still meets the onboarding entitlement gate on its next cold
+        // start.
+        expect(mockRememberLastKnownTier).toHaveBeenCalledWith('starter');
     });
 
     it('does NOT toast on confirmed:false — that snapshot is the PRE-purchase tier', async () => {
@@ -88,6 +101,10 @@ describe('presentFreeTierPaywall', () => {
         // Still self-heals on the next successful read.
         expect(mockSyncEntitlement).toHaveBeenCalledWith({ force: true });
         expect(mockSetServerBilling).not.toHaveBeenCalled();
+        // Nor is an unconfirmed snapshot written to the device's memory —
+        // committing the PRE-purchase tier as "last known" would be worse than
+        // having no memory at all, since the gate trusts it.
+        expect(mockRememberLastKnownTier).not.toHaveBeenCalled();
     });
 
     it('does NOT toast when the sheet was dismissed without a purchase', async () => {

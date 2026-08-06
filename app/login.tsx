@@ -26,6 +26,11 @@ export default function LoginScreen() {
     // no onLoginSuccess, so the Redirect below is the ONLY thing that moves a
     // freshly logged-in user off this screen. Release the moment the stale
     // session actually clears — any session after that is a real login.
+    //
+    // Still needed after the destination change below: /logged-in re-writes
+    // `cached_user_id` via setUserId() and re-identifies the user to RevenueCat,
+    // so bouncing a just-signed-out user through it is exactly as wrong as it
+    // was when this pointed at the onboarding route.
     const [suppressSessionShortcut, setSuppressSessionShortcut] = useState(signedOut === '1');
     useEffect(() => {
         if (suppressSessionShortcut && !session) setSuppressSessionShortcut(false);
@@ -38,9 +43,23 @@ export default function LoginScreen() {
     // In reauth mode (Forgot PIN, or a needs-reauth banner tap) we must NOT
     // shortcut on an existing session — the user has to re-verify OTP to prove
     // identity before the PIN can be reset.
+    // ── /logged-in, NOT /logged-in/onboarding ────────────────────────────────
+    //
+    // Changed 2026-08-06. This used to jump straight to /logged-in/onboarding on
+    // a truthy `useSession()` atom — which better-auth is allowed to serve stale
+    // — and that skipped EVERY gate in app/logged-in/index.tsx: the
+    // session↔local identity check (and its cross-user wipe), the local-fact
+    // check that decides whether onboarding is owed at all, and the entitlement
+    // resolution that decides paywall vs wizard. A signed-in, fully-onboarded
+    // subscriber logging in on this screen was routed to the onboarding gate and
+    // had to be bounced back out of it.
+    //
+    // /logged-in resolves all three and then routes: feed when facts exist,
+    // paywall / free-tier / onboarding otherwise. There is no case where jumping
+    // past that is right, because this route cannot know which of them applies.
     if (session && !isPending && !reauthMode && !suppressSessionShortcut) {
-        logger.debug('[Login] Session found, redirecting to /logged-in/onboarding');
-        return <Redirect href="/logged-in/onboarding" />;
+        logger.debug('[Login] Session found, redirecting to /logged-in');
+        return <Redirect href="/logged-in" />;
     }
 
     // Reauth: on successful OTP verify, compare the verified user against the

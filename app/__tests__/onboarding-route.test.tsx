@@ -3,9 +3,10 @@
 //
 // The one assertion that matters: `onLoginRedirect` (the escape hatch the
 // identity gate pulls when session and local identity are unresolvably out of
-// sync) must navigate to /login WITH reauth:'1'. login.tsx:23 redirects any
-// live session straight back to /logged-in/onboarding unless reauthMode is on,
-// so a missing param turns the recovery path into an infinite bounce.
+// sync) must navigate to /login WITH reauth:'1'. login.tsx redirects any live
+// session straight back into the app (/logged-in since 2026-08-06) unless
+// reauthMode is on, so a missing param turns the recovery path into an infinite
+// bounce.
 import { render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
