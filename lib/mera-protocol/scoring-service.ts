@@ -533,6 +533,21 @@ export async function buildReasonCallsForSubset(
   candidates: ScoringCandidate[],
   relevanceMap: Record<string, number>,
   subsetThreshold: number,
+  /**
+   * v3 routes this pass to `v3NoteSystemPrompt`, which does one job the legacy
+   * reason prompt cannot: it may DEMOTE. v3 absorbed the standalone verifier
+   * pass when it merged scoring and prose into one call, and lost its demote
+   * rules with it — 45.1% of what cleared the gate was judged "skip" by the
+   * blind panel. This is where that pressure comes back, at no extra call: the
+   * same rows had to be visited to write their notes anyway.
+   *
+   * The USER MESSAGE is identical either way. `buildReasonUserMessage` already
+   * carries the article, its score and the retrieval facts, which is exactly
+   * what a precision judgement needs too.
+   *
+   * Defaults false, so the legacy path is untouched.
+   */
+  v3 = false,
 ): Promise<CloudCallBundle> {
   const subset = candidates.filter((c) => {
     // This is the LIVE reason path (scoring-pipeline :1231 and :1846). Fixing
@@ -566,13 +581,16 @@ export async function buildReasonCallsForSubset(
       // rubric its score pass ran), so the note can name the causal mechanism
       // the scorer accepted. One call per candidate ⇒ no chunking constraint,
       // so this is a straight per-candidate selection.
-      system: reasonSystemPromptFor(
-        ARTICLE_CFG,
-        isHeadlineCandidate(c) ? 'headline' : 'standard',
-      ),
+      // The v3 note prompt is deliberately NOT split headline/standard: it
+      // judges ONE article against the user's facts, and that distinction
+      // exists to change how an article is retrieved and SCORED — which pass 1
+      // has already settled by the time we reach here.
+      system: v3
+        ? ARTICLE_CFG.v3NoteSystemPrompt
+        : reasonSystemPromptFor(ARTICLE_CFG, isHeadlineCandidate(c) ? 'headline' : 'standard'),
       prompt: reasonPrompt,
       temperature: ARTICLE_CFG.reasonTemperature,
-      maxTokens: ARTICLE_CFG.reasonMaxTokens,
+      maxTokens: v3 ? ARTICLE_CFG.v3NoteMaxTokens : ARTICLE_CFG.reasonMaxTokens,
     });
   }
 

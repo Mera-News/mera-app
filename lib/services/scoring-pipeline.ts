@@ -66,6 +66,7 @@ import {
   CLOUD_SCORE_V3_SYSTEM_PROMPT,
   CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT,
   parseScoreV3Response,
+  parseV3NoteResponse,
   buildBatchScoringUserMessage,
 } from '@/lib/news-harness/prompts/prompts';
 // RELEVANCE_V3 — interest-evidence rescue floor (strong topic evidence keeps a
@@ -1612,7 +1613,13 @@ async function doSubmitV3(args: {
       id: scoreId,
       system,
       prompt,
-      temperature: a.scoreTemperature,
+      // NOT `a.scoreTemperature` (0.1). Now that pass 1 emits no prose, its
+      // response is a run of near-identical all-numeric objects, and at 0.1 the
+      // model degenerates inside that run — `{"i": 2": 78, "impact": 50}`,
+      // collapsing two keys into one token sequence. Measured on the gold set:
+      // 47 of 292 articles lost their score to chunks that failed every parse
+      // attempt. See the note on `v3ScoreTemperature`.
+      temperature: a.v3ScoreTemperature,
       maxTokens,
     });
   });
@@ -2281,20 +2288,48 @@ async function handleV3Results(
     });
   }
 
-  // One merged pass ⇒ no reasons sub-phase. Store the maps for the recovery
-  // readers, terminate, discard the sub-gate rows, finalize.
+  // v3 pass 1 SCORES; it writes nothing the user reads. Every row that cleared
+  // the reason threshold now owes a note, and it earns one from a per-article
+  // pass 2 — the same `needs-reasons-submit` sub-phase the legacy path uses, so
+  // the crash-resume, rate-limit and recovery machinery is shared rather than
+  // duplicated. (The batch shape already carried this sub-phase; the merged
+  // design was the odd one out in skipping it.)
+  //
+  // `whyById` is normally empty here. It can be non-empty across an upgrade —
+  // a batch submitted by the previous build, whose prompt still asked for a
+  // `why`, decoding under this one. Those rows are already `complete`, so they
+  // are excluded and pass 2 does not re-do them.
+  const impactfulIds = Object.entries(relevanceMap)
+    .filter(([id, r]) => r >= REASON_RELEVANCE_THRESHOLD && !whyById.get(id))
+    .map(([id]) => id);
+
+  if (impactfulIds.length === 0) {
+    await mutatePipeline((run) => {
+      const b = run.batches.find((x) => x.batchId === batch.batchId);
+      if (!b || b.phase !== 'waiting-relevance') return null;
+      b.relevanceMap = relevanceMap;
+      b.rawRelevanceMap = relevanceMap;
+      b.reasonCandidateIds = [];
+      b.phase = 'done';
+      return true;
+    });
+    const discarded = await discardLowRelevance(batch.candidateIds, relevanceMap);
+    if (discarded > 0) await refreshUi();
+    await afterTerminal(context);
+    return;
+  }
+
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batch.batchId);
     if (!b || b.phase !== 'waiting-relevance') return null;
     b.relevanceMap = relevanceMap;
     b.rawRelevanceMap = relevanceMap;
-    b.reasonCandidateIds = [];
-    b.phase = 'done';
+    b.reasonCandidateIds = impactfulIds;
+    b.phase = 'needs-reasons-submit';
     return true;
   });
-  const discarded = await discardLowRelevance(batch.candidateIds, relevanceMap);
-  if (discarded > 0) await refreshUi();
-  await afterTerminal(context);
+
+  await submitNeedsReasons(batch.batchId, context);
 }
 
 async function handleRelevanceResults(
@@ -2483,28 +2518,100 @@ async function handleRelevanceResults(
   await submitNeedsReasons(batch.batchId, context);
 }
 
+/**
+ * Apply a v3 pass-2 batch: per article, a keep-or-demote verdict and (when
+ * kept) the sentence the user reads.
+ *
+ * The decode is NOT `decodeResults`. That reader runs `parseReasonResponse`,
+ * which treats the whole response as prose — handed `{"keep":true,"why":"…"}` it
+ * would cheerfully persist the raw JSON as the note.
+ *
+ * FAIL OPEN, in both directions:
+ *   - an unusable response leaves the pass-1 score and `reason_pending`, so the
+ *     orphaned-reasons sweep retries it. An unreadable answer is not evidence
+ *     that an article deserves demoting;
+ *   - a KEEP with no sentence is the same state — scored, still owed a note —
+ *     rather than a row stamped terminal with nothing to show.
+ * Only an explicit `{"keep": false}` demotes, and it writes the score terminal
+ * with no note: the row is going below the render gate, so a note for it would
+ * be spend with no reader.
+ */
+async function applyV3NoteResults(
+  batch: PipelineBatch,
+  batchResults: { id: string; output: string; error?: string }[],
+): Promise<void> {
+  const demoteScore = DEFAULT_HARNESS_CONFIG.articlePipeline.feedVerifierDemoteScore;
+  let kept = 0;
+  let demoted = 0;
+  let unusable = 0;
+
+  for (const res of batchResults) {
+    if (!res.id.startsWith('reason:')) continue;
+    const id = res.id.slice('reason:'.length);
+    if (res.error) {
+      unusable += 1;
+      continue;
+    }
+    const verdict = parseV3NoteResponse(res.output ?? '');
+    if (!verdict) {
+      unusable += 1;
+      continue;
+    }
+    try {
+      if (!verdict.keep) {
+        demoted += 1;
+        await saveScoringResult(id, {
+          relevance: demoteScore,
+          reason: '',
+          // Terminal: below the gate it owes no note at all, so leaving it
+          // `reason_pending` would strand it in the recovery sweep forever.
+          reasonSkipped: true,
+        });
+      } else if (verdict.why) {
+        kept += 1;
+        await saveReason(id, verdict.why);
+      }
+    } catch (err) {
+      if (isRecordNotFoundError(err)) continue;
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'save-v3-note' },
+        extra: { candidateId: id },
+      });
+    }
+  }
+
+  logger.debug(
+    `${TAG} batch ${batch.batchId} v3 notes: kept=${kept} demoted=${demoted} unusable=${unusable}`,
+  );
+}
+
 async function handleReasonResults(
   batch: PipelineBatch,
   server: ServerResults,
   context: ExecutionContext,
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
-  const { reasonMap, failedIds } = decodeResults({
-    batchResults,
-    promptsById: new Map(),
-    chunkIdToCandidates: new Map(),
-  });
 
-  for (const [id, reason] of reasonMap) {
-    if (failedIds.has(id)) continue;
-    try {
-      await saveReason(id, reason);
-    } catch (err) {
-      if (isRecordNotFoundError(err)) continue;
-      logger.captureException(err, {
-        tags: { service: 'scoring-pipeline', step: 'save-reason' },
-        extra: { candidateId: id },
-      });
+  if (isV3Batch(batch)) {
+    await applyV3NoteResults(batch, batchResults);
+  } else {
+    const { reasonMap, failedIds } = decodeResults({
+      batchResults,
+      promptsById: new Map(),
+      chunkIdToCandidates: new Map(),
+    });
+
+    for (const [id, reason] of reasonMap) {
+      if (failedIds.has(id)) continue;
+      try {
+        await saveReason(id, reason);
+      } catch (err) {
+        if (isRecordNotFoundError(err)) continue;
+        logger.captureException(err, {
+          tags: { service: 'scoring-pipeline', step: 'save-reason' },
+          extra: { candidateId: id },
+        });
+      }
     }
   }
 
@@ -2545,6 +2652,10 @@ async function submitNeedsReasons(
     subset,
     batch.rawRelevanceMap ?? {},
     REASON_RELEVANCE_THRESHOLD,
+    // Read off the BATCH, not the live config: a batch submitted under v3 must
+    // decode under v3 even if the toggle flipped while it was in flight, or its
+    // responses would be parsed by the wrong reader.
+    isV3Batch(batch),
   );
 
   if (bundle.calls.length === 0) {

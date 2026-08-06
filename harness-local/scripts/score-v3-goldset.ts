@@ -37,8 +37,9 @@ import {
   CLOUD_SCORE_V3_SYSTEM_PROMPT,
   buildBatchScoringUserMessage,
   parseScoreV3Response,
+  parseV3NoteResponse,
   isReasonGrounded,
-  CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  CLOUD_V3_NOTE_SYSTEM_PROMPT,
   buildReasonUserMessage,
   blendToScore,
   buildUserContext,
@@ -194,164 +195,49 @@ function loadFromDb(dbPath: string): {
   return { text, facts };
 }
 
-// --- Variant (b): derive a score-only system prompt -------------------------
-
-/** Every edit the surgery must land, so a silently-missed one fails the run
- *  instead of quietly producing a prompt that still asks for a reason. */
-interface Surgery {
-  name: string;
-  apply: (s: string) => string;
-}
-
-const WHY_FIELD_SECTION_START = '### The "why" field — conditional';
-const FIELD_ORDER_SECTION_START = '### Field order is load-bearing';
-
-const FIELD_ORDER_OLD =
-  '### Field order is load-bearing\n' +
-  'Always emit "i", then "rel", then "impact", then (if it qualifies) "why". ' +
-  'Decide the two numbers first and let the sentence explain them. ' +
-  'Never revise a number to fit a sentence you have already written.';
-
-const FIELD_ORDER_NEW =
-  '### Field order is load-bearing\n' +
-  'Always emit "i", then "rel", then "impact" — those three keys and nothing else. ' +
-  'Decide the two numbers independently and emit no other field.';
-
-// The output contract collapses from TWO shapes to one. Rewritten as the whole
-// two-shape block rather than just the `why` object, so the derived prompt does
-// not keep announcing "there are TWO object shapes" while showing one.
+// --- Variant (b): the score-only prompt ------------------------------------
 //
-// These strings track CLOUD_SCORE_V3_SYSTEM_PROMPT literally and WILL drift
-// again — `requireReplace` throws by design when they do, which is the intended
-// failure: a silently-unapplied surgery would leave `why` in a prompt whose
-// whole purpose is not having one.
-const CONTRACT_OLD =
-  'There are TWO object shapes and most articles take the short one:\n' +
-  '{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}' +
-  '            \u2190 the DEFAULT shape\n' +
-  '{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>, ' +
-  '"why": "<25 words or fewer>"}  \u2190 ONLY when (0.65 \u00d7 rel) + (0.35 \u00d7 impact) \u2265 34';
-const CONTRACT_NEW =
-  'Each object has exactly this shape:\n' +
-  '{"i": <1-based position>, "rel": <integer 0-100>, "impact": <integer 0-100>}';
-
-// Only meaningful when a `why` can exist at all.
-const FORMAT_ERROR_BULLET =
-  '- A low-scoring article with a `"why"` is a FORMAT ERROR \u2014 the chess-tournament ' +
-  'anchor above shows the correct low-score shape.\n';
-
-const INTEGERS_OLD =
-  '- `"rel"` and `"impact"` are INTEGERS (never decimals) and always come before `"why"`.';
-const INTEGERS_NEW = '- `"rel"` and `"impact"` are INTEGERS (never decimals).';
-
-const WHY_GATE_BULLET =
-  '- `"why"` is present ONLY when (0.65 × rel) + (0.35 × impact) ≥ 34; otherwise the key is absent.\n';
-
-function requireReplace(s: string, from: string, to: string, label: string): string {
-  if (!s.includes(from)) {
-    throw new Error(
-      `score-v3-goldset: prompt surgery "${label}" did not match — ` +
-        'CLOUD_SCORE_V3_SYSTEM_PROMPT has drifted. Re-derive the score-only variant before running.',
-    );
-  }
-  return s.replace(from, to);
-}
-
-const SURGERIES: Surgery[] = [
-  {
-    // Drop the whole conditional-reason section (rubric + voice rule + the
-    // "never fabricate a connection" paragraph), up to the next heading.
-    name: 'remove why-field section',
-    apply: (s) => {
-      const start = s.indexOf(WHY_FIELD_SECTION_START);
-      const end = s.indexOf(FIELD_ORDER_SECTION_START);
-      if (start === -1 || end === -1 || end <= start) {
-        throw new Error(
-          'score-v3-goldset: could not locate the why-field section boundaries in ' +
-            'CLOUD_SCORE_V3_SYSTEM_PROMPT — prompt has drifted.',
-        );
-      }
-      return s.slice(0, start) + s.slice(end);
-    },
-  },
-  {
-    name: 'rewrite field-order paragraph',
-    apply: (s) => requireReplace(s, FIELD_ORDER_OLD, FIELD_ORDER_NEW, 'field-order paragraph'),
-  },
-  {
-    name: 'rewrite output contract',
-    apply: (s) => requireReplace(s, CONTRACT_OLD, CONTRACT_NEW, 'output contract'),
-  },
-  {
-    name: 'rewrite integers bullet',
-    apply: (s) => requireReplace(s, INTEGERS_OLD, INTEGERS_NEW, 'integers bullet'),
-  },
-  {
-    name: 'drop why-gate bullet',
-    apply: (s) => requireReplace(s, WHY_GATE_BULLET, '', 'why-gate bullet'),
-  },
-  {
-    name: 'drop format-error bullet',
-    apply: (s) => requireReplace(s, FORMAT_ERROR_BULLET, '', 'format-error bullet'),
-  },
-  {
-    // The calibration anchors and the Task example both carry inline whys.
-    name: 'strip why from examples',
-    apply: (s) => {
-      const stripped = s.replace(/,"why":"[^"]*"/g, '');
-      if (stripped === s) {
-        throw new Error('score-v3-goldset: no inline "why" examples found to strip — prompt drifted.');
-      }
-      return stripped;
-    },
-  },
-  {
-    name: 'strip "no reason emitted" aside',
-    apply: (s) => requireReplace(s, ', no reason emitted', '', 'no-reason-emitted aside'),
-  },
-];
-
+// This USED to be derived by string surgery over CLOUD_SCORE_V3_SYSTEM_PROMPT,
+// because that prompt asked for a conditional user-facing `why` and the
+// experiment needed a copy that did not. The experiment settled it: 4.9% of
+// those notes described a different article than the one they sat on, so v3
+// pass 1 stopped asking for prose at all. The shipped prompt IS the score-only
+// prompt now, and carving is no longer meaningful.
+//
+// The assertion stays, inverted: if a `why` contract ever reappears in pass 1,
+// this run must stop rather than silently measure a design nobody chose.
 function deriveScoreOnlyPrompt(): string {
-  let out = CLOUD_SCORE_V3_SYSTEM_PROMPT;
-  for (const surgery of SURGERIES) out = surgery.apply(out);
-
-  // The base rubric legitimately contains lowercase prose "why" ("It names why
-  // this article was retrieved", an anchor titled "Why founders burn out"), so
-  // the assertion targets the JSON field reference specifically.
-  const leftovers = out
-    .split('\n')
-    .map((line, i) => ({ line, i }))
-    .filter(({ line }) => line.includes('"why"') || line.includes('"why":'));
-  if (leftovers.length > 0) {
+  const p = CLOUD_SCORE_V3_SYSTEM_PROMPT;
+  const reintroduced = ['(0.65 × rel) + (0.35 × impact)', '25 words or fewer'].filter((m) =>
+    p.includes(m),
+  );
+  if (reintroduced.length > 0) {
     throw new Error(
-      'score-v3-goldset: derived score-only prompt still references the "why" field:\n' +
-        leftovers.map(({ i, line }) => `  line ${i + 1}: ${line}`).join('\n'),
+      'score-v3-goldset: CLOUD_SCORE_V3_SYSTEM_PROMPT asks for a user-facing sentence again ' +
+        `(${reintroduced.join(', ')}). Pass 1 is score-only by design — see CLOUD_V3_NOTE_SYSTEM_PROMPT.`,
     );
   }
-  return out;
+  return p;
 }
 
-/** Variant (b)'s user message: the v3 message with the trailer's `"why"?` key
- *  removed, so the last thing the model reads matches its system contract. */
-const TRAILER_V3 = '({"i","rel","impact","why"?})';
+/** The trailer the SHIPPED v3 user message ends with. Pass 1 asks for three
+ *  keys and no prose, so every variant now sends the same message — the old
+ *  swap that carved `"why"?` out of it has nothing left to carve. */
 const TRAILER_SCORE_ONLY = '({"i","rel","impact"})';
 
 function buildUserMessage(
-  variant: VariantName,
+  _variant: VariantName,
   userContext: string,
   articles: { title: string; description: string; country?: string; relatedFacts?: string[] }[],
 ): string {
   const msg = buildBatchScoringUserMessage({ userContext, articles, v3: true });
-  // 'split' shares pass 1 with 'score-only' — same prompt, same trailer, same
-  // chunking. The two differ only in what happens afterwards.
-  if (variant === 'merged') return msg;
-  if (!msg.includes(TRAILER_V3)) {
+  if (!msg.includes(TRAILER_SCORE_ONLY)) {
     throw new Error(
-      'score-v3-goldset: v3 trailer not found in the built user message — ' +
+      'score-v3-goldset: the score-only trailer is missing from the built user message — ' +
         'buildBatchScoringUserMessage has drifted.',
     );
   }
-  return msg.replace(TRAILER_V3, TRAILER_SCORE_ONLY);
+  return msg;
 }
 
 // --- Statistics -------------------------------------------------------------
@@ -597,40 +483,14 @@ async function scoreVariant(
 // golden 1000-article run (FEED precision 73.2% -> 80.4%), and v3 dropped that
 // pass entirely when it merged everything into one call. Only the output
 // contract is replaced, since the verifier's own is written for a batch.
-const SPLIT_PASS2_SYSTEM = `${CLOUD_FEED_VERIFIER_SYSTEM_PROMPT}
+// Pass 2 uses the SHIPPED prompt, not a local copy — the point of this run is
+// to measure what the app actually sends.
+const SPLIT_PASS2_SYSTEM = CLOUD_V3_NOTE_SYSTEM_PROMPT;
 
-## This call covers exactly ONE article, and also writes its note
-
-You see one article, its pre-computed score, and the user's facts. Do both jobs:
-
-1. KEEP or DEMOTE, on the rules above. Default to keep; demote only on a clear NO pattern.
-2. If you keep it, write the one sentence the user reads under the headline: 25 words or fewer, containing (a) a specific detail from THIS article — the event, entity, place, policy or product, never "this topic" — and (b) the specific user fact that creates the link, never "your interests". Match the tone to the score: confident when it is high, one hedge word in the middle, and plainly state the limit when the topic matches but nothing changes for them.
-
-The sentence is read BY the user, so write it TO them — "you"/"your", never "the user" or any third person. Never fabricate a connection: if the article is about holiday homes, the sentence is about holiday homes. Never echo "[User facts]", "Relevance Score:", or any markdown.
-
-Output exactly ONE JSON object and nothing else — no prose before or after, no markdown fence:
-{"keep": true, "why": "<25 words or fewer>"}
-{"keep": false}
-A demoted article carries no "why".`;
-
-/** One decoded pass-2 verdict. `null` when the response was unusable, which the
- *  caller fails open on — keeping the pass-1 score and simply owing no note. */
+/** Kept as a thin alias so the call sites below read the same as before; the
+ *  decode itself is the shipped one. */
 function parseSplitPass2(output: string): { keep: boolean; why: string | null } | null {
-  const text = (output ?? '').trim();
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
-  if (start === -1 || end <= start) return null;
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text.slice(start, end + 1));
-  } catch {
-    return null;
-  }
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) return null;
-  const o = parsed as Record<string, unknown>;
-  if (typeof o.keep !== 'boolean') return null;
-  const why = typeof o.why === 'string' && o.why.trim().length > 0 ? o.why.trim() : null;
-  return { keep: o.keep, why: o.keep ? why : null };
+  return parseV3NoteResponse(output);
 }
 
 /**
@@ -1090,7 +950,7 @@ async function main(): Promise<number> {
       scoped,
       userContext,
       llmFactory,
-      args.p1Temp ?? CFG.scoreTemperature,
+      args.p1Temp ?? CFG.v3ScoreTemperature,
     );
     log(
       `[${variant}] done in ${Math.round((Date.now() - started) / 1000)}s — ` +

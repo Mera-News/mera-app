@@ -358,6 +358,18 @@ export function buildReasonCallsForSubset(
   factStatements: string[],
   config: ArticlePipelineConfig = ARTICLE_CFG,
   logger: HarnessLogger = NOOP_LOGGER,
+  /**
+   * v3 routes this pass to `v3NoteSystemPrompt`, which does one extra job the
+   * legacy prompt cannot: it may DEMOTE. v3 absorbed the standalone verifier
+   * pass when it merged scoring and prose into one call and then lost its
+   * demote rules with it; this is where they come back. The USER MESSAGE is
+   * identical either way — `buildReasonUserMessage` already carries the
+   * article, its score and the retrieval facts, which is exactly what a
+   * precision judgement needs too.
+   *
+   * Defaults false, so every existing caller keeps the legacy behaviour.
+   */
+  v3 = false,
 ): CloudCallBundle {
   const subset = candidates.filter((c) => {
     // isScorableCandidate: without it a factless headline that SCORED well gets
@@ -388,13 +400,16 @@ export function buildReasonCallsForSubset(
     promptsById.set(reasonId, reasonPrompt);
     calls.push({
       id: reasonId,
-      system: reasonSystemPromptFor(
-        config,
-        isHeadlineCandidate(c) ? 'headline' : 'standard',
-      ),
+      // The v3 note prompt is deliberately NOT split by headline/standard: it
+      // judges ONE article against the user's facts, and the headline/standard
+      // distinction exists to change how an article is RETRIEVED and SCORED,
+      // which pass 1 has already settled by the time we get here.
+      system: v3
+        ? config.v3NoteSystemPrompt
+        : reasonSystemPromptFor(config, isHeadlineCandidate(c) ? 'headline' : 'standard'),
       prompt: reasonPrompt,
       temperature: config.reasonTemperature,
-      maxTokens: config.reasonMaxTokens,
+      maxTokens: v3 ? config.v3NoteMaxTokens : config.reasonMaxTokens,
     });
   }
 
