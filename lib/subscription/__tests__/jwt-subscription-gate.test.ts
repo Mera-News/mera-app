@@ -13,8 +13,13 @@
 // has to be driven by the same `setServerBilling` a real entitlement sync calls,
 // not by a hand-rolled double.
 
+// Partial module mock: `entitlement-sync` (exercised further down) also calls
+// `syncRevenueCatAttributes` on its success path, and an unmocked export in a
+// factory mock is `undefined`, not the real function — so it has to be listed
+// here even though nothing in this suite asserts on it.
 jest.mock('@/lib/revenuecat', () => ({
     getActiveTier: jest.fn(() => null),
+    syncRevenueCatAttributes: jest.fn(async () => {}),
 }));
 
 const mockRecordAiLocked = jest.fn();
