@@ -42,6 +42,10 @@ import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-s
 import { setCurrentPathname } from '@/lib/nav-state';
 import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
 import { initNetworkListener } from '@/lib/stores/network-store';
+import {
+  applySentryUser,
+  startSentryScopeSync,
+} from '@/lib/observability/sentry-scope';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import {
@@ -159,6 +163,24 @@ function AppRoot() {
     );
     return remove;
   }, []);
+
+  // Keep the Sentry scope tracking app state for the life of the process. This
+  // is the ONLY registration point: lib/sentry-init.ts runs before store
+  // hydration and must stay store-free (see the cycle note in its header), so
+  // without this mount every event would carry build tags and nothing else.
+  useEffect(() => startSentryScopeSync(), []);
+
+  // Attribute events to the signed-in user (id only — see
+  // lib/observability/sentry-scope.ts for why it is the raw better-auth id and
+  // not a hash). Reads the LOCAL identity rather than the better-auth session,
+  // matching the rest of the app: a crash is most likely when /get-session is
+  // least likely to answer, and those are the events we can least afford to
+  // receive unattributed. Logout clears userId, so this also nulls the scope —
+  // redundantly with the two explicit sign-out paths, which is the point.
+  const sentryUserId = useUserStore((s) => s.userId);
+  useEffect(() => {
+    applySentryUser(sentryUserId ?? null);
+  }, [sentryUserId]);
 
   // Hydrate Zustand stores from WatermelonDB on app start. Fire-and-forget —
   // nothing here blocks the first paint of the For You feed. The cluster

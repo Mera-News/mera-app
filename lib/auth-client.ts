@@ -132,6 +132,16 @@ export const clearAuthStorage = async () => {
     // Reset the RevenueCat customer to anonymous so the next signed-in user
     // doesn't inherit the previous user's entitlements.
     await logoutRevenueCat();
+    // Same reasoning for crash reporting: without this, every error after a
+    // sign-out is attributed to the user who just left. Required imports
+    // lazily — sentry-scope reaches the Zustand stores, and a static import
+    // here would close the auth-client → apollo-client → auth-client cycle.
+    try {
+        const { applySentryUser } = require('@/lib/observability/sentry-scope');
+        applySentryUser(null);
+    } catch {
+        // Never block a sign-out on telemetry.
+    }
     try {
         await authClient.signOut();
     } catch {

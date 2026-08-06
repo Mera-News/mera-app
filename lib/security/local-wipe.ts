@@ -128,6 +128,17 @@ export async function wipeAllLocalUserData(): Promise<void> {
     // Never block the wipe on the billing SDK.
   }
 
+  // And drop the Sentry user id, so post-logout errors are not attributed to the
+  // user who just left. clearAuthStorage() does this too — both sign-out paths
+  // are independently complete by design (see this file's header), and the call
+  // is idempotent, so the duplication is deliberate rather than redundant.
+  try {
+    const { applySentryUser } = require('@/lib/observability/sentry-scope');
+    applySentryUser(null);
+  } catch {
+    // Never block the wipe on telemetry.
+  }
+
   // The PIN store's in-memory copy of the flags we just deleted. Written via
   // setState rather than setLockEnabled(), which persists to the keychain and
   // THROWS on a write failure — that would abort the wipe right before the

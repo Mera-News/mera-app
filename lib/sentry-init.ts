@@ -10,11 +10,29 @@
 
 import * as Sentry from '@sentry/react-native';
 
+import { getStaticAppContext } from './observability/app-context';
+
 // Note: this file intentionally does NOT import from ./config/endpoints.
 // sentry-init must initialise Sentry before anything else so that any later
 // module-load throw (including endpoints.ts asserting required env vars)
 // is captured by Sentry's global handler. Importing endpoints here would
 // reverse that order and the bootstrap failure would go unreported.
+//
+// ./observability/app-context is the ONE exception, and only because it is
+// store-free and reads nothing at module scope (every native read happens
+// inside getStaticAppContext(), which is called defensively below). The
+// runtime half — ./observability/runtime-context.ts — must NEVER be imported
+// here: it pulls in five Zustand stores, and those reach apollo-client →
+// auth-client, i.e. exactly the cycle this file's ordering rule exists to
+// avoid. The runtime tags are pushed onto the scope later by
+// ./observability/sentry-scope.ts instead.
+
+// WHAT beforeSend CAN AND CANNOT DO — read before relying on it.
+// beforeSend runs in JS, so it only sees events the JS layer sends. NATIVE
+// crashes are captured and uploaded by the native SDK directly and never pass
+// through here. The real control is therefore always at the SET site: never put
+// a value on the scope that must not leave the device. Everything below is
+// belt-and-suspenders for the JS path only.
 
 // Blunt cap for free-form string payloads. `extra` blobs and breadcrumb `data`
 // across the codebase carry server response bodies, prompts, and other
@@ -22,16 +40,57 @@ import * as Sentry from '@sentry/react-native';
 // redaction marker so partial plaintext/PII can't ride out on an event.
 const MAX_PII_STRING_LEN = 200;
 
-function capStringValues(
-  obj: Record<string, unknown> | undefined,
+// The length cap alone is not enough: the highest-value leaks are SHORT. A
+// userId, an email address, a topic string, or an article title all fit inside
+// 200 chars and would sail through untouched. So any key whose NAME suggests
+// identity or user-derived content is redacted regardless of its value.
+//
+// Matching is a case-insensitive SUBSTRING test on the key name, deliberately:
+// `userEmail`, `X-Authorization`, `promptTokens` and `topicText` must all hit,
+// and for a privacy control over-redaction is the safe direction to err in
+// (`keyboard` matching `key` costs us nothing but a diagnostic we didn't need).
+const REDACTED_KEY_PATTERN =
+  /email|token|statement|topics?|text|title|prompt|content|cookie|key|secret|password|authorization/i;
+
+/**
+ * In-place scrub of a free-form payload: denylisted keys are dropped outright,
+ * over-long strings are replaced with a length marker, and nested objects AND
+ * arrays are walked.
+ *
+ * Arrays used to be skipped (`!Array.isArray(value)`), which meant a plain
+ * `string[]` of prompts or article titles bypassed the cap entirely — the exact
+ * shape logger.info/captureException call sites push most often.
+ */
+function scrubEventValues(
+  container: Record<string, unknown> | unknown[] | undefined,
 ): void {
-  if (!obj) return;
-  for (const key of Object.keys(obj)) {
-    const value = obj[key];
+  if (!container) return;
+
+  if (Array.isArray(container)) {
+    // Array elements have no key name, so only the length cap applies here.
+    for (let i = 0; i < container.length; i++) {
+      const value = container[i];
+      if (typeof value === 'string' && value.length > MAX_PII_STRING_LEN) {
+        container[i] = `[redacted:${value.length}]`;
+      } else if (value !== null && typeof value === 'object') {
+        scrubEventValues(value as Record<string, unknown> | unknown[]);
+      }
+    }
+    return;
+  }
+
+  for (const key of Object.keys(container)) {
+    const value = container[key];
+    if (REDACTED_KEY_PATTERN.test(key)) {
+      // Null/undefined carry nothing; leave them so "the field was absent"
+      // stays distinguishable from "the field was scrubbed".
+      if (value !== null && value !== undefined) container[key] = '[redacted:key]';
+      continue;
+    }
     if (typeof value === 'string' && value.length > MAX_PII_STRING_LEN) {
-      obj[key] = `[redacted:${value.length}]`;
-    } else if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-      capStringValues(value as Record<string, unknown>);
+      container[key] = `[redacted:${value.length}]`;
+    } else if (value !== null && typeof value === 'object') {
+      scrubEventValues(value as Record<string, unknown> | unknown[]);
     }
   }
 }
@@ -53,8 +112,16 @@ if (SENTRY_ENABLED) {
     environment: __DEV__ ? 'development' : 'production',
     // Do NOT auto-attach IP address, request headers, or OS-user identifiers to
     // events. This is a privacy/E2EE product; nothing relies on server-side PII
-    // inference (logger.setUser is never called). The beforeSend scrubber below
-    // is a belt-and-suspenders defense in case a future contributor re-adds it.
+    // inference.
+    //
+    // THE USER CONTRACT: `user.id` ONLY, and it is the raw better-auth userId —
+    // the same value that is RevenueCat's app_user_id and our UserBilling.userId,
+    // which is what makes "this crash, that subscriber" answerable at all. It is
+    // set in exactly one place (./observability/sentry-scope.ts) and cleared on
+    // logout from both sign-out paths. NEVER email, username, ip_address, phone,
+    // push token, or an ad identifier — and nothing derived from persona facts,
+    // topics, interests, locations or reading history, in tags or contexts
+    // either. See the note above on why beforeSend cannot be the control here.
     sendDefaultPii: false,
     integrations: [
       // We render the feedback form ourselves via the <FeedbackWidget> component
@@ -79,19 +146,26 @@ if (SENTRY_ENABLED) {
     // Defensive scrubber: strip residual PII and cap free-form payloads
     // regardless of the flag above, so a future regression can't leak content.
     beforeSend(event) {
-      // Drop any IP / id / email the SDK or a future setUser would attach.
-      delete event.user;
+      // Keep `user.id` (the join key — see the sendDefaultPii note above) and
+      // discard every other user field, whether the SDK attached it or a future
+      // contributor set it. Allowlisting rather than deleting known-bad keys
+      // means a field Sentry adds in a later SDK version is dropped by default.
+      if (event.user) {
+        const id = typeof event.user.id === 'string' ? event.user.id : undefined;
+        if (id) event.user = { id };
+        else delete event.user;
+      }
       // Null out request headers/cookies if present.
       if (event.request) {
         delete event.request.cookies;
         delete event.request.headers;
       }
-      // Cap free-form extra payloads (response bodies, prompt metadata, etc.).
-      capStringValues(event.extra);
-      // Cap breadcrumb data values (logger.info/warn/debug push free-form data).
+      // Scrub free-form extra payloads (response bodies, prompt metadata, etc.).
+      scrubEventValues(event.extra);
+      // Scrub breadcrumb data values (logger.info/warn/debug push free-form data).
       if (event.breadcrumbs) {
         for (const crumb of event.breadcrumbs) {
-          capStringValues(crumb.data);
+          scrubEventValues(crumb.data);
         }
       }
       return event;
@@ -118,4 +192,28 @@ if (SENTRY_ENABLED) {
     'inference_endpoint',
     process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT ?? 'unset',
   );
+
+  // Build/device facts, set as TAGS (filterable, and — unlike a local scope —
+  // bridged to the native layer at set time by enableSyncToNative, so they
+  // survive a native crash) plus one context block for readability when you're
+  // already looking at an event. `ota_update_id` is the reason this exists:
+  // Sentry's `release` only tracks the native build, so without it an
+  // OTA-introduced crash cannot be pinned to the JS bundle that caused it.
+  //
+  // Wrapped because these are native-module reads and this file is the app's
+  // FIRST import — a throw here would take down the whole bundle before Sentry
+  // has anything useful to report about it.
+  try {
+    const appContext = getStaticAppContext();
+    // Emitted one-by-one rather than via setTags: it keeps the values that
+    // reach native identical either way, and setTag is the API every other
+    // call site in the app already uses.
+    for (const [key, value] of Object.entries(appContext)) {
+      Sentry.setTag(key, String(value));
+    }
+    Sentry.setContext('mera_app_build', { ...appContext });
+  } catch {
+    // Diagnostics are never worth a boot failure. The event still ships, just
+    // without build attribution.
+  }
 }

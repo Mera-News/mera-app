@@ -14,6 +14,21 @@ jest.mock('@sentry/react-native', () => ({
   captureException: jest.fn(),
 }));
 
+// sentry-init now reads lib/observability/app-context.ts for the static build
+// tags. Neither of these native modules is mocked globally (jest.setup.js covers
+// expo-device only), so they're mocked here rather than there — this suite
+// shadows the global Sentry mock anyway, so it is already self-contained.
+jest.mock('expo-application', () => ({
+  nativeApplicationVersion: '1.2.3',
+  nativeBuildVersion: '456',
+}));
+jest.mock('expo-updates', () => ({
+  updateId: 'update-abc',
+  channel: 'production',
+  runtimeVersion: '1.2.3',
+  isEmbeddedLaunch: false,
+}));
+
 describe('sentry-init (prod path: __DEV__ = false)', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -83,6 +98,30 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
     expect(mockSetTag).toHaveBeenCalledWith('inference_endpoint', 'unset');
   });
 
+  describe('static build tags', () => {
+    // Not just "some tags are set": ota_update_id is the only way to tell which
+    // JS bundle a crash came from, since Sentry's `release` tracks the native
+    // build only. Losing it silently is the failure this asserts against.
+    it('sets one tag per static app-context field, stringified', () => {
+      require('../sentry-init');
+      expect(mockSetTag).toHaveBeenCalledWith('app_version', '1.2.3');
+      expect(mockSetTag).toHaveBeenCalledWith('app_build', '456');
+      expect(mockSetTag).toHaveBeenCalledWith('ota_update_id', 'update-abc');
+      expect(mockSetTag).toHaveBeenCalledWith('ota_channel', 'production');
+      expect(mockSetTag).toHaveBeenCalledWith('runtime_version', '1.2.3');
+      // Booleans must arrive as strings — Sentry tag values are strings.
+      expect(mockSetTag).toHaveBeenCalledWith('is_embedded_launch', 'false');
+    });
+
+    it('mirrors the static context into a mera_app_build context block', () => {
+      require('../sentry-init');
+      expect(mockSetContext).toHaveBeenCalledWith(
+        'mera_app_build',
+        expect.objectContaining({ ota_update_id: 'update-abc' }),
+      );
+    });
+  });
+
   describe('beforeSend scrubber', () => {
     let capturedBeforeSend: ((event: any) => any) | null = null;
 
@@ -101,8 +140,39 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
       require('../sentry-init');
     });
 
-    it('strips event.user', () => {
+    // The user object is ALLOWLISTED, not denylisted: `id` is the join key to
+    // RevenueCat/UserBilling and support triage, everything else is PII.
+    it('keeps user.id', () => {
       const event = { user: { id: 'u1', email: 'u@test.com' }, extra: {} };
+      const result = capturedBeforeSend!(event);
+      expect(result.user).toEqual({ id: 'u1' });
+    });
+
+    it('strips email, username and ip_address from event.user', () => {
+      const event = {
+        user: {
+          id: 'u1',
+          email: 'u@test.com',
+          username: 'someone',
+          ip_address: '203.0.113.9',
+        },
+        extra: {},
+      };
+      const result = capturedBeforeSend!(event);
+      expect(result.user.email).toBeUndefined();
+      expect(result.user.username).toBeUndefined();
+      expect(result.user.ip_address).toBeUndefined();
+    });
+
+    it('drops unknown user keys rather than passing them through', () => {
+      // A field a future SDK version adds must not ship by default.
+      const event = { user: { id: 'u1', segment: 'beta', geo: {} }, extra: {} };
+      const result = capturedBeforeSend!(event);
+      expect(Object.keys(result.user)).toEqual(['id']);
+    });
+
+    it('deletes event.user entirely when there is no id (SDK-attached ip only)', () => {
+      const event = { user: { ip_address: '203.0.113.9' }, extra: {} };
       const result = capturedBeforeSend!(event);
       expect(result.user).toBeUndefined();
     });
@@ -152,6 +222,92 @@ describe('sentry-init (prod path: __DEV__ = false)', () => {
     it('returns the event (not null)', () => {
       const event = { extra: {}, request: {} };
       expect(capturedBeforeSend!(event)).toBe(event);
+    });
+
+    // The cap used to skip arrays outright, so `string[]` — the shape logger
+    // call sites push most often — bypassed redaction entirely.
+    it('caps over-long strings inside arrays', () => {
+      const longStr = 'a'.repeat(400);
+      const event = { extra: { items: ['ok', longStr] }, request: {} };
+      const result = capturedBeforeSend!(event);
+      expect(result.extra.items[0]).toBe('ok');
+      expect(result.extra.items[1]).toBe('[redacted:400]');
+    });
+
+    it('caps over-long strings in objects nested inside arrays', () => {
+      const longStr = 'b'.repeat(500);
+      const event = { extra: { rows: [{ body: longStr }] }, request: {} };
+      const result = capturedBeforeSend!(event);
+      expect(result.extra.rows[0].body).toBe('[redacted:500]');
+    });
+
+    it('caps over-long strings in arrays nested inside arrays', () => {
+      const longStr = 'c'.repeat(210);
+      const event = { extra: { grid: [['ok', longStr]] }, request: {} };
+      const result = capturedBeforeSend!(event);
+      expect(result.extra.grid[0][1]).toBe('[redacted:210]');
+    });
+
+    describe('key-name denylist', () => {
+      // The length cap misses exactly the leaks that matter most: a userId, an
+      // email, an article title and a topic string all fit inside 200 chars.
+      it.each([
+        'email',
+        'userEmail',
+        'token',
+        'statement',
+        'topic',
+        'topics',
+        'text',
+        'title',
+        'prompt',
+        'content',
+        'cookie',
+        'apiKey',
+        'secret',
+        'password',
+        'Authorization',
+      ])('redacts short values under the key %s', (key) => {
+        const event = { extra: { [key]: 'short-but-sensitive' }, request: {} };
+        const result = capturedBeforeSend!(event);
+        expect(result.extra[key]).toBe('[redacted:key]');
+      });
+
+      it('matches case-insensitively and inside nested objects', () => {
+        const event = { extra: { nested: { EMAIL: 'a@b.c' } }, request: {} };
+        const result = capturedBeforeSend!(event);
+        expect(result.extra.nested.EMAIL).toBe('[redacted:key]');
+      });
+
+      it('redacts a denylisted key whose value is an object, without recursing', () => {
+        const event = { extra: { prompt: { system: 'hi' } }, request: {} };
+        const result = capturedBeforeSend!(event);
+        expect(result.extra.prompt).toBe('[redacted:key]');
+      });
+
+      it('leaves null/undefined under a denylisted key alone', () => {
+        // "absent" and "scrubbed" must stay distinguishable when triaging.
+        const event = { extra: { token: null }, request: {} };
+        const result = capturedBeforeSend!(event);
+        expect(result.extra.token).toBeNull();
+      });
+
+      it('applies to breadcrumb data too', () => {
+        const event = {
+          extra: {},
+          breadcrumbs: [{ data: { email: 'a@b.c' } }],
+          request: {},
+        };
+        const result = capturedBeforeSend!(event);
+        expect(result.breadcrumbs[0].data.email).toBe('[redacted:key]');
+      });
+
+      it('leaves non-denylisted short keys untouched', () => {
+        const event = { extra: { status: 404, method: 'POST' }, request: {} };
+        const result = capturedBeforeSend!(event);
+        expect(result.extra.status).toBe(404);
+        expect(result.extra.method).toBe('POST');
+      });
     });
   });
 });

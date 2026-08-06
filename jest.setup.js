@@ -215,15 +215,39 @@ jest.mock('expo-web-browser', () => ({
   dismissBrowser: jest.fn(),
   WebBrowserPresentationStyle: { AUTOMATIC: 'automatic' },
 }));
+// Keep this surface a SUPERSET of every Sentry API the app calls. The mock is
+// global, so a missing key surfaces as `undefined is not a function` in the
+// ~132 suites that transitively import lib/logger.ts — far from the code that
+// actually added the call.
 jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),
   captureException: jest.fn(),
   captureMessage: jest.fn(),
+  captureFeedback: jest.fn(),
   addBreadcrumb: jest.fn(),
   setUser: jest.fn(),
   setTag: jest.fn(),
+  setTags: jest.fn(),
   setContext: jest.fn(),
+  setExtra: jest.fn(),
+  setExtras: jest.fn(),
+  withScope: jest.fn((cb) =>
+    cb({
+      setTag: jest.fn(),
+      setExtra: jest.fn(),
+      setContext: jest.fn(),
+      setLevel: jest.fn(),
+    }),
+  ),
+  getCurrentScope: jest.fn(() => ({
+    setTag: jest.fn(),
+    setExtra: jest.fn(),
+    setContext: jest.fn(),
+    setUser: jest.fn(),
+  })),
+  startInactiveSpan: jest.fn(() => ({ end: jest.fn(), setStatus: jest.fn() })),
   wrap: jest.fn((c) => c),
+  feedbackIntegration: jest.fn(() => ({})),
   reactNavigationIntegration: jest.fn(() => ({})),
   Severity: { Error: 'error', Warning: 'warning' },
 }));
@@ -254,6 +278,16 @@ jest.mock('react-native-purchases', () => ({
     ),
     addCustomerInfoUpdateListener: jest.fn(),
     removeCustomerInfoUpdateListener: jest.fn(),
+    // Subscriber attributes. `setAttributes` is write-only from the SDK, so
+    // tests assert on the mock's call args — that is the only way to check what
+    // we send. Never add setEmail/setPhoneNumber/setDisplayName/
+    // collectDeviceIdentifiers here: they are not called by design, and a mock
+    // for them would make an accidental future call silently pass.
+    setAttributes: jest.fn(),
+    syncAttributesAndOfferingsIfNeeded: jest.fn(() =>
+      Promise.resolve({ current: null, all: {} }),
+    ),
+    getAppUserID: jest.fn(() => Promise.resolve('test-user-id')),
   },
   LOG_LEVEL: {
     VERBOSE: 'VERBOSE',

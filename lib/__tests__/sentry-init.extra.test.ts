@@ -1,8 +1,10 @@
 // Supplemental tests for sentry-init.ts.
 // Covers branches NOT exercised by the primary sentry-init.test.ts:
-//  • capStringValues(undefined) → line 28 early-return
-//  • capStringValues with an array-valued key → !Array.isArray(value) = false branch
-//  • runtime_endpoints context when auth/graphql env vars are missing (lines 79-80)
+//  • scrubEventValues(undefined) → early-return
+//  • array recursion (the branch that used to be skipped outright)
+//  • runtime_endpoints context when auth/graphql env vars are missing
+//  • the static build tags degrading rather than throwing when a native module
+//    read fails
 
 const mockSentryInit = jest.fn();
 const mockSetContext = jest.fn();
@@ -17,7 +19,27 @@ jest.mock('@sentry/react-native', () => ({
   captureException: jest.fn(),
 }));
 
-describe('sentry-init supplemental — capStringValues edge cases', () => {
+// See the note in sentry-init.test.ts — expo-application/expo-updates have no
+// global mock, and sentry-init reaches them via observability/app-context.ts.
+jest.mock('expo-application', () => ({
+  nativeApplicationVersion: '1.2.3',
+  nativeBuildVersion: '456',
+}));
+// `updateId` is a getter so one case can make the native read throw — sentry-init
+// is the app's FIRST import, so a native module failing there must degrade to
+// "no build tags" and never take the bundle down.
+let mockUpdatesThrows = false;
+jest.mock('expo-updates', () => ({
+  get updateId() {
+    if (mockUpdatesThrows) throw new Error('native module unavailable');
+    return 'update-abc';
+  },
+  channel: 'production',
+  runtimeVersion: '1.2.3',
+  isEmbeddedLaunch: false,
+}));
+
+describe('sentry-init supplemental — scrubEventValues edge cases', () => {
   let capturedBeforeSend: ((event: any) => any) | null = null;
 
   beforeEach(() => {
@@ -39,8 +61,8 @@ describe('sentry-init supplemental — capStringValues edge cases', () => {
     (global as any).__DEV__ = true;
   });
 
-  it('does not throw when event.extra is undefined (capStringValues early return)', () => {
-    // event.extra is undefined → capStringValues(undefined) → early return at line 28
+  it('does not throw when event.extra is undefined (scrubEventValues early return)', () => {
+    // event.extra is undefined → scrubEventValues(undefined) → early return
     const event = { request: {} }; // no `extra` key
     expect(() => capturedBeforeSend!(event)).not.toThrow();
     // event should still be returned (not null)
@@ -52,18 +74,17 @@ describe('sentry-init supplemental — capStringValues edge cases', () => {
     expect(() => capturedBeforeSend!(event)).not.toThrow();
   });
 
-  it('does not recurse into array values in extra (array branch in capStringValues)', () => {
-    // When a value is an array, the !Array.isArray(value) check is false —
-    // the recursion should be skipped. The array should be left untouched.
+  it('walks array values in extra without replacing the array itself', () => {
+    // Arrays are recursed INTO (they used to be skipped entirely), but the
+    // container is mutated in place rather than swapped out.
     const arrayVal = ['item1', 'item2'];
     const event = { extra: { list: arrayVal }, request: {} };
     const result = capturedBeforeSend!(event);
-    // The array itself should still be there (not redacted)
     expect(result.extra.list).toBe(arrayVal);
-    expect(Array.isArray(result.extra.list)).toBe(true);
+    expect(result.extra.list).toEqual(['item1', 'item2']);
   });
 
-  it('does not throw when breadcrumb.data is undefined (capStringValues early return)', () => {
+  it('does not throw when breadcrumb.data is undefined (scrubEventValues early return)', () => {
     const event = {
       extra: {},
       breadcrumbs: [{ category: 'info' }], // no `data` field
@@ -121,6 +142,36 @@ describe('sentry-init supplemental — null endpoint values in setContext', () =
     expect(mockSetContext).toHaveBeenCalledWith(
       'runtime_endpoints',
       expect.objectContaining({ graphql: null }),
+    );
+  });
+});
+
+describe('sentry-init supplemental — static build tags degrade safely', () => {
+  beforeEach(() => {
+    jest.resetModules();
+    jest.clearAllMocks();
+    (global as any).__DEV__ = false;
+    process.env.EXPO_PUBLIC_SENTRY_DSN = 'https://test@sentry.io/1';
+    process.env.EXPO_PUBLIC_INFERENCE_ENDPOINT = 'https://infer.test';
+    mockUpdatesThrows = true;
+  });
+
+  afterEach(() => {
+    (global as any).__DEV__ = true;
+    mockUpdatesThrows = false;
+  });
+
+  it('still initialises Sentry when a native build-fact read throws', () => {
+    expect(() => require('../sentry-init')).not.toThrow();
+    expect(mockSentryInit).toHaveBeenCalled();
+    // The endpoint tag is set before the build facts, so it survives.
+    expect(mockSetTag).toHaveBeenCalledWith(
+      'inference_endpoint',
+      'https://infer.test',
+    );
+    expect(mockSetContext).not.toHaveBeenCalledWith(
+      'mera_app_build',
+      expect.anything(),
     );
   });
 });
