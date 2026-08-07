@@ -26,12 +26,14 @@ import {
 import { checkRequirements } from '@/lib/mera-protocol-toolkit/core/systemRequirements';
 import type { SystemRequirementsResult } from '@/lib/mera-protocol-toolkit/types';
 import {
+    useDeepInterview,
     useDownloadProgress,
     useMeraProtocolStore,
     useModelState as useModelStateSelector,
     useProcessingMode,
     useRelevanceV3,
     useSelectedModelId,
+    useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
 import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
@@ -107,6 +109,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const downloadProgress = useDownloadProgress();
     const store = useMeraProtocolStore();
     const relevanceV3 = useRelevanceV3();
+    const webSearchInChat = useWebSearchInChat();
+    const deepInterview = useDeepInterview();
 
     const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
     const hasModelUpdate = selectedModelId !== LATEST_MODEL.modelId;
@@ -667,6 +671,78 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </HStack>
                 <Text className="text-typography-500 text-xs mt-2">
                     {t('meraProtocol.relevanceV3Description')}
+                </Text>
+            </Box>
+
+            {/* Web search in chat (item 13) — OFF by default. The description
+                states plainly that the query leaves the device, in the toggle
+                itself rather than buried in the privacy block below: this is
+                the one setting on this screen that sends anything to a third
+                party, so the disclosure has to be where the switch is. */}
+            <Box className="px-5 mb-6" testID="mera-protocol-web-search">
+                <HStack space="md" className="items-center justify-between">
+                    <HStack space="md" className="items-center flex-1">
+                        <MaterialIcons
+                            name="travel-explore"
+                            size={24}
+                            color={webSearchInChat ? "#10b981" : "#9ca3af"}
+                        />
+                        <VStack className="flex-1">
+                            <Text className="text-white text-base font-semibold">
+                                {t('meraProtocol.webSearchTitle')}
+                            </Text>
+                            <Text className="text-typography-500 text-sm mt-0.5">
+                                {webSearchInChat
+                                    ? t('meraProtocol.webSearchOn')
+                                    : t('meraProtocol.webSearchOff')}
+                            </Text>
+                        </VStack>
+                    </HStack>
+                    <Switch
+                        value={webSearchInChat}
+                        onToggle={() => store.setWebSearchInChat(!webSearchInChat)}
+                        size="md"
+                        disabled={readOnly}
+                        testID="mera-protocol-web-search-switch"
+                    />
+                </HStack>
+                <Text className="text-typography-500 text-xs mt-2">
+                    {t('meraProtocol.webSearchDescription')}
+                </Text>
+            </Box>
+
+            {/* Deeper questions (item 17) — OFF by default. The copy's job is to
+                say why Mera can ask questions this personal at all: the answers
+                are facts, and facts never leave the device. */}
+            <Box className="px-5 mb-6" testID="mera-protocol-deep-interview">
+                <HStack space="md" className="items-center justify-between">
+                    <HStack space="md" className="items-center flex-1">
+                        <MaterialIcons
+                            name="psychology"
+                            size={24}
+                            color={deepInterview ? "#10b981" : "#9ca3af"}
+                        />
+                        <VStack className="flex-1">
+                            <Text className="text-white text-base font-semibold">
+                                {t('meraProtocol.deepInterviewTitle')}
+                            </Text>
+                            <Text className="text-typography-500 text-sm mt-0.5">
+                                {deepInterview
+                                    ? t('meraProtocol.deepInterviewOn')
+                                    : t('meraProtocol.deepInterviewOff')}
+                            </Text>
+                        </VStack>
+                    </HStack>
+                    <Switch
+                        value={deepInterview}
+                        onToggle={() => store.setDeepInterview(!deepInterview)}
+                        size="md"
+                        disabled={readOnly}
+                        testID="mera-protocol-deep-interview-switch"
+                    />
+                </HStack>
+                <Text className="text-typography-500 text-xs mt-2">
+                    {t('meraProtocol.deepInterviewDescription')}
                 </Text>
             </Box>
 

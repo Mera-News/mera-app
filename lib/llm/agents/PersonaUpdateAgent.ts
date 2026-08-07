@@ -9,6 +9,8 @@ import {
   handleSaveExtractedFacts,
   handleUpdateUserConfig,
 } from '../../chat-tools/tool-handlers';
+import { handleSearchNews } from '../../chat-tools/news-search-handler';
+import { handleWebSearch } from '../../chat-tools/web-search-handler';
 import { getFacts } from '../../database/services/fact-service';
 import { getActive as getActiveSuppressions } from '../../database/services/suppression-service';
 import { executeProposalActions } from '../../chat-tools/proposal-handlers';
@@ -58,6 +60,11 @@ export class PersonaUpdateAgent implements IAgent {
   private lastLanguageName: string | null = null;
   private lastMode: 'CLOUD' | 'LOCAL' | null = null;
   private lastFilterTools: PersonaPromptPlan['filterTools'] | null = null;
+  /** Both toggles change the STATIC prompt, so both belong in its cache key —
+   *  without them, flipping a toggle mid-session would keep serving the prompt
+   *  built before the flip. */
+  private lastDeepMode: boolean | null = null;
+  private lastWebSearch: boolean | null = null;
 
   /**
    * This turn's FILTERS budget decision (not-interested P4a). Recomputed by
@@ -72,10 +79,16 @@ export class PersonaUpdateAgent implements IAgent {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
     const languageName =
       SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage)?.name ?? 'English';
+    // Read ONCE, non-reactively, at turn-build time — so the whole turn
+    // (prompt + tool payload) is built against one consistent snapshot of the
+    // user's settings rather than re-reading a store that could change mid-turn.
+    const protocol = useMeraProtocolStore.getState();
     const mode: PersonaMode =
-      useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
-        ? 'LOCAL'
-        : 'CLOUD';
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+    const deepMode = protocol.deepInterview === true;
+    // Prose about `webSearch` only makes sense where the tool is declared:
+    // CLOUD, and only with the toggle on.
+    const webSearch = mode === 'CLOUD' && protocol.webSearchInChat === true;
 
     // Pass our own (test-mockable) buildPersonaUpdateStaticPrompt import explicitly
     // so persona-agent-core calls THIS function reference rather than its own
@@ -95,6 +108,10 @@ export class PersonaUpdateAgent implements IAgent {
           // ONBOARDING carries no filter tools at all, so leave the pre-P4a
           // call-args shape untouched there.
           ...(this.surface === 'CONFIG' ? { filterTools } : {}),
+          // Spread only when ON, so an untouched device's call args stay
+          // byte-identical to the pre-wave shape the seam tests assert.
+          ...(deepMode ? { deepMode: true } : {}),
+          ...(webSearch ? { webSearch: true } : {}),
         },
         buildPersonaUpdateStaticPrompt,
       );
@@ -113,6 +130,8 @@ export class PersonaUpdateAgent implements IAgent {
       && this.lastLanguageName === languageName
       && this.lastMode === mode
       && this.lastFilterTools === this.turnPlan.filterTools
+      && this.lastDeepMode === deepMode
+      && this.lastWebSearch === webSearch
     ) {
       return this.cachedSystemPrompt;
     }
@@ -121,6 +140,8 @@ export class PersonaUpdateAgent implements IAgent {
     this.lastLanguageName = languageName;
     this.lastMode = mode;
     this.lastFilterTools = this.turnPlan.filterTools;
+    this.lastDeepMode = deepMode;
+    this.lastWebSearch = webSearch;
     return this.cachedSystemPrompt;
   }
 
@@ -260,15 +281,22 @@ export class PersonaUpdateAgent implements IAgent {
     // last buildSystemPrompt call, because this method is also called
     // standalone (executeTool's name normalisation, the forced-extraction
     // payload) on an agent whose prompt was never built this turn.
+    //
+    // `webSearchInChat` gates the web-search DECLARATION, and it is read from
+    // the same non-reactive snapshot for the same reason: this method is also
+    // called standalone. Gating the DECLARATION (not just the handler) is the
+    // point — a handler-only check would leave an off-by-default tool in the
+    // payload on every turn, paying tokens for a feature the user declined.
+    // The handler re-checks the toggle regardless; see chat-tools/web-search-handler.
+    const protocol = useMeraProtocolStore.getState();
     const mode: PersonaMode =
-      useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
-        ? 'LOCAL'
-        : 'CLOUD';
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
     return getPersonaToolDefinitions(
       this.surface,
       buildToolDefinitions,
       this.turnPlan.filterTools,
       mode,
+      protocol.webSearchInChat === true,
     );
   }
 
@@ -330,6 +358,28 @@ export class PersonaUpdateAgent implements IAgent {
       // and must stay saveExtractedFacts-only.
       case 'explainMera': {
         const result = await handleExplainMera(args);
+        return { result };
+      }
+
+      // SEARCH tools (CLOUD only), both READS whose result is the point — see
+      // KNOWLEDGE_TOOL_NAMES, which both belong to so the continuation pass
+      // actually posts the results back for the model to read.
+      //
+      // `searchNews` hits Mera's own index: guarded, metered-exempt,
+      // headline-only. Nothing but the search words leaves the device.
+      case 'searchNews': {
+        const result = await handleSearchNews(args);
+        return { result };
+      }
+
+      // `webSearch` is OPT-IN and off by default. Its declaration is omitted
+      // while the toggle is off — but a persisted conversation can replay a
+      // call made while it was on, and such a call lands HERE (undeclared ⇒
+      // normalizeToolName can't match it ⇒ the raw name falls through to this
+      // case). handleWebSearch re-reads the toggle as its first statement,
+      // before any await, so an off toggle makes zero network calls.
+      case 'webSearch': {
+        const result = await handleWebSearch(args);
         return { result };
       }
 

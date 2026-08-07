@@ -27,6 +27,19 @@ interface MeraProtocolState {
   // now swept in `reset()`/`hydrateFromDb`). Default false.
   relevanceV3: boolean;
 
+  // Web search in chat — when true, Mera may call the `webSearch` tool, which
+  // sends the SEARCH WORDS (and nothing else) to our inference gateway and on
+  // to a search provider. Default false, and the default is load-bearing: the
+  // tool DECLARATION is omitted from the turn payload while this is false, so
+  // an off toggle costs zero prompt tokens and can make zero network calls.
+  webSearchInChat: boolean;
+
+  // Deep interview — when true, the persona interview draws from a deeper
+  // question bank (attention, anxiety, time sinks, decisions, why a place
+  // matters). The answers become richer LOCAL facts, exactly like every other
+  // fact: they never leave the device. Default false.
+  deepInterview: boolean;
+
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
   modelState: ModelStateLabel;
@@ -43,6 +56,8 @@ interface MeraProtocolState {
   setProcessingMode: (mode: ProcessingMode) => void;
   setInjectNoise: (enabled: boolean) => void;
   setRelevanceV3: (enabled: boolean) => void;
+  setWebSearchInChat: (enabled: boolean) => void;
+  setDeepInterview: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -65,6 +80,8 @@ const DEFAULT_PROCESSING_MODE: ProcessingMode = ProcessingMode.Cloud;
 const SETTING_PROCESSING_MODE = 'mera_processing_mode';
 const SETTING_INJECT_NOISE = 'mera_inject_noise';
 const SETTING_RELEVANCE_V3 = 'mera_relevance_v3';
+const SETTING_WEB_SEARCH_IN_CHAT = 'mera_web_search_in_chat';
+const SETTING_DEEP_INTERVIEW = 'mera_deep_interview';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
  *  only so `reset()` clears the orphaned row from devices that persisted it. */
@@ -79,6 +96,8 @@ const initialState = {
   processingMode: DEFAULT_PROCESSING_MODE,
   injectNoise: false,
   relevanceV3: false,
+  webSearchInChat: false,
+  deepInterview: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -105,6 +124,16 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
   setRelevanceV3: (relevanceV3) => {
     set({ relevanceV3 });
     setSetting(SETTING_RELEVANCE_V3, relevanceV3 ? 'true' : 'false').catch(() => { });
+  },
+
+  setWebSearchInChat: (webSearchInChat) => {
+    set({ webSearchInChat });
+    setSetting(SETTING_WEB_SEARCH_IN_CHAT, webSearchInChat ? 'true' : 'false').catch(() => { });
+  },
+
+  setDeepInterview: (deepInterview) => {
+    set({ deepInterview });
+    setSetting(SETTING_DEEP_INTERVIEW, deepInterview ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -148,6 +177,8 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting('mera_selected_model_id').catch(() => { });
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
     deleteSetting(SETTING_RELEVANCE_V3).catch(() => { });
+    deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
+    deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
     deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
     deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
     deleteSetting('e2ee_enabled').catch(() => { });
@@ -155,14 +186,23 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
 
   hydrateFromDb: async () => {
     try {
-      const [modeValue, legacyEnabledValue, modelIdValue, injectNoiseValue, relevanceV3Value] =
-        await Promise.all([
-          getSetting(SETTING_PROCESSING_MODE),
-          getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
-          getSetting('mera_selected_model_id'),
-          getSetting(SETTING_INJECT_NOISE),
-          getSetting(SETTING_RELEVANCE_V3),
-        ]);
+      const [
+        modeValue,
+        legacyEnabledValue,
+        modelIdValue,
+        injectNoiseValue,
+        relevanceV3Value,
+        webSearchValue,
+        deepInterviewValue,
+      ] = await Promise.all([
+        getSetting(SETTING_PROCESSING_MODE),
+        getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
+        getSetting('mera_selected_model_id'),
+        getSetting(SETTING_INJECT_NOISE),
+        getSetting(SETTING_RELEVANCE_V3),
+        getSetting(SETTING_WEB_SEARCH_IN_CHAT),
+        getSetting(SETTING_DEEP_INTERVIEW),
+      ]);
       // One-shot cleanup: the retired v2 key is never read — v3 starts off
       // regardless of what v2 was set to — just swept so it doesn't linger.
       deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
@@ -192,6 +232,20 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (relevanceV3Value === 'false') {
         updates.relevanceV3 = false;
       }
+      // ABSENT ⇒ OFF, deliberately: only an explicit 'true' turns either of
+      // these on. A device that has never seen the toggle must not inherit an
+      // on state from a missing row — for webSearchInChat that is the
+      // difference between a query leaving the device and not.
+      if (webSearchValue === 'true') {
+        updates.webSearchInChat = true;
+      } else if (webSearchValue === 'false') {
+        updates.webSearchInChat = false;
+      }
+      if (deepInterviewValue === 'true') {
+        updates.deepInterview = true;
+      } else if (deepInterviewValue === 'false') {
+        updates.deepInterview = false;
+      }
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
@@ -213,6 +267,12 @@ export const useInjectNoise = () =>
 
 export const useRelevanceV3 = () =>
   useMeraProtocolStore((state) => state.relevanceV3);
+
+export const useWebSearchInChat = () =>
+  useMeraProtocolStore((state) => state.webSearchInChat);
+
+export const useDeepInterview = () =>
+  useMeraProtocolStore((state) => state.deepInterview);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

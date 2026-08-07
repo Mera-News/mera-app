@@ -22,7 +22,12 @@ import {
 } from '../persona-management/persona-agent-core';
 import { estimateTokens } from '@/lib/llm/tokens';
 import type { ActiveSuppressionView, StagedProposal } from '../core/types';
-import { buildToolDefinitions, type FilterToolsVariant } from '../prompts/prompts';
+import {
+  buildToolDefinitions,
+  buildPersonaUpdateStaticPrompt,
+  DEEP_EXAMPLE_QUESTIONS,
+  type FilterToolsVariant,
+} from '../prompts/prompts';
 
 // --- not-interested P4a fixtures -------------------------------------------
 
@@ -53,13 +58,17 @@ function saturatedFilters(n = MAX_FILTERS_IN_CONTEXT): ActiveSuppressionView[] {
 /** The LARGEST persona system prompt: CONFIG (has the filter tools) + LOCAL
  *  (the path INPUT_TOKEN_BUDGET actually governs) + the XML tool-format block +
  *  a pinned language. */
-function worstCaseSystemPrompt(filterTools: FilterToolsVariant = 'full'): string {
+function worstCaseSystemPrompt(
+  filterTools: FilterToolsVariant = 'full',
+  deepMode = false,
+): string {
   return buildPersonaSystemPrompt({
     surface: 'CONFIG',
     includeToolFormat: true,
     languageName: 'French',
     mode: 'LOCAL',
     filterTools,
+    ...(deepMode ? { deepMode: true } : {}),
   });
 }
 
@@ -188,7 +197,9 @@ describe('getPersonaToolDefinitions', () => {
     // knowledge tool is APPENDED here (it is not built by buildToolDefinitions,
     // so the LOCAL XML prompt block derived from that builder gains no bytes).
     expect(result[0]).toEqual({ type: 'function', function: { name: 'x' } });
-    expect(result.map((d) => d.function.name)).toEqual(['x', 'explainMera']);
+    // `webSearch` is absent: it is gated on the user's toggle, which defaults
+    // to false — see the "web search is off by default" block below.
+    expect(result.map((d) => d.function.name)).toEqual(['x', 'explainMera', 'searchNews']);
   });
 
   // The LOCAL path executes tools but never pushes a role:'tool' message back to
@@ -235,6 +246,77 @@ describe('getPersonaToolDefinitions', () => {
     it('is a KNOWLEDGE tool — the cloud turn loop keys off this set', () => {
       expect(KNOWLEDGE_TOOL_NAMES.has('explainMera')).toBe(true);
       expect(KNOWLEDGE_TOOL_NAMES.has('saveExtractedFacts')).toBe(false);
+    });
+  });
+
+  // --- item 12b: searchNews -------------------------------------------------
+
+  describe('searchNews', () => {
+    it('is present on CLOUD, for BOTH surfaces, at every filter rung', () => {
+      for (const surface of ['ONBOARDING', 'CONFIG'] as const) {
+        for (const rung of ['full', 'compact', 'off'] as const) {
+          const names = getPersonaToolDefinitions(surface, buildToolDefinitions, rung, 'CLOUD')
+            .map((d) => d.function.name);
+          expect(names).toContain('searchNews');
+        }
+      }
+    });
+
+    // Same structural argument as explainMera: the LOCAL turn is one-shot (it
+    // never pushes a role:'tool' message back), so a search whose results the
+    // model can never read is strictly worse than no search — and the LOCAL XML
+    // prompt has a hard budget that ERRORS the turn when exceeded.
+    it('is absent on LOCAL, for BOTH surfaces', () => {
+      for (const surface of ['ONBOARDING', 'CONFIG'] as const) {
+        const names = getPersonaToolDefinitions(surface, buildToolDefinitions, 'full', 'LOCAL')
+          .map((d) => d.function.name);
+        expect(names).not.toContain('searchNews');
+      }
+    });
+
+    it('takes a required query and is a KNOWLEDGE tool', () => {
+      const def = getPersonaToolDefinitions('CONFIG')
+        .find((d) => d.function.name === 'searchNews')!;
+      expect(def.function.parameters.required).toEqual(['query']);
+      expect(KNOWLEDGE_TOOL_NAMES.has('searchNews')).toBe(true);
+    });
+  });
+
+  // --- item 13: webSearch, gated on the user's toggle -----------------------
+
+  describe('webSearch (declaration gate)', () => {
+    // THE privacy default, asserted at the seam: every caller that does not
+    // deliberately pass an enabled toggle gets a payload with no web-search
+    // tool in it, so an off-by-default feature costs zero prompt tokens.
+    it('is ABSENT by default — no argument, and an explicit false', () => {
+      for (const surface of ['ONBOARDING', 'CONFIG'] as const) {
+        expect(
+          getPersonaToolDefinitions(surface).map((d) => d.function.name),
+        ).not.toContain('webSearch');
+        expect(
+          getPersonaToolDefinitions(surface, buildToolDefinitions, 'full', 'CLOUD', false)
+            .map((d) => d.function.name),
+        ).not.toContain('webSearch');
+      }
+    });
+
+    it('appears only when the toggle is passed as enabled', () => {
+      const names = getPersonaToolDefinitions('CONFIG', buildToolDefinitions, 'full', 'CLOUD', true)
+        .map((d) => d.function.name);
+      expect(names).toContain('webSearch');
+    });
+
+    it('stays absent on LOCAL even when the toggle is on', () => {
+      const names = getPersonaToolDefinitions('CONFIG', buildToolDefinitions, 'full', 'LOCAL', true)
+        .map((d) => d.function.name);
+      expect(names).not.toContain('webSearch');
+    });
+
+    it('takes a required query and is a KNOWLEDGE tool', () => {
+      const def = getPersonaToolDefinitions('CONFIG', buildToolDefinitions, 'full', 'CLOUD', true)
+        .find((d) => d.function.name === 'webSearch')!;
+      expect(def.function.parameters.required).toEqual(['query']);
+      expect(KNOWLEDGE_TOOL_NAMES.has('webSearch')).toBe(true);
     });
   });
 
@@ -537,6 +619,79 @@ describe('persona prompt token budget', () => {
     for (const n of [88, 120, 150, 170, 199]) {
       expect(plannedTotal(n)).toBeLessThan(PERSONA_INPUT_TOKEN_BUDGET);
     }
+  });
+
+  // --- item 17: deep mode must not cost budget -----------------------------
+  //
+  // The filters ladder CANNOT rescue a deep-mode user: its last rung still
+  // carries the question bank, so a bank that merely APPENDED would push the
+  // measured worst case (~3008 of 3072) straight over the line into
+  // useLocalLLM's hard error. That is why DEEP_EXAMPLE_QUESTIONS replaces the
+  // standard bank rather than extending it — and why this is measured on
+  // LOCAL, the path the budget actually governs.
+  describe('deep mode (item 17)', () => {
+    it('never makes the worst-case LOCAL prompt larger, at any rung', () => {
+      for (const rung of ['full', 'compact', 'off'] as const) {
+        expect(estimateTokens(worstCaseSystemPrompt(rung, true)))
+          .toBeLessThanOrEqual(estimateTokens(worstCaseSystemPrompt(rung, false)));
+      }
+    });
+
+    it('keeps the saturated worst-case turn inside the budget', () => {
+      const facts = saturatedFacts(199);
+      const total =
+        estimateTokens(worstCaseSystemPrompt('off', true))
+        + estimateTokens(formatKnownFactsList(facts));
+      expect(total).toBeLessThanOrEqual(PRE_WAVE_WORST_CASE_TOKENS);
+      expect(total).toBeLessThan(PERSONA_INPUT_TOKEN_BUDGET);
+    });
+
+    it('swaps the question bank rather than appending to it', () => {
+      const deep = worstCaseSystemPrompt('full', true);
+      expect(deep).toContain('What are you trying to protect your attention from?');
+      // A standard-bank question that the deep bank drops.
+      expect(deep).not.toContain('Do you follow any sports teams or athletes?');
+      // ...and the anchors relevance needs are still asked.
+      expect(deep).toContain('Where do you live?');
+    });
+
+    // Scope decision, asserted so a future edit cannot quietly promise routing
+    // this app does not do: there is no briefing and notifications are an
+    // hourly cron, so no question may imply an alert is routed or interrupts.
+    // Scoped to the BANK, not the whole prompt: the scope decision is about
+    // what deep mode ASKS, and an unrelated future prompt line containing one
+    // of these words would otherwise fail here and blame deep mode.
+    it('promises no interrupt or briefing routing', () => {
+      const bank = DEEP_EXAMPLE_QUESTIONS.join(' ').toLowerCase();
+      for (const word of ['interrupt', 'briefing', 'notify', 'notification', 'alert']) {
+        expect(bank).not.toContain(word);
+      }
+    });
+
+    it('is off unless asked for — the default prompt is byte-identical', () => {
+      expect(worstCaseSystemPrompt('full', false)).toBe(worstCaseSystemPrompt('full'));
+    });
+  });
+
+  // item 13 — the web-search prose is the one change in this wave that makes a
+  // prompt BIGGER, and it feeds planTurn's systemTokensFor. A CLOUD user with
+  // many facts who enables it can therefore drop a filter rung sooner: the
+  // ladder working as designed, documented here so the interaction is not
+  // rediscovered as a surprise. What must hold is that the poorest rung still
+  // fits with the turn reserve applied.
+  it('leaves room at the `off` rung on CLOUD even with web-search prose', () => {
+    const cloud = (webSearch: boolean) =>
+      buildPersonaUpdateStaticPrompt({
+        surface: 'CONFIG',
+        includeToolFormat: false,
+        languageName: 'French',
+        mode: 'CLOUD',
+        filterTools: 'off',
+        ...(webSearch ? { webSearch: true } : {}),
+      });
+    expect(estimateTokens(cloud(true))).toBeGreaterThan(estimateTokens(cloud(false)));
+    expect(estimateTokens(cloud(true)))
+      .toBeLessThan(PERSONA_INPUT_TOKEN_BUDGET - PERSONA_TURN_RESERVE_TOKENS);
   });
 
   it('never picks a rung that would overflow, even with the turn reserve applied', () => {

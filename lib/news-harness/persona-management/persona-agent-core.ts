@@ -158,6 +158,12 @@ export interface PersonaSystemPromptInput {
   /** not-interested P4a: how much of the FILTERS feature this turn can afford
    *  (planPersonaPrompt). Defaults to `full`. */
   filterTools?: FilterToolsVariant;
+  /** item 17 — the user's "Deeper questions" toggle. Swaps the interview's
+   *  question bank; the answers are ordinary LOCAL facts. */
+  deepMode?: boolean;
+  /** item 13 — the user's "Web search in chat" toggle. Adds one CLOUD-only
+   *  prose line telling the model the tool exists. */
+  webSearch?: boolean;
 }
 
 export type BuildStaticPromptFn = typeof buildPersonaUpdateStaticPrompt;
@@ -178,7 +184,12 @@ export function buildPersonaSystemPrompt(
     mode: input.mode,
     // Spread CONDITIONALLY so a caller that never plans keeps the exact
     // pre-P4a call-args shape the frozen PersonaUpdateAgent seam test observes.
+    // The two toggles follow the same rule for the same reason: OFF (the
+    // default) must leave the call args byte-identical to what they were before
+    // this wave, so an untouched device's prompt is provably unchanged.
     ...(input.filterTools ? { filterTools: input.filterTools } : {}),
+    ...(input.deepMode ? { deepMode: true } : {}),
+    ...(input.webSearch ? { webSearch: true } : {}),
   });
 }
 
@@ -676,8 +687,23 @@ export type MeraExplainerTopicId = (typeof MERA_EXPLAINER_TOPIC_IDS)[number];
  *  2. Calling one is NOT extraction. Left uncounted, a bare `explainMera` call
  *     would flip `extractedSomething` true and silently disable the
  *     forced-extraction safety net for that turn.
+ *
+ * `searchNews` and `webSearch` join it for exactly the same reason: both are
+ * READS whose RESULT is the point. Left out of this set, a turn whose only tool
+ * call was a search would (1) skip the continuation pass, so the headlines the
+ * model asked for are pushed to the wire and never read — it then answers from
+ * memory, which for a news search means inventing articles — and (2) flip
+ * `extractedSomething` true, disabling the forced-extraction net for a turn
+ * where the user may well have stated a fact while asking their question.
+ *
+ * useCloudPersonaChat reads this set dynamically (`KNOWLEDGE_TOOL_NAMES.has`),
+ * so adding a name here is the whole wiring.
  */
-export const KNOWLEDGE_TOOL_NAMES: ReadonlySet<string> = new Set(['explainMera']);
+export const KNOWLEDGE_TOOL_NAMES: ReadonlySet<string> = new Set([
+  'explainMera',
+  'searchNews',
+  'webSearch',
+]);
 
 /**
  * CLOUD ONLY, and that is structural rather than a preference.
@@ -713,6 +739,62 @@ const EXPLAIN_MERA_TOOL: ToolDefinition = {
   },
 };
 
+/**
+ * `searchNews` — Mera's OWN article index (item 12b). CLOUD only, appended at
+ * this seam for both of EXPLAIN_MERA_TOOL's reasons: the LOCAL turn is one-shot
+ * (a search whose results the model can never read is strictly worse than no
+ * search) and the LOCAL XML prompt derived from `buildToolDefinitions` has a
+ * hard 3072-token budget that ERRORS the turn when exceeded. Appending here
+ * means the LOCAL prompt gains exactly zero bytes, by construction.
+ *
+ * The description tells the model what it will NOT get back — no body text, no
+ * link — because the failure mode of a headline-only search tool is a model
+ * that narrates an article it never read.
+ */
+const SEARCH_NEWS_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'searchNews',
+    description:
+      'Search Mera\'s own news index (last 48 hours) for real articles about a subject. Use it when the user asks what is happening with something, or to ground a claim about current events. Returns HEADLINES ONLY — no article text and no link — so summarise the headlines and never invent details.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search terms, in English.' },
+      },
+      required: ['query'],
+    },
+  },
+};
+
+/**
+ * `webSearch` — the OPTIONAL, off-by-default web search (item 13).
+ *
+ * Declared only when the user's "Web search in chat" toggle is on. That gate is
+ * on the DECLARATION, not merely the handler, and the distinction is the whole
+ * point: a handler-only check would leave an off-by-default tool sitting in the
+ * prompt on every turn, paying tokens for a feature the user declined. The
+ * handler re-checks the toggle anyway (a persisted conversation can replay a
+ * call made while it was on) — both gates are load-bearing.
+ *
+ * CLOUD only, for EXPLAIN_MERA_TOOL's reasons.
+ */
+const WEB_SEARCH_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'webSearch',
+    description:
+      'Search the public web when the answer is not in Mera\'s news index and you would otherwise be guessing. The user has explicitly enabled this. Only the search words are sent — never the user\'s facts or feed. Prefer searchNews for anything about current events.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search terms, 2-200 characters.' },
+      },
+      required: ['query'],
+    },
+  },
+};
+
 /** Tool definitions for the persona-update agent (OpenAI JSON Schema, cloud).
  *
  *  `filterTools` is applied by FILTERING the builder's output rather than by
@@ -723,16 +805,34 @@ const EXPLAIN_MERA_TOOL: ToolDefinition = {
  *  `mode` is applied the same way, and for the same reason: `explainMera` is
  *  APPENDED to the builder's output rather than built by it. Defaults to
  *  'CLOUD' — the one production caller passes it explicitly, and tests that
- *  predate the parameter keep observing the cloud payload. */
+ *  predate the parameter keep observing the cloud payload.
+ *
+ *  `webSearchEnabled` defaults to FALSE, and that default is the privacy
+ *  guarantee in code: every caller that does not deliberately pass the user's
+ *  toggle gets a payload with no web-search tool in it. The value is read
+ *  non-reactively (`useMeraProtocolStore.getState()`) at turn-build time by
+ *  PersonaUpdateAgent.getToolDefinitions — the store deliberately does NOT
+ *  reach into this file, which is RN-free harness code. */
 export function getPersonaToolDefinitions(
   surface: PersonaSurface,
   buildDefs: BuildToolDefinitionsFn = buildToolDefinitions,
   filterTools: FilterToolsVariant = 'full',
   mode: PersonaMode = 'CLOUD',
+  webSearchEnabled: boolean = false,
 ): ToolDefinition[] {
   const built = buildDefs(surface).map(withStagedCalibrationDescription);
   // Both surfaces: "how do you handle my data?" gets asked in settings chat too.
-  const defs = mode === 'CLOUD' ? [...built, EXPLAIN_MERA_TOOL] : built;
+  // searchNews rides along on both surfaces too — an onboarding user asking
+  // "what's happening with X" should get real headlines, not a redirect.
+  const defs =
+    mode === 'CLOUD'
+      ? [
+          ...built,
+          EXPLAIN_MERA_TOOL,
+          SEARCH_NEWS_TOOL,
+          ...(webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
+        ]
+      : built;
   if (filterTools !== 'off') return defs;
   return defs.filter((d) => !FILTER_TOOL_NAMES.has(d.function.name));
 }
