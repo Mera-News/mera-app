@@ -28,6 +28,23 @@ import DrillDownHeader from './DrillDownHeader';
 const formatCategory = (category: string): string =>
     category === 'general_news' ? 'All' : category;
 
+// Humanizes the structured taxonomy slugs (publication_type / categories) for
+// display. Deliberately not translated: like `category` above, these are raw
+// server-side data values rendered as-is, not UI copy.
+const humanizeSlug = (slug: string): string =>
+    slug.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+
+const formatTaxonomy = (
+    publicationType?: string | null,
+    categories?: readonly string[] | null
+): string | null => {
+    const parts = [
+        ...(publicationType ? [humanizeSlug(publicationType)] : []),
+        ...(categories ?? []).map(humanizeSlug),
+    ];
+    return parts.length > 0 ? parts.join(' · ') : null;
+};
+
 interface SourcesL2PublisherListProps {
     readonly countryCode: string;
     readonly countryName: string;
@@ -160,9 +177,16 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                         className="px-4 py-2.5 border-t border-gray-800"
                                     >
                                         <HStack className="items-center justify-between">
-                                            <Text className="text-white text-sm flex-1 mr-3 capitalize">
-                                                {formatCategory(feed.category)}
-                                            </Text>
+                                            <VStack className="flex-1 mr-3" space="xs">
+                                                <Text className="text-white text-sm capitalize">
+                                                    {formatCategory(feed.category)}
+                                                </Text>
+                                                {formatTaxonomy(feed.publication_type, feed.categories) && (
+                                                    <Text size="xs" className="text-gray-500">
+                                                        {formatTaxonomy(feed.publication_type, feed.categories)}
+                                                    </Text>
+                                                )}
+                                            </VStack>
                                             <MaterialIcons name="chevron-right" size={18} color="#999999" />
                                         </HStack>
                                     </Pressable>

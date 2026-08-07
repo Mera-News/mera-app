@@ -322,12 +322,14 @@ export type NewsClustersResponse = {
 export type NewsPublisher = {
   __typename?: 'NewsPublisher';
   _id: Scalars['ID']['output'];
+  categories?: Maybe<Array<Scalars['String']['output']>>;
   country_code: Scalars['String']['output'];
   country_name?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   is_active: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   publicationSources: Array<PublicationSource>;
+  publication_type?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   website_url?: Maybe<Scalars['String']['output']>;
 };
@@ -410,6 +412,7 @@ export enum ProcessingMode {
 export type PublicationSource = {
   __typename?: 'PublicationSource';
   _id: Scalars['ID']['output'];
+  categories?: Maybe<Array<Scalars['String']['output']>>;
   category: Scalars['String']['output'];
   codegen_checked_at?: Maybe<Scalars['DateTime']['output']>;
   codegen_status?: Maybe<Scalars['String']['output']>;
@@ -430,6 +433,7 @@ export type PublicationSource = {
   last_fetched_at?: Maybe<Scalars['DateTime']['output']>;
   newsPublisherId?: Maybe<Scalars['ID']['output']>;
   publication_name: Scalars['String']['output'];
+  publication_type?: Maybe<Scalars['String']['output']>;
   publication_url?: Maybe<Scalars['String']['output']>;
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];

@@ -34,6 +34,8 @@ const GET_PUBLICATION_SOURCES = gql`
         country_code
         country_name
         category
+        publication_type
+        categories
         createdAt
         updatedAt
       }
@@ -66,6 +68,8 @@ const GET_NEWS_PUBLISHERS = gql`
           _id
           feed_url
           category
+          publication_type
+          categories
           detected_language_code
         }
       }
