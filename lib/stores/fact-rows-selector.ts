@@ -90,11 +90,8 @@ import {
 } from '@/lib/feed-grouping/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import {
-  repPriorityTier,
-  sourcePriorityTier,
-  type UserGeoLanguageContext,
-} from '@/lib/feed-grouping/geo-language-priority';
+import { type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import { makeRepCompare } from '@/lib/feed-grouping/representative-compare';
 import type { ForYouSuggestion } from './for-you-store';
 
 /**
@@ -427,59 +424,26 @@ interface GroupItem extends GroupableItem {
   s: ForYouSuggestion;
 }
 
-/** Representative comparator: newest pubDate → higher rawScore → smaller id.
- *  (Standard sort order: negative ⇒ `a` preferred.) */
-function repCompare(a: GroupItem, b: GroupItem): number {
-  const pa = parseMs(a.s.firstPubDate);
-  const pb = parseMs(b.s.firstPubDate);
-  if (pa !== pb) return pb - pa;
-  const ra = a.s.rawScore ?? Number.NEGATIVE_INFINITY;
-  const rb = b.s.rawScore ?? Number.NEGATIVE_INFINITY;
-  if (ra !== rb) return rb - ra;
-  return a.s._id < b.s._id ? -1 : a.s._id > b.s._id ? 1 : 0;
-}
+// Representative election (`makeRepCompare`) lives in
+// `@/lib/feed-grouping/representative-compare`, shared with
+// `feed-list-selector`, so the Dashboard and the Feed cannot drift apart on
+// which article fronts a given story. It used to be duplicated in both files,
+// byte-identically and by hand.
+//
+// SYMMETRY WITH THE FEED: `feed-list-selector` applies D4, scoring a story group
+// on its BEST member so election cannot demote the story. The same rule now
+// holds here — `createdAtMs` is group-maxed where the group is built, so
+// `cardCompare` ranks a card by its freshest member regardless of which member
+// was elected to front it.
+//
+// This became necessary when the shared comparator flipped to electing the
+// OLDEST member (the originating report rather than the latest rewrite). Without
+// the group-max, a multi-source story would sink to roughly where its first
+// report landed, so a story gaining coverage through the day would drift DOWN
+// the Dashboard as it got more important. Election is a presentation choice;
+// it must not move the story.
 
-/** Tier-aware representative comparator, in three keys — kept BYTE-IDENTICAL to
- *  `feed-list-selector.makeRepCompare` so every feed surface fronts the same
- *  article for a given story:
- *
- *   1. `sourcePriorityTier` — the user's EXPLICIT source preferences (preferred
- *      publication → preferred country scope → rest). An explicit request
- *      outranks a derived signal, so it is compared FIRST.
- *   2. `repPriorityTier` — the derived geo/language priority.
- *   3. `repCompare` — newest → rawScore → id.
- *
- *  A `null` `userCtx` collapses every item to source tier 2 and geo tier 3, so
- *  this is byte-identical to `repCompare` alone — the pre-priority legacy
- *  behavior. So does a context with no source preferences, for key 1.
- *
- *  ASYMMETRY WITH THE FEED (deliberate): `feed-list-selector` also applies D4,
- *  scoring a story group on its BEST member so electing a preferred source
- *  cannot demote the story. There is no mirror here, because Dashboard card
- *  order is `cardCompare` = representative `createdAtMs` desc — there is no
- *  score to group-max. The analogous latent demotion therefore still exists on
- *  the Dashboard (a preferred rep with an older `createdAt` sinks its card);
- *  fixing it means group-maxing `createdAtMs`, a different semantic change that
- *  was not in this wave's scope. Logged as a power-user follow-up. */
-function makeRepCompare(userCtx: UserGeoLanguageContext | null) {
-  return (a: GroupItem, b: GroupItem): number => {
-    const sa = sourcePriorityTier(
-      { publicationName: a.s.publication_name, countryCodeAlpha3: a.s.country_code },
-      userCtx,
-    );
-    const sb = sourcePriorityTier(
-      { publicationName: b.s.publication_name, countryCodeAlpha3: b.s.country_code },
-      userCtx,
-    );
-    if (sa !== sb) return sa - sb;
-    const ta = repPriorityTier({ countryCodeAlpha3: a.s.country_code, languageCode: a.s.language_code }, userCtx);
-    const tb = repPriorityTier({ countryCodeAlpha3: b.s.country_code, languageCode: b.s.language_code }, userCtx);
-    if (ta !== tb) return ta - tb;
-    return repCompare(a, b);
-  };
-}
-
-/** Card (story-group) ordering within a Dashboard section: representative
+/** Card (story-group) ordering within a Dashboard section: the group's freshest
  *  `createdAt` (suggestion-creation time) descending, then id. */
 function cardCompare(a: FactRowGroup, b: FactRowGroup): number {
   if (a.createdAtMs !== b.createdAtMs) return b.createdAtMs - a.createdAtMs;
@@ -597,7 +561,10 @@ export function buildFactRows(
 
     // EMERGENCY band only — see `isEmergency`. Deliberately NOT `isBreaking`,
     // which is the (looser) "never bury this" predicate.
-    if (isEmergency(rep, config)) {
+    // Evaluated over the whole group, like `pubDateMs`/`addedMs` above: the
+    // representative is elected oldest-first for provenance, so asking only the
+    // rep would miss an emergency that broke in later coverage of the same story.
+    if (all.some((m) => isEmergency(m, config))) {
       breaking.push({ data: rep, members });
       continue;
     }
@@ -619,7 +586,12 @@ export function buildFactRows(
         bucket,
         pubDateMs,
         addedMs,
-        createdAtMs: parseMs(rep.createdAt),
+        // Group-maxed, like `pubDateMs` and `addedMs` above. `cardCompare`
+        // orders Dashboard cards by this, so taking the representative's value
+        // would sink every multi-source story to where its FIRST report landed
+        // once the rep flipped to oldest-first — a story gaining coverage all
+        // day would drift down instead of up.
+        createdAtMs: all.reduce((mx, m) => Math.max(mx, parseMs(m.createdAt)), 0),
         highPriority,
       },
     });

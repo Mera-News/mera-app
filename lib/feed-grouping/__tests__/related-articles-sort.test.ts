@@ -500,3 +500,113 @@ describe('orderRelatedArticles — preferred sources (source-pref, D1/D3)', () =
         );
     });
 });
+
+// ===========================================================================
+// ordering modes (`RelatedSortMode`)
+// ===========================================================================
+
+describe('orderRelatedArticles — mode selection', () => {
+    const MODE_PREF_CTX: UserGeoLanguageContext = {
+        ...CTX,
+        preferredPublications: new Set(['times of india']),
+        preferredCountriesAlpha3: new Set(['DEU']),
+    };
+
+    /** A fixture exercising every `relevance` key at once: a preferred
+     *  publication, a preferred country scope, the current article's country,
+     *  two rival country blocks, app-language vs other-language rows, a null
+     *  publication, and a countryless/undated row. */
+    const GOLDEN: RelatedSortable[] = [
+        entry({ id: 'g1', countryCodeAlpha3: 'FRA', languageCode: 'fr', publicationName: 'Le Monde', pubDateMs: 300 }),
+        entry({ id: 'g2', countryCodeAlpha3: 'USA', languageCode: 'en', publicationName: 'NYT', pubDateMs: 100 }),
+        entry({ id: 'g3', countryCodeAlpha3: 'IND', languageCode: 'hi', publicationName: 'Times of India', pubDateMs: 500 }),
+        entry({ id: 'g4', countryCodeAlpha3: 'DEU', languageCode: 'de', publicationName: 'Die Zeit', pubDateMs: 200 }),
+        entry({ id: 'g5', countryCodeAlpha3: null, languageCode: null, publicationName: null, pubDateMs: null }),
+        entry({ id: 'g6', countryCodeAlpha3: 'FRA', languageCode: 'en', publicationName: 'AFP', pubDateMs: 400 }),
+        entry({ id: 'g7', countryCodeAlpha3: 'USA', languageCode: 'en', publicationName: 'NYT', pubDateMs: 900 }),
+        entry({ id: 'g8', countryCodeAlpha3: 'FRA', languageCode: 'fr', publicationName: null, pubDateMs: 700 }),
+        entry({ id: 'g9', countryCodeAlpha3: 'GBR', languageCode: 'en', publicationName: 'BBC', pubDateMs: 600 }),
+        entry({ id: 'g10', countryCodeAlpha3: 'DEU', languageCode: 'de', publicationName: 'FAZ', pubDateMs: 800 }),
+    ];
+
+    /**
+     * GOLDEN ORDER — captured by running this exact fixture through
+     * `orderRelatedArticles` BEFORE the `mode` parameter existed. It is the
+     * regression lock on "`'relevance'` is byte-identical to today": if adding
+     * the mode switch had perturbed any tiered key, this literal would move.
+     */
+    const GOLDEN_RELEVANCE_ORDER = ['g3', 'g4', 'g10', 'g7', 'g2', 'g6', 'g1', 'g8', 'g9', 'g5'];
+
+    it("'relevance' reproduces the pre-mode ordering exactly", () => {
+        expect(ids(orderRelatedArticles(GOLDEN, 'USA', MODE_PREF_CTX, 'relevance'))).toEqual(
+            GOLDEN_RELEVANCE_ORDER,
+        );
+    });
+
+    it("'relevance' is the default — the omitted argument and the explicit value agree", () => {
+        expect(ids(orderRelatedArticles(GOLDEN, 'USA', MODE_PREF_CTX))).toEqual(
+            GOLDEN_RELEVANCE_ORDER,
+        );
+    });
+
+    it("'oldest' sorts by publish date ascending, ignoring every tier", () => {
+        expect(ids(orderRelatedArticles(GOLDEN, 'USA', MODE_PREF_CTX, 'oldest'))).toEqual([
+            'g2', 'g4', 'g1', 'g6', 'g3', 'g9', 'g8', 'g10', 'g7', 'g5',
+        ]);
+    });
+
+    it("'newest' sorts by publish date descending, ignoring every tier", () => {
+        expect(ids(orderRelatedArticles(GOLDEN, 'USA', MODE_PREF_CTX, 'newest'))).toEqual([
+            'g7', 'g10', 'g8', 'g9', 'g3', 'g6', 'g1', 'g4', 'g2', 'g5',
+        ]);
+    });
+
+    it('undated rows trail in BOTH date modes — so oldest is not the exact reverse of newest', () => {
+        const items = [
+            entry({ id: 'undated-a', pubDateMs: null }),
+            entry({ id: 'dated', pubDateMs: 500 }),
+            entry({ id: 'undated-b', pubDateMs: NaN }),
+        ];
+        expect(ids(orderRelatedArticles(items, null, CTX, 'oldest'))).toEqual([
+            'dated', 'undated-a', 'undated-b',
+        ]);
+        expect(ids(orderRelatedArticles(items, null, CTX, 'newest'))).toEqual([
+            'dated', 'undated-a', 'undated-b',
+        ]);
+        const oldest = ids(orderRelatedArticles(GOLDEN, 'USA', CTX, 'oldest'));
+        const newest = ids(orderRelatedArticles(GOLDEN, 'USA', CTX, 'newest'));
+        expect(newest).not.toEqual([...oldest].reverse());
+    });
+
+    it('the date modes ignore the context and the current country entirely', () => {
+        for (const mode of ['oldest', 'newest'] as const) {
+            const withCtx = ids(orderRelatedArticles(GOLDEN, 'USA', MODE_PREF_CTX, mode));
+            expect(ids(orderRelatedArticles(GOLDEN, null, null, mode))).toEqual(withCtx);
+            expect(ids(orderRelatedArticles(GOLDEN, 'FRA', CTX, mode))).toEqual(withCtx);
+        }
+    });
+
+    it('equal dates fall to id ASC in both date modes', () => {
+        const items = [
+            entry({ id: 'z', pubDateMs: 100 }),
+            entry({ id: 'a', pubDateMs: 100 }),
+        ];
+        expect(ids(orderRelatedArticles(items, null, CTX, 'oldest'))).toEqual(['a', 'z']);
+        expect(ids(orderRelatedArticles(items, null, CTX, 'newest'))).toEqual(['a', 'z']);
+    });
+
+    it('every mode is non-mutating, deterministic and idempotent', () => {
+        for (const mode of ['relevance', 'oldest', 'newest'] as const) {
+            const input = [...GOLDEN];
+            const snapshot = ids(input);
+            const once = orderRelatedArticles(input, 'USA', MODE_PREF_CTX, mode);
+            expect(ids(input)).toEqual(snapshot);
+            expect(once).not.toBe(input);
+            expect(ids(orderRelatedArticles(once, 'USA', MODE_PREF_CTX, mode))).toEqual(ids(once));
+            expect(
+                ids(orderRelatedArticles([...GOLDEN].reverse(), 'USA', MODE_PREF_CTX, mode)),
+            ).toEqual(ids(once));
+            expect(orderRelatedArticles([], 'USA', MODE_PREF_CTX, mode)).toEqual([]);
+        }
+    });
+});

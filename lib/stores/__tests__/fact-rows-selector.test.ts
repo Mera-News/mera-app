@@ -318,7 +318,7 @@ describe('buildFactRows visibility', () => {
 // --- cluster-timestamp rule (newest member fronts) ------------------------
 
 describe('buildFactRows cluster timestamp', () => {
-  it('picks the newest member as representative; group pubDate = newest', () => {
+  it('picks the OLDEST member as representative; group pubDate is still the newest', () => {
     const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
     const older = sugg({
       _id: 'older',
@@ -335,9 +335,11 @@ describe('buildFactRows cluster timestamp', () => {
     const { rows } = buildFactRows([older, newer], snap, new Set(), NOW);
     const f1 = rows.find((r) => r.factId === 'f1')!;
     expect(f1.groups).toHaveLength(1); // collapsed via shared cluster
-    expect(f1.groups[0].data._id).toBe('newer'); // newest fronts
+    expect(f1.groups[0].data._id).toBe('older'); // oldest (originating) fronts
+    // `pubDateMs` is a group-max over ALL members, so it is unaffected by which
+    // member was elected — it still reports the newest coverage.
     expect(f1.groups[0].pubDateMs).toBe(NOW - 1 * H);
-    expect(f1.groups[0].members.map((m) => m._id)).toEqual(['older']);
+    expect(f1.groups[0].members.map((m) => m._id)).toEqual(['newer']);
   });
 });
 
@@ -404,7 +406,7 @@ describe('buildFactRows representative election (geo/language priority)', () => 
     expect(f1.groups[0].data._id).toBe('gbr');
   });
 
-  it('a null userCtx keeps the legacy newest/rawScore-based pick', () => {
+  it('a null userCtx falls through to the untiered image/oldest/rawScore pick', () => {
     const older = sugg({
       _id: 'older',
       country_code: 'IND',
@@ -423,7 +425,8 @@ describe('buildFactRows representative election (geo/language priority)', () => 
     });
     const { rows } = buildFactRows([older, newer], snap, new Set(), NOW, DEFAULT_HARNESS_CONFIG, null);
     const f1 = rows.find((r) => r.factId === 'f1')!;
-    expect(f1.groups[0].data._id).toBe('newer');
+    // No tiers, no images ⇒ pubDate ASC decides, and it outranks rawScore.
+    expect(f1.groups[0].data._id).toBe('older');
   });
 });
 
@@ -506,6 +509,46 @@ describe('buildFactRows section ordering', () => {
     const f1 = buildFactRows([early, late], snap, new Set(), NOW).rows.find((r) => r.factId === 'f1')!;
     expect(f1.groups.map((g) => g.data._id)).toEqual(['late', 'early']);
   });
+
+  it('cardCompare ranks a multi-source card by its freshest member, not the elected (oldest) representative createdAt', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+    // Group A: rep is elected on OLDEST firstPubDate and itself has the
+    // OLDEST createdAt of anything in either group — but a same-story sibling
+    // has a much fresher createdAt than anything in Group B.
+    const aRep = sugg({
+      _id: 'a-rep',
+      createdAt: new Date(NOW - 10 * H).toISOString(),
+      firstPubDate: new Date(NOW - 5 * H).toISOString(), // oldest ⇒ elected rep
+      clusters: [{ clusterId: 'ga', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'a' }],
+    });
+    const aFresh = sugg({
+      _id: 'a-fresh',
+      createdAt: new Date(NOW - 0.5 * H).toISOString(), // freshest createdAt overall
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      clusters: [{ clusterId: 'ga', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'b' }],
+    });
+    // Group B: a single-member story whose (only, so elected) rep is newer
+    // than Group A's rep, but older than Group A's freshest member.
+    const bRep = sugg({
+      _id: 'b-rep',
+      createdAt: new Date(NOW - 2 * H).toISOString(),
+      matchedTopics: [{ topicId: 't1', text: 'c' }],
+    });
+    const f1 = buildFactRows([aRep, aFresh, bRep], snap, new Set(), NOW).rows.find(
+      (r) => r.factId === 'f1',
+    )!;
+    // Sanity: representative election picked the oldest member for Group A.
+    const groupA = f1.groups.find((g) => g.members.some((m) => m._id === 'a-fresh'));
+    expect(groupA?.data._id).toBe('a-rep');
+    // Without the group-max, Group A would rank on its rep's own (oldest)
+    // createdAt and sink BELOW Group B. With it, Group A's freshest member
+    // wins and it must sort ABOVE — otherwise a story gaining coverage
+    // through the day would drift DOWN the Dashboard as it got more
+    // important.
+    expect(f1.groups.map((g) => g.data._id)).toEqual(['a-rep', 'b-rep']);
+  });
 });
 
 // --- breaking extraction ---------------------------------------------------
@@ -547,6 +590,39 @@ describe('buildFactRows emergency extraction', () => {
     const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
     const noScore = sugg({ _id: 'ns', rawScore: null, relevance: 1.1, matchedTopics: [{ topicId: 't1', text: 'a' }] });
     expect(buildFactRows([noScore], snap, new Set(), NOW).breaking).toEqual([]);
+  });
+
+  // --- group-maxed EMERGENCY check (elected rep flipped to oldest-first) ----
+
+  it('a story lands in the EMERGENCY band when any member is, not just the elected (oldest) representative', () => {
+    const snap = snapshots([['t1', { factId: 'f1' }]], [['f1', {}]]);
+    // Oldest firstPubDate is elected representative (no images, no userCtx).
+    const older = sugg({
+      _id: 'older',
+      rawScore: 0.5, // sub-emergency on its own
+      relevance: 0.6,
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      clusters: [{ clusterId: 'c1', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'a' }],
+    });
+    const newer = sugg({
+      _id: 'newer',
+      rawScore: 1.05, // raw > emergencyPriorityCutoff (1.0) ⇒ emergency
+      relevance: 1.1,
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      clusters: [{ clusterId: 'c1', confidence: 0.9 }],
+      matchedTopics: [{ topicId: 't1', text: 'b' }],
+    });
+    const { breaking, rows } = buildFactRows([older, newer], snap, new Set(), NOW);
+    expect(breaking).toHaveLength(1);
+    // The elected representative is the non-emergency oldest member...
+    expect(breaking[0].data._id).toBe('older');
+    // ...but a newer member IS emergency, so the whole group must land in the
+    // strip rather than being scored/sectioned as ordinary coverage.
+    expect(breaking[0].members.map((m) => m._id)).toEqual(['newer']);
+    expect(
+      rows.some((r) => r.groups.some((g) => g.data._id === 'older' || g.data._id === 'newer')),
+    ).toBe(false);
   });
 });
 

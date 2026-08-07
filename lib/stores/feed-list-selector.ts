@@ -34,11 +34,8 @@ import {
   isBreaking,
   isSuggestionOpened,
 } from './fact-rows-selector';
-import {
-  repPriorityTier,
-  sourcePriorityTier,
-  type UserGeoLanguageContext,
-} from '@/lib/feed-grouping/geo-language-priority';
+import { type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import { makeRepCompare } from '@/lib/feed-grouping/representative-compare';
 import {
   passesImportanceThreshold,
   type ImportanceThreshold,
@@ -128,56 +125,11 @@ function parseMs(iso: string | null | undefined): number {
   return Number.isFinite(t) ? t : 0;
 }
 
-/** Representative comparator: newest pubDate → higher rawScore → smaller id.
- *  (Standard sort order: negative ⇒ `a` preferred.) Mirrors the swipe-stack /
- *  fact-rows selectors' representative pick so every feed surface fronts the
- *  same article for a given story. */
-function repCompare(a: GroupItem, b: GroupItem): number {
-  const pa = parseMs(a.s.firstPubDate);
-  const pb = parseMs(b.s.firstPubDate);
-  if (pa !== pb) return pb - pa;
-  const ra = a.s.rawScore ?? Number.NEGATIVE_INFINITY;
-  const rb = b.s.rawScore ?? Number.NEGATIVE_INFINITY;
-  if (ra !== rb) return rb - ra;
-  return a.s._id < b.s._id ? -1 : a.s._id > b.s._id ? 1 : 0;
-}
-
-/** Tier-aware representative comparator, in three keys:
- *
- *   1. `sourcePriorityTier` — the user's EXPLICIT source preferences
- *      (preferred publication → preferred country scope → rest). This is the
- *      literal ask: "when a story has an article from a source I prefer, that
- *      should be the one used." An explicit request outranks a derived
- *      geo/language signal, so it is compared FIRST.
- *   2. `repPriorityTier` — the derived geo/language priority (home country →
- *      other user country → app language → rest).
- *   3. `repCompare` — newest → rawScore → id.
- *
- *  A `null` `userCtx` collapses every item to source tier 2 and geo tier 3, so
- *  this stays byte-identical to `repCompare` alone — the pre-priority legacy
- *  behavior. So does a context with no source preferences, for key 1.
- *
- *  This changes only WHICH article fronts a group. Where the story sits in the
- *  list is decided by `feedCompare` over a score that is now the group's best
- *  (see `buildFeedList` / D4), so electing a preferred source can never demote
- *  the story. */
-function makeRepCompare(userCtx: UserGeoLanguageContext | null) {
-  return (a: GroupItem, b: GroupItem): number => {
-    const sa = sourcePriorityTier(
-      { publicationName: a.s.publication_name, countryCodeAlpha3: a.s.country_code },
-      userCtx,
-    );
-    const sb = sourcePriorityTier(
-      { publicationName: b.s.publication_name, countryCodeAlpha3: b.s.country_code },
-      userCtx,
-    );
-    if (sa !== sb) return sa - sb;
-    const ta = repPriorityTier({ countryCodeAlpha3: a.s.country_code, languageCode: a.s.language_code }, userCtx);
-    const tb = repPriorityTier({ countryCodeAlpha3: b.s.country_code, languageCode: b.s.language_code }, userCtx);
-    if (ta !== tb) return ta - tb;
-    return repCompare(a, b);
-  };
-}
+// Representative election (`makeRepCompare`) lives in
+// `@/lib/feed-grouping/representative-compare`. It used to be duplicated here
+// and in `fact-rows-selector`, byte-identically and by hand; it is now imported
+// by both so the Feed and the Dashboard cannot drift apart on which article
+// fronts a given story.
 
 function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
@@ -288,7 +240,13 @@ export function buildFeedList(
       // articleId, not `_id` — the tombstone/rep-switch keys downstream are
       // compared against future `FeedListItem.id`s, which are article ids.
       memberIds: g.map((m) => m.s.articleId),
-      breaking: isBreaking(rep),
+      // Group-maxed for the same reason `score` below is (D4): "breaking" is a
+      // property of the STORY, not of whichever member we elected to front it.
+      // This became load-bearing when the representative flipped to oldest-first
+      // — a story whose originating report was routine but whose later coverage
+      // is breaking would otherwise render non-breaking, and `filterByImportance`
+      // exempts breaking, so the Med+/High dial would silently start hiding it.
+      breaking: g.some((m) => isBreaking(m.s)),
       // D4 — a story is scored on its BEST member, not on whichever member was
       // elected to front it. This used to be `feedScore(rep, nowMs)`, which
       // silently coupled two unrelated decisions: because the list is ordered by
