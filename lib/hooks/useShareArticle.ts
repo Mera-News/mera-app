@@ -2,10 +2,8 @@
 // native share sheet. Picks the title the user actually sees on screen
 // (original if the article is in the user's app language, otherwise the
 // English title), matching the copy previously used by ShareArticleButton.
-// When that title differs from the article's original-language title, BOTH
-// are included (see resolveShareTitles) — otherwise a translated headline
-// ships next to an untranslated-language link with nothing to connect the
-// two for the recipient.
+// Only that ONE title ships — the variant currently displayed — never a
+// second, original-language line alongside it.
 //
 // The "Shared via" footer goes out in the LANGUAGE OF THAT TITLE, not the
 // sharer's UI language — a German headline followed by a Hindi footer reads as
@@ -16,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Share } from 'react-native';
 import { WEBSITE_URL } from '../config/branding';
 import logger from '../logger';
+import { secureUrlOrNull } from '../secure-url';
 import { useAppLanguage } from '../stores/app-language-store';
 import {
     getArticleTranslatableStatus, resolveUiLocale, type TranslatableStatus,
@@ -39,29 +38,20 @@ export interface ShareArticleParams {
 }
 
 /**
- * Resolves which title(s) go in a shared article's message.
- *
- * `primary` is the title the sharer was actually looking at: the exact
- * on-screen variant (`displayedTitle`) when the caller supplies one (detail
- * screens, which track the original/translation toggle), otherwise the same
+ * Resolves the single title that goes in a shared article's message: the
+ * title the sharer was actually looking at. That's the exact on-screen
+ * variant (`displayedTitle`) when the caller supplies one (detail screens,
+ * which track the original/translation toggle), otherwise the same
  * status-based original/English pick a toggle-less surface (e.g. a feed
- * card) would have rendered.
- *
- * `secondary` is the article's original-language title — included ONLY when
- * it's a different string from `primary`. An English article, or a reader
- * who was already viewing the original, therefore still produces a single
- * title line: today's payload shape for those cases is unchanged. This is
- * the fix for the cross-language share bug: previously a translated title
- * went out paired with the untranslated-language link and nothing tied the
- * two together for the recipient; now the original-language title rides
- * along whenever it would read as a mismatch.
+ * card) would have rendered. Only ever one language ships — never the
+ * original-language title alongside it.
  */
 export function resolveShareTitles(params: {
     titleEnglish: string | null;
     titleOriginal?: string | null;
     status: TranslatableStatus;
     displayedTitle?: string | null;
-}): { primary: string | null; secondary: string | null } {
+}): { primary: string | null } {
     const {
         titleEnglish, titleOriginal, status, displayedTitle,
     } = params;
@@ -70,33 +60,20 @@ export function resolveShareTitles(params: {
         : status === 'same-language'
             ? (titleOriginal ?? titleEnglish)
             : (titleEnglish ?? titleOriginal);
-    const primaryTrimmed = (primary ?? '').trim();
-    const secondary =
-        titleOriginal && titleOriginal.trim() && titleOriginal.trim() !== primaryTrimmed
-            ? titleOriginal
-            : null;
-    return { primary: primary ?? null, secondary };
+    return { primary: primary ?? null };
 }
 
 /**
- * Assembles the final share message: title line(s), the URL, then the
- * "Shared via" footer, each block separated by a blank line. The optional
- * secondary (original-language) title sits directly under the primary title
- * — no label, so the two-title case needs no new copy to translate.
+ * Assembles the final share message: the title, the URL, then the "Shared
+ * via" footer, each block separated by a blank line.
  */
 export function buildShareMessage(params: {
     primaryTitle: string | null;
-    secondaryTitle: string | null;
     url: string | null | undefined;
     footer: string;
 }): string {
-    const {
-        primaryTitle, secondaryTitle, url, footer,
-    } = params;
-    const titleBlock = primaryTitle && secondaryTitle
-        ? `${primaryTitle}\n${secondaryTitle}`
-        : (primaryTitle ?? secondaryTitle ?? null);
-    return [titleBlock, url, footer].filter(Boolean).join('\n\n');
+    const { primaryTitle, url, footer } = params;
+    return [primaryTitle, url, footer].filter(Boolean).join('\n\n');
 }
 
 export function useShareArticle(params: ShareArticleParams | undefined): () => Promise<void> {
@@ -104,13 +81,19 @@ export function useShareArticle(params: ShareArticleParams | undefined): () => P
     const appLanguage = useAppLanguage();
 
     return useCallback(async () => {
+        // Backstop for the https guard (item 16). The detail screens already
+        // refuse to render a share affordance for an insecure URL, so this only
+        // fires for a stale local row that slipped past them — sharing one would
+        // push a plaintext link out to somebody else's device, which is strictly
+        // worse than opening it on this one.
         if (!params?.url) return;
+        if (!secureUrlOrNull(params.url)) return;
 
         const {
             url, titleEnglish, titleOriginal, sourceLanguage, displayedTitle, displayedLanguage,
         } = params;
         const status = getArticleTranslatableStatus(sourceLanguage ?? null, appLanguage);
-        const { primary: title, secondary: secondaryTitle } = resolveShareTitles({
+        const { primary: title } = resolveShareTitles({
             titleEnglish, titleOriginal, status, displayedTitle,
         });
         // Attribute the shared link to Mera with a share-specific UTM medium.
@@ -127,7 +110,7 @@ export function useShareArticle(params: ShareArticleParams | undefined): () => P
                 lng: footerLng,
             });
             const message = buildShareMessage({
-                primaryTitle: title, secondaryTitle, url: shareUrl, footer,
+                primaryTitle: title, url: shareUrl, footer,
             });
             await Share.share({ message }, { subject: title ?? undefined });
         } catch (err) {

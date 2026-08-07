@@ -7,6 +7,7 @@ import ReauthBanner from '@/components/custom/ReauthBanner';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import LapseInterstitialGate from '@/components/custom/subscription/LapseInterstitialGate';
 import FirstOpenPaywallGate from '@/components/custom/subscription/FirstOpenPaywallGate';
+import ConsentGate from '@/components/custom/auth/ConsentGate';
 
 export default function LoggedInLayout() {
   const insets = useSafeAreaInsets();
@@ -203,6 +204,14 @@ export default function LoggedInLayout() {
       {/* Mutually exclusive with the gate above: this one requires
           hasEverSubscribed === false, which a lapse rules out. */}
       <FirstOpenPaywallGate />
+      {/* MUST be last: renders an in-place full-screen overlay (not a
+          navigation, unlike the two gates above) when the session user's
+          accepted terms/privacy versions are missing or stale, and needs to
+          paint over everything else mounted in this tree — including
+          FloatingChatHost and the feedback modal above. Outranks onboarding
+          and the paywall; see its own header for why it carries no
+          app_container path filter. */}
+      <ConsentGate />
     </View>
   );
 }

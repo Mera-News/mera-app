@@ -1,14 +1,10 @@
-// useShareArticle (r6c) — verifies:
+// useShareArticle (r6c, B6) — verifies:
 //  • the shared URL carries Mera's UTM referrer with utm_medium=share;
 //  • when a `displayedTitle` is supplied it is shared verbatim (the exact title
 //    variant the reader sees), otherwise the status-based original/English pick
 //    is used;
-//  • whenever the resolved (primary) title differs from `titleOriginal`, the
-//    original-language title rides along as a second line — the fix for a
-//    translated headline shipping next to an untranslated-language link with
-//    nothing to connect the two; when they're the same string (an English
-//    article, or the reader was already viewing the original) the payload
-//    stays exactly as it was: a single title line;
+//  • only ONE title ever ships — the variant currently on screen — never the
+//    original-language title alongside it;
 //  • the "Shared via" footer is rendered in the language of the shared title,
 //    falling back to the app language when that language has no locale bundle;
 //  • a missing URL is a no-op.
@@ -86,7 +82,7 @@ describe('useShareArticle', () => {
         expect(message).not.toContain(`${ARTICLE_URL}\n`);
     });
 
-    it('shares the displayedTitle verbatim when provided, plus the original title since they differ', async () => {
+    it('shares the displayedTitle verbatim when provided, and nothing else', async () => {
         await share({
             url: ARTICLE_URL,
             titleEnglish: 'English title',
@@ -97,15 +93,10 @@ describe('useShareArticle', () => {
         expect(message).toContain('The exact on-screen title');
         expect(opts.subject).toBe('The exact on-screen title');
         expect(message).not.toContain('English title');
-        // Original-language title rides along on the very next line since it
-        // differs from what the reader was actually looking at.
-        expect(message).toContain('The exact on-screen title\nOriginal title');
+        expect(message).not.toContain('Original title');
     });
 
-    it('includes the original title alongside the English fallback when no displayedTitle (the QA-reported bug)', async () => {
-        // This is the exact shape QA captured: a feed card (no displayedTitle)
-        // for a non-English article shares only the English title, paired with
-        // a link that lands on the untranslated original page.
+    it('shares only the English title (no original-language line) when no displayedTitle', async () => {
         mockGetArticleTranslatableStatus.mockReturnValue('translatable');
         await share({
             url: ARTICLE_URL,
@@ -114,12 +105,10 @@ describe('useShareArticle', () => {
         });
         const [{ message }] = shareSpy.mock.calls[0];
         expect(message).toContain('English title');
-        expect(message).toContain('Original title');
-        // Reader's title leads; original-language title is the very next line.
-        expect(message).toContain('English title\nOriginal title');
+        expect(message).not.toContain('Original title');
     });
 
-    it('does not duplicate the title when the article is in the app language (titles identical)', async () => {
+    it('shares the original title when the article is in the app language', async () => {
         mockGetArticleTranslatableStatus.mockReturnValue('same-language');
         await share({
             url: ARTICLE_URL,
@@ -129,11 +118,11 @@ describe('useShareArticle', () => {
         const [{ message }] = shareSpy.mock.calls[0];
         expect(message).toContain('Original title');
         expect(message).not.toContain('English title');
-        // Only ever appears once — no duplicated title line.
+        // Only ever appears once.
         expect(message.split('Original title')).toHaveLength(2);
     });
 
-    it('prefers displayedTitle even when the status pick would differ, and still appends the original', async () => {
+    it('prefers displayedTitle even when the status pick would differ', async () => {
         mockGetArticleTranslatableStatus.mockReturnValue('same-language');
         await share({
             url: ARTICLE_URL,
@@ -143,18 +132,7 @@ describe('useShareArticle', () => {
         });
         const [{ message }] = shareSpy.mock.calls[0];
         expect(message).toContain('Currently shown');
-        expect(message).toContain('Currently shown\nOriginal title');
-    });
-
-    it('does not duplicate the title when displayedTitle equals the original (reader already viewing it)', async () => {
-        await share({
-            url: ARTICLE_URL,
-            titleEnglish: 'English title',
-            titleOriginal: 'Original title',
-            displayedTitle: 'Original title',
-        });
-        const [{ message }] = shareSpy.mock.calls[0];
-        expect(message.split('Original title')).toHaveLength(2);
+        expect(message).not.toContain('Original title');
         expect(message).not.toContain('English title');
     });
 
@@ -229,70 +207,52 @@ describe('useShareArticle', () => {
         await share({ url: null, titleEnglish: 'English title' });
         expect(shareSpy).not.toHaveBeenCalled();
     });
+
+    // Item 16 — sharing an insecure link pushes it onto somebody else's device,
+    // which is strictly worse than opening it on this one. The detail screens
+    // already hide the affordance; this is the backstop.
+    it.each([
+        'http://publisher.example.com/story',
+        'javascript:alert(1)',
+        'publisher.example.com/story',
+    ])('is a no-op for the non-https URL %p', async (url) => {
+        await share({ url, titleEnglish: 'English title' });
+        expect(shareSpy).not.toHaveBeenCalled();
+    });
 });
 
 // ── pure helpers ─────────────────────────────────────────────────────────
 // Exercised directly (no hook/render machinery) since these carry the actual
 // title-precedence and message-assembly logic.
 describe('resolveShareTitles', () => {
-    it('returns only a primary title when titles are identical (same-language status)', () => {
+    it('returns the original title (same-language status)', () => {
         const result = resolveShareTitles({
             titleEnglish: 'English title',
             titleOriginal: 'Original title',
             status: 'same-language',
             displayedTitle: null,
         });
-        expect(result).toEqual({ primary: 'Original title', secondary: null });
+        expect(result).toEqual({ primary: 'Original title' });
     });
 
-    it('returns both when the translatable-status pick differs from the original', () => {
+    it('returns the English title for a translatable article with no displayedTitle', () => {
         const result = resolveShareTitles({
             titleEnglish: 'English title',
             titleOriginal: 'Original title',
             status: 'translatable',
             displayedTitle: null,
         });
-        expect(result).toEqual({ primary: 'English title', secondary: 'Original title' });
+        expect(result).toEqual({ primary: 'English title' });
     });
 
-    it('lets displayedTitle lead, with the original as secondary when it differs', () => {
+    it('lets displayedTitle lead over the status-based pick', () => {
         const result = resolveShareTitles({
             titleEnglish: 'English title',
             titleOriginal: 'Original title',
             status: 'same-language',
             displayedTitle: 'Currently shown',
         });
-        expect(result).toEqual({ primary: 'Currently shown', secondary: 'Original title' });
-    });
-
-    it('drops the secondary when displayedTitle equals the original title', () => {
-        const result = resolveShareTitles({
-            titleEnglish: 'English title',
-            titleOriginal: 'Original title',
-            status: 'translatable',
-            displayedTitle: 'Original title',
-        });
-        expect(result).toEqual({ primary: 'Original title', secondary: null });
-    });
-
-    it('has no secondary when there is no original title at all', () => {
-        const result = resolveShareTitles({
-            titleEnglish: 'English title',
-            titleOriginal: null,
-            status: 'translatable',
-            displayedTitle: null,
-        });
-        expect(result).toEqual({ primary: 'English title', secondary: null });
-    });
-
-    it('has no secondary when titleOriginal is an empty/whitespace string', () => {
-        const result = resolveShareTitles({
-            titleEnglish: 'English title',
-            titleOriginal: '   ',
-            status: 'translatable',
-            displayedTitle: null,
-        });
-        expect(result).toEqual({ primary: 'English title', secondary: null });
+        expect(result).toEqual({ primary: 'Currently shown' });
     });
 
     it('falls back to titleEnglish when same-language status has no titleOriginal', () => {
@@ -302,7 +262,7 @@ describe('resolveShareTitles', () => {
             status: 'same-language',
             displayedTitle: null,
         });
-        expect(result).toEqual({ primary: 'English title', secondary: null });
+        expect(result).toEqual({ primary: 'English title' });
     });
 
     it('falls back to titleOriginal when a translatable article has no titleEnglish', () => {
@@ -312,57 +272,33 @@ describe('resolveShareTitles', () => {
             status: 'translatable',
             displayedTitle: null,
         });
-        expect(result).toEqual({ primary: 'Original title', secondary: null });
+        expect(result).toEqual({ primary: 'Original title' });
     });
 
-    it('resolves to a null primary (and no secondary) when every title input is absent', () => {
+    it('resolves to a null primary when every title input is absent', () => {
         const result = resolveShareTitles({
             titleEnglish: null,
             titleOriginal: null,
             status: 'translatable',
             displayedTitle: null,
         });
-        expect(result).toEqual({ primary: null, secondary: null });
+        expect(result).toEqual({ primary: null });
     });
 });
 
 describe('buildShareMessage', () => {
-    it('joins a single title, the URL, and the footer with blank lines', () => {
+    it('joins the title, the URL, and the footer with blank lines', () => {
         const message = buildShareMessage({
             primaryTitle: 'Title',
-            secondaryTitle: null,
             url: 'https://example.com',
             footer: 'Shared via https://mera.news',
         });
         expect(message).toBe('Title\n\nhttps://example.com\n\nShared via https://mera.news');
     });
 
-    it('puts the secondary title directly under the primary, still one blank-line-separated block', () => {
-        const message = buildShareMessage({
-            primaryTitle: 'Translated title',
-            secondaryTitle: 'Original title',
-            url: 'https://example.com',
-            footer: 'Shared via https://mera.news',
-        });
-        expect(message).toBe(
-            'Translated title\nOriginal title\n\nhttps://example.com\n\nShared via https://mera.news',
-        );
-    });
-
-    it('falls back to the secondary alone when there is no primary', () => {
+    it('drops the title block entirely when there is no title', () => {
         const message = buildShareMessage({
             primaryTitle: null,
-            secondaryTitle: 'Original title',
-            url: 'https://example.com',
-            footer: 'Shared via https://mera.news',
-        });
-        expect(message).toBe('Original title\n\nhttps://example.com\n\nShared via https://mera.news');
-    });
-
-    it('drops the title block entirely when neither title is present', () => {
-        const message = buildShareMessage({
-            primaryTitle: null,
-            secondaryTitle: null,
             url: 'https://example.com',
             footer: 'Shared via https://mera.news',
         });
@@ -372,7 +308,6 @@ describe('buildShareMessage', () => {
     it('omits a falsy URL or footer without leaving stray blank lines', () => {
         const message = buildShareMessage({
             primaryTitle: 'Title',
-            secondaryTitle: null,
             url: null,
             footer: '',
         });

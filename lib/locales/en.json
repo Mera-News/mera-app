@@ -69,6 +69,7 @@
     "startWithStarter": "Start with Starter",
     "allPlansHint": "Every plan is on the next screen.",
     "starterRecommendation": "Starter is the place to begin. Mera News Free is there to keep what you have already built on this device, and on day one there is nothing to keep yet.",
+    "planRecommendation": "You open about {{count}} articles a day. {{plan}} analyzes up to {{limit}} a day so there is always more than you'll get through.",
     "turnMeraBackOn": "Turn Mera back on",
     "lapsedFreeNote": "Mera News Free is yours for as long as you want it. A plan is what starts Mera working on your news again.",
     "subscribe": "Subscribe",
@@ -249,7 +250,65 @@
     "share": "Share",
     "shareVia": "Shared via {{downloadUrl}}",
     "sourceCountryGlobal": "Worldwide",
-    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name."
+    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name.",
+    "linkUnavailable": "This link can't be opened securely, so it isn't available here."
+  },
+  "relatedSort": {
+    "a11yLabel": "Sort related articles",
+    "relevance": "Best match",
+    "oldest": "Oldest first",
+    "newest": "Newest first"
+  },
+  "factCheck": {
+    "action": "Fact check",
+    "actionA11y": "Run an AI fact check on this story",
+    "title": "AI fact check",
+    "hide": "Hide",
+    "retry": "Try again",
+    "checking": "Checking this story against other sources…",
+    "checkingHint": "This can take up to a minute.",
+    "stillWorking": "Still working on this one. Check back in a few minutes.",
+    "failed": "This check couldn't be finished. You can try again later.",
+    "error": "Couldn't start the check. Check your connection and try again.",
+    "blocked": "This story couldn't be checked.",
+    "claimsHeading": "Claims checked",
+    "citationsHeading": "Sources consulted",
+    "noCitations": "No sources came back with this check, so treat it as unconfirmed.",
+    "sourceFallback": "Source {{index}}",
+    "disclaimer": "Written by AI from a web search. It can be wrong or incomplete — read the sources before relying on it.",
+    "verdict": {
+      "supported": {
+        "label": "Consistent with sources",
+        "detail": "Other sources we found say broadly the same thing. That isn't proof it's true — only that we found nothing contradicting it."
+      },
+      "disputed": {
+        "label": "Sources disagree",
+        "detail": "We found sources that contradict parts of this story. Read them and judge for yourself."
+      },
+      "unsupported": {
+        "label": "No support found",
+        "detail": "We couldn't find other sources backing this up. That can simply mean the story is new or niche — it doesn't make it false."
+      },
+      "mixed": {
+        "label": "Partly consistent",
+        "detail": "Some parts line up with other sources and some don't. The claim-by-claim notes say which."
+      },
+      "unverifiable": {
+        "label": "Couldn't confirm",
+        "detail": "We couldn't find enough to confirm or contradict this story. This is not a finding that it's wrong."
+      },
+      "unknown": {
+        "label": "No clear answer",
+        "detail": "The check finished without a conclusion we can summarise. The sources below are what it looked at."
+      }
+    },
+    "assessment": {
+      "supported": "Backed by sources",
+      "disputed": "Sources disagree",
+      "unsupported": "No support found",
+      "unverifiable": "Couldn't confirm",
+      "unknown": "Unclear"
+    }
   },
   "newsCluster": {
     "failedToLoad": "Failed to load cluster details",
@@ -259,7 +318,9 @@
   },
   "sources": {
     "searchCountries": "Search countries...",
+    "searchCountriesOrPublishers": "Search countries or publishers...",
     "noCountriesMatch": "No countries match your search",
+    "noResultsMatch": "Nothing matches your search",
     "noSourcesAvailable": "No sources available",
     "noFeedsAvailable": "No feeds available",
     "publishers": "Publishers",
@@ -268,7 +329,15 @@
     "viewTopHeadlines": "Top headlines",
     "topHeadlines": "Top headlines",
     "addToLocations": "Add to your places",
-    "addedToLocations": "Added to your places"
+    "addedToLocations": "Added to your places",
+    "addToExplore": "Add to Explore",
+    "addedToExplore": "Added to Explore",
+    "badgeGovernment": "Government source",
+    "badgeRegulator": "Official agency"
+  },
+  "sourcePrefControl": {
+    "prioritiseA11y": "Prioritise this source",
+    "deprioritiseA11y": "Deprioritise this source"
   },
   "tabs": {
     "deck": "Feed",
@@ -297,6 +366,8 @@
     "scopeWorld": "World",
     "noArticles": "No articles found",
     "addPlaces": "Add places",
+    "addSources": "Add sources",
+    "removeScope": "Remove {{name}}",
     "offlineUnavailable": "You're offline: Explore needs an internet connection"
   },
   "forYou": {
@@ -524,6 +595,14 @@
     "relevanceV3On": "Single-pass scoring: interests and impact, balanced",
     "relevanceV3Off": "Classic two-pass cloud scoring",
     "relevanceV3Description": "Beta — scores each article once on two axes: how close it is to your stated interests, and how much it could affect you. Fewer, better-separated suggestions and about a third less AI processing. Turn it off at any time to go back.",
+    "webSearchTitle": "Web search in chat",
+    "webSearchOn": "On — Mera can search the web to answer a question",
+    "webSearchOff": "Off",
+    "webSearchDescription": "When this is on, Mera can search the web to answer a question. The search words you type are sent to our server and on to a search provider. Nothing else goes with them — not your facts, not your feed, not who you are. Off by default.",
+    "deepInterviewTitle": "Deeper questions",
+    "deepInterviewOn": "On — Mera asks about attention, worries and decisions",
+    "deepInterviewOff": "Off",
+    "deepInterviewDescription": "Mera asks fewer, deeper questions: what you are trying to protect your attention from, which topics are necessary but anxious, which feel useful but waste your time, what you are deciding this month, and why each place matters to you. Your answers are stored on this device and never leave it — which is exactly why Mera can ask them. They make relevance scores and the reasons shown on each story sharper. Off by default.",
     "privacyTitle": "Your data stays private",
     "privacyDescription": "Mera Protocol is always on. On-device mode runs inference fully offline on your phone. Cloud mode uses end-to-end encrypted inference: your data is encrypted on your device and only decrypted inside a secure enclave we can't read into. Your facts, your profile and your reading history never leave this device. To fetch news we send only broad topic phrases, carrying no user ID.",
     "deviceSupported": "Device Supported",
@@ -617,6 +696,11 @@
     "accountDeletedDescription": "Your account has been permanently deleted.",
     "deletionFailedTitle": "Deletion Failed",
     "deletionFailedDescription": "There was an issue deleting your account. Please try again.",
+    "deleteAccountConfirmGrace": "Your account will be scheduled for deletion, with a 30-day grace period. Sign in again within those 30 days and the deletion is automatically canceled.",
+    "deleteAccountWarningGrace": "⚠️ After 30 days, this cannot be undone and all your data is permanently removed.",
+    "finalConfirmationBodyGrace": "This schedules your account for permanent deletion in 30 days.",
+    "accountDeletionScheduledTitle": "Deletion Scheduled",
+    "accountDeletionScheduledDescription": "Your account will be permanently deleted in 30 days. Sign in again before then to cancel the deletion.",
     "signedOutTitle": "Signed Out",
     "signedOutDescription": "You have been successfully signed out.",
     "logoutFailedTitle": "Logout Failed",
@@ -1352,5 +1436,30 @@
     "lapseTitle": "Your Mera plan has ended",
     "lapseBody": "Nothing has been taken away. Anything you've saved, followed or read is yours, on this device, always. You're on Mera News Free from here. What pauses is the AI layer itself, so your personalized feed, dashboard, new story tracking and Mera chat stay off until you start a plan again.",
     "continueWithoutPlan": "Continue without a plan"
+  },
+  "paywall": {
+    "variantA": {
+      "title": "Here's the deal.",
+      "description": "Mera could be free. Ad-supported, like most apps. But that model has no ceiling — on your data, or on what it's used for. We refuse to be that company. So the deal is simple. You keep your data. We do the work. You pay for it. Nothing else changes hands."
+    },
+    "variantB": {
+      "title": "Someone always pays for the news.",
+      "description": "Free news isn't free. Usually, you pay in data — with no real limit on how much, or how it's used. This isn't a theory. It's documented, again and again. We chose a different answer. You pay us directly. We never take your data instead."
+    },
+    "variantC": {
+      "title": "We chose the harder business model.",
+      "description": "Ad-supported news has one goal: take as much of your data as possible. It's the easy way to build a company. We said no. Mera has no data ceiling to protect, because we don't need one. You pay us. We work for you. Nothing more."
+    }
+  },
+  "consent": {
+    "title": "Before you continue",
+    "body": "We've updated our Terms of Service and Privacy Policy. Please review and accept them to keep using Mera.",
+    "termsLink": "Terms of Service",
+    "privacyLink": "Privacy Policy",
+    "accept": "Agree & Continue",
+    "accepting": "Saving…",
+    "errorTitle": "Couldn't save your acceptance",
+    "errorDescription": "Please check your connection and try again.",
+    "retry": "Try again"
   }
 }

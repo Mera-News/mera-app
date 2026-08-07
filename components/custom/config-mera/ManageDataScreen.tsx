@@ -172,7 +172,15 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             setModalProcessing('deleteAccount', true);
             closeModal('deleteAccount');
 
-            await authClient.deleteUser();
+            // authClient.deleteUser() now 404s unconditionally — the server has
+            // replaced immediate deletion with a 30-day grace period. `$fetch`
+            // resolves `{ data, error }` rather than throwing on a non-2xx
+            // response, so success must be read from `error` being absent, not
+            // from the call merely completing.
+            const { error } = await authClient.$fetch('/request-account-deletion', {
+                method: 'POST',
+            });
+            if (error) throw error;
             serverDeleteSucceeded = true;
 
             try {
@@ -192,8 +200,8 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 placement: 'top',
                 render: () => (
                     <Toast action="success" variant="solid">
-                        <ToastTitle>{t('preferences.accountDeletedTitle')}</ToastTitle>
-                        <ToastDescription>{t('preferences.accountDeletedDescription')}</ToastDescription>
+                        <ToastTitle>{t('preferences.accountDeletionScheduledTitle')}</ToastTitle>
+                        <ToastDescription>{t('preferences.accountDeletionScheduledDescription')}</ToastDescription>
                     </Toast>
                 ),
             });
@@ -268,7 +276,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         {
             id: 'deleteAccount',
             title: t('preferences.deleteAccount'),
-            description: t('preferences.deleteAccountConfirm'),
+            description: t('preferences.deleteAccountConfirmGrace'),
             icon: 'delete-forever',
             location: 'server',
             onPress: () => openModal('deleteAccount'),
@@ -410,10 +418,10 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                         </ModalHeader>
                         <ModalBody className="py-6">
                             <Text className="text-gray-300 text-base leading-relaxed mb-4">
-                                {t('preferences.deleteAccountConfirm')}
+                                {t('preferences.deleteAccountConfirmGrace')}
                             </Text>
                             <Text className="text-red-400 text-sm font-medium">
-                                {t('preferences.deleteAccountWarning')}
+                                {t('preferences.deleteAccountWarningGrace')}
                             </Text>
                         </ModalBody>
                         <ModalFooter className="border-t border-gray-700 pt-4">
@@ -447,7 +455,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                         </ModalHeader>
                         <ModalBody className="py-6">
                             <Text className="text-gray-300 text-base leading-relaxed mb-4">
-                                {t('preferences.finalConfirmationBody')}
+                                {t('preferences.finalConfirmationBodyGrace')}
                             </Text>
                             <Text className="text-red-400 text-base font-semibold">
                                 {t('preferences.absolutelySure')}

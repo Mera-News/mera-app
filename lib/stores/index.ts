@@ -70,6 +70,7 @@ export const clearAllStores = async () => {
     const { useSubscriptionStore } = require('./subscription-store');
     const { useFeedOrderStore } = require('./feed-order-store');
     const { useImportanceFilterStore } = require('./importance-filter-store');
+    const { useRelatedSortStore } = require('./related-sort-store');
     const { clearAttestationCache } = require('../e2ee/e2ee-cache');
     const { clearLastKnownTier } = require('../subscription/last-known-tier');
 
@@ -92,6 +93,7 @@ export const clearAllStores = async () => {
     useSubscriptionStore.getState().reset();
     useFeedOrderStore.getState().reset();
     useImportanceFilterStore.getState().reset();
+    useRelatedSortStore.getState().reset();
     clearAttestationCache();
 
     // LAST, and deliberately so. The device's memory of its last resolved
