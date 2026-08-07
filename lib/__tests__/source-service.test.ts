@@ -265,3 +265,90 @@ describe('SourceService.getNewsPublishers', () => {
         expect(call.variables.countryCode).toBeUndefined();
     });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// searchPublishers (Item 8)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function makePublisherSearchHit(overrides: Record<string, unknown> = {}) {
+    return {
+        _id: 'pub-1',
+        name: 'Times of India',
+        website_url: 'https://timesofindia.indiatimes.com',
+        country_code: 'IND',
+        country_name: 'India',
+        matchingSources: [],
+        ...overrides,
+    };
+}
+
+describe('SourceService.searchPublishers', () => {
+    beforeEach(() => jest.clearAllMocks());
+
+    it('returns publishers on success', async () => {
+        const hits = [makePublisherSearchHit(), makePublisherSearchHit({ _id: 'pub-2' })];
+        const serverResp = {
+            publishers: hits,
+            pageInfo: { endCursor: 'cursor-1', hasNextPage: true, pageSize: 20 },
+        };
+        mockQuery.mockResolvedValueOnce({ data: { searchPublishers: serverResp } });
+
+        const result = await SourceService.searchPublishers({ query: 'Times of India' });
+        expect(result).toEqual(serverResp);
+    });
+
+    it('returns empty structure when data is null', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { searchPublishers: null } });
+        const result = await SourceService.searchPublishers({ query: 'xx' });
+        expect(result.publishers).toEqual([]);
+        expect(result.pageInfo.hasNextPage).toBe(false);
+        expect(result.pageInfo.pageSize).toBe(20);
+    });
+
+    it('uses no-cache fetchPolicy', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { searchPublishers: null } });
+        await SourceService.searchPublishers({ query: 'xx' });
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({ fetchPolicy: 'no-cache' }),
+        );
+    });
+
+    it('passes the query and default first=20', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { searchPublishers: null } });
+        await SourceService.searchPublishers({ query: 'bbc' });
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({
+                variables: expect.objectContaining({ query: 'bbc', first: 20 }),
+            }),
+        );
+    });
+
+    it('passes custom first and after', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { searchPublishers: null } });
+        await SourceService.searchPublishers({ query: 'bbc', first: 5, after: 'cursor-x' });
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({
+                variables: expect.objectContaining({ query: 'bbc', first: 5, after: 'cursor-x' }),
+            }),
+        );
+    });
+
+    it('fallback pageSize matches options.first', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { searchPublishers: null } });
+        const result = await SourceService.searchPublishers({ query: 'bbc', first: 7 });
+        expect(result.pageInfo.pageSize).toBe(7);
+    });
+
+    it('re-throws on error and logs captureException', async () => {
+        const err = new Error('search query failed');
+        mockQuery.mockRejectedValueOnce(err);
+
+        await expect(SourceService.searchPublishers({ query: 'bbc' })).rejects.toThrow('search query failed');
+        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
+            err,
+            expect.objectContaining({
+                tags: { service: 'source-service', method: 'searchPublishers' },
+            }),
+        );
+    });
+});

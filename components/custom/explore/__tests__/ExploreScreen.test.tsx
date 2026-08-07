@@ -131,7 +131,13 @@ jest.mock('@/lib/explore/device-country', () => ({
 }));
 
 const mockSetSetting = jest.fn((..._a: unknown[]) => Promise.resolve());
+// Backs lib/explore/browse-countries.ts + lib/explore/suppressed-scopes.ts too
+// (both real modules, not mocked — they're pure aside from this KV layer).
+// Empty by default so browseCountries/suppressedIds resolve to their
+// no-op-empty defaults and every pre-existing assertion below is unaffected.
+const mockGetSetting = jest.fn((..._a: unknown[]): Promise<string | null> => Promise.resolve(null));
 jest.mock('@/lib/database/services/setting-service', () => ({
+    getSetting: (...a: unknown[]) => mockGetSetting(...a),
     setSetting: (...a: unknown[]) => mockSetSetting(...a),
 }));
 
@@ -257,5 +263,104 @@ describe('ExploreScreen — scopes and selection', () => {
             emitLocations!([row()]);
         });
         expect(mockListMount).toHaveBeenLastCalledWith('world');
+    });
+});
+
+// Flush the browse-countries/suppressed-scopes focus-effect promise chain
+// (getSetting → JSON.parse → Promise.all → setState), which takes a few more
+// microtask turns than the synchronous emitLocations! path above.
+const flushKvLoad = async () => {
+    await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+    });
+};
+
+// mockGetSetting is typed as (...args: unknown[]) => Promise<string | null> —
+// this stubs a per-key lookup on top of that without narrowing the param type
+// (a `(key: string) => ...` override isn't assignable to mockImplementation's
+// expected `(...args: unknown[]) => ...` signature).
+const stubSettingByKey = (overrides: Record<string, string>) => (...args: unknown[]) => {
+    const key = args[0] as string;
+    return Promise.resolve(Object.prototype.hasOwnProperty.call(overrides, key) ? overrides[key] : null);
+};
+
+describe('ExploreScreen — browse countries + suppressed scopes (Items 7/18)', () => {
+    afterEach(() => {
+        // Tests below override mockGetSetting per-key; restore the blanket
+        // default so it never leaks into a later test.
+        mockGetSetting.mockImplementation((..._a: unknown[]) => Promise.resolve(null));
+    });
+
+    it('appends a browse country after location-derived ones and passes onRemove through', async () => {
+        mockGetSetting.mockImplementation(stubSettingByKey({ explore_browse_countries: JSON.stringify(['FR']) }));
+        render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]); // IN, role: home
+        });
+        await flushKvLoad();
+
+        const props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(props.scopes.map((s: any) => s.id)).toEqual(['world', 'country:IND', 'country:FRA']);
+        expect(typeof props.onRemove).toBe('function');
+    });
+
+    it('filters out a suppressed location-derived scope but never World', async () => {
+        mockGetSetting.mockImplementation(
+            stubSettingByKey({ explore_suppressed_scopes: JSON.stringify(['country:IND']) }),
+        );
+        render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        await flushKvLoad();
+
+        const props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(props.scopes.map((s: any) => s.id)).toEqual(['world']);
+    });
+
+    it('onRemove on a location-derived scope suppresses it (KV) without touching the browse set', async () => {
+        render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        await flushKvLoad();
+
+        let props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        const india = props.scopes.find((s: any) => s.id === 'country:IND');
+        act(() => {
+            props.onRemove(india);
+        });
+        // addSuppressedScopeId itself awaits getSetting THEN setSetting — two
+        // more microtask hops beyond the synchronous local setState above.
+        await flushKvLoad();
+
+        expect(mockSetSetting).toHaveBeenCalledWith('explore_suppressed_scopes', JSON.stringify(['country:IND']));
+        expect(mockSetSetting).not.toHaveBeenCalledWith('explore_browse_countries', expect.anything());
+        props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(props.scopes.map((s: any) => s.id)).toEqual(['world']);
+    });
+
+    it('onRemove on a browse-added scope drops it from the browse set, not the suppressed set', async () => {
+        mockGetSetting.mockImplementation(stubSettingByKey({ explore_browse_countries: JSON.stringify(['FR']) }));
+        render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]); // IN, role: home — FR has no location behind it
+        });
+        await flushKvLoad();
+
+        let props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        const france = props.scopes.find((s: any) => s.id === 'country:FRA');
+        act(() => {
+            props.onRemove(france);
+        });
+        // removeBrowseCountry itself awaits getSetting THEN setSetting — two
+        // more microtask hops beyond the synchronous local setState above.
+        await flushKvLoad();
+
+        expect(mockSetSetting).toHaveBeenCalledWith('explore_browse_countries', JSON.stringify([]));
+        expect(mockSetSetting).not.toHaveBeenCalledWith('explore_suppressed_scopes', expect.anything());
+        props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(props.scopes.some((s: any) => s.id === 'country:FRA')).toBe(false);
     });
 });

@@ -8,16 +8,21 @@ import {
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
+import { getBrowseCountries, removeBrowseCountry } from '@/lib/explore/browse-countries';
 import { getDeviceCountryAlpha2 } from '@/lib/explore/device-country';
-import { deriveExploreScopes, type ExploreScope, type ScopeLocationInput } from '@/lib/explore/scopes';
+import {
+    alpha2ToAlpha3,
+    deriveExploreScopes,
+    electPrimaryCountry,
+    type ExploreScope,
+    type ScopeLocationInput,
+} from '@/lib/explore/scopes';
+import { addSuppressedScopeId, getSuppressedScopeIds } from '@/lib/explore/suppressed-scopes';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
 import logger from '@/lib/logger';
-import { MaterialIcons } from '@expo/vector-icons';
-import { router, useFocusEffect } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
@@ -32,15 +37,22 @@ const LAST_SCOPE_KEY = 'explore_last_scope';
 /**
  * Explore tab (Wave 10, N5; geo-derivation wave deleted the Top stories chip).
  * Scope chips derived from the user's on-device locations + device country
- * (see lib/explore/scopes), ordered `[primary country, …, World]`. Every scope
- * is a DIRECT server-paginated `topHeadlinesForCountry` query
- * (ScopeArticleList) — no article_suggestions, no scoring, no LLM, nothing
- * persisted. Compact cards only.
+ * plus the browse-country set (see lib/explore/scopes,
+ * lib/explore/browse-countries), ordered `[World, primary country, …
+ * location-derived, … browse-added]`, minus anything the user long-pressed to
+ * hide (lib/explore/suppressed-scopes). Every scope is a DIRECT
+ * server-paginated `topHeadlinesForCountry` query (ScopeArticleList) — no
+ * article_suggestions, no scoring, no LLM, nothing persisted. Compact cards
+ * only.
  *
- * Sources management now lives in Profile (app-rethink wave) — the header
- * Sources action, the FAB, and the bottom sheet are removed; the header slot
- * they occupied now hosts the notification bell. The floating Mera bubble is
- * not rendered on this screen.
+ * Sources management lives in Profile → Advanced and via the trailing "+"
+ * chip in ScopeChipRow, which opens `/logged-in/sources` directly. Adding a
+ * country there is browse-only — it no longer creates a persona Location or
+ * touches geo relevance scoring (Item 7, decoupling wave). The header itself
+ * carries just the title; there is no header Sources button or bell — a
+ * previous doc comment here claimed one was already removed, but the button
+ * was still live until this wave deleted it as a duplicate of the "+" chip.
+ * The floating Mera bubble is not rendered on this screen.
  */
 const ExploreScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -97,10 +109,61 @@ const ExploreScreen: React.FC = () => {
         }, []),
     );
 
-    const scopes = useMemo(
-        () => deriveExploreScopes(locations, deviceCountry),
-        [locations, deviceCountry],
+    // Browse countries (Item 7) + suppressed scope ids (Item 18) — both a
+    // plain setting-service KV row, neither observable, so both are re-read on
+    // focus rather than subscribed. This is what makes a country added on the
+    // Sources screen (or a chip hidden here) show up on return to this tab.
+    const [browseCountries, setBrowseCountries] = useState<string[]>([]);
+    const [suppressedIds, setSuppressedIds] = useState<Set<string>>(new Set());
+    useFocusEffect(
+        useCallback(() => {
+            let cancelled = false;
+            Promise.all([getBrowseCountries(), getSuppressedScopeIds()])
+                .then(([browse, suppressed]) => {
+                    if (cancelled) return;
+                    setBrowseCountries(browse);
+                    setSuppressedIds(new Set(suppressed));
+                })
+                .catch((err: unknown) => {
+                    logger.captureException(err, {
+                        tags: { component: 'ExploreScreen', method: 'loadBrowseAndSuppressed' },
+                    });
+                });
+            return () => {
+                cancelled = true;
+            };
+        }, []),
     );
+
+    const rawScopes = useMemo(
+        () => deriveExploreScopes(locations, deviceCountry, browseCountries),
+        [locations, deviceCountry, browseCountries],
+    );
+    // World can never be hidden; every other scope is dropped once its id
+    // lands in the suppressed set (a long-pressed location-derived chip —
+    // browse-added chips are removed outright from `browseCountries` instead
+    // and never reach this filter).
+    const scopes = useMemo(
+        () => rawScopes.filter((s) => s.kind === 'world' || !suppressedIds.has(s.id)),
+        [rawScopes, suppressedIds],
+    );
+
+    // Which country alpha-3 codes are location-derived (primary + every
+    // location), independent of the browse set — used by handleRemoveScope to
+    // decide whether a "×" tap should suppress (location-derived) or delete
+    // from the browse set (browse-added). A country present in BOTH resolves
+    // as location-derived: that is the representation the visible chip
+    // actually carries (deriveExploreScopes dedupes the browse copy out).
+    const locationAlpha3s = useMemo(() => {
+        const set = new Set<string>();
+        const primary = electPrimaryCountry(locations, deviceCountry);
+        if (primary?.countryCodeAlpha3) set.add(primary.countryCodeAlpha3);
+        for (const loc of locations) {
+            const a3 = alpha2ToAlpha3(loc.countryCode);
+            if (a3) set.add(a3);
+        }
+        return set;
+    }, [locations, deviceCountry]);
 
     // Resolve the active scope: the selected id when still available,
     // otherwise the first scope (the primary country).
@@ -147,6 +210,40 @@ const ExploreScreen: React.FC = () => {
         });
     };
 
+    // Item 18 — long-press-then-"×" chip removal. World is filtered out of
+    // `scopes`'s hideable set already (ScopeChipRow also never offers a "×"
+    // for it), so this only ever sees a `country` scope in practice.
+    const handleRemoveScope = useCallback(
+        (scope: ExploreScope) => {
+            if (scope.kind !== 'country' || !scope.countryCodeAlpha3) return;
+
+            if (locationAlpha3s.has(scope.countryCodeAlpha3)) {
+                // Location-derived: hide the chip, but the location — and the
+                // geo-scoring signal it feeds — stays exactly as it was.
+                setSuppressedIds((prev) => new Set(prev).add(scope.id));
+                addSuppressedScopeId(scope.id).catch((err: unknown) => {
+                    logger.captureException(err, {
+                        tags: { component: 'ExploreScreen', method: 'suppressScope' },
+                    });
+                });
+                return;
+            }
+
+            if (scope.countryCodeAlpha2) {
+                // Browse-added: drop it from the browse set outright — there
+                // is no location/signal underneath it to preserve.
+                const code = scope.countryCodeAlpha2.toUpperCase();
+                setBrowseCountries((prev) => prev.filter((c) => c !== code));
+                removeBrowseCountry(code).catch((err: unknown) => {
+                    logger.captureException(err, {
+                        tags: { component: 'ExploreScreen', method: 'removeBrowseCountry' },
+                    });
+                });
+            }
+        },
+        [locationAlpha3s],
+    );
+
     return (
         // ROOT IS UNPADDED ON PURPOSE. A padding here would inset the scroll
         // view itself and fight the `contentInsetAdjustmentBehavior: automatic`
@@ -187,8 +284,8 @@ const ExploreScreen: React.FC = () => {
                 scrollHandler={scrollHandler}
             />
 
-            {/* Pinned header overlay — title + Sources button, offline banner,
-                scope chips. This sits ON TOP of the list, and the chip row's
+            {/* Pinned header overlay — title, offline banner, scope chips.
+                This sits ON TOP of the list, and the chip row's
                 own wrapper has no background, so the overlay needs an opaque
                 or glass backing or article rows scroll visibly through the
                 chips. On iOS 26+ that backing is real Liquid Glass (GlassPlate);
@@ -213,8 +310,8 @@ const ExploreScreen: React.FC = () => {
                 // box-none: the absolute header must not swallow the
                 // top-of-list pull-to-refresh gesture — touches pass through
                 // its empty area to the list beneath, while its interactive
-                // children (the Sources button, the chips) still receive taps.
-                // Same requirement documented at ForYouScreen.tsx:519-536.
+                // children (the chips) still receive taps. Same requirement
+                // documented at ForYouScreen.tsx:519-536.
                 pointerEvents="box-none"
                 style={[
                     {
@@ -241,8 +338,12 @@ const ExploreScreen: React.FC = () => {
             >
                 <GlassPlate tint={GLASS_HEADER_TINT} />
                 <Box pointerEvents="box-none" style={{ paddingTop: insets.top + 16 }}>
-                    {/* Header — title + a right-slot Sources button (mirrors the
-                        Dashboard's circular outline icon-button pattern). */}
+                    {/* Header — title only. It used to also carry a right-slot
+                        Sources button, but ScopeChipRow's trailing "+" chip now
+                        opens `/logged-in/sources` too — the two were exact
+                        duplicates once the "+" stopped going to /locations
+                        (Item 7), so this one was deleted rather than kept as a
+                        second way to reach the same screen. */}
                     <HStack className="items-center justify-between px-5 mb-2" pointerEvents="box-none">
                         <Heading
                             size="3xl"
@@ -252,15 +353,6 @@ const ExploreScreen: React.FC = () => {
                         >
                             {t('explore.title')}
                         </Heading>
-                        <Pressable
-                            onPress={() => router.push('/logged-in/sources')}
-                            hitSlop={12}
-                            accessibilityRole="button"
-                            accessibilityLabel={t('settings.sources')}
-                            className="p-3 rounded-full border border-primary-500 bg-transparent flex-shrink-0"
-                        >
-                            <MaterialIcons name="newspaper" size={22} color="#EDA77E" />
-                        </Pressable>
                     </HStack>
 
                     {/* The offline notice that used to sit here MOVED into
@@ -275,7 +367,12 @@ const ExploreScreen: React.FC = () => {
                         must not swallow a pull; only the chips themselves (and
                         ScopeChipRow's own FlatList) take touches. */}
                     <Box className="mb-2" pointerEvents="box-none">
-                        <ScopeChipRow scopes={scopes} selectedId={selectedScope.id} onSelect={handleSelect} />
+                        <ScopeChipRow
+                            scopes={scopes}
+                            selectedId={selectedScope.id}
+                            onSelect={handleSelect}
+                            onRemove={handleRemoveScope}
+                        />
                     </Box>
                 </Box>
             </Animated.View>
