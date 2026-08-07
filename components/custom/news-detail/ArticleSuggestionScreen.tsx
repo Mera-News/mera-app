@@ -3,13 +3,17 @@ import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
+import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
+import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { AlertCircleIcon, Icon } from '@/components/ui/icon';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -45,6 +49,8 @@ import {
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
 import { useIsConnected } from '@/lib/stores/network-store';
+import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
+import { secureUrlOrNull } from '@/lib/secure-url';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -259,6 +265,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // block sizes never become window-relative. Local siblings navigate to the
     // richer suggestion-detail route; server rows to the article-detail route
     // (encoded by whether `suggestionId` is set).
+    // How the reader wants the related list ordered. ONE persisted setting
+    // shared with the article-detail route — see related-sort-store.
+    const relatedSortMode = useRelatedSortStore((s) => s.mode);
+    const setRelatedSortMode = useRelatedSortStore((s) => s.setMode);
+
     const relatedEntries = useMemo<RelatedEntry[]>(() => {
         if (!suggestion) return [];
         const siblingArticleIds = new Set<string>(
@@ -291,8 +302,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             [...siblingEntries, ...serverEntries],
             suggestion.country_code ?? null,
             userCtx,
+            relatedSortMode,
         );
-    }, [localSiblings, related, suggestion, userCtx]);
+    }, [localSiblings, related, suggestion, userCtx, relatedSortMode]);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -322,9 +334,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // Reset the visible window when the underlying list identity changes
     // (navigating to a different suggestion re-mounts nothing here since this
     // screen instance is keyed per-route, but guard anyway for safety).
+    // Also reset on a sort change: the reader re-sorted to see a DIFFERENT set
+    // of rows at the top, and keeping a grown window would silently change how
+    // much of the list is on screen at the same time as its order.
     useEffect(() => {
         setVisibleRelatedCount(INITIAL_RELATED_COUNT);
-    }, [suggestion?._id]);
+    }, [suggestion?._id, relatedSortMode]);
 
     // Hydrate the suggestion from local DB if it wasn't already in the store
     // (e.g. deep-link from notification before store hydration completes).
@@ -465,7 +480,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         }
     }, [suggestion, isSaved, showSavedToast, t, articleSuggestionId]);
 
-    const handleArticleUrlPress = async (url: string | null | undefined) => {
+    const handleArticleUrlPress = async (rawUrl: string | null | undefined) => {
+        // Second gate for item 16 — see ArticleDetailScreen for the reasoning.
+        const url = secureUrlOrNull(rawUrl);
         if (!url) return;
         if (suggestion) {
             recordPublicationVisit({
@@ -531,6 +548,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     }
 
     const sourceLanguage = suggestion.language_code ?? null;
+    // Item 16 (defence in depth): a locally-stored suggestion row can predate
+    // the server's insecure-article filter. An `http://` URL reads as
+    // UNAVAILABLE — an explicit notice in place of the read/translate/share
+    // block — never as a button that quietly does nothing.
+    const articleUrl = secureUrlOrNull(suggestion.article_url);
+    const insecureLink = !!suggestion.article_url && !articleUrl;
     const read = isSuggestionOpened(suggestion, openedIds);
 
     return (
@@ -584,7 +607,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 footer={
                     <>
                         {/* Read Article CTA */}
-                        {suggestion.article_url ? (
+                        {articleUrl ? (
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
                                     articleId={suggestion.articleId}
@@ -620,7 +643,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         matchedTopics: suggestion.matchedTopics,
                                     }}
                                     share={{
-                                        url: suggestion.article_url,
+                                        url: articleUrl,
                                         titleEnglish: suggestion.title_en,
                                         titleOriginal: suggestion.title_original,
                                         sourceLanguage: suggestion.language_code,
@@ -629,13 +652,26 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     }}
                                 />
                                 <ReadTranslateActions
-                                    articleUrl={suggestion.article_url}
+                                    articleUrl={articleUrl}
                                     sourceLanguage={sourceLanguage}
                                     publicationName={suggestion.publication_name}
                                     onOpenUrl={handleArticleUrlPress}
                                 />
                             </VStack>
+                        ) : insecureLink ? (
+                            <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2" space="sm">
+                                <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+                                <Text size="sm" className="text-warning-400 flex-1">
+                                    {t('articleDetail.linkUnavailable')}
+                                </Text>
+                            </HStack>
                         ) : null}
+
+                        {/* Fact check sits OUTSIDE the URL branch: it is keyed
+                            on the ARTICLE id (not the suggestion id) and the
+                            server holds its own canonical URL, so it still works
+                            for a row whose local link we refuse to open. */}
+                        <FactCheckPanel articleId={suggestion.articleId} />
 
                         {/* Related Articles — ONE flat, sorted list merging the
                             local cluster siblings (the user's own personalized
@@ -651,9 +687,16 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             the bottom (see `handleRelatedEndReached`). */}
                         {(relatedEntries.length > 0 || isLoadingRelated) && (
                             <VStack space="md">
-                                <Heading size="md" className="text-gray-300">
-                                    {t('articleDetail.relatedArticles')}
-                                </Heading>
+                                <HStack className="items-center justify-between" space="sm">
+                                    <Heading size="md" className="text-gray-300 flex-1">
+                                        {t('articleDetail.relatedArticles')}
+                                    </Heading>
+                                    <RelatedSortDropdown
+                                        value={relatedSortMode}
+                                        onChange={setRelatedSortMode}
+                                        testIDPrefix="related-sort"
+                                    />
+                                </HStack>
                                 {relatedEntries.slice(0, visibleRelatedCount).map((entry, index) => (
                                     <ArticleStandaloneCompactCard
                                         key={entry.id || `related-${index}`}

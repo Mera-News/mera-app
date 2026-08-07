@@ -2,6 +2,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
 import { REFERRER_SOURCE } from './config/branding';
+import { isSecureUrl } from './secure-url';
 import { useAppLanguageStore } from './stores/app-language-store';
 
 // The website's supported locale codes (mirrors mera-promo-website
@@ -105,5 +106,17 @@ export async function openInAppBrowser(url: string): Promise<WebBrowser.WebBrows
 export async function openArticleInAppBrowser(
     url: string
 ): Promise<WebBrowser.WebBrowserResult> {
+    // Defence in depth. The server already excludes insecure articles from
+    // every serving path and both detail screens refuse to render a CTA for
+    // one, so reaching this throw means a stale local row slipped past both —
+    // fail loudly rather than open a plaintext connection.
+    //
+    // The check lives HERE and not in `openInAppBrowser`: that one is also fed
+    // the server-supplied app-store URL by the native update gate, which is
+    // legitimately `itms-apps://`/`market://`, and blocking it would silently
+    // break force-update.
+    if (!isSecureUrl(url)) {
+        throw new Error('Refusing to open a non-https article URL');
+    }
     return openInAppBrowser(appendReferrer(url));
 }
