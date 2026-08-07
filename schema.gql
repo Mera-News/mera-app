@@ -481,7 +481,6 @@ type PublicationSource {
   publication_name: String!
   publication_type: String
   publication_url: String
-  source_type: SourceType!
   type: String!
   updatedAt: DateTime!
 }
@@ -662,11 +661,6 @@ type Query {
   unblockRequestStatus(userId: ID!): UnblockRequest
   userBilling: UserBillingInfo!
   userPersonaByUserId(userId: ID!): UserPersona
-
-  """
-  Authenticated proxy for Brave web search. Returns at most 10 results, and [] when the spend gate (BRAVE_SEARCH_ENABLED) is off.
-  """
-  webSearch(query: String!): [WebSearchResult!]!
 }
 
 input RequestUnblockInput {
@@ -678,16 +672,6 @@ input RequestUnblockInput {
 type SearchPublishersResponse {
   pageInfo: CursorPageInfo!
   publishers: [PublisherSearchHit!]!
-}
-
-"""
-Derived classification of a PublicationSource from its free-text category. The app renders a badge ONLY for GOVERNMENT and AGENCY.
-"""
-enum SourceType {
-  AGENCY
-  GOVERNMENT
-  NEWS
-  UNCLASSIFIED
 }
 
 """
@@ -822,11 +806,4 @@ type UserPersona {
   processingMode: ProcessingMode!
   updatedAt: DateTime!
   userId: String!
-}
-
-"""One web-search result, proxied from Brave Search."""
-type WebSearchResult {
-  snippet: String!
-  title: String!
-  url: String!
 }

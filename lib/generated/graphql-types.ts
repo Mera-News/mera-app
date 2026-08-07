@@ -507,7 +507,6 @@ export type PublicationSource = {
   publication_name: Scalars['String']['output'];
   publication_type?: Maybe<Scalars['String']['output']>;
   publication_url?: Maybe<Scalars['String']['output']>;
-  source_type: SourceType;
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
 };
@@ -578,8 +577,6 @@ export type Query = {
   unblockRequestStatus?: Maybe<UnblockRequest>;
   userBilling: UserBillingInfo;
   userPersonaByUserId?: Maybe<UserPersona>;
-  /** Authenticated proxy for Brave web search. Returns at most 10 results, and [] when the spend gate (BRAVE_SEARCH_ENABLED) is off. */
-  webSearch: Array<WebSearchResult>;
 };
 
 
@@ -740,11 +737,6 @@ export type QueryUserPersonaByUserIdArgs = {
   userId: Scalars['ID']['input'];
 };
 
-
-export type QueryWebSearchArgs = {
-  query: Scalars['String']['input'];
-};
-
 export type RequestUnblockInput = {
   chatHistory: Array<ChatMessageInput>;
   feedback: Scalars['String']['input'];
@@ -756,14 +748,6 @@ export type SearchPublishersResponse = {
   pageInfo: CursorPageInfo;
   publishers: Array<PublisherSearchHit>;
 };
-
-/** Derived classification of a PublicationSource from its free-text category. The app renders a badge ONLY for GOVERNMENT and AGENCY. */
-export enum SourceType {
-  Agency = 'AGENCY',
-  Government = 'GOVERNMENT',
-  News = 'NEWS',
-  Unclassified = 'UNCLASSIFIED'
-}
 
 /** One top-headline slot: the representative article plus its cluster metadata (stableClusterId, clusterSize). Both are null/0 for an unclustered singleton. */
 export type TopHeadline = {
@@ -882,12 +866,4 @@ export type UserPersona = {
   processingMode: ProcessingMode;
   updatedAt: Scalars['DateTime']['output'];
   userId: Scalars['String']['output'];
-};
-
-/** One web-search result, proxied from Brave Search. */
-export type WebSearchResult = {
-  __typename?: 'WebSearchResult';
-  snippet: Scalars['String']['output'];
-  title: Scalars['String']['output'];
-  url: Scalars['String']['output'];
 };
