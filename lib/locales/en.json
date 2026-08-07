@@ -368,7 +368,13 @@
     "addPlaces": "Add places",
     "addSources": "Add sources",
     "removeScope": "Remove {{name}}",
-    "offlineUnavailable": "You're offline: Explore needs an internet connection"
+    "offlineUnavailable": "You're offline: Explore needs an internet connection",
+    "searchPlaceholder": "Search recent news",
+    "clearSearch": "Clear search",
+    "searchMinLength": "Keep typing to search",
+    "searchNotSubscribed": "Search needs an active plan",
+    "searchError": "Couldn't search right now",
+    "searchEmpty": "No matches in the last 48 hours. Search covers recent headlines, not the full archive."
   },
   "forYou": {
     "sectionPrefix": "News about:",

@@ -21,13 +21,18 @@ import {
 } from '@/lib/explore/scopes';
 import { addSuppressedScopeId, getSuppressedScopeIds } from '@/lib/explore/suppressed-scopes';
 import { useCollapsibleHeader } from '@/lib/hooks/use-collapsible-header';
+import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
+import type { NewsSearchHit } from '@/lib/generated/graphql-types';
+import { useNewsSearch } from '@/lib/news-search/use-news-search';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import ExploreSearchBar from './ExploreSearchBar';
+import ExploreSearchResults from './ExploreSearchResults';
 import ScopeArticleList from './ScopeArticleList';
 import ScopeChipRow from './ScopeChipRow';
 
@@ -53,6 +58,14 @@ const LAST_SCOPE_KEY = 'explore_last_scope';
  * previous doc comment here claimed one was already removed, but the button
  * was still live until this wave deleted it as a duplicate of the "+" chip.
  * The floating Mera bubble is not rendered on this screen.
+ *
+ * Item 12a — a search bar sits above the chips (`ExploreSearchBar`), backed by
+ * `lib/news-search/use-news-search.ts` (debounce + min-length gate + fetch —
+ * see that file for the state machine). While a search is active
+ * (non-empty query) `ExploreSearchResults` renders as an OVERLAY on top of the
+ * scope list rather than replacing it: the chips and `ScopeArticleList` stay
+ * mounted with unchanged props the whole time, so clearing the query needs no
+ * special-case restore — the underlying screen was simply never touched.
  */
 const ExploreScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -62,6 +75,17 @@ const ExploreScreen: React.FC = () => {
     // with the Feed/Dashboard tabs.
     const { scrollHandler, headerStyle, onHeaderLayout, headerHeight, reveal } =
         useCollapsibleHeader();
+
+    // Item 12a — search bar. See the class doc comment above; all state lives
+    // in the hook, this screen just wires it to the input and the overlay.
+    const search = useNewsSearch();
+    const openArticle = useOpenArticle();
+    const handlePressSearchResult = useCallback(
+        (hit: NewsSearchHit) => {
+            openArticle({ articleId: hit._id });
+        },
+        [openArticle],
+    );
 
     const [locations, setLocations] = useState<ScopeLocationInput[]>([]);
     // Cold-mount opens on the FIRST chip, which is World; the persisted
@@ -355,6 +379,15 @@ const ExploreScreen: React.FC = () => {
                         </Heading>
                     </HStack>
 
+                    {/* Item 12a — search bar, above the scope chips. Not
+                        box-none: it's a real Input and must take its own
+                        touches directly. */}
+                    <ExploreSearchBar
+                        query={search.query}
+                        onChangeQuery={search.setQuery}
+                        onClear={search.clear}
+                    />
+
                     {/* The offline notice that used to sit here MOVED into
                         ScopeArticleList's empty state. It answers a different
                         question from the global OfflineBanner — "why is this list
@@ -376,6 +409,38 @@ const ExploreScreen: React.FC = () => {
                     </Box>
                 </Box>
             </Animated.View>
+
+            {/* Item 12a — search results overlay. Rendered only while a
+                search is active (non-empty query), on top of ScopeArticleList
+                but BELOW the header (zIndex 10, so the input/chips above stay
+                interactive) — an overlay rather than a swap so the list and
+                chips underneath are never unmounted, re-keyed or re-fetched.
+                Clearing the query un-mounts this and reveals the untouched
+                scope list exactly as it was. `top: headerHeight` starts it
+                right under the pinned header; `bg-black` makes it fully opaque
+                so the covered list never shows through. */}
+            {search.isActive ? (
+                <Box
+                    testID="explore-search-overlay"
+                    className="bg-black"
+                    style={{
+                        position: 'absolute',
+                        top: headerHeight,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 5,
+                    }}
+                >
+                    <ExploreSearchResults
+                        status={search.status}
+                        hits={search.hits}
+                        errorKind={search.errorKind}
+                        onPressHit={handlePressSearchResult}
+                        onRetry={search.retry}
+                    />
+                </Box>
+            ) : null}
         </Box>
     );
 };

@@ -110,6 +110,56 @@ jest.mock('../ScopeChipRow', () => {
     };
 });
 
+// --- Item 12a: search bar/results stubs + the state hook they read --------
+// ExploreSearchBar/ExploreSearchResults are exercised by their own test
+// files; here they're stubbed so this suite stays focused on the INTEGRATION
+// question — does activating search ever disturb the scope chips/list — and
+// isn't coupled to their internal markup.
+type MockSearchStatus = 'idle' | 'loading' | 'success' | 'error';
+const defaultSearchState = () => ({
+    query: '',
+    setQuery: jest.fn(),
+    clear: jest.fn(),
+    status: 'idle' as MockSearchStatus,
+    hits: [] as any[],
+    errorKind: null as string | null,
+    retry: jest.fn(),
+    isActive: false,
+});
+const mockUseNewsSearch = jest.fn<ReturnType<typeof defaultSearchState>, []>(defaultSearchState);
+jest.mock('@/lib/news-search/use-news-search', () => ({
+    useNewsSearch: () => mockUseNewsSearch(),
+}));
+
+const mockOpenArticle = jest.fn();
+jest.mock('@/lib/hooks/use-open-article', () => ({
+    useOpenArticle: () => mockOpenArticle,
+}));
+
+const mockSearchBar = jest.fn();
+jest.mock('../ExploreSearchBar', () => {
+    const { View } = require('react-native');
+    return {
+        __esModule: true,
+        default: (props: any) => {
+            mockSearchBar(props);
+            return <View testID="explore-search-bar-stub" />;
+        },
+    };
+});
+
+const mockSearchResults = jest.fn();
+jest.mock('../ExploreSearchResults', () => {
+    const { View } = require('react-native');
+    return {
+        __esModule: true,
+        default: (props: any) => {
+            mockSearchResults(props);
+            return <View testID="explore-search-results-stub" />;
+        },
+    };
+});
+
 // --- services / stores ------------------------------------------------------
 // Deliberately NOT synchronous: the real WatermelonDB observable emits after
 // the first render, which is exactly the condition the flicker gate exists for.
@@ -159,6 +209,7 @@ const row = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
     jest.clearAllMocks();
     emitLocations = null;
+    mockUseNewsSearch.mockReturnValue(defaultSearchState());
 });
 
 describe('ExploreScreen — cold-open flicker gate', () => {
@@ -362,5 +413,87 @@ describe('ExploreScreen — browse countries + suppressed scopes (Items 7/18)', 
         expect(mockSetSetting).not.toHaveBeenCalledWith('explore_suppressed_scopes', expect.anything());
         props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
         expect(props.scopes.some((s: any) => s.id === 'country:FRA')).toBe(false);
+    });
+});
+
+describe('ExploreScreen — search bar + results overlay (Item 12a)', () => {
+    it('renders the search bar but no overlay while inactive', () => {
+        const { getByTestId, queryByTestId } = render(<ExploreScreen />);
+        expect(getByTestId('explore-search-bar-stub')).toBeTruthy();
+        expect(queryByTestId('explore-search-overlay')).toBeNull();
+        expect(queryByTestId('explore-search-results-stub')).toBeNull();
+    });
+
+    it('mounts the overlay and forwards hook state to ExploreSearchResults once active', () => {
+        const hits = [{ _id: 'a1', title_en: 'Headline' }];
+        mockUseNewsSearch.mockReturnValue({
+            ...defaultSearchState(),
+            isActive: true,
+            status: 'success',
+            hits,
+        });
+        const { getByTestId } = render(<ExploreScreen />);
+
+        expect(getByTestId('explore-search-overlay')).toBeTruthy();
+        expect(getByTestId('explore-search-results-stub')).toBeTruthy();
+        const props = mockSearchResults.mock.calls[mockSearchResults.mock.calls.length - 1][0];
+        expect(props.status).toBe('success');
+        expect(props.hits).toBe(hits);
+        expect(props.errorKind).toBeNull();
+        expect(typeof props.onPressHit).toBe('function');
+        expect(typeof props.onRetry).toBe('function');
+    });
+
+    it('tapping a search result opens the article by its id via useOpenArticle', () => {
+        mockUseNewsSearch.mockReturnValue({ ...defaultSearchState(), isActive: true, status: 'success' });
+        render(<ExploreScreen />);
+
+        const props = mockSearchResults.mock.calls[mockSearchResults.mock.calls.length - 1][0];
+        act(() => {
+            props.onPressHit({ _id: 'article-123' });
+        });
+        expect(mockOpenArticle).toHaveBeenCalledWith({ articleId: 'article-123' });
+    });
+
+    it('activating search never remounts or reconfigures the scope list/chips underneath', () => {
+        const { rerender, getByTestId, queryByTestId } = render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        expect(mockListMount).toHaveBeenCalledTimes(1);
+        expect(queryByTestId('explore-search-overlay')).toBeNull();
+        const chipPropsBefore = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+
+        mockUseNewsSearch.mockReturnValue({
+            ...defaultSearchState(),
+            query: 'india',
+            isActive: true,
+            status: 'loading',
+        });
+        rerender(<ExploreScreen />);
+
+        // The overlay is now up, but the list underneath was never touched.
+        expect(getByTestId('explore-search-overlay')).toBeTruthy();
+        expect(mockListMount).toHaveBeenCalledTimes(1);
+        expect(getByTestId('scope-article-list').props.accessibilityLabel).toBe('world');
+        const chipPropsAfter = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(chipPropsAfter.scopes).toEqual(chipPropsBefore.scopes);
+        expect(chipPropsAfter.selectedId).toBe(chipPropsBefore.selectedId);
+    });
+
+    it('clearing the query (isActive false again) drops the overlay and leaves the list as-is', () => {
+        mockUseNewsSearch.mockReturnValue({ ...defaultSearchState(), isActive: true, status: 'success' });
+        const { rerender, getByTestId, queryByTestId } = render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        expect(getByTestId('explore-search-overlay')).toBeTruthy();
+
+        mockUseNewsSearch.mockReturnValue(defaultSearchState());
+        rerender(<ExploreScreen />);
+
+        expect(queryByTestId('explore-search-overlay')).toBeNull();
+        expect(mockListMount).toHaveBeenCalledTimes(1);
+        expect(getByTestId('scope-article-list')).toBeTruthy();
     });
 });
