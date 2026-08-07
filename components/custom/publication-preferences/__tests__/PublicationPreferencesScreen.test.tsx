@@ -49,6 +49,18 @@ jest.mock('@/components/ui/text', () => { const { Text } = require('react-native
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
 jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
 
+// Pre-existing gap fixed alongside this wave's refactor: without this mock the
+// screen's real import chain (FreeTierReadOnlyBanner → present-free-tier-paywall
+// → billing-service → apollo-client → for-you-store → article-suggestion-service
+// → lib/database/index) instantiates the real WatermelonDB SQLiteAdapter, which
+// throws under Jest (no native JSI). Same mock shape as FactsScreen.test.tsx,
+// the other suite that renders a screen gated by this hook.
+jest.mock('@/components/custom/subscription/FreeTierReadOnlyBanner', () => ({
+    __esModule: true,
+    default: () => null,
+    useFreeTierReadOnly: () => false,
+}));
+
 jest.mock('@/components/custom/config-panel/DrillDownHeader', () => {
     const { View, Text, Pressable } = require('react-native');
     return {

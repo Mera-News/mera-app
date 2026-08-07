@@ -14,6 +14,13 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
+import { normPublicationName } from '@/lib/feed-grouping/geo-language-priority';
+import { observeActive as observeActivePublicationPreferences } from '@/lib/database/services/publication-preference-service';
+import {
+    setSourcePrefFromUi,
+    type SourcePrefUiLevel,
+} from '@/lib/database/services/publication-pref-ui-actions';
 import logger from '@/lib/logger';
 import type { NewsPublisher, PublicationSource } from '@/lib/source-service';
 import { SourceService } from '@/lib/source-service';
@@ -22,27 +29,83 @@ import { router } from 'expo-router';
 import { ChevronDownIcon } from 'lucide-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList, ListRenderItem } from 'react-native';
+import { FlatList, ListRenderItem, View } from 'react-native';
 import DrillDownHeader from './DrillDownHeader';
+import SourcePrefControl from './SourcePrefControl';
 
 const formatCategory = (category: string): string =>
     category === 'general_news' ? 'All' : category;
 
-// Humanizes the structured taxonomy slugs (publication_type / categories) for
-// display. Deliberately not translated: like `category` above, these are raw
-// server-side data values rendered as-is, not UI copy.
+// Humanizes the structured taxonomy slugs (`categories`) for display.
+// Deliberately not translated: like `category` above, these are raw
+// server-side data values rendered as-is, not UI copy. `publication_type` used
+// to be folded into this same line too — it now gets its own rule-based badge
+// (see `sourceKindOf`/`SourceKindBadge` below) instead, so it is deliberately
+// NOT repeated here (a government source would otherwise read "Government
+// source" twice on one row).
 const humanizeSlug = (slug: string): string =>
     slug.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
 
-const formatTaxonomy = (
-    publicationType?: string | null,
-    categories?: readonly string[] | null
-): string | null => {
-    const parts = [
-        ...(publicationType ? [humanizeSlug(publicationType)] : []),
-        ...(categories ?? []).map(humanizeSlug),
-    ];
+const formatCategories = (categories?: readonly string[] | null): string | null => {
+    const parts = (categories ?? []).map(humanizeSlug);
     return parts.length > 0 ? parts.join(' · ') : null;
+};
+
+// -----------------------------------------------------------------------
+// Item 6 — source-kind badges. A measured, deliberately narrow rule: ONLY
+// `publication_type === 'government'` or `'regulator'` renders anything.
+// Every other value, INCLUDING null ("not classified yet" — currently every
+// prod row), renders nothing. A keyword derivation from the free-text
+// `category` field was built, measured, and deleted (it badged "Android
+// Authority"/"Android Police" as authorities while missing real government
+// outlets) — do not reintroduce one here.
+// -----------------------------------------------------------------------
+
+type SourceKind = 'government' | 'regulator';
+
+const SOURCE_KIND_META: Record<SourceKind, { key: string; default: string; color: string }> = {
+    government: { key: 'sources.badgeGovernment', default: 'Government source', color: '#60a5fa' },
+    regulator: { key: 'sources.badgeRegulator', default: 'Official agency', color: '#34d399' },
+};
+
+const sourceKindOf = (publicationType?: string | null): SourceKind | null =>
+    publicationType === 'government' || publicationType === 'regulator' ? publicationType : null;
+
+/**
+ * A publisher accordion header only badges when EVERY one of its sources
+ * agrees on the same recognized kind — an empty list, a null/unrecognized
+ * type, or any disagreement all resolve to `null` (no badge). `sources` comes
+ * from `GET_NEWS_PUBLISHERS`'s nested `publicationSources` selection, which
+ * takes no `first:` (assumed complete); if the server ever paginates it this
+ * would need to re-derive from a full source list instead of trusting the
+ * publisher payload.
+ */
+const commonSourceKind = (sources: readonly PublicationSource[]): SourceKind | null => {
+    if (sources.length === 0) return null;
+    const first = sourceKindOf(sources[0].publication_type);
+    if (!first) return null;
+    return sources.every((s) => sourceKindOf(s.publication_type) === first) ? first : null;
+};
+
+const SourceKindBadge: React.FC<{ kind: SourceKind }> = ({ kind }) => {
+    const { t } = useTranslation();
+    const meta = SOURCE_KIND_META[kind];
+    return (
+        <View
+            style={{
+                alignSelf: 'flex-start',
+                borderRadius: 6,
+                borderWidth: 1,
+                borderColor: `${meta.color}80`,
+                paddingHorizontal: 6,
+                paddingVertical: 1,
+            }}
+        >
+            <Text size="xs" style={{ color: meta.color, letterSpacing: 0.3 }}>
+                {t(meta.key, { defaultValue: meta.default })}
+            </Text>
+        </View>
+    );
 };
 
 interface SourcesL2PublisherListProps {
@@ -53,12 +116,22 @@ interface SourcesL2PublisherListProps {
 
 const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ countryCode, countryName, onBack }) => {
     const { t } = useTranslation();
+    const readOnly = useFreeTierReadOnly();
     const [publishers, setPublishers] = useState<NewsPublisher[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
+    // publication-name (normalized) → current level, from the SAME
+    // `publication_preferences` table the dedicated Source-preferences screen
+    // reads — item 9's L2 control reflects (and writes) the live state, it
+    // does not keep a parallel copy of it.
+    const [pubPrefLevels, setPubPrefLevels] = useState<Map<string, SourcePrefUiLevel>>(new Map());
+    // Keyed by publisher._id, not name — mirrors the busy-id keying rationale
+    // in PublicationPreferencesScreen (two publishers could theoretically
+    // share a display name; the id never collides).
+    const [busyPublisherId, setBusyPublisherId] = useState<string | null>(null);
 
     useEffect(() => {
         if (countryCode && !hasFetched.current) {
@@ -69,6 +142,43 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
         // is defined below and intentionally excluded to avoid re-fetch loops.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [countryCode]);
+
+    useEffect(() => {
+        const sub = observeActivePublicationPreferences().subscribe((rows) => {
+            const next = new Map<string, SourcePrefUiLevel>();
+            for (const p of rows) {
+                if (p.scopeKind != null) continue; // a scope row's label is never a publication name
+                const name = normPublicationName(p.publicationName);
+                if (!name) continue;
+                // Mute (weight ≤ -0.9) collapses into 'deprioritised' for THIS
+                // control's 3-state display — L2 has no unmute affordance by
+                // design (item 9: mute stays exclusive to the dedicated
+                // Source-preferences screen). Pressing ↑ here still lifts a
+                // mute (a boost overwrites any prior weight), and pressing ↓
+                // clears it to 'none' rather than reinstating the mute.
+                next.set(name, p.weight > 0 ? 'prioritised' : p.weight < 0 ? 'deprioritised' : 'none');
+            }
+            setPubPrefLevels(next);
+        });
+        return () => sub.unsubscribe();
+    }, []);
+
+    const handleChangePublisherPref = useCallback(
+        async (publisher: NewsPublisher, next: SourcePrefUiLevel) => {
+            setBusyPublisherId(publisher._id);
+            try {
+                await setSourcePrefFromUi({ kind: 'publication', publicationName: publisher.name }, next);
+            } catch (error) {
+                logger.captureException(error, {
+                    tags: { screen: 'SourcesL2PublisherList', method: 'setPublisherPref' },
+                    extra: { publisherId: publisher._id, next },
+                });
+            } finally {
+                setBusyPublisherId(null);
+            }
+        },
+        [],
+    );
 
     const loadPublishers = async () => {
         try {
@@ -134,7 +244,11 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
     );
 
     const renderPublisher: ListRenderItem<NewsPublisher> = useCallback(
-        ({ item }) => (
+        ({ item }) => {
+            const headerBadgeKind = commonSourceKind(item.publicationSources);
+            const prefLevel = pubPrefLevels.get(normPublicationName(item.name) ?? '') ?? 'none';
+            const prefBusy = busyPublisherId === item._id || readOnly;
+            return (
             <Box className="mx-4 mb-3">
                 <Accordion type="single" isCollapsible variant="unfilled" className="border border-gray-700 rounded-lg">
                     <AccordionItem value={item._id}>
@@ -149,12 +263,19 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                             {item.website_url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
                                         </Text>
                                     )}
+                                    {headerBadgeKind && <SourceKindBadge kind={headerBadgeKind} />}
                                 </VStack>
+                                <SourcePrefControl
+                                    testIDPrefix={`source-pref-publisher-${item._id}`}
+                                    current={prefLevel}
+                                    busy={prefBusy}
+                                    onChange={(next) => handleChangePublisherPref(item, next)}
+                                />
                                 <Button
                                     variant="outline"
                                     size="xs"
                                     onPress={() => handleTopHeadlinesPress(item)}
-                                    className="rounded-full mr-2"
+                                    className="rounded-full mx-2"
                                 >
                                     <ButtonText>{t('sources.viewTopHeadlines')}</ButtonText>
                                 </Button>
@@ -170,7 +291,10 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                     {t('sources.noFeedsAvailable')}
                                 </Text>
                             ) : (
-                                item.publicationSources.map((feed) => (
+                                item.publicationSources.map((feed) => {
+                                    const feedBadgeKind = sourceKindOf(feed.publication_type);
+                                    const categoriesLabel = formatCategories(feed.categories);
+                                    return (
                                     <Pressable
                                         key={feed._id}
                                         onPress={() => handleFeedPress(feed, item.name)}
@@ -181,23 +305,26 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                                 <Text className="text-white text-sm capitalize">
                                                     {formatCategory(feed.category)}
                                                 </Text>
-                                                {formatTaxonomy(feed.publication_type, feed.categories) && (
+                                                {feedBadgeKind && <SourceKindBadge kind={feedBadgeKind} />}
+                                                {categoriesLabel && (
                                                     <Text size="xs" className="text-gray-500">
-                                                        {formatTaxonomy(feed.publication_type, feed.categories)}
+                                                        {categoriesLabel}
                                                     </Text>
                                                 )}
                                             </VStack>
                                             <MaterialIcons name="chevron-right" size={18} color="#999999" />
                                         </HStack>
                                     </Pressable>
-                                ))
+                                    );
+                                })
                             )}
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>
             </Box>
-        ),
-        [handleFeedPress, handleTopHeadlinesPress, t]
+            );
+        },
+        [handleFeedPress, handleTopHeadlinesPress, handleChangePublisherPref, pubPrefLevels, busyPublisherId, readOnly, t]
     );
 
     const keyExtractor = useCallback(
@@ -243,6 +370,12 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                     ListFooterComponent={ListFooterComponent}
                 />
             )}
+
+            {/* DISABLE, never hide (see FreeTierReadOnlyBanner's own header) — the
+                L2 ↑/↓ control is disabled under the same `surface="publications"`
+                gate as the dedicated Source-preferences screen, so it needs the
+                same pinned explanation rather than going silently dead. */}
+            <FreeTierReadOnlyBanner surface="publications" />
         </Box>
     );
 };
