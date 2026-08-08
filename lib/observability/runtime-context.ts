@@ -34,7 +34,7 @@ export interface RuntimeContext {
   app_language: string;
   onboarding_stage: string;
   processing_mode: string;
-  relevance_v3: boolean;
+  relevance_v4: boolean;
   free_tier_mode: boolean;
   model_state: string;
   /**
@@ -50,7 +50,7 @@ export interface RuntimeContext {
 export function getRuntimeContext(): RuntimeContext {
   const { appLanguage } = useAppLanguageStore.getState();
   const { tier, serverTier } = useSubscriptionStore.getState();
-  const { processingMode, relevanceV3, modelState } =
+  const { processingMode, relevanceV4, modelState } =
     useMeraProtocolStore.getState();
   const { isConnected, serverReachable } = useNetworkStore.getState();
   const { userPersona } = useUserStore.getState();
@@ -62,7 +62,7 @@ export function getRuntimeContext(): RuntimeContext {
     // Account progress, owned by the server — not a persona-derived value.
     onboarding_stage: userPersona?.onboardingStage ?? 'unknown',
     processing_mode: processingMode,
-    relevance_v3: relevanceV3,
+    relevance_v4: relevanceV4,
     free_tier_mode: FREE_TIER_MODE_ENABLED,
     model_state: modelState,
     network_connected: isConnected,

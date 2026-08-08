@@ -128,12 +128,18 @@ run is established) — labels are anchored to both. Process:
 5. Update the "current benchmark numbers" section below once you have a new
    baseline to compare future runs against.
 
-### Full-pipeline mode (`--engine=pipeline`, Wave 7b)
+### Full-pipeline mode (`--engine=pipeline`)
 
-`--engine=pipeline` runs the deterministic math engine AND the REAL combined
-judge over the NEAR AI LlmPort (needs the repo-root `.env` `NEAR_AI_DEVELOPMENT_KEY`
-or `harness-local/.env.harness`). It writes `eval-scores-pipeline.json` +
-`judge-calls.json` and reports tokens/latency/overrides. This is the wave gate.
+> **STALE SINCE THE JUDGE WAS REMOVED.** `--engine=pipeline` used to run the
+> deterministic math engine AND the REAL combined judge over the NEAR AI
+> LlmPort. The judge is deleted. The one remaining scoring path needs a `legacy`
+> ScoringCandidate payload, which `lib/build-eval-scores.ts` does not build, so
+> this mode now makes **no LLM call at all** and produces the same math-only
+> scores as `--engine=math`; `judge-calls.json` is empty and
+> tokens/latency/overrides are always zero. **The gate numbers below were
+> measured with the judge and do not describe the current code.** See the long
+> comment at the `--engine=pipeline` branch in `lib/build-eval-scores.ts` for
+> what it would take to grade what actually ships.
 
 The gate metric is **"FEED precision" = of predicted-FEED, the fraction that are
 NOT golden-EXCLUDE** (a legitimately related story — no unrelated leak). It is

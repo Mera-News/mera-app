@@ -29,7 +29,7 @@ import {
     useProcessingMode,
     useIsOnDeviceProcessing,
     useInjectNoise,
-    useRelevanceV3,
+    useRelevanceV4,
     useWebSearchInChat,
     useDeepInterview,
     useSelectedModelId,
@@ -49,7 +49,7 @@ import logger from '@/lib/logger';
 const initialState = {
     processingMode: ProcessingMode.Cloud,
     injectNoise: false,
-    relevanceV3: false,
+    relevanceV4: false,
     webSearchInChat: false,
     deepInterview: false,
     selectedModelId: 'mera-qwen3.5-4b',
@@ -75,7 +75,7 @@ describe('useMeraProtocolStore', () => {
         const state = useMeraProtocolStore.getState();
         expect(state.processingMode).toBe(ProcessingMode.Cloud);
         expect(state.injectNoise).toBe(false);
-        expect(state.relevanceV3).toBe(false);
+        expect(state.relevanceV4).toBe(false);
         expect(state.selectedModelId).toBe('mera-qwen3.5-4b');
         expect(state.modelState).toBe('not_downloaded');
         expect(state.isProcessing).toBe(false);
@@ -124,29 +124,45 @@ describe('useMeraProtocolStore', () => {
         expect(useMeraProtocolStore.getState().injectNoise).toBe(true);
     });
 
-    // ── setRelevanceV3 ───────────────────────────────────────────────────────
+    // ── setRelevanceV4 ───────────────────────────────────────────────────────
 
-    it('setRelevanceV3 true persists "true" string', async () => {
-        useMeraProtocolStore.getState().setRelevanceV3(true);
+    // The v3 scorer was retired and its user-facing switch repurposed as v4.
+    // The PERSISTED KEY deliberately did not move: it is the same preference,
+    // and minting `mera_relevance_v4` would read as absent on every device that
+    // had the beta on — silently switching those users off. This test exists so
+    // a future "tidy up the stale v3 name" cannot do that by accident.
+    it('keeps the v3-era persisted key — a renamed key would silently switch existing users off', async () => {
+        useMeraProtocolStore.getState().setRelevanceV4(true);
+        await Promise.resolve();
 
-        expect(useMeraProtocolStore.getState().relevanceV3).toBe(true);
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_relevance_v3', 'true');
+        expect(mockSetSetting).not.toHaveBeenCalledWith(
+            'mera_relevance_v4',
+            expect.anything(),
+        );
+    });
+
+    it('setRelevanceV4 true persists "true" string', async () => {
+        useMeraProtocolStore.getState().setRelevanceV4(true);
+
+        expect(useMeraProtocolStore.getState().relevanceV4).toBe(true);
         await Promise.resolve();
         expect(mockSetSetting).toHaveBeenCalledWith('mera_relevance_v3', 'true');
     });
 
-    it('setRelevanceV3 false persists "false" string', async () => {
-        useMeraProtocolStore.getState().setRelevanceV3(false);
+    it('setRelevanceV4 false persists "false" string', async () => {
+        useMeraProtocolStore.getState().setRelevanceV4(false);
 
-        expect(useMeraProtocolStore.getState().relevanceV3).toBe(false);
+        expect(useMeraProtocolStore.getState().relevanceV4).toBe(false);
         await Promise.resolve();
         expect(mockSetSetting).toHaveBeenCalledWith('mera_relevance_v3', 'false');
     });
 
-    it('setRelevanceV3 silently swallows DB errors', async () => {
+    it('setRelevanceV4 silently swallows DB errors', async () => {
         mockSetSetting.mockRejectedValueOnce(new Error('db'));
-        useMeraProtocolStore.getState().setRelevanceV3(true);
+        useMeraProtocolStore.getState().setRelevanceV4(true);
         await new Promise((r) => setImmediate(r));
-        expect(useMeraProtocolStore.getState().relevanceV3).toBe(true);
+        expect(useMeraProtocolStore.getState().relevanceV4).toBe(true);
     });
 
     // ── setWebSearchInChat / setDeepInterview (items 13 + 17) ────────────────
@@ -286,7 +302,7 @@ describe('useMeraProtocolStore', () => {
         useMeraProtocolStore.setState({
             processingMode: ProcessingMode.OnDevice,
             injectNoise: true,
-            relevanceV3: true,
+            relevanceV4: true,
             selectedModelId: 'custom',
             isProcessing: true,
         });
@@ -296,7 +312,7 @@ describe('useMeraProtocolStore', () => {
         const state = useMeraProtocolStore.getState();
         expect(state.processingMode).toBe(ProcessingMode.Cloud);
         expect(state.injectNoise).toBe(false);
-        expect(state.relevanceV3).toBe(false);
+        expect(state.relevanceV4).toBe(false);
         expect(state.selectedModelId).toBe('mera-qwen3.5-4b');
         expect(state.isProcessing).toBe(false);
 
@@ -475,7 +491,7 @@ describe('useMeraProtocolStore', () => {
         expect(useMeraProtocolStore.getState().injectNoise).toBe(false);
     });
 
-    it('hydrateFromDb sets relevanceV3=true from DB', async () => {
+    it('hydrateFromDb sets relevanceV4=true from DB', async () => {
         mockGetSetting
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
@@ -485,13 +501,13 @@ describe('useMeraProtocolStore', () => {
 
         await useMeraProtocolStore.getState().hydrateFromDb();
 
-        expect(useMeraProtocolStore.getState().relevanceV3).toBe(true);
+        expect(useMeraProtocolStore.getState().relevanceV4).toBe(true);
     });
 
     // The two-branch form matters: a one-branch `=== 'true'` hydrate would
     // silently ignore a persisted 'false' if the default ever flipped to true.
-    it('hydrateFromDb sets relevanceV3=false from DB', async () => {
-        useMeraProtocolStore.setState({ relevanceV3: true });
+    it('hydrateFromDb sets relevanceV4=false from DB', async () => {
+        useMeraProtocolStore.setState({ relevanceV4: true });
         mockGetSetting
             .mockResolvedValueOnce(null)
             .mockResolvedValueOnce(null)
@@ -501,7 +517,7 @@ describe('useMeraProtocolStore', () => {
 
         await useMeraProtocolStore.getState().hydrateFromDb();
 
-        expect(useMeraProtocolStore.getState().relevanceV3).toBe(false);
+        expect(useMeraProtocolStore.getState().relevanceV4).toBe(false);
     });
 
     // v3 starts off regardless of what v2 was persisted at — the retired key
@@ -517,7 +533,7 @@ describe('useMeraProtocolStore', () => {
         // Always swept, even though nothing in the DB mentions it.
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_relevance_v2');
         // v3 stays at its default (off) — v2's value, if any, is irrelevant.
-        expect(useMeraProtocolStore.getState().relevanceV3).toBe(false);
+        expect(useMeraProtocolStore.getState().relevanceV4).toBe(false);
     });
 
     it('hydrateFromDb does not call set() when all values are null', async () => {
@@ -581,9 +597,9 @@ describe('useMeraProtocolStore', () => {
         expect(result.current).toBe(true);
     });
 
-    it('useRelevanceV3 returns current relevanceV3 value', () => {
-        useMeraProtocolStore.setState({ relevanceV3: true });
-        const { result } = renderHook(() => useRelevanceV3());
+    it('useRelevanceV4 returns current relevanceV4 value', () => {
+        useMeraProtocolStore.setState({ relevanceV4: true });
+        const { result } = renderHook(() => useRelevanceV4());
         expect(result.current).toBe(true);
     });
 

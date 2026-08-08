@@ -13,7 +13,6 @@ import {
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
-  buildJudgeSystemPrompt,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -22,39 +21,14 @@ import {
  *  harness import graph on purpose so the harness stays RN-free). */
 const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
 
-/** Single source for the judge reason-emit floor: wired into BOTH
- *  judgeReasonFloor and the judge system prompt (Wave 14 — was previously a
- *  duplicated 0.15 literal in the prompt text, a silent-drift risk). */
-const JUDGE_REASON_FLOOR = 0.15;
-
 export interface ArticlePipelineConfig {
   /** Articles bundled into one batched relevance prompt (cloud). */
   articlesPerScorePrompt: number;
   /** Output token ceiling for one batched score call. */
   scoreBatchMaxTokens: number;
-  /** Output token ceiling for one batched RELEVANCE v3 score call — the merged
-   *  two-axis pass, which writes scores AND (conditionally) the user-facing
-   *  reason in the same response. Bigger than `scoreBatchMaxTokens` because the
-   *  output now carries prose: per article `{"i":1,"rel":88,"impact":70,"why":…}`
-   *  is ~12 tokens of scaffold + up to 25 words (~34 tokens) of reason ≈ 46, so
-   *  5 articles ≈ 230 worst case; 640 leaves ~2.7× headroom so a verbose model
-   *  never truncates mid-array (a truncated array decodes to null → the whole
-   *  batch retries or falls back). Used INSTEAD OF scoreBatchMaxTokens on the v3
-   *  path only; the legacy two-pass path keeps 320. */
-  v3ScoreBatchMaxTokens: number;
-  /** Sampling temperature for a v3 pass-1 (score-only) batch.
-   *
-   *  HIGHER than `scoreTemperature`, and that is measured, not taste. Score-only
-   *  output is a run of near-identical all-numeric objects, and at 0.1 the model
-   *  degenerates structurally inside it — emitting `{"i": 2": 78, "impact": 50}`,
-   *  collapsing `"i": 2, "rel": 78` into one token run. On the 292-article gold
-   *  set that cost 47 articles their score (chunks failing all three parse
-   *  attempts); at 0.35 every article scored. The merged prompt never hit this,
-   *  because its prose broke up the monotony. */
-  v3ScoreTemperature: number;
-  /** Output ceiling for one v3 pass-2 (note) call: one sentence plus a tiny JSON
-   *  wrapper. The merged design had to fit BOTH numbers and prose for a whole
-   *  chunk into `v3ScoreBatchMaxTokens`, ~128 tokens per article. */
+  /** Output ceiling for one NOTE call ({@link legacyNoteDemote}): one sentence
+   *  plus a tiny JSON wrapper. 96 is a ceiling 32 above `reasonMaxTokens`, and a
+   *  ceiling is not a spend. */
   v3NoteMaxTokens: number;
   /** Sampling temperature for relevance-score calls. */
   scoreTemperature: number;
@@ -75,10 +49,11 @@ export interface ArticlePipelineConfig {
    * {@link v3NoteSystemPrompt} instead of {@link reasonSystemPrompt}, so it may
    * also DEMOTE a false positive out of the feed rather than only captioning it.
    *
-   * This is the one thing RELEVANCE_V3 does after inference that carries a
-   * PRECISION judgement, transplanted onto the legacy path in isolation. It is
-   * available for FREE because the two passes are the same call: v1's reason
-   * pass and v3's note pass both visit ONE article, both build the user message
+   * This was the one thing the retired v3 scorer did after inference that
+   * carried a PRECISION judgement, transplanted onto the legacy path in
+   * isolation and kept when the rest of v3 was deleted. It is available for FREE
+   * because the two passes are the same call: v1's reason pass and the note pass
+   * both visit ONE article, both build the user message
    * with `buildReasonUserMessage`, and both send the same article + score +
    * retrieval facts. Only the system prompt and the decoder differ — so turning
    * this on buys a precision pass at ZERO net LLM calls.
@@ -117,12 +92,19 @@ export interface ArticlePipelineConfig {
    * (`geo_tags` / `entities` / `event_type`) to the pass-1 batch scoring prompt,
    * as one compact `Article Metadata:` line per article block.
    *
-   * DOES NOT CHANGE ROUTING. This is the distinction that makes the flag safe
-   * and it is not the same thing as `scoringEngine.USE_ARTICLE_TAGS`: that one
-   * feeds the tags to the ENGINE, where `isBackstop()` turns false for any
-   * tagged row and the candidate leaves the legacy path for math + judge. Since
-   * the server tagger emits an `event_type` on ~100% of served rows, turning
-   * `USE_ARTICLE_TAGS` on is in practice turning v3 on. This flag instead reads
+   * RELEVANCE v4 — this and {@link legacyTagReasonGateEnabled} ARE v4. One
+   * user-facing switch drives both (they were measured together and ship
+   * together): the Zustand store field `relevanceV4`, layered onto this object
+   * by `mera-protocol/stage-scoring::effectiveHarnessConfig`. The harness itself
+   * never reads the store or `process.env`. Because the toggle is a RUNTIME
+   * flag, the live app's call builders take the effective config as a parameter
+   * (`mera-protocol/scoring-service::buildRelevanceCalls`) rather than reading a
+   * module literal — without that the switch would move the offline harness twin
+   * and nothing the app actually sends.
+   *
+   * NOT THE SAME THING AS `scoringEngine.USE_ARTICLE_TAGS`, and deliberately not
+   * wired to it: that flag feeds the tags to the ENGINE, where they change what
+   * the user's "not interested" filters match. This flag reads
    * `ScoringCandidate.meta` inside the PROMPT builder only — see the mechanism
    * note at the top of `article-pipeline/tag-prompt.ts` — so `scoringMode` is
    * bit-for-bit unchanged whichever way it is set.
@@ -227,10 +209,11 @@ export interface ArticlePipelineConfig {
   relevanceSystemPrompt: string;
   /** System prompt for the cloud reason pass. */
   reasonSystemPrompt: string;
-  /** v3 pass 2 — combined precision + note, ONE article per call. Replaces
-   *  `reasonSystemPrompt` (and its headline twin) whenever RELEVANCE_V3 is on:
-   *  unlike the legacy reason prompt it may also DEMOTE, restoring the
-   *  downward pressure v3 lost when it absorbed the verifier pass. */
+  /** Combined precision + note, ONE article per call. Replaces
+   *  `reasonSystemPrompt` (and its headline twin) whenever
+   *  {@link legacyNoteDemote} is on: unlike the legacy reason prompt it may also
+   *  DEMOTE. Named for the retired v3 scorer it was written for; the name is
+   *  kept because the prompt text and its decoder are unchanged. */
   v3NoteSystemPrompt: string;
   /** Cloud model used for scoring + reason generation. */
   model: string;
@@ -261,22 +244,6 @@ export interface ArticlePipelineConfig {
   feedVerifierMaxTokens: number;
   /** System prompt for the second-pass FEED verifier. */
   feedVerifierSystemPrompt: string;
-  // --- Combined JUDGE + reason pass (Wave 7b — replaces the two-pass scorer +
-  //     verifier for math-mode candidates; see CLOUD_JUDGE_SYSTEM_PROMPT) ------
-  /** Math-mode candidates bundled into one judge prompt. Larger than the
-   *  score batch (5) because the judge prompt is ~1/5 the size (no fact bank,
-   *  no anchor table) and each output object is tiny ({"j","s"?,"r"?}). */
-  judgeChunkSize: number;
-  /** Output token ceiling for one judge batch call. ≈ judgeChunkSize × (reason
-   *  ≤22 words ~34 tok + object overhead ~8) + array headroom. */
-  judgeMaxTokens: number;
-  /** Computed-score floor at/above which a reason ("r") is requested in the
-   *  combined call. 0.15 = reasonRelevanceThreshold(0.3) − OVERRIDE_DELTA(0.15
-   *  legacy leash); below it a maximal judge lift still can't clear the reason
-   *  cutoff, so the token is never spent. */
-  judgeReasonFloor: number;
-  /** System prompt for the combined judge+reason pass. */
-  judgeSystemPrompt: string;
   // --- HEADLINE variants (P4a — authored, not yet routed to) ----------------
   /** Top-headline articles bundled into one batched relevance prompt. Smaller
    *  than articlesPerScorePrompt because the headline rubric is longer and adds
@@ -376,25 +343,31 @@ export interface ScoringEngineConfig {
   /** Honour the server's article-tagging metadata (`geo_tags` / `entities` /
    *  `event_type`).
    *
+   *  ONE MEANING, since the judge was removed: do the user's "not interested"
+   *  filters match on an article's places, people and event type?
+   *
    *  `false` (the default) ⇒ every candidate is presented to the engine as
-   *  UNTAGGED regardless of what the server sent, so `isBackstop` is true for
-   *  all of them and every batch takes the legacy two-pass LLM path. That is
-   *  exactly today's production behaviour: the server-side enrichment stage has
-   *  never run, so no article carries any of those three fields.
+   *  UNTAGGED regardless of what the server sent, so the `entity` / `place` /
+   *  `event_type` suppression kinds cannot match and `entities` never enter the
+   *  keyword haystack. A filter matches only what the article's own text says.
    *
-   *  `true` ⇒ the tags are passed through, so a tagged article routes to the
-   *  deterministic math path (and its geo/entity/event components and the
-   *  structured suppression kinds become live).
+   *  `true` ⇒ the tags are passed through and those structured kinds go live, in
+   *  BOTH the soft penalty and the hard screen — including
+   *  `services/suppression-sweep.ts`, which re-screens rows already stored on
+   *  the device.
    *
-   *  The switch exists so enabling enrichment in staging is a change we CHOOSE
-   *  and can compare against the LLM-only path side by side, rather than one
-   *  that happens to us the moment the server starts emitting tags. Bound from
-   *  `EXPO_PUBLIC_USE_ARTICLE_TAGS` in the app's composition root
-   *  (`mera-protocol/stage-scoring::effectiveHarnessConfig`); the harness
-   *  itself never reads `process.env`. Enforced by
-   *  `scoring-engine/tag-policy::applyArticleTagPolicy`, which is applied where
-   *  a persisted row becomes a `ScoredCandidateInput` — so "off" means the
-   *  engine never SEES a tag, not that one code path ignores them. */
+   *  It used to also decide ROUTING (`isBackstop` → the deterministic math +
+   *  judge path). That judge is deleted; every candidate takes the legacy LLM
+   *  path now, and `isBackstop` survives only as the producer of the diagnostic
+   *  `mode`. It is NOT the v4 toggle — see `scoring-engine/tag-policy.ts` for
+   *  why the two are kept apart.
+   *
+   *  Bound from `EXPO_PUBLIC_USE_ARTICLE_TAGS` in the app's composition root
+   *  (`mera-protocol/harness-config-base`); the harness itself never reads
+   *  `process.env`. Enforced by
+   *  `scoring-engine/tag-policy::applyArticleTagPolicy`, applied where a
+   *  persisted row becomes a `ScoredCandidateInput` — so "off" means the engine
+   *  never SEES a tag, not that one code path ignores them. */
   USE_ARTICLE_TAGS: boolean;
   /** Relevance v2 — the RUNTIME (user-toggleable) half of the same switch.
    *  Like `USE_ARTICLE_TAGS` this is NOT a tunable; it is a routing switch, and
@@ -417,31 +390,11 @@ export interface ScoringEngineConfig {
    *  Bound from the Zustand store field `relevanceV2` in that composition root;
    *  the harness itself never reads the store or `process.env`.
    *
-   *  DEPRECATE(v3): superseded by {@link RELEVANCE_V3}, which retires the
-   *  math-authoritative path this flag selects. The key stays declared (and
-   *  false) until the runtime layering that reads it is removed. */
+   *  DEPRECATE: the math-authoritative path this flag selects has no runtime
+   *  layering left that reads it. The key stays declared (and false) so the
+   *  calibration tests that pin "a boolean is not a tunable" keep their
+   *  subject. */
   RELEVANCE_V2: boolean;
-  /** Relevance v3 — the single-pass two-axis scoring path. Like the two flags
-   *  above this is a ROUTING SWITCH, not a tunable, and is deliberately absent
-   *  from `calibration::TUNABLE_CONSTANTS` (a boolean cannot ride a
-   *  `base × (1 + delta)` layer).
-   *
-   *  `false` (the default) ⇒ exactly today's behaviour: the legacy two-pass
-   *  cloud path (CLOUD_RELEVANCE_SYSTEM_PROMPT → CLOUD_REASON_SYSTEM_PROMPT),
-   *  scores bucketed to the four representative values.
-   *
-   *  `true` ⇒ ONE call per batch with CLOUD_SCORE_V3_SYSTEM_PROMPT (or the
-   *  headline variant) returning `{"i","rel","impact","why"?}` per article; the
-   *  persisted score is the CONTINUOUS blend
-   *  `clamp(0.05 + 1.05·((0.65·rel + 0.35·impact)/100), 0.05, 1.10)`
-   *  (`article-pipeline/scoring::blendToScore`) — `bucketScores` is NOT applied
-   *  on this path, so ranking keeps its resolution, and `v3ScoreBatchMaxTokens`
-   *  is used instead of `scoreBatchMaxTokens`.
-   *
-   *  Bound from the Zustand store field `relevanceV3` in the composition root
-   *  (`mera-protocol/stage-scoring::effectiveHarnessConfig`); the harness itself
-   *  never reads the store or `process.env`. */
-  RELEVANCE_V3: boolean;
   // --- affinity component weights (positive contributors sum ≈ 1) ---------
   /** Explicit topic interest (magnitude of the strongest matched topic). */
   W_TOPIC: number;
@@ -556,14 +509,6 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // verbose model never truncates mid-array (truncation = whole batch falls
     // back to fallbackRelevance).
     scoreBatchMaxTokens: 320,
-    // Merged v3 pass: scores + conditional reasons for ~5 articles in one
-    // response (see the field's doc comment for the arithmetic).
-    // Pass 1 emits three integers per article and no prose, so the merged
-    // design's 640 is now roughly double what a chunk can use. Left at 640
-    // deliberately: it is a CEILING, not a reservation, and the headroom is what
-    // stops a chunk truncating mid-array into an unparseable run.
-    v3ScoreBatchMaxTokens: 640,
-    v3ScoreTemperature: 0.35,
     v3NoteMaxTokens: 96,
     scoreTemperature: 0.1,
     reasonTemperature: 0.2,
@@ -580,11 +525,13 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // the owner flips it once he has seen it work. See the field's doc comment
     // for the paired measurement AND for the pre-registered bar it missed.
     legacyNoteDemote: false,
-    // Both article-tag features on the legacy path are OFF by default, as
-    // explicit literals rather than absent keys read as falsy — same style and
-    // same reason as `legacyNoteDemote` above and the scoringEngine routing
-    // switches: the harness default must always describe SHIPPED behaviour.
-    // Each field's doc comment carries its own paired measurement.
+    // RELEVANCE v4 — both article-tag features on the legacy path, OFF by
+    // default, as explicit literals rather than absent keys read as falsy —
+    // same style and same reason as `legacyNoteDemote` above and the
+    // scoringEngine routing switches: the harness default must always describe
+    // SHIPPED behaviour. Each field's doc comment carries its own paired
+    // measurement. ONE user-facing switch (`relevanceV4`) turns both on; to
+    // default v4 ON, flip BOTH of these to `true` (and update config.test.ts).
     legacyTagPromptEnabled: false,
     legacyTagReasonGateEnabled: false,
     // The measured set. Frozen as a literal so `config.test.ts` pins it and a
@@ -612,10 +559,6 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     feedVerifierMaxTokens: 260, // 15*12 + 80
     feedVerifierSystemPrompt: CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
     // Combined judge+reason pass (math-mode candidates).
-    judgeChunkSize: 12,
-    judgeMaxTokens: 560, // 12*(34+8) + ~56 headroom
-    judgeReasonFloor: JUDGE_REASON_FLOOR,
-    judgeSystemPrompt: buildJudgeSystemPrompt(JUDGE_REASON_FLOOR),
     // HEADLINE batch size — measured, not guessed (estimateTokens, lib/llm/tokens.ts):
     //   live relevance prompt      4386 est tokens, batched 5/call
     //   headline relevance prompt  7036 est tokens  (+60.4%)
@@ -665,18 +608,15 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
   },
   scoringEngine: {
     // Article tagging is OFF by default — the explicit literal, not an absent
-    // key read as falsy. This preserves today's behaviour (every article
-    // untagged ⇒ legacy LLM path) even after the server starts sending tags.
+    // key read as falsy. This preserves today's behaviour ("not interested"
+    // filters match an article's TEXT, not its tags) even after the server
+    // starts sending tags.
     USE_ARTICLE_TAGS: false,
     // Relevance v2 is OFF by default for the same reason and in the same style:
-    // an explicit literal, not an absent key read as falsy. It is layered in at
-    // runtime from the store in `effectiveHarnessConfig`; the harness default
-    // must always describe today's shipped behaviour.
+    // an explicit literal, not an absent key read as falsy. Nothing layers it in
+    // at runtime any more; the harness default must always describe today's
+    // shipped behaviour.
     RELEVANCE_V2: false,
-    // Relevance v3 (single-pass two-axis scoring) is OFF by default, in the same
-    // style and for the same reason: an explicit literal, not an absent key read
-    // as falsy. Layered in at runtime from the store in `effectiveHarnessConfig`.
-    RELEVANCE_V3: false,
     // affinity component weights (positives sum to ≈ 1.0 at full saturation).
     // Wave 7b rebalance: W_TOPIC 0.42→0.32, the freed 0.10 → W_BREADTH.
     // Round-3 A2: freshness decay removed (W_FRESH 0.08 deleted). The remaining

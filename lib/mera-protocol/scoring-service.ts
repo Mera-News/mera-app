@@ -66,9 +66,7 @@ import type {
   DecodedResults,
   ScoringResult,
 } from '@/lib/news-harness/article-pipeline/scoring';
-import { computeAndJudgeForCandidates } from './stage-scoring';
-import { recordOverrides } from '@/lib/database/services/calibration-service';
-import { buildCalibrationCase } from '@/lib/news-harness/scoring-engine';
+import { computeAndScoreForCandidates } from './stage-scoring';
 import { yieldToInteractions } from '@/lib/scheduler/idle';
 
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
@@ -240,15 +238,15 @@ export interface BatchScoreResult {
 
 /**
  * Persona-v3 (Wave 7b M-P5): score a batch through the SINGLE math + judge stage
- * (computeAndJudge, via stage-scoring), then run the reason pass for any
+ * (computeAndScore, via stage-scoring), then run the reason pass for any
  * survivor that still lacks a reason. Returns RAW scores (bucketing is the
  * caller's job) plus the computed_score / components audit maps.
  *
- * `scoreMap` values are the FINAL raw score (post-judge for math candidates,
- * legacy LLM for backstop). `reasonMap` carries the judge's combined reasons;
- * the reason pass below fills in survivors the judge didn't caption (backstop
- * rows + math rows the judge left below the reason floor but that still bucket
- * into FEED).
+ * `scoreMap` values are the FINAL raw score (the legacy LLM score, or the math
+ * score if that call failed). `reasonMap` is filled entirely by the reason pass
+ * below — the judge that used to caption some rows in the scoring call itself is
+ * gone, so `!reasonMap.has(c.id)` in the survivor filter is now always true and
+ * is kept only because the reason pass may run twice (retry).
  */
 export async function batchScoreAndReason(
   candidates: ScoringCandidate[],
@@ -283,12 +281,12 @@ export async function batchScoreAndReason(
     };
   }
 
-  // ---- ONE math + judge stage (shared by both orchestrators) ----
+  // ---- ONE hard-screen + math + legacy-score stage (both orchestrators) ----
   let stage;
   try {
-    stage = await computeAndJudgeForCandidates(eligible);
+    stage = await computeAndScoreForCandidates(eligible);
   } catch (err) {
-    logger.warn('[batchScoreAndReason] computeAndJudge failed — fallback relevance', {
+    logger.warn('[batchScoreAndReason] computeAndScore failed — fallback relevance', {
       error: err instanceof Error ? err.message : String(err),
       count: eligible.length,
     });
@@ -325,18 +323,10 @@ export async function batchScoreAndReason(
     });
   }
 
-  // M-P5c: capture LARGE judge overrides (stage.overrideMap) for the on-device
-  // calibration loop. Cheap on the hot path — just shape the numeric
-  // computed/judge/components (NO article text) into a CalibrationCase; the
-  // tally + persistent counter + threshold notification are all handled
-  // asynchronously (fire-and-forget) by the calibration service below.
-  //
-  // Round-3 A1: the judge is ADVISORY — `raw` here is the APPLIED math score
-  // (stage.rawScoreMap == computed for math rows), so the calibration case is
-  // built as (computed, judgeScore) with the ADVISORY judge score from
-  // stage.judgeScoreMap. applied = computed in every case.
-  const overrideCases: import('@/lib/news-harness/scoring-engine').CalibrationCase[] = [];
-
+  // (The judge-override capture that used to live here — shaping
+  // computed-vs-judge deltas into CalibrationCases and handing them to
+  // `recordOverrides` — went with the judge. It was the calibration loop's ONLY
+  // input; see the note at `buildCalibrationCase`.)
   for (const c of active) {
     const raw = stage.rawScoreMap.get(c.id);
     if (raw === undefined) {
@@ -349,28 +339,9 @@ export async function batchScoreAndReason(
     if (computed !== undefined) computedMap.set(c.id, computed);
     const comps = stage.componentsMap.get(c.id);
     if (comps) componentsJsonMap.set(c.id, JSON.stringify(comps));
-    const reason = stage.reasonMap.get(c.id);
-    if (reason) reasonMap.set(c.id, reason);
-    if (stage.overrideMap.get(c.id) && computed !== undefined && comps) {
-      const judgeScore = stage.judgeScoreMap.get(c.id);
-      if (judgeScore !== undefined) {
-        overrideCases.push(buildCalibrationCase(c.id, computed, judgeScore, comps));
-      }
-    }
   }
 
-  // Off the critical path: tally overrides toward the 7-day calibration counter
-  // and (if the threshold + rails allow) produce the recalibration notification.
-  if (overrideCases.length > 0) {
-    void recordOverrides(overrideCases).catch((err) => {
-      logger.warn('[batchScoreAndReason] recordOverrides failed', {
-        error: err instanceof Error ? err.message : String(err),
-      });
-    });
-  }
-
-  // ---- Reason pass: only survivors ≥ reasonRelevanceThreshold that the judge
-  //      didn't already caption (backstop rows + un-captioned math rows). ----
+  // ---- Reason pass: every survivor >= reasonRelevanceThreshold. ----
   // Top-headline cull, decided here and carried out by the caller. Dropping the
   // culled rows from the survivor set spends no reason tokens on a row that
   // ends up terminally `excluded` (its reason would be discarded with it).
@@ -503,6 +474,20 @@ function buildReasonCallsForSurvivors(
  */
 export async function buildRelevanceCalls(
   candidates: ScoringCandidate[],
+  /**
+   * The EFFECTIVE articlePipeline config for this batch.
+   *
+   * v4 (ADD 1, `legacyTagPromptEnabled`) is a RUNTIME toggle, so this can no
+   * longer be read off the module-level `ARTICLE_CFG` literal: that literal is
+   * `DEFAULT_HARNESS_CONFIG.articlePipeline`, frozen at import, and a user
+   * flipping the switch would have changed the offline harness twin and nothing
+   * the app actually sends. This is the threading the ADD-1 comment below
+   * predicted would be needed.
+   *
+   * Defaults to `ARTICLE_CFG` so every non-pipeline caller (and every test that
+   * predates the toggle) keeps the exact literal it had before.
+   */
+  config: ArticlePipelineConfig = ARTICLE_CFG,
 ): Promise<CloudCallBundle> {
   // isScorableCandidate, not isEligible — a pure TOP-HEADLINE row is factless by
   // design. Dropping it here would leave the batch's rows Unscored with NO score
@@ -511,8 +496,8 @@ export async function buildRelevanceCalls(
   // loop rather than a visible headline.
   const eligible = candidates.filter(isScorableCandidate);
   const variant = resolveScoringVariant(eligible);
-  const scoreChunkSize = scoreChunkSizeFor(ARTICLE_CFG, variant);
-  const systemPrompt = relevanceSystemPromptFor(ARTICLE_CFG, variant);
+  const scoreChunkSize = scoreChunkSizeFor(config, variant);
+  const systemPrompt = relevanceSystemPromptFor(config, variant);
   const chunks = chunk(eligible, scoreChunkSize);
   const allFactStatements = await loadAllFactStatements();
 
@@ -525,13 +510,12 @@ export async function buildRelevanceCalls(
       chunkCandidates,
       allFactStatements,
       systemPrompt,
-      // ADD 1 seam. `ARTICLE_CFG` is the same literal every other
-      // articlePipeline flag on this shim reads (feedVerifier*, reason*), so
-      // the tag block turns on exactly where those do. If this flag ever needs
-      // to be RUNTIME-layerable, it must be threaded like `legacyNoteDemote`
-      // is — through `judgeHarnessConfig()` and captured on the batch — not
-      // read from the literal here.
-      ARTICLE_CFG,
+      // ADD 1 seam — now fed the EFFECTIVE config (see the `config` param),
+      // which is what makes the v4 toggle reach the calls the app really sends.
+      // Nothing about the OUTPUT CONTRACT changes with the flag (the tag block
+      // is prompt INPUT only), so unlike `legacyNoteDemote` this needs no
+      // per-batch capture: a mid-flight OTA cannot mis-parse anything.
+      config,
     );
     const scoreId = `score:${idx}`;
     promptsById.set(scoreId, prompt);
@@ -540,7 +524,10 @@ export async function buildRelevanceCalls(
       id: scoreId,
       system,
       prompt,
-      temperature: ARTICLE_CFG.scoreTemperature,
+      temperature: config.scoreTemperature,
+      // Deliberately the module constant, not `config.scoreBatchMaxTokens`:
+      // this is not a v4 flag and CLAUDE.md names it a value that must not move
+      // without a scored comparison. Keeping the literal keeps the diff honest.
       maxTokens: SCORE_BATCH_MAX_TOKENS,
     });
   });
@@ -577,6 +564,13 @@ export async function buildReasonCallsForSubset(
    * Defaults false, so the legacy path is untouched.
    */
   v3 = false,
+  /**
+   * The EFFECTIVE articlePipeline config for this batch — see the same
+   * parameter on {@link buildRelevanceCalls}. v4 (ADD 2,
+   * `legacyTagReasonGateEnabled`) is read from it below, so the runtime toggle
+   * reaches the calls the app really sends rather than only the harness twin.
+   */
+  config: ArticlePipelineConfig = ARTICLE_CFG,
 ): Promise<CloudCallBundle> {
   const eligible = candidates.filter((c) => {
     // This is the LIVE reason path (scoring-pipeline :1231 and :1846). Fixing
@@ -594,7 +588,7 @@ export async function buildReasonCallsForSubset(
   //
   // Returning the ids is half the contract: the caller MUST persist
   // `feedVerifierDemoteScore` for them. See `CloudCallBundle.tagGatedDemoteIds`.
-  const tagGatedDemoteIds = selectTagGatedDemoteIds(eligible, ARTICLE_CFG);
+  const tagGatedDemoteIds = selectTagGatedDemoteIds(eligible, config);
   const gatedSet = new Set(tagGatedDemoteIds);
   const subset =
     gatedSet.size === 0 ? eligible : eligible.filter((c) => !gatedSet.has(c.id));
@@ -626,11 +620,11 @@ export async function buildReasonCallsForSubset(
       // exists to change how an article is retrieved and SCORED — which pass 1
       // has already settled by the time we reach here.
       system: v3
-        ? ARTICLE_CFG.v3NoteSystemPrompt
-        : reasonSystemPromptFor(ARTICLE_CFG, isHeadlineCandidate(c) ? 'headline' : 'standard'),
+        ? config.v3NoteSystemPrompt
+        : reasonSystemPromptFor(config, isHeadlineCandidate(c) ? 'headline' : 'standard'),
       prompt: reasonPrompt,
-      temperature: ARTICLE_CFG.reasonTemperature,
-      maxTokens: v3 ? ARTICLE_CFG.v3NoteMaxTokens : ARTICLE_CFG.reasonMaxTokens,
+      temperature: config.reasonTemperature,
+      maxTokens: v3 ? config.v3NoteMaxTokens : config.reasonMaxTokens,
     });
   }
 

@@ -1,10 +1,36 @@
-// scoring-engine — the deterministic math relevance engine (Wave 7a).
+// scoring-engine — the deterministic math relevance engine.
 //
 // Pure, RN-free, testable. computeRelevance() produces a raw score in the
 // EXISTING 0.05–1.10 band so bucketScores / discardLowRelevance /
 // reasonRelevanceThreshold / eval-golden.js keep working with zero contract
-// change. The LLM judge (later wave) only confirms/adjusts this number; here the
-// math stands alone.
+// change.
+//
+// WHAT THIS IS FOR NOW THAT THE JUDGE IS GONE.
+//
+// The judge that consumed the math score — comparing it, adjusting it, feeding
+// the calibration loop — has been deleted, and the LLM score from the legacy
+// tiered pass is what gets persisted as `relevance`. This engine is NOT dead
+// code; it has three live consumers, and the first is the important one:
+//
+//   1. SUPPRESSION. `components.suppressPenalty` is the user's "shown less"
+//      filters expressed as a number, and `run-stage` subtracts it from the LLM
+//      score. The LLM knows nothing about those filters, so without this the
+//      soft half of "not interested" would be inert on every article. Its
+//      sibling — the HARD screen — runs in `screenHardSuppressions*` off the
+//      same matcher, before this function is called.
+//   2. THE HEADLINE EXEMPTION (P6). `components.hardFilterExempt` is what
+//      floors a hard-filtered top headline at HEADLINE_BASE_FLOOR instead of
+//      removing it: demoted, never disappeared.
+//   3. FAIL-OPEN. `score` is the value that stands when the LLM call fails, so
+//      a dead gateway degrades the feed's ranking instead of emptying it.
+//
+// The affinity components themselves (topicComp / breadthComp / geoComp /
+// entityComp / eventComp / pubComp / popComp and the non-suppression penalties)
+// no longer steer anything on their own: they feed `score` — i.e. consumers 1
+// and 3 above — and are persisted into `score_components_json` as an audit
+// trail. `mode` is likewise diagnostic only now (the Observability funnel counts
+// it); nothing routes on it. None of them are deleted, because `score` is a
+// weighted sum of all of them and the fail-open value has to stay meaningful.
 //
 // Formula (SUB-PLAN M §2.2 + A6, Wave 7b breadth + vectorScore modulation):
 //   topicComp: strongest matched topic's weight, each positive weight first
@@ -260,9 +286,18 @@ export function suppressionPenalty(
   return Math.min(cfg.P_SUP_CAP, sum);
 }
 
-/** A candidate is `backstop` (route to legacy LLM scoring) only when it carries
- *  NO geo tags AND NO entities AND NO event type — i.e. never tagged. A
- *  tagged-but-empty article (event_type 'other') is still `math`. */
+/** A candidate is `backstop` when it carries NO geo tags AND NO entities AND NO
+ *  event type — i.e. it was never tagged. A tagged-but-empty article
+ *  (event_type 'other') is still `math`.
+ *
+ *  NO LONGER ROUTING. It used to decide whether a candidate went to the judge;
+ *  the judge is gone and every candidate takes the legacy LLM path. It survives
+ *  as the ONE remaining producer of `mode`, whose live consumer chain is:
+ *  computeRelevance → `components.mode` → persisted in `score_components_json`
+ *  → `article-suggestion-service::getScoringModeBreakdown` → the Observability
+ *  feed-funnel rows `funnel-row-scored-math` / `funnel-row-scored-llm`. That
+ *  readout is what makes the `USE_ARTICLE_TAGS` policy observable at all, which
+ *  is why the predicate is kept rather than folded away. */
 function isBackstop(candidate: ScoredCandidateInput): boolean {
   return (
     (candidate.geoTags?.length ?? 0) === 0 &&

@@ -12,8 +12,6 @@ import {
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
-  CLOUD_JUDGE_SYSTEM_PROMPT,
-  buildJudgeSystemPrompt,
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
 } from '../prompts/prompts';
@@ -108,35 +106,16 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.reasonSystemPrompt).toBe(CLOUD_REASON_SYSTEM_PROMPT);
   });
 
-  it('pins the second-pass FEED verifier config (Wave 7b: flag-off, absorbed into judge)', () => {
-    // Wave 7b: verifier absorbed into CLOUD_JUDGE_SYSTEM_PROMPT; flag-off one
-    // release then deleted. Code + constants stay for the fallback release.
+  it('pins the second-pass FEED verifier config (flag-off)', () => {
+    // The verifier was absorbed into the judge prompt and left flag-off. The
+    // judge has since been deleted; these constants remain because
+    // `feedVerifierDemoteScore` is what the v4 tag reason-gate writes for the
+    // rows it demotes (see `legacyTagReasonGateEnabled`).
     expect(a.feedVerifierEnabled).toBe(false);
     expect(a.feedVerifierBatchSize).toBe(15);
     expect(a.feedVerifierDemoteScore).toBe(0.28);
     expect(a.feedVerifierMaxTokens).toBe(260);
     expect(a.feedVerifierSystemPrompt).toBe(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT);
-  });
-
-  it('pins the combined judge+reason config (Wave 7b)', () => {
-    expect(a.judgeChunkSize).toBe(12);
-    expect(a.judgeMaxTokens).toBe(560);
-    expect(a.judgeReasonFloor).toBe(0.15);
-    // Wave 14: the prompt is BUILT from judgeReasonFloor (single source) — the
-    // wired prompt must equal the builder applied to the config's own floor,
-    // and the default const must match.
-    expect(a.judgeSystemPrompt).toBe(buildJudgeSystemPrompt(a.judgeReasonFloor));
-    expect(a.judgeSystemPrompt).toBe(CLOUD_JUDGE_SYSTEM_PROMPT);
-    // The floor is genuinely injected, not a coincidental literal:
-    expect(buildJudgeSystemPrompt(0.22)).toContain('≥ 0.22');
-    expect(buildJudgeSystemPrompt(0.22)).not.toContain('≥ 0.15,');
-    // Wave 14: the demote-floor recall experiments were REVERTED (see the
-    // buildJudgeSystemPrompt doc note) — the demote-when-in-doubt rule must
-    // remain the unqualified wave-7b original.
-    expect(a.judgeSystemPrompt).toContain(
-      'over-inclusion is the failure mode you exist to fix.',
-    );
-    expect(a.judgeSystemPrompt).not.toContain('EXCEPTION');
   });
 
   it('pins the headline variant config (P4a — authored, not yet routed)', () => {
@@ -241,29 +220,6 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(r).toContain(VOICE);
     expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(VOICE);
   });
-
-  it('pins the second-person voice rule on the judge reason ("r")', () => {
-    // QA 2026-07-28: the judge leaked third-person framing into a user-facing
-    // reason ("User follows Formula 1; …"). The low-band exemplars carried no
-    // pronoun at all, so nothing anchored the voice on demotes. The rule + the
-    // wrong/right pair below is the ONLY fix (no output post-processing) —
-    // removing either re-opens the leak.
-    expect(a.judgeSystemPrompt).toContain(
-      '"r"` is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person.',
-    );
-    expect(a.judgeSystemPrompt).toContain('This holds in EVERY band, demotes included.');
-    expect(a.judgeSystemPrompt).toContain(
-      'Wrong: "User follows Formula 1; the race matches this interest, no personal stake."',
-    );
-    expect(a.judgeSystemPrompt).toContain(
-      'Right: "The race matches your Formula 1 interest, but carries no personal stake."',
-    );
-    // Every exemplar reason in the prompt addresses the reader — including the
-    // demote-band one, which previously had no pronoun.
-    expect(a.judgeSystemPrompt).toContain(
-      '"r":"Amsterdam restaurant roundup is lifestyle filler in your city, no real stake."',
-    );
-  });
 });
 
 describe('DEFAULT_HARNESS_CONFIG.topicGen', () => {
@@ -286,6 +242,7 @@ describe('DEFAULT_HARNESS_CONFIG.topicGen', () => {
     expect(t.comboSystemPrompt).toBe(CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT);
   });
 });
+
 
 describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
   const e = DEFAULT_HARNESS_CONFIG.scoringEngine;

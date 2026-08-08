@@ -7,7 +7,7 @@
 //
 // The exemption has to hold at every hard-exclusion point or it fights the
 // retroactive purge on every sweep. This file pins the two harness-side points
-// (`screenHardSuppressions*` and `computeAndJudge`) plus the demotion itself;
+// (`screenHardSuppressions*` and `computeAndScore`) plus the demotion itself;
 // `lib/mera-protocol/__tests__/headline-exemption-math-stage.test.ts` pins the
 // E2EE math stage and `lib/services/__tests__/headline-exemption-sweep.test.ts`
 // pins the retroactive purge.
@@ -19,7 +19,7 @@
 import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
 import type { LlmPort } from '../../core/ports';
 import type { ScoringCandidate } from '../../core/types';
-import { computeAndJudge, type StageCandidate } from '../run-stage';
+import { computeAndScore, type StageCandidate } from '../run-stage';
 import type { PersonaScoringContext, SoftSuppression } from '../persona-context';
 import { computeRelevance, type ScoredCandidateInput } from '../relevance';
 import {
@@ -189,7 +189,7 @@ describe('computeRelevance — a hard-filtered headline is demoted, not removed'
 });
 
 // ---------------------------------------------------------------------------
-// Point 1 of 3 — the computeAndJudge orchestrator
+// Point 1 of 3 — the computeAndScore orchestrator
 // ---------------------------------------------------------------------------
 
 function legacy(id: string): ScoringCandidate {
@@ -218,11 +218,14 @@ function fixedScoreLlm(perChunk: number[]): LlmPort {
   };
 }
 
-describe('computeAndJudge — hard screen (call site 1 of 3)', () => {
+describe('computeAndScore — hard screen (call site 1 of 3)', () => {
   const run = (candidates: StageCandidate[], p: PersonaScoringContext, llmScores = [0.05]) =>
-    computeAndJudge(candidates, p, fixedScoreLlm(llmScores), DEFAULT_HARNESS_CONFIG, {
+    // No `skipLlm`: it used to be `skipJudge`, which suppressed ONLY the judge
+    // and let the legacy `score:N` call through. With the judge gone `skipLlm`
+    // suppresses the one remaining LLM call, so these cases — which assert on
+    // the APPLIED LLM score — must let it run.
+    computeAndScore(candidates, p, fixedScoreLlm(llmScores), DEFAULT_HARNESS_CONFIG, {
       nowMs: NOW_MS,
-      skipJudge: true,
     });
 
   it('excludes the normal row and KEEPS the headline row', async () => {
@@ -248,12 +251,21 @@ describe('computeAndJudge — hard screen (call site 1 of 3)', () => {
   });
 
   it('demotes rather than leaves the headline untouched', async () => {
-    const clean = await run([stage(headline({ id: 'head' }))], persona());
+    // The LLM score must sit ABOVE HEADLINE_BASE_FLOOR for the demotion to be
+    // observable at all: the applied score is
+    // `max(llm − suppressPenalty, HEADLINE_BASE_FLOOR)`, so a headline the LLM
+    // already scored under the floor is lifted TO the floor and the comparison
+    // measures the floor, not the penalty. (Before the judge was removed this
+    // row was math-mode and kept its math score, where any LLM value worked.)
+    const clean = await run([stage(headline({ id: 'head' }))], persona(), [0.9]);
     const filtered = await run(
       [stage(headline({ id: 'head' }))],
       persona({ hardSuppressions: [NVIDIA] }),
+      [0.9],
     );
     expect(filtered.rawScoreMap.get('head')!).toBeLessThan(clean.rawScoreMap.get('head')!);
+    // …and never below the floor: demoted, not removed.
+    expect(filtered.rawScoreMap.get('head')!).toBeGreaterThanOrEqual(ENG.HEADLINE_BASE_FLOOR);
   });
 
   it('floors an untagged (BACKSTOP) exempt headline too — the LLM score is not enough', async () => {

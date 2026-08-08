@@ -64,7 +64,7 @@ export function applySentryUser(userId: string | null): void {
 }
 
 // Sentry tag VALUES must be strings; booleans arrive from the runtime context
-// (relevance_v3, network_connected, …) and would otherwise be coerced by the
+// (relevance_v4, network_connected, …) and would otherwise be coerced by the
 // SDK in a way we don't control.
 function toTagValue(value: unknown): string {
   return typeof value === 'string' ? value : String(value);

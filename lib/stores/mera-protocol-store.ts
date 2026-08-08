@@ -20,12 +20,18 @@ interface MeraProtocolState {
   // discards clusters that only matched noisy topics at sync time.
   injectNoise: boolean;
 
-  // Relevance scoring v3 — when true, routes scoring through the single-pass,
-  // two-axis (interest + impact) cloud prompt instead of the classic two-pass
-  // cloud path (separate relevance-score and reason round trips). Replaces
-  // the retired relevance-v2 math-authoritative toggle (`mera_relevance_v2`,
-  // now swept in `reset()`/`hydrateFromDb`). Default false.
-  relevanceV3: boolean;
+  // Relevance scoring v4 — when true, the classic two-pass cloud path ALSO
+  // (a) shows each article's server tag metadata to the pass-1 scoring prompt
+  // and (b) skips the pass-2 note call for low-value event types, demoting
+  // those rows. One switch drives both `articlePipeline.legacyTagPromptEnabled`
+  // and `legacyTagReasonGateEnabled`: they were measured together and ship
+  // together. Routing is unchanged either way — v4 is still the legacy path.
+  //
+  // This field is the SAME user preference the retired "relevance v3" beta
+  // switch drove (v3 was single-pass two-axis scoring, now deleted); only the
+  // symbol was renamed. See `SETTING_RELEVANCE_V4` for why the persisted key
+  // still reads `mera_relevance_v3`. Default false.
+  relevanceV4: boolean;
 
   // Web search in chat — when true, Mera may call the `webSearch` tool, which
   // sends the SEARCH WORDS (and nothing else) to our inference gateway and on
@@ -55,7 +61,7 @@ interface MeraProtocolState {
   // Actions — protocol
   setProcessingMode: (mode: ProcessingMode) => void;
   setInjectNoise: (enabled: boolean) => void;
-  setRelevanceV3: (enabled: boolean) => void;
+  setRelevanceV4: (enabled: boolean) => void;
   setWebSearchInChat: (enabled: boolean) => void;
   setDeepInterview: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
@@ -79,15 +85,24 @@ const DEFAULT_PROCESSING_MODE: ProcessingMode = ProcessingMode.Cloud;
 
 const SETTING_PROCESSING_MODE = 'mera_processing_mode';
 const SETTING_INJECT_NOISE = 'mera_inject_noise';
-const SETTING_RELEVANCE_V3 = 'mera_relevance_v3';
+/**
+ * THE STRING STILL SAYS v3 ON PURPOSE. This row is the *same* user preference
+ * the "relevance v3" beta switch wrote; v3's scorer was retired and the switch
+ * repurposed as v4 (the legacy path plus the two measured article-tag
+ * features). Minting a fresh key would read as absent on every device that had
+ * the beta on and silently switch those users OFF — a settings key is user
+ * data, and renaming it is a migration, not a rename. Only the symbol changed.
+ */
+const SETTING_RELEVANCE_V4 = 'mera_relevance_v3';
 const SETTING_WEB_SEARCH_IN_CHAT = 'mera_web_search_in_chat';
 const SETTING_DEEP_INTERVIEW = 'mera_deep_interview';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
  *  only so `reset()` clears the orphaned row from devices that persisted it. */
 const RETIRED_SETTING_LEGACY_PERSONA_UPDATE = 'mera_legacy_persona_update';
-/** Retired with the relevance-v2 math-authoritative toggle (superseded by v3).
- *  Never read — v3 starts off regardless of what v2 was set to — kept only so
+/** Retired with the relevance-v2 math-authoritative toggle (superseded first by
+ *  v3, now by v4). Never read — the switch starts off regardless of what v2 was
+ *  set to — kept only so
  *  `reset()`/`hydrateFromDb` clear the orphaned row from devices that
  *  persisted it. */
 const RETIRED_SETTING_RELEVANCE_V2 = 'mera_relevance_v2';
@@ -95,7 +110,7 @@ const RETIRED_SETTING_RELEVANCE_V2 = 'mera_relevance_v2';
 const initialState = {
   processingMode: DEFAULT_PROCESSING_MODE,
   injectNoise: false,
-  relevanceV3: false,
+  relevanceV4: false,
   webSearchInChat: false,
   deepInterview: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
@@ -121,9 +136,9 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     setSetting(SETTING_INJECT_NOISE, injectNoise ? 'true' : 'false').catch(() => { });
   },
 
-  setRelevanceV3: (relevanceV3) => {
-    set({ relevanceV3 });
-    setSetting(SETTING_RELEVANCE_V3, relevanceV3 ? 'true' : 'false').catch(() => { });
+  setRelevanceV4: (relevanceV4) => {
+    set({ relevanceV4 });
+    setSetting(SETTING_RELEVANCE_V4, relevanceV4 ? 'true' : 'false').catch(() => { });
   },
 
   setWebSearchInChat: (webSearchInChat) => {
@@ -176,7 +191,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(LEGACY_SETTING_PROTOCOL_ENABLED).catch(() => { });
     deleteSetting('mera_selected_model_id').catch(() => { });
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
-    deleteSetting(SETTING_RELEVANCE_V3).catch(() => { });
+    deleteSetting(SETTING_RELEVANCE_V4).catch(() => { });
     deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
     deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
     deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
@@ -191,7 +206,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         legacyEnabledValue,
         modelIdValue,
         injectNoiseValue,
-        relevanceV3Value,
+        relevanceV4Value,
         webSearchValue,
         deepInterviewValue,
       ] = await Promise.all([
@@ -199,12 +214,12 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
         getSetting('mera_selected_model_id'),
         getSetting(SETTING_INJECT_NOISE),
-        getSetting(SETTING_RELEVANCE_V3),
+        getSetting(SETTING_RELEVANCE_V4),
         getSetting(SETTING_WEB_SEARCH_IN_CHAT),
         getSetting(SETTING_DEEP_INTERVIEW),
       ]);
-      // One-shot cleanup: the retired v2 key is never read — v3 starts off
-      // regardless of what v2 was set to — just swept so it doesn't linger.
+      // One-shot cleanup: the retired v2 key is never read — the switch starts
+      // off regardless of what v2 was set to — just swept so it doesn't linger.
       deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
       const updates: Partial<MeraProtocolState> = {};
       if (modeValue === ProcessingMode.OnDevice || modeValue === ProcessingMode.Cloud) {
@@ -227,10 +242,10 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (injectNoiseValue === 'false') {
         updates.injectNoise = false;
       }
-      if (relevanceV3Value === 'true') {
-        updates.relevanceV3 = true;
-      } else if (relevanceV3Value === 'false') {
-        updates.relevanceV3 = false;
+      if (relevanceV4Value === 'true') {
+        updates.relevanceV4 = true;
+      } else if (relevanceV4Value === 'false') {
+        updates.relevanceV4 = false;
       }
       // ABSENT ⇒ OFF, deliberately: only an explicit 'true' turns either of
       // these on. A device that has never seen the toggle must not inherit an
@@ -265,8 +280,8 @@ export const useIsOnDeviceProcessing = () =>
 export const useInjectNoise = () =>
   useMeraProtocolStore((state) => state.injectNoise);
 
-export const useRelevanceV3 = () =>
-  useMeraProtocolStore((state) => state.relevanceV3);
+export const useRelevanceV4 = () =>
+  useMeraProtocolStore((state) => state.relevanceV4);
 
 export const useWebSearchInChat = () =>
   useMeraProtocolStore((state) => state.webSearchInChat);

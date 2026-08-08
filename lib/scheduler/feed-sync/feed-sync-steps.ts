@@ -62,7 +62,7 @@ export const HYDRATE_CONCURRENCY = 3;
 /**
  * P9 hard-filter reconcile for the gate's propagation half. Propagated rows are
  * written terminal `complete` with a donor's relevance and never enter
- * computeMathStage/computeAndJudge — which is where `screenHardSuppressions`
+ * computeMathStage/computeAndScore — which is where `screenHardSuppressions`
  * runs — so without this a "Blocked" article can inherit a passing score and
  * render, defeating the badge's "never show me these at all" promise.
  *

@@ -34,7 +34,7 @@
  * HARD FILTERS (P9): propagation is DELIBERATELY DUMB about "not interested"
  * filters, and that is a hole unless callers close it. A propagated row is
  * written straight to terminal `complete` with the donor's relevance — it never
- * enters computeMathStage/computeAndJudge, which is where the hard screen
+ * enters computeMathStage/computeAndScore, which is where the hard screen
  * (`screenHardSuppressions`) runs. So a newly-synced article that a hard filter
  * blocks can inherit a passing score from a sibling and render.
  *

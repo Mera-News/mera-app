@@ -9,7 +9,7 @@
 //
 // `@/lib/observability/runtime-context` is mocked with its FULL shape, not just
 // the four fields we forward. A thin mock would make the "we do NOT send
-// relevance_v3 / model_state / …" assertions pass vacuously — they'd be absent
+// relevance_v4 / model_state / …" assertions pass vacuously — they'd be absent
 // because the mock never had them, not because the code excludes them.
 // `app-context` is deliberately NOT mocked: it loads for real under jest-expo,
 // so `runtime_version` / `is_embedded_launch` really are available to the code
@@ -21,7 +21,7 @@ const mockRuntimeContext = {
   app_language: 'de',
   onboarding_stage: 'complete',
   processing_mode: 'cloud',
-  relevance_v3: true,
+  relevance_v4: true,
   free_tier_mode: false,
   model_state: 'ready',
   network_connected: true,
@@ -370,7 +370,7 @@ describe('subscriber-attribute privacy contract', () => {
     const attrs = sentAttributes(Purchases);
     for (const key of [
       'subscription_tier',
-      'relevance_v3',
+      'relevance_v4',
       'free_tier_mode',
       'model_state',
       'network_connected',

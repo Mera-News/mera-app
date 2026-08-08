@@ -5,22 +5,53 @@
 // `EXPO_PUBLIC_USE_ARTICLE_TAGS` in the app's composition root) and nothing
 // else — no `process.env` here, per the harness import discipline.
 //
-// WHY A DATA-PLANE GATE AND NOT A BRANCH INSIDE `isBackstop`
+// WHAT THIS FLAG MEANS, NOW THAT THE JUDGE IS GONE
 //
-// Three separate engine behaviours key off the same three columns:
+// One thing: DO "NOT INTERESTED" FILTERS MATCH ON AN ARTICLE'S PLACES, PEOPLE
+// AND EVENT TYPE? Default `false` — they do not.
 //
-//   1. routing — `isBackstop` sends a candidate with no geoTags AND no entities
-//      AND no eventType down the legacy two-pass LLM path;
+// It used to carry three meanings at once, because three engine behaviours key
+// off the same three columns:
+//
+//   1. routing — `isBackstop` sent an untagged candidate down the legacy LLM
+//      path and a tagged one to the judge. THE JUDGE IS DELETED; every candidate
+//      takes the legacy path now, and `isBackstop` survives only as the producer
+//      of the diagnostic `mode`. This meaning is gone.
 //   2. scoring — `geoComp` / `entityComp` / `eventComp` (and `wrongLocPenalty`)
-//      are computed from them;
+//      are computed from them. Still true, but it no longer decides what is
+//      persisted as `relevance`: the LLM score does. It moves the math score,
+//      which is the fail-open value and the audit trail.
 //   3. suppression — `buildSuppressionHaystack` folds `entities` into the
 //      keyword haystack, and the `entity` / `place` / `event_type` structured
-//      kinds match on them, in BOTH the soft penalty and the hard screen.
+//      kinds match on them, in BOTH the soft penalty and the hard screen. THIS
+//      IS THE MEANING THAT REMAINS, and it is user-visible: it is the difference
+//      between "not interested in Brussels" matching an article that merely
+//      carries a Brussels geo tag, and matching only one that says so in its
+//      text.
 //
-// Gating only (1) would leave (2) and (3) live, so "tags off" would still
-// change what a "not interested" filter matches the moment the server starts
-// emitting tags. Stripping the fields at the boundary makes OFF mean the engine
-// never SEES a tag — one rule, no per-consumer branches to keep in sync.
+// Stripping the fields at the boundary makes OFF mean the engine never SEES a
+// tag — one rule, no per-consumer branches to keep in sync.
+//
+// THIS IS NOT THE v4 FLAG, AND WAS DELIBERATELY NOT DELETED WITH v3 OR THE JUDGE.
+//
+// Both scorers this file was written alongside are retired. This gate is not:
+// it is the reason those retirements did not change anybody's "not interested"
+// filter. Three options were weighed — delete it, fold it into the v4 toggle, or
+// keep it — and keeping it won on consumer (3) above. The hard screen runs on
+// the legacy path (via `stage-scoring::computeMathStage` →
+// `screenHardSuppressionsDetailed`), and `services/suppression-sweep.ts` calls
+// `applyArticleTagPolicyAll` directly over rows ALREADY STORED on the device. So
+// removing the strip would change what every existing filter matches,
+// retroactively, on articles the user already has.
+//
+// Folding it into the v4 toggle was rejected separately: v4 is the legacy path
+// plus two PROMPT features, and its flags live in `articlePipeline`, read inside
+// the prompt builder (`article-pipeline/tag-prompt.ts`) where they cannot reach
+// the engine at all. Wiring a scoring-prompt toggle to a suppression-matching
+// policy would tie two unrelated user-visible behaviours to one switch.
+//
+// Pinned by `mera-protocol/__tests__/relevance-v4.test.ts` — its parity block
+// fails if this strip is ever removed.
 //
 // Applied where a persisted row becomes a scoring candidate —
 // `mera-protocol/stage-scoring::buildStageCandidates`, which BOTH scoring

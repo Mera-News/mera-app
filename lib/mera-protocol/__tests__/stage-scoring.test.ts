@@ -12,12 +12,12 @@ jest.mock('@/lib/database/services/calibration-service', () => ({
   getScoringOverrides: jest.fn().mockResolvedValue({}),
   recordOverrides: jest.fn().mockResolvedValue({ count: 0, notified: false }),
 }));
-// Mutable so the RELEVANCE_V3 cases below can flip the runtime flag between
+// Mutable so the relevance-v4 cases below can flip the runtime flag between
 // awaits — `effectiveHarnessConfig` reads the store at CALL time, so no
 // resetModules/dynamic-require dance is needed (unlike the env-bound half).
-const mockStoreState: { processingMode: string; relevanceV3: boolean } = {
+const mockStoreState: { processingMode: string; relevanceV4: boolean } = {
   processingMode: 'CLOUD',
-  relevanceV3: false,
+  relevanceV4: false,
 };
 jest.mock('@/lib/stores/mera-protocol-store', () => ({
   useMeraProtocolStore: { getState: () => mockStoreState },
@@ -84,9 +84,9 @@ describe('loadPersonaScoringContext — persona snapshot seam', () => {
 // config. `lib/news-harness/**` is RN-free and must never read the store, and
 // the calibration-overrides layer is a closed NUMERIC allowlist, so this is the
 // only place a boolean routing switch can enter the config.
-describe('effectiveHarnessConfig — the relevanceV3 runtime switch', () => {
+describe('effectiveHarnessConfig — the relevance-v4 runtime switch', () => {
   beforeEach(() => {
-    mockStoreState.relevanceV3 = false;
+    mockStoreState.relevanceV4 = false;
     (getScoringOverrides as jest.Mock).mockResolvedValue({});
   });
 
@@ -96,44 +96,58 @@ describe('effectiveHarnessConfig — the relevanceV3 runtime switch', () => {
     // every scoring batch, and it is what harness-config-base.test.ts pins.
     const cfg = await effectiveHarnessConfig();
     expect(cfg).toBe(HARNESS_CONFIG_BASE);
-    expect(cfg.scoringEngine.RELEVANCE_V3).toBe(false);
+    expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(false);
+    expect(cfg.articlePipeline.legacyTagReasonGateEnabled).toBe(false);
   });
 
-  it('flag ON: RELEVANCE_V3 true, USE_ARTICLE_TAGS untouched, nothing else moved', async () => {
-    mockStoreState.relevanceV3 = true;
+  it('flag ON: BOTH tag features on — one switch, two flags', async () => {
+    mockStoreState.relevanceV4 = true;
     const cfg = await effectiveHarnessConfig();
-    expect(cfg.scoringEngine.RELEVANCE_V3).toBe(true);
-    // v3 is independent of tag policy — no forcing, no subsumption.
-    expect(cfg.scoringEngine.USE_ARTICLE_TAGS).toBe(
-      HARNESS_CONFIG_BASE.scoringEngine.USE_ARTICLE_TAGS,
-    );
-    // ...and nothing else moved: no weight, offset or penalty is touched.
-    expect({
-      ...cfg.scoringEngine,
-      RELEVANCE_V3: false,
-    }).toEqual(HARNESS_CONFIG_BASE.scoringEngine);
-    // Sibling sub-configs pass through by reference — this is a scoring-engine
-    // concern only.
-    expect(cfg.articlePipeline).toBe(HARNESS_CONFIG_BASE.articlePipeline);
+    // They were measured together and ship together. A build where the toggle
+    // moved only one of them would be a configuration nobody measured.
+    expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(true);
+    expect(cfg.articlePipeline.legacyTagReasonGateEnabled).toBe(true);
+  });
+
+  it('flag ON: USE_ARTICLE_TAGS and the whole scoringEngine are UNTOUCHED', async () => {
+    mockStoreState.relevanceV4 = true;
+    const cfg = await effectiveHarnessConfig();
+    // v4 is the LEGACY path. `USE_ARTICLE_TAGS` is the routing + suppression
+    // gate: switching it on would flip candidates onto math+judge (i.e. back to
+    // v3) AND turn on the structured entity/place/event_type suppression kinds.
+    // v4 must not touch it, and the scoringEngine slice must pass through BY
+    // REFERENCE so the calibration fast path below still short-circuits.
+    expect(cfg.scoringEngine).toBe(HARNESS_CONFIG_BASE.scoringEngine);
+    expect(cfg.scoringEngine.USE_ARTICLE_TAGS).toBe(false);
     expect(cfg.topicGen).toBe(HARNESS_CONFIG_BASE.topicGen);
   });
 
+  it('flag ON: nothing in articlePipeline moved except the two v4 flags', async () => {
+    mockStoreState.relevanceV4 = true;
+    const cfg = await effectiveHarnessConfig();
+    expect({
+      ...cfg.articlePipeline,
+      legacyTagPromptEnabled: false,
+      legacyTagReasonGateEnabled: false,
+    }).toEqual(HARNESS_CONFIG_BASE.articlePipeline);
+  });
+
   it('flag ON still layers the calibration overrides on top', async () => {
-    mockStoreState.relevanceV3 = true;
+    mockStoreState.relevanceV4 = true;
     (getScoringOverrides as jest.Mock).mockResolvedValue({ W_TOPIC: 0.1 });
     const cfg = await effectiveHarnessConfig();
-    expect(cfg.scoringEngine.RELEVANCE_V3).toBe(true);
+    expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(true);
     expect(cfg.scoringEngine.W_TOPIC).toBeCloseTo(
       HARNESS_CONFIG_BASE.scoringEngine.W_TOPIC * 1.1,
       6,
     );
   });
 
-  it('FAILS OPEN to HARNESS_CONFIG_BASE (v3 off) when the overrides read throws', async () => {
-    mockStoreState.relevanceV3 = true;
+  it('FAILS OPEN to HARNESS_CONFIG_BASE (v4 off) when the overrides read throws', async () => {
+    mockStoreState.relevanceV4 = true;
     (getScoringOverrides as jest.Mock).mockRejectedValue(new Error('db down'));
     const cfg = await effectiveHarnessConfig();
     expect(cfg).toBe(HARNESS_CONFIG_BASE);
-    expect(cfg.scoringEngine.RELEVANCE_V3).toBe(false);
+    expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(false);
   });
 });

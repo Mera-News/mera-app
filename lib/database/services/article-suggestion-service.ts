@@ -34,21 +34,17 @@ import { getSetting, setSetting, deleteSetting } from './setting-service';
  * at write time so the render gate can later be chosen per row rather than from
  * whatever the flag happens to be at read time (see `gateForRow`).
  *
- * Lazily required and defensively wrapped, mirroring `effectiveRenderGate`'s
- * pattern: this module is imported by jest suites that mock neither the store
- * nor MMKV, and a scorer-vintage stamp must never be the thing that throws
- * inside a database write. Falling back to `false` marks the row legacy, which
- * gates it at the LOOSER 0.4 — the safe direction, since the failure mode is
- * showing a row rather than silently deleting one.
+ * ALWAYS FALSE NOW — the v3 scorer is retired, so nothing this app writes is
+ * v3-vintage. The stamp is NOT deleted along with it, and that is the whole
+ * point: a device that ran the beta can hold v3-scored rows for up to the 48h
+ * feed window, and one of them can be RE-scored (score propagation, a re-run
+ * after a failed batch). Dropping the write would leave such a row carrying a
+ * stale `true` next to a fresh v1-vintage score, gating it at 0.55 — silently
+ * deleting a row that should render. Writing `false` retires the vintage with
+ * the score it describes.
  */
 function isRelevanceV3Active(): boolean {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { useMeraProtocolStore } = require('@/lib/stores/mera-protocol-store');
-    return useMeraProtocolStore.getState().relevanceV3 === true;
-  } catch {
-    return false;
-  }
+  return false;
 }
 import { getFacts } from './fact-service';
 import logger from '../../logger';

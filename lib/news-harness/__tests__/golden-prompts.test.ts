@@ -33,7 +33,7 @@ jest.mock('@/lib/database/services/fact-service', () => ({ getFacts: jest.fn() }
 // scoring-service now imports stage-scoring, which pulls in the persona DB
 // services at load time; mock it so scoring-service loads without native deps.
 jest.mock('@/lib/mera-protocol/stage-scoring', () => ({
-  computeAndJudgeForCandidates: jest.fn(),
+  computeAndScoreForCandidates: jest.fn(),
   computeMathStage: jest.fn(),
   loadPersonaScoringContext: jest.fn(),
   buildStageCandidates: jest.fn(),

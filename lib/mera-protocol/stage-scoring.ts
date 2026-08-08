@@ -1,17 +1,18 @@
 // stage-scoring — the RN-coupled bridge that loads the on-device persona
-// snapshot and routes scoring candidates through the ONE deterministic math +
-// judge stage (scoring-engine/run-stage::computeAndJudge). Both scoring
-// orchestrators build on this, so the math + judge behaviour cannot drift
-// between them (the "no divergence" guarantee, Wave 7b M-P5).
+// snapshot and routes scoring candidates through the ONE scoring stage
+// (scoring-engine/run-stage::computeAndScore). Both scoring orchestrators build
+// on this, so the hard screen + math behaviour cannot drift between them (the
+// "no divergence" guarantee).
 //
 //  - loadPersonaScoringContext(): reads topics/locations/pub-prefs/suppressions
 //    + fact weights → the plain PersonaScoringContext + a topicId→weight map.
 //  - buildStageCandidates(): maps ScoringCandidate[] (with their persisted
 //    metadata columns) → StageCandidate[] the engine scores.
-//  - computeAndJudgeForCandidates(): the sync inline path (LLM judge round-trip
-//    happens inline via an LlmPort). The E2EE pipeline uses loadPersonaScoring
-//    context + buildStageCandidates + the pure engine directly (its LLM call is
-//    a deferred encrypted job), so both share the identical math + persona.
+//  - computeAndScoreForCandidates(): the sync inline path (the LLM round-trip
+//    happens inline via an LlmPort). The E2EE pipeline uses
+//    loadPersonaScoringContext + buildStageCandidates + the pure engine directly
+//    (its LLM call is a deferred encrypted job), so both share the identical
+//    hard screen, math and persona.
 
 import { cloudBatchComplete, cloudComplete } from '@/lib/llm/cloudComplete';
 import { completeLocal } from '@/lib/llm/completeLocal';
@@ -29,7 +30,7 @@ import { HARNESS_CONFIG_BASE } from './harness-config-base';
 import { getScoringOverrides } from '@/lib/database/services/calibration-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
-  computeAndJudge,
+  computeAndScore,
   computeRelevance,
   applyScoringOverrides,
   buildPubPrefs,
@@ -323,33 +324,47 @@ async function loadAllFactStatements(): Promise<string[]> {
  * env-bound article-tag policy applies on EVERY branch — including the `catch`.
  * A calibration read failure must not quietly flip the tagging policy back.
  *
- * It is ALSO where the RUNTIME `relevanceV3` switch is layered in (the settings
+ * It is ALSO where the RUNTIME `relevanceV4` switch is layered in (the settings
  * toggle), for the same reason: `lib/news-harness/**` is RN-free and must never
  * import the store, and the calibration-overrides layer cannot carry a boolean
  * (`applyScoringOverrides` filters on a closed numeric allowlist and applies
- * `base × (1 + delta)`). RELEVANCE_V3 routes scoring/prompt-building through
- * the single-pass, two-axis (interest + impact) path — it is otherwise
- * independent of `USE_ARTICLE_TAGS`, which keeps its own gate untouched here.
+ * `base × (1 + delta)`).
  *
- * (Retired: the relevanceV2 math-authoritative branch — which forced
- * USE_ARTICLE_TAGS on and skipped relevance bucketing — is gone. v3 doesn't
- * touch article-tag policy at all.)
+ * v4 IS THE LEGACY PATH PLUS TWO MEASURED ARTICLE-TAG FEATURES, and it is
+ * layered onto `articlePipeline`, NOT `scoringEngine`:
+ *   - `legacyTagPromptEnabled` — the tag block in the pass-1 batch prompt;
+ *   - `legacyTagReasonGateEnabled` — skip (and demote) pass-2 reason calls for
+ *     the low-value event types.
+ * ONE switch drives both: they were measured together and ship together.
+ *
+ * `USE_ARTICLE_TAGS` is deliberately NOT touched here and is NOT part of v4.
+ * That flag is the ROUTING + SUPPRESSION gate: turning it on lets tags reach
+ * the engine, which flips candidates off the legacy path onto math+judge AND
+ * switches on the structured `entity`/`place`/`event_type` suppression kinds.
+ * v4 changes neither — `scoringMode` is bit-for-bit identical with it on or off.
+ *
+ * (Retired: the relevanceV2 math-authoritative branch, and the relevanceV3
+ * single-pass two-axis scorer this toggle used to select.)
  *
  * The store read is INSIDE the try: a hydration/store failure fail-opens to
- * HARNESS_CONFIG_BASE (v3 off), which is today's behaviour.
+ * HARNESS_CONFIG_BASE (v4 off), which is today's behaviour.
  */
 export async function effectiveHarnessConfig(): Promise<HarnessConfig> {
   try {
-    const relevanceV3 = useMeraProtocolStore.getState().relevanceV3 === true;
+    const relevanceV4 = useMeraProtocolStore.getState().relevanceV4 === true;
     // Fast path preserved: with the flag off this is HARNESS_CONFIG_BASE ITSELF,
     // so a no-override read still returns that exact reference (identity is
-    // asserted by harness-config-base.test.ts and relied on below).
-    const base: HarnessConfig = relevanceV3
+    // asserted by harness-config-base.test.ts and relied on below). Only
+    // `articlePipeline` is spread when it is on, so `base.scoringEngine` keeps
+    // its identity either way and the `eng === base.scoringEngine` tail below
+    // still short-circuits.
+    const base: HarnessConfig = relevanceV4
       ? {
           ...HARNESS_CONFIG_BASE,
-          scoringEngine: {
-            ...HARNESS_CONFIG_BASE.scoringEngine,
-            RELEVANCE_V3: relevanceV3,
+          articlePipeline: {
+            ...HARNESS_CONFIG_BASE.articlePipeline,
+            legacyTagPromptEnabled: true,
+            legacyTagReasonGateEnabled: true,
           },
         }
       : HARNESS_CONFIG_BASE;
@@ -381,9 +396,9 @@ export interface MathStageResult {
 
 /**
  * Run ONLY the deterministic math (no LLM) over the candidates — used by the
- * E2EE pipeline at SUBMIT time. The judge round-trip is then deferred as an
- * encrypted job (buildJudgeCalls / decodeJudgeResults). Persist the computed
- * scores so a judge failure fail-opens to the math.
+ * E2EE pipeline at SUBMIT time, whose LLM call is a deferred encrypted job.
+ * Its real product is the HARD "not interested" screen plus the persisted
+ * math/components audit; the scores fail-open if the LLM call never lands.
  */
 export async function computeMathStage(
   candidates: ScoringCandidate[],
@@ -395,7 +410,7 @@ export async function computeMathStage(
   ]);
   const allStage = buildStageCandidates(candidates, topicWeights, config.scoringEngine);
 
-  // HARD "not interested" screen — the E2EE path never enters computeAndJudge,
+  // HARD "not interested" screen — the E2EE path never enters computeAndScore,
   // so this is its own convergence point for the same shared matcher. P6: a
   // top-headline row that matches a hard filter lands in `exempted`, stays in
   // `stage`, and is demoted by computeRelevance rather than removed.
@@ -437,14 +452,14 @@ export async function computeMathStage(
 }
 
 /**
- * Sync inline path: compute the math for every candidate, judge the math-mode
- * ones and legacy-score the backstop ones — one call. The judge LLM round-trip
- * happens INLINE via the LlmPort (this is the synchronous scoring-service
- * orchestrator; the E2EE pipeline defers the LLM call and so does NOT use this).
+ * Sync inline path: hard-screen, compute the math for every candidate, then
+ * score them all through the legacy tiered LLM call. The LLM round-trip happens
+ * INLINE via the LlmPort (this is the synchronous scoring-service orchestrator;
+ * the E2EE pipeline defers the LLM call and so does NOT use this).
  */
-export async function computeAndJudgeForCandidates(
+export async function computeAndScoreForCandidates(
   candidates: ScoringCandidate[],
-  opts?: { skipJudge?: boolean; nowMs?: number },
+  opts?: { skipLlm?: boolean; nowMs?: number },
 ): Promise<StageResult> {
   const [{ persona, topicWeights }, factStatements, config] = await Promise.all([
     loadPersonaScoringContext(opts?.nowMs),
@@ -452,10 +467,10 @@ export async function computeAndJudgeForCandidates(
     effectiveHarnessConfig(),
   ]);
   const stage = buildStageCandidates(candidates, topicWeights, config.scoringEngine);
-  return computeAndJudge(stage, persona, getScoringLlmPort(), config, {
+  return computeAndScore(stage, persona, getScoringLlmPort(), config, {
     nowMs: opts?.nowMs,
     factStatements,
     logger: appHarnessLogger,
-    skipJudge: opts?.skipJudge,
+    skipLlm: opts?.skipLlm,
   });
 }

@@ -148,7 +148,7 @@ export function configureRevenueCat(): void {
 //     reading history. That is the product's core invariant (no collection links
 //     a user to a topic) and it does not get an exception for a billing vendor.
 // Values EXCLUDED even though ./observability/runtime-context.ts hands them to
-// us for free: relevance_v3, free_tier_mode, model_state, network_connected,
+// us for free: relevance_v4, free_tier_mode, model_state, network_connected,
 // server_reachable, runtime_version, is_embedded_launch. They are Sentry-side
 // debugging values with no support or segmentation use here, and `send it, it
 // might be handy` is how a purpose-limited set stops being one. Note

@@ -1,25 +1,31 @@
-// scoring-engine — the single stage BOTH scoring orchestrators route through
-// (Wave 7b). Structural "no divergence" guarantee: scoring-service.ts (sync)
-// and scoring-pipeline.ts (E2EE async) both call computeAndJudge, so the math +
-// judge behaviour can never drift between them.
+// scoring-engine — the single stage BOTH scoring orchestrators route through.
+// Structural "no divergence" guarantee: scoring-service.ts (sync) and
+// scoring-pipeline.ts (E2EE async) both call computeAndScore, so the hard
+// screen, the math and the legacy scoring can never drift between them.
 //
 //   0. HARD "not interested" screen (persona.hardSuppressions) — matching
 //      candidates are dropped here and returned in `excludedIds`; they never
-//      reach the math, the judge, the backstop or the reason pass.
+//      reach the math, the LLM score or the reason pass.
 //   1. computeRelevance() per candidate (on-device math) → computed score +
-//      components + mode ('math' | 'backstop').
-//   2. MATH candidates → ONE combined judge+reason call per chunk
-//      ({"j","s"?,"r"?}). ROUND-3 A1: the judge is ADVISORY — the APPLIED score
-//      in rawScoreMap stays the computed math; the judge's proposed score is
-//      exposed separately in judgeScoreMap, and its `reason` is applied as the
-//      note. The `override` flag (|judge − computed| > OVERRIDE_DELTA) still
-//      feeds the calibration loop.
-//   3. BACKSTOP candidates (never tagged) → the legacy tiered LLM score call
-//      (that path DOES apply the LLM score to rawScoreMap), minus the SOFT
-//      suppression penalty the math already computed for the same candidate —
-//      otherwise a "shown less" filter would be silently inert on every untagged
-//      article. Reasons for backstop stay the orchestrator's job (this stage
-//      returns only scores for them).
+//      components + mode. The math score is the FALLBACK that stands if the LLM
+//      call fails, and it is what carries the SOFT suppression penalty.
+//   2. EVERY active candidate → the legacy tiered LLM score call, which applies
+//      its score to rawScoreMap minus the soft suppression penalty the math
+//      already computed for the same candidate — otherwise a "shown less" filter
+//      would be silently inert. Reasons stay the orchestrator's job (this stage
+//      returns only scores).
+//
+// THE JUDGE IS GONE. Step 2 used to be split: tagged ("math"-mode) candidates
+// went to a combined judge+reason call and kept their math score, untagged
+// ("backstop") ones took the legacy LLM path. With the judge deleted there is
+// one path, so every candidate takes it. That is byte-identical to today —
+// `USE_ARTICLE_TAGS` is false, so `isBackstop` was already true for every
+// candidate and `mathItems` was always empty. It differs only under
+// `USE_ARTICLE_TAGS=true`, a configuration that has never been run.
+//
+// `mode` survives as a DIAGNOSTIC, not as routing: it is persisted inside
+// `score_components_json` and counted by `getScoringModeBreakdown` for the
+// Observability feed funnel.
 //
 // Pure except for the injected LlmPort. RN-free.
 
@@ -27,11 +33,9 @@ import type { LlmPort, HarnessLogger } from '../core/ports';
 import { NOOP_LOGGER } from '../core/ports';
 import type { BatchCall, ScoringCandidate } from '../core/types';
 import type { HarnessConfig } from '../core/config';
-import { buildJudgeUserMessage } from '../prompts/prompts';
 import {
   buildScoreCallForChunk,
   parseBatchRelevanceResponse,
-  resolveCountryName,
   chunk,
 } from '../article-pipeline/scoring';
 import {
@@ -41,44 +45,33 @@ import {
   type ScoringMode,
 } from './relevance';
 import type { PersonaScoringContext } from './persona-context';
-import { summarizeComponents, parseJudgeResponse } from './judge';
 import { screenHardSuppressionsDetailed } from './suppression';
 
 /** One candidate for the stage. `input` carries the rich metadata the math +
- *  judge need; `legacy` is the ScoringCandidate shape the backstop path scores
- *  through the untouched tiered LLM prompt (omit for math-only callers/eval). */
+ *  math needs; `legacy` is the ScoringCandidate shape the tiered LLM prompt
+ *  scores through (omit for math-only callers/eval). */
 export interface StageCandidate {
   input: ScoredCandidateInput;
   legacy?: ScoringCandidate;
 }
 
 export interface StageResult {
-  /** APPLIED raw score per id — the value to persist as relevance. Round-3 A1:
-   *  for MATH candidates this is the computed math score (the judge is advisory
-   *  and never applied); for BACKSTOP candidates it is the legacy LLM score. */
+  /** APPLIED raw score per id — the value to persist as relevance: the legacy
+   *  LLM score, or the math score when its call failed (fail-open). */
   rawScoreMap: Map<string, number>;
-  /** Deterministic math score per id (persist as computed_score). For math
-   *  candidates this equals rawScoreMap; kept separate for the calibration
-   *  case + the backstop-vs-math distinction. */
+  /** Deterministic math score per id (persist as computed_score). Kept separate
+   *  from rawScoreMap: it is the fail-open value and the audit trail. */
   computedScoreMap: Map<string, number>;
-  /** ADVISORY judge score per id (math mode only) — the judge's proposed score,
-   *  NEVER applied. Pair with computedScoreMap to build a CalibrationCase for
-   *  overridden rows (case.judge = this, case.computed = applied). */
-  judgeScoreMap: Map<string, number>;
   /** Full component breakdown per id (persist as score_components_json). */
   componentsMap: Map<string, RelevanceComponents>;
+  /** Which path the ENGINE would have taken for each id. Diagnostic only since
+   *  the judge was removed — nothing routes on it; it is persisted inside the
+   *  components blob and counted by the Observability funnel. */
   modeMap: Map<string, ScoringMode>;
-  /** Judge-authored reasons (math mode only; applied score ≥ reason threshold). */
-  reasonMap: Map<string, string>;
-  /** ids where |judge − computed| > OVERRIDE_DELTA (fed to the calibration
-   *  loop; applied score is still the computed math). */
-  overrideMap: Map<string, boolean>;
-  /** ids the judge adjusted at all (any magnitude). */
-  adjustedIds: Set<string>;
   /** ids a HARD "not interested" filter screened out (step 0). These get NO
-   *  entry in any of the maps above — no math, no judge, no backstop, no
-   *  reason — and the orchestrator persists them as terminal `excluded`
-   *  (relevance 0) rather than scoring them. */
+   *  entry in any of the maps above — no math, no LLM score, no reason — and the
+   *  orchestrator persists them as terminal `excluded` (relevance 0) rather than
+   *  scoring them. */
   excludedIds: Set<string>;
   /** excluded id → the display value of the filter that matched it (for the
    *  per-batch log / the user-facing "why is this gone" surface). */
@@ -90,28 +83,29 @@ export interface StageResult {
   exemptedValueById: Map<string, string>;
 }
 
-export interface ComputeAndJudgeOptions {
+export interface ComputeAndScoreOptions {
   /** Reference "now" (fixed in eval/replay for determinism). No longer affects
    *  the math since Round-3 A2 removed freshness decay. */
   nowMs?: number;
-  /** Full fact-bank statements — only used by the backstop legacy score call. */
+  /** Full fact-bank statements — used by the legacy score call. */
   factStatements?: string[];
   logger?: HarnessLogger;
-  /** Skip the judge round trip and let every math score stand (fake-judge=ok).
-   *  Used by the deterministic math-only eval. */
-  skipJudge?: boolean;
+  /** Skip the LLM round trip entirely and let every math score stand. Used by
+   *  the deterministic math-only eval. (Was `skipJudge`; it now skips the only
+   *  LLM call this stage makes.) */
+  skipLlm?: boolean;
 }
 
 /**
- * Compute the math score for every candidate, then judge the math-mode ones and
- * legacy-score the backstop ones. Returns merged per-id maps.
+ * Hard-screen, compute the math for every candidate, then score them all
+ * through the legacy tiered LLM call. Returns merged per-id maps.
  */
-export async function computeAndJudge(
+export async function computeAndScore(
   candidates: StageCandidate[],
   persona: PersonaScoringContext,
   llm: LlmPort,
   config: HarnessConfig,
-  opts: ComputeAndJudgeOptions = {},
+  opts: ComputeAndScoreOptions = {},
 ): Promise<StageResult> {
   const logger = opts.logger ?? NOOP_LOGGER;
   const nowMs = opts.nowMs ?? Date.now();
@@ -120,12 +114,8 @@ export async function computeAndJudge(
 
   const rawScoreMap = new Map<string, number>();
   const computedScoreMap = new Map<string, number>();
-  const judgeScoreMap = new Map<string, number>();
   const componentsMap = new Map<string, RelevanceComponents>();
   const modeMap = new Map<string, ScoringMode>();
-  const reasonMap = new Map<string, string>();
-  const overrideMap = new Map<string, boolean>();
-  const adjustedIds = new Set<string>();
 
   // --- 0. HARD "not interested" screen ---------------------------------------
   // Runs BEFORE any math so an excluded row costs no compute, no judge tokens
@@ -136,6 +126,9 @@ export async function computeAndJudge(
   // in `active` and computeRelevance demotes them (one shared predicate,
   // suppression.ts::isHardFilterExempt). Logged separately so the split is
   // visible in the field.
+  //
+  // THIS IS THE SCREEN THE WHOLE "not interested" FEATURE RUNS ON, and it is on
+  // the legacy path — it did not go anywhere when the judge did.
   const { excluded: excludedValueById, exempted: exemptedValueById } =
     screenHardSuppressionsDetailed(
       candidates.map((c) => c.input),
@@ -145,101 +138,37 @@ export async function computeAndJudge(
   const active =
     excludedIds.size > 0 ? candidates.filter((c) => !excludedIds.has(c.input.id)) : candidates;
   if (excludedIds.size > 0) {
-    logger.debug('[computeAndJudge] hard filters excluded candidates', {
+    logger.debug('[computeAndScore] hard filters excluded candidates', {
       excluded: excludedIds.size,
       of: candidates.length,
       values: [...new Set(excludedValueById.values())].slice(0, 10),
     });
   }
   if (exemptedValueById.size > 0) {
-    logger.debug('[computeAndJudge] hard filters demoted (not removed) headlines', {
+    logger.debug('[computeAndScore] hard filters demoted (not removed) headlines', {
       exempted: exemptedValueById.size,
       of: candidates.length,
       values: [...new Set(exemptedValueById.values())].slice(0, 10),
     });
   }
 
-  // --- 1. math for all; partition by mode -----------------------------------
-  const mathItems: StageCandidate[] = [];
-  const backstopItems: StageCandidate[] = [];
+  // --- 1. math for every active candidate ------------------------------------
+  // No partition any more: with the judge gone there is nowhere else to send a
+  // candidate, so `mode` is recorded for the Observability funnel and nothing
+  // branches on it.
   for (const c of active) {
     const r = computeRelevance(c.input, persona, eng, nowMs);
     computedScoreMap.set(c.input.id, r.score);
     componentsMap.set(c.input.id, r.components);
     modeMap.set(c.input.id, r.mode);
-    rawScoreMap.set(c.input.id, r.score); // default (judge/backstop overwrite)
-    if (r.mode === 'math') mathItems.push(c);
-    else backstopItems.push(c);
+    rawScoreMap.set(c.input.id, r.score); // fail-open default; the LLM overwrites
   }
 
-  // --- 2. JUDGE the math-mode candidates ------------------------------------
-  if (!opts.skipJudge && mathItems.length > 0) {
-    const chunks = chunk(mathItems, pipe.judgeChunkSize);
-    const calls: BatchCall[] = chunks.map((chunkItems, idx) => {
-      const prompt = buildJudgeUserMessage({
-        articles: chunkItems.map((c) => {
-          const computed = computedScoreMap.get(c.input.id) ?? 0;
-          const comps = componentsMap.get(c.input.id)!;
-          return {
-            title: c.input.titleEn ?? '',
-            description: c.input.descriptionEn ?? '',
-            country: resolveCountryName(c.input.countryCode),
-            computedScore: computed,
-            componentSummary: summarizeComponents(
-              comps,
-              c.input.matchedTopics,
-              persona.locations,
-              eng,
-            ),
-          };
-        }),
-      });
-      return {
-        id: `judge:${idx}`,
-        system: pipe.judgeSystemPrompt,
-        prompt,
-        temperature: pipe.scoreTemperature,
-        maxTokens: pipe.judgeMaxTokens,
-      };
-    });
-
-    const results = await llm.batchComplete(calls, { model: pipe.model });
-    const resultById = new Map(results.map((r) => [r.id, r]));
-
-    chunks.forEach((chunkItems, idx) => {
-      const result = resultById.get(`judge:${idx}`);
-      const computed = chunkItems.map((c) => computedScoreMap.get(c.input.id) ?? 0);
-      // Failed / missing chunk → fail-open: math scores stand for the chunk.
-      if (!result || result.error) {
-        if (result?.error) {
-          logger.warn('[computeAndJudge] judge chunk failed — math stands', {
-            chunkId: `judge:${idx}`,
-            error: result.error,
-            size: chunkItems.length,
-          });
-        }
-        return;
-      }
-      const decisions = parseJudgeResponse(result.output, computed, eng, logger, `judge:${idx}`);
-      chunkItems.forEach((c, i) => {
-        const d = decisions[i];
-        // Round-3 A1: the APPLIED score stays the computed math (already in
-        // rawScoreMap from the math pass). Capture the judge's proposed score as
-        // an advisory value only.
-        judgeScoreMap.set(c.input.id, d.score);
-        if (d.override) overrideMap.set(c.input.id, true);
-        if (d.adjusted) adjustedIds.add(c.input.id);
-        // Keep the note only when the APPLIED (computed) score clears the reason
-        // threshold — a judge demotion no longer applies, so gate on computed.
-        if (d.reason && computed[i] >= pipe.reasonRelevanceThreshold) {
-          reasonMap.set(c.input.id, d.reason);
-        }
-      });
-    });
-  }
-
-  // --- 3. BACKSTOP: legacy tiered LLM score for never-tagged candidates ------
-  const scorable = backstopItems.filter((c) => c.legacy);
+  // --- 2. LEGACY tiered LLM score for EVERY active candidate -----------------
+  // `c.legacy` is the ScoringCandidate the tiered prompt needs; math-only
+  // callers (the offline eval) omit it and get the math score untouched, which
+  // is also what `skipLlm` buys.
+  const scorable = opts.skipLlm ? [] : active.filter((c) => c.legacy);
   if (scorable.length > 0) {
     const facts = opts.factStatements ?? [];
     const chunks = chunk(scorable, pipe.articlesPerScorePrompt);
@@ -274,7 +203,7 @@ export async function computeAndJudge(
         pipe,
         logger,
       );
-      // SOFT suppression on the legacy path. The LLM knows nothing about the
+      // SOFT suppression. The LLM knows nothing about the
       // user's "shown less" filters, so its score REPLACES the math score that
       // carried the penalty — which left soft filters inert for every untagged
       // article (and, with enrichment unshipped, that is all of them). Re-apply
@@ -299,12 +228,11 @@ export async function computeAndJudge(
           penalised += 1;
           next = Math.max(0, next - penalty);
         }
-        // P6 — DEMOTED, NEVER REMOVED, on this path too. An exempt top headline
-        // carries a HARD filter's penalty in `suppressPenalty` (folded in by
-        // computeRelevance), and the LLM score it is subtracted from is not
-        // guaranteed to survive it. The math path floors such a row at
-        // HEADLINE_BASE_FLOOR; without the same floor here an untagged (backstop)
-        // headline would still vanish, which is exclusion under another name.
+        // P6 — DEMOTED, NEVER REMOVED. An exempt top headline carries a HARD
+        // filter's penalty in `suppressPenalty` (folded in by computeRelevance),
+        // and the LLM score it is subtracted from is not guaranteed to survive
+        // it. Without this floor such a headline would vanish, which is
+        // exclusion under another name.
         if (comps?.hardFilterExempt) {
           next = Math.max(next, eng.HEADLINE_BASE_FLOOR);
         }
@@ -312,7 +240,7 @@ export async function computeAndJudge(
       });
     });
     if (penalised > 0) {
-      logger.debug('[computeAndJudge] soft filters penalised backstop candidates', {
+      logger.debug('[computeAndScore] soft filters penalised candidates', {
         penalised,
         of: scorable.length,
       });
@@ -322,12 +250,8 @@ export async function computeAndJudge(
   return {
     rawScoreMap,
     computedScoreMap,
-    judgeScoreMap,
     componentsMap,
     modeMap,
-    reasonMap,
-    overrideMap,
-    adjustedIds,
     excludedIds,
     excludedValueById,
     exemptedValueById,

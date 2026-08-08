@@ -232,34 +232,32 @@ describe('buildFactRows ownership', () => {
 
 // --- render gate + note-gated visibility ----------------------------------
 
-describe('effectiveRenderGate (v3 calibration)', () => {
+describe('effectiveRenderGate — 0.4 for every fresh score, v4 or not', () => {
   afterEach(() => jest.resetModules());
 
-  function gateWithFlag(relevanceV3: boolean): number {
-    jest.isolateModules(() => {
-      jest.doMock('@/lib/stores/mera-protocol-store', () => ({
-        useMeraProtocolStore: { getState: () => ({ relevanceV3 }) },
-      }));
-    });
+  function gateWithFlag(relevanceV4: boolean): number {
     jest.doMock('@/lib/stores/mera-protocol-store', () => ({
-      useMeraProtocolStore: { getState: () => ({ relevanceV3 }) },
+      useMeraProtocolStore: { getState: () => ({ relevanceV4 }) },
     }));
-    // effectiveRenderGate lazy-requires the store, so the doMock above is
-    // what it sees on the next call.
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { effectiveRenderGate } = require('@/lib/stores/fact-rows-selector');
     return effectiveRenderGate();
   }
 
-  it('is V3_RENDER_GATE (0.55) while the v3 scorer is active', () => {
-    expect(gateWithFlag(true)).toBe(0.55);
+  // THE CHANGE THAT CAN EMPTY A FEED. v3 produced continuous scores calibrated
+  // against 0.55; v4 is the LEGACY path, whose scores are quantised onto
+  // 0.4/0.6/0.8/1.1. If the toggle still raised the gate to 0.55, turning v4 on
+  // would delete the entire 0.4 tier — measured at 25 of the 116 rows v1 admits
+  // on `goldset-348` — with nothing to re-score them back.
+  it('is RENDER_GATE (0.4) with the v4 toggle ON', () => {
+    expect(gateWithFlag(true)).toBe(0.4);
   });
 
-  it('is RENDER_GATE (0.4) for legacy scoring', () => {
+  it('is RENDER_GATE (0.4) with the v4 toggle OFF', () => {
     expect(gateWithFlag(false)).toBe(0.4);
   });
 
-  it('fails open to the legacy gate when the store is unavailable', () => {
+  it('does not read the store at all — no flag can move it', () => {
     jest.doMock('@/lib/stores/mera-protocol-store', () => {
       throw new Error('store unavailable');
     });
@@ -295,6 +293,21 @@ describe('gateForRow — the render gate follows the ROW, not the flag', () => {
     // calibrated against 0.55, so 0.4 means something different there.
     const v3AtSameScore = sugg({ _id: 'v3-0.4', relevance: 0.4, scoredWithV3: true });
     expect(relevancePassesGate(v3AtSameScore)).toBe(false);
+  });
+
+  // v4 ACCEPTANCE. A row scored by v4 is a LEGACY-vintage row: the pipeline
+  // stamps `scored_with_v3 = false` for everything it writes now, so a v4 score
+  // at exactly the gate renders. The v3 column and its 0.55 gate survive the
+  // scorer's deletion purely for rows already on the device.
+  it('renders a v4-scored row at 0.4 while an old v3-scored row still gates at 0.55', () => {
+    const v4AtGate = sugg({ _id: 'v4-0.4', relevance: 0.4, scoredWithV3: false });
+    expect(gateForRow(v4AtGate)).toBe(RENDER_GATE);
+    expect(relevancePassesGate(v4AtGate)).toBe(true);
+
+    // Same device, same feed, older row — judged by the scorer that wrote it.
+    const v3Leftover = sugg({ _id: 'v3-0.5', relevance: 0.5, scoredWithV3: true });
+    expect(gateForRow(v3Leftover)).toBe(V3_RENDER_GATE);
+    expect(relevancePassesGate(v3Leftover)).toBe(false);
   });
 
   it('is INCLUSIVE at each vintage’s own cutoff', () => {

@@ -24,7 +24,7 @@ import { DEFAULT_HARNESS_CONFIG } from '../../lib/news-harness/core/config';
 import {
   computeRelevance,
   resolveGeoMatch,
-  computeAndJudge,
+  computeAndScore,
   type StageCandidate,
   type ScoredCandidateInput,
   type MatchedTopicInput,
@@ -169,8 +169,14 @@ async function main(): Promise<void> {
   // --- Phase 2: score per engine -------------------------------------------
   const rawById = new Map<string, number>();
   const computedById = new Map<string, number>();
+  // ALWAYS EMPTY since the judge was removed — nothing overrides the math any
+  // more. Kept so the emitted row shape and the `override` column stay stable
+  // for the tracked golden-label comparisons.
   const overrideById = new Map<string, boolean>();
   const compById = new Map<string, Record<string, number>>();
+  // ALWAYS ZERO SINCE THE JUDGE WAS REMOVED — see the `--engine=pipeline` note
+  // below. Kept (and kept named) so the printed summary line and anything
+  // parsing it keep their shape.
   let judgeUsage = { promptTokens: 0, completionTokens: 0, calls: 0, latencyMs: 0 };
 
   if (engine === 'backstop') {
@@ -195,7 +201,26 @@ async function main(): Promise<void> {
       });
     }
   } else {
-    // pipeline: math + REAL judge via the NEAR AI LlmPort.
+    // `--engine=pipeline` — WHAT THIS MEASURES CHANGED WHEN THE JUDGE WAS
+    // REMOVED, AND ITS NUMBERS ARE NOT COMPARABLE TO PRE-REMOVAL RUNS.
+    //
+    // It used to run math + the REAL combined judge over the NEAR AI LlmPort:
+    // the goldset rows are tagged, so `isBackstop` was false, they were
+    // math-mode, and the judge branch keyed off `mathItems.length > 0` and ran.
+    // There is now one scoring path, and it needs `c.legacy` — the
+    // ScoringCandidate the tiered prompt is built from. The items below are
+    // constructed with `input` ONLY, so `scorable` is empty, NO LLM call is
+    // made, and `rawScoreMap` is the pure `computeRelevance()` math score.
+    //
+    // So `pipeline` currently produces the same thing `--engine=math` does,
+    // `judgeUsage.calls` is always 0, and `overrideById` is always empty. The
+    // GATE numbers in eval/README.md (90.4% FEED precision) were measured WITH
+    // the judge and no longer describe this code.
+    //
+    // Making it grade what actually ships means populating `legacy` here so the
+    // legacy tiered LLM call runs. That is a product decision about what the
+    // eval is for, not a rename, so it is left for the owner rather than
+    // guessed at.
     const env = loadHarnessEnv();
     const calls: LlmCallRecord[] = [];
     const llm = createNearAiLlm({
@@ -207,12 +232,11 @@ async function main(): Promise<void> {
     });
     const items: StageCandidate[] = prepared.map((p) => ({ input: p.input }));
     const started = Date.now();
-    const stage = await computeAndJudge(items, persona2, llm, DEFAULT_HARNESS_CONFIG, { nowMs });
+    const stage = await computeAndScore(items, persona2, llm, DEFAULT_HARNESS_CONFIG, { nowMs });
     judgeUsage.latencyMs = Date.now() - started;
     for (const p of prepared) {
       rawById.set(p.c.id, stage.rawScoreMap.get(p.c.id) ?? 0);
       computedById.set(p.c.id, stage.computedScoreMap.get(p.c.id) ?? 0);
-      overrideById.set(p.c.id, stage.overrideMap.get(p.c.id) ?? false);
     }
     for (const rec of calls) {
       judgeUsage.calls++;

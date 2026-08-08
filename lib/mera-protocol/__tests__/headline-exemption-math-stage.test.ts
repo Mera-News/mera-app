@@ -1,6 +1,6 @@
 // P6 — call site 2 of 3: `computeMathStage`, the E2EE pipeline's own hard screen.
 //
-// This path never enters `computeAndJudge`, so it is a SEPARATE convergence
+// This path never enters `computeAndScore`, so it is a SEPARATE convergence
 // point for the same matcher: miss it and the exemption holds on the inline
 // scoring path but not on the deferred-judge one, which is the path prod
 // actually runs.

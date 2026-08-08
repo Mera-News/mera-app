@@ -194,7 +194,23 @@ const round = (x: number, dp = 3): number => {
   return Math.round(x * f) / f;
 };
 
-/** Shape a single override row into a CalibrationCase (drops all text). */
+/**
+ * Shape a single override row into a CalibrationCase (drops all text).
+ *
+ * UNFED SINCE THE JUDGE WAS REMOVED. Its only two call sites captured
+ * math-vs-judge disagreements, and both went with the judge, so nothing
+ * produces a CalibrationCase any more. The consequence is that the chat's
+ * "Recalibrate" proposal (`chat-tools/proposal-handlers::run_calibration` →
+ * `calibration-service::runCalibration`) now always reports "no changes were
+ * needed": there is no sample to learn from.
+ *
+ * Deliberately NOT deleted along with the judge. `applyScoringOverrides` below
+ * is live on every config resolve, `runCalibration` is reachable from a
+ * user-facing chat action, and unpicking the record half cascades through
+ * `recordOverrides` / `shouldFireNotification` / `recordInWindow` /
+ * `rolloverIfExpired`. Whether the loop gets a new input or is retired is a
+ * product decision, not a cleanup.
+ */
 export function buildCalibrationCase(
   id: string,
   computed: number,

@@ -26,9 +26,15 @@ jest.mock('../../database/services/fact-service', () => ({
 }));
 // stage-scoring pulls in the persona DB services (topic/location/etc.) at import
 // time; mock it so the module loads without native deps. These tests exercise
-// the pure decoder + verifier, not the math+judge stage.
+// the pure decoder + verifier, not the scoring stage.
+//
+// The key MUST match stage-scoring's real export name. A factory mock replaces
+// the whole module, so a stale key silently exports a function nobody imports
+// while the name scoring-service.ts actually imports resolves to undefined —
+// the mock stops mocking and the suite still passes, right up until a test
+// touches that path and gets "undefined is not a function".
 jest.mock('../stage-scoring', () => ({
-  computeAndJudgeForCandidates: jest.fn(),
+  computeAndScoreForCandidates: jest.fn(),
   computeMathStage: jest.fn(),
   loadPersonaScoringContext: jest.fn(),
   buildStageCandidates: jest.fn(),

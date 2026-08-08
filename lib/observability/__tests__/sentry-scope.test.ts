@@ -40,7 +40,7 @@ const mockLanguageStore = mockMakeStore({ appLanguage: 'en' });
 const mockSubscriptionStore = mockMakeStore({ tier: 'pro', serverTier: 'pro' });
 const mockMeraStore = mockMakeStore({
   processingMode: 'CLOUD',
-  relevanceV3: true,
+  relevanceV4: true,
   modelState: 'not_downloaded',
 });
 const mockNetworkStore = mockMakeStore({ isConnected: true, serverReachable: false });
@@ -128,7 +128,7 @@ describe('sentry-scope', () => {
         app_language: 'en',
         onboarding_stage: 'COMPLETE',
         processing_mode: 'CLOUD',
-        relevance_v3: 'true',
+        relevance_v4: 'true',
         free_tier_mode: expect.any(String),
         model_state: 'not_downloaded',
         network_connected: 'true',

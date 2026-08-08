@@ -123,7 +123,18 @@ export const FEED_WINDOW_MS = SCORE_PROPAGATION_LOOKBACK_MS;
  *  `REASON_RELEVANCE_THRESHOLD` (lib/services/inference-results.ts). */
 export const RENDER_GATE = 0.4;
 
-/** Render gate while relevance v3 is scoring — judge-calibrated on the
+/** Render gate for a row that relevance v3 SCORED.
+ *
+ *  THE V3 SCORER IS RETIRED — nothing produces a score at this gate any more.
+ *  This constant and {@link gateForRow} survive it on purpose: a device that had
+ *  the v3 beta on still holds v3-scored rows for up to the 48h feed window, and
+ *  those rows are never re-scored. Judging them at 0.4 would flood the feed with
+ *  exactly the ~50%-junk band the A/B below measured. The column that carries
+ *  the vintage (`article_suggestions.scored_with_v3`) is kept for the same
+ *  reason — see `lib/database/schema.ts`. When the last v3-scored row ages out
+ *  of every device, this and its column can go; not before.
+ *
+ *  Original calibration — judge-calibrated on the
  *  2026-08-05 two-sim A/B (321 blind-judged articles): v3's continuous scores
  *  spread instead of piling at the buckets, so the shared 0.4 gate admits
  *  roughly twice v1's volume at ~50% judge-rated junk. At 0.55 the v3 feed
@@ -149,12 +160,12 @@ export const V3_RENDER_GATE = 0.55;
  * The render gate for ONE row, chosen by the scorer that actually produced its
  * score rather than by the current flag.
  *
- * WHY PER ROW. `effectiveRenderGate()` below answers "which scorer is active
- * NOW?", which is the wrong question for a row that was scored an hour ago.
- * Scored rows live for 48h (`FEED_WINDOW_MS`) and are never re-scored, so the
- * moment the v3 flag flips the device holds a MIXTURE of vintages and a single
- * global gate re-judges every one of them against a threshold calibrated for a
- * scorer most of them never saw.
+ * WHY PER ROW. `effectiveRenderGate()` below answers "what gate does a score
+ * written NOW get?", which is the wrong question for a row scored an hour ago.
+ * Scored rows live for 48h (`FEED_WINDOW_MS`) and are never re-scored, so a
+ * device that ran the v3 beta holds a MIXTURE of vintages, and a single global
+ * gate re-judges every one of them against a threshold calibrated for a scorer
+ * most of them never saw. Retiring v3 did not retire its rows.
  *
  * That is not a symmetric risk. v1's relevance is QUANTISED — measured on the
  * 348-row gold set (`harness-local/fixtures/goldset-348.json`) it takes just 25
@@ -189,27 +200,27 @@ export function relevancePassesGate(s: Pick<ForYouSuggestion, 'scoredWithV3' | '
   return (s.relevance ?? 0) >= gateForRow(s);
 }
 
-/** The effective render gate: V3_RENDER_GATE while the v3 scorer is active,
- *  RENDER_GATE otherwise. Read via getState (not a hook) — selectors here are
- *  plain functions, and the flag flips only from the Mera Protocol screen.
+/** The effective render gate for rows scored FROM NOW ON: always
+ *  {@link RENDER_GATE} (0.4).
  *
- *  SCOPE: this is the gate for rows scored FROM NOW ON — i.e. what the pipeline
- *  should stamp and what a diagnostic means by "the current gate". It is NOT
- *  the right thing to compare an existing row against; use {@link gateForRow}
- *  / {@link relevancePassesGate} for that. */
+ *  It used to return {@link V3_RENDER_GATE} whenever the v3 beta was on, because
+ *  v3's continuous blended score needed the tighter gate. v3 is retired; the
+ *  switch now selects v4, which is the LEGACY path — v1-vintage quantised
+ *  scores, calibrated against 0.4. Returning 0.55 for a v4-scored row would
+ *  delete the whole 0.4 tier the moment the toggle went on, with nothing to
+ *  re-score it back (on `goldset-348`, 25 rows sit at EXACTLY 0.4 — 21.6% of
+ *  what v1 admits at its own gate).
+ *
+ *  No store read is left here, so this is now a constant. Kept as a FUNCTION
+ *  deliberately: it is the named answer to "what gate does a fresh score get",
+ *  and its callers (diagnostics, the pipeline) should keep asking that question
+ *  rather than inlining a literal.
+ *
+ *  SCOPE unchanged: this is NOT the right thing to compare an EXISTING row
+ *  against — v3-scored rows can still be on-device for up to the 48h window.
+ *  Use {@link gateForRow} / {@link relevancePassesGate} for that. */
 export function effectiveRenderGate(): number {
-  try {
-    // Lazy require: keeps this module's static import graph free of the
-    // protocol store (mirrors read-story-filter's pattern for jest suites
-    // that mock neither).
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { useMeraProtocolStore } = require('@/lib/stores/mera-protocol-store');
-    return useMeraProtocolStore.getState().relevanceV3 === true
-      ? V3_RENDER_GATE
-      : RENDER_GATE;
-  } catch {
-    return RENDER_GATE;
-  }
+  return RENDER_GATE;
 }
 
 const BREAKING_EVENT_TYPES = new Set(['disaster', 'weather', 'conflict']);

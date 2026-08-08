@@ -98,10 +98,15 @@ export interface PipelineBatch {
    *  in flight when this shipped was built with, and what judge-mode/reasonsOnly
    *  batches (no `score:N` calls at all) leave it as. */
   scoreChunkSize?: number;
-  /** Round-3 B1: judge-mode only — the above-threshold subset the judge job was
-   *  built over, in the EXACT order buildJudgeCalls chunked (the `judge:N` decode
-   *  join key). Distinct from candidateIds (which covers every row, incl. the
-   *  sub-threshold rows persisted at submit and never sent to the judge). */
+  /** RETIRED with the judge path. Nothing writes this any more, and nothing
+   *  reads it; it survives only because rows persisted before the v4 migration
+   *  can still carry it and this type has to parse them. Do not repurpose the
+   *  name — a batch written by an older build means something specific by it.
+   *
+   *  It was: judge-mode only, the above-threshold subset the judge job was built
+   *  over, in the exact order `buildJudgeCalls` chunked (the `judge:N` decode
+   *  join key), distinct from candidateIds which covered every row including the
+   *  sub-threshold ones never sent to the judge. */
   judgedIds?: string[];
   /** Current outstanding gateway job; `placeholder-…` while `submitting-*`. */
   requestId?: string;

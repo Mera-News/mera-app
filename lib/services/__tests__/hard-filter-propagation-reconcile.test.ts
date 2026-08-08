@@ -3,7 +3,7 @@
 //
 // The hole this pins: `batchPropagateScores` copies a scored donor's relevance
 // onto its unscored story siblings and marks them terminal `complete`. Those
-// rows never enter computeMathStage/computeAndJudge, which is the ONLY place
+// rows never enter computeMathStage/computeAndScore, which is the ONLY place
 // `screenHardSuppressions` runs during scoring. So a newly-synced article that
 // an active hard filter blocks could inherit a passing (> 0.3) score from a
 // sibling and render — while the UI badges the filter "Blocked / Never show me

@@ -197,12 +197,12 @@ export function chunk<T>(arr: T[], size: number): T[][] {
  *   0.8 ≤ raw ≤ 1.0           → HIGH      (set to highPriorityScore)
  *   raw >  1.0                → EMERGENCY (set to emergencyPriorityScore)
  *
- * LEGACY PATH ONLY. The RELEVANCE_V3 path persists the continuous
- * {@link blendToScore} value and does NOT call this (same skip precedent as the
- * RELEVANCE_V2 branch in scoring-pipeline.ts) — collapsing a continuous score
- * onto four representative values is the compression v3 exists to remove. The
- * cutoffs here and in `bandOf` are the same numbers, so a v3 score still lands
- * in the band its value implies.
+ * This is the ONLY scoring path now, so this always runs. (The v3 scorer skipped
+ * it — it persisted a continuous blended score, and collapsing that onto four
+ * representative values was the compression v3 existed to remove. v3 is retired;
+ * v4 is this path, and its scores are quantised to these four values again.
+ * That is exactly why the render gate is 0.4 and not v3's 0.55 — see
+ * `stores/fact-rows-selector::effectiveRenderGate`.)
  */
 export function bucketScores(
   scoreMap: Map<string, number>,
@@ -218,50 +218,6 @@ export function bucketScores(
       scoreMap.set(id, config.mediumPriorityScore);
     else scoreMap.set(id, config.lowPriorityScore);
   }
-}
-
-// --- RELEVANCE v3 — two-axis blend ---------------------------------------
-
-/** Interest-leaning blend weights (user decision, 2026-08-05): a strong stated
- *  interest match carries most of the score, personal consequence lifts it. */
-const V3_REL_WEIGHT = 0.65;
-const V3_IMPACT_WEIGHT = 0.35;
-
-/**
- * Map the v3 model's two 0–100 axes onto the SAME 0.05–1.10 persisted band the
- * legacy path, the buckets, the gates, and the eval contracts already use:
- *
- *   score = clamp(BASE_OFFSET + BASE_SLOPE · ((0.65·rel + 0.35·impact) / 100),
- *                 BASE_MIN, BASE_MAX)
- *         = clamp(0.05 + 1.05 · (weighted/100), 0.05, 1.10)
- *
- * The offset/slope are deliberately the math engine's own affinity→raw mapping
- * (BASE_OFFSET/BASE_SLOPE/BASE_MIN/BASE_MAX in `scoringEngine`), so an LLM score
- * and a math score are expressed on one axis rather than two that merely look
- * alike. The literals are inlined rather than read from config because this is
- * the DEFINITION of the v3 score — the shared contract every other agent codes
- * against — not a tunable; calibration must not be able to move it out from
- * under the band cutoffs.
- *
- * Landmarks (worth keeping in mind when reading prompt anchors):
- *   weighted 33.3 → 0.400 (the render gate / discardFloor)
- *   weighted 52.4 → 0.600 (MEDIUM)
- *   weighted 71.4 → 0.800 (HIGH)
- *   weighted 100  → 1.100 (ceiling; EMERGENCY needs > 1.0, i.e. weighted > 90.5)
- *
- * Unlike the legacy path this value is persisted CONTINUOUSLY — `bucketScores`
- * is not applied on the v3 path — which is the whole point: 90 rows tied at 0.6
- * cannot be ranked.
- *
- * `rel` and `impact` are the model's integers; non-finite inputs are treated as
- * 0 so a half-parsed pair can never produce NaN in the score map.
- */
-export function blendToScore(rel: number, impact: number): number {
-  const r = Number.isFinite(rel) ? Math.max(0, Math.min(100, rel)) : 0;
-  const i = Number.isFinite(impact) ? Math.max(0, Math.min(100, impact)) : 0;
-  const weighted = V3_REL_WEIGHT * r + V3_IMPACT_WEIGHT * i;
-  const mapped = 0.05 + 1.05 * (weighted / 100);
-  return Math.max(0.05, Math.min(1.1, mapped));
 }
 
 // --- Batch scoring + reason generation ---

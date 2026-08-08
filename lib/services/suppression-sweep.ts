@@ -34,7 +34,7 @@
 //
 // P9 — WHY THE SCOPED VARIANT EXISTS. `batchPropagateScores` copies a scored
 // donor's relevance/reason onto its unscored siblings and marks them terminal
-// `complete`. Those rows never enter computeMathStage/computeAndJudge, which is
+// `complete`. Those rows never enter computeMathStage/computeAndScore, which is
 // where `screenHardSuppressions` runs — so a hard-blocked article could inherit
 // a passing score and render, defeating the "Blocked / never show me these at
 // all" promise. Reconciling at the propagation callers closes that hole with

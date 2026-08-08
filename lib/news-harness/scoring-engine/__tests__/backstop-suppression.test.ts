@@ -13,7 +13,7 @@
 import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
 import type { LlmPort } from '../../core/ports';
 import type { ScoringCandidate } from '../../core/types';
-import { computeAndJudge, type StageCandidate } from '../run-stage';
+import { computeAndScore, type StageCandidate } from '../run-stage';
 import type { PersonaScoringContext, SoftSuppression } from '../persona-context';
 import type { ScoredCandidateInput } from '../relevance';
 
@@ -92,7 +92,7 @@ async function scoreOne(
   over: Partial<ScoredCandidateInput> = {},
 ): Promise<number | undefined> {
   const stage = [stageCandidate(over)];
-  const res = await computeAndJudge(
+  const res = await computeAndScore(
     stage,
     persona,
     fixedScoreLlm([LLM_SCORE]),
@@ -143,7 +143,7 @@ describe('backstop path — soft suppression penalty', () => {
         })),
       complete: async () => '',
     };
-    const res = await computeAndJudge(
+    const res = await computeAndScore(
       [stageCandidate()],
       personaWith([sup({ keywords: ['nvidia'] }), sup({ keywords: ['gpu'] })]),
       llm,
@@ -189,7 +189,7 @@ describe('backstop path — soft suppression penalty', () => {
       complete: async () => '',
     };
     const persona = personaWith([sup({ keywords: ['nvidia'] })]);
-    const res = await computeAndJudge(
+    const res = await computeAndScore(
       [stageCandidate()],
       persona,
       failing,
@@ -203,7 +203,7 @@ describe('backstop path — soft suppression penalty', () => {
   });
 
   it('a HARD filter still EXCLUDES rather than penalises', async () => {
-    const res = await computeAndJudge(
+    const res = await computeAndScore(
       [stageCandidate()],
       personaWith([], [sup({ keywords: ['nvidia'] })]),
       fixedScoreLlm([LLM_SCORE]),
