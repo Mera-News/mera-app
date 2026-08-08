@@ -3,6 +3,7 @@
 // (resolved from the suggestion row when available) + the article title, so the
 // conversation always shows what it's about. Non-pressable — purely contextual.
 
+import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -11,7 +12,6 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getSuggestionByServerId } from '@/lib/database/services/article-suggestion-service';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -66,11 +66,20 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
             />
           </Box>
         ) : (
-          <Box
-            className="rounded-xl items-center justify-center"
-            style={{ width: 52, height: 52, backgroundColor: 'rgba(237,167,126,0.12)' }}
-          >
-            <MaterialIcons name="article" size={24} color={ACCENT} />
+          // Was its own third fallback style (an accent-tinted box + a
+          // MaterialIcons glyph) — unified onto the shared placeholder used by
+          // every card surface (ArticleCardBase, ArticleCompactCardBase). Two
+          // things made this an easy call rather than a "deliberately keep
+          // it" case: (1) the placeholder is now a monochrome translucent
+          // black wash + white glyph, which sits naturally on this card's own
+          // hardcoded `#1a1a1a` surface — the old warm off-white version
+          // would have clashed here, which is presumably why this card never
+          // adopted it originally; (2) one fewer "no image" visual language
+          // for a user to learn. `size={28}` (default is 40) — this thumbnail
+          // is 52x52 versus the ~112-192px hero/compact-card image regions
+          // the default was tuned for.
+          <Box className="rounded-xl overflow-hidden" style={{ width: 52, height: 52 }}>
+            <ArticleImagePlaceholder size={28} />
           </Box>
         )}
         <VStack className="flex-1" space="xs">

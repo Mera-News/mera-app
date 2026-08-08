@@ -14,7 +14,7 @@ import { Image } from '@/components/ui/image';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import React from 'react';
+import React, { useState } from 'react';
 
 /**
  * ArticleCompactCardBase — the compact card CHROME. Purely presentational:
@@ -93,6 +93,16 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
 }) => {
   const displayTitle = titleEnglish || titleOriginal || '';
   const blurImages = useBlurImagesStore((s) => s.blurImages);
+  // A 404 / timeout on `imageUrl` used to leave an EMPTY column: the guard
+  // below was `imageUrl ? <Image/> : <Placeholder/>`, which only ever looks
+  // at whether a URL was PASSED IN, never at whether it actually loaded.
+  // ArticleCardBase (the full-size hero) already tracks this with its own
+  // `imageFailed` state + `showImage` — mirrored here so every surface that
+  // renders this shared chrome (saved suggestions, related articles, story
+  // timeline, publication history, persona article list) falls back to the
+  // placeholder instead of a blank quarter-width hole.
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = !!imageUrl && !imageFailed;
 
   const surface = (
     <Card
@@ -121,13 +131,14 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               height, and the image just fills whatever that resolves to. Otherwise
               a tall source image stretches the whole row. */}
           <Box className="w-1/4 self-stretch overflow-hidden">
-            {imageUrl ? (
+            {showImage ? (
               <Image
-                source={{ uri: imageUrl }}
+                source={{ uri: imageUrl! }}
                 alt={displayTitle}
                 className="absolute inset-0 w-full h-full"
                 resizeMode="cover"
                 recyclingKey={recyclingKey}
+                onError={() => setImageFailed(true)}
                 blurRadius={blurImages ? 24 : undefined}
                 // Decorative, and these arrive by the screenful — yield decode
                 // work to whatever the user is waiting on. See the longer note
