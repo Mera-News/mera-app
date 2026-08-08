@@ -1554,8 +1554,8 @@
     "retry": "Opnieuw proberen"
   },
   "tutorials": {
-    "entryRow": "Welkom bij mera",
-    "menuTitle": "Welkom bij mera",
+    "entryRow": "Welkom bij Mera",
+    "menuTitle": "Welkom bij Mera",
     "menuSubtitle": "Korte gidsen over hoe deze app werkt. Begin overal.",
     "sectionBasic": "Start hier",
     "sectionAdvanced": "Ga dieper",
@@ -1575,7 +1575,7 @@
     "continueAnyway": "Toch doorgaan",
     "slideProgress": "Kaart {{current}} van {{total}}",
     "askMera": "Vraag Mera",
-    "chatIntro": "Vraag me alles over hoe mera werkt. Ik kan het uitleggen, maar kan niets van hier uit veranderen.",
+    "chatIntro": "Vraag me alles over hoe Mera werkt. Ik kan het uitleggen, maar kan niets van hier uit veranderen.",
     "launchButton": "Maak de rondleiding",
     "hintReveal": "Tik op elk.",
     "hintRevealSome": "Tik op minstens {{count}}.",
@@ -1588,12 +1588,12 @@
     "sortDone": "Dat zijn ze allemaal.",
     "chapters": {
       "welcome": {
-        "title": "Welkom bij mera",
+        "title": "Welkom bij Mera",
         "subtitle": "Wat deze app is, in één minuut.",
         "slides": {
           "what": {
             "headline": "Een nieuwsapp die met jou begint",
-            "body": "De meeste nieuwsapps beginnen met het nieuws en hopen dat het bij je past. mera begint aan het andere uiteinde: het leert een beetje over je leven, gaat dan op zoek naar de verhalen die het raken."
+            "body": "De meeste nieuwsapps beginnen met het nieuws en hopen dat het bij je past. Mera begint aan het andere uiteinde: het leert een beetje over je leven, gaat dan op zoek naar de verhalen die het raken."
           },
           "not-a-timeline": {
             "headline": "Geen tijdlijn",
@@ -1618,7 +1618,7 @@
             "body": "Het is echt zo kort.",
             "steps": {
               "0": "Je zegt een paar ware dingen over je leven.",
-              "1": "mera verandert ze in dingen om naar te zoeken.",
+              "1": "Mera verandert ze in dingen om naar te zoeken.",
               "2": "Het leest het dagnieuws en houdt wat past."
             }
           },
@@ -1642,7 +1642,7 @@
           },
           "begin": {
             "headline": "Klaar wanneer jij het bent",
-            "body": "Meld je aan en mera vraagt je een paar dingen. Er zijn geen foute antwoorden en je kunt later alles veranderen. De rest van deze gidsen wacht in Instellingen."
+            "body": "Meld je aan en Mera vraagt je een paar dingen. Er zijn geen foute antwoorden en je kunt later alles veranderen. De rest van deze gidsen wacht in Instellingen."
           }
         }
       },
@@ -1653,7 +1653,7 @@
           "a-fact-is": {
             "headline": "Een feit is één ware regel",
             "body": "'Ik ben een verpleegster.' 'Ik woon in Utrecht.' 'Ik heb een klein kind.' Kort, waar, over je leven. Dat is het hele idee.",
-            "ask": "Wat telt als feit in mera?"
+            "ask": "Wat telt als feit in Mera?"
           },
           "where-from": {
             "headline": "Waar feiten vandaan komen",
@@ -1733,7 +1733,7 @@
           },
           "order-holds-still": {
             "headline": "De volgorde blijft staan terwijl je leest",
-            "body": "mera werkt de volgorde eenmaal uit, wanneer je de app opent of naar beneden trekt om te vernieuwen, en laat het dan met rust. Niets herordent zich onder je duim halverwege de lijst."
+            "body": "Mera werkt de volgorde eenmaal uit, wanneer je de app opent of naar beneden trekt om te vernieuwen, en laat het dan met rust. Niets herordent zich onder je duim halverwege de lijst."
           },
           "why-this-one": {
             "headline": "Waarom deze?",
@@ -1742,7 +1742,7 @@
           },
           "caught-up": {
             "headline": "Uitputting is prima",
-            "body": "Als er niets nieuws meer over is, zegt mera dat en stopt. Het zal de lijst niet opvullen om je te laten scrollen. Alles wat je al hebt gelezen zit nog beneden, als je het wilt."
+            "body": "Als er niets nieuws meer over is, zegt Mera dat en stopt. Het zal de lijst niet opvullen om je te laten scrollen. Alles wat je al hebt gelezen zit nog beneden, als je het wilt."
           }
         }
       },
@@ -1836,7 +1836,7 @@
           "what-we-keep": {
             "headline": "Wat we houden",
             "body": "Je inlog-e-mail. Welk abonnement je hebt. Een dagelijks aantal geanalyseerde verhalen. De onderwerpsfrasen worden alleen per tekst gecachet, met niets dat opneemt wie ernaar vroeg en drops na veertien dagen ongebruikt.",
-            "ask": "Wat slaat mera op haar servers over mij op?"
+            "ask": "Wat slaat Mera op haar servers over mij op?"
           }
         }
       },
@@ -1877,7 +1877,7 @@
           },
           "the-timeline": {
             "headline": "Het verzamelt, het zeurt niet",
-            "body": "Nieuwe ontwikkelingen verzamelen op de eigen tijdlijn van het verhaal met een klein getal ernaast. Als het verhaal stil wordt, zegt mera dat in plaats van een update uit te vinden om de ruimte te vullen."
+            "body": "Nieuwe ontwikkelingen verzamelen op de eigen tijdlijn van het verhaal met een klein getal ernaast. Als het verhaal stil wordt, zegt Mera dat in plaats van een update uit te vinden om de ruimte te vullen."
           },
           "stop-following": {
             "headline": "Stoppen is één tik",
@@ -1892,7 +1892,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Opzettelijk niet over jou",
-            "body": "Verkennen is de enige plaats mera niets personaliseerd. Geen scoring, geen redenen, niets geleerd van wat je hier opent. Gewoon wat een land's nieuwskamers aanvoeren, in hun volgorde.",
+            "body": "Verkennen is de enige plaats Mera niets personaliseerd. Geen scoring, geen redenen, niets geleerd van wat je hier opent. Gewoon wat een land's nieuwskamers aanvoeren, in hun volgorde.",
             "ask": "Waarom is het Verkennen tabblad niet gepersonaliseerd?"
           },
           "the-chips": {
@@ -1900,7 +1900,7 @@
             "body": "Ze zijn gebouwd voor je in plaats van gekozen door jou.",
             "steps": {
               "0": "Wereld komt eerst, altijd.",
-              "1": "Dan je eigen land en plaatsen die mera weet, en daarna elk land dat je zelf hebt toegevoegd."
+              "1": "Dan je eigen land en plaatsen die Mera weet, en daarna elk land dat je zelf hebt toegevoegd."
             }
           },
           "the-plus-chip": {
@@ -1927,7 +1927,7 @@
           },
           "hide-a-chip": {
             "headline": "Te veel chips",
-            "body": "Druk en houd een chip die je niet wilt en deze gaat weg. mera bouwt deze uit plaatsen die het kent, dus als er steeds één terugkomt, is de plaats erachter nog steeds in je profiel.",
+            "body": "Druk en houd een chip die je niet wilt en deze gaat weg. Mera bouwt deze uit plaatsen die het kent, dus als er steeds één terugkomt, is de plaats erachter nog steeds in je profiel.",
             "ask": "Hoe word ik een landchip in Verkennen kwijt?"
           }
         }
@@ -2091,7 +2091,7 @@
           },
           "headline-cull": {
             "headline": "Sommige verhalen bereiken de wijzerplaat nooit",
-            "body": "Naast je eigen verhalen haalt mera's belangrijkste koppen van een land. Een topkop die laag voor je scoort wordt compleet verwijderd in plaats van onderaan geparkeerd. Een kopje bestaat om 'dit telt hier' te zeggen, en een laag scorend is gewoon ruis. Verhalen die bij je eigen interesses passen worden nooit op deze manier verwijderd.",
+            "body": "Naast je eigen verhalen haalt Mera's belangrijkste koppen van een land. Een topkop die laag voor je scoort wordt compleet verwijderd in plaats van onderaan geparkeerd. Een kopje bestaat om 'dit telt hier' te zeggen, en een laag scorend is gewoon ruis. Verhalen die bij je eigen interesses passen worden nooit op deze manier verwijderd.",
             "ask": "Waarom zie ik minder algemene koppen dan verhalen over mijn interesses?"
           }
         }
@@ -2149,7 +2149,7 @@
           },
           "written-down": {
             "headline": "Elke wijziging wordt opgeschreven",
-            "body": "Toegepaste wijzigingen worden opgenomen met wat het ervoor was, wat het werd, en waar de wijziging vandaan kwam: chat, feedback, een voorstel, of jij. Niets mera doet aan je profiel is onzichtbaar."
+            "body": "Toegepaste wijzigingen worden opgenomen met wat het ervoor was, wat het werd, en waar de wijziging vandaan kwam: chat, feedback, een voorstel, of jij. Niets Mera doet aan je profiel is onzichtbaar."
           },
           "take-it-back": {
             "headline": "En de meeste kunnen teruggenomen worden",

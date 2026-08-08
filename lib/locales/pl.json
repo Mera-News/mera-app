@@ -1580,8 +1580,8 @@
     "retry": "Spróbuj ponownie"
   },
   "tutorials": {
-    "entryRow": "Witaj w mera",
-    "menuTitle": "Witaj w mera",
+    "entryRow": "Witaj w Mera",
+    "menuTitle": "Witaj w Mera",
     "menuSubtitle": "Krótkie przewodniki, jak ta aplikacja działa. Zacznij od dowolnego miejsca.",
     "sectionBasic": "Zacznij tutaj",
     "sectionAdvanced": "Idź głębiej",
@@ -1601,7 +1601,7 @@
     "continueAnyway": "Kontynuuj mimo to",
     "slideProgress": "Karta {{current}} z {{total}}",
     "askMera": "Zapytaj Mera",
-    "chatIntro": "Zapytaj mnie o cokolwiek dotyczącego działania mera. Mogę wyjaśnić, ale nie mogę nic stąd zmienić.",
+    "chatIntro": "Zapytaj mnie o cokolwiek dotyczącego działania Mera. Mogę wyjaśnić, ale nie mogę nic stąd zmienić.",
     "launchButton": "Weź udział w wycieczce",
     "hintReveal": "Dotknij każdy.",
     "hintRevealSome": "Dotknij co najmniej {{count}}.",
@@ -1614,12 +1614,12 @@
     "sortDone": "To wszystkie.",
     "chapters": {
       "welcome": {
-        "title": "Witaj w mera",
+        "title": "Witaj w Mera",
         "subtitle": "Co to za aplikacja, w jedną minutę.",
         "slides": {
           "what": {
             "headline": "Aplikacja wiadomości, która zaczyna od Ciebie",
-            "body": "Większość aplikacji wiadomości zaczyna od wiadomości i ma nadzieję, że część z nich pasuje. mera zaczyna od drugiego końca: uczy się trochę o Twoim życiu, a następnie idzie szukać historii, które go dotyczą."
+            "body": "Większość aplikacji wiadomości zaczyna od wiadomości i ma nadzieję, że część z nich pasuje. Mera zaczyna od drugiego końca: uczy się trochę o Twoim życiu, a następnie idzie szukać historii, które go dotyczą."
           },
           "not-a-timeline": {
             "headline": "Nie oś czasu",
@@ -1644,7 +1644,7 @@
             "body": "Naprawdę to takie krótkie.",
             "steps": {
               "0": "Mówisz kilka prawdziwych rzeczy o swoim życiu.",
-              "1": "mera zamienia je w rzeczy do szukania.",
+              "1": "Mera zamienia je w rzeczy do szukania.",
               "2": "Czyta dzisiejszą wiadomość i przechowuje to, co pasuje."
             }
           },
@@ -1668,7 +1668,7 @@
           },
           "begin": {
             "headline": "Gotowy, kiedy chcesz",
-            "body": "Zaloguj się i mera zapyta Cię o kilka rzeczy. Nie ma błędnych odpowiedzi i możesz zmienić to wszystko później. Pozostałe przewodniki czekają w Ustawieniach."
+            "body": "Zaloguj się i Mera zapyta Cię o kilka rzeczy. Nie ma błędnych odpowiedzi i możesz zmienić to wszystko później. Pozostałe przewodniki czekają w Ustawieniach."
           }
         }
       },
@@ -1679,7 +1679,7 @@
           "a-fact-is": {
             "headline": "Fakt to jedna prawdziwa linia",
             "body": "\"Jestem pielęgniarką.\" \"Mieszkam w Utrechcie.\" \"Mam małe dziecko.\" Krótko, prawdziwie, o Twoim życiu. To cała idea.",
-            "ask": "Co liczy się za fakt w mera?"
+            "ask": "Co liczy się za fakt w Mera?"
           },
           "where-from": {
             "headline": "Skąd pochodzą fakty",
@@ -1759,7 +1759,7 @@
           },
           "order-holds-still": {
             "headline": "Porządek trzyma się w miejscu podczas czytania",
-            "body": "mera opracowuje porządek raz, gdy otworzysz aplikację lub pociągniesz w dół, aby odświeżyć, a następnie zostawia to w spokoju. Nic się nie zmienia pod kciukami w połowie listy."
+            "body": "Mera opracowuje porządek raz, gdy otworzysz aplikację lub pociągniesz w dół, aby odświeżyć, a następnie zostawia to w spokoju. Nic się nie zmienia pod kciukami w połowie listy."
           },
           "why-this-one": {
             "headline": "Dlaczego ten?",
@@ -1768,12 +1768,12 @@
           },
           "caught-up": {
             "headline": "Uruchomienie jest OK",
-            "body": "Gdy nie ma już nic nowego, mera to mówi i się zatrzymuje. Nie będzie podszycać listy, aby Cię trzymać w przewijaniu. Wszystko, co już przeczytałeś, jest poniżej, jeśli chcesz."
+            "body": "Gdy nie ma już nic nowego, Mera to mówi i się zatrzymuje. Nie będzie podszycać listy, aby Cię trzymać w przewijaniu. Wszystko, co już przeczytałeś, jest poniżej, jeśli chcesz."
           }
         }
       },
       "teaching": {
-        "title": "Nauczanie mera",
+        "title": "Nauczanie Mera",
         "subtitle": "Dwa kciuki, jeden powód i cofnięcie.",
         "slides": {
           "two-thumbs": {
@@ -1862,7 +1862,7 @@
           "what-we-keep": {
             "headline": "Co przechowujemy",
             "body": "Twój e-mail logowania. Jaki plan masz. Liczba historii przeanalizowanych dziennie. Frazy tematyczne są buforowane tylko do ich tekstu, nic nie zapisuje, kto je zapytał, i upuszczone po czternastu dniach nieużycia.",
-            "ask": "Co mera przechowuje o mnie na swoich serwerach?"
+            "ask": "Co Mera przechowuje o mnie na swoich serwerach?"
           }
         }
       },
@@ -1903,7 +1903,7 @@
           },
           "the-timeline": {
             "headline": "Zbiera się, nie narzeka",
-            "body": "Nowe rozmaity zbierają się na własnej osi czasu historii z małą liczbą obok. Jeśli historia stichnie, mera to mówi raczej niż wymyśli aktualizację, aby wypełnić przestrzeń."
+            "body": "Nowe rozmaity zbierają się na własnej osi czasu historii z małą liczbą obok. Jeśli historia stichnie, Mera to mówi raczej niż wymyśli aktualizację, aby wypełnić przestrzeń."
           },
           "stop-following": {
             "headline": "Zatrzymanie to jeden dotyk",
@@ -1918,7 +1918,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Celowo nie o Tobie",
-            "body": "Odkrywaj to jedno miejsce mera nie personalizuje nic. Bez punktowania, bez powodów, nic nauczonego z tego, co otwierasz tutaj. Po prostu to, co redakcje kraju prowadzą, w ich porządku.",
+            "body": "Odkrywaj to jedno miejsce Mera nie personalizuje nic. Bez punktowania, bez powodów, nic nauczonego z tego, co otwierasz tutaj. Po prostu to, co redakcje kraju prowadzą, w ich porządku.",
             "ask": "Dlaczego karta Odkrywaj nie jest spersonalizowana?"
           },
           "the-chips": {
@@ -1926,7 +1926,7 @@
             "body": "Są zbudowane dla Ciebie, a nie wybierane przez Ciebie.",
             "steps": {
               "0": "Świat przychodzi pierwszy, zawsze.",
-              "1": "Potem Twój własny kraj i wszystkie miejsca, które mera zna, a potem każdy kraj, który sam dodałeś."
+              "1": "Potem Twój własny kraj i wszystkie miejsca, które Mera zna, a potem każdy kraj, który sam dodałeś."
             }
           },
           "the-plus-chip": {
@@ -1953,7 +1953,7 @@
           },
           "hide-a-chip": {
             "headline": "Za wiele żetonów",
-            "body": "Naciśnij i przytrzymaj żeton, którego nie chcesz, a znika. mera buduje to z miejsc, które zna, więc jeśli jeden wciąż wraca, miejsce za nim jest wciąż w Twoim profilu.",
+            "body": "Naciśnij i przytrzymaj żeton, którego nie chcesz, a znika. Mera buduje to z miejsc, które zna, więc jeśli jeden wciąż wraca, miejsce za nim jest wciąż w Twoim profilu.",
             "ask": "Jak pozbyć się żetonu kraju w Odkrywaniu?"
           }
         }
@@ -2117,7 +2117,7 @@
           },
           "headline-cull": {
             "headline": "Niektóre historie nigdy nie osiągają pokrętła",
-            "body": "Obok Twoich własnych historii mera ciąga góry nagłówki kraju. Górny nagłówek, który zdobywa się nisko dla Ciebie, jest upuszczany wręcz zamiast parkowany u dołu. Nagłówek istnieje, aby powiedzieć 'to liczy się tutaj', a nisko punktowany jest tylko szumem. Historie dopasowane do Twoich własnych zainteresowań nigdy nie są upuszczane w ten sposób.",
+            "body": "Obok Twoich własnych historii Mera ciąga góry nagłówki kraju. Górny nagłówek, który zdobywa się nisko dla Ciebie, jest upuszczany wręcz zamiast parkowany u dołu. Nagłówek istnieje, aby powiedzieć 'to liczy się tutaj', a nisko punktowany jest tylko szumem. Historie dopasowane do Twoich własnych zainteresowań nigdy nie są upuszczane w ten sposób.",
             "ask": "Dlaczego widzę mniej ogólnych nagłówków niż historii o moich zainteresowaniach?"
           }
         }
@@ -2175,7 +2175,7 @@
           },
           "written-down": {
             "headline": "Każda zmiana jest zapisywana",
-            "body": "Zastosowane zmiany są rejestrowane z tym, co było przed, co się stało i skąd zmiana pochodzi: czat, opinia, sugestia lub ty. Nic mera nie robi z Twoim profilem jest niewidoczne."
+            "body": "Zastosowane zmiany są rejestrowane z tym, co było przed, co się stało i skąd zmiana pochodzi: czat, opinia, sugestia lub ty. Nic Mera nie robi z Twoim profilem jest niewidoczne."
           },
           "take-it-back": {
             "headline": "I większość tego można cofnąć",

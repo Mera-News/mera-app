@@ -1554,8 +1554,8 @@
     "retry": "Riprova"
   },
   "tutorials": {
-    "entryRow": "Benvenuto a mera",
-    "menuTitle": "Benvenuto a mera",
+    "entryRow": "Benvenuto a Mera",
+    "menuTitle": "Benvenuto a Mera",
     "menuSubtitle": "Brevi guide su come pensa questa app. Inizia da qualsiasi punto.",
     "sectionBasic": "Inizia qui",
     "sectionAdvanced": "Vai più in profondità",
@@ -1575,7 +1575,7 @@
     "continueAnyway": "Continua comunque",
     "slideProgress": "Carta {{current}} di {{total}}",
     "askMera": "Chiedi a Mera",
-    "chatIntro": "Chiedimi qualsiasi cosa su come funziona mera. Posso spiegare, ma non posso cambiare niente da qui.",
+    "chatIntro": "Chiedimi qualsiasi cosa su come funziona Mera. Posso spiegare, ma non posso cambiare niente da qui.",
     "launchButton": "Fai il tour",
     "hintReveal": "Tocca ognuno.",
     "hintRevealSome": "Tocca almeno {{count}}.",
@@ -1588,7 +1588,7 @@
     "sortDone": "Sono tutti.",
     "chapters": {
       "welcome": {
-        "title": "Benvenuto a mera",
+        "title": "Benvenuto a Mera",
         "subtitle": "Cosa è questa app, in un minuto.",
         "slides": {
           "what": {
@@ -1642,7 +1642,7 @@
           },
           "begin": {
             "headline": "Pronto quando lo sei tu",
-            "body": "Accedi e mera ti chiederà un paio di cose. Non ci sono risposte sbagliate e puoi cambiare qualsiasi cosa dopo. Il resto di queste guide ti sta aspettando in Impostazioni."
+            "body": "Accedi e Mera ti chiederà un paio di cose. Non ci sono risposte sbagliate e puoi cambiare qualsiasi cosa dopo. Il resto di queste guide ti sta aspettando in Impostazioni."
           }
         }
       },
@@ -1653,7 +1653,7 @@
           "a-fact-is": {
             "headline": "Un fatto è una riga vera",
             "body": "\"Sono un'infermiera.\" \"Vivo a Utrecht.\" \"Ho un bambino piccolo.\" Breve, vero, sulla tua vita. È l'intera idea.",
-            "ask": "Cosa conta come un fatto in mera?"
+            "ask": "Cosa conta come un fatto in Mera?"
           },
           "where-from": {
             "headline": "Da dove vengono i fatti",
@@ -1742,12 +1742,12 @@
           },
           "caught-up": {
             "headline": "Esaurire è fine",
-            "body": "Quando non c'è niente di nuovo lasciato, mera lo dice e si ferma. Non imbottirà l'elenco per farvi scorrere. Tutto quello che hai già letto è ancora sotto, se lo vuoi."
+            "body": "Quando non c'è niente di nuovo lasciato, Mera lo dice e si ferma. Non imbottirà l'elenco per farvi scorrere. Tutto quello che hai già letto è ancora sotto, se lo vuoi."
           }
         }
       },
       "teaching": {
-        "title": "Insegnare a mera",
+        "title": "Insegnare a Mera",
         "subtitle": "Due pollici, una ragione, e un annulla.",
         "slides": {
           "two-thumbs": {
@@ -1836,7 +1836,7 @@
           "what-we-keep": {
             "headline": "Cosa conserviamo",
             "body": "La tua email di accesso. Quale piano sei. Un conteggio per giorno di storie analizzate. Le frasi di argomenti sono messe in cache solo dal loro testo, senza niente che registri chi le ha chieste, e cadute dopo quattordici giorni senza usi.",
-            "ask": "Cosa conserva mera su di me sui suoi server?"
+            "ask": "Cosa conserva Mera su di me sui suoi server?"
           }
         }
       },
@@ -1877,7 +1877,7 @@
           },
           "the-timeline": {
             "headline": "Si raccoglie, non ti infastidisce",
-            "body": "I nuovi sviluppi si raccolgono sulla cronologia della storia con un piccolo conteggio accanto. Se la storia diventa silenziosa, mera lo dice piuttosto che inventare un aggiornamento per riempire lo spazio."
+            "body": "I nuovi sviluppi si raccolgono sulla cronologia della storia con un piccolo conteggio accanto. Se la storia diventa silenziosa, Mera lo dice piuttosto che inventare un aggiornamento per riempire lo spazio."
           },
           "stop-following": {
             "headline": "Fermarsi è un tocco",
@@ -1892,7 +1892,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Deliberatamente non su di te",
-            "body": "Esplora è l'unico luogo in cui mera non personalizza niente. Nessun punteggio, nessuna ragione, nulla imparato da quello che apri qui. Solo cosa i giornali di un paese stanno conducendo con, nel loro ordine.",
+            "body": "Esplora è l'unico luogo in cui Mera non personalizza niente. Nessun punteggio, nessuna ragione, nulla imparato da quello che apri qui. Solo cosa i giornali di un paese stanno conducendo con, nel loro ordine.",
             "ask": "Perché la scheda Esplora non è personalizzata?"
           },
           "the-chips": {
@@ -1900,7 +1900,7 @@
             "body": "Sono costruiti per te piuttosto che scelti da te.",
             "steps": {
               "0": "Il mondo viene per primo, sempre.",
-              "1": "Allora il tuo paese e qualsiasi luogo mera sa di, e dopo quelli, qualsiasi paese tu hai aggiunto te stesso."
+              "1": "Allora il tuo paese e qualsiasi luogo Mera sa di, e dopo quelli, qualsiasi paese tu hai aggiunto te stesso."
             }
           },
           "the-plus-chip": {
@@ -2017,7 +2017,7 @@
         "slides": {
           "three-shelves": {
             "headline": "Tre scaffali su una schermata",
-            "body": "La schermata Non interessato contiene tutto quello che hai chiesto a mera di tenere indietro.",
+            "body": "La schermata Non interessato contiene tutto quello che hai chiesto a Mera di tenere indietro.",
             "steps": {
               "0": "Parole e cose che hai nascosto.",
               "1": "Argomenti che vedi meno.",
@@ -2091,7 +2091,7 @@
           },
           "headline-cull": {
             "headline": "Alcune storie non raggiungono mai la manopola",
-            "body": "Insieme alle tue storie, mera tira in i titoli principali di un paese. Un titolo principale che punteggia basso per te viene abbandonato del tutto piuttosto che parcheggiato in fondo. Un titolo esiste per dire \"questo importa qui\", e uno a basso punteggio è solo rumore. Le storie abbinate ai tuoi stessi interessi non vengono mai abbandonate in questo modo.",
+            "body": "Insieme alle tue storie, Mera tira in i titoli principali di un paese. Un titolo principale che punteggia basso per te viene abbandonato del tutto piuttosto che parcheggiato in fondo. Un titolo esiste per dire \"questo importa qui\", e uno a basso punteggio è solo rumore. Le storie abbinate ai tuoi stessi interessi non vengono mai abbandonate in questo modo.",
             "ask": "Perché vedo meno titoli generali di storie sui miei interessi?"
           }
         }
@@ -2149,7 +2149,7 @@
           },
           "written-down": {
             "headline": "Ogni cambiamento è scritto",
-            "body": "I cambiamenti applicati sono registrati con quello che era prima, quello che è diventato, e dove è venuto il cambiamento: chat, feedback, un suggerimento, o tu. Niente mera fa al tuo profilo è invisibile."
+            "body": "I cambiamenti applicati sono registrati con quello che era prima, quello che è diventato, e dove è venuto il cambiamento: chat, feedback, un suggerimento, o tu. Niente Mera fa al tuo profilo è invisibile."
           },
           "take-it-back": {
             "headline": "E la maggior parte di esso può essere ripreso",

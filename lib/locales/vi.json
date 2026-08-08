@@ -1555,8 +1555,8 @@
     "retry": "Thử lại"
   },
   "tutorials": {
-    "entryRow": "Chào mừng đến mera",
-    "menuTitle": "Chào mừng đến mera",
+    "entryRow": "Chào mừng đến Mera",
+    "menuTitle": "Chào mừng đến Mera",
     "menuSubtitle": "Hướng dẫn ngắn về cách ứng dụng này hoạt động. Bắt đầu ở bất cứ đâu.",
     "sectionBasic": "Bắt đầu từ đây",
     "sectionAdvanced": "Đi sâu hơn",
@@ -1576,7 +1576,7 @@
     "continueAnyway": "Tiếp tục dù sao",
     "slideProgress": "Thẻ {{current}} trong {{total}}",
     "askMera": "Hỏi Mera",
-    "chatIntro": "Hỏi tôi bất cứ điều gì về cách mera hoạt động. Tôi có thể giải thích, nhưng tôi không thể thay đổi bất cứ điều gì từ đây.",
+    "chatIntro": "Hỏi tôi bất cứ điều gì về cách Mera hoạt động. Tôi có thể giải thích, nhưng tôi không thể thay đổi bất cứ điều gì từ đây.",
     "launchButton": "Tham quan",
     "hintReveal": "Nhấn từng cái một.",
     "hintRevealSome": "Nhấn ít nhất {{count}}.",
@@ -1589,12 +1589,12 @@
     "sortDone": "Đó là tất cả chúng.",
     "chapters": {
       "welcome": {
-        "title": "Chào mừng đến mera",
+        "title": "Chào mừng đến Mera",
         "subtitle": "Ứng dụng này là gì, trong một phút.",
         "slides": {
           "what": {
             "headline": "Một ứng dụng tin tức bắt đầu với bạn",
-            "body": "Hầu hết các ứng dụng tin tức bắt đầu với tin tức và hy vọng một số phù hợp. mera bắt đầu từ đầu kia: nó tìm hiểu một chút về cuộc sống của bạn, sau đó đi tìm các câu chuyện chạm vào nó."
+            "body": "Hầu hết các ứng dụng tin tức bắt đầu với tin tức và hy vọng một số phù hợp. Mera bắt đầu từ đầu kia: nó tìm hiểu một chút về cuộc sống của bạn, sau đó đi tìm các câu chuyện chạm vào nó."
           },
           "not-a-timeline": {
             "headline": "Không phải một dòng thời gian",
@@ -1619,7 +1619,7 @@
             "body": "Nó thực sự ngắn như vậy.",
             "steps": {
               "0": "Bạn nói một vài điều đúng về cuộc sống của bạn.",
-              "1": "mera biến chúng thành những thứ để đi tìm.",
+              "1": "Mera biến chúng thành những thứ để đi tìm.",
               "2": "Nó đọc tin tức trong ngày và giữ lại những gì phù hợp."
             }
           },
@@ -1643,7 +1643,7 @@
           },
           "begin": {
             "headline": "Sẵn sàng khi bạn sẵn sàng",
-            "body": "Đăng nhập và mera sẽ hỏi bạn một vài điều. Không có câu trả lời sai và bạn có thể thay đổi bất cứ điều gì sau này. Phần còn lại của các hướng dẫn này đang chờ trong Cài đặt."
+            "body": "Đăng nhập và Mera sẽ hỏi bạn một vài điều. Không có câu trả lời sai và bạn có thể thay đổi bất cứ điều gì sau này. Phần còn lại của các hướng dẫn này đang chờ trong Cài đặt."
           }
         }
       },
@@ -1654,7 +1654,7 @@
           "a-fact-is": {
             "headline": "Một thông tin là một dòng đúng",
             "body": "'Tôi là một y tá.' 'Tôi sống ở Utrecht.' 'Tôi có một đứa trẻ nhỏ.' Ngắn, đúng, về cuộc sống của bạn. Đó là toàn bộ ý tưởng.",
-            "ask": "Điều gì được tính là một thông tin trong mera?"
+            "ask": "Điều gì được tính là một thông tin trong Mera?"
           },
           "where-from": {
             "headline": "Các thông tin đến từ đâu",
@@ -1734,7 +1734,7 @@
           },
           "order-holds-still": {
             "headline": "Thứ tự giữ vẫn trong khi bạn đọc",
-            "body": "mera tính toán thứ tự một lần, khi bạn mở ứng dụng hoặc kéo xuống để làm mới, và sau đó để nó một mình. Không có gì sắp xếp lại chính nó dưới ngón tay của bạn nửa đường xuống danh sách."
+            "body": "Mera tính toán thứ tự một lần, khi bạn mở ứng dụng hoặc kéo xuống để làm mới, và sau đó để nó một mình. Không có gì sắp xếp lại chính nó dưới ngón tay của bạn nửa đường xuống danh sách."
           },
           "why-this-one": {
             "headline": "Tại sao cái này?",
@@ -1743,12 +1743,12 @@
           },
           "caught-up": {
             "headline": "Chạy hết là tốt",
-            "body": "Khi không có gì mới trái, mera nói vậy và dừng lại. Nó sẽ không đệm danh sách để giữ cho bạn cuộn. Tất cả những gì bạn đã đọc vẫn bên dưới, nếu bạn muốn nó."
+            "body": "Khi không có gì mới trái, Mera nói vậy và dừng lại. Nó sẽ không đệm danh sách để giữ cho bạn cuộn. Tất cả những gì bạn đã đọc vẫn bên dưới, nếu bạn muốn nó."
           }
         }
       },
       "teaching": {
-        "title": "Dạy mera",
+        "title": "Dạy Mera",
         "subtitle": "Hai ngón tay cái, một lý do, và hoàn tác.",
         "slides": {
           "two-thumbs": {
@@ -1878,7 +1878,7 @@
           },
           "the-timeline": {
             "headline": "Nó tập hợp, nó không làm phiền",
-            "body": "Các sự phát triển mới tập hợp trên dòng thời gian của câu chuyện với một số nhỏ bên cạnh nó. Nếu câu chuyện trở nên tĩnh lặng, mera nói như vậy thay vì phát minh một bản cập nhật để lấp chỗ trống."
+            "body": "Các sự phát triển mới tập hợp trên dòng thời gian của câu chuyện với một số nhỏ bên cạnh nó. Nếu câu chuyện trở nên tĩnh lặng, Mera nói như vậy thay vì phát minh một bản cập nhật để lấp chỗ trống."
           },
           "stop-following": {
             "headline": "Dừng là một nhấn",
@@ -1893,7 +1893,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Cố ý không về bạn",
-            "body": "Khám phá là nơi duy nhất mera không cá nhân hóa bất cứ điều gì. Không có chấm điểm, không có lý do, không có gì học từ những gì bạn mở ở đây. Chỉ cần những gì phòng tin của một quốc gia dẫn đầu, trong thứ tự của họ.",
+            "body": "Khám phá là nơi duy nhất Mera không cá nhân hóa bất cứ điều gì. Không có chấm điểm, không có lý do, không có gì học từ những gì bạn mở ở đây. Chỉ cần những gì phòng tin của một quốc gia dẫn đầu, trong thứ tự của họ.",
             "ask": "Tại sao tab Khám phá không được cá nhân hóa?"
           },
           "the-chips": {
@@ -1901,7 +1901,7 @@
             "body": "Chúng được xây dựng cho bạn thay vì được bạn chọn.",
             "steps": {
               "0": "Thế giới đến đầu tiên, luôn luôn.",
-              "1": "Sau đó đất nước của bạn và bất kỳ nơi nào mera biết, và sau những cái đó, bất kỳ quốc gia nào bạn đã thêm."
+              "1": "Sau đó đất nước của bạn và bất kỳ nơi nào Mera biết, và sau những cái đó, bất kỳ quốc gia nào bạn đã thêm."
             }
           },
           "the-plus-chip": {
@@ -1928,7 +1928,7 @@
           },
           "hide-a-chip": {
             "headline": "Quá nhiều chip",
-            "body": "Nhấn và giữ một chip bạn không muốn và nó đi đi. mera xây dựng những cái này từ những nơi nó biết, vì vậy nếu cái không liên tục quay lại, nơi đó vẫn còn trong hồ sơ của bạn.",
+            "body": "Nhấn và giữ một chip bạn không muốn và nó đi đi. Mera xây dựng những cái này từ những nơi nó biết, vì vậy nếu cái không liên tục quay lại, nơi đó vẫn còn trong hồ sơ của bạn.",
             "ask": "Làm cách nào để tôi loại bỏ một chip quốc gia ở Khám phá?"
           }
         }
@@ -2018,7 +2018,7 @@
         "slides": {
           "three-shelves": {
             "headline": "Ba kệ trên một màn hình",
-            "body": "Màn hình Không quan tâm nắm giữ mọi thứ bạn đã yêu cầu mera giữ lại.",
+            "body": "Màn hình Không quan tâm nắm giữ mọi thứ bạn đã yêu cầu Mera giữ lại.",
             "steps": {
               "0": "Từ và những thứ bạn đã ẩn.",
               "1": "Các chủ đề bạn thấy ít hơn.",
@@ -2092,7 +2092,7 @@
           },
           "headline-cull": {
             "headline": "Một số câu chuyện không bao giờ đến chiếc quay số",
-            "body": "Bên cạnh những câu chuyện riêng của bạn, mera kéo vào các tiêu đề hàng đầu của quốc gia. Một tiêu đề hàng đầu mà điểm số thấp cho bạn bị loại bỏ hoàn toàn thay vì đỗi ở phía dưới. Một tiêu đề tồn tại để nói 'điều này quan trọng ở đây', và một điểm số thấp chỉ là tiếng ồn. Những câu chuyện phù hợp với sở thích riêng của bạn không bao giờ bị loại bỏ theo cách này.",
+            "body": "Bên cạnh những câu chuyện riêng của bạn, Mera kéo vào các tiêu đề hàng đầu của quốc gia. Một tiêu đề hàng đầu mà điểm số thấp cho bạn bị loại bỏ hoàn toàn thay vì đỗi ở phía dưới. Một tiêu đề tồn tại để nói 'điều này quan trọng ở đây', và một điểm số thấp chỉ là tiếng ồn. Những câu chuyện phù hợp với sở thích riêng của bạn không bao giờ bị loại bỏ theo cách này.",
             "ask": "Tại sao tôi thấy ít hơn các tiêu đề chung hơn là những câu chuyện về sở thích của tôi?"
           }
         }
@@ -2150,7 +2150,7 @@
           },
           "written-down": {
             "headline": "Mỗi thay đổi được ghi chép lại",
-            "body": "Các thay đổi được áp dụng được ghi lại với những gì nó trước, những gì nó trở thành, và nơi nó đến từ: trò chuyện, phản hồi, một đề xuất, hoặc bạn. Không có gì mera làm cho hồ sơ của bạn là vô hình."
+            "body": "Các thay đổi được áp dụng được ghi lại với những gì nó trước, những gì nó trở thành, và nơi nó đến từ: trò chuyện, phản hồi, một đề xuất, hoặc bạn. Không có gì Mera làm cho hồ sơ của bạn là vô hình."
           },
           "take-it-back": {
             "headline": "Và hầu hết nó có thể được lấy lại",

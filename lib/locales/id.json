@@ -1554,8 +1554,8 @@
     "retry": "Coba lagi"
   },
   "tutorials": {
-    "entryRow": "Selamat datang di mera",
-    "menuTitle": "Selamat datang di mera",
+    "entryRow": "Selamat datang di Mera",
+    "menuTitle": "Selamat datang di Mera",
     "menuSubtitle": "Panduan singkat tentang cara aplikasi ini berpikir. Mulai di mana saja.",
     "sectionBasic": "Mulai di sini",
     "sectionAdvanced": "Pelajari lebih lanjut",
@@ -1575,7 +1575,7 @@
     "continueAnyway": "Lanjutkan saja",
     "slideProgress": "Kartu {{current}} dari {{total}}",
     "askMera": "Tanya Mera",
-    "chatIntro": "Tanyakan apa pun tentang cara kerja mera. Saya dapat menjelaskan, tetapi saya tidak dapat mengubah apa pun dari sini.",
+    "chatIntro": "Tanyakan apa pun tentang cara kerja Mera. Saya dapat menjelaskan, tetapi saya tidak dapat mengubah apa pun dari sini.",
     "launchButton": "Ikuti tur",
     "hintReveal": "Ketuk masing-masing.",
     "hintRevealSome": "Ketuk setidaknya {{count}}.",
@@ -1588,12 +1588,12 @@
     "sortDone": "Itu semua dari mereka.",
     "chapters": {
       "welcome": {
-        "title": "Selamat datang di mera",
+        "title": "Selamat datang di Mera",
         "subtitle": "Apa aplikasi ini, dalam satu menit.",
         "slides": {
           "what": {
             "headline": "Aplikasi berita yang dimulai dengan Anda",
-            "body": "Sebagian besar aplikasi berita dimulai dengan berita dan berharap beberapa cocok. mera dimulai di ujung lain: ia belajar sedikit tentang hidup Anda, kemudian mencari cerita yang menyentuhnya."
+            "body": "Sebagian besar aplikasi berita dimulai dengan berita dan berharap beberapa cocok. Mera dimulai di ujung lain: ia belajar sedikit tentang hidup Anda, kemudian mencari cerita yang menyentuhnya."
           },
           "not-a-timeline": {
             "headline": "Bukan garis waktu",
@@ -1618,7 +1618,7 @@
             "body": "Ini benar-benar sesingkat ini.",
             "steps": {
               "0": "Anda mengatakan beberapa hal yang benar tentang hidup Anda.",
-              "1": "mera mengubahnya menjadi hal-hal untuk dicari.",
+              "1": "Mera mengubahnya menjadi hal-hal untuk dicari.",
               "2": "Ini membaca berita hari itu dan menjaga apa yang cocok."
             }
           },
@@ -1642,7 +1642,7 @@
           },
           "begin": {
             "headline": "Siap saat Anda siap",
-            "body": "Masuk dan mera akan menanyakan Anda beberapa hal. Tidak ada jawaban yang salah dan Anda dapat mengubah apa pun nanti. Panduan lainnya menunggu di Pengaturan."
+            "body": "Masuk dan Mera akan menanyakan Anda beberapa hal. Tidak ada jawaban yang salah dan Anda dapat mengubah apa pun nanti. Panduan lainnya menunggu di Pengaturan."
           }
         }
       },
@@ -1653,7 +1653,7 @@
           "a-fact-is": {
             "headline": "Fakta adalah satu baris yang benar",
             "body": "\"Saya seorang perawat.\" \"Saya tinggal di Utrecht.\" \"Saya punya anak kecil.\" Pendek, benar, tentang hidup Anda. Itulah ide seluruhnya.",
-            "ask": "Apa yang dihitung sebagai fakta di mera?"
+            "ask": "Apa yang dihitung sebagai fakta di Mera?"
           },
           "where-from": {
             "headline": "Di mana fakta berasal",
@@ -1733,7 +1733,7 @@
           },
           "order-holds-still": {
             "headline": "Pesanan tetap diam saat Anda membaca",
-            "body": "mera menjalankan pesanan sekali, ketika Anda membuka aplikasi atau menarik ke bawah untuk menyegarkan, dan kemudian membiarkannya sendiri. Tidak ada yang mengatur ulang dirinya sendiri di bawah jempol Anda setengah jalan ke bawah daftar."
+            "body": "Mera menjalankan pesanan sekali, ketika Anda membuka aplikasi atau menarik ke bawah untuk menyegarkan, dan kemudian membiarkannya sendiri. Tidak ada yang mengatur ulang dirinya sendiri di bawah jempol Anda setengah jalan ke bawah daftar."
           },
           "why-this-one": {
             "headline": "Mengapa yang ini?",
@@ -1742,12 +1742,12 @@
           },
           "caught-up": {
             "headline": "Kehabisan baik-baik saja",
-            "body": "Ketika tidak ada yang baru tersisa, mera mengatakan demikian dan berhenti. Itu tidak akan mengisi daftar untuk membuat Anda terus menggulir. Semuanya yang telah Anda baca masih di bawah, jika Anda mau."
+            "body": "Ketika tidak ada yang baru tersisa, Mera mengatakan demikian dan berhenti. Itu tidak akan mengisi daftar untuk membuat Anda terus menggulir. Semuanya yang telah Anda baca masih di bawah, jika Anda mau."
           }
         }
       },
       "teaching": {
-        "title": "Mengajar mera",
+        "title": "Mengajar Mera",
         "subtitle": "Dua jempol, satu alasan, dan urungkan.",
         "slides": {
           "two-thumbs": {
@@ -1836,7 +1836,7 @@
           "what-we-keep": {
             "headline": "Apa yang kami simpan",
             "body": "Email login Anda. Paket mana yang Anda ikuti. Hitungan per hari cerita yang dianalisis. Frasa topik disimpan dalam cache oleh teks mereka saja, tanpa apa pun mencatat siapa yang memintanya, dan dijatuhkan setelah empat belas hari tidak digunakan.",
-            "ask": "Apa yang disimpan mera tentang saya di servernya?"
+            "ask": "Apa yang disimpan Mera tentang saya di servernya?"
           }
         }
       },
@@ -1877,7 +1877,7 @@
           },
           "the-timeline": {
             "headline": "Itu mengumpulkan, itu tidak mengganggu",
-            "body": "Perkembangan baru mengumpulkan pada garis waktu cerita sendiri dengan hitungan kecil di sebelahnya. Jika cerita menjadi sunyi, mera mengatakan demikian daripada menciptakan pembaruan untuk mengisi ruang."
+            "body": "Perkembangan baru mengumpulkan pada garis waktu cerita sendiri dengan hitungan kecil di sebelahnya. Jika cerita menjadi sunyi, Mera mengatakan demikian daripada menciptakan pembaruan untuk mengisi ruang."
           },
           "stop-following": {
             "headline": "Berhenti adalah satu ketukan",
@@ -1892,7 +1892,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Sengaja bukan tentang Anda",
-            "body": "Jelajahi adalah satu tempat mera tidak mempersonalisasi apa pun. Tidak ada penilaian, tidak ada alasan, tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya apa yang ruang berita negara memimpin, dalam pesanan mereka.",
+            "body": "Jelajahi adalah satu tempat Mera tidak mempersonalisasi apa pun. Tidak ada penilaian, tidak ada alasan, tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya apa yang ruang berita negara memimpin, dalam pesanan mereka.",
             "ask": "Mengapa tab Jelajahi tidak dipersonalisasi?"
           },
           "the-chips": {
@@ -1900,7 +1900,7 @@
             "body": "Mereka dibangun untuk Anda daripada dipilih oleh Anda.",
             "steps": {
               "0": "Dunia datang pertama, selalu.",
-              "1": "Kemudian negara Anda sendiri dan tempat mana pun mera tahu, dan setelah itu, negara mana pun yang Anda tambahkan sendiri."
+              "1": "Kemudian negara Anda sendiri dan tempat mana pun Mera tahu, dan setelah itu, negara mana pun yang Anda tambahkan sendiri."
             }
           },
           "the-plus-chip": {
@@ -1927,7 +1927,7 @@
           },
           "hide-a-chip": {
             "headline": "Terlalu banyak chip",
-            "body": "Tekan dan tahan chip yang tidak Anda inginkan dan itu akan hilang. mera membangunnya dari tempat yang diketahuinya, jadi jika yang terus kembali, tempat di baliknya masih dalam profil Anda.",
+            "body": "Tekan dan tahan chip yang tidak Anda inginkan dan itu akan hilang. Mera membangunnya dari tempat yang diketahuinya, jadi jika yang terus kembali, tempat di baliknya masih dalam profil Anda.",
             "ask": "Bagaimana cara saya menyingkirkan chip negara di Jelajahi?"
           }
         }
@@ -2017,7 +2017,7 @@
         "slides": {
           "three-shelves": {
             "headline": "Tiga rak di satu layar",
-            "body": "Layar Tidak Tertarik menyimpan semua yang telah Anda minta mera untuk disimpan.",
+            "body": "Layar Tidak Tertarik menyimpan semua yang telah Anda minta Mera untuk disimpan.",
             "steps": {
               "0": "Kata-kata dan hal-hal yang Anda sembunyikan.",
               "1": "Topik yang Anda lihat lebih sedikit.",
@@ -2091,7 +2091,7 @@
           },
           "headline-cull": {
             "headline": "Beberapa cerita tidak pernah mencapai panggilan",
-            "body": "Bersama cerita Anda sendiri, mera menarik berita utama negara. Berita utama teratas yang mencetak rendah untuk Anda dijatuhkan begitu saja daripada diletakkan di bagian bawah. Berita utama ada untuk mengatakan 'ini penting di sini', dan satu yang mencetak rendah hanya kebisingan. Cerita yang cocok dengan minat Anda sendiri tidak pernah dijatuhkan dengan cara ini.",
+            "body": "Bersama cerita Anda sendiri, Mera menarik berita utama negara. Berita utama teratas yang mencetak rendah untuk Anda dijatuhkan begitu saja daripada diletakkan di bagian bawah. Berita utama ada untuk mengatakan 'ini penting di sini', dan satu yang mencetak rendah hanya kebisingan. Cerita yang cocok dengan minat Anda sendiri tidak pernah dijatuhkan dengan cara ini.",
             "ask": "Mengapa saya melihat lebih sedikit berita utama umum daripada cerita tentang minat saya?"
           }
         }
@@ -2149,7 +2149,7 @@
           },
           "written-down": {
             "headline": "Setiap perubahan ditulis",
-            "body": "Perubahan yang diterapkan dicatat dengan apa yang dulu, apa yang menjadi, dan dari mana asalnya: chat, umpan balik, saran, atau Anda. Tidak ada yang dilakukan mera ke profil Anda yang tidak terlihat."
+            "body": "Perubahan yang diterapkan dicatat dengan apa yang dulu, apa yang menjadi, dan dari mana asalnya: chat, umpan balik, saran, atau Anda. Tidak ada yang dilakukan Mera ke profil Anda yang tidak terlihat."
           },
           "take-it-back": {
             "headline": "Dan sebagian besar dapat diambil kembali",

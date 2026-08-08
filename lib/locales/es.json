@@ -1554,8 +1554,8 @@
     "retry": "Intentar de nuevo"
   },
   "tutorials": {
-    "entryRow": "Bienvenido a mera",
-    "menuTitle": "Bienvenido a mera",
+    "entryRow": "Bienvenido a Mera",
+    "menuTitle": "Bienvenido a Mera",
     "menuSubtitle": "Guías cortas sobre cómo piensa esta aplicación. Comienza donde quieras.",
     "sectionBasic": "Comienza aquí",
     "sectionAdvanced": "Profundiza",
@@ -1575,7 +1575,7 @@
     "continueAnyway": "Continuar de todas formas",
     "slideProgress": "Tarjeta {{current}} de {{total}}",
     "askMera": "Pregunta a Mera",
-    "chatIntro": "Pregúntame cualquier cosa sobre cómo funciona mera. Puedo explicar, pero no puedo cambiar nada desde aquí.",
+    "chatIntro": "Pregúntame cualquier cosa sobre cómo funciona Mera. Puedo explicar, pero no puedo cambiar nada desde aquí.",
     "launchButton": "Hacer el tour",
     "hintReveal": "Toca cada uno.",
     "hintRevealSome": "Toca al menos {{count}}.",
@@ -1588,12 +1588,12 @@
     "sortDone": "Eso es todo.",
     "chapters": {
       "welcome": {
-        "title": "Bienvenido a mera",
+        "title": "Bienvenido a Mera",
         "subtitle": "Qué es esta aplicación, en un minuto.",
         "slides": {
           "what": {
             "headline": "Una aplicación de noticias que comienza contigo",
-            "body": "La mayoría de las aplicaciones de noticias comienzan con las noticias y esperan que algo te encaje. mera comienza en el otro extremo: aprende un poco sobre tu vida, luego busca las historias que la tocan."
+            "body": "La mayoría de las aplicaciones de noticias comienzan con las noticias y esperan que algo te encaje. Mera comienza en el otro extremo: aprende un poco sobre tu vida, luego busca las historias que la tocan."
           },
           "not-a-timeline": {
             "headline": "No es una línea de tiempo",
@@ -1618,7 +1618,7 @@
             "body": "Realmente es tan corto.",
             "steps": {
               "0": "Dices algunos datos verdaderos sobre tu vida.",
-              "1": "mera los convierte en cosas que buscar.",
+              "1": "Mera los convierte en cosas que buscar.",
               "2": "Lee las noticias del día y guarda lo que encaja."
             }
           },
@@ -1642,7 +1642,7 @@
           },
           "begin": {
             "headline": "Listo cuando tú lo estés",
-            "body": "Inicia sesión y mera te hará un par de preguntas. No hay respuestas equivocadas y puedes cambiar cualquiera después. El resto de estas guías está esperando en Ajustes."
+            "body": "Inicia sesión y Mera te hará un par de preguntas. No hay respuestas equivocadas y puedes cambiar cualquiera después. El resto de estas guías está esperando en Ajustes."
           }
         }
       },
@@ -1653,7 +1653,7 @@
           "a-fact-is": {
             "headline": "Un dato es una línea verdadera",
             "body": "'Soy enfermera.' 'Vivo en Utrecht.' 'Tengo un niño pequeño.' Corto, verdadero, sobre tu vida. Esa es toda la idea.",
-            "ask": "¿Qué cuenta como un dato en mera?"
+            "ask": "¿Qué cuenta como un dato en Mera?"
           },
           "where-from": {
             "headline": "De dónde vienen los datos",
@@ -1733,7 +1733,7 @@
           },
           "order-holds-still": {
             "headline": "El orden se mantiene mientras lees",
-            "body": "mera calcula el orden una vez, cuando abres la aplicación o tiras hacia abajo para actualizar, y luego lo deja solo. Nada se reorganiza bajo tu pulgar a mitad de la lista."
+            "body": "Mera calcula el orden una vez, cuando abres la aplicación o tiras hacia abajo para actualizar, y luego lo deja solo. Nada se reorganiza bajo tu pulgar a mitad de la lista."
           },
           "why-this-one": {
             "headline": "¿Por qué este?",
@@ -1742,12 +1742,12 @@
           },
           "caught-up": {
             "headline": "Estar al día está bien",
-            "body": "Cuando no hay nada nuevo, mera lo dice y se detiene. No rellenará la lista para mantenerte desplazándote. Todo lo que ya has leído está debajo, si lo quieres."
+            "body": "Cuando no hay nada nuevo, Mera lo dice y se detiene. No rellenará la lista para mantenerte desplazándote. Todo lo que ya has leído está debajo, si lo quieres."
           }
         }
       },
       "teaching": {
-        "title": "Enseñando a mera",
+        "title": "Enseñando a Mera",
         "subtitle": "Dos pulgares, una razón, y un deshacer.",
         "slides": {
           "two-thumbs": {
@@ -1836,7 +1836,7 @@
           "what-we-keep": {
             "headline": "Lo que sí guardamos",
             "body": "Tu correo de inicio de sesión. En qué plan estás. Un recuento diario de historias analizadas. Las frases de temas se almacenan en caché solo por su texto, sin nada que registre quién preguntó, y se descartan después de catorce días sin usar.",
-            "ask": "¿Qué almacena mera sobre mí en sus servidores?"
+            "ask": "¿Qué almacena Mera sobre mí en sus servidores?"
           }
         }
       },
@@ -1877,7 +1877,7 @@
           },
           "the-timeline": {
             "headline": "Se reúne, no molesta",
-            "body": "Los nuevos desarrollos se reúnen en la línea de tiempo de la historia con un pequeño recuento al lado. Si la historia se queda callada, mera lo dice en lugar de inventar una actualización para llenar el espacio."
+            "body": "Los nuevos desarrollos se reúnen en la línea de tiempo de la historia con un pequeño recuento al lado. Si la historia se queda callada, Mera lo dice en lugar de inventar una actualización para llenar el espacio."
           },
           "stop-following": {
             "headline": "Dejar de seguir es un toque",
@@ -1892,7 +1892,7 @@
         "slides": {
           "unscored-on-purpose": {
             "headline": "Deliberadamente no sobre ti",
-            "body": "Explorar es el único lugar donde mera no personaliza nada. Sin puntuación, sin razones, nada aprendido de lo que abres aquí. Solo lo que las salas de prensa de un país están encabezando, en su orden.",
+            "body": "Explorar es el único lugar donde Mera no personaliza nada. Sin puntuación, sin razones, nada aprendido de lo que abres aquí. Solo lo que las salas de prensa de un país están encabezando, en su orden.",
             "ask": "¿Por qué la pestaña Explorar no está personalizada?"
           },
           "the-chips": {
@@ -1900,7 +1900,7 @@
             "body": "Se construyen para ti en lugar de ser elegidos por ti.",
             "steps": {
               "0": "El mundo viene primero, siempre.",
-              "1": "Luego tu propio país y cualquier lugar que mera sepa, y después de esos, cualquier país que hayas agregado tú mismo."
+              "1": "Luego tu propio país y cualquier lugar que Mera sepa, y después de esos, cualquier país que hayas agregado tú mismo."
             }
           },
           "the-plus-chip": {
@@ -1927,7 +1927,7 @@
           },
           "hide-a-chip": {
             "headline": "Demasiados chips",
-            "body": "Presiona y mantén un chip que no quieras y se va. mera construye estos a partir de lugares que sabe, así que si uno sigue volviendo, el lugar detrás de él todavía está en tu perfil.",
+            "body": "Presiona y mantén un chip que no quieras y se va. Mera construye estos a partir de lugares que sabe, así que si uno sigue volviendo, el lugar detrás de él todavía está en tu perfil.",
             "ask": "¿Cómo me deshago de un chip de país en Explorar?"
           }
         }
@@ -2017,7 +2017,7 @@
         "slides": {
           "three-shelves": {
             "headline": "Tres estantes en una pantalla",
-            "body": "La pantalla No interesado contiene todo lo que has pedido que mera guarde.",
+            "body": "La pantalla No interesado contiene todo lo que has pedido que Mera guarde.",
             "steps": {
               "0": "Palabras y cosas que has ocultado.",
               "1": "Temas que ves menos.",
@@ -2091,7 +2091,7 @@
           },
           "headline-cull": {
             "headline": "Algunas historias nunca llegan al dial",
-            "body": "Junto a tus propias historias, mera tira de los titulares principales de un país. Un titular principal que te puntúa bajo se deja fuera directamente en lugar de ser estacionado en la parte inferior. Un titular existe para decir 'esto importa aquí', y uno que puntúa bajo es solo ruido. Las historias combinadas con tus propios intereses nunca se dejan de esta manera.",
+            "body": "Junto a tus propias historias, Mera tira de los titulares principales de un país. Un titular principal que te puntúa bajo se deja fuera directamente en lugar de ser estacionado en la parte inferior. Un titular existe para decir 'esto importa aquí', y uno que puntúa bajo es solo ruido. Las historias combinadas con tus propios intereses nunca se dejan de esta manera.",
             "ask": "¿Por qué veo menos titulares generales que historias sobre mis intereses?"
           }
         }
@@ -2149,7 +2149,7 @@
           },
           "written-down": {
             "headline": "Cada cambio se anota",
-            "body": "Los cambios aplicados se registran con lo que era antes, lo que se convirtió, y de dónde vino el cambio: chat, comentarios, una sugerencia, o tú. Nada que mera hace a tu perfil es invisible."
+            "body": "Los cambios aplicados se registran con lo que era antes, lo que se convirtió, y de dónde vino el cambio: chat, comentarios, una sugerencia, o tú. Nada que Mera hace a tu perfil es invisible."
           },
           "take-it-back": {
             "headline": "Y la mayoría se puede devolver",
