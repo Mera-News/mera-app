@@ -3,6 +3,7 @@
 // (resolved from the suggestion row when available) + the article title, so the
 // conversation always shows what it's about. Non-pressable — purely contextual.
 
+import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -11,7 +12,6 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getSuggestionByServerId } from '@/lib/database/services/article-suggestion-service';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -66,15 +66,26 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
             />
           </Box>
         ) : (
-          <Box
-            className="rounded-xl items-center justify-center"
-            style={{ width: 52, height: 52, backgroundColor: 'rgba(237,167,126,0.12)' }}
-          >
-            <MaterialIcons name="article" size={24} color={ACCENT} />
+          // Was its own third fallback style (an accent-tinted box + a
+          // MaterialIcons glyph) — unified onto the shared placeholder used by
+          // every card surface (ArticleCardBase, ArticleCompactCardBase). Two
+          // things made this an easy call rather than a "deliberately keep
+          // it" case: (1) the placeholder is now a monochrome translucent
+          // black wash + white glyph, which sits naturally on this card's own
+          // hardcoded `#1a1a1a` surface — the old warm off-white version
+          // would have clashed here, which is presumably why this card never
+          // adopted it originally; (2) one fewer "no image" visual language
+          // for a user to learn. `size={28}` (default is 40) — this thumbnail
+          // is 52x52 versus the ~112-192px hero/compact-card image regions
+          // the default was tuned for.
+          <Box className="rounded-xl overflow-hidden" style={{ width: 52, height: 52 }}>
+            <ArticleImagePlaceholder size={28} />
           </Box>
         )}
         <VStack className="flex-1" space="xs">
-          <Text style={{ color: ACCENT, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>
+          {/* `size="2xs"` rather than a pinned 11px: same rendered size, but on
+              the scale, so it grows with Dynamic Type and the in-app control. */}
+          <Text size="2xs" style={{ color: ACCENT, fontWeight: '700', letterSpacing: 0.4 }}>
             {t('floatingChat.aboutThisStory')}
           </Text>
           {/* Explicit light value, NOT a `typography-*` class. This card paints
@@ -92,16 +103,17 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
               English source, exactly as TranslatableDynamic documents. That
               also means no translate icon and no show-original toggle here,
               unlike a feed card, which does hold the original.
-              `lineHeight` is explicit because TranslatableDynamic derives its
-              own from the `size` TOKEN (md → 24), which would be wrong for the
-              13px font this card sets in `style`. Caller style spreads last. */}
+              The pinned `fontSize: 13` / `lineHeight: 18` are gone: they were
+              an inline override, which beats the class and so froze this
+              headline outside the type scale AND outside the in-app text-size
+              control. `size="sm"` is 14/21 — a hair larger, correctly led, and
+              it scales. Only colour and weight stay inline. */}
           <TranslatableDynamic
             text={title}
+            size="sm"
             style={{
               color: 'rgb(245, 245, 245)',
-              fontSize: 13,
               fontWeight: '600',
-              lineHeight: 18,
             }}
             numberOfLines={2}
           />

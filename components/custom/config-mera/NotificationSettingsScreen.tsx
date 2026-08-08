@@ -290,7 +290,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     <Text className="text-3xl font-bold text-white text-center mb-3">
                         {t('notifications.title')}
                     </Text>
-                    <Text className="text-base text-typography-400 text-center leading-6">
+                    <Text className="text-base text-typography-400 text-center">
                         {t('notifications.enableDescription')}
                     </Text>
                 </VStack>
@@ -337,7 +337,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             {!notificationsEnabled && !isOnboarding && (
                 <Box className="mt-4">
                     <Box className="p-4 bg-background-50 rounded-lg border border-background-100 mb-3">
-                        <Text className="text-typography-400 text-sm leading-5">
+                        <Text className="text-typography-400 text-sm">
                             <MaterialIcons name="info-outline" size={16} color="#9ca3af" /> {t('notifications.permissionDenied')}
                         </Text>
                     </Box>
@@ -367,11 +367,11 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     {t('notifications.timeTitle')}
                 </Text>
             )}
-            <Text size="md" className="text-gray-400 leading-6">
+            <Text size="md" className="text-gray-400">
                 {isOnboarding ? t('notifications.timeDescriptionOnboarding') : t('notifications.timeDescription')}
             </Text>
             {isOnboarding && (
-                <Text size="sm" className="text-typography-500 leading-5 mt-2">
+                <Text size="sm" className="text-typography-500 mt-2">
                     {timeNudges[nudgeIndex]}
                 </Text>
             )}

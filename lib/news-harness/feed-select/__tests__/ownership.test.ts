@@ -13,7 +13,10 @@ import {
   type ScoredSuggestionProjection,
   type TopicSnapshot,
   type FactSnapshot,
+  bandOf,
 } from '../ownership';
+import { bucketScores } from '../../article-pipeline/scoring';
+import { DEFAULT_HARNESS_CONFIG } from '../../core/config';
 
 // --- factories ------------------------------------------------------------
 
@@ -313,5 +316,54 @@ describe('isFactSectionViable', () => {
   it('the viability floor is the MEDIUM display tier', () => {
     expect(SECTION_MIN_VIABLE_BUCKET).toBe('MEDIUM');
     expect(isFactSectionViable([SECTION_MIN_VIABLE_BUCKET])).toBe(true);
+  });
+});
+
+// --- the band/bucket duality this module DOCUMENTS ------------------------
+//
+// ownership.ts states it as fact at the top of the file: `bandOf` "reads its
+// cutoffs from the SAME articlePipeline config `bucketScores` uses, so the band
+// a score lands in and the value the legacy path buckets it to can never
+// disagree." Nothing enforced it.
+//
+// It is load-bearing well beyond this module. Every gate, filter, cull and chip
+// in the app keys on the BAND, not on the score value — `sortByPriority`
+// (feed-ordering/priority-order) orders by `relevanceBandRank(relevance)`, the
+// importance filter and the top-headline cull both go through
+// `relevanceBandRank`, and Dashboard section viability goes through `bucketOf`.
+// Because bucketing is band-preserving, all of them see an IDENTICAL world
+// whether the legacy path persisted the raw LLM score or its bucketed
+// representative. That equivalence is what makes bucketing safe; if the two
+// ladders ever drift apart it becomes silently false and the same article starts
+// rendering in one band and filtering in another.
+//
+// Measured 2026-08-08 while asking whether the legacy path should stop
+// bucketing: it is exactly this invariant that makes such a change a NO-OP on
+// every ranking surface, which is why no flag was added for it.
+describe('bucketScores is band-preserving', () => {
+  it('maps every raw score to a value in its own band', () => {
+    const raws: number[] = [];
+    for (let v = 0; v <= 1.1000001; v += 0.01) raws.push(Number(v.toFixed(2)));
+    // The exact cutoffs and their immediate neighbours, where an off-by-one in
+    // either ladder would hide inside the 0.01 sweep.
+    raws.push(0.399, 0.4, 0.401, 0.599, 0.6, 0.601, 0.799, 0.8, 0.801, 1.0, 1.001, 1.1);
+
+    const map = new Map(raws.map((r, i) => [`r${i}`, r]));
+    const bucketed = new Map(map);
+    bucketScores(bucketed);
+
+    for (const [id, raw] of map) {
+      expect(bandOf(bucketed.get(id))).toBe(bandOf(raw));
+    }
+  });
+
+  it('never moves a score across the render gate in either direction', () => {
+    const gate = DEFAULT_HARNESS_CONFIG.articlePipeline.discardFloor;
+    const raws = [0.05, 0.2, 0.39, 0.399, 0.4, 0.45, 0.58, 0.6, 0.79, 0.95, 1.05, 1.1];
+    const bucketed = new Map(raws.map((r, i) => [`r${i}`, r]));
+    bucketScores(bucketed);
+    raws.forEach((raw, i) => {
+      expect(bucketed.get(`r${i}`)! >= gate).toBe(raw >= gate);
+    });
   });
 });

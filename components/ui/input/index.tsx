@@ -2,6 +2,8 @@
 import React from 'react';
 import { createInput } from '@gluestack-ui/core/input/creator';
 import { View, Pressable, TextInput } from 'react-native';
+import { maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/typography/policy';
+import { useTextScale } from '@/lib/typography/TextScaleContext';
 import {
   tva,
   withStyleContext,
@@ -186,17 +188,26 @@ const InputSlot = React.forwardRef<
 });
 
 type IInputFieldProps = React.ComponentProps<typeof UIInput.Input> &
-  VariantProps<typeof inputFieldStyle> & { className?: string };
+  VariantProps<typeof inputFieldStyle> & {
+    className?: string;
+    /** See `lib/typography/policy.ts`. Defaults to `content`. */
+    scaleTier?: FontScaleTier;
+  };
 
 const InputField = React.forwardRef<
   React.ComponentRef<typeof UIInput.Input>,
   IInputFieldProps
->(function InputField({ className, ...props }, ref) {
+>(function InputField({ className, scaleTier = 'content', ...props }, ref) {
   const { variant: parentVariant, size: parentSize } = useStyleContext(SCOPE);
+  const userScale = useTextScale();
 
   return (
     <UIInput.Input
       ref={ref}
+      // The `Input` shell this sits in has a variant-driven fixed height, so
+      // unbounded OS text scaling overflows it. Before `{...props}` so a call
+      // site can still override.
+      maxFontSizeMultiplier={maxFontSizeMultiplierFor(scaleTier, userScale)}
       {...props}
       className={inputFieldStyle({
         parentVariants: {

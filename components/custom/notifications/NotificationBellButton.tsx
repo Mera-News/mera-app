@@ -72,16 +72,19 @@ const NotificationBellButton: React.FC = () => {
             {count > 0 ? (
                 <View
                     className="absolute bg-primary-500 items-center justify-center"
+                    // minHeight, not height: the count scales and a hard 16pt
+                    // box clipped it. borderRadius stays 8 so it reads as a
+                    // pill once it outgrows a circle.
                     style={{
                         top: -2,
                         right: -2,
                         minWidth: 16,
-                        height: 16,
+                        minHeight: 16,
                         borderRadius: 8,
                         paddingHorizontal: 3,
                     }}
                 >
-                    <Text className="text-white font-bold" size="2xs">
+                    <Text className="text-white font-bold" size="2xs" scaleTier="chrome">
                         {count > 99 ? '99+' : count}
                     </Text>
                 </View>

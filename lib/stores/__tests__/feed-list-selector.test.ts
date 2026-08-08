@@ -153,9 +153,11 @@ describe('buildFeedList — grouping + exclusion', () => {
     const list = buildFeedList([a, b], new Set(), NOW);
     expect(list).toHaveLength(1);
     expect(list[0].memberCount).toBe(2);
-    // newest member (b) fronts the story.
-    expect(list[0].suggestion._id).toBe('b');
-    expect(list[0].id).toBe('art-b');
+    // OLDEST member (a) fronts the story — the originating report, not the
+    // latest aggregator rewrite. Neither member carries an image, so the
+    // `hasImage` key above pubDate ties.
+    expect(list[0].suggestion._id).toBe('a');
+    expect(list[0].id).toBe('art-a');
   });
 
   it('populates memberIds with every grouped member articleId (not _id)', () => {
@@ -214,6 +216,50 @@ describe('buildFeedList — score, breaking flag + frozen score', () => {
     const list = buildFeedList([fresh, old], new Set(), NOW);
     expect(list.map((c) => c.suggestion._id)).toEqual(['fresh', 'old']);
   });
+
+  // --- group-maxed `breaking` (elected rep flipped to oldest-first) ---------
+
+  it('a story is breaking when any member is, not just the elected (oldest) representative', () => {
+    // Oldest firstPubDate is elected representative (no images, no userCtx).
+    const older = sugg({
+      _id: 'older',
+      rawScore: 0.5, // not breaking on its own
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      clusters: [cluster('story-brk')],
+    });
+    const newer = sugg({
+      _id: 'newer',
+      rawScore: 1.05, // raw > 1.0 ⇒ breaking
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      clusters: [cluster('story-brk')],
+    });
+    const list = buildFeedList([older, newer], new Set(), NOW);
+    expect(list).toHaveLength(1);
+    // The elected representative is the non-breaking oldest member...
+    expect(list[0].suggestion._id).toBe('older');
+    // ...but a newer member IS breaking, so the story must be too — otherwise
+    // `filterByImportance` (which exempts breaking) would silently hide it
+    // under the Med+/High dial.
+    expect(list[0].breaking).toBe(true);
+  });
+
+  it('a group with no breaking member stays non-breaking', () => {
+    const older = sugg({
+      _id: 'older2',
+      rawScore: 0.5,
+      firstPubDate: new Date(NOW - 5 * H).toISOString(),
+      clusters: [cluster('story-nobrk')],
+    });
+    const newer = sugg({
+      _id: 'newer2',
+      rawScore: 0.6,
+      firstPubDate: new Date(NOW - 1 * H).toISOString(),
+      clusters: [cluster('story-nobrk')],
+    });
+    const list = buildFeedList([older, newer], new Set(), NOW);
+    expect(list).toHaveLength(1);
+    expect(list[0].breaking).toBe(false);
+  });
 });
 
 describe('buildFeedList — representative election (geo/language priority, Wave 2b)', () => {
@@ -269,7 +315,7 @@ describe('buildFeedList — representative election (geo/language priority, Wave
     expect(list[0].suggestion._id).toBe('gbr');
   });
 
-  it('a null userCtx (default) keeps the legacy newest/rawScore-based pick', () => {
+  it('a null userCtx (default) falls through to the untiered image/oldest/rawScore pick', () => {
     const older = sugg({
       _id: 'older',
       country_code: 'IND',
@@ -284,9 +330,12 @@ describe('buildFeedList — representative election (geo/language priority, Wave
       rawScore: 0.9,
       clusters: [cluster('story-3')],
     });
-    // Explicit `null` and the omitted-argument default must agree.
-    expect(buildFeedList([older, newer], new Set(), NOW, null)[0].suggestion._id).toBe('newer');
-    expect(buildFeedList([older, newer], new Set(), NOW)[0].suggestion._id).toBe('newer');
+    // Explicit `null` and the omitted-argument default must agree. With no tier
+    // context and no images, election falls to pubDate ASC — the OLDER member
+    // fronts, even though the newer one scores higher (rawScore ranks below
+    // pubDate, unchanged).
+    expect(buildFeedList([older, newer], new Set(), NOW, null)[0].suggestion._id).toBe('older');
+    expect(buildFeedList([older, newer], new Set(), NOW)[0].suggestion._id).toBe('older');
   });
 });
 
@@ -458,7 +507,12 @@ describe('buildFeedList — source preferences (source-pref, D1/D3/D4)', () => {
       _id: 'toi',
       publication_name: 'Times of India',
       country_code: 'IND',
-      firstPubDate: new Date(NOW - 20 * H).toISOString(),
+      // `firstPubDate` is the NEWER of the pair so the untiered comparator
+      // (pubDate ASC) elects the strong sibling, keeping this test about what it
+      // is about: the preference, not the date key. `createdAt` — which is what
+      // `feedScore` reads — is left where it was, so the D4 score assertions
+      // below are unchanged.
+      firstPubDate: new Date(NOW).toISOString(),
       createdAt: new Date(NOW - 20 * H).toISOString(),
       rawScore: 0.1,
       clusters: [cluster('story-big')],
@@ -467,7 +521,7 @@ describe('buildFeedList — source preferences (source-pref, D1/D3/D4)', () => {
       _id: 'cnn',
       publication_name: 'CNN',
       country_code: 'USA',
-      firstPubDate: new Date(NOW).toISOString(),
+      firstPubDate: new Date(NOW - 20 * H).toISOString(),
       createdAt: new Date(NOW).toISOString(),
       rawScore: 1.0,
       clusters: [cluster('story-big')],

@@ -4,12 +4,27 @@ const mockHandleSaveExtractedFacts = jest.fn();
 const mockHandleUpdateUserConfig = jest.fn();
 const mockHandleDeleteUserFacts = jest.fn();
 const mockHandleIssueWarning = jest.fn();
+const mockHandleExplainMera = jest.fn();
 
 jest.mock('../../chat-tools/tool-handlers', () => ({
   handleSaveExtractedFacts: (...args: unknown[]) => mockHandleSaveExtractedFacts(...args),
   handleUpdateUserConfig: (...args: unknown[]) => mockHandleUpdateUserConfig(...args),
   handleDeleteUserFacts: (...args: unknown[]) => mockHandleDeleteUserFacts(...args),
   handleIssueWarning: (...args: unknown[]) => mockHandleIssueWarning(...args),
+  handleExplainMera: (...args: unknown[]) => mockHandleExplainMera(...args),
+}));
+
+// item 12b / 13 — the two search tools live in their own modules (and pull in
+// Apollo / fetch), so they are mocked here exactly like the other handlers.
+const mockHandleSearchNews = jest.fn();
+const mockHandleWebSearch = jest.fn();
+
+jest.mock('../../chat-tools/news-search-handler', () => ({
+  handleSearchNews: (...args: unknown[]) => mockHandleSearchNews(...args),
+}));
+
+jest.mock('../../chat-tools/web-search-handler', () => ({
+  handleWebSearch: (...args: unknown[]) => mockHandleWebSearch(...args),
 }));
 
 const mockGetFacts = jest.fn();
@@ -350,6 +365,36 @@ describe('PersonaUpdateAgent', () => {
       expect(mockBuildToolDefinitions).toHaveBeenCalledWith('CONFIG');
       expect(tools.map((t) => t.function.name)).toContain('saveExtractedFacts');
     });
+
+    // item 13 — the DECLARATION gate. A handler-only check would leave an
+    // off-by-default tool sitting in the prompt on every turn.
+    it('omits webSearch while the user toggle is off (and with no toggle at all)', () => {
+      for (const state of [{ processingMode: 'CLOUD' }, { processingMode: 'CLOUD', webSearchInChat: false }]) {
+        mockMeraProtocolGetState.mockReturnValue(state);
+        const names = makeAgent('CONFIG').getToolDefinitions().map((t) => t.function.name);
+        expect(names).not.toContain('webSearch');
+        // ...while the ungated news search is always there on CLOUD.
+        expect(names).toContain('searchNews');
+      }
+    });
+
+    it('declares webSearch once the user toggle is on', () => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: true });
+      const names = makeAgent('CONFIG').getToolDefinitions().map((t) => t.function.name);
+      expect(names).toContain('webSearch');
+    });
+  });
+
+  // The forced pass runs with tool_choice:'required', so anything listed here
+  // can be called on a turn the user asked nothing of. Both new search tools
+  // must stay out of it — a forced `webSearch` would send a query the user
+  // never typed, and a forced `searchNews` would burn a round trip on nothing.
+  describe('getForcedExtractionTools', () => {
+    it('is saveExtractedFacts and nothing else, even with web search enabled', () => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: true });
+      const names = makeAgent('CONFIG').getForcedExtractionTools().map((t) => t.function.name);
+      expect(names).toEqual(['saveExtractedFacts']);
+    });
   });
 
   describe('executeTool', () => {
@@ -368,6 +413,41 @@ describe('PersonaUpdateAgent', () => {
       await agent.executeTool('saveExtractedsFacts', { facts: [] });
 
       expect(mockHandleSaveExtractedFacts).toHaveBeenCalled();
+    });
+
+    it('calls handleExplainMera for explainMera', async () => {
+      mockHandleExplainMera.mockResolvedValue({ sections: [] });
+      const agent = makeAgent();
+      const result = await agent.executeTool('explainMera', { topics: ['known_gaps'] });
+
+      expect(mockHandleExplainMera).toHaveBeenCalledWith({ topics: ['known_gaps'] });
+      expect(result.result).toEqual({ sections: [] });
+    });
+
+    it('calls handleSearchNews for searchNews', async () => {
+      mockHandleSearchNews.mockResolvedValue({ articles: [] });
+      const agent = makeAgent();
+      const result = await agent.executeTool('searchNews', { query: 'floods' });
+
+      expect(mockHandleSearchNews).toHaveBeenCalledWith({ query: 'floods' });
+      expect(result.result).toEqual({ articles: [] });
+    });
+
+    // item 13 — the REPLAY path, which is the whole reason the handler carries
+    // its own gate. With the toggle off the tool is NOT declared, so
+    // normalizeToolName finds no match and the raw name falls through to the
+    // static `case 'webSearch'`. Execution therefore still reaches the handler,
+    // and only the handler's own re-check can stop the query leaving the device.
+    it('routes an UNDECLARED webSearch call to the handler anyway (persisted replay)', async () => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: false });
+      mockHandleWebSearch.mockResolvedValue({ error: 'off', searched: false });
+      const agent = makeAgent('CONFIG');
+
+      expect(agent.getToolDefinitions().map((t) => t.function.name)).not.toContain('webSearch');
+
+      const result = await agent.executeTool('webSearch', { query: 'anything' });
+      expect(mockHandleWebSearch).toHaveBeenCalledWith({ query: 'anything' });
+      expect(result.result).toEqual({ error: 'off', searched: false });
     });
 
     it('calls handleUpdateUserConfig for updateUserConfig', async () => {
@@ -462,6 +542,28 @@ describe('PersonaUpdateAgent', () => {
           { type: 'add_suppression', suppressionPattern: 'gossip' },
         ]);
         expect(result.result).toMatchObject({ awaitingUserConfirmation: true });
+        expect(result.sideEffects?.proposalResolved).toBeUndefined();
+      });
+
+      // G1: the floating-chat store holds ONE global proposal, shared with the
+      // article / follow-story surfaces. This agent's own proposeChanges cannot
+      // set choose_one today, so this guard is defence-in-depth — the sibling
+      // call site shipped without it and applied every alternative at once.
+      it('refuses a SINGLE-SELECT proposal it did not stage', async () => {
+        mockFloatingChatGetState.mockReturnValue({
+          proposal: {
+            id: 'p-choose', explanation: 'e', expectedEffects: 'x', chooseOne: true,
+            actions: [
+              { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+              { type: 'retire_topic', topicText: 'cricket' },
+            ],
+          },
+        });
+        const result = await makeAgent().executeTool('applyProposal', {});
+
+        expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+        expect(result.result).toMatchObject({ applied: 0, awaitingUserConfirmation: true });
+        // Card survives — the pills stay tappable.
         expect(result.sideEffects?.proposalResolved).toBeUndefined();
       });
     });

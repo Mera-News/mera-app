@@ -12,6 +12,9 @@ const mockForYouPrefsHydrate = jest.fn(() => Promise.resolve());
 const mockBlurImagesHydrate = jest.fn(() => Promise.resolve());
 const mockDisplayPrefsHydrate = jest.fn(() => Promise.resolve());
 const mockImportanceFilterHydrate = jest.fn(() => Promise.resolve());
+const mockRelatedSortHydrate = jest.fn(() => Promise.resolve());
+const mockTextScaleHydrate = jest.fn(() => Promise.resolve());
+const mockTutorialsHydrate = jest.fn(() => Promise.resolve());
 const mockSetReady = jest.fn();
 
 jest.mock('@/lib/stores/for-you-store', () => ({
@@ -95,6 +98,30 @@ jest.mock('@/lib/stores/importance-filter-store', () => ({
   },
 }));
 
+jest.mock('@/lib/stores/related-sort-store', () => ({
+  useRelatedSortStore: {
+    getState: jest.fn(() => ({
+      hydrate: mockRelatedSortHydrate,
+    })),
+  },
+}));
+
+jest.mock('@/lib/stores/text-scale-store', () => ({
+  useTextScaleStore: {
+    getState: jest.fn(() => ({
+      hydrate: mockTextScaleHydrate,
+    })),
+  },
+}));
+
+jest.mock('@/lib/stores/tutorials-store', () => ({
+  useTutorialsStore: {
+    getState: jest.fn(() => ({
+      hydrate: mockTutorialsHydrate,
+    })),
+  },
+}));
+
 jest.mock('@/lib/stores/database-store', () => ({
   useDatabaseStore: {
     getState: jest.fn(() => ({
@@ -138,6 +165,9 @@ describe('hydrateAllStores', () => {
     expect(mockBlurImagesHydrate).toHaveBeenCalledTimes(1);
     expect(mockDisplayPrefsHydrate).toHaveBeenCalledTimes(1);
     expect(mockImportanceFilterHydrate).toHaveBeenCalledTimes(1);
+    expect(mockRelatedSortHydrate).toHaveBeenCalledTimes(1);
+    expect(mockTextScaleHydrate).toHaveBeenCalledTimes(1);
+    expect(mockTutorialsHydrate).toHaveBeenCalledTimes(1);
   });
 
   it('calls pruneStaleVisits after hydration', async () => {

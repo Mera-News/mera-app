@@ -34,6 +34,7 @@ import {
     _resetNetworkTrackingForTests,
     isOnline,
     markServerUnreachable,
+    probeInternetReachable,
     probeServerReachable,
     recordServerReachable,
     recordServerTransportFailure,
@@ -227,6 +228,12 @@ describe('server reachability', () => {
             markServerUnreachable();
             expect(useNetworkStore.getState().serverReachable).toBe(false);
         });
+
+        it('recordServerReachable also clears a stale internetReachable flag — real Mera traffic is stronger evidence than the neutral probe', () => {
+            useNetworkStore.setState({ internetReachable: false });
+            recordServerReachable();
+            expect(useNetworkStore.getState().internetReachable).toBe(true);
+        });
     });
 
     describe('isOnline', () => {
@@ -336,6 +343,105 @@ describe('server reachability', () => {
             );
 
             await expect(probeServerReachable(20)).resolves.toBe(false);
+        });
+    });
+
+    // ─────────────────────────────────────────────────────────────────────
+    // probeInternetReachable — the SIBLING probe against neutral (non-Mera)
+    // infrastructure. Distinguishes "there's a link but the internet itself is
+    // unreachable" (captive portal / DNS hijack) from "the internet is fine,
+    // only Mera is down" — information `isConnected` alone cannot provide.
+    // ─────────────────────────────────────────────────────────────────────
+    describe('probeInternetReachable', () => {
+        beforeEach(() => {
+            useNetworkStore.setState({ isConnected: true, internetReachable: true });
+        });
+
+        it('short-circuits false when the device is offline (no round-trip spent)', async () => {
+            const fetchSpy = jest.spyOn(global, 'fetch');
+            useNetworkStore.setState({ isConnected: false });
+
+            await expect(probeInternetReachable()).resolves.toBe(false);
+            expect(fetchSpy).not.toHaveBeenCalled();
+        });
+
+        it('is reachable when the gstatic neutral host answers 204', async () => {
+            jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+                const url = String(input);
+                if (url.includes('gstatic')) {
+                    return { status: 204, text: async () => '' } as Response;
+                }
+                // Apple host answers too, but with a captive-portal-shaped body —
+                // irrelevant here since gstatic already proved reachability.
+                return { status: 200, text: async () => 'Login required' } as Response;
+            });
+
+            await expect(probeInternetReachable()).resolves.toBe(true);
+            expect(useNetworkStore.getState().internetReachable).toBe(true);
+        });
+
+        it('is reachable via the apple host alone when gstatic fails', async () => {
+            jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+                const url = String(input);
+                if (url.includes('gstatic')) {
+                    return { status: 502, text: async () => '' } as Response;
+                }
+                return { status: 200, text: async () => 'Success' } as Response;
+            });
+
+            await expect(probeInternetReachable()).resolves.toBe(true);
+        });
+
+        it('treats a captive-portal login page (200, wrong body) as a failed verify, not a pass', async () => {
+            jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+                const url = String(input);
+                if (url.includes('gstatic')) {
+                    // A captive portal frequently answers every path 200.
+                    return { status: 200, text: async () => '' } as Response;
+                }
+                return { status: 200, text: async () => 'Please sign in to the Wi-Fi network' } as Response;
+            });
+
+            await expect(probeInternetReachable()).resolves.toBe(false);
+            expect(useNetworkStore.getState().internetReachable).toBe(false);
+        });
+
+        it('falls back to the canonical http:// scheme when the https attempt fails to complete', async () => {
+            jest.spyOn(global, 'fetch').mockImplementation(async (input) => {
+                const url = String(input);
+                if (url.startsWith('https://')) {
+                    throw new Error('TLS handshake blocked');
+                }
+                if (url.includes('gstatic')) {
+                    return { status: 204, text: async () => '' } as Response;
+                }
+                return { status: 200, text: async () => 'Success' } as Response;
+            });
+
+            await expect(probeInternetReachable()).resolves.toBe(true);
+        });
+
+        it('resolves false when BOTH the https attempt and its http fallback fail for every host', async () => {
+            jest.spyOn(global, 'fetch').mockImplementation(async () => {
+                throw new Error('network unreachable');
+            });
+
+            await expect(probeInternetReachable()).resolves.toBe(false);
+            expect(useNetworkStore.getState().internetReachable).toBe(false);
+        });
+
+        it('is bounded — a hanging probe resolves false rather than blocking', async () => {
+            jest.spyOn(global, 'fetch').mockImplementation(
+                (_input, init) =>
+                    new Promise((_resolve, reject) => {
+                        (init as RequestInit).signal?.addEventListener('abort', () =>
+                            reject(Object.assign(new Error('Aborted'), { name: 'AbortError' })),
+                        );
+                    }),
+            );
+
+            await expect(probeInternetReachable(20)).resolves.toBe(false);
+            expect(useNetworkStore.getState().internetReachable).toBe(false);
         });
     });
 });

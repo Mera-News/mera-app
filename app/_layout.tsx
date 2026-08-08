@@ -28,6 +28,7 @@ import OTAUpdatePrompt from '@/components/custom/OTAUpdatePrompt';
 import TranslationUnavailablePrompt from '@/components/custom/TranslationUnavailablePrompt';
 import ToastInitializer from '@/components/custom/ToastInitializer';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
+import { TextScaleProvider } from '@/lib/typography/TextScaleProvider';
 import '@/global.css';
 import database from '@/lib/database';
 import { hydrateAllStores } from '@/lib/database/hydrate-stores';
@@ -368,12 +369,18 @@ export default Sentry.wrap(function RootLayout() {
       <KeyboardProvider>
         <SafeAreaProvider>
           <GluestackUIProvider mode="dark">
+            {/* Publishes the user's in-app text size to every <Text>/<Heading>.
+                Outermost of the content providers so the update gate and the
+                toasts scale too — and it holds the ONE store subscription, so
+                this stays the only component that re-renders on a size change. */}
+            <TextScaleProvider>
             <NativeUpdateGate>
               <ToastInitializer />
               <OTAUpdatePrompt />
               <TranslationUnavailablePrompt />
               <AppRoot />
             </NativeUpdateGate>
+            </TextScaleProvider>
           </GluestackUIProvider>
         </SafeAreaProvider>
       </KeyboardProvider>

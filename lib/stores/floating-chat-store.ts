@@ -31,6 +31,11 @@ export type ChatContext =
     // Round-4 C5: open the popover showing the pending daily optimisation plan.
     // No target ids — the OptimisationPlanCard loads the plan from the service.
     | { kind: 'optimisation-plan' }
+    // "Follow a story" started from the Followed-stories screen's track FAB.
+    // Deliberately id-less: there is no article here, only what the user types —
+    // the FollowStoryAgent scopes the story from free text and stages the same
+    // proposeTrack scope pills the article surface stages.
+    | { kind: 'follow-story' }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {

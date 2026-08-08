@@ -28,6 +28,48 @@ import { buildExampleQuestionsText } from './questionnaire-data';
  */
 export type FilterToolsVariant = 'full' | 'compact' | 'off';
 
+/**
+ * DEEP MODE question bank (item 17) — used in place of the standard
+ * `EXAMPLE_QUESTIONS` when the user turns "Deeper questions" on.
+ *
+ * REPLACES rather than extends, and that is a hard budget requirement, not a
+ * style choice. The LOCAL path has a 3072-token input budget that HARD-ERRORS
+ * the turn when exceeded, and the measured pre-existing worst case
+ * (CONFIG + LOCAL + XML tools + 22 saturated facts) already sits at ~3008 with
+ * ~64 to spare. Appending a second bank would put a deep-mode user over that
+ * line, and the filters ladder cannot save them — its last rung still carries
+ * the question bank. So this list is deliberately SHORTER than the standard
+ * one, and `persona-agent-core.test.ts` asserts the deep prompt is no larger.
+ *
+ * The first four keep the anchors relevance actually needs (place, work); the
+ * rest are the deeper interview. Note what is NOT here: nothing asks the user
+ * to route an alert or schedule a briefing. There is no briefing in this app
+ * and notifications are an hourly cron, so a question implying urgency routing
+ * would be a promise the code does not honour. "Same day vs. can wait" is
+ * asked as an IMPORTANCE signal — which is real (the feed's High/Med/Low
+ * filter) — and its answers land as ordinary local facts feeding relevance and
+ * reason generation.
+ */
+export const DEEP_EXAMPLE_QUESTIONS: string[] = [
+  'Where do you live? (neighborhood, city, country)',
+  'What do you do for work? (role, company, industry)',
+  'Why does that place matter to you — family, work, safety, money, or travel?',
+  'What are you trying to protect your attention from?',
+  'Which topics feel necessary but leave you anxious?',
+  'Which topics feel useful but mostly waste your time?',
+  'What decisions are you weighing this month?',
+  'Whose lives elsewhere do you keep an eye on?',
+  'Which news matters to you the same day, and which can wait?',
+  'What would you regret not hearing about?',
+];
+
+/** The numbered question list for the system prompt. `deepMode` swaps the bank
+ *  wholesale — with it off this returns the pre-item-17 string byte for byte. */
+function buildQuestionBankText(deepMode: boolean): string {
+  if (!deepMode) return buildExampleQuestionsText();
+  return DEEP_EXAMPLE_QUESTIONS.map((q, i) => `${i + 1}. ${q}`).join('\n');
+}
+
 export function buildToolDefinitions(
   surface: 'ONBOARDING' | 'CONFIG',
   filterTools: FilterToolsVariant = 'full',
@@ -373,12 +415,36 @@ export function buildPersonaUpdateStaticPrompt(params: {
    *  Chosen by measurement per turn (planPersonaPrompt); `off` reproduces the
    *  pre-P4a prompt exactly. Defaults to `full`. */
   filterTools?: FilterToolsVariant;
+  /** item 17 — swap in the deeper question bank. Applies to BOTH paths (the
+   *  bank is smaller than the standard one, so LOCAL stays inside budget). */
+  deepMode?: boolean;
+  /** item 13 — the user's "Web search in chat" toggle. CLOUD-only prose, and
+   *  only when ON: an off toggle must cost zero prompt tokens. */
+  webSearch?: boolean;
 }): string {
-  const { surface, includeToolFormat = true, languageName, mode = 'CLOUD', filterTools = 'full' } = params;
+  const {
+    surface,
+    includeToolFormat = true,
+    languageName,
+    mode = 'CLOUD',
+    filterTools = 'full',
+    deepMode = false,
+    webSearch = false,
+  } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   if (mode === 'LOCAL') {
-    return buildPersonaUpdateLocalPrompt({ surface, includeToolFormat, languageName, filterTools });
+    // `webSearch` is deliberately NOT forwarded: the LOCAL path carries neither
+    // search tool (both are appended CLOUD-only at the getPersonaToolDefinitions
+    // seam), so prose about them would be instructions for tools that do not
+    // exist — and bytes the 3072-token budget cannot spare.
+    return buildPersonaUpdateLocalPrompt({
+      surface,
+      includeToolFormat,
+      languageName,
+      filterTools,
+      deepMode,
+    });
   }
 
   const languageRule = languageName
@@ -399,11 +465,12 @@ ${isOnboarding
         ? '- A welcome message was already shown — jump straight to asking the first unanswered question from the list below.'
         : '- Respond to user messages directly. After extracting, confirm briefly and ask if there\'s more.'}
 - Stay on profile/news topics. Redirect off-topic politely.
+- **CURRENT EVENTS (in scope).** "What's happening with X?" is NOT off-topic — call \`searchNews\` and answer from the headlines it returns. Never answer such a question from memory and never invent an article or a link.${webSearch ? '\n- **WEB SEARCH (the user switched it on).** If `searchNews` returns nothing and the question is not about the news, you may call `webSearch` once. Only the words you search leave the device.' : ''}
 - **ABOUT MERA (in scope, always).** Questions about Mera itself — privacy, what data leaves the device, encryption, how news is found, the licence, plans, limitations — are NEVER off-topic and take precedence over resuming the questions below. Call \`explainMera\` with the relevant topics and answer only from what it returns; never answer from memory and never invent a guarantee. Keep your text in that turn to one short holding line — the real answer follows. On the FOLLOW-UP turn that carries the explainMera result, the <200 char limit does not apply: give the full answer there, in prose, then return to the questions.
 
 ## Questions to explore
 Ask one at a time, only if not already answered in Known Facts. These are guides — follow the user's lead and ask natural follow-ups when their answer opens something new.
-${buildExampleQuestionsText()}`;
+${buildQuestionBankText(deepMode)}`;
 
   return `You are Mera. ${isOnboarding ? 'Onboard the user — learn what news matters to them.' : 'Update the user\'s news profile (add / change / remove info).'}
 
@@ -451,8 +518,9 @@ function buildPersonaUpdateLocalPrompt(params: {
   includeToolFormat: boolean;
   languageName?: string;
   filterTools?: FilterToolsVariant;
+  deepMode?: boolean;
 }): string {
-  const { surface, includeToolFormat, languageName, filterTools = 'full' } = params;
+  const { surface, includeToolFormat, languageName, filterTools = 'full', deepMode = false } = params;
   const isOnboarding = surface === 'ONBOARDING';
 
   const languageRule = languageName
@@ -475,7 +543,7 @@ ${isOnboarding
 
 ## Questions to explore
 Ask one at a time, only if not already in Known Facts.
-${buildExampleQuestionsText()}`;
+${buildQuestionBankText(deepMode)}`;
 
   return `You are Mera. ${isOnboarding ? 'Onboard the user — learn what news matters to them.' : 'Update the user\'s news profile (add / change / remove info).'}
 

@@ -3,7 +3,9 @@ import { ArticleFeedbackPrompt } from '@/components/custom/ArticleFeedbackPrompt
 import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestionContainer';
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
+import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
+import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import { SmoothScrollViewRef } from '@/components/custom/SmoothScrollView';
@@ -35,6 +37,8 @@ import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
+import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
+import { secureUrlOrNull } from '@/lib/secure-url';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -135,11 +139,17 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // costs at most one reorder of the memo below.
     const currentCountryAlpha3 = article?.publicationSource?.country_code ?? null;
 
+    // How the reader wants the related list ordered. ONE persisted setting
+    // shared with the suggestion-detail route — see related-sort-store.
+    const relatedSortMode = useRelatedSortStore((s) => s.mode);
+    const setRelatedSortMode = useRelatedSortStore((s) => s.setMode);
+
     // Server related rows, ordered into contiguous per-country blocks: this
     // article's country first, then the remaining countries biggest-block first,
     // countryless rows last; within a block, language → publication → date → id.
     // Non-mutating; `userCtx === null` (still loading) only relaxes the
-    // language/rank preferences, the blocks still form.
+    // language/rank preferences, the blocks still form. In 'oldest'/'newest'
+    // mode the country blocking is bypassed entirely (see orderRelatedArticles).
     const sortedRelated = useMemo(() => {
         const entries = related.map((a) => ({
             id: a._id,
@@ -152,8 +162,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             })(),
             summary: a,
         }));
-        return orderRelatedArticles(entries, currentCountryAlpha3, userCtx);
-    }, [related, currentCountryAlpha3, userCtx]);
+        return orderRelatedArticles(entries, currentCountryAlpha3, userCtx, relatedSortMode);
+    }, [related, currentCountryAlpha3, userCtx, relatedSortMode]);
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -383,7 +393,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         }
     }, [article, isSaved, showSavedToast, t, articleId]);
 
-    const handleArticleUrlPress = async (url: string | null | undefined) => {
+    const handleArticleUrlPress = async (rawUrl: string | null | undefined) => {
+        // Second gate for item 16 — the render already refuses to show a CTA
+        // for an insecure URL, but this handler is also reachable via the
+        // translate affordance, so it re-checks rather than trusting its caller.
+        const url = secureUrlOrNull(rawUrl);
         if (!url) return;
         if (article) {
             recordPublicationVisit({
@@ -488,7 +502,14 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     }
 
     const sourceLanguage = article.original_language_code ?? null;
-    const articleUrl = article.article_url ?? null;
+    // Item 16 (defence in depth): the server already drops insecure articles
+    // from every serving path, but a row restored from a local snapshot (saved
+    // article, 30-day publication-visit history) can predate that filter. An
+    // `http://` URL is treated as UNAVAILABLE — an explicit notice replaces the
+    // read/translate/share block — never as a button that quietly does nothing.
+    const rawArticleUrl = article.article_url ?? null;
+    const articleUrl = secureUrlOrNull(rawArticleUrl);
+    const insecureLink = !!rawArticleUrl && !articleUrl;
     const read = isOpenedId(article._id, stableClusterId, openedIds);
 
     return (
@@ -604,13 +625,33 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     onOpenUrl={handleArticleUrlPress}
                                 />
                             </VStack>
+                        ) : insecureLink ? (
+                            <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2" space="sm">
+                                <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
+                                <Text size="sm" className="text-warning-400 flex-1">
+                                    {t('articleDetail.linkUnavailable')}
+                                </Text>
+                            </HStack>
                         ) : null}
+
+                        {/* Fact check sits OUTSIDE the URL branch: it is keyed
+                            on the article id and the server holds its own
+                            canonical URL, so it still works for a row whose
+                            local link we refuse to open. */}
+                        <FactCheckPanel articleId={article._id ?? articleId} />
 
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">
-                                <Heading size="md" className="text-gray-300">
-                                    {t('articleDetail.relatedArticles')}
-                                </Heading>
+                                <HStack className="items-center justify-between" space="sm">
+                                    <Heading size="lg" className="text-gray-300 flex-1">
+                                        {t('articleDetail.relatedArticles')}
+                                    </Heading>
+                                    <RelatedSortDropdown
+                                        value={relatedSortMode}
+                                        onChange={setRelatedSortMode}
+                                        testIDPrefix="related-sort"
+                                    />
+                                </HStack>
                                 {isLoadingRelated ? (
                                     <Box className="items-center justify-center py-4">
                                         <Spinner size="small" />

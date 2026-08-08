@@ -3001,3 +3001,231 @@ describe('enqueueUnscoredEligible — story-grouping gate routing', () => {
     expect(currentRun().batches[0].candidateIds).toEqual(['a0']);
   });
 });
+
+// ---------------------------------------------------------------------------
+// legacyNoteDemote — the v3 keep/demote note pass, transplanted onto the LEGACY
+// (backstop) path. Measured 2026-08-08 on goldset-348: judge-skip 22.5% → 19.6%,
+// recall flat, ZERO net LLM calls (it is the SAME per-article call the legacy
+// reason pass already makes — only the system prompt and the decoder differ).
+//
+// What these pin, in order of what would hurt most if it broke:
+//   1. FLAG OFF is byte-identical to before. This is the default, so it is the
+//      one that protects every user who has not opted in.
+//   2. The decision is captured at SUBMIT and survives the persist round trip.
+//      The two prompts have different OUTPUT CONTRACTS, so a batch that sent one
+//      and decoded with the other would persist raw JSON as a user-facing note.
+//   3. An in-flight batch keeps its own contract even if the live config flips
+//      underneath it (an OTA mid-run).
+// ---------------------------------------------------------------------------
+describe('legacyNoteDemote — the legacy path\'s keep/demote note pass', () => {
+  beforeEach(() => {
+    // Let the note verdict reach the decoder. The suite's default
+    // `toBatchResult` drops `output` (the legacy prose path reads its reasons
+    // out of the mocked `decodeResults` instead), but a note verdict IS the
+    // output — without this every result decodes as an empty string and the
+    // pass fails open on all of them.
+    mockToBatchResult.mockImplementation((row: any) => ({
+      id: row.id,
+      output: row.output ?? '',
+      ...(row.ok === false ? { error: 'boom' } : {}),
+    }));
+  });
+
+  /** The calibrated-config object the legacy submit reads the flag off. */
+  const noteConfig = (on: boolean) => ({
+    ...DEFAULT_HARNESS_CONFIG,
+    articlePipeline: {
+      ...DEFAULT_HARNESS_CONFIG.articlePipeline,
+      legacyNoteDemote: on,
+    },
+  });
+
+  /** Drive one legacy (backstop) candidate through relevance into the reasons
+   *  phase, which is where the note prompt is chosen. */
+  async function legacyToReasonPhase(id: string, relevance: number) {
+    await enqueueCandidates([id]);
+    const batch = currentRun().batches[0];
+    mockDecodeResults.mockReturnValueOnce({
+      scoreMap: new Map([[id, relevance]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([{ ...candidate(id), relevance }]);
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+    await handlePush(batch.requestId, 'foreground');
+    return { relevanceBatch: batch, reasonsBatch: currentRun().batches[0] };
+  }
+
+  it('DEFAULT (off): no marker on the batch, legacy reason prompt, prose decoder', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(false));
+    const { reasonsBatch } = await legacyToReasonPhase('a0', 0.8);
+
+    // Absent, not `false` — a legacy run written before this field existed must
+    // parse and resume identically, which is what makes the default inert.
+    expect(reasonsBatch.noteMode).toBeUndefined();
+    expect(mockBuildReasonCallsForSubset).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      false,
+    );
+
+    // Prose decoder: the plain reason is saved verbatim, and nothing is demoted.
+    mockDecodeResults.mockReturnValueOnce({
+      scoreMap: new Map(),
+      reasonMap: new Map([['a0', 'because it matters']]),
+      failedIds: new Set(),
+    });
+    mockSaveScoringResult.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: reasonsBatch.requestId,
+      results: [{ id: 'reason:a0', ok: true }],
+    });
+    await handlePush(reasonsBatch.requestId, 'foreground');
+
+    expect(mockSaveReason).toHaveBeenCalledWith('a0', 'because it matters');
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+  });
+
+  it('ON: the marker is persisted at submit and the note prompt is requested', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(true));
+    const { reasonsBatch } = await legacyToReasonPhase('a0', 0.8);
+
+    expect(reasonsBatch.noteMode).toBe(true);
+    // Not a v3 batch — this is the LEGACY path wearing v3's note pass.
+    expect(reasonsBatch.v3Mode).toBeUndefined();
+    expect(mockBuildReasonCallsForSubset).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      true,
+    );
+  });
+
+  it('ON: a kept row gets its sentence; the prose decoder is never consulted', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(true));
+    const { reasonsBatch } = await legacyToReasonPhase('a0', 0.8);
+    mockDecodeResults.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: reasonsBatch.requestId,
+      results: [
+        { id: 'reason:a0', ok: true, output: '{"keep":true,"why":"Your Bhopal family is in the flood zone."}' },
+      ],
+    });
+
+    await handlePush(reasonsBatch.requestId, 'foreground');
+
+    expect(mockSaveReason).toHaveBeenCalledWith('a0', 'Your Bhopal family is in the flood zone.');
+    // decodeResults is the PROSE reader; handing it `{"keep":…}` would persist
+    // raw JSON as the user-facing note.
+    expect(mockDecodeResults).not.toHaveBeenCalled();
+  });
+
+  it('ON: a rejected row is demoted below the gate, terminal and noteless', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(true));
+    const { reasonsBatch } = await legacyToReasonPhase('a0', 0.8);
+    mockSaveReason.mockClear();
+    mockSaveScoringResult.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: reasonsBatch.requestId,
+      results: [{ id: 'reason:a0', ok: true, output: '{"keep":false}' }],
+    });
+
+    await handlePush(reasonsBatch.requestId, 'foreground');
+
+    expect(mockSaveReason).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).toHaveBeenCalledWith('a0', {
+      relevance: DEFAULT_HARNESS_CONFIG.articlePipeline.feedVerifierDemoteScore,
+      reason: '',
+      reasonSkipped: true,
+    });
+  });
+
+  it('ON: fails OPEN on an unusable verdict — score stands, note still owed', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(true));
+    const { reasonsBatch } = await legacyToReasonPhase('a0', 0.8);
+    mockSaveReason.mockClear();
+    mockSaveScoringResult.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: reasonsBatch.requestId,
+      results: [{ id: 'reason:a0', ok: true, output: 'I am not JSON' }],
+    });
+
+    await handlePush(reasonsBatch.requestId, 'foreground');
+
+    expect(mockSaveReason).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+  });
+
+  // The whole reason the marker is persisted rather than re-read at decode.
+  it('an in-flight batch keeps its own contract when the live flag flips', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(true));
+    const { reasonsBatch } = await legacyToReasonPhase('a0', 0.8);
+    expect(reasonsBatch.noteMode).toBe(true);
+
+    // OTA lands mid-flight and turns the flag back off.
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(false));
+    mockDecodeResults.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: reasonsBatch.requestId,
+      results: [{ id: 'reason:a0', ok: true, output: '{"keep":true,"why":"Still decoded as a verdict."}' }],
+    });
+
+    await handlePush(reasonsBatch.requestId, 'foreground');
+
+    expect(mockSaveReason).toHaveBeenCalledWith('a0', 'Still decoded as a verdict.');
+    expect(mockDecodeResults).not.toHaveBeenCalled();
+  });
+});
+
+// The orphaned-reason sweep is a SECOND submit path, and it reads the flag from
+// its own call site. An earlier cut of this wiring read the raw
+// DEFAULT_HARNESS_CONFIG literal there while the relevance path read the
+// calibrated `effectiveHarnessConfig` — invisible today (both resolve to the
+// same literal), and a silent split the moment the flag is layered at runtime,
+// which is exactly how RELEVANCE_V3 is bound. This pins that both paths ask the
+// same question of the same object.
+describe('legacyNoteDemote — the orphaned-reason sweep reads the same config', () => {
+  const noteConfig = (on: boolean) => ({
+    ...DEFAULT_HARNESS_CONFIG,
+    articlePipeline: {
+      ...DEFAULT_HARNESS_CONFIG.articlePipeline,
+      legacyNoteDemote: on,
+    },
+  });
+
+  it('OFF: reasonsOnly batches carry no marker and request the legacy prompt', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(false));
+    mockGetScoredWithoutReasons.mockResolvedValue([{ ...candidate('o0'), relevance: 0.8 }]);
+
+    await enqueueOrphanedReasons();
+
+    expect(mockBuildReasonCallsForSubset).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      false,
+    );
+    expect(currentRun().batches[0].noteMode).toBeUndefined();
+  });
+
+  it('ON: reasonsOnly batches request the note prompt AND persist the marker', async () => {
+    mockEffectiveHarnessConfig.mockResolvedValue(noteConfig(true));
+    mockGetScoredWithoutReasons.mockResolvedValue([{ ...candidate('o0'), relevance: 0.8 }]);
+
+    await enqueueOrphanedReasons();
+
+    expect(mockBuildReasonCallsForSubset).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      true,
+    );
+    // Persisted, not re-derived: this batch's results must decode as verdicts
+    // even if an OTA turns the flag off while it is in flight.
+    expect(currentRun().batches[0].noteMode).toBe(true);
+  });
+});

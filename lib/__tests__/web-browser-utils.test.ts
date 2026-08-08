@@ -142,4 +142,26 @@ describe('openArticleInAppBrowser', () => {
       BASE_OPTIONS
     );
   });
+
+  // Item 16 — defence in depth. The server already excludes insecure articles
+  // from every serving path; this covers rows already on the device.
+  it.each([
+    'http://publisher.com/story',
+    'javascript:alert(1)',
+    'publisher.com/story',
+    '',
+  ])('refuses to open the non-https article URL %p', async (url) => {
+    await expect(openArticleInAppBrowser(url)).rejects.toThrow(/non-https/i);
+    expect(mockOpenBrowserAsync).not.toHaveBeenCalled();
+  });
+
+  it('leaves openInAppBrowser itself unguarded — the update gate needs store schemes', async () => {
+    // A blanket https-only rule here would silently break force-update, which
+    // feeds this a server-supplied `itms-apps://` URL.
+    await openInAppBrowser('itms-apps://itunes.apple.com/app/id1');
+    expect(mockOpenBrowserAsync).toHaveBeenCalledWith(
+      'itms-apps://itunes.apple.com/app/id1',
+      BASE_OPTIONS
+    );
+  });
 });

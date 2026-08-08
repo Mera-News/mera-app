@@ -1283,5 +1283,70 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── On-device translation cache (schema v49) ─────────────────────────
+      // ONE new table, and nothing else. Purely ADDITIVE in the strongest
+      // sense available: `createTable` on a name that has never existed
+      // touches no other table, alters no column, and drops nothing — in
+      // particular it does not go near `article_suggestions`, whose
+      // DROP+recreate emptied every device's feed and destroyed the 48h
+      // score-propagation donor pool in the v37/v41 incident (see CLAUDE.md).
+      // A device upgrading from any prior version gains an empty table and
+      // loses nothing; the cache refills itself from the OS translator.
+      //
+      // The row `id` is `${source_hash}:${target_lang}` (set via `_raw.id`),
+      // which is why there is no unique index here — the primary key IS the
+      // lookup key. `source_hash`/`target_lang` are still indexed for the
+      // per-language hydrate and the TTL sweep.
+      toVersion: 49,
+      steps: [
+        createTable({
+          name: 'translation_cache',
+          columns: [
+            { name: 'source_hash', type: 'string', isIndexed: true },
+            { name: 'target_lang', type: 'string', isIndexed: true },
+            { name: 'source_text', type: 'string' },
+            { name: 'translated_text', type: 'string' },
+            { name: 'created_at', type: 'number' },
+            { name: 'last_used_at', type: 'number', isIndexed: true },
+          ],
+        }),
+      ],
+    },
+    {
+      // ── Scorer VINTAGE per row (schema v50) ──────────────────────────────
+      // The render gate was a single number chosen by a FLAG: 0.4 for legacy
+      // scoring, 0.55 while relevance v3 is active. That is safe only if every
+      // row on the device was scored by the scorer the gate is calibrated for,
+      // and on a real device it never is — rows persist for 48h, so the moment
+      // the flag flips the feed holds a MIXTURE of v1- and v3-scored rows and
+      // the new gate re-judges all of them.
+      //
+      // That mixture is not symmetric. v1's relevance is QUANTISED: on the
+      // 348-row gold set it takes 25 distinct values, 89 rows tie at 0.6 and
+      // 25 rows sit at EXACTLY 0.4 — 21.6% of the 116 rows v1 admits at its
+      // own gate. A flag-level move to 0.55 deletes all 25 instantly, and
+      // because scored rows are not re-scored, nothing ever brings them back.
+      // Those rows sit in the LOW band [0.4,0.6), so the surface that loses them
+      // is the Dashboard (importance threshold 'low' by default) and the Feed
+      // only when its filter is lowered from the default 'medium'.
+      //
+      // So the vintage travels WITH the row and the gate is applied per row
+      // (`gateForRow`, lib/stores/fact-rows-selector.ts).
+      //
+      // ADDITIVE `addColumns` ONLY — `article_suggestions` must NEVER be
+      // DROP+recreated for an additive change: that empties every device's
+      // feed until a full re-sync AND destroys the 48h score-propagation donor
+      // pool (the v37/v41 incident — see CLAUDE.md). One nullable boolean
+      // changes nothing for existing rows: NULL reads as "legacy vintage",
+      // which is precisely what every pre-v50 row is, so there is no backfill.
+      toVersion: 50,
+      steps: [
+        addColumns({
+          table: 'article_suggestions',
+          columns: [{ name: 'scored_with_v3', type: 'boolean', isOptional: true }],
+        }),
+      ],
+    },
   ],
 });

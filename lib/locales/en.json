@@ -1,6 +1,8 @@
 {
   "common": {
-    "offlineBanner": "Slow or no connection to Mera. Showing saved news — we'll keep trying.",
+    "offlineBannerOffline": "You're offline. Showing saved news, and we'll keep trying.",
+    "offlineBannerInternetDown": "No internet access. Showing saved news, and we'll keep trying.",
+    "offlineBannerServerDown": "Slow or no connection to Mera. Showing saved news, and we'll keep trying.",
     "home": "Home",
     "yes": "Yes",
     "no": "No",
@@ -60,15 +62,18 @@
     "pendingDescription": "Mera News runs on a subscription. A plan switches on the AI layer; without one, Explore stays open and free and everything already on this device stays yours.",
     "enquiries": "For any enquiries you can send a mail to",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Refresh 🔄"
+    "refresh": "Refresh"
   },
   "subscription": {
-    "title": "Switch Mera on",
-    "description": "Mera reads the news for you: a feed shaped by what you actually care about, a dashboard of the day, the stories you choose to follow, and a chat that keeps learning what matters to you.",
+    "title": "Free isn't free.",
+    "para1": "Mera News could be free. It would just mean someone else was paying: an advertiser buying your attention, your data, or a friendly write-up. A lot of what looks like news is exactly that.",
+    "para2": "Ad funded media has no ceiling. Not on how much it takes from you, and not on what that gets used for later. We don't want to be that company, so the deal here is simple. You keep your data. The software does the work. You pay for it.",
+    "para3Trial": "We'd suggest starting with the one week free trial of Individual. It's the plan most people end up needing. After the week you can stay on it, move down to Starter, or up to Professional, whichever suits you best.",
+    "para3NoTrial": "Starter is a good place to begin. It's the smallest plan, and you can move up whenever Mera has earned it.",
     "viewPlans": "View plans",
-    "startWithStarter": "Start with Starter",
-    "allPlansHint": "Every plan is on the next screen.",
-    "starterRecommendation": "Starter is the place to begin. Mera News Free is there to keep what you have already built on this device, and on day one there is nothing to keep yet.",
+    "startFreeTrial": "Start your free trial",
+    "subscribeNow": "Subscribe now",
+    "planRecommendation": "You open about {{count}} articles a day. {{plan}} analyzes up to {{limit}} a day so there is always more than you'll get through.",
     "turnMeraBackOn": "Turn Mera back on",
     "lapsedFreeNote": "Mera News Free is yours for as long as you want it. A plan is what starts Mera working on your news again.",
     "subscribe": "Subscribe",
@@ -249,7 +254,65 @@
     "share": "Share",
     "shareVia": "Shared via {{downloadUrl}}",
     "sourceCountryGlobal": "Worldwide",
-    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name."
+    "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name.",
+    "linkUnavailable": "This link can't be opened securely, so it isn't available here."
+  },
+  "relatedSort": {
+    "a11yLabel": "Sort related articles",
+    "relevance": "Best match",
+    "oldest": "Oldest first",
+    "newest": "Newest first"
+  },
+  "factCheck": {
+    "action": "Fact check",
+    "actionA11y": "Run an AI fact check on this story",
+    "title": "AI fact check",
+    "hide": "Hide",
+    "retry": "Try again",
+    "checking": "Checking this story against other sources…",
+    "checkingHint": "This can take up to a minute.",
+    "stillWorking": "Still working on this one. Check back in a few minutes.",
+    "failed": "This check couldn't be finished. You can try again later.",
+    "error": "Couldn't start the check. Check your connection and try again.",
+    "blocked": "This story couldn't be checked.",
+    "claimsHeading": "Claims checked",
+    "citationsHeading": "Sources consulted",
+    "noCitations": "No sources came back with this check, so treat it as unconfirmed.",
+    "sourceFallback": "Source {{index}}",
+    "disclaimer": "Written by AI from a web search. It can be wrong or incomplete — read the sources before relying on it.",
+    "verdict": {
+      "supported": {
+        "label": "Consistent with sources",
+        "detail": "Other sources we found say broadly the same thing. That isn't proof it's true — only that we found nothing contradicting it."
+      },
+      "disputed": {
+        "label": "Sources disagree",
+        "detail": "We found sources that contradict parts of this story. Read them and judge for yourself."
+      },
+      "unsupported": {
+        "label": "No support found",
+        "detail": "We couldn't find other sources backing this up. That can simply mean the story is new or niche — it doesn't make it false."
+      },
+      "mixed": {
+        "label": "Partly consistent",
+        "detail": "Some parts line up with other sources and some don't. The claim-by-claim notes say which."
+      },
+      "unverifiable": {
+        "label": "Couldn't confirm",
+        "detail": "We couldn't find enough to confirm or contradict this story. This is not a finding that it's wrong."
+      },
+      "unknown": {
+        "label": "No clear answer",
+        "detail": "The check finished without a conclusion we can summarise. The sources below are what it looked at."
+      }
+    },
+    "assessment": {
+      "supported": "Backed by sources",
+      "disputed": "Sources disagree",
+      "unsupported": "No support found",
+      "unverifiable": "Couldn't confirm",
+      "unknown": "Unclear"
+    }
   },
   "newsCluster": {
     "failedToLoad": "Failed to load cluster details",
@@ -259,7 +322,9 @@
   },
   "sources": {
     "searchCountries": "Search countries...",
+    "searchCountriesOrPublishers": "Search countries or publishers...",
     "noCountriesMatch": "No countries match your search",
+    "noResultsMatch": "Nothing matches your search",
     "noSourcesAvailable": "No sources available",
     "noFeedsAvailable": "No feeds available",
     "publishers": "Publishers",
@@ -268,7 +333,15 @@
     "viewTopHeadlines": "Top headlines",
     "topHeadlines": "Top headlines",
     "addToLocations": "Add to your places",
-    "addedToLocations": "Added to your places"
+    "addedToLocations": "Added to your places",
+    "addToExplore": "Add to Explore",
+    "addedToExplore": "Added to Explore",
+    "badgeGovernment": "Government source",
+    "badgeRegulator": "Official agency"
+  },
+  "sourcePrefControl": {
+    "prioritiseA11y": "Prioritise this source",
+    "deprioritiseA11y": "Deprioritise this source"
   },
   "tabs": {
     "deck": "Feed",
@@ -293,11 +366,20 @@
     "chatHandoffDislikeNoPath": "I didn't like this story. Help me get fewer like it."
   },
   "explore": {
+    "serverUnavailable": "Mera can't be reached right now: try again in a moment.",
     "title": "Explore",
     "scopeWorld": "World",
     "noArticles": "No articles found",
     "addPlaces": "Add places",
-    "offlineUnavailable": "You're offline: Explore needs an internet connection"
+    "addSources": "Add sources",
+    "removeScope": "Remove {{name}}",
+    "offlineUnavailable": "You're offline: Explore needs an internet connection",
+    "searchPlaceholder": "Search recent news",
+    "clearSearch": "Clear search",
+    "searchMinLength": "Keep typing to search",
+    "searchNotSubscribed": "Search needs an active plan",
+    "searchError": "Couldn't search right now",
+    "searchEmpty": "No matches in the last 48 hours. Search covers recent headlines, not the full archive."
   },
   "forYou": {
     "sectionPrefix": "News about:",
@@ -334,6 +416,11 @@
     "close": "Close"
   },
   "trackedStories": {
+    "followFabLabel": "Follow a new story",
+    "followChatSeed": "I want to follow a story.",
+    "followChatIntro": "Tell me what you'd like to follow and I'll set it up.",
+    "emptyHintFollow": "Tap the follow button and tell Mera what you want to keep up with.",
+    "emptyCtaFollow": "Follow a story",
     "emptyTitle": "No stories followed yet",
     "emptyBody": "Follow a story to see every new development gathered here as it unfolds.",
     "title": "Followed stories",
@@ -493,6 +580,33 @@
     "translationFailedTooltip": "Translation failed, please reopen the app or check your settings"
   },
   "meraProtocol": {
+    "attestationTitle": "Verify attestation",
+    "attestationSubtitle": "Check that the cloud AI is running in genuine Intel TDX hardware, and that the key your data is encrypted to came from inside it.",
+    "attestationVerifyButton": "Run verification",
+    "attestationVerifying": "Verifying…",
+    "attestationRerun": "Run again",
+    "attestationVerdictFailed": "Verification failed",
+    "attestationVerdictIncomplete": "Partly verified",
+    "attestationVerdictVerified": "Verified",
+    "attestationVerdictFailedDetail": "Something did not check out. Your data is still encrypted, but the hardware could not be confirmed.",
+    "attestationVerdictIncompleteDetail": "Every check we perform passed. Some checks are not performed at all, and they are listed below as not checked.",
+    "attestationError": "Could not fetch an attestation report. Check your connection and try again.",
+    "attestationNotRunYet": "Not run yet.",
+    "attestationFailOpenNotice": "These results are shown for transparency and do not block anything yet.",
+    "attestationCheckQuoteStructure": "Quote is well-formed Intel TDX",
+    "attestationCheckReportDataKey": "Encryption key committed inside the quote",
+    "attestationCheckFreshness": "Quote is fresh (not a replay)",
+    "attestationCheckSigningAlgo": "Signing algorithm matches the key",
+    "attestationCheckQeReportSignature": "Quoting enclave signed by Intel",
+    "attestationCheckAttestationKeyBinding": "Signing key bound to the quoting enclave",
+    "attestationCheckQuoteSignature": "Quote signature is valid",
+    "attestationCheckPckChain": "Intel certificate chain is valid",
+    "attestationCheckRootCaPin": "Chain anchors to Intel's root certificate",
+    "attestationCheckTcbStatus": "Platform patch level is current",
+    "attestationCheckGpuAttestation": "GPU attestation",
+    "attestationNotCheckedLabel": "not checked",
+    "attestationScopeNotice": "This checks the model shown above. Mera uses more than one cloud model (chat uses a different one, and each has a backup), so a pass here covers this model, not every request.",
+    "attestationModelLabel": "Model checked",
     "title": "Mera Protocol",
     "sectionTitle": "Mera Protocol",
     "processingModeTitle": "Processing mode",
@@ -524,6 +638,14 @@
     "relevanceV3On": "Single-pass scoring: interests and impact, balanced",
     "relevanceV3Off": "Classic two-pass cloud scoring",
     "relevanceV3Description": "Beta — scores each article once on two axes: how close it is to your stated interests, and how much it could affect you. Fewer, better-separated suggestions and about a third less AI processing. Turn it off at any time to go back.",
+    "webSearchTitle": "Web search in chat",
+    "webSearchOn": "On — Mera can search the web to answer a question",
+    "webSearchOff": "Off",
+    "webSearchDescription": "When this is on, Mera can search the web to answer a question. The search words you type are sent to our server and on to a search provider. Nothing else goes with them — not your facts, not your feed, not who you are. Off by default.",
+    "deepInterviewTitle": "Deeper questions",
+    "deepInterviewOn": "On — Mera asks about attention, worries and decisions",
+    "deepInterviewOff": "Off",
+    "deepInterviewDescription": "Mera asks fewer, deeper questions: what you are trying to protect your attention from, which topics are necessary but anxious, which feel useful but waste your time, what you are deciding this month, and why each place matters to you. Your answers are stored on this device and never leave it — which is exactly why Mera can ask them. They make relevance scores and the reasons shown on each story sharper. Off by default.",
     "privacyTitle": "Your data stays private",
     "privacyDescription": "Mera Protocol is always on. On-device mode runs inference fully offline on your phone. Cloud mode uses end-to-end encrypted inference: your data is encrypted on your device and only decrypted inside a secure enclave we can't read into. Your facts, your profile and your reading history never leave this device. To fetch news we send only broad topic phrases, carrying no user ID.",
     "deviceSupported": "Device Supported",
@@ -565,6 +687,12 @@
     "modelUpdateFailedDescription": "Failed to update model. Please try again."
   },
   "manageData": {
+    "exportHistoryTitle": "Export reading history",
+    "exportHistoryDescription": "Last 30 days as JSON: articles, publications, and average time from publish to read",
+    "exportHistorySubject": "My Mera reading history (JSON)",
+    "exporting": "Exporting…",
+    "exportHistoryEmptyTitle": "Nothing to export yet",
+    "exportHistoryEmptyDescription": "You haven't read any articles in the last 30 days.",
     "deleting": "Deleting...",
     "title": "Manage Data",
     "description": "Delete specific pieces of your data. Each action shows exactly what it will clear, and whether it lives on this device or on our servers, before you confirm.",
@@ -617,6 +745,11 @@
     "accountDeletedDescription": "Your account has been permanently deleted.",
     "deletionFailedTitle": "Deletion Failed",
     "deletionFailedDescription": "There was an issue deleting your account. Please try again.",
+    "deleteAccountConfirmGrace": "Your account will be scheduled for deletion, with a 30-day grace period. Sign in again within those 30 days and the deletion is automatically canceled.",
+    "deleteAccountWarningGrace": "⚠️ After 30 days, this cannot be undone and all your data is permanently removed.",
+    "finalConfirmationBodyGrace": "This schedules your account for permanent deletion in 30 days.",
+    "accountDeletionScheduledTitle": "Deletion Scheduled",
+    "accountDeletionScheduledDescription": "Your account will be permanently deleted in 30 days. Sign in again before then to cancel the deletion.",
     "signedOutTitle": "Signed Out",
     "signedOutDescription": "You have been successfully signed out.",
     "logoutFailedTitle": "Logout Failed",
@@ -1332,6 +1465,22 @@
     "blurImagesDescription": "Soften article images across the app so graphic or disturbing visuals aren't shown sharply."
   },
   "display": {
+    "screenTitle": "Text & Display",
+    "screenSubtitle": "Set how text and visuals look on this device",
+    "sectionText": "Text",
+    "sectionVisuals": "Visuals",
+    "textSizeTitle": "Text size",
+    "textSizeDescription": "Applies everywhere in Mera. This is on top of your device's own text size setting.",
+    "textSizePreviewLabel": "Preview",
+    "textSizePreviewHeadline": "Markets steady as talks resume",
+    "textSizePreviewBody": "A short sample of body text, shown at the size you have chosen.",
+    "textSizeA11y": "Text size, {{label}}",
+    "textSizeStepCompact": "Compact",
+    "textSizeStepDefault": "Default",
+    "textSizeStepLarge": "Large",
+    "textSizeStepLarger": "Larger",
+    "textSizeStepLargest": "Largest",
+    "deviceTextSizeHint": "For even larger text, use Display & Brightness in your device settings.",
     "title": "Display",
     "subtitle": "Tune how Mera renders visuals on this device",
     "staticGradientTitle": "Static background",
@@ -1352,5 +1501,684 @@
     "lapseTitle": "Your Mera plan has ended",
     "lapseBody": "Nothing has been taken away. Anything you've saved, followed or read is yours, on this device, always. You're on Mera News Free from here. What pauses is the AI layer itself, so your personalized feed, dashboard, new story tracking and Mera chat stay off until you start a plan again.",
     "continueWithoutPlan": "Continue without a plan"
+  },
+  "consent": {
+    "title": "Before you continue",
+    "body": "We've updated our Terms of Service and Privacy Policy. Please review and accept them to keep using Mera.",
+    "termsLink": "Terms of Service",
+    "privacyLink": "Privacy Policy",
+    "accept": "Agree & Continue",
+    "accepting": "Saving…",
+    "errorTitle": "Couldn't save your acceptance",
+    "errorDescription": "Please check your connection and try again.",
+    "retry": "Try again"
+  },
+  "tutorials": {
+    "entryRow": "Welcome to Mera",
+    "menuTitle": "Welcome to Mera",
+    "menuSubtitle": "Short guides to how this app thinks. Start anywhere.",
+    "sectionBasic": "Start here",
+    "sectionAdvanced": "Go deeper",
+    "progress": "{{done}} of {{total}} done",
+    "advancedLockedTitle": "Go deeper",
+    "advancedLockedBody_one": "Finish {{count}} more guide and the advanced ones open up.",
+    "advancedLockedBody_other": "Finish {{count}} more guides and the advanced ones open up.",
+    "slideCount_one": "{{count}} card",
+    "slideCount_other": "{{count}} cards",
+    "completedBadge": "Done",
+    "empty": "Nothing here yet.",
+    "close": "Close",
+    "skip": "Skip",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "continueAnyway": "Continue anyway",
+    "slideProgress": "Card {{current}} of {{total}}",
+    "askMera": "Ask Mera",
+    "chatIntro": "Ask me anything about how Mera works. I can explain, but I can't change anything from here.",
+    "launchButton": "Take the tour",
+    "hintReveal": "Tap each one.",
+    "hintRevealSome": "Tap at least {{count}}.",
+    "hintChoose": "Pick one.",
+    "hintSort": "Tap a card, then tap where it belongs.",
+    "hintSortPick": "Now tap where it belongs.",
+    "hintBeforeAfter": "Tap to flip it over.",
+    "beforeLabel": "The short version",
+    "afterLabel": "What is actually true",
+    "sortDone": "That's all of them.",
+    "chapters": {
+      "welcome": {
+        "title": "Welcome to Mera",
+        "subtitle": "What this app is, in one minute.",
+        "slides": {
+          "what": {
+            "headline": "A news app that starts with you",
+            "body": "Most news apps start with the news and hope some of it fits. Mera starts at the other end: it learns a little about your life, then goes looking for the stories that touch it."
+          },
+          "not-a-timeline": {
+            "headline": "Not a timeline",
+            "body": "Nothing here is ordered by what is popular or by whatever arrived last. Have a guess at what decides the order.",
+            "choose": {
+              "popular": {
+                "label": "Whatever most people are reading",
+                "feedback": "Not here. Popularity is somebody else's news."
+              },
+              "yours": {
+                "label": "How much it touches your life",
+                "feedback": "That's it. Everything else is only a tiebreak."
+              },
+              "newest": {
+                "label": "Whatever came in last",
+                "feedback": "Close. New stories do land near the top, but being new is not what earns the top."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Three steps, and that is the whole app",
+            "body": "It really is this short.",
+            "steps": {
+              "0": "You say a few true things about your life.",
+              "1": "Mera turns them into things to go looking for.",
+              "2": "It reads the day's news and keeps what fits."
+            }
+          },
+          "matching": {
+            "headline": "Your life, not your clicks",
+            "body": "A nurse in a small town and a nurse in a capital city get different news here. Not because one of them tapped more, but because different things actually reach them."
+          },
+          "stays-here": {
+            "headline": "It stays on this phone",
+            "body": "Tap each one to see what that means.",
+            "reveal": {
+              "about-you": {
+                "label": "What it knows about you",
+                "text": "Your facts, your interests and what you have read are written to this phone and stay there. There is no copy of them sitting on a server."
+              },
+              "what-leaves": {
+                "label": "What actually leaves",
+                "text": "Short topic phrases, like \"hospital staffing\". No name, no account, nothing saying the phrase came from you."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Ready when you are",
+            "body": "Sign in and Mera will ask you a couple of things. There are no wrong answers and you can change any of it later. The rest of these guides are waiting in Settings."
+          }
+        }
+      },
+      "facts": {
+        "title": "Your facts shape your feed",
+        "subtitle": "Tell Mera about your life. It does the rest.",
+        "slides": {
+          "a-fact-is": {
+            "headline": "A fact is one true line",
+            "body": "\"I am a nurse.\" \"I live in Utrecht.\" \"I have a small child.\" Short, true, about your life. That is the whole idea.",
+            "ask": "What counts as a fact in Mera?"
+          },
+          "where-from": {
+            "headline": "Where facts come from",
+            "body": "You never have to fill in a form.",
+            "steps": {
+              "0": "You talk to Mera and it listens for the durable bits.",
+              "1": "You tell it outright: \"I moved to Lisbon.\"",
+              "2": "You add or remove them yourself on the Profile tab."
+            }
+          },
+          "to-topics": {
+            "headline": "Facts become things to look for",
+            "body": "\"I am a nurse\" turns into several search phrases: hospital staffing, nursing pay, health policy. One fact fans out into a handful. Those phrases are what go out to find news."
+          },
+          "sort-them": {
+            "headline": "Which of these is a fact?",
+            "body": "Tap a card, then tap where it belongs.",
+            "sort": {
+              "buckets": {
+                "fact": "A fact",
+                "not-fact": "Not a fact"
+              },
+              "cards": {
+                "nurse": "I am a nurse",
+                "utrecht": "I live in Utrecht",
+                "headline": "That train strike story",
+                "mood": "I am bored today"
+              }
+            }
+          },
+          "importance": {
+            "headline": "Some facts matter more than others",
+            "body": "On the Profile tab, tap anything Mera knows about you to raise or lower how much it counts, reword it, or remove it. Turning something down is gentler than deleting it, and usually the better first move.",
+            "ask": "How do I change how important one of my facts is?"
+          }
+        }
+      },
+      "feed": {
+        "title": "Reading your Feed",
+        "subtitle": "Where the day's stories live, and how they move.",
+        "slides": {
+          "two-lists": {
+            "headline": "Two lists, two jobs",
+            "body": "The first tab is your Feed: one long list, the most relevant near the top. The second is the same day sorted into sections. Same stories, different shape, so use whichever suits the mood.",
+            "ask": "What is the difference between the Feed and the Dashboard?"
+          },
+          "nothing-removed": {
+            "headline": "Nothing is ever removed",
+            "body": "Read a card and it does not vanish; it sinks. Two thin dividers cut the list into three parts, and cards drift down past them as you go.",
+            "steps": {
+              "0": "Top: everything you have not seen yet.",
+              "1": "Below the first divider: seen, but not opened.",
+              "2": "Below the second: already read."
+            },
+            "beforeAfter": {
+              "before": "Before you read it: the card sits up top with everything else that is new.",
+              "after": "After you read it: the same card, still there, now below the second divider. Scroll down and you can read it again whenever you like."
+            }
+          },
+          "what-counts-as-read": {
+            "headline": "\"Read\" is broader than you think",
+            "body": "Tap at least two to see what counts.",
+            "reveal": {
+              "open": {
+                "label": "Opening it",
+                "text": "Tapping through to the full story counts, which is no surprise."
+              },
+              "dwell": {
+                "label": "Just looking",
+                "text": "A card that sits properly on your screen for a second and a half counts too. A fast scroll past does not."
+              },
+              "act": {
+                "label": "Acting on it",
+                "text": "A thumb, a save, following the story, or sending it to Mera all count as read."
+              }
+            }
+          },
+          "order-holds-still": {
+            "headline": "The order holds still while you read",
+            "body": "Mera works out the order once, when you open the app or pull down to refresh, and then leaves it alone. Nothing rearranges itself under your thumb halfway down the list."
+          },
+          "why-this-one": {
+            "headline": "Why this one?",
+            "body": "Each card carries a short line saying why it reached you, and a word for how much it seems to matter. If a reason looks wrong, that is the single most useful thing you can tell Mera about.",
+            "ask": "Where does the reason underneath a story come from?"
+          },
+          "caught-up": {
+            "headline": "Running out is fine",
+            "body": "When there is nothing new left, Mera says so and stops. It will not pad the list to keep you scrolling. Everything you have already read is still below, if you want it."
+          }
+        }
+      },
+      "teaching": {
+        "title": "Teaching Mera",
+        "subtitle": "Two thumbs, one reason, and an undo.",
+        "slides": {
+          "two-thumbs": {
+            "headline": "Two thumbs",
+            "body": "Every story has an \"I like it\" and a \"Not for me\". They are the fastest thing to tap, and on their own the least useful."
+          },
+          "bare-thumb": {
+            "headline": "A thumb on its own is thrown away",
+            "body": "This surprises people, so it is worth saying plainly.",
+            "steps": {
+              "0": "You tap a thumb.",
+              "1": "A small card opens and asks what it was about.",
+              "2": "Say nothing, and nothing is saved."
+            },
+            "ask": "Why does a thumbs down on its own not change anything?"
+          },
+          "the-reason": {
+            "headline": "The reason is the useful part",
+            "body": "Which of these actually changes your feed?",
+            "choose": {
+              "just-thumb": {
+                "label": "A thumbs down and nothing else",
+                "feedback": "Nothing changes. Mera cannot tell whether it was the subject, the source, or just today."
+              },
+              "thumb-plus-reason": {
+                "label": "A thumbs down plus \"too much about this football club\"",
+                "feedback": "That is the one. Now there is something specific to act on."
+              }
+            }
+          },
+          "undo": {
+            "headline": "Undo is always right there",
+            "body": "Every change made from feedback shows a short confirmation with an Undo beside it. Tap that and it is as though nothing happened."
+          },
+          "it-adds-up": {
+            "headline": "Small corrections beat big ones",
+            "body": "You do not have to fix your whole profile in one sitting. Two or three honest corrections across a week move the feed further than one long session ever does.",
+            "ask": "How soon does my feedback show up in the feed?"
+          }
+        }
+      },
+      "privacy": {
+        "title": "Your privacy",
+        "subtitle": "What leaves this phone, and what never does.",
+        "slides": {
+          "stays-on-phone": {
+            "headline": "The part about you never leaves",
+            "body": "Your facts, your interests, your places and everything you have read live on this phone. There is no copy on a server, which is also why signing out or switching phones means building the profile again."
+          },
+          "what-leaves": {
+            "headline": "What actually goes out",
+            "body": "Three things, and that is the list.",
+            "steps": {
+              "0": "Short topic phrases, so there is something to match stories against.",
+              "1": "Your email address and which plan you are on.",
+              "2": "A count of how many stories were analysed today, to keep that plan honest."
+            },
+            "ask": "What does the app send to your servers?"
+          },
+          "cloud-is-default": {
+            "headline": "The default is encrypted cloud",
+            "body": "Reading a day of news takes a fair amount of thinking, and most phones would rather not. So out of the box that work happens in the cloud.",
+            "beforeAfter": {
+              "before": "The version we would love to tell you: your phone does all of it, always.",
+              "after": "What is actually true: by default the thinking happens in the cloud, encrypted on this phone and opened only inside a sealed enclave. On-device is a switch you can flip. We would rather say so than let you assume."
+            }
+          },
+          "on-device-option": {
+            "headline": "On-device, if you want it",
+            "body": "In Settings → Mera Protocol you can move the processing onto this phone, and then nothing about you leaves at all. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
+          },
+          "decoys-are-a-switch": {
+            "headline": "Decoys are off until you turn them on",
+            "body": "There is a setting called Inject noise that sends invented topics alongside your real ones, so the phrases arriving from your phone cannot be read as a portrait of you. What is it doing right now?",
+            "choose": {
+              "always-on": {
+                "label": "Running quietly in the background",
+                "feedback": "No, and we would rather correct that than leave it as a comfortable assumption."
+              },
+              "off-until-you-turn-it-on": {
+                "label": "Nothing, until you switch it on",
+                "feedback": "Right. It is off by default: Settings → Mera Protocol → Inject noise."
+              }
+            }
+          },
+          "what-we-keep": {
+            "headline": "What we do keep",
+            "body": "Your login email. Which plan you are on. A per-day count of stories analysed. The topic phrases are cached by their text alone, with nothing recording who asked for them, and dropped after fourteen days unused.",
+            "ask": "What does Mera store about me on its servers?"
+          }
+        }
+      },
+      "following": {
+        "title": "Following a story",
+        "subtitle": "Keep one story in view as it unfolds.",
+        "slides": {
+          "what-it-is": {
+            "headline": "For stories that are not over",
+            "body": "An election, a trial, a storm, a takeover. Follow it once and every new development gathers in one place instead of arriving scattered through your feed over three weeks."
+          },
+          "two-ways-in": {
+            "headline": "Two ways to start",
+            "body": "Both end up in the same place.",
+            "steps": {
+              "0": "Open a story in full and tap the track icon in the row of buttons underneath.",
+              "1": "Or open Followed stories, tap the follow button, and just say what you want to keep up with."
+            },
+            "ask": "How do I follow a story?"
+          },
+          "pick-the-scope": {
+            "headline": "How wide should it be?",
+            "body": "Mera offers three or four scopes and you tap one. Nothing is followed until you do. Which would you pick for a court case?",
+            "choose": {
+              "narrow": {
+                "label": "Just this trial",
+                "feedback": "Tight and quiet. You will get the verdict and not much else."
+              },
+              "medium": {
+                "label": "This trial and the appeals around it",
+                "feedback": "A good middle. This is the one most people want."
+              },
+              "wide": {
+                "label": "The whole scandal it came out of",
+                "feedback": "Broad. You will get plenty, including things only loosely related."
+              }
+            }
+          },
+          "the-timeline": {
+            "headline": "It gathers, it does not nag",
+            "body": "New developments collect on the story's own timeline with a small count beside it. If the story goes quiet, Mera says so rather than inventing an update to fill the space."
+          },
+          "stop-following": {
+            "headline": "Stopping is one tap",
+            "body": "Open the story and stop following. The gathered timeline goes with it, so if you only wanted a break it is worth knowing this is a delete rather than a pause.",
+            "ask": "What happens to the timeline if I stop following a story?"
+          }
+        }
+      },
+      "explore": {
+        "title": "Explore",
+        "subtitle": "The same headlines everyone else gets.",
+        "slides": {
+          "unscored-on-purpose": {
+            "headline": "Deliberately not about you",
+            "body": "Explore is the one place Mera does not personalise anything. No scoring, no reasons, nothing learned from what you open here. Just what a country's newsrooms are leading with, in their order.",
+            "ask": "Why is the Explore tab not personalised?"
+          },
+          "the-chips": {
+            "headline": "The chips across the top",
+            "body": "They are built for you rather than chosen by you.",
+            "steps": {
+              "0": "World comes first, always.",
+              "1": "Then your own country and any places Mera knows about, and after those, any country you have added yourself."
+            }
+          },
+          "the-plus-chip": {
+            "headline": "The + at the end of the chips",
+            "body": "There is a small + chip after the last country. Where does it take you?",
+            "choose": {
+              "places": {
+                "label": "Your places",
+                "feedback": "It used to. It does not any more."
+              },
+              "sources": {
+                "label": "The Sources screen",
+                "feedback": "Right: countries, and the publishers behind them."
+              },
+              "settings": {
+                "label": "Settings",
+                "feedback": "No. Settings is the last tab along the bottom."
+              }
+            }
+          },
+          "search": {
+            "headline": "Searching Explore",
+            "body": "The search bar above the chips looks through recent headlines, roughly the last two days, not an archive. It is for \"what happened with that thing\", not for research."
+          },
+          "hide-a-chip": {
+            "headline": "Too many chips",
+            "body": "Press and hold a chip you do not want and it goes away. Mera builds these from the places it knows about, so if one keeps coming back, the place behind it is still in your profile.",
+            "ask": "How do I get rid of a country chip in Explore?"
+          }
+        }
+      },
+      "sources": {
+        "title": "Choosing your sources",
+        "subtitle": "Badges, arrows, and the one control that is a block.",
+        "slides": {
+          "where-it-lives": {
+            "headline": "Where sources live",
+            "body": "Two doors, one screen.",
+            "steps": {
+              "0": "The + chip at the end of Explore's row of chips.",
+              "1": "Or the Profile tab, then Advanced, then Sources."
+            },
+            "ask": "Where do I manage which sources I see?"
+          },
+          "the-two-badges": {
+            "headline": "Only two badges exist",
+            "body": "Tap each one to see what it means, and what the absence of one does not mean.",
+            "reveal": {
+              "government": {
+                "label": "Government source",
+                "text": "The publisher is a government body. Worth knowing when you are reading an official statement about an official thing."
+              },
+              "regulator": {
+                "label": "Official agency",
+                "text": "A regulator or public agency: a health authority, a transport safety board, a central bank."
+              },
+              "everything-else": {
+                "label": "No badge at all",
+                "text": "Everything else, which is nearly everything. It is not a quality rating, and its absence says nothing bad about a publisher."
+              }
+            }
+          },
+          "plus-is-not-a-rank": {
+            "headline": "The + next to a country",
+            "body": "Countries carry a + and a pair of arrows, and they do completely different jobs. What does the + do?",
+            "choose": {
+              "ranks-it-up": {
+                "label": "Ranks that country's news higher",
+                "feedback": "That is the arrows. The + is not a ranking control at all."
+              },
+              "adds-a-chip": {
+                "label": "Adds that country as a chip in Explore",
+                "feedback": "Exactly. Browsing only; it changes nothing about your personalised feed."
+              },
+              "follows-it": {
+                "label": "Follows the country as a story",
+                "feedback": "No. Following is for a single story that is still unfolding."
+              }
+            }
+          },
+          "arrows-on-a-country": {
+            "headline": "The arrows next to a country",
+            "body": "Up means you would rather hear from that country's newsrooms; down means less often. It applies to every publisher there at once, and tapping the same arrow again clears it."
+          },
+          "arrows-on-a-publisher": {
+            "headline": "The same arrows, one publisher at a time",
+            "body": "Open a country and every publisher has its own pair. Down is a nudge rather than a wall: a downranked publisher still turns up when it has a story nobody else has.",
+            "ask": "What is the difference between turning a source down and muting it?"
+          },
+          "mute-is-not-a-downrank": {
+            "headline": "Mute is a different thing entirely",
+            "body": "Mute lives only on the source preferences screen, and it is a hard exclusion: those stories are dropped, not merely sorted lower. Tap each card and put it where it belongs.",
+            "steps": {
+              "0": "Down arrow: shown less often.",
+              "1": "Mute: not shown at all.",
+              "2": "Either can be cleared later, from source preferences."
+            },
+            "sort": {
+              "buckets": {
+                "softer": "Shown less often",
+                "gone": "Kept out entirely"
+              },
+              "cards": {
+                "down-arrow": "The down arrow",
+                "mute": "Mute"
+              }
+            }
+          }
+        }
+      },
+      "filters": {
+        "title": "Filtering things out",
+        "subtitle": "How \"not interested\" actually works.",
+        "slides": {
+          "three-shelves": {
+            "headline": "Three shelves on one screen",
+            "body": "The Not interested screen holds everything you have asked Mera to keep back.",
+            "steps": {
+              "0": "Words and things you have hidden.",
+              "1": "Topics you see less of.",
+              "2": "Sources you have muted or turned down."
+            },
+            "ask": "Where can I see everything I have filtered out?"
+          },
+          "exact-match": {
+            "headline": "A filter matches one thing exactly",
+            "body": "Filters are not searches. A place filter matches that place; a source filter matches that source. They compare an exact value against one field of a story, which is what makes them predictable, and also what makes the next card matter."
+          },
+          "made-from-a-story": {
+            "headline": "Where the precise ones come from",
+            "body": "You want to stop hearing about one particular place. What actually works?",
+            "choose": {
+              "type-it": {
+                "label": "Type the place name into the filter screen",
+                "feedback": "That gets stored as words rather than as a place. Useful, but looser than you meant."
+              },
+              "from-an-article": {
+                "label": "Say it about a story you are looking at",
+                "feedback": "Yes. Tell Mera in chat, or use the feedback card on the story itself. The filter is minted from that story's real place, so it lines up exactly."
+              }
+            }
+          },
+          "typed-is-words-only": {
+            "headline": "Typed filters are words",
+            "body": "You can add one by hand and it is genuinely useful: it catches a phrase wherever it turns up. It simply cannot be a place or a source, because a name you typed would almost never line up exactly with the stored one."
+          },
+          "soft-fades-hard-stays": {
+            "headline": "Some fade, some stay",
+            "body": "It depends on how firmly you said it, not on where it came from.",
+            "beforeAfter": {
+              "before": "A soft filter, \"a bit less of this\", steps aside after thirty days. Tastes move on.",
+              "after": "A firm one (the hard switch when you add a filter by hand, or muting a source) has no expiry at all and stays until you remove it yourself."
+            },
+            "ask": "Do the things I filter out ever come back?"
+          }
+        }
+      },
+      "signal": {
+        "title": "Turning down the volume",
+        "subtitle": "One dial, and the stories it never gets to see.",
+        "slides": {
+          "the-dial": {
+            "headline": "The small chip in the header",
+            "body": "At the top of the Feed and of the Dashboard sits a chip reading High, Med or Low with a little arrow. It is a floor: stories rated below it are simply not drawn.",
+            "ask": "What does the Med chip at the top of my feed do?"
+          },
+          "per-screen": {
+            "headline": "Each screen keeps its own",
+            "body": "Tightening one never starves the other. Tap each card onto the screen it describes.",
+            "steps": {
+              "0": "The Feed starts at Medium: the day's substance, not every last thing.",
+              "1": "The Dashboard starts at Low: everything, for when you feel like browsing."
+            },
+            "sort": {
+              "buckets": {
+                "feed-tab": "Feed",
+                "dashboard-tab": "Dashboard"
+              },
+              "cards": {
+                "medium-default": "Starts at Medium",
+                "low-default": "Starts at Low"
+              }
+            }
+          },
+          "breaking-always-passes": {
+            "headline": "Breaking news ignores the dial",
+            "body": "Anything rated as an emergency passes every setting, High included. The dial is there to trim routine news; it is not a way to mute a disaster."
+          },
+          "headline-cull": {
+            "headline": "Some stories never reach the dial",
+            "body": "Alongside your own stories, Mera pulls in a country's top headlines. A top headline that scores low for you is dropped outright rather than parked at the bottom. A headline exists to say \"this matters here\", and a low-scoring one is just noise. Stories matched to your own interests are never dropped this way.",
+            "ask": "Why do I see fewer general headlines than stories about my interests?"
+          }
+        }
+      },
+      "chat": {
+        "title": "Talking to Mera",
+        "subtitle": "The fastest way to change almost anything.",
+        "slides": {
+          "where-mera-is": {
+            "headline": "Mera is on the Profile tab",
+            "body": "The speech bubble next to the logo on the Profile tab opens the chat. It is easy to walk past, and it is the most capable control in the app.",
+            "ask": "Where do I find the chat with Mera?"
+          },
+          "ask-what-it-knows": {
+            "headline": "Start by asking what it knows",
+            "body": "\"What do you know about me?\" gets you the list it is actually working from. It is the quickest way to spot the one stale fact that has been quietly bending your feed for a month."
+          },
+          "say-it-plainly": {
+            "headline": "Say it the way you would to a person",
+            "body": "No commands, no syntax. Tap a couple of examples.",
+            "steps": {
+              "0": "You say it plainly.",
+              "1": "Mera works out which settings that means.",
+              "2": "You confirm, or you do not."
+            },
+            "reveal": {
+              "less-of": {
+                "label": "\"Less football, please\"",
+                "text": "Mera turns that into a turned-down topic and shows you the change before anything is applied."
+              },
+              "more-of": {
+                "label": "\"I have started cycling\"",
+                "text": "That becomes a new fact, and a few things to go looking for."
+              },
+              "moved": {
+                "label": "\"I moved to Lisbon\"",
+                "text": "The old place is retired and the new one added, usually as one proposal you confirm once."
+              }
+            }
+          },
+          "nothing-until-you-tap": {
+            "headline": "Nothing happens until you tap",
+            "body": "When Mera decides something should change, it stages the change as a card and stops. So what happens if you type \"yes, do it\" instead of tapping the card?",
+            "choose": {
+              "applies-immediately": {
+                "label": "It applies the change",
+                "feedback": "It does not. Typed agreement is not consent here; the tap is."
+              },
+              "waits-for-your-tap": {
+                "label": "Nothing. The card is still sitting there waiting",
+                "feedback": "Right. The card usually offers a choice of scope that only you can make, so it waits for the tap."
+              }
+            },
+            "ask": "Why did Mera not apply the change I said yes to?"
+          },
+          "written-down": {
+            "headline": "Every change is written down",
+            "body": "Applied changes are recorded with what it was before, what it became, and where the change came from: chat, feedback, a suggestion, or you. Nothing Mera does to your profile is invisible."
+          },
+          "take-it-back": {
+            "headline": "And most of it can be taken back",
+            "body": "The record lives in Settings → Mera Protocol → Persona change log.",
+            "beforeAfter": {
+              "before": "A weight change, an added topic, a filter you removed: these carry a Revert that puts things back exactly as they were.",
+              "after": "A few cannot be undone and say so: deleting a fact during a cleanup, or removing a place, throws away what would be needed to restore it. Those sit in the log with no Revert beside them."
+            },
+            "ask": "How do I undo something Mera changed about my profile?"
+          }
+        }
+      },
+      "protocol": {
+        "title": "The Mera Protocol screen",
+        "subtitle": "A few switches, and what each one really does.",
+        "slides": {
+          "one-screen": {
+            "headline": "Where the switches are",
+            "body": "Two taps from anywhere in the app.",
+            "steps": {
+              "0": "The Settings tab, the last one along the bottom.",
+              "1": "Mera Protocol."
+            },
+            "ask": "Where is the Mera Protocol screen?"
+          },
+          "processing-mode": {
+            "headline": "Processing mode",
+            "body": "Where the thinking happens. Tap both.",
+            "reveal": {
+              "cloud": {
+                "label": "Cloud (the default)",
+                "text": "Your data is encrypted on this phone, opened only inside a sealed enclave, and encrypted again on the way back. Fast, and works on any phone. The app does not yet check that enclave's certificate against the chip maker, which the privacy notice says out loud."
+              },
+              "on-device": {
+                "label": "On-device",
+                "text": "Everything runs here and nothing about you leaves at all. It downloads a model first, wants a fairly recent phone, and is noticeably slower."
+              }
+            }
+          },
+          "inject-noise": {
+            "headline": "Inject noise",
+            "body": "Sends invented topics out alongside your real ones, so the phrases arriving from your phone cannot be read as a portrait. Anything that matched only a decoy is thrown away on this phone before you ever see it. Off by default: it can slow topic generation down and dilute the feed a little."
+          },
+          "deeper-questions": {
+            "headline": "Deeper questions",
+            "body": "This changes what Mera asks you, not what it sends. Instead of what you are interested in, it asks what you are protecting your attention from and what you are deciding this month. The answers are facts like any other and never leave this phone, which is precisely why it can ask them."
+          },
+          "web-search": {
+            "headline": "Web search in chat",
+            "body": "Off by default. Turned on, Mera can look something up mid-conversation. What leaves your phone when it does?",
+            "choose": {
+              "whole-question": {
+                "label": "Your whole message",
+                "feedback": "No. And while the switch is off, the search tool is not even offered to the model, so it costs nothing at all."
+              },
+              "search-words-only": {
+                "label": "Only the search words",
+                "feedback": "Right. The words it decided to search for, and nothing else."
+              }
+            },
+            "ask": "What leaves my phone when web search in chat is on?"
+          },
+          "the-change-log": {
+            "headline": "The change log lives here too",
+            "body": "Persona change log, on the same screen. Every change to your profile in order, newest first, with a Revert on the ones that can be undone. If your feed has drifted somewhere odd, this is where you find out when it happened.",
+            "ask": "How do I see what has been changing my profile?"
+          }
+        }
+      }
+    }
   }
 }

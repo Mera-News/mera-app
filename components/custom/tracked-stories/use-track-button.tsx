@@ -112,7 +112,7 @@ export function useTrackButton(
       <ModalBackdrop />
       <ModalContent>
         <ModalHeader>
-          <Heading size="md" className="text-white" testID="already-tracking-title">
+          <Heading size="lg" className="text-white" testID="already-tracking-title">
             {t('trackedStories.alreadyTrackingTitle')}
           </Heading>
         </ModalHeader>
@@ -138,7 +138,7 @@ export function useTrackButton(
       <ModalBackdrop />
       <ModalContent>
         <ModalHeader>
-          <Heading size="md" className="text-white" testID="track-locked-title">
+          <Heading size="lg" className="text-white" testID="track-locked-title">
             {t('freeTier.trackTitle')}
           </Heading>
         </ModalHeader>

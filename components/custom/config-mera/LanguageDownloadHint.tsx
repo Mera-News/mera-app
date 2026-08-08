@@ -45,7 +45,7 @@ const LanguageDownloadHint: React.FC<LanguageDownloadHintProps> = ({
     return (
         <Text
             testID={testID}
-            className={`text-typography-400 text-xs leading-5 ${className}`}
+            className={`text-typography-400 text-xs ${className}`}
         >
             {t('language.downloadHintBeforePrefix')}{' '}
             <MaterialCommunityIcons

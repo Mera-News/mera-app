@@ -331,7 +331,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                             <TranslatableDynamic
                                 text={headline}
                                 as="heading"
-                                size="lg"
+                                size="xl"
                                 numberOfLines={2}
                                 className="text-white"
                             />
@@ -375,7 +375,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader>
-                        <Heading size="md" className="text-white">
+                        <Heading size="lg" className="text-white">
                             {t('trackedStories.deleteStoryConfirmTitle')}
                         </Heading>
                     </ModalHeader>

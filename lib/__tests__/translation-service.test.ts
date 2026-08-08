@@ -45,11 +45,16 @@ import {
     isTranslationBlocked,
     isTranslationVerified,
     probeTranslationLanguage,
+    translateTextDetailed,
     TRANSLATION_FAILURE_THRESHOLD,
     VERIFIED_TRANSLATION_FAILURE_THRESHOLD,
     __resetTranslationStateForTests,
 } from '../translation-service';
 import logger from '@/lib/logger';
+import {
+    bumpTranslationEpoch,
+    getTranslationQueueStats,
+} from '../translation-queue';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // getLanguageName
@@ -895,5 +900,131 @@ describe('translateTexts', () => {
         const result = await promise;
 
         expect(result).toEqual(['Hola']);
+    });
+});
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scheduler integration — route-epoch dropping and the probe exemption.
+// The unit behaviour of the queue itself lives in translation-queue.test.ts;
+// these cover the wiring, which is where a mistake would be invisible.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('translateTextDetailed + the route epoch', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.useFakeTimers();
+        __resetTranslationStateForTests();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it("reports 'ok' with the text on success", async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockResolvedValueOnce({ translatedTexts: 'Bonjour' });
+
+        const promise = translateTextDetailed('Hello', 'fr');
+        await jest.runAllTimersAsync();
+
+        await expect(promise).resolves.toEqual({ status: 'ok', text: 'Bonjour' });
+    });
+
+    it("reports 'failed' — not 'dropped' — when the OS refuses", async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockRejectedValue(new Error('nope'));
+
+        const promise = translateTextDetailed('Hello', 'fr');
+        await jest.runAllTimersAsync();
+
+        await expect(promise).resolves.toEqual({ status: 'failed', text: null });
+    });
+
+    it("reports 'dropped' for a call retired by a route change, and never calls the OS", async () => {
+        await openGate('fr');
+        // Occupy the single slot with a call that never settles, so the next
+        // one is still queued when the route changes.
+        mockOnTranslateTask.mockReturnValueOnce(new Promise(() => {}));
+        void translateTextDetailed('First', 'fr');
+        await Promise.resolve();
+
+        const queued = translateTextDetailed('Second', 'fr');
+        bumpTranslationEpoch('/logged-in/article/1');
+
+        await expect(queued).resolves.toEqual({ status: 'dropped', text: null });
+        // One call for 'First' only — 'Second' never reached the native module.
+        expect(mockOnTranslateTask).toHaveBeenCalledTimes(1);
+    });
+
+    it('a drop costs the language nothing — no failure is recorded', async () => {
+        await openGate('fr');
+        mockOnTranslateTask.mockReturnValueOnce(new Promise(() => {}));
+        void translateTextDetailed('First', 'fr');
+        await Promise.resolve();
+
+        const queued = translateTextDetailed('Second', 'fr');
+        bumpTranslationEpoch();
+        await queued;
+
+        expect(isTranslationBlocked('fr')).toBe(false);
+        expect(isTranslationVerified('fr')).toBe(true);
+    });
+
+    it('forwards the caller priority so the visible text goes first', async () => {
+        await openGate('fr');
+        // Occupy the single slot with a call we control, so the next two are
+        // still QUEUED (and therefore orderable) when we release it.
+        let releaseHead!: (value: unknown) => void;
+        mockOnTranslateTask.mockReturnValueOnce(
+            new Promise((resolve) => {
+                releaseHead = resolve;
+            }),
+        );
+        void translateTextDetailed('Head', 'fr');
+        await Promise.resolve();
+
+        const order: string[] = [];
+        mockOnTranslateTask.mockImplementation((args: any) => {
+            order.push(args.input);
+            return Promise.resolve({ translatedTexts: 'x' });
+        });
+        // Enqueued bottom-first on purpose: pure FIFO would translate the text
+        // the reader has scrolled past before the one under their thumb.
+        void translateTextDetailed('Bottom of screen', 'fr', { priority: 900 });
+        void translateTextDetailed('Top of screen', 'fr', { priority: 10 });
+        expect(getTranslationQueueStats().pending).toBe(2);
+
+        releaseHead({ translatedTexts: 'ok' });
+        await jest.runAllTimersAsync();
+
+        expect(order).toEqual(['Top of screen', 'Bottom of screen']);
+    });
+
+    it('never drops the probe — a route change must not break language switching', async () => {
+        await openGate('fr');
+        let releaseHead!: (value: unknown) => void;
+        mockOnTranslateTask.mockReturnValueOnce(
+            new Promise((resolve) => {
+                releaseHead = resolve;
+            }),
+        );
+        void translateTextDetailed('Head', 'fr');
+        await Promise.resolve();
+
+        mockOnTranslateTask.mockImplementation(() =>
+            Promise.resolve({ translatedTexts: 'Hallo' }),
+        );
+        const probe = probeTranslationLanguage('de');
+        const ordinary = translateTextDetailed('Headline', 'de');
+
+        bumpTranslationEpoch('/logged-in/app_container/settings');
+
+        await expect(ordinary).resolves.toEqual({ status: 'dropped', text: null });
+
+        releaseHead({ translatedTexts: 'ok' });
+        await jest.runAllTimersAsync();
+        await expect(probe).resolves.toBe('success');
+        expect(isTranslationVerified('de')).toBe(true);
     });
 });

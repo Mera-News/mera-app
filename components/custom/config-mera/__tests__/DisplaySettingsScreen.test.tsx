@@ -1,7 +1,12 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Tests for Settings → Display. The one thing worth pinning: the toggle is
-// bound to the display-prefs store in both directions, because it is the only
-// way a user can turn the animated backdrop off.
+// Tests for Settings → Text & Display.
+//
+// Two bindings are worth pinning, because each is the ONLY way a user can reach
+// the setting behind it: the static-background toggle (display-prefs store) and
+// the text-size stepper (text-scale store).
+//
+// Copy is asserted by KEY, never by English text — `t` is mocked to echo the
+// key, and the new strings are spliced into the locale files separately.
 import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
@@ -38,6 +43,7 @@ jest.mock('@/components/ui/hstack', () => { const { View } = require('react-nati
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
 jest.mock('@/components/ui/pressable', () => { const { Pressable } = require('react-native'); return { Pressable }; });
+jest.mock('@/components/ui/scroll-view', () => { const { View } = require('react-native'); return { ScrollView: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/switch', () => {
     const { Pressable } = require('react-native');
     return {
@@ -61,18 +67,35 @@ jest.mock('@/lib/stores/display-prefs-store', () => ({
         selector({ staticGradient: mockStaticGradient, setStaticGradient: mockSetStaticGradient }),
 }));
 
+const mockSetTextScale = jest.fn();
+let mockTextScale = 1;
+
+// The store is mocked wholesale — it reaches WatermelonDB, and `requireActual`
+// would instantiate the SQLite adapter. The step list is NOT mocked: it lives in
+// `lib/typography/scale.ts` precisely so it can be imported without the DB, so
+// the option set under test is the shipped one.
+jest.mock('@/lib/stores/text-scale-store', () => ({
+    useTextScaleStore: (selector: any) =>
+        selector({ scale: mockTextScale, setScale: mockSetTextScale }),
+}));
+
 import DisplaySettingsScreen from '../DisplaySettingsScreen';
+
+import { TEXT_SCALE_STEPS } from '@/lib/typography/scale';
 
 beforeEach(() => {
     jest.clearAllMocks();
     mockStaticGradient = false;
+    mockTextScale = 1;
 });
 
 describe('DisplaySettingsScreen', () => {
-    it('renders the screen chrome and the static-background row', () => {
+    it('renders the screen chrome and both sections', () => {
         const { getByText } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        expect(getByText('display.title')).toBeTruthy();
-        expect(getByText('display.subtitle')).toBeTruthy();
+        expect(getByText('display.screenTitle')).toBeTruthy();
+        expect(getByText('display.screenSubtitle')).toBeTruthy();
+        expect(getByText('display.sectionText')).toBeTruthy();
+        expect(getByText('display.sectionVisuals')).toBeTruthy();
         expect(getByText('display.staticGradientTitle')).toBeTruthy();
         expect(getByText('display.staticGradientDescription')).toBeTruthy();
     });
@@ -94,5 +117,47 @@ describe('DisplaySettingsScreen', () => {
         const { getByTestId } = render(<DisplaySettingsScreen onBack={onBack} />);
         fireEvent.press(getByTestId('display-back'));
         expect(onBack).toHaveBeenCalledTimes(1);
+    });
+
+    // ── text size ─────────────────────────────────────────────────────────
+    it('renders one option per shipped text-scale step', () => {
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        for (const name of ['compact', 'default', 'large', 'larger', 'largest']) {
+            expect(getByTestId(`text-size-${name}`)).toBeTruthy();
+        }
+        expect(TEXT_SCALE_STEPS).toHaveLength(5);
+    });
+
+    it('marks the stored step as selected', () => {
+        mockTextScale = 1.3;
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(getByTestId('text-size-larger').props.accessibilityState.selected).toBe(true);
+        expect(getByTestId('text-size-default').props.accessibilityState.selected).toBe(false);
+    });
+
+    it('defaults the selection to 1x when nothing is stored', () => {
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(getByTestId('text-size-default').props.accessibilityState.selected).toBe(true);
+    });
+
+    it('persists the tapped step', () => {
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        fireEvent.press(getByTestId('text-size-largest'));
+        expect(mockSetTextScale).toHaveBeenCalledWith(TEXT_SCALE_STEPS[4]);
+    });
+
+    it('renders the live preview block', () => {
+        const { getByTestId, getByText } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(getByTestId('text-size-preview')).toBeTruthy();
+        expect(getByText('display.textSizePreviewHeadline')).toBeTruthy();
+    });
+
+    // Every option must clear the 44pt minimum target — the whole control is
+    // an accessibility affordance, so a cramped one would be self-defeating.
+    it('gives every option a 44pt minimum touch height', () => {
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        for (const name of ['compact', 'default', 'large', 'larger', 'largest']) {
+            expect(getByTestId(`text-size-${name}`).props.style.minHeight).toBe(44);
+        }
     });
 });

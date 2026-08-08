@@ -426,6 +426,116 @@ describe('ArticleFeedbackAgent', () => {
       expect(mockMarkFeedbackProcessedFor).not.toHaveBeenCalled();
     });
 
+    // --- G1: a SINGLE-SELECT card may only be resolved by a tap ---
+    //
+    // Regression: applyProposal used to hand the executor `proposal.actions`
+    // wholesale, so a typed "yes" against a 3-pill proposeTrack card minted
+    // three topics AND three followed stories. Only ProposalCard.handleConfirm
+    // knows WHICH pill the user picked, so the agent must refuse outright.
+    const trackAction = (label: string) => ({
+      type: 'track_story' as const,
+      label,
+      searchText: label.toLowerCase(),
+      subject: { id: 'a1', title: 'T' },
+    });
+
+    it('REFUSES to apply a chooseOne proposal (3 track pills) from chat', async () => {
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: {
+          id: 'track-1',
+          explanation: '',
+          expectedEffects: '',
+          chooseOne: true,
+          actions: [
+            trackAction('Attacks on Ukraine infrastructure'),
+            trackAction('Russia–Ukraine war'),
+            trackAction('European security crisis'),
+          ],
+        },
+      });
+      const result = await makeAgent().executeTool('applyProposal', {});
+      // Nothing is minted — not one pill, not three.
+      expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+      expect(result.result).toMatchObject({ applied: 0, awaitingUserConfirmation: true });
+      // …and the user is NOT stranded: the card stays pending and tappable, and
+      // the model is handed a message it can relay.
+      expect(result.sideEffects?.proposalResolved).toBeUndefined();
+      expect(typeof result.result.message).toBe('string');
+      expect((result.result.message as string).length).toBeGreaterThan(0);
+    });
+
+    it('REFUSES a chooseOne proposeChanges card (mutually-exclusive alternatives)', async () => {
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: {
+          id: 'p-choose',
+          explanation: 'Less of this?',
+          expectedEffects: 'Pick how far to go.',
+          chooseOne: true,
+          actions: [
+            { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+            { type: 'retire_topic', topicText: 'cricket' },
+          ],
+        },
+      });
+      const result = await makeAgent().executeTool('applyProposal', {});
+      expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+      expect(result.result).toMatchObject({ applied: 0, awaitingUserConfirmation: true });
+      expect(result.sideEffects?.proposalResolved).toBeUndefined();
+    });
+
+    it('still applies a chooseOne proposal that degenerated to ONE action', async () => {
+      // `chooseOne` with a single action is not a choice — the card renders as a
+      // plain confirm (ProposalCard: chooseOne && actions.length > 1), so the
+      // agent must keep applying it or a confirmable proposal becomes unreachable.
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: {
+          id: 'track-solo',
+          explanation: '',
+          expectedEffects: '',
+          chooseOne: true,
+          actions: [trackAction('Russia–Ukraine war')],
+        },
+      });
+      const result = await makeAgent().executeTool('applyProposal', {});
+      expect(mockExecuteProposalActions).toHaveBeenCalledWith([trackAction('Russia–Ukraine war')]);
+      expect(result.sideEffects?.proposalResolved).toBe('applied');
+    });
+
+    it('refuses a run_calibration-only proposal without destroying the card', async () => {
+      // The executor silently drops run_calibration unless confirmedByUser, so
+      // applying one from chat used to report applied:0 AND resolve the card —
+      // the recalibration became unreachable. (Sibling guard: PersonaUpdateAgent.)
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: {
+          id: 'cal-1',
+          explanation: '',
+          expectedEffects: '',
+          actions: [{ type: 'run_calibration' }],
+        },
+      });
+      const result = await makeAgent().executeTool('applyProposal', {});
+      expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+      expect(result.result).toMatchObject({ applied: 0, awaitingUserConfirmation: true });
+      expect(result.sideEffects?.proposalResolved).toBeUndefined();
+    });
+
+    it('applies the other actions of a mixed run_calibration proposal, card intact', async () => {
+      mockFloatingChatGetState.mockReturnValue({
+        proposal: {
+          id: 'cal-mix',
+          explanation: '',
+          expectedEffects: '',
+          actions: [{ type: 'run_calibration' }, { type: 'add_fact', statement: 'Likes AI' }],
+        },
+      });
+      const result = await makeAgent().executeTool('applyProposal', {});
+      expect(mockExecuteProposalActions).toHaveBeenCalledWith([
+        { type: 'add_fact', statement: 'Likes AI' },
+      ]);
+      expect(result.result).toMatchObject({ awaitingUserConfirmation: true });
+      expect(result.sideEffects?.proposalResolved).toBeUndefined();
+    });
+
     it('errors when there is no pending proposal to apply', async () => {
       mockFloatingChatGetState.mockReturnValue({ proposal: null });
       const result = await makeAgent().executeTool('applyProposal', {});

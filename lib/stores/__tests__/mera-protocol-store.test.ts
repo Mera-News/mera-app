@@ -30,6 +30,8 @@ import {
     useIsOnDeviceProcessing,
     useInjectNoise,
     useRelevanceV3,
+    useWebSearchInChat,
+    useDeepInterview,
     useSelectedModelId,
     useModelState,
     useDownloadProgress,
@@ -48,6 +50,8 @@ const initialState = {
     processingMode: ProcessingMode.Cloud,
     injectNoise: false,
     relevanceV3: false,
+    webSearchInChat: false,
+    deepInterview: false,
     selectedModelId: 'mera-qwen3.5-4b',
     modelState: 'not_downloaded' as const,
     downloadProgress: 0,
@@ -143,6 +147,47 @@ describe('useMeraProtocolStore', () => {
         useMeraProtocolStore.getState().setRelevanceV3(true);
         await new Promise((r) => setImmediate(r));
         expect(useMeraProtocolStore.getState().relevanceV3).toBe(true);
+    });
+
+    // ── setWebSearchInChat / setDeepInterview (items 13 + 17) ────────────────
+
+    it('both new toggles start OFF', () => {
+        const state = useMeraProtocolStore.getState();
+        expect(state.webSearchInChat).toBe(false);
+        expect(state.deepInterview).toBe(false);
+    });
+
+    it('setWebSearchInChat persists "true"/"false" like the other toggles', async () => {
+        useMeraProtocolStore.getState().setWebSearchInChat(true);
+        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_web_search_in_chat', 'true');
+
+        useMeraProtocolStore.getState().setWebSearchInChat(false);
+        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(false);
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_web_search_in_chat', 'false');
+    });
+
+    it('setDeepInterview persists "true"/"false" like the other toggles', async () => {
+        useMeraProtocolStore.getState().setDeepInterview(true);
+        expect(useMeraProtocolStore.getState().deepInterview).toBe(true);
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_deep_interview', 'true');
+
+        useMeraProtocolStore.getState().setDeepInterview(false);
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_deep_interview', 'false');
+    });
+
+    it('both toggles swallow DB errors rather than failing the switch', async () => {
+        mockSetSetting.mockRejectedValueOnce(new Error('db'));
+        useMeraProtocolStore.getState().setWebSearchInChat(true);
+        mockSetSetting.mockRejectedValueOnce(new Error('db'));
+        useMeraProtocolStore.getState().setDeepInterview(true);
+        await new Promise((r) => setImmediate(r));
+        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
+        expect(useMeraProtocolStore.getState().deepInterview).toBe(true);
     });
 
     // ── setSelectedModelId ───────────────────────────────────────────────────
@@ -337,6 +382,59 @@ describe('useMeraProtocolStore', () => {
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_protocol_enabled');
     });
 
+    // Keyed by NAME rather than call order: the two new keys were appended to
+    // the Promise.all, and an order-indexed test would silently pass while
+    // asserting the wrong row.
+    it('hydrateFromDb restores both new toggles from their own keys', async () => {
+        mockGetSetting.mockImplementation((k: string) =>
+            Promise.resolve(
+                k === 'mera_web_search_in_chat' ? 'true'
+                    : k === 'mera_deep_interview' ? 'true'
+                        : null,
+            ),
+        );
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
+        expect(useMeraProtocolStore.getState().deepInterview).toBe(true);
+    });
+
+    // ABSENT ⇒ OFF. A device that has never seen the toggle must not inherit
+    // an on state from a missing row — for web search that is the difference
+    // between a query leaving the device and not.
+    it('hydrateFromDb leaves both toggles OFF when their rows are absent or junk', async () => {
+        for (const stored of [null, 'yes', '1', '']) {
+            useMeraProtocolStore.setState({ webSearchInChat: false, deepInterview: false });
+            mockGetSetting.mockImplementation(() => Promise.resolve(stored as string | null));
+
+            await useMeraProtocolStore.getState().hydrateFromDb();
+
+            expect(useMeraProtocolStore.getState().webSearchInChat).toBe(false);
+            expect(useMeraProtocolStore.getState().deepInterview).toBe(false);
+        }
+    });
+
+    it('hydrateFromDb turns both toggles back OFF on an explicit "false"', async () => {
+        useMeraProtocolStore.setState({ webSearchInChat: true, deepInterview: true });
+        mockGetSetting.mockImplementation((k: string) =>
+            Promise.resolve(
+                k === 'mera_web_search_in_chat' || k === 'mera_deep_interview' ? 'false' : null,
+            ),
+        );
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(false);
+        expect(useMeraProtocolStore.getState().deepInterview).toBe(false);
+    });
+
+    it('reset() clears both new setting rows', () => {
+        useMeraProtocolStore.getState().reset();
+        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_web_search_in_chat');
+        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_deep_interview');
+    });
+
     it('hydrateFromDb sets selectedModelId from DB', async () => {
         mockGetSetting
             .mockResolvedValueOnce(null)
@@ -486,6 +584,18 @@ describe('useMeraProtocolStore', () => {
     it('useRelevanceV3 returns current relevanceV3 value', () => {
         useMeraProtocolStore.setState({ relevanceV3: true });
         const { result } = renderHook(() => useRelevanceV3());
+        expect(result.current).toBe(true);
+    });
+
+    it('useWebSearchInChat returns current webSearchInChat value', () => {
+        useMeraProtocolStore.setState({ webSearchInChat: true });
+        const { result } = renderHook(() => useWebSearchInChat());
+        expect(result.current).toBe(true);
+    });
+
+    it('useDeepInterview returns current deepInterview value', () => {
+        useMeraProtocolStore.setState({ deepInterview: true });
+        const { result } = renderHook(() => useDeepInterview());
         expect(result.current).toBe(true);
     });
 

@@ -9,7 +9,13 @@ import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { useWindowDimensions } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { MAX_FONT_SCALE } from '@/lib/typography/policy';
+import { useTextScale } from '@/lib/typography/TextScaleContext';
+
+/** Ceiling for the floating (non-fill) variant at 1x. Scaled at render. */
+const SURFACE_MAX_HEIGHT = 340;
 
 export interface CardFeedbackSurfaceProps {
   suggestion: ForYouSuggestion;
@@ -68,13 +74,25 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
   // most: mid-navigation, with the tap still discardable.
   const uncommitted = !committed;
 
+  // The 340pt ceiling was sized against 13/11px text. The tree below it does
+  // scroll, but the heading and caption above it do not — at large text sizes
+  // they alone ate most of the box. Growing the ceiling with the text keeps the
+  // tree's share of it roughly constant. Hook-derived, so an OS text-size
+  // change mid-session re-derives it (a module constant would not).
+  const { fontScale } = useWindowDimensions();
+  const userScale = useTextScale();
+  const cappedHeight =
+    SURFACE_MAX_HEIGHT * Math.min(fontScale, MAX_FONT_SCALE.content) * userScale;
+
   return (
     <Box
       className={fill ? 'w-full h-full px-3 py-3' : 'w-full px-3 py-3 rounded-2xl'}
-      style={{ backgroundColor: 'rgba(17,17,17,0.92)', ...(fill ? null : { maxHeight: 340 }) }}
+      style={{ backgroundColor: 'rgba(17,17,17,0.92)', ...(fill ? null : { maxHeight: cappedHeight }) }}
     >
       <HStack className="items-center justify-between">
-        <Text style={{ color: '#FFFFFF', fontSize: 13, fontWeight: '700' }} numberOfLines={1}>
+        {/* On-scale token instead of a pinned 13px — an inline fontSize beats
+            the class and would have frozen this outside Dynamic Type. */}
+        <Text size="sm" style={{ color: '#FFFFFF', fontWeight: '700' }} numberOfLines={1}>
           {heading}
         </Text>
         <Pressable
@@ -90,7 +108,8 @@ export const CardFeedbackSurface: React.FC<CardFeedbackSurfaceProps> = ({
       {uncommitted ? (
         <Text
           testID="feedback-caption"
-          style={{ color: '#9A9A9A', fontSize: 11, lineHeight: 15, paddingTop: 2 }}
+          size="2xs"
+          style={{ color: '#9A9A9A', paddingTop: 2 }}
         >
           {t('swipeFeed.feedbackCaption')}
         </Text>

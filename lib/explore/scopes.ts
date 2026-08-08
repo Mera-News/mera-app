@@ -204,6 +204,13 @@ export function electPrimaryCountry(
  *   3. The remaining location-derived country scopes (weight-desc, the
  *      primary excluded so it never appears twice). City/region scopes are no
  *      longer derived — see the module header.
+ *   4. `browseCountries` (alpha-2, from lib/explore/browse-countries.ts) —
+ *      countries the user added via Sources' "+", in array order. Appended
+ *      LAST and deduped against everything above, so a country already
+ *      reachable via a location never appears twice. This is display-only:
+ *      browse countries carry no location/weight and never affect
+ *      {@link electPrimaryCountry} — a browse country can never become the
+ *      primary chip.
  *
  * De-duped by scope id. The cap applies to the COUNTRY list only
  * ({@link MAX_SCOPES} - 1 countries); World is prepended afterwards so it
@@ -212,6 +219,7 @@ export function electPrimaryCountry(
 export function deriveExploreScopes(
     locations: readonly ScopeLocationInput[],
     deviceCountryAlpha2: string | null | undefined,
+    browseCountries: readonly string[] = [],
 ): ExploreScope[] {
     const primary = electPrimaryCountry(locations, deviceCountryAlpha2);
 
@@ -226,6 +234,12 @@ export function deriveExploreScopes(
         if (!alpha3 || seenAlpha3.has(alpha3)) continue;
         seenAlpha3.add(alpha3);
         countryScopes.push(countryScope(loc.countryCode.trim().toUpperCase(), alpha3));
+    }
+    for (const alpha2 of browseCountries) {
+        const alpha3 = alpha2ToAlpha3(alpha2);
+        if (!alpha3 || seenAlpha3.has(alpha3)) continue;
+        seenAlpha3.add(alpha3);
+        countryScopes.push(countryScope((alpha2 ?? '').trim().toUpperCase(), alpha3));
     }
 
     return [worldScope(), ...countryScopes.slice(0, MAX_SCOPES - 1)];

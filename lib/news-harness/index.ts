@@ -8,6 +8,7 @@
 
 export * from './core/types';
 export * from './core/ports';
+export * from './core/proposals';
 export * from './core/config';
 export * from './prompts/prompts';
 export * from './prompts/questionnaire-data';

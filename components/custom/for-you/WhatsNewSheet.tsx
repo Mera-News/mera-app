@@ -93,7 +93,7 @@ const WhatsNewSheet: React.FC = () => {
       <ModalBackdrop />
       <ModalContent className="bg-gray-950 border border-gray-800">
         <ModalHeader>
-          <Heading size="lg" className="text-white">
+          <Heading size="xl" className="text-white">
             {t('whatsNew.title')}
           </Heading>
         </ModalHeader>

@@ -40,7 +40,7 @@ export default function DailyLimitForYouBanner() {
                     <Text size="sm" className="text-warning-400 font-semibold">
                         {t('feed.dailyLimit.title')}
                     </Text>
-                    <Text size="xs" className="text-typography-300 leading-4">
+                    <Text size="xs" className="text-typography-300">
                         {t('feed.dailyLimit.bodyWithTime', { time })}
                     </Text>
                 </VStack>

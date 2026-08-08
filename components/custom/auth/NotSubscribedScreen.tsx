@@ -2,8 +2,9 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import MeraLogo from "@/components/custom/MeraLogo";
 import { CardGlassPlate } from "@/components/custom/cards/CardGlassPlate";
 import { Box } from "@/components/ui/box";
-import { Button, ButtonText } from "@/components/ui/button";
+import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
+import { RepeatIcon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -20,15 +21,17 @@ import logger from "@/lib/logger";
 import {
     getCustomerInfoSafe,
     getOfferingSafe,
+    getTrialAvailability,
     isRevenueCatConfigured,
     logRevenueCatDiagnostics,
+    type TrialAvailability,
 } from "@/lib/revenuecat";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { useUserStore } from "@/lib/stores/user-store";
 import { showSubscriptionActivatedToast } from "@/lib/subscription/activation-toast";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Linking, TouchableOpacity, View } from "react-native";
 // Via the ui layer rather than `react-native` directly: it is the same
@@ -62,6 +65,27 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
     const { t } = useTranslation();
     const [busy, setBusy] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
+
+    // Seeded `'unknown'` on purpose, which renders the no-trial copy and the
+    // "Subscribe now" label. The store answer arrives a beat after mount, and the
+    // safe thing to show in that beat is the version that promises less: a CTA
+    // that says "Start your free trial" and then flips to "Subscribe now" has
+    // already made an offer we cannot take back.
+    const [trialAvailability, setTrialAvailability] =
+        useState<TrialAvailability>('unknown');
+
+    useEffect(() => {
+        let cancelled = false;
+        // Lapsed users are not shown the trial paragraph or label at all, so
+        // there is nothing to ask the store about.
+        if (isLapsed) return;
+        void getTrialAvailability().then((a) => {
+            if (!cancelled) setTrialAvailability(a);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [isLapsed]);
 
     // Local-first, per lib/security/launch-route.ts. `checkServerSubscribed`
     // below is the only way off this screen other than Mera News Free, and with
@@ -298,32 +322,56 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                   {/* The app's existing animated-logo treatment —
                                       MeraLogo's own `animated` spotlight sweep,
                                       the same one the floating chat bubble and
-                                      AllCaughtUpCard use. Not a new animation. */}
-                                  <Box className="items-center mb-6">
-                                      <MeraLogo size={112} animated />
+                                      AllCaughtUpCard use. Not a new animation.
+                                      Sized down from 112: the copy below is now a
+                                      three-paragraph note rather than one line, and
+                                      the logo was spending vertical space the
+                                      argument needs. */}
+                                  <Box className="items-center mb-4">
+                                      <MeraLogo size={72} animated />
                                   </Box>
 
-                                  <Heading size="2xl" className="text-white text-center">
+                                  <Heading size="3xl" className="text-white text-center">
                                       {isLapsed ? t('freeTier.lapseTitle') : t('subscription.title')}
                                   </Heading>
 
-                                  <Text size="md" className="text-gray-300 text-center leading-relaxed mt-3">
-                                      {isLapsed ? t('freeTier.lapseBody') : t('subscription.description')}
-                                  </Text>
-
-                                  {/* The one line that differs in KIND between the
-                                      two paths, not just in wording. Lapsed: Mera
-                                      News Free is genuinely for you, because there
-                                      is a device full of your data for it to keep.
-                                      First open: there is nothing accumulated yet,
-                                      so Starter is the honest starting point. */}
-                                  <Box className="w-full mt-5 rounded-2xl border border-white/10 px-4 py-3">
-                                      <Text size="sm" className="text-gray-300 text-center leading-relaxed">
-                                          {isLapsed
-                                              ? t('subscription.lapsedFreeNote')
-                                              : t('subscription.starterRecommendation')}
-                                      </Text>
-                                  </Box>
+                                  {/* Deliberately a plain run of paragraphs, not a
+                                      lead line plus a bordered callout. This is
+                                      meant to read top to bottom as one note from
+                                      us to the reader; boxing the last third of an
+                                      argument turns it into a side-note and breaks
+                                      exactly the continuity the copy is going for. */}
+                                  {isLapsed ? (
+                                      <>
+                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-3">
+                                              {t('freeTier.lapseBody')}
+                                          </Text>
+                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
+                                              {t('subscription.lapsedFreeNote')}
+                                          </Text>
+                                      </>
+                                  ) : (
+                                      <>
+                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-3">
+                                              {t('subscription.para1')}
+                                          </Text>
+                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
+                                              {t('subscription.para2')}
+                                          </Text>
+                                          {/* The trial paragraph is NOT unconditional.
+                                              Only `mera_news_individual_monthly` on the
+                                              App Store carries an introductory offer, so
+                                              on Android — and for anyone who has already
+                                              used theirs — recommending "the one week
+                                              free trial" would promise something the
+                                              store will refuse at the sheet. */}
+                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
+                                              {trialAvailability === 'eligible'
+                                                  ? t('subscription.para3Trial')
+                                                  : t('subscription.para3NoTrial')}
+                                          </Text>
+                                      </>
+                                  )}
 
                                   {message ? (
                                       <Text size="sm" className="text-primary-400 text-center mt-4">
@@ -331,61 +379,28 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                       </Text>
                                   ) : null}
 
-                                  {/* Three weights, deliberately not three equal
-                                      buttons: solid primary, outlined secondary,
-                                      quiet tertiary. Refresh is LAST and lightest
-                                      — it is a recovery tool for a stuck
-                                      activation, not a choice a first-time visitor
-                                      should be drawn to. */}
+                                  {/* Descending weight, and now descending SIZE too:
+                                      one solid CTA, then two quiet text links.
+                                      Refresh sits directly under the CTA because it
+                                      is the recovery path for the CTA itself (a
+                                      purchase that went through but has not landed
+                                      yet), so it belongs next to the thing it
+                                      recovers. */}
                                   <VStack space="sm" className="w-full mt-6">
                                       <Button
                                           testID="not-subscribed-plans"
                                           onPress={presentPaywall}
                                           disabled={busy}
-                                          className="bg-primary-500 w-full"
+                                          className="bg-primary-500 w-full rounded-full"
                                           size="lg"
                                       >
                                           {busy ? <Spinner size="small" className="mr-2" /> : null}
                                           <ButtonText className="text-white font-semibold">
                                               {isLapsed
                                                   ? t('subscription.turnMeraBackOn')
-                                                  : t('subscription.startWithStarter')}
-                                          </ButtonText>
-                                      </Button>
-
-                                      {/* A recommendation must not read as the only
-                                          door. The sheet itself lists every tier —
-                                          say so rather than letting a Starter-named
-                                          CTA imply the others are gone. */}
-                                      {!isLapsed ? (
-                                          <Text size="xs" className="text-gray-400 text-center">
-                                              {t('subscription.allPlansHint')}
-                                          </Text>
-                                      ) : null}
-
-                                      {/* A real secondary BUTTON, not a text link.
-                                          Mera News Free is a legitimate destination,
-                                          not an escape hatch to be hidden — and it
-                                          is the only way off this screen, so a user
-                                          who declines must never be stranded.
-                                          Subordinate by weight only; never
-                                          disabled, shrunk or guilt-worded. */}
-                                      {/* Deliberately NOT `disabled={busy}`, unlike
-                                          the other two. `handleRefresh` and the
-                                          post-purchase poll can hold `busy` for
-                                          up to ~12s, and this is the ONLY way off
-                                          the screen — disabling it would strand
-                                          the user behind a request they did not
-                                          ask for. */}
-                                      <Button
-                                          testID="not-subscribed-continue"
-                                          onPress={handleContinueWithoutPlan}
-                                          variant="outline"
-                                          className="border-white/25 w-full"
-                                          size="lg"
-                                      >
-                                          <ButtonText className="text-white">
-                                              {t('freeTier.continueWithoutPlan')}
+                                                  : trialAvailability === 'eligible'
+                                                      ? t('subscription.startFreeTrial')
+                                                      : t('subscription.subscribeNow')}
                                           </ButtonText>
                                       </Button>
 
@@ -394,11 +409,35 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           onPress={handleRefresh}
                                           disabled={busy}
                                           variant="link"
-                                          className="w-full"
+                                          className="w-full rounded-full"
                                           size="md"
                                       >
+                                          <ButtonIcon as={RepeatIcon} className="mr-2 text-gray-400" />
                                           <ButtonText className="text-gray-400">
                                               {busy ? t('common.checking') : t('account.refresh')}
+                                          </ButtonText>
+                                      </Button>
+
+                                      {/* Demoted from an outlined button to a link,
+                                          but the rules that governed it are unchanged
+                                          and still load-bearing: Mera News Free is a
+                                          legitimate destination, not an escape hatch
+                                          to be hidden, and this is the ONLY way off
+                                          the screen. So it stays never disabled (even
+                                          while `busy` holds for ~12s, which would
+                                          otherwise strand a user behind a request they
+                                          did not ask for), never guilt-worded, and at
+                                          the same size as Refresh rather than smaller
+                                          — subordinate by weight, not by legibility. */}
+                                      <Button
+                                          testID="not-subscribed-continue"
+                                          onPress={handleContinueWithoutPlan}
+                                          variant="link"
+                                          className="w-full rounded-full"
+                                          size="md"
+                                      >
+                                          <ButtonText className="text-gray-400 underline">
+                                              {t('freeTier.continueWithoutPlan')}
                                           </ButtonText>
                                       </Button>
                                   </VStack>

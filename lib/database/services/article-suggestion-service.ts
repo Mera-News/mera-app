@@ -29,6 +29,27 @@ import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter
 // module — same import-safety argument as `isCulledHeadlineRelevance` above.
 import { isReasonGrounded } from '@/lib/news-harness/article-pipeline/reason-grounding';
 import { getSetting, setSetting, deleteSetting } from './setting-service';
+/**
+ * Is relevance v3 the scorer producing scores RIGHT NOW? Stamped onto each row
+ * at write time so the render gate can later be chosen per row rather than from
+ * whatever the flag happens to be at read time (see `gateForRow`).
+ *
+ * Lazily required and defensively wrapped, mirroring `effectiveRenderGate`'s
+ * pattern: this module is imported by jest suites that mock neither the store
+ * nor MMKV, and a scorer-vintage stamp must never be the thing that throws
+ * inside a database write. Falling back to `false` marks the row legacy, which
+ * gates it at the LOOSER 0.4 — the safe direction, since the failure mode is
+ * showing a row rather than silently deleting one.
+ */
+function isRelevanceV3Active(): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { useMeraProtocolStore } = require('@/lib/stores/mera-protocol-store');
+    return useMeraProtocolStore.getState().relevanceV3 === true;
+  } catch {
+    return false;
+  }
+}
 import { getFacts } from './fact-service';
 import logger from '../../logger';
 
@@ -360,6 +381,11 @@ export interface SuggestionGroupingRow {
   hasDescription: boolean; // !!descriptionEn — used for representative election
   countryCode: string | null; // publishing country, ISO alpha-3 (as stored) — geo/language priority
   languageCode: string | null; // article/publication language (may be a full tag) — geo/language priority
+  /** Scorer vintage (schema v50). Carried here because these rows act as
+   *  score-propagation DONORS: the recipient inherits this row's `relevance`,
+   *  so it must inherit the gate that relevance was calibrated for too.
+   *  Optional so the existing grouping-row fixtures keep compiling. */
+  scoredWithV3?: boolean | null;
 }
 
 function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRow {
@@ -375,6 +401,8 @@ function toGroupingRow(row: ArticleSuggestionModel): SuggestionGroupingRow {
     hasDescription: !!row.descriptionEn,
     countryCode: row.countryCode,
     languageCode: row.languageCode,
+    // Normalised like the `loadSuggestions` mapper: SQLite returns 0/1.
+    scoredWithV3: row.scoredWithV3 === true || (row.scoredWithV3 as unknown) === 1,
   };
 }
 
@@ -590,6 +618,11 @@ export async function saveScoringResult(
   await database.write(async () => {
     await row.update((r) => {
       r.relevance = relevance;
+      // Stamp the scorer VINTAGE alongside the score, UNCONDITIONALLY (unlike
+      // `scored_at` below, which is a once-only "when did this row leave
+      // unscored"). This is a property of THIS score: if a row is ever
+      // re-scored by a different scorer, the gate must move with it.
+      r.scoredWithV3 = isRelevanceV3Active();
       r.reason = grounded;
       if (computedScore !== undefined) r.computedScore = computedScore;
       if (rawScore !== undefined) r.rawScore = rawScore;
@@ -638,6 +671,9 @@ export async function batchSaveMathScores(
         const e = entryById.get(row.id)!;
         return row.prepareUpdate((r) => {
           r.relevance = e.relevance;
+          // See `saveScore`: the vintage is a property of this score, so it is
+          // written unconditionally rather than once-only like `scored_at`.
+          r.scoredWithV3 = isRelevanceV3Active();
           r.reason = '';
           r.computedScore = e.computedScore;
           r.rawScore = e.rawScore;
@@ -1111,8 +1147,19 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
  *
  * Mirrors batchMarkAsScoredByIds's prepareUpdate+batch shape.
  */
+/** One inherited score. `scoredWithV3` is the DONOR's scorer vintage — it
+ *  travels with the score so the recipient is gated at the cutoff that score
+ *  was calibrated for (see `gateForRow`, lib/stores/fact-rows-selector.ts).
+ *  Null/absent = legacy vintage. */
+export interface PropagateEntry {
+  id: string;
+  relevance: number;
+  reason: string;
+  scoredWithV3?: boolean | null;
+}
+
 export async function batchPropagateScores(
-  entries: { id: string; relevance: number; reason: string }[],
+  entries: PropagateEntry[],
 ): Promise<void> {
   if (entries.length === 0) return;
   // Delete-tolerant (see batchMarkAsScoredByIds): skip entries whose row was
@@ -1142,6 +1189,11 @@ export async function batchPropagateScores(
         const grounded = groundedReasonFor(row, propagatedReason, 'propagation');
         return row.prepareUpdate((r) => {
           r.relevance = entry.relevance;
+          // The gate is chosen by the scorer that produced the SCORE, and this
+          // row's score is the donor's. Leaving the recipient's own vintage in
+          // place would judge an inherited v3 number at the legacy 0.4 gate.
+          // `?? null` keeps pre-v50 donors reading as legacy.
+          r.scoredWithV3 = entry.scoredWithV3 ?? null;
           if (grounded.length > 0) {
             r.reason = grounded;
             r.status = ArticleSuggestionStatus.Complete;
@@ -1494,6 +1546,10 @@ function toForYouSuggestion(
     // Round-3 fact-rows fields.
     factIds,
     scoredAt: typeof row.scoredAt === 'number' ? row.scoredAt : null,
+    // Scorer vintage (schema v50). Normalised to a strict boolean: SQLite hands
+    // booleans back as 0/1, and `gateForRow` tests `=== true`, so a raw 1 would
+    // silently fall through to the legacy gate.
+    scoredWithV3: row.scoredWithV3 === true || (row.scoredWithV3 as unknown) === 1,
   };
 }
 

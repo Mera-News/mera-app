@@ -81,6 +81,26 @@ export interface RelatedSortable {
     pubDateMs: number | null;
 }
 
+/**
+ * How `orderRelatedArticles` should order the list.
+ *
+ * - `'relevance'` (DEFAULT) — the full tiered ordering described in the module
+ *   header: preferred sources → current article's country → other countries by
+ *   block size → countryless, then language → publication → date DESC → id.
+ *   This is the only mode that consults the user's context at all.
+ * - `'oldest'` — a FLAT publish-date ASCENDING sort. Every tier above is
+ *   deliberately bypassed: the user asked to read the coverage in the order it
+ *   was published, and interleaving country blocks would defeat that.
+ * - `'newest'` — the same flat sort, publish date DESCENDING.
+ *
+ * In BOTH date modes, rows with an unknown publish date (`null`/`NaN`) sort
+ * LAST, not merely at the numeric extreme — so `'oldest'` is not the exact
+ * reverse of `'newest'`. An undated row is not evidence of being early; putting
+ * it at the head of "oldest first" would assert something the data does not say.
+ * `id` ASC is the final tiebreak in every mode.
+ */
+export type RelatedSortMode = 'relevance' | 'oldest' | 'newest';
+
 /** Per-country facts precomputed once over the whole list. */
 interface CountryBlock {
     /** How many rows in the list carry this country. */
@@ -201,9 +221,35 @@ function dateMs(item: RelatedSortable): number {
 }
 
 /**
- * Return a NEW array of `items` ordered into contiguous per-country blocks —
+ * Flat publish-date ordering for the `'oldest'` / `'newest'` modes. Undated rows
+ * are pushed to the tail in BOTH directions (see `RelatedSortMode`), then `id`
+ * ASC settles the rest.
+ */
+function compareByDate(
+    a: RelatedSortable,
+    b: RelatedSortable,
+    ascending: boolean,
+): number {
+    const da = a.pubDateMs;
+    const db = b.pubDateMs;
+    const ua = da === null || da === undefined || Number.isNaN(da);
+    const ub = db === null || db === undefined || Number.isNaN(db);
+    if (ua !== ub) return ua ? 1 : -1; // undated last, either direction
+    if (!ua && !ub && da !== db) {
+        return ascending ? (da as number) - (db as number) : (db as number) - (da as number);
+    }
+    if (a.id !== b.id) return a.id < b.id ? -1 : 1;
+    return 0;
+}
+
+/**
+ * Return a NEW array of `items` ordered according to `mode`.
+ *
+ * In the default `'relevance'` mode the result is contiguous per-country blocks —
  * the current article's country first, then the remaining countries biggest-block
  * first, then the countryless rows; see the module header for the full key order.
+ * `'oldest'` / `'newest'` replace all of that with a flat publish-date sort (see
+ * `RelatedSortMode`), and ignore `currentCountryAlpha3` and `ctx` entirely.
  *
  * `currentCountryAlpha3` is the country of the article being viewed (any case /
  * whitespace; normalized here). Null/unknown simply leaves tier A empty.
@@ -215,7 +261,12 @@ export function orderRelatedArticles<T extends RelatedSortable>(
     items: T[],
     currentCountryAlpha3: string | null,
     ctx: UserGeoLanguageContext | null,
+    mode: RelatedSortMode = 'relevance',
 ): T[] {
+    if (mode === 'oldest' || mode === 'newest') {
+        return [...items].sort((a, b) => compareByDate(a, b, mode === 'oldest'));
+    }
+
     const current = normAlpha3(currentCountryAlpha3);
     const blocks = buildCountryBlocks(items, ctx);
 

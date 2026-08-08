@@ -193,6 +193,14 @@ const AppPreferencesTab: React.FC = () => {
     // Define preference options
     const preferenceOptions: PreferenceOption[] = [
         {
+            // FIRST on purpose — it is the "start here" row, and there is no
+            // other in-app explanation of how mera works (the FAQ leaves the app).
+            id: 'tutorials',
+            title: t('tutorials.entryRow'),
+            icon: 'school',
+            onPress: () => routerHook.push('/logged-in/tutorials' as any),
+        },
+        {
             id: 'notifications',
             title: t('preferences.notifications'),
             icon: 'notifications',
@@ -212,7 +220,7 @@ const AppPreferencesTab: React.FC = () => {
         },
         {
             id: 'display',
-            title: t('display.title'),
+            title: t('display.screenTitle'),
             icon: 'palette',
             onPress: () => routerHook.push('/logged-in/preferences/display' as any),
         },
@@ -296,6 +304,9 @@ const AppPreferencesTab: React.FC = () => {
                 fallbackClassName={`border ${borderColor} bg-transparent`}
             >
                 <Pressable
+                    // One line, every row. This list had NO testIDs at all, so
+                    // the simulator harness could not tap a single settings row.
+                    testID={`settings-row-${option.id}`}
                     className="flex-row items-center justify-between py-3 px-4"
                     onPress={option.onPress}
                 >

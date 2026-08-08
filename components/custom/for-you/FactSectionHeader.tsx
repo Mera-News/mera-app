@@ -65,7 +65,7 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
     <TranslatableDynamic
       text={title}
       as="heading"
-      size="lg"
+      size="xl"
       bold
       // Wraps to a second line instead of truncating — a truncated fact
       // ("Works as a software engineer buildin…") was unreadable and the full

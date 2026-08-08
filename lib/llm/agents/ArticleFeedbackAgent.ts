@@ -34,6 +34,11 @@ import {
   decideProposeTrack,
   getArticleFeedbackToolDefinitions,
 } from '../../news-harness/article-feedback/agent-core';
+import {
+  chooseOneRefusal,
+  proposalRequiresUserChoice,
+  userTapOnlyRefusal,
+} from '../../news-harness/core/proposals';
 import type {
   ActiveSuppressionView,
   SuggestionFeedbackContext,
@@ -307,8 +312,35 @@ export class ArticleFeedbackAgent implements IAgent {
       case 'applyProposal': {
         const proposal = useFloatingChatStore.getState().proposal;
         if (!proposal) return { result: { error: 'no pending proposal' } };
+
+        // SINGLE-SELECT cards are never applied from chat. The alternatives are
+        // mutually exclusive and only ProposalCard.handleConfirm knows WHICH one
+        // the user picked, so applying them all is not "what the user asked for":
+        // a typed "yes" against a 3-pill proposeTrack card minted three topics
+        // AND three followed stories. A model-chosen index would not fix it —
+        // the model's reading of assent is exactly what is not trusted here
+        // (same conclusion as run_calibration, and as FollowStoryAgent, which
+        // refuses applyProposal outright). Consent is the tap.
+        //
+        // No `proposalResolved` side effect: the card must stay pending so the
+        // pills remain tappable, and the message gives the model something true
+        // to say instead of stranding the user in silence.
+        if (proposalRequiresUserChoice(proposal)) {
+          return { result: chooseOneRefusal() };
+        }
+
+        // UI-ONLY actions are stripped before the executor sees them (which
+        // would silently drop them anyway, since they are user-confirmed-only).
+        // Doing it here is what keeps the CARD alive: applying a
+        // run_calibration-only proposal used to report applied:0 and still
+        // resolve the card, putting the recalibration out of reach. Mirrors
+        // PersonaUpdateAgent.applyProposal.
+        const uiOnly = proposal.actions.filter((a) => a.type === 'run_calibration');
+        const applicable = proposal.actions.filter((a) => a.type !== 'run_calibration');
+        if (applicable.length === 0) return { result: userTapOnlyRefusal() };
+
         const { applied, errors, summaries, changeLogIds } =
-          await executeProposalActions(proposal.actions);
+          await executeProposalActions(applicable);
         // A Feed-verdict handoff whose proposals just APPLIED has folded that
         // verdict into the persona — stamp its feedback row processed so the
         // deferred daily-plan wave won't double-count it. Best-effort; gated on
@@ -324,8 +356,18 @@ export class ArticleFeedbackAgent implements IAgent {
         }
         // summaries + changeLogIds surface what changed and power undo (revert_change).
         return {
-          result: { applied, errors, summaries, changeLogIds },
-          sideEffects: { proposalResolved: 'applied' },
+          result: {
+            applied,
+            errors,
+            summaries,
+            changeLogIds,
+            ...(uiOnly.length > 0 ? { awaitingUserConfirmation: true } : {}),
+          },
+          // Only resolve when nothing is still waiting on a tap — otherwise the
+          // card would vanish before the user could confirm the rest.
+          ...(uiOnly.length === 0
+            ? { sideEffects: { proposalResolved: 'applied' as const } }
+            : {}),
         };
       }
 

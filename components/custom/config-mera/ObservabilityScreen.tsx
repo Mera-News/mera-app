@@ -720,13 +720,13 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                             {t('observability.noteTitle')}
                         </Text>
                     </HStack>
-                    <Text size="xs" className="text-gray-400 leading-5">
+                    <Text size="xs" className="text-gray-400">
                         {t('observability.noteBody')}
                     </Text>
-                    <Text size="xs" className="text-gray-500 leading-5 mt-1.5">
+                    <Text size="xs" className="text-gray-500 mt-1.5">
                         {t('observability.noteExceptions')}
                     </Text>
-                    <Text size="xs" className="text-gray-500 leading-5 mt-1.5">
+                    <Text size="xs" className="text-gray-500 mt-1.5">
                         {t('observability.noteFooter')}
                     </Text>
                 </Box>

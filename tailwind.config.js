@@ -182,32 +182,70 @@ module.exports = {
       fontWeight: {
         extrablack: '950',
       },
+      // ── THE type scale. Every step is explicit px + explicit lineHeight. ──
+      //
+      // Why the whole scale is spelled out instead of inheriting Tailwind's:
+      // NativeWind inlines `rem` at BUILD time using `inlineRem`, which
+      // defaults to **14** (nativewind/dist/metro/index.js) and is not
+      // overridden in metro.config.js. Tailwind's default fontSize scale is
+      // authored in rem against a 16px root, so every step this file did NOT
+      // override was silently rendering at 14/16 = 87.5% of its intended size:
+      //
+      //     text-xs   0.75rem  -> 10.5px    text-lg  1.125rem -> 15.75px
+      //     text-sm   0.875rem -> 12.25px   text-xl  1.25rem  -> 17.5px
+      //     text-base 1rem     -> 14px
+      //
+      // 10.5px (`text-xs`, 146 call sites) and 12.25px (`text-sm`, 115 sites)
+      // are below iOS's smallest system text style (Caption 2, 11pt) — that is
+      // the app's accessibility floor problem, and it was never the `2xs` token
+      // alone. It also left a 37% cliff in the middle of the scale, because the
+      // px overrides below (2xl and up) were authored against a 16px root and
+      // so were NOT shrunk: `text-xl` 17.5px jumped straight to `text-2xl`
+      // 24px.
+      //
+      // The fix is to state the scale the app was always designed for — the
+      // rem-16 one — in px, so it cannot drift with an inlineRem default again.
+      // The steps from 2xl up are therefore UNCHANGED (they were already the
+      // rem-16 values); xs through xl grow by exactly 16/14, and 2xs is raised
+      // 10px -> 11px to sit on Caption 2 rather than below it.
+      //
+      // Deliberately NOT done: setting `inlineRem: 16` in metro.config.js.
+      // That is the same correction in one line, but Tailwind's SPACING scale
+      // is rem-based too, so it would silently inflate every p-*/m-*/gap-*/w-*
+      // in the app by 14% at the same time. This change moves type only.
+      //
+      // ── line heights ──
+      // Every step carries an explicit lineHeight and NO step's ratio is lower
+      // than what it rendered before. React Native treats `lineHeight` as a
+      // hard line box on both platforms, so anything above the Latin cap height
+      // is sliced off — Devanagari matras (सेटिंग्स), Thai upper vowels/tones
+      // (ไทย), stacked Vietnamese diacritics (Tiếng Việt).
+      //
+      // 1.5 is not a guess: it is roughly the NATURAL line height of the
+      // scripts that were clipping (iOS falls back to Kohinoor Devanagari,
+      // ascent ~1.10em + descent ~0.44em ~= 1.54em; Thai is comparable), so it
+      // gives the fallback font the room it already asks for instead of forcing
+      // it into a Latin-sized box. It matches the LINE_HEIGHT_RATIO = 1.5
+      // already used by components/custom/TranslatableDynamic.tsx.
+      //
+      // `2xs` previously had NO lineHeight at all and fell back to the font's
+      // own metrics (~1.2) — the one step in the scale with no script headroom.
+      //
+      // lib/typography/scale.ts mirrors these numbers for the runtime text-size
+      // control (a build-time Tailwind value cannot be multiplied at runtime),
+      // and components/ui/__tests__/typography-scale.test.ts fails if the two
+      // ever disagree.
       fontSize: {
-        '2xs': '10px',
-        // Script-safe line boxes for the LARGE end of the scale.
-        //
-        // Tailwind's defaults are tuned to Latin ascenders and get tighter the
-        // bigger the type gets: text-2xl 24/32 (1.33), text-3xl 30/36 (1.20),
-        // text-4xl 36/40 (1.11), and text-5xl/6xl are a flat 1.0. React Native
-        // treats `lineHeight` as a hard line box on both platforms, so anything
-        // that sits above the Latin cap height is sliced off — Devanagari
-        // matras (सेटिंग्स), Thai upper vowels/tones (ไทย), stacked Vietnamese
-        // diacritics (Tiếng Việt). Every screen title in the app is a
-        // `<Heading size="3xl">`, which resolves to `text-4xl` — the tightest
-        // ratio in the whole scale — so all of them clipped in Hindi.
-        //
-        // 1.5 is not a guess: it is roughly the NATURAL line height of the
-        // scripts that were clipping (iOS falls back to Kohinoor Devanagari,
-        // ascent ~1.10em + descent ~0.44em ≈ 1.54em; Thai is comparable), so
-        // this gives the fallback font the room it already asks for instead of
-        // forcing it into a Latin-sized box. It also matches the
-        // LINE_HEIGHT_RATIO = 1.5 already used by
-        // components/custom/TranslatableDynamic.tsx for the same reason.
-        //
-        // Only 2xl and up are overridden. text-xl (20/28) and everything below
-        // is already at or above 1.4 and is the body-copy end of the scale —
-        // re-leading it would reflow every card and paragraph in the app for no
-        // reported defect. Those are documented as known-tight, not changed.
+        '2xs': ['11px', { lineHeight: '16px' }],
+        'xs': ['12px', { lineHeight: '18px' }],
+        'sm': ['14px', { lineHeight: '21px' }],
+        'base': ['16px', { lineHeight: '24px' }],
+        'lg': ['18px', { lineHeight: '28px' }],
+        'xl': ['20px', { lineHeight: '30px' }],
+        // Unchanged — these were already the rem-16 values, and their 1.5
+        // ratios were set deliberately (see above): Tailwind's own defaults
+        // get TIGHTER the bigger the type gets (2xl 1.33, 3xl 1.20, 4xl 1.11,
+        // 5xl/6xl a flat 1.0), which clipped every Hindi screen title.
         '2xl': ['24px', { lineHeight: '36px' }],
         '3xl': ['30px', { lineHeight: '45px' }],
         '4xl': ['36px', { lineHeight: '54px' }],

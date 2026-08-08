@@ -78,6 +78,7 @@ import {
     getScoredDonorRows,
     getUnscoredGroupingRows,
     type SuggestionGroupingRow,
+    type PropagateEntry,
 } from '@/lib/database/services/article-suggestion-service';
 import {
     repPriorityTier,
@@ -369,7 +370,7 @@ export async function gateUnscoredForScoring(
             PROPAGATION_OPTIONS,
         );
 
-        const propagateEntries: { id: string; relevance: number; reason: string }[] = [];
+        const propagateEntries: PropagateEntry[] = [];
         const enqueueIds: string[] = [];
         const coveredIdsByRep: Record<string, string[]> = {};
         let heldBackCount = 0;
@@ -387,6 +388,12 @@ export async function gateUnscoredForScoring(
                         id: c.id,
                         relevance: donor.relevance,
                         reason: donor.reason,
+                        // The VINTAGE travels with the score, not with the row.
+                        // The recipient never ran a scorer; it is inheriting the
+                        // donor's number, so it must be judged at the gate that
+                        // number was calibrated for. Reading the recipient's own
+                        // (absent) vintage here would gate a v3 score at 0.4.
+                        scoredWithV3: donor.scoredWithV3 ?? null,
                     });
                 }
             } else if (groupCandidates.length >= 2) {
@@ -464,7 +471,7 @@ export async function propagateToUnscoredSiblings(
             PROPAGATION_OPTIONS,
         );
 
-        const propagateEntries: { id: string; relevance: number; reason: string }[] = [];
+        const propagateEntries: PropagateEntry[] = [];
         for (const group of groups) {
             const groupDonors = group.filter((r) => donorIds.has(r.id));
             if (groupDonors.length === 0) continue;
@@ -476,6 +483,9 @@ export async function propagateToUnscoredSiblings(
                     id: c.id,
                     relevance: donor.relevance,
                     reason: donor.reason,
+                    // See the note at the other push site: the gate follows the
+                    // score's scorer, and the score here is the donor's.
+                    scoredWithV3: donor.scoredWithV3 ?? null,
                 });
             }
         }

@@ -5,6 +5,12 @@ import { Platform } from 'react-native';
 import logger from '@/lib/logger';
 import { canonicalizeLanguageCode, primarySubtag } from '@/lib/language-codes';
 import { getLanguageNameIn } from '@/lib/language-names';
+import {
+    __resetTranslationQueueForTests,
+    enqueueTranslationTask,
+    isDropped,
+    PROBE_PRIORITY,
+} from '@/lib/translation-queue';
 
 /**
  * Resolve a BCP-47 / ISO-639 language code to its English display name.
@@ -525,7 +531,7 @@ export function __resetTranslationStateForTests(): void {
     availabilityListeners.clear();
     probeTimedOut.clear();
     probeErrors.clear();
-    queue = Promise.resolve();
+    __resetTranslationQueueForTests();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -576,9 +582,10 @@ export function deviceCanTranslate(): boolean {
     return Device.isDevice !== false;
 }
 
-// Serializes native translation calls to prevent the OS from cancelling
-// concurrent translation sessions.
-let queue: Promise<void> = Promise.resolve();
+// Native translation calls are serialized and PRIORITISED by the scheduler in
+// `lib/translation-queue` — one in flight at a time (the OS cancels concurrent
+// translation sessions), dispatched nearest-the-viewport first, and dropped
+// before dispatch when the route they were queued for is no longer on screen.
 
 // Delays (ms) between retry attempts. The OS translator throws transiently
 // when the translation session is busy; a short pause is enough to recover.
@@ -770,18 +777,51 @@ export async function probeTranslationLanguage(
 const probeTimedOut = new Map<string, boolean>();
 const probeErrors = new Map<string, string | null>();
 
-interface TranslateOptions {
+export interface TranslateOptions {
     /** Marks the one caller allowed through the gate. Defaults to false. */
     readonly isProbe?: boolean;
     readonly timeoutMs?: number;
+    /**
+     * Queue priority — LOWER dispatches sooner. Callers that know where their
+     * text sits on screen should pass `visibilityPriority(measuredY)`; the
+     * default 0 means "as soon as the queue reaches you".
+     */
+    readonly priority?: number;
+    /**
+     * Set false to exempt this call from route-epoch dropping. Defaults to true
+     * for ordinary calls; the probe is exempt automatically.
+     */
+    readonly epochScoped?: boolean;
 }
 
-/** Translate a single text string. Returns null on failure. */
-export function translateText(
+/**
+ * Why a translation call ended.
+ *
+ * `dropped` is NOT a failure and must never be treated as one: the route moved
+ * on before the call was ever made, so the text is exactly as translatable as
+ * it was a moment ago. A caller that latches on `dropped` (as a naive "we tried
+ * and got nothing" would) leaves the node showing English for the rest of the
+ * session — see TranslatableDynamic, which clears its fired-latch on it.
+ */
+export type TranslationOutcome = 'ok' | 'failed' | 'dropped';
+
+export interface TranslationResult {
+    readonly status: TranslationOutcome;
+    /** Non-null only when `status === 'ok'`. */
+    readonly text: string | null;
+}
+
+/**
+ * Translate a single text string, reporting WHY it ended. Never rejects.
+ *
+ * Prefer this over {@link translateText} anywhere the caller keeps per-node
+ * "already tried" state.
+ */
+export function translateTextDetailed(
     text: string,
     targetLangCode: string,
     options: TranslateOptions = {},
-): Promise<string | null> {
+): Promise<TranslationResult> {
     const isProbe = options.isProbe === true;
     const timeoutMs = options.timeoutMs
         ?? (isProbe ? TRANSLATION_PROBE_TIMEOUT_MS : TRANSLATE_CALL_TIMEOUT_MS);
@@ -790,7 +830,7 @@ export function translateText(
         probeErrors.set(targetLangCode, null);
     }
 
-    const promise = queue.then(async () => {
+    const task = async (): Promise<string | null> => {
         // Checked HERE, at the head of the queue — NOT when translateText was
         // called. A language switch fires every mounted <TranslatableDynamic>
         // in one effect flush, so all N calls are already queued before the
@@ -896,12 +936,48 @@ export function translateText(
             }
         }
         return null;
-    });
+    };
 
-    // Keep the queue moving even if one translation fails
-    queue = promise.then(() => {}, () => {});
+    return enqueueTranslationTask(task, {
+        // The probe is epoch-EXEMPT. It holds the queue for up to 90s while
+        // Apple's download sheet is up, and a route change is entirely
+        // plausible in that window (the picker modal dismissing is one). Drop
+        // it and the language never verifies, the gate never opens, and
+        // switching language silently stops working — a far worse outcome than
+        // one call the user no longer needs.
+        epoch: isProbe || options.epochScoped === false ? null : undefined,
+        priority: isProbe ? PROBE_PRIORITY : (options.priority ?? 0),
+        label: `${targetLangCode}:${text.slice(0, 16)}`,
+    }).then(
+        (value): TranslationResult => {
+            if (isDropped(value)) return { status: 'dropped', text: null };
+            return value == null
+                ? { status: 'failed', text: null }
+                : { status: 'ok', text: value };
+        },
+        // The task body catches everything already; this is the last net so a
+        // caller can never be handed a rejected promise.
+        (err): TranslationResult => {
+            logger.warn('[TranslationService] Translation task rejected', {
+                targetLangCode,
+                error: err instanceof Error ? err.message : String(err),
+            });
+            return { status: 'failed', text: null };
+        },
+    );
+}
 
-    return promise;
+/**
+ * Translate a single text string. Returns null on failure — AND on a
+ * route-change drop, which callers that keep "already tried" state must tell
+ * apart (use {@link translateTextDetailed}).
+ */
+export function translateText(
+    text: string,
+    targetLangCode: string,
+    options: TranslateOptions = {},
+): Promise<string | null> {
+    return translateTextDetailed(text, targetLangCode, options).then((r) => r.text);
 }
 
 /** Translate multiple texts sequentially. Returns array aligned with input. */

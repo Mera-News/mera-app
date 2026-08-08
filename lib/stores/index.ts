@@ -50,6 +50,7 @@ export {
     useIsPremium,
     useSubscriptionTier,
 } from './subscription-store';
+export { useTutorialsStore } from './tutorials-store';
 
 // Selectors
 export * from './selectors';
@@ -70,6 +71,8 @@ export const clearAllStores = async () => {
     const { useSubscriptionStore } = require('./subscription-store');
     const { useFeedOrderStore } = require('./feed-order-store');
     const { useImportanceFilterStore } = require('./importance-filter-store');
+    const { useRelatedSortStore } = require('./related-sort-store');
+    const { useTutorialsStore } = require('./tutorials-store');
     const { clearAttestationCache } = require('../e2ee/e2ee-cache');
     const { clearLastKnownTier } = require('../subscription/last-known-tier');
 
@@ -92,6 +95,11 @@ export const clearAllStores = async () => {
     useSubscriptionStore.getState().reset();
     useFeedOrderStore.getState().reset();
     useImportanceFilterStore.getState().reset();
+    useRelatedSortStore.getState().reset();
+    // Tutorial progress is per-DEVICE-USER, not per-account-in-the-abstract: the
+    // settings rows go with the database wipe above, so the in-memory ticks must
+    // go too or the next user on this phone inherits a finished tour.
+    useTutorialsStore.getState().reset();
     clearAttestationCache();
 
     // LAST, and deliberately so. The device's memory of its last resolved

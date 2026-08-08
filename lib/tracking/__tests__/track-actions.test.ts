@@ -176,6 +176,65 @@ describe('trackStoryWithProposal', () => {
     expect(call.initialSnapshot.pubDateMs).toBe(0);
   });
 
+  // --- Article-less follow (the Followed-stories FAB → Mera chat flow) -------
+  // Accepting a scope pill in that chat lands here with an EMPTY origin subject
+  // (there is no tapped article). The story must still be TOPIC-BACKED — a bare
+  // `tracked_stories` row would sit there forever, since the topic is the only
+  // thing that pulls coverage in on each fetch cycle.
+  describe('accepted from the article-less follow-story chat', () => {
+    const FOLLOW_SUBJECT = {
+      origin: 'article',
+      surface: 'tracked-stories-chat',
+      articleId: '',
+      title: '',
+      pubDate: null,
+      stableClusterId: null,
+      publicationName: null,
+    } as unknown as FeedbackSubject;
+
+    it('mints the topic and creates a topic-linked row (not a bare row)', async () => {
+      await trackStoryWithProposal(FOLLOW_SUBJECT, SCOPE);
+
+      expect(createTopics).toHaveBeenCalledWith([
+        expect.objectContaining({
+          text: 'Updates on the protest',
+          status: 'active',
+          provenance: 'tracked',
+          highPriority: true,
+        }),
+      ]);
+      const call = asMock(trackStory).mock.calls.at(-1)?.[0];
+      expect(call).toMatchObject({
+        topicId: 'top-1',
+        topicText: 'Updates on the protest',
+        llmHeadline: 'Protest updates',
+        originSurface: 'tracked-stories-chat',
+      });
+      // Topic-backed, never a bare row: a null topic id here would mean the
+      // story can never gather coverage.
+      expect(call.topicId).toBeTruthy();
+    });
+
+    it('seeds no member snapshot (there is no origin article)', async () => {
+      await trackStoryWithProposal(FOLLOW_SUBJECT, SCOPE);
+
+      const call = asMock(trackStory).mock.calls.at(-1)?.[0];
+      expect(call.articleId).toBe('');
+      expect(call.initialSnapshot).toMatchObject({ articleId: '' });
+    });
+
+    // The duplicate guard keys on stableClusterId/articleId; a free-text follow
+    // has neither, so it must not be able to match some unrelated active story.
+    it('does not consult a match that could block an unrelated follow', async () => {
+      asMock(findActiveTrackedId).mockResolvedValue(null);
+
+      await trackStoryWithProposal(FOLLOW_SUBJECT, SCOPE);
+
+      expect(findActiveTrackedId).toHaveBeenCalledWith({ stableClusterId: null, articleId: '' });
+      expect(trackStory).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('no-ops on a blank search text', async () => {
     await trackStoryWithProposal(SUBJECT, { label: 'Protest updates', searchText: '   ' });
     expect(createTopics).not.toHaveBeenCalled();

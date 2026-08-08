@@ -5,6 +5,8 @@ import {
     NewsPublishersResponse,
     PublicationSource,
     PublicationSourcesResponse,
+    PublisherSearchHit,
+    SearchPublishersResponse,
 } from './generated/graphql-types';
 import logger from './logger';
 
@@ -34,6 +36,8 @@ const GET_PUBLICATION_SOURCES = gql`
         country_code
         country_name
         category
+        publication_type
+        categories
         createdAt
         updatedAt
       }
@@ -66,6 +70,8 @@ const GET_NEWS_PUBLISHERS = gql`
           _id
           feed_url
           category
+          publication_type
+          categories
           detected_language_code
         }
       }
@@ -78,7 +84,46 @@ const GET_NEWS_PUBLISHERS = gql`
   }
 `;
 
-export type { PublicationSource, PublicationSourcesResponse, NewsPublisher, NewsPublishersResponse };
+const SEARCH_PUBLISHERS = gql`
+  query SearchPublishers(
+    $query: String!
+    $first: Int
+    $after: String
+  ) {
+    searchPublishers(query: $query, first: $first, after: $after) {
+      publishers {
+        _id
+        name
+        website_url
+        country_code
+        country_name
+        matchingSources {
+          _id
+          publication_name
+          feed_url
+          category
+          publication_type
+          categories
+          detected_language_code
+        }
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        pageSize
+      }
+    }
+  }
+`;
+
+export type {
+    PublicationSource,
+    PublicationSourcesResponse,
+    NewsPublisher,
+    NewsPublishersResponse,
+    PublisherSearchHit,
+    SearchPublishersResponse,
+};
 
 export class SourceService {
     static async getPublicationSources(options?: {
@@ -145,6 +190,44 @@ export class SourceService {
         } catch (error) {
             logger.captureException(error, {
                 tags: { service: 'source-service', method: 'getNewsPublishers' },
+                extra: { options },
+            });
+            throw error;
+        }
+    }
+
+    /**
+     * Publisher/website + matching-feed search (Item 8, Sources L1). The
+     * server rejects queries shorter than 2 characters — callers must not
+     * fire below that length (SourcesL1CountryList debounces and gates on it).
+     */
+    static async searchPublishers(options: {
+        query: string;
+        first?: number;
+        after?: string;
+    }): Promise<SearchPublishersResponse> {
+        try {
+            const { data } = await client.query<{ searchPublishers: SearchPublishersResponse }>({
+                query: SEARCH_PUBLISHERS,
+                variables: {
+                    query: options.query,
+                    first: options.first ?? 20,
+                    after: options.after,
+                },
+                fetchPolicy: 'no-cache',
+            });
+
+            return data?.searchPublishers || {
+                publishers: [],
+                pageInfo: {
+                    endCursor: null,
+                    hasNextPage: false,
+                    pageSize: options.first ?? 20,
+                },
+            };
+        } catch (error) {
+            logger.captureException(error, {
+                tags: { service: 'source-service', method: 'searchPublishers' },
                 extra: { options },
             });
             throw error;

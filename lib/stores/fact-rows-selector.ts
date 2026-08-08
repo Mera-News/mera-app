@@ -90,11 +90,8 @@ import {
 } from '@/lib/feed-grouping/story-grouping';
 import { DEFAULT_HARNESS_CONFIG, type HarnessConfig } from '@/lib/news-harness/core/config';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
-import {
-  repPriorityTier,
-  sourcePriorityTier,
-  type UserGeoLanguageContext,
-} from '@/lib/feed-grouping/geo-language-priority';
+import { type UserGeoLanguageContext } from '@/lib/feed-grouping/geo-language-priority';
+import { makeRepCompare } from '@/lib/feed-grouping/representative-compare';
 import type { ForYouSuggestion } from './for-you-store';
 
 /**
@@ -148,9 +145,58 @@ export const RENDER_GATE = 0.4;
  *  the floor. */
 export const V3_RENDER_GATE = 0.55;
 
+/**
+ * The render gate for ONE row, chosen by the scorer that actually produced its
+ * score rather than by the current flag.
+ *
+ * WHY PER ROW. `effectiveRenderGate()` below answers "which scorer is active
+ * NOW?", which is the wrong question for a row that was scored an hour ago.
+ * Scored rows live for 48h (`FEED_WINDOW_MS`) and are never re-scored, so the
+ * moment the v3 flag flips the device holds a MIXTURE of vintages and a single
+ * global gate re-judges every one of them against a threshold calibrated for a
+ * scorer most of them never saw.
+ *
+ * That is not a symmetric risk. v1's relevance is QUANTISED — measured on the
+ * 348-row gold set (`harness-local/fixtures/goldset-348.json`) it takes just 25
+ * distinct values, 89 rows tie at 0.6, and 25 rows sit at EXACTLY 0.4, which is
+ * 21.6% of the 116 rows v1 admits at its own gate. Moving the gate to 0.55 for
+ * everyone deletes all 25 of those instantly, and since nothing re-scores them
+ * they never come back.
+ *
+ * SURFACE SCOPE, measured rather than assumed: those 0.4 rows only reach a
+ * surface whose importance filter is set to LOW, because `bandOf` puts [0.4,0.6)
+ * in the LOW band. That is the DASHBOARD by default
+ * (`DEFAULT_DASHBOARD_IMPORTANCE_THRESHOLD = 'low'`), and the Feed only when the
+ * reader lowers its filter from the default 'medium'
+ * (`DEFAULT_FEED_IMPORTANCE_THRESHOLD`, which already requires >= 0.6). So this
+ * protects the Dashboard's entire low band, not the default Feed — worth stating
+ * precisely, since "a fifth of the feed" would be the wrong claim.
+ *
+ * So the vintage travels with the row (`article_suggestions.scored_with_v3`,
+ * schema v50) and each row is judged at its own scorer's gate. Absent/false —
+ * every pre-v50 row — reads as legacy and keeps `RENDER_GATE`, which is exactly
+ * what those rows were scored under.
+ */
+export function gateForRow(s: Pick<ForYouSuggestion, 'scoredWithV3'>): number {
+  return s.scoredWithV3 === true ? V3_RENDER_GATE : RENDER_GATE;
+}
+
+/** The render gate for a row's raw relevance — the per-row gate applied.
+ *  Prefer this over comparing against {@link effectiveRenderGate} directly:
+ *  that compares every row to the CURRENT flag's gate, which is the mixed-
+ *  vintage bug {@link gateForRow} exists to prevent. */
+export function relevancePassesGate(s: Pick<ForYouSuggestion, 'scoredWithV3' | 'relevance'>): boolean {
+  return (s.relevance ?? 0) >= gateForRow(s);
+}
+
 /** The effective render gate: V3_RENDER_GATE while the v3 scorer is active,
  *  RENDER_GATE otherwise. Read via getState (not a hook) — selectors here are
- *  plain functions, and the flag flips only from the Mera Protocol screen. */
+ *  plain functions, and the flag flips only from the Mera Protocol screen.
+ *
+ *  SCOPE: this is the gate for rows scored FROM NOW ON — i.e. what the pipeline
+ *  should stamp and what a diagnostic means by "the current gate". It is NOT
+ *  the right thing to compare an existing row against; use {@link gateForRow}
+ *  / {@link relevancePassesGate} for that. */
 export function effectiveRenderGate(): number {
   try {
     // Lazy require: keeps this module's static import graph free of the
@@ -290,11 +336,11 @@ export function isComplete(s: ForYouSuggestion): boolean {
 }
 
 /** The render gate — INCLUSIVE (relevance v3: was strict `>`, now `>=`, so
- *  rows at exactly the cutoff stay included). Uses the EFFECTIVE gate: 0.55
- *  while the v3 scorer is active, 0.4 for legacy scoring (see
- *  {@link V3_RENDER_GATE}). */
+ *  rows at exactly the cutoff stay included). Uses the row's OWN gate: 0.55 for
+ *  a row relevance v3 scored, 0.4 for a legacy-scored one (see
+ *  {@link gateForRow} for why this is per row and not per flag). */
 export function passesRenderGate(s: ForYouSuggestion): boolean {
-  return (s.relevance ?? 0) >= effectiveRenderGate();
+  return relevancePassesGate(s);
 }
 
 /** The publication window (`cutoffMs = nowMs - FEED_WINDOW_MS`, 48h). */
@@ -427,59 +473,26 @@ interface GroupItem extends GroupableItem {
   s: ForYouSuggestion;
 }
 
-/** Representative comparator: newest pubDate → higher rawScore → smaller id.
- *  (Standard sort order: negative ⇒ `a` preferred.) */
-function repCompare(a: GroupItem, b: GroupItem): number {
-  const pa = parseMs(a.s.firstPubDate);
-  const pb = parseMs(b.s.firstPubDate);
-  if (pa !== pb) return pb - pa;
-  const ra = a.s.rawScore ?? Number.NEGATIVE_INFINITY;
-  const rb = b.s.rawScore ?? Number.NEGATIVE_INFINITY;
-  if (ra !== rb) return rb - ra;
-  return a.s._id < b.s._id ? -1 : a.s._id > b.s._id ? 1 : 0;
-}
+// Representative election (`makeRepCompare`) lives in
+// `@/lib/feed-grouping/representative-compare`, shared with
+// `feed-list-selector`, so the Dashboard and the Feed cannot drift apart on
+// which article fronts a given story. It used to be duplicated in both files,
+// byte-identically and by hand.
+//
+// SYMMETRY WITH THE FEED: `feed-list-selector` applies D4, scoring a story group
+// on its BEST member so election cannot demote the story. The same rule now
+// holds here — `createdAtMs` is group-maxed where the group is built, so
+// `cardCompare` ranks a card by its freshest member regardless of which member
+// was elected to front it.
+//
+// This became necessary when the shared comparator flipped to electing the
+// OLDEST member (the originating report rather than the latest rewrite). Without
+// the group-max, a multi-source story would sink to roughly where its first
+// report landed, so a story gaining coverage through the day would drift DOWN
+// the Dashboard as it got more important. Election is a presentation choice;
+// it must not move the story.
 
-/** Tier-aware representative comparator, in three keys — kept BYTE-IDENTICAL to
- *  `feed-list-selector.makeRepCompare` so every feed surface fronts the same
- *  article for a given story:
- *
- *   1. `sourcePriorityTier` — the user's EXPLICIT source preferences (preferred
- *      publication → preferred country scope → rest). An explicit request
- *      outranks a derived signal, so it is compared FIRST.
- *   2. `repPriorityTier` — the derived geo/language priority.
- *   3. `repCompare` — newest → rawScore → id.
- *
- *  A `null` `userCtx` collapses every item to source tier 2 and geo tier 3, so
- *  this is byte-identical to `repCompare` alone — the pre-priority legacy
- *  behavior. So does a context with no source preferences, for key 1.
- *
- *  ASYMMETRY WITH THE FEED (deliberate): `feed-list-selector` also applies D4,
- *  scoring a story group on its BEST member so electing a preferred source
- *  cannot demote the story. There is no mirror here, because Dashboard card
- *  order is `cardCompare` = representative `createdAtMs` desc — there is no
- *  score to group-max. The analogous latent demotion therefore still exists on
- *  the Dashboard (a preferred rep with an older `createdAt` sinks its card);
- *  fixing it means group-maxing `createdAtMs`, a different semantic change that
- *  was not in this wave's scope. Logged as a power-user follow-up. */
-function makeRepCompare(userCtx: UserGeoLanguageContext | null) {
-  return (a: GroupItem, b: GroupItem): number => {
-    const sa = sourcePriorityTier(
-      { publicationName: a.s.publication_name, countryCodeAlpha3: a.s.country_code },
-      userCtx,
-    );
-    const sb = sourcePriorityTier(
-      { publicationName: b.s.publication_name, countryCodeAlpha3: b.s.country_code },
-      userCtx,
-    );
-    if (sa !== sb) return sa - sb;
-    const ta = repPriorityTier({ countryCodeAlpha3: a.s.country_code, languageCode: a.s.language_code }, userCtx);
-    const tb = repPriorityTier({ countryCodeAlpha3: b.s.country_code, languageCode: b.s.language_code }, userCtx);
-    if (ta !== tb) return ta - tb;
-    return repCompare(a, b);
-  };
-}
-
-/** Card (story-group) ordering within a Dashboard section: representative
+/** Card (story-group) ordering within a Dashboard section: the group's freshest
  *  `createdAt` (suggestion-creation time) descending, then id. */
 function cardCompare(a: FactRowGroup, b: FactRowGroup): number {
   if (a.createdAtMs !== b.createdAtMs) return b.createdAtMs - a.createdAtMs;
@@ -597,7 +610,10 @@ export function buildFactRows(
 
     // EMERGENCY band only — see `isEmergency`. Deliberately NOT `isBreaking`,
     // which is the (looser) "never bury this" predicate.
-    if (isEmergency(rep, config)) {
+    // Evaluated over the whole group, like `pubDateMs`/`addedMs` above: the
+    // representative is elected oldest-first for provenance, so asking only the
+    // rep would miss an emergency that broke in later coverage of the same story.
+    if (all.some((m) => isEmergency(m, config))) {
       breaking.push({ data: rep, members });
       continue;
     }
@@ -619,7 +635,12 @@ export function buildFactRows(
         bucket,
         pubDateMs,
         addedMs,
-        createdAtMs: parseMs(rep.createdAt),
+        // Group-maxed, like `pubDateMs` and `addedMs` above. `cardCompare`
+        // orders Dashboard cards by this, so taking the representative's value
+        // would sink every multi-source story to where its FIRST report landed
+        // once the rep flipped to oldest-first — a story gaining coverage all
+        // day would drift down instead of up.
+        createdAtMs: all.reduce((mx, m) => Math.max(mx, parseMs(m.createdAt)), 0),
         highPriority,
       },
     });

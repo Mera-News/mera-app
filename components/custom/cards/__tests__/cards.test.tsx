@@ -125,23 +125,6 @@ jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
 });
-// ArticleImagePlaceholder draws its warm off-white gradient with react-native-svg (same
-// house pattern as SectionGradientPanel) — mocked to plain views, same as
-// every other react-native-svg consumer's test (SectionGradientPanel.test.tsx,
-// MeraLogo.test.tsx).
-jest.mock('react-native-svg', () => {
-  const { View } = require('react-native');
-  const Passthrough = (props: any) => <View {...props} />;
-  return {
-    __esModule: true,
-    default: (props: any) => <View testID="placeholder-svg" {...props} />,
-    Svg: (props: any) => <View testID="placeholder-svg" {...props} />,
-    Defs: Passthrough,
-    LinearGradient: Passthrough,
-    Stop: Passthrough,
-    Rect: Passthrough,
-  };
-});
 jest.mock('@/components/custom/feedback-tree/FeedbackTreeOverlay', () => ({
   __esModule: true,
   default: () => null,
@@ -493,11 +476,11 @@ describe('ArticleImagePlaceholder (via the card bases)', () => {
   // DOM Testing Library), so every lookup into it needs
   // `includeHiddenElements: true`. That exclusion is itself proof the
   // decorative-hiding works: a sighted a11y query genuinely can't "see" it.
-  it('shows the dark-gradient watermark placeholder on a full-size card with no image', () => {
+  it('shows the translucent-black-wash watermark placeholder on a full-size card with no image', () => {
     const { getByTestId } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
     );
-    expect(getByTestId('placeholder-svg', { includeHiddenElements: true })).toBeTruthy();
+    expect(getByTestId('placeholder-ground', { includeHiddenElements: true })).toBeTruthy();
     expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
   });
 
@@ -506,10 +489,10 @@ describe('ArticleImagePlaceholder (via the card bases)', () => {
       <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
     );
     // Excluded from a default (non-hidden) query — this is the behavior we want.
-    expect(queryByTestId('placeholder-svg')).toBeNull();
-    // Walk up from the mocked Svg to the wrapping View that carries the
+    expect(queryByTestId('placeholder-ground')).toBeNull();
+    // Walk up from the ground View to the wrapping View that carries the
     // accessibility-hiding props.
-    let n: any = getByTestId('placeholder-svg', { includeHiddenElements: true }).parent;
+    let n: any = getByTestId('placeholder-ground', { includeHiddenElements: true }).parent;
     while (n && n.props?.accessible === undefined) n = n.parent;
     expect(n?.props?.accessible).toBe(false);
     expect(n?.props?.importantForAccessibility).toBe('no-hide-descendants');
@@ -522,7 +505,7 @@ describe('ArticleImagePlaceholder (via the card bases)', () => {
         onPress={jest.fn()}
       />,
     );
-    expect(queryByTestId('placeholder-svg', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
   });
 
@@ -530,7 +513,7 @@ describe('ArticleImagePlaceholder (via the card bases)', () => {
     const { getByTestId } = render(
       <ArticleStandaloneCompactCard article={makeArticle({ image_url: null })} onPress={jest.fn()} />,
     );
-    expect(getByTestId('placeholder-svg', { includeHiddenElements: true })).toBeTruthy();
+    expect(getByTestId('placeholder-ground', { includeHiddenElements: true })).toBeTruthy();
     expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
   });
 
@@ -541,8 +524,33 @@ describe('ArticleImagePlaceholder (via the card bases)', () => {
         onPress={jest.fn()}
       />,
     );
-    expect(queryByTestId('placeholder-svg', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+  });
+
+  // The bug this wave fixed: ArticleCompactCardBase's guard used to be
+  // `imageUrl ? <Image/> : <Placeholder/>` — it only looked at whether a URL
+  // was PASSED IN, never at whether it actually loaded. A 404/timeout left an
+  // empty quarter-width column instead of falling back, on every surface that
+  // renders this shared chrome (saved suggestions, related articles, story
+  // timeline, publication history, persona article list).
+  it('falls back to the placeholder after the compact card image fails to load (onError)', () => {
+    const { getByTestId, queryByTestId } = render(
+      <ArticleStandaloneCompactCard
+        article={makeArticle({ image_url: 'https://example.com/broken.jpg' })}
+        onPress={jest.fn()}
+      />,
+    );
+    // Before the error: the real image is rendered, no placeholder.
+    expect(getByTestId('article-image')).toBeTruthy();
+    expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
+
+    fireEvent(getByTestId('article-image'), 'error');
+
+    // After the error: placeholder takes over, image is gone.
+    expect(getByTestId('placeholder-ground', { includeHiddenElements: true })).toBeTruthy();
+    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
+    expect(queryByTestId('article-image')).toBeNull();
   });
 });
 

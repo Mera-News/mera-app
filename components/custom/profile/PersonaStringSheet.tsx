@@ -199,7 +199,7 @@ export const PersonaStringSheet: React.FC<PersonaStringSheetProps> = ({
                         <TranslatableDynamic
                             text={row.text}
                             as="heading"
-                            size="lg"
+                            size="xl"
                             className="text-white"
                             style={{ marginBottom: 16 }}
                         />

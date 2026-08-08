@@ -64,6 +64,12 @@ export default class ArticleSuggestion extends Model {
   // Round-3 (schema v41): epoch ms the row was scored (math persisted). Null
   // while unscored. Feeds the fact-rows selector's "added" ordering.
   @field('scored_at') scoredAt!: number | null;
+  // Scorer VINTAGE (schema v50): did relevance v3 produce this row's
+  // `relevance`? NULL/false = legacy v1 vintage. Read by `gateForRow`
+  // (lib/stores/fact-rows-selector.ts) so the render gate is applied per row —
+  // v1 and v3 scores are not on the same scale, so one global gate silently
+  // deletes rows the other scorer was never judged against.
+  @field('scored_with_v3') scoredWithV3!: boolean | null;
   @date('created_at') createdAt!: Date;
   @date('first_pub_date') firstPubDate!: Date;
 

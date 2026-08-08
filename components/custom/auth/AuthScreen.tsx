@@ -1,6 +1,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
+import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
 import PolicyPill from '@/components/custom/PolicyPill';
@@ -188,6 +189,14 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
                 screen. */}
             <VStack space="sm" className="mb-6">
                 <LanguageSelector />
+
+                {/* The tour. Sits WITH the language cluster rather than above the
+                    policy pills because it belongs to the same pre-flight group:
+                    things you may want before signing in. It opens a full-screen
+                    Modal (not a route — this screen is outside the logged-in
+                    stack) and closes back to exactly this view. Owns its own
+                    visibility state, so this stays a one-line insertion. */}
+                <TutorialLaunchButton />
 
                 {/* The "How to add a language" video chip lived here and is
                     gone on purpose. It taught the iOS Required-Downloads sheet

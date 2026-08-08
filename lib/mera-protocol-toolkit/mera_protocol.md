@@ -404,10 +404,32 @@ For devices that cannot run on-device inference, the protocol provides an equiva
 
 | Guarantee | On-Device | Confidential VM |
 | --- | --- | --- |
-| Profile invisible to app operator | ✅ Mathematical | ✅ TEE isolation |
-| Profile invisible to third party | ✅ | ✅ Hardware attestation |
+| Profile invisible to app operator | ✅ Mathematical | ⚠️ TEE isolation, partially attested (see below) |
+| Profile invisible to third party | ✅ | ⚠️ TEE isolation, partially attested (see below) |
 | External systems see identical traffic | ✅ | ✅ Protocol symmetry |
-| Trust model | Zero trust | Trust in hardware TEE |
+| Trust model | Zero trust | Trust in hardware TEE **plus its operator** |
+
+> **The Confidential VM column is not equivalent to the on-device column, and this
+> table used to imply it was.** The on-device guarantee is mathematical: the data
+> never moves. The Confidential VM guarantee is conditional on the attestation
+> actually being checked, and the check is currently *partial*:
+>
+> **What the client verifies** (`lib/e2ee/attestation-verify.ts`): the Intel TDX
+> quote's signature, the quoting-enclave signature, the attestation-key binding,
+> and the PCK certificate chain up to a **pinned** Intel SGX Root CA — plus, most
+> importantly, that the `signing_public_key` the app encrypts toward is the key
+> committed in the quote's `report_data`. Freshness is verified via a
+> client-supplied nonce echoed into `report_data`, but only on the user-initiated
+> check, not on the inference hot path.
+>
+> **What it does NOT verify:** platform TCB currency and QE identity (these need
+> Intel PCS collateral the app does not fetch), enclave measurements against
+> published expected values, and the NVIDIA GPU attestation. Verification is also
+> **fail-open** — results are displayed, and a failure does not block inference.
+>
+> Until those close, do not describe this path as hardware-proven. This matches
+> `README.md`, the privacy policy, and the in-app explainer; an earlier version of
+> this table contradicted all three.
 
 ---
 

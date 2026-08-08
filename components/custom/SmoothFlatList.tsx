@@ -14,8 +14,12 @@ import Animated, {
     useAnimatedStyle,
     useSharedValue,
 } from 'react-native-reanimated';
+import { PARALLAX_HEADER_HEIGHT } from '@/lib/layout/card-metrics';
 
-const HEADER_HEIGHT = 192; // Default parallax header height (h-48 = 192px)
+// Was a local `const HEADER_HEIGHT = 192` duplicated here and in the sibling
+// list component, each commented `(h-48 = 192px)` to tie it to a Tailwind class
+// on ArticleCardBase that neither file imports. One name now — see card-metrics.
+const HEADER_HEIGHT = PARALLAX_HEADER_HEIGHT;
 
 interface SmoothFlatListProps<ItemT> {
     /** Content to render as a parallax header */

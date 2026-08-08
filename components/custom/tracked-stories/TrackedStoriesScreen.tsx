@@ -22,11 +22,14 @@ import {
     observeActive,
 } from '@/lib/database/services/tracked-story-service';
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
+import { startFollowStoryChat } from '@/lib/tracking/follow-story-chat';
 import type TrackedStoryModel from '@/lib/database/models/TrackedStory';
 import { hapticLight } from '@/lib/haptics';
+import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Crosshair } from 'lucide-react-native';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -180,7 +183,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             <TranslatableDynamic
                                 text={headline}
                                 as="heading"
-                                size="md"
+                                size="lg"
                                 numberOfLines={2}
                                 className="text-white"
                             />
@@ -257,9 +260,13 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
         </Box>
     ) : null;
 
-    const goToFeed = useCallback(() => {
-        router.push('/logged-in/app_container/feed');
-    }, []);
+    // The FAB (and the empty state's CTA) both start the same conversation:
+    // Mera opens on the follow-story context with the seed turn already sent,
+    // asks what to follow, and stages the scope card the user taps to confirm.
+    // The whole behaviour lives in lib/ — this is just the tap.
+    const startFollowStory = useCallback(() => {
+        startFollowStoryChat(t('trackedStories.followChatSeed'));
+    }, [t]);
 
     const ListEmpty = (
         <Box className="flex-1 items-center justify-center px-8 py-20">
@@ -275,39 +282,33 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                     purely the zero-state message. */}
                 {locked ? t('freeTier.trackedStoriesEmptyBody') : t('trackedStories.emptyBody')}
             </Text>
-            {/* The empty body used to stop at "how" without saying "where". QA's
-                filed wording ("feed card → 👍 → the 'More like this' panel")
-                doesn't match the current wiring: Feed cards render no track
-                affordance — CardActionBar can show one, but ArticleSuggestionCard
-                passes no `onTrack`. The crosshair only appears in
-                ArticleFeedbackPrompt's action row on the article DETAIL screen
-                (opened by tapping a Feed card), and
-                it sits in that row independent of the like/dislike panel, not
-                inside it. Hint text reflects that traced path rather than the
-                filed description. CTA styling matches the other
-                icon+text+outline-button empty state (locations.tsx's "Add a
-                place" pattern) — the two components named in the task have no
-                CTA to match.
+            {/* The hint + CTA used to walk the user to the article DETAIL
+                screen's crosshair, because that was the only place a track could
+                START. It isn't any more: the FAB below starts one from here, so
+                sending them to the Feed to find an article would be the long way
+                round to a thing this screen now does itself. Same handler as the
+                FAB — one entry point, two affordances.
 
-                Locked: both the hint and the "go to feed" CTA below exist only
-                to walk the user through STARTING a new track, which the
-                free-tier body above just said needs a plan — showing them
-                would repeat a broken instruction. Suppressed rather than
-                relabeled; `FreeTierCard`/`FreeTierInlineNotice` already
-                own "See plans" messaging elsewhere and this empty state isn't
-                the place to duplicate it. */}
+                Locked: both exist only to walk the user through STARTING a new
+                track, which the free-tier body above just said needs a plan —
+                showing them would repeat a broken instruction. Suppressed rather
+                than relabeled; `FreeTierCard`/`FreeTierInlineNotice` already own
+                "See plans" messaging elsewhere and this empty state isn't the
+                place to duplicate it. (The FAB self-gates the same way.) */}
             {!locked && (
                 <>
                     <Text size="xs" className="text-typography-500 text-center mt-4">
-                        {t('trackedStories.emptyHint')}
+                        {t('trackedStories.emptyHintFollow')}
                     </Text>
                     <Button
                         variant="outline"
                         className="rounded-full border-primary-500 mt-4"
-                        onPress={goToFeed}
+                        onPress={startFollowStory}
                         testID="tracked-stories-empty-cta"
                     >
-                        <ButtonText className="text-primary-400">{t('trackedStories.emptyCta')}</ButtonText>
+                        <ButtonText className="text-primary-400">
+                            {t('trackedStories.emptyCtaFollow')}
+                        </ButtonText>
                     </Button>
                 </>
             )}
@@ -352,17 +353,20 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 ListHeaderComponent={
                     <>
                         <VStack
-                            className="px-5 pb-2"
+                            className="px-5 pb-2 mb-3"
                             style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
                         >
                             <Heading
-                                size="3xl"
+                                size="4xl"
                                 className={embedded ? 'text-white' : 'text-white ml-14'}
                             >
                                 {t('trackedStories.title')}
                             </Heading>
+                        {/* `mb-3` on the block above rather than a spacer
+                            element: a <Box style={{height:12}}/> is an
+                            invisible node in the tree that no spacing token
+                            governs and no layout tool can see. */}
                         </VStack>
-                        <Box style={{ height: 12 }} />
                         {/* Mera News Free: the one sentence that explains why
                             the track affordances elsewhere are refusing. It
                             self-gates on `useAiAccess()` and renders null
@@ -402,11 +406,37 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 scrollEventThrottle={16}
             />
 
+            {/* Start-a-follow FAB — bottom right, carrying the same crosshair
+                the card/detail track buttons use (CardActionBar), so the
+                affordance reads as "follow" rather than as a generic "+".
+
+                Hidden while locked, deliberately and on the same axis as the
+                empty-state CTA above: `openArticleFeedback` silently no-ops for
+                a free-tier user, so a visible FAB here would be a button that
+                does nothing at all.
+
+                Bottom offset clears the native tab bar when this screen is
+                EMBEDDED in the Dashboard's Stories sub-tab; standalone (its own
+                route, no tab shell) it only clears the home indicator. Same
+                convention as ScrollToTopFab's `extraBottomOffset`. */}
+            {!locked && (
+                <Pressable
+                    testID="tracked-stories-track-fab"
+                    onPress={startFollowStory}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('trackedStories.followFabLabel')}
+                    className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-primary-500 shadow-hard-3"
+                    style={{ bottom: 20 + insets.bottom + (embedded ? TAB_BAR_HEIGHT : 0) }}
+                >
+                    <Crosshair size={26} strokeWidth={2} color="#000000" fill="none" />
+                </Pressable>
+            )}
+
             <Modal isOpen={!!confirmTarget} onClose={() => setConfirmTarget(null)}>
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader>
-                        <Heading size="md" className="text-white">
+                        <Heading size="lg" className="text-white">
                             {t('trackedStories.untrackConfirmTitle')}
                         </Heading>
                     </ModalHeader>

@@ -211,3 +211,61 @@ describe('deriveExploreScopes', () => {
         expect(scopes.map((s) => s.id)).toEqual(['world']);
     });
 });
+
+describe('deriveExploreScopes — browse countries (3rd argument)', () => {
+    it('appends browse countries after World-only (no locations)', () => {
+        const scopes = deriveExploreScopes([], null, ['FR', 'jp']);
+        expect(scopes.map((s) => s.id)).toEqual(['world', 'country:FRA', 'country:JPN']);
+    });
+
+    it('appends browse countries AFTER location-derived countries', () => {
+        const scopes = deriveExploreScopes(
+            [loc({ city: 'mumbai', countryCode: 'IN', role: 'home', weight: 0.9 })],
+            'US',
+            ['FR'],
+        );
+        expect(scopes.map((s) => s.id)).toEqual(['world', 'country:IND', 'country:FRA']);
+    });
+
+    it('dedupes a browse country already covered by a location (location wins the single slot)', () => {
+        const scopes = deriveExploreScopes(
+            [loc({ city: 'mumbai', countryCode: 'IN', role: 'home', weight: 0.9 })],
+            'US',
+            ['IN', 'FR'],
+        );
+        expect(scopes.map((s) => s.id)).toEqual(['world', 'country:IND', 'country:FRA']);
+    });
+
+    it('never lets a browse country become the primary chip — electPrimaryCountry ignores browseCountries entirely', () => {
+        // No locations, device country US — primary is USA regardless of a
+        // heavier-seeming browse country appended after it.
+        const scopes = deriveExploreScopes([], 'US', ['FR']);
+        expect(scopes[1]).toMatchObject({ id: 'country:USA' });
+        expect(electPrimaryCountry([], 'US')).toMatchObject({ id: 'country:USA' });
+    });
+
+    it('is subject to the same MAX_SCOPES cap as location-derived countries', () => {
+        const scopes = deriveExploreScopes(
+            [
+                loc({ countryCode: 'GB', role: 'home', weight: 0.9 }),
+                loc({ countryCode: 'FR', weight: 0.8 }),
+                loc({ countryCode: 'DE', weight: 0.7 }),
+                loc({ countryCode: 'IT', weight: 0.6 }),
+                loc({ countryCode: 'ES', weight: 0.5 }),
+            ],
+            'US',
+            ['NL'],
+        );
+        expect(scopes).toHaveLength(MAX_SCOPES);
+        expect(scopes.some((s) => s.id === 'country:NLD')).toBe(false);
+    });
+
+    it('defaults to [] when omitted (back-compat with the 2-arg call sites)', () => {
+        expect(deriveExploreScopes([], 'US')).toEqual(deriveExploreScopes([], 'US', []));
+    });
+
+    it('skips an unmappable browse country code', () => {
+        const scopes = deriveExploreScopes([], null, ['ZZ', 'FR']);
+        expect(scopes.map((s) => s.id)).toEqual(['world', 'country:FRA']);
+    });
+});

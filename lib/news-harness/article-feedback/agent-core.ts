@@ -10,6 +10,7 @@
 // that thin adapter reads the data and hands plain values to this module.
 
 import { SUPPRESSION_KINDS } from '../core/types';
+import { proposalRequiresUserChoice } from '../core/proposals';
 import type {
   ActiveSuppressionView,
   FeedbackContextInput,
@@ -322,6 +323,7 @@ Example — article "Russia strikes humanitarian sites in Ukraine": proposeTrack
 - "Less of this / not for me" → ONE proposeChanges with choose_one:true offering 2–4 mutually-exclusive alternatives ordered least→most drastic (e.g. down-weight the topic → suppress a named ENTITY → retire the topic → suppress the CATEGORY). The user picks exactly one; typing free text (e.g. "mute the source") is always an option.
 - "This isn't important to me" → ask ONE short why-question FIRST, then stage the persona update their answer implies.
 - When a PENDING PROPOSAL is shown and the user confirms (yes / ok / do it, in any language) call applyProposal; if they decline call cancelProposal. If they say anything else, leave the proposal pending and answer normally.
+- EXCEPTION — a card offering ALTERNATIVES (choose_one, or the track options): the user must TAP the option they want. NEVER applyProposal on one; if they say "yes", ask which option, in words.
 - Keep replies short (≤2 sentences). ${languageRule}${toolSection}`;
 }
 
@@ -462,11 +464,16 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
       : null;
 
   // --- PENDING PROPOSAL ---
+  // A SINGLE-SELECT card gets the opposite instruction: applyProposal refuses it
+  // (only the tap knows which alternative was meant), so telling the model to
+  // call it on "yes" would guarantee a dead-end turn. It can still cancel.
   const pendingBlock = proposal
     ? '## PENDING PROPOSAL\n'
       + `${proposal.explanation}\n`
       + `Actions: ${proposal.actions.map(describeAction).join('; ')}\n`
-      + 'If the user confirms call applyProposal; if they decline call cancelProposal.'
+      + (proposalRequiresUserChoice(proposal)
+        ? 'These are ALTERNATIVES: the user must TAP the one they want — do NOT call applyProposal. If they decline call cancelProposal.'
+        : 'If the user confirms call applyProposal; if they decline call cancelProposal.')
     : null;
 
   // --- USER VERDICT (Feed-tab handoff) — grounds the proposal ---

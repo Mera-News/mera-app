@@ -22,6 +22,7 @@ import { Text } from '@/components/ui/text';
 import { executeProposalActions } from '@/lib/chat-tools/proposal-handlers';
 import { hapticSuccess } from '@/lib/haptics';
 import type { ProposalAction, StagedProposal } from '@/lib/llm/types';
+import { proposalRequiresUserChoice } from '@/lib/news-harness/core/proposals';
 import {
   useFloatingChatIsGenerating,
   useFloatingChatProposal,
@@ -332,7 +333,9 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   // so Confirm is always meaningful). Only used when proposal.chooseOne.
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const chooseOne = proposal.chooseOne === true && proposal.actions.length > 1;
+  // Shared with both agents' applyProposal (which REFUSE such a proposal) so the
+  // "is this single-select?" reading cannot drift between the card and the model.
+  const chooseOne = proposalRequiresUserChoice(proposal);
 
   // A "follow this story" proposal (every action is track_story, single or
   // multi-scope) gets its own header wording; other proposals keep the generic

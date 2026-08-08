@@ -87,7 +87,7 @@ describe('ScopeChipRow', () => {
 
     it('renders a chip per scope (World uses the translated label key, the rest their own label)', () => {
         const { getByText, queryByText } = render(
-            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} />,
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={jest.fn()} />,
         );
         expect(getByText('explore.scopeWorld')).toBeTruthy();
         expect(getByText('France')).toBeTruthy();
@@ -100,7 +100,7 @@ describe('ScopeChipRow', () => {
     it('fires onSelect with the tapped scope', () => {
         const onSelect = jest.fn();
         const { getByText } = render(
-            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} />,
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} onRemove={jest.fn()} />,
         );
         fireEvent.press(getByText('Mumbai'));
         expect(onSelect).toHaveBeenCalledWith(scopes[2]);
@@ -108,28 +108,80 @@ describe('ScopeChipRow', () => {
 
     it('marks the selected chip via accessibilityState', () => {
         const { getByLabelText } = render(
-            <ScopeChipRow scopes={scopes} selectedId="country:IND" onSelect={jest.fn()} />,
+            <ScopeChipRow scopes={scopes} selectedId="country:IND" onSelect={jest.fn()} onRemove={jest.fn()} />,
         );
         expect(getByLabelText('India').props.accessibilityState).toMatchObject({ selected: true });
     });
 
     it('renders a trailing "+" chip after the last scope', () => {
         const { getByLabelText } = render(
-            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} />,
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={jest.fn()} />,
         );
-        expect(getByLabelText('explore.addPlaces')).toBeTruthy();
+        expect(getByLabelText('explore.addSources')).toBeTruthy();
     });
 
-    it('the "+" chip is never marked selected and navigates to the locations screen on tap, without firing onSelect', () => {
+    it('the "+" chip is never marked selected and navigates to the Sources screen on tap, without firing onSelect', () => {
         const onSelect = jest.fn();
         const { getByLabelText } = render(
-            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} />,
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} onRemove={jest.fn()} />,
         );
-        const addChip = getByLabelText('explore.addPlaces');
+        const addChip = getByLabelText('explore.addSources');
         expect(addChip.props.accessibilityState).not.toMatchObject({ selected: true });
 
         fireEvent.press(addChip);
-        expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/locations');
+        expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/sources');
         expect(onSelect).not.toHaveBeenCalled();
+    });
+});
+
+describe('ScopeChipRow — long-press to reveal "×" (Item 18)', () => {
+    it('long-pressing a country chip reveals a "×" that calls onRemove with that scope', () => {
+        const onRemove = jest.fn();
+        const { getByText, getByLabelText } = render(
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={onRemove} />,
+        );
+        fireEvent(getByText('India'), 'longPress');
+        const removeButton = getByLabelText('explore.removeScope');
+        fireEvent.press(removeButton);
+        expect(onRemove).toHaveBeenCalledWith(scopes[1]);
+    });
+
+    it('the "×" is not rendered before a long-press', () => {
+        const { queryByLabelText } = render(
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={jest.fn()} />,
+        );
+        expect(queryByLabelText('explore.removeScope')).toBeNull();
+    });
+
+    it('World is never hideable — long-pressing it reveals no "×"', () => {
+        const { getByText, queryByLabelText } = render(
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={jest.fn()} />,
+        );
+        fireEvent(getByText('explore.scopeWorld'), 'longPress');
+        expect(queryByLabelText('explore.removeScope')).toBeNull();
+    });
+
+    it('tapping the chip to select dismisses a revealed "×" without firing onRemove', () => {
+        const onSelect = jest.fn();
+        const onRemove = jest.fn();
+        const { getByText, queryByLabelText } = render(
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={onSelect} onRemove={onRemove} />,
+        );
+        fireEvent(getByText('India'), 'longPress');
+        expect(queryByLabelText('explore.removeScope')).toBeTruthy();
+
+        fireEvent.press(getByText('India'));
+        expect(onSelect).toHaveBeenCalledWith(scopes[1]);
+        expect(onRemove).not.toHaveBeenCalled();
+        expect(queryByLabelText('explore.removeScope')).toBeNull();
+    });
+
+    it('long-pressing a different chip moves the "×" instead of stacking two', () => {
+        const { getByText, getAllByLabelText } = render(
+            <ScopeChipRow scopes={scopes} selectedId="world" onSelect={jest.fn()} onRemove={jest.fn()} />,
+        );
+        fireEvent(getByText('France'), 'longPress');
+        fireEvent(getByText('India'), 'longPress');
+        expect(getAllByLabelText('explore.removeScope')).toHaveLength(1);
     });
 });

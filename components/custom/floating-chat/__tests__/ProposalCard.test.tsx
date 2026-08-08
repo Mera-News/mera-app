@@ -99,6 +99,21 @@ describe('ProposalCard applied state', () => {
     expect(opacityOf(getByTestId('proposal-actions'))).toBeUndefined();
   });
 
+  // G1: the tap is the ONLY consent path for a single-select card (both agents'
+  // applyProposal now refuse one), so this is the assertion that keeps the pills
+  // meaningful: Confirm applies EXACTLY the picked scope — not all three.
+  it('applies exactly the SELECTED scope, as a user-confirmed call', async () => {
+    const { getByTestId, getByText } = render(<ProposalCard proposal={trackProposal} isLast />);
+
+    fireEvent.press(getByTestId('proposal-action-row-1'));
+    fireEvent.press(getByText('articleFeedback.proposalConfirm'));
+
+    await waitFor(() => expect(mockExecuteProposalActions).toHaveBeenCalledTimes(1));
+    expect(mockExecuteProposalActions).toHaveBeenCalledWith([trackProposal.actions[1]], {
+      confirmedByUser: true,
+    });
+  });
+
   it('dims and disables the rows once the proposal is applied', async () => {
     const { getByTestId, getByText, queryByText } = render(
       <ProposalCard proposal={trackProposal} isLast />,

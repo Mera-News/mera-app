@@ -49,7 +49,13 @@ const AUTOPLAY_INTERVAL_MS = 1400;
 
 const renderTickerItem = ({ item }: { item: string }) => (
     <View style={styles.tickerItem}>
-        <Text style={styles.tickerText}>{item}</Text>
+        {/* DELIBERATE LOCAL CLAMP. TICKER_HEIGHT / TICKER_ITEM_HEIGHT feed the
+            carousel's computed slide offsets, so this decorative word marquee
+            cannot grow its rows without the slides drifting out of register.
+            It is ornamental text (the word "Language" in 19 scripts) that is
+            never the only way to understand the screen, so capping it is the
+            right trade. `locked` = 1.2x. */}
+        <Text scaleTier="locked" style={styles.tickerText}>{item}</Text>
     </View>
 );
 

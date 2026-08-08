@@ -37,11 +37,16 @@ jest.mock('@/components/ui/heading', () => { const { Text } = require('react-nat
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text: (p: any) => <Text {...p} /> }; });
 jest.mock('@/components/ui/spinner', () => { const { View } = require('react-native'); return { Spinner: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/button', () => {
-    const { Pressable, Text } = require('react-native');
+    const { Pressable, Text, View } = require('react-native');
     return {
         Button: (p: any) => <Pressable {...p} />,
         ButtonText: (p: any) => <Text {...p} />,
+        ButtonIcon: (p: any) => <View {...p} />,
     };
+});
+jest.mock('@/components/ui/icon', () => {
+    const { View } = require('react-native');
+    return { RepeatIcon: (p: any) => <View {...p} /> };
 });
 jest.mock('react-native-safe-area-context', () => {
     const { View } = require('react-native');
@@ -72,11 +77,13 @@ jest.mock('@/lib/stores/user-store', () => ({
 // it off, and the "no auto-present" test turns it ON — which is the only state
 // in which the removed effect could ever have fired.
 const mockRcState = { configured: false };
+const mockTrialAvailability = { current: 'ineligible' as string };
 jest.mock('@/lib/revenuecat', () => ({
     getCustomerInfoSafe: jest.fn(async () => null),
     getOfferingSafe: jest.fn(async () => null),
     isRevenueCatConfigured: () => mockRcState.configured,
     logRevenueCatDiagnostics: jest.fn(async () => {}),
+    getTrialAvailability: jest.fn(async () => mockTrialAvailability.current),
 }));
 const mockPresentPaywall = jest.fn(async () => 'CANCELLED');
 jest.mock('react-native-purchases-ui', () => ({
@@ -128,6 +135,70 @@ beforeEach(() => {
     // Default: the webhook HAS landed and the server reports a paid tier.
     mockFetchUserBilling.mockResolvedValue({ subscriptionTier: 'starter' });
     mockRefreshAfterPurchase.mockResolvedValue({ billing: null, confirmed: false });
+    mockTrialAvailability.current = 'ineligible';
+});
+
+// Only `mera_news_individual_monthly` on the App Store carries an introductory
+// offer (verified against the RevenueCat catalogue: every other product,
+// including all four Play Store products and Starter, has a null
+// trial_duration). So the trial wording is a claim about THIS store account on
+// THIS platform, and getting it wrong means the payment sheet contradicts the
+// page that sent the user to it.
+describe('the trial is only promised when the store will honour it', () => {
+    it('offers the trial when the account is eligible', async () => {
+        mockTrialAvailability.current = 'eligible';
+        const { getByText } = render(<NotSubscribedScreen />);
+
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(getByText('subscription.startFreeTrial')).toBeTruthy();
+        expect(getByText('subscription.para3Trial')).toBeTruthy();
+    });
+
+    it('does not, once the account has already used it', async () => {
+        mockTrialAvailability.current = 'ineligible';
+        const { getByText, queryByText } = render(<NotSubscribedScreen />);
+
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(getByText('subscription.subscribeNow')).toBeTruthy();
+        expect(queryByText('subscription.para3Trial')).toBeNull();
+        expect(getByText('subscription.para3NoTrial')).toBeTruthy();
+    });
+
+    // The asymmetry is the point: an unknown answer must fall to the version
+    // that promises less. Showing "Start your free trial" and then retracting it
+    // is worse than never having offered it.
+    it('treats an unknown answer as no trial', async () => {
+        mockTrialAvailability.current = 'unknown';
+        const { getByText, queryByText } = render(<NotSubscribedScreen />);
+
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(getByText('subscription.subscribeNow')).toBeTruthy();
+        expect(queryByText('subscription.startFreeTrial')).toBeNull();
+    });
+
+    // The lapsed path has its own copy and its own CTA, and never mentions a
+    // trial -- a returning subscriber is by definition ineligible.
+    it('never shows trial copy on the lapsed entry, even when eligible', async () => {
+        mockTrialAvailability.current = 'eligible';
+        const { getByText, queryByText } = render(<NotSubscribedScreen reason="lapsed" />);
+
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        expect(getByText('subscription.turnMeraBackOn')).toBeTruthy();
+        expect(queryByText('subscription.startFreeTrial')).toBeNull();
+        expect(queryByText('subscription.para3Trial')).toBeNull();
+    });
 });
 
 // The screen used to open the RevenueCat sheet on mount for every non-`lapsed`

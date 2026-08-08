@@ -74,7 +74,7 @@ function ProcessingHeadline() {
 
     return (
         <Animated.View key={index} entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
-            <Text size="xs" className="text-typography-400 leading-4 mt-1">
+            <Text size="xs" className="text-typography-400 mt-1">
                 {line}
             </Text>
         </Animated.View>
@@ -88,7 +88,7 @@ function AnalysingProgress() {
     const batchProgress = useForYouBatchProgress();
     if (!batchProgress || batchProgress.total <= 0) return null;
     return (
-        <Text size="xs" className="text-typography-500 leading-4 mt-1">
+        <Text size="xs" className="text-typography-500 mt-1">
             {t('feed.analysingProgress', {
                 done: batchProgress.done,
                 total: batchProgress.total,
@@ -218,7 +218,7 @@ const FeedStatusShimmer: React.FC<FeedStatusShimmerProps> = ({
     if (mode === 'deferred') {
         return (
             <Animated.View layout={LinearTransition} style={{ marginTop: 8 }} testID="dashboard-status-shimmer">
-                <Text size="xs" className="text-typography-400 leading-4">
+                <Text size="xs" className="text-typography-400">
                     {t('feed.waitingForNextBatch', { count: unscoredCount })}
                 </Text>
             </Animated.View>

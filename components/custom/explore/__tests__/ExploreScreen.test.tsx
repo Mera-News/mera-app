@@ -110,6 +110,56 @@ jest.mock('../ScopeChipRow', () => {
     };
 });
 
+// --- Item 12a: search bar/results stubs + the state hook they read --------
+// ExploreSearchBar/ExploreSearchResults are exercised by their own test
+// files; here they're stubbed so this suite stays focused on the INTEGRATION
+// question — does activating search ever disturb the scope chips/list — and
+// isn't coupled to their internal markup.
+type MockSearchStatus = 'idle' | 'loading' | 'success' | 'error';
+const defaultSearchState = () => ({
+    query: '',
+    setQuery: jest.fn(),
+    clear: jest.fn(),
+    status: 'idle' as MockSearchStatus,
+    hits: [] as any[],
+    errorKind: null as string | null,
+    retry: jest.fn(),
+    isActive: false,
+});
+const mockUseNewsSearch = jest.fn<ReturnType<typeof defaultSearchState>, []>(defaultSearchState);
+jest.mock('@/lib/news-search/use-news-search', () => ({
+    useNewsSearch: () => mockUseNewsSearch(),
+}));
+
+const mockOpenArticle = jest.fn();
+jest.mock('@/lib/hooks/use-open-article', () => ({
+    useOpenArticle: () => mockOpenArticle,
+}));
+
+const mockSearchBar = jest.fn();
+jest.mock('../ExploreSearchBar', () => {
+    const { View } = require('react-native');
+    return {
+        __esModule: true,
+        default: (props: any) => {
+            mockSearchBar(props);
+            return <View testID="explore-search-bar-stub" />;
+        },
+    };
+});
+
+const mockSearchResults = jest.fn();
+jest.mock('../ExploreSearchResults', () => {
+    const { View } = require('react-native');
+    return {
+        __esModule: true,
+        default: (props: any) => {
+            mockSearchResults(props);
+            return <View testID="explore-search-results-stub" />;
+        },
+    };
+});
+
 // --- services / stores ------------------------------------------------------
 // Deliberately NOT synchronous: the real WatermelonDB observable emits after
 // the first render, which is exactly the condition the flicker gate exists for.
@@ -131,7 +181,13 @@ jest.mock('@/lib/explore/device-country', () => ({
 }));
 
 const mockSetSetting = jest.fn((..._a: unknown[]) => Promise.resolve());
+// Backs lib/explore/browse-countries.ts + lib/explore/suppressed-scopes.ts too
+// (both real modules, not mocked — they're pure aside from this KV layer).
+// Empty by default so browseCountries/suppressedIds resolve to their
+// no-op-empty defaults and every pre-existing assertion below is unaffected.
+const mockGetSetting = jest.fn((..._a: unknown[]): Promise<string | null> => Promise.resolve(null));
 jest.mock('@/lib/database/services/setting-service', () => ({
+    getSetting: (...a: unknown[]) => mockGetSetting(...a),
     setSetting: (...a: unknown[]) => mockSetSetting(...a),
 }));
 
@@ -153,6 +209,7 @@ const row = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => {
     jest.clearAllMocks();
     emitLocations = null;
+    mockUseNewsSearch.mockReturnValue(defaultSearchState());
 });
 
 describe('ExploreScreen — cold-open flicker gate', () => {
@@ -257,5 +314,186 @@ describe('ExploreScreen — scopes and selection', () => {
             emitLocations!([row()]);
         });
         expect(mockListMount).toHaveBeenLastCalledWith('world');
+    });
+});
+
+// Flush the browse-countries/suppressed-scopes focus-effect promise chain
+// (getSetting → JSON.parse → Promise.all → setState), which takes a few more
+// microtask turns than the synchronous emitLocations! path above.
+const flushKvLoad = async () => {
+    await act(async () => {
+        await Promise.resolve();
+        await Promise.resolve();
+    });
+};
+
+// mockGetSetting is typed as (...args: unknown[]) => Promise<string | null> —
+// this stubs a per-key lookup on top of that without narrowing the param type
+// (a `(key: string) => ...` override isn't assignable to mockImplementation's
+// expected `(...args: unknown[]) => ...` signature).
+const stubSettingByKey = (overrides: Record<string, string>) => (...args: unknown[]) => {
+    const key = args[0] as string;
+    return Promise.resolve(Object.prototype.hasOwnProperty.call(overrides, key) ? overrides[key] : null);
+};
+
+describe('ExploreScreen — browse countries + suppressed scopes (Items 7/18)', () => {
+    afterEach(() => {
+        // Tests below override mockGetSetting per-key; restore the blanket
+        // default so it never leaks into a later test.
+        mockGetSetting.mockImplementation((..._a: unknown[]) => Promise.resolve(null));
+    });
+
+    it('appends a browse country after location-derived ones and passes onRemove through', async () => {
+        mockGetSetting.mockImplementation(stubSettingByKey({ explore_browse_countries: JSON.stringify(['FR']) }));
+        render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]); // IN, role: home
+        });
+        await flushKvLoad();
+
+        const props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(props.scopes.map((s: any) => s.id)).toEqual(['world', 'country:IND', 'country:FRA']);
+        expect(typeof props.onRemove).toBe('function');
+    });
+
+    it('filters out a suppressed location-derived scope but never World', async () => {
+        mockGetSetting.mockImplementation(
+            stubSettingByKey({ explore_suppressed_scopes: JSON.stringify(['country:IND']) }),
+        );
+        render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        await flushKvLoad();
+
+        const props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(props.scopes.map((s: any) => s.id)).toEqual(['world']);
+    });
+
+    it('onRemove on a location-derived scope suppresses it (KV) without touching the browse set', async () => {
+        render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        await flushKvLoad();
+
+        let props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        const india = props.scopes.find((s: any) => s.id === 'country:IND');
+        act(() => {
+            props.onRemove(india);
+        });
+        // addSuppressedScopeId itself awaits getSetting THEN setSetting — two
+        // more microtask hops beyond the synchronous local setState above.
+        await flushKvLoad();
+
+        expect(mockSetSetting).toHaveBeenCalledWith('explore_suppressed_scopes', JSON.stringify(['country:IND']));
+        expect(mockSetSetting).not.toHaveBeenCalledWith('explore_browse_countries', expect.anything());
+        props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(props.scopes.map((s: any) => s.id)).toEqual(['world']);
+    });
+
+    it('onRemove on a browse-added scope drops it from the browse set, not the suppressed set', async () => {
+        mockGetSetting.mockImplementation(stubSettingByKey({ explore_browse_countries: JSON.stringify(['FR']) }));
+        render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]); // IN, role: home — FR has no location behind it
+        });
+        await flushKvLoad();
+
+        let props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        const france = props.scopes.find((s: any) => s.id === 'country:FRA');
+        act(() => {
+            props.onRemove(france);
+        });
+        // removeBrowseCountry itself awaits getSetting THEN setSetting — two
+        // more microtask hops beyond the synchronous local setState above.
+        await flushKvLoad();
+
+        expect(mockSetSetting).toHaveBeenCalledWith('explore_browse_countries', JSON.stringify([]));
+        expect(mockSetSetting).not.toHaveBeenCalledWith('explore_suppressed_scopes', expect.anything());
+        props = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(props.scopes.some((s: any) => s.id === 'country:FRA')).toBe(false);
+    });
+});
+
+describe('ExploreScreen — search bar + results overlay (Item 12a)', () => {
+    it('renders the search bar but no overlay while inactive', () => {
+        const { getByTestId, queryByTestId } = render(<ExploreScreen />);
+        expect(getByTestId('explore-search-bar-stub')).toBeTruthy();
+        expect(queryByTestId('explore-search-overlay')).toBeNull();
+        expect(queryByTestId('explore-search-results-stub')).toBeNull();
+    });
+
+    it('mounts the overlay and forwards hook state to ExploreSearchResults once active', () => {
+        const hits = [{ _id: 'a1', title_en: 'Headline' }];
+        mockUseNewsSearch.mockReturnValue({
+            ...defaultSearchState(),
+            isActive: true,
+            status: 'success',
+            hits,
+        });
+        const { getByTestId } = render(<ExploreScreen />);
+
+        expect(getByTestId('explore-search-overlay')).toBeTruthy();
+        expect(getByTestId('explore-search-results-stub')).toBeTruthy();
+        const props = mockSearchResults.mock.calls[mockSearchResults.mock.calls.length - 1][0];
+        expect(props.status).toBe('success');
+        expect(props.hits).toBe(hits);
+        expect(props.errorKind).toBeNull();
+        expect(typeof props.onPressHit).toBe('function');
+        expect(typeof props.onRetry).toBe('function');
+    });
+
+    it('tapping a search result opens the article by its id via useOpenArticle', () => {
+        mockUseNewsSearch.mockReturnValue({ ...defaultSearchState(), isActive: true, status: 'success' });
+        render(<ExploreScreen />);
+
+        const props = mockSearchResults.mock.calls[mockSearchResults.mock.calls.length - 1][0];
+        act(() => {
+            props.onPressHit({ _id: 'article-123' });
+        });
+        expect(mockOpenArticle).toHaveBeenCalledWith({ articleId: 'article-123' });
+    });
+
+    it('activating search never remounts or reconfigures the scope list/chips underneath', () => {
+        const { rerender, getByTestId, queryByTestId } = render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        expect(mockListMount).toHaveBeenCalledTimes(1);
+        expect(queryByTestId('explore-search-overlay')).toBeNull();
+        const chipPropsBefore = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+
+        mockUseNewsSearch.mockReturnValue({
+            ...defaultSearchState(),
+            query: 'india',
+            isActive: true,
+            status: 'loading',
+        });
+        rerender(<ExploreScreen />);
+
+        // The overlay is now up, but the list underneath was never touched.
+        expect(getByTestId('explore-search-overlay')).toBeTruthy();
+        expect(mockListMount).toHaveBeenCalledTimes(1);
+        expect(getByTestId('scope-article-list').props.accessibilityLabel).toBe('world');
+        const chipPropsAfter = mockChipRow.mock.calls[mockChipRow.mock.calls.length - 1][0];
+        expect(chipPropsAfter.scopes).toEqual(chipPropsBefore.scopes);
+        expect(chipPropsAfter.selectedId).toBe(chipPropsBefore.selectedId);
+    });
+
+    it('clearing the query (isActive false again) drops the overlay and leaves the list as-is', () => {
+        mockUseNewsSearch.mockReturnValue({ ...defaultSearchState(), isActive: true, status: 'success' });
+        const { rerender, getByTestId, queryByTestId } = render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        expect(getByTestId('explore-search-overlay')).toBeTruthy();
+
+        mockUseNewsSearch.mockReturnValue(defaultSearchState());
+        rerender(<ExploreScreen />);
+
+        expect(queryByTestId('explore-search-overlay')).toBeNull();
+        expect(mockListMount).toHaveBeenCalledTimes(1);
+        expect(getByTestId('scope-article-list')).toBeTruthy();
     });
 });

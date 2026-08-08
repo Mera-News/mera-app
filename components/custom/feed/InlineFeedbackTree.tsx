@@ -438,9 +438,12 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
 
     return (
       <VStack key={node.id} space="xs">
+        {/* 11/15 inline -> the `2xs` token (11/16). Same size, 1px more line
+            box, and it now scales. */}
         <Text
           testID={`feedback-tree-desc-${node.id}`}
-          style={{ color: '#9A9A9A', fontSize: 11, lineHeight: 15 }}
+          size="2xs"
+          style={{ color: '#9A9A9A' }}
         >
           {message}
         </Text>

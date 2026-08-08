@@ -10,6 +10,24 @@ jest.mock('@/lib/database/services/setting-service', () => ({
     setSetting: (k: string, v: string) => mockSetSetting(k, v),
 }));
 
+// The persisted translation cache (schema v49). Mocked at the service seam so
+// this stays a unit test — the real module imports the native DB singleton.
+const mockLoadTranslationCache = jest.fn(
+    (..._args: unknown[]) => Promise.resolve(new Map<string, string>()),
+);
+const mockRememberTranslation = jest.fn((..._args: unknown[]) => {});
+const mockSweepTranslationCache = jest.fn((..._args: unknown[]) => Promise.resolve(0));
+jest.mock('@/lib/database/services/translation-cache-service', () => ({
+    loadTranslationCache: (...args: unknown[]) => mockLoadTranslationCache(...args),
+    rememberTranslation: (...args: unknown[]) => mockRememberTranslation(...args),
+    sweepTranslationCache: (...args: unknown[]) => mockSweepTranslationCache(...args),
+}));
+
+const mockBumpTranslationEpoch = jest.fn();
+jest.mock('@/lib/translation-queue', () => ({
+    bumpTranslationEpoch: (...args: unknown[]) => mockBumpTranslationEpoch(...args),
+}));
+
 const mockApplyLanguage = jest.fn();
 jest.mock('@/lib/i18n', () => ({
     applyLanguage: (lang: string) => mockApplyLanguage(lang),
@@ -344,6 +362,135 @@ describe('useAppLanguageStore', () => {
         await useAppLanguageStore.getState().hydrateFromDb();
 
         expect(useAppLanguageStore.getState().appLanguage).toBe('en');
+    });
+
+    // ── persisted translation cache (schema v49) ──────────────────────────────
+    //
+    // The cache used to be in-memory only: every translation was lost on
+    // restart AND wiped wholesale on a language switch, so a non-English reader
+    // paid the full serial native-call cost on every cold start.
+
+    it('cacheTranslation persists the pair under the CURRENT app language', () => {
+        useAppLanguageStore.setState({ appLanguage: 'de' });
+
+        act(() => {
+            useAppLanguageStore.getState().cacheTranslation('Breaking news', 'Eilmeldung');
+        });
+
+        expect(mockRememberTranslation).toHaveBeenCalledWith(
+            'Breaking news',
+            'de',
+            'Eilmeldung',
+        );
+    });
+
+    it('cacheTranslation still updates the in-memory cache when persistence throws', () => {
+        mockRememberTranslation.mockImplementationOnce(() => {
+            throw new Error('disk full');
+        });
+        useAppLanguageStore.setState({ appLanguage: 'de' });
+
+        act(() => {
+            useAppLanguageStore.getState().cacheTranslation('Breaking news', 'Eilmeldung');
+        });
+
+        expect(useAppLanguageStore.getState().cache.get('Breaking news')).toBe('Eilmeldung');
+    });
+
+    it('hydrateTranslationCache loads the persisted rows into the cache', async () => {
+        useAppLanguageStore.setState({ appLanguage: 'de' });
+        mockLoadTranslationCache.mockResolvedValueOnce(
+            new Map([['Breaking news', 'Eilmeldung']]),
+        );
+
+        await act(async () => {
+            await useAppLanguageStore.getState().hydrateTranslationCache('de');
+        });
+
+        expect(useAppLanguageStore.getState().cache.get('Breaking news')).toBe('Eilmeldung');
+    });
+
+    it('hydrateTranslationCache never queries for English', async () => {
+        await useAppLanguageStore.getState().hydrateTranslationCache('en');
+        expect(mockLoadTranslationCache).not.toHaveBeenCalled();
+    });
+
+    it('hydrateTranslationCache discards a load whose language the user already left', async () => {
+        useAppLanguageStore.setState({ appLanguage: 'fr' });
+        mockLoadTranslationCache.mockResolvedValueOnce(
+            new Map([['Breaking news', 'Eilmeldung']]),
+        );
+
+        // Load was started for 'de' but the store is now on 'fr' — applying it
+        // would fill the cache with German for a French reader, and every keyed
+        // read would silently hit it.
+        await act(async () => {
+            await useAppLanguageStore.getState().hydrateTranslationCache('de');
+        });
+
+        expect(useAppLanguageStore.getState().cache.has('Breaking news')).toBe(false);
+    });
+
+    it('hydrateTranslationCache keeps translations that landed while the load was in flight', async () => {
+        useAppLanguageStore.setState({ appLanguage: 'de' });
+        useAppLanguageStore.getState().cache.set('Fresh headline', 'Frische Schlagzeile');
+        mockLoadTranslationCache.mockResolvedValueOnce(
+            new Map([['Breaking news', 'Eilmeldung']]),
+        );
+
+        await act(async () => {
+            await useAppLanguageStore.getState().hydrateTranslationCache('de');
+        });
+
+        const cache = useAppLanguageStore.getState().cache;
+        expect(cache.get('Breaking news')).toBe('Eilmeldung');
+        expect(cache.get('Fresh headline')).toBe('Frische Schlagzeile');
+    });
+
+    it('setAppLanguage retires the native calls queued for the language being left', async () => {
+        await act(async () => {
+            await useAppLanguageStore.getState().setAppLanguage('fr');
+        });
+        expect(mockBumpTranslationEpoch).toHaveBeenCalledWith('language:fr');
+    });
+
+    it('setAppLanguage refills the cache from disk for the language being adopted', async () => {
+        mockLoadTranslationCache.mockResolvedValueOnce(
+            new Map([['Breaking news', 'Dernières nouvelles']]),
+        );
+
+        await act(async () => {
+            await useAppLanguageStore.getState().setAppLanguage('fr');
+        });
+        // The refill is fire-and-forget; let its microtasks settle.
+        await act(async () => {
+            await Promise.resolve();
+        });
+
+        expect(mockLoadTranslationCache).toHaveBeenCalledWith('fr');
+        expect(useAppLanguageStore.getState().cache.get('Breaking news')).toBe(
+            'Dernières nouvelles',
+        );
+    });
+
+    it('hydrateFromDb loads the cache and kicks off the TTL sweep', async () => {
+        mockGetSetting.mockResolvedValueOnce('de');
+        mockLoadTranslationCache.mockResolvedValueOnce(
+            new Map([['Breaking news', 'Eilmeldung']]),
+        );
+
+        await useAppLanguageStore.getState().hydrateFromDb();
+
+        expect(useAppLanguageStore.getState().cache.get('Breaking news')).toBe('Eilmeldung');
+        expect(mockSweepTranslationCache).toHaveBeenCalled();
+    });
+
+    it('hydrateFromDb still resolves when the cache load fails', async () => {
+        mockGetSetting.mockResolvedValueOnce('de');
+        mockLoadTranslationCache.mockResolvedValueOnce(new Map());
+
+        await expect(useAppLanguageStore.getState().hydrateFromDb()).resolves.toBeUndefined();
+        expect(useAppLanguageStore.getState().appLanguage).toBe('de');
     });
 
     // ── selector hooks ────────────────────────────────────────────────────────

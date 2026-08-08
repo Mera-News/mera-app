@@ -90,6 +90,12 @@ surrounding `Box`/`View` instead. Text entry into gluestack inputs: tap the fiel
 - A relaunched app (`simctl launch`) can boot on a **stale JS bundle**. Force a Metro reload:
   `xcrun simctl openurl booted "com.mera.news://expo-development-client/?url=http%3A%2F%2F127.0.0.1%3A8081"`
   (an "Open in Mera?" alert appears — press Open).
+- **Do not trust Fast Refresh when screenshotting a copy change.** Editing a string and waiting
+  (tried at 7s, 18s and 20s) repeatedly screenshotted the PREVIOUS variant — the file was verified
+  patched on disk while the sim still rendered the old text, so the screenshot silently documents
+  the wrong build. Only the forced Metro reload above landed the change reliably. Sequence per
+  variant: patch → `sleep 5` → forced-reload URL → `sleep ~28` → re-deep-link → `sleep ~8` →
+  screenshot. Always read the screenshot and confirm the string actually changed before moving on.
 - Metro must stay running; it's the `expo run:ios` process. Health check:
   `curl -fsS http://127.0.0.1:8081/status`.
 - **Dev-menu gear FAB steals taps** near the top-right (its hit target is much larger than its

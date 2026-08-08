@@ -16,6 +16,15 @@ export type Scalars = {
   DateTime: { input: any; output: any; }
 };
 
+/** Static client configuration that does not depend on the caller. Currently the version stamps of the published legal documents. */
+export type AppConfig = {
+  __typename?: 'AppConfig';
+  /** Version stamp (YYYY-MM-DD) of the currently published Privacy Policy. Prompt for re-acceptance when the session user's privacyVersion differs. */
+  privacyVersion: Scalars['String']['output'];
+  /** Version stamp (YYYY-MM-DD) of the currently published Terms of Service. Prompt for re-acceptance when the session user's termsVersion differs. */
+  termsVersion: Scalars['String']['output'];
+};
+
 /** Mobile app platform the version check is being made for. */
 export enum AppPlatform {
   /** Google Android — directs to the Play Store. */
@@ -88,6 +97,7 @@ export type ArticleWithClusters = {
   publication_name?: Maybe<Scalars['String']['output']>;
   title?: Maybe<Scalars['String']['output']>;
   title_en: Scalars['String']['output'];
+  vector_sidecar_packed?: Maybe<Scalars['String']['output']>;
 };
 
 export type ArticlesForPublicationSourceResponse = {
@@ -150,6 +160,45 @@ export type EmbeddingSearchResult = {
   score: Scalars['Float']['output'];
 };
 
+/** A cached, cross-user fact check keyed on the article URL. Poll until status is complete / blocked / failed. */
+export type FactCheck = {
+  __typename?: 'FactCheck';
+  _id: Scalars['ID']['output'];
+  articleTitle?: Maybe<Scalars['String']['output']>;
+  /** Canonical, safe-to-open article URL. */
+  articleUrl?: Maybe<Scalars['String']['output']>;
+  /** Provider calls issued for this row. */
+  attempts: Scalars['Int']['output'];
+  citations: Array<FactCheckCitation>;
+  claims: Array<FactCheckClaim>;
+  completedAt?: Maybe<Scalars['DateTime']['output']>;
+  createdAt: Scalars['DateTime']['output'];
+  /** Model that answered, after failover. */
+  model?: Maybe<Scalars['String']['output']>;
+  publicationName?: Maybe<Scalars['String']['output']>;
+  /** Lifecycle: pending | running | complete | failed | blocked. `complete` and `blocked` are terminal. */
+  status: Scalars['String']['output'];
+  summary?: Maybe<Scalars['String']['output']>;
+  /** supported | disputed | unsupported | mixed | unverifiable. Present once complete. */
+  verdict?: Maybe<Scalars['String']['output']>;
+};
+
+/** A grounding source. `uri` is a Google redirect wrapper, stored verbatim. */
+export type FactCheckCitation = {
+  __typename?: 'FactCheckCitation';
+  snippet?: Maybe<Scalars['String']['output']>;
+  title?: Maybe<Scalars['String']['output']>;
+  uri: Scalars['String']['output'];
+};
+
+/** One checkable assertion lifted out of the article. */
+export type FactCheckClaim = {
+  __typename?: 'FactCheckClaim';
+  assessment: Scalars['String']['output'];
+  claim: Scalars['String']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+};
+
 /** Versioned feedback-tree config. When the client already holds the current version, treeJson is "" (not-modified) and only the version metadata is sent. */
 export type FeedbackTreeResponse = {
   __typename?: 'FeedbackTreeResponse';
@@ -202,6 +251,8 @@ export type Mutation = {
   advanceOnboardingStage: UserPersona;
   deleteExpoPushToken: UserPersona;
   issueLlmWarning: UserPersona;
+  /** Create or find the cached fact check for an article. Idempotent — an existing check is returned as-is and costs nothing. Poll `factCheck` until status leaves pending/running. */
+  requestFactCheck: FactCheck;
   requestUnblock: UnblockRequest;
   updateExpoPushToken: UserPersona;
   updateNotificationWindow: UserPersona;
@@ -224,6 +275,11 @@ export type MutationDeleteExpoPushTokenArgs = {
 
 export type MutationIssueLlmWarningArgs = {
   input: IssueLlmWarningInput;
+};
+
+
+export type MutationRequestFactCheckArgs = {
+  articleId: Scalars['ID']['input'];
 };
 
 
@@ -322,12 +378,14 @@ export type NewsClustersResponse = {
 export type NewsPublisher = {
   __typename?: 'NewsPublisher';
   _id: Scalars['ID']['output'];
+  categories?: Maybe<Array<Scalars['String']['output']>>;
   country_code: Scalars['String']['output'];
   country_name?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   is_active: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   publicationSources: Array<PublicationSource>;
+  publication_type?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   website_url?: Maybe<Scalars['String']['output']>;
 };
@@ -336,6 +394,22 @@ export type NewsPublishersResponse = {
   __typename?: 'NewsPublishersResponse';
   newsPublishers: Array<NewsPublisher>;
   pageInfo: CursorPageInfo;
+};
+
+/** A semantic search hit. Deliberately headline-only — hydrate the ids you want through the metered articlesForTopicsByIds to get body text and the link. */
+export type NewsSearchHit = {
+  __typename?: 'NewsSearchHit';
+  _id: Scalars['ID']['output'];
+  /** ISO-3166 alpha-2 of the publisher. */
+  country_code?: Maybe<Scalars['String']['output']>;
+  image_url?: Maybe<Scalars['String']['output']>;
+  /** Publication timestamp (ISO 8601). */
+  pubDate: Scalars['String']['output'];
+  publication_name?: Maybe<Scalars['String']['output']>;
+  /** Atlas vector-search cosine score (0–1). */
+  score: Scalars['Float']['output'];
+  /** English headline (translated at ingest). */
+  title_en: Scalars['String']['output'];
 };
 
 /** Monotonic onboarding progress marker. Values: NOTIFICATIONS, PROCESSING_MODE, PERSONA_CHAT, FINISHED. The user resumes at this stage on app launch; only FINISHED skips the wizard. */
@@ -410,6 +484,7 @@ export enum ProcessingMode {
 export type PublicationSource = {
   __typename?: 'PublicationSource';
   _id: Scalars['ID']['output'];
+  categories?: Maybe<Array<Scalars['String']['output']>>;
   category: Scalars['String']['output'];
   codegen_checked_at?: Maybe<Scalars['DateTime']['output']>;
   codegen_status?: Maybe<Scalars['String']['output']>;
@@ -430,6 +505,7 @@ export type PublicationSource = {
   last_fetched_at?: Maybe<Scalars['DateTime']['output']>;
   newsPublisherId?: Maybe<Scalars['ID']['output']>;
   publication_name: Scalars['String']['output'];
+  publication_type?: Maybe<Scalars['String']['output']>;
   publication_url?: Maybe<Scalars['String']['output']>;
   type: Scalars['String']['output'];
   updatedAt: Scalars['DateTime']['output'];
@@ -446,9 +522,21 @@ export type PublicationSourcesResponse = {
   publicationSources: Array<PublicationSource>;
 };
 
+export type PublisherSearchHit = {
+  __typename?: 'PublisherSearchHit';
+  _id: Scalars['ID']['output'];
+  country_code: Scalars['String']['output'];
+  country_name?: Maybe<Scalars['String']['output']>;
+  matchingSources: Array<PublicationSource>;
+  name: Scalars['String']['output'];
+  website_url?: Maybe<Scalars['String']['output']>;
+};
+
 export type Query = {
   __typename?: 'Query';
   allCountries: Array<Scalars['String']['output']>;
+  /** Static client config: the version stamps of the currently published Terms of Service and Privacy Policy. Unguarded — fetched pre-paywall. */
+  appConfig: AppConfig;
   appVersionInfo: AppVersionInfo;
   /** Fetch a single article by ID. Returns null if not found (e.g. TTL’d out). */
   articleById?: Maybe<NewsArticle>;
@@ -462,6 +550,8 @@ export type Query = {
   /** Hydrate articles by id for followed ("tracked") stories. Identical payload to articlesForTopicsByIds, but deliberately NOT charged against the daily article cap — following a story must not consume the allowance. dailyLimitReached is always false and resetAt is always absent. Capped at 50 ids per request. */
   articlesForStories: ArticlesForTopicsByIdsResponse;
   articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
+  /** The cached fact check for an article, or null if none has been requested yet. Poll this after requestFactCheck. */
+  factCheck?: Maybe<FactCheck>;
   /** The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response. */
   feedbackTree?: Maybe<FeedbackTreeResponse>;
   /** The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. The app uses this to read a story cluster's member articles (e.g. to ground the follow-a-story scope proposals). */
@@ -479,6 +569,9 @@ export type Query = {
   relatedArticles: Array<ArticleSummary>;
   /** Vector search using cosine similarity (scores 0–1). */
   searchArticlesVector: EmbeddingSearchResponse;
+  /** Semantic search over the last 48h of articles. Headline-only results — hydrate ids via articlesForTopicsByIds. Capped at 25 results. */
+  searchNews: Array<NewsSearchHit>;
+  searchPublishers: SearchPublishersResponse;
   /** A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. Falls back to the live path (editionBuiltAt: null) when no edition exists yet. */
   topHeadlinesForCountry: TopHeadlinesForCountryResponse;
   unblockRequestStatus?: Maybe<UnblockRequest>;
@@ -536,6 +629,11 @@ export type QueryArticlesForStoriesArgs = {
 
 export type QueryArticlesForTopicsByIdsArgs = {
   articleIds: Array<Scalars['ID']['input']>;
+};
+
+
+export type QueryFactCheckArgs = {
+  articleId: Scalars['ID']['input'];
 };
 
 
@@ -610,6 +708,19 @@ export type QuerySearchArticlesVectorArgs = {
 };
 
 
+export type QuerySearchNewsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  query: Scalars['String']['input'];
+};
+
+
+export type QuerySearchPublishersArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  query: Scalars['String']['input'];
+};
+
+
 export type QueryTopHeadlinesForCountryArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   countryCode?: InputMaybe<Scalars['String']['input']>;
@@ -630,6 +741,12 @@ export type RequestUnblockInput = {
   chatHistory: Array<ChatMessageInput>;
   feedback: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
+};
+
+export type SearchPublishersResponse = {
+  __typename?: 'SearchPublishersResponse';
+  pageInfo: CursorPageInfo;
+  publishers: Array<PublisherSearchHit>;
 };
 
 /** One top-headline slot: the representative article plus its cluster metadata (stableClusterId, clusterSize). Both are null/0 for an unclustered singleton. */

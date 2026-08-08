@@ -18,6 +18,7 @@ import {
   recordPublicationVisit,
   getVisitCountForPublication,
   getVisitsForPublication,
+  getAllVisitedArticles,
   pruneStaleVisits,
   clearAllVisits,
   getTopVisitedPublications,
@@ -491,6 +492,68 @@ describe('getVisitsForPublication', () => {
       fetchCount: jest.fn(async () => 0),
     });
     const result = await getVisitsForPublication('The Times', 'GB');
+    expect(result).toEqual([]);
+    expect(logger.captureException).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getAllVisitedArticles — feeds the "export reading history" feature; unlike
+// getVisitsForPublication, spans every publication in the 30-day window.
+// ---------------------------------------------------------------------------
+
+describe('getAllVisitedArticles', () => {
+  it('returns empty array when no visits exist', async () => {
+    db._setRows('publication_visits', []);
+    const result = await getAllVisitedArticles();
+    expect(result).toEqual([]);
+  });
+
+  it('returns visits across multiple publications, not just one', async () => {
+    const v1 = makeVisitRecord({ articleId: 'a1', publicationName: 'BBC', countryCode: 'GB' });
+    const v2 = makeVisitRecord({ articleId: 'a2', publicationName: 'CNN', countryCode: 'US' });
+    db._setRows('publication_visits', [v1, v2]);
+
+    const result = await getAllVisitedArticles();
+    expect(result).toHaveLength(2);
+    expect(result.map((r) => r.publicationName).sort()).toEqual(['BBC', 'CNN']);
+  });
+
+  it('dedupes by articleId across publications the same way getVisitsForPublication does', async () => {
+    const v1 = makeVisitRecord({ articleId: 'a1', publicationName: 'BBC', visitedAt: new Date(NOW - 1000) });
+    const v2 = makeVisitRecord({ articleId: 'a1', publicationName: 'BBC', visitedAt: new Date(NOW) });
+    db._setRows('publication_visits', [v1, v2]);
+
+    const result = await getAllVisitedArticles();
+    expect(result).toHaveLength(1);
+    expect(result[0].visitCount).toBe(2);
+  });
+
+  it('sorts results by most recent visitedAt descending', async () => {
+    const old = makeVisitRecord({ articleId: 'a1', visitedAt: new Date(NOW - 10000) });
+    const recent = makeVisitRecord({ articleId: 'a2', visitedAt: new Date(NOW) });
+    db._setRows('publication_visits', [old, recent]);
+
+    const result = await getAllVisitedArticles();
+    expect(result[0].articleId).toBe('a2');
+    expect(result[1].articleId).toBe('a1');
+  });
+
+  it('preserves null pubDate for rows that pre-date schema v23', async () => {
+    const visit = makeVisitRecord({ articleId: 'a1', pubDate: null });
+    db._setRows('publication_visits', [visit]);
+
+    const result = await getAllVisitedArticles();
+    expect(result[0].pubDate).toBeNull();
+  });
+
+  it('returns empty array and captures exception on error', async () => {
+    const col = db._collections['publication_visits'] ?? db.get('publication_visits');
+    col.query.mockReturnValueOnce({
+      fetch: jest.fn().mockRejectedValueOnce(new Error('fetch fail')),
+      fetchCount: jest.fn(async () => 0),
+    });
+    const result = await getAllVisitedArticles();
     expect(result).toEqual([]);
     expect(logger.captureException).toHaveBeenCalledTimes(1);
   });
