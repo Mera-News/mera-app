@@ -45,6 +45,10 @@ import {
   buildUserContext,
   resolveCountryName,
   chunk,
+  // --- the LEGACY ("v1") path, so the v1 arms run the SHIPPED code ----------
+  buildScoreCallForChunk,
+  parseBatchRelevanceResponse,
+  type ScoringCandidate,
   type ScoreV3Entry,
   type BatchCall,
 } from '../../lib/news-harness';
@@ -68,7 +72,33 @@ const DEFAULT_DB = join(SCRATCH, 'frozen', 'v1.db');
  *  straight from a tracked fixture and needs none of the three. */
 const DEFAULT_GOLDSET = join(__dirname, '..', 'fixtures', 'goldset-348.json');
 
-type VariantName = 'merged' | 'score-only' | 'split';
+/**
+ * v3 designs, plus the four LEGACY ("v1") arms added 2026-08-08 to answer
+ * "can v1 be improved by adopting what v3 computes pre- or post-inference?".
+ *
+ * The four v1 arms are NOT four LLM runs. They are ONE legacy scoring pass
+ * (CLOUD_RELEVANCE_SYSTEM_PROMPT, chunk 5, temp `scoreTemperature`) read through
+ * different POST-INFERENCE treatments, so they are perfectly paired: the model
+ * output is byte-identical across A0/A1/A2 and only deterministic code varies.
+ * That is what makes the ablation attributable — a resampling interval between
+ * them would be measuring nothing, because nothing stochastic differs.
+ *
+ *   v1-legacy      A0  stake-band clamp → bucketScores      (= what ships today)
+ *   v1-unbucketed  A1  stake-band clamp, NO bucketScores    (C1: v3 persists continuously)
+ *   v1-noband      A2  NO stake-band clamp, NO bucketScores (C3: v3 has no categorical ceiling)
+ *   v1-note        A3  A1 + the v3 per-article keep/demote note pass (C2)
+ */
+type VariantName =
+  | 'merged'
+  | 'score-only'
+  | 'split'
+  | 'v1-legacy'
+  | 'v1-unbucketed'
+  | 'v1-noband'
+  | 'v1-note';
+
+const V1_VARIANTS: VariantName[] = ['v1-legacy', 'v1-unbucketed', 'v1-noband', 'v1-note'];
+const isV1Variant = (v: VariantName): boolean => V1_VARIANTS.includes(v);
 
 interface Args {
   label: string;
@@ -113,9 +143,8 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--p1-temp') args.p1Temp = Number(argv[++i]);
     else if (a === '--variants') {
       const raw = (argv[++i] ?? '').split(',').map((s) => s.trim());
-      const ok = raw.filter(
-        (s): s is VariantName => s === 'merged' || s === 'score-only' || s === 'split',
-      );
+      const known: string[] = ['merged', 'score-only', 'split', ...V1_VARIANTS];
+      const ok = raw.filter((s): s is VariantName => known.includes(s));
       if (ok.length > 0) args.variants = ok;
     }
   }
@@ -541,6 +570,211 @@ async function scoreVariant(
   };
 }
 
+// --- The LEGACY ("v1") arms -------------------------------------------------
+//
+// ONE scoring pass, three post-inference readings. See the VariantName comment.
+//
+// The shipped decode (`parseBatchRelevanceResponse`) throws away two things this
+// experiment needs to see: the stake TAG the model emitted, and the score it
+// emitted BEFORE `clampToStakeBand` moved it. So the raw array is extracted here
+// as well, and the shipped decoder is still called for A0/A1 so those arms are
+// byte-identical to production rather than a re-implementation of it.
+
+/** One article's raw legacy output, before any clamping. `k` is the stake tag
+ *  (`home`/`family`/`travel`/`domain`/`attend`/`interest`/`none`), `s` the
+ *  model's own float. Both null when the chunk had to be regex-salvaged. */
+interface LegacyRawEntry {
+  k: string | null;
+  s: number | null;
+}
+
+/**
+ * Extract `{"k","s"}` (or bare float) entries from a legacy batch response
+ * WITHOUT clamping. Returns null when the output is not a well-formed array of
+ * the expected length — in that case the arms all fall back to the shipped
+ * decoder's value, so an unparseable chunk can never manufacture a difference
+ * between arms.
+ */
+function parseLegacyRawEntries(output: string, expectedCount: number): LegacyRawEntry[] | null {
+  const trimmed = output.trim();
+  const match = trimmed.match(/\[[\s\S]*\]/);
+  if (!match) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(match[0]);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || parsed.length !== expectedCount) return null;
+  return parsed.map((v): LegacyRawEntry => {
+    if (typeof v === 'number') return { k: null, s: v };
+    if (v && typeof v === 'object') {
+      const o = v as { k?: unknown; s?: unknown };
+      return {
+        k: typeof o.k === 'string' ? o.k : null,
+        s: typeof o.s === 'number' ? o.s : null,
+      };
+    }
+    return { k: null, s: null };
+  });
+}
+
+/** `bucketScores` for ONE value — the same thresholds, without needing a Map. */
+function bucketOne(raw: number): number {
+  if (raw < CFG.discardFloor) return raw;
+  if (raw > CFG.emergencyPriorityCutoff) return CFG.emergencyPriorityScore;
+  if (raw >= CFG.highPriorityCutoff) return CFG.highPriorityScore;
+  if (raw >= CFG.mediumPriorityCutoff) return CFG.mediumPriorityScore;
+  return CFG.lowPriorityScore;
+}
+
+/** Per-article record the three A0/A1/A2 readings are projected from. */
+interface LegacyScoredRow {
+  article: GoldArticle;
+  /** Shipped decode: stake-band clamped, pre-bucket. */
+  clamped: number;
+  /** Model's own float, clamped only to [0, 1.1]. Falls back to `clamped`. */
+  unbanded: number;
+  tag: string | null;
+  /** True when the stake band actually MOVED the score — the measurement C3
+   *  stands or falls on. */
+  bandBit: boolean;
+}
+
+interface LegacyPassResult {
+  rows: LegacyScoredRow[];
+  unscored: string[];
+  chunkAttempts: number;
+  salvagedChunks: number;
+  llmCalls: LlmCallRecord[];
+}
+
+async function runLegacyPass(
+  articles: GoldArticle[],
+  userContext: string,
+  llm: ReturnType<typeof createNearAiLlm>,
+  llmCalls: LlmCallRecord[],
+): Promise<LegacyPassResult> {
+  const chunks = chunk(articles, CFG.articlesPerScorePrompt);
+  const calls: BatchCall[] = chunks.map((chunkArticles, idx) => {
+    const { prompt, system } = buildScoreCallForChunk(
+      chunkArticles.map(toScoringCandidate),
+      // The FULL fact bank, exactly as `buildRelevanceCalls` sends it in the app.
+      personaStatements,
+      CFG.relevanceSystemPrompt,
+    );
+    // buildScoreCallForChunk derives the user context from the fact bank; assert
+    // it produced the same header the fixture round-trips on, so a legacy arm
+    // can never be scored against a different persona than the v3 arms.
+    if (!prompt.includes(userContext)) {
+      throw new Error(
+        'score-v3-goldset: the legacy user message does not carry the fixture user context — ' +
+          'buildScoreCallForChunk and buildUserContext have drifted apart.',
+      );
+    }
+    return {
+      id: `v1:chunk-${idx}`,
+      system,
+      prompt,
+      temperature: CFG.scoreTemperature,
+      maxTokens: CFG.scoreBatchMaxTokens,
+    };
+  });
+
+  const results = await llm.batchComplete(calls, { model: CFG.model });
+  const byId = new Map(results.map((r) => [r.id, r]));
+
+  const rows: LegacyScoredRow[] = [];
+  const unscored: string[] = [];
+  let salvagedChunks = 0;
+
+  chunks.forEach((chunkArticles, idx) => {
+    const res = byId.get(`v1:chunk-${idx}`);
+    if (!res || res.error) {
+      chunkArticles.forEach((a) => unscored.push(a.articleId));
+      return;
+    }
+    // The SHIPPED decoder — not a re-implementation. A0/A1 must be production.
+    const clamped = parseBatchRelevanceResponse(
+      res.output,
+      chunkArticles.length,
+      `v1:chunk-${idx}`,
+      undefined,
+      CFG,
+      consoleLogger,
+    );
+    const raw = parseLegacyRawEntries(res.output, chunkArticles.length);
+    if (!raw) salvagedChunks += 1;
+    chunkArticles.forEach((a, i) => {
+      const entry = raw?.[i];
+      const modelS = entry && typeof entry.s === 'number' ? entry.s : null;
+      const unbanded = modelS == null ? clamped[i] : Math.max(0, Math.min(1.1, modelS));
+      rows.push({
+        article: a,
+        clamped: clamped[i],
+        unbanded,
+        tag: entry?.k ?? null,
+        bandBit: modelS != null && Math.abs(unbanded - clamped[i]) > 1e-9,
+      });
+    });
+  });
+
+  return { rows, unscored, chunkAttempts: calls.length, salvagedChunks, llmCalls };
+}
+
+/** Project the shared legacy pass onto one arm's post-inference treatment. */
+function projectLegacyVariant(variant: VariantName, pass: LegacyPassResult): VariantResult {
+  const score = (r: LegacyScoredRow): number => {
+    if (variant === 'v1-legacy') return bucketOne(r.clamped);
+    if (variant === 'v1-noband') return r.unbanded;
+    return r.clamped; // v1-unbucketed and v1-note both start here
+  };
+  return {
+    variant,
+    systemPrompt: CFG.relevanceSystemPrompt,
+    rows: pass.rows.map((r) => ({
+      articleId: r.article.articleId,
+      title: r.article.title,
+      description: r.article.description,
+      // The legacy prompt emits ONE axis. `rel`/`impact` do not exist on this
+      // path and are recorded as the score itself rather than invented, so a
+      // reader of scores-*.json cannot mistake them for a two-axis decomposition.
+      rel: score(r) * 100,
+      impact: score(r) * 100,
+      blend: score(r),
+      why: null,
+      jComp: r.article.jComp,
+      verdict: r.article.verdict,
+      factless: r.article.relatedFacts.length === 0,
+    })),
+    unscored: pass.unscored,
+    chunkAttempts: pass.chunkAttempts,
+    parseNullChunks: pass.salvagedChunks,
+    retriedChunks: 0,
+    truncatedCalls: pass.llmCalls.filter((c) => c.finishReason === 'length').length,
+    errorCalls: pass.llmCalls.filter((c) => c.error).length,
+    llmCalls: pass.llmCalls,
+  };
+}
+
+/** The gold row → `ScoringCandidate` adapter the legacy builders need. */
+function toScoringCandidate(a: GoldArticle): ScoringCandidate {
+  return {
+    id: a.articleId,
+    titleEn: a.title,
+    descriptionEn: a.description,
+    countryCode: a.countryCode,
+    userTopicIds: [],
+    relatedFacts: a.relatedFacts.map((statement, i) => ({
+      id: `${a.articleId}:f${i}`,
+      statement,
+    })),
+  };
+}
+
+/** Set by main() before `runLegacyPass` — the fact bank the app would send. */
+let personaStatements: string[] = [];
+
 // --- Variant (c): the SPLIT design -----------------------------------------
 //
 // Pass 1 is the derived score-only prompt above (same batching, same chunk
@@ -673,6 +907,15 @@ interface VariantMetrics {
   };
   histogram: { bucket: string; count: number; includedShare: number }[];
   maxIncludedBucketShare: number;
+  /** Max 0.1-bucket share over the TOP-`ACCEPTANCE_TARGET_N` rows by score.
+   *
+   *  `maxIncludedBucketShare` is measured over each arm's own gate, so arms with
+   *  different gates (v1 renders at 0.4, v3 at 0.55) are read over different-sized
+   *  populations and a spread comparison between them is not like-for-like. This
+   *  is the same statistic at ONE matched feed size, which is the number the
+   *  cross-arm claim has to be made on. Diagnostic only — `acceptance()` is
+   *  untouched and still reads the gated version. */
+  maxBucketShareTopN: number;
   bands: { band: string; n: number; meanJComp: number }[];
   bandsMonotone: boolean;
   topDecileHighPlus: number;
@@ -818,6 +1061,19 @@ function computeMetrics(res: VariantResult, mustShowTotal: number): VariantMetri
     ...[...includedCounts.values()].map((c) => pct(c, included.length)),
   );
 
+  // Same statistic at a MATCHED feed size, so arms gated differently are still
+  // comparable. Ties at the cutoff are kept (a quantised arm cannot be cut
+  // mid-tie), so `topN.length` can exceed the target — reported, not hidden.
+  const sortedDesc = [...rows].sort((a, b) => b.blend - a.blend);
+  const cutN = sortedDesc[Math.min(sortedDesc.length, ACCEPTANCE_TARGET_N) - 1]?.blend ?? 0;
+  const topN = rows.filter((r) => r.blend >= cutN);
+  const topNCounts = new Map<string, number>();
+  for (const r of topN) topNCounts.set(bucketLabel(r.blend), (topNCounts.get(bucketLabel(r.blend)) ?? 0) + 1);
+  const maxBucketShareTopN = Math.max(
+    0,
+    ...[...topNCounts.values()].map((c) => pct(c, topN.length)),
+  );
+
   const bandRows = (lo: number, hi: number, inclusiveHi = false) =>
     rows.filter((r) => r.blend >= lo && (inclusiveHi ? r.blend <= hi : r.blend < hi));
   const bandDefs: { band: string; rows: ScoredRow[] }[] = [
@@ -904,6 +1160,7 @@ function computeMetrics(res: VariantResult, mustShowTotal: number): VariantMetri
     },
     histogram,
     maxIncludedBucketShare,
+    maxBucketShareTopN,
     bands,
     bandsMonotone,
     topDecileHighPlus,
@@ -943,6 +1200,7 @@ function printVariant(m: VariantMetrics): void {
     );
   }
   log(`max single-bucket share of included: ${fmt(m.maxIncludedBucketShare, 1)}%`);
+  log(`max single-bucket share @ top-${ACCEPTANCE_TARGET_N} (matched size): ${fmt(m.maxBucketShareTopN, 1)}%`);
 
   log(`\n-- Band purity (mean j_comp must be monotone) --`);
   for (const b of m.bands) log(`${b.band.padEnd(22)} n=${String(b.n).padStart(4)}  mean j_comp=${fmt(b.meanJComp, 2)}`);
@@ -1162,7 +1420,94 @@ async function main(): Promise<number> {
     });
 
   const results: VariantResult[] = [];
-  for (const variant of args.variants) {
+
+  // --- The LEGACY ("v1") arms: ONE pass, several post-inference readings. ----
+  //
+  // Run before the v3 arms and OUTSIDE the per-variant loop on purpose. A0/A1/A2
+  // must share one set of model outputs — re-scoring per arm would reintroduce
+  // sampling noise into an ablation whose whole point is that only deterministic
+  // code varies between arms.
+  const requestedV1 = args.variants.filter(isV1Variant);
+  if (requestedV1.length > 0) {
+    personaStatements = personaFacts.map((f) => f.statement);
+    const started = Date.now();
+    const v1Calls: LlmCallRecord[] = [];
+    log(
+      `\n[v1] ONE legacy scoring pass over ${scoped.length} articles ` +
+        `(chunk ${CFG.articlesPerScorePrompt}, temp ${CFG.scoreTemperature}) → ` +
+        `arms: ${requestedV1.join(', ')}`,
+    );
+    const pass = await runLegacyPass(scoped, userContext, llmFactory(v1Calls), v1Calls);
+    log(
+      `[v1] pass done in ${Math.round((Date.now() - started) / 1000)}s — ` +
+        `${pass.rows.length} scored, ${pass.unscored.length} unscored, ` +
+        `${pass.chunkAttempts} calls, ${pass.salvagedChunks} chunks regex-salvaged`,
+    );
+
+    // The C3 pre-check. Whether removing the categorical stake-band ceiling can
+    // possibly help is a question about the model's RAW output, and it is
+    // answered here for free rather than inferred from the arm's score.
+    const moved = pass.rows.filter((r) => r.bandBit);
+    const tagCounts = new Map<string, number>();
+    for (const r of pass.rows) tagCounts.set(r.tag ?? '(unparsed)', (tagCounts.get(r.tag ?? '(unparsed)') ?? 0) + 1);
+    log(`\n-- STAKE-BAND DIAGNOSTIC (C3 pre-check) --`);
+    log(`stake tags emitted: ${[...tagCounts.entries()].map(([k, v]) => `${k}=${v}`).join(', ')}`);
+    log(
+      `rows the band clamp MOVED: ${moved.length}/${pass.rows.length} ` +
+        `(${fmt(pct(moved.length, pass.rows.length), 1)}%)`,
+    );
+    const movedDown = moved.filter((r) => r.unbanded > r.clamped);
+    const movedDownMustShow = movedDown.filter((r) => r.article.verdict === 'must_show');
+    log(
+      `  of which clamped DOWNWARD: ${movedDown.length} ` +
+        `(${movedDownMustShow.length} of them must_show)`,
+    );
+    log(
+      `  downward-clamped rows the ceiling pushed BELOW the 0.4 gate: ` +
+        `${movedDown.filter((r) => r.unbanded >= 0.4 && r.clamped < 0.4).length} ` +
+        `(${movedDown.filter((r) => r.unbanded >= 0.4 && r.clamped < 0.4 && r.article.verdict === 'must_show').length} must_show)`,
+    );
+    for (const r of movedDown.slice(0, 6)) {
+      log(`   k=${r.tag} model s=${fmt(r.unbanded)} → clamped ${fmt(r.clamped)}  [${r.article.verdict}] ${r.article.title.slice(0, 70)}`);
+    }
+    writer.writeJson('v1-legacy-raw', pass.rows.map((r) => ({
+      articleId: r.article.articleId,
+      tag: r.tag,
+      modelScore: r.unbanded,
+      clamped: r.clamped,
+      bucketed: bucketOne(r.clamped),
+      bandMoved: r.bandBit,
+      verdict: r.article.verdict,
+      jComp: r.article.jComp,
+      frozenV1: r.article.v1Relevance,
+    })));
+    writer.writeJson('llm-calls-v1', v1Calls);
+
+    for (const variant of requestedV1) {
+      const res = projectLegacyVariant(variant, pass);
+      if (variant === 'v1-note') {
+        // C2 — the v3 per-article keep/demote note pass, on TOP of A1. This is
+        // the SAME call v1's legacy reason pass already makes (same user message,
+        // same one-article-per-call shape); only the system prompt differs, so
+        // the demote capability arrives at zero net call cost.
+        const p2Started = Date.now();
+        const articleById = new Map(scoped.map((a) => [a.articleId, a]));
+        const p2Calls: LlmCallRecord[] = [];
+        const pass2 = await runSplitPass2(res.rows, articleById, userContext, llmFactory(p2Calls));
+        res.rows = pass2.rows;
+        res.llmCalls = [...res.llmCalls, ...p2Calls];
+        log(
+          `[${variant}] note/demote pass done in ${Math.round((Date.now() - p2Started) / 1000)}s — ` +
+            `${p2Calls.length} per-article calls (v1's reason pass would have made the SAME number), ` +
+            `${pass2.demoted} demoted, ${pass2.unusable} unusable`,
+        );
+      }
+      writer.writeJson(`scores-${variant}`, res.rows);
+      results.push(res);
+    }
+  }
+
+  for (const variant of args.variants.filter((v) => !isV1Variant(v))) {
     const started = Date.now();
     log(`\n[${variant}] scoring ${scoped.length} articles…`);
     const res = await scoreVariant(
