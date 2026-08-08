@@ -13,6 +13,7 @@ import {
   buildBatchScoringUserMessage,
   buildFeedVerifierUserMessage,
   buildReasonUserMessage,
+  parseV3NoteResponse,
 } from '../prompts/prompts';
 import {
   DEFAULT_HARNESS_CONFIG,
@@ -578,6 +579,66 @@ export function applyFeedVerifierDecisions(
     });
   }
   return demoted;
+}
+
+// --- v3 NOTE pass — shared decode ----------------------------------------
+//
+// Pulled out of `scoring-pipeline::applyV3NoteResults` so the decision logic has
+// exactly ONE implementation. That function still owns the DB writes (which
+// cannot run outside the app), but it no longer owns the RULES — which is what
+// makes the offline goldset replay a measurement of the SHIPPED behaviour rather
+// than of a look-alike written beside it. Same argument, and the same shape, as
+// `parseFeedVerifierResponse` / `applyFeedVerifierDecisions` above.
+
+/** What the note pass decided for one article. */
+export interface V3NoteDecisions {
+  /** Ids the model explicitly demoted (`{"keep": false}`). The caller writes
+   *  `feedVerifierDemoteScore` + a terminal reason-skipped state. */
+  demoteIds: string[];
+  /** id → the sentence to persist, for kept rows that produced one. */
+  reasons: Map<string, string>;
+  /** Results that could not be read as a verdict at all (error, or output the
+   *  note parser rejected). FAIL OPEN — the caller leaves the pass-1 score and
+   *  `reason_pending` so the orphan sweep retries. An unreadable answer is not
+   *  evidence that an article deserves demoting. */
+  unusableIds: string[];
+}
+
+/**
+ * Decode a batch of per-article `reason:<id>` note results into keep/demote
+ * decisions. Pure: no DB, no LLM, no clock.
+ *
+ * FAIL OPEN in both directions, matching the shipped contract:
+ *   - an errored or unparseable result is `unusable`, never a demote;
+ *   - a KEEP with no sentence is neither demoted nor captioned — the row stays
+ *     scored and still owed a note, rather than stamped terminal with nothing to
+ *     show.
+ * Only an explicit `{"keep": false}` demotes.
+ */
+export function decodeV3NoteResults(
+  batchResults: { id: string; output: string; error?: string }[],
+): V3NoteDecisions {
+  const demoteIds: string[] = [];
+  const reasons = new Map<string, string>();
+  const unusableIds: string[] = [];
+
+  for (const res of batchResults) {
+    if (!res.id.startsWith('reason:')) continue;
+    const id = res.id.slice('reason:'.length);
+    if (res.error) {
+      unusableIds.push(id);
+      continue;
+    }
+    const verdict = parseV3NoteResponse(res.output ?? '');
+    if (!verdict) {
+      unusableIds.push(id);
+      continue;
+    }
+    if (!verdict.keep) demoteIds.push(id);
+    else if (verdict.why) reasons.set(id, verdict.why);
+  }
+
+  return { demoteIds, reasons, unusableIds };
 }
 
 /**

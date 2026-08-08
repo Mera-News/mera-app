@@ -48,6 +48,10 @@ import {
   // --- the LEGACY ("v1") path, so the v1 arms run the SHIPPED code ----------
   buildScoreCallForChunk,
   parseBatchRelevanceResponse,
+  // The SHIPPED reason/note wiring — the exact builder the pipeline calls and
+  // the exact keep/demote rules `applyV3NoteResults` now delegates to.
+  buildReasonCallsForSubset,
+  decodeV3NoteResults,
   type ScoringCandidate,
   type ScoreV3Entry,
   type BatchCall,
@@ -775,6 +779,97 @@ function toScoringCandidate(a: GoldArticle): ScoringCandidate {
 /** Set by main() before `runLegacyPass` — the fact bank the app would send. */
 let personaStatements: string[] = [];
 
+/**
+ * The C2 note/demote pass, run through the SHIPPED wiring rather than a
+ * look-alike.
+ *
+ * Everything decision-bearing here is app code:
+ *   - `buildReasonCallsForSubset(..., v3)` is the same builder
+ *     `scoring-pipeline::submitNeedsReasons` calls, so the subset predicate, the
+ *     one-article-per-call shape, the system prompt (`v3NoteSystemPrompt` vs
+ *     `reasonSystemPrompt`) and the token ceiling are the shipped ones;
+ *   - `decodeV3NoteResults` is the same decode `applyV3NoteResults` delegates
+ *     to, so keep / demote / fail-open are decided identically.
+ * Only the PERSISTENCE differs — the pipeline writes rows, this writes a map.
+ *
+ * COST HONESTY: the flag-OFF arm's calls are BUILT (so their count is exact and
+ * comparable) and deliberately NOT executed. The legacy reason prompt only emits
+ * prose, and `decodeCloudBatchResults` routes that to `reasonMap` — it cannot
+ * move a score. Spending ~100 provider calls to observe a no-op would measure
+ * nothing; the call COUNT is the only thing that arm contributes, and building
+ * is enough to report it exactly.
+ */
+async function runShippedNotePass(
+  rows: ScoredRow[],
+  articleById: Map<string, GoldArticle>,
+  llm: ReturnType<typeof createNearAiLlm>,
+): Promise<{
+  rows: ScoredRow[];
+  demoted: number;
+  kept: number;
+  unusable: number;
+  callsOn: number;
+  callsOff: number;
+}> {
+  const candidates = rows
+    .map((r) => articleById.get(r.articleId))
+    .filter((a): a is GoldArticle => a != null)
+    .map(toScoringCandidate);
+  const relevanceMap: Record<string, number> = {};
+  for (const r of rows) relevanceMap[r.articleId] = r.blend;
+
+  // Flag OFF — built only, to pin the call count (see the doc comment).
+  const off = buildReasonCallsForSubset(
+    candidates,
+    relevanceMap,
+    CFG.reasonRelevanceThreshold,
+    personaStatements,
+    CFG,
+    consoleLogger,
+    false,
+  );
+  // Flag ON — the arm that actually runs.
+  const on = buildReasonCallsForSubset(
+    candidates,
+    relevanceMap,
+    CFG.reasonRelevanceThreshold,
+    personaStatements,
+    CFG,
+    consoleLogger,
+    true,
+  );
+
+  if (on.calls[0] && on.calls[0].system !== CFG.v3NoteSystemPrompt) {
+    throw new Error(
+      'score-v3-goldset: the flag-ON arm is not sending v3NoteSystemPrompt — ' +
+        'buildReasonCallsForSubset has drifted and this is no longer a measurement of the shipped path.',
+    );
+  }
+
+  const results = await llm.batchComplete(on.calls, { model: CFG.model });
+  const { demoteIds, reasons, unusableIds } = decodeV3NoteResults(
+    results.map((r) => ({ id: r.id, output: r.output ?? '', error: r.error })),
+  );
+
+  const demoteSet = new Set(demoteIds);
+  const out = rows.map((r) => {
+    if (demoteSet.has(r.articleId)) {
+      return { ...r, blend: CFG.feedVerifierDemoteScore, why: null };
+    }
+    const why = reasons.get(r.articleId);
+    return why ? { ...r, why } : r;
+  });
+
+  return {
+    rows: out,
+    demoted: demoteIds.length,
+    kept: reasons.size,
+    unusable: unusableIds.length,
+    callsOn: on.calls.length,
+    callsOff: off.calls.length,
+  };
+}
+
 // --- Variant (c): the SPLIT design -----------------------------------------
 //
 // Pass 1 is the derived score-only prompt above (same batching, same chunk
@@ -1486,21 +1581,28 @@ async function main(): Promise<number> {
     for (const variant of requestedV1) {
       const res = projectLegacyVariant(variant, pass);
       if (variant === 'v1-note') {
-        // C2 — the v3 per-article keep/demote note pass, on TOP of A1. This is
-        // the SAME call v1's legacy reason pass already makes (same user message,
-        // same one-article-per-call shape); only the system prompt differs, so
-        // the demote capability arrives at zero net call cost.
+        // C2 through the SHIPPED wiring — `buildReasonCallsForSubset` +
+        // `decodeV3NoteResults`, i.e. the same builder and the same rules the
+        // pipeline runs. The 2026-08-08 first pass measured a hand-rolled
+        // look-alike; this re-measures the code that actually ships.
         const p2Started = Date.now();
         const articleById = new Map(scoped.map((a) => [a.articleId, a]));
         const p2Calls: LlmCallRecord[] = [];
-        const pass2 = await runSplitPass2(res.rows, articleById, userContext, llmFactory(p2Calls));
+        const pass2 = await runShippedNotePass(res.rows, articleById, llmFactory(p2Calls));
         res.rows = pass2.rows;
         res.llmCalls = [...res.llmCalls, ...p2Calls];
         log(
-          `[${variant}] note/demote pass done in ${Math.round((Date.now() - p2Started) / 1000)}s — ` +
-            `${p2Calls.length} per-article calls (v1's reason pass would have made the SAME number), ` +
-            `${pass2.demoted} demoted, ${pass2.unusable} unusable`,
+          `[${variant}] SHIPPED note/demote pass in ${Math.round((Date.now() - p2Started) / 1000)}s — ` +
+            `flag ON built ${pass2.callsOn} calls, flag OFF would build ${pass2.callsOff} ` +
+            `(delta ${pass2.callsOn - pass2.callsOff}); ` +
+            `${pass2.demoted} demoted, ${pass2.kept} captioned, ${pass2.unusable} unusable`,
         );
+        if (pass2.callsOn !== pass2.callsOff) {
+          log(
+            `[${variant}] WARNING: the flag CHANGES the call count. "Zero net calls" was the ` +
+              `whole basis for this candidate — report the delta, do not bury it.`,
+          );
+        }
       }
       writer.writeJson(`scores-${variant}`, res.rows);
       results.push(res);

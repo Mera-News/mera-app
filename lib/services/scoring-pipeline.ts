@@ -59,6 +59,9 @@ import {
   blendToScore,
   buildUserContext,
   resolveCountryName,
+  // The v3 NOTE pass's keep/demote RULES. Pure and shared, so the pipeline and
+  // the offline goldset replay decide identically (see the function's comment).
+  decodeV3NoteResults,
 } from '@/lib/news-harness/article-pipeline/scoring';
 // RELEVANCE_V3 — the merged score+impact+conditional-reason prompt pair and its
 // parser. The v1/v2 prompts stay where they are; nothing here is shared with
@@ -67,7 +70,6 @@ import {
   CLOUD_SCORE_V3_SYSTEM_PROMPT,
   CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT,
   parseScoreV3Response,
-  parseV3NoteResponse,
   buildBatchScoringUserMessage,
 } from '@/lib/news-harness/prompts/prompts';
 // RELEVANCE_V3 — interest-evidence rescue floor (strong topic evidence keeps a
@@ -278,6 +280,18 @@ interface V3BatchFields {
   v3Mode?: boolean;
   /** id → math audit carried from submit (see {@link V3AuditEntry}). */
   v3Audit?: Record<string, V3AuditEntry>;
+  /** `articlePipeline.legacyNoteDemote` — true when this LEGACY batch's reason
+   *  calls were built with the v3 NOTE prompt (which may demote) instead of the
+   *  caption-only reason prompt.
+   *
+   *  Persisted rather than re-read from the config at decode, for exactly the
+   *  reason `v3Mode` is: the two prompts have different OUTPUT CONTRACTS
+   *  (`{"keep","why"}` vs bare prose), so a batch submitted under one and
+   *  decoded under the other would have its answers read by the wrong parser.
+   *  An OTA that flips the flag must not reach batches already in flight.
+   *  Absent ⇒ the caption-only path, which is what makes every legacy run
+   *  written before this field existed resume correctly. */
+  noteMode?: boolean;
 }
 
 type V3Batch = PipelineBatch & V3BatchFields;
@@ -285,6 +299,20 @@ type V3Batch = PipelineBatch & V3BatchFields;
 /** Read the v3 marker off a batch of unknown vintage. */
 function isV3Batch(b: PipelineBatch): boolean {
   return (b as V3Batch).v3Mode === true;
+}
+
+/** Read the legacy note/demote marker off a batch of unknown vintage. */
+function isNoteModeBatch(b: PipelineBatch): boolean {
+  return (b as V3Batch).noteMode === true;
+}
+
+/** Batches whose `reason:<id>` results carry a `{"keep","why"}` verdict rather
+ *  than bare prose — v3 batches, and legacy batches submitted with
+ *  `legacyNoteDemote` on. The ONE predicate both the reason-call BUILDER and the
+ *  reason-result DECODER consult, so the prompt that was sent and the parser
+ *  that reads it can never disagree. */
+function usesNotePrompt(b: PipelineBatch): boolean {
+  return isV3Batch(b) || isNoteModeBatch(b);
 }
 
 // ---------------------------------------------------------------------------
@@ -1276,6 +1304,14 @@ async function doSubmitRelevance(
 
     if (outcome.status === 'ok') {
       // judgeMode stays false (default) — decode routes to the legacy path.
+      //
+      // `legacyNoteDemote` is decided HERE, once, and persisted on the batch.
+      // The reason calls are not built until a later phase, so the flag must be
+      // captured at the moment the batch commits to being a legacy batch —
+      // reading the literal again at reason-build or decode time would let an
+      // OTA change the output contract underneath an in-flight batch. Default
+      // OFF ⇒ `noteMode` is left undefined and every downstream predicate reads
+      // exactly as it did before this flag existed.
       await transitionToWaitingRelevance(
         batch.batchId,
         outcome,
@@ -1283,6 +1319,9 @@ async function doSubmitRelevance(
         undefined,
         penalisedCount > 0 ? suppressPenaltyMap : undefined,
         scoreChunkSize,
+        cfg.articlePipeline.legacyNoteDemote === true
+          ? { noteMode: true }
+          : undefined,
       );
       logger.debug(
         `${TAG} batch ${batch.batchId} → waiting-relevance requestId=${outcome.requestId}`,
@@ -1738,10 +1777,27 @@ async function doSubmitReasonsOnly(
   for (const c of subset) {
     if (typeof c.relevance === 'number') rawMap[c.id] = c.relevance;
   }
+  // A reasonsOnly batch never passed through `transitionToWaitingRelevance`, so
+  // it carries no `noteMode` yet. Decide it HERE, build with it, and persist it
+  // on the transition below — same submit-time capture as the relevance path.
+  // Without this the flag would demote on the main path and silently not on the
+  // orphaned-reason sweep, which is the kind of split that only shows up as
+  // "some rows kept a note they shouldn't have".
+  //
+  // Read through `judgeHarnessConfig()`, the SAME source the relevance path
+  // uses — not the raw `DEFAULT_HARNESS_CONFIG` literal. The two resolve
+  // identically today, but `effectiveHarnessConfig` is where a flag becomes
+  // runtime-layerable (it is how `RELEVANCE_V3` is bound), and the day this one
+  // is layered there, a literal read here would put the orphan sweep on a
+  // different prompt from the main path — which is the exact split this code
+  // exists to prevent.
+  const reasonsCfg = await judgeHarnessConfig();
+  const noteMode = reasonsCfg.articlePipeline.legacyNoteDemote === true;
   const bundle = await buildReasonCallsForSubset(
     subset,
     rawMap,
     REASON_RELEVANCE_THRESHOLD,
+    noteMode,
   );
   if (bundle.calls.length === 0) {
     logger.debug(
@@ -1769,7 +1825,13 @@ async function doSubmitReasonsOnly(
   });
 
   if (outcome.status === 'ok') {
-    await transitionToWaitingReasons(batch.batchId, outcome, reasonIds, rawMap);
+    await transitionToWaitingReasons(
+      batch.batchId,
+      outcome,
+      reasonIds,
+      rawMap,
+      noteMode,
+    );
     logger.debug(
       `${TAG} batch ${batch.batchId} → waiting-reasons requestId=${outcome.requestId}`,
     );
@@ -1803,6 +1865,7 @@ async function transitionToWaitingRelevance(
    *  built with, so decode re-chunks candidateIds identically. */
   scoreChunkSize?: number,
   /** RELEVANCE_V3 batches only — the v3 marker + the math audit decode needs.
+   *  ALSO carries `noteMode` for LEGACY batches (see {@link V3BatchFields}).
    *  Assigned unconditionally (like the two maps above) so a retry can never
    *  inherit the previous attempt's annotations, and so a legacy batch always
    *  clears them. */
@@ -1813,6 +1876,11 @@ async function transitionToWaitingRelevance(
     if (!b || b.phase !== 'submitting-relevance') return null;
     b.v3Mode = v3?.v3Mode === true ? true : undefined;
     b.v3Audit = v3?.v3Mode === true ? v3.v3Audit : undefined;
+    // Assigned unconditionally, for the same reason as the two above: a retry
+    // re-entering submit must never inherit the previous attempt's prompt
+    // choice. Independent of `v3Mode` — a v3 batch never sets this (its notes
+    // arrive on the relevance response, not a reasons sub-phase).
+    b.noteMode = v3?.noteMode === true ? true : undefined;
     b.phase = 'waiting-relevance';
     b.requestId = outcome.requestId;
     b.capabilityToken = outcome.capabilityToken || undefined;
@@ -1847,6 +1915,17 @@ async function transitionToWaitingReasons(
   outcome: { requestId: string; capabilityToken: string },
   reasonIds: string[],
   relevanceMap?: Record<string, number>,
+  /** `articlePipeline.legacyNoteDemote` as decided at THIS submit — passed only
+   *  by `doSubmitReasonsOnly`, whose batches never pass through
+   *  `transitionToWaitingRelevance` and so have no marker yet.
+   *
+   *  Deliberately "assign only when supplied", unlike the unconditional
+   *  assignments in `transitionToWaitingRelevance`: `submitNeedsReasons` also
+   *  lands here, for a batch whose `noteMode` was already fixed at RELEVANCE
+   *  submit. Overwriting it from the live literal there is exactly the
+   *  in-flight-OTA hazard the field exists to prevent, so an omitted argument
+   *  must leave the stored value alone. */
+  noteMode?: boolean,
 ): Promise<void> {
   await mutatePipeline((run) => {
     const b = run.batches.find((x) => x.batchId === batchId);
@@ -1867,6 +1946,11 @@ async function transitionToWaitingReasons(
     if (relevanceMap) {
       b.relevanceMap = relevanceMap;
       b.rawRelevanceMap = relevanceMap;
+    }
+    // See the parameter's doc comment: assign ONLY when supplied, so a
+    // needs-reasons-submit batch keeps the marker fixed at relevance submit.
+    if (noteMode !== undefined) {
+      (b as V3Batch).noteMode = noteMode === true ? true : undefined;
     }
     return true;
   });
@@ -2570,36 +2654,33 @@ async function applyV3NoteResults(
   batchResults: { id: string; output: string; error?: string }[],
 ): Promise<void> {
   const demoteScore = DEFAULT_HARNESS_CONFIG.articlePipeline.feedVerifierDemoteScore;
-  let kept = 0;
-  let demoted = 0;
-  let unusable = 0;
 
-  for (const res of batchResults) {
-    if (!res.id.startsWith('reason:')) continue;
-    const id = res.id.slice('reason:'.length);
-    if (res.error) {
-      unusable += 1;
-      continue;
-    }
-    const verdict = parseV3NoteResponse(res.output ?? '');
-    if (!verdict) {
-      unusable += 1;
-      continue;
-    }
+  // The RULES live in the harness (`decodeV3NoteResults`); this function owns
+  // only the DB writes. That split is what lets the offline goldset replay
+  // measure the SHIPPED decision logic rather than a look-alike written beside
+  // it — the same reason `applyFeedVerifierDecisions` is shaped this way.
+  const { demoteIds, reasons, unusableIds } = decodeV3NoteResults(batchResults);
+
+  for (const id of demoteIds) {
     try {
-      if (!verdict.keep) {
-        demoted += 1;
-        await saveScoringResult(id, {
-          relevance: demoteScore,
-          reason: '',
-          // Terminal: below the gate it owes no note at all, so leaving it
-          // `reason_pending` would strand it in the recovery sweep forever.
-          reasonSkipped: true,
-        });
-      } else if (verdict.why) {
-        kept += 1;
-        await saveReason(id, verdict.why);
-      }
+      await saveScoringResult(id, {
+        relevance: demoteScore,
+        reason: '',
+        // Terminal: below the gate it owes no note at all, so leaving it
+        // `reason_pending` would strand it in the recovery sweep forever.
+        reasonSkipped: true,
+      });
+    } catch (err) {
+      if (isRecordNotFoundError(err)) continue;
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'save-v3-note' },
+        extra: { candidateId: id },
+      });
+    }
+  }
+  for (const [id, why] of reasons) {
+    try {
+      await saveReason(id, why);
     } catch (err) {
       if (isRecordNotFoundError(err)) continue;
       logger.captureException(err, {
@@ -2610,7 +2691,8 @@ async function applyV3NoteResults(
   }
 
   logger.debug(
-    `${TAG} batch ${batch.batchId} v3 notes: kept=${kept} demoted=${demoted} unusable=${unusable}`,
+    `${TAG} batch ${batch.batchId} notes: kept=${reasons.size} ` +
+      `demoted=${demoteIds.length} unusable=${unusableIds.length}`,
   );
 }
 
@@ -2621,7 +2703,11 @@ async function handleReasonResults(
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
 
-  if (isV3Batch(batch)) {
+  // The SAME predicate the reason-call builder used. A legacy batch submitted
+  // with `legacyNoteDemote` sent the note prompt, so its answers are
+  // `{"keep","why"}` verdicts and must go to the note applier — handing them to
+  // the prose decoder would persist raw JSON as the user-facing note.
+  if (usesNotePrompt(batch)) {
     await applyV3NoteResults(batch, batchResults);
   } else {
     const { reasonMap, failedIds } = decodeResults({
@@ -2681,10 +2767,12 @@ async function submitNeedsReasons(
     subset,
     batch.rawRelevanceMap ?? {},
     REASON_RELEVANCE_THRESHOLD,
-    // Read off the BATCH, not the live config: a batch submitted under v3 must
-    // decode under v3 even if the toggle flipped while it was in flight, or its
-    // responses would be parsed by the wrong reader.
-    isV3Batch(batch),
+    // Read off the BATCH, not the live config: a batch submitted under v3 (or
+    // under `legacyNoteDemote`) must decode the same way even if the flag
+    // flipped while it was in flight, or its responses would be parsed by the
+    // wrong reader. `usesNotePrompt` is the single predicate the DECODER also
+    // consults, so the prompt sent and the parser used cannot diverge.
+    usesNotePrompt(batch),
   );
 
   if (bundle.calls.length === 0) {

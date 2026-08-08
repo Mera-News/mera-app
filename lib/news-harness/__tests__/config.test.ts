@@ -39,6 +39,23 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.reasonRelevanceThreshold).toBe(0.4);
   });
 
+  it('pins the legacy note/demote switch to OFF', () => {
+    // A ROUTING SWITCH, not a tunable: ON routes the legacy reason pass through
+    // the v3 NOTE prompt, which may DEMOTE as well as caption. It changes the
+    // reason call's OUTPUT CONTRACT, so submit and decode must agree — the
+    // pipeline persists the decision on the batch as `noteMode` rather than
+    // re-reading this literal at decode.
+    //
+    // Measured 2026-08-08 on goldset-348 (paired): skip 22.5% → 19.6%, recall
+    // flat at 26/37, Pearson +0.010, 5 rows demoted, ZERO net LLM calls. It did
+    // NOT clear its pre-registered bar (fall of 2.9pp against a >= 3.0pp bar);
+    // shipping it is an explicit owner override of that 0.1pp miss, and the
+    // default stays OFF until he has seen it run.
+    expect(a.legacyNoteDemote).toBe(false);
+    expect('legacyNoteDemote' in a).toBe(true);
+    expect(typeof a.legacyNoteDemote).toBe('boolean');
+  });
+
   it('pins the bucket cutoffs and representative values', () => {
     expect(a.mediumPriorityCutoff).toBe(0.6);
     expect(a.highPriorityCutoff).toBe(0.8);

@@ -70,6 +70,48 @@ export interface ArticlePipelineConfig {
   ineligibleRelevance: number;
   /** Bucketed-relevance floor that gates phase-2 reason generation. */
   reasonRelevanceThreshold: number;
+  /**
+   * LEGACY PATH ONLY — run the legacy reason pass through
+   * {@link v3NoteSystemPrompt} instead of {@link reasonSystemPrompt}, so it may
+   * also DEMOTE a false positive out of the feed rather than only captioning it.
+   *
+   * This is the one thing RELEVANCE_V3 does after inference that carries a
+   * PRECISION judgement, transplanted onto the legacy path in isolation. It is
+   * available for FREE because the two passes are the same call: v1's reason
+   * pass and v3's note pass both visit ONE article, both build the user message
+   * with `buildReasonUserMessage`, and both send the same article + score +
+   * retrieval facts. Only the system prompt and the decoder differ — so turning
+   * this on buys a precision pass at ZERO net LLM calls.
+   *
+   * v1 has had no precision pass since Wave 7b folded the standalone
+   * `feedVerifierEnabled` verifier into the JUDGE — a pass the legacy path never
+   * reaches, because a backstop batch never goes to the judge. So the legacy
+   * path lost the verifier and got nothing back. This returns it, through the
+   * prompt that already ships.
+   *
+   * MEASURED 2026-08-08 on `goldset-348`, paired within one scoring pass
+   * (identical pass-1 model output; only this stage differs):
+   *
+   *              Pearson  Spearman  n@0.4  recall  skip%  demoted
+   *   off         0.5689    0.6073    102   26/37  22.5%     —
+   *   on          0.5791    0.6139     97   26/37  19.6%    5/102
+   *
+   * Precision up, recall UNCHANGED, ranking slightly better, no extra call. It
+   * did NOT clear its pre-registered win bar, which demanded the judge-skip
+   * share fall by >= 3.0pp; the measured fall is 2.9pp. It is shipped behind
+   * this flag anyway, as an explicit owner decision to override a 0.1pp miss —
+   * recorded here so the miss is never mistaken for a pass.
+   *
+   * COST: zero net calls. `v3NoteMaxTokens` (96) is a ceiling 32 above
+   * `reasonMaxTokens` (64), and a ceiling is not a spend.
+   *
+   * SUBMIT/DECODE CONSISTENCY: reading this literal at decode would be a bug —
+   * a batch submitted with the legacy reason prompt must not be parsed by the
+   * note decoder just because an OTA flipped the flag while it was in flight.
+   * The pipeline therefore persists the decision on the batch as `noteMode` at
+   * submit and reads it back at decode, exactly as `v3Mode` already does.
+   */
+  legacyNoteDemote: boolean;
   // --- Bucket cutoffs (raw LLM score) + persisted representative values ---
   mediumPriorityCutoff: number;
   highPriorityCutoff: number;
@@ -434,6 +476,12 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // Lockstep with RENDER_GATE / inference-results.REASON_RELEVANCE_THRESHOLD
     // (0.3 -> 0.4 in the v3 wave); comparisons are INCLUSIVE (>=).
     reasonRelevanceThreshold: 0.4,
+    // OFF by default — an explicit literal, not an absent key read as falsy, in
+    // the same style and for the same reason as the scoringEngine routing
+    // switches: the harness default must always describe SHIPPED behaviour, and
+    // the owner flips it once he has seen it work. See the field's doc comment
+    // for the paired measurement AND for the pre-registered bar it missed.
+    legacyNoteDemote: false,
     mediumPriorityCutoff: 0.6,
     highPriorityCutoff: 0.8,
     emergencyPriorityCutoff: 1.0,
