@@ -73,6 +73,10 @@ export default function ChatSessionView({
     context.kind === 'optimisation-plan'
       ? // The pinned plan card IS the content — no persona intro line beneath it.
         null
+      : context.kind === 'follow-story'
+        ? // The FAB seeds "I want to follow a story", so the persona intro
+          // ("tell me about yourself…") would answer a question nobody asked.
+          t('trackedStories.followChatIntro')
       : context.kind === 'article-suggestion'
         ? context.verdict === 'like'
           ? t('articleFeedback.introLikeTuning')
@@ -155,6 +159,10 @@ export default function ChatSessionView({
   const starterChips: StarterChip[] = useMemo(() => {
     // The optimisation-plan thread is card-only — no persona/article chips.
     if (context.kind === 'optimisation-plan') return [];
+    // The follow-story thread opens with an auto-sent turn and expects the user
+    // to describe what they want followed — persona chips ("add a place", "show
+    // my facts") would derail it into a chat that has no tools for them.
+    if (context.kind === 'follow-story') return [];
     if (context.kind === 'article-suggestion') {
       // A real suggestion can be explained ("why?"); a plain article can't, so
       // it offers "more like this" instead. Both offer the "don't want" chip.

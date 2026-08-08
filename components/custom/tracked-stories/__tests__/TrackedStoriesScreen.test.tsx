@@ -159,6 +159,18 @@ jest.mock('@/lib/tracking/track-actions', () => ({
     deleteTrackedStoryById: (...a: any[]) => mockUntrack(...a),
 }));
 
+// Starting a follow (FAB + empty-state CTA) is one lib/ call; what it does with
+// the floating-chat store is asserted in lib/tracking/__tests__/follow-story-chat.
+const mockStartFollowStoryChat = jest.fn();
+jest.mock('@/lib/tracking/follow-story-chat', () => ({
+    startFollowStoryChat: (...a: any[]) => mockStartFollowStoryChat(...a),
+}));
+
+jest.mock('lucide-react-native', () => {
+    const { View } = require('react-native');
+    return { Crosshair: (p: any) => <View testID="icon-crosshair" {...p} /> };
+});
+
 jest.mock('@/components/ui/box', () => { const { View } = require('react-native'); return { Box: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/hstack', () => { const { View } = require('react-native'); return { HStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
@@ -214,14 +226,48 @@ describe('TrackedStoriesScreen', () => {
         expect(getByText('trackedStories.emptyBody')).toBeTruthy();
     });
 
-    it('gives the empty state an actionable hint + a CTA to the Feed tab', () => {
+    it('gives the empty state an actionable hint + a CTA that starts a follow here', () => {
         const { getByText } = render(<TrackedStoriesScreen embedded />);
         // The hint tells the user WHERE following happens (QA: the action was
         // three levels deep with nothing on this screen pointing there).
-        expect(getByText('trackedStories.emptyHint')).toBeTruthy();
-        // The CTA routes to the Feed tab, where the follow action lives.
-        fireEvent.press(getByText('trackedStories.emptyCta'));
-        expect(router.push).toHaveBeenCalledWith('/logged-in/app_container/feed');
+        expect(getByText('trackedStories.emptyHintFollow')).toBeTruthy();
+        // It used to route to the Feed tab because that was the only place a
+        // follow could START. This screen now starts one itself.
+        fireEvent.press(getByText('trackedStories.emptyCtaFollow'));
+        expect(router.push).not.toHaveBeenCalled();
+        expect(mockStartFollowStoryChat).toHaveBeenCalledWith('trackedStories.followChatSeed');
+    });
+
+    // The whole point of the FAB: one tap opens Mera already carrying the
+    // "I want to follow a story" turn, so the user lands mid-conversation
+    // rather than on an empty prompt.
+    describe('follow-a-story FAB', () => {
+        it('opens the chat seeded with the follow intent when tapped', () => {
+            mockRows = [story({ id: 'f1', llmHeadline: 'Existing' })];
+            const { getByTestId } = render(<TrackedStoriesScreen embedded />);
+
+            fireEvent.press(getByTestId('tracked-stories-track-fab'));
+
+            expect(mockStartFollowStoryChat).toHaveBeenCalledTimes(1);
+            expect(mockStartFollowStoryChat).toHaveBeenCalledWith('trackedStories.followChatSeed');
+        });
+
+        it('renders on the empty list too, carrying the track crosshair', () => {
+            const { getByTestId } = render(<TrackedStoriesScreen embedded />);
+
+            const fab = getByTestId('tracked-stories-track-fab');
+            expect(fab.props.accessibilityLabel).toBe('trackedStories.followFabLabel');
+            expect(getByTestId('icon-crosshair')).toBeTruthy();
+        });
+
+        it('does not follow anything by itself — only opens the chat', () => {
+            const { getByTestId } = render(<TrackedStoriesScreen embedded />);
+
+            fireEvent.press(getByTestId('tracked-stories-track-fab'));
+
+            expect(mockUntrack).not.toHaveBeenCalled();
+            expect(router.push).not.toHaveBeenCalled();
+        });
     });
 
     it('gives the row a composite a11y label: title, unseen count, total, age', () => {

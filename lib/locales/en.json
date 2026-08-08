@@ -416,6 +416,11 @@
     "close": "Close"
   },
   "trackedStories": {
+    "followFabLabel": "Follow a new story",
+    "followChatSeed": "I want to follow a story.",
+    "followChatIntro": "Tell me what you'd like to follow and I'll set it up.",
+    "emptyHintFollow": "Tap the follow button and tell Mera what you want to keep up with.",
+    "emptyCtaFollow": "Follow a story",
     "emptyTitle": "No stories followed yet",
     "emptyBody": "Follow a story to see every new development gathered here as it unfolds.",
     "title": "Followed stories",
