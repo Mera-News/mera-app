@@ -1,7 +1,13 @@
 import { HStack } from '@/components/ui/hstack';
 import { AlertCircleIcon, Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useIsNetworkHealthy, useIsOnline } from '@/lib/stores/network-store';
+import {
+    probeInternetReachable,
+    useIsConnected,
+    useIsNetworkHealthy,
+    useIsOnline,
+    useNetworkStore,
+} from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,15 +23,21 @@ export const SHOW_DELAY_MS = 2_000;
 /**
  * Global connectivity band.
  *
- * Covers three states behind ONE message, because the user's own framing was
- * that the distinction does not matter to them ("the user can even have
- * airplane mode on or can be in a terrible network — doesn't matter"):
- *   - device offline           (NetInfo)
- *   - server unreachable       (consecutive transport failures / probe)
- *   - server slow              (a request past the slow threshold, still running)
+ * Covers three UNHEALTHY states, forked into three messages — this used to be
+ * ONE message for all of them (the user's own framing was that the
+ * distinction didn't matter: "the user can even have airplane mode on or can
+ * be in a terrible network — doesn't matter"), but that framing conflated two
+ * genuinely different problems with different fixes: the user's own network
+ * versus Mera being down. Blaming Mera for a captive portal (or the reverse)
+ * sends the user to fix the wrong thing. The three:
+ *   - device offline           (NetInfo `isConnected: false`) → user's device
+ *   - link up, internet down   (neutral probe fails — captive portal / DNS
+ *                                hijack) → user's network, NOT Mera
+ *   - internet fine, Mera down (server unreachable, or merely slow) → Mera
  *
- * The copy is deliberately true of all three: "Slow or no connection" does not
- * lie during the slow-but-working case the way "Can't reach Mera" would.
+ * The middle state is the genuinely NEW information here: `isConnected` alone
+ * cannot tell "there is a link" apart from "that link actually reaches the
+ * open internet" — see `probeInternetReachable()` in network-store.ts.
  *
  * Not dismissible: it self-clears the instant connectivity returns, so a
  * dismiss control would only be a way to hide a true statement. (ReauthBanner
@@ -39,6 +51,8 @@ const OfflineBanner: React.FC = () => {
     const { t } = useTranslation();
     const healthy = useIsNetworkHealthy();
     const reachable = useIsOnline();
+    const isConnected = useIsConnected();
+    const internetReachable = useNetworkStore((s) => s.internetReachable);
     const needsReauth = useUserStore((s) => s.needsReauth);
     const [visible, setVisible] = useState(false);
 
@@ -66,7 +80,27 @@ const OfflineBanner: React.FC = () => {
         return () => clearTimeout(timer);
     }, [healthy, yieldToReauthBanner]);
 
+    // Disambiguate WHY, once per unhealthy episode. A confirmed-offline device
+    // already has its answer (`isConnected === false`) and isn't worth a round
+    // trip. Anything else that's still unhealthy but HAS a link — server
+    // unreachable, or merely slow — is exactly the case the neutral probe
+    // exists for: without it, a captive portal / DNS hijack reads identically
+    // to "Mera is down" and would tell the user to fix the wrong thing. Keyed
+    // on `isConnected` too (not just `healthy`) so a device that reconnects
+    // mid-episode gets a fresh verdict instead of reusing a stale one from
+    // before it dropped.
+    useEffect(() => {
+        if (healthy || !isConnected) return;
+        void probeInternetReachable();
+    }, [healthy, isConnected]);
+
     if (!visible) return null;
+
+    const messageKey = !isConnected
+        ? 'common.offlineBannerOffline'
+        : !internetReachable
+            ? 'common.offlineBannerInternetDown'
+            : 'common.offlineBannerServerDown';
 
     return (
         <HStack
@@ -79,7 +113,7 @@ const OfflineBanner: React.FC = () => {
         >
             <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />
             <Text size="sm" className="text-warning-400">
-                {t('common.offlineBanner')}
+                {t(messageKey)}
             </Text>
         </HStack>
     );

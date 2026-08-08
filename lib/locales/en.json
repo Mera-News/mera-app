@@ -1,6 +1,8 @@
 {
   "common": {
-    "offlineBanner": "Slow or no connection to Mera. Showing saved news — we'll keep trying.",
+    "offlineBannerOffline": "You're offline. Showing saved news, and we'll keep trying.",
+    "offlineBannerInternetDown": "No internet access. Showing saved news, and we'll keep trying.",
+    "offlineBannerServerDown": "Slow or no connection to Mera. Showing saved news, and we'll keep trying.",
     "home": "Home",
     "yes": "Yes",
     "no": "No",
@@ -364,6 +366,7 @@
     "chatHandoffDislikeNoPath": "I didn't like this story. Help me get fewer like it."
   },
   "explore": {
+    "serverUnavailable": "Mera can't be reached right now: try again in a moment.",
     "title": "Explore",
     "scopeWorld": "World",
     "noArticles": "No articles found",

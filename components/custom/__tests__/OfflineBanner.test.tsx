@@ -38,18 +38,39 @@ jest.mock('@/components/ui/icon', () => {
     return { Icon: (p: any) => <View {...p} />, AlertCircleIcon: 'AlertCircleIcon' };
 });
 
+// Partial mock: keep the REAL store (useNetworkStore, useIsConnected, etc — so
+// `setNet` below still drives the same instance the component reads) but stub
+// the neutral probe. It hits real hosts over real fetch, which has no place in
+// a unit test — the probe's own behavior (both hosts, http fallback, timeout)
+// is covered directly in lib/stores/__tests__/network-store.test.ts.
+const mockProbeInternetReachable = jest.fn(async (_timeoutMs?: number) => true);
+jest.mock('@/lib/stores/network-store', () => {
+    const actual = jest.requireActual('@/lib/stores/network-store');
+    return {
+        ...actual,
+        probeInternetReachable: (timeoutMs?: number) => mockProbeInternetReachable(timeoutMs),
+    };
+});
+
 import OfflineBanner, { SHOW_DELAY_MS } from '@/components/custom/OfflineBanner';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 
-const setNet = (s: Partial<{ isConnected: boolean; serverReachable: boolean; serverSlow: boolean }>) =>
-    useNetworkStore.setState(s as never);
+const setNet = (
+    s: Partial<{
+        isConnected: boolean;
+        serverReachable: boolean;
+        serverSlow: boolean;
+        internetReachable: boolean;
+    }>,
+) => useNetworkStore.setState(s as never);
 
 describe('OfflineBanner', () => {
     beforeEach(() => {
         jest.useFakeTimers();
-        setNet({ isConnected: true, serverReachable: true, serverSlow: false });
+        setNet({ isConnected: true, serverReachable: true, serverSlow: false, internetReachable: true });
         useUserStore.setState({ needsReauth: false } as never);
+        mockProbeInternetReachable.mockClear();
     });
     afterEach(() => jest.useRealTimers());
 
@@ -70,6 +91,70 @@ describe('OfflineBanner', () => {
         const { queryByTestId } = render(<OfflineBanner />);
         advance();
         expect(queryByTestId('offline-banner')).toBeTruthy();
+    });
+
+    // ── the three-way fork ───────────────────────────────────────────────
+    // One message used to cover all three states. Now each state gets its own
+    // string, because "you're offline" and "Mera is down" point the user at
+    // different fixes.
+    describe('three-way copy fork', () => {
+        it('device offline (isConnected: false) shows the offline string, regardless of internetReachable', () => {
+            setNet({ isConnected: false, internetReachable: false });
+            const { getByText } = render(<OfflineBanner />);
+            advance();
+            expect(getByText('common.offlineBannerOffline')).toBeTruthy();
+        });
+
+        it('link up but the neutral probe failed shows the internet-down string, not "Mera is down"', () => {
+            setNet({ isConnected: true, serverReachable: false, internetReachable: false });
+            const { getByText } = render(<OfflineBanner />);
+            advance();
+            expect(getByText('common.offlineBannerInternetDown')).toBeTruthy();
+        });
+
+        it('link up, internet fine, only the server unreachable shows the Mera-down string', () => {
+            setNet({ isConnected: true, serverReachable: false, internetReachable: true });
+            const { getByText } = render(<OfflineBanner />);
+            advance();
+            expect(getByText('common.offlineBannerServerDown')).toBeTruthy();
+        });
+
+        it('link up, internet fine, server merely slow ALSO shows the Mera-down string (not the internet-down one)', () => {
+            setNet({ isConnected: true, serverSlow: true, internetReachable: true });
+            const { getByText } = render(<OfflineBanner />);
+            advance();
+            expect(getByText('common.offlineBannerServerDown')).toBeTruthy();
+        });
+    });
+
+    // ── firing the neutral probe ─────────────────────────────────────────
+    describe('neutral-probe firing', () => {
+        it('fires the probe once when there IS a link but something downstream is still wrong', () => {
+            setNet({ isConnected: true, serverReachable: false });
+            render(<OfflineBanner />);
+            expect(mockProbeInternetReachable).toHaveBeenCalledTimes(1);
+        });
+
+        it('never fires the probe when the device is confirmed offline — that verdict is already certain', () => {
+            setNet({ isConnected: false });
+            render(<OfflineBanner />);
+            expect(mockProbeInternetReachable).not.toHaveBeenCalled();
+        });
+
+        it('does not fire while healthy', () => {
+            render(<OfflineBanner />);
+            expect(mockProbeInternetReachable).not.toHaveBeenCalled();
+        });
+
+        it('re-fires on reconnect mid-episode so a stale verdict from before the drop is not reused', () => {
+            setNet({ isConnected: false });
+            const { rerender } = render(<OfflineBanner />);
+            expect(mockProbeInternetReachable).not.toHaveBeenCalled();
+
+            act(() => { setNet({ isConnected: true, serverReachable: false }); });
+            rerender(<OfflineBanner />);
+            expect(mockProbeInternetReachable).toHaveBeenCalledTimes(1);
+        });
     });
 
     it('does not paint before the show delay — a 300ms blip must not flash a band', () => {
