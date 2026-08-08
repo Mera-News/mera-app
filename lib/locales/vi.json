@@ -102,7 +102,6 @@
       "Vận động cơ thể theo cách bạn thích.",
       "Điện thoại sẽ vẫn ở đây sau. Hãy sống trong hiện tại."
     ],
-    "noiseRemovedSummary": "{{count}} {{articleWord}} giả mồi đã được lọc ra trước khi phân tích.",
     "processing": {
       "doneFlash": "Xong rồi, đây là tin tức của bạn",
       "errorFlash": "Chúng tôi không thể tải nội dung mới nhất. Vui lòng thử lại.",
@@ -131,14 +130,6 @@
             "Mera đưa tin tức đến thiết bị của bạn. Sở thích của bạn không bao giờ rời khỏi thiết bị."
           ],
           "amberSubline": "Vui lòng giữ màn hình này mở."
-        },
-        "noiseRemoval": {
-          "shortName": "Lọc nội dung giả mồi",
-          "tooltip": "Lọc bỏ các bài viết giả mồi được tải về theo các chủ đề nhiễu. Chỉ xảy ra khi tính năng chèn nhiễu được bật.",
-          "headlines": [
-            "Đang lọc bài viết giả mồi khỏi bản tin của bạn…",
-            "Chèn nhiễu đã gửi các chủ đề giả mồi cùng với chủ đề thật của bạn. Chúng tôi đang loại bỏ các bài viết chỉ khớp với những chủ đề giả đó."
-          ]
         },
         "cloudRelevance": {
           "shortName": "Tính toán mức độ liên quan",
@@ -399,9 +390,6 @@
     "cancelDownload": "Hủy tải xuống",
     "retryDownload": "Thử tải lại",
     "updateTo": "Cập nhật lên {{modelName}}",
-    "injectNoiseTitle": "Chèn nhiễu",
-    "injectNoiseDescription": "Gửi các chủ đề giả mồi cùng với sở thích thật của bạn để phần mềm phía sau không thể xác định danh tính bạn từ danh sách chủ đề. Các bài viết chỉ khớp với chủ đề giả mồi sẽ bị loại trước khi đến với bạn.",
-    "injectNoiseBeta": "Thử nghiệm: có thể làm chậm quá trình tạo chủ đề và giảm độ liên quan của bản tin.",
     "relevanceV3Title": "Sử dụng tính liên quan v3",
     "relevanceV3On": "Chấm điểm một lần: sở thích và ảnh hưởng, cân bằng",
     "relevanceV3Off": "Chấm điểm đám mây hai lần cổ điển",
@@ -557,15 +545,13 @@
     "tabPersona": "Hồ sơ",
     "tabSources": "Nguồn tin",
     "tabPreferences": "Tùy chọn",
-    "privacyOnDevice": "Dữ kiện và chủ đề của bạn chỉ được lưu trên thiết bị của bạn: suy luận AI chạy hoàn toàn trên thiết bị thông qua Giao thức Mera. Mỗi lần bạn lấy tin, chỉ các cụm chủ đề của bạn được gửi đi, không mang ID người dùng (bật Chèn nhiễu ở trên để gửi chủ đề gây nhiễu cùng với chúng). Những cụm này được lưu đệm trên máy chủ của chúng tôi, khóa theo chính văn bản, và bị xóa sau 14 ngày không có yêu cầu; không đâu ghi lại rằng chính bạn là người hỏi. Dữ liệu chúng tôi giữ về bạn là email đăng nhập, trạng thái đăng ký và số lượng bài báo được phân tích hàng ngày được sử dụng để thực thi kế hoạch của bạn. Các phiên trò chuyện bắt đầu lại từ đầu và không bao giờ được lưu: ngoại lệ duy nhất là nếu bạn gửi yêu cầu mở khóa, bản ghi cuộc trò chuyện bạn đính kèm sẽ được lưu lại để xem xét. Đổi thiết bị hoặc đăng xuất đồng nghĩa với việc dựng lại persona của bạn. Phần máy chủ của chúng tôi chưa được công bố; chúng tôi đang di chuyển mọi dịch vụ chạm vào dữ liệu của bạn vào kho lưu trữ mã nguồn mở và dự kiến công khai nó trước tháng 9 năm 2026. Cho đến lúc đó, điều duy nhất dựa trên niềm tin là chúng tôi không lưu bản ghi nào nối bạn với các chủ đề của bạn. Mera được xây dựng tại Hà Lan theo GDPR, và việc không giữ dữ liệu của bạn chính là mục đích của thiết kế này.",
-    "privacyCloud": "Dữ kiện và chủ đề của bạn chỉ được lưu trên thiết bị của bạn. Suy luận đám mây dùng Trusted Execution Environments (TEE) được mã hóa: dữ liệu được mã hóa trên thiết bị cho khóa mà enclave công bố, xử lý trong một vùng cách ly và chỉ giải mã trên thiết bị của bạn. Nói đúng ra: ứng dụng chưa kiểm tra xác thực này chống lại nhà cung cấp phần cứng, vì vậy bây giờ bạn đang tin tưởng chúng tôi và nhà điều hành enclave thay vì chip; làm cho ứng dụng xác minh điều này và từ chối tiếp tục là trong kế hoạch của chúng tôi. Mỗi lần bạn lấy tin, chỉ các cụm chủ đề của bạn được gửi đi, không mang ID người dùng (bật Chèn nhiễu ở trên để gửi chủ đề gây nhiễu cùng với chúng). Những cụm này được lưu đệm trên máy chủ của chúng tôi, khóa theo chính văn bản, và bị xóa sau 14 ngày không có yêu cầu; không đâu ghi lại rằng chính bạn là người hỏi. Dữ liệu chúng tôi giữ về bạn là email đăng nhập, trạng thái đăng ký và số lượng bài báo được phân tích hàng ngày được sử dụng để thực thi kế hoạch của bạn. Các phiên trò chuyện bắt đầu lại từ đầu và không bao giờ được lưu: ngoại lệ duy nhất là nếu bạn gửi yêu cầu mở khóa, bản ghi cuộc trò chuyện bạn đính kèm sẽ được lưu lại để xem xét. Đổi thiết bị hoặc đăng xuất đồng nghĩa với việc dựng lại persona của bạn. Phần máy chủ của chúng tôi chưa được công bố; chúng tôi đang di chuyển mọi dịch vụ chạm vào dữ liệu của bạn vào kho lưu trữ mã nguồn mở và dự kiến công khai nó trước tháng 9 năm 2026. Mera được xây dựng tại Hà Lan theo GDPR, và việc không giữ dữ liệu của bạn chính là mục đích của thiết kế này.",
+    "privacyOnDevice": "Dữ kiện và chủ đề của bạn chỉ được lưu trên thiết bị của bạn: suy luận AI chạy hoàn toàn trên thiết bị thông qua Giao thức Mera. Mỗi lần bạn lấy tin, chỉ các cụm chủ đề của bạn được gửi đi, không mang ID người dùng. Những cụm này được lưu đệm trên máy chủ của chúng tôi, khóa theo chính văn bản, và bị xóa sau 14 ngày không có yêu cầu; không đâu ghi lại rằng chính bạn là người hỏi. Dữ liệu chúng tôi giữ về bạn là email đăng nhập, trạng thái đăng ký và số lượng bài báo được phân tích hàng ngày được sử dụng để thực thi kế hoạch của bạn. Các phiên trò chuyện bắt đầu lại từ đầu và không bao giờ được lưu: ngoại lệ duy nhất là nếu bạn gửi yêu cầu mở khóa, bản ghi cuộc trò chuyện bạn đính kèm sẽ được lưu lại để xem xét. Đổi thiết bị hoặc đăng xuất đồng nghĩa với việc dựng lại persona của bạn. Phần máy chủ của chúng tôi chưa được công bố; chúng tôi đang di chuyển mọi dịch vụ chạm vào dữ liệu của bạn vào kho lưu trữ mã nguồn mở và dự kiến công khai nó trước tháng 9 năm 2026. Cho đến lúc đó, điều duy nhất dựa trên niềm tin là chúng tôi không lưu bản ghi nào nối bạn với các chủ đề của bạn. Mera được xây dựng tại Hà Lan theo GDPR, và việc không giữ dữ liệu của bạn chính là mục đích của thiết kế này.",
+    "privacyCloud": "Dữ kiện và chủ đề của bạn chỉ được lưu trên thiết bị của bạn. Suy luận đám mây dùng Trusted Execution Environments (TEE) được mã hóa: dữ liệu được mã hóa trên thiết bị cho khóa mà enclave công bố, xử lý trong một vùng cách ly và chỉ giải mã trên thiết bị của bạn. Nói đúng ra: ứng dụng chưa kiểm tra xác thực này chống lại nhà cung cấp phần cứng, vì vậy bây giờ bạn đang tin tưởng chúng tôi và nhà điều hành enclave thay vì chip; làm cho ứng dụng xác minh điều này và từ chối tiếp tục là trong kế hoạch của chúng tôi. Mỗi lần bạn lấy tin, chỉ các cụm chủ đề của bạn được gửi đi, không mang ID người dùng. Những cụm này được lưu đệm trên máy chủ của chúng tôi, khóa theo chính văn bản, và bị xóa sau 14 ngày không có yêu cầu; không đâu ghi lại rằng chính bạn là người hỏi. Dữ liệu chúng tôi giữ về bạn là email đăng nhập, trạng thái đăng ký và số lượng bài báo được phân tích hàng ngày được sử dụng để thực thi kế hoạch của bạn. Các phiên trò chuyện bắt đầu lại từ đầu và không bao giờ được lưu: ngoại lệ duy nhất là nếu bạn gửi yêu cầu mở khóa, bản ghi cuộc trò chuyện bạn đính kèm sẽ được lưu lại để xem xét. Đổi thiết bị hoặc đăng xuất đồng nghĩa với việc dựng lại persona của bạn. Phần máy chủ của chúng tôi chưa được công bố; chúng tôi đang di chuyển mọi dịch vụ chạm vào dữ liệu của bạn vào kho lưu trữ mã nguồn mở và dự kiến công khai nó trước tháng 9 năm 2026. Mera được xây dựng tại Hà Lan theo GDPR, và việc không giữ dữ liệu của bạn chính là mục đích của thiết kế này.",
     "privacyPolicy": "Chính sách bảo mật",
     "privacyNoticeTitle": "Quyền riêng tư của bạn",
     "updatingTopics": "Đang cập nhật chủ đề... {{completed}}/{{total}}",
     "emptyStateMessage": "Trả lời một vài câu hỏi để tạo hồ sơ của bạn",
     "factsHeading": "Thông tin",
-    "noiseSwitchLabel": "Nhiễu",
-    "noiseBadge": "nhiễu",
     "generatingTopics": "Đang tạo chủ đề...",
     "topicGenFailed": "Tạo chủ đề thất bại: {{error}}",
     "clusterCount": "{{count}} tin tức",
@@ -980,7 +966,6 @@
     "published": "Đã xuất bản",
     "analysed": "Đã phân tích",
     "relevant": "Liên quan đến bạn",
-    "noiseRemoved": "Đã lọc nhiễu",
     "lastProcessed": "Xử lý lần cuối",
     "errorTitle": "Sự cố chấm điểm",
     "openA11y": "Mở trạng thái bản tin",
@@ -1578,6 +1563,7 @@
     "askMera": "Hỏi Mera",
     "chatIntro": "Hỏi tôi bất cứ điều gì về cách Mera hoạt động. Tôi có thể giải thích, nhưng tôi không thể thay đổi bất cứ điều gì từ đây.",
     "launchButton": "Tham quan",
+    "learnAboutMera": "Mera hoạt động thế nào",
     "hintReveal": "Nhấn từng cái một.",
     "hintRevealSome": "Nhấn ít nhất {{count}}.",
     "hintChoose": "Chọn một cái.",
@@ -1819,20 +1805,6 @@
           "on-device-option": {
             "headline": "Trên thiết bị, nếu bạn muốn",
             "body": "Trong Cài đặt, Mera Protocol bạn có thể di chuyển xử lý vào điện thoại này, và sau đó không có gì về bạn rời đi. Nó tải xuống một mô hình trước, muốn một điện thoại khá gần đây, và đáng chú ý chậm hơn, đó chính xác là lý do tại sao nó không phải là mặc định."
-          },
-          "decoys-are-a-switch": {
-            "headline": "Decoys tắt cho đến khi bạn bật chúng",
-            "body": "Có một cài đặt gọi là Chèn nhiễu gửi chủ đề được phát minh cùng với những cái thực của bạn, vì vậy các cụm từ đến từ điện thoại của bạn không thể được đọc như một chân dung của bạn. Nó đang làm gì bây giờ?",
-            "choose": {
-              "always-on": {
-                "label": "Chạy yên tĩnh ở chế độ nền",
-                "feedback": "Không, và chúng tôi sẽ nói sửa chữa hơn là để nó như một giả định thoải mái."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Không có gì, cho đến khi bạn bật nó",
-                "feedback": "Đúng. Nó tắt theo mặc định: Cài đặt, Mera Protocol, Chèn nhiễu."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "Những gì chúng tôi giữ lại",
@@ -2190,13 +2162,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Chèn nhiễu",
-            "body": "Gửi các chủ đề được phát minh cùng với những cái thực của bạn, vì vậy những cụm từ đến từ điện thoại của bạn không thể được đọc như một chân dung. Bất cứ điều gì khớp chỉ một decoy bị ném đi trên điện thoại này trước khi bạn từng nhìn thấy nó. Tắt theo mặc định: nó có thể làm chậm tạo chủ đề xuống và làm loãng bản tin một ít."
-          },
           "deeper-questions": {
             "headline": "Các câu hỏi sâu hơn",
             "body": "Điều này thay đổi những gì Mera hỏi bạn, không phải những gì nó gửi. Thay vì những gì bạn quan tâm, nó hỏi những gì bạn bảo vệ sự chú ý của mình khỏi và những gì bạn quyết định tháng này. Các câu trả lời là những sự thật như bất kỳ cách khác và không bao giờ rời khỏi điện thoại này, chính xác là tại sao nó có thể hỏi chúng."
+          },
+          "inject-noise": {
+            "headline": "Chèn nhiễu, vẫn đang được xây dựng",
+            "body": "Gửi các chủ đề bịa ra cùng với chủ đề thật sẽ khiến những cụm từ rời khỏi điện thoại của bạn khó đọc thành chân dung của một người hơn. Đây là phần của Mera Protocol mà chúng tôi vẫn đang xây dựng: nó chưa được xây dựng, nên không có cài đặt nào cho nó và hôm nay không có gì độn thêm vào những gì điện thoại bạn gửi đi. Chúng tôi thà nói với bạn điều đó còn hơn để bạn tưởng mình có một lớp bảo vệ chưa tồn tại."
           },
           "web-search": {
             "headline": "Tìm kiếm web trong trò chuyện",

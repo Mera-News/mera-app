@@ -21,7 +21,7 @@
 // call time so ~15KB of prose stays out of app startup evaluation. Do not add a
 // top-level import of this file anywhere.
 //
-// ── TWO HARD INVARIANTS, ENFORCED BY A BUILD-FAILING TEST ──
+// ── THREE HARD INVARIANTS, ENFORCED BY A BUILD-FAILING TEST ──
 // (see lib/chat-tools/__tests__/mera-explainer-content.test.ts, which regexes the
 //  RAW FILE TEXT — comments included, because this repository is published)
 //
@@ -36,6 +36,15 @@
 //    does not refuse to continue when a check fails. So "verified" may be
 //    written about the quote chain and the key binding, and must never be
 //    written unqualified about the hardware or the platform.
+// 3. No decoy / noise-injection claim. Mera ships no decoy topics and no
+//    noise-injection setting: nothing generates, sends or discards them, and
+//    no control exists to switch one on. An earlier version of this file
+//    described such a setting, which is why the test now bans any affirmative
+//    mention of one.
+//    The layer IS being built (Mera Protocol Rules 2/3/5 are marked `Planned`
+//    in lib/mera-protocol-toolkit/mera_protocol.md). The ban is on presenting
+//    it as a protection the user has NOW, not on the feature existing one day.
+//    When it ships, lift the ban here and in the test together.
 //
 // ── CONFIDENTIALITY: how news is gathered and prepared is NOT public ──
 //
@@ -69,8 +78,6 @@ Mera is built in the Netherlands, under the EU's GDPR, by a very small team. It 
 What IS sent, each time you ask for news, is a short list of broad topic phrases: things like "Amsterdam housing policy" or "EU technology regulation". Optionally a country goes with them, so local reporting can be found. That is the entire payload. No profile. No personal facts. No reading history. No user ID, no session, nothing that says the request came from you. This design is what Mera calls the Mera Protocol, and it is always on.
 
 The gap between a fact and a topic is the whole point. "Lives in Jordaan, Amsterdam" stays on your phone; "Amsterdam local news" is what travels. Your device turns one into the other, and only the second half is ever visible to anyone else.
-
-There is also an optional noise-injection setting, in the app's privacy settings. When it is on, decoy topics are sent alongside your real ones, which makes the list harder to attribute to any one person. Articles that match only a decoy are dropped on your device before they reach you. It is off by default because it costs extra work on your phone.
 
 Two honest caveats. First, chat with Mera is a separate thing from the topic payload: on the cloud path your messages ARE sent for the AI to process, encrypted, and discarded afterwards. Ask about encryption for how that works. Second, switching devices or logging out means rebuilding your profile from scratch, precisely because there is no server-side copy to restore.`,
 

@@ -42,12 +42,10 @@ import logger from '@/lib/logger';
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
-import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import {
     useForYouAsyncJobPhase,
     useForYouHasGeneratedTopics,
     useForYouLastProcessingRunFinishedAt,
-    useForYouNoisyDiscardedCount,
     useForYouSuggestions,
     useForYouSyncStatusMessage,
     useForYouScoringError,
@@ -246,8 +244,6 @@ const MeraNewsScreen: React.FC = () => {
     const syncStatusMessage = useForYouSyncStatusMessage();
     const scoringError = useForYouScoringError();
     const dailyLimitResetAt = useForYouDailyLimitResetAt();
-    const noisyDiscardedCount = useForYouNoisyDiscardedCount();
-    const injectNoiseEnabled = useInjectNoise();
     const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
     const [nowTick, setNowTick] = useState(() => Date.now());
 
@@ -711,8 +707,6 @@ const MeraNewsScreen: React.FC = () => {
                 processedCount={articleCount}
                 analysedCount={analysedCount}
                 relevantCount={relevantCount}
-                noiseRemovedCount={noisyDiscardedCount ?? 0}
-                injectNoiseEnabled={injectNoiseEnabled}
                 lastProcessedLabel={lastProcessedLabel}
             />
         </Box>

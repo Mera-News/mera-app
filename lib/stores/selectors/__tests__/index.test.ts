@@ -57,7 +57,6 @@ import {
     useForYouAsyncJobTotalCount,
     useForYouLastProcessingRunFinishedAt,
     useForYouHydrationProgress,
-    useForYouNoisyDiscardedCount,
     useForYouSyncStatusMessage,
     getForYouActions,
     useUserPersona,
@@ -258,18 +257,6 @@ describe('selectors/index', () => {
     it('useForYouHydrationProgress starts at 0/0', () => {
         const { result } = renderHook(() => useForYouHydrationProgress());
         expect(result.current).toEqual({ hydrationCompleted: 0, hydrationTotal: 0 });
-    });
-
-    /**
-     * BUG: useForYouNoisyDiscardedCount reads state.noisyDiscardedCount which
-     * does not exist on ForYouState — the field is absent from the store
-     * definition. This selector will always return undefined.
-     * EXPECTED FAILURE: the selector should return a number but returns undefined.
-     */
-    it('useForYouNoisyDiscardedCount returns undefined (bug: field missing from store)', () => {
-        const { result } = renderHook(() => useForYouNoisyDiscardedCount());
-        // The field is not in the store — undefined is returned instead of 0
-        expect(result.current).toBeUndefined();
     });
 
     it('useForYouSyncStatusMessage returns null initially', () => {

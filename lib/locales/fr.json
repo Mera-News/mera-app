@@ -102,7 +102,6 @@
       "Bougez votre corps, comme bon vous semble.",
       "Votre téléphone sera là plus tard. Soyez présent maintenant."
     ],
-    "noiseRemovedSummary": "{{count}} {{articleWord}} leurre(s) ont été filtrés avant l'analyse.",
     "processing": {
       "doneFlash": "C'est prêt : voici vos actualités",
       "errorFlash": "Nous n'avons pas pu charger les derniers contenus. Veuillez réessayer.",
@@ -131,14 +130,6 @@
             "Mera apporte les actualités sur votre appareil. Vos centres d'intérêt ne le quittent jamais."
           ],
           "amberSubline": "Veuillez garder cet écran ouvert."
-        },
-        "noiseRemoval": {
-          "shortName": "Suppression des leurres",
-          "tooltip": "Filtrage des histoires leurres récupérées sur les sujets de bruit. Ne se produit que lorsque l'injection de bruit est activée.",
-          "headlines": [
-            "Filtrage des histoires leurres de votre fil…",
-            "L'injection de bruit a soumis des sujets leurres en parallèle de vos vrais sujets. Nous supprimons maintenant les histoires qui ne correspondaient qu'à ces leurres."
-          ]
         },
         "cloudRelevance": {
           "shortName": "Calcul de la pertinence",
@@ -404,9 +395,6 @@
     "cancelDownload": "Annuler le téléchargement",
     "retryDownload": "Réessayer le téléchargement",
     "updateTo": "Mettre à jour vers {{modelName}}",
-    "injectNoiseTitle": "Injecter du bruit",
-    "injectNoiseDescription": "Soumet des sujets leurres en parallèle de vos vrais centres d'intérêt afin que le serveur ne puisse pas déduire qui vous êtes depuis votre liste de sujets. Les articles ne correspondant qu'aux sujets leurres sont supprimés avant de vous parvenir.",
-    "injectNoiseBeta": "Bêta : peut ralentir la génération de sujets et réduire la pertinence du fil.",
     "relevanceV3Title": "Utiliser le scoring de pertinence v3",
     "relevanceV3On": "Scoring en une seule passe: intérêts et impact, équilibré",
     "relevanceV3Off": "Scoring cloud classique en deux passes",
@@ -562,15 +550,13 @@
     "tabPersona": "Persona",
     "tabSources": "Sources",
     "tabPreferences": "Préférences",
-    "privacyOnDevice": "Vos faits et sujets sont stockés exclusivement sur votre appareil : l'inférence IA s'exécute entièrement sur l'appareil via Mera Protocol. Chaque fois que vous avez besoin d'actualités, seuls vos sujets sont envoyés pour récupérer les articles, sans identifiant d'utilisateur (activez Injecter du bruit ci-dessus pour envoyer des leurres à côté). Ces sujets sont mis en cache sur nos serveurs, indexés sur le texte seul, et supprimés après 14 jours sans utilisation ; rien n'enregistre que c'est vous qui les avez demandés. Ce que nous conservons sur vous est votre e-mail de connexion, votre statut d'abonnement et un comptage quotidien des articles analysés utilisé pour appliquer votre plan. Les sessions de chat démarrent de zéro et ne sont pas enregistrées : la seule exception est que si vous soumettez une demande de déblocage, la transcription que vous joignez est conservée pour examen. Changer d'appareil ou vous déconnecter signifie reconstruire votre persona. Notre backend n'est pas encore publié ; nous transférons chaque service qui touche à vos données dans un référentiel source-disponible et attendons sa publication avant septembre 2026. Jusqu'à présent, la seule chose que vous acceptez par confiance est que nous ne conservons aucune trace vous reliant à vos sujets. Mera est construit aux Pays-Bas selon le RGPD de l'UE, et ne pas conserver vos données est l'objet même de cette conception.",
-    "privacyCloud": "Vos faits et sujets sont stockés exclusivement sur votre appareil. L'inférence cloud utilise des Trusted Execution Environments (TEE) chiffrés : vos données sont chiffrées sur l'appareil vers la clé que l'enclave publie, traitées dans une enclave isolée et déchiffrées uniquement sur votre appareil. Pour être précis : l'application ne vérifie pas encore cette attestation auprès du fabricant de matériel, donc pour l'instant vous faites confiance à nous et à l'opérateur d'enclave plutôt qu'au chip ; faire en sorte que l'application le vérifie et refuse de continuer est sur notre feuille de route. Chaque fois que vous avez besoin d'actualités, seuls vos sujets sont envoyés pour récupérer les articles, sans identifiant d'utilisateur (activez Injecter du bruit ci-dessus pour envoyer des leurres à côté). Ces sujets sont mis en cache sur nos serveurs, indexés sur le texte seul, et supprimés après 14 jours sans utilisation ; rien n'enregistre que c'est vous qui les avez demandés. Ce que nous conservons sur vous est votre e-mail de connexion, votre statut d'abonnement et un comptage quotidien des articles analysés utilisé pour appliquer votre plan. Les sessions de chat démarrent de zéro et ne sont pas enregistrées : la seule exception est que si vous soumettez une demande de déblocage, la transcription que vous joignez est conservée pour examen. Changer d'appareil ou vous déconnecter signifie reconstruire votre persona. Notre backend n'est pas encore publié ; nous transférons chaque service qui touche à vos données dans un référentiel source-disponible et attendons sa publication avant septembre 2026. Mera est construit aux Pays-Bas selon le RGPD de l'UE, et ne pas conserver vos données est l'objet même de cette conception.",
+    "privacyOnDevice": "Vos faits et sujets sont stockés exclusivement sur votre appareil : l'inférence IA s'exécute entièrement sur l'appareil via Mera Protocol. Chaque fois que vous avez besoin d'actualités, seuls vos sujets sont envoyés pour récupérer les articles, sans identifiant d'utilisateur. Ces sujets sont mis en cache sur nos serveurs, indexés sur le texte seul, et supprimés après 14 jours sans utilisation ; rien n'enregistre que c'est vous qui les avez demandés. Ce que nous conservons sur vous est votre e-mail de connexion, votre statut d'abonnement et un comptage quotidien des articles analysés utilisé pour appliquer votre plan. Les sessions de chat démarrent de zéro et ne sont pas enregistrées : la seule exception est que si vous soumettez une demande de déblocage, la transcription que vous joignez est conservée pour examen. Changer d'appareil ou vous déconnecter signifie reconstruire votre persona. Notre backend n'est pas encore publié ; nous transférons chaque service qui touche à vos données dans un référentiel source-disponible et attendons sa publication avant septembre 2026. Jusqu'à présent, la seule chose que vous acceptez par confiance est que nous ne conservons aucune trace vous reliant à vos sujets. Mera est construit aux Pays-Bas selon le RGPD de l'UE, et ne pas conserver vos données est l'objet même de cette conception.",
+    "privacyCloud": "Vos faits et sujets sont stockés exclusivement sur votre appareil. L'inférence cloud utilise des Trusted Execution Environments (TEE) chiffrés : vos données sont chiffrées sur l'appareil vers la clé que l'enclave publie, traitées dans une enclave isolée et déchiffrées uniquement sur votre appareil. Pour être précis : l'application ne vérifie pas encore cette attestation auprès du fabricant de matériel, donc pour l'instant vous faites confiance à nous et à l'opérateur d'enclave plutôt qu'au chip ; faire en sorte que l'application le vérifie et refuse de continuer est sur notre feuille de route. Chaque fois que vous avez besoin d'actualités, seuls vos sujets sont envoyés pour récupérer les articles, sans identifiant d'utilisateur. Ces sujets sont mis en cache sur nos serveurs, indexés sur le texte seul, et supprimés après 14 jours sans utilisation ; rien n'enregistre que c'est vous qui les avez demandés. Ce que nous conservons sur vous est votre e-mail de connexion, votre statut d'abonnement et un comptage quotidien des articles analysés utilisé pour appliquer votre plan. Les sessions de chat démarrent de zéro et ne sont pas enregistrées : la seule exception est que si vous soumettez une demande de déblocage, la transcription que vous joignez est conservée pour examen. Changer d'appareil ou vous déconnecter signifie reconstruire votre persona. Notre backend n'est pas encore publié ; nous transférons chaque service qui touche à vos données dans un référentiel source-disponible et attendons sa publication avant septembre 2026. Mera est construit aux Pays-Bas selon le RGPD de l'UE, et ne pas conserver vos données est l'objet même de cette conception.",
     "privacyPolicy": "Politique de confidentialité",
     "privacyNoticeTitle": "Votre confidentialité",
     "updatingTopics": "Mise à jour des sujets... {{completed}}/{{total}}",
     "emptyStateMessage": "Répondez à quelques questions pour créer votre profil",
     "factsHeading": "Faits",
-    "noiseSwitchLabel": "Bruit",
-    "noiseBadge": "bruit",
     "generatingTopics": "Génération des sujets...",
     "topicGenFailed": "Échec de la génération de sujets : {{error}}",
     "clusterCount": "{{count}} Actualités",
@@ -985,7 +971,6 @@
     "published": "Publié",
     "analysed": "Analysés",
     "relevant": "Pertinents pour vous",
-    "noiseRemoved": "Bruit supprimé",
     "lastProcessed": "Dernier traitement",
     "errorTitle": "Problème d'évaluation",
     "openA11y": "Ouvrir l'état du fil",
@@ -1582,6 +1567,7 @@
     "askMera": "Demander à Mera",
     "chatIntro": "Posez-moi n'importe quelle question sur le fonctionnement de Mera. Je peux expliquer, mais je ne peux rien changer d'ici.",
     "launchButton": "Faire la visite",
+    "learnAboutMera": "Comment Mera fonctionne",
     "hintReveal": "Appuyez sur chacun.",
     "hintRevealSome": "Appuyez sur au moins {{count}}.",
     "hintChoose": "Choisissez-en une.",
@@ -1823,20 +1809,6 @@
           "on-device-option": {
             "headline": "Sur l'appareil, si vous le souhaitez",
             "body": "Dans Paramètres, Mera Protocol, vous pouvez déplacer le traitement sur ce téléphone, et alors rien de vous ne quitte du tout. Il télécharge d'abord un modèle, veut un téléphone assez récent, et est sensiblement plus lent, ce qui est exactement pourquoi ce n'est pas la valeur par défaut."
-          },
-          "decoys-are-a-switch": {
-            "headline": "Les leurres sont éteints jusqu'à ce que vous les activiez",
-            "body": "Il y a un paramètre appelé Injecter du bruit qui envoie des sujets inventés avec vos vrais sujets, donc les phrases arrivant de votre téléphone ne peuvent pas être lues comme un portrait de vous. Qu'est-ce qu'il fait en ce moment ?",
-            "choose": {
-              "always-on": {
-                "label": "Fonctionnement tranquille en arrière-plan",
-                "feedback": "Non, et nous préférerions corriger cela plutôt que de le laisser comme une supposition confortable."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Rien, jusqu'à ce que vous le activiez",
-                "feedback": "Oui. C'est désactivé par défaut : Paramètres, Mera Protocol, Injecter du bruit."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "Ce que nous gardons",
@@ -2194,13 +2166,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Injecter du bruit",
-            "body": "Envoie des sujets inventés en parallèle avec vos vrais sujets, donc les phrases arrivant de votre téléphone ne peuvent pas être lues comme un portrait. Tout ce qui correspondait à un leurre seul est jeté sur ce téléphone avant vous ne le voyiez jamais. Désactivé par défaut : cela peut ralentir la génération des sujets et diluer un peu le fil."
-          },
           "deeper-questions": {
             "headline": "Questions plus approfondies",
             "body": "Cela change ce que Mera vous demande, pas ce qu'elle envoie. Au lieu de ce que vous êtes intéressé par, elle demande ce que vous protégez votre attention et ce que vous décidez ce mois-ci. Les réponses sont des faits comme n'importe quel autre et ne quittent jamais ce téléphone, ce qui est précisément pourquoi elle peut les demander."
+          },
+          "inject-noise": {
+            "headline": "Injection de bruit, encore en construction",
+            "body": "Envoyer des thèmes inventés à côté des vrais rendrait les formulations qui partent de votre téléphone plus difficiles à lire comme le portrait d'une personne. C'est la partie du Mera Protocol que nous construisons encore : elle n'est pas encore construite, il n'y a donc aucun réglage pour cela et rien ne rembourre aujourd'hui ce que votre téléphone envoie. Nous préférons vous le dire plutôt que vous laisser supposer une protection que vous n'avez pas."
           },
           "web-search": {
             "headline": "Recherche Web en chat",

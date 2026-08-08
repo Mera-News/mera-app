@@ -102,7 +102,6 @@
       "Porusz ciałem w sposób, który sprawia Ci przyjemność.",
       "Twój telefon tu będzie. Bądź teraz obecny."
     ],
-    "noiseRemovedSummary": "{{count}} fałszywy(-ch) {{articleWord}} odfiltrowano przed analizą.",
     "processing": {
       "doneFlash": "Gotowe: oto Twoje wiadomości",
       "errorFlash": "Nie udało się załadować najnowszych treści. Spróbuj ponownie.",
@@ -131,14 +130,6 @@
             "Mera dostarcza wiadomości na Twoje urządzenie. Twoje zainteresowania nigdy go nie opuszczają."
           ],
           "amberSubline": "Proszę utrzymuj ten ekran otwarty."
-        },
-        "noiseRemoval": {
-          "shortName": "Usuwanie wabików",
-          "tooltip": "Filtrowanie fałszywych historii pobranych do tematów wabikowych. Dzieje się tylko wtedy, gdy wstrzykiwanie szumu jest włączone.",
-          "headlines": [
-            "Filtrowanie fałszywych historii z Twojego kanału…",
-            "Wstrzykiwanie szumu przesłało tematy wabikowe obok Twoich prawdziwych. Teraz usuwamy artykuły pasujące tylko do tych wabików."
-          ]
         },
         "cloudRelevance": {
           "shortName": "Obliczanie trafności",
@@ -411,9 +402,6 @@
     "cancelDownload": "Anuluj pobieranie",
     "retryDownload": "Ponów pobieranie",
     "updateTo": "Zaktualizuj do {{modelName}}",
-    "injectNoiseTitle": "Wstrzykuj szum",
-    "injectNoiseDescription": "Przesyła tematy wabikowe obok Twoich prawdziwych zainteresowań, aby serwer nie mógł ustalić, kim jesteś na podstawie listy tematów. Artykuły pasujące tylko do tematów wabikowych są odrzucane, zanim do Ciebie dotrą.",
-    "injectNoiseBeta": "Beta: może spowalniać generowanie tematów i zmniejszać trafność kanału.",
     "relevanceV3Title": "Użyj oceny istotności v3",
     "relevanceV3On": "Punktowanie jednorazowe: zainteresowania i wpływ, zbilansowane",
     "relevanceV3Off": "Klasyczne dwuetapowe punktowanie w chmurze",
@@ -569,15 +557,13 @@
     "tabPersona": "Persona",
     "tabSources": "Źródła",
     "tabPreferences": "Preferencje",
-    "privacyOnDevice": "Twoje dane i tematy są przechowywane wyłącznie na Twoim urządzeniu: wnioskowanie AI działa w całości na urządzeniu poprzez Protokół Mera. Za każdym razem, gdy pobierasz wiadomości, wysyłane są wyłącznie Twoje frazy tematyczne, bez identyfikatora użytkownika (włącz Wstrzykuj szum powyżej, aby przesyłać wabiki obok nich). Frazy te są buforowane na naszych serwerach z indeksem wyłącznie po tekście i usuwane po 14 dniach bez zapytań; nic nie zapisuje, że to Ty o nie poprosiłeś. Co przechowujemy o Tobie, to adres e-mail do logowania, status subskrypcji i dzienna liczba przeanalizowanych artykułów, która wymusza limit planu. Sesje czatu zaczynają się od nowa i nigdy nie są zapisywane: jedynym wyjątkiem jest to, że gdy prześlesz prośbę o odblokowanie, transkrypcja dołączona do niej jest przechowywana w celu przeglądu. Zmiana urządzenia lub wylogowanie oznacza odbudowanie Twojej persony. Nasz backend nie jest jeszcze publikowany; przesuwamy każdą usługę, która dotyka Twoich danych, do repozytorium open source i spodziewamy się, że będzie publicznie dostępne przed wrześniem 2026. Do tej pory jedyną kwestią zaufania pozostaje to, że nie prowadzimy żadnego zapisu łączącego Ciebie z Twoimi tematami. Mera powstaje w Holandii pod rygorem RODO, a nieprzechowywanie Twoich danych jest właśnie celem tego projektu.",
-    "privacyCloud": "Twoje dane i tematy są przechowywane wyłącznie na Twoim urządzeniu. Wnioskowanie w chmurze korzysta z szyfrowanych Trusted Execution Environments (TEE): dane są szyfrowane na urządzeniu do klucza, który publikuje enklawa, przetwarzane w izolowanej enklawie i odszyfrowywane dopiero na Twoim urządzeniu. Aby być precyzyjnym: aplikacja nie sprawdza jeszcze tego zaświadczenia względem dostawcy sprzętu, więc na razie ufasz nam i operatorowi enklawy zamiast chipowi; uczynienie tak, aby aplikacja to weryfikowała i odmówiła kontynuacji jest na naszym planie. Za każdym razem, gdy pobierasz wiadomości, wysyłane są wyłącznie Twoje frazy tematyczne, bez identyfikatora użytkownika (włącz Wstrzykuj szum powyżej, aby przesyłać wabiki obok nich). Frazy te są buforowane na naszych serwerach z indeksem wyłącznie po tekście i usuwane po 14 dniach bez zapytań; nic nie zapisuje, że to Ty o nie poprosiłeś. Co przechowujemy o Tobie, to adres e-mail do logowania, status subskrypcji i dzienna liczba przeanalizowanych artykułów, która wymusza limit planu. Sesje czatu zaczynają się od nowa i nigdy nie są zapisywane: jedynym wyjątkiem jest to, że gdy prześlesz prośbę o odblokowanie, transkrypcja dołączona do niej jest przechowywana w celu przeglądu. Zmiana urządzenia lub wylogowanie oznacza odbudowanie Twojej persony. Nasz backend nie jest jeszcze publikowany; przesuwamy każdą usługę, która dotyka Twoich danych, do repozytorium open source i spodziewamy się, że będzie publicznie dostępne przed wrześniem 2026. Mera powstaje w Holandii pod rygorem RODO, a nieprzechowywanie Twoich danych jest właśnie celem tego projektu.",
+    "privacyOnDevice": "Twoje dane i tematy są przechowywane wyłącznie na Twoim urządzeniu: wnioskowanie AI działa w całości na urządzeniu poprzez Protokół Mera. Za każdym razem, gdy pobierasz wiadomości, wysyłane są wyłącznie Twoje frazy tematyczne, bez identyfikatora użytkownika. Frazy te są buforowane na naszych serwerach z indeksem wyłącznie po tekście i usuwane po 14 dniach bez zapytań; nic nie zapisuje, że to Ty o nie poprosiłeś. Co przechowujemy o Tobie, to adres e-mail do logowania, status subskrypcji i dzienna liczba przeanalizowanych artykułów, która wymusza limit planu. Sesje czatu zaczynają się od nowa i nigdy nie są zapisywane: jedynym wyjątkiem jest to, że gdy prześlesz prośbę o odblokowanie, transkrypcja dołączona do niej jest przechowywana w celu przeglądu. Zmiana urządzenia lub wylogowanie oznacza odbudowanie Twojej persony. Nasz backend nie jest jeszcze publikowany; przesuwamy każdą usługę, która dotyka Twoich danych, do repozytorium open source i spodziewamy się, że będzie publicznie dostępne przed wrześniem 2026. Do tej pory jedyną kwestią zaufania pozostaje to, że nie prowadzimy żadnego zapisu łączącego Ciebie z Twoimi tematami. Mera powstaje w Holandii pod rygorem RODO, a nieprzechowywanie Twoich danych jest właśnie celem tego projektu.",
+    "privacyCloud": "Twoje dane i tematy są przechowywane wyłącznie na Twoim urządzeniu. Wnioskowanie w chmurze korzysta z szyfrowanych Trusted Execution Environments (TEE): dane są szyfrowane na urządzeniu do klucza, który publikuje enklawa, przetwarzane w izolowanej enklawie i odszyfrowywane dopiero na Twoim urządzeniu. Aby być precyzyjnym: aplikacja nie sprawdza jeszcze tego zaświadczenia względem dostawcy sprzętu, więc na razie ufasz nam i operatorowi enklawy zamiast chipowi; uczynienie tak, aby aplikacja to weryfikowała i odmówiła kontynuacji jest na naszym planie. Za każdym razem, gdy pobierasz wiadomości, wysyłane są wyłącznie Twoje frazy tematyczne, bez identyfikatora użytkownika. Frazy te są buforowane na naszych serwerach z indeksem wyłącznie po tekście i usuwane po 14 dniach bez zapytań; nic nie zapisuje, że to Ty o nie poprosiłeś. Co przechowujemy o Tobie, to adres e-mail do logowania, status subskrypcji i dzienna liczba przeanalizowanych artykułów, która wymusza limit planu. Sesje czatu zaczynają się od nowa i nigdy nie są zapisywane: jedynym wyjątkiem jest to, że gdy prześlesz prośbę o odblokowanie, transkrypcja dołączona do niej jest przechowywana w celu przeglądu. Zmiana urządzenia lub wylogowanie oznacza odbudowanie Twojej persony. Nasz backend nie jest jeszcze publikowany; przesuwamy każdą usługę, która dotyka Twoich danych, do repozytorium open source i spodziewamy się, że będzie publicznie dostępne przed wrześniem 2026. Mera powstaje w Holandii pod rygorem RODO, a nieprzechowywanie Twoich danych jest właśnie celem tego projektu.",
     "privacyPolicy": "Polityka prywatności",
     "privacyNoticeTitle": "Twoja prywatność",
     "updatingTopics": "Aktualizowanie tematów... {{completed}}/{{total}}",
     "emptyStateMessage": "Odpowiedz na kilka pytań, aby zbudować swój profil",
     "factsHeading": "Fakty",
-    "noiseSwitchLabel": "Szum",
-    "noiseBadge": "szum",
     "generatingTopics": "Generowanie tematów...",
     "topicGenFailed": "Generowanie tematów nieudane: {{error}}",
     "clusterCount": "{{count}} wiadomości",
@@ -994,7 +980,6 @@
     "published": "Opublikowano",
     "analysed": "Przeanalizowane",
     "relevant": "Trafne dla Ciebie",
-    "noiseRemoved": "Usunięty szum",
     "lastProcessed": "Ostatnio przetworzono",
     "errorTitle": "Problem z ocenianiem",
     "openA11y": "Otwórz stan kanału",
@@ -1603,6 +1588,7 @@
     "askMera": "Zapytaj Mera",
     "chatIntro": "Zapytaj mnie o cokolwiek dotyczącego działania Mera. Mogę wyjaśnić, ale nie mogę nic stąd zmienić.",
     "launchButton": "Weź udział w wycieczce",
+    "learnAboutMera": "Jak działa Mera",
     "hintReveal": "Dotknij każdy.",
     "hintRevealSome": "Dotknij co najmniej {{count}}.",
     "hintChoose": "Wybierz jeden.",
@@ -1844,20 +1830,6 @@
           "on-device-option": {
             "headline": "Na urządzeniu, jeśli chcesz",
             "body": "W Ustawieniach → Mera Protocol możesz przenieść przetwarzanie na ten telefon, a następnie nic o Tobie nie wychodzi wcale. Najpierw pobiera model, chce dość nowy telefon i jest zauważalnie wolniejszy, co jest dokładnie dlatego, dlaczego to nie jest domyślne."
-          },
-          "decoys-are-a-switch": {
-            "headline": "Wabiki są wyłączone, dopóki ich nie włączysz",
-            "body": "Jest ustawienie zwane Wstrzykuj szum, które wysyła wymyślone tematy obok Twoich rzeczywistych, aby frazy przychodzące z telefonu nie mogły być czytane jako portret Ciebie. Co to robi teraz?",
-            "choose": {
-              "always-on": {
-                "label": "Uruchomione cicho w tle",
-                "feedback": "Nie, i wolę to poprawić niż zostawić jako wygodne założenie."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Nic, dopóki go nie włączysz",
-                "feedback": "Prawo. Jest wyłączony domyślnie: Ustawienia → Mera Protocol → Wstrzykuj szum."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "Co przechowujemy",
@@ -2215,13 +2187,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Wstrzykuj szum",
-            "body": "Wysyła wymyślone tematy obok Twoich rzeczywistych, więc frazy przychodzące z telefonu nie mogą być czytane jako portret. Cokolwiek, co pasowało tylko wabikowi, jest wyrzucane na tym telefonie przed zobaczeniem. Wyłączone domyślnie: może spowalniać generowanie tematu i trochę rozcieńczać kanał."
-          },
           "deeper-questions": {
             "headline": "Głębsze pytania",
             "body": "To zmienia to, co pyta Mera, nie to, co wysyła. Zamiast tego, co Ciebie interesuje, pyta, co chroniłeś swoją uwagę przed, i co decydujesz w tym miesiącu. Odpowiedzi to fakty jak każde inne i nigdy nie opuszczają tego telefonu, co jest dokładnie dlatego, dlaczego może je pytać."
+          },
+          "inject-noise": {
+            "headline": "Wstrzykiwanie szumu, wciąż w budowie",
+            "body": "Wysyłanie zmyślonych tematów obok prawdziwych utrudniłoby odczytanie fraz wychodzących z Twojego telefonu jako portretu jednej osoby. To ta część Mera Protocol, którą wciąż budujemy: nie jest jeszcze zbudowana, więc nie ma dla niej ustawienia, a dziś nic nie uzupełnia tego, co wysyła Twój telefon. Wolimy Ci to powiedzieć, niż pozwolić zakładać ochronę, której nie masz."
           },
           "web-search": {
             "headline": "Wyszukiwanie w sieci w czacie",

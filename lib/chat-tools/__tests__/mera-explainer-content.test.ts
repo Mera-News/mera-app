@@ -93,6 +93,18 @@ describe('mera-explainer-content — banned claims', () => {
     ).toBeNull();
   });
 
+  // The feature does not exist: nothing in the app generates, sends or discards
+  // decoy topics, and no setting turns one on. This file claimed otherwise until
+  // 2026-08, and the claim was a privacy protection users were told they had.
+  // Banned affirmatively (via `affirmsThat`) so an honest DENIAL stays sayable
+  // in prose and in this file's own header.
+  it('never claims Mera sends decoy or noise topics', () => {
+    expect(affirmsThat(/decoy/i)).toBeNull();
+    // `[-\s]?` and not a literal space: "inject-noise" / "noise-injection" are
+    // the forms this claim actually shipped in.
+    expect(affirmsThat(/noise[-\s]?injection|inject(?:ing|s)?[-\s]?noise/i)).toBeNull();
+  });
+
   // The disclosure must SURVIVE. A future edit that quietly drops the
   // limitations paragraph would leave copy that is technically unbanned above
   // but misleading by omission — which is how this invariant gets defeated.

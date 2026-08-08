@@ -16,6 +16,12 @@
 //     rule is one grep away from being broken by a well-meaning edit.
 //  3. Chapter `welcome` carries no mera logo — the user's explicit instruction
 //     for the pre-auth chapter.
+//  4. NO CHAPTER TEACHES A DECOY / NOISE-INJECTION FEATURE. Mera has none:
+//     nothing generates, sends or discards decoy topics, and there is no
+//     setting to turn one on. Two slides (`privacy/decoys-are-a-switch`,
+//     `protocol/inject-noise`) taught one anyway, and one of them pointed at
+//     Settings → Mera Protocol → Inject noise, a control that does not exist.
+//     They were deleted; this check is what stops them coming back.
 
 import fs from 'fs';
 import path from 'path';
@@ -183,6 +189,69 @@ describe('tutorial copy', () => {
       (suffix) => typeof lookupKey(en, `tutorials.${suffix}`) !== 'string',
     );
     expect(missing).toEqual([]);
+  });
+
+  // Deliberately narrow: "just noise" as a plain English word survives (see
+  // `signal/headline-cull`). What is banned is the FEATURE — decoy topics and
+  // the "Inject noise" control, neither of which exists in the app. The
+  // separator class matters: the two ids actually removed were
+  // `decoys-are-a-switch` and `inject-noise`, and a pattern that only matched a
+  // SPACE would have let the second one straight back in.
+  const BANNED_FEATURE = /decoy|inject(?:ing|s)?[-\s]?noise|noise[-\s]?injection/i;
+
+  it('the decoy guard matches the ids it exists to catch, and nothing else', () => {
+    // A guard that cannot fire is worse than no guard, so prove it on both
+    // sides before trusting the check below.
+    expect(BANNED_FEATURE.test('decoys-are-a-switch')).toBe(true);
+    expect(BANNED_FEATURE.test('inject-noise')).toBe(true);
+    expect(BANNED_FEATURE.test('Inject noise')).toBe(true);
+    expect(BANNED_FEATURE.test('noise-injection setting')).toBe(true);
+    // The plain English word, which `signal/headline-cull` legitimately uses.
+    expect(BANNED_FEATURE.test('a low-scoring one is just noise')).toBe(false);
+  });
+
+  // The noise-injection layer is in development. Exactly ONE slide may mention
+  // it — `protocol/inject-noise` — and only to say it is not built yet. A blanket
+  // ban would force that slide out; no guard at all would let the old "it
+  // protects you" copy back in, which is the failure this suite exists to
+  // prevent. So: allowlist the slide, and require its copy to disclaim.
+  const ALLOWED_SLIDE = 'protocol/inject-noise';
+  const NOT_YET_BUILT =
+    /not built|isn't built|being built|still building|not yet|does not exist yet|doesn't exist yet|in development|not shipped|cannot turn it on|can't turn it on/i;
+
+  it('the disclaimer pattern accepts real disclaimers and rejects a live claim', () => {
+    // Same reasoning as the guard self-test above: a disclaimer check that
+    // matches everything would silently re-permit the old copy.
+    expect(NOT_YET_BUILT.test('Noise injection, still being built')).toBe(true);
+    expect(NOT_YET_BUILT.test('it is not built yet, so there is no setting')).toBe(true);
+    expect(NOT_YET_BUILT.test('Turn on Inject noise to send decoys alongside them')).toBe(false);
+  });
+
+  it('mentions the noise layer in exactly one slide, and only to disclaim it', () => {
+    const offenders: string[] = [];
+    for (const chapter of TUTORIAL_CHAPTERS) {
+      for (const slide of chapter.slides) {
+        const qualified = `${chapter.id}/${slide.id}`;
+        if (BANNED_FEATURE.test(slide.id) && qualified !== ALLOWED_SLIDE) {
+          offenders.push(qualified);
+        }
+      }
+      for (const key of keysForChapter(chapter)) {
+        const value = lookupKey(en, key);
+        if (typeof value !== 'string' || !BANNED_FEATURE.test(value)) continue;
+        // A mention is only allowed inside the allowlisted slide's own subtree,
+        // and only when that same string also says the feature is not built.
+        const insideAllowed = key.includes('.slides.inject-noise.');
+        if (!insideAllowed || !NOT_YET_BUILT.test(value)) offenders.push(key);
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('the allowlisted slide exists, so the exemption cannot rot silently', () => {
+    const protocol = TUTORIAL_CHAPTERS.find((c) => c.id === 'protocol');
+    expect(protocol?.slides.some((s) => s.id === 'inject-noise')).toBe(true);
   });
 
   it('carries both plural forms for the counted strings', () => {

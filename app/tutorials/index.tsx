@@ -15,6 +15,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
  * on, and `app/logged-in/sources-publishers.tsx` already proves the query-param
  * shape works. No `_layout.tsx` and no `Stack.Screen` declaration is needed —
  * `app/logged-in/preferences/` is the precedent.
+ *
+ * ⚠️ TOP-LEVEL, NOT UNDER `/logged-in`. Owner's instruction: an unauthed reader
+ * must be able to learn everything about Mera, so this flow may not sit behind
+ * the session gate. Moving it out costs nothing, because nothing under
+ * `app/logged-in/_layout.tsx` was ever required here — the tutorials read only
+ * the settings KV (`lib/stores/tutorials-store.ts`), never Apollo, never the
+ * session. It also means the PIN lock does not cover this route, which is
+ * correct: there is no user data on it.
+ *
+ * The one thing that IS in the logged-in layout and matters is
+ * `FloatingChatHost`. Pushed from inside the app the host is still mounted
+ * underneath in the root stack, so "Ask Mera" works exactly as before; signed
+ * out there is no host, which is why `AskMeraButton` self-gates on the local
+ * identity rather than trusting its host.
  */
 export default function Tutorials() {
     return (
@@ -31,7 +45,7 @@ export default function Tutorials() {
                             onBack={() => router.back()}
                             onOpenChapter={(chapterId) =>
                                 router.push(
-                                    `/logged-in/tutorials/player?chapter=${chapterId}` as never,
+                                    `/tutorials/player?chapter=${chapterId}` as never,
                                 )
                             }
                         />

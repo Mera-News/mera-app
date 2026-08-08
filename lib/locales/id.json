@@ -102,7 +102,6 @@
       "Gerakkan tubuh Anda, sesuka hati.",
       "Ponsel Anda akan tetap di sini nanti. Hadirlah sekarang."
     ],
-    "noiseRemovedSummary": "{{count}} {{articleWord}} umpan palsu disaring sebelum analisis.",
     "processing": {
       "doneFlash": "Siap. Ini berita Anda",
       "errorFlash": "Kami tidak dapat memuat konten terbaru. Silakan coba lagi.",
@@ -131,14 +130,6 @@
             "Mera membawa berita ke perangkat Anda. Minat Anda tidak pernah meninggalkannya."
           ],
           "amberSubline": "Harap tetap di layar ini."
-        },
-        "noiseRemoval": {
-          "shortName": "Menghapus cerita palsu",
-          "tooltip": "Menyaring cerita palsu yang diambil berdasarkan topik kebisingan. Hanya terjadi ketika injeksi kebisingan aktif.",
-          "headlines": [
-            "Menyaring cerita palsu dari feed Anda…",
-            "Injeksi kebisingan mengirimkan topik palsu bersama topik asli Anda. Kami sekarang menghapus cerita yang hanya cocok dengan topik palsu tersebut."
-          ]
         },
         "cloudRelevance": {
           "shortName": "Menghitung relevansi",
@@ -399,9 +390,6 @@
     "cancelDownload": "Batalkan Unduhan",
     "retryDownload": "Coba Unduh Ulang",
     "updateTo": "Perbarui ke {{modelName}}",
-    "injectNoiseTitle": "Injeksi Kebisingan",
-    "injectNoiseDescription": "Mengirimkan topik palsu bersama minat asli Anda agar backend tidak dapat mengidentifikasi siapa Anda dari daftar topik. Artikel yang hanya cocok dengan topik palsu dibuang sebelum sampai ke Anda.",
-    "injectNoiseBeta": "Beta: dapat memperlambat pembuatan topik dan mengurangi relevansi feed.",
     "relevanceV3Title": "Gunakan penilaian relevansi v3",
     "relevanceV3On": "Penilaian satu-pass: minat dan dampak, seimbang",
     "relevanceV3Off": "Penilaian cloud dua-pass klasik",
@@ -557,15 +545,13 @@
     "tabPersona": "Persona",
     "tabSources": "Sumber",
     "tabPreferences": "Preferensi",
-    "privacyOnDevice": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda: inferensi AI berjalan sepenuhnya di perangkat melalui Mera Protocol. Setiap kali Anda mengambil berita, hanya frasa topik Anda yang dikirim, tanpa ID pengguna (aktifkan Injeksi Kebisingan di atas untuk mengirim topik palsu bersama topik Anda). Frasa tersebut disimpan sementara di server kami dengan kunci berupa teksnya saja dan dihapus setelah 14 hari tanpa permintaan; tidak ada yang mencatat bahwa Andalah yang memintanya. Satu-satunya data yang kami simpan tentang Anda adalah email login, status langganan, dan per-hari jumlah artikel yang dianalisis yang digunakan untuk memberlakukan paket Anda. Sesi obrolan dimulai dari awal dan tidak disimpan. Satu-satunya pengecualian adalah jika Anda mengirimkan permintaan buka blokir, transkripsi yang Anda lampirkan akan disimpan untuk ditinjau. Berganti perangkat atau keluar akun berarti persona Anda harus dibangun ulang. Backend kami belum dipublikasikan; kami memindahkan setiap layanan yang menyentuh data Anda ke repositori source-available dan mengharapkannya publik sebelum September 2026. Sampai saat itu, satu-satunya hal yang bertumpu pada kepercayaan adalah bahwa kami tidak menyimpan catatan yang menghubungkan Anda dengan topik Anda. Mera dibangun di Belanda di bawah GDPR, dan tidak menyimpan data Anda memang tujuan rancangan ini.",
-    "privacyCloud": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda. Inferensi cloud menggunakan Trusted Execution Environments (TEE) yang terenkripsi: data Anda dienkripsi di perangkat ke kunci yang enklave publikasikan, diproses dalam enklave terisolasi, dan hanya didekripsi di perangkat Anda. Lebih tepatnya: aplikasi belum memeriksa atestasi terhadap vendor perangkat keras, jadi untuk saat ini Anda mempercayai kami dan operator enklave daripada chip; membuat aplikasi memverifikasinya dan menolak untuk melanjutkan ada di peta jalan kami. Setiap kali Anda mengambil berita, hanya frasa topik Anda yang dikirim, tanpa ID pengguna (aktifkan Injeksi Kebisingan di atas untuk mengirim topik palsu bersama topik Anda). Frasa tersebut disimpan sementara di server kami dengan kunci berupa teksnya saja dan dihapus setelah 14 hari tanpa permintaan; tidak ada yang mencatat bahwa Andalah yang memintanya. Satu-satunya data yang kami simpan tentang Anda adalah email login, status langganan, dan per-hari jumlah artikel yang dianalisis yang digunakan untuk memberlakukan paket Anda. Sesi obrolan dimulai dari awal dan tidak disimpan. Satu-satunya pengecualian adalah jika Anda mengirimkan permintaan buka blokir, transkripsi yang Anda lampirkan akan disimpan untuk ditinjau. Berganti perangkat atau keluar akun berarti persona Anda harus dibangun ulang. Backend kami belum dipublikasikan; kami memindahkan setiap layanan yang menyentuh data Anda ke repositori source-available dan mengharapkannya publik sebelum September 2026. Mera dibangun di Belanda di bawah GDPR, dan tidak menyimpan data Anda memang tujuan rancangan ini.",
+    "privacyOnDevice": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda: inferensi AI berjalan sepenuhnya di perangkat melalui Mera Protocol. Setiap kali Anda mengambil berita, hanya frasa topik Anda yang dikirim, tanpa ID pengguna. Frasa tersebut disimpan sementara di server kami dengan kunci berupa teksnya saja dan dihapus setelah 14 hari tanpa permintaan; tidak ada yang mencatat bahwa Andalah yang memintanya. Satu-satunya data yang kami simpan tentang Anda adalah email login, status langganan, dan per-hari jumlah artikel yang dianalisis yang digunakan untuk memberlakukan paket Anda. Sesi obrolan dimulai dari awal dan tidak disimpan. Satu-satunya pengecualian adalah jika Anda mengirimkan permintaan buka blokir, transkripsi yang Anda lampirkan akan disimpan untuk ditinjau. Berganti perangkat atau keluar akun berarti persona Anda harus dibangun ulang. Backend kami belum dipublikasikan; kami memindahkan setiap layanan yang menyentuh data Anda ke repositori source-available dan mengharapkannya publik sebelum September 2026. Sampai saat itu, satu-satunya hal yang bertumpu pada kepercayaan adalah bahwa kami tidak menyimpan catatan yang menghubungkan Anda dengan topik Anda. Mera dibangun di Belanda di bawah GDPR, dan tidak menyimpan data Anda memang tujuan rancangan ini.",
+    "privacyCloud": "Fakta dan topik Anda disimpan secara eksklusif di perangkat Anda. Inferensi cloud menggunakan Trusted Execution Environments (TEE) yang terenkripsi: data Anda dienkripsi di perangkat ke kunci yang enklave publikasikan, diproses dalam enklave terisolasi, dan hanya didekripsi di perangkat Anda. Lebih tepatnya: aplikasi belum memeriksa atestasi terhadap vendor perangkat keras, jadi untuk saat ini Anda mempercayai kami dan operator enklave daripada chip; membuat aplikasi memverifikasinya dan menolak untuk melanjutkan ada di peta jalan kami. Setiap kali Anda mengambil berita, hanya frasa topik Anda yang dikirim, tanpa ID pengguna. Frasa tersebut disimpan sementara di server kami dengan kunci berupa teksnya saja dan dihapus setelah 14 hari tanpa permintaan; tidak ada yang mencatat bahwa Andalah yang memintanya. Satu-satunya data yang kami simpan tentang Anda adalah email login, status langganan, dan per-hari jumlah artikel yang dianalisis yang digunakan untuk memberlakukan paket Anda. Sesi obrolan dimulai dari awal dan tidak disimpan. Satu-satunya pengecualian adalah jika Anda mengirimkan permintaan buka blokir, transkripsi yang Anda lampirkan akan disimpan untuk ditinjau. Berganti perangkat atau keluar akun berarti persona Anda harus dibangun ulang. Backend kami belum dipublikasikan; kami memindahkan setiap layanan yang menyentuh data Anda ke repositori source-available dan mengharapkannya publik sebelum September 2026. Mera dibangun di Belanda di bawah GDPR, dan tidak menyimpan data Anda memang tujuan rancangan ini.",
     "privacyPolicy": "Kebijakan Privasi",
     "privacyNoticeTitle": "Privasi Anda",
     "updatingTopics": "Memperbarui topik... {{completed}}/{{total}}",
     "emptyStateMessage": "Jawab beberapa pertanyaan untuk membuat profil Anda",
     "factsHeading": "Fakta",
-    "noiseSwitchLabel": "Kebisingan",
-    "noiseBadge": "kebisingan",
     "generatingTopics": "Membuat topik...",
     "topicGenFailed": "Pembuatan topik gagal: {{error}}",
     "clusterCount": "{{count}} Berita",
@@ -980,7 +966,6 @@
     "published": "Dipublikasikan",
     "analysed": "Dianalisis",
     "relevant": "Relevan untuk Anda",
-    "noiseRemoved": "Noise dihapus",
     "lastProcessed": "Terakhir diproses",
     "errorTitle": "Masalah penilaian",
     "openA11y": "Buka status feed",
@@ -1577,6 +1562,7 @@
     "askMera": "Tanya Mera",
     "chatIntro": "Tanyakan apa pun tentang cara kerja Mera. Saya dapat menjelaskan, tetapi saya tidak dapat mengubah apa pun dari sini.",
     "launchButton": "Ikuti tur",
+    "learnAboutMera": "Cara kerja Mera",
     "hintReveal": "Ketuk masing-masing.",
     "hintRevealSome": "Ketuk setidaknya {{count}}.",
     "hintChoose": "Pilih satu.",
@@ -1818,20 +1804,6 @@
           "on-device-option": {
             "headline": "Di perangkat, jika Anda menginginkannya",
             "body": "Di Pengaturan → Mera Protocol Anda dapat memindahkan pemrosesan ke ponsel ini, dan kemudian tidak ada apa pun tentang Anda yang pergi. Itu mengunduh model terlebih dahulu, menginginkan ponsel yang cukup baru, dan terlihat lebih lambat secara nyata, yang persis mengapa itu bukan default."
-          },
-          "decoys-are-a-switch": {
-            "headline": "Umpan adalah sakelar sampai Anda menyalakannya",
-            "body": "Ada pengaturan yang disebut Inject noise yang mengirimkan topik yang diciptakan bersama topik nyata Anda, jadi frasa yang tiba dari ponsel Anda tidak dapat dibaca sebagai potret Anda. Apa yang dilakukannya sekarang?",
-            "choose": {
-              "always-on": {
-                "label": "Berjalan diam di latar belakang",
-                "feedback": "Tidak, dan kami lebih suka memperbaiki itu daripada membiarkannya sebagai asumsi yang nyaman."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Tidak ada apa-apa, sampai Anda menyalakannya",
-                "feedback": "Benar. Ini nonaktif secara default: Pengaturan → Mera Protocol → Inject noise."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "Apa yang kami simpan",
@@ -2189,13 +2161,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Inject noise",
-            "body": "Mengirimkan topik yang diciptakan di samping topik nyata Anda, jadi frasa yang tiba dari ponsel Anda tidak dapat dibaca sebagai potret. Apa pun yang cocok hanya dengan umpan adalah tempat sampah di ponsel ini sebelum Anda pernah melihatnya. Nonaktif secara default: itu dapat memperlambat pembuatan topik dan sedikit mencairkan feed."
-          },
           "deeper-questions": {
             "headline": "Pertanyaan lebih dalam",
             "body": "Ini mengubah apa yang Mera tanyakan kepada Anda, bukan apa yang dikirimnya. Alih-alih apa yang Anda minati, ia menanyakan apa yang Anda lindungi dari perhatian Anda dan apa yang Anda putuskan bulan ini. Jawaban adalah fakta seperti yang lain dan tidak pernah meninggalkan ponsel ini, yang persis mengapa ia dapat menanyakannya."
+          },
+          "inject-noise": {
+            "headline": "Injeksi derau, masih dibangun",
+            "body": "Mengirim topik rekaan bersama topik asli Anda akan membuat frasa yang keluar dari ponsel Anda lebih sulit dibaca sebagai potret satu orang. Ini bagian dari Mera Protocol yang masih kami bangun: belum dibangun, jadi tidak ada pengaturannya dan hari ini tidak ada yang melapisi apa yang dikirim ponsel Anda. Kami lebih memilih memberi tahu Anda daripada membiarkan Anda mengira punya perlindungan yang belum ada."
           },
           "web-search": {
             "headline": "Pencarian web dalam chat",

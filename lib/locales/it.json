@@ -102,7 +102,6 @@
       "Muovi il corpo, come ti fa stare bene.",
       "Il tuo telefono sarà qui dopo. Sii presente ora."
     ],
-    "noiseRemovedSummary": "{{count}} {{articleWord}} esca filtrati prima dell'analisi.",
     "processing": {
       "doneFlash": "Tutto pronto. Ecco le tue notizie",
       "errorFlash": "Non è stato possibile caricare i contenuti più recenti. Per favore riprova.",
@@ -131,14 +130,6 @@
             "Mera porta le notizie sul tuo dispositivo. I tuoi interessi non lo abbandonano mai."
           ],
           "amberSubline": "Quasi fatto, rimani su questa schermata."
-        },
-        "noiseRemoval": {
-          "shortName": "Rimuovo gli articoli esca",
-          "tooltip": "Filtraggio delle storie esca recuperate in base ai topic rumore. Avviene solo quando l'iniezione di rumore è attiva.",
-          "headlines": [
-            "Sto filtrando le storie esca dal tuo feed…",
-            "L'iniezione di rumore ha inviato topic fittizi insieme ai tuoi veri. Ora eliminiamo le storie che corrispondevano solo a quei topic fittizi."
-          ]
         },
         "cloudRelevance": {
           "shortName": "Calcolo la rilevanza",
@@ -399,9 +390,6 @@
     "cancelDownload": "Annulla download",
     "retryDownload": "Riprova download",
     "updateTo": "Aggiorna a {{modelName}}",
-    "injectNoiseTitle": "Iniezione di rumore",
-    "injectNoiseDescription": "Invia topic fittizi insieme ai tuoi interessi reali in modo che il backend non possa identificarti dalla tua lista di topic. Gli articoli che corrispondono solo ai topic fittizi vengono scartati prima di raggiungerti.",
-    "injectNoiseBeta": "Beta: potrebbe rallentare la generazione dei topic e ridurre la rilevanza del feed.",
     "relevanceV3Title": "Usa valutazione rilevanza v3",
     "relevanceV3On": "Valutazione single-pass: interessi e impatto, equilibrato",
     "relevanceV3Off": "Valutazione cloud two-pass classica",
@@ -557,15 +545,13 @@
     "tabPersona": "Profilo",
     "tabSources": "Fonti",
     "tabPreferences": "Preferenze",
-    "privacyOnDevice": "I tuoi dati e i tuoi temi sono memorizzati esclusivamente sul tuo dispositivo: l'inferenza IA gira interamente sul dispositivo tramite Mera Protocol. Ogni volta che richiedi notizie vengono inviati solo i tuoi temi, senza identificativo utente (attiva l'Iniezione di rumore sopra per inviare esche insieme a loro). Quei temi restano in cache sui nostri server indicizzati solo dal testo e vengono eliminati dopo 14 giorni senza richieste; nulla registra che sia stato tu a chiederli. Ciò che conserviamo su di te è l'email di accesso, lo stato dell'abbonamento e un conteggio giornaliero degli articoli analizzati per applicare il tuo piano. Ogni sessione di chat è nuova e non viene salvata. L'unica eccezione è che se invii una richiesta di sblocco, la trascrizione che allegi viene archiviata per revisione. Cambiare dispositivo o disconnettersi significa ricostruire la tua persona. Il nostro backend non è ancora pubblicato; stiamo trasferendo ogni servizio che tocca i tuoi dati in un repository source-available e ci aspettiamo di renderlo pubblico prima di settembre 2026. Fino ad allora, l'unica cosa su cui fai affidamento è che non conserviamo alcun record che ti colleghi ai tuoi temi. Mera è sviluppato nei Paesi Bassi sotto il GDPR dell'UE e non trattenere i tuoi dati è proprio lo scopo del design.",
-    "privacyCloud": "I tuoi dati e i tuoi temi sono memorizzati esclusivamente sul tuo dispositivo. L'inferenza cloud usa Trusted Execution Environments (TEE) cifrati: i tuoi dati vengono cifrati sul dispositivo con la chiave che l'enclave pubblica, elaborati in un enclave isolato e decifrati solo sul tuo dispositivo. Essendo precisi: l'app non verifica ancora tale attestazione rispetto al fornitore dell'hardware, quindi per ora ti fidi di noi e dell'operatore dell'enclave piuttosto che del chip; far verificare all'app e rifiutare di continuare è nella nostra roadmap. Ogni volta che richiedi notizie vengono inviati solo i tuoi temi, senza identificativo utente (attiva l'Iniezione di rumore sopra per inviare esche insieme a loro). Quei temi restano in cache sui nostri server indicizzati solo dal testo e vengono eliminati dopo 14 giorni senza richieste; nulla registra che sia stato tu a chiederli. Ciò che conserviamo su di te è l'email di accesso, lo stato dell'abbonamento e un conteggio giornaliero degli articoli analizzati per applicare il tuo piano. Ogni sessione di chat è nuova e non viene salvata. L'unica eccezione è che se invii una richiesta di sblocco, la trascrizione che allegi viene archiviata per revisione. Cambiare dispositivo o disconnettersi significa ricostruire la tua persona. Il nostro backend non è ancora pubblicato; stiamo trasferendo ogni servizio che tocca i tuoi dati in un repository source-available e ci aspettiamo di renderlo pubblico prima di settembre 2026. Mera è sviluppato nei Paesi Bassi sotto il GDPR dell'UE e non trattenere i tuoi dati è proprio lo scopo del design.",
+    "privacyOnDevice": "I tuoi dati e i tuoi temi sono memorizzati esclusivamente sul tuo dispositivo: l'inferenza IA gira interamente sul dispositivo tramite Mera Protocol. Ogni volta che richiedi notizie vengono inviati solo i tuoi temi, senza identificativo utente. Quei temi restano in cache sui nostri server indicizzati solo dal testo e vengono eliminati dopo 14 giorni senza richieste; nulla registra che sia stato tu a chiederli. Ciò che conserviamo su di te è l'email di accesso, lo stato dell'abbonamento e un conteggio giornaliero degli articoli analizzati per applicare il tuo piano. Ogni sessione di chat è nuova e non viene salvata. L'unica eccezione è che se invii una richiesta di sblocco, la trascrizione che allegi viene archiviata per revisione. Cambiare dispositivo o disconnettersi significa ricostruire la tua persona. Il nostro backend non è ancora pubblicato; stiamo trasferendo ogni servizio che tocca i tuoi dati in un repository source-available e ci aspettiamo di renderlo pubblico prima di settembre 2026. Fino ad allora, l'unica cosa su cui fai affidamento è che non conserviamo alcun record che ti colleghi ai tuoi temi. Mera è sviluppato nei Paesi Bassi sotto il GDPR dell'UE e non trattenere i tuoi dati è proprio lo scopo del design.",
+    "privacyCloud": "I tuoi dati e i tuoi temi sono memorizzati esclusivamente sul tuo dispositivo. L'inferenza cloud usa Trusted Execution Environments (TEE) cifrati: i tuoi dati vengono cifrati sul dispositivo con la chiave che l'enclave pubblica, elaborati in un enclave isolato e decifrati solo sul tuo dispositivo. Essendo precisi: l'app non verifica ancora tale attestazione rispetto al fornitore dell'hardware, quindi per ora ti fidi di noi e dell'operatore dell'enclave piuttosto che del chip; far verificare all'app e rifiutare di continuare è nella nostra roadmap. Ogni volta che richiedi notizie vengono inviati solo i tuoi temi, senza identificativo utente. Quei temi restano in cache sui nostri server indicizzati solo dal testo e vengono eliminati dopo 14 giorni senza richieste; nulla registra che sia stato tu a chiederli. Ciò che conserviamo su di te è l'email di accesso, lo stato dell'abbonamento e un conteggio giornaliero degli articoli analizzati per applicare il tuo piano. Ogni sessione di chat è nuova e non viene salvata. L'unica eccezione è che se invii una richiesta di sblocco, la trascrizione che allegi viene archiviata per revisione. Cambiare dispositivo o disconnettersi significa ricostruire la tua persona. Il nostro backend non è ancora pubblicato; stiamo trasferendo ogni servizio che tocca i tuoi dati in un repository source-available e ci aspettiamo di renderlo pubblico prima di settembre 2026. Mera è sviluppato nei Paesi Bassi sotto il GDPR dell'UE e non trattenere i tuoi dati è proprio lo scopo del design.",
     "privacyPolicy": "Informativa sulla privacy",
     "privacyNoticeTitle": "La tua privacy",
     "updatingTopics": "Aggiornamento argomenti... {{completed}}/{{total}}",
     "emptyStateMessage": "Rispondi ad alcune domande per creare il tuo profilo",
     "factsHeading": "Fatti",
-    "noiseSwitchLabel": "Rumore",
-    "noiseBadge": "rumore",
     "generatingTopics": "Generazione argomenti...",
     "topicGenFailed": "Generazione argomenti non riuscita: {{error}}",
     "clusterCount": "{{count}} Notizie",
@@ -980,7 +966,6 @@
     "published": "Pubblicato",
     "analysed": "Analizzati",
     "relevant": "Rilevanti per te",
-    "noiseRemoved": "Rumore rimosso",
     "lastProcessed": "Ultima elaborazione",
     "errorTitle": "Problema di punteggio",
     "openA11y": "Apri stato del feed",
@@ -1577,6 +1562,7 @@
     "askMera": "Chiedi a Mera",
     "chatIntro": "Chiedimi qualsiasi cosa su come funziona Mera. Posso spiegare, ma non posso cambiare niente da qui.",
     "launchButton": "Fai il tour",
+    "learnAboutMera": "Come funziona Mera",
     "hintReveal": "Tocca ognuno.",
     "hintRevealSome": "Tocca almeno {{count}}.",
     "hintChoose": "Scegline uno.",
@@ -1818,20 +1804,6 @@
           "on-device-option": {
             "headline": "On-device, se lo vuoi",
             "body": "In Impostazioni; Mera Protocol puoi spostare l'elaborazione su questo telefono, e allora niente su di te se ne va affatto. Scarica prima un modello, vuole un telefono piuttosto recente, e è notevolmente più lento, il quale è esattamente il motivo per cui non è l'impostazione predefinita."
-          },
-          "decoys-are-a-switch": {
-            "headline": "I decoys sono spenti finché non li accendi",
-            "body": "C'è un'impostazione chiamata Iniezione di rumore che invia argomenti inventati insieme ai tuoi veri, così le frasi che arrivano dal tuo telefono non possono essere lette come un ritratto di te. Cosa sta facendo al momento?",
-            "choose": {
-              "always-on": {
-                "label": "Correre tranquillamente nello sfondo",
-                "feedback": "No, e preferiremo correggere piuttosto che lasciarlo come un presupposto confortevole."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Niente, finché non lo accendi",
-                "feedback": "Giusto. È spento per impostazione predefinita: Impostazioni; Mera Protocol; Iniezione di rumore."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "Cosa conserviamo",
@@ -2189,13 +2161,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Iniezione di rumore",
-            "body": "Invia argomenti inventati insieme ai tuoi veri, così le frasi che arrivano dal tuo telefono non possono essere lette come un ritratto. Qualsiasi cosa abbinata solo a un decoy viene gettata via su questo telefono prima di vederla. Spento per impostazione predefinita: può rallentare la generazione di argomenti e diluire un po' il feed."
-          },
           "deeper-questions": {
             "headline": "Domande più profonde",
             "body": "Questo cambia quello che Mera ti chiede, non cosa invia. Invece di cosa sei interessato, chiede cosa stai proteggendo la tua attenzione da e cosa stai decidendo questo mese. Le risposte sono fatti come qualsiasi altro e non lasciano mai questo telefono, il quale è precisamente il motivo per cui può chiedertelo."
+          },
+          "inject-noise": {
+            "headline": "Iniezione di rumore, ancora in costruzione",
+            "body": "Inviare temi inventati insieme a quelli reali renderebbe le frasi in uscita dal tuo telefono più difficili da leggere come il ritratto di una persona. È la parte del Mera Protocol che stiamo ancora costruendo: non è ancora costruita, quindi non esiste alcuna impostazione e oggi nulla imbottisce ciò che il tuo telefono invia. Preferiamo dirtelo piuttosto che lasciarti dare per scontata una protezione che non hai."
           },
           "web-search": {
             "headline": "Ricerca web in chat",

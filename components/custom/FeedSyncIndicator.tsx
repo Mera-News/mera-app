@@ -35,14 +35,12 @@ import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
-import { useInjectNoise } from '@/lib/stores/mera-protocol-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
 import { getAiAccess } from '@/lib/stores/subscription-store';
 import {
     useForYouAsyncJobPhase,
     useForYouDailyLimitResetAt,
     useForYouDeviceProcessing,
-    useForYouNoisyDiscardedCount,
     useForYouScoringError,
     useForYouSyncStatusMessage,
     useForYouUnscoredCount,
@@ -242,8 +240,6 @@ const FeedSyncIndicator: React.FC<FeedSyncIndicatorProps> = ({
     const unscoredCount = useForYouUnscoredCount();
     const scoringError = useForYouScoringError();
     const dailyLimitResetAt = useForYouDailyLimitResetAt();
-    const noisyDiscardedCount = useForYouNoisyDiscardedCount();
-    const injectNoiseEnabled = useInjectNoise();
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
 
     // Evaluated at render rather than off a ticking clock — same trade-off
@@ -262,8 +258,6 @@ const FeedSyncIndicator: React.FC<FeedSyncIndicatorProps> = ({
                 processedCount={articleCount}
                 analysedCount={analysedCount}
                 relevantCount={relevantCount}
-                noiseRemovedCount={noisyDiscardedCount ?? 0}
-                injectNoiseEnabled={injectNoiseEnabled}
                 lastProcessedLabel={lastProcessedLabel}
             />
         </>

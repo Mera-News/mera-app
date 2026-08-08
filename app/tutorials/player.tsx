@@ -19,6 +19,12 @@ import { View } from 'react-native';
  * `slide_from_right` for free. The PRE-auth host is a Modal for the opposite
  * reason (no stack to push onto); see `TutorialModalHost`.
  *
+ * ⚠️ TOP-LEVEL, NOT UNDER `/logged-in` — see `./index.tsx` for why. It is pushed
+ * onto the ROOT stack now, so when it is opened from inside the app the
+ * logged-in tree (and its `FloatingChatHost`) stays mounted below it and Ask
+ * Mera still lands somewhere real. Signed out there is no host at all, which
+ * `AskMeraButton` handles itself.
+ *
  * No `SafeAreaView` here: the player reads the insets itself, because the
  * pre-auth Modal host has no SafeAreaView to inherit from and both hosts must
  * lay out identically.

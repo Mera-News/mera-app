@@ -86,8 +86,6 @@ const detailProps = {
     processedCount: 0,
     analysedCount: 0,
     relevantCount: 0,
-    noiseRemovedCount: 0,
-    injectNoiseEnabled: false,
     lastProcessedLabel: null,
 };
 

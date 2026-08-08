@@ -22,10 +22,6 @@ interface FeedStatusSheetProps {
     readonly analysedCount: number;
     /** Analysed rows above the render gate. */
     readonly relevantCount: number;
-    /** Decoy clusters dropped by the noise-removal step. */
-    readonly noiseRemovedCount: number;
-    /** Whether the inject-noise beta setting is on (gates the noise row). */
-    readonly injectNoiseEnabled: boolean;
     /** Human relative label for the last finished processing run, or null. */
     readonly lastProcessedLabel: string | null;
 }
@@ -42,8 +38,6 @@ const FeedStatusSheet: React.FC<FeedStatusSheetProps> = ({
     processedCount,
     analysedCount,
     relevantCount,
-    noiseRemovedCount,
-    injectNoiseEnabled,
     lastProcessedLabel,
 }) => {
     const { t } = useTranslation();
@@ -62,8 +56,6 @@ const FeedStatusSheet: React.FC<FeedStatusSheetProps> = ({
                         processedCount={processedCount}
                         analysedCount={analysedCount}
                         relevantCount={relevantCount}
-                        noiseRemovedCount={noiseRemovedCount}
-                        injectNoiseEnabled={injectNoiseEnabled}
                         lastProcessedLabel={lastProcessedLabel}
                         // The body's daily-limit "Manage" pill navigates; this
                         // modal must come down first or the pushed screen lands

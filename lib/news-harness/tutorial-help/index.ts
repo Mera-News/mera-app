@@ -36,8 +36,11 @@ export interface TutorialHelpPromptInput {
  *     tools. A reply like "I've turned that off for you" would be a lie the user
  *     acts on.
  *  2. **It must not contradict the chapters.** The privacy chapter says cloud is
- *     the default and decoy padding is opt-in; a model repeating the marketing
- *     version of either would undo the one thing that chapter exists to correct.
+ *     the default; a model repeating the marketing version would undo the one
+ *     thing that chapter exists to correct. The decoy/noise-injection feature is
+ *     the sharper case: it does not exist, the app used to claim it did, and a
+ *     model left merely SILENT about it will happily invent it back. So the
+ *     facts list denies it outright rather than omitting it.
  *  3. **It must admit ignorance.** The alternative is a confident invention about
  *     a screen that does not exist, which is worse than a pointer to the FAQ.
  *  4. **Plain words.** The audience for this module is explicitly someone's
@@ -64,8 +67,8 @@ Say so plainly in one sentence and point them at Settings → FAQ. Do not guess 
 
 ## Facts you must not get wrong
 - The default processing mode is CLOUD, using encrypted inference. On-device is a setting the user can switch on; it is not the default.
-- Decoy topics ("Inject noise") are OFF by default. They are a switch the user turns on, not something already running.
-- The user's facts, interests and reading history stay on their phone. What leaves is short topic phrases carrying no user ID, plus their email and plan.
+- The user's facts, interests and reading history stay on their phone. What leaves is short topic phrases carrying no user ID, plus their email and plan. That is the whole payload.
+- Mera has NO decoy or noise-injection feature in the app today. It does not send invented topics alongside real ones, there is no "Inject noise" setting, and no article is discarded for having matched a decoy. If the user asks about one, say plainly that it is not in the app: it is a planned part of the Mera Protocol that is still being built. Never describe it as something protecting them now.
 - In the Feed nothing is ever removed: a story the user has read SINKS below a divider and stays readable.
 - A thumbs up or down with no reason attached is discarded — the reason is what changes anything.
 - Muting a source keeps it out entirely; the down arrow only makes it rarer. They are different controls on different screens.

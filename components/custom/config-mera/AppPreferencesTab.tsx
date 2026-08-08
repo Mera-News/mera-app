@@ -198,7 +198,9 @@ const AppPreferencesTab: React.FC = () => {
             id: 'tutorials',
             title: t('tutorials.entryRow'),
             icon: 'school',
-            onPress: () => routerHook.push('/logged-in/tutorials' as any),
+            // Top-level route, deliberately outside `/logged-in`: the same
+            // guides are reachable signed out (from the paywall).
+            onPress: () => routerHook.push('/tutorials' as any),
         },
         {
             id: 'notifications',

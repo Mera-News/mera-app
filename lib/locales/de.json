@@ -102,7 +102,6 @@
       "Bewegen Sie sich, so wie es sich für Sie richtig anfühlt.",
       "Ihr Telefon ist später noch da. Seien Sie jetzt im Moment."
     ],
-    "noiseRemovedSummary": "{{count}} Ablenkungsartikel ({{articleWord}}) wurden vor der Analyse herausgefiltert.",
     "processing": {
       "doneFlash": "Alles bereit: Hier sind Ihre Nachrichten",
       "errorFlash": "Die neuesten Inhalte konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
@@ -131,14 +130,6 @@
             "Mera bringt die Nachrichten auf Ihr Gerät. Ihre Interessen verlassen es nie."
           ],
           "amberSubline": "Bitte lassen Sie diesen Bildschirm geöffnet."
-        },
-        "noiseRemoval": {
-          "shortName": "Ablenker entfernen",
-          "tooltip": "Ablenkungsartikel, die zu den Rausch-Themen passen, werden herausgefiltert. Geschieht nur, wenn Noise Injection aktiviert ist.",
-          "headlines": [
-            "Ablenkungsartikel werden aus Ihrem Feed gefiltert…",
-            "Noise Injection hat Köder-Themen zusammen mit Ihren echten eingereicht. Wir entfernen nun die Artikel, die nur zu diesen Ködern passen."
-          ]
         },
         "cloudRelevance": {
           "shortName": "Relevanz berechnen",
@@ -399,9 +390,6 @@
     "cancelDownload": "Download abbrechen",
     "retryDownload": "Download wiederholen",
     "updateTo": "Auf {{modelName}} aktualisieren",
-    "injectNoiseTitle": "Rauschen einschleusen",
-    "injectNoiseDescription": "Sendet Köder-Themen zusammen mit Ihren echten Interessen, damit das Backend nicht anhand Ihrer Themenliste feststellen kann, wer Sie sind. Artikel, die nur zu Köder-Themen passen, werden herausgefiltert, bevor sie Sie erreichen.",
-    "injectNoiseBeta": "Beta: kann die Themengenerierung verlangsamen und die Feed-Relevanz verringern.",
     "relevanceV3Title": "Relevanz-Bewertung v3 verwenden",
     "relevanceV3On": "Einmaliges Scoring: Interessen und Auswirkungen, ausgeglichen",
     "relevanceV3Off": "Klassisches Zwei-Pass-Cloud-Scoring",
@@ -557,15 +545,13 @@
     "tabPersona": "Persona",
     "tabSources": "Quellen",
     "tabPreferences": "Einstellungen",
-    "privacyOnDevice": "Ihre Fakten und Themen werden ausschließlich auf Ihrem Gerät gespeichert: Die KI-Inferenz läuft vollständig auf dem Gerät über das Mera Protocol. Wenn Sie Nachrichten abrufen, werden nur Ihre Themenphrasen ohne Nutzerkennung gesendet (schalten Sie Rauschen einschleusen oben ein, um Köder-Themen daneben zu senden). Diese Phrasen werden auf unseren Servern nur anhand des Textes adressiert, zwischengespeichert und nach 14 Tagen ohne Verwendung gelöscht; nirgends wird festgehalten, dass Sie die Anfrage gestellt haben. Was wir über Sie speichern, ist Ihre Login-E-Mail-Adresse, Ihr Abonnementstatus und eine tägliche Anzahl analysierter Artikel zur Durchsetzung Ihres Plans. Chat-Sitzungen starten neu und werden nicht gespeichert, mit einer Ausnahme: Wenn Sie eine Entsperrungsanfrage einreichen, wird das Transkript, das Sie beifügen, zur Überprüfung gespeichert. Das Wechseln von Geräten oder das Abmelden bedeutet, dass Sie Ihre Persona neu aufbauen müssen. Unser Backend ist noch nicht veröffentlicht; wir verschieben jeden Service, der Ihre Daten berührt, in ein quelloffen-zugängliches Repository und erwarten die Veröffentlichung vor September 2026. Bis dahin ist das Einzige, das Sie auf Vertrauen nehmen, dass wir keine Aufzeichnung führen, die Sie mit Ihren Themen verknüpft. Mera wird in den Niederlanden unter der EU-DSGVO entwickelt, und keine Daten zu halten ist der Sinn dieses Designs.",
-    "privacyCloud": "Ihre Fakten und Themen werden ausschließlich auf Ihrem Gerät gespeichert. Die Cloud-Inferenz nutzt verschlüsselte Trusted Execution Environments (TEE): Ihre Daten werden auf dem Gerät mit dem Schlüssel verschlüsselt, den die Enklave veröffentlicht, in einer isolierten Enklave verarbeitet und nur auf Ihrem Gerät entschlüsselt. Um präzise zu sein: Die App prüft die Attest-Angabe derzeit nicht gegen den Hardware-Hersteller, daher vertrauen Sie vorerst uns und dem Enklave-Betreiber statt dem Chip; die App so zu ändern, dass sie dies prüft und die Weiterführung verweigert, steht auf unserer Roadmap. Wenn Sie Nachrichten abrufen, werden nur Ihre Themenphrasen ohne Nutzerkennung gesendet (schalten Sie Rauschen einschleusen oben ein, um Köder-Themen daneben zu senden). Diese Phrasen werden auf unseren Servern nur anhand des Textes adressiert, zwischengespeichert und nach 14 Tagen ohne Verwendung gelöscht; nirgends wird festgehalten, dass Sie die Anfrage gestellt haben. Was wir über Sie speichern, ist Ihre Login-E-Mail-Adresse, Ihr Abonnementstatus und eine tägliche Anzahl analysierter Artikel zur Durchsetzung Ihres Plans. Chat-Sitzungen starten neu und werden nicht gespeichert, mit einer Ausnahme: Wenn Sie eine Entsperrungsanfrage einreichen, wird das Transkript, das Sie beifügen, zur Überprüfung gespeichert. Das Wechseln von Geräten oder das Abmelden bedeutet, dass Sie Ihre Persona neu aufbauen müssen. Unser Backend ist noch nicht veröffentlicht; wir verschieben jeden Service, der Ihre Daten berührt, in ein quelloffen-zugängliches Repository und erwarten die Veröffentlichung vor September 2026. Mera wird in den Niederlanden unter der EU-DSGVO entwickelt, und keine Daten zu halten ist der Sinn dieses Designs.",
+    "privacyOnDevice": "Ihre Fakten und Themen werden ausschließlich auf Ihrem Gerät gespeichert: Die KI-Inferenz läuft vollständig auf dem Gerät über das Mera Protocol. Wenn Sie Nachrichten abrufen, werden nur Ihre Themenphrasen ohne Nutzerkennung gesendet. Diese Phrasen werden auf unseren Servern nur anhand des Textes adressiert, zwischengespeichert und nach 14 Tagen ohne Verwendung gelöscht; nirgends wird festgehalten, dass Sie die Anfrage gestellt haben. Was wir über Sie speichern, ist Ihre Login-E-Mail-Adresse, Ihr Abonnementstatus und eine tägliche Anzahl analysierter Artikel zur Durchsetzung Ihres Plans. Chat-Sitzungen starten neu und werden nicht gespeichert, mit einer Ausnahme: Wenn Sie eine Entsperrungsanfrage einreichen, wird das Transkript, das Sie beifügen, zur Überprüfung gespeichert. Das Wechseln von Geräten oder das Abmelden bedeutet, dass Sie Ihre Persona neu aufbauen müssen. Unser Backend ist noch nicht veröffentlicht; wir verschieben jeden Service, der Ihre Daten berührt, in ein quelloffen-zugängliches Repository und erwarten die Veröffentlichung vor September 2026. Bis dahin ist das Einzige, das Sie auf Vertrauen nehmen, dass wir keine Aufzeichnung führen, die Sie mit Ihren Themen verknüpft. Mera wird in den Niederlanden unter der EU-DSGVO entwickelt, und keine Daten zu halten ist der Sinn dieses Designs.",
+    "privacyCloud": "Ihre Fakten und Themen werden ausschließlich auf Ihrem Gerät gespeichert. Die Cloud-Inferenz nutzt verschlüsselte Trusted Execution Environments (TEE): Ihre Daten werden auf dem Gerät mit dem Schlüssel verschlüsselt, den die Enklave veröffentlicht, in einer isolierten Enklave verarbeitet und nur auf Ihrem Gerät entschlüsselt. Um präzise zu sein: Die App prüft die Attest-Angabe derzeit nicht gegen den Hardware-Hersteller, daher vertrauen Sie vorerst uns und dem Enklave-Betreiber statt dem Chip; die App so zu ändern, dass sie dies prüft und die Weiterführung verweigert, steht auf unserer Roadmap. Wenn Sie Nachrichten abrufen, werden nur Ihre Themenphrasen ohne Nutzerkennung gesendet. Diese Phrasen werden auf unseren Servern nur anhand des Textes adressiert, zwischengespeichert und nach 14 Tagen ohne Verwendung gelöscht; nirgends wird festgehalten, dass Sie die Anfrage gestellt haben. Was wir über Sie speichern, ist Ihre Login-E-Mail-Adresse, Ihr Abonnementstatus und eine tägliche Anzahl analysierter Artikel zur Durchsetzung Ihres Plans. Chat-Sitzungen starten neu und werden nicht gespeichert, mit einer Ausnahme: Wenn Sie eine Entsperrungsanfrage einreichen, wird das Transkript, das Sie beifügen, zur Überprüfung gespeichert. Das Wechseln von Geräten oder das Abmelden bedeutet, dass Sie Ihre Persona neu aufbauen müssen. Unser Backend ist noch nicht veröffentlicht; wir verschieben jeden Service, der Ihre Daten berührt, in ein quelloffen-zugängliches Repository und erwarten die Veröffentlichung vor September 2026. Mera wird in den Niederlanden unter der EU-DSGVO entwickelt, und keine Daten zu halten ist der Sinn dieses Designs.",
     "privacyPolicy": "Datenschutzrichtlinie",
     "privacyNoticeTitle": "Deine Privatsphäre",
     "updatingTopics": "Themen werden aktualisiert... {{completed}}/{{total}}",
     "emptyStateMessage": "Beantworten Sie einige Fragen, um Ihr Profil zu erstellen",
     "factsHeading": "Fakten",
-    "noiseSwitchLabel": "Rauschen",
-    "noiseBadge": "Rauschen",
     "generatingTopics": "Themen werden generiert...",
     "topicGenFailed": "Themengenerierung fehlgeschlagen: {{error}}",
     "clusterCount": "{{count}} Nachrichten",
@@ -980,7 +966,6 @@
     "published": "Veröffentlicht",
     "analysed": "Analysiert",
     "relevant": "Relevant für Sie",
-    "noiseRemoved": "Rauschen entfernt",
     "lastProcessed": "Zuletzt verarbeitet",
     "errorTitle": "Problem bei der Bewertung",
     "openA11y": "Feed-Status öffnen",
@@ -1577,6 +1562,7 @@
     "askMera": "Frag Mera",
     "chatIntro": "Frag mich alles über die Funktionsweise von Mera. Ich kann erklären, kann aber von hier aus nichts ändern.",
     "launchButton": "Tour machen",
+    "learnAboutMera": "So funktioniert Mera",
     "hintReveal": "Tippe auf jede.",
     "hintRevealSome": "Tippe auf mindestens {{count}}.",
     "hintChoose": "Wähle eine aus.",
@@ -1818,20 +1804,6 @@
           "on-device-option": {
             "headline": "Auf dem Gerät, wenn du es möchtest",
             "body": "In den Einstellungen → Mera Protocol kannst du die Verarbeitung auf dieses Telefon verschieben, und dann verlässt nichts über dich überhaupt. Es lädt ein Modell zuerst, will ein ziemlich neues Telefon und ist merklich langsamer, was genau ist, warum es nicht die Standard ist."
-          },
-          "decoys-are-a-switch": {
-            "headline": "Köder sind aus bis du sie einschaltest",
-            "body": "Es gibt eine Einstellung namens Rauschen einschleusen, die erfundene Topics zusammen mit deinen echten sendet, damit die Ausdrücke, die von deinem Telefon ankommen, nicht als Porträt von dir gelesen werden können. Was macht es jetzt?",
-            "choose": {
-              "always-on": {
-                "label": "Läuft still im Hintergrund",
-                "feedback": "Nein, und wir mögen lieber das korrigieren als es als bequeme Annahme zu lassen."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Nichts, bis du es einschaltest",
-                "feedback": "Ja. Es ist standardmäßig aus: Einstellungen → Mera Protocol → Rauschen einschleusen."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "Was wir behalten",
@@ -2189,13 +2161,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Rauschen einschleusen",
-            "body": "Sendet erfundene Topics daneben deine echten aus, daher die Ausdrücke vom Telefon können nicht als Porträt gelesen werden. Alles das bloß ein Köder passte wird auf diesem Telefon vorher geworfen bevor du es siehst. Aus standardmäßig: es kann Themengenerierung verlangsamen und Feed-Relevanz dünnen."
-          },
           "deeper-questions": {
             "headline": "Tiefere Fragen",
             "body": "Dies ändert nicht was Mera sendet, was es fragt. Statt was du daran interessiert bist, es fragt was du deine Aufmerksamkeit schützt von und was du diesen Monat entscheidest. Die Antworten sind Fakten wie alles andere und verlassen dieses Telefon nie, was genau die Grund ist, warum es sie fragen kann."
+          },
+          "inject-noise": {
+            "headline": "Rauschen einschleusen, noch im Aufbau",
+            "body": "Erfundene Themen zusammen mit Ihren echten zu senden, würde es schwerer machen, die von Ihrem Telefon ausgehenden Formulierungen als Porträt einer Person zu lesen. Das ist der Teil des Mera Protocol, an dem wir noch bauen: er ist noch nicht gebaut, es gibt also keine Einstellung dafür, und heute polstert nichts, was Ihr Telefon sendet. Wir sagen Ihnen das lieber, als Sie einen Schutz annehmen zu lassen, den Sie nicht haben."
           },
           "web-search": {
             "headline": "Websuche im Chat",

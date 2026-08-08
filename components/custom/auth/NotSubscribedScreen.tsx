@@ -4,7 +4,7 @@ import { CardGlassPlate } from "@/components/custom/cards/CardGlassPlate";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
-import { RepeatIcon } from "@/components/ui/icon";
+import { HelpCircleIcon, RepeatIcon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -415,6 +415,38 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           <ButtonIcon as={RepeatIcon} className="mr-2 text-gray-400" />
                                           <ButtonText className="text-gray-400">
                                               {busy ? t('common.checking') : t('account.refresh')}
+                                          </ButtonText>
+                                      </Button>
+
+                                      {/* Between Refresh and Continue, and that
+                                          position is the argument: this screen's
+                                          job is to convince, and a reader who is
+                                          not convinced has two ways out — one
+                                          soft ("show me what this actually is")
+                                          and one hard ("skip the plan"). The
+                                          soft one belongs first, so it is offered
+                                          before the escape hatch rather than
+                                          after it, while the solid primary CTA
+                                          keeps its monopoly on visual weight.
+                                          Not `disabled={busy}`, for the same
+                                          reason Continue is not: nothing here
+                                          should be stranded behind a ~25s poll
+                                          the reader never asked for.
+
+                                          `/tutorials` is a TOP-LEVEL route — it
+                                          has to be, because this screen is one of
+                                          the places a reader has no plan and may
+                                          have no session either. */}
+                                      <Button
+                                          testID="not-subscribed-learn"
+                                          onPress={() => router.push('/tutorials' as any)}
+                                          variant="link"
+                                          className="w-full rounded-full"
+                                          size="md"
+                                      >
+                                          <ButtonIcon as={HelpCircleIcon} className="mr-2 text-gray-400" />
+                                          <ButtonText className="text-gray-400">
+                                              {t('tutorials.learnAboutMera')}
                                           </ButtonText>
                                       </Button>
 

@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { hapticMedium } from '@/lib/haptics';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useAiAccess } from '@/lib/stores/subscription-store';
+import { useUserStore } from '@/lib/stores/user-store';
 import type { ChapterId } from '@/lib/tutorials/types';
 import { TUTORIAL_ACCENT, TUTORIAL_ACCENT_EDGE, TUTORIAL_ACCENT_SOFT } from './theme';
 import { useTutorialCopy } from './use-tutorial-copy';
@@ -35,10 +36,20 @@ interface AskMeraButtonProps {
  * `measureInWindow` below `ChatPopover` expands out of the top-left corner.
  * Precedent: `components/custom/profile/MeraChatInvite.tsx:38-49`.
  *
- * Not rendered at all pre-auth: the player is mounted with
- * `enableAskMera={false}` from the login-screen Modal, because there is no
- * session and therefore no agent. Also hidden on the free tier, where the chat
- * host renders nothing and the morph would target an unmounted popover.
+ * ⚠️ NOT RENDERED WITHOUT A SESSION, and the check lives HERE rather than in the
+ * host. The login-screen Modal passes `enableAskMera={false}`, but that prop
+ * only covers the host that remembers to pass it — and the tutorials are a
+ * TOP-LEVEL route now (`app/tutorials/`), reachable signed out from the paywall
+ * and from anywhere else an entry point is added later. Signed out,
+ * `deriveAiAccess` returns `'unknown'` (no server tier, an ANONYMOUS
+ * CustomerInfo), not `'locked'`, so the `aiAccess` guard below lets the button
+ * through — and outside `/logged-in` there is no `FloatingChatHost` to render
+ * the popover, so the press would open the chat store and paint nothing at all.
+ * A dead button is the worst of the three options, hence the local-identity
+ * check: absent user id ⇒ no affordance.
+ *
+ * Also hidden on the free tier, where the chat host renders nothing and the
+ * morph would target an unmounted popover.
  */
 const AskMeraButton: React.FC<AskMeraButtonProps> = ({
     chapterId,
@@ -49,6 +60,10 @@ const AskMeraButton: React.FC<AskMeraButtonProps> = ({
     const t = useTutorialCopy();
     const anchorRef = useRef<View>(null);
     const aiAccess = useAiAccess();
+    // Local identity, not `authClient.useSession()` — same rule as the rest of
+    // the app: the persisted id is what survives a /get-session that cannot be
+    // reached, and a signed-in reader must not lose Ask Mera to a flaky network.
+    const userId = useUserStore((s) => s.userId);
 
     const handlePress = useCallback(() => {
         void hapticMedium();
@@ -81,7 +96,7 @@ const AskMeraButton: React.FC<AskMeraButtonProps> = ({
         // next tap measures fine.
     }, [chapterId, slideId, prefill, onClose]);
 
-    if (aiAccess === 'locked') return null;
+    if (!userId || aiAccess === 'locked') return null;
 
     return (
         <View ref={anchorRef} style={styles.anchor}>

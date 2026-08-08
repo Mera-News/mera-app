@@ -30,10 +30,6 @@ export interface FeedStatusDetailsProps {
     readonly analysedCount: number;
     /** Analysed rows above the render gate. */
     readonly relevantCount: number;
-    /** Decoy clusters dropped by the noise-removal step. */
-    readonly noiseRemovedCount: number;
-    /** Whether the inject-noise beta setting is on (gates the noise row). */
-    readonly injectNoiseEnabled: boolean;
     /** Human relative label for the last finished processing run, or null. */
     readonly lastProcessedLabel: string | null;
     /**
@@ -62,7 +58,7 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
 /**
  * The shared feed-status detail body. This is the single source of truth for the
  * copy + selectors the four legacy header banners used to show — current pipeline
- * stage, cloud/device progress, the processed/analysed/relevant/noise counts,
+ * stage, cloud/device progress, the processed/analysed/relevant counts,
  * last-processed time, the daily-limit notice, and any scoring error. It is
  * rendered in TWO places: inside the FeedStatusSheet modal body, and inline in
  * the FeedStatusShimmer expand accordion — so the copy is never duplicated.
@@ -71,8 +67,6 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
     processedCount,
     analysedCount,
     relevantCount,
-    noiseRemovedCount,
-    injectNoiseEnabled,
     lastProcessedLabel,
     onBeforeNavigate,
 }) => {
@@ -115,7 +109,6 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
         ? new Date(dailyLimitResetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
         : '';
 
-    const showNoise = injectNoiseEnabled && noiseRemovedCount > 0;
     const showCloudProgress = asyncJobTotalCount > 0;
     const showDeviceProgress = deviceTotalCount > 0;
 
@@ -155,9 +148,6 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                 <StatRow label={t('feedStatus.published')} value={formatCount(processedCount, appLanguage)} />
                 <StatRow label={t('feedStatus.analysed')} value={formatCount(analysedCount, appLanguage)} />
                 <StatRow label={t('feedStatus.relevant')} value={formatCount(relevantCount, appLanguage)} />
-                {showNoise && (
-                    <StatRow label={t('feedStatus.noiseRemoved')} value={formatCount(noiseRemovedCount, appLanguage)} />
-                )}
             </VStack>
 
             {lastProcessedLabel && (

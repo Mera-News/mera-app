@@ -102,7 +102,6 @@
       "Vücudunu hareket ettir, nasıl iyi hissediyorsan öyle.",
       "Telefonun sonra da burada olacak. Şimdi anın içinde ol."
     ],
-    "noiseRemovedSummary": "Analizden önce {{count}} sahte {{articleWord}} filtrelendi.",
     "processing": {
       "doneFlash": "Her şey hazır, işte haberlerin",
       "errorFlash": "En son içerik yüklenemedi. Lütfen tekrar dene.",
@@ -131,14 +130,6 @@
             "Mera haberleri cihazına getirir. İlgi alanların hiçbir zaman buradan çıkmaz."
           ],
           "amberSubline": "Lütfen bu ekranı açık tut."
-        },
-        "noiseRemoval": {
-          "shortName": "Sahte içerikler kaldırılıyor",
-          "tooltip": "Gürültü konularına karşı çekilen sahte hikayeler filtreleniyor. Yalnızca gürültü enjeksiyonu açıkken çalışır.",
-          "headlines": [
-            "Akışından sahte hikayeler filtreleniyor…",
-            "Gürültü enjeksiyonu gerçek konularınla birlikte sahte konular gönderdi. Şimdi yalnızca bu sahtelerle eşleşen hikayeleri kaldırıyoruz."
-          ]
         },
         "cloudRelevance": {
           "shortName": "Alaka düzeyi hesaplanıyor",
@@ -399,9 +390,6 @@
     "cancelDownload": "İndirmeyi İptal Et",
     "retryDownload": "İndirmeyi Tekrar Dene",
     "updateTo": "{{modelName}} sürümüne güncelle",
-    "injectNoiseTitle": "Gürültü Enjeksiyonu",
-    "injectNoiseDescription": "Gerçek ilgi alanlarınla birlikte sahte konular göndererek arka ucun konu listenizden kim olduğunu tahmin etmesini önler. Yalnızca sahte konularla eşleşen makaleler sana ulaşmadan filtrelenir.",
-    "injectNoiseBeta": "Beta: konu oluşturmayı yavaşlatabilir ve akış alaka düzeyini düşürebilir.",
     "relevanceV3Title": "v3 ilgi puanlama kullan",
     "relevanceV3On": "Tek geçiş puanlama: ilgiler ve etki, dengeli",
     "relevanceV3Off": "Klasik iki geçişli bulut puanlaması",
@@ -557,15 +545,13 @@
     "tabPersona": "Profil",
     "tabSources": "Kaynaklar",
     "tabPreferences": "Tercihler",
-    "privacyOnDevice": "Bilgileriniz ve konularınız yalnızca cihazınızda saklanır: yapay zekâ çıkarımı Mera Protokolü ile tümüyle cihaz üzerinde çalışır. Her haber getirişinizde yalnızca konu ifadeleriniz gönderilir, kullanıcı kimliği taşımadan (yukarıdaki Gürültü Enjeksiyonu seçeneğini açarak yem konuları onlarla birlikte gönderebilirsiniz). Bu ifadeler sunucularımızda yalnızca metne göre önbelleğe alınır ve 14 gün istenmezse silinir; isteyenin siz olduğunu hiçbir yer kaydetmez. Sizin hakkınızda sakladığımız veriler giriş e-postanız, abonelik durumunuz ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısıdır. Sohbet oturumları sıfırdan başlar ve hiçbir zaman kaydedilmez: tek istisna, bir kilit açma talebi gönderdiğinizde, eklediğiniz sohbet transkripsiyonunun inceleme için depolanmasıdır. Cihaz değiştirmek veya çıkış yapmak, kişiliğinizin yeniden oluşturulması demektir. Arka ucumuz henüz yayınlanmadı; verilerinize dokunan her servisi açık kaynak deposuna taşıyoruz ve Eylül 2026'dan önce herkese açık hale getirmeyi bekliyoruz. O zamana kadar güvene kalan tek şey, sizi konularınızla ilişkilendiren hiçbir kayıt tutmadığımızdır. Mera, GDPR kapsamında Hollanda'da geliştirilir ve verilerinizi tutmamak bu tasarımın bütün amacıdır.",
-    "privacyCloud": "Bilgileriniz ve konularınız yalnızca cihazınızda saklanır. Bulut çıkarımı şifreli Trusted Execution Environments (TEE) kullanır: verileriniz cihazda kapsülün yayınladığı anahtarla şifrelenir, yalıtılmış bir kapsülde işlenir ve yalnızca cihazınızda çözülür. Kesin olmak gerekirse: uygulama henüz bu atestasyonu donanım satıcısına karşı denetlemez, bu nedenle şu an siz ve kapsül işletmecisi yerine bize güvenmektesiniz; uygulamayı bunu denetlemesini sağlamak ve devam etmeyi reddetmesini sağlamak yol haritamızda vardır. Her haber getirişinizde yalnızca konu ifadeleriniz gönderilir, kullanıcı kimliği taşımadan (yukarıdaki Gürültü Enjeksiyonu seçeneğini açarak yem konuları onlarla birlikte gönderebilirsiniz). Bu ifadeler sunucularımızda yalnızca metne göre önbelleğe alınır ve 14 gün istenmezse silinir; isteyenin siz olduğunu hiçbir yer kaydetmez. Sizin hakkınızda sakladığımız veriler giriş e-postanız, abonelik durumunuz ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısıdır. Sohbet oturumları sıfırdan başlar ve hiçbir zaman kaydedilmez: tek istisna, bir kilit açma talebi gönderdiğinizde, eklediğiniz sohbet transkripsiyonunun inceleme için depolanmasıdır. Cihaz değiştirmek veya çıkış yapmak, kişiliğinizin yeniden oluşturulması demektir. Arka ucumuz henüz yayınlanmadı; verilerinize dokunan her servisi açık kaynak deposuna taşıyoruz ve Eylül 2026'dan önce herkese açık hale getirmeyi bekliyoruz. Mera, GDPR kapsamında Hollanda'da geliştirilir ve verilerinizi tutmamak bu tasarımın bütün amacıdır.",
+    "privacyOnDevice": "Bilgileriniz ve konularınız yalnızca cihazınızda saklanır: yapay zekâ çıkarımı Mera Protokolü ile tümüyle cihaz üzerinde çalışır. Her haber getirişinizde yalnızca konu ifadeleriniz gönderilir, kullanıcı kimliği taşımadan. Bu ifadeler sunucularımızda yalnızca metne göre önbelleğe alınır ve 14 gün istenmezse silinir; isteyenin siz olduğunu hiçbir yer kaydetmez. Sizin hakkınızda sakladığımız veriler giriş e-postanız, abonelik durumunuz ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısıdır. Sohbet oturumları sıfırdan başlar ve hiçbir zaman kaydedilmez: tek istisna, bir kilit açma talebi gönderdiğinizde, eklediğiniz sohbet transkripsiyonunun inceleme için depolanmasıdır. Cihaz değiştirmek veya çıkış yapmak, kişiliğinizin yeniden oluşturulması demektir. Arka ucumuz henüz yayınlanmadı; verilerinize dokunan her servisi açık kaynak deposuna taşıyoruz ve Eylül 2026'dan önce herkese açık hale getirmeyi bekliyoruz. O zamana kadar güvene kalan tek şey, sizi konularınızla ilişkilendiren hiçbir kayıt tutmadığımızdır. Mera, GDPR kapsamında Hollanda'da geliştirilir ve verilerinizi tutmamak bu tasarımın bütün amacıdır.",
+    "privacyCloud": "Bilgileriniz ve konularınız yalnızca cihazınızda saklanır. Bulut çıkarımı şifreli Trusted Execution Environments (TEE) kullanır: verileriniz cihazda kapsülün yayınladığı anahtarla şifrelenir, yalıtılmış bir kapsülde işlenir ve yalnızca cihazınızda çözülür. Kesin olmak gerekirse: uygulama henüz bu atestasyonu donanım satıcısına karşı denetlemez, bu nedenle şu an siz ve kapsül işletmecisi yerine bize güvenmektesiniz; uygulamayı bunu denetlemesini sağlamak ve devam etmeyi reddetmesini sağlamak yol haritamızda vardır. Her haber getirişinizde yalnızca konu ifadeleriniz gönderilir, kullanıcı kimliği taşımadan. Bu ifadeler sunucularımızda yalnızca metne göre önbelleğe alınır ve 14 gün istenmezse silinir; isteyenin siz olduğunu hiçbir yer kaydetmez. Sizin hakkınızda sakladığımız veriler giriş e-postanız, abonelik durumunuz ve planınızı uygulamak için kullanılan günlük analiz edilen makale sayısıdır. Sohbet oturumları sıfırdan başlar ve hiçbir zaman kaydedilmez: tek istisna, bir kilit açma talebi gönderdiğinizde, eklediğiniz sohbet transkripsiyonunun inceleme için depolanmasıdır. Cihaz değiştirmek veya çıkış yapmak, kişiliğinizin yeniden oluşturulması demektir. Arka ucumuz henüz yayınlanmadı; verilerinize dokunan her servisi açık kaynak deposuna taşıyoruz ve Eylül 2026'dan önce herkese açık hale getirmeyi bekliyoruz. Mera, GDPR kapsamında Hollanda'da geliştirilir ve verilerinizi tutmamak bu tasarımın bütün amacıdır.",
     "privacyPolicy": "Gizlilik Politikası",
     "privacyNoticeTitle": "Gizliliğiniz",
     "updatingTopics": "Konular güncelleniyor... {{completed}}/{{total}}",
     "emptyStateMessage": "Profilini oluşturmak için birkaç soruyu yanıtla",
     "factsHeading": "Gerçekler",
-    "noiseSwitchLabel": "Gürültü",
-    "noiseBadge": "gürültü",
     "generatingTopics": "Konular oluşturuluyor...",
     "topicGenFailed": "Konu oluşturma başarısız: {{error}}",
     "clusterCount": "{{count}} Haber",
@@ -980,7 +966,6 @@
     "published": "Yayınlandı",
     "analysed": "Analiz edildi",
     "relevant": "Senin için alakalı",
-    "noiseRemoved": "Kaldırılan gürültü",
     "lastProcessed": "Son işlenme",
     "errorTitle": "Puanlama sorunu",
     "openA11y": "Akış durumunu aç",
@@ -1579,6 +1564,7 @@
     "askMera": "Mera'ya sor",
     "chatIntro": "Mera'nın nasıl çalıştığı hakkında bana ne istersen sor. Açıklayabilirim ama buradan hiçbir şeyi değiştiremem.",
     "launchButton": "Turu al",
+    "learnAboutMera": "Mera nasıl çalışır",
     "hintReveal": "Her birine dokun.",
     "hintRevealSome": "En az {{count}}'a dokun.",
     "hintChoose": "Birini seç.",
@@ -1820,20 +1806,6 @@
           "on-device-option": {
             "headline": "İsterseniz cihaz üzerinde",
             "body": "Ayarlar → Mera Protokolü'nde bu telefonda işlemeyi hareket ettirebilir ve sonra senin hakkında hiçbir şey ayrılmaz. İlk model indiriyor, açık çekiyor bir oldukça yeni telefon ve belirgin yavaş, bu tam olarak neden varsayılan değil."
-          },
-          "decoys-are-a-switch": {
-            "headline": "Decoys açana kadar kapalı",
-            "body": "Gürültü Enjeksiyonu adında bir ayar var bu gerçek konu yanlış konular gönderir, bu yüzden telefonu gelen ifadeler sana dönüştürülemez.",
-            "choose": {
-              "always-on": {
-                "label": "Arka planda sessizce çalışıyor",
-                "feedback": "Hayır ve bunu rahat bir varsayılan olarak bırakmaktan çok düzeltmek istemiyoruz."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Hiçbir şey, açana kadar",
-                "feedback": "Sağ. Varsayılan olarak kapalıdır: Ayarlar → Mera Protokolü → Gürültü Enjeksiyonu."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "Ne tuttuğumuz",
@@ -2191,13 +2163,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Gürültü Enjeksiyonu",
-            "body": "Gerçek ilgi alanlarıyla sahte konular gönderir, bu yüzden telefonu gelen ifadeleri sana çevrilemez. Sadece bir sahte konuyla eşleşen hiçbir şey seni görmeden bu telefonda atılır."
-          },
           "deeper-questions": {
             "headline": "Daha derin sorular",
             "body": "Bu Mera'nın ne gönderdiğini değer, sordu. İlgileriniz yerine, ne korumaya çalıştığın ve bu ay karar verdiğini soruyor. Cevaplar herhangi başka ve hiçbir zaman bu telefon, tam olarak neden sorabilir."
+          },
+          "inject-noise": {
+            "headline": "Gürültü ekleme, hâlâ yapım aşamasında",
+            "body": "Uydurma konuları gerçek konularınızın yanına göndermek, telefonunuzdan çıkan ifadeleri tek bir kişinin portresi olarak okumayı zorlaştırırdı. Bu, Mera Protocol’ün hâlâ inşa ettiğimiz kısmı: henüz yapılmadı, dolayısıyla bunun için bir ayar yok ve bugün telefonunuzun gönderdiklerine hiçbir şey eklenmiyor. Sahip olmadığınız bir korumayı varsaymanıza izin vermektense bunu size söylemeyi tercih ederiz."
           },
           "web-search": {
             "headline": "Sohbette web araması",

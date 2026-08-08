@@ -51,8 +51,12 @@ jest.mock('expo-router', () => ({
         dismissAll: () => mockDismissAll(),
         canDismiss: () => mockCanDismiss,
     },
-    useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+    // Stable across renders, so a row's push TARGET can be asserted. The rows
+    // write their paths as `'...' as any` (typedRoutes cannot see through the
+    // cast), which makes a wrong path invisible to tsc and to lint.
+    useRouter: () => ({ push: (...a: any[]) => mockPush(...a), replace: jest.fn() }),
 }));
+const mockPush = jest.fn();
 
 // --- modal state: hold the logout modal open so its button is reachable -----
 const mockCloseModal = jest.fn();
@@ -240,6 +244,21 @@ describe('Settings → Logout', () => {
         expect(mockDeleteSetting).not.toHaveBeenCalled();
         expect(mockWipeAll).not.toHaveBeenCalled();
         expect(mockReplace).not.toHaveBeenCalled();
+    });
+});
+
+describe('Settings → tutorials row', () => {
+    // TOP-LEVEL `/tutorials`, not `/logged-in/tutorials`. The flow was moved out
+    // of the signed-in tree so an unauthed reader can reach it (the paywall
+    // links to the same route), and this row is the in-app entry point that has
+    // to follow it there.
+    it('opens the top-level tutorials route', () => {
+        mockPush.mockClear();
+        const { getByTestId } = render(<AppPreferencesTab />);
+
+        fireEvent.press(getByTestId('settings-row-tutorials'));
+
+        expect(mockPush).toHaveBeenCalledWith('/tutorials');
     });
 });
 

@@ -162,7 +162,6 @@
       "Move your body, however feels good.",
       "Your phone will be here later. Be present now."
     ],
-    "noiseRemovedSummary": "{{count}} decoy {{articleWord}} were filtered out before analysis.",
     "processing": {
       "doneFlash": "All set: here’s your news",
       "errorFlash": "We couldn’t load the latest content. Please try again.",
@@ -407,7 +406,6 @@
     "published": "Published",
     "analysed": "Analysed",
     "relevant": "Relevant to you",
-    "noiseRemoved": "Noise removed",
     "lastProcessed": "Last processed",
     "errorTitle": "Scoring problem",
     "openA11y": "Open feed status",
@@ -631,9 +629,6 @@
     "cancelDownload": "Cancel Download",
     "retryDownload": "Retry Download",
     "updateTo": "Update to {{modelName}}",
-    "injectNoiseTitle": "Inject Noise",
-    "injectNoiseDescription": "Submits decoy topics alongside your real interests so the backend can't triangulate who you are from your topic list. Articles matching only decoy topics are dropped before they reach you.",
-    "injectNoiseBeta": "Beta: may slow down topic generation and reduce feed relevance.",
     "relevanceV3Title": "Use relevance scoring v3",
     "relevanceV3On": "Single-pass scoring: interests and impact, balanced",
     "relevanceV3Off": "Classic two-pass cloud scoring",
@@ -765,15 +760,13 @@
     "tabPersona": "Persona",
     "tabSources": "Sources",
     "tabPreferences": "Preferences",
-    "privacyOnDevice": "Your facts and topics are stored exclusively on your device: AI inference runs entirely on-device via the Mera Protocol. Each time you need news, only your topic phrases are sent to fetch articles, carrying no user ID (turn on Inject noise above to send decoys alongside them). Those phrases are cached on our servers keyed by the text alone and dropped after 14 days unused; nothing records that you were the one who asked. What we keep about you is your login email, your subscription status, and a per-day count of analysed articles used to enforce your plan. Chat sessions start fresh and aren't saved: the one exception is that if you submit an unblock request, the transcript you attach is stored for review. Switching devices or logging out means rebuilding your persona. Our backend isn't published yet; we're moving every service that touches your data into a source-available repository and expect it public before September 2026. Until then the one thing you take on trust is that we keep no record linking you to your topics. Mera is built in the Netherlands under the EU's GDPR, and not holding your data is the point of the design.",
-    "privacyCloud": "Your facts and topics are stored exclusively on your device. Cloud inference uses encrypted Trusted Execution Environments (TEE): your data is encrypted on-device to the key the enclave publishes, processed in an isolated enclave, and decrypted only on your device. Being precise: the app doesn't yet check that attestation against the hardware vendor, so for now you're trusting us and the enclave operator rather than the chip; making the app verify it and refuse to continue is on our roadmap. Each time you need news, only your topic phrases are sent to fetch articles, carrying no user ID (turn on Inject noise above to send decoys alongside them). Those phrases are cached on our servers keyed by the text alone and dropped after 14 days unused; nothing records that you were the one who asked. What we keep about you is your login email, your subscription status, and a per-day count of analysed articles used to enforce your plan. Chat sessions start fresh and aren't saved: the one exception is that if you submit an unblock request, the transcript you attach is stored for review. Switching devices or logging out means rebuilding your persona. Our backend isn't published yet; we're moving every service that touches your data into a source-available repository and expect it public before September 2026. Mera is built in the Netherlands under the EU's GDPR, and not holding your data is the point of the design.",
+    "privacyOnDevice": "Your facts and topics are stored exclusively on your device: AI inference runs entirely on-device via the Mera Protocol. Each time you need news, only your topic phrases are sent to fetch articles, carrying no user ID. Those phrases are cached on our servers keyed by the text alone and dropped after 14 days unused; nothing records that you were the one who asked. What we keep about you is your login email, your subscription status, and a per-day count of analysed articles used to enforce your plan. Chat sessions start fresh and aren't saved: the one exception is that if you submit an unblock request, the transcript you attach is stored for review. Switching devices or logging out means rebuilding your persona. Our backend isn't published yet; we're moving every service that touches your data into a source-available repository and expect it public before September 2026. Until then the one thing you take on trust is that we keep no record linking you to your topics. Mera is built in the Netherlands under the EU's GDPR, and not holding your data is the point of the design.",
+    "privacyCloud": "Your facts and topics are stored exclusively on your device. Cloud inference uses encrypted Trusted Execution Environments (TEE): your data is encrypted on-device to the key the enclave publishes, processed in an isolated enclave, and decrypted only on your device. Being precise: the app doesn't yet check that attestation against the hardware vendor, so for now you're trusting us and the enclave operator rather than the chip; making the app verify it and refuse to continue is on our roadmap. Each time you need news, only your topic phrases are sent to fetch articles, carrying no user ID. Those phrases are cached on our servers keyed by the text alone and dropped after 14 days unused; nothing records that you were the one who asked. What we keep about you is your login email, your subscription status, and a per-day count of analysed articles used to enforce your plan. Chat sessions start fresh and aren't saved: the one exception is that if you submit an unblock request, the transcript you attach is stored for review. Switching devices or logging out means rebuilding your persona. Our backend isn't published yet; we're moving every service that touches your data into a source-available repository and expect it public before September 2026. Mera is built in the Netherlands under the EU's GDPR, and not holding your data is the point of the design.",
     "privacyPolicy": "Privacy Policy",
     "privacyNoticeTitle": "Your privacy",
     "updatingTopics": "Updating topics... {{completed}}/{{total}}",
     "emptyStateMessage": "Answer a few questions to build your profile",
     "factsHeading": "Facts",
-    "noiseSwitchLabel": "Noise",
-    "noiseBadge": "noise",
     "generatingTopics": "Generating topics...",
     "topicGenFailed": "Topic generation failed: {{error}}",
     "clusterCount": "{{count}} News",
@@ -1537,6 +1530,7 @@
     "askMera": "Ask Mera",
     "chatIntro": "Ask me anything about how Mera works. I can explain, but I can't change anything from here.",
     "launchButton": "Take the tour",
+    "learnAboutMera": "Learn how Mera works",
     "hintReveal": "Tap each one.",
     "hintRevealSome": "Tap at least {{count}}.",
     "hintChoose": "Pick one.",
@@ -1778,20 +1772,6 @@
           "on-device-option": {
             "headline": "On-device, if you want it",
             "body": "In Settings → Mera Protocol you can move the processing onto this phone, and then nothing about you leaves at all. It downloads a model first, wants a fairly recent phone, and is noticeably slower, which is exactly why it is not the default."
-          },
-          "decoys-are-a-switch": {
-            "headline": "Decoys are off until you turn them on",
-            "body": "There is a setting called Inject noise that sends invented topics alongside your real ones, so the phrases arriving from your phone cannot be read as a portrait of you. What is it doing right now?",
-            "choose": {
-              "always-on": {
-                "label": "Running quietly in the background",
-                "feedback": "No, and we would rather correct that than leave it as a comfortable assumption."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Nothing, until you switch it on",
-                "feedback": "Right. It is off by default: Settings → Mera Protocol → Inject noise."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "What we do keep",
@@ -2149,13 +2129,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Inject noise",
-            "body": "Sends invented topics out alongside your real ones, so the phrases arriving from your phone cannot be read as a portrait. Anything that matched only a decoy is thrown away on this phone before you ever see it. Off by default: it can slow topic generation down and dilute the feed a little."
-          },
           "deeper-questions": {
             "headline": "Deeper questions",
             "body": "This changes what Mera asks you, not what it sends. Instead of what you are interested in, it asks what you are protecting your attention from and what you are deciding this month. The answers are facts like any other and never leave this phone, which is precisely why it can ask them."
+          },
+          "inject-noise": {
+            "headline": "Noise injection, still being built",
+            "body": "Sending invented topics out alongside your real ones would make the phrases arriving from your phone harder to read as a portrait of one person. It is the part of the Mera Protocol we are still building: it is not built yet, so there is no setting for it and nothing pads what your phone sends today. We would rather tell you that than let you assume a protection you do not have."
           },
           "web-search": {
             "headline": "Web search in chat",

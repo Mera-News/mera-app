@@ -45,6 +45,16 @@ interface TutorialPlayerProps {
  * ⚠️ Exactly ONE slide is mounted at a time — no carousel. A carousel would drag
  * gesture handling into the pre-auth Modal (where it misbehaves on Android) and
  * would keep several animated scenes alive at once for no visible gain.
+ *
+ * Navigation has THREE routes in and they all funnel through `handleNext` /
+ * `handleBack`: the footer buttons, the header Skip, and the stories-style tap
+ * zones inside the slide (see `SlideView`). The zones are an ADDITION — the
+ * footer keeps its labelled, accessible Back and Next, which is also what makes
+ * hiding the zones from the screen reader safe.
+ *
+ * The header (close, Skip) and the footer (Back, Next) are siblings OUTSIDE the
+ * slide's ScrollView, so no tap zone can ever cover them. That is structural,
+ * not a z-order accident.
  */
 const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     chapterId,
@@ -68,6 +78,11 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
     const total = chapter?.slides.length ?? 0;
     const isLast = index >= total - 1;
     const gated = Boolean(slide?.interaction);
+    // Hoisted above the early return so the tap-zone handlers below (which are
+    // hooks, and must run unconditionally) can apply the SAME rule the Next
+    // button applies. A right-half tap that ignored this would walk straight
+    // past every interaction and make UNGATE_AFTER_MS dead code.
+    const canAdvance = !gated || unlocked || timedOut;
 
     // Reset the gate on every slide change. A slide with no interaction is open
     // immediately; one with an interaction starts closed and the interaction
@@ -113,6 +128,44 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
         finish();
     }, [finish]);
 
+    /**
+     * Right half tapped.
+     *
+     * On the LAST slide this is `handleNext`, which finishes the chapter — the
+     * tap zone and the "Done" button do the identical thing, deliberately.
+     *
+     * On a gated slide that has not unlocked yet it BOUNCES: a haptic pulse and
+     * nothing else, matching the visibly disabled Next button beneath it. The
+     * gate is the only thing making the interactions worth doing, and a tap zone
+     * that quietly bypassed it would retire both the interaction and the
+     * "Continue anyway" timer.
+     */
+    const handleTapNext = useCallback(() => {
+        if (!canAdvance) {
+            void hapticLight();
+            return;
+        }
+        handleNext();
+    }, [canAdvance, handleNext]);
+
+    /**
+     * Left half tapped.
+     *
+     * On the FIRST slide there is nowhere to go back to, so this bounces too —
+     * a haptic and no navigation, mirroring the disabled Back button. It does
+     * NOT close the chapter: an accidental left tap ejecting a reader out of
+     * what they were reading is a far worse failure than a tap that visibly
+     * refuses, and it would contradict the disabled Back sitting two inches
+     * below saying the same thing.
+     */
+    const handleTapPrev = useCallback(() => {
+        if (index === 0) {
+            void hapticLight();
+            return;
+        }
+        handleBack();
+    }, [index, handleBack]);
+
     if (!chapter || !slide) {
         // Unknown chapter id (a stale deep link, a renamed slug). Render the
         // empty line rather than crashing the route.
@@ -126,7 +179,6 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
         );
     }
 
-    const canAdvance = !gated || unlocked || timedOut;
     const nextLabel = isLast
         ? t('tutorials.done')
         : canAdvance && !unlocked && gated
@@ -188,6 +240,8 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
                 enableAskMera={enableAskMera}
                 onUnlockedChange={setUnlocked}
                 onClose={onClose}
+                onTapPrev={handleTapPrev}
+                onTapNext={handleTapNext}
             />
 
             <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>

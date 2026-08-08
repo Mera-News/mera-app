@@ -15,9 +15,13 @@ The `mera-protocol-toolkit/` folder contains a **compliance toolkit** (published
 The Mera Protocol defines **what must be true on the device** for an application to be privacy-preserving. The core constraint:
 
 > **User PII never leaves the device. Any data transmitted externally is noisy and k-anonymous. All final inference and decision-making happen on-device.**
+>
+> *(The middle clause is the target. Noise and k-anonymity are in development — see Protocol Rules.)*
 > 
 
-The protocol's guarantees are **unconditional**: they hold regardless of what any external system does. The protocol makes no assumptions about servers, APIs, or infrastructure. If the on-device rules are satisfied, privacy is guaranteed even if every external system is fully adversarial.
+The protocol's guarantees are designed to be **unconditional**: once every rule is satisfied they hold regardless of what any external system does, making no assumptions about servers, APIs, or infrastructure.
+
+**They are not all satisfied yet.** The noise and k-anonymity half of the constraint above (Rules 2, 3 and 5) is **in development** — see the status note in Protocol Rules. Until it ships, outbound topic phrases are unpadded, so "even if every external system is fully adversarial" describes the finished protocol, not today's app. What holds today is that facts and consumption signals never leave the device (Rules 1, 4 and 6).
 
 **The protocol specifies:**
 
@@ -48,14 +52,24 @@ These are the responsibility of the consuming application (e.g., `mera-news`, `m
 
 These are **hard rules** that define the Mera Protocol. Any code path that violates them is a protocol breach. An app is "Mera Protocol compliant" if and only if all of these hold at all times.
 
-| # | Rule | Enforcement |
-| --- | --- | --- |
-| 1 | **Facts never leave the device.** **User PII stored in the on-device database must not be transmitted, logged, or serialized to any external destination.** | User PII DB is `LocalOnly` — no network access, no sync |
-| 2 | **All outbound data is noisy.** Real queries must be mixed with noise before any external transmission. No raw user-derived query may leave the device. | `injectNoise()` is the sole gateway to any transmittable data |
-| 3 | **Real and noise are structurally indistinguishable.** Query format, length, and structure must be uniform across real and noise entries. | Noise generator mirrors real query structure |
-| 4 | **No consumption signals leave the device.** Final selection, ranking, and presentation happen on-device. No read receipts, open events, or selection signals are transmitted externally. | On-device only: app-level selection logic |
-| 5 | **K-anonymity holds.** Each outbound query set must be indistinguishable from at least K other users' query sets (K ≥ 1000). | Noise patterns drawn from common user distributions |
-| 6 | **All inference over user PII is on-device.** Any computation that takes user PII as input must run within the device trust boundary (or an attested Confidential VM that the protocol treats as equivalent). | On-device LLM or attested CVM; no cloud inference over plaintext facts |
+> **Implementation status — read before citing any rule as a live guarantee.**
+> Rules **2, 3 and 5** describe the noise-injection layer, which is **in development and not yet
+> shipped**. As of 2026-08-08 nothing in the app generates, transmits, or discards decoy topics:
+> `injectNoise()` does not exist as running code, there is no user-facing setting, and outbound
+> query sets are **not** noisy and **not** K-anonymous. They are specified here because they are
+> being built, not because they hold today.
+>
+> Rules **1, 4 and 6** are live and enforced. The Status column below says which is which; do not
+> describe a `Planned` rule to a user, in marketing copy, or in an FAQ as though it protects them.
+
+| # | Rule | Status | Enforcement |
+| --- | --- | --- | --- |
+| 1 | **Facts never leave the device.** **User PII stored in the on-device database must not be transmitted, logged, or serialized to any external destination.** | **Live** | User PII DB is `LocalOnly` — no network access, no sync |
+| 2 | **All outbound data is noisy.** Real queries must be mixed with noise before any external transmission. No raw user-derived query may leave the device. | **Planned** | `injectNoise()` will be the sole gateway to any transmittable data. Not implemented; today topic phrases leave the device unpadded |
+| 3 | **Real and noise are structurally indistinguishable.** Query format, length, and structure must be uniform across real and noise entries. | **Planned** | Noise generator mirrors real query structure. Depends on Rule 2 |
+| 4 | **No consumption signals leave the device.** Final selection, ranking, and presentation happen on-device. No read receipts, open events, or selection signals are transmitted externally. | **Live** | On-device only: app-level selection logic |
+| 5 | **K-anonymity holds.** Each outbound query set must be indistinguishable from at least K other users' query sets (K ≥ 1000). | **Planned** | Noise patterns drawn from common user distributions. Depends on Rule 2; no K is achieved today |
+| 6 | **All inference over user PII is on-device.** Any computation that takes user PII as input must run within the device trust boundary (or an attested Confidential VM that the protocol treats as equivalent). | **Live** | On-device LLM or attested CVM; no cloud inference over plaintext facts |
 
 ---
 
@@ -93,7 +107,7 @@ These are **hard rules** that define the Mera Protocol. Any code path that viola
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-The protocol governs **everything inside the trust boundary**. What happens outside (servers, APIs, third-party services) is irrelevant. The protocol's guarantees hold unconditionally. The compliance toolkit provides ready-made implementations of these steps.
+The protocol governs **everything inside the trust boundary**. What happens outside (servers, APIs, third-party services) is irrelevant, and the protocol's guarantees hold unconditionally — once every rule is implemented. The noise step in this diagram is `Planned`, not shipped. The compliance toolkit provides ready-made implementations of the steps that exist.
 
 ---
 
@@ -307,6 +321,12 @@ Deletes the shared base model from storage. Only succeeds if no app currently ha
 
 ### Privacy Layer (Noise Injection & Stripping)
 
+> **In development — this section is a specification, not a description of shipped behaviour.**
+> `injectNoise()` and `stripNoise()` are **not implemented**. The types below exist in
+> `types.ts`; the functions do not exist, nothing imports them, and no decoy topic has ever left a
+> device. Treat everything in this section as the target design for Rules 2/3/5, which are `Planned`
+> in the rules table above.
+
 ### `injectNoise(queries: Query[], config?: NoiseConfig): NoisyQuerySet`
 
 Adds noise queries to achieve k-anonymity before any external transmission. This tool enforces **Protocol Rule #2** (all outbound data is noisy). It is application-agnostic. It works with any query structure as long as queries conform to the `Query` type.
@@ -435,14 +455,16 @@ For devices that cannot run on-device inference, the protocol provides an equiva
 
 ## Why No Server Rules?
 
-The Mera Protocol intentionally says nothing about what servers, APIs, or external systems should or should not do. The protocol's on-device guarantees are **unconditional**:
+The Mera Protocol intentionally says nothing about what servers, APIs, or external systems should or should not do. Once every on-device rule holds, the guarantees are **unconditional**:
 
-- The server *cannot* see user PII, because it never leaves the device (Rule #1).
-- The server *cannot* distinguish real queries from noise, because they are structurally identical (Rule #3).
-- The server *cannot* know what the user consumed, because no consumption signals are transmitted (Rule #4).
-- The server *cannot* reconstruct the user's profile, because k-anonymity makes any individual indistinguishable from ≥1000 others (Rule #5).
+- The server *cannot* see user PII, because it never leaves the device (Rule #1). **Live.**
+- The server *cannot* know what the user consumed, because no consumption signals are transmitted (Rule #4). **Live.**
+- The server *cannot* distinguish real queries from noise, because they are structurally identical (Rule #3). **Planned — not true today.**
+- The server *cannot* reconstruct the user's profile, because k-anonymity makes any individual indistinguishable from ≥1000 others (Rule #5). **Planned — not true today.**
 
-If the on-device rules hold, privacy holds — even if the server is fully adversarial, compromised, or logging everything. This is the protocol's core strength: **it does not require trust in any external system.**
+When all the on-device rules hold, privacy holds even if the server is fully adversarial, compromised, or logging everything, and the protocol requires no trust in any external system. That is the design goal and the reason the rules are shaped this way.
+
+Where it stands today: the two `Live` bullets are real and enforced. The two `Planned` bullets are not, so an adversarial server currently *does* see the topic phrases a device asks for. It sees them without a user id and cached by text alone, which is a meaningful protection and the one the product actually claims — but it is a weaker property than k-anonymity, and this document must not be quoted as though the stronger one already ships.
 
 ---
 

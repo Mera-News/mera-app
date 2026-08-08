@@ -1,6 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+// Via the ui layer rather than `react-native` directly — a bare re-export that
+// exists so tests can stub one module path. Same reason as `SlideView`.
+import { ScrollView } from '@/components/ui/scroll-view';
 
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { hapticLight } from '@/lib/haptics';

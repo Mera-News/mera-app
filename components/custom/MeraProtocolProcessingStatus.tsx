@@ -7,11 +7,18 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
+// `preparing` was called `noiseRemoval` until the decoy/noise-injection feature
+// was removed. It never removed noise: it covers `diffing` and `persisting`, i.e.
+// working out which articles are new and writing them to the local DB. The old
+// name still had headline copy in the 19 non-English locales claiming decoys had
+// been sent, which rendered on screen; `en` never had the key, so the claim was
+// invisible in development. The copy is deleted and the stage is named for what
+// it does.
 export type ProcessingStage =
     | 'idle'
     | 'sending'
     | 'hydrating'
-    | 'noiseRemoval'
+    | 'preparing'
     | 'cloudRelevance'
     | 'cloudReasons'
     | 'onDevice'
@@ -40,9 +47,9 @@ function syncStateToLegacyStage(
 ): ProcessingStage {
     switch (message.state) {
         case 'fetching-topic-ids': return 'sending';
-        case 'diffing': return 'noiseRemoval';
+        case 'diffing': return 'preparing';
         case 'hydrating': return 'hydrating';
-        case 'persisting': return 'noiseRemoval';
+        case 'persisting': return 'preparing';
         case 'scoring':
             if (asyncJobPhase === 'relevance') return 'cloudRelevance';
             if (asyncJobPhase === 'reasons') return 'cloudReasons';
@@ -66,7 +73,7 @@ export function deriveProcessingStage(
     if (syncStatusMessage) {
         if (syncStatusMessage.state === 'failed') return 'error';
         if (syncStatusMessage.state === 'hydrating' && hydrationTotal > 0) return 'hydrating';
-        if (syncStatusMessage.state === 'persisting') return 'noiseRemoval';
+        if (syncStatusMessage.state === 'persisting') return 'preparing';
         return syncStateToLegacyStage(syncStatusMessage, isOnDeviceProcessing, asyncJobPhase);
     }
     if (asyncJobPhase === 'relevance') return 'cloudRelevance';
@@ -94,9 +101,9 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
         if (syncStatusMessage.state === 'done') return 'done';
         if (syncStatusMessage.state === 'failed' || syncStatusMessage.state === 'paused-offline') return 'error';
         if (syncStatusMessage.state === 'hydrating') return 'hydrating';
-        if (syncStatusMessage.state === 'persisting') return 'noiseRemoval';
+        if (syncStatusMessage.state === 'persisting') return 'preparing';
         if (syncStatusMessage.state === 'fetching-topic-ids') return 'sending';
-        if (syncStatusMessage.state === 'diffing') return 'noiseRemoval';
+        if (syncStatusMessage.state === 'diffing') return 'preparing';
         if (syncStatusMessage.state === 'scoring') return 'sending';
         return 'idle';
     }, [stageProp, syncStatusMessage]);

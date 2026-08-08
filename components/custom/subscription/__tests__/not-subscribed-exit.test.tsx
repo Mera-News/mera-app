@@ -46,7 +46,10 @@ jest.mock('@/components/ui/button', () => {
 });
 jest.mock('@/components/ui/icon', () => {
     const { View } = require('react-native');
-    return { RepeatIcon: (p: any) => <View {...p} /> };
+    return {
+        RepeatIcon: (p: any) => <View {...p} />,
+        HelpCircleIcon: (p: any) => <View {...p} />,
+    };
 });
 jest.mock('react-native-safe-area-context', () => {
     const { View } = require('react-native');
@@ -55,7 +58,13 @@ jest.mock('react-native-safe-area-context', () => {
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 const mockReplace = jest.fn();
-jest.mock('expo-router', () => ({ useRouter: () => ({ replace: (...a: any[]) => mockReplace(...a) }) }));
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({
+    useRouter: () => ({
+        replace: (...a: any[]) => mockReplace(...a),
+        push: (...a: any[]) => mockPush(...a),
+    }),
+}));
 
 const mockSessionRef = { current: { user: { id: 'u1' } } as { user: { id: string } } | null };
 jest.mock('@/lib/auth-client', () => ({
@@ -325,6 +334,59 @@ describe('leaving the paywall for /logged-in', () => {
         // than looping back to this screen.
         expect(setSetting).toHaveBeenCalledWith('free_tier_first_open_dismissed', 'true');
         expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed');
+    });
+
+    // The tutorials link. The PATH is the whole assertion: it is written as
+    // `'/tutorials' as any` (typedRoutes cannot see through the cast), so a
+    // typo here would compile, lint and ship — and the one place it must never
+    // point is back under `/logged-in`, since this screen is reachable by a
+    // reader with no plan and, on the first-open path, barely a session.
+    //
+    // `push`, not `replace`: closing the tutorials must return the reader to
+    // this screen with the CTA still in front of them, not strand them.
+    it('"Learn how Mera works" opens the top-level tutorials route', () => {
+        const { getByText } = render(<NotSubscribedScreen />);
+
+        fireEvent.press(getByText('tutorials.learnAboutMera'));
+
+        expect(mockPush).toHaveBeenCalledWith('/tutorials');
+        expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    // It sits between Refresh and "Continue without a plan": the solid CTA keeps
+    // its monopoly on visual weight, and of the two ways out, the soft one
+    // ("show me what this is") is offered before the hard one.
+    it('sits between Refresh and "Continue without a plan"', () => {
+        const { getByTestId, UNSAFE_root } = render(<NotSubscribedScreen />);
+
+        const order = [
+            'not-subscribed-plans',
+            'not-subscribed-refresh',
+            'not-subscribed-learn',
+            'not-subscribed-continue',
+        ].map((id) => getByTestId(id));
+
+        const rendered = UNSAFE_root.findAll((n: unknown) => order.includes(n as never));
+        expect(rendered).toEqual(order);
+    });
+
+    // Never disabled, for the same reason "Continue without a plan" is not: a
+    // ~25s activation poll the reader did not ask for must not strand the
+    // secondary actions behind it.
+    it('stays tappable while the screen is busy', async () => {
+        mockRcState.configured = true;
+        // A purchase sheet that never resolves — `busy` holds for the whole test.
+        mockPresentPaywall.mockImplementation(() => new Promise(() => {}));
+        const { getByText } = render(<NotSubscribedScreen />);
+
+        await act(async () => {
+            fireEvent.press(getByText('subscription.subscribeNow'));
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+
+        fireEvent.press(getByText('tutorials.learnAboutMera'));
+
+        expect(mockPush).toHaveBeenCalledWith('/tutorials');
     });
 });
 

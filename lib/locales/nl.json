@@ -102,7 +102,6 @@
       "Beweeg je lichaam, op de manier die goed voelt.",
       "Je telefoon is er straks nog. Wees nu aanwezig."
     ],
-    "noiseRemovedSummary": "{{count}} nep-{{articleWord}} zijn gefilterd vóór de analyse.",
     "processing": {
       "doneFlash": "Alles klaar: hier is je nieuws",
       "errorFlash": "We konden de nieuwste inhoud niet laden. Probeer het opnieuw.",
@@ -131,14 +130,6 @@
             "Mera brengt het nieuws naar jouw apparaat. Je interesses verlaten het nooit."
           ],
           "amberSubline": "Houd dit scherm alsjeblieft open."
-        },
-        "noiseRemoval": {
-          "shortName": "Lokverhalen verwijderen",
-          "tooltip": "Nepverhalen die zijn opgehaald als tegengewicht worden gefilterd. Dit gebeurt alleen wanneer ruisinjectie is ingeschakeld.",
-          "headlines": [
-            "Lokverhalen worden uit je feed gefilterd…",
-            "Ruisinjectie stuurde lokvogel-onderwerpen mee naast je echte interesses. We verwijderen nu de verhalen die alleen bij die lokvogels pasten."
-          ]
         },
         "cloudRelevance": {
           "shortName": "Relevantie berekenen",
@@ -399,9 +390,6 @@
     "cancelDownload": "Download annuleren",
     "retryDownload": "Download opnieuw proberen",
     "updateTo": "Bijwerken naar {{modelName}}",
-    "injectNoiseTitle": "Ruis injecteren",
-    "injectNoiseDescription": "Stuurt lokvogel-onderwerpen mee naast je echte interesses zodat de backend niet kan achterhalen wie je bent op basis van je onderwerpenlijst. Artikelen die alleen bij lokvogel-onderwerpen passen, worden verwijderd voordat ze bij je aankomen.",
-    "injectNoiseBeta": "Beta: kan het genereren van onderwerpen vertragen en de feedrelevantie verminderen.",
     "relevanceV3Title": "Gebruik relevantie beoordeling v3",
     "relevanceV3On": "Single-pass beoordeling: interesses en impact, uitgebalanceerd",
     "relevanceV3Off": "Klassieke two-pass cloud beoordeling",
@@ -557,15 +545,13 @@
     "tabPersona": "Persona",
     "tabSources": "Bronnen",
     "tabPreferences": "Voorkeuren",
-    "privacyOnDevice": "Uw feiten en onderwerpen worden uitsluitend op uw apparaat opgeslagen: de AI-inferentie draait volledig op het apparaat via het Mera Protocol. Telkens als u nieuws ophaalt worden alleen uw onderwerpsfrasen verstuurd, zonder gebruikers-ID (zet Ruis injecteren hierboven in om nep-onderwerpen mee te sturen). Die frasen worden op onze servers gecachet op basis van alleen de tekst en verwijderd na 14 dagen zonder aanvraag; nergens staat vastgelegd dat u degene was die het vroeg. De enige gegevens die we over u bewaren zijn uw inlog-e-mailadres, uw abonnementsstatus en een dagelijks aantal geanalyseerde artikelen ter handhaving van uw plan. Chatsessies beginnen steeds opnieuw en worden niet opgeslagen: de enige uitzondering is dat als u een deblokkeeringsaanvraag indient, het transcript dat u bijvoegt ter beoordeling wordt opgeslagen. Van apparaat wisselen of uitloggen betekent dat uw persona opnieuw wordt opgebouwd. Onze backend is nog niet openbaar. We verplaatsen elke service die uw gegevens raakt naar een source-available repository en verwachten deze voor september 2026 openbaar te stellen. Tot die tijd is het enige wat u op vertrouwen aanneemt dat wij geen registratie bijhouden die u aan uw onderwerpen koppelt. Mera wordt in Nederland gebouwd onder de GDPR, en niets bewaren buiten inlog en facturatie is precies de bedoeling van dit ontwerp.",
-    "privacyCloud": "Uw feiten en onderwerpen worden uitsluitend op uw apparaat opgeslagen. Cloudinferentie gebruikt versleutelde Trusted Execution Environments (TEE): uw gegevens worden op het apparaat versleuteld met de sleutel die de enclave publiceert, verwerkt in een geïsoleerde enclave en pas op uw apparaat weer ontsleuteld. Om precies te zijn: de app controleert die attestatie nog niet tegen de hardwareleverancier, dus vertrouwt u nu op ons en de enclave-operator in plaats van op de chip; het doen van die controle in de app zodat het weigert door te gaan staat op ons roadmap. Telkens als u nieuws ophaalt worden alleen uw onderwerpsfrasen verstuurd, zonder gebruikers-ID (zet Ruis injecteren hierboven in om nep-onderwerpen mee te sturen). Die frasen worden op onze servers gecachet op basis van alleen de tekst en verwijderd na 14 dagen zonder aanvraag; nergens staat vastgelegd dat u degene was die het vroeg. De enige gegevens die we over u bewaren zijn uw inlog-e-mailadres, uw abonnementsstatus en een dagelijks aantal geanalyseerde artikelen ter handhaving van uw plan. Chatsessies beginnen steeds opnieuw en worden niet opgeslagen: de enige uitzondering is dat als u een deblokkeeringsaanvraag indient, het transcript dat u bijvoegt ter beoordeling wordt opgeslagen. Van apparaat wisselen of uitloggen betekent dat uw persona opnieuw wordt opgebouwd. Onze backend is nog niet openbaar. We verplaatsen elke service die uw gegevens raakt naar een source-available repository en verwachten deze voor september 2026 openbaar te stellen. Mera wordt in Nederland gebouwd onder de GDPR, en niets bewaren buiten inlog en facturatie is precies de bedoeling van dit ontwerp.",
+    "privacyOnDevice": "Uw feiten en onderwerpen worden uitsluitend op uw apparaat opgeslagen: de AI-inferentie draait volledig op het apparaat via het Mera Protocol. Telkens als u nieuws ophaalt worden alleen uw onderwerpsfrasen verstuurd, zonder gebruikers-ID. Die frasen worden op onze servers gecachet op basis van alleen de tekst en verwijderd na 14 dagen zonder aanvraag; nergens staat vastgelegd dat u degene was die het vroeg. De enige gegevens die we over u bewaren zijn uw inlog-e-mailadres, uw abonnementsstatus en een dagelijks aantal geanalyseerde artikelen ter handhaving van uw plan. Chatsessies beginnen steeds opnieuw en worden niet opgeslagen: de enige uitzondering is dat als u een deblokkeeringsaanvraag indient, het transcript dat u bijvoegt ter beoordeling wordt opgeslagen. Van apparaat wisselen of uitloggen betekent dat uw persona opnieuw wordt opgebouwd. Onze backend is nog niet openbaar. We verplaatsen elke service die uw gegevens raakt naar een source-available repository en verwachten deze voor september 2026 openbaar te stellen. Tot die tijd is het enige wat u op vertrouwen aanneemt dat wij geen registratie bijhouden die u aan uw onderwerpen koppelt. Mera wordt in Nederland gebouwd onder de GDPR, en niets bewaren buiten inlog en facturatie is precies de bedoeling van dit ontwerp.",
+    "privacyCloud": "Uw feiten en onderwerpen worden uitsluitend op uw apparaat opgeslagen. Cloudinferentie gebruikt versleutelde Trusted Execution Environments (TEE): uw gegevens worden op het apparaat versleuteld met de sleutel die de enclave publiceert, verwerkt in een geïsoleerde enclave en pas op uw apparaat weer ontsleuteld. Om precies te zijn: de app controleert die attestatie nog niet tegen de hardwareleverancier, dus vertrouwt u nu op ons en de enclave-operator in plaats van op de chip; het doen van die controle in de app zodat het weigert door te gaan staat op ons roadmap. Telkens als u nieuws ophaalt worden alleen uw onderwerpsfrasen verstuurd, zonder gebruikers-ID. Die frasen worden op onze servers gecachet op basis van alleen de tekst en verwijderd na 14 dagen zonder aanvraag; nergens staat vastgelegd dat u degene was die het vroeg. De enige gegevens die we over u bewaren zijn uw inlog-e-mailadres, uw abonnementsstatus en een dagelijks aantal geanalyseerde artikelen ter handhaving van uw plan. Chatsessies beginnen steeds opnieuw en worden niet opgeslagen: de enige uitzondering is dat als u een deblokkeeringsaanvraag indient, het transcript dat u bijvoegt ter beoordeling wordt opgeslagen. Van apparaat wisselen of uitloggen betekent dat uw persona opnieuw wordt opgebouwd. Onze backend is nog niet openbaar. We verplaatsen elke service die uw gegevens raakt naar een source-available repository en verwachten deze voor september 2026 openbaar te stellen. Mera wordt in Nederland gebouwd onder de GDPR, en niets bewaren buiten inlog en facturatie is precies de bedoeling van dit ontwerp.",
     "privacyPolicy": "Privacybeleid",
     "privacyNoticeTitle": "Jouw privacy",
     "updatingTopics": "Onderwerpen bijwerken... {{completed}}/{{total}}",
     "emptyStateMessage": "Beantwoord een paar vragen om je profiel op te bouwen",
     "factsHeading": "Feiten",
-    "noiseSwitchLabel": "Ruis",
-    "noiseBadge": "ruis",
     "generatingTopics": "Onderwerpen genereren...",
     "topicGenFailed": "Onderwerpgeneratie mislukt: {{error}}",
     "clusterCount": "{{count}} Nieuws",
@@ -980,7 +966,6 @@
     "published": "Gepubliceerd",
     "analysed": "Geanalyseerd",
     "relevant": "Relevant voor jou",
-    "noiseRemoved": "Ruis verwijderd",
     "lastProcessed": "Laatst verwerkt",
     "errorTitle": "Probleem bij scoren",
     "openA11y": "Feedstatus openen",
@@ -1577,6 +1562,7 @@
     "askMera": "Vraag Mera",
     "chatIntro": "Vraag me alles over hoe Mera werkt. Ik kan het uitleggen, maar kan niets van hier uit veranderen.",
     "launchButton": "Maak de rondleiding",
+    "learnAboutMera": "Zo werkt Mera",
     "hintReveal": "Tik op elk.",
     "hintRevealSome": "Tik op minstens {{count}}.",
     "hintChoose": "Kies er een.",
@@ -1818,20 +1804,6 @@
           "on-device-option": {
             "headline": "Apparaat, als je wilt",
             "body": "In Instellingen → Mera Protocol kun je de verwerking naar deze telefoon verplaatsen en dan verlaat niets over jou het apparaat helemaal. Het downloadt eerst een model, wil een vrij recent apparaat en is merkbaar langzamer, wat precies waarom het niet het standaard is."
-          },
-          "decoys-are-a-switch": {
-            "headline": "Lokvogels zijn uit tot je ze aanzet",
-            "body": "Er is een instelling genaamd Ruis injecteren die verzonnen onderwerpen naast je echte stuurt, dus de frasen van je telefoon kunnen niet als een portret van jou worden gelezen. Wat doet het nu?",
-            "choose": {
-              "always-on": {
-                "label": "Draait stil op de achtergrond",
-                "feedback": "Nee, en we willen dit corrigeren in plaats van het als aangenaam aan te nemen."
-              },
-              "off-until-you-turn-it-on": {
-                "label": "Niets, tot je het aanzet",
-                "feedback": "Juist. Het staat standaard uit: Instellingen → Mera Protocol → Ruis injecteren."
-              }
-            }
           },
           "what-we-keep": {
             "headline": "Wat we houden",
@@ -2189,13 +2161,13 @@
               }
             }
           },
-          "inject-noise": {
-            "headline": "Ruis injecteren",
-            "body": "Stuurt verzonnen onderwerpen langs je echte, dus de frasen die van je telefoon komen, kunnen niet als portret gelezen worden. Alles dat alleen een lokvogel paste, wordt op deze telefoon weggegooid voordat je het ooit ziet. Standaard uit: het kan onderwerpgeneratie vertragen en de feed een beetje verdunnen."
-          },
           "deeper-questions": {
             "headline": "Diepere vragen",
             "body": "Dit verandert wat Mera je vraagt, niet wat het verzendt. In plaats van wat je geïnteresseerd bent, vraagt het wat je je aandacht beschermt en wat je deze maand beslist. De antwoorden zijn feiten als elk ander en verlaten nooit deze telefoon, wat precies waarom het ze kan vragen."
+          },
+          "inject-noise": {
+            "headline": "Ruisinjectie, nog in aanbouw",
+            "body": "Verzonnen onderwerpen samen met je echte versturen zou de zinnen die je telefoon verlaten moeilijker leesbaar maken als portret van één persoon. Dit is het deel van het Mera Protocol waar we nog aan bouwen: het is nog niet gebouwd, dus er is geen instelling voor en vandaag vult niets aan wat je telefoon verstuurt. We zeggen het je liever dan je een bescherming te laten aannemen die je niet hebt."
           },
           "web-search": {
             "headline": "Websearch in chat",

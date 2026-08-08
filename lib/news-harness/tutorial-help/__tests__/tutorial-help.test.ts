@@ -65,8 +65,11 @@ describe('buildTutorialHelpPrompt', () => {
         const prompt = buildTutorialHelpPrompt();
         // Cloud is the default (mera-protocol-store DEFAULT_PROCESSING_MODE)…
         expect(prompt).toMatch(/default processing mode is CLOUD/i);
-        // …and decoy padding is opt-in (injectNoise: false).
-        expect(prompt).toMatch(/Inject noise.*OFF by default/i);
+        // …and there is no decoy/noise feature at all. Pinned as a DENIAL, not
+        // as an absence: the app shipped this claim for months, so a prompt that
+        // merely stops mentioning it leaves the model free to invent it back.
+        expect(prompt).toMatch(/NO decoy or noise-injection feature/i);
+        expect(prompt).toMatch(/there is no "Inject noise" setting/i);
         // A bare thumb is discarded.
         expect(prompt).toMatch(/thumbs up or down with no reason.*discarded/i);
         // Mute is a hard exclusion, the down arrow is not.

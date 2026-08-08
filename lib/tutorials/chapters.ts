@@ -45,8 +45,11 @@
 //     Expiry follows STRENGTH, not origin: ≥0.8 ⇒ hard, no expiry; below ⇒ +30d
 //     (`lib/database/services/suppression-service.ts:16-19`).
 //   • Cloud E2EE is the DEFAULT processing mode; on-device is opt-in
-//     (`lib/stores/mera-protocol-store.ts:78`). Decoy padding (`injectNoise`) is
-//     OFF by default (:98) — so the privacy chapter says "a switch you turn on".
+//     (`lib/stores/mera-protocol-store.ts:78`).
+//   • There is NO decoy/noise-injection feature. Nothing generates, sends or
+//     discards decoy topics, and no setting exists to switch one on, so no
+//     chapter may teach one. The privacy and protocol chapters used to, and the
+//     slides were removed rather than reworded.
 //   • Chapter `teaching` must NOT teach the "Kind of story" / "Person or thing"
 //     leaves — article tagging shipped but those kinds match almost nothing.
 //   • Chapter `explore` must not borrow relevance phrasing: Explore is
@@ -261,18 +264,6 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
       {
         id: 'on-device-option',
         visual: { placeholder: { kind: 'icon', name: 'memory' } },
-      },
-      {
-        id: 'decoys-are-a-switch',
-        visual: { placeholder: { kind: 'orbit', name: 'blur-on' } },
-        interaction: {
-          kind: 'choose',
-          options: [
-            { id: 'always-on' },
-            { id: 'off-until-you-turn-it-on', correct: true },
-          ],
-          mustBeCorrect: true,
-        },
       },
       {
         id: 'what-we-keep',
@@ -580,12 +571,18 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
         },
       },
       {
-        id: 'inject-noise',
-        visual: { placeholder: { kind: 'orbit', name: 'blur-on' } },
-      },
-      {
         id: 'deeper-questions',
         visual: { placeholder: { kind: 'icon', name: 'psychology' } },
+      },
+      // The noise-injection layer (Mera Protocol Rules 2/3/5) is being built and
+      // does NOT ship today: nothing generates, sends or discards a decoy topic,
+      // and there is no setting to switch one on. The slide stays because the
+      // owner is actively working on it, but its copy must describe it as
+      // unbuilt. `chapters.test.ts` enforces exactly that — it is the one
+      // allowlisted mention, and it fails if the copy stops saying so.
+      {
+        id: 'inject-noise',
+        visual: { placeholder: { kind: 'orbit', name: 'blur-on' } },
       },
       {
         id: 'web-search',
