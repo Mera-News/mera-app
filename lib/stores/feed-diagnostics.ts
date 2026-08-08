@@ -21,6 +21,8 @@
 
 import {
   FEED_WINDOW_MS,
+  RENDER_GATE,
+  V3_RENDER_GATE,
   effectiveRenderGate,
   isComplete,
   isOpenedId,
@@ -34,6 +36,11 @@ import {
   stableClusterIdOf,
   type FeedListItem,
 } from './feed-list-selector';
+import {
+  grayBandSweep,
+  type DedupCandidate,
+  type GrayBandCounters,
+} from '@/lib/feed-grouping/gray-band-pairs';
 import type {
   ScoringModeBreakdown,
   SharedNoteBreakdown,
@@ -163,6 +170,16 @@ export interface FeedFunnelInput {
    *  flag lives in the composition root. */
   useArticleTags?: boolean;
 
+  /** Packed sign-bit sidecars (`ArticleWithClusters.vector_sidecar_packed`,
+   *  base64) keyed by ARTICLE id, for the duplicate-candidate counters below.
+   *
+   *  Passed in rather than read off `ForYouSuggestion`: the sidecar is not a
+   *  persisted column, and adding one for a diagnostics counter would be a
+   *  migration in exchange for nothing. Absent ⇒ the sweep runs on its lexical
+   *  fallback and `dedup.withSidecar` reports 0, which is the honest reading of
+   *  "the vector axis was not measured". */
+  vectorSidecarsById?: Record<string, string | null>;
+
   userCtx: UserGeoLanguageContext | null;
   /** Captured ONCE by the caller and used for every window/age computation. */
   nowMs: number;
@@ -174,7 +191,24 @@ export interface FeedFunnelReport {
   hydrated: { order: boolean; opened: boolean };
 
   gates: {
+    /** The gate NEW scores are stamped at — i.e. the active flag's gate. Since
+     *  schema v50 this is NOT the cutoff every row is judged at: each row is
+     *  gated by its OWN scorer vintage (`gateForRow`). Kept as a single number
+     *  because the funnel log's histogram needs one line to draw, but read it
+     *  together with `mixedVintage` below — during a rollout the two gates are
+     *  both live and a single number cannot describe the population. */
     renderGate: number;
+    /** The two gates actually in force, and how the rows split between them.
+     *  Without this the diagnostic silently lies during mixed vintage: it would
+     *  claim one cutoff while the feed applied two. */
+    mixedVintage: {
+      legacyGate: number;
+      v3Gate: number;
+      /** Rows carrying `scored_with_v3` — judged at `v3Gate`. */
+      v3ScoredRows: number;
+      /** Rows without it (incl. every pre-v50 row) — judged at `legacyGate`. */
+      legacyScoredRows: number;
+    };
     renderWindowMs: number;
     renderCutoffMs: number;
   };
@@ -323,6 +357,18 @@ export interface FeedFunnelReport {
      *  Same reason `scoring.available` exists. */
     available: boolean;
   };
+
+  /** RESIDUAL DUPLICATE CANDIDATES — pairs that look like the same story yet
+   *  land in DIFFERENT propagation components, i.e. the ones read-story
+   *  filtering and score propagation both miss. Counters only: no model is
+   *  called, nothing is filtered, and no card changes. See
+   *  `lib/feed-grouping/gray-band-pairs.ts` for how the band was calibrated.
+   *
+   *  `dedupWithSidecar: 0` means the vector axis had nothing to work with (no
+   *  prod article carries a sidecar yet) and the numbers came from the lexical
+   *  fallback — read it as "not measured on the calibrated axis", never as
+   *  "no duplicates found". */
+  dedup: GrayBandCounters;
 
   hydrateProvenance: HydrateProvenance | null;
   /** The persisted READING ORDER was thrown away at launch. `ingest` refills the
@@ -585,6 +631,20 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
   const dividerIndex = aboveDividerCount;
   const belowDividerCount = Math.max(0, renderedCount - aboveDividerCount);
 
+  // ── Residual duplicate candidates (counters only) ─────────────────────────
+  // Run over the WHOLE pool, not the visible subset: the question this counter
+  // was built to answer is what a PRE-SCORING dedup step would have to chew on,
+  // and scoring sees the pool. Cost is one popcount sweep over ~10²–10³ items,
+  // on the Observability refresh path only.
+  const sidecars = input.vectorSidecarsById;
+  const dedupItems: DedupCandidate[] = input.suggestions.map((s) => ({
+    id: s._id,
+    title: s.title_en ?? s.title_original ?? null,
+    clusters: s.clusters ?? [],
+    vectorSidecarPacked: sidecars ? (sidecars[s.articleId] ?? null) : null,
+  }));
+  const { counters: dedup } = grayBandSweep(dedupItems);
+
   const memberSumMatchesVisible = memberSum === visibleCount;
   const visibilityAttributionSums =
     dropped.excluded +
@@ -600,6 +660,12 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
     hydrated: { order: input.orderHydrated, opened: input.openedHydrated },
     gates: {
       renderGate: effectiveRenderGate(),
+      mixedVintage: {
+        legacyGate: RENDER_GATE,
+        v3Gate: V3_RENDER_GATE,
+        v3ScoredRows: input.suggestions.filter((s) => s.scoredWithV3 === true).length,
+        legacyScoredRows: input.suggestions.filter((s) => s.scoredWithV3 !== true).length,
+      },
       renderWindowMs: FEED_WINDOW_MS,
       renderCutoffMs: cutoffMs,
     },
@@ -673,6 +739,7 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
       largestGroup: shared?.largestGroup ?? null,
       available: shared != null,
     },
+    dedup,
     hydrateProvenance: input.hydrateStats,
     launchWipeSuspected: !!input.hydrateStats?.emptyPoolGuardTripped,
     sumsCheck: {
@@ -748,6 +815,15 @@ export function feedFunnelScalars(r: FeedFunnelReport): Record<string, number | 
     sharedNoteGroups: r.sharedNotes.available ? r.sharedNotes.sharedNoteGroups : -1,
     rowsSharingANote: r.sharedNotes.available ? r.sharedNotes.rowsSharingANote : -1,
     largestSharedNoteGroup: r.sharedNotes.available ? r.sharedNotes.largestGroupSize : -1,
+    // Residual duplicate candidates. Counts only — the pairs themselves carry
+    // article ids and never leave the report object.
+    dedupCandidates: r.dedup.dedupCandidates,
+    dedupWithSidecar: r.dedup.dedupWithSidecar,
+    dedupPairsSent: r.dedup.dedupPairsSent,
+    dedupPairsFound: r.dedup.dedupPairsFound,
+    dedupPairsVectorAxis: r.dedup.dedupPairsVectorAxis,
+    dedupPairsLexicalAxis: r.dedup.dedupPairsLexicalAxis,
+    dedupClosestHamming: r.dedup.dedupClosestHamming,
     orderHydrated: r.hydrated.order,
     openedHydrated: r.hydrated.opened,
     launchWipeSuspected: r.launchWipeSuspected,

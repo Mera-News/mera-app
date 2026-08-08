@@ -169,6 +169,18 @@ function emitFunnelLog(
     if (r.launchWipeSuspected) {
       lines.push('    ⚠ launch wipe suspected — hydrate ran against an empty candidate pool');
     }
+    // Residual duplicate candidates — pairs that look like one story yet landed
+    // in different propagation components. MEASUREMENT ONLY: nothing acts on
+    // them. `sidecars 0/N` means the calibrated VECTOR axis had no data and the
+    // count came from the lexical fallback — read it as "not measured", not as
+    // "no duplicates".
+    lines.push(
+      `  ── residual duplicate candidates (measurement only) ──\n` +
+        `    pairs                : ${r.dedup.dedupPairsSent} sent / ${r.dedup.dedupPairsFound} found` +
+        `  (vector ${r.dedup.dedupPairsVectorAxis} · lexical ${r.dedup.dedupPairsLexicalAxis})\n` +
+        `    sidecar coverage     : ${r.dedup.dedupWithSidecar}/${r.dedup.dedupCandidates}` +
+        `  closest hamming ${r.dedup.dedupClosestHamming}`,
+    );
     const sums = r.sumsCheck;
     if (!sums.visibilityAttributionSums || !sums.memberSumMatchesVisible || !sums.orderReasonsSum) {
       lines.push('    ⚠ report inconsistent — feed-diagnostics is stale relative to the pipeline');
