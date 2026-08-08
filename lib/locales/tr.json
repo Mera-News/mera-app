@@ -21,7 +21,10 @@
     "yes": "Evet",
     "no": "Hayır",
     "saving": "Kaydediliyor...",
-    "offlineBanner": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz — denemelere devam edeceğiz."
+    "offlineBanner": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz — denemelere devam edeceğiz.",
+    "offlineBannerOffline": "Çevrimdışısın. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
+    "offlineBannerInternetDown": "İnternet bağlantısı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
+    "offlineBannerServerDown": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz."
   },
   "auth": {
     "reauthBanner": "Senkronize etmek için yeniden giriş yap",
@@ -237,7 +240,8 @@
     "sourceCountryGlobal": "Dünya Geneli",
     "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun.",
     "readOn": "{{publication}}'da Oku",
-    "readOnGoogleTranslate": "Google Translate'de Oku"
+    "readOnGoogleTranslate": "Google Translate'de Oku",
+    "linkUnavailable": "Bu bağlantı güvenli bir şekilde açılamıyor, bu yüzden burada mevcut değil."
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -256,7 +260,13 @@
     "topHeadlines": "Öne çıkan başlıklar",
     "viewTopHeadlines": "Öne çıkan başlıklar",
     "addToLocations": "Yerlerine ekle",
-    "addedToLocations": "Yerlerine eklendi"
+    "addedToLocations": "Yerlerine eklendi",
+    "searchCountriesOrPublishers": "Ülkeleri veya yayıncıları ara...",
+    "noResultsMatch": "Aramanızla eşleşen hiçbir şey yok",
+    "addToExplore": "Keşfete ekle",
+    "addedToExplore": "Keşfete eklendi",
+    "badgeGovernment": "Hükümet kaynağı",
+    "badgeRegulator": "Resmi kurum"
   },
   "clusterDetail": {
     "translatable": "Bu makale {{language}} dilinde: okurken cihazın onu çevirebilir. Çeviri çalışmazsa siteyi Google Translate'de açabilirsin; ama o zaman siteyi Google üzerinden görüntülediğini unutma.",
@@ -434,7 +444,42 @@
     "modelUpdatedTitle": "Model Güncellendi",
     "modelUpdatedDescription": "{{model}} modeline geçildi. Kullanmak için modeli indir.",
     "modelUpdateFailedTitle": "Güncelleme Başarısız",
-    "modelUpdateFailedDescription": "Model güncellenemedi. Lütfen tekrar dene."
+    "modelUpdateFailedDescription": "Model güncellenemedi. Lütfen tekrar dene.",
+    "attestationTitle": "Tasdiki doğrula",
+    "attestationSubtitle": "Bulut yapay zekasının gerçek Intel TDX donanımında çalıştığını ve verilerinizin şifrelendiği anahtarın içinden geldiğini kontrol edin.",
+    "attestationVerifyButton": "Doğrulamayı çalıştır",
+    "attestationVerifying": "Doğrulanıyor...",
+    "attestationRerun": "Tekrar çalıştır",
+    "attestationVerdictFailed": "Doğrulama başarısız oldu",
+    "attestationVerdictIncomplete": "Kısmen doğrulandi",
+    "attestationVerdictVerified": "Doğrulandi",
+    "attestationVerdictFailedDetail": "Bir şey kontrol edilmedi. Verileriniz hâlâ şifreli, ancak donanım doğrulanamadı.",
+    "attestationVerdictIncompleteDetail": "Gerçekleştirdiğimiz her denetim geçti. Bazı denetimler hiç yapılmıyor ve aşağıda kontrol edilmedi olarak listeleniyor.",
+    "attestationError": "Tasdikat raporu getirilemedi. Bağlantını kontrol et ve tekrar dene.",
+    "attestationNotRunYet": "Henüz çalıştırılmadı.",
+    "attestationFailOpenNotice": "Bu sonuçlar şeffaflık için gösteriliyor ve henüz hiçbir şeyi engellemiyor.",
+    "attestationCheckQuoteStructure": "Alıntı iyi şekilde oluşturulmuş Intel TDX",
+    "attestationCheckReportDataKey": "Alıntının içine işlenmiş şifreleme anahtarı",
+    "attestationCheckFreshness": "Alıntı yeni (yeniden oynama değil)",
+    "attestationCheckSigningAlgo": "İmzalama algoritması anahtarla eşleşiyor",
+    "attestationCheckQeReportSignature": "Alıntılama enklavesi Intel tarafından imzalı",
+    "attestationCheckAttestationKeyBinding": "İmzalama anahtarı alıntılama enklaveye bağlı",
+    "attestationCheckQuoteSignature": "Alıntı imzası geçerli",
+    "attestationCheckPckChain": "Intel sertifika zinciri geçerli",
+    "attestationCheckRootCaPin": "Zincir Intel kök sertifikasına bağlı",
+    "attestationCheckTcbStatus": "Platform yaması düzey güncel",
+    "attestationCheckGpuAttestation": "GPU tasdiki",
+    "attestationNotCheckedLabel": "kontrol edilmedi",
+    "attestationScopeNotice": "Bu yukarıda gösterilen modeli kontrol ediyor. Mera birden fazla bulut modeli kullanıyor (chat farklı bir tane kullanıyor ve her birinin bir yedeği var), bu yüzden burada bir geçiş bunu başarmaksa bunu yapar, her isteği değil.",
+    "attestationModelLabel": "Kontrol edilen model",
+    "webSearchTitle": "Sohbette web araması",
+    "webSearchOn": "Açık - Mera soruyu cevaplamak için web'i arayabilir",
+    "webSearchOff": "Kapalı",
+    "webSearchDescription": "Bu açık olduğunda, Mera soruyu cevaplamak için web'i arayabilir. Yazdığın arama sözcükleri sunucumuza ve bir arama sağlayıcısına gönderiliyor. Başka hiçbir şey onlarla gitmiyor - gerçekleriniz yok, akışınız yok, kim olduğunuz yok. Varsayılan olarak kapalı.",
+    "deepInterviewTitle": "Daha derin sorular",
+    "deepInterviewOn": "Açık - Mera dikkat, endişeler ve kararlar hakkında soruyor",
+    "deepInterviewOff": "Kapalı",
+    "deepInterviewDescription": "Mera daha az, daha derin sorular soruyor: dikkatini neye karşı korumaya çalıştığın, hangi konuların gerekli ama endişe verici olduğu, hangilerinin yararlı ama zamanı boşa harcadığı görünüyor, bu ay ne kararlaştırıyorsun ve her yer senin için neden önemli. Cevaplarınız bu cihazda saklanıyor ve hiçbir zaman oradan ayrılmıyor - bu, Mera'nın onları sorabilmesinin tam nedenidir. Alaka düzeyi puanlarını ve her hikayede gösterilen nedenleri keskinleştirir. Varsayılan olarak kapalı."
   },
   "manageData": {
     "deleting": "Siliniyor...",
@@ -457,7 +502,13 @@
     "factsDescription": "Bilgileriniz ve bunların ürettiği konular (bu cihazda)",
     "factsModalDescription": "Eklediğiniz bilgileri ve onlardan üretilen konuları siler. Bilgileriniz bu cihazdan hiç ayrılmaz. Konu ifadeleri haber getirirken gönderilir ve sunucularımızda kullanıcı kimliği olmadan önbelleğe alınır; dolayısıyla orada bunların size ait olduğunu gösteren hiçbir kayıt yoktur. Haber akışınız da temizlenir, çünkü bu konular üzerine kuruludur, ve yeni bilgi ekleyene kadar boş kalır.",
     "locationDevice": "Cihazda",
-    "locationServer": "Sunucu"
+    "locationServer": "Sunucu",
+    "exportHistoryTitle": "Okuma geçmişini dışa aktar",
+    "exportHistoryDescription": "Son 30 gün JSON olarak: makaleler, yayınlar ve ortalama yayından okumasına kadar süre",
+    "exportHistorySubject": "Mera okuma geçmişim (JSON)",
+    "exporting": "Dışa aktarılıyor...",
+    "exportHistoryEmptyTitle": "Dışa aktarılacak hiçbir şey yok henüz",
+    "exportHistoryEmptyDescription": "Son 30 gün içinde hiçbir makale okumadınız."
   },
   "preferences": {
     "manageSettings": "Uygulama ayarlarını ve hesabını yönet",
@@ -495,7 +546,12 @@
     "appVersion": "Uygulama Sürümü: {{version}}",
     "contentPolicy": "İçerik Politikası",
     "faq": "SSS",
-    "reportBug": "Hata bildir"
+    "reportBug": "Hata bildir",
+    "deleteAccountConfirmGrace": "Hesabınız silme için planlanacak ve 30 günlük ödemeli dönem vardır. Bu 30 gün içinde tekrar giriş yapın ve silme otomatik olarak iptal edilir.",
+    "deleteAccountWarningGrace": "⚠️ 30 günden sonra bu geri alınamaz ve tüm verileriniz kalıcı olarak kaldırılır.",
+    "finalConfirmationBodyGrace": "Bu, hesabınızı 30 gün içinde kalıcı silme için planlar.",
+    "accountDeletionScheduledTitle": "Silme Planlandı",
+    "accountDeletionScheduledDescription": "Hesabınız 30 gün içinde kalıcı olarak silinecek. Silmeyi iptal etmek için o zamandan önce tekrar giriş yapın."
   },
   "configPanel": {
     "tabPersona": "Profil",
@@ -851,7 +907,14 @@
     "manageBadge": "Yönet",
     "startWithStarter": "Starter ile başlayın",
     "starterRecommendation": "Starter başlamak için seçilecek yerdir. Mera News Free ise bu cihazda zaten oluşturduğunuz şeyi korumak içindir, ancak ilk gün henüz korunacak bir şey yoktur.",
-    "turnMeraBackOn": "Mera'yı tekrar açın"
+    "turnMeraBackOn": "Mera'yı tekrar açın",
+    "para1": "Mera News ücretsiz olabilirdi. Ama bu birisinin ödediği anlamına gelirdi: reklam veren seni satın alıyor, verilerin alınıyor veya dostça bir yazı. Haberin çoğu tam olarak budur.",
+    "para2": "Reklam destekli medyanın sınırı yok. Ne kadarını senden aldığının ve sonradan ne için kullanıldığının. Biz o şirket olmak istemiyoruz, bu yüzden buradaki anlaşma basit. Verileriniz sizde kalır. Yazılım işi yapır. Siz için ödersiniz.",
+    "para3Trial": "Individual'ın bir haftalık ücretsiz denemesini başlatmanızı öneriyoruz. Çoğu insanın ihtiyaç duyduğu plan budur. Bir haftadan sonra bunu tutabilir, Starter'a geçebilir veya Professional'a yükseltebilir, hangisi size en uygunsa.",
+    "para3NoTrial": "Starter başlamak için iyi bir yerdir. En küçük plandır ve istediğiniz zaman yükseltebilirsiniz.",
+    "startFreeTrial": "Ücretsiz denemeni başlat",
+    "subscribeNow": "Şimdi abone ol",
+    "planRecommendation": "Günde yaklaşık {{count}} makale açıyorsun. {{plan}} günde {{limit}}'e kadar analiz ediyor, bu yüzden her zaman geçeceğinden daha fazla var."
   },
   "tabs": {
     "deck": "Akış",
@@ -880,7 +943,16 @@
     "scopeWorld": "Dünya",
     "noArticles": "Makale bulunamadı",
     "addPlaces": "Yerleri ekle",
-    "offlineUnavailable": "Çevrimdışısın — Keşfet için internet bağlantısı gerekli"
+    "offlineUnavailable": "Çevrimdışısın — Keşfet için internet bağlantısı gerekli",
+    "serverUnavailable": "Mera şu anda erişilemiyor: biraz sonra tekrar dene.",
+    "addSources": "Kaynak ekle",
+    "removeScope": "{{name}} kaldır",
+    "searchPlaceholder": "Son haberleri ara",
+    "clearSearch": "Aramayı temizle",
+    "searchMinLength": "Aramak için yazmaya devam et",
+    "searchNotSubscribed": "Arama aktif bir plan gereklidir",
+    "searchError": "Şu anda arama yapılamıyor",
+    "searchEmpty": "Son 48 saatte hiçbir eşleşme yok. Arama son başlıkları kapsıyor, tam arşivi değil."
   },
   "forYou": {
     "sectionPrefix": "Haberler:",
@@ -943,7 +1015,12 @@
     "goToStoryAction": "Haberi aç",
     "deleteStoryAction": "Haberi sil",
     "deleteStoryConfirmTitle": "Bu haberi silinsin mi?",
-    "deleteStoryConfirmBody": "Silme, bu haber için kaydedilmiş her şeyi kaldırır."
+    "deleteStoryConfirmBody": "Silme, bu haber için kaydedilmiş her şeyi kaldırır.",
+    "followFabLabel": "Yeni bir hikayeyi takip et",
+    "followChatSeed": "Bir hikayeyi takip etmek istiyorum.",
+    "followChatIntro": "Takip etmek istediğini söyle ve ben bunu kurtaracağım.",
+    "emptyHintFollow": "Takip et düğmesine dokun ve Mera'ya neyi takip etmek istediğini söyle.",
+    "emptyCtaFollow": "Bir hikayeyi takip et"
   },
   "whatsNew": {
     "title": "Yenilikler",
@@ -1372,7 +1449,23 @@
     "title": "Görünüm",
     "subtitle": "Mera'nın bu cihazda görsel öğeleri nasıl işlediğini özelleştirin",
     "staticGradientTitle": "Sabit arka plan",
-    "staticGradientDescription": "Hareketli arka plan yerine sabit bir gradyan kullanın — pil ve eski cihazlar için daha kolay"
+    "staticGradientDescription": "Hareketli arka plan yerine sabit bir gradyan kullanın — pil ve eski cihazlar için daha kolay",
+    "screenTitle": "Metin ve Görüntü",
+    "screenSubtitle": "Mera'da metnin ve görsellerin nasıl göründüğünü ayarlayın",
+    "sectionText": "Metin",
+    "sectionVisuals": "Görseller",
+    "textSizeTitle": "Metin boyutu",
+    "textSizeDescription": "Mera'nın her yerinde geçerli. Bu cihazınızın kendi metin boyutu ayarının üzerine eklenir.",
+    "textSizePreviewLabel": "Önizleme",
+    "textSizePreviewHeadline": "Piyasalar görüşmelere karşı sakin",
+    "textSizePreviewBody": "Seçtiğiniz boyutta gösterilen kısa bir vücut metni örneği.",
+    "textSizeA11y": "Metin boyutu, {{label}}",
+    "textSizeStepCompact": "Kompakt",
+    "textSizeStepDefault": "Varsayılan",
+    "textSizeStepLarge": "Büyük",
+    "textSizeStepLarger": "Daha büyük",
+    "textSizeStepLargest": "En büyük",
+    "deviceTextSizeHint": "Daha da büyük metin için cihaz ayarlarında Görüntü ve Parlaklık kullanın."
   },
   "freeTier": {
     "cardBody": "Mera'nın yapay zeka kısmı şu an kapalı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey bu cihazda kalıyor ve Keşfet sekmesinde hâlâ bugünün haberlerine erişebilirsiniz. Bir plan olmadan Mera sizin akışınızı oluşturamaz, sorularınızı cevaplayamaz ya da yeni haberleri takip edemez. Bir plan başlatın ve her şey geri gelir.",
@@ -1389,5 +1482,745 @@
     "trackDismiss": "Şimdi değil",
     "trackTitle": "Haber takibi bir plan ile birlikte geliyor",
     "trackedStoriesEmptyBody": "Henüz takip edilen haber yok. Bir haberi takip etmek bir plan gerektirir, takip ettiğiniz her şey bu cihazda kalıyor, sizindir."
+  },
+  "relatedSort": {
+    "a11yLabel": "İlgili makaleleri sırala",
+    "relevance": "En iyi eşleşme",
+    "oldest": "Eski olanlar ilk",
+    "newest": "Yeni olanlar ilk"
+  },
+  "factCheck": {
+    "action": "Gerçek denetimi",
+    "actionA11y": "Bu hikayeye AI gerçek denetimi çalıştır",
+    "title": "AI gerçek denetimi",
+    "hide": "Gizle",
+    "retry": "Tekrar dene",
+    "checking": "Bu hikaye diğer kaynaklarla karşılaştırılıyor...",
+    "checkingHint": "Bu bir dakika kadar sürebilir.",
+    "stillWorking": "Hâlâ bunda çalışıyor. Birkaç dakika sonra tekrar kontrol et.",
+    "failed": "Bu denetim tamamlanamadı. Daha sonra tekrar deneyin.",
+    "error": "Denetim başlatılamadı. Bağlantını kontrol et ve tekrar dene.",
+    "blocked": "Bu hikaye denetlenemedi.",
+    "claimsHeading": "Denetlenen iddialar",
+    "citationsHeading": "Danışılan kaynaklar",
+    "noCitations": "Bu denetimle geri hiçbir kaynak gelmedi, bu yüzden bunu doğrulanmamış olarak görmek gerek.",
+    "sourceFallback": "Kaynak {{index}}",
+    "disclaimer": "Web aramasından yapay zeka tarafından yazılmıştır. Yanlış veya eksik olabilir, güvenmeden önce kaynakları oku.",
+    "verdict": {
+      "supported": {
+        "label": "Kaynaklarla tutarlı",
+        "detail": "Bulduğumuz diğer kaynaklar aynı şeyi söylüyor. Bu onun doğru olduğunu kanıtlamaz, yalnızca çelişen bir şey bulamadığımız anlamına gelir."
+      },
+      "disputed": {
+        "label": "Kaynaklar anlaşmazlık içinde",
+        "detail": "Bu hikayenin parçalarıyla çelişen kaynaklar bulduk. Onları oku ve kendin karar ver."
+      },
+      "unsupported": {
+        "label": "Destek bulunamadı",
+        "detail": "Bu hikayeyi destekleyen başka kaynaklar bulamadık. Bu sadece hikayenin yeni veya niş olması anlamına gelebilir, onun yanlış olduğunu göstermez."
+      },
+      "mixed": {
+        "label": "Kısmen tutarlı",
+        "detail": "Bazı parçalar diğer kaynaklarla uyuşuyor ve bazıları uymuyor. İddia-iddia notları hangisinin olduğunu söylüyor."
+      },
+      "unverifiable": {
+        "label": "Doğrulanamadı",
+        "detail": "Bu hikayeyi doğrulamak veya çelişmek için yeterli bulamadık. Bu, onun yanlış olduğunu bulgu değildir."
+      },
+      "unknown": {
+        "label": "Açık cevap yok",
+        "detail": "Denetim özetleyebileceğimiz bir sonuca ulaşmadan tamamlandı. Aşağıda onun baktığı kaynaklar var."
+      }
+    },
+    "assessment": {
+      "supported": "Kaynaklar tarafından destekleniyor",
+      "disputed": "Kaynaklar anlaşmazlık içinde",
+      "unsupported": "Destek bulunamadı",
+      "unverifiable": "Doğrulanamadı",
+      "unknown": "Belirsiz"
+    }
+  },
+  "sourcePrefControl": {
+    "prioritiseA11y": "Bu kaynağı önceliklendır",
+    "deprioritiseA11y": "Bu kaynağının önceliğini düşür"
+  },
+  "consent": {
+    "title": "Devam etmeden önce",
+    "body": "Hizmet Şartlarımız ve Gizlilik Politikamız güncelledik. Mera'yı kullanmaya devam etmek için lütfen bunları gözden geçir ve kabul et.",
+    "termsLink": "Hizmet Şartları",
+    "privacyLink": "Gizlilik Politikası",
+    "accept": "Kabul Et ve Devam",
+    "accepting": "Kaydediliyor...",
+    "errorTitle": "Kabulün kaydedilemedi",
+    "errorDescription": "Lütfen bağlantını kontrol et ve tekrar dene.",
+    "retry": "Tekrar Dene"
+  },
+  "tutorials": {
+    "entryRow": "Mera'ya hoş geldin",
+    "menuTitle": "Mera'ya hoş geldin",
+    "menuSubtitle": "Bu uygulamanın nasıl düşündüğü hakkında kısa rehberler. Herhangi bir yerden başla.",
+    "sectionBasic": "Buradan başla",
+    "sectionAdvanced": "Daha derin git",
+    "progress": "{{done}} / {{total}} bitti",
+    "advancedLockedTitle": "Daha derin git",
+    "advancedLockedBody_one": "Henüz {{count}} rehber daha ve ileri olanlar açılır.",
+    "advancedLockedBody_other": "Henüz {{count}} rehber daha ve ileri olanlar açılır.",
+    "slideCount_one": "{{count}} kart",
+    "slideCount_other": "{{count}} kart",
+    "completedBadge": "Bitti",
+    "empty": "Henüz hiçbir şey yok.",
+    "close": "Kapat",
+    "skip": "Atla",
+    "back": "Geri",
+    "next": "İleri",
+    "done": "Bitti",
+    "continueAnyway": "Yine de devam et",
+    "slideProgress": "Kart {{current}} / {{total}}",
+    "askMera": "Mera'ya sor",
+    "chatIntro": "Mera'nın nasıl çalıştığı hakkında bana ne istersen sor. Açıklayabilirim ama buradan hiçbir şeyi değiştiremem.",
+    "launchButton": "Turu al",
+    "hintReveal": "Her birine dokun.",
+    "hintRevealSome": "En az {{count}}'a dokun.",
+    "hintChoose": "Birini seç.",
+    "hintSort": "Bir kartı dokun, sonra ait olduğu yere dokun.",
+    "hintSortPick": "Şimdi ait olduğu yere dokun.",
+    "hintBeforeAfter": "Çevirmek için dokun.",
+    "beforeLabel": "Kısa versiyon",
+    "afterLabel": "Aslında ne doğru",
+    "sortDone": "Hepsi bitti.",
+    "chapters": {
+      "welcome": {
+        "title": "Mera'ya hoş geldin",
+        "subtitle": "Bu uygulamanın ne olduğu, bir dakikada.",
+        "slides": {
+          "what": {
+            "headline": "Seninle başlayan bir haber uygulaması",
+            "body": "Çoğu haber uygulaması haberin başında başlar ve uyumlu olması umuyla yapılır. Mera diğer ucunda başlar: senin yaşamın hakkında biraz öğrenir, sonra ona dokunan hikayeler arar."
+          },
+          "not-a-timeline": {
+            "headline": "Zaman çizelgesi değil",
+            "body": "Burada hiçbir şey popüler olduğu veya son gelen tarafından emredilmedi. Sırayı neyin karar verdiğini tahmin et.",
+            "choose": {
+              "popular": {
+                "label": "Çoğu insanın okuduğu ne",
+                "feedback": "Burada değil. Popülarite başka birinin haberidir."
+              },
+              "yours": {
+                "label": "Ne kadar yaşamına dokunduğu",
+                "feedback": "Bu işte. Başka her şey sadece kırılma."
+              },
+              "newest": {
+                "label": "Son gelen ne",
+                "feedback": "Yakın. Yeni hikayeler tepede iniyor, ama yeni olmak tepede kazanmayan."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Üç adım ve bu tüm uygulama",
+            "body": "Aslında bu kadar kısa.",
+            "steps": {
+              "0": "Yaşamın hakkında birkaç gerçek şeyi söylüyorsun.",
+              "1": "Mera onları aranacak şeyler halinde dönüştürüyor.",
+              "2": "Günün haberlerini okur ve uyuşanları tutar."
+            }
+          },
+          "matching": {
+            "headline": "Tıklamalarınız değil, yaşamınız",
+            "body": "Küçük bir şehirdeki hemşire ve başkentin hemşiresi burada farklı haber alıyor. Birinin daha çok tıklaması değil, farklı şeylerin aslında onlara ulaşması."
+          },
+          "stays-here": {
+            "headline": "Bu telefonda kalır",
+            "body": "Ne demek olduğunu görmek için her birine dokun.",
+            "reveal": {
+              "about-you": {
+                "label": "Senin hakkında ne biliyor",
+                "text": "Gerçekleriniz, ilgileriniz ve okuduğunuz bu telefona yazılıyor ve orada kalıyor. Sunucuda onun kopyası yok."
+              },
+              "what-leaves": {
+                "label": "Aslında ne ayrılıyor",
+                "text": "\"Hastane personeli\" gibi kısa konu ifadeleri. Ad yok, hesap yok, ifadenin senden geldiğini söyleyen hiçbir şey."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Hazır olduğunda hazır",
+            "body": "Oturum açın ve Mera size birkaç şey soracak. Yanlış cevap yok ve daha sonra herhangi birini değiştirebilirsiniz. Bu rehberlerin geri kalanı Ayarlar'da bekliyor."
+          }
+        }
+      },
+      "facts": {
+        "title": "Gerçekleriniz akışınızı şekillendiriyor",
+        "subtitle": "Mera'ya yaşamın hakkında söyle. Geri kalanını o hallediyor.",
+        "slides": {
+          "a-fact-is": {
+            "headline": "Gerçek bir doğru satır",
+            "body": "\"Ben hemşireyim.\" \"Utrecht'te yaşıyorum.\" \"Küçük bir çocuğum var.\" Kısa, doğru, yaşamınızla ilgili. Tüm fikir budur.",
+            "ask": "Mera'da ne gerçek sayılıyor?"
+          },
+          "where-from": {
+            "headline": "Gerçekler nereden geliyor",
+            "body": "Hiçbir zaman bir formu doldurmak zorunda değilsiniz.",
+            "steps": {
+              "0": "Sen Mera'yla konuşuyorsun ve o dayanıklı bitleri dinliyor.",
+              "1": "Bunu açık söylüyorsun: \"Lizbon'a taşındım.\"",
+              "2": "Profil sekmesinde kendin ekle veya kaldır."
+            }
+          },
+          "to-topics": {
+            "headline": "Gerçekler aranacak şeyler olur",
+            "body": "\"Ben hemşireyim\" birkaç arama ifadesine dönüşür: hastane personeli, hemşirelik maaşları, sağlık politikası. Bir gerçek bir avuç havaya fan. Bu ifadeler haberleri bulmaya gidenlerin."
+          },
+          "sort-them": {
+            "headline": "Bunlardan hangisi gerçek?",
+            "body": "Bir kartı dokun, sonra ait olduğu yere dokun.",
+            "sort": {
+              "buckets": {
+                "fact": "Gerçek",
+                "not-fact": "Gerçek değil"
+              },
+              "cards": {
+                "nurse": "Ben hemşireyim",
+                "utrecht": "Utrecht'te yaşıyorum",
+                "headline": "O tren grevinin hikayesi",
+                "mood": "Bugün sıkılıyorum"
+              }
+            }
+          },
+          "importance": {
+            "headline": "Bazı gerçekler diğerlerinden daha önemli",
+            "body": "Profil sekmesinde Mera'nın senin hakkında bildiği herhangi bir şeye dokun, ne kadar sayıldığını yükselt veya düşür, yeniden ifade et veya kaldır. Bir şeyi düşürmek silmekten daha yumuşaktır ve genellikle daha iyi ilk hamle.",
+            "ask": "Gerçeklerinden birinin ne kadar önemli olduğunu nasıl değiştirebilirim?"
+          }
+        }
+      },
+      "feed": {
+        "title": "Akışını okumak",
+        "subtitle": "Günün hikayelerinin yaşadığı ve nasıl hareket ettiği.",
+        "slides": {
+          "two-lists": {
+            "headline": "İki liste, iki iş",
+            "body": "İlk sekme senin akışın: bir uzun liste, en ilgili tepede. İkincisi aynı gün bölümlere ayrılmış. Aynı hikayeler, farklı şekil, bu yüzden bulduğun hangisini tercih et.",
+            "ask": "Akış ile Pano arasındaki fark nedir?"
+          },
+          "nothing-removed": {
+            "headline": "Hiçbir şey hiçbir zaman kaldırılmaz",
+            "body": "Bir kartı oku ve kayboluyor; batıyor. İki ince ayırıcı listeyi üç parçaya keser ve kartlar giderken aşağıya kayıyor.",
+            "steps": {
+              "0": "Tepede: henüz görmediğiniz her şey.",
+              "1": "İlk ayırıcının altında: görüldü, ama açılmadı.",
+              "2": "İkincinin altında: zaten oku."
+            },
+            "beforeAfter": {
+              "before": "Okumadan önce: kart tepede yeni başka her şeylerle oturuyor.",
+              "after": "Okuduğunuz sonra: aynı kart, hâlâ orada, şimdi ikinci ayırıcının altında. Aşağı kaydırın ve istediğiniz zaman tekrar okuyabilirsiniz."
+            }
+          },
+          "what-counts-as-read": {
+            "headline": "\"Oku\" düşündüğünden daha geniştir",
+            "body": "Ne saydığını görmek için en az ikisine dokun.",
+            "reveal": {
+              "open": {
+                "label": "Açma",
+                "text": "Tam hikayeye dokunmak sayılır, bu hiçbir şaşırtıcı değildir."
+              },
+              "dwell": {
+                "label": "Sadece bakıyor",
+                "text": "Ekranınızda düzgün oturan ve bir buçuk saniye oturan kart da sayılır. Hızlı bir kaydırma geçmez."
+              },
+              "act": {
+                "label": "Harekete geçmek",
+                "text": "Bir parmak, bir kayıt, hikayeyi takip etme veya Mera'ya gönderme okunan olarak sayılır."
+              }
+            }
+          },
+          "order-holds-still": {
+            "headline": "Sıra okurken sabit kalır",
+            "body": "Mera sırayı bir kez çıkartıyor, uygulamayı açtığınızda veya aşağı çektiğinizde ve sonra bunu yalnız bırakır. Listeyi okuduğunuz sırada hiçbir şey kendini yeniden düzenlemez."
+          },
+          "why-this-one": {
+            "headline": "Neden bunu?",
+            "body": "Her kart senin ne kadar önemli olduğunu söyleyen kısa bir çizgi taşır. Bir neden yanlış görünüyorsa, bu Mera'ya söyleyebileceğiniz en yararlı şey.",
+            "ask": "Bir haberin altındaki gerekçe nereden geliyor?"
+          },
+          "caught-up": {
+            "headline": "Bitişe kaçmak sorun değil",
+            "body": "Yeni kalan hiçbir şey olmadığında, Mera bunu söylüyor ve durur. Listeyi tutmak için doldurur. Zaten okuduğunuz her şey hâlâ aşağıda, istersen."
+          }
+        }
+      },
+      "teaching": {
+        "title": "Mera'yı öğretme",
+        "subtitle": "İki parmak, bir neden ve bir geri al.",
+        "slides": {
+          "two-thumbs": {
+            "headline": "İki parmak",
+            "body": "Her hikayenin bir \"Beğendim\" ve bir \"Bana göre değil\" var. Dokunması en hızlı şeyler ve kendi başlarına en az faydalı."
+          },
+          "bare-thumb": {
+            "headline": "Kendi başına bir parmak atılıyor",
+            "body": "Bu insanları şaşırtır, bu yüzden açıkça söylemeye değer.",
+            "steps": {
+              "0": "Bir parmağa dokunsun.",
+              "1": "Küçük bir kart açılır ve ne olduğunu sorar.",
+              "2": "Hiçbir şey söyleme ve hiçbir şey kaydedilmez."
+            },
+            "ask": "Neden kendi başında bir parmak çıkması hiçbir şeyi değiştirmiyor?"
+          },
+          "the-reason": {
+            "headline": "Neden yararlı bir parçadır",
+            "body": "Bunlardan hangisi akışınızı gerçekten değiştiriyor?",
+            "choose": {
+              "just-thumb": {
+                "label": "Bir parmak ve başka hiçbir şey değil",
+                "feedback": "Hiçbir şey değişmez. Mera bunun konu, kaynak veya sadece bugün olup olmadığını söyleyemez."
+              },
+              "thumb-plus-reason": {
+                "label": "Bir parmak artı \"Bu futbol kulübünün çok fazlası\"",
+                "feedback": "Bu bunu. Şimdi harekete geçecek başka bir şey var."
+              }
+            }
+          },
+          "undo": {
+            "headline": "Geri al her zaman sağ orada",
+            "body": "Geri bildirimden yapılan her değişiklik yanında bir Geri Al'ın yanında kısa bir onay gösterir. Buna dokun ve hiçbir şey olmamış gibi."
+          },
+          "it-adds-up": {
+            "headline": "Küçük düzeltmeler büyük olanları yener",
+            "body": "Tüm profilini bir oturumda düzeltmek zorunda değilsiniz. Bir hafta boyunca iki veya üç dürüst düzeltme bunu yapan uzun bir seanstan daha da akışı taşır.",
+            "ask": "Geri bildirim akışımda ne kadar çabuk gösteriliyor?"
+          }
+        }
+      },
+      "privacy": {
+        "title": "Gizliliğiniz",
+        "subtitle": "Bu telefonu ne ayrılıyor ve ne hiç ayrılmıyor.",
+        "slides": {
+          "stays-on-phone": {
+            "headline": "Senin hakkında olan bölüm hiçbir zaman ayrılmıyor",
+            "body": "Gerçekleriniz, ilgileriniz, yerleriniz ve okuduğunuz bu telefonda yaşıyor. Sunucuda bir kopyası yok, bu yüzden de çıkış yapma veya telefon değiştirme profilini tekrar inşa etmek anlamına gelir."
+          },
+          "what-leaves": {
+            "headline": "Aslında ne gidiyor",
+            "body": "Üç şey ve bu liste.",
+            "steps": {
+              "0": "Kısa konu ifadeleri, böylece hikayelerle eşleşecek bir şey var.",
+              "1": "Elektron adresiniz ve hangi planda olduğunuz.",
+              "2": "Bugün kaç hikaye analiz edildiğinin sayısı, bunu yapılan planı dürüst tutmak."
+            },
+            "ask": "Uygulama sunucularınıza ne gönderiyor?"
+          },
+          "cloud-is-default": {
+            "headline": "Varsayılan şifreli buluttadır",
+            "body": "Bir gün haber okumak makine kalitesinde birçok düşünme alır ve çoğu telefon istemez. Bu yüzden kutunun dışından bu iş bulutta olur.",
+            "beforeAfter": {
+              "before": "Sana söylemek isteyebileceğimiz versiyon: telefonun her zaman tamamını yapıyor.",
+              "after": "Aslında doğru olan: varsayılan olarak düşünme bulutta olur, bu telefonda şifreli ve yalnızca kapalı kapsülün içinde açılır. Cihazda yer aldığınız bir switch. Kabul etmek yerine söylemekten çok isteriz."
+            }
+          },
+          "on-device-option": {
+            "headline": "İsterseniz cihaz üzerinde",
+            "body": "Ayarlar → Mera Protokolü'nde bu telefonda işlemeyi hareket ettirebilir ve sonra senin hakkında hiçbir şey ayrılmaz. İlk model indiriyor, açık çekiyor bir oldukça yeni telefon ve belirgin yavaş, bu tam olarak neden varsayılan değil."
+          },
+          "decoys-are-a-switch": {
+            "headline": "Decoys açana kadar kapalı",
+            "body": "Gürültü Enjeksiyonu adında bir ayar var bu gerçek konu yanlış konular gönderir, bu yüzden telefonu gelen ifadeler sana dönüştürülemez.",
+            "choose": {
+              "always-on": {
+                "label": "Arka planda sessizce çalışıyor",
+                "feedback": "Hayır ve bunu rahat bir varsayılan olarak bırakmaktan çok düzeltmek istemiyoruz."
+              },
+              "off-until-you-turn-it-on": {
+                "label": "Hiçbir şey, açana kadar",
+                "feedback": "Sağ. Varsayılan olarak kapalıdır: Ayarlar → Mera Protokolü → Gürültü Enjeksiyonu."
+              }
+            }
+          },
+          "what-we-keep": {
+            "headline": "Ne tuttuğumuz",
+            "body": "Oturum açma e-postanız. Hangi plandan olduğunuz. Her gün analiz edilen hikaye sayısı. Konu ifadeleri yalnızca metne göre önbelleğe alınıyor, onu kimin istediğini hiçbir şey kaydedilmiyor ve on dört gün istenmeyen kullanım sonra bırakılıyor.",
+            "ask": "Mera beni sunuculara ne saklar?"
+          }
+        }
+      },
+      "following": {
+        "title": "Bir hikayeyi takip etmek",
+        "subtitle": "Açılırken bir hikayeyi görünümde tut.",
+        "slides": {
+          "what-it-is": {
+            "headline": "Bitmeyen hikayeler için",
+            "body": "Seçim, dava, fırtına, devralmak. Bir kez takip edin ve her yeni gelişme üç haftada dağınık akıştan geçen bir yerde toplanır."
+          },
+          "two-ways-in": {
+            "headline": "Başlamak için iki yol",
+            "body": "Her ikisi de aynı yere biter.",
+            "steps": {
+              "0": "Hikayeyi tam açın ve altındaki düğme satırında izleme simgesine dokun.",
+              "1": "Veya Takip edilen hikayeler açın, takip et düğmesine dokun ve sadece neyi takip etmek istediğini söyle."
+            },
+            "ask": "Bir hikayeyi nasıl takip ederim?"
+          },
+          "pick-the-scope": {
+            "headline": "Ne kadar geniş olmalı?",
+            "body": "Mera üç veya dört kapsam sunuyor ve birine dokunsun. Dokunana kadar hiçbir şey takip edilmez. Bir mahkeme davasında hangisini seçerdin?",
+            "choose": {
+              "narrow": {
+                "label": "Sadece bu dava",
+                "feedback": "Dar ve sessiz. Kararı ve başka çok az şey alacaksın."
+              },
+              "medium": {
+                "label": "Bu dava ve etrafındaki temyizler",
+                "feedback": "İyi bir orta. Bu insanlar istediği biri."
+              },
+              "wide": {
+                "label": "Çıktığı tüm skandal",
+                "feedback": "Geniş. Bolca alacaksın, yalnızca gevşek ilişkili şeyler dahil."
+              }
+            }
+          },
+          "the-timeline": {
+            "headline": "Birikt, tahakküm etmez",
+            "body": "Yeni gelişmeler hikayenin kendi zaman çizelgesinde bir küçük sayıyla toplanır. Hikaye sessiz giderse, Mera bunu söylüyor ve boşluk doldurmak için icat etmek yerine."
+          },
+          "stop-following": {
+            "headline": "Durdurmak bir dokunuş",
+            "body": "Hikayeyi açın ve takip etmeyi durdurun. Toplanan zaman çizelgesi onunla gider, bu yüzden sadece kırılma isterseydi bunun silme olduğunu biliyor, sadece duraklatma.",
+            "ask": "Bir hikayeyi takip etmeyi bırakırsam zaman çizelgelerine ne oluyor?"
+          }
+        }
+      },
+      "explore": {
+        "title": "Keşfet",
+        "subtitle": "Aynı başlıklar herkese aldığı.",
+        "slides": {
+          "unscored-on-purpose": {
+            "headline": "Kasıtlı olarak seninle ilgili değil",
+            "body": "Keşfet, Mera kişiselleştirmediği tek yerdir. Puanlama, neden, ne açtığından kat. Sadece bir ülkenin haber odasının liderliği yaptığı, onların emrinde.",
+            "ask": "Keşfet sekmesi neden kişiselleştirilmemiş?"
+          },
+          "the-chips": {
+            "headline": "Tepedeki çipiler",
+            "body": "Seninle yapıldı, seninle seçilmedi.",
+            "steps": {
+              "0": "Dünya ilk gelir, her zaman.",
+              "1": "Sonra kendi ülkeniz ve Mera bilen herhangi yerleri ve sonra kendin eklediğin herhangi ülkeyi."
+            }
+          },
+          "the-plus-chip": {
+            "headline": "Çiplerin sonundaki +",
+            "body": "Son ülkeden sonra küçük bir + çip var. Seni nereye götürür?",
+            "choose": {
+              "places": {
+                "label": "Yerlerin",
+                "feedback": "Eskidendi. Artık değil."
+              },
+              "sources": {
+                "label": "Kaynaklar ekranı",
+                "feedback": "Sağ: ülkeler ve onların arkasındaki yayıncılar."
+              },
+              "settings": {
+                "label": "Ayarlar",
+                "feedback": "Hayır. Ayarlar sonuncu sekme boyunca."
+              }
+            }
+          },
+          "search": {
+            "headline": "Keşfette arama",
+            "body": "Çiplerin üzerine arama çubuğu son başlıklar, kabaca son iki gün, arsiv değil. \"Bu şey ne oldu\" için."
+          },
+          "hide-a-chip": {
+            "headline": "Çok fazla çip",
+            "body": "Istemediğiniz çip ve gider basılı tutun. Mera bunları bildiği yerlerden inşa eder, bu yüzden biri geri gelirse, oradaki yer hâlâ profilinizde.",
+            "ask": "Keşfette ülke çipini nasıl alıyorsunuz?"
+          }
+        }
+      },
+      "sources": {
+        "title": "Kaynaklarınızı seçme",
+        "subtitle": "Rozetler, oklar ve engelleyen bir kontrol.",
+        "slides": {
+          "where-it-lives": {
+            "headline": "Kaynaklar nerede yaşıyor",
+            "body": "İki kapı, bir ekran.",
+            "steps": {
+              "0": "Keşfet'in çip satırının sonundaki + çip.",
+              "1": "Veya Profil sekmesi, sonra İleri, sonra Kaynaklar."
+            },
+            "ask": "Hangi kaynakları gördüğümü nereden yönetirim?"
+          },
+          "the-two-badges": {
+            "headline": "Sadece iki rozet var",
+            "body": "Biri ne demek olduğunu görmek için her birine dokun ve birinin bulunmayması ne anlamı gelmiyor.",
+            "reveal": {
+              "government": {
+                "label": "Hükümet kaynağı",
+                "text": "Yayıncı hükümet kuruluşu. Resmi bir şey hakkında resmi bir beyan okuyorken biliyor."
+              },
+              "regulator": {
+                "label": "Resmi kurum",
+                "text": "Düzenleyici veya kamu kurumu: sağlık otoritesi, nakliye güvenlik kurulu, merkez bankası."
+              },
+              "everything-else": {
+                "label": "Hiç rozet değil",
+                "text": "Her şey başka, neredeyse her şey. Kalite derecelendirmesi değil ve bulunmayması yayıncı hakkında kötü hiçbir şey söylemiyor."
+              }
+            }
+          },
+          "plus-is-not-a-rank": {
+            "headline": "Ülkenin yanındaki +",
+            "body": "Ülkeler + ve bir çift oklar taşıyor ve tamamen farklı işler yapıyorlar. + ne yapıyor?",
+            "choose": {
+              "ranks-it-up": {
+                "label": "O ülkenin haberlerini daha yüksek sıralar",
+                "feedback": "Bu oklar. + hiç bir sıralama kontrolü değil."
+              },
+              "adds-a-chip": {
+                "label": "O ülkeyi Keşfette çip olarak ekler",
+                "feedback": "Tam tamına. Yalnızca tarama; bu kişiselleştirilmiş akışınız hakkında hiçbir şey değiştirir."
+              },
+              "follows-it": {
+                "label": "Ülkeyi hikaye olarak takip eder",
+                "feedback": "Hayır. Takip etmek hâlâ açılmış tek hikaye için."
+              }
+            }
+          },
+          "arrows-on-a-country": {
+            "headline": "Ülkenin yanındaki oklar",
+            "body": "Yukarı kendi haber odasından daha sık duymak istemediğin anlamına gelir; aşağı daha az sık. Orada her yayıncısına tek seferde uygulanır ve aynı oka tekrar dokunmak temizler."
+          },
+          "arrows-on-a-publisher": {
+            "headline": "Aynı oklar, bir yayıncı bir kez",
+            "body": "Bir ülke açın ve her yayıncı kendi çiftini taşır. Aşağı sessizçe yayıncı hâlâ karar çiziyse hikaye hiç yok.",
+            "ask": "Kaynağı döndürme ile onu sessize almanın arasındaki fark nedir?"
+          },
+          "mute-is-not-a-downrank": {
+            "headline": "Sessize almak tamamen başka bir şey",
+            "body": "Sessize almak yalnızca kaynak tercihleri ekranında yaşıyor ve sert bir dışlama: bu hikayeler indirilir, yalnızca daha düşük sıralanmış değil. Kartı ve nereye ait olduğu yerdir.",
+            "steps": {
+              "0": "Aşağı okları: daha az sık gösterilir.",
+              "1": "Sessize al: hiç gösterilmez.",
+              "2": "Her ikisi daha sonra kaynak tercihlerinden temizlenebilir."
+            },
+            "sort": {
+              "buckets": {
+                "softer": "Daha az sık gösterilir",
+                "gone": "Tamamen tutuluyor"
+              },
+              "cards": {
+                "down-arrow": "Aşağı oklar",
+                "mute": "Sessize al"
+              }
+            }
+          }
+        }
+      },
+      "filters": {
+        "title": "Şeyleri filtrelemek",
+        "subtitle": "\"İlgilenmiyorum\" nasıl gerçekten çalışıyor.",
+        "slides": {
+          "three-shelves": {
+            "headline": "Bir ekrandaki üç raf",
+            "body": "İlgilenmiyorum ekranı onu tutmak istediğiniz her şeyi tutar.",
+            "steps": {
+              "0": "Kelimeler ve gizlediğiniz şeyler.",
+              "1": "Daha az gördüğü konular.",
+              "2": "Sessize aldığınız veya başa indirdiğiniz kaynaklar."
+            },
+            "ask": "Filtreleyenin tümünü nerede görebilirim?"
+          },
+          "exact-match": {
+            "headline": "Bir filtre tam olarak bir şey eşleşir",
+            "body": "Filtreler aramalar değil. Bir yer filtresi o yeri eşleştirir; kaynak filtresi bu kaynağı eşleştirir. Onlar hikayenin bir alanının tam değerini karşılaştırırlar, bunu öngörülebilir yapan ve aynı zamanda sonraki kartı önemli kılanlar."
+          },
+          "made-from-a-story": {
+            "headline": "Kesin olanlar nereden gelir",
+            "body": "Belirli bir yer hakkında duymak istemediğiniz duymak istermisiniz. Gerçekten ne çalışıyor?",
+            "choose": {
+              "type-it": {
+                "label": "Filtre ekranına yer adını yazın",
+                "feedback": "Bu kelimeler yerine depolanır. Faydalı ama gevşek istediğinden."
+              },
+              "from-an-article": {
+                "label": "Baktığınız hikaye hakkında söyleyin",
+                "feedback": "Evet. Mera'ya sohbette söyleyin veya hikayedeki geri bildirim kartını kullanın. Filtre o hikayenin gerçek yerinden çıkarılır, bu yüzden tam olarak sıralar."
+              }
+            }
+          },
+          "typed-is-words-only": {
+            "headline": "Yazılan filtreler sözcüklerdir",
+            "body": "Bir tanesini elle ekleyebilir ve gerçekten faydalıdır: herhangi bir yerde görünen bir ifadeyi yakalar. Yalnızca yer veya kaynak olamaz, çünkü yazılan ad depolananla neredeyse hiçbir zaman sıralanmaz."
+          },
+          "soft-fades-hard-stays": {
+            "headline": "Bazı solarlar, bazıları kalır",
+            "body": "Nereye geldiğine bağlı değil, ne kadar sıkı söylediğinize bağlıdır.",
+            "beforeAfter": {
+              "before": "Bir yumuşak filtre, \"Bu konuda biraz daha az\", otuz gün sonra ayakkabı girer. Beğeniler taşır.",
+              "after": "Sert bir (elle filtre eklediğinizde veya kaynağı sessize aldığınızda sert anahtar) hiç son tarihi olmaz ve siz onu kendiniz kaldırıncaya kadar kalır."
+            },
+            "ask": "Filtrelediğim şeyler geri gelir mi?"
+          }
+        }
+      },
+      "signal": {
+        "title": "Ses kapatmak",
+        "subtitle": "Bir aydınlat ve hikayeler asla görmüyor.",
+        "slides": {
+          "the-dial": {
+            "headline": "Başlıkta küçük çip",
+            "body": "Akış ve Panel üstünde yüksek, orta veya düşük okuyan çip oturuyor. Bu bir kat: sıfırın altında puanlanan hikayeler çizilir.",
+            "ask": "Akışımın üstündeki Med çip ne yapıyor?"
+          },
+          "per-screen": {
+            "headline": "Her ekran kendisini tuttuğu",
+            "body": "Biri sıkılaştırıyor asla diğeri aç. Tanımladığı ekrana her kartı vur.",
+            "steps": {
+              "0": "Akış Orta başında: gün madde, son şey değil.",
+              "1": "Panel düşük başında: her şey, göz atarken istersin."
+            },
+            "sort": {
+              "buckets": {
+                "feed-tab": "Akış",
+                "dashboard-tab": "Pano"
+              },
+              "cards": {
+                "medium-default": "Ortada başlar",
+                "low-default": "Düşükte başlar"
+              }
+            }
+          },
+          "breaking-always-passes": {
+            "headline": "Son dakika haberleri yaylı yoksun",
+            "body": "Acil durum olarak derecelendirilen herhangi biri yüksek dahil her ayar geçer. Aydınlat rutinde haberleri kırpılır; afet kapalı bir yolu değil."
+          },
+          "headline-cull": {
+            "headline": "Bazı hikayeler aydınlata ulaşmaz",
+            "body": "Kendi hikayeleriniz yanında, mera ülkenin üst başlıklarını çeker. Siz düşük puanlayan en kaliteli başlık tamamen bırakılır ve tabanına dikilir değil. Başlık \"bunda önemli\" söyleyin ve düşük puanlayan birgesen haber sadece. Kendi ilgilerinizle eşleştirilen hikayeler bu şekilde bırakılmaz.",
+            "ask": "Neden ilgilerim hakkında hikayelerden çoğu başlıkları daha az görerim?"
+          }
+        }
+      },
+      "chat": {
+        "title": "Mera ile konuşmak",
+        "subtitle": "Neredeyse her şeyi değiştirmenin en hızlı yolu.",
+        "slides": {
+          "where-mera-is": {
+            "headline": "Mera Profil sekmesinde",
+            "body": "Logoların yanındaki konuşma balonu Profil sekmesi sohbeti açar. Yürümek kolay ve uygulamada en yetkin kontrol.",
+            "ask": "Mera ile sohbeti nerede bulabilirim?"
+          },
+          "ask-what-it-knows": {
+            "headline": "Neyi bildiğini sorarak başla",
+            "body": "\"Benim hakkımda ne biliyorsun?\" gerçekten çalışan listesini alır. Bir ay sessizce akışını yanlış alan biri bayat olmuştu fark etmenin en hızlı yolu."
+          },
+          "say-it-plainly": {
+            "headline": "Bir kişiye söyleyeceğin gibi söyle",
+            "body": "Komut yok, söz dizimi yok. Birkaç örneğe dokun.",
+            "steps": {
+              "0": "Açıkça söylüyorsunuz.",
+              "1": "Mera hangi ayarları anlar.",
+              "2": "Siz onayla veya değil."
+            },
+            "reveal": {
+              "less-of": {
+                "label": "\"Daha az futbol, lütfen\"",
+                "text": "Mera bunu aşağı indirilen bir konu dönüştürür ve seni bir şey uygulanmadan gösterir."
+              },
+              "more-of": {
+                "label": "\"Bisikleti başlattım\"",
+                "text": "Bu yeni bir gerçek olur ve birkaç şeye bakmak için."
+              },
+              "moved": {
+                "label": "\"Lizbon'a taşındım\"",
+                "text": "Eski yer emekli edilir ve yeni eklenir, genellikle bir teklif olarak bir kez onayla."
+              }
+            }
+          },
+          "nothing-until-you-tap": {
+            "headline": "Dokunana kadar hiçbir şey olmaz",
+            "body": "Mera bir şey değişirse, kartı aşama değişikliği ve durur. Söyleyin \"Evet, yap\" kartı dokunmak yerine metin yazarsanız ne olur?",
+            "choose": {
+              "applies-immediately": {
+                "label": "Değişikliği uygulanır",
+                "feedback": "Yapmaz. Yazılan anlaşma burada rıza değil; karışım."
+              },
+              "waits-for-your-tap": {
+                "label": "Hiçbir şey. Kart hâlâ orada bekliyorum",
+                "feedback": "Sağ. Kart genellikle sadece sen yapabilirsin bir kapsam seçimi sunuyor, bu yüzden dokuntuu bekler."
+              }
+            },
+            "ask": "Neden Mera beni yaptığım değişikliği kullanmadı?"
+          },
+          "written-down": {
+            "headline": "Her değişiklik yazılı aşağı",
+            "body": "Uygulanan değişiklikleri nedir, ne oldu ve nereden geldi kaydedilir: sohbet, geri bildirim, teklif veya siz. Mera profilinde yapan hiçbir şey görünmez."
+          },
+          "take-it-back": {
+            "headline": "Çoğu geri alınabilir",
+            "body": "Kayıt Ayarlar → Mera Protokolü → Persona değişiklik günlüğünde yaşıyor.",
+            "beforeAfter": {
+              "before": "Ağırlık değişikliği, eklenen konu, kaldırdığı filtre: bunlar tam olarak nasıl geri koydukları bir Geri Al taşıyoruz.",
+              "after": "Birkaçı geri alınamaz ve söyleyin: temizleme sırasında bir gerçeği silmek veya yer kaldırma, geri koymak için gerekli olanları atar. Onlar hiçbir Geri Al yanında oturum günlüğünde oturuyoruz."
+            },
+            "ask": "Profilimdeki Mera değiştirdiği bir şeyi nasıl geri alabilirim?"
+          }
+        }
+      },
+      "protocol": {
+        "title": "Mera Protokolü ekranı",
+        "subtitle": "Birkaç anahtar ve her biri ne yaptığı.",
+        "slides": {
+          "one-screen": {
+            "headline": "Anahtarlar nerede",
+            "body": "Uygulamada herhangi bir yerden iki dokumu.",
+            "steps": {
+              "0": "Ayarlar sekmesi, sonuncu kuyu boyunca.",
+              "1": "Mera Protokolü."
+            },
+            "ask": "Mera Protokolü ekranı nerede?"
+          },
+          "processing-mode": {
+            "headline": "İşlem modu",
+            "body": "Düşünme nereye oluyor. Her ikisine de dokun.",
+            "reveal": {
+              "cloud": {
+                "label": "Bulut (varsayılan)",
+                "text": "Verileriniz bu telefonda şifreli, yalnızca kapalı kapsülün içinde açılıyor ve yolda tekrar şifrelenmiş. Hızlı ve herhangi bir telefonda çalışır. Uygulama henüz bu kapsülün sertifikasını çip yapan kontrol etmiyor, gizlilik bildirimi açık söylüyor."
+              },
+              "on-device": {
+                "label": "Cihazda",
+                "text": "Her şey burada çalışıyor ve senin hakkında hiçbir şey ayrılmaz. İlk model indirir, oldukça yeni bir telefon ister ve belirgin yavaştır."
+              }
+            }
+          },
+          "inject-noise": {
+            "headline": "Gürültü Enjeksiyonu",
+            "body": "Gerçek ilgi alanlarıyla sahte konular gönderir, bu yüzden telefonu gelen ifadeleri sana çevrilemez. Sadece bir sahte konuyla eşleşen hiçbir şey seni görmeden bu telefonda atılır."
+          },
+          "deeper-questions": {
+            "headline": "Daha derin sorular",
+            "body": "Bu Mera'nın ne gönderdiğini değer, sordu. İlgileriniz yerine, ne korumaya çalıştığın ve bu ay karar verdiğini soruyor. Cevaplar herhangi başka ve hiçbir zaman bu telefon, tam olarak neden sorabilir."
+          },
+          "web-search": {
+            "headline": "Sohbette web araması",
+            "body": "Varsayılan olarak kapalı. Çevrildi, Mera orta konuşmayı bir şey bakabilirsiniz. Ne çıkıyor telefonu yaptığında?",
+            "choose": {
+              "whole-question": {
+                "label": "Tüm mesajın",
+                "feedback": "Hayır. Anahtar kapalı, arama aracı bile modele sunulmuş, bu yüzden hiçbir şey maliyeti."
+              },
+              "search-words-only": {
+                "label": "Sadece arama sözcükleri",
+                "feedback": "Doğru. Sözcükleri aramaya karar verdi ve başka hiçbir şey."
+              }
+            },
+            "ask": "Web araması açık olduğunda telefonu ne bırakır?"
+          },
+          "the-change-log": {
+            "headline": "Değişim günlüğü burada da yaşıyor",
+            "body": "Persona değişim günlüğü, aynı ekranda. Her profil değişiklik sipariş, en yeni ilk, geri alanlar Geri Al ile. Akışın garip yere sürüklenmişse, orada olmuş oldu bulmak.",
+            "ask": "Profilimi neyin değiştirdiğini nasıl görebilirim?"
+          }
+        }
+      }
+    }
   }
 }

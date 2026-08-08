@@ -21,7 +21,10 @@
     "yes": "Tak",
     "no": "Nie",
     "saving": "Zapisywanie...",
-    "offlineBanner": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości — będziemy dalej próbować."
+    "offlineBanner": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości — będziemy dalej próbować.",
+    "offlineBannerOffline": "Jesteś offline. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
+    "offlineBannerInternetDown": "Brak dostępu do internetu. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
+    "offlineBannerServerDown": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować."
   },
   "auth": {
     "reauthBanner": "Zaloguj się ponownie, aby zsynchronizować",
@@ -249,7 +252,8 @@
     "sourceCountryGlobal": "Cały świat",
     "sourceCountryA11y": "Kraj źródła: {{country}}. Dotknij, aby wyświetlić nazwę kraju.",
     "readOn": "Czytaj w {{publication}}",
-    "readOnGoogleTranslate": "Czytaj w Google Translate"
+    "readOnGoogleTranslate": "Czytaj w Google Translate",
+    "linkUnavailable": "Tego linku nie można otworzyć bezpiecznie, dlatego nie jest tu dostępny."
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",
@@ -268,7 +272,13 @@
     "topHeadlines": "Najważniejsze nagłówki",
     "viewTopHeadlines": "Najważniejsze nagłówki",
     "addToLocations": "Dodaj do swoich miejsc",
-    "addedToLocations": "Dodano do Twoich miejsc"
+    "addedToLocations": "Dodano do Twoich miejsc",
+    "searchCountriesOrPublishers": "Szukaj krajów lub wydawców...",
+    "noResultsMatch": "Nic nie pasuje do Twojego wyszukiwania",
+    "addToExplore": "Dodaj do Odkrywania",
+    "addedToExplore": "Dodano do Odkrywania",
+    "badgeGovernment": "Źródło rządowe",
+    "badgeRegulator": "Agencja oficjalna"
   },
   "clusterDetail": {
     "translatable": "Język tego artykułu to {{language}}: twoje urządzenie może go przetłumaczyć podczas czytania. Jeśli tłumaczenie nie zadziała, możesz otworzyć stronę w Google Translate; pamiętaj, że wtedy przeglądasz ją za pośrednictwem Google.",
@@ -446,7 +456,42 @@
     "modelUpdatedTitle": "Model zaktualizowany",
     "modelUpdatedDescription": "Przełączono na {{model}}. Pobierz model, aby go użyć.",
     "modelUpdateFailedTitle": "Aktualizacja nieudana",
-    "modelUpdateFailedDescription": "Nie udało się zaktualizować modelu. Spróbuj ponownie."
+    "modelUpdateFailedDescription": "Nie udało się zaktualizować modelu. Spróbuj ponownie.",
+    "attestationTitle": "Zweryfikuj poświadczenie",
+    "attestationSubtitle": "Sprawdź, czy sztuczna inteligencja w chmurze działa na prawdziwym sprzęcie Intel TDX i czy klucz, do którego Twoje dane są szyfrowane, pochodzi z wnętrza.",
+    "attestationVerifyButton": "Uruchom weryfikację",
+    "attestationVerifying": "Weryfikowanie…",
+    "attestationRerun": "Uruchom ponownie",
+    "attestationVerdictFailed": "Weryfikacja nie powiodła się",
+    "attestationVerdictIncomplete": "Częściowo zweryfikowano",
+    "attestationVerdictVerified": "Zweryfikowano",
+    "attestationVerdictFailedDetail": "Coś się nie zgadzało. Twoje dane są nadal zaszyfrowane, ale sprzęt nie mógł być potwierdzony.",
+    "attestationVerdictIncompleteDetail": "Każde sprawdzenie, które przeprowadzamy, przeszło. Niektóre sprawdzenia nie są przeprowadzane wcale i są wymienione poniżej jako niesprawdzone.",
+    "attestationError": "Nie udało się pobrać raportu poświadczenia. Sprawdź połączenie i spróbuj ponownie.",
+    "attestationNotRunYet": "Nie uruchomiono jeszcze.",
+    "attestationFailOpenNotice": "Wyniki te są pokazane dla przejrzystości i nie blokują niczego na razie.",
+    "attestationCheckQuoteStructure": "Cytat jest dobrze sformułowany Intel TDX",
+    "attestationCheckReportDataKey": "Klucz szyfrowania zatwierdzony wewnątrz cytatu",
+    "attestationCheckFreshness": "Cytat jest świeży, nie powtórzenie",
+    "attestationCheckSigningAlgo": "Algorytm podpisu pasuje do klucza",
+    "attestationCheckQeReportSignature": "Enklawa cytowania podpisana przez Intel",
+    "attestationCheckAttestationKeyBinding": "Klucz podpisu powiązany z enkławą cytowania",
+    "attestationCheckQuoteSignature": "Podpis cytatu jest ważny",
+    "attestationCheckPckChain": "Łańcuch certyfikatów Intel jest ważny",
+    "attestationCheckRootCaPin": "Łańcuch zakotwiczony w głównym certyfikacie Intel",
+    "attestationCheckTcbStatus": "Poziom poprawki platformy jest aktualny",
+    "attestationCheckGpuAttestation": "Poświadczenie GPU",
+    "attestationNotCheckedLabel": "niesprawdzane",
+    "attestationScopeNotice": "To sprawdza model pokazany powyżej. Mera używa więcej niż jednego modelu chmury (chat używa innego, a każdy ma kopię zapasową), więc zaliczenie tutaj obejmuje ten model, nie każde żądanie.",
+    "attestationModelLabel": "Sprawdzony model",
+    "webSearchTitle": "Wyszukiwanie w sieci w czacie",
+    "webSearchOn": "Włączone, Mera może przeszukiwać sieć, aby odpowiedzieć na pytanie",
+    "webSearchOff": "Wyłączone",
+    "webSearchDescription": "Gdy to jest włączone, Mera może przeszukiwać sieć, aby odpowiedzieć na pytanie. Słowa wyszukiwania, które wpiszesz, są wysyłane na nasz serwer i do dostawcy wyszukiwania. Nic innego nie idzie z nimi, nie Twoje fakty, nie Twój kanał, nie to, kim jesteś. Domyślnie wyłączone.",
+    "deepInterviewTitle": "Głębsze pytania",
+    "deepInterviewOn": "Włączone, Mera pyta o uwagę, obawy i decyzje",
+    "deepInterviewOff": "Wyłączone",
+    "deepInterviewDescription": "Mera zadaje mniej, głębszych pytań: co próbujesz chronić swoją uwagę przed, które tematy są konieczne, ale niepokojące, które wydają się przydatne, ale marnotrawią Twój czas, co decydujesz w tym miesiącu i dlaczego każde miejsce ma dla Ciebie znaczenie. Twoje odpowiedzi są przechowywane na tym urządzeniu i nigdy go nie opuszczają, co jest dokładnie dlatego, dlaczego Mera może je pytać. Sprawiają, że wyniki trafności i powody pokazane na każdej historii są bardziej wyraźne. Domyślnie wyłączone."
   },
   "manageData": {
     "deleting": "Usuwanie...",
@@ -469,7 +514,13 @@
     "factsDescription": "Twoje fakty i generowane na ich podstawie tematy, na tym urządzeniu",
     "factsModalDescription": "Usuwa dodane przez Ciebie dane i wygenerowane z nich tematy. Twoje dane nigdy nie opuszczają tego urządzenia. Frazy tematyczne są wysyłane przy pobieraniu wiadomości i buforowane na naszych serwerach bez identyfikatora użytkownika, więc nic tam nie zapisuje, że pochodziły od Ciebie. Twój strumień artykułów również zostanie wyczyszczony, bo opiera się na tych tematach, i pozostanie pusty, dopóki nie dodasz nowych danych.",
     "locationDevice": "Na urządzeniu",
-    "locationServer": "Serwer"
+    "locationServer": "Serwer",
+    "exportHistoryTitle": "Eksportuj historię czytania",
+    "exportHistoryDescription": "Ostatnie 30 dni jako JSON: artykuły, publikacje i średni czas od publikacji do przeczytania",
+    "exportHistorySubject": "Moja historia czytania Mera (JSON)",
+    "exporting": "Eksportowanie…",
+    "exportHistoryEmptyTitle": "Nic do eksportowania",
+    "exportHistoryEmptyDescription": "Nie przeczytałeś żadnych artykułów w ciągu ostatnich 30 dni."
   },
   "preferences": {
     "manageSettings": "Zarządzaj ustawieniami aplikacji i kontem",
@@ -507,7 +558,12 @@
     "appVersion": "Wersja aplikacji: {{version}}",
     "contentPolicy": "Zasady dotyczące treści",
     "faq": "FAQ",
-    "reportBug": "Zgłoś błąd"
+    "reportBug": "Zgłoś błąd",
+    "deleteAccountConfirmGrace": "Twoje konto będzie zaplanowane do usunięcia z 30-dniowym okresem karencji. Zaloguj się ponownie w ciągu tych 30 dni i usunięcie zostanie automatycznie anulowane.",
+    "deleteAccountWarningGrace": "⚠️ Po upływie 30 dni nie można tego cofnąć i wszystkie Twoje dane zostaną trwale usunięte.",
+    "finalConfirmationBodyGrace": "To zaplanuje trwałe usunięcie Twojego konta za 30 dni.",
+    "accountDeletionScheduledTitle": "Usuwanie zaplanowane",
+    "accountDeletionScheduledDescription": "Twoje konto będzie trwale usunięte za 30 dni. Zaloguj się ponownie przed tym terminem, aby anulować usuwanie."
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -863,7 +919,14 @@
     "manageBadge": "Zarządzaj",
     "startWithStarter": "Zacznij ze Starterem",
     "starterRecommendation": "Starter to dobry punkt wyjścia. Mera News Darmowa zachowuje to, co już zbudowałeś na tym urządzeniu, ale na początku nie masz nic do przechowywania.",
-    "turnMeraBackOn": "Włącz Merę ponownie"
+    "turnMeraBackOn": "Włącz Merę ponownie",
+    "para1": "Mera News mogłaby być bezpłatna. Oznaczałoby to tylko, że ktoś inny zapłacałby: reklamujący kupujący Twoją uwagę, Twoje dane, albo pozytywny artykuł. Wiele tego, co wygląda jak wiadomości, jest dokładnie tym.",
+    "para2": "Media finansowane z reklam nie mają pułapu. Ani na to, ile pobierają od Ciebie, ani na to, jak to jest potem wykorzystywane. Nie chcemy być tą firmą, więc tutaj umowa jest prosta. Ty zachowujesz swoje dane. Oprogramowanie wykonuje pracę. Ty za to płacisz.",
+    "para3Trial": "Sugerujemy zacząć od bezpłatnego tygodnia Individual. To plan, który potrzebuje większość ludzi. Po tygodniu możesz zostać, przejść do Starter lub do Professional, w zależności od tego, co Ci się najbardziej podoba.",
+    "para3NoTrial": "Starter to dobre miejsce na początek. To najmniejszy plan i możesz przejść wyżej, kiedy Mera to sobie zasłuży.",
+    "startFreeTrial": "Uruchom bezpłatny okres próbny",
+    "subscribeNow": "Subskrybuj teraz",
+    "planRecommendation": "Otwierasz około {{count}} artykułów dziennie. {{plan}} analizuje do {{limit}} dziennie, więc zawsze będzie więcej niż się przejrzy."
   },
   "tabs": {
     "deck": "Strumień",
@@ -892,7 +955,16 @@
     "scopeWorld": "Świat",
     "noArticles": "Nie znaleziono artykułów",
     "addPlaces": "Dodaj miejsca",
-    "offlineUnavailable": "Jesteś offline — Odkrywaj wymaga połączenia internetowego"
+    "offlineUnavailable": "Jesteś offline — Odkrywaj wymaga połączenia internetowego",
+    "serverUnavailable": "Nie można teraz dotrzeć do Mera: spróbuj za chwilę.",
+    "addSources": "Dodaj źródła",
+    "removeScope": "Usuń {{name}}",
+    "searchPlaceholder": "Szukaj ostatnich wiadomości",
+    "clearSearch": "Wyczyść wyszukiwanie",
+    "searchMinLength": "Wpisz dalej, aby wyszukać",
+    "searchNotSubscribed": "Wyszukiwanie wymaga aktywnego planu",
+    "searchError": "Nie udało się teraz wyszukać",
+    "searchEmpty": "Brak dopasowań w ciągu ostatnich 48 godzin. Wyszukiwanie obejmuje ostatnie nagłówki, nie pełne archiwum."
   },
   "forYou": {
     "sectionPrefix": "Wiadomości o:",
@@ -957,7 +1029,12 @@
     "goToStoryAction": "Przejdź do historii",
     "deleteStoryAction": "Usuń historię",
     "deleteStoryConfirmTitle": "Usunąć tę historię?",
-    "deleteStoryConfirmBody": "Usunięcie usuwa wszystko, co zostało zapisane dla tej historii."
+    "deleteStoryConfirmBody": "Usunięcie usuwa wszystko, co zostało zapisane dla tej historii.",
+    "followFabLabel": "Śledź nową historię",
+    "followChatSeed": "Chcę śledzić historię.",
+    "followChatIntro": "Powiedz mi, co chcesz śledzić, a to ustawię.",
+    "emptyHintFollow": "Dotknij przycisk śledzenia i powiedz Mera, co chcesz śledzić.",
+    "emptyCtaFollow": "Śledź historię"
   },
   "whatsNew": {
     "title": "Co nowego",
@@ -1396,7 +1473,23 @@
     "title": "Wyświetlacz",
     "subtitle": "Dostosuj sposób renderowania elementów wizualnych Mery na tym urządzeniu",
     "staticGradientTitle": "Statyczne tło",
-    "staticGradientDescription": "Używaj stałego gradientu zamiast animowanego tła — łatwiej dla baterii i starszych urządzeń"
+    "staticGradientDescription": "Używaj stałego gradientu zamiast animowanego tła — łatwiej dla baterii i starszych urządzeń",
+    "screenTitle": "Tekst i wyświetlanie",
+    "screenSubtitle": "Ustaw, jak tekst i grafika wyglądają na tym urządzeniu",
+    "sectionText": "Tekst",
+    "sectionVisuals": "Grafika",
+    "textSizeTitle": "Rozmiar tekstu",
+    "textSizeDescription": "Dotyczy wszędzie w Mera. To jest dodatek do ustawienia rozmiaru tekstu samego urządzenia.",
+    "textSizePreviewLabel": "Podgląd",
+    "textSizePreviewHeadline": "Rynki stabilne, negocjacje wznowione",
+    "textSizePreviewBody": "Krótka próbka tekstu głównego, pokazana w wybranym rozmiarze.",
+    "textSizeA11y": "Rozmiar tekstu, {{label}}",
+    "textSizeStepCompact": "Kompaktowy",
+    "textSizeStepDefault": "Domyślny",
+    "textSizeStepLarge": "Duży",
+    "textSizeStepLarger": "Większy",
+    "textSizeStepLargest": "Największy",
+    "deviceTextSizeHint": "Aby uzyskać jeszcze większy tekst, użyj Wyświetlacza i Jasności w ustawieniach urządzenia."
   },
   "freeTier": {
     "cardBody": "Część AI w Mera jest teraz wyłączona. Wszystko, co zapisałeś, śledziłeś lub czytałeś, zostaje na tym urządzeniu, a zakładka Odkrywaj wciąż zawiera dzisiejsze nagłówki. Bez planu Mera nie będzie budować Twojego kanału, odpowiadać na Twoje pytania ani śledzić nowych historii. Zacznij plan, a wszystko wróci do normy.",
@@ -1413,5 +1506,745 @@
     "trackDismiss": "Nie teraz",
     "trackTitle": "Śledzenie historii wymaga planu",
     "trackedStoriesEmptyBody": "Jeszcze nic nie śledziłeś. Śledzenie historii wymaga planu, ale wszystko, co będziesz śledzić, zostaje na tym urządzeniu, zawsze Twoje."
+  },
+  "relatedSort": {
+    "a11yLabel": "Sortuj powiązane artykuły",
+    "relevance": "Najlepsze dopasowanie",
+    "oldest": "Najstarsze pierwsze",
+    "newest": "Najnowsze pierwsze"
+  },
+  "factCheck": {
+    "action": "Sprawdzanie faktów",
+    "actionA11y": "Uruchom sprawdzenie faktów AI dla tej historii",
+    "title": "Sprawdzanie faktów AI",
+    "hide": "Ukryj",
+    "retry": "Spróbuj ponownie",
+    "checking": "Sprawdzanie tej historii względem innych źródeł…",
+    "checkingHint": "Może to potrwać do minuty.",
+    "stillWorking": "Nadal pracuję nad tym. Wróć za kilka minut.",
+    "failed": "Nie udało się ukończyć tego sprawdzenia. Możesz spróbować ponownie później.",
+    "error": "Nie udało się uruchomić sprawdzenia. Sprawdź połączenie i spróbuj ponownie.",
+    "blocked": "Nie można było sprawdzić tej historii.",
+    "claimsHeading": "Sprawdzone twierdzenia",
+    "citationsHeading": "Konsultowane źródła",
+    "noCitations": "Żadne źródła nie powróciły z tym sprawdzeniem, traktuj jako niepotwierdzone.",
+    "sourceFallback": "Źródło {{index}}",
+    "disclaimer": "Napisane przez AI na podstawie wyszukiwania w sieci. Może być błędne lub niekompletne, przeczytaj źródła przed poleganiem na tym.",
+    "verdict": {
+      "supported": {
+        "label": "Zgodne ze źródłami",
+        "detail": "Inne źródła, które znaleźliśmy, mówią mniej więcej to samo. To nie jest dowód, że to prawda, tylko że nie znaleźliśmy nic jej zaprzeczającego."
+      },
+      "disputed": {
+        "label": "Źródła się nie zgadzają",
+        "detail": "Znaleźliśmy źródła, które zaprzeczają fragmentom tej historii. Przeczytaj je i osądzą siebie."
+      },
+      "unsupported": {
+        "label": "Nie znaleziono poparcia",
+        "detail": "Nie mogliśmy znaleźć innych źródeł potwierdzających to. To może oznaczać, że historia jest nowa lub niszowa, nie oznacza, że jest fałszywa."
+      },
+      "mixed": {
+        "label": "Częściowo zgodne",
+        "detail": "Niektóre części są zgodne z innymi źródłami, a inne nie. Notatki dla każdego twierdzenia wskazują, które."
+      },
+      "unverifiable": {
+        "label": "Nie udało się potwierdzić",
+        "detail": "Nie mogliśmy znaleźć wystarczająco dużo, aby potwierdzić lub zaprzeczyć tej historii. To nie jest stwierdzenie, że jest błędna."
+      },
+      "unknown": {
+        "label": "Brak jasnej odpowiedzi",
+        "detail": "Sprawdzenie zakończyło się bez wniosku, który moglibyśmy podsumować. Poniżej znajdują się źródła, na których się opierało."
+      }
+    },
+    "assessment": {
+      "supported": "Poparty źródłami",
+      "disputed": "Źródła się nie zgadzają",
+      "unsupported": "Nie znaleziono poparcia",
+      "unverifiable": "Nie udało się potwierdzić",
+      "unknown": "Niejasne"
+    }
+  },
+  "sourcePrefControl": {
+    "prioritiseA11y": "Uprioritetnij to źródło",
+    "deprioritiseA11y": "Zmniejsz priorytet tego źródła"
+  },
+  "consent": {
+    "title": "Zanim będziesz kontynuować",
+    "body": "Zaktualizowaliśmy nasze Warunki Korzystania i Politykę Prywatności. Przejrzyj i zaakceptuj, aby nadal korzystać z Mera.",
+    "termsLink": "Warunki Korzystania",
+    "privacyLink": "Polityka Prywatności",
+    "accept": "Zgadzam się i kontynuuję",
+    "accepting": "Zapisywanie…",
+    "errorTitle": "Nie można zapisać Twojej akceptacji",
+    "errorDescription": "Sprawdź połączenie i spróbuj ponownie.",
+    "retry": "Spróbuj ponownie"
+  },
+  "tutorials": {
+    "entryRow": "Witaj w mera",
+    "menuTitle": "Witaj w mera",
+    "menuSubtitle": "Krótkie przewodniki, jak ta aplikacja działa. Zacznij od dowolnego miejsca.",
+    "sectionBasic": "Zacznij tutaj",
+    "sectionAdvanced": "Idź głębiej",
+    "progress": "{{done}} z {{total}} ukończonych",
+    "advancedLockedTitle": "Idź głębiej",
+    "advancedLockedBody_one": "Ukończ {{count}} przewodnik więcej, a zaawansowane się otworzą.",
+    "advancedLockedBody_other": "Ukończ {{count}} przewodników więcej, a zaawansowane się otworzą.",
+    "slideCount_one": "{{count}} karta",
+    "slideCount_other": "{{count}} karty",
+    "completedBadge": "Ukończone",
+    "empty": "Nic tutaj jeszcze.",
+    "close": "Zamknij",
+    "skip": "Pomiń",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "done": "Gotowe",
+    "continueAnyway": "Kontynuuj mimo to",
+    "slideProgress": "Karta {{current}} z {{total}}",
+    "askMera": "Zapytaj Mera",
+    "chatIntro": "Zapytaj mnie o cokolwiek dotyczącego działania mera. Mogę wyjaśnić, ale nie mogę nic stąd zmienić.",
+    "launchButton": "Weź udział w wycieczce",
+    "hintReveal": "Dotknij każdy.",
+    "hintRevealSome": "Dotknij co najmniej {{count}}.",
+    "hintChoose": "Wybierz jeden.",
+    "hintSort": "Dotknij kartę, a następnie dotknij, gdzie powinna być.",
+    "hintSortPick": "Teraz dotknij, gdzie powinna być.",
+    "hintBeforeAfter": "Dotknij, aby obrócić.",
+    "beforeLabel": "Krótka wersja",
+    "afterLabel": "Co faktycznie jest prawdą",
+    "sortDone": "To wszystkie.",
+    "chapters": {
+      "welcome": {
+        "title": "Witaj w mera",
+        "subtitle": "Co to za aplikacja, w jedną minutę.",
+        "slides": {
+          "what": {
+            "headline": "Aplikacja wiadomości, która zaczyna od Ciebie",
+            "body": "Większość aplikacji wiadomości zaczyna od wiadomości i ma nadzieję, że część z nich pasuje. mera zaczyna od drugiego końca: uczy się trochę o Twoim życiu, a następnie idzie szukać historii, które go dotyczą."
+          },
+          "not-a-timeline": {
+            "headline": "Nie oś czasu",
+            "body": "Nic tutaj nie jest porządkowane według tego, co jest popularne lub co przybyło ostatnie. Zgadnij, co decyduje o porządku.",
+            "choose": {
+              "popular": {
+                "label": "To, co czyta większość ludzi",
+                "feedback": "Nie tutaj. Popularność to czyjeś wiadomości."
+              },
+              "yours": {
+                "label": "Jak bardzo dotyczy Twojego życia",
+                "feedback": "To jest to. Wszystko inne to tylko przebieg."
+              },
+              "newest": {
+                "label": "To, co przybyło jako ostatnie",
+                "feedback": "Blisko. Nowe historii rzeczywiście lądują bliżej szczytu, ale bycie nowym nie jest tym, co zarabia szczyt."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Trzy kroki, i to cała aplikacja",
+            "body": "Naprawdę to takie krótkie.",
+            "steps": {
+              "0": "Mówisz kilka prawdziwych rzeczy o swoim życiu.",
+              "1": "mera zamienia je w rzeczy do szukania.",
+              "2": "Czyta dzisiejszą wiadomość i przechowuje to, co pasuje."
+            }
+          },
+          "matching": {
+            "headline": "Twoje życie, nie Twoje klikania",
+            "body": "Pielęgniarka w małym mieście i pielęgniarka w stolicy otrzymają tutaj różne wiadomości. Nie dlatego, że jeden z nich dotknął więcej, ale dlatego, że różne rzeczy je faktycznie osiągają."
+          },
+          "stays-here": {
+            "headline": "Pozostaje na tym telefonie",
+            "body": "Dotknij każdy, aby zobaczyć, co to oznacza.",
+            "reveal": {
+              "about-you": {
+                "label": "Co o Tobie wie",
+                "text": "Twoje fakty, Twoje zainteresowania i to, co przeczytałeś, są napisane na tym telefonie i tam pozostają. Na serwerze nie ma ich kopii."
+              },
+              "what-leaves": {
+                "label": "Co faktycznie wychodzi",
+                "text": "Krótkie frazy tematyczne, takie jak 'obsada szpitala'. Bez imienia, bez konta, nic nie mówiące, że fraza pochodzi od Ciebie."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Gotowy, kiedy chcesz",
+            "body": "Zaloguj się i mera zapyta Cię o kilka rzeczy. Nie ma błędnych odpowiedzi i możesz zmienić to wszystko później. Pozostałe przewodniki czekają w Ustawieniach."
+          }
+        }
+      },
+      "facts": {
+        "title": "Twoje fakty kształtują Twój kanał",
+        "subtitle": "Powiedz Mera o swoim życiu. To zrobi resztę.",
+        "slides": {
+          "a-fact-is": {
+            "headline": "Fakt to jedna prawdziwa linia",
+            "body": "\"Jestem pielęgniarką.\" \"Mieszkam w Utrechcie.\" \"Mam małe dziecko.\" Krótko, prawdziwie, o Twoim życiu. To cała idea.",
+            "ask": "Co liczy się za fakt w mera?"
+          },
+          "where-from": {
+            "headline": "Skąd pochodzą fakty",
+            "body": "Nigdy nie musisz wypełniać formularza.",
+            "steps": {
+              "0": "Rozmawiam z Mera i to słyszy trwałe bity.",
+              "1": "Powiadomiasz bezpośrednio: 'Przeniosłem się do Lizbony.'",
+              "2": "Dodajesz lub usuwasz je sam na karcie Profilu."
+            }
+          },
+          "to-topics": {
+            "headline": "Fakty stają się rzeczami do szukania",
+            "body": "\"Jestem pielęgniarką\" zamienia się w kilka fraz wyszukiwania: obsada szpitala, wynagrodzenie pielęgniarki, polityka zdrowia. Jeden fakt rozprzestrzenia się na garstę. Te frazy to to, co wychodzą znaleźć wiadomości."
+          },
+          "sort-them": {
+            "headline": "Który z nich to fakt?",
+            "body": "Dotknij kartę, a następnie dotknij, gdzie powinna być.",
+            "sort": {
+              "buckets": {
+                "fact": "Fakt",
+                "not-fact": "Nie fakt"
+              },
+              "cards": {
+                "nurse": "Jestem pielęgniarką",
+                "utrecht": "Mieszkam w Utrechcie",
+                "headline": "Ta historia o strajku pociągu",
+                "mood": "Dziś mi się nudzi"
+              }
+            }
+          },
+          "importance": {
+            "headline": "Niektóre fakty są ważniejsze niż inne",
+            "body": "Na karcie Profilu dotknij cokolwiek, co Mera wie o Tobie, aby podnieść lub obniżyć, jak bardzo to się liczy, przeformułować to, czy je usunąć. Zmniejszenie czegoś jest łagodniejsze niż usunięcie, i zwykle jest to lepszy pierwszy krok.",
+            "ask": "Jak zmienić, jak ważny jest jeden z moich faktów?"
+          }
+        }
+      },
+      "feed": {
+        "title": "Czytanie Twojego kanału",
+        "subtitle": "Gdzie żyją dzisiejsze historie i jak się poruszają.",
+        "slides": {
+          "two-lists": {
+            "headline": "Dwie listy, dwa zadania",
+            "body": "Pierwsza karta to Twój kanał: jedna długa lista, najbardziej trafna na szczycie. Druga to ten sam dzień posortowany na sekcje. Te same historie, inny kształt, więc użyj tej, która pasuje nastroju.",
+            "ask": "Jaka jest różnica między kanałem a pulpitem?"
+          },
+          "nothing-removed": {
+            "headline": "Nic nigdy nie zostaje usunięte",
+            "body": "Przeczytaj kartę i nie znika, tone. Dwa cienkie dzielniki przecinają listę na trzy części, karty dryfują poniżej nich w miarę upływu.",
+            "steps": {
+              "0": "Góra: wszystko, czego jeszcze nie widziałeś.",
+              "1": "Poniżej pierwszego dzielnika: widział, ale nie otwierał.",
+              "2": "Poniżej drugiego: już przeczytane."
+            },
+            "beforeAfter": {
+              "before": "Zanim go przeczytasz: karta siedzi na szczycie ze wszystkim innym, co jest nowe.",
+              "after": "Po jego przeczytaniu: ta sama karta, wciąż tam, teraz poniżej drugiego dzielnika. Przewiń w dół i możesz go czytać ponownie, kiedy chcesz."
+            }
+          },
+          "what-counts-as-read": {
+            "headline": "'Przeczytane' jest szersze niż myślisz",
+            "body": "Dotknij co najmniej dwa, aby zobaczyć, co się liczy.",
+            "reveal": {
+              "open": {
+                "label": "Otwieranie go",
+                "text": "Przejście przez pełną historię się liczy, co nie jest niespodzianką."
+              },
+              "dwell": {
+                "label": "Po prostu patrząc",
+                "text": "Karta, która siedzi prawidłowo na ekranie przez sekund i pół, się liczy. Szybki przewiń nie."
+              },
+              "act": {
+                "label": "Działanie na nim",
+                "text": "Kciuk, zapis, śledzenie historii lub wysłanie jej do Mera wszystko się liczy jako przeczytane."
+              }
+            }
+          },
+          "order-holds-still": {
+            "headline": "Porządek trzyma się w miejscu podczas czytania",
+            "body": "mera opracowuje porządek raz, gdy otworzysz aplikację lub pociągniesz w dół, aby odświeżyć, a następnie zostawia to w spokoju. Nic się nie zmienia pod kciukami w połowie listy."
+          },
+          "why-this-one": {
+            "headline": "Dlaczego ten?",
+            "body": "Każda karta nosi krótką linię mówiącą, dlaczego się do Ciebie dotarła, i słowo, jak bardzo wydaje się być ważne. Jeśli powód wygląda źle, to jest najwartościowsza rzecz, którą możesz powiedzieć Mera o.",
+            "ask": "Skąd pochodzi powód pod historią?"
+          },
+          "caught-up": {
+            "headline": "Uruchomienie jest OK",
+            "body": "Gdy nie ma już nic nowego, mera to mówi i się zatrzymuje. Nie będzie podszycać listy, aby Cię trzymać w przewijaniu. Wszystko, co już przeczytałeś, jest poniżej, jeśli chcesz."
+          }
+        }
+      },
+      "teaching": {
+        "title": "Nauczanie mera",
+        "subtitle": "Dwa kciuki, jeden powód i cofnięcie.",
+        "slides": {
+          "two-thumbs": {
+            "headline": "Dwa kciuki",
+            "body": "Każda historia ma 'Podoba mi się' i 'To nie dla mnie'. Są to najszybsze rzeczy do dotknięcia i samodzielnie najmniej przydatne."
+          },
+          "bare-thumb": {
+            "headline": "Kciuk sam w sobie jest odrzucany",
+            "body": "To zaskakuje ludzi, więc warto to powiedzieć jasno.",
+            "steps": {
+              "0": "Dotykasz kciuka.",
+              "1": "Mała karta otwiera się i pyta, o co chodziło.",
+              "2": "Powiedz nic, a nic się nie zapisze."
+            },
+            "ask": "Dlaczego kciuk w dół sam nie zmienia niczego?"
+          },
+          "the-reason": {
+            "headline": "Powód jest przydatną częścią",
+            "body": "Które z nich faktycznie zmienia Twój kanał?",
+            "choose": {
+              "just-thumb": {
+                "label": "Kciuk w dół i nic innego",
+                "feedback": "Nic się nie zmienia. Mera nie potrafi stwierdzić, czy chodziło o temat, źródło, czy tylko dzisiaj."
+              },
+              "thumb-plus-reason": {
+                "label": "Kciuk w dół plus 'za dużo o tym klubie piłkarskim'",
+                "feedback": "To jest ta. Teraz jest coś konkretnego do działania."
+              }
+            }
+          },
+          "undo": {
+            "headline": "Cofnięcie jest zawsze tam",
+            "body": "Każda zmiana dokonana z opinii pokazuje krótkie potwierdzenie z Cofnięciem obok. Dotknij, a to jest takie, jak gdyby się nie stało."
+          },
+          "it-adds-up": {
+            "headline": "Małe poprawki biją duże",
+            "body": "Nie musisz naprawiać całego profilu w jednym siedzieniu. Dwie lub trzy uczciwych poprawek w ciągu tygodnia przesuwają kanał dalej niż jedno długie sesje.",
+            "ask": "Jak szybko moja opinia pojawia się w kanale?"
+          }
+        }
+      },
+      "privacy": {
+        "title": "Twoja prywatność",
+        "subtitle": "Co wychodzi z telefonu i co nigdy nie wychodzi.",
+        "slides": {
+          "stays-on-phone": {
+            "headline": "Część o Tobie nigdy nie wychodzi",
+            "body": "Twoje fakty, Twoje zainteresowania, Twoje miejsca i wszystko, co przeczytałeś, żyją na tym telefonie. Na serwerze nie ma jego kopii, co jest również powodem, dla którego wylogowanie lub zmiana telefonów oznacza ponowne budowanie profilu."
+          },
+          "what-leaves": {
+            "headline": "Co faktycznie wychodzi",
+            "body": "Trzy rzeczy, i to cała lista.",
+            "steps": {
+              "0": "Krótkie frazy tematyczne, aby było coś do dopasowania historii.",
+              "1": "Twój adres e-mail i jaki plan masz.",
+              "2": "Liczba przeanalizowanych historii dzisiaj, aby utrzymać ten plan uczciwym."
+            },
+            "ask": "Co aplikacja wysyła na Twoje serwery?"
+          },
+          "cloud-is-default": {
+            "headline": "Domyślnie jest zaszyfrowana chmura",
+            "body": "Czytanie dnia wiadomości zajmuje sporo myślenia, a większość telefonów woli nie. Więc z pudełka ta praca dzieje się w chmurze.",
+            "beforeAfter": {
+              "before": "Wersja, którą chcielibyśmy Ci powiedzieć: Twój telefon robi to wszystko, zawsze.",
+              "after": "Co faktycznie jest prawdą: domyślnie myślenie dzieje się w chmurze, szyfrowana na tym telefonie i otwierana tylko w zapieczętowanej enklawie. Na urządzeniu jest przełącznik, który możesz przerzucić. Wolę to powiedzieć niż pozwolić Ci założyć."
+            }
+          },
+          "on-device-option": {
+            "headline": "Na urządzeniu, jeśli chcesz",
+            "body": "W Ustawieniach → Mera Protocol możesz przenieść przetwarzanie na ten telefon, a następnie nic o Tobie nie wychodzi wcale. Najpierw pobiera model, chce dość nowy telefon i jest zauważalnie wolniejszy, co jest dokładnie dlatego, dlaczego to nie jest domyślne."
+          },
+          "decoys-are-a-switch": {
+            "headline": "Wabiki są wyłączone, dopóki ich nie włączysz",
+            "body": "Jest ustawienie zwane Wstrzykuj szum, które wysyła wymyślone tematy obok Twoich rzeczywistych, aby frazy przychodzące z telefonu nie mogły być czytane jako portret Ciebie. Co to robi teraz?",
+            "choose": {
+              "always-on": {
+                "label": "Uruchomione cicho w tle",
+                "feedback": "Nie, i wolę to poprawić niż zostawić jako wygodne założenie."
+              },
+              "off-until-you-turn-it-on": {
+                "label": "Nic, dopóki go nie włączysz",
+                "feedback": "Prawo. Jest wyłączony domyślnie: Ustawienia → Mera Protocol → Wstrzykuj szum."
+              }
+            }
+          },
+          "what-we-keep": {
+            "headline": "Co przechowujemy",
+            "body": "Twój e-mail logowania. Jaki plan masz. Liczba historii przeanalizowanych dziennie. Frazy tematyczne są buforowane tylko do ich tekstu, nic nie zapisuje, kto je zapytał, i upuszczone po czternastu dniach nieużycia.",
+            "ask": "Co mera przechowuje o mnie na swoich serwerach?"
+          }
+        }
+      },
+      "following": {
+        "title": "Śledzenie historii",
+        "subtitle": "Zachowaj jedną historię w widoku, gdy się rozprzestrzenia.",
+        "slides": {
+          "what-it-is": {
+            "headline": "Dla historii, które nie są skończone",
+            "body": "Wybory, proces, burza, przejęcie. Śledź to raz i każdy nowy rozwój zbiera się w jednym miejscu zamiast przybywa rozrzucone przez kanał ponad trzy tygodnie."
+          },
+          "two-ways-in": {
+            "headline": "Dwa sposoby na rozpoczęcie",
+            "body": "Oba kończą się w tym samym miejscu.",
+            "steps": {
+              "0": "Otwórz historię w pełni i dotknij ikonę śledzenia w rzędzie przycisków poniżej.",
+              "1": "Lub otwórz Śledzone historie, dotknij przycisk śledzenia i po prostu powiedz, co chcesz śledzić."
+            },
+            "ask": "Jak śledzić historię?"
+          },
+          "pick-the-scope": {
+            "headline": "Jak szeroko powinno być?",
+            "body": "Mera oferuje trzy lub cztery zakresy i dotykasz jeden. Nic nie jest śledzone, dopóki tego nie zrobisz. Który byś wybrał dla sprawy sądowej?",
+            "choose": {
+              "narrow": {
+                "label": "Tylko ten proces",
+                "feedback": "Ciasny i cichy. Otrzymasz wyrok i niewiele innego."
+              },
+              "medium": {
+                "label": "Ten proces i apelacje wokół niego",
+                "feedback": "Dobry środek. To ten, który chce większość ludzi."
+              },
+              "wide": {
+                "label": "Cały skandal, z którego wyszło",
+                "feedback": "Szeroki. Otrzymasz wiele, w tym rzeczy tylko luźno powiązane."
+              }
+            }
+          },
+          "the-timeline": {
+            "headline": "Zbiera się, nie narzeka",
+            "body": "Nowe rozmaity zbierają się na własnej osi czasu historii z małą liczbą obok. Jeśli historia stichnie, mera to mówi raczej niż wymyśli aktualizację, aby wypełnić przestrzeń."
+          },
+          "stop-following": {
+            "headline": "Zatrzymanie to jeden dotyk",
+            "body": "Otwórz historię i przestań śledzić. Zebrana oś czasu idzie z tym, więc jeśli chciałeś tylko przerwy, warto wiedzieć, że to jest usunięcie, a nie pauza.",
+            "ask": "Co się stanie z osią czasu, jeśli przestanę śledzić historię?"
+          }
+        }
+      },
+      "explore": {
+        "title": "Odkrywaj",
+        "subtitle": "Te same nagłówki, które dostaje wszyscy.",
+        "slides": {
+          "unscored-on-purpose": {
+            "headline": "Celowo nie o Tobie",
+            "body": "Odkrywaj to jedno miejsce mera nie personalizuje nic. Bez punktowania, bez powodów, nic nauczonego z tego, co otwierasz tutaj. Po prostu to, co redakcje kraju prowadzą, w ich porządku.",
+            "ask": "Dlaczego karta Odkrywaj nie jest spersonalizowana?"
+          },
+          "the-chips": {
+            "headline": "Żetony na szczycie",
+            "body": "Są zbudowane dla Ciebie, a nie wybierane przez Ciebie.",
+            "steps": {
+              "0": "Świat przychodzi pierwszy, zawsze.",
+              "1": "Potem Twój własny kraj i wszystkie miejsca, które mera zna, a potem każdy kraj, który sam dodałeś."
+            }
+          },
+          "the-plus-chip": {
+            "headline": "Żeton + na końcu żetonów",
+            "body": "Jest mały żeton + po ostatnim kraju. Dokąd to Cię zabiera?",
+            "choose": {
+              "places": {
+                "label": "Twoje miejsca",
+                "feedback": "Kiedyś. Już nie."
+              },
+              "sources": {
+                "label": "Ekran Źródeł",
+                "feedback": "Prawo: kraje i wydawcy za nimi."
+              },
+              "settings": {
+                "label": "Ustawienia",
+                "feedback": "Nie. Ustawienia to ostatnia karta na dnie."
+              }
+            }
+          },
+          "search": {
+            "headline": "Wyszukiwanie w Odkrywają",
+            "body": "Pasek wyszukiwania powyżej żetonów przeszukuje ostatnie nagłówki, mniej więcej ostatnie dwa dni, nie archiwum. To dla 'co się stało z tą rzeczą', a nie do badań."
+          },
+          "hide-a-chip": {
+            "headline": "Za wiele żetonów",
+            "body": "Naciśnij i przytrzymaj żeton, którego nie chcesz, a znika. mera buduje to z miejsc, które zna, więc jeśli jeden wciąż wraca, miejsce za nim jest wciąż w Twoim profilu.",
+            "ask": "Jak pozbyć się żetonu kraju w Odkrywaniu?"
+          }
+        }
+      },
+      "sources": {
+        "title": "Wybieranie swoich źródeł",
+        "subtitle": "Odznaki, strzałki i jedna kontrolka, która jest blokiem.",
+        "slides": {
+          "where-it-lives": {
+            "headline": "Gdzie żyją źródła",
+            "body": "Dwie drzwi, jeden ekran.",
+            "steps": {
+              "0": "Żeton + na końcu rzędu żetonów Odkrywania.",
+              "1": "Lub zakładka Profilu, potem Zaawansowane, potem Źródła."
+            },
+            "ask": "Gdzie zarządzam, które źródła widzę?"
+          },
+          "the-two-badges": {
+            "headline": "Istnieją tylko dwie odznaki",
+            "body": "Dotknij każdy, aby zobaczyć, co to oznacza, i co brak nie oznacza.",
+            "reveal": {
+              "government": {
+                "label": "Źródło rządowe",
+                "text": "Wydawca jest organem rządowym. Warte wiedzy, gdy czytasz oficjalne oświadczenie o oficjalnym rzeczy."
+              },
+              "regulator": {
+                "label": "Agencja oficjalna",
+                "text": "Regulator lub agencja publiczna: urząd zdrowia, rada bezpieczeństwa transportu, bank centralny."
+              },
+              "everything-else": {
+                "label": "Żadna odznak wcale",
+                "text": "Wszystko inne, które jest prawie wszystko. To nie jest ocena jakości, i jej brak nic złego nie mówi o wydawcy."
+              }
+            }
+          },
+          "plus-is-not-a-rank": {
+            "headline": "Szyk + obok kraju",
+            "body": "Kraje noszą + i parę strzałek i robią całkowicie różne prace. Co robi +?",
+            "choose": {
+              "ranks-it-up": {
+                "label": "Uszereguje wiadomości tego kraju wyżej",
+                "feedback": "To są strzałki. + to wcale nie jest kontrolka rankingowa."
+              },
+              "adds-a-chip": {
+                "label": "Dodaje ten kraj jako żeton w Odkrywaniu",
+                "feedback": "Dokładnie. Tylko przeglądanie; nic nie zmienia w spersonalizowanym kanale."
+              },
+              "follows-it": {
+                "label": "Śledzi kraj jako historię",
+                "feedback": "Nie. Śledzenie jest dla jednej historii, która wciąż się rozprzestrzenia."
+              }
+            }
+          },
+          "arrows-on-a-country": {
+            "headline": "Strzałki obok kraju",
+            "body": "Up oznacza, że wolisz słyczeć z redakcji tego kraju; w dół oznacza rzadziej. Dotyczy każdego wydawcy tam jednocześnie, a dotknięcie tej samej strzałki ponownie to czyści."
+          },
+          "arrows-on-a-publisher": {
+            "headline": "Te same strzałki, jeden wydawca na raz",
+            "body": "Otwórz kraj i każdy wydawca ma swoje. Dół to lekka porada niż ściana: wydawca z dołem wciąż pojawia się, gdy ma historię, którą nikt inny nie ma.",
+            "ask": "Jaka jest różnica między obróceniem źródła w dół a wyciszeniem go?"
+          },
+          "mute-is-not-a-downrank": {
+            "headline": "Wyciszenie to coś zupełnie innego",
+            "body": "Wyciszenie żyje tylko na ekranie preferencji źródła i to jest twardę wykluczenie: te historie są upuszczane, nie po prostu sortowane niżej. Dotknij każdą kartę i włóż ją tam, gdzie powinna być.",
+            "steps": {
+              "0": "Strzałka w dół: pokazana rzadziej.",
+              "1": "Wyciszenie: wcale nie pokazane.",
+              "2": "Każdy można wyczyścić później z preferencji źródła."
+            },
+            "sort": {
+              "buckets": {
+                "softer": "Pokazane rzadziej",
+                "gone": "Trzymane całkowicie poza"
+              },
+              "cards": {
+                "down-arrow": "Strzałka w dół",
+                "mute": "Wyciszenie"
+              }
+            }
+          }
+        }
+      },
+      "filters": {
+        "title": "Filtrowanie rzeczy",
+        "subtitle": "Jak 'nie zainteresowany' faktycznie działa.",
+        "slides": {
+          "three-shelves": {
+            "headline": "Trzy półki na jednym ekranie",
+            "body": "Ekran Nie zainteresowany zawiera wszystko, co poprosiłeś, aby Mera zachowała się z powrotem.",
+            "steps": {
+              "0": "Słowa i rzeczy, które ukryłeś.",
+              "1": "Tematy, które widzisz mniej.",
+              "2": "Źródła, które wyciszyłeś lub obróciłeś w dół."
+            },
+            "ask": "Gdzie mogę zobaczyć wszystko, co filtrowałem?"
+          },
+          "exact-match": {
+            "headline": "Filtr pasuje dokładnie jednej rzeczy",
+            "body": "Filtry to nie wyszukiwania. Filtr miejsca pasuje do tego miejsca; filtr źródła pasuje do tego źródła. Porównują dokładną wartość względem jednego pola historii, co je sprawia, że przewidywalne, i także co sprawia, że następna karta liczy się."
+          },
+          "made-from-a-story": {
+            "headline": "Gdzie pochodzą dokładne",
+            "body": "Chcesz przestać słyszeć o jednym konkretnym miejscu. Co faktycznie działa?",
+            "choose": {
+              "type-it": {
+                "label": "Wpisz nazwę miejsca na ekran filtra",
+                "feedback": "To jest przechowywane jako słowa, a nie jako miejsce. Przydatne, ale luźniejsze niż miałeś na myśli."
+              },
+              "from-an-article": {
+                "label": "Powiedz o historii, którą przeglądasz",
+                "feedback": "Tak. Powiedz Mera w czacie lub użyj karty opinii na historii. Filtr jest wymieniony z rzeczywistego miejsca tej historii, więc ustawia się dokładnie."
+              }
+            }
+          },
+          "typed-is-words-only": {
+            "headline": "Filtry wpisane to tylko słowa",
+            "body": "Możesz dodać jeden ręcznie i jest naprawdę przydatny: łapie frazę gdziekolwiek się pojawia. Po prostu nie może być miejscem lub źródłem, ponieważ nazwa, którą wpiszesz, prawie nigdy nie wyrównać się do przechowywanego."
+          },
+          "soft-fades-hard-stays": {
+            "headline": "Niektóre zanikają, niektóre pozostają",
+            "body": "To zależy od tego, jak mocno to powiedziałeś, a nie od tego, skąd pochodzi.",
+            "beforeAfter": {
+              "before": "Miękki filtr, 'trochę mniej z tego', step na bok po trzydziestu dniach. Smaki się poruszają.",
+              "after": "Mocna, 'trudna przełącznik gdy dodajesz filtr ręcznie lub wyciszenie źródła', ma bez wygaśnięcia i pozostaje, dopóki nie usuniesz jej siebie."
+            },
+            "ask": "Czy rzeczy, które filtruję, kiedykolwiek wracają?"
+          }
+        }
+      },
+      "signal": {
+        "title": "Zmniejszanie głośności",
+        "subtitle": "Jeden pokrętło i historii, które nigdy nie widzi.",
+        "slides": {
+          "the-dial": {
+            "headline": "Mały żeton w nagłówku",
+            "body": "Na szczycie kanału i pulpitu siedzi żeton czytający High, Med lub Low ze strzałką. To piętro: historie oceniane poniżej po prostu nie są rysowane.",
+            "ask": "Co robi żeton Med na szczycie mojego kanału?"
+          },
+          "per-screen": {
+            "headline": "Każdy ekran trzyma własne",
+            "body": "Zaostrzenie jednego nigdy nie głodzenia drugiego. Dotknij każdę kartę na ekran, który opisuje.",
+            "steps": {
+              "0": "Kanał zaczyna się w Medium: substancja dnia, nie każda ostatnia rzecz.",
+              "1": "Pulpit zaczyna się na Low: wszystko, na wypadek, gdy masz ochotę przeglądać."
+            },
+            "sort": {
+              "buckets": {
+                "feed-tab": "Kanał",
+                "dashboard-tab": "Pulpit"
+              },
+              "cards": {
+                "medium-default": "Zaczyna się w Medium",
+                "low-default": "Zaczyna się na Low"
+              }
+            }
+          },
+          "breaking-always-passes": {
+            "headline": "Przełamujące wiadomości ignorują pokrętło",
+            "body": "Wszystko oceniane jako nadzwyczajne przechodzi każde ustawienie, High włączone. Pokrętło jest tam, aby przycinać rutyny wiadomości; to nie jest sposób, aby wyciszyć katastrofę."
+          },
+          "headline-cull": {
+            "headline": "Niektóre historie nigdy nie osiągają pokrętła",
+            "body": "Obok Twoich własnych historii mera ciąga góry nagłówki kraju. Górny nagłówek, który zdobywa się nisko dla Ciebie, jest upuszczany wręcz zamiast parkowany u dołu. Nagłówek istnieje, aby powiedzieć 'to liczy się tutaj', a nisko punktowany jest tylko szumem. Historie dopasowane do Twoich własnych zainteresowań nigdy nie są upuszczane w ten sposób.",
+            "ask": "Dlaczego widzę mniej ogólnych nagłówków niż historii o moich zainteresowaniach?"
+          }
+        }
+      },
+      "chat": {
+        "title": "Rozmowa z Mera",
+        "subtitle": "Najszybszy sposób zmiany prawie wszystkiego.",
+        "slides": {
+          "where-mera-is": {
+            "headline": "Mera jest na karcie Profilu",
+            "body": "Bąbelek mowy obok logo na karcie Profilu otwiera czat. Łatwo przejść obok, i to jest najbardziej zdolna kontrolka w aplikacji.",
+            "ask": "Gdzie znaleźć czat z Mera?"
+          },
+          "ask-what-it-knows": {
+            "headline": "Zacznij od pytania, co wie",
+            "body": "'Co wiesz o mnie?' otrzymuje listę, którą faktycznie pracuje. To najszybszy sposób, aby dostrzec jeden zatęchły fakt, który został spokojnie naginaniem Twojego kanału przez miesiąc."
+          },
+          "say-it-plainly": {
+            "headline": "Powiedz to w taki sposób, jak byś do osoby",
+            "body": "Brak poleceń, brak składni. Dotknij kilka przykładów.",
+            "steps": {
+              "0": "Mówisz to zwyczajnie.",
+              "1": "Mera pracuje nad tym, które ustawienia to oznacza.",
+              "2": "Potwierdzasz lub nie."
+            },
+            "reveal": {
+              "less-of": {
+                "label": "'Mniej piłki nożnej, proszę'",
+                "text": "Mera zamienia to w obrócony temat i pokazuje zmianę, zanim cokolwiek zostanie zastosowane."
+              },
+              "more-of": {
+                "label": "'Zacząłem jeździć na rowerze'",
+                "text": "To staje się nowy fakt i kilka rzeczy do szukania."
+              },
+              "moved": {
+                "label": "'Przeniosłem się do Lizbony'",
+                "text": "Stare miejsce jest przejść na emeryturę i nowe jest dodawane, zwykle jako jedna propozycja, którą potwierdzasz raz."
+              }
+            }
+          },
+          "nothing-until-you-tap": {
+            "headline": "Nic się nie dzieje, dopóki nie dotkniesz",
+            "body": "Gdy Mera decyduje, że coś powinno się zmienić, etapy zmienia się jako kartę i zatrzymuje się. Więc co się dzieje, jeśli wpisujesz 'tak, zrób to' zamiast dotknąć karty?",
+            "choose": {
+              "applies-immediately": {
+                "label": "Stosuje zmianę",
+                "feedback": "Nie robi. Wpisana umowa nie jest zgodą tutaj; dotyk jest."
+              },
+              "waits-for-your-tap": {
+                "label": "Nic. Karta wciąż siedzi tam czekając",
+                "feedback": "Prawo. Karta zwykle oferuje wybór zakresu, który tylko ty możesz dokonać, więc czeka na dotyk."
+              }
+            },
+            "ask": "Dlaczego Mera nie zastosowała zmianę, którą powiedziałem tak?"
+          },
+          "written-down": {
+            "headline": "Każda zmiana jest zapisywana",
+            "body": "Zastosowane zmiany są rejestrowane z tym, co było przed, co się stało i skąd zmiana pochodzi: czat, opinia, sugestia lub ty. Nic mera nie robi z Twoim profilem jest niewidoczne."
+          },
+          "take-it-back": {
+            "headline": "I większość tego można cofnąć",
+            "body": "Rekord żyje w Ustawieniach → Mera Protocol → Dziennik zmian osoby.",
+            "beforeAfter": {
+              "before": "Zmiana wagi, dodany temat, filtr, który usunąłeś: noszą Cofnięcie, które mnie dokładnie takie, jakie były.",
+              "after": "Kilka nie może być cofnięte i mówi tak: usunięcie faktu podczas czyszczenia lub usunięcie miejsca, wyrzuca, co byłoby potrzebne do przywrócenia. Te siedzą w logu bez Cofnięcia obok nich."
+            },
+            "ask": "Jak cofnąć coś, co Mera zmieniła w moim profilu?"
+          }
+        }
+      },
+      "protocol": {
+        "title": "Ekran Mera Protocol",
+        "subtitle": "Kilka przełączników i co każdy faktycznie robi.",
+        "slides": {
+          "one-screen": {
+            "headline": "Gdzie są przełączniki",
+            "body": "Dwa dotknięcia z gdziekolwiek w aplikacji.",
+            "steps": {
+              "0": "Karta Ustawienia, ostatnia na dnie.",
+              "1": "Mera Protocol."
+            },
+            "ask": "Gdzie jest ekran Mera Protocol?"
+          },
+          "processing-mode": {
+            "headline": "Tryb przetwarzania",
+            "body": "Gdzie myślenie dzieje się. Dotknij oba.",
+            "reveal": {
+              "cloud": {
+                "label": "Chmura (domyślna)",
+                "text": "Twoje dane są szyfrowane na tym telefonie, otwierane tylko w zapieczętowanej enklawie i ponownie szyfrowane w drodze powrotnej. Szybka i działa na każdym telefonie. Aplikacja nie sprawdza jeszcze certyfikatu enklawy względem producenta sprzętu, co oznaczenie prywatności mówi głośno."
+              },
+              "on-device": {
+                "label": "Na urządzeniu",
+                "text": "Wszystko działa tutaj i nic o Tobie nie wychodzi wcale. Najpierw pobiera model, chce dość nowy telefon i jest zauważalnie wolniejszy."
+              }
+            }
+          },
+          "inject-noise": {
+            "headline": "Wstrzykuj szum",
+            "body": "Wysyła wymyślone tematy obok Twoich rzeczywistych, więc frazy przychodzące z telefonu nie mogą być czytane jako portret. Cokolwiek, co pasowało tylko wabikowi, jest wyrzucane na tym telefonie przed zobaczeniem. Wyłączone domyślnie: może spowalniać generowanie tematu i trochę rozcieńczać kanał."
+          },
+          "deeper-questions": {
+            "headline": "Głębsze pytania",
+            "body": "To zmienia to, co pyta Mera, nie to, co wysyła. Zamiast tego, co Ciebie interesuje, pyta, co chroniłeś swoją uwagę przed, i co decydujesz w tym miesiącu. Odpowiedzi to fakty jak każde inne i nigdy nie opuszczają tego telefonu, co jest dokładnie dlatego, dlaczego może je pytać."
+          },
+          "web-search": {
+            "headline": "Wyszukiwanie w sieci w czacie",
+            "body": "Wyłączone domyślnie. Włączone, Mera może coś szukać w połowie rozmowy. Co wychodzi z Twojego telefonu, gdy tak robi?",
+            "choose": {
+              "whole-question": {
+                "label": "Twoja całą wiadomość",
+                "feedback": "Nie. I gdy przełącznik jest wyłączony, narzędzie wyszukiwania nie jest nawet oferowane modelowi, więc kosztuje nic w całości."
+              },
+              "search-words-only": {
+                "label": "Tylko słowa wyszukiwania",
+                "feedback": "Prawo. Słowa, które zdecydowało się wyszukiwać, i nic innego."
+              }
+            },
+            "ask": "Co wychodzi z mojego telefonu, gdy wyszukiwanie w sieci w czacie jest włączone?"
+          },
+          "the-change-log": {
+            "headline": "Dziennik zmian żyje tutaj też",
+            "body": "Dziennik zmian osoby, na tym samym ekranie. Każda zmiana Twojego profilu w porządku, najnowsze pierwsze, z Cofnięciem na tych, które mogą być cofnięte. Jeśli Twój kanał zadryfował gdzieś dziwnie, to jest gdzie się dowiaduje, kiedy to się stało.",
+            "ask": "Jak zobaczyć, co zmieniało mój profil?"
+          }
+        }
+      }
+    }
   }
 }

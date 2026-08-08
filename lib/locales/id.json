@@ -21,7 +21,10 @@
     "yes": "Ya",
     "no": "Tidak",
     "saving": "Menyimpan...",
-    "offlineBanner": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan — kami akan terus mencoba."
+    "offlineBanner": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan — kami akan terus mencoba.",
+    "offlineBannerOffline": "Anda sedang offline. Menampilkan berita tersimpan dan kami akan terus mencoba.",
+    "offlineBannerInternetDown": "Tidak ada akses internet. Menampilkan berita tersimpan dan kami akan terus mencoba.",
+    "offlineBannerServerDown": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan dan kami akan terus mencoba."
   },
   "auth": {
     "reauthBanner": "Masuk lagi untuk sinkronisasi",
@@ -237,7 +240,8 @@
     "sourceCountryGlobal": "Global",
     "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara.",
     "readOn": "Baca di {{publication}}",
-    "readOnGoogleTranslate": "Baca di Google Translate"
+    "readOnGoogleTranslate": "Baca di Google Translate",
+    "linkUnavailable": "Tautan ini tidak dapat dibuka dengan aman, jadi tidak tersedia di sini."
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -256,7 +260,13 @@
     "topHeadlines": "Berita utama",
     "viewTopHeadlines": "Berita utama",
     "addToLocations": "Tambahkan ke tempat Anda",
-    "addedToLocations": "Ditambahkan ke tempat Anda"
+    "addedToLocations": "Ditambahkan ke tempat Anda",
+    "searchCountriesOrPublishers": "Cari negara atau penerbit...",
+    "noResultsMatch": "Tidak ada yang cocok dengan pencarian Anda",
+    "addToExplore": "Tambahkan ke Jelajahi",
+    "addedToExplore": "Ditambahkan ke Jelajahi",
+    "badgeGovernment": "Sumber pemerintah",
+    "badgeRegulator": "Lembaga resmi"
   },
   "clusterDetail": {
     "translatable": "Artikel ini dalam bahasa {{language}}: perangkatmu bisa menerjemahkannya saat kamu membaca. Jika terjemahan tidak berfungsi, kamu bisa membuka situsnya di Google Translate; perlu diketahui, kamu akan menjelajahinya melalui Google.",
@@ -434,7 +444,42 @@
     "modelUpdatedTitle": "Model Diperbarui",
     "modelUpdatedDescription": "Beralih ke {{model}}. Unduh model untuk menggunakannya.",
     "modelUpdateFailedTitle": "Pembaruan Gagal",
-    "modelUpdateFailedDescription": "Gagal memperbarui model. Silakan coba lagi."
+    "modelUpdateFailedDescription": "Gagal memperbarui model. Silakan coba lagi.",
+    "attestationTitle": "Verifikasi atestasi",
+    "attestationSubtitle": "Periksa bahwa AI cloud berjalan di perangkat keras Intel TDX asli, dan kunci data Anda dienkripsi datang dari dalamnya.",
+    "attestationVerifyButton": "Jalankan verifikasi",
+    "attestationVerifying": "Memverifikasi…",
+    "attestationRerun": "Jalankan lagi",
+    "attestationVerdictFailed": "Verifikasi gagal",
+    "attestationVerdictIncomplete": "Sebagian diverifikasi",
+    "attestationVerdictVerified": "Diverifikasi",
+    "attestationVerdictFailedDetail": "Sesuatu tidak cocok. Data Anda masih dienkripsi, tetapi perangkat keras tidak dapat dikonfirmasi.",
+    "attestationVerdictIncompleteDetail": "Setiap pemeriksaan yang kami lakukan lulus. Beberapa pemeriksaan tidak dilakukan sama sekali, dan tercantum di bawah sebagai tidak diperiksa.",
+    "attestationError": "Tidak dapat mengambil laporan atestasi. Periksa koneksi Anda dan coba lagi.",
+    "attestationNotRunYet": "Belum dijalankan.",
+    "attestationFailOpenNotice": "Hasil ini ditampilkan untuk transparansi dan tidak memblokir apa pun untuk saat ini.",
+    "attestationCheckQuoteStructure": "Kutipan adalah Intel TDX yang terbentuk dengan baik",
+    "attestationCheckReportDataKey": "Kunci enkripsi berkomitmen di dalam kutipan",
+    "attestationCheckFreshness": "Kutipan segar (bukan replay)",
+    "attestationCheckSigningAlgo": "Algoritma penandatanganan cocok dengan kunci",
+    "attestationCheckQeReportSignature": "Enklave kutipan ditandatangani oleh Intel",
+    "attestationCheckAttestationKeyBinding": "Kunci penandatanganan terikat ke enklave kutipan",
+    "attestationCheckQuoteSignature": "Tanda tangan kutipan valid",
+    "attestationCheckPckChain": "Rantai sertifikat Intel valid",
+    "attestationCheckRootCaPin": "Rantai jangkar ke sertifikat akar Intel",
+    "attestationCheckTcbStatus": "Tingkat patch platform saat ini",
+    "attestationCheckGpuAttestation": "Atestasi GPU",
+    "attestationNotCheckedLabel": "tidak diperiksa",
+    "attestationScopeNotice": "Ini memeriksa model yang ditampilkan di atas. Mera menggunakan lebih dari satu model cloud (chat menggunakan yang berbeda, dan masing-masing memiliki cadangan), jadi pass di sini mencakup model ini, bukan setiap permintaan.",
+    "attestationModelLabel": "Model diperiksa",
+    "webSearchTitle": "Pencarian web dalam chat",
+    "webSearchOn": "Aktif - Mera dapat mencari web untuk menjawab pertanyaan",
+    "webSearchOff": "Nonaktif",
+    "webSearchDescription": "Ketika ini aktif, Mera dapat mencari web untuk menjawab pertanyaan. Kata-kata pencarian yang Anda ketik dikirim ke server kami dan ke penyedia pencarian. Tidak ada yang lain yang ikut serta, bukan fakta Anda, bukan feed Anda, bukan siapa Anda. Nonaktif secara default.",
+    "deepInterviewTitle": "Pertanyaan lebih dalam",
+    "deepInterviewOn": "Aktif - Mera bertanya tentang perhatian, kekhawatiran, dan keputusan",
+    "deepInterviewOff": "Nonaktif",
+    "deepInterviewDescription": "Mera bertanya lebih sedikit, pertanyaan yang lebih dalam: apa yang Anda coba lindungi dari perhatian Anda, topik mana yang diperlukan tetapi cemas, mana yang terasa berguna tetapi membuang waktu Anda, apa yang Anda putuskan bulan ini, dan mengapa setiap tempat penting bagi Anda. Jawaban Anda disimpan di perangkat ini dan tidak pernah meninggalkannya, yang persis mengapa Mera dapat menanyakannya. Mereka membuat skor relevansi dan alasan yang ditampilkan di setiap cerita lebih tajam. Nonaktif secara default."
   },
   "manageData": {
     "deleting": "Menghapus...",
@@ -457,7 +502,13 @@
     "factsDescription": "Fakta Anda dan topik yang dihasilkannya, di perangkat ini",
     "factsModalDescription": "Menghapus fakta yang Anda tambahkan beserta topik yang dihasilkan darinya. Fakta Anda tidak pernah meninggalkan perangkat ini. Frasa topik dikirim saat Anda mengambil berita dan disimpan sementara di server kami tanpa ID pengguna, jadi tidak ada apa pun di sana yang mencatat bahwa itu milik Anda. Umpan artikel Anda juga dibersihkan, karena dibangun dari topik-topik ini, dan tetap kosong sampai Anda menambahkan fakta baru.",
     "locationDevice": "Di perangkat",
-    "locationServer": "Server"
+    "locationServer": "Server",
+    "exportHistoryTitle": "Ekspor riwayat bacaan",
+    "exportHistoryDescription": "30 hari terakhir sebagai JSON: artikel, publikasi, dan waktu rata-rata dari penerbitan hingga dibaca",
+    "exportHistorySubject": "Riwayat bacaan Mera saya (JSON)",
+    "exporting": "Mengekspor…",
+    "exportHistoryEmptyTitle": "Belum ada yang akan diekspor",
+    "exportHistoryEmptyDescription": "Anda belum membaca artikel apa pun dalam 30 hari terakhir."
   },
   "preferences": {
     "manageSettings": "Kelola pengaturan aplikasi dan akun Anda",
@@ -495,7 +546,12 @@
     "appVersion": "Versi Aplikasi: {{version}}",
     "contentPolicy": "Kebijakan Konten",
     "faq": "FAQ",
-    "reportBug": "Laporkan Bug"
+    "reportBug": "Laporkan Bug",
+    "deleteAccountConfirmGrace": "Akun Anda akan dijadwalkan untuk penghapusan, dengan masa tenggang 30 hari. Masuk kembali dalam 30 hari tersebut dan penghapusan akan otomatis dibatalkan.",
+    "deleteAccountWarningGrace": "⚠️ Setelah 30 hari, ini tidak dapat dibatalkan dan semua data Anda akan dihapus secara permanen.",
+    "finalConfirmationBodyGrace": "Ini menjadwalkan akun Anda untuk penghapusan permanen dalam 30 hari.",
+    "accountDeletionScheduledTitle": "Penghapusan Dijadwalkan",
+    "accountDeletionScheduledDescription": "Akun Anda akan dihapus secara permanen dalam 30 hari. Masuk kembali sebelum saat itu untuk membatalkan penghapusan."
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -851,7 +907,14 @@
     "manageBadge": "Kelola",
     "startWithStarter": "Mulai dengan Starter",
     "starterRecommendation": "Starter adalah tempat untuk memulai. Mera News Free ada untuk menyimpan apa yang sudah Anda bangun di perangkat ini. Pada hari pertama, belum ada apa pun untuk disimpan.",
-    "turnMeraBackOn": "Aktifkan Mera kembali"
+    "turnMeraBackOn": "Aktifkan Mera kembali",
+    "para1": "Mera News bisa saja gratis. Tetapi itu hanya berarti ada orang lain yang membayar: seorang pengiklan yang membeli perhatian Anda, data Anda, atau liputan yang bersahabat. Banyak dari yang terlihat seperti berita adalah persis itu.",
+    "para2": "Media yang didanai iklan tidak memiliki batas. Bukan untuk berapa banyak yang diambilnya dari Anda, dan juga tidak untuk apa yang digunakan untuk itu nanti. Kami tidak ingin menjadi perusahaan itu, jadi kesepakatan di sini sederhana. Anda menjaga data Anda. Perangkat lunak melakukan pekerjaan. Anda membayarnya.",
+    "para3Trial": "Kami sarankan memulai dengan uji coba gratis satu minggu dari Individual. Itu adalah paket yang paling banyak orang perlukan. Setelah seminggu Anda dapat tetap menggunakannya, turun ke Starter, atau naik ke Professional, mana pun yang paling sesuai untuk Anda.",
+    "para3NoTrial": "Starter adalah tempat yang baik untuk memulai. Ini adalah paket terkecil, dan Anda dapat naik kapan saja Mera telah membuktikannya.",
+    "startFreeTrial": "Mulai uji coba gratis Anda",
+    "subscribeNow": "Berlangganan sekarang",
+    "planRecommendation": "Anda membuka sekitar {{count}} artikel sehari. {{plan}} menganalisis hingga {{limit}} sehari jadi selalu ada lebih banyak dari yang akan Anda lalui."
   },
   "tabs": {
     "deck": "Umpan",
@@ -880,7 +943,16 @@
     "scopeWorld": "Dunia",
     "noArticles": "Tidak ada artikel yang ditemukan",
     "addPlaces": "Tambah tempat",
-    "offlineUnavailable": "Anda sedang offline — Jelajahi memerlukan koneksi internet"
+    "offlineUnavailable": "Anda sedang offline — Jelajahi memerlukan koneksi internet",
+    "serverUnavailable": "Mera tidak dapat dijangkau sekarang: coba lagi dalam sebentar.",
+    "addSources": "Tambahkan sumber",
+    "removeScope": "Hapus {{name}}",
+    "searchPlaceholder": "Cari berita terbaru",
+    "clearSearch": "Hapus pencarian",
+    "searchMinLength": "Terus ketik untuk mencari",
+    "searchNotSubscribed": "Pencarian memerlukan paket aktif",
+    "searchError": "Tidak dapat mencari sekarang",
+    "searchEmpty": "Tidak ada kecocokan dalam 48 jam terakhir. Pencarian mencakup berita terbaru, bukan arsip lengkap."
   },
   "forYou": {
     "sectionPrefix": "Berita tentang:",
@@ -941,7 +1013,12 @@
     "goToStoryAction": "Buka cerita",
     "deleteStoryAction": "Hapus cerita",
     "deleteStoryConfirmTitle": "Hapus cerita ini?",
-    "deleteStoryConfirmBody": "Menghapus menghapus semua yang tersimpan untuk cerita ini."
+    "deleteStoryConfirmBody": "Menghapus menghapus semua yang tersimpan untuk cerita ini.",
+    "followFabLabel": "Ikuti cerita baru",
+    "followChatSeed": "Saya ingin mengikuti cerita.",
+    "followChatIntro": "Beri tahu saya apa yang ingin Anda ikuti dan saya akan mengaturnya.",
+    "emptyHintFollow": "Ketuk tombol ikuti dan beri tahu Mera apa yang ingin Anda ikuti.",
+    "emptyCtaFollow": "Ikuti cerita"
   },
   "whatsNew": {
     "title": "Yang baru",
@@ -1370,7 +1447,23 @@
     "title": "Tampilan",
     "subtitle": "Sesuaikan cara Mera merender visual pada perangkat ini",
     "staticGradientTitle": "Latar belakang statis",
-    "staticGradientDescription": "Gunakan gradien tetap alih-alih latar belakang animasi — lebih mudah di baterai dan perangkat lama"
+    "staticGradientDescription": "Gunakan gradien tetap alih-alih latar belakang animasi — lebih mudah di baterai dan perangkat lama",
+    "screenTitle": "Teks & Tampilan",
+    "screenSubtitle": "Tetapkan bagaimana teks dan visual terlihat di perangkat ini",
+    "sectionText": "Teks",
+    "sectionVisuals": "Visual",
+    "textSizeTitle": "Ukuran teks",
+    "textSizeDescription": "Berlaku di mana pun di Mera. Ini di atas pengaturan ukuran teks perangkat Anda sendiri.",
+    "textSizePreviewLabel": "Pratinjau",
+    "textSizePreviewHeadline": "Pasar stabil saat pembicaraan dilanjutkan",
+    "textSizePreviewBody": "Sampel singkat teks body, ditampilkan pada ukuran yang Anda pilih.",
+    "textSizeA11y": "Ukuran teks, {{label}}",
+    "textSizeStepCompact": "Ringkas",
+    "textSizeStepDefault": "Standar",
+    "textSizeStepLarge": "Besar",
+    "textSizeStepLarger": "Lebih besar",
+    "textSizeStepLargest": "Terbesar",
+    "deviceTextSizeHint": "Untuk teks yang lebih besar, gunakan Tampilan & Kecerahan di pengaturan perangkat Anda."
   },
   "freeTier": {
     "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",
@@ -1387,5 +1480,745 @@
     "trackDismiss": "Nanti saja",
     "trackTitle": "Pelacakan cerita memerlukan paket",
     "trackedStoriesEmptyBody": "Belum ada cerita yang diikuti. Mengikuti cerita memerlukan paket, dan apa pun yang Anda ikuti kemudian tetap di perangkat ini untuk Anda simpan."
+  },
+  "relatedSort": {
+    "a11yLabel": "Urutkan artikel terkait",
+    "relevance": "Kecocokan terbaik",
+    "oldest": "Paling lama pertama",
+    "newest": "Terbaru pertama"
+  },
+  "factCheck": {
+    "action": "Verifikasi fakta",
+    "actionA11y": "Jalankan verifikasi fakta AI pada cerita ini",
+    "title": "Verifikasi fakta AI",
+    "hide": "Sembunyikan",
+    "retry": "Coba lagi",
+    "checking": "Memeriksa cerita ini terhadap sumber lain…",
+    "checkingHint": "Ini dapat memakan waktu hingga satu menit.",
+    "stillWorking": "Masih bekerja pada yang ini. Periksa kembali dalam beberapa menit.",
+    "failed": "Pemeriksaan ini tidak dapat diselesaikan. Anda dapat mencoba lagi nanti.",
+    "error": "Tidak dapat memulai pemeriksaan. Periksa koneksi Anda dan coba lagi.",
+    "blocked": "Cerita ini tidak dapat diperiksa.",
+    "claimsHeading": "Klaim yang diperiksa",
+    "citationsHeading": "Sumber yang dikonsultasi",
+    "noCitations": "Tidak ada sumber yang kembali dengan pemeriksaan ini, jadi anggap sebagai tidak dikonfirmasi.",
+    "sourceFallback": "Sumber {{index}}",
+    "disclaimer": "Ditulis oleh AI dari pencarian web. Ini bisa salah atau tidak lengkap, baca sumbernya sebelum mengandalkannya.",
+    "verdict": {
+      "supported": {
+        "label": "Konsisten dengan sumber",
+        "detail": "Sumber lain yang kami temukan mengatakan hal yang serupa. Itu bukan bukti itu benar, hanya bahwa kami tidak menemukan apa pun yang menentangnya."
+      },
+      "disputed": {
+        "label": "Sumber tidak setuju",
+        "detail": "Kami menemukan sumber yang menentang bagian dari cerita ini. Bacalah dan buat penilaian sendiri."
+      },
+      "unsupported": {
+        "label": "Tidak ada dukungan yang ditemukan",
+        "detail": "Kami tidak bisa menemukan sumber lain yang mendukung ini. Itu bisa berarti cerita itu baru atau niche, tidak membuatnya salah."
+      },
+      "mixed": {
+        "label": "Sebagian konsisten",
+        "detail": "Beberapa bagian selaras dengan sumber lain dan beberapa tidak. Catatan klaim demi klaim mengatakan mana."
+      },
+      "unverifiable": {
+        "label": "Tidak dapat dikonfirmasi",
+        "detail": "Kami tidak bisa menemukan cukup untuk mengonfirmasi atau menentang cerita ini. Ini bukan temuan bahwa itu salah."
+      },
+      "unknown": {
+        "label": "Tidak ada jawaban yang jelas",
+        "detail": "Pemeriksaan selesai tanpa kesimpulan yang dapat kami ringkas. Sumber di bawah adalah apa yang dilihatnya."
+      }
+    },
+    "assessment": {
+      "supported": "Didukung oleh sumber",
+      "disputed": "Sumber tidak setuju",
+      "unsupported": "Tidak ada dukungan yang ditemukan",
+      "unverifiable": "Tidak dapat dikonfirmasi",
+      "unknown": "Tidak jelas"
+    }
+  },
+  "sourcePrefControl": {
+    "prioritiseA11y": "Prioritaskan sumber ini",
+    "deprioritiseA11y": "Deprioritaskan sumber ini"
+  },
+  "consent": {
+    "title": "Sebelum Anda melanjutkan",
+    "body": "Kami telah memperbarui Ketentuan Layanan dan Kebijakan Privasi kami. Silakan tinjau dan terima untuk terus menggunakan Mera.",
+    "termsLink": "Ketentuan Layanan",
+    "privacyLink": "Kebijakan Privasi",
+    "accept": "Setuju & Lanjutkan",
+    "accepting": "Menyimpan…",
+    "errorTitle": "Tidak dapat menyimpan penerimaan Anda",
+    "errorDescription": "Silakan periksa koneksi Anda dan coba lagi.",
+    "retry": "Coba lagi"
+  },
+  "tutorials": {
+    "entryRow": "Selamat datang di mera",
+    "menuTitle": "Selamat datang di mera",
+    "menuSubtitle": "Panduan singkat tentang cara aplikasi ini berpikir. Mulai di mana saja.",
+    "sectionBasic": "Mulai di sini",
+    "sectionAdvanced": "Pelajari lebih lanjut",
+    "progress": "{{done}} dari {{total}} selesai",
+    "advancedLockedTitle": "Pelajari lebih lanjut",
+    "advancedLockedBody_one": "Selesaikan {{count}} panduan lagi dan yang canggih akan terbuka.",
+    "advancedLockedBody_other": "Selesaikan {{count}} panduan lagi dan yang canggih akan terbuka.",
+    "slideCount_one": "{{count}} kartu",
+    "slideCount_other": "{{count}} kartu",
+    "completedBadge": "Selesai",
+    "empty": "Belum ada apa-apa di sini.",
+    "close": "Tutup",
+    "skip": "Lewati",
+    "back": "Kembali",
+    "next": "Berikutnya",
+    "done": "Selesai",
+    "continueAnyway": "Lanjutkan saja",
+    "slideProgress": "Kartu {{current}} dari {{total}}",
+    "askMera": "Tanya Mera",
+    "chatIntro": "Tanyakan apa pun tentang cara kerja mera. Saya dapat menjelaskan, tetapi saya tidak dapat mengubah apa pun dari sini.",
+    "launchButton": "Ikuti tur",
+    "hintReveal": "Ketuk masing-masing.",
+    "hintRevealSome": "Ketuk setidaknya {{count}}.",
+    "hintChoose": "Pilih satu.",
+    "hintSort": "Ketuk kartu, lalu ketuk di mana seharusnya berada.",
+    "hintSortPick": "Sekarang ketuk di mana seharusnya berada.",
+    "hintBeforeAfter": "Ketuk untuk membaliknya.",
+    "beforeLabel": "Versi singkat",
+    "afterLabel": "Apa yang sebenarnya benar",
+    "sortDone": "Itu semua dari mereka.",
+    "chapters": {
+      "welcome": {
+        "title": "Selamat datang di mera",
+        "subtitle": "Apa aplikasi ini, dalam satu menit.",
+        "slides": {
+          "what": {
+            "headline": "Aplikasi berita yang dimulai dengan Anda",
+            "body": "Sebagian besar aplikasi berita dimulai dengan berita dan berharap beberapa cocok. mera dimulai di ujung lain: ia belajar sedikit tentang hidup Anda, kemudian mencari cerita yang menyentuhnya."
+          },
+          "not-a-timeline": {
+            "headline": "Bukan garis waktu",
+            "body": "Tidak ada di sini yang dipesan oleh apa yang populer atau apa yang tiba terakhir. Tebak apa yang memutuskan pesanan.",
+            "choose": {
+              "popular": {
+                "label": "Apa pun yang kebanyakan orang baca",
+                "feedback": "Bukan di sini. Popularitas adalah berita orang lain."
+              },
+              "yours": {
+                "label": "Berapa banyak itu menyentuh hidup Anda",
+                "feedback": "Itulah. Segalanya yang lain hanya pengalihan."
+              },
+              "newest": {
+                "label": "Apa pun yang datang terakhir",
+                "feedback": "Dekat. Cerita baru memang mendarat di dekat atas, tetapi menjadi baru bukan apa yang mengumpulkan puncak."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Tiga langkah, dan itulah seluruh aplikasi",
+            "body": "Ini benar-benar sesingkat ini.",
+            "steps": {
+              "0": "Anda mengatakan beberapa hal yang benar tentang hidup Anda.",
+              "1": "mera mengubahnya menjadi hal-hal untuk dicari.",
+              "2": "Ini membaca berita hari itu dan menjaga apa yang cocok."
+            }
+          },
+          "matching": {
+            "headline": "Hidup Anda, bukan klik Anda",
+            "body": "Seorang perawat di kota kecil dan seorang perawat di ibu kota mendapatkan berita yang berbeda di sini. Bukan karena salah satu dari mereka mengetuk lebih banyak, tetapi karena hal-hal yang berbeda benar-benar mencapai mereka."
+          },
+          "stays-here": {
+            "headline": "Ini tetap di ponsel ini",
+            "body": "Ketuk masing-masing untuk melihat apa yang itu berarti.",
+            "reveal": {
+              "about-you": {
+                "label": "Apa yang diketahuinya tentang Anda",
+                "text": "Fakta Anda, minat Anda, dan apa yang telah Anda baca ditulis ke ponsel ini dan tetap di sana. Tidak ada salinannya duduk di server."
+              },
+              "what-leaves": {
+                "label": "Apa yang benar-benar pergi",
+                "text": "Frasa topik pendek, seperti 'staf rumah sakit'. Tidak ada nama, tidak ada akun, tidak ada yang mengatakan frasa itu berasal dari Anda."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Siap saat Anda siap",
+            "body": "Masuk dan mera akan menanyakan Anda beberapa hal. Tidak ada jawaban yang salah dan Anda dapat mengubah apa pun nanti. Panduan lainnya menunggu di Pengaturan."
+          }
+        }
+      },
+      "facts": {
+        "title": "Fakta Anda membentuk feed Anda",
+        "subtitle": "Beri tahu Mera tentang hidup Anda. Ini melakukan sisanya.",
+        "slides": {
+          "a-fact-is": {
+            "headline": "Fakta adalah satu baris yang benar",
+            "body": "\"Saya seorang perawat.\" \"Saya tinggal di Utrecht.\" \"Saya punya anak kecil.\" Pendek, benar, tentang hidup Anda. Itulah ide seluruhnya.",
+            "ask": "Apa yang dihitung sebagai fakta di mera?"
+          },
+          "where-from": {
+            "headline": "Di mana fakta berasal",
+            "body": "Anda tidak pernah harus mengisi formulir.",
+            "steps": {
+              "0": "Anda berbicara dengan Mera dan itu mendengarkan untuk bit yang tahan lama.",
+              "1": "Anda memberitahunya dengan terang-terangan: 'Saya pindah ke Lisbon.'",
+              "2": "Anda menambahkan atau menghapusnya sendiri di tab Profil."
+            }
+          },
+          "to-topics": {
+            "headline": "Fakta menjadi hal-hal untuk dicari",
+            "body": "\"Saya seorang perawat\" berubah menjadi beberapa frasa pencarian: staf rumah sakit, gaji perawat, kebijakan kesehatan. Satu fakta terbentang menjadi segelintir. Frasa-frasa itu adalah apa yang keluar untuk menemukan berita."
+          },
+          "sort-them": {
+            "headline": "Mana yang merupakan fakta?",
+            "body": "Ketuk kartu, lalu ketuk di mana seharusnya berada.",
+            "sort": {
+              "buckets": {
+                "fact": "Fakta",
+                "not-fact": "Bukan fakta"
+              },
+              "cards": {
+                "nurse": "Saya seorang perawat",
+                "utrecht": "Saya tinggal di Utrecht",
+                "headline": "Cerita pemogokan kereta itu",
+                "mood": "Saya bosan hari ini"
+              }
+            }
+          },
+          "importance": {
+            "headline": "Beberapa fakta lebih penting dari yang lain",
+            "body": "Di tab Profil, ketuk apa pun yang diketahui Mera tentang Anda untuk menaikkan atau menurunkan berapa banyak yang diperhitungkan, memformulasikan ulang, atau menghapusnya. Mematikan sesuatu lebih lembut daripada menghapusnya, dan biasanya gerakan pertama yang lebih baik.",
+            "ask": "Bagaimana cara saya mengubah seberapa penting salah satu fakta saya?"
+          }
+        }
+      },
+      "feed": {
+        "title": "Membaca Feed Anda",
+        "subtitle": "Di mana cerita hari itu tinggal, dan bagaimana mereka bergerak.",
+        "slides": {
+          "two-lists": {
+            "headline": "Dua daftar, dua pekerjaan",
+            "body": "Tab pertama adalah Feed Anda: satu daftar panjang, yang paling relevan di dekat puncak. Yang kedua adalah hari yang sama diurutkan ke dalam bagian. Cerita yang sama, bentuk berbeda, jadi gunakan mana pun yang sesuai dengan suasana hati.",
+            "ask": "Apa perbedaan antara Feed dan Dashboard?"
+          },
+          "nothing-removed": {
+            "headline": "Tidak ada yang pernah dihapus",
+            "body": "Baca kartu dan itu tidak hilang, itu tenggelam. Dua pembagi tipis memotong daftar menjadi tiga bagian, dan kartu hanyut melewatinya saat Anda pergi.",
+            "steps": {
+              "0": "Atas: semuanya yang belum Anda lihat.",
+              "1": "Di bawah pembagi pertama: dilihat, tetapi tidak dibuka.",
+              "2": "Di bawah yang kedua: sudah dibaca."
+            },
+            "beforeAfter": {
+              "before": "Sebelum Anda membacanya: kartu duduk di atas dengan yang lain yang baru.",
+              "after": "Setelah Anda membacanya: kartu yang sama, masih di sana, sekarang di bawah pembagi kedua. Gulir ke bawah dan Anda dapat membacanya lagi kapan pun Anda mau."
+            }
+          },
+          "what-counts-as-read": {
+            "headline": "\"Dibaca\" lebih luas dari yang Anda pikirkan",
+            "body": "Ketuk setidaknya dua untuk melihat apa yang dihitung.",
+            "reveal": {
+              "open": {
+                "label": "Membukanya",
+                "text": "Mengetuk cerita lengkap dihitung, yang tidak mengejutkan."
+              },
+              "dwell": {
+                "label": "Hanya melihat",
+                "text": "Kartu yang duduk dengan benar di layar Anda selama satu setengah detik juga dihitung. Gulir cepat melewati tidak."
+              },
+              "act": {
+                "label": "Bertindak atas dasar itu",
+                "text": "Jempol, simpan, mengikuti cerita, atau mengirimnya ke Mera semuanya dihitung sebagai dibaca."
+              }
+            }
+          },
+          "order-holds-still": {
+            "headline": "Pesanan tetap diam saat Anda membaca",
+            "body": "mera menjalankan pesanan sekali, ketika Anda membuka aplikasi atau menarik ke bawah untuk menyegarkan, dan kemudian membiarkannya sendiri. Tidak ada yang mengatur ulang dirinya sendiri di bawah jempol Anda setengah jalan ke bawah daftar."
+          },
+          "why-this-one": {
+            "headline": "Mengapa yang ini?",
+            "body": "Setiap kartu membawa garis pendek yang mengatakan mengapa itu menjangkau Anda, dan kata untuk seberapa banyak itu tampak penting. Jika alasan terlihat salah, itu adalah satu-satunya hal paling berguna yang dapat Anda ceritakan kepada Mera.",
+            "ask": "Di mana alasan di bawah cerita berasal dari?"
+          },
+          "caught-up": {
+            "headline": "Kehabisan baik-baik saja",
+            "body": "Ketika tidak ada yang baru tersisa, mera mengatakan demikian dan berhenti. Itu tidak akan mengisi daftar untuk membuat Anda terus menggulir. Semuanya yang telah Anda baca masih di bawah, jika Anda mau."
+          }
+        }
+      },
+      "teaching": {
+        "title": "Mengajar mera",
+        "subtitle": "Dua jempol, satu alasan, dan urungkan.",
+        "slides": {
+          "two-thumbs": {
+            "headline": "Dua jempol",
+            "body": "Setiap cerita memiliki 'Saya suka' dan 'Bukan untuk saya'. Mereka adalah hal tercepat untuk mengetuk, dan atas dasar mereka sendiri yang paling tidak berguna."
+          },
+          "bare-thumb": {
+            "headline": "Jempol itu sendiri dibuang",
+            "body": "Ini mengejutkan orang, jadi layak disebutkan dengan jelas.",
+            "steps": {
+              "0": "Anda mengetuk jempol.",
+              "1": "Kartu kecil terbuka dan menanyakan apa itu tentang.",
+              "2": "Katakan tidak ada, dan tidak ada yang disimpan."
+            },
+            "ask": "Mengapa jempol ke bawah itu sendiri tidak mengubah apa pun?"
+          },
+          "the-reason": {
+            "headline": "Alasannya adalah bagian yang berguna",
+            "body": "Mana dari ini yang benar-benar mengubah feed Anda?",
+            "choose": {
+              "just-thumb": {
+                "label": "Jempol ke bawah dan tidak ada yang lain",
+                "feedback": "Tidak ada yang berubah. Mera tidak dapat mengatakan apakah itu tentang subjek, sumber, atau hanya hari ini."
+              },
+              "thumb-plus-reason": {
+                "label": "Jempol ke bawah plus 'terlalu banyak tentang klub sepak bola ini'",
+                "feedback": "Itulah yang satu. Sekarang ada sesuatu yang spesifik untuk ditindaklanjuti."
+              }
+            }
+          },
+          "undo": {
+            "headline": "Urungkan selalu tepat di sana",
+            "body": "Setiap perubahan yang dibuat dari umpan balik menunjukkan konfirmasi singkat dengan Urungkan di sebelahnya. Ketuk itu dan seolah-olah tidak ada yang terjadi."
+          },
+          "it-adds-up": {
+            "headline": "Koreksi kecil mengalahkan yang besar",
+            "body": "Anda tidak harus memperbaiki profil keseluruhan Anda dalam satu sesi. Dua atau tiga koreksi jujur selama seminggu menggerakkan feed lebih jauh daripada satu sesi panjang pernah melakukannya.",
+            "ask": "Berapa lama umpan balik saya muncul di feed?"
+          }
+        }
+      },
+      "privacy": {
+        "title": "Privasi Anda",
+        "subtitle": "Apa yang meninggalkan ponsel ini, dan apa yang tidak pernah.",
+        "slides": {
+          "stays-on-phone": {
+            "headline": "Bagian tentang Anda tidak pernah pergi",
+            "body": "Fakta Anda, minat Anda, tempat Anda, dan semuanya yang telah Anda baca tinggal di ponsel ini. Tidak ada salinannya di server, yang juga mengapa keluar atau beralih ponsel berarti membangun profil lagi."
+          },
+          "what-leaves": {
+            "headline": "Apa yang benar-benar keluar",
+            "body": "Tiga hal, dan itulah daftarnya.",
+            "steps": {
+              "0": "Frasa topik pendek, jadi ada sesuatu untuk mencocokkan cerita.",
+              "1": "Alamat email Anda dan paket mana yang Anda ikuti.",
+              "2": "Hitungan berapa banyak cerita yang dianalisis hari ini, untuk menjaga paket itu jujur."
+            },
+            "ask": "Apa yang dikirim aplikasi ke server Anda?"
+          },
+          "cloud-is-default": {
+            "headline": "Default adalah cloud terenkripsi",
+            "body": "Membaca sehari berita membutuhkan pemikiran yang adil, dan kebanyakan ponsel lebih suka tidak melakukannya. Jadi keluar dari kotak itu bekerja terjadi di cloud.",
+            "beforeAfter": {
+              "before": "Versi yang ingin kami katakan kepada Anda: ponsel Anda melakukan semuanya, selalu.",
+              "after": "Apa yang sebenarnya benar: secara default pemikiran terjadi di cloud, dienkripsi di ponsel ini dan dibuka hanya di dalam enklave yang tersegel. Di perangkat adalah sakelar yang dapat Anda balik. Kami lebih suka mengatakan demikian daripada membiarkan Anda mengasumsikan."
+            }
+          },
+          "on-device-option": {
+            "headline": "Di perangkat, jika Anda menginginkannya",
+            "body": "Di Pengaturan → Mera Protocol Anda dapat memindahkan pemrosesan ke ponsel ini, dan kemudian tidak ada apa pun tentang Anda yang pergi. Itu mengunduh model terlebih dahulu, menginginkan ponsel yang cukup baru, dan terlihat lebih lambat secara nyata, yang persis mengapa itu bukan default."
+          },
+          "decoys-are-a-switch": {
+            "headline": "Umpan adalah sakelar sampai Anda menyalakannya",
+            "body": "Ada pengaturan yang disebut Inject noise yang mengirimkan topik yang diciptakan bersama topik nyata Anda, jadi frasa yang tiba dari ponsel Anda tidak dapat dibaca sebagai potret Anda. Apa yang dilakukannya sekarang?",
+            "choose": {
+              "always-on": {
+                "label": "Berjalan diam di latar belakang",
+                "feedback": "Tidak, dan kami lebih suka memperbaiki itu daripada membiarkannya sebagai asumsi yang nyaman."
+              },
+              "off-until-you-turn-it-on": {
+                "label": "Tidak ada apa-apa, sampai Anda menyalakannya",
+                "feedback": "Benar. Ini nonaktif secara default: Pengaturan → Mera Protocol → Inject noise."
+              }
+            }
+          },
+          "what-we-keep": {
+            "headline": "Apa yang kami simpan",
+            "body": "Email login Anda. Paket mana yang Anda ikuti. Hitungan per hari cerita yang dianalisis. Frasa topik disimpan dalam cache oleh teks mereka saja, tanpa apa pun mencatat siapa yang memintanya, dan dijatuhkan setelah empat belas hari tidak digunakan.",
+            "ask": "Apa yang disimpan mera tentang saya di servernya?"
+          }
+        }
+      },
+      "following": {
+        "title": "Mengikuti cerita",
+        "subtitle": "Simpan satu cerita dalam tampilan saat terbuka.",
+        "slides": {
+          "what-it-is": {
+            "headline": "Untuk cerita yang belum berakhir",
+            "body": "Pemilihan, pengadilan, badai, pengambilalihan. Ikuti sekali dan setiap perkembangan baru berkumpul di satu tempat alih-alih tiba tersebar melalui feed Anda selama tiga minggu."
+          },
+          "two-ways-in": {
+            "headline": "Dua cara untuk memulai",
+            "body": "Keduanya berakhir di tempat yang sama.",
+            "steps": {
+              "0": "Buka cerita secara penuh dan ketuk ikon trek di baris tombol di bawahnya.",
+              "1": "Atau buka Cerita Diikuti, ketuk tombol ikuti, dan hanya katakan apa yang ingin Anda ikuti."
+            },
+            "ask": "Bagaimana cara saya mengikuti cerita?"
+          },
+          "pick-the-scope": {
+            "headline": "Seberapa luas seharusnya?",
+            "body": "Mera menawarkan tiga atau empat ruang lingkup dan Anda mengetuk satu. Tidak ada yang diikuti sampai Anda melakukannya. Mana yang akan Anda pilih untuk kasus pengadilan?",
+            "choose": {
+              "narrow": {
+                "label": "Hanya pengadilan ini",
+                "feedback": "Ketat dan tenang. Anda akan mendapatkan keputusan dan tidak banyak lagi."
+              },
+              "medium": {
+                "label": "Pengadilan ini dan banding di sekitarnya",
+                "feedback": "Keseimbangan yang baik. Ini yang paling banyak orang inginkan."
+              },
+              "wide": {
+                "label": "Seluruh skandal yang muncul darinya",
+                "feedback": "Luas. Anda akan mendapatkan banyak, termasuk hal-hal yang hanya longgar terkait."
+              }
+            }
+          },
+          "the-timeline": {
+            "headline": "Itu mengumpulkan, itu tidak mengganggu",
+            "body": "Perkembangan baru mengumpulkan pada garis waktu cerita sendiri dengan hitungan kecil di sebelahnya. Jika cerita menjadi sunyi, mera mengatakan demikian daripada menciptakan pembaruan untuk mengisi ruang."
+          },
+          "stop-following": {
+            "headline": "Berhenti adalah satu ketukan",
+            "body": "Buka cerita dan berhenti mengikuti. Garis waktu yang dikumpulkan pergi dengannya, jadi jika Anda hanya menginginkan istirahat layak diketahui ini adalah penghapusan daripada jeda.",
+            "ask": "Apa yang terjadi pada garis waktu jika saya berhenti mengikuti cerita?"
+          }
+        }
+      },
+      "explore": {
+        "title": "Jelajahi",
+        "subtitle": "Berita utama yang sama yang didapat semua orang.",
+        "slides": {
+          "unscored-on-purpose": {
+            "headline": "Sengaja bukan tentang Anda",
+            "body": "Jelajahi adalah satu tempat mera tidak mempersonalisasi apa pun. Tidak ada penilaian, tidak ada alasan, tidak ada yang dipelajari dari apa yang Anda buka di sini. Hanya apa yang ruang berita negara memimpin, dalam pesanan mereka.",
+            "ask": "Mengapa tab Jelajahi tidak dipersonalisasi?"
+          },
+          "the-chips": {
+            "headline": "Chip di seluruh bagian atas",
+            "body": "Mereka dibangun untuk Anda daripada dipilih oleh Anda.",
+            "steps": {
+              "0": "Dunia datang pertama, selalu.",
+              "1": "Kemudian negara Anda sendiri dan tempat mana pun mera tahu, dan setelah itu, negara mana pun yang Anda tambahkan sendiri."
+            }
+          },
+          "the-plus-chip": {
+            "headline": "+ di akhir chip",
+            "body": "Ada chip + kecil setelah negara terakhir. Kemana ia membawamu?",
+            "choose": {
+              "places": {
+                "label": "Tempat Anda",
+                "feedback": "Dulu. Itu tidak lagi."
+              },
+              "sources": {
+                "label": "Layar Sumber",
+                "feedback": "Benar: negara, dan penerbit di balik mereka."
+              },
+              "settings": {
+                "label": "Pengaturan",
+                "feedback": "Tidak. Pengaturan adalah tab terakhir di sepanjang bagian bawah."
+              }
+            }
+          },
+          "search": {
+            "headline": "Pencarian Jelajahi",
+            "body": "Batang pencarian di atas chip terlihat melalui berita terbaru, kira-kira dua hari terakhir, bukan arsip. Itu untuk 'apa yang terjadi dengan hal itu', bukan untuk penelitian."
+          },
+          "hide-a-chip": {
+            "headline": "Terlalu banyak chip",
+            "body": "Tekan dan tahan chip yang tidak Anda inginkan dan itu akan hilang. mera membangunnya dari tempat yang diketahuinya, jadi jika yang terus kembali, tempat di baliknya masih dalam profil Anda.",
+            "ask": "Bagaimana cara saya menyingkirkan chip negara di Jelajahi?"
+          }
+        }
+      },
+      "sources": {
+        "title": "Memilih sumber Anda",
+        "subtitle": "Lencana, panah, dan satu kontrol yang merupakan blok.",
+        "slides": {
+          "where-it-lives": {
+            "headline": "Di mana sumber tinggal",
+            "body": "Dua pintu, satu layar.",
+            "steps": {
+              "0": "Chip + di akhir baris chip Jelajahi.",
+              "1": "Atau tab Profil, kemudian Lanjutan, kemudian Sumber."
+            },
+            "ask": "Di mana saya mengelola sumber mana yang saya lihat?"
+          },
+          "the-two-badges": {
+            "headline": "Hanya ada dua lencana",
+            "body": "Ketuk masing-masing untuk melihat apa artinya, dan apa ketiadaannya tidak berarti.",
+            "reveal": {
+              "government": {
+                "label": "Sumber pemerintah",
+                "text": "Penerbit adalah badan pemerintah. Layak diketahui saat Anda membaca pernyataan resmi tentang hal resmi."
+              },
+              "regulator": {
+                "label": "Lembaga resmi",
+                "text": "Regulator atau lembaga publik: otoritas kesehatan, dewan keselamatan transportasi, bank sentral."
+              },
+              "everything-else": {
+                "label": "Tidak ada lencana sama sekali",
+                "text": "Segalanya yang lain, yang hampir semuanya. Ini bukan penilaian kualitas, dan ketiadaannya tidak mengatakan apa pun buruk tentang penerbit."
+              }
+            }
+          },
+          "plus-is-not-a-rank": {
+            "headline": "+ di sebelah negara",
+            "body": "Negara membawa + dan sepasang panah, dan mereka melakukan pekerjaan yang sangat berbeda. Apa yang dilakukan +?",
+            "choose": {
+              "ranks-it-up": {
+                "label": "Menilai berita negara itu lebih tinggi",
+                "feedback": "Itulah panahnya. + bukan kontrol peringkat sama sekali."
+              },
+              "adds-a-chip": {
+                "label": "Menambahkan negara itu sebagai chip di Jelajahi",
+                "feedback": "Tepat. Browsing saja; itu tidak mengubah apa pun tentang feed yang dipersonalisasi."
+              },
+              "follows-it": {
+                "label": "Mengikuti negara sebagai cerita",
+                "feedback": "Tidak. Mengikuti adalah untuk cerita tunggal yang masih berkembang."
+              }
+            }
+          },
+          "arrows-on-a-country": {
+            "headline": "Panah di sebelah negara",
+            "body": "Naik berarti Anda lebih suka mendengar dari ruang berita negara itu, turun berarti lebih jarang. Itu berlaku untuk setiap penerbit di sana sekaligus, dan mengetuk panah yang sama lagi menghapusnya."
+          },
+          "arrows-on-a-publisher": {
+            "headline": "Panah yang sama, satu penerbit sekaligus",
+            "body": "Buka negara dan setiap penerbit memiliki pasangannya sendiri. Turun adalah dorong daripada dinding: penerbit yang diturunkan masih muncul ketika ia memiliki cerita yang tidak ada orang lain.",
+            "ask": "Apa perbedaan antara menurunkan sumber dan membungkamnya?"
+          },
+          "mute-is-not-a-downrank": {
+            "headline": "Bungkam adalah hal yang sama sekali berbeda",
+            "body": "Bungkam hanya tinggal di layar preferensi sumber, dan itu pengecualian keras: cerita-cerita itu dijatuhkan, bukan hanya diurutkan lebih rendah. Ketuk setiap kartu dan letakkan di mana seharusnya.",
+            "steps": {
+              "0": "Panah turun: ditampilkan lebih jarang.",
+              "1": "Bungkam: tidak ditampilkan sama sekali.",
+              "2": "Keduanya dapat dihapus nanti, dari preferensi sumber."
+            },
+            "sort": {
+              "buckets": {
+                "softer": "Ditampilkan lebih jarang",
+                "gone": "Disimpan sepenuhnya"
+              },
+              "cards": {
+                "down-arrow": "Panah turun",
+                "mute": "Bungkam"
+              }
+            }
+          }
+        }
+      },
+      "filters": {
+        "title": "Menyaring hal-hal",
+        "subtitle": "Bagaimana 'tidak tertarik' benar-benar bekerja.",
+        "slides": {
+          "three-shelves": {
+            "headline": "Tiga rak di satu layar",
+            "body": "Layar Tidak Tertarik menyimpan semua yang telah Anda minta mera untuk disimpan.",
+            "steps": {
+              "0": "Kata-kata dan hal-hal yang Anda sembunyikan.",
+              "1": "Topik yang Anda lihat lebih sedikit.",
+              "2": "Sumber yang telah Anda bungkam atau turunkan."
+            },
+            "ask": "Di mana saya dapat melihat semua yang telah saya saring?"
+          },
+          "exact-match": {
+            "headline": "Filter cocok dengan satu hal persis",
+            "body": "Filter bukan pencarian. Filter tempat cocok dengan tempat itu, filter sumber cocok dengan sumber itu. Mereka membandingkan nilai yang tepat terhadap satu bidang cerita, yang membuat mereka dapat diprediksi, dan juga apa yang membuat kartu berikutnya penting."
+          },
+          "made-from-a-story": {
+            "headline": "Di mana yang tepat berasal dari",
+            "body": "Anda ingin berhenti mendengar tentang satu tempat tertentu. Apa yang sebenarnya berhasil?",
+            "choose": {
+              "type-it": {
+                "label": "Ketik nama tempat ke layar filter",
+                "feedback": "Itu disimpan sebagai kata-kata daripada sebagai tempat. Berguna, tetapi lebih longgar daripada yang Anda maksudkan."
+              },
+              "from-an-article": {
+                "label": "Katakan tentang cerita yang Anda lihat",
+                "feedback": "Ya. Beri tahu Mera dalam chat, atau gunakan kartu umpan balik di cerita itu sendiri. Filter dicetak dari tempat nyata cerita itu, jadi itu selaras persis."
+              }
+            }
+          },
+          "typed-is-words-only": {
+            "headline": "Filter yang diketik hanya kata-kata",
+            "body": "Anda dapat menambahkan satu dengan tangan dan itu benar-benar berguna: itu menangkap frasa di mana pun ia muncul. Itu hanya tidak dapat menjadi tempat atau sumber, karena nama yang Anda ketik hampir tidak akan pernah selaras dengan nama yang disimpan."
+          },
+          "soft-fades-hard-stays": {
+            "headline": "Beberapa memudar, beberapa tetap",
+            "body": "Itu tergantung pada seberapa tegas Anda mengatakannya, bukan dari mana asalnya.",
+            "beforeAfter": {
+              "before": "Filter lembut, 'sedikit lebih sedikit dari ini', mengalah setelah tiga puluh hari. Cita rasa bergerak.",
+              "after": "Satu yang tegas (sakelar keras saat Anda menambahkan filter dengan tangan, atau membungkam sumber) tidak memiliki kedaluwarsa sama sekali dan tetap sampai Anda menghapusnya sendiri."
+            },
+            "ask": "Apakah hal-hal yang saya saring keluar pernah kembali?"
+          }
+        }
+      },
+      "signal": {
+        "title": "Menurunkan volume",
+        "subtitle": "Satu panggilan, dan cerita yang tidak pernah dilihatnya.",
+        "slides": {
+          "the-dial": {
+            "headline": "Chip kecil di header",
+            "body": "Di bagian atas Feed dan Dashboard duduk chip yang membaca Tinggi, Sedang atau Rendah dengan panah kecil. Itu adalah lantai: cerita yang dinilai di bawahnya tidak akan ditarik.",
+            "ask": "Apa yang dilakukan chip Med di bagian atas feed saya?"
+          },
+          "per-screen": {
+            "headline": "Setiap layar menyimpan miliknya sendiri",
+            "body": "Mengencangkan satu tidak pernah membuatnya lapar yang lain. Ketuk setiap kartu ke layar yang dijelaskannya.",
+            "steps": {
+              "0": "Feed dimulai pada Sedang: substansi hari, bukan setiap hal terakhir.",
+              "1": "Dashboard dimulai pada Rendah: semuanya, untuk saat Anda merasa seperti browsing."
+            },
+            "sort": {
+              "buckets": {
+                "feed-tab": "Feed",
+                "dashboard-tab": "Dashboard"
+              },
+              "cards": {
+                "medium-default": "Dimulai pada Sedang",
+                "low-default": "Dimulai pada Rendah"
+              }
+            }
+          },
+          "breaking-always-passes": {
+            "headline": "Berita pecah mengabaikan panggilan",
+            "body": "Apa pun yang dinilai sebagai keadaan darurat melewati setiap pengaturan, Tinggi disertakan. Panggilan ada untuk memotong berita rutin, itu bukan cara untuk membungkam bencana."
+          },
+          "headline-cull": {
+            "headline": "Beberapa cerita tidak pernah mencapai panggilan",
+            "body": "Bersama cerita Anda sendiri, mera menarik berita utama negara. Berita utama teratas yang mencetak rendah untuk Anda dijatuhkan begitu saja daripada diletakkan di bagian bawah. Berita utama ada untuk mengatakan 'ini penting di sini', dan satu yang mencetak rendah hanya kebisingan. Cerita yang cocok dengan minat Anda sendiri tidak pernah dijatuhkan dengan cara ini.",
+            "ask": "Mengapa saya melihat lebih sedikit berita utama umum daripada cerita tentang minat saya?"
+          }
+        }
+      },
+      "chat": {
+        "title": "Berbicara dengan Mera",
+        "subtitle": "Cara tercepat untuk mengubah hampir apa pun.",
+        "slides": {
+          "where-mera-is": {
+            "headline": "Mera ada di tab Profil",
+            "body": "Gelembung ucapan di sebelah logo di tab Profil membuka obrolan. Mudah untuk berjalan melewati, dan itu adalah kontrol paling mampu di aplikasi.",
+            "ask": "Di mana saya menemukan obrolan dengan Mera?"
+          },
+          "ask-what-it-knows": {
+            "headline": "Mulai dengan menanyakan apa yang diketahuinya",
+            "body": "'Apa yang Anda ketahui tentang saya?' mendapatkan Anda daftar yang benar-benar sedang dikerjakan. Ini adalah cara tercepat untuk mengetahui fakta basi yang telah diam-diam membengkokkan feed Anda selama sebulan."
+          },
+          "say-it-plainly": {
+            "headline": "Katakan dengan cara Anda akan kepada seseorang",
+            "body": "Tidak ada perintah, tidak ada sintaks. Ketuk beberapa contoh.",
+            "steps": {
+              "0": "Anda mengatakannya dengan jelas.",
+              "1": "Mera menjalankan pengaturan mana itu berarti.",
+              "2": "Anda mengonfirmasi, atau tidak."
+            },
+            "reveal": {
+              "less-of": {
+                "label": "\"Kurang sepak bola, tolong\"",
+                "text": "Mera mengubahnya menjadi topik yang dimatikan dan menunjukkan Anda perubahan sebelum apa pun diterapkan."
+              },
+              "more-of": {
+                "label": "\"Saya telah mulai bersepeda\"",
+                "text": "Itu menjadi fakta baru, dan beberapa hal untuk dicari."
+              },
+              "moved": {
+                "label": "\"Saya pindah ke Lisbon\"",
+                "text": "Tempat lama dimulai pensiun dan yang baru ditambahkan, biasanya sebagai satu proposal yang Anda konfirmasi sekali."
+              }
+            }
+          },
+          "nothing-until-you-tap": {
+            "headline": "Tidak ada yang terjadi sampai Anda mengetuk",
+            "body": "Ketika Mera memutuskan sesuatu harus berubah, itu mengatur perubahan sebagai kartu dan berhenti. Jadi apa yang terjadi jika Anda mengetik 'ya, lakukan' bukannya mengetuk kartu?",
+            "choose": {
+              "applies-immediately": {
+                "label": "Itu menerapkan perubahan",
+                "feedback": "Itu tidak. Persetujuan yang diketik bukan persetujuan di sini, ketukannya adalah."
+              },
+              "waits-for-your-tap": {
+                "label": "Tidak ada. Kartu masih duduk menunggu",
+                "feedback": "Benar. Kartu biasanya menawarkan pilihan ruang lingkup yang hanya Anda yang dapat buat, jadi itu menunggu ketukannya."
+              }
+            },
+            "ask": "Mengapa Mera tidak menerapkan perubahan yang saya katakan ya?"
+          },
+          "written-down": {
+            "headline": "Setiap perubahan ditulis",
+            "body": "Perubahan yang diterapkan dicatat dengan apa yang dulu, apa yang menjadi, dan dari mana asalnya: chat, umpan balik, saran, atau Anda. Tidak ada yang dilakukan mera ke profil Anda yang tidak terlihat."
+          },
+          "take-it-back": {
+            "headline": "Dan sebagian besar dapat diambil kembali",
+            "body": "Catatan hidup di Pengaturan → Mera Protocol → Log perubahan Persona.",
+            "beforeAfter": {
+              "before": "Perubahan berat, topik yang ditambahkan, filter yang Anda hapus: ini membawa Urungkan yang menempatkan hal-hal kembali persis seperti semula.",
+              "after": "Beberapa tidak dapat dibatalkan dan mengatakan demikian: menghapus fakta saat pembersihan, atau menghapus tempat, membuang apa yang diperlukan untuk mengembalikannya. Yang-yang itu duduk dalam log tanpa Urungkan di sebelahnya."
+            },
+            "ask": "Bagaimana cara saya membatalkan sesuatu yang Mera ubah tentang profil saya?"
+          }
+        }
+      },
+      "protocol": {
+        "title": "Layar Mera Protocol",
+        "subtitle": "Beberapa sakelar, dan apa yang masing-masing benar-benar lakukan.",
+        "slides": {
+          "one-screen": {
+            "headline": "Di mana saklar berada",
+            "body": "Dua ketukan dari mana saja di aplikasi.",
+            "steps": {
+              "0": "Tab Pengaturan, yang terakhir di sepanjang bagian bawah.",
+              "1": "Mera Protocol."
+            },
+            "ask": "Di mana layar Mera Protocol?"
+          },
+          "processing-mode": {
+            "headline": "Mode pemrosesan",
+            "body": "Di mana pemikiran terjadi. Ketuk keduanya.",
+            "reveal": {
+              "cloud": {
+                "label": "Cloud (standar)",
+                "text": "Data Anda dienkripsi di ponsel ini, dibuka hanya di dalam enklave yang tersegel, dan dienkripsi lagi dalam perjalanan kembali. Cepat, dan bekerja di ponsel apa pun. Aplikasi belum memeriksa sertifikat enklave itu terhadap pembuat chip, jadi untuk saat ini Anda mempercayai kami dan operator enklave daripada chip, memeriksa itu dan menolak untuk melanjutkan ada di peta jalan kami."
+              },
+              "on-device": {
+                "label": "Di perangkat",
+                "text": "Semuanya berjalan di sini dan tidak ada apa pun tentang Anda yang pergi. Itu mengunduh model terlebih dahulu, menginginkan ponsel yang cukup baru, dan terlihat lebih lambat secara nyata."
+              }
+            }
+          },
+          "inject-noise": {
+            "headline": "Inject noise",
+            "body": "Mengirimkan topik yang diciptakan di samping topik nyata Anda, jadi frasa yang tiba dari ponsel Anda tidak dapat dibaca sebagai potret. Apa pun yang cocok hanya dengan umpan adalah tempat sampah di ponsel ini sebelum Anda pernah melihatnya. Nonaktif secara default: itu dapat memperlambat pembuatan topik dan sedikit mencairkan feed."
+          },
+          "deeper-questions": {
+            "headline": "Pertanyaan lebih dalam",
+            "body": "Ini mengubah apa yang Mera tanyakan kepada Anda, bukan apa yang dikirimnya. Alih-alih apa yang Anda minati, ia menanyakan apa yang Anda lindungi dari perhatian Anda dan apa yang Anda putuskan bulan ini. Jawaban adalah fakta seperti yang lain dan tidak pernah meninggalkan ponsel ini, yang persis mengapa ia dapat menanyakannya."
+          },
+          "web-search": {
+            "headline": "Pencarian web dalam chat",
+            "body": "Nonaktif secara default. Dinyalakan, Mera dapat mencari sesuatu di tengah percakapan. Apa yang meninggalkan ponsel Anda saat itu?",
+            "choose": {
+              "whole-question": {
+                "label": "Pesan keseluruhan Anda",
+                "feedback": "Tidak. Dan sementara sakelar nonaktif, alat pencarian bahkan tidak ditawarkan ke model, jadi itu tidak membutuhkan biaya apa pun sama sekali."
+              },
+              "search-words-only": {
+                "label": "Hanya kata-kata pencarian",
+                "feedback": "Benar. Kata-kata yang diputuskan untuk dicari, dan tidak ada yang lain."
+              }
+            },
+            "ask": "Apa yang meninggalkan ponsel saya saat pencarian web dalam chat aktif?"
+          },
+          "the-change-log": {
+            "headline": "Log perubahan tinggal di sini juga",
+            "body": "Log perubahan Persona, di layar yang sama. Setiap perubahan ke profil Anda dalam urutan, terbaru pertama, dengan Urungkan pada yang dapat dibatalkan. Jika feed Anda telah hanyut ke tempat yang aneh, ini adalah tempat Anda menemukan kapan itu terjadi.",
+            "ask": "Bagaimana cara melihat apa yang telah mengubah profil saya?"
+          }
+        }
+      }
+    }
   }
 }

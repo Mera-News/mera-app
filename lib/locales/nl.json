@@ -21,7 +21,10 @@
     "loggingOut": "Uitloggen...",
     "never": "Nooit",
     "saving": "Opslaan...",
-    "offlineBanner": "Traag of geen verbinding met Mera. Weergeven van opgeslagen nieuws — we proberen het opnieuw."
+    "offlineBanner": "Traag of geen verbinding met Mera. Weergeven van opgeslagen nieuws — we proberen het opnieuw.",
+    "offlineBannerOffline": "Je bent offline. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
+    "offlineBannerInternetDown": "Geen internetverbinding. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
+    "offlineBannerServerDown": "Langzame of geen verbinding met Mera. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw."
   },
   "auth": {
     "reauthBanner": "Log opnieuw in om te synchroniseren",
@@ -237,7 +240,8 @@
     "sourceCountryGlobal": "Wereldwijd",
     "sourceCountryA11y": "Bronland: {{country}}. Tik om de landnaam te tonen.",
     "readOn": "Lezen op {{publication}}",
-    "readOnGoogleTranslate": "Lezen op Google Translate"
+    "readOnGoogleTranslate": "Lezen op Google Translate",
+    "linkUnavailable": "Deze link kan niet veilig worden geopend, dus is deze hier niet beschikbaar."
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -256,7 +260,13 @@
     "topHeadlines": "Topnieuws",
     "viewTopHeadlines": "Topnieuws",
     "addToLocations": "Toevoegen aan jouw plaatsen",
-    "addedToLocations": "Toegevoegd aan jouw plaatsen"
+    "addedToLocations": "Toegevoegd aan jouw plaatsen",
+    "searchCountriesOrPublishers": "Landen of uitgevers zoeken...",
+    "noResultsMatch": "Niets komt overeen met je zoektocht",
+    "addToExplore": "Toevoegen aan Verkennen",
+    "addedToExplore": "Toegevoegd aan Verkennen",
+    "badgeGovernment": "Overheidsbron",
+    "badgeRegulator": "Officiële instelling"
   },
   "clusterDetail": {
     "translatable": "Dit artikel is in {{language}}: je toestel kan het vertalen terwijl je leest. Werkt vertalen niet, dan kun je de site openen in Google Translate; let op dat je dan via Google surft.",
@@ -434,7 +444,42 @@
     "modelUpdatedTitle": "Model bijgewerkt",
     "modelUpdatedDescription": "Overgeschakeld naar {{model}}. Download het model om het te gebruiken.",
     "modelUpdateFailedTitle": "Bijwerken mislukt",
-    "modelUpdateFailedDescription": "Model bijwerken mislukt. Probeer het opnieuw."
+    "modelUpdateFailedDescription": "Model bijwerken mislukt. Probeer het opnieuw.",
+    "attestationTitle": "Attestatie verifiëren",
+    "attestationSubtitle": "Controleer dat de cloud-AI op echte Intel TDX-hardware draait en dat de sleutel waarvoor je gegevens versleuteld zijn, van binnenuit afkomstig is.",
+    "attestationVerifyButton": "Verificatie uitvoeren",
+    "attestationVerifying": "Verifiëren...",
+    "attestationRerun": "Opnieuw uitvoeren",
+    "attestationVerdictFailed": "Verificatie mislukt",
+    "attestationVerdictIncomplete": "Deels geverifieerd",
+    "attestationVerdictVerified": "Geverifieerd",
+    "attestationVerdictFailedDetail": "Iets is niet correct. Je gegevens zijn nog steeds versleuteld, maar de hardware kon niet worden bevestigd.",
+    "attestationVerdictIncompleteDetail": "Elke controle die we uitvoeren is geslaagd. Sommige controles worden helemaal niet uitgevoerd en worden hieronder als niet gecontroleerd weergegeven.",
+    "attestationError": "Kon geen attestatierapport ophalen. Controleer je verbinding en probeer het opnieuw.",
+    "attestationNotRunYet": "Nog niet uitgevoerd.",
+    "attestationFailOpenNotice": "Deze resultaten worden voor transparantie weergegeven en blokkeren nu nog niets.",
+    "attestationCheckQuoteStructure": "Quote is goed gevormde Intel TDX",
+    "attestationCheckReportDataKey": "Versleutelingssleutel toegezegd in de quote",
+    "attestationCheckFreshness": "Quote is vers (geen replay)",
+    "attestationCheckSigningAlgo": "Algoritme ondertekenen komt overeen met sleutel",
+    "attestationCheckQeReportSignature": "Quote-enclave ondertekend door Intel",
+    "attestationCheckAttestationKeyBinding": "Ondertekensleutel gebonden aan quote-enclave",
+    "attestationCheckQuoteSignature": "Quote-handtekening is geldig",
+    "attestationCheckPckChain": "Intel-certificaatketen is geldig",
+    "attestationCheckRootCaPin": "Keten verankerd in Intel's basiscertificaat",
+    "attestationCheckTcbStatus": "Platformpatchniveau is actueel",
+    "attestationCheckGpuAttestation": "GPU-attestatie",
+    "attestationNotCheckedLabel": "niet gecontroleerd",
+    "attestationScopeNotice": "Dit controleert het bovenstaande model. Mera gebruikt meer dan één cloudmodel (chat gebruikt een ander en elk heeft een backup), dus een pass hier omvat dit model, niet elk verzoek.",
+    "attestationModelLabel": "Model gecontroleerd",
+    "webSearchTitle": "Websearch in chat",
+    "webSearchOn": "Aan: Mera kan het web doorzoeken om een vraag te beantwoorden",
+    "webSearchOff": "Uit",
+    "webSearchDescription": "Als dit aan is, kan Mera het web doorzoeken om een vraag te beantwoorden. De zoekwoorden die je typt, worden naar onze server gestuurd en naar een zoekprovider. Niets anders gaat mee. Niet je feiten, niet je feed, niet wie je bent. Standaard uit.",
+    "deepInterviewTitle": "Diepere vragen",
+    "deepInterviewOn": "Aan: Mera vraagt naar aandacht, zorgen en beslissingen",
+    "deepInterviewOff": "Uit",
+    "deepInterviewDescription": "Mera stelt minder, diepere vragen: wat je je aandacht probeert te beschermen, welke onderwerpen nodig maar angstig zijn, welke nuttig maar tijdverspilling voelen, wat je deze maand beslist en waarom elk moment voor jou uitmaakt. Je antwoorden worden op dit apparaat opgeslagen en verlaten het nooit. Dit is precies waarom Mera ze kan vragen. Ze maken relevantie scores en redenen op elk verhaal scherper. Standaard uit."
   },
   "manageData": {
     "deleting": "Verwijderen...",
@@ -457,7 +502,13 @@
     "factsDescription": "Je feiten en de onderwerpen die ze genereren, op dit apparaat",
     "factsModalDescription": "Wist de feiten die u hebt toegevoegd en de onderwerpen die daaruit zijn ontstaan. Uw feiten verlaten dit apparaat nooit. Onderwerpsfrasen worden verstuurd wanneer u nieuws ophaalt en op onze servers gecachet zonder gebruikers-ID, dus daar staat nergens vastgelegd dat ze van u kwamen. Uw artikelfeed wordt ook gewist, omdat die op deze onderwerpen is gebouwd, en blijft leeg totdat u nieuwe feiten toevoegt.",
     "locationDevice": "Op apparaat",
-    "locationServer": "Server"
+    "locationServer": "Server",
+    "exportHistoryTitle": "Leesgeschiedenis exporteren",
+    "exportHistoryDescription": "Afgelopen 30 dagen als JSON: artikelen, publicaties en gemiddelde tijd van publicatie tot lezen",
+    "exportHistorySubject": "Mijn Mera-leesgeschiedenis (JSON)",
+    "exporting": "Exporteren...",
+    "exportHistoryEmptyTitle": "Nog niets te exporteren",
+    "exportHistoryEmptyDescription": "Je hebt de afgelopen 30 dagen geen artikelen gelezen."
   },
   "preferences": {
     "manageSettings": "Beheer je app-instellingen en account",
@@ -495,7 +546,12 @@
     "appVersion": "App-versie: {{version}}",
     "contentPolicy": "Inhoudsbeleid",
     "faq": "FAQ",
-    "reportBug": "Een bug melden"
+    "reportBug": "Een bug melden",
+    "deleteAccountConfirmGrace": "Je account wordt voor verwijdering ingepland met een karenstermijn van 30 dagen. Meld je binnen deze 30 dagen opnieuw aan en de verwijdering wordt automatisch geannuleerd.",
+    "deleteAccountWarningGrace": "Waarschuwing: na 30 dagen kan dit niet meer ongedaan worden gemaakt en worden al je gegevens permanent verwijderd.",
+    "finalConfirmationBodyGrace": "Dit plant je account voor permanente verwijdering over 30 dagen in.",
+    "accountDeletionScheduledTitle": "Verwijdering gepland",
+    "accountDeletionScheduledDescription": "Je account wordt permanent verwijderd over 30 dagen. Meld je aan voordat dat gebeurt om de verwijdering te annuleren."
   },
   "configPanel": {
     "tabPersona": "Persona",
@@ -851,7 +907,14 @@
     "manageBadge": "Beheren",
     "startWithStarter": "Begin met Starter",
     "starterRecommendation": "Starter is waar je begint. Mera News Free is er voor wat je al hebt opgebouwd op dit apparaat, en op dag één is er nog niets.",
-    "turnMeraBackOn": "Mera opnieuw inschakelen"
+    "turnMeraBackOn": "Mera opnieuw inschakelen",
+    "para1": "Mera News zou gratis kunnen zijn. Dat zou alleen betekenen dat iemand anders betaalde: een adverteerder die je aandacht, je gegevens, of een gunstig artikel koopt. Veel van wat als nieuws uitziet, is precies dat.",
+    "para2": "Met advertenties gefinancieerde media hebben geen grenzen. Niet in hoeveel het van je neemt, en niet in waarvoor dat later wordt gebruikt. We willen dat bedrijf niet zijn, dus de afspraak hier is simpel. Jij houdt je gegevens. De software doet het werk. Je betaalt ervoor.",
+    "para3Trial": "We stellen voor met de gratis week van Individual te beginnen. Het is het abonnement dat de meeste mensen uiteindelijk nodig hebben. Na de week kun je erop blijven, naar Starter gaan, of naar Professional, wat het best voor je uitkomt.",
+    "para3NoTrial": "Starter is een goed beginpunt. Het is het kleinste abonnement en je kunt altijd upgraden wanneer Mera het verdiend heeft.",
+    "startFreeTrial": "Start je gratis proefperiode",
+    "subscribeNow": "Abonneer je nu",
+    "planRecommendation": "Je opent ongeveer {{count}} artikelen per dag. {{plan}} analyseert tot {{limit}} per dag zodat er altijd meer is dan je haalt."
   },
   "tabs": {
     "deck": "Feed",
@@ -880,7 +943,16 @@
     "scopeWorld": "Wereld",
     "noArticles": "Geen artikelen gevonden",
     "addPlaces": "Plaatsen toevoegen",
-    "offlineUnavailable": "Je bent offline — Verkennen heeft een internetverbinding nodig"
+    "offlineUnavailable": "Je bent offline — Verkennen heeft een internetverbinding nodig",
+    "serverUnavailable": "Mera kan momenteel niet worden bereikt. Probeer het over een moment opnieuw.",
+    "addSources": "Bronnen toevoegen",
+    "removeScope": "{{name}} verwijderen",
+    "searchPlaceholder": "Recente nieuws zoeken",
+    "clearSearch": "Zoekopdracht wissen",
+    "searchMinLength": "Ga door met typen om te zoeken",
+    "searchNotSubscribed": "Zoeken vereist een actief abonnement",
+    "searchError": "Kon nu niet zoeken",
+    "searchEmpty": "Geen overeenkomsten in de afgelopen 48 uur. Zoeken bestrijkt recent nieuws, niet het volledige archief."
   },
   "forYou": {
     "sectionPrefix": "Nieuws over:",
@@ -941,7 +1013,12 @@
     "goToStoryAction": "Ga naar verhaal",
     "deleteStoryAction": "Verhaal verwijderen",
     "deleteStoryConfirmTitle": "Dit verhaal verwijderen?",
-    "deleteStoryConfirmBody": "Verwijderen verwijdert alles wat je voor dit verhaal hebt opgeslagen."
+    "deleteStoryConfirmBody": "Verwijderen verwijdert alles wat je voor dit verhaal hebt opgeslagen.",
+    "followFabLabel": "Een nieuw verhaal volgen",
+    "followChatSeed": "Ik wil een verhaal volgen.",
+    "followChatIntro": "Vertel me wat je wilt volgen en ik stel het in.",
+    "emptyHintFollow": "Tik op de volg-knop en vertel Mera wat je wilt bijhouden.",
+    "emptyCtaFollow": "Een verhaal volgen"
   },
   "whatsNew": {
     "title": "Wat is er nieuw",
@@ -1370,7 +1447,23 @@
     "title": "Weergave",
     "subtitle": "Pas aan hoe Mera visuele elementen op dit apparaat weergeeft",
     "staticGradientTitle": "Statische achtergrond",
-    "staticGradientDescription": "Gebruik een vaste kleurverloping in plaats van de geanimeerde achtergrond — beter voor de batterij en oudere apparaten"
+    "staticGradientDescription": "Gebruik een vaste kleurverloping in plaats van de geanimeerde achtergrond — beter voor de batterij en oudere apparaten",
+    "screenTitle": "Tekst en weergave",
+    "screenSubtitle": "Stel in hoe tekst en afbeeldingen eruit zien op dit apparaat",
+    "sectionText": "Tekst",
+    "sectionVisuals": "Visuele elementen",
+    "textSizeTitle": "Tekstgrootte",
+    "textSizeDescription": "Geldt overal in Mera. Dit staat bovenop de eigen tekstgrootteinstelling van je apparaat.",
+    "textSizePreviewLabel": "Voorbeeld",
+    "textSizePreviewHeadline": "Markten stabiel naarmate onderhandelingen hervatten",
+    "textSizePreviewBody": "Een korte voorbeeldtekst, weergegeven in de grootte die je hebt gekozen.",
+    "textSizeA11y": "Tekstgrootte, {{label}}",
+    "textSizeStepCompact": "Compact",
+    "textSizeStepDefault": "Standaard",
+    "textSizeStepLarge": "Groot",
+    "textSizeStepLarger": "Groter",
+    "textSizeStepLargest": "Grootste",
+    "deviceTextSizeHint": "Voor nog grotere tekst, gebruik Scherm en helderheid in je apparaatinstellingen."
   },
   "freeTier": {
     "cardBody": "Het AI-deel van Mera is voor nu uitgeschakeld. Alles wat je hebt opgeslagen, gevolgd of gelezen blijft op dit apparaat, en Verkennen toont nog steeds vandaags nieuws. Zonder een plan zal Mera je feed niet opbouwen, je vragen niet beantwoorden en geen nieuwe verhalen niet volgen. Start een plan en alles komt terug.",
@@ -1387,5 +1480,745 @@
     "trackDismiss": "Niet nu",
     "trackTitle": "Verhaalvolging hoort bij een plan",
     "trackedStoriesEmptyBody": "Nog niets gevolgd. Een verhaal volgen hoort bij een plan, en wat je later volgt blijft op dit apparaat, voor jou."
+  },
+  "relatedSort": {
+    "a11yLabel": "Gerelateerde artikelen sorteren",
+    "relevance": "Best match",
+    "oldest": "Oudste eerst",
+    "newest": "Nieuwste eerst"
+  },
+  "factCheck": {
+    "action": "Feit controleren",
+    "actionA11y": "Voer een AI-feitcheck uit op dit verhaal",
+    "title": "AI-feitcheck",
+    "hide": "Verbergen",
+    "retry": "Opnieuw proberen",
+    "checking": "Dit verhaal controleren tegen andere bronnen...",
+    "checkingHint": "Dit kan tot een minuut duren.",
+    "stillWorking": "Nog steeds aan het werken aan deze. Kom over een paar minuten terug.",
+    "failed": "Deze controle kon niet worden voltooid. Je kunt het later opnieuw proberen.",
+    "error": "Kon de controle niet starten. Controleer je verbinding en probeer het opnieuw.",
+    "blocked": "Dit verhaal kon niet worden gecontroleerd.",
+    "claimsHeading": "Gecontroleerde beweringen",
+    "citationsHeading": "Geraadpleegde bronnen",
+    "noCitations": "Er zijn geen bronnen teruggekomen met deze controle, dus beschouw het als onbevestigd.",
+    "sourceFallback": "Bron {{index}}",
+    "disclaimer": "Geschreven door AI op basis van een websearch. Het kan fout of onvolledig zijn. Lees de bronnen voordat je erop vertrouwt.",
+    "verdict": {
+      "supported": {
+        "label": "Consistent met bronnen",
+        "detail": "Andere bronnen die we vonden zeggen ruwweg hetzelfde. Dat is geen bewijs dat het waar is. Het betekent alleen dat we niets tegenstrijdigs vonden."
+      },
+      "disputed": {
+        "label": "Bronnen zijn het oneens",
+        "detail": "We vonden bronnen die delen van dit verhaal tegenspreken. Lees ze en oordeel zelf."
+      },
+      "unsupported": {
+        "label": "Geen steun gevonden",
+        "detail": "We konden geen andere bronnen vinden die dit ondersteunen. Dat kan eenvoudig betekenen dat het verhaal nieuw of niche is. Het maakt het niet onwaar."
+      },
+      "mixed": {
+        "label": "Deels consistent",
+        "detail": "Sommige delen stemmen overeen met andere bronnen en sommige niet. De claim-per-claim-notities zeggen welke."
+      },
+      "unverifiable": {
+        "label": "Kon niet bevestigen",
+        "detail": "We konden niet genoeg vinden om dit verhaal te bevestigen of tegenspreken. Dit is geen bevinding dat het fout is."
+      },
+      "unknown": {
+        "label": "Geen duidelijk antwoord",
+        "detail": "De controle is voltooid zonder conclusie die we kunnen samenvatten. De onderstaande bronnen zijn wat het bekeek."
+      }
+    },
+    "assessment": {
+      "supported": "Ondersteund door bronnen",
+      "disputed": "Bronnen zijn het oneens",
+      "unsupported": "Geen steun gevonden",
+      "unverifiable": "Kon niet bevestigen",
+      "unknown": "Onduidelijk"
+    }
+  },
+  "sourcePrefControl": {
+    "prioritiseA11y": "Deze bron prioriteren",
+    "deprioritiseA11y": "Deze bron deprioriteren"
+  },
+  "consent": {
+    "title": "Voordat je doorgaat",
+    "body": "We hebben onze Servicevoorwaarden en Privacybeleid bijgewerkt. Lees en accepteer deze om Mera te blijven gebruiken.",
+    "termsLink": "Servicevoorwaarden",
+    "privacyLink": "Privacybeleid",
+    "accept": "Akkoord en doorgaan",
+    "accepting": "Opslaan...",
+    "errorTitle": "Kon je acceptatie niet opslaan",
+    "errorDescription": "Controleer je verbinding en probeer het opnieuw.",
+    "retry": "Opnieuw proberen"
+  },
+  "tutorials": {
+    "entryRow": "Welkom bij mera",
+    "menuTitle": "Welkom bij mera",
+    "menuSubtitle": "Korte gidsen over hoe deze app werkt. Begin overal.",
+    "sectionBasic": "Start hier",
+    "sectionAdvanced": "Ga dieper",
+    "progress": "{{done}} van {{total}} voltooid",
+    "advancedLockedTitle": "Ga dieper",
+    "advancedLockedBody_one": "Voltooi nog {{count}} gids en de geavanceerde openen.",
+    "advancedLockedBody_other": "Voltooi nog {{count}} gidsen en de geavanceerde openen.",
+    "slideCount_one": "{{count}} kaart",
+    "slideCount_other": "{{count}} kaarten",
+    "completedBadge": "Klaar",
+    "empty": "Hier is nog niets.",
+    "close": "Sluiten",
+    "skip": "Overslaan",
+    "back": "Terug",
+    "next": "Volgende",
+    "done": "Klaar",
+    "continueAnyway": "Toch doorgaan",
+    "slideProgress": "Kaart {{current}} van {{total}}",
+    "askMera": "Vraag Mera",
+    "chatIntro": "Vraag me alles over hoe mera werkt. Ik kan het uitleggen, maar kan niets van hier uit veranderen.",
+    "launchButton": "Maak de rondleiding",
+    "hintReveal": "Tik op elk.",
+    "hintRevealSome": "Tik op minstens {{count}}.",
+    "hintChoose": "Kies er een.",
+    "hintSort": "Tik op een kaart, tik dan waar deze hoort.",
+    "hintSortPick": "Tik nu waar deze hoort.",
+    "hintBeforeAfter": "Tik om om te draaien.",
+    "beforeLabel": "De korte versie",
+    "afterLabel": "Wat werkelijk waar is",
+    "sortDone": "Dat zijn ze allemaal.",
+    "chapters": {
+      "welcome": {
+        "title": "Welkom bij mera",
+        "subtitle": "Wat deze app is, in één minuut.",
+        "slides": {
+          "what": {
+            "headline": "Een nieuwsapp die met jou begint",
+            "body": "De meeste nieuwsapps beginnen met het nieuws en hopen dat het bij je past. mera begint aan het andere uiteinde: het leert een beetje over je leven, gaat dan op zoek naar de verhalen die het raken."
+          },
+          "not-a-timeline": {
+            "headline": "Geen tijdlijn",
+            "body": "Niets hier wordt geordend op basis van wat populair is of wat het laatst binnenkwam. Raad wat de volgorde bepaalt.",
+            "choose": {
+              "popular": {
+                "label": "Wat de meeste mensen lezen",
+                "feedback": "Niet hier. Populariteit is het nieuws van iemand anders."
+              },
+              "yours": {
+                "label": "Hoeveel het je leven raakt",
+                "feedback": "Dat is het. Alles anders is alleen maar een tiebreak."
+              },
+              "newest": {
+                "label": "Wat het laatst binnenkwam",
+                "feedback": "Dicht erbij. Nieuwe verhalen landen wel bovenaan, maar nieuw zijn geeft niet het top verdient."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Drie stappen en dat is de hele app",
+            "body": "Het is echt zo kort.",
+            "steps": {
+              "0": "Je zegt een paar ware dingen over je leven.",
+              "1": "mera verandert ze in dingen om naar te zoeken.",
+              "2": "Het leest het dagnieuws en houdt wat past."
+            }
+          },
+          "matching": {
+            "headline": "Je leven, niet je klikken",
+            "body": "Een verpleegster in een klein dorp en een verpleegster in een hoofdstad krijgen hier ander nieuws. Niet omdat de ene meer tikt, maar omdat verschillende dingen werkelijk hen bereiken."
+          },
+          "stays-here": {
+            "headline": "Het blijft op deze telefoon",
+            "body": "Tik elk om te zien wat dat betekent.",
+            "reveal": {
+              "about-you": {
+                "label": "Wat het over jou weet",
+                "text": "Je feiten, je interesses en wat je hebt gelezen worden op deze telefoon geschreven en blijven daar. Er is geen kopie ervan op een server."
+              },
+              "what-leaves": {
+                "label": "Wat werkelijk weggaat",
+                "text": "Korte onderwerpsfrasen, zoals 'ziekenhuisbezetting'. Geen naam, geen account, niets dat zegt dat de zin van jou afkomstig was."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Klaar wanneer jij het bent",
+            "body": "Meld je aan en mera vraagt je een paar dingen. Er zijn geen foute antwoorden en je kunt later alles veranderen. De rest van deze gidsen wacht in Instellingen."
+          }
+        }
+      },
+      "facts": {
+        "title": "Je feiten bepalen je feed",
+        "subtitle": "Vertel Mera over je leven. Het doet de rest.",
+        "slides": {
+          "a-fact-is": {
+            "headline": "Een feit is één ware regel",
+            "body": "'Ik ben een verpleegster.' 'Ik woon in Utrecht.' 'Ik heb een klein kind.' Kort, waar, over je leven. Dat is het hele idee.",
+            "ask": "Wat telt als feit in mera?"
+          },
+          "where-from": {
+            "headline": "Waar feiten vandaan komen",
+            "body": "Je hoeft nooit een formulier in te vullen.",
+            "steps": {
+              "0": "Je praat met Mera en het luistert naar de duurzame bits.",
+              "1": "Je zegt het ronduit: 'Ik ben naar Lissabon verhuisd.'",
+              "2": "Je voegt ze toe of verwijdert ze op het tabblad Profiel."
+            }
+          },
+          "to-topics": {
+            "headline": "Feiten worden dingen om naar te zoeken",
+            "body": "'Ik ben een verpleegster' verandert in verschillende zoekfrasen: ziekenhuisbezetting, salaris voor verpleegkundigen, gezondheidsbeleid. Één feit waiert uit naar een handvol. Die frasen zijn wat naar buiten gaat om nieuws te vinden."
+          },
+          "sort-them": {
+            "headline": "Welke hiervan is een feit?",
+            "body": "Tik op een kaart, tik dan waar deze hoort.",
+            "sort": {
+              "buckets": {
+                "fact": "Een feit",
+                "not-fact": "Geen feit"
+              },
+              "cards": {
+                "nurse": "Ik ben een verpleegster",
+                "utrecht": "Ik woon in Utrecht",
+                "headline": "Dat treinstreikverhaaltje",
+                "mood": "Ik verveel me vandaag"
+              }
+            }
+          },
+          "importance": {
+            "headline": "Sommige feiten zijn belangrijker dan andere",
+            "body": "Tik op het tabblad Profiel op wat Mera over je weet om hoeveel het telt te verhogen of verlagen, het opnieuw in te stellen of te verwijderen. Iets uitschakelen is zachter dan het verwijderen en meestal het betere eerste zet.",
+            "ask": "Hoe wijzig ik hoe belangrijk één van mijn feiten is?"
+          }
+        }
+      },
+      "feed": {
+        "title": "Je Feed lezen",
+        "subtitle": "Waar de verhalen van vandaag leven en hoe ze zich bewegen.",
+        "slides": {
+          "two-lists": {
+            "headline": "Twee lijsten, twee banen",
+            "body": "Het eerste tabblad is je Feed: één lange lijst, het meest relevant bovenaan. De tweede is dezelfde dag geordend in secties. Dezelfde verhalen, andere vorm, dus gebruik wat het best voor je stemming werkt.",
+            "ask": "Wat is het verschil tussen de Feed en het Dashboard?"
+          },
+          "nothing-removed": {
+            "headline": "Niets wordt ooit verwijderd",
+            "body": "Lees een kaart en deze verdwijnt niet; het zakt. Twee dunne scheidingslijnen snijden de lijst in drie delen en kaarten drijven er als je gaat voorbij.",
+            "steps": {
+              "0": "Boven: alles wat je nog niet hebt gezien.",
+              "1": "Onder de eerste scheidingslijn: gezien, maar niet geopend.",
+              "2": "Onder de tweede: al gelezen."
+            },
+            "beforeAfter": {
+              "before": "Voordat je het leest: de kaart zit bovenaan met alles anders wat nieuw is.",
+              "after": "Nadat je het leest: dezelfde kaart, nog steeds daar, nu onder de tweede scheidingslijn. Scroll naar beneden en je kunt het later opnieuw lezen."
+            }
+          },
+          "what-counts-as-read": {
+            "headline": "'Lezen' is breder dan je denkt",
+            "body": "Tik minstens twee om te zien wat telt.",
+            "reveal": {
+              "open": {
+                "label": "Het openen",
+                "text": "Door naar het volledige verhaal te tikken, telt dit, wat geen verrassing is."
+              },
+              "dwell": {
+                "label": "Gewoon kijken",
+                "text": "Een kaart die correct op je scherm zit voor anderhalve seconde telt ook. Een snelle scroll past niet."
+              },
+              "act": {
+                "label": "Er iets mee doen",
+                "text": "Een duim, een opslaan, het verhaal volgen of het naar Mera sturen telt allemaal als gelezen."
+              }
+            }
+          },
+          "order-holds-still": {
+            "headline": "De volgorde blijft staan terwijl je leest",
+            "body": "mera werkt de volgorde eenmaal uit, wanneer je de app opent of naar beneden trekt om te vernieuwen, en laat het dan met rust. Niets herordent zich onder je duim halverwege de lijst."
+          },
+          "why-this-one": {
+            "headline": "Waarom deze?",
+            "body": "Elke kaart heeft een korte regel waarom het bij je is aangekomen en een woord voor hoeveel het lijkt te betekenen. Als een reden verkeerd lijkt, is dat het enige nuttigste wat je Mera kunt vertellen.",
+            "ask": "Waar komt de reden onder een verhaal vandaan?"
+          },
+          "caught-up": {
+            "headline": "Uitputting is prima",
+            "body": "Als er niets nieuws meer over is, zegt mera dat en stopt. Het zal de lijst niet opvullen om je te laten scrollen. Alles wat je al hebt gelezen zit nog beneden, als je het wilt."
+          }
+        }
+      },
+      "teaching": {
+        "title": "Mera leren",
+        "subtitle": "Twee duimen, één reden en ongedaan maken.",
+        "slides": {
+          "two-thumbs": {
+            "headline": "Twee duimen",
+            "body": "Elk verhaal heeft 'Ik vind het leuk' en 'Niets voor mij'. Ze zijn het snelste om te tikken en op zichzelf het minst nuttig."
+          },
+          "bare-thumb": {
+            "headline": "Een duim op zichzelf wordt weggegooid",
+            "body": "Dit verbaast mensen, dus het is het waard duidelijk te zeggen.",
+            "steps": {
+              "0": "Je tikt een duim.",
+              "1": "Een klein kaartje opent en vraagt waar het over ging.",
+              "2": "Zeg niets en niets wordt opgeslagen."
+            },
+            "ask": "Waarom verandert een duim naar beneden op zichzelf niets?"
+          },
+          "the-reason": {
+            "headline": "De reden is het nuttige deel",
+            "body": "Welke van deze verandert werkelijk je feed?",
+            "choose": {
+              "just-thumb": {
+                "label": "Een duim naar beneden en niets anders",
+                "feedback": "Niets verandert. Mera kan niet zeggen of het het onderwerp, de bron of alleen vandaag was."
+              },
+              "thumb-plus-reason": {
+                "label": "Een duim naar beneden plus 'te veel over deze voetbalclub'",
+                "feedback": "Dat is het. Nu is er iets specifieks om op te handelen."
+              }
+            }
+          },
+          "undo": {
+            "headline": "Ongedaan maken is altijd dichtbij",
+            "body": "Elke wijziging van feedback toont een korte bevestiging met een Ongedaan maken naast. Tik dat en het is alsof er niets gebeurde."
+          },
+          "it-adds-up": {
+            "headline": "Kleine correcties winnen van grote",
+            "body": "Je hoeft je hele profiel niet in één zitting op te lossen. Twee of drie eerlijke correcties over een week voeren de feed verder dan één lange sessie ooit doet.",
+            "ask": "Hoe snel verschijnt mijn feedback in de feed?"
+          }
+        }
+      },
+      "privacy": {
+        "title": "Je privacy",
+        "subtitle": "Wat dit apparaat verlaat en wat nooit doet.",
+        "slides": {
+          "stays-on-phone": {
+            "headline": "Het deel over jou verlaat nooit",
+            "body": "Je feiten, je interesses, je plaatsen en alles wat je hebt gelezen leven op deze telefoon. Er is geen kopie op een server, wat ook waarom afmelden of van telefoon wisselen betekent het profiel opnieuw op te bouwen."
+          },
+          "what-leaves": {
+            "headline": "Wat werkelijk naar buiten gaat",
+            "body": "Drie dingen en dat is de lijst.",
+            "steps": {
+              "0": "Korte onderwerpsfrasen, dus er is iets om verhalen tegenaan te passen.",
+              "1": "Je e-mailadres en welk abonnement je hebt.",
+              "2": "Een telling van hoeveel verhalen vandaag zijn geanalyseerd, om dat abonnement eerlijk te houden."
+            },
+            "ask": "Wat stuurt de app naar jullie servers?"
+          },
+          "cloud-is-default": {
+            "headline": "Het standaard is versleutelde cloud",
+            "body": "Het lezen van een dag nieuws kost veel denken en de meeste telefoons willen dat niet. Dus standaard gebeurt dat werk in de cloud.",
+            "beforeAfter": {
+              "before": "De versie die we je graag willen vertellen: je telefoon doet het allemaal, altijd.",
+              "after": "Wat werkelijk waar is: standaard gebeurt het denken in de cloud, versleuteld op deze telefoon en geopend alleen in een gesealde enclave. Apparaat is een schakelaar die je kunt uitzetten. We willen dit eerder zeggen dan je laten aannemen."
+            }
+          },
+          "on-device-option": {
+            "headline": "Apparaat, als je wilt",
+            "body": "In Instellingen → Mera Protocol kun je de verwerking naar deze telefoon verplaatsen en dan verlaat niets over jou het apparaat helemaal. Het downloadt eerst een model, wil een vrij recent apparaat en is merkbaar langzamer, wat precies waarom het niet het standaard is."
+          },
+          "decoys-are-a-switch": {
+            "headline": "Lokvogels zijn uit tot je ze aanzet",
+            "body": "Er is een instelling genaamd Ruis injecteren die verzonnen onderwerpen naast je echte stuurt, dus de frasen van je telefoon kunnen niet als een portret van jou worden gelezen. Wat doet het nu?",
+            "choose": {
+              "always-on": {
+                "label": "Draait stil op de achtergrond",
+                "feedback": "Nee, en we willen dit corrigeren in plaats van het als aangenaam aan te nemen."
+              },
+              "off-until-you-turn-it-on": {
+                "label": "Niets, tot je het aanzet",
+                "feedback": "Juist. Het staat standaard uit: Instellingen → Mera Protocol → Ruis injecteren."
+              }
+            }
+          },
+          "what-we-keep": {
+            "headline": "Wat we houden",
+            "body": "Je inlog-e-mail. Welk abonnement je hebt. Een dagelijks aantal geanalyseerde verhalen. De onderwerpsfrasen worden alleen per tekst gecachet, met niets dat opneemt wie ernaar vroeg en drops na veertien dagen ongebruikt.",
+            "ask": "Wat slaat mera op haar servers over mij op?"
+          }
+        }
+      },
+      "following": {
+        "title": "Een verhaal volgen",
+        "subtitle": "Houd één verhaal in de gaten terwijl het zich ontvouwt.",
+        "slides": {
+          "what-it-is": {
+            "headline": "Voor verhalen die niet voorbij zijn",
+            "body": "Een verkiezing, een proces, een storm, een overname. Volg het eenmaal en elk nieuwe ontwikkeling verzamelt op één plek in plaats van over drie weken verspreid door je feed te arriveren."
+          },
+          "two-ways-in": {
+            "headline": "Twee manieren om te beginnen",
+            "body": "Beide eindigen op dezelfde plaats.",
+            "steps": {
+              "0": "Open een verhaal volledig en tik het volgpictogram in de rij knoppen eronder.",
+              "1": "Of open Gevolgde verhalen, tik de volg-knop en zeg wat je wilt bijhouden."
+            },
+            "ask": "Hoe volg ik een verhaal?"
+          },
+          "pick-the-scope": {
+            "headline": "Hoe breed zou het moeten zijn?",
+            "body": "Mera biedt drie of vier bereiken en je tikt er een. Niets wordt gevolgd tot je dat doet. Welke zou je kiezen voor een rechtszaak?",
+            "choose": {
+              "narrow": {
+                "label": "Alleen deze rechtszaak",
+                "feedback": "Strak en rustig. Je krijgt het vonnis en niet veel meer."
+              },
+              "medium": {
+                "label": "Deze rechtszaak en de hoger-beroepmogelijkheden eromheen",
+                "feedback": "Een goed midden. Dit is wat de meeste mensen willen."
+              },
+              "wide": {
+                "label": "Het hele schandaal waar het uit voortkomt",
+                "feedback": "Breed. Je krijgt veel, ook dingen alleen losjes gerelateerd."
+              }
+            }
+          },
+          "the-timeline": {
+            "headline": "Het verzamelt, het zeurt niet",
+            "body": "Nieuwe ontwikkelingen verzamelen op de eigen tijdlijn van het verhaal met een klein getal ernaast. Als het verhaal stil wordt, zegt mera dat in plaats van een update uit te vinden om de ruimte te vullen."
+          },
+          "stop-following": {
+            "headline": "Stoppen is één tik",
+            "body": "Open het verhaal en stop met volgen. De verzamelde tijdlijn gaat mee, dus als je alleen een pauze wilde, is het waard dit als verwijdering in plaats van pauze te weten.",
+            "ask": "Wat gebeurt er met de tijdlijn als ik stop met volgen van een verhaal?"
+          }
+        }
+      },
+      "explore": {
+        "title": "Verkennen",
+        "subtitle": "Dezelfde koppen die iedereen anders krijgt.",
+        "slides": {
+          "unscored-on-purpose": {
+            "headline": "Opzettelijk niet over jou",
+            "body": "Verkennen is de enige plaats mera niets personaliseerd. Geen scoring, geen redenen, niets geleerd van wat je hier opent. Gewoon wat een land's nieuwskamers aanvoeren, in hun volgorde.",
+            "ask": "Waarom is het Verkennen tabblad niet gepersonaliseerd?"
+          },
+          "the-chips": {
+            "headline": "De chips bovenaan",
+            "body": "Ze zijn gebouwd voor je in plaats van gekozen door jou.",
+            "steps": {
+              "0": "Wereld komt eerst, altijd.",
+              "1": "Dan je eigen land en plaatsen die mera weet, en daarna elk land dat je zelf hebt toegevoegd."
+            }
+          },
+          "the-plus-chip": {
+            "headline": "De + aan het einde van de chips",
+            "body": "Er is een kleine + chip na de laatste land. Waar voert het je?",
+            "choose": {
+              "places": {
+                "label": "Je plaatsen",
+                "feedback": "Het deed dat ooit. Het doet het niet meer."
+              },
+              "sources": {
+                "label": "Het Bronnen-scherm",
+                "feedback": "Juist: landen en de uitgevers erachter."
+              },
+              "settings": {
+                "label": "Instellingen",
+                "feedback": "Nee. Instellingen is het laatste tabblad onderaan."
+              }
+            }
+          },
+          "search": {
+            "headline": "Verkennen zoeken",
+            "body": "De zoekbalk boven de chips kijkt door recente koppen, ruwweg de afgelopen twee dagen, geen archief. Het is voor 'wat gebeurde met dat ding', niet voor onderzoek."
+          },
+          "hide-a-chip": {
+            "headline": "Te veel chips",
+            "body": "Druk en houd een chip die je niet wilt en deze gaat weg. mera bouwt deze uit plaatsen die het kent, dus als er steeds één terugkomt, is de plaats erachter nog steeds in je profiel.",
+            "ask": "Hoe word ik een landchip in Verkennen kwijt?"
+          }
+        }
+      },
+      "sources": {
+        "title": "Je bronnen kiezen",
+        "subtitle": "Badges, pijlen en de ene besturing die een blok is.",
+        "slides": {
+          "where-it-lives": {
+            "headline": "Waar bronnen leven",
+            "body": "Twee deuren, één scherm.",
+            "steps": {
+              "0": "De + chip aan het einde van de rij chips van Verkennen.",
+              "1": "Of het tabblad Profiel, dan Geavanceerd, dan Bronnen."
+            },
+            "ask": "Waar beheer ik welke bronnen ik zie?"
+          },
+          "the-two-badges": {
+            "headline": "Alleen twee badges bestaan",
+            "body": "Tik op elk om te zien wat het betekent en wat de afwezigheid van er geen betekenis aan geeft.",
+            "reveal": {
+              "government": {
+                "label": "Overheidsbron",
+                "text": "De uitgever is een overheidslichaam. Het waard te weten als je een officiële verklaring over een officieel ding leest."
+              },
+              "regulator": {
+                "label": "Officiële instelling",
+                "text": "Een regelgever of openbare instelling: een gezondheidsautoriteit, een veiligheidsraad voor vervoer, een centrale bank."
+              },
+              "everything-else": {
+                "label": "Geen badge helemaal",
+                "text": "Alles anders, wat bijna alles is. Het is geen kwaliteitsbeoordeling en de afwezigheid zegt niets slechts over een uitgever."
+              }
+            }
+          },
+          "plus-is-not-a-rank": {
+            "headline": "De + naast een land",
+            "body": "Landen dragen een + en een paar pijlen en ze doen volledig verschillende banen. Wat doet de +?",
+            "choose": {
+              "ranks-it-up": {
+                "label": "Rankt het nieuws van dat land hoger",
+                "feedback": "Dat zijn de pijlen. De + is helemaal geen rankingcontrole."
+              },
+              "adds-a-chip": {
+                "label": "Voegt dat land toe als chip in Verkennen",
+                "feedback": "Precies. Bladeren alleen; het verandert niets aan je gepersonaliseerde feed."
+              },
+              "follows-it": {
+                "label": "Volgt het land als een verhaal",
+                "feedback": "Nee. Volgen is voor een enkel verhaal dat nog steeds ontvouwt."
+              }
+            }
+          },
+          "arrows-on-a-country": {
+            "headline": "De pijlen naast een land",
+            "body": "Omhoog betekent dat je liever van dat land's nieuwskamers hoort; omlaag betekent minder vaak. Het geldt voor elke uitgever daar tegelijk en tippen op dezelfde pijl opnieuw wist het."
+          },
+          "arrows-on-a-publisher": {
+            "headline": "Dezelfde pijlen, één uitgever tegelijk",
+            "body": "Open een land en elke uitgever heeft zijn eigen paar. Omlaag is een duwtje eerder dan muur: een gedownrankte uitgever verschijnt nog steeds wanneer deze een verhaal heeft dat niemand anders heeft.",
+            "ask": "Wat is het verschil tussen het omlaagdraaien van een bron en het dempen ervan?"
+          },
+          "mute-is-not-a-downrank": {
+            "headline": "Mute is iets heel anders",
+            "body": "Mute leeft alleen op het scherm met bronvoorkeuzen en het is een harde uitsluiting: die verhalen worden verwijderd, niet alleen lager gesorteerd. Tik op elke kaart en zet het waar het hoort.",
+            "steps": {
+              "0": "Omlaag pijl: minder vaak weergegeven.",
+              "1": "Dempen: helemaal niet weergegeven.",
+              "2": "Beide kunnen later worden gewist, van bronvoorkeuzen."
+            },
+            "sort": {
+              "buckets": {
+                "softer": "Minder vaak weergegeven",
+                "gone": "Compleet verwijderd"
+              },
+              "cards": {
+                "down-arrow": "De omlaag pijl",
+                "mute": "Dempen"
+              }
+            }
+          }
+        }
+      },
+      "filters": {
+        "title": "Dingen filteren",
+        "subtitle": "Hoe 'niet geïnteresseerd' werkelijk werkt.",
+        "slides": {
+          "three-shelves": {
+            "headline": "Drie planken op één scherm",
+            "body": "Het scherm Niet geïnteresseerd bevat alles wat je Mera hebt gevraagd terug te houden.",
+            "steps": {
+              "0": "Woorden en dingen die je hebt verborgen.",
+              "1": "Onderwerpen die je minder ziet.",
+              "2": "Bronnen die je hebt gedempt of omlaaggedraaid."
+            },
+            "ask": "Waar kan ik alles zien wat ik heb gefilterd?"
+          },
+          "exact-match": {
+            "headline": "Een filter matcht precies één ding",
+            "body": "Filters zijn geen zoekopdrachten. Een plaatsfilter matcht die plaats; een bronfilter matcht die bron. Ze vergelijken een exacte waarde tegenover één veld van een verhaal, wat ze voorspelbaar maakt, en ook wat het volgende kaartje belangrijk maakt."
+          },
+          "made-from-a-story": {
+            "headline": "Waar de precieze van afkomen",
+            "body": "Je wilt niet meer over één bepaalde plaats horen. Wat werkelijk werkt?",
+            "choose": {
+              "type-it": {
+                "label": "Typ de plaatsnaam in het filterscherm",
+                "feedback": "Dat wordt opgeslagen als woorden in plaats van als plaats. Nuttig, maar losser dan je bedoelde."
+              },
+              "from-an-article": {
+                "label": "Zeg het over een verhaal dat je bekijkt",
+                "feedback": "Ja. Vertel Mera in chat of gebruik de feedbackkaart op het verhaal zelf. Het filter wordt gemunt uit die werkelijke plaats van dat verhaal, dus het past exact."
+              }
+            }
+          },
+          "typed-is-words-only": {
+            "headline": "Getypte filters zijn woorden",
+            "body": "Je kunt handmatig een toevoegen en het is werkelijk nuttig: het vangt een zin overal op waar het opduikt. Het kan eenvoudig geen plaats of bron zijn, omdat een naam die je typte bijna nooit exact overeenkomt met de opgeslagen."
+          },
+          "soft-fades-hard-stays": {
+            "headline": "Sommige vervagen, sommige blijven",
+            "body": "Het hangt af van hoe stevig je het zei, niet van waar het vandaan kwam.",
+            "beforeAfter": {
+              "before": "Een zacht filter, 'een beetje minder hiervan', stapt na dertig dagen opzij. Smaak verandert.",
+              "after": "Een stevige (de harde schakelaar wanneer je handmatig een filter toevoegt, of het dempen van een bron) heeft helemaal geen verlopen en blijft tot je het zelf verwijdert."
+            },
+            "ask": "Keren de dingen die ik filter ooit terug?"
+          }
+        }
+      },
+      "signal": {
+        "title": "Het volume omlaag draaien",
+        "subtitle": "Één wijzerplaat en de verhalen die het nooit te zien krijgen.",
+        "slides": {
+          "the-dial": {
+            "headline": "De kleine chip in de kop",
+            "body": "Bovenaan de Feed en het Dashboard zit een chip met Hoog, Med of Laag met een pijltje. Het is een vloer: verhalen onder het tarief worden eenvoudig niet getrokken.",
+            "ask": "Wat doet de Med chip bovenaan mijn feed?"
+          },
+          "per-screen": {
+            "headline": "Elk scherm houdt zijn eigen",
+            "body": "Aanscherpen van de ene verhongers nooit de andere. Tik op elke kaart op het scherm waar het beschrijft.",
+            "steps": {
+              "0": "De Feed begint op Gemiddeld: de substantie van de dag, niet elk laatst ding.",
+              "1": "Het Dashboard begint op Laag: alles, voor wanneer je in bladermodus bent."
+            },
+            "sort": {
+              "buckets": {
+                "feed-tab": "Feed",
+                "dashboard-tab": "Dashboard"
+              },
+              "cards": {
+                "medium-default": "Begint op Gemiddeld",
+                "low-default": "Begint op Laag"
+              }
+            }
+          },
+          "breaking-always-passes": {
+            "headline": "Breeknieuws negeert de wijzerplaat",
+            "body": "Alles beoordeeld als noodgeval passeert elk instelling, zelfs Hoog. De wijzerplaat is daar om routieuws te knippen; het is geen manier om een ramp het zwijgen op te leggen."
+          },
+          "headline-cull": {
+            "headline": "Sommige verhalen bereiken de wijzerplaat nooit",
+            "body": "Naast je eigen verhalen haalt mera's belangrijkste koppen van een land. Een topkop die laag voor je scoort wordt compleet verwijderd in plaats van onderaan geparkeerd. Een kopje bestaat om 'dit telt hier' te zeggen, en een laag scorend is gewoon ruis. Verhalen die bij je eigen interesses passen worden nooit op deze manier verwijderd.",
+            "ask": "Waarom zie ik minder algemene koppen dan verhalen over mijn interesses?"
+          }
+        }
+      },
+      "chat": {
+        "title": "Met Mera praten",
+        "subtitle": "De snelste manier om bijna alles te veranderen.",
+        "slides": {
+          "where-mera-is": {
+            "headline": "Mera is op het tabblad Profiel",
+            "body": "De spraakbel naast het logo op het tabblad Profiel opent de chat. Het is makkelijk voorbij te lopen, en het is de meest capabele controle in de app.",
+            "ask": "Waar vind ik de chat met Mera?"
+          },
+          "ask-what-it-knows": {
+            "headline": "Begin door te vragen wat het weet",
+            "body": "'Wat weet je over mij?' krijgt je de lijst die het werkelijk doet werken. Het is de snelste manier om het ene stoffige feit te vinden dat stil je feed voor een maand buigt."
+          },
+          "say-it-plainly": {
+            "headline": "Zeg het op de manier waarop je het tegen een persoon zou zeggen",
+            "body": "Geen commando's, geen syntaxis. Tik een paar voorbeelden.",
+            "steps": {
+              "0": "Je zegt het gewoon.",
+              "1": "Mera werkt uit welke instellingen dat betekent.",
+              "2": "Je bevestigt of je doet het niet."
+            },
+            "reveal": {
+              "less-of": {
+                "label": "'Minder voetbal alstublieft'",
+                "text": "Mera verandert dat in een omgekeerd onderwerp en toont je de wijziging voordat iets wordt toegepast."
+              },
+              "more-of": {
+                "label": "'Ik ben beginnen fietsen'",
+                "text": "Dat wordt een nieuw feit en een paar dingen om naar te zoeken."
+              },
+              "moved": {
+                "label": "'Ik ben naar Lissabon verhuisd'",
+                "text": "De oude plaats gaat naar pensioen en de nieuwe wordt toegevoegd, meestal als één voorstel dat je eenmaal bevestigt."
+              }
+            }
+          },
+          "nothing-until-you-tap": {
+            "headline": "Er gebeurt niets tot je tikt",
+            "body": "Wanneer Mera beslist dat iets moet veranderen, insceert het de wijziging als een kaart en stopt. Dus wat gebeurt er als je 'ja, doe het' tikt in plaats van op de kaart?",
+            "choose": {
+              "applies-immediately": {
+                "label": "Dit past de wijziging toe",
+                "feedback": "Het doet het niet. Getypte instemming is geen toestemming hier; de tik is."
+              },
+              "waits-for-your-tap": {
+                "label": "Niets. De kaart zit hier nog steeds te wachten",
+                "feedback": "Juist. De kaart biedt meestal een keuze van bereik die alleen jij kunt maken, dus wacht op de tik."
+              }
+            },
+            "ask": "Waarom paste Mera de wijziging niet toe die ik zei ja te zeggen?"
+          },
+          "written-down": {
+            "headline": "Elke wijziging wordt opgeschreven",
+            "body": "Toegepaste wijzigingen worden opgenomen met wat het ervoor was, wat het werd, en waar de wijziging vandaan kwam: chat, feedback, een voorstel, of jij. Niets mera doet aan je profiel is onzichtbaar."
+          },
+          "take-it-back": {
+            "headline": "En de meeste kunnen teruggenomen worden",
+            "body": "Het record leeft in Instellingen → Mera Protocol → Persona-wijzigingslogboek.",
+            "beforeAfter": {
+              "before": "Een gewichtswijziging, een toegevoegd onderwerp, een filter dat je verwijderde: deze dragen een Terugkeren die dingen precies terugzet.",
+              "after": "Een paar kunnen niet ongedaan worden gemaakt en zeggen dit: feiten verwijderen tijdens een opschoning, of het verwijderen van een plaats, gooien weg wat nodig zou zijn om het terug te stellen. Die zitten in het logboek zonder Terugkeren ernaast."
+            },
+            "ask": "Hoe maak ik iets ongedaan dat Mera over mijn profiel veranderde?"
+          }
+        }
+      },
+      "protocol": {
+        "title": "Het Mera Protocol-scherm",
+        "subtitle": "Een paar schakelaars, en wat elk werkelijk doet.",
+        "slides": {
+          "one-screen": {
+            "headline": "Waar de schakelaars zijn",
+            "body": "Twee tikken van ergens in de app.",
+            "steps": {
+              "0": "Het tabblad Instellingen, de laatste onderaan.",
+              "1": "Mera Protocol."
+            },
+            "ask": "Waar is het Mera Protocol-scherm?"
+          },
+          "processing-mode": {
+            "headline": "Verwerkingsmodus",
+            "body": "Waar het denken gebeurt. Tik beiden.",
+            "reveal": {
+              "cloud": {
+                "label": "Cloud (het standaard)",
+                "text": "Je gegevens worden op deze telefoon versleuteld, geopend alleen in een gesealde enclave en opnieuw versleuteld op de terugreis. Snel en werkt op elke telefoon. De app controleert die enclave's certificaat nog niet tegenover de chipfabrikant, dus vertrouwt je nu op ons en de enclave-operator in plaats van op de chip; het doen van die controle in de app zodat het weigert door te gaan staat op ons routekaart."
+              },
+              "on-device": {
+                "label": "Op apparaat",
+                "text": "Alles draait hier en niets over jou verlaat het aparaat helemaal. Het downloadt eerst een model, wil een vrij recent apparaat en is merkbaar langzamer."
+              }
+            }
+          },
+          "inject-noise": {
+            "headline": "Ruis injecteren",
+            "body": "Stuurt verzonnen onderwerpen langs je echte, dus de frasen die van je telefoon komen, kunnen niet als portret gelezen worden. Alles dat alleen een lokvogel paste, wordt op deze telefoon weggegooid voordat je het ooit ziet. Standaard uit: het kan onderwerpgeneratie vertragen en de feed een beetje verdunnen."
+          },
+          "deeper-questions": {
+            "headline": "Diepere vragen",
+            "body": "Dit verandert wat Mera je vraagt, niet wat het verzendt. In plaats van wat je geïnteresseerd bent, vraagt het wat je je aandacht beschermt en wat je deze maand beslist. De antwoorden zijn feiten als elk ander en verlaten nooit deze telefoon, wat precies waarom het ze kan vragen."
+          },
+          "web-search": {
+            "headline": "Websearch in chat",
+            "body": "Standaard uit. Ingeschakeld, Mera kan midden in het gesprek iets opzoeken. Wat verlaat je telefoon als het dat doet?",
+            "choose": {
+              "whole-question": {
+                "label": "Je hele bericht",
+                "feedback": "Nee. En terwijl de schakelaar uit is, wordt het zoekhulpmiddel niet eens aan het model aangeboden, dus het kost niets."
+              },
+              "search-words-only": {
+                "label": "Alleen de zoekwoorden",
+                "feedback": "Juist. De woorden waarvan het besloot te zoeken, en niets anders."
+              }
+            },
+            "ask": "Wat verlaat mijn telefoon als websearch in chat aan is?"
+          },
+          "the-change-log": {
+            "headline": "Het wijzigingslogboek leeft hier ook",
+            "body": "Persona-wijzigingslogboek op hetzelfde scherm. Elke wijziging van je profiel in volgorde, nieuwste eerst, met een Terugkeren op de dingen die ongedaan kunnen worden gemaakt. Als je feed ergens vreemd naar toe is afgedreven, is dit waar je ontdekt wanneer het gebeurde.",
+            "ask": "Hoe zie ik wat mijn profiel verandert?"
+          }
+        }
+      }
+    }
   }
 }

@@ -21,7 +21,10 @@
     "no": "否",
     "saving": "保存中...",
     "home": "主页",
-    "offlineBanner": "与Mera连接缓慢或无连接。正在显示保存的新闻——我们会继续尝试。"
+    "offlineBanner": "与Mera连接缓慢或无连接。正在显示保存的新闻——我们会继续尝试。",
+    "offlineBannerOffline": "您已离线。显示保存的新闻，我们会继续尝试。",
+    "offlineBannerInternetDown": "无互联网连接。显示保存的新闻，我们会继续尝试。",
+    "offlineBannerServerDown": "与Mera连接缓慢或无连接。显示保存的新闻，我们会继续尝试。"
   },
   "auth": {
     "reauthBanner": "重新登录以同步",
@@ -237,7 +240,8 @@
     "sourceCountryGlobal": "全球",
     "sourceCountryA11y": "来源国家：{{country}}。点按可显示国家名称。",
     "readOn": "在{{publication}}阅读",
-    "readOnGoogleTranslate": "在谷歌翻译中阅读"
+    "readOnGoogleTranslate": "在谷歌翻译中阅读",
+    "linkUnavailable": "此链接无法安全打开，所以在这里不可用。"
   },
   "newsCluster": {
     "failedToLoad": "聚合详情加载失败",
@@ -256,7 +260,13 @@
     "topHeadlines": "头条新闻",
     "viewTopHeadlines": "头条新闻",
     "addToLocations": "添加到你的地点",
-    "addedToLocations": "已添加到你的地点"
+    "addedToLocations": "已添加到你的地点",
+    "searchCountriesOrPublishers": "搜索国家或出版商...",
+    "noResultsMatch": "没有匹配您搜索的内容",
+    "addToExplore": "添加到探索",
+    "addedToExplore": "已添加到探索",
+    "badgeGovernment": "政府来源",
+    "badgeRegulator": "官方机构"
   },
   "clusterDetail": {
     "translatable": "这篇文章是{{language}}内容:你的设备可以在阅读时进行翻译。如果翻译无法使用,你可以用谷歌翻译打开该网站;请注意届时你将通过谷歌浏览内容。",
@@ -434,7 +444,42 @@
     "modelUpdatedTitle": "模型已更新",
     "modelUpdatedDescription": "已切换到 {{model}}。请下载模型以使用。",
     "modelUpdateFailedTitle": "更新失败",
-    "modelUpdateFailedDescription": "模型更新失败，请重试。"
+    "modelUpdateFailedDescription": "模型更新失败，请重试。",
+    "attestationTitle": "验证证明",
+    "attestationSubtitle": "检查云端AI是否在真实的Intel TDX硬件中运行，以及您的数据加密到的密钥是否来自其内部。",
+    "attestationVerifyButton": "运行验证",
+    "attestationVerifying": "正在验证…",
+    "attestationRerun": "再运行一次",
+    "attestationVerdictFailed": "验证失败",
+    "attestationVerdictIncomplete": "部分验证",
+    "attestationVerdictVerified": "已验证",
+    "attestationVerdictFailedDetail": "某些检查未通过。您的数据仍然加密，但无法确认硬件。",
+    "attestationVerdictIncompleteDetail": "我们执行的每项检查都通过了。某些检查根本不执行，下面列为未检查。",
+    "attestationError": "无法获取证明报告。检查您的连接并重试。",
+    "attestationNotRunYet": "尚未运行。",
+    "attestationFailOpenNotice": "这些结果显示以供透明参考，目前不会阻止任何内容。",
+    "attestationCheckQuoteStructure": "引用格式正确为Intel TDX",
+    "attestationCheckReportDataKey": "加密密钥在引用内提交",
+    "attestationCheckFreshness": "引用新鲜（非重放）",
+    "attestationCheckSigningAlgo": "签名算法与密钥匹配",
+    "attestationCheckQeReportSignature": "引用enclave由Intel签署",
+    "attestationCheckAttestationKeyBinding": "签名密钥绑定到引用enclave",
+    "attestationCheckQuoteSignature": "引用签名有效",
+    "attestationCheckPckChain": "Intel证书链有效",
+    "attestationCheckRootCaPin": "链锚定到Intel的根证书",
+    "attestationCheckTcbStatus": "平台补丁级别是最新的",
+    "attestationCheckGpuAttestation": "GPU证明",
+    "attestationNotCheckedLabel": "未检查",
+    "attestationScopeNotice": "这检查上方显示的模型。Mera使用多个云模型（聊天使用不同的模型，每个都有备份），所以这里的通过涵盖此模型，不是每个请求。",
+    "attestationModelLabel": "已检查的模型",
+    "webSearchTitle": "聊天中的网络搜索",
+    "webSearchOn": "开启，Mera可以搜索网络来回答问题",
+    "webSearchOff": "关闭",
+    "webSearchDescription": "打开时，Mera可以搜索网络来回答问题。您输入的搜索词被发送到我们的服务器以及搜索提供商。没有其他内容随之而来，不是您的事实，不是您的资讯，不是您是谁。默认关闭。",
+    "deepInterviewTitle": "更深入的问题",
+    "deepInterviewOn": "开启，Mera询问关于关注、担忧和决策",
+    "deepInterviewOff": "关闭",
+    "deepInterviewDescription": "Mera提出更少但更深入的问题：您试图保护什么样的关注，哪些话题是必要但令人焦虑的，哪些感觉有用但浪费您的时间，您这个月正在做什么决定，以及为什么每个地方对您很重要。您的答案存储在此设备上，永不离开，这正是Mera能够提出这些问题的原因。它们使相关性分数和每则报道上显示的原因更敏锐。默认关闭。"
   },
   "manageData": {
     "deleting": "删除中...",
@@ -457,7 +502,13 @@
     "factsDescription": "你的事实及其生成的主题——存储在此设备上",
     "factsModalDescription": "清除你添加的事实以及由此生成的主题。你的事实从不离开这台设备。主题短语在你获取新闻时发送，并在我们的服务器上缓存，不附带用户 ID，因此那里没有任何记录表明它们属于你。你的文章列表也会一并清空，因为它由这些主题构建，在你添加新事实之前将保持为空。",
     "locationDevice": "设备上",
-    "locationServer": "服务器"
+    "locationServer": "服务器",
+    "exportHistoryTitle": "导出阅读历史",
+    "exportHistoryDescription": "过去30天的JSON：文章、出版商和发布到阅读的平均时间",
+    "exportHistorySubject": "我的Mera阅读历史（JSON）",
+    "exporting": "正在导出…",
+    "exportHistoryEmptyTitle": "还没有要导出的内容",
+    "exportHistoryEmptyDescription": "您在过去30天内没有阅读任何文章。"
   },
   "preferences": {
     "manageSettings": "管理您的应用设置和账户",
@@ -495,7 +546,12 @@
     "appVersion": "应用版本：{{version}}",
     "contentPolicy": "内容政策",
     "faq": "常见问题",
-    "reportBug": "报告问题"
+    "reportBug": "报告问题",
+    "deleteAccountConfirmGrace": "您的账户将被安排删除，享有30天宽限期。在这30天内再次登录，删除会自动取消。",
+    "deleteAccountWarningGrace": "⚠️ 30天后，这无法撤销，您的所有数据都被永久删除。",
+    "finalConfirmationBodyGrace": "这将在30天内安排您的账户永久删除。",
+    "accountDeletionScheduledTitle": "删除已安排",
+    "accountDeletionScheduledDescription": "您的账户将在30天内永久删除。在之前再次登录以取消删除。"
   },
   "configPanel": {
     "tabPersona": "用户画像",
@@ -851,7 +907,14 @@
     "manageBadge": "管理",
     "startWithStarter": "从入门版开始",
     "starterRecommendation": "入门版是开始的地方。Mera News 免费版可保留你已在此设备上构建的所有内容，但初始时没有任何内容可保留。",
-    "turnMeraBackOn": "重新启用 Mera"
+    "turnMeraBackOn": "重新启用 Mera",
+    "para1": "Mera News本可以免费。只需有人付费即可：广告商购买您的关注，您的数据，或一篇好评。许多看起来像新闻的内容正是这样。",
+    "para2": "广告驱动的媒体没有上限。既没有从您那里索取多少的上限，也没有之后如何使用的上限。我们不想成为那样的公司，所以这里的协议很简单。您保留您的数据。软件完成工作。您支付费用。",
+    "para3Trial": "我们建议从Individual套餐的免费试用一周开始。这是大多数人最终需要的方案。一周后您可以继续使用，转换到Starter，或升级到Professional，选择最适合您的。",
+    "para3NoTrial": "Starter是一个不错的起点。它是最小的方案，您可以在Mera证明自己值得的时候随时升级。",
+    "startFreeTrial": "开始免费试用",
+    "subscribeNow": "立即订阅",
+    "planRecommendation": "您每天大约打开{{count}}篇文章。{{plan}}每天分析最多{{limit}}篇，所以总会有比您能读完的更多。"
   },
   "tabs": {
     "deck": "信息流",
@@ -880,7 +943,16 @@
     "scopeWorld": "全球",
     "noArticles": "未找到文章",
     "addPlaces": "添加地点",
-    "offlineUnavailable": "您离线了——「探索」需要网络连接"
+    "offlineUnavailable": "您离线了——「探索」需要网络连接",
+    "serverUnavailable": "Mera暂时无法到达：稍后再试。",
+    "addSources": "添加来源",
+    "removeScope": "移除{{name}}",
+    "searchPlaceholder": "搜索最近新闻",
+    "clearSearch": "清除搜索",
+    "searchMinLength": "继续输入以搜索",
+    "searchNotSubscribed": "搜索需要有效的方案",
+    "searchError": "现在无法搜索",
+    "searchEmpty": "过去48小时内无匹配。搜索涵盖最近的头条，不是完整档案。"
   },
   "forYou": {
     "sectionPrefix": "关于：",
@@ -941,7 +1013,12 @@
     "goToStoryAction": "前往报道",
     "deleteStoryAction": "删除报道",
     "deleteStoryConfirmTitle": "删除此报道？",
-    "deleteStoryConfirmBody": "删除会移除为此报道保存的所有内容。"
+    "deleteStoryConfirmBody": "删除会移除为此报道保存的所有内容。",
+    "followFabLabel": "关注新报道",
+    "followChatSeed": "我想关注一则报道。",
+    "followChatIntro": "告诉我您想关注什么，我会设置它。",
+    "emptyHintFollow": "点击关注按钮并告诉Mera您想跟踪什么。",
+    "emptyCtaFollow": "关注报道"
   },
   "whatsNew": {
     "title": "更新内容",
@@ -1371,7 +1448,23 @@
     "title": "显示",
     "subtitle": "自定义Mera在此设备上如何呈现视觉效果",
     "staticGradientTitle": "静态背景",
-    "staticGradientDescription": "使用固定渐变代替动画背景 — 对电池和旧设备更友好"
+    "staticGradientDescription": "使用固定渐变代替动画背景 — 对电池和旧设备更友好",
+    "screenTitle": "文本与显示",
+    "screenSubtitle": "设置此设备上文本和视觉的显示方式",
+    "sectionText": "文本",
+    "sectionVisuals": "视觉",
+    "textSizeTitle": "文本大小",
+    "textSizeDescription": "应用于Mera中的任何地方。这在您设备自己的文本大小设置之上。",
+    "textSizePreviewLabel": "预览",
+    "textSizePreviewHeadline": "市场稳定，谈判恢复",
+    "textSizePreviewBody": "您选择的大小显示的短文本样本。",
+    "textSizeA11y": "文本大小，{{label}}",
+    "textSizeStepCompact": "紧凑",
+    "textSizeStepDefault": "默认",
+    "textSizeStepLarge": "大",
+    "textSizeStepLarger": "更大",
+    "textSizeStepLargest": "最大",
+    "deviceTextSizeHint": "如需更大的文本，请在设备设置中使用显示与亮度。"
   },
   "freeTier": {
     "cardBody": "Mera 的 AI 部分暂时已关闭。你保存、关注或阅读过的任何内容都会保留在此设备上，探索标签页仍有今日新闻。没有计划的情况下，Mera 无法生成你的资讯、回答你的问题或追踪新报道。选择一个计划，一切都会恢复。",
@@ -1388,5 +1481,745 @@
     "trackDismiss": "稍后",
     "trackTitle": "报道追踪需要订阅计划",
     "trackedStoriesEmptyBody": "还没有关注任何报道。关注报道需要有效的订阅计划。你之后关注的任何报道都会保留在此设备上，永远属于你。"
+  },
+  "relatedSort": {
+    "a11yLabel": "对相关文章排序",
+    "relevance": "最佳匹配",
+    "oldest": "最早优先",
+    "newest": "最新优先"
+  },
+  "factCheck": {
+    "action": "事实查证",
+    "actionA11y": "对这则报道进行AI事实查证",
+    "title": "AI事实查证",
+    "hide": "隐藏",
+    "retry": "重试",
+    "checking": "根据其他来源检查这则报道中...",
+    "checkingHint": "这最多可能需要一分钟。",
+    "stillWorking": "仍在处理中。几分钟后回来检查。",
+    "failed": "无法完成此查证。您可以稍后重试。",
+    "error": "无法开始查证。检查您的连接并重试。",
+    "blocked": "无法对此报道进行查证。",
+    "claimsHeading": "已查证的主张",
+    "citationsHeading": "参考的来源",
+    "noCitations": "此查证未返回来源，因此请视其为未经证实。",
+    "sourceFallback": "来源{{index}}",
+    "disclaimer": "由AI根据网络搜索撰写。可能有误或不完整，在依赖之前请阅读来源。",
+    "verdict": {
+      "supported": {
+        "label": "与来源一致",
+        "detail": "我们找到的其他来源说的基本相同。这不是真实性的证明，只是我们未找到与其矛盾的内容。"
+      },
+      "disputed": {
+        "label": "来源意见不一",
+        "detail": "我们找到与这则报道部分矛盾的来源。请阅读它们并自己判断。"
+      },
+      "unsupported": {
+        "label": "未发现支持",
+        "detail": "我们无法找到其他来源支持这一点。这可能只意味着这则报道是新的或有针对性，这不会使其虚假。"
+      },
+      "mixed": {
+        "label": "部分一致",
+        "detail": "某些部分与其他来源一致，而某些则不一致。按条目的注释说明了哪些。"
+      },
+      "unverifiable": {
+        "label": "无法确认",
+        "detail": "我们找不到足够的信息来确认或反驳这则报道。这不是说它是错误的发现。"
+      },
+      "unknown": {
+        "label": "无明确答案",
+        "detail": "查证完成但没有我们可以总结的结论。下方的来源是它查看的。"
+      }
+    },
+    "assessment": {
+      "supported": "由来源支持",
+      "disputed": "来源意见不一",
+      "unsupported": "未发现支持",
+      "unverifiable": "无法确认",
+      "unknown": "不清楚"
+    }
+  },
+  "sourcePrefControl": {
+    "prioritiseA11y": "优先考虑此来源",
+    "deprioritiseA11y": "降低此来源的优先级"
+  },
+  "consent": {
+    "title": "继续之前",
+    "body": "我们已更新服务条款和隐私政策。请审查并接受以继续使用Mera。",
+    "termsLink": "服务条款",
+    "privacyLink": "隐私政策",
+    "accept": "同意并继续",
+    "accepting": "保存中…",
+    "errorTitle": "无法保存您的接受",
+    "errorDescription": "请检查您的连接并重试。",
+    "retry": "重试"
+  },
+  "tutorials": {
+    "entryRow": "欢迎使用Mera",
+    "menuTitle": "欢迎使用Mera",
+    "menuSubtitle": "关于此应用的思考方式的简短指南。从任何地方开始。",
+    "sectionBasic": "从这里开始",
+    "sectionAdvanced": "深入学习",
+    "progress": "{{done}}个已完成（共{{total}}个）",
+    "advancedLockedTitle": "深入学习",
+    "advancedLockedBody_one": "再完成{{count}}个指南，高级指南就会打开。",
+    "advancedLockedBody_other": "再完成{{count}}个指南，高级指南就会打开。",
+    "slideCount_one": "{{count}}张卡片",
+    "slideCount_other": "{{count}}张卡片",
+    "completedBadge": "已完成",
+    "empty": "这里还没有任何东西。",
+    "close": "关闭",
+    "skip": "跳过",
+    "back": "返回",
+    "next": "下一个",
+    "done": "完成",
+    "continueAnyway": "仍然继续",
+    "slideProgress": "卡片{{current}}（共{{total}}）",
+    "askMera": "问Mera",
+    "chatIntro": "问我任何关于Mera如何工作的问题。我可以解释，但不能从这里改变任何东西。",
+    "launchButton": "开始浏览",
+    "hintReveal": "点击每个。",
+    "hintRevealSome": "至少点击{{count}}个。",
+    "hintChoose": "选择一个。",
+    "hintSort": "点击一张卡片，然后点击它应该属于的地方。",
+    "hintSortPick": "现在点击它应该属于的地方。",
+    "hintBeforeAfter": "点击翻转它。",
+    "beforeLabel": "简短版本",
+    "afterLabel": "实际上是真实的",
+    "sortDone": "就这些了。",
+    "chapters": {
+      "welcome": {
+        "title": "欢迎使用Mera",
+        "subtitle": "这个应用的用途，一分钟内。",
+        "slides": {
+          "what": {
+            "headline": "从您开始的新闻应用",
+            "body": "大多数新闻应用从新闻开始，希望其中一些符合您。Mera从另一端开始：它对您的生活有一点了解，然后去寻找触及它的故事。"
+          },
+          "not-a-timeline": {
+            "headline": "不是时间线",
+            "body": "这里的任何东西都不是按流行程度排序的，也不是按最后到达的东西排序的。猜猜什么决定了顺序。",
+            "choose": {
+              "popular": {
+                "label": "任何大多数人都在阅读的内容",
+                "feedback": "不在这里。流行是别人的新闻。"
+              },
+              "yours": {
+                "label": "它对您的生活有多大影响",
+                "feedback": "就是这样。其他一切都只是打破平局。"
+              },
+              "newest": {
+                "label": "最后进来的任何东西",
+                "feedback": "接近。新故事确实排在靠近顶部的地方，但作为新的不是赚取顶部的原因。"
+              }
+            }
+          },
+          "you-first": {
+            "headline": "三个步骤，就是整个应用",
+            "body": "确实这么简短。",
+            "steps": {
+              "0": "您说一些关于您生活的真实事情。",
+              "1": "Mera将它们变成寻找的东西。",
+              "2": "它阅读当天的新闻并保留适合的。"
+            }
+          },
+          "matching": {
+            "headline": "您的生活，不是您的点击",
+            "body": "小镇里的护士和首都里的护士在这里得到不同的新闻。不是因为其中一个点击了更多，而是因为不同的东西实际上到达了他们。"
+          },
+          "stays-here": {
+            "headline": "它留在这部手机上",
+            "body": "点击每个来看看那是什么意思。",
+            "reveal": {
+              "about-you": {
+                "label": "它对您了解的内容",
+                "text": "您的事实、您的兴趣以及您阅读的内容被写入这部手机并保留在那里。服务器上没有副本。"
+              },
+              "what-leaves": {
+                "label": "实际离开的内容",
+                "text": "简短的话题短语，如\"医院人员编制\"。没有名字，没有账户，没有说话题来自您的东西。"
+              }
+            }
+          },
+          "begin": {
+            "headline": "当您准备好时",
+            "body": "登录，Mera会询问您一两件事。没有错误的答案，您稍后可以改变任何事情。其他这些指南正在设置中等待。"
+          }
+        }
+      },
+      "facts": {
+        "title": "您的事实塑造您的资讯",
+        "subtitle": "告诉Mera关于您的生活。它完成其余的。",
+        "slides": {
+          "a-fact-is": {
+            "headline": "事实是一条真实的线",
+            "body": "\"我是护士。\"\"我住在乌得勒支。\"\"我有一个小孩。\"简短，真实，关于您的生活。就是这样。",
+            "ask": "在Mera中什么算作事实？"
+          },
+          "where-from": {
+            "headline": "事实的来源",
+            "body": "您永远不必填写表格。",
+            "steps": {
+              "0": "您与Mera交谈，它倾听持久的位。",
+              "1": "您直言不讳：\"我搬到了里斯本。\"",
+              "2": "您在个人资料标签上自己添加或移除它们。"
+            }
+          },
+          "to-topics": {
+            "headline": "事实成为寻找的东西",
+            "body": "\"我是护士\"变成几个搜索短语：医院人员编制、护理薪酬、卫生政策。一个事实分散为少数几个。这些短语是出去寻找新闻的内容。"
+          },
+          "sort-them": {
+            "headline": "其中哪个是事实？",
+            "body": "点击一张卡片，然后点击它应该属于的地方。",
+            "sort": {
+              "buckets": {
+                "fact": "事实",
+                "not-fact": "不是事实"
+              },
+              "cards": {
+                "nurse": "我是护士",
+                "utrecht": "我住在乌得勒支",
+                "headline": "那则火车罢工故事",
+                "mood": "我今天很无聊"
+              }
+            }
+          },
+          "importance": {
+            "headline": "某些事实比其他更重要",
+            "body": "在个人资料标签上，点击Mera了解的任何内容来提高或降低它的计数有多大，改写它，或移除它。转低某个东西比删除它温和，通常是更好的第一步。",
+            "ask": "我如何改变我的其中一个事实有多重要？"
+          }
+        }
+      },
+      "feed": {
+        "title": "阅读您的资讯",
+        "subtitle": "当天的故事住在哪里，以及它们如何移动。",
+        "slides": {
+          "two-lists": {
+            "headline": "两个列表，两项工作",
+            "body": "第一个标签是您的资讯：一个长列表，最相关的靠近顶部。第二个是同一天分组到各部分。相同的故事，不同的形状，所以使用最适合心情的。",
+            "ask": "资讯和仪表盘之间有什么区别？"
+          },
+          "nothing-removed": {
+            "headline": "永远不会移除任何东西",
+            "body": "阅读卡片，它不会消失；它下沉。两条细分隔线将列表切成三部分，卡片随着您的移动在它们过去下沉。",
+            "steps": {
+              "0": "顶部：您尚未看到的所有内容。",
+              "1": "第一条分隔线下：已看到但未打开。",
+              "2": "第二条下：已阅读。"
+            },
+            "beforeAfter": {
+              "before": "阅读前：卡片与所有其他新的内容一起坐在顶部。",
+              "after": "阅读后：相同的卡片，仍然存在，现在在第二条分隔线下。向下滚动，您可以随时再次阅读它。"
+            }
+          },
+          "what-counts-as-read": {
+            "headline": "\"阅读\"比您想的更广泛",
+            "body": "至少点击两个来看看什么算。",
+            "reveal": {
+              "open": {
+                "label": "打开它",
+                "text": "点击进入完整故事算数，这不是什么意外。"
+              },
+              "dwell": {
+                "label": "只是看看",
+                "text": "卡片正确坐在您的屏幕上一秒半也算。快速滚动过去不算。"
+              },
+              "act": {
+                "label": "对它采取行动",
+                "text": "大拇指、保存、关注故事或将其发送给Mera都算作已阅读。"
+              }
+            }
+          },
+          "order-holds-still": {
+            "headline": "您阅读时顺序保持不变",
+            "body": "Mera在您打开应用或下拉刷新时计算一次顺序，然后让它独自处理。在您拇指沿着列表向下的一半时，没有任何东西重新排列本身。"
+          },
+          "why-this-one": {
+            "headline": "为什么这一个？",
+            "body": "每张卡片都带有说明它为什么到达您的短行，以及一个词表示它似乎有多重要。如果原因看起来错误，那是您可以告诉Mera的最有用的单一事情。",
+            "ask": "故事下的原因来自哪里？"
+          },
+          "caught-up": {
+            "headline": "运行结束很好",
+            "body": "当没有新的东西留下时，Mera说出来并停止。它不会填充列表以保持您滚动。您已经阅读的所有东西仍然下方，如果您想要它。"
+          }
+        }
+      },
+      "teaching": {
+        "title": "教Mera",
+        "subtitle": "两个拇指，一个原因，和一个撤销。",
+        "slides": {
+          "two-thumbs": {
+            "headline": "两个拇指",
+            "body": "每则故事都有\"我喜欢\"和\"不适合我\"。它们是最快的点击东西，单独情况下最不有用。"
+          },
+          "bare-thumb": {
+            "headline": "单独的拇指被抛弃",
+            "body": "这让人们感到惊讶，所以值得直言不讳地说。",
+            "steps": {
+              "0": "您点击拇指。",
+              "1": "一张小卡片打开并询问这是关于什么。",
+              "2": "什么都不说，什么都不保存。"
+            },
+            "ask": "为什么单独的大拇指下来不改变任何东西？"
+          },
+          "the-reason": {
+            "headline": "原因是有用的部分",
+            "body": "其中哪个实际改变您的资讯？",
+            "choose": {
+              "just-thumb": {
+                "label": "大拇指下来，没有别的",
+                "feedback": "什么都不改变。Mera无法判断这是主题、来源还是仅仅是今天。"
+              },
+              "thumb-plus-reason": {
+                "label": "大拇指下来加\"关于这支足球队的太多\"",
+                "feedback": "就是这样。现在有一些具体的东西可以起作用。"
+              }
+            }
+          },
+          "undo": {
+            "headline": "撤销始终就在那里",
+            "body": "从反馈进行的每项更改都显示一个简短的确认，旁边有一个撤销。点击它，就像什么都没发生过。"
+          },
+          "it-adds-up": {
+            "headline": "小的改正胜过大的",
+            "body": "您不必在一个坐着的时间内修复整个资料。一周内两三个诚实的改正比一个长期会议走得远。",
+            "ask": "我的反馈出现在资讯中需要多长时间？"
+          }
+        }
+      },
+      "privacy": {
+        "title": "您的隐私",
+        "subtitle": "什么离开这部手机，什么永远不会。",
+        "slides": {
+          "stays-on-phone": {
+            "headline": "关于您的部分永远不离开",
+            "body": "您的事实、您的兴趣、您的地点以及您阅读的所有内容都住在这部手机上。服务器上没有副本，这也是为什么注销或切换电话意味着重新构建资料。"
+          },
+          "what-leaves": {
+            "headline": "实际上会发生什么",
+            "body": "三件事，就是名单。",
+            "steps": {
+              "0": "简短的话题短语，所以有一些东西与故事进行匹配。",
+              "1": "您的电子邮件地址和您所处的方案。",
+              "2": "今天有多少故事被分析的计数，以保持该方案诚实。"
+            },
+            "ask": "应用向您的服务器发送什么？"
+          },
+          "cloud-is-default": {
+            "headline": "默认值是加密云",
+            "body": "阅读一天的新闻需要大量的思考，大多数手机宁愿不。所以开箱即用的工作在云中。",
+            "beforeAfter": {
+              "before": "我们希望告诉您的版本：您的手机始终完成所有工作。",
+              "after": "实际上是真实的：默认情况下，思考在云中进行，在这部手机上加密，仅在密封的enclave内打开。设备端是您可以翻转的开关。我们宁愿说出来而不是让您假设。"
+            }
+          },
+          "on-device-option": {
+            "headline": "设备端，如果您想要的话",
+            "body": "在设置→Mera Protocol中，您可以将处理移到这部手机上，然后关于您的任何东西都不会离开。它首先下载一个模型，需要一个相当近期的手机，并且明显较慢，这正是它不是默认值的原因。"
+          },
+          "decoys-are-a-switch": {
+            "headline": "诱饵是关闭的，直到您打开它们",
+            "body": "有一个称为\"注入噪声\"的设置，它发送发明的话题，与您真实的话题一起，所以从您的手机到达的短语无法被读作您的肖像。现在做什么？",
+            "choose": {
+              "always-on": {
+                "label": "在背景中安静地运行",
+                "feedback": "不，我们宁愿改正那而不是留下舒适的假设。"
+              },
+              "off-until-you-turn-it-on": {
+                "label": "没有，直到您打开它",
+                "feedback": "对。它默认关闭：设置→Mera Protocol→注入噪声。"
+              }
+            }
+          },
+          "what-we-keep": {
+            "headline": "我们确实保留什么",
+            "body": "您的登录电子邮件。您所处的方案。一个每天故事分析的计数。话题短语仅由它们的文本本身缓存，没有任何记录说明谁请求了它们，并在未使用14天后删除。",
+            "ask": "Mera在其服务器上存储关于我什么？"
+          }
+        }
+      },
+      "following": {
+        "title": "关注报道",
+        "subtitle": "在故事展开时保持一个故事的视图。",
+        "slides": {
+          "what-it-is": {
+            "headline": "对于还没有结束的故事",
+            "body": "选举、审判、暴风雨、收购。关注一次，每个新进展聚集在一个地方，而不是在三周内散布在您的资讯上到达。"
+          },
+          "two-ways-in": {
+            "headline": "两种开始方式",
+            "body": "两者最终都在同一地方。",
+            "steps": {
+              "0": "在完整版中打开故事，点击下方按钮行中的追踪图标。",
+              "1": "或打开已关注的报道，点击跟踪按钮，只需说您想跟踪的内容。"
+            },
+            "ask": "我如何关注一则报道？"
+          },
+          "pick-the-scope": {
+            "headline": "应该有多广泛？",
+            "body": "Mera提供三个或四个范围，您点击一个。在您这样做之前，不会关注任何东西。您会为法庭案件选择哪一个？",
+            "choose": {
+              "narrow": {
+                "label": "仅此审判",
+                "feedback": "紧凑而安静。您会得到判决和不多的东西。"
+              },
+              "medium": {
+                "label": "此审判及其周围的上诉",
+                "feedback": "一个很好的中点。这是大多数人想要的。"
+              },
+              "wide": {
+                "label": "它出现的整个丑闻",
+                "feedback": "广泛。您会得到很多，包括只有松散相关的东西。"
+              }
+            }
+          },
+          "the-timeline": {
+            "headline": "它聚集，它不会烦人",
+            "body": "新进展在故事自己的时间线上收集，旁边有一个小计数。如果故事安静，Mera说出来，而不是发明一个更新来填补空间。"
+          },
+          "stop-following": {
+            "headline": "停止是一个点击",
+            "body": "打开故事并停止跟踪。收集的时间线随之而来，所以如果您只想休息一下，值得知道这是删除而不是暂停。",
+            "ask": "如果我停止关注一则报道，时间线会发生什么？"
+          }
+        }
+      },
+      "explore": {
+        "title": "探索",
+        "subtitle": "所有其他人都得到的头条新闻。",
+        "slides": {
+          "unscored-on-purpose": {
+            "headline": "故意不关于您",
+            "body": "探索是Mera不个性化任何东西的唯一地方。无评分、无原因、无从您在这里打开的内容中学到的东西。只是一个国家的新闻编辑部按他们的顺序引领。",
+            "ask": "为什么探索标签不是个性化的？"
+          },
+          "the-chips": {
+            "headline": "顶部的芯片",
+            "body": "它们是为您构建的，而不是由您选择的。",
+            "steps": {
+              "0": "世界总是优先。",
+              "1": "然后您自己的国家和Mera知道的任何地方，在那些之后，您自己添加的任何国家。"
+            }
+          },
+          "the-plus-chip": {
+            "headline": "芯片末尾的+",
+            "body": "最后一个国家后有一个小+芯片。它带您到哪里？",
+            "choose": {
+              "places": {
+                "label": "您的地点",
+                "feedback": "它曾经。不再。"
+              },
+              "sources": {
+                "label": "来源屏幕",
+                "feedback": "对：国家和他们背后的出版商。"
+              },
+              "settings": {
+                "label": "设置",
+                "feedback": "不。设置是沿着底部的最后一个标签。"
+              }
+            }
+          },
+          "search": {
+            "headline": "搜索探索",
+            "body": "芯片上方的搜索栏查看最近的头条，大约过去两天，不是档案。这是为了\"关于那件事发生了什么\"，不是研究。"
+          },
+          "hide-a-chip": {
+            "headline": "太多芯片",
+            "body": "按住并按住您不想要的芯片，它就会消失。Mera从它知道的地点建造这些，所以如果一个不断回来，该地点背后的地点仍在您的资料中。",
+            "ask": "我如何摆脱探索中的一个国家芯片？"
+          }
+        }
+      },
+      "sources": {
+        "title": "选择您的来源",
+        "subtitle": "徽章、箭头和一个控制是一个块。",
+        "slides": {
+          "where-it-lives": {
+            "headline": "来源的住处",
+            "body": "两扇门，一个屏幕。",
+            "steps": {
+              "0": "探索芯片行末尾的+芯片。",
+              "1": "或个人资料标签，然后高级，然后来源。"
+            },
+            "ask": "我在哪里管理我看到的来源？"
+          },
+          "the-two-badges": {
+            "headline": "只有两个徽章存在",
+            "body": "点击每个来看看它是什么意思，以及其中没有一个不意味着什么。",
+            "reveal": {
+              "government": {
+                "label": "政府来源",
+                "text": "发布者是政府机构。当您阅读有关官方事情的官方声明时值得知道。"
+              },
+              "regulator": {
+                "label": "官方机构",
+                "text": "监管机构或公共机构：卫生部门、运输安全委员会、中央银行。"
+              },
+              "everything-else": {
+                "label": "根本没有徽章",
+                "text": "一切其他，几乎一切。这不是质量评级，其不存在对出版商不说任何不好的事情。"
+              }
+            }
+          },
+          "plus-is-not-a-rank": {
+            "headline": "国家旁的+",
+            "body": "国家携带一个+和一对箭头，他们做完全不同的工作。+做什么？",
+            "choose": {
+              "ranks-it-up": {
+                "label": "排名该国新闻较高",
+                "feedback": "这是箭头。+根本不是排名控制。"
+              },
+              "adds-a-chip": {
+                "label": "将该国作为芯片添加到探索中",
+                "feedback": "确切。浏览仅；它改变了您的个性化资讯。"
+              },
+              "follows-it": {
+                "label": "将国家作为故事跟踪",
+                "feedback": "不。跟踪是为了一个仍然展开的单一故事。"
+              }
+            }
+          },
+          "arrows-on-a-country": {
+            "headline": "国家旁边的箭头",
+            "body": "向上意味着您希望更频繁地听到该国的新闻编辑部；向下意味着不太经常。它立即适用于那里的每个出版商，点击同一个箭头再次清除它。"
+          },
+          "arrows-on-a-publisher": {
+            "headline": "相同的箭头，一次一个出版商",
+            "body": "打开一个国家，每个出版商都有自己的一对。向下是轻推而不是墙：降级的出版商仍然出现在它有没有其他人的故事时。",
+            "ask": "转向来源和使其沉默之间有什么区别？"
+          },
+          "mute-is-not-a-downrank": {
+            "headline": "Mute完全是另一件事",
+            "body": "Mute仅存在于来源首选项屏幕上，它是硬排除：这些故事被删除，而不仅仅是排序较低。点击每张卡片并把它放在它描述的地方。",
+            "steps": {
+              "0": "向下箭头：显示不太频繁。",
+              "1": "Mute：根本不显示。",
+              "2": "两者都可以稍后从来源首选项中清除。"
+            },
+            "sort": {
+              "buckets": {
+                "softer": "显示不太频繁",
+                "gone": "完全保持出局"
+              },
+              "cards": {
+                "down-arrow": "向下箭头",
+                "mute": "静音"
+              }
+            }
+          }
+        }
+      },
+      "filters": {
+        "title": "过滤事物",
+        "subtitle": "\"不感兴趣\"实际上如何工作。",
+        "slides": {
+          "three-shelves": {
+            "headline": "一个屏幕上的三个货架",
+            "body": "不感兴趣的屏幕容纳您要求Mera保留的所有东西。",
+            "steps": {
+              "0": "您隐藏的单词和东西。",
+              "1": "您看到较少的话题。",
+              "2": "您沉默或转向下的来源。"
+            },
+            "ask": "我在哪里可以看到我过滤掉的所有内容？"
+          },
+          "exact-match": {
+            "headline": "筛选器精确匹配一件事",
+            "body": "过滤器不是搜索。地点过滤器匹配该地点；来源过滤器匹配该来源。他们比较一个故事的一个字段的精确值，这就是他们可预测的，也是下一张卡片重要的原因。"
+          },
+          "made-from-a-story": {
+            "headline": "精确的来自哪里来自的",
+            "body": "您想停止听到一个特定的地方。什么实际上有效？",
+            "choose": {
+              "type-it": {
+                "label": "在过滤器屏幕上输入地点名称",
+                "feedback": "这被存储为单词而不是地点。有用，但比您打算的更松散。"
+              },
+              "from-an-article": {
+                "label": "关于您正在查看的故事说出来",
+                "feedback": "是。在聊天中告诉Mera，或使用故事本身的反馈卡。过滤器是从该故事的真实地点造出来的，所以它完全一致。"
+              }
+            }
+          },
+          "typed-is-words-only": {
+            "headline": "键入的过滤器仅是单词",
+            "body": "您可以手动添加一个，它非常有用：它在任何地方捕获短语。它根本不能是地点或来源，因为您输入的名称几乎永远不会与存储的名称完全一致。"
+          },
+          "soft-fades-hard-stays": {
+            "headline": "某些褪色，某些停留",
+            "body": "这取决于您说它有多坚定，而不是它来自哪里。",
+            "beforeAfter": {
+              "before": "软过滤器\"这个有点少\"，在三十天后退一步。品味前进。",
+              "after": "一个坚定的那个（添加过滤器时的硬开关，或使来源沉默）根本没有到期日期，并保持直到您自己移除它。"
+            },
+            "ask": "我过滤出的东西是否曾经回来？"
+          }
+        }
+      },
+      "signal": {
+        "title": "降低音量",
+        "subtitle": "一个拨号，它永远不会看到的故事。",
+        "slides": {
+          "the-dial": {
+            "headline": "标题中的小芯片",
+            "body": "在资讯和仪表盘的顶部坐着一个芯片，读取高、中或低与小箭头。这是一个楼层：评级低于它的故事根本不被吸引。",
+            "ask": "我的资讯顶部的Med芯片做什么？"
+          },
+          "per-screen": {
+            "headline": "每个屏幕保留自己的",
+            "body": "紧缩一个永远不会饥饿其他。点击每张卡片进入它描述的屏幕。",
+            "steps": {
+              "0": "资讯从中开始：当天的物质，不是每最后的东西。",
+              "1": "仪表盘从低开始：一切，以防您感觉像浏览。"
+            },
+            "sort": {
+              "buckets": {
+                "feed-tab": "资讯",
+                "dashboard-tab": "仪表盘"
+              },
+              "cards": {
+                "medium-default": "从中开始",
+                "low-default": "从低开始"
+              }
+            }
+          },
+          "breaking-always-passes": {
+            "headline": "突发新闻忽略拨号",
+            "body": "任何评为紧急的东西都通过每一个设置，高包括。拨号在那里修剪常规新闻；这不是沉默灾难的方式。"
+          },
+          "headline-cull": {
+            "headline": "某些故事永远不会到达拨号",
+            "body": "除了您自己的故事外，Mera还拉入国家的头条新闻。为您评分低的顶部标题完全被删除，而不是停泊在底部。标题存在以说\"这在这里重要\"，低评分的只是噪音。与您自己的兴趣匹配的故事永远不会以这种方式被删除。",
+            "ask": "为什么我看到的常规头条比我自己兴趣的故事更少？"
+          }
+        }
+      },
+      "chat": {
+        "title": "与Mera交谈",
+        "subtitle": "改变几乎任何东西的最快方式。",
+        "slides": {
+          "where-mera-is": {
+            "headline": "Mera在个人资料标签上",
+            "body": "logo旁边的语音气泡打开个人资料标签上的聊天。很容易走过，是应用中最有能力的控制。",
+            "ask": "我在哪里找到与Mera的聊天？"
+          },
+          "ask-what-it-knows": {
+            "headline": "从询问它所知道的开始",
+            "body": "\"您对我了解什么？\"获取您正在工作的列表。这是快速发现一个陈旧事实的最快方法，一个月来一直悄悄弯曲您的资讯。"
+          },
+          "say-it-plainly": {
+            "headline": "用你说话的方式说它",
+            "body": "没有命令，没有语法。点击几个例子。",
+            "steps": {
+              "0": "你用明文说它。",
+              "1": "Mera计算出这意味着哪些设置。",
+              "2": "您确认或您不确认。"
+            },
+            "reveal": {
+              "less-of": {
+                "label": "\"少点足球，请\"",
+                "text": "Mera将其变成关闭的话题，并在应用任何内容之前显示更改。"
+              },
+              "more-of": {
+                "label": "\"我开始骑自行车\"",
+                "text": "这成为一个新的事实，以及一些去寻找的东西。"
+              },
+              "moved": {
+                "label": "\"我搬到了里斯本\"",
+                "text": "旧地点已停用，新地点已添加，通常作为一个您确认一次的建议。"
+              }
+            }
+          },
+          "nothing-until-you-tap": {
+            "headline": "在您点击之前什么都不会发生",
+            "body": "当Mera决定应该改变某些东西时，它会将更改分阶段为卡片并停止。所以如果您输入\"是，做到\"而不是点击卡片会发生什么？",
+            "choose": {
+              "applies-immediately": {
+                "label": "它应用更改",
+                "feedback": "它没有。此处的键入协议不是同意；点击是。"
+              },
+              "waits-for-your-tap": {
+                "label": "什么都没有。卡片仍在那里等待",
+                "feedback": "对。该卡通常提供仅您可以进行的范围选择，所以它等待点击。"
+              }
+            },
+            "ask": "为什么Mera没有应用我说是的更改？"
+          },
+          "written-down": {
+            "headline": "每项更改都被写下来",
+            "body": "应用的更改与其之前是什么、变成什么以及更改来自哪里一起记录：聊天、反馈、建议或您。Mera对您的资料做的任何事情都不是看不见的。"
+          },
+          "take-it-back": {
+            "headline": "大部分都可以收回",
+            "body": "记录生活在设置→Mera Protocol→个人资料变更日志中。",
+            "beforeAfter": {
+              "before": "重量变化、添加的话题、您移除的过滤器：这些带有还原程序，将事物恢复到他们完全是的。",
+              "after": "少数人无法撤销并说所以：在清理过程中删除事实，或移除地点会扔掉恢复所需的内容。这些在日志中坐着，没有还原在他们旁边。"
+            },
+            "ask": "我如何撤销Mera对我的资料所做的事情？"
+          }
+        }
+      },
+      "protocol": {
+        "title": "Mera Protocol屏幕",
+        "subtitle": "几个开关，以及每个真正做什么。",
+        "slides": {
+          "one-screen": {
+            "headline": "开关在哪里",
+            "body": "从应用中的任何地方两个点击。",
+            "steps": {
+              "0": "设置标签，沿着底部的最后一个。",
+              "1": "Mera Protocol。"
+            },
+            "ask": "Mera Protocol屏幕在哪里？"
+          },
+          "processing-mode": {
+            "headline": "处理模式",
+            "body": "思考发生的地方。点击两者。",
+            "reveal": {
+              "cloud": {
+                "label": "云（默认）",
+                "text": "您的数据在这部手机上加密，仅在密封的enclave内打开，并在返回的方式上再次加密。快速，适用于任何手机。应用尚未检查该enclave的证书对抗芯片制造商，隐私通知明确表示。"
+              },
+              "on-device": {
+                "label": "设备端",
+                "text": "一切都在这里运行，关于您的任何东西都不会离开。它首先下载一个模型，需要一个相当近期的手机，明显较慢。"
+              }
+            }
+          },
+          "inject-noise": {
+            "headline": "注入噪声",
+            "body": "随着真实的话题发送发明的话题，所以从您的手机到达的短语无法被读作肖像。任何只匹配诱饵的东西都在您看到之前在这部手机上被扔掉。默认关闭：它可以放慢话题生成和稀释资讯。"
+          },
+          "deeper-questions": {
+            "headline": "更深入的问题",
+            "body": "这改变了Mera问什么，不是它发送什么。而不是您对什么感兴趣，它问您保护您的关注免受什么，以及您这个月正在决定什么。答案就像任何其他事实一样，永远不会离开这部手机，这正是它能问他们的原因。"
+          },
+          "web-search": {
+            "headline": "聊天中的网络搜索",
+            "body": "默认关闭。打开，Mera可以查看中间对话。什么离开你的手机？",
+            "choose": {
+              "whole-question": {
+                "label": "您的整个消息",
+                "feedback": "不。虽然开关已关闭，搜索工具甚至没有提供给模型，所以它免费成本。"
+              },
+              "search-words-only": {
+                "label": "仅搜索词",
+                "feedback": "对。它决定搜索的词，什么都没别的。"
+              }
+            },
+            "ask": "当聊天中的网络搜索打开时，什么离开我的手机？"
+          },
+          "the-change-log": {
+            "headline": "变更日志也住在这里",
+            "body": "个人资料变更日志，在同一屏幕。您资料中每个更改的顺序，最新的第一个，带有反向的可以撤销的。如果您的资讯已经漂流到某个奇怪的地方，这是您找到它什么时候发生的地方。",
+            "ask": "我如何看到什么一直在改变我的资料？"
+          }
+        }
+      }
+    }
   }
 }

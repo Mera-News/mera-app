@@ -21,7 +21,10 @@
     "yes": "Có",
     "no": "Không",
     "saving": "Đang lưu...",
-    "offlineBanner": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu — chúng tôi sẽ tiếp tục cố gắng."
+    "offlineBanner": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu — chúng tôi sẽ tiếp tục cố gắng.",
+    "offlineBannerOffline": "Bạn đang ngoại tuyến. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
+    "offlineBannerInternetDown": "Không có kết nối Internet. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
+    "offlineBannerServerDown": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử."
   },
   "auth": {
     "reauthBanner": "Đăng nhập lại để đồng bộ",
@@ -237,7 +240,8 @@
     "sourceCountryGlobal": "Toàn cầu",
     "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Nhấn để hiển thị tên quốc gia.",
     "readOn": "Đọc trên {{publication}}",
-    "readOnGoogleTranslate": "Đọc trên Google Dịch"
+    "readOnGoogleTranslate": "Đọc trên Google Dịch",
+    "linkUnavailable": "Liên kết này không thể được mở an toàn, vì vậy nó không khả dụng ở đây."
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -256,7 +260,13 @@
     "topHeadlines": "Tin nổi bật",
     "viewTopHeadlines": "Tin nổi bật",
     "addToLocations": "Thêm vào địa điểm của bạn",
-    "addedToLocations": "Đã thêm vào địa điểm của bạn"
+    "addedToLocations": "Đã thêm vào địa điểm của bạn",
+    "searchCountriesOrPublishers": "Tìm kiếm quốc gia hoặc nhà xuất bản...",
+    "noResultsMatch": "Không có gì khớp với tìm kiếm của bạn",
+    "addToExplore": "Thêm vào Khám phá",
+    "addedToExplore": "Đã thêm vào Khám phá",
+    "badgeGovernment": "Nguồn chính phủ",
+    "badgeRegulator": "Cơ quan chính thức"
   },
   "clusterDetail": {
     "translatable": "Bài viết này bằng {{language}}: thiết bị của bạn có thể dịch trong khi bạn đọc. Nếu tính năng dịch không hoạt động, bạn có thể mở trang web bằng Google Dịch; chỉ cần lưu ý rằng bạn sẽ xem qua Google.",
@@ -434,7 +444,42 @@
     "modelUpdatedTitle": "Đã cập nhật mô hình",
     "modelUpdatedDescription": "Đã chuyển sang {{model}}. Tải mô hình xuống để sử dụng.",
     "modelUpdateFailedTitle": "Cập nhật thất bại",
-    "modelUpdateFailedDescription": "Không thể cập nhật mô hình. Vui lòng thử lại."
+    "modelUpdateFailedDescription": "Không thể cập nhật mô hình. Vui lòng thử lại.",
+    "attestationTitle": "Xác minh chứng thực",
+    "attestationSubtitle": "Kiểm tra rằng AI đám mây chạy trên phần cứng Intel TDX thực sự, và khóa mà dữ liệu của bạn được mã hóa đến đến từ bên trong nó.",
+    "attestationVerifyButton": "Chạy xác minh",
+    "attestationVerifying": "Đang xác minh...",
+    "attestationRerun": "Chạy lại",
+    "attestationVerdictFailed": "Xác minh thất bại",
+    "attestationVerdictIncomplete": "Xác minh một phần",
+    "attestationVerdictVerified": "Đã xác minh",
+    "attestationVerdictFailedDetail": "Điều gì đó không đúng. Dữ liệu của bạn vẫn được mã hóa, nhưng phần cứng không thể được xác nhận.",
+    "attestationVerdictIncompleteDetail": "Mọi kiểm tra mà chúng tôi thực hiện đã vượt qua. Một số kiểm tra không được thực hiện, và chúng được liệt kê bên dưới là không được kiểm tra.",
+    "attestationError": "Không thể tìm nạp báo cáo chứng thực. Kiểm tra kết nối của bạn và thử lại.",
+    "attestationNotRunYet": "Chưa chạy.",
+    "attestationFailOpenNotice": "Những kết quả này được hiển thị để minh bạch và hiện không chặn bất cứ điều gì.",
+    "attestationCheckQuoteStructure": "Trích dẫn được định dạng tốt Intel TDX",
+    "attestationCheckReportDataKey": "Khóa mã hóa cam kết bên trong trích dẫn",
+    "attestationCheckFreshness": "Trích dẫn tươi (không phải lặp lại)",
+    "attestationCheckSigningAlgo": "Thuật toán ký phù hợp với khóa",
+    "attestationCheckQeReportSignature": "Trích dẫn enclaveký bởi Intel",
+    "attestationCheckAttestationKeyBinding": "Khóa ký ràng buộc với enclavetrích dẫn",
+    "attestationCheckQuoteSignature": "Chữ ký trích dẫn hợp lệ",
+    "attestationCheckPckChain": "Chuỗi chứng chỉ Intel hợp lệ",
+    "attestationCheckRootCaPin": "Chuỗi neo đến chứng chỉ gốc của Intel",
+    "attestationCheckTcbStatus": "Mức vá nền tảng là hiện tại",
+    "attestationCheckGpuAttestation": "Chứng thực GPU",
+    "attestationNotCheckedLabel": "không được kiểm tra",
+    "attestationScopeNotice": "Điều này kiểm tra mô hình được hiển thị ở trên. Mera sử dụng nhiều hơn một mô hình đám mây (chat sử dụng một khác, và mỗi mô hình có bản sao lưu), vì vậy một lần vượt qua ở đây bao gồm mô hình này, không phải mọi yêu cầu.",
+    "attestationModelLabel": "Mô hình được kiểm tra",
+    "webSearchTitle": "Tìm kiếm web trong chat",
+    "webSearchOn": "Bật - Mera có thể tìm kiếm trên web để trả lời câu hỏi",
+    "webSearchOff": "Tắt",
+    "webSearchDescription": "Khi điều này bật, Mera có thể tìm kiếm trên web để trả lời câu hỏi. Các từ tìm kiếm mà bạn nhập được gửi đến máy chủ của chúng tôi và cho nhà cung cấp tìm kiếm. Không có gì khác đi cùng - không phải thông tin của bạn, không phải bản tin của bạn, không phải danh tính của bạn. Tắt theo mặc định.",
+    "deepInterviewTitle": "Các câu hỏi sâu hơn",
+    "deepInterviewOn": "Bật - Mera hỏi về sự chú ý, lo lắng và quyết định",
+    "deepInterviewOff": "Tắt",
+    "deepInterviewDescription": "Mera hỏi ít hơn nhưng sâu hơn: những gì bạn cố gắng bảo vệ sự chú ý của mình khỏi, những chủ đề nào là cần thiết nhưng lo lắng, cái nào có vẻ hữu ích nhưng lãng phí thời gian của bạn, bạn đang quyết định điều gì trong tháng này, và tại sao mỗi nơi quan trọng với bạn. Những câu trả lời của bạn được lưu trữ trên thiết bị này và không bao giờ rời khỏi nó, đó chính xác là lý do tại sao Mera có thể hỏi chúng. Chúng làm cho điểm mức độ liên quan và lý do được hiển thị trên mỗi câu chuyện sắc nét hơn. Tắt theo mặc định."
   },
   "manageData": {
     "deleting": "Đang xóa...",
@@ -457,7 +502,13 @@
     "factsDescription": "Các dữ kiện của bạn và những chủ đề chúng tạo ra (trên thiết bị này)",
     "factsModalDescription": "Xóa các dữ kiện bạn đã thêm và những chủ đề sinh ra từ đó. Dữ kiện của bạn không bao giờ rời khỏi thiết bị này. Các cụm chủ đề được gửi khi bạn lấy tin và được lưu đệm trên máy chủ của chúng tôi mà không gắn ID người dùng, nên ở đó không có gì ghi lại rằng chúng là của bạn. Nguồn cấp bài viết của bạn cũng bị xóa, vì nó được dựng từ các chủ đề này, và sẽ trống cho tới khi bạn thêm dữ kiện mới.",
     "locationDevice": "Trên thiết bị",
-    "locationServer": "Máy chủ"
+    "locationServer": "Máy chủ",
+    "exportHistoryTitle": "Xuất lịch sử đọc",
+    "exportHistoryDescription": "30 ngày cuối cùng dưới dạng JSON: bài viết, ấn phẩm và thời gian trung bình từ xuất bản đến đọc",
+    "exportHistorySubject": "Lịch sử đọc Mera của tôi (JSON)",
+    "exporting": "Đang xuất...",
+    "exportHistoryEmptyTitle": "Không có gì để xuất cho đến nay",
+    "exportHistoryEmptyDescription": "Bạn chưa đọc bất kỳ bài viết nào trong 30 ngày qua."
   },
   "preferences": {
     "manageSettings": "Quản lý cài đặt ứng dụng và tài khoản",
@@ -495,7 +546,12 @@
     "appVersion": "Phiên bản ứng dụng: {{version}}",
     "contentPolicy": "Chính sách nội dung",
     "faq": "Câu hỏi thường gặp",
-    "reportBug": "Báo lỗi"
+    "reportBug": "Báo lỗi",
+    "deleteAccountConfirmGrace": "Tài khoản của bạn sẽ được lên lịch xóa, với thời gian ân hạn 30 ngày. Đăng nhập lại trong 30 ngày đó và việc xóa được tự động hủy.",
+    "deleteAccountWarningGrace": "Cảnh báo, sau 30 ngày, điều này không thể được hoàn tác và toàn bộ dữ liệu của bạn bị xóa vĩnh viễn.",
+    "finalConfirmationBodyGrace": "Điều này lên lịch tài khoản của bạn để xóa vĩnh viễn trong 30 ngày.",
+    "accountDeletionScheduledTitle": "Xóa đã được lên lịch",
+    "accountDeletionScheduledDescription": "Tài khoản của bạn sẽ bị xóa vĩnh viễn trong 30 ngày. Đăng nhập lại trước đó để hủy việc xóa."
   },
   "configPanel": {
     "tabPersona": "Hồ sơ",
@@ -851,7 +907,14 @@
     "manageBadge": "Quản lý",
     "startWithStarter": "Bắt đầu với Starter",
     "starterRecommendation": "Starter là nơi để bắt đầu. Mera News Free ở đó để giữ những gì bạn đã xây dựng trên thiết bị này, chỉ là vào ngày đầu tiên thì không có gì để giữ.",
-    "turnMeraBackOn": "Bật Mera lại"
+    "turnMeraBackOn": "Bật Mera lại",
+    "para1": "Mera News có thể miễn phí. Đó chỉ có nghĩa là ai đó khác trả tiền: một nhà quảng cáo mua sự chú ý của bạn, dữ liệu của bạn, hoặc một bài viết tích cực. Rất nhiều thứ trông giống tin tức chính là như thế.",
+    "para2": "Phương tiện tài trợ bởi quảng cáo không có giới hạn. Không có giới hạn về những gì nó lấy từ bạn, và không có giới hạn về cách sử dụng sau đó. Chúng tôi không muốn là công ty đó, vì vậy thỏa thuận ở đây rất đơn giản. Bạn giữ dữ liệu của bạn. Phần mềm làm công việc. Bạn trả tiền cho nó.",
+    "para3Trial": "Chúng tôi đề xuất bắt đầu với bản dùng thử miễn phí một tuần của gói Individual. Đó là gói mà hầu hết mọi người cần. Sau tuần đó, bạn có thể ở lại, chuyển xuống Starter hoặc lên Professional, tùy theo sở thích của bạn.",
+    "para3NoTrial": "Gói Starter là một nơi tốt để bắt đầu. Đó là gói nhỏ nhất, và bạn có thể nâng cấp bất kỳ khi nào Mera xứng đáng.",
+    "startFreeTrial": "Bắt đầu bản dùng thử miễn phí",
+    "subscribeNow": "Đăng ký ngay",
+    "planRecommendation": "Bạn mở khoảng {{count}} bài viết mỗi ngày. {{plan}} phân tích tối đa {{limit}} mỗi ngày vì vậy luôn có nhiều hơn những gì bạn sẽ xem hết."
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -880,7 +943,16 @@
     "scopeWorld": "Thế giới",
     "noArticles": "Không tìm thấy bài viết nào",
     "addPlaces": "Thêm địa điểm",
-    "offlineUnavailable": "Bạn đang ngoại tuyến — Khám phá cần kết nối internet"
+    "offlineUnavailable": "Bạn đang ngoại tuyến — Khám phá cần kết nối internet",
+    "serverUnavailable": "Mera không thể kết nối được ngay bây giờ: hãy thử lại trong chốc lát.",
+    "addSources": "Thêm nguồn",
+    "removeScope": "Xóa {{name}}",
+    "searchPlaceholder": "Tìm kiếm tin tức gần đây",
+    "clearSearch": "Xóa tìm kiếm",
+    "searchMinLength": "Tiếp tục gõ để tìm kiếm",
+    "searchNotSubscribed": "Tìm kiếm cần có gói hoạt động",
+    "searchError": "Không thể tìm kiếm ngay bây giờ",
+    "searchEmpty": "Không có kết quả khớp trong 48 giờ qua. Tìm kiếm bao gồm tin tức gần đây, không phải toàn bộ lưu trữ."
   },
   "forYou": {
     "sectionPrefix": "Tin tức về:",
@@ -941,7 +1013,12 @@
     "goToStoryAction": "Đi tới câu chuyện",
     "deleteStoryAction": "Xóa câu chuyện",
     "deleteStoryConfirmTitle": "Xóa câu chuyện này?",
-    "deleteStoryConfirmBody": "Xóa sẽ loại bỏ mọi thứ được lưu cho câu chuyện này."
+    "deleteStoryConfirmBody": "Xóa sẽ loại bỏ mọi thứ được lưu cho câu chuyện này.",
+    "followFabLabel": "Theo dõi một câu chuyện mới",
+    "followChatSeed": "Tôi muốn theo dõi một câu chuyện.",
+    "followChatIntro": "Hãy cho tôi biết những gì bạn muốn theo dõi và tôi sẽ thiết lập nó.",
+    "emptyHintFollow": "Nhấn nút theo dõi và cho Mera biết những gì bạn muốn theo dõi.",
+    "emptyCtaFollow": "Theo dõi một câu chuyện"
   },
   "whatsNew": {
     "title": "Có gì mới",
@@ -1371,7 +1448,23 @@
     "title": "Hiển thị",
     "subtitle": "Tùy chỉnh cách Mera hiển thị các yếu tố hình ảnh trên thiết bị này",
     "staticGradientTitle": "Nền tĩnh",
-    "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ"
+    "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ",
+    "screenTitle": "Văn bản và Hiển thị",
+    "screenSubtitle": "Đặt cách văn bản và hình ảnh trông như thế nào trên thiết bị này",
+    "sectionText": "Văn bản",
+    "sectionVisuals": "Hình ảnh",
+    "textSizeTitle": "Kích thước văn bản",
+    "textSizeDescription": "Áp dụng ở mọi nơi trong Mera. Điều này nằm trên cài đặt kích thước văn bản của riêng thiết bị của bạn.",
+    "textSizePreviewLabel": "Xem trước",
+    "textSizePreviewHeadline": "Thị trường ổn định khi các cuộc đàm phán tiếp tục",
+    "textSizePreviewBody": "Một mẫu ngắn của văn bản nội dung, được hiển thị ở kích thước bạn đã chọn.",
+    "textSizeA11y": "Kích thước văn bản, {{label}}",
+    "textSizeStepCompact": "Gọn nhẹ",
+    "textSizeStepDefault": "Mặc định",
+    "textSizeStepLarge": "Lớn",
+    "textSizeStepLarger": "Lớn hơn",
+    "textSizeStepLargest": "Lớn nhất",
+    "deviceTextSizeHint": "Để có văn bản lớn hơn, hãy sử dụng Hiển thị và Độ sáng trong cài đặt thiết bị của bạn."
   },
   "freeTier": {
     "cardBody": "Phần AI của Mera đã bị tắt tạm thời. Mọi thứ bạn đã lưu, theo dõi hoặc đọc vẫn ở trên thiết bị này, và Khám phá vẫn có tin tức hôm nay. Nếu không có gói, Mera sẽ không tạo bảng tin, trả lời câu hỏi hoặc theo dõi câu chuyện mới. Hãy bắt đầu một gói và mọi thứ sẽ quay trở lại.",
@@ -1388,5 +1481,745 @@
     "trackDismiss": "Để sau",
     "trackTitle": "Theo dõi câu chuyện đi kèm với một gói",
     "trackedStoriesEmptyBody": "Chưa theo dõi gì. Theo dõi một câu chuyện đi kèm với một gói, và bất cứ thứ gì bạn theo dõi sau này đều ở trên thiết bị này, của bạn để giữ."
+  },
+  "relatedSort": {
+    "a11yLabel": "Sắp xếp bài viết liên quan",
+    "relevance": "Khớp tốt nhất",
+    "oldest": "Cũ nhất trước",
+    "newest": "Mới nhất trước"
+  },
+  "factCheck": {
+    "action": "Kiểm chứng sự thật",
+    "actionA11y": "Chạy kiểm chứng sự thật AI trên câu chuyện này",
+    "title": "Kiểm chứng sự thật bằng AI",
+    "hide": "Ẩn",
+    "retry": "Thử lại",
+    "checking": "Đang kiểm chứng câu chuyện này với các nguồn khác...",
+    "checkingHint": "Điều này có thể mất tới một phút.",
+    "stillWorking": "Vẫn đang xử lý câu chuyện này. Quay lại trong vài phút.",
+    "failed": "Không thể hoàn thành kiểm chứng này. Bạn có thể thử lại sau.",
+    "error": "Không thể bắt đầu kiểm chứng. Kiểm tra kết nối của bạn và thử lại.",
+    "blocked": "Câu chuyện này không thể được kiểm chứng.",
+    "claimsHeading": "Các khẳng định được kiểm chứng",
+    "citationsHeading": "Các nguồn được tham khảo",
+    "noCitations": "Không có nguồn nào trả về kết quả kiểm chứng này, nên coi nó chưa được xác nhận.",
+    "sourceFallback": "Nguồn {{index}}",
+    "disclaimer": "Được viết bởi AI từ tìm kiếm web. Nó có thể sai hoặc không đầy đủ, hãy đọc các nguồn trước khi sử dụng.",
+    "verdict": {
+      "supported": {
+        "label": "Phù hợp với các nguồn",
+        "detail": "Các nguồn khác mà chúng tôi tìm thấy nói những điều tương tự. Đó không phải là bằng chứng nó đúng, chỉ là chúng tôi không tìm thấy gì mâu thuẫn."
+      },
+      "disputed": {
+        "label": "Các nguồn không đồng ý",
+        "detail": "Chúng tôi tìm thấy các nguồn mâu thuẫn với phần của câu chuyện này. Hãy đọc chúng và tự quyết định."
+      },
+      "unsupported": {
+        "label": "Không tìm thấy hỗ trợ",
+        "detail": "Chúng tôi không thể tìm thấy các nguồn khác hỗ trợ điều này. Đó có thể chỉ là vì câu chuyện mới hoặc đặc biệt, nó không làm cho nó sai."
+      },
+      "mixed": {
+        "label": "Một phần phù hợp",
+        "detail": "Một số phần trùng với các nguồn khác nhưng không phải cái khác. Các ghi chú theo khẳng định nói điều nào."
+      },
+      "unverifiable": {
+        "label": "Không thể xác nhận",
+        "detail": "Chúng tôi không thể tìm thấy đủ để xác nhận hoặc mâu thuẫn câu chuyện này. Đây không phải là kết luận nó sai."
+      },
+      "unknown": {
+        "label": "Không có câu trả lời rõ ràng",
+        "detail": "Kiểm chứng đã hoàn thành mà không có kết luận chúng tôi có thể tóm tắt. Các nguồn bên dưới là những gì nó đã xem xét."
+      }
+    },
+    "assessment": {
+      "supported": "Được hỗ trợ bởi các nguồn",
+      "disputed": "Các nguồn không đồng ý",
+      "unsupported": "Không tìm thấy hỗ trợ",
+      "unverifiable": "Không thể xác nhận",
+      "unknown": "Không rõ"
+    }
+  },
+  "sourcePrefControl": {
+    "prioritiseA11y": "Ưu tiên nguồn này",
+    "deprioritiseA11y": "Hạ thấp mức ưu tiên nguồn này"
+  },
+  "consent": {
+    "title": "Trước khi bạn tiếp tục",
+    "body": "Chúng tôi đã cập nhật Điều khoản dịch vụ và Chính sách bảo mật. Vui lòng xem xét và chấp nhận chúng để tiếp tục sử dụng Mera.",
+    "termsLink": "Điều khoản dịch vụ",
+    "privacyLink": "Chính sách bảo mật",
+    "accept": "Đồng ý và Tiếp tục",
+    "accepting": "Đang lưu...",
+    "errorTitle": "Không thể lưu chấp nhận của bạn",
+    "errorDescription": "Vui lòng kiểm tra kết nối của bạn và thử lại.",
+    "retry": "Thử lại"
+  },
+  "tutorials": {
+    "entryRow": "Chào mừng đến mera",
+    "menuTitle": "Chào mừng đến mera",
+    "menuSubtitle": "Hướng dẫn ngắn về cách ứng dụng này hoạt động. Bắt đầu ở bất cứ đâu.",
+    "sectionBasic": "Bắt đầu từ đây",
+    "sectionAdvanced": "Đi sâu hơn",
+    "progress": "{{done}} trong {{total}} được hoàn thành",
+    "advancedLockedTitle": "Đi sâu hơn",
+    "advancedLockedBody_one": "Hoàn thành {{count}} hướng dẫn nữa và những cái nâng cao sẽ mở ra.",
+    "advancedLockedBody_other": "Hoàn thành {{count}} hướng dẫn nữa và những cái nâng cao sẽ mở ra.",
+    "slideCount_one": "{{count}} thẻ",
+    "slideCount_other": "{{count}} thẻ",
+    "completedBadge": "Đã xong",
+    "empty": "Chưa có gì ở đây.",
+    "close": "Đóng",
+    "skip": "Bỏ qua",
+    "back": "Quay lại",
+    "next": "Tiếp theo",
+    "done": "Xong",
+    "continueAnyway": "Tiếp tục dù sao",
+    "slideProgress": "Thẻ {{current}} trong {{total}}",
+    "askMera": "Hỏi Mera",
+    "chatIntro": "Hỏi tôi bất cứ điều gì về cách mera hoạt động. Tôi có thể giải thích, nhưng tôi không thể thay đổi bất cứ điều gì từ đây.",
+    "launchButton": "Tham quan",
+    "hintReveal": "Nhấn từng cái một.",
+    "hintRevealSome": "Nhấn ít nhất {{count}}.",
+    "hintChoose": "Chọn một cái.",
+    "hintSort": "Nhấn một thẻ, sau đó nhấn nơi nó thuộc về.",
+    "hintSortPick": "Bây giờ nhấn nơi nó thuộc về.",
+    "hintBeforeAfter": "Nhấn để lật nó lại.",
+    "beforeLabel": "Phiên bản ngắn",
+    "afterLabel": "Những gì thực sự là sự thật",
+    "sortDone": "Đó là tất cả chúng.",
+    "chapters": {
+      "welcome": {
+        "title": "Chào mừng đến mera",
+        "subtitle": "Ứng dụng này là gì, trong một phút.",
+        "slides": {
+          "what": {
+            "headline": "Một ứng dụng tin tức bắt đầu với bạn",
+            "body": "Hầu hết các ứng dụng tin tức bắt đầu với tin tức và hy vọng một số phù hợp. mera bắt đầu từ đầu kia: nó tìm hiểu một chút về cuộc sống của bạn, sau đó đi tìm các câu chuyện chạm vào nó."
+          },
+          "not-a-timeline": {
+            "headline": "Không phải một dòng thời gian",
+            "body": "Không có gì ở đây được sắp xếp theo những gì phổ biến hoặc bất cứ điều gì đến cuối cùng. Hãy đoán những gì quyết định thứ tự.",
+            "choose": {
+              "popular": {
+                "label": "Bất cứ điều gì hầu hết mọi người đang đọc",
+                "feedback": "Không ở đây. Tính phổ biến là tin tức của ai đó khác."
+              },
+              "yours": {
+                "label": "Nó chạm vào cuộc sống của bạn bao nhiêu",
+                "feedback": "Đó rồi. Mọi thứ khác chỉ là để phá vỡ."
+              },
+              "newest": {
+                "label": "Bất cứ điều gì đến cuối cùng",
+                "feedback": "Gần. Các câu chuyện mới thực sự hạ cánh gần đầu, nhưng là mới không phải là những gì kiếm được đầu."
+              }
+            }
+          },
+          "you-first": {
+            "headline": "Ba bước, và đó là toàn bộ ứng dụng",
+            "body": "Nó thực sự ngắn như vậy.",
+            "steps": {
+              "0": "Bạn nói một vài điều đúng về cuộc sống của bạn.",
+              "1": "mera biến chúng thành những thứ để đi tìm.",
+              "2": "Nó đọc tin tức trong ngày và giữ lại những gì phù hợp."
+            }
+          },
+          "matching": {
+            "headline": "Cuộc sống của bạn, không phải nhấp chuột của bạn",
+            "body": "Một y tá ở một thị trấn nhỏ và một y tá ở một thành phố lớn nhận được tin tức khác nhau ở đây. Không phải vì một trong họ nhấn nhiều hơn, mà vì những thứ khác nhau thực sự đến được họ."
+          },
+          "stays-here": {
+            "headline": "Nó ở lại điện thoại này",
+            "body": "Nhấn từng cái để xem nghĩa là gì.",
+            "reveal": {
+              "about-you": {
+                "label": "Những gì nó biết về bạn",
+                "text": "Các thông tin của bạn, sở thích của bạn và những gì bạn đã đọc được viết vào điện thoại này và ở đó. Không có bản sao của chúng nằm trên máy chủ."
+              },
+              "what-leaves": {
+                "label": "Những gì thực sự rời đi",
+                "text": "Các cụm chủ đề ngắn, như 'quản lý bệnh viện'. Không có tên, không có tài khoản, không có gì nói cụm từ đến từ bạn."
+              }
+            }
+          },
+          "begin": {
+            "headline": "Sẵn sàng khi bạn sẵn sàng",
+            "body": "Đăng nhập và mera sẽ hỏi bạn một vài điều. Không có câu trả lời sai và bạn có thể thay đổi bất cứ điều gì sau này. Phần còn lại của các hướng dẫn này đang chờ trong Cài đặt."
+          }
+        }
+      },
+      "facts": {
+        "title": "Các thông tin của bạn định hình bản tin của bạn",
+        "subtitle": "Hãy kể cho Mera về cuộc sống của bạn. Nó làm phần còn lại.",
+        "slides": {
+          "a-fact-is": {
+            "headline": "Một thông tin là một dòng đúng",
+            "body": "'Tôi là một y tá.' 'Tôi sống ở Utrecht.' 'Tôi có một đứa trẻ nhỏ.' Ngắn, đúng, về cuộc sống của bạn. Đó là toàn bộ ý tưởng.",
+            "ask": "Điều gì được tính là một thông tin trong mera?"
+          },
+          "where-from": {
+            "headline": "Các thông tin đến từ đâu",
+            "body": "Bạn không bao giờ phải điền vào một biểu mẫu.",
+            "steps": {
+              "0": "Bạn nói chuyện với Mera và nó nghe những phần bền vững.",
+              "1": "Bạn nói rõ ràng: 'Tôi chuyển đến Lisbon.'",
+              "2": "Bạn thêm hoặc xóa chúng trên tab Hồ sơ."
+            }
+          },
+          "to-topics": {
+            "headline": "Các thông tin trở thành những thứ để tìm kiếm",
+            "body": "'Tôi là một y tá' chuyển thành một vài cụm tìm kiếm: quản lý bệnh viện, lương y tá, chính sách y tế. Một thông tin quạt ra thành một tay cầm. Những cụm từ đó là những gì đi ra để tìm tin tức."
+          },
+          "sort-them": {
+            "headline": "Cái nào là một thông tin?",
+            "body": "Nhấn một thẻ, sau đó nhấn nơi nó thuộc về.",
+            "sort": {
+              "buckets": {
+                "fact": "Một thông tin",
+                "not-fact": "Không phải thông tin"
+              },
+              "cards": {
+                "nurse": "Tôi là một y tá",
+                "utrecht": "Tôi sống ở Utrecht",
+                "headline": "Câu chuyện đình công tàu hỏa đó",
+                "mood": "Tôi buồn chán hôm nay"
+              }
+            }
+          },
+          "importance": {
+            "headline": "Một số thông tin quan trọng hơn những thông tin khác",
+            "body": "Trên tab Hồ sơ, nhấn bất cứ gì Mera biết về bạn để nâng cao hoặc hạ thấp mức độ nó đếm, diễn đạt lại nó hoặc xóa nó. Giảm một cái gì đó là nhẹ nhàng hơn so với xóa nó, và thường là bước đầu tiên tốt hơn.",
+            "ask": "Làm thế nào để tôi thay đổi mức độ quan trọng của một trong những thông tin của tôi?"
+          }
+        }
+      },
+      "feed": {
+        "title": "Đọc Bản tin của bạn",
+        "subtitle": "Nơi câu chuyện của ngày sống, và cách chúng chuyển động.",
+        "slides": {
+          "two-lists": {
+            "headline": "Hai danh sách, hai công việc",
+            "body": "Tab đầu tiên là Bản tin của bạn: một danh sách dài, điều liên quan nhất gần đầu. Thứ hai giống như ngày được sắp xếp thành các phần. Những câu chuyện giống nhau, hình dạng khác nhau, vì vậy sử dụng cái nào phù hợp với tâm trạng.",
+            "ask": "Sự khác biệt giữa Bản tin và Bảng điều khiển là gì?"
+          },
+          "nothing-removed": {
+            "headline": "Không bao giờ có gì bị xóa",
+            "body": "Đọc một thẻ và nó không biến mất, nó chìm xuống. Hai bộ chia nhỏ cắt danh sách thành ba phần, và các thẻ trôi xuống qua chúng khi bạn đi.",
+            "steps": {
+              "0": "Đầu: tất cả những gì bạn chưa thấy.",
+              "1": "Dưới bộ chia đầu tiên: nhìn thấy, nhưng không mở.",
+              "2": "Dưới thứ hai: đã đọc xong."
+            },
+            "beforeAfter": {
+              "before": "Trước khi bạn đọc nó: thẻ ngồi lên trên với tất cả những thứ khác mới.",
+              "after": "Sau khi bạn đọc nó: cùng thẻ, vẫn còn đó, bây giờ dưới bộ chia thứ hai. Cuộn xuống và bạn có thể đọc nó lại bất kỳ lúc nào bạn thích."
+            }
+          },
+          "what-counts-as-read": {
+            "headline": "'Đọc' rộng hơn bạn nghĩ",
+            "body": "Nhấn ít nhất hai cái để xem những gì được tính.",
+            "reveal": {
+              "open": {
+                "label": "Mở nó",
+                "text": "Nhấn qua câu chuyện đầy đủ được tính, điều này không là bất ngờ."
+              },
+              "dwell": {
+                "label": "Chỉ nhìn",
+                "text": "Một thẻ đó là ngồi đúng trên màn hình của bạn trong một giây rưỡi cũng được tính. Một cuộn nhanh chóng qua không."
+              },
+              "act": {
+                "label": "Hành động trên nó",
+                "text": "Một ngón tay cái, một tiết kiệm, theo câu chuyện, hoặc gửi nó cho Mera đều được tính là đọc."
+              }
+            }
+          },
+          "order-holds-still": {
+            "headline": "Thứ tự giữ vẫn trong khi bạn đọc",
+            "body": "mera tính toán thứ tự một lần, khi bạn mở ứng dụng hoặc kéo xuống để làm mới, và sau đó để nó một mình. Không có gì sắp xếp lại chính nó dưới ngón tay của bạn nửa đường xuống danh sách."
+          },
+          "why-this-one": {
+            "headline": "Tại sao cái này?",
+            "body": "Mỗi thẻ mang một dòng ngắn nói tại sao nó đến được bạn, và một từ về mức độ nó có vẻ quan trọng. Nếu một lý do trông sai, đó là điều duy nhất hữu ích nhất bạn có thể kể cho Mera.",
+            "ask": "Lý do dưới một câu chuyện đến từ đâu?"
+          },
+          "caught-up": {
+            "headline": "Chạy hết là tốt",
+            "body": "Khi không có gì mới trái, mera nói vậy và dừng lại. Nó sẽ không đệm danh sách để giữ cho bạn cuộn. Tất cả những gì bạn đã đọc vẫn bên dưới, nếu bạn muốn nó."
+          }
+        }
+      },
+      "teaching": {
+        "title": "Dạy mera",
+        "subtitle": "Hai ngón tay cái, một lý do, và hoàn tác.",
+        "slides": {
+          "two-thumbs": {
+            "headline": "Hai ngón tay cái",
+            "body": "Mỗi câu chuyện có 'Tôi thích nó' và 'Không dành cho tôi'. Chúng là những thứ nhanh nhất để nhấn, và riêng lẻ điều ít hữu ích nhất."
+          },
+          "bare-thumb": {
+            "headline": "Một ngón tay cái riêng được ném đi",
+            "body": "Điều này làm ngạc nhiên mọi người, vì vậy nó đáng nói rõ ràng.",
+            "steps": {
+              "0": "Bạn nhấn một ngón tay cái.",
+              "1": "Một thẻ nhỏ mở ra và hỏi nó là về gì.",
+              "2": "Không nói gì, và không có gì được lưu."
+            },
+            "ask": "Tại sao một thumbs xuống riêng lẻ không thay đổi bất cứ điều gì?"
+          },
+          "the-reason": {
+            "headline": "Lý do là phần hữu ích",
+            "body": "Cái nào trong số này thực sự thay đổi bản tin của bạn?",
+            "choose": {
+              "just-thumb": {
+                "label": "Một thumbs xuống và không có gì khác",
+                "feedback": "Không có gì thay đổi. Mera không thể biết nó là chủ đề, nguồn hay chỉ hôm nay."
+              },
+              "thumb-plus-reason": {
+                "label": "Một thumbs xuống cộng với 'quá nhiều về câu lạc bộ bóng đá này'",
+                "feedback": "Đó là cái. Bây giờ có điều gì cụ thể để hành động."
+              }
+            }
+          },
+          "undo": {
+            "headline": "Hoàn tác luôn ở ngay đó",
+            "body": "Mỗi thay đổi được thực hiện từ phản hồi hiển thị một xác nhận ngắn với một Hoàn tác bên cạnh nó. Nhấn nó và nó giống như không có gì xảy ra."
+          },
+          "it-adds-up": {
+            "headline": "Sửa chữa nhỏ đánh bại những cái to",
+            "body": "Bạn không phải sửa toàn bộ hồ sơ của mình trong một lần ngồi. Hai hoặc ba sửa chữa trung thực qua một tuần di chuyển bản tin xa hơn so với một phiên dài từng làm.",
+            "ask": "Phản hồi của tôi hiển thị bao lâu trong bản tin?"
+          }
+        }
+      },
+      "privacy": {
+        "title": "Quyền riêng tư của bạn",
+        "subtitle": "Những gì rời khỏi điện thoại này, và những gì không bao giờ làm.",
+        "slides": {
+          "stays-on-phone": {
+            "headline": "Phần về bạn không bao giờ rời đi",
+            "body": "Các thông tin của bạn, sở thích của bạn, nơi của bạn và tất cả những gì bạn đã đọc sống trên điện thoại này. Không có bản sao trên máy chủ, đó cũng là lý do tại sao đăng xuất hoặc chuyển điện thoại có nghĩa là xây dựng lại hồ sơ."
+          },
+          "what-leaves": {
+            "headline": "Những gì thực sự đi ra",
+            "body": "Ba điều, và đó là danh sách.",
+            "steps": {
+              "0": "Các cụm chủ đề ngắn, vì vậy có cái gì đó để đối sánh những câu chuyện với.",
+              "1": "Địa chỉ email của bạn và gói nào bạn đang bật.",
+              "2": "Số lượng câu chuyện được phân tích hôm nay, để giữ gói đó trung thực."
+            },
+            "ask": "Ứng dụng gửi những gì cho máy chủ của bạn?"
+          },
+          "cloud-is-default": {
+            "headline": "Mặc định là đám mây được mã hóa",
+            "body": "Đọc một ngày tin tức cần một lượng lớn suy nghĩ, và hầu hết điện thoại sẽ không thích. Vì vậy ngay từ hộp công việc đó xảy ra trong đám mây.",
+            "beforeAfter": {
+              "before": "Phiên bản chúng tôi muốn kể cho bạn biết: điện thoại của bạn làm tất cả, luôn luôn.",
+              "after": "Những gì thực sự là sự thật: theo mặc định suy nghĩ xảy ra trong đám mây, được mã hóa trên điện thoại này và mở chỉ bên trong một enclave được niêm phong. Trên thiết bị là một công tắc bạn có thể lật. Chúng tôi sẽ nói hơn là để bạn giả định."
+            }
+          },
+          "on-device-option": {
+            "headline": "Trên thiết bị, nếu bạn muốn",
+            "body": "Trong Cài đặt, Mera Protocol bạn có thể di chuyển xử lý vào điện thoại này, và sau đó không có gì về bạn rời đi. Nó tải xuống một mô hình trước, muốn một điện thoại khá gần đây, và đáng chú ý chậm hơn, đó chính xác là lý do tại sao nó không phải là mặc định."
+          },
+          "decoys-are-a-switch": {
+            "headline": "Decoys tắt cho đến khi bạn bật chúng",
+            "body": "Có một cài đặt gọi là Chèn nhiễu gửi chủ đề được phát minh cùng với những cái thực của bạn, vì vậy các cụm từ đến từ điện thoại của bạn không thể được đọc như một chân dung của bạn. Nó đang làm gì bây giờ?",
+            "choose": {
+              "always-on": {
+                "label": "Chạy yên tĩnh ở chế độ nền",
+                "feedback": "Không, và chúng tôi sẽ nói sửa chữa hơn là để nó như một giả định thoải mái."
+              },
+              "off-until-you-turn-it-on": {
+                "label": "Không có gì, cho đến khi bạn bật nó",
+                "feedback": "Đúng. Nó tắt theo mặc định: Cài đặt, Mera Protocol, Chèn nhiễu."
+              }
+            }
+          },
+          "what-we-keep": {
+            "headline": "Những gì chúng tôi giữ lại",
+            "body": "Email đăng nhập của bạn. Gói nào bạn đang bật. Số lượng câu chuyện được phân tích mỗi ngày. Các cụm chủ đề được lưu đệm bằng văn bản của chúng, với không có gì ghi lại ai đã hỏi, và bị loại bỏ sau mười bốn ngày không sử dụng.",
+            "ask": "Mera lưu trữ những gì về tôi trên máy chủ của nó?"
+          }
+        }
+      },
+      "following": {
+        "title": "Theo dõi một câu chuyện",
+        "subtitle": "Giữ một câu chuyện trong chế độ xem khi nó mở ra.",
+        "slides": {
+          "what-it-is": {
+            "headline": "Đối với những câu chuyện không kết thúc",
+            "body": "Một cuộc bầu cử, một phiên tòa, một cơn bão, một chiếc xe. Theo dõi nó một lần và mỗi sự phát triển mới tập hợp ở một nơi thay vì đến rải rác thông qua bản tin của bạn trong ba tuần."
+          },
+          "two-ways-in": {
+            "headline": "Hai cách để bắt đầu",
+            "body": "Cả hai kết thúc ở cùng một nơi.",
+            "steps": {
+              "0": "Mở một câu chuyện đầy đủ và nhấn biểu tượng theo dõi trong hàng các nút bên dưới.",
+              "1": "Hoặc mở các Câu chuyện theo dõi, nhấn nút theo dõi, và chỉ nói những gì bạn muốn theo dõi."
+            },
+            "ask": "Làm thế nào để tôi theo dõi một câu chuyện?"
+          },
+          "pick-the-scope": {
+            "headline": "Nó rộng bao nhiêu?",
+            "body": "Mera cung cấp ba hoặc bốn phạm vi và bạn nhấn cái. Không có gì được theo dõi cho đến khi bạn làm. Bạn sẽ chọn phạm vi nào cho một vụ kiện?",
+            "choose": {
+              "narrow": {
+                "label": "Chỉ vụ kiện này",
+                "feedback": "Chặt chẽ và yên tĩnh. Bạn sẽ nhận được phán quyết và không nhiều lắm."
+              },
+              "medium": {
+                "label": "Vụ kiện này và các kháng cáo xung quanh nó",
+                "feedback": "Một giữa tốt. Đây là cái mà hầu hết mọi người muốn."
+              },
+              "wide": {
+                "label": "Toàn bộ bê bối nó đến từ",
+                "feedback": "Rộng. Bạn sẽ có rất nhiều, bao gồm những thứ chỉ liên quan lỏng lẻo."
+              }
+            }
+          },
+          "the-timeline": {
+            "headline": "Nó tập hợp, nó không làm phiền",
+            "body": "Các sự phát triển mới tập hợp trên dòng thời gian của câu chuyện với một số nhỏ bên cạnh nó. Nếu câu chuyện trở nên tĩnh lặng, mera nói như vậy thay vì phát minh một bản cập nhật để lấp chỗ trống."
+          },
+          "stop-following": {
+            "headline": "Dừng là một nhấn",
+            "body": "Mở câu chuyện và dừng theo dõi. Dòng thời gian được tập hợp đi cùng với nó, vì vậy nếu bạn chỉ muốn một khoảng nghỉ nó đáng biết đây là xóa chứ không phải một tạm dừng.",
+            "ask": "Điều gì xảy ra với dòng thời gian nếu tôi ngừng theo dõi một câu chuyện?"
+          }
+        }
+      },
+      "explore": {
+        "title": "Khám phá",
+        "subtitle": "Cùng các tiêu đề hàng đầu mà mọi người khác nhận được.",
+        "slides": {
+          "unscored-on-purpose": {
+            "headline": "Cố ý không về bạn",
+            "body": "Khám phá là nơi duy nhất mera không cá nhân hóa bất cứ điều gì. Không có chấm điểm, không có lý do, không có gì học từ những gì bạn mở ở đây. Chỉ cần những gì phòng tin của một quốc gia dẫn đầu, trong thứ tự của họ.",
+            "ask": "Tại sao tab Khám phá không được cá nhân hóa?"
+          },
+          "the-chips": {
+            "headline": "Các chip trên cùng",
+            "body": "Chúng được xây dựng cho bạn thay vì được bạn chọn.",
+            "steps": {
+              "0": "Thế giới đến đầu tiên, luôn luôn.",
+              "1": "Sau đó đất nước của bạn và bất kỳ nơi nào mera biết, và sau những cái đó, bất kỳ quốc gia nào bạn đã thêm."
+            }
+          },
+          "the-plus-chip": {
+            "headline": "Chip + ở cuối",
+            "body": "Có một chip + nhỏ sau quốc gia cuối cùng. Nó đưa bạn đến đâu?",
+            "choose": {
+              "places": {
+                "label": "Những nơi của bạn",
+                "feedback": "Đó từng là. Nó không còn nữa."
+              },
+              "sources": {
+                "label": "Màn hình Nguồn",
+                "feedback": "Đúng: quốc gia và các nhà xuất bản đằng sau chúng."
+              },
+              "settings": {
+                "label": "Cài đặt",
+                "feedback": "Không. Cài đặt là tab cuối cùng dọc theo dưới cùng."
+              }
+            }
+          },
+          "search": {
+            "headline": "Tìm kiếm Khám phá",
+            "body": "Thanh tìm kiếm ở trên các chip nhìn qua các tiêu đề gần đây, khoảng hai ngày qua, không phải lưu trữ. Nó là để 'điều gì xảy ra với điều đó', không phải cho nghiên cứu."
+          },
+          "hide-a-chip": {
+            "headline": "Quá nhiều chip",
+            "body": "Nhấn và giữ một chip bạn không muốn và nó đi đi. mera xây dựng những cái này từ những nơi nó biết, vì vậy nếu cái không liên tục quay lại, nơi đó vẫn còn trong hồ sơ của bạn.",
+            "ask": "Làm cách nào để tôi loại bỏ một chip quốc gia ở Khám phá?"
+          }
+        }
+      },
+      "sources": {
+        "title": "Lựa chọn các nguồn của bạn",
+        "subtitle": "Huy hiệu, mũi tên, và điều khiển duy nhất là một khối.",
+        "slides": {
+          "where-it-lives": {
+            "headline": "Nơi các nguồn sống",
+            "body": "Hai cửa, một màn hình.",
+            "steps": {
+              "0": "Chip + ở cuối hàng chip của Khám phá.",
+              "1": "Hoặc tab Hồ sơ, sau đó Nâng cao, sau đó Nguồn."
+            },
+            "ask": "Tôi quản lý những nguồn nào tôi thấy ở đâu?"
+          },
+          "the-two-badges": {
+            "headline": "Chỉ có hai huy hiệu tồn tại",
+            "body": "Nhấn mỗi cái để xem ý nghĩa của nó, và điều gì sự vắng mặt của một không có nghĩa.",
+            "reveal": {
+              "government": {
+                "label": "Nguồn chính phủ",
+                "text": "Nhà xuất bản là một cơ quan chính phủ. Đáng biết khi bạn đang đọc một tuyên bố chính thức về một điều chính thức."
+              },
+              "regulator": {
+                "label": "Cơ quan chính thức",
+                "text": "Một cơ quan điều tiết hoặc công cộng: một cơ quan y tế, một hội đồng an toàn vận tải, một ngân hàng trung ương."
+              },
+              "everything-else": {
+                "label": "Không có huy hiệu nào cả",
+                "text": "Mọi thứ khác, đó là gần như mọi thứ. Nó không phải là xếp hạng chất lượng, và sự vắng mặt của nó không nói gì xấu về nhà xuất bản."
+              }
+            }
+          },
+          "plus-is-not-a-rank": {
+            "headline": "Cái + bên cạnh một quốc gia",
+            "body": "Các quốc gia mang một cái + và một cặp mũi tên, và chúng làm những công việc hoàn toàn khác nhau. Cái + làm gì?",
+            "choose": {
+              "ranks-it-up": {
+                "label": "Xếp hạng tin tức quốc gia đó cao hơn",
+                "feedback": "Đó là các mũi tên. Cái + không phải là một điều khiển xếp hạng nào cả."
+              },
+              "adds-a-chip": {
+                "label": "Thêm quốc gia đó như một chip ở Khám phá",
+                "feedback": "Chính xác. Chỉ duyệt, nó không thay đổi bất cứ điều gì về bản tin cá nhân hóa của bạn."
+              },
+              "follows-it": {
+                "label": "Theo câu chuyện quốc gia",
+                "feedback": "Không. Theo dõi là cho một câu chuyện duy nhất vẫn chưa kết thúc."
+              }
+            }
+          },
+          "arrows-on-a-country": {
+            "headline": "Các mũi tên bên cạnh một quốc gia",
+            "body": "Lên có nghĩa là bạn sẽ lắng nghe nhiều hơn từ phòng tin quốc gia đó, xuống có nghĩa là ít hơn. Nó áp dụng cho mỗi nhà xuất bản có sẵn ngay lập tức, và nhấn mũi tên giống nhau lại xóa nó."
+          },
+          "arrows-on-a-publisher": {
+            "headline": "Cùng các mũi tên, một nhà xuất bản tại một thời điểm",
+            "body": "Mở một quốc gia và mỗi nhà xuất bản có cặp của nó. Xuống là một nhịp chứ không phải một bức tường: một nhà xuất bản xếp hạng thấp vẫn quay lên khi nó có một câu chuyện không ai khác có.",
+            "ask": "Sự khác biệt giữa giảm một nguồn và im lặng nó?"
+          },
+          "mute-is-not-a-downrank": {
+            "headline": "Im lặng là một điều khác hoàn toàn",
+            "body": "Mute sống chỉ trên màn hình tùy chọn nguồn, và nó là một loại trừ cứng: những câu chuyện đó được loại bỏ, không chỉ sắp xếp thấp hơn. Nhấn mỗi thẻ và đặt nó nơi nó thuộc về.",
+            "steps": {
+              "0": "Mũi tên xuống: được hiển thị ít thường xuyên.",
+              "1": "Im lặng: không hiển thị nào cả.",
+              "2": "Cái nào cũng có thể được xóa sau, từ tùy chọn nguồn."
+            },
+            "sort": {
+              "buckets": {
+                "softer": "Được hiển thị ít thường xuyên",
+                "gone": "Được giữ lại hoàn toàn"
+              },
+              "cards": {
+                "down-arrow": "Mũi tên xuống",
+                "mute": "Im lặng"
+              }
+            }
+          }
+        }
+      },
+      "filters": {
+        "title": "Lọc các thứ ra",
+        "subtitle": "Làm thế nào 'không quan tâm' thực sự hoạt động.",
+        "slides": {
+          "three-shelves": {
+            "headline": "Ba kệ trên một màn hình",
+            "body": "Màn hình Không quan tâm nắm giữ mọi thứ bạn đã yêu cầu mera giữ lại.",
+            "steps": {
+              "0": "Từ và những thứ bạn đã ẩn.",
+              "1": "Các chủ đề bạn thấy ít hơn.",
+              "2": "Các nguồn bạn đã im lặng hoặc giảm xuống."
+            },
+            "ask": "Nơi tôi có thể thấy mọi thứ tôi đã lọc ra?"
+          },
+          "exact-match": {
+            "headline": "Một bộ lọc phù hợp một điều chính xác",
+            "body": "Bộ lọc không phải tìm kiếm. Một bộ lọc nơi khớp nơi đó, một bộ lọc nguồn khớp với nguồn đó. Họ so sánh một giá trị chính xác với một lĩnh vực của một câu chuyện, điều này làm cho chúng có thể dự đoán được, và cũng là những gì làm cho thẻ tiếp theo quan trọng."
+          },
+          "made-from-a-story": {
+            "headline": "Nơi những cái chính xác đến từ",
+            "body": "Bạn muốn ngừng nghe về một nơi cụ thể. Điều gì thực sự hoạt động?",
+            "choose": {
+              "type-it": {
+                "label": "Gõ tên nơi vào màn hình bộ lọc",
+                "feedback": "Nó được lưu trữ như từ chứ không phải như một nơi. Hữu ích, nhưng lỏng lẻo hơn bạn có ý định."
+              },
+              "from-an-article": {
+                "label": "Nói nó về một câu chuyện bạn đang xem",
+                "feedback": "Có. Hãy kể cho Mera trong trò chuyện, hoặc sử dụng thẻ phản hồi trên bản thân câu chuyện. Bộ lọc được khai sinh từ nơi thực của câu chuyện đó, vì vậy nó sắp xếp chính xác."
+              }
+            }
+          },
+          "typed-is-words-only": {
+            "headline": "Bộ lọc được gõ là từ",
+            "body": "Bạn có thể thêm một bằng tay và nó có lợi thực sự: nó bắt một cụm từ bất cứ nơi nó quay lên. Nó đơn giản là không thể là một nơi hoặc một nguồn, vì một cái tên bạn gõ sẽ gần như không bao giờ sắp xếp chính xác với cái được lưu trữ."
+          },
+          "soft-fades-hard-stays": {
+            "headline": "Một số phai, một số ở lại",
+            "body": "Nó phụ thuộc vào cách bạn nói mạnh mẽ bao nhiêu, không phải nơi nó đến từ.",
+            "beforeAfter": {
+              "before": "Một bộ lọc mềm, 'một ít ít hơn của điều này', bước sang một bên sau ba mươi ngày. Khẩu vị di chuyển.",
+              "after": "Một cái cứng (công tắc cứng khi bạn thêm một bộ lọc bằng tay, hoặc im lặng một nguồn) không có expiry nào cả và ở lại cho đến khi bạn xóa nó."
+            },
+            "ask": "Những thứ tôi lọc ra khi nào quay lại?"
+          }
+        }
+      },
+      "signal": {
+        "title": "Giảm âm lượng",
+        "subtitle": "Một chiếc quay số, và những câu chuyện nó không bao giờ nhận được để thấy.",
+        "slides": {
+          "the-dial": {
+            "headline": "Chip nhỏ ở tiêu đề",
+            "body": "Ở đầu Bản tin và của Bảng điều khiển ngồi một chip đọc Cao, Trung bình hoặc Thấp có một mũi tên nhỏ. Nó là một sàn: những câu chuyện được xếp hạng bên dưới nó đơn giản là không được vẽ.",
+            "ask": "Chip Trung bình ở đầu bản tin của tôi làm gì?"
+          },
+          "per-screen": {
+            "headline": "Mỗi màn hình giữ của nó",
+            "body": "Thắt chặt một không bao giờ đói cái kia. Nhấn mỗi thẻ vào màn hình nó mô tả.",
+            "steps": {
+              "0": "Bản tin bắt đầu ở Trung bình: chất của ngày, không phải mỗi điều cuối cùng.",
+              "1": "Bảng điều khiển bắt đầu ở Thấp: mọi thứ, cho khi bạn cảm thấy giống như duyệt."
+            },
+            "sort": {
+              "buckets": {
+                "feed-tab": "Bản tin",
+                "dashboard-tab": "Bảng điều khiển"
+              },
+              "cards": {
+                "medium-default": "Bắt đầu ở Trung bình",
+                "low-default": "Bắt đầu ở Thấp"
+              }
+            }
+          },
+          "breaking-always-passes": {
+            "headline": "Tin tức nóng hổi bỏ qua chiếc quay số",
+            "body": "Bất cứ điều gì được xếp hạng như một trường hợp khẩn cấp vượt qua mọi cài đặt, Cao bao gồm. Chiếc quay số ở đó để cắt tin tức thường xuyên, nó không phải là một cách để im lặng thảm họa."
+          },
+          "headline-cull": {
+            "headline": "Một số câu chuyện không bao giờ đến chiếc quay số",
+            "body": "Bên cạnh những câu chuyện riêng của bạn, mera kéo vào các tiêu đề hàng đầu của quốc gia. Một tiêu đề hàng đầu mà điểm số thấp cho bạn bị loại bỏ hoàn toàn thay vì đỗi ở phía dưới. Một tiêu đề tồn tại để nói 'điều này quan trọng ở đây', và một điểm số thấp chỉ là tiếng ồn. Những câu chuyện phù hợp với sở thích riêng của bạn không bao giờ bị loại bỏ theo cách này.",
+            "ask": "Tại sao tôi thấy ít hơn các tiêu đề chung hơn là những câu chuyện về sở thích của tôi?"
+          }
+        }
+      },
+      "chat": {
+        "title": "Nói chuyện với Mera",
+        "subtitle": "Cách nhanh nhất để thay đổi gần như bất cứ điều gì.",
+        "slides": {
+          "where-mera-is": {
+            "headline": "Mera ở trên tab Hồ sơ",
+            "body": "Bong bóng lời nói bên cạnh logo trên tab Hồ sơ mở trò chuyện. Thật dễ dàng để đi qua, và nó là điều khiển có năng lực nhất trong ứng dụng.",
+            "ask": "Tôi tìm thấy cuộc trò chuyện với Mera ở đâu?"
+          },
+          "ask-what-it-knows": {
+            "headline": "Bắt đầu bằng cách hỏi những gì nó biết",
+            "body": "'Bạn biết gì về tôi?' nhận được danh sách nó thực sự đang làm việc từ. Đó là cách nhanh nhất để phát hiện ra một sự thật cũ im lặng uốn bản tin của bạn trong một tháng."
+          },
+          "say-it-plainly": {
+            "headline": "Nói nó theo cách bạn sẽ cho một người",
+            "body": "Không có lệnh, không có cú pháp. Nhấn một vài ví dụ.",
+            "steps": {
+              "0": "Bạn nói nó rõ ràng.",
+              "1": "Mera tính toán cài đặt nào có nghĩa.",
+              "2": "Bạn xác nhận, hoặc bạn không."
+            },
+            "reveal": {
+              "less-of": {
+                "label": "'Bóng đá ít hơn, xin vui lòng'",
+                "text": "Mera biến điều đó thành một chủ đề quay xuống và hiển thị bạn sự thay đổi trước khi bất cứ điều gì được áp dụng."
+              },
+              "more-of": {
+                "label": "'Tôi đã bắt đầu đi xe đạp'",
+                "text": "Điều đó trở thành một thông tin mới, và một vài điều để đi tìm."
+              },
+              "moved": {
+                "label": "'Tôi chuyển đến Lisbon'",
+                "text": "Nơi cũ bị loại ra và cái mới được thêm, thường là một đề xuất bạn xác nhận một lần."
+              }
+            }
+          },
+          "nothing-until-you-tap": {
+            "headline": "Không có gì xảy ra cho đến khi bạn nhấn",
+            "body": "Khi Mera quyết định một cái gì đó nên thay đổi, nó giai đoạn thay đổi như một thẻ và dừng. Vì vậy những gì xảy ra nếu bạn gõ 'có, làm nó' thay vì nhấn thẻ?",
+            "choose": {
+              "applies-immediately": {
+                "label": "Nó áp dụng sự thay đổi",
+                "feedback": "Nó không. Sự đồng ý được gõ không phải là sự đồng ý ở đây, nhấn là."
+              },
+              "waits-for-your-tap": {
+                "label": "Không có gì. Thẻ vẫn đó chờ",
+                "feedback": "Đúng. Thẻ thường cung cấp một lựa chọn phạm vi chỉ bạn có thể thực hiện, vì vậy nó chờ nhấn."
+              }
+            },
+            "ask": "Tại sao Mera không áp dụng thay đổi tôi đã nói có?"
+          },
+          "written-down": {
+            "headline": "Mỗi thay đổi được ghi chép lại",
+            "body": "Các thay đổi được áp dụng được ghi lại với những gì nó trước, những gì nó trở thành, và nơi nó đến từ: trò chuyện, phản hồi, một đề xuất, hoặc bạn. Không có gì mera làm cho hồ sơ của bạn là vô hình."
+          },
+          "take-it-back": {
+            "headline": "Và hầu hết nó có thể được lấy lại",
+            "body": "Bản ghi sống trong Cài đặt, Mera Protocol, Nhật ký thay đổi người.",
+            "beforeAfter": {
+              "before": "Một thay đổi trọng lượng, một chủ đề được thêm, một bộ lọc bạn đã xóa: những cái này mang Hoàn tác đặt những thứ trở lại chính xác như chúng.",
+              "after": "Một vài có không thể hoàn tác và nói vậy: xóa một thông tin trong quá trình dọn dẹp, hoặc loại bỏ một nơi, ném đi những gì sẽ cần thiết để khôi phục nó. Những cái đó ngồi trong nhật ký không có Hoàn tác bên cạnh chúng."
+            },
+            "ask": "Làm cách nào để tôi hoàn tác điều gì đó Mera đã thay đổi về hồ sơ của tôi?"
+          }
+        }
+      },
+      "protocol": {
+        "title": "Màn hình Mera Protocol",
+        "subtitle": "Một vài công tắc, và những gì mỗi cái thực sự làm.",
+        "slides": {
+          "one-screen": {
+            "headline": "Nơi các công tắc",
+            "body": "Hai nhấn từ bất cứ nơi nào trong ứng dụng.",
+            "steps": {
+              "0": "Tab Cài đặt, cái cuối cùng dọc theo dưới cùng.",
+              "1": "Mera Protocol."
+            },
+            "ask": "Mera Protocol ở đâu?"
+          },
+          "processing-mode": {
+            "headline": "Chế độ xử lý",
+            "body": "Nơi suy nghĩ xảy ra. Nhấn cả hai.",
+            "reveal": {
+              "cloud": {
+                "label": "Đám mây (mặc định)",
+                "text": "Dữ liệu của bạn được mã hóa trên điện thoại này, mở chỉ bên trong một enclaveimhcó niêm phong, và được mã hóa lại trên đường trở lại. Nhanh chóng, và hoạt động trên bất kỳ điện thoại nào. Ứng dụng chưa kiểm tra chứng chỉ enclaveđó với nhà sản xuất chip, mà privacy notice nói rõ ràng."
+              },
+              "on-device": {
+                "label": "Trên thiết bị",
+                "text": "Mọi thứ chạy ở đây và không có gì về bạn rời. Nó tải xuống một mô hình trước, muốn một điện thoại khá gần đây, và chậm hơn đáng chú ý."
+              }
+            }
+          },
+          "inject-noise": {
+            "headline": "Chèn nhiễu",
+            "body": "Gửi các chủ đề được phát minh cùng với những cái thực của bạn, vì vậy những cụm từ đến từ điện thoại của bạn không thể được đọc như một chân dung. Bất cứ điều gì khớp chỉ một decoy bị ném đi trên điện thoại này trước khi bạn từng nhìn thấy nó. Tắt theo mặc định: nó có thể làm chậm tạo chủ đề xuống và làm loãng bản tin một ít."
+          },
+          "deeper-questions": {
+            "headline": "Các câu hỏi sâu hơn",
+            "body": "Điều này thay đổi những gì Mera hỏi bạn, không phải những gì nó gửi. Thay vì những gì bạn quan tâm, nó hỏi những gì bạn bảo vệ sự chú ý của mình khỏi và những gì bạn quyết định tháng này. Các câu trả lời là những sự thật như bất kỳ cách khác và không bao giờ rời khỏi điện thoại này, chính xác là tại sao nó có thể hỏi chúng."
+          },
+          "web-search": {
+            "headline": "Tìm kiếm web trong trò chuyện",
+            "body": "Tắt theo mặc định. Bật, Mera có thể tìm kiếm một cái gì đó trong cuộc trò chuyện. Những gì rời khỏi điện thoại của bạn khi nó làm?",
+            "choose": {
+              "whole-question": {
+                "label": "Toàn bộ tin nhắn của bạn",
+                "feedback": "Không. Và trong khi công tắc tắt, công cụ tìm kiếm thậm chí không được cung cấp cho mô hình, nên nó không chi phí gì cả."
+              },
+              "search-words-only": {
+                "label": "Chỉ các từ tìm kiếm",
+                "feedback": "Đúng. Những từ nó quyết định để tìm kiếm, và không gì khác."
+              }
+            },
+            "ask": "Những gì rời khỏi điện thoại của tôi khi web search trong trò chuyện bật?"
+          },
+          "the-change-log": {
+            "headline": "Nhật ký thay đổi sống ở đây",
+            "body": "Nhật ký thay đổi người, trên cùng một màn hình. Mỗi thay đổi cho hồ sơ của bạn theo thứ tự, mới nhất trước, với Hoàn tác trên những cái có thể hoàn tác. Nếu bản tin của bạn đã trôi đi đâu đó kỳ lạ, đây là nơi bạn tìm ra khi nó xảy ra.",
+            "ask": "Làm thế nào để tôi thấy những gì thay đổi hồ sơ của tôi?"
+          }
+        }
+      }
+    }
   }
 }
