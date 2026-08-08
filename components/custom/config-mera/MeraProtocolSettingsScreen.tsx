@@ -37,6 +37,7 @@ import {
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
 import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
+import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView } from 'react-native';
@@ -761,6 +762,13 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     </HStack>
                 </Box>
             </Box>
+
+            {/* Verify attestation — UNCONDITIONAL. This sits with the privacy
+                explainer rather than under the on-device section because it is
+                Cloud mode (the default) where attestation is what stands
+                between the user's prompts and the operator. Hiding it behind a
+                mode toggle would hide it from everyone it protects. */}
+            <AttestationVerificationRow />
 
             {/* Device Capability Notice — only when the user has expressed intent
                 to run on-device on a device that can't support it. Cloud-mode

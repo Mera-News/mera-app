@@ -63,6 +63,8 @@ import {
   encryptMessages,
   encryptContent,
   decryptContent,
+  fetchAttestationForVerification,
+  generateAttestationNonce,
   type ModelAttestation,
   type E2EEContext,
 } from '../e2ee-service';
@@ -891,5 +893,92 @@ describe('decryptContent — client secret length guard', () => {
     expect(() => decryptContent('00'.repeat(80), new Uint8Array(16), 'ed25519')).toThrow(
       ModelKeyAlgoMismatchError,
     );
+  });
+});
+
+// ─── fetchAttestationForVerification / generateAttestationNonce ───────────────
+
+describe('fetchAttestationForVerification', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('sends the client nonce in the query string', async () => {
+    // The nonce is the ENTIRE freshness mechanism: NEAR echoes it into the
+    // quote's report_data. If it stopped being sent, the freshness check would
+    // silently degrade to "not-checked" and a replayed quote would sail
+    // through, so the query string is asserted rather than assumed.
+    mockGlobalFetch.mockResolvedValue(
+      makeResponse(200, { model_attestations: [{ signing_public_key: 'ab', request_nonce: 'cd' }] }),
+    );
+    const nonce = 'a1'.repeat(32);
+    const { attestation } = await fetchAttestationForVerification('some/model', nonce);
+
+    const url = mockGlobalFetch.mock.calls[0][0] as string;
+    expect(url).toContain(`nonce=${nonce}`);
+    expect(url).toContain('model=some%2Fmodel');
+    expect(attestation.signing_public_key).toBe('ab');
+  });
+
+  it('does NOT consult the attestation cache', async () => {
+    // A cached report cannot carry this request's nonce. Reusing the cache
+    // here would make freshness unverifiable while still looking verified.
+    mockGlobalFetch.mockResolvedValue(
+      makeResponse(200, { model_attestations: [{ signing_public_key: 'ab' }] }),
+    );
+    await fetchAttestationForVerification('some/model', 'ff'.repeat(32));
+    expect(mockGetCachedAttestation).not.toHaveBeenCalled();
+    expect(mockSetCachedAttestation).not.toHaveBeenCalled();
+  });
+
+  it('attaches the bearer token when one is available', async () => {
+    mockGlobalFetch.mockResolvedValue(
+      makeResponse(200, { model_attestations: [{ signing_public_key: 'ab' }] }),
+    );
+    await fetchAttestationForVerification('m', 'ff'.repeat(32));
+    const init = mockGlobalFetch.mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer test-jwt');
+  });
+
+  it('omits Authorization when there is no token', async () => {
+    mockGetJwtToken.mockResolvedValueOnce(null);
+    mockGlobalFetch.mockResolvedValue(
+      makeResponse(200, { model_attestations: [{ signing_public_key: 'ab' }] }),
+    );
+    await fetchAttestationForVerification('m', 'ff'.repeat(32));
+    const init = mockGlobalFetch.mock.calls[0][1] as RequestInit;
+    expect((init.headers as Record<string, string>)['Authorization']).toBeUndefined();
+  });
+
+  it('throws on a non-ok response', async () => {
+    mockGlobalFetch.mockResolvedValue(makeResponse(503, {}, { text: 'upstream down' }));
+    await expect(fetchAttestationForVerification('m', 'ff'.repeat(32))).rejects.toThrow(
+      /attestation failed \(503\)/,
+    );
+  });
+
+  it('throws when model_attestations is missing', async () => {
+    mockGlobalFetch.mockResolvedValue(makeResponse(200, { gateway_attestation: {} }));
+    await expect(fetchAttestationForVerification('m', 'ff'.repeat(32))).rejects.toThrow(
+      /model_attestations missing/,
+    );
+  });
+
+  it('throws when model_attestations is present but empty', async () => {
+    mockGlobalFetch.mockResolvedValue(makeResponse(200, { model_attestations: [] }));
+    await expect(fetchAttestationForVerification('m', 'ff'.repeat(32))).rejects.toThrow(
+      /model_attestations missing/,
+    );
+  });
+});
+
+describe('generateAttestationNonce', () => {
+  it('produces 32 bytes of hex', () => {
+    expect(generateAttestationNonce()).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('produces a different value each call', () => {
+    // A constant nonce would defeat the entire freshness check.
+    expect(generateAttestationNonce()).not.toBe(generateAttestationNonce());
   });
 });

@@ -28,12 +28,80 @@ describe('mera-explainer-content — banned claims', () => {
     expect(source).not.toMatch(/open[- ]source/i);
   });
 
-  // README.md states plainly that the attestation quote's signature is NOT
-  // checked against the hardware vendor, so today's trust anchor is Mera plus
-  // the enclave operator, not the silicon. Any wording implying otherwise is a
-  // false security claim.
-  it('never claims the enclave hardware is checked', () => {
-    expect(source).not.toMatch(/attestation[- ]verified/i);
+  // The app NOW verifies the attestation quote's signature chain to a pinned
+  // Intel root and the key-to-quote binding, so the old blanket ban on
+  // "attestation-verified" would block honest, corrected copy. What must stay
+  // banned is the claim the invariant was always really about: that the
+  // HARDWARE or PLATFORM has been proven. It has not — TCB currency,
+  // measurement comparison and GPU attestation are all unchecked, and
+  // verification is fail-open (see lib/e2ee/attestation-verify.ts).
+  //
+  // These assertions are NEGATION-AWARE on purpose. The corrected copy has to
+  // NAME the things Mera does not check ("does not verify the GPU's separate
+  // attestation", "not hardware-proven") in order to disclose them, so a plain
+  // `not.toMatch` on those terms would ban the honest disclosure and pass only
+  // for text that stays silent about the gaps — the exact opposite of what
+  // this invariant is for. `affirmsThat` ignores a hit that is negated.
+  const NEGATION = /\b(not|never|no|nor|cannot|can't|without|lacks?|missing|neither)\b[^.]{0,80}$/i;
+
+  /** Returns the offending excerpt if `pattern` appears in `text` WITHOUT a
+   *  negation earlier in the same sentence; null otherwise. Parameterised on
+   *  `text` so the self-test below can prove it discriminates. */
+  function runAffirmsThat(text: string, pattern: RegExp): string | null {
+    const re = new RegExp(pattern.source, pattern.flags.includes('g') ? pattern.flags : pattern.flags + 'g');
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+      // Look back only as far as the start of the sentence, so a negation in a
+      // previous sentence cannot excuse an affirmative claim in this one.
+      const sentenceStart = text.lastIndexOf('.', m.index) + 1;
+      const before = text.slice(sentenceStart, m.index);
+      if (!NEGATION.test(before)) {
+        return `"${text.slice(Math.max(0, m.index - 80), m.index + 80)}"`;
+      }
+    }
+    return null;
+  }
+  const affirmsThat = (pattern: RegExp) => runAffirmsThat(source, pattern);
+
+  // The guard guards nothing if it cannot fire. `affirmsThat` is now the thing
+  // enforcing honesty in published copy, and a refactor that broke its regex or
+  // its negation window would leave every assertion below green while the
+  // invariant was dead. So prove it discriminates, on both sides.
+  it('the negation-aware guard actually fires on an affirmative claim', () => {
+    const probe = /hardware[- ]proven/i;
+    // Affirmative → caught.
+    expect(runAffirmsThat('This path is hardware-proven.', probe)).not.toBeNull();
+    // Negated → ignored, so honest disclosure is not banned.
+    expect(runAffirmsThat('This path is not hardware-proven.', probe)).toBeNull();
+    // Negation from a PREVIOUS sentence must not leak into this one.
+    expect(
+      runAffirmsThat('Mera does not store facts. The chip is hardware-proven.', probe),
+    ).not.toBeNull();
+  });
+
+  it('never claims the hardware or platform is proven', () => {
+    expect(affirmsThat(/hardware[- ](proven|verified|attested|checked)/i)).toBeNull();
+    expect(affirmsThat(/(fully|completely)[- ]verified/i)).toBeNull();
+    expect(affirmsThat(/tamper[- ]proof/i)).toBeNull();
+  });
+
+  // The two claims that would be outright false. These are the checks the app
+  // does NOT perform, so prose asserting them is a fabrication, not a nuance.
+  it('never claims the platform firmware level or GPU attestation is checked', () => {
+    expect(
+      affirmsThat(/(verif|check|validat)\w*[^.]{0,60}\b(TCB|firmware|GPU)\b/i),
+    ).toBeNull();
+  });
+
+  // The disclosure must SURVIVE. A future edit that quietly drops the
+  // limitations paragraph would leave copy that is technically unbanned above
+  // but misleading by omission — which is how this invariant gets defeated.
+  it('still discloses what is not checked, and that failures are not enforced', () => {
+    const s = MERA_EXPLAINER_SECTIONS.encryption_and_inference;
+    expect(s).toMatch(/still missing|does not check/i);
+    expect(s).toMatch(/GPU/i);
+    expect(s).toMatch(/not enforced|does not yet refuse|shown to you, not enforced/i);
+    expect(s).toMatch(/not hardware-proven/i);
   });
 });
 

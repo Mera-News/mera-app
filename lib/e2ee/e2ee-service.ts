@@ -305,6 +305,74 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
   return attestation;
 }
 
+/** One model attestation entry, as far as verification cares about it. */
+export interface RawModelAttestation {
+  signing_public_key?: string;
+  signing_algo?: string;
+  request_nonce?: string;
+  intel_quote?: string;
+  nvidia_payload?: string;
+}
+
+/**
+ * Fetch an attestation report FOR VERIFICATION, bound to a fresh client nonce.
+ *
+ * This is deliberately a SEPARATE path from {@link fetchModelPublicKey}:
+ *
+ *  - It sends a random `nonce`, which NEAR echoes into the quote's
+ *    `report_data` (measured, not assumed). That is the only way a quote can be
+ *    shown to be fresh rather than replayed.
+ *  - Precisely because the nonce is unique, it busts all three caches — the
+ *    30-minute client cache, the gateway's 10-minute cache (keyed on the exact
+ *    query string), and NEAR's own upstream cache. So it pays a full cold
+ *    round trip every time.
+ *
+ * That cost is why the inference hot path is NOT routed through here. The hot
+ * path (prewarm, chat, scoring) keeps using the cached, nonce-free fetch, so
+ * its attestation is chain-verifiable but NOT freshness-verifiable. Only the
+ * user-initiated "Verify attestation" tap pays for freshness, which is the
+ * right trade while verification is fail-open and gates nothing: a user asking
+ * a security question can absorb a few seconds; every cold inference request
+ * cannot.
+ *
+ * If verification is ever flipped to fail-closed, this trade must be revisited
+ * — a fail-closed gate on a non-fresh attestation is a weaker guarantee than
+ * it looks.
+ */
+export async function fetchAttestationForVerification(
+  model: string,
+  nonceHex: string,
+): Promise<{ attestation: RawModelAttestation; nonce: string }> {
+  const token = await getJwtToken();
+  const headers: Record<string, string> = {};
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  const url =
+    `${ATTESTATION_API}?model=${encodeURIComponent(model)}` +
+    `&signing_algo=ed25519&nonce=${encodeURIComponent(nonceHex)}`;
+
+  const res = await fetchWithTimeout(url, { headers });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`NEAR attestation failed (${res.status}): ${body.slice(0, 200)}`);
+  }
+  const data = (await res.json()) as Record<string, unknown>;
+  const mas = data.model_attestations as RawModelAttestation[] | undefined;
+  const attestation = mas?.[0];
+  if (!attestation) {
+    throw new Error(
+      `NEAR attestation: model_attestations missing. top=${Object.keys(data).join(',')}`,
+    );
+  }
+  return { attestation, nonce: nonceHex };
+}
+
+/** 32 random bytes, hex — the shape NEAR's `nonce` param echoes into the
+ *  quote's `report_data`. */
+export function generateAttestationNonce(): string {
+  return bytesToHex(randomBytes(32));
+}
+
 export async function prepareE2EEContext(model: string): Promise<E2EEContext> {
   const attestation = await fetchModelPublicKey(model);
   const { algo } = attestation;
