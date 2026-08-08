@@ -180,11 +180,16 @@ export function buildFollowStoryContext(input: FollowStoryContextInput): string 
  * The follow-story tool surface: `proposeTrack` + `cancelProposal`.
  *
  * `applyProposal` is deliberately ABSENT. The card this flow stages is always
- * single-select (`chooseOne`), and only `ProposalCard.handleConfirm` honours the
+ * single-select (`chooseOne`), and only `ProposalCard.handleConfirm` knows the
  * user's chosen pill — a model-driven apply would execute EVERY scope and mint
  * three topics plus three followed stories from one "yes". Consent lives in the
  * UI tap, so the tool that could bypass it is not offered at all (and the
  * adapter refuses it a second time if a model invents the name).
+ *
+ * The sibling surfaces DO offer the tool, so they enforce the same rule at the
+ * top of their handler via `proposalRequiresUserChoice`
+ * (lib/news-harness/core/proposals.ts) — for a while they did not, and the
+ * article Track surface applied all three pills on a typed "yes".
  */
 export function getFollowStoryToolDefinitions(): ToolDefinition[] {
   return [

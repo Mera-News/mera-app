@@ -256,6 +256,33 @@ describe('buildFeedbackContext', () => {
     expect(ctx).toContain('applyProposal');
   });
 
+  it('tells the model to have the user TAP — not applyProposal — on a chooseOne card', () => {
+    // G1: applyProposal REFUSES a single-select proposal, so the context must
+    // not order the model to call it (that turn would dead-end).
+    const proposal: StagedProposal = {
+      id: 'p-choose',
+      explanation: 'Pick how far to go.',
+      expectedEffects: 'One of these.',
+      chooseOne: true,
+      actions: [
+        { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+        { type: 'retire_topic', topicText: 'cricket' },
+      ],
+    };
+    const ctx = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: scoredContext(),
+      fallbackTitle: undefined,
+      proposal,
+    });
+    expect(ctx).toContain('## PENDING PROPOSAL');
+    expect(ctx).toContain('TAP');
+    expect(ctx).toContain('do NOT call applyProposal');
+    // cancelProposal stays available — declining must still work.
+    expect(ctx).toContain('cancelProposal');
+  });
+
   it('describes every action variant in the PENDING PROPOSAL block', () => {
     const proposal: StagedProposal = {
       id: 'p2',

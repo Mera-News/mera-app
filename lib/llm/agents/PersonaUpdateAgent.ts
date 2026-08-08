@@ -35,6 +35,11 @@ import {
 } from '@/lib/news-harness/persona-management/persona-agent-core';
 import { estimateTokens } from '../tokens';
 import { normalizeToolName } from '@/lib/news-harness/persona-management/tool-names';
+import {
+  chooseOneRefusal,
+  proposalRequiresUserChoice,
+  userTapOnlyRefusal,
+} from '@/lib/news-harness/core/proposals';
 import type { ActiveSuppressionView } from '@/lib/news-harness/core/types';
 import type {
   IAgent,
@@ -413,6 +418,17 @@ export class PersonaUpdateAgent implements IAgent {
         const proposal = useFloatingChatStore.getState().proposal;
         if (!proposal) return { result: { error: 'no pending proposal' } };
 
+        // SINGLE-SELECT cards are never applied from chat — only the tap knows
+        // which alternative the user meant, so applying all of them is not
+        // consent (see lib/news-harness/core/proposals.ts). This agent's own
+        // proposeChanges cannot set `choose_one` today, but the floating-chat
+        // store holds ONE global proposal shared with the article / follow-story
+        // surfaces, so the guard is here rather than assumed unreachable — the
+        // sibling call site had exactly this defect.
+        if (proposalRequiresUserChoice(proposal)) {
+          return { result: chooseOneRefusal() };
+        }
+
         // UI-ONLY actions are stripped here. This is the second half of the
         // consent guarantee: staging alone would be pointless if the model
         // could then apply its own proposal by deciding the user said yes —
@@ -421,16 +437,7 @@ export class PersonaUpdateAgent implements IAgent {
         const uiOnly = proposal.actions.filter((a) => a.type === 'run_calibration');
         const applicable = proposal.actions.filter((a) => a.type !== 'run_calibration');
 
-        if (applicable.length === 0) {
-          return {
-            result: {
-              applied: 0,
-              awaitingUserConfirmation: true,
-              message:
-                'This change needs the user to tap Confirm on the card. Tell them it is ready and waiting; do not claim it is done.',
-            },
-          };
-        }
+        if (applicable.length === 0) return { result: userTapOnlyRefusal() };
 
         // Same executor as the article surface — one seam, one audit trail.
         const { applied, errors, summaries, changeLogIds } =

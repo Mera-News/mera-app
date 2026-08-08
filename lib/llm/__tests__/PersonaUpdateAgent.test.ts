@@ -544,6 +544,28 @@ describe('PersonaUpdateAgent', () => {
         expect(result.result).toMatchObject({ awaitingUserConfirmation: true });
         expect(result.sideEffects?.proposalResolved).toBeUndefined();
       });
+
+      // G1: the floating-chat store holds ONE global proposal, shared with the
+      // article / follow-story surfaces. This agent's own proposeChanges cannot
+      // set choose_one today, so this guard is defence-in-depth — the sibling
+      // call site shipped without it and applied every alternative at once.
+      it('refuses a SINGLE-SELECT proposal it did not stage', async () => {
+        mockFloatingChatGetState.mockReturnValue({
+          proposal: {
+            id: 'p-choose', explanation: 'e', expectedEffects: 'x', chooseOne: true,
+            actions: [
+              { type: 'set_topic_weight', topicText: 'cricket', delta: -0.3 },
+              { type: 'retire_topic', topicText: 'cricket' },
+            ],
+          },
+        });
+        const result = await makeAgent().executeTool('applyProposal', {});
+
+        expect(mockExecuteProposalActions).not.toHaveBeenCalled();
+        expect(result.result).toMatchObject({ applied: 0, awaitingUserConfirmation: true });
+        // Card survives — the pills stay tappable.
+        expect(result.sideEffects?.proposalResolved).toBeUndefined();
+      });
     });
 
     // --- not-interested P4a (D6): the staged filter-proposal path ---

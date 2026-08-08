@@ -62,6 +62,12 @@ async function resolveActiveTopicId(topicText: string): Promise<string | null> {
  * than in each agent: there are three call sites today (ProposalCard's Confirm
  * button, PersonaUpdateAgent.applyProposal, ArticleFeedbackAgent.applyProposal)
  * and a per-agent guard would silently miss the next one.
+ *
+ * The OTHER consent rule cannot live here: `chooseOne` belongs to the PROPOSAL,
+ * not to any action, and by this point the caller has already picked the subset
+ * to pass — "the user tapped pill 2" and "the model applied all three" arrive
+ * identically. That guard is `proposalRequiresUserChoice` in
+ * lib/news-harness/core/proposals.ts; every applyProposal must call it.
  */
 const USER_CONFIRMED_ONLY_ACTIONS: ReadonlySet<ProposalAction['type']> = new Set([
   'run_calibration',
