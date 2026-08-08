@@ -9,6 +9,7 @@
 import { Platform } from 'react-native';
 import Purchases, {
   CustomerInfo,
+  INTRO_ELIGIBILITY_STATUS,
   LOG_LEVEL,
   PurchasesEntitlementInfo,
   PurchasesOffering,
@@ -439,6 +440,57 @@ export async function getCustomerInfoSafe(): Promise<CustomerInfo | null> {
       extra: describeError(e),
     });
     return null;
+  }
+}
+
+/**
+ * The ONLY store product that carries an introductory offer. Verified against
+ * the RevenueCat catalogue on 2026-08-08: of the eleven registered products,
+ * this is the single one with a non-null `trial_duration` (P1W). Starter has
+ * none, Professional has none, and NONE of the four Play Store products has one
+ * — so there is no trial to offer on Android at all, on any tier.
+ */
+export const TRIAL_PRODUCT_ID = 'mera_news_individual_monthly';
+
+/**
+ * `'eligible'` — this Apple Account has never taken the introductory offer.
+ * `'ineligible'` — it has (or the platform has no trial to give).
+ * `'unknown'` — we could not find out.
+ *
+ * Callers must treat `'unknown'` as "do not promise a trial". Apple's own
+ * guidance is to show the non-introductory price when eligibility is unknown,
+ * and the asymmetry matters here: offering a trial that the store then refuses
+ * to honour is a broken promise at the payment sheet, whereas withholding the
+ * word from someone who is in fact eligible costs nothing.
+ */
+export type TrialAvailability = 'eligible' | 'ineligible' | 'unknown';
+
+export async function getTrialAvailability(): Promise<TrialAvailability> {
+  // Not a capability gap we should paper over: Android genuinely has no trial
+  // product, and `checkTrialOrIntroductoryPriceEligibility` always answers
+  // UNKNOWN there, so asking would only produce a misleading maybe.
+  if (Platform.OS !== 'ios') return 'ineligible';
+  if (!configured) return 'unknown';
+  try {
+    const result = await Purchases.checkTrialOrIntroductoryPriceEligibility([
+      TRIAL_PRODUCT_ID,
+    ]);
+    const status = result[TRIAL_PRODUCT_ID]?.status;
+    if (status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_ELIGIBLE) {
+      return 'eligible';
+    }
+    if (
+      status === INTRO_ELIGIBILITY_STATUS.INTRO_ELIGIBILITY_STATUS_INELIGIBLE
+    ) {
+      return 'ineligible';
+    }
+    return 'unknown';
+  } catch (e) {
+    logger.captureException(e, {
+      tags: { module: 'revenuecat', method: 'getTrialAvailability' },
+      extra: describeError(e),
+    });
+    return 'unknown';
   }
 }
 

@@ -60,15 +60,17 @@
     "pendingDescription": "Mera News runs on a subscription. A plan switches on the AI layer; without one, Explore stays open and free and everything already on this device stays yours.",
     "enquiries": "For any enquiries you can send a mail to",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Refresh 🔄"
+    "refresh": "Refresh"
   },
   "subscription": {
-    "title": "Switch Mera on",
-    "description": "Mera reads the news for you: a feed shaped by what you actually care about, a dashboard of the day, the stories you choose to follow, and a chat that keeps learning what matters to you.",
+    "title": "Free isn't free.",
+    "para1": "Mera News could be free. It would just mean someone else was paying: an advertiser buying your attention, your data, or a friendly write-up. A lot of what looks like news is exactly that.",
+    "para2": "Ad funded media has no ceiling. Not on how much it takes from you, and not on what that gets used for later. We don't want to be that company, so the deal here is simple. You keep your data. The software does the work. You pay for it.",
+    "para3Trial": "We'd suggest starting with the one week free trial of Individual. It's the plan most people end up needing. After the week you can stay on it, or move down to Starter if that suits you better.",
+    "para3NoTrial": "Starter is a good place to begin. It's the smallest plan, and you can move up whenever Mera has earned it.",
     "viewPlans": "View plans",
-    "startWithStarter": "Start with Starter",
-    "allPlansHint": "Every plan is on the next screen.",
-    "starterRecommendation": "Starter is the place to begin. Mera News Free is there to keep what you have already built on this device, and on day one there is nothing to keep yet.",
+    "startFreeTrial": "Start your free trial",
+    "subscribeNow": "Subscribe now",
     "planRecommendation": "You open about {{count}} articles a day. {{plan}} analyzes up to {{limit}} a day so there is always more than you'll get through.",
     "turnMeraBackOn": "Turn Mera back on",
     "lapsedFreeNote": "Mera News Free is yours for as long as you want it. A plan is what starts Mera working on your news again.",
@@ -1442,20 +1444,6 @@
     "lapseTitle": "Your Mera plan has ended",
     "lapseBody": "Nothing has been taken away. Anything you've saved, followed or read is yours, on this device, always. You're on Mera News Free from here. What pauses is the AI layer itself, so your personalized feed, dashboard, new story tracking and Mera chat stay off until you start a plan again.",
     "continueWithoutPlan": "Continue without a plan"
-  },
-  "paywall": {
-    "variantA": {
-      "title": "Here's the deal.",
-      "description": "Mera could be free. Ad-supported, like most apps. But that model has no ceiling — on your data, or on what it's used for. We refuse to be that company. So the deal is simple. You keep your data. We do the work. You pay for it. Nothing else changes hands."
-    },
-    "variantB": {
-      "title": "Someone always pays for the news.",
-      "description": "Free news isn't free. Usually, you pay in data — with no real limit on how much, or how it's used. This isn't a theory. It's documented, again and again. We chose a different answer. You pay us directly. We never take your data instead."
-    },
-    "variantC": {
-      "title": "We chose the harder business model.",
-      "description": "Ad-supported news has one goal: take as much of your data as possible. It's the easy way to build a company. We said no. Mera has no data ceiling to protect, because we don't need one. You pay us. We work for you. Nothing more."
-    }
   },
   "consent": {
     "title": "Before you continue",
