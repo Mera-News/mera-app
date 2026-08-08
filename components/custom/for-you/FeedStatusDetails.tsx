@@ -170,7 +170,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                     <Text size="sm" className="text-warning-400 font-semibold">
                         {t('feed.dailyLimit.title')}
                     </Text>
-                    <Text size="xs" className="text-typography-300 leading-4 mt-1">
+                    <Text size="xs" className="text-typography-300 mt-1">
                         {t('feed.dailyLimit.bodyWithTime', { time: dailyResetTime })}
                     </Text>
                     {/* Same pill as the Profile usage card, and the same
@@ -205,7 +205,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                     <Text size="sm" className="text-red-400 font-semibold">
                         {t('feedStatus.errorTitle')}
                     </Text>
-                    <Text size="xs" className="text-typography-300 leading-4 mt-1">
+                    <Text size="xs" className="text-typography-300 mt-1">
                         {t(errorKeys.message)}
                     </Text>
                 </Box>

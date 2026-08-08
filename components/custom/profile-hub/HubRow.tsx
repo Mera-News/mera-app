@@ -60,9 +60,11 @@ const HubRow: React.FC<HubRowProps> = ({
                 {typeof badgeCount === 'number' && badgeCount > 0 ? (
                     <VStack
                         className="rounded-full items-center justify-center px-2"
-                        style={{ minWidth: 22, height: 22, backgroundColor: badgeColor }}
+                        // minHeight, not height — the count scales with Dynamic Type
+                        // and a hard 22pt box clipped it.
+                        style={{ minWidth: 22, minHeight: 22, backgroundColor: badgeColor }}
                     >
-                        <Text size="xs" className="text-black font-bold">{badgeCount}</Text>
+                        <Text size="xs" scaleTier="chrome" className="text-black font-bold">{badgeCount}</Text>
                     </VStack>
                 ) : null}
                 <MaterialIcons name="chevron-right" size={20} color="#6b7280" />

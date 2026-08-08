@@ -142,7 +142,7 @@ export function AttestationVerificationRow() {
               <Text className="text-typography-400 text-base font-semibold mb-1">
                 {t('meraProtocol.attestationTitle')}
               </Text>
-              <Text className="text-typography-400 text-sm leading-5">
+              <Text className="text-typography-400 text-sm">
                 {t('meraProtocol.attestationSubtitle')}
               </Text>
               <Text className="text-sm mt-1 font-semibold" style={{ color: summaryColor }}>

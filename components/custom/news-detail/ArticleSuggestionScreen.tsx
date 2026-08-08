@@ -688,7 +688,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         {(relatedEntries.length > 0 || isLoadingRelated) && (
                             <VStack space="md">
                                 <HStack className="items-center justify-between" space="sm">
-                                    <Heading size="md" className="text-gray-300 flex-1">
+                                    <Heading size="lg" className="text-gray-300 flex-1">
                                         {t('articleDetail.relatedArticles')}
                                     </Heading>
                                     <RelatedSortDropdown

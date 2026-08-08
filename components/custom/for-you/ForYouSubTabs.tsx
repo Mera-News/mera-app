@@ -91,6 +91,10 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                                 />
                                 <Text
                                     size="sm"
+                                    // Tab labels sit in a row sized by its neighbours; past
+                                    // ~1.4x they push the pills off-screen instead of
+                                    // helping. See lib/typography/policy.ts.
+                                    scaleTier="chrome"
                                     numberOfLines={1}
                                     className={active ? 'text-black font-semibold' : 'text-primary-500 font-semibold'}
                                 >
@@ -101,14 +105,19 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                                         accessibilityLabel={`${unseenTotal}`}
                                         testID={`dashboard-tab-${tab.key}-badge`}
                                         className="ml-1.5 rounded-full items-center justify-center px-1.5"
+                                        // minHeight, not height: the count inside scales
+                                        // with Dynamic Type, so a hard 18pt box clipped it.
+                                        // The badge becomes a pill rather than a circle at
+                                        // large sizes, which is the correct trade.
                                         style={{
                                             minWidth: 18,
-                                            height: 18,
+                                            minHeight: 18,
                                             backgroundColor: active ? '#000000' : ACCENT,
                                         }}
                                     >
                                         <Text
                                             size="xs"
+                                            scaleTier="chrome"
                                             className={active ? 'text-primary-400 font-bold' : 'text-black font-bold'}
                                         >
                                             {unseenTotal > 99 ? '99+' : unseenTotal}

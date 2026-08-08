@@ -213,7 +213,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                     language pack has to leave this section already
                                     knowing they can still read every article. Named
                                     exactly as the article-page button is labelled. */}
-                                <Text className="text-typography-400 text-xs leading-5">
+                                <Text className="text-typography-400 text-xs">
                                     {t('language.googleTranslateAlways')}
                                 </Text>
                             </VStack>
@@ -246,7 +246,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
 
                             {Platform.OS === 'ios' && (
                                 <VStack space="sm">
-                                    <Text className="text-typography-400 text-sm leading-5">
+                                    <Text className="text-typography-400 text-sm">
                                         {t('language.onDeviceTranslationHint')}
                                     </Text>
                                     {/* The one surviving guide button. The screen used
@@ -276,10 +276,10 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                 look like a peer. */}
                             {Platform.OS === 'ios' ? (
                                 <>
-                                    <Text className="text-typography-400 text-sm leading-5">
+                                    <Text className="text-typography-400 text-sm">
                                         {t('language.languagePacksIos')}
                                     </Text>
-                                    <Text className="text-typography-400 text-sm leading-5">
+                                    <Text className="text-typography-400 text-sm">
                                         {t('language.managePacksPrefix')}{' '}
                                         <Text className="text-white text-sm font-medium">
                                             {t('language.languagePacksIosPath')}
@@ -288,7 +288,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                     </Text>
                                 </>
                             ) : (
-                                <Text className="text-typography-400 text-sm leading-5">
+                                <Text className="text-typography-400 text-sm">
                                     {t('language.languagePacksAndroid')}
                                 </Text>
                             )}

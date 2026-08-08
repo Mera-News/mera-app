@@ -370,10 +370,9 @@ const ExploreScreen: React.FC = () => {
                         second way to reach the same screen. */}
                     <HStack className="items-center justify-between px-5 mb-2" pointerEvents="box-none">
                         <Heading
-                            size="3xl"
+                            size="4xl"
                             className="text-white flex-shrink mr-3"
-                            numberOfLines={1}
-                            pointerEvents="none"
+                                                        pointerEvents="none"
                         >
                             {t('explore.title')}
                         </Heading>

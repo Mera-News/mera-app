@@ -331,7 +331,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                       <MeraLogo size={72} animated />
                                   </Box>
 
-                                  <Heading size="2xl" className="text-white text-center">
+                                  <Heading size="3xl" className="text-white text-center">
                                       {isLapsed ? t('freeTier.lapseTitle') : t('subscription.title')}
                                   </Heading>
 

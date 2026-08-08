@@ -232,9 +232,12 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
           className="px-2.5 py-1 rounded-full mb-1"
           style={{ backgroundColor: reasonBoxColors.backgroundColor }}
         >
+          {/* `size="2xs"` is 11px — same pixels, but the `size="xs"` class and
+              the inline `fontSize: 11` are no longer contradicting each other,
+              and it is on the scale. */}
           <Text
-            size="xs"
-            style={{ color: reasonBoxColors.textColor, fontWeight: '600', fontSize: 11 }}
+            size="2xs"
+            style={{ color: reasonBoxColors.textColor, fontWeight: '600' }}
             numberOfLines={1}
           >
             {fact.statement}

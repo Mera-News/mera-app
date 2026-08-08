@@ -64,9 +64,19 @@ const Row: React.FC<RowProps> = React.memo(({ label, isSelected, isDisabled, onP
                 borderColor: '#d97706',
             }}
         >
+            {/* DELIBERATE LOCAL CLAMP. `ROW_HEIGHT` (50) is not decoration —
+                it is the wheel's unit of scroll maths: snap interval, the
+                index derived from contentOffset, and the recentre guard all
+                divide by it. Growing the row would need all of that rederived
+                from a measured height, which is not a change to make without
+                being able to scroll the thing. So the LABEL is capped instead
+                (`locked` = 1.2x, i.e. 11 -> ~13pt inside a 44pt cell) and the
+                text moved onto the `2xs` scale token so it at least tracks the
+                app's type scale. Known limitation, not an oversight. */}
             <Text
+                size="2xs"
+                scaleTier="locked"
                 style={{
-                    fontSize: 11,
                     fontWeight: isSelected ? '700' : '500',
                     color: isSelected ? '#d97706' : '#ffffff',
                 }}

@@ -93,26 +93,26 @@ function stripUnkTokens(value: string): string {
     return value.replace(/\s*<unk>\s*/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-/** Conservative line-height-per-font-size ratio so tall glyphs from scripts
- *  like Devanagari (Hindi matras), Thai, Arabic, and Burmese don't get
- *  clipped at the top of the first line. */
-const LINE_HEIGHT_RATIO = 1.5;
-
-/** Gluestack text-size tokens → pixel font sizes (mirrors components/ui/text/styles). */
-const SIZE_TO_FONT_PX: Record<TextSize, number> = {
-    '2xs': 10,
-    xs: 12,
-    sm: 14,
-    md: 16,
-    lg: 18,
-    xl: 20,
-    '2xl': 24,
-    '3xl': 30,
-    '4xl': 36,
-    '5xl': 48,
-    '6xl': 60,
-};
-
+/*
+ * The local `LINE_HEIGHT_RATIO = 1.5` and `SIZE_TO_FONT_PX` table that used to
+ * live here are gone.
+ *
+ * They existed to force a script-safe line box onto translated text, because
+ * Tailwind's leading gets tighter as type gets bigger and React Native treats
+ * `lineHeight` as a hard box — Devanagari matras and Thai upper vowels were
+ * being sliced. That friction is now solved one level down: EVERY step of the
+ * scale in `tailwind.config.js` carries an explicit lineHeight at >= 1.4x, so
+ * the class this component already renders brings its own headroom.
+ *
+ * Removing it was not merely tidiness. The injected `lineHeight` was an INLINE
+ * style, and an inline style beats the class — so it would have overridden the
+ * scaled lineHeight that the in-app text-size control applies, leaving enlarged
+ * glyphs crammed into a default-sized line box.
+ *
+ * (The deleted table is also the receipt for the scale being wrong: it mapped
+ * xs->12, sm->14, md->16, i.e. the rem-16 values, while NativeWind's
+ * `inlineRem: 14` default was actually rendering those steps at 10.5/12.25/14.)
+ */
 /**
  * A drop-in replacement for <Text>/<Heading> that auto-translates dynamic server content.
  *
@@ -451,14 +451,9 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         </>
     );
 
-    // Merge a conservative lineHeight into the style so tall non-Latin
-    // glyphs (Devanagari matras, Thai, Arabic) don't get clipped. Caller
-    // `style` spreads last so an explicit `lineHeight` override still wins.
-    const fontPx = SIZE_TO_FONT_PX[size];
-    const mergedStyle = {
-        lineHeight: Math.round(fontPx * LINE_HEIGHT_RATIO),
-        ...(style ?? {}),
-    };
+    // Line height comes from the size token's class now (see the note above),
+    // so the caller's style is passed straight through.
+    const mergedStyle = style ?? {};
 
     const sharedProps = {
         ref: setNodeRef,
@@ -473,7 +468,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const renderTextNode = (children: React.ReactNode) => {
         if (as === 'heading') {
             return (
-                <Heading size={size as any} {...sharedProps}>
+                <Heading size={size} {...sharedProps}>
                     {children}
                 </Heading>
             );

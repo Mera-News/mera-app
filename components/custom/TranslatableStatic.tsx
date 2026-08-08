@@ -45,7 +45,7 @@ const TranslatableStatic: React.FC<TranslatableStaticProps> = ({
 
     if (as === 'heading') {
         return (
-            <Heading size={size as any} numberOfLines={numberOfLines} {...sharedProps}>
+            <Heading size={size} numberOfLines={numberOfLines} {...sharedProps}>
                 {text}
             </Heading>
         );

@@ -1010,7 +1010,10 @@ const FeedScreen: React.FC = () => {
               pointerEvents="box-none"
             >
               <View pointerEvents="none" className="flex-shrink min-w-0">
-                <Heading size="3xl" className="text-white" numberOfLines={1}>
+                {/* No `numberOfLines`: a 1-line clamp on a 36px title truncated the
+                  screen's own name at large Dynamic Type sizes. Nothing below
+                  depends on this row's height, so it wraps instead. */}
+                <Heading size="4xl" className="text-white">
                   {t('swipeFeed.yourDeck')}
                 </Heading>
               </View>
@@ -1034,7 +1037,7 @@ const FeedScreen: React.FC = () => {
                 more stories than the filtered list below actually shows. */}
             <FeedStatsSentence
               importanceAware
-              className="text-typography-700 font-medium leading-6"
+              className="text-typography-700 font-medium"
             />
           </View>
 

@@ -73,7 +73,7 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
                 {Platform.OS === 'ios' ? (
                     <Text
                         testID="language-switch-download-hint"
-                        className="text-typography-300 text-sm font-medium leading-5"
+                        className="text-typography-300 text-sm font-medium"
                     >
                         {t('language.downloadHintNowPrefix')}{' '}
                         <MaterialCommunityIcons
@@ -84,7 +84,7 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
                         {' '}{t('language.downloadHintNowSuffix')}
                     </Text>
                 ) : null}
-                <Text className="text-typography-400 text-sm leading-5">
+                <Text className="text-typography-400 text-sm">
                     {t('language.switchingNudge', { language })}
                 </Text>
                 <Pressable

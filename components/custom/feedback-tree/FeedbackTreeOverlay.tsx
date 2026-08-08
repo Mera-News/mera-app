@@ -306,10 +306,12 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
     // its chip, so it is readable before the tap rather than after it.
     return (
       <VStack key={node.id} space="xs">
+        {/* 11/15 inline -> the `2xs` token (11/16). Same size, 1px more line
+            box, and it now scales. */}
         <Text
           testID={`feedback-tree-desc-${node.id}`}
+          size="2xs"
           className="text-typography-400"
-          style={{ fontSize: 11, lineHeight: 15 }}
         >
           {message}
         </Text>
@@ -339,17 +341,21 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
                   accessibilityRole="button"
                   accessibilityLabel={c('back', 'Back')}
                   onPress={goBack}
+                  hitSlop={12}
                   className="rounded-full p-1"
                 >
                   <MaterialIcons name="arrow-back" size={22} color={ACCENT} />
                 </Pressable>
               ) : null}
               <VStack className="flex-1">
-                <Text className="text-typography-0" style={{ fontSize: 16, fontWeight: '700' }}>
+                {/* `size="md"` is 16px — identical pixels, but on the scale, so
+                    it now honours Dynamic Type and the in-app text-size control
+                    instead of being pinned by an inline override. */}
+                <Text size="md" className="text-typography-0" style={{ fontWeight: '700' }}>
                   {c('title', 'Tell us more')}
                 </Text>
                 {contextTitle ? (
-                  <Text className="text-typography-400" numberOfLines={1} style={{ fontSize: 12 }}>
+                  <Text size="xs" className="text-typography-400" numberOfLines={1}>
                     {c('contextFor', 'About: {{title}}', { title: contextTitle })}
                   </Text>
                 ) : null}
@@ -358,6 +364,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
                 accessibilityRole="button"
                 accessibilityLabel={c('dismiss', 'Dismiss')}
                 onPress={onClose}
+                hitSlop={12}
                 className="rounded-full p-1"
               >
                 <MaterialIcons name="close" size={22} color="#8a8a8a" />
@@ -370,8 +377,9 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
             {path.length === 0 && !confirming ? (
               <Text
                 testID="feedback-caption"
+                size="2xs"
                 className="text-typography-400"
-                style={{ fontSize: 11, lineHeight: 15, paddingBottom: 8 }}
+                style={{ paddingBottom: 8 }}
               >
                 {t('swipeFeed.feedbackCaption')}
               </Text>

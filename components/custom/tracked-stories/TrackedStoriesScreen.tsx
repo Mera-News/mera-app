@@ -183,7 +183,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             <TranslatableDynamic
                                 text={headline}
                                 as="heading"
-                                size="md"
+                                size="lg"
                                 numberOfLines={2}
                                 className="text-white"
                             />
@@ -353,17 +353,20 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 ListHeaderComponent={
                     <>
                         <VStack
-                            className="px-5 pb-2"
+                            className="px-5 pb-2 mb-3"
                             style={{ paddingTop: embedded ? 8 : insets.top + 16 }}
                         >
                             <Heading
-                                size="3xl"
+                                size="4xl"
                                 className={embedded ? 'text-white' : 'text-white ml-14'}
                             >
                                 {t('trackedStories.title')}
                             </Heading>
+                        {/* `mb-3` on the block above rather than a spacer
+                            element: a <Box style={{height:12}}/> is an
+                            invisible node in the tree that no spacing token
+                            governs and no layout tool can see. */}
                         </VStack>
-                        <Box style={{ height: 12 }} />
                         {/* Mera News Free: the one sentence that explains why
                             the track affordances elsewhere are refusing. It
                             self-gates on `useAiAccess()` and renders null
@@ -433,7 +436,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader>
-                        <Heading size="md" className="text-white">
+                        <Heading size="lg" className="text-white">
                             {t('trackedStories.untrackConfirmTitle')}
                         </Heading>
                     </ModalHeader>

@@ -755,7 +755,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             <Text className="text-typography-400 text-base font-semibold mb-1">
                                 {t('meraProtocol.privacyTitle')}
                             </Text>
-                            <Text className="text-typography-400 text-sm leading-5">
+                            <Text className="text-typography-400 text-sm">
                                 {t('meraProtocol.privacyDescription')}
                             </Text>
                         </VStack>
@@ -789,7 +789,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     <Text className="text-base font-semibold mb-1 text-red-400">
                                         {t('meraProtocol.deviceNotSupported')}
                                     </Text>
-                                    <Text className="text-sm leading-5 text-red-300">
+                                    <Text className="text-sm text-red-300">
                                         {t('meraProtocol.deviceNotSupportedDescription')}
                                     </Text>
                                 </VStack>

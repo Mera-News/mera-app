@@ -60,7 +60,7 @@ const OTAUpdateModal: React.FC<{ visible: boolean }> = ({ visible }) => {
                             <MaterialIcons name="auto-awesome" size={20} color={ACCENT} />
                             <MaterialIcons name="rocket-launch" size={20} color={ACCENT} />
                         </HStack>
-                        <Heading size="xl" className="text-white text-center">
+                        <Heading size="2xl" className="text-white text-center">
                             {t('ota.updateReady')}
                         </Heading>
                         <Text size="md" className="text-typography-600 text-center px-4">

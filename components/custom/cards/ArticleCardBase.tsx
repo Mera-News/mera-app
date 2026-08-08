@@ -1,3 +1,4 @@
+import { HERO_IMAGE_CLASS, PLACEHOLDER_IMAGE_CLASS } from '@/lib/layout/card-metrics';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
 import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
 import {
@@ -144,8 +145,8 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               // to read as a deliberate marker, tall enough for the Mera
               // watermark to be legible. Compact cards are untouched — their
               // image column is width-driven, not height-driven.
-              ? `relative w-full ${showImage ? 'h-48' : 'h-28'} overflow-hidden rounded-t-2xl`
-              : `relative w-full ${showImage ? 'h-48' : 'h-28'} overflow-hidden rounded-t-lg`
+              ? `relative w-full ${showImage ? HERO_IMAGE_CLASS : PLACEHOLDER_IMAGE_CLASS} overflow-hidden rounded-t-2xl`
+              : `relative w-full ${showImage ? HERO_IMAGE_CLASS : PLACEHOLDER_IMAGE_CLASS} overflow-hidden rounded-t-lg`
           }
         >
           {showImage ? (
@@ -203,8 +204,8 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
             text={displayTitle}
             originalText={titleOriginal}
             originalLanguage={sourceLanguage}
-            size="md"
-            className="leading-6"
+            size="lg"
+            className=""
             showToggle={false}
           />
           {children}

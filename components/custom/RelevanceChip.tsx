@@ -45,12 +45,15 @@ const RelevanceChip: React.FC<RelevanceChipProps> = ({ relevance }) => {
                     size={11}
                     color={colors.textColor}
                 />
+                {/* `size="2xs"` is 11px — the same pixels the inline override
+                    was forcing, but declared once instead of a `size="xs"`
+                    (12px) class fighting an inline `fontSize: 11`. On the scale
+                    now, so it honours Dynamic Type and the text-size control. */}
                 <Text
-                    size="xs"
+                    size="2xs"
                     style={{
                         color: colors.textColor,
                         fontWeight: '600',
-                        fontSize: 11
                     }}
                 >
                     {t(colors.label as any)}

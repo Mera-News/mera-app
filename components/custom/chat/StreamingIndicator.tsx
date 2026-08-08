@@ -161,9 +161,17 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
 
 const streamingIndicatorStyles = StyleSheet.create({
     container: { alignItems: 'center', justifyContent: 'center', paddingVertical: 24, gap: 12 },
-    labelRow: { height: 22, justifyContent: 'center', overflow: 'hidden' },
+    // `minHeight`, not `height`, and no `overflow: 'hidden'`. This row was a
+    // hard 22pt box with clipping switched on around text that React Native
+    // was already free to scale to ~3.1x — the single worst clip site in the
+    // app. 22 still reserves the row so the indicator does not jump as the
+    // word crossfades; it just no longer amputates it.
+    labelRow: { minHeight: 22, justifyContent: 'center' },
     labelInner: { flexDirection: 'row', alignItems: 'center' },
-    label: { color: 'rgb(156, 163, 175)', fontSize: 13 },
+    // No `fontSize` here: the `size="sm"` token owns it, so this label is on
+    // the type scale (and honours the in-app text-size control) instead of
+    // being pinned at 13px outside it.
+    label: { color: 'rgb(156, 163, 175)' },
     dotsRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 2, marginBottom: -1 },
     dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: 'rgb(231, 138, 83)' },
 });

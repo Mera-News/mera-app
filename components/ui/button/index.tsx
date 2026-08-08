@@ -1,4 +1,6 @@
 'use client';
+import { maxFontSizeMultiplierFor, type FontScaleTier } from '@/lib/typography/policy';
+import { useTextScale } from '@/lib/typography/TextScaleContext';
 import React from 'react';
 import { createButton } from '@gluestack-ui/core/button/creator';
 import {
@@ -304,21 +306,31 @@ const Button = React.forwardRef<
 );
 
 type IButtonTextProps = React.ComponentPropsWithoutRef<typeof UIButton.Text> &
-  VariantProps<typeof buttonTextStyle> & { className?: string };
+  VariantProps<typeof buttonTextStyle> & {
+    className?: string;
+    /** See `lib/typography/policy.ts`. Defaults to `chrome`. */
+    scaleTier?: FontScaleTier;
+  };
 
 const ButtonText = React.forwardRef<
   React.ElementRef<typeof UIButton.Text>,
   IButtonTextProps
->(({ className, variant, size, action, ...props }, ref) => {
+>(({ className, variant, size, action, scaleTier = 'chrome', ...props }, ref) => {
   const {
     variant: parentVariant,
     size: parentSize,
     action: parentAction,
   } = useStyleContext(SCOPE);
+  const userScale = useTextScale();
 
   return (
     <UIButton.Text
       ref={ref}
+      // `chrome`, not `content`: a button's width is set by its row and its
+      // height by a size variant, so a label that keeps growing pushes siblings
+      // off-screen rather than becoming more readable. Before `{...props}` so a
+      // call site can still override.
+      maxFontSizeMultiplier={maxFontSizeMultiplierFor(scaleTier, userScale)}
       {...props}
       className={buttonTextStyle({
         parentVariants: {

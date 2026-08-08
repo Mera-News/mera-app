@@ -641,9 +641,8 @@ const MeraNewsScreen: React.FC = () => {
                             <HStack className="items-center min-w-0" space="sm" pointerEvents="box-none">
                                 <View pointerEvents="none" className="flex-shrink min-w-0">
                                     <Heading
-                                        size="3xl"
+                                        size="4xl"
                                         className="text-white"
-                                        numberOfLines={1}
                                     >
                                         {t('feed.dashboardTitle')}
                                     </Heading>
@@ -678,7 +677,7 @@ const MeraNewsScreen: React.FC = () => {
                             this line sits on glass with content moving under it,
                             where typography-400 was barely legible. Only colour
                             and weight change — `leading-6 mb-2` is preserved. */}
-                        <FeedStatsSentence className="text-typography-700 font-medium leading-6 mb-2" />
+                        <FeedStatsSentence className="text-typography-700 font-medium mb-2" />
                     </View>
 
                     {/* Sub-tab pills. box-none: the ROW is a full-width band and

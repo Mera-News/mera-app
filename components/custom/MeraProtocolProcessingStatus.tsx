@@ -200,18 +200,18 @@ const MeraProtocolProcessingStatus: React.FC<MeraProtocolProcessingStatusProps> 
                     exiting={FadeOut.duration(300)}
                     style={{ flex: 1 }}
                 >
-                    <Text size="sm" className="text-typography-300 leading-5">
+                    <Text size="sm" className="text-typography-300">
                         {headline}
                     </Text>
                 </Animated.View>
                 {progressLabel ? (
-                    <Text size="xs" className="text-typography-500 leading-5">
+                    <Text size="xs" className="text-typography-500">
                         {progressLabel}
                     </Text>
                 ) : null}
             </HStack>
             {stageCopy?.amberSubline && (
-                <Text size="xs" className="text-amber-400 leading-4">
+                <Text size="xs" className="text-amber-400">
                     {stageCopy.amberSubline}
                 </Text>
             )}

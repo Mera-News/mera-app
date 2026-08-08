@@ -26,10 +26,13 @@ import {
   type ListRenderItem,
   StyleSheet,
   TextInput,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
 import { Button } from '@/components/ui/button';
+import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/typography/policy';
+import { useTextScale } from '@/lib/typography/TextScaleContext';
 
 const ACCENT = 'rgb(231, 138, 83)';
 // Bubble surfaces float on the #1a1a1a panel: assistant slightly lighter than
@@ -41,6 +44,8 @@ const INPUT_SURFACE = '#262626';
 const TEXT_COLOR = 'rgb(210, 210, 210)';
 // Uniform chat type scale — assistant markdown, user bubble, and the input all
 // share this size/line-height so the conversation reads as one system.
+/** Composer ceiling at 1x — about 6.6 lines of 15/21. Scaled at the call site. */
+const COMPOSER_MAX_HEIGHT = 140;
 const CHAT_FONT_SIZE = 15;
 const CHAT_LINE_HEIGHT = 21;
 
@@ -247,6 +252,20 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
 
   const isSendDisabled = disabled || text.trim().length === 0;
 
+  // The composer's 140pt ceiling is ~6.6 lines at the default 15/21, but under
+  // 3 lines once the OS is scaling text — so at exactly the sizes where a
+  // reader needs MORE room to see what they typed, they got less. Growing the
+  // cap with the text keeps the line allowance roughly constant.
+  //
+  // `useWindowDimensions().fontScale` and not `PixelRatio.getFontScale()`:
+  // this must be a hook so the cap re-derives when the OS text size changes
+  // mid-session. The same number computed once at module scope would be stale
+  // forever. Both contributions are capped the same way the glyphs are.
+  const { fontScale } = useWindowDimensions();
+  const userScale = useTextScale();
+  const composerMaxHeight =
+    COMPOSER_MAX_HEIGHT * Math.min(fontScale, MAX_FONT_SCALE.content) * userScale;
+
   const handleSend = () => {
     const trimmed = text.trim();
     if (disabled || trimmed.length === 0) return;
@@ -270,7 +289,8 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         // so the user can keep typing. handleSend already ignores empty/disabled.
         submitBehavior="submit"
         onSubmitEditing={handleSend}
-        style={styles.textInput}
+        style={[styles.textInput, { maxHeight: composerMaxHeight }]}
+        maxFontSizeMultiplier={maxFontSizeMultiplierFor('content', userScale)}
       />
       {/* Gluestack Button (className/tva-driven) rather than a Pressable with a
           function-form style prop — NativeWind v4's babel interop drops that
@@ -357,7 +377,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom: 10,
-    maxHeight: 140,
+    // maxHeight is applied at the call site, derived from the live font scale —
+    // see `composerMaxHeight`. Leaving it here would pin it at 1x.
     textAlignVertical: 'top',
   },
 });

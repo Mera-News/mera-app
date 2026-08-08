@@ -83,7 +83,9 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
           </Box>
         )}
         <VStack className="flex-1" space="xs">
-          <Text style={{ color: ACCENT, fontSize: 11, fontWeight: '700', letterSpacing: 0.4 }}>
+          {/* `size="2xs"` rather than a pinned 11px: same rendered size, but on
+              the scale, so it grows with Dynamic Type and the in-app control. */}
+          <Text size="2xs" style={{ color: ACCENT, fontWeight: '700', letterSpacing: 0.4 }}>
             {t('floatingChat.aboutThisStory')}
           </Text>
           {/* Explicit light value, NOT a `typography-*` class. This card paints
@@ -101,16 +103,17 @@ const ArticleContextCard: React.FC<ArticleContextCardProps> = ({ title, suggesti
               English source, exactly as TranslatableDynamic documents. That
               also means no translate icon and no show-original toggle here,
               unlike a feed card, which does hold the original.
-              `lineHeight` is explicit because TranslatableDynamic derives its
-              own from the `size` TOKEN (md → 24), which would be wrong for the
-              13px font this card sets in `style`. Caller style spreads last. */}
+              The pinned `fontSize: 13` / `lineHeight: 18` are gone: they were
+              an inline override, which beats the class and so froze this
+              headline outside the type scale AND outside the in-app text-size
+              control. `size="sm"` is 14/21 — a hair larger, correctly led, and
+              it scales. Only colour and weight stay inline. */}
           <TranslatableDynamic
             text={title}
+            size="sm"
             style={{
               color: 'rgb(245, 245, 245)',
-              fontSize: 13,
               fontWeight: '600',
-              lineHeight: 18,
             }}
             numberOfLines={2}
           />

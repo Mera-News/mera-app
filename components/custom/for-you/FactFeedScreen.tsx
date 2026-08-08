@@ -262,7 +262,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
               <TranslatableDynamic
                 text={statement}
                 as="heading"
-                size="lg"
+                size="xl"
                 bold
                 numberOfLines={1}
                 className="text-white"

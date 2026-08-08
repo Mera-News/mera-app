@@ -16,7 +16,7 @@ import AppPreferencesTab from './AppPreferencesTab';
  * in Profile.
  *
  * Top-left screen heading mirrors the Profile tab idiom (ProfileScreen):
- * a fixed `<Heading size="3xl">` above the scroll area, reusing the same
+ * a fixed `<Heading size="4xl">` above the scroll area, reusing the same
  * `tabs.settings` string shown (hidden) on the tab trigger.
  *
  * Wrapped in a ScrollView (AppPreferencesTab itself has none) so the reduced
@@ -41,7 +41,10 @@ const SettingsTabScreen: React.FC = () => {
             <Box className="flex-1" style={{ paddingTop: insets.top }}>
 
             <HStack className="items-start justify-between px-5 pt-4 mb-2">
-                <Heading size="3xl" className="text-white" numberOfLines={1}>
+                {/* No `numberOfLines`: a 1-line clamp on a 36px title truncated the
+                    screen's own name at large Dynamic Type sizes. Nothing below
+                    depends on this row's height, so it wraps instead. */}
+                <Heading size="4xl" className="text-white">
                     {t('tabs.settings')}
                 </Heading>
             </HStack>
