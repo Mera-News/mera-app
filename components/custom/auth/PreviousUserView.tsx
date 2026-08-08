@@ -1,4 +1,5 @@
 import MeraLogo from '@/components/custom/MeraLogo';
+import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -157,6 +158,13 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
                                 {t('auth.previousUser.useDifferentUser')}
                             </ButtonText>
                         </Button>
+
+                        {/* A returning user lands in THIS view, not the email
+                            one, and would otherwise never see the tour at all.
+                            Only in the non-destructive branch: the switch-user
+                            confirmation is a "are you sure you want to erase
+                            this device" moment and nothing else belongs there. */}
+                        <TutorialLaunchButton />
                     </VStack>
                 ) : (
                     <VStack space="md">

@@ -77,6 +77,13 @@ export default function ChatSessionView({
         ? // The FAB seeds "I want to follow a story", so the persona intro
           // ("tell me about yourself…") would answer a question nobody asked.
           t('trackedStories.followChatIntro')
+      : context.kind === 'generic'
+        ? // Route-aware product help (today: "Ask Mera" on a tutorial slide).
+          // The persona intro ("tell me about yourself so I can tune your feed")
+          // would be an outright lie here — TutorialHelpAgent has no tools and
+          // cannot tune anything. The button also always seeds a question, so
+          // this line is only ever briefly visible.
+          t('tutorials.chatIntro')
       : context.kind === 'article-suggestion'
         ? context.verdict === 'like'
           ? t('articleFeedback.introLikeTuning')
@@ -163,6 +170,11 @@ export default function ChatSessionView({
     // to describe what they want followed — persona chips ("add a place", "show
     // my facts") would derail it into a chat that has no tools for them.
     if (context.kind === 'follow-story') return [];
+    // Product-help thread. The persona chips below ("add where I live", "show my
+    // facts", "help me set up") all expect an agent with fact tools; offering
+    // them here would advertise actions TutorialHelpAgent cannot take, which is
+    // the same silent mis-wire the agent itself exists to prevent.
+    if (context.kind === 'generic') return [];
     if (context.kind === 'article-suggestion') {
       // A real suggestion can be explained ("why?"); a plain article can't, so
       // it offers "more like this" instead. Both offer the "don't want" chip.
