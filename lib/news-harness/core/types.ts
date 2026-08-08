@@ -116,6 +116,20 @@ export interface CloudCallBundle {
    *  re-deriving it) is what makes the two incapable of disagreeing. Absent on
    *  reason/judge bundles, which have no score chunks. */
   scoreChunkSize?: number;
+  /**
+   * REASON bundles only: ids the article-tag reason gate removed from the
+   * subset (`articlePipeline.legacyTagReasonGateEnabled`). Empty when the flag
+   * is off, which is the shipped default.
+   *
+   * THE CALLER MUST PERSIST `feedVerifierDemoteScore` FOR THESE, and mark them
+   * reason-skipped. Skipping a row's reason call is only sound BECAUSE the row
+   * is simultaneously demoted out of the feed: this path's reason threshold
+   * equals its render gate, so a skipped-but-not-demoted row renders with no
+   * note forever and never leaves `reason_pending`. Carried on the bundle
+   * rather than written in the builder to keep the harness pure, exactly as
+   * `decodeV3NoteResults` returns `demoteIds` for `applyV3NoteResults` to write.
+   */
+  tagGatedDemoteIds?: string[];
 }
 
 /** Per-candidate maps decoded from a BatchCompletionResult[]. */

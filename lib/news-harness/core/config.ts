@@ -112,6 +112,104 @@ export interface ArticlePipelineConfig {
    * submit and reads it back at decode, exactly as `v3Mode` already does.
    */
   legacyNoteDemote: boolean;
+  /**
+   * ADD 1 — LEGACY PATH ONLY: show the server's article-tag metadata
+   * (`geo_tags` / `entities` / `event_type`) to the pass-1 batch scoring prompt,
+   * as one compact `Article Metadata:` line per article block.
+   *
+   * DOES NOT CHANGE ROUTING. This is the distinction that makes the flag safe
+   * and it is not the same thing as `scoringEngine.USE_ARTICLE_TAGS`: that one
+   * feeds the tags to the ENGINE, where `isBackstop()` turns false for any
+   * tagged row and the candidate leaves the legacy path for math + judge. Since
+   * the server tagger emits an `event_type` on ~100% of served rows, turning
+   * `USE_ARTICLE_TAGS` on is in practice turning v3 on. This flag instead reads
+   * `ScoringCandidate.meta` inside the PROMPT builder only — see the mechanism
+   * note at the top of `article-pipeline/tag-prompt.ts` — so `scoringMode` is
+   * bit-for-bit unchanged whichever way it is set.
+   *
+   * MEASURED 2026-08-08 on `goldset-348`, 3 baseline + 3 injected + 3 CONTROL
+   * replicates (`harness-local/scripts/score-v1-tagged.ts`). Primary metric is
+   * must_show recall at a MATCHED feed size, because v1's scores are heavily
+   * quantised and recall at a larger feed is not comparable recall:
+   *
+   *   feed size n   baseline   +tags    +SHUFFLED tags (control)
+   *   80            23.00      +2.67    +2.00
+   *   90            25.00      +3.33    +0.67
+   *   100           26.67      +2.00    -0.67
+   *   110           26.67      +2.67    -0.67
+   *   120           27.00      +3.67    -1.00
+   *   150           31.67      +2.00    -0.33
+   *
+   * The CONTROL arm sends the identical lines rotated by one within each chunk,
+   * so every article carries a NEIGHBOUR's metadata: same tokens, same
+   * structure, information destroyed. It tracks baseline everywhere. That is
+   * what rules out "a longer, more structured prompt helps" — which would have
+   * been a far cheaper thing to ship than a tagging pipeline — and it is the
+   * reason this flag exists rather than a prompt reformat.
+   *
+   * Pearson is deliberately NOT cited as evidence here: the control absorbed
+   * about half of its +0.037, so neither half clears the 0.03 noise floor.
+   *
+   * COST: +13.6% pass-1 prompt characters, no extra calls. Measured across 6
+   * arms: 0 truncated calls, 0 regex-salvaged chunks, 0 unscored rows — the
+   * bigger input did not push anything into the salvage path.
+   */
+  legacyTagPromptEnabled: boolean;
+  /**
+   * ADD 2 — LEGACY PATH ONLY: skip the pass-2 reason call for candidates whose
+   * `event_type` is in {@link legacyTagReasonGateEventTypes}, and demote them
+   * out of the feed.
+   *
+   * SKIPPING AND DEMOTING ARE ONE ACTION, NOT TWO. `reasonRelevanceThreshold`
+   * equals this path's render gate, so every reason-eligible row is a row the
+   * user would see; skipping its call without moving its score would render it
+   * silently note-less. Over 1,260 candidate rules the best saving available
+   * that way was 0.0%. The orchestrators therefore persist
+   * `feedVerifierDemoteScore` for every id the gate returns.
+   *
+   * MEASURED 2026-08-08 on `goldset-348`, re-checked against all 6 fresh
+   * scoring arms of the ADD-1 experiment plus the original run (7 independent
+   * runs): 0 must_show lost in every one, recall-at-gate byte-identical before
+   * and after, pass-2 calls saved 18.0%-23.8% (mean ~21%), judge-skip share of
+   * the delivered feed 25.7% -> 16.7%, mean j_comp of the cut rows 3.48 against
+   * 5.25 for the rows kept.
+   *
+   * Two honest bounds on that. (a) "0 must_show lost in 25 cut rows" bounds the
+   * true loss rate at <= 12% (95%, rule of three) — it is not proof of zero.
+   * (b) The saving straddles its own 20% acceptance bar: 2 of the 6 fresh runs
+   * came in at 18.0% and 18.1%. It clears the bar on the mean, not on every run.
+   *
+   * INDEPENDENT OF ADD 1: measured at 20.7% mean saving on the untagged prompt
+   * and 21.5% on the tag-injected one, so neither flag is a precondition for the
+   * other. Together they deliver 28-29/37 must_show in a 77-82 row feed at
+   * ~14.5% judge-skip, against baseline's 26-28/37 in a 100-110 row feed at ~24%.
+   */
+  legacyTagReasonGateEnabled: boolean;
+  /**
+   * The `event_type` values {@link legacyTagReasonGateEnabled} treats as
+   * low-value. SINGLE SOURCE — the gate has no other notion of "low value", so
+   * this list is the entire policy and editing it is the whole knob.
+   *
+   * CAVEAT 1 — THIS SET IS PER-PERSONA, NOT A GLOBAL TRUTH. It was derived from
+   * ONE persona (an Amsterdam software engineer: AI research, Dutch housing,
+   * cycling, Formula 1, chess) against ONE 348-row labelled corpus. `crime`
+   * scored 0/18 must_show FOR THAT PERSON. For a security professional, a
+   * policing reporter, or anyone whose stake IS crime, this same list would cut
+   * their best content. Treat a global default as a temporary convenience; the
+   * right long-term shape is a per-user set learned from their own
+   * "not interested" feedback, which is proposed and NOT yet built.
+   *
+   * CAVEAT 2 — PART OF ITS MEASURED VALUE IS A TAGGER BUG. The enrichment
+   * prompt's event vocabulary has no category for software vulnerability
+   * advisories, so it files them under `crime`: 4 of the 25 rows the gate cut in
+   * the reference run were MISP / Tenable / IBM advisories (j_comp 1.15-2.20).
+   * Production reproduces the same mis-tag, so the measured saving is a correct
+   * measurement of what ships — but the margin over the 20% bar is exactly one
+   * bug wide. Fix the vocabulary (e.g. add `security_advisory` and route it to
+   * `science_tech`) and this gate silently drops to 19.3%, i.e. UNDER its own
+   * acceptance criterion. Re-measure at that point rather than assuming it holds.
+   */
+  legacyTagReasonGateEventTypes: readonly string[];
   // --- Bucket cutoffs (raw LLM score) + persisted representative values ---
   mediumPriorityCutoff: number;
   highPriorityCutoff: number;
@@ -482,6 +580,17 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     // the owner flips it once he has seen it work. See the field's doc comment
     // for the paired measurement AND for the pre-registered bar it missed.
     legacyNoteDemote: false,
+    // Both article-tag features on the legacy path are OFF by default, as
+    // explicit literals rather than absent keys read as falsy — same style and
+    // same reason as `legacyNoteDemote` above and the scoringEngine routing
+    // switches: the harness default must always describe SHIPPED behaviour.
+    // Each field's doc comment carries its own paired measurement.
+    legacyTagPromptEnabled: false,
+    legacyTagReasonGateEnabled: false,
+    // The measured set. Frozen as a literal so `config.test.ts` pins it and a
+    // change has to be deliberate; see the field's TWO caveats before editing —
+    // it is per-persona, and part of its value comes from a tagger mis-label.
+    legacyTagReasonGateEventTypes: ['crime', 'other'],
     mediumPriorityCutoff: 0.6,
     highPriorityCutoff: 0.8,
     emergencyPriorityCutoff: 1.0,

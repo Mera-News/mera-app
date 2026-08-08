@@ -16,6 +16,7 @@ export * from './persona-management/fact-rules';
 export * from './persona-management/topic-generation';
 export * from './persona-management/persona-agent-core';
 export * from './article-pipeline/scoring';
+export * from './article-pipeline/tag-prompt';
 export * from './article-pipeline/candidates';
 export * from './article-pipeline/pipeline';
 export * from './article-pipeline/reason-grounding';

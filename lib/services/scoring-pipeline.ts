@@ -1799,6 +1799,9 @@ async function doSubmitReasonsOnly(
     REASON_RELEVANCE_THRESHOLD,
     noteMode,
   );
+  // Before the empty-bundle early return: the gate may have emptied the bundle
+  // by demoting EVERY row, and those demotions still have to be written.
+  await applyTagGatedDemotions(batch.batchId, bundle.tagGatedDemoteIds);
   if (bundle.calls.length === 0) {
     logger.debug(
       `${TAG} batch ${batch.batchId} reasonsOnly bundle empty — marking done`,
@@ -2649,6 +2652,51 @@ async function handleRelevanceResults(
  * with no note: the row is going below the render gate, so a note for it would
  * be spend with no reader.
  */
+/**
+ * ADD 2's persistence half — the write that makes skipping a pass-2 reason call
+ * sound.
+ *
+ * `buildReasonCallsForSubset` returns `tagGatedDemoteIds` when
+ * `articlePipeline.legacyTagReasonGateEnabled` is on (default off ⇒ always
+ * empty ⇒ this is a no-op). Those rows had their reason call SKIPPED, so they
+ * must simultaneously leave the feed: this path's reason threshold equals its
+ * render gate, so a skipped-but-not-demoted row would render with no note and
+ * sit in `reason_pending` forever, re-elected by every later gate pass.
+ *
+ * Deliberately identical in shape to `applyV3NoteResults`' demote loop —
+ * same score, same `reasonSkipped: true` terminal marker, same
+ * record-not-found tolerance — because it is the same product action reached by
+ * a deterministic route instead of an LLM one.
+ */
+async function applyTagGatedDemotions(
+  batchId: number,
+  demoteIds: string[] | undefined,
+): Promise<void> {
+  if (!demoteIds || demoteIds.length === 0) return;
+  const demoteScore = DEFAULT_HARNESS_CONFIG.articlePipeline.feedVerifierDemoteScore;
+  for (const id of demoteIds) {
+    try {
+      await saveScoringResult(id, {
+        relevance: demoteScore,
+        reason: '',
+        // Terminal: below the gate it owes no note, so leaving it
+        // `reason_pending` would strand it in the recovery sweep forever.
+        reasonSkipped: true,
+      });
+    } catch (err) {
+      if (isRecordNotFoundError(err)) continue;
+      logger.captureException(err, {
+        tags: { service: 'scoring-pipeline', step: 'tag-gate-demote' },
+        extra: { candidateId: id },
+      });
+    }
+  }
+  logger.debug(
+    `${TAG} batch ${batchId} article-tag reason gate: demoted ${demoteIds.length} ` +
+      `rows, skipping their reason calls`,
+  );
+}
+
 async function applyV3NoteResults(
   batch: PipelineBatch,
   batchResults: { id: string; output: string; error?: string }[],
@@ -2774,6 +2822,10 @@ async function submitNeedsReasons(
     // consults, so the prompt sent and the parser used cannot diverge.
     usesNotePrompt(batch),
   );
+
+  // Same ordering rule as the reasonsOnly path: write the demotions before the
+  // empty-bundle early return, since the gate can empty the bundle by itself.
+  await applyTagGatedDemotions(batchId, bundle.tagGatedDemoteIds);
 
   if (bundle.calls.length === 0) {
     // Every impactful row turned out ineligible for a reason — finish clean.

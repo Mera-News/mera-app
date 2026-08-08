@@ -56,6 +56,11 @@ import {
   CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
   REASON_MIN_RAW_SCORE,
 } from '@/lib/news-harness/article-pipeline/scoring';
+import {
+  injectArticleMetadata,
+  selectTagGatedDemoteIds,
+} from '@/lib/news-harness/article-pipeline/tag-prompt';
+import type { ArticlePipelineConfig } from '@/lib/news-harness/core/config';
 import type {
   CloudCallBundle,
   DecodedResults,
@@ -120,6 +125,18 @@ function buildScoreCallForChunk(
   chunkCandidates: ScoringCandidate[],
   allFactStatements: string[],
   systemPrompt: string = CLOUD_RELEVANCE_SYSTEM_PROMPT,
+  /**
+   * ADD 1 seam, mirroring the harness twin in
+   * `news-harness/article-pipeline/scoring.ts`. Only `legacyTagPromptEnabled` is
+   * read; with it false (the shipped default) this returns exactly the string it
+   * always did and `injectArticleMetadata` is never called.
+   *
+   * This LOCAL builder exists so pass-1 prompts keep flowing through the
+   * mockable `./prompts` builders, and it is the one the live app path uses —
+   * patching only the harness twin would have shipped the flag to the offline
+   * harness and to nothing else.
+   */
+  config: ArticlePipelineConfig = ARTICLE_CFG,
 ): { prompt: string; system: string } {
   const userContext = buildUserContext(allFactStatements);
   const prompt = buildBatchScoringUserMessage({
@@ -131,7 +148,12 @@ function buildScoreCallForChunk(
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     })),
   });
-  return { prompt, system: systemPrompt };
+  return {
+    prompt: config.legacyTagPromptEnabled
+      ? injectArticleMetadata(prompt, chunkCandidates)
+      : prompt,
+    system: systemPrompt,
+  };
 }
 
 async function generateReasonForCandidate(
@@ -503,6 +525,13 @@ export async function buildRelevanceCalls(
       chunkCandidates,
       allFactStatements,
       systemPrompt,
+      // ADD 1 seam. `ARTICLE_CFG` is the same literal every other
+      // articlePipeline flag on this shim reads (feedVerifier*, reason*), so
+      // the tag block turns on exactly where those do. If this flag ever needs
+      // to be RUNTIME-layerable, it must be threaded like `legacyNoteDemote`
+      // is — through `judgeHarnessConfig()` and captured on the batch — not
+      // read from the literal here.
+      ARTICLE_CFG,
     );
     const scoreId = `score:${idx}`;
     promptsById.set(scoreId, prompt);
@@ -549,7 +578,7 @@ export async function buildReasonCallsForSubset(
    */
   v3 = false,
 ): Promise<CloudCallBundle> {
-  const subset = candidates.filter((c) => {
+  const eligible = candidates.filter((c) => {
     // This is the LIVE reason path (scoring-pipeline :1231 and :1846). Fixing
     // only the harness twin would fix the offline harness and leave prod
     // broken: a factless headline scoring 0.6 would get no reason, stay
@@ -558,6 +587,17 @@ export async function buildReasonCallsForSubset(
     const rel = relevanceMap[c.id];
     return typeof rel === 'number' && rel > subsetThreshold;
   });
+
+  // ADD 2, mirroring the harness twin exactly (`article-pipeline/scoring.ts`).
+  // Applied AFTER the relevance gate so it can only ever REMOVE rows that would
+  // have been called, never resurrect one the threshold excluded.
+  //
+  // Returning the ids is half the contract: the caller MUST persist
+  // `feedVerifierDemoteScore` for them. See `CloudCallBundle.tagGatedDemoteIds`.
+  const tagGatedDemoteIds = selectTagGatedDemoteIds(eligible, ARTICLE_CFG);
+  const gatedSet = new Set(tagGatedDemoteIds);
+  const subset =
+    gatedSet.size === 0 ? eligible : eligible.filter((c) => !gatedSet.has(c.id));
 
   const calls: BatchCall[] = [];
   const promptsById = new Map<string, string>();
@@ -599,6 +639,7 @@ export async function buildReasonCallsForSubset(
     promptsById,
     chunkIdToCandidates: new Map(),
     eligibleCandidates: subset,
+    tagGatedDemoteIds,
   };
 }
 

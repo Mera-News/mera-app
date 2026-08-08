@@ -337,6 +337,34 @@ export async function runArticlePipeline(
     config,
     logger,
   );
+  // ADD 2's second half. `buildReasonCallsForSubset` only DECIDES; the demote
+  // has to be written or the gated rows keep their pass-1 score, stay above the
+  // render gate and render with no note — the one outcome the feature must not
+  // produce. Written BEFORE the reasons so a later failure can never leave a
+  // gated row un-demoted, and re-scored through `saveScores` (the same sink the
+  // pass-1 scores went through) so the persisted value is authoritative.
+  const gatedDemoteIds = reasonBundle.tagGatedDemoteIds ?? [];
+  if (gatedDemoteIds.length > 0) {
+    await ports.sink.saveScores(
+      gatedDemoteIds.map((id) => ({
+        id,
+        relevance: config.feedVerifierDemoteScore,
+        // The RAW score is left as the model produced it: the gate is a
+        // downstream product decision, not a claim about what pass 1 said, and
+        // overwriting the raw value would corrupt the only record of that.
+        rawScore: rawRelevanceMap[id] ?? config.feedVerifierDemoteScore,
+      })),
+    );
+    for (const id of gatedDemoteIds) {
+      relevanceMap[id] = config.feedVerifierDemoteScore;
+      bucketedScoreMap.set(id, config.feedVerifierDemoteScore);
+    }
+    logger.debug?.(
+      `pipeline: article-tag reason gate demoted ${gatedDemoteIds.length} rows ` +
+        `(pass-2 calls skipped)`,
+    );
+  }
+
   const reasonMap = decodedReasons.reasonMap;
   const reasonEntries = [...reasonMap.entries()].map(([id, reason]) => ({
     id,

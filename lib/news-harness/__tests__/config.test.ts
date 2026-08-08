@@ -56,6 +56,37 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(typeof a.legacyNoteDemote).toBe('boolean');
   });
 
+  it('pins the article-tag features on the legacy path OFF', () => {
+    // Both are EXPLICIT literals, not absent keys read as falsy — the `in`
+    // assertions are the ones that would catch a key being dropped, which is
+    // the failure mode that silently looks identical to "off".
+    //
+    // ADD 1 (prompt injection). Measured 2026-08-08 on goldset-348, 3+3+3
+    // replicates: +2.0..+3.7 must_show recall at matched feed sizes n=80..150,
+    // with a SHUFFLED-metadata control at -1.0..+0.67 ruling out prompt bulk.
+    expect(a.legacyTagPromptEnabled).toBe(false);
+    expect('legacyTagPromptEnabled' in a).toBe(true);
+    expect(typeof a.legacyTagPromptEnabled).toBe('boolean');
+
+    // ADD 2 (post-hoc reason gate). ~21% of pass-2 calls saved, 0 must_show
+    // lost across 7 independent scoring runs. Saving straddles its own 20% bar
+    // (2 of 6 fresh runs came in at 18.0%/18.1%).
+    expect(a.legacyTagReasonGateEnabled).toBe(false);
+    expect('legacyTagReasonGateEnabled' in a).toBe(true);
+    expect(typeof a.legacyTagReasonGateEnabled).toBe('boolean');
+  });
+
+  it('pins the article-tag reason gate event set to the measured value', () => {
+    // Changing this list changes the product behaviour of the gate and nothing
+    // else — it is the entire policy. Read BOTH caveats on the field before
+    // editing: the set is PER-PERSONA (derived from one Amsterdam-engineer
+    // persona, where `crime` scored 0/18 must_show), and part of its measured
+    // saving comes from the enrichment prompt mis-filing security advisories
+    // as `crime`. Fixing that vocabulary drops the gate to 19.3%, under its own
+    // acceptance bar.
+    expect(a.legacyTagReasonGateEventTypes).toEqual(['crime', 'other']);
+  });
+
   it('pins the bucket cutoffs and representative values', () => {
     expect(a.mediumPriorityCutoff).toBe(0.6);
     expect(a.highPriorityCutoff).toBe(0.8);

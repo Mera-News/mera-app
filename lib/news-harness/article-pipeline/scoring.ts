@@ -28,6 +28,7 @@ import type {
   ScoringCandidate,
   ScoringResult,
 } from '../core/types';
+import { injectArticleMetadata, selectTagGatedDemoteIds } from './tag-prompt';
 
 // Re-export the shared types for convenience (canonical home is core/types).
 export type { CloudCallBundle, DecodedResults, ScoringResult, ScoringCandidate };
@@ -269,6 +270,10 @@ export function buildScoreCallForChunk(
   chunkCandidates: ScoringCandidate[],
   allFactStatements: string[],
   systemPrompt: string = ARTICLE_CFG.relevanceSystemPrompt,
+  /** ADD 1 seam. Only `legacyTagPromptEnabled` is read; with it false (the
+   *  shipped default) the returned prompt is the SAME string this function has
+   *  always produced, and `injectArticleMetadata` is never called. */
+  config: ArticlePipelineConfig = ARTICLE_CFG,
 ): { prompt: string; system: string } {
   const userContext = buildUserContext(allFactStatements);
   const prompt = buildBatchScoringUserMessage({
@@ -280,7 +285,15 @@ export function buildScoreCallForChunk(
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     })),
   });
-  return { prompt, system: systemPrompt };
+  // The tag block is appended to the BUILT message rather than threaded through
+  // `buildBatchScoringUserMessage`, so the pinned prompt builder is untouched
+  // and the flag-off path is provably byte-identical. See tag-prompt.ts.
+  return {
+    prompt: config.legacyTagPromptEnabled
+      ? injectArticleMetadata(prompt, chunkCandidates)
+      : prompt,
+    system: systemPrompt,
+  };
 }
 
 /**
@@ -321,6 +334,7 @@ export function buildRelevanceCalls(
       chunkCandidates,
       factStatements,
       systemPrompt,
+      config,
     );
     const scoreId = `score:${idx}`;
     promptsById.set(scoreId, prompt);
@@ -372,7 +386,7 @@ export function buildReasonCallsForSubset(
    */
   v3 = false,
 ): CloudCallBundle {
-  const subset = candidates.filter((c) => {
+  const eligible = candidates.filter((c) => {
     // isScorableCandidate: without it a factless headline that SCORED well gets
     // no reason call, stays `reason_pending`, and isVisible keeps it invisible
     // anyway — the fix upstream would buy nothing.
@@ -383,6 +397,17 @@ export function buildReasonCallsForSubset(
     // the legacy LOW bucket both land at exactly 0.4).
     return typeof rel === 'number' && rel >= subsetThreshold;
   });
+
+  // ADD 2. Applied AFTER the relevance gate, deliberately: the gate's measured
+  // saving is a percentage of the rows that would otherwise have been CALLED,
+  // and it must never resurrect a row the threshold already excluded.
+  //
+  // The demote is the caller's job — see `selectTagGatedDemoteIds`. Skipping the
+  // call without persisting `feedVerifierDemoteScore` for these ids leaves them
+  // rendering with no note, which is the one outcome this feature must not have.
+  const gatedDemoteIds = selectTagGatedDemoteIds(eligible, config);
+  const gatedSet = new Set(gatedDemoteIds);
+  const subset = gatedSet.size === 0 ? eligible : eligible.filter((c) => !gatedSet.has(c.id));
 
   const calls: BatchCall[] = [];
   const promptsById = new Map<string, string>();
@@ -421,6 +446,7 @@ export function buildReasonCallsForSubset(
     // CloudCallBundle shape consistent so the decoder can dispatch by prefix.
     chunkIdToCandidates: new Map(),
     eligibleCandidates: subset,
+    tagGatedDemoteIds: gatedDemoteIds,
   };
 }
 
