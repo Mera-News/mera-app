@@ -127,6 +127,19 @@ jest.mock('react-native', () => {
     });
 });
 
+// lib/database/index.ts builds a real native SQLiteAdapter at import time, so
+// every consumer suite mocks it (see the collectCoverageFrom note in
+// jest.config.js). This screen reaches it transitively — FreeTierInlineNotice →
+// present-free-tier-paywall → billing-service → apollo-client → for-you-store —
+// which is why a screen with no database of its own still needs this.
+jest.mock('@/lib/database', () => ({
+    __esModule: true,
+    default: {
+        write: jest.fn((fn: () => Promise<void>) => fn()),
+        get: jest.fn(() => ({ query: jest.fn(() => ({ fetch: jest.fn(async () => []) })) })),
+    },
+}));
+
 let mockRows: any[] = [];
 const mockUntrack = jest.fn();
 jest.mock('@/lib/database/services/tracked-story-service', () => ({

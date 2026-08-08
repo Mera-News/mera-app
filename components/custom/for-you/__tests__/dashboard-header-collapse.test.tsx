@@ -96,6 +96,18 @@ jest.mock('@/components/ui/modal', () => ({
 }));
 
 // ── Panel data sources ────────────────────────────────────────────────────
+// lib/database/index.ts builds a real native SQLiteAdapter at import time, so
+// every consumer suite mocks it (see the collectCoverageFrom note in
+// jest.config.js). TrackedStoriesScreen reaches it transitively —
+// FreeTierInlineNotice → present-free-tier-paywall → billing-service →
+// apollo-client → for-you-store.
+jest.mock('@/lib/database', () => ({
+    __esModule: true,
+    default: {
+        write: jest.fn((fn: () => Promise<void>) => fn()),
+        get: jest.fn(() => ({ query: jest.fn(() => ({ fetch: jest.fn(async () => []) })) })),
+    },
+}));
 jest.mock('@/lib/database/services/tracked-story-service', () => ({
     MAX_MEMBER_IDS: 30,
     observeActive: () => ({
