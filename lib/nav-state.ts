@@ -4,6 +4,7 @@
 
 import { router } from 'expo-router';
 import { notifyTimeTick } from './time-tick';
+import { bumpTranslationEpoch } from './translation-queue';
 
 const PAYWALL_PATH = '/logged-in/not-subscribed';
 
@@ -31,6 +32,15 @@ export function setCurrentPathname(pathname: string): void {
   // sits below every card's React.memo boundary, so this cannot re-render a list
   // screen and cannot touch the Dashboard's 30-minute sort snapshot.
   if (changed) notifyTimeTick();
+
+  // Same signal, second consumer: a route change retires every translation
+  // request queued for the screen the user just left. Native translation cannot
+  // be cancelled once dispatched, but a call that was never made costs nothing
+  // — and the queue is strictly serial, so those stale titles are exactly what
+  // the NEW screen's title would otherwise wait behind. Cheap: a counter bump
+  // and one pass over a queue that is usually tens of items long, and a no-op
+  // when nothing is queued.
+  if (changed) bumpTranslationEpoch(pathname);
 }
 
 export function getCurrentPathname(): string {

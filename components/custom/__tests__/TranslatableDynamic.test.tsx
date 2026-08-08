@@ -24,14 +24,18 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
 }));
 
+// Shared across every getState() call so a test can assert on them.
+const mockCacheTranslation = jest.fn();
+const mockRemovePending = jest.fn();
+
 jest.mock('@/lib/stores/app-language-store', () => {
     const makeState = () => ({
         appLanguage: mockAppLanguage,
         cache: new Map<string, string>(),
         pending: new Set<string>(),
         addPending: jest.fn(),
-        removePending: jest.fn(),
-        cacheTranslation: jest.fn(),
+        removePending: mockRemovePending,
+        cacheTranslation: mockCacheTranslation,
     });
     const useAppLanguageStore = (selector?: (s: any) => unknown) =>
         selector ? selector(makeState()) : makeState();
@@ -41,6 +45,10 @@ jest.mock('@/lib/stores/app-language-store', () => {
 
 jest.mock('@/lib/translation-service', () => ({
     translateText: jest.fn(() => Promise.resolve(null)),
+    // The component uses the DETAILED variant so it can tell a route-change
+    // drop apart from a genuine failure — see the fired-latch note in
+    // TranslatableDynamic.
+    translateTextDetailed: jest.fn(() => Promise.resolve({ status: 'failed', text: null })),
     // Not blocked by default — the breaker's own behaviour is covered in
     // lib/__tests__/translation-service.test.ts.
     useTranslationBlocked: jest.fn(() => null),
@@ -94,7 +102,11 @@ jest.mock('@/components/ui/pressable', () => {
 
 import { act, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import { translateText } from '@/lib/translation-service';
+import { translateText, translateTextDetailed } from '@/lib/translation-service';
+import {
+    __resetTranslationQueueForTests,
+    bumpTranslationEpoch,
+} from '@/lib/translation-queue';
 import TranslatableDynamic from '../TranslatableDynamic';
 
 describe('TranslatableDynamic onDisplayChange', () => {
@@ -215,7 +227,13 @@ describe('TranslatableDynamic mount-time visibility ladder', () => {
         });
 
         expect(mockMeasureCalls).toBeGreaterThanOrEqual(2);
-        expect(translateText).toHaveBeenCalledWith('Breaking news headline', 'de');
+        // The measured `y` (100) rides along as the queue priority — lower
+        // dispatches sooner, so the node nearest the top of the viewport wins.
+        expect(translateTextDetailed).toHaveBeenCalledWith(
+            'Breaking news headline',
+            'de',
+            { priority: 100 },
+        );
     });
 
     it('does not treat a callback that never fires as visible', () => {
@@ -227,6 +245,139 @@ describe('TranslatableDynamic mount-time visibility ladder', () => {
         });
 
         expect(mockMeasureCalls).toBeGreaterThanOrEqual(2);
-        expect(translateText).not.toHaveBeenCalled();
+        expect(translateTextDetailed).not.toHaveBeenCalled();
+    });
+});
+
+
+// A request retired by the route-epoch sweep is NOT a failure, and the
+// difference is load-bearing. `firedRef` latches on (text, language) and is
+// cleared only on a text change or a suppression lift — neither happens on a
+// drop. Tabs stay mounted here, so without the recovery below: scroll the Feed,
+// open a story (the bump drops the queued titles), come back — and those titles
+// render English for the rest of the session.
+describe('TranslatableDynamic route-epoch drop recovery', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.useFakeTimers();
+        __resetTranslationQueueForTests();
+        mockAppLanguage = 'de';
+        mockMeasureCalls = 0;
+        // On screen from the first measure.
+        mockMeasureImpl = (_call, cb) => cb(0, 120, 320, 40);
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it('asks again after the next route change when its request was dropped', async () => {
+        (translateTextDetailed as jest.Mock)
+            .mockResolvedValueOnce({ status: 'dropped', text: null })
+            .mockResolvedValue({ status: 'ok', text: 'Eilmeldung' });
+
+        render(<TranslatableDynamic text="Breaking news headline" />);
+        await act(async () => {
+            jest.advanceTimersByTime(500);
+        });
+        expect(translateTextDetailed).toHaveBeenCalledTimes(1);
+
+        // The drop resolution has to land (a microtask) before the epoch fires,
+        // or there is nothing latched to un-latch.
+        await act(async () => {
+            bumpTranslationEpoch('/logged-in/app_container/feed');
+            jest.advanceTimersByTime(500);
+        });
+
+        expect(translateTextDetailed).toHaveBeenCalledTimes(2);
+    });
+
+    it('does NOT re-ask on a route change when the request genuinely failed', async () => {
+        // A failure is the OS saying no. Re-asking on every navigation would
+        // reopen the sheet-storm the breaker exists to prevent.
+        (translateTextDetailed as jest.Mock).mockResolvedValue({
+            status: 'failed',
+            text: null,
+        });
+
+        render(<TranslatableDynamic text="Breaking news headline" />);
+        await act(async () => {
+            jest.advanceTimersByTime(500);
+        });
+        expect(translateTextDetailed).toHaveBeenCalledTimes(1);
+
+        await act(async () => {
+            bumpTranslationEpoch('/logged-in/app_container/feed');
+            jest.advanceTimersByTime(500);
+        });
+
+        expect(translateTextDetailed).toHaveBeenCalledTimes(1);
+    });
+});
+
+
+// A translation that lands AFTER the reader switched language must not be
+// cached. `cacheTranslation` keys the persisted row by whatever the store says
+// at completion time, so a German answer arriving under French would be written
+// to disk labelled French — and reloaded, faithfully, on every later launch.
+// In-memory this was self-healing (the Map is replaced on each switch);
+// persisting it made it permanent.
+describe('TranslatableDynamic late answer after a language switch', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        jest.useFakeTimers();
+        __resetTranslationQueueForTests();
+        mockAppLanguage = 'de';
+        mockMeasureCalls = 0;
+        mockMeasureImpl = (_call, cb) => cb(0, 120, 320, 40);
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    it('discards a result whose language the reader has already left', async () => {
+        let resolveCall!: (value: unknown) => void;
+        (translateTextDetailed as jest.Mock).mockReturnValueOnce(
+            new Promise((resolve) => {
+                resolveCall = resolve;
+            }),
+        );
+
+        render(<TranslatableDynamic text="Breaking news headline" />);
+        await act(async () => {
+            jest.advanceTimersByTime(500);
+        });
+        expect(translateTextDetailed).toHaveBeenCalledWith(
+            'Breaking news headline',
+            'de',
+            { priority: 120 },
+        );
+
+        // The reader moves to French while the German call is still in flight.
+        mockAppLanguage = 'fr';
+        await act(async () => {
+            resolveCall({ status: 'ok', text: 'Eilmeldung' });
+        });
+
+        expect(mockCacheTranslation).not.toHaveBeenCalled();
+        expect(mockRemovePending).toHaveBeenCalledWith('Breaking news headline');
+    });
+
+    it('caches a result that arrives while the language is unchanged', async () => {
+        (translateTextDetailed as jest.Mock).mockResolvedValue({
+            status: 'ok',
+            text: 'Eilmeldung',
+        });
+
+        render(<TranslatableDynamic text="Breaking news headline" />);
+        await act(async () => {
+            jest.advanceTimersByTime(500);
+        });
+
+        expect(mockCacheTranslation).toHaveBeenCalledWith(
+            'Breaking news headline',
+            'Eilmeldung',
+        );
     });
 });

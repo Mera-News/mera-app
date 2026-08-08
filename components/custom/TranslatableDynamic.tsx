@@ -2,7 +2,8 @@ import { Heading } from '@/components/ui/heading';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { canonicalizeLanguageCode } from '@/lib/language-codes';
-import { translateText, useTranslationSuppressed } from '@/lib/translation-service';
+import { translateTextDetailed, useTranslationSuppressed } from '@/lib/translation-service';
+import { subscribeTranslationEpoch, visibilityPriority } from '@/lib/translation-queue';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import logger from '@/lib/logger';
@@ -201,6 +202,26 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
     const [isOnScreen, setIsOnScreen] = useState(false);
     // Avoid firing multiple translation requests for the same (text, language) pair.
     const firedRef = useRef<string | null>(null);
+    /**
+     * Last measured window-space `y`. This IS the node's visible rank, and it is
+     * what orders the translation queue — the text nearest the top of the
+     * viewport is translated first, the text scrolled past waits.
+     *
+     * Deliberately measured-y rather than the Feed's `viewabilityConfigCallback
+     * Pairs`: it is per-TEXT-NODE rather than per-card, it needs no plumbing
+     * through the card components, and it works identically on the Dashboard
+     * and Explore lists, which have no viewability config at all. We already
+     * measure this value on every visibility check and were throwing it away.
+     */
+    const lastYRef = useRef(0);
+    /**
+     * True when the last request was DROPPED by the route-epoch sweep rather
+     * than failing. See the epoch-subscription effect below for why the
+     * distinction is load-bearing.
+     */
+    const wasDroppedRef = useRef(false);
+    /** Bumped to re-run the fire-effect after a drop. */
+    const [retryToken, setRetryToken] = useState(0);
 
     // Measure the node's window-space position and flip `isOnScreen` if visible.
     const checkVisibility = useCallback(() => {
@@ -213,6 +234,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
                     y + h > -VISIBILITY_BUFFER_PX &&
                     y < screenH + VISIBILITY_BUFFER_PX;
                 if (visible) {
+                    lastYRef.current = y;
                     setIsOnScreen(true);
                 }
             });
@@ -228,6 +250,7 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         setIsOnScreen(false);
         setLocalShowOriginal(false);
         firedRef.current = null;
+        wasDroppedRef.current = false;
         // RETRY LADDER, not a single shot. Under Fabric, `measureInWindow` on a
         // freshly-mounted (or freshly-recycled) FlatList cell can return without
         // ever invoking its callback — the node has no committed shadow-tree
@@ -264,6 +287,31 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
         wasSuppressedRef.current = translationSuppressed;
     }, [translationSuppressed]);
 
+    // RECOVERY FROM A ROUTE-EPOCH DROP — this is not optional bookkeeping.
+    //
+    // `firedRef` latches on (text, language) and is cleared only when the text
+    // changes or suppression lifts. Neither happens on a drop. Tabs stay mounted
+    // in this navigator, so without this effect: scroll the Feed, tap a card
+    // (the epoch bump drops the queued titles), come back — and those titles
+    // render English for the rest of the session. That is a worse bug than the
+    // latency the drop was fixing.
+    //
+    // The retry is deliberately keyed to the NEXT epoch change rather than fired
+    // the instant the drop lands. The screen that was dropped is still mounted
+    // and still measures at its real coordinates underneath the pushed screen,
+    // so an immediate retry would re-enqueue it to compete with the screen the
+    // user is actually looking at. Waiting for the next route change means the
+    // natural "go back" gesture is what re-arms it.
+    useEffect(() => {
+        if (!needsTranslation) return;
+        return subscribeTranslationEpoch(() => {
+            if (!wasDroppedRef.current) return;
+            wasDroppedRef.current = false;
+            firedRef.current = null;
+            setRetryToken((n) => n + 1);
+        });
+    }, [needsTranslation]);
+
     // Fire the translation request once we're on screen and still need one.
     useEffect(() => {
         if (!needsTranslation) return;
@@ -284,19 +332,57 @@ const TranslatableDynamic: React.FC<TranslatableProps> = ({
             originalLanguage,
             appLanguage,
         });
-        translateText(text, appLanguage).then((translated) => {
-            if (translated) {
-                useAppLanguageStore.getState().cacheTranslation(text, translated);
-            } else {
-                logger.warn('[TranslatableDynamic] Translation unavailable, falling back to original text', {
-                    textPreview: text.slice(0, 20),
-                    originalLanguage,
-                    appLanguage,
-                });
+        // The language this call is FOR. Captured here, checked on completion:
+        // the store's `appLanguage` at completion time is not necessarily the
+        // one we asked for. A language switch does not (and cannot) stop a call
+        // already in flight, so a German result can land after the user has
+        // moved to French — and `cacheTranslation` keys the persisted row by
+        // whatever the store says NOW. In memory that was self-healing (the Map
+        // is replaced on every switch); on disk it would be a permanent
+        // wrong-language row that every later launch faithfully reloads.
+        const requestedLanguage = appLanguage;
+
+        // Priority = where this node sits on screen right now. Lower is sooner,
+        // so the headline at the top of the viewport beats the one the user has
+        // already scrolled past, and both beat anything above the fold.
+        translateTextDetailed(text, appLanguage, {
+            priority: visibilityPriority(lastYRef.current),
+        }).then((result) => {
+            if (useAppLanguageStore.getState().appLanguage !== requestedLanguage) {
+                // Answer for a language the reader has left. Drop it entirely —
+                // caching it would mislabel it (see above), and the node has
+                // already re-fired for the new language.
                 useAppLanguageStore.getState().removePending(text);
+                return;
             }
+            if (result.status === 'ok' && result.text) {
+                useAppLanguageStore.getState().cacheTranslation(text, result.text);
+                return;
+            }
+            if (result.status === 'dropped') {
+                // NOT a failure — the route moved on before we ever asked the
+                // OS. Un-latch so the next epoch change can ask again, and say
+                // nothing: this is the queue working, not translation breaking.
+                wasDroppedRef.current = true;
+                useAppLanguageStore.getState().removePending(text);
+                return;
+            }
+            logger.warn('[TranslatableDynamic] Translation unavailable, falling back to original text', {
+                textPreview: text.slice(0, 20),
+                originalLanguage,
+                appLanguage,
+            });
+            useAppLanguageStore.getState().removePending(text);
         });
-    }, [needsTranslation, isOnScreen, appLanguage, text, cachedTranslation, originalLanguage]);
+    }, [
+        needsTranslation,
+        isOnScreen,
+        appLanguage,
+        text,
+        cachedTranslation,
+        originalLanguage,
+        retryToken,
+    ]);
 
     // `displayText` and `displayedLanguage` are assigned together, branch by
     // branch — deriving the language separately afterwards would drift from
