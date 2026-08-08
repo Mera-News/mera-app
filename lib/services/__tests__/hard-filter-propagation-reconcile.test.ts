@@ -138,8 +138,8 @@ describe('score propagation × hard filters (P9)', () => {
     // were written terminal `complete` without ever meeting the hard screen.
     expect(propagated).toBe(2);
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'blocked', relevance: 0.9, reason: 'why' },
-      { id: 'ok', relevance: 0.9, reason: 'why' },
+      { id: 'blocked', relevance: 0.9, reason: 'why', scoredWithV3: null },
+      { id: 'ok', relevance: 0.9, reason: 'why', scoredWithV3: null },
     ]);
 
     // The fix: exactly those ids get re-screened, and the blocked one is made

@@ -145,9 +145,58 @@ export const RENDER_GATE = 0.4;
  *  the floor. */
 export const V3_RENDER_GATE = 0.55;
 
+/**
+ * The render gate for ONE row, chosen by the scorer that actually produced its
+ * score rather than by the current flag.
+ *
+ * WHY PER ROW. `effectiveRenderGate()` below answers "which scorer is active
+ * NOW?", which is the wrong question for a row that was scored an hour ago.
+ * Scored rows live for 48h (`FEED_WINDOW_MS`) and are never re-scored, so the
+ * moment the v3 flag flips the device holds a MIXTURE of vintages and a single
+ * global gate re-judges every one of them against a threshold calibrated for a
+ * scorer most of them never saw.
+ *
+ * That is not a symmetric risk. v1's relevance is QUANTISED — measured on the
+ * 348-row gold set (`harness-local/fixtures/goldset-348.json`) it takes just 25
+ * distinct values, 89 rows tie at 0.6, and 25 rows sit at EXACTLY 0.4, which is
+ * 21.6% of the 116 rows v1 admits at its own gate. Moving the gate to 0.55 for
+ * everyone deletes all 25 of those instantly, and since nothing re-scores them
+ * they never come back.
+ *
+ * SURFACE SCOPE, measured rather than assumed: those 0.4 rows only reach a
+ * surface whose importance filter is set to LOW, because `bandOf` puts [0.4,0.6)
+ * in the LOW band. That is the DASHBOARD by default
+ * (`DEFAULT_DASHBOARD_IMPORTANCE_THRESHOLD = 'low'`), and the Feed only when the
+ * reader lowers its filter from the default 'medium'
+ * (`DEFAULT_FEED_IMPORTANCE_THRESHOLD`, which already requires >= 0.6). So this
+ * protects the Dashboard's entire low band, not the default Feed — worth stating
+ * precisely, since "a fifth of the feed" would be the wrong claim.
+ *
+ * So the vintage travels with the row (`article_suggestions.scored_with_v3`,
+ * schema v50) and each row is judged at its own scorer's gate. Absent/false —
+ * every pre-v50 row — reads as legacy and keeps `RENDER_GATE`, which is exactly
+ * what those rows were scored under.
+ */
+export function gateForRow(s: Pick<ForYouSuggestion, 'scoredWithV3'>): number {
+  return s.scoredWithV3 === true ? V3_RENDER_GATE : RENDER_GATE;
+}
+
+/** The render gate for a row's raw relevance — the per-row gate applied.
+ *  Prefer this over comparing against {@link effectiveRenderGate} directly:
+ *  that compares every row to the CURRENT flag's gate, which is the mixed-
+ *  vintage bug {@link gateForRow} exists to prevent. */
+export function relevancePassesGate(s: Pick<ForYouSuggestion, 'scoredWithV3' | 'relevance'>): boolean {
+  return (s.relevance ?? 0) >= gateForRow(s);
+}
+
 /** The effective render gate: V3_RENDER_GATE while the v3 scorer is active,
  *  RENDER_GATE otherwise. Read via getState (not a hook) — selectors here are
- *  plain functions, and the flag flips only from the Mera Protocol screen. */
+ *  plain functions, and the flag flips only from the Mera Protocol screen.
+ *
+ *  SCOPE: this is the gate for rows scored FROM NOW ON — i.e. what the pipeline
+ *  should stamp and what a diagnostic means by "the current gate". It is NOT
+ *  the right thing to compare an existing row against; use {@link gateForRow}
+ *  / {@link relevancePassesGate} for that. */
 export function effectiveRenderGate(): number {
   try {
     // Lazy require: keeps this module's static import graph free of the
@@ -287,11 +336,11 @@ export function isComplete(s: ForYouSuggestion): boolean {
 }
 
 /** The render gate — INCLUSIVE (relevance v3: was strict `>`, now `>=`, so
- *  rows at exactly the cutoff stay included). Uses the EFFECTIVE gate: 0.55
- *  while the v3 scorer is active, 0.4 for legacy scoring (see
- *  {@link V3_RENDER_GATE}). */
+ *  rows at exactly the cutoff stay included). Uses the row's OWN gate: 0.55 for
+ *  a row relevance v3 scored, 0.4 for a legacy-scored one (see
+ *  {@link gateForRow} for why this is per row and not per flag). */
 export function passesRenderGate(s: ForYouSuggestion): boolean {
-  return (s.relevance ?? 0) >= effectiveRenderGate();
+  return relevancePassesGate(s);
 }
 
 /** The publication window (`cutoffMs = nowMs - FEED_WINDOW_MS`, 48h). */

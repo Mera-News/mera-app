@@ -13,11 +13,17 @@ import {
     type ArticleSuggestionStatus as ArticleSuggestionStatusType,
 } from '@/lib/database/article-suggestion-status';
 import type { ScoringErrorKind } from '@/lib/services/scoring-error';
-// RENDER_GATE (relevance v3: 0.4, inclusive) — the single source of truth the
-// pre-filter below is kept in lockstep with, rather than a second hardcoded
-// copy of the cutoff. Only a type import flows the other way (fact-rows-selector
-// takes `ForYouSuggestion` as a type), so this is not a runtime cycle.
-import { effectiveRenderGate } from '@/lib/stores/fact-rows-selector';
+// The render gate — the single source of truth the pre-filters below are kept
+// in lockstep with, rather than a second hardcoded copy of the cutoff. Only a
+// type import flows the other way (fact-rows-selector takes `ForYouSuggestion`
+// as a type), so this is not a runtime cycle.
+//
+// `relevancePassesGate`, not `effectiveRenderGate`: the gate is chosen from the
+// ROW's scorer vintage, not from the current flag. These counts feed the
+// header's "N relevant" sentence, so comparing them against a different gate
+// than the feed renders at is exactly the documented incident where the header
+// advertised rows the feed then refused to show (see FEED_WINDOW_MS).
+import { relevancePassesGate } from '@/lib/stores/fact-rows-selector';
 
 /** Article-keyed feed row hydrated from local WatermelonDB. Populated by the
  *  sync service from articlesForTopicsByIds, with client-side scoring fields.
@@ -116,6 +122,14 @@ export type ForYouSuggestion = {
      *  unscored or on legacy rows. The fact-rows selector uses `scoredAt ??
      *  createdAt` as the row's "added" time for newest-first ordering. */
     scoredAt?: number | null;
+    /** Scorer VINTAGE (`article_suggestions.scored_with_v3`, schema v50): did
+     *  relevance v3 produce this row's `relevance`? Absent/null/false = legacy
+     *  v1 vintage, which is what every pre-v50 row is. Read ONLY through
+     *  `gateForRow` / `relevancePassesGate` (lib/stores/fact-rows-selector.ts):
+     *  v1 and v3 scores are not on the same scale, so the render gate has to be
+     *  chosen per row rather than from the current flag. Optional so existing
+     *  suggestion fixtures keep compiling; `loadSuggestions` always populates it. */
+    scoredWithV3?: boolean | null;
 };
 
 /** Honest article-scoring progress for the current cloud run (Round-4 B) —
@@ -337,7 +351,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
         const nextSuggestions = state.suggestions.filter((s) => s._id !== serverId);
         const wasImpactful =
-            target.status !== ArticleSuggestionStatus.Unscored && target.relevance >= effectiveRenderGate();
+            target.status !== ArticleSuggestionStatus.Unscored && relevancePassesGate(target);
         const nextRelevantCount = wasImpactful
             ? Math.max(0, state.relevantArticleCount - 1)
             : state.relevantArticleCount;
@@ -504,7 +518,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             const rows = await loadSuggestions();
             rows.sort(byRelevanceDesc);
             const relevantCount = rows.filter(
-                (s) => s.status !== ArticleSuggestionStatus.Unscored && s.relevance >= effectiveRenderGate(),
+                (s) => s.status !== ArticleSuggestionStatus.Unscored && relevancePassesGate(s),
             ).length;
             const state = get();
             set({
@@ -560,7 +574,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
 
             const current = get().suggestions;
             const impactfulCount = current.filter(
-                (s) => s.status !== ArticleSuggestionStatus.Unscored && s.relevance >= effectiveRenderGate(),
+                (s) => s.status !== ArticleSuggestionStatus.Unscored && relevancePassesGate(s),
             ).length;
 
             set({

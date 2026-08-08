@@ -99,8 +99,8 @@ describe('gateUnscoredForScoring — donor propagation', () => {
 
     expect(mockBatchPropagateScores).toHaveBeenCalledTimes(1);
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'cand-1', relevance: 0.8, reason: 'high reason' },
-      { id: 'cand-2', relevance: 0.8, reason: 'high reason' },
+      { id: 'cand-1', relevance: 0.8, reason: 'high reason', scoredWithV3: null },
+      { id: 'cand-2', relevance: 0.8, reason: 'high reason', scoredWithV3: null },
     ]);
     expect(result.propagatedCount).toBe(2);
     expect(result.heldBackCount).toBe(0);
@@ -117,7 +117,7 @@ describe('gateUnscoredForScoring — donor propagation', () => {
     await gateUnscoredForScoring(new Set());
 
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'cand-1', relevance: 0.6, reason: 'new' },
+      { id: 'cand-1', relevance: 0.6, reason: 'new', scoredWithV3: null },
     ]);
   });
 
@@ -130,7 +130,7 @@ describe('gateUnscoredForScoring — donor propagation', () => {
     const result = await gateUnscoredForScoring(new Set());
 
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'cand-1', relevance: 0.2, reason: '' },
+      { id: 'cand-1', relevance: 0.2, reason: '', scoredWithV3: null },
     ]);
     expect(result.propagatedCount).toBe(1);
     expect(result.enqueueIds).toEqual([]);
@@ -152,7 +152,7 @@ describe('gateUnscoredForScoring — donor propagation', () => {
     const result = await gateUnscoredForScoring(new Set());
 
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'cand-1', relevance: 0.72, reason: '' },
+      { id: 'cand-1', relevance: 0.72, reason: '', scoredWithV3: null },
     ]);
     expect(result.propagatedCount).toBe(1);
     expect(result.enqueueIds).toEqual([]); // NOT re-scored from scratch
@@ -170,7 +170,7 @@ describe('gateUnscoredForScoring — donor propagation', () => {
     // Taking the reason-bearing donor lands the candidate on `complete` for
     // free; taking the 0.9 one would have cost an LLM reason call.
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'cand-1', relevance: 0.5, reason: 'real reason' },
+      { id: 'cand-1', relevance: 0.5, reason: 'real reason', scoredWithV3: null },
     ]);
   });
 
@@ -184,7 +184,7 @@ describe('gateUnscoredForScoring — donor propagation', () => {
     await gateUnscoredForScoring(new Set());
 
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'cand-1', relevance: 0.4, reason: 'real reason' },
+      { id: 'cand-1', relevance: 0.4, reason: 'real reason', scoredWithV3: null },
     ]);
   });
 
@@ -201,7 +201,7 @@ describe('gateUnscoredForScoring — donor propagation', () => {
     await gateUnscoredForScoring(new Set());
 
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'cand-1', relevance: 0.8, reason: 'hi-new' },
+      { id: 'cand-1', relevance: 0.8, reason: 'hi-new', scoredWithV3: null },
     ]);
   });
 });
@@ -411,7 +411,7 @@ describe('gateUnscoredForScoring — in-flight + edge cases', () => {
     const result = await gateUnscoredForScoring(new Set());
 
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'a-cand', relevance: 0.7, reason: 'why' },
+      { id: 'a-cand', relevance: 0.7, reason: 'why', scoredWithV3: null },
     ]);
     expect(result.propagatedCount).toBe(1);
     expect(result.heldBackCount).toBe(1); // b2 held back
@@ -435,8 +435,8 @@ describe('propagateToUnscoredSiblings', () => {
 
     expect(n).toBe(2);
     expect(mockBatchPropagateScores).toHaveBeenCalledWith([
-      { id: 'cand-1', relevance: 0.9, reason: 'r' },
-      { id: 'cand-2', relevance: 0.9, reason: 'r' },
+      { id: 'cand-1', relevance: 0.9, reason: 'r', scoredWithV3: null },
+      { id: 'cand-2', relevance: 0.9, reason: 'r', scoredWithV3: null },
     ]);
   });
 

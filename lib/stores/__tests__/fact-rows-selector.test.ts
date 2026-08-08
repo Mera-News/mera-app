@@ -16,6 +16,9 @@ import {
   passesRenderGate,
   FEED_WINDOW_MS,
   RENDER_GATE,
+  V3_RENDER_GATE,
+  gateForRow,
+  relevancePassesGate,
   type FactRowsSnapshots,
 } from '../fact-rows-selector';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
@@ -57,6 +60,9 @@ function sugg(o: Partial<ForYouSuggestion> = {}): ForYouSuggestion {
     matchedTopics: o.matchedTopics ?? [],
     factIds: o.factIds ?? [],
     scoredAt: o.scoredAt ?? null,
+    // Scorer vintage (schema v50). Defaults to null = LEGACY, which keeps every
+    // pre-existing fixture on the 0.4 gate it was written against.
+    scoredWithV3: o.scoredWithV3 ?? null,
   };
 }
 
@@ -260,6 +266,52 @@ describe('effectiveRenderGate (v3 calibration)', () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { effectiveRenderGate } = require('@/lib/stores/fact-rows-selector');
     expect(effectiveRenderGate()).toBe(0.4);
+  });
+});
+
+// The mitigation the v3 rollout actually needs. The scoring VERDICT (does v3
+// rank better than v1?) is a separate question — this is about what happens to
+// rows already on the device when the gate moves under them.
+describe('gateForRow — the render gate follows the ROW, not the flag', () => {
+  it('gates a v3-scored row at 0.55 and a legacy row at 0.4', () => {
+    expect(gateForRow({ scoredWithV3: true })).toBe(V3_RENDER_GATE);
+    expect(gateForRow({ scoredWithV3: false })).toBe(RENDER_GATE);
+  });
+
+  it('treats absent/null vintage as LEGACY — every pre-v50 row, no backfill', () => {
+    expect(gateForRow({ scoredWithV3: null })).toBe(RENDER_GATE);
+    expect(gateForRow({} as { scoredWithV3?: boolean | null })).toBe(RENDER_GATE);
+  });
+
+  it('does NOT delete the quantised pile of legacy rows sitting at exactly 0.4', () => {
+    // The measured hazard: on the 348-row gold set 25 rows carry v1 relevance
+    // of EXACTLY 0.4 — 21.6% of everything v1 admits. A flag-level move to 0.55
+    // deletes all of them at once, and since scored rows are never re-scored
+    // nothing brings them back. Per row, they survive.
+    const legacyAtGate = sugg({ _id: 'legacy-0.4', relevance: 0.4, scoredWithV3: false });
+    expect(relevancePassesGate(legacyAtGate)).toBe(true);
+
+    // A v3 row at the same 0.4 is correctly cut — v3 scores are continuous and
+    // calibrated against 0.55, so 0.4 means something different there.
+    const v3AtSameScore = sugg({ _id: 'v3-0.4', relevance: 0.4, scoredWithV3: true });
+    expect(relevancePassesGate(v3AtSameScore)).toBe(false);
+  });
+
+  it('is INCLUSIVE at each vintage’s own cutoff', () => {
+    expect(relevancePassesGate(sugg({ _id: 'v3-at', relevance: V3_RENDER_GATE, scoredWithV3: true }))).toBe(true);
+    expect(
+      relevancePassesGate(sugg({ _id: 'v3-under', relevance: V3_RENDER_GATE - 0.01, scoredWithV3: true })),
+    ).toBe(false);
+  });
+
+  it('keeps a MIXED-vintage pool coherent — each row judged by its own scorer', () => {
+    const rows = [
+      sugg({ _id: 'legacy-keep', relevance: 0.45, scoredWithV3: false }), // >= 0.4
+      sugg({ _id: 'legacy-cut', relevance: 0.31, scoredWithV3: false }), // < 0.4
+      sugg({ _id: 'v3-keep', relevance: 0.6, scoredWithV3: true }), // >= 0.55
+      sugg({ _id: 'v3-cut', relevance: 0.45, scoredWithV3: true }), // < 0.55
+    ];
+    expect(rows.filter(relevancePassesGate).map((s) => s._id)).toEqual(['legacy-keep', 'v3-keep']);
   });
 });
 
