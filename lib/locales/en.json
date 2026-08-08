@@ -652,6 +652,12 @@
     "modelUpdateFailedDescription": "Failed to update model. Please try again."
   },
   "manageData": {
+    "exportHistoryTitle": "Export reading history",
+    "exportHistoryDescription": "Last 30 days as JSON: articles, publications, and average time from publish to read",
+    "exportHistorySubject": "My Mera reading history (JSON)",
+    "exporting": "Exporting…",
+    "exportHistoryEmptyTitle": "Nothing to export yet",
+    "exportHistoryEmptyDescription": "You haven't read any articles in the last 30 days.",
     "deleting": "Deleting...",
     "title": "Manage Data",
     "description": "Delete specific pieces of your data. Each action shows exactly what it will clear, and whether it lives on this device or on our servers, before you confirm.",

@@ -142,14 +142,67 @@ export interface VisitedArticle {
 }
 
 /**
- * Returns each article the user has visited from a given publication,
- * deduped by (articleId || articleUrl) — repeated visits collapse into a
- * single row whose `visitedAt` is the most recent tap and `visitCount` is
- * the number of taps in-window.
+ * Dedupes raw visit rows by (articleId || articleUrl) — repeated visits
+ * collapse into a single entry whose `visitedAt` is the most recent tap and
+ * `visitCount` is the number of taps among the given rows.
  *
  * Falls back to a per-row entry when neither articleId nor articleUrl is
  * present (shouldn't happen post-v23, but historical rows from v22 could
  * lack snapshot data).
+ *
+ * Shared by `getVisitsForPublication` (rows pre-filtered to one publication)
+ * and `getAllVisitedArticles` (rows across every publication).
+ */
+function dedupeVisitRows(rows: PublicationVisitModel[]): VisitedArticle[] {
+  const grouped = new Map<string, VisitedArticle>();
+  for (const row of rows) {
+    const dedupeKey = row.articleId ?? row.articleUrl ?? `__row_${row.id}`;
+    const visitedAt = row.visitedAt instanceof Date
+      ? row.visitedAt.getTime()
+      : Number(row.visitedAt);
+    const pubDate = row.pubDate instanceof Date
+      ? row.pubDate.getTime()
+      : row.pubDate != null
+        ? Number(row.pubDate)
+        : null;
+    const existing = grouped.get(dedupeKey);
+    if (existing) {
+      existing.visitCount += 1;
+      if (visitedAt > existing.visitedAt) {
+        existing.visitedAt = visitedAt;
+        // Prefer the freshest non-null snapshot fields — earlier visits
+        // may pre-date the v23 columns being populated.
+        existing.titleEn = row.titleEn ?? existing.titleEn;
+        existing.titleOriginal = row.titleOriginal ?? existing.titleOriginal;
+        existing.imageUrl = row.imageUrl ?? existing.imageUrl;
+        existing.languageCode = row.languageCode ?? existing.languageCode;
+        existing.pubDate = pubDate ?? existing.pubDate;
+      }
+    } else {
+      grouped.set(dedupeKey, {
+        articleId: row.articleId,
+        articleSuggestionId: row.articleSuggestionId,
+        articleUrl: row.articleUrl,
+        publicationName: row.publicationName,
+        countryCode: row.countryCode,
+        titleEn: row.titleEn,
+        titleOriginal: row.titleOriginal,
+        languageCode: row.languageCode,
+        imageUrl: row.imageUrl,
+        pubDate,
+        visitedAt,
+        visitCount: 1,
+      });
+    }
+  }
+  return [...grouped.values()];
+}
+
+/**
+ * Returns each article the user has visited from a given publication,
+ * deduped by (articleId || articleUrl) — repeated visits collapse into a
+ * single row whose `visitedAt` is the most recent tap and `visitCount` is
+ * the number of taps in-window.
  */
 export async function getVisitsForPublication(
   publicationName: string,
@@ -169,52 +222,37 @@ export async function getVisitsForPublication(
       )
       .fetch();
 
-    const grouped = new Map<string, VisitedArticle>();
-    for (const row of rows) {
-      const dedupeKey = row.articleId ?? row.articleUrl ?? `__row_${row.id}`;
-      const visitedAt = row.visitedAt instanceof Date
-        ? row.visitedAt.getTime()
-        : Number(row.visitedAt);
-      const pubDate = row.pubDate instanceof Date
-        ? row.pubDate.getTime()
-        : row.pubDate != null
-          ? Number(row.pubDate)
-          : null;
-      const existing = grouped.get(dedupeKey);
-      if (existing) {
-        existing.visitCount += 1;
-        if (visitedAt > existing.visitedAt) {
-          existing.visitedAt = visitedAt;
-          // Prefer the freshest non-null snapshot fields — earlier visits
-          // may pre-date the v23 columns being populated.
-          existing.titleEn = row.titleEn ?? existing.titleEn;
-          existing.titleOriginal = row.titleOriginal ?? existing.titleOriginal;
-          existing.imageUrl = row.imageUrl ?? existing.imageUrl;
-          existing.languageCode = row.languageCode ?? existing.languageCode;
-          existing.pubDate = pubDate ?? existing.pubDate;
-        }
-      } else {
-        grouped.set(dedupeKey, {
-          articleId: row.articleId,
-          articleSuggestionId: row.articleSuggestionId,
-          articleUrl: row.articleUrl,
-          publicationName: row.publicationName,
-          countryCode: row.countryCode,
-          titleEn: row.titleEn,
-          titleOriginal: row.titleOriginal,
-          languageCode: row.languageCode,
-          imageUrl: row.imageUrl,
-          pubDate,
-          visitedAt,
-          visitCount: 1,
-        });
-      }
-    }
-
-    return [...grouped.values()].sort((a, b) => b.visitedAt - a.visitedAt);
+    return dedupeVisitRows(rows).sort((a, b) => b.visitedAt - a.visitedAt);
   } catch (error) {
     logger.captureException(error, {
       tags: { service: 'publication-visit', method: 'getVisitsForPublication' },
+    });
+    return [];
+  }
+}
+
+/**
+ * Every visited article across every publication, deduped the same way as
+ * `getVisitsForPublication`. Feeds the "export reading history as JSON"
+ * feature on the Manage Data screen.
+ *
+ * Always scoped to `DEFAULT_WINDOW_MS` (30 days) — deliberately not
+ * parameterized wider than that. The table itself is pruned to this same
+ * window on every app boot (see `pruneStaleVisits`), so this is a hard
+ * ceiling, not just a query default: the export can never contain more than
+ * 30 days of history.
+ */
+export async function getAllVisitedArticles(): Promise<VisitedArticle[]> {
+  const cutoff = Date.now() - DEFAULT_WINDOW_MS;
+  try {
+    const rows = await publicationVisitsCol
+      .query(Q.where('visited_at', Q.gte(cutoff)))
+      .fetch();
+
+    return dedupeVisitRows(rows).sort((a, b) => b.visitedAt - a.visitedAt);
+  } catch (error) {
+    logger.captureException(error, {
+      tags: { service: 'publication-visit', method: 'getAllVisitedArticles' },
     });
     return [];
   }
