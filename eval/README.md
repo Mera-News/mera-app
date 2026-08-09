@@ -36,8 +36,9 @@ only the engine (script + labels + configs) lives here, tracked in git.
 - `build-persona-v3.js` / `tag-golden-articles.js` — the two generators above.
 - `lib/build-eval-scores.ts` — engine-aware scorer used by `--engine`; emits a
   unified `<runDir>/eval-scores-<engine>.json` (rawScore + wrong-location + comp
-  breakdown). `math` re-scores via `computeRelevance()` (fake judge = ok);
-  `backstop` reads the run's recorded scores.json (today's LLM path, untouched).
+  breakdown). `math` re-scores via `computeRelevance()` (no LLM call);
+  `backstop` reads the run's recorded scores.json (untouched); `pipeline` runs
+  the math AND the live legacy tiered LLM scoring call.
 - `sanity-grouping.ts` — offline story-grouping sanity check; replays a feed
   dump (`logs.md` in the cwd, containing `feed dump chunk N/M [...]` log lines)
   through `lib/feed-grouping/story-grouping.ts` and reports group/dedup counts.
@@ -130,16 +131,26 @@ run is established) — labels are anchored to both. Process:
 
 ### Full-pipeline mode (`--engine=pipeline`)
 
-> **STALE SINCE THE JUDGE WAS REMOVED.** `--engine=pipeline` used to run the
-> deterministic math engine AND the REAL combined judge over the NEAR AI
-> LlmPort. The judge is deleted. The one remaining scoring path needs a `legacy`
-> ScoringCandidate payload, which `lib/build-eval-scores.ts` does not build, so
-> this mode now makes **no LLM call at all** and produces the same math-only
-> scores as `--engine=math`; `judge-calls.json` is empty and
-> tokens/latency/overrides are always zero. **The gate numbers below were
-> measured with the judge and do not describe the current code.** See the long
-> comment at the `--engine=pipeline` branch in `lib/build-eval-scores.ts` for
-> what it would take to grade what actually ships.
+`--engine=pipeline` runs the deterministic math engine AND the REAL legacy
+tiered LLM scoring call over the NEAR AI LlmPort (needs the repo-root `.env`
+`NEAR_AI_DEVELOPMENT_KEY` or `harness-local/.env.harness`). It writes
+`eval-scores-pipeline.json` + `judge-calls.json` and reports tokens/latency.
+This is the arm that grades what actually ships.
+
+> **THE GATE NUMBERS BELOW NEED A RE-BASELINE BEFORE THEY CAN BE QUOTED.**
+> They were measured against the **combined judge**, which has since been
+> deleted; this engine now exercises the legacy tiered scorer instead. The two
+> are different scorers, so 90.4% FEED precision is a number about code that no
+> longer exists. Re-run the gold set and record a fresh figure before treating
+> any of it as a threshold.
+>
+> There was also a window in which this engine silently made **no LLM call at
+> all** — it built its stage items without the `legacy` payload
+> `run-stage::computeAndScore` filters on, so it quietly emitted the same
+> numbers as `--engine=math`. `eval/` is excluded from `tsconfig`, so nothing
+> failed. Fixed; see the comment at the `--engine=pipeline` branch in
+> `lib/build-eval-scores.ts`, and treat any `pipeline` output produced in that
+> window as math-only.
 
 The gate metric is **"FEED precision" = of predicted-FEED, the fraction that are
 NOT golden-EXCLUDE** (a legitimately related story — no unrelated leak). It is
@@ -159,13 +170,19 @@ persona/article-set; `golden-tags.json` alpha-2-normalized):
 | math-only (`--engine=math`, Wave 7b) | 66.9% | 34.4% | 0 | 149 |
 | **full pipeline (`--engine=pipeline`)** | **90.4%** | **56.6%** | **0** | **11** |
 
-Wave-7b gate: full-pipeline FEED precision ≥ 76.2% AND 0 wrong-location leaks —
-**both met (90.4%, 0 leaks)**. The math engine alone over-includes single-topic
-matches (by design — it can't read the article); the judge is what recovers
-precision and drives wrong-location + foreign-domestic leaks to near-zero. The
-precision gain trades against FEED recall (judge is intentionally demote-biased;
-recall ~38% on this label set) — headline injection + the backstop add feed
-volume that this labeled-topic-match set does not measure.
+> ⚠ **The `pipeline` row is HISTORICAL — it measured the combined judge, which
+> has been deleted.** `--engine=pipeline` now exercises the legacy tiered
+> scorer. Do not quote 90.4% or treat "≥ 76.2%" as a live gate until the gold
+> set has been re-run; see the warning under Full-pipeline mode above.
+
+Wave-7b gate (as it stood): full-pipeline FEED precision ≥ 76.2% AND 0
+wrong-location leaks — both met (90.4%, 0 leaks). The math engine alone
+over-includes single-topic matches (by design — it can't read the article); the
+judge was what recovered precision and drove wrong-location + foreign-domestic
+leaks to near-zero. That precision gain traded against FEED recall (the judge
+was intentionally demote-biased; recall ~38% on this label set) — headline
+injection + the backstop add feed volume this labeled-topic-match set does not
+measure.
 
 The single-stage / verifier tier-accuracy figures below are the pre-Wave-7b
 2-pass numbers, kept for provenance:

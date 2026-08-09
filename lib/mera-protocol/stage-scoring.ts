@@ -26,7 +26,6 @@ import {
   type HarnessConfig,
   type ScoringEngineConfig,
 } from '@/lib/news-harness/core/config';
-import { HARNESS_CONFIG_BASE } from './harness-config-base';
 import { getScoringOverrides } from '@/lib/database/services/calibration-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
@@ -37,7 +36,6 @@ import {
   normalizeLocation,
   normText,
   screenHardSuppressionsDetailed,
-  applyArticleTagPolicy,
   type StageCandidate,
   type StageResult,
   type PersonaScoringContext,
@@ -278,25 +276,22 @@ function minimalStageRow(c: ScoringCandidate): StageCandidateRow {
 }
 
 /** Map ScoringCandidate[] → StageCandidate[]: the rich metadata drives the math
- *  input, the ScoringCandidate itself is the `legacy` backstop payload.
+ *  input, the ScoringCandidate itself is the `legacy` LLM-scoring payload.
  *
- *  THE ARTICLE-TAG SEAM. Both scoring orchestrators build their engine inputs
- *  here, so this is where `USE_ARTICLE_TAGS` is enforced: with the flag off,
- *  `applyArticleTagPolicy` hands the engine a candidate with no geoTags, no
- *  entities and no eventType, whatever the server sent — so routing, the
- *  geo/entity/event score components AND the structured suppression kinds all
- *  see exactly what they see today. `cfg` defaults to the harness default
- *  (tags off) so a caller can never accidentally opt in by omission. */
+ *  THE ENGINE NOW SEES THE SERVER'S TAGS. `applyArticleTagPolicy` used to sit
+ *  here and blank `geoTags` / `entities` / `eventType` unless
+ *  `USE_ARTICLE_TAGS` was on. Both are deleted. The blanking was there to stop
+ *  a tagged row routing onto the judge path; the judge is gone, so all it did
+ *  was make the user's `event_type` / `entity` / `place` "not interested"
+ *  filters — which the feedback surface CREATES — unable to match anything.
+ *  See the header of `scoring-engine/relevance.ts` for what unblanking also
+ *  turns on inside the math. */
 export function buildStageCandidates(
   candidates: ScoringCandidate[],
   topicWeights: Map<string, TopicWeightInfo>,
-  cfg: ScoringEngineConfig = DEFAULT_HARNESS_CONFIG.scoringEngine,
 ): StageCandidate[] {
   return candidates.map((c) => ({
-    input: applyArticleTagPolicy(
-      buildStageCandidateInput(c.meta ?? minimalStageRow(c), topicWeights),
-      cfg,
-    ),
+    input: buildStageCandidateInput(c.meta ?? minimalStageRow(c), topicWeights),
     legacy: c,
   }));
 }
@@ -312,18 +307,10 @@ async function loadAllFactStatements(): Promise<string[]> {
  * M-P5c: layer the persisted `scoringEngineOverrides` (the self-tuning deltas the
  * calibration loop produced) over the base ScoringEngineConfig. Loaded once per
  * scoring batch. When there are no overrides, applyScoringOverrides returns the
- * SAME base reference, so we hand back HARNESS_CONFIG_BASE untouched (no
+ * SAME base reference, so we hand back DEFAULT_HARNESS_CONFIG untouched (no
  * allocation). Any read failure fail-opens to the base config.
  *
- * Exported (Wave 14) so the E2EE scoring pipeline builds/decodes its judge
- * calls against the SAME effective config computeMathStage scored with —
- * previously it hardcoded DEFAULT_HARNESS_CONFIG there, which was safe only
- * because no judge-touched field is currently tunable.
- *
- * The base is HARNESS_CONFIG_BASE, not DEFAULT_HARNESS_CONFIG, so the
- * env-bound article-tag policy applies on EVERY branch — including the `catch`.
- * A calibration read failure must not quietly flip the tagging policy back.
- *
+
  * It is ALSO where the RUNTIME `relevanceV4` switch is layered in (the settings
  * toggle), for the same reason: `lib/news-harness/**` is RN-free and must never
  * import the store, and the calibration-overrides layer cannot carry a boolean
@@ -337,42 +324,41 @@ async function loadAllFactStatements(): Promise<string[]> {
  *     the low-value event types.
  * ONE switch drives both: they were measured together and ship together.
  *
- * `USE_ARTICLE_TAGS` is deliberately NOT touched here and is NOT part of v4.
- * That flag is the ROUTING + SUPPRESSION gate: turning it on lets tags reach
- * the engine, which flips candidates off the legacy path onto math+judge AND
- * switches on the structured `entity`/`place`/`event_type` suppression kinds.
- * v4 changes neither — `scoringMode` is bit-for-bit identical with it on or off.
+ * v4 moves the PROMPT only; the engine is untouched, so `scoringMode` is
+ * bit-for-bit identical with the toggle on or off.
  *
- * (Retired: the relevanceV2 math-authoritative branch, and the relevanceV3
- * single-pass two-axis scorer this toggle used to select.)
+ * (Retired: the relevanceV2 math-authoritative branch; the relevanceV3
+ * single-pass two-axis scorer this toggle used to select; and the
+ * `USE_ARTICLE_TAGS` gate, which was never part of v4 and is now deleted —
+ * the engine always sees the server's tags.)
  *
  * The store read is INSIDE the try: a hydration/store failure fail-opens to
- * HARNESS_CONFIG_BASE (v4 off), which is today's behaviour.
+ * DEFAULT_HARNESS_CONFIG (v4 off), which is today's behaviour.
  */
 export async function effectiveHarnessConfig(): Promise<HarnessConfig> {
   try {
     const relevanceV4 = useMeraProtocolStore.getState().relevanceV4 === true;
-    // Fast path preserved: with the flag off this is HARNESS_CONFIG_BASE ITSELF,
-    // so a no-override read still returns that exact reference (identity is
-    // asserted by harness-config-base.test.ts and relied on below). Only
+    // Fast path preserved: with the flag off this is DEFAULT_HARNESS_CONFIG
+    // ITSELF, so a no-override read still returns that exact reference (identity
+    // is asserted by stage-scoring.test.ts and relied on below). Only
     // `articlePipeline` is spread when it is on, so `base.scoringEngine` keeps
     // its identity either way and the `eng === base.scoringEngine` tail below
     // still short-circuits.
     const base: HarnessConfig = relevanceV4
       ? {
-          ...HARNESS_CONFIG_BASE,
+          ...DEFAULT_HARNESS_CONFIG,
           articlePipeline: {
-            ...HARNESS_CONFIG_BASE.articlePipeline,
+            ...DEFAULT_HARNESS_CONFIG.articlePipeline,
             legacyTagPromptEnabled: true,
             legacyTagReasonGateEnabled: true,
           },
         }
-      : HARNESS_CONFIG_BASE;
+      : DEFAULT_HARNESS_CONFIG;
     const overrides = await getScoringOverrides();
     const eng = applyScoringOverrides(base.scoringEngine, overrides);
     return eng === base.scoringEngine ? base : { ...base, scoringEngine: eng };
   } catch {
-    return HARNESS_CONFIG_BASE;
+    return DEFAULT_HARNESS_CONFIG;
   }
 }
 
@@ -408,7 +394,7 @@ export async function computeMathStage(
     loadPersonaScoringContext(nowMs),
     effectiveHarnessConfig(),
   ]);
-  const allStage = buildStageCandidates(candidates, topicWeights, config.scoringEngine);
+  const allStage = buildStageCandidates(candidates, topicWeights);
 
   // HARD "not interested" screen — the E2EE path never enters computeAndScore,
   // so this is its own convergence point for the same shared matcher. P6: a
@@ -466,7 +452,7 @@ export async function computeAndScoreForCandidates(
     loadAllFactStatements(),
     effectiveHarnessConfig(),
   ]);
-  const stage = buildStageCandidates(candidates, topicWeights, config.scoringEngine);
+  const stage = buildStageCandidates(candidates, topicWeights);
   return computeAndScore(stage, persona, getScoringLlmPort(), config, {
     nowMs: opts?.nowMs,
     factStatements,

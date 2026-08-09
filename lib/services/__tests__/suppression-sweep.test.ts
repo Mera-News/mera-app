@@ -110,11 +110,8 @@ describe('purgeHardFilteredSuggestions', () => {
   });
 
   it('matches structured kinds over the rehydrated JSON columns', async () => {
-    // Uses `topic`/matched_topics_json rather than `entity`/entities_json: this
-    // test pins that a STRUCTURED kind matches over a rehydrated JSON column,
-    // and matched_topics_json is one the article-tag policy does not touch, so
-    // the property survives EXPO_PUBLIC_USE_ARTICLE_TAGS in either position.
-    // The tag-derived kinds get their own test below.
+    // Uses `topic`/matched_topics_json: pins that a STRUCTURED kind matches over
+    // a rehydrated JSON column. The tag-derived kinds get their own test below.
     mockLoadPersona.mockResolvedValue(
       persona([{ keywords: [], strength: 1, kind: 'topic', value: 'nvidia' }]),
     );
@@ -127,13 +124,14 @@ describe('purgeHardFilteredSuggestions', () => {
     expect(r.excludedIds).toEqual(['a']);
   });
 
-  // CONSCIOUSLY UPDATED for EXPO_PUBLIC_USE_ARTICLE_TAGS. Structured filters now
-  // follow the tag policy: the kinds that read the tagging columns (`entity` /
-  // `place` / `event_type`) are inert while the flag is off, which is a faithful
-  // replica of production today — no article carries tags, so those kinds match
-  // nothing anywhere. Previously this row was asserted excluded via
-  // `entitiesJson`; that assertion now lives in the flag-on case below.
-  it('does NOT match an entity-kind filter while article tags are off', async () => {
+  // REVERSED when `USE_ARTICLE_TAGS` was deleted. This used to assert the
+  // OPPOSITE — that an entity filter matched nothing — which is precisely the
+  // bug the flag caused: this sweep re-screens rows the user has ALREADY
+  // filtered, so an inert entity kind meant a filtered story reappeared.
+  //
+  // The sweep and the scoring stage must agree, or a row screened out during
+  // scoring comes back on the next sweep. Both pass the tags through unchanged.
+  it('DOES match an entity-kind filter over the rehydrated entities column', async () => {
     mockLoadPersona.mockResolvedValue(
       persona([{ keywords: [], strength: 1, kind: 'entity', value: 'nvidia' }]),
     );
@@ -143,13 +141,21 @@ describe('purgeHardFilteredSuggestions', () => {
     ]);
 
     const r = await purgeHardFilteredSuggestions();
-    expect(r.excludedIds).toEqual([]);
-    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
+    expect(r.excludedIds).toEqual(['a']);
   });
 
-  // The flag-ON arm of this same rule lives in suppression-sweep-tags-on.test.ts
-  // — HARNESS_CONFIG_BASE is read at module scope, so flipping it needs its own
-  // module registry rather than a re-require inside one case.
+  it('DOES match a place-kind filter over the rehydrated geo tags', async () => {
+    mockLoadPersona.mockResolvedValue(
+      persona([{ keywords: [], strength: 1, kind: 'place', value: 'taipei' }]),
+    );
+    mockGetStageRows.mockResolvedValue([
+      row('a', { geoTagsJson: JSON.stringify([{ city: 'Taipei', countryCode: 'TWN' }]) }),
+      row('b', { geoTagsJson: JSON.stringify([{ city: 'Berlin', countryCode: 'DEU' }]) }),
+    ]);
+
+    const r = await purgeHardFilteredSuggestions();
+    expect(r.excludedIds).toEqual(['a']);
+  });
 
   it('evicts EXACTLY the excluded ids from the feed order — nothing inferred', async () => {
     seedFeedOrder(['a', 'b', 'c']);

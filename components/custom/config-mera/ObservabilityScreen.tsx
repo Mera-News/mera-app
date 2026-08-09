@@ -27,8 +27,6 @@ import {
     getScoringModeBreakdown,
     getSharedNoteBreakdown,
 } from '@/lib/database/services/article-suggestion-service';
-import { HARNESS_CONFIG_BASE } from '@/lib/mera-protocol/harness-config-base';
-import { effectiveHarnessConfig } from '@/lib/mera-protocol/stage-scoring';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { Box } from '@/components/ui/box';
@@ -207,19 +205,18 @@ function feedFunnelRows(
     // they read. Placed right after the gate rows: it explains HOW the scores
     // those gates compare against were produced.
     //
-    // Rendered even when every count is zero — "0 by math" is the expected,
-    // meaningful reading while the flag is off, so hiding the rows would hide
-    // the answer. `available: false` is called out instead, because THAT is the
-    // case where the zeroes are not measurements.
-    rows.push([
-        'Using article tags',
-        humanizeValue(String(r.scoring.useArticleTags)),
-        'funnel-row-article-tags',
-    ]);
+    // Rendered even when every count is zero — that is a meaningful reading,
+    // so hiding the rows would hide the answer. `available: false` is called
+    // out instead, because THAT is the case where the zeroes are not
+    // measurements. (The "Using article tags" row that used to head this block
+    // is gone with the `USE_ARTICLE_TAGS` flag: the engine always sees tags.)
     if (r.scoring.available) {
         rows.push(
-            ['Scored by math (tagged)', String(r.scoring.math), 'funnel-row-scored-math'],
-            ['Scored by AI (untagged)', String(r.scoring.legacy), 'funnel-row-scored-llm'],
+            // These count what the ENGINE SAW, not which scorer ran — since the
+            // judge was removed every row is scored by the LLM. `mode` records
+            // whether the article arrived with server tags.
+            ['Tagged (geo/entity/event)', String(r.scoring.math), 'funnel-row-scored-math'],
+            ['Untagged', String(r.scoring.legacy), 'funnel-row-scored-llm'],
         );
         if (r.scoring.unknown > 0) {
             rows.push([
@@ -230,8 +227,8 @@ function feedFunnelRows(
         }
     } else {
         rows.push(
-            ['Scored by math (tagged)', '—', 'funnel-row-scored-math'],
-            ['Scored by AI (untagged)', '—', 'funnel-row-scored-llm'],
+            ['Tagged (geo/entity/event)', '—', 'funnel-row-scored-math'],
+            ['Untagged', '—', 'funnel-row-scored-llm'],
         );
     }
 
@@ -471,7 +468,6 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 breakdown,
                 userCtx,
                 scoringModes,
-                effectiveCfg,
                 alreadyRead,
                 sharedNotes,
             ] = await Promise.all([
@@ -481,12 +477,6 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 // parse/read failure must degrade to "—" on two rows, not take
                 // the whole funnel down.
                 getScoringModeBreakdown().catch(() => null),
-                // The EFFECTIVE config, not HARNESS_CONFIG_BASE: the relevance-v2
-                // switch layers USE_ARTICLE_TAGS on at this seam, so reading the
-                // base would report `false` while scoring actually runs with tags
-                // on. Fail-open to the base so a diagnostic read can't break the
-                // funnel.
-                effectiveHarnessConfig().catch(() => HARNESS_CONFIG_BASE),
                 // Counted here rather than in `loadDbStats` so it lands in the
                 // same pass as the rest of the funnel. Own catch → '—'.
                 database
@@ -521,7 +511,6 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     openedStats: breakdown?.stats ?? null,
                     scoringModes,
                     sharedNotes,
-                    useArticleTags: effectiveCfg.scoringEngine.USE_ARTICLE_TAGS,
                     userCtx,
                     nowMs: Date.now(),
                 }),

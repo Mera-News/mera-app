@@ -32,6 +32,48 @@
 // it); nothing routes on it. None of them are deleted, because `score` is a
 // weighted sum of all of them and the fail-open value has to stay meaningful.
 //
+// ⚠ THE TAG-FED COMPONENTS HAVE NEVER RUN ON REAL DATA. Read this before
+// trusting a fail-open score.
+//
+// `geoComp`, `entityComp`, `eventComp` and `wrongLocPenalty` are computed from
+// the server's `geoTags` / `entities` / `eventType`. Until the `USE_ARTICLE_TAGS`
+// gate was deleted, `applyArticleTagPolicy` blanked all three before this
+// function ever saw them, so those four terms were HARD ZERO on every article
+// in production — their weights (W_GEO 0.217, W_ENTITY 0.087, W_EVENT 0.054:
+// ~36% of the positive weight budget) were carried but never exercised.
+//
+// The gate was removed because it was silently breaking a user-facing feature:
+// the card feedback surface CREATES `event_type` / `entity` / `place`
+// suppressions (`feedback-tree/resolve-leaf-actions.ts`,
+// `persona-management/feedback-digest.ts`), and blanking the columns they match
+// on meant those filters were stored, shown to the user, and matched nothing.
+// Unblanking fixes that — and, as a deliberate and accepted side effect, turns
+// those four scoring terms on for the first time.
+//
+// What that actually moves, in order of how much it matters:
+//   - the FAIL-OPEN score (consumer 3). A tagged article whose LLM call fails
+//     now scores differently — usually HIGHER, since three positive components
+//     can now contribute. This is the live behaviour change; it is pinned by a
+//     test ("the fail-open score is tag-sensitive").
+//   - `hardFilterExempt` / the headline floor (consumer 2) reads the same score.
+//   - `mode` flips from 'backstop' to 'math' for tagged rows, which moves the
+//     Observability funnel's two counters. Nothing routes on it.
+// It does NOT move what is normally persisted as `relevance`: that is the LLM's
+// score on every successful call.
+//
+// HOW WELL MEASURED ARE THEY? Narrower than "unvalidated", and worth stating
+// precisely. They have never run in PRODUCTION, but they HAVE been measured
+// offline at corpus scale: `eval/lib/build-eval-scores.ts --engine=math` feeds
+// `golden-tags.json` straight into this function with no blanking, and on the
+// 1,000-article prod baseline `geoComp` fires on 465 rows, `eventComp` on 237
+// and `wrongLocPenalty` on 90 (the `math` row in eval/README.md is that
+// measurement). `entityComp` is the genuine unknown — 0/1000, because the eval
+// persona expresses no entity interest and `entityInterest` is still unwired.
+//
+// The useful consequence: `--engine=math` used to DIVERGE from the app (the eval
+// fed tags, the app blanked them). It now describes shipped engine behaviour, so
+// its numbers are worth trusting again.
+//
 // Formula (SUB-PLAN M §2.2 + A6, Wave 7b breadth + vectorScore modulation):
 //   topicComp: strongest matched topic's weight, each positive weight first
 //              scaled by smoothstep(vectorScore, VS_LO, VS_HI) (absent → ×1).
@@ -295,9 +337,9 @@ export function suppressionPenalty(
  *  as the ONE remaining producer of `mode`, whose live consumer chain is:
  *  computeRelevance → `components.mode` → persisted in `score_components_json`
  *  → `article-suggestion-service::getScoringModeBreakdown` → the Observability
- *  feed-funnel rows `funnel-row-scored-math` / `funnel-row-scored-llm`. That
- *  readout is what makes the `USE_ARTICLE_TAGS` policy observable at all, which
- *  is why the predicate is kept rather than folded away. */
+ *  feed-funnel's tagged/untagged counters. Since `applyArticleTagPolicy` was
+ *  deleted this answers a real question again ("did the server tag this
+ *  article?") rather than always reporting 'backstop'. */
 function isBackstop(candidate: ScoredCandidateInput): boolean {
   return (
     (candidate.geoTags?.length ?? 0) === 0 &&

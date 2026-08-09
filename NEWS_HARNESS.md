@@ -52,18 +52,18 @@ article-pipeline/
   candidates.ts  : deriveTopicTexts, buildCandidatesFromArticles
   pipeline.ts    : runArticlePipeline: facts→topics→ids→articles→candidates→scores→reasons
 scoring-engine/
-  relevance.ts       : deterministic math affinity/penalty engine; ALWAYS the
-                       persisted score authority. No freshness/age-decay term
-                       (removed Round 3: see Config philosophy below).
-  judge.ts / judge-calls.ts : LLM judge over the math score. ADVISORY ONLY
-                       (Round 3): authors the user-facing note; its returned
-                       score is never applied, only recorded (+ the >0.3-delta
-                       `override` flag) as a `CalibrationCase`.
-  calibration.ts     : rolling-window override tracking + the user-gated
-                       gateway constant-tuning loop; unchanged by the
-                       advisory-judge move, still fed by the override flag.
-  run-stage.ts       : computeAndJudge: compute math → persist math → judge
-                       (advisory) → note.
+  relevance.ts       : deterministic math affinity/penalty engine. NOT the
+                       persisted score (the LLM's is) — it produces the SOFT
+                       suppression penalty, the hard-filter headline floor, and
+                       the fail-open score. No freshness/age-decay term.
+  suppression.ts     : the kind-aware "not interested" matcher — soft penalty
+                       AND hard screen. Reads the server's geo/entity/event
+                       columns directly (nothing blanks them any more).
+  calibration.ts     : the user-gated constant-tuning loop. `applyScoringOverrides`
+                       runs on every config resolve; the RECORD half is UNFED
+                       since the judge was removed, so "Recalibrate" is a no-op.
+  run-stage.ts       : computeAndScore: hard screen → math → legacy tiered LLM
+                       score (minus the soft penalty) for every candidate.
 feed-select/
   ownership.ts   : resolveOwnership / resolveOwningFact + bucketOf: the shared
                    ownership + display-tier cores, used by both the fact-rows
@@ -103,34 +103,31 @@ change** and will fail that test until the test is updated deliberately. For
 local experiments, do **not** edit the defaults: pass a per-run
 `--config overrides.json` that is merged over the defaults for that run only.
 
-`scoringEngine.USE_ARTICLE_TAGS` is the one **non-tunable** entry in that
-section — a routing switch, not a weight. Default **false**: every candidate is
-presented to the engine as untagged (no `geoTags`, no `entities`, no
-`eventType`), so `isBackstop` is true for all of them and scoring takes the
-legacy two-pass LLM path — exactly what production does today, where the
-server-side enrichment stage has never run. `true` passes the tags through, so a
-tagged article routes to the math path and the geo/entity/event components and
-the structured suppression kinds go live. It is bound from
-`EXPO_PUBLIC_USE_ARTICLE_TAGS` in the app's composition root
-(`lib/mera-protocol/harness-config-base.ts`) — the harness itself never reads
-`process.env` — and enforced by `scoring-engine/tag-policy.ts`, applied where a
-stored row becomes a scoring candidate (`stage-scoring::buildStageCandidates`).
-`eval/` and `harness-local/` drive `DEFAULT_HARNESS_CONFIG` and their own
-fixtures directly and never call that seam, so the eval engine is unaffected by
-the flag in either position. The in-app readout of the resulting split is on the
-Observability screen's feed funnel (`funnel-row-scored-math` /
-`funnel-row-scored-llm`).
+**`USE_ARTICLE_TAGS` IS GONE — the engine always sees the server's tags.** It
+used to blank `geoTags`/`entities`/`eventType` at
+`stage-scoring::buildStageCandidates`, which silently stopped every
+`event_type` / `entity` / `place` suppression the card feedback surface CREATES
+from matching anything. Deleting it fixed that, and — as an accepted side effect
+— turned on the `geoComp`/`entityComp`/`eventComp`/`wrongLocPenalty` terms in
+production for the first time. See the header of `scoring-engine/relevance.ts`
+for exactly what those now feed. `tag-policy.ts` and
+`lib/mera-protocol/harness-config-base.ts` are deleted with it. The Observability
+funnel's two counters now report whether an ARTICLE was tagged, not which scorer
+ran (there is only one).
 
 `scoringEngine` (the math affinity engine, `relevance.ts`) has **no
 freshness/age-decay component**: `W_FRESH` was removed in Round 3 and the
 remaining seven positive weights (`W_TOPIC`/`W_BREADTH`/`W_GEO`/`W_ENTITY`/
 `W_EVENT`/`W_PUB`/`W_POP`) were renormalized proportionally so full-saturation
-affinity still lands ≈1.0; current values are in `core/config.ts`. The math
-score is **always** what gets persisted: the LLM judge (`judge.ts`) is
-advisory only: it authors the user-facing note, and its own score is recorded
-solely as a calibration signal (the existing >0.3-delta `override` flag),
-never applied to the live relevance. The calibration loop itself is
-unchanged and stays user-gated.
+affinity still lands ≈1.0; current values are in `core/config.ts`.
+
+**The LLM's score is what gets persisted as `relevance`.** The combined judge
+that once sat over the math is deleted, and so is the v3 single-pass scorer:
+there is ONE path — the legacy tiered two-pass call — and every candidate takes
+it. The math score is the FAIL-OPEN value (it stands when the LLM call fails),
+the carrier of the soft suppression penalty, and the audit trail. The
+calibration loop is user-gated as before but no longer receives any input, since
+its only source was judge-vs-math disagreement.
 
 ### How the app consumes the same code (shim list)
 
@@ -160,10 +157,9 @@ old sectioned/two-zone For-You view and its single-shot cloud scoring job:
   built from the render-gated 24h suggestion pool via `resolveOwnership`. A
   card enters its row once its note exists (or is deliberately reason-skipped).
 - **`lib/services/fact-batching.ts`** + **`lib/services/scoring-pipeline.ts`**
-  : cloud scoring is batched. Per batch: the math score is computed and
-  persisted **immediately**; then ONE combined judge+notes cloud job runs per
-  batch, whose only effect is filling in notes: the judge never rewrites the
-  already-persisted math score (advisory-only, see Config philosophy below).
+  : cloud scoring is batched. Per batch: the deterministic math runs on-device
+  (hard "not interested" screen + the soft penalty carried on the batch), then
+  the legacy tiered relevance call, then a reason pass over the survivors.
   **Round 4 B:** per-fact batch grouping (`groupCandidatesByPrimaryFact` /
   `resolveOwningFact`-based chunking) and per-fact narration were retired:
   batches are now FIFO 25-article quanta of eligible candidates in delivery

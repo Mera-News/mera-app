@@ -810,14 +810,17 @@ export async function getSharedNoteBreakdown(): Promise<SharedNoteBreakdown> {
   };
 }
 
-/** Which scoring path actually produced each stored row's score. Counted from
- *  the `mode` recorded in the `score_components_json` audit — no parallel
- *  record, no extra column. */
+/** Whether each stored row's article arrived TAGGED. Counted from the `mode`
+ *  recorded in the `score_components_json` audit — no parallel record, no extra
+ *  column.
+ *
+ *  Named for the routing it used to describe. Since the judge was removed every
+ *  row is scored by the LLM, so this is a property of the ARTICLE, not of the
+ *  scorer. */
 export interface ScoringModeBreakdown {
-  /** Scored by the deterministic math engine (the article carried tags). */
+  /** The article carried geo/entity/event tags (`math`). */
   math: number;
-  /** Scored by the legacy two-pass LLM (`backstop` — the article was untagged,
-   *  which is every article while `USE_ARTICLE_TAGS` is off). */
+  /** The article was untagged (`backstop`). */
   backstop: number;
   /** Scored, but the audit blob is missing, unparseable, or predates the `mode`
    *  field. Reported rather than folded into either bucket — attributing these
@@ -827,15 +830,17 @@ export interface ScoringModeBreakdown {
 }
 
 /**
- * Count the stored suggestions by the scoring path that produced them.
+ * Count the stored suggestions by whether their article carried server tags.
  *
  * ON-DEMAND ONLY (the Observability screen's refresh). It reads every scored
  * row's audit JSON, so it is deliberately absent from the render, ingest and
  * scroll paths. Read-only.
  *
- * This is the readout that makes the `USE_ARTICLE_TAGS` comparison observable:
- * with the flag off it should be 100% `backstop`, and turning it on moves rows
- * into `math` as the server's tags arrive.
+ * This is how the tagging backfill becomes observable: rows move from
+ * `backstop` to `math` as the server starts emitting
+ * `geo_tags`/`entities`/`event_type`. Rows scored before the
+ * `USE_ARTICLE_TAGS` blanking was removed all read `backstop`, whatever their
+ * article actually carried.
  */
 export async function getScoringModeBreakdown(): Promise<ScoringModeBreakdown> {
   const out: ScoringModeBreakdown = { math: 0, backstop: 0, unknown: 0 };

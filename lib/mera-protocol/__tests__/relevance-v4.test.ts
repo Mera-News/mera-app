@@ -18,13 +18,11 @@
 //      feature. These tests drive the shim's own exports with an effective
 //      config and assert the features actually engage.
 //
-//   2. SUPPRESSION PARITY. `USE_ARTICLE_TAGS` — deliberately NOT part of v4 —
-//      is the gate for routing AND for the structured `entity`/`place`/
-//      `event_type` suppression kinds, in both the soft penalty and the hard
-//      screen. If v4 had been wired to it (or if `tag-policy.ts` had been
-//      deleted with the rest of v3), every user's "not interested" filter would
-//      silently start matching different articles. These tests assert the
-//      matched set is identical with the toggle on and off.
+//   2. SUPPRESSION. The engine sees the server's tags, so a user-created
+//      `event_type` / `entity` / `place` filter actually matches an article
+//      carrying that tag — and v4's toggle does not change that either way.
+//      These tests replace an earlier block that pinned the OPPOSITE (that the
+//      tags were hidden by `USE_ARTICLE_TAGS`); see the block comment there.
 
 jest.mock('../../llm/completeLocal', () => ({ completeLocal: jest.fn() }));
 jest.mock('../../llm/cloudComplete', () => ({
@@ -70,7 +68,6 @@ import {
   type ArticlePipelineConfig,
 } from '../../news-harness/core/config';
 import { ARTICLE_METADATA_PREFIX } from '../../news-harness/article-pipeline/tag-prompt';
-import { applyArticleTagPolicy } from '../../news-harness/scoring-engine/tag-policy';
 import {
   buildSuppressionHaystack,
   screenHardSuppressions,
@@ -163,11 +160,11 @@ describe('v4 ADD 1 — buildRelevanceCalls (the LIVE builder)', () => {
     expect(bundle.calls[0].prompt).not.toContain(ARTICLE_METADATA_PREFIX);
   });
 
-  it('ON does not change routing — the tag block is prompt INPUT only', () => {
-    // `isBackstop` keys off the same three fields the prompt block reads, but
-    // through a different door: the ENGINE only ever sees what
-    // `applyArticleTagPolicy` lets through, and v4 does not touch that policy.
-    // So a v4-scored candidate is still a backstop candidate.
+  it('ON does not touch the ENGINE — the tag block is prompt INPUT only', () => {
+    // The engine and the prompt builder read two different objects derived from
+    // the same row (see the mechanism note in `article-pipeline/tag-prompt.ts`).
+    // v4 moves only the prompt, so the engine's verdict on a tagged candidate is
+    // identical with the toggle on or off — `mode` included.
     const input: ScoredCandidateInput = {
       id: 'a0',
       matchedTopics: [],
@@ -182,8 +179,10 @@ describe('v4 ADD 1 — buildRelevanceCalls (the LIVE builder)', () => {
       softSuppressions: [],
       hardSuppressions: [],
     };
-    const stripped = applyArticleTagPolicy(input, eng);
-    expect(computeRelevance(stripped, persona, eng, Date.now()).mode).toBe('backstop');
+    const r = computeRelevance(input, persona, eng, Date.now());
+    // 'math' because the article IS tagged — a statement about the article, not
+    // about which scorer runs. Every candidate takes the LLM path now.
+    expect(r.mode).toBe('math');
   });
 });
 
@@ -237,12 +236,30 @@ describe('v4 ADD 2 — buildReasonCallsForSubset (the LIVE builder)', () => {
 // 3. SUPPRESSION PARITY — "not interested" matches the same things as before
 // ---------------------------------------------------------------------------
 
-describe('v4 does not move suppression — USE_ARTICLE_TAGS is not part of it', () => {
+// ---------------------------------------------------------------------------
+// 3. SUPPRESSION — the user's tag-based "not interested" filters MATCH
+//
+// THESE TESTS REPLACE A BLOCK THAT PINNED THE OPPOSITE. Until `USE_ARTICLE_TAGS`
+// was deleted, `applyArticleTagPolicy` blanked `geoTags` / `entities` /
+// `eventType` before the engine saw them, and this file asserted that blanking
+// held. That was protecting a live bug: the card feedback surface CREATES
+// `event_type` / `entity` / `place` suppressions
+// (`feedback-tree/resolve-leaf-actions.ts` maps `from_context_eventType` →
+// `kind: 'event_type'`; `persona-management/feedback-digest.ts` mints the same
+// kinds from swipe signals), and `suppression.ts` matches them against the
+// columns that were being blanked. So a user tapping "fewer stories like this"
+// got a filter that was created, stored, shown back to them — and matched
+// nothing, ever.
+//
+// Every test below fails against the pre-change code. That is the point: this is
+// the bug fix, so it has to have a test that would have caught it.
+// ---------------------------------------------------------------------------
+
+describe('tag-based "not interested" filters actually match', () => {
   const ENG = DEFAULT_HARNESS_CONFIG.scoringEngine;
 
-  /** A fully-tagged candidate — the case that could change behaviour, since the
-   *  structured suppression kinds match on exactly these fields. */
-  const taggedInput = (): ScoredCandidateInput => ({
+  /** A fully-tagged candidate — what the server sends today. */
+  const tagged = (): ScoredCandidateInput => ({
     id: 'a0',
     titleEn: 'Commission opens antitrust case',
     descriptionEn: 'Brussels probe',
@@ -252,68 +269,178 @@ describe('v4 does not move suppression — USE_ARTICLE_TAGS is not part of it', 
     eventType: 'crime',
   });
 
-  const filters: SoftSuppression[] = [
-    { keywords: [], strength: 1, kind: 'entity', value: 'european commission' },
-    { keywords: [], strength: 1, kind: 'place', value: 'brussels' },
-    { keywords: [], strength: 1, kind: 'event_type', value: 'crime' },
-    { keywords: ['antitrust'], strength: 1 },
-  ];
+  // Exactly the shapes the feedback surface mints.
+  const EVENT_TYPE_FILTER: SoftSuppression = {
+    keywords: [], strength: 1, kind: 'event_type', value: 'crime',
+  };
+  const ENTITY_FILTER: SoftSuppression = {
+    keywords: [], strength: 1, kind: 'entity', value: 'european commission',
+  };
+  const PLACE_FILTER: SoftSuppression = {
+    keywords: [], strength: 1, kind: 'place', value: 'brussels',
+  };
 
-  /** What the ENGINE actually sees — the seam `buildStageCandidates` applies. */
-  const asEngineSees = () => applyArticleTagPolicy(taggedInput(), ENG);
-
-  it('the tag policy still strips the three fields, so no structured kind can match', () => {
-    const seen = asEngineSees();
-    expect(seen.geoTags).toEqual([]);
-    expect(seen.entities).toEqual([]);
-    expect(seen.eventType).toBeNull();
-
-    for (const f of filters.slice(0, 3)) {
-      expect(suppressionMatchesCandidate(seen, f)).toBe(false);
-    }
-    // …and the plain keyword filter, which reads title/description, is
-    // unaffected: turning tags off must not turn "not interested" off.
-    expect(suppressionMatchesCandidate(seen, filters[3])).toBe(true);
+  it('an event_type filter matches the article carrying that event type', () => {
+    // THE BUG. `resolve-leaf-actions.ts` writes exactly this row from
+    // `from_context_eventType`. Before the fix `candidate.eventType` was null by
+    // the time `suppression.ts` compared it, so this was false.
+    expect(suppressionMatchesCandidate(tagged(), EVENT_TYPE_FILTER)).toBe(true);
   });
 
-  it('the keyword haystack does not gain the entities', () => {
-    expect(buildSuppressionHaystack(asEngineSees())).not.toContain(
-      'european commission',
-    );
+  it('an entity filter matches the article carrying that entity', () => {
+    expect(suppressionMatchesCandidate(tagged(), ENTITY_FILTER)).toBe(true);
   });
 
-  it('the HARD screen drops exactly the same row set', () => {
-    // The hard screen runs on the v1 path via `computeMathStage`, so this is the
-    // live behaviour, not a hypothetical.
-    const dropped = screenHardSuppressions([asEngineSees()], filters);
-    // Only the keyword filter matches — the three structured ones cannot.
+  it('a place filter matches the article carrying that geo tag', () => {
+    expect(suppressionMatchesCandidate(tagged(), PLACE_FILTER)).toBe(true);
+  });
+
+  it('the entities reach the keyword haystack too', () => {
+    expect(buildSuppressionHaystack(tagged())).toContain('european commission');
+  });
+
+  it('the HARD screen now drops a row on a tag-based filter alone', () => {
+    // The hard screen runs on the live path via `computeMathStage`, so this is
+    // the difference between "not interested" removing the row and doing
+    // nothing. No keyword filter here — only the three structured kinds.
+    const dropped = screenHardSuppressions([tagged()], [
+      EVENT_TYPE_FILTER,
+      ENTITY_FILTER,
+      PLACE_FILTER,
+    ]);
     expect([...dropped.keys()]).toEqual(['a0']);
-
-    const noKeyword = filters.slice(0, 3);
-    expect(screenHardSuppressions([asEngineSees()], noKeyword).size).toBe(0);
   });
 
-  it('the SOFT penalty comes from the ONE keyword filter and nothing else', () => {
-    // Pinned as a VALUE, not as "on equals off" — the latter is circular here,
-    // since `computeRelevance` takes the `scoringEngine` slice and v4 lives
-    // entirely in `articlePipeline`, so it could not differ. What is worth
-    // pinning is the SIZE of the penalty: exactly one of these four filters can
-    // match a tag-stripped candidate. If the three structured ones ever started
-    // matching (the failure mode deleting `tag-policy.ts` would cause), this
-    // number would rise and the test would say so.
+  it('the SOFT penalty is non-zero for a tag-only filter set', () => {
+    // Three matchers fire, so the sum is capped at P_SUP_CAP. Before the fix
+    // this was exactly 0 — the "shown less" half of the feature was inert.
     const persona: PersonaScoringContext = {
       locations: [],
       pubPrefs: new Map(),
-      softSuppressions: filters.map((f) => ({ ...f, strength: 0.5 })),
+      softSuppressions: [EVENT_TYPE_FILTER, ENTITY_FILTER, PLACE_FILTER].map((f) => ({
+        ...f,
+        strength: 0.5,
+      })),
       hardSuppressions: [],
     };
     const { suppressPenalty } = computeRelevance(
-      asEngineSees(),
+      tagged(),
       persona,
       ENG,
       Date.now(),
     ).components;
+    expect(suppressPenalty).toBeGreaterThan(0);
+    expect(suppressPenalty).toBeCloseTo(Math.min(ENG.P_SUP_CAP, 3 * ENG.P_SUP * 0.5), 10);
+  });
 
-    expect(suppressPenalty).toBeCloseTo(ENG.P_SUP * 0.5, 10);
+  it('an untagged article is still matched only on its TEXT', () => {
+    // The other half of the contract: unblanking must not make a filter match a
+    // row that carries no such tag. Guards against a matcher that treats a
+    // missing column as a wildcard.
+    const untagged: ScoredCandidateInput = {
+      id: 'u0',
+      titleEn: 'A quiet day in Utrecht',
+      descriptionEn: 'Nothing happened',
+      matchedTopics: [],
+    };
+    expect(suppressionMatchesCandidate(untagged, EVENT_TYPE_FILTER)).toBe(false);
+    expect(suppressionMatchesCandidate(untagged, ENTITY_FILTER)).toBe(false);
+    expect(suppressionMatchesCandidate(untagged, PLACE_FILTER)).toBe(false);
+    expect(screenHardSuppressions([untagged], [EVENT_TYPE_FILTER]).size).toBe(0);
+  });
+
+  it('the v4 toggle changes none of this', () => {
+    // v4 lives in `articlePipeline`; suppression is computed from
+    // `scoringEngine`. Asserted so a future edit cannot quietly couple the
+    // scoring-prompt toggle to what a user's filters match.
+    const persona: PersonaScoringContext = {
+      locations: [],
+      pubPrefs: new Map(),
+      softSuppressions: [EVENT_TYPE_FILTER],
+      hardSuppressions: [],
+    };
+    const penalty = () =>
+      computeRelevance(tagged(), persona, ENG, 0).components.suppressPenalty;
+    const before = penalty();
+    expect(V4_ON.legacyTagPromptEnabled).toBe(true);
+    expect(V4_OFF.legacyTagPromptEnabled).toBe(false);
+    expect(penalty()).toBe(before);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4. THE ACCEPTED SIDE EFFECT — the fail-open score is now tag-sensitive
+// ---------------------------------------------------------------------------
+
+describe('unblanking the tags also turned on four scoring components', () => {
+  const ENG = DEFAULT_HARNESS_CONFIG.scoringEngine;
+
+  const persona = (): PersonaScoringContext => ({
+    locations: [
+      {
+        id: 'home',
+        city: 'brussels',
+        region: null,
+        countryCode: 'BEL',
+        role: 'home',
+        weight: 1,
+        validUntilMs: undefined,
+      } as unknown as PersonaScoringContext['locations'][number],
+    ],
+    pubPrefs: new Map(),
+    softSuppressions: [],
+    hardSuppressions: [],
+  });
+
+  const base = (): ScoredCandidateInput => ({
+    id: 'a0',
+    titleEn: 'Something in Brussels',
+    descriptionEn: 'A policy change',
+    matchedTopics: [],
+  });
+
+  // DOCUMENTED PROPERTY, NOT A REGRESSION. `geoComp` / `entityComp` /
+  // `eventComp` / `wrongLocPenalty` are computed from the three tag columns and
+  // were HARD ZERO on every production article for as long as the blanking
+  // existed — roughly 36% of the positive weight budget, never exercised. They
+  // now feed the math score, which is what stands when an LLM call FAILS.
+  //
+  // So a tagged article's fail-open score differs from an untagged one's. That
+  // is the accepted consequence of fixing the suppression bug; it is pinned here
+  // so the next person meets it as a property rather than a surprise.
+  it('a tagged article scores differently from the same article untagged', () => {
+    const untaggedScore = computeRelevance(base(), persona(), ENG, 0).score;
+    const taggedScore = computeRelevance(
+      { ...base(), geoTags: [{ city: 'brussels', countryCode: 'BEL' }] },
+      persona(),
+      ENG,
+      0,
+    ).score;
+    expect(taggedScore).not.toBe(untaggedScore);
+    // Higher, specifically: geoComp is a POSITIVE component and the tag aligns
+    // with the persona's home city.
+    expect(taggedScore).toBeGreaterThan(untaggedScore);
+  });
+
+  it('geoComp is non-zero for a geo-tagged article — it was always 0 before', () => {
+    const c = computeRelevance(
+      { ...base(), geoTags: [{ city: 'brussels', countryCode: 'BEL' }] },
+      persona(),
+      ENG,
+      0,
+    ).components;
+    expect(c.geoComp).toBeGreaterThan(0);
+  });
+
+  it('eventComp/entityComp stay 0 without persona interest in them', () => {
+    // Bounding the blast radius: an event type or entity only scores when the
+    // persona expresses interest, so unblanking does not lift every tagged row.
+    const c = computeRelevance(
+      { ...base(), eventType: 'policy_change', entities: ['european commission'] },
+      persona(),
+      ENG,
+      0,
+    ).components;
+    expect(c.entityComp).toBe(0);
   });
 });

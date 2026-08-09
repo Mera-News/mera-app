@@ -52,9 +52,15 @@ jest.mock('@/lib/database/services/story-impression-service', () => ({
   getOpenedSeenSet: jest.fn().mockResolvedValue(new Set(['opened-article', 'stable-story-1'])),
 }));
 
-import { effectiveHarnessConfig, loadPersonaScoringContext } from '../stage-scoring';
+import {
+  buildStageCandidates,
+  effectiveHarnessConfig,
+  loadPersonaScoringContext,
+} from '../stage-scoring';
 import { getOpenedSeenSet } from '@/lib/database/services/story-impression-service';
-import { HARNESS_CONFIG_BASE } from '../harness-config-base';
+import { buildStageCandidateInput } from '@/lib/database/services/article-suggestion-service';
+import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
+import { screenHardSuppressions } from '@/lib/news-harness/scoring-engine';
 import { getScoringOverrides } from '@/lib/database/services/calibration-service';
 
 describe('loadPersonaScoringContext — persona snapshot seam', () => {
@@ -90,12 +96,12 @@ describe('effectiveHarnessConfig — the relevance-v4 runtime switch', () => {
     (getScoringOverrides as jest.Mock).mockResolvedValue({});
   });
 
-  it('flag OFF: hands back the HARNESS_CONFIG_BASE REFERENCE (no allocation)', async () => {
+  it('flag OFF: hands back the DEFAULT_HARNESS_CONFIG REFERENCE (no allocation)', async () => {
     // Reference equality, not deep equality — the whole point of the fast path.
     // A copy here would be behaviourally identical but silently allocate on
     // every scoring batch, and it is what harness-config-base.test.ts pins.
     const cfg = await effectiveHarnessConfig();
-    expect(cfg).toBe(HARNESS_CONFIG_BASE);
+    expect(cfg).toBe(DEFAULT_HARNESS_CONFIG);
     expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(false);
     expect(cfg.articlePipeline.legacyTagReasonGateEnabled).toBe(false);
   });
@@ -109,17 +115,15 @@ describe('effectiveHarnessConfig — the relevance-v4 runtime switch', () => {
     expect(cfg.articlePipeline.legacyTagReasonGateEnabled).toBe(true);
   });
 
-  it('flag ON: USE_ARTICLE_TAGS and the whole scoringEngine are UNTOUCHED', async () => {
+  it('flag ON: the whole scoringEngine is UNTOUCHED', async () => {
     mockStoreState.relevanceV4 = true;
     const cfg = await effectiveHarnessConfig();
-    // v4 is the LEGACY path. `USE_ARTICLE_TAGS` is the routing + suppression
-    // gate: switching it on would flip candidates onto math+judge (i.e. back to
-    // v3) AND turn on the structured entity/place/event_type suppression kinds.
-    // v4 must not touch it, and the scoringEngine slice must pass through BY
-    // REFERENCE so the calibration fast path below still short-circuits.
-    expect(cfg.scoringEngine).toBe(HARNESS_CONFIG_BASE.scoringEngine);
-    expect(cfg.scoringEngine.USE_ARTICLE_TAGS).toBe(false);
-    expect(cfg.topicGen).toBe(HARNESS_CONFIG_BASE.topicGen);
+    // v4 moves the PROMPT, never the engine. The scoringEngine slice must pass
+    // through BY REFERENCE so the calibration fast path below short-circuits —
+    // and so a future edit cannot couple the scoring-prompt toggle to what a
+    // user's suppression filters match.
+    expect(cfg.scoringEngine).toBe(DEFAULT_HARNESS_CONFIG.scoringEngine);
+    expect(cfg.topicGen).toBe(DEFAULT_HARNESS_CONFIG.topicGen);
   });
 
   it('flag ON: nothing in articlePipeline moved except the two v4 flags', async () => {
@@ -129,7 +133,7 @@ describe('effectiveHarnessConfig — the relevance-v4 runtime switch', () => {
       ...cfg.articlePipeline,
       legacyTagPromptEnabled: false,
       legacyTagReasonGateEnabled: false,
-    }).toEqual(HARNESS_CONFIG_BASE.articlePipeline);
+    }).toEqual(DEFAULT_HARNESS_CONFIG.articlePipeline);
   });
 
   it('flag ON still layers the calibration overrides on top', async () => {
@@ -138,16 +142,83 @@ describe('effectiveHarnessConfig — the relevance-v4 runtime switch', () => {
     const cfg = await effectiveHarnessConfig();
     expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(true);
     expect(cfg.scoringEngine.W_TOPIC).toBeCloseTo(
-      HARNESS_CONFIG_BASE.scoringEngine.W_TOPIC * 1.1,
+      DEFAULT_HARNESS_CONFIG.scoringEngine.W_TOPIC * 1.1,
       6,
     );
   });
 
-  it('FAILS OPEN to HARNESS_CONFIG_BASE (v4 off) when the overrides read throws', async () => {
+  it('FAILS OPEN to DEFAULT_HARNESS_CONFIG (v4 off) when the overrides read throws', async () => {
     mockStoreState.relevanceV4 = true;
     (getScoringOverrides as jest.Mock).mockRejectedValue(new Error('db down'));
     const cfg = await effectiveHarnessConfig();
-    expect(cfg).toBe(HARNESS_CONFIG_BASE);
+    expect(cfg).toBe(DEFAULT_HARNESS_CONFIG);
     expect(cfg.articlePipeline.legacyTagPromptEnabled).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// THE SEAM WHERE THE TAG BLANKING USED TO LIVE.
+//
+// `buildStageCandidates` is the ONE place a persisted row becomes an engine
+// input, and until `USE_ARTICLE_TAGS` was deleted it ran every input through
+// `applyArticleTagPolicy`, which blanked `geoTags` / `entities` / `eventType`.
+// Both the tests below FAIL against that code — they are the regression guard
+// for the bug that blanking caused: the card feedback surface mints
+// `event_type` / `entity` / `place` suppressions, and `suppression.ts` matches
+// them against exactly the columns that were being cleared, so those filters
+// were stored, shown to the user, and matched nothing.
+//
+// Deliberately at this seam rather than on the matcher: the matcher was never
+// broken. Only this seam was, which is why a unit test over
+// `suppressionMatchesCandidate` alone would have passed before the fix too.
+// ---------------------------------------------------------------------------
+
+describe('buildStageCandidates — the engine sees the server tags', () => {
+  // `buildStageCandidateInput` (the row → input parser) is mocked, which is
+  // exactly the isolation this needs: the parser never changed, the BLANKING
+  // STEP after it did. Feed the seam a tagged input and assert it comes out
+  // tagged. Pre-change, `applyArticleTagPolicy` sat between these two lines and
+  // cleared all three fields, so both tests below went red.
+  const taggedInput = {
+    id: 'a0',
+    titleEn: 'Commission opens antitrust case',
+    descriptionEn: 'Brussels probe',
+    matchedTopics: [],
+    geoTags: [{ city: 'brussels', countryCode: 'BEL' }],
+    entities: ['european commission'],
+    eventType: 'crime',
+  };
+
+  const candidate = {
+    id: 'a0',
+    titleEn: 'Commission opens antitrust case',
+    descriptionEn: 'Brussels probe',
+    countryCode: 'BEL',
+    userTopicIds: [],
+    relatedFacts: [],
+    meta: { id: 'a0' },
+  };
+
+  beforeEach(() => {
+    (buildStageCandidateInput as jest.Mock).mockReturnValue(taggedInput);
+  });
+
+  it('passes geoTags / entities / eventType through unblanked', () => {
+    const [stage] = buildStageCandidates([candidate as never], new Map());
+    expect(stage.input.eventType).toBe('crime');
+    expect(stage.input.entities).toEqual(['european commission']);
+    expect(stage.input.geoTags).toEqual([{ city: 'brussels', countryCode: 'BEL' }]);
+  });
+
+  it("a user's event_type filter now screens the row out", () => {
+    // The exact row shape `feedback-tree/resolve-leaf-actions.ts` writes from
+    // `from_context_eventType`. This is the user-facing bug: before the fix the
+    // filter was created, stored, shown back to the user — and screened nothing.
+    const [stage] = buildStageCandidates([candidate as never], new Map());
+    const dropped = screenHardSuppressions(
+      [stage.input],
+      [{ keywords: [], strength: 1, kind: 'event_type', value: 'crime' }],
+    );
+    expect([...dropped.keys()]).toEqual(['a0']);
   });
 });

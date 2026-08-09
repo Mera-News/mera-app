@@ -102,12 +102,12 @@ export interface ArticlePipelineConfig {
    * module literal — without that the switch would move the offline harness twin
    * and nothing the app actually sends.
    *
-   * NOT THE SAME THING AS `scoringEngine.USE_ARTICLE_TAGS`, and deliberately not
-   * wired to it: that flag feeds the tags to the ENGINE, where they change what
-   * the user's "not interested" filters match. This flag reads
-   * `ScoringCandidate.meta` inside the PROMPT builder only — see the mechanism
-   * note at the top of `article-pipeline/tag-prompt.ts` — so `scoringMode` is
-   * bit-for-bit unchanged whichever way it is set.
+   * DOES NOT TOUCH THE ENGINE. This flag reads `ScoringCandidate.meta` inside
+   * the PROMPT builder only — see the mechanism note at the top of
+   * `article-pipeline/tag-prompt.ts` — so `computeRelevance` and `scoringMode`
+   * are bit-for-bit unchanged whichever way it is set. (It was deliberately kept
+   * independent of the `USE_ARTICLE_TAGS` gate, which fed the same three columns
+   * to the engine and has since been deleted outright.)
    *
    * MEASURED 2026-08-08 on `goldset-348`, 3 baseline + 3 injected + 3 CONTROL
    * replicates (`harness-local/scripts/score-v1-tagged.ts`). Primary metric is
@@ -339,61 +339,13 @@ export interface TopicGenConfig {
  * raw score into the same 0.05–1.10 band the existing buckets/eval consume.
  */
 export interface ScoringEngineConfig {
-  // --- article-tagging policy (NOT a tunable; a routing switch) ------------
-  /** Honour the server's article-tagging metadata (`geo_tags` / `entities` /
-   *  `event_type`).
-   *
-   *  ONE MEANING, since the judge was removed: do the user's "not interested"
-   *  filters match on an article's places, people and event type?
-   *
-   *  `false` (the default) ⇒ every candidate is presented to the engine as
-   *  UNTAGGED regardless of what the server sent, so the `entity` / `place` /
-   *  `event_type` suppression kinds cannot match and `entities` never enter the
-   *  keyword haystack. A filter matches only what the article's own text says.
-   *
-   *  `true` ⇒ the tags are passed through and those structured kinds go live, in
-   *  BOTH the soft penalty and the hard screen — including
-   *  `services/suppression-sweep.ts`, which re-screens rows already stored on
-   *  the device.
-   *
-   *  It used to also decide ROUTING (`isBackstop` → the deterministic math +
-   *  judge path). That judge is deleted; every candidate takes the legacy LLM
-   *  path now, and `isBackstop` survives only as the producer of the diagnostic
-   *  `mode`. It is NOT the v4 toggle — see `scoring-engine/tag-policy.ts` for
-   *  why the two are kept apart.
-   *
-   *  Bound from `EXPO_PUBLIC_USE_ARTICLE_TAGS` in the app's composition root
-   *  (`mera-protocol/harness-config-base`); the harness itself never reads
-   *  `process.env`. Enforced by
-   *  `scoring-engine/tag-policy::applyArticleTagPolicy`, applied where a
-   *  persisted row becomes a `ScoredCandidateInput` — so "off" means the engine
-   *  never SEES a tag, not that one code path ignores them. */
-  USE_ARTICLE_TAGS: boolean;
-  /** Relevance v2 — the RUNTIME (user-toggleable) half of the same switch.
-   *  Like `USE_ARTICLE_TAGS` this is NOT a tunable; it is a routing switch, and
-   *  it is deliberately absent from `calibration::TUNABLE_CONSTANTS` (that layer
-   *  applies `base × (1 + delta)` to NUMBERS only — a boolean cannot ride it).
-   *
-   *  `false` (the default) ⇒ exactly today's behaviour on every path.
-   *
-   *  `true` ⇒ (a) it SUBSUMES `USE_ARTICLE_TAGS`: the composition root
-   *  (`mera-protocol/stage-scoring::effectiveHarnessConfig`) ORs the two, so the
-   *  server's tags stop being blanked and a tagged candidate routes to the
-   *  deterministic math path — `tag-policy` needs no second gate and keeps
-   *  reading `USE_ARTICLE_TAGS` alone; and (b) the math/judge path persists the
-   *  UNBUCKETED computed score as `relevance` instead of the coarse
-   *  articlePipeline bucket, so ranking keeps its resolution. Both effects are
-   *  inert until the server actually emits `geo_tags`/`entities`/`event_type` —
-   *  with no tags every candidate is still `isBackstop`, so the legacy two-pass
-   *  LLM path runs and bucketing there is untouched.
-   *
-   *  Bound from the Zustand store field `relevanceV2` in that composition root;
-   *  the harness itself never reads the store or `process.env`.
-   *
-   *  DEPRECATE: the math-authoritative path this flag selects has no runtime
-   *  layering left that reads it. The key stays declared (and false) so the
-   *  calibration tests that pin "a boolean is not a tunable" keep their
-   *  subject. */
+  /** RETIRED routing switch, kept declared (and false) only so the calibration
+   *  tests that pin "a boolean is not a tunable" keep their subject — it is
+   *  deliberately absent from `calibration::TUNABLE_CONSTANTS`, whose layer
+   *  applies `base × (1 + delta)` to NUMBERS only. Nothing reads it: the
+   *  math-authoritative path it used to select is gone, and so is the
+   *  `USE_ARTICLE_TAGS` gate it once subsumed (the engine now always sees the
+   *  server's tags — see `relevance.ts`). */
   RELEVANCE_V2: boolean;
   // --- affinity component weights (positive contributors sum ≈ 1) ---------
   /** Explicit topic interest (magnitude of the strongest matched topic). */
@@ -607,11 +559,6 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     comboSystemPrompt: CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   },
   scoringEngine: {
-    // Article tagging is OFF by default — the explicit literal, not an absent
-    // key read as falsy. This preserves today's behaviour ("not interested"
-    // filters match an article's TEXT, not its tags) even after the server
-    // starts sending tags.
-    USE_ARTICLE_TAGS: false,
     // Relevance v2 is OFF by default for the same reason and in the same style:
     // an explicit literal, not an absent key read as falsy. Nothing layers it in
     // at runtime any more; the harness default must always describe today's

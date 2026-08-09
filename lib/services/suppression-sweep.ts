@@ -59,9 +59,7 @@ import {
 } from '@/lib/database/services/article-suggestion-service';
 import type { StageCandidateRow } from '@/lib/news-harness/core/types';
 import { loadPersonaScoringContext } from '@/lib/mera-protocol/stage-scoring';
-import { HARNESS_CONFIG_BASE } from '@/lib/mera-protocol/harness-config-base';
 import {
-  applyArticleTagPolicyAll,
   screenHardSuppressions,
   screenHardSuppressionsDetailed,
   type ScoredCandidateInput,
@@ -87,34 +85,23 @@ export interface HardFilterUnexcludeResult {
 }
 
 /**
- * Rehydrate stored rows into engine inputs UNDER THE SAME article-tag policy the
- * scoring stage uses (`stage-scoring::buildStageCandidates`). Every screen in
- * this module goes through here, so there is one answer to "does the app use
- * tagging data" rather than one per subsystem.
+ * Rehydrate stored rows into engine inputs, exactly as the scoring stage does
+ * (`stage-scoring::buildStageCandidates`). Every screen in this module goes
+ * through here, so there is one answer to "what does a filter see" rather than
+ * one per subsystem.
  *
- * WHY THE SWEEP IS GATED TOO. `EXPO_PUBLIC_USE_ARTICLE_TAGS` exists to run a
- * clean A/B of tag-based scoring against the LLM-only path, and that only means
- * anything if the OFF arm is a faithful replica of production today — where no
- * article carries tags, so the `entity` / `place` / `event_type` kinds match
- * nothing, anywhere. Leaving this module ungated would give OFF two different
- * answers to the same question once the backfill lands: scoring would treat an
- * entity filter as inert while this screen still excluded rows by it. Any
- * difference we then measured could be the tagging or could be that artifact.
- * So: OFF means the app does not use tagging data anywhere, full stop.
- *
- * Reads the env-bound BASE config rather than `effectiveHarnessConfig()`: the
- * overrides that function layers on are numeric scoring weights, none of which
- * a suppression screen consults, and staying synchronous keeps the sweep free
- * of an extra database read per call.
+ * The server's tags are passed through UNCHANGED. `applyArticleTagPolicyAll`
+ * used to blank them here so this sweep matched the scoring stage's blanking;
+ * both are deleted. That symmetry still holds — neither blanks now — and it is
+ * the reason this file had to change in the same commit: a filter that matches
+ * during scoring but not during the sweep (or vice versa) is a row that
+ * reappears after being filtered.
  */
 function toScreeningInputs(
   rows: StageCandidateRow[],
   topicWeights: Map<string, TopicWeightInfo>,
 ): ScoredCandidateInput[] {
-  return applyArticleTagPolicyAll(
-    rows.map((r) => buildStageCandidateInput(r, topicWeights)),
-    HARNESS_CONFIG_BASE.scoringEngine,
-  );
+  return rows.map((r) => buildStageCandidateInput(r, topicWeights));
 }
 
 /** Lazy require, mirroring scoring-pipeline's own refreshUi: a static import of

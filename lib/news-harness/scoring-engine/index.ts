@@ -8,7 +8,6 @@ export * from './persona-context';
 export * from './geo';
 export * from './suppression';
 export * from './relevance';
-export * from './tag-policy';
 export * from './calibration';
 export * from './run-stage';
 export * from './retrieval-profile';

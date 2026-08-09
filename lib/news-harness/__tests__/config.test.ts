@@ -247,21 +247,18 @@ describe('DEFAULT_HARNESS_CONFIG.topicGen', () => {
 describe('DEFAULT_HARNESS_CONFIG.scoringEngine', () => {
   const e = DEFAULT_HARNESS_CONFIG.scoringEngine;
 
-  it('pins the article-tagging policy to OFF', () => {
-    // Added with the EXPO_PUBLIC_USE_ARTICLE_TAGS switch. NOT a tunable weight —
-    // a routing switch: false means every article is presented to the engine as
-    // untagged, so it takes the legacy two-pass LLM path, which is exactly what
-    // production does today (the server-side enrichment stage has never run).
-    // Flipping this literal changes how EVERY article is scored the moment the
-    // server starts emitting tags, so it is pinned here deliberately.
-    expect(e.USE_ARTICLE_TAGS).toBe(false);
+  it('has NO article-tagging gate — the engine always sees the server tags', () => {
+    // `USE_ARTICLE_TAGS` was deleted. It blanked geoTags/entities/eventType
+    // before the engine saw them, which silently stopped every user-created
+    // `event_type` / `entity` / `place` filter from matching anything. Pinned as
+    // an ABSENT KEY so re-introducing a gate here has to be a deliberate act.
+    expect('USE_ARTICLE_TAGS' in e).toBe(false);
   });
 
   it('pins relevance v2 to OFF', () => {
-    // The runtime (settings-toggle) half of the same routing switch. Stated as
-    // an explicit boolean literal, never left undefined: the harness default
-    // must always describe the SHIPPED behaviour, and `effectiveHarnessConfig`
-    // is the only place allowed to layer the user's choice on top.
+    // A retired routing switch, kept declared as an explicit boolean literal and
+    // never left undefined so the calibration tests that pin "a boolean is not a
+    // tunable" keep their subject.
     expect(e.RELEVANCE_V2).toBe(false);
     expect('RELEVANCE_V2' in e).toBe(true);
     expect(typeof e.RELEVANCE_V2).toBe('boolean');

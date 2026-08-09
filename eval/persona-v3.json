@@ -4,51 +4,63 @@
   "facts": [
     {
       "id": "fact-location",
-      "weight": 1
+      "weight": 1,
+      "statement": "Lives in Nieuw-West, Amsterdam, Netherlands, Europe"
     },
     {
       "id": "fact-travel-berlin",
-      "weight": 1
+      "weight": 1,
+      "statement": "Traveling to Berlin, Germany, Europe next weekend"
     },
     {
       "id": "fact-journalism-conferences",
-      "weight": 1
+      "weight": 1,
+      "statement": "Interested in journalism conferences and workshops"
     },
     {
       "id": "fact-tech-conferences",
-      "weight": 1
+      "weight": 1,
+      "statement": "Interested in tech conferences and events"
     },
     {
       "id": "fact-privacy-ai",
-      "weight": 1
+      "weight": 1,
+      "statement": "Interested in privacy-safe AI"
     },
     {
       "id": "fact-local-slm",
-      "weight": 1
+      "weight": 1,
+      "statement": "Interested in local small language models"
     },
     {
       "id": "fact-expat",
-      "weight": 1
+      "weight": 1,
+      "statement": "Expatriate from India living in the Netherlands"
     },
     {
       "id": "fact-parents-traveling",
-      "weight": 1
+      "weight": 1,
+      "statement": "Parents are currently traveling in Chhindwara, India"
     },
     {
       "id": "fact-gf-parents",
-      "weight": 1
+      "weight": 1,
+      "statement": "Girlfriend's parents live in Porto Santo, Portugal, Europe"
     },
     {
       "id": "fact-parents-bhopal",
-      "weight": 1
+      "weight": 1,
+      "statement": "Parents live in Bhopal, India, Asia"
     },
     {
       "id": "fact-startup-builder",
-      "weight": 1
+      "weight": 1,
+      "statement": "Software engineer building own AI news app start-up"
     },
     {
       "id": "fact-founder",
-      "weight": 1
+      "weight": 1,
+      "statement": "Founding own start-up"
     }
   ],
   "locations": [

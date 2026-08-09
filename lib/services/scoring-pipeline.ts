@@ -1635,8 +1635,8 @@ async function handleRelevanceResults(
   // merely dropped.
   //
   // The two markers differ in how likely they are. v3 was a shipped user-facing
-  // toggle, so real devices ran it. Judge mode required
-  // `EXPO_PUBLIC_USE_ARTICLE_TAGS=true`, which is unset in `.env` and false by
+  // toggle, so real devices ran it. Judge mode required the (since-deleted)
+  // `EXPO_PUBLIC_USE_ARTICLE_TAGS=true`, which was unset in `.env` and false by
   // default, so no shipped build could have produced one — it is covered anyway
   // because the machinery already exists and a dev/staging device is not worth
   // reasoning about twice.

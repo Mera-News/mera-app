@@ -6,13 +6,14 @@
 //
 // WHAT THIS IS *NOT*
 // ------------------
-// It is NOT `USE_ARTICLE_TAGS: true`. That flag routes a tagged candidate to the
+// It is NOT the (since-deleted) `USE_ARTICLE_TAGS: true`. That flag fed the same
+// three columns to the ENGINE; at the time it also routed a tagged candidate to the
 // deterministic math + judge path, because `isBackstop()` keys off exactly the
 // triple `tag-policy.ts` strips, and the tagger emits an `event_type` on ~100% of
 // rows. Flipping it measures v3, which is not the question.
 //
 // harness-local drives `DEFAULT_HARNESS_CONFIG` directly and never goes through
-// `stage-scoring::buildStageCandidates` — the one seam `applyArticleTagPolicy` is
+// `stage-scoring::buildStageCandidates` — the one seam the blanking used to be
 // applied at. THAT is why this script can show tags to the PROMPT while leaving
 // routing, chunk size and the pass-2 contract exactly as the legacy path has
 // them. Nothing under `lib/` is touched.

@@ -18,10 +18,9 @@
 // THE JUDGE IS GONE. Step 2 used to be split: tagged ("math"-mode) candidates
 // went to a combined judge+reason call and kept their math score, untagged
 // ("backstop") ones took the legacy LLM path. With the judge deleted there is
-// one path, so every candidate takes it. That is byte-identical to today —
-// `USE_ARTICLE_TAGS` is false, so `isBackstop` was already true for every
-// candidate and `mathItems` was always empty. It differs only under
-// `USE_ARTICLE_TAGS=true`, a configuration that has never been run.
+// one path, so every candidate takes it — including tagged ones, which is what
+// made it safe to delete the `USE_ARTICLE_TAGS` blanking afterwards (there is
+// no longer a judge for a tagged row to be routed onto).
 //
 // `mode` survives as a DIAGNOSTIC, not as routing: it is persisted inside
 // `score_components_json` and counted by `getScoringModeBreakdown` for the

@@ -1,8 +1,10 @@
-// feed-diagnostics — the "which scorer ran" readout.
+// feed-diagnostics — the "did the article arrive tagged" readout.
 //
-// This is the block that makes the EXPO_PUBLIC_USE_ARTICLE_TAGS comparison
-// observable: with the flag off every scored row should report `legacy`, and
-// turning it on moves rows into `math` as the server's tags arrive.
+// This is the block that makes the server-side tagging backfill observable:
+// rows move from `legacy` (untagged) into `math` (tagged) as the server starts
+// emitting geo/entity/event columns. It is NOT "which scorer ran" — since the
+// judge was removed every row is scored by the LLM — and the
+// `EXPO_PUBLIC_USE_ARTICLE_TAGS` flag it used to also report is deleted.
 //
 // It is a SEPARATE AXIS from the visibility funnel on purpose, and the tests
 // below pin that: adding it must not disturb
@@ -55,14 +57,12 @@ function baseInput(over: Partial<FeedFunnelInput> = {}): FeedFunnelInput {
 }
 
 describe('computeFeedFunnel — scoring-path readout', () => {
-  it('reports the math/legacy split and the flag state', () => {
+  it('reports the tagged/untagged split', () => {
     const r = computeFeedFunnel(
       baseInput({
-        useArticleTags: true,
         scoringModes: { math: 7, backstop: 3, unknown: 1 },
       }),
     );
-    expect(r.scoring.useArticleTags).toBe(true);
     expect(r.scoring.math).toBe(7);
     expect(r.scoring.legacy).toBe(3);
     expect(r.scoring.unknown).toBe(1);
@@ -70,11 +70,10 @@ describe('computeFeedFunnel — scoring-path readout', () => {
     expect(r.scoring.available).toBe(true);
   });
 
-  it('flag off with untagged rows reads as 100% legacy — the expected steady state today', () => {
+  it('an all-untagged pool reads as 100% legacy — every row scored before the backfill', () => {
     const r = computeFeedFunnel(
-      baseInput({ useArticleTags: false, scoringModes: { math: 0, backstop: 42, unknown: 0 } }),
+      baseInput({ scoringModes: { math: 0, backstop: 42, unknown: 0 } }),
     );
-    expect(r.scoring.useArticleTags).toBe(false);
     expect(r.scoring.math).toBe(0);
     expect(r.scoring.legacy).toBe(42);
   });
@@ -88,12 +87,11 @@ describe('computeFeedFunnel — scoring-path readout', () => {
     expect(r.scoring.legacy).toBe(0);
   });
 
-  it('defaults to unavailable + tags-off when the caller passes neither field', () => {
+  it('defaults to unavailable when the caller passes no breakdown', () => {
     // The Feed tab's dev-only funnel log calls computeFeedFunnel without
     // touching the database; it must keep working unchanged.
     const r = computeFeedFunnel(baseInput());
     expect(r.scoring.available).toBe(false);
-    expect(r.scoring.useArticleTags).toBe(false);
   });
 });
 
@@ -135,10 +133,9 @@ describe('feedFunnelScalars — Sentry-bound projection', () => {
   it('carries the scoring split', () => {
     const s = feedFunnelScalars(
       computeFeedFunnel(
-        baseInput({ useArticleTags: true, scoringModes: { math: 2, backstop: 8, unknown: 0 } }),
+        baseInput({ scoringModes: { math: 2, backstop: 8, unknown: 0 } }),
       ),
     );
-    expect(s.useArticleTags).toBe(true);
     expect(s.scoredByMath).toBe(2);
     expect(s.scoredByLlm).toBe(8);
   });

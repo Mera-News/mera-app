@@ -164,11 +164,6 @@ export interface FeedFunnelInput {
   /** Shared-note counts from the DB. Null ⇒ the read failed or was not
    *  requested, which the report distinguishes from "nothing is shared". */
   sharedNotes?: SharedNoteBreakdown | null;
-  /** Whether the app is currently honouring server article tags
-   *  (`EXPO_PUBLIC_USE_ARTICLE_TAGS` → `ScoringEngineConfig.USE_ARTICLE_TAGS`).
-   *  Passed in rather than imported: this module is pure and RN-free, and the
-   *  flag lives in the composition root. */
-  useArticleTags?: boolean;
 
   /** Packed sign-bit sidecars (`ArticleWithClusters.vector_sidecar_packed`,
    *  base64) keyed by ARTICLE id, for the duplicate-candidate counters below.
@@ -310,7 +305,11 @@ export interface FeedFunnelReport {
     stats: OpenedSeenStats | null;
   };
 
-  /** WHICH SCORER RAN — the `EXPO_PUBLIC_USE_ARTICLE_TAGS` A/B readout.
+  /** DID THE ARTICLE ARRIVE TAGGED — read off the persisted `mode`.
+   *
+   *  NOT "which scorer ran": since the judge was removed every row is scored by
+   *  the LLM, and `mode` records only whether the engine saw server tags on the
+   *  article. The names below are historical.
    *
    *  A SEPARATE AXIS from `totals.status` / `dropped.*`, deliberately. Those two
    *  partition the pool by VISIBILITY and are tied together by
@@ -318,11 +317,9 @@ export interface FeedFunnelReport {
    *  property of an already-scored row, so adding it as a bucket there would
    *  break that identity for no reason. It has its own self-check instead. */
   scoring: {
-    /** Is the app honouring server article tags right now? */
-    useArticleTags: boolean;
-    /** Scored by the deterministic math engine (article carried tags). */
+    /** The article carried geo/entity/event tags (`mode: 'math'`). */
     math: number;
-    /** Scored by the legacy two-pass LLM (untagged → `backstop`). */
+    /** The article was untagged (`mode: 'backstop'`). */
     legacy: number;
     /** Scored, but the audit blob can't say which path — see
      *  `ScoringModeBreakdown.unknown`. */
@@ -723,7 +720,6 @@ export function computeFeedFunnel(input: FeedFunnelInput): FeedFunnelReport {
       stats: input.openedStats,
     },
     scoring: {
-      useArticleTags: input.useArticleTags ?? false,
       math: modes?.math ?? 0,
       legacy: modes?.backstop ?? 0,
       unknown: modes?.unknown ?? 0,
@@ -806,7 +802,6 @@ export function feedFunnelScalars(r: FeedFunnelReport): Record<string, number | 
     openedOlderThan7d: r.opened.stats?.ageBuckets.d7to30 ?? -1,
     // Which scorer ran. `-1` (not 0) when the breakdown was unavailable, the
     // same "this is not a measurement" convention the opened fields use above.
-    useArticleTags: r.scoring.useArticleTags,
     scoredByMath: r.scoring.available ? r.scoring.math : -1,
     scoredByLlm: r.scoring.available ? r.scoring.legacy : -1,
     scoredByUnknown: r.scoring.available ? r.scoring.unknown : -1,

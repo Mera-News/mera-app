@@ -7,38 +7,34 @@
 //   ADD 2  `legacyTagReasonGateEnabled`  — a post-hoc demote gate that also
 //                                          skips the row's pass-2 reason call
 //
-// WHY THIS FILE EXISTS SEPARATELY FROM `relevance.ts` / `tag-policy.ts`
+// WHY THIS FILE EXISTS SEPARATELY FROM `relevance.ts`
 // ---------------------------------------------------------------------
-// `scoring-engine/tag-policy.ts` is the seam that decides whether the *engine*
-// sees tags, and it is deliberately all-or-nothing: with `USE_ARTICLE_TAGS`
-// on, `isBackstop()` turns FALSE for any tagged row and the candidate routes to
-// the deterministic math + judge path. Since the server's tagger emits an
-// `event_type` on ~100% of served rows, "tags on" is in practice "v3 on".
+// `relevance.ts` is the ENGINE: it consumes a `ScoredCandidateInput` and turns
+// the same three tag columns into `geoComp` / `entityComp` / `eventComp` /
+// `wrongLocPenalty` and into `mode`. What the v4 features here want is
+// different — the tags as TEXT in the pass-1 prompt, and as a deterministic
+// post-hoc reason gate — with the engine untouched either way.
 //
-// That is NOT what either feature here wants. Both want the tags VISIBLE — to
-// the prompt, and to a deterministic post-hoc filter — while the candidate
-// stays on the legacy two-pass LLM path.
-//
-// THE MECHANISM THAT KEEPS ROUTING UNCHANGED (read this before editing)
+// THE MECHANISM THAT KEEPS THE ENGINE UNAFFECTED (read this before editing)
 // ---------------------------------------------------------------------
-// Routing and prompt-building read two DIFFERENT objects derived from the same
-// row, by two different functions:
+// The engine and prompt-building read two DIFFERENT objects derived from the
+// same row, by two different functions:
 //
-//   routing : ScoringCandidate.meta ─► buildStageCandidateInput
-//                                   ─► applyArticleTagPolicy   ◄── the seam
-//                                   ─► ScoredCandidateInput
-//                                   ─► computeRelevance / isBackstop
+//   engine : ScoringCandidate.meta ─► buildStageCandidateInput
+//                                  ─► ScoredCandidateInput
+//                                  ─► computeRelevance / isBackstop
 //
-//   prompt  : ScoringCandidate      ─► buildScoreCallForChunk
-//   + gate    (+ .meta, read HERE)  ─► articleMetadataLine / tag gate
+//   prompt : ScoringCandidate      ─► buildScoreCallForChunk
+//   + gate   (+ .meta, read HERE)  ─► articleMetadataLine / tag gate
 //
 // Everything in this file reads `ScoringCandidate.meta` directly and produces
-// only STRINGS and ID LISTS. It never constructs a `ScoredCandidateInput`, never
-// calls `applyArticleTagPolicy`, and is never called from `buildStageCandidates`.
-// So `isBackstop()` cannot observe anything this file does, and `scoringMode`
-// is bit-for-bit what it was with both flags off. That separation is the whole
-// point of the feature; if a future edit makes this file produce an engine
-// input, the flags stop being safe and the experiment behind them is void.
+// only STRINGS and ID LISTS. It never constructs a `ScoredCandidateInput` and is
+// never called from `buildStageCandidates`, so nothing it does can reach
+// `computeRelevance`. That separation is the whole point of the feature: it is
+// what lets the v4 toggle move the PROMPT without moving the engine, and it is
+// why the toggle stayed independent of the (now-deleted) `USE_ARTICLE_TAGS`
+// gate. If a future edit makes this file produce an engine input, the flags stop
+// being safe and the experiment behind them is void.
 //
 // Pure and RN-free, per the harness import discipline.
 

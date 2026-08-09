@@ -39,7 +39,7 @@ type Engine = 'math' | 'backstop' | 'pipeline';
 
 interface PersonaV3 {
   seedWeight: number;
-  facts: { id: string; weight: number }[];
+  facts: { id: string; weight: number; statement?: string }[];
   locations: PersonaLocationSnapshot[];
   topics: {
     id: string;
@@ -103,6 +103,29 @@ async function main(): Promise<void> {
   // fact weight + topic-text lookup ---------------------------------------
   const factWeight = new Map(persona.facts.map((f) => [f.id, f.weight]));
   const topicByText = new Map(persona.topics.map((t) => [t.normalizedText, t]));
+
+  // Fact STATEMENTS — needed only by `--engine=pipeline`, which sends them to
+  // the tiered prompt. Added to the persona fixtures additively (weights,
+  // topics and ids are untouched) so this engine is self-contained rather than
+  // depending on the gitignored `.local-test-data/persona.json`.
+  const factStatement = new Map(
+    persona.facts
+      .filter((f) => typeof f.statement === 'string' && f.statement.trim().length > 0)
+      .map((f) => [f.id, f.statement as string]),
+  );
+  const allFactStatements = [...factStatement.values()];
+  const topicFactId = new Map(persona.topics.map((t) => [t.id, t.factId]));
+  /** The persona facts a candidate's matched topics hang off, deduped. */
+  const relatedFactsFor = (
+    matched: MatchedTopicInput[],
+  ): { id: string; statement: string }[] => {
+    const ids = new Set<string>();
+    for (const t of matched) {
+      const fid = t.topicId ? topicFactId.get(t.topicId) : undefined;
+      if (fid && factStatement.has(fid)) ids.add(fid);
+    }
+    return [...ids].map((id) => ({ id, statement: factStatement.get(id)! }));
+  };
 
   // article metadata by id ------------------------------------------------
   const artById = new Map(articles.map((a) => [a._id, a]));
@@ -169,14 +192,14 @@ async function main(): Promise<void> {
   // --- Phase 2: score per engine -------------------------------------------
   const rawById = new Map<string, number>();
   const computedById = new Map<string, number>();
-  // ALWAYS EMPTY since the judge was removed — nothing overrides the math any
-  // more. Kept so the emitted row shape and the `override` column stay stable
-  // for the tracked golden-label comparisons.
+  // Always empty — nothing overrides the math since the judge was removed. Kept
+  // so the emitted row shape and the `override` column stay stable for the
+  // tracked golden-label comparisons.
   const overrideById = new Map<string, boolean>();
   const compById = new Map<string, Record<string, number>>();
-  // ALWAYS ZERO SINCE THE JUDGE WAS REMOVED — see the `--engine=pipeline` note
-  // below. Kept (and kept named) so the printed summary line and anything
-  // parsing it keep their shape.
+  // LLM usage on the `pipeline` engine. Named for the judge it originally
+  // measured; it now measures the legacy tiered scoring call, which is the one
+  // LLM call the stage makes. Zero on `math` / `backstop`, which make none.
   let judgeUsage = { promptTokens: 0, completionTokens: 0, calls: 0, latencyMs: 0 };
 
   if (engine === 'backstop') {
@@ -201,26 +224,18 @@ async function main(): Promise<void> {
       });
     }
   } else {
-    // `--engine=pipeline` — WHAT THIS MEASURES CHANGED WHEN THE JUDGE WAS
-    // REMOVED, AND ITS NUMBERS ARE NOT COMPARABLE TO PRE-REMOVAL RUNS.
+    // `--engine=pipeline` — math + the REAL legacy tiered LLM scoring call over
+    // the NEAR AI LlmPort. This is the arm that grades what actually ships.
     //
-    // It used to run math + the REAL combined judge over the NEAR AI LlmPort:
-    // the goldset rows are tagged, so `isBackstop` was false, they were
-    // math-mode, and the judge branch keyed off `mathItems.length > 0` and ran.
-    // There is now one scoring path, and it needs `c.legacy` — the
-    // ScoringCandidate the tiered prompt is built from. The items below are
-    // constructed with `input` ONLY, so `scorable` is empty, NO LLM call is
-    // made, and `rawScoreMap` is the pure `computeRelevance()` math score.
-    //
-    // So `pipeline` currently produces the same thing `--engine=math` does,
-    // `judgeUsage.calls` is always 0, and `overrideById` is always empty. The
-    // GATE numbers in eval/README.md (90.4% FEED precision) were measured WITH
-    // the judge and no longer describe this code.
-    //
-    // Making it grade what actually ships means populating `legacy` here so the
-    // legacy tiered LLM call runs. That is a product decision about what the
-    // eval is for, not a rename, so it is left for the owner rather than
-    // guessed at.
+    // `legacy` IS LOAD-BEARING, and its absence silently broke this engine once.
+    // `run-stage::computeAndScore` scores `active.filter((c) => c.legacy)` — the
+    // `ScoringCandidate` the tiered prompt is built from. While the judge
+    // existed the judge branch keyed off `mathItems.length > 0` and needed no
+    // `legacy`, so building items as `{ input }` alone still exercised an LLM.
+    // When the judge was deleted that became "no LLM call at all", and because
+    // `eval/` is excluded from tsconfig NOTHING failed — the engine just quietly
+    // emitted the same numbers as `--engine=math`. Populate `legacy` or this
+    // regresses to that.
     const env = loadHarnessEnv();
     const calls: LlmCallRecord[] = [];
     const llm = createNearAiLlm({
@@ -230,9 +245,25 @@ async function main(): Promise<void> {
       concurrency: 6,
       onCall: (rec) => calls.push(rec),
     });
-    const items: StageCandidate[] = prepared.map((p) => ({ input: p.input }));
+    // `relatedFacts` are the persona facts the candidate's matched topics hang
+    // off — the same "Related User Fact" line the app sends. `factStatements`
+    // below is the whole bank, for the user-context block.
+    const items: StageCandidate[] = prepared.map((p) => ({
+      input: p.input,
+      legacy: {
+        id: p.c.id,
+        titleEn: p.c.titleEn,
+        descriptionEn: p.c.descriptionEn,
+        countryCode: p.c.countryCode ?? null,
+        userTopicIds: p.c.userTopicIds ?? [],
+        relatedFacts: relatedFactsFor(p.input.matchedTopics),
+      },
+    }));
     const started = Date.now();
-    const stage = await computeAndScore(items, persona2, llm, DEFAULT_HARNESS_CONFIG, { nowMs });
+    const stage = await computeAndScore(items, persona2, llm, DEFAULT_HARNESS_CONFIG, {
+      nowMs,
+      factStatements: allFactStatements,
+    });
     judgeUsage.latencyMs = Date.now() - started;
     for (const p of prepared) {
       rawById.set(p.c.id, stage.rawScoreMap.get(p.c.id) ?? 0);

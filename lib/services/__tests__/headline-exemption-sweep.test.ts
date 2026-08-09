@@ -170,14 +170,9 @@ describe('refreshHardFilterLabels — the card label', () => {
     // `category` never reaches ForYouSuggestion — deriving the label at render
     // time would silently miss this row, which is the surprise P6 exists to end.
     //
-    // CONSCIOUSLY UPDATED for EXPO_PUBLIC_USE_ARTICLE_TAGS: structured filters
-    // now follow the tag policy, so this case uses `category` rather than
-    // `entity`. It is the same guarantee — a structured kind reading a column
-    // the trimmed store row does not carry — over a field the tag policy does
-    // not strip (`category` is populated today and is not part of the untagged
-    // predicate), so the P6 regression guard survives the flag in either
-    // position. The `entity` version is covered with tags ON in
-    // suppression-sweep-tags-on.test.ts.
+    // Uses `category` rather than `entity` — both are structured kinds reading a
+    // column the trimmed store row does not carry, and the `entity` version is
+    // covered by the test below.
     mockLoadPersona.mockResolvedValue({
       persona: {
         locations: [],
@@ -195,11 +190,12 @@ describe('refreshHardFilterLabels — the card label', () => {
     expect(labels.get('head')).toBe('technology');
   });
 
-  it('does NOT label via a TAG-derived kind while article tags are off', async () => {
-    // The label path routes through the same `toScreeningInputs` policy as the
-    // purge, so EXPO_PUBLIC_USE_ARTICLE_TAGS gates it identically — no label
-    // here, and no half-state where a card is labelled for a filter the scorer
-    // never applied. The ON arm is in suppression-sweep-tags-on.test.ts.
+  // REVERSED when `USE_ARTICLE_TAGS` was deleted — this used to assert NO label.
+  // The label is what tells the reader WHY a card is dimmed; with the tag
+  // columns blanked, a user who filtered an entity got neither the filtering nor
+  // the explanation. The label path shares `toScreeningInputs` with the purge,
+  // so the two cannot disagree about what matched.
+  it('DOES label via a TAG-derived kind', async () => {
     mockLoadPersona.mockResolvedValue({
       persona: {
         locations: [],
@@ -214,7 +210,7 @@ describe('refreshHardFilterLabels — the card label', () => {
     ]);
 
     const labels = await refreshHardFilterLabels();
-    expect(labels.size).toBe(0);
+    expect(labels.get('head')).toBe('nvidia');
   });
 });
 
