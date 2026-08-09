@@ -635,7 +635,7 @@ const MeraNewsScreen: React.FC = () => {
                                 title-row placement is a deliberate user call
                                 (consistency with Feed over strict scoping). */}
                             <HStack className="items-center min-w-0" space="sm" pointerEvents="box-none">
-                                <View pointerEvents="none" className="flex-shrink min-w-0">
+                                <View pointerEvents="none" className="flex-1 min-w-0">
                                     <Heading
                                         size="4xl"
                                         className="text-white"
@@ -649,8 +649,6 @@ const MeraNewsScreen: React.FC = () => {
                                         // ellipsising a single word would be just
                                         // as broken, and letting it wrap pushes the
                                         // whole collapsing header out of shape.
-                                        adjustsFontSizeToFit
-                                        minimumFontScale={0.6}
                                     >
                                         {t('feed.dashboardTitle')}
                                     </Heading>

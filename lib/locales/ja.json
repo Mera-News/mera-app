@@ -949,7 +949,9 @@
     "searchMinLength": "検索を続行してください",
     "searchNotSubscribed": "検索には有効なプランが必要です",
     "searchError": "現在検索できません",
-    "searchEmpty": "過去48時間に一致するものはありません。検索は最近のヘッドラインをカバーし、完全なアーカイブではありません。"
+    "searchEmpty": "過去48時間に一致するものはありません。検索は最近のヘッドラインをカバーし、完全なアーカイブではありません。",
+    "openSearch": "検索",
+    "closeSearch": "検索を閉じる"
   },
   "forYou": {
     "sectionPrefix": "関連ニュース：",

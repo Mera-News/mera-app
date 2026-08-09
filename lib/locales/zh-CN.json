@@ -949,7 +949,9 @@
     "searchMinLength": "继续输入以搜索",
     "searchNotSubscribed": "搜索需要有效的方案",
     "searchError": "现在无法搜索",
-    "searchEmpty": "过去48小时内无匹配。搜索涵盖最近的头条，不是完整档案。"
+    "searchEmpty": "过去48小时内无匹配。搜索涵盖最近的头条，不是完整档案。",
+    "openSearch": "搜索",
+    "closeSearch": "关闭搜索"
   },
   "forYou": {
     "sectionPrefix": "关于：",

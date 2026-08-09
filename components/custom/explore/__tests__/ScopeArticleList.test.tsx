@@ -34,6 +34,11 @@ jest.mock('react-native', () => {
     };
 });
 
+// Captured from the mocked Animated.FlatList below (assigned during its render,
+// like `hookOptions`). `mock`-prefixed because jest's hoisting rule requires it
+// for anything a jest.mock factory closes over.
+let mockListOnEndReached: (() => Promise<void> | void) | null = null;
+
 // Reanimated: render Animated.FlatList as items (+ refreshControl/empty/footer),
 // and stub the scroll-handler hooks so composition doesn't crash. This mock
 // also renders the `refreshControl` PROP as a child, which is what lets the
@@ -52,9 +57,13 @@ jest.mock('react-native-reanimated', () => {
                 ListEmptyComponent,
                 ListFooterComponent,
                 refreshControl,
+                onEndReached,
             }: any,
             _ref: any,
         ) => {
+            // Exposed so a test can drive pagination — the real list calls this
+            // on scroll, which this mock has no notion of.
+            mockListOnEndReached = onEndReached;
             const items = data ?? [];
             const kids: any[] = [];
             if (refreshControl) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'rc' }, refreshControl));
@@ -139,6 +148,76 @@ const page = (ids: string[], cursor: string | null, more: boolean) => ({
 beforeEach(() => {
     jest.clearAllMocks();
     hookOptions = null;
+    mockListOnEndReached = null;
+});
+
+// Regression: "Encountered two children with the same key" on the Explore tab.
+// `topHeadlinesForCountry` paginates by OFFSET into an edition that is rebuilt
+// hourly, so a later page can legitimately re-serve rows the client already
+// holds. The duplicate ARTICLE is the bug; the key warning is only its symptom,
+// so the assertion is that the row renders ONCE — not that its key is unique.
+describe('ScopeArticleList — duplicate rows across pages', () => {
+    it('drops a page-2 row that is already on screen instead of rendering it twice', async () => {
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a', 'b'], 'cur1', true));
+        const { getAllByTestId, getByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+        await waitFor(() => expect(getByTestId('card-a')).toBeTruthy());
+
+        // Page 2 overlaps page 1 on 'b' — the edition shifted under the offset.
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['b', 'c'], 'cur2', false));
+        await act(async () => {
+            await mockListOnEndReached!();
+        });
+
+        expect(getAllByTestId('card-b')).toHaveLength(1);
+        expect(getByTestId('card-c')).toBeTruthy();
+        expect(getAllByTestId(/^card-/)).toHaveLength(3);
+    });
+
+    it('collapses a repeat WITHIN a single page (edition carrying one article twice)', async () => {
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a', 'a', 'b'], null, false));
+        const { getAllByTestId, getByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+
+        await waitFor(() => expect(getByTestId('card-b')).toBeTruthy());
+        expect(getAllByTestId('card-a')).toHaveLength(1);
+    });
+
+    it('discards an in-flight paginate whose page lands AFTER a refresh', async () => {
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a', 'b'], 'cur1', true));
+        const { getByTestId, queryByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+        await waitFor(() => expect(getByTestId('card-a')).toBeTruthy());
+
+        // Start page 2 but never settle it.
+        let settlePageTwo: ((value: unknown) => void) | null = null;
+        mockGetTopHeadlines.mockImplementationOnce(
+            () => new Promise((resolve) => { settlePageTwo = resolve; }),
+        );
+        await act(async () => {
+            void mockListOnEndReached!();
+        });
+
+        // …then refresh (the tab-icon re-tap path) and let it land.
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['z'], 'cur9', false));
+        await act(async () => {
+            await hookOptions.onRefresh();
+        });
+        expect(getByTestId('card-z')).toBeTruthy();
+
+        // The stale page 2 now arrives. It belongs to the pre-refresh ordering
+        // and must be dropped wholesale, not appended.
+        await act(async () => {
+            settlePageTwo!(page(['b', 'c'], 'cur2', false));
+        });
+
+        expect(getByTestId('card-z')).toBeTruthy();
+        expect(queryByTestId('card-c')).toBeNull();
+        expect(queryByTestId('card-b')).toBeNull();
+    });
 });
 
 describe('ScopeArticleList pull-to-refresh', () => {

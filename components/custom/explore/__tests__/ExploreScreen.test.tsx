@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { act, render } from '@testing-library/react-native';
+import { act, fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 
 // The animated gradient backdrop is pure decoration and asserts nothing here.
@@ -416,10 +416,64 @@ describe('ExploreScreen — browse countries + suppressed scopes (Items 7/18)', 
     });
 });
 
-describe('ExploreScreen — search bar + results overlay (Item 12a)', () => {
-    it('renders the search bar but no overlay while inactive', () => {
-        const { getByTestId, queryByTestId } = render(<ExploreScreen />);
+describe('ExploreScreen — search collapsed into the title row (Item 12a)', () => {
+    it('is COLLAPSED by default: heading + magnifier, and the input is not mounted at all', () => {
+        const { getByTestId, getByText, queryByTestId } = render(<ExploreScreen />);
+        expect(getByText('explore.title')).toBeTruthy();
+        expect(getByTestId('explore-search-open')).toBeTruthy();
+        // Not merely hidden — absent, so it takes no space in the row.
+        expect(queryByTestId('explore-search-bar-stub')).toBeNull();
+    });
+
+    it('tapping the magnifier swaps the heading out for the input on the SAME row', () => {
+        const { getByTestId, queryByText, queryByTestId } = render(<ExploreScreen />);
+
+        act(() => {
+            fireEvent.press(getByTestId('explore-search-open'));
+        });
+
         expect(getByTestId('explore-search-bar-stub')).toBeTruthy();
+        // Exactly one of the two states is ever rendered.
+        expect(queryByText('explore.title')).toBeNull();
+        expect(queryByTestId('explore-search-open')).toBeNull();
+    });
+
+    it('closing restores the heading AND clears the query, so the tab is never left silently filtered', () => {
+        const clear = jest.fn();
+        mockUseNewsSearch.mockReturnValue({ ...defaultSearchState(), clear });
+        const { getByTestId, getByText } = render(<ExploreScreen />);
+
+        act(() => {
+            fireEvent.press(getByTestId('explore-search-open'));
+        });
+        const barProps = mockSearchBar.mock.calls[mockSearchBar.mock.calls.length - 1][0];
+        act(() => {
+            barProps.onClose();
+        });
+
+        expect(clear).toHaveBeenCalledTimes(1);
+        expect(getByText('explore.title')).toBeTruthy();
+        expect(getByTestId('explore-search-open')).toBeTruthy();
+    });
+
+    it('opening search never remounts the scope list underneath', () => {
+        const { getByTestId } = render(<ExploreScreen />);
+        act(() => {
+            emitLocations!([row()]);
+        });
+        expect(mockListMount).toHaveBeenCalledTimes(1);
+
+        act(() => {
+            fireEvent.press(getByTestId('explore-search-open'));
+        });
+
+        expect(mockListMount).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('ExploreScreen — search results overlay (Item 12a)', () => {
+    it('renders no overlay while inactive', () => {
+        const { queryByTestId } = render(<ExploreScreen />);
         expect(queryByTestId('explore-search-overlay')).toBeNull();
         expect(queryByTestId('explore-search-results-stub')).toBeNull();
     });

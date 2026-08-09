@@ -40,14 +40,14 @@ import ExploreSearchBar from '../ExploreSearchBar';
 describe('ExploreSearchBar', () => {
     it('renders the wrapper testID (InputField swallows its own)', () => {
         const { getByTestId } = render(
-            <ExploreSearchBar query="" onChangeQuery={jest.fn()} onClear={jest.fn()} />,
+            <ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />,
         );
         expect(getByTestId('explore-search-input')).toBeTruthy();
     });
 
     it('shows the placeholder and current query value', () => {
         const { getByPlaceholderText } = render(
-            <ExploreSearchBar query="modi india" onChangeQuery={jest.fn()} onClear={jest.fn()} />,
+            <ExploreSearchBar query="modi india" onChangeQuery={jest.fn()} onClose={jest.fn()} />,
         );
         const input = getByPlaceholderText('explore.searchPlaceholder');
         expect(input.props.value).toBe('modi india');
@@ -56,25 +56,32 @@ describe('ExploreSearchBar', () => {
     it('calls onChangeQuery as the user types', () => {
         const onChangeQuery = jest.fn();
         const { getByPlaceholderText } = render(
-            <ExploreSearchBar query="" onChangeQuery={onChangeQuery} onClear={jest.fn()} />,
+            <ExploreSearchBar query="" onChangeQuery={onChangeQuery} onClose={jest.fn()} />,
         );
         fireEvent.changeText(getByPlaceholderText('explore.searchPlaceholder'), 'india');
         expect(onChangeQuery).toHaveBeenCalledWith('india');
     });
 
-    it('hides the clear button when the query is empty', () => {
-        const { queryByTestId } = render(
-            <ExploreSearchBar query="" onChangeQuery={jest.fn()} onClear={jest.fn()} />,
+    it('autofocuses, so the tap that revealed it also raises the keyboard', () => {
+        const { getByPlaceholderText } = render(
+            <ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />,
         );
-        expect(queryByTestId('explore-search-clear')).toBeNull();
+        expect(getByPlaceholderText('explore.searchPlaceholder').props.autoFocus).toBe(true);
     });
 
-    it('shows the clear button once there is text, and it calls onClear', () => {
-        const onClear = jest.fn();
+    it('shows the close control even with an EMPTY query — it is the only way back', () => {
         const { getByTestId } = render(
-            <ExploreSearchBar query="india" onChangeQuery={jest.fn()} onClear={onClear} />,
+            <ExploreSearchBar query="" onChangeQuery={jest.fn()} onClose={jest.fn()} />,
         );
-        fireEvent.press(getByTestId('explore-search-clear'));
-        expect(onClear).toHaveBeenCalledTimes(1);
+        expect(getByTestId('explore-search-close')).toBeTruthy();
+    });
+
+    it('calls onClose when the ✕ is pressed', () => {
+        const onClose = jest.fn();
+        const { getByTestId } = render(
+            <ExploreSearchBar query="india" onChangeQuery={jest.fn()} onClose={onClose} />,
+        );
+        fireEvent.press(getByTestId('explore-search-close'));
+        expect(onClose).toHaveBeenCalledTimes(1);
     });
 });

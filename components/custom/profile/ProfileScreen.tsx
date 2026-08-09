@@ -189,8 +189,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     size="4xl"
                     className="text-white flex-1 mr-3"
                     numberOfLines={1}
-                    adjustsFontSizeToFit
-                    minimumFontScale={0.6}
                 >
                     {t('tabs.profile')}
                 </Heading>

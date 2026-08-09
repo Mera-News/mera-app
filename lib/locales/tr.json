@@ -949,7 +949,9 @@
     "searchMinLength": "Aramak için yazmaya devam et",
     "searchNotSubscribed": "Arama aktif bir plan gereklidir",
     "searchError": "Şu anda arama yapılamıyor",
-    "searchEmpty": "Son 48 saatte hiçbir eşleşme yok. Arama son başlıkları kapsıyor, tam arşivi değil."
+    "searchEmpty": "Son 48 saatte hiçbir eşleşme yok. Arama son başlıkları kapsıyor, tam arşivi değil.",
+    "openSearch": "Ara",
+    "closeSearch": "Aramayı kapat"
   },
   "forYou": {
     "sectionPrefix": "Haberler:",

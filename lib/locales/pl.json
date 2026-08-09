@@ -961,7 +961,9 @@
     "searchMinLength": "Wpisz dalej, aby wyszukać",
     "searchNotSubscribed": "Wyszukiwanie wymaga aktywnego planu",
     "searchError": "Nie udało się teraz wyszukać",
-    "searchEmpty": "Brak dopasowań w ciągu ostatnich 48 godzin. Wyszukiwanie obejmuje ostatnie nagłówki, nie pełne archiwum."
+    "searchEmpty": "Brak dopasowań w ciągu ostatnich 48 godzin. Wyszukiwanie obejmuje ostatnie nagłówki, nie pełne archiwum.",
+    "openSearch": "Szukaj",
+    "closeSearch": "Zamknij wyszukiwanie"
   },
   "forYou": {
     "sectionPrefix": "Wiadomości o:",

@@ -949,7 +949,9 @@
     "searchMinLength": "Terus ketik untuk mencari",
     "searchNotSubscribed": "Pencarian memerlukan paket aktif",
     "searchError": "Tidak dapat mencari sekarang",
-    "searchEmpty": "Tidak ada kecocokan dalam 48 jam terakhir. Pencarian mencakup berita terbaru, bukan arsip lengkap."
+    "searchEmpty": "Tidak ada kecocokan dalam 48 jam terakhir. Pencarian mencakup berita terbaru, bukan arsip lengkap.",
+    "openSearch": "Cari",
+    "closeSearch": "Tutup pencarian"
   },
   "forYou": {
     "sectionPrefix": "Berita tentang:",

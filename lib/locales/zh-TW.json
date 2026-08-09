@@ -949,7 +949,9 @@
     "searchMinLength": "繼續輸入以搜尋",
     "searchNotSubscribed": "搜尋需要有效的方案",
     "searchError": "目前無法搜尋",
-    "searchEmpty": "過去48小時內沒有符合的結果。搜尋涵蓋最近的頭條，而非完整檔案。"
+    "searchEmpty": "過去48小時內沒有符合的結果。搜尋涵蓋最近的頭條，而非完整檔案。",
+    "openSearch": "搜尋",
+    "closeSearch": "關閉搜尋"
   },
   "forYou": {
     "sectionPrefix": "關於：",

@@ -949,7 +949,9 @@
     "searchMinLength": "Continua a scrivere per cercare",
     "searchNotSubscribed": "La ricerca richiede un piano attivo",
     "searchError": "Impossibile cercare al momento",
-    "searchEmpty": "Nessuna corrispondenza negli ultimi 48 ore. La ricerca copre i titoli recenti, non l'archivio completo."
+    "searchEmpty": "Nessuna corrispondenza negli ultimi 48 ore. La ricerca copre i titoli recenti, non l'archivio completo.",
+    "openSearch": "Cerca",
+    "closeSearch": "Chiudi ricerca"
   },
   "forYou": {
     "sectionPrefix": "Notizie su:",

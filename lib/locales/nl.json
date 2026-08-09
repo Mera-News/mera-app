@@ -949,7 +949,9 @@
     "searchMinLength": "Ga door met typen om te zoeken",
     "searchNotSubscribed": "Zoeken vereist een actief abonnement",
     "searchError": "Kon nu niet zoeken",
-    "searchEmpty": "Geen overeenkomsten in de afgelopen 48 uur. Zoeken bestrijkt recent nieuws, niet het volledige archief."
+    "searchEmpty": "Geen overeenkomsten in de afgelopen 48 uur. Zoeken bestrijkt recent nieuws, niet het volledige archief.",
+    "openSearch": "Zoeken",
+    "closeSearch": "Zoekopdracht sluiten"
   },
   "forYou": {
     "sectionPrefix": "Nieuws over:",

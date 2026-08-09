@@ -1009,7 +1009,7 @@ const FeedScreen: React.FC = () => {
               space="sm"
               pointerEvents="box-none"
             >
-              <View pointerEvents="none" className="flex-shrink min-w-0">
+              <View pointerEvents="none" className="flex-1 min-w-0">
                 {/* A bare 1-line clamp truncated the screen's own name at large
                   Dynamic Type sizes, so this deliberately had none and wrapped
                   instead — but wrapping a single long word breaks it MID-WORD
@@ -1021,8 +1021,6 @@ const FeedScreen: React.FC = () => {
                   size="4xl"
                   className="text-white"
                   numberOfLines={1}
-                  adjustsFontSizeToFit
-                  minimumFontScale={0.6}
                 >
                   {t('swipeFeed.yourDeck')}
                 </Heading>

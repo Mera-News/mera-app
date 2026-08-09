@@ -949,7 +949,9 @@
     "searchMinLength": "Tiếp tục gõ để tìm kiếm",
     "searchNotSubscribed": "Tìm kiếm cần có gói hoạt động",
     "searchError": "Không thể tìm kiếm ngay bây giờ",
-    "searchEmpty": "Không có kết quả khớp trong 48 giờ qua. Tìm kiếm bao gồm tin tức gần đây, không phải toàn bộ lưu trữ."
+    "searchEmpty": "Không có kết quả khớp trong 48 giờ qua. Tìm kiếm bao gồm tin tức gần đây, không phải toàn bộ lưu trữ.",
+    "openSearch": "Tìm kiếm",
+    "closeSearch": "Đóng tìm kiếm"
   },
   "forYou": {
     "sectionPrefix": "Tin tức về:",

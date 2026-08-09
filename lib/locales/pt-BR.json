@@ -949,7 +949,9 @@
     "searchMinLength": "Continue digitando para pesquisar",
     "searchNotSubscribed": "Pesquisa requer um plano ativo",
     "searchError": "Não foi possível pesquisar agora",
-    "searchEmpty": "Nenhuma correspondência nas últimas 48 horas. A pesquisa cobre manchetes recentes, não o arquivo completo."
+    "searchEmpty": "Nenhuma correspondência nas últimas 48 horas. A pesquisa cobre manchetes recentes, não o arquivo completo.",
+    "openSearch": "Pesquisar",
+    "closeSearch": "Fechar pesquisa"
   },
   "forYou": {
     "sectionPrefix": "Notícias sobre:",

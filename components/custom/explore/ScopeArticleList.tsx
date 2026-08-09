@@ -30,6 +30,42 @@ const PAGE_SIZE = 10;
 // declare it locally. A fourth copy beats a shared constant for one hex value.
 const REFRESH_TINT = '#EDA77E';
 
+/**
+ * Append `next` to `previous`, dropping any headline whose article id is
+ * already present (and any repeat WITHIN `next`).
+ *
+ * `topHeadlinesForCountry` paginates by OFFSET into a materialized edition
+ * (`encodeOffsetCursor` / `entries.slice(offset, offset + first)` in the
+ * server's top-headlines.service.ts), and that edition is rebuilt hourly. So a
+ * page-2 slice taken after a rebuild can legitimately re-serve rows the client
+ * already has from page 1. React's "Encountered two children with the same
+ * key" is only the symptom; the bug is the duplicated ARTICLE, so the fix is to
+ * render it once rather than to make the key unique — a key suffixed with the
+ * index would silence the warning and leave the duplicate row on screen.
+ *
+ * Rows with no `_id` pass through untouched: `keyExtractor` falls back to
+ * `article-${index}` for those, so collapsing them by their (empty) id would
+ * merge genuinely different rows — the opposite mistake.
+ */
+export function appendUniqueHeadlines(
+    previous: readonly TopHeadline[],
+    next: readonly TopHeadline[],
+): TopHeadline[] {
+    const seen = new Set<string>();
+    for (const headline of previous) {
+        const id = headline.article?._id;
+        if (id) seen.add(id);
+    }
+    const additions = next.filter((headline) => {
+        const id = headline.article?._id;
+        if (!id) return true;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+    });
+    return additions.length === 0 ? [...previous] : [...previous, ...additions];
+}
+
 interface ScopeArticleListProps {
     readonly scope: ExploreScope;
     /**
@@ -98,6 +134,15 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
     const [endCursor, setEndCursor] = useState<string | null>(null);
     const [hasNextPage, setHasNextPage] = useState(false);
     const hasFetched = useRef(false);
+    // Bumped by every refresh. A paginate captures the value it STARTED under
+    // and discards its page if a refresh landed meanwhile — the `isRefreshing`
+    // guard in `loadMore` only stops a paginate from starting during a refresh,
+    // not from landing after one, and appending stale page 2 onto a freshly
+    // refreshed page 1 is exactly how duplicate rows reached the screen. The
+    // reported trigger — leave the tab, come back, tap the tab icon — runs
+    // `useTabPressScrollRefresh` → `onRefresh` straight into that window.
+    // A ref, not state: `loadMore`/`onRefresh` must not be re-created by it.
+    const loadGenerationRef = useRef(0);
 
     // Fetch one page for this scope's country (or GLOBAL for World).
     const loadFrom = useCallback(
@@ -127,7 +172,10 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             try {
                 setIsLoading(true);
                 const { rows, cursor, more } = await loadFrom();
-                setHeadlines(rows);
+                // Deduped even though it is a single page: the edition can
+                // carry the same article under two entries, which would
+                // collide on first render.
+                setHeadlines(appendUniqueHeadlines([], rows));
                 setEndCursor(cursor);
                 setHasNextPage(more);
             } catch (error) {
@@ -153,10 +201,12 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
      */
     const onRefresh = useCallback(async () => {
         if (!enabled || isRefreshing || isLoading) return;
+        const generation = ++loadGenerationRef.current;
         try {
             setIsRefreshing(true);
             const { rows, cursor, more } = await loadFrom();
-            setHeadlines(rows);
+            if (loadGenerationRef.current !== generation) return;
+            setHeadlines(appendUniqueHeadlines([], rows));
             setEndCursor(cursor);
             setHasNextPage(more);
         } catch (error) {
@@ -188,10 +238,16 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
         // pre-refresh cursor and then have its rows thrown away (or overwrite
         // the refreshed cursor, depending on which settles last).
         if (!hasNextPage || isLoadingMore || isRefreshing || !endCursor) return;
+        const generation = loadGenerationRef.current;
         try {
             setIsLoadingMore(true);
             const { rows, cursor, more } = await loadFrom(endCursor);
-            setHeadlines((prev) => [...prev, ...rows]);
+            // A refresh landed while this page was in flight: its rows belong
+            // to the pre-refresh ordering and its cursor to the pre-refresh
+            // offsets. Dropping the page wholesale is the only correct answer —
+            // appending it would duplicate rows AND mix two rankings.
+            if (loadGenerationRef.current !== generation) return;
+            setHeadlines((prev) => appendUniqueHeadlines(prev, rows));
             setEndCursor(cursor);
             setHasNextPage(more);
         } catch (error) {

@@ -954,7 +954,9 @@
     "searchMinLength": "Continuez à taper pour rechercher",
     "searchNotSubscribed": "La recherche nécessite un forfait actif",
     "searchError": "Impossible de rechercher en ce moment",
-    "searchEmpty": "Aucune correspondance dans les 48 dernières heures. La recherche couvre les titres récents, pas l'archive complète."
+    "searchEmpty": "Aucune correspondance dans les 48 dernières heures. La recherche couvre les titres récents, pas l'archive complète.",
+    "openSearch": "Recherche",
+    "closeSearch": "Fermer recherche"
   },
   "forYou": {
     "sectionPrefix": "Actualités sur :",

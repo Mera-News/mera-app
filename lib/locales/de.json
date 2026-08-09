@@ -949,7 +949,9 @@
     "searchMinLength": "Weitertippen zum Suchen",
     "searchNotSubscribed": "Suche benötigt einen aktiven Plan",
     "searchError": "Konnte gerade nicht suchen",
-    "searchEmpty": "Keine Treffer in den letzten 48 Stunden. Die Suche umfasst aktuelle Schlagzeilen, nicht das vollständige Archiv."
+    "searchEmpty": "Keine Treffer in den letzten 48 Stunden. Die Suche umfasst aktuelle Schlagzeilen, nicht das vollständige Archiv.",
+    "openSearch": "Suchen",
+    "closeSearch": "Suche schließen"
   },
   "forYou": {
     "sectionPrefix": "Nachrichten zu:",

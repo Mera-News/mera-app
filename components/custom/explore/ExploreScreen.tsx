@@ -8,6 +8,7 @@ import {
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
 import { setSetting } from '@/lib/database/services/setting-service';
 import { observeAll as observeAllLocations } from '@/lib/database/services/location-service';
 import { getBrowseCountries, removeBrowseCountry } from '@/lib/explore/browse-countries';
@@ -25,10 +26,11 @@ import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
 import type { NewsSearchHit } from '@/lib/generated/graphql-types';
 import { useNewsSearch } from '@/lib/news-search/use-news-search';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, type LayoutChangeEvent } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import ExploreSearchBar from './ExploreSearchBar';
@@ -38,6 +40,16 @@ import ScopeChipRow from './ScopeChipRow';
 
 /** Persisted last-selected scope id (setting-service KV — same store as other flags). */
 const LAST_SCOPE_KEY = 'explore_last_scope';
+
+/**
+ * Fallback height for the title row, used only until it has measured itself
+ * once. `text-4xl` is `36px/54px` in tailwind.config.js and a `size="md"` Input
+ * is `h-10` (40px), so the two states are NOT naturally the same height — the
+ * row is pinned to the taller of them (see `titleRowHeight`) or the swap would
+ * shrink the header by 14pt, which in turn moves `headerHeight`, the search
+ * overlay's `top` and the list's `paddingTop`.
+ */
+const TITLE_ROW_MIN_HEIGHT = 54;
 
 /**
  * Explore tab (Wave 10, N5; geo-derivation wave deleted the Top stories chip).
@@ -59,7 +71,16 @@ const LAST_SCOPE_KEY = 'explore_last_scope';
  * was still live until this wave deleted it as a duplicate of the "+" chip.
  * The floating Mera bubble is not rendered on this screen.
  *
- * Item 12a — a search bar sits above the chips (`ExploreSearchBar`), backed by
+ * Item 12a — search is COLLAPSED INTO THE TITLE ROW. That row has two states
+ * and renders exactly one of them: collapsed (`Explore` heading + a magnifier
+ * on the right) or expanded (`ExploreSearchBar`'s input + an ✕ on the right).
+ * The input is not mounted while collapsed — mounting-and-hiding it would keep
+ * its layout in the row — and the row is height-pinned (see
+ * `TITLE_ROW_MIN_HEIGHT`) so the swap is instant with no reflow. Deliberately
+ * NOT animated: the two states have different intrinsic heights, and a clean
+ * instant swap beats a transition that moves `headerHeight` mid-flight.
+ *
+ * The search itself is backed by
  * `lib/news-search/use-news-search.ts` (debounce + min-length gate + fetch —
  * see that file for the state machine). While a search is active
  * (non-empty query) `ExploreSearchResults` renders as an OVERLAY on top of the
@@ -85,6 +106,40 @@ const ExploreScreen: React.FC = () => {
             openArticle({ articleId: hit._id });
         },
         [openArticle],
+    );
+
+    // Is the title row showing the input instead of the "Explore" heading?
+    // Local and ephemeral on purpose: nothing else on the tab (and nothing
+    // across a remount) cares, and persisting it would reopen the tab in a
+    // filtered-looking state.
+    const [searchOpen, setSearchOpen] = useState(false);
+    const handleOpenSearch = useCallback(() => setSearchOpen(true), []);
+    // Dismiss ALWAYS clears. Collapsing while a query survived would hide the
+    // only visible explanation for a filtered tab (the results overlay keys off
+    // the query, not off `searchOpen`).
+    const clearSearch = search.clear;
+    const handleCloseSearch = useCallback(() => {
+        setSearchOpen(false);
+        clearSearch();
+    }, [clearSearch]);
+
+    // The title row measures ITSELF in its collapsed state and then pins that
+    // height for both states, rather than hardcoding one — the heading honours
+    // Dynamic Type (see lib/typography), so its real height is only knowable at
+    // runtime, and a constant would let a large text setting reintroduce the
+    // very jump this exists to remove. Measuring only while collapsed is what
+    // keeps it a one-way calibration instead of a feedback loop: the pinned
+    // value is a `minHeight`, so the collapsed row's natural height always wins
+    // and re-measures to the same number.
+    const [titleRowHeight, setTitleRowHeight] = useState<number | null>(null);
+    const handleTitleRowLayout = useCallback(
+        (event: LayoutChangeEvent) => {
+            if (searchOpen) return;
+            const measured = Math.round(event.nativeEvent.layout.height);
+            if (measured <= 0) return;
+            setTitleRowHeight((previous) => (previous === measured ? previous : measured));
+        },
+        [searchOpen],
     );
 
     const [locations, setLocations] = useState<ScopeLocationInput[]>([]);
@@ -362,30 +417,62 @@ const ExploreScreen: React.FC = () => {
             >
                 <GlassPlate tint={GLASS_HEADER_TINT} />
                 <Box pointerEvents="box-none" style={{ paddingTop: insets.top + 16 }}>
-                    {/* Header — title only. It used to also carry a right-slot
-                        Sources button, but ScopeChipRow's trailing "+" chip now
-                        opens `/logged-in/sources` too — the two were exact
-                        duplicates once the "+" stopped going to /locations
-                        (Item 7), so this one was deleted rather than kept as a
-                        second way to reach the same screen. */}
-                    <HStack className="items-center justify-between px-5 mb-2" pointerEvents="box-none">
-                        <Heading
-                            size="4xl"
-                            className="text-white flex-shrink mr-3"
-                                                        pointerEvents="none"
-                        >
-                            {t('explore.title')}
-                        </Heading>
-                    </HStack>
+                    {/* Header — title OR search, never both (Item 12a). It used
+                        to also carry a right-slot Sources button, but
+                        ScopeChipRow's trailing "+" chip now opens
+                        `/logged-in/sources` too — the two were exact duplicates
+                        once the "+" stopped going to /locations (Item 7), so
+                        this one was deleted rather than kept as a second way to
+                        reach the same screen.
 
-                    {/* Item 12a — search bar, above the scope chips. Not
-                        box-none: it's a real Input and must take its own
-                        touches directly. */}
-                    <ExploreSearchBar
-                        query={search.query}
-                        onChangeQuery={search.setQuery}
-                        onClear={search.clear}
-                    />
+                        `minHeight` is what makes the two states the same
+                        height; `box-none` keeps the row itself out of the touch
+                        path (the list's pull-to-refresh passes through it)
+                        while the magnifier / input still receive taps. */}
+                    <HStack
+                        className="items-center justify-between px-5 mb-2"
+                        pointerEvents="box-none"
+                        onLayout={handleTitleRowLayout}
+                        style={{ minHeight: titleRowHeight ?? TITLE_ROW_MIN_HEIGHT }}
+                    >
+                        {searchOpen ? (
+                            <ExploreSearchBar
+                                query={search.query}
+                                onChangeQuery={search.setQuery}
+                                onClose={handleCloseSearch}
+                            />
+                        ) : (
+                            <>
+                                <Heading
+                                    size="4xl"
+                                    className="text-white flex-1 mr-3"
+                                    pointerEvents="none"
+                                    // `flex-1` CLAIMS the row's remaining width.
+                                    // `flex-shrink` let this column collapse toward
+                                    // zero in a justify-between row, which is the
+                                    // actual cause of both failures seen here: the
+                                    // title wrapping MID-WORD ("Dashboar"/"d"), and
+                                    // then, with adjustsFontSizeToFit, shrinking to
+                                    // ~8px to fit the collapsed box. No
+                                    // adjustsFontSizeToFit — with a real width the
+                                    // one-line clamp is enough, and scale-to-fit
+                                    // fights the row's minHeight pin.
+                                    numberOfLines={1}
+                                >
+                                    {t('explore.title')}
+                                </Heading>
+                                <Pressable
+                                    testID="explore-search-open"
+                                    onPress={handleOpenSearch}
+                                    hitSlop={12}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t('explore.openSearch')}
+                                >
+                                    <MaterialIcons name="search" size={24} color="#ffffff" />
+                                </Pressable>
+                            </>
+                        )}
+                    </HStack>
 
                     {/* The offline notice that used to sit here MOVED into
                         ScopeArticleList's empty state. It answers a different
