@@ -46,6 +46,15 @@ interface MeraProtocolState {
   // fact: they never leave the device. Default false.
   deepInterview: boolean;
 
+  // Show extracted metadata — when true, the article/suggestion detail
+  // screens show the server's machine-extracted tags for the open story
+  // (places, entities, event type). Transparency-only: no data path changes,
+  // no network calls added — the fields already ride the existing
+  // `articleById` query and the local suggestion row. Off by default because
+  // this metadata is measurably imperfect (audited well below 100% correct)
+  // and displaying it as fact would overclaim.
+  showExtractedMetadata: boolean;
+
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
   modelState: ModelStateLabel;
@@ -64,6 +73,7 @@ interface MeraProtocolState {
   setRelevanceV4: (enabled: boolean) => void;
   setWebSearchInChat: (enabled: boolean) => void;
   setDeepInterview: (enabled: boolean) => void;
+  setShowExtractedMetadata: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -96,6 +106,7 @@ const SETTING_INJECT_NOISE = 'mera_inject_noise';
 const SETTING_RELEVANCE_V4 = 'mera_relevance_v3';
 const SETTING_WEB_SEARCH_IN_CHAT = 'mera_web_search_in_chat';
 const SETTING_DEEP_INTERVIEW = 'mera_deep_interview';
+const SETTING_SHOW_EXTRACTED_METADATA = 'mera_show_extracted_metadata';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
  *  only so `reset()` clears the orphaned row from devices that persisted it. */
@@ -113,6 +124,7 @@ const initialState = {
   relevanceV4: false,
   webSearchInChat: false,
   deepInterview: false,
+  showExtractedMetadata: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -149,6 +161,11 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
   setDeepInterview: (deepInterview) => {
     set({ deepInterview });
     setSetting(SETTING_DEEP_INTERVIEW, deepInterview ? 'true' : 'false').catch(() => { });
+  },
+
+  setShowExtractedMetadata: (showExtractedMetadata) => {
+    set({ showExtractedMetadata });
+    setSetting(SETTING_SHOW_EXTRACTED_METADATA, showExtractedMetadata ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -194,6 +211,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(SETTING_RELEVANCE_V4).catch(() => { });
     deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
     deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
+    deleteSetting(SETTING_SHOW_EXTRACTED_METADATA).catch(() => { });
     deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
     deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
     deleteSetting('e2ee_enabled').catch(() => { });
@@ -209,6 +227,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         relevanceV4Value,
         webSearchValue,
         deepInterviewValue,
+        showExtractedMetadataValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
         getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
@@ -217,6 +236,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(SETTING_RELEVANCE_V4),
         getSetting(SETTING_WEB_SEARCH_IN_CHAT),
         getSetting(SETTING_DEEP_INTERVIEW),
+        getSetting(SETTING_SHOW_EXTRACTED_METADATA),
       ]);
       // One-shot cleanup: the retired v2 key is never read — the switch starts
       // off regardless of what v2 was set to — just swept so it doesn't linger.
@@ -261,6 +281,11 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (deepInterviewValue === 'false') {
         updates.deepInterview = false;
       }
+      if (showExtractedMetadataValue === 'true') {
+        updates.showExtractedMetadata = true;
+      } else if (showExtractedMetadataValue === 'false') {
+        updates.showExtractedMetadata = false;
+      }
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
@@ -288,6 +313,9 @@ export const useWebSearchInChat = () =>
 
 export const useDeepInterview = () =>
   useMeraProtocolStore((state) => state.deepInterview);
+
+export const useShowExtractedMetadata = () =>
+  useMeraProtocolStore((state) => state.showExtractedMetadata);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

@@ -467,7 +467,16 @@
     "deepInterviewTitle": "Diepere vragen",
     "deepInterviewOn": "Aan: Mera vraagt naar aandacht, zorgen en beslissingen",
     "deepInterviewOff": "Uit",
-    "deepInterviewDescription": "Mera stelt minder, diepere vragen: wat je je aandacht probeert te beschermen, welke onderwerpen nodig maar angstig zijn, welke nuttig maar tijdverspilling voelen, wat je deze maand beslist en waarom elk moment voor jou uitmaakt. Je antwoorden worden op dit apparaat opgeslagen en verlaten het nooit. Dit is precies waarom Mera ze kan vragen. Ze maken relevantie scores en redenen op elk verhaal scherper. Standaard uit."
+    "deepInterviewDescription": "Mera stelt minder, diepere vragen: wat je je aandacht probeert te beschermen, welke onderwerpen nodig maar angstig zijn, welke nuttig maar tijdverspilling voelen, wat je deze maand beslist en waarom elk moment voor jou uitmaakt. Je antwoorden worden op dit apparaat opgeslagen en verlaten het nooit. Dit is precies waarom Mera ze kan vragen. Ze maken relevantie scores en redenen op elk verhaal scherper. Standaard uit.",
+    "extractedMetadataTitle": "Geëxtraheerde metagegevens weergeven",
+    "extractedMetadataOn": "Aan: toont voor elk verhaal de geëxtraheerde plaatsen, entiteiten en gebeurtenistype",
+    "extractedMetadataOff": "Uit",
+    "extractedMetadataDescription": "Wanneer dit aanstaat, toont het artikelscherm wat ons systeem automatisch uit het verhaal heeft geëxtraheerd: plaatsen, entiteiten en gebeurtenistype. Dit is een machinelezen van het verhaal, geen geverifieerd feit, en het kan onjuist zijn. Standaard uit.",
+    "extractedMetadataPanelHeading": "Geëxtraheerde Metagegevens",
+    "extractedMetadataEventTypeLabel": "Gebeurtenistype",
+    "extractedMetadataPlacesLabel": "Plaatsen",
+    "extractedMetadataEntitiesLabel": "Entiteiten",
+    "extractedMetadataCaption": "AI-geëxtraheerd, geen geverifieerd feit"
   },
   "manageData": {
     "deleting": "Verwijderen...",

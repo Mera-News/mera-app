@@ -10,6 +10,7 @@
 // (ArticleFeedbackPrompt / CardActionBar) is the single entry point.
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
+import ExtractedMetadataPanel from '@/components/custom/news-detail/ExtractedMetadataPanel';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
 import RelevanceChip from '@/components/custom/RelevanceChip';
@@ -164,6 +165,16 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
     const metaCountryCode = suggestion?.country_code
         ?? article?.publicationSource?.country_code
         ?? null;
+
+    // Extraction metadata for the transparency panel (screen variant only —
+    // see ExtractedMetadataPanel). `entities`/`eventType` are reachable from
+    // both a live article and a local suggestion row; `geoTags` is NOT — the
+    // suggestion mapper (`toForYouSuggestion` in article-suggestion-service.ts)
+    // never carries `geo_tags_json` onto `ForYouSuggestion`, so a
+    // suggestion-sourced screen shows no places even when the server has them.
+    const metaEventType = suggestion?.eventType ?? article?.event_type ?? null;
+    const metaEntities = suggestion?.entities ?? article?.entities ?? null;
+    const metaGeoTags = article?.geo_tags ?? null;
 
     const [imageFailed, setImageFailed] = useState(false);
     const showImage = !!imageUrl && !imageFailed;
@@ -394,6 +405,11 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
                 {titleEl}
                 {aboveReason}
                 {reasonBoxEl}
+                <ExtractedMetadataPanel
+                    eventType={metaEventType}
+                    entities={metaEntities}
+                    geoTags={metaGeoTags}
+                />
                 {footer}
                 <Box style={{ height: contentBottomInset }} />
             </VStack>

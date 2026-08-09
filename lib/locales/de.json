@@ -467,7 +467,16 @@
     "deepInterviewTitle": "Tiefere Fragen",
     "deepInterviewOn": "An, Mera stellt Fragen zu Aufmerksamkeit, Sorgen und Entscheidungen",
     "deepInterviewOff": "Aus",
-    "deepInterviewDescription": "Mera stellt weniger, dafür tiefere Fragen: was du deine Aufmerksamkeit schützen möchtest, welche Themen notwendig aber angespannt sind, welche nützlich aber zeitverschwendend wirken, was du diesen Monat entscheidest und warum jeder Ort für dich wichtig ist. Deine Antworten werden auf diesem Gerät gespeichert und verlassen es nie, was genau der Grund ist, warum Mera sie stellen kann. Sie machen Relevanzwerte und die Gründe auf jeder Geschichte präziser."
+    "deepInterviewDescription": "Mera stellt weniger, dafür tiefere Fragen: was du deine Aufmerksamkeit schützen möchtest, welche Themen notwendig aber angespannt sind, welche nützlich aber zeitverschwendend wirken, was du diesen Monat entscheidest und warum jeder Ort für dich wichtig ist. Deine Antworten werden auf diesem Gerät gespeichert und verlassen es nie, was genau der Grund ist, warum Mera sie stellen kann. Sie machen Relevanzwerte und die Gründe auf jeder Geschichte präziser.",
+    "extractedMetadataTitle": "Automatisch extrahierte Metadaten anzeigen",
+    "extractedMetadataOn": "An: zeigt die extrahierten Orte, Entitäten und den Ereignistyp jeder Geschichte",
+    "extractedMetadataOff": "Aus",
+    "extractedMetadataDescription": "Wenn dies aktiviert ist, zeigt der Bildschirm des Artikels, was unser System automatisch aus der Geschichte extrahiert hat: Orte, Entitäten und Ereignistyp. Dies ist eine maschinelle Analyse der Geschichte, keine verifizierten Fakten und kann fehlerhaft sein. Standardmäßig deaktiviert.",
+    "extractedMetadataPanelHeading": "Extrahierte Metadaten",
+    "extractedMetadataEventTypeLabel": "Ereignistyp",
+    "extractedMetadataPlacesLabel": "Orte",
+    "extractedMetadataEntitiesLabel": "Entitäten",
+    "extractedMetadataCaption": "Von KI extrahiert, nicht verifizierte Fakten"
   },
   "manageData": {
     "deleting": "Wird gelöscht...",

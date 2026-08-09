@@ -467,7 +467,16 @@
     "deepInterviewTitle": "Pertanyaan lebih dalam",
     "deepInterviewOn": "Aktif - Mera bertanya tentang perhatian, kekhawatiran, dan keputusan",
     "deepInterviewOff": "Nonaktif",
-    "deepInterviewDescription": "Mera bertanya lebih sedikit, pertanyaan yang lebih dalam: apa yang Anda coba lindungi dari perhatian Anda, topik mana yang diperlukan tetapi cemas, mana yang terasa berguna tetapi membuang waktu Anda, apa yang Anda putuskan bulan ini, dan mengapa setiap tempat penting bagi Anda. Jawaban Anda disimpan di perangkat ini dan tidak pernah meninggalkannya, yang persis mengapa Mera dapat menanyakannya. Mereka membuat skor relevansi dan alasan yang ditampilkan di setiap cerita lebih tajam. Nonaktif secara default."
+    "deepInterviewDescription": "Mera bertanya lebih sedikit, pertanyaan yang lebih dalam: apa yang Anda coba lindungi dari perhatian Anda, topik mana yang diperlukan tetapi cemas, mana yang terasa berguna tetapi membuang waktu Anda, apa yang Anda putuskan bulan ini, dan mengapa setiap tempat penting bagi Anda. Jawaban Anda disimpan di perangkat ini dan tidak pernah meninggalkannya, yang persis mengapa Mera dapat menanyakannya. Mereka membuat skor relevansi dan alasan yang ditampilkan di setiap cerita lebih tajam. Nonaktif secara default.",
+    "extractedMetadataTitle": "Tampilkan metadata yang diekstrak",
+    "extractedMetadataOn": "Aktif: menampilkan tempat, entitas, dan jenis peristiwa yang diekstrak dari setiap cerita",
+    "extractedMetadataOff": "Nonaktif",
+    "extractedMetadataDescription": "Ketika ini aktif, layar artikel menampilkan apa yang sistem kami ekstrak otomatis dari cerita: tempat, entitas, dan jenis peristiwa. Ini adalah pembacaan mesin dari cerita, bukan fakta terverifikasi, dan dapat salah. Nonaktif secara default.",
+    "extractedMetadataPanelHeading": "Metadata yang Diekstrak",
+    "extractedMetadataEventTypeLabel": "Jenis peristiwa",
+    "extractedMetadataPlacesLabel": "Tempat",
+    "extractedMetadataEntitiesLabel": "Entitas",
+    "extractedMetadataCaption": "Diekstrak AI, bukan fakta terverifikasi"
   },
   "manageData": {
     "deleting": "Menghapus...",

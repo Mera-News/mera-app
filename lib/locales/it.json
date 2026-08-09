@@ -467,7 +467,16 @@
     "deepInterviewTitle": "Domande più profonde",
     "deepInterviewOn": "Attiva; Mera chiede informazioni su attenzione, preoccupazioni e decisioni",
     "deepInterviewOff": "Spegnere",
-    "deepInterviewDescription": "Mera fa domande meno, ma più profonde: cosa stai cercando di proteggere dalla tua attenzione, quali argomenti sono necessari ma ansiosi, quali sembrano utili ma spreca il tuo tempo, cosa stai decidendo questo mese, e perché ogni luogo ti importa. Le tue risposte sono archiviate su questo dispositivo e non lo lasciano mai; il quale è esattamente il motivo per cui Mera può chiedertelo. Rendono i punteggi di rilevanza e le ragioni mostrate su ogni storia più netti. Disattivato per impostazione predefinita."
+    "deepInterviewDescription": "Mera fa domande meno, ma più profonde: cosa stai cercando di proteggere dalla tua attenzione, quali argomenti sono necessari ma ansiosi, quali sembrano utili ma spreca il tuo tempo, cosa stai decidendo questo mese, e perché ogni luogo ti importa. Le tue risposte sono archiviate su questo dispositivo e non lo lasciano mai; il quale è esattamente il motivo per cui Mera può chiedertelo. Rendono i punteggi di rilevanza e le ragioni mostrate su ogni storia più netti. Disattivato per impostazione predefinita.",
+    "extractedMetadataTitle": "Mostra metadati estratti",
+    "extractedMetadataOn": "Attivo: mostra i luoghi, le entità e il tipo di evento estratti da ogni storia",
+    "extractedMetadataOff": "Disattivo",
+    "extractedMetadataDescription": "Quando questo è attivo, lo schermo dell'articolo mostra ciò che il nostro sistema ha estratto automaticamente dalla storia: luoghi, entità e tipo di evento. Questo è una lettura meccanica della storia, non un fatto verificato, e può essere errato. Disattivo per impostazione predefinita.",
+    "extractedMetadataPanelHeading": "Metadati Estratti",
+    "extractedMetadataEventTypeLabel": "Tipo di evento",
+    "extractedMetadataPlacesLabel": "Luoghi",
+    "extractedMetadataEntitiesLabel": "Entità",
+    "extractedMetadataCaption": "Estratto da AI, non è un fatto verificato"
   },
   "manageData": {
     "deleting": "Eliminazione...",

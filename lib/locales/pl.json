@@ -479,7 +479,16 @@
     "deepInterviewTitle": "Głębsze pytania",
     "deepInterviewOn": "Włączone, Mera pyta o uwagę, obawy i decyzje",
     "deepInterviewOff": "Wyłączone",
-    "deepInterviewDescription": "Mera zadaje mniej, głębszych pytań: co próbujesz chronić swoją uwagę przed, które tematy są konieczne, ale niepokojące, które wydają się przydatne, ale marnotrawią Twój czas, co decydujesz w tym miesiącu i dlaczego każde miejsce ma dla Ciebie znaczenie. Twoje odpowiedzi są przechowywane na tym urządzeniu i nigdy go nie opuszczają, co jest dokładnie dlatego, dlaczego Mera może je pytać. Sprawiają, że wyniki trafności i powody pokazane na każdej historii są bardziej wyraźne. Domyślnie wyłączone."
+    "deepInterviewDescription": "Mera zadaje mniej, głębszych pytań: co próbujesz chronić swoją uwagę przed, które tematy są konieczne, ale niepokojące, które wydają się przydatne, ale marnotrawią Twój czas, co decydujesz w tym miesiącu i dlaczego każde miejsce ma dla Ciebie znaczenie. Twoje odpowiedzi są przechowywane na tym urządzeniu i nigdy go nie opuszczają, co jest dokładnie dlatego, dlaczego Mera może je pytać. Sprawiają, że wyniki trafności i powody pokazane na każdej historii są bardziej wyraźne. Domyślnie wyłączone.",
+    "extractedMetadataTitle": "Pokaż wyekstrahowane metadane",
+    "extractedMetadataOn": "Włączone: pokazuje wyekstrahowane z każdej historii miejsca, jednostki i typ zdarzenia",
+    "extractedMetadataOff": "Wyłączone",
+    "extractedMetadataDescription": "Gdy ta opcja jest włączona, ekran artykułu pokazuje, co nasz system automatycznie wyekstrahował z artykułu: miejsca, jednostki i typ zdarzenia. To odczytanie maszynowe artykułu, a nie zweryfikowany fakt, i może być błędne. Domyślnie wyłączone.",
+    "extractedMetadataPanelHeading": "Wyekstrahowane Metadane",
+    "extractedMetadataEventTypeLabel": "Typ zdarzenia",
+    "extractedMetadataPlacesLabel": "Miejsca",
+    "extractedMetadataEntitiesLabel": "Jednostki",
+    "extractedMetadataCaption": "Wyekstrahowane przez AI, nie zweryfikowany fakt"
   },
   "manageData": {
     "deleting": "Usuwanie...",

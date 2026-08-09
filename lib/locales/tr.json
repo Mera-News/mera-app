@@ -467,7 +467,16 @@
     "deepInterviewTitle": "Daha derin sorular",
     "deepInterviewOn": "Açık - Mera dikkat, endişeler ve kararlar hakkında soruyor",
     "deepInterviewOff": "Kapalı",
-    "deepInterviewDescription": "Mera daha az, daha derin sorular soruyor: dikkatini neye karşı korumaya çalıştığın, hangi konuların gerekli ama endişe verici olduğu, hangilerinin yararlı ama zamanı boşa harcadığı görünüyor, bu ay ne kararlaştırıyorsun ve her yer senin için neden önemli. Cevaplarınız bu cihazda saklanıyor ve hiçbir zaman oradan ayrılmıyor - bu, Mera'nın onları sorabilmesinin tam nedenidir. Alaka düzeyi puanlarını ve her hikayede gösterilen nedenleri keskinleştirir. Varsayılan olarak kapalı."
+    "deepInterviewDescription": "Mera daha az, daha derin sorular soruyor: dikkatini neye karşı korumaya çalıştığın, hangi konuların gerekli ama endişe verici olduğu, hangilerinin yararlı ama zamanı boşa harcadığı görünüyor, bu ay ne kararlaştırıyorsun ve her yer senin için neden önemli. Cevaplarınız bu cihazda saklanıyor ve hiçbir zaman oradan ayrılmıyor - bu, Mera'nın onları sorabilmesinin tam nedenidir. Alaka düzeyi puanlarını ve her hikayede gösterilen nedenleri keskinleştirir. Varsayılan olarak kapalı.",
+    "extractedMetadataTitle": "Çıkarılan meta verileri göster",
+    "extractedMetadataOn": "Açık: her hikayenin çıkarılan yerleri, varlıkları ve olay türünü gösterir",
+    "extractedMetadataOff": "Kapalı",
+    "extractedMetadataDescription": "Bu açık olduğunda, makale ekranı sistemimizin hikayeden otomatik olarak çıkardığı bilgileri gösterir: yerler, varlıklar ve olay türü. Bu hikayenin bir makine okuması olup doğrulanmış bir gerçek değildir ve yanılabilir. Varsayılan olarak kapalı.",
+    "extractedMetadataPanelHeading": "Çıkarılan Meta Veriler",
+    "extractedMetadataEventTypeLabel": "Olay türü",
+    "extractedMetadataPlacesLabel": "Yerler",
+    "extractedMetadataEntitiesLabel": "Varlıklar",
+    "extractedMetadataCaption": "Yapay zeka tarafından çıkartıldı, doğrulanmamış gerçek"
   },
   "manageData": {
     "deleting": "Siliniyor...",

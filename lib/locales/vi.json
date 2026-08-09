@@ -467,7 +467,16 @@
     "deepInterviewTitle": "Các câu hỏi sâu hơn",
     "deepInterviewOn": "Bật - Mera hỏi về sự chú ý, lo lắng và quyết định",
     "deepInterviewOff": "Tắt",
-    "deepInterviewDescription": "Mera hỏi ít hơn nhưng sâu hơn: những gì bạn cố gắng bảo vệ sự chú ý của mình khỏi, những chủ đề nào là cần thiết nhưng lo lắng, cái nào có vẻ hữu ích nhưng lãng phí thời gian của bạn, bạn đang quyết định điều gì trong tháng này, và tại sao mỗi nơi quan trọng với bạn. Những câu trả lời của bạn được lưu trữ trên thiết bị này và không bao giờ rời khỏi nó, đó chính xác là lý do tại sao Mera có thể hỏi chúng. Chúng làm cho điểm mức độ liên quan và lý do được hiển thị trên mỗi câu chuyện sắc nét hơn. Tắt theo mặc định."
+    "deepInterviewDescription": "Mera hỏi ít hơn nhưng sâu hơn: những gì bạn cố gắng bảo vệ sự chú ý của mình khỏi, những chủ đề nào là cần thiết nhưng lo lắng, cái nào có vẻ hữu ích nhưng lãng phí thời gian của bạn, bạn đang quyết định điều gì trong tháng này, và tại sao mỗi nơi quan trọng với bạn. Những câu trả lời của bạn được lưu trữ trên thiết bị này và không bao giờ rời khỏi nó, đó chính xác là lý do tại sao Mera có thể hỏi chúng. Chúng làm cho điểm mức độ liên quan và lý do được hiển thị trên mỗi câu chuyện sắc nét hơn. Tắt theo mặc định.",
+    "extractedMetadataTitle": "Hiển thị siêu dữ liệu được trích xuất",
+    "extractedMetadataOn": "Bật: hiển thị địa điểm, thực thể và loại sự kiện được trích xuất từ mỗi bài viết",
+    "extractedMetadataOff": "Tắt",
+    "extractedMetadataDescription": "Khi bật, màn hình bài viết sẽ hiển thị những gì hệ thống của chúng tôi tự động trích xuất từ bài viết: địa điểm, thực thể và loại sự kiện. Đây là máy đọc bài viết chứ không phải sự kiện đã được xác minh, và có thể sai. Tắt theo mặc định.",
+    "extractedMetadataPanelHeading": "Siêu dữ liệu được trích xuất",
+    "extractedMetadataEventTypeLabel": "Loại sự kiện",
+    "extractedMetadataPlacesLabel": "Địa điểm",
+    "extractedMetadataEntitiesLabel": "Thực thể",
+    "extractedMetadataCaption": "Được trích xuất bằng AI, không phải sự kiện đã xác minh"
   },
   "manageData": {
     "deleting": "Đang xóa...",

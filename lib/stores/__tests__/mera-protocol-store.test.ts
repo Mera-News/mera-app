@@ -32,6 +32,7 @@ import {
     useRelevanceV4,
     useWebSearchInChat,
     useDeepInterview,
+    useShowExtractedMetadata,
     useSelectedModelId,
     useModelState,
     useDownloadProgress,
@@ -52,6 +53,7 @@ const initialState = {
     relevanceV4: false,
     webSearchInChat: false,
     deepInterview: false,
+    showExtractedMetadata: false,
     selectedModelId: 'mera-qwen3.5-4b',
     modelState: 'not_downloaded' as const,
     downloadProgress: 0,
@@ -204,6 +206,31 @@ describe('useMeraProtocolStore', () => {
         await new Promise((r) => setImmediate(r));
         expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
         expect(useMeraProtocolStore.getState().deepInterview).toBe(true);
+    });
+
+    // ── setShowExtractedMetadata ─────────────────────────────────────────────
+
+    it('showExtractedMetadata starts OFF', () => {
+        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(false);
+    });
+
+    it('setShowExtractedMetadata persists "true"/"false" like the other toggles', async () => {
+        useMeraProtocolStore.getState().setShowExtractedMetadata(true);
+        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(true);
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_show_extracted_metadata', 'true');
+
+        useMeraProtocolStore.getState().setShowExtractedMetadata(false);
+        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(false);
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_show_extracted_metadata', 'false');
+    });
+
+    it('setShowExtractedMetadata swallows DB errors rather than failing the switch', async () => {
+        mockSetSetting.mockRejectedValueOnce(new Error('db'));
+        useMeraProtocolStore.getState().setShowExtractedMetadata(true);
+        await new Promise((r) => setImmediate(r));
+        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(true);
     });
 
     // ── setSelectedModelId ───────────────────────────────────────────────────
@@ -451,6 +478,47 @@ describe('useMeraProtocolStore', () => {
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_deep_interview');
     });
 
+    // Keyed by NAME, same reasoning as the two toggles above — this key was
+    // appended even later in the Promise.all.
+    it('hydrateFromDb restores showExtractedMetadata from its own key', async () => {
+        mockGetSetting.mockImplementation((k: string) =>
+            Promise.resolve(k === 'mera_show_extracted_metadata' ? 'true' : null),
+        );
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(true);
+    });
+
+    // ABSENT ⇒ OFF — this metadata is measurably imperfect, so a device that
+    // never saw the toggle must not silently start showing it.
+    it('hydrateFromDb leaves showExtractedMetadata OFF when the row is absent or junk', async () => {
+        for (const stored of [null, 'yes', '1', '']) {
+            useMeraProtocolStore.setState({ showExtractedMetadata: false });
+            mockGetSetting.mockImplementation(() => Promise.resolve(stored as string | null));
+
+            await useMeraProtocolStore.getState().hydrateFromDb();
+
+            expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(false);
+        }
+    });
+
+    it('hydrateFromDb turns showExtractedMetadata back OFF on an explicit "false"', async () => {
+        useMeraProtocolStore.setState({ showExtractedMetadata: true });
+        mockGetSetting.mockImplementation((k: string) =>
+            Promise.resolve(k === 'mera_show_extracted_metadata' ? 'false' : null),
+        );
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().showExtractedMetadata).toBe(false);
+    });
+
+    it('reset() clears the extracted-metadata setting row', () => {
+        useMeraProtocolStore.getState().reset();
+        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_show_extracted_metadata');
+    });
+
     it('hydrateFromDb sets selectedModelId from DB', async () => {
         mockGetSetting
             .mockResolvedValueOnce(null)
@@ -612,6 +680,12 @@ describe('useMeraProtocolStore', () => {
     it('useDeepInterview returns current deepInterview value', () => {
         useMeraProtocolStore.setState({ deepInterview: true });
         const { result } = renderHook(() => useDeepInterview());
+        expect(result.current).toBe(true);
+    });
+
+    it('useShowExtractedMetadata returns current showExtractedMetadata value', () => {
+        useMeraProtocolStore.setState({ showExtractedMetadata: true });
+        const { result } = renderHook(() => useShowExtractedMetadata());
         expect(result.current).toBe(true);
     });
 

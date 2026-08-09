@@ -467,7 +467,16 @@
     "deepInterviewTitle": "更深入的問題",
     "deepInterviewOn": "開啟，Mera詢問關於注意力、擔憂和決策的問題",
     "deepInterviewOff": "關閉",
-    "deepInterviewDescription": "Mera提出更少但更深入的問題：你試圖保護你的注意力免受什麼影響、哪些主題對你來說是必要但焦慮的、哪些感覺有用但浪費時間、你本月在決定什麼，以及每個地方為什麼對你很重要。你的答案儲存在此裝置上，從不離開，正是出於這個原因，Mera可以提出這些問題。它們使相關性評分和每則故事上顯示的理由更加明確。預設為關閉。"
+    "deepInterviewDescription": "Mera提出更少但更深入的問題：你試圖保護你的注意力免受什麼影響、哪些主題對你來說是必要但焦慮的、哪些感覺有用但浪費時間、你本月在決定什麼，以及每個地方為什麼對你很重要。你的答案儲存在此裝置上，從不離開，正是出於這個原因，Mera可以提出這些問題。它們使相關性評分和每則故事上顯示的理由更加明確。預設為關閉。",
+    "extractedMetadataTitle": "顯示提取的元數據",
+    "extractedMetadataOn": "開啟：顯示每則故事提取的地點、實體和事件類型",
+    "extractedMetadataOff": "關閉",
+    "extractedMetadataDescription": "啟用時，文章畫面會顯示我們的系統從故事中自動提取的內容：地點、實體和事件類型。這是對故事的機器解讀，並非經過驗證的事實，可能會出錯。預設為關閉。",
+    "extractedMetadataPanelHeading": "提取的元數據",
+    "extractedMetadataEventTypeLabel": "事件類型",
+    "extractedMetadataPlacesLabel": "地點",
+    "extractedMetadataEntitiesLabel": "實體",
+    "extractedMetadataCaption": "AI提取，未經驗證的事實"
   },
   "manageData": {
     "deleting": "刪除中...",

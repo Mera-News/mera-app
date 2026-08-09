@@ -467,7 +467,16 @@
     "deepInterviewTitle": "더 깊은 질문",
     "deepInterviewOn": "켜짐. Mera가 관심, 걱정, 결정에 대해 묻습니다",
     "deepInterviewOff": "꺼짐",
-    "deepInterviewDescription": "Mera는 더 적지만 더 깊은 질문을 합니다. 당신의 주의를 보호하려는 것, 필요하지만 불안한 주제, 유용하지만 시간을 낭비하는 주제, 이번 달에 결정 중인 것, 각 항목이 중요한 이유를 묻습니다. 당신의 답변은 이 기기에 저장되고 절대 떠나지 않습니다. 정확히 이것이 Mera가 이를 물을 수 있는 이유입니다. 관련성 점수와 각 스토리에 표시되는 이유를 더 명확하게 만듭니다. 기본값은 꺼짐입니다."
+    "deepInterviewDescription": "Mera는 더 적지만 더 깊은 질문을 합니다. 당신의 주의를 보호하려는 것, 필요하지만 불안한 주제, 유용하지만 시간을 낭비하는 주제, 이번 달에 결정 중인 것, 각 항목이 중요한 이유를 묻습니다. 당신의 답변은 이 기기에 저장되고 절대 떠나지 않습니다. 정확히 이것이 Mera가 이를 물을 수 있는 이유입니다. 관련성 점수와 각 스토리에 표시되는 이유를 더 명확하게 만듭니다. 기본값은 꺼짐입니다.",
+    "extractedMetadataTitle": "추출된 메타데이터 표시",
+    "extractedMetadataOn": "켜기: 각 스토리에서 추출된 장소, 엔티티 및 이벤트 유형을 표시",
+    "extractedMetadataOff": "끄기",
+    "extractedMetadataDescription": "이를 켜면 기사 화면에 시스템이 스토리에서 자동으로 추출한 것(장소, 엔티티 및 이벤트 유형)을 표시합니다. 이는 스토리의 기계 읽기이며 검증된 사실이 아니며 잘못될 수 있습니다. 기본값으로는 꺼져 있습니다.",
+    "extractedMetadataPanelHeading": "추출된 메타데이터",
+    "extractedMetadataEventTypeLabel": "이벤트 유형",
+    "extractedMetadataPlacesLabel": "장소",
+    "extractedMetadataEntitiesLabel": "엔티티",
+    "extractedMetadataCaption": "AI 추출, 검증된 사실이 아님"
   },
   "manageData": {
     "deleting": "삭제 중...",

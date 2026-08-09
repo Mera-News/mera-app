@@ -33,6 +33,7 @@ import {
     useProcessingMode,
     useRelevanceV4,
     useSelectedModelId,
+    useShowExtractedMetadata,
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
@@ -112,6 +113,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const relevanceV4 = useRelevanceV4();
     const webSearchInChat = useWebSearchInChat();
     const deepInterview = useDeepInterview();
+    const showExtractedMetadata = useShowExtractedMetadata();
 
     const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
     const hasModelUpdate = selectedModelId !== LATEST_MODEL.modelId;
@@ -747,6 +749,43 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </HStack>
                 <Text className="text-typography-500 text-xs mt-2">
                     {t('meraProtocol.deepInterviewDescription')}
+                </Text>
+            </Box>
+
+            {/* Show extracted metadata — OFF by default. This metadata is
+                machine-extracted and measurably imperfect, so the toggle's own
+                description says plainly what it shows and that it is an AI
+                read of the story, not a verified fact — the detail-screen
+                panel repeats that provenance caption next to the data itself. */}
+            <Box className="px-5 mb-6" testID="mera-protocol-extracted-metadata">
+                <HStack space="md" className="items-center justify-between">
+                    <HStack space="md" className="items-center flex-1">
+                        <MaterialIcons
+                            name="label-outline"
+                            size={24}
+                            color={showExtractedMetadata ? "#10b981" : "#9ca3af"}
+                        />
+                        <VStack className="flex-1">
+                            <Text className="text-white text-base font-semibold">
+                                {t('meraProtocol.extractedMetadataTitle')}
+                            </Text>
+                            <Text className="text-typography-500 text-sm mt-0.5">
+                                {showExtractedMetadata
+                                    ? t('meraProtocol.extractedMetadataOn')
+                                    : t('meraProtocol.extractedMetadataOff')}
+                            </Text>
+                        </VStack>
+                    </HStack>
+                    <Switch
+                        value={showExtractedMetadata}
+                        onToggle={() => store.setShowExtractedMetadata(!showExtractedMetadata)}
+                        size="md"
+                        disabled={readOnly}
+                        testID="mera-protocol-extracted-metadata-switch"
+                    />
+                </HStack>
+                <Text className="text-typography-500 text-xs mt-2">
+                    {t('meraProtocol.extractedMetadataDescription')}
                 </Text>
             </Box>
 

@@ -467,7 +467,16 @@
     "deepInterviewTitle": "更深入的问题",
     "deepInterviewOn": "开启，Mera询问关于关注、担忧和决策",
     "deepInterviewOff": "关闭",
-    "deepInterviewDescription": "Mera提出更少但更深入的问题：您试图保护什么样的关注，哪些话题是必要但令人焦虑的，哪些感觉有用但浪费您的时间，您这个月正在做什么决定，以及为什么每个地方对您很重要。您的答案存储在此设备上，永不离开，这正是Mera能够提出这些问题的原因。它们使相关性分数和每则报道上显示的原因更敏锐。默认关闭。"
+    "deepInterviewDescription": "Mera提出更少但更深入的问题：您试图保护什么样的关注，哪些话题是必要但令人焦虑的，哪些感觉有用但浪费您的时间，您这个月正在做什么决定，以及为什么每个地方对您很重要。您的答案存储在此设备上，永不离开，这正是Mera能够提出这些问题的原因。它们使相关性分数和每则报道上显示的原因更敏锐。默认关闭。",
+    "extractedMetadataTitle": "显示提取的元数据",
+    "extractedMetadataOn": "开启：显示每个故事提取的地点、实体和事件类型",
+    "extractedMetadataOff": "关闭",
+    "extractedMetadataDescription": "启用时，文章屏幕将显示我们的系统从故事中自动提取的内容：地点、实体和事件类型。这是对故事的机器阅读，不是经过验证的事实，可能会出错。默认关闭。",
+    "extractedMetadataPanelHeading": "提取的元数据",
+    "extractedMetadataEventTypeLabel": "事件类型",
+    "extractedMetadataPlacesLabel": "地点",
+    "extractedMetadataEntitiesLabel": "实体",
+    "extractedMetadataCaption": "AI提取，未验证的事实"
   },
   "manageData": {
     "deleting": "删除中...",

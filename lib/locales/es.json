@@ -467,7 +467,16 @@
     "deepInterviewTitle": "Preguntas más profundas",
     "deepInterviewOn": "Activado; Mera pregunta sobre atención, preocupaciones y decisiones",
     "deepInterviewOff": "Desactivado",
-    "deepInterviewDescription": "Mera hace preguntas menos pero más profundas: de qué intentas proteger tu atención, qué temas son necesarios pero ansiosos, cuáles se sienten útiles pero pierden tu tiempo, qué estás decidiendo este mes, y por qué cada lugar te importa. Tus respuestas se guardan en este dispositivo y nunca salen de él; exactamente por eso Mera puede hacerlas. Hacen que las puntuaciones de relevancia y las razones mostradas en cada historia sean más claras. Desactivado por defecto."
+    "deepInterviewDescription": "Mera hace preguntas menos pero más profundas: de qué intentas proteger tu atención, qué temas son necesarios pero ansiosos, cuáles se sienten útiles pero pierden tu tiempo, qué estás decidiendo este mes, y por qué cada lugar te importa. Tus respuestas se guardan en este dispositivo y nunca salen de él; exactamente por eso Mera puede hacerlas. Hacen que las puntuaciones de relevancia y las razones mostradas en cada historia sean más claras. Desactivado por defecto.",
+    "extractedMetadataTitle": "Mostrar metadatos extraídos",
+    "extractedMetadataOn": "Activado: muestra los lugares, entidades y tipo de evento extraídos de cada historia",
+    "extractedMetadataOff": "Desactivado",
+    "extractedMetadataDescription": "Cuando está activado, la pantalla del artículo muestra lo que nuestro sistema extrajo automáticamente de la historia: lugares, entidades y tipo de evento. Esta es una lectura automatizada de la historia, no un hecho verificado, y puede ser incorrecta. Desactivado por defecto.",
+    "extractedMetadataPanelHeading": "Metadatos extraídos",
+    "extractedMetadataEventTypeLabel": "Tipo de evento",
+    "extractedMetadataPlacesLabel": "Lugares",
+    "extractedMetadataEntitiesLabel": "Entidades",
+    "extractedMetadataCaption": "Extraído por IA, hecho no verificado"
   },
   "manageData": {
     "deleting": "Eliminando...",

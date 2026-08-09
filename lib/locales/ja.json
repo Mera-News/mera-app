@@ -467,7 +467,16 @@
     "deepInterviewTitle": "より深い質問",
     "deepInterviewOn": "オン：Meraは注意、心配、決定について尋ねます",
     "deepInterviewOff": "オフ",
-    "deepInterviewDescription": "Meraは少ない、より深い質問をしています。あなたの注意を何から保護しようとしているのか、どのトピックが必要だが不安なのか、どれが有用だが時間を浪費するのか、この月に何を決定しているのか、なぜ各場所があなたにとって重要なのかです。あなたの答えはこのデバイスに保存され、決して離れません。これはまさにMeraがそれらを尋ねることができる理由です。彼らは関連性スコアと各ストーリーに表示される理由をより鋭くします。デフォルトではオフです。"
+    "deepInterviewDescription": "Meraは少ない、より深い質問をしています。あなたの注意を何から保護しようとしているのか、どのトピックが必要だが不安なのか、どれが有用だが時間を浪費するのか、この月に何を決定しているのか、なぜ各場所があなたにとって重要なのかです。あなたの答えはこのデバイスに保存され、決して離れません。これはまさにMeraがそれらを尋ねることができる理由です。彼らは関連性スコアと各ストーリーに表示される理由をより鋭くします。デフォルトではオフです。",
+    "extractedMetadataTitle": "抽出されたメタデータを表示",
+    "extractedMetadataOn": "オン：各ストーリーから抽出された場所、エンティティ、イベントタイプを表示",
+    "extractedMetadataOff": "オフ",
+    "extractedMetadataDescription": "これをオンにすると、記事画面には、システムがストーリーから自動的に抽出したもの（場所、エンティティ、イベントタイプ）が表示されます。これはストーリーの機械読み取りであり、検証済みの事実ではなく、間違っている可能性があります。デフォルトではオフです。",
+    "extractedMetadataPanelHeading": "抽出されたメタデータ",
+    "extractedMetadataEventTypeLabel": "イベントタイプ",
+    "extractedMetadataPlacesLabel": "場所",
+    "extractedMetadataEntitiesLabel": "エンティティ",
+    "extractedMetadataCaption": "AI抽出、検証済みの事実ではありません"
   },
   "manageData": {
     "deleting": "削除中...",

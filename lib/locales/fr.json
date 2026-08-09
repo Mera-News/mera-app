@@ -472,7 +472,16 @@
     "deepInterviewTitle": "Questions plus approfondies",
     "deepInterviewOn": "Activé, Mera pose des questions sur l'attention, les soucis et les décisions",
     "deepInterviewOff": "Désactivé",
-    "deepInterviewDescription": "Mera pose des questions moins nombreuses mais plus approfondies : ce que vous essayez de protéger votre attention de, quels sujets sont nécessaires mais anxiogènes, lesquels semblent utiles mais perdent du temps, ce que vous décidez ce mois-ci, et pourquoi chaque endroit vous importe. Vos réponses sont stockées sur cet appareil et ne le quittent jamais, ce qui est exactement pourquoi Mera peut les poser. Elles rendent les scores de pertinence et les raisons affichées sur chaque histoire plus nets. Désactivé par défaut."
+    "deepInterviewDescription": "Mera pose des questions moins nombreuses mais plus approfondies : ce que vous essayez de protéger votre attention de, quels sujets sont nécessaires mais anxiogènes, lesquels semblent utiles mais perdent du temps, ce que vous décidez ce mois-ci, et pourquoi chaque endroit vous importe. Vos réponses sont stockées sur cet appareil et ne le quittent jamais, ce qui est exactement pourquoi Mera peut les poser. Elles rendent les scores de pertinence et les raisons affichées sur chaque histoire plus nets. Désactivé par défaut.",
+    "extractedMetadataTitle": "Afficher les métadonnées extraites",
+    "extractedMetadataOn": "Activé : affiche les lieux, entités et type d'événement extraits de chaque histoire",
+    "extractedMetadataOff": "Désactivé",
+    "extractedMetadataDescription": "Lorsque cette option est activée, l'écran de l'article affiche ce que notre système a automatiquement extrait de l'histoire : lieux, entités et type d'événement. Il s'agit d'une lecture automatisée de l'histoire, pas d'un fait vérifié, et cela peut être erroné. Désactivé par défaut.",
+    "extractedMetadataPanelHeading": "Métadonnées extraites",
+    "extractedMetadataEventTypeLabel": "Type d'événement",
+    "extractedMetadataPlacesLabel": "Lieux",
+    "extractedMetadataEntitiesLabel": "Entités",
+    "extractedMetadataCaption": "Extrait par IA, fait non vérifié"
   },
   "manageData": {
     "deleting": "Suppression...",
