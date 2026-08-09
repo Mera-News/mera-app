@@ -143,6 +143,12 @@ export interface ScoredCandidateInput {
   maxClusterSize?: number | null;
   eventType?: string | null;
   category?: string | null;
+  /** Each tag's `countryCode` is ISO alpha-2 OR one of the curated
+   *  supranational PLACE codes (`supranational-codes.ts`, e.g. "MIDDLE_EAST",
+   *  "EU"). AUDITED: `geo.ts::resolveGeoMatch` matches it only by equality
+   *  against the persona's own alpha-2 location codes, and a supranational
+   *  code can never equal one (disjoint code spaces by construction), so it
+   *  resolves NONE/0 rather than a false match — no name lookup, no crash. */
   geoTags?: ArticleGeoTag[];
   entities?: string[];
   matchedTopics: MatchedTopicInput[];

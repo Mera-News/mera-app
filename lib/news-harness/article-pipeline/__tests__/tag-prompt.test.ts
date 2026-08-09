@@ -134,6 +134,39 @@ describe('articleMetadataLine', () => {
     expect(articleMetadataLine(candidate('a1'))).toBe('');
     expect(carriesPromptableTags(candidate('a1'))).toBe(false);
   });
+
+  // The server's geo_tags.countryCode widened to also allow curated
+  // supranational codes ("MIDDLE_EAST", "EU", …). The prompt line must show
+  // the reader/model prose ("Middle East"), never the raw SCREAMING_SNAKE
+  // token — and must not disturb the frozen real-country-code format above.
+  it('renders a supranational-only tag as its human name, not the raw token', () => {
+    const c = candidate('a1', {
+      geoTagsJson: JSON.stringify([{ countryCode: 'MIDDLE_EAST' }]),
+    });
+    expect(articleMetadataLine(c)).toBe('Article Metadata: places: Middle East');
+  });
+
+  it('renders EU (two-letter, not a country) as its human name too', () => {
+    // EU is exactly two characters, same length as every real ISO alpha-2
+    // code — a length-based shortcut would leave it unresolved as "EU" rather
+    // than "European Union".
+    const c = candidate('a1', {
+      geoTagsJson: JSON.stringify([{ countryCode: 'EU' }]),
+    });
+    expect(articleMetadataLine(c)).toBe('Article Metadata: places: European Union');
+  });
+
+  it('renders a mixed list — real country raw, supranational humanized', () => {
+    const c = candidate('a1', {
+      geoTagsJson: JSON.stringify([
+        { countryCode: 'GULF' },
+        { city: 'amsterdam', region: 'noord-holland', countryCode: 'NL' },
+      ]),
+    });
+    expect(articleMetadataLine(c)).toBe(
+      'Article Metadata: places: Gulf | amsterdam, noord-holland, NL',
+    );
+  });
 });
 
 // ---------------------------------------------------------------------------

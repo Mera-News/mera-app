@@ -41,6 +41,7 @@
 import type { ArticlePipelineConfig } from '../core/config';
 import { DEFAULT_HARNESS_CONFIG } from '../core/config';
 import type { ScoringCandidate, StageCandidateRow } from '../core/types';
+import { supranationalName } from '../scoring-engine/supranational-codes';
 
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
@@ -112,6 +113,14 @@ export function readCandidateTags(meta: StageCandidateRow | undefined): {
  *
  *   Article Metadata: places: amsterdam, noord-holland, NL | entities: ING | event: business
  *
+ * A SUPRANATIONAL geo tag ("MIDDLE_EAST", "EU", …) carries neither city nor
+ * region — the server never emits one alongside a bloc/region code — so its
+ * `countryCode` is rendered through {@link supranationalName} as prose
+ * ("places: Middle East") rather than the raw SCREAMING_SNAKE token. A real
+ * ISO alpha-2 country code is unaffected (`supranationalName` returns null
+ * for it), so the frozen `places: amsterdam, noord-holland, NL` format above
+ * is untouched.
+ *
  * Omissions, each deliberate:
  *   - empty fields are dropped rather than sent as "none" — half this corpus is
  *     legitimately place-less and five "places: none" lines per chunk is noise;
@@ -124,7 +133,11 @@ export function articleMetadataLine(candidate: ScoringCandidate): string {
   const parts: string[] = [];
   if (geoTags.length > 0) {
     const places = geoTags
-      .map((g) => [g.city, g.region, g.countryCode].filter(Boolean).join(', '))
+      .map((g) =>
+        [g.city, g.region, supranationalName(g.countryCode) ?? g.countryCode]
+          .filter(Boolean)
+          .join(', '),
+      )
       .join(' | ');
     parts.push(`places: ${places}`);
   }

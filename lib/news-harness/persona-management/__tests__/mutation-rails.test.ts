@@ -119,4 +119,54 @@ describe('buildWrongLocationActions', () => {
       'add_suppression',
     ]);
   });
+
+  // The server's geo_tags.countryCode widened to also allow curated
+  // supranational codes ("MIDDLE_EAST", "EU", …). A supranational tag carries
+  // no city/region, so placeName() always falls through to the countryCode
+  // branch — which must produce readable prose ("news about middle east"),
+  // not a raw SCREAMING_SNAKE token with an underscore baked into the
+  // on-device negative-topic search text.
+  describe('supranational geo tags', () => {
+    it('names the humanized place, not the raw underscored token', () => {
+      const actions = buildWrongLocationActions(
+        baseInput({ articleGeo: { countryCode: 'MIDDLE_EAST' } }),
+      );
+      expect(actions).toHaveLength(1);
+      expect(actions[0]).toEqual({
+        kind: 'add_negative_topic',
+        text: 'news about middle east',
+        weight: R.WRONG_LOCATION_NEG_TOPIC,
+      });
+    });
+
+    it('EU (two letters, not a country) is also humanized', () => {
+      // A length-based shortcut would leave this alone as "eu" rather than
+      // resolving it to "european union".
+      const actions = buildWrongLocationActions(
+        baseInput({ articleGeo: { countryCode: 'EU' } }),
+      );
+      expect(actions[0]).toEqual({
+        kind: 'add_negative_topic',
+        text: 'news about european union',
+        weight: R.WRONG_LOCATION_NEG_TOPIC,
+      });
+    });
+
+    it('a mixed geo list still names the first tag that matches no user location', () => {
+      const actions = buildWrongLocationActions(
+        baseInput({
+          articleGeo: [
+            { city: 'Mumbai', countryCode: 'IN' }, // matches the user's location → skipped
+            { countryCode: 'GULF' },
+          ],
+        }),
+      );
+      expect(actions).toHaveLength(1);
+      expect(actions[0]).toEqual({
+        kind: 'add_negative_topic',
+        text: 'news about gulf',
+        weight: R.WRONG_LOCATION_NEG_TOPIC,
+      });
+    });
+  });
 });

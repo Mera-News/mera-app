@@ -3,6 +3,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { useShowExtractedMetadata } from '@/lib/stores/mera-protocol-store';
+import { supranationalName } from '@/lib/news-harness/scoring-engine';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -35,8 +36,17 @@ const humanizeToken = (raw: string): string =>
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 
+/** A SUPRANATIONAL `countryCode` ("MIDDLE_EAST", "EU", …) carries neither
+ *  `city` nor `region` — the server never emits one alongside a bloc/region
+ *  code — so it is rendered through {@link supranationalName} as a readable
+ *  place name ("Middle East") rather than the raw SCREAMING_SNAKE token. A
+ *  real ISO alpha-2 country code is unaffected (`supranationalName` returns
+ *  null for it) and renders exactly as before. */
 const formatPlace = (tag: ExtractedMetadataGeoTag): string | null => {
-    const parts = [tag.city, tag.region, tag.countryCode].filter(
+    const countryDisplay = tag.countryCode
+        ? (supranationalName(tag.countryCode) ?? tag.countryCode)
+        : tag.countryCode;
+    const parts = [tag.city, tag.region, countryDisplay].filter(
         (p): p is string => !!p && p.trim().length > 0,
     );
     return parts.length > 0 ? parts.join(', ') : null;

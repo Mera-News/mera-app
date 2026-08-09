@@ -129,6 +129,34 @@ describe('suppressionMatchesCandidate — structured kinds', () => {
     ).toBe(false);
   });
 
+  it('place matches a supranational geo tag when the suppression value is the same code', () => {
+    // A place suppression's value is expected to be copied verbatim from a
+    // tag's own field (see the audit comment on the 'place' case), so a
+    // supranational-tagged article ("MIDDLE_EAST") matches a suppression whose
+    // value is that same code — matching is by value equality, not a country
+    // lookup.
+    const c = candidate({ geoTags: [{ countryCode: 'MIDDLE_EAST' }] });
+    expect(
+      suppressionMatchesCandidate(c, sup({ kind: 'place', value: 'MIDDLE_EAST' })),
+    ).toBe(true);
+    expect(
+      suppressionMatchesCandidate(c, sup({ kind: 'place', value: 'middle_east' })),
+    ).toBe(true); // normCountry uppercases
+  });
+
+  it('place — EU (two letters) never matches a suppression for a real two-letter country', () => {
+    // The two-character trap: EU must not be confused with any real ISO
+    // alpha-2 code just because both are two characters.
+    const c = candidate({ geoTags: [{ countryCode: 'EU' }] });
+    expect(suppressionMatchesCandidate(c, sup({ kind: 'place', value: 'EU' }))).toBe(true);
+    expect(suppressionMatchesCandidate(c, sup({ kind: 'place', value: 'ET' }))).toBe(false);
+    // And the reverse: a real two-letter country tag never matches an 'EU' filter.
+    const realCountry = candidate({ geoTags: [{ countryCode: 'ET' }] });
+    expect(
+      suppressionMatchesCandidate(realCountry, sup({ kind: 'place', value: 'EU' })),
+    ).toBe(false);
+  });
+
   it('a blank value on a structured kind matches nothing', () => {
     for (const kind of ['category', 'event_type', 'entity', 'publication', 'place', 'topic'] as const) {
       expect(suppressionMatchesCandidate(candidate(), sup({ kind, value: '  ' }))).toBe(false);

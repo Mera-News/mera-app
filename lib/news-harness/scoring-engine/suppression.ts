@@ -109,6 +109,16 @@ export function suppressionMatchesCandidate(
       // Only the article's GEO TAGS count. The top-level countryCode is the
       // PUBLISHING country, not what the story is about — muting "France"
       // must not kill every AFP wire story.
+      //
+      // AUDITED FOR THE SUPRANATIONAL PLACE CODES ("MIDDLE_EAST", "EU", …):
+      // needs no change here. `g.countryCode` may now carry one of those
+      // instead of an ISO alpha-2, but this branch does a plain code-to-code
+      // equality (`normCountry` only trims/uppercases — it never resolves a
+      // code to a country), and a `place` suppression's stored `value` is
+      // expected to be copied verbatim from a tag's own field, so both sides
+      // stay in the same code space. A real alpha-2 code can never collide
+      // with a supranational one (see `supranational-codes.ts`), so this is
+      // safe by construction — not because it was special-cased.
       const country = normCountry(s.value ?? '');
       return (candidate.geoTags ?? []).some(
         (g) =>

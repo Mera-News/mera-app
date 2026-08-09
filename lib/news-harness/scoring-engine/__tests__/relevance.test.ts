@@ -257,3 +257,63 @@ describe('computeRelevance — mode + clamps + monotonicity', () => {
     expect(stronger.components.topicComp).toBeCloseTo(0.9, 6);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Supranational geo tags — the server's `countryCode` widened from ISO alpha-2
+// to also allow curated codes like "MIDDLE_EAST"/"EU"/"GLOBAL". The engine
+// needs no special handling (see the ScoredCandidateInput.geoTags comment):
+// resolveGeoMatch matches by plain equality against the persona's own alpha-2
+// codes, and a supranational code can never equal one. These tests pin that
+// it never crashes and never produces a false geo match — and specifically
+// that `EU`, which is exactly two characters like every real ISO code, is not
+// mistaken for a country by any length-based shortcut.
+// ---------------------------------------------------------------------------
+
+describe('computeRelevance — supranational geo tags', () => {
+  it('a supranational-only tag list scores like backstop-mode geo: NONE alignment, geoComp 0, no crash', () => {
+    const r = computeRelevance(
+      candidate({
+        matchedTopics: [{ topicId: 't1', effectiveWeight: 0.5 }],
+        geoTags: [{ countryCode: 'MIDDLE_EAST' }],
+      }),
+      emptyPersona({ locations: [amsterdam] }),
+      cfg,
+      NOW,
+    );
+    expect(r.mode).toBe('math'); // it IS tagged — just not geo-alignable
+    expect(r.components.geoComp).toBe(0);
+    expect(r.components.geoAlignment).toBe('NONE');
+    expect(r.components.wrongLocationFlag).toBe(0);
+  });
+
+  it('EU (two characters, same length as every ISO alpha-2 code) never matches a real country location', () => {
+    // A `code.length > 2` (or `=== 2`) heuristic anywhere in the geo path would
+    // mishandle this case; the engine must decide purely by value equality
+    // against the persona's actual alpha-2 codes, which "EU" can never equal.
+    const r = computeRelevance(
+      candidate({
+        matchedTopics: [],
+        geoTags: [{ countryCode: 'EU' }],
+      }),
+      emptyPersona({ locations: [amsterdam] }), // amsterdam is countryCode 'NL', not 'EU'
+      cfg,
+      NOW,
+    );
+    expect(r.components.geoComp).toBe(0);
+    expect(r.components.geoAlignment).toBe('NONE');
+  });
+
+  it('a mixed list (real country + supranational) still aligns on the real tag', () => {
+    const r = computeRelevance(
+      candidate({
+        matchedTopics: [],
+        geoTags: [{ countryCode: 'EUROPE' }, { city: 'amsterdam', countryCode: 'NL' }],
+      }),
+      emptyPersona({ locations: [amsterdam] }),
+      cfg,
+      NOW,
+    );
+    expect(r.components.geoAlignment).toBe('CITY');
+    expect(r.components.geoComp).toBeCloseTo(cfg.GEO_CITY * amsterdam.weight, 6);
+  });
+});

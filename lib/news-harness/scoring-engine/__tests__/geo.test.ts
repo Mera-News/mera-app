@@ -124,3 +124,50 @@ describe('resolveGeoMatch — wrong-location', () => {
     expect(r.wrongLocationFlag).toBe(0);
   });
 });
+
+describe('resolveGeoMatch — supranational PLACE codes', () => {
+  // The server's geo_tags.countryCode widened from ISO alpha-2-only to also
+  // allow curated supranational codes ("MIDDLE_EAST", "EU", "GLOBAL", …). This
+  // module matches by plain equality against the persona's own alpha-2
+  // countryCode, so a supranational tag can never equal one — it must resolve
+  // NONE/0 rather than crash or produce a spurious match.
+
+  it('a supranational-only tag resolves NONE / 0, no crash', () => {
+    const r = resolveGeoMatch([tag({ countryCode: 'MIDDLE_EAST' })], [amsterdam], cfg);
+    expect(r.alignment).toBe('NONE');
+    expect(r.geoScore).toBe(0);
+    expect(r.wrongLocationFlag).toBe(0);
+  });
+
+  it('EU — exactly two characters, same length as every real ISO alpha-2 code — never matches a real country', () => {
+    // A length-based shortcut ("only alpha-2 codes are 2 chars") would
+    // misclassify EU as a country. countryEq must decide by value, not length:
+    // 'EU' !== 'NL' regardless of both being two characters.
+    const r = resolveGeoMatch([tag({ countryCode: 'EU' })], [amsterdam], cfg);
+    expect(r.alignment).toBe('NONE');
+    expect(r.geoScore).toBe(0);
+  });
+
+  it('a mixed tag list still aligns on the real ISO tag alongside a supranational one', () => {
+    const r = resolveGeoMatch(
+      [
+        tag({ countryCode: 'EUROPE' }),
+        tag({ city: 'amsterdam', region: 'noord-holland', countryCode: 'NL' }),
+      ],
+      [amsterdam],
+      cfg,
+    );
+    expect(r.alignment).toBe('CITY');
+    expect(r.matchedLocationId).toBe('loc-amsterdam');
+  });
+
+  it('a supranational tag never trips the wrong-location flag (it names no sibling city)', () => {
+    const r = resolveGeoMatch(
+      [tag({ countryCode: 'MIDDLE_EAST' })],
+      [chhindwara],
+      cfg,
+      new Set(['loc-chhindwara']),
+    );
+    expect(r.wrongLocationFlag).toBe(0);
+  });
+});

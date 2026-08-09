@@ -57,6 +57,7 @@ import {
   getTotalArticleSuggestionCount,
   persistAndLinkV2Suggestions,
   buildStageCandidateInput,
+  geoTextFromTags,
   type TopicWeightInfo,
 } from '../article-suggestion-service';
 import type { StageCandidateRow } from '@/lib/news-harness/core/types';
@@ -2097,6 +2098,54 @@ describe('buildStageCandidateInput', () => {
     const input = buildStageCandidateInput(row, weights);
     expect(input.geoTags).toEqual([{ city: undefined, region: undefined, countryCode: 'FR' }]);
     expect(input.entities).toEqual([]);
+  });
+
+  it('passes a supranational countryCode through untouched — the engine resolves it, not this mapper', () => {
+    const row: StageCandidateRow = {
+      ...baseRow,
+      geoTagsJson: JSON.stringify([{ countryCode: 'MIDDLE_EAST' }]),
+    };
+    const input = buildStageCandidateInput(row, weights);
+    expect(input.geoTags).toEqual([
+      { city: undefined, region: undefined, countryCode: 'MIDDLE_EAST' },
+    ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// geoTextFromTags — the most-specific human place name (city → region →
+// country), shared by the local-suggestion and standalone-article feedback
+// paths. Feeds the `from_context_geo` negative-topic search string.
+// ---------------------------------------------------------------------------
+
+describe('geoTextFromTags', () => {
+  it('prefers city, then region, then countryCode', () => {
+    expect(geoTextFromTags([{ city: 'Berlin', region: 'BE', countryCode: 'DE' }])).toBe(
+      'Berlin',
+    );
+    expect(geoTextFromTags([{ region: 'Bavaria', countryCode: 'DE' }])).toBe('Bavaria');
+    expect(geoTextFromTags([{ countryCode: 'DE' }])).toBe('DE'); // real ISO code: unchanged raw text
+  });
+
+  it('humanizes a supranational countryCode instead of showing the raw token', () => {
+    expect(geoTextFromTags([{ countryCode: 'MIDDLE_EAST' }])).toBe('Middle East');
+  });
+
+  it('EU (two letters, not a country) is humanized too, not left as the raw code', () => {
+    // Same length as every real ISO alpha-2 code — must be decided by lookup,
+    // not by a length check, so it does NOT fall into the "DE"-style raw path.
+    expect(geoTextFromTags([{ countryCode: 'EU' }])).toBe('European Union');
+  });
+
+  it('returns null when nothing is nameable, and skips a null/empty first entry', () => {
+    expect(geoTextFromTags([])).toBeNull();
+    expect(geoTextFromTags([{ city: null, region: null, countryCode: null }])).toBeNull();
+    expect(
+      geoTextFromTags([
+        { city: null, region: null, countryCode: null },
+        { countryCode: 'GULF' },
+      ]),
+    ).toBe('Gulf');
   });
 });
 

@@ -20,6 +20,7 @@ import type {
   HeadlineScope,
   RelevanceComponents,
 } from '@/lib/news-harness/scoring-engine';
+import { supranationalName } from '@/lib/news-harness/scoring-engine';
 // The ONE LOW-band top-headline cull predicate. Safe to import from a database
 // service: `importance-filter` → `priority-order` is a two-module, PURE, RN-free
 // leaf (no DB / expo / react-native imports and no edge back into this module),
@@ -1434,14 +1435,26 @@ export async function getSuggestionFeedbackContext(opts: {
  * definition shared by the local-suggestion path and the standalone-article
  * path (ArticleFeedbackPrompt) so the two can't name the same article's place
  * differently.
+ *
+ * A SUPRANATIONAL countryCode ("MIDDLE_EAST", "EU", …) carries neither city
+ * nor region, so it always falls through to the countryCode branch — resolved
+ * through {@link supranationalName} to prose ("Middle East") rather than the
+ * raw token, since this text feeds the `from_context_geo` negative-topic
+ * search string (see `lib/news-harness/feedback-tree/resolve-leaf-actions.ts`).
+ * A real ISO alpha-2 country code is unaffected (`supranationalName` returns
+ * null for it) and keeps its historical raw-code text.
  */
 export function geoTextFromTags(
   tags: { city?: string | null; region?: string | null; countryCode?: string | null }[],
 ): string | null {
   for (const tag of tags ?? []) {
     if (!tag) continue;
-    const name = tag.city?.trim() || tag.region?.trim() || tag.countryCode?.trim();
-    if (name) return name;
+    const city = tag.city?.trim();
+    if (city) return city;
+    const region = tag.region?.trim();
+    if (region) return region;
+    const country = tag.countryCode?.trim();
+    if (country) return supranationalName(country) ?? country;
   }
   return null;
 }

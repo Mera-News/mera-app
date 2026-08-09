@@ -15,6 +15,7 @@ import {
   DEFAULT_HARNESS_CONFIG,
   type HarnessConfig,
 } from '../core/config';
+import { supranationalName } from '../scoring-engine/supranational-codes';
 
 // ── Weight clamp ───────────────────────────────────────────────────────────
 
@@ -115,14 +116,25 @@ export type WrongLocationAction =
       strength: number;
     };
 
-/** The most specific human place name of a geo tag (city → region → country). */
+/** The most specific human place name of a geo tag (city → region → country).
+ *
+ * A SUPRANATIONAL country code ("MIDDLE_EAST", "EU", …) carries neither city
+ * nor region — the server never emits one alongside a bloc/region code — so
+ * it always falls through to this function's country branch. Resolved
+ * through {@link supranationalName} first: this text becomes the literal
+ * `news about <name>` negative-topic search string in
+ * {@link buildWrongLocationActions}, so a raw token would leak an underscore
+ * ("news about middle_east") into on-device embedding text. A real ISO
+ * alpha-2 country code is unaffected (`supranationalName` returns null for
+ * it) and keeps its historical raw-code text. */
 function placeName(g: WrongLocationGeoTag): string | null {
   const city = normalizePlace(g.city);
   if (city) return city;
   const region = normalizePlace(g.region);
   if (region) return region;
-  const country = normalizePlace(g.countryCode);
-  return country || null;
+  const rawCountry = (g.countryCode ?? '').trim();
+  if (!rawCountry) return null;
+  return normalizePlace(supranationalName(rawCountry) ?? rawCountry) || null;
 }
 
 /**

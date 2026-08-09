@@ -105,6 +105,49 @@ describe('ExtractedMetadataPanel', () => {
         expect(getByText('Pune, IN · Bavaria, DE')).toBeTruthy();
     });
 
+    it('renders a supranational-only geo tag as a human place name, not the raw token', () => {
+        mockUseShowExtractedMetadata.mockReturnValue(true);
+        const { getByText, queryByText } = render(
+            <ExtractedMetadataPanel
+                eventType={null}
+                entities={null}
+                geoTags={[{ city: null, region: null, countryCode: 'MIDDLE_EAST' }]}
+            />,
+        );
+        expect(getByText('Middle East')).toBeTruthy();
+        expect(queryByText('MIDDLE_EAST')).toBeNull();
+    });
+
+    it('renders EU (two letters, not a country) as its human name, not the raw code', () => {
+        // EU is exactly two characters, the same length as every real ISO
+        // alpha-2 code — a length-based shortcut would leave it as raw "EU".
+        mockUseShowExtractedMetadata.mockReturnValue(true);
+        const { getByText, queryByText } = render(
+            <ExtractedMetadataPanel
+                eventType={null}
+                entities={null}
+                geoTags={[{ city: null, region: null, countryCode: 'EU' }]}
+            />,
+        );
+        expect(getByText('European Union')).toBeTruthy();
+        expect(queryByText(/^EU$/)).toBeNull();
+    });
+
+    it('renders a mixed list — real country codes raw, supranational codes humanized', () => {
+        mockUseShowExtractedMetadata.mockReturnValue(true);
+        const { getByText } = render(
+            <ExtractedMetadataPanel
+                eventType={null}
+                entities={null}
+                geoTags={[
+                    { city: 'Pune', region: null, countryCode: 'IN' },
+                    { city: null, region: null, countryCode: 'GULF' },
+                ]}
+            />,
+        );
+        expect(getByText('Pune, IN · Gulf')).toBeTruthy();
+    });
+
     it('renders entities joined and filters blank entries', () => {
         mockUseShowExtractedMetadata.mockReturnValue(true);
         const { getByText } = render(
