@@ -909,7 +909,8 @@
     "para3NoTrial": "Gói Starter là một nơi tốt để bắt đầu. Đó là gói nhỏ nhất, và bạn có thể nâng cấp bất kỳ khi nào Mera xứng đáng.",
     "startFreeTrial": "Bắt đầu bản dùng thử miễn phí",
     "subscribeNow": "Đăng ký ngay",
-    "planRecommendation": "Bạn mở khoảng {{count}} bài viết mỗi ngày. {{plan}} phân tích tối đa {{limit}} mỗi ngày vì vậy luôn có nhiều hơn những gì bạn sẽ xem hết."
+    "planRecommendation": "Bạn mở khoảng {{count}} bài viết mỗi ngày. {{plan}} phân tích tối đa {{limit}} mỗi ngày vì vậy luôn có nhiều hơn những gì bạn sẽ xem hết.",
+    "sandboxOnProduction": "Đây là một giao dịch mua hàng sandbox (kiểm thử) và ứng dụng được kết nối với máy chủ production. Hóa đơn sandbox chỉ được chấp nhận trên staging, vì vậy production sẽ không bao giờ xác nhận giao dịch mua hàng này — chờ đợi sẽ không giúp ích. Hãy hướng ứng dụng tới môi trường staging để kiểm thử các giao dịch mua hàng."
   },
   "tabs": {
     "deck": "Bảng tin",

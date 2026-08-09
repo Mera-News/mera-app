@@ -909,7 +909,8 @@
     "para3NoTrial": "Starter方案是個不錯的開始。這是最小的方案，你可以在Mera證明自己值得時隨時升級。",
     "startFreeTrial": "開始免費試用",
     "subscribeNow": "立即訂閱",
-    "planRecommendation": "你每天大約打開{{count}}篇文章。{{plan}}每天最多可分析{{limit}}篇，所以你永遠有看不完的內容。"
+    "planRecommendation": "你每天大約打開{{count}}篇文章。{{plan}}每天最多可分析{{limit}}篇，所以你永遠有看不完的內容。",
+    "sandboxOnProduction": "這是一筆沙箱(測試)購買，應用連接到 production 伺服器。沙箱收據僅在 staging 上被接受，因此 production 永遠不會確認此次購買——等待不會有幫助。請將應用指向 staging 環境來測試購買。"
   },
   "tabs": {
     "deck": "資訊流",

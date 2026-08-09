@@ -909,7 +909,8 @@
     "para3NoTrial": "Starter è un buon punto di partenza. È il piano più piccolo, e puoi passare a uno più grande quando Mera se lo sarà meritato.",
     "startFreeTrial": "Inizia la tua prova gratuita",
     "subscribeNow": "Abbonati ora",
-    "planRecommendation": "Apri circa {{count}} articoli al giorno. {{plan}} analizza fino a {{limit}} al giorno così c'è sempre più di quello che riuscirai a leggere."
+    "planRecommendation": "Apri circa {{count}} articoli al giorno. {{plan}} analizza fino a {{limit}} al giorno così c'è sempre più di quello che riuscirai a leggere.",
+    "sandboxOnProduction": "Questo è un acquisto sandbox (test) e l'app è connessa al server di production. Le ricevute sandbox vengono accettate solo in staging, quindi production non confermerà mai questo acquisto — aspettare non aiuterà. Indirizza l'app all'ambiente staging per testare gli acquisti."
   },
   "tabs": {
     "deck": "Notizie",

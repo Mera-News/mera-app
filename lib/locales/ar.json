@@ -937,7 +937,8 @@
     "para3NoTrial": "Starter مكان جيد للبدء. إنها أصغر خطة، ويمكنك الترقية متى استحقت Mera ذلك.",
     "startFreeTrial": "ابدأ تجربتك المجانية",
     "subscribeNow": "اشترك الآن",
-    "planRecommendation": "تفتح حوالي {{count}} مقالات يوميًا. {{plan}} تحلل ما يصل {{limit}} يوميًا حتى يكون هناك دائمًا أكثر مما ستتمكن من تصفحه."
+    "planRecommendation": "تفتح حوالي {{count}} مقالات يوميًا. {{plan}} تحلل ما يصل {{limit}} يوميًا حتى يكون هناك دائمًا أكثر مما ستتمكن من تصفحه.",
+    "sandboxOnProduction": "هذا شراء من sandbox (اختبار) والتطبيق متصل بخادم production. لا يتم قبول sandbox receipts إلا في staging، لذا فإن production لن يؤكد هذا الشراء أبداً — الانتظار لن يساعد. وجّه التطبيق إلى بيئة staging لاختبار المشتريات."
   },
   "tabs": {
     "deck": "الخلاصة",

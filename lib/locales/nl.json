@@ -909,7 +909,8 @@
     "para3NoTrial": "Starter is een goed beginpunt. Het is het kleinste abonnement en je kunt altijd upgraden wanneer Mera het verdiend heeft.",
     "startFreeTrial": "Start je gratis proefperiode",
     "subscribeNow": "Abonneer je nu",
-    "planRecommendation": "Je opent ongeveer {{count}} artikelen per dag. {{plan}} analyseert tot {{limit}} per dag zodat er altijd meer is dan je haalt."
+    "planRecommendation": "Je opent ongeveer {{count}} artikelen per dag. {{plan}} analyseert tot {{limit}} per dag zodat er altijd meer is dan je haalt.",
+    "sandboxOnProduction": "Dit is een sandbox (test) aankoop en de app is verbonden met de productie server. Sandbox bonnetjes worden alleen geaccepteerd op staging, dus production zal deze aankoop nooit bevestigen — wachten zal niet helpen. Wijs de app naar de staging omgeving om aankopen te testen."
   },
   "tabs": {
     "deck": "Feed",

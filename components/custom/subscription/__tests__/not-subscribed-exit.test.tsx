@@ -253,10 +253,10 @@ describe('the purchase sheet opens only on an explicit tap', () => {
 
 describe('leaving the paywall for /logged-in', () => {
     it('forces an entitlement sync BEFORE handing back to the router gate', async () => {
-        const { getByText } = render(<NotSubscribedScreen />);
+        const { getByTestId } = render(<NotSubscribedScreen />);
 
         await act(async () => {
-            fireEvent.press(getByText('account.refresh'));
+            fireEvent.press(getByTestId('not-subscribed-refresh'));
             for (let i = 0; i < 8; i++) await Promise.resolve();
         });
 
@@ -274,10 +274,10 @@ describe('leaving the paywall for /logged-in', () => {
     // authorised by the auth cookie, not by the session object.
     it('Refresh still asks the server, off the LOCAL id, when the session cannot be fetched', async () => {
         mockSessionRef.current = null;
-        const { getByText } = render(<NotSubscribedScreen />);
+        const { getByTestId } = render(<NotSubscribedScreen />);
 
         await act(async () => {
-            fireEvent.press(getByText('account.refresh'));
+            fireEvent.press(getByTestId('not-subscribed-refresh'));
             for (let i = 0; i < 8; i++) await Promise.resolve();
         });
 
@@ -287,10 +287,10 @@ describe('leaving the paywall for /logged-in', () => {
 
     it('does not sync or leave while the server still refuses', async () => {
         mockFetchUserBilling.mockResolvedValue(null);
-        const { getByText } = render(<NotSubscribedScreen />);
+        const { getByTestId } = render(<NotSubscribedScreen />);
 
         await act(async () => {
-            fireEvent.press(getByText('account.refresh'));
+            fireEvent.press(getByTestId('not-subscribed-refresh'));
             for (let i = 0; i < 8; i++) await Promise.resolve();
         });
 
@@ -310,10 +310,10 @@ describe('leaving the paywall for /logged-in', () => {
     // reachable server.
     it('does not leave on a reachable server that still reports no tier', async () => {
         mockFetchUserBilling.mockResolvedValue({ subscriptionTier: 'none' });
-        const { getByText } = render(<NotSubscribedScreen />);
+        const { getByTestId } = render(<NotSubscribedScreen />);
 
         await act(async () => {
-            fireEvent.press(getByText('account.refresh'));
+            fireEvent.press(getByTestId('not-subscribed-refresh'));
             for (let i = 0; i < 8; i++) await Promise.resolve();
         });
 

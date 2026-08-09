@@ -147,20 +147,37 @@ export default function ConsentGate() {
                     contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
                     showsVerticalScrollIndicator={false}
                 >
-                    <Text className="text-white text-3xl font-bold">
+                    <Text accessibilityRole="header" className="text-white text-3xl font-bold">
                         {t('consent.title')}
                     </Text>
                     <Text className="text-gray-300 text-base mt-4 leading-relaxed">
                         {t('consent.body')}
                     </Text>
 
-                    <VStack space="md" className="mt-8">
-                        <Pressable onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}>
+                    {/* `py-3` on each row, NOT a vertical hitSlop. Both are ways to
+                        reach Apple's 44pt minimum around ~20pt of text, but a
+                        symmetric hitSlop on two links this close together makes
+                        their touch regions overlap, and RN resolves an overlap by
+                        z-order rather than by proximity — a tap in the gap would
+                        silently open the LATER link. Real padding cannot overlap,
+                        so the stack's own spacing drops to `xs` to compensate. */}
+                    <VStack space="xs" className="mt-8">
+                        <Pressable
+                            accessibilityRole="link"
+                            accessibilityLabel={t('consent.termsLink')}
+                            className="py-3"
+                            onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}
+                        >
                             <Text className="text-primary-400 text-base underline">
                                 {t('consent.termsLink')}
                             </Text>
                         </Pressable>
-                        <Pressable onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}>
+                        <Pressable
+                            accessibilityRole="link"
+                            accessibilityLabel={t('consent.privacyLink')}
+                            className="py-3"
+                            onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}
+                        >
                             <Text className="text-primary-400 text-base underline">
                                 {t('consent.privacyLink')}
                             </Text>

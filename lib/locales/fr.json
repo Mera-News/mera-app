@@ -914,7 +914,8 @@
     "para3NoTrial": "Starter est un bon endroit pour commencer. C'est le plus petit forfait, et vous pouvez passer à un supérieur chaque fois que Mera l'aura mérité.",
     "startFreeTrial": "Commencer votre essai gratuit",
     "subscribeNow": "S'abonner maintenant",
-    "planRecommendation": "Vous ouvrez environ {{count}} articles par jour. {{plan}} analyse jusqu'à {{limit}} par jour, il y a donc toujours plus que vous ne pourrez lire."
+    "planRecommendation": "Vous ouvrez environ {{count}} articles par jour. {{plan}} analyse jusqu'à {{limit}} par jour, il y a donc toujours plus que vous ne pourrez lire.",
+    "sandboxOnProduction": "Ceci est un achat sandbox (test) et l'application est connectée au serveur de production. Les reçus sandbox ne sont acceptés que sur staging, donc production ne confirmera jamais cet achat — attendre n'aidera pas. Pointez l'application vers l'environnement staging pour tester les achats."
   },
   "tabs": {
     "deck": "Fil d'actu",

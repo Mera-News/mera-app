@@ -30,6 +30,7 @@ import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { useUserStore } from "@/lib/stores/user-store";
 import { showSubscriptionActivatedToast } from "@/lib/subscription/activation-toast";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
+import { isSandboxPurchaseOnProduction } from "@/lib/subscription/sandbox-environment-mismatch";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -64,6 +65,12 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
     const router = useRouter();
     const { t } = useTranslation();
     const [busy, setBusy] = useState(false);
+    // Which control owns the current `busy` window. `busy` gates BOTH the CTA
+    // and Refresh, and now that Refresh is icon-only it has no label left to
+    // swap to "Checking…" — so without this the spinner would appear on the
+    // primary CTA while the work the reader actually started was the refresh
+    // beside it, pointing the only progress indicator at the wrong control.
+    const [refreshing, setRefreshing] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
     // Seeded `'unknown'` on purpose, which renders the no-trial copy and the
@@ -220,6 +227,24 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                 // the server to catch up via the webhook.
                 const info = await getCustomerInfoSafe();
                 if (info) useSubscriptionStore.getState().setCustomerInfo(info);
+
+                // A SANDBOX purchase on a PRODUCTION-backed build can never be
+                // confirmed, so do not spend the poll's retry budget pretending
+                // it might. RevenueCat routes sandbox receipts to the staging
+                // webhook by configuration, which means the UserBilling row this
+                // poll waits for is being written into a database this build
+                // does not read. Polling would burn ~20 attempts and then land
+                // on "your purchase is being confirmed" — a message that is
+                // false in both halves. Tell the tester the actual rule instead.
+                if (isSandboxPurchaseOnProduction(info)) {
+                    logger.warn(
+                        'sandbox purchase on a production backend — poll skipped',
+                        { component: 'NotSubscribedScreen' },
+                    );
+                    setMessage(t('subscription.sandboxOnProduction'));
+                    return;
+                }
+
                 setMessage(t('subscription.activating'));
                 const ok = await pollUntilSubscribed();
                 if (!ok) setMessage(t('subscription.activationDelayed'));
@@ -263,11 +288,13 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
 
     const handleRefresh = async () => {
         setBusy(true);
+        setRefreshing(true);
         setMessage(null);
         if (await checkServerSubscribed()) {
             await leaveForRouterGate();
         } else {
             setBusy(false);
+            setRefreshing(false);
         }
     };
 
@@ -343,7 +370,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                       exactly the continuity the copy is going for. */}
                                   {isLapsed ? (
                                       <>
-                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-3">
+                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
                                               {t('freeTier.lapseBody')}
                                           </Text>
                                           <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
@@ -352,7 +379,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                       </>
                                   ) : (
                                       <>
-                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-3">
+                                          <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
                                               {t('subscription.para1')}
                                           </Text>
                                           <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
@@ -379,44 +406,79 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                       </Text>
                                   ) : null}
 
-                                  {/* Descending weight, and now descending SIZE too:
-                                      one solid CTA, then two quiet text links.
-                                      Refresh sits directly under the CTA because it
+                                  {/* Descending weight: one solid CTA, then an
+                                      outlined secondary, then one quiet text link.
+                                      Refresh sits ON the CTA's own row because it
                                       is the recovery path for the CTA itself (a
                                       purchase that went through but has not landed
-                                      yet), so it belongs next to the thing it
+                                      yet), so it belongs beside the thing it
                                       recovers. */}
                                   <VStack space="sm" className="w-full mt-6">
-                                      <Button
-                                          testID="not-subscribed-plans"
-                                          onPress={presentPaywall}
-                                          disabled={busy}
-                                          className="bg-primary-500 w-full rounded-full"
-                                          size="lg"
-                                      >
-                                          {busy ? <Spinner size="small" className="mr-2" /> : null}
-                                          <ButtonText className="text-white font-semibold">
-                                              {isLapsed
-                                                  ? t('subscription.turnMeraBackOn')
-                                                  : trialAvailability === 'eligible'
-                                                      ? t('subscription.startFreeTrial')
-                                                      : t('subscription.subscribeNow')}
-                                          </ButtonText>
-                                      </Button>
+                                      {/* Three columns, and the leading one is a
+                                          SPACER that mirrors the trailing icon
+                                          button exactly — same `w-11`, same `gap-2`
+                                          on either side of the middle column. That
+                                          is what keeps the CTA's centre the PANEL's
+                                          centre: it does not shift left to make room
+                                          for Refresh. A margin would only fake this,
+                                          and would drift the moment either side's
+                                          size changed. */}
+                                      <Box className="w-full flex-row items-center gap-2">
+                                          <Box className="w-11" />
 
-                                      <Button
-                                          testID="not-subscribed-refresh"
-                                          onPress={handleRefresh}
-                                          disabled={busy}
-                                          variant="link"
-                                          className="w-full rounded-full"
-                                          size="md"
-                                      >
-                                          <ButtonIcon as={RepeatIcon} className="mr-2 text-gray-400" />
-                                          <ButtonText className="text-gray-400">
-                                              {busy ? t('common.checking') : t('account.refresh')}
-                                          </ButtonText>
-                                      </Button>
+                                          <Button
+                                              testID="not-subscribed-plans"
+                                              onPress={presentPaywall}
+                                              disabled={busy}
+                                              // `h-auto min-h-11` rather than `lg`'s fixed
+                                              // h-11: the CTA is ~104pt narrower now that
+                                              // it shares a row, and "Start your free
+                                              // trial" — longer still in several locales —
+                                              // wraps to two lines on a small phone at
+                                              // large Dynamic Type. A fixed height would
+                                              // CLIP that second line; this grows instead,
+                                              // while min-h keeps the 44pt floor.
+                                              className="bg-primary-500 flex-1 rounded-full h-auto min-h-11 py-2.5"
+                                              size="lg"
+                                          >
+                                              {busy && !refreshing ? <Spinner size="small" className="mr-2" /> : null}
+                                              <ButtonText className="text-white font-semibold">
+                                                  {isLapsed
+                                                      ? t('subscription.turnMeraBackOn')
+                                                      : trialAvailability === 'eligible'
+                                                          ? t('subscription.startFreeTrial')
+                                                          : t('subscription.subscribeNow')}
+                                              </ButtonText>
+                                          </Button>
+
+                                          {/* ICON ONLY. The label it lost is carried
+                                              by `accessibilityLabel`, so the
+                                              accessible name is unchanged — losing
+                                              the visible text must not lose the
+                                              name, and it also still announces
+                                              "Checking…" while the poll runs.
+                                              `w-11 h-11` is 44x44pt — Apple's HIG
+                                              minimum — BEFORE the hitSlop, which is
+                                              added anyway because the glyph itself is
+                                              far smaller than its box. Those two
+                                              classes are also what the leading spacer
+                                              mirrors, so they must stay in step. */}
+                                          <Button
+                                              testID="not-subscribed-refresh"
+                                              onPress={handleRefresh}
+                                              disabled={busy}
+                                              variant="link"
+                                              size="lg"
+                                              accessibilityRole="button"
+                                              accessibilityLabel={busy ? t('common.checking') : t('account.refresh')}
+                                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                              className="w-11 h-11 rounded-full items-center justify-center"
+                                          >
+                                              {refreshing
+                                                  ? <Spinner size="small" />
+                                                  : <ButtonIcon as={RepeatIcon} className="text-gray-300" />}
+                                          </Button>
+                                      </Box>
 
                                       {/* Between Refresh and Continue, and that
                                           position is the argument: this screen's
@@ -437,15 +499,24 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           has to be, because this screen is one of
                                           the places a reader has no plan and may
                                           have no session either. */}
+                                      {/* OUTLINED, not a bare text link, and `lg` to
+                                          match the CTA's h-11 (=44pt) — the two
+                                          buttons read as one stack rather than a
+                                          button and a stray link, and both clear
+                                          Apple's 44pt minimum without a hitSlop.
+                                          Gluestack's outline variant inherits
+                                          `border-primary-300`, which is invisible
+                                          against this glass panel, so the border and
+                                          the text colour are both set explicitly. */}
                                       <Button
                                           testID="not-subscribed-learn"
                                           onPress={() => router.push('/tutorials' as any)}
-                                          variant="link"
-                                          className="w-full rounded-full"
-                                          size="md"
+                                          variant="outline"
+                                          className="w-full rounded-full border-white/30"
+                                          size="lg"
                                       >
-                                          <ButtonIcon as={HelpCircleIcon} className="mr-2 text-gray-400" />
-                                          <ButtonText className="text-gray-400">
+                                          <ButtonIcon as={HelpCircleIcon} className="mr-2 text-white" />
+                                          <ButtonText className="text-white">
                                               {t('tutorials.learnAboutMera')}
                                           </ButtonText>
                                       </Button>
@@ -459,14 +530,17 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           while `busy` holds for ~12s, which would
                                           otherwise strand a user behind a request they
                                           did not ask for), never guilt-worded, and at
-                                          the same size as Refresh rather than smaller
-                                          — subordinate by weight, not by legibility. */}
+                                          the same size as the buttons above it rather
+                                          than smaller — subordinate by weight, not by
+                                          legibility. `lg` is also what puts its touch
+                                          target on 44pt: a link variant has no fill,
+                                          so the row height IS the target. */}
                                       <Button
                                           testID="not-subscribed-continue"
                                           onPress={handleContinueWithoutPlan}
                                           variant="link"
                                           className="w-full rounded-full"
-                                          size="md"
+                                          size="lg"
                                       >
                                           <ButtonText className="text-gray-400 underline">
                                               {t('freeTier.continueWithoutPlan')}
@@ -477,14 +551,35 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                           </Box>
                       </Box>
 
-                      <Text size="sm" className="text-gray-400 text-center">
-                          {t('account.enquiries')}{" "}
-                          <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}>
-                              <Text size="sm" className="text-primary-400">
+                      {/* The mail link is a SIBLING of the sentence, not a
+                          TouchableOpacity nested inside its <Text>. That nesting is
+                          not merely untidy: RN lays a nested touchable out as an
+                          inline view with no intrinsic size on iOS, so the link was
+                          effectively untappable — and there was nowhere to hang a
+                          hitSlop even if it had been. As its own control it gets a
+                          real 44pt-class target (py-2 + hitSlop) and an explicit
+                          link role. */}
+                      <VStack space="xs" className="items-center">
+                          <Text size="sm" className="text-gray-400 text-center">
+                              {t('account.enquiries')}
+                          </Text>
+                          <TouchableOpacity
+                              onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
+                              accessibilityRole="link"
+                              accessibilityLabel={t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
+                              hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
+                              // Inline style, not `py-2`: this is a bare
+                              // react-native TouchableOpacity and nothing else in
+                              // components/ puts a className on one, so there is no
+                              // evidence cssInterop is wired for it — a className
+                              // here would silently be a no-op.
+                              style={{ paddingVertical: 8 }}
+                          >
+                              <Text size="sm" className="text-primary-400 text-center">
                                   {t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
                               </Text>
                           </TouchableOpacity>
-                      </Text>
+                      </VStack>
                   </VStack>
               </ScrollView>
             </SafeAreaView>
