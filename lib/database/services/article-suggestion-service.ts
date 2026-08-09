@@ -449,6 +449,14 @@ export async function getScoredDonorRows(sinceMs: number): Promise<SuggestionGro
   const rows = await articleSuggestionsCol
     .query(
       Q.where('status', Q.notEq(ArticleSuggestionStatus.Unscored)),
+      // A `reason_skipped` row is NEVER a donor. It carries a real, renderable
+      // relevance and NO reason by design, so donating it would hand every
+      // same-story sibling a renderable score with a blank note — and, since a
+      // reason-less recipient lands in `reason_pending`, re-spend the very LLM
+      // call the gate skipped, once per sibling. `pickDonor` prefers a donor
+      // that HAS a reason, but that is a preference: a group whose only donor is
+      // gated would still propagate. This is the guarantee.
+      Q.where('status', Q.notEq(ArticleSuggestionStatus.ReasonSkipped)),
       Q.where('relevance', Q.gt(0)),
       Q.or(
         Q.where('scored_at', Q.gte(sinceMs)),
@@ -461,6 +469,7 @@ export async function getScoredDonorRows(sinceMs: number): Promise<SuggestionGro
     .filter(
       (r) =>
         r.status !== ArticleSuggestionStatus.Unscored &&
+        r.status !== ArticleSuggestionStatus.ReasonSkipped &&
         r.relevance > 0 &&
         ((typeof r.scoredAt === 'number' && r.scoredAt >= sinceMs) ||
           r.createdAt.getTime() >= sinceMs),
@@ -1104,6 +1113,40 @@ export async function batchMarkReasonSkipped(ids: string[]): Promise<void> {
       rows.map((row) =>
         row.prepareUpdate((r) => {
           r.status = ArticleSuggestionStatus.Complete;
+        }),
+      ),
+    );
+  });
+}
+
+/**
+ * Terminal write for the v4 tag reason-gate: the row KEEPS its real relevance
+ * and moves to `reason_skipped`.
+ *
+ * Deliberately NOT `batchMarkReasonSkipped` above, which sets `complete` — that
+ * one is for rows whose score already put them under the render gate, so
+ * `complete` is harmless (they are invisible on score alone). A gated row is
+ * ABOVE the gate; marking it `complete` would render it with a blank note.
+ *
+ * Relevance is untouched on purpose. The previous implementation overwrote it
+ * with `feedVerifierDemoteScore` (0.28) to force invisibility, which threw away
+ * a score an LLM call had just produced and misreported "we chose not to write a
+ * note" as "this scored badly". Invisibility now comes from the status.
+ */
+export async function batchMarkGateSkipped(ids: string[]): Promise<void> {
+  if (ids.length === 0) return;
+  // Delete-tolerant, same rationale as batchMarkReasonSkipped.
+  const rows = (
+    await Promise.all(
+      ids.map((id) => articleSuggestionsCol.find(id).catch(() => null)),
+    )
+  ).filter((r): r is ArticleSuggestionModel => r != null);
+  if (rows.length === 0) return;
+  await database.write(async () => {
+    await database.batch(
+      rows.map((row) =>
+        row.prepareUpdate((r) => {
+          r.status = ArticleSuggestionStatus.ReasonSkipped;
         }),
       ),
     );

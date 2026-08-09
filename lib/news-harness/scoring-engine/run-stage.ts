@@ -38,6 +38,7 @@ import {
   chunk,
 } from '../article-pipeline/scoring';
 import {
+  applyEntityPenalty,
   computeRelevance,
   type ScoredCandidateInput,
   type RelevanceComponents,
@@ -226,6 +227,17 @@ export async function computeAndScore(
         if (penalty > 0) {
           penalised += 1;
           next = Math.max(0, next - penalty);
+        }
+        // The ENTITY share is applied separately, against ENTITY_PENALTY_FLOOR
+        // rather than subtracted outright: entity extraction is 68.8% correct,
+        // so an entity filter may lower a row's rank but must never push it out
+        // of the feed. Same helper `computeRelevance` uses on the fail-open
+        // score, so the two paths cannot disagree about what "nudge, never
+        // delete" means.
+        const entityPenalty = comps?.entityPenalty ?? 0;
+        if (entityPenalty > 0) {
+          if (penalty <= 0) penalised += 1;
+          next = applyEntityPenalty(next, entityPenalty, eng);
         }
         // P6 — DEMOTED, NEVER REMOVED. An exempt top headline carries a HARD
         // filter's penalty in `suppressPenalty` (folded in by computeRelevance),

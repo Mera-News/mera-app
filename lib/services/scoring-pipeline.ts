@@ -38,6 +38,7 @@ import {
   saveReason,
   saveScoringResult,
   batchMarkExcluded,
+  batchMarkGateSkipped,
   batchMarkReasonSkipped,
   getStageRowsByIds,
   type ScoringCandidate,
@@ -1842,37 +1843,34 @@ async function handleRelevanceResults(
  * render gate, so a skipped-but-not-demoted row would render with no note and
  * sit in `reason_pending` forever, re-elected by every later gate pass.
  *
- * Deliberately identical in shape to `applyV3NoteResults`' demote loop —
- * same score, same `reasonSkipped: true` terminal marker, same
- * record-not-found tolerance — because it is the same product action reached by
- * a deterministic route instead of an LLM one.
+ * IT KEEPS ITS REAL RELEVANCE and goes terminal as `reason_skipped`. It used to
+ * be written at `feedVerifierDemoteScore` (0.28) to force it under the render
+ * gate, which threw away a score an LLM call had just produced and told every
+ * downstream reader "this scored badly" when the truth was "we chose not to
+ * narrate it". The status carries that meaning now, and carries it honestly.
+ *
+ * NOT the same action as `applyV3NoteResults`' demote loop, which this used to
+ * mirror. That one acts on an LLM VERDICT that the article does not belong in
+ * the feed — a claim about relevance, so overwriting relevance is right there.
+ * This one is a deterministic decision about the NOTE, taken from the event type
+ * alone, and it makes no claim about the score at all.
  */
 async function applyTagGatedDemotions(
   batchId: number,
   demoteIds: string[] | undefined,
 ): Promise<void> {
   if (!demoteIds || demoteIds.length === 0) return;
-  const demoteScore = DEFAULT_HARNESS_CONFIG.articlePipeline.feedVerifierDemoteScore;
-  for (const id of demoteIds) {
-    try {
-      await saveScoringResult(id, {
-        relevance: demoteScore,
-        reason: '',
-        // Terminal: below the gate it owes no note, so leaving it
-        // `reason_pending` would strand it in the recovery sweep forever.
-        reasonSkipped: true,
-      });
-    } catch (err) {
-      if (isRecordNotFoundError(err)) continue;
-      logger.captureException(err, {
-        tags: { service: 'scoring-pipeline', step: 'tag-gate-demote' },
-        extra: { candidateId: id },
-      });
-    }
+  try {
+    await batchMarkGateSkipped(demoteIds);
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-pipeline', step: 'tag-gate-skip' },
+      extra: { count: String(demoteIds.length) },
+    });
   }
   logger.debug(
-    `${TAG} batch ${batchId} article-tag reason gate: demoted ${demoteIds.length} ` +
-      `rows, skipping their reason calls`,
+    `${TAG} batch ${batchId} article-tag reason gate: marked ${demoteIds.length} ` +
+      `rows reason_skipped (real relevance kept), skipping their reason calls`,
   );
 }
 

@@ -38,7 +38,19 @@ jest.mock('@/lib/database/services/location-service', () => ({
 jest.mock('@/lib/database/services/publication-preference-service', () => ({
   getActive: jest.fn().mockResolvedValue([{ publicationName: 'Fav Times', weight: 0.5 }]),
 }));
+// suppression-service imports lib/database at module load, which needs a native
+// SQLite adapter. Mock the DB so `requireActual` below can reach the real pure
+// helpers without it.
+jest.mock('@/lib/database/index', () => {
+  const { makeDatabaseMock } = require('@/lib/__test-helpers__/mockDatabase');
+  return makeDatabaseMock();
+});
+// `kindOf` and `HARD_SUPPRESSION_STRENGTH` come from the REAL module: a factory
+// mock replaces the whole thing, and omitting them made `HARD_SUPPRESSION_STRENGTH`
+// undefined, so `strength >= undefined` was always false and the hard/soft
+// partition below was never actually exercised by this suite.
 jest.mock('@/lib/database/services/suppression-service', () => ({
+  ...jest.requireActual('@/lib/database/services/suppression-service'),
   getActive: jest.fn().mockResolvedValue([{ keywords: ['celebrity gossip'], strength: 0.5 }]),
 }));
 jest.mock('@/lib/database/services/fact-service', () => ({
@@ -58,6 +70,7 @@ import {
   loadPersonaScoringContext,
 } from '../stage-scoring';
 import { getOpenedSeenSet } from '@/lib/database/services/story-impression-service';
+import { getActive as getActiveSuppressions } from '@/lib/database/services/suppression-service';
 import { buildStageCandidateInput } from '@/lib/database/services/article-suggestion-service';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { screenHardSuppressions } from '@/lib/news-harness/scoring-engine';
@@ -220,5 +233,43 @@ describe('buildStageCandidates — the engine sees the server tags', () => {
       [{ keywords: [], strength: 1, kind: 'event_type', value: 'crime' }],
     );
     expect([...dropped.keys()]).toEqual(['a0']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// THE HARD/SOFT PARTITION — the one place the "entity can never exclude" rule
+// is enforced for every consumer of the persona snapshot at once (the scoring
+// stage, the E2EE pipeline, and services/suppression-sweep).
+// ---------------------------------------------------------------------------
+
+describe('loadPersonaScoringContext — entity filters are never HARD', () => {
+  const setSuppressions = (rows: unknown[]) =>
+    (getActiveSuppressions as jest.Mock).mockResolvedValue(rows);
+
+  afterEach(() => {
+    setSuppressions([{ keywords: ['celebrity gossip'], strength: 0.5 }]);
+  });
+
+  it('files a full-strength ENTITY filter as SOFT', async () => {
+    // Strength 1 is as hard as a filter gets; entity still lands in the soft
+    // list, where it becomes a capped penalty instead of an exclusion.
+    setSuppressions([{ keywords: [], strength: 1, kind: 'entity', value: 'nvidia' }]);
+
+    const { persona } = await loadPersonaScoringContext(1_700_000_000_000);
+
+    expect(persona.hardSuppressions).toEqual([]);
+    expect(persona.softSuppressions).toHaveLength(1);
+    expect(persona.softSuppressions[0]).toMatchObject({ kind: 'entity', value: 'nvidia' });
+  });
+
+  it('still files a full-strength PLACE filter as HARD', async () => {
+    // The change is entity-only: place measured 81.3%, event_type 93.8%.
+    setSuppressions([{ keywords: [], strength: 1, kind: 'place', value: 'taipei' }]);
+
+    const { persona } = await loadPersonaScoringContext(1_700_000_000_000);
+
+    expect(persona.softSuppressions).toEqual([]);
+    expect(persona.hardSuppressions).toHaveLength(1);
+    expect(persona.hardSuppressions![0]).toMatchObject({ kind: 'place' });
   });
 });

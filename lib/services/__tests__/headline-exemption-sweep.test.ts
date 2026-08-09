@@ -190,12 +190,35 @@ describe('refreshHardFilterLabels — the card label', () => {
     expect(labels.get('head')).toBe('technology');
   });
 
-  // REVERSED when `USE_ARTICLE_TAGS` was deleted — this used to assert NO label.
-  // The label is what tells the reader WHY a card is dimmed; with the tag
-  // columns blanked, a user who filtered an entity got neither the filtering nor
-  // the explanation. The label path shares `toScreeningInputs` with the purge,
-  // so the two cannot disagree about what matched.
+  // The label is what tells the reader WHY a card is dimmed. It follows
+  // exclusion exactly (both go through `toScreeningInputs` + the same screen),
+  // so a tag-derived kind that CAN exclude also labels. `place` is used here:
+  // `entity` can no longer exclude, so it can no longer label either — asserted
+  // in the test below.
   it('DOES label via a TAG-derived kind', async () => {
+    mockLoadPersona.mockResolvedValue({
+      persona: {
+        locations: [],
+        pubPrefs: new Map(),
+        softSuppressions: [],
+        hardSuppressions: [{ keywords: [], strength: 1, kind: 'place', value: 'taipei' }],
+      },
+      topicWeights: new Map(),
+    });
+    mockGetStageRows.mockResolvedValue([
+      row('head', {
+        geoTagsJson: JSON.stringify([{ city: 'Taipei', countryCode: 'TWN' }]),
+        headlineScope: 'COUNTRY',
+      }),
+    ]);
+
+    const labels = await refreshHardFilterLabels();
+    expect(labels.get('head')).toBe('taipei');
+  });
+
+  it('does NOT label via an entity filter — it never excluded, so there is nothing to explain', async () => {
+    // Labelling a card for a filter that did not remove anything would be a
+    // claim we cannot stand behind at 68.8% extraction accuracy.
     mockLoadPersona.mockResolvedValue({
       persona: {
         locations: [],
@@ -210,7 +233,7 @@ describe('refreshHardFilterLabels — the card label', () => {
     ]);
 
     const labels = await refreshHardFilterLabels();
-    expect(labels.get('head')).toBe('nvidia');
+    expect(labels.size).toBe(0);
   });
 });
 

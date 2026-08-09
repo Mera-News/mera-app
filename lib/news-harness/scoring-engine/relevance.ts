@@ -171,7 +171,15 @@ export interface RelevanceComponents {
   /** base after the headline floor, before penalties. */
   base: number;
   negTopicPenalty: number;
+  /** Σ P_SUP·strength over matching NON-entity soft suppressions, capped at
+   *  P_SUP_CAP. Subtracted from the score outright. */
   suppressPenalty: number;
+  /** The `entity`-kind share, kept SEPARATE because it is applied against
+   *  ENTITY_PENALTY_FLOOR rather than subtracted outright — an entity match may
+   *  lower a row's rank but must never push it out of the feed (68.8%-correct
+   *  extraction; see ENTITY_PENALTY_FLOOR). Optional so existing component
+   *  literals keep compiling; absent reads as 0. */
+  entityPenalty?: number;
   wrongLocPenalty: number;
   seenPenalty: number;
   wrongLocationFlag: 0 | 1;
@@ -317,15 +325,58 @@ export function suppressionPenalty(
   ctx: PersonaScoringContext,
   cfg: ScoringEngineConfig,
 ): number {
-  if (!ctx.softSuppressions?.length) return 0;
+  const { other, entity } = splitSuppressionPenalty(candidate, ctx, cfg);
+  return other + entity;
+}
+
+/**
+ * The same penalty, split by whether it may remove a row.
+ *
+ * `other` is subtracted from the score outright. `entity` is applied against
+ * ENTITY_PENALTY_FLOOR by the caller, so it can lower a rank but never take a
+ * renderable row out of the feed. Each side is capped at P_SUP_CAP
+ * INDEPENDENTLY — sharing one cap would let a pile of entity matches crowd out
+ * the reliable kinds' penalty, which is the opposite of the intent.
+ */
+export function splitSuppressionPenalty(
+  candidate: ScoredCandidateInput,
+  ctx: PersonaScoringContext,
+  cfg: ScoringEngineConfig,
+): { other: number; entity: number } {
+  if (!ctx.softSuppressions?.length) return { other: 0, entity: 0 };
   const haystack = buildSuppressionHaystack(candidate);
-  let sum = 0;
+  let other = 0;
+  let entity = 0;
   for (const s of ctx.softSuppressions) {
-    if (suppressionMatchesCandidate(candidate, s, haystack)) {
-      sum += cfg.P_SUP * s.strength;
-    }
+    if (!suppressionMatchesCandidate(candidate, s, haystack)) continue;
+    const p = cfg.P_SUP * s.strength;
+    if ((s.kind ?? 'keyword') === 'entity') entity += p;
+    else other += p;
   }
-  return Math.min(cfg.P_SUP_CAP, sum);
+  return {
+    other: Math.min(cfg.P_SUP_CAP, other),
+    entity: Math.min(cfg.P_SUP_CAP, entity),
+  };
+}
+
+/**
+ * Apply an entity-kind penalty WITHOUT letting it remove the row.
+ *
+ * The one place the "entities nudge, never delete" rule turns into arithmetic,
+ * shared by `computeRelevance` (the fail-open score) and
+ * `run-stage::computeAndScore` (the LLM score) so the two cannot drift.
+ *
+ *   - a score at or above the floor can be pushed down TO the floor, no further;
+ *   - a score already below the floor is left alone (it is not renderable
+ *     anyway, and lowering it further would only be a rank change nobody sees).
+ */
+export function applyEntityPenalty(
+  score: number,
+  entityPenalty: number,
+  cfg: ScoringEngineConfig,
+): number {
+  if (!(entityPenalty > 0)) return score;
+  return Math.max(score - entityPenalty, Math.min(score, cfg.ENTITY_PENALTY_FLOOR));
 }
 
 /** A candidate is `backstop` when it carries NO geo tags AND NO entities AND NO
@@ -447,7 +498,7 @@ export function computeRelevance(
     ? matchingHardSuppressions(candidate, persona.hardSuppressions)
     : [];
   const hardFilterExempt = exemptHard.length > 0;
-  const suppressPenalty = suppressionPenalty(
+  const { other: suppressPenalty, entity: entityPenalty } = splitSuppressionPenalty(
     candidate,
     hardFilterExempt
       ? { ...persona, softSuppressions: [...persona.softSuppressions, ...exemptHard] }
@@ -463,10 +514,14 @@ export function computeRelevance(
       : 0;
   const seenPenalty = config.P_SEEN * seen;
 
-  const penalised = clamp(
-    base - negTopicPenalty - suppressPenalty - wrongLocPenalty - seenPenalty,
-    config.BASE_MIN,
-    config.BASE_MAX,
+  const penalised = applyEntityPenalty(
+    clamp(
+      base - negTopicPenalty - suppressPenalty - wrongLocPenalty - seenPenalty,
+      config.BASE_MIN,
+      config.BASE_MAX,
+    ),
+    entityPenalty,
+    config,
   );
 
   // P6 — DEMOTED, NEVER REMOVED. For an exempt row the headline floor moves from
@@ -500,6 +555,7 @@ export function computeRelevance(
       base,
       negTopicPenalty,
       suppressPenalty,
+      entityPenalty,
       wrongLocPenalty,
       seenPenalty,
       wrongLocationFlag: geo.wrongLocationFlag,

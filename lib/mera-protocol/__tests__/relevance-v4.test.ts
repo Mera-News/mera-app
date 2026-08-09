@@ -302,18 +302,21 @@ describe('tag-based "not interested" filters actually match', () => {
   it('the HARD screen now drops a row on a tag-based filter alone', () => {
     // The hard screen runs on the live path via `computeMathStage`, so this is
     // the difference between "not interested" removing the row and doing
-    // nothing. No keyword filter here — only the three structured kinds.
+    // nothing. No keyword filter here — only the structured kinds that are
+    // allowed to exclude (entity is not one of them; see
+    // scoring-engine/__tests__/entity-never-excludes.test.ts).
     const dropped = screenHardSuppressions([tagged()], [
       EVENT_TYPE_FILTER,
-      ENTITY_FILTER,
       PLACE_FILTER,
     ]);
     expect([...dropped.keys()]).toEqual(['a0']);
   });
 
   it('the SOFT penalty is non-zero for a tag-only filter set', () => {
-    // Three matchers fire, so the sum is capped at P_SUP_CAP. Before the fix
-    // this was exactly 0 — the "shown less" half of the feature was inert.
+    // Before the tags were unblanked this was exactly 0 — the "shown less" half
+    // of the feature was inert. The ENTITY share is reported separately now
+    // (it is applied against a floor rather than subtracted outright), so this
+    // pins the two reliable kinds in `suppressPenalty` and entity in its own.
     const persona: PersonaScoringContext = {
       locations: [],
       pubPrefs: new Map(),
@@ -323,14 +326,14 @@ describe('tag-based "not interested" filters actually match', () => {
       })),
       hardSuppressions: [],
     };
-    const { suppressPenalty } = computeRelevance(
+    const { suppressPenalty, entityPenalty } = computeRelevance(
       tagged(),
       persona,
       ENG,
       Date.now(),
     ).components;
-    expect(suppressPenalty).toBeGreaterThan(0);
-    expect(suppressPenalty).toBeCloseTo(Math.min(ENG.P_SUP_CAP, 3 * ENG.P_SUP * 0.5), 10);
+    expect(suppressPenalty).toBeCloseTo(2 * ENG.P_SUP * 0.5, 10);
+    expect(entityPenalty).toBeCloseTo(ENG.P_SUP * 0.5, 10);
   });
 
   it('an untagged article is still matched only on its TEXT', () => {

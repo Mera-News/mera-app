@@ -337,12 +337,26 @@ export async function runArticlePipeline(
     config,
     logger,
   );
-  // ADD 2's second half. `buildReasonCallsForSubset` only DECIDES; the demote
+  // ADD 2's second half. `buildReasonCallsForSubset` only DECIDES; the outcome
   // has to be written or the gated rows keep their pass-1 score, stay above the
   // render gate and render with no note — the one outcome the feature must not
   // produce. Written BEFORE the reasons so a later failure can never leave a
-  // gated row un-demoted, and re-scored through `saveScores` (the same sink the
+  // gated row unmarked, and re-scored through `saveScores` (the same sink the
   // pass-1 scores went through) so the persisted value is authoritative.
+  //
+  // DIVERGENCE FROM THE APP, AND WHY IT IS DELIBERATE. In the app a gated row
+  // KEEPS its real relevance and goes terminal as the `reason_skipped` status
+  // (see article-suggestion-status.ts and scoring-pipeline::applyTagGatedDemotions)
+  // — the gate is a decision about the NOTE, and overwriting the score
+  // misreports it as a bad one. This offline replay has no status: its sink is
+  // `SuggestionSinkPort`, which persists scores and reasons only, and its output
+  // is a flat `scores.json`. So here the gate is still expressed by writing
+  // `feedVerifierDemoteScore`, which keeps the replay's kept/dropped bookkeeping
+  // correct at the cost of under-reporting those rows' real relevance.
+  //
+  // Bounded on purpose: `runArticlePipeline` is called ONLY by
+  // harness-local/scripts/test-news-harness-article-pipeline.ts, never by the
+  // app. If it ever gains an app caller, this has to become a status too.
   const gatedDemoteIds = reasonBundle.tagGatedDemoteIds ?? [];
   if (gatedDemoteIds.length > 0) {
     await ports.sink.saveScores(

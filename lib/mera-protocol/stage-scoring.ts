@@ -196,7 +196,15 @@ export async function loadPersonaScoringContext(
   const softSuppressions: SoftSuppression[] = [];
   const hardSuppressions: SoftSuppression[] = [];
   for (const s of suppressions) {
-    const isHard = s.strength >= HARD_SUPPRESSION_STRENGTH;
+    // ENTITY IS NEVER HARD, whatever its strength. Entity extraction measured
+    // 68.8% correct, so an entity filter may lower a row's rank but must never
+    // remove it (owner ruling). Deciding that HERE — at the one place the
+    // hard/soft partition is made — is what makes the guarantee hold for every
+    // consumer of this snapshot at once: the scoring stage, the E2EE pipeline
+    // and `services/suppression-sweep`, none of which has to know the rule.
+    // `suppression::canHardExclude` is the matching guard inside the engine.
+    const isHard =
+      s.strength >= HARD_SUPPRESSION_STRENGTH && kindOf(s) !== 'entity';
     const keywords = s.keywords ?? [];
     const pattern = s.pattern?.trim() || undefined;
     // A hard KEYWORD filter with no keywords would match nothing and silently

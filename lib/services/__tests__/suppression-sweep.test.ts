@@ -124,14 +124,17 @@ describe('purgeHardFilteredSuggestions', () => {
     expect(r.excludedIds).toEqual(['a']);
   });
 
-  // REVERSED when `USE_ARTICLE_TAGS` was deleted. This used to assert the
-  // OPPOSITE — that an entity filter matched nothing — which is precisely the
-  // bug the flag caused: this sweep re-screens rows the user has ALREADY
-  // filtered, so an inert entity kind meant a filtered story reappeared.
+  // ENTITY NEVER EXCLUDES — and this sweep is why that matters most. It
+  // re-screens rows the user ALREADY has, so an entity match here would delete
+  // stories retroactively on the strength of a 68.8%-accurate tag. The owner's
+  // ruling: entities may nudge a rank, never remove a row.
   //
-  // The sweep and the scoring stage must agree, or a row screened out during
-  // scoring comes back on the next sweep. Both pass the tags through unchanged.
-  it('DOES match an entity-kind filter over the rehydrated entities column', async () => {
+  // (This assertion has been reversed twice. It first read "does NOT match,
+  // because USE_ARTICLE_TAGS blanks the column"; that flag was deleted because
+  // it was breaking `place`/`event_type` filters too. Now the column is visible
+  // and `entity` alone is excluded from the screen — a narrower rule aimed at
+  // the actual accuracy problem rather than at all three kinds.)
+  it('does NOT exclude on an entity-kind filter, however strong', async () => {
     mockLoadPersona.mockResolvedValue(
       persona([{ keywords: [], strength: 1, kind: 'entity', value: 'nvidia' }]),
     );
@@ -141,7 +144,8 @@ describe('purgeHardFilteredSuggestions', () => {
     ]);
 
     const r = await purgeHardFilteredSuggestions();
-    expect(r.excludedIds).toEqual(['a']);
+    expect(r.excludedIds).toEqual([]);
+    expect(mockBatchMarkExcluded).not.toHaveBeenCalled();
   });
 
   it('DOES match a place-kind filter over the rehydrated geo tags', async () => {

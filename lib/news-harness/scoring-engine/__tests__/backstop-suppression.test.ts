@@ -215,3 +215,52 @@ describe('backstop path — soft suppression penalty', () => {
     expect(res.computedScoreMap.has('art-1')).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// ENTITY ON THE LIVE PATH — the penalty is applied to the LLM's score, which is
+// what gets persisted as `relevance`. `computeRelevance`'s own floor protects
+// the FAIL-OPEN score; this covers the score users actually see.
+// ---------------------------------------------------------------------------
+
+describe('entity penalty on the applied (LLM) score', () => {
+  const ENTITY = sup({ kind: 'entity', value: 'nvidia' });
+  const GATE = ENG.ENTITY_PENALTY_FLOOR;
+
+  /** Score one backstop candidate carrying the `nvidia` entity tag. */
+  async function scoreWithLlm(
+    persona: PersonaScoringContext,
+    llmScore: number,
+  ): Promise<number | undefined> {
+    const res = await computeAndScore(
+      [stageCandidate({ entities: ['Nvidia'] })],
+      persona,
+      fixedScoreLlm([llmScore]),
+      DEFAULT_HARNESS_CONFIG,
+      { nowMs: NOW_MS },
+    );
+    return res.rawScoreMap.get('art-1');
+  }
+
+  it('lowers a high LLM score — rank influence is retained', async () => {
+    // 0.9 − P_SUP(0.3) = 0.6, comfortably above the floor, so the nudge lands
+    // in full.
+    expect(await scoreWithLlm(personaWith([ENTITY]), 0.9)).toBeCloseTo(
+      0.9 - ENG.P_SUP,
+      10,
+    );
+  });
+
+  it('floors AT the gate instead of deleting a row the LLM scored just above it', async () => {
+    // Naive subtraction gives 0.45 − 0.3 = 0.15, under the 0.4 gate — an entity
+    // filter deleting a suggestion. THIS is the case the floor exists for.
+    expect(await scoreWithLlm(personaWith([ENTITY]), 0.45)).toBeCloseTo(GATE, 10);
+  });
+
+  it('a NON-entity soft filter still sinks the same row below the gate', async () => {
+    // The contrast that proves the floor is entity-scoped rather than a blanket
+    // softening of every "shown less" filter.
+    const score = await scoreWithLlm(personaWith([sup({ keywords: ['nvidia'] })]), 0.45);
+    expect(score).toBeCloseTo(0.45 - ENG.P_SUP, 10);
+    expect(score).toBeLessThan(GATE);
+  });
+});

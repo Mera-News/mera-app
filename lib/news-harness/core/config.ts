@@ -380,6 +380,33 @@ export interface ScoringEngineConfig {
   P_SUP: number;
   /** Cap on the summed suppression penalty. */
   P_SUP_CAP: number;
+  /**
+   * The floor an `entity`-kind suppression may push a score down TO, but never
+   * through.
+   *
+   * WHY ENTITIES ARE DIFFERENT. A hand audit put entity extraction at 68.8%
+   * correct — roughly one in three wrong. The owner's ruling: keep entities
+   * (the feedback tree's entity like/dislike paths are valuable and the data is
+   * fed to the LLM on optimisation runs) but never let them DELETE a
+   * suggestion. Unreliable data may nudge a rank; it must not remove a row.
+   *
+   * `entity` is therefore excluded from every hard-exclusion path
+   * (`suppression::canHardExclude`, and the hard/soft partition in
+   * `stage-scoring::loadPersonaScoringContext` never files one as hard). That
+   * alone is not enough: the SOFT penalty is subtracted from the score, and at
+   * P_SUP 0.3 (capped 0.6) an entity match could push a renderable row under
+   * the render gate — a hard filter wearing a soft filter's clothes. So the
+   * entity part of the penalty is applied against this floor: it can move a row
+   * down to it and no further, and it never moves a row that is already below
+   * it.
+   *
+   * MUST EQUAL the render gate — `articlePipeline.discardFloor` and
+   * `stores/fact-rows-selector::RENDER_GATE`, both 0.4. It lives here rather
+   * than being read from `articlePipeline` because `computeRelevance` is handed
+   * only the `scoringEngine` slice. `config.test.ts` pins the three together so
+   * they cannot drift.
+   */
+  ENTITY_PENALTY_FLOOR: number;
   /** Wrong-location — HEAVY (user directive): a sibling-city match single-
    *  handedly drops a would-be-FEED into EXCLUDE. */
   P_WRONG: number;
@@ -588,6 +615,8 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     P_NEG: 0.45,
     P_SUP: 0.3,
     P_SUP_CAP: 0.6,
+    // == articlePipeline.discardFloor == RENDER_GATE. See the field's comment.
+    ENTITY_PENALTY_FLOOR: 0.4,
     P_WRONG: 0.55,
     P_SEEN: 0.08,
     // topic weighting

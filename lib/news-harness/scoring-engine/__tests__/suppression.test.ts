@@ -151,12 +151,25 @@ describe('screenHardSuppressions', () => {
   });
 
   it('maps each excluded id to the first matching filter display value', () => {
+    // Uses `topic`, not `entity`: entity can no longer exclude anything (68.8%
+    // extraction accuracy — see canHardExclude and entity-never-excludes.test).
     const excluded = screenHardSuppressions(
-      [candidate(), candidate({ id: 'a2', titleEn: 'AMD ships', entities: [], matchedTopics: [] })],
-      [sup({ kind: 'entity', value: 'nvidia', pattern: 'anything about Nvidia' })],
+      [
+        candidate(),
+        candidate({ id: 'a2', titleEn: 'AMD ships', entities: [], matchedTopics: [] }),
+      ],
+      [sup({ kind: 'topic', value: 'ai hardware', pattern: 'anything about AI hardware' })],
     );
     expect([...excluded.keys()]).toEqual(['a1']);
-    expect(excluded.get('a1')).toBe('nvidia');
+    expect(excluded.get('a1')).toBe('ai hardware');
+  });
+
+  it('NEVER excludes on an entity filter, however strong', () => {
+    const excluded = screenHardSuppressions(
+      [candidate()],
+      [sup({ kind: 'entity', value: 'nvidia', strength: 1 })],
+    );
+    expect(excluded.size).toBe(0);
   });
 
   it('stops at the first match (one cause per row)', () => {

@@ -25,6 +25,7 @@ jest.mock('../fact-service', () => ({
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
+import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { GLOBAL_HEADLINE_SECTION_ID } from '@/lib/news-harness/feed-select';
 import {
   getLocalSuggestionServerIds,
@@ -453,6 +454,27 @@ describe('getUnscoredSuggestionsWithFacts', () => {
 // ===========================================================================
 
 describe('getScoredSuggestionsWithoutReasons', () => {
+  // THE PREDICATE IS THE GUARANTEE, and the fake query() ignores Q.where, so it
+  // has to be asserted on the call args rather than through the return value.
+  //
+  // This query is what stops the orphaned-reason sweep re-electing a
+  // `reason_skipped` row and re-spending the LLM call the v4 tag gate just
+  // saved — every sweep, forever. Widening it to "any scored status without a
+  // reason" would do exactly that (and would also re-elect `excluded` rows,
+  // which is why the source comment says not to).
+  it('selects reason_pending ONLY — never a terminal status', async () => {
+    db._setRows('article_suggestions', []);
+    const col = db._collections['article_suggestions'];
+    (col.query as jest.Mock).mockClear();
+
+    await getScoredSuggestionsWithoutReasons();
+
+    const args = JSON.stringify((col.query as jest.Mock).mock.calls[0]);
+    expect(args).toContain(ArticleSuggestionStatus.ReasonPending);
+    expect(args).not.toContain(ArticleSuggestionStatus.ReasonSkipped);
+    expect(args).not.toContain(ArticleSuggestionStatus.Complete);
+  });
+
   it('returns empty array when no rows exist', async () => {
     db._setRows('article_suggestions', []);
     const result = await getScoredSuggestionsWithoutReasons();
@@ -1483,6 +1505,36 @@ describe('getScoredDonorRows', () => {
     ]);
     const rows = await getScoredDonorRows(sinceMs);
     expect(rows.map((r) => r.id)).toEqual(['s2']);
+  });
+
+  // THE PROPAGATION HAZARD `reason_skipped` introduces. Such a row carries a
+  // REAL, renderable relevance and NO reason by design. Donating it would copy a
+  // renderable score with a blank note onto every same-story sibling, and since
+  // a reason-less recipient lands in `reason_pending`, it would re-spend the
+  // very LLM call the gate skipped — once per sibling.
+  //
+  // `pickDonor` prefers a donor that HAS a reason, but that is only a
+  // preference: a group whose ONLY donor is gated would still propagate. This
+  // query is the guarantee.
+  it('excludes reason_skipped rows — a real score with no reason is not a donor', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 'gated',
+        status: 'reason_skipped',
+        relevance: 0.8, // renderable, and deliberately NOT overwritten
+        reason: '',
+        createdAt: new Date(sinceMs + 1000),
+      }),
+      makeSuggestion({
+        id: 'ok',
+        status: 'complete',
+        relevance: 0.8,
+        reason: 'Because it affects you.',
+        createdAt: new Date(sinceMs + 1000),
+      }),
+    ]);
+    const rows = await getScoredDonorRows(sinceMs);
+    expect(rows.map((r) => r.id)).toEqual(['ok']);
   });
 
   it('excludes relevance=0 tombstones (ineligible rows carry no real signal)', async () => {

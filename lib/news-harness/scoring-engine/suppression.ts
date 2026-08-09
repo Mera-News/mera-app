@@ -6,9 +6,11 @@
 //   - SOFT (strength < HARD_SUPPRESSION_STRENGTH) → a capped score penalty,
 //     applied by relevance.ts::suppressionPenalty.
 //   - HARD (strength ≥ HARD_SUPPRESSION_STRENGTH) → the candidate is screened
-//     OUT before any math/judge work (screenHardSuppressions), invoked from
-//     both orchestrator convergence points — UNLESS it is a top-headline row,
-//     which P6 exempts from exclusion and demotes instead (isHardFilterExempt).
+//     OUT before any scoring work (screenHardSuppressions), invoked from both
+//     orchestrator convergence points — UNLESS it is a top-headline row, which
+//     P6 exempts from exclusion and demotes instead (isHardFilterExempt), or
+//     the filter is `entity`-kind, which may never exclude at all
+//     (canHardExclude).
 //
 // The hard/soft partition itself happens ONCE, in the RN-side persona loader
 // (mera-protocol/stage-scoring::loadPersonaScoringContext) — this module only
@@ -128,6 +130,29 @@ export function suppressionMatchesCandidate(
 }
 
 /**
+ * THE ONE PREDICATE FOR "may this filter REMOVE a row?".
+ *
+ * `entity` may not. Entity extraction measured 68.8% correct on hand audit, and
+ * the owner's ruling is that entities keep influencing RANK (the feedback
+ * tree's entity like/dislike paths depend on them) but may never delete a
+ * suggestion. One wrong entity should cost a story some position, not its
+ * existence.
+ *
+ * Every other kind is unchanged — `place` (81.3%) and `event_type` (93.8%) keep
+ * their hard-screen behaviour.
+ *
+ * The live path never even reaches this for entities: the hard/soft partition
+ * in `mera-protocol/stage-scoring::loadPersonaScoringContext` files every
+ * entity row as SOFT regardless of strength, so an entity filter is a penalty
+ * by construction. This predicate is the second line of defence, for any caller
+ * that hand-builds a hard list — the two together are why "entity cannot
+ * exclude" holds without auditing every call site.
+ */
+export function canHardExclude(s: SoftSuppression): boolean {
+  return (s.kind ?? 'keyword') !== 'entity';
+}
+
+/**
  * P6 — THE ONE headline-exemption predicate. Every hard-exclusion point must ask
  * this and nothing else; a second copy of the rule is exactly the drift the
  * one-matcher invariant exists to prevent.
@@ -182,6 +207,11 @@ export function screenHardSuppressionsDetailed(
   for (const candidate of candidates) {
     const haystack = buildSuppressionHaystack(candidate);
     for (const s of hard) {
+      // `entity` can never remove a row — see canHardExclude. Skipped rather
+      // than bucketed into `exempted`: exempted means "matched, kept, LABEL the
+      // card", and an unreliable entity match is not something to tell the user
+      // their filter did. Its penalty is applied in computeRelevance instead.
+      if (!canHardExclude(s)) continue;
       if (suppressionMatchesCandidate(candidate, s, haystack)) {
         const bucket = isHardFilterExempt(candidate) ? exempted : excluded;
         bucket.set(candidate.id, suppressionDisplayValue(s));
