@@ -286,6 +286,42 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
         router.replace('/logged-in/app_container/feed');
     }, [isLapsed, router]);
 
+    /**
+     * Explain the one state this screen cannot resolve, instead of showing a
+     * paywall to somebody the App Store already considers a subscriber.
+     *
+     * The gate is deliberately server-authoritative: `checkServerSubscribed`
+     * reads `UserBilling.subscriptionTier`, and `deriveAiAccess` consults the
+     * server tier FIRST, so a local RevenueCat entitlement cannot unlock the app
+     * on its own. That is correct — the device must not be able to grant itself
+     * a paid tier — but it means a SANDBOX purchase on a PRODUCTION build
+     * produces a genuinely contradictory screen: StoreKit says "you are
+     * currently subscribed to this", and Mera says "Free isn't free".
+     *
+     * Both are telling the truth. RevenueCat routes sandbox receipts to the
+     * STAGING webhook by configuration, so the row this screen waits for is
+     * written into a database this build never queries.
+     *
+     * Checked on MOUNT and on REFRESH, not only after a purchase: a tester who
+     * bought on a previous launch arrives here with the entitlement already on
+     * the device and never passes through the purchase path at all — which is
+     * exactly the report that prompted this.
+     */
+    const checkSandboxMismatch = useCallback(async (): Promise<boolean> => {
+        if (!isRevenueCatConfigured()) return false;
+        const info = await getCustomerInfoSafe();
+        if (!isSandboxPurchaseOnProduction(info)) return false;
+        logger.warn('sandbox entitlement on a production backend', {
+            component: 'NotSubscribedScreen',
+        });
+        setMessage(t('subscription.sandboxOnProduction'));
+        return true;
+    }, [t]);
+
+    useEffect(() => {
+        void checkSandboxMismatch();
+    }, [checkSandboxMismatch]);
+
     const handleRefresh = async () => {
         setBusy(true);
         setRefreshing(true);
@@ -293,6 +329,12 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
         if (await checkServerSubscribed()) {
             await leaveForRouterGate();
         } else {
+            // Refresh used to fail SILENTLY — it cleared `busy` and said nothing,
+            // so the reader could not tell a slow webhook from an impossible one.
+            // Name the impossible case; leave the ordinary one to `activationDelayed`.
+            if (!(await checkSandboxMismatch())) {
+                setMessage(t('subscription.activationDelayed'));
+            }
             setBusy(false);
             setRefreshing(false);
         }

@@ -87,8 +87,9 @@ jest.mock('@/lib/stores/user-store', () => ({
 // in which the removed effect could ever have fired.
 const mockRcState = { configured: false };
 const mockTrialAvailability = { current: 'ineligible' as string };
+const mockCustomerInfo = { current: null as unknown };
 jest.mock('@/lib/revenuecat', () => ({
-    getCustomerInfoSafe: jest.fn(async () => null),
+    getCustomerInfoSafe: jest.fn(async () => mockCustomerInfo.current),
     getOfferingSafe: jest.fn(async () => null),
     isRevenueCatConfigured: () => mockRcState.configured,
     logRevenueCatDiagnostics: jest.fn(async () => {}),
@@ -391,3 +392,75 @@ describe('leaving the paywall for /logged-in', () => {
 });
 
 export {};
+
+/**
+ * The report this exists for: StoreKit shows "You are currently subscribed to
+ * this … [Environment: Sandbox]" while Mera shows "Free isn't free".
+ *
+ * Both are correct. The gate is server-authoritative on purpose, and RevenueCat
+ * routes sandbox receipts to the STAGING webhook, so a production build's
+ * UserBilling row is never written. What was missing is saying so — and saying
+ * it WITHOUT a purchase happening in this session, because a tester who bought
+ * on a previous launch never passes through the purchase path at all.
+ */
+describe('a sandbox entitlement on a production build explains itself', () => {
+    const sandboxCustomer = {
+        entitlements: { all: { 'mera-news-individual-plan': { isSandbox: true } } },
+    };
+    const productionCustomer = {
+        entitlements: { all: { 'mera-news-individual-plan': { isSandbox: false } } },
+    };
+
+    beforeEach(() => {
+        mockRcState.configured = true;
+        mockFetchUserBilling.mockResolvedValue(null);
+        process.env.EXPO_PUBLIC_AUTH_ENDPOINT = 'https://auth.mera.news';
+    });
+    afterEach(() => {
+        mockCustomerInfo.current = null;
+        mockRcState.configured = false;
+    });
+
+    it('explains itself ON MOUNT, with no purchase in this session', async () => {
+        mockCustomerInfo.current = sandboxCustomer;
+        const { queryByText } = render(<NotSubscribedScreen />);
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+        expect(queryByText('subscription.sandboxOnProduction')).toBeTruthy();
+        // and it must NOT have opened the purchase sheet to find that out
+        expect(mockPresentPaywall).not.toHaveBeenCalled();
+    });
+
+    it('says nothing for a real production entitlement', async () => {
+        mockCustomerInfo.current = productionCustomer;
+        const { queryByText } = render(<NotSubscribedScreen />);
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+        expect(queryByText('subscription.sandboxOnProduction')).toBeNull();
+    });
+
+    it('says nothing when the build is pointed at staging — the supported test path', async () => {
+        process.env.EXPO_PUBLIC_AUTH_ENDPOINT = 'https://auth.staging.mera.news';
+        mockCustomerInfo.current = sandboxCustomer;
+        const { queryByText } = render(<NotSubscribedScreen />);
+        await act(async () => {
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+        expect(queryByText('subscription.sandboxOnProduction')).toBeNull();
+    });
+
+    // Refresh used to fail silently, which is indistinguishable from "still
+    // working" — the reader had no way to tell a slow webhook from an
+    // impossible one.
+    it('Refresh no longer fails silently when the server still refuses', async () => {
+        mockCustomerInfo.current = null;
+        const { getByTestId, queryByText } = render(<NotSubscribedScreen />);
+        await act(async () => {
+            fireEvent.press(getByTestId('not-subscribed-refresh'));
+            for (let i = 0; i < 8; i++) await Promise.resolve();
+        });
+        expect(queryByText('subscription.activationDelayed')).toBeTruthy();
+    });
+});
