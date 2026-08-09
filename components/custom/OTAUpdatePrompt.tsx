@@ -45,6 +45,18 @@ export default function OTAUpdatePrompt() {
       }
     };
 
+    // CHECK ON MOUNT, not only on the next foreground.
+    //
+    // `AppState.addEventListener('change', …)` fires on a TRANSITION. At mount
+    // the app is already `active`, so no transition happens and this effect
+    // registered a listener that would not fire until the user backgrounded the
+    // app and came back. An app left open — the normal case for someone using
+    // it — never checked at all, and a freshly published update reached that
+    // device only via expo-updates' own launch-time check on the NEXT cold
+    // start. That is exactly the "sat on stale JS until their next cold start"
+    // failure the toast-to-takeover change above was meant to end.
+    checkForUpdate();
+
     const handleAppStateChange = (state: AppStateStatus) => {
       if (state === 'active') {
         checkForUpdate();
