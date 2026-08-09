@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import { BackHandler, View } from 'react-native';
+import { BackHandler, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Pressable } from '@/components/ui/pressable';
+import { ScrollView } from '@/components/ui/scroll-view';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -43,6 +45,7 @@ import {
  */
 export default function ConsentGate() {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
     const { data: session, isPending } = authClient.useSession();
     const userId = session?.user?.id ?? null;
 
@@ -107,47 +110,75 @@ export default function ConsentGate() {
 
     return (
         <View
+            testID="consent-screen"
             pointerEvents="auto"
             style={{
                 position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100,
             }}
         >
-            <View className="flex-1 items-center justify-center px-8">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else here. */}
-                <AbstractGradientBackdrop />
+            {/* OPAQUE BASE — the reason this is a page and not a popup, and it is
+                load-bearing rather than decorative.
 
-                <Text className="text-white text-2xl font-bold text-center">
-                    {t('consent.title')}
-                </Text>
-                <Text className="text-gray-300 text-base mt-3 text-center leading-relaxed">
-                    {t('consent.body')}
-                </Text>
+                AbstractGradientBackdrop is translucent EVERYWHERE and opaque
+                NOWHERE: its own docs describe it as "an Svg with no background
+                fill whose blobs peak at alpha 0.38". On the tab screens that is
+                fine, because expo-router already paints an opaque navigation
+                background underneath it. This gate is an absolute overlay ON TOP
+                of a live logged-in tree, so there is no such background — without
+                this fill the paywall behind it showed straight through the text
+                and the screen read as a modal over another screen.
 
-                <VStack space="sm" className="mt-6 items-center">
-                    <Pressable onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}>
-                        <Text className="text-primary-400 text-sm underline">
-                            {t('consent.termsLink')}
-                        </Text>
-                    </Pressable>
-                    <Pressable onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}>
-                        <Text className="text-primary-400 text-sm underline">
-                            {t('consent.privacyLink')}
-                        </Text>
-                    </Pressable>
-                </VStack>
+                Black specifically: the app is dark-mode only on a pure-black
+                page, which is the ground the backdrop's alphas were tuned for. */}
+            <View testID="consent-backdrop-fill" style={[StyleSheet.absoluteFill, { backgroundColor: '#000000' }]} />
+            <AbstractGradientBackdrop />
 
-                {error ? (
-                    <Text className="text-red-400 text-sm text-center mt-4">
-                        {t('consent.errorDescription')}
+            {/* Page layout, not dialog layout: content flows from the top and the
+                commit action sits at the bottom edge, so it reads as a screen the
+                user is on rather than a card over the screen behind. The
+                ScrollView is what keeps it a page at large Dynamic Type sizes —
+                this copy is legally required to be readable, so it must never be
+                clipped by a fixed-height box. */}
+            <View
+                className="flex-1 px-8"
+                style={{ paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 }}
+            >
+                <ScrollView
+                    contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <Text className="text-white text-3xl font-bold">
+                        {t('consent.title')}
                     </Text>
-                ) : null}
+                    <Text className="text-gray-300 text-base mt-4 leading-relaxed">
+                        {t('consent.body')}
+                    </Text>
+
+                    <VStack space="md" className="mt-8">
+                        <Pressable onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}>
+                            <Text className="text-primary-400 text-base underline">
+                                {t('consent.termsLink')}
+                            </Text>
+                        </Pressable>
+                        <Pressable onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}>
+                            <Text className="text-primary-400 text-base underline">
+                                {t('consent.privacyLink')}
+                            </Text>
+                        </Pressable>
+                    </VStack>
+
+                    {error ? (
+                        <Text className="text-red-400 text-sm mt-6">
+                            {t('consent.errorDescription')}
+                        </Text>
+                    ) : null}
+                </ScrollView>
 
                 <Button
                     testID="consent-accept"
                     onPress={handleAccept}
                     disabled={busy || !current}
-                    className="mt-8 bg-white rounded-full px-8"
+                    className="mt-6 bg-white rounded-full"
                     size="lg"
                 >
                     {busy ? <Spinner size="small" className="mr-2" /> : null}

@@ -13,6 +13,7 @@
 //  • a failed accept shows the retry copy and does not latch acceptance.
 
 import { act, fireEvent, render } from '@testing-library/react-native';
+import { StyleSheet } from 'react-native';
 import React from 'react';
 
 // Pure decoration; keeps react-native-reanimated out of this suite's module
@@ -51,6 +52,13 @@ jest.mock('@/components/ui/spinner', () => {
     const { View } = require('react-native');
     return { Spinner: (p: any) => <View {...p} /> };
 });
+// RN's real ScrollView pulls in an untransformed Android spec file under this
+// jest config; the component reaches it through the ui layer, so one stub
+// suffices — same pattern as not-subscribed-exit.test.tsx.
+jest.mock('@/components/ui/scroll-view', () => {
+    const { View } = require('react-native');
+    return { ScrollView: (p: any) => <View {...p} /> };
+});
 jest.mock('@/components/ui/pressable', () => {
     const { Pressable } = require('react-native');
     return { Pressable: (p: any) => <Pressable {...p} /> };
@@ -63,6 +71,10 @@ jest.mock('@/components/ui/vstack', () => {
     const { View } = require('react-native');
     return { VStack: (p: any) => <View {...p} /> };
 });
+
+jest.mock('react-native-safe-area-context', () => ({
+    useSafeAreaInsets: () => ({ top: 59, bottom: 34, left: 0, right: 0 }),
+}));
 
 jest.mock('@/lib/web-browser-utils', () => ({
     openInAppBrowser: jest.fn(),
@@ -147,6 +159,30 @@ describe('ConsentGate', () => {
         const { getByTestId } = render(<ConsentGate />);
         await flush();
         expect(getByTestId('consent-accept')).toBeTruthy();
+    });
+
+    // REGRESSION. This gate is an absolute overlay on top of a LIVE logged-in
+    // tree, and AbstractGradientBackdrop is translucent everywhere and opaque
+    // nowhere — so without an opaque fill of its own the screen behind it (the
+    // paywall, in the reported case) reads straight through the consent copy and
+    // the whole thing looks like a popup over another page. Asserting the fill
+    // exists AND is actually opaque is the only way that regression is visible
+    // outside a screenshot.
+    it('paints an opaque full-bleed base so the screen behind it cannot show through', async () => {
+        const { getByTestId } = render(<ConsentGate />);
+        await flush();
+
+        const fill = getByTestId('consent-backdrop-fill');
+        const style = StyleSheet.flatten(fill.props.style) as {
+            backgroundColor?: string;
+            position?: string;
+            opacity?: number;
+        };
+        expect(style.backgroundColor).toBe('#000000');
+        expect(style.position).toBe('absolute');
+        // An explicit opacity below 1 would defeat the fill while leaving the
+        // colour assertion above green.
+        expect(style.opacity ?? 1).toBe(1);
     });
 
     it('fetches the server appConfig once a signed-in user is present', async () => {
