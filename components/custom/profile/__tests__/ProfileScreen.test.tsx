@@ -46,8 +46,20 @@ jest.mock('@/components/ui/pressable', () => { const { Pressable } = require('re
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
 jest.mock('@/components/ui/spinner', () => { const { View } = require('react-native'); return { Spinner: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/button', () => {
-    const { Pressable, Text } = require('react-native');
-    return { Button: (p: any) => <Pressable {...p} />, ButtonText: (p: any) => <Text {...p} /> };
+    const { Pressable, Text, View } = require('react-native');
+    return {
+        Button: (p: any) => <Pressable {...p} />,
+        ButtonText: (p: any) => <Text {...p} />,
+        // `ButtonIcon` was missing here, so the "Learn about Mera" button in the
+        // heading row rendered `undefined` and took the whole screen down with an
+        // "Element type is invalid" — a factory mock replaces the WHOLE module,
+        // so any export it omits resolves to undefined rather than falling back.
+        ButtonIcon: (p: any) => <View {...p} />,
+    };
+});
+jest.mock('@/components/ui/icon', () => {
+    const { View } = require('react-native');
+    return { HelpCircleIcon: (p: any) => <View {...p} /> };
 });
 jest.mock('@/components/ui/modal', () => {
     const { View } = require('react-native');

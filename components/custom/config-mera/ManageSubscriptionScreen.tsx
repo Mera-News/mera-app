@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing-service';
+import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
@@ -247,13 +248,27 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         }
     };
 
-    // DB is the source of truth for the plan; fall back to the RC tier while
-    // the webhook sync is still catching up.
-    const effectiveTier = billing?.subscriptionTier && billing.subscriptionTier !== 'none'
-        ? billing.subscriptionTier
-        : rcTier;
+    // ONE rule, shared with ProfileScreen — see plan-display.ts. The optimistic
+    // RevenueCat fallback is kept (a fresh purchase should show its plan name
+    // immediately), but it is now MARKED pending rather than asserted as fact,
+    // because the access gate has no such fallback and the two screens were
+    // free to disagree with the free-tier notice sitting right below them.
+    const planDisplay = resolvePlanDisplay({
+        serverTier: billing?.subscriptionTier,
+        rcTier,
+        serverLoaded: billing != null,
+    });
+    const effectiveTier = planDisplay.tier ?? undefined;
+    const isPaid = planDisplay.tier != null;
 
-    const isPaid = effectiveTier === 'individual' || effectiveTier === 'professional' || effectiveTier === 'starter';
+    /** The plan name, qualified when the server has not confirmed it yet. */
+    const planLabelText = (): string => {
+        if (!isPaid) return t('subscription.freePlan');
+        const name = planName(effectiveTier);
+        return planDisplay.pending
+            ? t('subscription.planPending', { plan: name })
+            : name;
+    };
 
     // Glanceable status pill for the hero card.
     const statusPill: { text: string; color: string } | null = activeEntitlement
@@ -351,7 +366,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                                     top off Devanagari/Thai marks. `text-2xl` now
                                     carries a script-safe 36px line box. */}
                                 <Text className="text-white font-bold text-2xl">
-                                    {isPaid ? planName(effectiveTier) : t('subscription.freePlan')}
+                                    {planLabelText()}
                                 </Text>
                             </VStack>
                             {priceString ? (
@@ -369,7 +384,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                                 used={usedToday}
                                 limit={dailyLimit}
                                 usedLabel={t('subscription.usedToday')}
-                                planLabel={isPaid ? planName(effectiveTier) : t('subscription.freePlan')}
+                                planLabel={planLabelText()}
                                 onUpgrade={effectiveTier === 'professional' ? undefined : handleViewPlans}
                                 upgradeLabel={t('subscription.upgrade')}
                                 resetAt={billing.resetAt}

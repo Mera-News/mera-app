@@ -5,13 +5,15 @@ import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import HubRow from '@/components/custom/profile-hub/HubRow';
 import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { Box } from '@/components/ui/box';
-import { Button, ButtonText } from '@/components/ui/button';
+import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
+import { HelpCircleIcon } from '@/components/ui/icon';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Text } from '@/components/ui/text';
 import { fetchUserBilling } from '@/lib/billing-service';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
 import { getTotalArticleSuggestionCount } from '@/lib/database/services/article-suggestion-service';
 import { getFacts } from '@/lib/database/services/fact-service';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
@@ -135,14 +137,40 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     const isBlocked = userPersona?.blockedByLlm ?? false;
     const isEmptyPersona = factCount === 0;
 
-    // Same fallback as ManageSubscriptionScreen's `effectiveTier`: DB is the
-    // source of truth, but fall back to RevenueCat's client-side tier while
-    // the webhook sync is still catching up, so a purchase shows the SAME
-    // plan text on both screens during that window instead of "Free plan"
-    // here and "Starter" there.
-    const effectiveTier = billing?.subscriptionTier && billing.subscriptionTier !== 'none'
-        ? billing.subscriptionTier
-        : rcTier;
+    // ONE rule, shared with ManageSubscriptionScreen — see plan-display.ts.
+    // This screen used to derive the label here and the free-tier notice from
+    // `deriveAiAccess`, which have DIFFERENT fallbacks: the label fell back to
+    // RevenueCat's tier, the gate deliberately does not. The result was a
+    // Profile card reading "Individual Plan" directly above a notice saying the
+    // user had no plan. Both were right by their own rule; the rule was the bug.
+    const planDisplay = resolvePlanDisplay({
+        serverTier: billing?.subscriptionTier,
+        rcTier,
+        serverLoaded: billing != null,
+    });
+    const effectiveTier = planDisplay.tier ?? undefined;
+
+    // `pending` means the plan name came from RevenueCat and the server has NOT
+    // confirmed it — the gate below is still locked. Saying "activating" rather
+    // than naming it flat is the difference between the card agreeing with the
+    // free-tier notice and contradicting it.
+    const planLabel = !planDisplay.known
+        // Still loading — no label beats a wrong one; avoids a flash on every
+        // cold mount before the first fetch resolves.
+        ? undefined
+        : planDisplay.tier == null
+            ? t('subscription.freePlan')
+            : (() => {
+                const name =
+                    planDisplay.tier === 'professional'
+                        ? t('configPanel.professionalPlan')
+                        : planDisplay.tier === 'individual'
+                            ? t('configPanel.individualPlan')
+                            : t('configPanel.starterPlan');
+                return planDisplay.pending
+                    ? t('subscription.planPending', { plan: name })
+                    : name;
+            })();
 
     return (
         // No `bg-black`: ProfileTabScreen mounts AbstractGradientBackdrop
@@ -150,13 +178,38 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         // leaving the fact rows/accordions below with nothing to show through.
         <Box className="flex-1">
             {/* Screen heading — mirrors the ForYou/Explore top-left title idiom. */}
-            <HStack className="items-start justify-between px-5 pt-4 mb-2">
-                {/* No `numberOfLines`: a 1-line clamp on a 36px title truncated the
-                    screen's own name at large Dynamic Type sizes. Nothing below
-                    depends on this row's height, so it wraps instead. */}
-                <Heading size="4xl" className="text-white">
+            <HStack className="items-center justify-between px-5 pt-4 mb-2">
+                {/* Clamp AND scale, matching Feed/Dashboard/Explore: a bare
+                    1-line clamp truncated the screen's own name at large Dynamic
+                    Type, and letting it wrap breaks a single long localized word
+                    mid-word. One line, shrunk to fit, is Apple's own answer for a
+                    title that shares its row with a control — and this row now
+                    has one. */}
+                <Heading
+                    size="4xl"
+                    className="text-white flex-1 mr-3"
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.6}
+                >
                     {t('tabs.profile')}
                 </Heading>
+                {/* `/tutorials` is a TOP-LEVEL route, not nested under
+                    /logged-in — pushing a nested path here silently no-ops.
+                    Same target as the paywall screen's "Learn how Mera works",
+                    so both entry points land in the same place. */}
+                <Button
+                    testID="profile-learn-about-mera"
+                    variant="outline"
+                    size="xs"
+                    className="rounded-full flex-shrink-0"
+                    onPress={() => router.push('/tutorials' as any)}
+                >
+                    <ButtonIcon as={HelpCircleIcon} className="mr-1 text-white" />
+                    <ButtonText className="text-white">
+                        {t('tutorials.learnAboutMera')}
+                    </ButtonText>
+                </Button>
             </HStack>
 
             <ScrollView
@@ -173,26 +226,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     used={billing?.articlesUsedToday ?? totalArticleCount}
                     limit={billing?.dailyArticleLimit ?? null}
                     usedLabel={t('configPanel.articlesAnalyzedLast24h')}
-                    planLabel={
-                        billing == null
-                            // Still loading — no label beats a wrong one; avoids a
-                            // "Promo" flash on every cold mount before the first
-                            // fetch resolves.
-                            ? undefined
-                            : effectiveTier === 'professional'
-                                ? t('configPanel.professionalPlan')
-                                : effectiveTier === 'individual'
-                                    ? t('configPanel.individualPlan')
-                                    : effectiveTier === 'starter'
-                                        ? t('configPanel.starterPlan')
-                                        // Loaded and genuinely not on a paid tier —
-                                        // matches ManageSubscriptionScreen's `isPaid`
-                                        // gate. "Promo" was the old fallback here for
-                                        // BOTH "still loading" and "unsubscribed",
-                                        // which is what made this label read wrong
-                                        // for the now-common no-plan case.
-                                        : t('subscription.freePlan')
-                    }
+                    planLabel={planLabel}
                     // "Manage", not "Upgrade": this pill now opens subscription
                     // management instead of the paywall, so it is NOT gated on
                     // tier the way the paywall version was. A professional

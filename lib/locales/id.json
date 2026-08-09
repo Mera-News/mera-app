@@ -910,7 +910,8 @@
     "startFreeTrial": "Mulai uji coba gratis Anda",
     "subscribeNow": "Berlangganan sekarang",
     "planRecommendation": "Anda membuka sekitar {{count}} artikel sehari. {{plan}} menganalisis hingga {{limit}} sehari jadi selalu ada lebih banyak dari yang akan Anda lalui.",
-    "sandboxOnProduction": "Ini adalah pembelian sandbox (tes) dan aplikasi terhubung ke server production. Kuitansi sandbox hanya diterima di staging, jadi production tidak akan pernah mengonfirmasi pembelian ini — menunggu tidak akan membantu. Arahkan aplikasi ke environment staging untuk menguji pembelian."
+    "sandboxOnProduction": "Ini adalah pembelian sandbox (tes) dan aplikasi terhubung ke server production. Kuitansi sandbox hanya diterima di staging, jadi production tidak akan pernah mengonfirmasi pembelian ini — menunggu tidak akan membantu. Arahkan aplikasi ke environment staging untuk menguji pembelian.",
+    "planPending": "{{plan}} · sedang diaktifkan"
   },
   "tabs": {
     "deck": "Umpan",

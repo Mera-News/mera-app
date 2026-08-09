@@ -922,7 +922,8 @@
     "startFreeTrial": "Uruchom bezpłatny okres próbny",
     "subscribeNow": "Subskrybuj teraz",
     "planRecommendation": "Otwierasz około {{count}} artykułów dziennie. {{plan}} analizuje do {{limit}} dziennie, więc zawsze będzie więcej niż się przejrzy.",
-    "sandboxOnProduction": "To jest zakup sandbox (testowy), a aplikacja jest połączona z serwerem produkcyjnym. Paragony sandbox są akceptowane tylko w staging, więc produkcja nigdy nie potwierdzi tego zakupu — czekanie nie pomoże. Skieruj aplikację na środowisko staging, aby testować zakupy."
+    "sandboxOnProduction": "To jest zakup sandbox (testowy), a aplikacja jest połączona z serwerem produkcyjnym. Paragony sandbox są akceptowane tylko w staging, więc produkcja nigdy nie potwierdzi tego zakupu — czekanie nie pomoże. Skieruj aplikację na środowisko staging, aby testować zakupy.",
+    "planPending": "{{plan}} · uaktywnianie"
   },
   "tabs": {
     "deck": "Strumień",

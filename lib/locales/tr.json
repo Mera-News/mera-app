@@ -910,7 +910,8 @@
     "startFreeTrial": "Ücretsiz denemeni başlat",
     "subscribeNow": "Şimdi abone ol",
     "planRecommendation": "Günde yaklaşık {{count}} makale açıyorsun. {{plan}} günde {{limit}}'e kadar analiz ediyor, bu yüzden her zaman geçeceğinden daha fazla var.",
-    "sandboxOnProduction": "Bu bir sandbox (test) satın almadır ve uygulama production sunucusuna bağlıdır. Sandbox makbuzları yalnızca staging'de kabul edilir, bu nedenle production hiçbir zaman bu satın almayı onaylamayacaktır — bekleme yardımcı olmayacaktır. Satın almaları test etmek için uygulamayı staging ortamına yönlendirin."
+    "sandboxOnProduction": "Bu bir sandbox (test) satın almadır ve uygulama production sunucusuna bağlıdır. Sandbox makbuzları yalnızca staging'de kabul edilir, bu nedenle production hiçbir zaman bu satın almayı onaylamayacaktır — bekleme yardımcı olmayacaktır. Satın almaları test etmek için uygulamayı staging ortamına yönlendirin.",
+    "planPending": "{{plan}} · etkinleştiriliyor"
   },
   "tabs": {
     "deck": "Akış",

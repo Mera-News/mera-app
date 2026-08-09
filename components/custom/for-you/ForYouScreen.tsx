@@ -639,6 +639,18 @@ const MeraNewsScreen: React.FC = () => {
                                     <Heading
                                         size="4xl"
                                         className="text-white"
+                                        numberOfLines={1}
+                                        // Dynamic Type + a long localized title
+                                        // squeezed by the filter chip beside it
+                                        // wrapped MID-WORD ("Dashboar" / "d") on a
+                                        // device at a larger text size. One line
+                                        // that scales down is Apple's own behaviour
+                                        // for a title that must share its row;
+                                        // ellipsising a single word would be just
+                                        // as broken, and letting it wrap pushes the
+                                        // whole collapsing header out of shape.
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={0.6}
                                     >
                                         {t('feed.dashboardTitle')}
                                     </Heading>

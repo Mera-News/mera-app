@@ -113,7 +113,8 @@
     "customerCenter": "Manage / cancel subscription",
     "freePlan": "Free plan",
     "active": "Active",
-    "upgrade": "Upgrade"
+    "upgrade": "Upgrade",
+    "planPending": "{{plan}} · activating"
   },
   "feed": {
     "updatedAt": "Updated {{time}}",
@@ -376,6 +377,8 @@
     "offlineUnavailable": "You're offline: Explore needs an internet connection",
     "searchPlaceholder": "Search recent news",
     "clearSearch": "Clear search",
+    "openSearch": "Search",
+    "closeSearch": "Close search",
     "searchMinLength": "Keep typing to search",
     "searchNotSubscribed": "Search needs an active plan",
     "searchError": "Couldn't search right now",

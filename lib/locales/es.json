@@ -910,7 +910,8 @@
     "startFreeTrial": "Comienza tu prueba gratuita",
     "subscribeNow": "Suscribirse ahora",
     "planRecommendation": "Abres alrededor de {{count}} artículos al día. {{plan}} analiza hasta {{limit}} al día, así siempre hay más de lo que podrás leer.",
-    "sandboxOnProduction": "Esta es una compra en sandbox (prueba) y la aplicación está conectada al servidor de producción. Los recibos de sandbox solo se aceptan en staging, por lo que production nunca confirmará esta compra — esperar no ayudará. Apunta la aplicación al entorno de staging para probar compras."
+    "sandboxOnProduction": "Esta es una compra en sandbox (prueba) y la aplicación está conectada al servidor de producción. Los recibos de sandbox solo se aceptan en staging, por lo que production nunca confirmará esta compra — esperar no ayudará. Apunta la aplicación al entorno de staging para probar compras.",
+    "planPending": "{{plan}} · activando"
   },
   "tabs": {
     "deck": "Noticias",

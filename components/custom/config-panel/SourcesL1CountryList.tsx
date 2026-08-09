@@ -350,9 +350,17 @@ const SourcesL1CountryList: React.FC = () => {
                                 </Pressable>
                             )}
                             <Text className="text-2xl">{item.flag}</Text>
-                            <Text className="text-base text-white">{item.name}</Text>
+                            {/* `flex-1` so a long name WRAPS inside the row's
+                                remaining width instead of overflowing across the
+                                "Top headlines" pill — "Antigua and Barbuda" ran
+                                straight through it. Two lines for a country name
+                                is fine; the row is already `h-auto`. */}
+                            <Text className="text-base text-white flex-1">{item.name}</Text>
                         </HStack>
-                        <HStack className="items-center" space="sm">
+                        {/* Must not shrink: without this the pill would give up
+                            width to the wrapping name and its own label would
+                            start wrapping instead. */}
+                        <HStack className="items-center flex-shrink-0" space="sm">
                             <Button
                                 variant="outline"
                                 size="xs"

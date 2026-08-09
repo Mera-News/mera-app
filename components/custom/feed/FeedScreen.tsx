@@ -1010,10 +1010,20 @@ const FeedScreen: React.FC = () => {
               pointerEvents="box-none"
             >
               <View pointerEvents="none" className="flex-shrink min-w-0">
-                {/* No `numberOfLines`: a 1-line clamp on a 36px title truncated the
-                  screen's own name at large Dynamic Type sizes. Nothing below
-                  depends on this row's height, so it wraps instead. */}
-                <Heading size="4xl" className="text-white">
+                {/* A bare 1-line clamp truncated the screen's own name at large
+                  Dynamic Type sizes, so this deliberately had none and wrapped
+                  instead — but wrapping a single long word breaks it MID-WORD
+                  ("Dashboar" / "d" was the reported case on the sibling header).
+                  Clamping AND scaling avoids both: one line, shrunk to fit, which
+                  is Apple's own behaviour for a title sharing its row with a
+                  control. */}
+                <Heading
+                  size="4xl"
+                  className="text-white"
+                  numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={0.6}
+                >
                   {t('swipeFeed.yourDeck')}
                 </Heading>
               </View>
