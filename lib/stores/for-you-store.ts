@@ -99,6 +99,20 @@ export type ForYouSuggestion = {
      *  existing suggestion fixtures keep compiling; `loadSuggestions` always
      *  populates it (`?? []` at the read sites). */
     entities?: string[];
+    /** Server-tagged places for this article (persisted as `geo_tags_json`),
+     *  parsed with the SAME shape and the same non-empty-countryCode filter
+     *  `buildStageCandidateInput` uses, so the scorer, the suppression matcher
+     *  and anything reading this see one definition of an article's places.
+     *
+     *  Was never projected onto the store row: only `getSuggestionFeedbackContext`
+     *  read the column, and only after a fresh DB row fetch, so every surface
+     *  holding a `ForYouSuggestion` had the article's places on disk and no way
+     *  to reach them. Optional so the many existing suggestion fixtures keep
+     *  compiling; `loadSuggestions` always populates it (`?? []` at read sites).
+     *
+     *  Unlike `place`-kind suppressions, which MATCH on these, nothing here
+     *  filters — it is data on the row. */
+    geoTags?: { city?: string; region?: string; countryCode: string }[];
     /** null = topic-retrieved; else the top-headline injection scope. */
     headlineScope: 'CITY' | 'COUNTRY' | 'GLOBAL' | null;
     /** ISO alpha-2 country of the scope that injected this row — only ever set

@@ -204,6 +204,15 @@ function parseContext(raw: string | null): { context: DigestSignalContext; treeP
       .filter((m): m is NonNullable<typeof m> => m !== null);
   }
   if (typeof parsed.relevance === 'number') context.relevance = parsed.relevance;
+  if (Array.isArray(parsed.entities)) {
+    // Context only — see DigestCandidate.entityContext. Strings are taken as
+    // stored; nothing matches on them, so there is no normalization to keep in
+    // sync with a matcher.
+    const entities = parsed.entities
+      .filter((e): e is string => typeof e === 'string' && e.trim().length > 0)
+      .map((e) => e.trim());
+    if (entities.length > 0) context.entities = entities;
+  }
   if (typeof parsed.eventType === 'string') context.eventType = parsed.eventType;
   if (typeof parsed.category === 'string') context.category = parsed.category;
   if (typeof parsed.publication === 'string') context.publication = parsed.publication;
@@ -361,14 +370,30 @@ const PLAN_SYSTEM_PROMPT = [
   '"action":"apply"}],"defaultIndex":0,"rationale":"..."}]}',
 ].join('\n');
 
-/** Compact single-line-per-candidate report (token-lean). */
+/** Compact single-line-per-candidate report (token-lean).
+ *
+ *  `about:` carries the entities of the articles behind the candidate, so the
+ *  model can word a change against what the stories were actually about. The
+ *  two directions are labelled separately and never merged — "liked" and
+ *  "disliked" are different signals, and a candidate can aggregate rows of both.
+ *  Omitted entirely when there are none, so a persona with no tagged articles
+ *  sends exactly the payload it sent before. */
 function buildOrganizeUserMessage(candidates: DigestCandidate[]): string {
   const lines = candidates.map((c) => {
     const conflicts =
       c.conflictsWith.length > 0
         ? ` | conflicts: ${c.conflictsWith.map((x) => x.title).join('; ')}`
         : '';
-    return `[${c.fingerprint}] ${c.kind} | ${c.summary}${conflicts}`;
+    const ec = c.entityContext;
+    const about = [
+      ec?.liked.length ? `liked: ${ec.liked.join(', ')}` : '',
+      ec?.disliked.length ? `disliked: ${ec.disliked.join(', ')}` : '',
+    ]
+      .filter(Boolean)
+      .join(' / ');
+    return `[${c.fingerprint}] ${c.kind} | ${c.summary}${conflicts}${
+      about ? ` | about — ${about}` : ''
+    }`;
   });
   return lines.join('\n');
 }

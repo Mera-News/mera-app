@@ -1574,6 +1574,18 @@ function toForYouSuggestion(
     entities: parseJsonArray<string>(row.entitiesJson).filter(
       (e): e is string => typeof e === 'string' && e.length > 0,
     ),
+    // Same parse + same non-empty-countryCode filter as
+    // `buildStageCandidateInput`, so a `place` filter and this row can never
+    // disagree about which places an article carries.
+    geoTags: parseJsonArray<{ city?: string; region?: string; countryCode?: string }>(
+      row.geoTagsJson,
+    )
+      .filter((g) => g && typeof g.countryCode === 'string' && g.countryCode.length > 0)
+      .map((g) => ({
+        city: g.city ?? undefined,
+        region: g.region ?? undefined,
+        countryCode: g.countryCode as string,
+      })),
     headlineScope:
       row.headlineScope === 'CITY' ||
       row.headlineScope === 'COUNTRY' ||

@@ -284,6 +284,47 @@ describe('loadSuggestions', () => {
     expect(result[0].firstPubDate).toBe(NOW.toISOString());
   });
 
+  // `geo_tags_json` was on the row from the start but never projected: only
+  // `getSuggestionFeedbackContext` read it, and only after a fresh DB fetch, so
+  // every surface holding a `ForYouSuggestion` had the article's places on disk
+  // with no way to reach them.
+  it('maps geo tags onto the suggestion, with the scorer\'s parse shape', async () => {
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        geoTagsJson: JSON.stringify([
+          { city: 'Taipei', region: 'Taipei City', countryCode: 'TWN' },
+          { countryCode: 'DEU' },
+        ]),
+      }),
+    ]);
+    const [row] = await loadSuggestions();
+    expect(row.geoTags).toEqual([
+      { city: 'Taipei', region: 'Taipei City', countryCode: 'TWN' },
+      { city: undefined, region: undefined, countryCode: 'DEU' },
+    ]);
+  });
+
+  it('drops geo tags with no usable countryCode — same filter as buildStageCandidateInput', async () => {
+    // The two must agree, or a `place` filter and the row it is shown against
+    // disagree about which places the article carries.
+    db._setRows('article_suggestions', [
+      makeSuggestion({
+        id: 's1',
+        geoTagsJson: JSON.stringify([{ city: 'Nowhere' }, { countryCode: '' }, { countryCode: 'FRA' }]),
+      }),
+    ]);
+    const [row] = await loadSuggestions();
+    expect(row.geoTags).toEqual([{ city: undefined, region: undefined, countryCode: 'FRA' }]);
+  });
+
+  it('yields [] for a null or unparseable geo_tags_json', async () => {
+    db._setRows('article_suggestions', [makeSuggestion({ id: 's1', geoTagsJson: null })]);
+    expect((await loadSuggestions())[0].geoTags).toEqual([]);
+    db._setRows('article_suggestions', [makeSuggestion({ id: 's2', geoTagsJson: 'not json' })]);
+    expect((await loadSuggestions())[0].geoTags).toEqual([]);
+  });
+
   it('maps all ForYouSuggestion fields correctly', async () => {
     const sug = makeSuggestion({
       id: 's1',

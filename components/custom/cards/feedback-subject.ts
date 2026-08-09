@@ -52,6 +52,15 @@ export interface FeedbackSubject {
   /** Topics the suggestion matched — feeds the dislike → feedback-tree overlay.
    *  Empty/absent for standalone articles. */
   matchedTopics?: MatchedTopicRef[];
+  /** Server-tagged named entities on the article the user acted on (≤8).
+   *
+   *  CONTEXT ONLY — it reaches the daily optimisation prompt attached to the
+   *  candidate it came from, so the model can see WHAT the story was about when
+   *  it words a "show me more/less of this" change. It never becomes an op and
+   *  never enters a filtering path: entity extraction is 68.8% accurate, and
+   *  `suppression::canHardExclude` + `loadPersonaScoringContext` make an entity
+   *  filter unable to exclude anything even if one were minted. */
+  entities?: string[];
   /** Relevance score (suggestions only), for the persisted context snapshot. */
   relevance?: number;
 }
@@ -75,6 +84,9 @@ export function buildContextJson(subject: FeedbackSubject): string | null {
   if (typeof subject.relevance === 'number') snapshot.relevance = subject.relevance;
   if (subject.matchedTopics && subject.matchedTopics.length > 0) {
     snapshot.matchedTopics = subject.matchedTopics;
+  }
+  if (subject.entities && subject.entities.length > 0) {
+    snapshot.entities = subject.entities;
   }
   return Object.keys(snapshot).length > 0 ? JSON.stringify(snapshot) : null;
 }
@@ -109,6 +121,7 @@ export function feedbackSubjectFromSuggestion(
       suggestion.clusters?.find((c) => c.stableClusterId)?.stableClusterId ?? undefined,
     eventType: suggestion.eventType ?? undefined,
     matchedTopics: suggestion.matchedTopics,
+    entities: suggestion.entities,
     relevance: suggestion.relevance,
   };
 }

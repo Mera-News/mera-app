@@ -90,6 +90,10 @@ export interface DigestSignalContext {
   /** Publication id — only present when a surface persisted it. */
   publication?: string;
   stableClusterId?: string;
+  /** Server-tagged named entities on the article the user acted on (≤8).
+   *  CONTEXT ONLY — never matched, never turned into an op. See
+   *  `DigestCandidate.entityContext`. */
+  entities?: string[];
 }
 
 /** One stored verdict the digest reasons over. */
@@ -175,6 +179,26 @@ export interface DigestCandidate {
   sourceRowIds: string[];
   confidence: 'auto' | 'review';
   conflictsWith: DigestConflict[];
+  /**
+   * What the articles behind this candidate were ABOUT, split by direction.
+   *
+   * Purely context for the daily optimisation prompt, which ORGANISES and words
+   * the deterministic candidates rather than inventing ops. "Show less about
+   * cycling" reads very differently when the disliked stories were all about one
+   * race series, and this is the only thing in the payload that can say so.
+   *
+   * DIRECTION IS PRESERVED, not collapsed: "more of this" and "less of this" are
+   * different signals, and a candidate can aggregate rows of both sentiments
+   * (a topic the user liked twice and disliked five times). Merging them would
+   * hand the model a bag of nouns with no sign.
+   *
+   * NOT A FILTER, and this is load-bearing given 68.8% entity accuracy: nothing
+   * here produces a `DigestPersonaAction`, and Task A made an entity suppression
+   * unable to exclude a row even if one existed. Derived at finalize time from
+   * the candidate's own `sourceRowIds`, so it is bounded by the candidate cap
+   * (≤8 auto + ≤5 review) rather than by any cap of its own.
+   */
+  entityContext?: { liked: string[]; disliked: string[] };
 }
 
 // ── Text helpers ──────────────────────────────────────────────────────────────
@@ -648,11 +672,41 @@ export function analyzeFeedback(input: DigestAnalyzeInput): DigestCandidate[] {
     mergeCandidate(byFingerprint, cand);
   }
 
+  // Entities are attached to the candidate they came from, at finalize time
+  // rather than in each of the ~8 candidate builders: every builder already
+  // records `sourceRowIds`, so one lookup here covers all of them and cannot
+  // drift between kinds.
+  const signalById = new Map(input.signals.map((sig) => [sig.id, sig]));
+  const entityContextFor = (
+    rowIds: Iterable<string>,
+  ): { liked: string[]; disliked: string[] } | undefined => {
+    const liked = new Set<string>();
+    const disliked = new Set<string>();
+    for (const rowId of rowIds) {
+      const sig = signalById.get(rowId);
+      if (!sig) continue;
+      const bucket = sig.sentiment === 'like' ? liked : disliked;
+      for (const e of sig.context.entities ?? []) {
+        const t = e.trim();
+        if (t.length > 0) bucket.add(t);
+      }
+    }
+    if (liked.size === 0 && disliked.size === 0) return undefined;
+    // Deduped and sorted — deduped because the same entity across five rows is
+    // one fact about the candidate, not five; sorted so the prompt is stable
+    // across runs (an unstable payload defeats prompt caching and makes two
+    // runs impossible to diff). Deliberately NOT capped or ranked: the
+    // candidate cap already bounds this, and a frequency/recency ranking would
+    // be a knob with no measurement behind it.
+    return { liked: [...liked].sort(), disliked: [...disliked].sort() };
+  };
+
   // Finalize: conflicts, confidence, rejected filter.
   const finalized: DigestCandidate[] = [];
   for (const m of byFingerprint.values()) {
     if (rejected.has(m.fingerprint)) continue;
     const conflictsWith = REMOVAL_KINDS.has(m.kind) ? conflictsFor(m, input.signals) : [];
+    const entityContext = entityContextFor(m.sourceRowIds);
     const confidence: 'auto' | 'review' =
       REMOVAL_KINDS.has(m.kind) || conflictsWith.length > 0 ? 'review' : 'auto';
     finalized.push({
@@ -663,6 +717,7 @@ export function analyzeFeedback(input: DigestAnalyzeInput): DigestCandidate[] {
       sourceRowIds: Array.from(m.sourceRowIds).sort(),
       confidence,
       conflictsWith,
+      ...(entityContext ? { entityContext } : {}),
     });
   }
 
