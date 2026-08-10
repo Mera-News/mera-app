@@ -20,10 +20,8 @@ import logger from "@/lib/logger";
 import {
     getCustomerInfoSafe,
     getOfferingSafe,
-    getTrialAvailability,
     isRevenueCatConfigured,
     logRevenueCatDiagnostics,
-    type TrialAvailability,
 } from "@/lib/revenuecat";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { useUserStore } from "@/lib/stores/user-store";
@@ -72,26 +70,10 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
     const [refreshing, setRefreshing] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
 
-    // Seeded `'unknown'` on purpose, which renders the no-trial copy and the
-    // "Subscribe now" label. The store answer arrives a beat after mount, and the
-    // safe thing to show in that beat is the version that promises less: a CTA
-    // that says "Start your free trial" and then flips to "Subscribe now" has
-    // already made an offer we cannot take back.
-    const [trialAvailability, setTrialAvailability] =
-        useState<TrialAvailability>('unknown');
-
-    useEffect(() => {
-        let cancelled = false;
-        // Lapsed users are not shown the trial paragraph or label at all, so
-        // there is nothing to ask the store about.
-        if (isLapsed) return;
-        void getTrialAvailability().then((a) => {
-            if (!cancelled) setTrialAvailability(a);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, [isLapsed]);
+    // r13: the store-eligibility probe that used to live here is gone with the
+    // trial itself. There is no introductory offer to promise any more — the
+    // free period is the server's 14-day Starter grant, which this screen only
+    // ever renders AFTER (it is a day-15+ surface now).
 
     // Local-first, per lib/security/launch-route.ts. `checkServerSubscribed`
     // below is the only way off this screen other than Mera News Free, and with
@@ -410,17 +392,12 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
                                               {t('subscription.para2')}
                                           </Text>
-                                          {/* The trial paragraph is NOT unconditional.
-                                              Only `mera_news_individual_monthly` on the
-                                              App Store carries an introductory offer, so
-                                              on Android — and for anyone who has already
-                                              used theirs — recommending "the one week
-                                              free trial" would promise something the
-                                              store will refuse at the sheet. */}
+                                          {/* Unconditional since r13: the store trial is
+                                              gone, so there is no eligibility to branch
+                                              on and nothing to promise the sheet would
+                                              then refuse. */}
                                           <Text size="md" className="text-gray-300 text-center leading-relaxed mt-4">
-                                              {trialAvailability === 'eligible'
-                                                  ? t('subscription.para3Trial')
-                                                  : t('subscription.para3NoTrial')}
+                                              {t('subscription.para3NoTrial')}
                                           </Text>
                                       </>
                                   )}
@@ -457,12 +434,13 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                               disabled={busy}
                                               // `h-auto min-h-11` rather than `lg`'s fixed
                                               // h-11: the CTA is ~104pt narrower now that
-                                              // it shares a row, and "Start your free
-                                              // trial" — longer still in several locales —
-                                              // wraps to two lines on a small phone at
-                                              // large Dynamic Type. A fixed height would
-                                              // CLIP that second line; this grows instead,
-                                              // while min-h keeps the 44pt floor.
+                                              // it shares a row, and its longest label
+                                              // ("Turn Mera back on", longer still in
+                                              // several locales) wraps to two lines on a
+                                              // small phone at large Dynamic Type. A fixed
+                                              // height would CLIP that second line; this
+                                              // grows instead, while min-h keeps the 44pt
+                                              // floor.
                                               className="bg-primary-500 flex-1 rounded-full h-auto min-h-11 py-2.5"
                                               size="lg"
                                           >
@@ -470,9 +448,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                               <ButtonText className="text-white font-semibold">
                                                   {isLapsed
                                                       ? t('subscription.turnMeraBackOn')
-                                                      : trialAvailability === 'eligible'
-                                                          ? t('subscription.startFreeTrial')
-                                                          : t('subscription.subscribeNow')}
+                                                      : t('subscription.subscribeNow')}
                                               </ButtonText>
                                           </Button>
 

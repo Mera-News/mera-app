@@ -17,7 +17,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
-import type { PurchasesOffering } from 'react-native-purchases';
+import { PACKAGE_TYPE } from 'react-native-purchases';
+import type { PurchasesOffering, PurchasesPackage } from 'react-native-purchases';
 import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import UsageWidget from '../UsageWidget';
@@ -55,19 +56,44 @@ interface ManageSubscriptionScreenProps {
 
 // Price lives on the offering's packages, not on CustomerInfo — match the
 // active entitlement's product to a package.
-const resolvePriceString = (
+const resolvePricePackage = (
     productId: string | null,
     offering: PurchasesOffering | null,
-): string | null => {
+): PurchasesPackage | null => {
     if (!productId || !offering) return null;
-    const pkg = offering.availablePackages.find(
-        (p) =>
-            p.product.identifier === productId ||
-            // Android product ids can carry a ":basePlan" suffix.
-            p.product.identifier.startsWith(`${productId}:`) ||
-            productId.startsWith(`${p.product.identifier}:`),
+    return (
+        offering.availablePackages.find(
+            (p) =>
+                p.product.identifier === productId ||
+                // Android product ids can carry a ":basePlan" suffix.
+                p.product.identifier.startsWith(`${productId}:`) ||
+                productId.startsWith(`${p.product.identifier}:`),
+        ) ?? null
     );
-    return pkg?.product.priceString ?? null;
+};
+
+/**
+ * The price as displayed: the store's localized `priceString` plus a period
+ * suffix, so "€1.99" reads as "€1.99/month" rather than as a one-off charge.
+ *
+ * GATED ON THE PACKAGE'S ACTUAL PERIOD, never hardcoded. Every plan is monthly
+ * today, which is exactly why a hardcoded "/month" would survive review and
+ * then quietly start lying the day an annual plan ships. An unrecognised period
+ * renders the bare price — no suffix is always better than a wrong one.
+ *
+ * `priceString` is already locale- and currency-formatted by the store; only
+ * the suffix is ours to translate.
+ */
+export const formatPackagePrice = (
+    pkg: PurchasesPackage | null,
+    perMonthSuffix: string,
+): string | null => {
+    if (!pkg) return null;
+    const price = pkg.product.priceString;
+    if (!price) return null;
+    return pkg.packageType === PACKAGE_TYPE.MONTHLY
+        ? `${price}${perMonthSuffix}`
+        : price;
 };
 
 /**
@@ -89,6 +115,9 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     const [activationPending, setActivationPending] = useState(false);
     const customerInfo = useSubscriptionStore((s) => s.customerInfo);
     const setCustomerInfo = useSubscriptionStore((s) => s.setCustomerInfo);
+    // Server-computed, display-only. Nothing here derives entitlement from it.
+    const grantExpiresAt = useSubscriptionStore((s) => s.grantExpiresAt);
+    const isPremium = useSubscriptionStore((s) => s.isPremium);
 
     const rcTier = getActiveTier(customerInfo);
     const activeEntitlement = getActiveEntitlementInfo(customerInfo);
@@ -165,9 +194,14 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
 
         const info = freshCustomerInfo ?? useSubscriptionStore.getState().customerInfo;
         const productId = getActiveEntitlementInfo(info)?.productIdentifier ?? null;
-        setPriceString(resolvePriceString(productId, offering));
+        setPriceString(
+            formatPackagePrice(
+                resolvePricePackage(productId, offering),
+                t('subscription.perMonth'),
+            ),
+        );
         setLoading(false);
-    }, [setCustomerInfo]);
+    }, [setCustomerInfo, t]);
 
     useEffect(() => {
         void load();
@@ -229,11 +263,14 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
         return t('subscription.planPromo');
     };
 
+    // r13: the TRIAL and INTRO cases are gone with the store's introductory
+    // offers. `humanizeKey` still renders anything unmapped, so a legacy
+    // entitlement that somehow reports one degrades to "Trial" rather than to a
+    // blank row — it just no longer has a translated string standing ready for
+    // a state the product does not offer.
     const periodTypeLabel = (periodType: string): string => {
         switch (periodType) {
             case 'NORMAL': return t('subscription.periodNormal');
-            case 'TRIAL': return t('subscription.periodTrial');
-            case 'INTRO': return t('subscription.periodIntro');
             case 'PROMOTIONAL': return t('subscription.periodPromotional');
             default: return humanizeKey(periodType);
         }
@@ -416,10 +453,21 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             <MaterialIcons name="upgrade" size={18} color="#000000" />
                             <ButtonText>{t('subscription.viewPlans')}</ButtonText>
                         </Button>
-                        <Button variant="outline" action="secondary" onPress={handleCustomerCenter} className="w-full">
-                            <MaterialIcons name="settings" size={18} color="#ffffff" />
-                            <ButtonText>{t('subscription.customerCenter')}</ButtonText>
-                        </Button>
+                        {/* Hidden for a user whose access comes from the
+                            server's free 14-day Starter grant. They hold no
+                            RevenueCat entitlement at all, so the Customer
+                            Center — which manages a store subscription —
+                            opens onto nothing. `!isPremium` rather than a
+                            tier check because the grant elevates
+                            `subscriptionTier` to `starter`, so the tier alone
+                            cannot tell a granted user from a paying one; the
+                            store's own view can. */}
+                        {grantExpiresAt && !isPremium ? null : (
+                            <Button variant="outline" action="secondary" onPress={handleCustomerCenter} className="w-full">
+                                <MaterialIcons name="settings" size={18} color="#ffffff" />
+                                <ButtonText>{t('subscription.customerCenter')}</ButtonText>
+                            </Button>
+                        )}
                     </VStack>
                 </ScrollView>
             )}
