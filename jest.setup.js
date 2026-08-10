@@ -296,6 +296,20 @@ jest.mock('react-native-purchases', () => ({
     WARN: 'WARN',
     ERROR: 'ERROR',
   },
+  // Real values from the SDK's enum. Needed because the price label is gated
+  // on `pkg.packageType === PACKAGE_TYPE.MONTHLY`; without this the namespace
+  // is `undefined` and the comparison throws rather than failing an assertion.
+  PACKAGE_TYPE: {
+    UNKNOWN: 'UNKNOWN',
+    CUSTOM: 'CUSTOM',
+    LIFETIME: 'LIFETIME',
+    ANNUAL: 'ANNUAL',
+    SIX_MONTH: 'SIX_MONTH',
+    THREE_MONTH: 'THREE_MONTH',
+    TWO_MONTH: 'TWO_MONTH',
+    MONTHLY: 'MONTHLY',
+    WEEKLY: 'WEEKLY',
+  },
 }));
 jest.mock('react-native-purchases-ui', () => ({
   __esModule: true,
