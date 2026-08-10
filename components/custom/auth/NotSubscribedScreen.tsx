@@ -1,6 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import MeraLogo from "@/components/custom/MeraLogo";
-import { CardGlassPlate } from "@/components/custom/cards/CardGlassPlate";
+import GlassPanel from "@/components/custom/cards/GlassPanel";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
@@ -378,28 +377,12 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                   showsVerticalScrollIndicator={false}
               >
                   <VStack space="lg" className="items-center w-full max-w-md">
-                      {/* Glass panel, same two-Box construction as FreeTierCard /
-                          NoGeneratedInterestsCard: the shadow lives on the outer,
-                          non-clipping Box because RN drops a shadow the moment a
-                          view sets overflow:hidden, and the rounded/clipped
-                          surface is the inner one. `CardGlassPlate` is a
-                          translucent fill, NOT a GlassView — no blur infra. */}
-                      <Box className="w-full rounded-3xl shadow-hard-2">
-                          <Box className="rounded-3xl overflow-hidden border border-white/10">
-                              <CardGlassPlate />
-                              <Box className="w-full items-center px-6 py-8">
-                                  {/* The app's existing animated-logo treatment —
-                                      MeraLogo's own `animated` spotlight sweep,
-                                      the same one the floating chat bubble and
-                                      AllCaughtUpCard use. Not a new animation.
-                                      Sized down from 112: the copy below is now a
-                                      three-paragraph note rather than one line, and
-                                      the logo was spending vertical space the
-                                      argument needs. */}
-                                  <Box className="items-center mb-4">
-                                      <MeraLogo size={72} animated />
-                                  </Box>
-
+                      {/* Same panel `FreeTierCard` renders — see `GlassPanel`
+                          for the two-Box shadow/clip construction and why it's
+                          shaped that way. Adopting it here (rather than keeping
+                          a parallel copy) is what proves the extraction is
+                          real. */}
+                      <GlassPanel radius="3xl" logoSize={72} className="w-full" contentClassName="px-6 py-8">
                                   <Heading size="3xl" className="text-white text-center">
                                       {isLapsed ? t('freeTier.lapseTitle') : t('subscription.title')}
                                   </Heading>
@@ -589,9 +572,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           </ButtonText>
                                       </Button>
                                   </VStack>
-                              </Box>
-                          </Box>
-                      </Box>
+                      </GlassPanel>
 
                       {/* The mail link is a SIBLING of the sentence, not a
                           TouchableOpacity nested inside its <Text>. That nesting is

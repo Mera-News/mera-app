@@ -1,13 +1,10 @@
-import {
-    CARDS_USE_GLASS,
-    CardGlassPlate,
-} from '@/components/custom/cards/CardGlassPlate';
-import MeraLogo from '@/components/custom/MeraLogo';
-import { Box } from '@/components/ui/box';
+import GlassPanel from '@/components/custom/cards/GlassPanel';
 import { Button, ButtonText } from '@/components/ui/button';
+import { Heading } from '@/components/ui/heading';
 import { Text } from '@/components/ui/text';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
+import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -38,11 +35,21 @@ export interface FreeTierCardProps {
  * nothing — flashing this at a paying subscriber during the first second of a
  * cold start would be worse than showing it a second late.
  *
- * Surface structure is copied from NoGeneratedInterestsCard: two nested Boxes,
- * and the nesting is load-bearing — RN drops a view's shadow the moment that
- * same view sets `overflow: hidden`, so the shadow lives on the outer,
- * non-clipping Box and the rounded/clipped surface is the inner one. No blur
- * infra is introduced; `CardGlassPlate` is a translucent fill, not a GlassView.
+ * The chrome (two-Box shadow/clip trick, translucent fill) is `GlassPanel` —
+ * see that file for why it's built the way it is. This component owns only
+ * the copy and the actions.
+ *
+ * That copy is the same "Free isn't free" argument `NotSubscribedScreen`
+ * makes, not the old one-line pitch: `subscription.title` + `para1` + `para2`
+ * + `para3NoTrial` (never `para3Trial` — this card never imports
+ * `getTrialAvailability`, so it cannot disagree with `NotSubscribedScreen`
+ * about whether a trial is on offer, and lands with zero order dependency on
+ * whichever surface removes trial copy). It reads longer as a result —
+ * MEASURED on an iPhone 17 Pro: the single-paragraph version was 306.67pt →
+ * 401.33pt (+30.9%) for adding just ONE more paragraph, and this adds two
+ * more plus a heading and a second button on top of that. The mitigation for
+ * that height, if the list needs it, is the existing `compact` prop — not
+ * trimming this copy back down.
  */
 const FreeTierCard: React.FC<FreeTierCardProps> = ({
     surface,
@@ -50,6 +57,7 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
     onSeePlans,
 }) => {
     const { t } = useTranslation();
+    const router = useRouter();
     const aiAccess = useAiAccess();
 
     const handleSeePlans = useCallback(async () => {
@@ -60,77 +68,61 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
         await presentFreeTierPaywall('FreeTierCard');
     }, [onSeePlans]);
 
+    const handleLearnMore = useCallback(() => {
+        router.push('/tutorials' as any);
+    }, [router]);
+
     if (aiAccess !== 'locked') return null;
 
     return (
-        <Box
+        <GlassPanel
             testID={`free-tier-card-${surface}`}
-            className="mb-4 rounded-2xl shadow-hard-2"
+            radius="2xl"
+            logoSize={compact ? 56 : 84}
+            className="mb-4"
+            contentClassName={compact ? 'py-6 px-5' : 'py-10 px-6'}
         >
-            <Box
-                className={
-                    CARDS_USE_GLASS
-                        ? 'rounded-2xl overflow-hidden border border-white/10'
-                        : 'rounded-2xl overflow-hidden bg-background-0 border border-white/10'
-                }
+            <Heading size="2xl" className="text-white text-center">
+                {t('subscription.title')}
+            </Heading>
+
+            <Text
+                testID={`free-tier-card-body-${surface}`}
+                size="md"
+                className="text-gray-400 text-center leading-relaxed mt-3"
             >
-                <CardGlassPlate />
-                <Box
-                    className={`w-full items-center ${compact ? 'py-6 px-5' : 'py-10 px-6'}`}
-                >
-                    {/* `animated`: the same spotlight sweep MeraChatInvite and
-                        NotSubscribedScreen already use — MeraLogo's own prop, not
-                        a second animation. It self-gates on focus + foreground
-                        (useAnimationsActive), which matters here because this card
-                        is a permanently-mounted list header on two tabs. */}
-                    <Box className={compact ? 'mb-3' : 'mb-5'}>
-                        <MeraLogo size={compact ? 56 : 84} animated />
-                    </Box>
+                {t('subscription.para1')}
+            </Text>
+            <Text size="md" className="text-gray-400 text-center leading-relaxed mt-3">
+                {t('subscription.para2')}
+            </Text>
+            <Text size="md" className="text-gray-400 text-center leading-relaxed mt-3">
+                {t('subscription.para3NoTrial')}
+            </Text>
 
-                    <Text
-                        size={compact ? 'lg' : 'xl'}
-                        className="text-white text-center mb-3 font-semibold"
-                    >
-                        {t('freeTier.cardTitle')}
-                    </Text>
+            <Button
+                testID="free-tier-card-cta"
+                onPress={handleSeePlans}
+                className="bg-primary-500 mt-6 rounded-full w-full"
+                size="md"
+            >
+                <ButtonText className="text-white">
+                    {t('freeTier.seePlans')}
+                </ButtonText>
+            </Button>
 
-                    {/* One paragraph, deliberately CATEGORY-shaped and never
-                        possession-shaped. This card renders for a brand-new
-                        locked user who has saved nothing and follows nothing, so
-                        "anything you've saved ... stays on this device" is true
-                        for them (vacuously) while "your saved articles stay"
-                        would assert content they do not own. The earlier cycling
-                        version needed a whole truth-gating module to keep that
-                        straight; the phrasing carries it now, so keep it.
-
-                        The paragraph is also what makes the card ~30% taller
-                        than the one-line-at-a-time version it replaced —
-                        MEASURED on an iPhone 17 Pro: 306.67pt before, 401.33pt
-                        after (+30.9%), at UNCHANGED padding. Do not "help" that
-                        along with extra py-*: bumping this row to py-14 measured
-                        429.33pt (+40%), which is why the padding here is
-                        deliberately still the original. */}
-                    <Text
-                        testID={`free-tier-card-body-${surface}`}
-                        size="md"
-                        className="text-gray-400 text-center leading-relaxed"
-                    >
-                        {t('freeTier.cardBody')}
-                    </Text>
-
-                    <Button
-                        testID="free-tier-card-cta"
-                        onPress={handleSeePlans}
-                        className="bg-primary-500 mt-6"
-                        size="md"
-                    >
-                        <ButtonText className="text-white">
-                            {t('freeTier.seePlans')}
-                        </ButtonText>
-                    </Button>
-                </Box>
-            </Box>
-        </Box>
+            <Button
+                testID="free-tier-card-learn"
+                onPress={handleLearnMore}
+                variant="outline"
+                className="w-full rounded-full border-white/30 mt-3"
+                size="md"
+            >
+                <ButtonText className="text-white">
+                    {t('tutorials.learnAboutMera')}
+                </ButtonText>
+            </Button>
+        </GlassPanel>
     );
 };
 
