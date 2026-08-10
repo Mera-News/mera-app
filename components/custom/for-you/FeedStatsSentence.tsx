@@ -56,6 +56,23 @@ const FeedStatsSentence: React.FC<FeedStatsSentenceProps> = ({
   const clause = (key: StatsClauseKey, count: number) =>
     t(key, { count, formatted: formatCount(count, appLanguage) });
 
+  // Nothing here at all: say nothing.
+  //
+  // `articleCount` counts the rows THIS DEVICE holds, so at zero it means "we
+  // haven't got anything", not "nothing was published". Rendering it anyway
+  // produced "0 articles were published in the last 24 hours." — a confident
+  // claim about the world, sourced from a number that only describes local
+  // state, and flatly contradicted by Explore showing stories from a few hours
+  // ago on the very same screen. It reads as the app being broken.
+  //
+  // Not a rare edge: it is the normal state for anyone whose AI access is
+  // locked, which is every user from day 15 of the free Starter window onward.
+  //
+  // Suppressed rather than reworded on purpose — there is no honest sentence to
+  // put here, and inventing one would need a new key in twenty locales to say
+  // less than nothing does.
+  if (articleCount === 0) return null;
+
   // Nothing scored yet: the published count is the only honest number, so the
   // sentence is that clause alone (it carries its own full stop).
   const sentence =
