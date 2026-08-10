@@ -90,6 +90,34 @@ export function deriveAiAccess(inputs: AiAccessInputs): AiAccess {
 }
 
 /**
+ * Has OUR SERVER contributed to the current `aiAccess` verdict?
+ *
+ * ## Why this exists
+ *
+ * The server now grants every account a free 14-day Starter window. RevenueCat
+ * knows nothing about that grant and never will — it is derived from the
+ * account's creation date on our side. So a verdict reached WITHOUT the server
+ * is not merely incomplete for a granted user, it is actively wrong: RevenueCat
+ * answers from local cache far faster than a GraphQL round trip, and an
+ * identified-but-empty `CustomerInfo` makes `deriveAiAccess` return `'locked'`
+ * while `serverTier` is still `null`. Routing on that verdict shows a paywall
+ * to exactly the cohort the grant exists to convert, on exactly the slow first
+ * launch where it is least recoverable.
+ *
+ * `aiAccess !== 'unknown'` is therefore NOT the right test for "have we heard
+ * enough to route". This is.
+ *
+ * The two short-circuits above `deriveAiAccess`'s server branch are mirrored
+ * here, because in both the server is genuinely irrelevant: the dev override
+ * outranks every signal, and with the ship gate off the verdict is a constant.
+ */
+export function aiAccessIsServerResolved(serverTier: string | null): boolean {
+    if (__DEV__ && DEV_FORCE_AI_ACCESS !== null) return true;
+    if (!FREE_TIER_MODE_ENABLED) return true;
+    return serverTier !== null;
+}
+
+/**
  * Whether the "your plan has ended" interstitial is owed to this user.
  *
  * The real answer is the SERVER's — a timestamp comparison on `UserBilling`

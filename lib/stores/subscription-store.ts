@@ -9,6 +9,7 @@ export interface ServerBillingSnapshot {
   subscriptionTier?: string | null;
   hasEverSubscribed?: boolean | null;
   showLapseInterstitial?: boolean | null;
+  grantExpiresAt?: string | null;
 }
 
 interface SubscriptionState {
@@ -30,6 +31,19 @@ interface SubscriptionState {
   hasEverSubscribed: boolean | null;
   /** Server-derived: is an unacknowledged lapse interstitial owed. `null` until known. */
   showLapseInterstitial: boolean | null;
+  /**
+   * ISO instant the server's free 14-day Starter grant ends, or `null`.
+   *
+   * DISPLAY ONLY, and this is a hard rule rather than a style preference: the
+   * grant is computed and enforced entirely server-side from the account's
+   * creation date, and the app is only ever REFLECTING that answer. Nothing
+   * may branch on this value to decide access — `serverTier` (already elevated
+   * by the server) is the only entitlement signal, and a device clock must
+   * never enter the decision. Safe uses: a countdown, a "your free two weeks
+   * end on…" line, hiding a RevenueCat Customer Center button that would open
+   * onto nothing.
+   */
+  grantExpiresAt: string | null;
 
   /** Replace the CustomerInfo and derive tier/isPremium from it. */
   setCustomerInfo: (info: CustomerInfo | null) => void;
@@ -58,6 +72,7 @@ const initialState = {
   serverTier: null as string | null,
   hasEverSubscribed: null as boolean | null,
   showLapseInterstitial: null as boolean | null,
+  grantExpiresAt: null as string | null,
 };
 
 export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
@@ -125,6 +140,13 @@ export const useSubscriptionStore = create<SubscriptionState>()((set, get) => ({
         : {}),
       ...(billing.showLapseInterstitial != null
         ? { showLapseInterstitial: billing.showLapseInterstitial }
+        : {}),
+      // `!== undefined`, not `!= null`, unlike the two above: an explicit
+      // `null` is the meaningful answer "no grant is providing your access"
+      // (window closed, or a paying subscriber), and it MUST clear a stale
+      // countdown. Only an unselected field — `undefined` — is ignored.
+      ...(billing.grantExpiresAt !== undefined
+        ? { grantExpiresAt: billing.grantExpiresAt }
         : {}),
     });
   },

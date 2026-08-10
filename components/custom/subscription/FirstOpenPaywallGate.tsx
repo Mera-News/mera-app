@@ -2,7 +2,10 @@ import { getSetting } from '@/lib/database/services/setting-service';
 import { navigateToPaywall } from '@/lib/nav-state';
 import { ROUTE_SETTLE_MS } from './LapseInterstitialGate';
 import { getAiAccess, useSubscriptionStore } from '@/lib/stores/subscription-store';
-import { deriveHasEverSubscribed } from '@/lib/subscription/ai-access';
+import {
+    aiAccessIsServerResolved,
+    deriveHasEverSubscribed,
+} from '@/lib/subscription/ai-access';
 import { FIRST_OPEN_DISMISSED_SETTING_KEY } from '@/lib/subscription/first-open-dismissal';
 import { usePathname } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -45,6 +48,8 @@ export default function FirstOpenPaywallGate() {
     const hasEverSubscribed = deriveHasEverSubscribed(
         useSubscriptionStore((s) => s.hasEverSubscribed),
     );
+    // Subscribed reactively so the effect re-runs the moment the server lands.
+    const serverTier = useSubscriptionStore((s) => s.serverTier);
 
     // `null` = the device setting has not been read yet. Must not be treated as
     // "not dismissed": doing so would race the read and re-show the paywall to
@@ -77,6 +82,18 @@ export default function FirstOpenPaywallGate() {
         // read is the worst possible false positive.
         if (hasEverSubscribed !== false) return;
 
+        // Never fire on an entitlement OUR SERVER has not resolved.
+        //
+        // `getAiAccess()` alone is not enough: RevenueCat answers from local
+        // cache far sooner than our GraphQL round trip, and an identified-but-
+        // empty CustomerInfo yields `'locked'` while `serverTier` is still
+        // null. RevenueCat cannot know about the server's free 14-day Starter
+        // grant, so acting on that `'locked'` would push a full paywall at a
+        // user who is currently entitled — and `hasEverSubscribed` will not
+        // save us, because it is deliberately computed from the RAW tier and
+        // stays `false` for exactly these users.
+        if (!aiAccessIsServerResolved(serverTier)) return;
+
         // Same reason: 'unknown' is not 'locked'.
         if (getAiAccess() !== 'locked') return;
 
@@ -95,7 +112,7 @@ export default function FirstOpenPaywallGate() {
         }, ROUTE_SETTLE_MS);
 
         return () => clearTimeout(timer);
-    }, [hasEverSubscribed, dismissed, pathname]);
+    }, [hasEverSubscribed, dismissed, pathname, serverTier]);
 
     return null;
 }

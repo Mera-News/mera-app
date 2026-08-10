@@ -839,6 +839,8 @@ export type UserBillingInfo = {
   dailyArticleLimit: Scalars['Int']['output'];
   /** ISO timestamp when the active entitlement expires; null = no entitlement or lifetime. */
   entitlementExpiresAt?: Maybe<Scalars['String']['output']>;
+  /** ISO timestamp when the free 14-day Starter grant ends. Non-null ONLY while that grant is what provides access — a paying subscriber inside the same window gets null, because nothing of theirs expires then. DISPLAY ONLY: the grant is computed and enforced server-side from the session's account-creation date, and no client may gate on this value. */
+  grantExpiresAt?: Maybe<Scalars['String']['output']>;
   /** True if this user has ever held a paid tier (now or in the past). False is what selects the app's first-open paywall over the softer lapse interstitial. */
   hasEverSubscribed: Scalars['Boolean']['output'];
   /** ISO timestamp of the next UTC midnight — when usage resets. */

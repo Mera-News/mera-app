@@ -104,6 +104,10 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 jest.mock('@/lib/revenuecat', () => ({
     getActiveTier: () => null,
     loginRevenueCat: jest.fn(async () => null),
+    // Needed by the real subscription store. `false` = "RevenueCat has spoken
+    // about THIS user", which is the state that produces the cold-start race
+    // the r13 test below pins.
+    isAnonymousCustomerInfo: () => false,
 }));
 
 // Stands in for the server round trip. Each test decides what the server
@@ -235,7 +239,16 @@ describe('paywall before onboarding', () => {
     // paywall. The "the paywall is useless offline" objection in the old
     // comment is answered by that fallback, not by handing the wizard to
     // everyone — see the two tests below.
-    it("aiAccess 'unknown' on a NEVER-RESOLVED device → the loading state holds, then the paywall", async () => {
+    // ── AND CHANGED AGAIN IN r13 ────────────────────────────────────────────
+    //
+    // The HOLD is untouched and is still the thing worth pinning. What flips is
+    // the destination once the hold ends: the server now grants every account a
+    // free 14-day Starter window and enforces it itself, so a client that has
+    // never heard from that server must not guess "locked" — that guess
+    // paywalls precisely the new users the grant exists to convert. It fails
+    // OPEN instead; an unentitled user meets a 402 and the free-tier UI catches
+    // them on the next pass.
+    it("aiAccess 'unknown' on a NEVER-RESOLVED device → the loading state holds, then fails OPEN to onboarding", async () => {
         jest.useFakeTimers();
         // The server never answers, so aiAccess stays 'unknown'...
         mockServerAnswer = null;
@@ -264,10 +277,48 @@ describe('paywall before onboarding', () => {
         // And still BOUNDED — the hold ends rather than running forever.
         act(() => { jest.advanceTimersByTime(2); });
         await flush();
-        expect(onPaywall).toHaveBeenCalledTimes(1);
-        // The regression, pinned: the wizard must NOT mount for a user whose
-        // entitlement was never established.
-        expect(queryByTestId('onboarding-wizard')).toBeNull();
+        expect(onPaywall).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
+        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+
+        jest.useRealTimers();
+    });
+
+    // ── THE COLD-START RACE (r13). The reason the grant needed a client fix. ─
+    //
+    // RevenueCat answers from local cache in milliseconds; our GraphQL round
+    // trip does not. An identified-but-EMPTY CustomerInfo makes `deriveAiAccess`
+    // return 'locked' while `serverTier` is still null — and RevenueCat can
+    // never know about the server's free 14-day Starter grant, because it is
+    // derived from the account's creation date on our side.
+    //
+    // Before this fix that 'locked' short-circuited `resolveEntitlementForOnboarding`
+    // on its FIRST statement: the paywall appeared and `syncEntitlement` was
+    // never even called. Both halves are asserted below, and the second is the
+    // one that fails if only `decideOnboardingEntry` is patched.
+    it('a cached RevenueCat "locked" does NOT decide the route before our server answers', async () => {
+        jest.useFakeTimers();
+        // RevenueCat, about this user, with no entitlements — the exact payload
+        // a granted (unpaid) user's device holds on every cold start.
+        useSubscriptionStore.getState().setCustomerInfo({
+            allPurchasedProductIdentifiers: [],
+            entitlements: { active: {} },
+        } as never);
+        // The server WILL answer, with the grant applied — a shade too late.
+        mockServerAnswer = { subscriptionTier: 'starter' };
+
+        const { onPaywall, queryByTestId } = renderGate();
+        await flush();
+
+        // It held instead of routing, AND it actually asked the server.
+        expect(onPaywall).not.toHaveBeenCalled();
+        expect(mockSyncEntitlement).toHaveBeenCalledTimes(1);
+
+        act(() => { jest.advanceTimersByTime(1); });
+        await flush();
+
+        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(onPaywall).not.toHaveBeenCalled();
 
         jest.useRealTimers();
     });
@@ -332,23 +383,27 @@ describe('paywall before onboarding', () => {
         expect(queryByTestId('onboarding-wizard')).toBeNull();
     });
 
-    it('a never-resolved OFFLINE device lands on the paywall without waiting', async () => {
+    it('a never-resolved OFFLINE device fails open without waiting', async () => {
         mockIsConnected = false;
         mockServerAnswer = null;
 
         const { onPaywall, queryByTestId } = renderGate();
         await flush();
 
-        // No timers advanced: the offline branch returns immediately rather
-        // than holding the splash for a network that is known to be absent.
-        expect(onPaywall).toHaveBeenCalledTimes(1);
-        expect(queryByTestId('onboarding-wizard')).toBeNull();
+        // No timers advanced: the offline branch still returns immediately
+        // rather than holding the splash for a network known to be absent.
+        // Its destination is now onboarding — a paywall is no more usable
+        // offline than the wizard is, and the wizard is the one that does not
+        // mis-accuse a granted user.
+        expect(onPaywall).not.toHaveBeenCalled();
+        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
     });
 
-    it("an unresolvable verdict on a DISMISSED device goes to Mera News Free, never back to the paywall", async () => {
-        // The anti-loop rule. `'unknown'` now diverts like `'locked'`, so it has
-        // to honour the same device-local dismissal — otherwise a user who said
-        // no once meets the paywall on every launch with no way past it.
+    it("a DISMISSED device with an unresolvable verdict still fails open, and never loops to the paywall", async () => {
+        // The anti-loop rule survives the r13 reversal, just by a shorter
+        // route: `'unknown'` no longer reaches the dismissal branch at all, so
+        // a user who said no once cannot meet the paywall again on a launch
+        // where nothing answered.
         mockSettings[FIRST_OPEN_DISMISSED_SETTING_KEY] = 'true';
         mockIsConnected = false;
         mockServerAnswer = null;
@@ -356,9 +411,9 @@ describe('paywall before onboarding', () => {
         const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
         expect(onPaywall).not.toHaveBeenCalled();
-        expect(queryByTestId('onboarding-wizard')).toBeNull();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
+        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
     });
 
     it('a resolved verdict is written to the device so a LATER cold start can trust it', async () => {
@@ -410,10 +465,13 @@ describe('paywall before onboarding', () => {
         expect(require('@/lib/revenuecat').loginRevenueCat).toHaveBeenCalledTimes(1);
 
         // And it still terminates, on the ORIGINAL clock rather than one
-        // restarted by the last re-render.
+        // restarted by the last re-render. (Destination is onboarding since
+        // r13 — see the fail-open note above; what this test pins is that the
+        // wait resolves ONCE, not where it lands.)
         act(() => { jest.advanceTimersByTime(ONBOARDING_ENTITLEMENT_WAIT_MS + 1); });
         await flush();
-        expect(onPaywall).toHaveBeenCalledTimes(1);
+        expect(onComplete).not.toHaveBeenCalled();
+        expect(onPaywall).not.toHaveBeenCalled();
 
         jest.useRealTimers();
     });
@@ -491,21 +549,26 @@ describe('decideOnboardingEntry', () => {
         expect(decideOnboardingEntry({ aiAccess: 'locked', firstOpenDismissed: true })).toBe('free-tier');
     });
 
-    // ── EXPECTATION CHANGED 2026-08-06 (owner decision) ─────────────────────
+    // ── EXPECTATION CHANGED TWICE. Both reversals are deliberate. ───────────
     //
-    // These two lines used to read `.toBe('onboarding')`, on the reasoning that
-    // an expired wait should land on pre-change behaviour. Once
-    // FREE_TIER_MODE_ENABLED went true that reasoning inverted: `'unknown'` is
-    // every cold start that has not heard from billing yet, and sending those
-    // users into the wizard is the production regression. `'unknown'` now means
-    // something narrower — the wait expired AND this device has never once
-    // resolved a tier (resolveEntitlementForOnboarding consults its memory
-    // first) — and for such a device the paywall is the honest destination.
-    it("'unknown' means NEVER-RESOLVED and behaves like locked, dismissal and all", () => {
-        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: false })).toBe('paywall');
-        // Not 'paywall' again: the dismissal must break the loop here exactly as
-        // it does on the locked branch.
-        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: true })).toBe('free-tier');
+    // 2026-08-06 these moved from 'onboarding' to 'paywall': with the ship gate
+    // armed, `'unknown'` was every cold start that had not heard from billing,
+    // and sending those users into the wizard was a production regression.
+    //
+    // r13 moves them back, for a reason that did not exist then: the server now
+    // GRANTS every account a free 14-day Starter window and enforces it
+    // server-side. Two things follow. `'unknown'` is now narrower still — since
+    // `resolveEntitlementForOnboarding` keys on OUR SERVER having answered, a
+    // RevenueCat-derived 'locked' no longer masquerades as a resolution — and a
+    // pessimistic guess is now the expensive one, because it paywalls exactly
+    // the new users the grant exists to convert. Guessing 'onboarding' grants
+    // no server content: an unentitled user meets a 402 and lands in the
+    // free-tier UI on the next pass.
+    it("'unknown' means our server has never answered → fail OPEN to onboarding", () => {
+        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: false })).toBe('onboarding');
+        // Dismissal does not change it: 'unknown' is not a refusal to respect,
+        // it is an absence of information, and the server is the enforcer.
+        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: true })).toBe('onboarding');
     });
 });
 
