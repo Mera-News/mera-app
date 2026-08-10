@@ -24,7 +24,8 @@
     "offlineBanner": "اتصال بطيء أو معدوم بـ Mera. جارٍ عرض الأخبار المحفوظة — سنحاول مجددًا.",
     "offlineBannerOffline": "أنت غير متصل بالإنترنت. عرض الأخبار المحفوظة، وسنحاول مجددًا.",
     "offlineBannerInternetDown": "لا توجد إمكانية الوصول للإنترنت. عرض الأخبار المحفوظة، وسنحاول مجددًا.",
-    "offlineBannerServerDown": "اتصال بطيء أو معدوم بـ Mera. عرض الأخبار المحفوظة، وسنحاول مجددًا."
+    "offlineBannerServerDown": "اتصال بطيء أو معدوم بـ Mera. عرض الأخبار المحفوظة، وسنحاول مجددًا.",
+    "beta": "تجريبي"
   },
   "auth": {
     "reauthBanner": "سجّل الدخول مجددًا لمزامنة البيانات",
@@ -500,7 +501,11 @@
     "extractedMetadataEventTypeLabel": "نوع الحدث",
     "extractedMetadataPlacesLabel": "الأماكن",
     "extractedMetadataEntitiesLabel": "الكيانات",
-    "extractedMetadataCaption": "استخرج بواسطة الذكاء الاصطناعي، حقيقة غير موثوقة"
+    "extractedMetadataCaption": "استخرج بواسطة الذكاء الاصطناعي، حقيقة غير موثوقة",
+    "factCheckTitle": "فحص الحقائق",
+    "factCheckOn": "تفعيل — يمكن لـ Mera البحث عن الويب للتحقق من صحة معلومات القصة",
+    "factCheckOff": "تعطيل",
+    "factCheckDescription": "عند تفعيله، يرسل فحص القصة إلى خادمنا وإلى مزود بحث للتحقق من صحة معلوماتها. لا شيء آخر يذهب معها — ليس حقائقك، ليس خلاصتك، ليس من أنت. معطّل بشكل افتراضي."
   },
   "manageData": {
     "deleting": "جارٍ الحذف...",
@@ -896,11 +901,9 @@
     "expiresOn": "ينتهي في",
     "lifetime": "مدى الحياة",
     "managePlan": "إدارة الاشتراك",
-    "periodIntro": "تمهيدي",
     "periodLabel": "الفترة",
     "periodNormal": "قياسي",
     "periodPromotional": "ترويجي",
-    "periodTrial": "تجربة مجانية",
     "planStarter": "مبتدئ",
     "planIndividual": "فردي",
     "planLabel": "الخطة",
@@ -933,13 +936,12 @@
     "turnMeraBackOn": "شغّل Mera مرة أخرى",
     "para1": "Mera News يمكن أن تكون مجانية. لكن ذلك يعني أن شخصًا آخر يدفع: معلن يشتري انتباهك أو بياناتك، أو حديث إيجابي. الكثير مما يبدو أخبارًا هو بالضبط ذلك.",
     "para2": "وسائل الإعلام الممولة من الإعلانات لا تملك حدًا أقصى. لا على كم تأخذ منك، ولا على ما يُستخدم لاحقًا. لا نريد أن نكون تلك الشركة، لذا الصفقة هنا بسيطة. تحافظ على بياناتك. البرنامج يقوم بالعمل. تدفع مقابل ذلك.",
-    "para3Trial": "نقترح عليك البدء بـ Individual مجانًا لمدة أسبوع. هي الخطة التي ينتهي بها معظم الناس. بعد الأسبوع يمكنك البقاء عليها، أو الانتقال لـ Starter، أو الترقية لـ Professional، حسب احتياجاتك.",
     "para3NoTrial": "Starter مكان جيد للبدء. إنها أصغر خطة، ويمكنك الترقية متى استحقت Mera ذلك.",
-    "startFreeTrial": "ابدأ تجربتك المجانية",
     "subscribeNow": "اشترك الآن",
     "planRecommendation": "تفتح حوالي {{count}} مقالات يوميًا. {{plan}} تحلل ما يصل {{limit}} يوميًا حتى يكون هناك دائمًا أكثر مما ستتمكن من تصفحه.",
     "sandboxOnProduction": "هذا شراء من sandbox (اختبار) والتطبيق متصل بخادم production. لا يتم قبول sandbox receipts إلا في staging، لذا فإن production لن يؤكد هذا الشراء أبداً — الانتظار لن يساعد. وجّه التطبيق إلى بيئة staging لاختبار المشتريات.",
-    "planPending": "{{plan}} · قيد التفعيل"
+    "planPending": "{{plan}} · قيد التفعيل",
+    "perMonth": "/شهر"
   },
   "tabs": {
     "deck": "الخلاصة",
@@ -1522,7 +1524,6 @@
     "textSizeStepDefault": "افتراضي",
     "textSizeStepLarge": "كبير",
     "textSizeStepLarger": "أكبر",
-    "textSizeStepLargest": "الأكبر",
     "deviceTextSizeHint": "للحصول على نص أكبر، استخدم عرض وسطوع في إعدادات جهازك."
   },
   "freeTier": {

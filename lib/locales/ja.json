@@ -24,7 +24,8 @@
     "offlineBanner": "Meraへの接続が遅い、または接続がありません。保存されたニュースを表示しています — 引き続きお試しします。",
     "offlineBannerOffline": "オフラインです。保存されたニュースを表示しています。引き続きお試しします。",
     "offlineBannerInternetDown": "インターネット接続がありません。保存されたニュースを表示しています。引き続きお試しします。",
-    "offlineBannerServerDown": "Meraへの接続が遅いか接続されていません。保存されたニュースを表示しています。引き続きお試しします。"
+    "offlineBannerServerDown": "Meraへの接続が遅いか接続されていません。保存されたニュースを表示しています。引き続きお試しします。",
+    "beta": "ベータ"
   },
   "auth": {
     "reauthBanner": "再度サインインして同期してください",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "イベントタイプ",
     "extractedMetadataPlacesLabel": "場所",
     "extractedMetadataEntitiesLabel": "エンティティ",
-    "extractedMetadataCaption": "AI抽出、検証済みの事実ではありません"
+    "extractedMetadataCaption": "AI抽出、検証済みの事実ではありません",
+    "factCheckTitle": "ファクトチェック",
+    "factCheckOn": "オン — Meraはストーリーの主張を確認するためにウェブを検索できます",
+    "factCheckOff": "オフ",
+    "factCheckDescription": "これがオンの場合、ストーリーの検証のためサーバーを通じて検索プロバイダーに送信されます。他には何も一緒に行きません。あなたの事実ではなく、あなたのフィードではなく、あなたが誰ではありません。デフォルトではオフです。"
   },
   "manageData": {
     "deleting": "削除中...",
@@ -868,11 +873,9 @@
     "expiresOn": "有効期限",
     "lifetime": "買い切り",
     "managePlan": "サブスクリプションを管理",
-    "periodIntro": "導入期間",
     "periodLabel": "期間",
     "periodNormal": "通常",
     "periodPromotional": "プロモーション",
-    "periodTrial": "無料トライアル",
     "planIndividual": "個人",
     "planLabel": "プラン",
     "planProfessional": "プロフェッショナル",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "Meraをもう一度オンにする",
     "para1": "Mera Newsは無料にすることもできました。ただし、誰か他の誰かが代わりに支払うことになります。広告主があなたの注意、データ、または好意的な報道を買っています。多くのニュースに見えるものはまさにそれです。",
     "para2": "広告でサポートされるメディアには上限がありません。あなたから何をどのくらい取るかについても、その後何に使用されるかについてもです。私たちはそのような会社になりたくないので、ここでの取引は簡単です。あなたはデータを保持します。ソフトウェアが仕事をします。あなたがそれに支払います。",
-    "para3Trial": "Individualの1週間の無料トライアルから始めることをお勧めします。これはほとんどの人が必要とするプランです。1週間後、それを継続するか、Starterに下げるか、Professionalに上げるか、自分に最も適していることを選択できます。",
     "para3NoTrial": "Starterは始めるのに良い場所です。最小のプランであり、Meraがそれを獲得したときはいつでも上げることができます。",
-    "startFreeTrial": "無料トライアルを開始する",
     "subscribeNow": "今すぐ登録する",
     "planRecommendation": "1日に約{{count}}件の記事を開いています。{{plan}}は1日最大{{limit}}件を分析するため、常にあなたが読むより多くあります。",
     "sandboxOnProduction": "これはサンドボックス（テスト）購入であり、アプリは本番環境サーバーに接続されています。サンドボックスレシートはステージング環境でのみ受け入れられるため、本番環境ではこの購入を確認することはありません。待機しても役に立ちません。アプリをステージング環境に向けて購入をテストしてください。",
-    "planPending": "{{plan}} · 有効化中"
+    "planPending": "{{plan}} · 有効化中",
+    "perMonth": "/月"
   },
   "tabs": {
     "deck": "フィード",
@@ -1460,7 +1462,6 @@
     "textSizeStepDefault": "デフォルト",
     "textSizeStepLarge": "大きい",
     "textSizeStepLarger": "より大きい",
-    "textSizeStepLargest": "最大",
     "deviceTextSizeHint": "さらに大きなテキストの場合は、デバイスの設定で表示と明るさを使用してください。"
   },
   "freeTier": {

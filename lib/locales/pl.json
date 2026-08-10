@@ -24,7 +24,8 @@
     "offlineBanner": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości — będziemy dalej próbować.",
     "offlineBannerOffline": "Jesteś offline. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
     "offlineBannerInternetDown": "Brak dostępu do internetu. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
-    "offlineBannerServerDown": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować."
+    "offlineBannerServerDown": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
+    "beta": "Beta"
   },
   "auth": {
     "reauthBanner": "Zaloguj się ponownie, aby zsynchronizować",
@@ -488,7 +489,11 @@
     "extractedMetadataEventTypeLabel": "Typ zdarzenia",
     "extractedMetadataPlacesLabel": "Miejsca",
     "extractedMetadataEntitiesLabel": "Jednostki",
-    "extractedMetadataCaption": "Wyekstrahowane przez AI, nie zweryfikowany fakt"
+    "extractedMetadataCaption": "Wyekstrahowane przez AI, nie zweryfikowany fakt",
+    "factCheckTitle": "Sprawdzanie faktów",
+    "factCheckOn": "Włączone — Mera może przeszukiwać sieć, aby sprawdzić roszczenia w artykule",
+    "factCheckOff": "Wyłączone",
+    "factCheckDescription": "Gdy to jest włączone, sprawdzenie artykułu wysyła go na nasz serwer i do dostawcy wyszukiwania w celu weryfikacji jego roszczeń. Nic innego nie idzie z nim — nie Twoje fakty, nie Twój kanał, nie to, kim jesteś. Domyślnie wyłączone."
   },
   "manageData": {
     "deleting": "Usuwanie...",
@@ -880,11 +885,9 @@
     "expiresOn": "Wygasa",
     "lifetime": "Dożywotnia",
     "managePlan": "Zarządzaj subskrypcją",
-    "periodIntro": "Wprowadzająca",
     "periodLabel": "Okres",
     "periodNormal": "Standardowy",
     "periodPromotional": "Promocyjny",
-    "periodTrial": "Bezpłatny okres próbny",
     "planIndividual": "Indywidualny",
     "planLabel": "Plan",
     "planProfessional": "Profesjonalny",
@@ -917,13 +920,12 @@
     "turnMeraBackOn": "Włącz Merę ponownie",
     "para1": "Mera News mogłaby być bezpłatna. Oznaczałoby to tylko, że ktoś inny zapłacałby: reklamujący kupujący Twoją uwagę, Twoje dane, albo pozytywny artykuł. Wiele tego, co wygląda jak wiadomości, jest dokładnie tym.",
     "para2": "Media finansowane z reklam nie mają pułapu. Ani na to, ile pobierają od Ciebie, ani na to, jak to jest potem wykorzystywane. Nie chcemy być tą firmą, więc tutaj umowa jest prosta. Ty zachowujesz swoje dane. Oprogramowanie wykonuje pracę. Ty za to płacisz.",
-    "para3Trial": "Sugerujemy zacząć od bezpłatnego tygodnia Individual. To plan, który potrzebuje większość ludzi. Po tygodniu możesz zostać, przejść do Starter lub do Professional, w zależności od tego, co Ci się najbardziej podoba.",
     "para3NoTrial": "Starter to dobre miejsce na początek. To najmniejszy plan i możesz przejść wyżej, kiedy Mera to sobie zasłuży.",
-    "startFreeTrial": "Uruchom bezpłatny okres próbny",
     "subscribeNow": "Subskrybuj teraz",
     "planRecommendation": "Otwierasz około {{count}} artykułów dziennie. {{plan}} analizuje do {{limit}} dziennie, więc zawsze będzie więcej niż się przejrzy.",
     "sandboxOnProduction": "To jest zakup sandbox (testowy), a aplikacja jest połączona z serwerem produkcyjnym. Paragony sandbox są akceptowane tylko w staging, więc produkcja nigdy nie potwierdzi tego zakupu — czekanie nie pomoże. Skieruj aplikację na środowisko staging, aby testować zakupy.",
-    "planPending": "{{plan}} · uaktywnianie"
+    "planPending": "{{plan}} · uaktywnianie",
+    "perMonth": "/miesiąc"
   },
   "tabs": {
     "deck": "Strumień",
@@ -1486,7 +1488,6 @@
     "textSizeStepDefault": "Domyślny",
     "textSizeStepLarge": "Duży",
     "textSizeStepLarger": "Większy",
-    "textSizeStepLargest": "Największy",
     "deviceTextSizeHint": "Aby uzyskać jeszcze większy tekst, użyj Wyświetlacza i Jasności w ustawieniach urządzenia."
   },
   "freeTier": {

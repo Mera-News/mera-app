@@ -24,7 +24,8 @@
     "offlineBanner": "Langsame oder keine Verbindung zu Mera. Zeige gespeicherte Nachrichten — wir versuchen es weiter.",
     "offlineBannerOffline": "Sie sind offline. Gespeicherte Nachrichten werden angezeigt, und wir versuchen es weiter.",
     "offlineBannerInternetDown": "Kein Internetzugang. Gespeicherte Nachrichten werden angezeigt, und wir versuchen es weiter.",
-    "offlineBannerServerDown": "Langsame oder keine Verbindung zu Mera. Gespeicherte Nachrichten werden angezeigt, und wir versuchen es weiter."
+    "offlineBannerServerDown": "Langsame oder keine Verbindung zu Mera. Gespeicherte Nachrichten werden angezeigt, und wir versuchen es weiter.",
+    "beta": "Beta"
   },
   "auth": {
     "reauthBanner": "Melden Sie sich erneut an, um zu synchronisieren",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "Ereignistyp",
     "extractedMetadataPlacesLabel": "Orte",
     "extractedMetadataEntitiesLabel": "Entitäten",
-    "extractedMetadataCaption": "Von KI extrahiert, nicht verifizierte Fakten"
+    "extractedMetadataCaption": "Von KI extrahiert, nicht verifizierte Fakten",
+    "factCheckTitle": "Faktenprüfung",
+    "factCheckOn": "An – Mera kann das Web durchsuchen, um die Behauptungen einer Story zu überprüfen",
+    "factCheckOff": "Aus",
+    "factCheckDescription": "Wenn dies an ist, wird deine Story an unseren Server und an einen Suchdienstleister gesendet, um ihre Behauptungen zu überprüfen. Nichts anderes geht damit mit – nicht deine Fakten, nicht dein Feed, nicht wer du bist. Standardmäßig aus."
   },
   "manageData": {
     "deleting": "Wird gelöscht...",
@@ -868,11 +873,9 @@
     "expiresOn": "Läuft ab am",
     "lifetime": "Lebenslang",
     "managePlan": "Abo verwalten",
-    "periodIntro": "Einführung",
     "periodLabel": "Zeitraum",
     "periodNormal": "Standard",
     "periodPromotional": "Aktion",
-    "periodTrial": "Kostenlose Testphase",
     "planStarter": "Starter",
     "planIndividual": "Einzelperson",
     "planLabel": "Tarif",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "Schalte Mera wieder ein",
     "para1": "Mera News könnte kostenlos sein. Das würde nur bedeuten, dass jemand anderes bezahlt: ein Werbetreibender, der deine Aufmerksamkeit, deine Daten oder einen freundlichen Artikel kauft. Ein großer Teil dessen, was wie Nachrichten aussieht, ist genau das.",
     "para2": "Werbefinanzierte Medien haben keine Obergrenze. Weder darin, wie viel sie von dir nehmen, noch wozu das später verwendet wird. Wir wollen nicht diese Firma sein, also ist der Deal hier einfach. Du behältst deine Daten. Die Software macht die Arbeit. Du zahlst dafür.",
-    "para3Trial": "Wir würden dir vorschlagen, mit der einwöchigen kostenlosen Testversion von Individual zu beginnen. Es ist der Plan, den die meisten Menschen letztendlich brauchen. Nach der Woche kannst du dabei bleiben, zu Starter herabstufen oder zu Professional heraufsteigen, je nachdem, was dir am besten passt.",
     "para3NoTrial": "Starter ist ein guter Einstiegspunkt. Es ist der kleinste Plan, und du kannst jederzeit upgraden, wenn Mera es verdient.",
-    "startFreeTrial": "Kostenlose Testversion starten",
     "subscribeNow": "Jetzt abonnieren",
     "planRecommendation": "Sie öffnen etwa {{count}} Artikel pro Tag. {{plan}} analysiert bis zu {{limit}} pro Tag, daher gibt es immer mehr, als Sie durcharbeiten.",
     "sandboxOnProduction": "Dies ist ein Sandbox-Kauf (Test) und die App ist mit dem Produktionsserver verbunden. Sandbox-Quittungen werden nur auf Staging akzeptiert, daher wird Production diesen Kauf niemals bestätigen – Warten wird nicht helfen. Richten Sie die App auf die Staging-Umgebung aus, um Käufe zu testen.",
-    "planPending": "{{plan}} · wird aktiviert"
+    "planPending": "{{plan}} · wird aktiviert",
+    "perMonth": "/Monat"
   },
   "tabs": {
     "deck": "Nachrichten",
@@ -1460,7 +1462,6 @@
     "textSizeStepDefault": "Standard",
     "textSizeStepLarge": "Groß",
     "textSizeStepLarger": "Größer",
-    "textSizeStepLargest": "Am größten",
     "deviceTextSizeHint": "Für noch größeren Text verwende Anzeige und Helligkeit in deinen Geräteeinstellungen."
   },
   "freeTier": {

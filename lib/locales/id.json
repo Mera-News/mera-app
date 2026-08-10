@@ -24,7 +24,8 @@
     "offlineBanner": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan — kami akan terus mencoba.",
     "offlineBannerOffline": "Anda sedang offline. Menampilkan berita tersimpan dan kami akan terus mencoba.",
     "offlineBannerInternetDown": "Tidak ada akses internet. Menampilkan berita tersimpan dan kami akan terus mencoba.",
-    "offlineBannerServerDown": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan dan kami akan terus mencoba."
+    "offlineBannerServerDown": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan dan kami akan terus mencoba.",
+    "beta": "Beta"
   },
   "auth": {
     "reauthBanner": "Masuk lagi untuk sinkronisasi",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "Jenis peristiwa",
     "extractedMetadataPlacesLabel": "Tempat",
     "extractedMetadataEntitiesLabel": "Entitas",
-    "extractedMetadataCaption": "Diekstrak AI, bukan fakta terverifikasi"
+    "extractedMetadataCaption": "Diekstrak AI, bukan fakta terverifikasi",
+    "factCheckTitle": "Pemeriksaan fakta",
+    "factCheckOn": "Aktif — Mera dapat mencari web untuk memeriksa klaim cerita",
+    "factCheckOff": "Nonaktif",
+    "factCheckDescription": "Ketika ini aktif, pemeriksaan cerita mengirimnya ke server kami dan ke penyedia pencarian untuk memverifikasi klaimnya. Tidak ada yang lain yang ikut serta, bukan fakta Anda, bukan feed Anda, bukan siapa Anda. Nonaktif secara default."
   },
   "manageData": {
     "deleting": "Menghapus...",
@@ -868,11 +873,9 @@
     "expiresOn": "Berakhir pada",
     "lifetime": "Seumur hidup",
     "managePlan": "Kelola langganan",
-    "periodIntro": "Perkenalan",
     "periodLabel": "Periode",
     "periodNormal": "Standar",
     "periodPromotional": "Promosi",
-    "periodTrial": "Uji coba gratis",
     "planStarter": "Pemula",
     "planIndividual": "Individu",
     "planLabel": "Paket",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "Aktifkan Mera kembali",
     "para1": "Mera News bisa saja gratis. Tetapi itu hanya berarti ada orang lain yang membayar: seorang pengiklan yang membeli perhatian Anda, data Anda, atau liputan yang bersahabat. Banyak dari yang terlihat seperti berita adalah persis itu.",
     "para2": "Media yang didanai iklan tidak memiliki batas. Bukan untuk berapa banyak yang diambilnya dari Anda, dan juga tidak untuk apa yang digunakan untuk itu nanti. Kami tidak ingin menjadi perusahaan itu, jadi kesepakatan di sini sederhana. Anda menjaga data Anda. Perangkat lunak melakukan pekerjaan. Anda membayarnya.",
-    "para3Trial": "Kami sarankan memulai dengan uji coba gratis satu minggu dari Individual. Itu adalah paket yang paling banyak orang perlukan. Setelah seminggu Anda dapat tetap menggunakannya, turun ke Starter, atau naik ke Professional, mana pun yang paling sesuai untuk Anda.",
     "para3NoTrial": "Starter adalah tempat yang baik untuk memulai. Ini adalah paket terkecil, dan Anda dapat naik kapan saja Mera telah membuktikannya.",
-    "startFreeTrial": "Mulai uji coba gratis Anda",
     "subscribeNow": "Berlangganan sekarang",
     "planRecommendation": "Anda membuka sekitar {{count}} artikel sehari. {{plan}} menganalisis hingga {{limit}} sehari jadi selalu ada lebih banyak dari yang akan Anda lalui.",
     "sandboxOnProduction": "Ini adalah pembelian sandbox (tes) dan aplikasi terhubung ke server production. Kuitansi sandbox hanya diterima di staging, jadi production tidak akan pernah mengonfirmasi pembelian ini — menunggu tidak akan membantu. Arahkan aplikasi ke environment staging untuk menguji pembelian.",
-    "planPending": "{{plan}} · sedang diaktifkan"
+    "planPending": "{{plan}} · sedang diaktifkan",
+    "perMonth": "/bulan"
   },
   "tabs": {
     "deck": "Umpan",
@@ -1460,7 +1462,6 @@
     "textSizeStepDefault": "Standar",
     "textSizeStepLarge": "Besar",
     "textSizeStepLarger": "Lebih besar",
-    "textSizeStepLargest": "Terbesar",
     "deviceTextSizeHint": "Untuk teks yang lebih besar, gunakan Tampilan & Kecerahan di pengaturan perangkat Anda."
   },
   "freeTier": {

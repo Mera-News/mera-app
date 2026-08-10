@@ -24,7 +24,8 @@
     "offlineBanner": "Traag of geen verbinding met Mera. Weergeven van opgeslagen nieuws — we proberen het opnieuw.",
     "offlineBannerOffline": "Je bent offline. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
     "offlineBannerInternetDown": "Geen internetverbinding. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
-    "offlineBannerServerDown": "Langzame of geen verbinding met Mera. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw."
+    "offlineBannerServerDown": "Langzame of geen verbinding met Mera. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
+    "beta": "Beta"
   },
   "auth": {
     "reauthBanner": "Log opnieuw in om te synchroniseren",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "Gebeurtenistype",
     "extractedMetadataPlacesLabel": "Plaatsen",
     "extractedMetadataEntitiesLabel": "Entiteiten",
-    "extractedMetadataCaption": "AI-geëxtraheerd, geen geverifieerd feit"
+    "extractedMetadataCaption": "AI-geëxtraheerd, geen geverifieerd feit",
+    "factCheckTitle": "Feitencheck",
+    "factCheckOn": "Aan: Mera kan het web doorzoeken om de beweringen van een verhaal te controleren",
+    "factCheckOff": "Uit",
+    "factCheckDescription": "Wanneer dit aanstaat, verzendt het controleren van een verhaal het naar onze server en vervolgens naar een zoekprovider om de beweringen ervan te verifiëren. Niets anders gaat mee. Niet je feiten, niet je feed, niet wie je bent. Standaard uit."
   },
   "manageData": {
     "deleting": "Verwijderen...",
@@ -868,11 +873,9 @@
     "expiresOn": "Verloopt op",
     "lifetime": "Levenslang",
     "managePlan": "Abonnement beheren",
-    "periodIntro": "Introductie",
     "periodLabel": "Periode",
     "periodNormal": "Standaard",
     "periodPromotional": "Promotioneel",
-    "periodTrial": "Gratis proefperiode",
     "planIndividual": "Individueel",
     "planLabel": "Abonnement",
     "planProfessional": "Professioneel",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "Mera opnieuw inschakelen",
     "para1": "Mera News zou gratis kunnen zijn. Dat zou alleen betekenen dat iemand anders betaalde: een adverteerder die je aandacht, je gegevens, of een gunstig artikel koopt. Veel van wat als nieuws uitziet, is precies dat.",
     "para2": "Met advertenties gefinancieerde media hebben geen grenzen. Niet in hoeveel het van je neemt, en niet in waarvoor dat later wordt gebruikt. We willen dat bedrijf niet zijn, dus de afspraak hier is simpel. Jij houdt je gegevens. De software doet het werk. Je betaalt ervoor.",
-    "para3Trial": "We stellen voor met de gratis week van Individual te beginnen. Het is het abonnement dat de meeste mensen uiteindelijk nodig hebben. Na de week kun je erop blijven, naar Starter gaan, of naar Professional, wat het best voor je uitkomt.",
     "para3NoTrial": "Starter is een goed beginpunt. Het is het kleinste abonnement en je kunt altijd upgraden wanneer Mera het verdiend heeft.",
-    "startFreeTrial": "Start je gratis proefperiode",
     "subscribeNow": "Abonneer je nu",
     "planRecommendation": "Je opent ongeveer {{count}} artikelen per dag. {{plan}} analyseert tot {{limit}} per dag zodat er altijd meer is dan je haalt.",
     "sandboxOnProduction": "Dit is een sandbox (test) aankoop en de app is verbonden met de productie server. Sandbox bonnetjes worden alleen geaccepteerd op staging, dus production zal deze aankoop nooit bevestigen — wachten zal niet helpen. Wijs de app naar de staging omgeving om aankopen te testen.",
-    "planPending": "{{plan}} · activering"
+    "planPending": "{{plan}} · activering",
+    "perMonth": "/maand"
   },
   "tabs": {
     "deck": "Feed",
@@ -1460,7 +1462,6 @@
     "textSizeStepDefault": "Standaard",
     "textSizeStepLarge": "Groot",
     "textSizeStepLarger": "Groter",
-    "textSizeStepLargest": "Grootste",
     "deviceTextSizeHint": "Voor nog grotere tekst, gebruik Scherm en helderheid in je apparaatinstellingen."
   },
   "freeTier": {

@@ -24,7 +24,8 @@
     "offlineBanner": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz — denemelere devam edeceğiz.",
     "offlineBannerOffline": "Çevrimdışısın. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
     "offlineBannerInternetDown": "İnternet bağlantısı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
-    "offlineBannerServerDown": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz."
+    "offlineBannerServerDown": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
+    "beta": "Beta"
   },
   "auth": {
     "reauthBanner": "Senkronize etmek için yeniden giriş yap",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "Olay türü",
     "extractedMetadataPlacesLabel": "Yerler",
     "extractedMetadataEntitiesLabel": "Varlıklar",
-    "extractedMetadataCaption": "Yapay zeka tarafından çıkartıldı, doğrulanmamış gerçek"
+    "extractedMetadataCaption": "Yapay zeka tarafından çıkartıldı, doğrulanmamış gerçek",
+    "factCheckTitle": "Gerçek Doğrulama",
+    "factCheckOn": "Açık — Mera bir hikayenin iddialarını doğrulamak için web araması yapabilir",
+    "factCheckOff": "Kapalı",
+    "factCheckDescription": "Bu açık olduğunda, bir hikayeyi doğrulamak onu sunucumuza ve bir arama sağlayıcısına gönderir. Hiçbir şey onunla gitmiyor — gerçekleriniz yok, akışınız yok, kim olduğunuz yok. Varsayılan olarak kapalı."
   },
   "manageData": {
     "deleting": "Siliniyor...",
@@ -868,11 +873,9 @@
     "expiresOn": "Bitiş tarihi",
     "lifetime": "Ömür boyu",
     "managePlan": "Aboneliği yönet",
-    "periodIntro": "Tanıtım",
     "periodLabel": "Dönem",
     "periodNormal": "Standart",
     "periodPromotional": "Promosyon",
-    "periodTrial": "Ücretsiz deneme",
     "planStarter": "Başlangıç",
     "planIndividual": "Bireysel",
     "planLabel": "Plan",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "Mera'yı tekrar açın",
     "para1": "Mera News ücretsiz olabilirdi. Ama bu birisinin ödediği anlamına gelirdi: reklam veren seni satın alıyor, verilerin alınıyor veya dostça bir yazı. Haberin çoğu tam olarak budur.",
     "para2": "Reklam destekli medyanın sınırı yok. Ne kadarını senden aldığının ve sonradan ne için kullanıldığının. Biz o şirket olmak istemiyoruz, bu yüzden buradaki anlaşma basit. Verileriniz sizde kalır. Yazılım işi yapır. Siz için ödersiniz.",
-    "para3Trial": "Individual'ın bir haftalık ücretsiz denemesini başlatmanızı öneriyoruz. Çoğu insanın ihtiyaç duyduğu plan budur. Bir haftadan sonra bunu tutabilir, Starter'a geçebilir veya Professional'a yükseltebilir, hangisi size en uygunsa.",
     "para3NoTrial": "Starter başlamak için iyi bir yerdir. En küçük plandır ve istediğiniz zaman yükseltebilirsiniz.",
-    "startFreeTrial": "Ücretsiz denemeni başlat",
     "subscribeNow": "Şimdi abone ol",
     "planRecommendation": "Günde yaklaşık {{count}} makale açıyorsun. {{plan}} günde {{limit}}'e kadar analiz ediyor, bu yüzden her zaman geçeceğinden daha fazla var.",
     "sandboxOnProduction": "Bu bir sandbox (test) satın almadır ve uygulama production sunucusuna bağlıdır. Sandbox makbuzları yalnızca staging'de kabul edilir, bu nedenle production hiçbir zaman bu satın almayı onaylamayacaktır — bekleme yardımcı olmayacaktır. Satın almaları test etmek için uygulamayı staging ortamına yönlendirin.",
-    "planPending": "{{plan}} · etkinleştiriliyor"
+    "planPending": "{{plan}} · etkinleştiriliyor",
+    "perMonth": "/ay"
   },
   "tabs": {
     "deck": "Akış",
@@ -1462,7 +1464,6 @@
     "textSizeStepDefault": "Varsayılan",
     "textSizeStepLarge": "Büyük",
     "textSizeStepLarger": "Daha büyük",
-    "textSizeStepLargest": "En büyük",
     "deviceTextSizeHint": "Daha da büyük metin için cihaz ayarlarında Görüntü ve Parlaklık kullanın."
   },
   "freeTier": {

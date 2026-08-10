@@ -24,7 +24,8 @@
     "offlineBanner": "与Mera连接缓慢或无连接。正在显示保存的新闻——我们会继续尝试。",
     "offlineBannerOffline": "您已离线。显示保存的新闻，我们会继续尝试。",
     "offlineBannerInternetDown": "无互联网连接。显示保存的新闻，我们会继续尝试。",
-    "offlineBannerServerDown": "与Mera连接缓慢或无连接。显示保存的新闻，我们会继续尝试。"
+    "offlineBannerServerDown": "与Mera连接缓慢或无连接。显示保存的新闻，我们会继续尝试。",
+    "beta": "测试版"
   },
   "auth": {
     "reauthBanner": "重新登录以同步",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "事件类型",
     "extractedMetadataPlacesLabel": "地点",
     "extractedMetadataEntitiesLabel": "实体",
-    "extractedMetadataCaption": "AI提取，未验证的事实"
+    "extractedMetadataCaption": "AI提取，未验证的事实",
+    "factCheckTitle": "事实核查",
+    "factCheckOn": "开启 — Mera 可以搜索网络来核查报道的声明",
+    "factCheckOff": "关闭",
+    "factCheckDescription": "打开时，核查一则报道会将其发送到我们的服务器以及搜索提供商来验证其声明。没有其他内容随之而来 — 不是您的事实，不是您的资讯，不是您是谁。默认关闭。"
   },
   "manageData": {
     "deleting": "删除中...",
@@ -868,11 +873,9 @@
     "expiresOn": "到期日",
     "lifetime": "永久",
     "managePlan": "管理订阅",
-    "periodIntro": "介绍期",
     "periodLabel": "周期",
     "periodNormal": "标准",
     "periodPromotional": "促销",
-    "periodTrial": "免费试用",
     "planStarter": "入门版",
     "planIndividual": "个人版",
     "planLabel": "方案",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "重新启用 Mera",
     "para1": "Mera News本可以免费。只需有人付费即可：广告商购买您的关注，您的数据，或一篇好评。许多看起来像新闻的内容正是这样。",
     "para2": "广告驱动的媒体没有上限。既没有从您那里索取多少的上限，也没有之后如何使用的上限。我们不想成为那样的公司，所以这里的协议很简单。您保留您的数据。软件完成工作。您支付费用。",
-    "para3Trial": "我们建议从Individual套餐的免费试用一周开始。这是大多数人最终需要的方案。一周后您可以继续使用，转换到Starter，或升级到Professional，选择最适合您的。",
     "para3NoTrial": "Starter是一个不错的起点。它是最小的方案，您可以在Mera证明自己值得的时候随时升级。",
-    "startFreeTrial": "开始免费试用",
     "subscribeNow": "立即订阅",
     "planRecommendation": "您每天大约打开{{count}}篇文章。{{plan}}每天分析最多{{limit}}篇，所以总会有比您能读完的更多。",
     "sandboxOnProduction": "这是一笔沙箱(测试)购买，应用连接到 production 服务器。沙箱收据仅在 staging 上被接受，因此 production 永远不会确认此次购买——等待不会有帮助。请将应用指向 staging 环境来测试购买。",
-    "planPending": "{{plan}} · 激活中"
+    "planPending": "{{plan}} · 激活中",
+    "perMonth": "/月"
   },
   "tabs": {
     "deck": "信息流",
@@ -1461,7 +1463,6 @@
     "textSizeStepDefault": "默认",
     "textSizeStepLarge": "大",
     "textSizeStepLarger": "更大",
-    "textSizeStepLargest": "最大",
     "deviceTextSizeHint": "如需更大的文本，请在设备设置中使用显示与亮度。"
   },
   "freeTier": {

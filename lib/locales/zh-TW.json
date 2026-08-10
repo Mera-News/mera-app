@@ -24,7 +24,8 @@
     "offlineBanner": "與Mera連線緩慢或無連線。正在顯示已儲存的新聞——我們會繼續嘗試。",
     "offlineBannerOffline": "您目前離線。正在顯示已儲存的新聞，我們會繼續嘗試。",
     "offlineBannerInternetDown": "無法連接網際網路。正在顯示已儲存的新聞，我們會繼續嘗試。",
-    "offlineBannerServerDown": "與Mera的連線速度緩慢或無連線。正在顯示已儲存的新聞，我們會繼續嘗試。"
+    "offlineBannerServerDown": "與Mera的連線速度緩慢或無連線。正在顯示已儲存的新聞，我們會繼續嘗試。",
+    "beta": "測試版"
   },
   "auth": {
     "reauthBanner": "重新登入以同步",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "事件類型",
     "extractedMetadataPlacesLabel": "地點",
     "extractedMetadataEntitiesLabel": "實體",
-    "extractedMetadataCaption": "AI提取，未經驗證的事實"
+    "extractedMetadataCaption": "AI提取，未經驗證的事實",
+    "factCheckTitle": "事實查核",
+    "factCheckOn": "開啟 — Mera 可搜尋網路以查核報導的聲明",
+    "factCheckOff": "關閉",
+    "factCheckDescription": "啟用此功能後，查核報導會將其傳送到我們的伺服器和搜尋提供商以驗證聲明。其他任何內容都不會跟隨 — 不是你的事實、不是你的動態、不是你是誰。預設為關閉。"
   },
   "manageData": {
     "deleting": "刪除中...",
@@ -868,11 +873,9 @@
     "expiresOn": "到期日",
     "lifetime": "終身",
     "managePlan": "管理訂閱",
-    "periodIntro": "促銷期",
     "periodLabel": "期間",
     "periodNormal": "標準",
     "periodPromotional": "促銷",
-    "periodTrial": "免費試用",
     "planStarter": "入門版",
     "planIndividual": "個人版",
     "planLabel": "方案",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "重新開啟 Mera",
     "para1": "Mera News可以免費使用。但那樣的話，就會有人代你付費，可能是購買你的注意力的廣告商、你的資料，或是一份友善的文章。很多看起來像新聞的東西正是這樣。",
     "para2": "廣告資助的媒體沒有上限。不限制它從你身上汲取多少，也不限制稍後用途。我們不想成為那樣的公司，所以這裡的協議很簡單。你保留你的資料。軟體完成工作。你付款。",
-    "para3Trial": "我們建議先免費試用一週的Individual方案。這是大多數人最後選擇的方案。一週後，你可以繼續使用它，降級到Starter，或升級到Professional，任選其一。",
     "para3NoTrial": "Starter方案是個不錯的開始。這是最小的方案，你可以在Mera證明自己值得時隨時升級。",
-    "startFreeTrial": "開始免費試用",
     "subscribeNow": "立即訂閱",
     "planRecommendation": "你每天大約打開{{count}}篇文章。{{plan}}每天最多可分析{{limit}}篇，所以你永遠有看不完的內容。",
     "sandboxOnProduction": "這是一筆沙箱(測試)購買，應用連接到 production 伺服器。沙箱收據僅在 staging 上被接受，因此 production 永遠不會確認此次購買——等待不會有幫助。請將應用指向 staging 環境來測試購買。",
-    "planPending": "{{plan}} · 啟用中"
+    "planPending": "{{plan}} · 啟用中",
+    "perMonth": "/月"
   },
   "tabs": {
     "deck": "資訊流",
@@ -1461,7 +1463,6 @@
     "textSizeStepDefault": "預設",
     "textSizeStepLarge": "大",
     "textSizeStepLarger": "更大",
-    "textSizeStepLargest": "最大",
     "deviceTextSizeHint": "如需更大的文字，請使用裝置設定中的「顯示與亮度」。"
   },
   "freeTier": {

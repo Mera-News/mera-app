@@ -24,7 +24,8 @@
     "offlineBanner": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu — chúng tôi sẽ tiếp tục cố gắng.",
     "offlineBannerOffline": "Bạn đang ngoại tuyến. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
     "offlineBannerInternetDown": "Không có kết nối Internet. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
-    "offlineBannerServerDown": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử."
+    "offlineBannerServerDown": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
+    "beta": "Beta"
   },
   "auth": {
     "reauthBanner": "Đăng nhập lại để đồng bộ",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "Loại sự kiện",
     "extractedMetadataPlacesLabel": "Địa điểm",
     "extractedMetadataEntitiesLabel": "Thực thể",
-    "extractedMetadataCaption": "Được trích xuất bằng AI, không phải sự kiện đã xác minh"
+    "extractedMetadataCaption": "Được trích xuất bằng AI, không phải sự kiện đã xác minh",
+    "factCheckTitle": "Kiểm tra sự thật",
+    "factCheckOn": "Bật — Mera có thể tìm kiếm trên web để kiểm tra những khẳng định trong một câu chuyện",
+    "factCheckOff": "Tắt",
+    "factCheckDescription": "Khi điều này bật, việc kiểm tra một câu chuyện sẽ gửi nó đến máy chủ của chúng tôi và đến một nhà cung cấp tìm kiếm để xác minh các khẳng định của nó. Không có gì khác đi cùng — không phải dữ kiện của bạn, không phải bản tin của bạn, không phải danh tính của bạn. Tắt theo mặc định."
   },
   "manageData": {
     "deleting": "Đang xóa...",
@@ -868,11 +873,9 @@
     "expiresOn": "Hết hạn vào",
     "lifetime": "Trọn đời",
     "managePlan": "Quản lý gói đăng ký",
-    "periodIntro": "Giới thiệu",
     "periodLabel": "Chu kỳ",
     "periodNormal": "Tiêu chuẩn",
     "periodPromotional": "Khuyến mãi",
-    "periodTrial": "Dùng thử miễn phí",
     "planStarter": "Cơ bản",
     "planIndividual": "Cá nhân",
     "planLabel": "Gói",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "Bật Mera lại",
     "para1": "Mera News có thể miễn phí. Đó chỉ có nghĩa là ai đó khác trả tiền: một nhà quảng cáo mua sự chú ý của bạn, dữ liệu của bạn, hoặc một bài viết tích cực. Rất nhiều thứ trông giống tin tức chính là như thế.",
     "para2": "Phương tiện tài trợ bởi quảng cáo không có giới hạn. Không có giới hạn về những gì nó lấy từ bạn, và không có giới hạn về cách sử dụng sau đó. Chúng tôi không muốn là công ty đó, vì vậy thỏa thuận ở đây rất đơn giản. Bạn giữ dữ liệu của bạn. Phần mềm làm công việc. Bạn trả tiền cho nó.",
-    "para3Trial": "Chúng tôi đề xuất bắt đầu với bản dùng thử miễn phí một tuần của gói Individual. Đó là gói mà hầu hết mọi người cần. Sau tuần đó, bạn có thể ở lại, chuyển xuống Starter hoặc lên Professional, tùy theo sở thích của bạn.",
     "para3NoTrial": "Gói Starter là một nơi tốt để bắt đầu. Đó là gói nhỏ nhất, và bạn có thể nâng cấp bất kỳ khi nào Mera xứng đáng.",
-    "startFreeTrial": "Bắt đầu bản dùng thử miễn phí",
     "subscribeNow": "Đăng ký ngay",
     "planRecommendation": "Bạn mở khoảng {{count}} bài viết mỗi ngày. {{plan}} phân tích tối đa {{limit}} mỗi ngày vì vậy luôn có nhiều hơn những gì bạn sẽ xem hết.",
     "sandboxOnProduction": "Đây là một giao dịch mua hàng sandbox (kiểm thử) và ứng dụng được kết nối với máy chủ production. Hóa đơn sandbox chỉ được chấp nhận trên staging, vì vậy production sẽ không bao giờ xác nhận giao dịch mua hàng này — chờ đợi sẽ không giúp ích. Hãy hướng ứng dụng tới môi trường staging để kiểm thử các giao dịch mua hàng.",
-    "planPending": "{{plan}} · đang kích hoạt"
+    "planPending": "{{plan}} · đang kích hoạt",
+    "perMonth": "/tháng"
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -1461,7 +1463,6 @@
     "textSizeStepDefault": "Mặc định",
     "textSizeStepLarge": "Lớn",
     "textSizeStepLarger": "Lớn hơn",
-    "textSizeStepLargest": "Lớn nhất",
     "deviceTextSizeHint": "Để có văn bản lớn hơn, hãy sử dụng Hiển thị và Độ sáng trong cài đặt thiết bị của bạn."
   },
   "freeTier": {

@@ -24,7 +24,8 @@
     "offlineBanner": "Conexão lenta ou ausente com Mera. Exibindo notícias salvas — continuaremos tentando.",
     "offlineBannerOffline": "Você está offline. Exibindo notícias salvas, e continuaremos tentando.",
     "offlineBannerInternetDown": "Sem acesso à internet. Exibindo notícias salvas, e continuaremos tentando.",
-    "offlineBannerServerDown": "Conexão lenta ou ausente com Mera. Exibindo notícias salvas, e continuaremos tentando."
+    "offlineBannerServerDown": "Conexão lenta ou ausente com Mera. Exibindo notícias salvas, e continuaremos tentando.",
+    "beta": "Beta"
   },
   "auth": {
     "reauthBanner": "Faça login novamente para sincronizar",
@@ -476,7 +477,11 @@
     "extractedMetadataEventTypeLabel": "Tipo de evento",
     "extractedMetadataPlacesLabel": "Locais",
     "extractedMetadataEntitiesLabel": "Entidades",
-    "extractedMetadataCaption": "Extraído por IA, não é um fato verificado"
+    "extractedMetadataCaption": "Extraído por IA, não é um fato verificado",
+    "factCheckTitle": "Verificação de fatos",
+    "factCheckOn": "Ativada — Mera pode buscar na web para verificar as declarações de uma história",
+    "factCheckOff": "Desativada",
+    "factCheckDescription": "Quando ativada, verificar uma história a envia ao nosso servidor e a um provedor de busca para verificar suas declarações. Nada mais vai com ela — não seus fatos, não seu feed, não quem você é. Desativada por padrão."
   },
   "manageData": {
     "deleting": "Excluindo...",
@@ -868,11 +873,9 @@
     "expiresOn": "Expira em",
     "lifetime": "Vitalícia",
     "managePlan": "Gerenciar assinatura",
-    "periodIntro": "Introdutório",
     "periodLabel": "Período",
     "periodNormal": "Padrão",
     "periodPromotional": "Promocional",
-    "periodTrial": "Teste gratuito",
     "planIndividual": "Individual",
     "planLabel": "Plano",
     "planProfessional": "Profissional",
@@ -905,13 +908,12 @@
     "turnMeraBackOn": "Ativar Mera novamente",
     "para1": "Mera News poderia ser gratuito. Só significaria que outra pessoa estava pagando: um anunciante comprando sua atenção, seus dados, ou uma boa reputação. Muita coisa que parece notícia é exatamente isso.",
     "para2": "Mídia financiada por anúncios não tem limite. Nem em quanto leva de você, nem no que é usado depois. Não queremos ser essa empresa, então o acordo aqui é simples. Você mantém seus dados. O software faz o trabalho. Você paga por isso.",
-    "para3Trial": "Sugerimos começar com uma semana grátis do plano Individual. É o plano que a maioria das pessoas acaba precisando. Após a semana você pode continuar nele, descer para Starter, ou subir para Professional, o que achar melhor.",
     "para3NoTrial": "Starter é um bom lugar para começar. É o menor plano, e você pode subir sempre que Mera o mereça.",
-    "startFreeTrial": "Comece seu teste gratuito",
     "subscribeNow": "Assine agora",
     "planRecommendation": "Você abre cerca de {{count}} artigos por dia. {{plan}} analisa até {{limit}} por dia, então sempre há mais do que você vai conseguir ler.",
     "sandboxOnProduction": "Esta é uma compra sandbox (teste) e o aplicativo está conectado ao servidor de produção. Recibos sandbox só são aceitos em staging, então a produção nunca confirmará esta compra — esperar não ajudará. Aponte o aplicativo para o ambiente staging para testar compras.",
-    "planPending": "{{plan}} · ativando"
+    "planPending": "{{plan}} · ativando",
+    "perMonth": "/mês"
   },
   "tabs": {
     "deck": "Feed",
@@ -1460,7 +1462,6 @@
     "textSizeStepDefault": "Padrão",
     "textSizeStepLarge": "Grande",
     "textSizeStepLarger": "Maior",
-    "textSizeStepLargest": "Maior ainda",
     "deviceTextSizeHint": "Para texto ainda maior, use Exibição e Brilho nas configurações do seu dispositivo."
   },
   "freeTier": {

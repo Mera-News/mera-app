@@ -24,7 +24,8 @@
     "offlineBanner": "Connexion lente ou absente à Mera. Affichage des actualités enregistrées — nous continuons d'essayer.",
     "offlineBannerOffline": "Vous êtes hors ligne. Affichage des actualités enregistrées, nous continuons d'essayer.",
     "offlineBannerInternetDown": "Pas d'accès Internet. Affichage des actualités enregistrées, nous continuons d'essayer.",
-    "offlineBannerServerDown": "Connexion lente ou absente à Mera. Affichage des actualités enregistrées, nous continuons d'essayer."
+    "offlineBannerServerDown": "Connexion lente ou absente à Mera. Affichage des actualités enregistrées, nous continuons d'essayer.",
+    "beta": "Bêta"
   },
   "auth": {
     "reauthBanner": "Connectez-vous à nouveau pour synchroniser",
@@ -481,7 +482,11 @@
     "extractedMetadataEventTypeLabel": "Type d'événement",
     "extractedMetadataPlacesLabel": "Lieux",
     "extractedMetadataEntitiesLabel": "Entités",
-    "extractedMetadataCaption": "Extrait par IA, fait non vérifié"
+    "extractedMetadataCaption": "Extrait par IA, fait non vérifié",
+    "factCheckTitle": "Vérification des faits",
+    "factCheckOn": "Activé — Mera peut rechercher le Web pour vérifier les affirmations d'une histoire",
+    "factCheckOff": "Désactivé",
+    "factCheckDescription": "Quand c'est activé, la vérification d'une histoire l'envoie à notre serveur et à un fournisseur de recherche pour vérifier ses affirmations. Rien d'autre ne part avec elle — pas vos faits, pas votre fil, pas qui vous êtes. Désactivé par défaut."
   },
   "manageData": {
     "deleting": "Suppression...",
@@ -873,11 +878,9 @@
     "expiresOn": "Expire le",
     "lifetime": "À vie",
     "managePlan": "Gérer l'abonnement",
-    "periodIntro": "Introductif",
     "periodLabel": "Période",
     "periodNormal": "Standard",
     "periodPromotional": "Promotionnel",
-    "periodTrial": "Essai gratuit",
     "planStarter": "Starter",
     "planIndividual": "Individuel",
     "planLabel": "Forfait",
@@ -910,13 +913,12 @@
     "turnMeraBackOn": "Réactiver Mera",
     "para1": "Mera News pourrait être gratuit. Cela signifierait simplement que quelqu'un d'autre paierait : un annonceur achète votre attention, vos données, ou une bonne couverture. Beaucoup de ce qui semble être des actualités est exactement cela.",
     "para2": "Les médias financés par la pub n'ont pas de limite. Ni sur ce qu'ils vous prennent, ni sur ce que cela servira plus tard. Nous ne voulons pas être cette entreprise, donc le marché ici est simple. Vous gardez vos données. Le logiciel fait le travail. Vous le payez.",
-    "para3Trial": "Nous vous suggérons de commencer par l'essai gratuit d'une semaine de Individual. C'est le forfait que la plupart des gens finissent par utiliser. Après la semaine, vous pouvez rester dessus, passer à Starter, ou à Professional, selon ce qui vous convient le mieux.",
     "para3NoTrial": "Starter est un bon endroit pour commencer. C'est le plus petit forfait, et vous pouvez passer à un supérieur chaque fois que Mera l'aura mérité.",
-    "startFreeTrial": "Commencer votre essai gratuit",
     "subscribeNow": "S'abonner maintenant",
     "planRecommendation": "Vous ouvrez environ {{count}} articles par jour. {{plan}} analyse jusqu'à {{limit}} par jour, il y a donc toujours plus que vous ne pourrez lire.",
     "sandboxOnProduction": "Ceci est un achat sandbox (test) et l'application est connectée au serveur de production. Les reçus sandbox ne sont acceptés que sur staging, donc production ne confirmera jamais cet achat — attendre n'aidera pas. Pointez l'application vers l'environnement staging pour tester les achats.",
-    "planPending": "{{plan}} · activation"
+    "planPending": "{{plan}} · activation",
+    "perMonth": "/mois"
   },
   "tabs": {
     "deck": "Fil d'actu",
@@ -1465,7 +1467,6 @@
     "textSizeStepDefault": "Par défaut",
     "textSizeStepLarge": "Grand",
     "textSizeStepLarger": "Plus grand",
-    "textSizeStepLargest": "Le plus grand",
     "deviceTextSizeHint": "Pour un texte encore plus grand, utilisez Affichage et luminosité dans les paramètres de votre appareil."
   },
   "freeTier": {
