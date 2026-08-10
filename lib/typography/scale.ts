@@ -108,7 +108,7 @@ export function tokenFromClassName(className: string | undefined): TypeToken | n
  * steps ARE (the settings screen, its tests) would have had to drag the whole
  * database in with it.
  */
-export const TEXT_SCALE_STEPS = [0.9, 1, 1.15, 1.3, 1.5] as const;
+export const TEXT_SCALE_STEPS = [0.9, 1, 1.15, 1.3] as const;
 
 export type TextScale = (typeof TEXT_SCALE_STEPS)[number];
 
@@ -116,13 +116,7 @@ export const DEFAULT_TEXT_SCALE: TextScale = 1;
 
 /** Step identifiers, index-aligned with `TEXT_SCALE_STEPS`. Used for testIDs and
  *  to build i18n key names. */
-export const TEXT_SCALE_LABEL_KEYS = [
-  'compact',
-  'default',
-  'large',
-  'larger',
-  'largest',
-] as const;
+export const TEXT_SCALE_LABEL_KEYS = ['compact', 'default', 'large', 'larger'] as const;
 
 /**
  * Nearest valid step to an arbitrary number.
@@ -142,4 +136,39 @@ export function nearestTextScale(value: number): TextScale {
     }
   }
   return best;
+}
+
+/**
+ * The width, in dp, below which the DEFAULT (unset-preference) text scale
+ * should be the compact step rather than the designed 1x.
+ *
+ * 375dp (iPhone SE / 13 mini) and 360dp (small Androids) sit below this;
+ * both harness devices (393dp, 402dp) sit at or above it with >=13dp of
+ * margin, so a cut anywhere in 390-400 would have made harness runs a coin
+ * flip on which branch they exercised. Picked to be roomy on both sides
+ * rather than tight on either.
+ */
+const COMPACT_DEFAULT_WIDTH_THRESHOLD_DP = 380;
+
+/**
+ * The text scale to apply when the user has never made an explicit choice,
+ * derived from the device's screen width.
+ *
+ * Width, not height and not the shorter side: it's line length — how many
+ * characters fit before a wrap — that makes small type hard to read, and
+ * width is what bounds that on a portrait phone screen regardless of how
+ * tall it is.
+ *
+ * Deliberately ignores the OS `fontScale` (Dynamic Type / system font size).
+ * `lib/typography/policy.ts` already composes the in-app scale with the OS
+ * setting at render time; folding the OS setting into the DEFAULT here as
+ * well would make the baseline move whenever the user changed something
+ * that has nothing to do with this control.
+ *
+ * A non-finite or non-positive width (bad measurement, not "know it's
+ * small") falls back to the designed default rather than guessing compact.
+ */
+export function defaultTextScaleForWidth(widthDp: number): TextScale {
+  if (!Number.isFinite(widthDp) || widthDp <= 0) return DEFAULT_TEXT_SCALE;
+  return widthDp < COMPACT_DEFAULT_WIDTH_THRESHOLD_DP ? 0.9 : DEFAULT_TEXT_SCALE;
 }

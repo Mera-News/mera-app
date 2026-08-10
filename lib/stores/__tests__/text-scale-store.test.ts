@@ -25,9 +25,19 @@ jest.mock('@/lib/logger', () => ({
 import { DEFAULT_TEXT_SCALE } from '@/lib/typography/scale';
 import { useTextScaleStore } from '../text-scale-store';
 
+// The jest-expo default `Dimensions.get('window')` is 750x1334 — wide enough
+// to pass the "leaves the scale at 1" case by accident even if the
+// width-derivation wiring regressed. Mock it explicitly so every test in this
+// file states the width it's exercising.
+const mockDimensionsGet = jest.fn((_dim: string) => ({ width: 750, height: 1334 }));
+jest.mock('react-native', () => ({
+  Dimensions: { get: (dim: string) => mockDimensionsGet(dim) },
+}));
+
 describe('useTextScaleStore', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockDimensionsGet.mockReturnValue({ width: 750, height: 1334 });
     useTextScaleStore.setState({ scale: DEFAULT_TEXT_SCALE, hydrated: false });
   });
 
@@ -48,12 +58,33 @@ describe('useTextScaleStore', () => {
     expect(useTextScaleStore.getState().hydrated).toBe(true);
   });
 
-  // No row means the user has never chosen — that must render the DESIGNED
-  // size, not something derived.
-  it('leaves the scale at 1 when nothing is stored', async () => {
+  // No row means the user has never chosen — the DEFAULT itself is then
+  // derived from screen width. On a wide-enough screen (both harness devices,
+  // and this mocked 750dp) that default is the designed 1x.
+  it('leaves the scale at the designed default on a wide screen when nothing is stored', async () => {
     mockGetSetting.mockResolvedValueOnce(null);
     await useTextScaleStore.getState().hydrate();
     expect(useTextScaleStore.getState().scale).toBe(1);
+  });
+
+  // Same never-chosen path, but on a narrow screen — the compact step is the
+  // derived default, never persisted (see below).
+  it('derives the compact default on a narrow screen when nothing is stored', async () => {
+    mockDimensionsGet.mockReturnValue({ width: 360, height: 800 });
+    mockGetSetting.mockResolvedValueOnce(null);
+    await useTextScaleStore.getState().hydrate();
+    expect(useTextScaleStore.getState().scale).toBe(0.9);
+  });
+
+  // A width-derived default is not an explicit choice — persisting it would
+  // forge one the user never made, which they'd then carry to a different,
+  // differently-sized device.
+  it('never persists a width-derived default', async () => {
+    mockDimensionsGet.mockReturnValue({ width: 360, height: 800 });
+    mockGetSetting.mockResolvedValueOnce(null);
+    await useTextScaleStore.getState().hydrate();
+    await Promise.resolve();
+    expect(mockSetSetting).not.toHaveBeenCalled();
   });
 
   it('snaps a stored value that is no longer a step', async () => {
@@ -80,10 +111,10 @@ describe('useTextScaleStore', () => {
   });
 
   it('applies and persists a new step', async () => {
-    useTextScaleStore.getState().setScale(1.5);
-    expect(useTextScaleStore.getState().scale).toBe(1.5);
+    useTextScaleStore.getState().setScale(1.3);
+    expect(useTextScaleStore.getState().scale).toBe(1.3);
     await Promise.resolve();
-    expect(mockSetSetting).toHaveBeenCalledWith('text_scale', '1.5');
+    expect(mockSetSetting).toHaveBeenCalledWith('text_scale', '1.3');
   });
 
   it('reports a failed write without throwing', async () => {

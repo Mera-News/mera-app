@@ -33,9 +33,18 @@ export function useTextScale(): number {
  * there is nothing to do.
  *
  * Returning `undefined` at scale 1 is load-bearing, not an optimisation: it
- * means the default configuration adds NO inline style to any text node in the
- * app, so class-driven styling stays byte-identical to what shipped before and
- * this feature can only affect users who opted into it.
+ * means an explicit choice of 1x — or never having opened the text-size
+ * control on a device wide enough to default to 1x — adds NO inline style to
+ * any text node, so class-driven styling stays byte-identical to what shipped
+ * before this feature existed.
+ *
+ * That is no longer true unconditionally, though. `text-scale-store` derives
+ * the UNSET default from screen width (`defaultTextScaleForWidth`), so a
+ * narrow-screen reader who has never touched the control gets `0.9` and DOES
+ * receive an inline style here — never having opted in. This is intentional
+ * (1x is genuinely harder to read on a small screen) but it means "no
+ * provider opinion" and "byte-identical to pre-feature" are no longer the
+ * same claim. Don't reintroduce a comment that says they are.
  *
  * `fontSize` is floored at `MIN_FONT_SIZE_PX` so the smallest step can never
  * push the smallest token below the platform's own minimum readable size;

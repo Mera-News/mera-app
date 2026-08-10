@@ -1,8 +1,10 @@
 import { create } from 'zustand';
+import { Dimensions } from 'react-native';
 import logger from '@/lib/logger';
 import { getSetting, setSetting } from '@/lib/database/services/setting-service';
 import {
   DEFAULT_TEXT_SCALE,
+  defaultTextScaleForWidth,
   nearestTextScale,
   type TextScale,
 } from '@/lib/typography/scale';
@@ -36,10 +38,22 @@ export const useTextScaleStore = create<TextScaleState>()((set) => ({
   hydrate: async () => {
     try {
       const raw = await getSetting(SETTING_KEY);
-      // `null` (no row) means the user has never chosen, which must render the
-      // designed size rather than being coerced through `nearestTextScale`.
+      // `null` (no row) means the user has never chosen. That must NOT be
+      // coerced through `nearestTextScale` (there is nothing stored to snap),
+      // but it also no longer means "always render 1x" — on a small screen,
+      // 1x is genuinely harder to read, so the DEFAULT itself is derived from
+      // screen width. This is never persisted: writing it would forge an
+      // explicit choice the user never made, one they'd then carry to a
+      // different, differently-sized device.
+      //
+      // `Dimensions.get('window')`, not `useWindowDimensions` — `hydrate()`
+      // runs outside React, called from `lib/database/hydrate-stores.ts`
+      // before any component tree exists.
       set({
-        scale: raw === null ? DEFAULT_TEXT_SCALE : nearestTextScale(Number(raw)),
+        scale:
+          raw === null
+            ? defaultTextScaleForWidth(Dimensions.get('window').width)
+            : nearestTextScale(Number(raw)),
         hydrated: true,
       });
     } catch (err) {

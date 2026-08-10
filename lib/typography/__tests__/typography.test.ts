@@ -6,6 +6,7 @@ import {
   TEXT_SCALE_LABEL_KEYS,
   TEXT_SCALE_STEPS,
   TYPE_SCALE,
+  defaultTextScaleForWidth,
   nearestTextScale,
 } from '../scale';
 
@@ -105,13 +106,42 @@ describe('nearestTextScale', () => {
   // step could be removed by a later release.
   it('snaps an off-grid value to the closest step', () => {
     expect(nearestTextScale(1.2)).toBe(1.15);
-    expect(nearestTextScale(1.45)).toBe(1.5);
+    expect(nearestTextScale(1.45)).toBe(1.3);
     expect(nearestTextScale(0.1)).toBe(0.9);
-    expect(nearestTextScale(99)).toBe(1.5);
+    expect(nearestTextScale(99)).toBe(1.3);
   });
 
   it('falls back to the default for a non-number', () => {
     expect(nearestTextScale(NaN)).toBe(DEFAULT_TEXT_SCALE);
     expect(nearestTextScale(Number('nope'))).toBe(DEFAULT_TEXT_SCALE);
+  });
+
+  // "Largest" (1.5) was removed from the step list; a value previously
+  // persisted at 1.5 must migrate forward by snapping to the new top step
+  // rather than needing a dedicated migration or key rename.
+  it('migrates a persisted "Largest" (1.5) forward to the new top step, Larger (1.3)', () => {
+    expect(TEXT_SCALE_STEPS).not.toContain(1.5);
+    expect(nearestTextScale(1.5)).toBe(1.3);
+  });
+});
+
+describe('defaultTextScaleForWidth', () => {
+  it('picks compact below the 380dp threshold', () => {
+    for (const width of [320, 360, 375, 379]) {
+      expect(defaultTextScaleForWidth(width)).toBe(0.9);
+    }
+  });
+
+  it('picks the designed default at and above the 380dp threshold', () => {
+    // 393 and 402 are the two harness devices — both must land on default.
+    for (const width of [380, 393, 402, 430]) {
+      expect(defaultTextScaleForWidth(width)).toBe(1);
+    }
+  });
+
+  it('falls back to the designed default for a bad measurement, never a guess', () => {
+    for (const width of [0, NaN, -1]) {
+      expect(defaultTextScaleForWidth(width)).toBe(DEFAULT_TEXT_SCALE);
+    }
   });
 });

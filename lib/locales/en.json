@@ -1485,7 +1485,6 @@
     "textSizeStepDefault": "Default",
     "textSizeStepLarge": "Large",
     "textSizeStepLarger": "Larger",
-    "textSizeStepLargest": "Largest",
     "deviceTextSizeHint": "For even larger text, use Display & Brightness in your device settings.",
     "title": "Display",
     "subtitle": "Tune how Mera renders visuals on this device",

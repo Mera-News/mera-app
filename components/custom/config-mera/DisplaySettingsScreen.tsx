@@ -27,7 +27,6 @@ const TEXT_SIZE_LABEL_KEYS = [
   'display.textSizeStepDefault',
   'display.textSizeStepLarge',
   'display.textSizeStepLarger',
-  'display.textSizeStepLargest',
 ] as const;
 
 interface DisplaySettingsScreenProps {

@@ -122,10 +122,16 @@ describe('DisplaySettingsScreen', () => {
     // ── text size ─────────────────────────────────────────────────────────
     it('renders one option per shipped text-scale step', () => {
         const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        for (const name of ['compact', 'default', 'large', 'larger', 'largest']) {
+        for (const name of ['compact', 'default', 'large', 'larger']) {
             expect(getByTestId(`text-size-${name}`)).toBeTruthy();
         }
-        expect(TEXT_SCALE_STEPS).toHaveLength(5);
+        expect(TEXT_SCALE_STEPS).toHaveLength(4);
+    });
+
+    // "Largest" (1.5) was removed — only four steps ship now.
+    it('does not render a "largest" option', () => {
+        const { queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(queryByTestId('text-size-largest')).toBeNull();
     });
 
     it('marks the stored step as selected', () => {
@@ -142,8 +148,8 @@ describe('DisplaySettingsScreen', () => {
 
     it('persists the tapped step', () => {
         const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        fireEvent.press(getByTestId('text-size-largest'));
-        expect(mockSetTextScale).toHaveBeenCalledWith(TEXT_SCALE_STEPS[4]);
+        fireEvent.press(getByTestId('text-size-larger'));
+        expect(mockSetTextScale).toHaveBeenCalledWith(TEXT_SCALE_STEPS[3]);
     });
 
     it('renders the live preview block', () => {
@@ -156,7 +162,7 @@ describe('DisplaySettingsScreen', () => {
     // an accessibility affordance, so a cramped one would be self-defeating.
     it('gives every option a 44pt minimum touch height', () => {
         const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
-        for (const name of ['compact', 'default', 'large', 'larger', 'largest']) {
+        for (const name of ['compact', 'default', 'large', 'larger']) {
             expect(getByTestId(`text-size-${name}`).props.style.minHeight).toBe(44);
         }
     });
