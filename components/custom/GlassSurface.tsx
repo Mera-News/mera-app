@@ -29,7 +29,24 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
  * (`AbstractGradientBackdrop`) and any scrolling content show through.
  */
 
-/** True only where `GlassView` actually paints glass — iOS 26+. */
+/**
+ * True only where `GlassView` actually paints glass — iOS 26+.
+ *
+ * **Nothing outside this file reads it any more, and that is deliberate.** It
+ * used to be the required companion of every `GlassPlate`: the plate returned
+ * `null` off iOS 26, so six chrome call sites each hand-rolled their own opaque
+ * fallback — and all six drifted into being wrong the same way (an opaque black
+ * slab, or in the FAB's case a white pill with a dark chevron, where iOS showed
+ * a translucent tinted surface over the gradient backdrop). `GlassPlate` now
+ * degrades to a flat translucent fill at the requested tint, so a caller that
+ * mounts it gets a correct-looking surface on every platform with no branch.
+ *
+ * It stays exported because the question "is this real Liquid Glass?" is still
+ * a legitimate one to ask — of a perf decision, or a screenshot test — and
+ * re-deriving it at a call site would be worse than importing it. If you find
+ * yourself adding `GLASS_AVAILABLE ? … : …` to pick a COLOUR, that is the
+ * pattern this comment exists to stop: put the fallback in the primitive.
+ */
 export const GLASS_AVAILABLE = isLiquidGlassAvailable();
 
 /** The default tint, used by cards and list rows. */
@@ -59,21 +76,49 @@ const TRANSLUCENT_FILL = 'rgba(255,255,255,0.07)';
 export const GLASS_EDGE = 'border border-white/10';
 
 /**
- * Absolute-fill glass background. Renders nothing where glass is unavailable,
- * so it is always safe to mount — but the caller still has to decide whether to
- * drop its own opaque background, which is why `GLASS_AVAILABLE` is exported.
+ * Absolute-fill glass background — real Liquid Glass on iOS 26+, a flat
+ * translucent fill at the same tint everywhere else.
+ *
+ * ## Why the fallback is a fill and not `null`
+ *
+ * This used to `return null` off iOS 26, on the reasoning that a caller could
+ * see `GLASS_AVAILABLE` and supply its own fallback. Six chrome call sites did,
+ * and **every one of them was wrong the same way** — an opaque `#000000` slab
+ * (or, for `ScrollToTopFab`, a near-white pill with a dark chevron) where iOS 26
+ * showed a translucent tinted surface floating over the gradient backdrop. That
+ * cost was paid on Android AND on iOS < 26, and it was invisible to anyone
+ * developing on a current iPhone.
+ *
+ * A flat `rgba` fill at the requested tint is what glass looks like once you
+ * remove the refraction: same lift, same transparency, no blur. Over a soft
+ * gradient there is very little high-frequency detail for a blur to diffuse
+ * anyway, which is the same argument `TranslucentPlate` below already makes for
+ * content surfaces. So the degradation is now the primitive's job, one place,
+ * and no call site branches.
+ *
+ * It is also free: a background colour, no native view, nothing to re-sample.
  *
  * Its parent must be an UNPADDED box that owns the corner radius and
  * `overflow-hidden`: Yoga resolves an absolute child's insets against the
  * parent's CONTENT box, so hanging this off a padded view leaves an unglassed
  * frame. And the parent's clipping is what rounds the glass — a native
  * visual-effect view does not reliably pick up a NativeWind `rounded-*` class.
+ * (The fallback honours `style`, so a caller passing `borderRadius` there — as
+ * the FAB does, because RN drops a shadow off any view that clips itself — gets
+ * a rounded fill too.)
  */
 export const GlassPlate: React.FC<{ tint?: string; style?: StyleProp<ViewStyle> }> = ({
   tint = GLASS_TINT,
   style,
 }) => {
-  if (!GLASS_AVAILABLE) return null;
+  if (!GLASS_AVAILABLE) {
+    return (
+      <View
+        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { backgroundColor: tint }, style]}
+      />
+    );
+  }
 
   return (
     <GlassView

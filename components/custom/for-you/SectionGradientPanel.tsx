@@ -1,6 +1,6 @@
-import { sectionGradient } from '@/lib/section-color';
+import { sectionColorAtAlpha, sectionGradient } from '@/lib/section-color';
 import React from 'react';
-import { I18nManager, Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { I18nManager, Platform, View, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 interface SectionGradientPanelProps {
@@ -23,8 +23,9 @@ interface SectionGradientPanelProps {
  * The gradient direction flips for RTL so the solid ink always sits on the
  * text-leading edge.
  */
-/** See the render branch below for why Android does not get the SVG fade. */
-const ANDROID_FLAT_TINT = Platform.OS === 'android';
+/** See the render branch below for why Android draws the fade as a CSS
+ *  background instead of as SVG. */
+const ANDROID_CSS_GRADIENT = Platform.OS === 'android';
 
 const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
   factId,
@@ -41,29 +42,45 @@ const SectionGradientPanelImpl: React.FC<SectionGradientPanelProps> = ({
 
   return (
     <View testID={`dashboard-section-${factId}`} style={[{ borderRadius, overflow: 'hidden' }, style]}>
-      {ANDROID_FLAT_TINT ? (
-        // Android gets a flat tint instead of the SVG fade.
+      {ANDROID_CSS_GRADIENT ? (
+        // Android draws the SAME fade as a CSS background instead of as SVG.
         //
         // The Svg below sizes itself with `width="100%" height="100%"`, and on
         // Android RNSVG resolves those percentages against the size at FIRST
         // layout and does not re-measure. This panel grows after that — cards
-        // mount, images load — so the gradient rect keeps its original height
-        // and leaves a hard horizontal line partway down the section where the
-        // fill simply stops. (Same family of RNSVG-on-Android problems as the
-        // full-screen backdrop, which is disabled there for a crash and for
-        // cost; see AbstractGradientBackdrop.)
+        // mount, images load — so the gradient rect kept its original height and
+        // left a hard horizontal line partway down the section where the fill
+        // simply stopped. That bug is what this branch exists for, and it is
+        // STRUCTURALLY GONE here rather than worked around: a background
+        // drawable is re-shaded against the view's CURRENT bounds on every draw,
+        // so there is no "first layout" for a percentage to be stuck to.
         //
-        // A plain absolutely-filled View has no measuring to get wrong, costs
-        // nothing, and keeps the per-fact colour identity. It loses the
-        // left-to-right fade, which is the acceptable half of the trade.
-        // `opacity` sits on this layer alone, so the children above are
-        // untouched.
+        // This replaces a flat single-colour tint that carried a compensatory
+        // `× 0.5` on its opacity — half the colour everywhere, to stand in for a
+        // fade that averages to about that. With the real fade restored, the
+        // opacity is the real `startOpacity` again and Android matches iOS.
+        //
+        // Alpha is baked into the stops (`hsla`) because CSS has no
+        // `stopOpacity`; the end stop is the SAME hue at alpha 0, never the
+        // keyword `transparent`, which is `rgba(0,0,0,0)` and would drag the
+        // falloff through grey.
         <View
           pointerEvents="none"
-          style={[
-            StyleSheet.absoluteFillObject,
-            { backgroundColor: spec.base, opacity: spec.startOpacity * 0.5 },
-          ]}
+          style={
+            {
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              // `to right` / `to left` mirrors the SVG branch's x1/x2 flip, so
+              // the solid ink stays on the text-leading edge under RTL.
+              experimental_backgroundImage:
+                `linear-gradient(to ${I18nManager.isRTL ? 'left' : 'right'}, ` +
+                `${sectionColorAtAlpha(spec.hue, spec.startOpacity)} 0%, ` +
+                `${sectionColorAtAlpha(spec.hue, spec.endOpacity)} 100%)`,
+            } as unknown as ViewStyle
+          }
         />
       ) : (
       <Svg

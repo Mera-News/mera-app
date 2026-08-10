@@ -3,11 +3,28 @@
 export interface SectionGradientSpec {
   /** Opaque base color, e.g. 'hsl(212, 52%, 64%)'. */
   base: string;
+  /**
+   * The hue `base` was built from, 0-359.
+   *
+   * Exposed because a consumer that needs the colour AT AN OPACITY cannot get
+   * there from `base`: CSS gradients have no `stopOpacity`, so the alpha has to
+   * be part of the colour literal, and deriving `hsla(...)` by string surgery on
+   * `hsl(...)` would couple that consumer to this function's formatting. The
+   * hue is already computed here; handing it over costs nothing and keeps
+   * saturation/lightness the single fixed pair documented below.
+   */
+  hue: number;
   /** Left (solid) edge stop opacity. */
   startOpacity: number;
   /** Right edge stop opacity. */
   endOpacity: number;
 }
+
+/** The fixed saturation/lightness pair every section colour uses — see
+ *  `sectionGradient`'s dark-mode tuning note. Exported so a consumer building
+ *  its own `hsla()` from `hue` cannot drift from `base`. */
+export const SECTION_SATURATION_PCT = 52;
+export const SECTION_LIGHTNESS_PCT = 64;
 
 /** FNV-1a 32-bit hash — deterministic across launches/screens (no runtime
  *  randomness, no Date/Math.random) so the same factId always maps to the
@@ -36,8 +53,15 @@ export function hashString(input: string): number {
 export function sectionGradient(factId: string): SectionGradientSpec {
   const hue = hashString(factId) % 360;
   return {
-    base: `hsl(${hue}, 52%, 64%)`,
+    base: `hsl(${hue}, ${SECTION_SATURATION_PCT}%, ${SECTION_LIGHTNESS_PCT}%)`,
+    hue,
     startOpacity: 0.3,
     endOpacity: 0,
   };
+}
+
+/** The same colour at an explicit alpha, as an `hsla()` literal. The form CSS
+ *  gradient stops need — see `SectionGradientSpec.hue`. */
+export function sectionColorAtAlpha(hue: number, alpha: number): string {
+  return `hsla(${hue}, ${SECTION_SATURATION_PCT}%, ${SECTION_LIGHTNESS_PCT}%, ${alpha})`;
 }

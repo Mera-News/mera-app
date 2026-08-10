@@ -183,6 +183,64 @@ const BLOBS = [
   { cx: onScreen(0.6), cy: onScreen(0.88), r: radius(0.65), alpha: 0.28, dx: 75, dy: -95, amp: 0.1, phase: 0.71 },
 ] as const;
 
+/** The halfway-ring stop's share of peak alpha. Named because the SVG and the
+ *  CSS port must use the SAME number or the two platforms' falloff differs. */
+const MID_STOP_RATIO = 0.34;
+
+/** `rgb(r,g,b)` → `rgba(r,g,b,a)`. CSS gradients have no `stopOpacity`, so the
+ *  alpha has to be BAKED INTO THE COLOUR — that is the whole reason this
+ *  exists. */
+function withAlpha(rgb: string, alpha: number): string {
+  return `${rgb.replace(/^rgb\(/, 'rgba(').replace(/\)$/, '')},${alpha})`;
+}
+
+/** Fraction → CSS percentage. Trailing zeros trimmed so the emitted string is
+ *  readable in a test failure. */
+function pct(f: number): string {
+  return `${Number((f * 100).toFixed(4))}%`;
+}
+
+/**
+ * The `BLOBS` field as a CSS `background-image` value — the Android renderer.
+ *
+ * Pure and exported for the test, because **four things about this port are not
+ * 1:1 with the SVG and every one of them fails SILENTLY** (a subtly wrong
+ * picture, no error, no warning):
+ *
+ * 1. **`ellipse W% H%`, never `circle`.** The SVG's default `objectBoundingBox`
+ *    gradient units stretch each circle into an ellipse matching the screen's
+ *    aspect ratio. CSS reproduces that only with a two-axis size, where the
+ *    first percentage resolves against the box WIDTH and the second against its
+ *    HEIGHT. `circle 70%` resolves one radius against the diagonal and paints a
+ *    round blob on a tall screen. (Measured on a 1080×2400 emulator:
+ *    `ellipse 20% 20%` → 216px × 480px half-extents. Per-axis, confirmed.)
+ * 2. **Alpha baked into the colour.** There is no CSS analogue of `stopOpacity`.
+ * 3. **The end stop is `rgba(R,G,B,0)`, NEVER `transparent`.** CSS
+ *    `transparent` is `rgba(0,0,0,0)`, so interpolating to it drags every
+ *    falloff through grey and muddies a warm blob.
+ * 4. **The layer array is REVERSED.** SVG paints in array order, so `BLOBS[2]`
+ *    ends up on top; CSS `background-image` puts the FIRST listed layer on top.
+ *    Three translucent hues do not composite commutatively, so shipping the
+ *    array unreversed gives a picture that is wrong in exactly the overlaps and
+ *    right everywhere else. (Verified on device with three opaque full-coverage
+ *    layers: the first listed is what you see.)
+ */
+export function cssBlobLayers(colors: string[]): string {
+  return BLOBS.map((spec, i) => {
+    const c = colors[i];
+    return (
+      `radial-gradient(ellipse ${pct(spec.r)} ${pct(spec.r)} ` +
+      `at ${pct(spec.cx)} ${pct(spec.cy)}, ` +
+      `${withAlpha(c, spec.alpha)} 0%, ` +
+      `${withAlpha(c, Number((spec.alpha * MID_STOP_RATIO).toFixed(4)))} 50%, ` +
+      `${withAlpha(c, 0)} 100%)`
+    );
+  })
+    // Trap 4 — see above. Do not "tidy" this away.
+    .reverse()
+    .join(', ');
+}
+
 
 /**
  * The oversize now lives on the RECT INSIDE the Svg, not on the hosting view.
@@ -493,13 +551,13 @@ type BlobSpec = (typeof BLOBS)[number];
  *
  * If drift ever comes back, it must not re-rasterise. Measure before shipping it.
  */
-const BlobField: React.FC<{ colors: string[]; idBase: string }> = ({ colors, idBase }) => (
+const BlobField: React.FC<{ colors: string[]; idBase?: string }> = ({ colors, idBase }) => (
   <Svg width="100%" height="100%" style={StyleSheet.absoluteFill}>
     <Defs>
       {BLOBS.map((spec, i) => (
         <RadialGradient key={i} id={`${idBase}-${i}`} cx={spec.cx} cy={spec.cy} r={spec.r}>
           <Stop offset="0" stopColor={colors[i]} stopOpacity={spec.alpha} />
-          <Stop offset="0.5" stopColor={colors[i]} stopOpacity={spec.alpha * 0.34} />
+          <Stop offset="0.5" stopColor={colors[i]} stopOpacity={spec.alpha * MID_STOP_RATIO} />
           <Stop offset="1" stopColor={colors[i]} stopOpacity={0} />
         </RadialGradient>
       ))}
@@ -508,6 +566,28 @@ const BlobField: React.FC<{ colors: string[]; idBase: string }> = ({ colors, idB
       <Rect key={i} x="0" y="0" width="100%" height="100%" fill={`url(#${idBase}-${i})`} />
     ))}
   </Svg>
+);
+
+/**
+ * The same field, drawn as a CSS `background-image` on a single leaf `View`.
+ * Android's renderer — see `ANDROID_STATIC_CSS`.
+ *
+ * `idBase` is accepted and ignored so this is prop-compatible with `BlobField`
+ * and the render site can pick between them with one ternary. There are no
+ * gradient `<Defs>` to name here: the whole field is one style string.
+ */
+const CssBlobField: React.FC<{ colors: string[]; idBase?: string }> = ({ colors }) => (
+  <View
+    pointerEvents="none"
+    style={[
+      StyleSheet.absoluteFill,
+      // `experimental_backgroundImage` is missing the radial variant in
+      // `StyleSheetTypes.d.ts` (RN 0.83), which is why this is the CSS STRING
+      // form and why the cast is needed. NativeWind 4.2.1 emits nothing for
+      // gradient classes, so a Tailwind class would silently do nothing.
+      { experimental_backgroundImage: cssBlobLayers(colors) } as unknown as ViewStyle,
+    ]}
+  />
 );
 
 export interface AbstractGradientBackdropProps {
@@ -524,31 +604,51 @@ export interface AbstractGradientBackdropProps {
 }
 
 /**
- * DISABLED ON ANDROID — deliberately, and this needs to stay until it can be
- * tested on a real Android build.
+ * ANDROID DRAWS THE FIELD AS A CSS BACKGROUND, NOT AS SVG.
  *
- * Two Android-only problems, both traced to this component being a full-screen
- * `Svg` mounted on every screen:
+ * Android used to render NOTHING here — a flat black page against iOS's warm
+ * gradient — because two Android-only problems were traced to this component
+ * being a full-screen `Svg` mounted on every screen:
  *
  * 1. **A crash.** `java.lang.NullPointerException` in
- *    `ViewGroup.dispatchGetDisplayList()` — Android's render thread walking a
- *    display list and finding a null child, i.e. a view removed from the
- *    hierarchy while it was being drawn. `RNSVGSvgView` is a `ViewGroup`, and
- *    this component put one on ~47 screens.
+ *    `ViewGroup.dispatchGetDisplayList()` — the render thread walking a display
+ *    list and finding a null child, i.e. a view removed from the hierarchy
+ *    while it was being drawn. `RNSVGSvgView` is a `ViewGroup`, and this
+ *    component put one on ~47 screens.
  * 2. **Slowness.** RNSVG draws through the Canvas/Picture path on Android
  *    rather than a cached layer, so a full-screen radial gradient is far more
  *    expensive there than on iOS — multiplied by every mounted tab.
  *
- * Android therefore renders nothing here and falls back to the flat dark page
- * it had before this feature, which is correct-looking, just less pretty. iOS
- * is unaffected.
+ * `CssBlobField` reproduces NEITHER, and that is why this is a re-enable rather
+ * than a revert:
  *
- * To bring Android back, do NOT simply re-enable this: use a non-SVG path
- * (a `View` with `experimental_backgroundImage` radial-gradients is the
- * obvious candidate) and verify it on a device, since neither of the problems
- * above reproduces on iOS.
+ * - **Not the crash.** It is a leaf `View` with no children. The crash is a
+ *   `ViewGroup` dispatching a draw to a child that vanished mid-frame; a view
+ *   with nothing to dispatch to cannot hit it. No `RNSVGSvgView` is created on
+ *   Android at all any more.
+ * - **Not the cost.** `experimental_backgroundImage` compiles to a background
+ *   drawable — a cached shader on the view's own display list — not a
+ *   Canvas/Picture replay. It re-shades on bounds change, not per frame, and
+ *   nothing about it is animated here (see `isStatic` below).
+ *
+ * Verified on the emulator before any of this was written, because
+ * `processBackgroundImage` fails by `return []` — no error, no warning, the
+ * prop silently dropped — and a dropped prop looks EXACTLY like the flat black
+ * Android already had. Measured, on a 1080×2400 API-35 emulator:
+ *   • a magenta layer at alpha 1.0 painted `(255,0,255)`, against a green
+ *     `backgroundColor` control that proves the View was on screen;
+ *   • `ellipse 20% 20%` resolved per-axis to 216px × 480px half-extents;
+ *   • of three opaque full-coverage layers, the FIRST listed is the one drawn;
+ *   • blob 0 at its real alpha 0.38 over `#121113` landed on `(99,63,43)` at
+ *     the centre and `(46,33,27)` at the halfway ring — both exactly the
+ *     predicted composites.
+ * Redo those four before believing any future change to this path.
  */
-const ANDROID_DISABLED = Platform.OS === 'android';
+const ANDROID_STATIC_CSS = Platform.OS === 'android';
+
+/** The renderer for this platform. One ternary, resolved once at module load,
+ *  so nothing downstream branches on the platform. */
+const Field = ANDROID_STATIC_CSS ? CssBlobField : BlobField;
 
 /**
  * The base layer's opacity for the commit that starts a fade — a PLAIN style
@@ -578,13 +678,21 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   const reduceMotion = useReducedMotion();
   const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
 
-  // OS Reduce Motion and the app's own "Static background" setting
-  // (Settings → Display) are the SAME mode: a single static frame, no clock,
-  // no timer, no animated styles. Both are global — every mounted instance
-  // agrees — so when either is on the shared engine has no subscribers left
-  // and stops, which is what keeps `step` from advancing underneath a static
-  // field.
-  const isStatic = reduceMotion || staticGradient;
+  // OS Reduce Motion, the app's own "Static background" setting
+  // (Settings → Display) and Android are the SAME mode: a single static frame,
+  // no clock, no timer, no animated styles. All three are global — every
+  // mounted instance agrees — so when any is on the shared engine has no
+  // subscribers left and stops, which is what keeps `step` from advancing
+  // underneath a static field.
+  //
+  // Android is FOLDED IN here rather than given a mode of its own. This is
+  // already the path `display-prefs-store` selects on <6 GB devices and the one
+  // OS Reduce Motion selects; a third spelling of "draw one frame and stop"
+  // would be a second thing to keep in sync for no behavioural difference. The
+  // consequence is that Settings → Display's "Static background" switch is a
+  // no-op on Android, which is why `DisplaySettingsScreen` hides that row
+  // there.
+  const isStatic = reduceMotion || staticGradient || ANDROID_STATIC_CSS;
 
   /* ──────────────────────────────────────────────────────────────────────────
    * ONLY THE FOCUSED INSTANCE CROSS-FADES
@@ -617,7 +725,7 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
 
   // One engine for the whole app — see THE SHARED ENGINE above. Deliberately
   // NOT gated on focus; see the note above.
-  useSharedEngine(!isStatic && !ANDROID_DISABLED);
+  useSharedEngine(!isStatic);
   const step = useSyncExternalStore(stepStore.subscribe, stepStore.get, stepStore.get);
 
   // Unseeded surfaces share the app-wide sequences, which is what makes every
@@ -788,8 +896,6 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   // `RNSVGSvgView`, which does its own hit-testing and does not reliably honour
   // the prop — and this is an absolute fill over the ENTIRE screen, so a
   // swallowed touch would make every tab untappable.
-  if (ANDROID_DISABLED) return null;
-
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       {/* Mounted UNCONDITIONALLY, even though its opacity only ever moves during
@@ -802,11 +908,11 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
         testID="backdrop-base"
         style={[StyleSheet.absoluteFill, baseStyle, fading ? BASE_HIDDEN : null]}
       >
-        <BlobField colors={current} idBase="bg-current" />
+        <Field colors={current} idBase="bg-current" />
       </Animated.View>
       {fading ? (
         <Animated.View testID="backdrop-cover" style={[StyleSheet.absoluteFill, outgoingStyle]}>
-          <BlobField colors={previous} idBase="bg-prev" />
+          <Field colors={previous} idBase="bg-prev" />
         </Animated.View>
       ) : null}
     </View>

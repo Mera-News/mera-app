@@ -17,7 +17,19 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+/**
+ * The "Static background" switch is HIDDEN on Android.
+ *
+ * `AbstractGradientBackdrop` folds Android into the same static path this
+ * switch selects (see `isStatic` there), so on Android the switch is already
+ * on and cannot be turned off. A visible control that does nothing is worse
+ * than an absent one — it invites the user to conclude the setting is broken.
+ * The setting itself is untouched: the row is what is hidden, not the store.
+ */
+const SHOWS_STATIC_GRADIENT_ROW = Platform.OS !== 'android';
 
 /** Index-aligned with `TEXT_SCALE_STEPS` / `TEXT_SCALE_LABEL_KEYS`. Written out
  *  in full rather than assembled from the step name so the keys are greppable
@@ -192,6 +204,9 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
           </VStack>
 
           {/* ── Visuals ──────────────────────────────────────────────────── */}
+          {/* The whole section, not just the row: it holds exactly one control,
+              and a heading over nothing reads as a rendering bug. */}
+          {SHOWS_STATIC_GRADIENT_ROW ? (
           <VStack className="px-5">
             <Text size="xs" className="text-gray-500 font-semibold mb-2 uppercase">
               {t('display.sectionVisuals')}
@@ -220,6 +235,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               />
             </HStack>
           </VStack>
+          ) : null}
         </ScrollView>
       </Box>
     </Box>

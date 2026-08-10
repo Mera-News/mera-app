@@ -1,4 +1,4 @@
-import { GLASS_AVAILABLE, GlassPlate } from '@/components/custom/GlassSurface';
+import { GlassPlate } from '@/components/custom/GlassSurface';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Pressable, StyleSheet } from 'react-native';
@@ -33,26 +33,21 @@ const ScrollToTopFab: React.FC<ScrollToTopFabProps> = ({ visible, onPress, extra
             entering={FadeIn.duration(200)}
             exiting={FadeOut.duration(200)}
             onPress={onPress}
-            style={[
-                styles.fab,
-                // The soft-white pill only applies OFF glass. Where glass paints,
-                // the plate is the surface and a solid fill would cancel it.
-                GLASS_AVAILABLE ? null : styles.fabSolid,
-                { bottom: 20 + insets.bottom + extraBottomOffset },
-            ]}
+            style={[styles.fab, { bottom: 20 + insets.bottom + extraBottomOffset }]}
         >
             {/* Radius goes on the plate's own style rather than clipping the
                 Pressable: RN drops a view's shadow the moment that same view sets
                 `overflow: hidden`, and the FAB's shadow is what lifts it off the
-                feed. */}
+                feed.
+
+                `GlassPlate` is the ONLY surface here on every platform now. It
+                used to paint nothing off iOS 26, so this file carried a
+                near-white pill with a dark chevron as its fallback — the single
+                largest visual mismatch between the two platforms, a white button
+                on Android against a translucent one on iOS. The plate's own
+                fallback replaced it. */}
             <GlassPlate style={{ borderRadius: FAB_RADIUS }} />
-            <MaterialIcons
-                name="keyboard-arrow-up"
-                size={28}
-                // Dark-on-white off glass; light-on-glass otherwise, where the
-                // surface is the dark page showing through.
-                color={GLASS_AVAILABLE ? '#e5e7eb' : '#6b7280'}
-            />
+            <MaterialIcons name="keyboard-arrow-up" size={28} color="#e5e7eb" />
         </AnimatedPressable>
     );
 };
@@ -73,11 +68,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 4,
         elevation: 8, // Android shadow
-    },
-    // Non-glass fallback only (Android, iOS < 26): without it the FAB would have
-    // no surface at all, since GlassPlate renders nothing there.
-    fabSolid: {
-        backgroundColor: 'rgba(255, 255, 255, 0.9)', // soft white
     },
 });
 

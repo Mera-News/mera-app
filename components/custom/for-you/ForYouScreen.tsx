@@ -7,7 +7,6 @@ import FeedSyncIndicator, {
 } from '@/components/custom/FeedSyncIndicator';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
 import {
-    GLASS_AVAILABLE,
     GLASS_HEADER_SCRIM,
     GLASS_HEADER_TINT,
     GlassPlate,
@@ -577,24 +576,17 @@ const MeraNewsScreen: React.FC = () => {
                 pointerEvents="box-none"
                 style={[
                     { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
-                    // Liquid Glass on iOS 26+, flat black everywhere else. The
-                    // opaque background is REMOVED (not layered under the plate)
-                    // where glass paints — a solid fill over glass cancels it
-                    // entirely. Where glass does not paint, `GlassPlate` renders
-                    // nothing, so dropping the background too would leave an
-                    // invisible header over the scrolling list; hence the
-                    // explicit fallback.
-                    GLASS_AVAILABLE
-                        ? {
-                              // Paints BEHIND the plate, so it is what the glass
-                              // samples — that is what actually cuts the
-                              // see-through. Translucent, NOT opaque: an opaque
-                              // fill here would cancel the glass (GlassSurface).
-                              backgroundColor: GLASS_HEADER_SCRIM,
-                              borderBottomWidth: StyleSheet.hairlineWidth,
-                              borderBottomColor: 'rgba(255,255,255,0.10)',
-                          }
-                        : { backgroundColor: '#000000' },
+                    // Paints BEHIND the plate, so on iOS 26 it is what the glass
+                    // samples — that is what actually cuts the see-through.
+                    // Translucent, NOT opaque: an opaque fill here would cancel
+                    // the glass (GlassSurface). No flat-black branch for other
+                    // platforms any more — `GlassPlate` degrades to a flat
+                    // translucent fill, so this is correct everywhere.
+                    {
+                        backgroundColor: GLASS_HEADER_SCRIM,
+                        borderBottomWidth: StyleSheet.hairlineWidth,
+                        borderBottomColor: 'rgba(255,255,255,0.10)',
+                    },
                     headerStyle,
                 ]}
             >

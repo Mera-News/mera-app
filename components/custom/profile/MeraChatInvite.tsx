@@ -1,4 +1,4 @@
-import { GLASS_AVAILABLE, GlassPanel } from '@/components/custom/GlassSurface';
+import { GlassPanel } from '@/components/custom/GlassSurface';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
@@ -86,7 +86,6 @@ const MeraChatInvite: React.FC = () => {
                     className="flex-1"
                     radius={16}
                     contentClassName="px-3.5 py-3"
-                    fallbackClassName="bg-black"
                     edge={false}
                     style={styles.bubbleBorder}
                 >
@@ -139,11 +138,16 @@ const MeraChatInvite: React.FC = () => {
     );
 };
 
-// Tail fallback matches the bubble's opaque `bg-black` fallback; when glass is
-// active there's no literal color to sample (GlassPlate is a native blur
-// view, not a color), so the tail is tinted with the same faint white lift
-// the app's glass surfaces use, instead of staying a pure-black cutout.
-const TAIL_COLOR = GLASS_AVAILABLE ? 'rgba(255,255,255,0.14)' : '#000000';
+// The tail is a rotated 12px diamond — too small to host its own plate — so it
+// carries a literal colour matching the bubble's faint white lift.
+//
+// It used to fall back to opaque `#000000` off iOS 26, on the premise that the
+// bubble did too via `GlassPanel`'s `fallbackClassName="bg-black"`. That premise
+// has been stale for a while: `GlassPanel` documents `fallbackClassName` as
+// deprecated AND IGNORED, and paints a `TranslucentPlate` on every platform. So
+// the black tail was a black notch hanging off a translucent bubble everywhere
+// except iOS 26. One constant now, matching the bubble on every platform.
+const TAIL_COLOR = 'rgba(255,255,255,0.14)';
 
 const styles = StyleSheet.create({
     bubbleWrap: {

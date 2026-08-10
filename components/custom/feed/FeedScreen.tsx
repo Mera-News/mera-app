@@ -78,7 +78,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
-  GLASS_AVAILABLE,
   GLASS_HEADER_SCRIM,
   GLASS_HEADER_TINT,
   GlassPlate,
@@ -957,23 +956,18 @@ const FeedScreen: React.FC = () => {
         pointerEvents="box-none"
         style={[
           { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 },
-          // Liquid Glass on iOS 26+, flat black everywhere else. The opaque
-          // background is REMOVED (not layered under the plate) where glass
-          // paints — a solid fill over glass cancels it entirely. Where glass
-          // does not paint, `GlassPlate` renders nothing, so dropping the
-          // background too would leave an invisible header over the scrolling
-          // list; hence the explicit fallback.
-          GLASS_AVAILABLE
-            ? {
-                // The scrim paints BEHIND the plate, so it is what the glass
-                // samples — that is what actually cuts the see-through. A
-                // translucent dark layer, NOT an opaque fill: an opaque fill
-                // here would cancel the glass entirely (see GlassSurface).
-                backgroundColor: GLASS_HEADER_SCRIM,
-                borderBottomWidth: StyleSheet.hairlineWidth,
-                borderBottomColor: 'rgba(255,255,255,0.10)',
-              }
-            : { backgroundColor: '#000000' },
+          // The scrim paints BEHIND the plate, so on iOS 26 it is what the glass
+          // samples — that is what actually cuts the see-through. A translucent
+          // dark layer, NOT an opaque fill: an opaque fill here would cancel the
+          // glass entirely (see GlassSurface). There is no longer a flat-black
+          // branch for other platforms: `GlassPlate` degrades to a flat
+          // translucent fill at the same tint, so this scrim is correct
+          // everywhere and the header reads as one material across platforms.
+          {
+            backgroundColor: GLASS_HEADER_SCRIM,
+            borderBottomWidth: StyleSheet.hairlineWidth,
+            borderBottomColor: 'rgba(255,255,255,0.10)',
+          },
           headerStyle,
         ]}
       >

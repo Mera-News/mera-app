@@ -1,7 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
     GlassPlate,
-    GLASS_AVAILABLE,
     GLASS_HEADER_SCRIM,
     GLASS_HEADER_TINT,
 } from '@/components/custom/GlassSurface';
@@ -400,17 +399,15 @@ const ExploreScreen: React.FC = () => {
                         right: 0,
                         zIndex: 10,
                         overflow: 'hidden',
-                        ...(GLASS_AVAILABLE
-                            ? {
-                                  // The scrim paints BEHIND the plate, which is
-                                  // what the glass samples — that is what cuts
-                                  // the see-through. The white/10 border
-                                  // reproduces the old GLASS_EDGE class.
-                                  backgroundColor: GLASS_HEADER_SCRIM,
-                                  borderWidth: StyleSheet.hairlineWidth,
-                                  borderColor: 'rgba(255,255,255,0.10)',
-                              }
-                            : { backgroundColor: '#000000' }),
+                        // The scrim paints BEHIND the plate, which on iOS 26 is
+                        // what the glass samples — that is what cuts the
+                        // see-through. The white/10 border reproduces the old
+                        // GLASS_EDGE class. No flat-black branch for other
+                        // platforms any more — `GlassPlate` degrades to a flat
+                        // translucent fill, so this is correct everywhere.
+                        backgroundColor: GLASS_HEADER_SCRIM,
+                        borderWidth: StyleSheet.hairlineWidth,
+                        borderColor: 'rgba(255,255,255,0.10)',
                     },
                     headerStyle,
                 ]}

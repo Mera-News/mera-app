@@ -10,7 +10,6 @@
 // zIndex) but BELOW the collapsing header (zIndex 10 on both FeedScreen and
 // ForYouScreen), so the header still reads normally above it when revealed.
 import {
-  GLASS_AVAILABLE,
   GLASS_HEADER_SCRIM,
   GLASS_HEADER_TINT,
   GlassPlate,
@@ -31,17 +30,16 @@ const StatusBarScrim: React.FC = () => {
         left: 0,
         right: 0,
         height: insets.top,
-        // Glass does this strip's job — it obscures list content behind the
-        // system glyphs without being a black slab. Solid black is kept as the
-        // fallback because off iOS 26 a GlassPlate paints nothing at all, and an
-        // invisible scrim would let text scroll under the clock.
-        // In the glass branch a translucent scrim paints BEHIND the plate — the
-        // glass samples it, which is what actually cuts the see-through. It must
-        // stay translucent: an opaque fill would cancel the glass. Off iOS 26
-        // the fallback stays fully opaque black.
-        ...(GLASS_AVAILABLE
-          ? { backgroundColor: GLASS_HEADER_SCRIM }
-          : { backgroundColor: '#000000' }),
+        // The scrim paints BEHIND the plate — on iOS 26 that is what the glass
+        // samples, and it is what actually cuts the see-through; everywhere else
+        // it composites with the plate's flat tint to the same tone. It must
+        // stay translucent: an opaque fill would cancel the glass.
+        //
+        // There is deliberately NO opaque-black branch any more. `GlassPlate`
+        // degrades to a flat translucent fill, so this strip reads as the same
+        // material on every platform instead of a black slab across the top of
+        // Android.
+        backgroundColor: GLASS_HEADER_SCRIM,
         zIndex: 5,
       }}
     >
