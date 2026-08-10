@@ -48,4 +48,45 @@ describe('SectionGradientPanel', () => {
         );
         expect(getByTestId('section-svg')).toBeTruthy();
     });
+
+    // The ANDROID branch cannot be rendered here — `jest.setup.js` pins
+    // `Platform.OS` to 'ios' globally — so its CSS string is asserted directly
+    // instead. That matters more than it looks: `processBackgroundImage` fails
+    // by `return []`, with no error and no warning, so a malformed value paints
+    // NOTHING and is indistinguishable from the flat tint this branch replaced.
+    // Feeding the real parser is the only check that can tell those apart.
+    describe('android CSS gradient string', () => {
+        const {
+            sectionGradient,
+            sectionColorAtAlpha,
+        } = require('@/lib/section-color') as typeof import('@/lib/section-color');
+        const spec = sectionGradient('fact-1');
+        const value =
+            `linear-gradient(to right, ` +
+            `${sectionColorAtAlpha(spec.hue, spec.startOpacity)} 0%, ` +
+            `${sectionColorAtAlpha(spec.hue, spec.endOpacity)} 100%)`;
+
+        it('parses through React Native own background-image parser', () => {
+            const processBackgroundImage =
+                require('react-native/Libraries/StyleSheet/processBackgroundImage').default;
+            const parsed = processBackgroundImage(value);
+            expect(parsed).toHaveLength(1);
+            expect(parsed[0].type).toBe('linear-gradient');
+            expect(parsed[0].colorStops).toHaveLength(2);
+        });
+
+        it('bakes the opacity into the colour and never uses `transparent`', () => {
+            // CSS has no `stopOpacity`. And `transparent` is `rgba(0,0,0,0)`, so
+            // fading to it would drag the pastel through grey instead of just
+            // vanishing.
+            expect(value).toContain(`, ${spec.startOpacity})`);
+            expect(value).toContain(`, ${spec.endOpacity})`);
+            expect(value).not.toContain('transparent');
+        });
+
+        it('uses the SAME hue as `base`, so the two branches cannot drift', () => {
+            expect(spec.base).toContain(`${spec.hue},`);
+            expect(value).toContain(`hsla(${spec.hue},`);
+        });
+    });
 });
