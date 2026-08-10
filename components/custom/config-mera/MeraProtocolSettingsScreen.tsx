@@ -28,6 +28,7 @@ import type { SystemRequirementsResult } from '@/lib/mera-protocol-toolkit/types
 import {
     useDeepInterview,
     useDownloadProgress,
+    useFactCheckEnabled,
     useMeraProtocolStore,
     useModelState as useModelStateSelector,
     useProcessingMode,
@@ -39,6 +40,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
+import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Platform, ScrollView } from 'react-native';
@@ -114,6 +116,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const webSearchInChat = useWebSearchInChat();
     const deepInterview = useDeepInterview();
     const showExtractedMetadata = useShowExtractedMetadata();
+    const factCheckEnabled = useFactCheckEnabled();
 
     const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
     const hasModelUpdate = selectedModelId !== LATEST_MODEL.modelId;
@@ -694,9 +697,12 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             color={webSearchInChat ? "#10b981" : "#9ca3af"}
                         />
                         <VStack className="flex-1">
-                            <Text className="text-white text-base font-semibold">
-                                {t('meraProtocol.webSearchTitle')}
-                            </Text>
+                            <HStack space="xs" className="items-center">
+                                <Text className="text-white text-base font-semibold">
+                                    {t('meraProtocol.webSearchTitle')}
+                                </Text>
+                                <BetaBadge />
+                            </HStack>
                             <Text className="text-typography-500 text-sm mt-0.5">
                                 {webSearchInChat
                                     ? t('meraProtocol.webSearchOn')
@@ -714,6 +720,45 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </HStack>
                 <Text className="text-typography-500 text-xs mt-2">
                     {t('meraProtocol.webSearchDescription')}
+                </Text>
+            </Box>
+
+            {/* Fact check (BETA) — OFF by default. Sits next to web search
+                because it is the other third-party disclosure on this screen:
+                checking a story sends it to our server and on to a search
+                provider, same as web search in chat. */}
+            <Box className="px-5 mb-6" testID="mera-protocol-fact-check">
+                <HStack space="md" className="items-center justify-between">
+                    <HStack space="md" className="items-center flex-1">
+                        <MaterialIcons
+                            name="fact-check"
+                            size={24}
+                            color={factCheckEnabled ? "#10b981" : "#9ca3af"}
+                        />
+                        <VStack className="flex-1">
+                            <HStack space="xs" className="items-center">
+                                <Text className="text-white text-base font-semibold">
+                                    {t('meraProtocol.factCheckTitle')}
+                                </Text>
+                                <BetaBadge />
+                            </HStack>
+                            <Text className="text-typography-500 text-sm mt-0.5">
+                                {factCheckEnabled
+                                    ? t('meraProtocol.factCheckOn')
+                                    : t('meraProtocol.factCheckOff')}
+                            </Text>
+                        </VStack>
+                    </HStack>
+                    <Switch
+                        value={factCheckEnabled}
+                        onToggle={() => store.setFactCheckEnabled(!factCheckEnabled)}
+                        size="md"
+                        disabled={readOnly}
+                        testID="mera-protocol-fact-check-switch"
+                    />
+                </HStack>
+                <Text className="text-typography-500 text-xs mt-2">
+                    {t('meraProtocol.factCheckDescription')}
                 </Text>
             </Box>
 

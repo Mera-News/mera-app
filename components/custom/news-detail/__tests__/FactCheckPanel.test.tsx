@@ -19,6 +19,15 @@ jest.mock('@/lib/fact-check/use-fact-check', () => ({
     useFactCheck: (...args: unknown[]) => mockUseFactCheck(...args),
 }));
 
+// The panel is gated on the protocol store's `factCheckEnabled` (BETA,
+// off by default). Mocked at module level so the real store — and its
+// WatermelonDB import chain — never loads in this render-only suite, and so
+// every existing case below can opt back in with a single `mockReturnValue`.
+const mockUseFactCheckEnabled = jest.fn(() => true);
+jest.mock('@/lib/stores/mera-protocol-store', () => ({
+    useFactCheckEnabled: () => mockUseFactCheckEnabled(),
+}));
+
 const mockOpenInAppBrowser = jest.fn((..._args: unknown[]) => Promise.resolve());
 jest.mock('@/lib/web-browser-utils', () => ({
     openInAppBrowser: (...args: unknown[]) => mockOpenInAppBrowser(...args),
@@ -206,5 +215,21 @@ describe('FactCheckPanel', () => {
         const { getByTestId } = render(<FactCheckPanel articleId="a1" />);
         fireEvent.press(getByTestId('fact-check-hide'));
         expect(dismiss).toHaveBeenCalledTimes(1);
+    });
+
+    // BETA gate — off by default (mera-protocol-store.ts). The button, the
+    // panel, and any verdict must all disappear regardless of the hook's
+    // phase; nothing renders while the setting is off.
+    it('renders nothing when fact check is disabled, even mid-check or with a ready verdict', () => {
+        mockUseFactCheckEnabled.mockReturnValue(false);
+        try {
+            hookState({ phase: 'ready', result: completeRow() });
+            const { toJSON, queryByTestId } = render(<FactCheckPanel articleId="a1" />);
+            expect(toJSON()).toBeNull();
+            expect(queryByTestId('fact-check-action')).toBeNull();
+            expect(queryByTestId('fact-check-panel')).toBeNull();
+        } finally {
+            mockUseFactCheckEnabled.mockReturnValue(true);
+        }
     });
 });

@@ -33,6 +33,7 @@ import {
     useWebSearchInChat,
     useDeepInterview,
     useShowExtractedMetadata,
+    useFactCheckEnabled,
     useSelectedModelId,
     useModelState,
     useDownloadProgress,
@@ -54,6 +55,7 @@ const initialState = {
     webSearchInChat: false,
     deepInterview: false,
     showExtractedMetadata: false,
+    factCheckEnabled: false,
     selectedModelId: 'mera-qwen3.5-4b',
     modelState: 'not_downloaded' as const,
     downloadProgress: 0,
@@ -517,6 +519,77 @@ describe('useMeraProtocolStore', () => {
     it('reset() clears the extracted-metadata setting row', () => {
         useMeraProtocolStore.getState().reset();
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_show_extracted_metadata');
+    });
+
+    // ── setFactCheckEnabled (BETA, off by default) ──────────────────────────
+
+    it('factCheckEnabled starts OFF', () => {
+        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(false);
+    });
+
+    it('setFactCheckEnabled persists "true"/"false" like the other toggles', async () => {
+        useMeraProtocolStore.getState().setFactCheckEnabled(true);
+        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_fact_check', 'true');
+
+        useMeraProtocolStore.getState().setFactCheckEnabled(false);
+        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(false);
+        await Promise.resolve();
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_fact_check', 'false');
+    });
+
+    it('setFactCheckEnabled swallows DB errors rather than failing the switch', async () => {
+        mockSetSetting.mockRejectedValueOnce(new Error('db'));
+        useMeraProtocolStore.getState().setFactCheckEnabled(true);
+        await new Promise((r) => setImmediate(r));
+        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
+    });
+
+    it('hydrateFromDb restores factCheckEnabled from its own key', async () => {
+        mockGetSetting.mockImplementation((k: string) =>
+            Promise.resolve(k === 'mera_fact_check' ? 'true' : null),
+        );
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
+    });
+
+    // ABSENT ⇒ OFF — this is the user's explicit requirement ("keep it off by
+    // default"). A device that never saw the toggle must not silently start
+    // offering fact check.
+    it('hydrateFromDb leaves factCheckEnabled OFF when the row is absent or junk', async () => {
+        for (const stored of [null, 'yes', '1', '']) {
+            useMeraProtocolStore.setState({ factCheckEnabled: false });
+            mockGetSetting.mockImplementation(() => Promise.resolve(stored as string | null));
+
+            await useMeraProtocolStore.getState().hydrateFromDb();
+
+            expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(false);
+        }
+    });
+
+    it('hydrateFromDb turns factCheckEnabled back OFF on an explicit "false"', async () => {
+        useMeraProtocolStore.setState({ factCheckEnabled: true });
+        mockGetSetting.mockImplementation((k: string) =>
+            Promise.resolve(k === 'mera_fact_check' ? 'false' : null),
+        );
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(false);
+    });
+
+    it('reset() clears the fact-check setting row', () => {
+        useMeraProtocolStore.getState().reset();
+        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_fact_check');
+    });
+
+    it('useFactCheckEnabled returns current factCheckEnabled value', () => {
+        useMeraProtocolStore.setState({ factCheckEnabled: true });
+        const { result } = renderHook(() => useFactCheckEnabled());
+        expect(result.current).toBe(true);
     });
 
     it('hydrateFromDb sets selectedModelId from DB', async () => {

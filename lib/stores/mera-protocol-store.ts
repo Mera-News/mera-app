@@ -55,6 +55,17 @@ interface MeraProtocolState {
   // and displaying it as fact would overclaim.
   showExtractedMetadata: boolean;
 
+  // Fact check (BETA) — when true, the article/suggestion detail screens
+  // offer the "Fact check" action, which asks our server to search the web
+  // to verify claims in the story. Off by default, and the default is
+  // load-bearing: absent ⇒ off (see hydrateFromDb) means every existing user
+  // gets this OFF on their next launch with no migration, matching the
+  // reported behaviour ("I tried fact checking and it didn't work") until
+  // the feature is verified end to end. This is a UX gate only — the
+  // server's `requestFactCheck`/`factCheck` resolvers stay behind
+  // SubscriptionGuard regardless of this switch.
+  factCheckEnabled: boolean;
+
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
   modelState: ModelStateLabel;
@@ -74,6 +85,7 @@ interface MeraProtocolState {
   setWebSearchInChat: (enabled: boolean) => void;
   setDeepInterview: (enabled: boolean) => void;
   setShowExtractedMetadata: (enabled: boolean) => void;
+  setFactCheckEnabled: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -107,6 +119,13 @@ const SETTING_RELEVANCE_V4 = 'mera_relevance_v3';
 const SETTING_WEB_SEARCH_IN_CHAT = 'mera_web_search_in_chat';
 const SETTING_DEEP_INTERVIEW = 'mera_deep_interview';
 const SETTING_SHOW_EXTRACTED_METADATA = 'mera_show_extracted_metadata';
+/**
+ * Names the durable concept (fact-checking), not the current BETA status or
+ * the off-by-default state — a settings key is user data, and renaming it
+ * later would be a migration. See `SETTING_RELEVANCE_V4` above for the
+ * cautionary precedent.
+ */
+const SETTING_FACT_CHECK_ENABLED = 'mera_fact_check';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
  *  only so `reset()` clears the orphaned row from devices that persisted it. */
@@ -125,6 +144,7 @@ const initialState = {
   webSearchInChat: false,
   deepInterview: false,
   showExtractedMetadata: false,
+  factCheckEnabled: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -166,6 +186,11 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
   setShowExtractedMetadata: (showExtractedMetadata) => {
     set({ showExtractedMetadata });
     setSetting(SETTING_SHOW_EXTRACTED_METADATA, showExtractedMetadata ? 'true' : 'false').catch(() => { });
+  },
+
+  setFactCheckEnabled: (factCheckEnabled) => {
+    set({ factCheckEnabled });
+    setSetting(SETTING_FACT_CHECK_ENABLED, factCheckEnabled ? 'true' : 'false').catch(() => { });
   },
 
   setSelectedModelId: (selectedModelId) => {
@@ -212,6 +237,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
     deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
     deleteSetting(SETTING_SHOW_EXTRACTED_METADATA).catch(() => { });
+    deleteSetting(SETTING_FACT_CHECK_ENABLED).catch(() => { });
     deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
     deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
     deleteSetting('e2ee_enabled').catch(() => { });
@@ -228,6 +254,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         webSearchValue,
         deepInterviewValue,
         showExtractedMetadataValue,
+        factCheckEnabledValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
         getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
@@ -237,6 +264,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(SETTING_WEB_SEARCH_IN_CHAT),
         getSetting(SETTING_DEEP_INTERVIEW),
         getSetting(SETTING_SHOW_EXTRACTED_METADATA),
+        getSetting(SETTING_FACT_CHECK_ENABLED),
       ]);
       // One-shot cleanup: the retired v2 key is never read — the switch starts
       // off regardless of what v2 was set to — just swept so it doesn't linger.
@@ -286,6 +314,15 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (showExtractedMetadataValue === 'false') {
         updates.showExtractedMetadata = false;
       }
+      // ABSENT ⇒ OFF, same rule as above: only an explicit 'true' turns fact
+      // check on. Every existing device — which has never seen this row —
+      // gets it off on next launch, with no migration. That is exactly the
+      // user's ask ("keep it off by default").
+      if (factCheckEnabledValue === 'true') {
+        updates.factCheckEnabled = true;
+      } else if (factCheckEnabledValue === 'false') {
+        updates.factCheckEnabled = false;
+      }
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
@@ -316,6 +353,9 @@ export const useDeepInterview = () =>
 
 export const useShowExtractedMetadata = () =>
   useMeraProtocolStore((state) => state.showExtractedMetadata);
+
+export const useFactCheckEnabled = () =>
+  useMeraProtocolStore((state) => state.factCheckEnabled);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

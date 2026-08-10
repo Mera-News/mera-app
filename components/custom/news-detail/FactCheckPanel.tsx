@@ -13,6 +13,7 @@ import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import type { FactCheckCitation, FactCheckClaim } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { isSecureUrl } from '@/lib/secure-url';
+import { useFactCheckEnabled } from '@/lib/stores/mera-protocol-store';
 import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
@@ -61,6 +62,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
 }) => {
     const { t } = useTranslation();
     const { phase, result, showProgress, timeoutKey, start, dismiss } = useFactCheck(articleId);
+    const factCheckEnabled = useFactCheckEnabled();
 
     const openCitation = useCallback((uri: string) => {
         // Citations are Google redirect wrappers, not publisher links — no UTM
@@ -74,6 +76,14 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
             });
         });
     }, []);
+
+    // UX gate only — BETA, off by default (see mera-protocol-store.ts). This
+    // does NOT gate the server: `requestFactCheck`/`factCheck` stay behind
+    // SubscriptionGuard regardless (fact-check.resolver.ts:22,38). Placed
+    // after every hook above so hook order never changes across renders;
+    // `useFactCheck`'s own mount effects only reset local state — no network,
+    // no timers until `start()` — so calling and discarding it here is free.
+    if (!factCheckEnabled) return null;
 
     // Working-but-not-yet-worth-a-spinner keeps the button on screen. This is
     // the whole no-flash mechanism — do not "simplify" it to `phase !== 'idle'`.
