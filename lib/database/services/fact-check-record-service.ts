@@ -298,3 +298,81 @@ export async function deleteFactCheck(id: string): Promise<void> {
         });
     }
 }
+
+/**
+ * Retention sweep (data-cleanup-task): deletes UNATTRIBUTED checks —
+ * `payload.checkedBy` is an empty array — requested before `cutoffMs`. A
+ * POPULATED `checkedBy` is kept indefinitely, regardless of age. Returns the
+ * number of rows deleted.
+ *
+ * WHY empty is deleted and populated is not (restated here so a later reader
+ * does not "simplify" the condition away): an empty `checkedBy` asserts "no
+ * fact-checking organisation has published on this claim". The server's
+ * re-check loop stops looking after 7 days (see `fact-check-fanout`'s sweep
+ * window), so past that point nobody is verifying the assertion any more —
+ * if a fact-checker publishes on day 10, the stored empty row is silently
+ * FALSE. Deleting it is self-healing: a later request re-creates the row and
+ * gets a fresh answer. A populated `checkedBy` is the opposite — a dated,
+ * attributed fact ("Alt News rated this False, here is the link") that does
+ * not decay and is the single most valuable thing this feature produces. It
+ * is also the user's own record, visible in the Dashboard's Fact checks
+ * list, so it is kept forever.
+ *
+ * (Supporting fact, not the reason: the article corpus only reaches back
+ * ~8 days, so a 7-day lifetime for unattributed checks roughly matches how
+ * long the article itself is even servable — but the retention rule is
+ * driven by the re-check window above, not by article lifetime.)
+ *
+ * WHY THE QUERY IS TWO-STAGE, NOT ONE SQL SWEEP. `checkedBy` lives inside
+ * `payload_json`, a text blob — there is no column, hence no index, to
+ * filter on directly. Loading every row to parse its JSON would defeat the
+ * point of an indexed cleanup sweep. Instead:
+ *   1. `requested_at < cutoffMs` runs in SQL against the INDEXED
+ *      `requested_at` column (see `schema.ts`), narrowing the candidate set
+ *      to rows already old enough to even consider. This set is bounded by
+ *      the sweep's own daily cadence, never the whole table.
+ *   2. Only THAT narrowed set is parsed in JS to read `checkedBy` — never
+ *      the full `fact_checks` table.
+ * `requested_at` (insert-only) is the correct anchor, not `resolved_at`
+ * (recomputed on every write, including re-checks) — an anchor that moves
+ * every re-check would keep resetting a row's clock and could make an
+ * unattributed row live forever.
+ *
+ * WHY A MALFORMED/UNPARSEABLE PAYLOAD IS KEPT, NOT DELETED. We cannot read
+ * `checkedBy` from it, so we cannot confirm it is unattributed — and
+ * destroying a row that might carry a user's published fact-check verdict is
+ * worse than leaving one stale, unreadable row in place for another sweep to
+ * reconsider. "Do not delete what you cannot read."
+ */
+export async function deleteExpiredFactChecks(cutoffMs: number): Promise<number> {
+    try {
+        const candidates = await collection()
+            .query(Q.where('requested_at', Q.lt(cutoffMs)))
+            .fetch();
+        if (candidates.length === 0) return 0;
+
+        const toDelete = candidates.filter((row) => {
+            let parsed: any;
+            try {
+                parsed = row.payloadJson ? JSON.parse(row.payloadJson) : null;
+            } catch {
+                return false; // unparseable — cannot confirm unattributed, keep
+            }
+            const checkedBy = parsed?.checkedBy;
+            // Not an array (missing/malformed) ⇒ cannot confirm empty, keep.
+            if (!Array.isArray(checkedBy)) return false;
+            return checkedBy.length === 0;
+        });
+        if (toDelete.length === 0) return 0;
+
+        await database.write(async () => {
+            await database.batch(toDelete.map((row) => row.prepareDestroyPermanently()));
+        });
+        return toDelete.length;
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'fact-check-record-service', method: 'deleteExpiredFactChecks' },
+        });
+        return 0;
+    }
+}

@@ -31,6 +31,7 @@ jest.mock('@/lib/logger', () => ({
 import database from '@/lib/database/index';
 import { makeRecord, type MockDatabase } from '@/lib/__test-helpers__/mockDatabase';
 import {
+    deleteExpiredFactChecks,
     getFactCheckForArticle,
     getFactCheckForClaim,
     listFactChecksByStatus,
@@ -48,10 +49,13 @@ function applyClauses(rows: any[], clauses: any[]): any[] {
     for (const clause of clauses) {
         if (clause?.type === 'where') {
             const col = clause.left;
+            const operator = clause.comparison?.operator ?? 'eq';
             const want = clause.comparison?.right?.value ?? null;
             const prop = col.replace(/_([a-z])/g, (_: string, c: string) => c.toUpperCase());
             out = out.filter((r) => {
-                const actual = r[prop] ?? null;
+                let actual = r[prop] ?? null;
+                if (actual instanceof Date) actual = actual.getTime();
+                if (operator === 'lt') return actual != null && actual < want;
                 return actual === want;
             });
         } else if (clause?.type === 'sortBy') {
@@ -225,5 +229,115 @@ describe('reads never throw', () => {
         collection().query = jest.fn(() => { throw new Error('db gone'); }) as any;
         expect(await listFactChecksForArticle('a1')).toEqual([]);
         expect(await getFactCheckForClaim('a1', 'k1')).toBeNull();
+    });
+});
+
+describe('deleteExpiredFactChecks — the retention sweep', () => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const NOW = 1_000_000 * DAY_MS; // an arbitrary "now" far from epoch 0
+    const SEVEN_DAYS_AGO = NOW - 7 * DAY_MS;
+
+    function oldRow(overrides: Record<string, unknown>) {
+        return row({
+            requestedAt: new Date(NOW - 8 * DAY_MS), // past the 7-day cutoff
+            ...overrides,
+        });
+    }
+
+    // THE IMPORTANT ONE: a populated `checkedBy` must survive the sweep no
+    // matter how old the row is. Destroying a user's published fact-check
+    // verdict is worse than keeping a stale row.
+    it('KEEPS a populated checkedBy row even when it is far past 7 days old', async () => {
+        collection()._setRows([
+            oldRow({
+                id: 'attributed',
+                requestedAt: new Date(NOW - 400 * DAY_MS), // over a year old
+                payloadJson: JSON.stringify({
+                    checkedBy: [{ organisation: 'Alt News', verdict: 'False' }],
+                }),
+            }),
+        ]);
+
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+
+        expect(deleted).toBe(0);
+        const stored = collection()._rows.find((r: any) => r.id === 'attributed');
+        expect(stored.prepareDestroyPermanently).not.toHaveBeenCalled();
+    });
+
+    it('deletes an unattributed (empty checkedBy) row once it is past 7 days old', async () => {
+        collection()._setRows([
+            oldRow({ id: 'unattributed', payloadJson: JSON.stringify({ checkedBy: [] }) }),
+        ]);
+
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+
+        expect(deleted).toBe(1);
+        const stored = collection()._rows.find((r: any) => r.id === 'unattributed');
+        expect(stored.prepareDestroyPermanently).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT delete an unattributed row that is only 6 days old', async () => {
+        collection()._setRows([
+            row({
+                id: 'young-unattributed',
+                requestedAt: new Date(NOW - 6 * DAY_MS),
+                payloadJson: JSON.stringify({ checkedBy: [] }),
+            }),
+        ]);
+
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+
+        expect(deleted).toBe(0);
+        const stored = collection()._rows.find((r: any) => r.id === 'young-unattributed');
+        expect(stored.prepareDestroyPermanently).not.toHaveBeenCalled();
+    });
+
+    it('does NOT delete a row with unparseable payload_json — cannot confirm unattributed', async () => {
+        collection()._setRows([
+            oldRow({ id: 'malformed', payloadJson: '{not valid json' }),
+        ]);
+
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+
+        expect(deleted).toBe(0);
+        const stored = collection()._rows.find((r: any) => r.id === 'malformed');
+        expect(stored.prepareDestroyPermanently).not.toHaveBeenCalled();
+    });
+
+    it('does NOT delete a row whose payload has no checkedBy array at all', async () => {
+        collection()._setRows([
+            oldRow({ id: 'no-field', payloadJson: JSON.stringify({ status: 'blocked' }) }),
+            oldRow({ id: 'null-payload', payloadJson: '' }),
+        ]);
+
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+
+        expect(deleted).toBe(0);
+        expect(collection()._rows.find((r: any) => r.id === 'no-field').prepareDestroyPermanently)
+            .not.toHaveBeenCalled();
+        expect(collection()._rows.find((r: any) => r.id === 'null-payload').prepareDestroyPermanently)
+            .not.toHaveBeenCalled();
+    });
+
+    it('mixes kept and deleted rows correctly in one sweep', async () => {
+        collection()._setRows([
+            oldRow({ id: 'keep-attributed', payloadJson: JSON.stringify({ checkedBy: [{ organisation: 'BOOM' }] }) }),
+            oldRow({ id: 'delete-empty', payloadJson: JSON.stringify({ checkedBy: [] }) }),
+            row({ id: 'keep-young', requestedAt: new Date(NOW - 1 * DAY_MS), payloadJson: JSON.stringify({ checkedBy: [] }) }),
+        ]);
+
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+
+        expect(deleted).toBe(1);
+        const rows = collection()._rows;
+        expect(rows.find((r: any) => r.id === 'keep-attributed').prepareDestroyPermanently).not.toHaveBeenCalled();
+        expect(rows.find((r: any) => r.id === 'delete-empty').prepareDestroyPermanently).toHaveBeenCalledTimes(1);
+        expect(rows.find((r: any) => r.id === 'keep-young').prepareDestroyPermanently).not.toHaveBeenCalled();
+    });
+
+    it('a throwing query returns 0 rather than throwing', async () => {
+        collection().query = jest.fn(() => { throw new Error('db gone'); }) as any;
+        expect(await deleteExpiredFactChecks(SEVEN_DAYS_AGO)).toBe(0);
     });
 });

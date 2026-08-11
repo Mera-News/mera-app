@@ -30,6 +30,10 @@ jest.mock('@/lib/database/services/notification-service', () => ({
   deleteOlderThan: jest.fn(),
 }));
 
+jest.mock('@/lib/database/services/fact-check-record-service', () => ({
+  deleteExpiredFactChecks: jest.fn(),
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
@@ -49,6 +53,7 @@ const { deleteOldSuggestions: mockDeleteOldSuggestions } = jest.requireMock('@/l
 const { refreshSuggestionsInStoreUnsafe: mockRefreshSuggestionsInStoreUnsafe } = jest.requireMock('@/lib/services/SuggestionSyncService') as any;
 const { deleteOlderThan: mockDeleteOldImpressions } = jest.requireMock('@/lib/database/services/story-impression-service') as any;
 const { deleteOlderThan: mockDeleteOldNotifications } = jest.requireMock('@/lib/database/services/notification-service') as any;
+const { deleteExpiredFactChecks: mockDeleteExpiredFactChecks } = jest.requireMock('@/lib/database/services/fact-check-record-service') as any;
 
 const registeredDef = mockRegister.mock.calls[0]?.[0];
 
@@ -103,6 +108,7 @@ describe('data-cleanup-task handler', () => {
     mockRefreshSuggestionsInStoreUnsafe.mockResolvedValue(undefined);
     mockDeleteOldImpressions.mockResolvedValue(0);
     mockDeleteOldNotifications.mockResolvedValue(0);
+    mockDeleteExpiredFactChecks.mockResolvedValue(0);
   });
 
   it('calls pruneOldJobs', async () => {
@@ -196,6 +202,42 @@ describe('data-cleanup-task handler', () => {
 
     expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('7 story impressions'));
     expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('2 notifications'));
+  });
+
+  it('prunes unattributed fact checks older than 7d', async () => {
+    const before = Date.now();
+    await registeredDef.handler(undefined, makeCtx());
+    const after = Date.now();
+
+    expect(mockDeleteExpiredFactChecks).toHaveBeenCalledTimes(1);
+    const FACT_CHECK_UNATTRIBUTED_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+    const cutoff = mockDeleteExpiredFactChecks.mock.calls[0][0];
+    expect(cutoff).toBeGreaterThanOrEqual(before - FACT_CHECK_UNATTRIBUTED_TTL_MS - 100);
+    expect(cutoff).toBeLessThanOrEqual(after - FACT_CHECK_UNATTRIBUTED_TTL_MS + 100);
+  });
+
+  it('logs pruned fact-check count when > 0', async () => {
+    mockDeleteExpiredFactChecks.mockResolvedValue(4);
+
+    const ctx = makeCtx();
+    await registeredDef.handler(undefined, ctx);
+
+    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('4 unattributed fact checks'));
+  });
+
+  it('does NOT log when 0 fact checks pruned', async () => {
+    mockDeleteExpiredFactChecks.mockResolvedValue(0);
+
+    const ctx = makeCtx();
+    await registeredDef.handler(undefined, ctx);
+
+    expect(ctx.log).not.toHaveBeenCalledWith(expect.stringContaining('fact checks'));
+  });
+
+  it('propagates errors from deleteExpiredFactChecks', async () => {
+    mockDeleteExpiredFactChecks.mockRejectedValueOnce(new Error('fact-check prune error'));
+
+    await expect(registeredDef.handler(undefined, makeCtx())).rejects.toThrow('fact-check prune error');
   });
 });
 
