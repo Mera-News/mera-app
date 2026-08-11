@@ -35,9 +35,10 @@ interface FactCheckPanelProps {
 
 /**
  * The article-detail fact-check block — a PURE OBSERVER of this device's
- * stored rows. There is nothing to tap here: starting a check is
- * `startFactCheckChat` (the action-row tick), which opens the floating chat.
- * This component only ever renders what that produced.
+ * stored rows plus `useFactCheck`'s server poll. There is nothing to tap
+ * here: starting a check is `openFactCheckChat` (the action-row tick), which
+ * opens the floating chat. This component only ever renders what that
+ * produced.
  *
  *   absent     → render nothing. Most articles are never asked about, and most
  *                of THOSE are never fact-checked at all (~4% of the corpus is
@@ -45,6 +46,12 @@ interface FactCheckPanelProps {
  *                overwhelming majority is the correct render, not a gap.
  *   processing → the working state, gated by `showProgress` so a check that
  *                resolves near-instantly never flashes a spinner.
+ *   stalled    → the poll gave up at its ceiling without a terminal answer.
+ *                MUST NOT collapse into the `absent` render (nothing) — that
+ *                exact bug shipped once (r14) and had to be fixed. Renders its
+ *                own honest "still checking" block instead, distinct from
+ *                both "nothing" and "checked, no result" — see
+ *                `factCheck.stillChecking` and `POLL_CEILING_MS`.
  *   terminal   → verdict chip → summary → claims → `FactCheckSources` →
  *                disclaimer, ONE CARD PER ROW. Several checks per article now
  *                stack: the user can pick more than one claim, and post-v52
@@ -67,12 +74,29 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     const terminalRows = rows.filter((row) => isTerminalStatus(row.status));
     // The no-flash rule: a check that resolves faster than PROGRESS_DELAY_MS
     // must not flash a working indicator on its way to the verdict. If nothing
-    // terminal exists yet either, there is nothing honest to render at all.
+    // terminal exists yet either, and the poll hasn't stalled either, there is
+    // nothing honest to render at all.
     const showWorking = phase === 'processing' && showProgress;
-    if (terminalRows.length === 0 && !showWorking) return null;
+    const showStalled = phase === 'stalled';
+    if (terminalRows.length === 0 && !showWorking && !showStalled) return null;
 
     return (
         <VStack space="sm" testID={`${testIDPrefix}-panel`}>
+            {showStalled && (
+                // Deliberately its OWN block, not a variant of the working
+                // block above: the working block promises an imminent answer
+                // ("this check keeps running… you don't have to wait"), which
+                // is no longer an honest thing to say once the poll itself has
+                // given up. This block says so plainly instead.
+                <VStack
+                    space="xs"
+                    testID={`${testIDPrefix}-stalled`}
+                    className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
+                >
+                    <Text size="sm" className="text-gray-300">{t('factCheck.stillChecking')}</Text>
+                </VStack>
+            )}
+
             {showWorking && (
                 <VStack
                     space="xs"
@@ -118,7 +142,13 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                         <HStack space="xs" className="items-center">
                             <MaterialIcons name="fact-check" size={16} color={ACCENT} />
                             <Text size="sm" className="text-gray-300 font-semibold ml-1 flex-1" numberOfLines={2}>
-                                {(row.claim ?? payload?.claim) || t('factCheck.title')}
+                                {/* `row.claim` is the STORED column — populated
+                                    only on a legacy per-claim row (pre-pivot
+                                    on-device checks). A server (whole-article)
+                                    check has no single "claim" to name — see
+                                    `fact-check-types.ts` — so it falls to the
+                                    generic heading. */}
+                                {row.claim || t('factCheck.title')}
                             </Text>
                         </HStack>
 

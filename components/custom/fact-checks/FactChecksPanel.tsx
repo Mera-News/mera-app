@@ -13,6 +13,7 @@ import {
     useFactChecksStore,
 } from '@/lib/stores/fact-checks-store';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
+import { reconcileStoredFactChecks } from '@/lib/fact-check/fact-check-graphql-client';
 import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl } from 'react-native';
@@ -46,14 +47,22 @@ interface FactChecksPanelProps {
  * way Saved and History do.
  *
  * Rows come from the on-device `fact_checks` table, which the article panel
- * writes to. `refresh` (not `load`) is what runs on mount and on every chip
- * selection, and it is now the ONLY way a finished check reaches the reader:
- * the push notification that used to announce one was removed (it required the
- * server to record which user asked about which article — see
- * `handleNotificationNavigation`). A local-only read renders whatever the table
+ * (and, pivot P8d, this panel itself) writes to. `refresh` (not `load`) is
+ * what runs on mount and on every chip selection.
+ *
+ * `reconcileStoredFactChecks()` runs FIRST, and is what makes `refresh()`
+ * trustworthy for a row nobody is actively watching: `useFactCheck`'s poll
+ * only ever covers the ONE article open at a time, so a request lodged via
+ * chat and then left — the reader closed the article, or the poll itself gave
+ * up at its ceiling (`POLL_CEILING_MS`) — has no path back to this list
+ * without it. Without this call, a local-only read renders whatever the table
  * happens to hold, which is exactly how a server-side COMPLETE check kept
- * showing "Still searching" indefinitely. It costs one bounded server read per
- * UNRESOLVED row and zero once everything is terminal — there is no poll.
+ * showing "Still searching" indefinitely once already (r14 P2b, "a completed
+ * check was stuck forever" — the bug this file's own copy now promises won't
+ * happen: `factCheck.queuedHint` and `factCheck.stillChecking` both tell the
+ * reader to look here). It costs one bounded server read per UNRESOLVED row
+ * (capped, see `RECONCILE_CAP`) and zero once everything is terminal — there
+ * is no poll, no interval, just a bounded sweep.
  *
  * Delete is local-only and genuinely cheap: the server keeps its own cross-user
  * cache, so a deleted row can be re-fetched by opening the article and asking
@@ -72,14 +81,24 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     const refresh = useFactChecksStore((s) => s.refresh);
     const remove = useFactChecksStore((s) => s.remove);
 
+    // The reconcile-then-refresh sequence, shared by the activation effect
+    // below and the pull-to-refresh control: sweep BEFORE reading, awaited, so
+    // a row the sweep advances to terminal is already in the table by the time
+    // `refresh()` reads it — reading first would show the stale row and need a
+    // SECOND trigger to notice the sweep's own write.
+    const reconcileAndRefresh = useCallback(async () => {
+        await reconcileStoredFactChecks();
+        await refresh();
+    }, [refresh]);
+
     // Re-read whenever the chip becomes active. The panel stays mounted behind
     // `display: 'none'` once visited, so a mount-only effect would fire exactly
     // once per app launch and every later visit would show a frozen list.
     // Bounded: terminal rows are skipped, so a settled table costs no requests.
     useEffect(() => {
         if (!active) return;
-        void refresh();
-    }, [active, refresh]);
+        void reconcileAndRefresh();
+    }, [active, reconcileAndRefresh]);
 
     const handleDelete = useCallback((id: string) => {
         void hapticLight();
@@ -129,14 +148,16 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                         </Text>
                     </VStack>
                 }
-                // The manual path. With the poll gone, a result can only arrive
-                // via a read or a push — so a user who suspects the list is
-                // stale must have a way to ask that does not depend on a
-                // notification having been delivered.
+                // The manual path — a user who suspects the list is stale can
+                // always ask directly rather than waiting for the next chip
+                // selection. Same reconcile-then-refresh sequence as above, so
+                // a pull here can ALSO advance a row the activation sweep
+                // hasn't gotten to yet (e.g. the panel has been sitting active
+                // since before a request was even lodged).
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
-                        onRefresh={() => { void refresh(); }}
+                        onRefresh={() => { void reconcileAndRefresh(); }}
                         tintColor={REFRESH_TINT}
                         colors={[REFRESH_TINT]}
                         // Push the spinner below the absolute collapsing header

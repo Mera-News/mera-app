@@ -1,15 +1,19 @@
-// useFactCheck — the pure WatermelonDB observer that replaced the request/
-// response hook. Properties worth a build over:
+// useFactCheck — the WatermelonDB observer PLUS the server poll layer
+// (pivot P8d re-added polling). Properties worth a build over:
 //
-//   • it reacts to the RUNNER MUTATING A ROW IN PLACE, not just to rows being
+//   • it reacts to a row being MUTATED IN PLACE, not just to rows being
 //     added/removed. This is the one bug that would make the whole feature look
 //     broken while every unit test built on a naive "push a new array" fake
 //     still passed — see the file header of `use-fact-check.ts`. The fake query
 //     below only exposes `observeWithColumns`, never `observe`, so a regression
 //     back to `.observe()` fails EVERY test here with "not a function" rather
 //     than silently passing;
-//   • it never touches the network or mutates anything — there is no
-//     `requestFactCheck` any more, only a read;
+//   • it never touches the network for an article nobody has asked about —
+//     `requestFactCheck` (the GraphQL client) is called ONLY once a local
+//     non-terminal row already exists;
+//   • a poll that reaches its ceiling without a terminal answer becomes
+//     'stalled', never 'absent' and never a fabricated 'terminal' — that
+//     collapse is the exact bug r14 shipped once and had to fix;
 //   • `showProgress` gates off the row's OWN `requestedAt`, not a mount timer,
 //     so a job already running for a while shows immediately on mount.
 
@@ -52,6 +56,15 @@ jest.mock('@/lib/database/index', () => ({
     default: { get: jest.fn(() => mockCollection) },
 }));
 
+// Bare (no inline implementation, matching the codebase's established
+// pattern for these wrapper mocks) — its default implementation is set fresh
+// in `beforeEach` below, and giving it a fixed-arity inline implementation
+// here would make the spread in the wrapper below a type error.
+const mockRequestFactCheck = jest.fn();
+jest.mock('../fact-check-graphql-client', () => ({
+    requestFactCheck: (...a: unknown[]) => mockRequestFactCheck(...a),
+}));
+
 /** Simulate the runner landing an update — SAME row identity, new field
  *  values, mirroring an in-place WatermelonDB write rather than a fresh insert. */
 function emitRows(rows: any[]) {
@@ -81,7 +94,7 @@ function fakeRow(overrides: Record<string, unknown> = {}) {
 }
 
 import { act, renderHook } from '@testing-library/react-native';
-import { PROGRESS_DELAY_MS } from '../fact-check-state';
+import { POLL_CEILING_MS, POLL_INTERVAL_MS, PROGRESS_DELAY_MS } from '../fact-check-state';
 import { useFactCheck } from '../use-fact-check';
 
 async function flush() {
@@ -98,6 +111,10 @@ describe('useFactCheck', () => {
         subscribers.clear();
         observeWithColumnsCalls.length = 0;
         queryCalls.length = 0;
+        // Full reset (not just clear) so a test that overrode the
+        // implementation can never leak it into the next one.
+        mockRequestFactCheck.mockReset();
+        mockRequestFactCheck.mockImplementation(() => Promise.resolve({ terminal: false, row: null }));
         jest.useFakeTimers();
     });
 
@@ -267,5 +284,132 @@ describe('useFactCheck', () => {
         expect(result.current.rows[0].payload).toBeNull();
         // The mirrored column survives even when the JSON blob didn't parse.
         expect(result.current.rows[0].verdict).toBeNull();
+    });
+
+    // ── The server poll layer (pivot P8d) ───────────────────────────────────
+    describe('the server poll layer', () => {
+        /** Advance one poll tick and let its promise settle. Mirrors the real
+         *  cadence: the timer fires, `poll()` runs synchronously, and its
+         *  `requestFactCheck().then(...)` needs a microtask flush to schedule
+         *  the NEXT timer — advancing the fake clock alone is not enough. */
+        async function tick(ms: number) {
+            await act(async () => {
+                jest.advanceTimersByTime(ms);
+                await Promise.resolve();
+                await Promise.resolve();
+            });
+        }
+
+        it('never calls the server for an article nobody has asked about', async () => {
+            emitRows([]);
+            renderHook(() => useFactCheck('a1'));
+            await flush();
+            await tick(POLL_INTERVAL_MS * 3);
+            expect(mockRequestFactCheck).not.toHaveBeenCalled();
+        });
+
+        it('never calls the server once every row is terminal', async () => {
+            emitRows([fakeRow({ status: 'complete', verdict: 'supported' })]);
+            renderHook(() => useFactCheck('a1'));
+            await flush();
+            await tick(POLL_INTERVAL_MS * 3);
+            expect(mockRequestFactCheck).not.toHaveBeenCalled();
+        });
+
+        it('polls immediately on mount, then every POLL_INTERVAL_MS, for a non-terminal row', async () => {
+            emitRows([fakeRow({ status: 'pending', payload: null })]);
+            renderHook(() => useFactCheck('a1'));
+            await flush();
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
+            expect(mockRequestFactCheck).toHaveBeenCalledWith('a1');
+
+            await tick(POLL_INTERVAL_MS);
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(2);
+
+            await tick(POLL_INTERVAL_MS);
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(3);
+        });
+
+        it('stops polling the moment the local row goes terminal (subscription-driven), not because the poll loop decided to', async () => {
+            const row = fakeRow({ status: 'processing', payload: null });
+            emitRows([row]);
+            renderHook(() => useFactCheck('a1'));
+            await flush();
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
+
+            // Simulate the write a real `requestFactCheck` would have made —
+            // the poll loop itself never touches `rows`, only the DB write does.
+            act(() => {
+                emitRows([{ ...row, status: 'complete', verdict: 'supported' }]);
+            });
+
+            await tick(POLL_INTERVAL_MS * 3);
+            // No further polls: the effect re-ran with localPhase 'terminal'
+            // and exited before scheduling anything.
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
+        });
+
+        // ── THE r14-SHAPED BUG THIS MUST NOT REINTRODUCE ────────────────────
+        // A poll that gives up must be VISIBLY DISTINGUISHABLE from "no
+        // result". This test fails if 'stalled' were ever collapsed into
+        // 'absent' (phase would read 'absent', rows.length === 0 either way,
+        // and no caller could tell "gave up" apart from "never asked").
+        it('gives up at POLL_CEILING_MS and reports "stalled" — never "absent", never a fabricated "terminal"', async () => {
+            emitRows([fakeRow({ status: 'pending', payload: null })]);
+            const { result } = renderHook(() => useFactCheck('a1'));
+            await flush();
+
+            const ticksToReachCeiling = Math.ceil(POLL_CEILING_MS / POLL_INTERVAL_MS) + 1;
+            for (let i = 0; i < ticksToReachCeiling; i += 1) {
+                await tick(POLL_INTERVAL_MS);
+            }
+
+            expect(result.current.phase).toBe('stalled');
+            expect(result.current.phase).not.toBe('absent');
+            expect(result.current.phase).not.toBe('terminal');
+            // The row is still there (a real request WAS made) — 'stalled' is
+            // not the same state as "nobody asked".
+            expect(result.current.rows).toHaveLength(1);
+
+            // Polling stops once given up — it does not retry forever.
+            const callsAtCeiling = mockRequestFactCheck.mock.calls.length;
+            await tick(POLL_INTERVAL_MS * 3);
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(callsAtCeiling);
+        });
+
+        it('re-arms a fresh, equally bounded poll on a fresh mount — "re-read once on next mount"', async () => {
+            emitRows([fakeRow({ status: 'pending', payload: null })]);
+            const { unmount } = renderHook(() => useFactCheck('a1'));
+            await flush();
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
+            unmount();
+
+            mockRequestFactCheck.mockClear();
+            renderHook(() => useFactCheck('a1'));
+            await flush();
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
+        });
+
+        it('treats a request failure as "not yet confirmed", not as a crash', async () => {
+            mockRequestFactCheck.mockImplementation(() => Promise.reject(new Error('network blip')));
+            emitRows([fakeRow({ status: 'pending', payload: null })]);
+            const { result } = renderHook(() => useFactCheck('a1'));
+            // The real `requestFactCheck` never rejects (it catches and
+            // degrades internally — see fact-check-graphql-client.ts), so a
+            // rejection here is a defensive-programming scenario only; the
+            // hook must not let it become an unhandled rejection or a crash.
+            await expect(flush()).resolves.not.toThrow();
+            expect(result.current.phase).toBe('processing');
+        });
+
+        it('stops polling on unmount — no dangling timers, no state updates after unmount', async () => {
+            emitRows([fakeRow({ status: 'pending', payload: null })]);
+            const { unmount } = renderHook(() => useFactCheck('a1'));
+            await flush();
+            const callsBeforeUnmount = mockRequestFactCheck.mock.calls.length;
+            unmount();
+            await tick(POLL_INTERVAL_MS * 5);
+            expect(mockRequestFactCheck).toHaveBeenCalledTimes(callsBeforeUnmount);
+        });
     });
 });

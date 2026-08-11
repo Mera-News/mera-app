@@ -4,7 +4,8 @@ import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestio
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
-import { startFactCheckChat } from '@/lib/fact-check/start-fact-check-chat';
+import { openFactCheckChat } from '@/lib/fact-check/open-fact-check-chat';
+import { FACT_CHECK_SEED_MESSAGE_KEY } from '@/lib/fact-check/fact-check-state';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
@@ -623,16 +624,17 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     // on a locked free-tier plan rather than
                                     // left as a dead tap.
                                     factCheck={aiAccess !== 'locked' ? {
-                                        onStart: () => startFactCheckChat({
+                                        onStart: () => openFactCheckChat({
                                             articleId: suggestion.articleId,
+                                            suggestionId: suggestion._id,
                                             title: suggestion.title_en ?? suggestion.title_original ?? '',
-                                            description: suggestion.description_en ?? null,
-                                            url: articleUrl ?? null,
-                                            publicationName: suggestion.publication_name ?? null,
-                                        }, t('factCheck.chatSeed')),
+                                        }, t(FACT_CHECK_SEED_MESSAGE_KEY)),
+                                        // See ArticleDetailScreen — 'stalled'
+                                        // reads as 'pending' on the tick; the
+                                        // panel is where it gets its own copy.
                                         state: factCheckPhase === 'terminal'
                                             ? 'done'
-                                            : factCheckPhase === 'processing'
+                                            : factCheckPhase === 'processing' || factCheckPhase === 'stalled'
                                                 ? 'pending'
                                                 : 'none',
                                     } : undefined}

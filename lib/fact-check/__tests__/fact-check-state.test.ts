@@ -9,12 +9,14 @@ import {
     describeCheckedBy,
     describeOrganisationVerdict,
     describeVerdict,
+    FACT_CHECK_SEED_MESSAGE_KEY,
     isTerminalStatus,
     normalizeVerdict,
+    POLL_CEILING_MS,
+    POLL_INTERVAL_MS,
     PROGRESS_DELAY_MS,
     shouldShowProgress,
 } from '../fact-check-state';
-import * as factCheckState from '../fact-check-state';
 
 describe('isTerminalStatus', () => {
     it.each(['complete', 'blocked', 'COMPLETE', ' blocked '])('is terminal: %s', (s) => {
@@ -217,15 +219,31 @@ describe('describeOrganisationVerdict', () => {
     });
 });
 
-// The old POLL_INTERVAL_MS / POLL_TIMEOUT_MS are GONE, deliberately: the client
-// no longer polls and no longer invents a deadline. PROGRESS_DELAY_MS survives
-// because the no-spinner-flash rule for a cross-user cache hit does.
+// Pivot P8d RE-ADDS polling (server-side async job, deleted from the client in
+// pivot P4 when the check briefly ran entirely on-device). These constants
+// replace the old, too-short 3s/60s window — see fact-check-state.ts's own
+// header for the full reasoning; this test only pins the values and the
+// relationships that would silently regress the design if broken.
 describe('timing constants', () => {
-    it('exposes only the progress delay, and keeps it imperceptible', () => {
+    it('keeps the progress delay imperceptible', () => {
         expect(PROGRESS_DELAY_MS).toBe(400);
-        const state = factCheckState as Record<string, unknown>;
-        expect(state.POLL_INTERVAL_MS).toBeUndefined();
-        expect(state.POLL_TIMEOUT_MS).toBeUndefined();
-        expect(state.timeoutCopyKey).toBeUndefined();
+    });
+
+    it('polls at a sane cadence, bounded by a ceiling generous enough for a multi-round server job', () => {
+        expect(POLL_INTERVAL_MS).toBeGreaterThan(0);
+        expect(POLL_CEILING_MS).toBeGreaterThan(POLL_INTERVAL_MS);
+        // The old ceiling this replaces was 60_000ms and was measured to be
+        // too short for a job that searches, looks up ClaimReview and
+        // synthesises server-side. The new one must be meaningfully larger,
+        // not a cosmetic bump.
+        expect(POLL_CEILING_MS).toBeGreaterThanOrEqual(60_000 * 2);
+        // A whole-number poll count keeps "stop cleanly at the ceiling"
+        // exact rather than landing mid-interval.
+        expect(POLL_CEILING_MS % POLL_INTERVAL_MS).toBe(0);
+    });
+
+    it('exposes the seed-message key the tick and the chat starter chip share', () => {
+        expect(typeof FACT_CHECK_SEED_MESSAGE_KEY).toBe('string');
+        expect(FACT_CHECK_SEED_MESSAGE_KEY.length).toBeGreaterThan(0);
     });
 });

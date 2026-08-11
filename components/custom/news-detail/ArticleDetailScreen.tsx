@@ -4,7 +4,8 @@ import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestio
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
-import { startFactCheckChat } from '@/lib/fact-check/start-fact-check-chat';
+import { openFactCheckChat } from '@/lib/fact-check/open-fact-check-chat';
+import { FACT_CHECK_SEED_MESSAGE_KEY } from '@/lib/fact-check/fact-check-state';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
@@ -645,21 +646,25 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
                                     // Hidden entirely on a locked free-tier plan
-                                    // — `startFactCheckChat` no-ops there too
+                                    // — `openFactCheckChat` no-ops there too
                                     // (the store's own chokepoint), but a tick
                                     // that visibly does nothing is worse than no
                                     // tick at all.
                                     factCheck={aiAccess !== 'locked' ? {
-                                        onStart: () => startFactCheckChat({
+                                        onStart: () => openFactCheckChat({
                                             articleId: article._id ?? articleId,
                                             title: article.title_en_internal_only ?? article.title ?? '',
-                                            description: article.description ?? null,
-                                            url: articleUrl ?? null,
-                                            publicationName: article.publicationSource?.publication_name ?? null,
-                                        }, t('factCheck.chatSeed')),
+                                        }, t(FACT_CHECK_SEED_MESSAGE_KEY)),
+                                        // 'stalled' reads as 'pending' here too —
+                                        // the tick only has a single/double
+                                        // vocabulary (asked-or-unasked vs
+                                        // answered), and a poll that gave up is
+                                        // still "asked, no answer yet" from the
+                                        // tick's point of view. The PANEL is
+                                        // where 'stalled' gets its own honest copy.
                                         state: factCheckPhase === 'terminal'
                                             ? 'done'
-                                            : factCheckPhase === 'processing'
+                                            : factCheckPhase === 'processing' || factCheckPhase === 'stalled'
                                                 ? 'pending'
                                                 : 'none',
                                     } : undefined}

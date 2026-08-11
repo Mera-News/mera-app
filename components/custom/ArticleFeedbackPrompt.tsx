@@ -52,12 +52,12 @@ interface ArticleFeedbackPromptProps {
      *  navigating anywhere. Omitted ⇒ the nudge just closes the surface. */
     onBrowseRelated?: () => void;
     /** The fact-check tick. `onStart` opens the floating chat's claim picker
-     *  (`startFactCheckChat`) — it no longer toggles a section, that request
+     *  (`openFactCheckChat`) — it no longer toggles a section, that request
      *  was withdrawn. `state` is the caller's own `useFactCheck(articleId)`
      *  phase, mapped to the tick's three-signal vocabulary. Omitted ⇒ no tick,
      *  which is every surface without a place to show the result (the feed
      *  card) or a locked free-tier user (the chokepoint is
-     *  `startFactCheckChat`'s, but the caller still hides the tick so it is
+     *  `openFactCheckChat`'s, but the caller still hides the tick so it is
      *  never a dead tap). */
     factCheck?: {
         onStart: () => void;

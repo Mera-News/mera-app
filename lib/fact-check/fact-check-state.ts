@@ -1,13 +1,13 @@
 /**
  * Pure state/copy logic for the article fact check.
  *
- * Everything here is a total function over runner-supplied strings. That
- * matters more than usual: the on-device runner's `status`, `verdict` and
- * `FactCheckClaim.assessment` (`lib/fact-check/fact-check-runner.ts`) are plain
- * strings, NOT enums — the model behind them can and will emit a value this
- * build has never seen. Every normalizer therefore has an explicit unknown
- * bucket that falls through to generic, hedged copy. Rendering a raw model
- * token, or an empty verdict row, is the failure this file exists to prevent.
+ * Everything here is a total function over server-supplied strings. That
+ * matters more than usual: the server's `status`, `verdict` and
+ * `FactCheckClaim.assessment` (see `fact-check-types.ts`) are plain strings,
+ * NOT enums — the model behind them can and will emit a value this build has
+ * never seen. Every normalizer therefore has an explicit unknown bucket that
+ * falls through to generic, hedged copy. Rendering a raw model token, or an
+ * empty verdict row, is the failure this file exists to prevent.
  *
  * No React, no network, never throws.
  */
@@ -46,15 +46,24 @@ export type FactCheckTone = 'positive' | 'caution' | 'neutral';
  * Where the fact-check UI currently is, for ONE article's stored rows. Drives
  * `FactCheckPanel`'s render and the action-row tick's icon.
  *
- * There is no `idle`/`working`/`queued`/`error` any more — those named states
- * in a request/response flow the app no longer runs. `useFactCheck` is a pure
- * observer of the on-device table, so it only has three honest things to say:
- * nobody has asked (`absent`), a background job is running (`processing`), or
- * every asked-for row has an answer (`terminal`). `blocked` rows count as
- * `terminal` — the runner already decided the row will never change again; see
- * `isTerminalStatus`.
+ * `useFactCheck` is a LIVE observer of the on-device table PLUS a bounded
+ * server poll layered on top of it (pivot P8d re-added polling, deleted in
+ * pivot P4 when the check briefly ran entirely on-device) — see
+ * `POLL_INTERVAL_MS` / `POLL_CEILING_MS` below. That gives it four honest
+ * things to say: nobody has asked (`absent`), a background job is running and
+ * still within its poll window (`processing`), every asked-for row has an
+ * answer (`terminal`, `blocked` included — the row will never change again;
+ * see `isTerminalStatus`), or a poll ran out its window without a terminal
+ * answer (`stalled`).
+ *
+ * `stalled` MUST NOT collapse into `absent` or render as nothing. r14 shipped
+ * exactly that bug once already — a timed-out poll that looked identical to
+ * "no result" — and it had to be fixed. `stalled` is a real UI state with its
+ * own copy (`factCheck.stillChecking`) precisely so a reader can tell "still
+ * working, ask again later" apart from "nobody has asked" or "checked, found
+ * nothing".
  */
-export type FactCheckPhase = 'absent' | 'processing' | 'terminal';
+export type FactCheckPhase = 'absent' | 'processing' | 'terminal' | 'stalled';
 
 /**
  * A spinner is only honest if the wait is perceptible. Reopening an article
@@ -63,6 +72,54 @@ export type FactCheckPhase = 'absent' | 'processing' | 'terminal';
  * showing an in-progress one truthfully.
  */
 export const PROGRESS_DELAY_MS = 400;
+
+/**
+ * Poll cadence and ceiling for `useFactCheck`'s server layer.
+ *
+ * THE OLD 3s/60s WINDOW (pre-r14) WAS TOO SHORT FOR THIS DESIGN AND MUST NOT
+ * COME BACK. It was sized for a client that did the whole job inline within
+ * the request the reader was staring at. The async job this wave polls is the
+ * opposite: it runs claim extraction, up to three web-search rounds, a
+ * ClaimReview lookup and an LLM synthesis pass, server-side, on a schedule the
+ * server controls and can retry — "no mobile deadline" is the whole point of
+ * having moved it there. A client-side ceiling can therefore never be "the
+ * job's real deadline"; it can only be "how long is it reasonable to keep an
+ * open screen polling before saying so honestly and stopping."
+ *
+ * Chosen values, and why:
+ *   - `POLL_INTERVAL_MS = 6s` — frequent enough that a check landing while the
+ *     reader is still on the article feels immediate, infrequent enough that
+ *     30 polls (see below) is a trivial request volume for a subscription-
+ *     gated feature, not a hammering pattern.
+ *   - `POLL_CEILING_MS = 3 minutes` (30 polls) — long enough to cover the
+ *     realistic worst case measured for this pipeline (several search rounds
+ *     plus one synthesis call, occasionally retried on a transient failure),
+ *     short enough that a reader who genuinely stays on one article for three
+ *     minutes without an answer is better served by an honest "still checking"
+ *     state than an indefinite spinner. It is FIVE TIMES the old 60s ceiling,
+ *     matching the 5x margin the r14 P2 poll-removal commit used when it
+ *     needed to prove "no more polls after the old deadline" — the same
+ *     multiple, now applied to widen the window instead of removing it.
+ *
+ * Reaching the ceiling stops polling — it does NOT retry forever and it does
+ * NOT silently render like "no result" (see `FactCheckPhase.stalled`).
+ * Leaving the screen and coming back (a fresh mount) starts a fresh, equally
+ * bounded poll — the honest way to let a reader "check again" without a
+ * client-invented notion of overall failure. The Dashboard's own bounded
+ * per-row read (`FactChecksPanel`) is the other way an answer that lands after
+ * the ceiling still reaches the reader.
+ */
+export const POLL_INTERVAL_MS = 6_000;
+export const POLL_CEILING_MS = 180_000;
+
+/** i18n key for the message the fact-check tick auto-sends as the user's
+ *  opening chat turn — the SAME opening turn Mera AI's "Quick fact check"
+ *  starter chip sends (see `open-fact-check-chat.ts`), so a tick tap and a
+ *  chip tap land on the identical claim-picker pill list, which always ends
+ *  with the async "The Article" option. Reuses the existing key rather than
+ *  minting a new one: this is the string already shipped in 19 locales for
+ *  this exact purpose pre-pivot. */
+export const FACT_CHECK_SEED_MESSAGE_KEY = 'factCheck.chatSeed';
 
 const TERMINAL: ReadonlySet<string> = new Set(['complete', 'blocked']);
 

@@ -1,40 +1,50 @@
 /**
- * The fact-check OBSERVER for the article detail screens and the action-row
- * tick.
+ * The fact-check OBSERVER + POLLER for the article detail screens and the
+ * action-row tick.
  *
- * THIS HOOK DOES NOTHING BUT WATCH. There is no mutation, no network query, and
- * no reconcile pass — the whole request/response dance (`requestFactCheck`
- * mutation, `factCheck` query, the `reconcileFactCheck` read-on-mount) is gone
- * along with the server pipeline it talked to. Starting a check is
- * `startFactCheckChat` (opens the floating chat, which stages a claim and calls
- * F2's `enqueueFactCheck`); this hook only ever reads back what that produced.
+ * PIVOT P8d re-adds a real server poll, deleted in pivot P4 when the check
+ * briefly ran entirely on-device (no server round trip to wait on). Now the
+ * job is server-side again (BullMQ, "no mobile deadline"), so this hook is
+ * back to doing two things:
  *
- *   absent ── enqueueFactCheck writes a row ──► processing ──► terminal
+ *   1. LIVE-OBSERVE the on-device `fact_checks` table — unchanged mechanism
+ *      from the on-device era, see the `observeWithColumns` note below.
+ *   2. POLL THE SERVER, bounded, but ONLY while a local non-terminal row
+ *      already exists — i.e. only once something has already asked. An
+ *      article nobody has asked about triggers zero network calls, same
+ *      invariant the pure-observer version had.
+ *
+ *   absent ── something writes a non-terminal row ──► processing ──┬─► terminal
+ *                                                                   └─► stalled (poll gave up)
  *
  * `absent` — nobody has asked about this article on this device.
- * `processing` — at least one claim is still being checked. A `processing` row
- *   coexists with already-`terminal` ones the moment a second claim is picked,
- *   so this is an AGGREGATE across every stored row, not one row's state.
- * `terminal` — every asked-for claim has an answer (`complete` or `blocked`;
- *   see `isTerminalStatus`). `failed` rows are NOT terminal: F2's recovery task
- *   re-drives them, so from the reader's side a `failed` row is indistinguishable
- *   from one still in flight.
+ * `processing` — at least one row is non-terminal AND the poll for it hasn't
+ *   given up yet. `failed` rows count as processing too: the server's own
+ *   recovery cron re-drives them, so from the reader's side a `failed` row is
+ *   indistinguishable from one still in flight.
+ * `stalled` — a non-terminal row's poll ran out its window (`POLL_CEILING_MS`
+ *   in `fact-check-state.ts`) without a terminal answer. THIS MUST NEVER
+ *   RENDER LIKE `absent` — see that file's header for why (r14 shipped exactly
+ *   that bug once). A fresh mount re-arms a fresh, equally bounded poll.
+ * `terminal` — every row has an answer (`complete` or `blocked`; see
+ *   `isTerminalStatus`).
  *
- * LIVE, NOT POLLED. `enqueueFactCheck` writes the row once and the runner then
- * UPDATES THAT SAME ROW as it progresses — no new row is ever inserted for an
- * existing claim. A plain WatermelonDB `.observe()` only re-emits when the
- * matched ROW SET changes (rows added/removed), so it would never notice the
- * runner flipping `processing` → `complete` in place and the panel would spin
+ * LIVE, NOT POLLED, FOR THE LOCAL HALF. Whatever writes the row (Q1's chat
+ * tool handler lodging the first ask, or this hook's own poll loop advancing
+ * it) UPDATES THAT SAME ROW in place — no new row is ever inserted for an
+ * existing article. A plain WatermelonDB `.observe()` only re-emits when the
+ * matched ROW SET changes (rows added/removed), so it would never notice a
+ * poll flipping `pending` → `complete` in place and the panel would spin
  * forever. `.observeWithColumns([...])` is what actually re-emits on an
  * in-place field change, which is the only way "the detail screen shows
  * processing → result while the reader is still looking at it" can be true.
  *
  * Queried directly against the WatermelonDB collection rather than through
- * `fact-check-record-service.ts` (F2's file, not this wave's to edit): the
- * service only exposes one-shot reads, and this hook needs a live subscription.
- * `article_id` is the one column this depends on, and it is untouched by the
- * v52 migration (additive-only — see CLAUDE.md's WatermelonDB migration
- * policy), so this stays correct across it.
+ * `fact-check-record-service.ts`: that service only exposes one-shot reads,
+ * and this hook needs a live subscription. `article_id` is the one column
+ * this depends on, and it is untouched by the v52 migration (additive-only —
+ * see CLAUDE.md's WatermelonDB migration policy), so this stays correct
+ * across it.
  */
 
 import { Q } from '@nozbe/watermelondb';
@@ -42,9 +52,12 @@ import { useEffect, useState } from 'react';
 import database from '../database/index';
 import FactCheckRecord from '../database/models/FactCheckRecord';
 import type { StoredFactCheck } from '../database/services/fact-check-record-service';
+import { requestFactCheck } from './fact-check-graphql-client';
 import type { FactCheckRow } from './fact-check-types';
 import {
     isTerminalStatus,
+    POLL_CEILING_MS,
+    POLL_INTERVAL_MS,
     PROGRESS_DELAY_MS,
     shouldShowProgress,
     type FactCheckPhase,
@@ -99,7 +112,11 @@ function toStoredRow(row: FactCheckRecord): StoredFactCheck<FactCheckRow> {
     };
 }
 
-function computePhase(rows: readonly StoredFactCheck<FactCheckRow>[]): FactCheckPhase {
+/** The LOCAL phase — never `'stalled'`, which only exists once a poll session
+ *  has actually given up; see `useFactCheck`'s combination with `pollGaveUp`. */
+function computeLocalPhase(
+    rows: readonly StoredFactCheck<FactCheckRow>[],
+): 'absent' | 'processing' | 'terminal' {
     if (rows.length === 0) return 'absent';
     return rows.some((row) => !isTerminalStatus(row.status)) ? 'processing' : 'terminal';
 }
@@ -125,14 +142,80 @@ export function useFactCheck(articleId: string | null | undefined): UseFactCheck
         }
         const subscription = collection()
             .query(Q.where('article_id', articleId), Q.sortBy('requested_at', Q.desc))
-            // See the file header — plain `.observe()` would miss the runner
+            // See the file header — plain `.observe()` would miss a poll
             // updating an existing row in place.
             .observeWithColumns(['status', 'verdict', 'payload_json', 'resolved_at'])
             .subscribe((records) => setRows(records.map(toStoredRow)));
         return () => subscription.unsubscribe();
     }, [articleId]);
 
-    const phase = computePhase(rows);
+    const localPhase = computeLocalPhase(rows);
+
+    // ── The server poll layer ────────────────────────────────────────────
+    // Only runs while a LOCAL non-terminal row already exists — see the file
+    // header. Bounded by POLL_INTERVAL_MS / POLL_CEILING_MS (fact-check-state.ts).
+    //
+    // A terminal result never needs to be read out of this effect: landing it
+    // means calling `requestFactCheck`, which UPSERTS the row, which the live
+    // subscription above picks up on its own and flips `localPhase` to
+    // 'terminal' — at which point this effect re-runs, sees a non-'processing'
+    // phase, and exits without scheduling anything further. This effect's own
+    // job is only to track whether the CEILING was reached first.
+    const [pollGaveUp, setPollGaveUp] = useState(false);
+
+    useEffect(() => {
+        // Any re-entry into (or out of) 'processing' — a fresh mount, a new
+        // article, or a fresh ask after a prior session stalled — starts a
+        // clean poll session. This IS "re-read once on next mount": the
+        // effect's first action below is an immediate, unconditional poll.
+        setPollGaveUp(false);
+        if (!articleId || localPhase !== 'processing') return;
+
+        let cancelled = false;
+        let timerId: ReturnType<typeof setTimeout> | null = null;
+        const startedAt = Date.now();
+
+        const poll = () => {
+            if (cancelled) return;
+            requestFactCheck(articleId)
+                .then((outcome) => {
+                    if (cancelled || outcome.terminal) return;
+                    if (Date.now() - startedAt >= POLL_CEILING_MS) {
+                        setPollGaveUp(true);
+                        return;
+                    }
+                    timerId = setTimeout(poll, POLL_INTERVAL_MS);
+                })
+                .catch(() => {
+                    // `requestFactCheck` is documented to never reject (it
+                    // catches and degrades to "not yet confirmed" internally)
+                    // — this is a defensive backstop, not the primary error
+                    // path. A misbehaving caller (or a test) throwing here
+                    // must not become an unhandled rejection, and must not
+                    // silently stop polling either: treat it exactly like a
+                    // non-terminal response and try again next interval.
+                    if (cancelled) return;
+                    if (Date.now() - startedAt >= POLL_CEILING_MS) {
+                        setPollGaveUp(true);
+                        return;
+                    }
+                    timerId = setTimeout(poll, POLL_INTERVAL_MS);
+                });
+        };
+
+        poll();
+
+        return () => {
+            cancelled = true;
+            if (timerId) clearTimeout(timerId);
+        };
+    }, [articleId, localPhase]);
+
+    // 'stalled' is the ONLY state a caller can't get by reading `localPhase`
+    // alone — it must never collapse into 'absent' (nothing rendered) or into
+    // a fabricated 'terminal' (a fake answer). See fact-check-state.ts.
+    const phase: FactCheckPhase =
+        localPhase === 'processing' && pollGaveUp ? 'stalled' : localPhase;
 
     const [showProgress, setShowProgress] = useState(false);
     useEffect(() => {

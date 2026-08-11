@@ -1,7 +1,7 @@
 // FactCheckPanel — a PURE OBSERVER post-pivot. No action button, no retry, no
-// hide: the tick (`startFactCheckChat`) is the only way in, and this component
-// only ever renders what `useFactCheck` reads back off the device. Properties
-// pinned here because nothing else enforces them:
+// hide: the tick (`openFactCheckChat`) is the only way in, and this component
+// only ever renders what `useFactCheck` reads back off the device (plus its
+// server poll). Properties pinned here because nothing else enforces them:
 //   • absent renders nothing at all;
 //   • a processing row below the progress delay renders nothing (no flash);
 //   • the hedging disclaimer and the citation list render with EVERY verdict;
@@ -363,6 +363,27 @@ describe('FactCheckPanel', () => {
         expect(getByTestId('fact-check-1-result')).toBeTruthy();
         expect(getByText('factCheck.verdict.supported.label')).toBeTruthy();
         expect(getByText('factCheck.verdict.disputed.label')).toBeTruthy();
+    });
+
+    // ── The r14-shaped bug this pivot must not reintroduce ──────────────────
+    // A poll that gives up must render something DIFFERENT from both "nobody
+    // asked" (absent → null) and "checked, nothing to show" (a terminal row
+    // with an empty checkedBy still renders a full verdict card). This test
+    // FAILS if 'stalled' is ever treated the same as 'absent': absent renders
+    // `null` from `toJSON()`, so asserting a non-null tree here is exactly the
+    // assertion that distinguishes "gave up" from "no result".
+    it('renders a distinguishable "still checking" state when the poll gives up — never identical to absent/no-result', () => {
+        hookState({ phase: 'stalled', showProgress: false, rows: [storedRow({ status: 'pending', payload: null })] });
+        const { toJSON, getByTestId, getByText, queryByTestId } = renderPanel();
+        expect(toJSON()).not.toBeNull();
+        expect(getByTestId('fact-check-panel')).toBeTruthy();
+        expect(getByTestId('fact-check-stalled')).toBeTruthy();
+        expect(getByText('factCheck.stillChecking')).toBeTruthy();
+        // Not the working block's copy — that promises an imminent answer,
+        // which is no longer honest once the poll has actually given up.
+        expect(queryByTestId('fact-check-working')).toBeNull();
+        // Not a fabricated terminal verdict either.
+        expect(queryByTestId('fact-check-0-verdict')).toBeNull();
     });
 
     it('shows the working indicator ABOVE an already-terminal row when a second claim is mid-check', () => {
