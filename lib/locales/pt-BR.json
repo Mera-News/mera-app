@@ -1594,7 +1594,9 @@
     "quickFailed": "Mera encontrou algumas informações, mas não conseguiu montar uma resposta desta vez. Tente novamente em um momento.",
     "quickNothingFound": "A busca não encontrou nada sobre isto. Isso não significa que seja falso — pode ser algo novo, nicho ou simplesmente não estar amplamente coberto na internet.",
     "quickRunning": "Buscando na web…",
-    "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano — verifique depois ou procure em Verificações de fatos no seu Painel."
+    "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano — verifique depois ou procure em Verificações de fatos no seu Painel.",
+    "checkedByMultipleNote": "Estas são avaliações independentes, cada uma na escala própria da organização — nem sempre concordam entre si.",
+    "ownReadingHeading": "Leitura própria da Mera — secundária ao parecer acima"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Priorizar esta fonte",

@@ -1624,7 +1624,9 @@
     "quickFailed": "Mera znalazła pewne informacje, ale tym razem nie mogła ułożyć odpowiedzi. Spróbuj ponownie za chwilę.",
     "quickNothingFound": "Wyszukiwanie nie znalazło nic na ten temat. To nie oznacza, że to fałsz — może to być po prostu nowe, niszowe, lub coś, co nie jest szeroko znane online.",
     "quickRunning": "Przeszukiwanie sieci…",
-    "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle — wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie."
+    "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle — wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie.",
+    "checkedByMultipleNote": "To niezależne oceny, każda w skali danej organizacji — nie zawsze są ze sobą zgodne.",
+    "ownReadingHeading": "Ocena własna Mera — drugorzędna wobec werdyktu powyżej"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Uprioritetnij to źródło",

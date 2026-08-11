@@ -1594,7 +1594,9 @@
     "quickFailed": "Mera hat Informationen gefunden, konnte aber diesmal keine Antwort zusammenstellen. Versuche es in einem Moment erneut.",
     "quickNothingFound": "Die Suche hat nichts dazu ergeben. Das bedeutet nicht, dass es falsch ist – es könnte einfach neu, spezialisiert oder online nicht weit verbreitet sein.",
     "quickRunning": "Suche im Web läuft…",
-    "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft – schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach."
+    "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft – schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach.",
+    "checkedByMultipleNote": "Dies sind unabhängige Bewertungen, jede nach der eigenen Skala der jeweiligen Organisation — sie stimmen nicht immer miteinander überein.",
+    "ownReadingHeading": "Meras eigene Einschätzung — nachrangig zur oben genannten Bewertung"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Diese Quelle priorisieren",

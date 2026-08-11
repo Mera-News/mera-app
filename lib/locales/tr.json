@@ -1596,7 +1596,9 @@
     "quickFailed": "Mera bazı bilgiler buldu ancak bu kez bir cevap oluşturamadı. Birazdan tekrar dene.",
     "quickNothingFound": "Arama, bununla ilgili hiçbir şey bulamamıştır. Bu, bunun yanlış olduğu anlamına gelmez — sadece yeni, niş veya çevrimiçi olarak yaygın olarak kapsanan bir konu olmayabilir.",
     "quickRunning": "Web aranıyor…",
-    "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor — daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak."
+    "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor — daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
+    "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir — her zaman birbiriyle uyuşmayabilir.",
+    "ownReadingHeading": "Mera'nın kendi değerlendirmesi — yukarıdaki karara ikincil"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Bu kaynağı önceliklendır",

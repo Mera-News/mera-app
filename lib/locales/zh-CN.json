@@ -1595,7 +1595,9 @@
     "quickFailed": "Mera 找到了一些信息，但这次无法组织成一个答案。请稍候后重试。",
     "quickNothingFound": "搜索未找到关于此内容的任何信息。这并不意味着它是假的 — 它可能只是新内容、利基话题或网上没有广泛报道的内容。",
     "quickRunning": "正在搜索网络…",
-    "stillChecking": "这耗时比平时长。仍在后台检查中 — 稍后再查看，或查看您仪表板上的「事实核查」部分。"
+    "stillChecking": "这耗时比平时长。仍在后台检查中 — 稍后再查看，或查看您仪表板上的「事实核查」部分。",
+    "checkedByMultipleNote": "这些是各自独立的评级,分别采用相关机构自己的标准——彼此不一定一致。",
+    "ownReadingHeading": "Mera 自己的解读——次于上方的结论"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "优先考虑此来源",

@@ -1594,7 +1594,9 @@
     "quickFailed": "Mera vond wat informatie, maar kon deze keer geen antwoord samenstellen. Probeer het over een moment opnieuw.",
     "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is — het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
     "quickRunning": "Het web wordt doorzocht…",
-    "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd — kijk later terug of zoek onder Feitencontroles op uw Dashboard."
+    "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd — kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
+    "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie — ze zijn het niet altijd met elkaar eens.",
+    "ownReadingHeading": "Mera's eigen kijk — ondergeschikt aan het oordeel hierboven"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",

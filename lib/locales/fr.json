@@ -1601,7 +1601,9 @@
     "quickFailed": "Mera a trouvé certaines informations mais n'a pas pu formuler une réponse cette fois. Réessayez dans un instant.",
     "quickNothingFound": "La recherche n'a rien trouvé à ce sujet. Cela ne signifie pas que c'est faux — c'est peut-être nouveau, spécialisé ou pas quelque chose de largement couvert en ligne.",
     "quickRunning": "Recherche sur le web…",
-    "stillChecking": "Cela prend plus de temps que d'habitude. C'est toujours en cours de vérification en arrière-plan — revenez plus tard ou consultez Vérifications des faits dans votre Tableau de bord."
+    "stillChecking": "Cela prend plus de temps que d'habitude. C'est toujours en cours de vérification en arrière-plan — revenez plus tard ou consultez Vérifications des faits dans votre Tableau de bord.",
+    "checkedByMultipleNote": "Il s'agit d'évaluations indépendantes, chacune selon l'échelle propre à cette organisation — elles ne concordent pas toujours entre elles.",
+    "ownReadingHeading": "Lecture propre à Mera — secondaire par rapport au verdict ci-dessus"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioriser cette source",

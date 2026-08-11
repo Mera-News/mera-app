@@ -1595,7 +1595,9 @@
     "quickFailed": "Mera tìm thấy một số thông tin nhưng không thể soạn thành câu trả lời lần này. Thử lại sau lát.",
     "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai — nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
     "quickRunning": "Đang tìm kiếm web…",
-    "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra — quay lại sau hoặc xem dưới Fact checks trên Dashboard."
+    "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra — quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
+    "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó — chúng không phải lúc nào cũng thống nhất với nhau.",
+    "ownReadingHeading": "Nhận định riêng của Mera — thứ yếu so với kết luận ở trên"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",

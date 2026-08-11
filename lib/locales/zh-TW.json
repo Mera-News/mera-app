@@ -1595,7 +1595,9 @@
     "quickFailed": "Mera 找到了一些資訊但這次無法整合成答案。請稍後再試。",
     "quickNothingFound": "搜尋沒有找到相關內容。這並不意味著是假的——它可能只是新近發生、專業領域話題或網路上沒有廣泛報導。",
     "quickRunning": "正在搜尋網路…",
-    "stillChecking": "這花費的時間比平常久。它仍在背景檢查中——稍後再查看，或查看您儀表板上的「查證結果」。"
+    "stillChecking": "這花費的時間比平常久。它仍在背景檢查中——稍後再查看，或查看您儀表板上的「查證結果」。",
+    "checkedByMultipleNote": "這些是各自獨立的評等,分別採用相關機構自己的標準——彼此不一定一致。",
+    "ownReadingHeading": "Mera 自己的解讀——次於上方的結論"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "優先考慮此來源",

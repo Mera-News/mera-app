@@ -1594,7 +1594,9 @@
     "quickFailed": "Mera menemukan beberapa informasi tetapi tidak dapat menyusun jawaban kali ini. Coba lagi sebentar.",
     "quickNothingFound": "Pencarian tidak menemukan apa pun tentang ini. Itu tidak berarti salah — mungkin saja baru, niche, atau bukan sesuatu yang banyak dibahas secara online.",
     "quickRunning": "Mencari di web…",
-    "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang — periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda."
+    "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang — periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda.",
+    "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri — sehingga tidak selalu sejalan satu sama lain.",
+    "ownReadingHeading": "Pembacaan Mera sendiri — bersifat sekunder terhadap putusan di atas"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritaskan sumber ini",
