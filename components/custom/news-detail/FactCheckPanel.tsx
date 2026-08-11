@@ -6,7 +6,9 @@ import { VStack } from '@/components/ui/vstack';
 import FactCheckSources from '@/components/custom/fact-checks/FactCheckSources';
 import {
     describeAssessment,
+    describeCheckedBy,
     describeVerdict,
+    describeVerdictPresentation,
     isTerminalStatus,
     type FactCheckTone,
 } from '@/lib/fact-check/fact-check-state';
@@ -61,6 +63,23 @@ interface FactCheckPanelProps {
  * the primary answer; the AI summary is context around it. An EMPTY
  * `checkedBy` is the normal outcome for most stories, not a failure: see
  * `factCheck.noCheckedBy`.
+ *
+ * PIVOT P8h — WHEN checkedBy IS POPULATED, IT LEADS, NOT OUR OWN VERDICT
+ * CHIP. A real screenshot caught a green "Consistent with sources" chip
+ * sitting directly above "No fact-checking organisation we searched has
+ * published on this story" — a confident verdict on zero evidence, "the
+ * failure mode that looks exactly like success" per the server's own
+ * `clampVerdictToEvidence` comment. The server now clamps that at write
+ * time, but a row can still legitimately arrive `verdict: 'unverifiable'`
+ * WITH a populated `checkedBy` (the re-check path: nothing found on day 0,
+ * clamped; a fact-checker publishes on day 2, `checkedBy` fills in, the
+ * verdict is deliberately NOT re-opened — see `describeVerdictPresentation`).
+ * "Couldn't confirm" next to a named organisation's own rating is the same
+ * contradiction, one hop later. So: `checkedBy` populated ⇒ `FactCheckSources`
+ * renders FIRST, and our own verdict chip is either demoted (a plain,
+ * relabelled line under "Mera's own reading") or suppressed outright when it
+ * is `'unverifiable'` — see `describeVerdictPresentation`'s own reasoning for
+ * why suppression, not just demotion, is correct there.
  */
 const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     articleId,
@@ -131,6 +150,19 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                 const checkedBy = payload?.checkedBy;
                 const checkedByStatus = payload?.checkedByStatus;
                 const rowPrefix = `${testIDPrefix}-${index}`;
+                // See the file header (PIVOT P8h) — an organisation's own
+                // rating leads once one exists; ours never competes with it.
+                const organisationCount = describeCheckedBy(checkedBy).length;
+                const hasCheckedBy = organisationCount > 0;
+                const presentation = describeVerdictPresentation(row.verdict, organisationCount);
+                const sources = (
+                    <FactCheckSources
+                        checkedBy={checkedBy}
+                        checkedByStatus={checkedByStatus}
+                        citations={citations}
+                        testIDPrefix={rowPrefix}
+                    />
+                );
 
                 return (
                     <VStack
@@ -156,52 +188,88 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                             <Text size="sm" className="text-gray-300">{t('factCheck.blocked')}</Text>
                         ) : verdictInfo ? (
                             <VStack space="sm">
-                                <Box
-                                    testID={`${rowPrefix}-verdict`}
-                                    className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
-                                >
-                                    <Text
-                                        size="sm"
-                                        className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}
+                                {/* checkedBy LEADS when populated — see the file
+                                    header (PIVOT P8h). Positioned above our own
+                                    reading rather than the other way around, so
+                                    the organisation's own verbatim rating is the
+                                    first thing read, not a chip that may
+                                    contradict it further down. */}
+                                {hasCheckedBy && sources}
+
+                                {presentation !== 'suppressed' && (
+                                    <VStack
+                                        space="sm"
+                                        testID={hasCheckedBy ? `${rowPrefix}-own-reading` : undefined}
                                     >
-                                        {t(verdictInfo.labelKey as any)}
-                                    </Text>
-                                </Box>
-                                <Text size="sm" className="text-gray-300">
-                                    {t(verdictInfo.detailKey as any)}
-                                </Text>
-
-                                {payload?.summary ? (
-                                    <Text size="sm" className="text-gray-300">{payload.summary}</Text>
-                                ) : null}
-
-                                {claims.length > 0 && (
-                                    <VStack space="xs" className="mt-1">
-                                        <Text size="xs" className="text-gray-400 font-semibold uppercase">
-                                            {t('factCheck.claimsHeading')}
-                                        </Text>
-                                        {claims.map((claim, claimIndex) => {
-                                            const info = describeAssessment(claim.assessment);
-                                            return (
-                                                <VStack
-                                                    key={`claim-${claimIndex}`}
-                                                    space="xs"
-                                                    testID={`${rowPrefix}-claim-${claimIndex}`}
-                                                    className="border-l-2 border-gray-700 pl-2 py-1"
+                                        {hasCheckedBy && (
+                                            <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                                                {t('factCheck.ownReadingHeading')}
+                                            </Text>
+                                        )}
+                                        {presentation === 'lead' ? (
+                                            <Box
+                                                testID={`${rowPrefix}-verdict`}
+                                                className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
+                                            >
+                                                <Text
+                                                    size="sm"
+                                                    className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}
                                                 >
-                                                    <Text size="sm" className="text-gray-200">{claim.claim}</Text>
-                                                    <Text
-                                                        size="xs"
-                                                        className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
-                                                    >
-                                                        {t(info.labelKey as any)}
-                                                    </Text>
-                                                    {claim.note ? (
-                                                        <Text size="xs" className="text-gray-400">{claim.note}</Text>
-                                                    ) : null}
-                                                </VStack>
-                                            );
-                                        })}
+                                                    {t(verdictInfo.labelKey as any)}
+                                                </Text>
+                                            </Box>
+                                        ) : (
+                                            // 'secondary' — no chip background: a
+                                            // coloured pill is what reads as "the
+                                            // answer", which is exactly the
+                                            // competing signal this demotion
+                                            // exists to remove. Plain, tone-only
+                                            // text instead.
+                                            <Text
+                                                size="sm"
+                                                testID={`${rowPrefix}-verdict-secondary`}
+                                                className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}
+                                            >
+                                                {t(verdictInfo.labelKey as any)}
+                                            </Text>
+                                        )}
+                                        <Text size="sm" className="text-gray-300">
+                                            {t(verdictInfo.detailKey as any)}
+                                        </Text>
+
+                                        {payload?.summary ? (
+                                            <Text size="sm" className="text-gray-300">{payload.summary}</Text>
+                                        ) : null}
+
+                                        {claims.length > 0 && (
+                                            <VStack space="xs" className="mt-1">
+                                                <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                                                    {t('factCheck.claimsHeading')}
+                                                </Text>
+                                                {claims.map((claim, claimIndex) => {
+                                                    const info = describeAssessment(claim.assessment);
+                                                    return (
+                                                        <VStack
+                                                            key={`claim-${claimIndex}`}
+                                                            space="xs"
+                                                            testID={`${rowPrefix}-claim-${claimIndex}`}
+                                                            className="border-l-2 border-gray-700 pl-2 py-1"
+                                                        >
+                                                            <Text size="sm" className="text-gray-200">{claim.claim}</Text>
+                                                            <Text
+                                                                size="xs"
+                                                                className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
+                                                            >
+                                                                {t(info.labelKey as any)}
+                                                            </Text>
+                                                            {claim.note ? (
+                                                                <Text size="xs" className="text-gray-400">{claim.note}</Text>
+                                                            ) : null}
+                                                        </VStack>
+                                                    );
+                                                })}
+                                            </VStack>
+                                        )}
                                     </VStack>
                                 )}
 
@@ -212,13 +280,10 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                     the disclaimer on purpose: that sentence
                                     tells the reader to read the sources before
                                     relying on it, which is only true once these
-                                    are tappable. */}
-                                <FactCheckSources
-                                    checkedBy={checkedBy}
-                                    checkedByStatus={checkedByStatus}
-                                    citations={citations}
-                                    testIDPrefix={rowPrefix}
-                                />
+                                    are tappable. When checkedBy is empty this is
+                                    its ORIGINAL position (unchanged); when
+                                    populated it already rendered above, first. */}
+                                {!hasCheckedBy && sources}
 
                                 <Text size="xs" className="text-gray-400 mt-1">
                                     {t('factCheck.disclaimer')}

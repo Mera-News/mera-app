@@ -6,6 +6,7 @@ import type { CheckedByStatus, FactCheckedByEntry, FactCheckCitation } from '@/l
 import {
     describeCheckedBy,
     describeOrganisationVerdict,
+    shouldShowMultipleOrganisationsCaveat,
     type FactCheckTone,
 } from '@/lib/fact-check/fact-check-state';
 import logger from '@/lib/logger';
@@ -101,7 +102,22 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                     </Text>
                 )
             ) : (
-                organisations.map((entry, index) => {
+                <>
+                    {/* Never a synthesised consensus — each rating below is
+                        verbatim, on that organisation's own scale, and two of
+                        them can legitimately disagree. This says so rather
+                        than letting a reader assume a shared heading means
+                        agreement. */}
+                    {shouldShowMultipleOrganisationsCaveat(organisations.length) && (
+                        <Text
+                            size="xs"
+                            className="text-gray-400 italic"
+                            testID={`${testIDPrefix}-multiple-organisations-note`}
+                        >
+                            {t('factCheck.checkedByMultipleNote')}
+                        </Text>
+                    )}
+                    {organisations.map((entry, index) => {
                     const org = entry.organisation.trim();
                     // Verbatim when unrecognised — a fact checker's published
                     // rating is human editorial copy ("Mostly False"), not a
@@ -154,7 +170,8 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                             {body}
                         </Box>
                     );
-                })
+                    })}
+                </>
             )}
 
             {/* Sources consulted. A COMPLETE check with zero citations is a real

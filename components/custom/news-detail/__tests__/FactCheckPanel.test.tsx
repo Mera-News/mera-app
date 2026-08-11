@@ -341,6 +341,107 @@ describe('FactCheckPanel', () => {
         expect(queryByText('factCheck.noCheckedBy')).toBeNull();
     });
 
+    // ── PIVOT P8h — checkedBy leads, our own verdict never contradicts it ───
+    // A real screenshot caught a green "Consistent with sources" chip sitting
+    // above "No fact-checking organisation we searched has published on this
+    // story". The server now clamps that at write time, but the SAME
+    // contradiction can still arrive one hop later: `verdict: 'unverifiable'`
+    // WITH a populated `checkedBy` (the re-check path — see
+    // `describeVerdictPresentation`'s own comment). These tests cover the
+    // render layer's half of that fix.
+    describe('when checkedBy is populated', () => {
+        const withOrg = (verdict: string, extra: Record<string, unknown> = {}) => storedRow({
+            verdict,
+            payload: {
+                ...storedRow().payload,
+                verdict,
+                checkedBy: [{ organisation: 'Alt News', url: 'https://altnews.in/x', verdict: 'False' }],
+                ...extra,
+            },
+        });
+
+        // ── THE MUST-FAIL TEST ───────────────────────────────────────────────
+        // Sabotaged (see report), this must go RED if 'unverifiable' next to a
+        // named organisation is ever allowed to render as though nothing is
+        // known — i.e. if the suppression below is removed or bypassed.
+        it('NEVER shows "unverifiable" alongside a named organisation — the chip is suppressed, not just relabelled', () => {
+            hookState({ phase: 'terminal', rows: [withOrg('unverifiable')] });
+            const { queryByTestId, queryByText, getByText } = renderPanel();
+
+            // The organisation's own ruling is present and is the answer.
+            expect(getByText('Alt News')).toBeTruthy();
+            expect(getByText('False')).toBeTruthy();
+
+            // Our own verdict — in EITHER its leading OR its demoted form —
+            // must not appear at all once it is 'unverifiable' here.
+            expect(queryByTestId('fact-check-0-verdict')).toBeNull();
+            expect(queryByTestId('fact-check-0-verdict-secondary')).toBeNull();
+            expect(queryByText('factCheck.verdict.unverifiable.label')).toBeNull();
+            expect(queryByText('factCheck.verdict.unverifiable.detail')).toBeNull();
+        });
+
+        it('leads with the organisation, not our own chip, for a non-unverifiable verdict too — demoted, never equal weight', () => {
+            hookState({ phase: 'terminal', rows: [withOrg('supported')] });
+            const { getByTestId, queryByTestId, getByText } = renderPanel();
+
+            // The demoted form exists (informational), the leading (chip)
+            // form does not — a coloured pill next to a named ruling is the
+            // contradiction this demotion removes.
+            expect(queryByTestId('fact-check-0-verdict')).toBeNull();
+            expect(getByTestId('fact-check-0-verdict-secondary')).toBeTruthy();
+            expect(getByText('factCheck.ownReadingHeading')).toBeTruthy();
+            expect(getByText('Alt News')).toBeTruthy();
+        });
+
+        it('renders the organisation list BEFORE our own reading in document order', () => {
+            hookState({ phase: 'terminal', rows: [withOrg('supported')] });
+            const { toJSON } = renderPanel();
+            const tree = JSON.stringify(toJSON());
+            const orgIndex = tree.indexOf('Alt News');
+            const ownReadingIndex = tree.indexOf('factCheck.ownReadingHeading');
+            expect(orgIndex).toBeGreaterThan(-1);
+            expect(ownReadingIndex).toBeGreaterThan(-1);
+            expect(orgIndex).toBeLessThan(ownReadingIndex);
+        });
+
+        it('still shows the leading chip (unchanged) when checkedBy is empty, even for the same unverifiable verdict', () => {
+            hookState({
+                phase: 'terminal',
+                rows: [storedRow({
+                    verdict: 'unverifiable',
+                    payload: { ...storedRow().payload, verdict: 'unverifiable', checkedBy: [] },
+                })],
+            });
+            const { getByTestId, queryByTestId } = renderPanel();
+            expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
+            expect(queryByTestId('fact-check-0-own-reading')).toBeNull();
+        });
+
+        it('warns that ratings may disagree once two or more organisations are listed', () => {
+            hookState({
+                phase: 'terminal',
+                rows: [storedRow({
+                    payload: {
+                        ...storedRow().payload,
+                        checkedBy: [
+                            { organisation: 'Alt News', url: 'https://altnews.in/x', verdict: 'False' },
+                            { organisation: 'BOOM', url: 'https://boomlive.in/y', verdict: 'Misleading' },
+                        ],
+                    },
+                })],
+            });
+            const { getByText, getByTestId } = renderPanel();
+            expect(getByTestId('fact-check-0-multiple-organisations-note')).toBeTruthy();
+            expect(getByText('factCheck.checkedByMultipleNote')).toBeTruthy();
+        });
+
+        it('does NOT show the disagreement note for a single organisation', () => {
+            hookState({ phase: 'terminal', rows: [withOrg('supported')] });
+            const { queryByTestId } = renderPanel();
+            expect(queryByTestId('fact-check-0-multiple-organisations-note')).toBeNull();
+        });
+    });
+
     it('renders the blocked terminal state instead of a verdict', () => {
         hookState({ phase: 'terminal', rows: [storedRow({ status: 'blocked', verdict: null })] });
         const { getByText, queryByTestId } = renderPanel();

@@ -6,7 +6,9 @@ import { VStack } from '@/components/ui/vstack';
 import FactCheckSources from '@/components/custom/fact-checks/FactCheckSources';
 import type { CheckedByStatus, FactCheckedByEntry, FactCheckCitation } from '@/lib/fact-check/fact-check-types';
 import {
+    describeCheckedBy,
     describeVerdict,
+    describeVerdictPresentation,
     isTerminalStatus,
     type FactCheckTone,
 } from '@/lib/fact-check/fact-check-state';
@@ -49,6 +51,13 @@ interface FactCheckCardProps {
  * than being hidden — the user asked for it, and a request that vanishes from
  * every surface until it completes is indistinguishable from one that was
  * dropped.
+ *
+ * PIVOT P8h — same rule as `FactCheckPanel`: once `checkedBy` is populated,
+ * an organisation's own rating leads and our verdict chip is demoted
+ * ('secondary', plain text under a relabelled heading) or suppressed
+ * outright when it is `'unverifiable'` (see `describeVerdictPresentation`) —
+ * "Couldn't confirm" next to a named organisation's own rating is not a
+ * hedge, it is wrong.
  */
 const FactCheckCard: React.FC<FactCheckCardProps> = ({
     item,
@@ -61,6 +70,20 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
     const resolved = isTerminalStatus(item.status);
     const blocked = item.status === 'blocked';
     const verdictInfo = resolved && !blocked ? describeVerdict(item.verdict) : null;
+    const checkedBy = (item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy;
+    const checkedByStatus = (item.payload as { checkedByStatus?: CheckedByStatus } | null)?.checkedByStatus;
+    const citations = (item.payload as { citations?: FactCheckCitation[] } | null)?.citations;
+    const organisationCount = describeCheckedBy(checkedBy).length;
+    const hasCheckedBy = organisationCount > 0;
+    const presentation = describeVerdictPresentation(item.verdict, organisationCount);
+    const sources = resolved && !blocked ? (
+        <FactCheckSources
+            checkedBy={checkedBy}
+            checkedByStatus={checkedByStatus}
+            citations={citations}
+            testIDPrefix={testIDPrefix}
+        />
+    ) : null;
 
     return (
         // The delete control is a SIBLING of the tappable body, absolutely
@@ -116,25 +139,42 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 <Text size="xs" className="text-gray-400">{t('factCheck.blocked')}</Text>
             )}
 
-            {verdictInfo && (
-                <Box
-                    testID={`${testIDPrefix}-verdict-${item.id}`}
-                    className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
-                >
-                    <Text size="xs" className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}>
-                        {t(verdictInfo.labelKey as any)}
-                    </Text>
-                </Box>
+            {/* checkedBy LEADS when populated — see the file header (PIVOT
+                P8h). Above the verdict rather than below it, so an
+                organisation's own rating is read first. */}
+            {hasCheckedBy && sources}
+
+            {verdictInfo && presentation !== 'suppressed' && (
+                <VStack space="xs" testID={hasCheckedBy ? `${testIDPrefix}-own-reading-${item.id}` : undefined}>
+                    {hasCheckedBy && (
+                        <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                            {t('factCheck.ownReadingHeading')}
+                        </Text>
+                    )}
+                    {presentation === 'lead' ? (
+                        <Box
+                            testID={`${testIDPrefix}-verdict-${item.id}`}
+                            className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
+                        >
+                            <Text size="xs" className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}>
+                                {t(verdictInfo.labelKey as any)}
+                            </Text>
+                        </Box>
+                    ) : (
+                        // 'secondary' — no chip background, see FactCheckPanel
+                        // for the same call.
+                        <Text
+                            size="xs"
+                            testID={`${testIDPrefix}-verdict-secondary-${item.id}`}
+                            className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}
+                        >
+                            {t(verdictInfo.labelKey as any)}
+                        </Text>
+                    )}
+                </VStack>
             )}
 
-            {resolved && !blocked && (
-                <FactCheckSources
-                    checkedBy={(item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy}
-                    checkedByStatus={(item.payload as { checkedByStatus?: CheckedByStatus } | null)?.checkedByStatus}
-                    citations={(item.payload as { citations?: FactCheckCitation[] } | null)?.citations}
-                    testIDPrefix={testIDPrefix}
-                />
-            )}
+            {!hasCheckedBy && sources}
 
                     <Text size="xs" className="text-gray-500">
                         {t('factCheck.disclaimer')}

@@ -289,6 +289,8 @@
     "checkedByHeading": "Fact-checkers who covered this",
     "noCheckedBy": "No fact-checking organisation we searched has published on this story. That doesn't make the story wrong — most stories are never fact-checked.",
     "checkedByUnavailable": "We couldn't check whether a fact-checking organisation has published on this story — the lookup didn't go through. That's different from nobody having published; below is what the wider search did find.",
+    "checkedByMultipleNote": "These are independent ratings, each on that organisation's own scale — they don't always agree with each other.",
+    "ownReadingHeading": "Mera's own reading — secondary to the ruling above",
     "organisationA11y": "Open {{organisation}}'s fact check in the in-app browser",
     "citationA11y": "Open the source {{source}} in the in-app browser",
     "noLink": "No link available",

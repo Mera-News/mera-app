@@ -200,4 +200,53 @@ describe('FactCheckCard', () => {
         expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
         expect(queryByText('factCheck.checkedByUnavailable')).toBeNull();
     });
+
+    // ── PIVOT P8h — same rule as FactCheckPanel: checkedBy leads, our own
+    // verdict never contradicts a named organisation's own ruling. ──────────
+    describe('when checkedBy is populated', () => {
+        const withOrg = (verdict: string | null) => stored({
+            verdict,
+            payload: {
+                _id: 'fc1',
+                status: 'complete',
+                verdict,
+                checkedBy: [{ organisation: 'Alt News', url: 'https://altnews.in/x', verdict: 'False' }],
+            },
+        });
+
+        // ── THE MUST-FAIL TEST (Dashboard card half) ────────────────────────
+        it('NEVER shows "unverifiable" alongside a named organisation on the Dashboard card either', () => {
+            const { queryByTestId, queryByText, getByText } = render(
+                <FactCheckCard item={withOrg('unverifiable')} onPress={jest.fn()} testIDPrefix="fc" />,
+            );
+            expect(getByText('Alt News')).toBeTruthy();
+            expect(queryByTestId('fc-verdict-row1')).toBeNull();
+            expect(queryByTestId('fc-verdict-secondary-row1')).toBeNull();
+            expect(queryByText('factCheck.verdict.unverifiable.label')).toBeNull();
+        });
+
+        it('demotes (never the leading chip) a non-unverifiable verdict once an organisation has ruled', () => {
+            const { getByTestId, queryByTestId, getByText } = render(
+                <FactCheckCard item={withOrg('supported')} onPress={jest.fn()} testIDPrefix="fc" />,
+            );
+            expect(queryByTestId('fc-verdict-row1')).toBeNull();
+            expect(getByTestId('fc-verdict-secondary-row1')).toBeTruthy();
+            expect(getByText('factCheck.ownReadingHeading')).toBeTruthy();
+        });
+
+        it('still leads with the chip (unchanged) when checkedBy is empty, even for the same verdict', () => {
+            const { getByTestId, queryByTestId } = render(
+                <FactCheckCard
+                    item={stored({
+                        verdict: 'supported',
+                        payload: { _id: 'fc1', status: 'complete', verdict: 'supported', checkedBy: [] },
+                    })}
+                    onPress={jest.fn()}
+                    testIDPrefix="fc"
+                />,
+            );
+            expect(getByTestId('fc-verdict-row1')).toBeTruthy();
+            expect(queryByTestId('fc-verdict-secondary-row1')).toBeNull();
+        });
+    });
 });
