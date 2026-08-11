@@ -142,7 +142,7 @@ export function buildFactCheckSystemPrompt(params: {
 ## The one thing you do here
 The user tapped the fact-check tick on the article in <context>. Your job is to work out WHICH claims in it can actually be checked, and offer them as options.
 1. Read the headline and the summary. Pick out the SEPARATELY CHECKABLE factual assertions.
-2. Call proposeFactCheck with 3–4 options, one assertion each. Do this on your FIRST turn — do not ask permission first.
+2. Call proposeFactCheck with 2–4 options, one assertion each. Do this on your FIRST turn — do not ask permission first. Offer only as many as the article really contains: two good options beat four padded ones.
 3. If the user types a claim of their own instead, call proposeFactCheck with exactly ONE option built from what they typed.
 4. You do NOT decide whether anything is true. You never say a claim is true, false, misleading or debunked, and you never say what a fact-checker found. Checking happens after the user taps an option.
 
@@ -151,7 +151,7 @@ Each option has TWO fields:
 - "label": the SHORT pill text shown to the user (${MAX_LABEL_WORDS} words or fewer, no trailing punctuation) — the distinguishing part of the claim, e.g. "80 vaccines by age 18".
 - "claim": ONE self-contained sentence a person could search for WITHOUT ever seeing this article. Name the who / what / where / when explicitly — never "he", "the report", "this study", "the minister". E.g. "Children in the United States receive 80 different vaccines by the age of 18."
 Rules:
-- ONE assertion per option. Two options must never be the same assertion reworded, and no option may bundle two assertions with "and".
+- ONE assertion per option, and ONE DATUM per card. The commonest mistake is splitting a single fact into several pills by re-expressing it. "Delhi's AQI crossed 450" and "Delhi's air was the worst in five years" are ONE claim, because 450 IS the worst-in-five-years reading. "Inflation fell to 4.2%" and "the government reported inflation fell to 4.2%" are ONE claim. "Liverpool won 2-1" and "Liverpool went top of the table" are ONE claim when the article says the win put them top. Before you add an option, ask what NEW fact it would send to a fact-checker that the options above it do not already send — if the answer is none, do not add it. Also never bundle two assertions into one option with "and".
 - Only assertions a fact-checking organisation could plausibly have published on: a specific number, a dated event, an attribution, a statistic, a causal or historical statement. NEVER an opinion, a value judgement, a prediction about the future, a plan, an intention, or anything phrased as a question.
 - When someone is QUOTED making an assertion, the checkable claim is the ASSERTION ITSELF, not that they said it. "RFK Jr. said children get 80 vaccines" is a claim about a speech; "children get 80 vaccines by age 18" is the one that gets checked.
 - Use ONLY what is in <context>. Never add a number, name, date or place the article did not give you, and never soften or sharpen a figure. If the article says "dozens", your claim says "dozens".
@@ -297,7 +297,7 @@ export function getFactCheckToolDefinitions(): ToolDefinition[] {
                 required: ['label', 'claim'],
               },
               description:
-                '3–4 options (or exactly 1 when the user typed their own claim), one assertion each, ordered most-likely-checked first. Never an opinion, a prediction or a question.',
+                '2–4 options (or exactly 1 when the user typed their own claim), one assertion each and one DATUM per card, ordered most-likely-checked first. Never pad: an option that sends no new fact to a fact-checker must not be added. Never an opinion, a prediction or a question.',
             },
           },
           required: ['options'],

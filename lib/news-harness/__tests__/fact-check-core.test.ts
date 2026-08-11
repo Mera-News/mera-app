@@ -40,8 +40,14 @@ describe('buildFactCheckSystemPrompt', () => {
     const prompt = buildFactCheckSystemPrompt({ needsToolFormat: false });
 
     expect(prompt).toContain('proposeFactCheck');
-    expect(prompt).toContain('3–4 options');
-    expect(prompt).toContain('ONE assertion per option');
+    expect(prompt).toContain('2–4 options');
+    expect(prompt).toContain('ONE assertion per option, and ONE DATUM per card');
+    // The anti-pattern the independent rater found in 11/31 cases: one fact
+    // split into several pills by re-expressing it. Named concretely, with
+    // worked examples, because the abstract rule ("never the same assertion
+    // reworded") was already present and was violated anyway.
+    expect(prompt).toContain('are ONE claim');
+    expect(prompt).toContain('what NEW fact it would send to a fact-checker');
   });
 
   // The four rules the plan calls the deliverable. Each is load-bearing and each
