@@ -86,7 +86,15 @@ describe('onboarding route', () => {
         });
     });
 
-    it('onComplete navigates to the dashboard with fromOnboarding', async () => {
+    // Post-onboarding ALWAYS lands on the Dashboard with fromOnboarding:'1' —
+    // deliberately NOT the startup-tab preference (lib/navigation/startup-tab.ts),
+    // which is applied only on the returning-user path
+    // (app/__tests__/logged-in-index.test.tsx). The wizard just finished and
+    // the app has no content yet; the Dashboard's "waiting for your feed"
+    // card (ForYouScreen, gated on this exact param) is the correct and only
+    // first-run affordance, regardless of where the user likes to start on
+    // an ordinary launch.
+    it('onComplete always navigates to the dashboard with fromOnboarding', async () => {
         mockInvoke = 'complete';
         render(<Onboarding />);
 

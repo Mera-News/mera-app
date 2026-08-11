@@ -36,7 +36,16 @@ jest.mock('@/lib/stores', () => ({ clearPreviousUserData: (...a: any[]) => mockC
 const mockHasAnyFacts = jest.fn(async () => true);
 jest.mock('@/lib/database/services/fact-service', () => ({ hasAnyFacts: () => mockHasAnyFacts() }));
 
-const mockGetSetting = jest.fn(async (_k: string): Promise<string | null> => 'u1');
+// Key-aware: `cached_user_id` and `startup_tab` (read by
+// lib/navigation/startup-tab.ts, real module, not mocked) share this one
+// getSetting mock. Tests that call `mockGetSetting.mockResolvedValue(...)`
+// directly (identity-fault scenarios below) replace this default entirely —
+// harmless here, since any value that isn't 'feed' | 'for_you' | 'around'
+// falls back to the 'feed' default in parseStartupTab().
+let mockStartupTabSetting: string | null = null;
+const mockGetSetting = jest.fn(async (key: string): Promise<string | null> =>
+    key === 'startup_tab' ? mockStartupTabSetting : 'u1',
+);
 jest.mock('@/lib/database/services/setting-service', () => ({ getSetting: (k: string) => mockGetSetting(k) }));
 
 const mockResolveIdentity = jest.fn(() => 'coherent' as string);
@@ -100,7 +109,10 @@ import LoggedInIndex from '../logged-in/index';
 beforeEach(() => {
     jest.clearAllMocks();
     mockSession = { user: { id: 'u1' } };
-    mockGetSetting.mockResolvedValue('u1');
+    mockStartupTabSetting = null;
+    mockGetSetting.mockImplementation(async (key: string) =>
+        key === 'startup_tab' ? mockStartupTabSetting : 'u1',
+    );
     mockResolveIdentity.mockReturnValue('coherent');
     mockHasIdentityFault.mockResolvedValue(false);
     mockHasAnyFacts.mockResolvedValue(true);
@@ -221,11 +233,23 @@ describe('cold-start identity gate', () => {
 });
 
 describe('cold-start fact gate', () => {
-    it('routes to the feed when the device holds facts', async () => {
+    it('routes to the feed when the device holds facts, no startup-tab preference set', async () => {
         mockHasAnyFacts.mockResolvedValue(true);
         render(<LoggedInIndex />);
         await waitFor(() =>
             expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
+        );
+    });
+
+    // The primary path for the startup-tab preference: every returning user,
+    // every launch. Pinned at a non-default value so a future simplification
+    // back to a hard-coded '/logged-in/app_container/feed' fails loudly.
+    it('routes to the startup-tab preference instead of a hard-coded feed', async () => {
+        mockHasAnyFacts.mockResolvedValue(true);
+        mockStartupTabSetting = 'around';
+        render(<LoggedInIndex />);
+        await waitFor(() =>
+            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/around'),
         );
     });
 

@@ -12,6 +12,8 @@ import type Setting from '@/lib/database/models/Setting';
 import type { TaskProgress } from '@/lib/scheduler/scheduler-types';
 import schema from '@/lib/database/schema';
 import logger from '@/lib/logger';
+import { getAllVisitedArticles } from '@/lib/database/services/publication-visit-service';
+import { buildReadingHistoryExport } from '@/lib/reading-history-export';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -32,7 +34,9 @@ import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { HStack } from '@/components/ui/hstack';
+import { VStack } from '@/components/ui/vstack';
 import { Pressable } from '@/components/ui/pressable';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { MaterialIcons } from '@expo/vector-icons';
 import {
     Table,
@@ -378,6 +382,7 @@ interface ObservabilityScreenProps {
 const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const insets = useSafeAreaInsets();
+    const toast = useToast();
 
     const {
         status: schedulerStatus,
@@ -435,6 +440,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
     const [dbStats, setDbStats] = useState<DbStats | null>(null);
     const [loadingDb, setLoadingDb] = useState(false);
     const [selectedTable, setSelectedTable] = useState<string | null>(null);
+    const [isExportingHistory, setIsExportingHistory] = useState(false);
     const [funnel, setFunnel] = useState<FeedFunnelReport | null>(null);
     // Terminal `already_read` rows — the pre-scoring already-read gate's output.
     // `null` until counted (or when the count query failed) → rendered '—'.
@@ -521,6 +527,53 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
     }, []);
 
     useEffect(() => { if (dbReady) void refresh(); }, [refresh, dbReady]);
+
+    // Moved here from Manage Data (2026-08) — the copy lives under
+    // `manageData.*` regardless (moving the i18n namespace too would be a
+    // 20-locale-file churn for zero user-visible gain, so this is the one
+    // spot in the app where a screen's strings live under a DIFFERENT
+    // screen's namespace). Reads the local publication_visits log (never
+    // leaves the device until the user picks a share target), shapes it via
+    // the pure reading-history-export module, and hands it to the OS share
+    // sheet as JSON — the same Share.share-with-a-JSON-message idiom as
+    // handleCopy just below.
+    const handleExportHistory = useCallback(async () => {
+        if (isExportingHistory) return;
+        setIsExportingHistory(true);
+        try {
+            const visits = await getAllVisitedArticles();
+            if (visits.length === 0) {
+                toast.show({
+                    placement: 'top',
+                    render: () => (
+                        <Toast action="info" variant="solid">
+                            <ToastTitle>{t('manageData.exportHistoryEmptyTitle')}</ToastTitle>
+                            <ToastDescription>{t('manageData.exportHistoryEmptyDescription')}</ToastDescription>
+                        </Toast>
+                    ),
+                });
+                return;
+            }
+            const payload = buildReadingHistoryExport(visits);
+            await Share.share(
+                { message: JSON.stringify(payload, null, 2) },
+                { subject: t('manageData.exportHistorySubject') },
+            );
+        } catch (error) {
+            logger.captureException(error, { tags: { screen: 'ObservabilityScreen', action: 'exportHistory' } });
+            toast.show({
+                placement: 'top',
+                render: () => (
+                    <Toast action="error" variant="solid">
+                        <ToastTitle>{t('manageData.errorTitle')}</ToastTitle>
+                        <ToastDescription>{t('manageData.errorDescription')}</ToastDescription>
+                    </Toast>
+                ),
+            });
+        } finally {
+            setIsExportingHistory(false);
+        }
+    }, [isExportingHistory, toast, t]);
 
     const [copied, setCopied] = useState(false);
 
@@ -719,6 +772,28 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         {t('observability.noteFooter')}
                     </Text>
                 </Box>
+
+                {/* Export reading history — moved here from Manage Data. A
+                    labelled row rather than a third header icon next to
+                    handleCopy's share button above: this action needs its
+                    description ("last 30 days as JSON…") to not look like an
+                    unexplained duplicate of that button. */}
+                <Pressable
+                    testID="observability-export-history"
+                    className="flex-row items-center py-3 px-3 mb-2 border border-gray-800 rounded-xl bg-gray-900"
+                    onPress={() => void handleExportHistory()}
+                    disabled={isExportingHistory}
+                >
+                    <MaterialIcons name="ios-share" size={18} color="#60a5fa" />
+                    <VStack className="ml-3 flex-1">
+                        <Text size="sm" className="text-blue-400">
+                            {isExportingHistory ? t('manageData.exporting') : t('manageData.exportHistoryTitle')}
+                        </Text>
+                        <Text size="xs" className="text-gray-500 mt-0.5">
+                            {t('manageData.exportHistoryDescription')}
+                        </Text>
+                    </VStack>
+                </Pressable>
 
                 {/* Top metric cards */}
                 <HStack space="sm" className="mb-2">

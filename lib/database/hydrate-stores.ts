@@ -27,6 +27,7 @@ export function hydrateAllStores(): Promise<void> {
   const { useRelatedSortStore } = require('../stores/related-sort-store');
   const { useTextScaleStore } = require('../stores/text-scale-store');
   const { useTutorialsStore } = require('../stores/tutorials-store');
+  const { useStartupTabStore } = require('../stores/startup-tab-store');
 
   // Paint-critical: load cached article_suggestions and push them to the
   // store first. No metadata, no expired-cleanup, no other-store gating.
@@ -59,6 +60,7 @@ export function hydrateAllStores(): Promise<void> {
     useRelatedSortStore.getState().hydrate(),
     useTextScaleStore.getState().hydrate(),
     useTutorialsStore.getState().hydrate(),
+    useStartupTabStore.getState().hydrate(),
   ])
     .then(() => {
       // Fire-and-forget: back-fill the persona's primary language_codes from the

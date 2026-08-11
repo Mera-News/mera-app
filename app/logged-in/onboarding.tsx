@@ -71,6 +71,16 @@ export default function Onboarding() {
         router.replace({ pathname: "/login", params: { reauth: "1" } });
     }, []);
 
+    // ALWAYS the Dashboard with fromOnboarding:'1' — the startup-tab
+    // preference (lib/navigation/startup-tab.ts) is deliberately NOT
+    // consulted here. That preference answers "where do I like to start when
+    // I open the app" — a habit. This moment isn't that: the app has no
+    // content yet, and the Dashboard's "waiting for your feed" card
+    // (ForYouScreen, gated on this exact param) is the correct and only
+    // first-run affordance. Honouring a preference the user set thirty
+    // seconds into onboarding buys nothing and costs that card. The
+    // preference IS applied on the returning-user path in
+    // app/logged-in/index.tsx — do not "fix" this back to match that.
     const handleComplete = useCallback(() => {
         router.replace({
             pathname: "/logged-in/app_container/for_you",

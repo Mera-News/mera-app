@@ -221,16 +221,13 @@ const AppPreferencesTab: React.FC = () => {
             onPress: () => routerHook.push('/logged-in/preferences/mera-protocol' as any),
         },
         {
+            // Security's PIN + blur-images controls now live on this screen
+            // too (the standalone Security screen/row was deleted) — see
+            // DisplaySettingsScreen.tsx's header doc.
             id: 'display',
             title: t('display.screenTitle'),
             icon: 'palette',
             onPress: () => routerHook.push('/logged-in/preferences/display' as any),
-        },
-        {
-            id: 'security',
-            title: t('security.title'),
-            icon: 'lock',
-            onPress: () => routerHook.push('/logged-in/preferences/security' as any),
         },
         {
             id: 'support',

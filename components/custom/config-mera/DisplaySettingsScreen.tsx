@@ -1,12 +1,21 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import PinLockScreen from '@/components/custom/auth/PinLockScreen';
+import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { ScrollView } from '@/components/ui/scroll-view';
+import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
+import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
+import logger from '@/lib/logger';
+import { type StartupTab } from '@/lib/navigation/startup-tab';
+import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
+import { usePinStore } from '@/lib/stores/pin-store';
+import { useStartupTabStore } from '@/lib/stores/startup-tab-store';
 import { useTextScaleStore } from '@/lib/stores/text-scale-store';
 import {
   TEXT_SCALE_LABEL_KEYS,
@@ -15,7 +24,7 @@ import {
 } from '@/lib/typography/scale';
 
 import { MaterialIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +37,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
  * on and cannot be turned off. A visible control that does nothing is worse
  * than an absent one — it invites the user to conclude the setting is broken.
  * The setting itself is untouched: the row is what is hidden, not the store.
+ *
+ * This gates only the static-gradient ROW, not the whole Visuals section —
+ * blur images (folded in from the deleted Security screen) must stay visible
+ * on Android, which is the platform the row-level (not section-level) gate
+ * exists to protect.
  */
 const SHOWS_STATIC_GRADIENT_ROW = Platform.OS !== 'android';
 
@@ -41,20 +55,45 @@ const TEXT_SIZE_LABEL_KEYS = [
   'display.textSizeStepLarger',
 ] as const;
 
+// Startup-tab options, in the order they're offered. Values are the REAL
+// route names under app_container (see lib/navigation/startup-tab.ts for why
+// they're inverted from what a user would call them) — labels below borrow
+// the shipped tab-bar copy (`tabs.*`) so the wording never drifts from the
+// tab bar itself, and the icons mirror app_container/_layout.tsx's Android
+// glyphs for the same reason.
+const STARTUP_TAB_OPTIONS: {
+  tab: StartupTab;
+  labelKey: 'tabs.deck' | 'tabs.dashboard' | 'tabs.around';
+  icon: keyof typeof MaterialIcons.glyphMap;
+}[] = [
+  { tab: 'feed', labelKey: 'tabs.deck', icon: 'view-agenda' },
+  { tab: 'for_you', labelKey: 'tabs.dashboard', icon: 'dashboard' },
+  { tab: 'around', labelKey: 'tabs.around', icon: 'explore' },
+];
+
+// menu → verify current PIN → set new PIN (change flow), plus enable → set the
+// first PIN (turning the lock on). Carried over from the deleted
+// SecuritySettingsScreen — its early-return-before-render shape is what lets
+// PinSetupScreen/PinLockScreen fully replace this screen mid-flow.
+type SecurityMode = 'menu' | 'verify' | 'set' | 'enable';
+
 interface DisplaySettingsScreenProps {
   onBack: () => void;
 }
 
 /**
- * Settings → Text & Display.
+ * Settings → Display.
  *
- * WHY THIS SCREEN OWNS BOTH: the text-size control needed a home, and there
- * were already two candidate screens drifting apart — this one on `dev`, and a
- * separate `preferences/appearance.tsx` on the `enabled-light-dark-mode`
- * branch. Adding text size to either would have guaranteed a THIRD competing
- * screen. So this is the one place a reader goes to change how Mera looks: a
- * "Text" section and a "Visuals" section, with room for a theme selector to
- * become a third without another rename.
+ * WHY THIS SCREEN OWNS ALL OF THIS: the text-size control needed a home, and
+ * there were already two candidate screens drifting apart — this one on
+ * `dev`, and a separate `preferences/appearance.tsx` on the
+ * `enabled-light-dark-mode` branch. Adding text size to either would have
+ * guaranteed a THIRD competing screen. The Security screen was folded in for
+ * the same reason once a third section ("room for a theme selector to become
+ * a third without another rename", per the original doc below) turned out to
+ * be Security's PIN controls plus a Startup-tab picker instead of a theme
+ * selector — this is the one place a reader goes to change how Mera looks
+ * AND behaves on launch: Text, Visuals, Security, Startup tab.
  *
  * Padding is `px-5` throughout, header included. It used to be `px-4` on the
  * header and `px-5` on the body, so the back arrow sat 4pt left of everything
@@ -63,13 +102,127 @@ interface DisplaySettingsScreenProps {
 const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack }) => {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const toast = useToast();
 
   const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
   const setStaticGradient = useDisplayPrefsStore((s) => s.setStaticGradient);
   const textScale = useTextScaleStore((s) => s.scale);
   const setTextScale = useTextScaleStore((s) => s.setScale);
+  const blurImages = useBlurImagesStore((s) => s.blurImages);
+  const setBlurImages = useBlurImagesStore((s) => s.setBlurImages);
+  const startupTab = useStartupTabStore((s) => s.startupTab);
+  const setStartupTab = useStartupTabStore((s) => s.setStartupTab);
 
   const activeIndex = Math.max(0, TEXT_SCALE_STEPS.indexOf(textScale as never));
+
+  // ── Security (folded in from the deleted SecuritySettingsScreen) ────────
+  const [mode, setMode] = useState<SecurityMode>('menu');
+  // Tracks the full verify→set journey (two sequential pin-service hashes,
+  // split across PinLockScreen and PinSetupScreen) for [pin-timing] logging.
+  const changePinStartRef = useRef(0);
+
+  const lockEnabled = usePinStore((s) => s.lockEnabled);
+  const setLockEnabled = usePinStore((s) => s.setLockEnabled);
+  // Guards the toggle against a second tap while the secure-store write from
+  // the first is still in flight.
+  const [lockBusy, setLockBusy] = useState(false);
+
+  const showToast = (title: string, description: string) => {
+    toast.show({
+      placement: 'top',
+      render: () => (
+        <Toast action="success" variant="solid">
+          <ToastTitle>{title}</ToastTitle>
+          <ToastDescription>{description}</ToastDescription>
+        </Toast>
+      ),
+    });
+  };
+
+  const handleLockToggle = async () => {
+    if (lockBusy) return;
+    // Turning it ON means choosing a PIN first — the flag is only written once
+    // a fresh record exists, so a cancelled setup leaves the lock off.
+    if (!lockEnabled) {
+      setMode('enable');
+      return;
+    }
+    setLockBusy(true);
+    try {
+      await setLockEnabled(false);
+      showToast(t('security.lockDisabledTitle'), t('security.lockDisabledDescription'));
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { screen: 'DisplaySettingsScreen', method: 'handleLockToggle' },
+      });
+    } finally {
+      setLockBusy(false);
+    }
+  };
+
+  // Turning the lock on: PinSetupScreen has already persisted the new record,
+  // so all that's left is recording the opt-in.
+  const handleEnableComplete = async () => {
+    setLockBusy(true);
+    try {
+      await setLockEnabled(true);
+      setMode('menu');
+      showToast(t('security.lockEnabledTitle'), t('security.lockEnabledDescription'));
+    } catch (err) {
+      logger.captureException(err, {
+        tags: { screen: 'DisplaySettingsScreen', method: 'handleEnableComplete' },
+      });
+      setMode('menu');
+    } finally {
+      setLockBusy(false);
+    }
+  };
+
+  const handleNewPinComplete = async () => {
+    // PinSetupScreen already persisted via its own setPin; nothing extra to do
+    // besides confirming and returning to the menu.
+    logger.info(
+      `[pin-timing] DisplaySettingsScreen submit→done ${Date.now() - changePinStartRef.current}ms`,
+    );
+    setMode('menu');
+    showToast(t('security.pinChangedTitle'), t('security.pinChangedDescription'));
+  };
+
+  // Same early-return-before-render shape as the deleted SecuritySettingsScreen:
+  // these three modes replace the ENTIRE screen with PinSetupScreen /
+  // PinLockScreen, not just the security section.
+  if (mode === 'enable') {
+    return (
+      <PinSetupScreen
+        onComplete={handleEnableComplete}
+        onCancel={() => setMode('menu')}
+        title={t('security.setPinTitle')}
+        subtitle={t('security.setPinSubtitle')}
+      />
+    );
+  }
+
+  if (mode === 'verify') {
+    return (
+      <PinLockScreen
+        onUnlock={() => setMode('set')}
+        showForgot={false}
+        title={t('security.verifyCurrentTitle')}
+        subtitle={t('security.verifyCurrentSubtitle')}
+      />
+    );
+  }
+
+  if (mode === 'set') {
+    return (
+      <PinSetupScreen
+        onComplete={handleNewPinComplete}
+        onCancel={() => setMode('menu')}
+        title={t('security.newPinTitle')}
+        subtitle={t('security.newPinSubtitle')}
+      />
+    );
+  }
 
   return (
     // Unpadded wrapper. The backdrop hangs off THIS box, not the padded one
@@ -204,9 +357,10 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
           </VStack>
 
           {/* ── Visuals ──────────────────────────────────────────────────── */}
-          {/* The whole section, not just the row: it holds exactly one control,
-              and a heading over nothing reads as a rendering bug. */}
-          {SHOWS_STATIC_GRADIENT_ROW ? (
+          {/* Unlike before, this section is NOT gated as a whole: blur images
+              (folded in from Security) must survive on Android, which only
+              hides the static-gradient row below (see
+              SHOWS_STATIC_GRADIENT_ROW's doc). */}
           <VStack className="px-5">
             <Text size="xs" className="text-gray-500 font-semibold mb-2 uppercase">
               {t('display.sectionVisuals')}
@@ -215,27 +369,147 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
             <HStack className="items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg">
               <HStack space="md" className="items-center flex-1 pr-3">
                 <MaterialIcons
-                  name="gradient"
+                  name="blur-on"
                   size={24}
-                  color={staticGradient ? '#10b981' : '#9ca3af'}
+                  color={blurImages ? '#10b981' : '#9ca3af'}
                 />
                 <VStack className="flex-1">
-                  <Text className="text-base text-white">{t('display.staticGradientTitle')}</Text>
+                  <Text className="text-base text-white">{t('security.blurImagesTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
-                    {t('display.staticGradientDescription')}
+                    {t('security.blurImagesDescription')}
                   </Text>
                 </VStack>
               </HStack>
 
-              <Switch
-                testID="static-gradient-switch"
-                value={staticGradient}
-                onToggle={setStaticGradient}
-                size="md"
-              />
+              <Switch testID="blur-images-switch" value={blurImages} onToggle={setBlurImages} size="md" />
             </HStack>
+
+            {SHOWS_STATIC_GRADIENT_ROW ? (
+              <HStack className="items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg">
+                <HStack space="md" className="items-center flex-1 pr-3">
+                  <MaterialIcons
+                    name="gradient"
+                    size={24}
+                    color={staticGradient ? '#10b981' : '#9ca3af'}
+                  />
+                  <VStack className="flex-1">
+                    <Text className="text-base text-white">{t('display.staticGradientTitle')}</Text>
+                    <Text size="sm" className="text-gray-400 mt-0.5">
+                      {t('display.staticGradientDescription')}
+                    </Text>
+                  </VStack>
+                </HStack>
+
+                <Switch
+                  testID="static-gradient-switch"
+                  value={staticGradient}
+                  onToggle={setStaticGradient}
+                  size="md"
+                />
+              </HStack>
+            ) : null}
           </VStack>
-          ) : null}
+
+          {/* ── Security ─────────────────────────────────────────────────── */}
+          <VStack className="px-5">
+            <Text size="xs" className="text-gray-500 font-semibold mb-2 uppercase">
+              {t('security.title')}
+            </Text>
+
+            <HStack className="items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg">
+              <HStack space="md" className="items-center flex-1 pr-3">
+                <MaterialIcons
+                  name={lockEnabled ? 'lock' : 'lock-open'}
+                  size={24}
+                  color={lockEnabled ? '#10b981' : '#9ca3af'}
+                />
+                <VStack className="flex-1">
+                  <Text className="text-base text-white">{t('security.requirePinTitle')}</Text>
+                  <Text size="sm" className="text-gray-400 mt-0.5">
+                    {t('security.requirePinDescription')}
+                  </Text>
+                </VStack>
+              </HStack>
+
+              {lockBusy ? (
+                <Spinner size="small" />
+              ) : (
+                <Switch testID="lock-switch" value={lockEnabled} onToggle={handleLockToggle} size="md" />
+              )}
+            </HStack>
+
+            {/* Changing the PIN is only meaningful while the lock is on — with
+                it off there is no record to change. */}
+            {lockEnabled && (
+              <Pressable
+                className="flex-row items-center justify-between py-3 px-4 mb-3 border border-gray-700 rounded-lg"
+                onPress={() => {
+                  changePinStartRef.current = Date.now();
+                  setMode('verify');
+                }}
+              >
+                <Text className="text-base text-white">{t('security.changePin')}</Text>
+                <MaterialIcons name="chevron-right" size={20} color="#999999" />
+              </Pressable>
+            )}
+          </VStack>
+
+          {/* ── Startup tab ──────────────────────────────────────────────── */}
+          <VStack className="px-5">
+            <Text size="xs" className="text-gray-500 font-semibold mb-2 uppercase">
+              {t('display.sectionStartup')}
+            </Text>
+
+            <VStack className="py-3 px-4 mb-3 border border-gray-700 rounded-lg" space="sm">
+              <HStack space="md" className="items-center">
+                <MaterialIcons name="open-in-new" size={24} color="#9ca3af" />
+                <VStack className="flex-1">
+                  <Text className="text-base text-white">{t('display.startupTabTitle')}</Text>
+                  <Text size="sm" className="text-gray-400 mt-0.5">
+                    {t('display.startupTabDescription')}
+                  </Text>
+                </VStack>
+              </HStack>
+
+              <HStack
+                className="mt-1"
+                space="xs"
+                accessibilityRole="radiogroup"
+                testID="startup-tab-options"
+              >
+                {STARTUP_TAB_OPTIONS.map(({ tab, labelKey, icon }) => {
+                  const active = tab === startupTab;
+                  const label = t(labelKey);
+                  return (
+                    <Pressable
+                      key={tab}
+                      testID={`startup-tab-${tab}`}
+                      onPress={() => setStartupTab(tab)}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected: active, checked: active }}
+                      accessibilityLabel={t('display.startupTabA11y', { label })}
+                      className={`flex-1 items-center justify-center rounded-md border px-1 py-2 ${
+                        active
+                          ? 'bg-primary-400 border-primary-400'
+                          : 'bg-transparent border-gray-700'
+                      }`}
+                      style={{ minHeight: 44 }}
+                    >
+                      <MaterialIcons name={icon} size={18} color={active ? '#000000' : '#d1d5db'} />
+                      <Text
+                        size="2xs"
+                        scaleTier="chrome"
+                        numberOfLines={1}
+                        className={active ? 'text-black mt-0.5' : 'text-gray-500 mt-0.5'}
+                      >
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </HStack>
+            </VStack>
+          </VStack>
         </ScrollView>
       </Box>
     </Box>

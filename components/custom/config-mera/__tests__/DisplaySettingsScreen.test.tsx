@@ -1,19 +1,20 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// Tests for Settings → Text & Display.
+// Tests for Settings → Display.
 //
-// Two bindings are worth pinning, because each is the ONLY way a user can reach
-// the setting behind it: the static-background toggle (display-prefs store) and
-// the text-size stepper (text-scale store).
+// This screen now owns what used to be three screens' worth of controls:
+// text size + static-background (always here), and — folded in from the
+// deleted SecuritySettingsScreen — the require-PIN toggle, Change PIN, and
+// blur-images. Plus a new startup-tab picker.
 //
 // Copy is asserted by KEY, never by English text — `t` is mocked to echo the
 // key, and the new strings are spliced into the locale files separately.
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // The animated gradient backdrop is pure decoration here, but it imports
 // react-native-reanimated, whose worklets runtime cannot initialise under
 // Jest. Stubbing the component keeps reanimated out of this suite's module
-// graph entirely — same reasoning as SecuritySettingsScreen.test.tsx.
+// graph entirely.
 jest.mock('@/components/custom/AbstractGradientBackdrop', () => ({
     __esModule: true,
     default: () => null,
@@ -30,7 +31,7 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 });
 
 jest.mock('react-i18next', () => ({
-    useTranslation: () => ({ t: (k: string) => k }),
+    useTranslation: () => ({ t: (k: string, opts?: any) => (opts ? `${k}:${JSON.stringify(opts)}` : k) }),
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
@@ -42,6 +43,7 @@ jest.mock('@/components/ui/box', () => { const { View } = require('react-native'
 jest.mock('@/components/ui/hstack', () => { const { View } = require('react-native'); return { HStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/vstack', () => { const { View } = require('react-native'); return { VStack: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/text', () => { const { Text } = require('react-native'); return { Text }; });
+jest.mock('@/components/ui/spinner', () => { const { View } = require('react-native'); return { Spinner: (p: any) => <View testID="spinner" {...p} /> }; });
 jest.mock('@/components/ui/pressable', () => { const { Pressable } = require('react-native'); return { Pressable }; });
 jest.mock('@/components/ui/scroll-view', () => { const { View } = require('react-native'); return { ScrollView: (p: any) => <View {...p} /> }; });
 jest.mock('@/components/ui/switch', () => {
@@ -57,7 +59,36 @@ jest.mock('@/components/ui/switch', () => {
         ),
     };
 });
+jest.mock('@/components/ui/toast', () => ({
+    useToast: () => ({ show: jest.fn() }),
+    Toast: (p: any) => { const { View } = require('react-native'); return <View {...p} />; },
+    ToastTitle: (p: any) => { const { Text } = require('react-native'); return <Text {...p} />; },
+    ToastDescription: (p: any) => { const { Text } = require('react-native'); return <Text {...p} />; },
+}));
 jest.mock('@expo/vector-icons', () => { const { View } = require('react-native'); return { MaterialIcons: (p: any) => <View {...p} /> }; });
+
+// --- PIN screens → stubs that expose their callbacks -----------------------
+jest.mock('@/components/custom/auth/PinSetupScreen', () => {
+    const { Pressable, View } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ onComplete, onCancel }: any) => (
+            <View testID="pin-setup-screen">
+                <Pressable testID="pin-setup-complete" onPress={onComplete} />
+                <Pressable testID="pin-setup-cancel" onPress={onCancel} />
+            </View>
+        ),
+    };
+});
+jest.mock('@/components/custom/auth/PinLockScreen', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: (p: any) => <View testID="pin-lock-screen" {...p} /> };
+});
+
+jest.mock('@/lib/logger', () => ({
+    __esModule: true,
+    default: { info: jest.fn(), captureException: jest.fn() },
+}));
 
 const mockSetStaticGradient = jest.fn();
 let mockStaticGradient = false;
@@ -79,6 +110,30 @@ jest.mock('@/lib/stores/text-scale-store', () => ({
         selector({ scale: mockTextScale, setScale: mockSetTextScale }),
 }));
 
+const mockSetLockEnabled = jest.fn(() => Promise.resolve());
+let mockLockEnabled = false;
+
+jest.mock('@/lib/stores/pin-store', () => ({
+    usePinStore: (selector: any) =>
+        selector({ lockEnabled: mockLockEnabled, setLockEnabled: mockSetLockEnabled }),
+}));
+
+const mockSetBlurImages = jest.fn();
+let mockBlurImages = false;
+
+jest.mock('@/lib/stores/blur-images-store', () => ({
+    useBlurImagesStore: (selector: any) =>
+        selector({ blurImages: mockBlurImages, setBlurImages: mockSetBlurImages }),
+}));
+
+const mockSetStartupTab = jest.fn();
+let mockStartupTab: 'feed' | 'for_you' | 'around' = 'feed';
+
+jest.mock('@/lib/stores/startup-tab-store', () => ({
+    useStartupTabStore: (selector: any) =>
+        selector({ startupTab: mockStartupTab, setStartupTab: mockSetStartupTab }),
+}));
+
 import DisplaySettingsScreen from '../DisplaySettingsScreen';
 
 import { TEXT_SCALE_STEPS } from '@/lib/typography/scale';
@@ -87,6 +142,9 @@ beforeEach(() => {
     jest.clearAllMocks();
     mockStaticGradient = false;
     mockTextScale = 1;
+    mockLockEnabled = false;
+    mockBlurImages = false;
+    mockStartupTab = 'feed';
 });
 
 describe('DisplaySettingsScreen', () => {
@@ -165,5 +223,112 @@ describe('DisplaySettingsScreen', () => {
         for (const name of ['compact', 'default', 'large', 'larger']) {
             expect(getByTestId(`text-size-${name}`).props.style.minHeight).toBe(44);
         }
+    });
+});
+
+// ── Security, folded in from the deleted SecuritySettingsScreen ───────────
+describe('DisplaySettingsScreen — require-PIN toggle', () => {
+    it('with the lock off, hides Change PIN (there is no PIN to change)', () => {
+        const { queryByText } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(queryByText('security.requirePinTitle')).toBeTruthy();
+        expect(queryByText('security.changePin')).toBeNull();
+    });
+
+    it('turning the lock on opens PIN setup without persisting anything yet', () => {
+        const { getByTestId, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        fireEvent.press(getByTestId('lock-switch'));
+        expect(queryByTestId('pin-setup-screen')).toBeTruthy();
+        // The preference must not be written before a PIN actually exists.
+        expect(mockSetLockEnabled).not.toHaveBeenCalled();
+    });
+
+    it('cancelling PIN setup returns to the menu with the lock still off', () => {
+        const { getByTestId, queryByTestId, queryByText } = render(
+            <DisplaySettingsScreen onBack={jest.fn()} />,
+        );
+        fireEvent.press(getByTestId('lock-switch'));
+        fireEvent.press(getByTestId('pin-setup-cancel'));
+        expect(queryByTestId('pin-setup-screen')).toBeNull();
+        expect(queryByText('security.requirePinTitle')).toBeTruthy();
+        expect(mockSetLockEnabled).not.toHaveBeenCalled();
+    });
+
+    it('completing PIN setup records the opt-in and returns to the menu', async () => {
+        const { getByTestId, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        fireEvent.press(getByTestId('lock-switch'));
+        fireEvent.press(getByTestId('pin-setup-complete'));
+        await waitFor(() => expect(mockSetLockEnabled).toHaveBeenCalledWith(true));
+        await waitFor(() => expect(queryByTestId('pin-setup-screen')).toBeNull());
+    });
+
+    it('turning the lock off disables it directly (no PIN prompt) and shows Change PIN while on', async () => {
+        mockLockEnabled = true;
+        const { getByTestId, queryByText, queryByTestId } = render(
+            <DisplaySettingsScreen onBack={jest.fn()} />,
+        );
+        expect(queryByText('security.changePin')).toBeTruthy();
+        fireEvent.press(getByTestId('lock-switch'));
+        await waitFor(() => expect(mockSetLockEnabled).toHaveBeenCalledWith(false));
+        expect(queryByTestId('pin-setup-screen')).toBeNull();
+    });
+
+    it('Change PIN goes through verification of the current PIN first', () => {
+        mockLockEnabled = true;
+        const { getByText, queryByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        fireEvent.press(getByText('security.changePin'));
+        expect(queryByTestId('pin-lock-screen')).toBeTruthy();
+    });
+});
+
+describe('DisplaySettingsScreen — blur-images toggle', () => {
+    it('renders the blur-images row bound to the store value', () => {
+        mockBlurImages = true;
+        const { getByTestId, getByText } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(getByText('security.blurImagesTitle')).toBeTruthy();
+        expect(getByTestId('blur-images-switch').props.accessibilityState.checked).toBe(true);
+    });
+
+    it('fires setBlurImages with the flipped value on toggle', () => {
+        mockBlurImages = false;
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        fireEvent.press(getByTestId('blur-images-switch'));
+        expect(mockSetBlurImages).toHaveBeenCalledWith(true);
+    });
+
+    // The Android-hides-static-gradient-but-not-blur behavior (why blur moved
+    // OUTSIDE the SHOWS_STATIC_GRADIENT_ROW gate, per that constant's doc
+    // comment in DisplaySettingsScreen.tsx) is a module-load-time Platform.OS
+    // read, not reachable from this file without re-importing the module
+    // under a mocked react-native — see DisplaySettingsScreen.android.test.tsx
+    // (this same directory) for that coverage.
+});
+
+// ── Startup tab (new) ───────────────────────────────────────────────────
+describe('DisplaySettingsScreen — startup tab picker', () => {
+    it('renders one option per tab, plus the section chrome', () => {
+        const { getByTestId, getByText } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(getByText('display.sectionStartup')).toBeTruthy();
+        expect(getByText('display.startupTabTitle')).toBeTruthy();
+        expect(getByTestId('startup-tab-feed')).toBeTruthy();
+        expect(getByTestId('startup-tab-for_you')).toBeTruthy();
+        expect(getByTestId('startup-tab-around')).toBeTruthy();
+    });
+
+    it('marks the stored preference as selected', () => {
+        mockStartupTab = 'around';
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(getByTestId('startup-tab-around').props.accessibilityState.selected).toBe(true);
+        expect(getByTestId('startup-tab-feed').props.accessibilityState.selected).toBe(false);
+    });
+
+    it('defaults to Feed selected when nothing is stored', () => {
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        expect(getByTestId('startup-tab-feed').props.accessibilityState.selected).toBe(true);
+    });
+
+    it('persists the tapped tab using its real route name, not its label', () => {
+        const { getByTestId } = render(<DisplaySettingsScreen onBack={jest.fn()} />);
+        fireEvent.press(getByTestId('startup-tab-for_you'));
+        expect(mockSetStartupTab).toHaveBeenCalledWith('for_you');
     });
 });

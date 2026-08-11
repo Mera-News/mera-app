@@ -11,19 +11,17 @@ import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import database from '@/lib/database';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
-import { clearAllVisits, getAllVisitedArticles } from '@/lib/database/services/publication-visit-service';
-import { buildReadingHistoryExport } from '@/lib/reading-history-export';
+import { clearAllVisits } from '@/lib/database/services/publication-visit-service';
 import * as scoringPipeline from '@/lib/services/scoring-pipeline';
 import { clearAllStores, useForYouStore } from '@/lib/stores';
 import { useFeedOrderStore } from '@/lib/stores/feed-order-store';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { useDeleteAccountModal, useUIStore } from '@/lib/stores/ui-store';
-import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Q } from '@nozbe/watermelondb';
 import { router } from 'expo-router';
 import React, { useCallback, useState } from 'react';
-import { ScrollView, Share } from 'react-native';
+import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
@@ -61,7 +59,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const [confirmAction, setConfirmAction] = useState<DataAction>(null);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
 
     const deleteAccountModal = useDeleteAccountModal();
     const { openModal, closeModal, setDeleteAccountStep, setModalProcessing } = useUIStore();
@@ -104,42 +101,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             ),
         });
     }, [toast, t]);
-
-    // Reads the local publication_visits log (never leaves the device until
-    // the user picks a share target), shapes it via the pure
-    // reading-history-export module, and hands it to the OS share sheet as
-    // JSON — same Share.share-with-a-JSON-message pattern used by the
-    // Observability panel's debug export. Non-destructive, so it skips the
-    // confirm-modal flow the delete actions below use.
-    const handleExportHistory = useCallback(async () => {
-        if (isExporting) return;
-        setIsExporting(true);
-        try {
-            const visits = await getAllVisitedArticles();
-            if (visits.length === 0) {
-                toast.show({
-                    placement: 'top',
-                    render: () => (
-                        <Toast action="info" variant="solid">
-                            <ToastTitle>{t('manageData.exportHistoryEmptyTitle')}</ToastTitle>
-                            <ToastDescription>{t('manageData.exportHistoryEmptyDescription')}</ToastDescription>
-                        </Toast>
-                    ),
-                });
-                return;
-            }
-            const payload = buildReadingHistoryExport(visits);
-            await Share.share(
-                { message: JSON.stringify(payload, null, 2) },
-                { subject: t('manageData.exportHistorySubject') },
-            );
-        } catch (error) {
-            logger.captureException(error, { tags: { screen: 'ManageDataScreen', action: 'exportHistory' } });
-            showErrorToast();
-        } finally {
-            setIsExporting(false);
-        }
-    }, [isExporting, toast, t, showErrorToast]);
 
     const handleConfirm = useCallback(async () => {
         const action = confirmAction;
@@ -279,21 +240,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         onPress: () => void;
     };
 
-    // Non-destructive rows (currently just the export) render with neutral
-    // styling instead of the red destructive-action look, and bypass the
-    // generic confirm-modal flow via their own onPress.
-    type ExportEntry = {
-        id: 'exportHistory';
-        title: string;
-        description: string;
-        icon: keyof typeof MaterialIcons.glyphMap;
-        location: DataLocation;
-        variant: 'neutral';
-        loading: boolean;
-        onPress: () => void;
-    };
-
-    const options: (OptionEntry | AccountEntry | ExportEntry)[] = [
+    const options: (OptionEntry | AccountEntry)[] = [
         {
             id: 'feedCache',
             title: t('manageData.feedCacheTitle'),
@@ -317,16 +264,6 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             modalDescription: t('manageData.viewingHistoryModalDescription'),
             icon: 'visibility-off',
             location: 'device',
-        },
-        {
-            id: 'exportHistory',
-            title: t('manageData.exportHistoryTitle'),
-            description: t('manageData.exportHistoryDescription'),
-            icon: 'ios-share',
-            location: 'device',
-            variant: 'neutral',
-            loading: isExporting,
-            onPress: handleExportHistory,
         },
         {
             id: 'wipeAll',
@@ -367,33 +304,26 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
     };
 
     const renderOption = (
-        option: OptionEntry | AccountEntry | ExportEntry,
+        option: OptionEntry | AccountEntry,
     ) => {
         const isAccount = option.id === 'deleteAccount';
-        const isExport = option.id === 'exportHistory';
-        // Export is non-destructive, so it gets its own accent instead of the
-        // red destructive-action look shared by every delete/wipe row.
-        const accentColor = isExport ? '#60a5fa' : '#ef4444';
-        const titleClassName = isExport ? 'text-base text-blue-400' : 'text-base text-red-400';
         return (
             <Pressable
                 key={option.id}
                 className="flex-row items-center py-4 px-4 border border-gray-700 rounded-lg"
                 onPress={
-                    isAccount || isExport
-                        ? (option as AccountEntry | ExportEntry).onPress
+                    isAccount
+                        ? (option as AccountEntry).onPress
                         : () => setConfirmAction((option as OptionEntry).id)
                 }
-                disabled={isProcessing || isDeletingAccount || (isExport && (option as ExportEntry).loading)}
+                disabled={isProcessing || isDeletingAccount}
             >
                 <Box className="flex-row items-center flex-1">
-                    <MaterialIcons name={option.icon} size={22} color={accentColor} />
+                    <MaterialIcons name={option.icon} size={22} color="#ef4444" />
                     <VStack className="ml-3 flex-1">
                         <Box className="flex-row items-center">
-                            <Text className={titleClassName}>
-                                {isExport && (option as ExportEntry).loading
-                                    ? t('manageData.exporting')
-                                    : option.title}
+                            <Text className="text-base text-red-400">
+                                {option.title}
                             </Text>
                             {renderLocationChip(option.location)}
                         </Box>

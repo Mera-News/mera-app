@@ -12,6 +12,7 @@ import { loginRevenueCat } from "@/lib/revenuecat";
 import { navigateToPaywall } from "@/lib/nav-state";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { readFirstOpenDismissed } from "@/lib/subscription/first-open-dismissal";
+import { readStartupTab } from "@/lib/navigation/startup-tab";
 import {
     decideOnboardingEntry,
     resolveEntitlementForOnboarding,
@@ -152,9 +153,15 @@ export default function LoggedInIndex() {
 
                 if (cancelled) return;
                 if (hasFacts) {
-                    // Untouched, and deliberately so: an already-onboarded user
-                    // pays for none of the entitlement wait below.
-                    router.replace('/logged-in/app_container/feed');
+                    // Still pays for none of the entitlement wait below — the
+                    // startup-tab lookup is a plain local settings read, not a
+                    // network round trip. Reads the setting directly rather
+                    // than the Zustand store: hydrateAllStores() is
+                    // fire-and-forget, so the store may not be hydrated yet
+                    // (see lib/navigation/startup-tab.ts).
+                    const startupTab = await readStartupTab();
+                    if (cancelled) return;
+                    router.replace(`/logged-in/app_container/${startupTab}`);
                     return;
                 }
 

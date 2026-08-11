@@ -73,6 +73,7 @@ export const clearAllStores = async () => {
     const { useImportanceFilterStore } = require('./importance-filter-store');
     const { useRelatedSortStore } = require('./related-sort-store');
     const { useTutorialsStore } = require('./tutorials-store');
+    const { useStartupTabStore } = require('./startup-tab-store');
     const { clearAttestationCache } = require('../e2ee/e2ee-cache');
     const { clearLastKnownTier } = require('../subscription/last-known-tier');
 
@@ -100,6 +101,7 @@ export const clearAllStores = async () => {
     // settings rows go with the database wipe above, so the in-memory ticks must
     // go too or the next user on this phone inherits a finished tour.
     useTutorialsStore.getState().reset();
+    useStartupTabStore.getState().reset();
     clearAttestationCache();
 
     // LAST, and deliberately so. The device's memory of its last resolved
