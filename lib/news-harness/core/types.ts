@@ -227,18 +227,33 @@ export type ProposalAction =
    *  persisted tool call, with no store read). */
   | { type: 'track_story'; label: string; searchText: string; subject: TrackFeedbackSubject }
   // -- Fact-check a claim (the fact-check agent's `proposeFactCheck` tool) --
-  /** Start an on-device fact check of ONE claim drawn from an article. A claim
-   *  pill: `label` is the short pill text shown to the user ("80 vaccines by age
-   *  18"); `claim` is the self-contained sentence that gets searched, and it is
-   *  the thing the runner keys on — never the label. `subject` is the article
-   *  snapshot the executor hands to `enqueueFactCheck` (embedded so the confirm
-   *  is reconstructable from the persisted tool call, with no store read).
+  /** Fact-check ONE claim drawn from an article, or (`mode: 'article'`) the
+   *  whole article. A claim pill: `label` is the short pill text shown to the
+   *  user ("80 vaccines by age 18"); `claim` is the self-contained sentence that
+   *  gets searched, and it is the thing the runner keys on — never the label.
+   *  `subject` is the article snapshot the executor forwards (embedded so the
+   *  confirm is reconstructable from the persisted tool call, with no store read).
+   *
+   *  TWO SPEEDS BEHIND ONE CARD:
+   *   - `mode` absent / `'claim'` — the QUICK path. Brave-only web search plus a
+   *     low-temperature synthesis, answered in the chat thread and never written
+   *     to the `fact_checks` table.
+   *   - `mode: 'article'` — the LAST pill, always present: hand the whole article
+   *     to the SERVER-side check, which is the only path that may attribute a
+   *     rating to a fact-checking organisation (ClaimReview). `claim` is empty
+   *     here; the article is the subject.
    *
    *  UI-CONFIRMED ONLY (`USER_CONFIRMED_ONLY_ACTIONS`): a check spends a search
    *  round-trip plus a thinking synthesis, so no model-driven path may start one
    *  — and on a multi-claim card an agent-side apply would start every one of
    *  them from a single typed "yes". */
-  | { type: 'fact_check_claim'; label: string; claim: string; subject: FactCheckSubject }
+  | {
+      type: 'fact_check_claim';
+      label: string;
+      claim: string;
+      subject: FactCheckSubject;
+      mode?: 'claim' | 'article';
+    }
   // -- Scoring recalibration (M-P5c) — UI-CONFIRMED ONLY --
   /** Re-tune the on-device scoring constants from the retained override sample.
    *

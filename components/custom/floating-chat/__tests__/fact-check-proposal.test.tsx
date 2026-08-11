@@ -15,8 +15,14 @@
 //      runtime, with `unknown action type` and `applied: 0`.
 //
 // It also pins the consent rule, which is the expensive one to get wrong: a
-// check spends a lookup, up to three searches and a thinking synthesis, so no
-// model-driven path may start one.
+// check spends up to three searches and a synthesis call (or, on the article
+// pill, a server-side job), so no model-driven path may start one.
+//
+// pivot P8c: the card now ALWAYS ends with a whole-article pill, and the two
+// pills go to different places — the claim one answers in the thread, the
+// article one lodges a server check whose result the Dashboard carries. Both
+// paths are covered below, because rendering them identically is exactly how a
+// reader would come to believe the fast web summary was the thorough check.
 
 /* eslint-disable @typescript-eslint/no-require-imports */
 
@@ -45,17 +51,14 @@ jest.mock('@/lib/database/services/persona-action-executor', () => ({
 jest.mock('@/lib/tracking/track-actions', () => ({
   trackStoryWithProposal: jest.fn(() => Promise.resolve()),
 }));
-// The queue is owned by another unit of this wave and is required LAZILY by the
-// executor, so it is mocked `virtual` — this test pins OUR call against the
-// agreed signature and stays green whether or not that module has landed.
-const mockEnqueueFactCheck = jest.fn(() =>
-  Promise.resolve({ factCheckId: 'fc-1', claimKey: 'ck-1' }),
-);
-jest.mock(
-  '@/lib/fact-check/fact-check-queue',
-  () => ({ enqueueFactCheck: mockEnqueueFactCheck }),
-  { virtual: true },
-);
+// The check itself is required LAZILY by the executor (it drags the search +
+// inference graphs), so it is mocked at that seam: this file's job is to pin
+// that the executor REACHES it, not to re-test what it does — that is
+// lib/chat-tools/__tests__/quick-fact-check-handler.test.ts.
+const mockStartFactCheck = jest.fn();
+jest.mock('@/lib/chat-tools/quick-fact-check-handler', () => ({
+  startFactCheckFromAction: mockStartFactCheck,
+}));
 
 // ── ProposalCard's RN/UI seams (actionToRow is pure; the module is not) ──
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
@@ -107,12 +110,22 @@ const OPTIONS = [
   { label: '80 vaccines by age 18', claim: 'Children in the US receive 80 different vaccines by age 18.' },
   { label: 'Schedule tripled since 1986', claim: 'The US childhood vaccine schedule has tripled since 1986.' },
 ];
+const ARTICLE_OPTION_LABEL = 'The Article (async)';
 
 const ACTION: ProposalAction = {
   type: 'fact_check_claim',
   label: OPTIONS[0].label,
   claim: OPTIONS[0].claim,
   subject: SUBJECT,
+};
+
+/** The always-last pill: no claim, the whole article, the SERVER path. */
+const ARTICLE_ACTION: ProposalAction = {
+  type: 'fact_check_claim',
+  label: ARTICLE_OPTION_LABEL,
+  claim: '',
+  subject: SUBJECT,
+  mode: 'article',
 };
 
 // ---------------------------------------------------------------------------
@@ -139,6 +152,18 @@ describe('ProposalCard renders a labelled row for fact_check_claim', () => {
     expect(row.translateHeading).toBe(true);
     expect(row.detail).toBeUndefined();
   });
+
+  // The two pills promise DIFFERENT things — a quick web summary answered in the
+  // thread vs. a thorough server check that lands in the Dashboard. A row that
+  // read "Check this claim" over the article pill would sell one as the other.
+  it('gives the article pill its own label and icon', () => {
+    const row = actionToRow(ARTICLE_ACTION);
+
+    expect(row.labelKey).toBe('factCheck.actionCheckArticle');
+    expect(row.labelKey).not.toBe(actionToRow(ACTION).labelKey);
+    expect(row.icon).not.toBe(actionToRow(ACTION).icon);
+    expect(row.heading).toBe(ARTICLE_OPTION_LABEL);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -161,7 +186,7 @@ function derive(toolCall: ToolCallRecord) {
 
 describe('deriveThreadItems rebuilds a fact-check proposal from a persisted call', () => {
   it('rebuilds actions byte-identical to the live decide path', () => {
-    const live = decideProposeFactCheck({ options: OPTIONS }, SUBJECT);
+    const live = decideProposeFactCheck({ options: OPTIONS }, SUBJECT, ARTICLE_OPTION_LABEL);
     const toolCall: ToolCallRecord = {
       id: 'tc-fc',
       name: 'proposeFactCheck',
@@ -178,6 +203,30 @@ describe('deriveThreadItems rebuilds a fact-check proposal from a persisted call
       expect(card.proposal.id).toBe(live.result.proposalId);
       expect(card.proposal.actions).toEqual(live.sideEffects?.proposal?.actions);
       expect(card.proposal.chooseOne).toBe(true);
+    }
+  });
+
+  // The article pill exists ONLY in the staged (echoed) options — the model
+  // never emits it, so the tool INPUT does not carry it. A resume that read
+  // `input.options` in preference would drop the thorough path off the card.
+  it('rebuilds the whole-article pill, which the tool input never carried', () => {
+    const live = decideProposeFactCheck({ options: OPTIONS }, SUBJECT, ARTICLE_OPTION_LABEL);
+    const card = derive({
+      id: 'tc-fc-article',
+      name: 'proposeFactCheck',
+      status: 'done',
+      input: { options: OPTIONS },
+      result: live.result as Record<string, unknown>,
+    });
+
+    expect(card && card.kind === 'proposal-card' && card.proposal.actions).toHaveLength(3);
+    if (card && card.kind === 'proposal-card') {
+      const last = card.proposal.actions[2];
+      expect(last.type).toBe('fact_check_claim');
+      if (last.type === 'fact_check_claim') {
+        expect(last.mode).toBe('article');
+        expect(last.label).toBe(ARTICLE_OPTION_LABEL);
+      }
     }
   });
 
@@ -212,69 +261,81 @@ describe('deriveThreadItems rebuilds a fact-check proposal from a persisted call
 // ---------------------------------------------------------------------------
 
 describe('executeProposalActions runs fact_check_claim', () => {
-  beforeEach(() => mockEnqueueFactCheck.mockClear());
+  beforeEach(() => mockStartFactCheck.mockClear());
 
-  it('calls enqueueFactCheck with the agreed input and never falls through', async () => {
+  it('hands the tapped action straight through and never falls through', async () => {
     const result = await executeProposalActions([ACTION], { confirmedByUser: true });
 
-    expect(mockEnqueueFactCheck).toHaveBeenCalledWith({
-      articleId: 'art-1',
-      articleTitle: ARTICLE.title,
-      articleUrl: ARTICLE.url,
-      publicationName: 'France 24',
-      claim: OPTIONS[0].claim,
-    });
+    // The WHOLE action, not a re-derived payload: the article snapshot is
+    // embedded in it, so the starter needs no store read.
+    expect(mockStartFactCheck).toHaveBeenCalledWith(ACTION);
     expect(result.applied).toBe(1);
     expect(result.errors).toEqual([]);
     for (const err of result.errors) expect(err).not.toContain('unknown action type');
   });
 
-  it('omits the optional fields when the article had none', async () => {
-    await executeProposalActions(
-      [{ ...ACTION, subject: makeFactCheckSubject({ articleId: 'a', title: 'T' }) }],
-      { confirmedByUser: true },
-    );
+  it('runs the article pill too, despite its empty claim', async () => {
+    const result = await executeProposalActions([ARTICLE_ACTION], { confirmedByUser: true });
 
-    expect(mockEnqueueFactCheck).toHaveBeenCalledWith({
-      articleId: 'a',
-      articleTitle: 'T',
-      claim: OPTIONS[0].claim,
-    });
+    expect(mockStartFactCheck).toHaveBeenCalledWith(ARTICLE_ACTION);
+    expect(result.applied).toBe(1);
+    expect(result.errors).toEqual([]);
   });
 
-  it('errors (and enqueues nothing) on an empty claim', async () => {
+  it('errors (and starts nothing) on an empty CLAIM pill', async () => {
     const result = await executeProposalActions([{ ...ACTION, claim: '  ' }], {
       confirmedByUser: true,
     });
 
-    expect(mockEnqueueFactCheck).not.toHaveBeenCalled();
+    expect(mockStartFactCheck).not.toHaveBeenCalled();
     expect(result.applied).toBe(0);
     expect(result.errors).toEqual(['fact_check_claim: empty claim']);
   });
 
+  // The article pill's payload IS the article id, so that is what it is guarded
+  // on — a resumed card with no subject must not lodge a server check on ''.
+  it('errors on an article pill with no articleId', async () => {
+    const result = await executeProposalActions(
+      [{ ...ARTICLE_ACTION, subject: makeFactCheckSubject({ articleId: '', title: 'T' }) }],
+      { confirmedByUser: true },
+    );
+
+    expect(mockStartFactCheck).not.toHaveBeenCalled();
+    expect(result.errors).toEqual(['fact_check_claim: empty articleId']);
+  });
+
   // THE consent rule. Without `confirmedByUser` this is a model-driven path, and
-  // a model-driven path must never start a background check.
+  // a model-driven path must never start a check.
   it('refuses to run without an explicit user tap', async () => {
     const result = await executeProposalActions([ACTION]);
 
-    expect(mockEnqueueFactCheck).not.toHaveBeenCalled();
+    expect(mockStartFactCheck).not.toHaveBeenCalled();
     expect(result.applied).toBe(0);
   });
 });
 
-describe('the staged card is single-select whenever it offers a choice', () => {
+describe('the staged card is always single-select', () => {
   it('treats a multi-claim card as requiring a tap', () => {
-    const staged = decideProposeFactCheck({ options: OPTIONS }, SUBJECT).sideEffects!.proposal!;
+    const staged = decideProposeFactCheck({ options: OPTIONS }, SUBJECT, ARTICLE_OPTION_LABEL)
+      .sideEffects!.proposal!;
 
     expect(proposalRequiresUserChoice(staged)).toBe(true);
   });
 
-  // A lone claim (the "user typed their own" path) is not a CHOICE — the card
-  // renders a plain confirm. USER_CONFIRMED_ONLY_ACTIONS is what still stops a
-  // model applying it, which the refusal test above pins.
-  it('treats a lone claim as a plain confirm', () => {
-    const staged = decideProposeFactCheck({ options: [OPTIONS[0]] }, SUBJECT).sideEffects!.proposal!;
+  // The "user typed their own claim" card used to be a plain confirm, and
+  // USER_CONFIRMED_ONLY_ACTIONS was the only thing standing between it and a
+  // model-applied check. Appending the article pill makes even that card a
+  // choice of two, so `proposalRequiresUserChoice` — the guard every
+  // applyProposal calls — now covers every fact-check card there is. The
+  // executor's refusal above is the belt to this braces.
+  it('treats a LONE typed claim as a choice too, once the article pill is added', () => {
+    const staged = decideProposeFactCheck(
+      { options: [OPTIONS[0]] },
+      SUBJECT,
+      ARTICLE_OPTION_LABEL,
+    ).sideEffects!.proposal!;
 
-    expect(proposalRequiresUserChoice(staged)).toBe(false);
+    expect(staged.actions).toHaveLength(2);
+    expect(proposalRequiresUserChoice(staged)).toBe(true);
   });
 });

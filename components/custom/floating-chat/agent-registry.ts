@@ -4,7 +4,6 @@
 // container or the inference hooks.
 
 import { ArticleFeedbackAgent } from '@/lib/llm/agents/ArticleFeedbackAgent';
-import { FactCheckAgent } from '@/lib/llm/agents/FactCheckAgent';
 import { FollowStoryAgent } from '@/lib/llm/agents/FollowStoryAgent';
 import { PersonaUpdateAgent } from '@/lib/llm/agents/PersonaUpdateAgent';
 import { TutorialHelpAgent } from '@/lib/llm/agents/TutorialHelpAgent';
@@ -18,6 +17,10 @@ export function createAgentForContext(
 ): IAgent {
   switch (context.kind) {
     case 'article-suggestion':
+      // Also the FACT-CHECK surface (pivot P8c). `proposeFactCheck` moved onto
+      // this agent because the `Quick fact check` chip and the article tick both
+      // send into the EXISTING article thread; the standalone FactCheckAgent and
+      // its `fact-check` ChatContext kind are gone with it.
       return new ArticleFeedbackAgent(
         userId,
         { articleId: context.articleId, suggestionId: context.suggestionId },
@@ -30,19 +33,6 @@ export function createAgentForContext(
       // proposeTrack tool, so the user would be asked what to follow by the
       // seeded turn and then get persona edits instead of a scope card.
       return new FollowStoryAgent(userId);
-
-    case 'fact-check':
-      // Claim-picking chat opened from an article's fact-check tick. Falling
-      // through to the persona agent would be silently wrong in the same way
-      // 'follow-story' was: no proposeFactCheck tool, so the seeded turn would
-      // ask to fact-check something and the user would get persona edits.
-      return new FactCheckAgent(userId, {
-        articleId: context.articleId,
-        title: context.title,
-        description: context.description ?? null,
-        url: context.url ?? null,
-        publicationName: context.publicationName ?? null,
-      });
 
     case 'generic':
       // Route-aware product help — today, the "Ask Mera" button on a tutorial

@@ -1,10 +1,39 @@
 import { create } from 'zustand';
 import { getAiAccess } from './subscription-store';
 import type { StagedProposal } from '../llm/types';
+import type { QuickFactCheckAnswer } from '../chat-tools/quick-fact-check-handler';
 import type { TrackFeedbackSubject } from '../news-harness/core/types';
 
 /** Terminal resolution of a save-time fact conflict (U-B1). */
 export type ConflictResolution = 'kept-both' | 'replaced' | 'merged' | 'dismissed';
+
+/**
+ * One fact check the user started by tapping a pill on the claim card.
+ *
+ * IN-MEMORY AND EPHEMERAL, deliberately. A quick answer is a web summary that
+ * was true when it was fetched; it is not a stored verdict, it is never written
+ * to the `fact_checks` table, and it dies with the thread. Persisting it here
+ * would be a second, weaker source of "what has been checked" competing with the
+ * Dashboard, which shows only server-checked rows.
+ *
+ * `mode: 'article'` is the always-last pill — the SERVER-side check of the whole
+ * article. Its entry never carries an answer; the Dashboard carries that.
+ */
+export interface QuickFactCheckEntry {
+    id: string;
+    mode: 'claim' | 'article';
+    /** The pill text the user tapped (display only). */
+    label: string;
+    /** The searched sentence. Empty for `mode: 'article'`. */
+    claim: string;
+    status: 'running' | 'done';
+    createdAt: number;
+    /** Present once a `mode: 'claim'` check settles. */
+    answer?: QuickFactCheckAnswer;
+    /** Present once a `mode: 'article'` request settles: whether the server
+     *  accepted it. False must never render as "it's in the Dashboard". */
+    articleRequested?: boolean;
+}
 
 export type ChatContext =
     | { kind: 'persona' }
@@ -36,18 +65,6 @@ export type ChatContext =
     // the FollowStoryAgent scopes the story from free text and stages the same
     // proposeTrack scope pills the article surface stages.
     | { kind: 'follow-story' }
-    // "Fact-check this" started from an article's fact-check tick. Carries the
-    // article snapshot the FactCheckAgent decomposes into checkable claims —
-    // headline + summary ONLY, deliberately: reading the article body is out of
-    // scope, and `url` travels for the eventual citation, never to be fetched.
-    | {
-          kind: 'fact-check';
-          articleId: string;
-          title: string;
-          description?: string;
-          url?: string;
-          publicationName?: string;
-      }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {
@@ -92,6 +109,10 @@ interface FloatingChatState {
     // re-deriving it. Reset to 0 when the session unmounts: a block that
     // outlived its cards would be unclearable.
     unresolvedTopicPlanCount: number;
+    // Quick fact checks started in THIS thread, oldest-first. See
+    // QuickFactCheckEntry: in-memory only, never persisted, cleared whenever the
+    // thread is (a stale answer about another article would be worse than none).
+    quickFactChecks: QuickFactCheckEntry[];
     // Conversation identity for the whole APP SESSION (not per popover open).
     // In-memory only (no persist middleware) so it naturally dies on app kill,
     // giving fresh-conversation-per-launch for free. Closing/reopening the
@@ -111,6 +132,11 @@ interface FloatingChatState {
     setTopicPlanSettled: (factId: string) => void;
     setTopicPlanDiscarded: (factId: string) => void;
     setUnresolvedTopicPlanCount: (count: number) => void;
+    beginQuickFactCheck: (entry: QuickFactCheckEntry) => void;
+    settleQuickFactCheck: (
+        id: string,
+        outcome: { answer?: QuickFactCheckAnswer; articleRequested?: boolean },
+    ) => void;
     resolveConflict: (conflictKey: string, resolution: ConflictResolution) => void;
     collapse: () => void;
     toggle: () => void;
@@ -145,6 +171,7 @@ const initialState = {
     discardedTopicPlans: {} as Record<string, boolean>,
     resolvedConflicts: {} as Record<string, ConflictResolution>,
     unresolvedTopicPlanCount: 0,
+    quickFactChecks: [] as QuickFactCheckEntry[],
     conversationId: null as string | null,
 };
 
@@ -158,15 +185,6 @@ function contextDiffers(a: ChatContext, b: ChatContext): boolean {
             a.verdict !== b.verdict ||
             (a.treePath ?? []).join('') !== (b.treePath ?? []).join('')
         );
-    }
-    // Two fact-check chats on DIFFERENT articles are same-kind, so without this
-    // `expand()` would keep the previous article's thread and its staged claim
-    // card — exactly the leak the comment in `expand` exists to prevent. The
-    // tick's own entry point (openArticleFeedback) resets unconditionally, so
-    // this covers the `expand(context)` path only; it is cheap and it removes
-    // the trap rather than relying on one caller being the only caller.
-    if (a.kind === 'fact-check' && b.kind === 'fact-check') {
-        return a.articleId !== b.articleId;
     }
     return false;
 }
@@ -195,7 +213,12 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
                 isExpanded: true,
                 context: context ?? state.context,
                 ...(switching
-                    ? { conversationId: null, pendingInitialMessage: null, proposal: null }
+                    ? {
+                          conversationId: null,
+                          pendingInitialMessage: null,
+                          proposal: null,
+                          quickFactChecks: [],
+                      }
                     : {}),
             };
         });
@@ -209,6 +232,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             pendingInitialMessage: initialMessage,
             isExpanded: true,
             proposal: null,
+            quickFactChecks: [],
             // Null id = "create a fresh conversation" (fresh thread per thumbs
             // tap). The zustand set is atomic, so the null id and the pending
             // message land in one commit — the old thread unmounts before its
@@ -230,6 +254,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             isExpanded: true,
             pendingInitialMessage: null,
             proposal: null,
+            quickFactChecks: [],
             conversationId: null,
         }));
     },
@@ -272,6 +297,16 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             state.unresolvedTopicPlanCount === count ? {} : { unresolvedTopicPlanCount: count },
         ),
 
+    beginQuickFactCheck: (entry) =>
+        set((state) => ({ quickFactChecks: [...state.quickFactChecks, entry] })),
+
+    settleQuickFactCheck: (id, outcome) =>
+        set((state) => ({
+            quickFactChecks: state.quickFactChecks.map((e) =>
+                e.id === id ? { ...e, ...outcome, status: 'done' as const } : e,
+            ),
+        })),
+
     resolveConflict: (conflictKey, resolution) =>
         set((state) => ({
             resolvedConflicts: { ...state.resolvedConflicts, [conflictKey]: resolution },
@@ -293,7 +328,7 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
 
     setConversationId: (id) => set({ conversationId: id }),
 
-    requestNewChat: () => set({ conversationId: null }),
+    requestNewChat: () => set({ conversationId: null, quickFactChecks: [] }),
 
     reset: () => set({ ...initialState }),
 }));
@@ -317,3 +352,5 @@ export const useFloatingChatHasUnresolvedTopicPlans = () =>
     useFloatingChatStore((state) => state.unresolvedTopicPlanCount > 0);
 export const useFloatingChatResolvedConflicts = () =>
     useFloatingChatStore((state) => state.resolvedConflicts);
+export const useFloatingChatQuickFactChecks = () =>
+    useFloatingChatStore((state) => state.quickFactChecks);

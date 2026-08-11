@@ -282,9 +282,26 @@ describe('ArticleFeedbackAgent', () => {
   });
 
   describe('getToolDefinitions', () => {
-    it('exposes the proposal + follow tools', () => {
+    it('exposes the proposal + follow + claim-picker tools', () => {
       const names = makeAgent().getToolDefinitions().map((t) => t.function.name);
-      expect(names).toEqual(['proposeChanges', 'proposeTrack', 'applyProposal', 'cancelProposal']);
+      expect(names).toEqual([
+        'proposeChanges',
+        'proposeTrack',
+        'applyProposal',
+        'cancelProposal',
+        // pivot P8c: the Quick fact check chip and the article tick both send
+        // into THIS thread, so the claim picker lives on this agent.
+        'proposeFactCheck',
+      ]);
+    });
+
+    // CLOUD-only, and for a reason that is not webSearch's: its prompt section
+    // is ~1,200 measured tokens against a ~3,072-token local input budget, and
+    // the check it proposes needs the cloud regardless.
+    it('never declares proposeFactCheck in LOCAL mode', () => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'ON_DEVICE', webSearchInChat: false });
+      const names = makeAgent().getToolDefinitions().map((t) => t.function.name);
+      expect(names).not.toContain('proposeFactCheck');
     });
 
     // pivot P6 (F4): this surface never declared webSearch at all, so the

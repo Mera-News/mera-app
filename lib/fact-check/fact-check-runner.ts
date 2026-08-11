@@ -1,6 +1,39 @@
 /**
- * The on-device fact-check job: two tiers, and only one of them uses a model.
+ * The QUICK fact-check machinery: search rounds, synthesis parsing, and the
+ * guards that stop a model inventing a source.
  *
+ * ── WHAT THIS FILE STOPPED BEING (pivot P8c) ───────────────────────────────
+ * It used to be a two-tier on-device JOB that also did a ClaimReview lookup and
+ * WROTE ITS ANSWER TO THE `fact_checks` TABLE. Both halves are gone, and their
+ * absence is the design:
+ *
+ *   - TIER 1 (ClaimReview) moved to the SERVER. It is the only lookup that can
+ *     say "Alt News rated this False", and it must stay the only thing that can:
+ *     the quick path is a summary of what the web says right now, and letting it
+ *     attribute a rating would blur the two speeds the whole feature is built
+ *     around. `checkedBy` / `checkedByStatus` therefore no longer originate
+ *     here; their types stay exported because the RENDER layer
+ *     (`fact-check-types.ts`) reads server rows through them.
+ *   - PERSISTENCE is gone with it. A quick answer is chat-only and ephemeral —
+ *     it lives in the conversation like any other reply and is NEVER written to
+ *     `fact_checks`, so "in the Dashboard" keeps meaning *properly checked, with
+ *     sources*.
+ *
+ * ── WHAT SURVIVED, AND WHY ─────────────────────────────────────────────────
+ * The guards, unchanged, because they are what make a fabricated source
+ * impossible rather than unlikely:
+ *   - `clampVerdictToEvidence` forces `unverifiable` on an empty evidence set,
+ *     whatever the model said. `supported` is unreachable with zero evidence by
+ *     construction, not by prompt.
+ *   - citations resolve ONLY by numeric index into evidence actually fetched, so
+ *     an index the list cannot resolve is dropped.
+ *   - `coerceVerdict`'s negation guard: a negated verdict word degrades to
+ *     `unverifiable` rather than printing the opposite of what was said.
+ * And `buildSearchQueries`, which never pastes the claim verbatim —
+ * `MAX_QUERY_CHARS` is 200 and a sentence-shaped query just returns the article
+ * the reader started from.
+ *
+ * ── PRIOR ART ──────────────────────────────────────────────────────────────
  * PRIOR ART — Loki / OpenFactVerification (https://github.com/Libr-AI/OpenFactVerification,
  * MIT, ~1.2k stars). Its pipeline is *decompose → check-worthiness → generate
  * queries → gather evidence → verify*, and this file is an ADAPTATION of the
@@ -19,163 +52,51 @@
  * The first two stages are the CLAIM PICKER's, not this file's: the user has
  * already chosen exactly one assertion by the time we are called.
  *
- * ── TIER 1: `checkedBy[]`, and no model touches it ─────────────────────────
- * A ClaimReview lookup (`../web-search/fact-check-claims-client` — G1's file,
- * living beside `searchWeb` because it is the client half of a gateway contract
- * and the two halves of the "did we actually look?" rule must not drift apart).
- * `publisher.name`, `url`, `textualRating` and `title` map field-for-field onto the
- * `FactCheckOrganisation` shape the UI already renders. An organisation
- * therefore CANNOT be hallucinated and its rating stays verbatim — the
- * `describeOrganisationVerdict` invariant holds by construction rather than by
- * prompt discipline. Measured on the prod corpus, ~4% of articles are the genre
- * fact-checkers cover, so an EMPTY `checkedBy` is the normal, honest outcome.
+ * ── THE HONESTY CONTRACT THAT SURVIVES HERE ───────────────────────────────
+ *   we searched, evidence found  → a verdict, clamped to that evidence
+ *   we searched, index empty     → `unverifiable`, and the reader is told the
+ *                                  search came back empty. A real answer.
+ *   we could not search at all    → NO verdict, and the reader is told we could
+ *                                  not look. Never "I found nothing".
  *
- * TIER 1 IS A BONUS AND MUST NEVER GATE THE FEATURE. An earlier draft blocked
- * the whole check when this lookup was unavailable, which inverted the
- * measurement above: a lookup that pays off on ~4% of articles would have
- * killed 100% of them whenever its flag was off or its (undocumented, so
- * genuinely unknown) quota bit. Unavailability here now degrades Tier 1 alone
- * — see `checkedByStatus`.
+ * The last two are the pair this design exists to keep apart: both end with zero
+ * evidence and they mean opposite things. The gateway contract is what
+ * distinguishes them — `200 + []` is a search that happened, `503`
+ * + `code: 'search-unavailable'` is a search that did not — so the branch keys
+ * on `outcome.ok`, never on `results.length`.
  *
- * ── TIER 2: the narrative, which is what the user actually sees ────────────
- * Up to three short web searches, then one synthesis pass on `BIG_MODEL`
- * (`cloudChatStream` already hardcodes `enable_thinking: true`). This tier IS
- * the product, so its unavailability — and only its unavailability — is what
- * `blocked` means.
- *
- * ── THE HONESTY CONTRACT — four outcomes, four DISTINCT states ─────────────
- *   a fact-checker published  → `checkedBy` populated, `searched`    → complete
- *   nobody published          → `checkedBy: []`,       `searched`    → complete
- *   we could not ASK them     → `checkedBy: []`,       `unavailable` → complete
- *   we could not gather ANY   → no verdict at all                    → blocked
- *   evidence
- *
- * Rows 2 and 3 are the pair this design exists to keep apart. They have the
- * same empty array and opposite meanings: one says "nobody has ruled on this",
- * the other says "we do not know whether anybody has". Collapsing them prints a
- * fabricated all-clear on the single axis this feature is meant to be
- * authoritative about — which is why `checkedByStatus` is an explicit field
- * rather than an inference from array length.
- *
- * Row 4 keeps its structural guards, because a counter-metric that cannot fail
- * is not a counter-metric:
- *   1. `blocked` is decided BEFORE the model is ever called, so a blocked row
- *      cannot carry a verdict — there is no code path that produces one.
- *   2. `clampVerdictToEvidence` forces `unverifiable` whenever the evidence set
- *      is empty, whatever the model said. `supported` is unreachable with zero
- *      evidence by construction, which matters because a search client that
- *      reported a DISABLED provider as an empty success would otherwise sail
- *      straight through.
- * Citations get the same treatment: only indices that resolve to a URL we
- * actually fetched survive, so the model cannot invent a source.
- *
- * `checkedByStatus` defaults to `unavailable` and is only ever promoted to
- * `searched` by a lookup that actually returned. The default is the fail-safe
- * direction: a row can never claim we looked because someone forgot to set a
- * field.
- *
- * No React. Every I/O seam is injected (`FactCheckRunnerDeps`) so all four
- * honesty cases are unit-testable without a network.
+ * No React, no stores, no persistence — every function here is pure but for the
+ * types it borrows, so both honesty cases are unit-testable without a network.
+ * The I/O half lives in `lib/chat-tools/quick-fact-check-handler.ts`.
  */
 
-import { BIG_MODEL } from '../llm/constants';
-import { cloudChatStream, type SseEvent, type WireMessage } from '../llm/cloudComplete';
-import { searchWeb, MAX_QUERY_CHARS, type WebSearchResult } from '../web-search/web-search-client';
-import {
-  searchClaimReviews,
-  MAX_CLAIM_CHARS,
-  type ClaimReview,
-} from '../web-search/fact-check-claims-client';
-import { upsertFactCheck } from '../database/services/fact-check-record-service';
-import logger from '../logger';
+import type { WireMessage } from '../llm/cloudComplete';
+import { MAX_QUERY_CHARS, type WebSearchResult } from '../web-search/web-search-client';
 
 // ───────────────────────────────────────────────────────────────────────────
-// The payload shape — EXACTLY today's, so the render layer is untouched
+// Payload fragments
 // ───────────────────────────────────────────────────────────────────────────
+//
+// Only the two shapes the QUICK path produces live here. The full row shape
+// (`FactCheckRow`, `checkedBy`, `checkedByStatus`) belongs to the SERVER answer
+// and is declared in `fact-check-types.ts` — this file must not carry a second,
+// drifting copy of it.
 
-/** One organisation's own published rating. `verdict` is verbatim.
- *
- *  The optional fields accept `null` as well as `undefined` on purpose: the
- *  render layer (`fact-check-types.ts`) aliases these types, and a row stored
- *  before the pivot came from GraphQL, where every optional field is `Maybe<T>`
- *  — i.e. explicitly null. Narrowing to `string | undefined` would make a
- *  legacy payload unassignable to the type that describes it. */
-export interface FactCheckOrganisationPayload {
-  organisation: string;
-  url?: string | null;
-  verdict?: string | null;
-  summary?: string | null;
-}
-
-/** A source. `uri`, not `url` — the render layer reads `uri`. */
+/** A source. `uri`, not `url` — the render layer reads `uri`. Optionals accept
+ *  `null` as well as `undefined` because a server row arrives from GraphQL,
+ *  where every optional field is `Maybe<T>`. */
 export interface FactCheckCitationPayload {
   uri: string;
   title?: string | null;
   snippet?: string | null;
 }
 
+/** One sub-assertion the synthesis broke the claim into. */
 export interface FactCheckClaimPayload {
   claim: string;
   assessment: string;
   note?: string | null;
 }
-
-/**
- * What lands in `payload_json`. Structurally identical to the GraphQL
- * `FactCheck` row the panel used to read, deliberately: `fact-check-state.ts`,
- * `FactCheckSources.tsx` and `FactCheckCard.tsx` keep working with no change.
- * Declared locally rather than imported from the generated types — the server
- * schema is being torn down and this must outlive it.
- */
-export interface FactCheckPayload {
-  _id: string;
-  articleTitle?: string | null;
-  articleUrl?: string | null;
-  publicationName?: string | null;
-  status: FactCheckRunStatus;
-  verdict?: string | null;
-  summary?: string | null;
-  claims: FactCheckClaimPayload[];
-  checkedBy: FactCheckOrganisationPayload[];
-  /**
-   * WHETHER THE `checkedBy` LIST IS AN ANSWER OR AN ABSENCE OF ONE.
-   *
-   * An empty array has two completely different meanings and the UI must not
-   * treat them alike:
-   *   `searched`    — we asked the ClaimReview corpus and it returned nothing.
-   *                   No IFCN signatory has published on this claim. That is a
-   *                   FACT, and the normal outcome: ~4% of Mera's corpus is the
-   *                   genre fact-checkers cover, so `factCheck.noCheckedBy`
-   *                   ("most stories are never fact-checked") is correct here.
-   *   `unavailable` — the lookup did not happen (flag off, 429, dead route,
-   *                   transport failure). We know NOTHING about who has ruled
-   *                   on this claim, and saying "nobody has" would be a
-   *                   fabricated all-clear on the one axis this feature is
-   *                   supposed to be authoritative about.
-   *
-   * A separate field rather than an overloaded `checkedBy: null` because null
-   * is exactly the value every existing render path already coerces to `[]`.
-   */
-  checkedByStatus: CheckedByStatus;
-  citations: FactCheckCitationPayload[];
-  createdAt: string;
-  completedAt?: string | null;
-  /** The claim the user picked, echoed so a row is self-describing. */
-  claim: string;
-  /** Runner attempts spent. Bounds the recovery task's re-drive loop. */
-  attempts: number;
-  /** When the CURRENT attempt started. `requested_at` is insert-only, so this
-   *  is the only thing that can say "this run is stale". */
-  startedAt: number;
-  model?: string | null;
-  /** Why a row is `blocked`. Never a verdict. */
-  blockedReason?: string | null;
-}
-
-export type FactCheckRunStatus = 'processing' | 'complete' | 'blocked' | 'failed';
-
-/** See {@link FactCheckPayload.checkedByStatus}. */
-export type CheckedByStatus = 'searched' | 'unavailable';
 
 /** Closed verdict vocabulary — `normalizeVerdict` in fact-check-state.ts. */
 const VERDICTS = new Set(['supported', 'disputed', 'unsupported', 'mixed', 'unverifiable']);
@@ -305,22 +226,6 @@ export function buildSearchQueries(claim: string, articleTitle?: string | null):
   return out.slice(0, 3);
 }
 
-/** The ClaimReview query: this API matches on claim TEXT, so unlike the web
- *  search it wants the sentence — merely trimmed to its own, longer cap
- *  (`MAX_CLAIM_CHARS` is 300, not the web search's 200, precisely because a
- *  claim is an asserted sentence rather than a query built short). The retry is
- *  the shortened form, for a claim too specific to match anything. */
-export function buildClaimReviewQueries(claim: string): string[] {
-  const out: string[] = [];
-  const push = (q: string) => {
-    const fitted = fit(q, MAX_CLAIM_CHARS);
-    if (fitted.length >= 2 && !out.includes(fitted)) out.push(fitted);
-  };
-  push(claim);
-  push(contentWords(claim, 8).join(' '));
-  return out;
-}
-
 // ───────────────────────────────────────────────────────────────────────────
 // Synthesis prompt — Loki's verify stage, widened to our vocabulary
 // ───────────────────────────────────────────────────────────────────────────
@@ -355,7 +260,7 @@ const SYNTHESIS_SYSTEM = [
   'unverifiable = the evidence does not settle it. At most 4 entries in "claims".',
 ].join('\n');
 
-function buildSynthesisMessages(
+export function buildSynthesisMessages(
   claim: string,
   evidence: WebSearchResult[],
   articleTitle?: string | null,
@@ -494,47 +399,12 @@ export function resolveCitations(
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// The job
+// Search-round budget
 // ───────────────────────────────────────────────────────────────────────────
 
-export interface FactCheckJob {
-  readonly factCheckId: string;
-  readonly articleId: string;
-  readonly claim: string;
-  readonly claimKey: string;
-  readonly articleTitle?: string;
-  readonly articleUrl?: string;
-  readonly publicationName?: string;
-  /** BCP-47, for the ClaimReview lookup. Retried unset when it yields nothing. */
-  readonly languageCode?: string;
-  /** Attempts already spent. The recovery task carries this forward. */
-  readonly attempts?: number;
-}
-
-export interface FactCheckRunnerDeps {
-  searchClaimReviews: typeof searchClaimReviews;
-  searchWeb: typeof searchWeb;
-  chatStream: (req: {
-    messages: WireMessage[];
-    model: string;
-    temperature?: number;
-    maxTokens?: number;
-  }) => AsyncGenerator<SseEvent>;
-  persist: typeof upsertFactCheck;
-  now: () => number;
-}
-
-const defaultDeps: FactCheckRunnerDeps = {
-  searchClaimReviews,
-  searchWeb,
-  chatStream: (req) => cloudChatStream(req),
-  persist: upsertFactCheck,
-  now: () => Date.now(),
-};
-
 /** Stop collecting once we have plenty — every extra round is latency the user
- *  is waiting through and gateway quota nobody capped. */
-const ENOUGH_EVIDENCE = 8;
+ *  is watching and gateway quota nobody capped. */
+export const ENOUGH_EVIDENCE = 8;
 /**
  * Rounds that ALWAYS run, before `ENOUGH_EVIDENCE` is allowed to stop the loop.
  *
@@ -546,303 +416,12 @@ const ENOUGH_EVIDENCE = 8;
  * targeted queries" that this file credits. Round 3 stays conditional: it only
  * earns its latency when the first two came back thin.
  */
-const MIN_SEARCH_ROUNDS = 2;
+export const MIN_SEARCH_ROUNDS = 2;
 /** Evidence items that reach the prompt (and therefore the citation index
  *  space). Two full rounds is ~20 results; every one of them in the prompt is
  *  context the synthesis does not need and latency the user waits through. */
-const MAX_EVIDENCE_IN_PROMPT = 12;
-/** Wall-clock ceiling on the synthesis stream. `BIG_MODEL` with thinking on is
- *  tens of seconds; past this the answer is not worth the wait. */
-const SYNTHESIS_DEADLINE_MS = 120_000;
-const SYNTHESIS_MAX_CHARS = 12_000;
-/** Attempts before a repeatedly-failing row stops being re-driven. It then goes
- *  `blocked` — terminal and verdict-free — rather than looping forever. */
-export const MAX_FACT_CHECK_ATTEMPTS = 3;
-
-export interface FactCheckRunResult {
-  status: FactCheckRunStatus;
-  verdict: string | null;
-  checkedByCount: number;
-  /** Whether Tier 1 ran at all. `checkedByCount === 0` alone cannot tell you. */
-  checkedByStatus: CheckedByStatus;
-  evidenceCount: number;
-  blockedReason?: string;
-}
-
-/**
- * Run one check to completion and persist the outcome. Never throws.
- *
- * Ordering is load-bearing: every `blocked` exit happens BEFORE the model is
- * called, so there is no path on which a blocked row carries a verdict.
- */
-export async function runFactCheck(
-  job: FactCheckJob,
-  overrides: Partial<FactCheckRunnerDeps> = {},
-): Promise<FactCheckRunResult> {
-  const deps: FactCheckRunnerDeps = { ...defaultDeps, ...overrides };
-  const startedAt = deps.now();
-  const attempts = (job.attempts ?? 0) + 1;
-
-  const base = {
-    _id: job.factCheckId,
-    articleTitle: job.articleTitle ?? null,
-    articleUrl: job.articleUrl ?? null,
-    publicationName: job.publicationName ?? null,
-    claim: job.claim,
-    createdAt: new Date(startedAt).toISOString(),
-    attempts,
-    startedAt,
-    // FAIL-SAFE DEFAULT. Promoted to `searched` only by a lookup that actually
-    // returned, so no row can ever claim "nobody has published on this" merely
-    // because a code path forgot to set the field.
-    checkedByStatus: 'unavailable' as CheckedByStatus,
-  };
-
-  const write = async (
-    payload: FactCheckPayload,
-  ): Promise<void> => {
-    await deps.persist({
-      articleId: job.articleId,
-      factCheckId: job.factCheckId,
-      articleTitle: job.articleTitle ?? null,
-      claim: job.claim,
-      claimKey: job.claimKey,
-      status: payload.status,
-      // BLOCKED ROWS CARRY NO VERDICT. Asserted here as well as by construction,
-      // because this is the one field that could turn "we could not look" into
-      // a green all-clear.
-      verdict: payload.status === 'blocked' ? null : (payload.verdict ?? null),
-      payload,
-    });
-  };
-
-  // Whether Tier 1 actually ran. Declared out here because `blocked` reports it
-  // too: a check that failed at Tier 2 may still hold a real answer about who
-  // has published, and discarding that would be its own small dishonesty.
-  let checkedByStatus: CheckedByStatus = 'unavailable';
-  let organisations: FactCheckOrganisationPayload[] = [];
-
-  const blocked = async (reason: string): Promise<FactCheckRunResult> => {
-    logger.warn('[fact-check] blocked', { reason, articleId: job.articleId });
-    await write({
-      ...base,
-      status: 'blocked',
-      verdict: null,
-      summary: null,
-      claims: [],
-      checkedBy: organisations,
-      checkedByStatus,
-      citations: [],
-      completedAt: new Date(deps.now()).toISOString(),
-      blockedReason: reason,
-    });
-    return {
-      status: 'blocked',
-      verdict: null,
-      checkedByCount: organisations.length,
-      checkedByStatus,
-      evidenceCount: 0,
-      blockedReason: reason,
-    };
-  };
-
-  // Re-stamp `processing` so the recovery task can tell a live run from a
-  // stranded one (`requested_at` is insert-only and cannot).
-  await write({
-    ...base,
-    status: 'processing',
-    verdict: null,
-    summary: null,
-    claims: [],
-    checkedBy: [],
-    checkedByStatus,
-    citations: [],
-    completedAt: null,
-  });
-
-  // ── Tier 1 ───────────────────────────────────────────────────────────────
-  let checkedBy: ClaimReview[] = [];
-  {
-    const queries = buildClaimReviewQueries(job.claim);
-    // (claim, languageCode) pairs: shortened retry first, then the language
-    // dropped — the ClaimReview corpus skews hard to a handful of languages, so
-    // a language-scoped miss is often an artefact rather than an answer.
-    const lookups: { claim: string; languageCode?: string }[] = [
-      ...queries.map((claim) => ({ claim, languageCode: job.languageCode })),
-      ...(job.languageCode ? [{ claim: queries[0], languageCode: undefined }] : []),
-    ];
-    for (const lookup of lookups) {
-      const outcome = await deps.searchClaimReviews(lookup.claim, {
-        languageCode: lookup.languageCode,
-      });
-      // Unavailable is NOT empty — but it is also NOT fatal. `ok: false` from
-      // this client means, without exception, that NO LOOKUP HAPPENED, so we
-      // stop asking and record that we do not know. What we must never do is
-      // fall through to an empty `checkedBy` that reads as "nobody published":
-      // `checkedByStatus` stays `unavailable`, and the UI has to say so.
-      //
-      // Not blocking here is deliberate, and was a correction. This tier pays
-      // off on ~4% of the corpus; letting it kill the other 96% because a flag
-      // was off or an undocumented quota bit inverts what the feature is for.
-      if (!outcome.ok) {
-        logger.warn('[fact-check] ClaimReview lookup unavailable — Tier 2 continues', {
-          code: outcome.code ?? outcome.status ?? 'failed',
-          articleId: job.articleId,
-        });
-        break;
-      }
-      // We asked and got an answer, even an empty one. THIS is the only place
-      // that may promote the status.
-      checkedByStatus = 'searched';
-      if (outcome.claimReviews.length > 0) {
-        checkedBy = outcome.claimReviews;
-        break;
-      }
-    }
-  }
-
-  // ── Tier 2 ───────────────────────────────────────────────────────────────
-  const evidence: WebSearchResult[] = [];
-  const seenUrls = new Set<string>();
-  let okRounds = 0;
-  let rounds = 0;
-  let lastSearchError: string | undefined;
-  for (const query of buildSearchQueries(job.claim, job.articleTitle)) {
-    // The `rounds` guard is what keeps rounds 2 and 3 from being dead code —
-    // see MIN_SEARCH_ROUNDS. One round already returns 10 results.
-    if (rounds >= MIN_SEARCH_ROUNDS && evidence.length >= ENOUGH_EVIDENCE) break;
-    rounds++;
-    const outcome = await deps.searchWeb(query);
-    if (!outcome.ok) {
-      lastSearchError = outcome.error;
-      continue;
-    }
-    okRounds++;
-    for (const r of outcome.results) {
-      if (!r?.url || seenUrls.has(r.url)) continue;
-      seenUrls.add(r.url);
-      evidence.push(r);
-    }
-  }
-  // Not "no results" — no successful ROUND. Zero of our searches reached the
-  // provider, so we know nothing at all and must not pretend otherwise.
-  if (okRounds === 0) return blocked(`web-search:${lastSearchError ?? 'search-unavailable'}`);
-
-  // THE ONLY MAPPING, and no model is anywhere near it:
-  //   publisher.name -> organisation | url -> url
-  //   textualRating  -> verdict      | title -> summary
-  // A review with no masthead is dropped: `describeCheckedBy` drops it
-  // downstream anyway, and "whose judgement is this" is the entire value of the
-  // list. `textualRating` is passed through UNTOUCHED — an organisation's
-  // rating rewritten by us, or by an LLM, is an attribution we are not entitled
-  // to make.
-  organisations = checkedBy
-    .filter((c) => c.publisher?.name?.trim().length > 0)
-    .map((c) => ({
-      organisation: c.publisher.name.trim(),
-      url: c.url || undefined,
-      verdict: c.textualRating?.trim() || undefined,
-      summary: c.title?.trim() || undefined,
-    }));
-
-  // Searches ran and returned nothing at all. There is nothing to synthesise
-  // from, so the model is not called: an answer built on zero evidence is the
-  // fabricated all-clear this feature exists to avoid. `unverifiable` is the
-  // honest, renderable outcome, and `checkedBy` may still be populated.
-  if (evidence.length === 0) {
-    await write({
-      ...base,
-      status: 'complete',
-      verdict: 'unverifiable',
-      summary: null,
-      claims: [],
-      checkedBy: organisations,
-      checkedByStatus,
-      citations: [],
-      completedAt: new Date(deps.now()).toISOString(),
-    });
-    return {
-      status: 'complete',
-      verdict: 'unverifiable',
-      checkedByCount: organisations.length,
-      checkedByStatus,
-      evidenceCount: 0,
-    };
-  }
-
-  // ── Synthesis ────────────────────────────────────────────────────────────
-  // ONE array from here on: the prompt's numbering, the citation index space
-  // and `resolveCitations` must all index the SAME list, or "citation [7]"
-  // resolves to a page the model never saw.
-  const shortlist = evidence.slice(0, MAX_EVIDENCE_IN_PROMPT);
-  let answer = '';
-  try {
-    const deadline = deps.now() + SYNTHESIS_DEADLINE_MS;
-    const stream = deps.chatStream({
-      messages: buildSynthesisMessages(
-        job.claim,
-        shortlist,
-        job.articleTitle,
-        job.publicationName,
-      ),
-      model: BIG_MODEL,
-      temperature: 0,
-      maxTokens: 1200,
-    });
-    for await (const event of stream) {
-      if (event.type === 'text-delta') answer += event.delta;
-      else if (event.type === 'error') throw new Error(event.message);
-      if (answer.length > SYNTHESIS_MAX_CHARS || deps.now() > deadline) break;
-    }
-  } catch (err) {
-    logger.warn('[fact-check] synthesis failed', {
-      error: String(err),
-      attempts,
-      articleId: job.articleId,
-    });
-    // A model failure is not a fact about the claim. At the attempt cap it
-    // becomes `blocked` (terminal, verdict-free) rather than a row the recovery
-    // task re-drives forever.
-    if (attempts >= MAX_FACT_CHECK_ATTEMPTS) return blocked('synthesis-failed');
-    await write({
-      ...base,
-      status: 'failed',
-      verdict: null,
-      summary: null,
-      claims: [],
-      checkedBy: organisations,
-      checkedByStatus,
-      citations: [],
-      completedAt: null,
-    });
-    return {
-      status: 'failed',
-      verdict: null,
-      checkedByCount: organisations.length,
-      checkedByStatus,
-      evidenceCount: evidence.length,
-    };
-  }
-
-  const parsed = parseSynthesis(answer, shortlist.length);
-  const verdict = clampVerdictToEvidence(parsed.verdict, shortlist.length);
-  await write({
-    ...base,
-    status: 'complete',
-    verdict,
-    summary: parsed.summary,
-    claims: parsed.claims,
-    checkedBy: organisations,
-    checkedByStatus,
-    citations: resolveCitations(parsed.citationIndices, shortlist),
-    completedAt: new Date(deps.now()).toISOString(),
-    model: BIG_MODEL,
-  });
-  return {
-    status: 'complete',
-    verdict,
-    checkedByCount: organisations.length,
-    checkedByStatus,
-    evidenceCount: evidence.length,
-  };
-}
+export const MAX_EVIDENCE_IN_PROMPT = 12;
+/** Wall-clock ceiling on the synthesis stream. Past this the answer is not
+ *  worth the wait — and the QUICK path is the one the user sits and watches. */
+export const SYNTHESIS_DEADLINE_MS = 90_000;
+export const SYNTHESIS_MAX_CHARS = 12_000;

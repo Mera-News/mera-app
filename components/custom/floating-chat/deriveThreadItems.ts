@@ -19,6 +19,7 @@ import {
 } from '@/lib/news-harness/core/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
+import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
 
 // ---------------------------------------------------------------------------
@@ -436,9 +437,12 @@ function deriveFactCheckProposal(toolCall: ToolCallRecord): StagedProposal | nul
   // Rebuild the claim pills from input.options (result.options as fallback), or
   // a legacy lone `claim` string. Same parser as the live path → identical
   // actions.
+  // RESULT FIRST, unlike the track card above. The staged options are a superset
+  // of the model's: decideProposeFactCheck appends the whole-article pill, and
+  // reading `input.options` in preference would rebuild a card missing it.
   const rawOptions =
-    (Array.isArray(input.options) && input.options) ||
     (Array.isArray(result?.options) && result.options) ||
+    (Array.isArray(input.options) && input.options) ||
     (typeof input.claim === 'string' && input.claim.trim() ? [input.claim] : []) ||
     [];
   const options = parseFactCheckClaimOptions(rawOptions);
@@ -450,6 +454,12 @@ function deriveFactCheckProposal(toolCall: ToolCallRecord): StagedProposal | nul
     label: o.label,
     claim: o.claim,
     subject,
+    // The trailing whole-article pill. It only ever reaches this parser via
+    // `result.options` (the model never emits it and the tool INPUT never
+    // carries it), which is exactly why decideProposeFactCheck echoes the
+    // options it staged rather than only the ones it was given — without that
+    // echo a resumed card would silently lose the thorough path.
+    ...(o.mode === 'article' ? { mode: 'article' as const } : {}),
   }));
   return {
     id: echoedId ?? toolCall.id,
@@ -629,6 +639,17 @@ export function deriveThreadItems(opts: {
    * history/intro), mirroring `articleContext` (Round-4 C5).
    */
   optimisationPlan?: { key: string };
+  /**
+   * Quick fact checks started in this thread (oldest-first), appended AFTER the
+   * live messages.
+   *
+   * Injected rather than derived, unlike every other card here, and that is the
+   * point: nothing in the message stream produces one. The user taps a claim
+   * pill, the check runs off-model, and the answer the reader sees is the one
+   * the handler decided — there is no turn in between that could restate "we
+   * could not search" as "I found nothing".
+   */
+  quickFactChecks?: QuickFactCheckEntry[];
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
@@ -704,6 +725,11 @@ export function deriveThreadItems(opts: {
       (lastLive.role === 'assistant' && lastLive.content.trim().length === 0));
   if (showTyping) {
     out.push({ kind: 'typing', key: 'typing' });
+  }
+
+  // --- Quick fact checks (always last: they answer the newest tap) ---
+  for (const entry of [...(opts.quickFactChecks ?? [])].sort((a, b) => a.createdAt - b.createdAt)) {
+    out.push({ kind: 'quick-fact-check-card', key: `qfc-${entry.id}`, entry });
   }
 
   return out;

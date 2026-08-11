@@ -6,6 +6,7 @@
 
 import type { ConversationMessage, StagedProposal } from '@/lib/llm/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
+import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 
 // ---------------------------------------------------------------------------
 // PersistedMessage
@@ -47,6 +48,11 @@ export type ChatThreadItem =
   | { kind: 'topic-plan-card'; key: string; factId: string; factStatement: string }
   // Wave 11 U-B1 — save-time fact-conflict resolution card.
   | { kind: 'conflict-card'; key: string; conflict: FactConflict }
+  // pivot P8c — the QUICK fact check the user started by tapping a claim pill,
+  // answered in the thread. Injected from the floating-chat store (like the
+  // optimisation plan) rather than derived from a tool call: no model turn
+  // produces it, and it is deliberately never persisted.
+  | { kind: 'quick-fact-check-card'; key: string; entry: QuickFactCheckEntry }
   | { kind: 'divider'; key: string; label: string }
   | { kind: 'typing'; key: string };
 

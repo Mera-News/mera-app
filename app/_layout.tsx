@@ -76,7 +76,6 @@ import '@/lib/scheduler/tasks/sanity-backfill-task';
 import '@/lib/scheduler/tasks/persona-geo-task';
 import '@/lib/scheduler/tasks/feedback-cycle-task';
 import '@/lib/scheduler/tasks/entitlement-sync-task';
-import '@/lib/scheduler/tasks/fact-check-recover-task';
 
 // Register the inference TaskManager task at module load so the
 // expo-notifications silent-push wake (phase-1-done / phase-2-done from the

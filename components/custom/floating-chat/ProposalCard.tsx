@@ -192,14 +192,27 @@ export function actionToRow(action: ProposalAction): ActionRow {
       // with "Check this claim" as the small category line above it — the same
       // shape as track_story, which the card already renders well as 3–4 pills.
       // DISPLAY-translated only: `action.claim` is the English search key sent
-      // to the ClaimReview index and to web search, and it is read from the
-      // ACTION (never from this row), so the reader's Hindi cannot reach it.
-      return {
-        icon: 'fact-check',
-        labelKey: 'factCheck.actionCheckClaim',
-        heading: action.label,
-        translateHeading: true,
-      };
+      // to web search, and it is read from the ACTION (never from this row), so
+      // the reader's Hindi cannot reach it.
+      //
+      // The ALWAYS-LAST article pill gets its own category line and icon,
+      // because it is a different promise: not a quick web summary answered here
+      // in the thread, but a thorough server check whose result lands in the
+      // Dashboard. A row that read "Check this claim" over it would sell the
+      // slow, authoritative path as the fast one.
+      return action.mode === 'article'
+        ? {
+            icon: 'cloud-upload',
+            labelKey: 'factCheck.actionCheckArticle',
+            heading: action.label,
+            translateHeading: true,
+          }
+        : {
+            icon: 'fact-check',
+            labelKey: 'factCheck.actionCheckClaim',
+            heading: action.label,
+            translateHeading: true,
+          };
     // -- Wave-9 rails-backed feed-tuning actions (the "less of this" choose-one
     //    alternatives) — each renders its own labelled row so the radio card is
     //    legible. --

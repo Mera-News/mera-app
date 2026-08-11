@@ -36,12 +36,18 @@ import {
   getArticleFeedbackToolDefinitions,
 } from '../../news-harness/article-feedback/agent-core';
 import {
+  decideProposeFactCheck,
+  makeFactCheckSubject,
+} from '../../news-harness/fact-check';
+import {
   chooseOneRefusal,
   proposalRequiresUserChoice,
   userTapOnlyRefusal,
 } from '../../news-harness/core/proposals';
+import i18n from '../../i18n';
 import type {
   ActiveSuppressionView,
+  FactCheckSubject,
   SuggestionFeedbackContext,
   TrackFeedbackSubject,
 } from '../../news-harness/core/types';
@@ -143,6 +149,33 @@ export class ArticleFeedbackAgent implements IAgent {
     };
   }
 
+  /**
+   * The article snapshot `proposeFactCheck` stages against.
+   *
+   * Read from the SUGGESTION ROW rather than from the chat context, because the
+   * chat may have been opened with a suggestionId alone and both halves of the
+   * card need a real `articleId`: the quick path has nothing to do without one,
+   * and the async path's whole payload IS the article id. A null return refuses
+   * the tool rather than staging pills against an empty id.
+   */
+  private async resolveFactCheckSubject(): Promise<FactCheckSubject | null> {
+    const ctx = await getSuggestionFeedbackContext(this.target).catch(() => null);
+    const storeContext = useFloatingChatStore.getState().context;
+    const storeTitle =
+      storeContext.kind === 'article-suggestion' ? storeContext.articleTitle : undefined;
+    const articleId = ctx?.suggestion.articleId ?? this.target.articleId ?? '';
+    if (!articleId) return null;
+    const title =
+      ctx?.suggestion.title_en ?? ctx?.suggestion.title_original ?? storeTitle ?? '';
+    return makeFactCheckSubject({
+      articleId,
+      title,
+      description: ctx?.suggestion.description_en ?? null,
+      url: ctx?.suggestion.article_url ?? null,
+      publicationName: ctx?.suggestion.publication_name ?? null,
+    });
+  }
+
   /** Resolve the subject the follow tool tracks against: the explicit
    *  trackSubject, else a minimal one built from the target + store title. */
   private resolveTrackSubject(): TrackFeedbackSubject | null {
@@ -195,7 +228,15 @@ export class ArticleFeedbackAgent implements IAgent {
       return this.cachedSystemPrompt;
     }
 
-    this.cachedSystemPrompt = buildArticleFeedbackSystemPrompt({ needsToolFormat, languageName, webSearch });
+    this.cachedSystemPrompt = buildArticleFeedbackSystemPrompt({
+      needsToolFormat,
+      languageName,
+      webSearch,
+      // Same gate as getToolDefinitions' `proposeFactCheck` declaration, and
+      // part of the cache key below for the same reason webSearch is: a prompt
+      // built in one mode must not keep serving after the user switches.
+      factCheck: mode === 'CLOUD',
+    });
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
     this.lastMode = mode;
@@ -331,6 +372,30 @@ export class ArticleFeedbackAgent implements IAgent {
           /* non-fatal — proceed to propose */
         }
         return decideProposeTrack(args, subject);
+      }
+
+      case 'proposeFactCheck': {
+        // Stage the claim pills against this article's snapshot, plus the
+        // always-last whole-article option. No already-checked guard: per-claim
+        // identity means one article can legitimately carry several checks.
+        //
+        // The article option's label is USER-FACING PROSE, not a search key, so
+        // it is localized HERE — the pure layer never reads i18n — and it is
+        // resolved at stage time so the persisted tool result carries the same
+        // string the resumed card rebuilds from.
+        const subject = await this.resolveFactCheckSubject();
+        if (!subject) {
+          return { result: { error: 'no article to fact-check in this context' } };
+        }
+        // `factCheck.optionWholeArticle` lands with the wave's `en.json` splice;
+        // typed `t` is generated from that file, so the key is not in the union
+        // yet. One cast, and deliberately no `defaultValue` — an inline English
+        // default is how English has previously shipped into 19 locale files.
+        return decideProposeFactCheck(
+          args,
+          subject,
+          i18n.t('factCheck.optionWholeArticle' as 'factCheck.chatSeed'),
+        );
       }
 
       case 'applyProposal': {

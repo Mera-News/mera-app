@@ -34,12 +34,17 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { loadHarnessEnv } from '../config/env';
 import {
-  buildFactCheckContext,
-  buildFactCheckSystemPrompt,
-  getFactCheckToolDefinitions,
   parseFactCheckClaimOptions,
   type FactCheckArticleInput,
 } from '../../lib/news-harness/fact-check';
+// The claim picker is a SECTION of the article agent's prompt now (the chip
+// sends into the existing article thread), so the replay has to render the
+// article agent's prompt + <context> or it measures a prompt we do not ship.
+import {
+  buildArticleFeedbackSystemPrompt,
+  buildFeedbackContext,
+  getArticleFeedbackToolDefinitions,
+} from '../../lib/news-harness/article-feedback/agent-core';
 
 const BIG_MODEL = 'deepseek-ai/DeepSeek-V4-Flash';
 const CHAT_MAX_OUTPUT_TOKENS = 1024;
@@ -189,13 +194,32 @@ interface RunOutcome {
 }
 
 async function runOnce(fixture: Fixture, apiKey: string, baseUrl: string): Promise<RunOutcome> {
-  const system = buildFactCheckSystemPrompt({
+  const system = buildArticleFeedbackSystemPrompt({
     needsToolFormat: false,
     languageName: fixture.languageName ?? 'English',
   });
-  const context = buildFactCheckContext({
+  // The article agent's own <context>: the fixture article rendered through the
+  // SHIPPED builder, with no persona facts (the claim picker reads the ARTICLE
+  // block, the Publication line and Today — nothing else).
+  const context = buildFeedbackContext({
     nowMs: Date.now(),
-    article: fixture.article,
+    facts: [],
+    context: {
+      suggestion: {
+        title_en: fixture.article.title,
+        title_original: null,
+        publication_name: fixture.article.publicationName ?? null,
+        description_en: fixture.article.description ?? null,
+        isScored: false,
+        relevance: 0,
+        reason: null,
+      },
+      matchedTopicTexts: [],
+      linkedFacts: [],
+      entities: [],
+      category: null,
+    },
+    fallbackTitle: fixture.article.title,
     proposal: null,
   });
   const userTurn = fixture.userTurn ?? SEED;
@@ -208,7 +232,7 @@ async function runOnce(fixture: Fixture, apiKey: string, baseUrl: string): Promi
       // turn — same here, or the model sees a different prompt from the app's.
       { role: 'user', content: `${context}\n\n${userTurn}` },
     ],
-    tools: getFactCheckToolDefinitions(),
+    tools: getArticleFeedbackToolDefinitions('CLOUD'),
     tool_choice: 'auto',
     max_tokens: CHAT_MAX_OUTPUT_TOKENS,
     chat_template_kwargs: { enable_thinking: true },

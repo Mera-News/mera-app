@@ -95,6 +95,43 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     expect(estimateTokens(prompt)).toBeLessThan(ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING);
   });
 
+  // pivot P8c — THE REASON THE CLAIM PICKER IS CLOUD-ONLY, pinned so it stays
+  // that way. Its rules are ~1,200 MEASURED tokens (85% separability; not
+  // shortenable without re-running the replay), and the local path's whole input
+  // budget is ~3,072. Splicing them into the LOCAL prompt took system + a
+  // saturated context from 2,740 to 4,145 — i.e. straight through the budget the
+  // test below exists to defend, silently truncating a surface that was already
+  // living inside it.
+  it('adds the claim-picker section on CLOUD only, and not one byte on LOCAL', () => {
+    const local = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    const cloudOff = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+    const cloudOn = buildArticleFeedbackSystemPrompt({
+      needsToolFormat: false,
+      languageName: 'English',
+      factCheck: true,
+    });
+
+    expect(local).not.toContain('proposeFactCheck');
+    expect(cloudOff).not.toContain('proposeFactCheck');
+    expect(cloudOn).toContain('proposeFactCheck');
+    // The cloud path enforces no hard input budget (see
+    // CLOUD_HISTORY_BUDGET_TOKENS' note), but latency and cost are real: this is
+    // the policy ceiling for the biggest prompt this surface can build.
+    expect(estimateTokens(cloudOn)).toBeLessThan(3200);
+  });
+
+  // The LOCAL flag must not be able to smuggle the section in through the XML
+  // tool-format block, which is the one part of the prompt only that path sees.
+  it('never lists proposeFactCheck in the local XML tool format', () => {
+    const localWithFlag = buildArticleFeedbackSystemPrompt({
+      needsToolFormat: true,
+      languageName: 'English',
+      factCheck: false,
+    });
+    expect(localWithFlag).toContain('- proposeTrack:');
+    expect(localWithFlag).not.toContain('- proposeFactCheck:');
+  });
+
   // not-interested P4a — new: the YOUR FILTERS block is the only unbounded
   // addition to this surface's context, so pin system + a saturated context
   // (full article, 12 long facts, filters at MAX_ACTIVE_FILTERS) against the
@@ -532,9 +569,25 @@ describe('buildFeedbackContext', () => {
 });
 
 describe('getArticleFeedbackToolDefinitions', () => {
+  // pivot P8c — `proposeFactCheck` joined this surface (the Quick fact check
+  // chip and the article tick both send into THIS thread), CLOUD-only: it costs
+  // ~1,200 tokens of measured prompt text that the local path's ~3,072-token
+  // input budget has no room for, and the check it proposes needs the cloud
+  // anyway. The LOCAL list is therefore the four it always was.
   it('exposes the proposal + follow tools in order', () => {
-    const names = getArticleFeedbackToolDefinitions().map((t) => t.function.name);
-    expect(names).toEqual(['proposeChanges', 'proposeTrack', 'applyProposal', 'cancelProposal']);
+    expect(getArticleFeedbackToolDefinitions('LOCAL').map((t) => t.function.name)).toEqual([
+      'proposeChanges',
+      'proposeTrack',
+      'applyProposal',
+      'cancelProposal',
+    ]);
+    expect(getArticleFeedbackToolDefinitions().map((t) => t.function.name)).toEqual([
+      'proposeChanges',
+      'proposeTrack',
+      'applyProposal',
+      'cancelProposal',
+      'proposeFactCheck',
+    ]);
   });
 
   it('declares the proposeChanges required params and action enum', () => {
@@ -615,9 +668,16 @@ describe('getArticleFeedbackToolDefinitions', () => {
       expect(names).not.toContain('webSearch');
     });
 
-    it('leaves the other four tools and their order untouched when webSearch is appended', () => {
+    it('leaves the other tools and their order untouched when webSearch is appended', () => {
       const names = getArticleFeedbackToolDefinitions('CLOUD', true).map((t) => t.function.name);
-      expect(names).toEqual(['proposeChanges', 'proposeTrack', 'applyProposal', 'cancelProposal', 'webSearch']);
+      expect(names).toEqual([
+        'proposeChanges',
+        'proposeTrack',
+        'applyProposal',
+        'cancelProposal',
+        'proposeFactCheck',
+        'webSearch',
+      ]);
     });
   });
 });

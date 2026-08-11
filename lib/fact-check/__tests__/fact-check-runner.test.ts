@@ -1,26 +1,21 @@
-// The honesty contract, and the guards that make it structural.
+// The guards that make the honesty contract structural, not a matter of prompt
+// wording.
 //
-// THE TEST THAT MUST BE ABLE TO FAIL. A fact-checker that cannot say "I could
-// not look" is not a fact-checker — it is a machine that prints an all-clear
-// whenever the search provider is down, and that output is byte-identical to a
-// real one. So the assertions below are not "status === 'blocked'": a row can
-// be blocked AND carry a verdict, which would be worse than either. Every
-// blocked case asserts all three of
-//   • the row's `verdict` column is null,
-//   • the stored payload's `verdict` is null,
-//   • the MODEL WAS NEVER CALLED,
-// and the last one is the discriminator that cannot be satisfied by accident.
+// WHAT THIS FILE STOPPED COVERING (pivot P8c). The two-tier on-device JOB is
+// gone: the ClaimReview lookup moved to the server (it is the only thing that
+// may attribute a rating to an organisation) and nothing here persists any more.
+// The "we could not look" contract did not go with it — it moved DOWN a layer,
+// to the quick path, and is tested at the seam that now produces user-visible
+// text: see `lib/chat-tools/__tests__/quick-fact-check-handler.test.ts`, whose
+// must-fail test drives an unavailable search and asserts it can never render as
+// "found nothing".
 //
-// Verified red-then-green: making the blocked path write
-// `verdict: 'supported'` turns `blocks and writes no verdict when the
-// ClaimReview lookup is unavailable` red on both verdict assertions, and
-// moving the tier-1 bail to AFTER synthesis turns the "never called" assertion
-// red. Both were reverted.
-
-jest.mock('@/lib/database/index', () => {
-  const { makeDatabaseMock } = require('@/lib/__test-helpers__/mockDatabase');
-  return makeDatabaseMock();
-});
+// What remains here is what makes a fabricated source impossible rather than
+// unlikely, and every one of these still guards the quick path:
+//   • `clampVerdictToEvidence` — `supported` is unreachable with zero evidence;
+//   • `resolveCitations` — an index the evidence cannot resolve is dropped;
+//   • `coerceVerdict` — a negated verdict degrades rather than inverting;
+//   • `buildSearchQueries` — the claim is never pasted verbatim.
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
@@ -33,366 +28,32 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-// The two transports and the model are injected per-call, but the module still
-// imports them for its defaults — stubbed so no suite ever opens a socket.
-jest.mock('@/lib/llm/cloudComplete', () => ({
-  __esModule: true,
-  cloudChatStream: jest.fn(),
-}));
+// The module imports the transport for its query cap — stubbed so no suite ever
+// opens a socket.
 jest.mock('@/lib/web-search/web-search-client', () => ({
   __esModule: true,
   searchWeb: jest.fn(),
   MIN_QUERY_CHARS: 2,
   MAX_QUERY_CHARS: 200,
 }));
-jest.mock('@/lib/web-search/fact-check-claims-client', () => ({
-  __esModule: true,
-  searchClaimReviews: jest.fn(),
-  MIN_CLAIM_CHARS: 2,
-  MAX_CLAIM_CHARS: 300,
-}));
 
-import { BIG_MODEL } from '@/lib/llm/constants';
 import {
   buildSearchQueries,
   clampVerdictToEvidence,
   coerceVerdict,
   parseSynthesis,
   resolveCitations,
-  runFactCheck,
-  type FactCheckPayload,
 } from '../fact-check-runner';
 
-// ── Harness ────────────────────────────────────────────────────────────────
-
-const JOB = {
-  factCheckId: 'local:a1:k1',
-  articleId: 'a1',
-  claim: 'The vaccine schedule requires children to receive 80 different vaccines.',
-  claimKey: 'k1',
-  articleTitle: 'Trump repeats vaccine schedule claim',
-  publicationName: 'France 24',
-  languageCode: 'en',
-};
-
-interface Written {
-  status: string;
-  verdict: string | null;
-  payload: FactCheckPayload;
-}
-
-function harness(options: {
-  claimReview?: any[];
-  claimReviewOutcome?: any;
-  search?: any;
-  answer?: string;
-  throwOnSynthesis?: boolean;
-}) {
-  const writes: Written[] = [];
-  const chatStream = jest.fn(async function* () {
-    if (options.throwOnSynthesis) throw new Error('stream died');
-    yield { type: 'text-delta' as const, delta: options.answer ?? '{}' };
-    yield { type: 'finish' as const, reason: 'stop' as const };
-  });
-  const deps = {
-    searchClaimReviews: jest.fn(async (_claim: string, _opts?: any) =>
-      options.claimReviewOutcome ?? { ok: true, claimReviews: options.claimReview ?? [] }),
-    searchWeb: jest.fn(async () =>
-      options.search ?? { ok: true, results: [] }),
-    chatStream: chatStream as any,
-    persist: jest.fn(async (input: any) => {
-      writes.push({ status: input.status, verdict: input.verdict ?? null, payload: input.payload });
-    }),
-    now: () => 1_700_000_000_000,
-  };
-  return { deps, writes, chatStream, terminal: () => writes[writes.length - 1] };
-}
+const CLAIM = 'The vaccine schedule requires children to receive 80 different vaccines.';
+const ARTICLE_TITLE = 'Trump repeats vaccine schedule claim';
 
 const RESULTS = [
   { title: 'PolitiFact: no, children do not get 80 vaccines', url: 'https://politifact.com/a', snippet: 'The schedule lists 36 doses.' },
   { title: 'FactCheck.org on the vaccine schedule', url: 'https://factcheck.org/b', snippet: 'Claim overstates the count.' },
 ];
 
-// ── 1a. Tier 1 unavailable ⇒ the check STILL RUNS, but never claims nobody ─
-//
-// THE TEST THAT MUST BE ABLE TO FAIL, PART TWO. `checkedBy: []` is rendered as
-// "No fact-checking organisation we searched has published on this story" — a
-// positive claim about the world. When the ClaimReview lookup never ran, we
-// have no basis for that claim, and an assertion on the empty array alone
-// cannot tell the two apart: BOTH cases produce `[]`. `checkedByStatus` is the
-// only discriminator, so every test here asserts it.
-//
-// Verified red-then-green: promoting `checkedByStatus` to 'searched' before the
-// `outcome.ok` check turns all three of these red while the arrays stay
-// identical. Reverted.
-
-describe('Tier 1 unavailable degrades Tier 1 ALONE, and never fakes the empty case', () => {
-  const unavailableTier1 = {
-    claimReviewOutcome: { ok: false, error: 'off', code: 'search-unavailable', status: 503 },
-    search: { ok: true, results: RESULTS },
-    answer: JSON.stringify({ verdict: 'mixed', summary: 'S', claims: [], citations: [1] }),
-  };
-
-  it('completes the check instead of blocking it', async () => {
-    // The correction that matters: this tier pays off on ~4% of the corpus, so
-    // letting it kill the other 96% inverts what the feature is for.
-    const h = harness(unavailableTier1);
-    const result = await runFactCheck(JOB, h.deps);
-
-    expect(result.status).toBe('complete');
-    expect(result.verdict).toBe('mixed');
-    expect(h.deps.searchWeb).toHaveBeenCalled();
-    expect(h.chatStream).toHaveBeenCalledTimes(1);
-  });
-
-  it('marks checkedBy `unavailable`, so the UI cannot say "nobody published"', async () => {
-    const h = harness(unavailableTier1);
-    const result = await runFactCheck(JOB, h.deps);
-
-    expect(h.terminal().payload.checkedBy).toEqual([]);
-    // …and THIS is what stops that empty array being read as an answer.
-    expect(h.terminal().payload.checkedByStatus).toBe('unavailable');
-    expect(result.checkedByStatus).toBe('unavailable');
-  });
-
-  it('a 429 on the bonus tier costs the bonus, not the check', async () => {
-    // The Fact Check Tools quota is undocumented, so this is normal operation,
-    // not an edge case.
-    const h = harness({
-      ...unavailableTier1,
-      claimReviewOutcome: { ok: false, error: 'rate-limited', code: 'search-unavailable', status: 429 },
-    });
-    const result = await runFactCheck(JOB, h.deps);
-    expect(result.status).toBe('complete');
-    expect(result.checkedByStatus).toBe('unavailable');
-  });
-
-  it('stops asking after the first unavailable answer', async () => {
-    const h = harness(unavailableTier1);
-    await runFactCheck(JOB, h.deps);
-    expect(h.deps.searchClaimReviews).toHaveBeenCalledTimes(1);
-  });
-
-  it('a lookup that RETURNED, even empty, is `searched` — a real answer', async () => {
-    const h = harness({
-      claimReview: [],
-      search: { ok: true, results: RESULTS },
-      answer: '{}',
-    });
-    const result = await runFactCheck(JOB, h.deps);
-    expect(h.terminal().payload.checkedBy).toEqual([]);
-    expect(h.terminal().payload.checkedByStatus).toBe('searched');
-    expect(result.checkedByStatus).toBe('searched');
-  });
-
-  it('a processing row starts `unavailable` — never claims we looked before we did', async () => {
-    const h = harness(unavailableTier1);
-    await runFactCheck(JOB, h.deps);
-    expect(h.writes[0].payload.status).toBe('processing');
-    expect(h.writes[0].payload.checkedByStatus).toBe('unavailable');
-  });
-});
-
-// ── 1b. Tier 2 unavailable ⇒ blocked, and NEVER a verdict ──────────────────
-
-describe('the honesty contract: no evidence at all can never produce a verdict', () => {
-  it('blocks and writes no verdict when EVERY web-search round is unavailable', async () => {
-    const h = harness({
-      claimReview: [],
-      search: { ok: false, error: 'off', code: 'search-unavailable', status: 503 },
-    });
-    const result = await runFactCheck(JOB, h.deps);
-
-    expect(result.status).toBe('blocked');
-    expect(h.terminal().verdict).toBeNull();
-    expect(h.terminal().payload.verdict).toBeNull();
-    expect(h.chatStream).not.toHaveBeenCalled();
-  });
-
-  it('treats a web-search 429 as unavailable, not as "we found nothing"', async () => {
-    const h = harness({
-      claimReview: [],
-      search: { ok: false, error: 'rate-limited', code: 'search-unavailable', status: 429 },
-    });
-    const result = await runFactCheck(JOB, h.deps);
-
-    expect(result.status).toBe('blocked');
-    expect(result.blockedReason).toContain('web-search');
-    expect(h.terminal().payload.verdict).toBeNull();
-    expect(h.chatStream).not.toHaveBeenCalled();
-  });
-
-  it('a blocked row is terminal and says WHY, without implying anything about the claim', async () => {
-    const h = harness({
-      claimReview: [],
-      search: { ok: false, error: 'unreachable', code: 'search-unavailable' },
-    });
-    await runFactCheck(JOB, h.deps);
-    const payload = h.terminal().payload;
-    expect(payload.status).toBe('blocked');
-    expect(payload.blockedReason).toContain('web-search');
-    expect(payload.claims).toEqual([]);
-    expect(payload.citations).toEqual([]);
-    expect(payload.summary).toBeNull();
-  });
-
-  it('a blocked row still reports what Tier 1 DID establish', async () => {
-    // Tier 2 died, but we genuinely asked the fact-checkers and they had
-    // nothing. Throwing that away would be its own small dishonesty.
-    const h = harness({
-      claimReview: [],
-      search: { ok: false, error: 'off', code: 'search-unavailable', status: 503 },
-    });
-    await runFactCheck(JOB, h.deps);
-    expect(h.terminal().payload.checkedByStatus).toBe('searched');
-    expect(h.terminal().payload.verdict).toBeNull();
-  });
-});
-
-// ── 2. Nobody published ⇒ complete + empty checkedBy ───────────────────────
-
-describe('the normal case: nobody has fact-checked this', () => {
-  it('synthesises on BIG_MODEL, not the small one', async () => {
-    // `cloudChatStream` falls back to SMALL_MODEL when `model` is absent, and
-    // `enable_thinking: true` only earns its cost on the big one — so a
-    // refactor that drops this field would degrade silently.
-    const h = harness({ claimReview: [], search: { ok: true, results: RESULTS }, answer: '{}' });
-    await runFactCheck(JOB, h.deps);
-    expect((h.chatStream.mock.calls[0] as any[])[0].model).toBe(BIG_MODEL);
-  });
-
-  it('runs BOTH mandatory search rounds even when the first fills the quota', async () => {
-    // The gateway hardcodes count=10, so a naive `evidence.length >= 8` check
-    // after round 1 would make rounds 2 and 3 dead code — and they are the
-    // "several short, targeted queries" the design is built on, not more of
-    // the same.
-    const ten = Array.from({ length: 10 }, (_, i) => ({
-      title: `r${i}`, url: `https://e/${i}`, snippet: 's',
-    }));
-    const h = harness({ claimReview: [], search: { ok: true, results: ten }, answer: '{}' });
-    await runFactCheck(JOB, h.deps);
-    expect(h.deps.searchWeb).toHaveBeenCalledTimes(2);
-  });
-
-  it('runs the third round only when the first two came back thin', async () => {
-    const h = harness({ claimReview: [], search: { ok: true, results: RESULTS }, answer: '{}' });
-    await runFactCheck(JOB, h.deps);
-    // 2 unique results across two rounds is below ENOUGH_EVIDENCE, so the
-    // headline pivot earns its latency.
-    expect(h.deps.searchWeb).toHaveBeenCalledTimes(3);
-  });
-
-  it('caps the evidence that reaches the prompt, and the citation index space with it', async () => {
-    const many = Array.from({ length: 20 }, (_, i) => ({
-      title: `r${i}`, url: `https://e/${i}`, snippet: 's',
-    }));
-    const h = harness({
-      claimReview: [],
-      search: { ok: true, results: many },
-      // 13 is outside the 12-item shortlist and must not resolve.
-      answer: JSON.stringify({ verdict: 'mixed', citations: [1, 13] }),
-    });
-    await runFactCheck(JOB, h.deps);
-    const prompt = (h.chatStream.mock.calls[0] as any[])[0].messages[1].content as string;
-    expect(prompt).toContain('[12]');
-    expect(prompt).not.toContain('[13]');
-    expect(h.terminal().payload.citations.map((c) => c.uri)).toEqual(['https://e/0']);
-  });
-
-  it('completes with an empty checkedBy and a Tier 2 narrative', async () => {
-    const h = harness({
-      claimReview: [],
-      search: { ok: true, results: RESULTS },
-      answer: JSON.stringify({
-        verdict: 'unsupported',
-        summary: 'Reporting puts the number far lower.',
-        claims: [{ claim: '80 vaccines', assessment: 'unsupported', note: 'see [1]' }],
-        citations: [1, 2],
-      }),
-    });
-    const result = await runFactCheck(JOB, h.deps);
-
-    expect(result.status).toBe('complete');
-    expect(h.terminal().payload.checkedBy).toEqual([]);
-    expect(h.terminal().payload.verdict).toBe('unsupported');
-    expect(h.terminal().payload.citations).toHaveLength(2);
-    expect(h.chatStream).toHaveBeenCalledTimes(1);
-  });
-
-  it('a search that reached the provider and found NOTHING never reaches the model', async () => {
-    // Structural, not prompt discipline: with zero evidence there is nothing a
-    // verdict could be derived from, so the model is not asked for one.
-    const h = harness({ claimReview: [], search: { ok: true, results: [] } });
-    const result = await runFactCheck(JOB, h.deps);
-
-    expect(result.status).toBe('complete');
-    expect(result.verdict).toBe('unverifiable');
-    expect(h.chatStream).not.toHaveBeenCalled();
-    expect(h.terminal().payload.citations).toEqual([]);
-  });
-});
-
-// ── 3. A fact-checker published ⇒ checkedBy straight from ClaimReview ──────
-
-describe('Tier 1: checkedBy comes from ClaimReview, verbatim', () => {
-  it('carries the organisation and its own rating through untouched', async () => {
-    const h = harness({
-      claimReview: [
-        {
-          publisher: { name: 'PolitiFact', site: 'politifact.com' },
-          url: 'https://politifact.com/x',
-          textualRating: 'Pants on Fire!',
-          title: 'No, small children do not receive 80 vaccines',
-        },
-      ],
-      search: { ok: true, results: RESULTS },
-      answer: JSON.stringify({ verdict: 'unsupported', summary: 'ok', claims: [], citations: [1] }),
-    });
-    await runFactCheck(JOB, h.deps);
-
-    // "Pants on Fire!" is NOT in our five-token vocabulary and must not be
-    // normalised into it — that is the whole value of the list.
-    expect(h.terminal().payload.checkedByStatus).toBe('searched');
-    expect(h.terminal().payload.checkedBy).toEqual([
-      {
-        organisation: 'PolitiFact',
-        url: 'https://politifact.com/x',
-        verdict: 'Pants on Fire!',
-        summary: 'No, small children do not receive 80 vaccines',
-      },
-    ]);
-  });
-
-  it('stops asking once an organisation is found, and retries language-unset when none is', async () => {
-    const h = harness({ claimReview: [], search: { ok: true, results: RESULTS }, answer: '{}' });
-    await runFactCheck(JOB, h.deps);
-    // full claim (en) → shortened (en) → full claim, language dropped
-    expect(h.deps.searchClaimReviews).toHaveBeenCalledTimes(3);
-    expect((h.deps.searchClaimReviews.mock.calls[2] as any[])[1])
-      .toMatchObject({ languageCode: undefined });
-  });
-});
-
-// ── 4. Failure handling ────────────────────────────────────────────────────
-
-describe('a model failure is not a fact about the claim', () => {
-  it('records `failed` (non-terminal, no verdict) below the attempt cap', async () => {
-    const h = harness({ claimReview: [], search: { ok: true, results: RESULTS }, throwOnSynthesis: true });
-    const result = await runFactCheck({ ...JOB, attempts: 0 }, h.deps);
-    expect(result.status).toBe('failed');
-    expect(h.terminal().verdict).toBeNull();
-    expect(h.terminal().payload.verdict).toBeNull();
-  });
-
-  it('becomes `blocked` at the attempt cap rather than looping forever', async () => {
-    const h = harness({ claimReview: [], search: { ok: true, results: RESULTS }, throwOnSynthesis: true });
-    const result = await runFactCheck({ ...JOB, attempts: 2 }, h.deps);
-    expect(result.status).toBe('blocked');
-    expect(h.terminal().payload.verdict).toBeNull();
-  });
-});
-
-// ── 5. The structural guards ───────────────────────────────────────────────
+// ── The structural guards ──────────────────────────────────────────────────
 
 describe('clampVerdictToEvidence', () => {
   it('makes `supported` unreachable with an empty evidence set', () => {
@@ -455,15 +116,15 @@ describe('parseSynthesis', () => {
 });
 
 describe('buildSearchQueries', () => {
-  const claim = JOB.claim;
+  const claim = CLAIM;
   it('never pastes the claim and never exceeds the gateway cap', () => {
-    for (const q of buildSearchQueries(claim, JOB.articleTitle)) {
+    for (const q of buildSearchQueries(claim, ARTICLE_TITLE)) {
       expect(q.length).toBeLessThanOrEqual(200);
       expect(q).not.toBe(claim);
     }
   });
   it('produces at most three distinct rounds', () => {
-    const qs = buildSearchQueries(claim, JOB.articleTitle);
+    const qs = buildSearchQueries(claim, ARTICLE_TITLE);
     expect(qs.length).toBeLessThanOrEqual(3);
     expect(new Set(qs).size).toBe(qs.length);
   });
