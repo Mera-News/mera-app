@@ -43,6 +43,7 @@ import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort'
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -111,6 +112,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // read, so there is nothing wrong with two components each watching it.
     const factCheckPhase = useFactCheck(article?._id ?? articleId).phase;
     const aiAccess = useAiAccess();
+    // `proposeFactCheck` is CLOUD-only (`ChatSessionView.tsx` gates its own
+    // "Quick fact check" chip on the same signal) — splicing its claim-picker
+    // rules into the local prompt blows the on-device token budget. The tick
+    // must be hidden here, not just no-op in `openFactCheckChat`: a tick that
+    // silently mis-wires into a confused reply is worse than no tick.
+    const isOnDeviceProcessing = useIsOnDeviceProcessing();
     // Only read once the article is KNOWN to be unavailable — a normal open
     // costs no extra query (FactCheckPanel runs its own observer on the happy
     // path).
@@ -646,11 +653,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
                                     // Hidden entirely on a locked free-tier plan
-                                    // — `openFactCheckChat` no-ops there too
-                                    // (the store's own chokepoint), but a tick
-                                    // that visibly does nothing is worse than no
+                                    // OR on-device processing — `openFactCheckChat`
+                                    // no-ops in both cases too (belt-and-
+                                    // suspenders, see that file), but a tick that
+                                    // visibly does nothing, or silently mis-wires
+                                    // into a confused reply, is worse than no
                                     // tick at all.
-                                    factCheck={aiAccess !== 'locked' ? {
+                                    factCheck={aiAccess !== 'locked' && !isOnDeviceProcessing ? {
                                         onStart: () => openFactCheckChat({
                                             articleId: article._id ?? articleId,
                                             title: article.title_en_internal_only ?? article.title ?? '',

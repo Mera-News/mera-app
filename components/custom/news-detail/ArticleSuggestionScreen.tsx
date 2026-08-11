@@ -55,6 +55,7 @@ import { useIsConnected } from '@/lib/stores/network-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -262,6 +263,9 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // imperative action state to keep in sync.
     const factCheckPhase = useFactCheck(suggestion?.articleId).phase;
     const aiAccess = useAiAccess();
+    // See ArticleDetailScreen — `proposeFactCheck` is CLOUD-only, same signal
+    // `ChatSessionView`'s "Quick fact check" chip is gated on.
+    const isOnDeviceProcessing = useIsOnDeviceProcessing();
     const userCtx = useUserGeoLanguageContext();
     const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
@@ -621,9 +625,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
                                     // See ArticleDetailScreen — hidden entirely
-                                    // on a locked free-tier plan rather than
-                                    // left as a dead tap.
-                                    factCheck={aiAccess !== 'locked' ? {
+                                    // on a locked free-tier plan or on-device
+                                    // processing, rather than left as a dead
+                                    // tap or a silent mis-wire.
+                                    factCheck={aiAccess !== 'locked' && !isOnDeviceProcessing ? {
                                         onStart: () => openFactCheckChat({
                                             articleId: suggestion.articleId,
                                             suggestionId: suggestion._id,

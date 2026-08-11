@@ -23,9 +23,24 @@
 // for free — which is why the tick must still be HIDDEN in that state by the
 // caller (see ArticleDetailScreen / ArticleSuggestionScreen), not left to tap
 // into nothing.
+//
+// SECOND GATE, added after Q1 flagged the gap: `proposeFactCheck` is declared
+// CLOUD-ONLY (`ChatSessionView.tsx:145-151` — splicing its ~1,200-token claim
+// rules into the local prompt blows the ~3,072-token on-device budget, 2,740
+// → 4,145 measured). The "Quick fact check" starter chip is gated on
+// `useIsOnDeviceProcessing()` for exactly that reason. Without the same gate
+// here, tapping the tick on a device set to on-device processing seeds a turn
+// into an agent with no tool to act on it — a silent mis-wire, not an error —
+// so this checks the SAME store the chip does and no-ops identically to the
+// free-tier chokepoint above. The caller still HIDES the tick in that state
+// (see ArticleDetailScreen / ArticleSuggestionScreen) — this is the
+// belt-and-suspenders backstop, not the primary defence, matching how
+// `getAiAccess()` is enforced both at the store and at the call site.
 
 import { hapticLight } from '../haptics';
+import { ProcessingMode } from '../generated/graphql-types';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
+import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 
 /** The article a fact-check chat is opened from. Only what `article-suggestion`
  *  context needs to resolve the rest itself — see `ChatContext`'s own comment:
@@ -49,10 +64,16 @@ export interface FactCheckChatArticle {
  * stays i18n-free) — see `FACT_CHECK_SEED_MESSAGE_KEY` in `fact-check-state.ts`
  * for which key to resolve it from.
  *
- * Fire-and-forget: a locked free-tier user is silently ignored by the store's
- * chokepoint.
+ * Fire-and-forget: a locked free-tier user, or a device set to on-device
+ * processing (see the file header — `proposeFactCheck` is cloud-only), is
+ * silently ignored.
  */
 export function openFactCheckChat(article: FactCheckChatArticle, seedMessage: string): void {
+    // Same signal `ChatSessionView`'s chip gate reads — read directly off the
+    // store (not the `useIsOnDeviceProcessing()` hook) because this is a
+    // plain function, not a component; `.getState()` is zustand's supported
+    // outside-React read, the same pattern `getAiAccess()` uses.
+    if (useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice) return;
     hapticLight();
     useFloatingChatStore.getState().openArticleFeedback(
         {

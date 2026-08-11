@@ -21,10 +21,21 @@ jest.mock('../../haptics', () => ({
     hapticLight: (...args: unknown[]) => mockHapticLight(...args),
 }));
 
+// Defaults to Cloud — the vast majority of tests here exercise the seeding
+// seam itself, not the gate, and Cloud is the store's own documented default
+// processing mode.
+let mockProcessingMode = 'CLOUD';
+jest.mock('../../stores/mera-protocol-store', () => ({
+    useMeraProtocolStore: {
+        getState: () => ({ processingMode: mockProcessingMode }),
+    },
+}));
+
 import { openFactCheckChat } from '../open-fact-check-chat';
 
 beforeEach(() => {
     jest.clearAllMocks();
+    mockProcessingMode = 'CLOUD';
 });
 
 describe('openFactCheckChat', () => {
@@ -83,5 +94,33 @@ describe('openFactCheckChat', () => {
             expect.objectContaining({ kind: 'article-suggestion' }),
             'Que peut-on vérifier dans cet article ?',
         );
+    });
+
+    // ── The on-device gate (flagged by Q1 — proposeFactCheck is CLOUD-only) ──
+    // Without this, a tap on a device set to on-device processing seeds a turn
+    // into an agent with no `proposeFactCheck` tool: not an error, a silent
+    // mis-wire — the exact failure mode `ChatSessionView`'s own comments warn
+    // about for the persona starter chips.
+    describe('on-device processing gate', () => {
+        it('no-ops when the device is set to on-device processing', () => {
+            mockProcessingMode = 'ON_DEVICE';
+            openFactCheckChat({ articleId: 'a1', title: 'A headline' }, 'seed');
+
+            expect(mockOpenArticleFeedback).not.toHaveBeenCalled();
+        });
+
+        it('does not even fire the haptic on-device — no partial affordance', () => {
+            mockProcessingMode = 'ON_DEVICE';
+            openFactCheckChat({ articleId: 'a1', title: 'A headline' }, 'seed');
+
+            expect(mockHapticLight).not.toHaveBeenCalled();
+        });
+
+        it('still opens normally in cloud mode', () => {
+            mockProcessingMode = 'CLOUD';
+            openFactCheckChat({ articleId: 'a1', title: 'A headline' }, 'seed');
+
+            expect(mockOpenArticleFeedback).toHaveBeenCalledTimes(1);
+        });
     });
 });
