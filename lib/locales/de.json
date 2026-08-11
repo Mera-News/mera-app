@@ -1515,17 +1515,13 @@
     "newest": "Neueste zuerst"
   },
   "factCheck": {
-    "action": "Nach Faktenchecks suchen",
     "actionA11y": "Nach veröffentlichten Faktenchecks über diese Story suchen",
     "title": "Faktenchecks",
-    "hide": "Ausblenden",
-    "retry": "Erneut versuchen",
     "checking": "Suche nach veröffentlichten Faktenchecks…",
-    "error": "Die Suche konnte nicht gestartet werden. Überprüfe deine Verbindung und versuche es erneut.",
     "blocked": "Diese Story konnte nicht durchsucht werden.",
     "claimsHeading": "Überprüfte Behauptungen",
     "citationsHeading": "Konsultierte Quellen",
-    "noCitations": "Mit dieser Suche wurden keine Quellen gefunden, daher solltest du sie als unbestätigt betrachten.",
+    "noCitations": "Diese Überprüfung hat keine spezifischen Quellenangaben. Das ist keine fehlgeschlagene Suche – behandle die Zusammenfassung einfach mit etwas mehr Vorsicht, wenn es keine Quellen gibt.",
     "sourceFallback": "Quelle {{index}}",
     "disclaimer": "Mera überprüft keine Nachrichten selbst. Das ist eine KI-Zusammenfassung einer Websuche nach veröffentlichten Faktenchecks – es kann falsch oder unvollständig sein, daher lies die Quellen, bevor du dich darauf verlässt.",
     "verdict": {
@@ -1564,7 +1560,7 @@
     "checkedByHeading": "Fact-Checker, die dies überprüft haben",
     "dashboard": {
       "deleteA11y": "Diesen Factencheck löschen",
-      "empty": "Du hast noch keine Faktenchecks nachgeschlagen. Öffne eine Story und tippe auf \"Nach Faktenchecks suchen\".",
+      "empty": "Du hast noch keine Aussagen überprüft. Tippe auf das Häkchen unter einem Artikel, um Mera danach zu fragen – das Ergebnis wird hier angezeigt, sobald es verfügbar ist.",
       "listSubtitle": "Geschichten, für die du Mera nach Faktenchecks gefragt hast. Nur auf diesem Gerät gespeichert.",
       "listTitle": "Faktenchecks",
       "pending": "Wird noch gesucht",
@@ -1575,10 +1571,17 @@
     },
     "explainer": "Mera überprüft keine Nachrichten selbst. Es sucht nach dem, was etablierte Fact-Check-Organisationen bereits über diese Story veröffentlicht haben.",
     "noCheckedBy": "Keine der durchsuchten Fact-Check-Organisationen hat etwas über diese Story veröffentlicht. Das macht die Story nicht falsch – die meisten Stories werden nie überprüft.",
-    "organisationA11y": "Den Factencheck von {{organisation}} öffnen",
-    "queued": "Wir suchen. Das läuft im Hintergrund – du musst nicht hier warten.",
-    "queuedHint": "Das Ergebnis wird unter Faktenprüfungen auf Ihrem Dashboard angezeigt — ziehen Sie dort herunter, um es zu aktualisieren, oder überprüfen Sie es unten erneut.",
-    "checkAgain": "Ergebnis prüfen"
+    "organisationA11y": "Faktencheck von {{organisation}} im integrierten Browser öffnen",
+    "queued": "Diese Überprüfung läuft im Hintergrund weiter. Du brauchst hier nicht zu warten – es ist völlig in Ordnung, den Artikel zu verlassen.",
+    "queuedHint": "Das Ergebnis findest du auf deinem Dashboard unter \"Faktenchecks\", sobald es verfügbar ist.",
+    "citationA11y": "Quelle {{source}} im integrierten Browser öffnen",
+    "noLink": "Kein Link verfügbar",
+    "actionA11yPending": "Faktencheck angefordert – überprüfe das Ergebnis",
+    "actionA11yDone": "Faktencheck abgeschlossen – das Ergebnis wird unten angezeigt",
+    "checkedByUnavailable": "Wir konnten nicht überprüfen, ob eine Faktencheck-Organisation zu diesem Artikel veröffentlicht hat – die Suche ist fehlgeschlagen. Das ist unterschiedlich von der Situation, dass niemand dazu veröffentlicht hat; unten siehst du, was die weitere Suche gefunden hat.",
+    "claimProposalTitle": "Diese Aussage überprüfen?",
+    "actionCheckClaim": "Aussage überprüfen",
+    "chatSeed": "Was in diesem Artikel überprüft werden kann?"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Diese Quelle priorisieren",

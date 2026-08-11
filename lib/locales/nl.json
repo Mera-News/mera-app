@@ -1515,17 +1515,13 @@
     "newest": "Nieuwste eerst"
   },
   "factCheck": {
-    "action": "Zoeken naar feitchecks",
     "actionA11y": "Zoeken naar gepubliceerde feitchecks op dit artikel",
     "title": "Feitchecks",
-    "hide": "Verbergen",
-    "retry": "Opnieuw proberen",
     "checking": "Zoeken naar gepubliceerde feitchecks…",
-    "error": "Kon de zoekopdracht niet starten. Controleer je verbinding en probeer het opnieuw.",
     "blocked": "Dit artikel kon niet worden doorzocht.",
     "claimsHeading": "Gecontroleerde beweringen",
     "citationsHeading": "Geraadpleegde bronnen",
-    "noCitations": "Er zijn geen bronnen teruggekomen bij deze zoekopdracht, dus beschouw dit als onbevestigd.",
+    "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt — wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
     "sourceFallback": "Bron {{index}}",
     "disclaimer": "Mera controleert het nieuws niet zelf. Dit is een AI-samenvatting van een websearch naar gepubliceerde feitchecks — het kan onjuist of onvolledig zijn, dus lees de bronnen voordat je er op vertrouwt.",
     "verdict": {
@@ -1564,7 +1560,7 @@
     "checkedByHeading": "Feitcheckers die dit hebben onderzocht",
     "dashboard": {
       "deleteA11y": "Deze feitcheck verwijderen",
-      "empty": "Je hebt nog geen feitchecks opgezocht. Open een artikel en tik op \"Zoeken naar feitchecks\".",
+      "empty": "Je hebt nog geen claims gecontroleerd. Tik het vinkje onder een artikel om Mera erover te vragen — het resultaat verschijnt hier zodra het klaar is.",
       "listSubtitle": "Artikelen waarvoor je Mera hebt gevraagd feitchecks op te zoeken. Alleen opgeslagen op dit apparaat.",
       "listTitle": "Feitchecks",
       "pending": "Nog steeds zoeken",
@@ -1575,10 +1571,17 @@
     },
     "explainer": "Mera controleert het nieuws niet zelf. Het zoekt naar wat gevestigde feitcheckorganisaties al over dit artikel hebben gepubliceerd.",
     "noCheckedBy": "Geen van de feitcheckorganisaties die we hebben doorzocht, heeft iets over dit artikel gepubliceerd. Dat maakt het artikel niet onjuist — de meeste artikelen worden nooit feitgecheckt.",
-    "organisationA11y": "Feitcheck van {{organisation}} openen",
-    "queued": "We zoeken. Dit gebeurt op de achtergrond — je hoeft hier niet te wachten.",
-    "queuedHint": "Het resultaat verschijnt onder Feitencontroles op uw Dashboard — veeg omlaag om het te vernieuwen, of controleer het opnieuw hieronder.",
-    "checkAgain": "Resultaat controleren"
+    "organisationA11y": "Open de feitencheck van {{organisation}} in de in-app browser",
+    "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten — je kunt het artikel gerust verlaten.",
+    "queuedHint": "Het resultaat verschijnt onder Feitenchecks op je Dashboard zodra het klaar is.",
+    "citationA11y": "Open bron {{source}} in de in-app browser",
+    "noLink": "Geen link beschikbaar",
+    "actionA11yPending": "Feitencheck aangevraagd — controleer op het resultaat",
+    "actionA11yDone": "Feitencheck gereed — het resultaat wordt hieronder weergegeven",
+    "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit artikel heeft gepubliceerd — de opzoeking is niet voltooid. Dat verschilt van het geval dat niemand heeft gepubliceerd; hieronder zie je wat de bredere zoeking wel heeft gevonden.",
+    "claimProposalTitle": "Deze claim feitenchecken?",
+    "actionCheckClaim": "Deze claim controleren",
+    "chatSeed": "Wat kan je in dit artikel controleren?"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",

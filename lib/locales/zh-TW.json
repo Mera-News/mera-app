@@ -1516,17 +1516,13 @@
     "newest": "最新的優先"
   },
   "factCheck": {
-    "action": "查詢事實查證",
     "actionA11y": "查詢已發佈的事實查證",
     "title": "事實查證",
-    "hide": "隱藏",
-    "retry": "重試",
     "checking": "正在搜尋已發佈的事實查證…",
-    "error": "無法開始搜尋。檢查您的連線並再試一次。",
     "blocked": "無法搜尋此故事。",
     "claimsHeading": "已檢查的聲明",
     "citationsHeading": "參考來源",
-    "noCitations": "此搜尋未傳回任何來源，因此請將其視為未確認。",
+    "noCitations": "此檢查未引用任何特定頁面。這不是搜尋失敗——在沒有來源指引的情況下，請對摘要抱持更謹慎的態度。",
     "sourceFallback": "來源{{index}}",
     "disclaimer": "Mera 不會對新聞進行事實查證。這是對已發佈事實查證的網路搜尋的人工智慧摘要——它可能有誤或不完整，所以在依賴之前請先閱讀來源。",
     "verdict": {
@@ -1565,7 +1561,7 @@
     "checkedByHeading": "檢查此內容的事實查證機構",
     "dashboard": {
       "deleteA11y": "刪除此事實查證",
-      "empty": "您還沒有查詢過任何事實查證。請開啟新聞故事，並輕點「查詢事實查證」。",
+      "empty": "您尚未檢查任何聲明。點選故事下方的勾號以詢問 Mera——結果準備好後將出現在此。",
       "listSubtitle": "您要求 Mera 查詢事實查證的故事。僅保存在此裝置。",
       "listTitle": "事實查證",
       "pending": "正在搜尋",
@@ -1576,10 +1572,17 @@
     },
     "explainer": "Mera 不會對新聞進行事實查證。它會搜尋已建立的事實查證機構已發佈的內容。",
     "noCheckedBy": "我們搜尋的事實查證機構都沒有報導過此故事。這不表示故事有誤——大多數故事都從未被事實查證過。",
-    "organisationA11y": "開啟 {{organisation}} 的事實查證",
-    "queued": "我們正在搜尋。此程序在背景執行——您無須等待。",
-    "queuedHint": "搜尋結果將顯示在您的儀表板的事實查核部分中 — 在那裡向下拉以重新整理，或在下面再次檢查。",
-    "checkAgain": "查看結果"
+    "organisationA11y": "在應用內瀏覽器中開啟 {{organisation}} 的事實查證",
+    "queued": "此檢查將在背景中繼續執行。您無需在此等待——放心地離開文章即可。",
+    "queuedHint": "結果準備好後，將出現在您儀表板上的「事實查證」下。",
+    "citationA11y": "在應用內瀏覽器中開啟來源 {{source}}",
+    "noLink": "無可用連結",
+    "actionA11yPending": "已要求事實查證——查看結果",
+    "actionA11yDone": "事實查證已準備好——結果如下所示",
+    "checkedByUnavailable": "我們無法檢查事實查證機構是否對此故事進行了發表——查詢未成功。這與沒有人發表不同；以下是更廣泛搜尋的結果。",
+    "claimProposalTitle": "檢查此聲明的事實？",
+    "actionCheckClaim": "檢查此聲明",
+    "chatSeed": "此故事中有什麼可以進行事實查證的？"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "優先考慮此來源",

@@ -1522,17 +1522,13 @@
     "newest": "Les plus récents en premier"
   },
   "factCheck": {
-    "action": "Rechercher des vérifications de faits",
     "actionA11y": "Rechercher les vérifications de faits publiées sur cette histoire",
     "title": "Vérifications de faits",
-    "hide": "Masquer",
-    "retry": "Réessayer",
     "checking": "Recherche des vérifications de faits publiées…",
-    "error": "Impossible de commencer la recherche. Vérifiez votre connexion et réessayez.",
     "blocked": "Cette histoire n'a pas pu être recherchée.",
     "claimsHeading": "Affirmations vérifiées",
     "citationsHeading": "Sources consultées",
-    "noCitations": "Aucune source n'a été trouvée avec cette recherche, traitez-la comme non confirmée.",
+    "noCitations": "Cette vérification n'a cité aucune page spécifique. Ce n'est pas un échec — traitez le résumé avec un peu plus de prudence sans sources à consulter.",
     "sourceFallback": "Source {{index}}",
     "disclaimer": "Mera ne vérifie pas les faits de l'actualité elle-même. Ceci est un résumé généré par l'IA d'une recherche web pour les vérifications de faits publiées — il peut être inexact ou incomplet, veuillez donc lire les sources avant de vous y fier.",
     "verdict": {
@@ -1571,7 +1567,7 @@
     "checkedByHeading": "Vérificateurs de faits ayant couvert ce sujet",
     "dashboard": {
       "deleteA11y": "Supprimer cette vérification de fait",
-      "empty": "Vous n'avez pas encore consulté de vérifications de faits. Ouvrez une histoire et appuyez sur « Rechercher des vérifications de faits ».",
+      "empty": "Vous n'avez pas encore vérifié d'affirmations. Appuyez sur la coche sous une histoire pour demander à Mera — le résultat s'affiche ici une fois prêt.",
       "listSubtitle": "Les histoires pour lesquelles vous avez demandé à Mera de rechercher des vérifications de faits. Conservées uniquement sur cet appareil.",
       "listTitle": "Vérifications de faits",
       "pending": "Recherche en cours",
@@ -1582,10 +1578,17 @@
     },
     "explainer": "Mera ne vérifie pas les faits de l'actualité elle-même. Elle recherche ce que les organismes de vérification de faits établis ont déjà publié sur cette histoire.",
     "noCheckedBy": "Aucun organisme de vérification de faits que nous avons consulté n'a publié sur cette histoire. Cela ne rend pas l'histoire fausse — la plupart des histoires ne sont jamais vérifiées.",
-    "organisationA11y": "Ouvrir la vérification de faits de {{organisation}}",
-    "queued": "Nous effectuons une recherche. Cette action s'exécute en arrière-plan — vous n'avez pas besoin d'attendre ici.",
-    "queuedHint": "Le résultat apparaît sous Vérifications de faits sur votre Tableau de bord — tirez vers le bas pour l'actualiser, ou vérifiez-le à nouveau ci-dessous.",
-    "checkAgain": "Voir le résultat"
+    "organisationA11y": "Ouvrir la vérification de faits de {{organisation}} dans le navigateur intégré",
+    "queued": "Cette vérification s'exécute en arrière-plan. Vous n'avez pas besoin d'attendre ici — c'est parfait de quitter l'article.",
+    "queuedHint": "Le résultat s'affiche sous Vérifications de faits sur votre Tableau de bord une fois prêt.",
+    "citationA11y": "Ouvrir la source {{source}} dans le navigateur intégré",
+    "noLink": "Aucun lien disponible",
+    "actionA11yPending": "Vérification de faits demandée — vérifier le résultat",
+    "actionA11yDone": "Vérification de faits prête — le résultat s'affiche ci-dessous",
+    "checkedByUnavailable": "Nous n'avons pas pu vérifier si une organisation de vérification de faits a publié sur cette histoire — la recherche n'a pas abouti. C'est différent du cas où personne n'aurait publié ; ci-dessous ce que la recherche plus large a trouvé.",
+    "claimProposalTitle": "Vérifier cette affirmation ?",
+    "actionCheckClaim": "Vérifier cette affirmation",
+    "chatSeed": "Qu'y a-t-il à vérifier dans cette histoire ?"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioriser cette source",

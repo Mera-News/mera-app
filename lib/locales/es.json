@@ -1515,17 +1515,13 @@
     "newest": "Más recientes primero"
   },
   "factCheck": {
-    "action": "Buscar verificaciones de hechos",
     "actionA11y": "Buscar verificaciones de hechos publicadas sobre esta historia",
     "title": "Verificaciones de hechos",
-    "hide": "Ocultar",
-    "retry": "Intentar de nuevo",
     "checking": "Buscando verificaciones de hechos publicadas…",
-    "error": "No se pudo iniciar la búsqueda. Verifica tu conexión e intenta de nuevo.",
     "blocked": "Esta historia no pudo ser buscada.",
     "claimsHeading": "Afirmaciones verificadas",
     "citationsHeading": "Fuentes consultadas",
-    "noCitations": "No salieron fuentes en esta búsqueda, así que trátalo como no confirmado.",
+    "noCitations": "Esta verificación no incluyó páginas específicas. No es un error de búsqueda — trata el resumen con un poco más de precaución sin fuentes que respalden.",
     "sourceFallback": "Fuente {{index}}",
     "disclaimer": "Mera no verifica hechos en las noticias. Esto es un resumen de IA de una búsqueda web en busca de verificaciones publicadas — puede estar mal o ser incompleto, así que lee las fuentes antes de confiar en él.",
     "verdict": {
@@ -1564,7 +1560,7 @@
     "checkedByHeading": "Verificadores de hechos que trataron esto",
     "dashboard": {
       "deleteA11y": "Eliminar esta verificación de hechos",
-      "empty": "Aún no has buscado verificaciones de hechos. Abre una historia y toca \"Buscar verificaciones\".",
+      "empty": "Aún no has verificado ninguna afirmación. Toca la marca bajo una noticia para preguntarle a Mera — el resultado aparece aquí una vez que esté listo.",
       "listSubtitle": "Historias en las que le pediste a Mera que busque verificaciones de hechos. Guardadas solo en este dispositivo.",
       "listTitle": "Verificaciones de hechos",
       "pending": "Buscando aún",
@@ -1575,10 +1571,17 @@
     },
     "explainer": "Mera no verifica hechos en las noticias. Busca lo que organizaciones de verificación de hechos ya han publicado sobre esta historia.",
     "noCheckedBy": "Ninguna organización de verificación de hechos que buscamos ha publicado sobre esta historia. Eso no significa que la historia sea falsa — la mayoría de las historias nunca se verifican.",
-    "organisationA11y": "Abrir la verificación de {{organisation}}",
-    "queued": "Estamos buscando. Esto funciona en segundo plano — no tienes que esperar aquí.",
-    "queuedHint": "El resultado aparece bajo Verificación de hechos en su Panel — deslice hacia abajo allí para actualizarlo, o verifíquelo nuevamente a continuación.",
-    "checkAgain": "Ver resultado"
+    "organisationA11y": "Abre la verificación de hechos de {{organisation}} en el navegador en la aplicación",
+    "queued": "Esta verificación continúa ejecutándose en segundo plano. No tienes que esperar aquí — está bien que abandones el artículo.",
+    "queuedHint": "El resultado aparece bajo Verificaciones de hechos en tu Panel una vez que esté listo.",
+    "citationA11y": "Abre {{source}} en el navegador en la aplicación",
+    "noLink": "No hay enlace disponible",
+    "actionA11yPending": "Verificación de hechos solicitada; espera el resultado",
+    "actionA11yDone": "Verificación de hechos lista; el resultado se muestra a continuación",
+    "checkedByUnavailable": "No pudimos verificar si una organización de verificación de hechos ha publicado sobre esta noticia — la búsqueda no se completó. Eso es diferente a que nadie haya publicado; a continuación se muestra lo que la búsqueda más amplia encontró.",
+    "claimProposalTitle": "¿Verificar esta afirmación?",
+    "actionCheckClaim": "Verificar esta afirmación",
+    "chatSeed": "¿Qué se puede verificar en esta noticia?"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Priorizar esta fuente",

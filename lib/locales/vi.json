@@ -1516,17 +1516,13 @@
     "newest": "Mới nhất trước"
   },
   "factCheck": {
-    "action": "Tìm kiếm kiểm chứng sự kiện",
     "actionA11y": "Tìm kiếm các kiểm chứng sự kiện được công bố về câu chuyện này",
     "title": "Kiểm chứng sự kiện",
-    "hide": "Ẩn",
-    "retry": "Thử lại",
     "checking": "Đang tìm kiếm các kiểm chứng sự kiện được công bố…",
-    "error": "Không thể bắt đầu tìm kiếm. Kiểm tra kết nối của bạn và thử lại.",
     "blocked": "Không thể tìm kiếm câu chuyện này.",
     "claimsHeading": "Các khẳng định được kiểm chứng",
     "citationsHeading": "Các nguồn được tham khảo",
-    "noCitations": "Không có nguồn nào quay lại với tìm kiếm này, vì vậy hãy coi nó là chưa xác nhận.",
+    "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại — hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
     "sourceFallback": "Nguồn {{index}}",
     "disclaimer": "Mera không kiểm chứng tin tức trực tiếp. Đây là tóm tắt AI của tìm kiếm web cho các kiểm chứng sự kiện được công bố — nó có thể sai hoặc không đầy đủ, vì vậy hãy đọc các nguồn trước khi dựa vào nó.",
     "verdict": {
@@ -1565,7 +1561,7 @@
     "checkedByHeading": "Các tổ chức kiểm chứng đã đề cập",
     "dashboard": {
       "deleteA11y": "Xóa kiểm chứng sự kiện này",
-      "empty": "Bạn chưa tra cứu bất kỳ kiểm chứng sự kiện nào. Mở một câu chuyện và nhấn \"Tìm kiếm kiểm chứng sự kiện\".",
+      "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera — kết quả sẽ xuất hiện ở đây khi sẵn sàng.",
       "listSubtitle": "Những câu chuyện bạn đã yêu cầu Mera tìm kiếm kiểm chứng sự kiện. Chỉ được lưu trên thiết bị này.",
       "listTitle": "Kiểm chứng sự kiện",
       "pending": "Đang tìm kiếm",
@@ -1576,10 +1572,17 @@
     },
     "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
     "noCheckedBy": "Không có tổ chức kiểm chứng nào trong tìm kiếm của chúng tôi đã công bố về câu chuyện này. Điều này không có nghĩa là câu chuyện sai — hầu hết các câu chuyện không bao giờ được kiểm chứng.",
-    "organisationA11y": "Mở kiểm chứng sự kiện của {{organisation}}",
-    "queued": "Chúng tôi đang tìm kiếm. Điều này chạy ở nền — bạn không cần phải chờ tại đây.",
-    "queuedHint": "Kết quả sẽ xuất hiện dưới Kiểm tra sự thật trên Bảng điều khiển của bạn — kéo xuống để làm mới hoặc kiểm tra lại dưới đây.",
-    "checkAgain": "Xem kết quả"
+    "organisationA11y": "Mở kiểm tra sự thật của {{organisation}} trong trình duyệt trong ứng dụng",
+    "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây — có thể rời khỏi bài viết.",
+    "queuedHint": "Kết quả sẽ xuất hiện dưới mục Kiểm tra sự thật trên Dashboard khi sẵn sàng.",
+    "citationA11y": "Mở nguồn {{source}} trong trình duyệt trong ứng dụng",
+    "noLink": "Không có liên kết",
+    "actionA11yPending": "Kiểm tra sự thật được yêu cầu — kiểm tra kết quả",
+    "actionA11yDone": "Kiểm tra sự thật sẵn sàng — kết quả được hiển thị bên dưới",
+    "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem một tổ chức kiểm tra sự thật có công bố về bài viết này hay không — tìm kiếm không thành công. Điều này khác với trường hợp không ai công bố; dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
+    "claimProposalTitle": "Kiểm tra khẳng định này?",
+    "actionCheckClaim": "Kiểm tra khẳng định này",
+    "chatSeed": "Có gì có thể kiểm tra trong bài viết này?"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",

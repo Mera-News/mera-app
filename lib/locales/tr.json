@@ -1517,17 +1517,13 @@
     "newest": "Yeni olanlar ilk"
   },
   "factCheck": {
-    "action": "Doğruluk kontrol ara",
     "actionA11y": "Bu haber hakkında yayımlanmış doğruluk kontrolleri ara",
     "title": "Doğruluk kontroller",
-    "hide": "Gizle",
-    "retry": "Tekrar dene",
     "checking": "Yayımlanmış doğruluk kontroller aranıyor…",
-    "error": "Araması başlatılamadı. Bağlantınızı kontrol edin ve tekrar deneyin.",
     "blocked": "Bu haber aranamadı.",
     "claimsHeading": "Denetlenen iddialar",
     "citationsHeading": "Danışılan kaynaklar",
-    "noCitations": "Bu aramayla hiçbir kaynak gelmedi. Bunu doğrulanmamış olarak değerlendirin.",
+    "noCitations": "Bu kontrol herhangi bir belirli sayfaya atıf yapmadı. Bu başarısız bir arama değil — kaynaklar olmadan özeti biraz daha dikkatle ele alın.",
     "sourceFallback": "Kaynak {{index}}",
     "disclaimer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Bu, yayımlanmış doğruluk kontrolleri için yapılan bir web aramasının AI özeti olup, yanlış veya eksik olabilir. Güvenmeden önce kaynakları okuyun.",
     "verdict": {
@@ -1566,7 +1562,7 @@
     "checkedByHeading": "Bu haberi inceleyen doğruluk kontrol kuruluşları",
     "dashboard": {
       "deleteA11y": "Bu doğruluk kontrolünü sil",
-      "empty": "Henüz hiçbir doğruluk kontrolü aramadınız. Bir haberi açın ve \"Doğruluk kontrol ara\"ya dokunun.",
+      "empty": "Henüz herhangi bir iddia kontrol etmediniz. Bir hikayenin altındaki işareti dokunarak Mera'ya sorular sorun — sonuç hazır olduğunda buraya gelir.",
       "listSubtitle": "Mera'ya doğruluk kontrol araması yapmasını istediğiniz haberler. Sadece bu cihazda saklanır.",
       "listTitle": "Doğruluk kontroller",
       "pending": "Hala aranıyor",
@@ -1577,10 +1573,17 @@
     },
     "explainer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Resmi doğruluk kontrol kuruluşlarının bu haber hakkında yayımladıklarını arar.",
     "noCheckedBy": "Aradığımız hiçbir doğruluk kontrol kuruluşu bu haber hakkında bilgi yayımlamadı. Bu haberin yanlış olduğu anlamına gelmez — çoğu haber hiçbir zaman doğruluk kontrolünden geçmez.",
-    "organisationA11y": "{{organisation}}'nin doğruluk kontrolünü aç",
-    "queued": "Arama yapıyoruz. Bu işlem arka planda çalışıyor — burada beklemenize gerek yok.",
-    "queuedHint": "Sonuç, Panonuzun Gerçek Kontrolü bölümünde görünecektir — yenilemek için aşağı doğru çekin ve aşağıda tekrar kontrol edin.",
-    "checkAgain": "Sonucu kontrol et"
+    "organisationA11y": "{{organisation}}'nın gerçek kontrolünü uygulama içinde aç",
+    "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Burada beklemenize gerek yok — makaleyi terk etseniz bile sorun değil.",
+    "queuedHint": "Sonuç hazır olduğunda Panoda Gerçek Kontroller altında görüntülenir.",
+    "citationA11y": "{{source}} kaynağını uygulama içinde aç",
+    "noLink": "Bağlantı mevcut değil",
+    "actionA11yPending": "Gerçek kontrol talep edildi — sonuç için kontrol edin",
+    "actionA11yDone": "Gerçek kontrol hazır — sonuç aşağıda gösterilir",
+    "checkedByUnavailable": "Bir gerçek kontrol kuruluşunun bu hikayede yayın yapıp yapmadığını kontrol edemedik — sorgu başarısız oldu. Bu kimsenin yayın yapmamış olmasından farklıdır; aşağıda geniş aramanın bulduğu sonuçlar yer almaktadır.",
+    "claimProposalTitle": "Bu iddiayı kontrol et?",
+    "actionCheckClaim": "Iddiayı kontrol et",
+    "chatSeed": "Bu hikaye hakkında ne kontrol edilebilir?"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Bu kaynağı önceliklendır",
