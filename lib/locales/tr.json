@@ -1580,7 +1580,8 @@
     "noCheckedBy": "Aradığımız hiçbir doğruluk kontrol kuruluşu bu haber hakkında bilgi yayımlamadı. Bu haberin yanlış olduğu anlamına gelmez — çoğu haber hiçbir zaman doğruluk kontrolünden geçmez.",
     "organisationA11y": "{{organisation}}'nin doğruluk kontrolünü aç",
     "queued": "Arama yapıyoruz. Bu işlem arka planda çalışıyor — burada beklemenize gerek yok.",
-    "queuedHint": "Sonuç, Kontrol Paneli'nde Doğruluk kontroller bölümünde görünecek ve hazırlandığında (bildirimler açıksa) size bir bildirim gönderilecek."
+    "queuedHint": "Sonuç, Kontrol Paneli'nde Doğruluk kontroller bölümünde görünecek ve hazırlandığında (bildirimler açıksa) size bir bildirim gönderilecek.",
+    "checkAgain": "Sonucu kontrol et"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Bu kaynağı önceliklendır",

@@ -1578,7 +1578,8 @@
     "noCheckedBy": "Tidak ada organisasi pemeriksa fakta yang kami cari yang telah mempublikasikan cerita ini. Itu tidak membuat cerita salah — sebagian besar cerita tidak pernah diperiksa faktanya.",
     "organisationA11y": "Buka pemeriksaan fakta {{organisation}}",
     "queued": "Kami sedang mencari. Ini berjalan di latar belakang — Anda tidak perlu menunggu di sini.",
-    "queuedHint": "Hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda, dan kami akan mengirim notifikasi saat selesai jika Anda mengaktifkan notifikasi."
+    "queuedHint": "Hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda, dan kami akan mengirim notifikasi saat selesai jika Anda mengaktifkan notifikasi.",
+    "checkAgain": "Lihat hasilnya"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritaskan sumber ini",

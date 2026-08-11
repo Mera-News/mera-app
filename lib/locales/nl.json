@@ -1578,7 +1578,8 @@
     "noCheckedBy": "Geen van de feitcheckorganisaties die we hebben doorzocht, heeft iets over dit artikel gepubliceerd. Dat maakt het artikel niet onjuist — de meeste artikelen worden nooit feitgecheckt.",
     "organisationA11y": "Feitcheck van {{organisation}} openen",
     "queued": "We zoeken. Dit gebeurt op de achtergrond — je hoeft hier niet te wachten.",
-    "queuedHint": "Het resultaat verschijnt onder Feitchecks op je Dashboard, en we sturen een melding als het klaar is."
+    "queuedHint": "Het resultaat verschijnt onder Feitchecks op je Dashboard, en we sturen een melding als het klaar is.",
+    "checkAgain": "Resultaat controleren"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",

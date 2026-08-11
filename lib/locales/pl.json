@@ -1608,7 +1608,8 @@
     "noCheckedBy": "Żadna z przeszukanych organizacji weryfikujących fakty nie opublikowała na temat tego artykułu. To nie oznacza, że artykuł jest nieprawidłowy — większość artykułów nigdy nie jest weryfikowana.",
     "organisationA11y": "Otwórz weryfikację faktów od {{organisation}}",
     "queued": "Wyszukiwanie w toku. Działa w tle — nie musisz tutaj czekać.",
-    "queuedHint": "Wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, a my wyślemy powiadomienie, gdy będzie gotowy, jeśli powiadomienia masz włączone."
+    "queuedHint": "Wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, a my wyślemy powiadomienie, gdy będzie gotowy, jeśli powiadomienia masz włączone.",
+    "checkAgain": "Sprawdź wynik"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Uprioritetnij to źródło",

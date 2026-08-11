@@ -1579,7 +1579,8 @@
     "noCheckedBy": "Không có tổ chức kiểm chứng nào trong tìm kiếm của chúng tôi đã công bố về câu chuyện này. Điều này không có nghĩa là câu chuyện sai — hầu hết các câu chuyện không bao giờ được kiểm chứng.",
     "organisationA11y": "Mở kiểm chứng sự kiện của {{organisation}}",
     "queued": "Chúng tôi đang tìm kiếm. Điều này chạy ở nền — bạn không cần phải chờ tại đây.",
-    "queuedHint": "Kết quả sẽ xuất hiện dưới phần Kiểm chứng sự kiện trên Bảng điều khiển của bạn, và chúng tôi sẽ gửi một thông báo khi nó sẵn sàng nếu bạn bật thông báo."
+    "queuedHint": "Kết quả sẽ xuất hiện dưới phần Kiểm chứng sự kiện trên Bảng điều khiển của bạn, và chúng tôi sẽ gửi một thông báo khi nó sẵn sàng nếu bạn bật thông báo.",
+    "checkAgain": "Xem kết quả"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",

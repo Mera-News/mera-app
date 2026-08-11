@@ -1578,7 +1578,8 @@
     "noCheckedBy": "Ninguna organización de verificación de hechos que buscamos ha publicado sobre esta historia. Eso no significa que la historia sea falsa — la mayoría de las historias nunca se verifican.",
     "organisationA11y": "Abrir la verificación de {{organisation}}",
     "queued": "Estamos buscando. Esto funciona en segundo plano — no tienes que esperar aquí.",
-    "queuedHint": "El resultado aparecerá en Verificaciones de hechos en tu Dashboard, y te enviaremos una notificación cuando esté listo si tienes notificaciones activadas."
+    "queuedHint": "El resultado aparecerá en Verificaciones de hechos en tu Dashboard, y te enviaremos una notificación cuando esté listo si tienes notificaciones activadas.",
+    "checkAgain": "Ver resultado"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Priorizar esta fuente",

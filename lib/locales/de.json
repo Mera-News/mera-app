@@ -1578,7 +1578,8 @@
     "noCheckedBy": "Keine der durchsuchten Fact-Check-Organisationen hat etwas über diese Story veröffentlicht. Das macht die Story nicht falsch – die meisten Stories werden nie überprüft.",
     "organisationA11y": "Den Factencheck von {{organisation}} öffnen",
     "queued": "Wir suchen. Das läuft im Hintergrund – du musst nicht hier warten.",
-    "queuedHint": "Das Ergebnis wird unter Faktenchecks in deinem Dashboard angezeigt, und wir senden dir eine Benachrichtigung, wenn es fertig ist, falls du Benachrichtigungen aktiviert hast."
+    "queuedHint": "Das Ergebnis wird unter Faktenchecks in deinem Dashboard angezeigt, und wir senden dir eine Benachrichtigung, wenn es fertig ist, falls du Benachrichtigungen aktiviert hast.",
+    "checkAgain": "Ergebnis prüfen"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Diese Quelle priorisieren",

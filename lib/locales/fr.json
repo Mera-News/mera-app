@@ -1585,7 +1585,8 @@
     "noCheckedBy": "Aucun organisme de vérification de faits que nous avons consulté n'a publié sur cette histoire. Cela ne rend pas l'histoire fausse — la plupart des histoires ne sont jamais vérifiées.",
     "organisationA11y": "Ouvrir la vérification de faits de {{organisation}}",
     "queued": "Nous effectuons une recherche. Cette action s'exécute en arrière-plan — vous n'avez pas besoin d'attendre ici.",
-    "queuedHint": "Le résultat apparaîtra dans les Vérifications de faits de votre Tableau de bord, et nous vous enverrons une notification lorsqu'il sera prêt si vous avez activé les notifications."
+    "queuedHint": "Le résultat apparaîtra dans les Vérifications de faits de votre Tableau de bord, et nous vous enverrons une notification lorsqu'il sera prêt si vous avez activé les notifications.",
+    "checkAgain": "Voir le résultat"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioriser cette source",
