@@ -115,10 +115,36 @@ export function makeFactCheckSubject(article: FactCheckArticleInput): FactCheckS
 //
 // So: more prose about when NOT to call the tool made the model call it more,
 // and the rules it violated were the ones written most emphatically. 1/10 vs
-// 4/10 at n=10 is not significant either way — the honest reading is that none
-// of the three variants is distinguishable, which is itself the finding: this
-// surface is not improvable by adding prompt pressure, and the shipped text is
-// the one the null experiment was actually run on.
+// 4/10 at n=10 is not significant either way, so BOTH were reverted. The lesson
+// that shaped everything below: RESTATING an existing rule more forcefully does
+// not work on this surface.
+//
+// What DID work was different in kind — naming the anti-pattern concretely, and
+// lowering the quota that created it. An independent rater (blinded, arm key
+// withheld until after it had graded) found the top defect was NON-SEPARABILITY:
+// options that are one fact re-expressed. Three edits, each measured:
+//   - v4 "one datum per card": ask for 2–4 options instead of 3–4, say plainly
+//     that padding is worse than offering fewer, and give three worked examples
+//     of pairs that are ONE claim. Blinded A/B, multi-option cases only:
+//     54.5% → 85.0% separable. The rater's own stricter-rule sensitivity check
+//     kept the gap (51.9% → 73.1%). The Delhi fixture failed 5/5 before with
+//     ZERO within-fixture variance — a deterministic defect, not noise — and 1/5
+//     after, so the between-arm move is far larger than the within-arm wobble.
+//   - v5 the Publication/Today rule: the model read the Publication line only
+//     intermittently and emitted unsearchable claims ("Inflation in the country
+//     fell to 4.2%"). Since F2's runner searches the claim string VERBATIM in
+//     both tiers, unsearchable is worse than wrong. Every claim names the
+//     country in 1/5 runs before, 10/10 after.
+//   - v6 the two duplicate SHAPES: attribution-bolted-onto-a-duplicate was 100%
+//     of what survived v4. Naming it as a shape (plus the superlative one) took
+//     the attribution duplicate on the headline-only fixture from 3/5 runs to
+//     1/10, with the superlative duplicate staying at 0–1/10.
+//
+// STILL OPEN, measured and NOT fixed: the residual is ~1-in-10, and the
+// reworded-value-judgement shape is UNTESTED (the opinion fixture only fires the
+// tool 1–2 runs in 5, so arm B exercised it once). The fixtures are also
+// synthetic; the honest next experiment is to rebuild them from real prod
+// articles rather than to tune this text further.
 
 export function buildFactCheckSystemPrompt(params: {
   needsToolFormat: boolean;
@@ -151,10 +177,11 @@ Each option has TWO fields:
 - "label": the SHORT pill text shown to the user (${MAX_LABEL_WORDS} words or fewer, no trailing punctuation) — the distinguishing part of the claim, e.g. "80 vaccines by age 18".
 - "claim": ONE self-contained sentence a person could search for WITHOUT ever seeing this article. Name the who / what / where / when explicitly — never "he", "the report", "this study", "the minister". E.g. "Children in the United States receive 80 different vaccines by the age of 18."
 Rules:
-- ONE assertion per option, and ONE DATUM per card. The commonest mistake is splitting a single fact into several pills by re-expressing it. "Delhi's AQI crossed 450" and "Delhi's air was the worst in five years" are ONE claim, because 450 IS the worst-in-five-years reading. "Inflation fell to 4.2%" and "the government reported inflation fell to 4.2%" are ONE claim. "Liverpool won 2-1" and "Liverpool went top of the table" are ONE claim when the article says the win put them top. Before you add an option, ask what NEW fact it would send to a fact-checker that the options above it do not already send — if the answer is none, do not add it. Also never bundle two assertions into one option with "and".
+- ONE assertion per option, and ONE DATUM per card. The commonest mistake is splitting a single fact into several pills by re-expressing it. "Delhi's AQI crossed 450" and "Delhi's air was the worst in five years" are ONE claim, because 450 IS the worst-in-five-years reading. "Inflation fell to 4.2%" and "the government reported inflation fell to 4.2%" are ONE claim. "Liverpool won 2-1" and "Liverpool went top of the table" are ONE claim when the article says the win put them top. Two shapes are ALWAYS a duplicate, never a second option: (a) WHO REPORTED a fact is not separate from the fact — if one option says "inflation fell to 4.2%", "the government reported inflation fell to 4.2%" is the same option again; (b) a SUPERLATIVE or ranking already stated inside another option cannot be its own option — if one option ends "…, the highest since 2021", "the worst in five years" is that same ranking. Before you add an option, ask what NEW fact it would send to a fact-checker that the options above it do not already send — if the answer is none, do not add it. Also never bundle two assertions into one option with "and".
 - Only assertions a fact-checking organisation could plausibly have published on: a specific number, a dated event, an attribution, a statistic, a causal or historical statement. NEVER an opinion, a value judgement, a prediction about the future, a plan, an intention, or anything phrased as a question.
 - When someone is QUOTED making an assertion, the checkable claim is the ASSERTION ITSELF, not that they said it. "RFK Jr. said children get 80 vaccines" is a claim about a speech; "children get 80 vaccines by age 18" is the one that gets checked.
 - Use ONLY what is in <context>. Never add a number, name, date or place the article did not give you, and never soften or sharpen a figure. If the article says "dozens", your claim says "dozens".
+- <context> includes a Publication line and a Today date, and they ARE part of what you were given. When the article never names the country its story is about, take it from the publication — a national outlet reporting "the government" means ITS government — and when the article names a bare month or weekday, resolve it against Today. Do this EVERY time the claim needs it: "Inflation in the country fell to 4.2%" cannot be searched by anyone.
 - If the summary is missing and you only have the headline, still propose — but propose FEWER (2 or 3) rather than inventing the detail a summary would have carried.
 - If nothing in the article is a factual assertion at all (a pure opinion column, a listings page, a preview of something that has not happened yet), do NOT call proposeFactCheck. Say in one sentence that there is nothing here a fact-checker could rule on, and ask whether there is a specific claim they had in mind. Never manufacture a controversy to fill the card.
 - Order options by how likely they are to have been checked: the contested, quantified, widely-repeated claim first; the incidental detail last.
