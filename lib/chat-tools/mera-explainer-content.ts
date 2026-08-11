@@ -70,6 +70,8 @@ You control the interruptions. You can set up to 24 alert opportunities a day, a
 
 Mera runs on iOS and Android, worldwide. The app interface is available in 20 languages, and news is gathered from sources in many more, so the language a story was written in never limits what reaches you.
 
+Reading a story in another language works in two ways. Your phone can translate on its own: Android handles 59 languages, downloading each model the first time it is needed, and an iPhone handles 20 today and 26 on iOS 27 and later, because Apple ships translation languages with the operating system. Independently of that, every article page offers to open the publisher through Google Translate, which covers more than 200 languages on both platforms with nothing to download. Mera itself never rewrites the article; the translating is done by the phone or by Google.
+
 Mera is built in the Netherlands, under the EU's GDPR, by a very small team. It is subscription-only: there are no ads, and your data is never sold. You are the customer, not the product.`,
 
   // ---------------------------------------------------------------------------
