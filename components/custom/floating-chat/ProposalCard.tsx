@@ -197,7 +197,6 @@ export function actionToRow(action: ProposalAction): ActionRow {
       return {
         icon: 'fact-check',
         labelKey: 'factCheck.actionCheckClaim',
-        labelDefault: 'Check this claim',
         heading: action.label,
         translateHeading: true,
       };
@@ -422,7 +421,7 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
           {isTrackProposal
             ? t('trackedStories.trackProposalTitle', { defaultValue: 'Follow this story?' })
             : isFactCheckProposal
-              ? t('factCheck.claimProposalTitle', { defaultValue: 'Fact-check this claim?' })
+              ? t('factCheck.claimProposalTitle')
               : t('articleFeedback.proposalTitle')}
         </Text>
       </View>

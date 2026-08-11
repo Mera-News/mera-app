@@ -264,6 +264,9 @@
   },
   "factCheck": {
     "actionA11y": "Look for published fact checks on this story",
+    "claimProposalTitle": "Fact-check this claim?",
+    "actionCheckClaim": "Check this claim",
+    "chatSeed": "What can be fact-checked in this story?",
     "title": "Fact checks",
     "explainer": "Mera doesn't fact-check the news itself. It searches for what established fact-checking organisations have already published about this story.",
     "checking": "Searching for published fact checks…",

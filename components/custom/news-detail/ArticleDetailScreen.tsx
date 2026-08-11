@@ -656,7 +656,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                             description: article.description ?? null,
                                             url: articleUrl ?? null,
                                             publicationName: article.publicationSource?.publication_name ?? null,
-                                        }),
+                                        }, t('factCheck.chatSeed')),
                                         state: factCheckPhase === 'terminal'
                                             ? 'done'
                                             : factCheckPhase === 'processing'

@@ -629,7 +629,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                             description: suggestion.description_en ?? null,
                                             url: articleUrl ?? null,
                                             publicationName: suggestion.publication_name ?? null,
-                                        }),
+                                        }, t('factCheck.chatSeed')),
                                         state: factCheckPhase === 'terminal'
                                             ? 'done'
                                             : factCheckPhase === 'processing'
