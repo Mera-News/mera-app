@@ -33,6 +33,22 @@ const MAX_MATCHED_TOPICS = 10;
 const MAX_PRODUCING_FACTS = 5;
 const MAX_ALL_FACTS = 12; // newest-first — needed for "more of this" diagnosis
 const ARTICLE_DESC_TRUNC = 160;
+/**
+ * The description cap when the CLAIM PICKER is on (cloud only).
+ *
+ * The 85%-separability measurement was established against a 900-char summary.
+ * 160 chars is 18% of that input, and every rule the measurement bought —
+ * "2–4 options, padding is worse than fewer", "resolve the country from the
+ * Publication line" — is a rule about what the model reads. Moving the prompt
+ * text verbatim while cutting its input by 82% would carry the words and not the
+ * result.
+ *
+ * Applied ONLY when `factCheck` is on, which is only ever CLOUD: the local path
+ * stays byte-identical to what it renders today, because ~185 extra tokens
+ * against its ~3,072 budget is exactly the trade this split exists to avoid.
+ * Cloud enforces no hard input budget (see CLOUD_HISTORY_BUDGET_TOKENS' note).
+ */
+const ARTICLE_DESC_TRUNC_FACT_CHECK = 900;
 const FACT_STATEMENT_TRUNC = 120;
 const TOPICS_PER_FACT_PREVIEW = 3;
 const MAX_ARTICLE_ENTITIES = 8;
@@ -400,7 +416,8 @@ ${factCheck ? `${PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE}\n` : ''}- applyProposal: {
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions, factCheck } = input;
+  const descTrunc = factCheck ? ARTICLE_DESC_TRUNC_FACT_CHECK : ARTICLE_DESC_TRUNC;
 
   // Injected clock (never read here) — anchors the agent to the present so
   // proposeTrack scopes can't name a season/year that is already over.
@@ -415,7 +432,7 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     const lines = [`Title: ${trunc(title, 160)}`];
     if (publishedDay) lines.push(`Published: ${publishedDay}`);
     if (s.publication_name) lines.push(`Publication: ${trunc(s.publication_name, 80)}`);
-    if (s.description_en) lines.push(`Description: ${trunc(s.description_en, ARTICLE_DESC_TRUNC)}`);
+    if (s.description_en) lines.push(`Description: ${trunc(s.description_en, descTrunc)}`);
     // Category + entities feed the "less of this" choose-one alternatives (one
     // line each; capped so the block stays compact).
     if (ctx.category) lines.push(`Category: ${trunc(ctx.category, 60)}`);

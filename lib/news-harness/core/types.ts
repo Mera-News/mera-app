@@ -464,6 +464,11 @@ export interface FeedbackContextInput {
    *  proposal. Absent/empty ⇒ the block is omitted and retire_suppression is
    *  rejected outright. */
   activeSuppressions?: ActiveSuppressionView[];
+  /** The CLAIM PICKER is active on this turn (cloud only — see
+   *  `buildArticleFeedbackSystemPrompt`'s `factCheck`). Widens the rendered
+   *  article description to the length the 85%-separability measurement was
+   *  established against; the local path is untouched. */
+  factCheck?: boolean;
   /** Human-readable breadcrumb LABELS of the inline feedback-tree options the
    *  user tapped before opening chat (e.g. ["Not a good suggestion", "Wrong
    *  topic"]). Rendered as a `TAPPED OPTIONS` line. Absent/empty when none. */

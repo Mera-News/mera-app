@@ -18,6 +18,7 @@ import {
   useFloatingChatStore,
   type ChatContext,
 } from '@/lib/stores/floating-chat-store';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -141,6 +142,14 @@ export default function ChatSessionView({
   // what the web said at that moment, not a stored verdict.
   const quickFactChecks = useFloatingChatQuickFactChecks();
 
+  // The claim picker is CLOUD-only — `proposeFactCheck` is neither declared nor
+  // described in the LOCAL prompt (its rules are ~1,200 tokens against a ~3,072
+  // budget, and the check needs the cloud regardless). A chip offering it in
+  // on-device mode would send a turn to an agent with no such tool, which is the
+  // exact silent mis-wire the `generic` and `follow-story` branches below already
+  // exist to prevent. Same signal the agent reads, so the three gates agree.
+  const isOnDevice = useIsOnDeviceProcessing();
+
   const items = useMemo(
     () =>
       deriveThreadItems({
@@ -257,11 +266,15 @@ export default function ChatSessionView({
         // (FACT_CHECK_SEED_MESSAGE_KEY in fact-check-state.ts), so the two
         // affordances open the identical turn by construction rather than by two
         // strings someone has to keep in step.
-        {
-          key: 'quick-fact-check',
-          label: t('factCheck.chipQuickFactCheck' as PendingLocaleKey),
-          message: t('factCheck.chatSeed'),
-        },
+        ...(isOnDevice
+          ? []
+          : [
+              {
+                key: 'quick-fact-check',
+                label: t('factCheck.chipQuickFactCheck' as PendingLocaleKey),
+                message: t('factCheck.chatSeed'),
+              },
+            ]),
         {
           key: 'dont-want',
           label: t('articleFeedback.chipDontWant'),
@@ -293,7 +306,7 @@ export default function ChatSessionView({
         message: t('floatingChat.chipDataHandlingMessage'),
       },
     ];
-  }, [t, context]);
+  }, [t, context, isOnDevice]);
 
   // --- Server-authoritative block state ---------------------------------
   // The hook's `isBlocked` only flips mid-session (via an issueWarning side

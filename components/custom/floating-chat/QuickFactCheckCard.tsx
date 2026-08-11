@@ -108,10 +108,19 @@ const QuickFactCheckCard: React.FC<QuickFactCheckCardProps> = ({ entry }) => {
         </Text>
       </View>
 
+      {/* The verdict LABEL alone overclaims — "Consistent with sources" reads
+          as a clearance. Its `detailKey` is where the hedge lives ("That isn't
+          proof it's true — only that nothing contradicting it was found"), so
+          the two always render together. */}
       {verdict && (
-        <Text size="sm" bold style={styles.verdict}>
-          {t(k(verdict.labelKey))}
-        </Text>
+        <>
+          <Text size="sm" bold style={styles.verdict}>
+            {t(k(verdict.labelKey))}
+          </Text>
+          <Text size="xs" style={styles.verdictDetail}>
+            {t(k(verdict.detailKey))}
+          </Text>
+        </>
       )}
 
       <Text size="sm" style={styles.body}>
@@ -175,6 +184,9 @@ const styles = StyleSheet.create({
   },
   verdict: {
     color: 'rgb(232, 232, 232)',
+  },
+  verdictDetail: {
+    color: 'rgb(178, 178, 178)',
   },
   body: {
     color: 'rgb(210, 210, 210)',

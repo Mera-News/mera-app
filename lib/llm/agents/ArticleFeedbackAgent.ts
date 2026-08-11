@@ -248,6 +248,11 @@ export class ArticleFeedbackAgent implements IAgent {
 
   async buildContext(): Promise<string> {
     const context = await this.loadArticleContext();
+    // Same CLOUD gate as the prompt section and the tool declaration — a fourth
+    // place it must agree, because it decides how much of the article the claim
+    // picker actually gets to read.
+    const factCheck =
+      useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
     const facts = await getFacts(); // newest-first (sorted created_at desc)
 
     const storeContext = useFloatingChatStore.getState().context;
@@ -291,6 +296,7 @@ export class ArticleFeedbackAgent implements IAgent {
       verdict,
       tappedOptions,
       activeSuppressions,
+      factCheck,
     });
   }
 

@@ -122,6 +122,37 @@ describe('buildArticleFeedbackSystemPrompt', () => {
 
   // The LOCAL flag must not be able to smuggle the section in through the XML
   // tool-format block, which is the one part of the prompt only that path sees.
+  // The 85%-separability measurement was established against a ~900-char
+  // summary. Moving the prompt text verbatim while the context still truncated
+  // the description at 160 would carry the words and not the result — every rule
+  // that measurement bought is a rule about what the model READS.
+  it('widens the article description for the claim picker, and only for it', () => {
+    const long = `${'A'.repeat(880)} END`;
+    const ctx = { ...scoredContext() };
+    ctx.suggestion = { ...ctx.suggestion, description_en: long };
+
+    const withFactCheck = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: ctx,
+      proposal: null,
+      factCheck: true,
+    });
+    const without = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: ctx,
+      proposal: null,
+    });
+
+    expect(withFactCheck).toContain('END');
+    // The LOCAL path is byte-identical to what it renders today: ~185 extra
+    // tokens against a ~3,072 budget is exactly the trade the cloud/local split
+    // exists to avoid.
+    expect(without).not.toContain('END');
+    expect(without.length).toBeLessThan(withFactCheck.length);
+  });
+
   it('never lists proposeFactCheck in the local XML tool format', () => {
     const localWithFlag = buildArticleFeedbackSystemPrompt({
       needsToolFormat: true,
