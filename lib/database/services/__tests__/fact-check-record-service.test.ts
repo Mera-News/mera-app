@@ -305,19 +305,26 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
         expect(stored.prepareDestroyPermanently).not.toHaveBeenCalled();
     });
 
-    it('does NOT delete a row whose payload has no checkedBy array at all', async () => {
+    // A parsed-but-missing checkedBy is a REAL shape, not hypothetical:
+    // `requestFactCheck` stores `payload: null` for the `pending` stub row it
+    // writes when the server's first response doesn't echo a full row back
+    // (fact-check-graphql-client.ts). That stub carries no attribution by
+    // construction and must decay like an explicit `checkedBy: []`, or a
+    // stuck/never-resolved request would sit in the table forever.
+    it('DELETES a readable row whose payload has no checkedBy array at all', async () => {
         collection()._setRows([
             oldRow({ id: 'no-field', payloadJson: JSON.stringify({ status: 'blocked' }) }),
-            oldRow({ id: 'null-payload', payloadJson: '' }),
+            oldRow({ id: 'null-payload', payloadJson: JSON.stringify(null) }), // the pending stub shape
+            oldRow({ id: 'empty-string-payload', payloadJson: '' }),
         ]);
 
         const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
 
-        expect(deleted).toBe(0);
-        expect(collection()._rows.find((r: any) => r.id === 'no-field').prepareDestroyPermanently)
-            .not.toHaveBeenCalled();
-        expect(collection()._rows.find((r: any) => r.id === 'null-payload').prepareDestroyPermanently)
-            .not.toHaveBeenCalled();
+        expect(deleted).toBe(3);
+        for (const id of ['no-field', 'null-payload', 'empty-string-payload']) {
+            expect(collection()._rows.find((r: any) => r.id === id).prepareDestroyPermanently)
+                .toHaveBeenCalledTimes(1);
+        }
     });
 
     it('mixes kept and deleted rows correctly in one sweep', async () => {

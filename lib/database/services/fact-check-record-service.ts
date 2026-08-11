@@ -301,9 +301,9 @@ export async function deleteFactCheck(id: string): Promise<void> {
 
 /**
  * Retention sweep (data-cleanup-task): deletes UNATTRIBUTED checks —
- * `payload.checkedBy` is an empty array — requested before `cutoffMs`. A
- * POPULATED `checkedBy` is kept indefinitely, regardless of age. Returns the
- * number of rows deleted.
+ * `payload.checkedBy` is missing, `null`, or an empty array — requested
+ * before `cutoffMs`. A POPULATED `checkedBy` is kept indefinitely, regardless
+ * of age. Returns the number of rows deleted.
  *
  * WHY empty is deleted and populated is not (restated here so a later reader
  * does not "simplify" the condition away): an empty `checkedBy` asserts "no
@@ -338,11 +338,25 @@ export async function deleteFactCheck(id: string): Promise<void> {
  * every re-check would keep resetting a row's clock and could make an
  * unattributed row live forever.
  *
- * WHY A MALFORMED/UNPARSEABLE PAYLOAD IS KEPT, NOT DELETED. We cannot read
- * `checkedBy` from it, so we cannot confirm it is unattributed — and
- * destroying a row that might carry a user's published fact-check verdict is
- * worse than leaving one stale, unreadable row in place for another sweep to
- * reconsider. "Do not delete what you cannot read."
+ * WHY A TRULY UNREADABLE PAYLOAD IS KEPT, NOT DELETED — but a READABLE
+ * payload with no attribution is NOT given the same benefit of the doubt.
+ * Two different situations both surface as "no `checkedBy` array present",
+ * and they get opposite treatment:
+ *   - `JSON.parse` THROWS (the text itself is corrupt) ⇒ we cannot read the
+ *     payload at all, so we cannot confirm it is unattributed. Destroying a
+ *     row that might carry a user's published verdict is worse than leaving
+ *     one stale, unreadable row for another sweep to reconsider. Kept.
+ *   - `JSON.parse` SUCCEEDS but yields `null`, or an object with no
+ *     `checkedBy` array — this is a rarer but REAL shape, not hypothetical:
+ *     `requestFactCheck` (`fact-check-graphql-client.ts`) stores
+ *     `payload: null` for the `pending` stub row written when the server's
+ *     very first response doesn't echo a full row back. That stub carries no
+ *     evidence of attribution by construction — it is not "unreadable", it
+ *     is "read, and there is nothing there" — so it decays exactly like an
+ *     explicit empty `checkedBy: []` array. Treating it as immortal instead
+ *     would let a stuck/never-resolved request sit in the table forever,
+ *     which is the opposite of the valuable, attributed rows this rule
+ *     exists to protect.
  */
 export async function deleteExpiredFactChecks(cutoffMs: number): Promise<number> {
     try {
@@ -356,12 +370,12 @@ export async function deleteExpiredFactChecks(cutoffMs: number): Promise<number>
             try {
                 parsed = row.payloadJson ? JSON.parse(row.payloadJson) : null;
             } catch {
-                return false; // unparseable — cannot confirm unattributed, keep
+                return false; // unreadable text — cannot confirm unattributed, keep
             }
             const checkedBy = parsed?.checkedBy;
-            // Not an array (missing/malformed) ⇒ cannot confirm empty, keep.
-            if (!Array.isArray(checkedBy)) return false;
-            return checkedBy.length === 0;
+            // Readable, but no populated attribution array ⇒ unattributed
+            // (covers a missing field, a `null` payload, and an explicit []).
+            return !Array.isArray(checkedBy) || checkedBy.length === 0;
         });
         if (toDelete.length === 0) return 0;
 
