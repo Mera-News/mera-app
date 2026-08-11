@@ -1581,7 +1581,20 @@
     "checkedByUnavailable": "No pudimos verificar si una organización de verificación de hechos ha publicado sobre esta noticia — la búsqueda no se completó. Eso es diferente a que nadie haya publicado; a continuación se muestra lo que la búsqueda más amplia encontró.",
     "claimProposalTitle": "¿Verificar esta afirmación?",
     "actionCheckClaim": "Verificar esta afirmación",
-    "chatSeed": "¿Qué se puede verificar en esta noticia?"
+    "chatSeed": "¿Qué se puede verificar en esta noticia?",
+    "actionCheckArticle": "Verificar el artículo completo",
+    "chipQuickFactCheck": "Verificación rápida",
+    "optionWholeArticle": "El artículo completo",
+    "quickAnswered": "Esto es lo que encontró una búsqueda rápida en la web:",
+    "quickArticleFailed": "Mera no pudo confirmar que la solicitud se envió. Intenta de nuevo en un momento.",
+    "quickArticleRequested": "Solicitud enviada. Mera verificará el artículo completo — el resultado aparecerá en Verificaciones de hechos en tu Dashboard cuando esté listo.",
+    "quickArticleSending": "Enviando la solicitud…",
+    "quickCouldNotSearch": "Mera no pudo buscar en la web en este momento, así que esto no es una respuesta — intenta de nuevo en un momento.",
+    "quickDisclaimer": "Esta es una búsqueda rápida en la web, no una verificación de una organización verificadora de hechos, y no se guarda. Para una verificación exhaustiva con fuentes nombradas, elige \"El artículo completo\".",
+    "quickFailed": "Mera encontró información pero no pudo formular una respuesta esta vez. Intenta de nuevo en un momento.",
+    "quickNothingFound": "La búsqueda no encontró nada al respecto. Eso no significa que sea falso — puede ser nuevo, nicho, o algo que no está ampliamente cubierto en línea.",
+    "quickRunning": "Buscando en la web…",
+    "stillChecking": "Esto está tomando más tiempo de lo habitual. Todavía se está verificando en segundo plano — revisa más tarde, o mira en Verificaciones de hechos en tu Dashboard."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Priorizar esta fuente",

@@ -1611,7 +1611,20 @@
     "checkedByUnavailable": "Nie mogliśmy sprawdzić, czy organizacja zajmująca się weryfikacją faktów opublikowała coś na temat tej historii — sprawdzenie się nie powiodło. To coś innego niż brak publikacji; poniżej znajduje się to, co znaleźliśmy w szerszym wyszukiwaniu.",
     "claimProposalTitle": "Sprawdzić to twierdzenie?",
     "actionCheckClaim": "Sprawdź to twierdzenie",
-    "chatSeed": "Co w tej historii można sprawdzić?"
+    "chatSeed": "Co w tej historii można sprawdzić?",
+    "actionCheckArticle": "Sprawdź cały artykuł",
+    "chipQuickFactCheck": "Szybka weryfikacja",
+    "optionWholeArticle": "Cały artykuł",
+    "quickAnswered": "Oto, co znaleziono w szybkim wyszukiwaniu internetowym:",
+    "quickArticleFailed": "Mera nie mogła potwierdzić, że żądanie przeszło. Spróbuj ponownie za chwilę.",
+    "quickArticleRequested": "Żądanie wysłane. Mera sprawdzi cały artykuł — wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, gdy będzie gotowy.",
+    "quickArticleSending": "Wysyłanie żądania…",
+    "quickCouldNotSearch": "Mera nie mogła wyszukać w sieci w tym momencie, więc to nie jest odpowiedź — spróbuj ponownie za chwilę.",
+    "quickDisclaimer": "To jest szybkie wyszukiwanie internetowe, a nie sprawdzenie przez organizację zajmującą się weryfikacją faktów, i nie jest zapisywane. Aby uzyskać dokładne sprawdzenie z podanymi źródłami, wybierz \"Cały artykuł\".",
+    "quickFailed": "Mera znalazła pewne informacje, ale tym razem nie mogła ułożyć odpowiedzi. Spróbuj ponownie za chwilę.",
+    "quickNothingFound": "Wyszukiwanie nie znalazło nic na ten temat. To nie oznacza, że to fałsz — może to być po prostu nowe, niszowe, lub coś, co nie jest szeroko znane online.",
+    "quickRunning": "Przeszukiwanie sieci…",
+    "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle — wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Uprioritetnij to źródło",

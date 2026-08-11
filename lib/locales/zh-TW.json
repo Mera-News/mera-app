@@ -1582,7 +1582,20 @@
     "checkedByUnavailable": "我們無法檢查事實查證機構是否對此故事進行了發表——查詢未成功。這與沒有人發表不同；以下是更廣泛搜尋的結果。",
     "claimProposalTitle": "檢查此聲明的事實？",
     "actionCheckClaim": "檢查此聲明",
-    "chatSeed": "此故事中有什麼可以進行事實查證的？"
+    "chatSeed": "此故事中有什麼可以進行事實查證的？",
+    "actionCheckArticle": "檢查完整文章",
+    "chipQuickFactCheck": "快速查證",
+    "optionWholeArticle": "完整文章",
+    "quickAnswered": "以下是快速網路搜尋的結果：",
+    "quickArticleFailed": "Mera 無法確認請求已送出。請稍後再試。",
+    "quickArticleRequested": "請求已送出。Mera 將詳細檢查文章——結果準備好後將顯示在您的儀表板「查證結果」下方。",
+    "quickArticleSending": "正在發送請求…",
+    "quickCouldNotSearch": "Mera 目前無法搜尋網路，所以這不是答案——請稍後再試。",
+    "quickDisclaimer": "這是快速網路搜尋，不是由查證機構進行的檢查，也不會被保存。要進行包含具體來源的詳細檢查，請選擇「完整文章」。",
+    "quickFailed": "Mera 找到了一些資訊但這次無法整合成答案。請稍後再試。",
+    "quickNothingFound": "搜尋沒有找到相關內容。這並不意味著是假的——它可能只是新近發生、專業領域話題或網路上沒有廣泛報導。",
+    "quickRunning": "正在搜尋網路…",
+    "stillChecking": "這花費的時間比平常久。它仍在背景檢查中——稍後再查看，或查看您儀表板上的「查證結果」。"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "優先考慮此來源",

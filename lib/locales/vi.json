@@ -1582,7 +1582,20 @@
     "checkedByUnavailable": "Chúng tôi không thể kiểm tra xem một tổ chức kiểm tra sự thật có công bố về bài viết này hay không — tìm kiếm không thành công. Điều này khác với trường hợp không ai công bố; dưới đây là những gì tìm kiếm rộng hơn đã tìm thấy.",
     "claimProposalTitle": "Kiểm tra khẳng định này?",
     "actionCheckClaim": "Kiểm tra khẳng định này",
-    "chatSeed": "Có gì có thể kiểm tra trong bài viết này?"
+    "chatSeed": "Có gì có thể kiểm tra trong bài viết này?",
+    "actionCheckArticle": "Kiểm tra toàn bộ bài viết",
+    "chipQuickFactCheck": "Kiểm tra nhanh sự thật",
+    "optionWholeArticle": "Toàn bộ bài viết",
+    "quickAnswered": "Đây là những gì tìm kiếm web nhanh tìm thấy:",
+    "quickArticleFailed": "Mera không thể xác nhận yêu cầu đã gửi. Thử lại sau lát.",
+    "quickArticleRequested": "Yêu cầu đã gửi. Mera sẽ kiểm tra toàn bộ bài viết — kết quả sẽ hiện dưới Fact checks trên Dashboard khi sẵn sàng.",
+    "quickArticleSending": "Đang gửi yêu cầu…",
+    "quickCouldNotSearch": "Mera không thể tìm kiếm web lúc này, vì vậy đây không phải là câu trả lời — thử lại sau lát.",
+    "quickDisclaimer": "Đây là tìm kiếm web nhanh, không phải kiểm tra bởi một tổ chức kiểm tra sự thật, và nó không được lưu lại. Để kiểm tra kỹ lưỡng với các nguồn có tên, chọn \"Toàn bộ bài viết\".",
+    "quickFailed": "Mera tìm thấy một số thông tin nhưng không thể soạn thành câu trả lời lần này. Thử lại sau lát.",
+    "quickNothingFound": "Tìm kiếm không tìm thấy bất cứ điều gì về vấn đề này. Điều đó không có nghĩa là sai — nó có thể là mới, niche, hoặc không được đề cập rộng rãi trực tuyến.",
+    "quickRunning": "Đang tìm kiếm web…",
+    "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra — quay lại sau hoặc xem dưới Fact checks trên Dashboard."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",

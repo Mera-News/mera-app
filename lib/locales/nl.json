@@ -1581,7 +1581,20 @@
     "checkedByUnavailable": "We konden niet controleren of een feitenorganisatie over dit artikel heeft gepubliceerd — de opzoeking is niet voltooid. Dat verschilt van het geval dat niemand heeft gepubliceerd; hieronder zie je wat de bredere zoeking wel heeft gevonden.",
     "claimProposalTitle": "Deze claim feitenchecken?",
     "actionCheckClaim": "Deze claim controleren",
-    "chatSeed": "Wat kan je in dit artikel controleren?"
+    "chatSeed": "Wat kan je in dit artikel controleren?",
+    "actionCheckArticle": "Controleer het hele artikel",
+    "chipQuickFactCheck": "Snelle feitencheck",
+    "optionWholeArticle": "Het hele artikel",
+    "quickAnswered": "Dit is wat een snelle webzoeking heeft gevonden:",
+    "quickArticleFailed": "Mera kon niet bevestigen dat het verzoek is verzonden. Probeer het over een moment opnieuw.",
+    "quickArticleRequested": "Verzoek verzonden. Mera zal het hele artikel controleren — het resultaat verschijnt onder Feitencontroles op uw Dashboard zodra het klaar is.",
+    "quickArticleSending": "Verzoek wordt verzonden…",
+    "quickCouldNotSearch": "Mera kon het web zojuist niet zoeken, dus dit is geen antwoord — probeer het over een moment opnieuw.",
+    "quickDisclaimer": "Dit is een snelle webzoeking, geen controle door een feitencontrolestichting, en deze wordt niet opgeslagen. Voor een grondige controle met genoemde bronnen, kies \"Het hele artikel\".",
+    "quickFailed": "Mera vond wat informatie, maar kon deze keer geen antwoord samenstellen. Probeer het over een moment opnieuw.",
+    "quickNothingFound": "De zoeking heeft niets over dit onderwerp opgeleverd. Dat betekent niet dat het onwaar is — het kan gewoon nieuw, niche of niet veel online te vinden zijn.",
+    "quickRunning": "Het web wordt doorzocht…",
+    "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd — kijk later terug of zoek onder Feitencontroles op uw Dashboard."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",

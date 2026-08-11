@@ -1581,7 +1581,20 @@
     "checkedByUnavailable": "Kami tidak dapat memeriksa apakah organisasi penyelia fakta telah menerbitkan tentang cerita ini — pencarian tidak berhasil. Itu berbeda dari tidak ada yang menerbitkan; di bawah ini adalah apa yang ditemukan pencarian yang lebih luas.",
     "claimProposalTitle": "Periksa klaim ini?",
     "actionCheckClaim": "Periksa klaim ini",
-    "chatSeed": "Apa yang dapat diperiksa fakta dalam cerita ini?"
+    "chatSeed": "Apa yang dapat diperiksa fakta dalam cerita ini?",
+    "actionCheckArticle": "Periksa seluruh artikel",
+    "chipQuickFactCheck": "Pemeriksaan fakta cepat",
+    "optionWholeArticle": "Seluruh artikel",
+    "quickAnswered": "Inilah yang ditemukan pencarian web cepat:",
+    "quickArticleFailed": "Mera tidak dapat memastikan permintaan terkirim. Coba lagi sebentar.",
+    "quickArticleRequested": "Permintaan terkirim. Mera akan memeriksa seluruh artikel — hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda setelah siap.",
+    "quickArticleSending": "Mengirim permintaan…",
+    "quickCouldNotSearch": "Mera tidak dapat mencari web sekarang, jadi ini bukan jawaban — coba lagi sebentar.",
+    "quickDisclaimer": "Ini adalah pencarian web cepat, bukan pemeriksaan oleh organisasi pemeriksa fakta, dan tidak disimpan. Untuk pemeriksaan menyeluruh dengan sumber tertentu, pilih \"Seluruh artikel\".",
+    "quickFailed": "Mera menemukan beberapa informasi tetapi tidak dapat menyusun jawaban kali ini. Coba lagi sebentar.",
+    "quickNothingFound": "Pencarian tidak menemukan apa pun tentang ini. Itu tidak berarti salah — mungkin saja baru, niche, atau bukan sesuatu yang banyak dibahas secara online.",
+    "quickRunning": "Mencari di web…",
+    "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang — periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritaskan sumber ini",

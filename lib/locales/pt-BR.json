@@ -1581,7 +1581,20 @@
     "checkedByUnavailable": "Não foi possível verificar se uma organização de verificação de fatos publicou algo sobre esta história — a busca não funcionou. Isso é diferente de ninguém ter publicado; abaixo está o que a busca mais ampla encontrou.",
     "claimProposalTitle": "Verificar esta alegação?",
     "actionCheckClaim": "Verificar esta alegação",
-    "chatSeed": "O que pode ser verificado nesta história?"
+    "chatSeed": "O que pode ser verificado nesta história?",
+    "actionCheckArticle": "Verificar o artigo completo",
+    "chipQuickFactCheck": "Verificação rápida",
+    "optionWholeArticle": "O artigo completo",
+    "quickAnswered": "Veja o que uma busca rápida na web encontrou:",
+    "quickArticleFailed": "Mera não conseguiu confirmar que a solicitação foi enviada. Tente novamente em um momento.",
+    "quickArticleRequested": "Solicitação enviada. Mera verificará o artigo completo — o resultado aparecerá em Verificações de fatos no seu Painel assim que estiver pronto.",
+    "quickArticleSending": "Enviando a solicitação…",
+    "quickCouldNotSearch": "Mera não conseguiu fazer a busca na web agora, então isso não é uma resposta — tente novamente em um momento.",
+    "quickDisclaimer": "Esta é uma busca rápida na web, não uma verificação de uma organização de verificação de fatos, e não é salva. Para uma verificação completa com fontes nomeadas, escolha \"O artigo completo\".",
+    "quickFailed": "Mera encontrou algumas informações, mas não conseguiu montar uma resposta desta vez. Tente novamente em um momento.",
+    "quickNothingFound": "A busca não encontrou nada sobre isto. Isso não significa que seja falso — pode ser algo novo, nicho ou simplesmente não estar amplamente coberto na internet.",
+    "quickRunning": "Buscando na web…",
+    "stillChecking": "Está levando mais tempo que o normal. Ainda está sendo verificado em segundo plano — verifique depois ou procure em Verificações de fatos no seu Painel."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Priorizar esta fonte",

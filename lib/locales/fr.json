@@ -1588,7 +1588,20 @@
     "checkedByUnavailable": "Nous n'avons pas pu vérifier si une organisation de vérification de faits a publié sur cette histoire — la recherche n'a pas abouti. C'est différent du cas où personne n'aurait publié ; ci-dessous ce que la recherche plus large a trouvé.",
     "claimProposalTitle": "Vérifier cette affirmation ?",
     "actionCheckClaim": "Vérifier cette affirmation",
-    "chatSeed": "Qu'y a-t-il à vérifier dans cette histoire ?"
+    "chatSeed": "Qu'y a-t-il à vérifier dans cette histoire ?",
+    "actionCheckArticle": "Vérifier l'article complet",
+    "chipQuickFactCheck": "Vérification rapide des faits",
+    "optionWholeArticle": "L'article complet",
+    "quickAnswered": "Voici ce qu'une recherche web rapide a trouvé :",
+    "quickArticleFailed": "Mera n'a pas pu confirmer que la demande a été envoyée. Réessayez dans un instant.",
+    "quickArticleRequested": "Demande envoyée. Mera vérifiera l'article complet — le résultat apparaîtra sous Vérifications des faits dans votre Tableau de bord une fois qu'il sera prêt.",
+    "quickArticleSending": "Envoi de la demande…",
+    "quickCouldNotSearch": "Mera n'a pas pu effectuer la recherche web en ce moment, ce n'est donc pas une réponse — réessayez dans un instant.",
+    "quickDisclaimer": "Ceci est une recherche web rapide, pas une vérification par une organisation de vérification des faits, et elle n'est pas enregistrée. Pour une vérification approfondie avec des sources nommées, choisissez « L'article complet ».",
+    "quickFailed": "Mera a trouvé certaines informations mais n'a pas pu formuler une réponse cette fois. Réessayez dans un instant.",
+    "quickNothingFound": "La recherche n'a rien trouvé à ce sujet. Cela ne signifie pas que c'est faux — c'est peut-être nouveau, spécialisé ou pas quelque chose de largement couvert en ligne.",
+    "quickRunning": "Recherche sur le web…",
+    "stillChecking": "Cela prend plus de temps que d'habitude. C'est toujours en cours de vérification en arrière-plan — revenez plus tard ou consultez Vérifications des faits dans votre Tableau de bord."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioriser cette source",

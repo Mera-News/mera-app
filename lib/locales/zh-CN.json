@@ -1582,7 +1582,20 @@
     "checkedByUnavailable": "我们无法检查事实核查组织是否已发布关于本故事的内容——查询未能进行。这与没有人发布不同；下方是更广泛搜索的发现。",
     "claimProposalTitle": "核查此声明？",
     "actionCheckClaim": "核查此声明",
-    "chatSeed": "本故事中哪些内容可以进行事实核查？"
+    "chatSeed": "本故事中哪些内容可以进行事实核查？",
+    "actionCheckArticle": "检查整篇文章",
+    "chipQuickFactCheck": "快速事实核查",
+    "optionWholeArticle": "整篇文章",
+    "quickAnswered": "以下是快速网络搜索的结果：",
+    "quickArticleFailed": "Mera 无法确认请求已发送。请稍候后重试。",
+    "quickArticleRequested": "请求已发送。Mera 将检查整篇文章 — 检查完成后，结果将显示在您仪表板上的「事实核查」部分。",
+    "quickArticleSending": "正在发送请求…",
+    "quickCouldNotSearch": "Mera 现在无法搜索网络，所以这不是一个答案 — 请稍候后重试。",
+    "quickDisclaimer": "这是快速网络搜索，不是事实核查组织的核查，也不会被保存。如需获得具有命名来源的全面核查，请选择「整篇文章」。",
+    "quickFailed": "Mera 找到了一些信息，但这次无法组织成一个答案。请稍候后重试。",
+    "quickNothingFound": "搜索未找到关于此内容的任何信息。这并不意味着它是假的 — 它可能只是新内容、利基话题或网上没有广泛报道的内容。",
+    "quickRunning": "正在搜索网络…",
+    "stillChecking": "这耗时比平时长。仍在后台检查中 — 稍后再查看，或查看您仪表板上的「事实核查」部分。"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "优先考虑此来源",

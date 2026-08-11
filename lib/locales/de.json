@@ -1581,7 +1581,20 @@
     "checkedByUnavailable": "Wir konnten nicht überprüfen, ob eine Faktencheck-Organisation zu diesem Artikel veröffentlicht hat – die Suche ist fehlgeschlagen. Das ist unterschiedlich von der Situation, dass niemand dazu veröffentlicht hat; unten siehst du, was die weitere Suche gefunden hat.",
     "claimProposalTitle": "Diese Aussage überprüfen?",
     "actionCheckClaim": "Aussage überprüfen",
-    "chatSeed": "Was in diesem Artikel überprüft werden kann?"
+    "chatSeed": "Was in diesem Artikel überprüft werden kann?",
+    "actionCheckArticle": "Den ganzen Artikel überprüfen",
+    "chipQuickFactCheck": "Schnelle Faktenchecks",
+    "optionWholeArticle": "Den ganzen Artikel",
+    "quickAnswered": "Das hat eine schnelle Websuche ergeben:",
+    "quickArticleFailed": "Mera konnte nicht bestätigen, dass die Anfrage gesendet wurde. Versuche es in einem Moment erneut.",
+    "quickArticleRequested": "Anfrage gesendet. Mera wird den ganzen Artikel überprüfen – das Ergebnis wird unter Faktenchecks in deinem Dashboard angezeigt, sobald es fertig ist.",
+    "quickArticleSending": "Anfrage wird gesendet…",
+    "quickCouldNotSearch": "Mera konnte die Websuche gerade nicht durchführen, das ist also keine Antwort – versuche es in einem Moment erneut.",
+    "quickDisclaimer": "Das ist eine schnelle Websuche, kein Faktencheck durch eine Faktenchecking-Organisation, und es wird nicht gespeichert. Für einen gründlichen Check mit benannten Quellen wähle \"Den ganzen Artikel\".",
+    "quickFailed": "Mera hat Informationen gefunden, konnte aber diesmal keine Antwort zusammenstellen. Versuche es in einem Moment erneut.",
+    "quickNothingFound": "Die Suche hat nichts dazu ergeben. Das bedeutet nicht, dass es falsch ist – es könnte einfach neu, spezialisiert oder online nicht weit verbreitet sein.",
+    "quickRunning": "Suche im Web läuft…",
+    "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft – schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Diese Quelle priorisieren",

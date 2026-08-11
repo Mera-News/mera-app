@@ -1581,7 +1581,20 @@
     "checkedByUnavailable": "Non abbiamo potuto controllare se un'organizzazione di fact-checking ha pubblicato su questa storia — la ricerca non è andata a buon fine. È diverso dal fatto che nessuno abbia pubblicato; qui sotto è quello che la ricerca più ampia ha trovato.",
     "claimProposalTitle": "Verificare questa affermazione?",
     "actionCheckClaim": "Verifica questa affermazione",
-    "chatSeed": "Cosa può essere verificato in questa storia?"
+    "chatSeed": "Cosa può essere verificato in questa storia?",
+    "actionCheckArticle": "Controlla l'articolo completo",
+    "chipQuickFactCheck": "Verifica rapida",
+    "optionWholeArticle": "L'articolo completo",
+    "quickAnswered": "Ecco cosa ha trovato una ricerca web rapida:",
+    "quickArticleFailed": "Mera non ha potuto confermare che la richiesta è stata inviata. Riprova tra poco.",
+    "quickArticleRequested": "Richiesta inviata. Mera verificherà l'articolo completo — il risultato apparirà sotto Verifiche di fatto sul tuo Dashboard quando sarà pronto.",
+    "quickArticleSending": "Invio della richiesta…",
+    "quickCouldNotSearch": "Mera non ha potuto cercare sul web in questo momento, quindi questo non è una risposta — riprova tra poco.",
+    "quickDisclaimer": "Questa è una ricerca web rapida, non una verifica di un'organizzazione di fact-checking, e non è salvata. Per una verifica approfondita con fonti nominate, scegli \"L'articolo completo\".",
+    "quickFailed": "Mera ha trovato alcune informazioni ma non ha potuto mettere insieme una risposta questa volta. Riprova tra poco.",
+    "quickNothingFound": "La ricerca non ha trovato nulla su questo argomento. Questo non significa che sia falso — potrebbe semplicemente essere nuovo, di nicchia, o non ampiamente coperto online.",
+    "quickRunning": "Ricerca sul web in corso…",
+    "stillChecking": "Sta richiedendo più tempo del solito. È ancora in fase di verifica in background — controlla più tardi, o guarda sotto Verifiche di fatto sul tuo Dashboard."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Dai priorità a questa fonte",
