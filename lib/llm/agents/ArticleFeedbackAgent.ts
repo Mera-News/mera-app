@@ -27,6 +27,7 @@ import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import { isSubjectTracked } from '../../tracking/track-actions';
+import { handleWebSearch } from '../../chat-tools/web-search-handler';
 import {
   buildArticleFeedbackSystemPrompt,
   buildFeedbackContext,
@@ -160,31 +161,45 @@ export class ArticleFeedbackAgent implements IAgent {
   private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
   private lastMode: 'CLOUD' | 'LOCAL' | null = null;
+  private lastWebSearch: boolean | null = null;
 
   async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
     const languageName =
       SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage)?.name ?? 'English';
+    // Read ONCE, non-reactively, at turn-build time (same seam as
+    // PersonaUpdateAgent.buildSystemPrompt) so the prompt and the tool payload
+    // this turn agree with each other.
+    const protocol = useMeraProtocolStore.getState();
     const mode: 'CLOUD' | 'LOCAL' =
-      useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
-        ? 'LOCAL'
-        : 'CLOUD';
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+    // Gates the SAME prose getToolDefinitions gates the tool declaration with —
+    // see agent-core's buildArticleFeedbackSystemPrompt. Must be part of the
+    // cache key: without it, a prompt built while the toggle was off (or CLOUD
+    // flipped to LOCAL) would keep serving stale text after the user flips the
+    // toggle on, so getToolDefinitions() would declare `webSearch` while the
+    // cached prompt still tells the model it has no way to look beyond the
+    // metadata — reproducing the exact "toggle on, still refuses" bug reported.
+    const webSearch = mode === 'CLOUD' && protocol.webSearchInChat === true;
 
-    // Static content depends only on needsToolFormat + languageName + mode —
-    // all fixed per session unless the user changes app language or processing.
+    // Static content depends only on needsToolFormat + languageName + mode +
+    // webSearch — all fixed per session unless the user changes app language,
+    // processing mode, or the web-search toggle.
     if (
       this.cachedSystemPrompt
       && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
       && this.lastMode === mode
+      && this.lastWebSearch === webSearch
     ) {
       return this.cachedSystemPrompt;
     }
 
-    this.cachedSystemPrompt = buildArticleFeedbackSystemPrompt({ needsToolFormat, languageName });
+    this.cachedSystemPrompt = buildArticleFeedbackSystemPrompt({ needsToolFormat, languageName, webSearch });
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
     this.lastMode = mode;
+    this.lastWebSearch = webSearch;
     return this.cachedSystemPrompt;
   }
 
@@ -241,7 +256,16 @@ export class ArticleFeedbackAgent implements IAgent {
   // --- IAgent: tool definitions (OpenAI JSON Schema for cloud chat) ---
 
   getToolDefinitions(): ToolDefinition[] {
-    return getArticleFeedbackToolDefinitions();
+    // Read fresh (not the buildSystemPrompt cache) — this method is also called
+    // standalone (executeTool's forced-extraction payload, tool-name
+    // resolution) on a turn whose prompt was never rebuilt. Same gate as the
+    // prompt's webSearchLine: CLOUD mode AND the user's toggle. The handler
+    // (web-search-handler.ts) re-checks the toggle regardless — belt-and-braces
+    // for a persisted conversation replaying a call made while it was on.
+    const protocol = useMeraProtocolStore.getState();
+    const mode: 'CLOUD' | 'LOCAL' =
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+    return getArticleFeedbackToolDefinitions(mode, protocol.webSearchInChat === true);
   }
 
   /**
@@ -373,6 +397,18 @@ export class ArticleFeedbackAgent implements IAgent {
 
       case 'cancelProposal':
         return { result: { cancelled: true }, sideEffects: { proposalResolved: 'cancelled' } };
+
+      // OPT-IN, off by default — see getToolDefinitions and agent-core's
+      // WEB_SEARCH_TOOL. Declared only while the toggle is on, but an
+      // UNDECLARED replayed call (persisted conversation, toggle now off)
+      // still lands here: normalizeToolName finds no declared match, the raw
+      // name falls through, and handleWebSearch re-checks the toggle as its
+      // first statement before any await — same shape as PersonaUpdateAgent's
+      // 'webSearch' case.
+      case 'webSearch': {
+        const result = await handleWebSearch(args);
+        return { result };
+      }
 
       default:
         logger.warn('[ArticleFeedbackAgent] Unknown tool', { name });

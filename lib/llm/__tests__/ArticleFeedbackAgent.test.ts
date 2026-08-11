@@ -80,6 +80,12 @@ jest.mock('../../logger', () => ({
   default: { warn: jest.fn(), error: jest.fn(), debug: jest.fn(), info: jest.fn() },
 }));
 
+const mockHandleWebSearch = jest.fn();
+
+jest.mock('../../chat-tools/web-search-handler', () => ({
+  handleWebSearch: (...args: unknown[]) => mockHandleWebSearch(...args),
+}));
+
 import { ArticleFeedbackAgent } from '../agents/ArticleFeedbackAgent';
 
 const SUGGESTION_ID = 'sugg-1';
@@ -119,6 +125,7 @@ describe('ArticleFeedbackAgent', () => {
     // not-interested P4a default — no active filters, so every pre-existing
     // context/proposal expectation sees exactly what it saw before.
     mockGetActiveSuppressions.mockResolvedValue([]);
+    mockHandleWebSearch.mockResolvedValue({ searched: true, query: 'q', results: [] });
   });
 
   describe('constructor', () => {
@@ -159,6 +166,30 @@ describe('ArticleFeedbackAgent', () => {
       const a = await agent.buildSystemPrompt(false);
       const b = await agent.buildSystemPrompt(false);
       expect(a).toBe(b);
+    });
+
+    // pivot P6 (F4): the cache key used to omit the web-search toggle
+    // entirely, so a prompt built while the toggle was off would keep
+    // serving stale "you don't have the full article" text even after the
+    // user flipped it on — getToolDefinitions() would then declare the tool
+    // while the (cached) prompt never told the model it could use it. That is
+    // the exact "toggle on, still refuses" bug the user reported.
+    it('rebuilds (does not serve a stale cache) when the toggle flips, and teaches search once on', async () => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: false });
+      const agent = makeAgent();
+      const off = await agent.buildSystemPrompt(false);
+      expect(off).not.toContain('WEB SEARCH');
+
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: true });
+      const on = await agent.buildSystemPrompt(false);
+      expect(on).not.toBe(off);
+      expect(on).toContain('WEB SEARCH');
+    });
+
+    it('does not teach search prose when the toggle is on but mode is LOCAL', async () => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'ON_DEVICE', webSearchInChat: true });
+      const prompt = await makeAgent().buildSystemPrompt(false);
+      expect(prompt).not.toContain('WEB SEARCH');
     });
   });
 
@@ -254,6 +285,26 @@ describe('ArticleFeedbackAgent', () => {
     it('exposes the proposal + follow tools', () => {
       const names = makeAgent().getToolDefinitions().map((t) => t.function.name);
       expect(names).toEqual(['proposeChanges', 'proposeTrack', 'applyProposal', 'cancelProposal']);
+    });
+
+    // pivot P6 (F4): this surface never declared webSearch at all, so the
+    // "Web search in chat" toggle was inert here no matter its value. These
+    // pin BOTH directions of the fix.
+    it('omits webSearch when the toggle is off (default beforeEach state)', () => {
+      const names = makeAgent().getToolDefinitions().map((t) => t.function.name);
+      expect(names).not.toContain('webSearch');
+    });
+
+    it('declares webSearch in CLOUD mode when the toggle is on', () => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: true });
+      const names = makeAgent().getToolDefinitions().map((t) => t.function.name);
+      expect(names).toContain('webSearch');
+    });
+
+    it('never declares webSearch in LOCAL mode, even with the toggle on', () => {
+      mockMeraProtocolGetState.mockReturnValue({ processingMode: 'ON_DEVICE', webSearchInChat: true });
+      const names = makeAgent().getToolDefinitions().map((t) => t.function.name);
+      expect(names).not.toContain('webSearch');
     });
   });
 
@@ -552,6 +603,38 @@ describe('ArticleFeedbackAgent', () => {
     it('returns an error for an unknown tool', async () => {
       const result = await makeAgent().executeTool('bogus', {});
       expect(result.result.error).toContain('Unknown tool');
+    });
+  });
+
+  // pivot P6 (F4): wires the tool call through to the shared handler, the
+  // same one PersonaUpdateAgent uses — including for an UNDECLARED replayed
+  // call (toggle now off, conversation persisted from when it was on): the
+  // handler re-checks the toggle itself, so this must reach it rather than
+  // fall into "Unknown tool".
+  describe('executeTool — webSearch', () => {
+    it('delegates to handleWebSearch and returns its result verbatim', async () => {
+      mockHandleWebSearch.mockResolvedValue({
+        searched: true,
+        query: 'eu ai act enforcement',
+        results: [{ title: 'T', url: 'https://e.com', snippet: 'S' }],
+      });
+      const result = await makeAgent().executeTool('webSearch', { query: 'eu ai act enforcement' });
+      expect(mockHandleWebSearch).toHaveBeenCalledWith({ query: 'eu ai act enforcement' });
+      expect(result.result).toEqual({
+        searched: true,
+        query: 'eu ai act enforcement',
+        results: [{ title: 'T', url: 'https://e.com', snippet: 'S' }],
+      });
+    });
+
+    it('still reaches the handler (which itself refuses) for an undeclared replayed call', async () => {
+      // No declaration gating here — that's getToolDefinitions's job. This
+      // proves the EXECUTION path does not itself gate on the toggle; the
+      // handler is the one source of truth for refusing.
+      mockHandleWebSearch.mockResolvedValue({ error: 'switched off', searched: false });
+      const result = await makeAgent().executeTool('webSearch', { query: 'x' });
+      expect(mockHandleWebSearch).toHaveBeenCalled();
+      expect(result.result).toEqual({ error: 'switched off', searched: false });
     });
   });
 });

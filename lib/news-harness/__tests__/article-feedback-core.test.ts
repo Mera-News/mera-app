@@ -148,6 +148,37 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false });
     expect(prompt).toContain("Match the user's language");
   });
+
+  // pivot P6 (F4): the old text taught the model to refuse the moment a
+  // question went past the metadata ("say plainly you don't have the full
+  // article ... recommend reading it") with no mention it could search. That
+  // refusal is the bug the user reported ("it says I don't have visibility
+  // into the article") even WITH the toggle on, because the tool was never
+  // declared on this surface at all (see the webSearch gate tests above) — and
+  // even once declared, an unchanged prompt would still teach refusal first.
+  describe('webSearch prose gate', () => {
+    it('is byte-identical to the pre-existing text when webSearch is omitted (default false)', () => {
+      const withParam = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English', webSearch: false });
+      const withoutParam = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+      expect(withParam).toBe(withoutParam);
+      expect(withoutParam).not.toContain('WEB SEARCH');
+      expect(withoutParam).not.toContain('webSearch');
+    });
+
+    it('still carries the honest metadata-only disclosure when webSearch is on', () => {
+      const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true });
+      expect(prompt).toContain('NEVER the full article text');
+    });
+
+    it('teaches searching instead of refusing when webSearch is on', () => {
+      const off = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: false });
+      const on = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true });
+      expect(off).not.toContain('WEB SEARCH');
+      expect(on).toContain('WEB SEARCH');
+      expect(on).toContain('webSearch');
+      expect(on).toContain('naming the publications');
+    });
+  });
 });
 
 describe('buildFeedbackContext', () => {
@@ -555,6 +586,39 @@ describe('getArticleFeedbackToolDefinitions', () => {
     expect((propose.function.parameters.properties.choose_one as { type: string }).type).toBe('boolean');
     expect(track.function.parameters.properties.options).toBeDefined();
     expect((track.function.parameters.properties.options as { type: string }).type).toBe('array');
+  });
+
+  // pivot P6 (F4): the article surface previously never declared `webSearch`
+  // at all, so the "Web search in chat" toggle was inert here regardless of
+  // its value. These pin BOTH directions of the gate — the toggle must be
+  // observable, not merely claimed.
+  describe('webSearch gate', () => {
+    it('omits webSearch by default (no args — matches every pre-existing call site)', () => {
+      const names = getArticleFeedbackToolDefinitions().map((t) => t.function.name);
+      expect(names).not.toContain('webSearch');
+    });
+
+    it('omits webSearch in CLOUD when the toggle is off', () => {
+      const names = getArticleFeedbackToolDefinitions('CLOUD', false).map((t) => t.function.name);
+      expect(names).not.toContain('webSearch');
+    });
+
+    it('declares webSearch in CLOUD when the toggle is on', () => {
+      const names = getArticleFeedbackToolDefinitions('CLOUD', true).map((t) => t.function.name);
+      expect(names).toContain('webSearch');
+      const tool = getArticleFeedbackToolDefinitions('CLOUD', true).find((t) => t.function.name === 'webSearch')!;
+      expect(tool.function.parameters.properties.query).toBeDefined();
+    });
+
+    it('never declares webSearch in LOCAL, even with the toggle on — the one-shot path cannot read a tool result', () => {
+      const names = getArticleFeedbackToolDefinitions('LOCAL', true).map((t) => t.function.name);
+      expect(names).not.toContain('webSearch');
+    });
+
+    it('leaves the other four tools and their order untouched when webSearch is appended', () => {
+      const names = getArticleFeedbackToolDefinitions('CLOUD', true).map((t) => t.function.name);
+      expect(names).toEqual(['proposeChanges', 'proposeTrack', 'applyProposal', 'cancelProposal', 'webSearch']);
+    });
   });
 });
 

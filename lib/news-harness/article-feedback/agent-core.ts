@@ -265,14 +265,30 @@ function estimateTokens(text: string): number {
 export function buildArticleFeedbackSystemPrompt(params: {
   needsToolFormat: boolean;
   languageName?: string;
+  /**
+   * CLOUD mode AND the user's "Web search in chat" toggle on — the SAME gate
+   * `getArticleFeedbackToolDefinitions` uses for the `webSearch` tool, so the
+   * prose and the declaration can never disagree. Off (default) costs zero
+   * prompt bytes: the base "Article access" text is byte-identical to what it
+   * was before this flag existed.
+   */
+  webSearch?: boolean;
 }): string {
-  const { needsToolFormat, languageName } = params;
+  const { needsToolFormat, languageName, webSearch = false } = params;
 
   const languageRule = languageName
     ? `LANGUAGE: ALWAYS write conversational text in **${languageName}**, with no exceptions — even if the user writes in another language. Fact statements stay English.`
     : 'LANGUAGE: Match the user\'s language (switch if they switch). Fact statements stay English.';
 
   const toolSection = needsToolFormat ? buildArticleFeedbackToolFormat() : '';
+
+  // Appended, never rewritten in place — the base two bullets stay exactly as
+  // they were (the "NEVER the full article text" limitation is still true; the
+  // model just isn't stuck with it as the end of the conversation any more).
+  // Off (default): zero bytes.
+  const webSearchLine = webSearch
+    ? '\n- **WEB SEARCH (the user switched it on).** Before telling the user you don\'t have something, ask: could a web search answer this? If yes — background on the story, other coverage, verification, "is this true", what happened before/after — call `webSearch` and answer from what you find, naming the publications you cite by name. Only the search words leave the device — never the article, the user\'s facts, or their feed. Don\'t use it to guess at the article\'s OWN content (title/description/publication) you were not given; use it for context outside that.'
+    : '';
 
   return `You are Mera, helping the user understand and shape their personalized news feed.
 
@@ -288,7 +304,7 @@ export function buildArticleFeedbackSystemPrompt(params: {
 
 ## Article access (by design)
 - You see ONLY limited metadata: title, publication, and a short description — NEVER the full article text.
-- Help with news questions as best you can from that, but when the user probes for detail beyond it, say plainly you don't have the full article and recommend reading it — the human-written article is the source of truth. AI summaries can distort information (bias, hallucination, lost nuance).
+- Help with news questions as best you can from that, but when the user probes for detail beyond it, say plainly you don't have the full article and recommend reading it — the human-written article is the source of truth. AI summaries can distort information (bias, hallucination, lost nuance).${webSearchLine}
 
 ## Capabilities — what proposeChanges can do
 Persona edits (reference facts by the [id] in <context>):
@@ -518,7 +534,41 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
 // Tool definitions (OpenAI JSON Schema for cloud chat)
 // ---------------------------------------------------------------------------
 
-export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
+/**
+ * `webSearch` — OPTIONAL, off by default, mirroring
+ * `persona-agent-core.ts`'s `WEB_SEARCH_TOOL` exactly (same tool name, same
+ * "only the search words" privacy line, same gate). Declared only when the
+ * user's "Web search in chat" toggle is on — the gate is on the DECLARATION,
+ * not merely the handler, so an off-by-default feature does not sit in the
+ * prompt paying tokens on every turn while the user has it switched off. The
+ * handler (`lib/chat-tools/web-search-handler.ts`) re-checks the toggle
+ * regardless, because a persisted conversation can replay a call made while it
+ * was on — both gates are load-bearing.
+ *
+ * CLOUD only: the LOCAL turn is one-shot (`lib/llm/useLocalLLM.ts` never pushes
+ * a `role:'tool'` message back), so a search whose result the model can never
+ * read is strictly worse than no tool at all.
+ */
+const WEB_SEARCH_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'webSearch',
+    description:
+      'Search the public web when the user asks something the article metadata (title/publication/description) cannot answer and you would otherwise be guessing. The user has explicitly enabled this. Only the search words are sent — never the article, the user\'s facts, or their feed.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search terms, 2-200 characters.' },
+      },
+      required: ['query'],
+    },
+  },
+};
+
+export function getArticleFeedbackToolDefinitions(
+  mode: 'CLOUD' | 'LOCAL' = 'CLOUD',
+  webSearchEnabled: boolean = false,
+): ToolDefinition[] {
   return [
     {
       type: 'function',
@@ -637,6 +687,7 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
         parameters: { type: 'object', properties: {} },
       },
     },
+    ...(mode === 'CLOUD' && webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
   ];
 }
 

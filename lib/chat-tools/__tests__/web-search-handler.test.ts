@@ -108,8 +108,10 @@ describe('handleWebSearch', () => {
     expect(results[0].snippet.endsWith('…')).toBe(true);
   });
 
-  // An empty result set is what the server returns when its own feature flag
-  // is off — a success the model must report, not a failure it should retry.
+  // `ok:true, results:[]` means we searched and the index had nothing — a real
+  // answer about the world, distinct from `ok:false` ("we did not search",
+  // which the gateway now signals with its own 503 + code rather than an empty
+  // array). See web-search-client.ts's WebSearchOutcome contract.
   it('reports an empty result set as a search that succeeded', async () => {
     mockSearchWeb.mockResolvedValue({ ok: true, results: [] });
 
