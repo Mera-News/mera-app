@@ -33,15 +33,21 @@
  * unresolved — i.e. the user asked before and the answer may have landed since.
  * An article nobody on this device ever asked about costs nothing until it is
  * tapped.
+ *
+ * That read now lives in `fact-check-sync`, shared with the Dashboard block and
+ * the fact-checks list, because those two surfaces originally had NO read at
+ * all and would render a stale `pending` row forever. It is also AWAITED to the
+ * database before this hook reports a result — the earlier fire-and-forget
+ * write meant another surface could re-read the table and redraw the very
+ * staleness that had just been fixed. `refresh()` is the same call behind a
+ * user-visible control, so a reader whose push never arrived is never stuck.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-    getFactCheckForArticle,
-    upsertFactCheck,
-} from '../database/services/fact-check-record-service';
+import { upsertFactCheck } from '../database/services/fact-check-record-service';
 import logger from '../logger';
 import { FactCheckService, type FactCheckRow } from './fact-check-service';
+import { reconcileFactCheck } from './fact-check-sync';
 import {
     isTerminalStatus,
     PROGRESS_DELAY_MS,
@@ -72,8 +78,15 @@ export interface UseFactCheckResult {
     result: FactCheckRow | null;
     /** True only once the wait has been long enough to deserve a spinner. */
     showProgress: boolean;
+    /** A bounded re-read is in flight (mount or manual). */
+    refreshing: boolean;
+    /** The last re-read was attempted and failed — offer the manual retry. */
+    refreshFailed: boolean;
     /** Start (or re-start) a check. No-op while one is already running. */
     start: () => void;
+    /** Re-read the stored row against the server ONCE. The user's manual path
+     *  to a result when no push ever arrived. Never starts a loop. */
+    refresh: () => void;
     /** Collapse the panel back to 'idle'. The stored row is untouched. */
     dismiss: () => void;
 }
@@ -86,6 +99,8 @@ export function useFactCheck(
     const [phase, setPhase] = useState<FactCheckPhase>('idle');
     const [result, setResult] = useState<FactCheckRow | null>(null);
     const [elapsedMs, setElapsedMs] = useState(0);
+    const [refreshing, setRefreshing] = useState(false);
+    const [refreshFailed, setRefreshFailed] = useState(false);
 
     // Monotonic run id: every settle/cancel path compares against it, so a
     // late-arriving response from an abandoned run (unmount, article change,
@@ -116,6 +131,8 @@ export function useFactCheck(
         setPhase('idle');
         setResult(null);
         setElapsedMs(0);
+        setRefreshing(false);
+        setRefreshFailed(false);
     }, [articleId]);
 
     /** Mirror an observation into the on-device table. Fire-and-forget: the
@@ -133,6 +150,41 @@ export function useFactCheck(
         });
     }, [articleId, articleTitle]);
 
+    /**
+     * ONE bounded read of the stored row against the server. Shared by the
+     * mount effect and the queued state's manual "check again" — the same
+     * function, so the manual path can never drift from the automatic one.
+     *
+     * Returns nothing and never throws; it drives phase directly.
+     */
+    const reconcile = useCallback(async (aliveCheck: () => boolean) => {
+        if (!articleId) return;
+        setRefreshing(true);
+        try {
+            const { stored, failed } = await reconcileFactCheck(articleId);
+            if (!aliveCheck()) return;
+
+            // Nobody asked on this device — stay idle and spend nothing. The
+            // collapsed action button is the correct render.
+            if (!stored) return;
+
+            if (isTerminalStatus(stored.status) && stored.payload) {
+                setResult(stored.payload as FactCheckRow);
+                setPhase('ready');
+                setRefreshFailed(false);
+                return;
+            }
+            // Still unresolved. Say so and stop — no timer is armed. `failed`
+            // is remembered so the panel can offer the manual retry rather than
+            // silently pretending the refresh happened, which is precisely how
+            // a swallowed read left users on "Still searching" indefinitely.
+            setPhase('queued');
+            setRefreshFailed(failed);
+        } finally {
+            if (aliveCheck()) setRefreshing(false);
+        }
+    }, [articleId]);
+
     // ── Mount read: ONE look, never a loop ──────────────────────────────────
     useEffect(() => {
         if (!articleId || !enabled) return;
@@ -140,42 +192,17 @@ export function useFactCheck(
         const alive = () => runIdRef.current === run;
         let cancelled = false;
 
-        (async () => {
-            const stored = await getFactCheckForArticle(articleId);
-            if (cancelled || !alive()) return;
-
-            if (stored && isTerminalStatus(stored.status) && stored.payload) {
-                setResult(stored.payload as FactCheckRow);
-                setPhase('ready');
-                return;
-            }
-            if (!stored) return; // Nobody asked on this device — stay idle, spend nothing.
-
-            // A stored-but-unresolved row: the user asked earlier and the answer
-            // may have landed since. Exactly one server read — no retry, no
-            // interval. If it is still not ready, say so and stop.
-            setPhase('queued');
-            try {
-                const row = await FactCheckService.getFactCheck(articleId);
-                if (cancelled || !alive() || !row) return;
-                persist(row);
-                if (isTerminalStatus(row.status)) {
-                    setResult(row);
-                    setPhase('ready');
-                }
-            } catch (err) {
-                // Offline, or the plan does not cover this. Neither is worth an
-                // error report on a passive read the user never asked for — the
-                // stored row is still on screen.
-                logger.debug('[useFactCheck] mount read failed', {
-                    articleId,
-                    error: String(err),
-                });
-            }
-        })();
+        void reconcile(() => !cancelled && alive());
 
         return () => { cancelled = true; };
-    }, [articleId, enabled, persist]);
+    }, [articleId, enabled, reconcile]);
+
+    /** Manual, user-initiated re-read. Bounded exactly like the mount read. */
+    const refresh = useCallback(() => {
+        if (!articleId) return;
+        const run = runIdRef.current;
+        void reconcile(() => runIdRef.current === run);
+    }, [articleId, reconcile]);
 
     const start = useCallback(() => {
         if (!articleId || runningRef.current) return;
@@ -229,13 +256,18 @@ export function useFactCheck(
         setPhase('idle');
         setResult(null);
         setElapsedMs(0);
+        setRefreshing(false);
+        setRefreshFailed(false);
     }, [clearTimers]);
 
     return {
         phase,
         result,
         showProgress: shouldShowProgress(phase, elapsedMs),
+        refreshing,
+        refreshFailed,
         start,
+        refresh,
         dismiss,
     };
 }

@@ -72,6 +72,7 @@ import React from 'react';
 import FactCheckPanel from '../FactCheckPanel';
 
 const start = jest.fn();
+const refresh = jest.fn();
 const dismiss = jest.fn();
 
 function hookState(overrides: Record<string, unknown> = {}) {
@@ -79,8 +80,10 @@ function hookState(overrides: Record<string, unknown> = {}) {
         phase: 'idle',
         result: null,
         showProgress: false,
-        timeoutKey: null,
+        refreshing: false,
+        refreshFailed: false,
         start,
+        refresh,
         dismiss,
         ...overrides,
     });
@@ -277,13 +280,35 @@ describe('FactCheckPanel', () => {
     // request is already lodged and the server retries on its own, so a "try
     // again" button would invite the reader to re-ask for something already in
     // flight — the polling loop's mistake in a single control.
-    it('tells the reader the check will finish without them, and offers no retry', () => {
+    it('tells the reader the check will finish without them, and offers no request retry', () => {
         hookState({ phase: 'queued' });
         const { getByText, getByTestId, queryByTestId } = render(<FactCheckPanel articleId="a1" />);
         expect(getByTestId('fact-check-queued')).toBeTruthy();
         expect(getByText('factCheck.queued')).toBeTruthy();
         expect(getByText('factCheck.queuedHint')).toBeTruthy();
+        // No `retry` — the REQUEST is already lodged; re-asking is not the fix.
         expect(queryByTestId('fact-check-retry')).toBeNull();
+    });
+
+    // With the poll gone, a result can only arrive via a read or a push. A
+    // reader whose push never comes (notifications denied, no token, dropped
+    // send) must have a manual path — that was the prod failure: "Still
+    // searching" on a completed check, with nothing the user could do.
+    it('offers a manual one-shot re-read from the queued state', () => {
+        hookState({ phase: 'queued' });
+        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
+        expect(getByText('factCheck.checkAgain')).toBeTruthy();
+        fireEvent.press(getByTestId('fact-check-refresh'));
+        expect(refresh).toHaveBeenCalledTimes(1);
+        // Never the request mutation — this re-reads, it does not re-ask.
+        expect(start).not.toHaveBeenCalled();
+    });
+
+    it('disables the re-read control while one is already in flight', () => {
+        hookState({ phase: 'queued', refreshing: true });
+        const { getByTestId } = render(<FactCheckPanel articleId="a1" />);
+        fireEvent.press(getByTestId('fact-check-refresh'));
+        expect(refresh).not.toHaveBeenCalled();
     });
 
     it('offers a retry from the error state', () => {

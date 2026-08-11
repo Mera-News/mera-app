@@ -80,10 +80,11 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     // the return happens AFTER this call (hook order must not change), so the
     // hook's mount read would otherwise fire on every article open for a user
     // who has the feature off — and the resolvers sit behind SubscriptionGuard.
-    const { phase, result, showProgress, start, dismiss } = useFactCheck(articleId, {
-        enabled: factCheckEnabled,
-        articleTitle,
-    });
+    const { phase, result, showProgress, refreshing, start, refresh, dismiss } =
+        useFactCheck(articleId, {
+            enabled: factCheckEnabled,
+            articleTitle,
+        });
 
     const openSource = useCallback((uri: string) => {
         // Citations are Google redirect wrappers, not publisher links — no UTM
@@ -189,6 +190,30 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                     <Text size="xs" className="text-gray-400">
                         {t('factCheck.queuedHint')}
                     </Text>
+                    {/* The manual path to a result. Not a retry of the REQUEST
+                        (that is already lodged) — a single re-read of it. It
+                        exists because the push is otherwise the only way an
+                        answer can arrive, and a reader with notifications
+                        denied, no token, or a dropped send would otherwise sit
+                        on "still searching" with nothing they can do. */}
+                    <Pressable
+                        onPress={refresh}
+                        disabled={refreshing}
+                        accessibilityRole="button"
+                        accessibilityState={{ disabled: refreshing }}
+                        testID={`${testIDPrefix}-refresh`}
+                        hitSlop={8}
+                        className="pt-1"
+                    >
+                        <Text
+                            size="sm"
+                            className={refreshing
+                                ? 'text-gray-500 font-semibold'
+                                : 'text-primary-400 font-semibold'}
+                        >
+                            {t('factCheck.checkAgain')}
+                        </Text>
+                    </Pressable>
                 </VStack>
             )}
 

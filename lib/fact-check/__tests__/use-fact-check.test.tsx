@@ -22,11 +22,53 @@ jest.mock('../fact-check-service', () => ({
     },
 }));
 
-const mockUpsertFactCheck = jest.fn((..._a: any[]) => Promise.resolve());
-const mockGetStored = jest.fn((..._a: any[]) => Promise.resolve(null as any));
+// A FAKE TABLE, not a stub returning a fixed row.
+//
+// This is load-bearing. The earlier stub answered `getFactCheckForArticle` with
+// the same frozen value forever, so a test could "pass" while the write never
+// landed and the surface re-read the stale row — which is exactly the prod bug
+// (a server-side COMPLETE check rendering "Still searching" indefinitely). With
+// the write and the read hitting one shared object, a reconcile that fails to
+// persist now fails the test.
+let fakeRows: Record<string, any> = {};
+
+const mockUpsertFactCheck = jest.fn(async (input: any) => {
+    const prev = fakeRows[input.articleId];
+    fakeRows[input.articleId] = {
+        id: prev?.id ?? `row-${input.articleId}`,
+        articleId: input.articleId,
+        factCheckId: input.factCheckId,
+        articleTitle: input.articleTitle ?? null,
+        status: input.status,
+        verdict: input.verdict ?? null,
+        payload: input.payload,
+        requestedAt: prev?.requestedAt ?? 1,
+        resolvedAt: input.resolvedAt ?? null,
+    };
+});
+const mockGetStored = jest.fn(async (articleId: string) => fakeRows[articleId] ?? null);
+const mockListFactChecks = jest.fn(async () => Object.values(fakeRows));
+
+/** Seed the fake table with one row, as a previous session would have left it. */
+function seedStored(articleId: string, status: string, extra: Record<string, unknown> = {}) {
+    fakeRows[articleId] = {
+        id: `row-${articleId}`,
+        articleId,
+        factCheckId: 'fc1',
+        articleTitle: null,
+        status,
+        verdict: null,
+        payload: { _id: 'fc1', status, verdict: null, claims: [], citations: [] },
+        requestedAt: 1,
+        resolvedAt: null,
+        ...extra,
+    };
+}
+
 jest.mock('@/lib/database/services/fact-check-record-service', () => ({
-    upsertFactCheck: (...a: any[]) => mockUpsertFactCheck(...a),
-    getFactCheckForArticle: (...a: any[]) => mockGetStored(...a),
+    upsertFactCheck: (...a: any[]) => mockUpsertFactCheck(...(a as [any])),
+    getFactCheckForArticle: (...a: any[]) => mockGetStored(...(a as [string])),
+    listFactChecks: (...a: any[]) => mockListFactChecks(...(a as [])),
 }));
 
 const mockCaptureException = jest.fn();
@@ -66,7 +108,7 @@ async function flush() {
 describe('useFactCheck', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        mockGetStored.mockResolvedValue(null as any);
+        fakeRows = {};
         jest.useFakeTimers();
     });
 
@@ -205,17 +247,11 @@ describe('useFactCheck', () => {
     });
 
     it('renders a stored terminal result on mount with no network call at all', async () => {
-        mockGetStored.mockResolvedValue({
-            id: 'r1',
-            articleId: 'a1',
-            factCheckId: 'fc1',
-            articleTitle: null,
-            status: 'complete',
+        seedStored('a1', 'complete', {
             verdict: 'supported',
             payload: row('complete', { verdict: 'supported' }),
-            requestedAt: 1,
             resolvedAt: 2,
-        } as any);
+        });
 
         const { result } = renderHook(() => useFactCheck('a1'));
         await flush();
@@ -225,43 +261,43 @@ describe('useFactCheck', () => {
         expect(mockGetFactCheck).not.toHaveBeenCalled();
     });
 
-    it('makes exactly ONE server read for a stored-but-unresolved row, never a loop', async () => {
-        mockGetStored.mockResolvedValue({
-            id: 'r1',
-            articleId: 'a1',
-            factCheckId: 'fc1',
-            articleTitle: null,
-            status: 'pending',
-            verdict: null,
-            payload: row('pending'),
-            requestedAt: 1,
-            resolvedAt: null,
-        } as any);
-        mockGetFactCheck.mockResolvedValue(row('complete', { verdict: 'disputed' }));
+    // ══ THE PROD BUG ════════════════════════════════════════════════════════
+    // A check that COMPLETED server-side, against a device whose stored row is
+    // still `pending` and whose push never arrived. This is the state a real
+    // user was stuck in indefinitely, on all three surfaces.
+    //
+    // "We don't poll" passed the whole time this was broken, so the assertion
+    // that matters is the OUTCOME: after mount, the panel renders the completed
+    // verdict AND the local table has been advanced to terminal — because the
+    // Dashboard block and the list read that table, not this hook's state. The
+    // fake table is what makes the second half checkable at all.
+    it('resolves a stored PENDING row against a server row that has since completed', async () => {
+        seedStored('a1', 'pending');
+        mockGetFactCheck.mockResolvedValue(
+            row('complete', { verdict: 'supported', articleTitle: 'A headline' }),
+        );
 
         const { result } = renderHook(() => useFactCheck('a1'));
         await flush();
 
-        expect(mockGetFactCheck).toHaveBeenCalledTimes(1);
+        // 1. The panel shows the answer instead of "still searching".
         expect(result.current.phase).toBe('ready');
-        expect(result.current.result?.verdict).toBe('disputed');
+        expect(result.current.result?.verdict).toBe('supported');
 
+        // 2. The write LANDED and was awaited — the other two surfaces read
+        //    this table, so a fire-and-forget write that lost the race would
+        //    leave them on the stale pending row exactly as in prod.
+        expect(fakeRows.a1.status).toBe('complete');
+        expect(fakeRows.a1.verdict).toBe('supported');
+
+        // 3. Still exactly one read, and no timer armed behind it.
+        expect(mockGetFactCheck).toHaveBeenCalledTimes(1);
         await tick(300_000);
         expect(mockGetFactCheck).toHaveBeenCalledTimes(1);
     });
 
     it('leaves a still-unresolved row on queued after its single read', async () => {
-        mockGetStored.mockResolvedValue({
-            id: 'r1',
-            articleId: 'a1',
-            factCheckId: 'fc1',
-            articleTitle: null,
-            status: 'running',
-            verdict: null,
-            payload: row('running'),
-            requestedAt: 1,
-            resolvedAt: null,
-        } as any);
+        seedStored('a1', 'running');
         mockGetFactCheck.mockResolvedValue(row('running'));
 
         const { result } = renderHook(() => useFactCheck('a1'));
@@ -281,18 +317,46 @@ describe('useFactCheck', () => {
         expect(mockGetFactCheck).not.toHaveBeenCalled();
     });
 
+    // The manual escape hatch. With no poll, a reader whose push never arrives
+    // has only this — so a failed automatic read must leave the door open
+    // rather than silently look like a completed refresh.
+    it('recovers via refresh() when the automatic read failed', async () => {
+        seedStored('a1', 'pending');
+        mockGetFactCheck.mockRejectedValueOnce(new Error('offline'));
+
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+
+        expect(result.current.phase).toBe('queued');
+        expect(result.current.refreshFailed).toBe(true);
+
+        mockGetFactCheck.mockResolvedValueOnce(row('complete', { verdict: 'mixed' }));
+        act(() => result.current.refresh());
+        await flush();
+
+        expect(result.current.phase).toBe('ready');
+        expect(result.current.result?.verdict).toBe('mixed');
+        expect(fakeRows.a1.status).toBe('complete');
+    });
+
+    it('refresh() is one read, not a loop', async () => {
+        seedStored('a1', 'pending');
+        mockGetFactCheck.mockResolvedValue(row('running'));
+
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+        expect(mockGetFactCheck).toHaveBeenCalledTimes(1);
+
+        act(() => result.current.refresh());
+        await flush();
+        expect(mockGetFactCheck).toHaveBeenCalledTimes(2);
+
+        await tick(300_000);
+        expect(mockGetFactCheck).toHaveBeenCalledTimes(2);
+    });
+
     it('never reports a failed mount read — it is passive and the user never asked', async () => {
-        mockGetStored.mockResolvedValue({
-            id: 'r1',
-            articleId: 'a1',
-            factCheckId: 'fc1',
-            articleTitle: null,
-            status: 'pending',
-            verdict: null,
-            payload: row('pending'),
-            requestedAt: 1,
-            resolvedAt: null,
-        } as any);
+        seedStored('a1', 'pending');
         mockGetFactCheck.mockRejectedValue(new Error('offline'));
 
         const { result } = renderHook(() => useFactCheck('a1'));

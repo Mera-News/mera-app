@@ -289,15 +289,16 @@ const MeraNewsScreen: React.FC = () => {
     }, []);
 
     // ── Fact checks block ──
-    // Re-read on every focus, not just on mount. A fact check completes
-    // asynchronously — the answer typically arrives by push while the app is
-    // backgrounded, and the user's next act is to come back to this tab. A
-    // mount-only load would show them a stale list on precisely the visit the
-    // notification sent them on. The table is one row per story the user
-    // personally asked about, so this is a cheap query.
+    // `refresh`, not `load`. A local read alone is what shipped first, and it
+    // was wrong: the answer completes on the server and the ONLY things that
+    // can bring it down are a read and the push. With no read here, a user
+    // whose push never arrived saw "Still searching" on a check that had
+    // finished ten minutes earlier, forever. `refresh` re-reads only the rows
+    // that are still unresolved, so once everything is terminal this costs
+    // zero requests. Focus, not an interval — there is no poll anywhere here.
     useEffect(() => {
         if (!isFocused || !dbReady) return;
-        void useFactChecksStore.getState().load();
+        void useFactChecksStore.getState().refresh();
     }, [isFocused, dbReady]);
 
     // Authored HERE (not as a `SectionKind` — see DashboardFactChecksBlock) and

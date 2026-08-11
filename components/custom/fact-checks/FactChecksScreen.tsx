@@ -6,12 +6,15 @@ import { hapticLight } from '@/lib/haptics';
 import {
     useFactCheckItems,
     useFactChecksHydrated,
+    useFactChecksRefreshing,
     useFactChecksStore,
 } from '@/lib/stores/fact-checks-store';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
 import React, { useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FlatList } from 'react-native';
+import { FlatList, RefreshControl } from 'react-native';
+
+const REFRESH_TINT = '#EDA77E';
 
 interface FactChecksScreenProps {
     readonly onBack: () => void;
@@ -31,12 +34,16 @@ const FactChecksScreen: React.FC<FactChecksScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
     const items = useFactCheckItems();
     const hydrated = useFactChecksHydrated();
-    const load = useFactChecksStore((s) => s.load);
+    const refreshing = useFactChecksRefreshing();
+    const refresh = useFactChecksStore((s) => s.refresh);
     const remove = useFactChecksStore((s) => s.remove);
 
+    // `refresh`, not `load`: a local-only read renders whatever the table
+    // happens to hold, which is exactly how a server-side COMPLETE check kept
+    // showing "Still searching". One bounded server read per unresolved row.
     useEffect(() => {
-        void load();
-    }, [load]);
+        void refresh();
+    }, [refresh]);
 
     const handleDelete = useCallback((id: string) => {
         void hapticLight();
@@ -65,6 +72,18 @@ const FactChecksScreen: React.FC<FactChecksScreenProps> = ({ onBack }) => {
                 keyExtractor={(item) => item.id}
                 renderItem={renderItem}
                 testID="fact-checks-list"
+                // The manual path. With the poll gone, a result can only arrive
+                // via a read or a push — so a user who suspects the list is
+                // stale must have a way to ask that does not depend on a
+                // notification having been delivered.
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => { void refresh(); }}
+                        tintColor={REFRESH_TINT}
+                        colors={[REFRESH_TINT]}
+                    />
+                }
                 contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
                 ListEmptyComponent={
                     // Only once a read has completed — otherwise the empty state
