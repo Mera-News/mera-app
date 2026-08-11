@@ -25,20 +25,28 @@
 
 import { getJwtToken } from '../auth-client';
 import { INFERENCE_ENDPOINT } from '../config/endpoints';
-import { acquire } from '../llm/gateway-rate-limiter';
+import { acquire, pauseFor } from '../llm/gateway-rate-limiter';
+import { SEARCH_UNAVAILABLE, type SearchUnavailableCode } from '../web-search/web-search-client';
 import logger from '../logger';
 
 const CLAIM_REVIEW_API = `${INFERENCE_ENDPOINT}/v1/fact-check-claims`;
 
-/** Mirrors `web-search-client`'s bounds — the gateway rejects anything else. */
+/** The gateway's own bounds for this route. Note the MAX is 300, not the web
+ *  search's 200: a claim is a sentence someone asserted, not a query we built
+ *  short. */
 export const MIN_CLAIM_QUERY_CHARS = 2;
-export const MAX_CLAIM_QUERY_CHARS = 200;
+export const MAX_CLAIM_QUERY_CHARS = 300;
 
 const REQUEST_TIMEOUT_MS = 12_000;
 
-/** The stable code every "we could not search" condition collapses to. The
- *  runner keys its `blocked` decision on this and nothing else. */
-export const SEARCH_UNAVAILABLE = 'search-unavailable';
+/** How long to hold the shared gateway limiter off after a 429. */
+const THROTTLE_BACKOFF_MS = 30_000;
+
+/** Re-exported so callers can key on ONE code across both search routes. The
+ *  constant itself is `web-search-client`'s, deliberately: a fact-checker that
+ *  reads one route's "we did not look" correctly and the other's loosely is
+ *  worse than one that reads both loosely, because the bug is intermittent. */
+export { SEARCH_UNAVAILABLE };
 
 /** One organisation's published review, already mapped onto our shape. */
 export interface ClaimReviewEntry {
@@ -52,12 +60,28 @@ export interface ClaimReviewEntry {
   summary?: string;
 }
 
+/**
+ * THE THREE OUTCOMES, AND WHY THE MIDDLE ONE IS NOT A FAILURE:
+ *
+ *   `{ ok: true,  entries: [...] }` — a fact-checker has published.
+ *   `{ ok: true,  entries: []    }` — WE LOOKED, and no IFCN signatory has
+ *                                     published on this claim. A fact about the
+ *                                     world, and the normal outcome (~4% of the
+ *                                     corpus is the genre they cover).
+ *   `{ ok: false, ... }`            — NO LOOKUP HAPPENED. The caller must record
+ *                                     `blocked`, never a verdict and never
+ *                                     "nobody checked this".
+ *
+ * Collapsing rows 2 and 3 in either direction is the failure this module exists
+ * to prevent. Shape mirrors `WebSearchOutcome` so the runner reads both the
+ * same way.
+ */
 export type ClaimReviewOutcome =
   | { ok: true; entries: ClaimReviewEntry[] }
-  | { ok: false; error: string; status?: number };
+  | { ok: false; error: string; status?: number; code?: SearchUnavailableCode };
 
 function unavailable(status?: number): ClaimReviewOutcome {
-  return { ok: false, error: SEARCH_UNAVAILABLE, status };
+  return { ok: false, error: SEARCH_UNAVAILABLE, status, code: SEARCH_UNAVAILABLE };
 }
 
 /** Reads one entry out of whatever shape the gateway hands back.
@@ -179,6 +203,9 @@ export async function searchClaimReviews(
       // 404 (route not deployed), 429 (throttled), 503 (flag off / no key) —
       // every one of them is "we could not look", never "nobody published".
       logger.warn('[claim-review] Non-OK response', { status: response.status });
+      // The gateway's per-IP throttle rejects before reaching any index, so a
+      // burst of claim lookups must not keep hammering it.
+      if (response.status === 429) pauseFor(THROTTLE_BACKOFF_MS);
       return unavailable(response.status);
     }
 

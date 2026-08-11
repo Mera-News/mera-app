@@ -137,6 +137,32 @@ describe('searchWeb', () => {
     expect(order).toEqual(['acquire', 'fetch']);
   });
 
+  // The limiter is a SHARED FIFO with no ceiling — during a scoring cycle a
+  // search can queue behind many 3s grants. The deadline therefore covers the
+  // queue wait too, or a chat turn hangs for as long as the pipeline runs.
+  it('gives up without fetching when the limiter queue outlasts the deadline', async () => {
+    jest.useFakeTimers();
+    try {
+      // A grant that never comes. Before the deadline was raced against the
+      // limiter, this hung the call forever and this test timed out — which is
+      // exactly how the bug was found.
+      mockAcquire.mockImplementation(() => new Promise(() => {}));
+
+      const pending = searchWeb('anything');
+      // Let the token resolve so the deadline timer is actually registered
+      // before the clock jumps.
+      for (let i = 0; i < 10; i += 1) await Promise.resolve();
+      jest.advanceTimersByTime(60_000);
+
+      const outcome = await pending;
+
+      expect(mockFetch).not.toHaveBeenCalled();
+      expect(outcome.ok).toBe(false);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('does not spend a limiter grant on a request it refuses locally', async () => {
     await searchWeb('a');
     mockGetJwtToken.mockResolvedValue(null);

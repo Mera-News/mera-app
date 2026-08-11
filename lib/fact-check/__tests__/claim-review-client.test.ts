@@ -9,14 +9,17 @@
 
 jest.mock('@/lib/auth-client', () => ({ getJwtToken: jest.fn(async () => 'jwt') }));
 jest.mock('@/lib/config/endpoints', () => ({ INFERENCE_ENDPOINT: 'https://gw.test' }));
-jest.mock('@/lib/llm/gateway-rate-limiter', () => ({ acquire: jest.fn(async () => undefined) }));
+jest.mock('@/lib/llm/gateway-rate-limiter', () => ({
+  acquire: jest.fn(async () => undefined),
+  pauseFor: jest.fn(),
+}));
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: { warn: jest.fn(), error: jest.fn(), debug: jest.fn(), info: jest.fn(), captureException: jest.fn() },
 }));
 
 import { getJwtToken } from '@/lib/auth-client';
-import { acquire } from '@/lib/llm/gateway-rate-limiter';
+import { acquire, pauseFor } from '@/lib/llm/gateway-rate-limiter';
 import { searchClaimReviews, SEARCH_UNAVAILABLE } from '../claim-review-client';
 
 const CLAIM = 'Children receive 80 different vaccines';
@@ -116,8 +119,15 @@ describe('transport', () => {
   it('refuses a query outside the gateway bounds without a round trip', async () => {
     (global as any).fetch = jest.fn();
     expect(await searchClaimReviews({ query: 'a' })).toMatchObject({ ok: false, status: 400 });
-    expect(await searchClaimReviews({ query: 'x'.repeat(201) })).toMatchObject({ ok: false, status: 400 });
+    // 300, not the web search's 200 — a claim is an asserted sentence.
+    expect(await searchClaimReviews({ query: 'x'.repeat(301) })).toMatchObject({ ok: false, status: 400 });
     expect((global as any).fetch).not.toHaveBeenCalled();
+  });
+
+  it('backs the shared limiter off after a 429 — the throttle is per-IP across routes', async () => {
+    respond({}, false, 429);
+    await searchClaimReviews({ query: CLAIM });
+    expect(pauseFor).toHaveBeenCalled();
   });
 
   it('goes through the shared gateway rate limiter', async () => {

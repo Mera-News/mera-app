@@ -48,6 +48,8 @@ jest.mock('@/lib/web-search/web-search-client', () => ({
 jest.mock('../claim-review-client', () => ({
   __esModule: true,
   searchClaimReviews: jest.fn(),
+  MIN_CLAIM_QUERY_CHARS: 2,
+  MAX_CLAIM_QUERY_CHARS: 300,
   SEARCH_UNAVAILABLE: 'search-unavailable',
 }));
 
@@ -93,7 +95,7 @@ function harness(options: {
     yield { type: 'finish' as const, reason: 'stop' as const };
   });
   const deps = {
-    searchClaimReviews: jest.fn(async () =>
+    searchClaimReviews: jest.fn(async (_req: any) =>
       options.claimReviewOutcome ?? { ok: true, entries: options.claimReview ?? [] }),
     searchWeb: jest.fn(async () =>
       options.search ?? { ok: true, results: [] }),
@@ -115,7 +117,7 @@ const RESULTS = [
 
 describe('the honesty contract: unavailable search can never produce a verdict', () => {
   it('blocks and writes no verdict when the ClaimReview lookup is unavailable', async () => {
-    const h = harness({ claimReviewOutcome: { ok: false, error: 'search-unavailable', status: 503 } });
+    const h = harness({ claimReviewOutcome: { ok: false, error: 'off', code: 'search-unavailable', status: 503 } });
     const result = await runFactCheck(JOB, h.deps);
 
     expect(result.status).toBe('blocked');
@@ -132,7 +134,7 @@ describe('the honesty contract: unavailable search can never produce a verdict',
   it('blocks and writes no verdict when EVERY web-search round is unavailable', async () => {
     const h = harness({
       claimReview: [],
-      search: { ok: false, error: 'search-unavailable', status: 503 },
+      search: { ok: false, error: 'off', code: 'search-unavailable', status: 503 },
     });
     const result = await runFactCheck(JOB, h.deps);
 
@@ -143,7 +145,7 @@ describe('the honesty contract: unavailable search can never produce a verdict',
   });
 
   it('treats a 429 as unavailable, not as "nobody checked this"', async () => {
-    const h = harness({ claimReviewOutcome: { ok: false, error: 'search-unavailable', status: 429 } });
+    const h = harness({ claimReviewOutcome: { ok: false, error: 'rate-limited', code: 'search-unavailable', status: 429 } });
     const result = await runFactCheck(JOB, h.deps);
 
     expect(result.status).toBe('blocked');
@@ -154,7 +156,7 @@ describe('the honesty contract: unavailable search can never produce a verdict',
   });
 
   it('a blocked row is terminal and says WHY, without implying anything about the claim', async () => {
-    const h = harness({ claimReviewOutcome: { ok: false, error: 'search-unavailable' } });
+    const h = harness({ claimReviewOutcome: { ok: false, error: 'unreachable', code: 'search-unavailable' } });
     await runFactCheck(JOB, h.deps);
     const payload = h.terminal().payload;
     expect(payload.status).toBe('blocked');
@@ -207,7 +209,12 @@ describe('Tier 1: checkedBy comes from ClaimReview, verbatim', () => {
   it('carries the organisation and its own rating through untouched', async () => {
     const h = harness({
       claimReview: [
-        { organisation: 'PolitiFact', url: 'https://politifact.com/x', verdict: 'Pants on Fire!', summary: 'No, small children do not receive 80 vaccines' },
+        {
+          organisation: 'PolitiFact',
+          url: 'https://politifact.com/x',
+          verdict: 'Pants on Fire!',
+          summary: 'No, small children do not receive 80 vaccines',
+        },
       ],
       search: { ok: true, results: RESULTS },
       answer: JSON.stringify({ verdict: 'unsupported', summary: 'ok', claims: [], citations: [1] }),

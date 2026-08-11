@@ -88,20 +88,51 @@ function messageForStatus(status: number): string {
   }
 }
 
-/** Reads the gateway's `{ code }` off a non-OK body without ever throwing. A
- *  Cloud Run 503 (as opposed to ours) carries no JSON at all, and it means the
- *  same thing anyway, so the status alone is enough to conclude the code. */
-export async function readUnavailableCode(
-  response: { status: number; json: () => Promise<unknown> },
-): Promise<SearchUnavailableCode | undefined> {
-  if (response.status !== 503 && response.status !== 429) return undefined;
-  try {
-    const body = (await response.json()) as { code?: unknown };
-    if (body?.code === SEARCH_UNAVAILABLE) return SEARCH_UNAVAILABLE;
-  } catch {
-    // A body-less or non-JSON 503 is still an unavailability — fall through.
-  }
-  return SEARCH_UNAVAILABLE;
+/**
+ * STATUS ONLY, and that is the whole decision — do not "improve" this by
+ * reading the gateway's `{ code }` out of the body.
+ *
+ * A draft of this function did exactly that, then fell through to the same
+ * answer whether or not the body matched. It was a check no input could make
+ * fail: it read as validation while deciding nothing, which is precisely the
+ * instrument-that-cannot-fail shape this whole change exists to remove. The
+ * body genuinely cannot discriminate here — a 503 from Cloud Run itself, or
+ * from a proxy in front of it, carries no JSON at all and means the same thing
+ * our own 503 means: we did not search.
+ *
+ * 429 joins it because the gateway's per-IP throttle rejects the request before
+ * it reaches any index.
+ */
+export function unavailableCodeForStatus(status: number): SearchUnavailableCode | undefined {
+  return status === 503 || status === 429 ? SEARCH_UNAVAILABLE : undefined;
+}
+
+/**
+ * Awaits `work`, but gives up the moment `signal` aborts.
+ *
+ * `fetch` honours an AbortSignal for free; a promise from the rate limiter does
+ * not. Without this, the deadline below would cover only the network call and a
+ * caller stuck in the limiter's FIFO would wait forever — which is worse than
+ * failing, because nothing above it ever learns the search is not coming.
+ *
+ * If `work` wins, the rejection branch is simply never armed: the `finally`
+ * clears the timer, so `abort` never fires and the loser promise stays pending
+ * and unreferenced.
+ */
+export function raceDeadline<T>(work: Promise<T>, signal: AbortSignal): Promise<T> {
+  return Promise.race([
+    work,
+    new Promise<never>((_resolve, reject) => {
+      const fail = () =>
+        reject(
+          Object.assign(new Error('Search gave up waiting for a rate-limit grant'), {
+            name: 'AbortError',
+          }),
+        );
+      if (signal.aborted) fail();
+      else signal.addEventListener('abort', fail, { once: true });
+    }),
+  ]);
 }
 
 /**
@@ -137,16 +168,27 @@ export async function searchWeb(query: string): Promise<WebSearchOutcome> {
     return { ok: false, error: messageForStatus(401), status: 401 };
   }
 
-  // Through the SHARED gateway limiter, like every other inference-gateway
-  // call. This used to `fetch` directly: fine for one search, but the
-  // fact-check runner issues several in a burst and the gateway throttles at
-  // 30 req/60s PER IP — which, behind a carrier NAT, is shared with strangers.
-  // Tripping it would surface as a 429, and a 429 here means "we never looked".
-  await gatewayRateLimiter.acquire();
-
+  // THE DEADLINE STARTS BEFORE THE QUEUE WAIT, NOT AFTER IT. The limiter is a
+  // shared FIFO also fed by submitInferenceJob and the scoring pipeline, and it
+  // grants one caller every 3s with no ceiling on the queue — so timing only the
+  // fetch would make the total unbounded, and a chat turn waiting on a search
+  // would hang for as long as a scoring cycle takes. 12s is the budget for
+  // "answer this search", queue time included.
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
   try {
+    // Through the SHARED gateway limiter, like every other inference-gateway
+    // call. This used to `fetch` directly: fine for one search, but the
+    // fact-check runner issues several in a burst and the gateway throttles at
+    // 30 req/60s PER IP — which, behind a carrier NAT, is shared with strangers.
+    // Tripping it would surface as a 429, and a 429 here means "we never looked".
+    //
+    // RACED against the deadline, not merely awaited. `acquire()` resolves only
+    // when its FIFO turn comes up, so a plain await here would ignore the
+    // AbortController entirely and hang for however long the queue is — the
+    // exact failure this deadline exists to prevent, moved one line earlier.
+    await raceDeadline(gatewayRateLimiter.acquire(), controller.signal);
+
     const response = await fetch(WEB_SEARCH_API, {
       method: 'POST',
       headers: {
@@ -162,7 +204,7 @@ export async function searchWeb(query: string): Promise<WebSearchOutcome> {
       // Tell the shared limiter to back off so the next caller does not walk
       // straight into the same throttle.
       if (response.status === 429) gatewayRateLimiter.pauseFor(THROTTLE_BACKOFF_MS);
-      const code = await readUnavailableCode(response);
+      const code = unavailableCodeForStatus(response.status);
       return {
         ok: false,
         error: messageForStatus(response.status),

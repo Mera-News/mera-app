@@ -20,7 +20,9 @@
  * already chosen exactly one assertion by the time we are called.
  *
  * ── TIER 1: `checkedBy[]`, and no model touches it ─────────────────────────
- * A ClaimReview lookup (`claim-review-client.ts`). `publisher.name`,
+ * A ClaimReview lookup (`claim-review-client.ts`, which re-exports
+ * `web-search-client`'s `SEARCH_UNAVAILABLE` so the two search routes state the
+ * "did we actually look?" rule with one shared constant). `publisher.name`,
  * `url`, `textualRating` and `title` map field-for-field onto the
  * `FactCheckOrganisation` shape the UI already renders. An organisation
  * therefore CANNOT be hallucinated and its rating stays verbatim — the
@@ -56,7 +58,11 @@
 import { BIG_MODEL } from '../llm/constants';
 import { cloudChatStream, type SseEvent, type WireMessage } from '../llm/cloudComplete';
 import { searchWeb, MAX_QUERY_CHARS, type WebSearchResult } from '../web-search/web-search-client';
-import { searchClaimReviews, type ClaimReviewEntry } from './claim-review-client';
+import {
+  searchClaimReviews,
+  MAX_CLAIM_QUERY_CHARS,
+  type ClaimReviewEntry,
+} from './claim-review-client';
 import { upsertFactCheck } from '../database/services/fact-check-record-service';
 import logger from '../logger';
 
@@ -221,10 +227,10 @@ function contentWords(text: string, limit: number): string[] {
   return (kept.length > 0 ? kept : words).slice(0, limit);
 }
 
-function fit(query: string): string {
+function fit(query: string, max: number = MAX_QUERY_CHARS): string {
   const trimmed = query.trim().replace(/\s+/g, ' ');
-  if (trimmed.length <= MAX_QUERY_CHARS) return trimmed;
-  const cut = trimmed.slice(0, MAX_QUERY_CHARS);
+  if (trimmed.length <= max) return trimmed;
+  const cut = trimmed.slice(0, max);
   const lastSpace = cut.lastIndexOf(' ');
   return (lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trim();
 }
@@ -254,12 +260,14 @@ export function buildSearchQueries(claim: string, articleTitle?: string | null):
 }
 
 /** The ClaimReview query: this API matches on claim TEXT, so unlike the web
- *  search it wants the sentence — merely trimmed to the length cap. The retry
- *  is the shortened form, for a claim too specific to match anything. */
+ *  search it wants the sentence — merely trimmed to its own, longer cap
+ *  (`MAX_CLAIM_CHARS` is 300, not the web search's 200, precisely because a
+ *  claim is an asserted sentence rather than a query built short). The retry is
+ *  the shortened form, for a claim too specific to match anything. */
 export function buildClaimReviewQueries(claim: string): string[] {
   const out: string[] = [];
   const push = (q: string) => {
-    const fitted = fit(q);
+    const fitted = fit(q, MAX_CLAIM_QUERY_CHARS);
     if (fitted.length >= 2 && !out.includes(fitted)) out.push(fitted);
   };
   push(claim);
@@ -573,19 +581,23 @@ export async function runFactCheck(
   let checkedBy: ClaimReviewEntry[] = [];
   {
     const queries = buildClaimReviewQueries(job.claim);
-    // (query, languageCode) pairs: shortened retry first, then the language
+    // (claim, languageCode) pairs: shortened retry first, then the language
     // dropped — the ClaimReview corpus skews hard to a handful of languages, so
     // a language-scoped miss is often an artefact rather than an answer.
-    const attemptsList: { query: string; languageCode?: string }[] = [
-      ...queries.map((query) => ({ query, languageCode: job.languageCode })),
-      ...(job.languageCode ? [{ query: queries[0], languageCode: undefined }] : []),
+    const lookups: { claim: string; languageCode?: string }[] = [
+      ...queries.map((claim) => ({ claim, languageCode: job.languageCode })),
+      ...(job.languageCode ? [{ claim: queries[0], languageCode: undefined }] : []),
     ];
-    for (const attempt of attemptsList) {
-      const outcome = await deps.searchClaimReviews(attempt);
+    for (const lookup of lookups) {
+      const outcome = await deps.searchClaimReviews({
+        query: lookup.claim,
+        languageCode: lookup.languageCode,
+      });
       // Unavailable is NOT empty. Bailing here — before any model call — is
       // what makes "we could not look" impossible to confuse with "nobody
-      // published".
-      if (!outcome.ok) return blocked(`claim-review:${outcome.error}`);
+      // published". `ok: false` from this client means, without exception, that
+      // NO LOOKUP HAPPENED.
+      if (!outcome.ok) return blocked(`claim-review:${outcome.code ?? outcome.status ?? 'failed'}`);
       if (outcome.entries.length > 0) {
         checkedBy = outcome.entries;
         break;
@@ -616,6 +628,11 @@ export async function runFactCheck(
   // provider, so we know nothing at all and must not pretend otherwise.
   if (okRounds === 0) return blocked(`web-search:${lastSearchError ?? 'search-unavailable'}`);
 
+  // The ClaimReview -> checkedBy mapping already happened in the transport
+  // (publisher.name -> organisation, textualRating -> verdict, title ->
+  // summary, unattributed rows dropped), and NO MODEL is anywhere near it. This
+  // is a straight copy: an organisation's rating rewritten by us, or by an LLM,
+  // is an attribution we are not entitled to make.
   const organisations: FactCheckOrganisationPayload[] = checkedBy.map((c) => ({
     organisation: c.organisation,
     url: c.url,
