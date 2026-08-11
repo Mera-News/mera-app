@@ -3,20 +3,16 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import type { FactCheckedByEntry } from '@/lib/fact-check/fact-check-service';
+import FactCheckSources from '@/components/custom/fact-checks/FactCheckSources';
+import type { CheckedByStatus, FactCheckedByEntry, FactCheckCitation } from '@/lib/fact-check/fact-check-types';
 import {
-    describeCheckedBy,
-    describeOrganisationVerdict,
     describeVerdict,
     isTerminalStatus,
     type FactCheckTone,
 } from '@/lib/fact-check/fact-check-state';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
-import logger from '@/lib/logger';
-import { isSecureUrl } from '@/lib/secure-url';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
@@ -62,20 +58,8 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const openSource = useCallback((uri: string) => {
-        if (!isSecureUrl(uri)) return;
-        openInAppBrowser(uri).catch((err) => {
-            logger.captureException(err, {
-                tags: { component: 'FactCheckCard', method: 'openSource' },
-            });
-        });
-    }, []);
-
     const resolved = isTerminalStatus(item.status);
     const blocked = item.status === 'blocked';
-    const checkedBy: FactCheckedByEntry[] = describeCheckedBy(
-        (item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy,
-    );
     const verdictInfo = resolved && !blocked ? describeVerdict(item.verdict) : null;
 
     return (
@@ -112,6 +96,16 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                     </Text>
             </HStack>
 
+            {/* The claim this ROW is about. An article can carry several rows
+                post-v52 (one per claim the user picked) — without this line
+                two rows for the same headline are indistinguishable except by
+                their verdict. Absent on a legacy (pre-v52) whole-article row. */}
+            {item.claim ? (
+                <Text size="xs" className="text-gray-400 italic" numberOfLines={2}>
+                    {item.claim}
+                </Text>
+            ) : null}
+
             {!resolved && (
                 <Text size="xs" className="text-gray-400" testID={`${testIDPrefix}-pending`}>
                     {t('factCheck.dashboard.pending')}
@@ -134,68 +128,12 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
             )}
 
             {resolved && !blocked && (
-                <VStack space="xs">
-                    <Text size="xs" className="text-gray-400 font-semibold uppercase">
-                        {t('factCheck.checkedByHeading')}
-                    </Text>
-                    {checkedBy.length === 0 ? (
-                        <Text size="xs" className="text-gray-400">
-                            {t('factCheck.noCheckedBy')}
-                        </Text>
-                    ) : (
-                        checkedBy.map((entry, index) => {
-                            const org = entry.organisation.trim();
-                            // Verbatim when unrecognised — see
-                            // describeOrganisationVerdict. Real ratings are
-                            // "Mostly False" / "Misleading", not our vocabulary.
-                            const info = describeOrganisationVerdict(entry.verdict);
-                            const tappable = isSecureUrl(entry.url ?? '');
-                            const body = (
-                                <VStack space="xs">
-                                    <Text
-                                        size="sm"
-                                        className={tappable
-                                            ? 'text-primary-400 underline font-semibold'
-                                            : 'text-gray-200 font-semibold'}
-                                    >
-                                        {org}
-                                    </Text>
-                                    <Text
-                                        size="xs"
-                                        className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
-                                    >
-                                        {info.isKey ? t(info.label as any) : info.label}
-                                    </Text>
-                                    {entry.summary ? (
-                                        <Text size="xs" className="text-gray-400" numberOfLines={3}>
-                                            {entry.summary}
-                                        </Text>
-                                    ) : null}
-                                </VStack>
-                            );
-                            return tappable ? (
-                                <Pressable
-                                    key={`org-${index}`}
-                                    onPress={() => openSource(entry.url as string)}
-                                    accessibilityRole="link"
-                                    accessibilityLabel={t('factCheck.organisationA11y', { organisation: org })}
-                                    testID={`${testIDPrefix}-org-${index}`}
-                                    className="border-l-2 border-gray-700 pl-2 py-1"
-                                >
-                                    {body}
-                                </Pressable>
-                            ) : (
-                                <Box
-                                    key={`org-${index}`}
-                                    testID={`${testIDPrefix}-org-${index}`}
-                                    className="border-l-2 border-gray-700 pl-2 py-1"
-                                >
-                                    {body}
-                                </Box>
-                            );
-                        })
-                    )}
-                </VStack>
+                <FactCheckSources
+                    checkedBy={(item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy}
+                    checkedByStatus={(item.payload as { checkedByStatus?: CheckedByStatus } | null)?.checkedByStatus}
+                    citations={(item.payload as { citations?: FactCheckCitation[] } | null)?.citations}
+                    testIDPrefix={testIDPrefix}
+                />
             )}
 
                     <Text size="xs" className="text-gray-500">

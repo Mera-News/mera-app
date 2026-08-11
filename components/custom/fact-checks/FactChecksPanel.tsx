@@ -89,8 +89,9 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
     // Opening a card goes through the SHARED article-open handler, not a bare
     // `router.push`: it resolves the article to a local suggestion when one
     // exists and routes to suggestion-detail (which shows Mera's reason) rather
-    // than the bare article view. Both destinations mount `FactCheckPanel`, so
-    // the fact check is expanded on arrival either way.
+    // than the bare article view. Both destinations mount `FactCheckPanel`,
+    // which is a pure observer of the stored rows — so the check renders there
+    // regardless of which of the two screens the tap landed on.
     const openArticle = useOpenArticle();
     const handleOpen = useCallback((item: StoredFactCheck) => {
         if (!item.articleId) return;

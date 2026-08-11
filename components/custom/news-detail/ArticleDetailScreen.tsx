@@ -4,6 +4,8 @@ import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestio
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
+import { startFactCheckChat } from '@/lib/fact-check/start-fact-check-chat';
+import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
@@ -39,6 +41,7 @@ import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -100,9 +103,17 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // The tick's icon state — a pure observer of the stored rows, same hook
+    // `FactCheckPanel` uses below. Two independent subscriptions to the same
+    // WatermelonDB query, not a shared instance: unlike the old request-driving
+    // hook there is no imperative action state to keep in sync, only a live
+    // read, so there is nothing wrong with two components each watching it.
+    const factCheckPhase = useFactCheck(article?._id ?? articleId).phase;
+    const aiAccess = useAiAccess();
     // Only read once the article is KNOWN to be unavailable — a normal open
-    // costs no extra query (FactCheckPanel does its own read on the happy path).
-    const orphanFactCheck = useStoredFactCheck(
+    // costs no extra query (FactCheckPanel runs its own observer on the happy
+    // path).
+    const orphanFactChecks = useStoredFactCheck(
         articleId,
         !isLoading && (!!error || !article),
     );
@@ -499,10 +510,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 <ScrollView
                     contentContainerStyle={{
                         flexGrow: 1,
-                        justifyContent: orphanFactCheck ? 'flex-start' : 'center',
+                        justifyContent: orphanFactChecks.length > 0 ? 'flex-start' : 'center',
                         alignItems: 'center',
                         padding: 20,
-                        paddingTop: orphanFactCheck ? insets.top + 24 : 20,
+                        paddingTop: orphanFactChecks.length > 0 ? insets.top + 24 : 20,
                         paddingBottom: insets.bottom + 40,
                     }}
                 >
@@ -522,18 +533,24 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         fact check older than ~2 days lands here — that is the
                         normal state of an older row, not an edge case. The
                         reader tapped a fact check; losing it to a bare "Article
-                        not found" would throw away the one thing the device
-                        still holds in full. No `onPress`: there is nowhere
-                        further to go. */}
-                    {orphanFactCheck && (
+                        not found" would throw away everything the device still
+                        holds for it — post-v52 that can be SEVERAL rows, one
+                        per claim the reader asked about. No `onPress`: there is
+                        nowhere further to go. */}
+                    {orphanFactChecks.length > 0 && (
                         <Box className="w-full mt-6" testID="article-detail-orphan-fact-check">
                             <Text size="sm" className="text-typography-400 text-center mb-3">
                                 {t('factCheck.dashboard.articleGone')}
                             </Text>
-                            <FactCheckCard
-                                item={orphanFactCheck}
-                                testIDPrefix="article-detail-fact-check"
-                            />
+                            <VStack space="sm">
+                                {orphanFactChecks.map((item) => (
+                                    <FactCheckCard
+                                        key={item.id}
+                                        item={item}
+                                        testIDPrefix="article-detail-fact-check"
+                                    />
+                                ))}
+                            </VStack>
                         </Box>
                     )}
 
@@ -627,6 +644,25 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         {articleUrl ? (
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
+                                    // Hidden entirely on a locked free-tier plan
+                                    // — `startFactCheckChat` no-ops there too
+                                    // (the store's own chokepoint), but a tick
+                                    // that visibly does nothing is worse than no
+                                    // tick at all.
+                                    factCheck={aiAccess !== 'locked' ? {
+                                        onStart: () => startFactCheckChat({
+                                            articleId: article._id ?? articleId,
+                                            title: article.title_en_internal_only ?? article.title ?? '',
+                                            description: article.description ?? null,
+                                            url: articleUrl ?? null,
+                                            publicationName: article.publicationSource?.publication_name ?? null,
+                                        }),
+                                        state: factCheckPhase === 'terminal'
+                                            ? 'done'
+                                            : factCheckPhase === 'processing'
+                                                ? 'pending'
+                                                : 'none',
+                                    } : undefined}
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}
                                     // REQUIRED: this screen also serves articles
@@ -679,13 +715,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         ) : null}
 
                         {/* Fact check sits OUTSIDE the URL branch: it is keyed
-                            on the article id and the server holds its own
-                            canonical URL, so it still works for a row whose
-                            local link we refuse to open. */}
-                        <FactCheckPanel
-                            articleId={article._id ?? articleId}
-                            articleTitle={article.title_en_internal_only ?? article.title ?? null}
-                        />
+                            on the article id, not the (possibly refused) local
+                            link, so it still renders for a row whose URL we
+                            won't open. Always mounted — a pure observer of the
+                            stored rows, it renders nothing itself when nobody
+                            has asked about this article. */}
+                        <FactCheckPanel articleId={article._id ?? articleId} />
 
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">

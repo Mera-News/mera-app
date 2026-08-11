@@ -137,4 +137,67 @@ describe('FactCheckCard', () => {
         );
         expect(getByTestId('fc-pending')).toBeTruthy();
     });
+
+    // F2's honest "searched and found nothing to synthesise from" outcome —
+    // same property FactCheckPanel pins: this must render a real, hedged
+    // verdict, never a blank card, on the Dashboard/list surface too.
+    it('renders a real answer for complete/unverifiable with every array empty', () => {
+        const { getByTestId, getByText } = render(
+            <FactCheckCard
+                item={stored({
+                    verdict: 'unverifiable',
+                    payload: {
+                        _id: 'fc1', status: 'complete', verdict: 'unverifiable',
+                        summary: null, claims: [], citations: [], checkedBy: [],
+                        checkedByStatus: 'searched',
+                    },
+                })}
+                onPress={jest.fn()}
+                testIDPrefix="fc"
+            />,
+        );
+        expect(getByTestId('fc-verdict-row1')).toBeTruthy();
+        expect(getByText('factCheck.verdict.unverifiable.label')).toBeTruthy();
+        expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
+    });
+
+    // The checkedBy tri-state, same as FactCheckPanel — this card is a
+    // SEPARATE render path (the Dashboard block and the fact-checks list) and
+    // must not independently regress into claiming "nobody published" for a
+    // lookup that never ran.
+    it('never claims nobody published when the ClaimReview lookup was unavailable', () => {
+        const { getByText, queryByText, getByTestId } = render(
+            <FactCheckCard
+                item={stored({
+                    payload: {
+                        _id: 'fc1', status: 'complete', verdict: 'unverifiable',
+                        checkedBy: [], checkedByStatus: 'unavailable',
+                        citations: [{ title: 'A source', uri: 'https://example.com/x' }],
+                    },
+                })}
+                onPress={jest.fn()}
+                testIDPrefix="fc"
+            />,
+        );
+        expect(getByTestId('fc-checked-by-unavailable')).toBeTruthy();
+        expect(getByText('factCheck.checkedByUnavailable')).toBeTruthy();
+        expect(queryByText('factCheck.noCheckedBy')).toBeNull();
+    });
+
+    it('says nobody published when the lookup actually ran and found nothing', () => {
+        const { getByText, queryByText } = render(
+            <FactCheckCard
+                item={stored({
+                    payload: {
+                        _id: 'fc1', status: 'complete', verdict: 'supported',
+                        checkedBy: [], checkedByStatus: 'searched',
+                    },
+                })}
+                onPress={jest.fn()}
+                testIDPrefix="fc"
+            />,
+        );
+        expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
+        expect(queryByText('factCheck.checkedByUnavailable')).toBeNull();
+    });
 });

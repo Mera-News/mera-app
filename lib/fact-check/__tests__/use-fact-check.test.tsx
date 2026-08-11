@@ -1,103 +1,89 @@
-// useFactCheck — the request driver, after polling was removed.
+// useFactCheck — the pure WatermelonDB observer that replaced the request/
+// response hook. Properties worth a build over:
 //
-// The behaviours worth breaking a build over:
-//   • a cross-user cache hit (the mutation itself returns `complete`) goes tap →
-//     result with NO spinner;
-//   • THERE IS NO POLL. A non-terminal answer settles on `queued` and the hook
-//     arms nothing — asserted by CALL COUNT after advancing the clock well past
-//     the old 60s deadline, because a phase assertion alone would still pass
-//     with a stray timer alive;
-//   • every observation is written to the on-device table, which is the only
-//     thing that makes leaving the screen free;
-//   • the mount read costs NOTHING for an article this device never asked
-//     about, and nothing at all when the feature is switched off.
+//   • it reacts to the RUNNER MUTATING A ROW IN PLACE, not just to rows being
+//     added/removed. This is the one bug that would make the whole feature look
+//     broken while every unit test built on a naive "push a new array" fake
+//     still passed — see the file header of `use-fact-check.ts`. The fake query
+//     below only exposes `observeWithColumns`, never `observe`, so a regression
+//     back to `.observe()` fails EVERY test here with "not a function" rather
+//     than silently passing;
+//   • it never touches the network or mutates anything — there is no
+//     `requestFactCheck` any more, only a read;
+//   • `showProgress` gates off the row's OWN `requestedAt`, not a mount timer,
+//     so a job already running for a while shows immediately on mount.
 
-const mockRequestFactCheck = jest.fn();
-const mockGetFactCheck = jest.fn();
+/* eslint-disable @typescript-eslint/no-require-imports */
 
-jest.mock('../fact-check-service', () => ({
-    FactCheckService: {
-        requestFactCheck: (...a: any[]) => mockRequestFactCheck(...a),
-        getFactCheck: (...a: any[]) => mockGetFactCheck(...a),
-    },
+type Emit = (rows: any[]) => void;
+
+let currentRows: any[] = [];
+const subscribers = new Set<Emit>();
+const observeWithColumnsCalls: string[][] = [];
+const queryCalls: any[] = [];
+
+const fakeQueryResult = {
+    observeWithColumns: jest.fn((columns: string[]) => {
+        observeWithColumnsCalls.push(columns);
+        return {
+            subscribe: (cb: Emit) => {
+                subscribers.add(cb);
+                // WatermelonDB emits the current matching set immediately on
+                // subscribe, before any change happens.
+                cb(currentRows);
+                return {
+                    unsubscribe: jest.fn(() => {
+                        subscribers.delete(cb);
+                    }),
+                };
+            },
+        };
+    }),
+};
+
+const mockQuery = jest.fn((...clauses: any[]) => {
+    queryCalls.push(clauses);
+    return fakeQueryResult;
+});
+const mockCollection = { query: mockQuery };
+
+jest.mock('@/lib/database/index', () => ({
+    __esModule: true,
+    default: { get: jest.fn(() => mockCollection) },
 }));
 
-// A FAKE TABLE, not a stub returning a fixed row.
-//
-// This is load-bearing. The earlier stub answered `getFactCheckForArticle` with
-// the same frozen value forever, so a test could "pass" while the write never
-// landed and the surface re-read the stale row — which is exactly the prod bug
-// (a server-side COMPLETE check rendering "Still searching" indefinitely). With
-// the write and the read hitting one shared object, a reconcile that fails to
-// persist now fails the test.
-let fakeRows: Record<string, any> = {};
-
-const mockUpsertFactCheck = jest.fn(async (input: any) => {
-    const prev = fakeRows[input.articleId];
-    fakeRows[input.articleId] = {
-        id: prev?.id ?? `row-${input.articleId}`,
-        articleId: input.articleId,
-        factCheckId: input.factCheckId,
-        articleTitle: input.articleTitle ?? null,
-        status: input.status,
-        verdict: input.verdict ?? null,
-        payload: input.payload,
-        requestedAt: prev?.requestedAt ?? 1,
-        resolvedAt: input.resolvedAt ?? null,
-    };
-});
-const mockGetStored = jest.fn(async (articleId: string) => fakeRows[articleId] ?? null);
-const mockListFactChecks = jest.fn(async () => Object.values(fakeRows));
-
-/** Seed the fake table with one row, as a previous session would have left it. */
-function seedStored(articleId: string, status: string, extra: Record<string, unknown> = {}) {
-    fakeRows[articleId] = {
-        id: `row-${articleId}`,
-        articleId,
-        factCheckId: 'fc1',
-        articleTitle: null,
-        status,
-        verdict: null,
-        payload: { _id: 'fc1', status, verdict: null, claims: [], citations: [] },
-        requestedAt: 1,
-        resolvedAt: null,
-        ...extra,
-    };
+/** Simulate the runner landing an update — SAME row identity, new field
+ *  values, mirroring an in-place WatermelonDB write rather than a fresh insert. */
+function emitRows(rows: any[]) {
+    currentRows = rows;
+    // Snapshot: a subscriber's own cleanup (unmount) may mutate the live Set
+    // while we're iterating it.
+    Array.from(subscribers).forEach((cb) => cb(rows));
 }
 
-jest.mock('@/lib/database/services/fact-check-record-service', () => ({
-    upsertFactCheck: (...a: any[]) => mockUpsertFactCheck(...(a as [any])),
-    getFactCheckForArticle: (...a: any[]) => mockGetStored(...(a as [string])),
-    listFactChecks: (...a: any[]) => mockListFactChecks(...(a as [])),
-}));
-
-const mockCaptureException = jest.fn();
-jest.mock('@/lib/logger', () => ({
-    __esModule: true,
-    default: {
-        captureException: (...a: unknown[]) => mockCaptureException(...a),
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn(),
-        info: jest.fn(),
-    },
-}));
+function fakeRow(overrides: Record<string, unknown> = {}) {
+    return {
+        id: 'row-1',
+        articleId: 'a1',
+        factCheckId: 'local:a1:key1',
+        articleTitle: 'A headline',
+        status: 'processing',
+        verdict: null,
+        payloadJson: JSON.stringify({
+            _id: 'local:a1:key1', status: 'processing', claims: [], citations: [], checkedBy: [],
+        }),
+        requestedAt: new Date(),
+        resolvedAt: null,
+        claim: 'The dam was completed in 2019.',
+        claimKey: 'key1',
+        ...overrides,
+    };
+}
 
 import { act, renderHook } from '@testing-library/react-native';
 import { PROGRESS_DELAY_MS } from '../fact-check-state';
 import { useFactCheck } from '../use-fact-check';
 
-const row = (status: string, extra: Record<string, unknown> = {}) =>
-    ({ _id: 'fc1', status, verdict: null, claims: [], citations: [], ...extra }) as any;
-
-/** Run pending timers for `ms` and flush the promise continuations they start. */
-async function tick(ms: number) {
-    await act(async () => {
-        jest.advanceTimersByTime(ms);
-    });
-}
-
-/** Flush microtasks without moving the clock. */
 async function flush() {
     await act(async () => {
         await Promise.resolve();
@@ -108,7 +94,10 @@ async function flush() {
 describe('useFactCheck', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        fakeRows = {};
+        currentRows = [];
+        subscribers.clear();
+        observeWithColumnsCalls.length = 0;
+        queryCalls.length = 0;
         jest.useFakeTimers();
     });
 
@@ -116,365 +105,167 @@ describe('useFactCheck', () => {
         jest.useRealTimers();
     });
 
-    it('starts idle and does nothing without an article id', async () => {
+    it('is absent with no article id, and never queries the database', () => {
         const { result } = renderHook(() => useFactCheck(null));
-        expect(result.current.phase).toBe('idle');
-        act(() => result.current.start());
-        expect(mockRequestFactCheck).not.toHaveBeenCalled();
-        expect(result.current.phase).toBe('idle');
+        expect(result.current.phase).toBe('absent');
+        expect(result.current.rows).toEqual([]);
+        expect(mockQuery).not.toHaveBeenCalled();
     });
 
-    it('renders an already-cached result with no spinner and no second call', async () => {
-        mockRequestFactCheck.mockResolvedValue(row('complete', { verdict: 'supported' }));
+    it('is absent for an article nobody has asked about', async () => {
+        emitRows([]);
         const { result } = renderHook(() => useFactCheck('a1'));
         await flush();
-
-        act(() => result.current.start());
-        expect(result.current.phase).toBe('working');
-        // The whole point: nothing to see yet, so the panel keeps its button.
-        expect(result.current.showProgress).toBe(false);
-
-        await flush();
-        expect(result.current.phase).toBe('ready');
-        expect(result.current.result?.verdict).toBe('supported');
-        expect(result.current.showProgress).toBe(false);
-        expect(mockGetFactCheck).not.toHaveBeenCalled();
+        expect(result.current.phase).toBe('absent');
+        expect(result.current.rows).toEqual([]);
     });
 
-    it('shows progress only once the wait becomes perceptible', async () => {
-        mockRequestFactCheck.mockReturnValue(new Promise(() => {}));
+    it('subscribes with observeWithColumns, never plain observe', () => {
+        renderHook(() => useFactCheck('a1'));
+        expect(observeWithColumnsCalls.length).toBeGreaterThan(0);
+        // The columns the runner actually mutates in place — miss one of these
+        // and an in-flight check can update on-device without the panel
+        // noticing.
+        expect(observeWithColumnsCalls[0]).toEqual(
+            expect.arrayContaining(['status', 'verdict', 'payload_json', 'resolved_at']),
+        );
+    });
+
+    it('is processing while a row is non-terminal', async () => {
+        emitRows([fakeRow({ status: 'processing' })]);
         const { result } = renderHook(() => useFactCheck('a1'));
         await flush();
-
-        act(() => result.current.start());
-        expect(result.current.showProgress).toBe(false);
-
-        await tick(PROGRESS_DELAY_MS);
-        expect(result.current.showProgress).toBe(true);
+        expect(result.current.phase).toBe('processing');
+        expect(result.current.rows).toHaveLength(1);
     });
 
-    // ── THE POLL IS GONE ────────────────────────────────────────────────────
-    // Call counts, not phases: a phase assertion passes even if a 3s interval is
-    // still ticking in the background. Advancing five minutes — five times the
-    // old deadline — and finding ZERO reads is the discriminating check.
-    it('never polls: a non-terminal answer settles on queued and arms nothing', async () => {
-        mockRequestFactCheck.mockResolvedValue(row('pending'));
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        act(() => result.current.start());
-        await flush();
-
-        expect(result.current.phase).toBe('queued');
-        expect(mockGetFactCheck).not.toHaveBeenCalled();
-
-        await tick(300_000);
-        expect(mockGetFactCheck).not.toHaveBeenCalled();
-        expect(result.current.phase).toBe('queued');
-    });
-
-    it.each(['pending', 'running', 'failed'])(
-        'treats a %s row as queued, not as a failure — the server retries on its own',
+    it.each(['pending', 'running', 'processing', 'failed'])(
+        'treats a %s row as processing, not terminal — the recovery task retries it',
         async (status) => {
-            mockRequestFactCheck.mockResolvedValue(row(status));
+            emitRows([fakeRow({ status })]);
             const { result } = renderHook(() => useFactCheck('a1'));
             await flush();
-            act(() => result.current.start());
-            await flush();
-            expect(result.current.phase).toBe('queued');
+            expect(result.current.phase).toBe('processing');
         },
     );
 
-    it('treats a null row as queued too — nullable means "not written yet"', async () => {
-        mockRequestFactCheck.mockResolvedValue(null);
+    it.each(['complete', 'blocked'])(
+        'is terminal once every row is %s',
+        async (status) => {
+            emitRows([fakeRow({ status, verdict: 'supported' })]);
+            const { result } = renderHook(() => useFactCheck('a1'));
+            await flush();
+            expect(result.current.phase).toBe('terminal');
+        },
+    );
+
+    // ── THE LOAD-BEARING TEST ────────────────────────────────────────────────
+    // The runner does not insert a second row when a check finishes — it
+    // UPDATES the row `enqueueFactCheck` already wrote. A hook built on plain
+    // `.observe()` would only re-emit on a row being added or removed and would
+    // never notice this, leaving the panel spinning forever. Simulating a
+    // same-id emission with new field values is what actually discriminates
+    // that bug from a passing test.
+    it('reacts when the runner updates the SAME row from processing to complete', async () => {
+        const row = fakeRow({ status: 'processing' });
+        emitRows([row]);
         const { result } = renderHook(() => useFactCheck('a1'));
         await flush();
-        act(() => result.current.start());
-        await flush();
-        expect(result.current.phase).toBe('queued');
-        expect(mockGetFactCheck).not.toHaveBeenCalled();
-    });
+        expect(result.current.phase).toBe('processing');
 
-    it('treats blocked as terminal', async () => {
-        mockRequestFactCheck.mockResolvedValue(row('blocked'));
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-        act(() => result.current.start());
-        await flush();
-        expect(result.current.phase).toBe('ready');
-        expect(result.current.result?.status).toBe('blocked');
-    });
-
-    // Persistence is what makes "you don't need to wait here" true.
-    it('writes every observation to the on-device table', async () => {
-        mockRequestFactCheck.mockResolvedValue(row('complete', { verdict: 'mixed' }));
-        const { result } = renderHook(() =>
-            useFactCheck('a1', { articleTitle: 'A headline' }),
-        );
-        await flush();
-        act(() => result.current.start());
-        await flush();
-
-        expect(mockUpsertFactCheck).toHaveBeenCalledWith(
-            expect.objectContaining({
-                articleId: 'a1',
-                factCheckId: 'fc1',
-                articleTitle: 'A headline',
+        act(() => {
+            emitRows([{
+                ...row,
                 status: 'complete',
-                verdict: 'mixed',
-            }),
-        );
-    });
-
-    it('persists a queued row too, so the Fact checks list can show it pending', async () => {
-        mockRequestFactCheck.mockResolvedValue(row('pending'));
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-        act(() => result.current.start());
-        await flush();
-        expect(mockUpsertFactCheck).toHaveBeenCalledWith(
-            expect.objectContaining({ articleId: 'a1', status: 'pending' }),
-        );
-    });
-
-    // ── The mount read: exactly one look, and often none at all ─────────────
-    it('spends nothing on mount for an article nobody on this device asked about', async () => {
-        renderHook(() => useFactCheck('a1'));
-        await flush();
-        expect(mockGetStored).toHaveBeenCalledWith('a1');
-        expect(mockGetFactCheck).not.toHaveBeenCalled();
-        expect(mockRequestFactCheck).not.toHaveBeenCalled();
-    });
-
-    // ── Arriving from the Fact checks list ──────────────────────────────────
-    // The list navigates to the article; the panel there must show the RESULT,
-    // not the "Look for published fact checks" button, with no second tap. No
-    // route param drives this — a stored terminal row alone puts the hook in
-    // `ready`, and FactCheckPanel's `collapsed` predicate is false for `ready`.
-    // Pinned here because that is an implicit coupling between two files: if
-    // either side changed, the entry path would silently regress to a CTA for
-    // a result the user was just looking at.
-    it('is already in the expanded ready phase on mount for a stored terminal row', async () => {
-        seedStored('a1', 'complete', {
-            verdict: 'supported',
-            payload: row('complete', { verdict: 'supported' }),
+                verdict: 'supported',
+                resolvedAt: new Date(),
+                payloadJson: JSON.stringify({
+                    _id: row.factCheckId, status: 'complete', verdict: 'supported',
+                    claims: [], citations: [], checkedBy: [],
+                }),
+            }]);
         });
 
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        expect(result.current.phase).toBe('ready');
-        // `collapsed` in FactCheckPanel is `idle || (working && !showProgress)`.
-        expect(result.current.phase).not.toBe('idle');
-        expect(result.current.showProgress).toBe(false);
-        expect(result.current.result?.verdict).toBe('supported');
-        // No tap needed: `start` was never called and nothing was requested.
-        expect(mockRequestFactCheck).not.toHaveBeenCalled();
+        expect(result.current.phase).toBe('terminal');
+        expect(result.current.rows[0].status).toBe('complete');
+        expect(result.current.rows[0].payload?.verdict).toBe('supported');
     });
 
-    it('renders a stored terminal result on mount with no network call at all', async () => {
-        seedStored('a1', 'complete', {
-            verdict: 'supported',
-            payload: row('complete', { verdict: 'supported' }),
-            resolvedAt: 2,
+    it('several claims stack: one processing and one terminal is still processing overall', async () => {
+        emitRows([
+            fakeRow({ id: 'row-1', status: 'complete', verdict: 'supported' }),
+            fakeRow({ id: 'row-2', status: 'processing', claim: 'A second claim.' }),
+        ]);
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+        expect(result.current.phase).toBe('processing');
+        expect(result.current.rows).toHaveLength(2);
+    });
+
+    it('unsubscribes on unmount', async () => {
+        emitRows([fakeRow()]);
+        const { unmount } = renderHook(() => useFactCheck('a1'));
+        await flush();
+        expect(subscribers.size).toBe(1);
+        unmount();
+        expect(subscribers.size).toBe(0);
+    });
+
+    it('re-subscribes when the article id changes', async () => {
+        emitRows([fakeRow({ articleId: 'a1' })]);
+        const { rerender } = renderHook(({ id }: { id: string }) => useFactCheck(id), {
+            initialProps: { id: 'a1' },
         });
-
-        const { result } = renderHook(() => useFactCheck('a1'));
         await flush();
+        expect(queryCalls).toHaveLength(1);
 
-        expect(result.current.phase).toBe('ready');
-        expect(result.current.result?.verdict).toBe('supported');
-        expect(mockGetFactCheck).not.toHaveBeenCalled();
-    });
-
-    // ══ THE PROD BUG ════════════════════════════════════════════════════════
-    // A check that COMPLETED server-side, against a device whose stored row is
-    // still `pending` and whose push never arrived. This is the state a real
-    // user was stuck in indefinitely, on all three surfaces.
-    //
-    // "We don't poll" passed the whole time this was broken, so the assertion
-    // that matters is the OUTCOME: after mount, the panel renders the completed
-    // verdict AND the local table has been advanced to terminal — because the
-    // Dashboard block and the list read that table, not this hook's state. The
-    // fake table is what makes the second half checkable at all.
-    it('resolves a stored PENDING row against a server row that has since completed', async () => {
-        seedStored('a1', 'pending');
-        mockGetFactCheck.mockResolvedValue(
-            row('complete', { verdict: 'supported', articleTitle: 'A headline' }),
-        );
-
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        // 1. The panel shows the answer instead of "still searching".
-        expect(result.current.phase).toBe('ready');
-        expect(result.current.result?.verdict).toBe('supported');
-
-        // 2. The write LANDED and was awaited — the other two surfaces read
-        //    this table, so a fire-and-forget write that lost the race would
-        //    leave them on the stale pending row exactly as in prod.
-        expect(fakeRows.a1.status).toBe('complete');
-        expect(fakeRows.a1.verdict).toBe('supported');
-
-        // 3. Still exactly one read, and no timer armed behind it.
-        expect(mockGetFactCheck).toHaveBeenCalledTimes(1);
-        await tick(300_000);
-        expect(mockGetFactCheck).toHaveBeenCalledTimes(1);
-    });
-
-    it('leaves a still-unresolved row on queued after its single read', async () => {
-        seedStored('a1', 'running');
-        mockGetFactCheck.mockResolvedValue(row('running'));
-
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        expect(result.current.phase).toBe('queued');
-        expect(mockGetFactCheck).toHaveBeenCalledTimes(1);
-    });
-
-    // The panel's `factCheckEnabled` gate returns null AFTER this hook runs, so
-    // without `enabled` the mount read would fire on every article open for a
-    // user who has the feature off — against resolvers behind SubscriptionGuard.
-    it('does not touch the database or the network when disabled', async () => {
-        renderHook(() => useFactCheck('a1', { enabled: false }));
-        await flush();
-        expect(mockGetStored).not.toHaveBeenCalled();
-        expect(mockGetFactCheck).not.toHaveBeenCalled();
-    });
-
-    // The manual escape hatch. With no poll, a reader whose push never arrives
-    // has only this — so a failed automatic read must leave the door open
-    // rather than silently look like a completed refresh.
-    it('recovers via refresh() when the automatic read failed', async () => {
-        seedStored('a1', 'pending');
-        mockGetFactCheck.mockRejectedValueOnce(new Error('offline'));
-
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        expect(result.current.phase).toBe('queued');
-        expect(result.current.refreshFailed).toBe(true);
-
-        mockGetFactCheck.mockResolvedValueOnce(row('complete', { verdict: 'mixed' }));
-        act(() => result.current.refresh());
-        await flush();
-
-        expect(result.current.phase).toBe('ready');
-        expect(result.current.result?.verdict).toBe('mixed');
-        expect(fakeRows.a1.status).toBe('complete');
-    });
-
-    it('refresh() is one read, not a loop', async () => {
-        seedStored('a1', 'pending');
-        mockGetFactCheck.mockResolvedValue(row('running'));
-
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-        expect(mockGetFactCheck).toHaveBeenCalledTimes(1);
-
-        act(() => result.current.refresh());
-        await flush();
-        expect(mockGetFactCheck).toHaveBeenCalledTimes(2);
-
-        await tick(300_000);
-        expect(mockGetFactCheck).toHaveBeenCalledTimes(2);
-    });
-
-    it('never reports a failed mount read — it is passive and the user never asked', async () => {
-        seedStored('a1', 'pending');
-        mockGetFactCheck.mockRejectedValue(new Error('offline'));
-
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        expect(result.current.phase).toBe('queued');
-        expect(mockCaptureException).not.toHaveBeenCalled();
-    });
-
-    it('surfaces a failed request as the error phase', async () => {
-        mockRequestFactCheck.mockRejectedValue(new Error('NotFound'));
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        act(() => result.current.start());
-        await flush();
-
-        expect(result.current.phase).toBe('error');
-        expect(mockCaptureException).toHaveBeenCalled();
-        expect(mockGetFactCheck).not.toHaveBeenCalled();
-    });
-
-    it('retries after an error', async () => {
-        mockRequestFactCheck
-            .mockRejectedValueOnce(new Error('offline'))
-            .mockResolvedValueOnce(row('complete'));
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        act(() => result.current.start());
-        await flush();
-        expect(result.current.phase).toBe('error');
-
-        act(() => result.current.start());
-        await flush();
-        expect(result.current.phase).toBe('ready');
-    });
-
-    it('ignores a second start while one is already running', async () => {
-        mockRequestFactCheck.mockReturnValue(new Promise(() => {}));
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        act(() => result.current.start());
-        act(() => result.current.start());
-        expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
-    });
-
-    it('dismiss cancels an in-flight run and collapses to idle', async () => {
-        let resolveRequest: (v: unknown) => void = () => {};
-        mockRequestFactCheck.mockReturnValue(
-            new Promise((resolve) => {
-                resolveRequest = resolve;
-            }),
-        );
-        const { result } = renderHook(() => useFactCheck('a1'));
-        await flush();
-
-        act(() => result.current.start());
-        act(() => result.current.dismiss());
-        expect(result.current.phase).toBe('idle');
-
-        // The abandoned run's late answer must not write state.
-        await act(async () => {
-            resolveRequest(row('complete'));
-        });
-        expect(result.current.phase).toBe('idle');
-        expect(result.current.result).toBeNull();
-    });
-
-    it('drops an in-flight run when the screen switches article', async () => {
-        let resolveRequest: (v: unknown) => void = () => {};
-        mockRequestFactCheck.mockReturnValue(
-            new Promise((resolve) => {
-                resolveRequest = resolve;
-            }),
-        );
-        const { result, rerender } = renderHook(
-            ({ id }: { id: string }) => useFactCheck(id),
-            { initialProps: { id: 'a1' } },
-        );
-        await flush();
-
-        act(() => result.current.start());
         rerender({ id: 'a2' });
-        expect(result.current.phase).toBe('idle');
+        await flush();
+        expect(queryCalls).toHaveLength(2);
+    });
+
+    // ── showProgress: gated off the row's OWN requestedAt ───────────────────
+    it('suppresses the spinner for a just-started job', async () => {
+        emitRows([fakeRow({ status: 'processing', requestedAt: new Date() })]);
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+        expect(result.current.showProgress).toBe(false);
+    });
+
+    it('shows progress once the wait becomes perceptible', async () => {
+        emitRows([fakeRow({ status: 'processing', requestedAt: new Date() })]);
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+        expect(result.current.showProgress).toBe(false);
 
         await act(async () => {
-            resolveRequest(row('complete'));
+            jest.advanceTimersByTime(PROGRESS_DELAY_MS);
         });
-        // The previous article's verdict must never appear under the new one.
-        expect(result.current.phase).toBe('idle');
-        expect(result.current.result).toBeNull();
+        expect(result.current.showProgress).toBe(true);
+    });
+
+    it('shows progress immediately for a job that has already been running a while — no second artificial delay', async () => {
+        const startedLongAgo = new Date(Date.now() - 10_000);
+        emitRows([fakeRow({ status: 'processing', requestedAt: startedLongAgo })]);
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+        expect(result.current.showProgress).toBe(true);
+    });
+
+    it('never shows progress once terminal', async () => {
+        emitRows([fakeRow({ status: 'complete', verdict: 'supported' })]);
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+        expect(result.current.showProgress).toBe(false);
+    });
+
+    it('degrades a corrupt payload to a null payload rather than throwing', async () => {
+        emitRows([fakeRow({ status: 'complete', payloadJson: '{not json' })]);
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+        expect(result.current.phase).toBe('terminal');
+        expect(result.current.rows[0].payload).toBeNull();
+        // The mirrored column survives even when the JSON blob didn't parse.
+        expect(result.current.rows[0].verdict).toBeNull();
     });
 });

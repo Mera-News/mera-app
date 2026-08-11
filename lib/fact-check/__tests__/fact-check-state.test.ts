@@ -111,17 +111,17 @@ describe('describeAssessment', () => {
 });
 
 describe('shouldShowProgress', () => {
-    it('suppresses the spinner below the delay — the cross-user cache hit path', () => {
-        expect(shouldShowProgress('working', 0)).toBe(false);
-        expect(shouldShowProgress('working', PROGRESS_DELAY_MS - 1)).toBe(false);
+    it('suppresses the spinner below the delay — a just-started job', () => {
+        expect(shouldShowProgress('processing', 0)).toBe(false);
+        expect(shouldShowProgress('processing', PROGRESS_DELAY_MS - 1)).toBe(false);
     });
 
     it('shows the spinner once the wait is perceptible', () => {
-        expect(shouldShowProgress('working', PROGRESS_DELAY_MS)).toBe(true);
-        expect(shouldShowProgress('working', 10_000)).toBe(true);
+        expect(shouldShowProgress('processing', PROGRESS_DELAY_MS)).toBe(true);
+        expect(shouldShowProgress('processing', 10_000)).toBe(true);
     });
 
-    it.each(['idle', 'ready', 'queued', 'error'] as const)(
+    it.each(['absent', 'terminal'] as const)(
         'never shows progress in phase %s',
         (phase) => {
             expect(shouldShowProgress(phase, 99_999)).toBe(false);

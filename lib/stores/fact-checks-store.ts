@@ -1,17 +1,24 @@
 // In-memory mirror of the on-device `fact_checks` table.
 //
 // Why a store at all rather than each surface querying WatermelonDB: three
-// unrelated places write to that table — the detail panel (a check the reader
-// just asked for), the push handler (an answer arriving while the app is
-// backgrounded), and the list screen's delete — and two places read it. Without
-// a shared subscription, deleting a row on the list screen leaves the
-// Dashboard's block showing it until the Dashboard happens to remount, and a
-// push-delivered result never appears at all.
+// unrelated places write to that table — a chat-driven check being enqueued,
+// F2's runner landing a result, and the list screen's delete — and two places
+// read it. Without a shared subscription, deleting a row on the list screen
+// leaves the Dashboard's block showing it until the Dashboard happens to
+// remount, and a result that lands while the Dashboard is elsewhere never
+// appears until the next explicit read.
 //
 // Deliberately NOT a WatermelonDB observable: the table is tiny (one row per
-// story the user personally asked about), the surfaces are two, and an explicit
-// `load()` after each write is three lines against a subscription lifecycle to
-// manage. Revisit if a third reader appears.
+// claim the user personally asked about), the surfaces are two, and an
+// explicit `load()` on each (re)selection is three lines against a
+// subscription lifecycle to manage. Revisit if a third reader appears.
+//
+// `refresh` used to also RECONCILE every unresolved row against the server —
+// that pipeline is gone. There is nothing left to reconcile against: the
+// on-device runner writes straight to this table (via `fact-check-queue.ts`),
+// so a local read is already the up-to-date answer. `refresh` is kept as a
+// distinct action (rather than folded into `load`) only so the list's
+// `RefreshControl` has something with its own in-flight flag to bind to.
 
 import { create } from 'zustand';
 import {
@@ -19,7 +26,6 @@ import {
     listFactChecks,
     type StoredFactCheck,
 } from '../database/services/fact-check-record-service';
-import { reconcileStoredFactChecks } from '../fact-check/fact-check-sync';
 
 /** How many the Dashboard block shows before "View all". */
 export const DASHBOARD_FACT_CHECK_PREVIEW = 3;
@@ -31,22 +37,13 @@ interface FactChecksState {
      *  stored" apart from "not read yet" and skip rendering an empty state that
      *  is about to be replaced. */
     hydrated: boolean;
-    /** A reconcile pass is in flight — drives the list's pull-to-refresh. */
+    /** A read is in flight — drives the list's pull-to-refresh spinner. */
     refreshing: boolean;
-    /** Read the local table only. Cheap, offline, no network. */
+    /** Read the local table. Cheap, offline, no network — this is the ONLY
+     *  read there is now. */
     load: () => Promise<void>;
-    /**
-     * Read the table, then bring every UNRESOLVED row up to date with ONE
-     * server read each, then read the table again.
-     *
-     * This is the fix for the surfaces that had no read at all: they rendered
-     * whatever the table held and never asked whether the server had since
-     * finished, so a completed check showed "Still searching" indefinitely
-     * whenever the push did not arrive. Bounded by
-     * `MAX_RECONCILE_PER_PASS` and by the fact that terminal rows are skipped —
-     * the steady-state cost is zero requests. NOT a poll: nothing schedules it
-     * except a mount, a focus, or a pull-to-refresh.
-     */
+    /** Same read as `load`, behind the `refreshing` flag the pull-to-refresh
+     *  control binds to. */
     refresh: () => Promise<void>;
     remove: (id: string) => Promise<void>;
 }
@@ -65,17 +62,8 @@ export const useFactChecksStore = create<FactChecksState>((set, get) => ({
         if (get().refreshing) return;
         set({ refreshing: true });
         try {
-            // Paint what we already have first, so a slow network never delays
-            // rows the device can render immediately.
             const items = await listFactChecks();
             set({ items, hydrated: true });
-
-            const changed = await reconcileStoredFactChecks(items);
-            // Only re-read when something actually moved — a Dashboard focus
-            // with nothing pending must not cost a second query.
-            if (changed > 0) {
-                set({ items: await listFactChecks() });
-            }
         } finally {
             set({ refreshing: false });
         }

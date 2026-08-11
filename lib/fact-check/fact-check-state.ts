@@ -1,19 +1,21 @@
 /**
  * Pure state/copy logic for the article fact check.
  *
- * Everything here is a total function over server-supplied strings. That
- * matters more than usual: `FactCheck.status`, `FactCheck.verdict` and
- * `FactCheckClaim.assessment` are all plain `String` in the schema, NOT
- * enums — the model on the other end can and will emit a value this build has
- * never seen. Every normalizer therefore has an explicit unknown bucket that
- * falls through to generic, hedged copy. Rendering a raw model token, or an
- * empty verdict row, is the failure this file exists to prevent.
+ * Everything here is a total function over runner-supplied strings. That
+ * matters more than usual: the on-device runner's `status`, `verdict` and
+ * `FactCheckClaim.assessment` (`lib/fact-check/fact-check-runner.ts`) are plain
+ * strings, NOT enums — the model behind them can and will emit a value this
+ * build has never seen. Every normalizer therefore has an explicit unknown
+ * bucket that falls through to generic, hedged copy. Rendering a raw model
+ * token, or an empty verdict row, is the failure this file exists to prevent.
  *
  * No React, no network, never throws.
  */
 
-/** Lifecycle values the server documents. `complete` and `blocked` are terminal. */
-export type FactCheckStatus = 'pending' | 'running' | 'complete' | 'failed' | 'blocked';
+/** Lifecycle values the runner writes. `complete` and `blocked` are terminal;
+ *  `pending`/`running` are legacy (pre-pivot server statuses, still valid on an
+ *  old stored row) and `processing` is the on-device runner's equivalent. */
+export type FactCheckStatus = 'pending' | 'running' | 'processing' | 'complete' | 'failed' | 'blocked';
 
 /** Verdicts the server documents, plus the catch-all for anything else. */
 export type FactCheckVerdict =
@@ -41,21 +43,24 @@ export type FactCheckAssessment =
 export type FactCheckTone = 'positive' | 'caution' | 'neutral';
 
 /**
- * Where the fact-check UI currently is. Drives the panel's render.
+ * Where the fact-check UI currently is, for ONE article's stored rows. Drives
+ * `FactCheckPanel`'s render and the action-row tick's icon.
  *
- * `queued` replaced the old `timeout`, and the difference is the whole point of
- * the rewrite. `timeout` was a client-side fiction: the app polled for 60s and
- * then declared a deadline the server had never agreed to. `queued` is a
- * statement of fact — the request is lodged, the answer is not here yet, and
- * nothing about staying on this screen makes it arrive sooner.
+ * There is no `idle`/`working`/`queued`/`error` any more — those named states
+ * in a request/response flow the app no longer runs. `useFactCheck` is a pure
+ * observer of the on-device table, so it only has three honest things to say:
+ * nobody has asked (`absent`), a background job is running (`processing`), or
+ * every asked-for row has an answer (`terminal`). `blocked` rows count as
+ * `terminal` — the runner already decided the row will never change again; see
+ * `isTerminalStatus`.
  */
-export type FactCheckPhase = 'idle' | 'working' | 'ready' | 'queued' | 'error';
+export type FactCheckPhase = 'absent' | 'processing' | 'terminal';
 
 /**
- * A spinner is only honest if the wait is perceptible. A cross-user cache hit
- * returns `complete` on the very first round trip, so anything shorter than
- * this renders as a flash of "Checking…" replaced instantly by the result —
- * which reads as a glitch, not as speed.
+ * A spinner is only honest if the wait is perceptible. Reopening an article
+ * whose check is already seconds old must not flash "Checking…" for 400ms
+ * before rendering — the delay guards against a JUST-STARTED job, not against
+ * showing an in-progress one truthfully.
  */
 export const PROGRESS_DELAY_MS = 400;
 
@@ -152,13 +157,15 @@ export function describeAssessment(raw: string | null | undefined): {
 /**
  * Whether to render the "Checking…" progress state.
  *
- * Only `working` can show progress at all, and only once the wait has been long
- * enough to be worth acknowledging — see {@link PROGRESS_DELAY_MS}. An already
- * fact-checked article (the cross-user cache hit) therefore goes tap → result
- * with no intermediate spinner.
+ * Only `processing` can show progress at all, and only once the wait has been
+ * long enough to be worth acknowledging — see {@link PROGRESS_DELAY_MS}.
+ * `elapsedMs` is measured from the row's OWN `requested_at` (not from a mount
+ * timer), so reopening an article whose check has genuinely been running for a
+ * while shows the working state immediately rather than waiting out a second
+ * artificial delay.
  */
 export function shouldShowProgress(phase: FactCheckPhase, elapsedMs: number): boolean {
-    return phase === 'working' && elapsedMs >= PROGRESS_DELAY_MS;
+    return phase === 'processing' && elapsedMs >= PROGRESS_DELAY_MS;
 }
 
 /**

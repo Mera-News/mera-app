@@ -4,6 +4,8 @@ import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestio
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
+import { startFactCheckChat } from '@/lib/fact-check/start-fact-check-chat';
+import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
@@ -51,6 +53,7 @@ import {
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -252,6 +255,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
+    // The tick's icon state — a pure observer of the stored rows, same hook
+    // `FactCheckPanel` uses below. See ArticleDetailScreen for why two
+    // independent subscriptions to the same query is fine now that there is no
+    // imperative action state to keep in sync.
+    const factCheckPhase = useFactCheck(suggestion?.articleId).phase;
+    const aiAccess = useAiAccess();
     const userCtx = useUserGeoLanguageContext();
     const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
@@ -610,6 +619,23 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         {articleUrl ? (
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
+                                    // See ArticleDetailScreen — hidden entirely
+                                    // on a locked free-tier plan rather than
+                                    // left as a dead tap.
+                                    factCheck={aiAccess !== 'locked' ? {
+                                        onStart: () => startFactCheckChat({
+                                            articleId: suggestion.articleId,
+                                            title: suggestion.title_en ?? suggestion.title_original ?? '',
+                                            description: suggestion.description_en ?? null,
+                                            url: articleUrl ?? null,
+                                            publicationName: suggestion.publication_name ?? null,
+                                        }),
+                                        state: factCheckPhase === 'terminal'
+                                            ? 'done'
+                                            : factCheckPhase === 'processing'
+                                                ? 'pending'
+                                                : 'none',
+                                    } : undefined}
                                     articleId={suggestion.articleId}
                                     suggestionId={suggestion._id}
                                     title={suggestion.title_en ?? ''}
@@ -668,13 +694,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         ) : null}
 
                         {/* Fact check sits OUTSIDE the URL branch: it is keyed
-                            on the ARTICLE id (not the suggestion id) and the
-                            server holds its own canonical URL, so it still works
-                            for a row whose local link we refuse to open. */}
-                        <FactCheckPanel
-                            articleId={suggestion.articleId}
-                            articleTitle={suggestion.title_en ?? suggestion.title_original ?? null}
-                        />
+                            on the ARTICLE id (not the suggestion id), not the
+                            (possibly refused) local link, so it still renders
+                            for a row whose URL we won't open. Always mounted —
+                            a pure observer, it renders nothing itself when
+                            nobody has asked about this article. */}
+                        <FactCheckPanel articleId={suggestion.articleId} />
 
                         {/* Related Articles — ONE flat, sorted list merging the
                             local cluster siblings (the user's own personalized

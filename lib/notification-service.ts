@@ -251,8 +251,12 @@ async function refreshForYouCacheFromDb(): Promise<void> {
  * was dropped rather than the promise amended, so the push can never be sent
  * and the branch was unreachable.
  *
- * A fact check now reaches the reader only by being read back: the bounded
- * reconcile on mount/focus/pull-to-refresh (see lib/fact-check/fact-check-sync).
+ * Fact-checking has since moved fully on-device (the pivot that replaced the
+ * server pipeline this comment originally described): the runner writes the
+ * on-device `fact_checks` table directly as it works, and `useFactCheck` (see
+ * lib/fact-check/use-fact-check.ts) observes that table live. There is nothing
+ * left to reconcile with a server, and still no `type === 'fact-check'` branch
+ * here — there was never anything server-side to deep-link into.
  */
 async function handleNotificationNavigation(data: NotificationDeepLinkData): Promise<void> {
     try {
