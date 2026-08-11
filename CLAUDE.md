@@ -71,6 +71,41 @@ OTA updates work for JS/TS/styling/GraphQL changes. Native builds required for n
 
 ### Simulator Harness (verify UI changes yourself)
 
+Two options, both agent-drivable from Bash with `agent-device`: **iOS** (default — resident account,
+fully onboarded, real prod data) and **Android** (emulator, EAS dev client). Verify every UI change
+on one of them yourself instead of asking the user for screenshots.
+
+#### Drive the simulators through subagents, not from the main agent
+
+**Spawn one `ios-sim` subagent and one `android-sim` subagent and treat them as the interface to
+each device.** Give each one this section plus its runbook up front, then send it goals
+("open Display settings and confirm the title reads Display", "capture the Feed header over a
+bright image and sample the pixel at 0.5,0.2"). It returns findings and screenshot paths; the main
+agent never holds the command syntax, the session bookkeeping, or the failed attempts.
+
+Why: driving a device is a long tail of snapshots, ref lookups, retries and dismissed overlays, and
+almost none of it is worth main-agent context. The screenshots themselves are the expensive part —
+one full-resolution PNG read costs more than the entire exchange that produced it.
+
+- **One agent per platform, and keep them alive.** `SendMessage` the same agent for the next check;
+  it keeps its session binding, the app's current screen, and everything it has learned about which
+  selectors actually work. Respawning throws all of that away.
+- **Never let both agents share a session name.** iOS is `--session default` (the user's); Android
+  gets its own (`--session android`). A session is bound to one device, and the binding is sticky.
+- Ask for **conclusions plus the evidence**, not raw trees: "which of these three strings rendered",
+  "the RGB at these coordinates", "the screenshot path if it disagrees with expectation". Read a
+  PNG in the main agent only when you actually need to see it.
+- The agent must report **dimensions with every capture** (Android 1080x2400, iOS 1206x2622 native)
+  and treat a mismatch as "I drove the wrong device", not as a rendering bug.
+- Never run file-editing agents and a simulator agent over the same screen at once — every save
+  Fast-Refreshes the device out from under the capture.
+
+**Trap that has bitten twice:** `agent-device open` FAILS if the session is already bound to another
+device, and prints the error where a `| tail -3` will hide it. Every later command then drives the
+old device while looking fine. Never truncate `agent-device` output, and check the capture size.
+
+#### iOS (default)
+
 **Full runbook: [harness/README.md](harness/README.md) — read it before first use.** The `iPhone 17 Pro`
 simulator runs the dev client with a permanent resident account (real prod data, fully onboarded).
 Drive it from Bash with `agent-device` instead of asking the user for screenshots — a JS edit is
@@ -102,6 +137,43 @@ Rules that save time (details + more traps in the README):
 - Never run file-editing subagents while the user is typing in the simulator — every save fires a
   Fast Refresh that stomps their input. The resident account is the user's to log in; never log it
   out.
+
+#### Android (second option)
+
+**Full runbook: [harness/README-android.md](harness/README-android.md) — read it before first use.**
+Same driver, same testIDs, same Metro. Use iOS by default; use Android when the change is
+Android-specific or you need to confirm cross-platform parity.
+
+```bash
+export ANDROID_HOME="$HOME/Library/Android/sdk"                  # not in the user's profile
+export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
+emulator @Mera_Harness_API35 -no-boot-anim &                     # ~15s; NOT Medium_Phone_API_36.1 (dead AVD)
+adb wait-for-device && adb reverse tcp:8081 tcp:8081
+adb shell am start -a android.intent.action.VIEW \
+  -d "meraapp://expo-development-client/?url=http%3A%2F%2F10.0.2.2%3A8081"
+cd mera-app
+agent-device open com.mera.news --device "Mera Harness API35" --session android
+agent-device snapshot -i --session android
+agent-device press 'id=<testID>' --settle --session android
+agent-device screenshot harness/out/android/foo.png --session android
+```
+
+Rules that save time (details + more traps in the runbook):
+- **`--session android` on every command.** With an iPhone booted, `agent-device` silently drives
+  *it* and returns a plausible screenshot of the wrong platform — sanity-check screenshots are
+  1080x2400. Never `close --session default`; that is the user's live iOS session.
+- Scheme is `meraapp://`, **not** `com.mera.news://` (that's the package). Host is `10.0.2.2`, not
+  `127.0.0.1`. Reuse the iOS harness's Metro — one instance serves both, and an edit driven for
+  Android Fast-Refreshes the iOS sim too.
+- **A press that reports `settled` but changes nothing is usually an overlay, not a dead button.**
+  The minimized LogBox toast covers bottom-anchored CTAs and the dev-client FAB has a huge touch
+  target. Dump rects from `snapshot --raw --json` before filing a bug.
+- No local build path (no NDK/cmdline-tools) — rebuild via
+  `eas build -p android --profile development` + `eas build:run -p android --latest`.
+- Better than iOS: gluestack `InputField` surfaces its testID, `fill` works directly (no
+  clipboard→paste), and copy Fast-Refreshes in ~13s with no wedging.
+- No resident account — login needs a human-entered OTP, and Play Billing is unavailable, so a new
+  account needs a RevenueCat entitlement grant to get past the paywall (recipe in the runbook).
 
 ### Testing In-App Purchases (RevenueCat / StoreKit)
 
