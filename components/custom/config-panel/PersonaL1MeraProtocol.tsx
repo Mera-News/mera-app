@@ -19,7 +19,7 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { PRIVACY_URL } from '@/lib/config/branding';
-import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { usePulse } from '@/lib/hooks/use-pulse';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { deleteFact, getFacts, updateFact } from '@/lib/database/services/fact-service';
 import { enqueueJob } from '@/lib/database/services/inference-job-service';
@@ -76,8 +76,12 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
     const [generateMoreFact, setGenerateMoreFact] = useState<Fact | null>(null);
     const [generatingMoreFactIds, setGeneratingMoreFactIds] = useState<Set<string>>(new Set());
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
-    const glowAnim = useRef(new Animated.Value(0.3)).current;
-    const animationsActive = useAnimationsActive();
+    // `usePulse` gates the loop on focus + foreground: `feedNeedsRefresh` can
+    // stay true indefinitely, and this screen stays mounted behind whatever
+    // the user navigates to, so without that gate the glow pulses forever
+    // off-screen. Parks at 0.3 (not 0) while pending so a blurred screen comes
+    // back with the affordance still visible.
+    const glowAnim = usePulse(feedNeedsRefresh);
     const isChatExpanded = useFloatingChatIsExpanded();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
     const [hygieneCount, setHygieneCount] = useState(0);
@@ -131,28 +135,6 @@ const PersonaL1MeraProtocol: React.FC<PersonaL1MeraProtocolProps> = ({ userId })
             useForYouStore.getState().setFeedNeedsRefresh(true);
         }
     }, [factMutationVersion, loadLocalFacts, fetchUserPersona, userId]);
-
-    // `animationsActive` gates the loop on focus + foreground: `feedNeedsRefresh`
-    // can stay true indefinitely, and this screen stays mounted behind whatever
-    // the user navigates to, so without it the glow pulses forever off-screen.
-    useEffect(() => {
-        if (feedNeedsRefresh && animationsActive) {
-            const animation = Animated.loop(
-                Animated.sequence([
-                    Animated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-                    Animated.timing(glowAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
-                ])
-            );
-            animation.start();
-            return () => animation.stop();
-        } else {
-            glowAnim.stopAnimation();
-            // Park at the resting value the ref is seeded with, not 0 — 0 is
-            // fully transparent, so a blurred screen used to come back with the
-            // affordance invisible until the next mutation restarted the loop.
-            glowAnim.setValue(feedNeedsRefresh ? 0.3 : 0);
-        }
-    }, [feedNeedsRefresh, animationsActive, glowAnim]);
 
     // When the floating chat popover collapses (true→false transition), reload
     // facts + persona — the same refresh the old embedded chat's closeChat did.

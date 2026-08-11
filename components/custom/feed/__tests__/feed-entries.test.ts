@@ -13,9 +13,6 @@ import {
   extendPinnedIds,
   INITIAL_VISIBLE_FLOOR,
   seenTierOfEntry,
-  buildFeedRows,
-  DIVIDER_CAUGHT_UP,
-  DIVIDER_OPENED,
   stalenessBandPenalty,
   effectiveBand,
   STALE_ONE_BAND_HOURS,
@@ -351,89 +348,6 @@ describe('seenTierOfEntry', () => {
         isViewedEntry(a, states, opened),
       );
     }
-  });
-});
-
-describe('buildFeedRows — the two dividers', () => {
-  const tierOf =
-    (states: Record<string, CardStateRecord>, opened: Set<string>) => (it: FeedListItem) =>
-      seenTierOfEntry(it, states, opened);
-
-  const kinds = (rows: ReturnType<typeof buildFeedRows>['rows']) =>
-    rows.map((r) => (r.kind === 'divider' ? r.id : r.id));
-
-  it('splices both dividers at the tier boundaries', () => {
-    const data = [item('u', 0.9), item('s', 0.9, 'art-s'), item('o', 0.9, 'art-o')];
-    const out = buildFeedRows(data, 0, tierOf({ s: skipped() }, new Set(['art-o'])));
-    expect(kinds(out.rows)).toEqual(['u', DIVIDER_CAUGHT_UP, 's', DIVIDER_OPENED, 'o']);
-    expect(out.caughtUpIsFooter).toBe(false);
-  });
-
-  it('caughtUpIsFooter when nothing below the boundary has been seen', () => {
-    const data = [item('u1', 0.9), item('u2', 0.6)];
-    const out = buildFeedRows(data, 0, tierOf(noStates, new Set()));
-    expect(kinds(out.rows)).toEqual(['u1', 'u2']);
-    expect(out.caughtUpIsFooter).toBe(true);
-  });
-
-  it('omits divider #2 when nothing was opened', () => {
-    const data = [item('u', 0.9), item('s', 0.9, 'art-s')];
-    const out = buildFeedRows(data, 0, tierOf({ s: skipped() }, new Set()));
-    expect(kinds(out.rows)).toEqual(['u', DIVIDER_CAUGHT_UP, 's']);
-  });
-
-  it('emits both dividers in order even when the dynamic region is ALL opened', () => {
-    const data = [item('o', 0.9, 'art-o')];
-    const out = buildFeedRows(data, 0, tierOf(noStates, new Set(['art-o'])));
-    expect(kinds(out.rows)).toEqual([DIVIDER_CAUGHT_UP, DIVIDER_OPENED, 'o']);
-  });
-
-  it('NEVER puts a divider inside the pinned prefix, whatever tiers it holds', () => {
-    // The prefix is the user's reading order and deliberately mixes tiers.
-    const data = [item('p1', 0.9, 'art-p1'), item('p2', 0.9), item('u', 0.9)];
-    const out = buildFeedRows(data, 2, tierOf(noStates, new Set(['art-p1'])));
-    expect(kinds(out.rows).slice(0, 2)).toEqual(['p1', 'p2']);
-    expect(out.rows.slice(0, 2).every((r) => r.kind === 'story')).toBe(true);
-  });
-
-  // The scrolled-to-the-bottom case: everything pinned ⇒ empty dynamic region ⇒
-  // the caught-up marker is the footer ⇒ the NEXT arrival appears ABOVE it.
-  it('a new arrival lands above the caught-up divider once everything is pinned', () => {
-    const pinned = [item('p1', 0.9, 'art-p1'), item('p2', 0.9, 'art-p2')];
-    const allPinned = buildFeedRows(
-      pinned,
-      2,
-      tierOf(noStates, new Set(['art-p1', 'art-p2'])),
-    );
-    expect(allPinned.caughtUpIsFooter).toBe(true);
-
-    // ...now one fresh story arrives into the dynamic region.
-    const withFresh = buildFeedRows(
-      [...pinned, item('fresh', 0.9)],
-      2,
-      tierOf(noStates, new Set(['art-p1', 'art-p2'])),
-    );
-    expect(kinds(withFresh.rows)).toEqual(['p1', 'p2', 'fresh']);
-    expect(withFresh.caughtUpIsFooter).toBe(true);
-  });
-
-  it('clamps a pinnedCount past the end and never drops a story', () => {
-    const data = [item('a', 0.9), item('b', 0.6)];
-    const out = buildFeedRows(data, 99, tierOf(noStates, new Set()));
-    expect(kinds(out.rows)).toEqual(['a', 'b']);
-  });
-
-  it('divider ids never collide with story ids (keyExtractor stays unique)', () => {
-    const data = [item('u', 0.9), item('s', 0.9, 'art-s'), item('o', 0.9, 'art-o')];
-    const out = buildFeedRows(data, 0, tierOf({ s: skipped() }, new Set(['art-o'])));
-    const ks = out.rows.map((r) => r.id);
-    expect(new Set(ks).size).toBe(ks.length);
-  });
-
-  it('returns an empty result for an empty feed', () => {
-    const out = buildFeedRows([], 0, tierOf(noStates, new Set()));
-    expect(out.rows).toEqual([]);
-    expect(out.caughtUpIsFooter).toBe(true);
   });
 });
 

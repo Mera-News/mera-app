@@ -1,38 +1,17 @@
-// AllCaughtUpCard — variant + surface + scale coverage.
+// AllCaughtUpCard — the end-of-list "you're all caught up" card.
 //
-// This card renders at SIX call sites along two INDEPENDENT axes.
+// Used at SIX call sites: the Feed's end-of-list footer, and the empty state of
+// the Feed, FactFeedScreen, and ForYouScreen. There used to be two MORE
+// instances of this component, spliced in-list at each Feed attention-tier
+// boundary (`variant="seen"` / `"read"`), each with its own headline and
+// instruction line. The user reported their position wasn't reliable, so both
+// were removed — this file used to pin their per-variant copy; that coverage is
+// gone along with the feature, not weakened.
 //
-//  `variant` — which boundary the card marks, and the copy that differs with it:
-//  `seen` (Feed divider #1), `read` (Feed divider #2, which used to be the
-//  separate FeedOpenedDivider component), and `end` (the DEFAULT — the
-//  end-of-list footer and the three empty states, where there is no boundary
-//  below to describe).
-//
-//  TWO strings are variant-dependent: the HEADLINE and the instruction line
-//  beneath it. The headline used to be shared, and this file used to pin that it
-//  was ("exactly one line differs"). It was changed deliberately — two visually
-//  identical cards ten rows apart were too weakly separated by one short line,
-//  and the shared "You're all caught up with what impacts you." was wrong on its
-//  face above the pile the user had already read. The tests below now pin the
-//  replacement contract: the headline is DISTINCT per variant (so this cannot
-//  silently regress to one shared string), while the cycling mindfulness nudge
-//  and the Explore CTA stay identical in all three.
-//
-//  `end` keeps the ORIGINAL `feed.allCaughtUp` key, which is why five of the six
-//  call sites and their 19 translations needed no edit at all.
-//
-//  `compact` — scale. Three call sites are rows inside the Feed list (both
-//  dividers and the footer, all `compact`) and three are terminal EMPTY STATES
-//  (Feed `renderEmpty`, FactFeedScreen, ForYouScreen) where the card IS the
-//  screen. The tests below pin that split, because getting it wrong is invisible
-//  in a unit run and obvious on a device: a compact empty state is a small card
-//  marooned in a blank screen.
-//
-// The corner radius is asserted directly against the token ArticleCardBase's
-// FLAT branch uses (`rounded-2xl`) — that branch is what the Feed's article
-// cards render through, and matching it is the whole point of the change. If
-// ArticleCardBase ever moves off `rounded-2xl`, this fails and the two surfaces
-// can't silently drift apart.
+// What's left: the surface/scale contract (unchanged), and the CTA, which is
+// now CONDITIONAL — "Browse Explore" by default, or "Want to read more? Lower
+// the feed priority" when the caller passes both `feedThreshold` (above its
+// floor) and `onLowerPriority`.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 jest.mock('react-i18next', () => ({
@@ -74,25 +53,33 @@ jest.mock('@/components/ui/button', () => {
   };
 });
 
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
+import { router } from 'expo-router';
 import AllCaughtUpCard from '../AllCaughtUpCard';
 import en from '@/lib/locales/en.json';
 
 const rootClass = () => screen.getByTestId('all-caught-up-card').props.className as string;
 
 describe('AllCaughtUpCard', () => {
-  it('renders the end headline and the Explore CTA in both scales', () => {
+  it('renders the headline and the Explore CTA by default, in both scales', () => {
     for (const compact of [false, true]) {
       const { unmount } = render(<AllCaughtUpCard compact={compact} />);
       expect(screen.getByText(en.feed.allCaughtUp)).toBeTruthy();
       expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
+      expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
       unmount();
     }
   });
 
+  it('tapping the Explore CTA navigates to Explore', () => {
+    render(<AllCaughtUpCard />);
+    fireEvent.press(screen.getByTestId('all-caught-up-explore-cta'));
+    expect(router.navigate).toHaveBeenCalledWith('/logged-in/app_container/around');
+  });
+
   // The user's explicit ask: "its corners should be rounded like the suggestion
-  // cards". Radius is NOT variant-dependent — it reads correctly at both scales.
+  // cards". Radius is checked at both scales.
   it('uses the article cards rounded-2xl radius at BOTH scales', () => {
     render(<AllCaughtUpCard />);
     expect(rootClass()).toContain('rounded-2xl');
@@ -123,96 +110,61 @@ describe('AllCaughtUpCard', () => {
     expect(compactLogo).toBeLessThan(roomyLogo);
   });
 
-  // ── The copy that differs per variant ──
+  // ── The conditional CTA (r14 #9) ──
   //
-  // Asserted against the REAL en.json values (the i18n mock resolves the actual
-  // file), so a renamed or missing key fails here rather than silently rendering
-  // the raw key path on device.
-  it('renders the seen headline and line for variant="seen" and nothing else', () => {
-    render(<AllCaughtUpCard compact variant="seen" />);
-    expect(screen.getByText(en.feed.divider.seenTitle)).toBeTruthy();
-    expect(screen.getByText(en.feed.divider.seenLine)).toBeTruthy();
-    expect(screen.queryByText(en.feed.divider.readTitle)).toBeNull();
-    expect(screen.queryByText(en.feed.divider.readLine)).toBeNull();
-    // The shared headline is gone from the dividers — that is the change.
-    expect(screen.queryByText(en.feed.allCaughtUp)).toBeNull();
-  });
-
-  it('renders the read headline and line for variant="read" and nothing else', () => {
-    render(<AllCaughtUpCard compact variant="read" />);
-    expect(screen.getByText(en.feed.divider.readTitle)).toBeTruthy();
-    expect(screen.getByText(en.feed.divider.readLine)).toBeTruthy();
-    expect(screen.queryByText(en.feed.divider.seenTitle)).toBeNull();
-    expect(screen.queryByText(en.feed.divider.seenLine)).toBeNull();
-    expect(screen.queryByText(en.feed.allCaughtUp)).toBeNull();
-  });
-
-  // "the basic all caught up card, with no props" — the footer and the three
-  // empty states. `end` is the default precisely so those call sites pass none,
-  // and it keeps the ORIGINAL key so their 19 translations stay valid.
-  it('keeps the original allCaughtUp headline and NO boundary line by default, i.e. the end variant', () => {
-    for (const el of [<AllCaughtUpCard compact key="d" />, <AllCaughtUpCard compact variant="end" key="e" />]) {
-      const { unmount } = render(el);
-      expect(screen.getByText(en.feed.allCaughtUp)).toBeTruthy();
-      expect(screen.queryByText(en.feed.divider.seenTitle)).toBeNull();
-      expect(screen.queryByText(en.feed.divider.readTitle)).toBeNull();
-      expect(screen.queryByText(en.feed.divider.seenLine)).toBeNull();
-      expect(screen.queryByText(en.feed.divider.readLine)).toBeNull();
-      unmount();
-    }
-  });
-
-  // The replacement contract. The headline MOVES with the variant (three
-  // distinct strings, asserted below), while the nudge and the CTA do not. If a
-  // future change collapses the headlines back to one shared string, or gates
-  // the nudge/CTA to a variant, this fails.
-  it('gives each variant its own headline while the nudge and the Explore CTA stay identical', () => {
-    const messages = require('@/lib/locales/en.json').feed.mindfulness as string[];
-    const headlines: string[] = [];
-    for (const variant of ['seen', 'read', 'end'] as const) {
-      const { unmount } = render(<AllCaughtUpCard compact variant={variant} />);
-      headlines.push(
-        String(
-          screen.getByTestId('all-caught-up-headline').props.children,
-        ),
-      );
-      // The nudge to step away must render everywhere — the user's explicit ask.
-      expect(screen.getByText(messages[0])).toBeTruthy();
-      // The CTA is deliberately NOT gated to `end`: the footer only renders when
-      // nothing below the pin boundary has been seen and the empty states only
-      // on an empty feed, so gating it would leave a normal populated feed with
-      // no Explore affordance at all.
+  // "if the user has chosen a priority higher than low in the feed header,
+  // instead of the browse explore button write 'Want to read more? Lower the
+  // feed priority'". `feedThreshold` and `onLowerPriority` are opt-in props —
+  // only FeedScreen passes them; FactFeedScreen and ForYouScreen's empty
+  // states (and the Feed's own loading/error states) pass neither and must
+  // keep today's Explore-only behavior untouched.
+  describe('the lower-priority CTA', () => {
+    it('shows the Explore CTA when no props are passed (the other three call sites)', () => {
+      render(<AllCaughtUpCard compact />);
       expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
-      unmount();
-    }
-    expect(headlines).toEqual([
-      en.feed.divider.seenTitle,
-      en.feed.divider.readTitle,
-      en.feed.allCaughtUp,
-    ]);
-    // Rendered, not just declared: no two variants may show the same headline.
-    expect(new Set(headlines).size).toBe(3);
-  });
+      expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
+    });
 
-  // Nothing may read alike: `seen` and `read` are two otherwise identical cards
-  // ten rows apart, and a headline that duplicated its own line beneath would be
-  // two lines saying one thing. Pinned across all six strings.
-  it('keeps all six variant strings distinct from one another', () => {
-    const strings = [
-      en.feed.divider.seenTitle,
-      en.feed.divider.seenLine,
-      en.feed.divider.readTitle,
-      en.feed.divider.readLine,
-      en.feed.allCaughtUp,
-    ];
-    for (const s of strings) expect(s).toBeTruthy();
-    expect(new Set(strings).size).toBe(strings.length);
+    it('shows the Explore CTA at threshold "low" even with a handler — nothing to lower', () => {
+      const onLowerPriority = jest.fn();
+      render(<AllCaughtUpCard compact feedThreshold="low" onLowerPriority={onLowerPriority} />);
+      expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
+      expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
+    });
+
+    it('shows the lower-priority CTA at threshold "medium"', () => {
+      const onLowerPriority = jest.fn();
+      render(<AllCaughtUpCard compact feedThreshold="medium" onLowerPriority={onLowerPriority} />);
+      expect(screen.getByText(en.feed.lowerPriorityCta)).toBeTruthy();
+      expect(screen.getByTestId('all-caught-up-lower-priority-cta')).toBeTruthy();
+      expect(screen.queryByTestId('all-caught-up-explore-cta')).toBeNull();
+    });
+
+    it('shows the lower-priority CTA at threshold "high"', () => {
+      const onLowerPriority = jest.fn();
+      render(<AllCaughtUpCard compact feedThreshold="high" onLowerPriority={onLowerPriority} />);
+      expect(screen.getByText(en.feed.lowerPriorityCta)).toBeTruthy();
+      expect(screen.queryByTestId('all-caught-up-explore-cta')).toBeNull();
+    });
+
+    it('falls back to Explore when feedThreshold is passed without a handler', () => {
+      render(<AllCaughtUpCard compact feedThreshold="high" />);
+      expect(screen.getByTestId('all-caught-up-explore-cta')).toBeTruthy();
+      expect(screen.queryByTestId('all-caught-up-lower-priority-cta')).toBeNull();
+    });
+
+    it('tapping the lower-priority CTA calls the handler', () => {
+      const onLowerPriority = jest.fn();
+      render(<AllCaughtUpCard compact feedThreshold="medium" onLowerPriority={onLowerPriority} />);
+      fireEvent.press(screen.getByTestId('all-caught-up-lower-priority-cta'));
+      expect(onLowerPriority).toHaveBeenCalledTimes(1);
+    });
   });
 
   // Long translations must WRAP, not clip — nothing here sets numberOfLines, and
   // the card is content-sized, so the worst-case strings simply make it taller.
   it('does not constrain any text to a fixed line count', () => {
-    render(<AllCaughtUpCard compact variant="seen" />);
+    render(<AllCaughtUpCard compact />);
     for (const node of screen.UNSAFE_getAllByType(require('react-native').Text)) {
       expect(node.props.numberOfLines).toBeUndefined();
     }
@@ -223,37 +175,10 @@ describe('AllCaughtUpCard', () => {
     expect(screen.getByTestId('glass-plate')).toBeTruthy();
   });
 
-    it('renders the functional instruction line brighter than the cycling mindfulness line', () => {
-        // Regression guard: these two sat at identical weight on device and a user could not
-        // tell which line was actionable. They must stay visually distinct. Checked on BOTH
-        // boundary variants — the hierarchy is keyed off "a boundary line renders", not off
-        // which one. (The per-variant headline sits ABOVE both, brighter still; it names the
-        // state, this line names the action.)
-        for (const variant of ['seen', 'read'] as const) {
-            const line = variant === 'seen' ? en.feed.divider.seenLine : en.feed.divider.readLine;
-            const { unmount } = render(<AllCaughtUpCard variant={variant} compact />);
-            const subClass = String(screen.getByText(line).props.className ?? '');
-            expect(subClass).toContain('text-typography-200');
-            expect(subClass).toContain('font-medium');
-            unmount();
-        }
-    });
-
-    it('leaves the mindfulness line as the primary line in the end variant', () => {
-        // Footer and empty states render no boundary line, so the cycling line keeps its
-        // original class — the pre-variant appearance, unchanged.
-        const messages = require('@/lib/locales/en.json').feed.mindfulness as string[];
-        const { getByText } = render(<AllCaughtUpCard />);
-        const msg = getByText(messages[0]);
-        expect(String(msg.props.className ?? '')).toContain('text-gray-400');
-    });
-
-    it('recedes the mindfulness line whenever a boundary line is present', () => {
-        // The other half of the same rule: with a functional line above it, the decorative
-        // cycling line must step back. Pinned so the two classes cannot be collapsed into one.
-        const messages = require('@/lib/locales/en.json').feed.mindfulness as string[];
-        render(<AllCaughtUpCard variant="seen" compact />);
-        const msg = screen.getByText(messages[0]);
-        expect(String(msg.props.className ?? '')).toContain('text-typography-500');
-    });
+  it('keeps the mindfulness cycling line at its original recede-from-headline styling', () => {
+    const messages = require('@/lib/locales/en.json').feed.mindfulness as string[];
+    const { getByText } = render(<AllCaughtUpCard />);
+    const msg = getByText(messages[0]);
+    expect(String(msg.props.className ?? '')).toContain('text-gray-400');
+  });
 });

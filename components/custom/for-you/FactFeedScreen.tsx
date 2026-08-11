@@ -10,6 +10,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import {
   GLASS_HEADER_SCRIM,
   GLASS_HEADER_TINT,
+  GlassHeaderAndroidBackdrop,
   GlassPlate,
 } from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
@@ -24,8 +25,10 @@ import {
   buildFactRows,
   isHeadlineSectionId,
   isSuggestionOpened,
+  type FactRow,
   type FactRowGroup,
 } from '@/lib/stores/fact-rows-selector';
+import { sectionTitle } from '@/components/custom/for-you/section-title';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { useForYouSuggestions } from '@/lib/stores/selectors';
@@ -116,10 +119,17 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
   const dashboardThreshold = useImportanceFilterStore((s) => s.dashboardThreshold);
   const [threshold, setThreshold] = useState<ImportanceThreshold>(dashboardThreshold);
 
-  const groups: FactRowGroup[] = useMemo(() => {
+  // Hoisted so the "next fact" footer below can reuse it instead of calling
+  // `buildFactRows` a second time — this was previously computed inline and
+  // thrown away, keeping only this section's own `groups`.
+  const allRows: FactRow[] = useMemo(() => {
     if (!snapshots) return [];
     const { rows } = buildFactRows(suggestions, snapshots, openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
-    const found = rows.find((r) => r.factId === factId)?.groups ?? [];
+    return rows;
+  }, [snapshots, suggestions, openedIds, userGeoLanguageCtx]);
+
+  const groups: FactRowGroup[] = useMemo(() => {
+    const found = allRows.find((r) => r.factId === factId)?.groups ?? [];
     const filtered = filterGroupsByImportance(found, threshold);
     // Order this screen by article publication freshness — newest PUBLISHED on
     // top (`pubDateMs`), not suggestion-creation time (the shared `cardCompare`
@@ -130,7 +140,53 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         b.pubDateMs - a.pubDateMs ||
         (a.data._id < b.data._id ? -1 : a.data._id > b.data._id ? 1 : 0),
     );
-  }, [snapshots, suggestions, factId, openedIds, userGeoLanguageCtx, threshold]);
+  }, [allRows, factId, threshold]);
+
+  // The NEXT fact, in Dashboard-VISIBLE order — so tapping the footer below
+  // always lands on a section the user could also have reached by scrolling
+  // the Dashboard, never a section hidden by their Dashboard filter.
+  //
+  // Deliberately `dashboardThreshold` (the persisted Dashboard pill), NOT this
+  // screen's own ephemeral `threshold` — that local dropdown only reshapes
+  // THIS section's article list and resets to `dashboardThreshold` on every
+  // visit (see its declaration above); the ORDER of sections is a Dashboard
+  // concept and must use the Dashboard's own filter, or "next" could point at
+  // a section this user's Dashboard never actually shows.
+  //
+  // Mirrors DashboardSectionsFeed's own filter-and-drop rule exactly
+  // (DashboardSectionsFeed.tsx ~146-152): a row that HAD groups but the filter
+  // hid all of them is dropped; a row with no groups to begin with (a headline
+  // shell whose denominator line is its content) is kept.
+  const dashboardVisibleRows = useMemo(
+    () =>
+      allRows.filter((row) => {
+        const filteredGroups = filterGroupsByImportance(row.groups, dashboardThreshold);
+        return !(row.groups.length > 0 && filteredGroups.length === 0);
+      }),
+    [allRows, dashboardThreshold],
+  );
+
+  const nextFact = useMemo(() => {
+    const idx = dashboardVisibleRows.findIndex((r) => r.factId === factId);
+    if (idx === -1) return null;
+    return dashboardVisibleRows[idx + 1] ?? null;
+  }, [dashboardVisibleRows, factId]);
+
+  const nextFactTitle = nextFact ? sectionTitle(t, nextFact) : null;
+
+  // `router.replace`, not `push`: hopping from fact to fact via this footer
+  // must not build a back-stack five deep. Both the visit-tracking effect
+  // (above) and the seeded palette (`AbstractGradientBackdrop seed={factId}`
+  // below) are keyed on `factId`, so a replace re-runs them for free — no
+  // special-case needed for "arrived via the footer" vs. "arrived from the
+  // Dashboard".
+  const goToNextFact = useCallback(() => {
+    if (!nextFact || !nextFactTitle) return;
+    router.replace({
+      pathname: '/logged-in/fact-feed',
+      params: { factId: nextFact.factId, statement: nextFactTitle },
+    });
+  }, [nextFact, nextFactTitle]);
 
   // ── Scroll-to-top FAB ──
   const listRef = useRef<FlatList<FactRowGroup>>(null);
@@ -208,6 +264,48 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
     [handlePress, openedIds, prevVisitMs, verdicts, dismissedMap, onVerdict, onAskMera, feedbackHandlers],
   );
 
+  // "Jump from one fact feed list to the next" (r14 #6) — a tap target naming
+  // the NEXT section in Dashboard-visible order (see `dashboardVisibleRows`
+  // above). Renders nothing when there is no next fact — including on an
+  // empty section, which the user reported is exactly when hopping onward is
+  // most useful, so this deliberately coexists with the `ListEmptyComponent`
+  // below rather than being suppressed by it.
+  //
+  // A headline section's title is app copy, already localized — rendered
+  // as plain `Text`, mirroring the header above. A fact section's title is
+  // user data, so it goes through `TranslatableDynamic`, exactly like the
+  // header's own `statement`.
+  const listFooter = nextFact && nextFactTitle ? (
+    <Pressable
+      testID="fact-feed-next"
+      onPress={goToNextFact}
+      accessibilityRole="button"
+      accessibilityLabel={`${t('forYou.nextFactPrefix')}: ${nextFactTitle}`}
+      className="items-center py-6 px-4"
+    >
+      <HStack className="items-center" space="xs">
+        <Text size="xs" className="text-typography-500">
+          {t('forYou.nextFactPrefix')}
+        </Text>
+        <MaterialIcons name="arrow-forward" size={14} color="#6B7280" />
+      </HStack>
+      {isHeadlineSectionId(nextFact.factId) ? (
+        <Text size="md" bold numberOfLines={1} className="text-white text-center mt-1">
+          {nextFactTitle}
+        </Text>
+      ) : (
+        <TranslatableDynamic
+          text={nextFactTitle}
+          as="text"
+          size="md"
+          bold
+          numberOfLines={1}
+          className="text-white text-center mt-1"
+        />
+      )}
+    </Pressable>
+  ) : null;
+
   return (
     // No `bg-black`: the AbstractGradientBackdrop below is the page background.
     <Box className="flex-1">
@@ -233,6 +331,16 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
           second hairline on this wrapper would both double the line and add a
           pixel of height. */}
       <Box testID="fact-feed-header" style={{ backgroundColor: GLASS_HEADER_SCRIM }}>
+        {/* Android-only opaque-ish gradient — must render BEFORE GlassPlate
+            so the tint below still lifts it to a readable surface tone (see
+            GlassSurface.tsx's GlassHeaderAndroidBackdrop doc comment). No-op
+            on iOS. Applied here for the same lockstep reason as the other
+            four header paint sites, even though this header sits in normal
+            flow with nothing scrolling under it — see the doc comment above
+            this Box for why that made translucency fine before; verify on
+            device that the extra opacity doesn't read as a dark band over
+            the seeded backdrop below it. */}
+        <GlassHeaderAndroidBackdrop />
         <GlassPlate tint={GLASS_HEADER_TINT} />
         <HStack
           className="items-center px-4 pb-3 border-b border-gray-900"
@@ -286,6 +394,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         onScroll={handleScroll}
         scrollEventThrottle={16}
         ListEmptyComponent={<AllCaughtUpCard />}
+        ListFooterComponent={listFooter}
       />
 
       <ScrollToTopFab visible={showScrollToTop} onPress={scrollToTop} />

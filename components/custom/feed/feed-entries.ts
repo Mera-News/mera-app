@@ -2,18 +2,20 @@
 //
 // The persisted `feed-order-store.order` is the insert-only source of truth for
 // which stories exist and how new arrivals stack. At render the Feed turns that
-// into a static prefix plus a re-ranking remainder, with a divider at each
-// attention boundary:
+// into a static prefix plus a re-ranking remainder:
 //
 //   [ PINNED PREFIX — what the user has already read past, in reading order ]
 //   [ tier 0 unseen — high → med → low; new arrivals land here ]
-//   ── divider #1 "seen but not read below" ──
 //   [ tier 1 seen but not opened ]
-//   ── divider #2 "already read below" ──
 //   [ tier 2 opened ]
 //
-// Nothing is ever removed. A read card SINKS past a divider, it does not
-// disappear, so the user can always scroll on to re-read everything.
+// Nothing is ever removed. A read card SINKS to the bottom, it does not
+// disappear, so the user can always scroll on to re-read everything. There used
+// to be an in-list divider card at each tier boundary (plus a third copy as the
+// end-of-list footer) — the user reported its position wasn't reliable, so all
+// three were collapsed into ONE card, the end-of-list footer only (see
+// AllCaughtUpCard). This module still computes the tiers — they still decide
+// ORDER — it just no longer places anything AT a boundary.
 //
 // The three tiers come from two signals (see `seenTierOf`): the card's own
 // LIFECYCLE STATE (`skipped` = dwelt on for DWELL_READ_SECONDS, `viewed` =
@@ -51,7 +53,7 @@ import { FEED_HALF_LIFE_HOURS, type FeedListItem } from '@/lib/stores/feed-list-
 // projection onto that rule.
 export { relevanceBandRank };
 
-/** A rendered Feed row. Every row is a real story — the divider entry is gone. */
+/** A rendered Feed row. Every row is a real story. */
 export type FeedEntry = FeedListItem;
 
 /** How many rows are pinned before the user has scrolled at all. Expressed as a
@@ -72,15 +74,11 @@ export const INITIAL_VISIBLE_FLOOR = 2;
  * never shrinks it, which is what stops the boundary chasing the viewport and
  * turning the whole list static inside one scroll.
  *
- * `deepestSeenId` is an ID, never an index. An index would have to survive both
- * a re-sort and (once dividers exist) a sentinel-row splice into the rendered
- * array, and those are two different index spaces — the exact divergence that
- * killed the previous "deepest row" tracker (see use-visible-index's header).
- * Resolving the id against `sorted` in the same tick it is consumed means no
- * index ever crosses a boundary.
- *
- * `sorted` must be the STORY-only list, never a union array containing dividers:
- * a divider must never occupy a pin slot.
+ * `deepestSeenId` is an ID, never an index. An index would have to survive a
+ * re-sort, which is the exact divergence that killed the previous "deepest
+ * row" tracker (see use-visible-index's header). Resolving the id against
+ * `sorted` in the same tick it is consumed means no index ever crosses a
+ * boundary.
  *
  * An unresolvable id (row dropped by `hydrate` / `removeIds`) falls back to the
  * floor rather than collapsing the pin — combined with the monotonic guard, a
@@ -104,8 +102,7 @@ export interface SortedFeed {
   rows: FeedEntry[];
   /** How many leading entries of `rows` are the pinned prefix. Deliberately the
    *  count of SURVIVORS, not `pinnedIds.length` — the two diverge whenever
-   *  `hydrate`/`removeIds` has dropped a pinned row, and consumers place things
-   *  (dividers) relative to this boundary. One producer, one number. */
+   *  `hydrate`/`removeIds` has dropped a pinned row. One producer, one number. */
   pinnedCount: number;
 }
 
@@ -131,7 +128,9 @@ export function isViewedEntry(
 
 /**
  * Which of the three attention tiers a laid-out card is in: 0 unseen, 1 seen but
- * not opened, 2 opened. The Feed renders a divider at each boundary.
+ * not opened, 2 opened. These tiers still decide RENDER ORDER (unseen first,
+ * then seen, then opened) — the Feed no longer renders anything AT the
+ * boundary between them, but the boundary itself is still real.
  *
  * Same namespacing caveat as `isViewedEntry`: `item.id` is the feed-order row
  * key, the opened set is keyed by ARTICLE id.
@@ -292,84 +291,6 @@ export function sortFeedEntries(
   }
   const rest = data.filter((it) => !pinnedSet.has(it.id));
   return { rows: [...pinned, ...sortByPriority(rest, facts)], pinnedCount: pinned.length };
-}
-
-/** Stable keys for the two divider sentinels. Constants, so `keyExtractor` stays
- *  unique and stable and the rows never remount. */
-export const DIVIDER_CAUGHT_UP = 'feed-divider-caught-up';
-export const DIVIDER_OPENED = 'feed-divider-opened';
-
-/** One rendered row: a story, or one of the two dividers. */
-export type FeedRowEntry =
-  | { kind: 'story'; id: string; item: FeedListItem }
-  | { kind: 'divider'; id: typeof DIVIDER_CAUGHT_UP | typeof DIVIDER_OPENED };
-
-export interface FeedRows {
-  rows: FeedRowEntry[];
-  /** True when the caught-up divider has nothing below it and should render as
-   *  the list FOOTER instead of in-list — so exactly one instance exists. */
-  caughtUpIsFooter: boolean;
-}
-
-/**
- * Wrap the sorted stories as render rows and splice in the two dividers.
- *
- *   [ pinned prefix — the user's timeline, mixed tiers, static ]
- *   [ tier 0 — the DYNAMIC sublist; new arrivals land here by priority ]
- *   ── divider #1 — caught-up card, variant "seen" ──
- *   [ tier 1 — seen, not opened ]
- *   ── divider #2 — the SAME caught-up card, variant "read" ──
- *   [ tier 2 — opened ]
- *
- * Both sentinels render one component (AllCaughtUpCard); only the variant, and
- * therefore the headline and instruction line, differs. This module is unchanged
- * by that — it owns WHERE the sentinels go, never what they look like.
- *
- * Dividers are placed by scanning the DYNAMIC region only, never the pinned
- * prefix. Two consequences, both deliberate:
- *
- *  - The pinned prefix keeps the order the user actually read in, so it may hold
- *    a mix of tiers. Slicing a divider into it would contradict that.
- *  - When the user has scrolled to the very bottom, everything is pinned and the
- *    dynamic region is empty — so the caught-up divider degrades to the footer,
- *    and the NEXT arrival appears in tier 0, i.e. ABOVE it. That only works
- *    because divider position is derived from the region's composition rather
- *    than from a fixed index.
- */
-export function buildFeedRows(
-  sorted: readonly FeedListItem[],
-  pinnedCount: number,
-  tierOf: (it: FeedListItem) => SeenTier,
-): FeedRows {
-  const rows: FeedRowEntry[] = [];
-  const story = (item: FeedListItem): FeedRowEntry => ({ kind: 'story', id: item.id, item });
-
-  // `pinnedCount` must come from `sortFeedEntries` — it counts SURVIVORS, so it
-  // cannot run past the end even when pinned ids were dropped.
-  const boundary = Math.min(Math.max(pinnedCount, 0), sorted.length);
-  for (let i = 0; i < boundary; i += 1) rows.push(story(sorted[i]));
-
-  const dynamic = sorted.slice(boundary);
-  let seenDivider = false;
-  let openedDivider = false;
-  for (const item of dynamic) {
-    const tier = tierOf(item);
-    if (tier >= 1 && !seenDivider) {
-      seenDivider = true;
-      rows.push({ kind: 'divider', id: DIVIDER_CAUGHT_UP });
-    }
-    if (tier >= 2 && !openedDivider) {
-      openedDivider = true;
-      // Only meaningful once the caught-up divider exists above it; a feed whose
-      // dynamic region is ALL opened rows still gets both, in order.
-      rows.push({ kind: 'divider', id: DIVIDER_OPENED });
-    }
-    rows.push(story(item));
-  }
-
-  // Nothing below the boundary is seen ⇒ the caught-up marker belongs at the very
-  // end, which is the footer's job. Never both.
-  return { rows, caughtUpIsFooter: !seenDivider };
 }
 
 /** How many rows at the head of a sorted list are unviewed. The boundary is no

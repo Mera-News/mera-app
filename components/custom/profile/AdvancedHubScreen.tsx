@@ -12,7 +12,7 @@ import { HEADLINE_DEPTH_UI_ENABLED } from '@/lib/config/feature-gates';
 import { getFacts } from '@/lib/database/services/fact-service';
 import { getActive } from '@/lib/database/services/publication-preference-service';
 import { getPendingCount, subscribeHygieneChange } from '@/lib/database/services/hygiene-service';
-import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { usePulse } from '@/lib/hooks/use-pulse';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -68,8 +68,12 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
 
     const feedNeedsRefresh = useForYouStore(s => s.feedNeedsRefresh);
     const factMutationVersion = useFloatingChatFactMutationVersion();
-    const glowAnim = useRef(new Animated.Value(0.3)).current;
-    const animationsActive = useAnimationsActive();
+    // `feedNeedsRefresh` can stay true indefinitely, and this screen stays
+    // mounted behind whatever is pushed on top of it — `usePulse` gates the
+    // loop on focus + foreground so it doesn't pulse forever off-screen, and
+    // parks at 0.3 (not 0) while pending so the affordance stays visible on a
+    // blurred screen.
+    const glowAnim = usePulse(feedNeedsRefresh);
 
     const lastCountsRefreshRef = useRef(0);
 
@@ -115,27 +119,6 @@ const AdvancedHubScreen: React.FC<AdvancedHubScreenProps> = ({ userId, onBack })
             refreshCounts();
         }
     }, [factMutationVersion, refreshCounts]);
-
-    // Gated on focus + foreground — same reasoning as PersonaL1MeraProtocol:
-    // `feedNeedsRefresh` can stay true indefinitely and this screen stays
-    // mounted behind whatever is pushed on top of it.
-    useEffect(() => {
-        if (feedNeedsRefresh && animationsActive) {
-            const animation = Animated.loop(
-                Animated.sequence([
-                    Animated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-                    Animated.timing(glowAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
-                ])
-            );
-            animation.start();
-            return () => animation.stop();
-        }
-        glowAnim.stopAnimation();
-        // Park at the resting value while the refresh is still pending, so the
-        // affordance stays visible on a blurred screen instead of going fully
-        // transparent until something restarts the loop.
-        glowAnim.setValue(feedNeedsRefresh ? 0.3 : 0);
-    }, [feedNeedsRefresh, animationsActive, glowAnim]);
 
     const handleRefreshSuggestions = useCallback(async () => {
         if (isRefreshingSuggestions) return;

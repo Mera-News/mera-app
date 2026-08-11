@@ -17,37 +17,34 @@
 // The prefix is SESSION-ONLY and resets on exactly the two events that re-freeze
 // the partition (see `resetSession`).
 //
-// DISPLAY ORDER (feed-entries.sortFeedEntries + buildFeedRows) — three attention
-// tiers with a divider at each boundary, all inside the dynamic region:
+// DISPLAY ORDER (feed-entries.sortFeedEntries) — three attention tiers, all
+// inside the dynamic region:
 //
 //   [ pinned prefix — reading order, mixed tiers, static ]
 //   [ tier 0 unseen — high → med → low; new arrivals land here ]
-//   ── divider #1: AllCaughtUpCard variant="seen", testID `feed-divider-caught-up` ──
 //   [ tier 1 seen but not opened ]
-//   ── divider #2: AllCaughtUpCard variant="read", testID `feed-divider-opened` ──
 //   [ tier 2 opened ]
 //
-// BOTH dividers and the footer are the SAME component — AllCaughtUpCard — with a
-// `variant` selecting the copy that differs. Divider #2 used to be a separate
-// slim label row (FeedOpenedDivider, now deleted) on the rationale that two
-// full cards would "read alike at a glance". The user overrode that: they want
-// one card everywhere, with the mindfulness nudge on every instance.
+// The tiers decide ORDER only. There USED to be an AllCaughtUpCard divider
+// spliced in at each tier boundary (variant="seen" / "read"), plus a third copy
+// of the same component as the end-of-list footer (variant="end") — three
+// instances of one component, differing only in headline + instruction line.
+// The user reported the in-list dividers' position wasn't reliable (a card
+// whose slot moves as new stories arrive and old ones sink reads as broken), so
+// both were removed: the list renders nothing at a tier boundary any more.
+// Exactly ONE caught-up card remains, always at the very end — see `listFooter`
+// below and `renderEmpty`. NOTHING is ever removed for being read: a read card
+// SINKS to the bottom, so it stays reachable by scrolling on. Cards leave the
+// feed by exactly one route: `hydrate` dropping a persisted id whose story aged
+// out of the publication window between sessions (FEED_WINDOW_MS).
 //
-// The overridden rationale did come back, exactly as predicted: one differing
-// line under a shared headline was too thin a separation ten cards apart, and
-// "You're all caught up with what impacts you." read oddly above the pile the
-// user had already READ. The fix applied was the one predicted here — stronger
-// per-variant copy, not a second component: the HEADLINE is now per-variant too
-// ("That's everything new." / "Already read."), with the instruction line
-// trimmed to what to DO. If it comes back again, keep going that way.
-//
-// When nothing below the boundary has been seen there is no in-list divider #1;
-// it renders as the end-of-list FOOTER (`feed-caught-up-footer`, variant `end`)
-// instead, so exactly ONE caught-up card exists either way. NOTHING is ever removed for
-// being read: a read card SINKS past a divider, so it stays reachable by
-// scrolling on. Cards leave the feed by exactly one route: `hydrate` dropping a
-// persisted id whose story aged out of the publication window between sessions
-// (FEED_WINDOW_MS).
+// The end card's CTA is conditional: normally "Browse Explore", but when the
+// Feed's importance threshold (`feedThreshold`) is above its floor ('low'), it
+// becomes "Want to read more? Lower the feed priority" — tapping it reveals the
+// header and briefly pulses the priority-filter chip (see `onLowerPriority`,
+// `ImportanceFilterDropdown`'s `pulsing` prop, and `lib/hooks/use-pulse.ts`)
+// rather than trying to open the filter menu itself, which cannot be driven
+// programmatically on native (see that dropdown's own comment).
 //
 // The unviewed/viewed input to that sort is a SNAPSHOT, so a card never sinks
 // under the reader mid-session. Together with the pinned prefix it refreshes at
@@ -80,6 +77,7 @@ import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
   GLASS_HEADER_SCRIM,
   GLASS_HEADER_TINT,
+  GlassHeaderAndroidBackdrop,
   GlassPlate,
 } from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
@@ -105,10 +103,7 @@ import {
   sortFeedEntries,
   countUnviewed,
   extendPinnedIds,
-  buildFeedRows,
-  seenTierOfEntry,
-  DIVIDER_CAUGHT_UP,
-  type FeedRowEntry,
+  type FeedEntry,
 } from './feed-entries';
 import {
   useFeedbackSheet,
@@ -262,6 +257,27 @@ const FeedScreen: React.FC = () => {
   const feedThreshold = useImportanceFilterStore((s) => s.feedThreshold);
   const setFeedThreshold = useImportanceFilterStore((s) => s.setFeedThreshold);
 
+  // "Want to read more? Lower the feed priority" — the end card's CTA when
+  // `feedThreshold` is above its floor (see AllCaughtUpCard's `onLowerPriority`
+  // prop). Tapping it reveals the header and briefly pulses the priority chip
+  // rather than trying to open its menu programmatically — see
+  // ImportanceFilterDropdown's `pulsing` prop for why that path doesn't work on
+  // native. Transient: cleared by a timer rather than left pulsing forever.
+  const [priorityPulsing, setPriorityPulsing] = useState(false);
+  const priorityPulseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (priorityPulseTimerRef.current) clearTimeout(priorityPulseTimerRef.current);
+    },
+    [],
+  );
+  const onLowerPriority = useCallback(() => {
+    reveal();
+    setPriorityPulsing(true);
+    if (priorityPulseTimerRef.current) clearTimeout(priorityPulseTimerRef.current);
+    priorityPulseTimerRef.current = setTimeout(() => setPriorityPulsing(false), 3500);
+  }, [reveal]);
+
   // Candidates keep opened items in (they back frozen rows + survive hydrate) —
   // no exclusion here; opened-filtering happens only for NEW ids in ingest.
   const candidates = useMemo(
@@ -306,7 +322,7 @@ const FeedScreen: React.FC = () => {
   // (Animated.createAnimatedComponent), so scrollToOffset is available. The
   // visibility boolean is driven from the scroll worklet (below) but only
   // crosses the JS bridge when it actually flips (showFabShared guard).
-  const listRef = useRef<Animated.FlatList<FeedRowEntry>>(null);
+  const listRef = useRef<Animated.FlatList<FeedEntry>>(null);
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const showFabShared = useSharedValue(false);
   // Raw offset mirror, updated on every scroll frame (see tickHandler below) —
@@ -479,7 +495,12 @@ const FeedScreen: React.FC = () => {
   // then viewed (high → med → low). Nothing is ever removed; a viewed card sinks
   // below the boundary, it does not disappear. Empty when there are no stories,
   // so the empty-state chain renders.
-  const { rows: listData, pinnedCount } = useMemo(
+  // `pinnedCount` is part of `sortFeedEntries`'s return but has no consumer
+  // here any more — it used to tell `buildFeedRows` where the pinned prefix
+  // ended so it could splice a divider just past it; that splicing is gone
+  // (see the header comment), and the pinned rows are already in their final
+  // rendered position within `listData` itself.
+  const { rows: listData } = useMemo(
     () =>
       sortFeedEntries(
         visibleData,
@@ -504,18 +525,6 @@ const FeedScreen: React.FC = () => {
     setPinnedIds(extendPinnedIds([], listData, deepestSeenIdRef.current));
   }, [listData, pinnedIds.length, deepestSeenIdRef]);
 
-  // Render rows = the sorted stories with the two divider sentinels spliced into
-  // the DYNAMIC region (never into the pinned prefix). `caughtUpIsFooter` is true
-  // when nothing below the boundary has been seen, in which case the caught-up
-  // card renders as the end-of-list footer instead — exactly one instance, always.
-  const { rows: feedRows, caughtUpIsFooter } = useMemo(
-    () =>
-      buildFeedRows(listData, pinnedCount, (it) =>
-        seenTierOfEntry(it, partitionSnapshot.cardStates, partitionSnapshot.openedArticleIds),
-      ),
-    [listData, pinnedCount, partitionSnapshot],
-  );
-
   // DEV-only: the FIRST commit at which this screen actually has cards. A
   // useEFFECT, not the memo body above — the memo runs during render, BEFORE
   // commit, so measuring there measures memo evaluation rather than paint.
@@ -523,15 +532,14 @@ const FeedScreen: React.FC = () => {
   // debounce would misreport this by 2.5s, in exactly the direction that
   // matters. `mark` is once-per-run, so the dep churn costs nothing.
   useEffect(() => {
-    if (feedRows.length > 0) {
-      coldstartTimeline.mark('feed-first-paint', `rows=${feedRows.length}`);
+    if (listData.length > 0) {
+      coldstartTimeline.mark('feed-first-paint', `rows=${listData.length}`);
     }
-  }, [feedRows.length]);
+  }, [listData.length]);
 
-  // How many rows sit in the unviewed block — now a RENDERED boundary again (the
-  // caught-up divider). The funnel diagnostic reports it as its `dividerIdx`, and
-  // is deliberately fed the STORY-only list, not `feedRows`: its index space must
-  // stay free of sentinels, exactly like the pin's.
+  // How many rows sit in the unviewed block — no longer a rendered boundary
+  // (see the header comment), but the funnel diagnostic still reports it as
+  // its `dividerIdx`.
   const unviewedCount = useMemo(
     () =>
       countUnviewed(
@@ -706,59 +714,42 @@ const FeedScreen: React.FC = () => {
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
   const renderItem = useCallback(
-    ({ item }: { item: FeedRowEntry }) => {
-      if (item.kind === 'divider') {
-        // Both dividers are the SAME card; only `variant` differs, and it picks
-        // the single line that names which boundary this is. The testIDs stay on
-        // the WRAPPERS — `all-caught-up-card` is no longer unique within a render
-        // (both dividers can be in-list at once), so these are what disambiguate
-        // for the simulator harness.
-        return item.id === DIVIDER_CAUGHT_UP ? (
-          <Box style={{ marginTop: 16 }} testID="feed-divider-caught-up">
-            <AllCaughtUpCard compact variant="seen" />
-          </Box>
-        ) : (
-          <Box style={{ marginTop: 16 }} testID="feed-divider-opened">
-            <AllCaughtUpCard compact variant="read" />
-          </Box>
-        );
-      }
-      return (
-        <FeedRow
-          item={item.item}
-          onPress={openSuggestion}
-          onVerdict={onVerdict}
-          onAskMera={onAskMera}
-          onSaveToggled={onSaveToggled}
-          feedbackHandlers={feedbackHandlers}
-        />
-      );
-    },
+    ({ item }: { item: FeedEntry }) => (
+      <FeedRow
+        item={item}
+        onPress={openSuggestion}
+        onVerdict={onVerdict}
+        onAskMera={onAskMera}
+        onSaveToggled={onSaveToggled}
+        feedbackHandlers={feedbackHandlers}
+      />
+    ),
     [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers],
   );
 
-  // Story ids and the two divider constants are disjoint, so keys stay unique and
-  // stable and no row remounts when a divider appears or moves.
-  const keyExtractor = useCallback((item: FeedRowEntry) => item.id, []);
+  const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
 
-  // End-of-feed marker — the caught-up card at its DEFAULT variant (`end`): no
-  // boundary line, because there is no boundary below it, just the headline, the
-  // mindfulness nudge and the Explore CTA. Rendered HERE only when it is not
-  // already in-list (`caughtUpIsFooter`), so exactly one instance exists whether
-  // the user has seen everything below the boundary or nothing.
+  // End-of-feed marker — the ONLY caught-up card left (see the header comment):
+  // no in-list dividers any more, just this footer. Its CTA depends on
+  // `feedThreshold`: "Browse Explore" at the floor ('low'), otherwise "Want to
+  // read more? Lower the feed priority" (see AllCaughtUpCard + onLowerPriority).
   //
-  // Still gated on a non-empty list because FlatList renders
-  // `ListFooterComponent` even when `data` is empty — without this the zero-item
-  // case would show the AllCaughtUpCard twice (the empty-state chain in
-  // `renderEmpty` already owns that case, and still does).
+  // Gated on a non-empty list because FlatList renders `ListFooterComponent`
+  // even when `data` is empty — without this the zero-item case would show the
+  // AllCaughtUpCard twice (the empty-state chain in `renderEmpty` already owns
+  // that case, and still does).
   const listFooter = useMemo(
     () =>
-      feedRows.length > 0 && caughtUpIsFooter ? (
+      listData.length > 0 ? (
         <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-          <AllCaughtUpCard compact />
+          <AllCaughtUpCard
+            compact
+            feedThreshold={feedThreshold}
+            onLowerPriority={onLowerPriority}
+          />
         </Box>
       ) : null,
-    [feedRows.length, caughtUpIsFooter],
+    [listData.length, feedThreshold, onLowerPriority],
   );
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
@@ -828,7 +819,10 @@ const FeedScreen: React.FC = () => {
     if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
       return <FeedPreparingCard />;
     }
-    return <AllCaughtUpCard />;
+    // The highest-value spot for the "lower the priority" nudge: when the
+    // importance filter has hidden every story, this is the ONLY surface the
+    // user sees, and lowering the threshold is precisely the fix.
+    return <AllCaughtUpCard feedThreshold={feedThreshold} onLowerPriority={onLowerPriority} />;
   };
 
   return (
@@ -841,7 +835,7 @@ const FeedScreen: React.FC = () => {
       <Animated.FlatList
         ref={listRef}
         testID="feed-list"
-        data={feedRows}
+        data={listData}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
         viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs}
@@ -971,6 +965,11 @@ const FeedScreen: React.FC = () => {
           headerStyle,
         ]}
       >
+        {/* Android-only opaque-ish gradient — must render BEFORE GlassPlate so
+            the tint below still lifts it to a readable surface tone (see
+            GlassSurface.tsx's GlassHeaderAndroidBackdrop doc comment). No-op
+            on iOS. */}
+        <GlassHeaderAndroidBackdrop />
         {/* Absolute-fill glass. This Animated.View is unpadded (all padding
             lives on the VStack below), which is exactly what GlassPlate's
             parent must be — see GlassSurface. No corner radius here, so no
@@ -1023,6 +1022,7 @@ const FeedScreen: React.FC = () => {
                 value={feedThreshold}
                 onChange={setFeedThreshold}
                 testIDPrefix="feed-importance"
+                pulsing={priorityPulsing}
               />
             </HStack>
             <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
