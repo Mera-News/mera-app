@@ -1,5 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import {
+    GlassHeaderAndroidBackdrop,
     GlassPlate,
     GLASS_HEADER_SCRIM,
     GLASS_HEADER_TINT,
@@ -412,6 +413,11 @@ const ExploreScreen: React.FC = () => {
                     headerStyle,
                 ]}
             >
+                {/* Android-only opaque-ish gradient — must render BEFORE
+                    GlassPlate so the tint below still lifts it to a readable
+                    surface tone (see GlassSurface.tsx's
+                    GlassHeaderAndroidBackdrop doc comment). No-op on iOS. */}
+                <GlassHeaderAndroidBackdrop />
                 <GlassPlate tint={GLASS_HEADER_TINT} />
                 <Box pointerEvents="box-none" style={{ paddingTop: insets.top + 16 }}>
                     {/* Header — title OR search, never both (Item 12a). It used

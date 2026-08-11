@@ -1,7 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import React from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 /**
  * The app's shared Liquid Glass primitives — one place to tune how glass looks
@@ -65,6 +65,68 @@ const GLASS_TINT = 'rgba(255,255,255,0.10)';
  */
 export const GLASS_HEADER_TINT = 'rgba(255,255,255,0.16)';
 export const GLASS_HEADER_SCRIM = 'rgba(0,0,0,0.42)';
+
+/**
+ * Android-only opaque-ish gradient that stands in for the missing blur behind
+ * every header.
+ *
+ * ## Why Android needs a THIRD layer, not just a stronger scrim
+ *
+ * `GlassPlate`'s non-glass branch (below) is a flat 16% white fill with no
+ * blur — there is no `UIVisualEffectView` off iOS 26, so nothing diffuses
+ * what's behind it. Composited with `GLASS_HEADER_SCRIM`, transmission works
+ * out to `(1 − 0.42) × (1 − 0.16) ≈ 0.49`: on Android roughly half of
+ * whatever is scrolling behind a header shows straight through it, which
+ * reads as a bug rather than "frosted." On iOS 26 the identical two numbers
+ * sit under real glass, so the see-through is diffused and reads as
+ * intentional. Raising `GLASS_HEADER_SCRIM` itself would fix Android but
+ * also darken the iOS 26 glass sample, so the fix is a layer that renders on
+ * Android alone.
+ *
+ * Top-to-bottom, not a flat fill: near-opaque under the status bar, easing
+ * down toward the header's bottom edge so it blends into scrolling content
+ * rather than ending on a hard seam — the same read a real blur gives for
+ * free by having nothing high-frequency left to diffuse near an edge.
+ *
+ * CSS STRING form, not the `ViewStyle` object form — see
+ * `AbstractGradientBackdrop.tsx`'s `CssBlobField` comment for why: RN 0.83's
+ * `StyleSheetTypes.d.ts` has no linear-gradient variant either, and
+ * NativeWind 4.2.1 emits nothing at all for gradient classes, so a Tailwind
+ * gradient class would silently do nothing.
+ */
+export const GLASS_HEADER_ANDROID_GRADIENT =
+  'linear-gradient(180deg, rgba(8,8,10,0.95) 0%, rgba(8,8,10,0.88) 55%, rgba(8,8,10,0.68) 100%)';
+
+/** True only on Android — mirrors `AbstractGradientBackdrop.tsx`'s
+ *  `ANDROID_STATIC_CSS`, resolved once at module load so nothing downstream
+ *  branches on the platform. */
+const IS_ANDROID = Platform.OS === 'android';
+
+/**
+ * Absolute-fill Android gradient layer for header chrome. Renders `null` on
+ * every other platform, so all five header paint sites (the four screen
+ * headers plus `StatusBarScrim`) can mount it unconditionally instead of each
+ * repeating its own `Platform.OS === 'android'` branch — the whole point of
+ * centralising this in one file is that the five sites cannot drift apart.
+ *
+ * MUST be mounted BEFORE `GlassPlate`, not after: this layer is meant to cut
+ * the see-through the same way `GLASS_HEADER_SCRIM` does on iOS 26 — behind
+ * the plate, which then lifts it back to a readable surface tone with
+ * `GLASS_HEADER_TINT`. Mounting it after `GlassPlate` would paint a
+ * near-opaque layer OVER that 16% white lift and cancel it, producing exactly
+ * the flat near-black slab this file's own history (see `GlassPlate`'s doc
+ * comment) already identifies as the wrong Android fallback.
+ */
+export const GlassHeaderAndroidBackdrop: React.FC = () =>
+  IS_ANDROID ? (
+    <View
+      pointerEvents="none"
+      style={[
+        StyleSheet.absoluteFill,
+        { experimental_backgroundImage: GLASS_HEADER_ANDROID_GRADIENT } as unknown as ViewStyle,
+      ]}
+    />
+  ) : null;
 
 /** Fill for `TranslucentPlate`. Matches the default glass tint's lift so a
  *  content surface and a chrome surface read as the same material. */

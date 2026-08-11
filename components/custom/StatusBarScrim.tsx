@@ -12,6 +12,7 @@
 import {
   GLASS_HEADER_SCRIM,
   GLASS_HEADER_TINT,
+  GlassHeaderAndroidBackdrop,
   GlassPlate,
 } from '@/components/custom/GlassSurface';
 import React from 'react';
@@ -43,6 +44,11 @@ const StatusBarScrim: React.FC = () => {
         zIndex: 5,
       }}
     >
+      {/* Android-only opaque-ish gradient — must render BEFORE GlassPlate so
+          the tint below still lifts it to a readable surface tone. See
+          GlassSurface.tsx's GlassHeaderAndroidBackdrop doc comment. No-op on
+          iOS. */}
+      <GlassHeaderAndroidBackdrop />
       <GlassPlate tint={GLASS_HEADER_TINT} />
     </View>
   );
