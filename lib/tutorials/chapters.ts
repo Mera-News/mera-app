@@ -21,10 +21,16 @@
 //   • Tabs are icon-only — teach glyphs and positions, never names. Route names
 //     are inverted vs the UI (`for_you` = Dashboard, `around` = Explore,
 //     `deck` = Feed).
-//   • The Feed has TWO dividers over THREE tiers, and nothing is ever removed —
-//     a read card SINKS (`components/custom/feed/feed-entries.ts:1-34`,
-//     `lib/locales/en.json → feed.divider.*`). "All caught up" survives as an
-//     empty state only.
+//   • The Feed has NO in-list dividers any more — nothing is ever removed, and a
+//     read card SINKS to the bottom of a single unbroken list instead of being
+//     cut off by a labelled boundary (`components/custom/feed/feed-entries.ts:1-34`).
+//     There used to be two divider cards splicing the list into three visual
+//     parts; both were deleted (r14) because their position wasn't reliable —
+//     the three tiers (unseen → seen-not-opened → opened) still decide SORT
+//     ORDER, they just no longer mark a boundary on screen. The single
+//     "All caught up" card (`AllCaughtUpCard`, `feed.allCaughtUp`) survives as
+//     the end-of-list footer / empty state, and its CTA switches to "lower the
+//     feed priority" when the importance threshold is filtering stories out.
 //   • "Read" = opened, or ≥75% on screen for 1.5s
 //     (`components/custom/feed/use-visible-index.ts` DWELL_READ_SECONDS = 1.5).
 //   • Explore's trailing "+" chip opens `/logged-in/sources`, NOT Locations

@@ -88,9 +88,11 @@ jest.mock('@/components/custom/UsageWidget', () => {
     const { View, Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ used, limit, onUpgrade, onInfoPress }: any) => (
+        default: ({ used, limit, planLabel, trialEndsAt, onUpgrade, onInfoPress }: any) => (
             <View testID="usage-widget">
                 <Text>{`usage:${used}/${limit ?? '-'}`}</Text>
+                {planLabel ? <Text testID="usage-widget-plan-label">{planLabel}</Text> : null}
+                {trialEndsAt ? <Text testID="usage-widget-trial-ends-at">{trialEndsAt}</Text> : null}
                 {onUpgrade ? <Pressable accessibilityLabel="upgrade" onPress={onUpgrade} /> : null}
                 {onInfoPress ? <Pressable accessibilityLabel="usage-info" onPress={onInfoPress} /> : null}
             </View>
@@ -134,9 +136,16 @@ jest.mock('@/lib/revenuecat', () => ({
 // the render.
 let mockAiAccess: 'unknown' | 'locked' | 'entitled' = 'unknown';
 const mockSetServerBilling = jest.fn();
+// `grantExpiresAt`/`isPremium` default to the "no trial" shape every existing
+// test in this file assumes; the trial-label tests below override them.
+let mockSubscriptionState: any = {
+    serverTier: null,
+    customerInfo: null,
+    grantExpiresAt: null,
+    isPremium: false,
+};
 jest.mock('@/lib/stores/subscription-store', () => {
-    const useSubscriptionStore: any = (selector: any) =>
-        selector({ serverTier: null, customerInfo: null });
+    const useSubscriptionStore: any = (selector: any) => selector(mockSubscriptionState);
     useSubscriptionStore.getState = () => ({ setServerBilling: mockSetServerBilling });
     return {
         useAiAccess: () => mockAiAccess,
@@ -173,6 +182,12 @@ beforeEach(() => {
     jest.clearAllMocks();
     mockFetchUserBilling.mockResolvedValue(null);
     mockAiAccess = 'unknown';
+    mockSubscriptionState = {
+        serverTier: null,
+        customerInfo: null,
+        grantExpiresAt: null,
+        isPremium: false,
+    };
 });
 
 describe('ProfileScreen', () => {
@@ -274,5 +289,64 @@ describe('ProfileScreen', () => {
         await waitFor(() => expect(getByLabelText('usage-info')).toBeTruthy());
         fireEvent.press(getByLabelText('usage-info'));
         expect(getByText('configPanel.articleAnalysisTitle')).toBeTruthy();
+    });
+
+    // ── Free-trial grant (r14 #16) ──────────────────────────────────────────
+    // `subscriptionTier: 'starter'` is what BOTH a granted trial user and a
+    // paying Starter subscriber report — `grantExpiresAt && !isPremium` (read
+    // from the store, independent of the `billing` fetch) is the only thing
+    // that tells them apart. Both cases below hold `subscriptionTier` fixed at
+    // 'starter' and flip only the store fields, to prove the label follows the
+    // right signal.
+    it('grantExpiresAt set + not premium → usage card labels the plan a free trial and passes the end date through', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        mockSubscriptionState = {
+            serverTier: 'starter',
+            customerInfo: null,
+            grantExpiresAt: '2026-08-20T00:00:00.000Z',
+            isPremium: false,
+        };
+        mockFetchUserBilling.mockResolvedValue({
+            subscriptionTier: 'starter',
+            articlesUsedToday: 1,
+            dailyArticleLimit: 5,
+            resetAt: '2026-08-11T00:00:00.000Z',
+            entitlementExpiresAt: null,
+            grantExpiresAt: '2026-08-20T00:00:00.000Z',
+            hasEverSubscribed: true,
+            showLapseInterstitial: false,
+        });
+        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() =>
+            expect(getByTestId('usage-widget-plan-label').props.children).toBe('subscription.freeTrial'),
+        );
+        expect(getByTestId('usage-widget-trial-ends-at').props.children).toBe('2026-08-20T00:00:00.000Z');
+    });
+
+    it('grantExpiresAt null (paying subscriber) → usage card shows the plain plan name, no trial label', async () => {
+        mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
+        mockSubscriptionState = {
+            serverTier: 'starter',
+            customerInfo: null,
+            // Server invariant: null once a paying subscription (not the grant)
+            // is what's providing access. See subscription-store.ts's own doc.
+            grantExpiresAt: null,
+            isPremium: true,
+        };
+        mockFetchUserBilling.mockResolvedValue({
+            subscriptionTier: 'starter',
+            articlesUsedToday: 1,
+            dailyArticleLimit: 5,
+            resetAt: '2026-08-11T00:00:00.000Z',
+            entitlementExpiresAt: '2026-09-11T00:00:00.000Z',
+            grantExpiresAt: null,
+            hasEverSubscribed: true,
+            showLapseInterstitial: false,
+        });
+        const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
+        await waitFor(() =>
+            expect(getByTestId('usage-widget-plan-label').props.children).toBe('configPanel.starterPlan'),
+        );
+        expect(queryByTestId('usage-widget-trial-ends-at')).toBeNull();
     });
 });

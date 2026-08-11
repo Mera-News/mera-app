@@ -23,7 +23,6 @@ interface SlideViewProps {
     /** False from the pre-auth Modal host: no session ⇒ no agent ⇒ no button. */
     readonly enableAskMera: boolean;
     readonly onUnlockedChange: (unlocked: boolean) => void;
-    readonly onClose: () => void;
     /** Left half tapped. The player decides what "back" means here. */
     readonly onTapPrev: () => void;
     /** Right half tapped. The player applies the same gate as the Next button. */
@@ -73,7 +72,6 @@ const SlideView: React.FC<SlideViewProps> = ({
     slide,
     enableAskMera,
     onUnlockedChange,
-    onClose,
     onTapPrev,
     onTapNext,
 }) => {
@@ -154,7 +152,6 @@ const SlideView: React.FC<SlideViewProps> = ({
                         chapterId={chapterId}
                         slideId={slide.id}
                         prefill={t(slideAskKey(chapterId, slide.id))}
-                        onClose={onClose}
                     />
                 </View>
             ) : null}

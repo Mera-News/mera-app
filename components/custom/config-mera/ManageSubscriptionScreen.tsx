@@ -75,6 +75,11 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     // Server-computed, display-only. Nothing here derives entitlement from it.
     const grantExpiresAt = useSubscriptionStore((s) => s.grantExpiresAt);
     const isPremium = useSubscriptionStore((s) => s.isPremium);
+    // Same compound check the Customer Center button below already used: the
+    // grant elevates `subscriptionTier` to `starter`, so the tier alone can't
+    // tell a granted user from a paying one — `!isPremium` (RevenueCat's own
+    // view) can.
+    const isTrial = Boolean(grantExpiresAt) && !isPremium;
 
     const rcTier = getActiveTier(customerInfo);
     const activeEntitlement = getActiveEntitlementInfo(customerInfo);
@@ -258,6 +263,9 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
     /** The plan name, qualified when the server has not confirmed it yet. */
     const planLabelText = (): string => {
         if (!isPaid) return t('subscription.freePlan');
+        // Checked ahead of the tier name below — the free 14-day Starter grant
+        // reports the same `subscriptionTier` a paying Starter subscriber has.
+        if (isTrial) return t('subscription.freeTrial');
         const name = planName(effectiveTier);
         return planDisplay.pending
             ? t('subscription.planPending', { plan: name })
@@ -383,7 +391,30 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                                 upgradeLabel={t('subscription.upgrade')}
                                 resetAt={billing.resetAt}
                                 resetLabel={t('subscription.resetsOn')}
+                                trialEndsAt={isTrial ? grantExpiresAt : null}
                             />
+                        </>
+                    )}
+
+                    {/* Free-trial explainer: no payment details are held (so
+                        there is nothing to cancel here) and what happens when
+                        the grant window closes. Mirrors the Customer-Center
+                        button's own `isTrial` gating just below. */}
+                    {isTrial && (
+                        <>
+                            <SectionHeader title={t('subscription.freeTrial')} />
+                            <Box className="bg-gray-900 rounded-2xl border border-gray-800 p-4">
+                                <Text
+                                    testID="manage-trial-ends-on"
+                                    size="sm"
+                                    className="text-white font-semibold mb-1.5"
+                                >
+                                    {t('subscription.trialEndsOn', { date: formatDate(grantExpiresAt) ?? '' })}
+                                </Text>
+                                <Text size="sm" className="text-gray-400 leading-relaxed">
+                                    {t('subscription.trialNoPaymentDetails')}
+                                </Text>
+                            </Box>
                         </>
                     )}
 

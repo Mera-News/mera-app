@@ -116,6 +116,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     // immediately, independent of navigation.
     const storeServerTier = useSubscriptionStore((s) => s.serverTier);
     const customerInfo = useSubscriptionStore((s) => s.customerInfo);
+    // Server-computed, display-only — see the field's own doc in
+    // subscription-store.ts. `grantExpiresAt && !isPremium` is the same
+    // compound check ManageSubscriptionScreen uses to tell a granted user from
+    // a paying one, since the grant elevates `subscriptionTier` to `starter`
+    // and the tier alone can't distinguish them.
+    const grantExpiresAt = useSubscriptionStore((s) => s.grantExpiresAt);
+    const isPremium = useSubscriptionStore((s) => s.isPremium);
+    const isTrial = Boolean(grantExpiresAt) && !isPremium;
     const rcTier = getActiveTier(customerInfo);
     useEffect(() => {
         if (storeServerTier == null) return;
@@ -160,17 +168,23 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
         ? undefined
         : planDisplay.tier == null
             ? t('subscription.freePlan')
-            : (() => {
-                const name =
-                    planDisplay.tier === 'professional'
-                        ? t('configPanel.professionalPlan')
-                        : planDisplay.tier === 'individual'
-                            ? t('configPanel.individualPlan')
-                            : t('configPanel.starterPlan');
-                return planDisplay.pending
-                    ? t('subscription.planPending', { plan: name })
-                    : name;
-            })();
+            // The free 14-day Starter grant reports the SAME tier as a paying
+            // Starter subscriber (`isTrial` is what tells them apart) — so this
+            // must be checked ahead of the tier-name branch below, or a
+            // trialing user reads "Starter Plan" with no trial framing at all.
+            : isTrial
+                ? t('subscription.freeTrial')
+                : (() => {
+                    const name =
+                        planDisplay.tier === 'professional'
+                            ? t('configPanel.professionalPlan')
+                            : planDisplay.tier === 'individual'
+                                ? t('configPanel.individualPlan')
+                                : t('configPanel.starterPlan');
+                    return planDisplay.pending
+                        ? t('subscription.planPending', { plan: name })
+                        : name;
+                })();
 
     return (
         // No `bg-black`: ProfileTabScreen mounts AbstractGradientBackdrop
@@ -238,6 +252,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     upgradeIcon="credit-card"
                     resetAt={billing?.resetAt}
                     resetLabel={t('configPanel.resetsOn')}
+                    trialEndsAt={isTrial ? grantExpiresAt : null}
                     onInfoPress={() => setShowArticleCountInfo(true)}
                 />
 

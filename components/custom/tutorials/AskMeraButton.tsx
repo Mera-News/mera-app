@@ -1,4 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { router } from 'expo-router';
 import React, { useCallback, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
@@ -15,8 +16,6 @@ interface AskMeraButtonProps {
     readonly slideId: string;
     /** Resolved prefill — the question this slide seeds the chat with. */
     readonly prefill: string;
-    /** Closes the tutorial so the popover is not covered by the pushed route. */
-    readonly onClose: () => void;
 }
 
 /**
@@ -50,12 +49,22 @@ interface AskMeraButtonProps {
  *
  * Also hidden on the free tier, where the chat host renders nothing and the
  * morph would target an unmounted popover.
+ *
+ * ⚠️ CLOSES WITH `dismissAll()`, NOT the tutorial's own `onClose`. The
+ * tutorials group is TWO stacked routes now (`/tutorials` menu, then
+ * `/tutorials/player`), both pushed onto the ROOT stack above the entire
+ * `/logged-in` subtree — `FloatingChatHost` included. `onClose` (wired to
+ * `router.back()` in `app/tutorials/player.tsx`) only pops the player, which
+ * left the opaque tutorials menu covering the chat popover — the user came
+ * here to ask, not to keep reading, so this pops the whole group instead.
+ * `dismissAll()` is an established idiom for this: see
+ * `components/custom/onboarding/OnboardingWizard.tsx:187` and
+ * `components/custom/config-mera/AppPreferencesTab.tsx`.
  */
 const AskMeraButton: React.FC<AskMeraButtonProps> = ({
     chapterId,
     slideId,
     prefill,
-    onClose,
 }) => {
     const t = useTutorialCopy();
     const anchorRef = useRef<View>(null);
@@ -72,12 +81,12 @@ const AskMeraButton: React.FC<AskMeraButtonProps> = ({
                 { kind: 'generic', route: `tutorials/${chapterId}/${slideId}` },
                 prefill,
             );
-            // The popover is a sibling of the logged-in <Stack>, so it paints
-            // ABOVE this pushed route — but leaving the tutorial on screen
-            // underneath is disorienting, and the user came here to ask, not to
-            // keep reading. Closing after the open() keeps the measured origin
-            // valid for the morph.
-            onClose();
+            // Pop BOTH pushed tutorial routes so the popover (a sibling of the
+            // logged-in <Stack>, mounted underneath) is visible instead of
+            // covered by the tutorials menu. See the class doc above.
+            // Closing after the open() keeps the measured origin valid for the
+            // morph.
+            router.dismissAll();
         };
 
         anchorRef.current?.measureInWindow((x, y, w, h) => {
@@ -94,7 +103,7 @@ const AskMeraButton: React.FC<AskMeraButtonProps> = ({
         // there is no fallback here on purpose: a chat that opens from the corner
         // is worse than a button that did nothing on one unlucky tap, and the
         // next tap measures fine.
-    }, [chapterId, slideId, prefill, onClose]);
+    }, [chapterId, slideId, prefill]);
 
     if (!userId || aiAccess === 'locked') return null;
 

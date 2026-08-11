@@ -21,9 +21,15 @@ import { View } from 'react-native';
  *
  * ⚠️ TOP-LEVEL, NOT UNDER `/logged-in` — see `./index.tsx` for why. It is pushed
  * onto the ROOT stack now, so when it is opened from inside the app the
- * logged-in tree (and its `FloatingChatHost`) stays mounted below it and Ask
- * Mera still lands somewhere real. Signed out there is no host at all, which
- * `AskMeraButton` handles itself.
+ * logged-in tree (and its `FloatingChatHost`) stays mounted below it. That
+ * placement is exactly why the host does NOT simply paint above this route:
+ * `/tutorials` (menu) and `/tutorials/player` are TWO stacked screens, both
+ * above the entire `/logged-in` subtree — the plain `router.back()` below only
+ * pops this one, leaving the opaque menu covering the popover. `AskMeraButton`
+ * does not use this `onClose` prop at all; it calls `router.dismissAll()`
+ * itself to clear both routes at once before opening the chat. This `onClose`
+ * remains for the ordinary close ("X") and finish (last-slide "Done") paths,
+ * which should only pop back to the tutorials menu, not exit the whole group.
  *
  * No `SafeAreaView` here: the player reads the insets itself, because the
  * pre-auth Modal host has no SafeAreaView to inherit from and both hosts must

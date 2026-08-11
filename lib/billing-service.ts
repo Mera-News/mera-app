@@ -12,6 +12,7 @@ const GET_USER_BILLING = gql`
       articlesUsedToday
       entitlementExpiresAt
       resetAt
+      grantExpiresAt
     }
   }
 `;
@@ -31,13 +32,13 @@ const GET_USER_BILLING = gql`
 // leaves `hasEverSubscribed` null — which every consumer already reads as
 // "unknown, do nothing". Delete this split and re-merge the fields once the
 // server change is live in prod.
-// `grantExpiresAt` lives HERE and deliberately not on GET_USER_BILLING above,
-// for exactly the reason this split exists: it is new on the server's `dev`
-// branch and an app that ships ahead of the server would turn every
-// `userBilling` read into a whole-operation validation failure, taking out
-// `subscriptionTier` and `dailyArticleLimit` with it. This query already
-// returns null on any error, so an app-ahead window costs one swallowed error
-// and a missing countdown. Re-merge once the field is live in prod.
+//
+// `grantExpiresAt` USED to live only here for the same reason — it was new on
+// the server's `dev` branch when this split was written. It is now live in
+// prod, so it was re-merged onto `GET_USER_BILLING` above (r14). It is kept
+// here too rather than removed: this query already reads it (free-tier-gated,
+// see `fetchUserBillingLapseState` below) and there is no cost to leaving it,
+// only a cost to a partial edit that misses a caller.
 const GET_USER_BILLING_LAPSE_STATE = gql`
   query GetUserBillingLapseState {
     userBilling {

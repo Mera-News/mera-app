@@ -239,7 +239,6 @@ const TutorialPlayer: React.FC<TutorialPlayerProps> = ({
                 slide={slide}
                 enableAskMera={enableAskMera}
                 onUnlockedChange={setUnlocked}
-                onClose={onClose}
                 onTapPrev={handleTapPrev}
                 onTapNext={handleTapNext}
             />
