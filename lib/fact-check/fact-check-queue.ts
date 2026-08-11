@@ -138,9 +138,19 @@ function launch(job: FactCheckJob): void {
  * promise there would surface as a broken tap rather than as a failed check
  * (which is what the row's own status is for).
  *
- * Re-enqueueing a claim that already has a TERMINAL row is a no-op — the answer
- * is already on the device. A `processing`/`failed` row is re-driven, which is
- * what makes "tap again" a working retry.
+ * Re-enqueueing a claim that already has a COMPLETE row is a no-op — the answer
+ * is already on the device. Everything else is re-driven, which is what makes
+ * "tap again" a working retry.
+ *
+ * `blocked` is deliberately in the re-driven set even though it is terminal for
+ * the RENDER. Its causes are a gateway 503, a 429, a dead route — transient
+ * conditions that will very often have cleared by the time the user taps again.
+ * Making it permanent would mean one blip silently retires that claim forever,
+ * which is the stranded-row failure this queue exists to avoid, dressed up as a
+ * status. Terminal means "stop the automation" (the recovery task will not
+ * touch it, and `MAX_FACT_CHECK_ATTEMPTS` bounds that), not "refuse the human".
+ * A user-initiated retry therefore also RESETS the attempt count: the person is
+ * asking again, which is not the loop the cap exists to stop.
  */
 export async function enqueueFactCheck(input: EnqueueFactCheckInput): Promise<{
   factCheckId: string;
@@ -158,8 +168,7 @@ export async function enqueueFactCheck(input: EnqueueFactCheckInput): Promise<{
     }
 
     const existing = await getFactCheckForClaim(articleId, claimKey);
-    if (existing && (existing.status === FACT_CHECK_STATUS.complete
-      || existing.status === FACT_CHECK_STATUS.blocked)) {
+    if (existing && existing.status === FACT_CHECK_STATUS.complete) {
       return { factCheckId, claimKey };
     }
     if (isFactCheckInFlight(articleId, claimKey)) {
@@ -205,7 +214,12 @@ export async function enqueueFactCheck(input: EnqueueFactCheckInput): Promise<{
       articleUrl: input.articleUrl,
       publicationName: input.publicationName,
       languageCode: currentLanguageCode(),
-      attempts: existing?.payload?.attempts ?? 0,
+      // A blocked row is being retried BY THE USER, so the attempt budget
+      // starts over — the cap bounds the recovery task's automation, not a
+      // person asking again. Any other row carries its count forward.
+      attempts: existing?.status === FACT_CHECK_STATUS.blocked
+        ? 0
+        : (existing?.payload?.attempts ?? 0),
     });
   } catch (err) {
     logger.captureException(err, {

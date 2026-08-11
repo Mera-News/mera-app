@@ -489,6 +489,22 @@ const defaultDeps: FactCheckRunnerDeps = {
 /** Stop collecting once we have plenty — every extra round is latency the user
  *  is waiting through and gateway quota nobody capped. */
 const ENOUGH_EVIDENCE = 8;
+/**
+ * Rounds that ALWAYS run, before `ENOUGH_EVIDENCE` is allowed to stop the loop.
+ *
+ * Without this the multi-query design is dead code: the gateway hardcodes
+ * `count = 10`, so round 1 alone clears a threshold of 8 and rounds 2 and 3
+ * never execute. The rounds are not more of the same — round 2 adds the
+ * fact-check register and round 3 pivots onto the headline, and they surface
+ * DIFFERENT documents, which is the whole point of Loki's "several short,
+ * targeted queries" that this file credits. Round 3 stays conditional: it only
+ * earns its latency when the first two came back thin.
+ */
+const MIN_SEARCH_ROUNDS = 2;
+/** Evidence items that reach the prompt (and therefore the citation index
+ *  space). Two full rounds is ~20 results; every one of them in the prompt is
+ *  context the synthesis does not need and latency the user waits through. */
+const MAX_EVIDENCE_IN_PROMPT = 12;
 /** Wall-clock ceiling on the synthesis stream. `BIG_MODEL` with thinking on is
  *  tens of seconds; past this the answer is not worth the wait. */
 const SYNTHESIS_DEADLINE_MS = 120_000;
@@ -608,9 +624,13 @@ export async function runFactCheck(
   const evidence: WebSearchResult[] = [];
   const seenUrls = new Set<string>();
   let okRounds = 0;
+  let rounds = 0;
   let lastSearchError: string | undefined;
   for (const query of buildSearchQueries(job.claim, job.articleTitle)) {
-    if (evidence.length >= ENOUGH_EVIDENCE) break;
+    // The `rounds` guard is what keeps rounds 2 and 3 from being dead code —
+    // see MIN_SEARCH_ROUNDS. One round already returns 10 results.
+    if (rounds >= MIN_SEARCH_ROUNDS && evidence.length >= ENOUGH_EVIDENCE) break;
+    rounds++;
     const outcome = await deps.searchWeb(query);
     if (!outcome.ok) {
       lastSearchError = outcome.error;
@@ -668,13 +688,17 @@ export async function runFactCheck(
   }
 
   // ── Synthesis ────────────────────────────────────────────────────────────
+  // ONE array from here on: the prompt's numbering, the citation index space
+  // and `resolveCitations` must all index the SAME list, or "citation [7]"
+  // resolves to a page the model never saw.
+  const shortlist = evidence.slice(0, MAX_EVIDENCE_IN_PROMPT);
   let answer = '';
   try {
     const deadline = deps.now() + SYNTHESIS_DEADLINE_MS;
     const stream = deps.chatStream({
       messages: buildSynthesisMessages(
         job.claim,
-        evidence,
+        shortlist,
         job.articleTitle,
         job.publicationName,
       ),
@@ -715,8 +739,8 @@ export async function runFactCheck(
     };
   }
 
-  const parsed = parseSynthesis(answer, evidence.length);
-  const verdict = clampVerdictToEvidence(parsed.verdict, evidence.length);
+  const parsed = parseSynthesis(answer, shortlist.length);
+  const verdict = clampVerdictToEvidence(parsed.verdict, shortlist.length);
   await write({
     ...base,
     status: 'complete',
@@ -724,7 +748,7 @@ export async function runFactCheck(
     summary: parsed.summary,
     claims: parsed.claims,
     checkedBy: organisations,
-    citations: resolveCitations(parsed.citationIndices, evidence),
+    citations: resolveCitations(parsed.citationIndices, shortlist),
     completedAt: new Date(deps.now()).toISOString(),
     model: BIG_MODEL,
   });

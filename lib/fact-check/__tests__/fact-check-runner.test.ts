@@ -52,6 +52,7 @@ jest.mock('@/lib/web-search/fact-check-claims-client', () => ({
   MAX_CLAIM_CHARS: 300,
 }));
 
+import { BIG_MODEL } from '@/lib/llm/constants';
 import {
   buildSearchQueries,
   clampVerdictToEvidence,
@@ -169,6 +170,53 @@ describe('the honesty contract: unavailable search can never produce a verdict',
 // ── 2. Nobody published ⇒ complete + empty checkedBy ───────────────────────
 
 describe('the normal case: nobody has fact-checked this', () => {
+  it('synthesises on BIG_MODEL, not the small one', async () => {
+    // `cloudChatStream` falls back to SMALL_MODEL when `model` is absent, and
+    // `enable_thinking: true` only earns its cost on the big one — so a
+    // refactor that drops this field would degrade silently.
+    const h = harness({ claimReview: [], search: { ok: true, results: RESULTS }, answer: '{}' });
+    await runFactCheck(JOB, h.deps);
+    expect((h.chatStream.mock.calls[0] as any[])[0].model).toBe(BIG_MODEL);
+  });
+
+  it('runs BOTH mandatory search rounds even when the first fills the quota', async () => {
+    // The gateway hardcodes count=10, so a naive `evidence.length >= 8` check
+    // after round 1 would make rounds 2 and 3 dead code — and they are the
+    // "several short, targeted queries" the design is built on, not more of
+    // the same.
+    const ten = Array.from({ length: 10 }, (_, i) => ({
+      title: `r${i}`, url: `https://e/${i}`, snippet: 's',
+    }));
+    const h = harness({ claimReview: [], search: { ok: true, results: ten }, answer: '{}' });
+    await runFactCheck(JOB, h.deps);
+    expect(h.deps.searchWeb).toHaveBeenCalledTimes(2);
+  });
+
+  it('runs the third round only when the first two came back thin', async () => {
+    const h = harness({ claimReview: [], search: { ok: true, results: RESULTS }, answer: '{}' });
+    await runFactCheck(JOB, h.deps);
+    // 2 unique results across two rounds is below ENOUGH_EVIDENCE, so the
+    // headline pivot earns its latency.
+    expect(h.deps.searchWeb).toHaveBeenCalledTimes(3);
+  });
+
+  it('caps the evidence that reaches the prompt, and the citation index space with it', async () => {
+    const many = Array.from({ length: 20 }, (_, i) => ({
+      title: `r${i}`, url: `https://e/${i}`, snippet: 's',
+    }));
+    const h = harness({
+      claimReview: [],
+      search: { ok: true, results: many },
+      // 13 is outside the 12-item shortlist and must not resolve.
+      answer: JSON.stringify({ verdict: 'mixed', citations: [1, 13] }),
+    });
+    await runFactCheck(JOB, h.deps);
+    const prompt = (h.chatStream.mock.calls[0] as any[])[0].messages[1].content as string;
+    expect(prompt).toContain('[12]');
+    expect(prompt).not.toContain('[13]');
+    expect(h.terminal().payload.citations.map((c) => c.uri)).toEqual(['https://e/0']);
+  });
+
   it('completes with an empty checkedBy and a Tier 2 narrative', async () => {
     const h = harness({
       claimReview: [],

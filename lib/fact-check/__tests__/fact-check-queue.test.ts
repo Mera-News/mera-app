@@ -116,14 +116,24 @@ describe('enqueueFactCheck', () => {
     expect(mockRun).toHaveBeenCalledTimes(1);
   });
 
-  it('is a no-op once the claim has a TERMINAL row', async () => {
-    for (const status of ['complete', 'blocked']) {
-      mockRows = [{ articleId: 'a1', claimKey: computeClaimKey(INPUT.claim), status }];
-      __resetFactCheckQueueForTests();
-      mockRun.mockClear();
-      await enqueueFactCheck(INPUT);
-      expect(mockRun).not.toHaveBeenCalled();
-    }
+  it('is a no-op once the claim has a COMPLETE row', async () => {
+    mockRows = [{ articleId: 'a1', claimKey: computeClaimKey(INPUT.claim), status: 'complete' }];
+    await enqueueFactCheck(INPUT);
+    expect(mockRun).not.toHaveBeenCalled();
+  });
+
+  it('RE-DRIVES a `blocked` row — its causes are transient and the tap is a human', async () => {
+    // A gateway 503 or a 429 must not silently retire the claim forever.
+    // Terminal means "stop the automation", not "refuse the user".
+    mockRows = [{
+      articleId: 'a1', claimKey: computeClaimKey(INPUT.claim),
+      status: 'blocked', payload: { attempts: 3, blockedReason: 'claim-review:search-unavailable' },
+    }];
+    await enqueueFactCheck(INPUT);
+    expect(mockRun).toHaveBeenCalledTimes(1);
+    // …and the attempt budget starts over: the cap bounds the recovery task,
+    // not a person asking again. Carrying 3 forward would re-block instantly.
+    expect(mockRun.mock.calls[0][0].attempts).toBe(0);
   });
 
   it('re-drives a `failed` row — "tap again" has to be a working retry', async () => {
