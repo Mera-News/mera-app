@@ -36,6 +36,18 @@ export type ChatContext =
     // the FollowStoryAgent scopes the story from free text and stages the same
     // proposeTrack scope pills the article surface stages.
     | { kind: 'follow-story' }
+    // "Fact-check this" started from an article's fact-check tick. Carries the
+    // article snapshot the FactCheckAgent decomposes into checkable claims —
+    // headline + summary ONLY, deliberately: reading the article body is out of
+    // scope, and `url` travels for the eventual citation, never to be fetched.
+    | {
+          kind: 'fact-check';
+          articleId: string;
+          title: string;
+          description?: string;
+          url?: string;
+          publicationName?: string;
+      }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {
@@ -146,6 +158,15 @@ function contextDiffers(a: ChatContext, b: ChatContext): boolean {
             a.verdict !== b.verdict ||
             (a.treePath ?? []).join('') !== (b.treePath ?? []).join('')
         );
+    }
+    // Two fact-check chats on DIFFERENT articles are same-kind, so without this
+    // `expand()` would keep the previous article's thread and its staged claim
+    // card — exactly the leak the comment in `expand` exists to prevent. The
+    // tick's own entry point (openArticleFeedback) resets unconditionally, so
+    // this covers the `expand(context)` path only; it is cheap and it removes
+    // the trap rather than relying on one caller being the only caller.
+    if (a.kind === 'fact-check' && b.kind === 'fact-check') {
+        return a.articleId !== b.articleId;
     }
     return false;
 }

@@ -226,6 +226,19 @@ export type ProposalAction =
    *  trackStoryWithProposal (embedded so the confirm is reconstructable from the
    *  persisted tool call, with no store read). */
   | { type: 'track_story'; label: string; searchText: string; subject: TrackFeedbackSubject }
+  // -- Fact-check a claim (the fact-check agent's `proposeFactCheck` tool) --
+  /** Start an on-device fact check of ONE claim drawn from an article. A claim
+   *  pill: `label` is the short pill text shown to the user ("80 vaccines by age
+   *  18"); `claim` is the self-contained sentence that gets searched, and it is
+   *  the thing the runner keys on — never the label. `subject` is the article
+   *  snapshot the executor hands to `enqueueFactCheck` (embedded so the confirm
+   *  is reconstructable from the persisted tool call, with no store read).
+   *
+   *  UI-CONFIRMED ONLY (`USER_CONFIRMED_ONLY_ACTIONS`): a check spends a search
+   *  round-trip plus a thinking synthesis, so no model-driven path may start one
+   *  — and on a multi-claim card an agent-side apply would start every one of
+   *  them from a single typed "yes". */
+  | { type: 'fact_check_claim'; label: string; claim: string; subject: FactCheckSubject }
   // -- Scoring recalibration (M-P5c) — UI-CONFIRMED ONLY --
   /** Re-tune the on-device scoring constants from the retained override sample.
    *
@@ -318,6 +331,24 @@ export interface TrackFeedbackSubject {
   pubDate?: string | null;
   stableClusterId?: string | null;
   publicationName?: string | null;
+}
+
+/** Serializable article snapshot for a `fact_check_claim` action — the minimal
+ *  subset the on-device fact-check runner needs, with field names that map 1:1
+ *  onto `enqueueFactCheck`'s parameters so the executor forwards it unchanged.
+ *
+ *  Deliberately NOT reused from `TrackFeedbackSubject`: that one carries `title`
+ *  where this carries `articleTitle`, and two structurally-similar shapes with
+ *  different consumers would typecheck into a call with an empty title. */
+export interface FactCheckSubject {
+  /** Origin surface, for the persisted row's provenance ('fact-check-chat'). */
+  surface: string;
+  articleId: string;
+  articleTitle: string;
+  /** The article's canonical URL, when known. Carried for the runner's citation
+   *  only — reading the article body is explicitly out of scope. */
+  articleUrl?: string;
+  publicationName?: string;
 }
 
 /** A proposal staged by the LLM and awaiting user confirmation. */

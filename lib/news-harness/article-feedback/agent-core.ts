@@ -686,6 +686,14 @@ function describeAction(a: ProposalAction): string {
       return `retire topic "${trunc(a.topicText, 60)}"`;
     case 'track_story':
       return `follow "${trunc(a.label, 80)}"`;
+    // Staged only by the FACT-CHECK surface, but this switch is the shared
+    // renderer that writes a PENDING proposal back into <context>, so the case
+    // has to live here for the same reason set_source_scope_pref does. It names
+    // the CLAIM, not the pill label: the label is an abbreviation ("80 vaccines
+    // by age 18") and a model re-reading its own pending card off a label alone
+    // can re-propose or contradict the claim it actually staged.
+    case 'fact_check_claim':
+      return `fact-check "${trunc(a.claim, 60)}"`;
   }
 }
 

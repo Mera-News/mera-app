@@ -71,6 +71,12 @@ async function resolveActiveTopicId(topicText: string): Promise<string | null> {
  */
 const USER_CONFIRMED_ONLY_ACTIONS: ReadonlySet<ProposalAction['type']> = new Set([
   'run_calibration',
+  // A fact check spends a ClaimReview lookup, up to three web searches and a
+  // thinking synthesis. `chooseOne` already stops a model applying a 3–4 claim
+  // card wholesale (proposalRequiresUserChoice), but a card with a SINGLE claim
+  // — the "user typed their own" path — is not chooseOne, so without this a
+  // typed "yes" could start a background job the user never tapped for.
+  'fact_check_claim',
 ]);
 
 export interface ExecuteProposalOptions {
@@ -331,6 +337,39 @@ export async function executeProposalActions(
             searchText,
           });
           summaries.push(`Following "${label || searchText}"`);
+          applied++;
+          break;
+        }
+        case 'fact_check_claim': {
+          // Start an on-device background check of the ONE claim the user
+          // tapped. The article snapshot is embedded in the action (staged by
+          // decideProposeFactCheck), so this stays self-contained — no store
+          // read. `claim` is the load-bearing field: it is the search key, and
+          // `label` is display only, so an empty claim is fatal while an empty
+          // label is not.
+          const claim = action.claim.trim();
+          if (!claim) {
+            errors.push('fact_check_claim: empty claim');
+            break;
+          }
+          // Lazily required for the same reason as run_calibration below: a
+          // static import would drag the fact-check queue — and with it the
+          // WatermelonDB and cloud-inference graphs — into every consumer of
+          // this executor, for a branch only a fact-check confirm reaches.
+          //
+          /* eslint-disable-next-line @typescript-eslint/no-require-imports */
+          const { enqueueFactCheck } =
+            require('../fact-check/fact-check-queue') as typeof import('../fact-check/fact-check-queue');
+          await enqueueFactCheck({
+            articleId: action.subject.articleId,
+            articleTitle: action.subject.articleTitle,
+            ...(action.subject.articleUrl ? { articleUrl: action.subject.articleUrl } : {}),
+            ...(action.subject.publicationName
+              ? { publicationName: action.subject.publicationName }
+              : {}),
+            claim,
+          });
+          summaries.push(`Checking "${action.label.trim() || claim}"`);
           applied++;
           break;
         }

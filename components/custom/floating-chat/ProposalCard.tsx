@@ -187,6 +187,20 @@ export function actionToRow(action: ProposalAction): ActionRow {
         heading: action.label,
         translateHeading: true,
       };
+    case 'fact_check_claim':
+      // The claim label is the load-bearing choice, so it is the bold heading
+      // with "Check this claim" as the small category line above it — the same
+      // shape as track_story, which the card already renders well as 3–4 pills.
+      // DISPLAY-translated only: `action.claim` is the English search key sent
+      // to the ClaimReview index and to web search, and it is read from the
+      // ACTION (never from this row), so the reader's Hindi cannot reach it.
+      return {
+        icon: 'fact-check',
+        labelKey: 'factCheck.actionCheckClaim',
+        labelDefault: 'Check this claim',
+        heading: action.label,
+        translateHeading: true,
+      };
     // -- Wave-9 rails-backed feed-tuning actions (the "less of this" choose-one
     //    alternatives) — each renders its own labelled row so the radio card is
     //    legible. --
@@ -343,6 +357,13 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   const isTrackProposal =
     proposal.actions.length > 0 && proposal.actions.every((a) => a.type === 'track_story');
 
+  // A "fact-check a claim" proposal (every action is fact_check_claim, single
+  // typed claim or 3–4 extracted ones) gets its own header wording and icon, for
+  // the same reason as the track card: "Proposed changes" over a list of claims
+  // reads as if Mera is about to change the user's profile.
+  const isFactCheckProposal =
+    proposal.actions.length > 0 && proposal.actions.every((a) => a.type === 'fact_check_claim');
+
   const resolved = localResolved ?? resolvedProposals[proposal.id] ?? null;
   const isPending =
     resolved === null &&
@@ -387,14 +408,22 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
     >
       <View style={styles.headerRow}>
         <MaterialIcons
-          name={isTrackProposal ? 'track-changes' : 'auto-fix-high'}
+          name={
+            isTrackProposal
+              ? 'track-changes'
+              : isFactCheckProposal
+                ? 'fact-check'
+                : 'auto-fix-high'
+          }
           size={18}
           color={ACCENT}
         />
         <Text size="sm" bold style={styles.title}>
           {isTrackProposal
             ? t('trackedStories.trackProposalTitle', { defaultValue: 'Follow this story?' })
-            : t('articleFeedback.proposalTitle')}
+            : isFactCheckProposal
+              ? t('factCheck.claimProposalTitle', { defaultValue: 'Fact-check this claim?' })
+              : t('articleFeedback.proposalTitle')}
         </Text>
       </View>
 
