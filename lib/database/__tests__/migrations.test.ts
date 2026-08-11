@@ -534,3 +534,77 @@ describe('v51 adds fact_checks additively and touches nothing else', () => {
     expect(!!byName.get('requested_at').isIndexed).toBe(true);
   });
 });
+
+// ── v52: per-claim identity, ADDITIVE ONLY ──────────────────────────────────
+// `fact_checks` is the one table in this database whose contents cannot be
+// re-fetched: after the pivot the whole check runs on the device and the server
+// pipeline that used to hold a cross-user copy is switched off. A DROP+recreate
+// here is not a re-sync, it is permanent loss — strictly worse than the v37/v41
+// incident that only emptied a rebuildable feed.
+describe('v52 adds claim identity to fact_checks additively', () => {
+  const byVersion = new Map(migList.map((m) => [m.toVersion, m]));
+
+  it('v52 is a single add_columns on fact_checks', () => {
+    const m = byVersion.get(52);
+    expect(m).toBeDefined();
+    expect(m!.steps).toHaveLength(1);
+    const step: any = m!.steps[0];
+    expect(step.type).toBe('add_columns');
+    expect(step.table).toBe('fact_checks');
+    expect(step.columns.map((c: any) => c.name).sort()).toEqual(['claim', 'claim_key']);
+  });
+
+  it('v52 drops nothing and recreates nothing', () => {
+    const offending = byVersion.get(52)!.steps.filter(
+      (s: any) => s && (s.type === 'sql' || s.type === 'create_table'),
+    );
+    expect(offending).toHaveLength(0);
+  });
+
+  it('both columns are OPTIONAL — a v51 device upgrades without a backfill', () => {
+    // This is what lets existing rows survive. A required column on an ALTER
+    // would need a default for every stored row, and there is no honest default
+    // for "which claim did the user check?" on a check that predates claims.
+    const step: any = byVersion.get(52)!.steps[0];
+    for (const col of step.columns) expect(!!col.isOptional).toBe(true);
+  });
+
+  it('claim_key is indexed — it is half of every lookup', () => {
+    const step: any = byVersion.get(52)!.steps[0];
+    const byName = new Map<string, any>(step.columns.map((c: any) => [c.name as string, c]));
+    expect(!!byName.get('claim_key').isIndexed).toBe(true);
+  });
+
+  it('a v51 device upgrades with its rows intact', () => {
+    // "Rows intact" is a property of the STEPS, not of a data fixture: SQLite
+    // keeps every row across an `ALTER TABLE ... ADD COLUMN`, and the only ways
+    // to lose them are a `create_table` (WatermelonDB drops first) or raw SQL.
+    // So the assertion is that the chain after the table exists contains
+    // NEITHER, for this table, anywhere.
+    const afterCreation = migList.filter((m) => m.toVersion > 51).flatMap((m) => m.steps);
+    expect(
+      afterCreation.filter(
+        (s: any) => s && (s.type === 'sql' || (s.type === 'create_table' && s.schema?.name === 'fact_checks')),
+      ),
+    ).toHaveLength(0);
+    // And the table is created exactly once in the whole chain — a second
+    // create anywhere would silently reset every device that crossed it.
+    expect(
+      migList
+        .flatMap((m) => m.steps)
+        .filter((s: any) => s && s.type === 'create_table' && s.schema?.name === 'fact_checks'),
+    ).toHaveLength(1);
+  });
+
+  it('the reconstructed v52 column set is the one a fresh install gets', () => {
+    // Belt-and-braces over the shared `reconstruct` assertion above: name the
+    // two new columns, so a future change that adds them to ONE of schema.ts /
+    // the chain fails with a message that says which one went missing.
+    const table: any = (schema as any).tables['fact_checks'];
+    const byName = new Map<string, any>(
+      table.columnArray.map((c: any) => [c.name as string, c]),
+    );
+    expect(byName.get('claim')).toMatchObject({ isOptional: true });
+    expect(byName.get('claim_key')).toMatchObject({ isOptional: true, isIndexed: true });
+  });
+});

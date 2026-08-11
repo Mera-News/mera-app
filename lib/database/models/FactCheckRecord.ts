@@ -26,4 +26,18 @@ export default class FactCheckRecord extends Model {
   @text('payload_json') payloadJson!: string;
   @date('requested_at') requestedAt!: Date;
   @date('resolved_at') resolvedAt!: Date | null;
+
+  /**
+   * v52 — per-claim identity.
+   *
+   * `claim` is the verbatim assertion the user picked out of the claim
+   * picker's options; `claimKey` is its normalised hash and the second half of
+   * the upsert key `(article_id, claim_key)`.
+   *
+   * BOTH ARE NULL ON A v51 ROW, and that null is meaningful rather than
+   * missing: it marks a legacy whole-article check, which keeps its own slot
+   * because a keyed lookup can never match it.
+   */
+  @text('claim') claim!: string | null;
+  @field('claim_key') claimKey!: string | null;
 }

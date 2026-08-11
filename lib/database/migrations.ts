@@ -1379,5 +1379,40 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── Per-claim fact checks (schema v52) ────────────────────────────────
+      // ADDITIVE `addColumns` ONLY. `fact_checks` holds a user-owned result
+      // that cannot be re-fetched — the server pipeline it used to come from is
+      // being switched off, and the answer now lives ONLY on this device. So
+      // the DROP+recreate that the v37/v41 OTA used for `article_suggestions`
+      // (and which emptied every device's feed — see CLAUDE.md) would not just
+      // cost a re-sync here, it would be permanent data loss.
+      //
+      // WHY: the check moved from "fact-check this article" to "fact-check THIS
+      // CLAIM in this article". The user picks one assertion out of the three
+      // or four the claim-picker proposes and can come back for another, so an
+      // article now carries several rows and the one-row-per-`article_id`
+      // upsert rule is gone. The new key is (`article_id`, `claim_key`).
+      //
+      // Both columns are OPTIONAL and there is NO backfill, deliberately. Every
+      // v51 row predates the claim picker: it is a whole-article check, and
+      // `claim_key IS NULL` says exactly that. A keyed lookup never matches it,
+      // so a legacy row keeps its own slot next to any per-claim rows added
+      // afterwards instead of being silently overwritten by the first one.
+      //
+      // `claim_key` is indexed because it is half of the lookup that runs on
+      // every article-detail mount; `claim` is the verbatim text and is only
+      // ever read back for render.
+      toVersion: 52,
+      steps: [
+        addColumns({
+          table: 'fact_checks',
+          columns: [
+            { name: 'claim', type: 'string', isOptional: true },
+            { name: 'claim_key', type: 'string', isOptional: true, isIndexed: true },
+          ],
+        }),
+      ],
+    },
   ],
 });
