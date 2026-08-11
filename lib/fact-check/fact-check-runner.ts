@@ -20,10 +20,10 @@
  * already chosen exactly one assertion by the time we are called.
  *
  * ── TIER 1: `checkedBy[]`, and no model touches it ─────────────────────────
- * A ClaimReview lookup (`claim-review-client.ts`, which re-exports
- * `web-search-client`'s `SEARCH_UNAVAILABLE` so the two search routes state the
- * "did we actually look?" rule with one shared constant). `publisher.name`,
- * `url`, `textualRating` and `title` map field-for-field onto the
+ * A ClaimReview lookup (`../web-search/fact-check-claims-client` — G1's file,
+ * living beside `searchWeb` because it is the client half of a gateway contract
+ * and the two halves of the "did we actually look?" rule must not drift apart).
+ * `publisher.name`, `url`, `textualRating` and `title` map field-for-field onto the
  * `FactCheckOrganisation` shape the UI already renders. An organisation
  * therefore CANNOT be hallucinated and its rating stays verbatim — the
  * `describeOrganisationVerdict` invariant holds by construction rather than by
@@ -60,9 +60,9 @@ import { cloudChatStream, type SseEvent, type WireMessage } from '../llm/cloudCo
 import { searchWeb, MAX_QUERY_CHARS, type WebSearchResult } from '../web-search/web-search-client';
 import {
   searchClaimReviews,
-  MAX_CLAIM_QUERY_CHARS,
-  type ClaimReviewEntry,
-} from './claim-review-client';
+  MAX_CLAIM_CHARS,
+  type ClaimReview,
+} from '../web-search/fact-check-claims-client';
 import { upsertFactCheck } from '../database/services/fact-check-record-service';
 import logger from '../logger';
 
@@ -267,7 +267,7 @@ export function buildSearchQueries(claim: string, articleTitle?: string | null):
 export function buildClaimReviewQueries(claim: string): string[] {
   const out: string[] = [];
   const push = (q: string) => {
-    const fitted = fit(q, MAX_CLAIM_QUERY_CHARS);
+    const fitted = fit(q, MAX_CLAIM_CHARS);
     if (fitted.length >= 2 && !out.includes(fitted)) out.push(fitted);
   };
   push(claim);
@@ -578,7 +578,7 @@ export async function runFactCheck(
   });
 
   // ── Tier 1 ───────────────────────────────────────────────────────────────
-  let checkedBy: ClaimReviewEntry[] = [];
+  let checkedBy: ClaimReview[] = [];
   {
     const queries = buildClaimReviewQueries(job.claim);
     // (claim, languageCode) pairs: shortened retry first, then the language
@@ -589,8 +589,7 @@ export async function runFactCheck(
       ...(job.languageCode ? [{ claim: queries[0], languageCode: undefined }] : []),
     ];
     for (const lookup of lookups) {
-      const outcome = await deps.searchClaimReviews({
-        query: lookup.claim,
+      const outcome = await deps.searchClaimReviews(lookup.claim, {
         languageCode: lookup.languageCode,
       });
       // Unavailable is NOT empty. Bailing here — before any model call — is
@@ -598,8 +597,8 @@ export async function runFactCheck(
       // published". `ok: false` from this client means, without exception, that
       // NO LOOKUP HAPPENED.
       if (!outcome.ok) return blocked(`claim-review:${outcome.code ?? outcome.status ?? 'failed'}`);
-      if (outcome.entries.length > 0) {
-        checkedBy = outcome.entries;
+      if (outcome.claimReviews.length > 0) {
+        checkedBy = outcome.claimReviews;
         break;
       }
     }
@@ -628,17 +627,22 @@ export async function runFactCheck(
   // provider, so we know nothing at all and must not pretend otherwise.
   if (okRounds === 0) return blocked(`web-search:${lastSearchError ?? 'search-unavailable'}`);
 
-  // The ClaimReview -> checkedBy mapping already happened in the transport
-  // (publisher.name -> organisation, textualRating -> verdict, title ->
-  // summary, unattributed rows dropped), and NO MODEL is anywhere near it. This
-  // is a straight copy: an organisation's rating rewritten by us, or by an LLM,
-  // is an attribution we are not entitled to make.
-  const organisations: FactCheckOrganisationPayload[] = checkedBy.map((c) => ({
-    organisation: c.organisation,
-    url: c.url,
-    verdict: c.verdict,
-    summary: c.summary,
-  }));
+  // THE ONLY MAPPING, and no model is anywhere near it:
+  //   publisher.name -> organisation | url -> url
+  //   textualRating  -> verdict      | title -> summary
+  // A review with no masthead is dropped: `describeCheckedBy` drops it
+  // downstream anyway, and "whose judgement is this" is the entire value of the
+  // list. `textualRating` is passed through UNTOUCHED — an organisation's
+  // rating rewritten by us, or by an LLM, is an attribution we are not entitled
+  // to make.
+  const organisations: FactCheckOrganisationPayload[] = checkedBy
+    .filter((c) => c.publisher?.name?.trim().length > 0)
+    .map((c) => ({
+      organisation: c.publisher.name.trim(),
+      url: c.url || undefined,
+      verdict: c.textualRating?.trim() || undefined,
+      summary: c.title?.trim() || undefined,
+    }));
 
   // Searches ran and returned nothing at all. There is nothing to synthesise
   // from, so the model is not called: an answer built on zero evidence is the

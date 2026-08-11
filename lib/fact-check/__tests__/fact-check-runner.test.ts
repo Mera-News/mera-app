@@ -45,12 +45,11 @@ jest.mock('@/lib/web-search/web-search-client', () => ({
   MIN_QUERY_CHARS: 2,
   MAX_QUERY_CHARS: 200,
 }));
-jest.mock('../claim-review-client', () => ({
+jest.mock('@/lib/web-search/fact-check-claims-client', () => ({
   __esModule: true,
   searchClaimReviews: jest.fn(),
-  MIN_CLAIM_QUERY_CHARS: 2,
-  MAX_CLAIM_QUERY_CHARS: 300,
-  SEARCH_UNAVAILABLE: 'search-unavailable',
+  MIN_CLAIM_CHARS: 2,
+  MAX_CLAIM_CHARS: 300,
 }));
 
 import {
@@ -95,8 +94,8 @@ function harness(options: {
     yield { type: 'finish' as const, reason: 'stop' as const };
   });
   const deps = {
-    searchClaimReviews: jest.fn(async (_req: any) =>
-      options.claimReviewOutcome ?? { ok: true, entries: options.claimReview ?? [] }),
+    searchClaimReviews: jest.fn(async (_claim: string, _opts?: any) =>
+      options.claimReviewOutcome ?? { ok: true, claimReviews: options.claimReview ?? [] }),
     searchWeb: jest.fn(async () =>
       options.search ?? { ok: true, results: [] }),
     chatStream: chatStream as any,
@@ -210,10 +209,10 @@ describe('Tier 1: checkedBy comes from ClaimReview, verbatim', () => {
     const h = harness({
       claimReview: [
         {
-          organisation: 'PolitiFact',
+          publisher: { name: 'PolitiFact', site: 'politifact.com' },
           url: 'https://politifact.com/x',
-          verdict: 'Pants on Fire!',
-          summary: 'No, small children do not receive 80 vaccines',
+          textualRating: 'Pants on Fire!',
+          title: 'No, small children do not receive 80 vaccines',
         },
       ],
       search: { ok: true, results: RESULTS },
@@ -238,7 +237,7 @@ describe('Tier 1: checkedBy comes from ClaimReview, verbatim', () => {
     await runFactCheck(JOB, h.deps);
     // full claim (en) → shortened (en) → full claim, language dropped
     expect(h.deps.searchClaimReviews).toHaveBeenCalledTimes(3);
-    expect((h.deps.searchClaimReviews.mock.calls[2] as any[])[0])
+    expect((h.deps.searchClaimReviews.mock.calls[2] as any[])[1])
       .toMatchObject({ languageCode: undefined });
   });
 });
