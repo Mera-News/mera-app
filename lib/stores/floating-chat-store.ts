@@ -59,9 +59,27 @@ interface FloatingChatState {
     // only, so a settled card re-opens "fresh" on app restart, which is
     // harmless: topic rows are already active and conflicts re-derive from the
     // persisted tool result). `settledTopicPlans` is keyed by factId (the
-    // TopicPlanCard's Accept-all); `resolvedConflicts` by `${newFactId}:${existingFactId}`.
+    // TopicPlanCard's Save); `resolvedConflicts` by `${newFactId}:${existingFactId}`.
+    //
+    // r14: these two maps are the SESSION-LOCAL half of a topic plan's
+    // resolution. They are deliberately NOT the gate's source of truth — the
+    // chat input and the onboarding Next button are blocked while a plan is
+    // unresolved, and gating on an in-memory map would re-block the user after
+    // every relaunch against cards whose topics are already saved. The DURABLE
+    // marker is `metadata.topicsReviewedAt` on the fact (Save) and the absence
+    // of the fact row entirely (Discard deletes it). See
+    // components/custom/floating-chat/topic-plan-resolution.ts, which combines
+    // both halves; these maps only make the card react instantly.
     settledTopicPlans: Record<string, boolean>;
+    discardedTopicPlans: Record<string, boolean>;
     resolvedConflicts: Record<string, ConflictResolution>;
+    // How many topic-plan cards in the CURRENTLY MOUNTED thread are unresolved.
+    // Published by ChatSessionView (the one component that sees both the thread
+    // items and the durable markers) so surfaces OUTSIDE the chat — namely the
+    // onboarding wizard's Next button — can gate on the same signal without
+    // re-deriving it. Reset to 0 when the session unmounts: a block that
+    // outlived its cards would be unclearable.
+    unresolvedTopicPlanCount: number;
     // Conversation identity for the whole APP SESSION (not per popover open).
     // In-memory only (no persist middleware) so it naturally dies on app kill,
     // giving fresh-conversation-per-launch for free. Closing/reopening the
@@ -79,6 +97,8 @@ interface FloatingChatState {
     setProposal: (p: StagedProposal | null) => void;
     resolveProposal: (status: 'applied' | 'cancelled') => void;
     setTopicPlanSettled: (factId: string) => void;
+    setTopicPlanDiscarded: (factId: string) => void;
+    setUnresolvedTopicPlanCount: (count: number) => void;
     resolveConflict: (conflictKey: string, resolution: ConflictResolution) => void;
     collapse: () => void;
     toggle: () => void;
@@ -110,7 +130,9 @@ const initialState = {
     proposal: null as StagedProposal | null,
     resolvedProposals: {} as Record<string, 'applied' | 'cancelled'>,
     settledTopicPlans: {} as Record<string, boolean>,
+    discardedTopicPlans: {} as Record<string, boolean>,
     resolvedConflicts: {} as Record<string, ConflictResolution>,
+    unresolvedTopicPlanCount: 0,
     conversationId: null as string | null,
 };
 
@@ -216,6 +238,19 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             settledTopicPlans: { ...state.settledTopicPlans, [factId]: true },
         })),
 
+    setTopicPlanDiscarded: (factId) =>
+        set((state) => ({
+            discardedTopicPlans: { ...state.discardedTopicPlans, [factId]: true },
+        })),
+
+    setUnresolvedTopicPlanCount: (count) =>
+        set((state) =>
+            // Guarded so the publishing effect can run on every render without
+            // notifying subscribers (and re-rendering the onboarding wizard)
+            // when nothing changed.
+            state.unresolvedTopicPlanCount === count ? {} : { unresolvedTopicPlanCount: count },
+        ),
+
     resolveConflict: (conflictKey, resolution) =>
         set((state) => ({
             resolvedConflicts: { ...state.resolvedConflicts, [conflictKey]: resolution },
@@ -254,5 +289,10 @@ export const useFloatingChatResolvedProposals = () =>
     useFloatingChatStore((state) => state.resolvedProposals);
 export const useFloatingChatSettledTopicPlans = () =>
     useFloatingChatStore((state) => state.settledTopicPlans);
+export const useFloatingChatDiscardedTopicPlans = () =>
+    useFloatingChatStore((state) => state.discardedTopicPlans);
+/** Boolean (not the count) so subscribers only re-render when the gate flips. */
+export const useFloatingChatHasUnresolvedTopicPlans = () =>
+    useFloatingChatStore((state) => state.unresolvedTopicPlanCount > 0);
 export const useFloatingChatResolvedConflicts = () =>
     useFloatingChatStore((state) => state.resolvedConflicts);

@@ -13,6 +13,7 @@
 // UI surfaces the nudge).
 
 import * as topicService from './topic-service';
+import * as factService from './fact-service';
 import * as suppressionService from './suppression-service';
 import * as locationService from './location-service';
 import * as publicationPreferenceService from './publication-preference-service';
@@ -296,6 +297,36 @@ async function dispatch(
         summary: 'Retired topic',
       });
       return { applied: true, changeLogId: row.id, summary: 'Retired topic' };
+    }
+
+    // -- Discard a fact (r14 topic-plan card) -------------------------------
+    //
+    // Modelled on RETIRE_TOPIC above (guard → mutate → append one change-log
+    // row → return its id) with two deliberate differences:
+    //
+    //  1. The statement is read BEFORE the delete, for the same reason
+    //     RETIRE_SUPPRESSION reads its row first: a bare id is useless in the
+    //     Activity list.
+    //  2. It is NOT invertible. `deleteFact` runs `destroyCascade()`, which
+    //     destroys the fact AND its topics permanently — there is nothing for
+    //     `revertChange` to restore, so no inverse case is added and
+    //     `action-display.isRevertible` deny-lists this type (that file's
+    //     deny-list is opt-OUT, so the two edits must always ship together).
+    //     The change-log row is the audit trail, not an undo.
+    case ACTION_NAMES.DISCARD_FACT: {
+      if (!action.factId) return skipped(action, 'missing factId');
+      const facts = await factService.getFacts();
+      const existing = facts.find((f) => f.id === action.factId);
+      if (!existing) return { applied: false, summary: 'fact not found' };
+      await factService.deleteFact(action.factId);
+      const summary = `Discarded fact: ${existing.statement}`;
+      const row = await changeLogService.append({
+        actionType: ACTION_NAMES.DISCARD_FACT,
+        action: { targetId: action.factId, statement: existing.statement },
+        source,
+        summary,
+      });
+      return { applied: true, changeLogId: row.id, summary };
     }
 
     // -- Mint a suppression -------------------------------------------------

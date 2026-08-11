@@ -485,10 +485,11 @@ ${conversationGuide}
 ## Facts
 - ENGLISH ONLY. Translate meaning into natural English; preserve specifics (places, names, numbers). Never generalize.
   GOOD "Lives near Brixton, London, UK" / BAD "Lives in London". GOOD "Senior ML engineer at DeepMind" / BAD "Works in tech".
-- ATOMIC — one concept per fact. "interested in AI and blockchain" → two facts. "software engineer & expat from India" → two facts.
+- ATOMIC — one concept per fact. "interested in AI and blockchain" → two facts. "software engineer & expat from India" → two facts (profession and identity are different concepts).
+- **IDENTITY COMPOSITION — the ONE exception to ATOMIC.** Country of ORIGIN and current RESIDENCE are a SINGLE concept: apart they are useless, together they are the whole fact. "expat from India" + Known: "Lives in Amsterdam, Netherlands" → ONE fact "Expat from India living in Amsterdam, Netherlands, Europe". ✗ NEVER split into "Expatriate / lives outside country of origin" + "Originally from India". "Expatriate / lives outside country of origin" names no country at all — it is a placeholder, never a fact. If the current city is not known yet, save ONE fact naming the origin ("Expat originally from India") and ASK for the current city, then compose. Nothing else composes — this exception covers origin × residence and nothing more.
 - <200 chars. No "User" prefix. Never save placeholder/negative/meta facts ("No stocks held", "Speaks English", "User greeted assistant"). Never save language prefs as facts (use updateUserConfig).
 - Greeting/navigation only ("Hi", "Help me set up", "Let's start") → empty extract.
-- CROSS-REFERENCE Known Facts only for the SAME subject. "got promoted to senior engineer" + Known: "Works at Google" → "Senior engineer at Google". Never combine different subjects (workplace ≠ parents' location).
+- CROSS-REFERENCE Known Facts only for the SAME subject. "got promoted to senior engineer" + Known: "Works at Google" → "Senior engineer at Google". Never combine different subjects (workplace ≠ parents' location). EXCEPTION: origin and current residence ARE the same subject (the user's own identity) and MUST be composed into one fact — see IDENTITY COMPOSITION above.
 - LOCATION ANCHORING (personal/local facts only — residency, family role, local activity/service, school, commute, neighborhood). Expand the full chain neighborhood → city → country → continent/bloc.
   Examples: "moved to a flat in Jordaan" + Known: "Lives in Amsterdam, Netherlands" → "Lives in Jordaan, Amsterdam, Netherlands, Europe". "parents live in Brooklyn" → "Parents live in Brooklyn, New York, United States, North America".
   DO NOT anchor global/professional interests ("works in AI", "invested in ASML", "follows Formula 1", "interested in Middle East politics" stay unanchored).
@@ -496,8 +497,11 @@ ${conversationGuide}
 - Extract ALL new info (interests, hobbies, opinions). Infer obvious related facts ("works at Google" → also "Works in Technology industry"). Never re-extract ${isOnboarding ? 'known' : 'unchanged known'} facts.
 ${isOnboarding ? '' : '- ADDITIVE by default — only replace on explicit same-subject correction (see Deleting). Residence, family location, workplace, travel are separate; saving one never deletes another.'}
 
-## Off-script extraction example
-Asked: "What do you do for work?" — User: "I'm an expat" → save "Expatriate / lives outside country of origin" with minted attribute "background: origin / cultural identity", reply "Got it — where are you originally from, and what do you do for work?". Do NOT just repeat "What do you do for work?".
+## Off-script extraction example (IDENTITY COMPOSITION in practice)
+Asked: "What do you do for work?" — User: "I'm an expat from India".
+- Known Facts ALREADY give a current city (e.g. "Lives in Amsterdam, Netherlands") → save exactly ONE fact: "Expat from India living in Amsterdam, Netherlands, Europe", minted attribute "background: origin and current residence". Emit nothing else for this — no separate "Expatriate…", no separate "Originally from India".
+- Current city NOT known → save exactly ONE fact "Expat originally from India" (attribute "background: origin and current residence") and ASK for the city: reply "Got it — which city are you living in now, and what do you do for work?". Compose the two on the next turn.
+Either way return to the unanswered question — do NOT just repeat "What do you do for work?".
 
 ## Config & Deletion
 - updateUserConfig: language preference ONLY, never preemptive.${deletingFactsSection}${toolSection}`;
@@ -524,21 +528,18 @@ function buildPersonaUpdateLocalPrompt(params: {
   const isOnboarding = surface === 'ONBOARDING';
 
   const languageRule = languageName
-    ? `ALWAYS reply in **${languageName}**. NEVER switch languages, even if the user writes in English or any other language — reply in ${languageName} regardless. Fact statements stay English.`
+    ? `ALWAYS reply in **${languageName}**, never switch — even if the user writes another language. Fact statements stay English.`
     : `Reply in the user's language (switch if they switch). Fact statements stay English.`;
 
   const toolSection = includeToolFormat ? buildToolFormatSection(surface, filterTools) : '';
 
-  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Adding info on a DIFFERENT subject is NEVER a correction. Match by attribute key. If unsure, ask first.\n- runCalibration: only when the user was invited to recalibrate scoring AND explicitly confirms (no args); never unprompted.' + filtersPromptSection(filterTools);
+  const deletingLine = isOnboarding ? '' : '\n- deleteUserFacts: only on explicit removal OR same-subject correction ("Berlin, not Paris"; "Stripe now, not Google"). Info on a DIFFERENT subject is NEVER a correction — saving one never deletes another. Match by attribute key; if unsure, ask.\n- runCalibration: only when the user was invited to recalibrate AND explicitly confirms; never unprompted.' + filtersPromptSection(filterTools);
 
   const rulesSection = `## Rules
 - ${languageRule}
-- **Save first, then ask.** Save any info the user volunteers before asking anything. Acknowledge briefly, then ask one follow-up or the next relevant question.
-- **Read Known Facts before asking.** Never ask about a topic already in Known Facts — if the city is known, do not ask for the city again.
-- **Off-script example.** User says "I'm an expat from India" → save \`{"statement": "Expatriate / lives outside country of origin", "questionnaire_attribute": "background: origin"}\`, reply "Got it — where in India are you from, and where are you living now?".
-${isOnboarding
-        ? '- A welcome message was already shown — ask the first unanswered question from the list below.'
-        : '- Respond directly. After extracting, confirm briefly and ask if there\'s more.'}
+- **Save first, then ask.** Save anything the user volunteers before asking. Acknowledge briefly, then ask one follow-up or the next question.
+- **Read Known Facts before asking** — if the city is known, never ask for the city again.
+- **Off-script example.** "I'm an expat from India" + known "Lives in Amsterdam" → ONE fact \`{"statement": "Expat from India living in Amsterdam, Netherlands", "questionnaire_attribute": "background: origin+residence"}\`. City unknown → "Expat originally from India" + ask the city. Never two.${isOnboarding ? '\n- A welcome message was already shown — ask the first unanswered question below.' : ''}
 - Stay on profile/news topics; redirect off-topic politely.
 
 ## Questions to explore
@@ -550,20 +551,19 @@ ${buildQuestionBankText(deepMode)}`;
 ## Per turn
 1. Read <context> in user message (Known Facts always present).
 2. Write 1 short message (<200 chars, 1 question, no inline option lists).
-3. Emit ≥1 tool call — always saveExtractedFacts (empty array if nothing new).
-Both text (2) and tool call(s) (3) are REQUIRED — never omit either.
+3. Emit ≥1 tool call — always saveExtractedFacts (empty array if nothing new).${includeToolFormat ? '' : '\nBoth (2) and (3) are REQUIRED — never omit either.'}
 
 ${rulesSection}
 
 ## Facts (saveExtractedFacts.statement)
-- ENGLISH ONLY. Translate meaning to natural English; preserve specifics (places, names, numbers). GOOD "Senior ML engineer at DeepMind" / BAD "Works in tech". GOOD "Lives near Brixton, London, UK" / BAD "Lives in London".
-- ATOMIC — one concept per fact. "interested in AI and blockchain" → two facts. "software engineer & expat from India" → two facts.
+- ENGLISH ONLY. Translate meaning to natural English; preserve specifics (places, names, numbers). GOOD "Senior ML engineer at DeepMind" / BAD "Works in tech".
+- ATOMIC — one concept per fact. "interested in AI and blockchain" → two facts. "software engineer & expat from India" → two facts (profession ≠ identity). BUT origin + residence = ONE fact.
 - <200 chars. No "User" prefix. Never save greetings, navigation ("Help me start"), negatives ("No stocks held"), meta facts ("User greeted assistant"), or language prefs (use updateUserConfig).
 - Cross-reference Known Facts ONLY for the same subject. "got promoted to senior" + known "Works at Google" → "Senior engineer at Google". Never combine different subjects (workplace ≠ parents' location).
-- LOCATION ANCHORING for personal/local facts only (residency, family role, school, commute, neighborhood) — expand full chain neighborhood → city → country → continent. Example: "moved to a flat in Jordaan" + known "Lives in Amsterdam, Netherlands" → "Lives in Jordaan, Amsterdam, Netherlands, Europe". DO NOT anchor global/professional interests ("works in AI", "follows F1" stay unanchored).
+- LOCATION ANCHORING for personal/local facts only (residency, family role, school, commute, neighborhood) — expand the full chain neighborhood → city → country → continent: "a flat in Jordaan" + known Amsterdam → "Lives in Jordaan, Amsterdam, Netherlands, Europe". DO NOT anchor global/professional interests ("works in AI", "follows F1" stay unanchored).
 - Continent map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/ID → Asia; BR/AR → South America; EG/NG → Africa; AU/NZ → Oceania.
 - Extract ALL new info (interests, hobbies, opinions). Infer obvious siblings: "works at Google" → also "Works in Technology industry".
-- Never re-extract ${isOnboarding ? 'known' : 'unchanged known'} facts.${isOnboarding ? '' : '\n- ADDITIVE by default — only replace on explicit same-subject correction. Residence, family location, workplace, travel are separate; saving one never deletes another.'}
+- Never re-extract ${isOnboarding ? 'known facts.' : 'unchanged known facts; ADDITIVE by default — replace only on an explicit same-subject correction.'}
 
 ## Config${deletingLine}
 - updateUserConfig: language preference ONLY, never preemptive.${toolSection}`;
@@ -1361,7 +1361,8 @@ export function buildReasonUserMessage(params: {
  */
 export const CLOUD_TOPIC_GEN_RULES_SNIPPET = `## Inputs
 1. **Fact** (primary) — every topic MUST be about this fact's subject only.
-2. **User location** (optional) — anchors only Fact-subject topics. Example: Fact "music festivals" + location "Amsterdam" → "Amsterdam music festivals" ✓; "Amsterdam news" ✗ (that's about the location, not the Fact).
+2. **User location** (optional) — where the user CURRENTLY LIVES, supplied as the raw statement of their residence fact. It is a PLACE ANCHOR and nothing else. Example: Fact "music festivals" + location "Amsterdam" → "Amsterdam music festivals" ✓; "Amsterdam news" ✗ (that's about the location, not the Fact).
+   **Read only the place out of it.** That statement may also mention country of origin, profession or family ("Expat from India living in Amsterdam, Netherlands"). Those are OTHER facts with their own runs — take "Amsterdam, Netherlands" and ignore the rest. A Fact about work or an interest NEVER becomes an origin/diaspora topic just because the user-location line mentions origin.
 
 You will NEVER receive Other user facts in this prompt. A sibling prompt handles topics that combine this Fact with Other facts.
 
@@ -1370,6 +1371,9 @@ You will NEVER receive Other user facts in this prompt. A sibling prompt handles
   **Residence requirement:** for this case ONLY, always include ≥1 city-level public-transport topic and ≥1 country-level public-services/rail topic (e.g. "Amsterdam public transport updates", "Netherlands rail strikes", "Netherlands public services disruptions") — practical daily-life coverage residents need, alongside the standard chain above.
 - **(a-2)** Fact contains a RELATIONAL or TEMPORARY location — someone OTHER than the user is at X, or someone is only briefly there (partner's parents live in X, family from X, in-laws in X, sibling moved to X, friend in X, parents traveling/visiting/on holiday in X, staying in X) → anchor to X and STAY there. Do NOT ladder up to its state, country, or continent. Only that exact place matters. No "X-state politics", no "X-country news", no "X-continent regulation". "Traveling/visiting X" is NOT a travel-logistics fact — the person is simply present in X, so generate the SAME local-news set you would for living there (local news, safety, weather, transport, civic issues). Do NOT switch the subject to visas/flights/travel advisories/monsoon-disruption.
   - **Micro-location exception:** if X is a very small locality/island/village with near-zero dedicated news coverage, you MAY take exactly ONE step up — to its named archipelago / metro area / immediate region ONLY (never its state or country). E.g. Porto Santo (tiny island) → "Madeira news" / "Funchal news" OK, "Portugal news" ✗. A district town like Chhindwara has enough local news — stay put, no ladder.
+- **(a-3)** **THE FACT ITSELF** names the user's COUNTRY OF ORIGIN while they live somewhere else — "originally from X", "X heritage", "X-born", "expat from X", "X diaspora", "moved here from X" → anchor to X, but the user is NOT THERE. Origin mentioned in the **User location** line does NOT put a Fact on this branch: a work or interest Fact stays on (c)/(b) even when the user's residence statement says they are an expat. Generate DIASPORA-FACING shapes only: visa / entry / passport rule changes, consular services abroad, citizenship and overseas-citizen status, remittance rules, double-tax treaties, customs and travel rules, property and inheritance rules for citizens abroad, diaspora voting rights and diaspora-community news.
+  **The X-domestic ladder is FORBIDDEN here** — that ladder belongs to a RESIDENCE fact (a-1), not to an origin fact. A person who left X does not need X's daily domestic round-up. ✗ "India monsoon", "India elections", "India economy", "India rail strikes", "India tax policy", "X state politics", bare "X news", X weather/cyclone/pollution.
+  **BOTH origin AND current residence in ONE fact** (e.g. "Expat from India living in Amsterdam, Netherlands") → generate the CROSS PRODUCT, roughly half and half: (i) ORIGIN-country rules that reach citizens abroad (the list above), and (ii) HOST-country law and policy affecting migrants of that origin — immigration and residence-permit reform, integration/language requirements, recognition of foreign qualifications, housing and tax rules for newcomers, host-country diaspora community news. The residence chain's practical items (a-1) may fill the remainder, but must never crowd out (i): an origin-and-residence fact that yields zero origin-country topics has failed.
 - **(b)** No Fact location, User location given, Fact is personal/local (residency, family role, school, commute, shopping, weather, neighborhood, expat/immigrant life, parenting, student life) → anchor to User location, full chain. No location-less variants.
 - **(c)** Fact is global/professional ("works in AI", "invested in ASML", "follows Formula 1", "Middle East politics") → unanchored. Never use User location.
 - **(d)** Ambiguous → default to (c).
@@ -1384,6 +1388,8 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 - **Big-country (≥1B pop, India/China)** → NO generic country topic at all. Specific only ("India tech regulation", "China tax policy"). City/state stay normal.
 
 ## Other rules
+- **NEVER COPY AN EXAMPLE'S OUTPUT.** The examples below teach SHAPES only. Every topic you emit must be traceable to THIS Fact (plus the User location, when a rule anchors it). Reproducing an example's countries, cities or organisations for a Fact that names none of them is a hard failure — the resulting topics retrieve news for a person who does not exist.
+- **Neutral group terms only.** No country-specific acronyms or nationality labels (NRI, OCI, PIO, DACA, H-1B): use "expat", "diaspora", "overseas citizens", "non-residents". Acronyms tied to one country's nationals are a triangulation tell.
 - Expand region/category to specific entities: "Middle East conflicts" → "Israel Hamas war", "Iran Israel tensions", etc.
 - **BANNED empty shapes (emit any and the output fails):** the words "industry trends", "career development", "awards", "festivals" are banned in ANY topic regardless of prefix; also bare "press freedom news" / "media ethics". These name a field with no news hook. Award ceremonies, festival line-ups, and "industry trends" round-ups feel like news but are LOW-VALUE noise — banned anyway. ✗ "Journalism industry trends", "AI industry trends", "Journalism career development", "Dutch journalism awards", "European journalism awards", "European journalism festivals", "Press freedom news". Every topic MUST carry a concrete bridge instead — a location, named actor/org, policy/law, or specific event/action: ✓ "Netherlands press-freedom law", "Amsterdam newsroom layoffs", "EU media freedom act", "newsroom AI adoption", "AI copyright ruling".
 - No duplicates and no near-synonyms — the same concept reworded is a duplicate; emit only ONE. ✗ pairs like "startup tax" + "startup tax incentives", "EU startup regulation" + "EU startup regulatory changes", "startup funding" + "startup funding rules". No personal names — use roles. Identifier-only facts → \`[]\`.
@@ -1396,8 +1402,17 @@ Fact: "Lives in Nieuw-West, Amsterdam, Netherlands" — Generate 18 topics
 ["Nieuw-West Amsterdam news", "Amsterdam Nieuw-West events", "Nieuw-West safety", "Amsterdam local government", "Amsterdam urban planning", "Amsterdam community news", "Amsterdam public transport updates", "North Holland politics", "North Holland transport", "Randstad region updates", "Netherlands policy", "Netherlands tax law", "Netherlands elections", "Dutch immigration law", "Netherlands public services disruptions", "Netherlands weather emergencies", "EU regulation", "European policy"]
 
 Fact: "Lives in Bengaluru, India" — Generate 15 topics
-(big-country rule — no "India news"; residence requirement still applies)
+(RESIDENCE fact — branch (a-1). The India-domestic ladder below is correct HERE and ONLY here, because the user is IN India. An ORIGIN fact ("originally from India") takes branch (a-3) instead and must NOT reuse these; see the next example.)
 ["Bengaluru news", "Bengaluru traffic", "Bengaluru public transport updates", "Bengaluru tech scene", "Bengaluru weather", "Bengaluru local government", "Karnataka politics", "Karnataka transport", "South India news", "India tech regulation", "India tax policy", "India rail strikes", "India monsoon", "India elections", "India economy"]
+
+Fact: "Originally from Nigeria / Nigerian heritage" — Generate 10 topics
+User location: Berlin, Germany
+(COUNTRY OF ORIGIN — branch (a-3). The user LEFT Nigeria: only rules that reach them abroad. NOTE THE SHAPES, NEVER THE COUNTRIES — substitute the fact's own origin and host country. ✗ NEVER the domestic ladder of the origin country: "Nigeria elections", "Nigeria economy", "Nigeria weather", "Nigeria news" — that is the (a-1) residence ladder and it does not apply here.)
+["Nigeria visa rule changes", "Nigeria passport rules abroad", "Nigeria dual citizenship rules", "Nigeria consular services Europe", "Nigeria remittance rules", "Nigeria Germany tax treaty", "Nigeria customs rules travellers", "Nigeria diaspora voting rights", "Nigeria property rules non-residents", "Germany immigration law reform"]
+
+Fact: "Expat from Brazil living in Lisbon, Portugal" — Generate 10 topics
+(BOTH origin AND residence in one fact — branch (a-3) cross product: roughly half origin-country rules reaching citizens abroad, half host-country law affecting migrants, then practical residence items. NOTE THE SHAPES, NEVER THE COUNTRIES. ✗ "Brazil elections", "Brazil economy", "Brazil weather".)
+["Brazil visa rule changes", "Brazil passport renewal abroad", "Brazil consular services Portugal", "Brazil Portugal tax treaty", "Brazil remittance rules", "Portugal immigration law reform", "Portugal residence permit rules", "Portugal citizenship requirements", "Lisbon housing market", "Lisbon public transport updates"]
 
 Fact: "Parents live in Bhopal, India, Asia" — Generate 8 topics
 (Relational location — STAY at Bhopal. No MP/India/Asia ladder. Subject is PARENTS in Bhopal — Bhopal-elderly topics only.)
@@ -1442,7 +1457,7 @@ export const CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news se
 
 ## Inputs
 1. **Fact** (primary) — the Fact is ALWAYS the subject of every topic you emit.
-2. **User location** (optional) — used by the same anchoring rules below.
+2. **User location** (optional) — where the user CURRENTLY LIVES, as the raw statement of their residence fact. A PLACE ANCHOR only: read the place out of it and IGNORE anything else it mentions (origin, profession, family). Origin appearing there never makes a work/interest Fact a diaspora topic.
 3. **Other user facts** (REQUIRED, ≥1) — qualifiers. Each topic MUST weave in at least one Other fact as a role / lifestyle / profession / life-stage qualifier of the Fact.
 
 ## Combo rule (hard requirement)
@@ -1468,11 +1483,13 @@ The number in the user message is a **CEILING, not a quota**. Emit only the comb
 ## News-shape rule (hard requirement)
 Every topic must read like a NEWS ARTICLE HEADLINE a journalist would write — public-interest reporting on policy, debate, demographic/economic trends, government decisions, sector news, incidents. NEVER a TRANSACTIONAL SERVICE SEARCH a user would type when hiring a service or filing paperwork.
 
-Forbidden categories (service-shaped, not news-shaped):
+Forbidden categories (service-shaped, not news-shaped) — all subject to the ORIGIN / IMMIGRATION CARVE-OUT below:
 - Service-provider queries: "notary services", "legal aid", "tax filing", "accounting services", "compliance consultancy", "visa services", "filing assistance".
 - Cross-border service patterns: "X law for Y residents", "X-Y legal compliance", "X services for Y nationals", "X paperwork for Y expats".
 - "X services for Y" / "X support for Y" / "X aid for Y" — these are looking-to-hire patterns, not news.
 - Hyper-specific intersections naming 3 entities (residence × profession × parents-location) — these uniquely identify a user-shaped combo, not a news topic.
+
+**ORIGIN / IMMIGRATION CARVE-OUT (overrides the forbidden list above).** When the Fact carries a country of ORIGIN, diaspora status, or immigration status, RULE CHANGES that reach that group ARE public-interest news and ARE allowed even though the group is named: ✓ "India visa rule changes", "India passport rules abroad", "India overseas citizenship rules", "India Netherlands tax treaty", "Netherlands residence permit reform", "Dutch civic integration exam changes", "India remittance rules". The line is HIRING vs LEGISLATING: a rule that CHANGED is news; a provider you would hire to deal with it is not. So ✗ still: "India visa services", "notary services for expats", "Dutch tax filing help for expats", "immigration lawyer Amsterdam".
 
 Allowed (news-shaped):
 - Policy debates, regulation news, reform proposals.
@@ -1486,6 +1503,7 @@ Bad: "Split notary services for expats", "Croatian inheritance law for Dutch res
 ## Step 1 — Anchoring (decide in order)
 - **(a-1)** Fact contains the USER's OWN location → anchor to THAT location, expand full chain (neighborhood → city → state/region → country → continent/bloc). Ignore User location.
 - **(a-2)** Fact contains a RELATIONAL or TEMPORARY location (someone OTHER than the user is at X, or someone is only briefly there — partner's parents live in X, family from X, in-laws in X, parents traveling/visiting X, etc.) → anchor to X and STAY there. Do NOT ladder to its state/country/continent. Combos stay at the EXACT place X (e.g. "X elder-care apps", "X expat tech support" — never "Country X-policy", "Country X startup funding", or "Continent diaspora"). If no genuine combo exists at city-level X, DROP that pairing and build a combo from a different Other fact instead — never substitute X's country.
+- **(a-3)** Fact names the user's COUNTRY OF ORIGIN while they live elsewhere ("originally from X", "X heritage", "expat from X", "X diaspora") → anchor to X but the user is NOT THERE: combos take DIASPORA-FACING shapes qualified by the Other fact (visa/passport/entry rules, consular services, overseas citizenship, remittance and tax treaties, customs and travel rules, diaspora voting). The X-domestic ladder is FORBIDDEN — ✗ "India monsoon", "India elections", "India economy", "X state politics". When the Fact carries BOTH origin and current residence, combos may draw on either side: origin-country rules reaching citizens abroad, or host-country law affecting migrants of that origin.
 - **(b)** No Fact location, User location given, Fact is personal/local → anchor to User location, full chain.
 - **(c)** Fact is global/professional → unanchored. Never use User location.
 - **(d)** Ambiguous → default to (c).
@@ -1565,13 +1583,14 @@ Output: JSON array of strings, AT MOST the requested count. Fewer is correct, \`
  */
 export const LOCAL_TOPIC_GEN_RULES_SNIPPET = `## Inputs
 1. **Fact** (primary) — every topic MUST be about this fact's subject only.
-2. **User location** (optional) — anchors only Fact-subject topics.
+2. **User location** (optional) — where the user CURRENTLY LIVES, as the raw statement of their residence fact. A PLACE ANCHOR only: read the place out of it and IGNORE anything else it mentions (origin, profession, family) — those are other facts with their own runs.
 
 You will NEVER receive Other user facts. A sibling prompt covers fact-combination topics.
 
 ## Step 1 — Anchoring (decide in order)
 - **(a-1)** Fact contains the USER's OWN location (lives/works/studies in X) → anchor to THAT location, full chain (neighborhood → city → state/region → country → continent/bloc). Ignore User location. Residence requirement: always include ≥1 city public-transport topic and ≥1 country public-services/rail topic (e.g. "Amsterdam public transport updates", "Netherlands rail strikes").
 - **(a-2)** Fact contains a RELATIONAL or TEMPORARY location (someone OTHER than the user is at X, or someone is only briefly there — partner's parents live in X, family from X, parents traveling/visiting X) → anchor to X and STAY there. Do NOT ladder to its state/country/continent. "Traveling/visiting X" = present in X, so generate the same local-news set as living there (local news, safety, weather, transport) — NOT visas/flights/travel advisories. Exception: if X is a tiny locality/island with almost no news, take at most ONE step to its named archipelago/region only (Porto Santo → "Madeira news" OK, "Portugal news" ✗).
+- **(a-3)** **THE FACT ITSELF** names the user's COUNTRY OF ORIGIN while they live elsewhere ("originally from X", "X heritage", "X-born", "expat from X", "X diaspora") → anchor to X but generate DIASPORA-FACING shapes only. Origin in the User location line does NOT trigger this branch — a work/interest Fact stays on (c)/(b). Shapes: visa/entry/passport rule changes, consular services abroad, citizenship and overseas-citizen status, remittance rules, double-tax treaties, customs and travel rules, property/inheritance rules for citizens abroad, diaspora voting rights. **The X-domestic ladder is FORBIDDEN here** — it belongs to a RESIDENCE fact (a-1). ✗ "India monsoon", "India elections", "India economy", "India rail strikes", "X state politics", bare "X news", X weather. If the fact carries BOTH origin AND current residence ("Expat from India living in Amsterdam, Netherlands"), generate the CROSS PRODUCT — roughly half origin-country rules reaching citizens abroad, half host-country law affecting migrants (immigration/residence-permit reform, integration requirements, recognition of foreign qualifications) — then practical residence items.
 - **(b)** No Fact location, User location given, Fact is personal/local (residency, family role, school, commute, shopping, weather, neighborhood, expat/immigrant life, parenting, student life) → anchor to User location, full chain. No location-less variants.
 - **(c)** Fact is global/professional ("works in AI", "invested in ASML", "follows Formula 1", "Middle East politics") → unanchored. Never use User location.
 - **(d)** Ambiguous → default to (c).
@@ -1586,6 +1605,8 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 - **Big-country exception (≥1B pop, India/China)** → NO generic country topic at all. Specific only ("India tech regulation", "China tax policy"). City/state stay normal.
 
 ## Other rules
+- **NEVER COPY AN EXAMPLE'S OUTPUT.** The examples teach SHAPES only. Every topic must be traceable to THIS Fact (plus the User location where a rule anchors it). Emitting an example's countries or organisations for a Fact that names none of them is a hard failure.
+- **Neutral group terms only** — no country-specific acronyms or nationality labels (NRI, OCI, PIO, H-1B). Use "expat", "diaspora", "overseas citizens", "non-residents".
 - **BANNED empty shapes:** the words "industry trends", "career development", "awards", "festivals" are banned in ANY topic; also bare "press freedom news" / "media ethics". Award ceremonies and "industry trends" round-ups feel like news but are LOW-VALUE — banned anyway. ✗ "Journalism industry trends", "AI industry trends", "Dutch journalism awards", "European journalism awards". Each topic needs a concrete bridge (location, named actor, policy, or specific event) ✓ "Netherlands press-freedom law", "newsroom AI adoption", "EU media freedom act", "AI copyright ruling".
 - No duplicates and no near-synonyms — emit only ONE per concept. ✗ "startup tax" + "startup tax incentives", "EU startup regulation" + "EU startup regulatory changes". No personal names — use roles. Identifier-only fact → \`[]\`.
 - Output EXACTLY the count specified in the user message. JSON array only, no prose.
@@ -1596,8 +1617,12 @@ Fact: "Lives in Nieuw-West, Amsterdam, Netherlands" — Generate 14 topics
 ["Nieuw-West Amsterdam news", "Amsterdam local government", "Amsterdam urban planning", "Amsterdam community news", "North Holland politics", "North Holland transport", "Randstad region updates", "Netherlands policy", "Netherlands tax law", "Netherlands elections", "Dutch immigration law", "Netherlands weather emergencies", "EU regulation", "European policy"]
 
 Fact: "Lives in Bengaluru, India" — Generate 13 topics
-(big-country rule — no "India news")
+(RESIDENCE fact — branch (a-1). The India-domestic ladder is correct HERE only, because the user IS in India. An ORIGIN fact takes (a-3) — see below.)
 ["Bengaluru news", "Bengaluru traffic", "Bengaluru tech scene", "Bengaluru weather", "Karnataka politics", "Karnataka transport", "South India news", "India tech regulation", "India tax policy", "India monsoon", "India elections", "India economy", "Asia economic news"]
+
+Fact: "Expat from Brazil living in Lisbon, Portugal" — Generate 10 topics
+(ORIGIN + RESIDENCE — branch (a-3) cross product. NOTE THE SHAPES, NEVER THE COUNTRIES. ✗ NEVER the origin country's domestic ladder: "Brazil elections", "Brazil economy", "Brazil weather".)
+["Brazil visa rule changes", "Brazil passport renewal abroad", "Brazil consular services Portugal", "Brazil Portugal tax treaty", "Brazil remittance rules", "Portugal immigration law reform", "Portugal residence permit rules", "Portugal citizenship requirements", "Lisbon housing market", "Lisbon public transport updates"]
 
 Fact: "Parents are currently traveling in Chhindwara, India" — Generate 6 topics
 (Relational + TEMPORARY — STAY at Chhindwara, same local-news set as residence. No MP/India ladder, no travel advisories/visas.)
@@ -1629,7 +1654,7 @@ export const LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news se
 
 ## Inputs
 1. **Fact** (primary) — the Fact is ALWAYS the subject of every topic.
-2. **User location** (optional) — used by the anchoring rules below.
+2. **User location** (optional) — where the user CURRENTLY LIVES, as the raw statement of their residence fact. A PLACE ANCHOR only: ignore anything else it mentions (origin, profession, family).
 3. **Other user facts** (REQUIRED, ≥1) — qualifiers. Each topic MUST weave in at least one Other fact as a role / lifestyle / profession / life-stage qualifier of the Fact.
 
 ## Combo rule (hard requirement)
@@ -1647,10 +1672,12 @@ The number in the user message is a **CEILING, not a quota**. Emit only genuinel
 Every topic must read like a NEWS HEADLINE (policy debate, reform, demographic trend, government decision, sector news), NOT a TRANSACTIONAL SERVICE search. Forbidden: "X services for Y", "X law for Y residents", "X-Y compliance", "notary/legal aid/tax filing/accounting services" patterns. These are looking-to-hire queries, not news.
 - Good: "Split eldercare policy debate", "Croatia healthcare reform", "Amsterdam lawyer climate ruling".
 - Bad: "Split notary services for expats", "Croatian inheritance law for Dutch residents", "Netherlands-Croatia legal compliance".
+- **ORIGIN / IMMIGRATION CARVE-OUT (overrides the forbidden list).** When the Fact carries a country of ORIGIN, diaspora or immigration status, RULE CHANGES reaching that group ARE news: ✓ "India visa rule changes", "India passport rules abroad", "India overseas citizenship rules", "Netherlands residence permit reform", "Dutch civic integration exam changes". HIRING vs LEGISLATING is the line — ✗ still "India visa services", "notary services for expats", "immigration lawyer Amsterdam".
 
 ## Step 1 — Anchoring
 - **(a-1)** Fact has the USER's OWN location → anchor to it, full chain.
 - **(a-2)** Fact has a RELATIONAL or TEMPORARY location (someone OTHER than the user is at X, or briefly there — partner's parents live in X, family from X, parents traveling/visiting X) → anchor to X and STAY there. NO ladder to its state/country/continent. Combos stay at the EXACT place X. If no city-level combo exists, drop it and use a different Other fact — never substitute X's country.
+- **(a-3)** Fact names the user's COUNTRY OF ORIGIN while they live elsewhere ("originally from X", "X heritage", "expat from X") → anchor to X but generate DIASPORA-FACING combos only (visa/passport rules, consular services, overseas citizenship, remittance and tax treaties, customs rules, diaspora voting). ✗ NEVER the X-domestic ladder: "India monsoon", "India elections", "India economy", "X state politics". If the Fact carries BOTH origin and residence, combos may use either side.
 - **(b)** No Fact location, User location given, Fact is personal/local → anchor to User location.
 - **(c)** Fact is global/professional → unanchored.
 - **(d)** Ambiguous → (c).

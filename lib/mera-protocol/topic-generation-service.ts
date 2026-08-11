@@ -39,8 +39,14 @@ import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 export { buildBaseUserPrompt, splitCount, mergeTopicsAppend } from '@/lib/news-harness/persona-management/topic-generation';
 export type { RealTopicGenInputs };
 
-const DEFAULT_TOTAL_CLOUD = 16;
-const DEFAULT_TOTAL_LOCAL = 14;
+// SOURCED from the harness config, never re-stated. These were hardcoded 16/14
+// — stale since the 2026-07-16 16→10 / 14→10 product change — and this module is
+// what "Generate more topics" actually calls, so the widget minted 16 topics
+// while `DEFAULT_HARNESS_CONFIG.topicGen` (the batch path) minted 10 and
+// `topicPlan.generateMoreTopicsWarning` promised the user 10. Reading the config
+// makes a third source of truth impossible.
+const DEFAULT_TOTAL_CLOUD = DEFAULT_HARNESS_CONFIG.topicGen.totalCloud;
+const DEFAULT_TOTAL_LOCAL = DEFAULT_HARNESS_CONFIG.topicGen.totalLocal;
 
 /**
  * Output budget for the ON-DEVICE topic-generation calls (1024 = the on-device

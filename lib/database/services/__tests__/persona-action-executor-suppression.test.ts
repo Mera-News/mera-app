@@ -16,6 +16,15 @@ jest.mock('../topic-service', () => ({
   retire: jest.fn(async () => {}),
 }));
 
+// r14: the executor's DISCARD_FACT case reads + deletes facts. Without this
+// mock the real WatermelonDB fact-service adapter is pulled in at import time
+// and the whole suite fails to LOAD (not to assert).
+jest.mock('../fact-service', () => ({
+  getFacts: jest.fn(async () => [{ id: 'f-1', statement: 'Lives in Amsterdam' }]),
+  deleteFact: jest.fn(async () => {}),
+  markTopicsReviewed: jest.fn(async () => {}),
+}));
+
 jest.mock('../suppression-service', () => ({
   addSuppression: jest.fn(async () => ({ id: 'sup-1' })),
   getAll: jest.fn(async () => []),

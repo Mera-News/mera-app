@@ -15,7 +15,7 @@ import {
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   sanitizeForPrompt,
 } from '../prompts/prompts';
-import { buildAttributeTextToIdMap } from '../prompts/questionnaire-data';
+import { buildAttributeTextToIdMap, isLocationAttribute } from '../prompts/questionnaire-data';
 import { DEFAULT_HARNESS_CONFIG, type TopicGenConfig } from '../core/config';
 import { NOOP_LOGGER, type HarnessLogger } from '../core/ports';
 import type { LlmPort, PersonaStorePort } from '../core/ports';
@@ -276,6 +276,73 @@ export function parseTopicsFromOutput(
 /** Fact ids whose questionnaire attribute marks them as the USER's own location. */
 const USER_OWN_LOCATION_ATTR_IDS = new Set(['q1_location', 'q4_neighborhood']);
 
+/** Tier-3 shapes for "the user currently lives here", stated in the fact text. */
+const RESIDENCE_STATEMENT_RE =
+  /\b(lives?|living|residing|resides?|based|settled|relocated|moved)\s+(in|to)\b/i;
+
+/**
+ * Third parties whose presence somewhere is NOT the user's own location. Topic
+ * generation already treats these as branch (a-2) — anchored to that place and
+ * deliberately NOT laddered — so promoting one to `userLocation` would anchor
+ * every unanchored personal fact in the persona to, say, the user's parents'
+ * town. Tier 3 is a text heuristic, so it needs this explicit veto.
+ */
+const RELATIONAL_SUBJECT_RE =
+  /\b(parents?|mother|father|mom|mum|dad|family|in-?laws?|sibling|brother|sister|partner|spouse|wife|husband|girlfriend|boyfriend|friends?|colleagues?|son|daughter|children|kids|grandparents?|grandmother|grandfather|relatives?|cousins?)\b/i;
+
+/** The minimum shape this resolver needs — deliberately not the full Fact. */
+export interface UserLocationCandidate {
+  id: string;
+  statement: string;
+  questionnaireAttribute?: string;
+}
+
+/**
+ * Resolve the fact that states where the user CURRENTLY LIVES — the anchor for
+ * topic-generation rule (b).
+ *
+ * Three tiers, most explicit first:
+ *   1. The questionnaire attribute maps to `q1_location` / `q4_neighborhood`.
+ *   2. The attribute merely LOOKS like a location key ("location: …",
+ *      "residence: …", "neighborhood: …", "home: …") — `isLocationAttribute`.
+ *   3. The STATEMENT says the user lives somewhere, and names no third party.
+ *
+ * Tier 1 alone was the whole implementation, and it is why the reported
+ * expat-from-India persona got unanchored topics: the chat agent mints its own
+ * attribute strings, and any string that is not byte-identical to the two
+ * canonical texts resolved to `null`. With no user location, rule (b) cannot
+ * fire and every personal fact falls through to (c) "unanchored".
+ *
+ * Tiers are evaluated in order across ALL facts, so a fact with the canonical
+ * attribute always beats a text-matched one no matter what order they are in.
+ */
+export function resolveUserLocationFact<T extends UserLocationCandidate>(
+  facts: T[],
+  options: { excludeFactId?: string } = {},
+): T | undefined {
+  const candidates = options.excludeFactId
+    ? facts.filter((f) => f.id !== options.excludeFactId)
+    : facts;
+  const attrTextToId = buildAttributeTextToIdMap();
+
+  const tier1 = candidates.find((f) => {
+    if (!f.questionnaireAttribute) return false;
+    const attrId = attrTextToId.get(f.questionnaireAttribute);
+    return attrId !== undefined && USER_OWN_LOCATION_ATTR_IDS.has(attrId);
+  });
+  if (tier1) return tier1;
+
+  const tier2 = candidates.find(
+    (f) => !!f.questionnaireAttribute && isLocationAttribute(f.questionnaireAttribute),
+  );
+  if (tier2) return tier2;
+
+  return candidates.find(
+    (f) =>
+      RESIDENCE_STATEMENT_RE.test(f.statement) && !RELATIONAL_SUBJECT_RE.test(f.statement),
+  );
+}
+
 /**
  * Batch-generates real topics for all facts in ONE cloud API call. Each fact
  * contributes up to 2 BatchCall entries (fact-only + combo). Generated topics are
@@ -311,12 +378,7 @@ export async function generateTopicsForFactsBatch(
   logger.debug('[topic-gen-batch] starting', { factCount: factEntries.length });
 
   const allFacts = await ports.personaStore.getFacts();
-  const attrTextToId = buildAttributeTextToIdMap();
-  const userLocation = allFacts.find((f) => {
-    if (!f.questionnaireAttribute) return false;
-    const attrId = attrTextToId.get(f.questionnaireAttribute);
-    return attrId !== undefined && USER_OWN_LOCATION_ATTR_IDS.has(attrId);
-  });
+  const userLocation = resolveUserLocationFact(allFacts);
 
   const realCalls: BatchCall[] = [];
   for (const entry of factEntries) {

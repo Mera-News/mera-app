@@ -579,7 +579,14 @@ describe('buildPersonaUpdateStaticPrompt — LOCAL/CLOUD surface branches', () =
 
   it('LOCAL CONFIG responds directly rather than using the onboarding start', () => {
     const prompt = buildPersonaUpdateStaticPrompt({ surface: 'CONFIG', mode: 'LOCAL' });
-    expect(prompt).toContain('Respond directly');
+    // Asserts the BEHAVIOUR the name describes — no onboarding opener — rather
+    // than the presence of a "Respond directly" line. r14 deleted that line as
+    // redundant (the "Save first, then ask" rule directly above it already says
+    // "Acknowledge briefly, then ask one follow-up or the next question") while
+    // reclaiming LOCAL token budget. The onboarding branch is what actually
+    // distinguishes the two surfaces, and it must stay absent here.
+    expect(prompt).not.toContain('welcome message');
+    expect(prompt).toContain('Save first, then ask');
   });
 
   it('CLOUD ONBOARDING uses the welcome message start', () => {

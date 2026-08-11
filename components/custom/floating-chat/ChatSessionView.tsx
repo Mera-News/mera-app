@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import ChatThread from './ChatThread';
 import RequestUnblockModal from './RequestUnblockModal';
 import { deriveThreadItems } from './deriveThreadItems';
+import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
 
 const noop = () => {};
@@ -137,6 +138,39 @@ export default function ChatSessionView({
         optimisationPlan,
       }),
     [messages, history, introMessage, isStreaming, t, resume, articleContext, optimisationPlan],
+  );
+
+  // r14 — topic-plan gate. Every unresolved "Topics I'll track" card in the
+  // thread blocks the chat input, so the user can't walk away from a plan they
+  // never chose to keep or discard.
+  //
+  // Resolution is NOT the in-memory store map: cards re-derive from a persisted
+  // tool result, so gating on the map alone would re-block the user after every
+  // relaunch. useTopicPlanResolutions combines it with the durable markers and
+  // fails open while the facts read is in flight. See topic-plan-resolution.ts.
+  const topicPlanFactIds = useMemo(
+    () =>
+      items
+        .filter((item) => item.kind === 'topic-plan-card')
+        .map((item) => (item as Extract<typeof item, { kind: 'topic-plan-card' }>).factId),
+    [items],
+  );
+  const { unresolved: unresolvedTopicPlans } = useTopicPlanResolutions(topicPlanFactIds);
+  const hasUnresolvedTopicPlans = unresolvedTopicPlans.length > 0;
+
+  // Publish the count so surfaces OUTSIDE this component — the onboarding
+  // wizard's Next button — gate on the same signal. Without this the input is
+  // disabled while Next sails straight past it, which makes the block
+  // decorative. Cleared on unmount: a block that outlives its cards is
+  // unclearable.
+  useEffect(() => {
+    useFloatingChatStore.getState().setUnresolvedTopicPlanCount(unresolvedTopicPlans.length);
+  }, [unresolvedTopicPlans.length]);
+  useEffect(
+    () => () => {
+      useFloatingChatStore.getState().setUnresolvedTopicPlanCount(0);
+    },
+    [],
   );
 
   // Mirror generation state into the floating-chat store (bubble shimmer etc).
@@ -305,11 +339,14 @@ export default function ChatSessionView({
     (text: string) => {
       const trimmed = text.trim();
       if (!trimmed || isStreaming || effectiveBlocked) return;
+      // Disabling PromptInput is not enough: the auto-send effect below and the
+      // starter chips both call this directly, bypassing the input entirely.
+      if (hasUnresolvedTopicPlans) return;
       void hapticMedium();
       setIntroMessage(null);
       sendMessage(trimmed);
     },
-    [isStreaming, effectiveBlocked, sendMessage],
+    [isStreaming, effectiveBlocked, hasUnresolvedTopicPlans, sendMessage],
   );
 
   // Chips send their canned message through the same path (haptic included).
@@ -328,12 +365,16 @@ export default function ChatSessionView({
   const autoSentRef = useRef(false);
   useEffect(() => {
     if (isLoading || isStreaming || autoSentRef.current) return;
+    // Checked BEFORE consuming: `consumePendingInitialMessage` clears the store
+    // slot, so consuming into a handleSend that then drops the text would lose
+    // the message outright rather than deferring it.
+    if (hasUnresolvedTopicPlans) return;
     const pending = useFloatingChatStore.getState().consumePendingInitialMessage();
     if (pending) {
       autoSentRef.current = true;
       handleSend(pending);
     }
-  }, [isLoading, isStreaming, handleSend]);
+  }, [isLoading, isStreaming, hasUnresolvedTopicPlans, handleSend]);
 
   // "View previous messages" gate: history stays hidden until the user reveals
   // it, at which point the normal scroll-up paging resumes.
@@ -346,11 +387,16 @@ export default function ChatSessionView({
   // Surface inference errors directly — there's no recovery action the user
   // can take in-app (ported from PersonaChatUI). A server block always shows a
   // banner even when the reason is null, so the unblock controls have a host.
+  // Ordering is deliberate: a server block outranks an inference error, and both
+  // outrank the topic-plan gate — the gate is a soft "finish this first", not a
+  // failure, so it must never mask a real error the user needs to see.
   const blockedMessage = effectiveBlocked
     ? effectiveBlockedReason ?? t('errors.accountRestricted')
     : error
       ? `${t('chat.inferenceError')} (${error})`
-      : null;
+      : hasUnresolvedTopicPlans
+        ? t('topicPlan.resolveBeforeContinuing')
+        : null;
 
   if (isLoading) {
     return (

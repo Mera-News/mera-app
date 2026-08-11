@@ -96,6 +96,35 @@ export async function appendFactMetadataTopics(
   await record.updateFact(record.statement, { ...current, topics: merged });
 }
 
+/**
+ * r14 — stamp `metadata.topicsReviewedAt` so the fact's in-chat topic-plan card
+ * stays resolved across relaunches (the chat/onboarding gate reads this; the
+ * store's settled map is in-memory only). Additive on the existing metadata
+ * JSON, so no schema migration is involved.
+ *
+ * Merges rather than assigns for exactly the reason `appendFactMetadataTopics`
+ * documents above: `Fact.updateFact` REPLACES the whole metadata object, so
+ * writing `{ topicsReviewedAt: [...] }` alone would drop `topics` (the legacy
+ * retrieval path still reads it) and `topicGenError`.
+ *
+ * Idempotent: re-stamping an already-reviewed fact refreshes the timestamp and
+ * is harmless. A missing fact is a no-op, never a throw — the caller is a UI
+ * button and the fact may have been deleted from another surface.
+ */
+export async function markTopicsReviewed(id: string, at: Date = new Date()): Promise<void> {
+  let record: FactModel;
+  try {
+    record = await factsCollection.find(id);
+  } catch {
+    return;
+  }
+  const current = record.metadata ?? {};
+  await record.updateFact(record.statement, {
+    ...current,
+    topicsReviewedAt: [at.toISOString()],
+  });
+}
+
 export async function deleteFact(id: string): Promise<void> {
   const record = await factsCollection.find(id);
   await record.destroyCascade();

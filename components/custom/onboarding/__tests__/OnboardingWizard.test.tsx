@@ -97,8 +97,13 @@ jest.mock('@/lib/notification-service', () => ({ ensurePushTokenRegistered: jest
 
 const mockCollapse = jest.fn();
 const mockSetSuppressed = jest.fn();
+// r14: the wizard also reads the topic-plan gate. Defaults to "nothing pending"
+// so the existing navigation tests keep exercising the unblocked path; the gate
+// itself is asserted in its own describe block below.
+let mockHasUnresolvedTopicPlans = false;
 jest.mock('@/lib/stores/floating-chat-store', () => ({
     useFloatingChatStore: { getState: () => ({ collapse: mockCollapse, setSuppressed: mockSetSuppressed }) },
+    useFloatingChatHasUnresolvedTopicPlans: () => mockHasUnresolvedTopicPlans,
 }));
 
 let mockOnline = true;

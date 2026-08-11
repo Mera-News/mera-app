@@ -40,6 +40,13 @@ export const ACTION_NAMES = {
   // (fact + cascaded topics deleted) — logged for audit visibility but NOT
   // invertible (see action-display.isRevertible + persona-change-log-service).
   HYGIENE_DELETE_FACT: 'hygiene_delete_fact',
+  // r14 — the in-chat topic-plan card's DISCARD. Same destructive shape as
+  // HYGIENE_DELETE_FACT (fact + cascaded topics deleted) but user-initiated
+  // from the chat rather than proposed by the hygiene sweep, so it gets its own
+  // id to keep the audit trail honest about who asked. Like its sibling it is
+  // logged for visibility but NOT invertible — `destroyCascade` leaves nothing
+  // to restore — so it MUST also sit in action-display.isRevertible's deny-list.
+  DISCARD_FACT: 'discard_fact',
   // Location management (Wave 12 U-F2). Both are logged for audit visibility but
   // are NOT invertible this wave — `add` has no revert (delete the row from the
   // locations screen) and `delete` is destroyPermanently (nothing to restore).

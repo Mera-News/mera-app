@@ -11,8 +11,18 @@
 //     invert mechanism (revertChange reactivates the topic + logs a revert_change
 //     row, keeping the audit trail honest). Fallback to reactivate() only if no
 //     change-log id came back.
-// ACCEPT-ALL settles the widget (everything stays active). GENERATE-MORE mints
-// additional topics excluding the existing texts (topic-planning-service).
+// r14: the card's two terminal actions are SAVE and DISCARD (there is no
+// "Looks good" + "Generate more" pair up front any more).
+//   - SAVE keeps every topic and records the review durably (see
+//     topic-plan-actions.saveTopicPlan). Only AFTER saving does the settled card
+//     offer GENERATE-MORE, which mints additional topics excluding the existing
+//     texts (topic-planning-service).
+//   - DISCARD deletes the fact — which cascades to its topics — through the same
+//     applyPersonaAction seam, so it is audited. It is the one action here that
+//     is NOT undoable, so it asks for confirmation first. There is no
+//     "Generate more" on this path: the fact it would generate from is gone.
+// An UNRESOLVED card blocks the chat input and the onboarding Next button, so
+// its resolution has to survive a relaunch — see topic-plan-resolution.ts.
 
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -25,13 +35,11 @@ import { generateMoreTopicsForFact } from '@/lib/database/services/topic-plannin
 import { getFacts } from '@/lib/database/services/fact-service';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
 import type TopicModel from '@/lib/database/models/Topic';
-import {
-  useFloatingChatFactMutationVersion,
-  useFloatingChatSettledTopicPlans,
-  useFloatingChatStore,
-} from '@/lib/stores/floating-chat-store';
+import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
+import { discardTopicPlan, saveTopicPlan } from './topic-plan-actions';
+import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
@@ -66,13 +74,19 @@ export interface TopicPlanCardProps {
 
 const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) => {
   const { t } = useTranslation();
-  const settledMap = useFloatingChatSettledTopicPlans();
-  const settled = settledMap[factId] === true;
+  // Shared with the thread-level gate and the Save-all/Discard-all row, so a
+  // card can never consider itself settled while the gate still counts it.
+  const ids = useMemo(() => [factId], [factId]);
+  const resolution = useTopicPlanResolutions(ids).resolutionOf(factId);
+  const saved = resolution === 'saved';
+  const discarded = resolution === 'discarded';
 
   const [rows, setRows] = useState<TopicRow[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isResolving, setIsResolving] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [topicGenError, setTopicGenError] = useState<string | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
   // topicId → change-log id of its retire, so UNDO can revert the exact row.
@@ -154,9 +168,35 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
     }
   };
 
-  const handleAcceptAll = () => {
+  const handleSave = async () => {
+    if (isResolving) return;
+    setIsResolving(true);
     hapticSuccess();
-    useFloatingChatStore.getState().setTopicPlanSettled(factId);
+    try {
+      await saveTopicPlan(factId);
+    } finally {
+      setIsResolving(false);
+    }
+  };
+
+  // Two taps, because this is the one action in the card that cannot be undone
+  // (the fact and its topics are destroyed, not retired). The confirm state is
+  // local and inline — a modal would fight the chat popover's own morph.
+  const handleDiscard = async () => {
+    if (isResolving) return;
+    if (!confirmDiscard) {
+      hapticLight();
+      setConfirmDiscard(true);
+      return;
+    }
+    setIsResolving(true);
+    hapticSuccess();
+    try {
+      await discardTopicPlan(factId);
+    } finally {
+      setIsResolving(false);
+      setConfirmDiscard(false);
+    }
   };
 
   // Re-runs the same batch generation for this fact. The button is disabled
@@ -185,10 +225,38 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
     }
   };
 
-  // Settled: compact summary, no controls.
-  if (settled) {
+  // DISCARDED: terminal summary only. No "Generate more" — the fact it would
+  // generate from has been deleted.
+  if (discarded) {
     return (
-      <Animated.View entering={cardEntering} style={[styles.card, styles.cardSettled]}>
+      <Animated.View
+        entering={cardEntering}
+        style={[styles.card, styles.cardSettled]}
+        testID={`topic-plan-discarded-${factId}`}
+      >
+        <View style={styles.headerRow}>
+          <MaterialIcons name="delete-outline" size={18} color={ACCENT} />
+          <Text size="sm" bold style={styles.title}>
+            {t('topicPlan.discardedTitle')}
+          </Text>
+        </View>
+        <Text size="xs" style={styles.settledSub}>
+          {t('topicPlan.discardedSummary')}
+        </Text>
+      </Animated.View>
+    );
+  }
+
+  // SAVED: compact summary + the "Generate more" affordance, which lives HERE
+  // (post-save) rather than alongside the terminal actions — asking for more
+  // topics is a follow-up to keeping the plan, not an alternative to resolving it.
+  if (saved) {
+    return (
+      <Animated.View
+        entering={cardEntering}
+        style={[styles.card, styles.cardSettled]}
+        testID={`topic-plan-saved-${factId}`}
+      >
         <View style={styles.headerRow}>
           <MaterialIcons name="check-circle" size={18} color={ACCENT} />
           <Text size="sm" bold style={styles.title}>
@@ -198,6 +266,19 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         <Text size="xs" style={styles.settledSub}>
           {t('topicPlan.settledSummary', { count: activeCount })}
         </Text>
+        <View style={styles.buttonRow}>
+          <Button
+            testID={`topic-plan-generate-more-${factId}`}
+            onPress={handleGenerateMore}
+            isDisabled={isGenerating}
+            className="flex-1 rounded-full bg-background-100"
+            size="sm"
+          >
+            <ButtonText className="text-typography-700 text-sm">
+              {isGenerating ? t('topicPlan.generatingMore') : t('topicPlan.generateMore')}
+            </ButtonText>
+          </Button>
+        </View>
       </Animated.View>
     );
   }
@@ -295,23 +376,32 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
         </View>
       )}
 
+      {confirmDiscard && (
+        <Text size="xs" style={styles.discardWarning}>
+          {t('topicPlan.discardWarning')}
+        </Text>
+      )}
+
       <View style={styles.buttonRow}>
         <Button
-          onPress={handleGenerateMore}
-          isDisabled={isGenerating}
+          testID={`topic-plan-discard-${factId}`}
+          onPress={handleDiscard}
+          isDisabled={isResolving}
           className="flex-1 rounded-full bg-background-100"
           size="sm"
         >
           <ButtonText className="text-typography-700 text-sm">
-            {isGenerating ? t('topicPlan.generatingMore') : t('topicPlan.generateMore')}
+            {confirmDiscard ? t('topicPlan.discardConfirm') : t('topicPlan.discard')}
           </ButtonText>
         </Button>
         <Button
-          onPress={handleAcceptAll}
+          testID={`topic-plan-save-${factId}`}
+          onPress={handleSave}
+          isDisabled={isResolving}
           className="flex-1 rounded-full bg-primary-400"
           size="sm"
         >
-          <ButtonText className="text-white text-sm">{t('topicPlan.acceptAll')}</ButtonText>
+          <ButtonText className="text-white text-sm">{t('topicPlan.save')}</ButtonText>
         </Button>
       </View>
     </Animated.View>
@@ -339,6 +429,7 @@ const styles = StyleSheet.create({
   // merging `style` after its className-derived styles.
   factLine: { color: 'rgb(180, 180, 180)' },
   settledSub: { color: 'rgb(170, 170, 170)' },
+  discardWarning: { color: 'rgb(200, 200, 200)' },
   generatingRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
   generatingText: { color: 'rgb(170, 170, 170)' },
   failedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },

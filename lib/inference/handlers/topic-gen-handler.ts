@@ -1,7 +1,7 @@
 // Handler for topic_gen jobs — runs fact-only + combo prompts (parallel on
 // cloud, sequential on-device) and saves the resulting topic texts to the fact.
 
-import { buildAttributeTextToIdMap } from '../../mera-protocol/questionnaire-data';
+import { resolveUserLocationFact } from '../../news-harness/persona-management/topic-generation';
 import {
   getFacts,
   updateFact,
@@ -37,14 +37,11 @@ export function buildTopicGenContext(
   allFacts: Fact[],
   factId: string,
 ): { userLocation: string | null; otherFacts: string[] } {
-  const attrTextToId = buildAttributeTextToIdMap();
-  const userOwnLocationIds = new Set(['q1_location', 'q4_neighborhood']);
-  const userLocation = allFacts.find((f) => {
-    if (f.id === factId) return false;
-    if (!f.questionnaireAttribute) return false;
-    const attrId = attrTextToId.get(f.questionnaireAttribute);
-    return attrId !== undefined && userOwnLocationIds.has(attrId);
-  });
+  // Shared with the batch flow (news-harness topic-generation) so the two paths
+  // can never disagree about what counts as "where the user lives". This used
+  // to require a byte-identical canonical questionnaire attribute, which the
+  // chat agent does not always mint — see resolveUserLocationFact's header.
+  const userLocation = resolveUserLocationFact(allFacts, { excludeFactId: factId });
 
   const otherFacts = allFacts
     .filter((f) => f.id !== factId && f.id !== userLocation?.id)

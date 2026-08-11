@@ -22,7 +22,10 @@ import {
     useOnboardingStep,
     useOnboardingStore,
 } from '../../../lib/stores/onboarding-store';
-import { useFloatingChatStore } from '../../../lib/stores/floating-chat-store';
+import {
+    useFloatingChatHasUnresolvedTopicPlans,
+    useFloatingChatStore,
+} from '../../../lib/stores/floating-chat-store';
 import { isOnline, useIsOnline } from '../../../lib/stores/network-store';
 import { useTranslation } from 'react-i18next';
 import OnboardingNavBar from '../chat/OnboardingNavBar';
@@ -89,6 +92,14 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     // Reactive so the destructive action reappears the moment connectivity does.
     const offline = !useIsOnline();
+
+    // r14 — SECOND HALF of the topic-plan gate. ChatSessionView disables the
+    // chat input while a "Topics I'll track" card is unresolved, but step 1
+    // renders that chat UNDER this wizard's own nav bar: leave Next live and the
+    // block is bypassed by the most obvious tap on the screen. The count is
+    // published by ChatSessionView (which owns the resolution logic) and is 0
+    // whenever no chat session is mounted, so this can only bite on step 1.
+    const hasUnresolvedTopicPlans = useFloatingChatHasUnresolvedTopicPlans();
 
     // Initialize userId and pre-populate with existing user data on mount
     useEffect(() => {
@@ -215,6 +226,25 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     const handleBack = useCallback(() => setStep(currentStep - 1), [currentStep, setStep]);
 
     const handleNext = useCallback(async () => {
+        // Topic-plan gate BEFORE anything else, including the offline check: a
+        // pending card is a local-state problem and advancing the server stage
+        // for it would be wrong even online. `skipDisabled` on the nav bar
+        // already prevents the tap; this is the programmatic backstop, and it
+        // surfaces WHY rather than looking like a dead button.
+        if (hasUnresolvedTopicPlans) {
+            toast.show({
+                placement: 'top',
+                render: () => (
+                    <Toast action="warning" variant="solid">
+                        <ToastDescription>
+                            {t('topicPlan.resolveBeforeContinuing')}
+                        </ToastDescription>
+                    </Toast>
+                ),
+            });
+            return;
+        }
+
         // Offline check FIRST, before getCurrentUserId and before any mutation.
         //
         // Putting this in the catch below would still fire
@@ -266,7 +296,16 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
         } catch {
             setShowServerErrorModal(true);
         }
-    }, [currentStep, userPreferences, setStep, resetOnboarding, onComplete]);
+    }, [
+        currentStep,
+        userPreferences,
+        setStep,
+        resetOnboarding,
+        onComplete,
+        hasUnresolvedTopicPlans,
+        toast,
+        t,
+    ]);
 
     const renderStep = () => {
         switch (currentStep) {
@@ -327,6 +366,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 onBack={currentStep > 0 ? handleBack : undefined}
                 onSkip={handleNext}
                 skipLabel={t('common.next')}
+                skipDisabled={hasUnresolvedTopicPlans}
                 stepLabel={t('onboarding.stepOf', { current: currentStep + 1, total: TOTAL_STEPS })}
             />
 

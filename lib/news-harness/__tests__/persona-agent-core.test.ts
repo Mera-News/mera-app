@@ -78,6 +78,26 @@ function worstCaseSystemPrompt(
  * (1511) = 3008, which fit the 3072 budget with 64 to spare. This wave must not
  * make that user's turn cost MORE — over budget, useLocalLLM does not degrade,
  * it hard-errors with "Context too long".
+ *
+ * WHAT THIS NUMBER IS, for whoever it fails on next. It is NOT the hard limit —
+ * `INPUT_TOKEN_BUDGET` (3072 = n_ctx 4096 − 1024 max output) is. This is a
+ * RATCHET: the heaviest real on-device turn we have ever shipped. It exists
+ * because 3072 alone is too loose to protect anyone — a change can eat all 64
+ * remaining tokens, pass, and leave the NEXT change with nowhere to go and no
+ * signal about why. Holding the line at the pre-P4a figure keeps a permanent
+ * margin under the real ceiling.
+ *
+ * So: **do not raise this constant to make a red test green.** Going up means
+ * shipping a heavier prompt to a device that cannot degrade. Find the tokens in
+ * the LOCAL prompt instead — it accumulates duplicated rules (the same
+ * instruction stated in the wrapper AND the shared tool section) and examples
+ * that teach the same lesson twice, which is where r14 recovered ~114 tokens.
+ * Only raise it with a measured argument that the extra cost buys more than the
+ * margin is worth.
+ *
+ * MEASURED r14 (topic-plan / identity-composition wave), after that recovery:
+ * the saturated worst case is 2898 (110 under this ratchet) and the absolute
+ * budget case is 2939 (133 under the 3072 hard limit).
  */
 const PRE_WAVE_WORST_CASE_TOKENS = 3008;
 
