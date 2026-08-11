@@ -1,20 +1,27 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// FeedSyncIndicator — the P8 loader contract.
+// The feed-sync loader contract (P8).
 //
 // The one property that matters and that no integration test can prove cheaply:
-// the indicator must be visible in the SAME render pass as the synchronous
+// the loader must be visible in the SAME render pass as the synchronous
 // `reserveTask('feed-sync')` that `AppScheduler.trigger` performs before its
 // first await. Everything here is driven by direct store mutations inside
 // `act()`, which is exactly the "same JS tick" the pull gesture produces.
 //
-// FeedStatusShimmer is stubbed to a plain View exposing its `processing` prop:
-// the real one pulls reanimated (useSharedValue/withRepeat/LinearTransition) and
-// @expo/vector-icons, neither of which this repo mocks globally. The stub keeps
-// the assertion on the thing the plan specifies — the visibility boolean — and
-// immune to animation-mock drift.
+// `FeedSyncIndicator` used to export a COMPONENT that mounted the full-width
+// status bar, and these tests rendered it to read that visibility boolean off a
+// stubbed shimmer. The bar is gone; the same boolean is now `useFeedStatusMode()
+// === 'processing'`, which is the exact same expression the bar's `processing`
+// prop was fed. `StatusProbe` below reads it directly, so the assertions are
+// unchanged and no longer depend on a component stub at all.
+//
+// One test went rather than being ported: "no longer renders an inline offline
+// notice". It asserted something about a component that no longer exists, so it
+// could only ever pass. The global OfflineBanner at the root layout still owns
+// that band.
 
 import { act, render } from '@testing-library/react-native';
 import React from 'react';
+import { View } from 'react-native';
 
 // Stub the css-interop JSX wrapper layer. Its safe-area-context shim reads
 // Platform.OS at module load, which is undefined under jest-expo's setup.
@@ -34,34 +41,6 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
     };
 });
 
-jest.mock('@/components/custom/for-you/FeedStatusShimmer', () => {
-    const { View } = require('react-native');
-    return {
-        __esModule: true,
-        default: ({ processing }: { processing: boolean }) => (
-            <View testID="shimmer" accessibilityState={{ busy: processing }} />
-        ),
-    };
-});
-
-jest.mock('@/components/custom/ReauthBanner', () => {
-    const { View } = require('react-native');
-    return { __esModule: true, default: () => <View testID="reauth" /> };
-});
-
-jest.mock('@/components/ui/hstack', () => {
-    const { View } = require('react-native');
-    return { HStack: (props: any) => <View {...props} /> };
-});
-jest.mock('@/components/ui/text', () => {
-    const { Text: RNText } = require('react-native');
-    return { Text: RNText };
-});
-jest.mock('@/components/ui/icon', () => {
-    const { View } = require('react-native');
-    return { Icon: (props: any) => <View {...props} />, AlertCircleIcon: 'AlertCircleIcon' };
-});
-
 jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -77,7 +56,8 @@ jest.mock('@/lib/database', () => ({
 }));
 
 /* eslint-disable import/first */
-import FeedSyncIndicator, { useFeedSyncRefresh } from '@/components/custom/FeedSyncIndicator';
+import { useFeedSyncRefresh } from '@/components/custom/FeedSyncIndicator';
+import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -99,6 +79,17 @@ function addFeedSyncJob() {
     } as never);
 }
 
+/**
+ * Stands in for the header status glyph. `mode === 'processing'` is exactly the
+ * boolean the deleted bar received as its `processing` prop —
+ * `schedulerRunning || isFeedProcessing` — so every assertion below still means
+ * what it did.
+ */
+function StatusProbe() {
+    const mode = useFeedStatusMode();
+    return <View testID="shimmer" accessibilityState={{ busy: mode === 'processing' }} />;
+}
+
 function isVisible(getByTestId: (id: string) => any): boolean {
     return getByTestId('shimmer').props.accessibilityState.busy === true;
 }
@@ -116,7 +107,7 @@ function RefreshProbe({
     return null;
 }
 
-describe('FeedSyncIndicator', () => {
+describe('useFeedStatusMode — loader visibility', () => {
     beforeEach(() => {
         useSchedulerStore.setState({
             jobs: {},
@@ -144,7 +135,7 @@ describe('FeedSyncIndicator', () => {
     });
 
     it('becomes visible in the same render pass as reserveTask, and hides on setJobCompleted', () => {
-        const { getByTestId } = render(<FeedSyncIndicator />);
+        const { getByTestId } = render(<StatusProbe />);
         expect(isVisible(getByTestId)).toBe(false);
 
         // The synchronous half of AppScheduler.trigger — everything that runs
@@ -162,7 +153,7 @@ describe('FeedSyncIndicator', () => {
     });
 
     it('does not treat the non-null "completed" status as running (=== running, not truthiness)', () => {
-        const { getByTestId } = render(<FeedSyncIndicator />);
+        const { getByTestId } = render(<StatusProbe />);
         act(() => {
             useSchedulerStore.setState({ taskCurrentStatus: { 'feed-sync': 'completed' } });
         });
@@ -175,7 +166,7 @@ describe('FeedSyncIndicator', () => {
     });
 
     it('stays visible while asyncJobPhase !== idle even after the scheduler job completes', () => {
-        const { getByTestId } = render(<FeedSyncIndicator />);
+        const { getByTestId } = render(<StatusProbe />);
 
         act(() => {
             useSchedulerStore.getState().reserveTask('feed-sync');
@@ -196,21 +187,6 @@ describe('FeedSyncIndicator', () => {
         expect(isVisible(getByTestId)).toBe(false);
     });
 
-    it('no longer renders an inline offline notice — the global band owns that', () => {
-        // The band moved to components/custom/OfflineBanner, mounted once at the
-        // root layout. It renders the same warning in the same style at the same
-        // position, so keeping this one stacked two identical bands ~40px apart;
-        // and the global one also covers /login and /pin-lock, which this never
-        // could. `showConnectivityNotices` went with it — its only job was to
-        // hide this row.
-        const { queryByText } = render(<FeedSyncIndicator />);
-        expect(queryByText('feed.offlineCached')).toBeNull();
-
-        act(() => {
-            useNetworkStore.setState({ isConnected: false });
-        });
-        expect(queryByText('feed.offlineCached')).toBeNull();
-    });
 });
 
 describe('useFeedSyncRefresh', () => {
@@ -251,7 +227,7 @@ describe('useFeedSyncRefresh', () => {
         const { getByTestId } = render(
             <>
                 <RefreshProbe />
-                <FeedSyncIndicator />
+                <StatusProbe />
             </>,
         );
         expect(lastRefresh.refreshing).toBe(false);
@@ -344,7 +320,7 @@ describe('useFeedSyncRefresh', () => {
         const { getByTestId } = render(
             <>
                 <RefreshProbe />
-                <FeedSyncIndicator />
+                <StatusProbe />
             </>,
         );
         act(() => {
@@ -363,7 +339,7 @@ describe('useFeedSyncRefresh', () => {
         const { getByTestId } = render(
             <>
                 <RefreshProbe />
-                <FeedSyncIndicator />
+                <StatusProbe />
             </>,
         );
         act(() => {
@@ -381,7 +357,7 @@ describe('useFeedSyncRefresh', () => {
         const { getByTestId } = render(
             <>
                 <RefreshProbe />
-                <FeedSyncIndicator />
+                <StatusProbe />
             </>,
         );
         act(() => {
@@ -414,7 +390,7 @@ describe('useFeedSyncRefresh', () => {
         render(
             <>
                 <RefreshProbe />
-                <FeedSyncIndicator />
+                <StatusProbe />
             </>,
         );
 

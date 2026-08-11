@@ -70,6 +70,10 @@ interface ArticleCardProps {
    *  only suppresses the NEW badge. (`ArticleCardBase`'s doc is the source of
    *  truth.) The Dashboard surfaces use this. */
   read?: boolean;
+  /** Pass-through to `ArticleCardBase` — show the age label + NEW badge on the
+   *  meta row. Default true; the Feed passes false. See `ArticleMetaRow`'s
+   *  `showRecency` doc for why the badge travels with the timestamp. */
+  showRecency?: boolean;
   /** Pass-through to `ArticleCardBase` — renders as the floating neumorphic
    *  card (Dashboard's list treatment) instead of the default Card chrome.
    *  Default false. */
@@ -107,6 +111,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
   feedbackHandlers,
   dimmed = false,
   read = false,
+  showRecency = true,
   flat = false,
   onSaveToggled,
   metaRowRightReserve,
@@ -365,6 +370,7 @@ const ArticleSuggestionCardImpl: React.FC<ArticleCardProps> = ({
       recyclingKey={suggestion._id}
       dimmed={dimmed}
       read={read}
+      showRecency={showRecency}
       flat={flat}
       onPress={() => onPress(suggestion)}
       metaAccessory={metaAccessory}

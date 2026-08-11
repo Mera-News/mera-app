@@ -1,11 +1,16 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
-import FeedSyncIndicator, {
+import {
     useFeedSyncRefresh,
     useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
+import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
+import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
+import { isStatusVisible } from '@/lib/feed-status-mode';
+import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
+import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import {
     GLASS_HEADER_SCRIM,
     GLASS_HEADER_TINT,
@@ -268,6 +273,15 @@ const MeraNewsScreen: React.FC = () => {
     // the empty-state chain and the header auto-reveal; the header indicator
     // OR-s in the scheduler flag on its own.
     const isFeedProcessing = useIsFeedProcessing();
+
+    // Same status glyph + panel pair the Feed mounts, with NO auto-collapse:
+    // this is the screen you come to in order to look at the numbers, so the
+    // panel stays open until you close it — which is how this accordion has
+    // always behaved.
+    const statusMode = useFeedStatusMode();
+    const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
+        isStatusVisible(statusMode),
+    );
 
     // The user is over their daily delivery cap (sticky until a sync delivers
     // again or the reset time passes).
@@ -674,6 +688,12 @@ const MeraNewsScreen: React.FC = () => {
                                         {t('feed.dashboardTitle')}
                                     </Heading>
                                 </View>
+                                <FeedStatusIndicator
+                                    mode={statusMode}
+                                    expanded={statusExpanded}
+                                    onPress={toggleStatus}
+                                    testID="dashboard-status-indicator"
+                                />
                                 <ImportanceFilterDropdown
                                     value={dashboardThreshold}
                                     onChange={setDashboardThreshold}
@@ -714,14 +734,18 @@ const MeraNewsScreen: React.FC = () => {
                         <ForYouSubTabs activeSubTab={activeSubTab} onSelect={selectSubTab} />
                     </View>
 
-                    {/* Shared sync surface — indeterminate bar + expand accordion.
-                        Identical to the Feed tab's, and it goes up on the same
-                        frame as a pull on EITHER screen (see FeedSyncIndicator).
-                        The offline notice moved to the global OfflineBanner at
-                        the root layout, so there is no longer a per-sub-tab
-                        connectivity prop to pass. */}
+                    {/* The detail panel the status glyph in the title row opens.
+                        Same component the Feed mounts; the full-width
+                        indeterminate bar that used to live here is gone from
+                        both tabs. The offline notice moved to the global
+                        OfflineBanner at the root layout, so there is no longer a
+                        per-sub-tab connectivity prop to pass. */}
                     <View pointerEvents="box-none">
-                        <FeedSyncIndicator lastProcessedLabel={lastProcessedLabel} />
+                        <FeedStatusPanel
+                            expanded={statusExpanded}
+                            mode={statusMode}
+                            lastProcessedLabel={lastProcessedLabel}
+                        />
                     </View>
                 </VStack>
             </Animated.View>

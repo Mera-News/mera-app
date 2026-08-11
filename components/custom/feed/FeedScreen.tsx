@@ -69,8 +69,13 @@
 // a verdict and reveals the card's inline feedback surface
 // (CardFeedbackSurface). Every one of those interactions — plus opening the card
 // — marks it `viewed`.
-// The header is the "Feed" heading + notification bell, the importance-filter
-// pills, and the 24h stats sentence.
+// The header is the "Feed" heading, a small pipeline-status glyph, and the
+// importance-filter chip — and nothing else. It used to also carry the
+// notification bell, a full-width indeterminate progress bar and the 24h counts
+// sentence; all three were removed because they made this screen a place you
+// check for arrivals rather than a place you read. The bell lives on the
+// Dashboard, and so do the counts. The status glyph opens the same detail panel
+// the bar used to expand into, and closes itself after 3s.
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
@@ -82,15 +87,18 @@ import {
 } from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
 import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
-import FeedSyncIndicator, {
+import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
 } from '@/components/custom/FeedSyncIndicator';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
+import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
+import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
-import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
+import { isStatusVisible } from '@/lib/feed-status-mode';
+import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
+import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
@@ -213,6 +221,11 @@ const FeedRow = React.memo(function FeedRow({
     <ArticleSuggestionCard
       suggestion={item.suggestion}
       onPress={onPress}
+      // No age label and no NEW badge on this screen. "2h ago" and a green NEW
+      // pill are both answers to "has something arrived?", which is the
+      // question this feed is deliberately not asking. The Dashboard's cards
+      // keep both, and the article detail screen always shows the time.
+      showRecency={false}
       verdict={verdict}
       onVerdict={onVerdict}
       onAskMera={onAskMera}
@@ -256,6 +269,17 @@ const FeedScreen: React.FC = () => {
   // rows immediately instead of waiting for the next sync to re-admit them.
   const feedThreshold = useImportanceFilterStore((s) => s.feedThreshold);
   const setFeedThreshold = useImportanceFilterStore((s) => s.setFeedThreshold);
+
+  // Status glyph + its detail panel. 3000ms: this screen is for reading, so the
+  // panel answers the question and then leaves. (The Dashboard mounts the same
+  // pair with no timeout — there, staying open is the point.) `isStatusVisible`
+  // closes the panel if the pipeline goes idle underneath it, which otherwise
+  // strands it on screen with the glyph that opened it already unmounted.
+  const statusMode = useFeedStatusMode();
+  const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
+    isStatusVisible(statusMode),
+    3000,
+  );
 
   // "Want to read more? Lower the feed priority" — the end card's CTA when
   // `feedThreshold` is above its floor (see AllCaughtUpCard's `onLowerPriority`
@@ -991,14 +1015,19 @@ const FeedScreen: React.FC = () => {
           pointerEvents="box-none"
           style={{ paddingTop: insets.top + 16 }}
         >
-          <HStack className="items-center justify-between" pointerEvents="box-none">
+          {/* Title, status glyph, priority filter — and nothing else. The
+              notification bell used to sit at the right edge of this row; it
+              lives on the Dashboard only now. This screen is the reading
+              surface, and every additional affordance here is something that
+              competes with the story you are trying to read. */}
+          <HStack className="items-center" pointerEvents="box-none">
             {/* The importance DROPDOWN (one chip, not three pills) is what
                 makes an in-title-row control viable in the longer languages:
                 "Nachrichten" + a single "Mittel ▾" chip fits where the full
                 pill row did not. The heading still truncates first
                 (flex-shrink min-w-0, numberOfLines={1}) if a locale needs it. */}
             <HStack
-              className="flex-1 min-w-0 mr-3 items-center"
+              className="flex-1 min-w-0 items-center"
               space="sm"
               pointerEvents="box-none"
             >
@@ -1018,6 +1047,16 @@ const FeedScreen: React.FC = () => {
                   {t('swipeFeed.yourDeck')}
                 </Heading>
               </View>
+              {/* Everything the deleted full-width bar used to say, in one
+                  glyph. Sits immediately after the title rather than at the
+                  right edge so it reads as a property of this screen's state,
+                  not as another button. */}
+              <FeedStatusIndicator
+                mode={statusMode}
+                expanded={statusExpanded}
+                onPress={toggleStatus}
+                testID="feed-status-indicator"
+              />
               <ImportanceFilterDropdown
                 value={feedThreshold}
                 onChange={setFeedThreshold}
@@ -1025,29 +1064,15 @@ const FeedScreen: React.FC = () => {
                 pulsing={priorityPulsing}
               />
             </HStack>
-            <HStack className="items-center flex-shrink-0" space="sm" pointerEvents="box-none">
-              <NotificationBellButton />
-            </HStack>
           </HStack>
-          <View pointerEvents="none">
-            {/* Brighter + a little heavier than the muted body step: this line
-                sits on glass with content moving under it, where
-                typography-400 was barely legible. `leading-6` is repeated
-                because the prop REPLACES FeedStatsSentence's default class
-                string rather than merging with it. */}
-            {/* `importanceAware`: the "K relevant" clause must not advertise
-                more stories than the filtered list below actually shows. */}
-            <FeedStatsSentence
-              importanceAware
-              className="text-typography-700 font-medium"
-            />
-          </View>
 
-          {/* Shared sync surface — the same indeterminate bar the Dashboard
-              shows, plus the offline notice and the re-auth prompt. It goes up
-              on the same frame as a pull on EITHER screen. */}
+          {/* The 24h counts sentence that used to sit here is gone — it lives
+              on the Dashboard, which is the screen for looking at numbers. It
+              is still one tap away: the panel below carries the same counts. */}
+
+          {/* Opened by the glyph above, and closes itself after 3s. */}
           <View pointerEvents="box-none">
-            <FeedSyncIndicator />
+            <FeedStatusPanel expanded={statusExpanded} mode={statusMode} />
           </View>
         </VStack>
       </Animated.View>

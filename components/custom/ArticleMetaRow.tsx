@@ -31,6 +31,16 @@ interface ArticleMetaRowProps {
     /** Whether to render the trailing country flag. Default true. The compact
      *  card sets this false and shows the flag in its footer instead. */
     showFlag?: boolean;
+    /**
+     * Whether to render the leading recency slot. Default true.
+     *
+     * This covers the WHOLE slot — the clock glyph, the age label, AND the
+     * green NEW badge, which shares it. That grouping is the point rather than
+     * an accident of layout: both answer "has something arrived?", and the Feed
+     * screen sets this false precisely to stop asking. Hiding only the text
+     * would leave an orphan clock glyph next to a NEW pill.
+     */
+    showRecency?: boolean;
 }
 
 export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
@@ -42,6 +52,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     isNew = false,
     read = false,
     showFlag = true,
+    showRecency = true,
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
@@ -104,25 +115,28 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
         // shrink (single-line, truncating) so a long publication name truncates
         // instead of bleeding across / pushing the flag off-row.
         <HStack className="items-center justify-between" space="sm">
-            {/* 1. Age (+ optional NEW badge) */}
-            <HStack className="items-center flex-shrink-0" space="xs">
-                <MaterialIcons name="schedule" size={14} color={iconColor} />
-                <Text size="sm" className={ageColor}>
-                    {age}
-                </Text>
-                {/* No read indicator is drawn. `read` still SUPPRESSES the NEW
-                    badge below — the seen mechanism is intact end to end (card
-                    state, the "All caught up" partition, scoring); it is only
-                    the eye glyph that is deliberately not shown. */}
-                {/* A read card never shows NEW — read wins. */}
-                {isCard && isNew && !read ? (
-                    <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
-                        <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
-                            {t('feed.newBadge')}
-                        </Text>
-                    </Box>
-                ) : null}
-            </HStack>
+            {/* 1. Age (+ optional NEW badge) — omitted wholesale when
+                `showRecency` is false; see the prop's doc. */}
+            {showRecency ? (
+                <HStack className="items-center flex-shrink-0" space="xs">
+                    <MaterialIcons name="schedule" size={14} color={iconColor} />
+                    <Text size="sm" className={ageColor}>
+                        {age}
+                    </Text>
+                    {/* No read indicator is drawn. `read` still SUPPRESSES the NEW
+                        badge below — the seen mechanism is intact end to end (card
+                        state, the "All caught up" partition, scoring); it is only
+                        the eye glyph that is deliberately not shown. */}
+                    {/* A read card never shows NEW — read wins. */}
+                    {isCard && isNew && !read ? (
+                        <Box className="px-2 py-0.5 rounded-full" style={{ backgroundColor: '#10B981' }}>
+                            <Text size="xs" style={{ color: '#FFFFFF', fontWeight: '600' }}>
+                                {t('feed.newBadge')}
+                            </Text>
+                        </Box>
+                    ) : null}
+                </HStack>
+            ) : null}
 
             {/* 2. Translate icon + language name */}
             {showLanguageSlot ? (
