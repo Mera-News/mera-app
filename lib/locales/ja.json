@@ -190,17 +190,12 @@
     "statsAnalysed_other": "{{formatted}}件が分析されました。",
     "statsRelevant_other": "{{formatted}}件があなたに関連性があります。",
     "statsRead_other": "そしてあなたは{{formatted}}件を読みました。",
-    "divider": {
-      "readLine": "開き直す。",
-      "seenLine": "開いて読む。",
-      "readTitle": "読み済み。",
-      "seenTitle": "新着はここまで。"
-    },
     "statsAnalysed_one": "{{formatted}}件が分析されました、",
     "statsPublishedPending_one": "{{formatted}}件の記事が過去24時間に公開されました。",
     "statsPublished_one": "{{formatted}}件の記事が過去24時間に公開されました、",
     "statsRead_one": "そしてあなたは{{formatted}}件を読みました。",
-    "statsRelevant_one": "{{formatted}}件があなたに関連性があります、"
+    "statsRelevant_one": "{{formatted}}件があなたに関連性があります、",
+    "lowerPriorityCta": "もっと読みたいですか？フィード優先度を下げてください"
   },
   "relevance": {
     "emergency": "緊急",
@@ -300,12 +295,6 @@
     "formatAmPm": "AM/PM",
     "timeDescription": "ニュースを処理するための通知を受け取る時間を選択してください",
     "timeDescriptionOnboarding": "ニュースをまとめて確認したい時間を選択してください",
-    "timeNudges": [
-      "ニュースは1日に1〜2回、集中して読むのが最も効果的です。",
-      "常にチェックする必要はありません — あなたの準備ができた時に、いつでも用意しておきます。",
-      "こまめに確認するより、少なく落ち着いてチェックする方が効果的です。",
-      "あなたの一日に合った時間を選んでください — 情報収集はMeraにお任せです。"
-    ],
     "savePreferences": "設定を保存",
     "loadFailedTitle": "読み込みに失敗しました",
     "loadFailedDescription": "通知設定を読み込めませんでした。",
@@ -324,7 +313,8 @@
     "savedTitle": "設定を保存しました",
     "savedDescription": "通知設定が更新されました。",
     "saveFailedTitle": "保存に失敗しました",
-    "saveFailedDescription": "設定の保存に失敗しました。もう一度お試しください。"
+    "saveFailedDescription": "設定の保存に失敗しました。もう一度お試しください。",
+    "timeNudge": "読んだり、考えたり、計画したりできるときを選んでください。1日1～2回で十分です。"
   },
   "language": {
     "title": "言語",
@@ -479,9 +469,9 @@
     "extractedMetadataEntitiesLabel": "エンティティ",
     "extractedMetadataCaption": "AI抽出、検証済みの事実ではありません",
     "factCheckTitle": "ファクトチェック",
-    "factCheckOn": "オン — Meraはストーリーの主張を確認するためにウェブを検索できます",
+    "factCheckOn": "オン — Meraはストーリーの公開されているファクトチェックを検索できます",
     "factCheckOff": "オフ",
-    "factCheckDescription": "これがオンの場合、ストーリーの検証のためサーバーを通じて検索プロバイダーに送信されます。他には何も一緒に行きません。あなたの事実ではなく、あなたのフィードではなく、あなたが誰ではありません。デフォルトではオフです。"
+    "factCheckDescription": "Meraはニュース自体をファクトチェックしていません。これがオンの場合、ストーリーを検索するとサーバーに送信され、確立された機関がすでに公開しているファクトチェックを検索するプロバイダーに送信されます。ファクト、フィード、あなたが誰であるかは含まれません。デフォルトではオンになっています。検索は、あなたが要求したときにのみ実行されます。"
   },
   "manageData": {
     "deleting": "削除中...",
@@ -913,7 +903,12 @@
     "planRecommendation": "1日に約{{count}}件の記事を開いています。{{plan}}は1日最大{{limit}}件を分析するため、常にあなたが読むより多くあります。",
     "sandboxOnProduction": "これはサンドボックス（テスト）購入であり、アプリは本番環境サーバーに接続されています。サンドボックスレシートはステージング環境でのみ受け入れられるため、本番環境ではこの購入を確認することはありません。待機しても役に立ちません。アプリをステージング環境に向けて購入をテストしてください。",
     "planPending": "{{plan}} · 有効化中",
-    "perMonth": "/月"
+    "perMonth": "/月",
+    "freeTrial": "無料トライアル",
+    "trialDaysLeft_one": "あと{{count}}日",
+    "trialDaysLeft_other": "あと{{count}}日",
+    "trialEndsOn": "無料トライアルは{{date}}に終了します",
+    "trialNoPaymentDetails": "支払い詳細がファイルに保存されていないため、キャンセルするものはありません。トライアルが終わると、購読を選択しない限り、無料プランに移行します。"
   },
   "tabs": {
     "deck": "フィード",
@@ -970,7 +965,8 @@
     "headlineDenominator_other": "Meraが{{count}}件のニュースを読みました。{{shown}}件があなたの時間を価値があるもの。",
     "headlineDenominatorNone_one": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
     "headlineDenominatorNone_other": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
-    "subTabHistory": "履歴"
+    "subTabHistory": "履歴",
+    "nextFactPrefix": "次へ"
   },
   "feedStatus": {
     "title": "フィードの状態",
@@ -1135,7 +1131,28 @@
     "paywallRelatedDesc": "別の出版社から似た記事が出ており、ペイウォール内にないかもしれません — 関連記事を確認してください。",
     "paywallSubscribeDesc": "この月、{{publication}}に{{visits}}回訪問しました — フルアクセスのために購読を検討してください。",
     "paywallBlockOption": "代わりに{{publication}}をブロック",
-    "tooMuchOfThis": "これを見かけすぎます"
+    "tooMuchOfThis": "これを見かけすぎます",
+    "managePublicationsDesc": "任意のパブリケーション（このパブリケーションを含む）をブーストしたり、ランクを下げたり、ミュートしたりします。",
+    "managePublicationsOption": "パブリケーションを管理",
+    "neverShowPublication": "このパブリケーションは表示しない",
+    "notAGoodSuggestion": "良い提案ではない",
+    "notFactual": "事実ではない / 偏っている",
+    "notRelated": "自分には関係ない",
+    "notThatImportant": "それほど重要ではない",
+    "paywall": "ペイウォール記事です",
+    "publicationIssue": "このパブリケーションの問題",
+    "seenAlready": "すでに見ました",
+    "showLessEntity": "{{entity}}をもっと少なく表示",
+    "showLessEventType": "{{eventType}}をもっと少なく表示",
+    "showLessPlace": "{{place}}をもっと少なく表示",
+    "showLessPublication": "このパブリケーションをもっと少なく表示",
+    "somethingElse": "その他",
+    "tellMeraWhy": "Meraに理由を教える",
+    "thisCategory": "このカテゴリー",
+    "tooCluttered": "雑然としている / 広告が多い",
+    "tooSlow": "読み込みが遅い",
+    "wrongPlace": "場所が間違っている",
+    "wrongTopic": "トピックが間違っている"
   },
   "topicPlan": {
     "title": "追跡するトピック",
@@ -1148,7 +1165,17 @@
     "delete": "トピックを削除",
     "undo": "元に戻す",
     "settledTitle": "トピックを保存しました",
-    "settledSummary": "このファクトに対して{{count}}件のトピックが有効です。"
+    "settledSummary": "このファクトに対して{{count}}件のトピックが有効です。",
+    "discard": "破棄",
+    "discardAll": "すべて破棄",
+    "discardAllWarning_one": "{{count}}件のファクトとそのすべてのトピックを削除します。取り消すことはできません。",
+    "discardAllWarning_other": "{{count}}件のファクトとそのすべてのトピックを削除します。取り消すことはできません。",
+    "discardConfirm": "はい、破棄します",
+    "discardWarning": "ファクトとそのすべてのトピックを削除します。取り消すことはできません。",
+    "discardedSummary": "このファクトとそのトピックは削除されました。",
+    "discardedTitle": "破棄しました",
+    "resolveBeforeContinuing": "続行する前にアクションを選択してください。",
+    "save": "保存"
   },
   "conflict": {
     "title": "競合の可能性",
@@ -1424,7 +1451,6 @@
   },
   "security": {
     "title": "セキュリティ",
-    "subtitle": "Meraがこのデバイスでカプセル認証を求めるかどうかを選択してください",
     "requirePinTitle": "ロック解除にPINが必要",
     "requirePinDescription": "Meraを開くときに4桁のPINを求めます",
     "setPinTitle": "PINを設定",
@@ -1444,12 +1470,10 @@
     "blurImagesDescription": "アプリ全体の記事画像をソフト化して、グラフィックまたは不穏なビジュアルが鮮明に表示されないようにします。"
   },
   "display": {
-    "title": "表示",
-    "subtitle": "このデバイスでMeraがビジュアルをどのようにレンダリングするかをカスタマイズします",
     "staticGradientTitle": "静的背景",
     "staticGradientDescription": "アニメーション背景の代わりに固定グラデーションを使用します — バッテリーと古いデバイスに優しい",
-    "screenTitle": "テキストと表示",
-    "screenSubtitle": "このデバイスでテキストとビジュアルがどのように見えるかを設定してください",
+    "screenTitle": "表示",
+    "screenSubtitle": "テキスト、ビジュアル、セキュリティ、およびこのデバイスでMeraを開く方法",
     "sectionText": "テキスト",
     "sectionVisuals": "ビジュアル",
     "textSizeTitle": "テキストサイズ",
@@ -1462,7 +1486,11 @@
     "textSizeStepDefault": "デフォルト",
     "textSizeStepLarge": "大きい",
     "textSizeStepLarger": "より大きい",
-    "deviceTextSizeHint": "さらに大きなテキストの場合は、デバイスの設定で表示と明るさを使用してください。"
+    "deviceTextSizeHint": "さらに大きなテキストの場合は、デバイスの設定で表示と明るさを使用してください。",
+    "sectionStartup": "スタートアップタブ",
+    "startupTabA11y": "スタートアップタブ、{{label}}",
+    "startupTabDescription": "アプリを起動したときにMeraが開くタブを選択します。",
+    "startupTabTitle": "起動時に開く"
   },
   "freeTier": {
     "cardBody": "Meraが持つAI機能は現在オフになっています。保存した記事、フォローした記事、読んだ記事はすべてこのデバイスに残ります。探索タブには今日のニュースが引き続き表示されます。プランなしでは、Meraはフィードを作成したり、質問に答えたり、新しいストーリーをフォローできません。プランを開始すれば、すべてが戻ります。",
@@ -1487,46 +1515,43 @@
     "newest": "新しい順"
   },
   "factCheck": {
-    "action": "ファクトチェック",
-    "actionA11y": "このストーリーでAIファクトチェックを実行する",
-    "title": "AIファクトチェック",
+    "action": "ファクトチェックを探す",
+    "actionA11y": "このストーリーの公開されているファクトチェックを探す",
+    "title": "ファクトチェック",
     "hide": "非表示",
     "retry": "もう一度お試しください",
-    "checking": "このストーリーを他のソースと照合して確認しています…",
-    "checkingHint": "これには最大1分かかります。",
-    "stillWorking": "まだこれに取り組んでいます。数分後にもう一度確認してください。",
-    "failed": "このチェックは完了できませんでした。後で再度お試しできます。",
-    "error": "チェックを開始できませんでした。接続を確認してもう一度お試しください。",
-    "blocked": "このストーリーはチェックできませんでした。",
+    "checking": "公開されているファクトチェックを検索中…",
+    "error": "検索を開始できませんでした。接続を確認してもう一度試してください。",
+    "blocked": "このストーリーは検索できませんでした。",
     "claimsHeading": "チェックされたクレーム",
     "citationsHeading": "参照されたソース",
-    "noCitations": "このチェックでは情報源が返されませんでした。未確認として扱ってください。",
+    "noCitations": "この検索でソースが返されなかったため、確認されていないものとして扱ってください。",
     "sourceFallback": "ソース{{index}}",
-    "disclaimer": "ウェブ検索からAIが書きました。間違っているか不完全な場合があります。それに頼る前にソースをお読みください。",
+    "disclaimer": "Meraはニュース自体をファクトチェックしていません。これは公開されているファクトチェックのウェブ検索のAIサマリーです。間違っているか不完全な可能性があるため、それに依存する前にソースを読んでください。",
     "verdict": {
       "supported": {
         "label": "ソースと一貫性がある",
-        "detail": "見つけた他のソースでは、ほぼ同じことを述べています。それが真実であることの証拠ではなく、それに矛盾するものは見つけられなかったということだけです。"
+        "detail": "検索で見つかったソースは、基本的に同じことを述べています。それが真実である証拠ではなく、それに矛盾するものが見つからなかったということです。"
       },
       "disputed": {
         "label": "ソースが異なる意見",
-        "detail": "このストーリーの一部に矛盾するソースが見つかりました。それらをお読みになり、自分で判断してください。"
+        "detail": "検索でこのストーリーの一部に矛盾するソースが見つかりました。それらを読んで自分で判断してください。"
       },
       "unsupported": {
         "label": "サポートが見つかりません",
-        "detail": "これをサポートする他のソースが見つかりませんでした。ストーリーが新しいか利基的であるという意味でもあります。それが偽ではありません。"
+        "detail": "検索ではこれを支持するものは見つかりませんでした。これは単にストーリーが新しいかニッチであることを意味する可能性があります。それは偽であることを意味しません。"
       },
       "mixed": {
         "label": "一部一貫性がある",
-        "detail": "一部は他のソースと一致し、一部は異なります。クレームごとのメモは、どれが当てはまるかを述べています。"
+        "detail": "一部は検索結果と一致し、一部は一致しません。請求ごとのメモで、どちらであるかがわかります。"
       },
       "unverifiable": {
         "label": "確認できませんでした",
-        "detail": "このストーリーを確認または矛盾させるのに十分なものが見つかりませんでした。これは間違っていることが判明していません。"
+        "detail": "検索ではこのストーリーを確認または矛盾させるのに十分な情報が見つかりませんでした。これは、それが間違っているという発見ではありません。"
       },
       "unknown": {
         "label": "明確な答えがない",
-        "detail": "チェックは要約できる結論なしで完了しました。以下のソースはそれが見たものです。"
+        "detail": "検索は要約できる結論なしで完了しました。以下のソースはそれが見た内容です。"
       }
     },
     "assessment": {
@@ -1535,7 +1560,25 @@
       "unsupported": "サポートが見つかりません",
       "unverifiable": "確認できませんでした",
       "unknown": "不明"
-    }
+    },
+    "checkedByHeading": "このニュースを取り上げたファクトチェッカー",
+    "dashboard": {
+      "delete": "削除",
+      "deleteA11y": "このファクトチェックを削除",
+      "empty": "まだファクトチェックを検索していません。ストーリーを開いて「ファクトチェックを探す」をタップしてください。",
+      "listSubtitle": "Meraにファクトチェックを検索させたストーリー。このデバイスにのみ保存されます。",
+      "listTitle": "ファクトチェック",
+      "openA11y": "このファクトチェックを開く",
+      "pending": "検索中です",
+      "title": "ファクトチェック",
+      "untitled": "タイトルなしのストーリー",
+      "viewAll": "すべて表示"
+    },
+    "explainer": "Meraはニュース自体をファクトチェックしていません。確認された実績のあるファクトチェック機関がすでに公開している内容を検索します。",
+    "noCheckedBy": "検索した範囲では、このストーリーについてファクトチェック機関が公開している内容はありません。これはストーリーが間違っているということではなく、ほとんどのストーリーはファクトチェックされていません。",
+    "organisationA11y": "{{organisation}}のファクトチェックを開く",
+    "queued": "検索中です。これはバックグラウンドで実行されるため、ここで待機する必要はありません。",
+    "queuedHint": "結果はダッシュボードのファクトチェックの下に表示され、通知がオンの場合は準備できたときに通知が送信されます。"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "このソースを優先順位付けする",
@@ -1553,8 +1596,8 @@
     "retry": "もう一度お試しください"
   },
   "tutorials": {
-    "entryRow": "Meraへようこそ",
-    "menuTitle": "Meraへようこそ",
+    "entryRow": "Meraについて学ぶ",
+    "menuTitle": "Meraについて学ぶ",
     "menuSubtitle": "このアプリがどのように機能するかについての短いガイド。どこからでも始めてください。",
     "sectionBasic": "ここから始めてください",
     "sectionAdvanced": "より深く行く",
@@ -1702,15 +1745,15 @@
           },
           "nothing-removed": {
             "headline": "何も削除されません",
-            "body": "カードを読むと消えません。それは沈みます。2つの薄いディバイダーがリストを3つの部分に切ります。カードは移動するにつれて、それらをドリフトしていきます。",
+            "body": "カードを読んでも消えない。下に沈むだけです。セクションが仕切りで切られていない、1つの継続的なリストです。カードは進むにつれて静かに新しいものの下を漂います。",
             "steps": {
-              "0": "トップ。見たことのないすべてのもの。",
-              "1": "最初のディバイダーの下。見たが、開かなかった。",
-              "2": "第二の下。すでに読んでいます。"
+              "0": "リード：まだ見ていないすべてのもの。",
+              "1": "次：見ましたが、開いていません。",
+              "2": "最も低い：既に読んでいます。仕切りはなく、同じリストの下の場所です。"
             },
             "beforeAfter": {
               "before": "あなたがそれを読む前に。カードは上部に他のすべてのニュースと一緒に座ります。",
-              "after": "あなたがそれを読んだ後。同じカード、まだそこに、今は第二のディバイダーの下。スクロールしてください。好きなときにいつでも再度読むことができます。"
+              "after": "読んだ後：同じカード、まだそこにあり、リストの下の方に並び替えられただけです。下にスクロールすれば、いつでも何度でも読むことができます。"
             }
           },
           "what-counts-as-read": {

@@ -195,12 +195,7 @@
     "statsRelevant_other": "{{formatted}} uygun görünüyor,",
     "statsRead_one": "ve {{formatted}} okumuşsun.",
     "statsRead_other": "ve {{formatted}} okumuşsun.",
-    "divider": {
-      "readLine": "Açarak tekrar gör",
-      "seenLine": "Açarak oku",
-      "readTitle": "Zaten okundu",
-      "seenTitle": "Hepsi yeni"
-    }
+    "lowerPriorityCta": "Daha fazla okumak mı istiyorsunuz? Akış önceliğini düşürün"
   },
   "relevance": {
     "emergency": "Acil",
@@ -319,12 +314,7 @@
     "saveFailedTitle": "Kaydetme Başarısız",
     "saveFailedDescription": "Tercihler kaydedilemedi. Lütfen tekrar dene.",
     "timeDescriptionOnboarding": "Haberlerine ne zaman göz atmak istediğini seç",
-    "timeNudges": [
-      "Haberler, günde bir ya da iki odaklanmış anda en iyi şekilde işler.",
-      "Sürekli kontrol etmene gerek yok: sen hazır olduğunda biz de hazır olacağız.",
-      "Daha az ve sakin kontroller, gün boyu süren bilgi akışından daha iyidir.",
-      "Gününe uyan saatleri seç: toplama işini Mera halleder."
-    ]
+    "timeNudge": "Okuyabileceğiniz, düşünebileceğiniz ve planlayabileceğiniz bir zamanı seçin — günde bir veya iki kez yeterlidir."
   },
   "language": {
     "title": "Dil",
@@ -478,10 +468,10 @@
     "extractedMetadataPlacesLabel": "Yerler",
     "extractedMetadataEntitiesLabel": "Varlıklar",
     "extractedMetadataCaption": "Yapay zeka tarafından çıkartıldı, doğrulanmamış gerçek",
-    "factCheckTitle": "Gerçek Doğrulama",
-    "factCheckOn": "Açık — Mera bir hikayenin iddialarını doğrulamak için web araması yapabilir",
+    "factCheckTitle": "Doğruluk kontroller",
+    "factCheckOn": "Açık — Mera bir haberde yayımlanmış doğruluk kontrolleri arayabilir",
     "factCheckOff": "Kapalı",
-    "factCheckDescription": "Bu açık olduğunda, bir hikayeyi doğrulamak onu sunucumuza ve bir arama sağlayıcısına gönderir. Hiçbir şey onunla gitmiyor — gerçekleriniz yok, akışınız yok, kim olduğunuz yok. Varsayılan olarak kapalı."
+    "factCheckDescription": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Bu açıkken, bir haberi aramak onu sunucumuza ve bir arama sağlayıcısına gönderir. Resmi kuruluşlar tarafından yayımlanmış doğruluk kontrolleri arar. Bununla başka bir şey gitmez — sizin bilgileriniz, akışınız, kimliğiniz. Varsayılan olarak açık; araması sadece siz istediğinizde çalışır."
   },
   "manageData": {
     "deleting": "Siliniyor...",
@@ -913,7 +903,12 @@
     "planRecommendation": "Günde yaklaşık {{count}} makale açıyorsun. {{plan}} günde {{limit}}'e kadar analiz ediyor, bu yüzden her zaman geçeceğinden daha fazla var.",
     "sandboxOnProduction": "Bu bir sandbox (test) satın almadır ve uygulama production sunucusuna bağlıdır. Sandbox makbuzları yalnızca staging'de kabul edilir, bu nedenle production hiçbir zaman bu satın almayı onaylamayacaktır — bekleme yardımcı olmayacaktır. Satın almaları test etmek için uygulamayı staging ortamına yönlendirin.",
     "planPending": "{{plan}} · etkinleştiriliyor",
-    "perMonth": "/ay"
+    "perMonth": "/ay",
+    "freeTrial": "Ücretsiz Deneme",
+    "trialDaysLeft_one": "{{count}} gün kaldı",
+    "trialDaysLeft_other": "{{count}} gün kaldı",
+    "trialEndsOn": "Ücretsiz denemeniz {{date}} tarihinde sona eriyor",
+    "trialNoPaymentDetails": "Dosyada ödeme bilgisi olmadığı için iptal edilecek bir şey yok. Deneme süresi sona erdiğinde, abonelik yapmamayı seçmediğiniz sürece ücretsiz plana geçersiniz."
   },
   "tabs": {
     "deck": "Akış",
@@ -970,7 +965,8 @@
     "subTabFeed": "Bakış",
     "subTabStories": "Haberler",
     "subTabSaved": "Kaydedilenler",
-    "subTabHistory": "Geçmiş"
+    "subTabHistory": "Geçmiş",
+    "nextFactPrefix": "Sonraki"
   },
   "feedStatus": {
     "title": "Akış durumu",
@@ -1137,7 +1133,28 @@
     "paywallRelatedDesc": "Başka bir yayından benzer bir haber ödeme duvarı arkasında olmayabilir — ilgili makaleleri kontrol et.",
     "paywallSubscribeDesc": "{{publication}}'i bu ay {{visits}} kez ziyaret ettin — tam erişim için abone olmayı düşün.",
     "paywallBlockOption": "Bunun yerine {{publication}}'i Engelle",
-    "tooMuchOfThis": "Bunu çok sık görüyorum"
+    "tooMuchOfThis": "Bunu çok sık görüyorum",
+    "managePublicationsDesc": "Herhangi bir yayını (bu yayın dahil) öne çıkarın, arka plana atin veya sessiz yapın.",
+    "managePublicationsOption": "Yayınları yönet",
+    "neverShowPublication": "Bu yayını asla gösterme",
+    "notAGoodSuggestion": "Bu iyi bir öneri değil",
+    "notFactual": "Gerçekçi değil / çok taraflı",
+    "notRelated": "Bana ait değil",
+    "notThatImportant": "Çok önemli değil",
+    "paywall": "Ücretli erişim arkasında",
+    "publicationIssue": "Bu yayınla ilgili sorun",
+    "seenAlready": "Bunu daha önce gördüm",
+    "showLessEntity": "{{entity}} hakkında daha az göster",
+    "showLessEventType": "{{eventType}} türünde daha az göster",
+    "showLessPlace": "{{place}} hakkında daha az göster",
+    "showLessPublication": "Bu yayını daha az göster",
+    "somethingElse": "Başka bir şey",
+    "tellMeraWhy": "Mera'ya neden olduğunu söyle",
+    "thisCategory": "Bu kategori",
+    "tooCluttered": "Karmaşık / çok fazla reklam",
+    "tooSlow": "Yüklemesi çok uzun",
+    "wrongPlace": "Yanlış konum",
+    "wrongTopic": "Yanlış konu"
   },
   "topicPlan": {
     "title": "Takip edeceğim konular",
@@ -1150,7 +1167,17 @@
     "delete": "Konuyu kaldır",
     "undo": "Geri al",
     "settledTitle": "Konular kaydedildi",
-    "settledSummary": "Bu bilgi için {{count}} konu aktif."
+    "settledSummary": "Bu bilgi için {{count}} konu aktif.",
+    "discard": "Ata",
+    "discardAll": "Tümünü at",
+    "discardAllWarning_one": "Bu {{count}} bilgiyi ve tüm konularını siler. Geri alınamaz.",
+    "discardAllWarning_other": "Bu {{count}} bilgiyi ve tüm konularını siler. Geri alınamaz.",
+    "discardConfirm": "Evet, at",
+    "discardWarning": "Bu bilgiyi ve tüm konularını siler. Geri alınamaz.",
+    "discardedSummary": "Bu bilgi ve konuları silindi.",
+    "discardedTitle": "Atıldı",
+    "resolveBeforeContinuing": "Devam etmeden önce lütfen bir işlem seçin.",
+    "save": "Kaydet"
   },
   "conflict": {
     "title": "Olası çelişki",
@@ -1426,7 +1453,6 @@
   },
   "security": {
     "title": "Güvenlik",
-    "subtitle": "Mera'nın bu cihazda PIN isteyip istemediğini seç",
     "requirePinTitle": "Kilidi açmak için PIN gerekli",
     "requirePinDescription": "Mera açarken 4 haneli PIN'i iste",
     "setPinTitle": "PIN ayarla",
@@ -1446,12 +1472,10 @@
     "blurImagesDescription": "Uygulama genelinde makale görüntülerini yumuşat; böylece grafik veya rahatsız edici görseller keskinlikle gösterilmez."
   },
   "display": {
-    "title": "Görünüm",
-    "subtitle": "Mera'nın bu cihazda görsel öğeleri nasıl işlediğini özelleştirin",
     "staticGradientTitle": "Sabit arka plan",
     "staticGradientDescription": "Hareketli arka plan yerine sabit bir gradyan kullanın — pil ve eski cihazlar için daha kolay",
-    "screenTitle": "Metin ve Görüntü",
-    "screenSubtitle": "Mera'da metnin ve görsellerin nasıl göründüğünü ayarlayın",
+    "screenTitle": "Görünüm",
+    "screenSubtitle": "Metin, görseller, güvenlik ve Mera'nın bu cihazda nasıl açıldığı",
     "sectionText": "Metin",
     "sectionVisuals": "Görseller",
     "textSizeTitle": "Metin boyutu",
@@ -1464,7 +1488,11 @@
     "textSizeStepDefault": "Varsayılan",
     "textSizeStepLarge": "Büyük",
     "textSizeStepLarger": "Daha büyük",
-    "deviceTextSizeHint": "Daha da büyük metin için cihaz ayarlarında Görüntü ve Parlaklık kullanın."
+    "deviceTextSizeHint": "Daha da büyük metin için cihaz ayarlarında Görüntü ve Parlaklık kullanın.",
+    "sectionStartup": "Başlangıç sekmesi",
+    "startupTabA11y": "Başlangıç sekmesi, {{label}}",
+    "startupTabDescription": "Mera uygulamasını açtığınızda hangi sekmede başlamasını istediğinizi seçin.",
+    "startupTabTitle": "Başlangıçta açılacak sekme"
   },
   "freeTier": {
     "cardBody": "Mera'nın yapay zeka kısmı şu an kapalı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey bu cihazda kalıyor ve Keşfet sekmesinde hâlâ bugünün haberlerine erişebilirsiniz. Bir plan olmadan Mera sizin akışınızı oluşturamaz, sorularınızı cevaplayamaz ya da yeni haberleri takip edemez. Bir plan başlatın ve her şey geri gelir.",
@@ -1489,46 +1517,43 @@
     "newest": "Yeni olanlar ilk"
   },
   "factCheck": {
-    "action": "Gerçek denetimi",
-    "actionA11y": "Bu hikayeye AI gerçek denetimi çalıştır",
-    "title": "AI gerçek denetimi",
+    "action": "Doğruluk kontrol ara",
+    "actionA11y": "Bu haber hakkında yayımlanmış doğruluk kontrolleri ara",
+    "title": "Doğruluk kontroller",
     "hide": "Gizle",
     "retry": "Tekrar dene",
-    "checking": "Bu hikaye diğer kaynaklarla karşılaştırılıyor...",
-    "checkingHint": "Bu bir dakika kadar sürebilir.",
-    "stillWorking": "Hâlâ bunda çalışıyor. Birkaç dakika sonra tekrar kontrol et.",
-    "failed": "Bu denetim tamamlanamadı. Daha sonra tekrar deneyin.",
-    "error": "Denetim başlatılamadı. Bağlantını kontrol et ve tekrar dene.",
-    "blocked": "Bu hikaye denetlenemedi.",
+    "checking": "Yayımlanmış doğruluk kontroller aranıyor…",
+    "error": "Araması başlatılamadı. Bağlantınızı kontrol edin ve tekrar deneyin.",
+    "blocked": "Bu haber aranamadı.",
     "claimsHeading": "Denetlenen iddialar",
     "citationsHeading": "Danışılan kaynaklar",
-    "noCitations": "Bu denetimle geri hiçbir kaynak gelmedi, bu yüzden bunu doğrulanmamış olarak görmek gerek.",
+    "noCitations": "Bu aramayla hiçbir kaynak gelmedi. Bunu doğrulanmamış olarak değerlendirin.",
     "sourceFallback": "Kaynak {{index}}",
-    "disclaimer": "Web aramasından yapay zeka tarafından yazılmıştır. Yanlış veya eksik olabilir, güvenmeden önce kaynakları oku.",
+    "disclaimer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Bu, yayımlanmış doğruluk kontrolleri için yapılan bir web aramasının AI özeti olup, yanlış veya eksik olabilir. Güvenmeden önce kaynakları okuyun.",
     "verdict": {
       "supported": {
         "label": "Kaynaklarla tutarlı",
-        "detail": "Bulduğumuz diğer kaynaklar aynı şeyi söylüyor. Bu onun doğru olduğunu kanıtlamaz, yalnızca çelişen bir şey bulamadığımız anlamına gelir."
+        "detail": "Aramanın bulduğu kaynaklar temelde aynı şeyi söylüyor. Bu, doğru olduğu anlamına gelmez — sadece onu çürüten bir şey bulunmadığı anlamına gelir."
       },
       "disputed": {
         "label": "Kaynaklar anlaşmazlık içinde",
-        "detail": "Bu hikayenin parçalarıyla çelişen kaynaklar bulduk. Onları oku ve kendin karar ver."
+        "detail": "Araması, bu haberin bazı kısımlarıyla çelişen kaynaklar buldu. Okuyun ve kendiniz karar verin."
       },
       "unsupported": {
         "label": "Destek bulunamadı",
-        "detail": "Bu hikayeyi destekleyen başka kaynaklar bulamadık. Bu sadece hikayenin yeni veya niş olması anlamına gelebilir, onun yanlış olduğunu göstermez."
+        "detail": "Araması bu bulguyu destekleyen bir şey bulamadı. Bu, sadece haberin yeni veya niş olduğu anlamına gelebilir — onu yanlış yapmaz."
       },
       "mixed": {
         "label": "Kısmen tutarlı",
-        "detail": "Bazı parçalar diğer kaynaklarla uyuşuyor ve bazıları uymuyor. İddia-iddia notları hangisinin olduğunu söylüyor."
+        "detail": "Bazı kısımlar aramanın bulduğu bilgilerle uyumlu, bazıları ise uyumsuz. İddia-iddialı notlar hangisinin hangisi olduğunu söyler."
       },
       "unverifiable": {
         "label": "Doğrulanamadı",
-        "detail": "Bu hikayeyi doğrulamak veya çelişmek için yeterli bulamadık. Bu, onun yanlış olduğunu bulgu değildir."
+        "detail": "Araması bu haberi doğrulamak veya çürütmek için yeterli bilgi bulamadı. Bu, onu yanlış olduğunu bulmak değil."
       },
       "unknown": {
         "label": "Açık cevap yok",
-        "detail": "Denetim özetleyebileceğimiz bir sonuca ulaşmadan tamamlandı. Aşağıda onun baktığı kaynaklar var."
+        "detail": "Araması, özetleyebileceğimiz bir sonuç olmadan tamamlandı. Aşağıdaki kaynaklar aramanın baktığı şeylerdir."
       }
     },
     "assessment": {
@@ -1537,7 +1562,25 @@
       "unsupported": "Destek bulunamadı",
       "unverifiable": "Doğrulanamadı",
       "unknown": "Belirsiz"
-    }
+    },
+    "checkedByHeading": "Bu haberi inceleyen doğruluk kontrol kuruluşları",
+    "dashboard": {
+      "delete": "Sil",
+      "deleteA11y": "Bu doğruluk kontrolünü sil",
+      "empty": "Henüz hiçbir doğruluk kontrolü aramadınız. Bir haberi açın ve \"Doğruluk kontrol ara\"ya dokunun.",
+      "listSubtitle": "Mera'ya doğruluk kontrol araması yapmasını istediğiniz haberler. Sadece bu cihazda saklanır.",
+      "listTitle": "Doğruluk kontroller",
+      "openA11y": "Bu doğruluk kontrolünü aç",
+      "pending": "Hala aranıyor",
+      "title": "Doğruluk kontroller",
+      "untitled": "Başlıksız haber",
+      "viewAll": "Tümünü gör"
+    },
+    "explainer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Resmi doğruluk kontrol kuruluşlarının bu haber hakkında yayımladıklarını arar.",
+    "noCheckedBy": "Aradığımız hiçbir doğruluk kontrol kuruluşu bu haber hakkında bilgi yayımlamadı. Bu haberin yanlış olduğu anlamına gelmez — çoğu haber hiçbir zaman doğruluk kontrolünden geçmez.",
+    "organisationA11y": "{{organisation}}'nin doğruluk kontrolünü aç",
+    "queued": "Arama yapıyoruz. Bu işlem arka planda çalışıyor — burada beklemenize gerek yok.",
+    "queuedHint": "Sonuç, Kontrol Paneli'nde Doğruluk kontroller bölümünde görünecek ve hazırlandığında (bildirimler açıksa) size bir bildirim gönderilecek."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Bu kaynağı önceliklendır",
@@ -1555,8 +1598,8 @@
     "retry": "Tekrar Dene"
   },
   "tutorials": {
-    "entryRow": "Mera'ya hoş geldin",
-    "menuTitle": "Mera'ya hoş geldin",
+    "entryRow": "Mera hakkında bilgi edin",
+    "menuTitle": "Mera hakkında bilgi edin",
     "menuSubtitle": "Bu uygulamanın nasıl düşündüğü hakkında kısa rehberler. Herhangi bir yerden başla.",
     "sectionBasic": "Buradan başla",
     "sectionAdvanced": "Daha derin git",
@@ -1704,15 +1747,15 @@
           },
           "nothing-removed": {
             "headline": "Hiçbir şey hiçbir zaman kaldırılmaz",
-            "body": "Bir kartı oku ve kayboluyor; batıyor. İki ince ayırıcı listeyi üç parçaya keser ve kartlar giderken aşağıya kayıyor.",
+            "body": "Bir kartı okuyun ve kaybolmaz; batır. Bu, ayırıcılarla kesilen bölümler değil, tek bir sürekli listedir — kartlar sessizce yenileri geçerken daha aşağıya kaymaktadır.",
             "steps": {
-              "0": "Tepede: henüz görmediğiniz her şey.",
-              "1": "İlk ayırıcının altında: görüldü, ama açılmadı.",
-              "2": "İkincinin altında: zaten oku."
+              "0": "Ön plandaki: henüz görmediğiniz her şey.",
+              "1": "Sonraki: görülen, ama açılmayan.",
+              "2": "En altta: zaten okundu — ayırıcı yok, sadece aynı listedeki daha düşük bir yer."
             },
             "beforeAfter": {
               "before": "Okumadan önce: kart tepede yeni başka her şeylerle oturuyor.",
-              "after": "Okuduğunuz sonra: aynı kart, hâlâ orada, şimdi ikinci ayırıcının altında. Aşağı kaydırın ve istediğiniz zaman tekrar okuyabilirsiniz."
+              "after": "Okuduktan sonra: aynı kart, hala orada, sadece listenin daha ilerisinde sıralanmış. Aşağı kaydırın ve istediğiniz zaman tekrar okuyabilirsiniz."
             }
           },
           "what-counts-as-read": {

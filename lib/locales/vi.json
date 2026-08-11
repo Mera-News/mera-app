@@ -190,17 +190,12 @@
     "statsAnalysed_other": "phân tích {{formatted}} cho bạn,",
     "statsRelevant_other": "{{formatted}} có vẻ phù hợp,",
     "statsRead_other": "và bạn đã đọc {{formatted}}.",
-    "divider": {
-      "readLine": "Mở để xem lại",
-      "seenLine": "Mở để đọc",
-      "readTitle": "Đã đọc rồi",
-      "seenTitle": "Toàn bộ mới"
-    },
     "statsAnalysed_one": "phân tích {{formatted}} cho bạn,",
     "statsPublishedPending_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua.",
     "statsPublished_one": "{{formatted}} bài viết đã được đăng trong 24 giờ qua,",
     "statsRead_one": "và bạn đã đọc {{formatted}}.",
-    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,"
+    "statsRelevant_one": "{{formatted}} có vẻ phù hợp,",
+    "lowerPriorityCta": "Muốn đọc thêm? Hạ độ ưu tiên bảng nguồn cấp dữ liệu"
   },
   "relevance": {
     "emergency": "Khẩn cấp",
@@ -300,12 +295,6 @@
     "formatAmPm": "SA/CH",
     "timeDescription": "Chọn thời điểm bạn muốn nhận thông báo để xử lý tin tức",
     "timeDescriptionOnboarding": "Chọn thời điểm bạn muốn cập nhật tin tức",
-    "timeNudges": [
-      "Tin tức hiệu quả nhất khi bạn tập trung đọc vào một hoặc hai thời điểm trong ngày.",
-      "Bạn không cần kiểm tra liên tục: chúng tôi sẽ chuẩn bị sẵn khi bạn cần.",
-      "Ít lần kiểm tra hơn, nhẹ nhàng hơn, tốt hơn là nhận tin rải rác cả ngày.",
-      "Chọn thời điểm phù hợp với ngày của bạn: Mera sẽ lo phần thu thập tin tức."
-    ],
     "savePreferences": "Lưu tùy chọn",
     "loadFailedTitle": "Tải thất bại",
     "loadFailedDescription": "Không thể tải cài đặt thông báo.",
@@ -324,7 +313,8 @@
     "savedTitle": "Đã lưu tùy chọn",
     "savedDescription": "Cài đặt thông báo của bạn đã được cập nhật.",
     "saveFailedTitle": "Lưu thất bại",
-    "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại."
+    "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại.",
+    "timeNudge": "Chọn một thời gian khi bạn có thể đọc, suy nghĩ và lên kế hoạch — một hoặc hai lần một ngày là đủ."
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -478,10 +468,10 @@
     "extractedMetadataPlacesLabel": "Địa điểm",
     "extractedMetadataEntitiesLabel": "Thực thể",
     "extractedMetadataCaption": "Được trích xuất bằng AI, không phải sự kiện đã xác minh",
-    "factCheckTitle": "Kiểm tra sự thật",
-    "factCheckOn": "Bật — Mera có thể tìm kiếm trên web để kiểm tra những khẳng định trong một câu chuyện",
+    "factCheckTitle": "Kiểm chứng sự kiện",
+    "factCheckOn": "Bật — Mera có thể tìm kiếm các kiểm chứng sự kiện được công bố về một câu chuyện",
     "factCheckOff": "Tắt",
-    "factCheckDescription": "Khi điều này bật, việc kiểm tra một câu chuyện sẽ gửi nó đến máy chủ của chúng tôi và đến một nhà cung cấp tìm kiếm để xác minh các khẳng định của nó. Không có gì khác đi cùng — không phải dữ kiện của bạn, không phải bản tin của bạn, không phải danh tính của bạn. Tắt theo mặc định."
+    "factCheckDescription": "Mera không kiểm chứng tin tức trực tiếp. Khi nó bật, tìm kiếm một câu chuyện sẽ gửi nó tới máy chủ của chúng tôi và tới nhà cung cấp tìm kiếm, nhà cung cấp tìm kiếm các kiểm chứng sự kiện mà các tổ chức đã công bố. Không có gì khác đi cùng nó — không phải sự kiện của bạn, không phải bảng nguồn cấp dữ liệu của bạn, không phải bạn là ai. Bật theo mặc định; tìm kiếm chỉ chạy khi bạn yêu cầu nó."
   },
   "manageData": {
     "deleting": "Đang xóa...",
@@ -913,7 +903,12 @@
     "planRecommendation": "Bạn mở khoảng {{count}} bài viết mỗi ngày. {{plan}} phân tích tối đa {{limit}} mỗi ngày vì vậy luôn có nhiều hơn những gì bạn sẽ xem hết.",
     "sandboxOnProduction": "Đây là một giao dịch mua hàng sandbox (kiểm thử) và ứng dụng được kết nối với máy chủ production. Hóa đơn sandbox chỉ được chấp nhận trên staging, vì vậy production sẽ không bao giờ xác nhận giao dịch mua hàng này — chờ đợi sẽ không giúp ích. Hãy hướng ứng dụng tới môi trường staging để kiểm thử các giao dịch mua hàng.",
     "planPending": "{{plan}} · đang kích hoạt",
-    "perMonth": "/tháng"
+    "perMonth": "/tháng",
+    "freeTrial": "Dùng thử miễn phí",
+    "trialDaysLeft_one": "Còn {{count}} ngày",
+    "trialDaysLeft_other": "Còn {{count}} ngày",
+    "trialEndsOn": "Dùng thử miễn phí của bạn kết thúc {{date}}",
+    "trialNoPaymentDetails": "Không có chi tiết thanh toán nào trong tệp, vì vậy không có gì để hủy. Khi dùng thử kết thúc, bạn sẽ chuyển sang gói miễn phí trừ khi bạn chọn đăng ký."
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -970,7 +965,8 @@
     "subTabFeed": "Tổng quan",
     "subTabStories": "Câu chuyện",
     "subTabSaved": "Đã lưu",
-    "subTabHistory": "Lịch sử"
+    "subTabHistory": "Lịch sử",
+    "nextFactPrefix": "Tiếp theo"
   },
   "feedStatus": {
     "title": "Trạng thái bản tin",
@@ -1136,7 +1132,28 @@
     "paywallRelatedDesc": "Một câu chuyện tương tự từ một ấn phẩm khác có thể không có tường lửa thanh toán — hãy kiểm tra các bài viết liên quan.",
     "paywallSubscribeDesc": "Bạn đã truy cập {{publication}} {{visits}} lần tháng này — hãy cân nhắc đăng ký để có quyền truy cập đầy đủ.",
     "paywallBlockOption": "Chặn {{publication}} thay vào đó",
-    "tooMuchOfThis": "Tôi đang thấy quá nhiều nội dung kiểu này"
+    "tooMuchOfThis": "Tôi đang thấy quá nhiều nội dung kiểu này",
+    "managePublicationsDesc": "Tăng, hạ xếp hạng hoặc tắt tiếng bất kỳ ấn phẩm nào — bao gồm cái này.",
+    "managePublicationsOption": "Quản lý ấn phẩm",
+    "neverShowPublication": "Không bao giờ hiển thị ấn phẩm này",
+    "notAGoodSuggestion": "Không phải là gợi ý tốt",
+    "notFactual": "Không chính xác / quá thiên vị",
+    "notRelated": "Không liên quan đến tôi",
+    "notThatImportant": "Không quá quan trọng",
+    "paywall": "Nó bị trả tiền",
+    "publicationIssue": "Vấn đề với ấn phẩm này",
+    "seenAlready": "Tôi đã thấy cái này rồi",
+    "showLessEntity": "Hiển thị ít hơn {{entity}}",
+    "showLessEventType": "Hiển thị ít hơn {{eventType}}",
+    "showLessPlace": "Hiển thị ít hơn {{place}}",
+    "showLessPublication": "Hiển thị ít của cái này cho tôi",
+    "somethingElse": "Cái gì đó khác",
+    "tellMeraWhy": "Cho Mera biết tại sao",
+    "thisCategory": "Danh mục này",
+    "tooCluttered": "Lộn xộn / quá nhiều quảng cáo",
+    "tooSlow": "Tải quá chậm",
+    "wrongPlace": "Sai địa điểm",
+    "wrongTopic": "Chủ đề sai"
   },
   "topicPlan": {
     "title": "Chủ đề mình sẽ theo dõi",
@@ -1149,7 +1166,17 @@
     "delete": "Xóa chủ đề",
     "undo": "Hoàn tác",
     "settledTitle": "Đã lưu chủ đề",
-    "settledSummary": "{{count}} chủ đề đang hoạt động cho thông tin này."
+    "settledSummary": "{{count}} chủ đề đang hoạt động cho thông tin này.",
+    "discard": "Loại bỏ",
+    "discardAll": "Loại bỏ tất cả",
+    "discardAllWarning_one": "Điều này sẽ xóa {{count}} sự kiện và tất cả các chủ đề của nó. Không thể hoàn tác.",
+    "discardAllWarning_other": "Điều này sẽ xóa {{count}} sự kiện và tất cả các chủ đề của chúng. Không thể hoàn tác.",
+    "discardConfirm": "Vâng, loại bỏ",
+    "discardWarning": "Điều này sẽ xóa sự kiện và tất cả các chủ đề của nó. Không thể hoàn tác.",
+    "discardedSummary": "Sự kiện này và các chủ đề của nó đã bị xóa.",
+    "discardedTitle": "Đã loại bỏ",
+    "resolveBeforeContinuing": "Vui lòng chọn một hành động trước khi tiếp tục.",
+    "save": "Lưu"
   },
   "conflict": {
     "title": "Có thể có xung đột",
@@ -1425,7 +1452,6 @@
   },
   "security": {
     "title": "Bảo mật",
-    "subtitle": "Chọn liệu Mera có yêu cầu PIN trên thiết bị này hay không",
     "requirePinTitle": "Yêu cầu PIN để mở khóa",
     "requirePinDescription": "Yêu cầu PIN 4 chữ số khi mở Mera",
     "setPinTitle": "Đặt PIN",
@@ -1445,12 +1471,10 @@
     "blurImagesDescription": "Làm mềm hình ảnh bài viết trên toàn bộ ứng dụng để các hình ảnh đồ họa hoặc gây phiền nhiễu không được hiển thị rõ."
   },
   "display": {
-    "title": "Hiển thị",
-    "subtitle": "Tùy chỉnh cách Mera hiển thị các yếu tố hình ảnh trên thiết bị này",
     "staticGradientTitle": "Nền tĩnh",
     "staticGradientDescription": "Sử dụng gradient cố định thay vì nền động — tiết kiệm pin và dễ hơn trên các thiết bị cũ",
-    "screenTitle": "Văn bản và Hiển thị",
-    "screenSubtitle": "Đặt cách văn bản và hình ảnh trông như thế nào trên thiết bị này",
+    "screenTitle": "Hiển thị",
+    "screenSubtitle": "Văn bản, hình ảnh, bảo mật và cách Mera mở trên thiết bị này",
     "sectionText": "Văn bản",
     "sectionVisuals": "Hình ảnh",
     "textSizeTitle": "Kích thước văn bản",
@@ -1463,7 +1487,11 @@
     "textSizeStepDefault": "Mặc định",
     "textSizeStepLarge": "Lớn",
     "textSizeStepLarger": "Lớn hơn",
-    "deviceTextSizeHint": "Để có văn bản lớn hơn, hãy sử dụng Hiển thị và Độ sáng trong cài đặt thiết bị của bạn."
+    "deviceTextSizeHint": "Để có văn bản lớn hơn, hãy sử dụng Hiển thị và Độ sáng trong cài đặt thiết bị của bạn.",
+    "sectionStartup": "Tab khởi động",
+    "startupTabA11y": "Tab khởi động, {{label}}",
+    "startupTabDescription": "Chọn tab nào Mera sẽ mở khi bạn khởi chạy ứng dụng.",
+    "startupTabTitle": "Mở khi khởi chạy"
   },
   "freeTier": {
     "cardBody": "Phần AI của Mera đã bị tắt tạm thời. Mọi thứ bạn đã lưu, theo dõi hoặc đọc vẫn ở trên thiết bị này, và Khám phá vẫn có tin tức hôm nay. Nếu không có gói, Mera sẽ không tạo bảng tin, trả lời câu hỏi hoặc theo dõi câu chuyện mới. Hãy bắt đầu một gói và mọi thứ sẽ quay trở lại.",
@@ -1488,46 +1516,43 @@
     "newest": "Mới nhất trước"
   },
   "factCheck": {
-    "action": "Kiểm chứng sự thật",
-    "actionA11y": "Chạy kiểm chứng sự thật AI trên câu chuyện này",
-    "title": "Kiểm chứng sự thật bằng AI",
+    "action": "Tìm kiếm kiểm chứng sự kiện",
+    "actionA11y": "Tìm kiếm các kiểm chứng sự kiện được công bố về câu chuyện này",
+    "title": "Kiểm chứng sự kiện",
     "hide": "Ẩn",
     "retry": "Thử lại",
-    "checking": "Đang kiểm chứng câu chuyện này với các nguồn khác...",
-    "checkingHint": "Điều này có thể mất tới một phút.",
-    "stillWorking": "Vẫn đang xử lý câu chuyện này. Quay lại trong vài phút.",
-    "failed": "Không thể hoàn thành kiểm chứng này. Bạn có thể thử lại sau.",
-    "error": "Không thể bắt đầu kiểm chứng. Kiểm tra kết nối của bạn và thử lại.",
-    "blocked": "Câu chuyện này không thể được kiểm chứng.",
+    "checking": "Đang tìm kiếm các kiểm chứng sự kiện được công bố…",
+    "error": "Không thể bắt đầu tìm kiếm. Kiểm tra kết nối của bạn và thử lại.",
+    "blocked": "Không thể tìm kiếm câu chuyện này.",
     "claimsHeading": "Các khẳng định được kiểm chứng",
     "citationsHeading": "Các nguồn được tham khảo",
-    "noCitations": "Không có nguồn nào trả về kết quả kiểm chứng này, nên coi nó chưa được xác nhận.",
+    "noCitations": "Không có nguồn nào quay lại với tìm kiếm này, vì vậy hãy coi nó là chưa xác nhận.",
     "sourceFallback": "Nguồn {{index}}",
-    "disclaimer": "Được viết bởi AI từ tìm kiếm web. Nó có thể sai hoặc không đầy đủ, hãy đọc các nguồn trước khi sử dụng.",
+    "disclaimer": "Mera không kiểm chứng tin tức trực tiếp. Đây là tóm tắt AI của tìm kiếm web cho các kiểm chứng sự kiện được công bố — nó có thể sai hoặc không đầy đủ, vì vậy hãy đọc các nguồn trước khi dựa vào nó.",
     "verdict": {
       "supported": {
         "label": "Phù hợp với các nguồn",
-        "detail": "Các nguồn khác mà chúng tôi tìm thấy nói những điều tương tự. Đó không phải là bằng chứng nó đúng, chỉ là chúng tôi không tìm thấy gì mâu thuẫn."
+        "detail": "Các nguồn tìm kiếm tìm thấy nói chung điều tương tự. Điều đó không phải là bằng chứng nó đúng — chỉ là không tìm thấy gì mâu thuẫn."
       },
       "disputed": {
         "label": "Các nguồn không đồng ý",
-        "detail": "Chúng tôi tìm thấy các nguồn mâu thuẫn với phần của câu chuyện này. Hãy đọc chúng và tự quyết định."
+        "detail": "Tìm kiếm tìm thấy các nguồn mâu thuẫn với các phần của câu chuyện này. Đọc chúng và tự đánh giá."
       },
       "unsupported": {
         "label": "Không tìm thấy hỗ trợ",
-        "detail": "Chúng tôi không thể tìm thấy các nguồn khác hỗ trợ điều này. Đó có thể chỉ là vì câu chuyện mới hoặc đặc biệt, nó không làm cho nó sai."
+        "detail": "Tìm kiếm không tìm thấy gì hỗ trợ điều này. Điều đó chỉ có thể có nghĩa là câu chuyện mới hoặc chuyên biệt — nó không làm cho nó sai."
       },
       "mixed": {
         "label": "Một phần phù hợp",
-        "detail": "Một số phần trùng với các nguồn khác nhưng không phải cái khác. Các ghi chú theo khẳng định nói điều nào."
+        "detail": "Một số phần phù hợp với những gì tìm kiếm tìm thấy và một số thì không. Các ghi chú từng tuyên bố nói rõ."
       },
       "unverifiable": {
         "label": "Không thể xác nhận",
-        "detail": "Chúng tôi không thể tìm thấy đủ để xác nhận hoặc mâu thuẫn câu chuyện này. Đây không phải là kết luận nó sai."
+        "detail": "Tìm kiếm không tìm thấy đủ để xác nhận hoặc mâu thuẫn với câu chuyện này. Đây không phải là phát hiện rằng nó sai."
       },
       "unknown": {
         "label": "Không có câu trả lời rõ ràng",
-        "detail": "Kiểm chứng đã hoàn thành mà không có kết luận chúng tôi có thể tóm tắt. Các nguồn bên dưới là những gì nó đã xem xét."
+        "detail": "Tìm kiếm kết thúc mà không có kết luận chúng tôi có thể tóm tắt. Các nguồn dưới đây là những gì nó xem xét."
       }
     },
     "assessment": {
@@ -1536,7 +1561,25 @@
       "unsupported": "Không tìm thấy hỗ trợ",
       "unverifiable": "Không thể xác nhận",
       "unknown": "Không rõ"
-    }
+    },
+    "checkedByHeading": "Các tổ chức kiểm chứng đã đề cập",
+    "dashboard": {
+      "delete": "Xóa",
+      "deleteA11y": "Xóa kiểm chứng sự kiện này",
+      "empty": "Bạn chưa tra cứu bất kỳ kiểm chứng sự kiện nào. Mở một câu chuyện và nhấn \"Tìm kiếm kiểm chứng sự kiện\".",
+      "listSubtitle": "Những câu chuyện bạn đã yêu cầu Mera tìm kiếm kiểm chứng sự kiện. Chỉ được lưu trên thiết bị này.",
+      "listTitle": "Kiểm chứng sự kiện",
+      "openA11y": "Mở kiểm chứng sự kiện này",
+      "pending": "Đang tìm kiếm",
+      "title": "Kiểm chứng sự kiện",
+      "untitled": "Câu chuyện không có tiêu đề",
+      "viewAll": "Xem tất cả"
+    },
+    "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
+    "noCheckedBy": "Không có tổ chức kiểm chứng nào trong tìm kiếm của chúng tôi đã công bố về câu chuyện này. Điều này không có nghĩa là câu chuyện sai — hầu hết các câu chuyện không bao giờ được kiểm chứng.",
+    "organisationA11y": "Mở kiểm chứng sự kiện của {{organisation}}",
+    "queued": "Chúng tôi đang tìm kiếm. Điều này chạy ở nền — bạn không cần phải chờ tại đây.",
+    "queuedHint": "Kết quả sẽ xuất hiện dưới phần Kiểm chứng sự kiện trên Bảng điều khiển của bạn, và chúng tôi sẽ gửi một thông báo khi nó sẵn sàng nếu bạn bật thông báo."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",
@@ -1554,8 +1597,8 @@
     "retry": "Thử lại"
   },
   "tutorials": {
-    "entryRow": "Chào mừng đến Mera",
-    "menuTitle": "Chào mừng đến Mera",
+    "entryRow": "Tìm hiểu về Mera",
+    "menuTitle": "Tìm hiểu về Mera",
     "menuSubtitle": "Hướng dẫn ngắn về cách ứng dụng này hoạt động. Bắt đầu ở bất cứ đâu.",
     "sectionBasic": "Bắt đầu từ đây",
     "sectionAdvanced": "Đi sâu hơn",
@@ -1703,15 +1746,15 @@
           },
           "nothing-removed": {
             "headline": "Không bao giờ có gì bị xóa",
-            "body": "Đọc một thẻ và nó không biến mất, nó chìm xuống. Hai bộ chia nhỏ cắt danh sách thành ba phần, và các thẻ trôi xuống qua chúng khi bạn đi.",
+            "body": "Đọc một thẻ và nó không biến mất; nó chìm. Đó là một danh sách liên tục, không phải các phần bị cắt bởi dấu chia — các thẻ yên tĩnh trôi xuống dưới những cái mới khi bạn tiến hành.",
             "steps": {
-              "0": "Đầu: tất cả những gì bạn chưa thấy.",
-              "1": "Dưới bộ chia đầu tiên: nhìn thấy, nhưng không mở.",
-              "2": "Dưới thứ hai: đã đọc xong."
+              "0": "Dẫn đầu: tất cả những gì bạn chưa thấy.",
+              "1": "Tiếp theo: đã xem, nhưng không mở.",
+              "2": "Thấp nhất: đã đọc — không có dấu chia, chỉ là một vị trí thấp hơn trong cùng một danh sách."
             },
             "beforeAfter": {
               "before": "Trước khi bạn đọc nó: thẻ ngồi lên trên với tất cả những thứ khác mới.",
-              "after": "Sau khi bạn đọc nó: cùng thẻ, vẫn còn đó, bây giờ dưới bộ chia thứ hai. Cuộn xuống và bạn có thể đọc nó lại bất kỳ lúc nào bạn thích."
+              "after": "Sau khi bạn đọc nó: cùng một thẻ, vẫn ở đó, chỉ được sắp xếp thấp hơn trong danh sách. Cuộn xuống và bạn có thể đọc nó lại bất cứ khi nào bạn thích."
             }
           },
           "what-counts-as-read": {

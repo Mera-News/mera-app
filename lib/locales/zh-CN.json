@@ -190,17 +190,12 @@
     "statsAnalysed_other": "{{formatted}}篇文章经过分析。",
     "statsRelevant_other": "{{formatted}}篇与您相关。",
     "statsRead_other": "您已读过{{formatted}}篇。",
-    "divider": {
-      "readLine": "打开重看",
-      "seenLine": "打开阅读",
-      "readTitle": "已阅读",
-      "seenTitle": "全是新的"
-    },
     "statsAnalysed_one": "{{formatted}}篇文章经过分析,",
     "statsPublishedPending_one": "过去24小时内发布了{{formatted}}篇文章。",
     "statsPublished_one": "过去24小时内发布了{{formatted}}篇文章,",
     "statsRead_one": "且您已阅读{{formatted}}篇。",
-    "statsRelevant_one": "{{formatted}}篇与您相关,"
+    "statsRelevant_one": "{{formatted}}篇与您相关,",
+    "lowerPriorityCta": "想阅读更多内容？降低信息流优先级"
   },
   "relevance": {
     "emergency": "紧急",
@@ -300,12 +295,6 @@
     "formatAmPm": "AM/PM",
     "timeDescription": "选择您希望接收新闻推送通知的时间",
     "timeDescriptionOnboarding": "选择您希望接收新闻更新的时间",
-    "timeNudges": [
-      "新闻最好在一天中一两个专注的时刻集中阅读。",
-      "您无需一直查看——我们会在您需要时准备好。",
-      "偶尔从容地查看，胜过一整天零散地接收信息。",
-      "选择适合您日常安排的时间——收集新闻的事交给 Mera。"
-    ],
     "savePreferences": "保存偏好设置",
     "loadFailedTitle": "加载失败",
     "loadFailedDescription": "无法加载通知设置。",
@@ -324,7 +313,8 @@
     "savedTitle": "偏好已保存",
     "savedDescription": "您的通知设置已更新。",
     "saveFailedTitle": "保存失败",
-    "saveFailedDescription": "无法保存您的偏好设置，请重试。"
+    "saveFailedDescription": "无法保存您的偏好设置，请重试。",
+    "timeNudge": "选择一个您可以阅读、思考和规划的时间——每天一两次就足够了。"
   },
   "language": {
     "title": "语言",
@@ -479,9 +469,9 @@
     "extractedMetadataEntitiesLabel": "实体",
     "extractedMetadataCaption": "AI提取，未验证的事实",
     "factCheckTitle": "事实核查",
-    "factCheckOn": "开启 — Mera 可以搜索网络来核查报道的声明",
+    "factCheckOn": "启用——Mera 可以在故事上查找已发布的事实核查",
     "factCheckOff": "关闭",
-    "factCheckDescription": "打开时，核查一则报道会将其发送到我们的服务器以及搜索提供商来验证其声明。没有其他内容随之而来 — 不是您的事实，不是您的资讯，不是您是谁。默认关闭。"
+    "factCheckDescription": "Mera 不是对新闻本身进行事实核查。启用此功能后，查找故事会将其发送到我们的服务器，然后发送到搜索提供商，搜索已建立的组织已发布的事实核查。随后不会发送任何其他内容——不是您的事实，不是您的信息流，不是您是谁。默认启用；搜索仅在您要求时运行。"
   },
   "manageData": {
     "deleting": "删除中...",
@@ -913,7 +903,12 @@
     "planRecommendation": "您每天大约打开{{count}}篇文章。{{plan}}每天分析最多{{limit}}篇，所以总会有比您能读完的更多。",
     "sandboxOnProduction": "这是一笔沙箱(测试)购买，应用连接到 production 服务器。沙箱收据仅在 staging 上被接受，因此 production 永远不会确认此次购买——等待不会有帮助。请将应用指向 staging 环境来测试购买。",
     "planPending": "{{plan}} · 激活中",
-    "perMonth": "/月"
+    "perMonth": "/月",
+    "freeTrial": "免费试用",
+    "trialDaysLeft_one": "还剩 {{count}} 天",
+    "trialDaysLeft_other": "还剩 {{count}} 天",
+    "trialEndsOn": "您的免费试用在 {{date}} 结束",
+    "trialNoPaymentDetails": "没有支付方式在档案中，所以没有什么可以取消的。试用期结束后，除非您选择订阅，否则您将转入免费计划。"
   },
   "tabs": {
     "deck": "信息流",
@@ -970,7 +965,8 @@
     "headlineDenominator_other": "Mera 阅读了 {{count}} 条头条 · {{shown}} 值得您关注。",
     "headlineDenominatorNone_one": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
     "headlineDenominatorNone_other": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
-    "subTabHistory": "历史"
+    "subTabHistory": "历史",
+    "nextFactPrefix": "下一个"
   },
   "feedStatus": {
     "title": "资讯状态",
@@ -1136,7 +1132,28 @@
     "paywallRelatedDesc": "另一家出版机构的类似报道可能不在付费墙后面 — 请查看相关文章。",
     "paywallSubscribeDesc": "本月您访问了{{publication}}{{visits}}次 — 请考虑订阅以获得完全访问权限。",
     "paywallBlockOption": "改为屏蔽{{publication}}",
-    "tooMuchOfThis": "这类内容我看得太多了"
+    "tooMuchOfThis": "这类内容我看得太多了",
+    "managePublicationsDesc": "提升、降级或静音任何出版物——包括这一个。",
+    "managePublicationsOption": "管理出版物",
+    "neverShowPublication": "永不显示此出版物",
+    "notAGoodSuggestion": "不是一个好建议",
+    "notFactual": "不是真实的／带有偏见",
+    "notRelated": "与我无关",
+    "notThatImportant": "不那么重要",
+    "paywall": "这是付费内容",
+    "publicationIssue": "此出版物有问题",
+    "seenAlready": "我已经看过了",
+    "showLessEntity": "减少 {{entity}} 的内容",
+    "showLessEventType": "减少 {{eventType}} 的内容",
+    "showLessPlace": "减少 {{place}} 的内容",
+    "showLessPublication": "让我减少看这个出版物",
+    "somethingElse": "其他",
+    "tellMeraWhy": "告诉 Mera 原因",
+    "thisCategory": "此类别",
+    "tooCluttered": "混乱／太多广告",
+    "tooSlow": "加载太慢",
+    "wrongPlace": "错误的地点",
+    "wrongTopic": "错误的话题"
   },
   "topicPlan": {
     "title": "我将追踪的话题",
@@ -1149,7 +1166,17 @@
     "delete": "移除话题",
     "undo": "撤销",
     "settledTitle": "话题已保存",
-    "settledSummary": "此事实目前有 {{count}} 个活跃话题。"
+    "settledSummary": "此事实目前有 {{count}} 个活跃话题。",
+    "discard": "放弃",
+    "discardAll": "放弃全部",
+    "discardAllWarning_one": "这将移除 {{count}} 个事实及其所有话题。无法撤销。",
+    "discardAllWarning_other": "这将移除 {{count}} 个事实及其所有话题。无法撤销。",
+    "discardConfirm": "是的，放弃",
+    "discardWarning": "这将移除此事实及其所有话题。无法撤销。",
+    "discardedSummary": "此事实及其话题已被移除。",
+    "discardedTitle": "已放弃",
+    "resolveBeforeContinuing": "请在继续前选择一个操作。",
+    "save": "保存"
   },
   "conflict": {
     "title": "可能存在冲突",
@@ -1425,7 +1452,6 @@
   },
   "security": {
     "title": "安全",
-    "subtitle": "选择 Mera 是否在此设备上要求 PIN",
     "requirePinTitle": "需要 PIN 来解锁",
     "requirePinDescription": "打开 Mera 时询问 4 位 PIN",
     "setPinTitle": "设置 PIN",
@@ -1445,12 +1471,10 @@
     "blurImagesDescription": "在整个应用中软化文章图像,使图形或令人不安的视觉效果不会显示清晰。"
   },
   "display": {
-    "title": "显示",
-    "subtitle": "自定义Mera在此设备上如何呈现视觉效果",
     "staticGradientTitle": "静态背景",
     "staticGradientDescription": "使用固定渐变代替动画背景 — 对电池和旧设备更友好",
-    "screenTitle": "文本与显示",
-    "screenSubtitle": "设置此设备上文本和视觉的显示方式",
+    "screenTitle": "显示",
+    "screenSubtitle": "文本、视觉效果、安全性和 Mera 在此设备上的打开方式",
     "sectionText": "文本",
     "sectionVisuals": "视觉",
     "textSizeTitle": "文本大小",
@@ -1463,7 +1487,11 @@
     "textSizeStepDefault": "默认",
     "textSizeStepLarge": "大",
     "textSizeStepLarger": "更大",
-    "deviceTextSizeHint": "如需更大的文本，请在设备设置中使用显示与亮度。"
+    "deviceTextSizeHint": "如需更大的文本，请在设备设置中使用显示与亮度。",
+    "sectionStartup": "启动选项卡",
+    "startupTabA11y": "启动选项卡，{{label}}",
+    "startupTabDescription": "选择应用启动时打开的标签页。",
+    "startupTabTitle": "启动时打开"
   },
   "freeTier": {
     "cardBody": "Mera 的 AI 部分暂时已关闭。你保存、关注或阅读过的任何内容都会保留在此设备上，探索标签页仍有今日新闻。没有计划的情况下，Mera 无法生成你的资讯、回答你的问题或追踪新报道。选择一个计划，一切都会恢复。",
@@ -1488,46 +1516,43 @@
     "newest": "最新优先"
   },
   "factCheck": {
-    "action": "事实查证",
-    "actionA11y": "对这则报道进行AI事实查证",
-    "title": "AI事实查证",
+    "action": "查找事实核查",
+    "actionA11y": "在此故事上查找已发布的事实核查",
+    "title": "事实核查",
     "hide": "隐藏",
     "retry": "重试",
-    "checking": "根据其他来源检查这则报道中...",
-    "checkingHint": "这最多可能需要一分钟。",
-    "stillWorking": "仍在处理中。几分钟后回来检查。",
-    "failed": "无法完成此查证。您可以稍后重试。",
-    "error": "无法开始查证。检查您的连接并重试。",
-    "blocked": "无法对此报道进行查证。",
+    "checking": "搜索已发布的事实核查中……",
+    "error": "无法开始搜索。检查您的连接并再试一次。",
+    "blocked": "无法搜索此故事。",
     "claimsHeading": "已查证的主张",
     "citationsHeading": "参考的来源",
-    "noCitations": "此查证未返回来源，因此请视其为未经证实。",
+    "noCitations": "此搜索没有返回任何来源，请将其视为未确认的。",
     "sourceFallback": "来源{{index}}",
-    "disclaimer": "由AI根据网络搜索撰写。可能有误或不完整，在依赖之前请阅读来源。",
+    "disclaimer": "Mera 不是对新闻本身进行事实核查。这是网络搜索已发布事实核查的 AI 总结——可能有错误或不完整，在依赖之前请阅读来源。",
     "verdict": {
       "supported": {
         "label": "与来源一致",
-        "detail": "我们找到的其他来源说的基本相同。这不是真实性的证明，只是我们未找到与其矛盾的内容。"
+        "detail": "搜索发现的来源大致相同。这不是证明它是真的——只是没有找到相矛盾的内容。"
       },
       "disputed": {
         "label": "来源意见不一",
-        "detail": "我们找到与这则报道部分矛盾的来源。请阅读它们并自己判断。"
+        "detail": "搜索发现与此故事相矛盾的来源。阅读它们并自己判断。"
       },
       "unsupported": {
         "label": "未发现支持",
-        "detail": "我们无法找到其他来源支持这一点。这可能只意味着这则报道是新的或有针对性，这不会使其虚假。"
+        "detail": "搜索没有找到支持这一点的任何内容。这可能只是意味着故事很新或很小众——这不会使其不真实。"
       },
       "mixed": {
         "label": "部分一致",
-        "detail": "某些部分与其他来源一致，而某些则不一致。按条目的注释说明了哪些。"
+        "detail": "部分内容与搜索结果相符，部分不符。逐条说明会告诉您哪些。"
       },
       "unverifiable": {
         "label": "无法确认",
-        "detail": "我们找不到足够的信息来确认或反驳这则报道。这不是说它是错误的发现。"
+        "detail": "搜索没有找到足够的信息来确认或否定此故事。这不是它有错的发现。"
       },
       "unknown": {
         "label": "无明确答案",
-        "detail": "查证完成但没有我们可以总结的结论。下方的来源是它查看的。"
+        "detail": "搜索完成后没有我们可以总结的结论。下面的来源是它查看的内容。"
       }
     },
     "assessment": {
@@ -1536,7 +1561,25 @@
       "unsupported": "未发现支持",
       "unverifiable": "无法确认",
       "unknown": "不清楚"
-    }
+    },
+    "checkedByHeading": "核实过此内容的事实核查机构",
+    "dashboard": {
+      "delete": "删除",
+      "deleteA11y": "删除此事实核查",
+      "empty": "您尚未查询任何事实核查。打开一个故事并点击“查找事实核查”。",
+      "listSubtitle": "您要求 Mera 查找事实核查的故事。仅保存在此设备上。",
+      "listTitle": "事实核查",
+      "openA11y": "打开此事实核查",
+      "pending": "仍在搜索",
+      "title": "事实核查",
+      "untitled": "无标题的故事",
+      "viewAll": "查看全部"
+    },
+    "explainer": "Mera 不是对新闻本身进行事实核查。它搜索已建立的事实核查机构已经发布的有关此故事的内容。",
+    "noCheckedBy": "我们搜索的事实核查机构都未发布过关于此故事的内容。这并不意味着此故事是错误的——大多数故事从未被事实核查。",
+    "organisationA11y": "打开 {{organisation}} 的事实核查",
+    "queued": "我们正在搜索。这将在后台运行——您不需要在这里等待。",
+    "queuedHint": "搜索结果将显示在您的仪表板上的“事实核查”下，完成后如果您打开了通知，我们会发送通知。"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "优先考虑此来源",
@@ -1554,8 +1597,8 @@
     "retry": "重试"
   },
   "tutorials": {
-    "entryRow": "欢迎使用Mera",
-    "menuTitle": "欢迎使用Mera",
+    "entryRow": "了解 Mera",
+    "menuTitle": "了解 Mera",
     "menuSubtitle": "关于此应用的思考方式的简短指南。从任何地方开始。",
     "sectionBasic": "从这里开始",
     "sectionAdvanced": "深入学习",
@@ -1703,15 +1746,15 @@
           },
           "nothing-removed": {
             "headline": "永远不会移除任何东西",
-            "body": "阅读卡片，它不会消失；它下沉。两条细分隔线将列表切成三部分，卡片随着您的移动在它们过去下沉。",
+            "body": "阅读卡片不会消失；它会下沉。这是一个连续的列表，而不是由分隔符截断的部分——当您继续时，卡片会静静地漂移到较新的卡片下方。",
             "steps": {
-              "0": "顶部：您尚未看到的所有内容。",
-              "1": "第一条分隔线下：已看到但未打开。",
-              "2": "第二条下：已阅读。"
+              "0": "最新：您还没有看过的所有内容。",
+              "1": "下一个：已看过，但未打开。",
+              "2": "最低：已经读过——没有分隔符，只是同一列表中的较低位置。"
             },
             "beforeAfter": {
               "before": "阅读前：卡片与所有其他新的内容一起坐在顶部。",
-              "after": "阅读后：相同的卡片，仍然存在，现在在第二条分隔线下。向下滚动，您可以随时再次阅读它。"
+              "after": "阅读后：同一张卡片仍然在那里，只是在列表中排名更低。向下滚动，您可以随时再次阅读。"
             }
           },
           "what-counts-as-read": {

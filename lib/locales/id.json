@@ -190,17 +190,12 @@
     "statsAnalysed_other": "{{formatted}} dianalisis untuk Anda,",
     "statsRelevant_other": "{{formatted}} terlihat relevan,",
     "statsRead_other": "dan Anda telah membaca {{formatted}}.",
-    "divider": {
-      "readLine": "Buka apa saja untuk membaca ulang.",
-      "seenLine": "Buka apa saja untuk membaca.",
-      "readTitle": "Sudah dibaca.",
-      "seenTitle": "Itu semua baru."
-    },
     "statsAnalysed_one": "{{formatted}} dianalisis untuk Anda,",
     "statsPublishedPending_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir.",
     "statsPublished_one": "{{formatted}} artikel dipublikasikan dalam 24 jam terakhir,",
     "statsRead_one": "dan Anda telah membaca {{formatted}}.",
-    "statsRelevant_one": "{{formatted}} terlihat relevan,"
+    "statsRelevant_one": "{{formatted}} terlihat relevan,",
+    "lowerPriorityCta": "Ingin membaca lebih banyak? Turunkan prioritas feed"
   },
   "relevance": {
     "emergency": "Darurat",
@@ -319,12 +314,7 @@
     "saveFailedTitle": "Gagal Menyimpan",
     "saveFailedDescription": "Gagal menyimpan preferensi Anda. Silakan coba lagi.",
     "timeDescriptionOnboarding": "Pilih kapan Anda ingin mengejar ketinggalan berita Anda",
-    "timeNudges": [
-      "Berita bekerja paling baik dalam satu atau dua momen fokus sehari.",
-      "Anda tidak perlu memeriksa terus-menerus. Kami akan menyiapkannya saat Anda siap.",
-      "Pengecekan yang lebih sedikit dan tenang lebih baik daripada notifikasi sepanjang hari.",
-      "Pilih waktu yang sesuai dengan hari Anda: Mera yang akan mengumpulkannya."
-    ]
+    "timeNudge": "Pilih waktu ketika Anda dapat membaca, berpikir, dan merencanakan — sekali atau dua kali sehari sudah cukup."
   },
   "language": {
     "title": "Bahasa",
@@ -479,9 +469,9 @@
     "extractedMetadataEntitiesLabel": "Entitas",
     "extractedMetadataCaption": "Diekstrak AI, bukan fakta terverifikasi",
     "factCheckTitle": "Pemeriksaan fakta",
-    "factCheckOn": "Aktif — Mera dapat mencari web untuk memeriksa klaim cerita",
+    "factCheckOn": "Aktif — Mera dapat mencari pemeriksaan fakta yang dipublikasikan pada cerita",
     "factCheckOff": "Nonaktif",
-    "factCheckDescription": "Ketika ini aktif, pemeriksaan cerita mengirimnya ke server kami dan ke penyedia pencarian untuk memverifikasi klaimnya. Tidak ada yang lain yang ikut serta, bukan fakta Anda, bukan feed Anda, bukan siapa Anda. Nonaktif secara default."
+    "factCheckDescription": "Mera tidak memeriksa fakta berita itu sendiri. Ketika ini aktif, mencari cerita mengirimnya ke server kami dan ke penyedia pencarian, yang mencari pemeriksaan fakta yang telah dipublikasikan organisasi yang sudah mapan. Tidak ada yang lain pergi dengannya — bukan fakta Anda, bukan feed Anda, bukan siapa Anda. Aktif secara default; pencarian hanya berjalan ketika Anda memintanya."
   },
   "manageData": {
     "deleting": "Menghapus...",
@@ -913,7 +903,12 @@
     "planRecommendation": "Anda membuka sekitar {{count}} artikel sehari. {{plan}} menganalisis hingga {{limit}} sehari jadi selalu ada lebih banyak dari yang akan Anda lalui.",
     "sandboxOnProduction": "Ini adalah pembelian sandbox (tes) dan aplikasi terhubung ke server production. Kuitansi sandbox hanya diterima di staging, jadi production tidak akan pernah mengonfirmasi pembelian ini — menunggu tidak akan membantu. Arahkan aplikasi ke environment staging untuk menguji pembelian.",
     "planPending": "{{plan}} · sedang diaktifkan",
-    "perMonth": "/bulan"
+    "perMonth": "/bulan",
+    "freeTrial": "Uji Coba Gratis",
+    "trialDaysLeft_one": "{{count}} hari tersisa",
+    "trialDaysLeft_other": "{{count}} hari tersisa",
+    "trialEndsOn": "Uji coba gratis Anda berakhir {{date}}",
+    "trialNoPaymentDetails": "Tidak ada detail pembayaran dalam file, jadi tidak ada yang perlu dibatalkan. Saat uji coba berakhir, Anda akan beralih ke paket gratis kecuali Anda memilih untuk berlangganan."
   },
   "tabs": {
     "deck": "Umpan",
@@ -970,7 +965,8 @@
     "subTabFeed": "Tinjauan",
     "subTabStories": "Cerita",
     "subTabSaved": "Tersimpan",
-    "subTabHistory": "Riwayat"
+    "subTabHistory": "Riwayat",
+    "nextFactPrefix": "Berikutnya"
   },
   "feedStatus": {
     "title": "Status feed",
@@ -1135,7 +1131,28 @@
     "paywallRelatedDesc": "Cerita serupa dari publikasi lain mungkin tidak dibayar — periksa artikel terkait.",
     "paywallSubscribeDesc": "Anda telah mengunjungi {{publication}} {{visits}} kali bulan ini — pertimbangkan untuk berlangganan akses penuh.",
     "paywallBlockOption": "Blokir {{publication}} sebagai gantinya",
-    "tooMuchOfThis": "Saya terlalu sering melihat ini"
+    "tooMuchOfThis": "Saya terlalu sering melihat ini",
+    "managePublicationsDesc": "Tingkatkan, turunkan peringkat, atau matikan suara publikasi apa pun — termasuk yang ini.",
+    "managePublicationsOption": "Kelola publikasi",
+    "neverShowPublication": "Jangan pernah tampilkan publikasi ini",
+    "notAGoodSuggestion": "Bukan saran yang baik",
+    "notFactual": "Tidak faktual / terlalu bias",
+    "notRelated": "Tidak terkait dengan saya",
+    "notThatImportant": "Tidak terlalu penting",
+    "paywall": "Itu adalah konten berbayar",
+    "publicationIssue": "Masalah dengan publikasi ini",
+    "seenAlready": "Saya sudah melihat ini",
+    "showLessEntity": "Tampilkan lebih sedikit dari {{entity}}",
+    "showLessEventType": "Tampilkan lebih sedikit dari {{eventType}}",
+    "showLessPlace": "Tampilkan lebih sedikit dari {{place}}",
+    "showLessPublication": "Tampilkan lebih sedikit dari ini",
+    "somethingElse": "Sesuatu yang lain",
+    "tellMeraWhy": "Beri tahu Mera mengapa",
+    "thisCategory": "Kategori ini",
+    "tooCluttered": "Berantakan / terlalu banyak iklan",
+    "tooSlow": "Terlalu lambat untuk dimuat",
+    "wrongPlace": "Tempat yang salah",
+    "wrongTopic": "Topik yang salah"
   },
   "topicPlan": {
     "title": "Topik yang akan saya lacak",
@@ -1148,7 +1165,17 @@
     "delete": "Hapus topik",
     "undo": "Urungkan",
     "settledTitle": "Topik disimpan",
-    "settledSummary": "{{count}} topik aktif untuk fakta ini."
+    "settledSummary": "{{count}} topik aktif untuk fakta ini.",
+    "discard": "Buang",
+    "discardAll": "Buang semua",
+    "discardAllWarning_one": "Ini menghapus {{count}} fakta dan semua topiknya. Tidak dapat dibatalkan.",
+    "discardAllWarning_other": "Ini menghapus {{count}} fakta dan semua topiknya. Tidak dapat dibatalkan.",
+    "discardConfirm": "Ya, buang",
+    "discardWarning": "Ini menghapus fakta dan semua topiknya. Tidak dapat dibatalkan.",
+    "discardedSummary": "Fakta ini dan topiknya telah dihapus.",
+    "discardedTitle": "Dibuang",
+    "resolveBeforeContinuing": "Pilih tindakan sebelum melanjutkan.",
+    "save": "Simpan"
   },
   "conflict": {
     "title": "Kemungkinan konflik",
@@ -1424,7 +1451,6 @@
   },
   "security": {
     "title": "Keamanan",
-    "subtitle": "Pilih apakah Mera meminta PIN di perangkat ini",
     "requirePinTitle": "Perlukan PIN untuk membuka",
     "requirePinDescription": "Minta PIN 4 digit saat membuka Mera",
     "setPinTitle": "Atur PIN",
@@ -1444,12 +1470,10 @@
     "blurImagesDescription": "Melembapkan gambar artikel di seluruh aplikasi sehingga visual grafis atau mengganggu tidak ditampilkan dengan tajam."
   },
   "display": {
-    "title": "Tampilan",
-    "subtitle": "Sesuaikan cara Mera merender visual pada perangkat ini",
     "staticGradientTitle": "Latar belakang statis",
     "staticGradientDescription": "Gunakan gradien tetap alih-alih latar belakang animasi — lebih mudah di baterai dan perangkat lama",
-    "screenTitle": "Teks & Tampilan",
-    "screenSubtitle": "Tetapkan bagaimana teks dan visual terlihat di perangkat ini",
+    "screenTitle": "Tampilan",
+    "screenSubtitle": "Teks, visual, keamanan, dan cara Mera membuka di perangkat ini",
     "sectionText": "Teks",
     "sectionVisuals": "Visual",
     "textSizeTitle": "Ukuran teks",
@@ -1462,7 +1486,11 @@
     "textSizeStepDefault": "Standar",
     "textSizeStepLarge": "Besar",
     "textSizeStepLarger": "Lebih besar",
-    "deviceTextSizeHint": "Untuk teks yang lebih besar, gunakan Tampilan & Kecerahan di pengaturan perangkat Anda."
+    "deviceTextSizeHint": "Untuk teks yang lebih besar, gunakan Tampilan & Kecerahan di pengaturan perangkat Anda.",
+    "sectionStartup": "Tab Startup",
+    "startupTabA11y": "Tab Startup, {{label}}",
+    "startupTabDescription": "Pilih tab mana yang dibuka Mera saat Anda meluncurkan aplikasi.",
+    "startupTabTitle": "Buka saat diluncurkan"
   },
   "freeTier": {
     "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",
@@ -1487,46 +1515,43 @@
     "newest": "Terbaru pertama"
   },
   "factCheck": {
-    "action": "Verifikasi fakta",
-    "actionA11y": "Jalankan verifikasi fakta AI pada cerita ini",
-    "title": "Verifikasi fakta AI",
+    "action": "Cari pemeriksaan fakta",
+    "actionA11y": "Cari pemeriksaan fakta yang dipublikasikan pada cerita ini",
+    "title": "Pemeriksaan fakta",
     "hide": "Sembunyikan",
     "retry": "Coba lagi",
-    "checking": "Memeriksa cerita ini terhadap sumber lain…",
-    "checkingHint": "Ini dapat memakan waktu hingga satu menit.",
-    "stillWorking": "Masih bekerja pada yang ini. Periksa kembali dalam beberapa menit.",
-    "failed": "Pemeriksaan ini tidak dapat diselesaikan. Anda dapat mencoba lagi nanti.",
-    "error": "Tidak dapat memulai pemeriksaan. Periksa koneksi Anda dan coba lagi.",
-    "blocked": "Cerita ini tidak dapat diperiksa.",
+    "checking": "Mencari pemeriksaan fakta yang dipublikasikan…",
+    "error": "Tidak dapat memulai pencarian. Periksa koneksi Anda dan coba lagi.",
+    "blocked": "Cerita ini tidak dapat dicari.",
     "claimsHeading": "Klaim yang diperiksa",
     "citationsHeading": "Sumber yang dikonsultasi",
-    "noCitations": "Tidak ada sumber yang kembali dengan pemeriksaan ini, jadi anggap sebagai tidak dikonfirmasi.",
+    "noCitations": "Tidak ada sumber yang kembali dengan pencarian ini, jadi perlakukan sebagai tidak dikonfirmasi.",
     "sourceFallback": "Sumber {{index}}",
-    "disclaimer": "Ditulis oleh AI dari pencarian web. Ini bisa salah atau tidak lengkap, baca sumbernya sebelum mengandalkannya.",
+    "disclaimer": "Mera tidak memeriksa fakta berita itu sendiri. Ini adalah ringkasan AI dari pencarian web untuk pemeriksaan fakta yang dipublikasikan — ini bisa salah atau tidak lengkap, jadi baca sumbernya sebelum bergantung padanya.",
     "verdict": {
       "supported": {
         "label": "Konsisten dengan sumber",
-        "detail": "Sumber lain yang kami temukan mengatakan hal yang serupa. Itu bukan bukti itu benar, hanya bahwa kami tidak menemukan apa pun yang menentangnya."
+        "detail": "Sumber yang ditemukan pencarian mengatakan hal yang kurang lebih sama. Itu bukan bukti bahwa itu benar — hanya bahwa tidak ada yang bertentangan dengannya yang ditemukan."
       },
       "disputed": {
         "label": "Sumber tidak setuju",
-        "detail": "Kami menemukan sumber yang menentang bagian dari cerita ini. Bacalah dan buat penilaian sendiri."
+        "detail": "Pencarian menemukan sumber yang bertentangan dengan bagian dari cerita ini. Bacalah mereka dan putuskan sendiri."
       },
       "unsupported": {
         "label": "Tidak ada dukungan yang ditemukan",
-        "detail": "Kami tidak bisa menemukan sumber lain yang mendukung ini. Itu bisa berarti cerita itu baru atau niche, tidak membuatnya salah."
+        "detail": "Pencarian tidak menemukan apa pun yang mendukung ini. Itu bisa berarti cerita itu baru atau khusus — itu tidak membuatnya salah."
       },
       "mixed": {
         "label": "Sebagian konsisten",
-        "detail": "Beberapa bagian selaras dengan sumber lain dan beberapa tidak. Catatan klaim demi klaim mengatakan mana."
+        "detail": "Beberapa bagian sesuai dengan apa yang ditemukan pencarian dan beberapa tidak. Catatan klaim demi klaim menunjukkan mana."
       },
       "unverifiable": {
         "label": "Tidak dapat dikonfirmasi",
-        "detail": "Kami tidak bisa menemukan cukup untuk mengonfirmasi atau menentang cerita ini. Ini bukan temuan bahwa itu salah."
+        "detail": "Pencarian tidak menemukan cukup untuk mengonfirmasi atau membantah cerita ini. Ini bukan temuan bahwa itu salah."
       },
       "unknown": {
         "label": "Tidak ada jawaban yang jelas",
-        "detail": "Pemeriksaan selesai tanpa kesimpulan yang dapat kami ringkas. Sumber di bawah adalah apa yang dilihatnya."
+        "detail": "Pencarian selesai tanpa kesimpulan yang dapat kami ringkas. Sumber di bawah adalah apa yang dilihatnya."
       }
     },
     "assessment": {
@@ -1535,7 +1560,25 @@
       "unsupported": "Tidak ada dukungan yang ditemukan",
       "unverifiable": "Tidak dapat dikonfirmasi",
       "unknown": "Tidak jelas"
-    }
+    },
+    "checkedByHeading": "Pemeriksa fakta yang meliput ini",
+    "dashboard": {
+      "delete": "Hapus",
+      "deleteA11y": "Hapus pemeriksaan fakta ini",
+      "empty": "Anda belum memeriksa fakta apa pun. Buka cerita dan ketuk \"Cari pemeriksaan fakta\".",
+      "listSubtitle": "Cerita yang Anda minta Mera untuk memeriksa faktanya. Disimpan hanya di perangkat ini.",
+      "listTitle": "Pemeriksaan fakta",
+      "openA11y": "Buka pemeriksaan fakta ini",
+      "pending": "Masih mencari",
+      "title": "Pemeriksaan fakta",
+      "untitled": "Cerita tanpa judul",
+      "viewAll": "Lihat semua"
+    },
+    "explainer": "Mera tidak memeriksa fakta berita itu sendiri. Mera mencari apa yang telah dipublikasikan organisasi pemeriksa fakta yang sudah mapan tentang cerita ini.",
+    "noCheckedBy": "Tidak ada organisasi pemeriksa fakta yang kami cari yang telah mempublikasikan cerita ini. Itu tidak membuat cerita salah — sebagian besar cerita tidak pernah diperiksa faktanya.",
+    "organisationA11y": "Buka pemeriksaan fakta {{organisation}}",
+    "queued": "Kami sedang mencari. Ini berjalan di latar belakang — Anda tidak perlu menunggu di sini.",
+    "queuedHint": "Hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda, dan kami akan mengirim notifikasi saat selesai jika Anda mengaktifkan notifikasi."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritaskan sumber ini",
@@ -1553,8 +1596,8 @@
     "retry": "Coba lagi"
   },
   "tutorials": {
-    "entryRow": "Selamat datang di Mera",
-    "menuTitle": "Selamat datang di Mera",
+    "entryRow": "Pelajari tentang Mera",
+    "menuTitle": "Pelajari tentang Mera",
     "menuSubtitle": "Panduan singkat tentang cara aplikasi ini berpikir. Mulai di mana saja.",
     "sectionBasic": "Mulai di sini",
     "sectionAdvanced": "Pelajari lebih lanjut",
@@ -1702,15 +1745,15 @@
           },
           "nothing-removed": {
             "headline": "Tidak ada yang pernah dihapus",
-            "body": "Baca kartu dan itu tidak hilang, itu tenggelam. Dua pembagi tipis memotong daftar menjadi tiga bagian, dan kartu hanyut melewatinya saat Anda pergi.",
+            "body": "Baca kartu dan itu tidak hilang; itu tenggelam. Ini adalah satu daftar berkelanjutan, bukan bagian yang dipotong oleh pembagi — kartu secara diam-diam bergerak turun melewati yang lebih baru saat Anda pergi.",
             "steps": {
-              "0": "Atas: semuanya yang belum Anda lihat.",
-              "1": "Di bawah pembagi pertama: dilihat, tetapi tidak dibuka.",
-              "2": "Di bawah yang kedua: sudah dibaca."
+              "0": "Terdepan: semuanya yang belum Anda lihat.",
+              "1": "Berikutnya: dilihat, tetapi tidak dibuka.",
+              "2": "Terendah: sudah dibaca — tidak ada pembagi, hanya tempat yang lebih rendah di daftar yang sama."
             },
             "beforeAfter": {
               "before": "Sebelum Anda membacanya: kartu duduk di atas dengan yang lain yang baru.",
-              "after": "Setelah Anda membacanya: kartu yang sama, masih di sana, sekarang di bawah pembagi kedua. Gulir ke bawah dan Anda dapat membacanya lagi kapan pun Anda mau."
+              "after": "Setelah Anda membacanya: kartu yang sama, masih ada, hanya diurutkan lebih jauh ke bawah daftar. Gulir ke bawah dan Anda dapat membacanya lagi kapan saja."
             }
           },
           "what-counts-as-read": {

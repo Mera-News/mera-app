@@ -190,17 +190,12 @@
     "statsAnalysed_other": "{{formatted}}개의 기사가 분석되었습니다.",
     "statsRelevant_other": "{{formatted}}개가 관련 있는 것으로 확인되었습니다.",
     "statsRead_other": "당신은 {{formatted}}개를 읽었습니다.",
-    "divider": {
-      "readLine": "열어서 다시 읽기.",
-      "seenLine": "열어서 읽기.",
-      "readTitle": "이미 읽음.",
-      "seenTitle": "새로운 것은 여기까지."
-    },
     "statsAnalysed_one": "{{formatted}}개가 분석되었습니다,",
     "statsPublishedPending_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다.",
     "statsPublished_one": "{{formatted}}개의 기사가 지난 24시간 동안 게재되었습니다,",
     "statsRead_one": "당신은 {{formatted}}개를 읽었습니다.",
-    "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,"
+    "statsRelevant_one": "{{formatted}}개가 관련 있는 것으로 보입니다,",
+    "lowerPriorityCta": "더 읽고 싶으신가요? 피드 우선순위를 낮추세요"
   },
   "relevance": {
     "emergency": "긴급",
@@ -319,12 +314,7 @@
     "saveFailedTitle": "저장 실패",
     "saveFailedDescription": "환경설정을 저장하지 못했습니다. 다시 시도해 주세요.",
     "timeDescriptionOnboarding": "뉴스를 확인하고 싶은 시간을 선택해 주세요",
-    "timeNudges": [
-      "뉴스는 하루에 한두 번, 집중된 시간에 확인할 때 가장 효과적입니다.",
-      "계속 확인할 필요는 없어요. 준비되면 저희가 알려드릴게요.",
-      "하루 종일 조금씩 확인하는 것보다 차분하게 몇 번 확인하는 것이 더 낫습니다.",
-      "하루 일정에 맞는 시간을 선택하세요: 정보 수집은 Mera가 대신합니다."
-    ]
+    "timeNudge": "읽고, 생각하고, 계획할 수 있는 시간을 선택하세요. 하루에 한두 번이면 충분합니다."
   },
   "language": {
     "title": "언어",
@@ -479,9 +469,9 @@
     "extractedMetadataEntitiesLabel": "엔티티",
     "extractedMetadataCaption": "AI 추출, 검증된 사실이 아님",
     "factCheckTitle": "팩트 체크",
-    "factCheckOn": "켜짐. Mera가 스토리의 주장을 확인하기 위해 웹을 검색할 수 있습니다",
+    "factCheckOn": "켜짐 — 메라가 기사에 대한 발표된 팩트 체크를 조회할 수 있습니다",
     "factCheckOff": "꺼짐",
-    "factCheckDescription": "켜면 스토리를 확인할 때 저희 서버로, 그 다음 검색 제공자로 보내집니다. 다른 것은 포함되지 않습니다 — 팩트도 피드도 당신이 누구인지도 포함되지 않습니다. 기본값은 꺼짐입니다."
+    "factCheckDescription": "메라는 뉴스를 직접 팩트 체크하지 않습니다. 이 기능이 켜져 있으면 기사를 검색할 때 서버로 전달되고 검색 제공자에게 전달되어 확인된 기관이 이미 발표한 팩트 체크를 찾습니다. 팩트, 피드, 신원 등 다른 것은 전송되지 않습니다. 기본적으로 켜져 있으며, 검색은 요청할 때만 실행됩니다."
   },
   "manageData": {
     "deleting": "삭제 중...",
@@ -913,7 +903,12 @@
     "planRecommendation": "하루에 약 {{count}}개의 기사를 엽니다. {{plan}}은 하루에 {{limit}}개까지 분석하므로 항상 더 많은 콘텐츠가 있습니다.",
     "sandboxOnProduction": "이것은 샌드박스(테스트) 구매이며 앱이 프로덕션 서버에 연결되어 있습니다. 샌드박스 영수증은 스테이징에서만 허용되므로 프로덕션은 이 구매를 절대 확인하지 않습니다. 기다려도 도움이 되지 않습니다. 앱을 스테이징 환경으로 지정하여 구매를 테스트하십시오.",
     "planPending": "{{plan}} · 활성화 중",
-    "perMonth": "/월"
+    "perMonth": "/월",
+    "freeTrial": "무료 체험",
+    "trialDaysLeft_one": "{{count}}일 남음",
+    "trialDaysLeft_other": "{{count}}일 남음",
+    "trialEndsOn": "무료 체험이 {{date}}에 종료됩니다",
+    "trialNoPaymentDetails": "등록된 결제 수단이 없으므로 취소할 것이 없습니다. 체험이 끝나면 구독하지 않는 한 무료 플랜으로 전환됩니다."
   },
   "tabs": {
     "deck": "피드",
@@ -970,7 +965,8 @@
     "headlineDenominator_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · {{shown}}개가 당신의 시간을 가치 있게 합니다.",
     "headlineDenominatorNone_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
     "headlineDenominatorNone_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
-    "subTabHistory": "기록"
+    "subTabHistory": "기록",
+    "nextFactPrefix": "다음"
   },
   "feedStatus": {
     "title": "피드 상태",
@@ -1135,7 +1131,28 @@
     "paywallRelatedDesc": "다른 출판사의 유사 기사가 있을 수 있으며 유료화가 아닐 수 있습니다 — 관련 기사를 확인해 보세요.",
     "paywallSubscribeDesc": "이번 달에 {{publication}}을(를) {{visits}}회 방문했습니다 — 전체 액세스를 위해 구독을 고려해 보세요.",
     "paywallBlockOption": "대신 {{publication}} 차단",
-    "tooMuchOfThis": "이 주제가 너무 자주 보여요"
+    "tooMuchOfThis": "이 주제가 너무 자주 보여요",
+    "managePublicationsDesc": "모든 매체를 포함하여 어떤 매체든 상향, 하향 또는 음소거할 수 있습니다.",
+    "managePublicationsOption": "매체 관리",
+    "neverShowPublication": "이 매체는 다시 표시하지 않기",
+    "notAGoodSuggestion": "좋은 추천이 아닙니다",
+    "notFactual": "사실이 아닙니다 / 편향적입니다",
+    "notRelated": "나와 관련이 없습니다",
+    "notThatImportant": "별로 중요하지 않습니다",
+    "paywall": "유료 기사입니다",
+    "publicationIssue": "이 매체의 문제점",
+    "seenAlready": "이미 봤습니다",
+    "showLessEntity": "{{entity}} 더 적게 보기",
+    "showLessEventType": "{{eventType}} 더 적게 보기",
+    "showLessPlace": "{{place}} 더 적게 보기",
+    "showLessPublication": "이것을 덜 보여주세요",
+    "somethingElse": "기타",
+    "tellMeraWhy": "메라에 이유를 알려주세요",
+    "thisCategory": "이 카테고리",
+    "tooCluttered": "복잡함 / 광고가 너무 많습니다",
+    "tooSlow": "로드가 너무 느립니다",
+    "wrongPlace": "잘못된 지역",
+    "wrongTopic": "잘못된 주제"
   },
   "topicPlan": {
     "title": "추적할 토픽",
@@ -1148,7 +1165,17 @@
     "delete": "토픽 제거",
     "undo": "실행 취소",
     "settledTitle": "토픽이 저장되었습니다",
-    "settledSummary": "이 정보에 대해 {{count}}개의 토픽이 활성화되었습니다."
+    "settledSummary": "이 정보에 대해 {{count}}개의 토픽이 활성화되었습니다.",
+    "discard": "삭제",
+    "discardAll": "모두 삭제",
+    "discardAllWarning_one": "이 작업은 {{count}}개의 팩트와 모든 관련 주제를 제거합니다. 실행 취소할 수 없습니다.",
+    "discardAllWarning_other": "이 작업은 {{count}}개의 팩트와 모든 관련 주제를 제거합니다. 실행 취소할 수 없습니다.",
+    "discardConfirm": "네, 삭제하겠습니다",
+    "discardWarning": "이 작업은 팩트와 모든 관련 주제를 제거합니다. 실행 취소할 수 없습니다.",
+    "discardedSummary": "팩트와 관련 주제가 제거되었습니다.",
+    "discardedTitle": "삭제됨",
+    "resolveBeforeContinuing": "계속하기 전에 작업을 선택해주세요.",
+    "save": "저장"
   },
   "conflict": {
     "title": "가능한 충돌",
@@ -1424,7 +1451,6 @@
   },
   "security": {
     "title": "보안",
-    "subtitle": "Mera가 이 기기에서 PIN을 요청할지 선택하세요",
     "requirePinTitle": "잠금 해제에 PIN 필요",
     "requirePinDescription": "Mera를 열 때 4자리 PIN을 요청합니다",
     "setPinTitle": "PIN 설정",
@@ -1444,12 +1470,10 @@
     "blurImagesDescription": "앱 전체의 기사 이미지를 부드럽게 하여 그래픽 또는 불쾌한 시각 자료가 선명하게 표시되지 않도록 합니다."
   },
   "display": {
-    "title": "디스플레이",
-    "subtitle": "이 장치에서 Mera가 시각 요소를 렌더링하는 방식을 맞춤설정하세요",
     "staticGradientTitle": "정적 배경",
     "staticGradientDescription": "애니메이션 배경 대신 고정 그래디언트를 사용합니다 — 배터리와 오래된 장치에 더 친절합니다",
-    "screenTitle": "텍스트 및 디스플레이",
-    "screenSubtitle": "이 기기에서 텍스트와 시각 자료가 어떻게 표시될지 설정합니다",
+    "screenTitle": "디스플레이",
+    "screenSubtitle": "텍스트, 시각 효과, 보안 및 메라가 이 기기에서 열리는 방식",
     "sectionText": "텍스트",
     "sectionVisuals": "시각 자료",
     "textSizeTitle": "텍스트 크기",
@@ -1462,7 +1486,11 @@
     "textSizeStepDefault": "기본값",
     "textSizeStepLarge": "큼",
     "textSizeStepLarger": "더 큼",
-    "deviceTextSizeHint": "더 큰 텍스트를 원하시면 기기 설정의 디스플레이 및 밝기를 사용하세요."
+    "deviceTextSizeHint": "더 큰 텍스트를 원하시면 기기 설정의 디스플레이 및 밝기를 사용하세요.",
+    "sectionStartup": "시작 탭",
+    "startupTabA11y": "시작 탭, {{label}}",
+    "startupTabDescription": "앱을 시작할 때 메라가 열 탭을 선택하세요.",
+    "startupTabTitle": "시작할 때 열 탭"
   },
   "freeTier": {
     "cardBody": "Mera의 AI 기능이 지금 꺼져 있습니다. 저장했거나 팔로우한 기사, 읽은 기사는 이 기기에 그대로 남아 있으며 탐색에서 오늘의 헤드라인을 확인할 수 있습니다. 플랜이 없으면 Mera가 피드를 만들거나 질문에 답하거나 새로운 기사를 팔로우하지 않습니다. 플랜을 시작하면 모든 기능이 다시 작동합니다.",
@@ -1487,46 +1515,43 @@
     "newest": "최신순"
   },
   "factCheck": {
-    "action": "팩트 체크",
-    "actionA11y": "이 스토리에 대해 AI 팩트 체크 실행",
-    "title": "AI 팩트 체크",
+    "action": "팩트 체크 찾기",
+    "actionA11y": "이 기사에 대해 발표된 팩트 체크 찾기",
+    "title": "팩트 체크",
     "hide": "숨기기",
     "retry": "다시 시도",
-    "checking": "이 스토리를 다른 출처와 비교 중…",
-    "checkingHint": "1분 정도 걸릴 수 있습니다.",
-    "stillWorking": "아직 진행 중입니다. 몇 분 후에 다시 확인해 주세요.",
-    "failed": "이 체크를 완료할 수 없습니다. 나중에 다시 시도할 수 있습니다.",
-    "error": "체크를 시작할 수 없습니다. 연결을 확인하고 다시 시도해 주세요.",
-    "blocked": "이 스토리를 확인할 수 없습니다.",
+    "checking": "발표된 팩트 체크 검색 중...",
+    "error": "검색을 시작할 수 없습니다. 연결 상태를 확인하고 다시 시도하세요.",
+    "blocked": "이 기사를 검색할 수 없습니다.",
     "claimsHeading": "확인된 주장",
     "citationsHeading": "검토한 출처",
-    "noCitations": "이 체크에서 반환된 출처가 없으므로 미확인으로 취급하세요.",
+    "noCitations": "이 검색으로 나온 출처가 없으므로 미확인으로 취급하세요.",
     "sourceFallback": "출처 {{index}}",
-    "disclaimer": "웹 검색을 통해 AI가 작성했습니다. 틀리거나 불완전할 수 있으므로 의존하기 전에 출처를 읽어보세요.",
+    "disclaimer": "메라는 뉴스를 직접 팩트 체크하지 않습니다. 이것은 발표된 팩트 체크의 웹 검색에 대한 AI 요약이므로 잘못되거나 불완전할 수 있습니다. 신뢰하기 전에 출처를 읽으세요.",
     "verdict": {
       "supported": {
         "label": "출처와 일관성 있음",
-        "detail": "우리가 찾은 다른 출처들도 대체로 같은 내용을 말합니다. 이것이 사실임을 증명하는 것은 아니며, 오직 모순되는 것을 찾지 못했다는 뜻입니다."
+        "detail": "검색 결과 나온 출처들이 대체로 같은 내용을 말합니다. 이것이 사실이라는 증거는 아니며, 이를 모순하는 내용을 찾지 못했을 뿐입니다."
       },
       "disputed": {
         "label": "출처 불일치",
-        "detail": "이 스토리의 일부를 모순하는 출처를 찾았습니다. 읽고 직접 판단해 주세요."
+        "detail": "검색 결과 이 기사의 일부를 모순하는 출처가 나왔습니다. 읽고 직접 판단하세요."
       },
       "unsupported": {
         "label": "지지 증거 없음",
-        "detail": "이를 뒷받침하는 다른 출처를 찾을 수 없습니다. 단순히 스토리가 새롭거나 틈새이기 때문일 수 있습니다. 거짓이라는 뜻은 아닙니다."
+        "detail": "검색 결과 이를 뒷받침하는 것이 없습니다. 단순히 기사가 새롭거나 특정 분야라는 뜻일 수 있으며, 이것이 거짓이라는 뜻은 아닙니다."
       },
       "mixed": {
         "label": "부분적으로 일관성 있음",
-        "detail": "일부는 다른 출처와 일치하고 일부는 그렇지 않습니다. 주장별 메모에 어느 것인지 표시되어 있습니다."
+        "detail": "일부는 검색 결과와 일치하고 일부는 그렇지 않습니다. 주장별 메모에 어느 것이 어떤지 나와 있습니다."
       },
       "unverifiable": {
         "label": "확인 불가",
-        "detail": "이 스토리를 확인하거나 반박할 충분한 정보를 찾을 수 없습니다. 이것이 잘못되었다는 증거는 아닙니다."
+        "detail": "검색 결과 이 기사를 확인하거나 모순하기에 충분한 내용을 찾지 못했습니다. 이것은 기사가 틀렸다는 것을 의미하지 않습니다."
       },
       "unknown": {
         "label": "명확한 답변 없음",
-        "detail": "체크가 요약할 수 있는 결론 없이 완료되었습니다. 아래 출처가 검토한 것입니다."
+        "detail": "검색이 정리할 수 있는 결론 없이 완료되었습니다. 아래 출처는 검색이 살펴본 것들입니다."
       }
     },
     "assessment": {
@@ -1535,7 +1560,25 @@
       "unsupported": "지지 증거 없음",
       "unverifiable": "확인 불가",
       "unknown": "불명확"
-    }
+    },
+    "checkedByHeading": "이 사안을 다룬 팩트 체커",
+    "dashboard": {
+      "delete": "삭제",
+      "deleteA11y": "이 팩트 체크 삭제",
+      "empty": "아직 팩트 체크를 찾아본 기사가 없습니다. 기사를 열고 \"팩트 체크 찾기\"를 탭하세요.",
+      "listSubtitle": "메라에 팩트 체크를 찾아달라고 요청한 기사입니다. 이 기기에만 보관됩니다.",
+      "listTitle": "팩트 체크",
+      "openA11y": "이 팩트 체크 열기",
+      "pending": "검색 중",
+      "title": "팩트 체크",
+      "untitled": "제목 없는 기사",
+      "viewAll": "모두 보기"
+    },
+    "explainer": "메라는 뉴스를 직접 팩트 체크하지 않습니다. 확인된 팩트 체킹 기관이 이 기사에 대해 발표한 내용을 검색합니다.",
+    "noCheckedBy": "검색한 팩트 체킹 기관 중 이 기사에 대해 발표한 곳이 없습니다. 이것이 기사가 틀렸다는 뜻은 아닙니다. 대부분의 기사는 팩트 체크되지 않습니다.",
+    "organisationA11y": "{{organisation}}의 팩트 체크 열기",
+    "queued": "검색 중입니다. 백그라운드에서 실행되므로 여기서 기다릴 필요가 없습니다.",
+    "queuedHint": "결과가 대시보드의 팩트 체크 아래에 표시되며, 알림을 켠 경우 준비되면 알림을 보내드립니다."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "이 출처 우선순위 지정",
@@ -1553,8 +1596,8 @@
     "retry": "다시 시도"
   },
   "tutorials": {
-    "entryRow": "Mera에 오신 것을 환영합니다",
-    "menuTitle": "Mera에 오신 것을 환영합니다",
+    "entryRow": "메라에 대해 알아보기",
+    "menuTitle": "메라에 대해 알아보기",
     "menuSubtitle": "이 앱이 어떻게 생각하는지에 대한 짧은 가이드입니다. 어디서나 시작할 수 있습니다.",
     "sectionBasic": "여기서 시작",
     "sectionAdvanced": "더 깊게",
@@ -1702,15 +1745,15 @@
           },
           "nothing-removed": {
             "headline": "절대 제거되지 않는 것",
-            "body": "카드를 읽고 사라지지 않습니다. 가라앉습니다. 두 개의 얇은 구분선이 목록을 세 부분으로 나누고, 카드는 당신이 진행함에 따라 그들을 넘어 표류합니다.",
+            "body": "카드를 읽어도 사라지지 않고 내려갑니다. 구분자로 끊긴 섹션이 아닌 하나의 연속 목록입니다. 카드가 조용히 새 카드 아래로 흘러내립니다.",
             "steps": {
-              "0": "맨 위: 아직 보지 못한 모든 것.",
-              "1": "첫 번째 구분선 아래: 본 것이지만 열지 않은 것.",
-              "2": "두 번째 아래: 이미 읽은 것."
+              "0": "최신: 아직 보지 못한 모든 기사",
+              "1": "다음: 본 기사이지만 열지 않은 것",
+              "2": "가장 오래: 이미 읽은 것 — 구분자가 없고 같은 목록의 낮은 위치일 뿐입니다."
             },
             "beforeAfter": {
               "before": "읽기 전: 카드가 새로운 것처럼 맨 위에 앉아 있습니다.",
-              "after": "읽은 후: 같은 카드인데, 여전히 거기에 있고, 이제 두 번째 구분선 아래에 있습니다. 스크롤 다운하고 원할 때마다 다시 읽을 수 있습니다."
+              "after": "읽은 후: 같은 카드가 여전히 있지만 목록 아래로 정렬됩니다. 아래로 스크롤하면 언제든지 다시 읽을 수 있습니다."
             }
           },
           "what-counts-as-read": {

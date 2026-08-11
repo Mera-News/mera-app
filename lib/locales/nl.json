@@ -195,12 +195,7 @@
     "statsRelevant_other": "{{formatted}} lijken relevant,",
     "statsRead_one": "en je hebt {{formatted}} gelezen.",
     "statsRead_other": "en je hebt {{formatted}} gelezen.",
-    "divider": {
-      "readLine": "Open om terug te kijken.",
-      "seenLine": "Open om te lezen.",
-      "readTitle": "Alles gelezen.",
-      "seenTitle": "Tot zover het nieuwe."
-    }
+    "lowerPriorityCta": "Wil je meer lezen? Verlaag de feedprioriteit"
   },
   "relevance": {
     "emergency": "Noodgeval",
@@ -319,12 +314,7 @@
     "saveFailedTitle": "Opslaan mislukt",
     "saveFailedDescription": "Voorkeuren opslaan mislukt. Probeer het opnieuw.",
     "timeDescriptionOnboarding": "Kies wanneer je wilt bijlezen over het nieuws",
-    "timeNudges": [
-      "Nieuws werkt het best op een of twee vaste momenten per dag.",
-      "Je hoeft niet constant te checken. We zorgen dat het klaarstaat wanneer jij dat bent.",
-      "Minder, rustigere check-ins zijn beter dan de hele dag door een beetje.",
-      "Kies tijden die bij je dag passen. Mera doet het verzamelen."
-    ]
+    "timeNudge": "Kies een moment waarop je kunt lezen, nadenken en plannen — eenmaal of tweemaal per dag is voldoende."
   },
   "language": {
     "title": "Taal",
@@ -478,10 +468,10 @@
     "extractedMetadataPlacesLabel": "Plaatsen",
     "extractedMetadataEntitiesLabel": "Entiteiten",
     "extractedMetadataCaption": "AI-geëxtraheerd, geen geverifieerd feit",
-    "factCheckTitle": "Feitencheck",
-    "factCheckOn": "Aan: Mera kan het web doorzoeken om de beweringen van een verhaal te controleren",
+    "factCheckTitle": "Feitchecks",
+    "factCheckOn": "Aan — Mera kan gepubliceerde feitchecks op een artikel opzoeken",
     "factCheckOff": "Uit",
-    "factCheckDescription": "Wanneer dit aanstaat, verzendt het controleren van een verhaal het naar onze server en vervolgens naar een zoekprovider om de beweringen ervan te verifiëren. Niets anders gaat mee. Niet je feiten, niet je feed, niet wie je bent. Standaard uit."
+    "factCheckDescription": "Mera controleert het nieuws niet zelf. Wanneer dit is ingeschakeld, wordt het artikel naar onze server en naar een zoekprovider gestuurd, die zoekt naar feitchecks die gevestigde organisaties al hebben gepubliceerd. Niets anders gaat mee — niet je feiten, niet je feed, niet wie je bent. Standaard ingeschakeld; de zoekopdracht wordt alleen uitgevoerd als je erom vraagt."
   },
   "manageData": {
     "deleting": "Verwijderen...",
@@ -913,7 +903,12 @@
     "planRecommendation": "Je opent ongeveer {{count}} artikelen per dag. {{plan}} analyseert tot {{limit}} per dag zodat er altijd meer is dan je haalt.",
     "sandboxOnProduction": "Dit is een sandbox (test) aankoop en de app is verbonden met de productie server. Sandbox bonnetjes worden alleen geaccepteerd op staging, dus production zal deze aankoop nooit bevestigen — wachten zal niet helpen. Wijs de app naar de staging omgeving om aankopen te testen.",
     "planPending": "{{plan}} · activering",
-    "perMonth": "/maand"
+    "perMonth": "/maand",
+    "freeTrial": "Gratis proefperiode",
+    "trialDaysLeft_one": "{{count}} dag resterend",
+    "trialDaysLeft_other": "{{count}} dagen resterend",
+    "trialEndsOn": "Je gratis proefperiode eindigt op {{date}}",
+    "trialNoPaymentDetails": "Er zijn geen betalingsgegevens opgeslagen, dus er is niets om te annuleren. Als de proefperiode afloopt, ga je naar het gratis plan tenzij je je abonneert."
   },
   "tabs": {
     "deck": "Feed",
@@ -970,7 +965,8 @@
     "subTabFeed": "Overzicht",
     "subTabStories": "Verhalen",
     "subTabSaved": "Opgeslagen",
-    "subTabHistory": "Geschiedenis"
+    "subTabHistory": "Geschiedenis",
+    "nextFactPrefix": "Volgende"
   },
   "feedStatus": {
     "title": "Feedstatus",
@@ -1135,7 +1131,28 @@
     "paywallRelatedDesc": "Een vergelijkbaar verhaal van een ander medium is mogelijk niet achter een betaalmuur — controleer de gerelateerde artikelen.",
     "paywallSubscribeDesc": "Je hebt {{publication}} {{visits}} keer bezocht deze maand — overweeg een abonnement voor volledige toegang.",
     "paywallBlockOption": "In plaats daarvan {{publication}} blokkeren",
-    "tooMuchOfThis": "Ik zie dit te vaak"
+    "tooMuchOfThis": "Ik zie dit te vaak",
+    "managePublicationsDesc": "Verhoog, verlaag of dempen elke publicatie — inclusief deze.",
+    "managePublicationsOption": "Publicaties beheren",
+    "neverShowPublication": "Deze publicatie nooit weergeven",
+    "notAGoodSuggestion": "Geen goed voorstel",
+    "notFactual": "Niet feitelijk / te bevooroordeeld",
+    "notRelated": "Niet relevant voor mij",
+    "notThatImportant": "Niet zo belangrijk",
+    "paywall": "Dit zit achter een betaalmuur",
+    "publicationIssue": "Probleem met deze publicatie",
+    "seenAlready": "Dit heb ik al gezien",
+    "showLessEntity": "Minder van {{entity}} weergeven",
+    "showLessEventType": "Minder van {{eventType}} weergeven",
+    "showLessPlace": "Minder van {{place}} weergeven",
+    "showLessPublication": "Geef mij minder hiervan",
+    "somethingElse": "Iets anders",
+    "tellMeraWhy": "Vertel Mera waarom",
+    "thisCategory": "Deze categorie",
+    "tooCluttered": "Te rommelig / te veel advertenties",
+    "tooSlow": "Te langzaam om in te laden",
+    "wrongPlace": "Verkeerde plaats",
+    "wrongTopic": "Verkeerd onderwerp"
   },
   "topicPlan": {
     "title": "Onderwerpen die ik volg",
@@ -1148,7 +1165,17 @@
     "delete": "Onderwerp verwijderen",
     "undo": "Ongedaan maken",
     "settledTitle": "Onderwerpen opgeslagen",
-    "settledSummary": "{{count}} onderwerpen actief voor dit feit."
+    "settledSummary": "{{count}} onderwerpen actief voor dit feit.",
+    "discard": "Verwijderen",
+    "discardAll": "Alles verwijderen",
+    "discardAllWarning_one": "Dit verwijdert {{count}} feit en al zijn onderwerpen. Dit kan niet ongedaan worden gemaakt.",
+    "discardAllWarning_other": "Dit verwijdert {{count}} feiten en al hun onderwerpen. Dit kan niet ongedaan worden gemaakt.",
+    "discardConfirm": "Ja, verwijderen",
+    "discardWarning": "Dit verwijdert het feit en al zijn onderwerpen. Dit kan niet ongedaan worden gemaakt.",
+    "discardedSummary": "Dit feit en zijn onderwerpen zijn verwijderd.",
+    "discardedTitle": "Verwijderd",
+    "resolveBeforeContinuing": "Kies alsjeblieft een actie voordat je doorgaat.",
+    "save": "Opslaan"
   },
   "conflict": {
     "title": "Mogelijk conflict",
@@ -1424,7 +1451,6 @@
   },
   "security": {
     "title": "Beveiliging",
-    "subtitle": "Kies of Mera om een PIN vraagt op dit apparaat",
     "requirePinTitle": "PIN vereist om te ontgrendelen",
     "requirePinDescription": "Vraag om een 4-cijferige PIN wanneer je Mera opent",
     "setPinTitle": "PIN instellen",
@@ -1444,12 +1470,10 @@
     "blurImagesDescription": "Verzwak artikelafbeeldingen in de app zodat grafische of verstorende beelden niet scherp worden weergegeven."
   },
   "display": {
-    "title": "Weergave",
-    "subtitle": "Pas aan hoe Mera visuele elementen op dit apparaat weergeeft",
     "staticGradientTitle": "Statische achtergrond",
     "staticGradientDescription": "Gebruik een vaste kleurverloping in plaats van de geanimeerde achtergrond — beter voor de batterij en oudere apparaten",
-    "screenTitle": "Tekst en weergave",
-    "screenSubtitle": "Stel in hoe tekst en afbeeldingen eruit zien op dit apparaat",
+    "screenTitle": "Weergave",
+    "screenSubtitle": "Tekst, afbeeldingen, veiligheid en hoe Mera op dit apparaat opent",
     "sectionText": "Tekst",
     "sectionVisuals": "Visuele elementen",
     "textSizeTitle": "Tekstgrootte",
@@ -1462,7 +1486,11 @@
     "textSizeStepDefault": "Standaard",
     "textSizeStepLarge": "Groot",
     "textSizeStepLarger": "Groter",
-    "deviceTextSizeHint": "Voor nog grotere tekst, gebruik Scherm en helderheid in je apparaatinstellingen."
+    "deviceTextSizeHint": "Voor nog grotere tekst, gebruik Scherm en helderheid in je apparaatinstellingen.",
+    "sectionStartup": "Starttabblad",
+    "startupTabA11y": "Starttabblad, {{label}}",
+    "startupTabDescription": "Kies welk tabblad Mera opent wanneer je de app start.",
+    "startupTabTitle": "Open bij opstarten"
   },
   "freeTier": {
     "cardBody": "Het AI-deel van Mera is voor nu uitgeschakeld. Alles wat je hebt opgeslagen, gevolgd of gelezen blijft op dit apparaat, en Verkennen toont nog steeds vandaags nieuws. Zonder een plan zal Mera je feed niet opbouwen, je vragen niet beantwoorden en geen nieuwe verhalen niet volgen. Start een plan en alles komt terug.",
@@ -1487,46 +1515,43 @@
     "newest": "Nieuwste eerst"
   },
   "factCheck": {
-    "action": "Feit controleren",
-    "actionA11y": "Voer een AI-feitcheck uit op dit verhaal",
-    "title": "AI-feitcheck",
+    "action": "Zoeken naar feitchecks",
+    "actionA11y": "Zoeken naar gepubliceerde feitchecks op dit artikel",
+    "title": "Feitchecks",
     "hide": "Verbergen",
     "retry": "Opnieuw proberen",
-    "checking": "Dit verhaal controleren tegen andere bronnen...",
-    "checkingHint": "Dit kan tot een minuut duren.",
-    "stillWorking": "Nog steeds aan het werken aan deze. Kom over een paar minuten terug.",
-    "failed": "Deze controle kon niet worden voltooid. Je kunt het later opnieuw proberen.",
-    "error": "Kon de controle niet starten. Controleer je verbinding en probeer het opnieuw.",
-    "blocked": "Dit verhaal kon niet worden gecontroleerd.",
+    "checking": "Zoeken naar gepubliceerde feitchecks…",
+    "error": "Kon de zoekopdracht niet starten. Controleer je verbinding en probeer het opnieuw.",
+    "blocked": "Dit artikel kon niet worden doorzocht.",
     "claimsHeading": "Gecontroleerde beweringen",
     "citationsHeading": "Geraadpleegde bronnen",
-    "noCitations": "Er zijn geen bronnen teruggekomen met deze controle, dus beschouw het als onbevestigd.",
+    "noCitations": "Er zijn geen bronnen teruggekomen bij deze zoekopdracht, dus beschouw dit als onbevestigd.",
     "sourceFallback": "Bron {{index}}",
-    "disclaimer": "Geschreven door AI op basis van een websearch. Het kan fout of onvolledig zijn. Lees de bronnen voordat je erop vertrouwt.",
+    "disclaimer": "Mera controleert het nieuws niet zelf. Dit is een AI-samenvatting van een websearch naar gepubliceerde feitchecks — het kan onjuist of onvolledig zijn, dus lees de bronnen voordat je er op vertrouwt.",
     "verdict": {
       "supported": {
         "label": "Consistent met bronnen",
-        "detail": "Andere bronnen die we vonden zeggen ruwweg hetzelfde. Dat is geen bewijs dat het waar is. Het betekent alleen dat we niets tegenstrijdigs vonden."
+        "detail": "De bronnen die de zoekopdracht heeft gevonden, zeggen grotendeels hetzelfde. Dat is niet het bewijs dat het waar is — alleen dat er niets tegenstrijdigs is gevonden."
       },
       "disputed": {
         "label": "Bronnen zijn het oneens",
-        "detail": "We vonden bronnen die delen van dit verhaal tegenspreken. Lees ze en oordeel zelf."
+        "detail": "De zoekopdracht heeft bronnen opgeleverd die delen van dit artikel tegenspreken. Lees ze en oordeel zelf."
       },
       "unsupported": {
         "label": "Geen steun gevonden",
-        "detail": "We konden geen andere bronnen vinden die dit ondersteunen. Dat kan eenvoudig betekenen dat het verhaal nieuw of niche is. Het maakt het niet onwaar."
+        "detail": "De zoekopdracht heeft niets gevonden dat dit ondersteunt. Dat kan eenvoudig betekenen dat het artikel nieuw of niche is — het maakt het niet onwaar."
       },
       "mixed": {
         "label": "Deels consistent",
-        "detail": "Sommige delen stemmen overeen met andere bronnen en sommige niet. De claim-per-claim-notities zeggen welke."
+        "detail": "Sommige onderdelen komen overeen met wat de zoekopdracht heeft gevonden en sommige niet. De opmerkingen per bewering geven aan welke."
       },
       "unverifiable": {
         "label": "Kon niet bevestigen",
-        "detail": "We konden niet genoeg vinden om dit verhaal te bevestigen of tegenspreken. Dit is geen bevinding dat het fout is."
+        "detail": "De zoekopdracht heeft niet genoeg gevonden om dit artikel te bevestigen of tegen te spreken. Dit is niet een bevinding dat het onjuist is."
       },
       "unknown": {
         "label": "Geen duidelijk antwoord",
-        "detail": "De controle is voltooid zonder conclusie die we kunnen samenvatten. De onderstaande bronnen zijn wat het bekeek."
+        "detail": "De zoekopdracht is beëindigd zonder een conclusie die we kunnen samenvatten. De onderstaande bronnen zijn wat het heeft bekeken."
       }
     },
     "assessment": {
@@ -1535,7 +1560,25 @@
       "unsupported": "Geen steun gevonden",
       "unverifiable": "Kon niet bevestigen",
       "unknown": "Onduidelijk"
-    }
+    },
+    "checkedByHeading": "Feitcheckers die dit hebben onderzocht",
+    "dashboard": {
+      "delete": "Verwijderen",
+      "deleteA11y": "Deze feitcheck verwijderen",
+      "empty": "Je hebt nog geen feitchecks opgezocht. Open een artikel en tik op \"Zoeken naar feitchecks\".",
+      "listSubtitle": "Artikelen waarvoor je Mera hebt gevraagd feitchecks op te zoeken. Alleen opgeslagen op dit apparaat.",
+      "listTitle": "Feitchecks",
+      "openA11y": "Deze feitcheck openen",
+      "pending": "Nog steeds zoeken",
+      "title": "Feitchecks",
+      "untitled": "Naamloos artikel",
+      "viewAll": "Alles weergeven"
+    },
+    "explainer": "Mera controleert het nieuws niet zelf. Het zoekt naar wat gevestigde feitcheckorganisaties al over dit artikel hebben gepubliceerd.",
+    "noCheckedBy": "Geen van de feitcheckorganisaties die we hebben doorzocht, heeft iets over dit artikel gepubliceerd. Dat maakt het artikel niet onjuist — de meeste artikelen worden nooit feitgecheckt.",
+    "organisationA11y": "Feitcheck van {{organisation}} openen",
+    "queued": "We zoeken. Dit gebeurt op de achtergrond — je hoeft hier niet te wachten.",
+    "queuedHint": "Het resultaat verschijnt onder Feitchecks op je Dashboard, en we sturen een melding als het klaar is."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",
@@ -1553,8 +1596,8 @@
     "retry": "Opnieuw proberen"
   },
   "tutorials": {
-    "entryRow": "Welkom bij Mera",
-    "menuTitle": "Welkom bij Mera",
+    "entryRow": "Meer over Mera",
+    "menuTitle": "Meer over Mera",
     "menuSubtitle": "Korte gidsen over hoe deze app werkt. Begin overal.",
     "sectionBasic": "Start hier",
     "sectionAdvanced": "Ga dieper",
@@ -1702,15 +1745,15 @@
           },
           "nothing-removed": {
             "headline": "Niets wordt ooit verwijderd",
-            "body": "Lees een kaart en deze verdwijnt niet; het zakt. Twee dunne scheidingslijnen snijden de lijst in drie delen en kaarten drijven er als je gaat voorbij.",
+            "body": "Lees een kaart en deze verdwijnt niet; het zinkt. Het is één continue lijst, niet secties afgebrochen door scheidingslijnen — kaarten drijven stilletjes omlaag langs de nieuwere kaarten.",
             "steps": {
-              "0": "Boven: alles wat je nog niet hebt gezien.",
-              "1": "Onder de eerste scheidingslijn: gezien, maar niet geopend.",
-              "2": "Onder de tweede: al gelezen."
+              "0": "Leads: alles wat je nog niet hebt gezien.",
+              "1": "Volgende: gezien, maar niet geopend.",
+              "2": "Laagste: al gelezen — geen scheiding, gewoon een lagere plaats in dezelfde lijst."
             },
             "beforeAfter": {
               "before": "Voordat je het leest: de kaart zit bovenaan met alles anders wat nieuw is.",
-              "after": "Nadat je het leest: dezelfde kaart, nog steeds daar, nu onder de tweede scheidingslijn. Scroll naar beneden en je kunt het later opnieuw lezen."
+              "after": "Nadat je het hebt gelezen: dezelfde kaart, nog steeds daar, alleen verder omlaag in de lijst gesorteerd. Scroll omlaag en je kunt het weer lezen wanneer je maar wilt."
             }
           },
           "what-counts-as-read": {

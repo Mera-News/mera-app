@@ -207,12 +207,7 @@
     "statsRead_few": "i przeczytałeś {{formatted}}.",
     "statsRead_many": "i przeczytałeś {{formatted}}.",
     "statsRead_other": "i przeczytałeś {{formatted}}.",
-    "divider": {
-      "readLine": "Otwórz, aby przejrzeć.",
-      "seenLine": "Otwórz, aby czytać.",
-      "readTitle": "Już przeczytane.",
-      "seenTitle": "To wszystkie nowe."
-    }
+    "lowerPriorityCta": "Chcesz czytać więcej? Obniż priorytet kanału"
   },
   "relevance": {
     "emergency": "Pilne",
@@ -331,12 +326,7 @@
     "saveFailedTitle": "Zapis nieudany",
     "saveFailedDescription": "Nie udało się zapisać preferencji. Spróbuj ponownie.",
     "timeDescriptionOnboarding": "Wybierz, kiedy chcesz być na bieżąco z wiadomościami",
-    "timeNudges": [
-      "Wiadomości działają najlepiej, gdy poświęcasz im jeden lub dwa skupione momenty dziennie.",
-      "Nie musisz sprawdzać ciągle. Przygotujemy wszystko, gdy będziesz gotowy.",
-      "Rzadsze, spokojniejsze zaglądanie do aplikacji jest lepsze niż ciągły napływ przez cały dzień.",
-      "Wybierz pory, które pasują do Twojego dnia. Mera zajmie się resztą."
-    ]
+    "timeNudge": "Wybierz czas, kiedy możesz czytać, myśleć i planować — raz lub dwa razy dziennie to wystarczająco."
   },
   "language": {
     "title": "Język",
@@ -490,10 +480,10 @@
     "extractedMetadataPlacesLabel": "Miejsca",
     "extractedMetadataEntitiesLabel": "Jednostki",
     "extractedMetadataCaption": "Wyekstrahowane przez AI, nie zweryfikowany fakt",
-    "factCheckTitle": "Sprawdzanie faktów",
-    "factCheckOn": "Włączone — Mera może przeszukiwać sieć, aby sprawdzić roszczenia w artykule",
+    "factCheckTitle": "Weryfikacje faktów",
+    "factCheckOn": "Włączone — Mera może wyszukiwać opublikowane weryfikacje faktów dla artykułu",
     "factCheckOff": "Wyłączone",
-    "factCheckDescription": "Gdy to jest włączone, sprawdzenie artykułu wysyła go na nasz serwer i do dostawcy wyszukiwania w celu weryfikacji jego roszczeń. Nic innego nie idzie z nim — nie Twoje fakty, nie Twój kanał, nie to, kim jesteś. Domyślnie wyłączone."
+    "factCheckDescription": "Mera nie weryfikuje wiadomości sama. Gdy to jest włączone, wyszukiwanie artykułu wysyła go na nasz serwer i dalej do dostawcy wyszukiwarki, który szuka weryfikacji faktów, które opublikowały ustalone organizacje. Nic więcej z tym nie idzie — nie twoje fakty, nie twój kanał, nie to, kim jesteś. Domyślnie włączone; wyszukiwanie uruchamia się tylko wtedy, gdy go poprosisz."
   },
   "manageData": {
     "deleting": "Usuwanie...",
@@ -925,7 +915,14 @@
     "planRecommendation": "Otwierasz około {{count}} artykułów dziennie. {{plan}} analizuje do {{limit}} dziennie, więc zawsze będzie więcej niż się przejrzy.",
     "sandboxOnProduction": "To jest zakup sandbox (testowy), a aplikacja jest połączona z serwerem produkcyjnym. Paragony sandbox są akceptowane tylko w staging, więc produkcja nigdy nie potwierdzi tego zakupu — czekanie nie pomoże. Skieruj aplikację na środowisko staging, aby testować zakupy.",
     "planPending": "{{plan}} · uaktywnianie",
-    "perMonth": "/miesiąc"
+    "perMonth": "/miesiąc",
+    "freeTrial": "Bezpłatna próba",
+    "trialDaysLeft_few": "{{count}} dni pozostały",
+    "trialDaysLeft_many": "{{count}} dni pozostało",
+    "trialDaysLeft_one": "{{count}} dzień pozostał",
+    "trialDaysLeft_other": "{{count}} dni pozostało",
+    "trialEndsOn": "Twoja bezpłatna próba kończy się {{date}}",
+    "trialNoPaymentDetails": "Brak danych karty płatniczej w systemie, więc nie ma nic do anulowania. Po zakończeniu próby przejdziesz do planu bezpłatnego, chyba że zdecydujesz się zasubskrybować."
   },
   "tabs": {
     "deck": "Strumień",
@@ -984,7 +981,8 @@
     "subTabFeed": "Przegląd",
     "subTabStories": "historie",
     "subTabSaved": "Zapisane",
-    "subTabHistory": "Historia"
+    "subTabHistory": "Historia",
+    "nextFactPrefix": "Dalej"
   },
   "feedStatus": {
     "title": "Stan kanału",
@@ -1151,7 +1149,28 @@
     "paywallRelatedDesc": "Podobna historia z innego wydawcy może nie być za paywallem — sprawdź powiązane artykuły.",
     "paywallSubscribeDesc": "Odwiedziłeś {{publication}} {{visits}} razy w tym miesiącu — rozważ subskrypcję, aby uzyskać pełny dostęp.",
     "paywallBlockOption": "Zamiast tego zablokuj {{publication}}",
-    "tooMuchOfThis": "Widzę to zbyt często"
+    "tooMuchOfThis": "Widzę to zbyt często",
+    "managePublicationsDesc": "Promuj, obniżaj rangę lub wyciszaj dowolne wydawnictwo — łącznie z tym.",
+    "managePublicationsOption": "Zarządzaj wydawnictwami",
+    "neverShowPublication": "Nigdy nie pokazuj tego wydawnictwa",
+    "notAGoodSuggestion": "Nie jest dobrą sugestią",
+    "notFactual": "Nie jest faktyczne / zbyt stronnicze",
+    "notRelated": "Nie dotyczy mnie",
+    "notThatImportant": "Nie tak ważne",
+    "paywall": "To jest za paywallem",
+    "publicationIssue": "Problem z tym wydawnictwem",
+    "seenAlready": "Już to widziałem",
+    "showLessEntity": "Pokazuj mniej {{entity}}",
+    "showLessEventType": "Pokazuj mniej {{eventType}}",
+    "showLessPlace": "Pokazuj mniej {{place}}",
+    "showLessPublication": "Pokazuj mi mniej tego",
+    "somethingElse": "Coś innego",
+    "tellMeraWhy": "Powiedz Merze dlaczego",
+    "thisCategory": "Ta kategoria",
+    "tooCluttered": "Zaśmiecone / zbyt wiele reklam",
+    "tooSlow": "Za wolno się ładuje",
+    "wrongPlace": "Zła lokalizacja",
+    "wrongTopic": "Zły temat"
   },
   "topicPlan": {
     "title": "Tematy, które będę śledzić",
@@ -1164,7 +1183,19 @@
     "delete": "Usuń temat",
     "undo": "Cofnij",
     "settledTitle": "Tematy zapisane",
-    "settledSummary": "{{count}} tematów aktywnych dla tego faktu."
+    "settledSummary": "{{count}} tematów aktywnych dla tego faktu.",
+    "discard": "Odrzuć",
+    "discardAll": "Odrzuć wszystko",
+    "discardAllWarning_few": "To usuwa {{count}} fakty i wszystkie ich tematy. Nie można tego cofnąć.",
+    "discardAllWarning_many": "To usuwa {{count}} faktów i wszystkich ich tematów. Nie można tego cofnąć.",
+    "discardAllWarning_one": "To usuwa {{count}} fakt i wszystkie jego tematy. Nie można tego cofnąć.",
+    "discardAllWarning_other": "To usuwa {{count}} faktów i wszystkich ich tematów. Nie można tego cofnąć.",
+    "discardConfirm": "Tak, odrzuć",
+    "discardWarning": "To usuwa fakt i wszystkie jego tematy. Nie można tego cofnąć.",
+    "discardedSummary": "Ten fakt i jego tematy zostały usunięte.",
+    "discardedTitle": "Odrzucone",
+    "resolveBeforeContinuing": "Proszę wybrać akcję przed kontynuacją.",
+    "save": "Zapisz"
   },
   "conflict": {
     "title": "Możliwy konflikt",
@@ -1450,7 +1481,6 @@
   },
   "security": {
     "title": "Bezpieczeństwo",
-    "subtitle": "Wybierz, czy Mera będzie prosić o PIN na tym urządzeniu",
     "requirePinTitle": "Wymagaj PIN do odblokowania",
     "requirePinDescription": "Poproś o 4-cyfrowy PIN, gdy otworzysz Merę",
     "setPinTitle": "Ustaw PIN",
@@ -1470,12 +1500,10 @@
     "blurImagesDescription": "Wymiękczaj obrazy artykułów w aplikacji, aby drastyczne lub niepokojące wizualizacje nie były wyświetlane ostro."
   },
   "display": {
-    "title": "Wyświetlacz",
-    "subtitle": "Dostosuj sposób renderowania elementów wizualnych Mery na tym urządzeniu",
     "staticGradientTitle": "Statyczne tło",
     "staticGradientDescription": "Używaj stałego gradientu zamiast animowanego tła — łatwiej dla baterii i starszych urządzeń",
-    "screenTitle": "Tekst i wyświetlanie",
-    "screenSubtitle": "Ustaw, jak tekst i grafika wyglądają na tym urządzeniu",
+    "screenTitle": "Wyświetlacz",
+    "screenSubtitle": "Tekst, wizualizacje, bezpieczeństwo i sposób, w jaki Mera otwiera się na tym urządzeniu",
     "sectionText": "Tekst",
     "sectionVisuals": "Grafika",
     "textSizeTitle": "Rozmiar tekstu",
@@ -1488,7 +1516,11 @@
     "textSizeStepDefault": "Domyślny",
     "textSizeStepLarge": "Duży",
     "textSizeStepLarger": "Większy",
-    "deviceTextSizeHint": "Aby uzyskać jeszcze większy tekst, użyj Wyświetlacza i Jasności w ustawieniach urządzenia."
+    "deviceTextSizeHint": "Aby uzyskać jeszcze większy tekst, użyj Wyświetlacza i Jasności w ustawieniach urządzenia.",
+    "sectionStartup": "Karta startowa",
+    "startupTabA11y": "Karta startowa, {{label}}",
+    "startupTabDescription": "Wybierz kartę, którą Mera otwiera podczas uruchomienia aplikacji.",
+    "startupTabTitle": "Otwórz przy uruchomieniu"
   },
   "freeTier": {
     "cardBody": "Część AI w Mera jest teraz wyłączona. Wszystko, co zapisałeś, śledziłeś lub czytałeś, zostaje na tym urządzeniu, a zakładka Odkrywaj wciąż zawiera dzisiejsze nagłówki. Bez planu Mera nie będzie budować Twojego kanału, odpowiadać na Twoje pytania ani śledzić nowych historii. Zacznij plan, a wszystko wróci do normy.",
@@ -1513,46 +1545,43 @@
     "newest": "Najnowsze pierwsze"
   },
   "factCheck": {
-    "action": "Sprawdzanie faktów",
-    "actionA11y": "Uruchom sprawdzenie faktów AI dla tej historii",
-    "title": "Sprawdzanie faktów AI",
+    "action": "Wyszukaj weryfikacje faktów",
+    "actionA11y": "Wyszukaj opublikowane weryfikacje faktów dla tego artykułu",
+    "title": "Weryfikacje faktów",
     "hide": "Ukryj",
     "retry": "Spróbuj ponownie",
-    "checking": "Sprawdzanie tej historii względem innych źródeł…",
-    "checkingHint": "Może to potrwać do minuty.",
-    "stillWorking": "Nadal pracuję nad tym. Wróć za kilka minut.",
-    "failed": "Nie udało się ukończyć tego sprawdzenia. Możesz spróbować ponownie później.",
-    "error": "Nie udało się uruchomić sprawdzenia. Sprawdź połączenie i spróbuj ponownie.",
-    "blocked": "Nie można było sprawdzić tej historii.",
+    "checking": "Wyszukiwanie opublikowanych weryfikacji faktów…",
+    "error": "Nie można było rozpocząć wyszukiwania. Sprawdź połączenie i spróbuj ponownie.",
+    "blocked": "Nie można było wyszukać tego artykułu.",
     "claimsHeading": "Sprawdzone twierdzenia",
     "citationsHeading": "Konsultowane źródła",
-    "noCitations": "Żadne źródła nie powróciły z tym sprawdzeniem, traktuj jako niepotwierdzone.",
+    "noCitations": "Z tego wyszukiwania nie zwróciły się żadne źródła, więc traktuj to jako niepotwierdzone.",
     "sourceFallback": "Źródło {{index}}",
-    "disclaimer": "Napisane przez AI na podstawie wyszukiwania w sieci. Może być błędne lub niekompletne, przeczytaj źródła przed poleganiem na tym.",
+    "disclaimer": "Mera nie weryfikuje wiadomości sama. To jest podsumowanie AI z wyszukiwania internetowego opublikowanych weryfikacji faktów — może być nieprawidłowe lub niekompletne, więc przeczytaj źródła przed poleganiem na tym.",
     "verdict": {
       "supported": {
         "label": "Zgodne ze źródłami",
-        "detail": "Inne źródła, które znaleźliśmy, mówią mniej więcej to samo. To nie jest dowód, że to prawda, tylko że nie znaleźliśmy nic jej zaprzeczającego."
+        "detail": "Źródła znalezione przez wyszukiwanie mówią mniej więcej to samo. To nie jest dowód, że to prawda — tylko to, że nic mu nie zaprzeczało."
       },
       "disputed": {
         "label": "Źródła się nie zgadzają",
-        "detail": "Znaleźliśmy źródła, które zaprzeczają fragmentom tej historii. Przeczytaj je i osądzą siebie."
+        "detail": "Wyszukiwanie wykazało źródła, które zaprzeczają niektórym częściom tego artykułu. Przeczytaj je i sam osądzisz."
       },
       "unsupported": {
         "label": "Nie znaleziono poparcia",
-        "detail": "Nie mogliśmy znaleźć innych źródeł potwierdzających to. To może oznaczać, że historia jest nowa lub niszowa, nie oznacza, że jest fałszywa."
+        "detail": "Wyszukiwanie nie znalazło nic popierającego to. To może po prostu oznaczać, że historia jest nowa lub niszowa — nie czyni tego fałszywym."
       },
       "mixed": {
         "label": "Częściowo zgodne",
-        "detail": "Niektóre części są zgodne z innymi źródłami, a inne nie. Notatki dla każdego twierdzenia wskazują, które."
+        "detail": "Niektóre części zgadzają się z tym, co znaleźliśmy, a niektóre nie. Notatki obok każdego twierdzenia wskazują które."
       },
       "unverifiable": {
         "label": "Nie udało się potwierdzić",
-        "detail": "Nie mogliśmy znaleźć wystarczająco dużo, aby potwierdzić lub zaprzeczyć tej historii. To nie jest stwierdzenie, że jest błędna."
+        "detail": "Wyszukiwanie nie znalazło wystarczająco dużo, aby potwierdzić lub zaprzeczyć tej historii. To nie jest ustalenie, że jest to nieprawidłowe."
       },
       "unknown": {
         "label": "Brak jasnej odpowiedzi",
-        "detail": "Sprawdzenie zakończyło się bez wniosku, który moglibyśmy podsumować. Poniżej znajdują się źródła, na których się opierało."
+        "detail": "Wyszukiwanie zostało zakończone bez wniosku, który moglibyśmy podsumować. Poniższe źródła to to, na które patrzył."
       }
     },
     "assessment": {
@@ -1561,7 +1590,25 @@
       "unsupported": "Nie znaleziono poparcia",
       "unverifiable": "Nie udało się potwierdzić",
       "unknown": "Niejasne"
-    }
+    },
+    "checkedByHeading": "Organizacje weryfikujące fakty, które zajęły się tą sprawą",
+    "dashboard": {
+      "delete": "Usuń",
+      "deleteA11y": "Usuń tę weryfikację faktów",
+      "empty": "Nie wyszukałeś jeszcze żadnych weryfikacji faktów. Otwórz artykuł i naciśnij \"Wyszukaj weryfikacje faktów\".",
+      "listSubtitle": "Artykuły, dla których poprosiłeś Merę o wyszukanie weryfikacji faktów. Przechowywane tylko na tym urządzeniu.",
+      "listTitle": "Weryfikacje faktów",
+      "openA11y": "Otwórz tę weryfikację faktów",
+      "pending": "Wciąż wyszukiwanie",
+      "title": "Weryfikacje faktów",
+      "untitled": "Artykuł bez tytułu",
+      "viewAll": "Wyświetl wszystko"
+    },
+    "explainer": "Mera nie weryfikuje wiadomości sama. Wyszukuje to, co ustalone organizacje weryfikujące fakty już opublikowały na temat tej historii.",
+    "noCheckedBy": "Żadna z przeszukanych organizacji weryfikujących fakty nie opublikowała na temat tego artykułu. To nie oznacza, że artykuł jest nieprawidłowy — większość artykułów nigdy nie jest weryfikowana.",
+    "organisationA11y": "Otwórz weryfikację faktów od {{organisation}}",
+    "queued": "Wyszukiwanie w toku. Działa w tle — nie musisz tutaj czekać.",
+    "queuedHint": "Wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, a my wyślemy powiadomienie, gdy będzie gotowy, jeśli powiadomienia masz włączone."
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Uprioritetnij to źródło",
@@ -1579,8 +1626,8 @@
     "retry": "Spróbuj ponownie"
   },
   "tutorials": {
-    "entryRow": "Witaj w Mera",
-    "menuTitle": "Witaj w Mera",
+    "entryRow": "Dowiedz się więcej o Merze",
+    "menuTitle": "Dowiedz się więcej o Merze",
     "menuSubtitle": "Krótkie przewodniki, jak ta aplikacja działa. Zacznij od dowolnego miejsca.",
     "sectionBasic": "Zacznij tutaj",
     "sectionAdvanced": "Idź głębiej",
@@ -1728,15 +1775,15 @@
           },
           "nothing-removed": {
             "headline": "Nic nigdy nie zostaje usunięte",
-            "body": "Przeczytaj kartę i nie znika, tone. Dwa cienkie dzielniki przecinają listę na trzy części, karty dryfują poniżej nich w miarę upływu.",
+            "body": "Przeczytaj kartę i nie znika; tonie. To jest jedna ciągła lista, a nie sekcje oddzielone dzielnikami — karty cicho opadają poniżej nowszych w miarę postępu.",
             "steps": {
-              "0": "Góra: wszystko, czego jeszcze nie widziałeś.",
-              "1": "Poniżej pierwszego dzielnika: widział, ale nie otwierał.",
-              "2": "Poniżej drugiego: już przeczytane."
+              "0": "Wiadomości: wszystko, co jeszcze nie widziałeś.",
+              "1": "Dalej: widoczne, ale nie otwarte.",
+              "2": "Najniżej: już przeczytane — brak dzielnika, po prostu niżej na tej samej liście."
             },
             "beforeAfter": {
               "before": "Zanim go przeczytasz: karta siedzi na szczycie ze wszystkim innym, co jest nowe.",
-              "after": "Po jego przeczytaniu: ta sama karta, wciąż tam, teraz poniżej drugiego dzielnika. Przewiń w dół i możesz go czytać ponownie, kiedy chcesz."
+              "after": "Po przeczytaniu: ta sama karta jest tu, po prostu posortowana dalej na liście. Przewiń w dół i możesz przeczytać ją ponownie, kiedy chcesz."
             }
           },
           "what-counts-as-read": {
