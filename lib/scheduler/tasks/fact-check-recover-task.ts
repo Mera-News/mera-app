@@ -109,7 +109,17 @@ AppScheduler.register({
           claimKey: row.claimKey,
           status: FACT_CHECK_STATUS.blocked,
           verdict: null,
-          payload: { ...(payload ?? {}), status: FACT_CHECK_STATUS.blocked, verdict: null, blockedReason: 'attempts-exhausted' },
+          payload: {
+            ...(payload ?? {}),
+            status: FACT_CHECK_STATUS.blocked,
+            verdict: null,
+            // Fail-safe for a row written before this field existed: we cannot
+            // know whether its Tier 1 lookup ran, and "we don't know" is the
+            // only honest answer. Claiming `searched` here would let the UI say
+            // "nobody has published on this" off no evidence at all.
+            checkedByStatus: payload?.checkedByStatus ?? 'unavailable',
+            blockedReason: 'attempts-exhausted',
+          },
         });
         continue;
       }

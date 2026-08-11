@@ -187,6 +187,9 @@ export async function enqueueFactCheck(input: EnqueueFactCheckInput): Promise<{
       summary: null,
       claims: [],
       checkedBy: [],
+      // We have not asked anybody yet. The fail-safe value, so a row rendered
+      // mid-run can never read as "no fact-checker has published on this".
+      checkedByStatus: 'unavailable',
       citations: [],
       createdAt: new Date().toISOString(),
       completedAt: null,

@@ -30,28 +30,51 @@
  * prompt discipline. Measured on the prod corpus, ~4% of articles are the genre
  * fact-checkers cover, so an EMPTY `checkedBy` is the normal, honest outcome.
  *
+ * TIER 1 IS A BONUS AND MUST NEVER GATE THE FEATURE. An earlier draft blocked
+ * the whole check when this lookup was unavailable, which inverted the
+ * measurement above: a lookup that pays off on ~4% of articles would have
+ * killed 100% of them whenever its flag was off or its (undocumented, so
+ * genuinely unknown) quota bit. Unavailability here now degrades Tier 1 alone
+ * — see `checkedByStatus`.
+ *
  * ── TIER 2: the narrative, which is what the user actually sees ────────────
  * Up to three short web searches, then one synthesis pass on `BIG_MODEL`
- * (`cloudChatStream` already hardcodes `enable_thinking: true`).
+ * (`cloudChatStream` already hardcodes `enable_thinking: true`). This tier IS
+ * the product, so its unavailability — and only its unavailability — is what
+ * `blocked` means.
  *
- * ── THE HONESTY CONTRACT — three outcomes, three DISTINCT states ───────────
- *   a fact-checker published  → `checkedBy` populated  → `complete`
- *   nobody published          → `checkedBy: []`        → `complete`
- *   we could not look         → no verdict at all      → `blocked`
+ * ── THE HONESTY CONTRACT — four outcomes, four DISTINCT states ─────────────
+ *   a fact-checker published  → `checkedBy` populated, `searched`    → complete
+ *   nobody published          → `checkedBy: []`,       `searched`    → complete
+ *   we could not ASK them     → `checkedBy: []`,       `unavailable` → complete
+ *   we could not gather ANY   → no verdict at all                    → blocked
+ *   evidence
  *
- * The third row is the whole point. Two structural guards enforce it, because a
- * counter-metric that cannot fail is not a counter-metric:
+ * Rows 2 and 3 are the pair this design exists to keep apart. They have the
+ * same empty array and opposite meanings: one says "nobody has ruled on this",
+ * the other says "we do not know whether anybody has". Collapsing them prints a
+ * fabricated all-clear on the single axis this feature is meant to be
+ * authoritative about — which is why `checkedByStatus` is an explicit field
+ * rather than an inference from array length.
+ *
+ * Row 4 keeps its structural guards, because a counter-metric that cannot fail
+ * is not a counter-metric:
  *   1. `blocked` is decided BEFORE the model is ever called, so a blocked row
  *      cannot carry a verdict — there is no code path that produces one.
  *   2. `clampVerdictToEvidence` forces `unverifiable` whenever the evidence set
  *      is empty, whatever the model said. `supported` is unreachable with zero
- *      evidence by construction, which matters because today's search client
- *      still reports a DISABLED provider as an empty success (G1 is changing
- *      that; this clamp does not depend on G1 landing).
+ *      evidence by construction, which matters because a search client that
+ *      reported a DISABLED provider as an empty success would otherwise sail
+ *      straight through.
  * Citations get the same treatment: only indices that resolve to a URL we
  * actually fetched survive, so the model cannot invent a source.
  *
- * No React. Every I/O seam is injected (`FactCheckRunnerDeps`) so the three
+ * `checkedByStatus` defaults to `unavailable` and is only ever promoted to
+ * `searched` by a lookup that actually returned. The default is the fail-safe
+ * direction: a row can never claim we looked because someone forgot to set a
+ * field.
+ *
+ * No React. Every I/O seam is injected (`FactCheckRunnerDeps`) so all four
  * honesty cases are unit-testable without a network.
  */
 
@@ -114,6 +137,26 @@ export interface FactCheckPayload {
   summary?: string | null;
   claims: FactCheckClaimPayload[];
   checkedBy: FactCheckOrganisationPayload[];
+  /**
+   * WHETHER THE `checkedBy` LIST IS AN ANSWER OR AN ABSENCE OF ONE.
+   *
+   * An empty array has two completely different meanings and the UI must not
+   * treat them alike:
+   *   `searched`    — we asked the ClaimReview corpus and it returned nothing.
+   *                   No IFCN signatory has published on this claim. That is a
+   *                   FACT, and the normal outcome: ~4% of Mera's corpus is the
+   *                   genre fact-checkers cover, so `factCheck.noCheckedBy`
+   *                   ("most stories are never fact-checked") is correct here.
+   *   `unavailable` — the lookup did not happen (flag off, 429, dead route,
+   *                   transport failure). We know NOTHING about who has ruled
+   *                   on this claim, and saying "nobody has" would be a
+   *                   fabricated all-clear on the one axis this feature is
+   *                   supposed to be authoritative about.
+   *
+   * A separate field rather than an overloaded `checkedBy: null` because null
+   * is exactly the value every existing render path already coerces to `[]`.
+   */
+  checkedByStatus: CheckedByStatus;
   citations: FactCheckCitationPayload[];
   createdAt: string;
   completedAt?: string | null;
@@ -130,6 +173,9 @@ export interface FactCheckPayload {
 }
 
 export type FactCheckRunStatus = 'processing' | 'complete' | 'blocked' | 'failed';
+
+/** See {@link FactCheckPayload.checkedByStatus}. */
+export type CheckedByStatus = 'searched' | 'unavailable';
 
 /** Closed verdict vocabulary — `normalizeVerdict` in fact-check-state.ts. */
 const VERDICTS = new Set(['supported', 'disputed', 'unsupported', 'mixed', 'unverifiable']);
@@ -517,6 +563,8 @@ export interface FactCheckRunResult {
   status: FactCheckRunStatus;
   verdict: string | null;
   checkedByCount: number;
+  /** Whether Tier 1 ran at all. `checkedByCount === 0` alone cannot tell you. */
+  checkedByStatus: CheckedByStatus;
   evidenceCount: number;
   blockedReason?: string;
 }
@@ -544,6 +592,10 @@ export async function runFactCheck(
     createdAt: new Date(startedAt).toISOString(),
     attempts,
     startedAt,
+    // FAIL-SAFE DEFAULT. Promoted to `searched` only by a lookup that actually
+    // returned, so no row can ever claim "nobody has published on this" merely
+    // because a code path forgot to set the field.
+    checkedByStatus: 'unavailable' as CheckedByStatus,
   };
 
   const write = async (
@@ -564,6 +616,12 @@ export async function runFactCheck(
     });
   };
 
+  // Whether Tier 1 actually ran. Declared out here because `blocked` reports it
+  // too: a check that failed at Tier 2 may still hold a real answer about who
+  // has published, and discarding that would be its own small dishonesty.
+  let checkedByStatus: CheckedByStatus = 'unavailable';
+  let organisations: FactCheckOrganisationPayload[] = [];
+
   const blocked = async (reason: string): Promise<FactCheckRunResult> => {
     logger.warn('[fact-check] blocked', { reason, articleId: job.articleId });
     await write({
@@ -572,12 +630,20 @@ export async function runFactCheck(
       verdict: null,
       summary: null,
       claims: [],
-      checkedBy: [],
+      checkedBy: organisations,
+      checkedByStatus,
       citations: [],
       completedAt: new Date(deps.now()).toISOString(),
       blockedReason: reason,
     });
-    return { status: 'blocked', verdict: null, checkedByCount: 0, evidenceCount: 0, blockedReason: reason };
+    return {
+      status: 'blocked',
+      verdict: null,
+      checkedByCount: organisations.length,
+      checkedByStatus,
+      evidenceCount: 0,
+      blockedReason: reason,
+    };
   };
 
   // Re-stamp `processing` so the recovery task can tell a live run from a
@@ -589,6 +655,7 @@ export async function runFactCheck(
     summary: null,
     claims: [],
     checkedBy: [],
+    checkedByStatus,
     citations: [],
     completedAt: null,
   });
@@ -608,11 +675,25 @@ export async function runFactCheck(
       const outcome = await deps.searchClaimReviews(lookup.claim, {
         languageCode: lookup.languageCode,
       });
-      // Unavailable is NOT empty. Bailing here — before any model call — is
-      // what makes "we could not look" impossible to confuse with "nobody
-      // published". `ok: false` from this client means, without exception, that
-      // NO LOOKUP HAPPENED.
-      if (!outcome.ok) return blocked(`claim-review:${outcome.code ?? outcome.status ?? 'failed'}`);
+      // Unavailable is NOT empty — but it is also NOT fatal. `ok: false` from
+      // this client means, without exception, that NO LOOKUP HAPPENED, so we
+      // stop asking and record that we do not know. What we must never do is
+      // fall through to an empty `checkedBy` that reads as "nobody published":
+      // `checkedByStatus` stays `unavailable`, and the UI has to say so.
+      //
+      // Not blocking here is deliberate, and was a correction. This tier pays
+      // off on ~4% of the corpus; letting it kill the other 96% because a flag
+      // was off or an undocumented quota bit inverts what the feature is for.
+      if (!outcome.ok) {
+        logger.warn('[fact-check] ClaimReview lookup unavailable — Tier 2 continues', {
+          code: outcome.code ?? outcome.status ?? 'failed',
+          articleId: job.articleId,
+        });
+        break;
+      }
+      // We asked and got an answer, even an empty one. THIS is the only place
+      // that may promote the status.
+      checkedByStatus = 'searched';
       if (outcome.claimReviews.length > 0) {
         checkedBy = outcome.claimReviews;
         break;
@@ -655,7 +736,7 @@ export async function runFactCheck(
   // list. `textualRating` is passed through UNTOUCHED — an organisation's
   // rating rewritten by us, or by an LLM, is an attribution we are not entitled
   // to make.
-  const organisations: FactCheckOrganisationPayload[] = checkedBy
+  organisations = checkedBy
     .filter((c) => c.publisher?.name?.trim().length > 0)
     .map((c) => ({
       organisation: c.publisher.name.trim(),
@@ -676,6 +757,7 @@ export async function runFactCheck(
       summary: null,
       claims: [],
       checkedBy: organisations,
+      checkedByStatus,
       citations: [],
       completedAt: new Date(deps.now()).toISOString(),
     });
@@ -683,6 +765,7 @@ export async function runFactCheck(
       status: 'complete',
       verdict: 'unverifiable',
       checkedByCount: organisations.length,
+      checkedByStatus,
       evidenceCount: 0,
     };
   }
@@ -728,6 +811,7 @@ export async function runFactCheck(
       summary: null,
       claims: [],
       checkedBy: organisations,
+      checkedByStatus,
       citations: [],
       completedAt: null,
     });
@@ -735,6 +819,7 @@ export async function runFactCheck(
       status: 'failed',
       verdict: null,
       checkedByCount: organisations.length,
+      checkedByStatus,
       evidenceCount: evidence.length,
     };
   }
@@ -748,6 +833,7 @@ export async function runFactCheck(
     summary: parsed.summary,
     claims: parsed.claims,
     checkedBy: organisations,
+    checkedByStatus,
     citations: resolveCitations(parsed.citationIndices, shortlist),
     completedAt: new Date(deps.now()).toISOString(),
     model: BIG_MODEL,
@@ -756,6 +842,7 @@ export async function runFactCheck(
     status: 'complete',
     verdict,
     checkedByCount: organisations.length,
+    checkedByStatus,
     evidenceCount: evidence.length,
   };
 }

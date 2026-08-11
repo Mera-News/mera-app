@@ -113,24 +113,89 @@ const RESULTS = [
   { title: 'FactCheck.org on the vaccine schedule', url: 'https://factcheck.org/b', snippet: 'Claim overstates the count.' },
 ];
 
-// ── 1. Either lookup unavailable ⇒ blocked, and NEVER a verdict ────────────
+// ── 1a. Tier 1 unavailable ⇒ the check STILL RUNS, but never claims nobody ─
+//
+// THE TEST THAT MUST BE ABLE TO FAIL, PART TWO. `checkedBy: []` is rendered as
+// "No fact-checking organisation we searched has published on this story" — a
+// positive claim about the world. When the ClaimReview lookup never ran, we
+// have no basis for that claim, and an assertion on the empty array alone
+// cannot tell the two apart: BOTH cases produce `[]`. `checkedByStatus` is the
+// only discriminator, so every test here asserts it.
+//
+// Verified red-then-green: promoting `checkedByStatus` to 'searched' before the
+// `outcome.ok` check turns all three of these red while the arrays stay
+// identical. Reverted.
 
-describe('the honesty contract: unavailable search can never produce a verdict', () => {
-  it('blocks and writes no verdict when the ClaimReview lookup is unavailable', async () => {
-    const h = harness({ claimReviewOutcome: { ok: false, error: 'off', code: 'search-unavailable', status: 503 } });
+describe('Tier 1 unavailable degrades Tier 1 ALONE, and never fakes the empty case', () => {
+  const unavailableTier1 = {
+    claimReviewOutcome: { ok: false, error: 'off', code: 'search-unavailable', status: 503 },
+    search: { ok: true, results: RESULTS },
+    answer: JSON.stringify({ verdict: 'mixed', summary: 'S', claims: [], citations: [1] }),
+  };
+
+  it('completes the check instead of blocking it', async () => {
+    // The correction that matters: this tier pays off on ~4% of the corpus, so
+    // letting it kill the other 96% inverts what the feature is for.
+    const h = harness(unavailableTier1);
     const result = await runFactCheck(JOB, h.deps);
 
-    expect(result.status).toBe('blocked');
-    expect(h.terminal().status).toBe('blocked');
-    // All three, deliberately — 'blocked' alone would pass on a row that
-    // carried an answer anyway.
-    expect(h.terminal().verdict).toBeNull();
-    expect(h.terminal().payload.verdict).toBeNull();
-    expect(h.chatStream).not.toHaveBeenCalled();
-    // And it never even reached the web search, so nothing was spent.
-    expect(h.deps.searchWeb).not.toHaveBeenCalled();
+    expect(result.status).toBe('complete');
+    expect(result.verdict).toBe('mixed');
+    expect(h.deps.searchWeb).toHaveBeenCalled();
+    expect(h.chatStream).toHaveBeenCalledTimes(1);
   });
 
+  it('marks checkedBy `unavailable`, so the UI cannot say "nobody published"', async () => {
+    const h = harness(unavailableTier1);
+    const result = await runFactCheck(JOB, h.deps);
+
+    expect(h.terminal().payload.checkedBy).toEqual([]);
+    // …and THIS is what stops that empty array being read as an answer.
+    expect(h.terminal().payload.checkedByStatus).toBe('unavailable');
+    expect(result.checkedByStatus).toBe('unavailable');
+  });
+
+  it('a 429 on the bonus tier costs the bonus, not the check', async () => {
+    // The Fact Check Tools quota is undocumented, so this is normal operation,
+    // not an edge case.
+    const h = harness({
+      ...unavailableTier1,
+      claimReviewOutcome: { ok: false, error: 'rate-limited', code: 'search-unavailable', status: 429 },
+    });
+    const result = await runFactCheck(JOB, h.deps);
+    expect(result.status).toBe('complete');
+    expect(result.checkedByStatus).toBe('unavailable');
+  });
+
+  it('stops asking after the first unavailable answer', async () => {
+    const h = harness(unavailableTier1);
+    await runFactCheck(JOB, h.deps);
+    expect(h.deps.searchClaimReviews).toHaveBeenCalledTimes(1);
+  });
+
+  it('a lookup that RETURNED, even empty, is `searched` — a real answer', async () => {
+    const h = harness({
+      claimReview: [],
+      search: { ok: true, results: RESULTS },
+      answer: '{}',
+    });
+    const result = await runFactCheck(JOB, h.deps);
+    expect(h.terminal().payload.checkedBy).toEqual([]);
+    expect(h.terminal().payload.checkedByStatus).toBe('searched');
+    expect(result.checkedByStatus).toBe('searched');
+  });
+
+  it('a processing row starts `unavailable` — never claims we looked before we did', async () => {
+    const h = harness(unavailableTier1);
+    await runFactCheck(JOB, h.deps);
+    expect(h.writes[0].payload.status).toBe('processing');
+    expect(h.writes[0].payload.checkedByStatus).toBe('unavailable');
+  });
+});
+
+// ── 1b. Tier 2 unavailable ⇒ blocked, and NEVER a verdict ──────────────────
+
+describe('the honesty contract: no evidence at all can never produce a verdict', () => {
   it('blocks and writes no verdict when EVERY web-search round is unavailable', async () => {
     const h = harness({
       claimReview: [],
@@ -144,26 +209,43 @@ describe('the honesty contract: unavailable search can never produce a verdict',
     expect(h.chatStream).not.toHaveBeenCalled();
   });
 
-  it('treats a 429 as unavailable, not as "nobody checked this"', async () => {
-    const h = harness({ claimReviewOutcome: { ok: false, error: 'rate-limited', code: 'search-unavailable', status: 429 } });
+  it('treats a web-search 429 as unavailable, not as "we found nothing"', async () => {
+    const h = harness({
+      claimReview: [],
+      search: { ok: false, error: 'rate-limited', code: 'search-unavailable', status: 429 },
+    });
     const result = await runFactCheck(JOB, h.deps);
 
     expect(result.status).toBe('blocked');
-    expect(result.blockedReason).toContain('claim-review');
-    expect(h.terminal().payload.checkedBy).toEqual([]);
+    expect(result.blockedReason).toContain('web-search');
     expect(h.terminal().payload.verdict).toBeNull();
     expect(h.chatStream).not.toHaveBeenCalled();
   });
 
   it('a blocked row is terminal and says WHY, without implying anything about the claim', async () => {
-    const h = harness({ claimReviewOutcome: { ok: false, error: 'unreachable', code: 'search-unavailable' } });
+    const h = harness({
+      claimReview: [],
+      search: { ok: false, error: 'unreachable', code: 'search-unavailable' },
+    });
     await runFactCheck(JOB, h.deps);
     const payload = h.terminal().payload;
     expect(payload.status).toBe('blocked');
-    expect(payload.blockedReason).toBe('claim-review:search-unavailable');
+    expect(payload.blockedReason).toContain('web-search');
     expect(payload.claims).toEqual([]);
     expect(payload.citations).toEqual([]);
     expect(payload.summary).toBeNull();
+  });
+
+  it('a blocked row still reports what Tier 1 DID establish', async () => {
+    // Tier 2 died, but we genuinely asked the fact-checkers and they had
+    // nothing. Throwing that away would be its own small dishonesty.
+    const h = harness({
+      claimReview: [],
+      search: { ok: false, error: 'off', code: 'search-unavailable', status: 503 },
+    });
+    await runFactCheck(JOB, h.deps);
+    expect(h.terminal().payload.checkedByStatus).toBe('searched');
+    expect(h.terminal().payload.verdict).toBeNull();
   });
 });
 
@@ -270,6 +352,7 @@ describe('Tier 1: checkedBy comes from ClaimReview, verbatim', () => {
 
     // "Pants on Fire!" is NOT in our five-token vocabulary and must not be
     // normalised into it — that is the whole value of the list.
+    expect(h.terminal().payload.checkedByStatus).toBe('searched');
     expect(h.terminal().payload.checkedBy).toEqual([
       {
         organisation: 'PolitiFact',
