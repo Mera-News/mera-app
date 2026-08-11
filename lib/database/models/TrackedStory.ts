@@ -73,7 +73,12 @@ export default class TrackedStory extends Model {
   @field('llm_headline') llmHeadline!: string | null;
   @field('fallback_title') fallbackTitle!: string;
   @field('latest_article_id') latestArticleId!: string | null;
-  @field('latest_title') latestTitle!: string | null;
+  // `latest_title` was here. It was written once at track time with the title
+  // of the article the user tapped and then almost never replaced, so what it
+  // actually held was the story's ORIGIN headline — which the tracked-stories
+  // list rendered under the real headline as if it were news. Dropped from the
+  // model and NULLed on disk by migration v52. The column itself survives on
+  // upgraded devices (WatermelonDB has no destroyColumn) but is inert.
   @field('origin_surface') originSurface!: string | null;
   @date('last_update_at') lastUpdateAt!: Date | null;
   @field('unseen_count') unseenCount!: number;

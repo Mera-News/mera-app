@@ -220,6 +220,33 @@ describe('specific migration versions', () => {
     expect(!!addStep.columns[0].isOptional).toBe(true);
   });
 
+  it('v52 NULLs tracked_stories.latest_title without touching the table itself', () => {
+    const m = byVersion.get(52);
+    expect(m).toBeDefined();
+
+    const sqlStep = m!.steps.find(
+      (s: any) =>
+        s &&
+        s.type === 'sql' &&
+        /UPDATE tracked_stories/i.test(String(s.sql ?? s.text ?? '')) &&
+        /latest_title\s*=\s*NULL/i.test(String(s.sql ?? s.text ?? '')),
+    );
+    expect(sqlStep).toBeDefined();
+
+    // The whole point of choosing an UPDATE over a rebuild: `tracked_stories`
+    // is long-lived user-owned state. A create_table (drop+recreate) or a
+    // DELETE/DROP against it here would destroy every followed story to
+    // reclaim one unused column.
+    const destructive = m!.steps.filter(
+      (s: any) =>
+        (s && s.type === 'create_table' && s.schema?.name === 'tracked_stories') ||
+        (s &&
+          s.type === 'sql' &&
+          /(DROP|DELETE\s+FROM)\s+.*tracked_stories/i.test(String(s.sql ?? s.text ?? ''))),
+    );
+    expect(destructive).toHaveLength(0);
+  });
+
   it('v45 clears the stale persisted async_pipeline_run settings row', () => {
     const m = byVersion.get(45);
     expect(m).toBeDefined();

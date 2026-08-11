@@ -118,8 +118,6 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
             // list-level note (see `listNote` below). This flag still gates the
             // AUDIBLE half — see the accessibilityLabel.
             const isLlmHeadline = !!item.llmHeadline;
-            const latest = item.latestTitle;
-            const showLatest = !!latest && latest.trim().length > 0 && latest !== headline;
             const unseen = item.unseenCount ?? 0;
             // Total coverage gathered under this story. `memberArticleIds` is
             // capped at MAX_MEMBER_IDS, so at the cap the true total is
@@ -187,14 +185,15 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                                 numberOfLines={2}
                                 className="text-white"
                             />
-                            {showLatest && (
-                                <TranslatableDynamic
-                                    text={latest as string}
-                                    size="xs"
-                                    numberOfLines={1}
-                                    className="text-typography-400"
-                                />
-                            )}
+                            {/* A second title line used to sit here, fed by
+                                `latest_title`. That column was seeded at track
+                                time with the title of the article the user
+                                happened to tap, and nothing reliably replaced
+                                it afterwards — so the "latest" line was usually
+                                just the story's ORIGIN article, repeated under
+                                a headline that had moved on. It said nothing
+                                the headline did not, and it is gone from the
+                                database too (migration v52). */}
                             {/* Meta line: total coverage + last-activity age,
                                 in the card's existing 2xs muted style. */}
                             <HStack className="items-center mt-0.5" space="xs">

@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 51,
+  version: 52,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -457,7 +457,8 @@ export default appSchema({
         { name: 'llm_headline', type: 'string', isOptional: true },
         { name: 'fallback_title', type: 'string' },
         { name: 'latest_article_id', type: 'string', isOptional: true },
-        { name: 'latest_title', type: 'string', isOptional: true },
+        // `latest_title` removed in v52 — see migrations.ts. Fresh installs
+        // never create it; upgraded devices keep an inert, NULLed column.
         { name: 'origin_surface', type: 'string', isOptional: true },
         { name: 'last_update_at', type: 'number', isOptional: true },
         { name: 'unseen_count', type: 'number' },
