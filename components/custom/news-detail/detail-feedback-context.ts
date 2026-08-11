@@ -23,6 +23,7 @@ import {
 import {
   geoTextFromTags,
   getSuggestionFeedbackContext,
+  placeValueFromTags,
 } from '@/lib/database/services/article-suggestion-service';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
@@ -118,6 +119,11 @@ export async function resolveDetailFeedbackSubject(opts: {
   const suggestion = suggestionFromArticle(opts.articleId, opts.title, article);
   const category = article?.category ?? null;
   const geoText = geoTextFromTags(article?.geo_tags ?? []);
+  // The verbatim tag field behind `geoText`, for the `place` FILTER (the prose
+  // form resolves a supranational code and would match nothing). The standalone
+  // suggestion carries `entities` but no `geoTags`, so unlike the entity this
+  // one cannot be derived from the row and has to travel in the fallback.
+  const placeValue = placeValueFromTags(article?.geo_tags ?? []);
   return {
     suggestion,
     subject: {
@@ -135,6 +141,7 @@ export async function resolveDetailFeedbackSubject(opts: {
     contextFallback: {
       ...(category ? { category } : {}),
       ...(geoText ? { geoText } : {}),
+      ...(placeValue ? { placeValue } : {}),
     },
   };
 }

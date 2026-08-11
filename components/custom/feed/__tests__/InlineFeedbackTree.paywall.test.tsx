@@ -62,6 +62,11 @@ jest.mock('@/lib/database/services/publication-visit-service', () => ({
   getVisitCountForPublication: jest.fn(async () => 7),
 }));
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
+  // Pure helpers the tree uses for the place label + the `place` filter's
+  // verbatim value. Null here: these fixtures carry no geo tags, so the place
+  // leaf stays hidden.
+  placeValueFromTags: jest.fn(() => null),
+  geoTextFromTags: jest.fn(() => null),
   getSuggestionFeedbackContext: jest.fn(async () => ({ category: 'Politics' })),
 }));
 
@@ -131,9 +136,9 @@ function renderTree(overrides?: {
   return { ...utils, ...handlers };
 }
 
-/** Root → "Problem with the site" → "It's paywalled". */
+/** Root → "Issue with this publication" → "It's paywalled". */
 async function openPaywall(utils: ReturnType<typeof renderTree>) {
-  fireEvent.press(await waitFor(() => utils.getByText('Problem with the site')));
+  fireEvent.press(await waitFor(() => utils.getByText('Issue with this publication')));
   fireEvent.press(await waitFor(() => utils.getByText("It's paywalled")));
 }
 
@@ -142,7 +147,7 @@ beforeEach(() => jest.clearAllMocks());
 describe('InlineFeedbackTree — the paywall branch', () => {
   it('is reachable at all: "It\'s paywalled" renders as a real branch, not a hidden dead end', async () => {
     const utils = renderTree();
-    fireEvent.press(await waitFor(() => utils.getByText('Problem with the site')));
+    fireEvent.press(await waitFor(() => utils.getByText('Issue with this publication')));
     // The regression: both old children were gated, so the whole row vanished.
     expect(await waitFor(() => utils.getByText("It's paywalled"))).toBeTruthy();
   });
@@ -167,7 +172,7 @@ describe('InlineFeedbackTree — the paywall branch', () => {
     await openPaywall(utils);
     fireEvent.press(await waitFor(() => utils.getByText('Show related coverage')));
 
-    const path = ['publication_website', 'paywall', 'paywall_related'];
+    const path = ['publication_issue', 'paywall', 'paywall_related'];
     expect(utils.onTreePathChanged).toHaveBeenLastCalledWith(
       expect.objectContaining({ articleId: 'art-1' }),
       'dislike',
@@ -213,7 +218,7 @@ describe('InlineFeedbackTree — the paywall branch', () => {
     expect(utils.onLeafCommitted).toHaveBeenCalledWith(
       expect.objectContaining({ articleId: 'art-1' }),
       'dislike',
-      ['publication_website', 'paywall', 'paywall_block_source'],
+      ['publication_issue', 'paywall', 'paywall_block_source'],
     );
     // Muting is a persona mutation, not a nudge.
     expect(utils.onNudge).not.toHaveBeenCalled();

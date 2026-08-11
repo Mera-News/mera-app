@@ -32,6 +32,14 @@ export function evaluateCondition(
   if (visibleIf.has_event_type === true) {
     if (!ctx.eventType?.trim()) return false;
   }
+  // Entities are present on ~70% of SERVED articles (measured 2026-08-10 over
+  // 300 topic-linked prod rows). Without this branch the key would be an
+  // UNKNOWN one, and unknown keys are ignored — so a typo here does not hide
+  // the node, it SHOWS it on every entity-less article. Fails open, silently;
+  // hence the explicit absent-context test.
+  if (visibleIf.has_entity === true) {
+    if (!ctx.entity?.trim()) return false;
+  }
 
   return true;
 }

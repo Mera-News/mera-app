@@ -73,8 +73,17 @@ jest.mock('@/lib/database/services/article-feedback-service', () => ({
 const mockGetSuggestionFeedbackContext = jest.fn();
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
   getSuggestionFeedbackContext: (...a: any[]) => mockGetSuggestionFeedbackContext(...(a as [])),
-  // The real (pure) helper — the two paths must name a place identically.
+  // The real (pure) helpers — the two paths must name a place identically.
   geoTextFromTags: (tags: any[]) => {
+    for (const t of tags ?? []) {
+      const n = t?.city?.trim() || t?.region?.trim() || t?.countryCode?.trim();
+      if (n) return n;
+    }
+    return null;
+  },
+  // Its uncooked twin: the tag field verbatim, which is what a structured
+  // `place` filter compares against (see placeValueFromTags' own doc).
+  placeValueFromTags: (tags: any[]) => {
     for (const t of tags ?? []) {
       const n = t?.city?.trim() || t?.region?.trim() || t?.countryCode?.trim();
       if (n) return n;

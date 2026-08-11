@@ -20,7 +20,7 @@ import {
   refreshFeedbackTree,
   resetFeedbackTreeMemo,
 } from '../feedback-tree-service';
-import { BUNDLED_FEEDBACK_TREE } from '../feedback-tree-snapshot';
+import { APP_FEEDBACK_SCHEMA, BUNDLED_FEEDBACK_TREE } from '../feedback-tree-snapshot';
 
 const KEY_JSON = 'feedback_tree.json';
 const KEY_VERSION = 'feedback_tree.version';
@@ -165,11 +165,20 @@ describe('refreshFeedbackTree', () => {
     expect((await getFeedbackTree()).version).toBe(3);
   });
 
-  it('DROPS a tree requiring app schema 5 — one past what this app understands', async () => {
+  // Pinned to APP_FEEDBACK_SCHEMA + 1 rather than a literal: this assertion is
+  // about the COMPARISON, and hard-coding the number turned it into a test that
+  // silently stopped exercising the drop path the moment the app schema caught
+  // up with it (it was written as `5` and the app is now 5).
+  it('DROPS a tree requiring one schema past what this app understands', async () => {
     mockGetSetting.mockResolvedValue(null);
     mockQuery.mockResolvedValue({
       data: {
-        feedbackTree: { version: 4, minAppSchema: 5, updatedAt: 'now', treeJson: serverTree(4) },
+        feedbackTree: {
+          version: 999,
+          minAppSchema: APP_FEEDBACK_SCHEMA + 1,
+          updatedAt: 'now',
+          treeJson: serverTree(999),
+        },
       },
     });
 

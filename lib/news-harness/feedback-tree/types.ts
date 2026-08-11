@@ -20,12 +20,25 @@ export interface FeedbackTreeCondition {
   cluster_size_gte?: number;
   has_matched_topics?: boolean;
   has_geo_mismatch?: boolean;
-  /** True ⇒ the node is hidden unless the article carries an `eventType`. Its
-   *  reason for existing: as of 2026-07-29 the server populates `event_type` on
-   *  ZERO of ~303k articles, so an event-type leaf resolves to no actions,
-   *  applies nothing and shows no toast — a dead option is worse than a missing
-   *  one. The gate disappears by itself once tagging starts writing the field. */
+  /** True ⇒ the node is hidden unless the article carries an `eventType`.
+   *
+   *  MEASURED 2026-08-10 over 300 topic-linked prod articles: `event_type` is
+   *  present on **97%** of SERVED articles (entities 70%, geo_tags 85%). The
+   *  older claim in this comment — "ZERO of ~303k articles" — was true when the
+   *  gate was written and is now stale: it measured the RAW corpus (~8%), which
+   *  is not what a feedback tree ever sees, and it predates the 2026-07-30 and
+   *  2026-08-09 enrichment backfills. The gate stays because 3% is not 0%: on
+   *  those articles the leaf resolves to no actions, applies nothing and shows
+   *  no toast, and a dead option is worse than a missing one. */
   has_event_type?: boolean;
+  /** True ⇒ the node is hidden unless the article carries at least one
+   *  `entity`. Same rationale as `has_event_type`, at a lower coverage —
+   *  entities are present on ~70% of served articles, so ~30% of taps would
+   *  land on a chip that does nothing without this. `isInertActionLeaf` is the
+   *  belt to this gate's braces (it hides any action leaf that resolves empty
+   *  whatever the server tree says), which matters because an UNKNOWN gate key
+   *  is ignored rather than enforced — a typo here fails OPEN. */
+  has_entity?: boolean;
   // Forward-compat: server may add gate keys this app doesn't know.
   [key: string]: unknown;
 }
@@ -62,12 +75,21 @@ export interface FeedbackTreeAbstractAction {
   [key: string]: unknown;
 }
 
+/** The closed set of HOST INTENTS a `nudge` leaf can carry. Exported so every
+ *  surface that forwards one spells it the same way — the union used to be
+ *  re-typed inline in five components, and widening it meant finding all five. */
+export type FeedbackNudge = 'subscribe' | 'browse_related' | 'manage_publication';
+
 /** Terminal node payload. Exactly one flavor is meaningful per leaf. */
 export interface FeedbackTreeLeaf {
   /** Concrete persona mutations (resolved from `actions` + local context). */
   actions?: FeedbackTreeAbstractAction[];
-  /** A SUGGESTION (not a mutation): surface a subscribe / browse-related nudge. */
-  nudge?: 'subscribe' | 'browse_related';
+  /** A SUGGESTION (not a mutation): a HOST INTENT the surface acts on instead
+   *  of applying anything to the persona. `browse_related` opens the story's
+   *  related coverage; `manage_publication` opens the publication-preferences
+   *  screen (the app's only boost/downrank/mute control); `subscribe` is legacy
+   *  — no current tree authors it and every host ignores it. */
+  nudge?: FeedbackNudge;
   /** Escalate INTO the Mera chat instead of applying a mutation. */
   openChat?: boolean;
   /** Destructive — the UI must confirm before applying (e.g. mute-publication). */
@@ -116,12 +138,32 @@ export interface LocalFeedbackContext {
   countryCode?: string | null;
   /** Title of the disliked article — source for `from_context_title`. */
   articleTitle?: string | null;
-  /** Geo label for `from_context_geo` (e.g. the article's place/region). */
+  /** Human-readable place label for `from_context_geo` and for `{{place}}` in a
+   *  label — the most specific nameable place across the article's geo tags,
+   *  with a SUPRANATIONAL code rendered as prose ("MIDDLE_EAST" → "Middle
+   *  East"). Display text, and the search string a negative topic is built
+   *  from. NOT the token a `place` filter compares against — see `placeValue`. */
   geoText?: string | null;
+  /** The VERBATIM geo-tag field `geoText` was derived from (the tag's own
+   *  `city` / `region` / `countryCode`, uncooked) — the source for
+   *  `from_context_place`.
+   *
+   *  Separate from `geoText` because a structured `place` filter matches by
+   *  exact normalized equality against a geo-tag field, so its value must BE
+   *  that field. `geoText` is not: it resolves a supranational code to prose,
+   *  and `normCountry` only trims/uppercases, so a filter built from "Middle
+   *  East" would compare "MIDDLE EAST" against the tag's "MIDDLE_EAST" and
+   *  match nothing, forever, while looking perfectly applied. */
+  placeValue?: string | null;
   /** Category label for `from_context_category` (e.g. "Politics"). */
   category?: string | null;
   /** Event-type label for `from_context_eventType` (e.g. "Earnings call"). */
   eventType?: string | null;
+  /** The article's PRIMARY entity (server emits entities most-central-first) —
+   *  source for `from_context_entity` and for `{{entity}}` in a label. Singular
+   *  on purpose: one value means the label and the action it mints can never
+   *  name different things. */
+  entity?: string | null;
   /** Topics the suggestion matched (topicId null for synthetic headline hits). */
   matchedTopics?: { topicId: string | null; text: string }[];
   /** Explicitly-selected subset for `from_selection` (else falls back to all matched). */

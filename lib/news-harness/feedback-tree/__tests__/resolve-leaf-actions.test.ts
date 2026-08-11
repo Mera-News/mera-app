@@ -254,3 +254,115 @@ describe('resolveLeafActions — a generic category mints nothing', () => {
     ]);
   });
 });
+
+// v5 — the two new placeholders behind "Show less of {{entity}}" / "Show less of
+// {{place}}". Both must mint a STRUCTURED filter: a placeholder this module
+// doesn't know is treated as a LITERAL pattern, which silently degrades to a
+// normalized-substring keyword scan (over title + description + entities) —
+// i.e. exactly the "looks applied, matches the wrong things" failure the
+// placeholder→kind binding exists to prevent.
+describe('resolveLeafActions — from_context_entity (v5)', () => {
+  const leaf: FeedbackTreeLeaf = {
+    actions: [
+      { type: 'add_suppression', pattern: 'from_context_entity', kind: 'entity', strength: 0.5 },
+    ],
+  };
+
+  it('mints an entity-KIND suppression whose value is the entity verbatim', () => {
+    expect(resolveLeafActions(leaf, ctx({ entity: 'Reserve Bank of India' }))).toEqual([
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'Reserve Bank of India',
+        suppressionStrength: 0.5,
+        suppressionKind: 'entity',
+        suppressionValue: 'Reserve Bank of India',
+      },
+    ]);
+  });
+
+  it('is a REAL source, not a literal degrading to a keyword scan', () => {
+    // The discriminator: an unregistered placeholder keeps its own name as the
+    // pattern and carries NO kind. If `from_context_entity` is ever dropped
+    // from SUPPRESSION_SOURCES, the assertion above starts producing this.
+    const bogus: FeedbackTreeLeaf = {
+      actions: [
+        { type: 'add_suppression', pattern: 'from_context_entitiy', kind: 'entity', strength: 0.5 },
+      ],
+    };
+    expect(resolveLeafActions(bogus, ctx({ entity: 'Reserve Bank of India' }))).toEqual([
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'from_context_entitiy',
+        suppressionStrength: 0.5,
+      },
+    ]);
+  });
+
+  it('resolves to nothing without an entity — so the leaf is hidden, not inert', () => {
+    expect(resolveLeafActions(leaf, ctx())).toEqual([]);
+    expect(resolveLeafActions(leaf, ctx({ entity: '   ' }))).toEqual([]);
+  });
+
+  it('stays SOFT: strength rides through unchanged and below the 0.8 hard bar', () => {
+    const [action] = resolveLeafActions(leaf, ctx({ entity: 'Tesla' }));
+    expect(action.suppressionStrength).toBe(0.5);
+    expect(action.suppressionStrength!).toBeLessThan(0.8);
+  });
+});
+
+describe('resolveLeafActions — from_context_place (v5)', () => {
+  const leaf: FeedbackTreeLeaf = {
+    actions: [
+      { type: 'add_suppression', pattern: 'from_context_place', kind: 'place', strength: 0.5 },
+    ],
+  };
+
+  it('reads placeValue (the tag field), NOT geoText (display prose)', () => {
+    // The bug this shape exists to avoid: geoText resolves a supranational code
+    // to "Middle East", and `place` matching compares normCountry to
+    // normCountry — "MIDDLE EAST" vs the tag's "MIDDLE_EAST", forever unequal.
+    expect(
+      resolveLeafActions(leaf, ctx({ geoText: 'Middle East', placeValue: 'MIDDLE_EAST' })),
+    ).toEqual([
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'MIDDLE_EAST',
+        suppressionStrength: 0.5,
+        suppressionKind: 'place',
+        suppressionValue: 'MIDDLE_EAST',
+      },
+    ]);
+    // A geoText alone resolves NOTHING — the leaf is hidden rather than minting
+    // a filter off prose.
+    expect(resolveLeafActions(leaf, ctx({ geoText: 'Middle East' }))).toEqual([]);
+  });
+
+  it('carries a city verbatim', () => {
+    expect(resolveLeafActions(leaf, ctx({ placeValue: 'amsterdam' }))).toEqual([
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'amsterdam',
+        suppressionStrength: 0.5,
+        suppressionKind: 'place',
+        suppressionValue: 'amsterdam',
+      },
+    ]);
+  });
+
+  it('leaves from_context_geo free of any kind — it is a negative-topic text', () => {
+    const geoAsFilter: FeedbackTreeLeaf = {
+      actions: [
+        { type: 'add_suppression', pattern: 'from_context_geo', kind: 'place', strength: 0.5 },
+      ],
+    };
+    // Not a registered suppression source ⇒ literal ⇒ keyword, and NOT a place
+    // filter built from prose. Deliberate: see SUPPRESSION_SOURCES' comment.
+    expect(resolveLeafActions(geoAsFilter, ctx({ geoText: 'Middle East' }))).toEqual([
+      {
+        action_type: ACTION_NAMES.ADD_SUPPRESSION,
+        suppressionPattern: 'from_context_geo',
+        suppressionStrength: 0.5,
+      },
+    ]);
+  });
+});

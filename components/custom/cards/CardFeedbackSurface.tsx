@@ -4,7 +4,7 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { ScrollView } from '@/components/ui/scroll-view';
 import { Text } from '@/components/ui/text';
-import type { LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
+import type { FeedbackNudge, LocalFeedbackContext } from '@/lib/news-harness/feedback-tree';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -35,7 +35,7 @@ export interface CardFeedbackSurfaceProps {
   /** A `nudge` leaf was tapped — pure pass-through to the tree. The host decides
    *  what "browse related" means on its surface (the feed opens the detail
    *  screen; the detail screen scrolls to its related-articles footer). */
-  onNudge?: (nudge: 'subscribe' | 'browse_related') => void;
+  onNudge?: (nudge: FeedbackNudge) => void;
   /** Fill the parent (the feed card's absolute overlay slot). When false the
    *  surface sizes to its content with a capped height + rounded corners — the
    *  detail screen's floating panel. Default true. */

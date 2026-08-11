@@ -1365,9 +1365,14 @@ export async function getSuggestionFeedbackContext(opts: {
   /** Story-cluster size (`max_cluster_size`) — the feedback tree's
    *  `cluster_size_gte` gate (e.g. "Browse related coverage"). */
   clusterSize: number | null;
-  /** Most specific place the article is tagged with — the feedback tree's
-   *  `from_context_geo` placeholder ("More news from this place"). */
+  /** Most specific place the article is tagged with, as DISPLAY prose — the
+   *  feedback tree's `from_context_geo` placeholder ("More news from this
+   *  place") and its `{{place}}` label variable. */
   geoText: string | null;
+  /** The same tag's own field, VERBATIM — the feedback tree's
+   *  `from_context_place` placeholder, i.e. the token a structured `place`
+   *  filter compares against. See {@link placeValueFromTags}. */
+  placeValue: string | null;
 } | null> {
   let row: ArticleSuggestionModel | null = null;
 
@@ -1414,9 +1419,16 @@ export async function getSuggestionFeedbackContext(opts: {
     typeof row.maxClusterSize === 'number' && Number.isFinite(row.maxClusterSize)
       ? row.maxClusterSize
       : null;
-  const geoText = geoTextFromTags(
-    parseJsonArray<{ city?: string; region?: string; countryCode?: string }>(row.geoTagsJson),
+  const geoTags = parseJsonArray<{ city?: string; region?: string; countryCode?: string }>(
+    row.geoTagsJson,
   );
+  const geoText = geoTextFromTags(geoTags);
+  // The same tag's own field, uncooked — the `place` FILTER's value, which
+  // `geoText` cannot be (it resolves a supranational code to prose). Derived
+  // here rather than from the projected suggestion so it is available on every
+  // surface that has a ROW, including the ones whose ForYouSuggestion
+  // projection carries no `geoTags` at all (e.g. a saved card).
+  const placeValue = placeValueFromTags(geoTags);
 
   return {
     suggestion,
@@ -1426,6 +1438,7 @@ export async function getSuggestionFeedbackContext(opts: {
     category,
     clusterSize,
     geoText,
+    placeValue,
   };
 }
 
@@ -1455,6 +1468,38 @@ export function geoTextFromTags(
     if (region) return region;
     const country = tag.countryCode?.trim();
     if (country) return supranationalName(country) ?? country;
+  }
+  return null;
+}
+
+/**
+ * The same tag, the same field, UNCOOKED — the token a structured `place`
+ * suppression compares against (`from_context_place`).
+ *
+ * It exists because {@link geoTextFromTags} is DISPLAY prose: it resolves a
+ * supranational code through `supranationalName`, so an article tagged
+ * `MIDDLE_EAST` yields "Middle East". A `place` filter matches by exact
+ * normalized equality against a geo tag's own field, and `normCountry` only
+ * trims and uppercases — so a filter built from that prose compares
+ * "MIDDLE EAST" against the tag's "MIDDLE_EAST" and matches nothing, forever,
+ * while looking perfectly applied.
+ *
+ * The walk is deliberately IDENTICAL to `geoTextFromTags`' (same tag order,
+ * same city → region → countryCode precedence, same trim), because the label
+ * the user reads and the value the filter carries must name the same place. A
+ * test pins that they always pick the same tag and the same field.
+ */
+export function placeValueFromTags(
+  tags: { city?: string | null; region?: string | null; countryCode?: string | null }[],
+): string | null {
+  for (const tag of tags ?? []) {
+    if (!tag) continue;
+    const city = tag.city?.trim();
+    if (city) return city;
+    const region = tag.region?.trim();
+    if (region) return region;
+    const country = tag.countryCode?.trim();
+    if (country) return country;
   }
   return null;
 }

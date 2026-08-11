@@ -26,6 +26,15 @@ import type {
  * rather than trusted from the leaf alone. `from_context_title` backs no kind: a
  * headline is not a matchable field, so a title-derived filter is always a
  * keyword one.
+ *
+ * NOTE the deliberate ABSENCE of `from_context_geo` here. That placeholder
+ * carries display prose — `geoTextFromTags` resolves a supranational code to
+ * "Middle East" — and `place` matching in scoring-engine/suppression compares
+ * `normCountry` to `normCountry`, i.e. "MIDDLE EAST" against "MIDDLE_EAST".
+ * Such a filter matches nothing, forever, while looking perfectly applied,
+ * which is exactly the failure the placeholder→kind binding exists to prevent.
+ * `from_context_place` reads the tag's own field instead. `from_context_geo`
+ * keeps its one legitimate job: the search TEXT of an `add_negative_topic`.
  */
 const SUPPRESSION_SOURCES: Record<
   string,
@@ -34,6 +43,8 @@ const SUPPRESSION_SOURCES: Record<
   from_context_title: { read: (c) => c.articleTitle },
   from_context_category: { read: (c) => c.category, kind: 'category' },
   from_context_eventType: { read: (c) => c.eventType, kind: 'event_type' },
+  from_context_entity: { read: (c) => c.entity, kind: 'entity' },
+  from_context_place: { read: (c) => c.placeValue, kind: 'place' },
 };
 
 /** Numeric passthrough — undefined when the field isn't a finite number. */

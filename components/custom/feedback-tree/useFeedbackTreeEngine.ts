@@ -34,8 +34,15 @@ export type FeedbackTreeRoot = 'like' | 'dislike';
  *
  *  Deliberately narrow — it fires ONLY for action-declaring leaves. `openChat`,
  *  `nudge` and `seenOnly` leaves legitimately mutate nothing and must survive.
- *  Known cases it catches today: `this_kind_of_event` (event_type is null on
- *  every article in prod) and `this_category` on a category-less article. */
+ *
+ *  What it catches today, with MEASURED frequencies (2026-08-10, 300
+ *  topic-linked prod articles — SERVED articles, which is the only population a
+ *  feedback tree ever sees): `this_kind_of_event` on the 3% with no
+ *  `event_type`, `less_entity` on the 30% with no entities, `less_place` on the
+ *  15% with no geo tags, and `this_category` on a category-less or
+ *  generic-category article. The older claim here — "event_type is null on
+ *  every article in prod" — measured the RAW corpus (~8% enriched) and predates
+ *  the 2026-07-30 / 2026-08-09 enrichment backfills. */
 function isInertActionLeaf(node: FeedbackTreeNode, context: LocalFeedbackContext): boolean {
   const leaf = node.leaf;
   if (!leaf?.actions?.length) return false;

@@ -25,12 +25,19 @@ import { VStack } from '@/components/ui/vstack';
 import { useFeedbackTreeEngine } from '@/components/custom/feedback-tree/useFeedbackTreeEngine';
 import { acknowledgeSeenOnly } from '@/components/custom/feedback-tree/acknowledge-seen-only';
 import { applyLeafActions } from '@/components/custom/feedback-tree/apply-leaf-actions';
+import { feedbackLabelVars } from '@/components/custom/feedback-tree/label-vars';
+import { openPublicationPreferences } from '@/components/custom/feedback-tree/open-publication-preferences';
 import { getVisitCountForPublication } from '@/lib/database/services/publication-visit-service';
-import { getSuggestionFeedbackContext } from '@/lib/database/services/article-suggestion-service';
+import {
+  geoTextFromTags,
+  getSuggestionFeedbackContext,
+  placeValueFromTags,
+} from '@/lib/database/services/article-suggestion-service';
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { resolveLeafActions, resolveTopicLabel } from '@/lib/news-harness/feedback-tree';
 import type {
+  FeedbackNudge,
   FeedbackTreeNode,
   LocalFeedbackContext,
 } from '@/lib/news-harness/feedback-tree';
@@ -67,7 +74,7 @@ export interface InlineFeedbackTreeProps {
    *  host acts on it instead of applying anything. 'browse_related' means "take
    *  me to the related coverage"; 'subscribe' is only reachable from a stale
    *  cached tree (the current tree no longer authors one) and hosts ignore it. */
-  onNudge?: (nudge: 'subscribe' | 'browse_related') => void;
+  onNudge?: (nudge: FeedbackNudge) => void;
   /** Stored node-id path to resume when revisiting a card (Back). */
   initialPathIds?: string[];
   /** Breadcrumb ROOT label — the parent panel's own title (e.g. "More like
@@ -90,6 +97,8 @@ async function buildLocalContext(
   let category: string | null = null;
   let clusterSize: number | null = null;
   let geoText: string | null = null;
+  let rowEntities: string[] = [];
+  let rowPlaceValue: string | null = null;
   try {
     const fb = await getSuggestionFeedbackContext({
       suggestionId: suggestion._id,
@@ -99,6 +108,8 @@ async function buildLocalContext(
       category = fb.category;
       clusterSize = fb.clusterSize ?? null;
       geoText = fb.geoText ?? null;
+      rowEntities = fb.entities ?? [];
+      rowPlaceValue = fb.placeValue ?? null;
     }
   } catch (err) {
     logger.captureException(err, {
@@ -121,7 +132,36 @@ async function buildLocalContext(
   // The local row always wins; `fallback` only fills what it could not supply
   // (a standalone article has no row at all — see detail-feedback-context).
   const resolvedClusterSize = clusterSize ?? fallback?.clusterSize ?? null;
-  const resolvedGeoText = geoText ?? fallback?.geoText ?? null;
+
+  // The article's own TAGS, in one precedence order: the ROW (authoritative,
+  // and present on every surface that has one), then the suggestion's own
+  // projection, then the fallback.
+  //
+  // The row comes FIRST because not every ForYouSuggestion carries these
+  // fields. `loadSuggestions`/`toForYouSuggestion` populate `entities` and
+  // `geoTags`, but the SAVED-card projection
+  // (saved-article-suggestion-service) has no column for either, so reading
+  // only the projection would hide the entity and place leaves on that surface
+  // — silently, and indistinguishably from the intended "hide when untagged".
+  const tags = suggestion.geoTags ?? [];
+  const firstNonBlank = (xs: (string | null | undefined)[]) =>
+    xs.map((x) => x?.trim()).find((x) => !!x) ?? null;
+
+  // `entity` is the PRIMARY one: the server emits entities most-central-first,
+  // and one value means the "Show less of {{entity}}" label and the filter it
+  // mints can never name different things.
+  const entity =
+    firstNonBlank(rowEntities) ??
+    firstNonBlank(suggestion.entities ?? []) ??
+    fallback?.entity ??
+    null;
+  // NOT `geoText` — that is display prose ("Middle East"); a `place` filter
+  // needs the tag's own field ("MIDDLE_EAST"). Same walk, same tag, same field.
+  const placeValue = rowPlaceValue ?? placeValueFromTags(tags) ?? fallback?.placeValue ?? null;
+  // The place LABEL, resolved from the same sources in the same order so it can
+  // never go missing while `placeValue` is present — a visible "Show less of "
+  // with nothing after it is the one outcome worse than a hidden row.
+  const resolvedGeoText = geoText ?? geoTextFromTags(tags) ?? fallback?.geoText ?? null;
 
   return {
     publicationName: suggestion.publication_name,
@@ -129,8 +169,10 @@ async function buildLocalContext(
     articleTitle: suggestion.title_en,
     category: category ?? fallback?.category ?? null,
     eventType: suggestion.eventType ?? undefined,
+    entity,
     matchedTopics,
     publicationVisits,
+    ...(placeValue ? { placeValue } : {}),
     // Both were already on the suggestion row and simply never read here, which
     // gated out `nudge_browse_related` and no-op'd every `from_context_geo`
     // leaf ("More news from this place") on the feed too — not just on detail.
@@ -241,15 +283,16 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
           ) as string;
         }
       }
-      // `publication` / `visits` are supplied to EVERY label, not just the
-      // paywall ones: a label without those placeholders ignores them, and the
+      // The FULL variable bag goes to EVERY label, not just the ones that use
+      // it: a label without a given placeholder ignores it, and the
       // alternative — resolving them per-node — is how "Block {{publication}}
       // instead" would have shipped with the braces still in it, in the chip AND
-      // in the breadcrumb crumb (both render through this one callback).
+      // in the breadcrumb crumb (both render through this one callback). Shared
+      // with FeedbackTreeOverlay so the two surfaces cannot supply different
+      // sets for the same server-authored node — see label-vars.
       return t(node.labelKey, {
         defaultValue: node.labelDefault,
-        publication: context.publicationName ?? '',
-        visits: context.publicationVisits ?? 0,
+        ...feedbackLabelVars(context),
       }) as string;
     },
     [t, context],
@@ -263,8 +306,7 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       if (!node.descKey && !node.descDefault) return '';
       return t(node.descKey ?? '', {
         defaultValue: node.descDefault ?? '',
-        publication: context.publicationName ?? '',
-        visits: context.publicationVisits ?? 0,
+        ...feedbackLabelVars(context),
       }) as string;
     },
     [t, context],
@@ -336,6 +378,10 @@ export const InlineFeedbackTree: React.FC<InlineFeedbackTreeProps> = ({
       // return [] for it anyway — but silently, which is how "Browse related
       // coverage" spent its whole life as a chip that closed the panel.
       if (node.leaf?.nudge) {
+        // `manage_publication` has one destination on every surface and takes no
+        // argument, so it navigates here rather than through each host — see
+        // open-publication-preferences. The host still gets the nudge.
+        if (node.leaf.nudge === 'manage_publication') openPublicationPreferences();
         onNudge?.(node.leaf.nudge);
         return;
       }

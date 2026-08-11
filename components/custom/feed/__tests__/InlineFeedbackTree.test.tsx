@@ -55,6 +55,11 @@ jest.mock('@/lib/database/services/publication-visit-service', () => ({
   getVisitCountForPublication: jest.fn(async () => 0),
 }));
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
+  // Pure helpers the tree uses for the place label + the `place` filter's
+  // verbatim value. Null here: these fixtures carry no geo tags, so the place
+  // leaf stays hidden.
+  placeValueFromTags: jest.fn(() => null),
+  geoTextFromTags: jest.fn(() => null),
   getSuggestionFeedbackContext: jest.fn(async () => ({ category: null })),
 }));
 

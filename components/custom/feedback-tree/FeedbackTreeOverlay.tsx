@@ -20,6 +20,8 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { applyLeafActions } from '@/components/custom/feedback-tree/apply-leaf-actions';
+import { feedbackLabelVars } from '@/components/custom/feedback-tree/label-vars';
+import { openPublicationPreferences } from '@/components/custom/feedback-tree/open-publication-preferences';
 import { hapticLight, hapticMedium } from '@/lib/haptics';
 import {
   resolveLeafActions,
@@ -106,15 +108,17 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
     setConfirming(null);
   }, [visible, root]);
 
-  // `publication` / `visits` go to EVERY label — a label with no placeholders
-  // ignores them, and the paywall branch's "Block {{publication}} instead" would
-  // otherwise render its braces verbatim. Matches InlineFeedbackTree.
+  // The FULL variable bag goes to EVERY label — a label with no placeholders
+  // ignores it, and the paywall branch's "Block {{publication}} instead" (or
+  // v5's "Show less of {{entity}}") would otherwise render its braces verbatim.
+  // Shared with InlineFeedbackTree via `feedbackLabelVars` precisely so the two
+  // surfaces can't supply different sets for the same server-authored node —
+  // that drift is invisible from whichever surface you happen to be testing.
   const label = useCallback(
     (node: FeedbackTreeNode) =>
       t(node.labelKey, {
         defaultValue: node.labelDefault,
-        publication: context.publicationName ?? '',
-        visits: context.publicationVisits ?? 0,
+        ...feedbackLabelVars(context),
       }) as string,
     [t, context],
   );
@@ -126,8 +130,7 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       if (!node.descKey && !node.descDefault) return '';
       return t(node.descKey ?? '', {
         defaultValue: node.descDefault ?? '',
-        publication: context.publicationName ?? '',
-        visits: context.publicationVisits ?? 0,
+        ...feedbackLabelVars(context),
       }) as string;
     },
     [t, context],
@@ -188,7 +191,13 @@ export const FeedbackTreeOverlay: React.FC<FeedbackTreeOverlayProps> = ({
       if (leaf.nudge) {
         onLeafPicked?.(leafPath, 0, true);
         onClose();
-        if (leaf.nudge === 'subscribe') {
+        if (leaf.nudge === 'manage_publication') {
+          // The one nudge this surface can ACT on rather than describe — it has
+          // a single destination and needs no per-host argument. Navigating
+          // after `onClose()` so the modal is gone before the push (see
+          // open-publication-preferences).
+          openPublicationPreferences();
+        } else if (leaf.nudge === 'subscribe') {
           showInfoToast(
             c('nudgeSubscribe', 'Subscribing unlocks full articles', {
               publication: context.publicationName ?? '',

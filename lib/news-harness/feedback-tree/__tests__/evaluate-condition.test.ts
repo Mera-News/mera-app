@@ -48,9 +48,13 @@ describe('evaluateCondition', () => {
   });
 });
 
-// Added with the `has_event_type` gate: the server populates `event_type` on
-// none of ~303k prod articles, so an ungated event-type leaf renders, applies
-// nothing and shows no toast. The gate hides it until tagging writes the field.
+// Added with the `has_event_type` gate. Its original note said the server
+// populates `event_type` on "none of ~303k prod articles" — that measured the
+// RAW corpus and predates the 2026-07-30 / 2026-08-09 enrichment backfills.
+// MEASURED 2026-08-10 over 300 topic-linked prod articles, coverage on SERVED
+// articles (the only population a feedback tree sees) is 97%. The gate stays
+// for the remaining 3%: there, an ungated event-type leaf renders, applies
+// nothing and shows no toast.
 describe('evaluateCondition — has_event_type', () => {
   it('requires a non-blank event type', () => {
     expect(evaluateCondition({ has_event_type: true }, ctx({ eventType: 'Earnings call' }))).toBe(true);
@@ -63,5 +67,39 @@ describe('evaluateCondition — has_event_type', () => {
   it('does not gate when the key is absent or false', () => {
     expect(evaluateCondition({ has_event_type: false }, ctx())).toBe(true);
     expect(evaluateCondition({}, ctx())).toBe(true);
+  });
+});
+
+// v5 — `has_entity`, the gate for "Show less of {{entity}}".
+//
+// THE TRAP THIS PINS: unknown gate keys are IGNORED for forward-compat, so a
+// key that isn't wired into `evaluateCondition` does not hide the node — it
+// SHOWS it, on every article, including the ~30% of served articles with no
+// entities at all. A typo fails OPEN and silently. The absent-context case is
+// therefore the load-bearing assertion, not a formality: it is the only one
+// that can tell a working gate from a misspelt one.
+describe('evaluateCondition — has_entity', () => {
+  it('is FALSE when the context carries no entity (the fail-open trap)', () => {
+    expect(evaluateCondition({ has_entity: true }, ctx())).toBe(false);
+    expect(evaluateCondition({ has_entity: true }, ctx({ entity: null }))).toBe(false);
+    expect(evaluateCondition({ has_entity: true }, ctx({ entity: '   ' }))).toBe(false);
+  });
+
+  it('is TRUE once the article carries one', () => {
+    expect(evaluateCondition({ has_entity: true }, ctx({ entity: 'Reserve Bank of India' }))).toBe(
+      true,
+    );
+  });
+
+  it('does not gate when the key is absent or false', () => {
+    expect(evaluateCondition({ has_entity: false }, ctx())).toBe(true);
+    expect(evaluateCondition({}, ctx())).toBe(true);
+  });
+
+  it('is genuinely enforced, unlike a key this module does NOT know', () => {
+    // The discriminator: a misspelt gate behaves like the second line, not the
+    // first. If `has_entity` ever stops being enforced, these two converge.
+    expect(evaluateCondition({ has_entity: true }, ctx())).toBe(false);
+    expect(evaluateCondition({ has_entitiy: true } as never, ctx())).toBe(true);
   });
 });

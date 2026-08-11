@@ -33,6 +33,7 @@
 import { swipeCallbacks } from './swipe-callbacks';
 import { wireSwipeCallbacks } from '@/lib/services/swipe-feedback';
 import { recordOpen } from '@/lib/database/services/story-impression-service';
+import type { FeedbackNudge } from '@/lib/news-harness/feedback-tree';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import { useFeedbackDismissedStore } from '@/lib/stores/feedback-dismissed-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
@@ -101,7 +102,7 @@ export interface CardFeedbackHandlers {
   /** A `nudge` leaf settled — act on the SUGGESTION it carries. Fired after
    *  `onLeafCommitted`, which has already committed the verdict and dismissed
    *  the surface, so this only has to do the navigation. */
-  onNudge: (s: ForYouSuggestion, nudge: 'subscribe' | 'browse_related') => void;
+  onNudge: (s: ForYouSuggestion, nudge: FeedbackNudge) => void;
 }
 
 /**
@@ -215,10 +216,16 @@ export function useFeedbackSheet(
         }
       },
       onNudge: (s, nudge) => {
-        // 'subscribe' is deliberately ignored: the current tree authors no such
-        // leaf, so it is only reachable from a tree cached before this change,
-        // and there is nothing honest for the app to do with it (it never had a
-        // subscribe flow — the old leaf only ever showed a toast).
+        // Two nudges are deliberately ignored, for different reasons:
+        //  • 'subscribe' — the current tree authors no such leaf, so it is only
+        //    reachable from a tree cached before that change, and there is
+        //    nothing honest for the app to do with it (there never was a
+        //    subscribe flow; the old leaf only ever showed a toast).
+        //  • 'manage_publication' — already HANDLED. It has one destination on
+        //    every surface and takes no per-suggestion argument, so
+        //    InlineFeedbackTree navigates before calling this (see
+        //    feedback-tree/open-publication-preferences). A `router.push` here
+        //    would double-push.
         if (nudge !== 'browse_related') return;
         // `onLeafCommitted` already fired for this leaf, so the verdict is
         // committed and the surface dismissed; all that is left is to take the

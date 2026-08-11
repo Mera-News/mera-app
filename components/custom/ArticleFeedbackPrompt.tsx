@@ -19,6 +19,7 @@ import { openFeedbackChatWithPath } from '@/lib/services/swipe-feedback';
 import { hapticLight, hapticMedium, hapticSuccess } from '@/lib/haptics';
 import { useShareArticle, type ShareArticleParams } from '@/lib/hooks/useShareArticle';
 import { useTrackButton } from '@/components/custom/tracked-stories/use-track-button';
+import type { FeedbackNudge } from '@/lib/news-harness/feedback-tree';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { Verdict } from '@/lib/stores/feed-order-store';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
@@ -229,10 +230,17 @@ export const ArticleFeedbackPrompt: React.FC<ArticleFeedbackPromptProps> = ({
     const handleCloseSurface = useCallback(() => setSurfaceClosed(true), []);
     // A nudge leaf. `handleLeafCommitted` has already run (the tree fires it
     // first), so the verdict is committed and the surface closed — this only
-    // has to act on the suggestion. 'subscribe' is ignored: no current tree
-    // authors one, and a stale cached tree offering it has nothing to open.
+    // has to act on the suggestion.
+    //
+    // Everything except 'browse_related' is deliberately ignored here, and for
+    // two different reasons: 'subscribe' is legacy (no current tree authors
+    // one, and a stale cached tree offering it has nothing to open), while
+    // 'manage_publication' is already HANDLED — it has one destination on every
+    // surface and no per-host argument, so InlineFeedbackTree navigates before
+    // calling this (see feedback-tree/open-publication-preferences). Adding a
+    // second `router.push` here would double-push.
     const handleNudge = useCallback(
-        (nudge: 'subscribe' | 'browse_related') => {
+        (nudge: FeedbackNudge) => {
             if (nudge !== 'browse_related') return;
             onBrowseRelated?.();
         },
