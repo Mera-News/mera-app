@@ -45,7 +45,10 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
+import { useStoredFactCheck } from '@/lib/fact-check/use-stored-fact-check';
 
 interface ArticleDetailScreenProps {
     articleId: string;
@@ -97,6 +100,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // Only read once the article is KNOWN to be unavailable — a normal open
+    // costs no extra query (FactCheckPanel does its own read on the happy path).
+    const orphanFactCheck = useStoredFactCheck(
+        articleId,
+        !isLoading && (!!error || !article),
+    );
     // Offline, and no local snapshot exists — a dedicated empty state instead
     // of the generic error card. Auto-retries when connectivity returns (see
     // the retryNonce effect below).
@@ -479,24 +488,59 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     if (error || !article) {
         return (
-            <Box className="flex-1 items-center justify-center p-5">
+            // ScrollView, not a centred Box: this state can now carry a fact
+            // check, which is taller than the screen once it lists several
+            // organisations.
+            <Box className="flex-1">
                 {/* Page background. Must be the FIRST child so it paints behind
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                <MaterialIcons
-                    name="error-outline"
-                    size={48}
-                    color="#EF4444"
-                    accessibilityElementsHidden={true}
-                    importantForAccessibility="no-hide-descendants"
-                />
-                <Text size="lg" className="text-white mt-4 text-center">
-                    {error || t('articleDetail.articleNotFound')}
-                </Text>
-                <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
-                </Pressable>
+                <ScrollView
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        justifyContent: orphanFactCheck ? 'flex-start' : 'center',
+                        alignItems: 'center',
+                        padding: 20,
+                        paddingTop: orphanFactCheck ? insets.top + 24 : 20,
+                        paddingBottom: insets.bottom + 40,
+                    }}
+                >
+                    <MaterialIcons
+                        name="error-outline"
+                        size={48}
+                        color="#EF4444"
+                        accessibilityElementsHidden={true}
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Text size="lg" className="text-white mt-4 text-center">
+                        {error || t('articleDetail.articleNotFound')}
+                    </Text>
+
+                    {/* THE 48h CASE. `NewsArticle` rows are swept at 48h while
+                        `fact_checks` rows deliberately outlive them, so every
+                        fact check older than ~2 days lands here — that is the
+                        normal state of an older row, not an edge case. The
+                        reader tapped a fact check; losing it to a bare "Article
+                        not found" would throw away the one thing the device
+                        still holds in full. No `onPress`: there is nowhere
+                        further to go. */}
+                    {orphanFactCheck && (
+                        <Box className="w-full mt-6" testID="article-detail-orphan-fact-check">
+                            <Text size="sm" className="text-typography-400 text-center mb-3">
+                                {t('factCheck.dashboard.articleGone')}
+                            </Text>
+                            <FactCheckCard
+                                item={orphanFactCheck}
+                                testIDPrefix="article-detail-fact-check"
+                            />
+                        </Box>
+                    )}
+
+                    <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
+                        <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                    </Pressable>
+                </ScrollView>
             </Box>
         );
     }

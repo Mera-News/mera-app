@@ -1564,22 +1564,21 @@
     },
     "checkedByHeading": "檢查此內容的事實查證機構",
     "dashboard": {
-      "delete": "刪除",
       "deleteA11y": "刪除此事實查證",
       "empty": "您還沒有查詢過任何事實查證。請開啟新聞故事，並輕點「查詢事實查證」。",
       "listSubtitle": "您要求 Mera 查詢事實查證的故事。僅保存在此裝置。",
       "listTitle": "事實查證",
-      "openA11y": "開啟此事實查證",
       "pending": "正在搜尋",
       "title": "事實查證",
       "untitled": "未命名的故事",
-      "viewAll": "查看全部"
+      "openA11y": "開啟這篇文章",
+      "articleGone": "該文章已過期，因此無法打開。我們找到的事實查核保存在此處。"
     },
     "explainer": "Mera 不會對新聞進行事實查證。它會搜尋已建立的事實查證機構已發佈的內容。",
     "noCheckedBy": "我們搜尋的事實查證機構都沒有報導過此故事。這不表示故事有誤——大多數故事都從未被事實查證過。",
     "organisationA11y": "開啟 {{organisation}} 的事實查證",
     "queued": "我們正在搜尋。此程序在背景執行——您無須等待。",
-    "queuedHint": "結果會出現在您的儀表板中的「事實查證」下方，如果您啟用了通知，在結果準備好時我們會發送通知。",
+    "queuedHint": "搜尋結果將顯示在您的儀表板的事實查核部分中 — 在那裡向下拉以重新整理，或在下面再次檢查。",
     "checkAgain": "查看結果"
   },
   "sourcePrefControl": {

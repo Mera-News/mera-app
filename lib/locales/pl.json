@@ -1593,22 +1593,21 @@
     },
     "checkedByHeading": "Organizacje weryfikujące fakty, które zajęły się tą sprawą",
     "dashboard": {
-      "delete": "Usuń",
       "deleteA11y": "Usuń tę weryfikację faktów",
       "empty": "Nie wyszukałeś jeszcze żadnych weryfikacji faktów. Otwórz artykuł i naciśnij \"Wyszukaj weryfikacje faktów\".",
       "listSubtitle": "Artykuły, dla których poprosiłeś Merę o wyszukanie weryfikacji faktów. Przechowywane tylko na tym urządzeniu.",
       "listTitle": "Weryfikacje faktów",
-      "openA11y": "Otwórz tę weryfikację faktów",
       "pending": "Wciąż wyszukiwanie",
       "title": "Weryfikacje faktów",
       "untitled": "Artykuł bez tytułu",
-      "viewAll": "Wyświetl wszystko"
+      "openA11y": "Otwórz ten artykuł",
+      "articleGone": "Artykuł wygasł, dlatego nie można go otworzyć. Znaleziona weryfikacja faktów jest przechowywana tutaj."
     },
     "explainer": "Mera nie weryfikuje wiadomości sama. Wyszukuje to, co ustalone organizacje weryfikujące fakty już opublikowały na temat tej historii.",
     "noCheckedBy": "Żadna z przeszukanych organizacji weryfikujących fakty nie opublikowała na temat tego artykułu. To nie oznacza, że artykuł jest nieprawidłowy — większość artykułów nigdy nie jest weryfikowana.",
     "organisationA11y": "Otwórz weryfikację faktów od {{organisation}}",
     "queued": "Wyszukiwanie w toku. Działa w tle — nie musisz tutaj czekać.",
-    "queuedHint": "Wynik pojawi się w sekcji Weryfikacje faktów na Pulpicie, a my wyślemy powiadomienie, gdy będzie gotowy, jeśli powiadomienia masz włączone.",
+    "queuedHint": "Wynik pojawi się pod Weryfikacją faktów na Twoim Panelu — przeciągnij tam w dół, aby go odświeżyć, lub sprawdź ponownie poniżej.",
     "checkAgain": "Sprawdź wynik"
   },
   "sourcePrefControl": {

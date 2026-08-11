@@ -1563,22 +1563,21 @@
     },
     "checkedByHeading": "Verificadores de fatos que abordaram isto",
     "dashboard": {
-      "delete": "Excluir",
       "deleteA11y": "Excluir essa verificação de fatos",
       "empty": "Você ainda não pesquisou nenhuma verificação de fatos. Abra uma história e toque em \"Pesquisar verificações de fatos\".",
       "listSubtitle": "Histórias para as quais você pediu ao Mera para pesquisar verificações de fatos. Mantidas apenas neste dispositivo.",
       "listTitle": "Verificações de fatos",
-      "openA11y": "Abrir essa verificação de fatos",
       "pending": "Ainda pesquisando",
       "title": "Verificações de fatos",
       "untitled": "História sem título",
-      "viewAll": "Ver tudo"
+      "openA11y": "Abrir este artigo",
+      "articleGone": "O artigo expirou, então não pode ser aberto. A verificação de fatos que encontramos é mantida aqui."
     },
     "explainer": "Mera não verifica os fatos das notícias em si. Ela pesquisa o que organizações de verificação de fatos estabelecidas já publicaram sobre essa história.",
     "noCheckedBy": "Nenhuma organização de verificação de fatos que pesquisamos publicou sobre essa história. Isso não torna a história falsa — a maioria das histórias nunca é verificada.",
     "organisationA11y": "Abrir a verificação de fatos de {{organisation}}",
     "queued": "Estamos pesquisando. Isso ocorre em segundo plano — você não precisa esperar aqui.",
-    "queuedHint": "O resultado aparecerá em Verificações de fatos no seu Painel, e enviaremos uma notificação quando estiver pronto, se você tiver notificações ativadas.",
+    "queuedHint": "O resultado aparece em Verificação de fatos no seu Painel — puxe para baixo lá para atualizá-lo, ou verifique novamente abaixo.",
     "checkAgain": "Ver resultado"
   },
   "sourcePrefControl": {

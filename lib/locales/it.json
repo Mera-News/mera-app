@@ -1563,22 +1563,21 @@
     },
     "checkedByHeading": "Verificatori di fatti che hanno trattato questo",
     "dashboard": {
-      "delete": "Elimina",
       "deleteA11y": "Elimina questa verifica dei fatti",
       "empty": "Non hai ancora cercato verifiche dei fatti. Apri una storia e tocca \"Cerca verifiche dei fatti\".",
       "listSubtitle": "Storie per cui hai chiesto a Mera di cercare verifiche dei fatti. Conservate solo su questo dispositivo.",
       "listTitle": "Verifiche dei fatti",
-      "openA11y": "Apri questa verifica dei fatti",
       "pending": "Ricerca in corso",
       "title": "Verifiche dei fatti",
       "untitled": "Storia senza titolo",
-      "viewAll": "Visualizza tutto"
+      "openA11y": "Apri questo articolo",
+      "articleGone": "L'articolo è scaduto, quindi non può essere aperto. La verifica dei fatti che abbiamo trovato è conservata qui."
     },
     "explainer": "Mera non verifica i fatti della notizia stessa. Cerca quello che le organizzazioni di verifica dei fatti ufficialmente riconosciute hanno già pubblicato su questa storia.",
     "noCheckedBy": "Nessuna organizzazione di verifica dei fatti che abbiamo cercato ha pubblicato su questa storia. Ciò non rende la storia inesatta — la maggior parte delle storie non viene mai verificata.",
     "organisationA11y": "Apri la verifica dei fatti di {{organisation}}",
     "queued": "Stiamo cercando. Questo funziona in background — non devi aspettare qui.",
-    "queuedHint": "Il risultato apparirà sotto Verifiche dei fatti nella tua Dashboard, e ti invieremo una notifica quando sarà pronto se le notifiche sono attive.",
+    "queuedHint": "Il risultato appare sotto Verifiche dei fatti sulla sua Dashboard — scorra verso il basso per aggiornarla, o verifichi nuovamente di seguito.",
     "checkAgain": "Visualizza risultato"
   },
   "sourcePrefControl": {

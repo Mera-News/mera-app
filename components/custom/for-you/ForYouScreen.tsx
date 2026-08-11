@@ -22,8 +22,7 @@ import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
-import DashboardFactChecksBlock from '@/components/custom/fact-checks/DashboardFactChecksBlock';
-import { useFactChecksStore } from '@/lib/stores/fact-checks-store';
+import FactChecksPanel from '@/components/custom/fact-checks/FactChecksPanel';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPublicationsList';
@@ -83,6 +82,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Profile is now a bottom tab — the right-edge swipe still opens it directly.
 const openConfigPanel = () => router.push('/logged-in/app_container/profile');
+
 
 const MeraNewsScreen: React.FC = () => {
     const { t } = useTranslation();
@@ -199,11 +199,13 @@ const MeraNewsScreen: React.FC = () => {
     const [storiesVisited, setStoriesVisited] = useState(false);
     const [savedVisited, setSavedVisited] = useState(false);
     const [historyVisited, setHistoryVisited] = useState(false);
+    const [factChecksVisited, setFactChecksVisited] = useState(false);
     const selectSubTab = useCallback((tab: ForYouSubTab) => {
         setActiveSubTab(tab);
         if (tab === 'stories') setStoriesVisited(true);
         if (tab === 'saved') setSavedVisited(true);
         if (tab === 'history') setHistoryVisited(true);
+        if (tab === 'factChecks') setFactChecksVisited(true);
         // Always reveal the header on a sub-tab switch.
         reveal();
         // ...and drop the scroll baseline. All four panels stay mounted behind
@@ -288,25 +290,6 @@ const MeraNewsScreen: React.FC = () => {
         void useSectionVisitsStore.getState().hydrate();
     }, []);
 
-    // ── Fact checks block ──
-    // `refresh`, not `load`. A local read alone is what shipped first, and it
-    // was wrong: the answer completes on the server and the ONLY things that
-    // can bring it down are a read and the push. With no read here, a user
-    // whose push never arrived saw "Still searching" on a check that had
-    // finished ten minutes earlier, forever. `refresh` re-reads only the rows
-    // that are still unresolved, so once everything is terminal this costs
-    // zero requests. Focus, not an interval — there is no poll anywhere here.
-    useEffect(() => {
-        if (!isFocused || !dbReady) return;
-        void useFactChecksStore.getState().refresh();
-    }, [isFocused, dbReady]);
-
-    // Authored HERE (not as a `SectionKind` — see DashboardFactChecksBlock) and
-    // threaded into the list's header so it scrolls with the content and sits
-    // under the absolute collapsing header, which compensates via the list's
-    // own contentContainer padding. A sibling above the list would be pinned
-    // behind that header instead.
-    const factChecksBlock = useMemo(() => <DashboardFactChecksBlock />, []);
 
     // Load the persona snapshots when interests exist or the feed size changes
     // (tiny tables; a new sync's insert/remove is the coarse trigger).
@@ -533,7 +516,6 @@ const MeraNewsScreen: React.FC = () => {
                         scrollHandler={scrollHandler}
                         headerHeight={headerHeight}
                         ListEmptyComponent={renderEmpty}
-                        ListHeaderExtra={factChecksBlock}
                         refreshing={refreshing}
                         onRefresh={onRefresh}
                     />
@@ -574,6 +556,16 @@ const MeraNewsScreen: React.FC = () => {
                 {historyVisited && (
                     <View style={{ flex: 1, display: activeSubTab === 'history' ? 'flex' : 'none' }} testID="dashboard-history-content">
                         <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
+                    </View>
+                )}
+
+                {/* Fact checks (lazy-mounted on first visit) — the ONLY surface
+                    for the feature. `active` drives its bounded re-read: the
+                    panel stays mounted behind display:'none' once visited, so a
+                    mount-only read would go stale after the first visit. */}
+                {factChecksVisited && (
+                    <View style={{ flex: 1, display: activeSubTab === 'factChecks' ? 'flex' : 'none' }} testID="dashboard-fact-checks-content">
+                        <FactChecksPanel active={activeSubTab === 'factChecks'} scrollHandler={scrollHandler} headerHeight={headerHeight} />
                     </View>
                 )}
             </View>

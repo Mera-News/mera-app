@@ -30,7 +30,11 @@ const TONE_CLASSES: Record<FactCheckTone, { chip: string; text: string }> = {
 
 interface FactCheckCardProps {
     readonly item: StoredFactCheck;
-    /** Rendered top-right. The list screen passes a delete control. */
+    /** Tapping the card body. Omit to render a non-interactive card (the
+     *  article-detail "no longer available" state passes nothing — the reader
+     *  is already as far in as the story goes). */
+    readonly onPress?: (item: StoredFactCheck) => void;
+    /** Rendered top-right, over the body. The list passes a delete control. */
     readonly onDelete?: (id: string) => void;
     readonly testIDPrefix?: string;
 }
@@ -52,6 +56,7 @@ interface FactCheckCardProps {
  */
 const FactCheckCard: React.FC<FactCheckCardProps> = ({
     item,
+    onPress,
     onDelete,
     testIDPrefix = 'fact-check-card',
 }) => {
@@ -74,13 +79,28 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
     const verdictInfo = resolved && !blocked ? describeVerdict(item.verdict) : null;
 
     return (
-        <VStack
-            space="sm"
-            testID={`${testIDPrefix}-${item.id}`}
-            className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
-        >
-            <HStack className="items-start justify-between" space="sm">
-                <HStack space="xs" className="items-start flex-1">
+        // The delete control is a SIBLING of the tappable body, absolutely
+        // positioned over its top-right corner — not a child of it.
+        //
+        // Nesting it inside the card's Pressable is the classic bug in this
+        // pattern: RN's responder system usually lets the inner Pressable win,
+        // but "usually" is doing real work there, and the failure mode (delete
+        // ALSO navigates, so the row vanishes as a detail screen opens over it)
+        // is both destructive and confusing. Sibling + absolute makes it
+        // structural rather than a behaviour to hope for. The title row carries
+        // `pr-8` so a long headline can never run under the icon, and hitSlop
+        // keeps the target at ~44pt on a narrow screen.
+        <Box testID={`${testIDPrefix}-${item.id}`} className="relative">
+            <Pressable
+                onPress={onPress ? () => onPress(item) : undefined}
+                disabled={!onPress}
+                accessibilityRole={onPress ? 'button' : undefined}
+                accessibilityLabel={onPress ? t('factCheck.dashboard.openA11y') : undefined}
+                testID={`${testIDPrefix}-open-${item.id}`}
+                className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
+            >
+                <VStack space="sm">
+            <HStack space="xs" className="items-start pr-8">
                     <MaterialIcons
                         name="fact-check"
                         size={16}
@@ -90,18 +110,6 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                     <Text size="sm" className="text-gray-100 font-semibold flex-1 ml-1" numberOfLines={3}>
                         {item.articleTitle?.trim() || t('factCheck.dashboard.untitled')}
                     </Text>
-                </HStack>
-                {onDelete ? (
-                    <Pressable
-                        onPress={() => onDelete(item.id)}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('factCheck.dashboard.deleteA11y')}
-                        testID={`${testIDPrefix}-delete-${item.id}`}
-                        hitSlop={12}
-                    >
-                        <MaterialIcons name="delete-outline" size={20} color="#9ca3af" />
-                    </Pressable>
-                ) : null}
             </HStack>
 
             {!resolved && (
@@ -190,10 +198,25 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 </VStack>
             )}
 
-            <Text size="xs" className="text-gray-500">
-                {t('factCheck.disclaimer')}
-            </Text>
-        </VStack>
+                    <Text size="xs" className="text-gray-500">
+                        {t('factCheck.disclaimer')}
+                    </Text>
+                </VStack>
+            </Pressable>
+
+            {onDelete ? (
+                <Pressable
+                    onPress={() => onDelete(item.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('factCheck.dashboard.deleteA11y')}
+                    testID={`${testIDPrefix}-delete-${item.id}`}
+                    hitSlop={12}
+                    className="absolute top-2 right-2 p-1"
+                >
+                    <MaterialIcons name="delete-outline" size={20} color="#9ca3af" />
+                </Pressable>
+            ) : null}
+        </Box>
     );
 };
 

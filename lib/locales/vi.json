@@ -1564,22 +1564,21 @@
     },
     "checkedByHeading": "Các tổ chức kiểm chứng đã đề cập",
     "dashboard": {
-      "delete": "Xóa",
       "deleteA11y": "Xóa kiểm chứng sự kiện này",
       "empty": "Bạn chưa tra cứu bất kỳ kiểm chứng sự kiện nào. Mở một câu chuyện và nhấn \"Tìm kiếm kiểm chứng sự kiện\".",
       "listSubtitle": "Những câu chuyện bạn đã yêu cầu Mera tìm kiếm kiểm chứng sự kiện. Chỉ được lưu trên thiết bị này.",
       "listTitle": "Kiểm chứng sự kiện",
-      "openA11y": "Mở kiểm chứng sự kiện này",
       "pending": "Đang tìm kiếm",
       "title": "Kiểm chứng sự kiện",
       "untitled": "Câu chuyện không có tiêu đề",
-      "viewAll": "Xem tất cả"
+      "openA11y": "Mở bài viết này",
+      "articleGone": "Bài viết đã hết hạn, nên không thể mở được. Kiểm tra sự thật mà chúng tôi tìm thấy được giữ lại ở đây."
     },
     "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
     "noCheckedBy": "Không có tổ chức kiểm chứng nào trong tìm kiếm của chúng tôi đã công bố về câu chuyện này. Điều này không có nghĩa là câu chuyện sai — hầu hết các câu chuyện không bao giờ được kiểm chứng.",
     "organisationA11y": "Mở kiểm chứng sự kiện của {{organisation}}",
     "queued": "Chúng tôi đang tìm kiếm. Điều này chạy ở nền — bạn không cần phải chờ tại đây.",
-    "queuedHint": "Kết quả sẽ xuất hiện dưới phần Kiểm chứng sự kiện trên Bảng điều khiển của bạn, và chúng tôi sẽ gửi một thông báo khi nó sẵn sàng nếu bạn bật thông báo.",
+    "queuedHint": "Kết quả sẽ xuất hiện dưới Kiểm tra sự thật trên Bảng điều khiển của bạn — kéo xuống để làm mới hoặc kiểm tra lại dưới đây.",
     "checkAgain": "Xem kết quả"
   },
   "sourcePrefControl": {

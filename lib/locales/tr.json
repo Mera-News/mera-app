@@ -1565,22 +1565,21 @@
     },
     "checkedByHeading": "Bu haberi inceleyen doğruluk kontrol kuruluşları",
     "dashboard": {
-      "delete": "Sil",
       "deleteA11y": "Bu doğruluk kontrolünü sil",
       "empty": "Henüz hiçbir doğruluk kontrolü aramadınız. Bir haberi açın ve \"Doğruluk kontrol ara\"ya dokunun.",
       "listSubtitle": "Mera'ya doğruluk kontrol araması yapmasını istediğiniz haberler. Sadece bu cihazda saklanır.",
       "listTitle": "Doğruluk kontroller",
-      "openA11y": "Bu doğruluk kontrolünü aç",
       "pending": "Hala aranıyor",
       "title": "Doğruluk kontroller",
       "untitled": "Başlıksız haber",
-      "viewAll": "Tümünü gör"
+      "openA11y": "Bu makaleyi aç",
+      "articleGone": "Makale süresi dolmuş, bu nedenle açılamıyor. Bulduğumuz gerçek kontrolü burada saklıyoruz."
     },
     "explainer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Resmi doğruluk kontrol kuruluşlarının bu haber hakkında yayımladıklarını arar.",
     "noCheckedBy": "Aradığımız hiçbir doğruluk kontrol kuruluşu bu haber hakkında bilgi yayımlamadı. Bu haberin yanlış olduğu anlamına gelmez — çoğu haber hiçbir zaman doğruluk kontrolünden geçmez.",
     "organisationA11y": "{{organisation}}'nin doğruluk kontrolünü aç",
     "queued": "Arama yapıyoruz. Bu işlem arka planda çalışıyor — burada beklemenize gerek yok.",
-    "queuedHint": "Sonuç, Kontrol Paneli'nde Doğruluk kontroller bölümünde görünecek ve hazırlandığında (bildirimler açıksa) size bir bildirim gönderilecek.",
+    "queuedHint": "Sonuç, Panonuzun Gerçek Kontrolü bölümünde görünecektir — yenilemek için aşağı doğru çekin ve aşağıda tekrar kontrol edin.",
     "checkAgain": "Sonucu kontrol et"
   },
   "sourcePrefControl": {

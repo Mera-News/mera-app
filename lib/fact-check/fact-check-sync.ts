@@ -2,14 +2,18 @@
  * Reconciling a locally-stored fact check against the server — ONE read, never
  * a loop.
  *
- * WHY THIS FILE EXISTS. Removing the poll left exactly two paths from "asked"
- * to "answered": a read when a surface mounts, and the push notification. The
- * first shipped in `use-fact-check` only, so the Dashboard block and the
- * /logged-in/fact-checks list rendered whatever the local table happened to
- * hold and never once asked whether it was still true. A user whose push never
- * arrived — notifications denied, no token, a dev client, a dropped send —
- * therefore sat on "Still searching" forever, which is the same failure this
- * wave set out to remove, moved one step later.
+ * WHY THIS FILE EXISTS. Removing the poll left a read-on-mount as the path from
+ * "asked" to "answered", and it shipped in `use-fact-check` only — so the
+ * Dashboard's fact-check surface rendered whatever the local table happened to
+ * hold and never once asked whether it was still true. A completed check showed
+ * "Still searching" indefinitely, which is the same failure this wave set out to
+ * remove, moved one step later.
+ *
+ * This is now the ONLY path. The push notification that used to announce a
+ * finished check was removed — delivering it required the server to store which
+ * user asked about which article, a durable article-level behavioural record our
+ * privacy policy promises we do not keep. So every route to a result runs
+ * through here: mount, focus, and pull-to-refresh.
  *
  * So the read lives here, once, and every surface that renders a stored row
  * calls it. The bound is structural, not a timer: one server read per

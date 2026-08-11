@@ -1563,22 +1563,21 @@
     },
     "checkedByHeading": "Pemeriksa fakta yang meliput ini",
     "dashboard": {
-      "delete": "Hapus",
       "deleteA11y": "Hapus pemeriksaan fakta ini",
       "empty": "Anda belum memeriksa fakta apa pun. Buka cerita dan ketuk \"Cari pemeriksaan fakta\".",
       "listSubtitle": "Cerita yang Anda minta Mera untuk memeriksa faktanya. Disimpan hanya di perangkat ini.",
       "listTitle": "Pemeriksaan fakta",
-      "openA11y": "Buka pemeriksaan fakta ini",
       "pending": "Masih mencari",
       "title": "Pemeriksaan fakta",
       "untitled": "Cerita tanpa judul",
-      "viewAll": "Lihat semua"
+      "openA11y": "Buka artikel ini",
+      "articleGone": "Artikel telah kadaluarsa, sehingga tidak dapat dibuka. Pemeriksaan fakta yang kami temukan disimpan di sini."
     },
     "explainer": "Mera tidak memeriksa fakta berita itu sendiri. Mera mencari apa yang telah dipublikasikan organisasi pemeriksa fakta yang sudah mapan tentang cerita ini.",
     "noCheckedBy": "Tidak ada organisasi pemeriksa fakta yang kami cari yang telah mempublikasikan cerita ini. Itu tidak membuat cerita salah — sebagian besar cerita tidak pernah diperiksa faktanya.",
     "organisationA11y": "Buka pemeriksaan fakta {{organisation}}",
     "queued": "Kami sedang mencari. Ini berjalan di latar belakang — Anda tidak perlu menunggu di sini.",
-    "queuedHint": "Hasilnya akan muncul di bawah Pemeriksaan fakta di Dashboard Anda, dan kami akan mengirim notifikasi saat selesai jika Anda mengaktifkan notifikasi.",
+    "queuedHint": "Hasil akan muncul di bawah Pemeriksaan Fakta di Dasbor Anda — tarik ke bawah di sana untuk menyegarkannya, atau periksa lagi di bawah.",
     "checkAgain": "Lihat hasilnya"
   },
   "sourcePrefControl": {

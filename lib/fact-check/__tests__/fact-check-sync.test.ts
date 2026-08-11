@@ -156,6 +156,47 @@ describe('reconcileFactCheck', () => {
     });
 });
 
+// ── The stranded-row case ───────────────────────────────────────────────────
+// Users who asked for a fact check BEFORE the push was removed were told a
+// notification was coming. It never will be. Nothing in the recovery path may
+// depend on push delivery, on a token, or on notification permission — a row
+// that has been sitting `pending` for days must resolve the moment any surface
+// reads it. This is the whole safety net for those users, so it is pinned
+// separately from the ordinary reconcile cases.
+describe('a row left pending from before the push was removed', () => {
+    it('resolves on the next read, with no push involvement whatsoever', async () => {
+        seed('a1', 'pending', { requestedAt: 1 });
+        mockGetFactCheck.mockResolvedValue(serverRow('complete', { verdict: 'supported' }));
+
+        const res = await reconcileFactCheck('a1');
+
+        expect(res.changed).toBe(true);
+        expect(mockRows.a1.status).toBe('complete');
+        expect(mockRows.a1.verdict).toBe('supported');
+    });
+
+    it('resolves through the list pass too — the Dashboard chip path', async () => {
+        seed('a1', 'pending');
+        seed('a2', 'running');
+        mockGetFactCheck.mockResolvedValue(serverRow('complete', { verdict: 'mixed' }));
+
+        expect(await reconcileStoredFactChecks()).toBe(2);
+        expect(mockRows.a1.status).toBe('complete');
+        expect(mockRows.a2.status).toBe('complete');
+    });
+
+    it('stays pending — never silently discarded — when the device is offline', async () => {
+        seed('a1', 'pending');
+        mockGetFactCheck.mockRejectedValue(new Error('offline'));
+
+        await reconcileStoredFactChecks();
+
+        // Still there, still pending, still retryable on the next read. A row
+        // that vanished here would be unrecoverable: nothing else announces it.
+        expect(mockRows.a1.status).toBe('pending');
+    });
+});
+
 describe('reconcileStoredFactChecks', () => {
     it('reads ONLY the unresolved rows — a settled table is free', async () => {
         seed('a1', 'complete');

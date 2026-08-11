@@ -77,6 +77,44 @@ describe('ForYouSubTabs', () => {
         expect(getByText('forYou.subTabStories')).toBeTruthy();
         expect(getByText('forYou.subTabSaved')).toBeTruthy();
         expect(getByText('forYou.subTabHistory')).toBeTruthy();
+        expect(getByText('factCheck.dashboard.title')).toBeTruthy();
+    });
+
+    // Position is the requirement, not just presence: "after History".
+    it('places Fact checks LAST, immediately after History', () => {
+        const { getByTestId } = render(
+            <ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />,
+        );
+        const row = getByTestId('dashboard-subtabs-row');
+        const keys: string[] = [];
+        const walk = (node: any) => {
+            if (!node || typeof node !== 'object') return;
+            const id = node.props?.testID;
+            if (typeof id === 'string' && /^dashboard-tab-[a-zA-Z]+$/.test(id)) {
+                keys.push(id.replace('dashboard-tab-', ''));
+            }
+            React.Children.forEach(node.props?.children, walk);
+        };
+        walk(row);
+        expect(keys).toEqual(['feed', 'stories', 'saved', 'history', 'factChecks']);
+    });
+
+    it('fires onSelect with factChecks when the Fact checks pill is tapped', () => {
+        const onSelect = jest.fn();
+        const { getByText } = render(
+            <ForYouSubTabs activeSubTab="feed" onSelect={onSelect} />,
+        );
+        fireEvent.press(getByText('factCheck.dashboard.title'));
+        expect(onSelect).toHaveBeenCalledWith('factChecks');
+    });
+
+    it('marks the Fact checks pill active like any other', () => {
+        const { getByLabelText } = render(
+            <ForYouSubTabs activeSubTab="factChecks" onSelect={jest.fn()} />,
+        );
+        expect(
+            getByLabelText('factCheck.dashboard.title').props.accessibilityState,
+        ).toMatchObject({ selected: true });
     });
 
     it('shows the unseen tracked-story badge on the Stories pill', () => {

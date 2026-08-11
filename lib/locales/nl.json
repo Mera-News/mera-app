@@ -1563,22 +1563,21 @@
     },
     "checkedByHeading": "Feitcheckers die dit hebben onderzocht",
     "dashboard": {
-      "delete": "Verwijderen",
       "deleteA11y": "Deze feitcheck verwijderen",
       "empty": "Je hebt nog geen feitchecks opgezocht. Open een artikel en tik op \"Zoeken naar feitchecks\".",
       "listSubtitle": "Artikelen waarvoor je Mera hebt gevraagd feitchecks op te zoeken. Alleen opgeslagen op dit apparaat.",
       "listTitle": "Feitchecks",
-      "openA11y": "Deze feitcheck openen",
       "pending": "Nog steeds zoeken",
       "title": "Feitchecks",
       "untitled": "Naamloos artikel",
-      "viewAll": "Alles weergeven"
+      "openA11y": "Dit artikel openen",
+      "articleGone": "Het artikel is verlopen en kan niet worden geopend. De feitencontrole die we hebben gevonden, blijft hier behouden."
     },
     "explainer": "Mera controleert het nieuws niet zelf. Het zoekt naar wat gevestigde feitcheckorganisaties al over dit artikel hebben gepubliceerd.",
     "noCheckedBy": "Geen van de feitcheckorganisaties die we hebben doorzocht, heeft iets over dit artikel gepubliceerd. Dat maakt het artikel niet onjuist — de meeste artikelen worden nooit feitgecheckt.",
     "organisationA11y": "Feitcheck van {{organisation}} openen",
     "queued": "We zoeken. Dit gebeurt op de achtergrond — je hoeft hier niet te wachten.",
-    "queuedHint": "Het resultaat verschijnt onder Feitchecks op je Dashboard, en we sturen een melding als het klaar is.",
+    "queuedHint": "Het resultaat verschijnt onder Feitencontroles op uw Dashboard — veeg omlaag om het te vernieuwen, of controleer het opnieuw hieronder.",
     "checkAgain": "Resultaat controleren"
   },
   "sourcePrefControl": {

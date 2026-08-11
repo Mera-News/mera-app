@@ -1563,22 +1563,21 @@
     },
     "checkedByHeading": "Verificadores de hechos que trataron esto",
     "dashboard": {
-      "delete": "Eliminar",
       "deleteA11y": "Eliminar esta verificación de hechos",
       "empty": "Aún no has buscado verificaciones de hechos. Abre una historia y toca \"Buscar verificaciones\".",
       "listSubtitle": "Historias en las que le pediste a Mera que busque verificaciones de hechos. Guardadas solo en este dispositivo.",
       "listTitle": "Verificaciones de hechos",
-      "openA11y": "Abrir esta verificación de hechos",
       "pending": "Buscando aún",
       "title": "Verificaciones de hechos",
       "untitled": "Historia sin título",
-      "viewAll": "Ver todo"
+      "openA11y": "Abrir este artículo",
+      "articleGone": "El artículo ha caducado, por lo que no se puede abrir. La verificación de hechos que encontramos se mantiene aquí."
     },
     "explainer": "Mera no verifica hechos en las noticias. Busca lo que organizaciones de verificación de hechos ya han publicado sobre esta historia.",
     "noCheckedBy": "Ninguna organización de verificación de hechos que buscamos ha publicado sobre esta historia. Eso no significa que la historia sea falsa — la mayoría de las historias nunca se verifican.",
     "organisationA11y": "Abrir la verificación de {{organisation}}",
     "queued": "Estamos buscando. Esto funciona en segundo plano — no tienes que esperar aquí.",
-    "queuedHint": "El resultado aparecerá en Verificaciones de hechos en tu Dashboard, y te enviaremos una notificación cuando esté listo si tienes notificaciones activadas.",
+    "queuedHint": "El resultado aparece bajo Verificación de hechos en su Panel — deslice hacia abajo allí para actualizarlo, o verifíquelo nuevamente a continuación.",
     "checkAgain": "Ver resultado"
   },
   "sourcePrefControl": {

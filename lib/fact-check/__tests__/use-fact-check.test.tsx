@@ -246,6 +246,32 @@ describe('useFactCheck', () => {
         expect(mockRequestFactCheck).not.toHaveBeenCalled();
     });
 
+    // ── Arriving from the Fact checks list ──────────────────────────────────
+    // The list navigates to the article; the panel there must show the RESULT,
+    // not the "Look for published fact checks" button, with no second tap. No
+    // route param drives this — a stored terminal row alone puts the hook in
+    // `ready`, and FactCheckPanel's `collapsed` predicate is false for `ready`.
+    // Pinned here because that is an implicit coupling between two files: if
+    // either side changed, the entry path would silently regress to a CTA for
+    // a result the user was just looking at.
+    it('is already in the expanded ready phase on mount for a stored terminal row', async () => {
+        seedStored('a1', 'complete', {
+            verdict: 'supported',
+            payload: row('complete', { verdict: 'supported' }),
+        });
+
+        const { result } = renderHook(() => useFactCheck('a1'));
+        await flush();
+
+        expect(result.current.phase).toBe('ready');
+        // `collapsed` in FactCheckPanel is `idle || (working && !showProgress)`.
+        expect(result.current.phase).not.toBe('idle');
+        expect(result.current.showProgress).toBe(false);
+        expect(result.current.result?.verdict).toBe('supported');
+        // No tap needed: `start` was never called and nothing was requested.
+        expect(mockRequestFactCheck).not.toHaveBeenCalled();
+    });
+
     it('renders a stored terminal result on mount with no network call at all', async () => {
         seedStored('a1', 'complete', {
             verdict: 'supported',

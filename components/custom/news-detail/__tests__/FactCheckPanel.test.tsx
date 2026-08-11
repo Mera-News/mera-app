@@ -135,6 +135,19 @@ describe('FactCheckPanel', () => {
         expect(getByText('factCheck.verdict.supported.label')).toBeTruthy();
     });
 
+    // The other half of the "arrived from the Fact checks list" contract: given
+    // `ready` (which a stored terminal row produces on mount), the panel must
+    // render the RESULT, never the CTA. Together with the hook test of the same
+    // name, this pins the entry path end to end without a route param.
+    it('shows the result, not the CTA, when the hook is already ready on mount', () => {
+        hookState({ phase: 'ready', result: completeRow() });
+        const { queryByTestId, getByTestId } = render(<FactCheckPanel articleId="a1" />);
+        expect(queryByTestId('fact-check-action')).toBeNull();
+        expect(getByTestId('fact-check-panel')).toBeTruthy();
+        expect(getByTestId('fact-check-verdict')).toBeTruthy();
+        expect(start).not.toHaveBeenCalled();
+    });
+
     it('always shows the hedging disclaimer and the citations — including for "supported"', () => {
         hookState({ phase: 'ready', result: completeRow() });
         const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
