@@ -723,10 +723,12 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </Text>
             </Box>
 
-            {/* Fact check (BETA) — OFF by default. Sits next to web search
-                because it is the other third-party disclosure on this screen:
-                checking a story sends it to our server and on to a search
-                provider, same as web search in chat. */}
+            {/* Fact checks (BETA) — ON by default (see mera-protocol-store:
+                absent ⇒ on). Sits next to web search because it is the other
+                third-party disclosure on this screen: looking a story up sends
+                it to our server and on to a search provider, same as web search
+                in chat. Still BETA-badged — the default changed, the maturity
+                claim did not. */}
             <Box className="px-5 mb-6" testID="mera-protocol-fact-check">
                 <HStack space="md" className="items-center justify-between">
                     <HStack space="md" className="items-center flex-1">

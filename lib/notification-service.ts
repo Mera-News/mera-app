@@ -237,12 +237,84 @@ async function refreshForYouCacheFromDb(): Promise<void> {
 }
 
 /**
- * Handles navigation from notification tap. Awaits a DB-backed cache refresh
- * before navigating so the For You screen never renders against a half-cleared
- * cache.
+ * A completed fact check announced by push.
+ *
+ * The push carries `{ factCheckId, articleId }` and nothing else, so the result
+ * has to be fetched. It is written to the on-device `fact_checks` table BEFORE
+ * navigating — the destination screen reads that table, not the network, so a
+ * tap that navigated first would land on a list missing the very row the
+ * notification was about.
+ *
+ * The one-shot fetch is best-effort. A device that is offline when the user taps
+ * still navigates: `requestFactCheck` already stored a pending row when the
+ * check was asked for, so the list has something to show, and the detail
+ * panel's own mount read will fill it in later.
+ */
+async function handleFactCheckNotification(
+    data: NotificationDeepLinkData,
+): Promise<void> {
+    const articleId = typeof data.articleId === 'string' ? data.articleId : null;
+
+    if (articleId) {
+        try {
+            const [{ FactCheckService }, { upsertFactCheck }] = await Promise.all([
+                import('./fact-check/fact-check-service'),
+                import('./database/services/fact-check-record-service'),
+            ]);
+            const row = await FactCheckService.getFactCheck(articleId);
+            if (row) {
+                await upsertFactCheck({
+                    articleId,
+                    factCheckId: String(row._id ?? data.factCheckId ?? ''),
+                    articleTitle: row.articleTitle ?? null,
+                    status: row.status,
+                    verdict: row.verdict ?? null,
+                    payload: row,
+                });
+            }
+        } catch (error) {
+            // Offline / transport / plan rejection. Not worth an error report on
+            // a notification tap — the navigation below still works.
+            logger.warn('[notification-service] fact-check fetch failed', {
+                error: String(error),
+            });
+        }
+    }
+
+    try {
+        const { useFactChecksStore } = await import('./stores/fact-checks-store');
+        await useFactChecksStore.getState().load();
+    } catch (error) {
+        logger.warn('[notification-service] fact-check store refresh failed', {
+            error: String(error),
+        });
+    }
+
+    // The FACT CHECK LIST, not the article. `factCheck` outlives the article
+    // row (the article's 48h TTL drops it while the check keeps answering — see
+    // fact-check-service), and this push can easily arrive after that, so
+    // deep-linking to an article detail screen would routinely land on a story
+    // that no longer exists.
+    router.push('/logged-in/fact-checks');
+}
+
+/**
+ * Handles navigation from notification tap.
+ *
+ * Branches on `data.type`. Everything that is not explicitly handled keeps the
+ * historical behaviour EXACTLY — a DB-backed cache refresh awaited before
+ * navigating, so the For You screen never renders against a half-cleared cache,
+ * then a push to For You. That default is load-bearing: most pushes carry no
+ * type at all, and narrowing it would silently break every existing
+ * notification.
  */
 async function handleNotificationNavigation(data: NotificationDeepLinkData): Promise<void> {
     try {
+        if (data?.type === 'fact-check') {
+            await handleFactCheckNotification(data);
+            return;
+        }
+
         await refreshForYouCacheFromDb();
 
         router.push('/logged-in/app_container/for_you');
@@ -273,8 +345,13 @@ function setupNotificationListeners(): void {
 }
 
 /**
- * Checks for and handles notifications that launched the app (when app was not running)
- * Should be called once during app initialization after the router is ready
+ * Checks for and handles notifications that launched the app (when app was not
+ * running). Should be called once during app initialization after the router is
+ * ready.
+ *
+ * Routes through the same `handleNotificationNavigation` as a warm tap, so the
+ * `data.type` switch — including the fact-check branch — covers the cold-start
+ * path with no second implementation to keep in sync.
  */
 export async function handleInitialNotification(): Promise<void> {
     try {

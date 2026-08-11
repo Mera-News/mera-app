@@ -671,7 +671,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             on the ARTICLE id (not the suggestion id) and the
                             server holds its own canonical URL, so it still works
                             for a row whose local link we refuse to open. */}
-                        <FactCheckPanel articleId={suggestion.articleId} />
+                        <FactCheckPanel
+                            articleId={suggestion.articleId}
+                            articleTitle={suggestion.title_en ?? suggestion.title_original ?? null}
+                        />
 
                         {/* Related Articles — ONE flat, sorted list merging the
                             local cluster siblings (the user's own personalized

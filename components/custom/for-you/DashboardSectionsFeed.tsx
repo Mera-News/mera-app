@@ -82,6 +82,12 @@ interface DashboardSectionsFeedProps {
   /** Dashboard header height — content top padding. */
   headerHeight: number;
   ListEmptyComponent?: React.ComponentType<any> | React.ReactElement | null;
+  /** Extra content rendered at the top of the list, above the sections and
+   *  below the breaking strip. Exists so ForYouScreen can own a block that is
+   *  NOT an article section (the Fact checks block) without that content having
+   *  to become a `SectionKind` — this list's items are article rows and the
+   *  whole ordering/scoring pipeline behind them assumes that. */
+  ListHeaderExtra?: React.ReactNode;
   /** Pull-to-refresh spinner state. Driven by the scheduler's feed-sync flag
    *  (see `useFeedSyncRefresh`), NOT by local state — so it rises on the same
    *  frame as the pull and stays up for the real duration of the sync. */
@@ -107,6 +113,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   scrollHandler,
   headerHeight,
   ListEmptyComponent,
+  ListHeaderExtra,
   refreshing,
   onRefresh,
 }) => {
@@ -257,6 +264,10 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
   // The card reads entitlement itself and renders null unless locked, so this
   // costs an empty fragment in the normal case, and every section below keeps
   // rendering underneath it when it does appear. Nothing is hidden or replaced.
+  // `ListHeaderExtra` MUST be in the dep array. This memo is the reason the
+  // header renders once and then never again — an omitted dep here would freeze
+  // the Fact checks block at whatever it held on first paint: new results would
+  // never appear and deletes would never disappear.
   const ListHeader = useMemo(
     () => (
       <>
@@ -264,9 +275,10 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         {breaking.length > 0 ? (
           <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
         ) : null}
+        {ListHeaderExtra}
       </>
     ),
-    [breaking, onPressSuggestion],
+    [breaking, onPressSuggestion, ListHeaderExtra],
   );
 
   return (

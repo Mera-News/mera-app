@@ -40,13 +40,17 @@ export type FactCheckAssessment =
  */
 export type FactCheckTone = 'positive' | 'caution' | 'neutral';
 
-/** Where the fact-check UI currently is. Drives the panel's render. */
-export type FactCheckPhase = 'idle' | 'working' | 'ready' | 'timeout' | 'error';
+/**
+ * Where the fact-check UI currently is. Drives the panel's render.
+ *
+ * `queued` replaced the old `timeout`, and the difference is the whole point of
+ * the rewrite. `timeout` was a client-side fiction: the app polled for 60s and
+ * then declared a deadline the server had never agreed to. `queued` is a
+ * statement of fact — the request is lodged, the answer is not here yet, and
+ * nothing about staying on this screen makes it arrive sooner.
+ */
+export type FactCheckPhase = 'idle' | 'working' | 'ready' | 'queued' | 'error';
 
-/** Poll cadence once the request is in flight (server contract: ~3s). */
-export const POLL_INTERVAL_MS = 3000;
-/** Give up polling after this long and tell the reader to come back. */
-export const POLL_TIMEOUT_MS = 60_000;
 /**
  * A spinner is only honest if the wait is perceptible. A cross-user cache hit
  * returns `complete` on the very first round trip, so anything shorter than
@@ -59,9 +63,11 @@ const TERMINAL: ReadonlySet<string> = new Set(['complete', 'blocked']);
 
 /**
  * True once the row will never change again. `failed` is deliberately NOT
- * terminal: the server records `attempts` and fails over between models, so a
- * `failed` observation mid-poll can still become `complete`. It is only
- * reported as a failure if it is what we last saw when the deadline hit.
+ * terminal: the server records `attempts`, fails over between models, and now
+ * has a retry cron behind it, so a `failed` row is one the pipeline will pick
+ * up again. There is no client-side deadline any more to turn that observation
+ * into a verdict of failure — a non-terminal row of any status is simply
+ * "not answered yet", which is what the `queued` phase says.
  */
 export function isTerminalStatus(status: string | null | undefined): boolean {
     return typeof status === 'string' && TERMINAL.has(status.trim().toLowerCase());
@@ -156,14 +162,69 @@ export function shouldShowProgress(phase: FactCheckPhase, elapsedMs: number): bo
 }
 
 /**
- * Which copy the timeout state uses, branched on the last status observed.
+ * The fact-checking organisations that covered this story, cleaned up for
+ * render.
  *
- * A run that was still `pending`/`running` at the deadline is genuinely just
- * slow — "still working, check back". A run whose last observation was `failed`
- * is a different message: the check did not produce an answer. Collapsing the
- * two would tell a reader to come back to something that is never coming.
+ * The server's `checkedBy` is a list of `{ organisation, url, verdict, summary
+ * }`. Entries with no organisation name are dropped — a source link with
+ * nothing to attribute it to is worse than no row, because the reader cannot
+ * tell whose judgement they are being shown, and "whose judgement" is the
+ * entire value of this list over the model's own summary.
  */
-export function timeoutCopyKey(lastStatus: string | null | undefined): string {
-    const key = typeof lastStatus === 'string' ? lastStatus.trim().toLowerCase() : '';
-    return key === 'failed' ? 'factCheck.failed' : 'factCheck.stillWorking';
+export function describeCheckedBy<
+    T extends { organisation?: string | null },
+>(entries: readonly T[] | null | undefined): T[] {
+    if (!Array.isArray(entries)) return [];
+    return entries.filter(
+        (entry) => !!entry && typeof entry.organisation === 'string'
+            && entry.organisation.trim().length > 0,
+    );
+}
+
+/**
+ * How to render ONE organisation's own published rating.
+ *
+ * This is the one place in this file where an unrecognised token is DISPLAYED
+ * VERBATIM instead of being swallowed by an unknown bucket, and the distinction
+ * is deliberate rather than an oversight of the rule at the top.
+ *
+ * The unknown buckets elsewhere exist because the string is a MODEL's opinion:
+ * an unvetted token from an LLM must never render as though it were a finding.
+ * An organisation's verdict is the opposite kind of object — a human editorial
+ * rating, published under a masthead, attributed on screen, and linked. Fact
+ * checkers do not use our five-word vocabulary: real ratings are "False",
+ * "Mostly False", "Misleading", "Altered photo", "Pants on Fire". Routing those
+ * through `describeAssessment` would collapse every one of them to "Unclear",
+ * which does not hedge the claim — it DELETES it, and the per-organisation
+ * verdict is the whole point of the `checkedBy` list.
+ *
+ * So: a token we recognise gets the localized label and its tone; anything else
+ * is shown as written, in the neutral tone, because we cannot know whether a
+ * rating we don't recognise is positive or cautionary. That makes this correct
+ * whether or not the server normalizes its vocabulary.
+ */
+export function describeOrganisationVerdict(raw: string | null | undefined): {
+    /** Either an i18n key or literal text — see `isKey`. */
+    label: string;
+    /** True ⇒ `label` must be passed through `t()`; false ⇒ render as-is. */
+    isKey: boolean;
+    tone: FactCheckTone;
+} {
+    const trimmed = typeof raw === 'string' ? raw.trim() : '';
+    if (trimmed.length === 0) {
+        return {
+            label: 'factCheck.assessment.unknown',
+            isKey: true,
+            tone: 'neutral',
+        };
+    }
+    const key = trimmed.toLowerCase();
+    if (ASSESSMENTS.has(key)) {
+        return {
+            label: `factCheck.assessment.${key}`,
+            isKey: true,
+            tone: ASSESSMENT_TONE[key as FactCheckAssessment],
+        };
+    }
+    return { label: trimmed, isKey: false, tone: 'neutral' };
 }

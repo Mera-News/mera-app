@@ -1348,5 +1348,36 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // ── On-device fact checks (schema v51) ────────────────────────────────
+      // NEW TABLE, `createTable` ONLY — the exact shape of the v49
+      // `translation_cache` step above. Nothing existing is touched: a device
+      // upgrading from any prior version gains an empty `fact_checks` table and
+      // loses nothing. In particular this migration must never DROP+recreate
+      // anything; the v37/v41 OTA that DROP+recreated `article_suggestions` for
+      // a purely additive change emptied every device's feed (see CLAUDE.md).
+      //
+      // Why the table exists at all: the fact check stopped being a
+      // request/poll round trip the reader waits out. The client fires the
+      // request and leaves; the answer arrives minutes later via push. This is
+      // where it lands, and it is the only backing store for the Dashboard's
+      // "Fact checks" block and the /logged-in/fact-checks list.
+      toVersion: 51,
+      steps: [
+        createTable({
+          name: 'fact_checks',
+          columns: [
+            { name: 'article_id', type: 'string', isIndexed: true },
+            { name: 'fact_check_id', type: 'string' },
+            { name: 'article_title', type: 'string', isOptional: true },
+            { name: 'status', type: 'string' },
+            { name: 'verdict', type: 'string', isOptional: true },
+            { name: 'payload_json', type: 'string' },
+            { name: 'requested_at', type: 'number', isIndexed: true },
+            { name: 'resolved_at', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

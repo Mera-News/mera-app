@@ -444,6 +444,54 @@ describe('handleInitialNotification', () => {
   });
 });
 
+// ── data.type switch (r14) ───────────────────────────────────────────────────
+// `handleNotificationNavigation` used to push for_you UNCONDITIONALLY with no
+// switch at all. A branch was added for the fact-check push; the risk in adding
+// the first branch to a defaulting handler is that the default stops covering
+// everything else, so both halves are pinned here.
+//
+// TEST ENV NOTE: dynamic import() throws under Jest's CJS runner (see the
+// refreshForYouCacheFromDb block below), so the fact-check branch's fetch and
+// persist are unreachable here — which is itself the property being asserted:
+// the navigation must survive both of them failing.
+describe('handleNotificationNavigation type switch (via handleInitialNotification)', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('routes a fact-check push to the Fact checks list, not to For You', async () => {
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce({
+      notification: {
+        request: {
+          content: {
+            data: { type: 'fact-check', factCheckId: 'fc1', articleId: 'a1' },
+          },
+        },
+      },
+    });
+
+    await handleInitialNotification();
+
+    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/fact-checks');
+    expect(mockRouterPush).not.toHaveBeenCalledWith('/logged-in/app_container/for_you');
+  });
+
+  it.each([
+    { type: 'news-ready' },
+    { type: 'calibration' },
+    {},
+  ])('leaves every other notification on the For You default: %p', async (data) => {
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce({
+      notification: { request: { content: { data } } },
+    });
+
+    await handleInitialNotification();
+
+    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
+    expect(mockRouterPush).not.toHaveBeenCalledWith('/logged-in/fact-checks');
+  });
+});
+
 describe('ensurePushTokenRegistered', () => {
   beforeEach(() => {
     jest.clearAllMocks();

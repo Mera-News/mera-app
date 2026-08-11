@@ -169,6 +169,8 @@ export type FactCheck = {
   articleUrl?: Maybe<Scalars['String']['output']>;
   /** Provider calls issued for this row. */
   attempts: Scalars['Int']['output'];
+  /** Established fact-checking organisations that have covered this claim. The attributable subset of `citations`. An EMPTY list on a complete check is a real answer — nobody has fact checked this — not a pending state. */
+  checkedBy: Array<FactCheckOrganisation>;
   citations: Array<FactCheckCitation>;
   claims: Array<FactCheckClaim>;
   completedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -197,6 +199,18 @@ export type FactCheckClaim = {
   assessment: Scalars['String']['output'];
   claim: Scalars['String']['output'];
   note?: Maybe<Scalars['String']['output']>;
+};
+
+/** An established fact-checking organisation that has published on this claim, with its OWN verdict quoted verbatim (never mapped onto the FactCheck verdict vocabulary). */
+export type FactCheckOrganisation = {
+  __typename?: 'FactCheckOrganisation';
+  /** Organisation name, e.g. "Full Fact", "Alt News". */
+  organisation: Scalars['String']['output'];
+  summary?: Maybe<Scalars['String']['output']>;
+  /** Link to that organisation's own fact check. */
+  url?: Maybe<Scalars['String']['output']>;
+  /** That organisation's own rating in its own words ("False", "Pants on Fire", "Misleading", ...). NOT one of the FactCheck verdict values. */
+  verdict?: Maybe<Scalars['String']['output']>;
 };
 
 /** Versioned feedback-tree config. When the client already holds the current version, treeJson is "" (not-modified) and only the version metadata is sent. */
@@ -318,6 +332,7 @@ export type NewsArticle = {
   article_url: Scalars['String']['output'];
   category?: Maybe<Scalars['String']['output']>;
   clusterConfidence?: Maybe<Scalars['Float']['output']>;
+  content_category?: Maybe<Scalars['String']['output']>;
   country?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   creator?: Maybe<Scalars['String']['output']>;
@@ -463,6 +478,18 @@ export type PersonaTopicResult = {
   topicText: Scalars['String']['output'];
 };
 
+export type PhraseEmbeddingResult = {
+  __typename?: 'PhraseEmbeddingResult';
+  /** Vector dimensionality before packing. Part of the compatibility key: one Jina model can legitimately emit 512/768/1024 (Matryoshka truncation), so the model tag alone does not identify the space. */
+  dimensions: Scalars['Int']['output'];
+  /** Embedding model tag (JINA_MODEL). Part of the compatibility key — store it and re-embed if a later response reports a different value. */
+  model: Scalars['String']['output'];
+  /** Base64 of the packed sign-bit sidecar per input phrase, ALIGNED TO INPUT ORDER (packed[i] is the vector for phrases[i]). Identical representation and bit order to `ArticleWithClusters.vector_sidecar_packed`, produced by the same packing function, so the device can Hamming-compare the two directly. 768 dims = 96 bytes. */
+  packed: Array<Scalars['String']['output']>;
+  /** Jina task the phrases were embedded under — always `retrieval.query`. Part of the compatibility key, and the part most easily missed: the same model emits DIFFERENT vectors per task, so a query vector and a text-matching vector look compatible (same model, same dims) and compare to noise. Article sidecars are `retrieval.passage`; that pairing is intended, not a mismatch. */
+  taskType: Scalars['String']['output'];
+};
+
 export type Place = {
   __typename?: 'Place';
   _id: Scalars['ID']['output'];
@@ -550,6 +577,8 @@ export type Query = {
   /** Hydrate articles by id for followed ("tracked") stories. Identical payload to articlesForTopicsByIds, but deliberately NOT charged against the daily article cap — following a story must not consume the allowance. dailyLimitReached is always false and resetAt is always absent. Capped at 50 ids per request. */
   articlesForStories: ArticlesForTopicsByIdsResponse;
   articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
+  /** Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call. */
+  embedPhrases: PhraseEmbeddingResult;
   /** The cached fact check for an article, or null if none has been requested yet. Poll this after requestFactCheck. */
   factCheck?: Maybe<FactCheck>;
   /** The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response. */
@@ -629,6 +658,11 @@ export type QueryArticlesForStoriesArgs = {
 
 export type QueryArticlesForTopicsByIdsArgs = {
   articleIds: Array<Scalars['ID']['input']>;
+};
+
+
+export type QueryEmbedPhrasesArgs = {
+  phrases: Array<Scalars['String']['input']>;
 };
 
 

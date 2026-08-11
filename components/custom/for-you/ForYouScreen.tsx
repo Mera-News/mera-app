@@ -9,6 +9,7 @@ import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
 import {
     GLASS_HEADER_SCRIM,
     GLASS_HEADER_TINT,
+    GlassHeaderAndroidBackdrop,
     GlassPlate,
 } from '@/components/custom/GlassSurface';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
@@ -21,6 +22,8 @@ import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
 import StoriesSlotPlaceholder from '@/components/custom/for-you/StoriesSlotPlaceholder';
 import FeedStatusSheet from '@/components/custom/for-you/FeedStatusSheet';
 import DashboardSectionsFeed from '@/components/custom/for-you/DashboardSectionsFeed';
+import DashboardFactChecksBlock from '@/components/custom/fact-checks/DashboardFactChecksBlock';
+import { useFactChecksStore } from '@/lib/stores/fact-checks-store';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPublicationsList';
@@ -285,6 +288,25 @@ const MeraNewsScreen: React.FC = () => {
         void useSectionVisitsStore.getState().hydrate();
     }, []);
 
+    // ── Fact checks block ──
+    // Re-read on every focus, not just on mount. A fact check completes
+    // asynchronously — the answer typically arrives by push while the app is
+    // backgrounded, and the user's next act is to come back to this tab. A
+    // mount-only load would show them a stale list on precisely the visit the
+    // notification sent them on. The table is one row per story the user
+    // personally asked about, so this is a cheap query.
+    useEffect(() => {
+        if (!isFocused || !dbReady) return;
+        void useFactChecksStore.getState().load();
+    }, [isFocused, dbReady]);
+
+    // Authored HERE (not as a `SectionKind` — see DashboardFactChecksBlock) and
+    // threaded into the list's header so it scrolls with the content and sits
+    // under the absolute collapsing header, which compensates via the list's
+    // own contentContainer padding. A sibling above the list would be pinned
+    // behind that header instead.
+    const factChecksBlock = useMemo(() => <DashboardFactChecksBlock />, []);
+
     // Load the persona snapshots when interests exist or the feed size changes
     // (tiny tables; a new sync's insert/remove is the coarse trigger).
     useEffect(() => {
@@ -510,6 +532,7 @@ const MeraNewsScreen: React.FC = () => {
                         scrollHandler={scrollHandler}
                         headerHeight={headerHeight}
                         ListEmptyComponent={renderEmpty}
+                        ListHeaderExtra={factChecksBlock}
                         refreshing={refreshing}
                         onRefresh={onRefresh}
                     />
@@ -590,6 +613,11 @@ const MeraNewsScreen: React.FC = () => {
                     headerStyle,
                 ]}
             >
+                {/* Android-only opaque-ish gradient — must render BEFORE
+                    GlassPlate so the tint below still lifts it to a readable
+                    surface tone (see GlassSurface.tsx's
+                    GlassHeaderAndroidBackdrop doc comment). No-op on iOS. */}
+                <GlassHeaderAndroidBackdrop />
                 {/* Absolute-fill glass. This Animated.View is unpadded (all
                     padding lives on the VStack below), which is exactly what
                     GlassPlate's parent must be — see GlassSurface. No corner

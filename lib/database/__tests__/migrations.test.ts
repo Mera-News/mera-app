@@ -469,4 +469,68 @@ describe('migration → schema convergence', () => {
     const fromSchema = new Set(schemaColsOf('article_suggestion_facts').map(sigKey));
     expect(fromChain).toEqual(fromSchema);
   });
+
+  // ── v51 `fact_checks` ──
+  // A brand-new table has to be written out TWICE — once in the migration
+  // (upgrading devices) and once in schema.ts (fresh installs) — and nothing
+  // else compares them. An `isIndexed`/`isOptional` drift between the two
+  // produces a device where the query plan or the nullability differs by
+  // install path, which would only ever surface on a real handset.
+  it('fact_checks: chain reconstruction set-equals schema.ts', () => {
+    const { cols, duplicates } = reconstruct('fact_checks');
+    expect(duplicates).toEqual([]);
+    const fromChain = new Set(cols.map(sigKey));
+    const fromSchema = new Set(schemaColsOf('fact_checks').map(sigKey));
+    expect(fromChain).toEqual(fromSchema);
+  });
+});
+
+// ── v51: additive createTable ONLY ──────────────────────────────────────────
+// The standing cautionary example is the v37/v41 OTA that DROP+recreated
+// `article_suggestions` for a purely additive change and wiped every device's
+// feed. A new table must never drag an existing one along.
+describe('v51 adds fact_checks additively and touches nothing else', () => {
+  const byVersion = new Map(migList.map((m) => [m.toVersion, m]));
+
+  it('v51 creates fact_checks and is its ONLY step', () => {
+    const m = byVersion.get(51);
+    expect(m).toBeDefined();
+    expect(m!.steps).toHaveLength(1);
+    const step: any = m!.steps[0];
+    expect(step.type).toBe('create_table');
+    expect(step.schema.name).toBe('fact_checks');
+    const colNames = step.schema.columnArray.map((c: any) => c.name).sort();
+    expect(colNames).toEqual(
+      [
+        'article_id',
+        'article_title',
+        'fact_check_id',
+        'payload_json',
+        'requested_at',
+        'resolved_at',
+        'status',
+        'verdict',
+      ].sort(),
+    );
+  });
+
+  it('v51 has no sql step and no create_table for any pre-existing table', () => {
+    const m = byVersion.get(51)!;
+    const offending = m.steps.filter(
+      (s: any) =>
+        (s && s.type === 'sql') ||
+        (s && s.type === 'create_table' && s.schema?.name !== 'fact_checks') ||
+        (s && s.type === 'add_columns'),
+    );
+    expect(offending).toHaveLength(0);
+  });
+
+  it('the lookup and ordering columns are indexed on both sides', () => {
+    const step: any = byVersion.get(51)!.steps[0];
+    const byName = new Map<string, any>(
+      step.schema.columnArray.map((c: any) => [c.name as string, c]),
+    );
+    expect(!!byName.get('article_id').isIndexed).toBe(true);
+    expect(!!byName.get('requested_at').isIndexed).toBe(true);
+  });
 });

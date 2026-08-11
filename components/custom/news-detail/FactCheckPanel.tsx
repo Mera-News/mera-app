@@ -6,9 +6,12 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import {
     describeAssessment,
+    describeCheckedBy,
+    describeOrganisationVerdict,
     describeVerdict,
     type FactCheckTone,
 } from '@/lib/fact-check/fact-check-state';
+import type { FactCheckedByEntry } from '@/lib/fact-check/fact-check-service';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import type { FactCheckCitation, FactCheckClaim } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
@@ -35,16 +38,26 @@ const TONE_CLASSES: Record<FactCheckTone, { chip: string; text: string }> = {
 interface FactCheckPanelProps {
     /** The ARTICLE id (not a suggestion id) — the server keys checks on it. */
     readonly articleId: string;
+    /** Headline, stored with the result so the Fact checks list can name the
+     *  story after the article row itself has aged out server-side. */
+    readonly articleTitle?: string | null;
     readonly testIDPrefix?: string;
 }
 
 /**
- * "Fact check" action + result for an article detail screen.
+ * "Look for fact checks" action + result for an article detail screen.
  *
- * Flow: tap → `requestFactCheck` → poll `factCheck` for up to 60s. Both detail
- * routes mount this the same way; the request is idempotent and the result is
- * cached across users, so a story somebody else already checked resolves on the
- * first round trip.
+ * WHAT THIS ACTUALLY DOES, because the old copy claimed otherwise: Mera does not
+ * fact-check the news. It asks the server to search for fact checks that
+ * established organisations have already published on the story, and reports
+ * who said what. `checkedBy` — the organisations, each with its own verdict and
+ * a link — is the primary answer; the AI summary is context around it.
+ *
+ * Flow: tap → `requestFactCheck` → render. There is NO poll. A story somebody
+ * else already checked comes back complete on that first call; anything else
+ * resolves in the background and lands in the on-device `fact_checks` table via
+ * a push, so the panel says so and stops rather than holding the reader on the
+ * screen behind a spinner with a made-up deadline.
  *
  * The no-spinner-flash rule is enforced HERE as well as in the hook: while the
  * check is running but `showProgress` is still false, the panel keeps rendering
@@ -58,13 +71,21 @@ interface FactCheckPanelProps {
  */
 const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     articleId,
+    articleTitle = null,
     testIDPrefix = 'fact-check',
 }) => {
     const { t } = useTranslation();
-    const { phase, result, showProgress, timeoutKey, start, dismiss } = useFactCheck(articleId);
     const factCheckEnabled = useFactCheckEnabled();
+    // `enabled` is threaded in rather than relying on the early return below:
+    // the return happens AFTER this call (hook order must not change), so the
+    // hook's mount read would otherwise fire on every article open for a user
+    // who has the feature off — and the resolvers sit behind SubscriptionGuard.
+    const { phase, result, showProgress, start, dismiss } = useFactCheck(articleId, {
+        enabled: factCheckEnabled,
+        articleTitle,
+    });
 
-    const openCitation = useCallback((uri: string) => {
+    const openSource = useCallback((uri: string) => {
         // Citations are Google redirect wrappers, not publisher links — no UTM
         // referrer, so `openInAppBrowser` rather than `openArticleInAppBrowser`.
         // Same https requirement though; insecure ones never become tappable
@@ -72,7 +93,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
         if (!isSecureUrl(uri)) return;
         openInAppBrowser(uri).catch((err) => {
             logger.captureException(err, {
-                tags: { component: 'FactCheckPanel', method: 'openCitation' },
+                tags: { component: 'FactCheckPanel', method: 'openSource' },
             });
         });
     }, []);
@@ -115,6 +136,12 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     const blocked = result?.status === 'blocked';
     const claims: FactCheckClaim[] = result?.claims ?? [];
     const citations: FactCheckCitation[] = result?.citations ?? [];
+    // The organisations that actually published a fact check on this story —
+    // the headline answer, rendered above the AI's own summary. Absent whenever
+    // the server predates `checkedBy` (see CHECKED_BY_SELECTION in
+    // fact-check-service), which degrades to the "nobody covered it" line
+    // rather than to a crash.
+    const checkedBy: FactCheckedByEntry[] = describeCheckedBy(result?.checkedBy);
 
     return (
         <VStack
@@ -145,21 +172,23 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                     <Spinner size="small" />
                     <VStack className="flex-1">
                         <Text size="sm" className="text-gray-300">{t('factCheck.checking')}</Text>
-                        <Text size="xs" className="text-gray-400">{t('factCheck.checkingHint')}</Text>
+                        <Text size="xs" className="text-gray-400">{t('factCheck.explainer')}</Text>
                     </VStack>
                 </HStack>
             )}
 
-            {phase === 'timeout' && (
-                <VStack space="sm" className="py-1">
+            {/* Queued — the honest end of a non-instant request. No spinner, no
+                retry: there is nothing to retry (the request is lodged and the
+                server has a retry cron of its own) and nothing on this screen
+                for the reader to wait for. */}
+            {phase === 'queued' && (
+                <VStack space="xs" className="py-1" testID={`${testIDPrefix}-queued`}>
                     <Text size="sm" className="text-gray-300">
-                        {t((timeoutKey ?? 'factCheck.stillWorking') as any)}
+                        {t('factCheck.queued')}
                     </Text>
-                    <Pressable onPress={start} accessibilityRole="button" testID={`${testIDPrefix}-retry`}>
-                        <Text size="sm" className="text-primary-400 font-semibold">
-                            {t('factCheck.retry')}
-                        </Text>
-                    </Pressable>
+                    <Text size="xs" className="text-gray-400">
+                        {t('factCheck.queuedHint')}
+                    </Text>
                 </VStack>
             )}
 
@@ -194,6 +223,83 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                     <Text size="sm" className="text-gray-300">
                         {t(verdictInfo.detailKey as any)}
                     </Text>
+
+                    {/* WHO CHECKED IT — the primary answer, above the AI's own
+                        prose. Every organisation is listed, each with its own
+                        verdict and its own link; the reader's question is
+                        "which fact-checkers looked at this and what did they
+                        conclude", and collapsing that to one aggregate verdict
+                        throws away the only part of this feature that isn't a
+                        model's opinion. */}
+                    <VStack space="xs" className="mt-1" testID={`${testIDPrefix}-checked-by`}>
+                        <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                            {t('factCheck.checkedByHeading')}
+                        </Text>
+                        {checkedBy.length === 0 ? (
+                            <Text size="xs" className="text-gray-400">
+                                {t('factCheck.noCheckedBy')}
+                            </Text>
+                        ) : (
+                            checkedBy.map((entry, index) => {
+                                const org = entry.organisation.trim();
+                                // NOT describeAssessment: an organisation's own
+                                // rating ("Mostly False", "Altered photo") is
+                                // human editorial copy and is shown verbatim
+                                // when we don't recognise it. Bucketing it as
+                                // "Unclear" would delete the very thing the
+                                // reader came for.
+                                const info = describeOrganisationVerdict(entry.verdict);
+                                const tappable = isSecureUrl(entry.url ?? '');
+                                const body = (
+                                    <VStack space="xs">
+                                        <Text
+                                            size="sm"
+                                            className={tappable
+                                                ? 'text-primary-400 underline font-semibold'
+                                                : 'text-gray-200 font-semibold'}
+                                        >
+                                            {org}
+                                        </Text>
+                                        <Text
+                                            size="xs"
+                                            className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
+                                        >
+                                            {info.isKey ? t(info.label as any) : info.label}
+                                        </Text>
+                                        {entry.summary ? (
+                                            <Text size="xs" className="text-gray-400">
+                                                {entry.summary}
+                                            </Text>
+                                        ) : null}
+                                    </VStack>
+                                );
+                                return tappable ? (
+                                    <Pressable
+                                        key={`checked-by-${index}`}
+                                        onPress={() => openSource(entry.url as string)}
+                                        accessibilityRole="link"
+                                        accessibilityLabel={t('factCheck.organisationA11y', { organisation: org })}
+                                        testID={`${testIDPrefix}-checked-by-${index}`}
+                                        className="border-l-2 border-gray-700 pl-2 py-1"
+                                    >
+                                        {body}
+                                    </Pressable>
+                                ) : (
+                                    // Same rule as the citations below: an
+                                    // organisation with no https link is still
+                                    // named — the reader learns who covered it —
+                                    // it just isn't openable over plaintext.
+                                    <Box
+                                        key={`checked-by-${index}`}
+                                        testID={`${testIDPrefix}-checked-by-${index}`}
+                                        className="border-l-2 border-gray-700 pl-2 py-1"
+                                    >
+                                        {body}
+                                    </Box>
+                                );
+                            })
+                        )}
+                    </VStack>
 
                     {result?.summary ? (
                         <Text size="sm" className="text-gray-300">{result.summary}</Text>
@@ -262,7 +368,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                 return tappable ? (
                                     <Pressable
                                         key={`citation-${index}`}
-                                        onPress={() => openCitation(citation.uri)}
+                                        onPress={() => openSource(citation.uri)}
                                         accessibilityRole="link"
                                         accessibilityLabel={label}
                                         testID={`${testIDPrefix}-citation-${index}`}

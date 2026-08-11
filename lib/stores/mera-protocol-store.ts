@@ -56,14 +56,23 @@ interface MeraProtocolState {
   showExtractedMetadata: boolean;
 
   // Fact check (BETA) — when true, the article/suggestion detail screens
-  // offer the "Fact check" action, which asks our server to search the web
-  // to verify claims in the story. Off by default, and the default is
-  // load-bearing: absent ⇒ off (see hydrateFromDb) means every existing user
-  // gets this OFF on their next launch with no migration, matching the
-  // reported behaviour ("I tried fact checking and it didn't work") until
-  // the feature is verified end to end. This is a UX gate only — the
-  // server's `requestFactCheck`/`factCheck` resolvers stay behind
-  // SubscriptionGuard regardless of this switch.
+  // offer the "Look for fact checks" action, which asks our server to search
+  // for fact checks established organisations have already published on the
+  // story.
+  //
+  // ON by default, and the default is load-bearing in BOTH places: the
+  // `initialState` value below AND the absent branch in `hydrateFromDb`.
+  // No existing device has a `mera_fact_check` row — the feature shipped off —
+  // so if absent still read as OFF this would ship completely dark while
+  // looking like it worked. Absent ⇒ ON is what actually turns it on for the
+  // installed base, with no migration. An explicit 'false' still wins: a user
+  // who deliberately switched it off stays off.
+  //
+  // It was off because the SERVER pipeline was disabled, not because the
+  // client was unsafe; with that fixed the switch has no reason to be a
+  // hidden opt-in. This is a UX gate only — the server's
+  // `requestFactCheck`/`factCheck` resolvers stay behind SubscriptionGuard
+  // regardless of this switch.
   factCheckEnabled: boolean;
 
   // Model lifecycle
@@ -144,7 +153,10 @@ const initialState = {
   webSearchInChat: false,
   deepInterview: false,
   showExtractedMetadata: false,
-  factCheckEnabled: false,
+  // ON by default. Its twin — the absent branch in `hydrateFromDb` — must
+  // agree, or the hydrate immediately overwrites this on every existing
+  // device and the feature ships dark.
+  factCheckEnabled: true,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -314,14 +326,17 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (showExtractedMetadataValue === 'false') {
         updates.showExtractedMetadata = false;
       }
-      // ABSENT ⇒ OFF, same rule as above: only an explicit 'true' turns fact
-      // check on. Every existing device — which has never seen this row —
-      // gets it off on next launch, with no migration. That is exactly the
-      // user's ask ("keep it off by default").
-      if (factCheckEnabledValue === 'true') {
-        updates.factCheckEnabled = true;
-      } else if (factCheckEnabledValue === 'false') {
+      // ABSENT ⇒ ON — the one exception to the rule the settings above follow,
+      // and it is deliberate. No device has ever written `mera_fact_check`
+      // (the feature shipped off), so "absent ⇒ off" would leave the whole
+      // installed base with fact-checking disabled while `initialState` says
+      // otherwise — the feature would ship completely dark and look like it
+      // worked. Only an explicit 'false' turns it off, which preserves the
+      // choice of anyone who found the switch and deliberately disabled it.
+      if (factCheckEnabledValue === 'false') {
         updates.factCheckEnabled = false;
+      } else {
+        updates.factCheckEnabled = true;
       }
       if (Object.keys(updates).length > 0) {
         set(updates);

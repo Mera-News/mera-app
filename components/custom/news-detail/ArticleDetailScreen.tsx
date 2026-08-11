@@ -638,7 +638,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             on the article id and the server holds its own
                             canonical URL, so it still works for a row whose
                             local link we refuse to open. */}
-                        <FactCheckPanel articleId={article._id ?? articleId} />
+                        <FactCheckPanel
+                            articleId={article._id ?? articleId}
+                            articleTitle={article.title_en_internal_only ?? article.title ?? null}
+                        />
 
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">

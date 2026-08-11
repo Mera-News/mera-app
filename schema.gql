@@ -170,6 +170,11 @@ type FactCheck {
 
   """Provider calls issued for this row."""
   attempts: Int!
+
+  """
+  Established fact-checking organisations that have covered this claim. The attributable subset of `citations`. An EMPTY list on a complete check is a real answer — nobody has fact checked this — not a pending state.
+  """
+  checkedBy: [FactCheckOrganisation!]!
   citations: [FactCheckCitation!]!
   claims: [FactCheckClaim!]!
   completedAt: DateTime
@@ -205,6 +210,23 @@ type FactCheckClaim {
   assessment: String!
   claim: String!
   note: String
+}
+
+"""
+An established fact-checking organisation that has published on this claim, with its OWN verdict quoted verbatim (never mapped onto the FactCheck verdict vocabulary).
+"""
+type FactCheckOrganisation {
+  """Organisation name, e.g. "Full Fact", "Alt News"."""
+  organisation: String!
+  summary: String
+
+  """Link to that organisation's own fact check."""
+  url: String
+
+  """
+  That organisation's own rating in its own words ("False", "Pants on Fire", "Misleading", ...). NOT one of the FactCheck verdict values.
+  """
+  verdict: String
 }
 
 """
@@ -284,6 +306,7 @@ type NewsArticle {
   article_url: String!
   category: String
   clusterConfidence: Float
+  content_category: String
   country: String
   createdAt: DateTime!
   creator: String
@@ -437,6 +460,28 @@ type PersonaTopicResult {
   topicText: String!
 }
 
+type PhraseEmbeddingResult {
+  """
+  Vector dimensionality before packing. Part of the compatibility key: one Jina model can legitimately emit 512/768/1024 (Matryoshka truncation), so the model tag alone does not identify the space.
+  """
+  dimensions: Int!
+
+  """
+  Embedding model tag (JINA_MODEL). Part of the compatibility key — store it and re-embed if a later response reports a different value.
+  """
+  model: String!
+
+  """
+  Base64 of the packed sign-bit sidecar per input phrase, ALIGNED TO INPUT ORDER (packed[i] is the vector for phrases[i]). Identical representation and bit order to `ArticleWithClusters.vector_sidecar_packed`, produced by the same packing function, so the device can Hamming-compare the two directly. 768 dims = 96 bytes.
+  """
+  packed: [String!]!
+
+  """
+  Jina task the phrases were embedded under — always `retrieval.query`. Part of the compatibility key, and the part most easily missed: the same model emits DIFFERENT vectors per task, so a query vector and a text-matching vector look compatible (same model, same dims) and compare to noise. Article sidecars are `retrieval.passage`; that pairing is intended, not a mismatch.
+  """
+  taskType: String!
+}
+
 type Place {
   _id: ID!
   city: String!
@@ -558,6 +603,14 @@ type Query {
   """
   articlesForStories(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
   articlesForTopicsByIds(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
+
+  """
+  Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call.
+  """
+  embedPhrases(
+    """Phrases to embed. Results are returned aligned to this order."""
+    phrases: [String!]!
+  ): PhraseEmbeddingResult!
 
   """
   The cached fact check for an article, or null if none has been requested yet. Poll this after requestFactCheck.

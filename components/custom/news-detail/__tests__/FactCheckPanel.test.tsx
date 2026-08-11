@@ -181,6 +181,85 @@ describe('FactCheckPanel', () => {
         expect(mockOpenInAppBrowser).not.toHaveBeenCalled();
     });
 
+    // `checkedBy` is the answer the user actually asked for: WHO checked this,
+    // and what did each of them say. Every organisation is listed — not a
+    // best-one, not an aggregate — each with its own verdict and its own link.
+    it('lists every organisation that fact-checked the story, with its own verdict and link', () => {
+        hookState({
+            phase: 'ready',
+            result: completeRow({
+                checkedBy: [
+                    {
+                        organisation: 'Full Fact',
+                        url: 'https://fullfact.org/a',
+                        verdict: 'disputed',
+                        summary: 'The figure was misquoted.',
+                    },
+                    {
+                        organisation: 'AFP Fact Check',
+                        url: 'https://factcheck.afp.com/b',
+                        verdict: 'supported',
+                        summary: null,
+                    },
+                ],
+            }),
+        });
+        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
+        expect(getByText('factCheck.checkedByHeading')).toBeTruthy();
+        expect(getByText('Full Fact')).toBeTruthy();
+        expect(getByText('AFP Fact Check')).toBeTruthy();
+        expect(getByText('factCheck.assessment.disputed')).toBeTruthy();
+        expect(getByText('factCheck.assessment.supported')).toBeTruthy();
+        expect(getByText('The figure was misquoted.')).toBeTruthy();
+
+        // Each row carries its OWN link, so the second organisation's tap must
+        // open the second organisation's URL.
+        fireEvent.press(getByTestId('fact-check-checked-by-1'));
+        expect(mockOpenInAppBrowser).toHaveBeenCalledWith('https://factcheck.afp.com/b');
+    });
+
+    // The realistic case. A fact checker's published rating is its own editorial
+    // vocabulary; showing "Unclear" instead would erase the answer the reader
+    // opened this panel for.
+    it('renders a real published rating verbatim, not as "Unclear"', () => {
+        hookState({
+            phase: 'ready',
+            result: completeRow({
+                checkedBy: [
+                    {
+                        organisation: 'PolitiFact',
+                        url: 'https://politifact.com/x',
+                        verdict: 'Mostly False',
+                    },
+                ],
+            }),
+        });
+        const { getByText, queryByText } = render(<FactCheckPanel articleId="a1" />);
+        expect(getByText('Mostly False')).toBeTruthy();
+        expect(queryByText('factCheck.assessment.unknown')).toBeNull();
+    });
+
+    it('names an organisation whose link is insecure, but never opens it', () => {
+        hookState({
+            phase: 'ready',
+            result: completeRow({
+                checkedBy: [{ organisation: 'Somebody', url: 'http://plain.example/x' }],
+            }),
+        });
+        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
+        expect(getByText('Somebody')).toBeTruthy();
+        fireEvent.press(getByTestId('fact-check-checked-by-0'));
+        expect(mockOpenInAppBrowser).not.toHaveBeenCalled();
+    });
+
+    // The pre-`checkedBy` server, and the ordinary "nobody fact-checked this"
+    // case, are the same render — and it must not read as a verdict.
+    it('says so plainly when no organisation covered the story', () => {
+        hookState({ phase: 'ready', result: completeRow({ checkedBy: undefined }) });
+        const { getByText } = render(<FactCheckPanel articleId="a1" />);
+        expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
+    });
+
     it('warns when a check came back with no sources at all', () => {
         hookState({ phase: 'ready', result: completeRow({ citations: [] }) });
         const { getByText } = render(<FactCheckPanel articleId="a1" />);
@@ -194,12 +273,17 @@ describe('FactCheckPanel', () => {
         expect(queryByTestId('fact-check-verdict')).toBeNull();
     });
 
-    it('uses the timeout key the hook resolved, and offers a retry', () => {
-        hookState({ phase: 'timeout', timeoutKey: 'factCheck.failed' });
-        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
-        expect(getByText('factCheck.failed')).toBeTruthy();
-        fireEvent.press(getByTestId('fact-check-retry'));
-        expect(start).toHaveBeenCalledTimes(1);
+    // The honest end of a non-instant request. It must NOT offer a retry: the
+    // request is already lodged and the server retries on its own, so a "try
+    // again" button would invite the reader to re-ask for something already in
+    // flight — the polling loop's mistake in a single control.
+    it('tells the reader the check will finish without them, and offers no retry', () => {
+        hookState({ phase: 'queued' });
+        const { getByText, getByTestId, queryByTestId } = render(<FactCheckPanel articleId="a1" />);
+        expect(getByTestId('fact-check-queued')).toBeTruthy();
+        expect(getByText('factCheck.queued')).toBeTruthy();
+        expect(getByText('factCheck.queuedHint')).toBeTruthy();
+        expect(queryByTestId('fact-check-retry')).toBeNull();
     });
 
     it('offers a retry from the error state', () => {

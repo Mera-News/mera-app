@@ -6,15 +6,15 @@
 
 import {
     describeAssessment,
+    describeCheckedBy,
+    describeOrganisationVerdict,
     describeVerdict,
     isTerminalStatus,
     normalizeVerdict,
-    POLL_INTERVAL_MS,
-    POLL_TIMEOUT_MS,
     PROGRESS_DELAY_MS,
     shouldShowProgress,
-    timeoutCopyKey,
 } from '../fact-check-state';
+import * as factCheckState from '../fact-check-state';
 
 describe('isTerminalStatus', () => {
     it.each(['complete', 'blocked', 'COMPLETE', ' blocked '])('is terminal: %s', (s) => {
@@ -121,7 +121,7 @@ describe('shouldShowProgress', () => {
         expect(shouldShowProgress('working', 10_000)).toBe(true);
     });
 
-    it.each(['idle', 'ready', 'timeout', 'error'] as const)(
+    it.each(['idle', 'ready', 'queued', 'error'] as const)(
         'never shows progress in phase %s',
         (phase) => {
             expect(shouldShowProgress(phase, 99_999)).toBe(false);
@@ -129,24 +129,103 @@ describe('shouldShowProgress', () => {
     );
 });
 
-describe('timeoutCopyKey', () => {
-    it('reports a failure when the last observation was failed', () => {
-        expect(timeoutCopyKey('failed')).toBe('factCheck.failed');
-        expect(timeoutCopyKey(' FAILED ')).toBe('factCheck.failed');
+// `checkedBy` is the primary answer this feature gives: WHO published a fact
+// check on this story, not what our model thinks of it. An entry with no
+// organisation name cannot carry that, so it is dropped rather than rendered as
+// an anonymous verdict.
+describe('describeCheckedBy', () => {
+    it('keeps every named organisation, in order', () => {
+        const entries = [
+            { organisation: 'Full Fact', url: 'https://fullfact.org/a' },
+            { organisation: 'Snopes', url: 'https://snopes.com/b' },
+        ];
+        expect(describeCheckedBy(entries)).toEqual(entries);
     });
 
-    it('tells the reader to check back for anything still in progress', () => {
-        expect(timeoutCopyKey('pending')).toBe('factCheck.stillWorking');
-        expect(timeoutCopyKey('running')).toBe('factCheck.stillWorking');
-        expect(timeoutCopyKey(null)).toBe('factCheck.stillWorking');
-        expect(timeoutCopyKey(undefined)).toBe('factCheck.stillWorking');
+    it('drops entries with no usable organisation name', () => {
+        const kept = { organisation: 'AFP Fact Check' };
+        expect(
+            describeCheckedBy([
+                { organisation: '' },
+                { organisation: '   ' },
+                { organisation: null },
+                { organisation: undefined },
+                kept,
+            ] as any),
+        ).toEqual([kept]);
+    });
+
+    it('returns [] for an absent list — the pre-checkedBy server, and the no-coverage case', () => {
+        expect(describeCheckedBy(null)).toEqual([]);
+        expect(describeCheckedBy(undefined)).toEqual([]);
+        expect(describeCheckedBy([])).toEqual([]);
+        expect(describeCheckedBy('nope' as any)).toEqual([]);
     });
 });
 
+// A PUBLISHED organisation's rating is human editorial copy, not a model token.
+// Real fact checkers rate stories "Mostly False" / "Misleading" / "Altered
+// photo" — none of which are in our five-word vocabulary. Bucketing those as
+// "Unclear" would not hedge the claim, it would DELETE the per-organisation
+// verdict, which is the entire ask behind the checkedBy list.
+describe('describeOrganisationVerdict', () => {
+    it.each([
+        ['supported', 'positive'],
+        ['disputed', 'caution'],
+        ['unsupported', 'caution'],
+        ['unverifiable', 'neutral'],
+    ])('localizes the recognised token %s with tone %s', (raw, tone) => {
+        const info = describeOrganisationVerdict(raw);
+        expect(info.isKey).toBe(true);
+        expect(info.label).toBe(`factCheck.assessment.${raw}`);
+        expect(info.tone).toBe(tone);
+    });
+
+    it.each(['False', 'Mostly False', 'Misleading', 'Pants on Fire', 'Altered photo'])(
+        'shows a real published rating (%s) VERBATIM rather than as "Unclear"',
+        (raw) => {
+            const info = describeOrganisationVerdict(raw);
+            expect(info.isKey).toBe(false);
+            expect(info.label).toBe(raw);
+            expect(info.tone).toBe('neutral');
+        },
+    );
+
+    it('trims, and is case-insensitive on the tokens it does recognise', () => {
+        expect(describeOrganisationVerdict('  DISPUTED ')).toEqual({
+            label: 'factCheck.assessment.disputed',
+            isKey: true,
+            tone: 'caution',
+        });
+        expect(describeOrganisationVerdict('  Mostly True  ').label).toBe('Mostly True');
+    });
+
+    it('falls back to the localized unknown label only when there is no rating at all', () => {
+        for (const empty of [null, undefined, '', '   ']) {
+            const info = describeOrganisationVerdict(empty);
+            expect(info.isKey).toBe(true);
+            expect(info.label).toBe('factCheck.assessment.unknown');
+            expect(info.tone).toBe('neutral');
+        }
+    });
+
+    it('never assigns a tone it cannot justify to an unrecognised rating', () => {
+        // "False" reads as damning, but we have no way to know an unknown
+        // vocabulary's polarity — neutral is the only honest tone.
+        expect(describeOrganisationVerdict('False').tone).toBe('neutral');
+        expect(describeOrganisationVerdict('True').tone).toBe('neutral');
+    });
+});
+
+// The old POLL_INTERVAL_MS / POLL_TIMEOUT_MS are GONE, deliberately: the client
+// no longer polls and no longer invents a deadline. PROGRESS_DELAY_MS survives
+// because the no-spinner-flash rule for a cross-user cache hit does.
 describe('timing constants', () => {
-    it('polls on the documented cadence and gives up at a minute', () => {
-        expect(POLL_INTERVAL_MS).toBe(3000);
-        expect(POLL_TIMEOUT_MS).toBe(60_000);
-        expect(PROGRESS_DELAY_MS).toBeLessThan(POLL_INTERVAL_MS);
+    it('exposes only the progress delay, and keeps it imperceptible', () => {
+        expect(PROGRESS_DELAY_MS).toBe(400);
+        const state = factCheckState as Record<string, unknown>;
+        expect(state.POLL_INTERVAL_MS).toBeUndefined();
+        expect(state.POLL_TIMEOUT_MS).toBeUndefined();
+        expect(state.timeoutCopyKey).toBeUndefined();
     });
 });

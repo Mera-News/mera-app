@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 50,
+  version: 51,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -518,6 +518,39 @@ export default appSchema({
         { name: 'created_at', type: 'number' },
         // Touched on every cache hit; the TTL sweep orders by it.
         { name: 'last_used_at', type: 'number', isIndexed: true },
+      ],
+    }),
+
+    // ── Fact checks (schema v51) ────────────────────────────────────────────
+    // One row per fact check the user asked for, ON THIS DEVICE. The server
+    // keeps its own cross-user cache; this table is what makes the result
+    // survivable: the check now completes ASYNCHRONOUSLY (the client no longer
+    // polls — see lib/fact-check/use-fact-check.ts), so the answer usually
+    // arrives long after the reader has left the article. Without a local row
+    // there is nowhere for it to land and nothing for the Dashboard section or
+    // the /logged-in/fact-checks list to read.
+    //
+    // `payload_json` is the WHOLE server row (claims, citations and the
+    // `checkedBy` organisations) serialized verbatim, deliberately rather than
+    // shredded into columns: the render only ever needs the object back, and
+    // the server's shape is still moving. `status`/`verdict` are duplicated out
+    // of it only so a list can be filtered/sorted without parsing every row.
+    tableSchema({
+      name: 'fact_checks',
+      columns: [
+        // The ARTICLE id the check is keyed on — the lookup for "do we already
+        // have this article's check?" on a detail-screen mount.
+        { name: 'article_id', type: 'string', isIndexed: true },
+        // The server row's `_id`. Carried so a push (which names the check, not
+        // the article) can be reconciled against what is already stored.
+        { name: 'fact_check_id', type: 'string' },
+        { name: 'article_title', type: 'string', isOptional: true },
+        { name: 'status', type: 'string' },
+        { name: 'verdict', type: 'string', isOptional: true },
+        { name: 'payload_json', type: 'string' },
+        // Ordering key for the Dashboard's "3 most recent" block and the list.
+        { name: 'requested_at', type: 'number', isIndexed: true },
+        { name: 'resolved_at', type: 'number', isOptional: true },
       ],
     }),
   ],
