@@ -9,10 +9,10 @@
 // passed down from the screen — not two subscriptions that could tick apart
 // mid-render.
 //
-// The `FeedStatusMode` type and `isStatusVisible` live in lib/feed-status-mode
-// instead of here, deliberately: this module reaches the scheduler and the
-// for-you store, which instantiate a native SQLite adapter at import. See that
-// file's header.
+// The `FeedStatusMode` type lives in lib/feed-status-mode instead of here,
+// deliberately: this module reaches the scheduler and the for-you store, which
+// instantiate a native SQLite adapter at import, and a purely presentational
+// component must not pull that in behind a type. See that file's header.
 //
 // Precedence is unchanged from the bar: processing wins over error wins over the
 // daily limit, and "rows waiting for the next batch" only surfaces when nothing

@@ -1819,7 +1819,7 @@
             "reveal": {
               "feed": {
                 "label": "Akış",
-                "text": "Kartlarda ilerleyen toplamlar, ilerleme çubuğu ya da «2 saat önce» yok. Başlığın yanındaki küçük gösterge, bir şeyin getirildiğine dair tek işarettir; ona dokunmak sayıları üç saniye gösterir, sonra aradan çekilir."
+                "text": "Kartlarda ilerleyen toplamlar, ilerleme çubuğu ya da «2 saat önce» yok. Başlığın yanındaki Mera işareti, bir şeyin getirildiğine dair tek belirtidir: eşitleme sürerken parlar ve büyür, geri kalan zamanda sessizce durur. Sayıları görmek istediğinizde ona dokunun; üç saniye görünür, sonra aradan çekilir."
               },
               "dashboard": {
                 "label": "Panel",

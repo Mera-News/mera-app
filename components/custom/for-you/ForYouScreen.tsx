@@ -8,7 +8,6 @@ import {
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
-import { isStatusVisible } from '@/lib/feed-status-mode';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import {
@@ -276,14 +275,19 @@ const MeraNewsScreen: React.FC = () => {
     // OR-s in the scheduler flag on its own.
     const isFeedProcessing = useIsFeedProcessing();
 
-    // Same status glyph + panel pair the Feed mounts, with NO auto-collapse:
+    // Same status mark + panel pair the Feed mounts, with NO auto-collapse:
     // this is the screen you come to in order to look at the numbers, so the
     // panel stays open until you close it — which is how this accordion has
     // always behaved.
+    //
+    // `available` is hard-coded true, matching the Feed. It used to be
+    // `isStatusVisible(statusMode)`, whose whole job was closing a panel whose
+    // mark had just unmounted at the end of a sync. The mark is on screen in
+    // every state now, so that guard would only yank an open accordion shut the
+    // moment the pipeline settled — on the one screen whose panel is meant to
+    // stay put.
     const statusMode = useFeedStatusMode();
-    const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
-        isStatusVisible(statusMode),
-    );
+    const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(true);
 
     // The user is over their daily delivery cap (sticky until a sync delivers
     // again or the reset time passes).
@@ -662,7 +666,15 @@ const MeraNewsScreen: React.FC = () => {
                                 title-row placement is a deliberate user call
                                 (consistency with Feed over strict scoping). */}
                             <HStack className="items-center min-w-0" space="sm" pointerEvents="box-none">
-                                <View pointerEvents="none" className="flex-1 min-w-0">
+                                {/* `flex-shrink`, NOT `flex-1`. With `flex-1`
+                                    this box ate every spare pixel and pushed the
+                                    status mark to the far right, beside the
+                                    filter chip, where it read as a third button
+                                    rather than as part of the title. Sized to its
+                                    text and shrinkable, it hands the slack to the
+                                    spacer below instead. `min-w-0` stays: it is
+                                    what lets the shrink actually happen. */}
+                                <View pointerEvents="none" className="flex-shrink min-w-0">
                                     <Heading
                                         size="4xl"
                                         className="text-white"
@@ -686,6 +698,15 @@ const MeraNewsScreen: React.FC = () => {
                                     onPress={toggleStatus}
                                     testID="dashboard-status-indicator"
                                 />
+                                {/* The slack the title gave up, so the filter
+                                    chip stays pinned right. `flex-basis: 0` means
+                                    it adds nothing to the row's natural width, so
+                                    a long title still gets the whole row and
+                                    truncates rather than being squeezed by a
+                                    spacer. `pointerEvents="none"` per the header
+                                    rule above: a full-height band that is not a
+                                    control must never swallow a refresh pan. */}
+                                <View pointerEvents="none" className="flex-1" />
                                 <ImportanceFilterDropdown
                                     value={dashboardThreshold}
                                     onChange={setDashboardThreshold}

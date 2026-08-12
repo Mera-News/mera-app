@@ -1817,7 +1817,7 @@
             "reveal": {
               "feed": {
                 "label": "Notizie",
-                "text": "Nessun totale in corso, nessuna barra di avanzamento, nessun «2 ore fa» sulle schede. Un piccolo indicatore accanto al titolo è l'unico segno che qualcosa si sta scaricando, e toccandolo mostra i numeri per tre secondi prima di togliersi di mezzo."
+                "text": "Nessun totale in corso, nessuna barra di avanzamento, nessun «2 ore fa» sulle schede. Il segno Mera accanto al titolo è l'unico indizio che qualcosa si sta scaricando: si schiarisce e si ingrandisce durante una sincronizzazione, e per il resto del tempo resta silenzioso. Toccalo quando vuoi i numeri: compaiono per tre secondi e poi si tolgono di mezzo."
               },
               "dashboard": {
                 "label": "Dashboard",

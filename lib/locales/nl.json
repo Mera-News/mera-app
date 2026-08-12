@@ -1817,7 +1817,7 @@
             "reveal": {
               "feed": {
                 "label": "Feed",
-                "text": "Geen lopende totalen, geen voortgangsbalk, geen „2 uur geleden” op de kaarten. Een klein indicatortje naast de titel is het enige teken dat er iets wordt opgehaald, en erop tikken toont de cijfers drie seconden lang voordat ze weer verdwijnen."
+                "text": "Geen lopende totalen, geen voortgangsbalk, geen „2 uur geleden” op de kaarten. Het Mera-teken naast de titel is het enige teken dat er iets wordt opgehaald: het wordt lichter en groter tijdens een synchronisatie en blijft de rest van de tijd rustig. Tik erop wanneer je de cijfers wilt zien; ze verschijnen drie seconden en verdwijnen dan weer."
               },
               "dashboard": {
                 "label": "Dashboard",

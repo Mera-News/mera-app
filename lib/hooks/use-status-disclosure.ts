@@ -9,11 +9,18 @@
 //     how its accordion has always behaved. The Dashboard is where you go to
 //     look at the numbers, so it lets you keep looking.
 //
-// `available` is the affordance's own visibility. Without it there is a state
-// with no way out: the pipeline goes idle while the panel is open, the indicator
-// that opened it unmounts, and the panel is stranded on screen with nothing left
-// to tap. That is not hypothetical — on the Feed the indicator disappears at the
-// end of every single sync.
+// `available` is the affordance's own visibility, and BOTH CURRENT CALLERS PASS
+// `true`. It exists for a state that no longer occurs here: an affordance that
+// unmounts while its panel is open leaves the panel stranded with nothing left
+// to tap. That used to happen on the Feed at the end of every sync, back when
+// the status indicator rendered nothing in idle. The indicator is now the Mera
+// mark and is on screen in every mode, so passing anything but `true` would do
+// the opposite of the original job — yank an open panel shut the moment the
+// pipeline settled.
+//
+// Kept as a parameter rather than deleted because it is the correct guard for
+// any future caller whose trigger CAN disappear, and because the behaviour is
+// covered by tests either way. Do not re-wire it to the pipeline state.
 //
 // No refs and no manual clearing: the timer is armed by an effect keyed on
 // `expanded`, so React's own cleanup covers unmount, a re-tap, and the panel

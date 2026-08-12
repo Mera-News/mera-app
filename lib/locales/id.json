@@ -1817,7 +1817,7 @@
             "reveal": {
               "feed": {
                 "label": "Umpan",
-                "text": "Tidak ada total berjalan, tidak ada bilah kemajuan, tidak ada «2 jam lalu» di kartu. Indikator kecil di samping judul adalah satu-satunya tanda bahwa sesuatu sedang diambil, dan mengetuknya menampilkan angkanya selama tiga detik sebelum menyingkir."
+                "text": "Tidak ada total berjalan, tidak ada bilah kemajuan, tidak ada «2 jam lalu» di kartu. Tanda Mera di samping judul adalah satu-satunya petunjuk bahwa sesuatu sedang diambil: tanda itu menerang dan membesar selama sinkronisasi, dan tenang saja di waktu lainnya. Ketuk kapan pun Anda ingin melihat angkanya; angka itu tampil tiga detik lalu menyingkir."
               },
               "dashboard": {
                 "label": "Dasbor",

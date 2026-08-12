@@ -1847,7 +1847,7 @@
             "reveal": {
               "feed": {
                 "label": "Strumień",
-                "text": "Żadnych bieżących sum, paska postępu ani „2 godziny temu” na kartach. Mały wskaźnik obok tytułu to jedyny znak, że coś jest pobierane, a dotknięcie go pokazuje liczby przez trzy sekundy, po czym znikają."
+                "text": "Żadnych bieżących sum, paska postępu ani „2 godziny temu” na kartach. Znak Mera obok tytułu to jedyny sygnał, że coś jest pobierane: rozjaśnia się i powiększa podczas synchronizacji, a przez resztę czasu spokojnie odpoczywa. Dotknij go, kiedy chcesz zobaczyć liczby, a pokażą się na trzy sekundy i znikną."
               },
               "dashboard": {
                 "label": "Pulpit",

@@ -1818,7 +1818,7 @@
             "reveal": {
               "feed": {
                 "label": "Bảng tin",
-                "text": "Không có tổng số chạy, không thanh tiến trình, không có «2 giờ trước» trên thẻ. Một chỉ báo nhỏ bên cạnh tiêu đề là dấu hiệu duy nhất cho thấy có gì đó đang được tải, và chạm vào nó sẽ hiện các con số trong ba giây rồi nhường chỗ."
+                "text": "Không có tổng số chạy, không thanh tiến trình, không có «2 giờ trước» trên thẻ. Dấu Mera bên cạnh tiêu đề là dấu hiệu duy nhất cho thấy có gì đó đang được tải: nó sáng lên và to ra khi đang đồng bộ, còn lại thì lặng lẽ nghỉ. Chạm vào bất cứ khi nào bạn muốn xem các con số, chúng hiện trong ba giây rồi nhường chỗ."
               },
               "dashboard": {
                 "label": "Bảng điều khiển",

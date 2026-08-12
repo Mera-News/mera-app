@@ -1824,7 +1824,7 @@
             "reveal": {
               "feed": {
                 "label": "Fil d'actu",
-                "text": "Aucun total en cours, aucune barre de progression, aucun « il y a 2 heures » sur les cartes. Un petit indicateur à côté du titre est le seul signe qu'une récupération est en cours, et le toucher affiche les chiffres pendant trois secondes avant de s'effacer."
+                "text": "Aucun total en cours, aucune barre de progression, aucun « il y a 2 heures » sur les cartes. Le signe Mera à côté du titre est le seul indice qu'une récupération est en cours : il s'éclaircit et grandit pendant une synchronisation, et reste discret le reste du temps. Touchez-le quand vous voulez les chiffres, ils s'affichent trois secondes puis s'effacent."
               },
               "dashboard": {
                 "label": "Tableau de bord",

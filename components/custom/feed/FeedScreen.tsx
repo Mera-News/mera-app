@@ -96,7 +96,6 @@ import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
-import { isStatusVisible } from '@/lib/feed-status-mode';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
@@ -270,14 +269,19 @@ const FeedScreen: React.FC = () => {
   const feedThreshold = useImportanceFilterStore((s) => s.feedThreshold);
   const setFeedThreshold = useImportanceFilterStore((s) => s.setFeedThreshold);
 
-  // Status glyph + its detail panel. 3000ms: this screen is for reading, so the
+  // Status mark + its detail panel. 3000ms: this screen is for reading, so the
   // panel answers the question and then leaves. (The Dashboard mounts the same
-  // pair with no timeout — there, staying open is the point.) `isStatusVisible`
-  // closes the panel if the pipeline goes idle underneath it, which otherwise
-  // strands it on screen with the glyph that opened it already unmounted.
+  // pair with no timeout — there, staying open is the point.)
+  //
+  // `available` is hard-coded true. It used to be `isStatusVisible(statusMode)`,
+  // which existed to stop the panel being stranded on screen after the mark that
+  // opened it unmounted at the end of a sync. The mark no longer unmounts in any
+  // state, so that guard now only does harm: it would slam the panel shut under
+  // a reader the moment the pipeline went idle, with the tappable mark still
+  // sitting right there.
   const statusMode = useFeedStatusMode();
   const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
-    isStatusVisible(statusMode),
+    true,
     3000,
   );
 
@@ -1031,7 +1035,13 @@ const FeedScreen: React.FC = () => {
               space="sm"
               pointerEvents="box-none"
             >
-              <View pointerEvents="none" className="flex-1 min-w-0">
+              {/* `flex-shrink`, NOT `flex-1`. With `flex-1` this box grew into
+                  every spare pixel of the row, which parked the status mark
+                  hard against the filter chip at the far right — the exact
+                  placement the mark is meant not to have. Sized to its text and
+                  shrinkable instead, it hands the slack to the spacer below.
+                  `min-w-0` stays: it is what lets the shrink actually happen. */}
+              <View pointerEvents="none" className="flex-shrink min-w-0">
                 {/* A bare 1-line clamp truncated the screen's own name at large
                   Dynamic Type sizes, so this deliberately had none and wrapped
                   instead — but wrapping a single long word breaks it MID-WORD
@@ -1048,7 +1058,7 @@ const FeedScreen: React.FC = () => {
                 </Heading>
               </View>
               {/* Everything the deleted full-width bar used to say, in one
-                  glyph. Sits immediately after the title rather than at the
+                  mark. Sits immediately after the title rather than at the
                   right edge so it reads as a property of this screen's state,
                   not as another button. */}
               <FeedStatusIndicator
@@ -1057,6 +1067,14 @@ const FeedScreen: React.FC = () => {
                 onPress={toggleStatus}
                 testID="feed-status-indicator"
               />
+              {/* The slack the title gave up, so the filter chip stays pinned
+                  right. `flex-basis: 0` means this contributes nothing to the
+                  row's natural width, so a long localized title still takes the
+                  whole row and truncates rather than being squeezed by a spacer.
+                  `pointerEvents="none"`: this is a full-height band across the
+                  header and would otherwise swallow a pull-to-refresh pan (see
+                  the rule above). */}
+              <View pointerEvents="none" className="flex-1" />
               <ImportanceFilterDropdown
                 value={feedThreshold}
                 onChange={setFeedThreshold}

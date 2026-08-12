@@ -1817,7 +1817,7 @@
             "reveal": {
               "feed": {
                 "label": "Noticias",
-                "text": "Sin totales en marcha, sin barra de progreso, sin «hace 2 horas» en las tarjetas. Un pequeño indicador junto al título es la única señal de que algo se está descargando, y al tocarlo muestra las cifras durante tres segundos antes de apartarse."
+                "text": "Sin totales en marcha, sin barra de progreso, sin «hace 2 horas» en las tarjetas. La marca de Mera junto al título es la única señal de que algo se está descargando: se aclara y crece mientras hay una sincronización, y descansa en silencio el resto del tiempo. Tócala cuando quieras las cifras y se mostrarán durante tres segundos antes de apartarse."
               },
               "dashboard": {
                 "label": "Panel",

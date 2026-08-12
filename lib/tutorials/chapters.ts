@@ -35,9 +35,11 @@
 //     NOTHING else — no notification bell (it is Dashboard-only), no counts
 //     sentence, no progress bar, and its cards carry no timestamp and no NEW
 //     badge (`FeedScreen` passes `showRecency={false}`). The Dashboard keeps all
-//     of it. The glyph appears only while syncing / on an error / when
-//     rate-limited (`lib/feed-status-mode.isStatusVisible`) and opens a panel
-//     that closes itself after 3s. Chapter `feed` must not teach a bell, a
+//     of it. The status mark beside the title is the Mera logo and is ALWAYS on
+//     screen: it sweeps, grows to 1.3x and turns white while syncing, and rests
+//     small and off-white otherwise (red on an error, amber when rate-limited).
+//     Tapping it opens a panel that closes itself after 3s, and that tap works
+//     in every state, including idle. Chapter `feed` must not teach a bell, a
 //     counter or a bar on the Feed, and must not claim a story's age is visible
 //     there.
 //   • "Read" = opened, or ≥75% on screen for 1.5s

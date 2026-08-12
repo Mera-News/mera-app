@@ -1817,7 +1817,7 @@
             "reveal": {
               "feed": {
                 "label": "Nachrichten",
-                "text": "Keine laufenden Summen, kein Fortschrittsbalken, kein „vor 2 Stunden“ auf den Karten. Ein kleiner Ladekreis neben dem Titel ist das einzige Zeichen dafür, dass etwas abgerufen wird, und ein Tippen darauf zeigt die Zahlen drei Sekunden lang, bevor sie wieder verschwinden."
+                "text": "Keine laufenden Summen, kein Fortschrittsbalken, kein „vor 2 Stunden“ auf den Karten. Das Mera-Zeichen neben dem Titel ist das einzige Anzeichen dafür, dass etwas abgerufen wird: Es leuchtet auf und wird größer, während eine Synchronisierung läuft, und ruht die übrige Zeit still. Tippe darauf, wann immer du die Zahlen sehen möchtest; sie erscheinen drei Sekunden lang und verschwinden dann wieder."
               },
               "dashboard": {
                 "label": "Dashboard",

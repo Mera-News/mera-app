@@ -1780,7 +1780,7 @@
             "reveal": {
               "feed": {
                 "label": "The Feed",
-                "text": "No running totals, no progress bar, no \"2 hours ago\" on the cards. A small spinner beside the title is the only sign that anything is fetching, and tapping it shows the numbers for three seconds before getting out of the way."
+                "text": "No running totals, no progress bar, no \"2 hours ago\" on the cards. The Mera mark beside the title is the only sign that anything is fetching: it brightens and grows while a sync runs, and rests quietly the rest of the time. Tap it whenever you want the numbers, and they show for three seconds before getting out of the way."
               },
               "dashboard": {
                 "label": "The Dashboard",
