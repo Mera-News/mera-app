@@ -209,6 +209,8 @@ import ArticleStandaloneCard from '../ArticleStandaloneCard';
 // eslint-disable-next-line import/first
 import ArticleStandaloneCompactCard from '../ArticleStandaloneCompactCard';
 // eslint-disable-next-line import/first
+import { ArticleImagePlaceholder } from '../ArticleImagePlaceholder';
+// eslint-disable-next-line import/first
 import ArticleActionsRow from '../ArticleActionsRow';
 // eslint-disable-next-line import/first
 import CompactActionsSheet from '../CompactActionsSheet';
@@ -469,38 +471,25 @@ describe('ArticleStandaloneCompactCard', () => {
   });
 });
 
-describe('ArticleImagePlaceholder (via the card bases)', () => {
-  // The placeholder wraps itself in accessible={false} +
-  // importantForAccessibility="no-hide-descendants" — RNTL v13 EXCLUDES that
-  // whole subtree from default queries (mirroring how aria-hidden works in
-  // DOM Testing Library), so every lookup into it needs
-  // `includeHiddenElements: true`. That exclusion is itself proof the
-  // decorative-hiding works: a sighted a11y query genuinely can't "see" it.
-  // Full-size cards deliberately DROP the image region entirely when there is
-  // no image — no band, no watermark, the card starts at the meta row. The
-  // watermark read as a broken photo rather than a deliberate marker. Compact
-  // cards and the chat context card keep it, so the placeholder itself lives on
-  // and the tests below still cover it through the compact base.
+describe('no image ⇒ no image region (either card base)', () => {
+  // NEITHER card base draws a watermark for an imageless article any more. The
+  // dimmed Mera glyph read as a broken photo rather than as a deliberate
+  // marker, so the full-size card drops its band and starts at the meta row,
+  // and the compact row drops its image square and lets the headline run the
+  // full width. `ArticleImagePlaceholder` survives for exactly one consumer,
+  // the chat "About this story" card, and is unit-tested directly below rather
+  // than through whichever card happens to mount one.
+  //
+  // Lookups still pass `includeHiddenElements: true` because the placeholder
+  // hides itself from the a11y tree, and RNTL v13 excludes that subtree from
+  // default queries. Without the flag these assertions would pass whether the
+  // watermark rendered or not.
   it('renders no placeholder at all on a full-size card with no image', () => {
     const { queryByTestId } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
     );
     expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
-  });
-
-  it('hides the placeholder from the accessibility tree (decorative, not an article photo)', () => {
-    const { getByTestId, queryByTestId } = render(
-      <ArticleStandaloneCompactCard article={makeArticle({ image_url: null })} onPress={jest.fn()} />,
-    );
-    // Excluded from a default (non-hidden) query — this is the behavior we want.
-    expect(queryByTestId('placeholder-ground')).toBeNull();
-    // Walk up from the ground View to the wrapping View that carries the
-    // accessibility-hiding props.
-    let n: any = getByTestId('placeholder-ground', { includeHiddenElements: true }).parent;
-    while (n && n.props?.accessible === undefined) n = n.parent;
-    expect(n?.props?.accessible).toBe(false);
-    expect(n?.props?.importantForAccessibility).toBe('no-hide-descendants');
   });
 
   it('renders the real image instead of the placeholder when the full-size card has an image', () => {
@@ -514,12 +503,15 @@ describe('ArticleImagePlaceholder (via the card bases)', () => {
     expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
   });
 
-  it('shows the placeholder on a compact card with no image', () => {
-    const { getByTestId } = render(
+  it('renders no placeholder and no image on a compact card with no image', () => {
+    const { queryByTestId } = render(
       <ArticleStandaloneCompactCard article={makeArticle({ image_url: null })} onPress={jest.fn()} />,
     );
-    expect(getByTestId('placeholder-ground', { includeHiddenElements: true })).toBeTruthy();
-    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
+    expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+    // The whole square is absent, not merely empty — that is what lets the
+    // headline column run to the card's right edge.
+    expect(queryByTestId('article-image')).toBeNull();
   });
 
   it('renders the real image instead of the placeholder when the compact card has an image', () => {
@@ -533,29 +525,54 @@ describe('ArticleImagePlaceholder (via the card bases)', () => {
     expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
   });
 
-  // The bug this wave fixed: ArticleCompactCardBase's guard used to be
-  // `imageUrl ? <Image/> : <Placeholder/>` — it only looked at whether a URL
-  // was PASSED IN, never at whether it actually loaded. A 404/timeout left an
-  // empty quarter-width column instead of falling back, on every surface that
+  // `showImage` tracks LOADED, not merely PASSED IN. The guard used to be
+  // `imageUrl ? <Image/> : <Placeholder/>`, which never noticed a 404 or a
+  // timeout and left an empty quarter-width column on every surface that
   // renders this shared chrome (saved suggestions, related articles, story
-  // timeline, publication history, persona article list).
-  it('falls back to the placeholder after the compact card image fails to load (onError)', () => {
+  // timeline, publication history, persona article list). A broken image must
+  // end up looking exactly like no image, which now means no square at all.
+  it('drops the image square after the compact card image fails to load (onError)', () => {
     const { getByTestId, queryByTestId } = render(
       <ArticleStandaloneCompactCard
         article={makeArticle({ image_url: 'https://example.com/broken.jpg' })}
         onPress={jest.fn()}
       />,
     );
-    // Before the error: the real image is rendered, no placeholder.
     expect(getByTestId('article-image')).toBeTruthy();
-    expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
 
     fireEvent(getByTestId('article-image'), 'error');
 
-    // After the error: placeholder takes over, image is gone.
-    expect(getByTestId('placeholder-ground', { includeHiddenElements: true })).toBeTruthy();
-    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
     expect(queryByTestId('article-image')).toBeNull();
+    expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+  });
+});
+
+describe('ArticleImagePlaceholder (direct)', () => {
+  // Tested directly rather than through a card: the chat "About this story"
+  // card is its only remaining consumer, and mounting that pulls in the
+  // WatermelonDB lookup it uses to resolve an image url. The behavior under
+  // test belongs to the placeholder either way.
+  it('hides itself from the accessibility tree (decorative, not an article photo)', () => {
+    const { getByTestId, queryByTestId } = render(<ArticleImagePlaceholder />);
+
+    // Excluded from a default (non-hidden) query — this is the behavior we want.
+    expect(queryByTestId('placeholder-ground')).toBeNull();
+
+    // Walk up from the ground View to the View carrying the hiding props. The
+    // ground is a child of that wrapper, so the walk terminates on the wrapper
+    // itself; asserting both props pins that it did not run past it to some
+    // ancestor that happens to set `accessible`.
+    let n: any = getByTestId('placeholder-ground', { includeHiddenElements: true }).parent;
+    while (n && n.props?.accessible === undefined) n = n.parent;
+    expect(n?.props?.accessible).toBe(false);
+    expect(n?.props?.importantForAccessibility).toBe('no-hide-descendants');
+    expect(n?.props?.accessibilityElementsHidden).toBe(true);
+  });
+
+  it('renders the Mera glyph it exists to show', () => {
+    const { getByTestId } = render(<ArticleImagePlaceholder />);
+    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
   });
 });
 

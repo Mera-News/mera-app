@@ -1,5 +1,4 @@
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
-import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
 import {
   CARDS_USE_GLASS,
   CardGlassPlate,
@@ -21,13 +20,28 @@ import React, { useState } from 'react';
  * ArticleCompactCardBase — the compact card CHROME. Purely presentational:
  * callers pass a flat view-model plus slots.
  *
- * Layout: Pressable → elevated Card → flex-row (min-height 128, grows with the
- * title) [ ¼-width image (article image, else the generic placeholder) | ¾-width
- * content stacked in three zones:
- *   1. meta row  — time + language (ArticleMetaRow, flag hidden) + `metaAccessory`
- *   2. title     — up to 3 lines
- *   3. footer    — `footerAccessory` (left) · country flag + publisher name (right)
- * ].
+ * Layout: Pressable → elevated Card → one column of three zones:
+ *   1. meta row  — spans the full card width: time (left) + language (right),
+ *                  which is just what ArticleMetaRow's `justify-between` does
+ *                  when recency and language are its only populated slots.
+ *                  `metaAccessory` trails it.
+ *   2. body      — title (flex-1) beside a fixed 78x78 image square on the
+ *                  RIGHT. No image ⇒ no image node at all, so the title runs
+ *                  the full width.
+ *   3. footer    — full width BELOW the image: `footerAccessory` (left) ·
+ *                  country flag + publisher name (right)
+ *
+ * The image used to be a ¼-width column bleeding down the LEFT edge, holding
+ * the Mera watermark when an article had none. The watermark is gone from this
+ * card entirely (it survives only on the chat context card): an imageless row
+ * is now just text.
+ *
+ * Faithful to the source design except for one thing Yoga cannot express. That
+ * design floats the image right so the headline reflows UNDERNEATH it, and
+ * clears the float at the footer. React Native has no float and cannot wrap
+ * text around a block, so a long headline stops at the image's left edge. The
+ * `clear` half IS reproduced: the footer is a full-width sibling below the
+ * title/image row, not a third column beside them.
  *
  * • `metaAccessory`   — small adornment at the right of the meta row (e.g. the
  *                       __DEV__ cluster-confidence chip).
@@ -98,14 +112,13 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   // 2x — the clamp has to move with the type or a large-text reader gets an
   // ellipsis where the headline was. Returns exactly 2 at 1x.
   const headlineLines = useAdaptiveLineClamp(2, 4);
-  // A 404 / timeout on `imageUrl` used to leave an EMPTY column: the guard
-  // below was `imageUrl ? <Image/> : <Placeholder/>`, which only ever looks
-  // at whether a URL was PASSED IN, never at whether it actually loaded.
-  // ArticleCardBase (the full-size hero) already tracks this with its own
-  // `imageFailed` state + `showImage` — mirrored here so every surface that
-  // renders this shared chrome (saved suggestions, related articles, story
-  // timeline, publication history, persona article list) falls back to the
-  // placeholder instead of a blank quarter-width hole.
+  // Tracks LOADED, not merely PASSED IN. The guard was once
+  // `imageUrl ? <Image/> : <Placeholder/>`, which never noticed a 404 or a
+  // timeout and left a blank quarter-width hole. Now a failure collapses the
+  // square away and the headline reflows to full width, so a broken image is
+  // indistinguishable from no image — on every surface that renders this shared
+  // chrome (saved suggestions, related articles, story timeline, publication
+  // history, persona article list). ArticleCardBase does the same for the hero.
   const [imageFailed, setImageFailed] = useState(false);
   const showImage = !!imageUrl && !imageFailed;
 
@@ -125,59 +138,32 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
       }
     >
       {/* No fixed minHeight: the card wraps its content. It was 128, which
-            left visible dead space under a short 2-line headline. The image
-            column is `self-stretch` with an ABSOLUTELY positioned image, so it
-            simply fills whatever height the content column resolves to — image
-            cards keep their layout, they just get shorter too. */}
-        <Box className="flex-row">
-          {/* Image Section - 1/4 width (25%). Article image, else placeholder.
-              The image is ABSOLUTELY positioned to fill the column so its intrinsic
-              size never drives the row height — the content column (below) owns the
-              height, and the image just fills whatever that resolves to. Otherwise
-              a tall source image stretches the whole row. */}
-          <Box className="w-1/4 self-stretch overflow-hidden">
-            {showImage ? (
-              <Image
-                source={{ uri: imageUrl! }}
-                alt={displayTitle}
-                className="absolute inset-0 w-full h-full"
-                resizeMode="cover"
-                recyclingKey={recyclingKey}
-                onError={() => setImageFailed(true)}
-                blurRadius={blurImages ? 24 : undefined}
-                // Decorative, and these arrive by the screenful — yield decode
-                // work to whatever the user is waiting on. See the longer note
-                // in ArticleCardBase.
-                priority="low"
+            left visible dead space under a short 2-line headline. */}
+        <Box className="flex-col">
+          {/* 1. Meta row — the FULL card width. `countryCode` is deliberately
+              not passed: this row's flag is off (`showFlag={false}`) because the
+              footer draws it, so handing it a country here would only look
+              live. Time lands left and language right by `justify-between`,
+              those being the only two slots this card populates. */}
+          <Box className="flex-row items-center" style={{ gap: 6 }}>
+            <Box className="flex-1">
+              <ArticleMetaRow
+                pubDate={pubDate}
+                languageCode={languageCode}
+                variant="card"
+                isNew={isNew}
+                read={read}
+                showFlag={false}
               />
-            ) : (
-              <ArticleImagePlaceholder />
-            )}
+            </Box>
+            {metaAccessory}
           </Box>
 
-          {/* Content Section - 3/4 width (75%), three stacked zones. */}
-          <Box className="flex-1 flex-col px-3 py-2">
-            {/* 1. Meta row: time + language (flag lives in the footer) + optional
-                metaAccessory. */}
-            <Box className="flex-row items-center" style={{ gap: 6 }}>
-              <Box className="flex-1">
-                <ArticleMetaRow
-                  pubDate={pubDate}
-                  languageCode={languageCode}
-                  countryCode={countryCode}
-                  variant="card"
-                  isNew={isNew}
-                  read={read}
-                  showFlag={false}
-                />
-              </Box>
-              {metaAccessory}
-            </Box>
-
-            {/* 2. Headline — clamped to 2 lines. `my-1` instead of
-                `flex-1 justify-center`: with no minHeight there is no spare
-                height to distribute, and flex-1 would have re-introduced it. */}
-            <Box className="my-1">
+          {/* 2. Body — headline beside the image square. `items-start` pins the
+              image to the top of the row, under the language slot, rather than
+              letting it centre against a taller headline. */}
+          <Box className="flex-row items-start mt-2">
+            <Box className="flex-1">
               <TranslatableDynamic
                 text={displayTitle}
                 originalText={titleOriginal}
@@ -191,22 +177,49 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 numberOfLines={headlineLines}
               />
             </Box>
+            {/* Fixed 78x78, so unlike the old `self-stretch` column it CAN drive
+                the row height — an image row is taller than a text-only one,
+                which is what the design shows. Absent entirely with no image:
+                that is the whole point of this card, the headline then runs to
+                the card's right edge. */}
+            {showImage ? (
+              <Box
+                className="overflow-hidden"
+                style={{ width: 78, height: 78, borderRadius: 13, marginLeft: 14 }}
+              >
+                <Image
+                  source={{ uri: imageUrl! }}
+                  alt={displayTitle}
+                  className="w-full h-full"
+                  resizeMode="cover"
+                  recyclingKey={recyclingKey}
+                  onError={() => setImageFailed(true)}
+                  blurRadius={blurImages ? 24 : undefined}
+                  // Decorative, and these arrive by the screenful — yield decode
+                  // work to whatever the user is waiting on. See the longer note
+                  // in ArticleCardBase.
+                  priority="low"
+                />
+              </Box>
+            ) : null}
+          </Box>
 
-            {/* 3. Footer: footerAccessory (left) · country flag + publisher (right).
-                The source group is `flex-1 justify-end` rather than relying on
-                `justify-between`, so it stays right-aligned even when there is no
-                accessory (standalone rows, unscored suggestions). */}
-            <Box className="flex-row items-center" style={{ gap: 6 }}>
-              {footerAccessory ? <Box className="flex-shrink-0">{footerAccessory}</Box> : null}
-              <HStack className="items-center flex-1 justify-end" space="xs" style={{ minWidth: 0 }}>
-                <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
-                {publicationName ? (
-                  <Text size="xs" className="text-typography-500 flex-shrink" numberOfLines={1}>
-                    {publicationName}
-                  </Text>
-                ) : null}
-              </HStack>
-            </Box>
+          {/* 3. Footer: footerAccessory (left) · country flag + publisher (right).
+              Full width, BELOW the image rather than beside it — the design's
+              `clear:right`. The source group is `flex-1 justify-end` rather than
+              relying on `justify-between`, so it stays right-aligned even when
+              there is no accessory (standalone rows, unscored suggestions),
+              which is most of them. */}
+          <Box className="flex-row items-center mt-3" style={{ gap: 6 }}>
+            {footerAccessory ? <Box className="flex-shrink-0">{footerAccessory}</Box> : null}
+            <HStack className="items-center flex-1 justify-end" space="xs" style={{ minWidth: 0 }}>
+              <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
+              {publicationName ? (
+                <Text size="xs" className="text-typography-500 flex-shrink" numberOfLines={1}>
+                  {publicationName}
+                </Text>
+              ) : null}
+            </HStack>
           </Box>
         </Box>
       </Card>
