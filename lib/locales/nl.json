@@ -1567,7 +1567,10 @@
       "title": "Feitchecks",
       "untitled": "Naamloos artikel",
       "openA11y": "Dit artikel openen",
-      "articleGone": "Het artikel is verlopen en kan niet worden geopend. De feitencontrole die we hebben gevonden, blijft hier behouden."
+      "articleGone": "Het artikel is verlopen en kan niet worden geopend. De feitencontrole die we hebben gevonden, blijft hier behouden.",
+      "couldNotCheck": "We konden niet nagaan wie hierover iets heeft gepubliceerd. Tik om te zien wat de zoekopdracht wel vond.",
+      "moreOrganisations_one": "+{{count}} meer",
+      "moreOrganisations_other": "+{{count}} meer"
     },
     "explainer": "Mera controleert het nieuws niet zelf. Het zoekt naar wat gevestigde feitcheckorganisaties al over dit artikel hebben gepubliceerd.",
     "noCheckedBy": "Geen van de feitcheckorganisaties die we hebben doorzocht, heeft iets over dit artikel gepubliceerd. Dat maakt het artikel niet onjuist — de meeste artikelen worden nooit feitgecheckt.",
@@ -1596,7 +1599,9 @@
     "quickRunning": "Het web wordt doorzocht…",
     "stillChecking": "Dit duurt langer dan normaal. Het wordt nog steeds op de achtergrond gecontroleerd — kijk later terug of zoek onder Feitencontroles op uw Dashboard.",
     "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie — ze zijn het niet altijd met elkaar eens.",
-    "ownReadingHeading": "Mera's eigen kijk — ondergeschikt aan het oordeel hierboven"
+    "ownReadingHeading": "Mera's eigen kijk — ondergeschikt aan het oordeel hierboven",
+    "collapseA11y": "Deze factcheck verbergen",
+    "expandA11y": "Deze factcheck tonen"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",

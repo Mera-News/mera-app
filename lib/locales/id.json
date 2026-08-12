@@ -1567,7 +1567,10 @@
       "title": "Pemeriksaan fakta",
       "untitled": "Cerita tanpa judul",
       "openA11y": "Buka artikel ini",
-      "articleGone": "Artikel telah kadaluarsa, sehingga tidak dapat dibuka. Pemeriksaan fakta yang kami temukan disimpan di sini."
+      "articleGone": "Artikel telah kadaluarsa, sehingga tidak dapat dibuka. Pemeriksaan fakta yang kami temukan disimpan di sini.",
+      "couldNotCheck": "Kami tidak bisa memeriksa siapa yang sudah menerbitkan soal ini. Ketuk untuk melihat hasil pencariannya.",
+      "moreOrganisations_one": "+{{count}} lagi",
+      "moreOrganisations_other": "+{{count}} lagi"
     },
     "explainer": "Mera tidak memeriksa fakta berita itu sendiri. Mera mencari apa yang telah dipublikasikan organisasi pemeriksa fakta yang sudah mapan tentang cerita ini.",
     "noCheckedBy": "Tidak ada organisasi pemeriksa fakta yang kami cari yang telah mempublikasikan cerita ini. Itu tidak membuat cerita salah — sebagian besar cerita tidak pernah diperiksa faktanya.",
@@ -1596,7 +1599,9 @@
     "quickRunning": "Mencari di web…",
     "stillChecking": "Ini memakan waktu lebih lama dari biasanya. Masih diperiksa di latar belakang — periksa kembali nanti, atau lihat di bawah Pemeriksaan fakta di Dashboard Anda.",
     "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri — sehingga tidak selalu sejalan satu sama lain.",
-    "ownReadingHeading": "Pembacaan Mera sendiri — bersifat sekunder terhadap putusan di atas"
+    "ownReadingHeading": "Pembacaan Mera sendiri — bersifat sekunder terhadap putusan di atas",
+    "collapseA11y": "Sembunyikan cek fakta ini",
+    "expandA11y": "Tampilkan cek fakta ini"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritaskan sumber ini",

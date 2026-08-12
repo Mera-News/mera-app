@@ -1,3 +1,13 @@
+jest.mock('@/components/custom/TranslatableDynamic', () => {
+  const { Text } = require('react-native');
+  return {
+    __esModule: true,
+    default: ({ text, numberOfLines }: { text: string; numberOfLines?: number }) => (
+      <Text numberOfLines={numberOfLines}>{text}</Text>
+    ),
+  };
+});
+
 // FactChecksPanel — the Dashboard "Fact checks" chip. Pivot P8d's addition:
 // `reconcileStoredFactChecks()` runs BEFORE `refresh()`, on both activation
 // and pull-to-refresh, so a row nobody is actively watching (the reader left

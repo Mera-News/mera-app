@@ -1567,7 +1567,10 @@
       "title": "팩트 체크",
       "untitled": "제목 없는 기사",
       "openA11y": "이 기사 열기",
-      "articleGone": "이 기사는 만료되어 열 수 없습니다. 찾은 팩트체크는 여기에 유지됩니다."
+      "articleGone": "이 기사는 만료되어 열 수 없습니다. 찾은 팩트체크는 여기에 유지됩니다.",
+      "couldNotCheck": "누가 이에 대해 발표했는지 확인하지 못했습니다. 검색에서 찾은 내용을 보려면 탭하세요.",
+      "moreOrganisations_one": "외 {{count}}곳",
+      "moreOrganisations_other": "외 {{count}}곳"
     },
     "explainer": "메라는 뉴스를 직접 팩트 체크하지 않습니다. 확인된 팩트 체킹 기관이 이 기사에 대해 발표한 내용을 검색합니다.",
     "noCheckedBy": "검색한 팩트 체킹 기관 중 이 기사에 대해 발표한 곳이 없습니다. 이것이 기사가 틀렸다는 뜻은 아닙니다. 대부분의 기사는 팩트 체크되지 않습니다.",
@@ -1596,7 +1599,9 @@
     "quickRunning": "웹을 검색 중…",
     "stillChecking": "평소보다 시간이 더 걸리고 있습니다. 백그라운드에서 확인 중입니다 — 나중에 다시 확인하거나 대시보드의 팩트 체크에서 확인하세요.",
     "checkedByMultipleNote": "이는 각 기관이 독자적인 기준으로 독립적으로 평가한 결과이며, 서로 항상 일치하지는 않습니다.",
-    "ownReadingHeading": "메라의 자체 해석 — 위 판정에 대해 부차적인 견해"
+    "ownReadingHeading": "메라의 자체 해석 — 위 판정에 대해 부차적인 견해",
+    "collapseA11y": "이 팩트 체크 숨기기",
+    "expandA11y": "이 팩트 체크 보기"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "이 출처 우선순위 지정",

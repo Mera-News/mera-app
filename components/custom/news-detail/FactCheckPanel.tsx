@@ -4,6 +4,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import FactCheckSources from '@/components/custom/fact-checks/FactCheckSources';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import {
     describeAssessment,
     describeCheckedBy,
@@ -15,6 +16,7 @@ import {
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
+import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
@@ -88,6 +90,25 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     const { t } = useTranslation();
     const { phase, showProgress, rows } = useFactCheck(articleId);
 
+    /**
+     * Which cards the reader has folded away, keyed by row id.
+     *
+     * OPEN BY DEFAULT, and absence means open — a result the user asked for
+     * should never arrive already hidden. Keyed by id rather than index so a
+     * second check arriving (rows are prepended/stacked) cannot slide the
+     * collapsed state onto a different card.
+     *
+     * Deliberately NOT persisted. This is a reading-posture preference for the
+     * screen in front of you, not a setting; storing it would mean a check the
+     * user collapsed weeks ago is still hidden when they return to the article
+     * having forgotten they did it, which reads as the fact check having
+     * vanished. Cheap to re-collapse, expensive to debug.
+     */
+    const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({});
+    const toggle = React.useCallback((id: string) => {
+        setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
+    }, []);
+
     if (phase === 'absent') return null;
 
     const terminalRows = rows.filter((row) => isTerminalStatus(row.status));
@@ -150,6 +171,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                 const checkedBy = payload?.checkedBy;
                 const checkedByStatus = payload?.checkedByStatus;
                 const rowPrefix = `${testIDPrefix}-${index}`;
+                const isCollapsed = collapsed[row.id] === true;
                 // See the file header (PIVOT P8h) — an organisation's own
                 // rating leads once one exists; ours never competes with it.
                 const organisationCount = describeCheckedBy(checkedBy).length;
@@ -171,20 +193,60 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                         testID={`${rowPrefix}-result`}
                         className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
                     >
-                        <HStack space="xs" className="items-center">
-                            <MaterialIcons name="fact-check" size={16} color={ACCENT} />
-                            <Text size="sm" className="text-gray-300 font-semibold ml-1 flex-1" numberOfLines={2}>
+                        {/* THE WHOLE HEADER IS THE TOGGLE, not just the chevron.
+                            A verdict card is tall — organisations, summary, per
+                            claim assessments, sources, disclaimer — and on a
+                            phone it can bury the article the reader came for.
+                            Folding it leaves this one line, so the check is
+                            still visibly THERE and one tap from returning;
+                            removing it outright would read as the fact check
+                            having failed or disappeared. */}
+                        <Pressable
+                            testID={`${rowPrefix}-toggle`}
+                            onPress={() => toggle(row.id)}
+                            accessibilityRole="button"
+                            // `expanded` is what a screen reader announces and
+                            // is the only cue a non-sighted user gets that the
+                            // body is foldable at all — the chevron is
+                            // decorative to them.
+                            accessibilityState={{ expanded: !isCollapsed }}
+                            accessibilityLabel={
+                                isCollapsed ? t('factCheck.expandA11y') : t('factCheck.collapseA11y')
+                            }
+                            // Row height is the tap target; the chevron alone
+                            // would be a ~16px one.
+                            hitSlop={8}
+                        >
+                            <HStack space="xs" className="items-center">
+                                <MaterialIcons name="fact-check" size={16} color={ACCENT} />
                                 {/* `row.claim` is the STORED column — populated
                                     only on a legacy per-claim row (pre-pivot
                                     on-device checks). A server (whole-article)
                                     check has no single "claim" to name — see
                                     `fact-check-types.ts` — so it falls to the
-                                    generic heading. */}
-                                {row.claim || t('factCheck.title')}
-                            </Text>
-                        </HStack>
+                                    generic heading, which is an i18n key and
+                                    already localised, hence the plain <Text>. */}
+                                {row.claim ? (
+                                    <TranslatableDynamic
+                                        text={row.claim}
+                                        size="sm"
+                                        className="text-gray-300 font-semibold ml-1 flex-1"
+                                        numberOfLines={2}
+                                    />
+                                ) : (
+                                    <Text size="sm" className="text-gray-300 font-semibold ml-1 flex-1" numberOfLines={2}>
+                                        {t('factCheck.title')}
+                                    </Text>
+                                )}
+                                <MaterialIcons
+                                    name={isCollapsed ? 'expand-more' : 'expand-less'}
+                                    size={20}
+                                    color="#9CA3AF"
+                                />
+                            </HStack>
+                        </Pressable>
 
-                        {blocked ? (
+                        {isCollapsed ? null : blocked ? (
                             <Text size="sm" className="text-gray-300">{t('factCheck.blocked')}</Text>
                         ) : verdictInfo ? (
                             <VStack space="sm">
@@ -238,7 +300,11 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                         </Text>
 
                                         {payload?.summary ? (
-                                            <Text size="sm" className="text-gray-300">{payload.summary}</Text>
+                                            <TranslatableDynamic
+                                                text={payload.summary}
+                                                size="sm"
+                                                className="text-gray-300"
+                                            />
                                         ) : null}
 
                                         {claims.length > 0 && (
@@ -255,7 +321,11 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                                             testID={`${rowPrefix}-claim-${claimIndex}`}
                                                             className="border-l-2 border-gray-700 pl-2 py-1"
                                                         >
-                                                            <Text size="sm" className="text-gray-200">{claim.claim}</Text>
+                                                            <TranslatableDynamic
+                                                                text={claim.claim}
+                                                                size="sm"
+                                                                className="text-gray-200"
+                                                            />
                                                             <Text
                                                                 size="xs"
                                                                 className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
@@ -263,7 +333,11 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                                                 {t(info.labelKey as any)}
                                                             </Text>
                                                             {claim.note ? (
-                                                                <Text size="xs" className="text-gray-400">{claim.note}</Text>
+                                                                <TranslatableDynamic
+                                                                    text={claim.note}
+                                                                    size="xs"
+                                                                    className="text-gray-400"
+                                                                />
                                                             ) : null}
                                                         </VStack>
                                                     );

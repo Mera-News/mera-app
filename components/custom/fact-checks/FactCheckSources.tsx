@@ -1,4 +1,5 @@
 import { Box } from '@/components/ui/box';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
@@ -140,8 +141,20 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                             >
                                 {info.isKey ? t(info.label as any) : info.label}
                             </Text>
+                            {/* The organisation's own one-line description of
+                                its finding — prose, so it is translated. The
+                                organisation NAME and its verbatim RATING above
+                                are deliberately NOT: a rating is a quote on
+                                that organisation's own scale, and machine
+                                translating "Pants on Fire" re-words the very
+                                thing the server stores verbatim precisely so it
+                                cannot be re-worded. */}
                             {entry.summary ? (
-                                <Text size="xs" className="text-gray-400">{entry.summary}</Text>
+                                <TranslatableDynamic
+                                    text={entry.summary}
+                                    size="xs"
+                                    className="text-gray-400"
+                                />
                             ) : null}
                             {!tappable ? (
                                 <Text size="xs" className="text-gray-500 italic">
@@ -206,9 +219,12 @@ const FactCheckSources: React.FC<FactCheckSourcesProps> = ({
                                     {label}
                                 </Text>
                                 {citation.snippet ? (
-                                    <Text size="xs" className="text-gray-400" numberOfLines={3}>
-                                        {citation.snippet}
-                                    </Text>
+                                    <TranslatableDynamic
+                                        text={citation.snippet}
+                                        size="xs"
+                                        className="text-gray-400"
+                                        numberOfLines={3}
+                                    />
                                 ) : null}
                                 {!tappable ? (
                                     <Text size="xs" className="text-gray-500 italic">

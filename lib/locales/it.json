@@ -1567,7 +1567,10 @@
       "title": "Verifiche dei fatti",
       "untitled": "Storia senza titolo",
       "openA11y": "Apri questo articolo",
-      "articleGone": "L'articolo è scaduto, quindi non può essere aperto. La verifica dei fatti che abbiamo trovato è conservata qui."
+      "articleGone": "L'articolo è scaduto, quindi non può essere aperto. La verifica dei fatti che abbiamo trovato è conservata qui.",
+      "couldNotCheck": "Non siamo riusciti a verificare chi ha pubblicato su questo. Tocca per vedere cosa ha trovato la ricerca.",
+      "moreOrganisations_one": "+{{count}} altro",
+      "moreOrganisations_other": "+{{count}} altri"
     },
     "explainer": "Mera non verifica i fatti della notizia stessa. Cerca quello che le organizzazioni di verifica dei fatti ufficialmente riconosciute hanno già pubblicato su questa storia.",
     "noCheckedBy": "Nessuna organizzazione di verifica dei fatti che abbiamo cercato ha pubblicato su questa storia. Ciò non rende la storia inesatta — la maggior parte delle storie non viene mai verificata.",
@@ -1596,7 +1599,9 @@
     "quickRunning": "Ricerca sul web in corso…",
     "stillChecking": "Sta richiedendo più tempo del solito. È ancora in fase di verifica in background — controlla più tardi, o guarda sotto Verifiche di fatto sul tuo Dashboard.",
     "checkedByMultipleNote": "Si tratta di valutazioni indipendenti, ciascuna secondo la scala propria di quell'organizzazione — non sempre concordano tra loro.",
-    "ownReadingHeading": "Lettura di Mera — secondaria rispetto al verdetto qui sopra"
+    "ownReadingHeading": "Lettura di Mera — secondaria rispetto al verdetto qui sopra",
+    "collapseA11y": "Nascondi questa verifica",
+    "expandA11y": "Mostra questa verifica"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Dai priorità a questa fonte",

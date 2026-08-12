@@ -1567,7 +1567,10 @@
       "title": "Faktenchecks",
       "untitled": "Unbenannte Story",
       "openA11y": "Diesen Artikel öffnen",
-      "articleGone": "Der Artikel ist abgelaufen und kann nicht mehr geöffnet werden. Die gefundene Faktenprüfung wird hier beibehalten."
+      "articleGone": "Der Artikel ist abgelaufen und kann nicht mehr geöffnet werden. Die gefundene Faktenprüfung wird hier beibehalten.",
+      "couldNotCheck": "Wir konnten nicht prüfen, wer dazu etwas veröffentlicht hat. Tippe, um zu sehen, was die Suche gefunden hat.",
+      "moreOrganisations_one": "+{{count}} weitere",
+      "moreOrganisations_other": "+{{count}} weitere"
     },
     "explainer": "Mera überprüft keine Nachrichten selbst. Es sucht nach dem, was etablierte Fact-Check-Organisationen bereits über diese Story veröffentlicht haben.",
     "noCheckedBy": "Keine der durchsuchten Fact-Check-Organisationen hat etwas über diese Story veröffentlicht. Das macht die Story nicht falsch – die meisten Stories werden nie überprüft.",
@@ -1596,7 +1599,9 @@
     "quickRunning": "Suche im Web läuft…",
     "stillChecking": "Das dauert länger als normal. Es wird immer noch im Hintergrund überprüft – schau später nach, oder sieh unter Faktenchecks in deinem Dashboard nach.",
     "checkedByMultipleNote": "Dies sind unabhängige Bewertungen, jede nach der eigenen Skala der jeweiligen Organisation — sie stimmen nicht immer miteinander überein.",
-    "ownReadingHeading": "Meras eigene Einschätzung — nachrangig zur oben genannten Bewertung"
+    "ownReadingHeading": "Meras eigene Einschätzung — nachrangig zur oben genannten Bewertung",
+    "collapseA11y": "Diesen Faktencheck ausblenden",
+    "expandA11y": "Diesen Faktencheck anzeigen"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Diese Quelle priorisieren",

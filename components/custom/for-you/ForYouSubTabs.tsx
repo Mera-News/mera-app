@@ -26,15 +26,20 @@ const TABS: readonly TabDef[] = [
     { key: 'feed', icon: 'dynamic-feed', labelKey: 'forYou.subTabFeed' },
     { key: 'stories', icon: 'auto-awesome', labelKey: 'forYou.subTabStories' },
     { key: 'saved', icon: 'bookmark', labelKey: 'forYou.subTabSaved' },
-    { key: 'history', icon: 'history', labelKey: 'forYou.subTabHistory' },
-    // Fact checks — the LAST pill, after History, and the only surface for the
-    // feature: selecting it renders every fact check the user has asked for,
-    // inline in the Dashboard body. There is no separate destination.
+    // Fact checks sits BEFORE History, and that ordering is the point: this row
+    // scrolls horizontally, so the last pill is the one a reader has to know is
+    // there before they can reach it. A fact check is something the user
+    // deliberately asked for and is waiting on; History is a passive record
+    // they can browse whenever. The thing being waited on goes first.
+    //
+    // It was last, and reaching it on a phone needed a fling that plain scroll
+    // and swipe both misfired — which is the ordering problem showing up as a
+    // navigation problem.
     //
     // Reuses `factCheck.dashboard.title` rather than minting a `forYou.subTab*`
-    // twin: the pill and the section it opens are the same noun, and the row
-    // scrolls horizontally (see below), so the extra characters cost nothing.
+    // twin: the pill and the section it opens are the same noun.
     { key: 'factChecks', icon: 'fact-check', labelKey: 'factCheck.dashboard.title' },
+    { key: 'history', icon: 'history', labelKey: 'forYou.subTabHistory' },
 ];
 
 /**

@@ -1,3 +1,13 @@
+jest.mock('@/components/custom/TranslatableDynamic', () => {
+  const { Text } = require('react-native');
+  return {
+    __esModule: true,
+    default: ({ text, numberOfLines }: { text: string; numberOfLines?: number }) => (
+      <Text numberOfLines={numberOfLines}>{text}</Text>
+    ),
+  };
+});
+
 // FactCheckCard — tap-to-open + delete, and the separation between them.
 //
 // The property worth a build over: DELETE MUST NOT ALSO NAVIGATE. That is the
@@ -98,14 +108,19 @@ describe('FactCheckCard', () => {
         expect(onPress).not.toHaveBeenCalled();
     });
 
-    it('opens a fact-checker link without also navigating to the article', () => {
+    // The card is COMPACT: organisation links, citations, our reading, the
+    // claims and the disclaimer all live on the article screen this row opens.
+    // Nothing inside the body is independently tappable any more, so the whole
+    // row is one target and a tap can only mean "open the article".
+    it('renders no tappable source links — the body is one target', () => {
         const onPress = jest.fn();
-        const { getByTestId } = render(
+        const { queryByTestId, getByTestId } = render(
             <FactCheckCard item={stored()} onPress={onPress} testIDPrefix="fc" />,
         );
-        fireEvent.press(getByTestId('fc-org-0'));
-        expect(mockOpenInAppBrowser).toHaveBeenCalledWith('https://fullfact.org/a');
-        expect(onPress).not.toHaveBeenCalled();
+        expect(queryByTestId('fc-org-0')).toBeNull();
+        fireEvent.press(getByTestId('fc-open-row1'));
+        expect(onPress).toHaveBeenCalledTimes(1);
+        expect(mockOpenInAppBrowser).not.toHaveBeenCalled();
     });
 
     // The article-detail "no longer available" state renders the card with no
@@ -142,7 +157,7 @@ describe('FactCheckCard', () => {
     // same property FactCheckPanel pins: this must render a real, hedged
     // verdict, never a blank card, on the Dashboard/list surface too.
     it('renders a real answer for complete/unverifiable with every array empty', () => {
-        const { getByTestId, getByText } = render(
+        const { getByTestId, getByText, queryByText } = render(
             <FactCheckCard
                 item={stored({
                     verdict: 'unverifiable',
@@ -156,9 +171,11 @@ describe('FactCheckCard', () => {
                 testIDPrefix="fc"
             />,
         );
+        // Compact: the verdict badge is the whole answer on this row. The
+        // "nobody published" prose is part of the full card, one tap away.
         expect(getByTestId('fc-verdict-row1')).toBeTruthy();
         expect(getByText('factCheck.verdict.unverifiable.label')).toBeTruthy();
-        expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
+        expect(queryByText('factCheck.noCheckedBy')).toBeNull();
     });
 
     // The checkedBy tri-state, same as FactCheckPanel — this card is a
@@ -166,7 +183,7 @@ describe('FactCheckCard', () => {
     // must not independently regress into claiming "nobody published" for a
     // lookup that never ran.
     it('never claims nobody published when the ClaimReview lookup was unavailable', () => {
-        const { getByText, queryByText, getByTestId } = render(
+        const { getByText, queryByText, getByTestId, queryByTestId } = render(
             <FactCheckCard
                 item={stored({
                     payload: {
@@ -179,13 +196,18 @@ describe('FactCheckCard', () => {
                 testIDPrefix="fc"
             />,
         );
-        expect(getByTestId('fc-checked-by-unavailable')).toBeTruthy();
-        expect(getByText('factCheck.checkedByUnavailable')).toBeTruthy();
+        // THE INVARIANT SURVIVES THE COMPACTION. A compact row has space for
+        // exactly one status line, and "we could not look" outranks any
+        // verdict for it — a verdict badge here would be presented as though
+        // we had checked and were reporting back.
+        expect(getByTestId('fc-unavailable-row1')).toBeTruthy();
+        expect(getByText('factCheck.dashboard.couldNotCheck')).toBeTruthy();
         expect(queryByText('factCheck.noCheckedBy')).toBeNull();
+        expect(queryByTestId('fc-verdict-row1')).toBeNull();
     });
 
-    it('says nobody published when the lookup actually ran and found nothing', () => {
-        const { getByText, queryByText } = render(
+    it('shows the verdict when the lookup ran and found nothing', () => {
+        const { getByTestId, queryByText } = render(
             <FactCheckCard
                 item={stored({
                     payload: {
@@ -197,8 +219,10 @@ describe('FactCheckCard', () => {
                 testIDPrefix="fc"
             />,
         );
-        expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
-        expect(queryByText('factCheck.checkedByUnavailable')).toBeNull();
+        // Searched and found nothing is a REAL answer, so the row shows our
+        // verdict badge — and must NOT borrow the "we couldn't look" line.
+        expect(getByTestId('fc-verdict-row1')).toBeTruthy();
+        expect(queryByText('factCheck.dashboard.couldNotCheck')).toBeNull();
     });
 
     // ── PIVOT P8h — same rule as FactCheckPanel: checkedBy leads, our own
@@ -216,22 +240,29 @@ describe('FactCheckCard', () => {
 
         // ── THE MUST-FAIL TEST (Dashboard card half) ────────────────────────
         it('NEVER shows "unverifiable" alongside a named organisation on the Dashboard card either', () => {
-            const { queryByTestId, queryByText, getByText } = render(
+            const { getByTestId, queryByTestId, queryByText, getByText } = render(
                 <FactCheckCard item={withOrg('unverifiable')} onPress={jest.fn()} testIDPrefix="fc" />,
             );
-            expect(getByText('Alt News')).toBeTruthy();
+            // Compact form makes this structural rather than a matter of
+            // ordering: with one badge available, it is the ORGANISATION's,
+            // quoted verbatim, and ours is not rendered at all.
+            expect(getByTestId('fc-organisation-row1')).toBeTruthy();
+            expect(getByText('Alt News: False')).toBeTruthy();
             expect(queryByTestId('fc-verdict-row1')).toBeNull();
-            expect(queryByTestId('fc-verdict-secondary-row1')).toBeNull();
             expect(queryByText('factCheck.verdict.unverifiable.label')).toBeNull();
         });
 
         it('demotes (never the leading chip) a non-unverifiable verdict once an organisation has ruled', () => {
-            const { getByTestId, queryByTestId, getByText } = render(
+            const { getByTestId, queryByTestId, queryByText } = render(
                 <FactCheckCard item={withOrg('supported')} onPress={jest.fn()} testIDPrefix="fc" />,
             );
+            // Not merely demoted here — absent. "Consistent with sources" on a
+            // row where Alt News said False is the original defect at its
+            // smallest, and the compact card cannot show both.
             expect(queryByTestId('fc-verdict-row1')).toBeNull();
-            expect(getByTestId('fc-verdict-secondary-row1')).toBeTruthy();
-            expect(getByText('factCheck.ownReadingHeading')).toBeTruthy();
+            expect(queryByTestId('fc-verdict-secondary-row1')).toBeNull();
+            expect(getByTestId('fc-organisation-row1')).toBeTruthy();
+            expect(queryByText('factCheck.verdict.supported.label')).toBeNull();
         });
 
         it('still leads with the chip (unchanged) when checkedBy is empty, even for the same verdict', () => {

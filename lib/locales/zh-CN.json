@@ -1568,7 +1568,10 @@
       "title": "事实核查",
       "untitled": "无标题的故事",
       "openA11y": "打开此文章",
-      "articleGone": "该文章已过期，因此无法打开。我们找到的事实核查保存在此处。"
+      "articleGone": "该文章已过期，因此无法打开。我们找到的事实核查保存在此处。",
+      "couldNotCheck": "我们无法确认有谁就此发表过查核。点按可查看搜索到的内容。",
+      "moreOrganisations_one": "还有 {{count}} 家",
+      "moreOrganisations_other": "还有 {{count}} 家"
     },
     "explainer": "Mera 不是对新闻本身进行事实核查。它搜索已建立的事实核查机构已经发布的有关此故事的内容。",
     "noCheckedBy": "我们搜索的事实核查机构都未发布过关于此故事的内容。这并不意味着此故事是错误的——大多数故事从未被事实核查。",
@@ -1597,7 +1600,9 @@
     "quickRunning": "正在搜索网络…",
     "stillChecking": "这耗时比平时长。仍在后台检查中 — 稍后再查看，或查看您仪表板上的「事实核查」部分。",
     "checkedByMultipleNote": "这些是各自独立的评级,分别采用相关机构自己的标准——彼此不一定一致。",
-    "ownReadingHeading": "Mera 自己的解读——次于上方的结论"
+    "ownReadingHeading": "Mera 自己的解读——次于上方的结论",
+    "collapseA11y": "隐藏此项事实查核",
+    "expandA11y": "显示此项事实查核"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "优先考虑此来源",

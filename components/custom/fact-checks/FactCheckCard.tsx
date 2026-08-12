@@ -3,8 +3,8 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import FactCheckSources from '@/components/custom/fact-checks/FactCheckSources';
-import type { CheckedByStatus, FactCheckedByEntry, FactCheckCitation } from '@/lib/fact-check/fact-check-types';
+import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
+import type { CheckedByStatus, FactCheckedByEntry } from '@/lib/fact-check/fact-check-types';
 import {
     describeCheckedBy,
     describeVerdict,
@@ -72,18 +72,17 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
     const verdictInfo = resolved && !blocked ? describeVerdict(item.verdict) : null;
     const checkedBy = (item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy;
     const checkedByStatus = (item.payload as { checkedByStatus?: CheckedByStatus } | null)?.checkedByStatus;
-    const citations = (item.payload as { citations?: FactCheckCitation[] } | null)?.citations;
-    const organisationCount = describeCheckedBy(checkedBy).length;
+    const organisations = describeCheckedBy(checkedBy);
+    const organisationCount = organisations.length;
+    const leadOrganisation = organisations[0];
+    // Only meaningful once the row is resolved — a pending row has not looked
+    // yet, which is a third thing again and is handled by its own branch first.
+    const lookupUnavailable = resolved && !blocked && checkedByStatus === 'unavailable';
     const hasCheckedBy = organisationCount > 0;
     const presentation = describeVerdictPresentation(item.verdict, organisationCount);
-    const sources = resolved && !blocked ? (
-        <FactCheckSources
-            checkedBy={checkedBy}
-            checkedByStatus={checkedByStatus}
-            citations={citations}
-            testIDPrefix={testIDPrefix}
-        />
-    ) : null;
+    // The sources block, our own reading, the claims and the disclaimer all
+    // moved to the article screen with the rest of the full card — this row is
+    // a pointer to that answer, not a second copy of it.
 
     return (
         // The delete control is a SIBLING of the tappable body, absolutely
@@ -114,9 +113,18 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                         color={ACCENT}
                         style={{ marginTop: 2 }}
                     />
-                    <Text size="sm" className="text-gray-100 font-semibold flex-1 ml-1" numberOfLines={3}>
-                        {item.articleTitle?.trim() || t('factCheck.dashboard.untitled')}
-                    </Text>
+                    {item.articleTitle?.trim() ? (
+                        <TranslatableDynamic
+                            text={item.articleTitle.trim()}
+                            size="sm"
+                            className="text-gray-100 font-semibold flex-1 ml-1"
+                            numberOfLines={3}
+                        />
+                    ) : (
+                        <Text size="sm" className="text-gray-100 font-semibold flex-1 ml-1" numberOfLines={3}>
+                            {t('factCheck.dashboard.untitled')}
+                        </Text>
+                    )}
             </HStack>
 
             {/* The claim this ROW is about. An article can carry several rows
@@ -124,61 +132,80 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 two rows for the same headline are indistinguishable except by
                 their verdict. Absent on a legacy (pre-v52) whole-article row. */}
             {item.claim ? (
-                <Text size="xs" className="text-gray-400 italic" numberOfLines={2}>
-                    {item.claim}
-                </Text>
+                <TranslatableDynamic
+                    text={item.claim}
+                    size="xs"
+                    className="text-gray-400"
+                    italic
+                    numberOfLines={2}
+                />
             ) : null}
 
-            {!resolved && (
+            {/* ONE STATUS LINE, AND ONLY ONE. This is a list row, not the
+                answer: the full card — organisations with their own ratings and
+                links, our reading, the claims, the sources, the disclaimer —
+                lives on the article screen this row opens.
+
+                Which badge shows is NOT cosmetic, and follows the same rule the
+                full card does (PIVOT P8h): when an organisation has published,
+                ITS verbatim rating is the badge, because a compact row has
+                space for exactly one and ours must never be the one that
+                displaces theirs. Showing "Consistent with sources" on a row
+                where Alt News rated the claim False is the original defect in
+                its smallest possible form. */}
+            {!resolved ? (
                 <Text size="xs" className="text-gray-400" testID={`${testIDPrefix}-pending`}>
                     {t('factCheck.dashboard.pending')}
                 </Text>
-            )}
-
-            {blocked && (
+            ) : blocked ? (
                 <Text size="xs" className="text-gray-400">{t('factCheck.blocked')}</Text>
-            )}
-
-            {/* checkedBy LEADS when populated — see the file header (PIVOT
-                P8h). Above the verdict rather than below it, so an
-                organisation's own rating is read first. */}
-            {hasCheckedBy && sources}
-
-            {verdictInfo && presentation !== 'suppressed' && (
-                <VStack space="xs" testID={hasCheckedBy ? `${testIDPrefix}-own-reading-${item.id}` : undefined}>
-                    {hasCheckedBy && (
-                        <Text size="xs" className="text-gray-400 font-semibold uppercase">
-                            {t('factCheck.ownReadingHeading')}
+            ) : lookupUnavailable ? (
+                // THE DISTINCTION THIS WHOLE FEATURE TURNS ON, and the one a
+                // compact row is most likely to lose. `unavailable` means the
+                // lookup never happened, so ANY verdict badge here would be
+                // presented as though we had checked and were reporting back.
+                // It outranks the verdict for exactly that reason.
+                <Text
+                    size="xs"
+                    className="text-gray-400"
+                    testID={`${testIDPrefix}-unavailable-${item.id}`}
+                    numberOfLines={2}
+                >
+                    {t('factCheck.dashboard.couldNotCheck')}
+                </Text>
+            ) : hasCheckedBy ? (
+                <HStack space="xs" className="items-center flex-wrap">
+                    <Box
+                        testID={`${testIDPrefix}-organisation-${item.id}`}
+                        className="self-start rounded-full bg-gray-800 px-3 py-1"
+                    >
+                        {/* Verbatim, on that organisation's own scale — never
+                            mapped onto our five verdict values, which is the
+                            same rule the server applies when it stores it. */}
+                        <Text size="xs" className="font-semibold text-gray-200" numberOfLines={1}>
+                            {leadOrganisation?.verdict
+                                ? `${leadOrganisation.organisation}: ${leadOrganisation.verdict}`
+                                : leadOrganisation?.organisation}
+                        </Text>
+                    </Box>
+                    {organisationCount > 1 && (
+                        <Text size="xs" className="text-gray-400">
+                            {t('factCheck.dashboard.moreOrganisations', {
+                                count: organisationCount - 1,
+                            })}
                         </Text>
                     )}
-                    {presentation === 'lead' ? (
-                        <Box
-                            testID={`${testIDPrefix}-verdict-${item.id}`}
-                            className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
-                        >
-                            <Text size="xs" className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}>
-                                {t(verdictInfo.labelKey as any)}
-                            </Text>
-                        </Box>
-                    ) : (
-                        // 'secondary' — no chip background, see FactCheckPanel
-                        // for the same call.
-                        <Text
-                            size="xs"
-                            testID={`${testIDPrefix}-verdict-secondary-${item.id}`}
-                            className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}
-                        >
-                            {t(verdictInfo.labelKey as any)}
-                        </Text>
-                    )}
-                </VStack>
-            )}
-
-            {!hasCheckedBy && sources}
-
-                    <Text size="xs" className="text-gray-500">
-                        {t('factCheck.disclaimer')}
+                </HStack>
+            ) : verdictInfo && presentation !== 'suppressed' ? (
+                <Box
+                    testID={`${testIDPrefix}-verdict-${item.id}`}
+                    className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
+                >
+                    <Text size="xs" className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}>
+                        {t(verdictInfo.labelKey as any)}
                     </Text>
+                </Box>
+            ) : null}
                 </VStack>
             </Pressable>
 

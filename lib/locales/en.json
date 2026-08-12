@@ -310,7 +310,10 @@
       "untitled": "Untitled story",
       "deleteA11y": "Delete this fact check",
       "openA11y": "Open this article",
-      "articleGone": "The article has expired, so it can't be opened. The fact check we found is kept here."
+      "articleGone": "The article has expired, so it can't be opened. The fact check we found is kept here.",
+      "couldNotCheck": "We couldn't check who has published on this. Tap to see what the search did find.",
+      "moreOrganisations_one": "+{{count}} more",
+      "moreOrganisations_other": "+{{count}} more"
     },
     "verdict": {
       "supported": {
@@ -344,7 +347,9 @@
       "unsupported": "No support found",
       "unverifiable": "Couldn't confirm",
       "unknown": "Unclear"
-    }
+    },
+    "collapseA11y": "Hide this fact check",
+    "expandA11y": "Show this fact check"
   },
   "newsCluster": {
     "failedToLoad": "Failed to load cluster details",

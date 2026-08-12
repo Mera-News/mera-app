@@ -1597,7 +1597,10 @@
       "title": "Weryfikacje faktów",
       "untitled": "Artykuł bez tytułu",
       "openA11y": "Otwórz ten artykuł",
-      "articleGone": "Artykuł wygasł, dlatego nie można go otworzyć. Znaleziona weryfikacja faktów jest przechowywana tutaj."
+      "articleGone": "Artykuł wygasł, dlatego nie można go otworzyć. Znaleziona weryfikacja faktów jest przechowywana tutaj.",
+      "couldNotCheck": "Nie udało się sprawdzić, kto o tym pisał. Dotknij, aby zobaczyć, co znalazło wyszukiwanie.",
+      "moreOrganisations_one": "+{{count}} więcej",
+      "moreOrganisations_other": "+{{count}} więcej"
     },
     "explainer": "Mera nie weryfikuje wiadomości sama. Wyszukuje to, co ustalone organizacje weryfikujące fakty już opublikowały na temat tej historii.",
     "noCheckedBy": "Żadna z przeszukanych organizacji weryfikujących fakty nie opublikowała na temat tego artykułu. To nie oznacza, że artykuł jest nieprawidłowy — większość artykułów nigdy nie jest weryfikowana.",
@@ -1626,7 +1629,9 @@
     "quickRunning": "Przeszukiwanie sieci…",
     "stillChecking": "To trwa dłużej niż zwykle. Sprawdzanie ciągle trwa w tle — wróć później lub sprawdź sekcję Weryfikacje faktów na Pulpicie.",
     "checkedByMultipleNote": "To niezależne oceny, każda w skali danej organizacji — nie zawsze są ze sobą zgodne.",
-    "ownReadingHeading": "Ocena własna Mera — drugorzędna wobec werdyktu powyżej"
+    "ownReadingHeading": "Ocena własna Mera — drugorzędna wobec werdyktu powyżej",
+    "collapseA11y": "Ukryj to sprawdzenie faktów",
+    "expandA11y": "Pokaż to sprawdzenie faktów"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Uprioritetnij to źródło",

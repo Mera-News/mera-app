@@ -1569,7 +1569,10 @@
       "title": "Doğruluk kontroller",
       "untitled": "Başlıksız haber",
       "openA11y": "Bu makaleyi aç",
-      "articleGone": "Makale süresi dolmuş, bu nedenle açılamıyor. Bulduğumuz gerçek kontrolü burada saklıyoruz."
+      "articleGone": "Makale süresi dolmuş, bu nedenle açılamıyor. Bulduğumuz gerçek kontrolü burada saklıyoruz.",
+      "couldNotCheck": "Bu konuda kimin yayın yaptığını kontrol edemedik. Aramanın ne bulduğunu görmek için dokunun.",
+      "moreOrganisations_one": "+{{count}} tane daha",
+      "moreOrganisations_other": "+{{count}} tane daha"
     },
     "explainer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Resmi doğruluk kontrol kuruluşlarının bu haber hakkında yayımladıklarını arar.",
     "noCheckedBy": "Aradığımız hiçbir doğruluk kontrol kuruluşu bu haber hakkında bilgi yayımlamadı. Bu haberin yanlış olduğu anlamına gelmez — çoğu haber hiçbir zaman doğruluk kontrolünden geçmez.",
@@ -1598,7 +1601,9 @@
     "quickRunning": "Web aranıyor…",
     "stillChecking": "Bu normalden daha uzun sürüyor. Arka planda hala kontrol ediliyor — daha sonra geri gel veya Dashboard'unuzdaki Gerçek Kontroller bölümüne bak.",
     "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir — her zaman birbiriyle uyuşmayabilir.",
-    "ownReadingHeading": "Mera'nın kendi değerlendirmesi — yukarıdaki karara ikincil"
+    "ownReadingHeading": "Mera'nın kendi değerlendirmesi — yukarıdaki karara ikincil",
+    "collapseA11y": "Bu doğrulamayı gizle",
+    "expandA11y": "Bu doğrulamayı göster"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Bu kaynağı önceliklendır",

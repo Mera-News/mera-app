@@ -1574,7 +1574,10 @@
       "title": "Vérifications de faits",
       "untitled": "Histoire sans titre",
       "openA11y": "Ouvrir cet article",
-      "articleGone": "L'article a expiré, il ne peut donc pas être ouvert. La vérification des faits que nous avons trouvée est conservée ici."
+      "articleGone": "L'article a expiré, il ne peut donc pas être ouvert. La vérification des faits que nous avons trouvée est conservée ici.",
+      "couldNotCheck": "Nous n'avons pas pu vérifier qui a publié à ce sujet. Touchez pour voir ce que la recherche a trouvé.",
+      "moreOrganisations_one": "+{{count}} autre",
+      "moreOrganisations_other": "+{{count}} autres"
     },
     "explainer": "Mera ne vérifie pas les faits de l'actualité elle-même. Elle recherche ce que les organismes de vérification de faits établis ont déjà publié sur cette histoire.",
     "noCheckedBy": "Aucun organisme de vérification de faits que nous avons consulté n'a publié sur cette histoire. Cela ne rend pas l'histoire fausse — la plupart des histoires ne sont jamais vérifiées.",
@@ -1603,7 +1606,9 @@
     "quickRunning": "Recherche sur le web…",
     "stillChecking": "Cela prend plus de temps que d'habitude. C'est toujours en cours de vérification en arrière-plan — revenez plus tard ou consultez Vérifications des faits dans votre Tableau de bord.",
     "checkedByMultipleNote": "Il s'agit d'évaluations indépendantes, chacune selon l'échelle propre à cette organisation — elles ne concordent pas toujours entre elles.",
-    "ownReadingHeading": "Lecture propre à Mera — secondaire par rapport au verdict ci-dessus"
+    "ownReadingHeading": "Lecture propre à Mera — secondaire par rapport au verdict ci-dessus",
+    "collapseA11y": "Masquer cette vérification",
+    "expandA11y": "Afficher cette vérification"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioriser cette source",

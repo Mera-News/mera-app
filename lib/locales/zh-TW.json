@@ -1568,7 +1568,10 @@
       "title": "事實查證",
       "untitled": "未命名的故事",
       "openA11y": "開啟這篇文章",
-      "articleGone": "該文章已過期，因此無法打開。我們找到的事實查核保存在此處。"
+      "articleGone": "該文章已過期，因此無法打開。我們找到的事實查核保存在此處。",
+      "couldNotCheck": "我們無法確認有誰就此發表過查核。點按可查看搜尋到的內容。",
+      "moreOrganisations_one": "還有 {{count}} 家",
+      "moreOrganisations_other": "還有 {{count}} 家"
     },
     "explainer": "Mera 不會對新聞進行事實查證。它會搜尋已建立的事實查證機構已發佈的內容。",
     "noCheckedBy": "我們搜尋的事實查證機構都沒有報導過此故事。這不表示故事有誤——大多數故事都從未被事實查證過。",
@@ -1597,7 +1600,9 @@
     "quickRunning": "正在搜尋網路…",
     "stillChecking": "這花費的時間比平常久。它仍在背景檢查中——稍後再查看，或查看您儀表板上的「查證結果」。",
     "checkedByMultipleNote": "這些是各自獨立的評等,分別採用相關機構自己的標準——彼此不一定一致。",
-    "ownReadingHeading": "Mera 自己的解讀——次於上方的結論"
+    "ownReadingHeading": "Mera 自己的解讀——次於上方的結論",
+    "collapseA11y": "隱藏此項事實查核",
+    "expandA11y": "顯示此項事實查核"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "優先考慮此來源",

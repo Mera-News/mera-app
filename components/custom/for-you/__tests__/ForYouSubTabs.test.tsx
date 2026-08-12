@@ -81,7 +81,11 @@ describe('ForYouSubTabs', () => {
     });
 
     // Position is the requirement, not just presence: "after History".
-    it('places Fact checks LAST, immediately after History', () => {
+    // Fact checks sits BEFORE History. The row scrolls horizontally, so the
+    // last pill is the one a reader has to already know is there — and a fact
+    // check is something they deliberately asked for and are waiting on, where
+    // History is a passive record. Order encodes that, so it is asserted.
+    it('places Fact checks before History', () => {
         const { getByTestId } = render(
             <ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />,
         );
@@ -96,7 +100,7 @@ describe('ForYouSubTabs', () => {
             React.Children.forEach(node.props?.children, walk);
         };
         walk(row);
-        expect(keys).toEqual(['feed', 'stories', 'saved', 'history', 'factChecks']);
+        expect(keys).toEqual(['feed', 'stories', 'saved', 'factChecks', 'history']);
     });
 
     it('fires onSelect with factChecks when the Fact checks pill is tapped', () => {

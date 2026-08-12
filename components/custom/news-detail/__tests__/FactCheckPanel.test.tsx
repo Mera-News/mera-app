@@ -1,3 +1,13 @@
+jest.mock('@/components/custom/TranslatableDynamic', () => {
+  const { Text } = require('react-native');
+  return {
+    __esModule: true,
+    default: ({ text, numberOfLines }: { text: string; numberOfLines?: number }) => (
+      <Text numberOfLines={numberOfLines}>{text}</Text>
+    ),
+  };
+});
+
 // FactCheckPanel — a PURE OBSERVER post-pivot. No action button, no retry, no
 // hide: the tick (`openFactCheckChat`) is the only way in, and this component
 // only ever renders what `useFactCheck` reads back off the device (plus its
@@ -100,6 +110,65 @@ const storedRow = (overrides: Record<string, unknown> = {}) => ({
 
 describe('FactCheckPanel', () => {
     beforeEach(() => jest.clearAllMocks());
+
+    // ── Collapse. A verdict card is tall — organisations, our reading, every
+    // claim, the sources and the disclaimer — and on a phone it can bury the
+    // article the reader opened. ───────────────────────────────────────────
+    describe('collapsing a card', () => {
+        it('starts EXPANDED — a result the user asked for never arrives hidden', () => {
+            hookState({ phase: 'terminal', rows: [storedRow()] });
+            const { getByTestId, getByText } = renderPanel();
+            expect(getByTestId('fact-check-0-toggle').props.accessibilityState.expanded).toBe(true);
+            expect(getByText('Two other outlets report the same figures.')).toBeTruthy();
+        });
+
+        it('folds the body away but KEEPS the header, so the check is still visibly there', () => {
+            hookState({ phase: 'terminal', rows: [storedRow()] });
+            const { getByTestId, queryByText, getByText } = renderPanel();
+
+            fireEvent.press(getByTestId('fact-check-0-toggle'));
+
+            // Body gone...
+            expect(queryByText('Two other outlets report the same figures.')).toBeNull();
+            expect(queryByText('factCheck.disclaimer')).toBeNull();
+            // ...header stays. Removing the row outright would read as the
+            // fact check having failed or vanished, which is the one thing
+            // hiding it must not look like.
+            expect(getByText('The dam was completed in 2019.')).toBeTruthy();
+            expect(getByTestId('fact-check-0-toggle').props.accessibilityState.expanded).toBe(false);
+        });
+
+        it('re-opens on a second tap', () => {
+            hookState({ phase: 'terminal', rows: [storedRow()] });
+            const { getByTestId, getByText } = renderPanel();
+            fireEvent.press(getByTestId('fact-check-0-toggle'));
+            fireEvent.press(getByTestId('fact-check-0-toggle'));
+            expect(getByText('Two other outlets report the same figures.')).toBeTruthy();
+        });
+
+        it('collapses ONE card without touching its sibling', () => {
+            // Keyed by row id, not index, so a second check arriving cannot
+            // slide the collapsed state onto a different card.
+            hookState({
+                phase: 'terminal',
+                rows: [
+                    storedRow({ id: 'row-0', claim: 'First claim.' }),
+                    storedRow({
+                        id: 'row-1',
+                        claim: 'Second claim.',
+                        payload: { ...storedRow().payload, summary: 'A different summary.' },
+                    }),
+                ],
+            });
+            const { getByTestId, queryByText, getByText } = renderPanel();
+
+            fireEvent.press(getByTestId('fact-check-0-toggle'));
+
+            expect(queryByText('Two other outlets report the same figures.')).toBeNull();
+            expect(getByText('A different summary.')).toBeTruthy();
+            expect(getByTestId('fact-check-1-toggle').props.accessibilityState.expanded).toBe(true);
+        });
+    });
 
     it('renders nothing when absent', () => {
         hookState({ phase: 'absent', rows: [] });

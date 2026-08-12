@@ -1568,7 +1568,10 @@
       "title": "Kiểm chứng sự kiện",
       "untitled": "Câu chuyện không có tiêu đề",
       "openA11y": "Mở bài viết này",
-      "articleGone": "Bài viết đã hết hạn, nên không thể mở được. Kiểm tra sự thật mà chúng tôi tìm thấy được giữ lại ở đây."
+      "articleGone": "Bài viết đã hết hạn, nên không thể mở được. Kiểm tra sự thật mà chúng tôi tìm thấy được giữ lại ở đây.",
+      "couldNotCheck": "Chúng tôi không kiểm tra được ai đã đăng về việc này. Chạm để xem kết quả tìm kiếm.",
+      "moreOrganisations_one": "+{{count}} nữa",
+      "moreOrganisations_other": "+{{count}} nữa"
     },
     "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
     "noCheckedBy": "Không có tổ chức kiểm chứng nào trong tìm kiếm của chúng tôi đã công bố về câu chuyện này. Điều này không có nghĩa là câu chuyện sai — hầu hết các câu chuyện không bao giờ được kiểm chứng.",
@@ -1597,7 +1600,9 @@
     "quickRunning": "Đang tìm kiếm web…",
     "stillChecking": "Điều này mất nhiều thời gian hơn bình thường. Nó vẫn đang được kiểm tra — quay lại sau hoặc xem dưới Fact checks trên Dashboard.",
     "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó — chúng không phải lúc nào cũng thống nhất với nhau.",
-    "ownReadingHeading": "Nhận định riêng của Mera — thứ yếu so với kết luận ở trên"
+    "ownReadingHeading": "Nhận định riêng của Mera — thứ yếu so với kết luận ở trên",
+    "collapseA11y": "Ẩn phần kiểm chứng này",
+    "expandA11y": "Hiện phần kiểm chứng này"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",
