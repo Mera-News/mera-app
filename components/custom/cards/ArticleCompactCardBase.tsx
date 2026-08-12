@@ -195,12 +195,20 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
               the image's height so it has slack of its own to distribute. */}
           <Box className="flex-row mt-2">
             <Box className="flex-1 flex-col">
-              {/* Headline takes the slack (`flex-1`) and centres inside it, so
-                  a short headline sits between the meta row and the footer
-                  rather than pinned under the meta row. On an imageless row
-                  there IS no slack — the row height is the content height — so
-                  this is a no-op there and needs no guard. */}
-              <Box className="flex-1 justify-center">
+              {/* Headline takes the slack and centres inside it, so a short
+                  headline sits between the meta row and the footer rather than
+                  pinned under the meta row.
+
+                  `flexGrow` ALONE, never `flex-1`. `flex: 1` also sets
+                  `flexBasis: 0`, and this box sits in a COLUMN whose height is
+                  auto whenever there is no image to force one. A zero basis
+                  then contributes zero to that auto height, so the headline
+                  collapsed to nothing and imageless rows rendered a time, a
+                  language and a publisher with a blank space where the story
+                  was. With the basis left at `auto` the box is content-sized
+                  when there is nothing to grow into, and grows to fill the
+                  image's height when there is. */}
+              <Box className="justify-center" style={{ flexGrow: 1 }}>
                 <TranslatableDynamic
                   text={displayTitle}
                   originalText={titleOriginal}
