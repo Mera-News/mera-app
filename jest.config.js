@@ -22,7 +22,13 @@ module.exports = {
   // harness-local/ is a standalone Node executor (tsx scripts, not jest specs) —
   // its testMatch shape already excludes them, but this is belt-and-suspenders
   // so a future harness-local/**/*.test.ts fixture never gets picked up here.
-  testPathIgnorePatterns: ['/node_modules/', '/harness-local/'],
+  //
+  // .claude/worktrees/ is a full duplicate repo tree (428 spec files). Its specs
+  // resolve `@/…` through THIS rootDir's alias, so they run the LIVE code
+  // against STALE expectations: the suite ran twice, and any deliberate change
+  // to a component here failed in the copy while passing in the original. That
+  // is a false red by construction, not coverage.
+  testPathIgnorePatterns: ['/node_modules/', '/harness-local/', '/.claude/worktrees/'],
   // Coverage spans the whole logic layer (lib/**). Excluded: generated GraphQL
   // types, locale data, the native DB singleton (instantiates SQLiteAdapter at
   // import — every consumer mocks it), and the three thin llama.rn/react-native-fs
