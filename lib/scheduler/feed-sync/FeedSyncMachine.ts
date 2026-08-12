@@ -388,7 +388,15 @@ class FeedSyncMachine {
 
         await flushSuggestionsRefresh();
         this._transitionTo('done', runId);
-        useForYouStore.getState().setLastSyncAt(Date.now());
+        // Ownership-gated from here to the end of the branch. This is the branch
+        // a RELEASED ZOMBIE almost always lands in: the live run has already
+        // inserted the rows, so the zombie's own `stepDiff` finds
+        // `missingIds === []`. Left ungated, it would stamp "a processing run
+        // finished" and flip both feed surfaces from FeedPreparingCard to
+        // AllCaughtUpCard while the live run is genuinely still hydrating.
+        if (this._isCurrentRun(runId)) {
+          useForYouStore.getState().setLastSyncAt(Date.now());
+        }
         // A cycle that found nothing to do is still a processing run that
         // FINISHED, and it has to say so. `lastProcessingRunFinishedAt` is what
         // both feed surfaces read to choose between FeedPreparingCard and
@@ -402,7 +410,7 @@ class FeedSyncMachine {
         // Skipped while suppressed: a live scoring run owns the unscored backlog
         // and will stamp its own finalize, so claiming "finished" here would
         // resolve the card while work is genuinely still in flight.
-        if (!suppressScoring) {
+        if (!suppressScoring && this._isCurrentRun(runId)) {
           useForYouStore.getState().markProcessingRunFinished();
         }
         try {
@@ -508,7 +516,9 @@ class FeedSyncMachine {
       // handles the run already in flight when the verdict landed.
       if (errorCode === 'not-subscribed') {
         this._forceIdle(runId); // bypasses the transition guard — valid from any state
-        publishSyncStatus('idle');
+        // Gated: publishSyncStatus('idle') CLEARS the status message, so an
+        // abandoned run would blank the live run's header.
+        if (this._isCurrentRun(runId)) publishSyncStatus('idle');
         try {
           await feedPersistence.clearMachineSnapshot();
         } catch (snapErr) {
@@ -525,7 +535,12 @@ class FeedSyncMachine {
       // return WITHOUT throwing so the scheduler marks the job completed (no
       // 3× retry, no Sentry error). Recovery is the user adding interests.
       if (errorCode === 'no-topics-configured') {
-        publishSyncError('no-topics-configured', undefined, this._state);
+        // Gated, and the `this._state` argument is why it matters twice over: it
+        // is read as `failedAtState`, so an abandoned run would both paint its
+        // own error on the live header AND attribute it to the LIVE run's state.
+        if (this._isCurrentRun(runId)) {
+          publishSyncError('no-topics-configured', undefined, this._state);
+        }
         this._forceIdle(runId); // bypasses the transition guard — valid from any state
         try {
           await feedPersistence.clearMachineSnapshot();
@@ -548,8 +563,15 @@ class FeedSyncMachine {
         // statuses each polling cycle publishes, so the "limit reached" notice
         // stays visible until a sync delivers articles again or the reset
         // passes. Fall back to the next UTC midnight if the server omitted it.
+        // `setDailyLimitResetAt` and the notice below are deliberately NOT
+        // ownership-gated: the cap really was hit, and that is a global fact
+        // about the user's day, not per-run state. Only the header status is
+        // gated, because it reads `this._state` as `failedAtState` and would
+        // otherwise describe the LIVE run's position.
         store.setDailyLimitResetAt(resetAt ?? nextUtcMidnightMs());
-        publishSyncError('daily-limit', resetAt, this._state);
+        if (this._isCurrentRun(runId)) {
+          publishSyncError('daily-limit', resetAt, this._state);
+        }
 
         // Gate the repeating toast/notification-center row to once per UTC
         // day. Without this, the 60s task-gate re-arm and the 5s

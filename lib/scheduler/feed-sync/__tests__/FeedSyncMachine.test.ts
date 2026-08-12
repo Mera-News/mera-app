@@ -1102,12 +1102,39 @@ describe('FeedSyncMachine — invalid transition', () => {
     expect(feedSyncMachine.state).toBe('done');
   });
 
-  // NOTE: FeedSyncMachine.ts line 220 (`throw new InvalidTransitionError`) is
-  // defensive dead code. The only caller of _transitionTo('paused-offline') is the
-  // network subscriber callback, which guards with NETWORK_DEPENDENT_STATES.includes()
-  // before calling _transitionTo. Since paused-offline is always reachable from those
-  // states, the guard prevents an invalid transition from ever being attempted. Line 220
-  // cannot be reached without modifying source code.
+  it('still throws for a genuine invalid transition in the LIVE run', () => {
+    // Decision on record: the abandoned-run guard added in `_transitionTo` makes
+    // a ZOMBIE's transitions no-ops, and nothing else. A bad pair in the run
+    // that owns the machine stays fatal — the cross-run collision was the only
+    // known cause of these errors, so anything left is a real bug and has to
+    // stay loud rather than be silently swallowed.
+    (feedSyncMachine as any)._state = 'done';
+    expect(() =>
+      (feedSyncMachine as any)._transitionTo('diffing', (feedSyncMachine as any)._runSeq),
+    ).toThrow(InvalidTransitionError);
+    (feedSyncMachine as any)._state = 'idle';
+  });
+
+  // The `throw new InvalidTransitionError` in `_transitionTo` is NOT dead code.
+  // An earlier note here said it was, reasoning only about a single run: the one
+  // caller that targets 'paused-offline' is the network subscriber, which guards
+  // with NETWORK_DEPENDENT_STATES.includes(), so THAT call site genuinely cannot
+  // throw. The conclusion did not generalise — there are nine other call sites
+  // covering every other state, and production reached them: Sentry
+  // MERA-APP-5W/6D/6E/61.
+  //
+  // The mechanism the single-run reasoning could not see is cross-run. Two runs
+  // share this module singleton's one `_state`, because `start()`'s
+  // INFLIGHT_STALE_MS branch abandons a stale run by dropping the reference
+  // without stopping it. Both directions occurred: the zombie throwing (its
+  // transition evaluated against the replacement's state), and the zombie
+  // force-resetting `_state` to 'idle' so the LIVE run's next legal transition
+  // threw. Closed by threading `runId` through `_transitionTo`, `_forceIdle`, the
+  // network subscription and the resume waiters.
+  //
+  // Covered by 'still throws for a genuine invalid transition in the LIVE run'
+  // above and by the two 'abandoned run' tests in the stale-in-flight block.
+  // Deliberately no line numbers here — citing one is why the old note rotted.
 });
 
 describe('FeedSyncMachine — abort in fetching-topic-ids before step resolves', () => {
@@ -1395,6 +1422,49 @@ describe('FeedSyncMachine — stale in-flight run', () => {
     await jest.advanceTimersByTimeAsync(0);
     await expect(pB).resolves.toBeUndefined();
     expect(feedSyncMachine.state).toBe('done');
+  });
+
+  it('an abandoned run does not stamp "processing finished" over a live run', async () => {
+    // The branch a released zombie almost always lands in: the live run already
+    // inserted the rows, so the zombie's own stepDiff finds missingIds === [].
+    // Ungated, its `markProcessingRunFinished` flips both feed surfaces from
+    // FeedPreparingCard to AllCaughtUpCard while the live run is still hydrating.
+    let releaseA: (() => void) | null = null;
+    mockStepFetchTopicIds.mockImplementationOnce(
+      () => new Promise((resolve) => { releaseA = () => resolve(defaultTopicResult); }),
+    );
+    const pA = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(5 * 60_000);
+
+    // Live run B parks in hydrate — genuinely still working.
+    let releaseB: (() => void) | null = null;
+    mockStepHydratePersistEnqueue.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2, dailyLimitReached: false });
+      }),
+    );
+    const pB = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    expect(feedSyncMachine.state).toBe('hydrating');
+
+    // The zombie runs its whole no-op branch: nothing new to insert.
+    mockStepDiff.mockResolvedValueOnce({ ...defaultDiffResult, missingIds: [] });
+    mockForYouStoreState.markProcessingRunFinished.mockClear();
+    mockForYouStoreState.setLastSyncAt.mockClear();
+    (releaseA as unknown as () => void)?.();
+    await jest.advanceTimersByTimeAsync(0);
+    await expect(pA).resolves.toBeUndefined();
+
+    expect(mockForYouStoreState.markProcessingRunFinished).not.toHaveBeenCalled();
+    expect(mockForYouStoreState.setLastSyncAt).not.toHaveBeenCalled();
+    expect(feedSyncMachine.state).toBe('hydrating');
+
+    (releaseB as unknown as () => void)?.();
+    await jest.advanceTimersByTimeAsync(0);
+    await expect(pB).resolves.toBeUndefined();
+    // The LIVE run still stamps, as it always did.
+    expect(mockForYouStoreState.setLastSyncAt).toHaveBeenCalled();
   });
 
   it('an abandoned run\'s network listener cannot touch the replacement', async () => {
