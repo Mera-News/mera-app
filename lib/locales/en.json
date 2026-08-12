@@ -1768,6 +1768,21 @@
             "body": "Each card carries a short line saying why it reached you, and a word for how much it seems to matter. If a reason looks wrong, that is the single most useful thing you can tell Mera about.",
             "ask": "Where does the reason underneath a story come from?"
           },
+          "quiet-by-design": {
+            "headline": "A quiet feed on purpose",
+            "body": "Mera does not count at you while you read. Tap both to see what sits where.",
+            "ask": "Why does the Feed not show how many stories came in?",
+            "reveal": {
+              "feed": {
+                "label": "The Feed",
+                "text": "No running totals, no progress bar, no \"2 hours ago\" on the cards. A small spinner beside the title is the only sign that anything is fetching, and tapping it shows the numbers for three seconds before getting out of the way."
+              },
+              "dashboard": {
+                "label": "The Dashboard",
+                "text": "Everything the Feed leaves out. How many stories were published, analysed and kept, when the last run finished, how old each story is, and your notifications."
+              }
+            }
+          },
           "caught-up": {
             "headline": "Running out is fine",
             "body": "When there is nothing new left, Mera says so and stops. It will not pad the list to keep you scrolling. Everything you have already read is still below, if you want it."

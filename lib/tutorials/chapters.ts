@@ -31,6 +31,15 @@
 //     "All caught up" card (`AllCaughtUpCard`, `feed.allCaughtUp`) survives as
 //     the end-of-list footer / empty state, and its CTA switches to "lower the
 //     feed priority" when the importance threshold is filtering stories out.
+//   • The Feed header is the title, a status glyph and the priority filter, and
+//     NOTHING else — no notification bell (it is Dashboard-only), no counts
+//     sentence, no progress bar, and its cards carry no timestamp and no NEW
+//     badge (`FeedScreen` passes `showRecency={false}`). The Dashboard keeps all
+//     of it. The glyph appears only while syncing / on an error / when
+//     rate-limited (`lib/feed-status-mode.isStatusVisible`) and opens a panel
+//     that closes itself after 3s. Chapter `feed` must not teach a bell, a
+//     counter or a bar on the Feed, and must not claim a story's age is visible
+//     there.
 //   • "Read" = opened, or ≥75% on screen for 1.5s
 //     (`components/custom/feed/use-visible-index.ts` DWELL_READ_SECONDS = 1.5).
 //   • Explore's trailing "+" chip opens `/logged-in/sources`, NOT Locations
@@ -199,6 +208,18 @@ export const TUTORIAL_CHAPTERS: readonly TutorialChapter[] = [
       {
         id: 'why-this-one',
         visual: { placeholder: { kind: 'cards', count: 2 } },
+        hasAsk: true,
+      },
+      {
+        id: 'quiet-by-design',
+        visual: { placeholder: { kind: 'icon', name: 'spa' } },
+        interaction: {
+          kind: 'tap-to-reveal',
+          targets: [
+            { id: 'feed', icon: 'view-agenda' },
+            { id: 'dashboard', icon: 'grid-view' },
+          ],
+        },
         hasAsk: true,
       },
       {

@@ -1414,5 +1414,33 @@ export default schemaMigrations({
         }),
       ],
     },
+    {
+      // Forget `tracked_stories.latest_title`.
+      //
+      // (v53, not v52: this was authored as v52 on a branch cut before the
+      // per-claim fact-check migration above landed on dev. Renumbered on
+      // merge — two migrations sharing a toVersion means the second never
+      // runs.)
+      //
+      // It was seeded at track time with the title of the article the user
+      // tapped and then only replaced if a reconcile happened to carry a new
+      // one, so in practice it held the story's ORIGIN headline forever — and
+      // the tracked-stories list rendered it under the real headline, where it
+      // read as the newest development. Nothing else ever read it.
+      //
+      // An UPDATE, not a DROP COLUMN, deliberately. This table holds long-lived
+      // user-owned state that must be migrated rather than rebuilt (see
+      // CLAUDE.md), WatermelonDB's `destroyColumn` is unimplemented in this
+      // version, and a table rebuild here would put every followed story at
+      // risk to reclaim one unused column. Nulling deletes the stored values —
+      // which is the actual ask — and cannot fail: it is idempotent and touches
+      // no row identity, no `_status`/`_changed` bookkeeping, and no other
+      // column. The column is dropped from `schema.ts`, so fresh installs never
+      // create it; upgraded devices keep it as an inert tombstone.
+      toVersion: 53,
+      steps: [
+        unsafeExecuteSql('UPDATE tracked_stories SET latest_title = NULL;'),
+      ],
+    },
   ],
 });

@@ -65,7 +65,6 @@ export interface TrackStoryInput {
 export interface ApplyUpdatesInput {
   newMemberIds: string[];
   latestArticleId?: string | null;
-  latestTitle?: string | null;
   /** Lean card snapshots for the new members (merged newest-first, capped 50). */
   newSnapshots?: TrackedStoryMemberSnapshot[];
 }
@@ -130,7 +129,6 @@ export async function trackStory(input: TrackStoryInput): Promise<TrackedStoryMo
       m.llmHeadline = llmHeadline;
       m.fallbackTitle = title;
       m.latestArticleId = articleId || null;
-      m.latestTitle = title || null;
       m.originSurface = originSurface;
       m.lastUpdateAt = null;
       m.unseenCount = 0;
@@ -341,7 +339,6 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
           m.memberSnapshots = mergeMemberSnapshots(m.memberSnapshots ?? [], snapshots);
         }
         if (updates.latestArticleId) m.latestArticleId = updates.latestArticleId;
-        if (updates.latestTitle) m.latestTitle = updates.latestTitle;
       });
     });
   } catch (err) {

@@ -40,7 +40,6 @@ function makeStory(overrides: Record<string, any> = {}) {
     llmHeadline: overrides.llmHeadline ?? null,
     fallbackTitle: overrides.fallbackTitle ?? 'A story',
     latestArticleId: overrides.latestArticleId ?? 'a1',
-    latestTitle: overrides.latestTitle ?? 'A story',
     originSurface: overrides.originSurface ?? 'detail',
     lastUpdateAt: overrides.lastUpdateAt ?? null,
     unseenCount: overrides.unseenCount ?? 0,
@@ -193,14 +192,12 @@ describe('applyUpdates', () => {
     await applyUpdates('s1', {
       newMemberIds: ['new1', 'new2'],
       latestArticleId: 'new1',
-      latestTitle: 'Newest',
     });
 
     expect(row.memberArticleIds).toEqual(['new1', 'new2', 'old1', 'old2']);
     expect(row.unseenCount).toBe(3); // 1 + 2 new
     expect(row.missCount).toBe(0);
     expect(row.latestArticleId).toBe('new1');
-    expect(row.latestTitle).toBe('Newest');
     expect(row.lastUpdateAt).toBeInstanceOf(Date);
   });
 

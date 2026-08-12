@@ -54,6 +54,9 @@ export interface ArticleCardBaseProps {
    *  deliberately removed — it only suppresses the NEW badge in the meta row.
    *  The seen mechanism itself is untouched. The Dashboard surfaces use this. */
   read?: boolean;
+  /** Forwarded to the meta row: show the age label + NEW badge. Default true.
+   *  The Feed sets it false — see ArticleMetaRow's `showRecency` doc. */
+  showRecency?: boolean;
   /** Renders as a "floating" neumorphic card instead of the default `Card`
    *  chrome: rounded-2xl, a hairline low-opacity border, a subtle drop shadow,
    *  and the same `bg-background-0` surface tone the default Card already
@@ -114,6 +117,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   recyclingKey,
   dimmed = false,
   read = false,
+  showRecency = true,
   flat = false,
   onPress,
   children,
@@ -194,6 +198,7 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               variant="card"
               isNew={isNew}
               read={read}
+              showRecency={showRecency}
             />
             {metaAccessory ? (
               <HStack className="self-end mt-1">{metaAccessory}</HStack>

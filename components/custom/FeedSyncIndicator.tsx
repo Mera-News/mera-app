@@ -1,11 +1,14 @@
-// FeedSyncIndicator — the ONE feed-sync status surface, shared by the Feed tab
-// (components/custom/feed/FeedScreen) and the Dashboard (for_you /
-// components/custom/for-you/ForYouScreen). Both headers used to hand-roll their
-// own chrome: the Dashboard mounted FeedStatusShimmer + a copy-pasted offline
-// row, and the Feed tab had no sync indicator at all. This component owns both
-// so the two tabs can never drift again. (ReauthBanner is NOT here — it moved
-// to app/logged-in/_layout.tsx so it covers every logged-in screen, not just
-// the two feed surfaces.)
+// The feed-sync hooks, shared by the Feed tab (components/custom/feed/
+// FeedScreen) and the Dashboard (for_you / components/custom/for-you/
+// ForYouScreen).
+//
+// This file used to also export a `FeedSyncIndicator` COMPONENT that mounted the
+// full-width status bar on both headers. The bar is gone (see
+// for-you/FeedStatusIndicator + FeedStatusPanel, which split it into a glyph
+// beside the title and a panel below it), and the component went with it: its
+// two halves now sit in different rows of the header, so the screens compose
+// them directly. The hooks below stayed exactly as they were — they are the
+// pull-to-refresh contract and several screens depend on them.
 //
 // ── Why the scheduler flag and not just the for-you store ──
 // The Dashboard's old `isFeedProcessing` derivation is driven by
@@ -28,10 +31,6 @@
 // instant on/off, the store-derived flag keeps the richer phase detail and
 // covers the cloud/on-device scoring tail that outlives the scheduler job.
 
-import FeedStatusShimmer from '@/components/custom/for-you/FeedStatusShimmer';
-import { HStack } from '@/components/ui/hstack';
-import { Text } from '@/components/ui/text';
-import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
 import logger from '@/lib/logger';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
@@ -39,14 +38,10 @@ import { useNetworkStore } from '@/lib/stores/network-store';
 import { getAiAccess } from '@/lib/stores/subscription-store';
 import {
     useForYouAsyncJobPhase,
-    useForYouDailyLimitResetAt,
     useForYouDeviceProcessing,
-    useForYouScoringError,
     useForYouSyncStatusMessage,
-    useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /** The scheduler task both screens pull-to-refresh against. */
 export const FEED_SYNC_TASK = 'feed-sync';
@@ -64,8 +59,9 @@ export const FEED_SYNC_TASK = 'feed-sync';
  *
  * Round-4 B note (preserved): the `unscoredCount > 0` term is intentionally
  * absent — deliberately-deferred rows (a sub-25 quantum waiting for the next
- * batch) are NOT "processing", so the shimmer must not spin while they wait.
- * They surface as a static note via FeedStatusShimmer's `unscoredCount` prop.
+ * batch) are NOT "processing", so the indicator must not spin while they wait.
+ * `useFeedStatusMode` folds them in as its own `deferred` mode, which draws
+ * nothing and surfaces only inside the detail panel.
  */
 export function useIsFeedProcessing(): boolean {
     const asyncJobPhase = useForYouAsyncJobPhase();
@@ -119,10 +115,10 @@ export interface FeedSyncRefresh {
  *    raw scheduler flag would drop the native spinner over the list during
  *    every one of those, mid-read, with no gesture behind it.
  *
- * So: `schedulerRunning && userPulled`. The header shimmer (which is ambient
- * chrome, not a modal overlay) still reflects every sync via the indicator's
- * own `useFeedSyncRunning()` — that is the "loader" the pull is meant to
- * confirm, and it lights on the same JS tick as `reserveTask`.
+ * So: `schedulerRunning && userPulled`. The header spinner (which is chrome, not
+ * a modal overlay) still reflects every sync via `useFeedStatusMode`, which
+ * folds in this same `useFeedSyncRunning()` — that is the "loader" the pull is
+ * meant to confirm, and it lights on the same JS tick as `reserveTask`.
  *
  * The two guards below are read BEFORE calling `trigger()`. There is no TOCTOU
  * window because `reserveTask` is synchronous, so a concurrent trigger has
@@ -208,60 +204,3 @@ export function useFeedSyncRefresh(
 
     return { refreshing: schedulerRunning && userPulled, onRefresh };
 }
-
-export interface FeedSyncIndicatorProps {
-    /** Human relative label for the last finished run ("4 minutes ago"), shown
-     *  in the expanded detail panel. The Dashboard already computes this for its
-     *  header line against a 30s tick; the Feed tab omits it. */
-    readonly lastProcessedLabel?: string | null;
-}
-
-/**
- * The header sync surface: an indeterminate status bar with an expandable detail
- * accordion (FeedStatusShimmer).
- *
- * The inline offline row that used to live here was removed: the global
- * OfflineBanner (mounted at the root layout) shows the same warning, in the same
- * style, at the same position, so the two stacked. It also covers /login and
- * /pin-lock, which this one never could. The `showConnectivityNotices` prop went
- * with it — its only purpose was hiding that row.
- *
- * Everything except `lastProcessedLabel` is self-subscribed, so mounting it is a
- * one-liner on either screen and the two can't drift.
- */
-const FeedSyncIndicator: React.FC<FeedSyncIndicatorProps> = ({
-    lastProcessedLabel = null,
-}) => {
-    const { t } = useTranslation();
-
-    const schedulerRunning = useFeedSyncRunning();
-    const isFeedProcessing = useIsFeedProcessing();
-
-    const unscoredCount = useForYouUnscoredCount();
-    const scoringError = useForYouScoringError();
-    const dailyLimitResetAt = useForYouDailyLimitResetAt();
-    const { articleCount, analysedCount, relevantCount } = useFeedCounts();
-
-    // Evaluated at render rather than off a ticking clock — same trade-off
-    // FeedStatusDetails already makes. The limit is sticky enough that the next
-    // store-driven render clears it; hoisting a second 30s interval in here just
-    // to flip a tint isn't worth the wakeups.
-    const isDailyLimited = dailyLimitResetAt != null && Date.now() < dailyLimitResetAt;
-
-    return (
-        <>
-            <FeedStatusShimmer
-                processing={schedulerRunning || isFeedProcessing}
-                error={scoringError !== null}
-                dailyLimited={isDailyLimited}
-                unscoredCount={unscoredCount}
-                processedCount={articleCount}
-                analysedCount={analysedCount}
-                relevantCount={relevantCount}
-                lastProcessedLabel={lastProcessedLabel}
-            />
-        </>
-    );
-};
-
-export default FeedSyncIndicator;

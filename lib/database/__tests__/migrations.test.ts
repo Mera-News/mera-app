@@ -220,6 +220,33 @@ describe('specific migration versions', () => {
     expect(!!addStep.columns[0].isOptional).toBe(true);
   });
 
+  it('v53 NULLs tracked_stories.latest_title without touching the table itself', () => {
+    const m = byVersion.get(53);
+    expect(m).toBeDefined();
+
+    const sqlStep = m!.steps.find(
+      (s: any) =>
+        s &&
+        s.type === 'sql' &&
+        /UPDATE tracked_stories/i.test(String(s.sql ?? s.text ?? '')) &&
+        /latest_title\s*=\s*NULL/i.test(String(s.sql ?? s.text ?? '')),
+    );
+    expect(sqlStep).toBeDefined();
+
+    // The whole point of choosing an UPDATE over a rebuild: `tracked_stories`
+    // is long-lived user-owned state. A create_table (drop+recreate) or a
+    // DELETE/DROP against it here would destroy every followed story to
+    // reclaim one unused column.
+    const destructive = m!.steps.filter(
+      (s: any) =>
+        (s && s.type === 'create_table' && s.schema?.name === 'tracked_stories') ||
+        (s &&
+          s.type === 'sql' &&
+          /(DROP|DELETE\s+FROM)\s+.*tracked_stories/i.test(String(s.sql ?? s.text ?? ''))),
+    );
+    expect(destructive).toHaveLength(0);
+  });
+
   it('v45 clears the stale persisted async_pipeline_run settings row', () => {
     const m = byVersion.get(45);
     expect(m).toBeDefined();
@@ -581,10 +608,21 @@ describe('v52 adds claim identity to fact_checks additively', () => {
     // to lose them are a `create_table` (WatermelonDB drops first) or raw SQL.
     // So the assertion is that the chain after the table exists contains
     // NEITHER, for this table, anywhere.
+    //
+    // The `sql` arm is scoped to statements that NAME this table, which is what
+    // the paragraph above always claimed but the first version of this check did
+    // not do: it flagged every raw SQL step in the chain regardless of target,
+    // so the v53 `UPDATE tracked_stories …` tripped a fact_checks guarantee it
+    // cannot possibly affect. Scoping keeps the guarantee exactly as strong —
+    // any DROP/DELETE/UPDATE/ALTER aimed at fact_checks still fails this — while
+    // no longer firing on unrelated tables.
     const afterCreation = migList.filter((m) => m.toVersion > 51).flatMap((m) => m.steps);
     expect(
       afterCreation.filter(
-        (s: any) => s && (s.type === 'sql' || (s.type === 'create_table' && s.schema?.name === 'fact_checks')),
+        (s: any) =>
+          s &&
+          ((s.type === 'sql' && /fact_checks/i.test(String(s.sql ?? s.text ?? ''))) ||
+            (s.type === 'create_table' && s.schema?.name === 'fact_checks')),
       ),
     ).toHaveLength(0);
     // And the table is created exactly once in the whole chain — a second
