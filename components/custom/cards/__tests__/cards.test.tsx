@@ -107,11 +107,15 @@ jest.mock('@/lib/typography/useAdaptiveLineClamp', () => ({
 (global as any).__mockUseAdaptiveLineClamp = mockUseAdaptiveLineClamp;
 jest.mock('@/components/custom/ArticleMetaRow', () => {
   const { Text, View } = require('react-native');
+  // `centerAccessory` is rendered, not dropped. The compact card's priority
+  // chip lives in this slot, and a mock that swallows it would make "the chip
+  // is in the meta row, not the footer" untestable — while still passing.
   return {
-    ArticleMetaRow: ({ publicationName, read }: any) => (
-      <View>
+    ArticleMetaRow: ({ publicationName, read, centerAccessory }: any) => (
+      <View testID="meta-row">
         <Text>{publicationName ?? ''}</Text>
         {read ? <View testID="read-eye-icon" /> : null}
+        {centerAccessory ?? null}
       </View>
     ),
   };
@@ -227,7 +231,11 @@ import ArticleStandaloneCard from '../ArticleStandaloneCard';
 // eslint-disable-next-line import/first
 import ArticleStandaloneCompactCard from '../ArticleStandaloneCompactCard';
 // eslint-disable-next-line import/first
+import ArticleSuggestionCompactCard from '../ArticleSuggestionCompactCard';
+// eslint-disable-next-line import/first
 import { ArticleImagePlaceholder } from '../ArticleImagePlaceholder';
+// eslint-disable-next-line import/first
+import { COMPACT_HEADLINE_LINES, COMPACT_IMAGE_SIZE } from '../ArticleCompactCardBase';
 // eslint-disable-next-line import/first
 import ArticleActionsRow from '../ArticleActionsRow';
 // eslint-disable-next-line import/first
@@ -586,9 +594,47 @@ describe('compact card headline clamp', () => {
         onPress={jest.fn()}
       />,
     );
-    expect(mockUseAdaptiveLineClamp).toHaveBeenCalledWith(3, 4);
+    expect(mockUseAdaptiveLineClamp).toHaveBeenCalledWith(COMPACT_HEADLINE_LINES, 4);
     // The mock is identity on `base`, so this is the 1x rendering.
-    expect(getByText(LONG).props.numberOfLines).toBe(3);
+    expect(getByText(LONG).props.numberOfLines).toBe(COMPACT_HEADLINE_LINES);
+  });
+
+  // The image is sized against the text beside it, so a change to either the
+  // clamp or the type scale must move it too. Written as the arithmetic rather
+  // than as `105` for the same reason the component is: the failure mode is
+  // silent, an image that no longer lines up with the block it was cut to fit.
+  it('sizes the image as the headline block plus the footer line', () => {
+    const HEADLINE_LINE_BOX = 24; // tailwind fontSize.base
+    const FOOTER_LINE_BOX = 21; // tailwind fontSize.sm
+    const FOOTER_GAP = 12;
+    expect(COMPACT_IMAGE_SIZE).toBe(
+      COMPACT_HEADLINE_LINES * HEADLINE_LINE_BOX + FOOTER_GAP + FOOTER_LINE_BOX,
+    );
+    expect(COMPACT_IMAGE_SIZE).toBe(105);
+  });
+});
+
+describe('compact card priority chip', () => {
+  it('renders the chip inside the meta row, not the footer', () => {
+    const { getByTestId } = render(
+      <ArticleSuggestionCompactCard suggestion={makeSuggestion()} onPress={jest.fn()} />,
+    );
+    const metaRow = getByTestId('meta-row');
+    const chip = getByTestId('relevance-chip');
+    // Walk up from the chip: the meta row has to be one of its ancestors.
+    let n: any = chip.parent;
+    while (n && n !== metaRow) n = n.parent;
+    expect(n).toBe(metaRow);
+  });
+
+  it('renders no chip while the suggestion is unscored', () => {
+    const { queryByTestId } = render(
+      <ArticleSuggestionCompactCard
+        suggestion={makeSuggestion({ status: ArticleSuggestionStatus.Unscored })}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(queryByTestId('relevance-chip')).toBeNull();
   });
 });
 

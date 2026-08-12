@@ -41,6 +41,16 @@ interface ArticleMetaRowProps {
      * would leave an orphan clock glyph next to a NEW pill.
      */
     showRecency?: boolean;
+    /**
+     * A slot rendered between the recency and language slots.
+     *
+     * The row is already `justify-between`, so a third populated slot lands in
+     * the middle of the free space with no new layout machinery — the same
+     * shape the full-size card gets from its publication slot. The compact card
+     * puts its priority chip here. Absent by default, so every other caller is
+     * unchanged.
+     */
+    centerAccessory?: React.ReactNode;
 }
 
 export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
@@ -53,6 +63,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
     read = false,
     showFlag = true,
     showRecency = true,
+    centerAccessory,
 }) => {
     const { t } = useTranslation();
     const appLanguage = useAppLanguage();
@@ -138,7 +149,12 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                 </HStack>
             ) : null}
 
-            {/* 2. Translate icon + language name */}
+            {/* 2. Caller-supplied middle slot (the compact card's priority chip). */}
+            {centerAccessory ? (
+                <Box className="flex-shrink-0">{centerAccessory}</Box>
+            ) : null}
+
+            {/* 3. Translate icon + language name */}
             {showLanguageSlot ? (
                 <HStack className="items-center flex-shrink" space="xs" style={{ minWidth: 0 }}>
                     {/* SAME glyph in every state — only the colour changes, so
@@ -180,7 +196,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                 </HStack>
             ) : null}
 
-            {/* 3. Newspaper icon + publication name — natural width, truncating a
+            {/* 4. Newspaper icon + publication name — natural width, truncating a
                 long name instead of bleeding when the row runs tight. */}
             {showPublicationSlot ? (
                 <HStack className="items-center flex-shrink" space="xs" style={{ minWidth: 0 }}>
@@ -196,7 +212,7 @@ export const ArticleMetaRow: React.FC<ArticleMetaRowProps> = ({
                 </HStack>
             ) : null}
 
-            {/* 4. Country flag — tappable on the detail screen to name the country.
+            {/* 5. Country flag — tappable on the detail screen to name the country.
                 Hidden when `showFlag` is false (compact card shows it in its footer). */}
             {showFlag ? (
                 <Box className="flex-shrink-0">

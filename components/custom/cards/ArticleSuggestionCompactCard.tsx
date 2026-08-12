@@ -45,10 +45,10 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
   const relevanceReady = !!status && status !== ArticleSuggestionStatus.Unscored;
   const relevance = suggestion.relevance ?? 0;
 
-  // Compact cards never show reason text — the footer carries the fixed-size
-  // RelevanceChip (once relevance is ready) on the LEFT, opposite the
-  // right-aligned source identity.
-  const footerAccessory = relevanceReady ? (
+  // Compact cards never show reason text — the fixed-size RelevanceChip (once
+  // relevance is ready) is the whole signal, and it rides in the middle of the
+  // meta row. It sat in the footer until the image grew into that corner.
+  const priorityAccessory = relevanceReady ? (
     <RelevanceChip relevance={relevance} />
   ) : undefined;
 
@@ -86,7 +86,7 @@ const ArticleSuggestionCompactCardImpl: React.FC<ArticleSuggestionCompactCardPro
         isNew={isNew}
         onPress={() => onPress(suggestion)}
         onLongPress={() => setSheetOpen(true)}
-        footerAccessory={footerAccessory}
+        priorityAccessory={priorityAccessory}
       />
       <CompactActionsSheet
         visible={sheetOpen}
