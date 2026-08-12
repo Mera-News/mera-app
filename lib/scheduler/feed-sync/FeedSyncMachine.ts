@@ -83,7 +83,22 @@ class FeedSyncMachine {
   private _state: FeedSyncState = 'idle';
   private _networkUnsubscribe: (() => void) | null = null;
   private _paused = false;
-  private _resumeCallback: (() => void) | null = null;
+  /**
+   * Everyone currently parked in `_awaitResumeIfPaused`, resolved together.
+   *
+   * A SET, NOT A SINGLE SLOT, because hydrate runs a pool: `HYDRATE_CONCURRENCY`
+   * is 3 and every worker calls `awaitResumeIfPaused()` at the top of its loop.
+   * With one slot each parking worker overwrote the previous one's resolver, so
+   * on reconnect only the last was ever resolved — the other two never settled,
+   * their `Promise.all` never resolved, and the run hung for the rest of the
+   * session. That hang is what made a run go stale and get abandoned, which is
+   * what produced the transition collisions in the first place.
+   *
+   * Releasing the displaced resolver instead would be worse than the bug: the
+   * first worker would un-park while the device is still offline and go
+   * straight back to fetching. Same-run waiters have to resume together.
+   */
+  private _resumeWaiters = new Set<() => void>();
   /** Non-null while a run is in flight. The machine is a module singleton with a
    *  single mutable `_state`, so two concurrent runs would stomp each other's
    *  transitions (the "Invalid FeedSyncMachine transition" errors). This makes
@@ -140,6 +155,12 @@ class FeedSyncMachine {
       logger.warn(
         `[FeedSyncMachine] abandoning a stale in-flight run (${Math.round(age / 60_000)}min) — starting fresh`,
       );
+      // Let the abandoned run UNWIND rather than stay parked. This is what makes
+      // "abandon it but let it finish" actually terminate: a run parked in
+      // `_awaitResumeIfPaused` can only be woken by the live run's network
+      // listener, which will now ignore it, so without this it never settles.
+      // Its transitions are already inert, so waking it is harmless.
+      this._releaseResumeWaiters();
       this._inFlight = null;
     }
     this._inFlightStartedAt = Date.now();
@@ -162,8 +183,34 @@ class FeedSyncMachine {
 
     await feedPersistence.saveMachineSnapshot({ state: 'idle', startedAt: Date.now() });
     this._forceIdle(runId); // bypasses the transition guard — valid from any state
+    // `_paused` is per-run bookkeeping living on a singleton, and nothing used
+    // to reset it. A run that died while paused left it `true`, so the NEXT run
+    // parked at the first `_awaitResumeIfPaused` below waiting for a resume that
+    // could never come: the listener's resume branch requires
+    // `_state === 'paused-offline'`, and the line above just set it to `idle`.
+    // On a stable connection no network event ever fires, so that run hung
+    // forever — the second way a run went stale and got abandoned.
+    // Deliberately NOT folded into `_forceIdle`: the catch-block callers of that
+    // helper must not clear a pause the live run legitimately owns.
+    if (this._isCurrentRun(runId)) this._paused = false;
+
+    // WHOEVER SUBSCRIBES LAST RELEASES THE ONE IT FINDS. `_networkUnsubscribe`
+    // is a single field, and the teardown at the bottom of this method is
+    // ownership-guarded — so an ABANDONED run's handle was overwritten here
+    // without ever being called, leaving its listener registered for the rest of
+    // the session. One permanent leak per abandonment, each still mutating this
+    // singleton. Safe against a double-unsubscribe: `_runSeq` was bumped above,
+    // so the previous run's teardown will not touch the field.
+    this._networkUnsubscribe?.();
+    this._networkUnsubscribe = null;
 
     this._networkUnsubscribe = useNetworkStore.subscribe((state, prev) => {
+      // Inert once this run no longer owns the machine — and inert ENTIRELY,
+      // not just for the transition. The two branches below also write
+      // `_paused` and fire the resume waiters, neither of which routes through
+      // `_transitionTo`, so its guard cannot cover them. A stale listener could
+      // otherwise un-park the LIVE run mid-wait.
+      if (!this._isCurrentRun(runId)) return;
       const networkState = this._state;
       if (!state.isConnected && NETWORK_DEPENDENT_STATES.includes(networkState)) {
         const pausedAtState = networkState;
@@ -172,7 +219,7 @@ class FeedSyncMachine {
         publishSyncStatus('paused-offline', { pausedAtState });
       } else if (state.isConnected && !prev.isConnected && this._state === 'paused-offline') {
         this._paused = false;
-        this._resumeCallback?.();
+        this._releaseResumeWaiters();
       }
     });
 
@@ -661,15 +708,33 @@ class FeedSyncMachine {
    * needs the screen kept alive.
    */
   private async _awaitResumeIfPaused(runId: number): Promise<void> {
+    // An abandoned run must never park. Only the LIVE run's listener can
+    // release waiters (see the ownership check in the subscription), so parking
+    // here would strand this run for the rest of the session — the one zombie
+    // that never finishes, holding an async frame and never reaching its
+    // `flushSuggestionsRefresh`.
+    if (!this._isCurrentRun(runId)) return;
     if (!this._paused) return;
     this._releaseKeepAwake(runId);
     await new Promise<void>((resolve) => {
-      this._resumeCallback = () => {
-        this._resumeCallback = null;
-        resolve();
-      };
+      this._resumeWaiters.add(resolve);
     });
+    // Abandoned while parked: do not re-arm a lock the live run has dropped.
+    if (!this._isCurrentRun(runId)) return;
     await this._acquireKeepAwake(runId);
+  }
+
+  /**
+   * Wake everyone parked in `_awaitResumeIfPaused`.
+   *
+   * Drained before resolving, so a waiter that immediately re-parks lands in a
+   * fresh set rather than one being iterated.
+   */
+  private _releaseResumeWaiters(): void {
+    if (this._resumeWaiters.size === 0) return;
+    const waiters = [...this._resumeWaiters];
+    this._resumeWaiters.clear();
+    waiters.forEach((resolve) => resolve());
   }
 }
 

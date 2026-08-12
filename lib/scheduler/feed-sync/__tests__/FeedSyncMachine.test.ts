@@ -1382,6 +1382,108 @@ describe('FeedSyncMachine — stale in-flight run', () => {
     expect(feedSyncMachine.state).toBe('done');
   });
 
+  it('an abandoned run\'s network listener cannot touch the replacement', async () => {
+    // `_networkUnsubscribe` is a single field and the teardown is
+    // ownership-guarded, so an abandoned run's handle used to be overwritten
+    // without ever being called — one listener leaked per abandonment, each
+    // still able to drive `_state` to 'paused-offline' and set `_paused`.
+    mockStepFetchTopicIds.mockImplementationOnce(() => new Promise(() => { /* hangs */ }));
+
+    void feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    const zombieListener = networkSubscribers[networkSubscribers.length - 1];
+
+    await jest.advanceTimersByTimeAsync(5 * 60_000);
+
+    // Run B parks in hydrate so there is a live, network-dependent state to hit.
+    let releaseB: (() => void) | null = null;
+    mockStepHydratePersistEnqueue.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2, dailyLimitReached: false });
+      }),
+    );
+    const pB = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    expect(feedSyncMachine.state).toBe('hydrating');
+
+    // The stale run's handle was released when B subscribed...
+    expect(zombieListener.unsubscribe).toHaveBeenCalled();
+    // ...and even if it fires anyway, it is inert.
+    mockPublishSyncStatus.mockClear();
+    zombieListener.fn({ isConnected: false }, { isConnected: true });
+    expect(feedSyncMachine.state).toBe('hydrating');
+    expect((feedSyncMachine as any)._paused).toBe(false);
+    expect(mockPublishSyncStatus).not.toHaveBeenCalledWith('paused-offline', expect.anything());
+
+    (releaseB as unknown as () => void)?.();
+    await jest.advanceTimersByTimeAsync(0);
+    await expect(pB).resolves.toBeUndefined();
+  });
+
+  it('an inherited _paused does not wedge the next run', async () => {
+    // A run that failed while offline left `_paused` true and nothing reset it.
+    // The next run then parked at the first `_awaitResumeIfPaused` waiting for a
+    // resume that could never arrive: the listener's resume branch needs
+    // `_state === 'paused-offline'`, but `_start` had just forced it to 'idle'.
+    (feedSyncMachine as any)._paused = true;
+
+    const p = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+
+    await expect(p).resolves.toBeUndefined();
+    expect(feedSyncMachine.state).toBe('done');
+  });
+
+  it('releases EVERY parked waiter on resume, not just the last', async () => {
+    // Hydrate runs a pool of HYDRATE_CONCURRENCY workers, each of which can park
+    // in `_awaitResumeIfPaused`. With a single resolver slot, each parking
+    // worker overwrote the previous one's resolver and only the last was ever
+    // woken — the others' promises never settled, so the run hung forever.
+    (feedSyncMachine as any)._paused = true;
+    const runId = (feedSyncMachine as any)._runSeq;
+    const settled: string[] = [];
+
+    const w1 = (feedSyncMachine as any)._awaitResumeIfPaused(runId).then(() => settled.push('w1'));
+    const w2 = (feedSyncMachine as any)._awaitResumeIfPaused(runId).then(() => settled.push('w2'));
+    const w3 = (feedSyncMachine as any)._awaitResumeIfPaused(runId).then(() => settled.push('w3'));
+    await jest.advanceTimersByTimeAsync(0);
+    expect(settled).toEqual([]);
+
+    (feedSyncMachine as any)._releaseResumeWaiters();
+    await jest.advanceTimersByTimeAsync(0);
+    await Promise.all([w1, w2, w3]);
+
+    expect(settled.sort()).toEqual(['w1', 'w2', 'w3']);
+    (feedSyncMachine as any)._paused = false;
+  });
+
+  it('an abandoned run parked offline unwinds instead of hanging forever', async () => {
+    // The one zombie that would never finish. Only the live run's listener can
+    // wake a parked run, and it now ignores abandoned ones — so abandonment has
+    // to release the waiters itself or this run holds an async frame for the
+    // rest of the session.
+    let releaseA: (() => void) | null = null;
+    mockStepFetchTopicIds.mockImplementationOnce(
+      () => new Promise((resolve) => { releaseA = () => resolve(defaultTopicResult); }),
+    );
+    const pA = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Park A: it is at 'fetching-topic-ids', a network-dependent state.
+    networkSubscribeFn?.({ isConnected: false }, { isConnected: true });
+    expect(feedSyncMachine.state).toBe('paused-offline');
+    (releaseA as unknown as () => void)?.();
+    await jest.advanceTimersByTimeAsync(0);
+
+    await jest.advanceTimersByTimeAsync(5 * 60_000);
+    const pB = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Abandonment released A's waiter, so A settles rather than staying parked.
+    await expect(pA).resolves.toBeUndefined();
+    await expect(pB).resolves.toBeUndefined();
+  });
+
   it('the abandoned run cannot clear the replacement\'s _inFlight slot', async () => {
     let releaseFirst: (() => void) | null = null;
     mockStepFetchTopicIds.mockImplementationOnce(
