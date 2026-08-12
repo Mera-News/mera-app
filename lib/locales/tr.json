@@ -1806,6 +1806,21 @@
           "caught-up": {
             "headline": "Bitişe kaçmak sorun değil",
             "body": "Yeni kalan hiçbir şey olmadığında, Mera bunu söylüyor ve durur. Listeyi tutmak için doldurur. Zaten okuduğunuz her şey hâlâ aşağıda, istersen."
+          },
+          "quiet-by-design": {
+            "headline": "Bilerek sessiz bir akış",
+            "body": "Mera siz okurken size sayı saymaz. Neyin nerede durduğunu görmek için ikisine de dokunun.",
+            "ask": "Akış neden kaç haberin geldiğini göstermiyor?",
+            "reveal": {
+              "feed": {
+                "label": "Akış",
+                "text": "Kartlarda ilerleyen toplamlar, ilerleme çubuğu ya da «2 saat önce» yok. Başlığın yanındaki küçük gösterge, bir şeyin getirildiğine dair tek işarettir; ona dokunmak sayıları üç saniye gösterir, sonra aradan çekilir."
+              },
+              "dashboard": {
+                "label": "Panel",
+                "text": "Akışın dışarıda bıraktığı her şey. Kaç haberin yayımlandığı, çözümlendiği ve tutulduğu, son çalışmanın ne zaman bittiği, her haberin ne kadar eski olduğu ve bildirimleriniz."
+              }
+            }
           }
         }
       },

@@ -1804,6 +1804,21 @@
           "caught-up": {
             "headline": "Ausgeht ist in Ordnung",
             "body": "Wenn nichts Neues mehr übrig ist, sagt Mera so und stoppt. Es wird die Liste nicht auffüllen, um dich zum Scrollen zu bringen. Alles, das du bereits gelesen hast, ist unten, wenn du es möchtest."
+          },
+          "quiet-by-design": {
+            "headline": "Ein bewusst ruhiger Feed",
+            "body": "Mera zählt dir beim Lesen nichts vor. Tippe auf beide, um zu sehen, was wo steht.",
+            "ask": "Warum zeigt der Feed nicht, wie viele Meldungen hereingekommen sind?",
+            "reveal": {
+              "feed": {
+                "label": "Nachrichten",
+                "text": "Keine laufenden Summen, kein Fortschrittsbalken, kein „vor 2 Stunden“ auf den Karten. Ein kleiner Ladekreis neben dem Titel ist das einzige Zeichen dafür, dass etwas abgerufen wird, und ein Tippen darauf zeigt die Zahlen drei Sekunden lang, bevor sie wieder verschwinden."
+              },
+              "dashboard": {
+                "label": "Dashboard",
+                "text": "Alles, was der Feed weglässt. Wie viele Meldungen veröffentlicht, ausgewertet und behalten wurden, wann der letzte Durchlauf endete, wie alt jede Meldung ist und deine Benachrichtigungen."
+              }
+            }
           }
         }
       },

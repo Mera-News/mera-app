@@ -1804,6 +1804,21 @@
           "caught-up": {
             "headline": "Kehabisan baik-baik saja",
             "body": "Ketika tidak ada yang baru tersisa, Mera mengatakan demikian dan berhenti. Itu tidak akan mengisi daftar untuk membuat Anda terus menggulir. Semuanya yang telah Anda baca masih di bawah, jika Anda mau."
+          },
+          "quiet-by-design": {
+            "headline": "Umpan yang sengaja dibuat tenang",
+            "body": "Mera tidak menghitung di depan Anda saat Anda membaca. Ketuk keduanya untuk melihat apa yang ada di mana.",
+            "ask": "Mengapa Umpan tidak menampilkan berapa banyak berita yang masuk?",
+            "reveal": {
+              "feed": {
+                "label": "Umpan",
+                "text": "Tidak ada total berjalan, tidak ada bilah kemajuan, tidak ada «2 jam lalu» di kartu. Indikator kecil di samping judul adalah satu-satunya tanda bahwa sesuatu sedang diambil, dan mengetuknya menampilkan angkanya selama tiga detik sebelum menyingkir."
+              },
+              "dashboard": {
+                "label": "Dasbor",
+                "text": "Semua yang tidak ditampilkan Umpan. Berapa banyak berita yang diterbitkan, dianalisis, dan disimpan, kapan proses terakhir selesai, berapa usia setiap berita, dan notifikasi Anda."
+              }
+            }
           }
         }
       },

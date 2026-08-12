@@ -1804,6 +1804,21 @@
           "caught-up": {
             "headline": "Uitputting is prima",
             "body": "Als er niets nieuws meer over is, zegt Mera dat en stopt. Het zal de lijst niet opvullen om je te laten scrollen. Alles wat je al hebt gelezen zit nog beneden, als je het wilt."
+          },
+          "quiet-by-design": {
+            "headline": "Een bewust rustige feed",
+            "body": "Mera telt niet mee terwijl je leest. Tik op beide om te zien wat waar staat.",
+            "ask": "Waarom laat de Feed niet zien hoeveel verhalen er binnenkwamen?",
+            "reveal": {
+              "feed": {
+                "label": "Feed",
+                "text": "Geen lopende totalen, geen voortgangsbalk, geen „2 uur geleden” op de kaarten. Een klein indicatortje naast de titel is het enige teken dat er iets wordt opgehaald, en erop tikken toont de cijfers drie seconden lang voordat ze weer verdwijnen."
+              },
+              "dashboard": {
+                "label": "Dashboard",
+                "text": "Alles wat de Feed weglaat. Hoeveel verhalen er zijn gepubliceerd, geanalyseerd en bewaard, wanneer de laatste run klaar was, hoe oud elk verhaal is, en je meldingen."
+              }
+            }
           }
         }
       },

@@ -1834,6 +1834,21 @@
           "caught-up": {
             "headline": "Uruchomienie jest OK",
             "body": "Gdy nie ma już nic nowego, Mera to mówi i się zatrzymuje. Nie będzie podszycać listy, aby Cię trzymać w przewijaniu. Wszystko, co już przeczytałeś, jest poniżej, jeśli chcesz."
+          },
+          "quiet-by-design": {
+            "headline": "Celowo cichy strumień",
+            "body": "Mera nie liczy ci nic przed oczami podczas czytania. Dotknij obu, aby zobaczyć, co gdzie się znajduje.",
+            "ask": "Dlaczego Strumień nie pokazuje, ile historii napłynęło?",
+            "reveal": {
+              "feed": {
+                "label": "Strumień",
+                "text": "Żadnych bieżących sum, paska postępu ani „2 godziny temu” na kartach. Mały wskaźnik obok tytułu to jedyny znak, że coś jest pobierane, a dotknięcie go pokazuje liczby przez trzy sekundy, po czym znikają."
+              },
+              "dashboard": {
+                "label": "Pulpit",
+                "text": "Wszystko, co Strumień pomija. Ile historii opublikowano, przeanalizowano i zachowano, kiedy zakończył się ostatni przebieg, ile lat ma każda historia oraz twoje powiadomienia."
+              }
+            }
           }
         }
       },

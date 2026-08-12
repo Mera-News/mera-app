@@ -1811,6 +1811,21 @@
           "caught-up": {
             "headline": "Manquer, c'est bien",
             "body": "Quand il n'y a rien de nouveau à gauche, Mera le dit et s'arrête. Il ne bourrera pas la liste pour vous faire scroller. Tout ce que vous avez déjà lu est toujours en dessous, si vous le voulez."
+          },
+          "quiet-by-design": {
+            "headline": "Un fil volontairement silencieux",
+            "body": "Mera ne vous compte rien pendant que vous lisez. Touchez les deux pour voir ce qui se trouve où.",
+            "ask": "Pourquoi le fil n'affiche-t-il pas le nombre d'articles arrivés ?",
+            "reveal": {
+              "feed": {
+                "label": "Fil d'actu",
+                "text": "Aucun total en cours, aucune barre de progression, aucun « il y a 2 heures » sur les cartes. Un petit indicateur à côté du titre est le seul signe qu'une récupération est en cours, et le toucher affiche les chiffres pendant trois secondes avant de s'effacer."
+              },
+              "dashboard": {
+                "label": "Tableau de bord",
+                "text": "Tout ce que le fil laisse de côté. Combien d'articles ont été publiés, analysés et conservés, quand la dernière exécution s'est terminée, l'ancienneté de chaque article, et vos notifications."
+              }
+            }
           }
         }
       },

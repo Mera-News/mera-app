@@ -1804,6 +1804,21 @@
           "caught-up": {
             "headline": "Esaurire è fine",
             "body": "Quando non c'è niente di nuovo lasciato, Mera lo dice e si ferma. Non imbottirà l'elenco per farvi scorrere. Tutto quello che hai già letto è ancora sotto, se lo vuoi."
+          },
+          "quiet-by-design": {
+            "headline": "Un feed silenzioso per scelta",
+            "body": "Mera non ti tiene il conto mentre leggi. Tocca entrambi per vedere cosa sta dove.",
+            "ask": "Perché Notizie non mostra quante storie sono arrivate?",
+            "reveal": {
+              "feed": {
+                "label": "Notizie",
+                "text": "Nessun totale in corso, nessuna barra di avanzamento, nessun «2 ore fa» sulle schede. Un piccolo indicatore accanto al titolo è l'unico segno che qualcosa si sta scaricando, e toccandolo mostra i numeri per tre secondi prima di togliersi di mezzo."
+              },
+              "dashboard": {
+                "label": "Dashboard",
+                "text": "Tutto ciò che Notizie tralascia. Quante storie sono state pubblicate, analizzate e conservate, quando è terminata l'ultima esecuzione, quanto è vecchia ogni storia e le tue notifiche."
+              }
+            }
           }
         }
       },

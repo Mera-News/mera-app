@@ -1805,6 +1805,21 @@
           "caught-up": {
             "headline": "Chạy hết là tốt",
             "body": "Khi không có gì mới trái, Mera nói vậy và dừng lại. Nó sẽ không đệm danh sách để giữ cho bạn cuộn. Tất cả những gì bạn đã đọc vẫn bên dưới, nếu bạn muốn nó."
+          },
+          "quiet-by-design": {
+            "headline": "Bảng tin yên tĩnh có chủ đích",
+            "body": "Mera không đếm trước mắt bạn khi bạn đọc. Chạm vào cả hai để xem cái gì nằm ở đâu.",
+            "ask": "Vì sao Bảng tin không hiển thị có bao nhiêu tin đã về?",
+            "reveal": {
+              "feed": {
+                "label": "Bảng tin",
+                "text": "Không có tổng số chạy, không thanh tiến trình, không có «2 giờ trước» trên thẻ. Một chỉ báo nhỏ bên cạnh tiêu đề là dấu hiệu duy nhất cho thấy có gì đó đang được tải, và chạm vào nó sẽ hiện các con số trong ba giây rồi nhường chỗ."
+              },
+              "dashboard": {
+                "label": "Bảng điều khiển",
+                "text": "Mọi thứ Bảng tin bỏ qua. Bao nhiêu tin đã được đăng, phân tích và giữ lại, lần chạy cuối kết thúc khi nào, mỗi tin cũ bao lâu, và thông báo của bạn."
+              }
+            }
           }
         }
       },

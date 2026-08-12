@@ -1804,6 +1804,21 @@
           "caught-up": {
             "headline": "Estar al día está bien",
             "body": "Cuando no hay nada nuevo, Mera lo dice y se detiene. No rellenará la lista para mantenerte desplazándote. Todo lo que ya has leído está debajo, si lo quieres."
+          },
+          "quiet-by-design": {
+            "headline": "Un feed silencioso a propósito",
+            "body": "Mera no te lleva la cuenta mientras lees. Toca ambos para ver qué hay en cada sitio.",
+            "ask": "¿Por qué Noticias no muestra cuántas historias han entrado?",
+            "reveal": {
+              "feed": {
+                "label": "Noticias",
+                "text": "Sin totales en marcha, sin barra de progreso, sin «hace 2 horas» en las tarjetas. Un pequeño indicador junto al título es la única señal de que algo se está descargando, y al tocarlo muestra las cifras durante tres segundos antes de apartarse."
+              },
+              "dashboard": {
+                "label": "Panel",
+                "text": "Todo lo que Noticias deja fuera. Cuántas historias se publicaron, se analizaron y se conservaron, cuándo terminó la última ejecución, qué antigüedad tiene cada historia y tus notificaciones."
+              }
+            }
           }
         }
       },

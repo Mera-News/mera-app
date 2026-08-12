@@ -1804,6 +1804,21 @@
           "caught-up": {
             "headline": "Correr para fora está bem",
             "body": "Quando não há nada novo deixado, Mera diz assim e para. Não vai preencher a lista para mantê-lo rolando. Tudo que você já leu ainda está abaixo, se quiser."
+          },
+          "quiet-by-design": {
+            "headline": "Um feed silencioso de propósito",
+            "body": "O Mera não fica contando para você enquanto lê. Toque nos dois para ver o que fica onde.",
+            "ask": "Por que o Feed não mostra quantas histórias chegaram?",
+            "reveal": {
+              "feed": {
+                "label": "Feed",
+                "text": "Sem totais correndo, sem barra de progresso, sem «há 2 horas» nos cartões. Um pequeno indicador ao lado do título é o único sinal de que algo está sendo buscado, e tocá-lo mostra os números por três segundos antes de sair do caminho."
+              },
+              "dashboard": {
+                "label": "Painel",
+                "text": "Tudo o que o Feed deixa de fora. Quantas histórias foram publicadas, analisadas e mantidas, quando a última execução terminou, qual a idade de cada história e suas notificações."
+              }
+            }
           }
         }
       },
