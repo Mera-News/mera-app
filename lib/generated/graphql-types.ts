@@ -169,8 +169,10 @@ export type FactCheck = {
   articleUrl?: Maybe<Scalars['String']['output']>;
   /** Provider calls issued for this row. */
   attempts: Scalars['Int']['output'];
-  /** Established fact-checking organisations that have covered this claim. The attributable subset of `citations`. An EMPTY list on a complete check is a real answer — nobody has fact checked this — not a pending state. */
+  /** Established fact-checking organisations that have covered this claim, from the ClaimReview index (never from a model, so an organisation here cannot be invented). An EMPTY list is a real answer — but ONLY when `checkedByStatus` is `searched`. Read the two together, always. */
   checkedBy: Array<FactCheckOrganisation>;
+  /** Whether the ClaimReview index was actually consulted: `searched` or `unavailable`. THIS IS NOT COSMETIC. `searched` with an empty `checkedBy` means WE LOOKED AND NOBODY HAS PUBLISHED — the normal case, and a real answer worth showing. `unavailable` means WE COULD NOT LOOK (disabled, rate-limited, timed out) and must NEVER be rendered as "nobody has published". The two are byte-identical in `checkedBy`, which is why this is a stored field and not something a client may infer from the array being empty. */
+  checkedByStatus: Scalars['String']['output'];
   citations: Array<FactCheckCitation>;
   claims: Array<FactCheckClaim>;
   completedAt?: Maybe<Scalars['DateTime']['output']>;
@@ -265,7 +267,7 @@ export type Mutation = {
   advanceOnboardingStage: UserPersona;
   deleteExpoPushToken: UserPersona;
   issueLlmWarning: UserPersona;
-  /** Create or find the cached fact check for an article. Idempotent — an existing check is returned as-is and costs nothing. Poll `factCheck` until status leaves pending/running. */
+  /** Create or find the cached fact check for an article. Idempotent — an existing check is returned as-is and costs nothing. Poll `factCheck` until status leaves pending/running. New clients need only `factCheck`, which creates on a miss by itself. */
   requestFactCheck: FactCheck;
   requestUnblock: UnblockRequest;
   updateExpoPushToken: UserPersona;
@@ -344,6 +346,8 @@ export type NewsArticle = {
   embedding_status?: Maybe<Scalars['String']['output']>;
   entities?: Maybe<Array<Scalars['String']['output']>>;
   event_type?: Maybe<Scalars['String']['output']>;
+  /** The article's cached fact check, or null when none exists. READ-ONLY: unlike the `factCheck` query it never creates one and never starts a job, so it is safe on every article open. Null also means "not entitled" — use the `factCheck` query to ASK for a check. */
+  factCheck?: Maybe<FactCheck>;
   /** @deprecated v1-only link to the fetch state machine; unused by the v3 pipeline. */
   fetchPublicationId?: Maybe<Scalars['ID']['output']>;
   geo_tags?: Maybe<Array<GeoTagDto>>;
@@ -579,7 +583,7 @@ export type Query = {
   articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
   /** Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call. */
   embedPhrases: PhraseEmbeddingResult;
-  /** The cached fact check for an article, or null if none has been requested yet. Poll this after requestFactCheck. */
+  /** The fact check for an article. Returns the cached row instantly when one exists (in any state); creates a `pending` one and starts the job when none does. Poll until `status` is complete / blocked / failed. Null means no check exists and none could be started (the article is no longer servable). Always read `checkedBy` together with `checkedByStatus` — an empty list only means "nobody has published" when the status is `searched`. */
   factCheck?: Maybe<FactCheck>;
   /** The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response. */
   feedbackTree?: Maybe<FeedbackTreeResponse>;

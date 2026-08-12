@@ -28,7 +28,22 @@ jest.mock('../../logger', () => ({
     default: { captureException: jest.fn() },
 }));
 
-import { fetchFactCheck, reconcileStoredFactChecks, requestFactCheck } from '../fact-check-graphql-client';
+// `mirrorArticleFactCheck` reads the Mera Protocol switch. Mocked rather than
+// hydrated: the real store pulls in the settings table, and the only thing
+// under test here is that the switch is OBEYED.
+let mockFactCheckEnabled = true;
+jest.mock('../../stores/mera-protocol-store', () => ({
+    useMeraProtocolStore: {
+        getState: () => ({ factCheckEnabled: mockFactCheckEnabled }),
+    },
+}));
+
+import {
+    fetchFactCheck,
+    mirrorArticleFactCheck,
+    reconcileStoredFactChecks,
+    requestFactCheck,
+} from '../fact-check-graphql-client';
 
 const TERMINAL_ROW = {
     _id: 'fc1',
@@ -218,5 +233,81 @@ describe('reconcileStoredFactChecks', () => {
 
         await expect(reconcileStoredFactChecks()).resolves.toBeUndefined();
         expect(mockQuery).toHaveBeenCalledTimes(2);
+    });
+});
+
+// ===========================================================================
+// mirrorArticleFactCheck — the cross-user visibility fix.
+//
+// Checks are cached server-side and keyed on the ARTICLE, holding no user
+// identity, so the cache was always cross-user — but `useFactCheck` reports
+// `absent` (and the panel renders nothing) when the LOCAL table has no row, so
+// only the device that ASKED ever saw the answer. User A paid for the check,
+// user B opened the same article and saw nothing. This lands the row that
+// arrived attached to `articleById`, WITHOUT a request of its own.
+// ===========================================================================
+describe('mirrorArticleFactCheck', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockFactCheckEnabled = true;
+    });
+
+    it('writes the local row so the existing panel can render it', async () => {
+        await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(true);
+
+        expect(mockUpsertFactCheck).toHaveBeenCalledTimes(1);
+        expect(mockUpsertFactCheck).toHaveBeenCalledWith({
+            articleId: 'a1',
+            factCheckId: 'fc1',
+            articleTitle: 'A headline',
+            status: 'complete',
+            verdict: 'supported',
+            payload: TERMINAL_ROW,
+        });
+    });
+
+    // The reason this is safe to run on every article open.
+    it('makes NO network request', async () => {
+        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never);
+
+        expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it('writes nothing when the article carries no check', async () => {
+        await expect(mirrorArticleFactCheck('a1', null)).resolves.toBe(false);
+        await expect(mirrorArticleFactCheck('a1', undefined)).resolves.toBe(false);
+
+        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
+    });
+
+    it('writes nothing without an article id', async () => {
+        await expect(mirrorArticleFactCheck('', TERMINAL_ROW as never)).resolves.toBe(false);
+
+        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
+    });
+
+    // A reader who turned the feature off must not accumulate fact-check rows
+    // on their device as a side effect of reading articles.
+    it('writes nothing when factCheckEnabled is off', async () => {
+        mockFactCheckEnabled = false;
+
+        await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(false);
+
+        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
+    });
+
+    it('falls back to the caller title only when the row has none', async () => {
+        await mirrorArticleFactCheck('a1', PENDING_ROW as never, 'From the article');
+
+        expect(mockUpsertFactCheck).toHaveBeenCalledWith(
+            expect.objectContaining({ articleTitle: 'From the article' }),
+        );
+    });
+
+    // A missing panel must never cost the reader the article.
+    it('never throws when the local write fails', async () => {
+        mockUpsertFactCheck.mockRejectedValueOnce(new Error('db closed'));
+
+        await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(false);
     });
 });

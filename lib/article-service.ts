@@ -18,6 +18,9 @@ import {
     TopicPaginationInput,
 } from './generated/graphql-types';
 import logger from './logger';
+// The field list is shared with `factCheck(articleId)` rather than restated:
+// the panel reads one shape, so a field added for one path must reach both.
+import { FACT_CHECK_FIELDS } from './fact-check/fact-check-fields';
 import { isNotSubscribedError } from './subscription/not-subscribed-error';
 import { recordAiLocked } from './subscription/ai-lock';
 
@@ -82,6 +85,27 @@ const GET_ARTICLE_BY_ID = gql`
         category
         detected_language_code
         feed_language_code
+      }
+      # The CACHED fact check, if anybody has ever asked for one on this
+      # article. Read-only on the server (it never creates a row and never
+      # starts a job — see the ResolveField's own comment), so selecting it
+      # here costs nothing and starts nothing.
+      #
+      # WHY IT RIDES ON THIS QUERY. Checks are cached server-side and keyed on
+      # the article, deliberately holding no user identity — so the cache was
+      # always cross-user, but only the device that ASKED ever had a local row
+      # to render from. This query already runs on every article-detail open
+      # through this route, so the server already receives this article id on
+      # those opens: piggybacking adds no request and no new signal about what
+      # anyone reads. A separate per-open lookup would have added exactly that
+      # signal.
+      #
+      # RELEASE GATE, the same one FACT_CHECK_FIELDS carries: GraphQL fails
+      # WHOLE-OPERATION validation on an unknown field, so a build shipped
+      # ahead of the server change would break articleById outright, not just
+      # this one field. The server ships first, by design.
+      factCheck {
+        ${FACT_CHECK_FIELDS}
       }
     }
   }

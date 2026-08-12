@@ -4,8 +4,8 @@ import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestio
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
-import { openFactCheckChat } from '@/lib/fact-check/open-fact-check-chat';
-import { FACT_CHECK_SEED_MESSAGE_KEY } from '@/lib/fact-check/fact-check-state';
+import { requestArticleFactCheck } from '@/lib/fact-check/request-article-fact-check';
+import { mirrorArticleFactCheck } from '@/lib/fact-check/fact-check-graphql-client';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
@@ -43,7 +43,7 @@ import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort'
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
+import { useFactCheckEnabled } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -112,12 +112,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // read, so there is nothing wrong with two components each watching it.
     const factCheckPhase = useFactCheck(article?._id ?? articleId).phase;
     const aiAccess = useAiAccess();
-    // `proposeFactCheck` is CLOUD-only (`ChatSessionView.tsx` gates its own
-    // "Quick fact check" chip on the same signal) — splicing its claim-picker
-    // rules into the local prompt blows the on-device token budget. The tick
-    // must be hidden here, not just no-op in `openFactCheckChat`: a tick that
-    // silently mis-wires into a confused reply is worse than no tick.
-    const isOnDeviceProcessing = useIsOnDeviceProcessing();
+    // The Mera Protocol switch (`mera_fact_check`, default on). Until now it
+    // persisted and nothing read it. Off ⇒ no tick, no panel, and no mirroring
+    // of a check that arrives on the article (the mirror enforces that itself,
+    // see `mirrorArticleFactCheck`).
+    const factCheckEnabled = useFactCheckEnabled();
     // Only read once the article is KNOWN to be unavailable — a normal open
     // costs no extra query (FactCheckPanel runs its own observer on the happy
     // path).
@@ -291,6 +290,19 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 } else {
                     setArticle(row);
                     setIsLoading(false);
+                    // A fact check somebody ELSE already paid for arrives
+                    // attached to the article. Land it in the local table so
+                    // the panel below renders it — without this the check is
+                    // invisible to everyone except the device that asked, even
+                    // though the server-side cache is cross-user. No request of
+                    // its own: the row is already in this response. `void` and
+                    // not awaited, and it never throws — a missing panel must
+                    // never cost the reader the article.
+                    void mirrorArticleFactCheck(
+                        row._id ?? articleId,
+                        row.factCheck,
+                        row.title_en_internal_only ?? row.title,
+                    );
                 }
             })
             .catch((err) => {
@@ -396,6 +408,40 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         },
         [toast, t],
     );
+
+    /**
+     * The action-row tick. It USED to seed Mera AI with an opening turn, which
+     * answered "the article metadata gives me only a headline… there's nothing
+     * specific to fact-check from this alone" — a chat that could not do the
+     * job it was opened for. It now asks the SERVER for a check on this
+     * article; the panel below goes to `processing` and then to a result in
+     * place, with no chat involved.
+     *
+     * The toast is the immediate acknowledgement: the panel's own spinner is
+     * deliberately delayed (`PROGRESS_DELAY_MS`, so a fast answer never
+     * flashes one), which would otherwise leave the tap looking ignored. It is
+     * shown only when the request was actually issued — `requestArticleFactCheck`
+     * returns false for a gated no-op, and a toast about work nobody started
+     * would be a lie.
+     */
+    const handleStartFactCheck = useCallback(() => {
+        if (!article) return;
+        const asked = requestArticleFactCheck({
+            articleId: article._id ?? articleId,
+            title: article.title_en_internal_only ?? article.title ?? '',
+        });
+        if (!asked) return;
+        toast.show({
+            placement: 'top',
+            duration: 3000,
+            render: ({ id }: { id: string }) => (
+                <Toast nativeID={id} action="info" variant="solid">
+                    <ToastTitle>{t('factCheck.title')}</ToastTitle>
+                    <ToastDescription>{t('factCheck.checking')}</ToastDescription>
+                </Toast>
+            ),
+        });
+    }, [article, articleId, toast, t]);
 
     const handleToggleSave = useCallback(async () => {
         if (!article) return;
@@ -544,8 +590,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         not found" would throw away everything the device still
                         holds for it — post-v52 that can be SEVERAL rows, one
                         per claim the reader asked about. No `onPress`: there is
-                        nowhere further to go. */}
-                    {orphanFactChecks.length > 0 && (
+                        nowhere further to go. Gated with the panel below: a
+                        reader who turned fact checking off must not meet it
+                        here either, on rows mirrored before they did. */}
+                    {factCheckEnabled && orphanFactChecks.length > 0 && (
                         <Box className="w-full mt-6" testID="article-detail-orphan-fact-check">
                             <Text size="sm" className="text-typography-400 text-center mb-3">
                                 {t('factCheck.dashboard.articleGone')}
@@ -653,17 +701,21 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
                                     // Hidden entirely on a locked free-tier plan
-                                    // OR on-device processing — `openFactCheckChat`
-                                    // no-ops in both cases too (belt-and-
-                                    // suspenders, see that file), but a tick that
-                                    // visibly does nothing, or silently mis-wires
-                                    // into a confused reply, is worse than no
-                                    // tick at all.
-                                    factCheck={aiAccess !== 'locked' && !isOnDeviceProcessing ? {
-                                        onStart: () => openFactCheckChat({
-                                            articleId: article._id ?? articleId,
-                                            title: article.title_en_internal_only ?? article.title ?? '',
-                                        }, t(FACT_CHECK_SEED_MESSAGE_KEY)),
+                                    // (the server resolvers are behind
+                                    // SubscriptionGuard) or when the reader has
+                                    // turned fact checking off.
+                                    // `requestArticleFactCheck` no-ops in both
+                                    // cases too (belt-and-suspenders, see that
+                                    // file), but a tick that visibly does
+                                    // nothing is worse than no tick at all.
+                                    //
+                                    // NO LONGER hidden on on-device processing:
+                                    // that gate existed because the CHAT's
+                                    // claim picker is cloud-only, and the tick
+                                    // no longer opens a chat — it asks the
+                                    // server, which needs no cloud chat.
+                                    factCheck={aiAccess !== 'locked' && factCheckEnabled ? {
+                                        onStart: () => handleStartFactCheck(),
                                         // 'stalled' reads as 'pending' here too —
                                         // the tick only has a single/double
                                         // vocabulary (asked-or-unasked vs
@@ -731,10 +783,15 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         {/* Fact check sits OUTSIDE the URL branch: it is keyed
                             on the article id, not the (possibly refused) local
                             link, so it still renders for a row whose URL we
-                            won't open. Always mounted — a pure observer of the
-                            stored rows, it renders nothing itself when nobody
-                            has asked about this article. */}
-                        <FactCheckPanel articleId={article._id ?? articleId} />
+                            won't open. Mounted whenever the feature is on — a
+                            pure observer of the stored rows, it renders nothing
+                            itself when nobody has asked about this article.
+                            `factCheckEnabled` off means the reader sees no fact
+                            checking anywhere: no tick, no panel, and nothing
+                            mirrored to render from. */}
+                        {factCheckEnabled && (
+                            <FactCheckPanel articleId={article._id ?? articleId} />
+                        )}
 
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">

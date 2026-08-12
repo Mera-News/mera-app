@@ -40,9 +40,10 @@ interface FactCheckPanelProps {
 /**
  * The article-detail fact-check block — a PURE OBSERVER of this device's
  * stored rows plus `useFactCheck`'s server poll. There is nothing to tap
- * here: starting a check is `openFactCheckChat` (the action-row tick), which
- * opens the floating chat. This component only ever renders what that
- * produced.
+ * here: starting a check is `requestArticleFactCheck` (the action-row tick),
+ * which asks the server directly. This component only ever renders what that
+ * produced — plus, since the `NewsArticle.factCheck` field landed, whatever
+ * `mirrorArticleFactCheck` lands from a check SOMEBODY ELSE asked for.
  *
  *   absent     → render nothing. Most articles are never asked about, and most
  *                of THOSE are never fact-checked at all (~4% of the corpus is

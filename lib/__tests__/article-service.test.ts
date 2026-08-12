@@ -670,6 +670,27 @@ describe('ArticleService.getArticleById', () => {
         );
     });
 
+    // ── The cross-user fact-check fix ─────────────────────────────────────
+    // A check is cached server-side and keyed on the ARTICLE, holding no user
+    // identity, so the cache was always cross-user — but only the device that
+    // ASKED ever had a local row, so user B opened the same article and saw
+    // nothing. `NewsArticle.factCheck` is read-only server-side and rides on
+    // this query precisely BECAUSE it already runs on every open through this
+    // route: no extra request, and no new signal about what anyone reads.
+    it('selects the article-attached fact check, with the fields the panel reads', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { articleById: null } });
+        await ArticleService.getArticleById('art-1');
+
+        const doc = mockQuery.mock.calls[0][0].query;
+        const text = doc?.loc?.source?.body ?? '';
+        expect(text).toContain('factCheck {');
+        // The same field list `factCheck(articleId)` selects — one shape, so a
+        // field added for one path reaches both.
+        for (const field of ['checkedByStatus', 'checkedBy', 'citations', 'claims', 'verdict', 'summary']) {
+            expect(text).toContain(field);
+        }
+    });
+
     it('re-throws on error and logs with articleId', async () => {
         const err = new Error('article not found');
         mockQuery.mockRejectedValueOnce(err);

@@ -51,14 +51,18 @@ interface ArticleFeedbackPromptProps {
      *  already on the page — its footer — so the host scrolls there rather than
      *  navigating anywhere. Omitted ⇒ the nudge just closes the surface. */
     onBrowseRelated?: () => void;
-    /** The fact-check tick. `onStart` opens the floating chat's claim picker
-     *  (`openFactCheckChat`) — it no longer toggles a section, that request
-     *  was withdrawn. `state` is the caller's own `useFactCheck(articleId)`
-     *  phase, mapped to the tick's three-signal vocabulary. Omitted ⇒ no tick,
-     *  which is every surface without a place to show the result (the feed
-     *  card) or a locked free-tier user (the chokepoint is
-     *  `openFactCheckChat`'s, but the caller still hides the tick so it is
-     *  never a dead tap). */
+    /** The fact-check tick. `onStart` asks the SERVER for a check on this
+     *  article (`requestArticleFactCheck`); the result lands in the detail
+     *  screen's own `FactCheckPanel`, in place. It used to open the floating
+     *  chat's claim picker instead, which could only answer "there's nothing
+     *  specific to fact-check from this alone" — the AI-assisted path lives on
+     *  as Mera AI's own "Quick fact check" chip. `state` is the caller's own
+     *  `useFactCheck(articleId)` phase, mapped to the tick's three-signal
+     *  vocabulary. Omitted ⇒ no tick, which is every surface without a place to
+     *  show the result (the feed card), a locked free-tier user, and a reader
+     *  who has turned fact checking off (`requestArticleFactCheck` no-ops in
+     *  both of those too, but the caller still hides the tick so it is never a
+     *  dead tap). */
     factCheck?: {
         onStart: () => void;
         state: 'none' | 'pending' | 'done';

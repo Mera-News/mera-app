@@ -9,7 +9,8 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
 });
 
 // FactCheckPanel — a PURE OBSERVER post-pivot. No action button, no retry, no
-// hide: the tick (`openFactCheckChat`) is the only way in, and this component
+// hide: the tick (`requestArticleFactCheck`) and the article mirror are the
+// only ways in, and this component
 // only ever renders what `useFactCheck` reads back off the device (plus its
 // server poll). Properties pinned here because nothing else enforces them:
 //   • absent renders nothing at all;

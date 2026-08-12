@@ -18,12 +18,18 @@
  * calling this more than once is to find out whether the answer changed,
  * which is exactly what an Apollo cache hit would hide.
  *
- * ⚠️ BECAUSE THE FIRST CALL FOR AN ARTICLE STARTS A BILLABLE SERVER JOB, this
- * module must only be reached from an EXPLICIT user action — the fact-check
- * tick opening chat, and (Q1's territory) the chat's "The Article" async pill.
- * It must never be called merely because an article screen mounted. See
+ * ⚠️ BECAUSE THE FIRST CALL FOR AN ARTICLE STARTS A BILLABLE SERVER JOB,
+ * `fetchFactCheck` / `requestFactCheck` must only be reached from an EXPLICIT
+ * user action — the fact-check tick, and the chat's "The Article" async pill.
+ * They must never be called merely because an article screen mounted. See
  * `use-fact-check.ts`'s own guard: it only polls the server once a LOCAL,
  * non-terminal row already exists, i.e. once something has already asked.
+ *
+ * `mirrorArticleFactCheck` (bottom of this file) is the EXCEPTION THAT PROVES
+ * THE RULE, and it is exempt because it makes NO request at all: it lands a
+ * check that already came back attached to `articleById`. That is what lets a
+ * reader see a check somebody else paid for without either of them being
+ * asked, or recorded, for it.
  */
 
 import { gql } from '@apollo/client';
@@ -33,52 +39,11 @@ import {
     listFactChecksByStatus,
     upsertFactCheck,
 } from '../database/services/fact-check-record-service';
+import { useMeraProtocolStore } from '../stores/mera-protocol-store';
+import type { FactCheck as GeneratedFactCheck } from '../generated/graphql-types';
+import { FACT_CHECK_FIELDS } from './fact-check-fields';
 import { isTerminalStatus } from './fact-check-state';
 import type { FactCheckRow } from './fact-check-types';
-
-// `checkedByStatus` and `createdAt` are the two fields NOT on the server type
-// already deployed as of this file's writing (`lib/generated/graphql-types.ts`)
-// — see fact-check-types.ts's file header for why this selection is
-// hand-written rather than codegen'd for now.
-//
-// ⚠️ RELEASE GATE, same shape as the one the pre-pivot `fact-check-service.ts`
-// carried: GraphQL does not degrade on an unknown field, it fails WHOLE-
-// OPERATION validation — a build shipped ahead of S1's server change would
-// break `factCheck(articleId)` outright with "Cannot query field
-// 'checkedByStatus'", not just render that one field blank. Sequencing (server
-// to prod first, per the plan) is what covers this; if that order ever has to
-// reverse, the one-line escape hatch is deleting `checkedByStatus` (and, if it
-// also isn't live yet, `createdAt`) from this selection.
-const FACT_CHECK_FIELDS = `
-    _id
-    status
-    verdict
-    summary
-    checkedBy {
-      organisation
-      url
-      verdict
-      summary
-    }
-    checkedByStatus
-    citations {
-      title
-      uri
-      snippet
-    }
-    claims {
-      claim
-      assessment
-      note
-    }
-    completedAt
-    createdAt
-    articleTitle
-    articleUrl
-    publicationName
-    model
-    attempts
-`;
 
 const GET_FACT_CHECK = gql`
   query GetFactCheck($articleId: ID!) {
@@ -175,6 +140,59 @@ export async function requestFactCheck(
             extra: { articleId },
         });
         return { terminal: false, row: null };
+    }
+}
+
+/**
+ * Mirror a fact check that arrived ON AN ARTICLE into the local `fact_checks`
+ * table. NO NETWORK CALL — the row was already in the `articleById` response.
+ *
+ * THIS IS WHAT MAKES A CACHED CHECK VISIBLE TO SOMEBODY WHO DID NOT ASK FOR
+ * IT. Checks are cached server-side and keyed on the article, deliberately
+ * holding no user identity, so the cache was always cross-user — but only the
+ * device that asked ever had a local row, and `useFactCheck` reports `absent`
+ * (and `FactCheckPanel` renders nothing) when the LOCAL table is empty. User A
+ * paid for the check; user B opened the same article and saw nothing. Writing
+ * the row here is the whole fix: from that point the existing live
+ * WatermelonDB subscription and the existing panel render it, with no new
+ * render path.
+ *
+ * `factCheckEnabled` is honoured HERE rather than only at the call sites: a
+ * reader who turned the feature off must not accumulate fact-check rows on
+ * their device as a side effect of reading articles.
+ *
+ * Never throws, for the same reason `requestFactCheck` doesn't — a failed
+ * mirror must cost the reader a missing panel, never a failed article open.
+ */
+export async function mirrorArticleFactCheck(
+    articleId: string,
+    // The codegen'd `NewsArticle.factCheck` and the hand-written `FactCheckRow`
+    // describe the same payload and differ only in how tightly a couple of
+    // string fields are typed (see fact-check-types.ts's header). Accept either
+    // and narrow ONCE, here, rather than making every screen cast.
+    factCheck: FactCheckRow | GeneratedFactCheck | null | undefined,
+    articleTitle?: string | null,
+): Promise<boolean> {
+    if (!factCheck || !articleId) return false;
+    if (!useMeraProtocolStore.getState().factCheckEnabled) return false;
+
+    const row = factCheck as FactCheckRow;
+    try {
+        await upsertFactCheck({
+            articleId,
+            factCheckId: String(row._id ?? ''),
+            articleTitle: row.articleTitle ?? articleTitle ?? null,
+            status: row.status,
+            verdict: row.verdict ?? null,
+            payload: row,
+        });
+        return true;
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'fact-check-graphql-client', method: 'mirrorArticleFactCheck' },
+            extra: { articleId },
+        });
+        return false;
     }
 }
 

@@ -112,13 +112,17 @@ export const PROGRESS_DELAY_MS = 400;
 export const POLL_INTERVAL_MS = 6_000;
 export const POLL_CEILING_MS = 180_000;
 
-/** i18n key for the message the fact-check tick auto-sends as the user's
- *  opening chat turn — the SAME opening turn Mera AI's "Quick fact check"
- *  starter chip sends (see `open-fact-check-chat.ts`), so a tick tap and a
- *  chip tap land on the identical claim-picker pill list, which always ends
- *  with the async "The Article" option. Reuses the existing key rather than
- *  minting a new one: this is the string already shipped in 19 locales for
- *  this exact purpose pre-pivot. */
+/** i18n key for the opening chat turn that asks Mera AI to propose checkable
+ *  claims — what Mera AI's "Quick fact check" starter chip sends
+ *  (`ChatSessionView`), and the entry point to the claim picker.
+ *
+ *  THE ARTICLE TICK NO LONGER SENDS IT. The tick used to seed this turn and
+ *  let the chat take over, which on a real device answered "the article
+ *  metadata gives me only a headline… there's nothing specific to fact-check
+ *  from this alone"; it now asks the server directly
+ *  (`request-article-fact-check.ts`) and opens no chat. The chip is the
+ *  remaining, and only, consumer — the AI-assisted claim-by-claim path is
+ *  intact, it just is not what the tick does. */
 export const FACT_CHECK_SEED_MESSAGE_KEY = 'factCheck.chatSeed';
 
 const TERMINAL: ReadonlySet<string> = new Set(['complete', 'blocked']);
