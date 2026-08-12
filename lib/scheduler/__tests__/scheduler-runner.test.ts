@@ -295,6 +295,39 @@ describe('run — failure handling', () => {
     expect(mockCaptureException).toHaveBeenCalledWith(err);
   });
 
+  it.each([
+    ['a bare ServerError', { statusCode: 401 }],
+    ['a wrapped network error', { networkError: { statusCode: 401 } }],
+    ['a fetch-style response', { response: { status: 401 } }],
+  ])(
+    'does NOT capture a 401 to Sentry (%s) — breadcrumb only',
+    async (_label, shape) => {
+      const err = Object.assign(new Error('Response not successful: Received status code 401'), shape);
+      const job = makeJob({ attempt: 1, maxAttempts: 3 });
+      await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+      expect(mockCaptureException).not.toHaveBeenCalled();
+      expect(mockLogAddBreadcrumb).toHaveBeenCalledWith(
+        expect.stringContaining('UNAUTHENTICATED'),
+        'scheduler',
+        expect.objectContaining({ jobId: 'job-test-1' }),
+        'warning',
+      );
+    },
+  );
+
+  it('still records the failure and its retry bookkeeping for a 401', async () => {
+    const err = Object.assign(new Error('401'), { statusCode: 401 });
+    const job = makeJob({ attempt: 1, maxAttempts: 3 });
+    await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+    // Suppressing the Sentry event must not turn the failure into a success:
+    // a 401 is a non-retryable 4xx, so it is marked failed AND exhausted.
+    expect(mockMarkFailed).toHaveBeenCalled();
+    expect(mockMarkFailed.mock.calls[0][2]).toBe(true);
+    expect(mockSetJobFailed).toHaveBeenCalled();
+  });
+
   it('schedules retry via AppScheduler.trigger when retryAt is set', async () => {
     const err = new Error('retry me');
     const job = makeJob({ attempt: 1, maxAttempts: 3 });

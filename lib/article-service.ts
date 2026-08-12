@@ -1,6 +1,4 @@
 import { gql } from '@apollo/client';
-import { CombinedGraphQLErrors } from '@apollo/client/errors';
-import { StatusCodes } from 'http-status-codes';
 import client from './apollo-client';
 import { recordAuthFailure } from './auth-failure-breaker';
 import {
@@ -21,6 +19,7 @@ import logger from './logger';
 // The field list is shared with `factCheck(articleId)` rather than restated:
 // the panel reads one shape, so a field added for one path must reach both.
 import { FACT_CHECK_FIELDS } from './fact-check/fact-check-fields';
+import { isUnauthenticatedError } from './utils/retry';
 import { isNotSubscribedError } from './subscription/not-subscribed-error';
 import { recordAiLocked } from './subscription/ai-lock';
 
@@ -572,36 +571,10 @@ export type {
 // the server a Jina embed + vector search, so parallel batches would spike load.
 const MAX_TOPICS_PER_BATCH = 150;
 
-interface UnauthenticatedLikeError {
-    statusCode?: number;
-    response?: { status?: number };
-    networkError?: { statusCode?: number };
-}
-
-/**
- * True when `error` is a 401 / UNAUTHENTICATED, in any of the shapes Apollo
- * Client v4 surfaces it in (GraphQL extensions, network error, wrapped network
- * error). Mirrors isNotSubscribedError's multi-shape approach so the two gates
- * can't drift.
- */
-function isUnauthenticatedError(error: unknown): boolean {
-    if (CombinedGraphQLErrors.is(error)) {
-        return error.errors.some((e) => {
-            const ext = e.extensions as
-                | { code?: string; statusCode?: number }
-                | undefined;
-            return (
-                ext?.code === 'UNAUTHENTICATED' ||
-                ext?.statusCode === StatusCodes.UNAUTHORIZED
-            );
-        });
-    }
-
-    const ne = error as UnauthenticatedLikeError | undefined;
-    const status =
-        ne?.statusCode ?? ne?.response?.status ?? ne?.networkError?.statusCode;
-    return status === StatusCodes.UNAUTHORIZED;
-}
+// `isUnauthenticatedError` used to be defined here. It now lives in
+// `lib/utils/retry.ts` so the scheduler runner can apply the SAME 401 rule
+// without importing this module (and with it the Apollo client). Behaviour is
+// unchanged; see the docstring there for why there is exactly one copy.
 
 // Article Service Class
 export class ArticleService {

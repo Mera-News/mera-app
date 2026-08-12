@@ -72,6 +72,37 @@ export function isNonRetryableError(error: unknown): boolean {
   return typeof status === 'number' && status >= 400 && status < 500;
 }
 
+/**
+ * True when `error` is a 401 / UNAUTHENTICATED, in any of the shapes Apollo
+ * Client v4 surfaces it in (GraphQL extensions, network error, wrapped network
+ * error).
+ *
+ * ONE DEFINITION, DELIBERATELY. The 401 reporting rule has to be identical at
+ * every catch site — the Apollo error link, `ArticleService.reportQueryError`
+ * and the scheduler runner all suppress on it — and a second copy that drifts
+ * is enough to re-open the duplicate-event storm this predicate exists to stop.
+ * It lives beside `isNonRetryableError` because the two answer the same kind of
+ * question about the same error shapes, and because `lib/utils/retry` is
+ * dependency-light: importing it must never drag Apollo's client instance into
+ * a module (the scheduler runner) that has no business constructing one.
+ */
+export function isUnauthenticatedError(error: unknown): boolean {
+  if (CombinedGraphQLErrors.is(error)) {
+    return error.errors.some((e) => {
+      const ext = (e as GraphQLErrorLike & { extensions?: { statusCode?: number } })
+        .extensions;
+      return ext?.code === 'UNAUTHENTICATED' || ext?.statusCode === 401;
+    });
+  }
+
+  const ne = error as
+    | (NetworkLikeError & { networkError?: { statusCode?: number } })
+    | undefined;
+  const status =
+    ne?.statusCode ?? ne?.response?.status ?? ne?.networkError?.statusCode;
+  return status === 401;
+}
+
 export async function withRetry<T>(
   op: () => Promise<T>,
   signal?: AbortSignal,
