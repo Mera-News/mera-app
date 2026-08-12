@@ -471,7 +471,11 @@
     "factCheckTitle": "Faktenchecks",
     "factCheckOn": "Aktiviert – Mera kann veröffentlichte Faktenchecks zu einer Story nachschlagen",
     "factCheckOff": "Aus",
-    "factCheckDescription": "Mera überprüft keine Nachrichten selbst. Wenn diese Option aktiviert ist, wird die Story an unseren Server und an einen Suchanbieter gesendet, der nach Faktenchecks sucht, die etablierte Organisationen bereits veröffentlicht haben. Nichts anderes wird damit gesendet – nicht deine Fakten, nicht dein Feed, nicht wer du bist. Standardmäßig aktiviert; die Suche wird nur ausgeführt, wenn du darum bittest."
+    "factCheckDescription": "Mera überprüft keine Nachrichten selbst. Wenn diese Option aktiviert ist, wird die Story an unseren Server und an einen Suchanbieter gesendet, der nach Faktenchecks sucht, die etablierte Organisationen bereits veröffentlicht haben. Nichts anderes wird damit gesendet – nicht deine Fakten, nicht dein Feed, nicht wer du bist. Standardmäßig aktiviert; die Suche wird nur ausgeführt, wenn du darum bittest.",
+    "autoCommunityFactCheckTitle": "Automatischer Community-Faktencheck",
+    "autoCommunityFactCheckOn": "Wird bei jedem geöffneten Artikel abgefragt",
+    "autoCommunityFactCheckOff": "Wird nur auf Tippen abgefragt",
+    "autoCommunityFactCheckDescription": "Faktenchecks werden geteilt. Wenn eine Person einen Check für eine Meldung anfordert, wird das Ergebnis bei dieser Meldung gespeichert und alle können es sehen. Ist dies aktiviert, sucht Mera bei jedem geöffneten Artikel nach einem vorhandenen Check. Bleibt es aus, sucht Mera nur, wenn du auf die Faktencheck-Schaltfläche tippst, sodass das Nachfragen eine bewusste Entscheidung für eine einzelne Meldung bleibt."
   },
   "manageData": {
     "deleting": "Wird gelöscht...",

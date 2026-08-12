@@ -471,7 +471,11 @@
     "factCheckTitle": "Feitchecks",
     "factCheckOn": "Aan — Mera kan gepubliceerde feitchecks op een artikel opzoeken",
     "factCheckOff": "Uit",
-    "factCheckDescription": "Mera controleert het nieuws niet zelf. Wanneer dit is ingeschakeld, wordt het artikel naar onze server en naar een zoekprovider gestuurd, die zoekt naar feitchecks die gevestigde organisaties al hebben gepubliceerd. Niets anders gaat mee — niet je feiten, niet je feed, niet wie je bent. Standaard ingeschakeld; de zoekopdracht wordt alleen uitgevoerd als je erom vraagt."
+    "factCheckDescription": "Mera controleert het nieuws niet zelf. Wanneer dit is ingeschakeld, wordt het artikel naar onze server en naar een zoekprovider gestuurd, die zoekt naar feitchecks die gevestigde organisaties al hebben gepubliceerd. Niets anders gaat mee — niet je feiten, niet je feed, niet wie je bent. Standaard ingeschakeld; de zoekopdracht wordt alleen uitgevoerd als je erom vraagt.",
+    "autoCommunityFactCheckTitle": "Automatische community-factcheck",
+    "autoCommunityFactCheckOn": "Opgezocht bij elk artikel dat je opent",
+    "autoCommunityFactCheckOff": "Alleen opgezocht als je erom vraagt",
+    "autoCommunityFactCheckDescription": "Factchecks worden gedeeld. Als iemand een verhaal laat checken, wordt het resultaat bij dat verhaal bewaard en kan iedereen het zien. Staat dit aan, dan zoekt Mera bij elk artikel dat je opent naar een bestaande check. Staat het uit, dan zoekt Mera alleen als je op de factcheck-knop tikt, zodat het vragen iets blijft wat je per verhaal zelf kiest."
   },
   "manageData": {
     "deleting": "Verwijderen...",

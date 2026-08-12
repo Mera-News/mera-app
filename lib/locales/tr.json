@@ -471,7 +471,11 @@
     "factCheckTitle": "Doğruluk kontroller",
     "factCheckOn": "Açık — Mera bir haberde yayımlanmış doğruluk kontrolleri arayabilir",
     "factCheckOff": "Kapalı",
-    "factCheckDescription": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Bu açıkken, bir haberi aramak onu sunucumuza ve bir arama sağlayıcısına gönderir. Resmi kuruluşlar tarafından yayımlanmış doğruluk kontrolleri arar. Bununla başka bir şey gitmez — sizin bilgileriniz, akışınız, kimliğiniz. Varsayılan olarak açık; araması sadece siz istediğinizde çalışır."
+    "factCheckDescription": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Bu açıkken, bir haberi aramak onu sunucumuza ve bir arama sağlayıcısına gönderir. Resmi kuruluşlar tarafından yayımlanmış doğruluk kontrolleri arar. Bununla başka bir şey gitmez — sizin bilgileriniz, akışınız, kimliğiniz. Varsayılan olarak açık; araması sadece siz istediğinizde çalışır.",
+    "autoCommunityFactCheckTitle": "Otomatik topluluk doğrulaması",
+    "autoCommunityFactCheckOn": "Açtığınız her haberde aranır",
+    "autoCommunityFactCheckOff": "Yalnızca siz istediğinizde aranır",
+    "autoCommunityFactCheckDescription": "Doğrulamalar ortaktır. Biri bir haberin doğrulanmasını istediğinde sonuç o haberle birlikte saklanır ve herkes görebilir. Bunu açarsanız Mera, açtığınız her haberde mevcut bir doğrulama arar. Kapalı bırakırsanız Mera yalnızca doğrulama düğmesine dokunduğunuzda arar; böylece istemek, tek bir haber için bilerek yaptığınız bir şey olarak kalır."
   },
   "manageData": {
     "deleting": "Siliniyor...",

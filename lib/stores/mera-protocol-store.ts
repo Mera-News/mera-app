@@ -75,6 +75,24 @@ interface MeraProtocolState {
   // regardless of this switch.
   factCheckEnabled: boolean;
 
+  // Auto community fact check — OFF by default, and the default is the point.
+  //
+  // A fact check is cached on our server against the ARTICLE, so one reader's
+  // request is an answer for everybody. Showing it automatically means asking
+  // the server "does this article have a check?" every time an article is
+  // OPENED, which on the suggestion screen is a round trip and on the detail
+  // screen is a field on a query already being made.
+  //
+  // That is a reasonable thing to want and a reasonable thing to decline, so it
+  // is a switch rather than a decision made for the reader. OFF means the
+  // lookup happens only when they tap the fact-check button — a deliberate act
+  // on one article, which is exactly how the privacy policy describes it.
+  //
+  // ABSENT ⇒ OFF, the normal rule, unlike `factCheckEnabled` above whose
+  // absent ⇒ ON is a deliberate one-off for an installed base that predates it.
+  // This setting is new and opt-in; nobody has consented to it yet.
+  autoCommunityFactCheck: boolean;
+
   // Model lifecycle
   selectedModelId: string; // Which model the user has chosen
   modelState: ModelStateLabel;
@@ -95,6 +113,7 @@ interface MeraProtocolState {
   setDeepInterview: (enabled: boolean) => void;
   setShowExtractedMetadata: (enabled: boolean) => void;
   setFactCheckEnabled: (enabled: boolean) => void;
+  setAutoCommunityFactCheck: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
   setDownloadProgress: (progress: number) => void;
@@ -135,6 +154,7 @@ const SETTING_SHOW_EXTRACTED_METADATA = 'mera_show_extracted_metadata';
  * cautionary precedent.
  */
 const SETTING_FACT_CHECK_ENABLED = 'mera_fact_check';
+const SETTING_AUTO_COMMUNITY_FACT_CHECK = 'mera_auto_community_fact_check';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
  *  only so `reset()` clears the orphaned row from devices that persisted it. */
@@ -157,6 +177,7 @@ const initialState = {
   // agree, or the hydrate immediately overwrites this on every existing
   // device and the feature ships dark.
   factCheckEnabled: true,
+  autoCommunityFactCheck: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
   downloadProgress: 0,
@@ -205,6 +226,14 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     setSetting(SETTING_FACT_CHECK_ENABLED, factCheckEnabled ? 'true' : 'false').catch(() => { });
   },
 
+  setAutoCommunityFactCheck: (autoCommunityFactCheck: boolean) => {
+    set({ autoCommunityFactCheck });
+    setSetting(
+      SETTING_AUTO_COMMUNITY_FACT_CHECK,
+      autoCommunityFactCheck ? 'true' : 'false',
+    ).catch(() => { });
+  },
+
   setSelectedModelId: (selectedModelId) => {
     set({ selectedModelId });
     setSetting('mera_selected_model_id', selectedModelId).catch(() => { });
@@ -250,6 +279,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
     deleteSetting(SETTING_SHOW_EXTRACTED_METADATA).catch(() => { });
     deleteSetting(SETTING_FACT_CHECK_ENABLED).catch(() => { });
+    deleteSetting(SETTING_AUTO_COMMUNITY_FACT_CHECK).catch(() => { });
     deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
     deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
     deleteSetting('e2ee_enabled').catch(() => { });
@@ -267,6 +297,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         deepInterviewValue,
         showExtractedMetadataValue,
         factCheckEnabledValue,
+        autoCommunityFactCheckValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
         getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
@@ -277,6 +308,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(SETTING_DEEP_INTERVIEW),
         getSetting(SETTING_SHOW_EXTRACTED_METADATA),
         getSetting(SETTING_FACT_CHECK_ENABLED),
+        getSetting(SETTING_AUTO_COMMUNITY_FACT_CHECK),
       ]);
       // One-shot cleanup: the retired v2 key is never read — the switch starts
       // off regardless of what v2 was set to — just swept so it doesn't linger.
@@ -338,6 +370,11 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else {
         updates.factCheckEnabled = true;
       }
+      // Only an explicit 'true' opts in — see the field's comment for why this
+      // does NOT copy the absent ⇒ ON exception directly above it.
+      if (autoCommunityFactCheckValue === 'true') {
+        updates.autoCommunityFactCheck = true;
+      }
       if (Object.keys(updates).length > 0) {
         set(updates);
       }
@@ -371,6 +408,11 @@ export const useShowExtractedMetadata = () =>
 
 export const useFactCheckEnabled = () =>
   useMeraProtocolStore((state) => state.factCheckEnabled);
+
+/** Whether to look up a community fact check on every article open, rather than
+ *  only when the reader taps the button. Opt-in; see the field's comment. */
+export const useAutoCommunityFactCheck = () =>
+  useMeraProtocolStore((state) => state.autoCommunityFactCheck);
 
 export const useSelectedModelId = () =>
   useMeraProtocolStore((state) => state.selectedModelId);

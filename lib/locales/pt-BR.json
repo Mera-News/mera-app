@@ -471,7 +471,11 @@
     "factCheckTitle": "Verificações de fatos",
     "factCheckOn": "Ativado — Mera pode procurar verificações de fatos publicadas em uma história",
     "factCheckOff": "Desativada",
-    "factCheckDescription": "Mera não verifica os fatos das notícias em si. Quando ativado, procurar uma história a envia para nosso servidor e depois para um provedor de pesquisa, que procura por verificações de fatos que organizações estabelecidas já publicaram. Nada mais vai com ele — não seus fatos, não seu feed, não quem você é. Ativado por padrão; a pesquisa sempre é executada apenas quando você a solicita."
+    "factCheckDescription": "Mera não verifica os fatos das notícias em si. Quando ativado, procurar uma história a envia para nosso servidor e depois para um provedor de pesquisa, que procura por verificações de fatos que organizações estabelecidas já publicaram. Nada mais vai com ele — não seus fatos, não seu feed, não quem você é. Ativado por padrão; a pesquisa sempre é executada apenas quando você a solicita.",
+    "autoCommunityFactCheckTitle": "Checagem da comunidade automática",
+    "autoCommunityFactCheckOn": "Buscada em cada artigo que você abre",
+    "autoCommunityFactCheckOff": "Buscada só quando você pede",
+    "autoCommunityFactCheckDescription": "As checagens são compartilhadas. Quando alguém pede a checagem de uma notícia, o resultado fica guardado junto dela e qualquer pessoa pode ver. Com isto ligado, o Mera procura uma checagem existente sempre que você abre um artigo. Desligado, o Mera procura apenas quando você toca no botão de checagem, de modo que pedir continua sendo algo que você escolhe fazer, notícia a notícia."
   },
   "manageData": {
     "deleting": "Excluindo...",

@@ -28,6 +28,7 @@ import type { SystemRequirementsResult } from '@/lib/mera-protocol-toolkit/types
 import {
     useDeepInterview,
     useDownloadProgress,
+    useAutoCommunityFactCheck,
     useFactCheckEnabled,
     useMeraProtocolStore,
     useModelState as useModelStateSelector,
@@ -117,6 +118,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     const deepInterview = useDeepInterview();
     const showExtractedMetadata = useShowExtractedMetadata();
     const factCheckEnabled = useFactCheckEnabled();
+    const autoCommunityFactCheck = useAutoCommunityFactCheck();
 
     const currentModel = KNOWN_MODELS[selectedModelId] ?? LATEST_MODEL;
     const hasModelUpdate = selectedModelId !== LATEST_MODEL.modelId;
@@ -763,6 +765,51 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     {t('meraProtocol.factCheckDescription')}
                 </Text>
             </Box>
+
+            {/* Auto community fact check — OFF by default, and NESTED under the
+                switch above: it is meaningless with fact checking off, so it is
+                hidden rather than left tappable and inert.
+
+                A check is cached against the ARTICLE, so one reader's request
+                answers for everyone. This decides whether Mera LOOKS for that
+                answer on every article opened, or only when the reader taps the
+                button. Off, the lookup is a deliberate act on one article,
+                which is exactly how the privacy policy describes it. */}
+            {factCheckEnabled && (
+                <Box className="px-5 mb-6" testID="mera-protocol-auto-community-fact-check">
+                    <HStack space="md" className="items-center justify-between">
+                        <HStack space="md" className="items-center flex-1">
+                            <MaterialIcons
+                                name="groups"
+                                size={24}
+                                color={autoCommunityFactCheck ? "#10b981" : "#9ca3af"}
+                            />
+                            <VStack className="flex-1">
+                                <Text className="text-white text-base font-semibold">
+                                    {t('meraProtocol.autoCommunityFactCheckTitle')}
+                                </Text>
+                                <Text className="text-typography-500 text-sm mt-0.5">
+                                    {autoCommunityFactCheck
+                                        ? t('meraProtocol.autoCommunityFactCheckOn')
+                                        : t('meraProtocol.autoCommunityFactCheckOff')}
+                                </Text>
+                            </VStack>
+                        </HStack>
+                        <Switch
+                            value={autoCommunityFactCheck}
+                            onToggle={() =>
+                                store.setAutoCommunityFactCheck(!autoCommunityFactCheck)
+                            }
+                            size="md"
+                            disabled={readOnly}
+                            testID="mera-protocol-auto-community-fact-check-switch"
+                        />
+                    </HStack>
+                    <Text className="text-typography-500 text-xs mt-2">
+                        {t('meraProtocol.autoCommunityFactCheckDescription')}
+                    </Text>
+                </Box>
+            )}
 
             {/* Deeper questions (item 17) — OFF by default. The copy's job is to
                 say why Mera can ask questions this personal at all: the answers

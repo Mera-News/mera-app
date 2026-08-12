@@ -471,7 +471,11 @@
     "factCheckTitle": "Pemeriksaan fakta",
     "factCheckOn": "Aktif — Mera dapat mencari pemeriksaan fakta yang dipublikasikan pada cerita",
     "factCheckOff": "Nonaktif",
-    "factCheckDescription": "Mera tidak memeriksa fakta berita itu sendiri. Ketika ini aktif, mencari cerita mengirimnya ke server kami dan ke penyedia pencarian, yang mencari pemeriksaan fakta yang telah dipublikasikan organisasi yang sudah mapan. Tidak ada yang lain pergi dengannya — bukan fakta Anda, bukan feed Anda, bukan siapa Anda. Aktif secara default; pencarian hanya berjalan ketika Anda memintanya."
+    "factCheckDescription": "Mera tidak memeriksa fakta berita itu sendiri. Ketika ini aktif, mencari cerita mengirimnya ke server kami dan ke penyedia pencarian, yang mencari pemeriksaan fakta yang telah dipublikasikan organisasi yang sudah mapan. Tidak ada yang lain pergi dengannya — bukan fakta Anda, bukan feed Anda, bukan siapa Anda. Aktif secara default; pencarian hanya berjalan ketika Anda memintanya.",
+    "autoCommunityFactCheckTitle": "Cek fakta komunitas otomatis",
+    "autoCommunityFactCheckOn": "Dicari di setiap artikel yang Anda buka",
+    "autoCommunityFactCheckOff": "Dicari hanya saat Anda meminta",
+    "autoCommunityFactCheckDescription": "Cek fakta bersifat bersama. Saat seseorang meminta sebuah berita diperiksa, hasilnya disimpan bersama berita itu dan siapa pun bisa melihatnya. Jika dinyalakan, Mera mencari cek yang sudah ada setiap kali Anda membuka artikel. Jika dibiarkan mati, Mera hanya mencari ketika Anda mengetuk tombol cek fakta, sehingga meminta tetap menjadi pilihan Anda pada satu berita."
   },
   "manageData": {
     "deleting": "Menghapus...",

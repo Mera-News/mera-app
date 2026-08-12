@@ -483,7 +483,11 @@
     "factCheckTitle": "Weryfikacje faktów",
     "factCheckOn": "Włączone — Mera może wyszukiwać opublikowane weryfikacje faktów dla artykułu",
     "factCheckOff": "Wyłączone",
-    "factCheckDescription": "Mera nie weryfikuje wiadomości sama. Gdy to jest włączone, wyszukiwanie artykułu wysyła go na nasz serwer i dalej do dostawcy wyszukiwarki, który szuka weryfikacji faktów, które opublikowały ustalone organizacje. Nic więcej z tym nie idzie — nie twoje fakty, nie twój kanał, nie to, kim jesteś. Domyślnie włączone; wyszukiwanie uruchamia się tylko wtedy, gdy go poprosisz."
+    "factCheckDescription": "Mera nie weryfikuje wiadomości sama. Gdy to jest włączone, wyszukiwanie artykułu wysyła go na nasz serwer i dalej do dostawcy wyszukiwarki, który szuka weryfikacji faktów, które opublikowały ustalone organizacje. Nic więcej z tym nie idzie — nie twoje fakty, nie twój kanał, nie to, kim jesteś. Domyślnie włączone; wyszukiwanie uruchamia się tylko wtedy, gdy go poprosisz.",
+    "autoCommunityFactCheckTitle": "Automatyczne sprawdzenie społeczności",
+    "autoCommunityFactCheckOn": "Sprawdzane przy każdym otwartym artykule",
+    "autoCommunityFactCheckOff": "Sprawdzane tylko na żądanie",
+    "autoCommunityFactCheckDescription": "Sprawdzenia faktów są wspólne. Gdy ktoś poprosi o sprawdzenie materiału, wynik zostaje zapisany przy nim i każdy może go zobaczyć. Po włączeniu Mera szuka istniejącego sprawdzenia przy każdym otwartym artykule. Po wyłączeniu Mera szuka tylko wtedy, gdy dotkniesz przycisku sprawdzenia, więc pytanie pozostaje świadomym wyborem przy pojedynczym materiale."
   },
   "manageData": {
     "deleting": "Usuwanie...",

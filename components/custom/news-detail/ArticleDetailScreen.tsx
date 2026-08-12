@@ -43,7 +43,7 @@ import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort'
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { useFactCheckEnabled } from '@/lib/stores/mera-protocol-store';
+import { useAutoCommunityFactCheck, useFactCheckEnabled } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -117,6 +117,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // of a check that arrives on the article (the mirror enforces that itself,
     // see `mirrorArticleFactCheck`).
     const factCheckEnabled = useFactCheckEnabled();
+    // Both switches, and BOTH must be on. `factCheckEnabled` is the feature;
+    // this one is consent to look one up on every article opened rather than
+    // only when the reader asks. Off by default.
+    const autoCommunityFactCheck = useAutoCommunityFactCheck();
+    const withFactCheck = factCheckEnabled && autoCommunityFactCheck;
     // Only read once the article is KNOWN to be unavailable — a normal open
     // costs no extra query (FactCheckPanel runs its own observer on the happy
     // path).
@@ -282,7 +287,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             };
         }
 
-        ArticleService.getArticleById(articleId)
+        ArticleService.getArticleById(articleId, withFactCheck)
             .then((row) => {
                 if (cancelled) return;
                 if (!row) {
@@ -328,6 +333,14 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         // article is already loaded shouldn't wipe it. Reconnecting after the
         // offlineUnavailable empty state DOES retry, via the effect below
         // bumping retryNonce.
+        //
+        // `withFactCheck` is deliberately NOT a dep either. The effect closes
+        // over the value from the render in which it last ran, and since this
+        // screen mounts fresh per article, that is the setting as it stood when
+        // the reader opened THIS article. Toggling the switch while an article
+        // is already open therefore does not re-fetch it underneath them; the
+        // new value applies to the next article. That is a deliberately stale
+        // closure, not an oversight.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [articleId, t, retryNonce]);
 

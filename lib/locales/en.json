@@ -728,7 +728,11 @@
     "modelUpdatedTitle": "Model Updated",
     "modelUpdatedDescription": "Switched to {{model}}. Download the model to use it.",
     "modelUpdateFailedTitle": "Update Failed",
-    "modelUpdateFailedDescription": "Failed to update model. Please try again."
+    "modelUpdateFailedDescription": "Failed to update model. Please try again.",
+    "autoCommunityFactCheckTitle": "Auto community fact check",
+    "autoCommunityFactCheckOn": "Looked up on every article you open",
+    "autoCommunityFactCheckOff": "Looked up only when you tap the button",
+    "autoCommunityFactCheckDescription": "Fact checks are shared. When one reader asks for a story to be checked, the result is kept against that story and anyone can see it. Turn this on and Mera looks for an existing check every time you open an article. Leave it off and Mera looks only when you tap the fact check button, so asking stays something you choose to do on one story at a time."
   },
   "manageData": {
     "exportHistoryTitle": "Export reading history",

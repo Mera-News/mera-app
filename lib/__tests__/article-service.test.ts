@@ -664,8 +664,21 @@ describe('ArticleService.getArticleById', () => {
         await ArticleService.getArticleById('specific-id');
         expect(mockQuery).toHaveBeenCalledWith(
             expect.objectContaining({
-                variables: { id: 'specific-id' },
+                // `withFactCheck` DEFAULTS TO FALSE. A caller that forgets the
+                // flag gets the private behaviour, not the chatty one — the
+                // reader has to opt in to a lookup on every article they open.
+                variables: { id: 'specific-id', withFactCheck: false },
                 fetchPolicy: 'no-cache',
+            }),
+        );
+    });
+
+    it('only asks for the fact check when the reader has opted in', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { articleById: null } });
+        await ArticleService.getArticleById('a1', true);
+        expect(mockQuery).toHaveBeenCalledWith(
+            expect.objectContaining({
+                variables: { id: 'a1', withFactCheck: true },
             }),
         );
     });
@@ -683,7 +696,11 @@ describe('ArticleService.getArticleById', () => {
 
         const doc = mockQuery.mock.calls[0][0].query;
         const text = doc?.loc?.source?.body ?? '';
-        expect(text).toContain('factCheck {');
+        // @include, not a client-side discard: with the setting off the
+        // resolver must never run at all. Fetching it and ignoring it would
+        // still have performed the lookup, making the switch decoration.
+        expect(text).toContain('factCheck @include(if: $withFactCheck) {');
+        expect(text).toContain('$withFactCheck: Boolean!');
         // The same field list `factCheck(articleId)` selects — one shape, so a
         // field added for one path reaches both.
         for (const field of ['checkedByStatus', 'checkedBy', 'citations', 'claims', 'verdict', 'summary']) {

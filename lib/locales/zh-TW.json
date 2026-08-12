@@ -471,7 +471,11 @@
     "factCheckTitle": "事實查證",
     "factCheckOn": "開啟——Mera 可以查詢故事的已發佈事實查證",
     "factCheckOff": "關閉",
-    "factCheckDescription": "Mera 不會對新聞進行事實查證。開啟此功能後，查詢故事會將其發送到我們的伺服器，然後發送到搜尋提供者，搜尋已建立的組織已發佈的事實查證。其他任何內容都不會隨之發送——不會發送您的事實、您的資訊流或您是誰。預設為開啟；只有在您要求時才會執行搜尋。"
+    "factCheckDescription": "Mera 不會對新聞進行事實查證。開啟此功能後，查詢故事會將其發送到我們的伺服器，然後發送到搜尋提供者，搜尋已建立的組織已發佈的事實查證。其他任何內容都不會隨之發送——不會發送您的事實、您的資訊流或您是誰。預設為開啟；只有在您要求時才會執行搜尋。",
+    "autoCommunityFactCheckTitle": "自動取得社群事實查核",
+    "autoCommunityFactCheckOn": "每次開啟文章時都會查詢",
+    "autoCommunityFactCheckOff": "僅在你點按時才查詢",
+    "autoCommunityFactCheckDescription": "事實查核是共享的。當有人請求查核某則報導，結果會隨該報導保存，任何人都能看到。開啟後，Mera 會在你每次開啟文章時尋找已有的查核。保持關閉，Mera 只在你點按事實查核按鈕時才去尋找，這樣請求查核仍是你針對單則報導做出的選擇。"
   },
   "manageData": {
     "deleting": "刪除中...",

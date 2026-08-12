@@ -471,7 +471,11 @@
     "factCheckTitle": "Kiểm chứng sự kiện",
     "factCheckOn": "Bật — Mera có thể tìm kiếm các kiểm chứng sự kiện được công bố về một câu chuyện",
     "factCheckOff": "Tắt",
-    "factCheckDescription": "Mera không kiểm chứng tin tức trực tiếp. Khi nó bật, tìm kiếm một câu chuyện sẽ gửi nó tới máy chủ của chúng tôi và tới nhà cung cấp tìm kiếm, nhà cung cấp tìm kiếm các kiểm chứng sự kiện mà các tổ chức đã công bố. Không có gì khác đi cùng nó — không phải sự kiện của bạn, không phải bảng nguồn cấp dữ liệu của bạn, không phải bạn là ai. Bật theo mặc định; tìm kiếm chỉ chạy khi bạn yêu cầu nó."
+    "factCheckDescription": "Mera không kiểm chứng tin tức trực tiếp. Khi nó bật, tìm kiếm một câu chuyện sẽ gửi nó tới máy chủ của chúng tôi và tới nhà cung cấp tìm kiếm, nhà cung cấp tìm kiếm các kiểm chứng sự kiện mà các tổ chức đã công bố. Không có gì khác đi cùng nó — không phải sự kiện của bạn, không phải bảng nguồn cấp dữ liệu của bạn, không phải bạn là ai. Bật theo mặc định; tìm kiếm chỉ chạy khi bạn yêu cầu nó.",
+    "autoCommunityFactCheckTitle": "Tự động kiểm chứng cộng đồng",
+    "autoCommunityFactCheckOn": "Tra cứu mỗi khi bạn mở một bài",
+    "autoCommunityFactCheckOff": "Chỉ tra cứu khi bạn yêu cầu",
+    "autoCommunityFactCheckDescription": "Các kiểm chứng được dùng chung. Khi một người yêu cầu kiểm chứng một tin, kết quả được lưu cùng tin đó và ai cũng xem được. Bật lên, Mera sẽ tìm kiểm chứng sẵn có mỗi lần bạn mở một bài. Để tắt, Mera chỉ tìm khi bạn chạm nút kiểm chứng, nên việc yêu cầu vẫn là điều bạn chủ động làm với từng tin."
   },
   "manageData": {
     "deleting": "Đang xóa...",

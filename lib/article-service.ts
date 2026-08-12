@@ -50,7 +50,7 @@ const GET_ARTICLES_FOR_CLUSTER = gql`
 
 // GraphQL Query for fetching a single article by ID.
 const GET_ARTICLE_BY_ID = gql`
-  query GetArticleById($id: ID!) {
+  query GetArticleById($id: ID!, $withFactCheck: Boolean!) {
     articleById(id: $id) {
       _id
       title
@@ -104,7 +104,14 @@ const GET_ARTICLE_BY_ID = gql`
       # WHOLE-OPERATION validation on an unknown field, so a build shipped
       # ahead of the server change would break articleById outright, not just
       # this one field. The server ships first, by design.
-      factCheck {
+      #
+      # @include, NOT a client-side discard. "Auto community fact check" is OFF
+      # by default, and with it off the reader has not opted into a lookup on
+      # every article they open. Fetching the field and then ignoring it would
+      # still have performed that lookup server-side — the switch would look
+      # like a preference while being decoration. Skipping it in the DOCUMENT
+      # means the resolver never runs.
+      factCheck @include(if: $withFactCheck) {
         ${FACT_CHECK_FIELDS}
       }
     }
@@ -1011,11 +1018,17 @@ export class ArticleService {
      * out or the ID is unknown — the caller treats that as the not-found
      * state.
      */
-    static async getArticleById(articleId: string): Promise<NewsArticle | null> {
+    static async getArticleById(
+        articleId: string,
+        withFactCheck = false,
+    ): Promise<NewsArticle | null> {
         try {
             const { data } = await client.query<{ articleById: NewsArticle | null }>({
                 query: GET_ARTICLE_BY_ID,
-                variables: { id: articleId },
+                // Defaults to FALSE, matching the setting's own default. A
+                // caller that forgets the flag gets the private behaviour, not
+                // the chatty one.
+                variables: { id: articleId, withFactCheck },
                 fetchPolicy: 'no-cache',
             });
             return data?.articleById ?? null;
