@@ -18,6 +18,7 @@ const mockActivateKeepAwakeAsync = jest.fn();
 const mockDeactivateKeepAwake = jest.fn();
 const mockCaptureException = jest.fn();
 const mockLogInfo = jest.fn();
+const mockLogAddBreadcrumb = jest.fn();
 const mockGetPipelineStatus = jest.fn();
 const mockGetRunStartedAt = jest.fn();
 const mockAbortRun = jest.fn();
@@ -28,9 +29,18 @@ const mockAbortRun = jest.fn();
 // module currently ships.
 const STALE_RUN_GUARD_MS = 30 * 60_000;
 
-// Network store subscription support
+// Network store subscription support. `networkSubscribeFn` is the LATEST
+// subscriber; `networkSubscribers` keeps every one ever registered, paired with
+// its own unsubscribe handle, so a test can drive an ABANDONED run's listener
+// and assert which subscription was released. A single shared handle cannot
+// distinguish those — and distinguishing them is the whole point of the
+// leaked-listener test.
 let networkSubscribeFn: ((state: any, prev: any) => void) | null = null;
 const mockNetworkUnsubscribe = jest.fn();
+const networkSubscribers: {
+  fn: (state: any, prev: any) => void;
+  unsubscribe: jest.Mock;
+}[] = [];
 
 const mockForYouStoreState = {
   setCounts: jest.fn(),
@@ -48,7 +58,13 @@ jest.mock('@/lib/stores/network-store', () => ({
   useNetworkStore: {
     subscribe: jest.fn((fn: any) => {
       networkSubscribeFn = fn;
-      return mockNetworkUnsubscribe;
+      // Per-call handle AND the shared one: existing tests assert on
+      // `mockNetworkUnsubscribe` (single-run, so either works), while the
+      // leaked-listener test needs to know which specific subscription was
+      // released.
+      const unsubscribe = jest.fn(() => mockNetworkUnsubscribe());
+      networkSubscribers.push({ fn, unsubscribe });
+      return unsubscribe;
     }),
   },
 }));
@@ -118,10 +134,15 @@ jest.mock('@/lib/logger', () => ({
     debug: (...args: any[]) => mockLogInfo(...args),
     info: (...args: any[]) => mockLogInfo(...args),
     warn: jest.fn(),
+    // `_transitionTo` breadcrumbs a dropped transition from an abandoned run.
+    // It uses addBreadcrumb rather than debug() deliberately — debug() only
+    // emits under __DEV__, and the whole point is a production signal.
+    addBreadcrumb: (...args: any[]) => mockLogAddBreadcrumb(...args),
   },
 }));
 
 import { feedSyncMachine } from '../FeedSyncMachine';
+import { InvalidTransitionError } from '../feed-sync-types';
 
 function makeCtx(aborted = false) {
   const controller = new AbortController();
@@ -195,6 +216,18 @@ beforeEach(() => {
   // `private` is a compile-time fiction, so reach in directly.
   (feedSyncMachine as any)._inFlight = null;
   (feedSyncMachine as any)._inFlightStartedAt = 0;
+  // The abandoned-run tests below deliberately strand zombie runs. A zombie's
+  // teardown is runId-guarded, so it never releases any of these — without the
+  // reset they leak into every later test. `_keepAwakeHeld` in particular makes
+  // `_acquireKeepAwake` early-return, which breaks the wake-lock assertions.
+  //
+  // `_runSeq` is deliberately NOT reset: keeping it monotonic across the file is
+  // exactly what makes a leaked zombie's captured runId un-matchable.
+  (feedSyncMachine as any)._paused = false;
+  (feedSyncMachine as any)._resumeWaiters?.clear?.();
+  (feedSyncMachine as any)._resumeCallback = null;
+  (feedSyncMachine as any)._keepAwakeHeld = false;
+  networkSubscribers.length = 0;
 });
 
 afterEach(() => {
@@ -1263,6 +1296,89 @@ describe('FeedSyncMachine — stale in-flight run', () => {
     await secondPromise;
 
     expect(mockStepFetchTopicIds).toHaveBeenCalledTimes(2);
+    expect(feedSyncMachine.state).toBe('done');
+  });
+
+  // ── The production bug: Sentry MERA-APP-5W/6D/6E/61 ───────────────────────
+  //
+  // The three tests above all pass on the PRE-FIX tree, but only by luck of
+  // interleaving — each happens to release the zombie at a point where its next
+  // transition is coincidentally legal against the replacement's state. These
+  // two stage the collision deliberately, in both directions.
+
+  it('an abandoned run cannot corrupt the replacement\'s state', async () => {
+    // Direction 1 — the ZOMBIE throws. Run A hangs at fetch and is abandoned;
+    // run B completes to `done`; A then resumes into `_transitionTo('diffing')`,
+    // which is evaluated against B's `done` (allowed: ['idle']) and throws
+    // "Invalid FeedSyncMachine transition: done → diffing".
+    let releaseA: (() => void) | null = null;
+    mockStepFetchTopicIds.mockImplementationOnce(
+      () => new Promise((resolve) => { releaseA = () => resolve(defaultTopicResult); }),
+    );
+
+    const pA = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(5 * 60_000); // age past INFLIGHT_STALE_MS
+
+    const pB = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await pB;
+    expect(feedSyncMachine.state).toBe('done');
+
+    // Let the ABANDONED run continue into its next transition.
+    (releaseA as unknown as () => void)?.();
+    await jest.advanceTimersByTimeAsync(0);
+
+    // Asserted on the PROMISE, not on mockCaptureException: the machine never
+    // captures InvalidTransitionError itself — it propagates to
+    // scheduler-runner, which is not in this suite. An assertion on
+    // mockCaptureException here would be vacuous.
+    await expect(pA).resolves.toBeUndefined();
+    // B's terminal state survived A finishing underneath it.
+    expect(feedSyncMachine.state).toBe('done');
+    // Decision on record: the zombie is NEUTERED, not aborted. It still runs
+    // its own remaining steps — it just cannot touch shared machine state.
+    expect(mockStepScore).toHaveBeenCalledTimes(2);
+  });
+
+  it('an abandoned run\'s terminal branch cannot make the LIVE run throw', async () => {
+    // Direction 2 — the LIVE run throws, which a guard on `_transitionTo` alone
+    // would NOT catch. Zombie A rejects with `daily-limit` and hits the
+    // `this._state = 'idle'` force-reset while live run B sits at `hydrating`.
+    // B's next legal transition (hydrating → scoring) is then evaluated as
+    // `idle → scoring` and throws from B, which owns the current runId.
+    let failA: ((err: Error) => void) | null = null;
+    mockStepFetchTopicIds.mockImplementationOnce(
+      () => new Promise((_resolve, reject) => { failA = (err) => reject(err); }),
+    );
+
+    const pA = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    await jest.advanceTimersByTimeAsync(5 * 60_000);
+
+    // Run B parks in hydrate, so `_state` is 'hydrating' when A's catch runs.
+    let releaseB: (() => void) | null = null;
+    mockStepHydratePersistEnqueue.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        releaseB = () => resolve({ insertedCount: 2, enqueuedCount: 2, dailyLimitReached: false });
+      }),
+    );
+    const pB = feedSyncMachine.start('persona-1', makeCtx());
+    await jest.advanceTimersByTimeAsync(0);
+    expect(feedSyncMachine.state).toBe('hydrating');
+
+    // A's rejection routes to the `daily-limit` force-reset branch.
+    mockClassifyError.mockReturnValueOnce('daily-limit');
+    (failA as unknown as (err: Error) => void)?.(new Error('daily-limit'));
+    await jest.advanceTimersByTimeAsync(0);
+    await expect(pA).resolves.toBeUndefined();
+
+    // The live run must be untouched by the zombie's force-reset.
+    expect(feedSyncMachine.state).toBe('hydrating');
+
+    (releaseB as unknown as () => void)?.();
+    await jest.advanceTimersByTimeAsync(0);
+    await expect(pB).resolves.toBeUndefined();
     expect(feedSyncMachine.state).toBe('done');
   });
 

@@ -161,13 +161,13 @@ class FeedSyncMachine {
     }
 
     await feedPersistence.saveMachineSnapshot({ state: 'idle', startedAt: Date.now() });
-    this._state = 'idle'; // force reset — bypasses transition guard, valid from any state
+    this._forceIdle(runId); // bypasses the transition guard — valid from any state
 
     this._networkUnsubscribe = useNetworkStore.subscribe((state, prev) => {
       const networkState = this._state;
       if (!state.isConnected && NETWORK_DEPENDENT_STATES.includes(networkState)) {
         const pausedAtState = networkState;
-        this._transitionTo('paused-offline');
+        this._transitionTo('paused-offline', runId);
         this._paused = true;
         publishSyncStatus('paused-offline', { pausedAtState });
       } else if (state.isConnected && !prev.isConnected && this._state === 'paused-offline') {
@@ -281,7 +281,7 @@ class FeedSyncMachine {
       // publishes, from `hydrating` onward. Internal `_transitionTo` +
       // `updateMachineState` bookkeeping still runs so the machine + persisted
       // snapshot stay consistent.
-      this._transitionTo('fetching-topic-ids');
+      this._transitionTo('fetching-topic-ids', runId);
       logger.debug('[FeedSyncMachine] → fetching-topic-ids');
       await feedPersistence.updateMachineState('fetching-topic-ids');
 
@@ -308,7 +308,7 @@ class FeedSyncMachine {
       );
 
       // Step 2: diff (status intentionally not published — see Step 1 note).
-      this._transitionTo('diffing');
+      this._transitionTo('diffing', runId);
       logger.debug('[FeedSyncMachine] → diffing');
       await feedPersistence.updateMachineState('diffing');
 
@@ -325,7 +325,7 @@ class FeedSyncMachine {
         // shimmer. Internal transitions + snapshot clearing + setLastSyncAt still
         // run so the machine stays consistent. If scoring actually finds work,
         // the scoring-pipeline publishes its own header progress independently.
-        this._transitionTo('scoring');
+        this._transitionTo('scoring', runId);
         logger.debug('[FeedSyncMachine] → scoring (no new articles, silent)');
         await feedPersistence.updateMachineState('scoring');
 
@@ -340,7 +340,7 @@ class FeedSyncMachine {
         if (!suppressScoring) await steps.stepScore(ctx);
 
         await flushSuggestionsRefresh();
-        this._transitionTo('done');
+        this._transitionTo('done', runId);
         useForYouStore.getState().setLastSyncAt(Date.now());
         // A cycle that found nothing to do is still a processing run that
         // FINISHED, and it has to say so. `lastProcessingRunFinishedAt` is what
@@ -369,7 +369,7 @@ class FeedSyncMachine {
       }
 
       // Step 3: hydrate + persist + enqueue (merged, batched, pipelined)
-      this._transitionTo('hydrating');
+      this._transitionTo('hydrating', runId);
       publishSyncStatus('hydrating');
       await feedPersistence.updateMachineState('hydrating');
 
@@ -408,7 +408,7 @@ class FeedSyncMachine {
       await flushSuggestionsRefresh();
 
       // Step 4: score
-      this._transitionTo('scoring');
+      this._transitionTo('scoring', runId);
       publishSyncStatus('scoring');
       await feedPersistence.updateMachineState('scoring');
 
@@ -422,7 +422,7 @@ class FeedSyncMachine {
 
       // Done
       await flushSuggestionsRefresh();
-      this._transitionTo('done');
+      this._transitionTo('done', runId);
       publishSyncStatus('done');
       useForYouStore.getState().setLastSyncAt(Date.now());
       try {
@@ -433,10 +433,17 @@ class FeedSyncMachine {
         });
       }
 
-      // Auto-reset to idle after 2s so the UI can show "done" briefly
+      // Auto-reset to idle after 2s so the UI can show "done" briefly.
+      //
+      // The whole body is run-guarded, not just the transition: this timer is
+      // never cleared, so a run that finishes and is replaced inside 2s would
+      // otherwise fire under its replacement and — if that replacement is
+      // legitimately at `done` — reset it early AND call publishSyncStatus('idle'),
+      // which blanks the live header's status message.
       setTimeout(() => {
+        if (!this._isCurrentRun(runId)) return;
         if (this._state === 'done') {
-          this._transitionTo('idle');
+          this._transitionTo('idle', runId);
           publishSyncStatus('idle');
         }
       }, 2_000);
@@ -453,7 +460,7 @@ class FeedSyncMachine {
       // aiAccess, which is what stops the task firing again at all; this branch
       // handles the run already in flight when the verdict landed.
       if (errorCode === 'not-subscribed') {
-        this._state = 'idle'; // force reset — bypasses transition guard, valid from any state
+        this._forceIdle(runId); // bypasses the transition guard — valid from any state
         publishSyncStatus('idle');
         try {
           await feedPersistence.clearMachineSnapshot();
@@ -472,7 +479,7 @@ class FeedSyncMachine {
       // 3× retry, no Sentry error). Recovery is the user adding interests.
       if (errorCode === 'no-topics-configured') {
         publishSyncError('no-topics-configured', undefined, this._state);
-        this._state = 'idle'; // force reset — bypasses transition guard, valid from any state
+        this._forceIdle(runId); // bypasses the transition guard — valid from any state
         try {
           await feedPersistence.clearMachineSnapshot();
         } catch (snapErr) {
@@ -521,7 +528,7 @@ class FeedSyncMachine {
           });
           store.setDailyLimitNoticeDay(today);
         }
-        this._state = 'idle';
+        this._forceIdle(runId); // bypasses the transition guard — valid from any state
         try {
           await feedPersistence.clearMachineSnapshot();
         } catch (snapErr) {
@@ -533,8 +540,16 @@ class FeedSyncMachine {
       }
 
       const failedAtState = this._state; // capture before transition
-      if (this._state !== 'failed' && this._state !== 'done') {
-        this._transitionTo('failed');
+      // OWNERSHIP FIRST, and it matters more here than the transition guard
+      // does. When an abandoned run threw while the live run was mid-cycle,
+      // `hydrating → failed` was a LEGAL pair — so the zombie quietly drove the
+      // singleton to `failed`, published the error, fired the sync-failed toast
+      // and persisted a `failed` snapshot, all over a healthy sync. That is a
+      // worse outcome than the InvalidTransitionError it sometimes threw
+      // instead. `throw err` stays outside: the zombie's own job must still
+      // fail and report.
+      if (this._isCurrentRun(runId) && this._state !== 'failed' && this._state !== 'done') {
+        this._transitionTo('failed', runId);
         publishSyncError(errorCode, undefined, failedAtState);
         // Generic (non-terminal, non-daily-limit) sync failure — surface a
         // notification-center-backed toast. The `no-topics-configured` and
@@ -564,12 +579,71 @@ class FeedSyncMachine {
     }
   }
 
-  private _transitionTo(next: FeedSyncState): void {
+  /**
+   * Move the machine to `next`, but only on behalf of the run that still owns it.
+   *
+   * `runId` IS REQUIRED, and that is deliberate: it makes `tsc` the completeness
+   * check for call-site coverage rather than a comment nobody updates.
+   *
+   * THE GUARD IS THE FIX FOR Sentry MERA-APP-5W/6D/6E/61. `start()` abandons an
+   * `_inFlight` run older than `INFLIGHT_STALE_MS` by dropping the reference —
+   * it does not stop the run, which keeps executing against this singleton's one
+   * `_state`. Its transitions are therefore evaluated against the REPLACEMENT's
+   * state, and a pair that was perfectly legal for its own run ("→ diffing"
+   * after fetch) reads as nonsense ("done → diffing") and throws. Two prod
+   * events 32ms apart, from two jobs created 5m12s apart, are the evidence.
+   *
+   * A dropped transition is a breadcrumb, NOT a `logger.debug`: debug only emits
+   * under `__DEV__`, and this guard firing in production — while those four
+   * issues stay at zero — is the signal that says the fix is working.
+   *
+   * A genuine invalid transition in the LIVE run still throws, by design. The
+   * collision was the only known cause, so anything left is a real bug and has
+   * to stay loud.
+   */
+  private _transitionTo(next: FeedSyncState, runId: number): void {
+    if (!this._isCurrentRun(runId)) {
+      logger.addBreadcrumb(
+        `[FeedSyncMachine] dropped transition from abandoned run: ${this._state} → ${next}`,
+        'feed-sync',
+        { runId, currentRun: this._runSeq },
+        'info',
+      );
+      return;
+    }
     const allowed = VALID_TRANSITIONS[this._state];
     if (allowed && !allowed.includes(next)) {
       throw new InvalidTransitionError(this._state, next);
     }
     this._state = next;
+  }
+
+  /**
+   * True while `runId` still owns the machine.
+   *
+   * The one predicate behind every shared-state write, so "which run may touch
+   * `_state`" has a single definition rather than a scattering of
+   * `this._runSeq === runId` comparisons that can drift apart.
+   */
+  private _isCurrentRun(runId: number): boolean {
+    return this._runSeq === runId;
+  }
+
+  /**
+   * Force the machine back to `idle`, bypassing the transition table — legal
+   * from any state — but only for the run that still owns it.
+   *
+   * THE OWNERSHIP CHECK IS NOT DEFENSIVE, IT IS THE OTHER HALF OF THE BUG.
+   * These force-resets sit on terminal branches an ABANDONED run can still
+   * reach. Zombie A rejecting with `daily-limit` used to set `_state = 'idle'`
+   * while live run B sat at `hydrating`; B's next perfectly legal
+   * `hydrating → scoring` was then evaluated as `idle → scoring` and threw —
+   * from B, which owns the current `runId`. A guard on `_transitionTo` alone
+   * passes that throw straight through, which is why both are needed.
+   */
+  private _forceIdle(runId: number): void {
+    if (!this._isCurrentRun(runId)) return;
+    this._state = 'idle';
   }
 
   /**
