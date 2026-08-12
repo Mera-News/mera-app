@@ -54,7 +54,6 @@ import { useIsConnected } from '@/lib/stores/network-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { useFactCheckEnabled } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -264,7 +263,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const aiAccess = useAiAccess();
     // See ArticleDetailScreen — the Mera Protocol switch (`mera_fact_check`,
     // default on) now actually gates the tick and the panel.
-    const factCheckEnabled = useFactCheckEnabled();
     const userCtx = useUserGeoLanguageContext();
     const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
@@ -658,7 +656,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                     // processing: that gate existed for the
                                     // chat's cloud-only claim picker, and this
                                     // tick no longer opens a chat.
-                                    factCheck={aiAccess !== 'locked' && factCheckEnabled ? {
+                                    factCheck={aiAccess !== 'locked' ? {
                                         onStart: () => handleStartFactCheck(),
                                         // See ArticleDetailScreen — 'stalled'
                                         // reads as 'pending' on the tick; the
@@ -733,7 +731,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             the feature is on — a pure observer, it renders
                             nothing itself when nobody has asked about this
                             article. */}
-                        {factCheckEnabled && (
+                        {(
                             <FactCheckPanel articleId={suggestion.articleId} />
                         )}
 

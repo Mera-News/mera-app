@@ -1,4 +1,5 @@
 import { Box } from '@/components/ui/box';
+import { SearchCheck } from 'lucide-react-native';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -219,7 +220,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                             hitSlop={8}
                         >
                             <HStack space="xs" className="items-center">
-                                <MaterialIcons name="fact-check" size={16} color={ACCENT} />
+                                <SearchCheck size={16} strokeWidth={2} color={ACCENT} />
                                 {/* `row.claim` is the STORED column — populated
                                     only on a legacy per-claim row (pre-pivot
                                     on-device checks). A server (whole-article)

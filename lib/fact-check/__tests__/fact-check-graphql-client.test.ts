@@ -286,14 +286,14 @@ describe('mirrorArticleFactCheck', () => {
         expect(mockUpsertFactCheck).not.toHaveBeenCalled();
     });
 
-    // A reader who turned the feature off must not accumulate fact-check rows
-    // on their device as a side effect of reading articles.
-    it('writes nothing when factCheckEnabled is off', async () => {
-        mockFactCheckEnabled = false;
-
-        await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(false);
-
-        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
+    // The `factCheckEnabled` switch that used to gate this is gone — fact
+    // checking is part of the product. A row only reaches this function when
+    // the server actually returned one, and the server is only ASKED when the
+    // reader opted into `autoCommunityFactCheck` (the @include on articleById)
+    // or tapped the button. The gate moved up the call chain; it did not vanish.
+    it('mirrors regardless of any Mera Protocol setting', async () => {
+        await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(true);
+        expect(mockUpsertFactCheck).toHaveBeenCalledTimes(1);
     });
 
     it('falls back to the caller title only when the row has none', async () => {

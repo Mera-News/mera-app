@@ -109,24 +109,16 @@ describe('requestArticleFactCheck', () => {
         });
     });
 
-    // ── factCheckEnabled — NEW ─────────────────────────────────────────────
-    // The Mera Protocol switch persisted and nothing read it. It gates the
-    // tick, the panel and the article mirror now.
-    describe('factCheckEnabled gate', () => {
-        it('no-ops when the reader has turned fact checking off', () => {
-            mockFactCheckEnabled = false;
-
-            expect(requestArticleFactCheck(article)).toBe(false);
-            expect(mockRequestFactCheck).not.toHaveBeenCalled();
-            expect(mockHapticLight).not.toHaveBeenCalled();
-        });
-
-        it('asks normally when it is on', () => {
-            mockFactCheckEnabled = true;
-
-            expect(requestArticleFactCheck(article)).toBe(true);
-            expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
-        });
+    // ── NO FEATURE SWITCH ──────────────────────────────────────────────────
+    // There was a `factCheckEnabled` toggle in Mera Protocol settings and it is
+    // gone: fact checking is part of the product. The only remaining switch,
+    // `autoCommunityFactCheck`, governs whether Mera LOOKS UP an existing check
+    // on every article open — it has no say over a deliberate tap, which is
+    // what this function is.
+    it('asks regardless of any Mera Protocol setting', () => {
+        expect(requestArticleFactCheck(article)).toBe(true);
+        expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
+        expect(mockHapticLight).toHaveBeenCalledTimes(1);
     });
 
     // ── The on-device gate — REMOVED, deliberately ─────────────────────────

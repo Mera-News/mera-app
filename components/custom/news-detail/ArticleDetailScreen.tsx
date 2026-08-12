@@ -43,7 +43,7 @@ import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort'
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { useAutoCommunityFactCheck, useFactCheckEnabled } from '@/lib/stores/mera-protocol-store';
+import { useAutoCommunityFactCheck } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -112,16 +112,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // read, so there is nothing wrong with two components each watching it.
     const factCheckPhase = useFactCheck(article?._id ?? articleId).phase;
     const aiAccess = useAiAccess();
-    // The Mera Protocol switch (`mera_fact_check`, default on). Until now it
-    // persisted and nothing read it. Off ⇒ no tick, no panel, and no mirroring
-    // of a check that arrives on the article (the mirror enforces that itself,
-    // see `mirrorArticleFactCheck`).
-    const factCheckEnabled = useFactCheckEnabled();
-    // Both switches, and BOTH must be on. `factCheckEnabled` is the feature;
-    // this one is consent to look one up on every article opened rather than
-    // only when the reader asks. Off by default.
-    const autoCommunityFactCheck = useAutoCommunityFactCheck();
-    const withFactCheck = factCheckEnabled && autoCommunityFactCheck;
+    // The only fact-check switch left. Fact checking itself is part of the
+    // product; this is consent to LOOK ONE UP on every article opened, rather
+    // than only when the reader asks. Off by default.
+    const withFactCheck = useAutoCommunityFactCheck();
     // Only read once the article is KNOWN to be unavailable — a normal open
     // costs no extra query (FactCheckPanel runs its own observer on the happy
     // path).
@@ -606,7 +600,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         nowhere further to go. Gated with the panel below: a
                         reader who turned fact checking off must not meet it
                         here either, on rows mirrored before they did. */}
-                    {factCheckEnabled && orphanFactChecks.length > 0 && (
+                    {orphanFactChecks.length > 0 && (
                         <Box className="w-full mt-6" testID="article-detail-orphan-fact-check">
                             <Text size="sm" className="text-typography-400 text-center mb-3">
                                 {t('factCheck.dashboard.articleGone')}
@@ -727,7 +721,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                     // claim picker is cloud-only, and the tick
                                     // no longer opens a chat — it asks the
                                     // server, which needs no cloud chat.
-                                    factCheck={aiAccess !== 'locked' && factCheckEnabled ? {
+                                    factCheck={aiAccess !== 'locked' ? {
                                         onStart: () => handleStartFactCheck(),
                                         // 'stalled' reads as 'pending' here too —
                                         // the tick only has a single/double
@@ -796,15 +790,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         {/* Fact check sits OUTSIDE the URL branch: it is keyed
                             on the article id, not the (possibly refused) local
                             link, so it still renders for a row whose URL we
-                            won't open. Mounted whenever the feature is on — a
-                            pure observer of the stored rows, it renders nothing
-                            itself when nobody has asked about this article.
-                            `factCheckEnabled` off means the reader sees no fact
-                            checking anywhere: no tick, no panel, and nothing
-                            mirrored to render from. */}
-                        {factCheckEnabled && (
-                            <FactCheckPanel articleId={article._id ?? articleId} />
-                        )}
+                            won't open. Always mounted — a pure observer of the
+                            stored rows, it renders nothing itself when nobody
+                            has asked about this article, which is the common
+                            case. */}
+                        <FactCheckPanel articleId={article._id ?? articleId} />
 
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">

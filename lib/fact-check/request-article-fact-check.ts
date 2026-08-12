@@ -78,7 +78,6 @@ export function requestArticleFactCheck(article: FactCheckArticle): boolean {
     // outside-React read, and `getAiAccess()` is the imperative twin the store
     // exposes for exactly these callers.
     if (getAiAccess() === 'locked') return false;
-    if (!useMeraProtocolStore.getState().factCheckEnabled) return false;
 
     hapticLight();
     // Not awaited: the tap's job is to lodge the ask. Everything after it is

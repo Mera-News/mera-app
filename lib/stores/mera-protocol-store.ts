@@ -55,26 +55,6 @@ interface MeraProtocolState {
   // and displaying it as fact would overclaim.
   showExtractedMetadata: boolean;
 
-  // Fact check (BETA) — when true, the article/suggestion detail screens
-  // offer the "Look for fact checks" action, which asks our server to search
-  // for fact checks established organisations have already published on the
-  // story.
-  //
-  // ON by default, and the default is load-bearing in BOTH places: the
-  // `initialState` value below AND the absent branch in `hydrateFromDb`.
-  // No existing device has a `mera_fact_check` row — the feature shipped off —
-  // so if absent still read as OFF this would ship completely dark while
-  // looking like it worked. Absent ⇒ ON is what actually turns it on for the
-  // installed base, with no migration. An explicit 'false' still wins: a user
-  // who deliberately switched it off stays off.
-  //
-  // It was off because the SERVER pipeline was disabled, not because the
-  // client was unsafe; with that fixed the switch has no reason to be a
-  // hidden opt-in. This is a UX gate only — the server's
-  // `requestFactCheck`/`factCheck` resolvers stay behind SubscriptionGuard
-  // regardless of this switch.
-  factCheckEnabled: boolean;
-
   // Auto community fact check — OFF by default, and the default is the point.
   //
   // A fact check is cached on our server against the ARTICLE, so one reader's
@@ -88,9 +68,14 @@ interface MeraProtocolState {
   // lookup happens only when they tap the fact-check button — a deliberate act
   // on one article, which is exactly how the privacy policy describes it.
   //
-  // ABSENT ⇒ OFF, the normal rule, unlike `factCheckEnabled` above whose
-  // absent ⇒ ON is a deliberate one-off for an installed base that predates it.
-  // This setting is new and opt-in; nobody has consented to it yet.
+  // ABSENT ⇒ OFF, the normal rule. This setting is new and opt-in; nobody has
+  // consented to it yet, and a default that opted everyone in would be the
+  // whole point of the switch, missed.
+  //
+  // It is now the ONLY fact-check switch. The `factCheckEnabled` toggle that
+  // used to sit above it is gone: fact checking is part of the product, not
+  // something to turn on. What remains a choice is not WHETHER checks exist,
+  // but whether Mera goes looking for one on every article opened.
   autoCommunityFactCheck: boolean;
 
   // Model lifecycle
@@ -112,7 +97,6 @@ interface MeraProtocolState {
   setWebSearchInChat: (enabled: boolean) => void;
   setDeepInterview: (enabled: boolean) => void;
   setShowExtractedMetadata: (enabled: boolean) => void;
-  setFactCheckEnabled: (enabled: boolean) => void;
   setAutoCommunityFactCheck: (enabled: boolean) => void;
   setSelectedModelId: (modelId: string) => void;
   setModelState: (state: ModelStateLabel) => void;
@@ -153,7 +137,15 @@ const SETTING_SHOW_EXTRACTED_METADATA = 'mera_show_extracted_metadata';
  * later would be a migration. See `SETTING_RELEVANCE_V4` above for the
  * cautionary precedent.
  */
-const SETTING_FACT_CHECK_ENABLED = 'mera_fact_check';
+// RETIRED. Fact checking is part of the product now rather than an opt-in, so
+// this key is no longer READ — only swept, so a device that once stored 'false'
+// does not keep a row implying a preference the app no longer honours.
+//
+// Sweeping rather than migrating is the decision, not an oversight: an explicit
+// 'false' is deliberately NOT carried forward anywhere, because the switch it
+// belonged to no longer exists. Anyone who had turned fact checks off now gets
+// them, which is what "part of the product" means.
+const RETIRED_SETTING_FACT_CHECK = 'mera_fact_check';
 const SETTING_AUTO_COMMUNITY_FACT_CHECK = 'mera_auto_community_fact_check';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
@@ -176,7 +168,6 @@ const initialState = {
   // ON by default. Its twin — the absent branch in `hydrateFromDb` — must
   // agree, or the hydrate immediately overwrites this on every existing
   // device and the feature ships dark.
-  factCheckEnabled: true,
   autoCommunityFactCheck: false,
   selectedModelId: DEFAULT_SELECTED_MODEL_ID,
   modelState: 'not_downloaded' as ModelStateLabel,
@@ -219,11 +210,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
   setShowExtractedMetadata: (showExtractedMetadata) => {
     set({ showExtractedMetadata });
     setSetting(SETTING_SHOW_EXTRACTED_METADATA, showExtractedMetadata ? 'true' : 'false').catch(() => { });
-  },
-
-  setFactCheckEnabled: (factCheckEnabled) => {
-    set({ factCheckEnabled });
-    setSetting(SETTING_FACT_CHECK_ENABLED, factCheckEnabled ? 'true' : 'false').catch(() => { });
   },
 
   setAutoCommunityFactCheck: (autoCommunityFactCheck: boolean) => {
@@ -278,7 +264,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
     deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
     deleteSetting(SETTING_SHOW_EXTRACTED_METADATA).catch(() => { });
-    deleteSetting(SETTING_FACT_CHECK_ENABLED).catch(() => { });
+    deleteSetting(RETIRED_SETTING_FACT_CHECK).catch(() => { });
     deleteSetting(SETTING_AUTO_COMMUNITY_FACT_CHECK).catch(() => { });
     deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
     deleteSetting(RETIRED_SETTING_LEGACY_PERSONA_UPDATE).catch(() => { });
@@ -296,7 +282,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         webSearchValue,
         deepInterviewValue,
         showExtractedMetadataValue,
-        factCheckEnabledValue,
         autoCommunityFactCheckValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
@@ -307,12 +292,12 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(SETTING_WEB_SEARCH_IN_CHAT),
         getSetting(SETTING_DEEP_INTERVIEW),
         getSetting(SETTING_SHOW_EXTRACTED_METADATA),
-        getSetting(SETTING_FACT_CHECK_ENABLED),
         getSetting(SETTING_AUTO_COMMUNITY_FACT_CHECK),
       ]);
       // One-shot cleanup: the retired v2 key is never read — the switch starts
       // off regardless of what v2 was set to — just swept so it doesn't linger.
       deleteSetting(RETIRED_SETTING_RELEVANCE_V2).catch(() => { });
+      deleteSetting(RETIRED_SETTING_FACT_CHECK).catch(() => { });
       const updates: Partial<MeraProtocolState> = {};
       if (modeValue === ProcessingMode.OnDevice || modeValue === ProcessingMode.Cloud) {
         updates.processingMode = modeValue;
@@ -358,18 +343,6 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (showExtractedMetadataValue === 'false') {
         updates.showExtractedMetadata = false;
       }
-      // ABSENT ⇒ ON — the one exception to the rule the settings above follow,
-      // and it is deliberate. No device has ever written `mera_fact_check`
-      // (the feature shipped off), so "absent ⇒ off" would leave the whole
-      // installed base with fact-checking disabled while `initialState` says
-      // otherwise — the feature would ship completely dark and look like it
-      // worked. Only an explicit 'false' turns it off, which preserves the
-      // choice of anyone who found the switch and deliberately disabled it.
-      if (factCheckEnabledValue === 'false') {
-        updates.factCheckEnabled = false;
-      } else {
-        updates.factCheckEnabled = true;
-      }
       // Only an explicit 'true' opts in — see the field's comment for why this
       // does NOT copy the absent ⇒ ON exception directly above it.
       if (autoCommunityFactCheckValue === 'true') {
@@ -406,8 +379,6 @@ export const useDeepInterview = () =>
 export const useShowExtractedMetadata = () =>
   useMeraProtocolStore((state) => state.showExtractedMetadata);
 
-export const useFactCheckEnabled = () =>
-  useMeraProtocolStore((state) => state.factCheckEnabled);
 
 /** Whether to look up a community fact check on every article open, rather than
  *  only when the reader taps the button. Opt-in; see the field's comment. */

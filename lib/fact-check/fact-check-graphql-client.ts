@@ -174,7 +174,6 @@ export async function mirrorArticleFactCheck(
     articleTitle?: string | null,
 ): Promise<boolean> {
     if (!factCheck || !articleId) return false;
-    if (!useMeraProtocolStore.getState().factCheckEnabled) return false;
 
     const row = factCheck as FactCheckRow;
     try {

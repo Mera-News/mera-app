@@ -1,4 +1,5 @@
 import { Box } from '@/components/ui/box';
+import { SearchCheck } from 'lucide-react-native';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -107,9 +108,9 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
             >
                 <VStack space="sm">
             <HStack space="xs" className="items-start pr-8">
-                    <MaterialIcons
-                        name="fact-check"
+                    <SearchCheck
                         size={16}
+                        strokeWidth={2}
                         color={ACCENT}
                         style={{ marginTop: 2 }}
                     />

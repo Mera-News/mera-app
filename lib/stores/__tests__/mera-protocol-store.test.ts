@@ -33,7 +33,6 @@ import {
     useWebSearchInChat,
     useDeepInterview,
     useShowExtractedMetadata,
-    useFactCheckEnabled,
     useSelectedModelId,
     useModelState,
     useDownloadProgress,
@@ -55,7 +54,6 @@ const initialState = {
     webSearchInChat: false,
     deepInterview: false,
     showExtractedMetadata: false,
-    factCheckEnabled: false,
     selectedModelId: 'mera-qwen3.5-4b',
     modelState: 'not_downloaded' as const,
     downloadProgress: 0,
@@ -521,22 +519,33 @@ describe('useMeraProtocolStore', () => {
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_show_extracted_metadata');
     });
 
-    // ── setFactCheckEnabled (BETA, ON by default) ───────────────────────────
-    //
-    // This assertion used to read `.toBe(false)` and PASSED for the wrong
-    // reason: it inspects live store state with no reset, so it was really
-    // observing whatever the preceding test left behind. Resetting first is
-    // what makes it actually about the default.
-    it('factCheckEnabled starts ON', () => {
-        useMeraProtocolStore.getState().reset();
-        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
+    // ── Auto community fact check ──────────────────────────────────────────
+    // OFF by default, and the ONLY fact-check switch left: `factCheckEnabled`
+    // is gone, because fact checking is part of the product rather than
+    // something to turn on. What is still a choice is whether Mera goes looking
+    // for a check on every article opened.
+    // The retired `mera_fact_check` key is SWEPT, not migrated. A device that
+    // once stored 'false' must not keep a row implying a preference the app no
+    // longer honours — and that 'false' is deliberately not carried anywhere,
+    // because the switch it belonged to is gone.
+    it('sweeps the retired mera_fact_check key on hydrate', async () => {
+        mockGetSetting.mockImplementation(() => Promise.resolve(null));
+        await useMeraProtocolStore.getState().hydrateFromDb();
+        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_fact_check');
     });
 
-    // ── Auto community fact check ──────────────────────────────────────────
-    // OFF by default, and unlike `factCheckEnabled` it does NOT get the
-    // absent ⇒ ON treatment. That exception exists for an installed base that
-    // predates the switch; this one is new, and nobody has opted into a lookup
-    // on every article they open.
+    it('never READS the retired key back into state', async () => {
+        // The proof that it is retired rather than merely renamed: an explicit
+        // 'false' changes nothing at all now.
+        mockGetSetting.mockImplementation((k: string) =>
+            Promise.resolve(k === 'mera_fact_check' ? 'false' : null),
+        );
+        await useMeraProtocolStore.getState().hydrateFromDb();
+        expect(
+            (useMeraProtocolStore.getState() as unknown as Record<string, unknown>).factCheckEnabled,
+        ).toBeUndefined();
+    });
+
     it('autoCommunityFactCheck starts OFF', () => {
         useMeraProtocolStore.getState().reset();
         expect(useMeraProtocolStore.getState().autoCommunityFactCheck).toBe(false);
@@ -579,83 +588,9 @@ describe('useMeraProtocolStore', () => {
         expect(useMeraProtocolStore.getState().autoCommunityFactCheck).toBe(true);
     });
 
-    it('setFactCheckEnabled persists "true"/"false" like the other toggles', async () => {
-        useMeraProtocolStore.getState().setFactCheckEnabled(true);
-        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_fact_check', 'true');
-
-        useMeraProtocolStore.getState().setFactCheckEnabled(false);
-        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(false);
-        await Promise.resolve();
-        expect(mockSetSetting).toHaveBeenCalledWith('mera_fact_check', 'false');
-    });
-
-    it('setFactCheckEnabled swallows DB errors rather than failing the switch', async () => {
-        mockSetSetting.mockRejectedValueOnce(new Error('db'));
-        useMeraProtocolStore.getState().setFactCheckEnabled(true);
-        await new Promise((r) => setImmediate(r));
-        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
-    });
-
-    it('hydrateFromDb restores factCheckEnabled from its own key', async () => {
-        mockGetSetting.mockImplementation((k: string) =>
-            Promise.resolve(k === 'mera_fact_check' ? 'true' : null),
-        );
-
-        await useMeraProtocolStore.getState().hydrateFromDb();
-
-        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
-    });
-
-    // ── ABSENT ⇒ ON. The single easiest thing in this feature to get wrong. ──
-    //
-    // NO device has a `mera_fact_check` row: the feature shipped off and nothing
-    // ever wrote one. So the absent branch — not `initialState` — is what the
-    // entire installed base actually goes through on launch. If absent still
-    // read as OFF, fact-checking would ship completely dark while every other
-    // symptom (a flipped `initialState`, a green switch in a fresh simulator)
-    // said it had shipped.
-    //
-    // This test deliberately seeds the store to `false` first, so it fails if
-    // `hydrateFromDb` merely leaves the (now-true) initial value alone: only an
-    // absent row that ACTIVELY writes `true` passes.
-    it('hydrateFromDb turns factCheckEnabled ON when the row is absent or junk', async () => {
-        for (const stored of [null, 'yes', '1', '']) {
-            useMeraProtocolStore.setState({ factCheckEnabled: false });
-            mockGetSetting.mockImplementation(() => Promise.resolve(stored as string | null));
-
-            await useMeraProtocolStore.getState().hydrateFromDb();
-
-            expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
-        }
-    });
-
-    it('initialState defaults factCheckEnabled ON', () => {
-        useMeraProtocolStore.getState().reset();
-        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(true);
-    });
-
-    it('hydrateFromDb turns factCheckEnabled back OFF on an explicit "false"', async () => {
-        useMeraProtocolStore.setState({ factCheckEnabled: true });
-        mockGetSetting.mockImplementation((k: string) =>
-            Promise.resolve(k === 'mera_fact_check' ? 'false' : null),
-        );
-
-        await useMeraProtocolStore.getState().hydrateFromDb();
-
-        expect(useMeraProtocolStore.getState().factCheckEnabled).toBe(false);
-    });
-
     it('reset() clears the fact-check setting row', () => {
         useMeraProtocolStore.getState().reset();
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_fact_check');
-    });
-
-    it('useFactCheckEnabled returns current factCheckEnabled value', () => {
-        useMeraProtocolStore.setState({ factCheckEnabled: true });
-        const { result } = renderHook(() => useFactCheckEnabled());
-        expect(result.current).toBe(true);
     });
 
     it('hydrateFromDb sets selectedModelId from DB', async () => {
