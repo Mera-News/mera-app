@@ -9,12 +9,16 @@ import {
     describeCheckedBy,
     describeOrganisationVerdict,
     describeVerdict,
+    describeVerdictPresentation,
+    FACT_CHECK_SEED_MESSAGE_KEY,
     isTerminalStatus,
     normalizeVerdict,
+    POLL_CEILING_MS,
+    POLL_INTERVAL_MS,
     PROGRESS_DELAY_MS,
+    shouldShowMultipleOrganisationsCaveat,
     shouldShowProgress,
 } from '../fact-check-state';
-import * as factCheckState from '../fact-check-state';
 
 describe('isTerminalStatus', () => {
     it.each(['complete', 'blocked', 'COMPLETE', ' blocked '])('is terminal: %s', (s) => {
@@ -111,17 +115,17 @@ describe('describeAssessment', () => {
 });
 
 describe('shouldShowProgress', () => {
-    it('suppresses the spinner below the delay — the cross-user cache hit path', () => {
-        expect(shouldShowProgress('working', 0)).toBe(false);
-        expect(shouldShowProgress('working', PROGRESS_DELAY_MS - 1)).toBe(false);
+    it('suppresses the spinner below the delay — a just-started job', () => {
+        expect(shouldShowProgress('processing', 0)).toBe(false);
+        expect(shouldShowProgress('processing', PROGRESS_DELAY_MS - 1)).toBe(false);
     });
 
     it('shows the spinner once the wait is perceptible', () => {
-        expect(shouldShowProgress('working', PROGRESS_DELAY_MS)).toBe(true);
-        expect(shouldShowProgress('working', 10_000)).toBe(true);
+        expect(shouldShowProgress('processing', PROGRESS_DELAY_MS)).toBe(true);
+        expect(shouldShowProgress('processing', 10_000)).toBe(true);
     });
 
-    it.each(['idle', 'ready', 'queued', 'error'] as const)(
+    it.each(['absent', 'terminal'] as const)(
         'never shows progress in phase %s',
         (phase) => {
             expect(shouldShowProgress(phase, 99_999)).toBe(false);
@@ -217,15 +221,92 @@ describe('describeOrganisationVerdict', () => {
     });
 });
 
-// The old POLL_INTERVAL_MS / POLL_TIMEOUT_MS are GONE, deliberately: the client
-// no longer polls and no longer invents a deadline. PROGRESS_DELAY_MS survives
-// because the no-spinner-flash rule for a cross-user cache hit does.
+// Pivot P8d RE-ADDS polling (server-side async job, deleted from the client in
+// pivot P4 when the check briefly ran entirely on-device). These constants
+// replace the old, too-short 3s/60s window — see fact-check-state.ts's own
+// header for the full reasoning; this test only pins the values and the
+// relationships that would silently regress the design if broken.
 describe('timing constants', () => {
-    it('exposes only the progress delay, and keeps it imperceptible', () => {
+    it('keeps the progress delay imperceptible', () => {
         expect(PROGRESS_DELAY_MS).toBe(400);
-        const state = factCheckState as Record<string, unknown>;
-        expect(state.POLL_INTERVAL_MS).toBeUndefined();
-        expect(state.POLL_TIMEOUT_MS).toBeUndefined();
-        expect(state.timeoutCopyKey).toBeUndefined();
+    });
+
+    it('polls at a sane cadence, bounded by a ceiling generous enough for a multi-round server job', () => {
+        expect(POLL_INTERVAL_MS).toBeGreaterThan(0);
+        expect(POLL_CEILING_MS).toBeGreaterThan(POLL_INTERVAL_MS);
+        // The old ceiling this replaces was 60_000ms and was measured to be
+        // too short for a job that searches, looks up ClaimReview and
+        // synthesises server-side. The new one must be meaningfully larger,
+        // not a cosmetic bump.
+        expect(POLL_CEILING_MS).toBeGreaterThanOrEqual(60_000 * 2);
+        // A whole-number poll count keeps "stop cleanly at the ceiling"
+        // exact rather than landing mid-interval.
+        expect(POLL_CEILING_MS % POLL_INTERVAL_MS).toBe(0);
+    });
+
+    it('exposes the seed-message key the tick and the chat starter chip share', () => {
+        expect(typeof FACT_CHECK_SEED_MESSAGE_KEY).toBe('string');
+        expect(FACT_CHECK_SEED_MESSAGE_KEY.length).toBeGreaterThan(0);
+    });
+});
+
+// describeVerdictPresentation — pivot P8h. The server can now legitimately
+// write `verdict: 'unverifiable'` alongside a POPULATED `checkedBy` (the
+// re-check path: nothing found day 0, clamped; a fact-checker publishes day
+// 2, checkedBy fills in, the verdict is deliberately not re-opened). A real
+// screenshot caught the sibling bug — a confident verdict chip sitting next
+// to "no organisation has published" — and this is the same contradiction
+// shape one hop later: "couldn't confirm" next to a named organisation's own
+// ruling reads as us not knowing something we plainly do.
+describe('describeVerdictPresentation', () => {
+    it('leads with our own verdict when nobody has published — the normal ~96% case, unchanged', () => {
+        expect(describeVerdictPresentation('supported', 0)).toBe('lead');
+        expect(describeVerdictPresentation('unverifiable', 0)).toBe('lead');
+        expect(describeVerdictPresentation(null, 0)).toBe('lead');
+    });
+
+    // ── THE MUST-FAIL CASE ──────────────────────────────────────────────────
+    // A row that is `unverifiable` WITH a populated checkedBy must never
+    // present as though nothing is known — "suppressed" is the only correct
+    // answer, because "couldn't confirm" is factually wrong once an
+    // organisation HAS ruled, not merely unhelpful.
+    it('SUPPRESSES our own verdict when it is unverifiable and an organisation has ruled', () => {
+        expect(describeVerdictPresentation('unverifiable', 1)).toBe('suppressed');
+        expect(describeVerdictPresentation('UNVERIFIABLE', 3)).toBe('suppressed');
+        expect(describeVerdictPresentation('  unverifiable  ', 1)).toBe('suppressed');
+    });
+
+    it('demotes (never hides) a non-unverifiable verdict once an organisation has ruled — informational, not competing', () => {
+        expect(describeVerdictPresentation('supported', 1)).toBe('secondary');
+        expect(describeVerdictPresentation('disputed', 2)).toBe('secondary');
+        expect(describeVerdictPresentation('mixed', 1)).toBe('secondary');
+        expect(describeVerdictPresentation('unsupported', 1)).toBe('secondary');
+    });
+
+    it('never returns "lead" once checkedBy is populated, whatever the verdict — two verdicts at equal weight is the contradiction this function exists to prevent', () => {
+        const verdicts = ['supported', 'disputed', 'unsupported', 'mixed', 'unverifiable', 'some-unrecognised-token', null, undefined];
+        for (const v of verdicts) {
+            expect(describeVerdictPresentation(v, 1)).not.toBe('lead');
+        }
+    });
+
+    it('treats an unrecognised verdict token as non-unverifiable (secondary, not suppressed) once checkedBy is populated', () => {
+        // normalizeVerdict buckets anything undocumented as 'unknown', which
+        // is NOT 'unverifiable' — an unrecognised token must not silently
+        // gain the suppression behaviour reserved for the one documented
+        // zero-evidence bucket.
+        expect(describeVerdictPresentation('mostly-true-ish', 1)).toBe('secondary');
+    });
+});
+
+describe('shouldShowMultipleOrganisationsCaveat', () => {
+    it('is false for zero or one organisation — nothing to disambiguate', () => {
+        expect(shouldShowMultipleOrganisationsCaveat(0)).toBe(false);
+        expect(shouldShowMultipleOrganisationsCaveat(1)).toBe(false);
+    });
+
+    it('is true for two or more — never invent a consensus among them', () => {
+        expect(shouldShowMultipleOrganisationsCaveat(2)).toBe(true);
+        expect(shouldShowMultipleOrganisationsCaveat(5)).toBe(true);
     });
 });

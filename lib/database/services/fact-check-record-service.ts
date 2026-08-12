@@ -7,14 +7,25 @@
 // no local store the answer had nowhere to land: leaving the screen threw it
 // away, and there was no surface that could list what had ever been checked.
 //
-// Everything here is derived, single-user, and safe to delete — the server
-// keeps its own cross-user cache, so a wiped row can always be re-fetched by
-// article id. That is what makes the per-row delete on the list screen a
-// genuinely cheap operation rather than data loss.
+// v52 — THE KEY CHANGED, AND WITH IT WHAT THIS TABLE IS.
 //
-// One row per ARTICLE, not per request. `requestFactCheck` is idempotent
-// server-side and returns the same row for repeat taps, so upserting on
-// `article_id` is what keeps the list free of duplicates.
+// It used to be one row per ARTICLE, backed by a cross-user server cache: a
+// wiped row could always be re-fetched by article id, which is what made the
+// per-row delete on the list screen cheap rather than destructive. Neither half
+// of that is true any more. The check is now "this CLAIM in this article" — the
+// user picks one assertion out of the three or four the picker proposes and can
+// come back for another — and the whole job runs on this device, so a deleted
+// row is gone for good.
+//
+// The upsert key is therefore `(article_id, claim_key)`. Two consequences that
+// are easy to get wrong and are both covered by tests:
+//
+//  1. The duplicate-collapse below must be scoped to the SAME composite key.
+//     Collapsing on `article_id` alone would make each new claim destroy the
+//     previous claim's answer.
+//  2. A v51 row has `claim_key = NULL` and that null is meaningful: it is a
+//     legacy whole-article check. A keyed lookup must never match it, so it
+//     keeps its own slot next to per-claim rows instead of being overwritten.
 
 import { Q } from '@nozbe/watermelondb';
 import database from '../index';
@@ -35,6 +46,10 @@ export interface StoredFactCheck<TPayload = any> {
     readonly payload: TPayload | null;
     readonly requestedAt: number;
     readonly resolvedAt: number | null;
+    /** The verbatim assertion checked. Null on a legacy (v51) whole-article row. */
+    readonly claim: string | null;
+    /** Normalised hash of `claim`. Null ⇒ legacy whole-article row. */
+    readonly claimKey: string | null;
 }
 
 const collection = () => database.get<FactCheckRecord>('fact_checks');
@@ -58,6 +73,8 @@ function toStored(row: FactCheckRecord): StoredFactCheck {
         payload,
         requestedAt: row.requestedAt ? row.requestedAt.getTime() : 0,
         resolvedAt: row.resolvedAt ? row.resolvedAt.getTime() : null,
+        claim: row.claim ?? null,
+        claimKey: row.claimKey ?? null,
     };
 }
 
@@ -73,17 +90,33 @@ export interface UpsertFactCheckInput {
     /** Completion time, when the row is terminal. Defaults to now for terminal
      *  statuses so the list can say when an answer landed. */
     readonly resolvedAt?: number | null;
+    /** The verbatim assertion. Omit for a legacy whole-article check. */
+    readonly claim?: string | null;
+    /** Second half of the upsert key. Omit ⇒ the legacy `claim_key IS NULL` slot. */
+    readonly claimKey?: string | null;
 }
 
 const TERMINAL: ReadonlySet<string> = new Set(['complete', 'blocked']);
 
+/** The clauses that identify ONE stored check. Exported so the query the
+ *  service actually runs is assertable, rather than trusted. */
+export function claimKeyClauses(articleId: string, claimKey?: string | null) {
+    return [
+        Q.where('article_id', articleId),
+        // `claim_key` is nullable and the null is meaningful — see the header.
+        // `Q.where(col, null)` compiles to `IS NULL`, which is the ONLY thing
+        // that matches a v51 row; a keyed lookup compiles to `= 'x'` and cannot.
+        Q.where('claim_key', claimKey == null ? null : claimKey),
+    ];
+}
+
 /**
- * Insert-or-update the row for one article.
+ * Insert-or-update the row for one (article, claim).
  *
  * Idempotent and last-write-wins on every field except `requested_at`, which is
- * only set on insert — the list is ordered by "when did I ask for this", and a
- * push-driven update arriving hours later must not jump the row to the top as
- * if it were a fresh request.
+ * only set on insert — the list is ordered by "when did I ask for this", and an
+ * answer landing minutes later must not jump the row to the top as if it were a
+ * fresh request.
  */
 export async function upsertFactCheck(
     input: UpsertFactCheckInput,
@@ -101,8 +134,11 @@ export async function upsertFactCheck(
 
     try {
         await database.write(async () => {
+            // Scoped to the COMPOSITE key. Querying `article_id` alone here
+            // would make the collapse below delete every other claim's answer
+            // for this article the first time a second claim was checked.
             const existing = await collection()
-                .query(Q.where('article_id', input.articleId))
+                .query(...claimKeyClauses(input.articleId, input.claimKey))
                 .fetch();
             const apply = (row: FactCheckRecord) => {
                 row.factCheckId = input.factCheckId ?? '';
@@ -111,11 +147,13 @@ export async function upsertFactCheck(
                 row.verdict = input.verdict ?? null;
                 row.payloadJson = payloadJson;
                 row.resolvedAt = resolvedAt != null ? new Date(resolvedAt) : null;
+                row.claim = input.claim ?? null;
+                row.claimKey = input.claimKey ?? null;
             };
             if (existing.length > 0) {
                 await existing[0].update(apply);
-                // Any accidental duplicates (a pre-index race) collapse here
-                // rather than accumulating in the list forever.
+                // Any accidental duplicates OF THIS SAME CLAIM (a pre-index
+                // race) collapse here rather than accumulating in the list.
                 for (const dupe of existing.slice(1)) {
                     await dupe.destroyPermanently();
                 }
@@ -135,20 +173,93 @@ export async function upsertFactCheck(
     }
 }
 
-/** The stored check for one article, or null. Never throws. */
-export async function getFactCheckForArticle(
+/**
+ * EVERY stored check for one article, newest request first.
+ *
+ * This is the read the panel wants post-v52: an article can carry a legacy
+ * whole-article row plus one row per claim the user has picked, and all of them
+ * are renderable.
+ */
+export async function listFactChecksForArticle(
     articleId: string,
+): Promise<StoredFactCheck[]> {
+    if (!articleId) return [];
+    try {
+        const rows = await collection()
+            .query(Q.where('article_id', articleId), Q.sortBy('requested_at', Q.desc))
+            .fetch();
+        return rows.map(toStored);
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'fact-check-record-service', method: 'listFactChecksForArticle' },
+            extra: { articleId },
+        });
+        return [];
+    }
+}
+
+/**
+ * The stored check for one (article, claim), or null.
+ *
+ * Omitting `claimKey` asks for the LEGACY whole-article row specifically, not
+ * "any row for this article" — `claim_key IS NULL` is a slot of its own.
+ */
+export async function getFactCheckForClaim(
+    articleId: string,
+    claimKey?: string | null,
 ): Promise<StoredFactCheck | null> {
     if (!articleId) return null;
     try {
-        const rows = await collection().query(Q.where('article_id', articleId)).fetch();
+        const rows = await collection()
+            .query(...claimKeyClauses(articleId, claimKey))
+            .fetch();
         return rows.length > 0 ? toStored(rows[0]) : null;
     } catch (err) {
         logger.captureException(err, {
-            tags: { service: 'fact-check-record-service', method: 'getFactCheckForArticle' },
+            tags: { service: 'fact-check-record-service', method: 'getFactCheckForClaim' },
             extra: { articleId },
         });
         return null;
+    }
+}
+
+/**
+ * The first stored check for one article, or null.
+ *
+ * Kept for the orphan-card path, which knows an article id and nothing else.
+ * Post-v52 an article may hold several rows — prefer
+ * {@link listFactChecksForArticle} anywhere the answer is rendered.
+ */
+export async function getFactCheckForArticle(
+    articleId: string,
+): Promise<StoredFactCheck | null> {
+    const rows = await listFactChecksForArticle(articleId);
+    return rows.length > 0 ? rows[0] : null;
+}
+
+/**
+ * Rows sitting in a non-terminal status — the recovery task's input.
+ *
+ * Filtering is done in SQL on `status`, but the staleness decision is NOT: a
+ * re-driven row keeps its original `requested_at` (see {@link upsertFactCheck}),
+ * so "how long has this attempt been running" lives in the payload and is the
+ * caller's to read.
+ */
+export async function listFactChecksByStatus(
+    status: string,
+    limit = 20,
+): Promise<StoredFactCheck[]> {
+    try {
+        const rows = await collection()
+            .query(Q.where('status', status), Q.sortBy('requested_at', Q.desc), Q.take(limit))
+            .fetch();
+        return rows.map(toStored);
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'fact-check-record-service', method: 'listFactChecksByStatus' },
+            extra: { status },
+        });
+        return [];
     }
 }
 
@@ -185,5 +296,130 @@ export async function deleteFactCheck(id: string): Promise<void> {
             tags: { service: 'fact-check-record-service', method: 'deleteFactCheck' },
             extra: { id },
         });
+    }
+}
+
+/**
+ * Retention sweep (data-cleanup-task): deletes UNATTRIBUTED checks —
+ * `payload.checkedBy` is missing, `null`, or an empty array — requested
+ * before `cutoffMs`. A POPULATED `checkedBy` is kept indefinitely, regardless
+ * of age. Returns the number of rows deleted.
+ *
+ * WHY empty is deleted and populated is not (restated here so a later reader
+ * does not "simplify" the condition away): an empty `checkedBy` asserts "no
+ * fact-checking organisation has published on this claim". The server's
+ * re-check loop stops looking after 7 days (see `fact-check-fanout`'s sweep
+ * window), so past that point nobody is verifying the assertion any more —
+ * if a fact-checker publishes on day 10, the stored empty row is silently
+ * FALSE. Deleting it is self-healing: a later request re-creates the row and
+ * gets a fresh answer. A populated `checkedBy` is the opposite — a dated,
+ * attributed fact ("Alt News rated this False, here is the link") that does
+ * not decay and is the single most valuable thing this feature produces. It
+ * is also the user's own record, visible in the Dashboard's Fact checks
+ * list, so it is kept forever.
+ *
+ * (Supporting fact, not the reason: the article corpus only reaches back
+ * ~8 days, so a 7-day lifetime for unattributed checks roughly matches how
+ * long the article itself is even servable — but the retention rule is
+ * driven by the re-check window above, not by article lifetime.)
+ *
+ * WHY THE QUERY IS TWO-STAGE, NOT ONE SQL SWEEP. `checkedBy` lives inside
+ * `payload_json`, a text blob — there is no column, hence no index, to
+ * filter on directly. Loading every row to parse its JSON would defeat the
+ * point of an indexed cleanup sweep. Instead:
+ *   1. `requested_at < cutoffMs` runs in SQL against the INDEXED
+ *      `requested_at` column (see `schema.ts`), narrowing the candidate set
+ *      to rows already old enough to even consider. This set is bounded by
+ *      the sweep's own daily cadence, never the whole table.
+ *   2. Only THAT narrowed set is parsed in JS to read `checkedBy` — never
+ *      the full `fact_checks` table.
+ * `requested_at` (insert-only) is the correct anchor, not `resolved_at`
+ * (recomputed on every write, including re-checks) — an anchor that moves
+ * every re-check would keep resetting a row's clock and could make an
+ * unattributed row live forever.
+ *
+ * TWO CUTOFFS, NOT ONE. `unattributedCutoffMs` (7 days) drops rows nobody has
+ * published on; `hardCutoffMs` (90 days) drops EVERY row, attributed or not,
+ * and is checked first. Attribution used to mean "keep forever", which was
+ * wrong in a way that only shows up late: fact-checking organisations revise
+ * and occasionally retract their ratings, so a cached verdict can drift out of
+ * agreement with the organisation still named on it, and the reader has no way
+ * to tell. Deleting is self-healing — the row is re-fetchable from the server,
+ * which holds the same 90-day rule.
+ *
+ * WHY A TRULY UNREADABLE PAYLOAD IS KEPT, NOT DELETED — but a READABLE
+ * payload with no attribution is NOT given the same benefit of the doubt.
+ * Two different situations both surface as "no `checkedBy` array present",
+ * and they get opposite treatment:
+ *   - `JSON.parse` THROWS (the text itself is corrupt) ⇒ we cannot read the
+ *     payload at all, so we cannot confirm it is unattributed. Destroying a
+ *     row that might carry a user's published verdict is worse than leaving
+ *     one stale, unreadable row for another sweep to reconsider. Kept.
+ *   - `JSON.parse` SUCCEEDS but yields `null`, or an object with no
+ *     `checkedBy` array — this is a rarer but REAL shape, not hypothetical:
+ *     `requestFactCheck` (`fact-check-graphql-client.ts`) stores
+ *     `payload: null` for the `pending` stub row written when the server's
+ *     very first response doesn't echo a full row back. That stub carries no
+ *     evidence of attribution by construction — it is not "unreadable", it
+ *     is "read, and there is nothing there" — so it decays exactly like an
+ *     explicit empty `checkedBy: []` array. Treating it as immortal instead
+ *     would let a stuck/never-resolved request sit in the table forever,
+ *     which is the opposite of the valuable, attributed rows this rule
+ *     exists to protect.
+ */
+export async function deleteExpiredFactChecks(
+    unattributedCutoffMs: number,
+    hardCutoffMs: number,
+): Promise<number> {
+    try {
+        // ONE query, at the LATER of the two instants. `unattributedCutoffMs`
+        // (7 days ago) is more recent than `hardCutoffMs` (90 days ago), so
+        // everything the hard cap could catch is already inside this set —
+        // a second query would only re-read rows we are holding.
+        const candidates = await collection()
+            .query(Q.where('requested_at', Q.lt(unattributedCutoffMs)))
+            .fetch();
+        if (candidates.length === 0) return 0;
+
+        const toDelete = candidates.filter((row) => {
+            // THE HARD CAP, APPLIED FIRST AND WITHOUT READING THE PAYLOAD.
+            // Past it, attribution stops being a reason to keep a row and
+            // becomes a reason to drop it: fact-checkers revise and sometimes
+            // retract, so an indefinitely-cached "False" can outlive the
+            // organisation's own position and would still be shown under their
+            // name. A stale verdict with a real masthead on it is worse than
+            // no verdict. This also settles Google's API terms on keeping
+            // permanent copies of API content, but correctness is the reason.
+            // `.getTime()`, not a bare `<`: `requestedAt` is a Date, which
+            // compares against a number only by silent coercion. It happened
+            // to work and the tests happened to pass; tsc is what caught it.
+            if (row.requestedAt.getTime() < hardCutoffMs) return true;
+
+            let parsed: any;
+            try {
+                parsed = row.payloadJson ? JSON.parse(row.payloadJson) : null;
+            } catch {
+                // Unreadable text — cannot confirm unattributed, keep. Note
+                // this benefit of the doubt is NOT open-ended any more: the
+                // hard cap above already returned true for anything past 90
+                // days, so an unreadable row decays too, it just decays later.
+                return false;
+            }
+            const checkedBy = parsed?.checkedBy;
+            // Readable, but no populated attribution array ⇒ unattributed
+            // (covers a missing field, a `null` payload, and an explicit []).
+            return !Array.isArray(checkedBy) || checkedBy.length === 0;
+        });
+        if (toDelete.length === 0) return 0;
+
+        await database.write(async () => {
+            await database.batch(toDelete.map((row) => row.prepareDestroyPermanently()));
+        });
+        return toDelete.length;
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'fact-check-record-service', method: 'deleteExpiredFactChecks' },
+        });
+        return 0;
     }
 }

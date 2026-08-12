@@ -4,6 +4,9 @@ import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestio
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
+import { openFactCheckChat } from '@/lib/fact-check/open-fact-check-chat';
+import { FACT_CHECK_SEED_MESSAGE_KEY } from '@/lib/fact-check/fact-check-state';
+import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
@@ -51,6 +54,8 @@ import {
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
+import { useAiAccess } from '@/lib/stores/subscription-store';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -252,6 +257,15 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
+    // The tick's icon state — a pure observer of the stored rows, same hook
+    // `FactCheckPanel` uses below. See ArticleDetailScreen for why two
+    // independent subscriptions to the same query is fine now that there is no
+    // imperative action state to keep in sync.
+    const factCheckPhase = useFactCheck(suggestion?.articleId).phase;
+    const aiAccess = useAiAccess();
+    // See ArticleDetailScreen — `proposeFactCheck` is CLOUD-only, same signal
+    // `ChatSessionView`'s "Quick fact check" chip is gated on.
+    const isOnDeviceProcessing = useIsOnDeviceProcessing();
     const userCtx = useUserGeoLanguageContext();
     const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
@@ -610,6 +624,25 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         {articleUrl ? (
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
+                                    // See ArticleDetailScreen — hidden entirely
+                                    // on a locked free-tier plan or on-device
+                                    // processing, rather than left as a dead
+                                    // tap or a silent mis-wire.
+                                    factCheck={aiAccess !== 'locked' && !isOnDeviceProcessing ? {
+                                        onStart: () => openFactCheckChat({
+                                            articleId: suggestion.articleId,
+                                            suggestionId: suggestion._id,
+                                            title: suggestion.title_en ?? suggestion.title_original ?? '',
+                                        }, t(FACT_CHECK_SEED_MESSAGE_KEY)),
+                                        // See ArticleDetailScreen — 'stalled'
+                                        // reads as 'pending' on the tick; the
+                                        // panel is where it gets its own copy.
+                                        state: factCheckPhase === 'terminal'
+                                            ? 'done'
+                                            : factCheckPhase === 'processing' || factCheckPhase === 'stalled'
+                                                ? 'pending'
+                                                : 'none',
+                                    } : undefined}
                                     articleId={suggestion.articleId}
                                     suggestionId={suggestion._id}
                                     title={suggestion.title_en ?? ''}
@@ -668,13 +701,12 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                         ) : null}
 
                         {/* Fact check sits OUTSIDE the URL branch: it is keyed
-                            on the ARTICLE id (not the suggestion id) and the
-                            server holds its own canonical URL, so it still works
-                            for a row whose local link we refuse to open. */}
-                        <FactCheckPanel
-                            articleId={suggestion.articleId}
-                            articleTitle={suggestion.title_en ?? suggestion.title_original ?? null}
-                        />
+                            on the ARTICLE id (not the suggestion id), not the
+                            (possibly refused) local link, so it still renders
+                            for a row whose URL we won't open. Always mounted —
+                            a pure observer, it renders nothing itself when
+                            nobody has asked about this article. */}
+                        <FactCheckPanel articleId={suggestion.articleId} />
 
                         {/* Related Articles — ONE flat, sorted list merging the
                             local cluster siblings (the user's own personalized

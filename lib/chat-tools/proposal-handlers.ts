@@ -71,6 +71,14 @@ async function resolveActiveTopicId(topicText: string): Promise<string | null> {
  */
 const USER_CONFIRMED_ONLY_ACTIONS: ReadonlySet<ProposalAction['type']> = new Set([
   'run_calibration',
+  // A fact check spends up to three web searches and a synthesis call, or (the
+  // article pill) a server-side job. `chooseOne` already stops a model applying
+  // the card wholesale (proposalRequiresUserChoice) — and since the whole-article
+  // option is ALWAYS appended, every fact-check card now has ≥2 actions and is
+  // always chooseOne, so that guard now covers the "user typed their own claim"
+  // card too. This entry is the belt to that braces: it is the only guard that
+  // does not depend on how many pills the card happens to carry.
+  'fact_check_claim',
 ]);
 
 export interface ExecuteProposalOptions {
@@ -331,6 +339,43 @@ export async function executeProposalActions(
             searchText,
           });
           summaries.push(`Following "${label || searchText}"`);
+          applied++;
+          break;
+        }
+        case 'fact_check_claim': {
+          // The tapped pill: either ONE claim checked quickly in this thread, or
+          // (`mode: 'article'`) the whole article handed to the SERVER check. The
+          // article snapshot is embedded in the action (staged by
+          // decideProposeFactCheck), so this stays self-contained — no store
+          // read.
+          //
+          // For a CLAIM pill, `claim` is the load-bearing field: it is the search
+          // key, and `label` is display only, so an empty claim is fatal while an
+          // empty label is not. The ARTICLE pill carries no claim by design — the
+          // article id is the whole payload — so it is guarded on that instead.
+          const claim = action.claim.trim();
+          if (action.mode !== 'article' && !claim) {
+            errors.push('fact_check_claim: empty claim');
+            break;
+          }
+          if (action.mode === 'article' && !action.subject.articleId) {
+            errors.push('fact_check_claim: empty articleId');
+            break;
+          }
+          // Lazily required for the same reason as run_calibration below: a
+          // static import would drag the search + inference graphs into every
+          // consumer of this executor, for a branch only a fact-check confirm
+          // reaches.
+          //
+          /* eslint-disable-next-line @typescript-eslint/no-require-imports */
+          const { startFactCheckFromAction } =
+            require('./quick-fact-check-handler') as typeof import('./quick-fact-check-handler');
+          // FIRE-AND-FORGET. It registers a running card in the thread up front
+          // and settles it when the search finishes; awaiting here would hold the
+          // Confirm button disabled for the length of a search round and leave
+          // the user staring at a card that looks stuck.
+          startFactCheckFromAction(action);
+          summaries.push(`Checking "${action.label.trim() || claim}"`);
           applied++;
           break;
         }

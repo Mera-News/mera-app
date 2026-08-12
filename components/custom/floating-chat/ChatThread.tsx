@@ -26,6 +26,7 @@ import ArticleContextCard from './ArticleContextCard';
 import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard from './ProposalCard';
+import QuickFactCheckCard from './QuickFactCheckCard';
 import TopicPlanCard from './TopicPlanCard';
 import TopicPlanSaveAllRow from './TopicPlanSaveAllRow';
 import ConflictResolutionCard from './ConflictResolutionCard';
@@ -146,6 +147,9 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       case 'conflict-card':
         return <ConflictResolutionCard conflict={item.conflict} />;
+
+      case 'quick-fact-check-card':
+        return <QuickFactCheckCard entry={item.entry} />;
 
       case 'divider':
         return (

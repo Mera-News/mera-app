@@ -39,7 +39,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { HStack } from '@/components/ui/hstack';
 import MeraLogo from '@/components/custom/MeraLogo';
 import type { Verdict } from '@/lib/stores/feed-order-store';
-import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share2 } from 'lucide-react-native';
+import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share2, Check, CheckCheck } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -72,6 +72,23 @@ interface CardActionBarProps {
   /** Optional share action — renders a Share2 icon right of the bookmark. Hidden
    *  entirely when undefined (e.g. a story with no article URL). */
   onShare?: () => void;
+  /** Optional fact-check toggle — a tick right of the track crosshair. Shows and
+   *  hides the fact-check SECTION on the article detail screens.
+   *
+   *  Hidden entirely when undefined, and that is the FEED card's case, by
+   *  design: the section this toggles only exists on the detail screens, so a
+   *  tick on a feed card would start a search with nowhere to show the answer.
+   *  Same optional-prop contract as `onTrack`, for the same reason. */
+  onFactCheck?: () => void;
+  /** none = never asked · pending = asked, no answer yet · done = resolved.
+   *
+   *  A tick that looks identical before and after a check is a bad affordance,
+   *  so the states are carried by three signals at once, never colour alone
+   *  (the same rule the Crosshair follows): a SINGLE tick for asked-or-unasked
+   *  vs a DOUBLE tick for answered, colour, and a changed accessibility label.
+   *  The single/double idiom is borrowed from messaging apps, where it already
+   *  means exactly "sent" vs "delivered". */
+  factCheckState?: 'none' | 'pending' | 'done';
   /** Horizontal padding of the row. Defaults to 16 (the card-root look). Hosts
    *  that already inset the row (e.g. ArticleCardBase's `p-4`) pass 0 to avoid
    *  doubling the horizontal padding. */
@@ -96,6 +113,8 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
   onTrack,
   tracked = false,
   onShare,
+  onFactCheck,
+  factCheckState = 'none',
   horizontalPadding = 16,
   provisional = false,
 }) => {
@@ -194,6 +213,34 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
             color={tracked ? SAVE_ACCENT : WHITE}
             fill="none"
           />
+        </Pressable>
+      ) : null}
+
+      {onFactCheck ? (
+        <Pressable
+          testID="card-action-fact-check"
+          onPress={onFactCheck}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityState={{ selected: factCheckState !== 'none' }}
+          accessibilityLabel={t(
+            factCheckState === 'done'
+              ? 'factCheck.actionA11yDone'
+              : factCheckState === 'pending'
+                ? 'factCheck.actionA11yPending'
+                : 'factCheck.actionA11y',
+          )}
+        >
+          {factCheckState === 'done' ? (
+            <CheckCheck size={ICON_SIZE} strokeWidth={STROKE} color={LIKE} fill="none" />
+          ) : (
+            <Check
+              size={ICON_SIZE}
+              strokeWidth={STROKE}
+              color={factCheckState === 'pending' ? SAVE_ACCENT : WHITE}
+              fill="none"
+            />
+          )}
         </Pressable>
       ) : null}
 

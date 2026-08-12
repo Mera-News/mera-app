@@ -4,6 +4,9 @@ import { ArticleSuggestionContainer } from '@/components/custom/ArticleSuggestio
 import { type TranslatableDisplayState } from '@/components/custom/TranslatableDynamic';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
+import { openFactCheckChat } from '@/lib/fact-check/open-fact-check-chat';
+import { FACT_CHECK_SEED_MESSAGE_KEY } from '@/lib/fact-check/fact-check-state';
+import { useFactCheck } from '@/lib/fact-check/use-fact-check';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
@@ -39,13 +42,18 @@ import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
 import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
+import { useAiAccess } from '@/lib/stores/subscription-store';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
+import { useStoredFactCheck } from '@/lib/fact-check/use-stored-fact-check';
 
 interface ArticleDetailScreenProps {
     articleId: string;
@@ -97,6 +105,26 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // The tick's icon state — a pure observer of the stored rows, same hook
+    // `FactCheckPanel` uses below. Two independent subscriptions to the same
+    // WatermelonDB query, not a shared instance: unlike the old request-driving
+    // hook there is no imperative action state to keep in sync, only a live
+    // read, so there is nothing wrong with two components each watching it.
+    const factCheckPhase = useFactCheck(article?._id ?? articleId).phase;
+    const aiAccess = useAiAccess();
+    // `proposeFactCheck` is CLOUD-only (`ChatSessionView.tsx` gates its own
+    // "Quick fact check" chip on the same signal) — splicing its claim-picker
+    // rules into the local prompt blows the on-device token budget. The tick
+    // must be hidden here, not just no-op in `openFactCheckChat`: a tick that
+    // silently mis-wires into a confused reply is worse than no tick.
+    const isOnDeviceProcessing = useIsOnDeviceProcessing();
+    // Only read once the article is KNOWN to be unavailable — a normal open
+    // costs no extra query (FactCheckPanel runs its own observer on the happy
+    // path).
+    const orphanFactChecks = useStoredFactCheck(
+        articleId,
+        !isLoading && (!!error || !article),
+    );
     // Offline, and no local snapshot exists — a dedicated empty state instead
     // of the generic error card. Auto-retries when connectivity returns (see
     // the retryNonce effect below).
@@ -479,24 +507,65 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     if (error || !article) {
         return (
-            <Box className="flex-1 items-center justify-center p-5">
+            // ScrollView, not a centred Box: this state can now carry a fact
+            // check, which is taller than the screen once it lists several
+            // organisations.
+            <Box className="flex-1">
                 {/* Page background. Must be the FIRST child so it paints behind
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                <MaterialIcons
-                    name="error-outline"
-                    size={48}
-                    color="#EF4444"
-                    accessibilityElementsHidden={true}
-                    importantForAccessibility="no-hide-descendants"
-                />
-                <Text size="lg" className="text-white mt-4 text-center">
-                    {error || t('articleDetail.articleNotFound')}
-                </Text>
-                <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
-                </Pressable>
+                <ScrollView
+                    contentContainerStyle={{
+                        flexGrow: 1,
+                        justifyContent: orphanFactChecks.length > 0 ? 'flex-start' : 'center',
+                        alignItems: 'center',
+                        padding: 20,
+                        paddingTop: orphanFactChecks.length > 0 ? insets.top + 24 : 20,
+                        paddingBottom: insets.bottom + 40,
+                    }}
+                >
+                    <MaterialIcons
+                        name="error-outline"
+                        size={48}
+                        color="#EF4444"
+                        accessibilityElementsHidden={true}
+                        importantForAccessibility="no-hide-descendants"
+                    />
+                    <Text size="lg" className="text-white mt-4 text-center">
+                        {error || t('articleDetail.articleNotFound')}
+                    </Text>
+
+                    {/* THE 48h CASE. `NewsArticle` rows are swept at 48h while
+                        `fact_checks` rows deliberately outlive them, so every
+                        fact check older than ~2 days lands here — that is the
+                        normal state of an older row, not an edge case. The
+                        reader tapped a fact check; losing it to a bare "Article
+                        not found" would throw away everything the device still
+                        holds for it — post-v52 that can be SEVERAL rows, one
+                        per claim the reader asked about. No `onPress`: there is
+                        nowhere further to go. */}
+                    {orphanFactChecks.length > 0 && (
+                        <Box className="w-full mt-6" testID="article-detail-orphan-fact-check">
+                            <Text size="sm" className="text-typography-400 text-center mb-3">
+                                {t('factCheck.dashboard.articleGone')}
+                            </Text>
+                            <VStack space="sm">
+                                {orphanFactChecks.map((item) => (
+                                    <FactCheckCard
+                                        key={item.id}
+                                        item={item}
+                                        testIDPrefix="article-detail-fact-check"
+                                    />
+                                ))}
+                            </VStack>
+                        </Box>
+                    )}
+
+                    <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
+                        <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                    </Pressable>
+                </ScrollView>
             </Box>
         );
     }
@@ -583,6 +652,31 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         {articleUrl ? (
                             <VStack space="md">
                                 <ArticleFeedbackPrompt
+                                    // Hidden entirely on a locked free-tier plan
+                                    // OR on-device processing — `openFactCheckChat`
+                                    // no-ops in both cases too (belt-and-
+                                    // suspenders, see that file), but a tick that
+                                    // visibly does nothing, or silently mis-wires
+                                    // into a confused reply, is worse than no
+                                    // tick at all.
+                                    factCheck={aiAccess !== 'locked' && !isOnDeviceProcessing ? {
+                                        onStart: () => openFactCheckChat({
+                                            articleId: article._id ?? articleId,
+                                            title: article.title_en_internal_only ?? article.title ?? '',
+                                        }, t(FACT_CHECK_SEED_MESSAGE_KEY)),
+                                        // 'stalled' reads as 'pending' here too —
+                                        // the tick only has a single/double
+                                        // vocabulary (asked-or-unasked vs
+                                        // answered), and a poll that gave up is
+                                        // still "asked, no answer yet" from the
+                                        // tick's point of view. The PANEL is
+                                        // where 'stalled' gets its own honest copy.
+                                        state: factCheckPhase === 'terminal'
+                                            ? 'done'
+                                            : factCheckPhase === 'processing' || factCheckPhase === 'stalled'
+                                                ? 'pending'
+                                                : 'none',
+                                    } : undefined}
                                     articleId={article._id ?? articleId}
                                     title={article.title_en_internal_only ?? article.title ?? ''}
                                     // REQUIRED: this screen also serves articles
@@ -635,13 +729,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         ) : null}
 
                         {/* Fact check sits OUTSIDE the URL branch: it is keyed
-                            on the article id and the server holds its own
-                            canonical URL, so it still works for a row whose
-                            local link we refuse to open. */}
-                        <FactCheckPanel
-                            articleId={article._id ?? articleId}
-                            articleTitle={article.title_en_internal_only ?? article.title ?? null}
-                        />
+                            on the article id, not the (possibly refused) local
+                            link, so it still renders for a row whose URL we
+                            won't open. Always mounted — a pure observer of the
+                            stored rows, it renders nothing itself when nobody
+                            has asked about this article. */}
+                        <FactCheckPanel articleId={article._id ?? articleId} />
 
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">

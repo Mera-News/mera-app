@@ -2,9 +2,9 @@
  * Pure state/copy logic for the article fact check.
  *
  * Everything here is a total function over server-supplied strings. That
- * matters more than usual: `FactCheck.status`, `FactCheck.verdict` and
- * `FactCheckClaim.assessment` are all plain `String` in the schema, NOT
- * enums — the model on the other end can and will emit a value this build has
+ * matters more than usual: the server's `status`, `verdict` and
+ * `FactCheckClaim.assessment` (see `fact-check-types.ts`) are plain strings,
+ * NOT enums — the model behind them can and will emit a value this build has
  * never seen. Every normalizer therefore has an explicit unknown bucket that
  * falls through to generic, hedged copy. Rendering a raw model token, or an
  * empty verdict row, is the failure this file exists to prevent.
@@ -12,8 +12,10 @@
  * No React, no network, never throws.
  */
 
-/** Lifecycle values the server documents. `complete` and `blocked` are terminal. */
-export type FactCheckStatus = 'pending' | 'running' | 'complete' | 'failed' | 'blocked';
+/** Lifecycle values the runner writes. `complete` and `blocked` are terminal;
+ *  `pending`/`running` are legacy (pre-pivot server statuses, still valid on an
+ *  old stored row) and `processing` is the on-device runner's equivalent. */
+export type FactCheckStatus = 'pending' | 'running' | 'processing' | 'complete' | 'failed' | 'blocked';
 
 /** Verdicts the server documents, plus the catch-all for anything else. */
 export type FactCheckVerdict =
@@ -41,23 +43,83 @@ export type FactCheckAssessment =
 export type FactCheckTone = 'positive' | 'caution' | 'neutral';
 
 /**
- * Where the fact-check UI currently is. Drives the panel's render.
+ * Where the fact-check UI currently is, for ONE article's stored rows. Drives
+ * `FactCheckPanel`'s render and the action-row tick's icon.
  *
- * `queued` replaced the old `timeout`, and the difference is the whole point of
- * the rewrite. `timeout` was a client-side fiction: the app polled for 60s and
- * then declared a deadline the server had never agreed to. `queued` is a
- * statement of fact — the request is lodged, the answer is not here yet, and
- * nothing about staying on this screen makes it arrive sooner.
+ * `useFactCheck` is a LIVE observer of the on-device table PLUS a bounded
+ * server poll layered on top of it (pivot P8d re-added polling, deleted in
+ * pivot P4 when the check briefly ran entirely on-device) — see
+ * `POLL_INTERVAL_MS` / `POLL_CEILING_MS` below. That gives it four honest
+ * things to say: nobody has asked (`absent`), a background job is running and
+ * still within its poll window (`processing`), every asked-for row has an
+ * answer (`terminal`, `blocked` included — the row will never change again;
+ * see `isTerminalStatus`), or a poll ran out its window without a terminal
+ * answer (`stalled`).
+ *
+ * `stalled` MUST NOT collapse into `absent` or render as nothing. r14 shipped
+ * exactly that bug once already — a timed-out poll that looked identical to
+ * "no result" — and it had to be fixed. `stalled` is a real UI state with its
+ * own copy (`factCheck.stillChecking`) precisely so a reader can tell "still
+ * working, ask again later" apart from "nobody has asked" or "checked, found
+ * nothing".
  */
-export type FactCheckPhase = 'idle' | 'working' | 'ready' | 'queued' | 'error';
+export type FactCheckPhase = 'absent' | 'processing' | 'terminal' | 'stalled';
 
 /**
- * A spinner is only honest if the wait is perceptible. A cross-user cache hit
- * returns `complete` on the very first round trip, so anything shorter than
- * this renders as a flash of "Checking…" replaced instantly by the result —
- * which reads as a glitch, not as speed.
+ * A spinner is only honest if the wait is perceptible. Reopening an article
+ * whose check is already seconds old must not flash "Checking…" for 400ms
+ * before rendering — the delay guards against a JUST-STARTED job, not against
+ * showing an in-progress one truthfully.
  */
 export const PROGRESS_DELAY_MS = 400;
+
+/**
+ * Poll cadence and ceiling for `useFactCheck`'s server layer.
+ *
+ * THE OLD 3s/60s WINDOW (pre-r14) WAS TOO SHORT FOR THIS DESIGN AND MUST NOT
+ * COME BACK. It was sized for a client that did the whole job inline within
+ * the request the reader was staring at. The async job this wave polls is the
+ * opposite: it runs claim extraction, up to three web-search rounds, a
+ * ClaimReview lookup and an LLM synthesis pass, server-side, on a schedule the
+ * server controls and can retry — "no mobile deadline" is the whole point of
+ * having moved it there. A client-side ceiling can therefore never be "the
+ * job's real deadline"; it can only be "how long is it reasonable to keep an
+ * open screen polling before saying so honestly and stopping."
+ *
+ * Chosen values, and why:
+ *   - `POLL_INTERVAL_MS = 6s` — frequent enough that a check landing while the
+ *     reader is still on the article feels immediate, infrequent enough that
+ *     30 polls (see below) is a trivial request volume for a subscription-
+ *     gated feature, not a hammering pattern.
+ *   - `POLL_CEILING_MS = 3 minutes` (30 polls) — long enough to cover the
+ *     realistic worst case measured for this pipeline (several search rounds
+ *     plus one synthesis call, occasionally retried on a transient failure),
+ *     short enough that a reader who genuinely stays on one article for three
+ *     minutes without an answer is better served by an honest "still checking"
+ *     state than an indefinite spinner. It is FIVE TIMES the old 60s ceiling,
+ *     matching the 5x margin the r14 P2 poll-removal commit used when it
+ *     needed to prove "no more polls after the old deadline" — the same
+ *     multiple, now applied to widen the window instead of removing it.
+ *
+ * Reaching the ceiling stops polling — it does NOT retry forever and it does
+ * NOT silently render like "no result" (see `FactCheckPhase.stalled`).
+ * Leaving the screen and coming back (a fresh mount) starts a fresh, equally
+ * bounded poll — the honest way to let a reader "check again" without a
+ * client-invented notion of overall failure. The Dashboard's own bounded
+ * per-row read (`FactChecksPanel`) is the other way an answer that lands after
+ * the ceiling still reaches the reader.
+ */
+export const POLL_INTERVAL_MS = 6_000;
+export const POLL_CEILING_MS = 180_000;
+
+/** i18n key for the message the fact-check tick auto-sends as the user's
+ *  opening chat turn — the SAME opening turn Mera AI's "Quick fact check"
+ *  starter chip sends (see `open-fact-check-chat.ts`), so a tick tap and a
+ *  chip tap land on the identical claim-picker pill list, which always ends
+ *  with the async "The Article" option. Reuses the existing key rather than
+ *  minting a new one: this is the string already shipped in 19 locales for
+ *  this exact purpose pre-pivot. */
+export const FACT_CHECK_SEED_MESSAGE_KEY = 'factCheck.chatSeed';
 
 const TERMINAL: ReadonlySet<string> = new Set(['complete', 'blocked']);
 
@@ -116,6 +178,69 @@ export function describeVerdict(raw: string | null | undefined): {
     };
 }
 
+/**
+ * How prominently to show OUR OWN verdict chip, given whether a named
+ * fact-checking organisation has ALSO ruled on this story (`checkedBy`).
+ *
+ * BACKGROUND (pivot P8h). The server used to let a confident verdict through
+ * on zero evidence — the failure mode a real screenshot caught: a green
+ * "Consistent with sources" chip sitting directly above "No fact-checking
+ * organisation we searched has published on this story" and "This check
+ * didn't cite any specific pages." `clampVerdictToEvidence` now forces
+ * `unverifiable` server-side when BOTH `citations` and `checkedBy` are empty
+ * at write time. But `checkedBy` can fill in LATER on the re-check path (day
+ * 0: nothing found, clamped to `unverifiable`; day 2: a fact-checker
+ * publishes) and the verdict is deliberately NOT re-opened when that happens
+ * — restoring the model's original ungrounded verdict would put back the very
+ * answer the clamp exists to remove, and deriving a verdict from the
+ * organisation's own rating would misquote a scale that isn't ours (see
+ * `describeOrganisationVerdict`). So a row can now legitimately be
+ * `verdict: 'unverifiable'` WITH a populated `checkedBy` — same shape of
+ * contradiction as the screenshot, one hop later.
+ *
+ * `checkedBy` empty (the ~96% normal case) → `'lead'`: our own reading is the
+ * only signal there is, so it renders exactly as before.
+ *
+ * `checkedBy` populated → an organisation's OWN verbatim rating is the
+ * primary answer now, never ours — see `describeOrganisationVerdict`'s own
+ * rationale for why it can't be routed through our vocabulary. Showing both
+ * at equal weight is the exact contradiction this function exists to prevent,
+ * so it is never `'lead'` in this branch:
+ *   - our own verdict is `'unverifiable'` → `'suppressed'`. "Couldn't
+ *     confirm" next to a named organisation's rating isn't a hedge, it's
+ *     factually wrong — we DO have an answer, just not from us. There is
+ *     nothing to lose by dropping a token that carries zero information here.
+ *   - any other verdict → `'secondary'`. Our own AI reading (which claims it
+ *     leaned on, its own hedge) may still be informative, so it stays, but
+ *     demoted below the organisations and re-labelled so it can never be
+ *     mistaken for a competing ruling — see `factCheck.ownReadingHeading`.
+ */
+export type VerdictPresentation = 'lead' | 'secondary' | 'suppressed';
+
+export function describeVerdictPresentation(
+    verdict: string | null | undefined,
+    checkedByCount: number,
+): VerdictPresentation {
+    if (checkedByCount <= 0) return 'lead';
+    return normalizeVerdict(verdict) === 'unverifiable' ? 'suppressed' : 'secondary';
+}
+
+/**
+ * Whether to show the "these are independent, not a consensus" caveat above
+ * the `checkedBy` list.
+ *
+ * Two or more organisations can rate the SAME claim differently, on scales
+ * that are not comparable to each other (see `describeOrganisationVerdict`) —
+ * nothing here ever averages, ranks or picks a "majority" verdict among them,
+ * and the list itself already renders each rating independently. This is
+ * purely a comprehension aid: without it, a reader skimming a list of two or
+ * three named organisations could reasonably assume they agree just because
+ * they are grouped under one heading.
+ */
+export function shouldShowMultipleOrganisationsCaveat(checkedByCount: number): boolean {
+    return checkedByCount > 1;
+}
+
 const ASSESSMENTS: ReadonlySet<string> = new Set([
     'supported', 'disputed', 'unsupported', 'unverifiable',
 ]);
@@ -152,13 +277,15 @@ export function describeAssessment(raw: string | null | undefined): {
 /**
  * Whether to render the "Checking…" progress state.
  *
- * Only `working` can show progress at all, and only once the wait has been long
- * enough to be worth acknowledging — see {@link PROGRESS_DELAY_MS}. An already
- * fact-checked article (the cross-user cache hit) therefore goes tap → result
- * with no intermediate spinner.
+ * Only `processing` can show progress at all, and only once the wait has been
+ * long enough to be worth acknowledging — see {@link PROGRESS_DELAY_MS}.
+ * `elapsedMs` is measured from the row's OWN `requested_at` (not from a mount
+ * timer), so reopening an article whose check has genuinely been running for a
+ * while shows the working state immediately rather than waiting out a second
+ * artificial delay.
  */
 export function shouldShowProgress(phase: FactCheckPhase, elapsedMs: number): boolean {
-    return phase === 'working' && elapsedMs >= PROGRESS_DELAY_MS;
+    return phase === 'processing' && elapsedMs >= PROGRESS_DELAY_MS;
 }
 
 /**

@@ -187,6 +187,32 @@ export function actionToRow(action: ProposalAction): ActionRow {
         heading: action.label,
         translateHeading: true,
       };
+    case 'fact_check_claim':
+      // The claim label is the load-bearing choice, so it is the bold heading
+      // with "Check this claim" as the small category line above it — the same
+      // shape as track_story, which the card already renders well as 3–4 pills.
+      // DISPLAY-translated only: `action.claim` is the English search key sent
+      // to web search, and it is read from the ACTION (never from this row), so
+      // the reader's Hindi cannot reach it.
+      //
+      // The ALWAYS-LAST article pill gets its own category line and icon,
+      // because it is a different promise: not a quick web summary answered here
+      // in the thread, but a thorough server check whose result lands in the
+      // Dashboard. A row that read "Check this claim" over it would sell the
+      // slow, authoritative path as the fast one.
+      return action.mode === 'article'
+        ? {
+            icon: 'cloud-upload',
+            labelKey: 'factCheck.actionCheckArticle',
+            heading: action.label,
+            translateHeading: true,
+          }
+        : {
+            icon: 'fact-check',
+            labelKey: 'factCheck.actionCheckClaim',
+            heading: action.label,
+            translateHeading: true,
+          };
     // -- Wave-9 rails-backed feed-tuning actions (the "less of this" choose-one
     //    alternatives) — each renders its own labelled row so the radio card is
     //    legible. --
@@ -343,6 +369,13 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
   const isTrackProposal =
     proposal.actions.length > 0 && proposal.actions.every((a) => a.type === 'track_story');
 
+  // A "fact-check a claim" proposal (every action is fact_check_claim, single
+  // typed claim or 3–4 extracted ones) gets its own header wording and icon, for
+  // the same reason as the track card: "Proposed changes" over a list of claims
+  // reads as if Mera is about to change the user's profile.
+  const isFactCheckProposal =
+    proposal.actions.length > 0 && proposal.actions.every((a) => a.type === 'fact_check_claim');
+
   const resolved = localResolved ?? resolvedProposals[proposal.id] ?? null;
   const isPending =
     resolved === null &&
@@ -387,14 +420,22 @@ const ProposalCard: React.FC<ProposalCardProps> = ({ proposal, isLast }) => {
     >
       <View style={styles.headerRow}>
         <MaterialIcons
-          name={isTrackProposal ? 'track-changes' : 'auto-fix-high'}
+          name={
+            isTrackProposal
+              ? 'track-changes'
+              : isFactCheckProposal
+                ? 'fact-check'
+                : 'auto-fix-high'
+          }
           size={18}
           color={ACCENT}
         />
         <Text size="sm" bold style={styles.title}>
           {isTrackProposal
             ? t('trackedStories.trackProposalTitle', { defaultValue: 'Follow this story?' })
-            : t('articleFeedback.proposalTitle')}
+            : isFactCheckProposal
+              ? t('factCheck.claimProposalTitle')
+              : t('articleFeedback.proposalTitle')}
         </Text>
       </View>
 

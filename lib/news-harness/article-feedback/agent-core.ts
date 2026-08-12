@@ -11,6 +11,11 @@
 
 import { SUPPRESSION_KINDS } from '../core/types';
 import { proposalRequiresUserChoice } from '../core/proposals';
+import {
+  PROPOSE_FACT_CHECK_TOOL,
+  PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE,
+  buildFactCheckPromptSection,
+} from '../fact-check';
 import type {
   ActiveSuppressionView,
   FeedbackContextInput,
@@ -28,6 +33,22 @@ const MAX_MATCHED_TOPICS = 10;
 const MAX_PRODUCING_FACTS = 5;
 const MAX_ALL_FACTS = 12; // newest-first — needed for "more of this" diagnosis
 const ARTICLE_DESC_TRUNC = 160;
+/**
+ * The description cap when the CLAIM PICKER is on (cloud only).
+ *
+ * The 85%-separability measurement was established against a 900-char summary.
+ * 160 chars is 18% of that input, and every rule the measurement bought —
+ * "2–4 options, padding is worse than fewer", "resolve the country from the
+ * Publication line" — is a rule about what the model reads. Moving the prompt
+ * text verbatim while cutting its input by 82% would carry the words and not the
+ * result.
+ *
+ * Applied ONLY when `factCheck` is on, which is only ever CLOUD: the local path
+ * stays byte-identical to what it renders today, because ~185 extra tokens
+ * against its ~3,072 budget is exactly the trade this split exists to avoid.
+ * Cloud enforces no hard input budget (see CLOUD_HISTORY_BUDGET_TOKENS' note).
+ */
+const ARTICLE_DESC_TRUNC_FACT_CHECK = 900;
 const FACT_STATEMENT_TRUNC = 120;
 const TOPICS_PER_FACT_PREVIEW = 3;
 const MAX_ARTICLE_ENTITIES = 8;
@@ -265,14 +286,46 @@ function estimateTokens(text: string): number {
 export function buildArticleFeedbackSystemPrompt(params: {
   needsToolFormat: boolean;
   languageName?: string;
+  /**
+   * CLOUD mode AND the user's "Web search in chat" toggle on — the SAME gate
+   * `getArticleFeedbackToolDefinitions` uses for the `webSearch` tool, so the
+   * prose and the declaration can never disagree. Off (default) costs zero
+   * prompt bytes: the base "Article access" text is byte-identical to what it
+   * was before this flag existed.
+   */
+  webSearch?: boolean;
+  /**
+   * CLOUD mode — the SAME gate `getArticleFeedbackToolDefinitions` uses for the
+   * `proposeFactCheck` declaration, so the prose and the declaration can never
+   * disagree (the bug F4's webSearch flag exists to prevent).
+   *
+   * CLOUD-ONLY, and for two independent reasons. Substantively: the quick path
+   * runs a gateway web search and a cloud synthesis call, so offering it in
+   * on-device mode would advertise a capability that contradicts the mode the
+   * user chose. Budget: the claim-picker rules are ~1,200 tokens of MEASURED
+   * text, and the local path's whole input budget is ~3,072 — including them
+   * there would push system + context past it and start silently truncating the
+   * article-feedback surface that was already living inside it.
+   *
+   * Off (default) costs zero prompt bytes.
+   */
+  factCheck?: boolean;
 }): string {
-  const { needsToolFormat, languageName } = params;
+  const { needsToolFormat, languageName, webSearch = false, factCheck = false } = params;
 
   const languageRule = languageName
     ? `LANGUAGE: ALWAYS write conversational text in **${languageName}**, with no exceptions — even if the user writes in another language. Fact statements stay English.`
     : 'LANGUAGE: Match the user\'s language (switch if they switch). Fact statements stay English.';
 
-  const toolSection = needsToolFormat ? buildArticleFeedbackToolFormat() : '';
+  const toolSection = needsToolFormat ? buildArticleFeedbackToolFormat(factCheck) : '';
+
+  // Appended, never rewritten in place — the base two bullets stay exactly as
+  // they were (the "NEVER the full article text" limitation is still true; the
+  // model just isn't stuck with it as the end of the conversation any more).
+  // Off (default): zero bytes.
+  const webSearchLine = webSearch
+    ? '\n- **WEB SEARCH (the user switched it on).** Before telling the user you don\'t have something, ask: could a web search answer this? If yes — background on the story, other coverage, verification, "is this true", what happened before/after — call `webSearch` and answer from what you find, naming the publications you cite by name. Only the search words leave the device — never the article, the user\'s facts, or their feed. Don\'t use it to guess at the article\'s OWN content (title/description/publication) you were not given; use it for context outside that.'
+    : '';
 
   return `You are Mera, helping the user understand and shape their personalized news feed.
 
@@ -288,7 +341,7 @@ export function buildArticleFeedbackSystemPrompt(params: {
 
 ## Article access (by design)
 - You see ONLY limited metadata: title, publication, and a short description — NEVER the full article text.
-- Help with news questions as best you can from that, but when the user probes for detail beyond it, say plainly you don't have the full article and recommend reading it — the human-written article is the source of truth. AI summaries can distort information (bias, hallucination, lost nuance).
+- Help with news questions as best you can from that, but when the user probes for detail beyond it, say plainly you don't have the full article and recommend reading it — the human-written article is the source of truth. AI summaries can distort information (bias, hallucination, lost nuance).${webSearchLine}
 
 ## Capabilities — what proposeChanges can do
 Persona edits (reference facts by the [id] in <context>):
@@ -317,7 +370,9 @@ Rules:
 - If TRACK STATE says already following, do NOT propose — just tell them it's already being followed.
 Example — article "Russia strikes humanitarian sites in Ukraine": proposeTrack {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "russia ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "russia ukraine war"}, {"label": "European security crisis", "search": "europe russia security military tensions"}]}
 
-## Rules
+${factCheck ? `${buildFactCheckPromptSection()}
+
+` : ''}## Rules
 - NEVER change anything directly. ALWAYS stage changes via the proposeChanges tool — a ≤2-sentence explanation, a ≤2-sentence expected_effects, and a MINIMAL action list.
 - Pick the LEAST drastic action that fits: "less cricket" → set_topic_weight (small negative delta), not a mute. "Mute Times of India" → set_publication_pref mute. "Wrong Delhi — I meant Delhi Ohio" → add_negative_topic.
 - "Less of this / not for me" → ONE proposeChanges with choose_one:true offering 2–4 mutually-exclusive alternatives ordered least→most drastic (e.g. down-weight the topic → suppress a named ENTITY → retire the topic → suppress the CATEGORY). The user picks exactly one; typing free text (e.g. "mute the source") is always an option.
@@ -332,7 +387,7 @@ Example — article "Russia strikes humanitarian sites in Ukraine": proposeTrack
  * agent's buildToolFormatSection, but scoped to the 3 proposal tools with one
  * compact proposeChanges example).
  */
-function buildArticleFeedbackToolFormat(): string {
+function buildArticleFeedbackToolFormat(factCheck: boolean): string {
   return `
 
 ## Tools
@@ -342,7 +397,7 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 - proposeChanges: {"explanation": string, "expected_effects": string, "choose_one"?: boolean, "actions": [{"type": string, "statement"?, "fact_id"?, "new_statement"?, "topics"?: string[], "title"?, "summary"?, "topicText"?, "delta"?: number, "weight"?: number, "publicationId"?, "publicationPref"?: "boost"|"deprioritize"|"mute", "suppressionPattern"?, "suppressionKeywords"?: string[], "suppressionStrength"?: number, "suppressionKind"?: ${SUPPRESSION_KINDS.join('|')}, "suppressionValue"?, "suppressionId"?, "highPriority"?: boolean}]}
   suppressionValue: copy VERBATIM from <context>, or omit it together with suppressionKind. suppressionId: an [id] from YOUR FILTERS.
 - proposeTrack: {"options": [{"label": string, "search": string}]}
-- applyProposal: {}
+${factCheck ? `${PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE}\n` : ''}- applyProposal: {}
 - cancelProposal: {}
 
 ## Example (format only)
@@ -361,7 +416,8 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
  * assembled context exceeds CONTEXT_TOKEN_BUDGET.
  */
 export function buildFeedbackContext(input: FeedbackContextInput): string {
-  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions } = input;
+  const { facts, context: ctx, fallbackTitle, proposal, isTracked, relatedCoverage, verdict, tappedOptions, nowMs, articlePubDate, activeSuppressions, factCheck } = input;
+  const descTrunc = factCheck ? ARTICLE_DESC_TRUNC_FACT_CHECK : ARTICLE_DESC_TRUNC;
 
   // Injected clock (never read here) — anchors the agent to the present so
   // proposeTrack scopes can't name a season/year that is already over.
@@ -376,7 +432,7 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     const lines = [`Title: ${trunc(title, 160)}`];
     if (publishedDay) lines.push(`Published: ${publishedDay}`);
     if (s.publication_name) lines.push(`Publication: ${trunc(s.publication_name, 80)}`);
-    if (s.description_en) lines.push(`Description: ${trunc(s.description_en, ARTICLE_DESC_TRUNC)}`);
+    if (s.description_en) lines.push(`Description: ${trunc(s.description_en, descTrunc)}`);
     // Category + entities feed the "less of this" choose-one alternatives (one
     // line each; capped so the block stays compact).
     if (ctx.category) lines.push(`Category: ${trunc(ctx.category, 60)}`);
@@ -518,7 +574,41 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
 // Tool definitions (OpenAI JSON Schema for cloud chat)
 // ---------------------------------------------------------------------------
 
-export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
+/**
+ * `webSearch` — OPTIONAL, off by default, mirroring
+ * `persona-agent-core.ts`'s `WEB_SEARCH_TOOL` exactly (same tool name, same
+ * "only the search words" privacy line, same gate). Declared only when the
+ * user's "Web search in chat" toggle is on — the gate is on the DECLARATION,
+ * not merely the handler, so an off-by-default feature does not sit in the
+ * prompt paying tokens on every turn while the user has it switched off. The
+ * handler (`lib/chat-tools/web-search-handler.ts`) re-checks the toggle
+ * regardless, because a persisted conversation can replay a call made while it
+ * was on — both gates are load-bearing.
+ *
+ * CLOUD only: the LOCAL turn is one-shot (`lib/llm/useLocalLLM.ts` never pushes
+ * a `role:'tool'` message back), so a search whose result the model can never
+ * read is strictly worse than no tool at all.
+ */
+const WEB_SEARCH_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'webSearch',
+    description:
+      'Search the public web when the user asks something the article metadata (title/publication/description) cannot answer and you would otherwise be guessing. The user has explicitly enabled this. Only the search words are sent — never the article, the user\'s facts, or their feed.',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search terms, 2-200 characters.' },
+      },
+      required: ['query'],
+    },
+  },
+};
+
+export function getArticleFeedbackToolDefinitions(
+  mode: 'CLOUD' | 'LOCAL' = 'CLOUD',
+  webSearchEnabled: boolean = false,
+): ToolDefinition[] {
   return [
     {
       type: 'function',
@@ -637,6 +727,14 @@ export function getArticleFeedbackToolDefinitions(): ToolDefinition[] {
         parameters: { type: 'object', properties: {} },
       },
     },
+    // CLOUD ONLY, and the gate is on the DECLARATION as well as the prose — see
+    // buildArticleFeedbackSystemPrompt's `factCheck` param for both reasons
+    // (a cloud-dependent feature, and ~1,200 tokens the local budget has no room
+    // for). Not for the reason `webSearch` is cloud-only, though: this tool needs
+    // no result read back — its whole effect is `sideEffects.proposal`, which a
+    // one-shot LOCAL turn would stage perfectly well.
+    ...(mode === 'CLOUD' ? [PROPOSE_FACT_CHECK_TOOL] : []),
+    ...(mode === 'CLOUD' && webSearchEnabled ? [WEB_SEARCH_TOOL] : []),
   ];
 }
 
@@ -686,6 +784,14 @@ function describeAction(a: ProposalAction): string {
       return `retire topic "${trunc(a.topicText, 60)}"`;
     case 'track_story':
       return `follow "${trunc(a.label, 80)}"`;
+    // Staged only by the FACT-CHECK surface, but this switch is the shared
+    // renderer that writes a PENDING proposal back into <context>, so the case
+    // has to live here for the same reason set_source_scope_pref does. It names
+    // the CLAIM, not the pill label: the label is an abbreviation ("80 vaccines
+    // by age 18") and a model re-reading its own pending card off a label alone
+    // can re-propose or contradict the claim it actually staged.
+    case 'fact_check_claim':
+      return `fact-check "${trunc(a.claim, 60)}"`;
   }
 }
 

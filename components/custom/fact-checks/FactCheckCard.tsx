@@ -3,20 +3,18 @@ import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import type { FactCheckedByEntry } from '@/lib/fact-check/fact-check-service';
+import FactCheckSources from '@/components/custom/fact-checks/FactCheckSources';
+import type { CheckedByStatus, FactCheckedByEntry, FactCheckCitation } from '@/lib/fact-check/fact-check-types';
 import {
     describeCheckedBy,
-    describeOrganisationVerdict,
     describeVerdict,
+    describeVerdictPresentation,
     isTerminalStatus,
     type FactCheckTone,
 } from '@/lib/fact-check/fact-check-state';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
-import logger from '@/lib/logger';
-import { isSecureUrl } from '@/lib/secure-url';
-import { openInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
@@ -30,7 +28,11 @@ const TONE_CLASSES: Record<FactCheckTone, { chip: string; text: string }> = {
 
 interface FactCheckCardProps {
     readonly item: StoredFactCheck;
-    /** Rendered top-right. The list screen passes a delete control. */
+    /** Tapping the card body. Omit to render a non-interactive card (the
+     *  article-detail "no longer available" state passes nothing — the reader
+     *  is already as far in as the story goes). */
+    readonly onPress?: (item: StoredFactCheck) => void;
+    /** Rendered top-right, over the body. The list passes a delete control. */
     readonly onDelete?: (id: string) => void;
     readonly testIDPrefix?: string;
 }
@@ -49,38 +51,63 @@ interface FactCheckCardProps {
  * than being hidden — the user asked for it, and a request that vanishes from
  * every surface until it completes is indistinguishable from one that was
  * dropped.
+ *
+ * PIVOT P8h — same rule as `FactCheckPanel`: once `checkedBy` is populated,
+ * an organisation's own rating leads and our verdict chip is demoted
+ * ('secondary', plain text under a relabelled heading) or suppressed
+ * outright when it is `'unverifiable'` (see `describeVerdictPresentation`) —
+ * "Couldn't confirm" next to a named organisation's own rating is not a
+ * hedge, it is wrong.
  */
 const FactCheckCard: React.FC<FactCheckCardProps> = ({
     item,
+    onPress,
     onDelete,
     testIDPrefix = 'fact-check-card',
 }) => {
     const { t } = useTranslation();
 
-    const openSource = useCallback((uri: string) => {
-        if (!isSecureUrl(uri)) return;
-        openInAppBrowser(uri).catch((err) => {
-            logger.captureException(err, {
-                tags: { component: 'FactCheckCard', method: 'openSource' },
-            });
-        });
-    }, []);
-
     const resolved = isTerminalStatus(item.status);
     const blocked = item.status === 'blocked';
-    const checkedBy: FactCheckedByEntry[] = describeCheckedBy(
-        (item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy,
-    );
     const verdictInfo = resolved && !blocked ? describeVerdict(item.verdict) : null;
+    const checkedBy = (item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy;
+    const checkedByStatus = (item.payload as { checkedByStatus?: CheckedByStatus } | null)?.checkedByStatus;
+    const citations = (item.payload as { citations?: FactCheckCitation[] } | null)?.citations;
+    const organisationCount = describeCheckedBy(checkedBy).length;
+    const hasCheckedBy = organisationCount > 0;
+    const presentation = describeVerdictPresentation(item.verdict, organisationCount);
+    const sources = resolved && !blocked ? (
+        <FactCheckSources
+            checkedBy={checkedBy}
+            checkedByStatus={checkedByStatus}
+            citations={citations}
+            testIDPrefix={testIDPrefix}
+        />
+    ) : null;
 
     return (
-        <VStack
-            space="sm"
-            testID={`${testIDPrefix}-${item.id}`}
-            className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
-        >
-            <HStack className="items-start justify-between" space="sm">
-                <HStack space="xs" className="items-start flex-1">
+        // The delete control is a SIBLING of the tappable body, absolutely
+        // positioned over its top-right corner — not a child of it.
+        //
+        // Nesting it inside the card's Pressable is the classic bug in this
+        // pattern: RN's responder system usually lets the inner Pressable win,
+        // but "usually" is doing real work there, and the failure mode (delete
+        // ALSO navigates, so the row vanishes as a detail screen opens over it)
+        // is both destructive and confusing. Sibling + absolute makes it
+        // structural rather than a behaviour to hope for. The title row carries
+        // `pr-8` so a long headline can never run under the icon, and hitSlop
+        // keeps the target at ~44pt on a narrow screen.
+        <Box testID={`${testIDPrefix}-${item.id}`} className="relative">
+            <Pressable
+                onPress={onPress ? () => onPress(item) : undefined}
+                disabled={!onPress}
+                accessibilityRole={onPress ? 'button' : undefined}
+                accessibilityLabel={onPress ? t('factCheck.dashboard.openA11y') : undefined}
+                testID={`${testIDPrefix}-open-${item.id}`}
+                className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
+            >
+                <VStack space="sm">
+            <HStack space="xs" className="items-start pr-8">
                     <MaterialIcons
                         name="fact-check"
                         size={16}
@@ -90,19 +117,17 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                     <Text size="sm" className="text-gray-100 font-semibold flex-1 ml-1" numberOfLines={3}>
                         {item.articleTitle?.trim() || t('factCheck.dashboard.untitled')}
                     </Text>
-                </HStack>
-                {onDelete ? (
-                    <Pressable
-                        onPress={() => onDelete(item.id)}
-                        accessibilityRole="button"
-                        accessibilityLabel={t('factCheck.dashboard.deleteA11y')}
-                        testID={`${testIDPrefix}-delete-${item.id}`}
-                        hitSlop={12}
-                    >
-                        <MaterialIcons name="delete-outline" size={20} color="#9ca3af" />
-                    </Pressable>
-                ) : null}
             </HStack>
+
+            {/* The claim this ROW is about. An article can carry several rows
+                post-v52 (one per claim the user picked) — without this line
+                two rows for the same headline are indistinguishable except by
+                their verdict. Absent on a legacy (pre-v52) whole-article row. */}
+            {item.claim ? (
+                <Text size="xs" className="text-gray-400 italic" numberOfLines={2}>
+                    {item.claim}
+                </Text>
+            ) : null}
 
             {!resolved && (
                 <Text size="xs" className="text-gray-400" testID={`${testIDPrefix}-pending`}>
@@ -114,86 +139,62 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 <Text size="xs" className="text-gray-400">{t('factCheck.blocked')}</Text>
             )}
 
-            {verdictInfo && (
-                <Box
-                    testID={`${testIDPrefix}-verdict-${item.id}`}
-                    className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
-                >
-                    <Text size="xs" className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}>
-                        {t(verdictInfo.labelKey as any)}
-                    </Text>
-                </Box>
-            )}
+            {/* checkedBy LEADS when populated — see the file header (PIVOT
+                P8h). Above the verdict rather than below it, so an
+                organisation's own rating is read first. */}
+            {hasCheckedBy && sources}
 
-            {resolved && !blocked && (
-                <VStack space="xs">
-                    <Text size="xs" className="text-gray-400 font-semibold uppercase">
-                        {t('factCheck.checkedByHeading')}
-                    </Text>
-                    {checkedBy.length === 0 ? (
-                        <Text size="xs" className="text-gray-400">
-                            {t('factCheck.noCheckedBy')}
+            {verdictInfo && presentation !== 'suppressed' && (
+                <VStack space="xs" testID={hasCheckedBy ? `${testIDPrefix}-own-reading-${item.id}` : undefined}>
+                    {hasCheckedBy && (
+                        <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                            {t('factCheck.ownReadingHeading')}
                         </Text>
+                    )}
+                    {presentation === 'lead' ? (
+                        <Box
+                            testID={`${testIDPrefix}-verdict-${item.id}`}
+                            className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
+                        >
+                            <Text size="xs" className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}>
+                                {t(verdictInfo.labelKey as any)}
+                            </Text>
+                        </Box>
                     ) : (
-                        checkedBy.map((entry, index) => {
-                            const org = entry.organisation.trim();
-                            // Verbatim when unrecognised — see
-                            // describeOrganisationVerdict. Real ratings are
-                            // "Mostly False" / "Misleading", not our vocabulary.
-                            const info = describeOrganisationVerdict(entry.verdict);
-                            const tappable = isSecureUrl(entry.url ?? '');
-                            const body = (
-                                <VStack space="xs">
-                                    <Text
-                                        size="sm"
-                                        className={tappable
-                                            ? 'text-primary-400 underline font-semibold'
-                                            : 'text-gray-200 font-semibold'}
-                                    >
-                                        {org}
-                                    </Text>
-                                    <Text
-                                        size="xs"
-                                        className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
-                                    >
-                                        {info.isKey ? t(info.label as any) : info.label}
-                                    </Text>
-                                    {entry.summary ? (
-                                        <Text size="xs" className="text-gray-400" numberOfLines={3}>
-                                            {entry.summary}
-                                        </Text>
-                                    ) : null}
-                                </VStack>
-                            );
-                            return tappable ? (
-                                <Pressable
-                                    key={`org-${index}`}
-                                    onPress={() => openSource(entry.url as string)}
-                                    accessibilityRole="link"
-                                    accessibilityLabel={t('factCheck.organisationA11y', { organisation: org })}
-                                    testID={`${testIDPrefix}-org-${index}`}
-                                    className="border-l-2 border-gray-700 pl-2 py-1"
-                                >
-                                    {body}
-                                </Pressable>
-                            ) : (
-                                <Box
-                                    key={`org-${index}`}
-                                    testID={`${testIDPrefix}-org-${index}`}
-                                    className="border-l-2 border-gray-700 pl-2 py-1"
-                                >
-                                    {body}
-                                </Box>
-                            );
-                        })
+                        // 'secondary' — no chip background, see FactCheckPanel
+                        // for the same call.
+                        <Text
+                            size="xs"
+                            testID={`${testIDPrefix}-verdict-secondary-${item.id}`}
+                            className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}
+                        >
+                            {t(verdictInfo.labelKey as any)}
+                        </Text>
                     )}
                 </VStack>
             )}
 
-            <Text size="xs" className="text-gray-500">
-                {t('factCheck.disclaimer')}
-            </Text>
-        </VStack>
+            {!hasCheckedBy && sources}
+
+                    <Text size="xs" className="text-gray-500">
+                        {t('factCheck.disclaimer')}
+                    </Text>
+                </VStack>
+            </Pressable>
+
+            {onDelete ? (
+                <Pressable
+                    onPress={() => onDelete(item.id)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('factCheck.dashboard.deleteA11y')}
+                    testID={`${testIDPrefix}-delete-${item.id}`}
+                    hitSlop={12}
+                    className="absolute top-2 right-2 p-1"
+                >
+                    <MaterialIcons name="delete-outline" size={20} color="#9ca3af" />
+                </Pressable>
+            ) : null}
+        </Box>
     );
 };
 

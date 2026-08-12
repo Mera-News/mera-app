@@ -95,6 +95,74 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     expect(estimateTokens(prompt)).toBeLessThan(ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING);
   });
 
+  // pivot P8c — THE REASON THE CLAIM PICKER IS CLOUD-ONLY, pinned so it stays
+  // that way. Its rules are ~1,200 MEASURED tokens (85% separability; not
+  // shortenable without re-running the replay), and the local path's whole input
+  // budget is ~3,072. Splicing them into the LOCAL prompt took system + a
+  // saturated context from 2,740 to 4,145 — i.e. straight through the budget the
+  // test below exists to defend, silently truncating a surface that was already
+  // living inside it.
+  it('adds the claim-picker section on CLOUD only, and not one byte on LOCAL', () => {
+    const local = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+    const cloudOff = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English' });
+    const cloudOn = buildArticleFeedbackSystemPrompt({
+      needsToolFormat: false,
+      languageName: 'English',
+      factCheck: true,
+    });
+
+    expect(local).not.toContain('proposeFactCheck');
+    expect(cloudOff).not.toContain('proposeFactCheck');
+    expect(cloudOn).toContain('proposeFactCheck');
+    // The cloud path enforces no hard input budget (see
+    // CLOUD_HISTORY_BUDGET_TOKENS' note), but latency and cost are real: this is
+    // the policy ceiling for the biggest prompt this surface can build.
+    expect(estimateTokens(cloudOn)).toBeLessThan(3200);
+  });
+
+  // The LOCAL flag must not be able to smuggle the section in through the XML
+  // tool-format block, which is the one part of the prompt only that path sees.
+  // The 85%-separability measurement was established against a ~900-char
+  // summary. Moving the prompt text verbatim while the context still truncated
+  // the description at 160 would carry the words and not the result — every rule
+  // that measurement bought is a rule about what the model READS.
+  it('widens the article description for the claim picker, and only for it', () => {
+    const long = `${'A'.repeat(880)} END`;
+    const ctx = { ...scoredContext() };
+    ctx.suggestion = { ...ctx.suggestion, description_en: long };
+
+    const withFactCheck = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: ctx,
+      proposal: null,
+      factCheck: true,
+    });
+    const without = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: ctx,
+      proposal: null,
+    });
+
+    expect(withFactCheck).toContain('END');
+    // The LOCAL path is byte-identical to what it renders today: ~185 extra
+    // tokens against a ~3,072 budget is exactly the trade the cloud/local split
+    // exists to avoid.
+    expect(without).not.toContain('END');
+    expect(without.length).toBeLessThan(withFactCheck.length);
+  });
+
+  it('never lists proposeFactCheck in the local XML tool format', () => {
+    const localWithFlag = buildArticleFeedbackSystemPrompt({
+      needsToolFormat: true,
+      languageName: 'English',
+      factCheck: false,
+    });
+    expect(localWithFlag).toContain('- proposeTrack:');
+    expect(localWithFlag).not.toContain('- proposeFactCheck:');
+  });
+
   // not-interested P4a — new: the YOUR FILTERS block is the only unbounded
   // addition to this surface's context, so pin system + a saturated context
   // (full article, 12 long facts, filters at MAX_ACTIVE_FILTERS) against the
@@ -147,6 +215,37 @@ describe('buildArticleFeedbackSystemPrompt', () => {
   it('falls back to a match-the-user language rule when no language given', () => {
     const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false });
     expect(prompt).toContain("Match the user's language");
+  });
+
+  // pivot P6 (F4): the old text taught the model to refuse the moment a
+  // question went past the metadata ("say plainly you don't have the full
+  // article ... recommend reading it") with no mention it could search. That
+  // refusal is the bug the user reported ("it says I don't have visibility
+  // into the article") even WITH the toggle on, because the tool was never
+  // declared on this surface at all (see the webSearch gate tests above) — and
+  // even once declared, an unchanged prompt would still teach refusal first.
+  describe('webSearch prose gate', () => {
+    it('is byte-identical to the pre-existing text when webSearch is omitted (default false)', () => {
+      const withParam = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English', webSearch: false });
+      const withoutParam = buildArticleFeedbackSystemPrompt({ needsToolFormat: true, languageName: 'English' });
+      expect(withParam).toBe(withoutParam);
+      expect(withoutParam).not.toContain('WEB SEARCH');
+      expect(withoutParam).not.toContain('webSearch');
+    });
+
+    it('still carries the honest metadata-only disclosure when webSearch is on', () => {
+      const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true });
+      expect(prompt).toContain('NEVER the full article text');
+    });
+
+    it('teaches searching instead of refusing when webSearch is on', () => {
+      const off = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: false });
+      const on = buildArticleFeedbackSystemPrompt({ needsToolFormat: false, languageName: 'English', webSearch: true });
+      expect(off).not.toContain('WEB SEARCH');
+      expect(on).toContain('WEB SEARCH');
+      expect(on).toContain('webSearch');
+      expect(on).toContain('naming the publications');
+    });
   });
 });
 
@@ -501,9 +600,25 @@ describe('buildFeedbackContext', () => {
 });
 
 describe('getArticleFeedbackToolDefinitions', () => {
+  // pivot P8c — `proposeFactCheck` joined this surface (the Quick fact check
+  // chip and the article tick both send into THIS thread), CLOUD-only: it costs
+  // ~1,200 tokens of measured prompt text that the local path's ~3,072-token
+  // input budget has no room for, and the check it proposes needs the cloud
+  // anyway. The LOCAL list is therefore the four it always was.
   it('exposes the proposal + follow tools in order', () => {
-    const names = getArticleFeedbackToolDefinitions().map((t) => t.function.name);
-    expect(names).toEqual(['proposeChanges', 'proposeTrack', 'applyProposal', 'cancelProposal']);
+    expect(getArticleFeedbackToolDefinitions('LOCAL').map((t) => t.function.name)).toEqual([
+      'proposeChanges',
+      'proposeTrack',
+      'applyProposal',
+      'cancelProposal',
+    ]);
+    expect(getArticleFeedbackToolDefinitions().map((t) => t.function.name)).toEqual([
+      'proposeChanges',
+      'proposeTrack',
+      'applyProposal',
+      'cancelProposal',
+      'proposeFactCheck',
+    ]);
   });
 
   it('declares the proposeChanges required params and action enum', () => {
@@ -555,6 +670,46 @@ describe('getArticleFeedbackToolDefinitions', () => {
     expect((propose.function.parameters.properties.choose_one as { type: string }).type).toBe('boolean');
     expect(track.function.parameters.properties.options).toBeDefined();
     expect((track.function.parameters.properties.options as { type: string }).type).toBe('array');
+  });
+
+  // pivot P6 (F4): the article surface previously never declared `webSearch`
+  // at all, so the "Web search in chat" toggle was inert here regardless of
+  // its value. These pin BOTH directions of the gate — the toggle must be
+  // observable, not merely claimed.
+  describe('webSearch gate', () => {
+    it('omits webSearch by default (no args — matches every pre-existing call site)', () => {
+      const names = getArticleFeedbackToolDefinitions().map((t) => t.function.name);
+      expect(names).not.toContain('webSearch');
+    });
+
+    it('omits webSearch in CLOUD when the toggle is off', () => {
+      const names = getArticleFeedbackToolDefinitions('CLOUD', false).map((t) => t.function.name);
+      expect(names).not.toContain('webSearch');
+    });
+
+    it('declares webSearch in CLOUD when the toggle is on', () => {
+      const names = getArticleFeedbackToolDefinitions('CLOUD', true).map((t) => t.function.name);
+      expect(names).toContain('webSearch');
+      const tool = getArticleFeedbackToolDefinitions('CLOUD', true).find((t) => t.function.name === 'webSearch')!;
+      expect(tool.function.parameters.properties.query).toBeDefined();
+    });
+
+    it('never declares webSearch in LOCAL, even with the toggle on — the one-shot path cannot read a tool result', () => {
+      const names = getArticleFeedbackToolDefinitions('LOCAL', true).map((t) => t.function.name);
+      expect(names).not.toContain('webSearch');
+    });
+
+    it('leaves the other tools and their order untouched when webSearch is appended', () => {
+      const names = getArticleFeedbackToolDefinitions('CLOUD', true).map((t) => t.function.name);
+      expect(names).toEqual([
+        'proposeChanges',
+        'proposeTrack',
+        'applyProposal',
+        'cancelProposal',
+        'proposeFactCheck',
+        'webSearch',
+      ]);
+    });
   });
 });
 

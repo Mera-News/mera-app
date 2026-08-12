@@ -1,7 +1,9 @@
 // use-feed-counts — the shared "N published / M analysed / K relevant" counters
-// for the last 48h, extracted from ForYouScreen so both the Dashboard header
-// (FeedStatusShimmer/Sheet) and the new Feed tab's stats sentence read ONE
-// source of truth.
+// for the last 48h, extracted from ForYouScreen so every surface that quotes
+// them reads ONE source of truth: the Dashboard's stats sentence and status
+// sheet, and the status detail panel on both tabs. (The Feed tab's own stats
+// sentence was removed — the Feed does not show counts any more; its only
+// route to these numbers is opening the status panel.)
 //
 // `articleCount` (total published this cycle) comes from the for-you store
 // (written by the FeedSyncMachine). `analysedCount`/`relevantCount` are derived

@@ -1,10 +1,12 @@
-// FactCheckPanel — the render half of item 14. Three properties are pinned
-// here because nothing else enforces them:
-//   • a result that arrives before the progress delay NEVER shows a spinner
-//     (the cross-user cache hit — tap straight to verdict);
-//   • the hedging disclaimer and the citation list render with EVERY verdict,
-//     including 'supported';
-//   • an insecure citation is shown but never opened (item 16).
+// FactCheckPanel — a PURE OBSERVER post-pivot. No action button, no retry, no
+// hide: the tick (`openFactCheckChat`) is the only way in, and this component
+// only ever renders what `useFactCheck` reads back off the device (plus its
+// server poll). Properties pinned here because nothing else enforces them:
+//   • absent renders nothing at all;
+//   • a processing row below the progress delay renders nothing (no flash);
+//   • the hedging disclaimer and the citation list render with EVERY verdict;
+//   • an insecure citation is shown but never opened;
+//   • several terminal rows STACK — one card per claim.
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 jest.mock('react-i18next', () => ({
@@ -16,16 +18,7 @@ jest.mock('react-i18next', () => ({
 
 const mockUseFactCheck = jest.fn();
 jest.mock('@/lib/fact-check/use-fact-check', () => ({
-    useFactCheck: (...args: unknown[]) => mockUseFactCheck(...args),
-}));
-
-// The panel is gated on the protocol store's `factCheckEnabled` (BETA,
-// off by default). Mocked at module level so the real store — and its
-// WatermelonDB import chain — never loads in this render-only suite, and so
-// every existing case below can opt back in with a single `mockReturnValue`.
-const mockUseFactCheckEnabled = jest.fn(() => true);
-jest.mock('@/lib/stores/mera-protocol-store', () => ({
-    useFactCheckEnabled: () => mockUseFactCheckEnabled(),
+    useFactCheck: (...a: unknown[]) => mockUseFactCheck(...a),
 }));
 
 const mockOpenInAppBrowser = jest.fn((..._args: unknown[]) => Promise.resolve());
@@ -71,274 +64,440 @@ import { fireEvent, render } from '@testing-library/react-native';
 import React from 'react';
 import FactCheckPanel from '../FactCheckPanel';
 
-const start = jest.fn();
-const refresh = jest.fn();
-const dismiss = jest.fn();
-
 function hookState(overrides: Record<string, unknown> = {}) {
     mockUseFactCheck.mockReturnValue({
-        phase: 'idle',
-        result: null,
+        phase: 'absent',
         showProgress: false,
-        refreshing: false,
-        refreshFailed: false,
-        start,
-        refresh,
-        dismiss,
+        rows: [],
         ...overrides,
     });
 }
 
-const completeRow = (overrides: Record<string, unknown> = {}) => ({
-    _id: 'fc1',
+const renderPanel = () => render(<FactCheckPanel articleId="a1" />);
+
+const storedRow = (overrides: Record<string, unknown> = {}) => ({
+    id: 'row-0',
+    articleId: 'a1',
+    factCheckId: 'fc1',
+    articleTitle: 'A headline',
     status: 'complete',
     verdict: 'supported',
-    summary: 'Two other outlets report the same figures.',
-    claims: [],
-    citations: [{ title: 'Reuters report', uri: 'https://vertexaisearch.google/x', snippet: null }],
+    claim: 'The dam was completed in 2019.',
+    claimKey: 'k1',
+    requestedAt: 1,
+    resolvedAt: 2,
+    payload: {
+        _id: 'fc1',
+        status: 'complete',
+        verdict: 'supported',
+        summary: 'Two other outlets report the same figures.',
+        claims: [],
+        citations: [{ title: 'Reuters report', uri: 'https://vertexaisearch.google/x', snippet: null }],
+        checkedBy: [],
+    },
     ...overrides,
 });
 
 describe('FactCheckPanel', () => {
     beforeEach(() => jest.clearAllMocks());
 
-    it('renders the action button when idle and starts on tap', () => {
-        hookState();
-        const { getByTestId, queryByTestId } = render(<FactCheckPanel articleId="a1" />);
-        expect(queryByTestId('fact-check-panel')).toBeNull();
-        fireEvent.press(getByTestId('fact-check-action'));
-        expect(start).toHaveBeenCalledTimes(1);
+    it('renders nothing when absent', () => {
+        hookState({ phase: 'absent', rows: [] });
+        const { toJSON } = renderPanel();
+        expect(toJSON()).toBeNull();
     });
 
-    it('keeps the button (no spinner, no empty card) while the wait is imperceptible', () => {
-        hookState({ phase: 'working', showProgress: false });
-        const { getByTestId, queryByTestId } = render(<FactCheckPanel articleId="a1" />);
-        expect(getByTestId('fact-check-action')).toBeTruthy();
+    it('renders nothing while processing but below the progress delay — no flash', () => {
+        hookState({ phase: 'processing', showProgress: false, rows: [storedRow({ status: 'processing' })] });
+        const { toJSON, queryByTestId } = renderPanel();
+        expect(toJSON()).toBeNull();
         expect(queryByTestId('spinner')).toBeNull();
-        expect(queryByTestId('fact-check-panel')).toBeNull();
     });
 
-    it('shows the panel and a spinner once the wait is perceptible', () => {
-        hookState({ phase: 'working', showProgress: true });
-        const { getByTestId, getByText } = render(<FactCheckPanel articleId="a1" />);
+    it('shows the working state once the wait is perceptible', () => {
+        hookState({ phase: 'processing', showProgress: true, rows: [storedRow({ status: 'processing', payload: null })] });
+        const { getByTestId, getByText } = renderPanel();
         expect(getByTestId('fact-check-panel')).toBeTruthy();
+        expect(getByTestId('fact-check-working')).toBeTruthy();
         expect(getByTestId('spinner')).toBeTruthy();
         expect(getByText('factCheck.checking')).toBeTruthy();
+        expect(getByText('factCheck.queued')).toBeTruthy();
+        expect(getByText('factCheck.queuedHint')).toBeTruthy();
     });
 
-    it('goes straight from the button to the verdict for a cached result', () => {
-        hookState({ phase: 'ready', result: completeRow(), showProgress: false });
-        const { getByTestId, queryByTestId, getByText } = render(<FactCheckPanel articleId="a1" />);
-        expect(queryByTestId('fact-check-action')).toBeNull();
+    it('renders the terminal verdict for a cached result, no action button anywhere', () => {
+        hookState({ phase: 'terminal', rows: [storedRow()] });
+        const { getByTestId, queryByTestId, getByText } = renderPanel();
+        expect(getByTestId('fact-check-panel')).toBeTruthy();
         expect(queryByTestId('spinner')).toBeNull();
-        expect(getByTestId('fact-check-verdict')).toBeTruthy();
+        expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
         expect(getByText('factCheck.verdict.supported.label')).toBeTruthy();
+        // The retired full-width action button is gone for good — there is
+        // exactly one way in now, the action-row tick.
+        expect(queryByTestId('fact-check-action')).toBeNull();
     });
 
     it('always shows the hedging disclaimer and the citations — including for "supported"', () => {
-        hookState({ phase: 'ready', result: completeRow() });
-        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
+        hookState({ phase: 'terminal', rows: [storedRow()] });
+        const { getByText, getByTestId } = renderPanel();
         expect(getByText('factCheck.disclaimer')).toBeTruthy();
         expect(getByText('factCheck.citationsHeading')).toBeTruthy();
-        expect(getByTestId('fact-check-citation-0')).toBeTruthy();
+        expect(getByTestId('fact-check-0-citation-0')).toBeTruthy();
     });
 
     it('reads an unknown verdict as the hedged generic copy, never the raw token', () => {
-        hookState({ phase: 'ready', result: completeRow({ verdict: 'MOSTLY_TRUE' }) });
-        const { getByText, queryByText } = render(<FactCheckPanel articleId="a1" />);
+        hookState({ phase: 'terminal', rows: [storedRow({ verdict: 'MOSTLY_TRUE' })] });
+        const { getByText, queryByText } = renderPanel();
         expect(getByText('factCheck.verdict.unknown.label')).toBeTruthy();
         expect(queryByText('MOSTLY_TRUE')).toBeNull();
     });
 
     it('renders the per-claim breakdown', () => {
         hookState({
-            phase: 'ready',
-            result: completeRow({
-                claims: [{ claim: 'The dam was completed in 2019.', assessment: 'disputed', note: 'Two dates cited.' }],
-            }),
+            phase: 'terminal',
+            rows: [storedRow({
+                payload: {
+                    ...storedRow().payload,
+                    claims: [{ claim: 'The dam was completed in 2019.', assessment: 'disputed', note: 'Two dates cited.' }],
+                },
+            })],
         });
-        const { getByText } = render(<FactCheckPanel articleId="a1" />);
+        const { getByText } = renderPanel();
         expect(getByText('factCheck.claimsHeading')).toBeTruthy();
-        expect(getByText('The dam was completed in 2019.')).toBeTruthy();
         expect(getByText('factCheck.assessment.disputed')).toBeTruthy();
         expect(getByText('Two dates cited.')).toBeTruthy();
     });
 
     it('opens a citation in the in-app browser with no UTM referrer', () => {
-        hookState({ phase: 'ready', result: completeRow() });
-        const { getByTestId } = render(<FactCheckPanel articleId="a1" />);
-        fireEvent.press(getByTestId('fact-check-citation-0'));
+        hookState({ phase: 'terminal', rows: [storedRow()] });
+        const { getByTestId } = renderPanel();
+        fireEvent.press(getByTestId('fact-check-0-citation-0'));
         expect(mockOpenInAppBrowser).toHaveBeenCalledWith('https://vertexaisearch.google/x');
     });
 
-    it('shows an insecure citation but never opens it (item 16)', () => {
+    it('shows an insecure citation but never opens it', () => {
         hookState({
-            phase: 'ready',
-            result: completeRow({
-                citations: [{ title: 'Sketchy source', uri: 'http://plain.example.com/x', snippet: null }],
-            }),
+            phase: 'terminal',
+            rows: [storedRow({
+                payload: {
+                    ...storedRow().payload,
+                    citations: [{ title: 'Sketchy source', uri: 'http://plain.example.com/x', snippet: null }],
+                },
+            })],
         });
-        const { getByTestId, getByText } = render(<FactCheckPanel articleId="a1" />);
+        const { getByTestId, getByText } = renderPanel();
         expect(getByText('Sketchy source')).toBeTruthy();
-        fireEvent.press(getByTestId('fact-check-citation-0'));
+        fireEvent.press(getByTestId('fact-check-0-citation-0'));
         expect(mockOpenInAppBrowser).not.toHaveBeenCalled();
     });
 
-    // `checkedBy` is the answer the user actually asked for: WHO checked this,
-    // and what did each of them say. Every organisation is listed — not a
-    // best-one, not an aggregate — each with its own verdict and its own link.
     it('lists every organisation that fact-checked the story, with its own verdict and link', () => {
         hookState({
-            phase: 'ready',
-            result: completeRow({
-                checkedBy: [
-                    {
-                        organisation: 'Full Fact',
-                        url: 'https://fullfact.org/a',
-                        verdict: 'disputed',
-                        summary: 'The figure was misquoted.',
-                    },
-                    {
-                        organisation: 'AFP Fact Check',
-                        url: 'https://factcheck.afp.com/b',
-                        verdict: 'supported',
-                        summary: null,
-                    },
-                ],
-            }),
+            phase: 'terminal',
+            rows: [storedRow({
+                payload: {
+                    ...storedRow().payload,
+                    checkedBy: [
+                        { organisation: 'Full Fact', url: 'https://fullfact.org/a', verdict: 'disputed', summary: 'The figure was misquoted.' },
+                        { organisation: 'AFP Fact Check', url: 'https://factcheck.afp.com/b', verdict: 'supported', summary: null },
+                    ],
+                },
+            })],
         });
-        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
+        const { getByText, getByTestId } = renderPanel();
         expect(getByText('factCheck.checkedByHeading')).toBeTruthy();
         expect(getByText('Full Fact')).toBeTruthy();
         expect(getByText('AFP Fact Check')).toBeTruthy();
-        expect(getByText('factCheck.assessment.disputed')).toBeTruthy();
-        expect(getByText('factCheck.assessment.supported')).toBeTruthy();
-        expect(getByText('The figure was misquoted.')).toBeTruthy();
 
-        // Each row carries its OWN link, so the second organisation's tap must
-        // open the second organisation's URL.
-        fireEvent.press(getByTestId('fact-check-checked-by-1'));
+        // Each row carries its OWN link — testIDs renamed org-N (was checked-by-N).
+        fireEvent.press(getByTestId('fact-check-0-org-1'));
         expect(mockOpenInAppBrowser).toHaveBeenCalledWith('https://factcheck.afp.com/b');
     });
 
-    // The realistic case. A fact checker's published rating is its own editorial
-    // vocabulary; showing "Unclear" instead would erase the answer the reader
-    // opened this panel for.
     it('renders a real published rating verbatim, not as "Unclear"', () => {
         hookState({
-            phase: 'ready',
-            result: completeRow({
-                checkedBy: [
-                    {
-                        organisation: 'PolitiFact',
-                        url: 'https://politifact.com/x',
-                        verdict: 'Mostly False',
-                    },
-                ],
-            }),
+            phase: 'terminal',
+            rows: [storedRow({
+                payload: {
+                    ...storedRow().payload,
+                    checkedBy: [{ organisation: 'PolitiFact', url: 'https://politifact.com/x', verdict: 'Mostly False' }],
+                },
+            })],
         });
-        const { getByText, queryByText } = render(<FactCheckPanel articleId="a1" />);
+        const { getByText, queryByText } = renderPanel();
         expect(getByText('Mostly False')).toBeTruthy();
         expect(queryByText('factCheck.assessment.unknown')).toBeNull();
     });
 
-    it('names an organisation whose link is insecure, but never opens it', () => {
-        hookState({
-            phase: 'ready',
-            result: completeRow({
-                checkedBy: [{ organisation: 'Somebody', url: 'http://plain.example/x' }],
-            }),
-        });
-        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
-        expect(getByText('Somebody')).toBeTruthy();
-        fireEvent.press(getByTestId('fact-check-checked-by-0'));
-        expect(mockOpenInAppBrowser).not.toHaveBeenCalled();
-    });
-
-    // The pre-`checkedBy` server, and the ordinary "nobody fact-checked this"
-    // case, are the same render — and it must not read as a verdict.
     it('says so plainly when no organisation covered the story', () => {
-        hookState({ phase: 'ready', result: completeRow({ checkedBy: undefined }) });
-        const { getByText } = render(<FactCheckPanel articleId="a1" />);
+        hookState({
+            phase: 'terminal',
+            rows: [storedRow({ payload: { ...storedRow().payload, checkedBy: [] } })],
+        });
+        const { getByText } = renderPanel();
         expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
     });
 
+    // The regression the stopped agent introduced — restored: a complete check
+    // with zero citations must say so, not silently show a bare disclaimer.
     it('warns when a check came back with no sources at all', () => {
-        hookState({ phase: 'ready', result: completeRow({ citations: [] }) });
-        const { getByText } = render(<FactCheckPanel articleId="a1" />);
+        hookState({
+            phase: 'terminal',
+            rows: [storedRow({ payload: { ...storedRow().payload, citations: [] } })],
+        });
+        const { getByText } = renderPanel();
         expect(getByText('factCheck.noCitations')).toBeTruthy();
     });
 
+    // ── F2's honest "searched and found nothing to synthesise from" outcome ──
+    // The runner legitimately writes exactly this: status complete, verdict
+    // unverifiable, and every array empty, when the ClaimReview lookup and the
+    // web search both ran but turned up nothing usable — no model is even
+    // called. This must render as a real, hedged answer, never a blank or
+    // near-blank card.
+    it('renders a real answer — not a blank card — for complete/unverifiable with every array empty', () => {
+        hookState({
+            phase: 'terminal',
+            rows: [storedRow({
+                verdict: 'unverifiable',
+                payload: {
+                    _id: 'fc1',
+                    status: 'complete',
+                    verdict: 'unverifiable',
+                    summary: null,
+                    claims: [],
+                    citations: [],
+                    checkedBy: [],
+                    checkedByStatus: 'searched',
+                },
+            })],
+        });
+        const { getByTestId, getByText } = renderPanel();
+        expect(getByTestId('fact-check-panel')).toBeTruthy();
+        expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
+        expect(getByText('factCheck.verdict.unverifiable.label')).toBeTruthy();
+        expect(getByText('factCheck.verdict.unverifiable.detail')).toBeTruthy();
+        expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
+        expect(getByText('factCheck.noCitations')).toBeTruthy();
+        expect(getByText('factCheck.disclaimer')).toBeTruthy();
+    });
+
+    // ── The checkedBy tri-state (F2) ─────────────────────────────────────────
+    // An empty `checkedBy[]` has two unrelated causes and the copy must not
+    // conflate them: `searched` is a real "nobody has published" answer,
+    // `unavailable` means the lookup never happened and we know nothing.
+    it('says "nobody has published" only when the lookup actually ran (searched + empty)', () => {
+        hookState({
+            phase: 'terminal',
+            rows: [storedRow({
+                payload: { ...storedRow().payload, checkedBy: [], checkedByStatus: 'searched' },
+            })],
+        });
+        const { getByText, queryByText } = renderPanel();
+        expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
+        expect(queryByText('factCheck.checkedByUnavailable')).toBeNull();
+    });
+
+    it('treats an undefined checkedByStatus (a pre-tri-state stored row) as searched', () => {
+        const payload = { ...storedRow().payload, checkedBy: [] } as Record<string, unknown>;
+        delete payload.checkedByStatus;
+        hookState({ phase: 'terminal', rows: [storedRow({ payload })] });
+        const { getByText, queryByText } = renderPanel();
+        expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
+        expect(queryByText('factCheck.checkedByUnavailable')).toBeNull();
+    });
+
+    it('NEVER claims nobody published when the lookup was unavailable — the fabricated-all-clear this feature exists to prevent', () => {
+        hookState({
+            phase: 'terminal',
+            rows: [storedRow({
+                payload: { ...storedRow().payload, checkedBy: [], checkedByStatus: 'unavailable' },
+            })],
+        });
+        const { getByText, queryByText, getByTestId } = renderPanel();
+        expect(getByTestId('fact-check-0-checked-by-unavailable')).toBeTruthy();
+        expect(getByText('factCheck.checkedByUnavailable')).toBeTruthy();
+        expect(queryByText('factCheck.noCheckedBy')).toBeNull();
+        // The narrative verdict and its sources still render — an unavailable
+        // Tier 1 lookup must not suppress the Tier 2 answer we DO have.
+        expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
+        expect(getByTestId('fact-check-0-citation-0')).toBeTruthy();
+    });
+
+    it('shows real organisations when checkedBy is populated, regardless of checkedByStatus', () => {
+        hookState({
+            phase: 'terminal',
+            rows: [storedRow({
+                payload: {
+                    ...storedRow().payload,
+                    checkedByStatus: 'unavailable',
+                    checkedBy: [{ organisation: 'Full Fact', url: 'https://fullfact.org/a', verdict: 'disputed' }],
+                },
+            })],
+        });
+        const { getByText, queryByText } = renderPanel();
+        expect(getByText('Full Fact')).toBeTruthy();
+        expect(queryByText('factCheck.checkedByUnavailable')).toBeNull();
+        expect(queryByText('factCheck.noCheckedBy')).toBeNull();
+    });
+
+    // ── PIVOT P8h — checkedBy leads, our own verdict never contradicts it ───
+    // A real screenshot caught a green "Consistent with sources" chip sitting
+    // above "No fact-checking organisation we searched has published on this
+    // story". The server now clamps that at write time, but the SAME
+    // contradiction can still arrive one hop later: `verdict: 'unverifiable'`
+    // WITH a populated `checkedBy` (the re-check path — see
+    // `describeVerdictPresentation`'s own comment). These tests cover the
+    // render layer's half of that fix.
+    describe('when checkedBy is populated', () => {
+        const withOrg = (verdict: string, extra: Record<string, unknown> = {}) => storedRow({
+            verdict,
+            payload: {
+                ...storedRow().payload,
+                verdict,
+                checkedBy: [{ organisation: 'Alt News', url: 'https://altnews.in/x', verdict: 'False' }],
+                ...extra,
+            },
+        });
+
+        // ── THE MUST-FAIL TEST ───────────────────────────────────────────────
+        // Sabotaged (see report), this must go RED if 'unverifiable' next to a
+        // named organisation is ever allowed to render as though nothing is
+        // known — i.e. if the suppression below is removed or bypassed.
+        it('NEVER shows "unverifiable" alongside a named organisation — the chip is suppressed, not just relabelled', () => {
+            hookState({ phase: 'terminal', rows: [withOrg('unverifiable')] });
+            const { queryByTestId, queryByText, getByText } = renderPanel();
+
+            // The organisation's own ruling is present and is the answer.
+            expect(getByText('Alt News')).toBeTruthy();
+            expect(getByText('False')).toBeTruthy();
+
+            // Our own verdict — in EITHER its leading OR its demoted form —
+            // must not appear at all once it is 'unverifiable' here.
+            expect(queryByTestId('fact-check-0-verdict')).toBeNull();
+            expect(queryByTestId('fact-check-0-verdict-secondary')).toBeNull();
+            expect(queryByText('factCheck.verdict.unverifiable.label')).toBeNull();
+            expect(queryByText('factCheck.verdict.unverifiable.detail')).toBeNull();
+        });
+
+        it('leads with the organisation, not our own chip, for a non-unverifiable verdict too — demoted, never equal weight', () => {
+            hookState({ phase: 'terminal', rows: [withOrg('supported')] });
+            const { getByTestId, queryByTestId, getByText } = renderPanel();
+
+            // The demoted form exists (informational), the leading (chip)
+            // form does not — a coloured pill next to a named ruling is the
+            // contradiction this demotion removes.
+            expect(queryByTestId('fact-check-0-verdict')).toBeNull();
+            expect(getByTestId('fact-check-0-verdict-secondary')).toBeTruthy();
+            expect(getByText('factCheck.ownReadingHeading')).toBeTruthy();
+            expect(getByText('Alt News')).toBeTruthy();
+        });
+
+        it('renders the organisation list BEFORE our own reading in document order', () => {
+            hookState({ phase: 'terminal', rows: [withOrg('supported')] });
+            const { toJSON } = renderPanel();
+            const tree = JSON.stringify(toJSON());
+            const orgIndex = tree.indexOf('Alt News');
+            const ownReadingIndex = tree.indexOf('factCheck.ownReadingHeading');
+            expect(orgIndex).toBeGreaterThan(-1);
+            expect(ownReadingIndex).toBeGreaterThan(-1);
+            expect(orgIndex).toBeLessThan(ownReadingIndex);
+        });
+
+        it('still shows the leading chip (unchanged) when checkedBy is empty, even for the same unverifiable verdict', () => {
+            hookState({
+                phase: 'terminal',
+                rows: [storedRow({
+                    verdict: 'unverifiable',
+                    payload: { ...storedRow().payload, verdict: 'unverifiable', checkedBy: [] },
+                })],
+            });
+            const { getByTestId, queryByTestId } = renderPanel();
+            expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
+            expect(queryByTestId('fact-check-0-own-reading')).toBeNull();
+        });
+
+        it('warns that ratings may disagree once two or more organisations are listed', () => {
+            hookState({
+                phase: 'terminal',
+                rows: [storedRow({
+                    payload: {
+                        ...storedRow().payload,
+                        checkedBy: [
+                            { organisation: 'Alt News', url: 'https://altnews.in/x', verdict: 'False' },
+                            { organisation: 'BOOM', url: 'https://boomlive.in/y', verdict: 'Misleading' },
+                        ],
+                    },
+                })],
+            });
+            const { getByText, getByTestId } = renderPanel();
+            expect(getByTestId('fact-check-0-multiple-organisations-note')).toBeTruthy();
+            expect(getByText('factCheck.checkedByMultipleNote')).toBeTruthy();
+        });
+
+        it('does NOT show the disagreement note for a single organisation', () => {
+            hookState({ phase: 'terminal', rows: [withOrg('supported')] });
+            const { queryByTestId } = renderPanel();
+            expect(queryByTestId('fact-check-0-multiple-organisations-note')).toBeNull();
+        });
+    });
+
     it('renders the blocked terminal state instead of a verdict', () => {
-        hookState({ phase: 'ready', result: completeRow({ status: 'blocked', verdict: null }) });
-        const { getByText, queryByTestId } = render(<FactCheckPanel articleId="a1" />);
+        hookState({ phase: 'terminal', rows: [storedRow({ status: 'blocked', verdict: null })] });
+        const { getByText, queryByTestId } = renderPanel();
         expect(getByText('factCheck.blocked')).toBeTruthy();
-        expect(queryByTestId('fact-check-verdict')).toBeNull();
+        expect(queryByTestId('fact-check-0-verdict')).toBeNull();
     });
 
-    // The honest end of a non-instant request. It must NOT offer a retry: the
-    // request is already lodged and the server retries on its own, so a "try
-    // again" button would invite the reader to re-ask for something already in
-    // flight — the polling loop's mistake in a single control.
-    it('tells the reader the check will finish without them, and offers no request retry', () => {
-        hookState({ phase: 'queued' });
-        const { getByText, getByTestId, queryByTestId } = render(<FactCheckPanel articleId="a1" />);
-        expect(getByTestId('fact-check-queued')).toBeTruthy();
-        expect(getByText('factCheck.queued')).toBeTruthy();
-        expect(getByText('factCheck.queuedHint')).toBeTruthy();
-        // No `retry` — the REQUEST is already lodged; re-asking is not the fix.
-        expect(queryByTestId('fact-check-retry')).toBeNull();
+    // Several checks per article now stack — post-v52 an article can carry one
+    // row per claim the user picked.
+    it('stacks several terminal rows, one card per claim', () => {
+        hookState({
+            phase: 'terminal',
+            rows: [
+                storedRow({ id: 'row-0', claim: 'Claim one', verdict: 'supported' }),
+                storedRow({ id: 'row-1', claim: 'Claim two', verdict: 'disputed' }),
+            ],
+        });
+        const { getByTestId, getByText } = renderPanel();
+        expect(getByTestId('fact-check-0-result')).toBeTruthy();
+        expect(getByTestId('fact-check-1-result')).toBeTruthy();
+        expect(getByText('factCheck.verdict.supported.label')).toBeTruthy();
+        expect(getByText('factCheck.verdict.disputed.label')).toBeTruthy();
     });
 
-    // With the poll gone, a result can only arrive via a read or a push. A
-    // reader whose push never comes (notifications denied, no token, dropped
-    // send) must have a manual path — that was the prod failure: "Still
-    // searching" on a completed check, with nothing the user could do.
-    it('offers a manual one-shot re-read from the queued state', () => {
-        hookState({ phase: 'queued' });
-        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
-        expect(getByText('factCheck.checkAgain')).toBeTruthy();
-        fireEvent.press(getByTestId('fact-check-refresh'));
-        expect(refresh).toHaveBeenCalledTimes(1);
-        // Never the request mutation — this re-reads, it does not re-ask.
-        expect(start).not.toHaveBeenCalled();
+    // ── The r14-shaped bug this pivot must not reintroduce ──────────────────
+    // A poll that gives up must render something DIFFERENT from both "nobody
+    // asked" (absent → null) and "checked, nothing to show" (a terminal row
+    // with an empty checkedBy still renders a full verdict card). This test
+    // FAILS if 'stalled' is ever treated the same as 'absent': absent renders
+    // `null` from `toJSON()`, so asserting a non-null tree here is exactly the
+    // assertion that distinguishes "gave up" from "no result".
+    it('renders a distinguishable "still checking" state when the poll gives up — never identical to absent/no-result', () => {
+        hookState({ phase: 'stalled', showProgress: false, rows: [storedRow({ status: 'pending', payload: null })] });
+        const { toJSON, getByTestId, getByText, queryByTestId } = renderPanel();
+        expect(toJSON()).not.toBeNull();
+        expect(getByTestId('fact-check-panel')).toBeTruthy();
+        expect(getByTestId('fact-check-stalled')).toBeTruthy();
+        expect(getByText('factCheck.stillChecking')).toBeTruthy();
+        // Not the working block's copy — that promises an imminent answer,
+        // which is no longer honest once the poll has actually given up.
+        expect(queryByTestId('fact-check-working')).toBeNull();
+        // Not a fabricated terminal verdict either.
+        expect(queryByTestId('fact-check-0-verdict')).toBeNull();
     });
 
-    it('disables the re-read control while one is already in flight', () => {
-        hookState({ phase: 'queued', refreshing: true });
-        const { getByTestId } = render(<FactCheckPanel articleId="a1" />);
-        fireEvent.press(getByTestId('fact-check-refresh'));
-        expect(refresh).not.toHaveBeenCalled();
-    });
-
-    it('offers a retry from the error state', () => {
-        hookState({ phase: 'error' });
-        const { getByText, getByTestId } = render(<FactCheckPanel articleId="a1" />);
-        expect(getByText('factCheck.error')).toBeTruthy();
-        fireEvent.press(getByTestId('fact-check-retry'));
-        expect(start).toHaveBeenCalledTimes(1);
-    });
-
-    it('hide collapses the panel via the hook', () => {
-        hookState({ phase: 'ready', result: completeRow() });
-        const { getByTestId } = render(<FactCheckPanel articleId="a1" />);
-        fireEvent.press(getByTestId('fact-check-hide'));
-        expect(dismiss).toHaveBeenCalledTimes(1);
-    });
-
-    // BETA gate — off by default (mera-protocol-store.ts). The button, the
-    // panel, and any verdict must all disappear regardless of the hook's
-    // phase; nothing renders while the setting is off.
-    it('renders nothing when fact check is disabled, even mid-check or with a ready verdict', () => {
-        mockUseFactCheckEnabled.mockReturnValue(false);
-        try {
-            hookState({ phase: 'ready', result: completeRow() });
-            const { toJSON, queryByTestId } = render(<FactCheckPanel articleId="a1" />);
-            expect(toJSON()).toBeNull();
-            expect(queryByTestId('fact-check-action')).toBeNull();
-            expect(queryByTestId('fact-check-panel')).toBeNull();
-        } finally {
-            mockUseFactCheckEnabled.mockReturnValue(true);
-        }
+    it('shows the working indicator ABOVE an already-terminal row when a second claim is mid-check', () => {
+        hookState({
+            phase: 'processing',
+            showProgress: true,
+            rows: [
+                storedRow({ id: 'row-0', claim: 'Claim one', status: 'complete', verdict: 'supported' }),
+                storedRow({ id: 'row-1', claim: 'Claim two', status: 'processing', payload: null }),
+            ],
+        });
+        const { getByTestId } = renderPanel();
+        expect(getByTestId('fact-check-working')).toBeTruthy();
+        expect(getByTestId('fact-check-0-result')).toBeTruthy();
     });
 });

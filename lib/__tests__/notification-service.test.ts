@@ -444,43 +444,26 @@ describe('handleInitialNotification', () => {
   });
 });
 
-// ── data.type switch (r14) ───────────────────────────────────────────────────
-// `handleNotificationNavigation` used to push for_you UNCONDITIONALLY with no
-// switch at all. A branch was added for the fact-check push; the risk in adding
-// the first branch to a defaulting handler is that the default stops covering
-// everything else, so both halves are pinned here.
+// ── NO data.type switch ──────────────────────────────────────────────────────
+// A `type === 'fact-check'` branch lived here briefly and deep-linked to the
+// Dashboard's Fact checks chip. It was removed with the push itself: sending it
+// required the server to store which user asked about which article, a durable
+// article-level behavioural record the privacy policy promises we do not keep.
 //
-// TEST ENV NOTE: dynamic import() throws under Jest's CJS runner (see the
-// refreshForYouCacheFromDb block below), so the fact-check branch's fetch and
-// persist are unreachable here — which is itself the property being asserted:
-// the navigation must survive both of them failing.
-describe('handleNotificationNavigation type switch (via handleInitialNotification)', () => {
+// So the handler is back to ONE destination for every notification. This pins
+// that: no payload — including the old fact-check shape, which may still exist
+// in a queued push or a stale test fixture — may divert navigation.
+describe('handleNotificationNavigation has no type switch (via handleInitialNotification)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it('routes a fact-check push to the Fact checks list, not to For You', async () => {
-    mockGetLastNotificationResponseAsync.mockResolvedValueOnce({
-      notification: {
-        request: {
-          content: {
-            data: { type: 'fact-check', factCheckId: 'fc1', articleId: 'a1' },
-          },
-        },
-      },
-    });
-
-    await handleInitialNotification();
-
-    expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/fact-checks');
-    expect(mockRouterPush).not.toHaveBeenCalledWith('/logged-in/app_container/for_you');
-  });
-
   it.each([
+    { type: 'fact-check', factCheckId: 'fc1', articleId: 'a1' },
     { type: 'news-ready' },
     { type: 'calibration' },
     {},
-  ])('leaves every other notification on the For You default: %p', async (data) => {
+  ])('routes %p to For You, with no chip preselect param', async (data) => {
     mockGetLastNotificationResponseAsync.mockResolvedValueOnce({
       notification: { request: { content: { data } } },
     });
@@ -488,7 +471,24 @@ describe('handleNotificationNavigation type switch (via handleInitialNotificatio
     await handleInitialNotification();
 
     expect(mockRouterPush).toHaveBeenCalledWith('/logged-in/app_container/for_you');
+    expect(mockRouterPush).toHaveBeenCalledTimes(1);
+  });
+
+  it('never navigates to the retired fact-check destinations', async () => {
+    mockGetLastNotificationResponseAsync.mockResolvedValueOnce({
+      notification: {
+        request: {
+          content: { data: { type: 'fact-check', articleId: 'a1' } },
+        },
+      },
+    });
+
+    await handleInitialNotification();
+
     expect(mockRouterPush).not.toHaveBeenCalledWith('/logged-in/fact-checks');
+    expect(mockRouterPush).not.toHaveBeenCalledWith(
+      '/logged-in/app_container/for_you?subTab=factChecks',
+    );
   });
 });
 

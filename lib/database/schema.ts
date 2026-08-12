@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 52,
+  version: 53,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -457,7 +457,7 @@ export default appSchema({
         { name: 'llm_headline', type: 'string', isOptional: true },
         { name: 'fallback_title', type: 'string' },
         { name: 'latest_article_id', type: 'string', isOptional: true },
-        // `latest_title` removed in v52 — see migrations.ts. Fresh installs
+        // `latest_title` removed in v53 — see migrations.ts. Fresh installs
         // never create it; upgraded devices keep an inert, NULLed column.
         { name: 'origin_surface', type: 'string', isOptional: true },
         { name: 'last_update_at', type: 'number', isOptional: true },
@@ -552,6 +552,20 @@ export default appSchema({
         // Ordering key for the Dashboard's "3 most recent" block and the list.
         { name: 'requested_at', type: 'number', isIndexed: true },
         { name: 'resolved_at', type: 'number', isOptional: true },
+        // ── v52: per-claim identity ──────────────────────────────────────────
+        // The check is no longer "this article", it is "this CLAIM in this
+        // article": the user picks one assertion out of three or four the model
+        // proposed, and may come back and pick another. So one article now
+        // holds several rows and `article_id` alone stopped being the upsert
+        // key.
+        //
+        // Both are OPTIONAL because v51 rows exist on real devices and must
+        // survive the upgrade untouched: a NULL `claim_key` means "the legacy
+        // whole-article check", which keeps its own slot alongside any
+        // per-claim rows added later. `claim` is the verbatim text the user
+        // picked (rendered), `claim_key` its normalised hash (the key).
+        { name: 'claim', type: 'string', isOptional: true },
+        { name: 'claim_key', type: 'string', isOptional: true, isIndexed: true },
       ],
     }),
   ],

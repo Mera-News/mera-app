@@ -99,13 +99,6 @@ export default function LoggedInLayout() {
           }}
         />
         <Stack.Screen
-          name="fact-checks"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
-        />
-        <Stack.Screen
           name="article-detail"
           options={{
             headerShown: false,

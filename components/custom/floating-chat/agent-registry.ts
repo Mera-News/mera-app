@@ -17,6 +17,10 @@ export function createAgentForContext(
 ): IAgent {
   switch (context.kind) {
     case 'article-suggestion':
+      // Also the FACT-CHECK surface (pivot P8c). `proposeFactCheck` moved onto
+      // this agent because the `Quick fact check` chip and the article tick both
+      // send into the EXISTING article thread; the standalone FactCheckAgent and
+      // its `fact-check` ChatContext kind are gone with it.
       return new ArticleFeedbackAgent(
         userId,
         { articleId: context.articleId, suggestionId: context.suggestionId },

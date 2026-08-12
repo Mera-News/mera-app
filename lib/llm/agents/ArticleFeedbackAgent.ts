@@ -27,6 +27,7 @@ import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { ProcessingMode } from '../../generated/graphql-types';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import { isSubjectTracked } from '../../tracking/track-actions';
+import { handleWebSearch } from '../../chat-tools/web-search-handler';
 import {
   buildArticleFeedbackSystemPrompt,
   buildFeedbackContext,
@@ -35,12 +36,18 @@ import {
   getArticleFeedbackToolDefinitions,
 } from '../../news-harness/article-feedback/agent-core';
 import {
+  decideProposeFactCheck,
+  makeFactCheckSubject,
+} from '../../news-harness/fact-check';
+import {
   chooseOneRefusal,
   proposalRequiresUserChoice,
   userTapOnlyRefusal,
 } from '../../news-harness/core/proposals';
+import i18n from '../../i18n';
 import type {
   ActiveSuppressionView,
+  FactCheckSubject,
   SuggestionFeedbackContext,
   TrackFeedbackSubject,
 } from '../../news-harness/core/types';
@@ -142,6 +149,33 @@ export class ArticleFeedbackAgent implements IAgent {
     };
   }
 
+  /**
+   * The article snapshot `proposeFactCheck` stages against.
+   *
+   * Read from the SUGGESTION ROW rather than from the chat context, because the
+   * chat may have been opened with a suggestionId alone and both halves of the
+   * card need a real `articleId`: the quick path has nothing to do without one,
+   * and the async path's whole payload IS the article id. A null return refuses
+   * the tool rather than staging pills against an empty id.
+   */
+  private async resolveFactCheckSubject(): Promise<FactCheckSubject | null> {
+    const ctx = await getSuggestionFeedbackContext(this.target).catch(() => null);
+    const storeContext = useFloatingChatStore.getState().context;
+    const storeTitle =
+      storeContext.kind === 'article-suggestion' ? storeContext.articleTitle : undefined;
+    const articleId = ctx?.suggestion.articleId ?? this.target.articleId ?? '';
+    if (!articleId) return null;
+    const title =
+      ctx?.suggestion.title_en ?? ctx?.suggestion.title_original ?? storeTitle ?? '';
+    return makeFactCheckSubject({
+      articleId,
+      title,
+      description: ctx?.suggestion.description_en ?? null,
+      url: ctx?.suggestion.article_url ?? null,
+      publicationName: ctx?.suggestion.publication_name ?? null,
+    });
+  }
+
   /** Resolve the subject the follow tool tracks against: the explicit
    *  trackSubject, else a minimal one built from the target + store title. */
   private resolveTrackSubject(): TrackFeedbackSubject | null {
@@ -160,31 +194,53 @@ export class ArticleFeedbackAgent implements IAgent {
   private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
   private lastMode: 'CLOUD' | 'LOCAL' | null = null;
+  private lastWebSearch: boolean | null = null;
 
   async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
     const languageName =
       SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage)?.name ?? 'English';
+    // Read ONCE, non-reactively, at turn-build time (same seam as
+    // PersonaUpdateAgent.buildSystemPrompt) so the prompt and the tool payload
+    // this turn agree with each other.
+    const protocol = useMeraProtocolStore.getState();
     const mode: 'CLOUD' | 'LOCAL' =
-      useMeraProtocolStore.getState().processingMode === ProcessingMode.OnDevice
-        ? 'LOCAL'
-        : 'CLOUD';
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+    // Gates the SAME prose getToolDefinitions gates the tool declaration with —
+    // see agent-core's buildArticleFeedbackSystemPrompt. Must be part of the
+    // cache key: without it, a prompt built while the toggle was off (or CLOUD
+    // flipped to LOCAL) would keep serving stale text after the user flips the
+    // toggle on, so getToolDefinitions() would declare `webSearch` while the
+    // cached prompt still tells the model it has no way to look beyond the
+    // metadata — reproducing the exact "toggle on, still refuses" bug reported.
+    const webSearch = mode === 'CLOUD' && protocol.webSearchInChat === true;
 
-    // Static content depends only on needsToolFormat + languageName + mode —
-    // all fixed per session unless the user changes app language or processing.
+    // Static content depends only on needsToolFormat + languageName + mode +
+    // webSearch — all fixed per session unless the user changes app language,
+    // processing mode, or the web-search toggle.
     if (
       this.cachedSystemPrompt
       && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
       && this.lastMode === mode
+      && this.lastWebSearch === webSearch
     ) {
       return this.cachedSystemPrompt;
     }
 
-    this.cachedSystemPrompt = buildArticleFeedbackSystemPrompt({ needsToolFormat, languageName });
+    this.cachedSystemPrompt = buildArticleFeedbackSystemPrompt({
+      needsToolFormat,
+      languageName,
+      webSearch,
+      // Same gate as getToolDefinitions' `proposeFactCheck` declaration, and
+      // part of the cache key below for the same reason webSearch is: a prompt
+      // built in one mode must not keep serving after the user switches.
+      factCheck: mode === 'CLOUD',
+    });
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
     this.lastMode = mode;
+    this.lastWebSearch = webSearch;
     return this.cachedSystemPrompt;
   }
 
@@ -192,6 +248,11 @@ export class ArticleFeedbackAgent implements IAgent {
 
   async buildContext(): Promise<string> {
     const context = await this.loadArticleContext();
+    // Same CLOUD gate as the prompt section and the tool declaration — a fourth
+    // place it must agree, because it decides how much of the article the claim
+    // picker actually gets to read.
+    const factCheck =
+      useMeraProtocolStore.getState().processingMode !== ProcessingMode.OnDevice;
     const facts = await getFacts(); // newest-first (sorted created_at desc)
 
     const storeContext = useFloatingChatStore.getState().context;
@@ -235,13 +296,23 @@ export class ArticleFeedbackAgent implements IAgent {
       verdict,
       tappedOptions,
       activeSuppressions,
+      factCheck,
     });
   }
 
   // --- IAgent: tool definitions (OpenAI JSON Schema for cloud chat) ---
 
   getToolDefinitions(): ToolDefinition[] {
-    return getArticleFeedbackToolDefinitions();
+    // Read fresh (not the buildSystemPrompt cache) — this method is also called
+    // standalone (executeTool's forced-extraction payload, tool-name
+    // resolution) on a turn whose prompt was never rebuilt. Same gate as the
+    // prompt's webSearchLine: CLOUD mode AND the user's toggle. The handler
+    // (web-search-handler.ts) re-checks the toggle regardless — belt-and-braces
+    // for a persisted conversation replaying a call made while it was on.
+    const protocol = useMeraProtocolStore.getState();
+    const mode: 'CLOUD' | 'LOCAL' =
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+    return getArticleFeedbackToolDefinitions(mode, protocol.webSearchInChat === true);
   }
 
   /**
@@ -309,6 +380,30 @@ export class ArticleFeedbackAgent implements IAgent {
         return decideProposeTrack(args, subject);
       }
 
+      case 'proposeFactCheck': {
+        // Stage the claim pills against this article's snapshot, plus the
+        // always-last whole-article option. No already-checked guard: per-claim
+        // identity means one article can legitimately carry several checks.
+        //
+        // The article option's label is USER-FACING PROSE, not a search key, so
+        // it is localized HERE — the pure layer never reads i18n — and it is
+        // resolved at stage time so the persisted tool result carries the same
+        // string the resumed card rebuilds from.
+        const subject = await this.resolveFactCheckSubject();
+        if (!subject) {
+          return { result: { error: 'no article to fact-check in this context' } };
+        }
+        // `factCheck.optionWholeArticle` lands with the wave's `en.json` splice;
+        // typed `t` is generated from that file, so the key is not in the union
+        // yet. One cast, and deliberately no `defaultValue` — an inline English
+        // default is how English has previously shipped into 19 locale files.
+        return decideProposeFactCheck(
+          args,
+          subject,
+          i18n.t('factCheck.optionWholeArticle' as 'factCheck.chatSeed'),
+        );
+      }
+
       case 'applyProposal': {
         const proposal = useFloatingChatStore.getState().proposal;
         if (!proposal) return { result: { error: 'no pending proposal' } };
@@ -373,6 +468,18 @@ export class ArticleFeedbackAgent implements IAgent {
 
       case 'cancelProposal':
         return { result: { cancelled: true }, sideEffects: { proposalResolved: 'cancelled' } };
+
+      // OPT-IN, off by default — see getToolDefinitions and agent-core's
+      // WEB_SEARCH_TOOL. Declared only while the toggle is on, but an
+      // UNDECLARED replayed call (persisted conversation, toggle now off)
+      // still lands here: normalizeToolName finds no declared match, the raw
+      // name falls through, and handleWebSearch re-checks the toggle as its
+      // first statement before any await — same shape as PersonaUpdateAgent's
+      // 'webSearch' case.
+      case 'webSearch': {
+        const result = await handleWebSearch(args);
+        return { result };
+      }
 
       default:
         logger.warn('[ArticleFeedbackAgent] Unknown tool', { name });

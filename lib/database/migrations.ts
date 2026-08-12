@@ -1380,7 +1380,47 @@ export default schemaMigrations({
       ],
     },
     {
+      // ── Per-claim fact checks (schema v52) ────────────────────────────────
+      // ADDITIVE `addColumns` ONLY. `fact_checks` holds a user-owned result
+      // that cannot be re-fetched — the server pipeline it used to come from is
+      // being switched off, and the answer now lives ONLY on this device. So
+      // the DROP+recreate that the v37/v41 OTA used for `article_suggestions`
+      // (and which emptied every device's feed — see CLAUDE.md) would not just
+      // cost a re-sync here, it would be permanent data loss.
+      //
+      // WHY: the check moved from "fact-check this article" to "fact-check THIS
+      // CLAIM in this article". The user picks one assertion out of the three
+      // or four the claim-picker proposes and can come back for another, so an
+      // article now carries several rows and the one-row-per-`article_id`
+      // upsert rule is gone. The new key is (`article_id`, `claim_key`).
+      //
+      // Both columns are OPTIONAL and there is NO backfill, deliberately. Every
+      // v51 row predates the claim picker: it is a whole-article check, and
+      // `claim_key IS NULL` says exactly that. A keyed lookup never matches it,
+      // so a legacy row keeps its own slot next to any per-claim rows added
+      // afterwards instead of being silently overwritten by the first one.
+      //
+      // `claim_key` is indexed because it is half of the lookup that runs on
+      // every article-detail mount; `claim` is the verbatim text and is only
+      // ever read back for render.
+      toVersion: 52,
+      steps: [
+        addColumns({
+          table: 'fact_checks',
+          columns: [
+            { name: 'claim', type: 'string', isOptional: true },
+            { name: 'claim_key', type: 'string', isOptional: true, isIndexed: true },
+          ],
+        }),
+      ],
+    },
+    {
       // Forget `tracked_stories.latest_title`.
+      //
+      // (v53, not v52: this was authored as v52 on a branch cut before the
+      // per-claim fact-check migration above landed on dev. Renumbered on
+      // merge — two migrations sharing a toVersion means the second never
+      // runs.)
       //
       // It was seeded at track time with the title of the article the user
       // tapped and then only replaced if a reconcile happened to carry a new
@@ -1397,7 +1437,7 @@ export default schemaMigrations({
       // no row identity, no `_status`/`_changed` bookkeeping, and no other
       // column. The column is dropped from `schema.ts`, so fresh installs never
       // create it; upgraded devices keep it as an inert tombstone.
-      toVersion: 52,
+      toVersion: 53,
       steps: [
         unsafeExecuteSql('UPDATE tracked_stories SET latest_title = NULL;'),
       ],

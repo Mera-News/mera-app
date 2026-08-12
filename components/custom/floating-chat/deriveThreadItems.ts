@@ -12,12 +12,14 @@ import type {
   ToolCallRecord,
 } from '@/lib/llm/types';
 import { parseTrackScopeOptions } from '@/lib/news-harness/article-feedback/agent-core';
+import { parseFactCheckClaimOptions } from '@/lib/news-harness/fact-check';
 import {
   SUPPRESSION_KINDS,
   type SuppressionKindName,
 } from '@/lib/news-harness/core/types';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
+import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
 import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
 
 // ---------------------------------------------------------------------------
@@ -401,6 +403,73 @@ function deriveTrackProposal(toolCall: ToolCallRecord): StagedProposal | null {
   };
 }
 
+/**
+ * Rebuilds a fact-check StagedProposal from a completed `proposeFactCheck` tool
+ * call. Structurally identical to `deriveTrackProposal`: the tool INPUT carries
+ * the claim `options` (label + searchable claim); the confirmable article
+ * `subject` and the parsed options are echoed in the RESULT (see
+ * decideProposeFactCheck), so we recover the full `fact_check_claim` actions
+ * from input + result through the SAME parser the live path uses — a resumed
+ * thread therefore rebuilds byte-identical actions. On resume without a result
+ * the card still renders (dimmed, no confirm) from the options alone.
+ */
+function deriveFactCheckProposal(toolCall: ToolCallRecord): StagedProposal | null {
+  if (toolCall.status !== 'done' || toolCall.name !== 'proposeFactCheck') return null;
+
+  const input = asRecord(toolCall.input) ?? {};
+  const result = asRecord(toolCall.result);
+
+  // Subject is only load-bearing on Confirm (live session, result present). A
+  // resumed card is dimmed, so an empty subject is harmless there — and
+  // `enqueueFactCheck` would be handed an empty articleId rather than a wrong
+  // one, which the executor's own empty-claim guard cannot mask.
+  const subjectRec = asRecord(result?.subject);
+  const subject = {
+    surface: typeof subjectRec?.surface === 'string' ? subjectRec.surface : 'fact-check-chat',
+    articleId: typeof subjectRec?.articleId === 'string' ? subjectRec.articleId : '',
+    articleTitle: typeof subjectRec?.articleTitle === 'string' ? subjectRec.articleTitle : '',
+    ...(typeof subjectRec?.articleUrl === 'string' ? { articleUrl: subjectRec.articleUrl } : {}),
+    ...(typeof subjectRec?.publicationName === 'string'
+      ? { publicationName: subjectRec.publicationName }
+      : {}),
+  };
+
+  // Rebuild the claim pills from input.options (result.options as fallback), or
+  // a legacy lone `claim` string. Same parser as the live path → identical
+  // actions.
+  // RESULT FIRST, unlike the track card above. The staged options are a superset
+  // of the model's: decideProposeFactCheck appends the whole-article pill, and
+  // reading `input.options` in preference would rebuild a card missing it.
+  const rawOptions =
+    (Array.isArray(result?.options) && result.options) ||
+    (Array.isArray(input.options) && input.options) ||
+    (typeof input.claim === 'string' && input.claim.trim() ? [input.claim] : []) ||
+    [];
+  const options = parseFactCheckClaimOptions(rawOptions);
+  if (options.length === 0) return null;
+
+  const echoedId = typeof result?.proposalId === 'string' ? result.proposalId : null;
+  const actions: ProposalAction[] = options.map((o) => ({
+    type: 'fact_check_claim',
+    label: o.label,
+    claim: o.claim,
+    subject,
+    // The trailing whole-article pill. It only ever reaches this parser via
+    // `result.options` (the model never emits it and the tool INPUT never
+    // carries it), which is exactly why decideProposeFactCheck echoes the
+    // options it staged rather than only the ones it was given — without that
+    // echo a resumed card would silently lose the thorough path.
+    ...(o.mode === 'article' ? { mode: 'article' as const } : {}),
+  }));
+  return {
+    id: echoedId ?? toolCall.id,
+    explanation: '',
+    expectedEffects: '',
+    actions,
+    ...(actions.length >= 2 ? { chooseOne: true } : {}),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Topic-plan-card + conflict-card derivation (Wave 11)
 // ---------------------------------------------------------------------------
@@ -472,7 +541,8 @@ function emitMessage(
     message.toolCalls.forEach((tc, idx) => {
       // Proposal cards take precedence — a `proposeChanges` call never doubles
       // as a fact card (and applyProposal/cancelProposal surface nothing).
-      const proposal = deriveProposal(tc) ?? deriveTrackProposal(tc);
+      const proposal =
+        deriveProposal(tc) ?? deriveTrackProposal(tc) ?? deriveFactCheckProposal(tc);
       if (proposal) {
         cards.push({
           kind: 'proposal-card',
@@ -569,6 +639,17 @@ export function deriveThreadItems(opts: {
    * history/intro), mirroring `articleContext` (Round-4 C5).
    */
   optimisationPlan?: { key: string };
+  /**
+   * Quick fact checks started in this thread (oldest-first), appended AFTER the
+   * live messages.
+   *
+   * Injected rather than derived, unlike every other card here, and that is the
+   * point: nothing in the message stream produces one. The user taps a claim
+   * pill, the check runs off-model, and the answer the reader sees is the one
+   * the handler decided — there is no turn in between that could restate "we
+   * could not search" as "I found nothing".
+   */
+  quickFactChecks?: QuickFactCheckEntry[];
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
@@ -644,6 +725,11 @@ export function deriveThreadItems(opts: {
       (lastLive.role === 'assistant' && lastLive.content.trim().length === 0));
   if (showTyping) {
     out.push({ kind: 'typing', key: 'typing' });
+  }
+
+  // --- Quick fact checks (always last: they answer the newest tap) ---
+  for (const entry of [...(opts.quickFactChecks ?? [])].sort((a, b) => a.createdAt - b.createdAt)) {
+    out.push({ kind: 'quick-fact-check-card', key: `qfc-${entry.id}`, entry });
   }
 
   return out;

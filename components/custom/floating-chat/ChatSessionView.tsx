@@ -13,7 +13,12 @@ import { loadUserPersona } from '@/lib/database/services/user-persona-service';
 import { hapticMedium, hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import type { ConversationMessage } from '@/lib/llm/types';
-import { useFloatingChatStore, type ChatContext } from '@/lib/stores/floating-chat-store';
+import {
+  useFloatingChatQuickFactChecks,
+  useFloatingChatStore,
+  type ChatContext,
+} from '@/lib/stores/floating-chat-store';
+import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -25,6 +30,12 @@ import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
 
 const noop = () => {};
+
+// `factCheck.chipQuickFactCheck` lands with agent A1's `en.json` splice (see
+// this unit's locale fragment); the `t` overloads are generated from en.json, so
+// the key is not in the union yet. One cast, no `defaultValue` — an inline
+// English default is how English has previously shipped into 19 locale files.
+type PendingLocaleKey = 'factCheck.chatSeed';
 
 export interface ChatSessionViewProps {
   // Inference hook result (shared shape of useLocalLLM / useCloudPersonaChat)
@@ -125,6 +136,20 @@ export default function ChatSessionView({
     [context],
   );
 
+  // Quick fact checks live in the store, not in the message stream: no model
+  // turn produces one (the user taps a claim pill and the check runs off-model),
+  // and they are deliberately never persisted — a quick answer is a snapshot of
+  // what the web said at that moment, not a stored verdict.
+  const quickFactChecks = useFloatingChatQuickFactChecks();
+
+  // The claim picker is CLOUD-only — `proposeFactCheck` is neither declared nor
+  // described in the LOCAL prompt (its rules are ~1,200 tokens against a ~3,072
+  // budget, and the check needs the cloud regardless). A chip offering it in
+  // on-device mode would send a turn to an agent with no such tool, which is the
+  // exact silent mis-wire the `generic` and `follow-story` branches below already
+  // exist to prevent. Same signal the agent reads, so the three gates agree.
+  const isOnDevice = useIsOnDeviceProcessing();
+
   const items = useMemo(
     () =>
       deriveThreadItems({
@@ -136,8 +161,19 @@ export default function ChatSessionView({
         resume,
         articleContext,
         optimisationPlan,
+        quickFactChecks,
       }),
-    [messages, history, introMessage, isStreaming, t, resume, articleContext, optimisationPlan],
+    [
+      messages,
+      history,
+      introMessage,
+      isStreaming,
+      t,
+      resume,
+      articleContext,
+      optimisationPlan,
+      quickFactChecks,
+    ],
   );
 
   // r14 — topic-plan gate. Every unresolved "Topics I'll track" card in the
@@ -225,6 +261,20 @@ export default function ChatSessionView({
           };
       return [
         firstChip,
+        // The QUICK path's entry point. `factCheck.chatSeed` is deliberately the
+        // SAME key the article action-row tick seeds with
+        // (FACT_CHECK_SEED_MESSAGE_KEY in fact-check-state.ts), so the two
+        // affordances open the identical turn by construction rather than by two
+        // strings someone has to keep in step.
+        ...(isOnDevice
+          ? []
+          : [
+              {
+                key: 'quick-fact-check',
+                label: t('factCheck.chipQuickFactCheck' as PendingLocaleKey),
+                message: t('factCheck.chatSeed'),
+              },
+            ]),
         {
           key: 'dont-want',
           label: t('articleFeedback.chipDontWant'),
@@ -256,7 +306,7 @@ export default function ChatSessionView({
         message: t('floatingChat.chipDataHandlingMessage'),
       },
     ];
-  }, [t, context]);
+  }, [t, context, isOnDevice]);
 
   // --- Server-authoritative block state ---------------------------------
   // The hook's `isBlocked` only flips mid-session (via an issueWarning side
