@@ -1,6 +1,7 @@
 import { useForYouStore } from '@/lib/stores/for-you-store';
 import { isNotSubscribedError } from '@/lib/subscription/not-subscribed-error';
 import type { FeedSyncState, SyncErrorCode, SyncStatusMessage } from './feed-sync-types';
+import { InvalidTransitionError } from './feed-sync-types';
 
 function makeMessage(
   state: FeedSyncState,
@@ -70,6 +71,15 @@ export function classifyError(err: unknown): SyncErrorCode {
   // server-unreachable and painted as a red sync failure, which is the exact
   // outcome Mera News Free exists to avoid.
   if (isNotSubscribedError(err)) return 'not-subscribed';
+
+  // ALSO ABOVE THE SUBSTRING HEURISTICS, for the same reason. An
+  // InvalidTransitionError's message embeds STATE NAMES, and
+  // 'fetching-topic-ids' contains the substring 'fetch' — so
+  // "Invalid FeedSyncMachine transition: fetching-topic-ids → scoring" was
+  // classified `server-unreachable` and shown to the user as a red "can't reach
+  // the server" banner, for a fault that is entirely internal and has nothing to
+  // do with the network.
+  if (err instanceof InvalidTransitionError) return 'unknown';
 
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();

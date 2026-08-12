@@ -17,6 +17,7 @@ import {
   publishSyncError,
   classifyError,
 } from '../feed-sync-status';
+import { InvalidTransitionError } from '../feed-sync-types';
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -349,6 +350,24 @@ describe('classifyError', () => {
         [{ message: 'no active plan', extensions: { code: 'NOT_SUBSCRIBED' } } as any],
       );
       expect(classifyError(err)).toBe('not-subscribed');
+    });
+  });
+
+  describe('InvalidTransitionError is never a network fault', () => {
+    // The message embeds STATE NAMES, and 'fetching-topic-ids' contains the
+    // substring 'fetch'. Before the type check was hoisted above the substring
+    // heuristics, an internal state-machine fault was classified
+    // `server-unreachable` and painted as a red "can't reach the server" banner.
+    it.each([
+      ['fetching-topic-ids', 'scoring'],
+      ['paused-offline', 'hydrating'],
+      ['idle', 'fetching-topic-ids'],
+    ] as const)('classifies %s → %s as unknown, not server-unreachable', (from, to) => {
+      expect(classifyError(new InvalidTransitionError(from, to))).toBe('unknown');
+    });
+
+    it('still classifies a genuine network error as server-unreachable', () => {
+      expect(classifyError(new Error('Network request failed'))).toBe('server-unreachable');
     });
   });
 });

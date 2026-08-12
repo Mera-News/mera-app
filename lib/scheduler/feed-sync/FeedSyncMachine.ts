@@ -596,7 +596,16 @@ class FeedSyncMachine {
       // instead. `throw err` stays outside: the zombie's own job must still
       // fail and report.
       if (this._isCurrentRun(runId) && this._state !== 'failed' && this._state !== 'done') {
-        this._transitionTo('failed', runId);
+        // FORCE-ASSIGNED, not transitioned. `VALID_TRANSITIONS.idle` is
+        // ['fetching-topic-ids'] only, so `_transitionTo('failed')` THREW
+        // whenever the catch ran with _state still 'idle' — which is every
+        // failure raised by the scoring-pipeline block above, before the first
+        // transition. That replaced the original error with an
+        // InvalidTransitionError and skipped the three lines below, so the real
+        // cause never reached Sentry and the user got no status at all.
+        // Recording a failure must not be able to fail. Same precedent as the
+        // three `_forceIdle` branches above.
+        this._state = 'failed';
         publishSyncError(errorCode, undefined, failedAtState);
         // Generic (non-terminal, non-daily-limit) sync failure — surface a
         // notification-center-backed toast. The `no-topics-configured` and

@@ -1145,6 +1145,21 @@ describe('FeedSyncMachine — error catch: already failed/done state', () => {
     // publishSyncError called once
     expect(mockPublishSyncError).toHaveBeenCalledTimes(1);
   });
+
+  it('keeps the ORIGINAL error when the catch runs with _state still idle', async () => {
+    // The scoring-pipeline block runs before the first transition, so a failure
+    // raised there reaches the catch with _state === 'idle'. `idle` allows only
+    // 'fetching-topic-ids', so `_transitionTo('failed')` threw and REPLACED the
+    // real error with an InvalidTransitionError — losing the cause and skipping
+    // publishSyncError, the toast and the snapshot save entirely.
+    mockGetPipelineStatus.mockRejectedValueOnce(new Error('pipeline exploded'));
+
+    await expect(feedSyncMachine.start('persona-1', makeCtx()))
+      .rejects.toThrow('pipeline exploded');
+    expect(feedSyncMachine.state).toBe('failed');
+    // The status the user actually sees was published, rather than skipped.
+    expect(mockPublishSyncError).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('FeedSyncMachine — re-entrancy guard (single-flight)', () => {
