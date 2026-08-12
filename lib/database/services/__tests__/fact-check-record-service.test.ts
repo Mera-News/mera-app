@@ -236,6 +236,7 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
     const DAY_MS = 24 * 60 * 60 * 1000;
     const NOW = 1_000_000 * DAY_MS; // an arbitrary "now" far from epoch 0
     const SEVEN_DAYS_AGO = NOW - 7 * DAY_MS;
+    const NINETY_DAYS_AGO = NOW - 90 * DAY_MS;
 
     function oldRow(overrides: Record<string, unknown>) {
         return row({
@@ -244,13 +245,36 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
         });
     }
 
-    // THE IMPORTANT ONE: a populated `checkedBy` must survive the sweep no
-    // matter how old the row is. Destroying a user's published fact-check
-    // verdict is worse than keeping a stale row.
-    it('KEEPS a populated checkedBy row even when it is far past 7 days old', async () => {
+    // Attribution buys a row past the 7-day sweep — that is the whole reason
+    // the sweep reads the payload instead of just the age.
+    it('KEEPS a populated checkedBy row past 7 days, while it is inside 90', async () => {
         collection()._setRows([
             oldRow({
                 id: 'attributed',
+                requestedAt: new Date(NOW - 60 * DAY_MS),
+                payloadJson: JSON.stringify({
+                    checkedBy: [{ organisation: 'Alt News', verdict: 'False' }],
+                }),
+            }),
+        ]);
+
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO);
+
+        expect(deleted).toBe(0);
+        const stored = collection()._rows.find((r: any) => r.id === 'attributed');
+        expect(stored.prepareDestroyPermanently).not.toHaveBeenCalled();
+    });
+
+    // ...but it does NOT buy it forever. This is the behaviour change: an
+    // attributed row used to be immortal, which quietly assumed a published
+    // rating never changes. Fact-checkers revise and retract, so a cached
+    // verdict can drift out of agreement with the organisation still named on
+    // it, and the reader cannot tell. Deleting is self-healing — the row is
+    // re-fetchable, and the server holds the same 90-day rule.
+    it('DELETES a populated checkedBy row once it is past 90 days', async () => {
+        collection()._setRows([
+            oldRow({
+                id: 'stale-attributed',
                 requestedAt: new Date(NOW - 400 * DAY_MS), // over a year old
                 payloadJson: JSON.stringify({
                     checkedBy: [{ organisation: 'Alt News', verdict: 'False' }],
@@ -258,11 +282,51 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
             }),
         ]);
 
-        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO);
 
-        expect(deleted).toBe(0);
-        const stored = collection()._rows.find((r: any) => r.id === 'attributed');
-        expect(stored.prepareDestroyPermanently).not.toHaveBeenCalled();
+        expect(deleted).toBe(1);
+        const stored = collection()._rows.find((r: any) => r.id === 'stale-attributed');
+        expect(stored.prepareDestroyPermanently).toHaveBeenCalledTimes(1);
+    });
+
+    it('DELETES an unreadable payload past 90 days — the hard cap does not read it', async () => {
+        // The "keep what you cannot parse" benefit of the doubt is no longer
+        // open-ended. It defers the decision; it does not cancel it. Otherwise
+        // one corrupt blob is immortal, which is the immortality this cap
+        // exists to remove.
+        collection()._setRows([
+            oldRow({
+                id: 'stale-malformed',
+                requestedAt: new Date(NOW - 120 * DAY_MS),
+                payloadJson: '{not valid json',
+            }),
+        ]);
+
+        expect(await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO)).toBe(1);
+    });
+
+    it('applies the hard cap to each row independently, not to the batch', async () => {
+        collection()._setRows([
+            oldRow({
+                id: 'keep-recent-attributed',
+                requestedAt: new Date(NOW - 30 * DAY_MS),
+                payloadJson: JSON.stringify({ checkedBy: [{ organisation: 'BOOM' }] }),
+            }),
+            oldRow({
+                id: 'drop-old-attributed',
+                requestedAt: new Date(NOW - 200 * DAY_MS),
+                payloadJson: JSON.stringify({ checkedBy: [{ organisation: 'BOOM' }] }),
+            }),
+        ]);
+
+        expect(await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO)).toBe(1);
+        const rows = collection()._rows;
+        expect(
+            rows.find((r: any) => r.id === 'keep-recent-attributed').prepareDestroyPermanently,
+        ).not.toHaveBeenCalled();
+        expect(
+            rows.find((r: any) => r.id === 'drop-old-attributed').prepareDestroyPermanently,
+        ).toHaveBeenCalledTimes(1);
     });
 
     it('deletes an unattributed (empty checkedBy) row once it is past 7 days old', async () => {
@@ -270,7 +334,7 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
             oldRow({ id: 'unattributed', payloadJson: JSON.stringify({ checkedBy: [] }) }),
         ]);
 
-        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO);
 
         expect(deleted).toBe(1);
         const stored = collection()._rows.find((r: any) => r.id === 'unattributed');
@@ -286,7 +350,7 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
             }),
         ]);
 
-        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO);
 
         expect(deleted).toBe(0);
         const stored = collection()._rows.find((r: any) => r.id === 'young-unattributed');
@@ -298,7 +362,7 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
             oldRow({ id: 'malformed', payloadJson: '{not valid json' }),
         ]);
 
-        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO);
 
         expect(deleted).toBe(0);
         const stored = collection()._rows.find((r: any) => r.id === 'malformed');
@@ -318,7 +382,7 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
             oldRow({ id: 'empty-string-payload', payloadJson: '' }),
         ]);
 
-        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO);
 
         expect(deleted).toBe(3);
         for (const id of ['no-field', 'null-payload', 'empty-string-payload']) {
@@ -334,7 +398,7 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
             row({ id: 'keep-young', requestedAt: new Date(NOW - 1 * DAY_MS), payloadJson: JSON.stringify({ checkedBy: [] }) }),
         ]);
 
-        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO);
+        const deleted = await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO);
 
         expect(deleted).toBe(1);
         const rows = collection()._rows;
@@ -345,6 +409,6 @@ describe('deleteExpiredFactChecks — the retention sweep', () => {
 
     it('a throwing query returns 0 rather than throwing', async () => {
         collection().query = jest.fn(() => { throw new Error('db gone'); }) as any;
-        expect(await deleteExpiredFactChecks(SEVEN_DAYS_AGO)).toBe(0);
+        expect(await deleteExpiredFactChecks(SEVEN_DAYS_AGO, NINETY_DAYS_AGO)).toBe(0);
     });
 });

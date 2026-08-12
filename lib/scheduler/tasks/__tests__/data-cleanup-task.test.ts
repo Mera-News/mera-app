@@ -204,16 +204,27 @@ describe('data-cleanup-task handler', () => {
     expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('2 notifications'));
   });
 
-  it('prunes unattributed fact checks older than 7d', async () => {
+  it('passes BOTH cutoffs: unattributed at 7d, the hard cap at 90d', async () => {
     const before = Date.now();
     await registeredDef.handler(undefined, makeCtx());
     const after = Date.now();
 
     expect(mockDeleteExpiredFactChecks).toHaveBeenCalledTimes(1);
-    const FACT_CHECK_UNATTRIBUTED_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-    const cutoff = mockDeleteExpiredFactChecks.mock.calls[0][0];
-    expect(cutoff).toBeGreaterThanOrEqual(before - FACT_CHECK_UNATTRIBUTED_TTL_MS - 100);
-    expect(cutoff).toBeLessThanOrEqual(after - FACT_CHECK_UNATTRIBUTED_TTL_MS + 100);
+    const [unattributed, hard] = mockDeleteExpiredFactChecks.mock.calls[0];
+
+    const SEVEN_D = 7 * 24 * 60 * 60 * 1000;
+    expect(unattributed).toBeGreaterThanOrEqual(before - SEVEN_D - 100);
+    expect(unattributed).toBeLessThanOrEqual(after - SEVEN_D + 100);
+
+    const NINETY_D = 90 * 24 * 60 * 60 * 1000;
+    expect(hard).toBeGreaterThanOrEqual(before - NINETY_D - 100);
+    expect(hard).toBeLessThanOrEqual(after - NINETY_D + 100);
+
+    // ORDER IS LOAD-BEARING: the hard cap is the OLDER instant. Swapping the
+    // two arguments would silently delete every attributed row past 7 days —
+    // the sweep would still "work", just far too eagerly, and nothing else in
+    // this file would catch it.
+    expect(hard).toBeLessThan(unattributed);
   });
 
   it('logs pruned fact-check count when > 0', async () => {
@@ -222,7 +233,7 @@ describe('data-cleanup-task handler', () => {
     const ctx = makeCtx();
     await registeredDef.handler(undefined, ctx);
 
-    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('4 unattributed fact checks'));
+    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('4 fact checks'));
   });
 
   it('does NOT log when 0 fact checks pruned', async () => {

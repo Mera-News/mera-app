@@ -338,6 +338,15 @@ export async function deleteFactCheck(id: string): Promise<void> {
  * every re-check would keep resetting a row's clock and could make an
  * unattributed row live forever.
  *
+ * TWO CUTOFFS, NOT ONE. `unattributedCutoffMs` (7 days) drops rows nobody has
+ * published on; `hardCutoffMs` (90 days) drops EVERY row, attributed or not,
+ * and is checked first. Attribution used to mean "keep forever", which was
+ * wrong in a way that only shows up late: fact-checking organisations revise
+ * and occasionally retract their ratings, so a cached verdict can drift out of
+ * agreement with the organisation still named on it, and the reader has no way
+ * to tell. Deleting is self-healing — the row is re-fetchable from the server,
+ * which holds the same 90-day rule.
+ *
  * WHY A TRULY UNREADABLE PAYLOAD IS KEPT, NOT DELETED — but a READABLE
  * payload with no attribution is NOT given the same benefit of the doubt.
  * Two different situations both surface as "no `checkedBy` array present",
@@ -358,19 +367,43 @@ export async function deleteFactCheck(id: string): Promise<void> {
  *     which is the opposite of the valuable, attributed rows this rule
  *     exists to protect.
  */
-export async function deleteExpiredFactChecks(cutoffMs: number): Promise<number> {
+export async function deleteExpiredFactChecks(
+    unattributedCutoffMs: number,
+    hardCutoffMs: number,
+): Promise<number> {
     try {
+        // ONE query, at the LATER of the two instants. `unattributedCutoffMs`
+        // (7 days ago) is more recent than `hardCutoffMs` (90 days ago), so
+        // everything the hard cap could catch is already inside this set —
+        // a second query would only re-read rows we are holding.
         const candidates = await collection()
-            .query(Q.where('requested_at', Q.lt(cutoffMs)))
+            .query(Q.where('requested_at', Q.lt(unattributedCutoffMs)))
             .fetch();
         if (candidates.length === 0) return 0;
 
         const toDelete = candidates.filter((row) => {
+            // THE HARD CAP, APPLIED FIRST AND WITHOUT READING THE PAYLOAD.
+            // Past it, attribution stops being a reason to keep a row and
+            // becomes a reason to drop it: fact-checkers revise and sometimes
+            // retract, so an indefinitely-cached "False" can outlive the
+            // organisation's own position and would still be shown under their
+            // name. A stale verdict with a real masthead on it is worse than
+            // no verdict. This also settles Google's API terms on keeping
+            // permanent copies of API content, but correctness is the reason.
+            // `.getTime()`, not a bare `<`: `requestedAt` is a Date, which
+            // compares against a number only by silent coercion. It happened
+            // to work and the tests happened to pass; tsc is what caught it.
+            if (row.requestedAt.getTime() < hardCutoffMs) return true;
+
             let parsed: any;
             try {
                 parsed = row.payloadJson ? JSON.parse(row.payloadJson) : null;
             } catch {
-                return false; // unreadable text — cannot confirm unattributed, keep
+                // Unreadable text — cannot confirm unattributed, keep. Note
+                // this benefit of the doubt is NOT open-ended any more: the
+                // hard cap above already returned true for anything past 90
+                // days, so an unreadable row decays too, it just decays later.
+                return false;
             }
             const checkedBy = parsed?.checkedBy;
             // Readable, but no populated attribution array ⇒ unattributed
