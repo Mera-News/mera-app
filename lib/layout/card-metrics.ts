@@ -23,17 +23,6 @@ export const CARD_HERO_HEIGHT = 192;
 export const HERO_IMAGE_CLASS = 'h-48';
 
 /**
- * Shortened band used when a card has no image.
- *
- * At full height the placeholder spent 192pt saying "there is no picture",
- * which dominated cards whose actual content is the headline and rationale.
- */
-export const CARD_PLACEHOLDER_HEIGHT = 112;
-
-/** Tailwind class that must render `CARD_PLACEHOLDER_HEIGHT`. */
-export const PLACEHOLDER_IMAGE_CLASS = 'h-28';
-
-/**
  * Default parallax header height for `SmoothScrollView` / `SmoothFlatList`.
  *
  * Equal to the hero by construction: the header IS the card hero when a card is

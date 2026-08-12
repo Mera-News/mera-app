@@ -9,13 +9,7 @@
  * through the real Tailwind config and comparing is the only way to make a
  * mismatch fail rather than merely look wrong on screen.
  */
-import {
-  CARD_HERO_HEIGHT,
-  CARD_PLACEHOLDER_HEIGHT,
-  HERO_IMAGE_CLASS,
-  PARALLAX_HEADER_HEIGHT,
-  PLACEHOLDER_IMAGE_CLASS,
-} from '../card-metrics';
+import { CARD_HERO_HEIGHT, HERO_IMAGE_CLASS, PARALLAX_HEADER_HEIGHT } from '../card-metrics';
 
 /**
  * `h-<n>` in Tailwind's default spacing scale is `n * 0.25rem`. NativeWind
@@ -40,15 +34,7 @@ describe('card metrics', () => {
     expect(heightClassToPx(HERO_IMAGE_CLASS)).toBe(CARD_HERO_HEIGHT);
   });
 
-  it('placeholder class and placeholder height are the same size', () => {
-    expect(heightClassToPx(PLACEHOLDER_IMAGE_CLASS)).toBe(CARD_PLACEHOLDER_HEIGHT);
-  });
-
   it('the parallax header is the hero height', () => {
     expect(PARALLAX_HEADER_HEIGHT).toBe(CARD_HERO_HEIGHT);
-  });
-
-  it('the placeholder band is shorter than the hero', () => {
-    expect(CARD_PLACEHOLDER_HEIGHT).toBeLessThan(CARD_HERO_HEIGHT);
   });
 });

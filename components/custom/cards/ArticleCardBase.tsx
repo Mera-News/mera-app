@@ -1,6 +1,5 @@
-import { HERO_IMAGE_CLASS, PLACEHOLDER_IMAGE_CLASS } from '@/lib/layout/card-metrics';
+import { HERO_IMAGE_CLASS } from '@/lib/layout/card-metrics';
 import { ArticleMetaRow } from '@/components/custom/ArticleMetaRow';
-import { ArticleImagePlaceholder } from '@/components/custom/cards/ArticleImagePlaceholder';
 import {
   CARDS_USE_GLASS,
   CardGlassPlate,
@@ -22,14 +21,17 @@ import { useTranslation } from 'react-i18next';
  * `ArticleSuggestionContainer`'s `isCard` branch. Purely presentational and
  * decoupled from any data model: callers pass a flat view-model plus two slots.
  *
- * Layout (unchanged, pixel-identical to the old container card):
- *   Pressable → elevated Card → hero (192px with a real image, a shorter 112px
- *   band for the `ArticleImagePlaceholder` when there is none or it fails) →
- *   VStack{ meta row (+ metaAccessory), title, children }.
+ * Layout:
+ *   Pressable → elevated Card → hero (192px, ONLY when there is a real image
+ *   that loaded) → VStack{ meta row (+ metaAccessory), title, children }.
  *
- * `metaRowRightReserve` keys off `showImage` (a REAL image, not the
- * placeholder) — unaffected by the placeholder always occupying the hero
- * region now.
+ * An article with no image renders no image region at all: the card starts at
+ * the meta row. It used to get a shortened 112px band carrying a dimmed Mera
+ * watermark, which read as a broken photo rather than a deliberate marker. The
+ * surrounding padding needs no adjustment for that case and none is applied —
+ * the space above the meta row already equals the space below the action bar
+ * (VStack `pt-4` vs the footer's `pb-4`, both sitting inside the same wrapper
+ * padding). Do not "fix" the spacing here.
  *
  * • `children`      — variant chrome rendered under the title (reason box, fact
  *                     chips, actions row, …).
@@ -87,9 +89,11 @@ export interface ArticleCardBaseProps {
    * at the meta row — for a host that floats a control over the card's
    * top-right corner (the Saved list's delete button).
    *
-   * Applied ONLY when there is no hero image. With an image the 192px hero
-   * pushes the meta row far below any such control, so reserving there would
-   * indent the flag for no reason and change a layout that is already correct.
+   * Applied ONLY when there is no hero image — the case where the meta row IS
+   * the card's top edge and sits directly under the floating control. With an
+   * image the 192px hero pushes the meta row far below any such control, so
+   * reserving there would indent the flag for no reason and change a layout
+   * that is already correct.
    *
    * Reserving space is the fix, not nudging the button: the meta row is
    * right-aligned, so it runs UNDER an overlaid button no matter where the
@@ -139,21 +143,18 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
       {/* Content region — the `overlay` (when present) floats over exactly this,
           clipped to the card's rounded corners by the outer overflow-hidden. */}
       <Box className="relative">
-        <Box
-          className={
-            flat
-              // A REAL image keeps the full 192px (h-48) hero. The imageless
-              // placeholder gets a shorter 112px (h-28) band: at full height it
-              // spent 192pt saying "there is no picture", which dominated cards
-              // whose actual content is the headline and rationale. Short enough
-              // to read as a deliberate marker, tall enough for the Mera
-              // watermark to be legible. Compact cards are untouched — their
-              // image column is width-driven, not height-driven.
-              ? `relative w-full ${showImage ? HERO_IMAGE_CLASS : PLACEHOLDER_IMAGE_CLASS} overflow-hidden rounded-t-2xl`
-              : `relative w-full ${showImage ? HERO_IMAGE_CLASS : PLACEHOLDER_IMAGE_CLASS} overflow-hidden rounded-t-lg`
-          }
-        >
-          {showImage ? (
+        {/* No image, no image region. The whole hero Box is gated, not just its
+            contents: an imageless card starts at the meta row. Compact cards
+            are untouched — they keep their placeholder, and their image column
+            is width-driven, not height-driven. */}
+        {showImage ? (
+          <Box
+            className={
+              flat
+                ? `relative w-full ${HERO_IMAGE_CLASS} overflow-hidden rounded-t-2xl`
+                : `relative w-full ${HERO_IMAGE_CLASS} overflow-hidden rounded-t-lg`
+            }
+          >
             <Image
               source={{ uri: imageUrl! }}
               alt={displayTitle}
@@ -175,10 +176,8 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
               // produced it.
               priority="low"
             />
-          ) : (
-            <ArticleImagePlaceholder />
-          )}
-        </Box>
+          </Box>
+        ) : null}
         {/* When a footer is present it owns the bottom padding, so the content
             VStack drops its own (pb-0) to avoid a doubled gap. */}
         <VStack className={footer ? 'px-4 pt-4' : 'p-4'} space="sm">

@@ -476,17 +476,22 @@ describe('ArticleImagePlaceholder (via the card bases)', () => {
   // DOM Testing Library), so every lookup into it needs
   // `includeHiddenElements: true`. That exclusion is itself proof the
   // decorative-hiding works: a sighted a11y query genuinely can't "see" it.
-  it('shows the translucent-black-wash watermark placeholder on a full-size card with no image', () => {
-    const { getByTestId } = render(
+  // Full-size cards deliberately DROP the image region entirely when there is
+  // no image — no band, no watermark, the card starts at the meta row. The
+  // watermark read as a broken photo rather than a deliberate marker. Compact
+  // cards and the chat context card keep it, so the placeholder itself lives on
+  // and the tests below still cover it through the compact base.
+  it('renders no placeholder at all on a full-size card with no image', () => {
+    const { queryByTestId } = render(
       <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
     );
-    expect(getByTestId('placeholder-ground', { includeHiddenElements: true })).toBeTruthy();
-    expect(getByTestId('mera-logo', { includeHiddenElements: true })).toBeTruthy();
+    expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
+    expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
   });
 
   it('hides the placeholder from the accessibility tree (decorative, not an article photo)', () => {
     const { getByTestId, queryByTestId } = render(
-      <ArticleSuggestionCard suggestion={makeSuggestion({ image_url: null })} onPress={jest.fn()} />,
+      <ArticleStandaloneCompactCard article={makeArticle({ image_url: null })} onPress={jest.fn()} />,
     );
     // Excluded from a default (non-hidden) query — this is the behavior we want.
     expect(queryByTestId('placeholder-ground')).toBeNull();
