@@ -39,7 +39,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { HStack } from '@/components/ui/hstack';
 import MeraLogo from '@/components/custom/MeraLogo';
 import type { Verdict } from '@/lib/stores/feed-order-store';
-import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share2, Check, CheckCheck } from 'lucide-react-native';
+import { ThumbsUp, ThumbsDown, Bookmark, Crosshair, Share2, SearchCheck } from 'lucide-react-native';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -47,6 +47,8 @@ const WHITE = '#FFFFFF';
 const LIKE = '#22C55E';
 const DISLIKE = '#EF4444';
 const SAVE_ACCENT = 'rgb(231,138,83)';
+/** Disabled ink for a control that has already done its job. */
+const MUTED = '#6B7280';
 const ICON_SIZE = 27;
 const STROKE = 1.8;
 
@@ -219,10 +221,23 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
       {onFactCheck ? (
         <Pressable
           testID="card-action-fact-check"
-          onPress={onFactCheck}
+          // DISABLED ONCE A CHECK EXISTS. A check is cached against the article
+          // and shared, so asking again cannot produce a different answer — the
+          // second tap would be a no-op that looks like an action. Disabling
+          // says "this is already done" instead of quietly doing nothing.
+          //
+          // `pending` stays TAPPABLE: the panel is already showing progress, and
+          // a re-tap there is idempotent (the server returns the same row), so
+          // it costs nothing and lets a reader who missed the toast confirm
+          // their request landed.
+          onPress={factCheckState === 'done' ? undefined : onFactCheck}
+          disabled={factCheckState === 'done'}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityState={{ selected: factCheckState !== 'none' }}
+          accessibilityState={{
+            selected: factCheckState !== 'none',
+            disabled: factCheckState === 'done',
+          }}
           accessibilityLabel={t(
             factCheckState === 'done'
               ? 'factCheck.actionA11yDone'
@@ -231,16 +246,24 @@ const CardActionBar: React.FC<CardActionBarProps> = ({
                 : 'factCheck.actionA11y',
           )}
         >
-          {factCheckState === 'done' ? (
-            <CheckCheck size={ICON_SIZE} strokeWidth={STROKE} color={LIKE} fill="none" />
-          ) : (
-            <Check
-              size={ICON_SIZE}
-              strokeWidth={STROKE}
-              color={factCheckState === 'pending' ? SAVE_ACCENT : WHITE}
-              fill="none"
-            />
-          )}
+          {/* ONE SHAPE IN EVERY STATE, colour carries the rest. This used to be
+              a single tick that became a double tick once answered; the double
+              tick read as "sent/delivered" rather than as "there is a finding
+              here", and it changed the affordance's silhouette for something
+              that is not a different action. Muted grey is the disabled state,
+              and it is the same glyph as the fact-check block it opens. */}
+          <SearchCheck
+            size={ICON_SIZE}
+            strokeWidth={STROKE}
+            color={
+              factCheckState === 'done'
+                ? MUTED
+                : factCheckState === 'pending'
+                  ? SAVE_ACCENT
+                  : WHITE
+            }
+            fill="none"
+          />
         </Pressable>
       ) : null}
 

@@ -21,7 +21,6 @@
     "yes": "Có",
     "no": "Không",
     "saving": "Đang lưu...",
-    "offlineBanner": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu — chúng tôi sẽ tiếp tục cố gắng.",
     "offlineBannerOffline": "Bạn đang ngoại tuyến. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
     "offlineBannerInternetDown": "Không có kết nối Internet. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
     "offlineBannerServerDown": "Kết nối chậm hoặc không có với Mera. Đang hiển thị tin tức đã lưu, chúng tôi sẽ tiếp tục thử.",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "Vui lòng giữ màn hình này mở."
         },
-        "sending": {
-          "shortName": "Yêu cầu tin tức hôm nay",
-          "tooltip": "Mera đang chuẩn bị yêu cầu được mã hóa của bạn trên điện thoại. Vui lòng giữ ứng dụng mở trong bước này.",
-          "headlines": [
-            "Đang yêu cầu tin tức hôm nay cho bạn…",
-            "Mera là một ứng dụng khác biệt: yêu cầu của bạn được mã hóa ngay trên điện thoại trước khi gửi đi."
-          ],
-          "amberSubline": "Vui lòng giữ màn hình này mở trong vài giây: chúng tôi không thể thực hiện bước này ở nền."
-        },
-        "hydrating": {
-          "shortName": "Tải về điện thoại",
-          "tooltip": "Các bài viết hôm nay đang được sao chép về điện thoại của bạn để các bước tiếp theo có thể diễn ra riêng tư.",
-          "headlines": [
-            "Đang tải các bài viết hôm nay về điện thoại của bạn…",
-            "Mera đưa tin tức đến thiết bị của bạn. Sở thích của bạn không bao giờ rời khỏi thiết bị."
-          ],
-          "amberSubline": "Vui lòng giữ màn hình này mở."
-        },
         "cloudRelevance": {
-          "shortName": "Tính toán mức độ liên quan",
-          "tooltip": "Một AI trên đám mây đang đọc từng bài viết và chọn những bài có thể quan trọng với bạn. Yêu cầu của bạn được mã hóa: chỉ điện thoại của bạn giữ khóa.",
           "headlines": [
             "Một AI đang đọc từng bài viết để xem bài nào quan trọng với bạn.",
             "Yêu cầu của bạn được mã hóa: chỉ điện thoại của bạn giữ khóa."
           ]
         },
         "cloudReasons": {
-          "shortName": "Viết ghi chú cho bạn",
-          "tooltip": "AI đang viết ghi chú ngắn cho mỗi bài viết giải thích tại sao bài đó có thể quan trọng với bạn. Yêu cầu vẫn được mã hóa.",
           "headlines": [
             "Đang viết ghi chú ngắn cho từng bài viết liên quan.",
             "Bạn có thể rời đi, chúng tôi sẽ thông báo khi xong.",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "Chấm điểm trên điện thoại",
-          "tooltip": "Điện thoại của bạn đang chấm điểm các bài viết ngay trên máy. Không có dữ liệu nào rời thiết bị trong bước này.",
           "headlines": [
             "Điện thoại của bạn đang chấm điểm các bài viết cho bạn.",
             "Bước này diễn ra hoàn toàn trên thiết bị của bạn: không có gì rời đi."
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "Khẩn cấp",
-      "majorImpact": "Tác động lớn",
-      "notableImpact": "Tác động đáng chú ý",
-      "goodToKnow": "Hay biết thêm",
       "unscoredShort": "Chưa chấm điểm",
       "high": "Cao",
       "medium": "Trung bình",
@@ -858,7 +830,6 @@
     "autoRenew": "Tự động gia hạn",
     "customerCenter": "Quản lý / hủy gói đăng ký",
     "dailyArticleLimit": "Giới hạn bài viết hằng ngày",
-    "description": "Mera đọc tin tức cho bạn: một bảng tin được tạo hình theo những gì bạn quan tâm, bảng điều khiển hàng ngày, những câu chuyện bạn chọn theo dõi, và trò chuyện luôn học hỏi những gì quan trọng với bạn.",
     "detailsSection": "Chi tiết gói đăng ký",
     "expiresOn": "Hết hạn vào",
     "lifetime": "Trọn đời",
@@ -890,11 +861,8 @@
     "upgrade": "Nâng cấp",
     "activatedBody": "Bảng tin cá nhân, bảng điều khiển, những câu chuyện theo dõi và trò chuyện đã sẵn sàng.",
     "activatedTitle": "{{plan}} đã hoạt động",
-    "allPlansHint": "Tất cả các gói đều ở trên màn hình tiếp theo.",
     "lapsedFreeNote": "Mera News Free là của bạn miễn là bạn muốn. Một gói là điều bắt đầu Mera hoạt động lại trên tin tức của bạn.",
     "manageBadge": "Quản lý",
-    "startWithStarter": "Bắt đầu với Starter",
-    "starterRecommendation": "Starter là nơi để bắt đầu. Mera News Free ở đó để giữ những gì bạn đã xây dựng trên thiết bị này, chỉ là vào ngày đầu tiên thì không có gì để giữ.",
     "turnMeraBackOn": "Bật Mera lại",
     "para1": "Mera News có thể miễn phí. Đó chỉ có nghĩa là ai đó khác trả tiền: một nhà quảng cáo mua sự chú ý của bạn, dữ liệu của bạn, hoặc một bài viết tích cực. Rất nhiều thứ trông giống tin tức chính là như thế.",
     "para2": "Phương tiện tài trợ bởi quảng cáo không có giới hạn. Không có giới hạn về những gì nó lấy từ bạn, và không có giới hạn về cách sử dụng sau đó. Chúng tôi không muốn là công ty đó, vì vậy thỏa thuận ở đây rất đơn giản. Bạn giữ dữ liệu của bạn. Phần mềm làm công việc. Bạn trả tiền cho nó.",
@@ -1161,7 +1129,6 @@
     "generating": "Đang tạo chủ đề…",
     "generateMore": "Tạo thêm",
     "generatingMore": "Đang tạo…",
-    "acceptAll": "Được đấy",
     "saveAll": "Lưu tất cả ({{count}})",
     "delete": "Xóa chủ đề",
     "undo": "Hoàn tác",

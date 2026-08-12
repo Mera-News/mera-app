@@ -21,7 +21,6 @@
     "yes": "Evet",
     "no": "Hayır",
     "saving": "Kaydediliyor...",
-    "offlineBanner": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz — denemelere devam edeceğiz.",
     "offlineBannerOffline": "Çevrimdışısın. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
     "offlineBannerInternetDown": "İnternet bağlantısı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
     "offlineBannerServerDown": "Mera'ya yavaş veya bağlantı yok. Kaydedilmiş haberleri gösteriyoruz, denemelere devam edeceğiz.",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "Lütfen bu ekranı açık tut."
         },
-        "sending": {
-          "shortName": "Bugünün haberleri isteniyor",
-          "tooltip": "Mera telefonunda şifreli isteği hazırlıyor. Bu adım için uygulamayı açık tutman gerekiyor.",
-          "headlines": [
-            "Bugünün haberleri senin için isteniyor…",
-            "Mera farklı bir uygulama: isteğin çıkmadan önce telefonunda şifreleniyor."
-          ],
-          "amberSubline": "Birkaç saniyeliğine bu ekranda kal: bu adımı arka planda yapamıyoruz."
-        },
-        "hydrating": {
-          "shortName": "Telefona çekiliyor",
-          "tooltip": "Bugünün makaleleri telefonuna kopyalanıyor, böylece sonraki adımlar gizli biçimde çalışabilsin.",
-          "headlines": [
-            "Bugünün makaleleri telefonuna aktarılıyor…",
-            "Mera haberleri cihazına getirir. İlgi alanların hiçbir zaman buradan çıkmaz."
-          ],
-          "amberSubline": "Lütfen bu ekranı açık tut."
-        },
         "cloudRelevance": {
-          "shortName": "Alaka düzeyi hesaplanıyor",
-          "tooltip": "Buluttaki bir AI her makaleyi okuyarak sana neyin önemli olabileceğini seçiyor. İsteğin şifreli: anahtarı yalnızca telefonun tutuyor.",
           "headlines": [
             "Bir AI her makaleyi okuyarak hangilerinin sana önemli olduğunu belirliyor.",
             "İsteğin şifreli: anahtarı yalnızca telefonun tutuyor."
           ]
         },
         "cloudReasons": {
-          "shortName": "Notlar yazılıyor",
-          "tooltip": "AI her hikaye için kısa bir not yazıyor: bu haberin sana neden önemli olduğunu açıklıyor. İstek şifreli kalmaya devam ediyor.",
           "headlines": [
             "Her uygun hikaye için kısa bir not yazılıyor.",
             "Uzaklaşabilirsin. Hazır olduğunda sana bildirim göndeririz.",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "Telefonda puanlanıyor",
-          "tooltip": "Telefonun bu hikayeleri yerel olarak puanlıyor. Bu adım için hiçbir şey cihazdan çıkmıyor.",
           "headlines": [
             "Telefonun bu hikayeleri senin için puanlıyor.",
             "Bu adım tamamen cihazında gerçekleşiyor: hiçbir şey dışarı çıkmıyor."
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "Acil",
-      "majorImpact": "Büyük etki",
-      "notableImpact": "Önemli etki",
-      "goodToKnow": "Bilinmesinde fayda var",
       "unscoredShort": "Puansız",
       "high": "Yüksek",
       "medium": "Orta",
@@ -858,7 +830,6 @@
     "autoRenew": "Otomatik yenileme",
     "customerCenter": "Aboneliği yönet / iptal et",
     "dailyArticleLimit": "Günlük makale sınırı",
-    "description": "Mera sizin için haberleri okuyor: ilgi alanlarınıza göre şekillendirilen bir akış, günün özeti, takip ettiğiniz hikayeler ve sizin için neyin önemli olduğunu öğrenmeye devam eden sohbet.",
     "detailsSection": "Abonelik ayrıntıları",
     "expiresOn": "Bitiş tarihi",
     "lifetime": "Ömür boyu",
@@ -890,11 +861,8 @@
     "upgrade": "Yükselt",
     "activatedBody": "Kişiselleştirilmiş akışınız, paneliniz, takip ettiğiniz haberler ve sohbet hazır.",
     "activatedTitle": "{{plan}} aktif",
-    "allPlansHint": "Her plan bir sonraki ekranda.",
     "lapsedFreeNote": "Mera News Free istediğiniz sürece sizindir. Bir plan, Mera'nın haberlerde yeniden çalışmaya başlamasını sağlayan şey.",
     "manageBadge": "Yönet",
-    "startWithStarter": "Starter ile başlayın",
-    "starterRecommendation": "Starter başlamak için seçilecek yerdir. Mera News Free ise bu cihazda zaten oluşturduğunuz şeyi korumak içindir, ancak ilk gün henüz korunacak bir şey yoktur.",
     "turnMeraBackOn": "Mera'yı tekrar açın",
     "para1": "Mera News ücretsiz olabilirdi. Ama bu birisinin ödediği anlamına gelirdi: reklam veren seni satın alıyor, verilerin alınıyor veya dostça bir yazı. Haberin çoğu tam olarak budur.",
     "para2": "Reklam destekli medyanın sınırı yok. Ne kadarını senden aldığının ve sonradan ne için kullanıldığının. Biz o şirket olmak istemiyoruz, bu yüzden buradaki anlaşma basit. Verileriniz sizde kalır. Yazılım işi yapır. Siz için ödersiniz.",
@@ -1162,7 +1130,6 @@
     "generating": "Konular oluşturuluyor…",
     "generateMore": "Daha fazla oluştur",
     "generatingMore": "Oluşturuluyor…",
-    "acceptAll": "İyi görünüyor",
     "saveAll": "Tümünü kaydet ({{count}})",
     "delete": "Konuyu kaldır",
     "undo": "Geri al",

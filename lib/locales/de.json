@@ -21,7 +21,6 @@
     "loggingOut": "Wird abgemeldet...",
     "never": "Nie",
     "saving": "Wird gespeichert...",
-    "offlineBanner": "Langsame oder keine Verbindung zu Mera. Zeige gespeicherte Nachrichten — wir versuchen es weiter.",
     "offlineBannerOffline": "Sie sind offline. Gespeicherte Nachrichten werden angezeigt, und wir versuchen es weiter.",
     "offlineBannerInternetDown": "Kein Internetzugang. Gespeicherte Nachrichten werden angezeigt, und wir versuchen es weiter.",
     "offlineBannerServerDown": "Langsame oder keine Verbindung zu Mera. Gespeicherte Nachrichten werden angezeigt, und wir versuchen es weiter.",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "Bitte lassen Sie diesen Bildschirm geöffnet."
         },
-        "sending": {
-          "shortName": "Nachrichten von heute anfragen",
-          "tooltip": "Mera bereitet Ihre verschlüsselte Anfrage auf Ihrem Telefon vor. Bitte lassen Sie die App für diesen Schritt geöffnet.",
-          "headlines": [
-            "Die heutigen Nachrichten werden für Sie angefragt…",
-            "Mera ist eine andere Art von App: Ihre Anfrage wird auf Ihrem Telefon verschlüsselt, bevor sie es verlässt."
-          ],
-          "amberSubline": "Bitte lassen Sie diesen Bildschirm für ein paar Sekunden geöffnet, denn dieser Schritt kann nicht im Hintergrund ausgeführt werden."
-        },
-        "hydrating": {
-          "shortName": "Auf Ihr Telefon laden",
-          "tooltip": "Die heutigen Artikel werden auf Ihr Telefon kopiert, damit die nächsten Schritte privat ablaufen können.",
-          "headlines": [
-            "Die heutigen Artikel werden auf Ihr Telefon geladen…",
-            "Mera bringt die Nachrichten auf Ihr Gerät. Ihre Interessen verlassen es nie."
-          ],
-          "amberSubline": "Bitte lassen Sie diesen Bildschirm geöffnet."
-        },
         "cloudRelevance": {
-          "shortName": "Relevanz berechnen",
-          "tooltip": "Eine KI in der Cloud liest jeden Artikel und wählt aus, was für Sie relevant sein könnte. Ihre Anfrage ist verschlüsselt. Nur Ihr Telefon besitzt den Schlüssel.",
           "headlines": [
             "Eine KI liest jeden Artikel, um herauszufinden, welche für Sie wichtig sind.",
             "Ihre Anfrage ist verschlüsselt. Nur Ihr Telefon besitzt den Schlüssel."
           ]
         },
         "cloudReasons": {
-          "shortName": "Notizen für Sie verfassen",
-          "tooltip": "Die KI schreibt für jede Geschichte eine kurze Notiz, warum sie für Sie relevant sein könnte. Die Anfrage bleibt verschlüsselt.",
           "headlines": [
             "Eine kurze Notiz wird für jede relevante Geschichte verfasst.",
             "Sie können sich entfernen: Wir benachrichtigen Sie, wenn alles fertig ist.",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "Bewertung auf Ihrem Telefon",
-          "tooltip": "Ihr Telefon bewertet diese Geschichten lokal. Für diesen Schritt verlässt nichts das Gerät.",
           "headlines": [
             "Ihr Telefon bewertet diese Geschichten für Sie.",
             "Dies geschieht vollständig auf Ihrem Gerät: nichts verlässt es."
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "Notfall",
-      "majorImpact": "Große Auswirkung",
-      "notableImpact": "Nennenswerte Auswirkung",
-      "goodToKnow": "Gut zu wissen",
       "unscoredShort": "Nicht bewertet",
       "high": "Hoch",
       "medium": "Mittel",
@@ -858,7 +830,6 @@
     "autoRenew": "Automatische Verlängerung",
     "customerCenter": "Abo verwalten / kündigen",
     "dailyArticleLimit": "Tägliches Artikellimit",
-    "description": "Mera liest die Nachrichten für dich: einen Feed, der dich interessiert, ein Tages-Dashboard, die Geschichten, denen du folgen möchtest, und einen Chat, der ständig lernt, was dir wichtig ist.",
     "detailsSection": "Abo-Details",
     "expiresOn": "Läuft ab am",
     "lifetime": "Lebenslang",
@@ -890,11 +861,8 @@
     "upgrade": "Upgrade",
     "activatedBody": "Dein personalisierter Feed, dein Dashboard, verfolgte Geschichten und Chat sind bereit.",
     "activatedTitle": "{{plan}} ist aktiv",
-    "allPlansHint": "Jeden Plan findest du auf dem nächsten Bildschirm.",
     "lapsedFreeNote": "Mera News Free gehört dir, so lange du möchtest. Mit einem Plan beginnt Mera wieder, deine Nachrichten zu bearbeiten.",
     "manageBadge": "Verwalten",
-    "startWithStarter": "Starte mit Starter",
-    "starterRecommendation": "Starter ist der richtige Anfang. Mera News Free bewahrt, was du schon auf diesem Gerät aufgebaut hast. Am ersten Tag gibt es noch nichts zu bewahren.",
     "turnMeraBackOn": "Schalte Mera wieder ein",
     "para1": "Mera News könnte kostenlos sein. Das würde nur bedeuten, dass jemand anderes bezahlt: ein Werbetreibender, der deine Aufmerksamkeit, deine Daten oder einen freundlichen Artikel kauft. Ein großer Teil dessen, was wie Nachrichten aussieht, ist genau das.",
     "para2": "Werbefinanzierte Medien haben keine Obergrenze. Weder darin, wie viel sie von dir nehmen, noch wozu das später verwendet wird. Wir wollen nicht diese Firma sein, also ist der Deal hier einfach. Du behältst deine Daten. Die Software macht die Arbeit. Du zahlst dafür.",
@@ -1160,7 +1128,6 @@
     "generating": "Themen werden generiert…",
     "generateMore": "Mehr generieren",
     "generatingMore": "Wird generiert…",
-    "acceptAll": "Sieht gut aus",
     "saveAll": "Alle speichern ({{count}})",
     "delete": "Thema entfernen",
     "undo": "Rückgängig machen",

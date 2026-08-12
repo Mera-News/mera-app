@@ -1,6 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { SearchCheck } from 'lucide-react-native';
-import VerdictIcon from '@/components/custom/fact-checks/VerdictIcon';
+import FactCheckBadge from '@/components/custom/fact-checks/FactCheckBadge';
+import { GLASS_EDGE, GlassPlate } from '@/components/custom/GlassSurface';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -107,9 +108,9 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
      * having forgotten they did it, which reads as the fact check having
      * vanished. Cheap to re-collapse, expensive to debug.
      */
-    const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({});
+    const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
     const toggle = React.useCallback((id: string) => {
-        setCollapsed((prev) => ({ ...prev, [id]: !prev[id] }));
+        setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
     }, []);
 
     if (phase === 'absent') return null;
@@ -174,7 +175,7 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                 const checkedBy = payload?.checkedBy;
                 const checkedByStatus = payload?.checkedByStatus;
                 const rowPrefix = `${testIDPrefix}-${index}`;
-                const isCollapsed = collapsed[row.id] === true;
+                const isOpen = expanded[row.id] === true;
                 // See the file header (PIVOT P8h) — an organisation's own
                 // rating leads once one exists; ours never competes with it.
                 const organisationCount = describeCheckedBy(checkedBy).length;
@@ -190,12 +191,25 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                 );
 
                 return (
-                    <VStack
+                    /* GLASS, and the platform branch is the PRIMITIVE's, not
+                       ours. `GlassPlate` is real Liquid Glass on iOS 26+ and a
+                       flat translucent fill at the same tint everywhere else —
+                       its own doc records six call sites that hand-rolled a
+                       fallback and were all wrong the same way, so this one
+                       does not branch.
+
+                       The plate's parent must be UNPADDED and own the radius
+                       and `overflow-hidden`: Yoga resolves an absolute child's
+                       insets against the CONTENT box, so a padded parent leaves
+                       an unglassed frame. Hence the outer Box here and the
+                       padding on the inner VStack. */
+                    <Box
                         key={row.id}
-                        space="sm"
                         testID={`${rowPrefix}-result`}
-                        className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
+                        className={`rounded-lg overflow-hidden ${GLASS_EDGE}`}
                     >
+                        <GlassPlate />
+                        <VStack space="sm" className="p-3">
                         {/* THE WHOLE HEADER IS THE TOGGLE, not just the chevron.
                             A verdict card is tall — organisations, summary, per
                             claim assessments, sources, disclaimer — and on a
@@ -212,9 +226,9 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                             // is the only cue a non-sighted user gets that the
                             // body is foldable at all — the chevron is
                             // decorative to them.
-                            accessibilityState={{ expanded: !isCollapsed }}
+                            accessibilityState={{ expanded: isOpen }}
                             accessibilityLabel={
-                                isCollapsed ? t('factCheck.expandA11y') : t('factCheck.collapseA11y')
+                                isOpen ? t('factCheck.collapseA11y') : t('factCheck.expandA11y')
                             }
                             // Row height is the tap target; the chevron alone
                             // would be a ~16px one.
@@ -241,17 +255,33 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                         {t('factCheck.title')}
                                     </Text>
                                 )}
+                                {/* The finding itself, on the header line, so a
+                                    closed card still answers the question. Same
+                                    component the Dashboard card uses — which
+                                    badge wins is a correctness rule, not
+                                    styling, and it must not be restated here.
+                                    See FactCheckBadge. */}
+                                <FactCheckBadge
+                                    status={row.status}
+                                    verdict={row.verdict}
+                                    checkedBy={checkedBy}
+                                    checkedByStatus={checkedByStatus}
+                                    testIDPrefix={rowPrefix}
+                                    testIDSuffix="header"
+                                />
                                 <MaterialIcons
-                                    name={isCollapsed ? 'expand-more' : 'expand-less'}
+                                    name={isOpen ? 'expand-less' : 'expand-more'}
                                     size={20}
                                     color="#9CA3AF"
                                 />
                             </HStack>
                         </Pressable>
 
-                        {isCollapsed ? null : blocked ? (
-                            <Text size="sm" className="text-gray-300">{t('factCheck.blocked')}</Text>
-                        ) : verdictInfo ? (
+                        {/* `blocked` has no body: the header badge already says
+                            so, and there is nothing else to show for a check
+                            that found no evidence at all. Repeating it here
+                            stated one finding twice. */}
+                        {!isOpen || blocked ? null : verdictInfo ? (
                             <VStack space="sm">
                                 {/* checkedBy LEADS when populated — see the file
                                     header (PIVOT P8h). Positioned above our own
@@ -271,29 +301,17 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                                 {t('factCheck.ownReadingHeading')}
                                             </Text>
                                         )}
-                                        {presentation === 'lead' ? (
-                                            <Box
-                                                testID={`${rowPrefix}-verdict`}
-                                                className={`self-start flex-row items-center rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
-                                            >
-                                                {/* Shield first, then the words.
-                                                    One tone drives both, so they
-                                                    cannot disagree. */}
-                                                <VerdictIcon tone={verdictInfo.tone} size={16} />
-                                                <Text
-                                                    size="sm"
-                                                    className={`font-semibold ml-1.5 ${TONE_CLASSES[verdictInfo.tone].text}`}
-                                                >
-                                                    {t(verdictInfo.labelKey as any)}
-                                                </Text>
-                                            </Box>
-                                        ) : (
-                                            // 'secondary' — no chip background: a
-                                            // coloured pill is what reads as "the
-                                            // answer", which is exactly the
-                                            // competing signal this demotion
-                                            // exists to remove. Plain, tone-only
-                                            // text instead.
+                                        {/* NO CHIP HERE WHEN OURS IS THE LEAD —
+                                            the header badge already carries it,
+                                            and the same finding stated twice on
+                                            one card reads as two findings. The
+                                            'secondary' case DOES still render:
+                                            there the header shows the
+                                            ORGANISATION's rating, so this is a
+                                            different statement, deliberately
+                                            demoted to plain tone-only text under
+                                            its own heading. */}
+                                        {presentation === 'secondary' && (
                                             <Text
                                                 size="sm"
                                                 testID={`${rowPrefix}-verdict-secondary`}
@@ -371,7 +389,8 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                 </Text>
                             </VStack>
                         ) : null}
-                    </VStack>
+                        </VStack>
+                    </Box>
                 );
             })}
         </VStack>

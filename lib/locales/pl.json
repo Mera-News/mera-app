@@ -21,7 +21,6 @@
     "yes": "Tak",
     "no": "Nie",
     "saving": "Zapisywanie...",
-    "offlineBanner": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości — będziemy dalej próbować.",
     "offlineBannerOffline": "Jesteś offline. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
     "offlineBannerInternetDown": "Brak dostępu do internetu. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
     "offlineBannerServerDown": "Powolne lub brak połączenia z Mera. Wyświetlanie zapisanych wiadomości, będziemy dalej próbować.",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "Proszę utrzymuj ten ekran otwarty."
         },
-        "sending": {
-          "shortName": "Prośba o dzisiejsze wiadomości",
-          "tooltip": "Mera przygotowuje Twoje zaszyfrowane żądanie na telefonie. Proszę utrzymuj aplikację otwartą w tym momencie.",
-          "headlines": [
-            "Prośba o dzisiejsze wiadomości dla Ciebie…",
-            "Mera to wyjątkowa aplikacja: Twoje żądanie jest szyfrowane na telefonie, zanim go opuści."
-          ],
-          "amberSubline": "Proszę utrzymuj ten ekran otwarty przez kilka sekund. Nie możemy wykonać tej części w tle."
-        },
-        "hydrating": {
-          "shortName": "Pobieranie na Twój telefon",
-          "tooltip": "Dzisiejsze artykuły są kopiowane na Twój telefon, aby kolejne kroki mogły być wykonane prywatnie.",
-          "headlines": [
-            "Pobieranie dzisiejszych artykułów na Twój telefon…",
-            "Mera dostarcza wiadomości na Twoje urządzenie. Twoje zainteresowania nigdy go nie opuszczają."
-          ],
-          "amberSubline": "Proszę utrzymuj ten ekran otwarty."
-        },
         "cloudRelevance": {
-          "shortName": "Obliczanie trafności",
-          "tooltip": "Sztuczna inteligencja w chmurze czyta każdy artykuł i wybiera te, które mogą Cię interesować. Twoje żądanie jest zaszyfrowane. Tylko Twój telefon posiada klucz.",
           "headlines": [
             "Sztuczna inteligencja czyta każdy artykuł, aby sprawdzić, które są dla Ciebie ważne.",
             "Twoje żądanie jest zaszyfrowane. Tylko Twój telefon posiada klucz."
           ]
         },
         "cloudReasons": {
-          "shortName": "Pisanie notatek dla Ciebie",
-          "tooltip": "Sztuczna inteligencja pisze krótką notatkę dla każdej historii, wyjaśniając, dlaczego może Cię dotyczyć. Żądanie pozostaje zaszyfrowane.",
           "headlines": [
             "Pisanie krótkiej notatki dla każdej trafnej historii.",
             "Możesz się oddalić. Powiadomimy Cię, gdy będzie gotowe.",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "Ocenianie na Twoim telefonie",
-          "tooltip": "Twój telefon ocenia te artykuły lokalnie. Nic nie opuszcza urządzenia podczas tego kroku.",
           "headlines": [
             "Twój telefon ocenia te artykuły dla Ciebie.",
             "Dzieje się to w całości na Twoim urządzeniu: nic go nie opuszcza."
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "Pilne",
-      "majorImpact": "Duży wpływ",
-      "notableImpact": "Zauważalny wpływ",
-      "goodToKnow": "Warto wiedzieć",
       "unscoredShort": "Nieocenione",
       "high": "Wysoki",
       "medium": "Średni",
@@ -870,7 +842,6 @@
     "autoRenew": "Automatyczne odnawianie",
     "customerCenter": "Zarządzaj / anuluj subskrypcję",
     "dailyArticleLimit": "Dzienny limit artykułów",
-    "description": "Mera czyta wiadomości dla ciebie: kanał dostosowany do tego, co naprawdę cię interesuje, podsumowanie dnia, historie, które chcesz śledzić, i czat, który ciągle uczy się, co dla ciebie ważne.",
     "detailsSection": "Szczegóły subskrypcji",
     "expiresOn": "Wygasa",
     "lifetime": "Dożywotnia",
@@ -902,11 +873,8 @@
     "upgrade": "Ulepsz",
     "activatedBody": "Twój spersonalizowany kanał, pulpit, śledzone historie i chat są gotowe.",
     "activatedTitle": "{{plan}} jest aktywny",
-    "allPlansHint": "Wszystkie plany są na następnym ekranie.",
     "lapsedFreeNote": "Mera News Darmowa jest Twoja na zawsze. Plan to to, co uruchamia pracę Mery nad Twoimi wiadomościami.",
     "manageBadge": "Zarządzaj",
-    "startWithStarter": "Zacznij ze Starterem",
-    "starterRecommendation": "Starter to dobry punkt wyjścia. Mera News Darmowa zachowuje to, co już zbudowałeś na tym urządzeniu, ale na początku nie masz nic do przechowywania.",
     "turnMeraBackOn": "Włącz Merę ponownie",
     "para1": "Mera News mogłaby być bezpłatna. Oznaczałoby to tylko, że ktoś inny zapłacałby: reklamujący kupujący Twoją uwagę, Twoje dane, albo pozytywny artykuł. Wiele tego, co wygląda jak wiadomości, jest dokładnie tym.",
     "para2": "Media finansowane z reklam nie mają pułapu. Ani na to, ile pobierają od Ciebie, ani na to, jak to jest potem wykorzystywane. Nie chcemy być tą firmą, więc tutaj umowa jest prosta. Ty zachowujesz swoje dane. Oprogramowanie wykonuje pracę. Ty za to płacisz.",
@@ -1178,7 +1146,6 @@
     "generating": "Generowanie tematów…",
     "generateMore": "Wygeneruj więcej",
     "generatingMore": "Generowanie…",
-    "acceptAll": "Wygląda dobrze",
     "saveAll": "Zapisz wszystko ({{count}})",
     "delete": "Usuń temat",
     "undo": "Cofnij",

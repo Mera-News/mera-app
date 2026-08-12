@@ -21,7 +21,6 @@
     "yes": "Oui",
     "no": "Non",
     "saving": "Enregistrement...",
-    "offlineBanner": "Connexion lente ou absente à Mera. Affichage des actualités enregistrées — nous continuons d'essayer.",
     "offlineBannerOffline": "Vous êtes hors ligne. Affichage des actualités enregistrées, nous continuons d'essayer.",
     "offlineBannerInternetDown": "Pas d'accès Internet. Affichage des actualités enregistrées, nous continuons d'essayer.",
     "offlineBannerServerDown": "Connexion lente ou absente à Mera. Affichage des actualités enregistrées, nous continuons d'essayer.",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "Veuillez garder cet écran ouvert."
         },
-        "sending": {
-          "shortName": "Demande des actualités du jour",
-          "tooltip": "Mera prépare votre requête chiffrée sur votre téléphone. Veuillez garder l'application ouverte pendant cette étape.",
-          "headlines": [
-            "Demande des actualités du jour pour vous…",
-            "Mera est une application différente : votre requête est chiffrée sur votre téléphone avant de partir."
-          ],
-          "amberSubline": "Veuillez garder cet écran ouvert quelques secondes, car nous ne pouvons pas effectuer cette étape en arrière-plan."
-        },
-        "hydrating": {
-          "shortName": "Téléchargement sur votre téléphone",
-          "tooltip": "Les articles du jour sont copiés sur votre téléphone pour que les étapes suivantes se déroulent en privé.",
-          "headlines": [
-            "Chargement des articles du jour sur votre téléphone…",
-            "Mera apporte les actualités sur votre appareil. Vos centres d'intérêt ne le quittent jamais."
-          ],
-          "amberSubline": "Veuillez garder cet écran ouvert."
-        },
         "cloudRelevance": {
-          "shortName": "Calcul de la pertinence",
-          "tooltip": "Une IA dans le cloud lit chaque article et sélectionne ce qui pourrait vous intéresser. Votre requête est chiffrée. Seul votre téléphone détient la clé.",
           "headlines": [
             "Une IA lit chaque article pour voir lesquels vous concernent.",
             "Votre requête est chiffrée. Seul votre téléphone détient la clé."
           ]
         },
         "cloudReasons": {
-          "shortName": "Rédaction de notes pour vous",
-          "tooltip": "L'IA rédige une courte note pour chaque article expliquant pourquoi il pourrait vous intéresser. La requête reste chiffrée.",
           "headlines": [
             "Rédaction d'une courte note pour chaque article pertinent.",
             "Vous pouvez vous éloigner : nous vous préviendrons dès que c'est prêt.",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "Tri sur votre téléphone",
-          "tooltip": "Votre téléphone trie ces articles en local. Rien ne quitte l'appareil pour cette étape.",
           "headlines": [
             "Votre téléphone trie ces articles pour vous.",
             "Cette étape se déroule entièrement sur votre appareil : rien n'en sort."
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "Urgence",
-      "majorImpact": "Impact majeur",
-      "notableImpact": "Impact notable",
-      "goodToKnow": "Bon à savoir",
       "unscoredShort": "Non évalué",
       "high": "Élevé",
       "medium": "Moyen",
@@ -863,7 +835,6 @@
     "autoRenew": "Renouvellement automatique",
     "customerCenter": "Gérer / annuler l'abonnement",
     "dailyArticleLimit": "Limite quotidienne d'articles",
-    "description": "Mera lit les actualités pour vous : un fil façonné par ce qui vous intéresse vraiment, un résumé du jour, les histoires que vous choisissez de suivre, et un chat qui apprend constamment ce qui vous importe.",
     "detailsSection": "Détails de l'abonnement",
     "expiresOn": "Expire le",
     "lifetime": "À vie",
@@ -895,11 +866,8 @@
     "upgrade": "Passer à un forfait supérieur",
     "activatedBody": "Votre fil personnalisé, votre tableau de bord, les histoires suivies et le chat sont prêts.",
     "activatedTitle": "{{plan}} est actif",
-    "allPlansHint": "Tous les plans se trouvent sur l'écran suivant.",
     "lapsedFreeNote": "Mera News Gratuit est à vous aussi longtemps que vous le souhaitez. Un plan est ce qui relance Mera pour travailler sur vos actualités.",
     "manageBadge": "Gérer",
-    "startWithStarter": "Commencer avec Starter",
-    "starterRecommendation": "Starter est par où commencer. Mera News Gratuit est là pour conserver ce que vous avez déjà construit sur cet appareil, et le premier jour, il n'y a encore rien à conserver.",
     "turnMeraBackOn": "Réactiver Mera",
     "para1": "Mera News pourrait être gratuit. Cela signifierait simplement que quelqu'un d'autre paierait : un annonceur achète votre attention, vos données, ou une bonne couverture. Beaucoup de ce qui semble être des actualités est exactement cela.",
     "para2": "Les médias financés par la pub n'ont pas de limite. Ni sur ce qu'ils vous prennent, ni sur ce que cela servira plus tard. Nous ne voulons pas être cette entreprise, donc le marché ici est simple. Vous gardez vos données. Le logiciel fait le travail. Vous le payez.",
@@ -1166,7 +1134,6 @@
     "generating": "Génération des sujets…",
     "generateMore": "Générer plus",
     "generatingMore": "Génération…",
-    "acceptAll": "Ça me va",
     "saveAll": "Tout enregistrer ({{count}})",
     "delete": "Supprimer le sujet",
     "undo": "Annuler",

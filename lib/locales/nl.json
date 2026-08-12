@@ -21,7 +21,6 @@
     "loggingOut": "Uitloggen...",
     "never": "Nooit",
     "saving": "Opslaan...",
-    "offlineBanner": "Traag of geen verbinding met Mera. Weergeven van opgeslagen nieuws — we proberen het opnieuw.",
     "offlineBannerOffline": "Je bent offline. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
     "offlineBannerInternetDown": "Geen internetverbinding. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
     "offlineBannerServerDown": "Langzame of geen verbinding met Mera. Opgeslagen nieuws wordt weergegeven en we proberen het opnieuw.",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "Houd dit scherm alsjeblieft open."
         },
-        "sending": {
-          "shortName": "Nieuws van vandaag opvragen",
-          "tooltip": "Mera bereidt je versleutelde verzoek op je telefoon voor. Houd de app open voor dit gedeelte.",
-          "headlines": [
-            "Nieuws van vandaag voor jou opvragen…",
-            "Mera is een ander soort app: je verzoek is versleuteld op je telefoon voordat het vertrekt."
-          ],
-          "amberSubline": "Houd dit scherm alsjeblieft een paar seconden open. We kunnen dit gedeelte niet op de achtergrond doen."
-        },
-        "hydrating": {
-          "shortName": "Ophalen naar je telefoon",
-          "tooltip": "De artikelen van vandaag worden naar je telefoon gekopieerd zodat de volgende stappen privé kunnen verlopen.",
-          "headlines": [
-            "Artikelen van vandaag naar je telefoon ophalen…",
-            "Mera brengt het nieuws naar jouw apparaat. Je interesses verlaten het nooit."
-          ],
-          "amberSubline": "Houd dit scherm alsjeblieft open."
-        },
         "cloudRelevance": {
-          "shortName": "Relevantie berekenen",
-          "tooltip": "Een AI in de cloud leest elk artikel en kiest wat voor jou van belang kan zijn. Je verzoek is versleuteld. Alleen je telefoon heeft de sleutel.",
           "headlines": [
             "Een AI leest elk artikel om te zien welke voor jou van belang zijn.",
             "Je verzoek is versleuteld. Alleen je telefoon heeft de sleutel."
           ]
         },
         "cloudReasons": {
-          "shortName": "Notities voor jou schrijven",
-          "tooltip": "De AI schrijft voor elk artikel een korte notitie uit waarom het voor jou van belang kan zijn. Het verzoek blijft versleuteld.",
           "headlines": [
             "Een korte notitie schrijven voor elk relevant artikel.",
             "Je kunt wegstappen. We sturen je een melding wanneer het klaar is.",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "Scoren op je telefoon",
-          "tooltip": "Je telefoon scoort deze artikelen lokaal. Niets verlaat het apparaat voor deze stap.",
           "headlines": [
             "Je telefoon scoort deze artikelen voor jou.",
             "Dit gebeurt volledig op je apparaat: niets verlaat het."
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "Noodgeval",
-      "majorImpact": "Grote impact",
-      "notableImpact": "Merkbare impact",
-      "goodToKnow": "Goed om te weten",
       "unscoredShort": "Ongepuntueerd",
       "high": "Hoog",
       "medium": "Gemiddeld",
@@ -858,7 +830,6 @@
     "autoRenew": "Automatisch verlengen",
     "customerCenter": "Abonnement beheren / opzeggen",
     "dailyArticleLimit": "Daglimiet voor artikelen",
-    "description": "Mera leest het nieuws voor je. Een feed gevormd door wat je echt interesseert, een dashboard van vandaag, de verhalen die je volgt, en een chat die leert wat voor jou belangrijk is.",
     "detailsSection": "Abonnementsgegevens",
     "expiresOn": "Verloopt op",
     "lifetime": "Levenslang",
@@ -890,11 +861,8 @@
     "upgrade": "Upgraden",
     "activatedBody": "Je persoonlijke feed, dashboard, gevolgde verhalen en chat staan klaar.",
     "activatedTitle": "{{plan}} is actief",
-    "allPlansHint": "Elk plan staat op het volgende scherm.",
     "lapsedFreeNote": "Mera News Free is voor jou zolang je het wilt. Een plan brengt Mera aan de slag met je nieuws opnieuw.",
     "manageBadge": "Beheren",
-    "startWithStarter": "Begin met Starter",
-    "starterRecommendation": "Starter is waar je begint. Mera News Free is er voor wat je al hebt opgebouwd op dit apparaat, en op dag één is er nog niets.",
     "turnMeraBackOn": "Mera opnieuw inschakelen",
     "para1": "Mera News zou gratis kunnen zijn. Dat zou alleen betekenen dat iemand anders betaalde: een adverteerder die je aandacht, je gegevens, of een gunstig artikel koopt. Veel van wat als nieuws uitziet, is precies dat.",
     "para2": "Met advertenties gefinancieerde media hebben geen grenzen. Niet in hoeveel het van je neemt, en niet in waarvoor dat later wordt gebruikt. We willen dat bedrijf niet zijn, dus de afspraak hier is simpel. Jij houdt je gegevens. De software doet het werk. Je betaalt ervoor.",
@@ -1160,7 +1128,6 @@
     "generating": "Onderwerpen genereren…",
     "generateMore": "Meer genereren",
     "generatingMore": "Genereren…",
-    "acceptAll": "Ziet er goed uit",
     "saveAll": "Alles opslaan ({{count}})",
     "delete": "Onderwerp verwijderen",
     "undo": "Ongedaan maken",

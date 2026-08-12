@@ -1,6 +1,7 @@
 import { Box } from '@/components/ui/box';
 import { SearchCheck } from 'lucide-react-native';
-import VerdictIcon from '@/components/custom/fact-checks/VerdictIcon';
+import FactCheckBadge from '@/components/custom/fact-checks/FactCheckBadge';
+import { GLASS_EDGE, GlassPlate } from '@/components/custom/GlassSurface';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -105,9 +106,16 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 accessibilityRole={onPress ? 'button' : undefined}
                 accessibilityLabel={onPress ? t('factCheck.dashboard.openA11y') : undefined}
                 testID={`${testIDPrefix}-open-${item.id}`}
-                className="rounded-lg border border-gray-700 bg-gray-800/40 p-3"
+                // UNPADDED and clipping, because `GlassPlate` is an absolute
+                // fill and Yoga resolves its insets against the CONTENT box —
+                // padding here would leave an unglassed frame. The padding
+                // moves to the inner VStack. The platform branch is the
+                // primitive's: real Liquid Glass where expo reports it
+                // available, a flat fill at the same tint everywhere else.
+                className={`rounded-lg overflow-hidden ${GLASS_EDGE}`}
             >
-                <VStack space="sm">
+                <GlassPlate />
+                <VStack space="sm" className="p-3">
             <HStack space="xs" className="items-start pr-8">
                     <SearchCheck
                         size={16}
@@ -143,74 +151,17 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 />
             ) : null}
 
-            {/* ONE STATUS LINE, AND ONLY ONE. This is a list row, not the
-                answer: the full card — organisations with their own ratings and
-                links, our reading, the claims, the sources, the disclaimer —
-                lives on the article screen this row opens.
-
-                Which badge shows is NOT cosmetic, and follows the same rule the
-                full card does (PIVOT P8h): when an organisation has published,
-                ITS verbatim rating is the badge, because a compact row has
-                space for exactly one and ours must never be the one that
-                displaces theirs. Showing "Consistent with sources" on a row
-                where Alt News rated the claim False is the original defect in
-                its smallest possible form. */}
-            {!resolved ? (
-                <Text size="xs" className="text-gray-400" testID={`${testIDPrefix}-pending`}>
-                    {t('factCheck.dashboard.pending')}
-                </Text>
-            ) : blocked ? (
-                <Text size="xs" className="text-gray-400">{t('factCheck.blocked')}</Text>
-            ) : lookupUnavailable ? (
-                // THE DISTINCTION THIS WHOLE FEATURE TURNS ON, and the one a
-                // compact row is most likely to lose. `unavailable` means the
-                // lookup never happened, so ANY verdict badge here would be
-                // presented as though we had checked and were reporting back.
-                // It outranks the verdict for exactly that reason.
-                <Text
-                    size="xs"
-                    className="text-gray-400"
-                    testID={`${testIDPrefix}-unavailable-${item.id}`}
-                    numberOfLines={2}
-                >
-                    {t('factCheck.dashboard.couldNotCheck')}
-                </Text>
-            ) : hasCheckedBy ? (
-                <HStack space="xs" className="items-center flex-wrap">
-                    <Box
-                        testID={`${testIDPrefix}-organisation-${item.id}`}
-                        className="self-start rounded-full bg-gray-800 px-3 py-1"
-                    >
-                        {/* Verbatim, on that organisation's own scale — never
-                            mapped onto our five verdict values, which is the
-                            same rule the server applies when it stores it. */}
-                        <Text size="xs" className="font-semibold text-gray-200" numberOfLines={1}>
-                            {leadOrganisation?.verdict
-                                ? `${leadOrganisation.organisation}: ${leadOrganisation.verdict}`
-                                : leadOrganisation?.organisation}
-                        </Text>
-                    </Box>
-                    {organisationCount > 1 && (
-                        <Text size="xs" className="text-gray-400">
-                            {t('factCheck.dashboard.moreOrganisations', {
-                                count: organisationCount - 1,
-                            })}
-                        </Text>
-                    )}
-                </HStack>
-            ) : verdictInfo && presentation !== 'suppressed' ? (
-                <Box
-                    testID={`${testIDPrefix}-verdict-${item.id}`}
-                    className={`self-start flex-row items-center rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
-                >
-                    {/* Shield first, then the words. Same tone drives both, so
-                        the two can never disagree about the finding. */}
-                    <VerdictIcon tone={verdictInfo.tone} size={14} />
-                    <Text size="xs" className={`font-semibold ml-1.5 ${TONE_CLASSES[verdictInfo.tone].text}`}>
-                        {t(verdictInfo.labelKey as any)}
-                    </Text>
-                </Box>
-            ) : null}
+            {/* One status line, and which one is a correctness question — see
+                FactCheckBadge. Shared with the article panel's collapsed
+                header so the two surfaces cannot drift. */}
+            <FactCheckBadge
+                status={item.status}
+                verdict={item.verdict}
+                checkedBy={checkedBy}
+                checkedByStatus={checkedByStatus}
+                testIDPrefix={testIDPrefix}
+                testIDSuffix={item.id}
+            />
                 </VStack>
             </Pressable>
 

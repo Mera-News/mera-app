@@ -84,7 +84,19 @@ function hookState(overrides: Record<string, unknown> = {}) {
     });
 }
 
-const renderPanel = () => render(<FactCheckPanel articleId="a1" />);
+// The panel now starts CLOSED: the header carries the finding as a badge and
+// the body is one tap away. Most tests here are about the BODY, so this helper
+// opens every card it finds. Tests that are about the collapse itself use
+// `renderClosed` below and drive the toggle themselves.
+const renderClosed = () => render(<FactCheckPanel articleId="a1" />);
+
+const renderPanel = () => {
+    const utils = renderClosed();
+    for (const toggle of utils.queryAllByTestId(/-toggle$/)) {
+        fireEvent.press(toggle);
+    }
+    return utils;
+};
 
 const storedRow = (overrides: Record<string, unknown> = {}) => ({
     id: 'row-0',
@@ -200,7 +212,7 @@ describe('FactCheckPanel', () => {
         const { getByTestId, queryByTestId, getByText } = renderPanel();
         expect(getByTestId('fact-check-panel')).toBeTruthy();
         expect(queryByTestId('spinner')).toBeNull();
-        expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
+        expect(getByTestId('fact-check-0-verdict-header')).toBeTruthy();
         expect(getByText('factCheck.verdict.supported.label')).toBeTruthy();
         // The retired full-width action button is gone for good — there is
         // exactly one way in now, the action-row tick.
@@ -344,7 +356,7 @@ describe('FactCheckPanel', () => {
         });
         const { getByTestId, getByText } = renderPanel();
         expect(getByTestId('fact-check-panel')).toBeTruthy();
-        expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
+        expect(getByTestId('fact-check-0-verdict-header')).toBeTruthy();
         expect(getByText('factCheck.verdict.unverifiable.label')).toBeTruthy();
         expect(getByText('factCheck.verdict.unverifiable.detail')).toBeTruthy();
         expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
@@ -384,13 +396,17 @@ describe('FactCheckPanel', () => {
                 payload: { ...storedRow().payload, checkedBy: [], checkedByStatus: 'unavailable' },
             })],
         });
-        const { getByText, queryByText, getByTestId } = renderPanel();
+        const { getByText, queryByText, getByTestId, queryByTestId } = renderPanel();
+        // `checkedByStatus` is about TIER 1 only. The tier 2 verdict we DO
+        // have still shows in the header badge — suppressing it would throw
+        // away a real finding — while the attribution gap is told in the body.
+        expect(queryByTestId('fact-check-0-unavailable-header')).toBeNull();
         expect(getByTestId('fact-check-0-checked-by-unavailable')).toBeTruthy();
         expect(getByText('factCheck.checkedByUnavailable')).toBeTruthy();
         expect(queryByText('factCheck.noCheckedBy')).toBeNull();
         // The narrative verdict and its sources still render — an unavailable
         // Tier 1 lookup must not suppress the Tier 2 answer we DO have.
-        expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
+        expect(getByTestId('fact-check-0-verdict-header')).toBeTruthy();
         expect(getByTestId('fact-check-0-citation-0')).toBeTruthy();
     });
 
@@ -444,7 +460,7 @@ describe('FactCheckPanel', () => {
 
             // Our own verdict — in EITHER its leading OR its demoted form —
             // must not appear at all once it is 'unverifiable' here.
-            expect(queryByTestId('fact-check-0-verdict')).toBeNull();
+            expect(queryByTestId('fact-check-0-verdict-header')).toBeNull();
             expect(queryByTestId('fact-check-0-verdict-secondary')).toBeNull();
             expect(queryByText('factCheck.verdict.unverifiable.label')).toBeNull();
             expect(queryByText('factCheck.verdict.unverifiable.detail')).toBeNull();
@@ -457,7 +473,7 @@ describe('FactCheckPanel', () => {
             // The demoted form exists (informational), the leading (chip)
             // form does not — a coloured pill next to a named ruling is the
             // contradiction this demotion removes.
-            expect(queryByTestId('fact-check-0-verdict')).toBeNull();
+            expect(queryByTestId('fact-check-0-verdict-header')).toBeNull();
             expect(getByTestId('fact-check-0-verdict-secondary')).toBeTruthy();
             expect(getByText('factCheck.ownReadingHeading')).toBeTruthy();
             expect(getByText('Alt News')).toBeTruthy();
@@ -483,7 +499,7 @@ describe('FactCheckPanel', () => {
                 })],
             });
             const { getByTestId, queryByTestId } = renderPanel();
-            expect(getByTestId('fact-check-0-verdict')).toBeTruthy();
+            expect(getByTestId('fact-check-0-verdict-header')).toBeTruthy();
             expect(queryByTestId('fact-check-0-own-reading')).toBeNull();
         });
 
@@ -516,7 +532,7 @@ describe('FactCheckPanel', () => {
         hookState({ phase: 'terminal', rows: [storedRow({ status: 'blocked', verdict: null })] });
         const { getByText, queryByTestId } = renderPanel();
         expect(getByText('factCheck.blocked')).toBeTruthy();
-        expect(queryByTestId('fact-check-0-verdict')).toBeNull();
+        expect(queryByTestId('fact-check-0-verdict-header')).toBeNull();
     });
 
     // Several checks per article now stack — post-v52 an article can carry one
@@ -554,7 +570,7 @@ describe('FactCheckPanel', () => {
         // which is no longer honest once the poll has actually given up.
         expect(queryByTestId('fact-check-working')).toBeNull();
         // Not a fabricated terminal verdict either.
-        expect(queryByTestId('fact-check-0-verdict')).toBeNull();
+        expect(queryByTestId('fact-check-0-verdict-header')).toBeNull();
     });
 
     it('shows the working indicator ABOVE an already-terminal row when a second claim is mid-check', () => {

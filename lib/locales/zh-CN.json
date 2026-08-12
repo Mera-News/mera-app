@@ -21,7 +21,6 @@
     "no": "否",
     "saving": "保存中...",
     "home": "主页",
-    "offlineBanner": "与Mera连接缓慢或无连接。正在显示保存的新闻——我们会继续尝试。",
     "offlineBannerOffline": "您已离线。显示保存的新闻，我们会继续尝试。",
     "offlineBannerInternetDown": "无互联网连接。显示保存的新闻，我们会继续尝试。",
     "offlineBannerServerDown": "与Mera连接缓慢或无连接。显示保存的新闻，我们会继续尝试。",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "请保持此界面开启。"
         },
-        "sending": {
-          "shortName": "为您请求今日新闻",
-          "tooltip": "Mera 正在您的手机上准备加密请求，请保持应用处于前台。",
-          "headlines": [
-            "正在为您请求今日新闻…",
-            "Mera 是一款不同的应用——您的请求在发送前已在您的手机上加密。"
-          ],
-          "amberSubline": "请保持此界面开启几秒钟——此步骤无法在后台执行。"
-        },
-        "hydrating": {
-          "shortName": "正在下载到您的手机",
-          "tooltip": "今天的文章正被复制到您的手机，以便后续步骤可以私密进行。",
-          "headlines": [
-            "正在将今日文章下载到您的手机…",
-            "Mera 将新闻带到您的设备——您的兴趣永不离开设备。"
-          ],
-          "amberSubline": "请保持此界面开启。"
-        },
         "cloudRelevance": {
-          "shortName": "计算相关性",
-          "tooltip": "云端 AI 正在逐一阅读每篇文章，挑选可能对您重要的内容。您的请求已加密——只有您的手机持有密钥。",
           "headlines": [
             "AI 正在逐一阅读每篇文章，筛选对您重要的内容。",
             "您的请求已加密——只有您的手机持有密钥。"
           ]
         },
         "cloudReasons": {
-          "shortName": "为您撰写摘要",
-          "tooltip": "AI 正在为每篇文章撰写简短说明，解释为何它可能对您重要。请求保持加密状态。",
           "headlines": [
             "正在为每篇相关文章撰写简短摘要。",
             "您可以离开——准备好时我们会立即通知您。",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "在您的手机上评分",
-          "tooltip": "您的手机正在本地为这些文章评分，此步骤不会有任何数据离开设备。",
           "headlines": [
             "您的手机正在为您对这些文章评分。",
             "这一步完全在您的设备上进行——没有任何数据离开设备。"
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "紧急",
-      "majorImpact": "重大影响",
-      "notableImpact": "显著影响",
-      "goodToKnow": "值得了解",
       "unscoredShort": "未评分",
       "high": "高",
       "medium": "中",
@@ -858,7 +830,6 @@
     "autoRenew": "自动续订",
     "customerCenter": "管理／取消订阅",
     "dailyArticleLimit": "每日文章上限",
-    "description": "Mera 为你阅读新闻：根据你关心的内容定制的信息流、每日摘要、你选择关注的故事，以及持续学习什么对你重要的聊天。",
     "detailsSection": "订阅详情",
     "expiresOn": "到期日",
     "lifetime": "永久",
@@ -890,11 +861,8 @@
     "upgrade": "升级",
     "activatedBody": "你的个性化资讯、仪表盘、已关注的报道和聊天已准备好。",
     "activatedTitle": "{{plan}} 已激活",
-    "allPlansHint": "所有计划都在下一屏幕上。",
     "lapsedFreeNote": "Mera News 免费版永远属于你。选择一个计划，Mera 就会重新开始处理你的新闻。",
     "manageBadge": "管理",
-    "startWithStarter": "从入门版开始",
-    "starterRecommendation": "入门版是开始的地方。Mera News 免费版可保留你已在此设备上构建的所有内容，但初始时没有任何内容可保留。",
     "turnMeraBackOn": "重新启用 Mera",
     "para1": "Mera News本可以免费。只需有人付费即可：广告商购买您的关注，您的数据，或一篇好评。许多看起来像新闻的内容正是这样。",
     "para2": "广告驱动的媒体没有上限。既没有从您那里索取多少的上限，也没有之后如何使用的上限。我们不想成为那样的公司，所以这里的协议很简单。您保留您的数据。软件完成工作。您支付费用。",
@@ -1161,7 +1129,6 @@
     "generating": "正在生成话题…",
     "generateMore": "生成更多",
     "generatingMore": "生成中…",
-    "acceptAll": "看起来不错",
     "saveAll": "保存全部 ({{count}})",
     "delete": "移除话题",
     "undo": "撤销",

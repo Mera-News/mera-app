@@ -21,7 +21,6 @@
     "yes": "Sim",
     "no": "Não",
     "saving": "Salvando...",
-    "offlineBanner": "Conexão lenta ou ausente com Mera. Exibindo notícias salvas — continuaremos tentando.",
     "offlineBannerOffline": "Você está offline. Exibindo notícias salvas, e continuaremos tentando.",
     "offlineBannerInternetDown": "Sem acesso à internet. Exibindo notícias salvas, e continuaremos tentando.",
     "offlineBannerServerDown": "Conexão lenta ou ausente com Mera. Exibindo notícias salvas, e continuaremos tentando.",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "Por favor, mantenha esta tela aberta."
         },
-        "sending": {
-          "shortName": "Pedindo as notícias de hoje",
-          "tooltip": "O Mera está preparando sua solicitação criptografada no seu celular. Por favor, mantenha o app aberto durante esta etapa.",
-          "headlines": [
-            "Pedindo as notícias de hoje para você…",
-            "O Mera é um app diferente: sua solicitação é criptografada no seu celular antes de sair."
-          ],
-          "amberSubline": "Por favor, mantenha esta tela aberta por alguns segundos. Não conseguimos fazer isso em segundo plano."
-        },
-        "hydrating": {
-          "shortName": "Baixando para o seu celular",
-          "tooltip": "Os artigos de hoje estão sendo copiados para o seu celular para que as próximas etapas possam ocorrer de forma privada.",
-          "headlines": [
-            "Trazendo os artigos de hoje para o seu celular…",
-            "O Mera leva as notícias até o seu dispositivo. Seus interesses nunca saem dele."
-          ],
-          "amberSubline": "Por favor, mantenha esta tela aberta."
-        },
         "cloudRelevance": {
-          "shortName": "Calculando relevância",
-          "tooltip": "Uma IA na nuvem está lendo cada artigo e selecionando o que pode importar para você. Sua solicitação está criptografada. Só seu celular tem a chave.",
           "headlines": [
             "Uma IA está lendo cada artigo para ver quais importam para você.",
             "Sua solicitação está criptografada. Só seu celular tem a chave."
           ]
         },
         "cloudReasons": {
-          "shortName": "Escrevendo notas para você",
-          "tooltip": "A IA está escrevendo uma nota curta para cada história explicando por que pode importar para você. A solicitação permanece criptografada.",
           "headlines": [
             "Escrevendo uma nota curta para cada história relevante.",
             "Você pode se afastar. Vamos te notificar quando estiver pronto.",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "Classificando no seu celular",
-          "tooltip": "Seu celular está classificando essas histórias localmente. Nada sai do dispositivo nesta etapa.",
           "headlines": [
             "Seu celular está classificando essas histórias para você.",
             "Isso acontece inteiramente no seu dispositivo: nada sai dele."
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "Emergência",
-      "majorImpact": "Grande impacto",
-      "notableImpact": "Impacto notável",
-      "goodToKnow": "Bom saber",
       "unscoredShort": "Não pontuado",
       "high": "Alta",
       "medium": "Média",
@@ -858,7 +830,6 @@
     "autoRenew": "Renovação automática",
     "customerCenter": "Gerenciar / cancelar assinatura",
     "dailyArticleLimit": "Limite diário de artigos",
-    "description": "Mera lê as notícias para você: um feed moldado pelo que você realmente se importa, um resumo do dia, as histórias que você escolhe acompanhar, e um chat que continua aprendendo o que importa para você.",
     "detailsSection": "Detalhes da assinatura",
     "expiresOn": "Expira em",
     "lifetime": "Vitalícia",
@@ -890,11 +861,8 @@
     "upgrade": "Fazer upgrade",
     "activatedBody": "Seu feed personalizado, painel, histórias acompanhadas e chat estão prontos.",
     "activatedTitle": "{{plan}} está ativo",
-    "allPlansHint": "Todos os planos estão na próxima tela.",
     "lapsedFreeNote": "Mera News Free é seu pelo tempo que você quiser. Um plano é o que faz Mera trabalhar nas suas notícias novamente.",
     "manageBadge": "Gerenciar",
-    "startWithStarter": "Comece com Starter",
-    "starterRecommendation": "Starter é por onde começar. Mera News Free preserva o que você já criou neste dispositivo. No primeiro dia, você não tem nada para guardar ainda.",
     "turnMeraBackOn": "Ativar Mera novamente",
     "para1": "Mera News poderia ser gratuito. Só significaria que outra pessoa estava pagando: um anunciante comprando sua atenção, seus dados, ou uma boa reputação. Muita coisa que parece notícia é exatamente isso.",
     "para2": "Mídia financiada por anúncios não tem limite. Nem em quanto leva de você, nem no que é usado depois. Não queremos ser essa empresa, então o acordo aqui é simples. Você mantém seus dados. O software faz o trabalho. Você paga por isso.",
@@ -1160,7 +1128,6 @@
     "generating": "Gerando tópicos…",
     "generateMore": "Gerar mais",
     "generatingMore": "Gerando…",
-    "acceptAll": "Está bom",
     "saveAll": "Salvar tudo ({{count}})",
     "delete": "Remover tópico",
     "undo": "Desfazer",

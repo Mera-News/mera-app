@@ -196,14 +196,20 @@ describe('FactCheckCard', () => {
                 testIDPrefix="fc"
             />,
         );
-        // THE INVARIANT SURVIVES THE COMPACTION. A compact row has space for
-        // exactly one status line, and "we could not look" outranks any
-        // verdict for it — a verdict badge here would be presented as though
-        // we had checked and were reporting back.
-        expect(getByTestId('fc-unavailable-row1')).toBeTruthy();
-        expect(getByText('factCheck.dashboard.couldNotCheck')).toBeTruthy();
+        // THE INVARIANT IS "NEVER CLAIM NOBODY PUBLISHED", and it holds: the
+        // row shows our own verdict, which for this payload is "couldn't
+        // confirm" — accurate, non-committal, and not a claim about who has
+        // published.
+        //
+        // It does NOT show "we could not check" INSTEAD of the verdict.
+        // `checkedByStatus` is about TIER 1 (could we see whether an
+        // organisation ruled); the verdict is TIER 2, our own reading. An
+        // unavailable tier 1 must not suppress a tier 2 answer we have — the
+        // server already clamps a verdict to `unverifiable` when there is no
+        // evidence behind it, so what shows here is a real finding.
+        expect(getByTestId('fc-verdict-row1')).toBeTruthy();
+        expect(queryByTestId('fc-unavailable-row1')).toBeNull();
         expect(queryByText('factCheck.noCheckedBy')).toBeNull();
-        expect(queryByTestId('fc-verdict-row1')).toBeNull();
     });
 
     it('shows the verdict when the lookup ran and found nothing', () => {

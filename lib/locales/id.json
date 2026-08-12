@@ -21,7 +21,6 @@
     "yes": "Ya",
     "no": "Tidak",
     "saving": "Menyimpan...",
-    "offlineBanner": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan — kami akan terus mencoba.",
     "offlineBannerOffline": "Anda sedang offline. Menampilkan berita tersimpan dan kami akan terus mencoba.",
     "offlineBannerInternetDown": "Tidak ada akses internet. Menampilkan berita tersimpan dan kami akan terus mencoba.",
     "offlineBannerServerDown": "Koneksi lambat atau tidak ada ke Mera. Menampilkan berita tersimpan dan kami akan terus mencoba.",
@@ -114,35 +113,13 @@
           ],
           "amberSubline": "Harap tetap buka layar ini."
         },
-        "sending": {
-          "shortName": "Meminta berita hari ini",
-          "tooltip": "Mera sedang menyiapkan permintaan terenkripsi Anda di ponsel. Harap tetap buka aplikasi untuk bagian ini.",
-          "headlines": [
-            "Meminta berita hari ini untuk Anda…",
-            "Mera adalah aplikasi yang berbeda: permintaan Anda dienkripsi di ponsel sebelum dikirim."
-          ],
-          "amberSubline": "Harap tetap buka layar ini beberapa detik: kami tidak bisa melakukan bagian ini di latar belakang."
-        },
-        "hydrating": {
-          "shortName": "Mengunduh ke ponsel Anda",
-          "tooltip": "Artikel hari ini sedang disalin ke ponsel Anda agar langkah berikutnya dapat berjalan secara pribadi.",
-          "headlines": [
-            "Mengambil artikel hari ini ke ponsel Anda…",
-            "Mera membawa berita ke perangkat Anda. Minat Anda tidak pernah meninggalkannya."
-          ],
-          "amberSubline": "Harap tetap di layar ini."
-        },
         "cloudRelevance": {
-          "shortName": "Menghitung relevansi",
-          "tooltip": "AI di cloud sedang membaca setiap artikel dan memilih yang mungkin penting bagi Anda. Permintaan Anda dienkripsi: hanya ponsel Anda yang menyimpan kuncinya.",
           "headlines": [
             "AI sedang membaca setiap artikel untuk melihat mana yang penting bagi Anda.",
             "Permintaan Anda dienkripsi: hanya ponsel Anda yang menyimpan kuncinya."
           ]
         },
         "cloudReasons": {
-          "shortName": "Menulis catatan untuk Anda",
-          "tooltip": "AI sedang menulis catatan singkat untuk setiap cerita yang menjelaskan mengapa itu mungkin penting bagi Anda. Permintaan tetap terenkripsi.",
           "headlines": [
             "Menulis catatan singkat untuk setiap cerita yang relevan.",
             "Anda bisa pergi sejenak. Kami akan memberi tahu Anda saat sudah siap.",
@@ -150,8 +127,6 @@
           ]
         },
         "onDevice": {
-          "shortName": "Memberi skor di ponsel Anda",
-          "tooltip": "Ponsel Anda memberi skor pada cerita-cerita ini secara lokal. Tidak ada yang meninggalkan perangkat untuk langkah ini.",
           "headlines": [
             "Ponsel Anda sedang memberi skor pada cerita-cerita ini untuk Anda.",
             "Ini terjadi sepenuhnya di perangkat Anda. Tidak ada yang keluar darinya."
@@ -161,9 +136,6 @@
     },
     "sections": {
       "emergency": "Darurat",
-      "majorImpact": "Dampak besar",
-      "notableImpact": "Dampak penting",
-      "goodToKnow": "Perlu diketahui",
       "unscoredShort": "Belum dinilai",
       "high": "Tinggi",
       "medium": "Sedang",
@@ -858,7 +830,6 @@
     "autoRenew": "Perpanjang otomatis",
     "customerCenter": "Kelola / batalkan langganan",
     "dailyArticleLimit": "Batas artikel harian",
-    "description": "Mera membaca berita untuk Anda: feed yang dibentuk oleh apa yang benar-benar Anda pedulikan, dasbor hari itu, cerita yang Anda pilih untuk diikuti, dan obrolan yang terus belajar apa yang penting bagi Anda.",
     "detailsSection": "Detail langganan",
     "expiresOn": "Berakhir pada",
     "lifetime": "Seumur hidup",
@@ -890,11 +861,8 @@
     "upgrade": "Tingkatkan",
     "activatedBody": "Feed personal Anda, dasbor, cerita yang diikuti, dan obrolan siap digunakan.",
     "activatedTitle": "{{plan}} aktif",
-    "allPlansHint": "Semua paket ada di layar berikutnya.",
     "lapsedFreeNote": "Mera News Free adalah milik Anda selama yang Anda inginkan. Paket adalah apa yang membuat Mera kembali bekerja untuk Anda.",
     "manageBadge": "Kelola",
-    "startWithStarter": "Mulai dengan Starter",
-    "starterRecommendation": "Starter adalah tempat untuk memulai. Mera News Free ada untuk menyimpan apa yang sudah Anda bangun di perangkat ini. Pada hari pertama, belum ada apa pun untuk disimpan.",
     "turnMeraBackOn": "Aktifkan Mera kembali",
     "para1": "Mera News bisa saja gratis. Tetapi itu hanya berarti ada orang lain yang membayar: seorang pengiklan yang membeli perhatian Anda, data Anda, atau liputan yang bersahabat. Banyak dari yang terlihat seperti berita adalah persis itu.",
     "para2": "Media yang didanai iklan tidak memiliki batas. Bukan untuk berapa banyak yang diambilnya dari Anda, dan juga tidak untuk apa yang digunakan untuk itu nanti. Kami tidak ingin menjadi perusahaan itu, jadi kesepakatan di sini sederhana. Anda menjaga data Anda. Perangkat lunak melakukan pekerjaan. Anda membayarnya.",
@@ -1160,7 +1128,6 @@
     "generating": "Membuat topik…",
     "generateMore": "Buat lebih banyak",
     "generatingMore": "Membuat…",
-    "acceptAll": "Sudah bagus",
     "saveAll": "Simpan semua ({{count}})",
     "delete": "Hapus topik",
     "undo": "Urungkan",
