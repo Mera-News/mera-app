@@ -108,10 +108,14 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
 }) => {
   const displayTitle = titleEnglish || titleOriginal || '';
   const blurImages = useBlurImagesStore((s) => s.blurImages);
-  // 2 lines is 2 lines of WORDS at the default size and roughly one word at
-  // 2x — the clamp has to move with the type or a large-text reader gets an
-  // ellipsis where the headline was. Returns exactly 2 at 1x.
-  const headlineLines = useAdaptiveLineClamp(2, 4);
+  // 3, because the image square is 78px and the `md` token's line box is 24px:
+  // three lines is 72px and fits INSIDE the square, four is 96px and would push
+  // the row 18px taller. So the third line is space the row already pays for,
+  // and it was being spent on an ellipsis instead. The clamp still has to grow
+  // with the type — a fixed clamp is a fixed number of LINES, not a fixed
+  // amount of text, and at 2x three lines is barely a phrase. Returns exactly
+  // 3 at 1x.
+  const headlineLines = useAdaptiveLineClamp(3, 4);
   // Tracks LOADED, not merely PASSED IN. The guard was once
   // `imageUrl ? <Image/> : <Placeholder/>`, which never noticed a 404 or a
   // timeout and left a blank quarter-width hole. Now a failure collapses the
@@ -159,10 +163,15 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
             {metaAccessory}
           </Box>
 
-          {/* 2. Body — headline beside the image square. `items-start` pins the
-              image to the top of the row, under the language slot, rather than
-              letting it centre against a taller headline. */}
-          <Box className="flex-row items-start mt-2">
+          {/* 2. Body — headline beside the image square, CENTRED against it.
+              A 2-line headline is 48px next to a 78px square; top-aligned, all
+              30px of that slack fell below the text and it read as floating
+              rather than set against the picture. Centred it gets ~15px either
+              side. No guard needed for the imageless case: with no square the
+              row height IS the headline height, so centring is a no-op. And it
+              handles the inverse — at large text sizes the headline outgrows
+              78px and the square centres against IT. */}
+          <Box className="flex-row items-center mt-2">
             <Box className="flex-1">
               <TranslatableDynamic
                 text={displayTitle}
@@ -204,15 +213,17 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
             ) : null}
           </Box>
 
-          {/* 3. Footer: footerAccessory (left) · country flag + publisher (right).
+          {/* 3. Footer: country flag + publisher (left) · footerAccessory (right).
               Full width, BELOW the image rather than beside it — the design's
-              `clear:right`. The source group is `flex-1 justify-end` rather than
-              relying on `justify-between`, so it stays right-aligned even when
-              there is no accessory (standalone rows, unscored suggestions),
-              which is most of them. */}
+              `clear:right`. A deliberate divergence from that design, which puts
+              the pill left and the publisher right.
+
+              The source group leads on `flex-1` alone, no `justify-end`. Only
+              scored suggestion rows pass an accessory, so most footers have just
+              this one group: right-aligned it sat across a wide empty gutter,
+              left-aligned it simply has trailing space. */}
           <Box className="flex-row items-center mt-3" style={{ gap: 6 }}>
-            {footerAccessory ? <Box className="flex-shrink-0">{footerAccessory}</Box> : null}
-            <HStack className="items-center flex-1 justify-end" space="xs" style={{ minWidth: 0 }}>
+            <HStack className="items-center flex-1" space="xs" style={{ minWidth: 0 }}>
               <SourceFlag countryCode={countryCode} size="sm" iconClassName="text-typography-500" />
               {publicationName ? (
                 <Text size="xs" className="text-typography-500 flex-shrink" numberOfLines={1}>
@@ -220,6 +231,7 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 </Text>
               ) : null}
             </HStack>
+            {footerAccessory ? <Box className="flex-shrink-0">{footerAccessory}</Box> : null}
           </Box>
         </Box>
       </Card>

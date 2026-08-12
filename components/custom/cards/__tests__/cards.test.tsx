@@ -85,8 +85,26 @@ jest.mock('lucide-react-native', () => {
 // ── Custom children → light stubs that surface the props we assert on ──
 jest.mock('@/components/custom/TranslatableDynamic', () => {
   const { Text } = require('react-native');
-  return { __esModule: true, default: ({ text }: any) => <Text>{text}</Text> };
+  // `numberOfLines` is passed through, not dropped: the compact card's clamp is
+  // a geometry decision (see its `useAdaptiveLineClamp` comment) and a mock that
+  // swallows the prop makes it untestable.
+  return {
+    __esModule: true,
+    default: ({ text, numberOfLines }: any) => (
+      <Text numberOfLines={numberOfLines}>{text}</Text>
+    ),
+  };
 });
+// Identity on `base`, which IS the hook's documented 1x return. Mocked because
+// the jest environment reports a 2x `fontScale`, so the real hook here would
+// always yield the ceiling and the base could never be observed. The scaling
+// itself is covered in lib/typography/__tests__/useAdaptiveLineClamp.test.ts.
+const mockUseAdaptiveLineClamp = jest.fn((base: number) => base);
+jest.mock('@/lib/typography/useAdaptiveLineClamp', () => ({
+  useAdaptiveLineClamp: (...args: [number, number]) =>
+    (global as any).__mockUseAdaptiveLineClamp(...args),
+}));
+(global as any).__mockUseAdaptiveLineClamp = mockUseAdaptiveLineClamp;
 jest.mock('@/components/custom/ArticleMetaRow', () => {
   const { Text, View } = require('react-native');
   return {
@@ -545,6 +563,32 @@ describe('no image ⇒ no image region (either card base)', () => {
     expect(queryByTestId('article-image')).toBeNull();
     expect(queryByTestId('placeholder-ground', { includeHiddenElements: true })).toBeNull();
     expect(queryByTestId('mera-logo', { includeHiddenElements: true })).toBeNull();
+  });
+});
+
+describe('compact card headline clamp', () => {
+  // 3 is not an arbitrary nicety. The image square is 78px and the `md` line box
+  // is 24px, so three lines (72px) fit INSIDE the square and four (96px) would
+  // make the row taller. Two lines spent the difference on an ellipsis. If the
+  // square or the type token ever changes, this number has to be rederived —
+  // which is exactly why it is pinned rather than left implicit.
+  //
+  // The clamp asked for is what is pinned here, not the scaled result: the jest
+  // environment reports a 2x `fontScale`, so the scaled value in this harness is
+  // the CEILING, never the base. How base becomes a scaled value is the hook's
+  // own contract and is tested in lib/typography/__tests__.
+  const LONG = 'A headline long enough to need every line it is given';
+
+  it('asks for 3 lines with a ceiling of 4, and that reaches the headline', () => {
+    const { getByText } = render(
+      <ArticleStandaloneCompactCard
+        article={makeArticle({ title_en_internal_only: LONG })}
+        onPress={jest.fn()}
+      />,
+    );
+    expect(mockUseAdaptiveLineClamp).toHaveBeenCalledWith(3, 4);
+    // The mock is identity on `base`, so this is the 1x rendering.
+    expect(getByText(LONG).props.numberOfLines).toBe(3);
   });
 });
 
