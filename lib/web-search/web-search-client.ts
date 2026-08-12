@@ -75,6 +75,11 @@ function messageForStatus(status: number): string {
       return 'Search is unavailable right now (not authenticated). Answer without it and say you could not search.';
     case 429:
       return 'Search is rate-limited right now. Do not retry; answer without it and say so.';
+    case 404:
+      // Deploy skew: the gateway predates the search routes. Same user-visible
+      // truth as 503 — nothing was searched — so the instruction must match it
+      // word for word, or the model softens one and not the other.
+      return 'Search is switched off or unreachable, so NOTHING was searched. Do not say you found nothing — say you were unable to search.';
     case 502:
       return 'The search provider failed. Do not retry; answer without it and say so.';
     case 503:
@@ -102,9 +107,20 @@ function messageForStatus(status: number): string {
  *
  * 429 joins it because the gateway's per-IP throttle rejects the request before
  * it reaches any index.
+ *
+ * 404 JOINS THEM BECAUSE IT ACTUALLY HAPPENED (2026-08-12). The app shipped
+ * from `dev` while the deployed gateway still ran `main`, which carries neither
+ * `/v1/web-search` nor `/v1/fact-check-claims` — so a live quick fact check got
+ * a 404 from a route that did not exist yet. That is deploy skew, and it is
+ * "no search happened" in the purest form: not throttled, not switched off,
+ * simply not there. It previously fell to the generic branch, which tells the
+ * model the right thing but leaves `code` undefined, so a caller branching on
+ * the code alone would treat a wholly unsearched query as merely a failed one.
  */
 export function unavailableCodeForStatus(status: number): SearchUnavailableCode | undefined {
-  return status === 503 || status === 429 ? SEARCH_UNAVAILABLE : undefined;
+  return status === 503 || status === 429 || status === 404
+    ? SEARCH_UNAVAILABLE
+    : undefined;
 }
 
 /**

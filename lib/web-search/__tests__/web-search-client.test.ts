@@ -111,6 +111,23 @@ describe('searchWeb', () => {
     expect(mockPauseFor).toHaveBeenCalledTimes(1);
   });
 
+  it('marks a 404 unavailable — the deploy-skew case that actually happened', async () => {
+    // 2026-08-12, live: the app ran `dev` while the deployed gateway ran
+    // `main`, which carries neither search route. A real quick fact check got
+    // a 404 from a route that did not exist. Nothing was searched, so it must
+    // carry the same code as 503 — otherwise a caller branching on `code`
+    // alone treats a wholly unsearched query as merely a failed one.
+    mockFetch.mockResolvedValue(jsonResponse(404, {}));
+    const outcome = await searchWeb('anything');
+    expect(outcome.ok).toBe(false);
+    if (!outcome.ok) {
+      expect(outcome.code).toBe(SEARCH_UNAVAILABLE);
+      // And the model must be told the same thing a 503 tells it, word for
+      // word — a softer phrasing here is how "I found nothing" gets said.
+      expect(outcome.error).toContain('NOTHING was searched');
+    }
+  });
+
   it('does NOT mark an ordinary upstream failure (502) as search-unavailable', async () => {
     // 502 means the provider failed on a request we did make; 503 means we
     // never made one. Both are `ok:false`, but only one is a configuration
