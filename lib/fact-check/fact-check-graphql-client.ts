@@ -157,9 +157,12 @@ export async function requestFactCheck(
  * WatermelonDB subscription and the existing panel render it, with no new
  * render path.
  *
- * `factCheckEnabled` is honoured HERE rather than only at the call sites: a
- * reader who turned the feature off must not accumulate fact-check rows on
- * their device as a side effect of reading articles.
+ * NO SETTING IS CONSULTED HERE. There used to be a `factCheckEnabled` gate in
+ * this function; fact checking is part of the product now, so the only question
+ * left is whether the server was ASKED, which is decided upstream — by the
+ * `@include` on `articleById`, by `fetchCachedFactCheck`'s own gate, or by a
+ * deliberate tap. A row only reaches this function because one of those already
+ * happened.
  *
  * Never throws, for the same reason `requestFactCheck` doesn't — a failed
  * mirror must cost the reader a missing panel, never a failed article open.
@@ -189,6 +192,65 @@ export async function mirrorArticleFactCheck(
     } catch (err) {
         logger.captureException(err, {
             tags: { service: 'fact-check-graphql-client', method: 'mirrorArticleFactCheck' },
+            extra: { articleId },
+        });
+        return false;
+    }
+}
+
+const GET_CACHED_FACT_CHECK = gql`
+  query GetCachedFactCheck($articleId: ID!) {
+    cachedFactCheck(articleId: $articleId) {
+      ${FACT_CHECK_FIELDS}
+    }
+  }
+`;
+
+/**
+ * Read the CACHED check for an article and mirror it locally. Never creates one.
+ *
+ * ── WHY THIS EXISTS ALONGSIDE THE `articleById` FIELD ─────────────────────
+ * There are two article detail screens and only one of them fetches the
+ * article. `ArticleDetailScreen` calls `getArticleById`, so it gets
+ * `NewsArticle.factCheck` for free. `ArticleSuggestionScreen` — where every
+ * FEED card lands — renders from a local `article_suggestions` row and only
+ * asks the server for `relatedArticles`. Without this, a check requested by one
+ * reader stayed invisible to everyone else on the surface they actually use.
+ *
+ * ── THE CALLER'S OBLIGATION ──────────────────────────────────────────────
+ * Only call this from a screen that ALREADY identifies the article to the
+ * server. On the suggestion screen `relatedArticles(articleId)` fires on mount
+ * with the same id, so this adds a round trip and not a disclosure. Calling it
+ * from a list, or speculatively across articles the reader has not opened, is
+ * exactly the reading-history signal the design refused — see the resolver.
+ *
+ * Gated on `autoCommunityFactCheck` (default OFF) for the same reason the
+ * `articleById` selection is gated: without it the reader has not agreed to a
+ * lookup on every article they open. Enforced HERE as well as at the call site,
+ * so a future caller cannot bypass the setting by forgetting it.
+ *
+ * Never throws — a failed lookup costs the reader a missing panel, never a
+ * failed article open.
+ */
+export async function fetchCachedFactCheck(articleId: string): Promise<boolean> {
+    if (!articleId) return false;
+    if (!useMeraProtocolStore.getState().autoCommunityFactCheck) return false;
+
+    try {
+        const { data } = await client.query<{ cachedFactCheck: FactCheckRow | null }>({
+            query: GET_CACHED_FACT_CHECK,
+            variables: { articleId },
+            fetchPolicy: 'no-cache',
+        });
+        const row = data?.cachedFactCheck ?? null;
+        // A miss is the common case and is NOT a failure: most articles have
+        // never been checked by anybody. Nothing is written, and the panel
+        // renders nothing, which is the correct answer.
+        if (!row) return false;
+        return await mirrorArticleFactCheck(articleId, row);
+    } catch (err) {
+        logger.captureException(err, {
+            tags: { service: 'fact-check-graphql-client', method: 'fetchCachedFactCheck' },
             extra: { articleId },
         });
         return false;

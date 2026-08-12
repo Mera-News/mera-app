@@ -1,5 +1,6 @@
 import { Box } from '@/components/ui/box';
 import { SearchCheck } from 'lucide-react-native';
+import VerdictIcon from '@/components/custom/fact-checks/VerdictIcon';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -200,9 +201,12 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
             ) : verdictInfo && presentation !== 'suppressed' ? (
                 <Box
                     testID={`${testIDPrefix}-verdict-${item.id}`}
-                    className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
+                    className={`self-start flex-row items-center rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
                 >
-                    <Text size="xs" className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}>
+                    {/* Shield first, then the words. Same tone drives both, so
+                        the two can never disagree about the finding. */}
+                    <VerdictIcon tone={verdictInfo.tone} size={14} />
+                    <Text size="xs" className={`font-semibold ml-1.5 ${TONE_CLASSES[verdictInfo.tone].text}`}>
                         {t(verdictInfo.labelKey as any)}
                     </Text>
                 </Box>

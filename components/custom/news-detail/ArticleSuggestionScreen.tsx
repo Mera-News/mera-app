@@ -6,6 +6,7 @@ import { type TranslatableDisplayState } from '@/components/custom/TranslatableD
 import FactCheckPanel from '@/components/custom/news-detail/FactCheckPanel';
 import { requestArticleFactCheck } from '@/lib/fact-check/request-article-fact-check';
 import { useFactCheck } from '@/lib/fact-check/use-fact-check';
+import { fetchCachedFactCheck } from '@/lib/fact-check/fact-check-graphql-client';
 import ReadTranslateActions from '@/components/custom/news-detail/ReadTranslateActions';
 import RelatedSortDropdown from '@/components/custom/news-detail/RelatedSortDropdown';
 import PublicationVisitBadge from '@/components/custom/PublicationVisitBadge';
@@ -420,6 +421,31 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         // `isConnected` is a dep so the fetch RE-runs when connectivity returns —
         // without it, a screen opened offline would never populate the server
         // half of the related list even after the network came back.
+    }, [suggestion?.articleId, isConnected]);
+
+    // THE COMMUNITY CHECK, for the screen every FEED card lands on.
+    //
+    // This screen renders from a local `article_suggestions` row and never
+    // calls `getArticleById`, so it never receives the `NewsArticle.factCheck`
+    // field that fixes the other detail screen. Without this, a check one
+    // reader asked for stayed invisible to everyone else here — which is the
+    // surface the bug was actually reported from.
+    //
+    // Deliberately its OWN effect rather than a branch inside the related-
+    // articles fetch above: they fail independently, and a fact-check lookup
+    // that throws must not cost the reader their related articles.
+    //
+    // `fetchCachedFactCheck` re-checks `autoCommunityFactCheck` itself, so this
+    // gate is the fast path and not the only defence. On a miss it writes
+    // nothing and the panel renders nothing, which for most articles is the
+    // correct answer rather than a failure. There is no cleanup flag: the
+    // result lands in WatermelonDB and `useFactCheck`'s live subscription picks
+    // it up, so a late resolve after unmount updates the database, not a
+    // detached component.
+    useEffect(() => {
+        const id = suggestion?.articleId;
+        if (!id || !isConnected) return;
+        void fetchCachedFactCheck(id);
     }, [suggestion?.articleId, isConnected]);
 
     // Same-story siblings are surfaced two ways: `localSiblings` (above) groups

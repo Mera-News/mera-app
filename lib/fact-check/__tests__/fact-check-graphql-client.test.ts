@@ -31,15 +31,16 @@ jest.mock('../../logger', () => ({
 // `mirrorArticleFactCheck` reads the Mera Protocol switch. Mocked rather than
 // hydrated: the real store pulls in the settings table, and the only thing
 // under test here is that the switch is OBEYED.
-let mockFactCheckEnabled = true;
+let mockAutoCommunity = true;
 jest.mock('../../stores/mera-protocol-store', () => ({
     useMeraProtocolStore: {
-        getState: () => ({ factCheckEnabled: mockFactCheckEnabled }),
+        getState: () => ({ autoCommunityFactCheck: mockAutoCommunity }),
     },
 }));
 
 import {
     fetchFactCheck,
+    fetchCachedFactCheck,
     mirrorArticleFactCheck,
     reconcileStoredFactChecks,
     requestFactCheck,
@@ -249,7 +250,7 @@ describe('reconcileStoredFactChecks', () => {
 describe('mirrorArticleFactCheck', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        mockFactCheckEnabled = true;
+        mockAutoCommunity = true;
     });
 
     it('writes the local row so the existing panel can render it', async () => {
@@ -309,5 +310,55 @@ describe('mirrorArticleFactCheck', () => {
         mockUpsertFactCheck.mockRejectedValueOnce(new Error('db closed'));
 
         await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(false);
+    });
+});
+
+
+// ── fetchCachedFactCheck ────────────────────────────────────────────────────
+// The FEED's way in. ArticleSuggestionScreen never fetches the article, so it
+// never gets `NewsArticle.factCheck`; this is its equivalent, and it must never
+// create a check — it runs on an article OPEN, not on a deliberate ask.
+describe('fetchCachedFactCheck', () => {
+    beforeEach(() => {
+        mockAutoCommunity = true;
+        jest.clearAllMocks();
+    });
+
+    it('mirrors a cached row so the panel can render it', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { cachedFactCheck: TERMINAL_ROW } });
+
+        await expect(fetchCachedFactCheck('a1')).resolves.toBe(true);
+        expect(mockUpsertFactCheck).toHaveBeenCalledTimes(1);
+    });
+
+    // THE GATE. Off by default; without it the reader has not agreed to a
+    // lookup on every article they open. Enforced here as well as at the call
+    // site, so a future caller cannot bypass it by forgetting.
+    it('does not even ASK when auto community fact check is off', async () => {
+        mockAutoCommunity = false;
+
+        await expect(fetchCachedFactCheck('a1')).resolves.toBe(false);
+        expect(mockQuery).not.toHaveBeenCalled();
+        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
+    });
+
+    it('treats a miss as the normal answer, not a failure', async () => {
+        // Most articles have never been checked by anybody. Nothing is written
+        // and the panel renders nothing, which is correct.
+        mockQuery.mockResolvedValueOnce({ data: { cachedFactCheck: null } });
+
+        await expect(fetchCachedFactCheck('a1')).resolves.toBe(false);
+        expect(mockUpsertFactCheck).not.toHaveBeenCalled();
+    });
+
+    it('never throws — a failed lookup costs a panel, not the article open', async () => {
+        mockQuery.mockRejectedValueOnce(new Error('network'));
+
+        await expect(fetchCachedFactCheck('a1')).resolves.toBe(false);
+    });
+
+    it('ignores an empty article id', async () => {
+        await expect(fetchCachedFactCheck('')).resolves.toBe(false);
+        expect(mockQuery).not.toHaveBeenCalled();
     });
 });

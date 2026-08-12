@@ -1,5 +1,6 @@
 import { Box } from '@/components/ui/box';
 import { SearchCheck } from 'lucide-react-native';
+import VerdictIcon from '@/components/custom/fact-checks/VerdictIcon';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -273,11 +274,15 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                         {presentation === 'lead' ? (
                                             <Box
                                                 testID={`${rowPrefix}-verdict`}
-                                                className={`self-start rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
+                                                className={`self-start flex-row items-center rounded-full px-3 py-1 ${TONE_CLASSES[verdictInfo.tone].chip}`}
                                             >
+                                                {/* Shield first, then the words.
+                                                    One tone drives both, so they
+                                                    cannot disagree. */}
+                                                <VerdictIcon tone={verdictInfo.tone} size={16} />
                                                 <Text
                                                     size="sm"
-                                                    className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}
+                                                    className={`font-semibold ml-1.5 ${TONE_CLASSES[verdictInfo.tone].text}`}
                                                 >
                                                     {t(verdictInfo.labelKey as any)}
                                                 </Text>
