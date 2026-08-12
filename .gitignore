@@ -90,11 +90,19 @@ error-logs/
 harness-local/.env.harness
 .local-test-data/
 logs.md
+# QA artifacts. `qa/*.png` matches DIRECT CHILDREN ONLY — a run that wrote to
+# qa/factcheck/ left 14 screenshots untracked-but-visible, one `git add -A`
+# away from being committed. The `**/` forms cover any depth.
 qa/*.png
+qa/**/*.png
+qa/**/*.jpg
+qa/**/*.jpeg
 qa/*raw*.json
+qa/**/*raw*.json
 # QA scratch dumps (snapshot greps, card-id lists). Only S0-BASELINE-v45.json,
 # the one-shot pre-migration baseline, is tracked under qa/.
 qa/*.txt
+qa/**/*.txt
 
 
 *.storekit
