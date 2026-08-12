@@ -8,6 +8,7 @@ import {
 import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator';
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import FeedSyncLastUpdateText from '@/components/custom/FeedSyncLastUpdateText';
+import { headerTitleSize, HEADER_TITLE_MIN_SCALE } from '@/lib/typography/header-title-size';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import {
@@ -78,7 +79,7 @@ import { Text } from '@/components/ui/text';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { runOnJS } from 'react-native-reanimated';
@@ -286,6 +287,11 @@ const MeraNewsScreen: React.FC = () => {
     // every state now, so that guard would only yank an open accordion shut the
     // moment the pipeline settled — on the one screen whose panel is meant to
     // stay put.
+    // Title ceiling from the window width; see header-title-size for why this
+    // is two steps and not a ramp.
+    const { width: windowWidth } = useWindowDimensions();
+    const titleSize = headerTitleSize(windowWidth);
+
     const statusMode = useFeedStatusMode();
     const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(true);
 
@@ -676,18 +682,28 @@ const MeraNewsScreen: React.FC = () => {
                                     what lets the shrink actually happen. */}
                                 <View pointerEvents="none" className="flex-shrink min-w-0">
                                     <Heading
-                                        size="4xl"
+                                        size={titleSize}
                                         className="text-white"
                                         numberOfLines={1}
-                                        // Dynamic Type + a long localized title
-                                        // squeezed by the filter chip beside it
-                                        // wrapped MID-WORD ("Dashboar" / "d") on a
-                                        // device at a larger text size. One line
-                                        // that scales down is Apple's own behaviour
-                                        // for a title that must share its row;
-                                        // ellipsising a single word would be just
-                                        // as broken, and letting it wrap pushes the
-                                        // whole collapsing header out of shape.
+                                        // SHRINK THE TYPE, DO NOT CUT THE WORD.
+                                        // Sharing this row with the status mark,
+                                        // the filter chip and the bell left "
+                                        // Dashboard" truncating to "Dasbo…" at a
+                                        // fixed 36px — a screen title that cannot
+                                        // say its own name. `titleSize` lowers the
+                                        // ceiling on a compact phone; this pair
+                                        // handles the case no breakpoint can know
+                                        // about, which is that "Tableau de bord"
+                                        // needs room "Dashboard" does not.
+                                        //
+                                        // Also the original fix for a separate
+                                        // bug: at a larger Dynamic Type setting
+                                        // this wrapped MID-WORD ("Dashboar"/"d").
+                                        // One line that scales down is Apple's own
+                                        // behaviour for a title that must share
+                                        // its row.
+                                        adjustsFontSizeToFit
+                                        minimumFontScale={HEADER_TITLE_MIN_SCALE}
                                     >
                                         {t('feed.dashboardTitle')}
                                     </Heading>

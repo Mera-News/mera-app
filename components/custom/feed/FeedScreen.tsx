@@ -96,6 +96,7 @@ import FeedStatusIndicator from '@/components/custom/for-you/FeedStatusIndicator
 import FeedStatusPanel from '@/components/custom/for-you/FeedStatusPanel';
 import WhatsNewSheet from '@/components/custom/for-you/WhatsNewSheet';
 import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
+import { headerTitleSize, HEADER_TITLE_MIN_SCALE } from '@/lib/typography/header-title-size';
 import { useFeedStatusMode } from '@/lib/hooks/use-feed-status-mode';
 import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
@@ -153,7 +154,7 @@ import {
 import { notifyScrollTick } from '@/lib/visibility-tick';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, RefreshControl, StyleSheet, View } from 'react-native';
+import { AppState, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
   runOnJS,
@@ -279,6 +280,11 @@ const FeedScreen: React.FC = () => {
   // state, so that guard now only does harm: it would slam the panel shut under
   // a reader the moment the pipeline went idle, with the tappable mark still
   // sitting right there.
+  // Title ceiling from the window width; see header-title-size for why this is
+  // two steps and not a ramp.
+  const { width: windowWidth } = useWindowDimensions();
+  const titleSize = headerTitleSize(windowWidth);
+
   const statusMode = useFeedStatusMode();
   const { expanded: statusExpanded, toggle: toggleStatus } = useStatusDisclosure(
     true,
@@ -1050,9 +1056,11 @@ const FeedScreen: React.FC = () => {
                   is Apple's own behaviour for a title sharing its row with a
                   control. */}
                 <Heading
-                  size="4xl"
+                  size={titleSize}
                   className="text-white"
                   numberOfLines={1}
+                  adjustsFontSizeToFit
+                  minimumFontScale={HEADER_TITLE_MIN_SCALE}
                 >
                   {t('swipeFeed.yourDeck')}
                 </Heading>
