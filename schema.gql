@@ -1,3 +1,7 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
 """
 Static client configuration that does not depend on the caller. Currently the version stamps of the published legal documents.
 """
@@ -281,6 +285,18 @@ type HeadlineScopeResult {
   countryCode: String
   scope: HeadlineScope!
   stableClusterIds: [String]!
+}
+
+type IntercomIdentity {
+  """
+  ISO timestamp when the JWT expires (one hour after it was minted). Advisory only: re-fetch before each Messenger open rather than scheduling a refresh against this value.
+  """
+  expiresAt: String!
+
+  """
+  HS256 JWT identifying the current user to Intercom. Pass it to setUserJwt immediately before opening the Messenger, every time — Intercom validates it on every request, not just at login, so a token minted once at login dies mid-conversation.
+  """
+  jwt: String!
 }
 
 input IssueLlmWarningInput {
@@ -615,6 +631,11 @@ type Query {
   articlesForTopicsByIds(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
 
   """
+  The cached fact check for an article, or null when none exists. READ-ONLY: never creates one, never starts a job, never spends. Null also means "not entitled". Use `factCheck` to ASK for a check.
+  """
+  cachedFactCheck(articleId: ID!): FactCheck
+
+  """
   Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call.
   """
   embedPhrases(
@@ -631,6 +652,7 @@ type Query {
   The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response.
   """
   feedbackTree(currentVersion: Int): FeedbackTreeResponse
+  intercomIdentity: IntercomIdentity!
 
   """
   The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. The app uses this to read a story cluster's member articles (e.g. to ground the follow-a-story scope proposals).

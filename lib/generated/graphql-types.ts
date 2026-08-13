@@ -256,6 +256,14 @@ export type HeadlineScopeResult = {
   stableClusterIds: Array<Maybe<Scalars['String']['output']>>;
 };
 
+export type IntercomIdentity = {
+  __typename?: 'IntercomIdentity';
+  /** ISO timestamp when the JWT expires (one hour after it was minted). Advisory only: re-fetch before each Messenger open rather than scheduling a refresh against this value. */
+  expiresAt: Scalars['String']['output'];
+  /** HS256 JWT identifying the current user to Intercom. Pass it to setUserJwt immediately before opening the Messenger, every time — Intercom validates it on every request, not just at login, so a token minted once at login dies mid-conversation. */
+  jwt: Scalars['String']['output'];
+};
+
 export type IssueLlmWarningInput = {
   reason: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
@@ -581,12 +589,15 @@ export type Query = {
   /** Hydrate articles by id for followed ("tracked") stories. Identical payload to articlesForTopicsByIds, but deliberately NOT charged against the daily article cap — following a story must not consume the allowance. dailyLimitReached is always false and resetAt is always absent. Capped at 50 ids per request. */
   articlesForStories: ArticlesForTopicsByIdsResponse;
   articlesForTopicsByIds: ArticlesForTopicsByIdsResponse;
+  /** The cached fact check for an article, or null when none exists. READ-ONLY: never creates one, never starts a job, never spends. Null also means "not entitled". Use `factCheck` to ASK for a check. */
+  cachedFactCheck?: Maybe<FactCheck>;
   /** Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call. */
   embedPhrases: PhraseEmbeddingResult;
   /** The fact check for an article. Returns the cached row instantly when one exists (in any state); creates a `pending` one and starts the job when none does. Poll until `status` is complete / blocked / failed. Null means no check exists and none could be started (the article is no longer servable). Always read `checkedBy` together with `checkedByStatus` — an empty list only means "nobody has published" when the status is `searched`. */
   factCheck?: Maybe<FactCheck>;
   /** The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response. */
   feedbackTree?: Maybe<FeedbackTreeResponse>;
+  intercomIdentity: IntercomIdentity;
   /** The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. The app uses this to read a story cluster's member articles (e.g. to ground the follow-a-story scope proposals). */
   newsClusterForArticle?: Maybe<NewsCluster>;
   newsClusterForUser: NewsCluster;
@@ -662,6 +673,11 @@ export type QueryArticlesForStoriesArgs = {
 
 export type QueryArticlesForTopicsByIdsArgs = {
   articleIds: Array<Scalars['ID']['input']>;
+};
+
+
+export type QueryCachedFactCheckArgs = {
+  articleId: Scalars['ID']['input'];
 };
 
 
