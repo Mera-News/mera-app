@@ -63,7 +63,8 @@
     "pendingDescription": "Chúng tôi rất vui vì bạn muốn dùng thử ứng dụng của chúng tôi. Khi tài khoản của bạn được phê duyệt, bạn sẽ nhận được email. Sau đó bạn có thể tiếp tục sử dụng ứng dụng.",
     "enquiries": "Nếu có thắc mắc, bạn có thể gửi email đến",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Làm mới 🔄"
+    "refresh": "Làm mới 🔄",
+    "contactSupport": "Liên hệ hỗ trợ"
   },
   "feed": {
     "updatedAt": "Cập nhật lúc {{time}}",
@@ -600,7 +601,8 @@
         "message": "Chúng tôi không thể kết nối dịch vụ tin tức. Việc này thường chỉ diễn ra trong chốc lát: chúng tôi sẽ tiếp tục thử và bảng tin sẽ tự cập nhật.",
         "title": "Dịch vụ không khả dụng"
       }
-    }
+    },
+    "accountRestrictedContact": "Liên hệ hỗ trợ"
   },
   "download": {
     "modelDownloading": "Đang tải AI Model...",
@@ -2255,5 +2257,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Đang mở hỗ trợ"
   }
 }

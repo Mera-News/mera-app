@@ -63,7 +63,8 @@
     "pendingDescription": "Mera News runs on a subscription. A plan switches on the AI layer; without one, Explore stays open and free and everything already on this device stays yours.",
     "enquiries": "For any enquiries you can send a mail to",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Refresh"
+    "refresh": "Refresh",
+    "contactSupport": "Message support"
   },
   "subscription": {
     "title": "Free isn't free.",
@@ -888,7 +889,8 @@
         "title": "Couldn't update your feed",
         "message": "Something went wrong while picking news for you. We'll keep trying: pull down to refresh if it continues."
       }
-    }
+    },
+    "accountRestrictedContact": "Message support"
   },
   "download": {
     "modelDownloading": "Downloading AI model...",
@@ -2254,5 +2256,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Opening support"
   }
 }

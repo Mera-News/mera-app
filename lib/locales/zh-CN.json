@@ -63,7 +63,8 @@
     "pendingDescription": "我们很高兴您愿意试用我们的应用。一旦您的账户获批，您将收到一封电子邮件，届时即可继续使用该应用。",
     "enquiries": "如有任何疑问，请发送邮件至",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "刷新 🔄"
+    "refresh": "刷新 🔄",
+    "contactSupport": "联系支持"
   },
   "feed": {
     "updatedAt": "更新于 {{time}}",
@@ -600,7 +601,8 @@
         "message": "我们无法连接新闻服务。这通常是暂时的——我们会继续尝试，你的信息流会自动更新。",
         "title": "服务不可用"
       }
-    }
+    },
+    "accountRestrictedContact": "联系支持"
   },
   "download": {
     "modelDownloading": "正在下载 AI 模型...",
@@ -2255,5 +2257,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "正在打开支持"
   }
 }

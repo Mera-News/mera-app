@@ -63,7 +63,8 @@
     "pendingDescription": "Cieszymy się, że chcesz wypróbować naszą aplikację. Po zatwierdzeniu konta otrzymasz e-mail. Następnie możesz kontynuować korzystanie z aplikacji.",
     "enquiries": "W przypadku pytań możesz napisać na adres",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Odśwież 🔄"
+    "refresh": "Odśwież 🔄",
+    "contactSupport": "Napisz do wsparcia"
   },
   "feed": {
     "updatedAt": "Zaktualizowano {{time}}",
@@ -612,7 +613,8 @@
         "message": "Nie udało się połączyć z usługą wiadomości. Zwykle trwa to krótko. Będziemy próbować dalej, a Twój kanał zaktualizuje się samodzielnie.",
         "title": "Usługa niedostępna"
       }
-    }
+    },
+    "accountRestrictedContact": "Napisz do wsparcia"
   },
   "download": {
     "modelDownloading": "Pobieranie modelu AI...",
@@ -2284,5 +2286,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Otwieranie wsparcia"
   }
 }

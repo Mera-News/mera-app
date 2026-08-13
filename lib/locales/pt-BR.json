@@ -63,7 +63,8 @@
     "pendingDescription": "Estamos muito felizes que você queira experimentar nosso app. Assim que sua conta for aprovada, você receberá um e-mail. Então poderá continuar usando o app.",
     "enquiries": "Para qualquer dúvida, você pode enviar um e-mail para",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Atualizar 🔄"
+    "refresh": "Atualizar 🔄",
+    "contactSupport": "Falar com o suporte"
   },
   "feed": {
     "updatedAt": "Atualizado {{time}}",
@@ -600,7 +601,8 @@
         "message": "Não conseguimos acessar o serviço de notícias. Isso costuma ser rápido. Vamos continuar tentando e seu feed será atualizado sozinho.",
         "title": "Serviço indisponível"
       }
-    }
+    },
+    "accountRestrictedContact": "Falar com o suporte"
   },
   "download": {
     "modelDownloading": "Baixando modelo de IA...",
@@ -2254,5 +2256,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Abrindo o suporte"
   }
 }

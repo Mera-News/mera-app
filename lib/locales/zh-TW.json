@@ -63,7 +63,8 @@
     "pendingDescription": "我們很高興您想試用我們的應用程式。一旦您的帳號通過審核，您將收到一封電子郵件，屆時即可繼續使用此應用程式。",
     "enquiries": "如有任何疑問，您可以發送郵件至",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "重新整理 🔄"
+    "refresh": "重新整理 🔄",
+    "contactSupport": "聯絡支援"
   },
   "feed": {
     "updatedAt": "更新於 {{time}}",
@@ -600,7 +601,8 @@
         "message": "我們無法連上新聞服務。這通常只是暫時的——我們會持續嘗試，你的資訊流會自動更新。",
         "title": "服務無法使用"
       }
-    }
+    },
+    "accountRestrictedContact": "聯絡支援"
   },
   "download": {
     "modelDownloading": "正在下載 AI Model...",
@@ -2255,5 +2257,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "正在開啟支援"
   }
 }

@@ -63,7 +63,8 @@
     "pendingDescription": "Uygulamamızı denemek istemenize çok sevindik. Hesabınız onaylandığında bir e-posta alacaksınız. Ardından uygulamayı kullanmaya devam edebilirsiniz.",
     "enquiries": "Sorularınız için şu adrese e-posta gönderebilirsiniz:",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Yenile 🔄"
+    "refresh": "Yenile 🔄",
+    "contactSupport": "Desteğe yazın"
   },
   "feed": {
     "updatedAt": "{{time}} güncellendi",
@@ -600,7 +601,8 @@
         "message": "Haber servisine ulaşamadık. Bu genellikle kısa sürer: denemeye devam edeceğiz ve akışınız kendiliğinden güncellenecek.",
         "title": "Servis kullanılamıyor"
       }
-    }
+    },
+    "accountRestrictedContact": "Desteğe yazın"
   },
   "download": {
     "modelDownloading": "AI modeli indiriliyor...",
@@ -2256,5 +2258,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Destek açılıyor"
   }
 }
