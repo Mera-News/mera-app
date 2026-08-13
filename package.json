@@ -35,6 +35,7 @@
     "@expo/vector-icons": "^15.0.2",
     "@gluestack-ui/core": "^3.0.10",
     "@gluestack-ui/utils": "^3.0.7",
+    "@intercom/intercom-react-native": "10.6.0",
     "@legendapp/motion": "^2.5.3",
     "@noble/ciphers": "^2.1.1",
     "@noble/curves": "^2.0.1",
