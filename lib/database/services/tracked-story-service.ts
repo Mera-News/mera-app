@@ -353,9 +353,11 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
  * DROPS THE SNAPSHOT, KEEPS THE MEMBER ID, and that asymmetry is the entire
  * design, not an oversight:
  *
- *   - `member_snapshots_json` is what the timeline renders (StoryTimelineScreen
- *     builds its cards from `story.memberSnapshots`), so dropping the snapshot
- *     is what makes the card disappear.
+ *   - `member_snapshots_json` is EXACTLY what the timeline renders:
+ *     StoryTimelineScreen builds its cards with `buildTimeline(memberSnapshots)`
+ *     and `hydrateSource` only maps over the cards it is handed, so
+ *     `member_article_ids` never contributes a card. Dropping the snapshot is
+ *     what makes the card disappear.
  *   - `member_article_ids` is the reconcile's ALREADY-CONSIDERED ledger. Every
  *     feed sync re-derives membership from scratch —
  *     `fresh = candidates.filter((r) => !existing.has(r.id))` in
@@ -364,8 +366,17 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
  *     re-adds the member and its snapshot, and the card the user just dismissed
  *     comes straight back.
  *
- * So the id IS the durable record of the removal. Keeping it needs no deny
- * list, no tombstone column, and no change to how the reconcile grows.
+ * So the id IS the record of the removal, and keeping it needs no deny list, no
+ * tombstone column, and no change to how the reconcile grows.
+ *
+ * THE GUARANTEE IS BOUNDED, and the bound is {@link MAX_MEMBER_IDS}.
+ * `applyUpdates` prepends newest-first and slices to 30, so a story that keeps
+ * growing eventually evicts this id off the tail — and if the article's
+ * `article_suggestions` row is still on-device at that point (48h window,
+ * reconcile every 60s), the next sync re-adds the member and its snapshot, and
+ * the dismissed card comes back. It takes a story gathering 30+ further members
+ * within 48h, which a hot story can. Anything stronger needs state this row
+ * does not have; do not "fix" it by re-introducing a member-id deny list.
  *
  * The member COUNT on the stories list is derived from `member_article_ids`, so
  * it deliberately still counts this article: the story really did gather that
