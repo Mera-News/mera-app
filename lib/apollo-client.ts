@@ -128,12 +128,22 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                 },
             });
 
-            useForYouStore.getState().setSyncStatusMessage({
+            // `noSyncStatus` opts an operation out of the feed-wide "sync
+            // failed" banner while keeping its Sentry capture above. It exists
+            // for operations that are not part of the feed sync at all, where
+            // painting a failure across For You would be actively misleading:
+            // the first is `intercomIdentity` (lib/intercom.ts), whose only
+            // real failure mode is a server that has not deployed the query
+            // yet, and whose correct user-visible outcome is falling back to an
+            // email support link, not telling the user their news is broken.
+            if (!operation.getContext().noSyncStatus) {
+                useForYouStore.getState().setSyncStatusMessage({
                     state: 'failed',
                     headlineKey: 'sync.syncFailed',
                     errorCode: 'unknown',
                     isRecoverable: false,
                 });
+            }
         }
     } else {
         // Handle network errors. (The 402 "not subscribed" case is handled at

@@ -252,6 +252,36 @@ jest.mock('@sentry/react-native', () => ({
   Severity: { Error: 'error', Warning: 'warning' },
 }));
 
+// Intercom — native support Messenger. An explicit factory, NOT an automock:
+// lib/auth-client.ts imports lib/intercom.ts statically (logoutIntercom runs
+// inside clearAuthStorage), so the package is pulled into every auth suite, and
+// the real module dereferences native TurboModule state at import time. The
+// enums are exported because the module's type surface references them.
+jest.mock('@intercom/intercom-react-native', () => ({
+  __esModule: true,
+  default: {
+    initialize: jest.fn(() => Promise.resolve(true)),
+    setUserJwt: jest.fn(() => Promise.resolve(true)),
+    loginUserWithUserAttributes: jest.fn(() => Promise.resolve(true)),
+    loginUnidentifiedUser: jest.fn(() => Promise.resolve(true)),
+    // Defaults to NOT logged in so presentIntercomMessenger() exercises its
+    // login branch. A mock defaulting to `true` would skip that path and make
+    // the login-ordering tests pass without ever calling login.
+    isUserLoggedIn: jest.fn(() => Promise.resolve(false)),
+    logout: jest.fn(() => Promise.resolve(true)),
+    present: jest.fn(() => Promise.resolve(true)),
+    presentSpace: jest.fn(() => Promise.resolve(true)),
+    sendTokenToIntercom: jest.fn(() => Promise.resolve(true)),
+    getUnreadConversationCount: jest.fn(() => Promise.resolve(0)),
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+  },
+  Space: { home: 'HOME', helpCenter: 'HELP_CENTER', messages: 'MESSAGES', tickets: 'TICKETS' },
+  Visibility: { VISIBLE: 'VISIBLE', GONE: 'GONE' },
+  LogLevel: { ASSERT: 'ASSERT', DEBUG: 'DEBUG', ERROR: 'ERROR', INFO: 'INFO', VERBOSE: 'VERBOSE', WARN: 'WARN' },
+  ThemeMode: { LIGHT: 'LIGHT', DARK: 'DARK', SYSTEM: 'SYSTEM' },
+  IntercomEvents: { IntercomUnreadCountDidChange: 'IntercomUnreadCountDidChange' },
+}));
+
 // RevenueCat — native IAP SDK + paywall UI. Never load the real modules (they
 // pull in ESM deps Jest can't transform). Individual tests override behaviour.
 jest.mock('react-native-purchases', () => ({
