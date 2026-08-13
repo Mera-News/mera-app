@@ -3,7 +3,7 @@ import GlassPanel from "@/components/custom/cards/GlassPanel";
 import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
-import { HelpCircleIcon, RepeatIcon } from "@/components/ui/icon";
+import { CloseIcon, HelpCircleIcon, RepeatIcon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
@@ -37,7 +37,7 @@ import { Linking, TouchableOpacity, View } from "react-native";
 // partially mocking the whole react-native module.
 import { ScrollView } from "@/components/ui/scroll-view";
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export interface NotSubscribedScreenProps {
     /**
@@ -59,6 +59,7 @@ export interface NotSubscribedScreenProps {
 export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps = {}) {
     const isLapsed = reason === 'lapsed';
     const { data: session, isPending: isSessionPending } = authClient.useSession();
+    const insets = useSafeAreaInsets();
     const router = useRouter();
     const { t } = useTranslation();
     const [busy, setBusy] = useState(false);
@@ -246,14 +247,24 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
 
     // Drop into the app on Mera News Free. `replace`, not `push`: this screen
     // must not sit on the back stack waiting to be swiped back into.
+    //
+    // Now reached from the close control top-right rather than a text link at
+    // the bottom of a scroll view. The BODY is unchanged and must stay that
+    // way: without the dismissal flag, `decideOnboardingEntry` sends the reader
+    // straight back to this screen on the next cold start, which is precisely
+    // the loop `lib/subscription/first-open-dismissal.ts` exists to prevent.
     const handleContinueWithoutPlan = useCallback(async () => {
         // Default mode = the first-open push. Record the dismissal BEFORE
         // navigating, so it cannot be lost if the user kills the app on the way
         // out and gets asked again on the next launch.
         //
-        // Not written for `lapsed`: that one's "shown once" state is the
-        // server's, and a local flag here would be a second, conflicting
-        // source of truth for the same question.
+        // NOT WRITTEN FOR `lapsed`, and the asymmetry is deliberate even though
+        // it reads like an oversight. The lapse interstitial is latched
+        // SERVER-side (`lapseInterstitialShownAt`), once per lapse, so there is
+        // no cold-start loop here to prevent. This device-local flag guards the
+        // FIRST-OPEN gate only. Making the close control "consistently" write it
+        // in both modes would put device state in charge of a question the
+        // server owns.
         if (!isLapsed) {
             try {
                 await setSetting(FIRST_OPEN_DISMISSED_SETTING_KEY, 'true');
@@ -522,31 +533,28 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           </ButtonText>
                                       </Button>
 
-                                      {/* Demoted from an outlined button to a link,
-                                          but the rules that governed it are unchanged
-                                          and still load-bearing: Mera News Free is a
-                                          legitimate destination, not an escape hatch
-                                          to be hidden, and this is the ONLY way off
-                                          the screen. So it stays never disabled (even
-                                          while `busy` holds for ~12s, which would
-                                          otherwise strand a user behind a request they
-                                          did not ask for), never guilt-worded, and at
-                                          the same size as the buttons above it rather
-                                          than smaller — subordinate by weight, not by
-                                          legibility. `lg` is also what puts its touch
-                                          target on 44pt: a link variant has no fill,
-                                          so the row height IS the target. */}
-                                      <Button
-                                          testID="not-subscribed-continue"
-                                          onPress={handleContinueWithoutPlan}
-                                          variant="link"
-                                          className="w-full rounded-full"
-                                          size="lg"
-                                      >
-                                          <ButtonText className="text-gray-400 underline">
-                                              {t('freeTier.continueWithoutPlan')}
-                                          </ButtonText>
-                                      </Button>
+                                      {/* The "Continue without a plan" link that
+                                          used to sit here has moved to the close
+                                          control top-right. It was the only exit
+                                          from a full-screen page every route
+                                          enters with `router.replace` — so there
+                                          is no back stack — and it sat at the
+                                          bottom of a scroll view that this file's
+                                          own comments admit overflows on a small
+                                          phone at large Dynamic Type. The exit
+                                          could sit below the fold.
+
+                                          The trade is recorded rather than
+                                          hidden: an unlabelled glyph is less
+                                          explicit than words about where the
+                                          reader lands, and "Mera News Free is a
+                                          legitimate destination, not an escape
+                                          hatch to be hidden" was argued at
+                                          length. That is why the control carries
+                                          the OLD LINK'S WORDING as its accessible
+                                          name instead of "Close": the glyph is
+                                          what ships, but the destination survives
+                                          for anyone not looking at it. */}
                                   </VStack>
                       </GlassPanel>
 
@@ -582,6 +590,38 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                   </VStack>
               </ScrollView>
             </SafeAreaView>
+
+            {/* THE EXIT. Outside the ScrollView on purpose: as a child of it,
+                the one control that leaves this screen would scroll away with
+                the content, which is the failure mode being fixed. Positioned
+                against the raw inset rather than inside the SafeAreaView so it
+                sits in the same place whatever the page does, following
+                VideoPlayerModal's close button.
+
+                `w-11 h-11` is 44x44pt (Apple's HIG minimum) BEFORE the hitSlop,
+                mirroring the Refresh button above. Icon-only, so the
+                accessible name has to be explicit — and it names the
+                DESTINATION rather than the action, because "Close" tells a
+                screen-reader user nothing about where they are about to land.
+                Reusing the removed link's key keeps the two from drifting and
+                adds no new string to the locale fan-out.
+
+                Never disabled by `busy`, for the same reason the link was not:
+                a ~25s activation poll the reader never asked for must not
+                strand the only way out. */}
+            <Button
+                testID="not-subscribed-close"
+                onPress={handleContinueWithoutPlan}
+                variant="link"
+                size="lg"
+                accessibilityRole="button"
+                accessibilityLabel={t('freeTier.continueWithoutPlan')}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                className="absolute w-11 h-11 rounded-full items-center justify-center"
+                style={{ top: insets.top + 12, right: 12 }}
+            >
+                <ButtonIcon as={CloseIcon} className="text-gray-300" />
+            </Button>
         </View>
     );
 }

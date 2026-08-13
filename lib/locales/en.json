@@ -87,7 +87,7 @@
     "restore": "Restore purchases",
     "activating": "Activating your subscription…",
     "activationDelayed": "Your purchase is being confirmed. This can take a moment. Tap refresh if it doesn't continue.",
-    "sandboxOnProduction": "This is a sandbox (test) purchase and the app is connected to the production server. Sandbox receipts are only accepted on staging, so production will never confirm this purchase — waiting will not help. Point the app at the staging environment to test purchases.",
+    "sandboxOnProduction": "This is a sandbox (test) purchase and the app is connected to the production server. Sandbox receipts are only accepted on staging, so production will never confirm this purchase, and waiting will not help. Point the app at the staging environment to test purchases.",
     "activatedTitle": "{{plan}} is active",
     "activatedBody": "Your personalized feed, dashboard, followed stories and chat are ready.",
     "planSection": "Your plan",
