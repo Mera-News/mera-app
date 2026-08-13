@@ -346,6 +346,56 @@ export async function applyUpdates(id: string, updates: ApplyUpdatesInput): Prom
   }
 }
 
+/**
+ * Remove ONE member article from a story's TIMELINE — the "not part of this
+ * story" per-card action.
+ *
+ * DROPS THE SNAPSHOT, KEEPS THE MEMBER ID, and that asymmetry is the entire
+ * design, not an oversight:
+ *
+ *   - `member_snapshots_json` is what the timeline renders (StoryTimelineScreen
+ *     builds its cards from `story.memberSnapshots`), so dropping the snapshot
+ *     is what makes the card disappear.
+ *   - `member_article_ids` is the reconcile's ALREADY-CONSIDERED ledger. Every
+ *     feed sync re-derives membership from scratch —
+ *     `fresh = candidates.filter((r) => !existing.has(r.id))` in
+ *     tracked-story-reconcile — against the whole local `article_suggestions`
+ *     set with no status filter. Remove the id and the very next sync (60s)
+ *     re-adds the member and its snapshot, and the card the user just dismissed
+ *     comes straight back.
+ *
+ * So the id IS the durable record of the removal. Keeping it needs no deny
+ * list, no tombstone column, and no change to how the reconcile grows.
+ *
+ * The member COUNT on the stories list is derived from `member_article_ids`, so
+ * it deliberately still counts this article: the story really did gather that
+ * coverage, the user only asked not to see it on the timeline.
+ *
+ * `unseen_count` is left alone on purpose. The timeline zeroes it via
+ * `markSeen` on every focus and `advanceSeenWatermark` only ever moves forward,
+ * so the badge is already 0 by the time a card on that screen can be dismissed.
+ *
+ * No-op (and NO write, so the `observeWithColumns` subscribers don't re-render)
+ * when the article isn't a snapshot. Never throws.
+ */
+export async function removeMemberSnapshot(id: string, articleId: string): Promise<void> {
+  const target = (articleId ?? '').trim();
+  if (!target) return;
+  try {
+    const record = await collection.find(id);
+    const current = record.memberSnapshots ?? [];
+    const next = current.filter((s) => s?.articleId !== target);
+    if (next.length === current.length) return; // not a member — nothing to write
+    await database.write(async () => {
+      await record.update((m) => {
+        m.memberSnapshots = next;
+      });
+    });
+  } catch (err) {
+    logger.warn('[tracked-story] removeMemberSnapshot failed', { id, error: String(err) });
+  }
+}
+
 /** The source fields a snapshot can be missing — see {@link backfillSnapshotSource}. */
 export interface SnapshotSourcePatch {
   languageCode?: string;

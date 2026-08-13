@@ -28,6 +28,7 @@ import {
   bindTrackedTopic,
   sortTrackedStories,
   mergeMemberSnapshots,
+  removeMemberSnapshot,
 } from '../tracked-story-service';
 
 const db = database as any;
@@ -631,5 +632,116 @@ describe('bindTrackedTopic', () => {
 
   it('never throws on a missing row', async () => {
     await expect(bindTrackedTopic('nope', 'top-1', 'text')).resolves.toBeUndefined();
+  });
+});
+
+describe('removeMemberSnapshot', () => {
+  it('drops only the matching snapshot and leaves the rest in order', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberArticleIds: ['a1', 'a2', 'a3'],
+      memberSnapshots: [
+        { articleId: 'a3', title: 'Third', pubDateMs: 3000 },
+        { articleId: 'a2', title: 'Second', pubDateMs: 2000 },
+        { articleId: 'a1', title: 'First', pubDateMs: 1000 },
+      ],
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await removeMemberSnapshot('s1', 'a2');
+
+    expect(row.memberSnapshots.map((s: any) => s.articleId)).toEqual(['a3', 'a1']);
+  });
+
+  // THE assertion that guards the whole design. The reconcile re-derives
+  // membership every sync from `member_article_ids`
+  // (`candidates.filter((r) => !existing.has(r.id))`), so the id is what stops
+  // the dismissed member being re-added with a fresh snapshot 60s later.
+  // Removing the id here would make the dismissal silently undo itself.
+  it('leaves member_article_ids UNTOUCHED, so the reconcile cannot re-add the member', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberArticleIds: ['a1', 'a2', 'a3'],
+      memberSnapshots: [{ articleId: 'a2', title: 'Second', pubDateMs: 2000 }],
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await removeMemberSnapshot('s1', 'a2');
+
+    expect(row.memberArticleIds).toEqual(['a1', 'a2', 'a3']);
+    expect(row.memberSnapshots).toEqual([]);
+  });
+
+  it('leaves the badge and activity fields alone', async () => {
+    const lastUpdateAt = new Date(5000);
+    const row = makeStory({
+      id: 's1',
+      unseenCount: 2,
+      missCount: 3,
+      lastUpdateAt,
+      latestArticleId: 'a2',
+      seenPubWatermarkMs: 1500,
+      memberArticleIds: ['a1', 'a2'],
+      memberSnapshots: [{ articleId: 'a2', title: 'Second', pubDateMs: 9000 }],
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await removeMemberSnapshot('s1', 'a2');
+
+    expect(row.unseenCount).toBe(2);
+    expect(row.missCount).toBe(3);
+    expect(row.lastUpdateAt).toBe(lastUpdateAt);
+    expect(row.latestArticleId).toBe('a2');
+    expect(row.seenPubWatermarkMs).toBe(1500);
+  });
+
+  it('writes NOTHING when the article is not a snapshot', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberSnapshots: [{ articleId: 'a1', title: 'First', pubDateMs: 1000 }],
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await removeMemberSnapshot('s1', 'a9');
+
+    // No write at all — the row is under observeWithColumns, so a no-op update
+    // would re-render the stories list for nothing.
+    expect(row.update).not.toHaveBeenCalled();
+    expect(row.memberSnapshots).toHaveLength(1);
+  });
+
+  it('no-ops on a blank article id without touching the row', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberSnapshots: [{ articleId: 'a1', title: 'First', pubDateMs: 1000 }],
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await removeMemberSnapshot('s1', '   ');
+
+    expect(row.update).not.toHaveBeenCalled();
+  });
+
+  it('trims the article id before matching', async () => {
+    const row = makeStory({
+      id: 's1',
+      memberSnapshots: [{ articleId: 'a1', title: 'First', pubDateMs: 1000 }],
+    });
+    db._setRows('tracked_stories', [row]);
+
+    await removeMemberSnapshot('s1', '  a1  ');
+
+    expect(row.memberSnapshots).toEqual([]);
+  });
+
+  it('never throws on a missing row', async () => {
+    await expect(removeMemberSnapshot('nope', 'a1')).resolves.toBeUndefined();
+  });
+
+  it('tolerates a story with no snapshots at all', async () => {
+    const row = makeStory({ id: 's1', memberSnapshots: undefined });
+    db._setRows('tracked_stories', [row]);
+    await expect(removeMemberSnapshot('s1', 'a1')).resolves.toBeUndefined();
+    expect(row.update).not.toHaveBeenCalled();
   });
 });
