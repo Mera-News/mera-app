@@ -291,6 +291,22 @@ export async function presentIntercomMessenger(): Promise<boolean> {
     }
 
     if (moved()) return false;
+
+    // Fire-and-forget, deliberately NOT awaited: fetching the raw device token
+    // can take seconds, and on iOS can never settle at all if neither APNs
+    // delegate fires. Nothing about opening the Messenger should wait on it.
+    // Required lazily to keep notification-service out of this module's import
+    // graph (it reaches the stores and the database).
+    try {
+      void require('@/lib/notification-service')
+        .registerIntercomPushToken()
+        .catch(() => {
+          /* Non-fatal: the user simply gets no push for support replies. */
+        });
+    } catch {
+      // Module unavailable in this context — never block the Messenger on it.
+    }
+
     await Intercom.present();
     return true;
   } catch (e) {
@@ -314,6 +330,12 @@ export async function presentIntercomMessenger(): Promise<boolean> {
 export async function sendIntercomPushToken(token: string): Promise<void> {
   if (!configured || !token) return;
   try {
+    // The login check lives HERE rather than at the call sites so the ordering
+    // rule holds for boot registration and token rotation alike. Sending before
+    // a login resolves yields "Failed to register a device token, identity
+    // verification is not setup correctly" — which names credentials and means
+    // ordering, and has cost people days.
+    if (!(await Intercom.isUserLoggedIn())) return;
     await Intercom.sendTokenToIntercom(token);
   } catch (e) {
     logger.warn('[intercom] sendTokenToIntercom failed', { error: String(e) });

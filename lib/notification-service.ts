@@ -359,11 +359,23 @@ export async function ensurePushTokenRegistered(userId: string): Promise<void> {
         // ExponentPushToken[...] form the server expects. Only attach once.
         if (!pushTokenListener) {
             let tokenRotationInFlight = false;
-            pushTokenListener = Notifications.addPushTokenListener(() => {
+            pushTokenListener = Notifications.addPushTokenListener((devicePushToken) => {
                 void (async () => {
                     if (tokenRotationInFlight) return;
                     tokenRotationInFlight = true;
                     try {
+                        // Intercom wants the RAW token this listener already
+                        // carries, so rotation costs no extra native call —
+                        // and must not re-enter getDevicePushTokenAsync, which
+                        // rejects E_PROMISE_REPLACED on a concurrent call.
+                        // Ordering is enforced inside sendIntercomPushToken.
+                        if (devicePushToken?.data) {
+                            const { sendIntercomPushToken } = require('@/lib/intercom');
+                            await sendIntercomPushToken(String(devicePushToken.data)).catch(
+                                () => { /* Non-fatal, see registerIntercomPushToken. */ },
+                            );
+                        }
+
                         const current = useUserStore.getState().userId;
                         if (!current) return;
                         const expoToken = await registerForPushNotificationsAsync(true);
@@ -393,6 +405,75 @@ export async function ensurePushTokenRegistered(userId: string): Promise<void> {
         });
     }
 }
+
+// ---------------------------------------------------------------------------
+// Intercom push. Separate from everything above.
+// ---------------------------------------------------------------------------
+
+/**
+ * Hand Intercom the RAW APNs/FCM device token.
+ *
+ * This is a different token from the `ExponentPushToken[...]` the rest of this
+ * file deals with. Intercom's servers push directly via APNs/FCM and know
+ * nothing about Expo's push service, so both are registered and both coexist —
+ * `registerForPushNotificationsAsync` above is untouched.
+ *
+ * iOS note: Intercom's own config plugin cannot do this. Its
+ * withPushNotifications mod inserts the setDeviceToken call with
+ * `insertContentsInsideObjcFunctionBlock`, which is Objective-C only, and SDK
+ * 55 generates a Swift AppDelegate — so the mod silently no-ops (it returns the
+ * source unchanged rather than throwing). This JS path is the replacement. Do
+ * not try to patch the AppDelegate.
+ *
+ * Safe to call repeatedly and never throws.
+ */
+export async function registerIntercomPushToken(): Promise<void> {
+    if (!Device.isDevice) return;
+    try {
+        // getDevicePushTokenAsync can NEVER SETTLE when neither APNs delegate
+        // fires — no rejection, no resolution, just a promise that hangs for
+        // the life of the process. It also rejects with E_PROMISE_REPLACED if a
+        // second call starts while one is in flight. So it is both raced
+        // against a timeout and guarded by an in-flight flag, and no caller
+        // ever awaits it on a path a user is watching.
+        if (intercomTokenInFlight) return;
+        intercomTokenInFlight = true;
+        // The timer is captured and cleared rather than left to fire. A bare
+        // setTimeout inside Promise.race keeps the event loop alive for its
+        // full duration even after the race is settled — which in jest surfaces
+        // as "a worker process has failed to exit gracefully", and on device is
+        // a needless 10s wakeup on every support tap.
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const token = await Promise.race([
+            Notifications.getDevicePushTokenAsync(),
+            new Promise<never>((_, reject) => {
+                timer = setTimeout(
+                    () => reject(new Error('device push token timed out after 10s')),
+                    10000,
+                );
+            }),
+        ]).finally(() => {
+            if (timer) clearTimeout(timer);
+        });
+        if (!token?.data) return;
+        const { sendIntercomPushToken } = require('@/lib/intercom');
+        // sendIntercomPushToken checks Intercom.isUserLoggedIn() itself, which
+        // is the ordering that matters: a token sent before login resolves is
+        // rejected with an identity-verification error.
+        await sendIntercomPushToken(String(token.data));
+    } catch (err) {
+        // Non-fatal by design: the user loses push for support replies, not the
+        // app. Warning rather than exception — a device that has never been
+        // granted notification permission reaches here routinely.
+        logger.warn('[notification-service] Intercom push token registration failed', {
+            error: String(err),
+        });
+    } finally {
+        intercomTokenInFlight = false;
+    }
+}
+
+let intercomTokenInFlight = false;
 
 /**
  * Settings toggle handler. Flips the per-user `notificationsEnabled` flag.
