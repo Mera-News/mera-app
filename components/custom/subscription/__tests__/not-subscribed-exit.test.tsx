@@ -49,15 +49,11 @@ jest.mock('@/components/ui/icon', () => {
     return {
         RepeatIcon: (p: any) => <View {...p} />,
         HelpCircleIcon: (p: any) => <View {...p} />,
-        CloseIcon: (p: any) => <View {...p} />,
     };
 });
 jest.mock('react-native-safe-area-context', () => {
     const { View } = require('react-native');
-    return {
-        SafeAreaView: (p: any) => <View {...p} />,
-        useSafeAreaInsets: () => ({ top: 47, bottom: 34, left: 0, right: 0 }),
-    };
+    return { SafeAreaView: (p: any) => <View {...p} /> };
 });
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
@@ -297,14 +293,11 @@ describe('leaving the paywall for /logged-in', () => {
         expect(mockReplace).not.toHaveBeenCalled();
     });
 
-    // REPOINTED at the close control (r19), body unchanged. The exit moved from
-    // a text link at the bottom of the scroll view to a glyph top-right; what
-    // it must DO did not move an inch, and this assertion is the reason.
-    it('the close control records the dismissal and drops onto Mera News Free', async () => {
-        const { getByTestId } = render(<NotSubscribedScreen />);
+    it('"Continue without a plan" records the dismissal and drops onto Mera News Free', async () => {
+        const { getByText } = render(<NotSubscribedScreen />);
 
         await act(async () => {
-            fireEvent.press(getByTestId('not-subscribed-close'));
+            fireEvent.press(getByText('freeTier.continueWithoutPlan'));
             for (let i = 0; i < 8; i++) await Promise.resolve();
         });
 
@@ -332,67 +325,21 @@ describe('leaving the paywall for /logged-in', () => {
         expect(mockReplace).not.toHaveBeenCalled();
     });
 
-    // UPDATED, not deleted (r19). This asserted four testIDs in flow order and
-    // the fourth is gone: "Continue without a plan" became the close control,
-    // which is absolutely positioned OUTSIDE the ScrollView and therefore not
-    // in this flow at all. The property the test was protecting is unchanged
-    // for the three that remain: the solid CTA keeps its monopoly on visual
-    // weight, and the soft way out ("show me what this is") is still offered
-    // before anything else.
-    it('the learn link sits after Refresh, and the panel ends there', () => {
+    // It sits between Refresh and "Continue without a plan": the solid CTA keeps
+    // its monopoly on visual weight, and of the two ways out, the soft one
+    // ("show me what this is") is offered before the hard one.
+    it('sits between Refresh and "Continue without a plan"', () => {
         const { getByTestId, UNSAFE_root } = render(<NotSubscribedScreen />);
 
         const order = [
             'not-subscribed-plans',
             'not-subscribed-refresh',
             'not-subscribed-learn',
+            'not-subscribed-continue',
         ].map((id) => getByTestId(id));
 
         const rendered = UNSAFE_root.findAll((n: unknown) => order.includes(n as never));
         expect(rendered).toEqual(order);
-    });
-
-    // The exit itself, asserted separately because it is no longer part of the
-    // panel's flow. Its POSITION is the whole point: as a child of the
-    // ScrollView the one control that leaves this screen would scroll away with
-    // the content, which is the bug being fixed.
-    it('the close control is outside the scroll view and names its destination', () => {
-        const { getByTestId, queryByText } = render(<NotSubscribedScreen />);
-
-        const close = getByTestId('not-subscribed-close');
-        expect(close).toBeTruthy();
-        // Icon-only, so the accessible name has to be explicit — and it names
-        // where the reader LANDS, not "Close", which would say nothing.
-        expect(close.props.accessibilityLabel).toBe('freeTier.continueWithoutPlan');
-        expect(close.props.accessibilityRole).toBe('button');
-        // Never disabled: a ~25s poll the reader never asked for must not
-        // strand the only way out.
-        expect(close.props.disabled).toBeFalsy();
-
-        // And the text link it replaced is gone, so there is exactly one exit.
-        expect(queryByText('freeTier.continueWithoutPlan')).toBeNull();
-    });
-
-    it('the close control is present on the lapsed entry too', () => {
-        const { getByTestId } = render(<NotSubscribedScreen reason="lapsed" />);
-        expect(getByTestId('not-subscribed-close')).toBeTruthy();
-    });
-
-    // The asymmetry that looks like a bug and is not: the lapse interstitial is
-    // latched SERVER-side, once per lapse, so there is no cold-start loop for a
-    // device-local flag to prevent. Writing it here would put device state in
-    // charge of a question the server owns.
-    it('does NOT write the first-open flag on the lapsed entry', async () => {
-        const { getByTestId } = render(<NotSubscribedScreen reason="lapsed" />);
-
-        await act(async () => {
-            fireEvent.press(getByTestId('not-subscribed-close'));
-            for (let i = 0; i < 8; i++) await Promise.resolve();
-        });
-
-        const { setSetting } = require('@/lib/database/services/setting-service');
-        expect(setSetting).not.toHaveBeenCalled();
-        expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed');
     });
 
     // Never disabled, for the same reason "Continue without a plan" is not: a
