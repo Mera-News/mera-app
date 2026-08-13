@@ -60,6 +60,13 @@ const mockGetSetting = jest.fn(async (key: string): Promise<string | null> =>
 );
 jest.mock('@/lib/database/services/setting-service', () => ({ getSetting: (k: string) => mockGetSetting(k) }));
 
+// The ownership alarm. Mocked at the seam because the real module constructs a
+// WatermelonDB collection at import time.
+const mockAssertPersonaOwner = jest.fn(async (_id: string) => false);
+jest.mock('@/lib/database/services/user-persona-service', () => ({
+    assertPersonaOwner: (id: string) => mockAssertPersonaOwner(id),
+}));
+
 const mockResolveIdentity = jest.fn(() => 'coherent' as string);
 const mockHasIdentityFault = jest.fn(async () => false);
 // The recorder is REAL module state in the source, so every member of it has to
@@ -145,6 +152,7 @@ beforeEach(() => {
     // Without this reset the recorder leaks between tests, which is exactly how
     // a suite stops testing the offline path without anybody noticing.
     mockReadPendingAuthUserId.mockReturnValue(null);
+    mockAssertPersonaOwner.mockResolvedValue(false);
     mockClearPreviousUserData.mockResolvedValue(undefined);
     mockHasAnyFacts.mockResolvedValue(true);
     mockResolveEntitlement.mockResolvedValue('entitled');
@@ -314,6 +322,56 @@ describe('cold-start identity gate', () => {
         expect(mockClearPreviousUserData).not.toHaveBeenCalled();
         expect(mockSetUserId).not.toHaveBeenCalled();
         expect(mockAdoptLocalUserId).toHaveBeenCalledWith('A');
+    });
+
+    // ── THE OWNERSHIP ALARM ──────────────────────────────────────────────
+    it('a foreign persona row upgrades a coherent verdict to a wipe', async () => {
+        // Independent of `cached_user_id`, which is the value this whole class
+        // of bug corrupts. Positive evidence of contamination even when the
+        // sentinel agrees with the session.
+        mockResolveIdentity.mockReturnValue('coherent');
+        mockAssertPersonaOwner.mockResolvedValue(true);
+
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockClearPreviousUserData).toHaveBeenCalledWith('u1'));
+        expect(mockAssertPersonaOwner).toHaveBeenCalledWith('u1');
+    });
+
+    it('never consulted on a reauth verdict', async () => {
+        // The server has already said a local fix is guesswork there.
+        mockResolveIdentity.mockReturnValue('reauth');
+
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+        expect(mockAssertPersonaOwner).not.toHaveBeenCalled();
+    });
+
+    it('finding nothing foreign is not permission to skip anything', async () => {
+        // It can CONFIRM, never clear: persistUserPersona is fire-and-forget,
+        // so a clean device may hold zero rows. A `false` must leave the
+        // verdict exactly as resolveIdentity left it.
+        mockResolveIdentity.mockReturnValue('wipeAndProceed');
+        mockAssertPersonaOwner.mockResolvedValue(false);
+
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockClearPreviousUserData).toHaveBeenCalledWith('u1'));
+        // Not even asked: the verdict was already a wipe.
+        expect(mockAssertPersonaOwner).not.toHaveBeenCalled();
+    });
+
+    it('is not consulted for an offline user with no proven identity', async () => {
+        mockSession = null;
+        mockReadPendingAuthUserId.mockReturnValue(null);
+        mockResolveIdentity.mockReturnValue('coherent');
+
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockHasAnyFacts).toHaveBeenCalled());
+        expect(mockAssertPersonaOwner).not.toHaveBeenCalled();
+        expect(mockClearPreviousUserData).not.toHaveBeenCalled();
     });
 
     // ── FAIL CLOSED ──────────────────────────────────────────────────────

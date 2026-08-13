@@ -6,6 +6,7 @@ import logger from "@/lib/logger";
 import { clearPreviousUserData } from "@/lib/stores";
 import { hasAnyFacts } from "@/lib/database/services/fact-service";
 import { getSetting } from "@/lib/database/services/setting-service";
+import { assertPersonaOwner } from "@/lib/database/services/user-persona-service";
 import {
     clearPendingAuthUserId,
     effectiveSessionUserId,
@@ -105,7 +106,7 @@ export default function LoggedInIndex() {
                     }
                 }
 
-                const verdict = resolveIdentity({
+                let verdict = resolveIdentity({
                     // The LIVE atom, kept separate from `pendingAuthUserId` on
                     // purpose — resolveIdentity owns the precedence rule, and
                     // pre-coalescing here would hand it the same value twice
@@ -117,6 +118,24 @@ export default function LoggedInIndex() {
                     isConnected,
                     serverReachable,
                 });
+
+                // A SECOND OPINION, and only ever in one direction.
+                //
+                // Everything above turns on `cached_user_id`, which is the one
+                // value this whole class of bug corrupts. `user_personas` is the
+                // only user-data table carrying a `user_id`, so a row owned by
+                // somebody else is independent, positive evidence that this
+                // device is contaminated even when the sentinel was lost.
+                //
+                // It can CONFIRM, never clear: persistUserPersona is
+                // fire-and-forget, so a clean device may hold zero rows and
+                // "nothing foreign found" proves nothing. It therefore upgrades
+                // 'coherent' to a wipe and is never the gate itself, and it is
+                // deliberately not consulted on 'reauth' — the server has
+                // already said a local fix is guesswork there.
+                if (verdict === 'coherent' && effective && (await assertPersonaOwner(effective))) {
+                    verdict = 'wipeAndProceed';
+                }
 
                 if (verdict === 'reauth') {
                     // Unresolvable locally — OTP is the only way to learn which

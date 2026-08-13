@@ -86,6 +86,50 @@ export async function clearUserPersona(): Promise<void> {
   });
 }
 
+// --- Ownership alarm ---
+
+/**
+ * Does a persona row on this device belong to somebody OTHER than `ownerId`?
+ *
+ * A cheap second opinion on the question `cached_user_id` normally answers.
+ * `user_personas` is the only one of the six user-data tables with a `user_id`
+ * column, and it is indexed, so this is one query — but it is positive evidence
+ * of contamination even when `cached_user_id` was lost or overwritten, which is
+ * exactly the failure the cross-user leak was made of.
+ *
+ * IT CAN ONLY EVER CONFIRM, NEVER CLEAR. `persistUserPersona` is called
+ * fire-and-forget from the user store, so a perfectly clean device can hold
+ * zero persona rows — "no mismatch found" therefore proves nothing at all.
+ * Treat `true` as a reason to force a wipe; never treat `false` as permission
+ * to skip one, and never make this the gate. `hasAnyFacts()` plus a correct,
+ * fail-closed wipe remains the gate.
+ *
+ * Returns `false` on any read failure, for the same reason: an unanswerable
+ * question is not evidence.
+ */
+export async function assertPersonaOwner(ownerId: string): Promise<boolean> {
+  if (!ownerId) return false;
+  try {
+    const foreign = await personasCol
+      .query(Q.where('user_id', Q.notEq(ownerId)))
+      .fetchCount();
+    if (foreign > 0) {
+      logger.captureMessage(
+        'Persona rows on this device belong to a different user',
+        {
+          level: 'error',
+          tags: { source: 'user-persona-service' },
+          extra: { foreignRowCount: foreign },
+        },
+      );
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 // --- Helpers ---
 
 function toProcessingMode(value: string): ProcessingMode {
