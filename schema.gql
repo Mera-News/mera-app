@@ -1,3 +1,7 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
 """
 Static client configuration that does not depend on the caller. Currently the version stamps of the published legal documents.
 """
@@ -458,6 +462,11 @@ A single persona topic. `limit` overrides the query-level limitPerTopic; `afterC
 input PersonaTopicInput {
   afterCursor: ID
   limit: Int
+
+  """
+  Require the narrowest place term in the topic rather than any of them. Request-scoped and never stored.
+  """
+  strictMatch: Boolean! = false
   text: String!
 }
 
@@ -613,6 +622,11 @@ type Query {
   """
   articlesForStories(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
   articlesForTopicsByIds(articleIds: [ID!]!): ArticlesForTopicsByIdsResponse!
+
+  """
+  The cached fact check for an article, or null when none exists. READ-ONLY: never creates one, never starts a job, never spends. Null also means "not entitled". Use `factCheck` to ASK for a check.
+  """
+  cachedFactCheck(articleId: ID!): FactCheck
 
   """
   Stateless embedding proxy: embeds short phrases as `retrieval.query` and returns the packed sign-bit sidecars, in the same representation as `vector_sidecar_packed` on articles, so the device can compare them locally. NOTHING IS STORED — no phrase, vector, or caller is persisted, cached, or logged anywhere. At most 16 phrases of 200 characters per call.

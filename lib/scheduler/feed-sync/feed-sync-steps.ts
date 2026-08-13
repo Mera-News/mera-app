@@ -30,6 +30,7 @@ import {
   HeadlineScope,
   type ArticleWithClusters,
   type PersonaQueryInput,
+  type PersonaTopicInput,
 } from '@/lib/generated/graphql-types';
 import { gateUnscoredForScoring } from '@/lib/feed-grouping/score-propagation';
 import {
@@ -417,9 +418,14 @@ async function fetchTopicIdsPersona(
   const freeTopicTexts = computeFreeTopicTexts(activeTopics);
 
   const query: PersonaQueryInput = {
-    topics: profile.topics.map((t) => ({
-      text: t.text,
-      limit: t.limit,
+    topics: profile.topics.map((t): PersonaTopicInput => {
+      // Written as a typed variable + conditional assignment, NOT a conditional
+      // spread. A spread bypasses excess-property checking, so a typo'd key
+      // would compile — and an input field the server does not know fails the
+      // WHOLE articleIdsForPersona query, i.e. feed sync stops for everyone who
+      // follows a story. This shape makes that a compile error instead.
+      const topic: PersonaTopicInput = { text: t.text, limit: t.limit };
+
       // Tighten the server's match floor for followed stories ONLY.
       //
       // Keyed on NORMALIZED text, not topicId, for the same reason the billing
@@ -435,8 +441,10 @@ async function fetchTopicIdsPersona(
       // OMITTED, not false, when not tracked-only — the same absence-is-default
       // rule the headline scopes follow just below, so a reader who follows no
       // stories sends the byte-identical payload they send today.
-      ...(freeTopicTexts.has(normalizeTopicText(t.text)) ? { strictMatch: true } : {}),
-    })),
+      if (freeTopicTexts.has(normalizeTopicText(t.text))) topic.strictMatch = true;
+
+      return topic;
+    }),
     // Query-level fallback only: the server prefers each topic's own `limit`
     // (set by buildRetrievalProfile, which now tops out at 40) and only falls
     // back to this when a topic omits one. Kept in step with that ceiling so
