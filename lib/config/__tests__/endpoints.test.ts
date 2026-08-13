@@ -110,6 +110,43 @@ describe('config/endpoints', () => {
     delete process.env.EXPO_PUBLIC_DUMP_QUERY_FOR_DEBUGGING;
   });
 
+  // The Intercom trio must degrade to '' rather than throw. A missing support
+  // key is a supported configuration (the UI falls back to mailto:), so
+  // routing these through requireEnv would take out launch for every user.
+  it('exports the Intercom keys as empty strings when unset', () => {
+    setEnv();
+    for (const key of [
+      'EXPO_PUBLIC_INTERCOM_APP_ID',
+      'EXPO_PUBLIC_INTERCOM_IOS_KEY',
+      'EXPO_PUBLIC_INTERCOM_ANDROID_KEY',
+    ]) {
+      delete process.env[key];
+    }
+    const mod = require('../endpoints');
+    expect(mod.INTERCOM_APP_ID).toBe('');
+    expect(mod.INTERCOM_IOS_KEY).toBe('');
+    expect(mod.INTERCOM_ANDROID_KEY).toBe('');
+    expect(mockSentryCaptureException).not.toHaveBeenCalled();
+  });
+
+  it('exports the Intercom keys when set', () => {
+    setEnv();
+    process.env.EXPO_PUBLIC_INTERCOM_APP_ID = 'abc12345';
+    process.env.EXPO_PUBLIC_INTERCOM_IOS_KEY = 'ios_sdk-test';
+    process.env.EXPO_PUBLIC_INTERCOM_ANDROID_KEY = 'android_sdk-test';
+    const mod = require('../endpoints');
+    expect(mod.INTERCOM_APP_ID).toBe('abc12345');
+    expect(mod.INTERCOM_IOS_KEY).toBe('ios_sdk-test');
+    expect(mod.INTERCOM_ANDROID_KEY).toBe('android_sdk-test');
+    for (const key of [
+      'EXPO_PUBLIC_INTERCOM_APP_ID',
+      'EXPO_PUBLIC_INTERCOM_IOS_KEY',
+      'EXPO_PUBLIC_INTERCOM_ANDROID_KEY',
+    ]) {
+      delete process.env[key];
+    }
+  });
+
   it('throws an Error with a helpful message mentioning .env.example', () => {
     delete process.env.EXPO_PUBLIC_AUTH_ENDPOINT;
     try {
