@@ -1,5 +1,3 @@
-import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
@@ -32,6 +30,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
  * `cached_user_id` and must NOT route. Leaving the stamp as the previous owner
  * is the retry marker — it is what makes the next launch re-detect the mismatch
  * and try again, the same principle `purgeOrphanedLocalData` uses.
+ *
+ * ── AND NO DECORATION ───────────────────────────────────────────────────────
+ *
+ * Flat black, no `AbstractGradientBackdrop` and no `MeraLogo`. Both pull
+ * react-native-reanimated and react-native-svg, and the backdrop additionally
+ * reads `useDisplayPrefsStore` — a Zustand read on the one screen whose whole
+ * contract is that it reads no store. This screen renders precisely when the
+ * local database has just failed, which is the worst possible moment to be
+ * mounting an animation stack. Every import here is load-bearing; adding one
+ * back is a regression, not a polish.
  */
 
 /**
@@ -100,15 +108,9 @@ export default function IdentitySwitchFailedScreen({ onRetry }: IdentitySwitchFa
   }, []);
 
   return (
-    <Box className="flex-1">
-      {/* Page background. Must be the FIRST child so it paints behind
-          everything else on the page. */}
-      <AbstractGradientBackdrop />
-
+    <Box className="flex-1 bg-black">
       <SafeAreaView style={{ flex: 1 }}>
         <VStack className="flex-1 items-center justify-center px-6" space="lg">
-          <MeraLogo size={72} />
-
           <Heading size="2xl" className="text-white text-center">
             {t('auth.identitySwitchFailedTitle')}
           </Heading>

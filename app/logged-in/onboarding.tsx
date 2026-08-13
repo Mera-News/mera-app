@@ -7,6 +7,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { authClient } from "@/lib/auth-client";
 import { getSetting } from "@/lib/database/services/setting-service";
 import { navigateToPaywall } from "@/lib/nav-state";
+import { effectiveSessionUserId, readPendingAuthUserId } from "@/lib/security/identity-gate";
 import { Redirect, router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 
@@ -40,7 +41,25 @@ export default function Onboarding() {
                 localUserId = null;
             } finally {
                 if (!cancelled) {
-                    setUserId(session?.user?.id ?? localUserId ?? null);
+                    // Session atom → this process's recorded sign-in → disk.
+                    //
+                    // The middle term is the fix. DeepLinkVerifyScreen replaces
+                    // straight to this route the instant OTP succeeds, so the
+                    // atom is still `undefined` here and this used to fall
+                    // through to the on-disk owner — which on a device holding
+                    // user A's data IS user A. OnboardingScreen would then wipe
+                    // "for" A (a no-op, the ids match), stamp A, count A's
+                    // facts, decide onboarding was already done, and hand the
+                    // wizard A as the owner of everything B did next.
+                    //
+                    // `sessionUserId` below still gets the RAW atom. The two
+                    // props must stay distinct or resolveIdentity's mismatch
+                    // check compares a value against itself.
+                    setUserId(
+                        effectiveSessionUserId(session?.user?.id, readPendingAuthUserId()) ??
+                            localUserId ??
+                            null,
+                    );
                     setResolved(true);
                 }
             }

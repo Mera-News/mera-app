@@ -6,6 +6,7 @@ import { Text } from '@/components/ui/text';
 import { authClient } from '@/lib/auth-client';
 import { setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
+import { recordAuthenticatedUser } from '@/lib/security/identity-gate';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
@@ -34,6 +35,15 @@ export default function DeepLinkVerifyScreen({ otp, email, type }: Props) {
                     logger.warn('[DeepLinkVerify] OTP sign-in failed', { error: error?.message });
                     router.replace('/login');
                 } else {
+                    // The THIRD doorway, and it carries the identical race:
+                    // this replaces straight to /logged-in/onboarding, whose
+                    // gate runs long before better-auth's session atom settles.
+                    // Instrumented here as well as in OTPVerificationView
+                    // because this route never touches app/logged-in/index.tsx,
+                    // so a recording made only there would never be read on
+                    // this path. See identity-gate.ts for why it is module
+                    // state and not a route param.
+                    recordAuthenticatedUser(data.user.id);
                     setSetting('cached_user_email', email).catch(() => {});
                     router.replace('/logged-in/onboarding');
                 }

@@ -63,6 +63,10 @@ jest.mock('@/components/ui/spinner', () => {
     const { View } = require('react-native');
     return { Spinner: (p: any) => <View testID="onboarding-gate-spinner" {...p} /> };
 });
+jest.mock('@/components/custom/auth/IdentitySwitchFailedScreen', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="identity-switch-failed" /> };
+});
 jest.mock('@/components/custom/onboarding/OnboardingWizard', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: (p: any) => <View testID="onboarding-wizard" {...p} /> };
@@ -76,6 +80,12 @@ jest.mock('@/lib/stores', () => ({
 jest.mock('@/lib/security/identity-gate', () => ({
     resolveIdentity: () => 'coherent',
     hasIdentityFault: async () => false,
+    readPendingAuthUserId: () => null,
+    clearPendingAuthUserId: () => {},
+}));
+jest.mock('@/lib/logger', () => ({
+    __esModule: true,
+    default: { captureException: jest.fn(), warn: jest.fn(), info: jest.fn() },
 }));
 jest.mock('@/lib/stores/network-store', () => ({
     useNetworkStore: { getState: () => ({ isConnected: mockIsConnected }) },

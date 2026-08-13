@@ -4,7 +4,14 @@ import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
 import { hasAnyFacts } from "@/lib/database/services/fact-service";
 import { getSetting } from "@/lib/database/services/setting-service";
-import { hasIdentityFault, resolveIdentity } from "@/lib/security/identity-gate";
+import IdentitySwitchFailedScreen from "@/components/custom/auth/IdentitySwitchFailedScreen";
+import logger from "@/lib/logger";
+import {
+    clearPendingAuthUserId,
+    hasIdentityFault,
+    readPendingAuthUserId,
+    resolveIdentity,
+} from "@/lib/security/identity-gate";
 import { clearPreviousUserData, useUserStore } from "@/lib/stores";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { readFirstOpenDismissed } from "@/lib/subscription/first-open-dismissal";
@@ -12,7 +19,7 @@ import {
     decideOnboardingEntry,
     resolveEntitlementForOnboarding,
 } from "@/lib/subscription/onboarding-paywall";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface OnboardingScreenProps {
     /**
@@ -71,6 +78,18 @@ interface OnboardingScreenProps {
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onPaywall, onFreeTierMode }) => {
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
+    // Fail-closed state, mirroring app/logged-in/index.tsx rather than
+    // inventing a second shape. This screen needs its own copy because
+    // DeepLinkVerifyScreen lands here directly and never passes through that
+    // file — a wipe that throws on THIS doorway would otherwise fall through to
+    // the fact count, read the previous owner's facts, and complete.
+    const [wipeFailed, setWipeFailed] = useState(false);
+    const [retryNonce, setRetryNonce] = useState(0);
+
+    const handleRetry = useCallback(() => {
+        setWipeFailed(false);
+        setRetryNonce((n) => n + 1);
+    }, []);
 
     // ── WHY THE HANDLERS LIVE IN A REF ──────────────────────────────────────
     //
@@ -121,11 +140,20 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 const serverReachable =
                     ownershipFault && isConnected ? await probeServerReachable() : undefined;
 
+                // Who authenticated in this process. The caller has already
+                // folded this into `userId` (see app/logged-in/onboarding.tsx),
+                // which is what makes the wipe target and the stamp correct —
+                // but resolveIdentity still needs it RAW, because it owns the
+                // precedence rule and `userId` cannot tell it whether the id it
+                // holds was proven or merely read off this device's disk.
+                const pendingAuthUserId = readPendingAuthUserId();
+
                 const verdict = resolveIdentity({
                     // The LIVE session id, never the coalesced `userId` — see
                     // the prop doc. Passing `userId` here would make this
                     // comparison compare the local id against itself.
                     sessionUserId,
+                    pendingAuthUserId,
                     cachedUserId,
                     ownershipFault,
                     isConnected,
@@ -141,8 +169,27 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 }
 
                 if (verdict === 'wipeAndProceed') {
-                    await clearPreviousUserData(userId);
+                    // BEFORE the destructive call, never inside it: a wipe
+                    // already in flight must be allowed to finish.
+                    if (cancelled) return;
+                    try {
+                        await clearPreviousUserData(userId);
+                    } catch (error) {
+                        // ── FAIL CLOSED ──────────────────────────────────
+                        // The previous owner's data is still here. Do NOT
+                        // stamp and do NOT fall through to the fact count:
+                        // that count is device-global, so it would report the
+                        // incoming user as already onboarded and hand them the
+                        // previous owner's feed. Leaving `cached_user_id`
+                        // untouched is the retry marker for the next launch.
+                        logger.captureException(error, {
+                            tags: { component: 'OnboardingScreen', method: 'clearPreviousUserData' },
+                        });
+                        if (!cancelled) setWipeFailed(true);
+                        return;
+                    }
                 }
+                if (cancelled) return;
                 // Stamp the new owner. `cached_user_id` is the ONLY sentinel
                 // clearPreviousUserData keys off, and until now nothing on the
                 // fresh-login path wrote it (setUserId lives in
@@ -154,6 +201,14 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 // after. Same prologue as app/logged-in/index.tsx.
                 useUserStore.getState().setUserId(userId);
 
+                // Consumed — but only when the value just written to disk IS
+                // the recorded one. On the offline path `userId` came off the
+                // disk instead, and dropping a recording that has not been
+                // stamped anywhere would lose the only trace of who signed in.
+                if (pendingAuthUserId && userId === pendingAuthUserId) {
+                    clearPendingAuthUserId();
+                }
+
                 // Deferred fault — keep authenticated background work gated
                 // until it is genuinely resolved. Must follow the wipe above,
                 // which resets the user store. See app/logged-in/index.tsx for
@@ -161,11 +216,24 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 if (ownershipFault) {
                     useUserStore.getState().setNeedsReauth(true);
                 }
-            } catch {
-                // A broken wipe must not strand the user on a spinner — fall
-                // through to the count and let it decide.
+            } catch (error) {
+                // NARROWED. This used to swallow a broken WIPE too, and falling
+                // through to the count on a failed wipe is the leak: the count
+                // is device-global, so it sees the previous owner's facts and
+                // completes onboarding for somebody who never did it. The wipe
+                // now has its own catch above and never reaches this one, which
+                // is left to cover the surrounding READS — a getSetting on a
+                // cold DB must still not strand the user on a spinner.
+                logger.captureException(error, {
+                    tags: { component: 'OnboardingScreen', method: 'resolveIdentity' },
+                });
             }
 
+            // COUPLING, stated because it is invisible: `facts` has no user
+            // column, so this count is device-GLOBAL. It is a safe gate if and
+            // only if the wipe above is correct AND fails closed. Anything that
+            // routes past a failed wipe makes this line read the PREVIOUS
+            // user's facts and report the incoming user as already onboarded.
             let hasFacts = false;
             try {
                 hasFacts = await hasAnyFacts();
@@ -237,10 +305,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
         return () => {
             cancelled = true;
         };
-        // IDENTITY ONLY. `onComplete` used to be here; see the ref above for
-        // what that cost. Re-running this gate is only ever correct when the
-        // user it is about changes.
-    }, [userId, sessionUserId]);
+        // IDENTITY ONLY, plus the blocking screen's retry. `onComplete` used to
+        // be here; see the ref above for what that cost. Re-running this gate
+        // is only ever correct when the user it is about changes, or when the
+        // user explicitly asks for the failed wipe to be tried again.
+    }, [userId, sessionUserId, retryNonce]);
 
     const handleOnboardingComplete = () => {
         setShowOnboarding(false);
@@ -248,6 +317,13 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
         // so the prop it closes over is by definition the current one.
         onComplete();
     };
+
+    // Fail closed. Checked BEFORE the spinner: nothing was stamped and no
+    // handler was called, so this component is still what the user is looking
+    // at, and it must not be a spinner that never resolves.
+    if (wipeFailed) {
+        return <IdentitySwitchFailedScreen onRetry={handleRetry} />;
+    }
 
     if (isCheckingOnboarding) {
         return (

@@ -35,6 +35,10 @@ jest.mock('@/components/ui/spinner', () => {
     return { Spinner: (p: any) => <View testID="onboarding-gate-spinner" {...p} /> };
 });
 
+jest.mock('@/components/custom/auth/IdentitySwitchFailedScreen', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="identity-switch-failed" /> };
+});
 jest.mock('@/components/custom/onboarding/OnboardingWizard', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: (p: any) => <View testID="onboarding-wizard" {...p} /> };
@@ -64,9 +68,21 @@ jest.mock('@/lib/database/services/fact-service', () => ({
 // which verdict produces which action, and in what order.
 const mockResolveIdentity = jest.fn(() => 'wipeAndProceed' as string);
 const mockHasIdentityFault = jest.fn(async () => false);
+// EVERY member the source imports has to exist on this factory. A missing one
+// is `undefined` at the call site, the gate effect throws a TypeError, and the
+// catch swallows it — which reads as "resolveIdentity was never called" rather
+// than as the coding error it is.
+const mockReadPendingAuthUserId = jest.fn((): string | null => null);
+const mockClearPendingAuthUserId = jest.fn();
 jest.mock('@/lib/security/identity-gate', () => ({
     resolveIdentity: (...a: any[]) => mockResolveIdentity(...(a as [])),
     hasIdentityFault: () => mockHasIdentityFault(),
+    readPendingAuthUserId: () => mockReadPendingAuthUserId(),
+    clearPendingAuthUserId: () => mockClearPendingAuthUserId(),
+}));
+jest.mock('@/lib/logger', () => ({
+    __esModule: true,
+    default: { captureException: jest.fn(), warn: jest.fn(), info: jest.fn() },
 }));
 
 const mockGetSetting = jest.fn(async (_k: string): Promise<string | null> => 'u1');
@@ -107,6 +123,9 @@ beforeEach(() => {
     mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return false; });
     mockResolveIdentity.mockReturnValue('wipeAndProceed');
     mockHasIdentityFault.mockResolvedValue(false);
+    // Nothing recorded is the default and the offline shape. The recorder is
+    // module state in the source, so leaving it set would leak between cases.
+    mockReadPendingAuthUserId.mockReturnValue(null);
     mockGetSetting.mockResolvedValue('u1');
     mockProbeServerReachable.mockResolvedValue(true);
     mockResolveEntitlement.mockResolvedValue('entitled');
@@ -175,12 +194,73 @@ describe('OnboardingScreen fact gate', () => {
         expect(callOrder).toEqual(['clear', 'setUserId', 'count']);
     });
 
-    it('still counts facts when the wipe throws (a broken wipe must not strand the user)', async () => {
+    // ── THE DEEP-LINK DOORWAY (r19) ──────────────────────────────────────
+    //
+    // DeepLinkVerifyScreen replaces straight to /logged-in/onboarding the
+    // instant OTP succeeds and never touches app/logged-in/index.tsx, so this
+    // screen is the ONLY gate on that path — and better-auth's session atom has
+    // not settled when it runs. Without the recorder, `sessionUserId` is
+    // undefined here, the gate reads it as the offline path, and user B keeps
+    // user A's facts.
+    it("resolves off the RECORDED sign-in when the session atom has not settled", async () => {
+        mockReadPendingAuthUserId.mockReturnValue('B');
+        mockGetSetting.mockResolvedValue('A');
+        mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return true; });
+        renderScreen(jest.fn(), jest.fn(), { userId: 'B', sessionUserId: undefined });
+
+        await waitFor(() => expect(mockHasAnyFacts).toHaveBeenCalled());
+        // Raw and separate: the precedence rule lives in resolveIdentity, and
+        // pre-coalescing here would hand it the same value twice.
+        expect(mockResolveIdentity).toHaveBeenCalledWith(
+            expect.objectContaining({
+                sessionUserId: undefined,
+                pendingAuthUserId: 'B',
+                cachedUserId: 'A',
+            }),
+        );
+        expect(mockClearPreviousUserData).toHaveBeenCalledWith('B');
+        expect(mockSetUserId).toHaveBeenCalledWith('B');
+        expect(mockSetUserId).not.toHaveBeenCalledWith('A');
+        // Consumed, so it cannot mask a later switch.
+        expect(mockClearPendingAuthUserId).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT consume the recording when the stamp came off disk', async () => {
+        // Offline-shaped: the recorded id belongs to a sign-in this screen is
+        // not the one stamping, so dropping it here would lose the only trace
+        // of who signed in before the cold-start gate ever reads it.
+        mockReadPendingAuthUserId.mockReturnValue('B');
+        mockGetSetting.mockResolvedValue('A');
+        mockResolveIdentity.mockReturnValue('coherent');
+        mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return true; });
+        renderScreen(jest.fn(), jest.fn(), { userId: 'A', sessionUserId: undefined });
+
+        await waitFor(() => expect(mockHasAnyFacts).toHaveBeenCalled());
+        expect(mockSetUserId).toHaveBeenCalledWith('A');
+        expect(mockClearPendingAuthUserId).not.toHaveBeenCalled();
+    });
+
+    // ── INVERTED, DELIBERATELY (r19) ─────────────────────────────────────
+    //
+    // This used to assert the opposite: "still counts facts when the wipe
+    // throws (a broken wipe must not strand the user)". That is fail-OPEN, and
+    // it is the leak. `facts` has no user column, so the count is
+    // device-global: after a failed wipe it sees the PREVIOUS owner's facts,
+    // reports the incoming user as already onboarded, and hands them a feed
+    // built from somebody else's persona. Stranding is the lesser harm, and it
+    // is not even stranding — the blocking screen carries a bounded retry and
+    // an always-available sign-out.
+    it('a wipe that throws blocks instead of counting facts', async () => {
         mockClearPreviousUserData.mockImplementation(async () => { throw new Error('db locked'); });
         mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return true; });
-        const { onComplete } = renderScreen();
+        const { onComplete, findByTestId } = renderScreen();
 
-        await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+        expect(await findByTestId('identity-switch-failed')).toBeTruthy();
+        expect(mockHasAnyFacts).not.toHaveBeenCalled();
+        expect(onComplete).not.toHaveBeenCalled();
+        // Not stamping is the retry marker: `cached_user_id` staying at the
+        // previous owner is what makes the next launch re-detect the mismatch.
+        expect(mockSetUserId).not.toHaveBeenCalled();
     });
 
     it('shows the wizard when the local fact count throws', async () => {

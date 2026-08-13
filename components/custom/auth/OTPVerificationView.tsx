@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text';
 import { authClient, sendOTP } from '@/lib/auth-client';
 import logger from '@/lib/logger';
 import { setSetting } from '@/lib/database/services/setting-service';
-import { clearIdentityFault } from '@/lib/security/identity-gate';
+import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
 import { useUserStore } from '@/lib/stores/user-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useRef, useState } from 'react';
@@ -78,6 +78,27 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
             if (error) {
                 setErrorMessage(error.message || t('auth.invalidOtpServer'));
             } else if (data?.user) {
+                // WHO JUST SIGNED IN, recorded before anything navigates.
+                //
+                // The identity gates run the instant this screen hands off, and
+                // better-auth's session atom has NOT settled by then — it only
+                // nulls/fills `data` once /get-session round-trips. For that
+                // window `resolveIdentity` was being asked to compare against an
+                // `undefined` session, read it as the offline path, and return
+                // 'coherent'. That is how user B entered the shell on user A's
+                // device holding A's facts, reading history, saved items, chat
+                // and topics, skipped onboarding, and sent A's topic texts under
+                // B's session.
+                //
+                // In-memory module state, deliberately NOT a route param: the
+                // id it carries selects a DESTRUCTIVE WIPE target, /logged-in is
+                // reachable from the app's URL scheme, and an attacker-supplied
+                // target would let a crafted link erase the legitimate user.
+                //
+                // Recorded only HERE, after the call resolved with a user — an
+                // optimistic recording would let a device claim an identity it
+                // never proved.
+                recordAuthenticatedUser(data.user.id);
                 // Remember the email for the "previous user" view on the login
                 // screen if the session is ever cleared / the user lands back
                 // on /login (transient connectivity, expired cookie, etc.).
