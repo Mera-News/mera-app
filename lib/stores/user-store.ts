@@ -33,6 +33,7 @@ interface UserState {
 
     // Actions
     setUserId: (id: string | null) => void;
+    adoptLocalUserId: (id: string) => void;
     setUserPersona: (persona: UserPersona | null) => void;
     setNeedsReauth: (v: boolean) => void;
     fetchUserPersona: (userId: string, force?: boolean) => Promise<UserPersona | null>;
@@ -133,6 +134,27 @@ export const useUserStore = create<UserState>()((set, get) => ({
         } else {
             deleteSetting('cached_user_id').catch(() => {});
         }
+    },
+
+    /**
+     * Adopt an owner that was read OFF DISK, without writing it back.
+     *
+     * Deliberately narrower than `setUserId`. The cold-start gate needs the
+     * in-memory id populated for the screens downstream of it, but for a user
+     * whose session has not resolved the only id available is the one
+     * `cached_user_id` already holds — so re-stamping it is at best a no-op
+     * write and at worst the thing that made a bad state STICKY: the gate used
+     * to coalesce session ?? local and then write the result back, which
+     * re-stamped the previous owner over an account switch it had just failed
+     * to detect.
+     *
+     * `setUserId` stays the only writer. Absent a proven identity there is
+     * nothing new to persist, and persisting a guess is how the guess survives
+     * a relaunch.
+     */
+    adoptLocalUserId: (id) => {
+        if (!id) return;
+        set({ userId: id });
     },
 
     setUserPersona: (persona) => {

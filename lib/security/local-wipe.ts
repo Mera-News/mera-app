@@ -163,6 +163,76 @@ export async function wipeAllLocalUserData(): Promise<void> {
 }
 
 /**
+ * Sign out and erase, in the order that keeps the ESCAPE working even when the
+ * erase does not.
+ *
+ * NAVIGATE BEFORE WIPING. This is the whole point of the function: the caller
+ * that needs it most is the identity-switch failure screen, reached precisely
+ * because `wipeAllLocalUserData()` already threw once. If the navigation waited
+ * on the wipe, a second failure would strand the user on a screen whose only
+ * two controls both lead through the thing that is broken. Sign-out proper runs
+ * first (it is what makes the state self-healing on the next launch: absent
+ * credentials with data on disk is the marker `purgeOrphanedLocalData` above
+ * reads), then the route, then the erase.
+ *
+ * `signedOut: '1'` on the route is load-bearing: better-auth does not clear its
+ * session atom synchronously on `signOut()`, and login.tsx would otherwise
+ * shortcut on the stale session and bounce the user straight back in.
+ *
+ * Every step before the wipe is individually guarded, for the same reason the
+ * logout path in AppPreferencesTab documents at length: past the point where
+ * the cookie is gone, the device is half-signed-out and the flow must ALWAYS
+ * reach the wipe. The wipe itself is allowed to throw, and the caller decides
+ * what that means.
+ *
+ * NOTE: `components/custom/config-mera/AppPreferencesTab.tsx` performs this same
+ * sequence inline for the explicit logout button. It is a second copy, and it is
+ * the ordering this function was extracted FROM.
+ */
+export async function signOutAndWipe(): Promise<void> {
+  try {
+    const { authClient, clearAuthStorage } = require('@/lib/auth-client');
+    await authClient.signOut();
+    await clearAuthStorage();
+  } catch (err) {
+    logger.addBreadcrumb(
+      'local-wipe: sign-out failed, continuing to the wipe',
+      'local-wipe',
+      { message: err instanceof Error ? err.message : String(err) },
+      'warning',
+    );
+  }
+
+  // Drop the identity sentinel BEFORE navigating. `cached_user_id` is what the
+  // launch gate reads as "somebody lives here", and app/logged-in/index.tsx
+  // re-writes it — so any gate that runs while the row survives routes back
+  // into the app AND re-poisons the identity being cleared.
+  try {
+    const { deleteSetting } = require('@/lib/database/services/setting-service');
+    await deleteSetting('cached_user_id');
+  } catch {
+    // Covered by the wipe below.
+  }
+
+  try {
+    const { router } = require('expo-router');
+    if (router.canDismiss?.()) router.dismissAll();
+    router.replace({ pathname: '/login', params: { signedOut: '1' } });
+  } catch (err) {
+    // A failed navigation must not cancel the erase — the data leaving the
+    // device is the more important half of this.
+    logger.captureException(err, {
+      tags: { service: 'local-wipe', method: 'signOutAndWipe' },
+    });
+  }
+
+  // Yield a tick so the screens above unmount before their data disappears
+  // underneath them.
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await wipeAllLocalUserData();
+}
+
+/**
  * Launch-time resume check. Credentials provably gone but user data still on
  * disk means a logout was interrupted between the two — the state the owner's
  * rule makes recoverable: the ABSENCE of credentials is itself the "wipe

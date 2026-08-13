@@ -42,7 +42,29 @@ jest.mock('@/lib/logger', () => ({
     default: { info: jest.fn(), addBreadcrumb: jest.fn(), captureException: jest.fn() },
 }));
 
-import { hasLocalUserData, purgeOrphanedLocalData, wipeAllLocalUserData } from '../local-wipe';
+const mockSignOut = jest.fn(async () => { calls.push('signOut'); });
+const mockClearAuthStorage = jest.fn(async () => { calls.push('clearAuthStorage'); });
+jest.mock('@/lib/auth-client', () => ({
+    authClient: { signOut: () => mockSignOut() },
+    clearAuthStorage: () => mockClearAuthStorage(),
+}));
+
+const mockDeleteSetting = jest.fn(async (key: string) => { calls.push(`deleteSetting:${key}`); });
+jest.mock('@/lib/database/services/setting-service', () => ({
+    deleteSetting: (k: string) => mockDeleteSetting(k),
+}));
+
+const mockRouterReplace = jest.fn((_target: unknown) => { calls.push('router.replace'); });
+jest.mock('expo-router', () => ({
+    router: { canDismiss: () => false, replace: (t: unknown) => mockRouterReplace(t) },
+}));
+
+import {
+    hasLocalUserData,
+    purgeOrphanedLocalData,
+    signOutAndWipe,
+    wipeAllLocalUserData,
+} from '../local-wipe';
 
 beforeEach(() => {
     jest.clearAllMocks();
@@ -144,5 +166,70 @@ describe('hasLocalUserData', () => {
         mockFetchCount.mockRejectedValueOnce(new Error('no such table'));
         mockFetchCount.mockResolvedValue(2);
         await expect(hasLocalUserData()).resolves.toBe(true);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// signOutAndWipe — the escape that works when the wipe does not
+// ---------------------------------------------------------------------------
+// Extracted from the explicit-logout ordering in AppPreferencesTab. Its one
+// non-obvious property is the reason it exists: the caller that needs it most
+// is the identity-switch failure screen, reached BECAUSE the wipe already threw
+// once. If the navigation waited on the wipe, a second failure would strand the
+// user on a screen whose only controls both lead through the broken thing.
+
+describe('signOutAndWipe', () => {
+    it('signs out, drops the identity sentinel, NAVIGATES, and only then erases', async () => {
+        await signOutAndWipe();
+
+        const nav = calls.indexOf('router.replace');
+        const erase = calls.indexOf('clearAllStores');
+        expect(nav).toBeGreaterThanOrEqual(0);
+        expect(erase).toBeGreaterThanOrEqual(0);
+        // THE PROPERTY. Everything else in this test is scaffolding for it.
+        expect(nav).toBeLessThan(erase);
+
+        expect(calls.indexOf('signOut')).toBeLessThan(nav);
+        expect(calls.indexOf('clearAuthStorage')).toBeLessThan(nav);
+        // `cached_user_id` is what the launch gate reads as "somebody lives
+        // here", and app/logged-in/index.tsx re-writes it — so it has to go
+        // before any navigation can run a gate against it.
+        expect(calls.indexOf('deleteSetting:cached_user_id')).toBeLessThan(nav);
+    });
+
+    it("routes to /login with signedOut:'1' — without it login bounces the user back in", async () => {
+        await signOutAndWipe();
+
+        expect(mockRouterReplace).toHaveBeenCalledWith({
+            pathname: '/login',
+            params: { signedOut: '1' },
+        });
+    });
+
+    it('still erases when sign-out itself throws', async () => {
+        mockSignOut.mockRejectedValueOnce(new Error('network down'));
+
+        await signOutAndWipe();
+
+        // Half-signed-out is the dangerous state, so the erase is exactly what
+        // must not be skipped.
+        expect(mockClearAllStores).toHaveBeenCalled();
+        expect(mockRouterReplace).toHaveBeenCalled();
+    });
+
+    it('still erases when the navigation throws', async () => {
+        mockRouterReplace.mockImplementationOnce(() => { throw new Error('no navigator'); });
+
+        await signOutAndWipe();
+
+        expect(mockClearAllStores).toHaveBeenCalled();
+    });
+
+    it('propagates a failed erase — the caller decides what that means', async () => {
+        mockClearAllStores.mockRejectedValueOnce(new Error('database is locked'));
+
+        await expect(signOutAndWipe()).rejects.toThrow('database is locked');
+        // ...but the user is already out, which is the point of the ordering.
+        expect(mockRouterReplace).toHaveBeenCalled();
     });
 });

@@ -8,10 +8,22 @@
 //      short-circuits on the live session and bounces straight back, an
 //      infinite loop.
 //   2. Onboarding is gated on LOCAL FACTS, never the server onboardingStage.
-import { render, waitFor } from '@testing-library/react-native';
+import { act, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
+// The fail-closed screen. Stubbed to a bare marker: its own behaviour (the
+// retry budget, the always-enabled sign-out, the no-store rule) is covered in
+// components/custom/auth/__tests__/IdentitySwitchFailedScreen.test.tsx. What
+// this suite asserts is only that the gate renders it INSTEAD of routing.
+jest.mock('@/components/custom/auth/IdentitySwitchFailedScreen', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="identity-switch-failed" /> };
+});
+jest.mock('@/lib/logger', () => ({
+    __esModule: true,
+    default: { captureException: jest.fn(), info: jest.fn(), warn: jest.fn(), debug: jest.fn() },
+}));
 jest.mock('@/components/ui/box', () => { const { View } = require('react-native'); return { Box: (p: any) => <View {...p} /> }; });
 
 jest.mock('react-native-css-interop/jsx-runtime', () => {
@@ -50,12 +62,25 @@ jest.mock('@/lib/database/services/setting-service', () => ({ getSetting: (k: st
 
 const mockResolveIdentity = jest.fn(() => 'coherent' as string);
 const mockHasIdentityFault = jest.fn(async () => false);
+// The recorder is REAL module state in the source, so every member of it has to
+// exist on this factory. A missing one is `undefined` at the call site, the
+// effect throws a TypeError, and the catch at the bottom of the gate swallows
+// it — a coding error that renders as a passing routing test.
+const mockReadPendingAuthUserId = jest.fn((): string | null => null);
+const mockClearPendingAuthUserId = jest.fn();
 jest.mock('@/lib/security/identity-gate', () => ({
     resolveIdentity: (...a: any[]) => mockResolveIdentity(...(a as [])),
     hasIdentityFault: () => mockHasIdentityFault(),
+    readPendingAuthUserId: () => mockReadPendingAuthUserId(),
+    clearPendingAuthUserId: () => mockClearPendingAuthUserId(),
+    // NOT a jest.fn: the precedence rule is the thing under test on this path,
+    // so the gate must run the REAL one. Its own unit tests live in
+    // lib/security/__tests__/identity-gate.test.ts.
+    effectiveSessionUserId: (s?: string | null, p?: string | null) => (s ? s : p || null),
 }));
 
 const mockSetUserId = jest.fn();
+const mockAdoptLocalUserId = jest.fn();
 const mockHydrateFromDb = jest.fn(async () => {});
 const mockFetchUserPersona = jest.fn(async () => null);
 const mockFetchUserPersonaOrThrow = jest.fn(async () => ({}));
@@ -64,6 +89,7 @@ jest.mock('@/lib/stores/user-store', () => ({
     useUserStore: {
         getState: () => ({
             setUserId: mockSetUserId,
+            adoptLocalUserId: mockAdoptLocalUserId,
             setNeedsReauth: mockSetNeedsReauth,
             hydrateFromDb: mockHydrateFromDb,
             fetchUserPersona: mockFetchUserPersona,
@@ -115,6 +141,11 @@ beforeEach(() => {
     );
     mockResolveIdentity.mockReturnValue('coherent');
     mockHasIdentityFault.mockResolvedValue(false);
+    // Nothing recorded is the DEFAULT, and it is the offline/cold-start shape.
+    // Without this reset the recorder leaks between tests, which is exactly how
+    // a suite stops testing the offline path without anybody noticing.
+    mockReadPendingAuthUserId.mockReturnValue(null);
+    mockClearPreviousUserData.mockResolvedValue(undefined);
     mockHasAnyFacts.mockResolvedValue(true);
     mockResolveEntitlement.mockResolvedValue('entitled');
     mockDecideEntry.mockReturnValue('onboarding');
@@ -167,6 +198,9 @@ describe('cold-start identity gate', () => {
         await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
         expect(mockResolveIdentity).toHaveBeenCalledWith({
             sessionUserId: 'u1',
+            // Fed in alongside the atom, never pre-coalesced into it: the
+            // precedence rule has exactly one home, inside resolveIdentity.
+            pendingAuthUserId: null,
             cachedUserId: 'other-user',
             ownershipFault: true,
             isConnected: true,
@@ -220,6 +254,130 @@ describe('cold-start identity gate', () => {
 
         await waitFor(() => expect(mockResolveIdentity).toHaveBeenCalled());
         expect(mockSetNeedsReauth).not.toHaveBeenCalled();
+    });
+
+    // ── THE LEAK, AS A DATA-FLOW TEST ────────────────────────────────────
+    //
+    // The recorder turns a timing bug into a data-flow bug, which is why none
+    // of this needs fake timers. The scenario is the reported one: user A's
+    // data on disk, user B signs in through the reauth banner, and the gate
+    // runs before better-auth's session atom has settled.
+    it("routes B's sign-in off the RECORDER when the session atom has not settled", async () => {
+        mockSession = null;
+        mockGetSetting.mockImplementation(async (key: string) =>
+            key === 'startup_tab' ? mockStartupTabSetting : 'A',
+        );
+        mockReadPendingAuthUserId.mockReturnValue('B');
+        mockResolveIdentity.mockReturnValue('wipeAndProceed');
+
+        render(<LoggedInIndex />);
+
+        await waitFor(() => expect(mockHasAnyFacts).toHaveBeenCalled());
+        // The unresolved atom is passed through as-is; the recorder rides
+        // beside it.
+        expect(mockResolveIdentity).toHaveBeenCalledWith(
+            expect.objectContaining({
+                sessionUserId: undefined,
+                pendingAuthUserId: 'B',
+                cachedUserId: 'A',
+            }),
+        );
+        // A's data goes, and the wipe TARGET is B — passing the unresolved
+        // session id would hand clearPreviousUserData `undefined`.
+        expect(mockClearPreviousUserData).toHaveBeenCalledWith('B');
+        expect(mockSetUserId).toHaveBeenCalledWith('B');
+        // The negative is the assertion that matters. `toHaveBeenCalledWith('B')`
+        // passes just as happily when A is stamped back afterwards, which is
+        // precisely the sticky-state bug this replaces.
+        expect(mockSetUserId).not.toHaveBeenCalledWith('A');
+        expect(mockAdoptLocalUserId).not.toHaveBeenCalled();
+        // Consumed once stamped, so it cannot mask a later switch.
+        expect(mockClearPendingAuthUserId).toHaveBeenCalledTimes(1);
+    });
+
+    // The other side of the same coin, and the one that must not regress: an
+    // offline device has no recording (it requires a resolved network sign-in),
+    // so nothing above is reachable for it and nothing is written to disk.
+    it('offline: adopts the on-disk owner in memory and re-stamps NOTHING', async () => {
+        mockSession = null;
+        mockReadPendingAuthUserId.mockReturnValue(null);
+        mockGetSetting.mockImplementation(async (key: string) =>
+            key === 'startup_tab' ? mockStartupTabSetting : 'A',
+        );
+        mockResolveIdentity.mockReturnValue('coherent');
+
+        render(<LoggedInIndex />);
+
+        await waitFor(() =>
+            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
+        );
+        expect(mockClearPreviousUserData).not.toHaveBeenCalled();
+        expect(mockSetUserId).not.toHaveBeenCalled();
+        expect(mockAdoptLocalUserId).toHaveBeenCalledWith('A');
+    });
+
+    // ── FAIL CLOSED ──────────────────────────────────────────────────────
+    it('a failed wipe stamps nothing, routes nowhere, and blocks', async () => {
+        mockSession = null;
+        mockReadPendingAuthUserId.mockReturnValue('B');
+        mockGetSetting.mockImplementation(async (key: string) =>
+            key === 'startup_tab' ? mockStartupTabSetting : 'A',
+        );
+        mockResolveIdentity.mockReturnValue('wipeAndProceed');
+        mockClearPreviousUserData.mockRejectedValue(new Error('database is locked'));
+
+        const { findByTestId } = render(<LoggedInIndex />);
+
+        expect(await findByTestId('identity-switch-failed')).toBeTruthy();
+        // Not stamping is the RETRY MARKER: `cached_user_id` staying at A is
+        // what makes the next launch re-detect the mismatch.
+        expect(mockSetUserId).not.toHaveBeenCalled();
+        expect(mockAdoptLocalUserId).not.toHaveBeenCalled();
+        expect(mockClearPendingAuthUserId).not.toHaveBeenCalled();
+        // No route AT ALL — not to the feed, not to onboarding, not to /login.
+        expect(mockReplace).not.toHaveBeenCalled();
+        // And nothing personalized was read on the way past.
+        expect(mockHydrateFromDb).not.toHaveBeenCalled();
+        expect(mockHasAnyFacts).not.toHaveBeenCalled();
+    });
+
+    // ── HOLE 2: THE SUPERSEDED RUN ───────────────────────────────────────
+    //
+    // `cancelled` used to guard navigation only, never writes. Two runs
+    // interleaved and the older one stamped its stale owner back over the newer
+    // one's, making the bad state sticky across launches.
+    it('a superseded run never stamps the old owner over the new one', async () => {
+        let releaseRun1: (v: string) => void = () => {};
+        const parked = new Promise<string>((resolve) => { releaseRun1 = resolve; });
+        let ownerReads = 0;
+        mockGetSetting.mockImplementation(async (key: string) => {
+            if (key === 'startup_tab') return mockStartupTabSetting;
+            ownerReads += 1;
+            // Run 1 parks on the owner read; every later run answers at once.
+            return ownerReads === 1 ? parked : 'A';
+        });
+
+        // Run 1: the session has not resolved and nothing is recorded, so this
+        // run would adopt A.
+        mockSession = null;
+        mockReadPendingAuthUserId.mockReturnValue(null);
+        const { rerender } = render(<LoggedInIndex />);
+
+        // Run 2: the session resolves to B and supersedes it.
+        mockSession = { user: { id: 'B' } };
+        mockResolveIdentity.mockReturnValue('wipeAndProceed');
+        rerender(<LoggedInIndex />);
+        await waitFor(() => expect(mockSetUserId).toHaveBeenCalledWith('B'));
+
+        // Only now let the superseded run finish.
+        await act(async () => {
+            releaseRun1('A');
+            for (let i = 0; i < 12; i++) await Promise.resolve();
+        });
+
+        expect(mockSetUserId).not.toHaveBeenCalledWith('A');
+        expect(mockAdoptLocalUserId).not.toHaveBeenCalled();
+        expect(mockSetUserId).toHaveBeenCalledTimes(1);
     });
 
     it('no local identity at all → back to the launch gate', async () => {

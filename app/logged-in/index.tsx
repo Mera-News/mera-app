@@ -1,10 +1,18 @@
 import { Box } from "@/components/ui/box";
 import MeraLogo from "@/components/custom/MeraLogo";
+import IdentitySwitchFailedScreen from "@/components/custom/auth/IdentitySwitchFailedScreen";
 import { authClient } from "@/lib/auth-client";
+import logger from "@/lib/logger";
 import { clearPreviousUserData } from "@/lib/stores";
 import { hasAnyFacts } from "@/lib/database/services/fact-service";
 import { getSetting } from "@/lib/database/services/setting-service";
-import { hasIdentityFault, resolveIdentity } from "@/lib/security/identity-gate";
+import {
+    clearPendingAuthUserId,
+    effectiveSessionUserId,
+    hasIdentityFault,
+    readPendingAuthUserId,
+    resolveIdentity,
+} from "@/lib/security/identity-gate";
 import { useUserStore } from "@/lib/stores/user-store";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
@@ -18,7 +26,7 @@ import {
     resolveEntitlementForOnboarding,
 } from "@/lib/subscription/onboarding-paywall";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export default function LoggedInIndex() {
     // useSession is a non-blocking enhancement — routing is driven by LOCAL
@@ -26,14 +34,38 @@ export default function LoggedInIndex() {
     // the user out.
     const { data: session } = authClient.useSession();
 
+    // Fail-closed state. `wipeFailed` renders the blocking screen INSTEAD of
+    // routing; `retryNonce` is what its "Try again" bumps to re-run the effect.
+    const [wipeFailed, setWipeFailed] = useState(false);
+    const [retryNonce, setRetryNonce] = useState(0);
+
+    const handleRetry = useCallback(() => {
+        setWipeFailed(false);
+        setRetryNonce((n) => n + 1);
+    }, []);
+
     useEffect(() => {
         let cancelled = false;
+        // Set the moment `cached_user_id` has been written for the user we
+        // resolved. It is what narrows the catch at the bottom: a failure
+        // BEFORE this point tells us nothing about who owns the data on this
+        // device, so falling through to the feed there is the fail-OPEN shape
+        // that let the leak reach the shell.
+        let identityStamped = false;
 
         const determineRoute = async () => {
             // Identity is local-first: the persisted userId survives a dead
             // session. Fall back to a live session id if nothing is persisted yet.
             const localUserId = await getSetting('cached_user_id');
-            const userId = session?.user?.id ?? localUserId;
+
+            // WHO AUTHENTICATED IN THIS PROCESS. The session atom outranks it
+            // and it is only ever a hole-filler — but the hole is the bug: the
+            // reauth path navigates here the instant OTP succeeds, before
+            // better-auth's atom settles, so `session?.user?.id` is `undefined`
+            // for a window in which this gate is being asked to decide.
+            const pendingAuthUserId = readPendingAuthUserId();
+            const effective = effectiveSessionUserId(session?.user?.id, pendingAuthUserId);
+            const userId = effective ?? localUserId;
 
             if (!userId) {
                 // No local identity at all — back to the launch gate → login.
@@ -58,11 +90,28 @@ export default function LoggedInIndex() {
                 // Probe ONLY when it can change the outcome. The fault path is
                 // rare; the happy path must not pay a round-trip on every cold
                 // start. Bounded at 3s inside probeServerReachable().
-                const serverReachable =
-                    ownershipFault && isConnected ? await probeServerReachable() : undefined;
+                //
+                // Swallowed rather than left to the catch below: a throwing
+                // probe is a connectivity failure, not an identity one, and
+                // since the catch now fails CLOSED before the stamp it would
+                // otherwise put a perfectly coherent user on the blocking
+                // screen. `undefined` is the established "unprobed" value.
+                let serverReachable: boolean | undefined;
+                if (ownershipFault && isConnected) {
+                    try {
+                        serverReachable = await probeServerReachable();
+                    } catch {
+                        serverReachable = undefined;
+                    }
+                }
 
                 const verdict = resolveIdentity({
+                    // The LIVE atom, kept separate from `pendingAuthUserId` on
+                    // purpose — resolveIdentity owns the precedence rule, and
+                    // pre-coalescing here would hand it the same value twice
+                    // and make the comparison compare a value against itself.
                     sessionUserId: session?.user?.id,
+                    pendingAuthUserId,
                     cachedUserId: localUserId,
                     ownershipFault,
                     isConnected,
@@ -80,10 +129,65 @@ export default function LoggedInIndex() {
                     return;
                 }
 
-                if (verdict === 'wipeAndProceed' && session?.user?.id) {
-                    await clearPreviousUserData(session.user.id);
+                // `&& effective`, NOT `&& session?.user?.id`. That older guard
+                // is the single easiest way to implement all of this and ship
+                // nothing: after the recorder exists, `effective` can be a real
+                // id while the session atom is still `undefined`, so keying on
+                // the atom leaves the wipe unreachable on exactly the path the
+                // leak travels — and every unit test still passes.
+                //
+                // The ARGUMENT matters as much as the guard: wiping with
+                // `session.user.id` while `effective` came from the recorder
+                // would pass `undefined`, and clearPreviousUserData's
+                // `cachedUserId !== newUserId` test is true against `undefined`
+                // — it would wipe, for the wrong reason, on the wrong input.
+                if (verdict === 'wipeAndProceed' && effective) {
+                    // BEFORE the destructive call, never inside it. A wipe
+                    // already in flight must be allowed to complete: it is
+                    // half-way through a sequence whose whole safety property
+                    // is that it finishes or is finished on the next launch.
+                    // This only stops a SUPERSEDED run from starting a second
+                    // one and then stamping its stale owner over the live one.
+                    if (cancelled) return;
+                    try {
+                        await clearPreviousUserData(effective);
+                    } catch (error) {
+                        // ── FAIL CLOSED ──────────────────────────────────
+                        // The previous owner's facts, reading history, saved
+                        // items, chat and topics are still on this device and
+                        // the incoming user must not be routed into a shell
+                        // that reads them. Do NOT stamp and do NOT route: the
+                        // unchanged `cached_user_id` IS the retry marker, and
+                        // it is what makes the next launch re-detect the
+                        // mismatch. Same principle as purgeOrphanedLocalData.
+                        logger.captureException(error, {
+                            tags: { component: 'LoggedInIndex', method: 'clearPreviousUserData' },
+                        });
+                        if (!cancelled) setWipeFailed(true);
+                        return;
+                    }
                 }
-                userStore.setUserId(userId);
+
+                if (cancelled) return;
+                if (effective) {
+                    // A PROVEN identity — persist it. This is the only writer
+                    // of `cached_user_id` on this path.
+                    userStore.setUserId(effective);
+                    // Consumed. The stamp is the durable form of the same fact,
+                    // so keeping the recording could only let a stale value mask
+                    // a later switch.
+                    clearPendingAuthUserId();
+                } else {
+                    // Offline / unresolved session: the only id we have is the
+                    // one already on disk, so adopt it IN MEMORY and write
+                    // nothing. Re-stamping it is what made a missed account
+                    // switch sticky — the gate coalesced session ?? local and
+                    // then wrote the result back, re-stamping the previous
+                    // owner. For an offline user this is byte-for-byte the same
+                    // state the old `setUserId(userId)` produced.
+                    userStore.adoptLocalUserId(userId);
+                }
+                identityStamped = true;
 
                 // DEFERRED FAULT. We chose not to eject because re-auth is
                 // unreachable, but the fault is still unresolved — so keep every
@@ -98,6 +202,7 @@ export default function LoggedInIndex() {
                 // operation, including unauthenticated ones that prove nothing
                 // about the userId the 403 was about. Only OTP success clears
                 // the persisted fault itself.
+                if (cancelled) return;
                 if (ownershipFault) {
                     userStore.setNeedsReauth(true);
                 }
@@ -144,6 +249,14 @@ export default function LoggedInIndex() {
                 // what the app actually needs to build a feed, and counting
                 // them is local, so this branch is offline-safe by
                 // construction. Zero facts ALWAYS re-enters onboarding.
+                //
+                // COUPLING, stated because it is invisible: `facts` has no user
+                // column, so this count is device-GLOBAL. It is a safe gate if
+                // and only if the wipe above is correct AND fails closed. The
+                // day something routes past a failed wipe, this line reads the
+                // PREVIOUS user's facts and reports the incoming user as
+                // already onboarded. That is the leak, and this is the line it
+                // comes out of.
                 let hasFacts = false;
                 try {
                     hasFacts = await hasAnyFacts();
@@ -207,8 +320,22 @@ export default function LoggedInIndex() {
                         router.replace('/logged-in/onboarding');
                         return;
                 }
-            } catch {
-                if (!cancelled) router.replace('/logged-in/app_container/feed');
+            } catch (error) {
+                // NARROWED. This used to drop every failure into the feed,
+                // which is fail-OPEN for anything that went wrong before we
+                // knew who owns this device: the shell then reads whatever
+                // facts and persona are lying around. Route onward only for
+                // failures that provably happened AFTER identity was resolved
+                // and stamped — hydration, a persona fetch, the fact count, the
+                // entitlement resolve. Those are all recoverable and all
+                // already about the right user.
+                logger.captureException(error, {
+                    tags: { component: 'LoggedInIndex', method: 'determineRoute' },
+                    extra: { identityStamped },
+                });
+                if (cancelled) return;
+                if (identityStamped) router.replace('/logged-in/app_container/feed');
+                else setWipeFailed(true);
             }
         };
 
@@ -217,9 +344,17 @@ export default function LoggedInIndex() {
         return () => {
             cancelled = true;
         };
-        // Re-run only when the session id changes (login/logout), not on every
-        // useSession poll tick.
-    }, [session?.user?.id]);
+        // Re-run when the session id changes (login/logout), and when the
+        // blocking screen asks for a retry. Never on a useSession poll tick.
+    }, [session?.user?.id, retryNonce]);
+
+    // Fail closed. Nothing was stamped and nothing was routed, so this screen
+    // is still mounted and is the only thing the user can see. It reads no
+    // store and no persona — see its header for why that is a correctness rule
+    // rather than a preference.
+    if (wipeFailed) {
+        return <IdentitySwitchFailedScreen onRetry={handleRetry} />;
+    }
 
     // Spinner while (and after) routing — the replace() unmounts this screen.
     return (
