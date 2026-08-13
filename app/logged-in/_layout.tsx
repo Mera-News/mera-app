@@ -8,6 +8,7 @@ import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost
 import LapseInterstitialGate from '@/components/custom/subscription/LapseInterstitialGate';
 import FirstOpenPaywallGate from '@/components/custom/subscription/FirstOpenPaywallGate';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
+import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
 
 export default function LoggedInLayout() {
   const insets = useSafeAreaInsets();
@@ -197,6 +198,13 @@ export default function LoggedInLayout() {
       </View>
       <FloatingChatHost />
       <FeedbackWidgetModal />
+      {/* Renders nothing — a mounted effect, and the catch-all for an account
+          switch that got past the gates. It has to live HERE rather than on a
+          screen: the gates unmount as soon as they route, and the case this
+          exists for is the session atom resolving AFTER that. Ignores an
+          unresolved session unconditionally (that is the offline path) and
+          fires at most once per process. */}
+      <IdentitySwitchWatcher />
       {/* Renders nothing — a mounted effect. Lives here, once, so it watches
           the whole logged-in tree instead of one screen, and so it survives the
           tab switches a per-screen mount would miss. */}
