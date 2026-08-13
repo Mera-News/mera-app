@@ -26,6 +26,9 @@ npm run update:production   # never a bare `eas update`: only these scripts uplo
 
 ## Load a skill
 
+Read the skill before the code, even for a one-line fix. It carries this area's map,
+invariants and traps.
+
 | Work | Skill |
 |---|---|
 | Feed, cards, ordering, grouping, article detail, story timeline, `lib/news-harness` | `mera-app-feed` |
