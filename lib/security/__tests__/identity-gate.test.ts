@@ -26,17 +26,27 @@ jest.mock('@/lib/logger', () => ({
 
 import {
     IDENTITY_FAULT_KEY,
-    __resetIdentityFaultForTests,
+    __resetIdentityStateForTests,
     clearIdentityFault,
+    clearPendingAuthUserId,
+    effectiveSessionUserId,
     hasIdentityFault,
+    isIdentitySwitchBlocked,
     isOwnershipFault,
+    readPendingAuthUserId,
+    recordAuthenticatedUser,
     recordOwnershipFault,
     resolveIdentity,
+    setIdentitySwitchBlocked,
 } from '../identity-gate';
 
 beforeEach(() => {
     jest.clearAllMocks();
-    __resetIdentityFaultForTests();
+    // EVERY piece of module state, not just the fault latch. The
+    // authenticated-user recorder is process-lived by design, so one test's
+    // recording would otherwise leak into the offline cases below and quietly
+    // stop them from being offline at all.
+    __resetIdentityStateForTests();
     mockGetSetting.mockResolvedValue(null);
 });
 
@@ -165,6 +175,155 @@ describe('resolveIdentity', () => {
 
     it('coherent: no identity at all', () => {
         expect(resolveIdentity({})).toBe('coherent');
+    });
+
+    // ── the recorded authenticated user ──────────────────────────────────
+    // The two cases above are the OFFLINE contract and must keep passing
+    // VERBATIM — they are the regression guard for everything below, not a
+    // formality. An offline device never has a recorded id (the recording
+    // requires a resolved network sign-in), so for it nothing here is reachable.
+
+    // THE BUG, in one line. User A's data on the device, user B signs in via
+    // the reauth banner, and the gate runs before better-auth's session atom
+    // settles. This used to return 'coherent' — B entered the shell holding A's
+    // facts, reading history, saved items, chat and topics, skipped onboarding,
+    // and then sent A's topic texts to the server under B's session.
+    it('wipeAndProceed: an UNRESOLVED session with a recorded sign-in as a different user', () => {
+        expect(
+            resolveIdentity({
+                sessionUserId: undefined,
+                pendingAuthUserId: 'B',
+                cachedUserId: 'A',
+            }),
+        ).toBe('wipeAndProceed');
+    });
+
+    // The other half of the same window: re-authenticating as YOURSELF must not
+    // wipe. This is the common case of the reauth banner by a wide margin.
+    it('coherent: an unresolved session with a recorded sign-in as the SAME user', () => {
+        expect(
+            resolveIdentity({
+                sessionUserId: undefined,
+                pendingAuthUserId: 'A',
+                cachedUserId: 'A',
+            }),
+        ).toBe('coherent');
+    });
+
+    it('wipeAndProceed: recorded sign-in with nothing stamped on disk yet', () => {
+        expect(
+            resolveIdentity({ sessionUserId: null, pendingAuthUserId: 'B', cachedUserId: null }),
+        ).toBe('wipeAndProceed');
+    });
+
+    it('a recorded id cannot override a resolved session that agrees with disk', () => {
+        // Atom wins. A stale recording must never manufacture a wipe.
+        expect(
+            resolveIdentity({ sessionUserId: 'A', pendingAuthUserId: 'B', cachedUserId: 'A' }),
+        ).toBe('coherent');
+    });
+
+    // ── ORDERING GUARD ───────────────────────────────────────────────────
+    // The coalesce goes AFTER the ownership-fault check. Inserted above it, a
+    // fault carrying a recorded id would resolve to 'wipeAndProceed' and
+    // silently destroy data the SERVER has already told us we are wrong about —
+    // the precise outcome the fault check exists to prevent. If this test goes
+    // red, the coalesce moved; move it back rather than editing this.
+    it('reauth still wins over a recorded id when a fault is present', () => {
+        expect(
+            resolveIdentity({
+                sessionUserId: undefined,
+                pendingAuthUserId: 'B',
+                cachedUserId: 'A',
+                ownershipFault: true,
+            }),
+        ).toBe('reauth');
+    });
+
+    // ...and the deferral still falls through to the comparison, now including
+    // the recorded id. Same property the pre-existing deferral test pins for a
+    // resolved session.
+    it('still wipes on a DEFERRED fault whose recorded id disagrees with disk', () => {
+        expect(
+            resolveIdentity({
+                sessionUserId: undefined,
+                pendingAuthUserId: 'B',
+                cachedUserId: 'A',
+                ownershipFault: true,
+                isConnected: true,
+                serverReachable: false,
+            }),
+        ).toBe('wipeAndProceed');
+    });
+
+    it('an explicit null recorded id changes nothing (the offline shape)', () => {
+        expect(
+            resolveIdentity({ sessionUserId: null, pendingAuthUserId: null, cachedUserId: 'A' }),
+        ).toBe('coherent');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// effectiveSessionUserId — asserted DIRECTLY
+// ---------------------------------------------------------------------------
+// Not folded into the verdict tests: inverted precedence produces the same
+// verdict in most pairings, so only the function itself can catch it.
+
+describe('effectiveSessionUserId', () => {
+    it('THE ATOM WINS on conflict — the recorder only ever fills a hole', () => {
+        expect(effectiveSessionUserId('B', 'C')).toBe('B');
+    });
+
+    it('falls back to the recorder when the session has not resolved', () => {
+        expect(effectiveSessionUserId(undefined, 'C')).toBe('C');
+        expect(effectiveSessionUserId(null, 'C')).toBe('C');
+    });
+
+    it('returns null, not undefined, when neither is present', () => {
+        expect(effectiveSessionUserId(undefined, undefined)).toBeNull();
+        expect(effectiveSessionUserId(null, null)).toBeNull();
+    });
+
+    it('treats an empty-string session id as absent, not as an identity', () => {
+        expect(effectiveSessionUserId('', 'C')).toBe('C');
+        expect(effectiveSessionUserId('', '')).toBeNull();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// the authenticated-user recorder
+// ---------------------------------------------------------------------------
+
+describe('recordAuthenticatedUser', () => {
+    it('round-trips the id and clears on consumption', () => {
+        expect(readPendingAuthUserId()).toBeNull();
+        recordAuthenticatedUser('B');
+        expect(readPendingAuthUserId()).toBe('B');
+        clearPendingAuthUserId();
+        expect(readPendingAuthUserId()).toBeNull();
+    });
+
+    it('normalises an absent id to null rather than storing undefined', () => {
+        recordAuthenticatedUser(undefined);
+        expect(readPendingAuthUserId()).toBeNull();
+        recordAuthenticatedUser('');
+        expect(readPendingAuthUserId()).toBeNull();
+    });
+
+    it('the last sign-in wins — a second account overwrites the first', () => {
+        recordAuthenticatedUser('B');
+        recordAuthenticatedUser('C');
+        expect(readPendingAuthUserId()).toBe('C');
+    });
+});
+
+describe('the blocking-screen latch', () => {
+    it('is off by default and round-trips', () => {
+        expect(isIdentitySwitchBlocked()).toBe(false);
+        setIdentitySwitchBlocked(true);
+        expect(isIdentitySwitchBlocked()).toBe(true);
+        setIdentitySwitchBlocked(false);
+        expect(isIdentitySwitchBlocked()).toBe(false);
     });
 });
 

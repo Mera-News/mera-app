@@ -12,12 +12,14 @@
 // means, so the cold-start route (app/logged-in/index.tsx) and the onboarding
 // gate (components/custom/onboarding/OnboardingScreen.tsx) cannot drift apart.
 //
-// Split in two on purpose:
+// Split in three on purpose:
 //   1. `resolveIdentity()` — pure, import-free, exhaustively unit-testable.
 //   2. the ownership-fault recorder + its persisted flag, used by the Apollo
 //      error link as a BACKSTOP. Everything there is lazy-required (the link
 //      imports this module, and the stores import the link's siblings), same
 //      pattern as auth-failure-breaker.ts.
+//   3. the AUTHENTICATED-USER recorder: module-level, in-memory, process-lived.
+//      See its section for why the id cannot travel as a route param.
 
 export type IdentityVerdict =
   /** Session and local identity agree — or there is nothing to reconcile. */
@@ -30,6 +32,16 @@ export type IdentityVerdict =
 export interface IdentityInput {
   /** Live better-auth session user id. Absent = offline / not yet resolved. */
   sessionUserId?: string | null;
+  /**
+   * Who authenticated in THIS process, from `readPendingAuthUserId()`.
+   *
+   * The session atom is the primary source and always outranks this; the
+   * recorder only ever fills a hole. It exists because `sessionUserId` cannot
+   * tell "no session because offline" apart from "the session has not come back
+   * yet", and the reauth path asks this function to decide inside exactly that
+   * window — which is how user B once landed in the shell on user A's data.
+   */
+  pendingAuthUserId?: string | null;
   /** `cached_user_id` — the owner of the on-device data. */
   cachedUserId?: string | null;
   /** A server ownership-403 was observed (persisted across launches). */
@@ -60,8 +72,32 @@ export interface IdentityInput {
   serverReachable?: boolean;
 }
 
+/**
+ * The authenticated user id this process should be judged against: the live
+ * session atom when it has resolved, else whoever signed in during this
+ * process.
+ *
+ * THE ATOM WINS ON CONFLICT. The recorder is a hole-filler, never an override —
+ * a stale recording must not be able to mask a later account switch. Returns
+ * `null`, never `undefined`, so callers can gate on it with a single truthiness
+ * check.
+ *
+ * One home for the rule so the two callers (app/logged-in/index.tsx and
+ * components/custom/onboarding/OnboardingScreen.tsx) cannot drift.
+ */
+export function effectiveSessionUserId(
+  sessionUserId?: string | null,
+  pendingAuthUserId?: string | null,
+): string | null {
+  // Truthiness, not `??`: an empty-string id is not an identity, and letting it
+  // win would suppress the recorder for the one caller that produced it.
+  if (sessionUserId) return sessionUserId;
+  return pendingAuthUserId || null;
+}
+
 export function resolveIdentity({
   sessionUserId,
+  pendingAuthUserId,
   cachedUserId,
   ownershipFault = false,
   isConnected,
@@ -80,9 +116,21 @@ export function resolveIdentity({
     return 'reauth';
   }
 
+  // INSERTION POINT IS LOAD-BEARING: after the fault check, before the early
+  // return below. Above the fault check, a fault carrying a recorded id would
+  // silently WIPE instead of ejecting to reauth — the one outcome the fault
+  // check exists to prevent. There is an ordering-guard test for this.
+  const effective = effectiveSessionUserId(sessionUserId, pendingAuthUserId);
+
   // No live session is the OFFLINE path, not a fault. A dead or not-yet-loaded
   // session must never eject a user who has local data to read.
-  if (!sessionUserId) return 'coherent';
+  //
+  // Still exactly that, and provably so: `pendingAuthUserId` is non-null only
+  // after `signIn.emailOtp` RESOLVED, which requires the network. An offline
+  // device has none, so `effective === sessionUserId` and this function is
+  // byte-identical to what it was. The two offline cases in the test file are
+  // the regression guard for that claim and must never need editing.
+  if (!effective) return 'coherent';
 
   // Signed in with nothing stamped on disk yet (fresh login). The wipe is a
   // no-op; the stamp is the point — `cached_user_id` is the only sentinel
@@ -90,7 +138,86 @@ export function resolveIdentity({
   // cross-user check a no-op too.
   if (!cachedUserId) return 'wipeAndProceed';
 
-  return sessionUserId === cachedUserId ? 'coherent' : 'wipeAndProceed';
+  return effective === cachedUserId ? 'coherent' : 'wipeAndProceed';
+}
+
+// ---------------------------------------------------------------------------
+// Authenticated-user recorder
+// ---------------------------------------------------------------------------
+//
+// Who signed in during THIS process. Written at both sign-in sites
+// (OTPVerificationView, DeepLinkVerifyScreen), read by the two identity gates,
+// and cleared the moment it is consumed.
+//
+// WHY MODULE STATE AND NOT A ROUTE PARAM. `/logged-in` is reachable from the
+// app's registered URL scheme, so a route param would let a crafted deep link
+// name an arbitrary id — and the verdict that id produces triggers a
+// DESTRUCTIVE WIPE of the legitimate user's data. The wipe target must never be
+// attacker-supplied. Module state is unreachable from a link, survives
+// `unsafeResetDatabase()` (so it is still readable AFTER the wipe it triggered),
+// costs no I/O on the cold-start path, and dies with the process. Same shape as
+// `faultTriggered` below.
+//
+// WHY NOT A BOUNDED WAIT for the session atom instead: it pays latency on every
+// cold start to defend a few hundred milliseconds, and the only safe timeout
+// behaviour ("fall through to coherent") reintroduces the bug on slow networks
+// after paying the cost.
+
+let pendingAuthUserId: string | null = null;
+
+/**
+ * Record a COMPLETED authentication. Call only after `signIn.emailOtp` has
+ * resolved with a user — never optimistically, or an offline device could hold
+ * an id it never proved.
+ */
+export function recordAuthenticatedUser(userId: string | null | undefined): void {
+  pendingAuthUserId = userId || null;
+}
+
+/** The id recorded by this process's own sign-in, if any. */
+export function readPendingAuthUserId(): string | null {
+  return pendingAuthUserId;
+}
+
+/**
+ * Drop the recording. Called by the gates once the id has been consumed — i.e.
+ * once it has been STAMPED to `cached_user_id`, which is the durable form of
+ * the same fact. Leaving it set would let a stale value mask a later switch.
+ */
+export function clearPendingAuthUserId(): void {
+  pendingAuthUserId = null;
+}
+
+// ---------------------------------------------------------------------------
+// Blocking-screen latch
+// ---------------------------------------------------------------------------
+//
+// Set while the identity-switch failure screen is on screen. Read by the
+// watcher in app/logged-in/_layout.tsx, which must not navigate out from under
+// a user who is looking at an unrecoverable state — the ids genuinely disagree
+// there, which is exactly the condition the watcher fires on.
+
+let identitySwitchBlocked = false;
+
+export function setIdentitySwitchBlocked(value: boolean): void {
+  identitySwitchBlocked = value;
+}
+
+export function isIdentitySwitchBlocked(): boolean {
+  return identitySwitchBlocked;
+}
+
+/**
+ * Test-only: reset EVERY piece of module state in this file.
+ *
+ * All of it is process-lived by design, so without this a suite's first test
+ * leaks its recording into the rest of the file and the offline cases stop
+ * being offline. Call it in `beforeEach` of any suite that imports this module.
+ */
+export function __resetIdentityStateForTests(): void {
+  pendingAuthUserId = null;
+  identitySwitchBlocked = false;
+  faultTriggered = false;
 }
 
 // ---------------------------------------------------------------------------
