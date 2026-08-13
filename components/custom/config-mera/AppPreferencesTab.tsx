@@ -3,6 +3,7 @@ import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
+import { Spinner } from '@/components/ui/spinner';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
@@ -23,6 +24,7 @@ import { router, useRouter } from 'expo-router';
 import React from 'react';
 import { Linking } from 'react-native';
 import { isRevenueCatConfigured } from '@/lib/revenuecat';
+import { useSupportAction } from '@/lib/intercom';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -41,6 +43,9 @@ const AppPreferencesTab: React.FC = () => {
     const routerHook = useRouter();
     const toast = useToast();
     const { t } = useTranslation();
+    // Shared with the paywall footer and BlockedBanner. `busy` drives the
+    // spinner in the chevron slot; every fallback decision lives in the hook.
+    const { busy: supportBusy, openSupport } = useSupportAction();
     const appLanguage = useAppLanguageStore((s) => s.appLanguage);
     const { data: session } = authClient.useSession();
     // LOCAL first. This used to be `session?.user?.email` alone, so any window
@@ -233,7 +238,10 @@ const AppPreferencesTab: React.FC = () => {
             id: 'support',
             title: t('preferences.support'),
             icon: 'support-agent',
-            onPress: () => Linking.openURL(`mailto:${SUPPORT_EMAIL}`),
+            // Opens the Intercom Messenger, or falls back to mail. The whole
+            // decision lives in useSupportAction so this row, the paywall
+            // footer and BlockedBanner cannot drift apart.
+            onPress: () => { void openSupport(); },
         },
         {
             id: 'faq',
@@ -308,6 +316,18 @@ const AppPreferencesTab: React.FC = () => {
                     testID={`settings-row-${option.id}`}
                     className="flex-row items-center justify-between py-3 px-4"
                     onPress={option.onPress}
+                    accessibilityRole="button"
+                    // "busy", not "disabled": the control still accepts input,
+                    // it is just working. Announcing it as disabled would be a
+                    // lie to a screen reader.
+                    accessibilityState={
+                        option.id === 'support' && supportBusy ? { busy: true } : undefined
+                    }
+                    accessibilityLabel={
+                        option.id === 'support' && supportBusy
+                            ? t('support.opening')
+                            : undefined
+                    }
                 >
                     {option.id === 'language' ? (
                         <HStack className="items-center flex-1" space="md">
@@ -321,11 +341,23 @@ const AppPreferencesTab: React.FC = () => {
                             {option.title}
                         </Text>
                     )}
-                    <MaterialIcons
-                        name="chevron-right"
-                        size={20}
-                        color="#999999"
-                    />
+                    {/* The spinner takes the chevron's slot rather than
+                        sitting beside it, so the row does not reflow while
+                        support is opening. Both are 20px in a 20px box. The
+                        row is deliberately NOT disabled: re-entry is guarded
+                        by a ref inside useSupportAction, so a second tap is a
+                        no-op without the row greying out and looking broken. */}
+                    <Box className="w-5 h-5 items-center justify-center">
+                        {option.id === 'support' && supportBusy ? (
+                            <Spinner size="small" />
+                        ) : (
+                            <MaterialIcons
+                                name="chevron-right"
+                                size={20}
+                                color="#999999"
+                            />
+                        )}
+                    </Box>
                 </Pressable>
             </GlassPanel>
         );

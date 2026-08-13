@@ -23,7 +23,8 @@
 //    request. So the token is re-minted immediately before every present(),
 //    never once at login. A mint-at-login design dies silently mid-conversation.
 
-import { Platform } from 'react-native';
+import { useCallback, useRef, useState } from 'react';
+import { Linking, Platform } from 'react-native';
 import Intercom from '@intercom/intercom-react-native';
 import { gql } from '@apollo/client';
 import {
@@ -340,6 +341,58 @@ export async function sendIntercomPushToken(token: string): Promise<void> {
   } catch (e) {
     logger.warn('[intercom] sendTokenToIntercom failed', { error: String(e) });
   }
+}
+
+/**
+ * The one place the "tap Support" behaviour is defined, shared by all three
+ * entry points so they cannot drift.
+ *
+ * Contract:
+ *  - Offline, or no Intercom key in this bundle: open mail immediately. No
+ *    spinner, no error. Email is genuinely BETTER offline — the composer opens,
+ *    the user writes, and Mail queues it until there is a network. A Messenger
+ *    that cannot connect is strictly worse than that.
+ *  - Otherwise: show a spinner, try the Messenger, and on ANY failure or after
+ *    ~6s open mail instead, silently. The mailto fallback is today's behaviour,
+ *    not an incident, so it gets no alert and no toast.
+ *  - Only if opening mail ITSELF fails is there anything to tell the user, and
+ *    that is left to the caller via `onMailFailed`.
+ */
+export function useSupportAction(onMailFailed?: () => void) {
+  const [busy, setBusy] = useState(false);
+  // A ref, not the `busy` state: two taps in the same frame both read the old
+  // state. The row is never disabled, so double-tapping is expected input.
+  const inFlight = useRef(false);
+
+  const openSupport = useCallback(async () => {
+    if (inFlight.current) return;
+    inFlight.current = true;
+    try {
+      const { SUPPORT_EMAIL } = require('@/lib/config/branding');
+      const openMail = async () => {
+        try {
+          await Linking.openURL(`mailto:${SUPPORT_EMAIL}`);
+        } catch {
+          onMailFailed?.();
+        }
+      };
+
+      const { isOnline } = require('@/lib/stores/network-store');
+      if (!isIntercomEnabled() || !isOnline()) {
+        await openMail();
+        return;
+      }
+
+      setBusy(true);
+      const presented = await presentIntercomMessenger();
+      if (!presented) await openMail();
+    } finally {
+      setBusy(false);
+      inFlight.current = false;
+    }
+  }, [onMailFailed]);
+
+  return { busy, openSupport };
 }
 
 /** Test seam only. */

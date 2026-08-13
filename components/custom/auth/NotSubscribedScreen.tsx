@@ -5,6 +5,8 @@ import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { HelpCircleIcon, RepeatIcon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
+import { Pressable } from "@/components/ui/pressable";
+import { isIntercomEnabled, useSupportAction } from "@/lib/intercom";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { authClient } from "@/lib/auth-client";
@@ -61,6 +63,11 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
     const { data: session, isPending: isSessionPending } = authClient.useSession();
     const router = useRouter();
     const { t } = useTranslation();
+    // Bundle-time, so it is stable for the life of the screen and safe to
+    // branch layout on. Never `isIntercomConfigured()`, which is false until a
+    // lazy init resolves.
+    const supportEnabled = isIntercomEnabled();
+    const { busy: supportBusy, openSupport } = useSupportAction();
     const [busy, setBusy] = useState(false);
     // Which control owns the current `busy` window. `busy` gates BOTH the CTA
     // and Refresh, and now that Refresh is icon-only it has no label left to
@@ -558,26 +565,60 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                           hitSlop even if it had been. As its own control it gets a
                           real 44pt-class target (py-2 + hitSlop) and an explicit
                           link role. */}
+                      {/* Two different affordances pointing at two different
+                          destinations, so they get different copy.
+
+                          The Messenger is a single self-contained control with
+                          NO lead-in: "For any enquiries you can send a mail to"
+                          followed by "Message support" reads as "send a mail to
+                          Message support", which is broken in English and worse
+                          in verb-final languages.
+
+                          The mail fallback keeps TODAY's exact two-line block,
+                          verbatim, so nothing regresses for a build with no
+                          Intercom key. */}
                       <VStack space="xs" className="items-center">
-                          <Text size="sm" className="text-gray-400 text-center">
-                              {t('account.enquiries')}
-                          </Text>
-                          <TouchableOpacity
-                              onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
-                              accessibilityRole="link"
-                              accessibilityLabel={t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
-                              hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
-                              // Inline style, not `py-2`: this is a bare
-                              // react-native TouchableOpacity and nothing else in
-                              // components/ puts a className on one, so there is no
-                              // evidence cssInterop is wired for it — a className
-                              // here would silently be a no-op.
-                              style={{ paddingVertical: 8 }}
-                          >
-                              <Text size="sm" className="text-primary-400 text-center">
-                                  {t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
-                              </Text>
-                          </TouchableOpacity>
+                          {supportEnabled ? (
+                              <Pressable
+                                  onPress={() => { void openSupport(); }}
+                                  accessibilityRole="button"
+                                  accessibilityState={supportBusy ? { busy: true } : undefined}
+                                  accessibilityLabel={
+                                      supportBusy ? t('support.opening') : t('account.contactSupport')
+                                  }
+                                  className="py-2 px-4 min-h-[44px] justify-center"
+                              >
+                                  {supportBusy ? (
+                                      <Spinner size="small" />
+                                  ) : (
+                                      <Text size="sm" className="text-primary-400 text-center">
+                                          {t('account.contactSupport')}
+                                      </Text>
+                                  )}
+                              </Pressable>
+                          ) : (
+                              <>
+                                  <Text size="sm" className="text-gray-400 text-center">
+                                      {t('account.enquiries')}
+                                  </Text>
+                                  <TouchableOpacity
+                                      onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
+                                      accessibilityRole="link"
+                                      accessibilityLabel={t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
+                                      hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
+                                      // Inline style, not `py-2`: this is a bare
+                                      // react-native TouchableOpacity and nothing else in
+                                      // components/ puts a className on one, so there is no
+                                      // evidence cssInterop is wired for it — a className
+                                      // here would silently be a no-op.
+                                      style={{ paddingVertical: 8 }}
+                                  >
+                                      <Text size="sm" className="text-primary-400 text-center">
+                                          {t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
+                                      </Text>
+                                  </TouchableOpacity>
+                              </>
+                          )}
                       </VStack>
                   </VStack>
               </ScrollView>

@@ -252,6 +252,27 @@ jest.mock('@sentry/react-native', () => ({
   Severity: { Error: 'error', Warning: 'warning' },
 }));
 
+// Spinner. React Native's own jest mock for ActivityIndicator does a
+// `requireActual` on src/private/specs_DEPRECATED/ActivityIndicatorViewNativeComponent,
+// which is untransformed ESM and dies with "Unexpected token 'export'". Nothing
+// rendered a Spinner in a test until the support row got one, so the whole
+// suite for a screen fell over on an import rather than on anything it asserts.
+//
+// Global rather than per-suite: the failure has nothing to do with any one
+// screen, it is a property of the primitive, and the next person to put a
+// spinner in a component should not have to rediscover this. Purely
+// presentational, so a stub costs no assertion.
+//
+// NO JSX IN THIS FILE. babel-preset-expo routes JSX through
+// react-native-css-interop's jsx-runtime, so a single JSX element here imports
+// css-interop into EVERY suite at setup time. That broke
+// web-browser-utils-android.test.ts, which mocks react-native and does not
+// render anything. Returning the component directly avoids the whole question.
+jest.mock('@/components/ui/spinner', () => {
+  const { View } = require('react-native');
+  return { Spinner: View };
+});
+
 // Intercom — native support Messenger. An explicit factory, NOT an automock:
 // lib/auth-client.ts imports lib/intercom.ts statically (logoutIntercom runs
 // inside clearAuthStorage), so the package is pulled into every auth suite, and
