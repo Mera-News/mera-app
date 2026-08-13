@@ -446,6 +446,71 @@ describe('stepFetchTopicIds', () => {
     expect(result.personaMeta?.headlineCountryCode?.has('art-both')).toBe(false);
   });
 
+  // ── strictMatch: tighten the server's floor for followed stories only ────
+
+  const topicRow = (over: Record<string, any>) => ({
+    id: over.id ?? 't1',
+    text: over.text ?? 'ai',
+    weight: over.weight ?? 0.8,
+    highPriority: false,
+    factId: over.factId ?? null,
+    locationId: null,
+    provenance: over.provenance,
+  });
+
+  const topicsSentFor = async (rows: Record<string, any>[]) => {
+    mockGetActive.mockResolvedValue(rows.map(topicRow) as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+    await stepFetchTopicIds('p-1', makeCtx());
+    return mockGetArticleIdsForPersona.mock.calls[0][0].topics as any[];
+  };
+
+  it('sets strictMatch on a topic carried ONLY by a followed story', async () => {
+    const topics = await topicsSentFor([
+      { id: 't1', text: 'gaza ceasefire', provenance: 'tracked' },
+      { id: 't2', text: 'AI regulation', provenance: 'llm' },
+    ]);
+    expect(topics.find((t) => t.text === 'gaza ceasefire').strictMatch).toBe(true);
+  });
+
+  // The whole point of the set difference: tightening a followed story must
+  // never quietly tighten an ordinary interest that happens to share its text.
+  it('leaves a text shared with an interest topic LOOSE', async () => {
+    const topics = await topicsSentFor([
+      { id: 't1', text: 'gaza ceasefire', provenance: 'tracked' },
+      { id: 't2', text: 'Gaza  Ceasefire', factId: 'f1', provenance: 'llm' },
+    ]);
+    for (const t of topics) expect('strictMatch' in t).toBe(false);
+  });
+
+  // Two rows can carry the same NORMALIZED text and are sent as two entries
+  // (buildRetrievalProfile does not dedupe). Keying the flag on the normalized
+  // text is what stops the same text going out strict on one entry and loose on
+  // the other.
+  it('gives every entry sharing a normalized text the same flag', async () => {
+    const topics = await topicsSentFor([
+      { id: 't1', text: 'Gaza Ceasefire', provenance: 'tracked' },
+      { id: 't2', text: '  gaza   ceasefire  ', provenance: 'tracked' },
+    ]);
+    expect(topics).toHaveLength(2);
+    for (const t of topics) expect(t.strictMatch).toBe(true);
+  });
+
+  // Absence, not `false`. A reader who follows no stories must send the payload
+  // they send today, byte for byte.
+  it('omits the key entirely when nothing is tracked', async () => {
+    const topics = await topicsSentFor([
+      { id: 't1', text: 'ai', provenance: 'llm' },
+      { id: 't2', text: 'climate', provenance: 'exploration' },
+    ]);
+    // Asserted as the exact KEY SET, not against limit values — the weight →
+    // limit math belongs to retrieval-profile's own tests and must not be
+    // pinned twice.
+    expect(topics).toHaveLength(2);
+    for (const t of topics) expect(Object.keys(t).sort()).toEqual(['limit', 'text']);
+  });
+
   // ── P2b: per-scope headline depth reaches the GraphQL variables ──────────
   it('sends NO per-scope limit when there are no depth overrides', async () => {
     mockGetActive.mockResolvedValue([

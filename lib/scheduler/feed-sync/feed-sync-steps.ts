@@ -409,8 +409,34 @@ async function fetchTopicIdsPersona(
     if (!textToTopicId.has(t.text)) textToTopicId.set(t.text, t.topicId);
   }
 
+  // ONE set, two consumers: the per-topic `strictMatch` flag on the wire below,
+  // and the billing partition returned at the bottom of this function. Deriving
+  // "tracked-only" twice is exactly how the two would drift, and they must
+  // agree — an article hydrated free because a followed story was its only
+  // match is the same article that story asked the server to match strictly.
+  const freeTopicTexts = computeFreeTopicTexts(activeTopics);
+
   const query: PersonaQueryInput = {
-    topics: profile.topics.map((t) => ({ text: t.text, limit: t.limit })),
+    topics: profile.topics.map((t) => ({
+      text: t.text,
+      limit: t.limit,
+      // Tighten the server's match floor for followed stories ONLY.
+      //
+      // Keyed on NORMALIZED text, not topicId, for the same reason the billing
+      // partition is (see computeFreeTopicTexts): the server answers keyed by
+      // topic TEXT, and buildRetrievalProfile does not dedupe texts — a tracked
+      // topic and a fact-owned interest topic can legitimately carry the same
+      // one, and are sent as two entries. Keying on the normalized text is what
+      // guarantees both entries carry the SAME flag, and computeFreeTopicTexts
+      // guarantees that flag is absent whenever any non-tracked topic shares
+      // the text. LOOSE always wins a collision: tightening a followed story
+      // must never quietly tighten an ordinary interest's feed.
+      //
+      // OMITTED, not false, when not tracked-only — the same absence-is-default
+      // rule the headline scopes follow just below, so a reader who follows no
+      // stories sends the byte-identical payload they send today.
+      ...(freeTopicTexts.has(normalizeTopicText(t.text)) ? { strictMatch: true } : {}),
+    })),
     // Query-level fallback only: the server prefers each topic's own `limit`
     // (set by buildRetrievalProfile, which now tops out at 40) and only falls
     // back to this when a topic omits one. Kept in step with that ceiling so
@@ -507,10 +533,11 @@ async function fetchTopicIdsPersona(
     articleToTopicTexts,
     serverArticleIds,
     personaMeta: { matchedTopics, headlineScope, headlineCountryCode, stableClusterId },
-    // Billing partition input. Derived from the SAME activeTopics snapshot the
-    // retrieval profile was built from, so the two can't disagree about which
-    // texts were sent as tracked.
-    freeTopicTexts: computeFreeTopicTexts(activeTopics),
+    // Billing partition input. The SAME set that decided `strictMatch` on the
+    // wire above, derived from the SAME activeTopics snapshot the retrieval
+    // profile was built from, so the three can't disagree about which texts
+    // were sent as tracked.
+    freeTopicTexts,
   };
 }
 
