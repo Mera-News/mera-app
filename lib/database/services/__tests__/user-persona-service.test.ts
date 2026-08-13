@@ -8,16 +8,19 @@ jest.mock('@/lib/database/index', () => {
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
-  default: { captureException: jest.fn(), warn: jest.fn() },
+  default: { captureException: jest.fn(), captureMessage: jest.fn(), warn: jest.fn() },
 }));
 
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import {
+  assertPersonaOwner,
   persistUserPersona,
   loadUserPersona,
   clearUserPersona,
 } from '../user-persona-service';
+import { Q } from '@nozbe/watermelondb';
+import logger from '@/lib/logger';
 import { OnboardingStage, ProcessingMode } from '@/lib/generated/graphql-types';
 
 const db = database as any;
@@ -332,5 +335,71 @@ describe('clearUserPersona', () => {
     await clearUserPersona();
     expect(rec1.prepareDestroyPermanently).toHaveBeenCalledTimes(1);
     expect(rec2.prepareDestroyPermanently).toHaveBeenCalledTimes(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// assertPersonaOwner — the ownership alarm
+// ---------------------------------------------------------------------------
+//
+// A destructive trigger, so the predicate itself is tested and not only its
+// wiring. `user_personas` is the ONLY user-data table with a `user_id` column,
+// which makes a foreign row independent evidence of contamination even when
+// `cached_user_id` was lost or overwritten — the exact value the cross-user
+// leak corrupts.
+//
+// NOTE ON THE MOCK: the fake `query()` ignores the predicate and counts every
+// row set, so the rows here stand for "what the predicate matched". The
+// predicate is pinned separately, on the query arguments.
+
+describe('assertPersonaOwner', () => {
+  it('asks for rows whose user_id is NOT the owner', () => {
+    // If this ever became `Q.eq`, the alarm would invert: it would fire for
+    // every correctly-owned device and stay silent on every contaminated one.
+    db._setRows('user_personas', []);
+    void assertPersonaOwner('user-1');
+
+    expect(db._collections['user_personas'].query).toHaveBeenCalledWith(
+      Q.where('user_id', Q.notEq('user-1')),
+    );
+  });
+
+  it('true, and logs, when a row belongs to somebody else', async () => {
+    db._setRows('user_personas', [makePersonaRecord({ userId: 'user-2' })]);
+
+    await expect(assertPersonaOwner('user-1')).resolves.toBe(true);
+    expect(logger.captureMessage).toHaveBeenCalledTimes(1);
+  });
+
+  it('false when no foreign rows exist', async () => {
+    db._setRows('user_personas', []);
+
+    await expect(assertPersonaOwner('user-1')).resolves.toBe(false);
+    expect(logger.captureMessage).not.toHaveBeenCalled();
+  });
+
+  // IT CAN ONLY CONFIRM, NEVER CLEAR. `persistUserPersona` is called
+  // fire-and-forget from the user store, so a perfectly clean device can hold
+  // zero persona rows. `false` therefore means "no evidence", never "safe", and
+  // no caller may treat it as permission to skip a wipe.
+  it('a clean device with zero rows is indistinguishable from no evidence', async () => {
+    db._setRows('user_personas', []);
+    await expect(assertPersonaOwner('user-1')).resolves.toBe(false);
+  });
+
+  it('false rather than throwing when the read fails', async () => {
+    // An unanswerable question is not evidence, and this drives a destructive
+    // action — it must never fire on a broken read.
+    db._collections['user_personas'].query.mockImplementationOnce(() => ({
+      fetch: jest.fn(),
+      fetchCount: jest.fn(async () => { throw new Error('no such table'); }),
+    }));
+
+    await expect(assertPersonaOwner('user-1')).resolves.toBe(false);
+  });
+
+  it('false, without querying, for an empty owner id', async () => {
+    await expect(assertPersonaOwner('')).resolves.toBe(false);
+    expect(db._collections['user_personas'].query).not.toHaveBeenCalled();
   });
 });
