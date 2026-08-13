@@ -490,7 +490,10 @@
     "goToStoryAction": "Go to story",
     "deleteStoryAction": "Delete story",
     "deleteStoryConfirmTitle": "Delete this story?",
-    "deleteStoryConfirmBody": "Deleting removes everything saved for this story."
+    "deleteStoryConfirmBody": "Deleting removes everything saved for this story.",
+    "removeMemberAction": "Not part of this story",
+    "removeMemberConfirmTitle": "Remove this article?",
+    "removeMemberConfirmBody": "This article is removed from the story's timeline. Mera keeps following the story itself."
   },
   "whatsNew": {
     "title": "What's new",

@@ -25,9 +25,11 @@ import {
     backfillSnapshotSource,
     getTrackedStoryById,
     markSeen,
+    removeMemberSnapshot,
     type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
+import { hapticLight } from '@/lib/haptics';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
 import { buildTimeline, type TimelineCard } from './merge-timeline';
@@ -155,6 +157,9 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [confirmDelete, setConfirmDelete] = useState(false);
+    // The card the user long-pressed and is being asked about. Holding the CARD
+    // (not just its id) keeps the confirm addressable after the list re-renders.
+    const [confirmRemove, setConfirmRemove] = useState<TimelineCard | null>(null);
 
     // Deleting retires the linked TOPIC as well as dropping the row — without
     // that the topic keeps pulling this story's coverage every fetch cycle for a
@@ -165,6 +170,37 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         await deleteTrackedStoryById(trackedStoryId);
         onBack();
     }, [trackedStoryId, onBack]);
+
+    /**
+     * "Not part of this story" — drop ONE article from this timeline.
+     *
+     * Removes the member SNAPSHOT and deliberately LEAVES the member id on the
+     * row. The two are not interchangeable:
+     *   - `member_snapshots_json` is what this screen renders (buildTimeline).
+     *   - `member_article_ids` is the reconcile's already-considered ledger
+     *     (tracked-story-reconcile::reconcileByTopic diffs candidates against
+     *     it).
+     * Drop the id too and the next feed sync re-adds the article, because the
+     * topic still matches it and the dedupe no longer remembers it. Keeping the
+     * id is what makes the removal stick, and it needs no tombstone list and no
+     * schema change. The id ages off the 30-cap only after 30 newer members,
+     * long past the suggestion window that could resurrect it.
+     *
+     * Optimistic: the row leaves the list immediately, and the write is a
+     * never-throwing local update. NOT reloading afterwards is deliberate — a
+     * reload would re-run the watermark stamp for no reason.
+     *
+     * Known, accepted: `matchesTrackedQuery` still matches by member article id,
+     * so opening this article from the feed keeps reporting "already following".
+     * The alternative (dropping the id) resurrects the card, which is worse.
+     */
+    const handleConfirmRemove = useCallback(async () => {
+        const card = confirmRemove;
+        setConfirmRemove(null);
+        if (!card?.articleId) return;
+        setCards((prev) => prev.filter((c) => c.articleId !== card.articleId));
+        await removeMemberSnapshot(trackedStoryId, card.articleId);
+    }, [confirmRemove, trackedStoryId]);
 
     // Monotonic run token — each load() invalidates prior in-flight runs, and
     // the focus-effect cleanup bumps it so a load resolving after blur/unmount
@@ -278,8 +314,19 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
             const article = cardToNewsArticle(item);
             return (
                 <ArticleStandaloneCompactCard
+                    testID={`story-timeline-card-${item.articleId}`}
                     article={article}
                     onPress={() => handleArticlePress(item.articleId, stableClusterId)}
+                    // Long-press to disown a card, matching the Followed-stories
+                    // list one screen up (and Explore's scope chips). The row
+                    // draws no affordance: a visible button on every card would
+                    // re-add the "…" the compact-card cleanup removed. RN
+                    // resolves a gesture as press OR long-press, never both, so
+                    // this cannot fight the tap-to-open.
+                    onLongPress={() => {
+                        hapticLight();
+                        setConfirmRemove(item);
+                    }}
                     subjectExtras={{
                         surface: 'tracked',
                         stableClusterId: stableClusterId ?? undefined,
@@ -399,6 +446,42 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                             testID="story-timeline-delete-confirm"
                         >
                             <ButtonText>{t('trackedStories.deleteStoryAction')}</ButtonText>
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
+
+            {/* "Not part of this story" confirm — same Modal shape as the delete
+                above, one step less drastic: this drops ONE article and leaves
+                the story followed. */}
+            <Modal isOpen={!!confirmRemove} onClose={() => setConfirmRemove(null)}>
+                <ModalBackdrop />
+                <ModalContent>
+                    <ModalHeader>
+                        <Heading size="lg" className="text-white">
+                            {t('trackedStories.removeMemberConfirmTitle')}
+                        </Heading>
+                    </ModalHeader>
+                    <ModalBody>
+                        <Text size="sm" className="text-typography-300">
+                            {t('trackedStories.removeMemberConfirmBody')}
+                        </Text>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Button
+                            variant="outline"
+                            action="secondary"
+                            onPress={() => setConfirmRemove(null)}
+                            className="mr-3"
+                        >
+                            <ButtonText>{t('common.cancel')}</ButtonText>
+                        </Button>
+                        <Button
+                            action="negative"
+                            onPress={handleConfirmRemove}
+                            testID="story-timeline-card-remove"
+                        >
+                            <ButtonText>{t('trackedStories.removeMemberAction')}</ButtonText>
                         </Button>
                     </ModalFooter>
                 </ModalContent>

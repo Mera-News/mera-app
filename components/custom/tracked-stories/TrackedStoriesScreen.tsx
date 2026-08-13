@@ -123,7 +123,24 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
             // capped at MAX_MEMBER_IDS, so at the cap the true total is
             // unknowable from the row — render "30+" rather than a confidently
             // wrong exact number.
-            const total = (item.memberArticleIds ?? []).length;
+            //
+            // Counted over ids that STILL HAVE A SNAPSHOT, because those are
+            // exactly the cards the timeline renders. "Not part of this story"
+            // drops a member's snapshot but deliberately keeps its id (the id is
+            // the reconcile's already-considered ledger — drop it and the next
+            // sync re-adds the article), so a plain `memberArticleIds.length`
+            // would keep counting articles the user has disowned.
+            //
+            // Identical to the old count for every un-edited row: trackStory and
+            // applyUpdates always write an id and its snapshot together. Do NOT
+            // simplify this to `memberSnapshots.length` — snapshots are capped
+            // at 50 against the ids' 30, which would change "30+" everywhere.
+            const snapshotIds = new Set(
+                (item.memberSnapshots ?? []).map((s) => s.articleId),
+            );
+            const total = (item.memberArticleIds ?? []).filter((id) =>
+                snapshotIds.has(id),
+            ).length;
             const totalLabel =
                 total >= MAX_MEMBER_IDS
                     ? t('trackedStories.articleCountCapped', { count: MAX_MEMBER_IDS })

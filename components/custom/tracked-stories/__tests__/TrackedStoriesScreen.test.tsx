@@ -211,6 +211,16 @@ const story = (o: Record<string, any>) => ({
     lastUpdateAt: o.lastUpdateAt ?? null,
     createdAt: o.createdAt ?? new Date(),
     memberArticleIds: o.memberArticleIds ?? ['a1', 'a2', 'a3'],
+    // A real row always writes an id and its snapshot TOGETHER (trackStory
+    // seeds both; applyUpdates appends both), so the default mirrors the ids.
+    // The count renders over the intersection — see the row's `total`.
+    memberSnapshots:
+        o.memberSnapshots
+        ?? (o.memberArticleIds ?? ['a1', 'a2', 'a3']).map((articleId: string) => ({
+            articleId,
+            title: `Title ${articleId}`,
+            pubDateMs: 1,
+        })),
     ...o,
 });
 
@@ -277,6 +287,28 @@ describe('TrackedStoriesScreen', () => {
         expect(label).toContain('Flood update');
         expect(label).toContain('trackedStories.updatesBadge'); // unseen count
         expect(label).toContain('trackedStories.articleCount'); // total
+    });
+
+    // The article count must follow what the timeline actually renders, which is
+    // the SNAPSHOTS. "Not part of this story" drops a member's snapshot and
+    // deliberately keeps its id (the id is the reconcile's already-considered
+    // ledger — dropping it lets the next sync re-add the article), so a count
+    // over `memberArticleIds` alone would keep counting disowned articles.
+    it('counts only members that still have a snapshot, so a removal decrements it', () => {
+        mockRows = [
+            story({
+                id: 's10',
+                llmHeadline: 'Flood update',
+                memberArticleIds: ['a1', 'a2', 'a3'],
+                // a2 disowned: its id stays, its snapshot is gone.
+                memberSnapshots: [
+                    { articleId: 'a1', title: 'One', pubDateMs: 1 },
+                    { articleId: 'a3', title: 'Three', pubDateMs: 3 },
+                ],
+            }),
+        ];
+        const { getByText } = render(<TrackedStoriesScreen embedded />);
+        expect(getByText('trackedStories.articleCount:2')).toBeTruthy();
     });
 
     it('renders a row with headline, unseen badge and ended pill', () => {

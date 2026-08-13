@@ -15,13 +15,25 @@ interface ArticleStandaloneCompactCardProps {
    * Kept so the many call sites keep compiling; safe to delete in a cleanup pass.
    */
   subjectExtras?: Partial<FeedbackSubject>;
+  /**
+   * Optional secondary gesture, forwarded straight to the base row. The card
+   * still draws NO affordance for it — this is the long-press escape hatch a
+   * surface uses to offer a per-row action without re-adding the "…" button the
+   * compact-card cleanup removed. RN resolves a gesture as either press or
+   * long-press, never both, so this cannot fire alongside `onPress`.
+   */
+  onLongPress?: () => void;
+  /** Root testID passthrough, so a surface adding a gesture can expose a stable
+   *  driver target (skill invariant 10). No visual effect. */
+  testID?: string;
 }
 
 /**
  * The standalone compact article row — publisher-name semantics
  * (source_uri → domain fallback, __DEV__ cluster-confidence chip) delegating all
- * layout to `ArticleCompactCardBase`. Tap-only: no "…" button and no actions
- * sheet (removed in the compact-card cleanup).
+ * layout to `ArticleCompactCardBase`. Tap-first: no "…" button and no actions
+ * sheet (removed in the compact-card cleanup). A caller may add an invisible
+ * long-press action via `onLongPress`.
  *
  * The row NEVER opens the publisher URL itself. `onPress` must navigate to a
  * detail screen (article-detail / suggestion-detail) — that is the only surface
@@ -30,6 +42,8 @@ interface ArticleStandaloneCompactCardProps {
 const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardProps> = ({
   article,
   onPress,
+  onLongPress,
+  testID,
 }) => {
   const publisherName =
     article.publicationSource?.publication_name ||
@@ -56,7 +70,9 @@ const ArticleStandaloneCompactCardImpl: React.FC<ArticleStandaloneCompactCardPro
       countryCode={article.publicationSource?.country_code}
       publicationName={publisherName}
       onPress={onPress}
+      onLongPress={onLongPress}
       metaAccessory={metaAccessory}
+      testID={testID}
     />
   );
 };
