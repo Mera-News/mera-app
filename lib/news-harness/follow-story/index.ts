@@ -84,10 +84,12 @@ The user came from their Followed stories screen and wants to follow something n
 ## Following a story (the proposeTrack tool)
 Each option has TWO fields:
 - "label": the SHORT display name shown to the user (${MAX_TRACK_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation). Generic and recognisable — e.g. "Russia–Ukraine war".
-- "search": a plain lowercase retrieval query (${MAX_TRACK_SEARCH_WORDS} words or fewer) with the concrete who / what / where entity anchors that make future articles match — e.g. "russia ukraine civilian infrastructure attacks". NOT shown to the user.
+- "search": a short retrieval query (${MAX_TRACK_SEARCH_WORDS} words or fewer) with the concrete who / what / where entity anchors that make future articles match — e.g. "Russia Ukraine civilian infrastructure attacks". NOT shown to the user.
 Rules:
 - Order options narrow → broad. Track the CONTINUING story, not one event, so future developments keep matching.
 - Ground every option in what the USER said. Do not invent entities they never mentioned; if their request is too vague to anchor (e.g. "the news"), ask one clarifying question instead of guessing.
+- ONE incident in ONE place: keep that venue, street, building or town name inside "search" — it is the anchor that stops the scope matching every other story nearby. A place is not a date, so the scope still stays undated.
+- KEEP THE CAPITALS on proper nouns in "search" (sentence case, never lowercase): retrieval recognises a place by its capital letter, so an all-lowercase query cannot be filtered by place and pulls the right subject from the wrong town.
 - Scopes must stay matchable indefinitely. Check the Today date in <context>: NEVER name an already-ended year, season or edition, and prefer an UNDATED scope ("Hungarian Grand Prix updates") over a dated one.
 - If the user redirects ("no, the protests themselves"), call proposeTrack AGAIN with re-scoped options.
 - Mera can only follow a story here. For anything else (feed tuning, facts, settings) say plainly that this chat only starts a followed story.
@@ -110,7 +112,7 @@ Format: <tool_call>{"name": "toolName", "arguments": {...}}</tool_call>
 - cancelProposal: {}
 
 ## Example (format only)
-<tool_call>{"name": "proposeTrack", "arguments": {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "russia ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "russia ukraine war"}, {"label": "European security crisis", "search": "europe russia security military tensions"}]}}</tool_call>`;
+<tool_call>{"name": "proposeTrack", "arguments": {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "Russia Ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "Russia Ukraine war"}, {"label": "European security crisis", "search": "Europe Russia security military tensions"}]}}</tool_call>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -198,7 +200,7 @@ export function getFollowStoryToolDefinitions(): ToolDefinition[] {
       function: {
         name: 'proposeTrack',
         description:
-          'Propose following the story the user described, as a durable topic. Never follows directly — stages a card the user taps. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden lowercase `search` retrieval query. Ground every option in what the USER said; there is no article in this conversation.',
+          'Propose following the story the user described, as a durable topic. Never follows directly — stages a card the user taps. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground every option in what the USER said; there is no article in this conversation.',
         parameters: {
           type: 'object',
           properties: {
@@ -215,7 +217,7 @@ export function getFollowStoryToolDefinitions(): ToolDefinition[] {
                   search: {
                     type: 'string',
                     description:
-                      'Hidden lowercase retrieval query with concrete who/what/where anchors (≤8 words, e.g. "russia ukraine civilian infrastructure attacks"). NOT shown to the user.',
+                      'Hidden retrieval query with concrete who/what/where anchors (≤8 words, e.g. "Russia Ukraine civilian infrastructure attacks"). Sentence case, proper nouns KEEP their capitals — retrieval recognises a place by its capital letter. NOT shown to the user.',
                   },
                 },
                 required: ['label', 'search'],

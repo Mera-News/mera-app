@@ -105,6 +105,30 @@ describe('buildStoryScopePrompt', () => {
     expect(system).toContain('UNDATED');
   });
 
+  // Precision rules. These two are load-bearing and pull in OPPOSITE directions
+  // from the undated rule above, so they are pinned side by side: a future edit
+  // that generalises the scope to keep it "matchable" must not take the place
+  // anchor or the capitals with it.
+  it('keeps the place anchor in the search for a single localised incident', () => {
+    const { system } = buildStoryScopePrompt(['Bridge collapses on Nehru Road'], NOW_MS);
+    expect(system).toContain('ONE incident in ONE place');
+    expect(system).toContain('venue, street or town name');
+    // The place anchor must not be read as re-permitting a dated scope.
+    expect(system).toContain('A place is not a date');
+  });
+
+  it('mandates sentence case with capitals, and never lowercase, for the search', () => {
+    const { system } = buildStoryScopePrompt(['Bhopal rain floods low-lying areas'], NOW_MS);
+    // The server's geo gate detects a place by its uppercase first letter, so a
+    // lowercase-mandated query is silently un-geo-filterable. Do not "tidy" the
+    // prompt back to "a plain lowercase search query".
+    expect(system).toContain('KEEP THE CAPITALS');
+    expect(system).toContain('recognises a place by its capital letter');
+    expect(system).not.toMatch(/plain lowercase|lowercase (search|retrieval) query/);
+    // The worked example has to obey its own rule or the model copies the case.
+    expect(system).toContain('"search": "Russia Ukraine war"');
+  });
+
   it('is deterministic for a fixed date and varies only with it', () => {
     const titles = ['Hungarian Grand Prix qualifying', 'Verstappen takes pole'];
     expect(buildStoryScopePrompt(titles, NOW_MS).user).toBe(

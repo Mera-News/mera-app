@@ -47,6 +47,28 @@ describe('buildFollowStorySystemPrompt', () => {
     expect(buildFollowStorySystemPrompt({ needsToolFormat: false })).not.toContain('<tool_call>');
   });
 
+  // Precision rules. These pull in the OPPOSITE direction from "keep the scope
+  // generic so it stays matchable", so they are pinned explicitly: an edit that
+  // widens the scope must not take the place anchor or the capitals with it.
+  it('keeps the place anchor in the search for a single localised incident', () => {
+    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: false });
+    expect(prompt).toContain('ONE incident in ONE place');
+    expect(prompt).toContain('venue, street, building or town name');
+    expect(prompt).toContain('A place is not a date');
+  });
+
+  it('mandates sentence case with capitals, and never lowercase, for the search', () => {
+    // The server's geo gate detects a place by its uppercase first letter, so a
+    // lowercase-mandated query is silently un-geo-filterable. Do not "tidy" the
+    // prompt back to "a plain lowercase retrieval query".
+    const prompt = buildFollowStorySystemPrompt({ needsToolFormat: true });
+    expect(prompt).toContain('KEEP THE CAPITALS');
+    expect(prompt).toContain('recognises a place by its capital letter');
+    expect(prompt).not.toMatch(/plain lowercase|lowercase (search|retrieval) query/);
+    // The worked example has to obey its own rule or the model copies its case.
+    expect(prompt).toContain('"search": "Russia Ukraine war"');
+  });
+
   // The card is the consent gate — the prompt must not invite a typed "yes".
   it('does not offer applyProposal anywhere', () => {
     expect(buildFollowStorySystemPrompt({ needsToolFormat: true })).not.toContain('applyProposal');
@@ -125,6 +147,16 @@ describe('getFollowStoryToolDefinitions', () => {
 
     expect(propose.parameters.required).toEqual(['options']);
     expect(options.items.required).toEqual(['label', 'search']);
+  });
+
+  it('carries the case rule on the CLOUD path too', () => {
+    // The system prompt is the LOCAL path's carrier. The cloud path reads this
+    // schema instead, so the rule has to be stated in both or half the installed
+    // base keeps emitting lowercase searches the geo gate cannot filter.
+    const options = (getFollowStoryToolDefinitions()[0].function.parameters as any).properties
+      .options;
+    expect(options.items.properties.search.description).toContain('KEEP their capitals');
+    expect(options.items.properties.search.description).not.toMatch(/lowercase/);
   });
 });
 

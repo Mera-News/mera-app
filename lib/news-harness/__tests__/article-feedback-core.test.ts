@@ -21,8 +21,17 @@ import type {
 } from '../core/types';
 
 /** not-interested P4a: named ceiling for the XML-path system prompt, so the
- *  budget assertion states a number instead of "fits". Measured 2080. */
-const ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING = 2200;
+ *  budget assertion states a number instead of "fits". Measured 2080, ceiling
+ *  2200.
+ *
+ *  RAISED to 2360 (measured 2241) for the two scope-precision rules: the place
+ *  anchor and the keep-the-capitals case rule. Both are deliberate spend, not
+ *  drift — the case rule is what makes the server's geo gate work at all (it
+ *  detects a place by its uppercase first letter, so the previous "plain
+ *  lowercase retrieval query" mandate made every followed topic un-geo-
+ *  filterable). Re-measure and restate BOTH numbers if you edit the prompt; do
+ *  not buy headroom by trimming those two rules. */
+const ARTICLE_SYSTEM_PROMPT_TOKEN_CEILING = 2360;
 
 /** Fixed injected clock — 2026-03-04T05:06:07Z. Pinned so every assertion over
  *  the rendered context stays deterministic (the builder never reads Date.now). */
@@ -205,6 +214,43 @@ describe('buildArticleFeedbackSystemPrompt', () => {
     // The rule is imperative only — no clock value here, so the per-session
     // system-prompt cache in ArticleFeedbackAgent stays correct.
     expect(prompt).not.toMatch(/\b20\d{2}-\d{2}-\d{2}\b/);
+  });
+
+  // Precision rules. These pull in the OPPOSITE direction from the undated rule
+  // above, so they are pinned right beside it: an edit that generalises the
+  // scope to keep it "matchable" must not take the place anchor or the capitals
+  // with it.
+  it('keeps the place anchor in the search for a single localised incident', () => {
+    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: false });
+    expect(prompt).toContain('ONE incident in ONE place');
+    expect(prompt).toContain('venue, street, building or town name');
+    expect(prompt).toContain('A place is not a date');
+  });
+
+  it('mandates sentence case with capitals, and never lowercase, for the search', () => {
+    // The server's geo gate detects a place by its uppercase first letter, so a
+    // lowercase-mandated query is silently un-geo-filterable. Do not "tidy" the
+    // prompt back to "a plain lowercase retrieval query".
+    const prompt = buildArticleFeedbackSystemPrompt({ needsToolFormat: true });
+    expect(prompt).toContain('KEEP THE CAPITALS');
+    expect(prompt).toContain('recognises a place by its capital letter');
+    expect(prompt).not.toMatch(/plain lowercase|lowercase (search|retrieval) query/);
+    // The worked examples have to obey the rule or the model copies their case.
+    expect(prompt).toContain('"search": "Russia Ukraine war"');
+  });
+
+  it('keeps the case rule on the CLOUD path too (JSON-Schema tool descriptions)', () => {
+    // The system prompt above is the LOCAL path's carrier. The cloud path reads
+    // the tool schema instead, so the rule has to be stated in both or half the
+    // installed base keeps emitting lowercase.
+    const [, track] = getArticleFeedbackToolDefinitions();
+    const search = (
+      track.function.parameters.properties.options as {
+        items: { properties: { search: { description: string } } };
+      }
+    ).items.properties.search.description;
+    expect(search).toContain('KEEP their capitals');
+    expect(search).not.toMatch(/lowercase/);
   });
 
   it('pins the language name when provided', () => {

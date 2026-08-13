@@ -361,14 +361,16 @@ Feed-tuning actions (reference topics by their TEXT from MATCHED TOPICS, publica
 When the user wants to FOLLOW / TRACK this unfolding story, call proposeTrack with 3–4 scope OPTIONS at widening scope — from the narrow specific event to the broad ongoing story — so the user can pick how much they want to follow. Read the ARTICLE and the RELATED COVERAGE titles to judge the real span of the story; base the options on what that coverage actually spans, not just this one article.
 Each option has TWO fields:
 - "label": the SHORT display name shown to the user (${MAX_TRACK_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation). This is a generic, recognisable topic name — e.g. "Russia–Ukraine war", "Attacks on Ukraine infrastructure".
-- "search": a plain lowercase retrieval query (${MAX_TRACK_SEARCH_WORDS} words or fewer) with the concrete who / what / where entity anchors that make future articles match — e.g. "russia ukraine civilian infrastructure attacks". NOT shown to the user.
+- "search": a short retrieval query (${MAX_TRACK_SEARCH_WORDS} words or fewer) with the concrete who / what / where entity anchors that make future articles match — e.g. "Russia Ukraine civilian infrastructure attacks". NOT shown to the user.
 Rules:
 - Order options narrow → broad. Make the labels GENERIC enough that future developments keep matching (track the CONTINUING story, not this single article).
 - Do not invent entities absent from the ARTICLE / RELATED COVERAGE. Plain, neutral language; no clickbait, no ALL CAPS.
+- ONE incident in ONE place: keep that venue, street, building or town name inside "search" — it is the anchor that stops the scope matching every other story nearby. A place is not a date, so the scope still stays undated.
+- KEEP THE CAPITALS on proper nouns in "search" (sentence case, never lowercase): retrieval recognises a place by its capital letter, so an all-lowercase query cannot be filtered by place and pulls the right subject from the wrong town.
 - Scopes must stay matchable indefinitely. Check the Today / Published dates in <context>: NEVER name an already-ended year, season or edition, and prefer an UNDATED scope ("Hungarian Grand Prix updates") over a dated one.
 - If the user redirects ("track the protest itself, not this article"), call proposeTrack AGAIN with re-scoped options.
 - If TRACK STATE says already following, do NOT propose — just tell them it's already being followed.
-Example — article "Russia strikes humanitarian sites in Ukraine": proposeTrack {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "russia ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "russia ukraine war"}, {"label": "European security crisis", "search": "europe russia security military tensions"}]}
+Example — article "Russia strikes humanitarian sites in Ukraine": proposeTrack {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "Russia Ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "Russia Ukraine war"}, {"label": "European security crisis", "search": "Europe Russia security military tensions"}]}
 
 ${factCheck ? `${buildFactCheckPromptSection()}
 
@@ -402,7 +404,7 @@ ${factCheck ? `${PROPOSE_FACT_CHECK_TOOL_FORMAT_LINE}\n` : ''}- applyProposal: {
 
 ## Example (format only)
 <tool_call>{"name": "proposeChanges", "arguments": {"explanation": "You want less of this.", "expected_effects": "Pick how far to go.", "choose_one": true, "actions": [{"type": "set_topic_weight", "topicText": "cricket", "delta": -0.3}, {"type": "retire_topic", "topicText": "cricket"}]}}</tool_call>
-<tool_call>{"name": "proposeTrack", "arguments": {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "russia ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "russia ukraine war"}, {"label": "European security crisis", "search": "europe russia security military tensions"}]}}</tool_call>`;
+<tool_call>{"name": "proposeTrack", "arguments": {"options": [{"label": "Attacks on Ukraine infrastructure", "search": "Russia Ukraine civilian infrastructure attacks"}, {"label": "Russia–Ukraine war", "search": "Russia Ukraine war"}, {"label": "European security crisis", "search": "Europe Russia security military tensions"}]}}</tool_call>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -681,7 +683,7 @@ export function getArticleFeedbackToolDefinitions(
       function: {
         name: 'proposeTrack',
         description:
-          "Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden lowercase `search` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user picks one label; its `search` becomes the tracked topic.",
+          "Propose following this article's unfolding story as a durable topic. Never tracks directly — stages a confirm card. Give 3–4 `options` at widening scope (narrow event → broad ongoing story), each a scope pill with a short display `label` and a hidden `search` retrieval query. Ground the scope in the ARTICLE + RELATED COVERAGE. The user picks one label; its `search` becomes the tracked topic.",
         parameters: {
           type: 'object',
           properties: {
@@ -698,7 +700,7 @@ export function getArticleFeedbackToolDefinitions(
                   search: {
                     type: 'string',
                     description:
-                      'Hidden lowercase retrieval query with concrete who/what/where anchors (≤8 words, e.g. "russia ukraine civilian infrastructure attacks"). NOT shown to the user.',
+                      'Hidden retrieval query with concrete who/what/where anchors (≤8 words, e.g. "Russia Ukraine civilian infrastructure attacks"). Sentence case, proper nouns KEEP their capitals — retrieval recognises a place by its capital letter. NOT shown to the user.',
                   },
                 },
                 required: ['label', 'search'],

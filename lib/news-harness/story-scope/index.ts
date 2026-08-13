@@ -1,8 +1,8 @@
 // news-harness — story-scope generator (PURE, RN-free).
 //
 // Turns the known titles of a followed story into ONE trackable topic scope: a
-// short generic display `label` (shown to the user) + a lowercase entity-
-// anchored `search` query (minted as the tracked topic). Used to LLM-generate a
+// short generic display `label` (shown to the user) + an entity-anchored
+// `search` query (minted as the tracked topic). Used to LLM-generate a
 // scope for LEGACY stable-cluster follows during their one-shot migration to the
 // topic model — the non-interactive sibling of the chat `proposeTrack` pills.
 //
@@ -23,7 +23,14 @@ export const MAX_SCOPE_SEARCH_WORDS = 8;
 export interface StoryScope {
   /** Short generic display name shown to the user (Title Case, ≤5 words). */
   label: string;
-  /** Lowercase entity-anchored retrieval query minted as the topic (≤8 words). */
+  /**
+   * Entity-anchored retrieval query minted as the topic (≤8 words). Sentence
+   * case, proper nouns KEEP their capitals: the server's geo gate recognises a
+   * place by its capital letter, so an all-lowercase query is never place-
+   * filtered. Do not lowercase this anywhere on the way to the topic row —
+   * `topics.normalized_text` is the lowercase dedupe key, `topics.text` (what
+   * ships to the server) is the verbatim one.
+   */
   search: string;
 }
 
@@ -40,13 +47,15 @@ You are given a numbered list of titles that all cover the same developing story
 
 Output TWO fields:
 - "label": a short display name for the story, ${MAX_SCOPE_LABEL_WORDS} words or fewer, Title Case, no trailing punctuation. Generic and recognisable (e.g. "Russia–Ukraine war").
-- "search": a plain lowercase search query, ${MAX_SCOPE_SEARCH_WORDS} words or fewer, with the concrete who / what / where entity anchors that make future articles match (e.g. "russia ukraine civilian infrastructure attacks").
+- "search": a short search query, ${MAX_SCOPE_SEARCH_WORDS} words or fewer, with the concrete who / what / where entity anchors that make future articles match (e.g. "Russia Ukraine civilian infrastructure attacks").
 
 The topic must stay matchable indefinitely. Given the Today date: NEVER name an already-ended year, season or edition; prefer an UNDATED scope.
 Do not invent entities absent from the titles. Plain, neutral language; no clickbait, no ALL CAPS.
+If the titles are ONE incident in ONE place, keep that venue, street or town name in "search" — it is the anchor that stops the scope matching every other story nearby. A place is not a date.
+Write "search" in ordinary sentence case and KEEP THE CAPITALS on proper nouns: retrieval recognises a place by its capital letter, so an all-lowercase query cannot be filtered by place.
 
 Output ONLY a JSON object, nothing else:
-{"label": "Russia–Ukraine war", "search": "russia ukraine war"}`;
+{"label": "Russia–Ukraine war", "search": "Russia Ukraine war"}`;
 
 /**
  * Build the {system, user} pair for one story-scope generation call. Titles are
