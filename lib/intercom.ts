@@ -187,39 +187,6 @@ async function fetchIntercomJwt(): Promise<string | null> {
 }
 
 /**
- * Identify the Intercom user.
- *
- * Call order is not negotiable: initialize -> setUserJwt -> login. setUserJwt
- * MUST resolve before login or login 400s with code 102, which reads like a
- * credentials problem and is not one.
- */
-export async function loginIntercomUser(
-  userId: string,
-  email: string | null,
-): Promise<boolean> {
-  if (!configured || !userId) return false;
-  try {
-    const jwt = await fetchIntercomJwt();
-    if (!jwt) return false;
-    await Intercom.setUserJwt(jwt);
-    await Intercom.loginUserWithUserAttributes({
-      userId,
-      // Nothing else, ever. No topics, no facts, no reading history, no
-      // article ids. The support conversation must not become a second,
-      // undeclared copy of the persona.
-      ...(email ? { email } : {}),
-    });
-    return true;
-  } catch (e) {
-    logger.captureException(e, {
-      tags: { module: 'intercom', method: 'login' },
-      extra: describeError(e),
-    });
-    return false;
-  }
-}
-
-/**
  * Reset Intercom identity. Called from clearAuthStorage() and again from
  * wipeAllLocalUserData(), mirroring logoutRevenueCat().
  *
