@@ -152,7 +152,7 @@
         "@intercom/intercom-react-native",
         {
           "useManualInit": true,
-          "intercomRegion": "EU"
+          "intercomRegion": "US"
         }
       ]
     ],

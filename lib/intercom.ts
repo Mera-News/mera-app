@@ -22,6 +22,32 @@
 // 3. IDENTITY IS A JWT WITH A ONE-HOUR TTL, validated by Intercom on EVERY
 //    request. So the token is re-minted immediately before every present(),
 //    never once at login. A mint-at-login design dies silently mid-conversation.
+//
+// ---------------------------------------------------------------------------
+// A CHECKBOX IN INTERCOM'S DASHBOARD CAN TERMINATE THIS APP ON iOS.
+// ---------------------------------------------------------------------------
+// Intercom 19.7.2 links the LEGACY iOS pickers: UIImagePickerController,
+// PHAuthorizationStatus and AVAudioSession appear in its Mach-O symbol table,
+// and PHPickerViewController (the modern permissionless one) does not. Those
+// APIs require NSPhotoLibraryUsageDescription / NSMicrophoneUsageDescription,
+// and iOS KILLS a process that calls them without one.
+//
+// We deliberately ship NEITHER usage string, because a minimal Info.plist is
+// the honest signal for a privacy-focused app. The consequence is that the only
+// thing preventing a crash is server-side configuration:
+//
+//   Intercom > Messenger > Messenger input types
+//     camera access (Mobile SDK), images and videos, files, GIFs, voice notes
+//     -> all must stay OFF
+//   Intercom > Messenger > Allow attachments
+//     -> must stay OFF
+//
+// Turning any of them on ships a crash to users with no code change and no
+// release. Treat those settings as code. On Android the same two affordances
+// hit the RECORD_AUDIO we block in app.json, so the failure is symmetric.
+//
+// If you ever need attachments, add the two usage strings FIRST, in the same
+// change, and update the App Store privacy answers. See INTERCOM_PLAN.md.
 
 import { useCallback, useRef, useState } from 'react';
 import { Linking, Platform } from 'react-native';
