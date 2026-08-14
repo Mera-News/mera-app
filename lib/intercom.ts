@@ -24,29 +24,38 @@
 //    never once at login. A mint-at-login design dies silently mid-conversation.
 //
 // ---------------------------------------------------------------------------
-// A CHECKBOX IN INTERCOM'S DASHBOARD CAN TERMINATE THIS APP ON iOS.
+// ATTACHMENTS ARE OFF, AND THE ONLY THING HOLDING THEM OFF IS A DASHBOARD.
 // ---------------------------------------------------------------------------
 // Intercom 19.7.2 links the LEGACY iOS pickers: UIImagePickerController,
-// PHAuthorizationStatus and AVAudioSession appear in its Mach-O symbol table,
-// and PHPickerViewController (the modern permissionless one) does not. Those
-// APIs require NSPhotoLibraryUsageDescription / NSMicrophoneUsageDescription,
-// and iOS KILLS a process that calls them without one.
+// PHAuthorizationStatus and AVAudioSession are in its Mach-O symbol table, and
+// PHPickerViewController (the modern permissionless one) is not. Those APIs
+// require NSPhotoLibraryUsageDescription / NSMicrophoneUsageDescription, which
+// we deliberately do NOT ship: a minimal Info.plist is the honest signal for a
+// privacy-focused app.
 //
-// We deliberately ship NEITHER usage string, because a minimal Info.plist is
-// the honest signal for a privacy-focused app. The consequence is that the only
-// thing preventing a crash is server-side configuration:
+// MEASURED, 2026-08-14, on a simulator build: Intercom GUARDS this rather than
+// calling the API blind. It logs
+//   "Camera input has been disabled because NSCameraUsageDescription is missing"
+// and carries on. So the camera path DEGRADES; it does not terminate. An
+// earlier version of this comment claimed iOS kills the process. That is true
+// of the raw APIs but not of what Intercom actually does, at least for camera.
+// The photo-library and microphone paths are UNVERIFIED — nobody has made the
+// SDK reach them, because attachments have been off workspace-side throughout.
+//
+// So keep them off, on the weaker but still sound grounds that an unverified
+// path is not worth exercising for a feature we do not want:
 //
 //   Intercom > Messenger > Messenger input types
 //     camera access (Mobile SDK), images and videos, files, GIFs, voice notes
-//     -> all must stay OFF
+//     -> all stay OFF
 //   Intercom > Messenger > Allow attachments
-//     -> must stay OFF
+//     -> stays OFF
 //
-// Turning any of them on ships a crash to users with no code change and no
-// release. Treat those settings as code. On Android the same two affordances
-// hit the RECORD_AUDIO we block in app.json, so the failure is symmetric.
+// These are server-side settings, so they change with no code change and no
+// release. Treat them as code. On Android the same affordances hit the
+// RECORD_AUDIO blocked in app.json, so the posture is symmetric.
 //
-// If you ever need attachments, add the two usage strings FIRST, in the same
+// If you ever want attachments, add the two usage strings FIRST, in the same
 // change, and update the App Store privacy answers. See INTERCOM_PLAN.md.
 
 import { useCallback, useRef, useState } from 'react';
