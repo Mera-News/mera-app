@@ -63,7 +63,8 @@
     "pendingDescription": "Wir freuen uns, dass Sie unsere App ausprobieren möchten. Sobald Ihr Konto freigeschaltet ist, erhalten Sie eine E-Mail. Danach können Sie die App weiter nutzen.",
     "enquiries": "Bei Fragen können Sie eine E-Mail senden an",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Aktualisieren 🔄"
+    "refresh": "Aktualisieren 🔄",
+    "contactSupport": "Support kontaktieren"
   },
   "feed": {
     "updatedAt": "Aktualisiert {{time}}",
@@ -600,7 +601,8 @@
         "message": "Wir konnten den News-Dienst nicht erreichen. Das ist meist nur kurz – wir versuchen es weiter und dein Feed aktualisiert sich von selbst.",
         "title": "Dienst nicht verfügbar"
       }
-    }
+    },
+    "accountRestrictedContact": "Support kontaktieren"
   },
   "download": {
     "modelDownloading": "KI-Modell wird heruntergeladen...",
@@ -2254,5 +2256,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Support wird geöffnet"
   }
 }

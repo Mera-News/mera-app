@@ -128,6 +128,22 @@ export async function wipeAllLocalUserData(): Promise<void> {
     // Never block the wipe on the billing SDK.
   }
 
+  // And reset the support Messenger, so the next user on this device cannot
+  // open Support and read the previous user's conversation — Intercom holds
+  // identity natively and a JS sign-out does not touch it. clearAuthStorage()
+  // does this too; both sign-out paths are independently complete by design
+  // (see this file's header) and logoutIntercom() is idempotent.
+  //
+  // The guarded require shape matters more here than it looks:
+  // purgeOrphanedLocalData() calls this function at LAUNCH on a device whose
+  // logout was interrupted, so this runs before most of the app exists.
+  try {
+    const { logoutIntercom } = require('@/lib/intercom');
+    await logoutIntercom();
+  } catch {
+    // Never block the wipe on the support SDK.
+  }
+
   // And drop the Sentry user id, so post-logout errors are not attributed to the
   // user who just left. clearAuthStorage() does this too — both sign-out paths
   // are independently complete by design (see this file's header), and the call

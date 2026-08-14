@@ -196,6 +196,66 @@ describe('apollo-client', () => {
     });
   });
 
+  // ── errorLink noSyncStatus opt-out ───────────────────────────────────────
+  // A GraphQL error on an operation that is NOT part of the feed sync must not
+  // paint "sync failed" across For You. The first such operation is
+  // intercomIdentity (lib/intercom.ts): on a server that has not deployed the
+  // query yet, its only correct user-visible outcome is an email support link,
+  // not telling the user their news is broken.
+  //
+  // This asserts the HONOURING half. lib/__tests__/intercom.test.ts asserts the
+  // sending half (that the flag is on the operation); neither is worth much
+  // without the other.
+  describe('errorLink noSyncStatus opt-out', () => {
+    const QUERY = gql`query NoSyncStatusProbe { probe }`;
+    const graphqlErrorResponse = () => ({
+      status: 200,
+      ok: true,
+      headers: { get: () => 'application/json' },
+      text: async () =>
+        JSON.stringify({
+          data: null,
+          errors: [{ message: 'Cannot query field "probe"', extensions: { code: 'BAD_USER_INPUT' } }],
+        }),
+    });
+
+    let fetchSpy: jest.SpyInstance;
+    let syncSpy: jest.SpyInstance;
+
+    beforeEach(() => {
+      const { useForYouStore } = require('@/lib/stores/for-you-store');
+      fetchSpy = jest
+        .spyOn(global, 'fetch')
+        .mockResolvedValue(graphqlErrorResponse() as unknown as Response);
+      syncSpy = jest.spyOn(useForYouStore.getState(), 'setSyncStatusMessage');
+      useNetworkStore.setState({ isConnected: true });
+    });
+
+    afterEach(() => {
+      fetchSpy.mockRestore();
+    });
+
+    it('suppresses the sync-failed banner when the operation opts out', async () => {
+      await expect(
+        client.query({
+          query: QUERY,
+          fetchPolicy: 'network-only',
+          context: { noSyncStatus: true },
+        }),
+      ).rejects.toBeTruthy();
+      expect(syncSpy).not.toHaveBeenCalled();
+    });
+
+    it('still paints the banner for an ordinary operation', async () => {
+      await expect(
+        client.query({ query: QUERY, fetchPolicy: 'network-only' }),
+      ).rejects.toBeTruthy();
+      expect(syncSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ state: 'failed', headlineKey: 'sync.syncFailed' }),
+      );
+    });
+  });
+
   // ── errorLink Sentry-capture gating (Sentry MERA-APP-5F/4P/4N) ───────────
   // Previously captureException fired unconditionally for every network
   // error; the isConnected gate only suppressed the toast. That meant every

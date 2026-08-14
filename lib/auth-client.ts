@@ -5,6 +5,7 @@ import Constants from 'expo-constants';
 import { secureStore } from "./utils/secure-store-adapter";
 import { AUTH_ENDPOINT } from "./config/endpoints";
 import { logoutRevenueCat } from "./revenuecat";
+import { logoutIntercom } from "./intercom";
 import logger from "./logger";
 import {
     clearJwtSubscriptionLock,
@@ -132,6 +133,15 @@ export const clearAuthStorage = async () => {
     // Reset the RevenueCat customer to anonymous so the next signed-in user
     // doesn't inherit the previous user's entitlements.
     await logoutRevenueCat();
+    // Same reasoning for the support Messenger: Intercom holds identity
+    // NATIVELY, so without this the next user on this device opens Support and
+    // reads the previous user's conversation. This has to sit inside
+    // clearAuthStorage() rather than in the logout button, because all four
+    // callers destroy local identity — logout, delete account, switch user and
+    // the onboarding server-error eject — and any of them can be followed by a
+    // different person signing in. logoutIntercom() is total and never
+    // rejects; see its header for why that is load-bearing here.
+    await logoutIntercom();
     // Same reasoning for crash reporting: without this, every error after a
     // sign-out is attributed to the user who just left. Required imports
     // lazily — sentry-scope reaches the Zustand stores, and a static import

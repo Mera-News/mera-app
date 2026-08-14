@@ -63,7 +63,8 @@
     "pendingDescription": "Kami sangat senang Anda ingin mencoba aplikasi kami. Setelah akun Anda disetujui, Anda akan menerima email. Kemudian Anda dapat melanjutkan menggunakan aplikasi.",
     "enquiries": "Untuk pertanyaan, Anda dapat mengirim email ke",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Muat Ulang 🔄"
+    "refresh": "Muat Ulang 🔄",
+    "contactSupport": "Hubungi dukungan"
   },
   "feed": {
     "updatedAt": "Diperbarui {{time}}",
@@ -600,7 +601,8 @@
         "message": "Kami tidak dapat menjangkau layanan berita. Ini biasanya sebentar. Kami akan terus mencoba dan feed Anda akan diperbarui dengan sendirinya.",
         "title": "Layanan tidak tersedia"
       }
-    }
+    },
+    "accountRestrictedContact": "Hubungi dukungan"
   },
   "download": {
     "modelDownloading": "Mengunduh AI model...",
@@ -2254,5 +2256,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Membuka dukungan"
   }
 }

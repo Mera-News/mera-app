@@ -1,0 +1,103 @@
+{
+  "_comment": "Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand and never fan this work out file-by-file: doing that corrupted four dictionaries in an earlier wave. Add keys here, run the script, review the diff. Each locale reuses the noun that dictionary already uses for preferences.support, so the new strings match the app's existing voice instead of inventing a second term for the same thing.",
+  "ar": {
+    "account": { "contactSupport": "مراسلة الدعم" },
+    "errors": { "accountRestrictedContact": "مراسلة الدعم" },
+    "support": { "opening": "جارٍ فتح الدعم" }
+  },
+  "de": {
+    "account": { "contactSupport": "Support kontaktieren" },
+    "errors": { "accountRestrictedContact": "Support kontaktieren" },
+    "support": { "opening": "Support wird geöffnet" }
+  },
+  "en": {
+    "account": { "contactSupport": "Message support" },
+    "errors": { "accountRestrictedContact": "Message support" },
+    "support": { "opening": "Opening support" }
+  },
+  "es": {
+    "account": { "contactSupport": "Escribir a soporte" },
+    "errors": { "accountRestrictedContact": "Escribir a soporte" },
+    "support": { "opening": "Abriendo soporte" }
+  },
+  "fr": {
+    "account": { "contactSupport": "Contacter l'assistance" },
+    "errors": { "accountRestrictedContact": "Contacter l'assistance" },
+    "support": { "opening": "Ouverture de l'assistance" }
+  },
+  "hi": {
+    "account": { "contactSupport": "सहायता को संदेश भेजें" },
+    "errors": { "accountRestrictedContact": "सहायता को संदेश भेजें" },
+    "support": { "opening": "सहायता खोली जा रही है" }
+  },
+  "id": {
+    "account": { "contactSupport": "Hubungi dukungan" },
+    "errors": { "accountRestrictedContact": "Hubungi dukungan" },
+    "support": { "opening": "Membuka dukungan" }
+  },
+  "it": {
+    "account": { "contactSupport": "Contatta il supporto" },
+    "errors": { "accountRestrictedContact": "Contatta il supporto" },
+    "support": { "opening": "Apertura del supporto" }
+  },
+  "ja": {
+    "account": { "contactSupport": "サポートに問い合わせる" },
+    "errors": { "accountRestrictedContact": "サポートに問い合わせる" },
+    "support": { "opening": "サポートを開いています" }
+  },
+  "ko": {
+    "account": { "contactSupport": "고객 지원에 문의하기" },
+    "errors": { "accountRestrictedContact": "고객 지원에 문의하기" },
+    "support": { "opening": "고객 지원을 여는 중" }
+  },
+  "nl": {
+    "account": { "contactSupport": "Contact met ondersteuning" },
+    "errors": { "accountRestrictedContact": "Contact met ondersteuning" },
+    "support": { "opening": "Ondersteuning wordt geopend" }
+  },
+  "pl": {
+    "account": { "contactSupport": "Napisz do wsparcia" },
+    "errors": { "accountRestrictedContact": "Napisz do wsparcia" },
+    "support": { "opening": "Otwieranie wsparcia" }
+  },
+  "pt-BR": {
+    "account": { "contactSupport": "Falar com o suporte" },
+    "errors": { "accountRestrictedContact": "Falar com o suporte" },
+    "support": { "opening": "Abrindo o suporte" }
+  },
+  "ru": {
+    "account": { "contactSupport": "Написать в поддержку" },
+    "errors": { "accountRestrictedContact": "Написать в поддержку" },
+    "support": { "opening": "Открытие поддержки" }
+  },
+  "th": {
+    "account": { "contactSupport": "ติดต่อฝ่ายสนับสนุน" },
+    "errors": { "accountRestrictedContact": "ติดต่อฝ่ายสนับสนุน" },
+    "support": { "opening": "กำลังเปิดฝ่ายสนับสนุน" }
+  },
+  "tr": {
+    "account": { "contactSupport": "Desteğe yazın" },
+    "errors": { "accountRestrictedContact": "Desteğe yazın" },
+    "support": { "opening": "Destek açılıyor" }
+  },
+  "uk": {
+    "account": { "contactSupport": "Написати в підтримку" },
+    "errors": { "accountRestrictedContact": "Написати в підтримку" },
+    "support": { "opening": "Відкриття підтримки" }
+  },
+  "vi": {
+    "account": { "contactSupport": "Liên hệ hỗ trợ" },
+    "errors": { "accountRestrictedContact": "Liên hệ hỗ trợ" },
+    "support": { "opening": "Đang mở hỗ trợ" }
+  },
+  "zh-CN": {
+    "account": { "contactSupport": "联系支持" },
+    "errors": { "accountRestrictedContact": "联系支持" },
+    "support": { "opening": "正在打开支持" }
+  },
+  "zh-TW": {
+    "account": { "contactSupport": "聯絡支援" },
+    "errors": { "accountRestrictedContact": "聯絡支援" },
+    "support": { "opening": "正在開啟支援" }
+  }
+}

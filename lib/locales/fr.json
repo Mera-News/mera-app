@@ -63,7 +63,8 @@
     "pendingDescription": "Nous sommes ravis que vous souhaitiez essayer notre application. Une fois votre compte approuvé, vous recevrez un e-mail. Vous pourrez alors continuer à utiliser l'application.",
     "enquiries": "Pour toute question, vous pouvez envoyer un e-mail à",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Actualiser 🔄"
+    "refresh": "Actualiser 🔄",
+    "contactSupport": "Contacter l'assistance"
   },
   "feed": {
     "updatedAt": "Mis à jour {{time}}",
@@ -605,7 +606,8 @@
         "message": "Nous n'avons pas pu joindre le service d'actualités. C'est généralement bref : nous continuons d'essayer et votre fil se mettra à jour de lui-même.",
         "title": "Service indisponible"
       }
-    }
+    },
+    "accountRestrictedContact": "Contacter l'assistance"
   },
   "download": {
     "modelDownloading": "Téléchargement de l'AI Model...",
@@ -2261,5 +2263,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Ouverture de l'assistance"
   }
 }

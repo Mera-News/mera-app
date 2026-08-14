@@ -19,7 +19,7 @@
 // connect failures that look like server outages. We capture to Sentry on
 // the way out (sentry-init runs first in every entry point) and re-throw.
 //
-// Cache-bust marker (bump when env values change): 2026-08-06a (dev .env staging → prod endpoints)
+// Cache-bust marker (bump when env values change): 2026-08-13a (Intercom keys added)
 
 import * as Sentry from '@sentry/react-native';
 
@@ -87,6 +87,23 @@ export const REVENUECAT_IOS_KEY: string =
   process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || '';
 export const REVENUECAT_ANDROID_KEY: string =
   process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || '';
+
+// Intercom keys for the in-app support Messenger. Optional (not requireEnv) for
+// the same reason as the RevenueCat trio above: support degrades to a mailto:
+// link when unset, and a missing key must never crash launch.
+//
+// Both an app id AND a platform key are required — unlike RevenueCat there is
+// no generic cross-platform key, and Intercom.initialize() rejects on a key
+// that does not start with `ios_sdk-` / `android_sdk-`. Platform selection
+// happens in lib/intercom.ts at call time so this module stays free of
+// react-native imports (it loads extremely early, before any native module is
+// mockable in tests).
+export const INTERCOM_APP_ID: string =
+  process.env.EXPO_PUBLIC_INTERCOM_APP_ID || '';
+export const INTERCOM_IOS_KEY: string =
+  process.env.EXPO_PUBLIC_INTERCOM_IOS_KEY || '';
+export const INTERCOM_ANDROID_KEY: string =
+  process.env.EXPO_PUBLIC_INTERCOM_ANDROID_KEY || '';
 
 // Dev-only override for the mandatory-update gate. The gate skips in dev builds
 // by default so the team isn't locked out while the server's min-version floor

@@ -256,6 +256,14 @@ export type HeadlineScopeResult = {
   stableClusterIds: Array<Maybe<Scalars['String']['output']>>;
 };
 
+export type IntercomIdentity = {
+  __typename?: 'IntercomIdentity';
+  /** ISO timestamp when the JWT expires (one hour after it was minted). Advisory only: re-fetch before each Messenger open rather than scheduling a refresh against this value. */
+  expiresAt: Scalars['String']['output'];
+  /** HS256 JWT identifying the current user to Intercom. Pass it to setUserJwt immediately before opening the Messenger, every time — Intercom validates it on every request, not just at login, so a token minted once at login dies mid-conversation. */
+  jwt: Scalars['String']['output'];
+};
+
 export type IssueLlmWarningInput = {
   reason: Scalars['String']['input'];
   userId: Scalars['ID']['input'];
@@ -591,6 +599,7 @@ export type Query = {
   factCheck?: Maybe<FactCheck>;
   /** The versioned feedback tree. Pass the version you already hold as currentVersion to get a not-modified (empty treeJson) response. */
   feedbackTree?: Maybe<FeedbackTreeResponse>;
+  intercomIdentity: IntercomIdentity;
   /** The live cluster an article currently belongs to (via its newest cluster-article-link). Null when the article is unclustered or its cluster has aged out. The app uses this to read a story cluster's member articles (e.g. to ground the follow-a-story scope proposals). */
   newsClusterForArticle?: Maybe<NewsCluster>;
   newsClusterForUser: NewsCluster;

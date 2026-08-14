@@ -63,7 +63,8 @@
     "pendingDescription": "We zijn blij dat je onze app wilt uitproberen. Zodra je account is goedgekeurd, ontvang je een e-mail. Daarna kun je de app blijven gebruiken.",
     "enquiries": "Voor vragen kun je een e-mail sturen naar",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "Vernieuwen 🔄"
+    "refresh": "Vernieuwen 🔄",
+    "contactSupport": "Contact met ondersteuning"
   },
   "feed": {
     "updatedAt": "Bijgewerkt {{time}}",
@@ -600,7 +601,8 @@
         "message": "We konden de nieuwsdienst niet bereiken. Dit is meestal van korte duur. We blijven het proberen en je feed wordt vanzelf bijgewerkt.",
         "title": "Dienst niet beschikbaar"
       }
-    }
+    },
+    "accountRestrictedContact": "Contact met ondersteuning"
   },
   "download": {
     "modelDownloading": "AI-model downloaden...",
@@ -2254,5 +2256,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "Ondersteuning wordt geopend"
   }
 }

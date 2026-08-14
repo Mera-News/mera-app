@@ -63,7 +63,8 @@
     "pendingDescription": "アプリをお試しいただけることを嬉しく思います。アカウントが承認されるとメールが届きます。その後、アプリのご利用を続けることができます。",
     "enquiries": "お問い合わせはこちらへメールをお送りください：",
     "contactEmail": "{{supportEmail}} ✉️",
-    "refresh": "更新 🔄"
+    "refresh": "更新 🔄",
+    "contactSupport": "サポートに問い合わせる"
   },
   "feed": {
     "updatedAt": "{{time}}に更新",
@@ -600,7 +601,8 @@
         "message": "ニュースサービスに接続できませんでした。通常は一時的なもので、引き続き試行し、フィードは自動的に更新されます。",
         "title": "サービスを利用できません"
       }
-    }
+    },
+    "accountRestrictedContact": "サポートに問い合わせる"
   },
   "download": {
     "modelDownloading": "AIモデルをダウンロード中...",
@@ -2254,5 +2256,8 @@
         }
       }
     }
+  },
+  "support": {
+    "opening": "サポートを開いています"
   }
 }
