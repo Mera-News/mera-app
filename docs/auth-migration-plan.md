@@ -475,6 +475,34 @@ environment: `db.getCollection('device-key').createIndex({ userId: 1 }, { name: 
   config plugin (dependency ask happens at S3 start), sign-in flow, `pendingAuthUserId` call site,
   both identity-gate copies, `readLocalIdentityState` untouched (the session cookie name does not
   change). Native queue row added when the module choice is made.
+  **Built 2026-08-17, with these deltas from the sketch above:**
+  - No config plugin and no npm dependency: `modules/mera-device-attest` is a local Expo module,
+    autolinked by expo-modules-autolinking's default `modules/` scan. Swift wraps DCAppAttestService
+    with DCError→typed-code mapping; Kotlin wraps Play Integrity classic requests and declares
+    `com.google.android.play:integrity:1.4.0` in the module's own build.gradle. Native compile is
+    verified at the prebuild step, not in this phase (the worktree has no ios/ or android/).
+  - Final HTTP contract as implemented (matches S2's final revision): `/device/nonce` takes
+    `{purpose: attest|assert|integrity}`; iOS sign-in body is `{keyId, assertion, nonce}` (the nonce
+    IS the client data; SHA256 of the nonce string feeds the native calls); Android sign-in body is
+    `{integrityToken, nonce, deviceId}` with deviceId REQUIRED (integrity verdicts carry no device
+    identity — a stable SecureStore UUID, shared with the dev bypass, is the resume key).
+  - `lib/device-auth.ts` orchestrates through `authClient.$fetch` (cookie persistence is
+    route-agnostic there, and only there). Every attempt fetches a fresh nonce; the keyId persists
+    only after the server accepts the attestation; ERR_ATTEST_INVALID_KEY clears it and re-enrolls
+    once; a keychain READ failure aborts retryable instead of re-enrolling (re-enrolling on a locked
+    keychain would mint a second account).
+  - Logout severs the device→account link: `_appattest_key_id` and `_device_attest_device_id` are in
+    local-wipe's SECURE_STORE_KEYS, because both select an ACCOUNT server-side and must not hand the
+    previous user's account to the next person on the device.
+  - The third `recordAuthenticatedUser` site is AuthScreen's WelcomeView; device sign-in success also
+    clears the identity fault (an assertion is the same re-proof as an OTP).
+  - Email at purchase hangs off `refreshUserBillingAfterPurchase` (the chokepoint all purchase
+    surfaces share) via a listener registry in `lib/subscription/email-capture.ts`; the sheet is
+    also reachable from a Settings row shown only to anonymous accounts.
+  - Locale note: en.json had drifted 9 keys ahead of the other 19 dictionaries
+    (auth.identitySwitchFailed*, trackedStories.removeMember*), which made `_splice-fragments.mjs`
+    refuse every new fragment; healed with `_drift-backfill-fragments.json` before splicing
+    `_device-auth-fragments.json`.
 - **S4 — recall bits**, flag-gated, blocked on DeviceCheck keys and the Play Integrity beta form
   (STILL UNSUBMITTED — user action).
 - One phase at a time, stop for review after each, per the standing rules.
