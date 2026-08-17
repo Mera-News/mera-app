@@ -38,6 +38,13 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *   run (scoring-pipeline-store.ts). This one survived logout entirely before
  *   this module existed.
  * - `async_inference_pending_job_privkey` — its legacy single-slot predecessor.
+ * - `_appattest_key_id` — the App Attest key bound to this device's account
+ *   (lib/device-auth.ts). MUST die with the account's local presence: the
+ *   server resumes whichever user a key is bound to, so a surviving keyId
+ *   would sign the NEXT person on this device into the PREVIOUS person's
+ *   account. Same class of leak as the RevenueCat/Intercom/Drive rule.
+ * - `_device_attest_dev_id` — the staging dev-bypass device id, cleared for
+ *   the same reason (it selects an account server-side).
  */
 const SECURE_STORE_KEYS = [
   `${APP_SLUG}_cookie`,
@@ -47,6 +54,8 @@ const SECURE_STORE_KEYS = [
   `${APP_SLUG}_app_lock_enabled`,
   'async_pipeline_privkey',
   'async_inference_pending_job_privkey',
+  `${APP_SLUG}_appattest_key_id`,
+  `${APP_SLUG}_device_attest_dev_id`,
 ];
 
 /** The only AsyncStorage key the app has ever written (a since-deleted LLM
