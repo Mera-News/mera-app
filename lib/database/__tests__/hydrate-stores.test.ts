@@ -143,6 +143,14 @@ jest.mock('@/lib/database/services/publication-visit-service', () => ({
   pruneStaleVisits: jest.fn(() => Promise.resolve()),
 }));
 
+// Not a Zustand store, but it hydrates in the same Promise.all: a synchronous
+// mirror of the backup preferences that the scheduler's custom condition reads.
+// Unmocked it reaches the real setting-service, which opens SQLite at import
+// and kills the worker rather than failing an assertion.
+jest.mock('@/lib/backup/backup-settings', () => ({
+  hydrateBackupSettings: jest.fn(() => Promise.resolve()),
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: { captureException: jest.fn() },

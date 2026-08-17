@@ -150,6 +150,12 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   dev_free_tier_lapse_acked: 'Entitlement UI latch, same reason.',
   onboarding_state: 'Device flow state; onboarding gates on local facts anyway.',
   push_token_fail_streak: 'Counts failures of a push token this device does not have.',
+  backup_cadence:
+    'Device schedule state. Restoring "daily to iCloud" onto a device with no key, or no iCloud, enables a schedule that can only fail.',
+  backup_provider: 'Device schedule state, same reason.',
+  backup_wifi_only: 'Device schedule state, same reason.',
+  backup_last_run_at:
+    'Records when THIS device last uploaded. Restored, it would make a new device believe it is already up to date and skip its first backup.',
   backup_recovery_code_confirmed:
     'Records that THIS device showed the user their code. Restoring it onto a new device would assert a confirmation that never happened and let a backup upload under a key nobody has written down.',
   [RESTORE_IN_PROGRESS_KEY]:
