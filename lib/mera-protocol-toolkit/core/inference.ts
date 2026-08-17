@@ -25,6 +25,13 @@ function withLlamaLock<T>(fn: () => Promise<T>): Promise<T> {
  * Manual acquire for `inferStream`, which spans many awaits and so cannot be
  * expressed as a single promise. Resolves once the lock is held; the caller
  * MUST release it in a `finally`, or every later llama call waits forever.
+ *
+ * `for await` always calls the generator's `.return()` on break/throw, so the
+ * `finally` runs and this is safe for every consumer today. The one shape that
+ * would deadlock is a consumer driving `.next()` by hand and abandoning the
+ * generator without `.return()`: nothing releases, and since this file is the
+ * single chokepoint for all on-device inference, the whole engine goes quiet
+ * with no error. Iterate with `for await`.
  */
 function acquireLlamaLock(): Promise<() => void> {
   let release!: () => void;
