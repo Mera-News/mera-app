@@ -11,6 +11,8 @@
 // table fails the suite until someone decides which side it belongs on. That is
 // the point: silence would mean new user data quietly stops being backed up.
 
+import { RESTORE_IN_PROGRESS_KEY } from './types';
+
 /**
  * Tables written to the blob. Order matters on restore — parents before
  * children, because the importer seeds `_raw.id` and a child row referencing a
@@ -129,6 +131,8 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   dev_free_tier_lapse_acked: 'Entitlement UI latch, same reason.',
   onboarding_state: 'Device flow state; onboarding gates on local facts anyway.',
   push_token_fail_streak: 'Counts failures of a push token this device does not have.',
+  [RESTORE_IN_PROGRESS_KEY]:
+    'Torn-restore marker for THIS device. Backing it up would restore a permanent "a restore is in progress" state onto the next device.',
 };
 
 /**
@@ -136,7 +140,7 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
  * unbounded; the header records `rowsAvailable` alongside `rows` so the restore
  * UI can say so instead of implying completeness.
  *
- * Only tables that grow without bound are capped. Newest-first.
+ * Only tables that grow without bound are capped.
  */
 export const TABLE_ROW_CAPS: Readonly<Record<string, number>> = {
   messages: 20_000,
@@ -144,6 +148,29 @@ export const TABLE_ROW_CAPS: Readonly<Record<string, number>> = {
   persona_change_log: 10_000,
   article_feedback: 10_000,
   fact_checks: 2_000,
+};
+
+/**
+ * The timestamp column each capped table is ordered by, newest first.
+ *
+ * "Newest-first" is not decoration, it is the whole meaning of a cap. A
+ * WatermelonDB row id is a random string, so paging a capped table by `id`
+ * takes an ARBITRARY N of the user's rows — a user with 60k messages would get
+ * 20k scattered ones, mostly old, and every small round-trip test would still
+ * pass. Every capped table must therefore name a monotonic column here, and
+ * `allowlist.test.ts` asserts the two records have identical keys and that the
+ * column exists in `schema.ts`.
+ *
+ * `id` is the tiebreaker at the call site: without one, two rows sharing a
+ * timestamp can swap places between pages and OFFSET paging silently drops or
+ * duplicates a row.
+ */
+export const TABLE_CAP_ORDER_COLUMN: Readonly<Record<string, string>> = {
+  messages: 'created_at',
+  publication_visits: 'visited_at',
+  persona_change_log: 'created_at',
+  article_feedback: 'created_at',
+  fact_checks: 'requested_at',
 };
 
 /** True when a settings key is carried, by exact match or by prefix family. */

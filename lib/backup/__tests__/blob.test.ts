@@ -8,8 +8,9 @@
 // IO is an in-memory buffer, which is the point of injecting it: this exercises
 // the real codec with no native module and no device.
 
-import { BlobFormatError, BlobWriter, openBlob, type BlobSink, type BlobSource } from '../blob';
+import { BlobFormatError, BlobWriter, openBlob } from '../blob';
 import { BACKUP_FORMAT_VERSION, type BackupHeader } from '../types';
+import { MemoryFile as MemoryBlob } from './memory-file';
 
 const KEY = Uint8Array.from({ length: 32 }, (_, i) => i + 1);
 const OTHER_KEY = Uint8Array.from({ length: 32 }, (_, i) => i + 99);
@@ -24,30 +25,6 @@ const HEADER: BackupHeader = {
   tables: [{ table: 'facts', rows: 2, rowsAvailable: 2 }],
   plaintextBytes: 12,
 };
-
-/** Grow-on-write buffer standing in for a file. */
-class MemoryBlob implements BlobSink, BlobSource {
-  bytes = new Uint8Array(0);
-
-  write(data: Uint8Array, position: number): Promise<void> {
-    const end = position + data.length;
-    if (end > this.bytes.length) {
-      const grown = new Uint8Array(end);
-      grown.set(this.bytes, 0);
-      this.bytes = grown;
-    }
-    this.bytes.set(data, position);
-    return Promise.resolve();
-  }
-
-  read(length: number, position: number): Promise<Uint8Array> {
-    return Promise.resolve(this.bytes.slice(position, position + length));
-  }
-
-  size(): Promise<number> {
-    return Promise.resolve(this.bytes.length);
-  }
-}
 
 function readU32(b: Uint8Array, at: number): number {
   return ((b[at] << 24) | (b[at + 1] << 16) | (b[at + 2] << 8) | b[at + 3]) >>> 0;

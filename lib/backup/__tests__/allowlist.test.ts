@@ -19,21 +19,29 @@ import {
   BACKUP_TABLES,
   EXCLUDED_TABLES,
   FORBIDDEN_SETTING_KEYS,
+  TABLE_CAP_ORDER_COLUMN,
   TABLE_ROW_CAPS,
   isBackedUpSettingKey,
 } from '../allowlist';
 
 const SCHEMA_PATH = path.resolve(__dirname, '../../database/schema.ts');
 
-function liveSchema(): { version: number; tables: string[] } {
+function liveSchema(): { version: number; tables: string[]; columns: Record<string, string[]> } {
   const src = fs.readFileSync(SCHEMA_PATH, 'utf8');
   const version = Number(/version:\s*(\d+)/.exec(src)?.[1]);
   const tables = [...src.matchAll(/tableSchema\(\{\s*name:\s*'([^']+)'/g)].map((m) => m[1]);
-  return { version, tables };
+
+  const columns: Record<string, string[]> = {};
+  for (const block of src.split('tableSchema({').slice(1)) {
+    const table = /name:\s*'([^']+)'/.exec(block)?.[1];
+    if (!table) continue;
+    columns[table] = [...block.matchAll(/\{\s*name:\s*'([^']+)',\s*type:/g)].map((m) => m[1]);
+  }
+  return { version, tables, columns };
 }
 
 describe('backup allowlist vs the live schema', () => {
-  const { version, tables } = liveSchema();
+  const { version, tables, columns } = liveSchema();
 
   it('parsed a schema that actually has tables in it', () => {
     // Without this the set checks below pass vacuously if the file ever moves
@@ -81,6 +89,26 @@ describe('backup allowlist vs the live schema', () => {
     for (const table of Object.keys(TABLE_ROW_CAPS)) {
       expect(BACKUP_TABLES).toContain(table);
     }
+  });
+
+  it('gives every capped table an order column, because a cap without one is arbitrary', () => {
+    // A WatermelonDB id is a random string. Paging a capped table by id keeps
+    // an ARBITRARY N of the user's rows rather than the newest N, and a
+    // small-fixture round-trip test passes either way. So the two records must
+    // have identical keys.
+    expect(Object.keys(TABLE_CAP_ORDER_COLUMN).sort()).toEqual(Object.keys(TABLE_ROW_CAPS).sort());
+  });
+
+  it('names an order column that exists on that table', () => {
+    for (const [table, column] of Object.entries(TABLE_CAP_ORDER_COLUMN)) {
+      expect(columns[table]).toBeDefined();
+      expect(columns[table]).toContain(column);
+    }
+  });
+
+  it('parsed real columns, so the check above is not vacuous', () => {
+    expect(columns.messages).toContain('conversation_id');
+    expect(columns.settings).toEqual(expect.arrayContaining(['key', 'value']));
   });
 });
 

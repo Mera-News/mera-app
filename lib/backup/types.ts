@@ -107,3 +107,17 @@ export interface BackupProvider {
 
 /** User-configured cadence. `off` unregisters the task rather than no-opping. */
 export type BackupCadence = 'off' | 'daily' | 'weekly' | 'manual';
+
+/**
+ * Settings key holding the torn-restore marker.
+ *
+ * A restore cannot be atomic — tens of thousands of rows do not fit in one
+ * WatermelonDB `batch()`, so writes are chunked and a crash lands mid-restore.
+ * The importer sets this before the first write and clears it only on success,
+ * which is what lets launch tell a finished restore from an interrupted one
+ * instead of booting a persona assembled from two different people.
+ *
+ * It is device state and must never be backed up. `FORBIDDEN_SETTING_KEYS`
+ * names it, and `allowlist.test.ts` asserts the tripwire holds.
+ */
+export const RESTORE_IN_PROGRESS_KEY = 'backup_restore_in_progress';
