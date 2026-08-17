@@ -413,6 +413,39 @@ The user chose to build ahead of the 08-25 cohort data, explicitly. Decisions ta
   dispatcher treats `@anon.mera.news` exactly like no-email-address (SKIPPED, push still fires). Real
   email written onto the same row at purchase; the plugin's link flow stays forbidden.
 
+### Continuous execution, second directive 2026-08-17
+
+The user directed: do not stop between phases; finish S2 and S3 end to end on staging and test on a
+simulator. Stop-for-review is suspended for the remainder of the wave. Decisions taken at this point
+so nothing is invented mid-build:
+
+- **Client-facing attestation routes live under the Better Auth basePath**, as endpoints of a small
+  server-side Better Auth plugin, so the Expo client's existing cookie handling applies to the minted
+  session with zero client transport work. S1's verification services (nonce store, App Attest checks,
+  Play Integrity port) are reused as-is; only the HTTP surface consolidates into the plugin. Contract:
+  `POST {basePath}/device/nonce` · `/device/attest/ios` · `/device/sign-in/ios` ·
+  `/device/sign-in/android` · `/device/sign-in/dev`.
+- **Mint-or-resume.** A device key bound to a user resumes that user (internal session creation, so
+  `session.create.before` and the deleted-account block still apply, proven by test); an unbound key
+  mints via `auth.api.signInAnonymous(...)`. A key bound to another user is never re-bound.
+- **Direct `/sign-in/anonymous` is denied by a before-hook** except when the call carries a
+  per-process random internal header that only the mint endpoint can supply. Network callers cannot
+  know it; it is generated at module scope and never logged.
+- **Simulator e2e needs a bypass.** App Attest does not exist on simulators and Play Integrity not on
+  emulators. `/device/sign-in/dev` exists only when `DEVICE_ATTESTATION_DEV_BYPASS_TOKEN` is set
+  (staging terraform only, never prod; NODE_ENV guards are inert in staging so presence-of-var is the
+  gate), constant-time compared. The client uses it only when native attestation is unsupported AND
+  `EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN` is set (worktree `.env`, gitignored, never in eas.json).
+- **No third-party npm module for attestation.** A local Expo native module
+  (`modules/mera-device-attest`) wraps `DCAppAttestService` (Swift) and Play Integrity classic
+  requests (Kotlin; `com.google.android.play:integrity` is the unavoidable platform SDK, declared in
+  the module's own build.gradle). The ask-first dependency rule stays intact.
+- **Android uses Play Integrity classic requests** for sign-in: infrequent, high-value, Google's own
+  guidance, and it matches the S1 adapter's `decodeIntegrityToken` path.
+- **Email at purchase**: post-purchase sheet, skippable and also reachable from settings, verified via
+  the existing emailOTP infrastructure, then written onto the same anonymous row with
+  `emailVerified: true`. Never the plugin's link flow.
+
 ### Active phase breakdown
 
 - **S1 — server attestation foundation** (news-auth, no binary): nonce store (atomic
