@@ -24,6 +24,7 @@ import {
     useNetworkStore,
 } from './stores/network-store';
 import { instrumentedFetch, isRequestTimeoutError } from './apollo-fetch';
+import { clientHeaderValue } from './observability/client-header';
 import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from './config/endpoints';
 
@@ -324,6 +325,11 @@ const authLink = new SetContextLink(async (prevContext, _operation) => {
         headers: {
             ...prevContext.headers,
             ...(cookies ? { Cookie: cookies } : {}),
+            // Version attribution for client-server skew; computed once at
+            // module scope in lib/observability/client-header.ts. Null means
+            // it could not be built safely, and we send no header (the server
+            // reads absence as "unknown client").
+            ...(clientHeaderValue ? { 'x-mera-client': clientHeaderValue } : {}),
         },
     };
 });
