@@ -53,6 +53,10 @@ jest.mock('../prompts', () => ({
   LOCAL_REASON_SYSTEM_PROMPT: 'local-reason-sys',
   buildBatchScoringUserMessage: jest.fn(() => 'stub-score-prompt'),
   buildReasonUserMessage: jest.fn(() => 'stub-reason-prompt'),
+  // Omitting this makes it `undefined` on the on-device branch. The TypeError is
+  // then swallowed by generateReasonForCandidate's caller, so the suite reads as
+  // "completeLocal was never called" rather than as a missing mock.
+  buildLocalReasonUserMessage: jest.fn(() => 'stub-local-reason-prompt'),
 }));
 // Must mock the generated types so ProcessingMode.OnDevice is the correct string value
 jest.mock('../../generated/graphql-types', () => ({
@@ -124,15 +128,17 @@ function stageResult(scores: Record<string, number>) {
 }
 
 // Re-import the mocked prompt builders so we can re-apply them after clearAllMocks
-import { buildBatchScoringUserMessage, buildReasonUserMessage } from '../prompts';
+import { buildBatchScoringUserMessage, buildLocalReasonUserMessage, buildReasonUserMessage } from '../prompts';
 const mockBuildBatchScoringUserMessage = buildBatchScoringUserMessage as jest.MockedFunction<typeof buildBatchScoringUserMessage>;
 const mockBuildReasonUserMessage = buildReasonUserMessage as jest.MockedFunction<typeof buildReasonUserMessage>;
+const mockBuildLocalReasonUserMessage = buildLocalReasonUserMessage as jest.MockedFunction<typeof buildLocalReasonUserMessage>;
 
 beforeEach(() => {
   jest.resetAllMocks();
   // Re-apply ALL stub implementations after resetAllMocks clears them
   mockBuildBatchScoringUserMessage.mockReturnValue('stub-score-prompt');
   mockBuildReasonUserMessage.mockReturnValue('stub-reason-prompt');
+  mockBuildLocalReasonUserMessage.mockReturnValue('stub-local-reason-prompt');
   // Default: cloud mode
   mockGetState.mockReturnValue({ processingMode: 'CLOUD' } as ReturnType<typeof useMeraProtocolStore.getState>);
   mockGetFacts.mockResolvedValue([]);
@@ -468,6 +474,22 @@ describe('batchScoreAndReason — on-device path', () => {
     expect(mockCompleteLocal).toHaveBeenCalled();
     expect(mockCloudBatchComplete).not.toHaveBeenCalled();
     expect(reasonMap.get('a')).toBe('Local reason.');
+  });
+
+  // The two builders differ only in field order, but that order is the whole
+  // point: local leads with the fact bank so llama.cpp's prefix cache can reuse
+  // it across a batch. Cloud must keep the shared builder byte-for-byte.
+  it('builds the reason message with the LOCAL builder, never the shared one', async () => {
+    mockComputeAndScore.mockResolvedValue(stageResult({ a: 0.7 }));
+    mockCompleteLocal.mockResolvedValueOnce('Local reason.');
+
+    await batchScoreAndReason([makeCandidate('a')]);
+
+    expect(mockBuildLocalReasonUserMessage).toHaveBeenCalled();
+    expect(mockBuildReasonUserMessage).not.toHaveBeenCalled();
+    expect(mockCompleteLocal).toHaveBeenCalledWith(
+      expect.objectContaining({ prompt: 'stub-local-reason-prompt' }),
+    );
   });
 
   it('falls back to FALLBACK_RELEVANCE and marks failedIds when computeAndScoreForCandidates throws', async () => {

@@ -1348,6 +1348,48 @@ export function buildReasonUserMessage(params: {
   return `Relevance Score: ${relevance}\n\nUser Context: ${userContext}\n\nNews Title: ${sanitizeForPrompt(articleTitle)}\n\nNews Description: ${sanitizeForPrompt(articleDescription)}${countryLine}\n\nRelated User Fact: ${related}`;
 }
 
+/**
+ * Local-only variant of {@link buildReasonUserMessage}: same content, ordered so
+ * llama.cpp's prefix cache can actually reuse it across a batch.
+ *
+ * The shared builder opens with `Relevance Score: <float>`, which differs for
+ * every article. llama.cpp reuses only the COMMON PREFIX between consecutive
+ * calls, so that float terminates the reusable span almost immediately and the
+ * whole `userContext` fact bank — byte-identical across every article in a
+ * batch — gets re-prefilled once per article. Putting `User Context` first
+ * extends the cached prefix by the entire fact bank; everything after it varies
+ * per article and would be re-prefilled under any ordering.
+ *
+ * This exists as a separate function rather than a fix to the shared builder
+ * because `golden-prompts.test.ts` pins the shared one byte-for-byte against the
+ * harness twin, and cloud reason quality is calibrated against `eval:golden`
+ * runs that use it. Cloud output stays byte-unchanged; only the on-device path
+ * sees this ordering.
+ *
+ * LLMs are order-sensitive, so this is a quality change as well as a latency
+ * one — it needs an eval run, not just a passing type-check.
+ */
+export function buildLocalReasonUserMessage(params: {
+  userContext: string;
+  articleTitle: string;
+  articleDescription: string;
+  articleCountry?: string;
+  relevance: number;
+  relatedFacts?: string[];
+}): string {
+  const { userContext, articleTitle, articleDescription, articleCountry, relevance, relatedFacts } = params;
+  const country = sanitizeForPrompt(articleCountry ?? '', 60);
+  const hasCountry = country.length > 0 && country.toUpperCase() !== 'GLOBAL';
+  const countryLine = hasCountry
+    ? `\n\nArticle Country (publication's country — use as the article's scope ONLY when the title/description names no location): ${country}`
+    : '';
+  const related = (relatedFacts ?? [])
+    .map((f) => sanitizeForPrompt(f, 200))
+    .filter((f) => f.length > 0)
+    .join('; ') || 'none';
+  return `User Context: ${userContext}\n\nNews Title: ${sanitizeForPrompt(articleTitle)}\n\nNews Description: ${sanitizeForPrompt(articleDescription)}${countryLine}\n\nRelated User Fact: ${related}\n\nRelevance Score: ${relevance}`;
+}
+
 // ============================================================
 // Topic Generation Prompt — On-device topic generation from user facts
 // ============================================================
