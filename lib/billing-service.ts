@@ -3,6 +3,7 @@ import { FREE_TIER_MODE_ENABLED } from './config/feature-gates';
 import client from './apollo-client';
 import { UserBillingInfo } from './generated/graphql-types';
 import logger from './logger';
+import { maybeRequestEmailCaptureAfterPurchase } from './subscription/email-capture';
 
 const GET_USER_BILLING = gql`
   query GetUserBilling {
@@ -226,6 +227,12 @@ export async function refreshUserBillingAfterPurchase(
         if (billing) {
             latest = billing;
             if (normalizeTier(billing.subscriptionTier) !== before) {
+                // This is the one chokepoint every purchase surface converges
+                // on, which is what makes it the email-at-purchase trigger: an
+                // anonymous (device sign-in) account that just paid is offered
+                // a real email for receipts and recovery. Fire-and-forget — an
+                // email nag must never delay or fail the purchase refresh.
+                void maybeRequestEmailCaptureAfterPurchase();
                 return { billing, confirmed: true };
             }
         }

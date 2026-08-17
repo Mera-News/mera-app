@@ -25,6 +25,11 @@ import React from 'react';
 import { Linking } from 'react-native';
 import { isRevenueCatConfigured } from '@/lib/revenuecat';
 import { useSupportAction } from '@/lib/intercom';
+import {
+    emailLooksAnonymous,
+    requestEmailCapture,
+    userNeedsEmail,
+} from '@/lib/subscription/email-capture';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -57,6 +62,16 @@ const AppPreferencesTab: React.FC = () => {
     // in before that row was hydrated here.
     const cachedEmail = useUserStore((s) => s.userEmail);
     const userEmail = cachedEmail ?? session?.user?.email;
+    // Device sign-in accounts carry a fabricated @anon.mera.news address that
+    // must never be shown as if it were the user's. When the session has
+    // resolved it decides (isAnonymous / anon-domain / no email); when it has
+    // not (offline), only a POSITIVE anon-domain match on the cached email
+    // counts — a merely-missing email must not flip an email user's row.
+    const isAnonAccount = session?.user
+        ? userNeedsEmail(session.user)
+        : userEmail
+            ? emailLooksAnonymous(userEmail)
+            : false;
     const maskedEmail = React.useMemo(() => {
         if (!userEmail) return null;
         const atIdx = userEmail.lastIndexOf('@');
@@ -255,6 +270,19 @@ const AppPreferencesTab: React.FC = () => {
             icon: 'storage',
             onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
         },
+        // Only for accounts that came in via device sign-in and never added a
+        // real email. Opens the same sheet the post-purchase offer uses; the
+        // host is mounted in app/logged-in/_layout.tsx.
+        ...(isAnonAccount
+            ? [
+                {
+                    id: 'add-email',
+                    title: t('emailCapture.settingsRow'),
+                    icon: 'alternate-email' as const,
+                    onPress: () => requestEmailCapture('settings'),
+                },
+            ]
+            : []),
         {
             id: 'observability',
             title: t('observability.title'),
@@ -402,7 +430,7 @@ const AppPreferencesTab: React.FC = () => {
                             <MaterialIcons name="language" size={24} color="#9ca3af" />
                         </Pressable>
                     </HStack>
-                    {maskedEmail && (
+                    {maskedEmail && !isAnonAccount && (
                         <Text size="xs" className="text-gray-500 mb-1">
                             {t('preferences.user', { email: maskedEmail })}
                         </Text>
