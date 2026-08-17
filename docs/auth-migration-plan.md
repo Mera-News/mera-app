@@ -2,6 +2,32 @@
 
 Wave token `auth-wave`. Every phase below is independently deployable and independently revertible.
 
+## Wave status: implementation complete 2026-08-17
+
+Everything buildable without prod-facing action is built, on branch `auth-wave` in the three sibling
+worktrees. Nothing is pushed, merged, applied, or released; all of that is the user's, deliberately.
+
+| Repo | Commits on `auth-wave` |
+|---|---|
+| mera-app | `8f5210b` plan · `ce2f3dd` baseline · `a7ce396` corrections · `d98b656` P0b header |
+| mera-server | `0cfb5e8` P0a header · `4ffda33` P0a seam specs · `7326330` P1b trial emails |
+| mera-infra | `11d40e2` P1a PROMO_EPOCH `(NOT applied)` · `ff42ebe` P1a comments |
+
+Still open, in order:
+1. **User: merge** the three `auth-wave` branches when satisfied. mera-infra `main` moved ahead by
+   one commit (`f3aabec`) after the worktree was cut; different files, but rebase-check it.
+2. **User: terraform applies**, staging then prod, per the P1 checklist below. Prod mail is armed;
+   applying before 12:00 UTC on the 23rd gives the first cohort its D-2 notice on time.
+3. **User: 1.3.0 store release** carries P0b; header coverage begins as users update.
+4. **P3 cohort query on 2026-08-25**, read-only prod, query shown before running.
+5. **Post-merge fold-back:** `.claude/skills/mera-server-async/SKILL.md:184-190` still says the
+   trial notices never send; true until the infra change merges and applies, stale after. Revisit it
+   and its `variables.tf` line cite then.
+6. **Optional, zero-cost, still open:** submit the Play Integrity device recall beta interest form
+   to keep the held design's Android half unblocked on the calendar.
+7. mera-app worktree carries an uncommitted `package-lock.json` dedupe from install; deliberately
+   left unstaged.
+
 ## Why this exists
 
 Email currently does nothing in this product except authenticate. The intent was to remove it for new
