@@ -88,7 +88,7 @@ describe('wipeAllLocalUserData — the complete list', () => {
         // Attest key resumes whichever user it is bound to), so they must not
         // outlive the account's local presence.
         expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_appattest_key_id');
-        expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_device_attest_dev_id');
+        expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_device_attest_device_id');
 
         expect(mockAsyncRemove).toHaveBeenCalledWith('mera.cycle.capabilityToken');
         expect(mockLogoutRevenueCat).toHaveBeenCalled();

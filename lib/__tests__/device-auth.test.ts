@@ -70,10 +70,9 @@ import { Platform } from 'react-native';
 
 import {
     APP_ATTEST_KEY_ID_STORE_KEY,
-    DEV_DEVICE_ID_STORE_KEY,
+    DEVICE_ID_STORE_KEY,
     deviceSignInAvailability,
     signInWithDevice,
-    utf8ToBase64,
 } from '../device-auth';
 
 const KEY_SLOT = APP_ATTEST_KEY_ID_STORE_KEY;
@@ -121,14 +120,6 @@ afterAll(() => {
     (Platform as { OS: string }).OS = originalPlatform;
 });
 
-describe('utf8ToBase64', () => {
-    it('matches Buffer for ASCII and multibyte input', () => {
-        for (const s of ['{"nonce":"abc-123"}', 'héllo wörld', '日本語', '']) {
-            expect(utf8ToBase64(s)).toBe(Buffer.from(s, 'utf8').toString('base64'));
-        }
-    });
-});
-
 describe('iOS first-run enrollment', () => {
     it('enrolls (nonce -> generateKey -> attest -> POST) then signs in with a FRESH nonce', async () => {
         installServer();
@@ -140,8 +131,11 @@ describe('iOS first-run enrollment', () => {
 
         expect(result).toEqual({ status: 'success', userId: 'user-1' });
 
-        // Enrollment used nonce-1; sign-in used nonce-2. Never the same nonce.
+        // Enrollment used nonce-1 (purpose attest); sign-in used nonce-2
+        // (purpose assert). Never the same nonce.
         expect(callsTo('/device/nonce')).toHaveLength(2);
+        expect(callsTo('/device/nonce')[0][1].body).toEqual({ purpose: 'attest' });
+        expect(callsTo('/device/nonce')[1][1].body).toEqual({ purpose: 'assert' });
         expect(mockAttestKey).toHaveBeenCalledWith('key-1', 'sha256(nonce-1)');
         const attestBody = callsTo('/device/attest/ios')[0][1].body;
         expect(attestBody).toEqual({
@@ -150,13 +144,14 @@ describe('iOS first-run enrollment', () => {
             nonce: 'nonce-1',
         });
 
-        const clientData = JSON.stringify({ nonce: 'nonce-2' });
-        expect(mockGenerateAssertion).toHaveBeenCalledWith('key-1', `sha256(${clientData})`);
+        // The nonce IS the client data: the assertion signs its hash, the body
+        // carries it raw.
+        expect(mockGenerateAssertion).toHaveBeenCalledWith('key-1', 'sha256(nonce-2)');
         const signInBody = callsTo('/device/sign-in/ios')[0][1].body;
         expect(signInBody).toEqual({
             keyId: 'key-1',
             assertion: 'assertion-b64',
-            clientData: Buffer.from(clientData, 'utf8').toString('base64'),
+            nonce: 'nonce-2',
         });
 
         // The keyId is persisted only after the server accepted the attestation.
@@ -248,7 +243,7 @@ describe('iOS invalid-key recovery', () => {
 });
 
 describe('Android', () => {
-    it('requests a classic integrity token with the nonce and posts it', async () => {
+    it('requests a classic integrity token with the nonce and posts it with the deviceId', async () => {
         (Platform as { OS: string }).OS = 'android';
         process.env.EXPO_PUBLIC_PLAY_INTEGRITY_PROJECT = '123456';
         installServer();
@@ -257,11 +252,16 @@ describe('Android', () => {
         const result = await signInWithDevice();
 
         expect(result).toEqual({ status: 'success', userId: 'user-1' });
+        expect(callsTo('/device/nonce')[0][1].body).toEqual({ purpose: 'integrity' });
         expect(mockRequestIntegrityToken).toHaveBeenCalledWith('nonce-1', '123456');
+        // deviceId is REQUIRED: it is the resume key (integrity verdicts carry
+        // no device identity), the same persisted UUID the dev bypass uses.
         expect(callsTo('/device/sign-in/android')[0][1].body).toEqual({
             integrityToken: 'integrity-token',
             nonce: 'nonce-1',
+            deviceId: 'dev-uuid-1',
         });
+        expect(mockSetItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY, 'dev-uuid-1');
     });
 
     it('omits the cloud project number when the env var is unset', async () => {
@@ -288,14 +288,14 @@ describe('dev bypass', () => {
             token: 'dev-token',
             deviceId: 'dev-uuid-1',
         });
-        expect(mockSetItemAsync).toHaveBeenCalledWith(DEV_DEVICE_ID_STORE_KEY, 'dev-uuid-1');
+        expect(mockSetItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY, 'dev-uuid-1');
     });
 
     it('reuses the persisted deviceId on later sign-ins', async () => {
         mockIsSupported.mockResolvedValue(false);
         process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
         mockGetItemAsync.mockImplementation(async (k: string) =>
-            k === DEV_DEVICE_ID_STORE_KEY ? 'persisted-id' : null,
+            k === DEVICE_ID_STORE_KEY ? 'persisted-id' : null,
         );
         installServer();
 

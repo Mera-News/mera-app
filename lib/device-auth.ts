@@ -25,8 +25,10 @@
 //  - Never throws: every outcome is a typed result the UI can render.
 //
 // Hashing convention, shared with the server implementation: SHA256 over the
-// UTF-8 bytes of the exact string — the base64url nonce string for attest, the
-// clientData JSON string for assertion.
+// UTF-8 bytes of the base64url nonce string — for BOTH the attest challenge
+// and the assertion clientDataHash. Per the final S2 contract the nonce IS the
+// client data; the HTTP bodies carry the raw nonce string and the hashing
+// happens only on the way into the native calls.
 
 import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
@@ -51,8 +53,10 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *  account instead of resuming this one. */
 export const APP_ATTEST_KEY_ID_STORE_KEY = `${APP_SLUG}_appattest_key_id`;
 
-/** Keychain slot for the stable random deviceId the staging dev bypass uses. */
-export const DEV_DEVICE_ID_STORE_KEY = `${APP_SLUG}_device_attest_dev_id`;
+/** Keychain slot for the stable random deviceId. Required by the Android
+ *  sign-in (Play Integrity verdicts carry no device identity, so this is the
+ *  resume key) and by the staging dev bypass. */
+export const DEVICE_ID_STORE_KEY = `${APP_SLUG}_device_attest_device_id`;
 
 // Read at call time, not module scope: Metro inlines EXPO_PUBLIC_* wherever it
 // appears, and call-time reads keep the module testable without resetModules.
@@ -127,8 +131,10 @@ async function post<T>(path: string, body?: Record<string, unknown>): Promise<T>
   return (result?.data ?? (result as unknown)) as T;
 }
 
-async function fetchNonce(): Promise<string> {
-  const data = await post<{ nonce?: string }>('/device/nonce');
+type NoncePurpose = 'attest' | 'assert' | 'integrity';
+
+async function fetchNonce(purpose: NoncePurpose): Promise<string> {
+  const data = await post<{ nonce?: string }>('/device/nonce', { purpose });
   if (!data?.nonce || typeof data.nonce !== 'string') {
     throw new ServerRejection('/device/nonce', undefined, 'MALFORMED_NONCE_RESPONSE');
   }
@@ -156,27 +162,6 @@ function sha256Base64(input: string): Promise<string> {
   });
 }
 
-const B64_ALPHABET =
-  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-/** Standard base64 of the UTF-8 bytes of `input`. Hand-rolled because Hermes'
- *  btoa is byte-string-only and the repo has no shared encoder; the inverse
- *  lives in lib/e2ee/attestation-verify.ts. Exported for its unit test. */
-export function utf8ToBase64(input: string): string {
-  const bytes = new TextEncoder().encode(input);
-  let out = '';
-  for (let i = 0; i < bytes.length; i += 3) {
-    const b0 = bytes[i];
-    const b1 = i + 1 < bytes.length ? bytes[i + 1] : undefined;
-    const b2 = i + 2 < bytes.length ? bytes[i + 2] : undefined;
-    out += B64_ALPHABET[b0 >> 2];
-    out += B64_ALPHABET[((b0 & 0x03) << 4) | ((b1 ?? 0) >> 4)];
-    out += b1 === undefined ? '=' : B64_ALPHABET[((b1 & 0x0f) << 2) | ((b2 ?? 0) >> 6)];
-    out += b2 === undefined ? '=' : B64_ALPHABET[b2 & 0x3f];
-  }
-  return out;
-}
-
 // ─── Keychain-backed state ───────────────────────────────────────────────────
 
 /** Distinguishes "no key stored" (null) from "keychain unreadable" (throws). */
@@ -192,15 +177,16 @@ async function clearStoredKeyId(): Promise<void> {
   }
 }
 
-async function readOrCreateDevDeviceId(): Promise<string> {
-  const existing = await secureStore.getItemAsync(DEV_DEVICE_ID_STORE_KEY).catch(() => null);
+async function readOrCreateDeviceId(): Promise<string> {
+  const existing = await secureStore.getItemAsync(DEVICE_ID_STORE_KEY).catch(() => null);
   if (existing) return existing;
   const fresh = Crypto.randomUUID();
   try {
-    await secureStore.setItemAsync(DEV_DEVICE_ID_STORE_KEY, fresh);
+    await secureStore.setItemAsync(DEVICE_ID_STORE_KEY, fresh);
   } catch {
     // Persisting failed — the id is still usable for this attempt; the next
-    // attempt mints another. Staging-only path, so churn is acceptable.
+    // attempt mints another, which at worst resumes a different (empty)
+    // account until the keychain heals.
   }
   return fresh;
 }
@@ -210,7 +196,7 @@ async function readOrCreateDevDeviceId(): Promise<string> {
 /** First-time iOS enrollment: nonce → generateKey → attestKey(sha256(nonce))
  *  → POST attest/ios. The keyId is persisted only after the server accepted. */
 async function enrollIos(): Promise<string> {
-  const nonce = await fetchNonce();
+  const nonce = await fetchNonce('attest');
   const keyId = await generateKey();
   const challenge = await sha256Base64(nonce);
   const attestation = await attestKey(keyId, challenge);
@@ -222,16 +208,17 @@ async function enrollIos(): Promise<string> {
   return keyId;
 }
 
-/** Fresh nonce → assertion over clientData JSON → POST sign-in/ios. */
+/** Fresh nonce → assertion over the nonce → POST sign-in/ios. The nonce IS
+ *  the client data (final S2 contract): the body carries it raw, and only the
+ *  native call receives its hash. */
 async function assertAndSignInIos(keyId: string): Promise<string> {
-  const nonce = await fetchNonce();
-  const clientData = JSON.stringify({ nonce });
-  const clientDataHash = await sha256Base64(clientData);
+  const nonce = await fetchNonce('assert');
+  const clientDataHash = await sha256Base64(nonce);
   const assertion = await generateAssertion(keyId, clientDataHash);
   const data = await post<SessionResponseLike>('/device/sign-in/ios', {
     keyId,
     assertion,
-    clientData: utf8ToBase64(clientData),
+    nonce,
   });
   return requireUserId('/device/sign-in/ios', data);
 }
@@ -255,11 +242,15 @@ async function signInIos(): Promise<string> {
 }
 
 async function signInAndroid(): Promise<string> {
-  const nonce = await fetchNonce();
+  const nonce = await fetchNonce('integrity');
   const integrityToken = await requestIntegrityToken(nonce, readPlayIntegrityProject());
+  // deviceId is REQUIRED here: Play Integrity verdicts carry no device
+  // identity, so this stable UUID is what the server resumes an account by.
+  const deviceId = await readOrCreateDeviceId();
   const data = await post<SessionResponseLike>('/device/sign-in/android', {
     integrityToken,
     nonce,
+    deviceId,
   });
   return requireUserId('/device/sign-in/android', data);
 }
@@ -267,7 +258,7 @@ async function signInAndroid(): Promise<string> {
 /** Staging-only bypass: the route exists only where the server has
  *  DEVICE_ATTESTATION_DEV_BYPASS_TOKEN set (404 elsewhere). */
 async function signInDev(token: string): Promise<string> {
-  const deviceId = await readOrCreateDevDeviceId();
+  const deviceId = await readOrCreateDeviceId();
   const data = await post<SessionResponseLike>('/device/sign-in/dev', { token, deviceId });
   return requireUserId('/device/sign-in/dev', data);
 }
