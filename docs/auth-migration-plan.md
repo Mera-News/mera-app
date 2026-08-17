@@ -136,13 +136,22 @@ Run in the worktrees at their base commits, so any later red is attributable.
 | Repo | Base | Suites | Tests | Time |
 |---|---|---|---|---|
 | `mera-app` | `next-binary` @ `f9ff7b5` | 436 passed, 436 total | 7876 passed, 1 skipped | 142s |
-| `mera-server` | `dev` @ `c0fbf9e` | **1 failed**, 195 passed, 196 total | **1 failed**, 2923 passed | 149s |
+| `mera-server` | `dev` @ `c0fbf9e` | 195 passed, 1 flaky (see below) | 2923 passed, 1 flaky | 149s |
 
-The one `mera-server` failure is **pre-existing on `dev` and unrelated to this wave**:
+**Both baselines are green.** `mera-server` showed one failure on the first run, but it is a **flaky test,
+not a bug**, and the diagnosis matters because the obvious readings are both wrong:
 `apps/mera-server-async/src/modules/shared-utilities/mera-worker-host.spec.ts`, test "does NOT discard job
-that is exactly at the age limit (boundary)". The implementation throws at `waited 600s, max 600s`, so it
-discards **at** the limit where the test asserts it should not. A `>=` versus `>` disagreement in
-`mera-worker-host.ts:71`. Treat it as the baseline, not as a regression, and see the side findings below.
+that is exactly at the age limit (boundary)".
+
+The implementation is `waitTimeMs > this.maxQueueAgeMs` (`mera-worker-host.ts:61`), strictly greater, which
+**agrees** with the test's intent. The problem is the clock: the spec sets `const NOW = Date.now()` at
+module load (`:4`) and builds the boundary job at `NOW - 10 * 60 * 1000 + 100`, a **100ms** margin, while
+the host computes `Date.now() - job.timestamp` at execution time (`:58-59`). There are no fake timers
+anywhere in the spec. So any load that puts more than 100ms between module evaluation and that test
+failing it, which is what happened here because both repos' suites were run concurrently.
+
+Verified by re-running the suite alone: 10 passed, 10 total. The fix is fake timers or a wider margin in
+the spec, never a change to the operator. Filed below, not touched.
 
 Note that `mera-app` is fully green here. Project memory records its jest coverage gate as red for 220+
 commits; on this branch `npm test` passes, so either the gate has been fixed or it is not part of the
@@ -452,13 +461,16 @@ For `non-native-rebuild-plans.md`:
 - **Pending deletions are never purged.** `purge-pending-deletions` exists in code but no Cloud Scheduler
   job triggers it in either Terraform root, and no `ACCOUNT_DELETION_GRACE_DAYS` var exists anywhere.
   Accounts sit in `pending_deletion` indefinitely. Data-retention exposure.
-- **`mera-server` `dev` has one red test.**
-  `apps/mera-server-async/src/modules/shared-utilities/mera-worker-host.spec.ts` asserts a job exactly at
-  the age limit is not discarded, but `mera-worker-host.ts:71` throws at `waited 600s, max 600s`. Either
-  the boundary is off by one in the implementation or the test encodes the wrong intent. Worth resolving
-  because the comment above that throw says the strictness exists so discarded jobs do not read as
-  successes in Bull Board, which suggests the implementation is deliberate and the test is stale. Found
-  while taking this wave's baseline; not touched.
+- **One flaky test in `mera-server` on `dev`, failing only under load.**
+  `apps/mera-server-async/src/modules/shared-utilities/mera-worker-host.spec.ts`, "does NOT discard job
+  that is exactly at the age limit (boundary)". The spec captures `const NOW = Date.now()` at module load
+  (`:4`) and builds the boundary job with a **100ms** margin, while the host computes
+  `Date.now() - job.timestamp` at execution (`mera-worker-host.ts:58-59`), with no fake timers anywhere.
+  Any load that inserts more than 100ms between module evaluation and that test running flips it red. The
+  implementation's `>` comparison is correct and agrees with the test's intent, so **the fix belongs in the
+  spec**: fake timers, or a margin that is not 100ms. Passes 10/10 in isolation. Found while taking this
+  wave's baseline; not touched. Worth fixing because it will fail CI intermittently and train people to
+  re-run rather than read.
 
 For `native-rebuild-plans.md`, because both need a new binary:
 
