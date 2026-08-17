@@ -154,6 +154,18 @@
           "useManualInit": true,
           "intercomRegion": "US"
         }
+      ],
+      [
+        "react-native-cloud-storage",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.454136165020-ucg71begsenaak3ppmhma54bcbm0s9tr"
+        }
       ]
     ],
     "experiments": {
