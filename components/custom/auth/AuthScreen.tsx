@@ -319,19 +319,35 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                 : t('auth.deviceSignInFailed');
 
     return (
-        <Box className="flex-1 px-5">
+        // ── ACCESSIBILITY SCOPING (F2) ──────────────────────────────────────
+        // The band wrappers are layout only, and they are explicitly
+        // `accessible={false}`: left implicit, the full-screen containers were
+        // surfaced to VoiceOver/XCUITest as phantom "Get started" elements
+        // claiming the whole screen (label aggregation from the one labelled
+        // descendant). Accessibility lives ONLY on the pressables, each with
+        // its own role and label.
+        <Box testID="auth-welcome-root" accessible={false} className="flex-1 px-5">
             {/* Upper band — the logo owns it and is centred in it. */}
-            <Box className="items-center justify-center" style={{ flex: 5 }}>
+            <Box
+                testID="auth-welcome-logo-band"
+                accessible={false}
+                className="items-center justify-center"
+                style={{ flex: 5 }}
+            >
                 <MeraLogo size={150} animated />
             </Box>
 
             {/* The primary action, on the same line the email input occupies
                 in the sibling view. */}
-            <VStack space="md">
+            <VStack testID="auth-welcome-actions" accessible={false} space="md">
                 <Pressable
                     testID="auth-get-started"
                     onPress={handleGetStarted}
                     disabled={working}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={working ? t('auth.deviceSignInWorking') : t('auth.getStarted')}
+                    accessibilityState={working ? { busy: true, disabled: true } : undefined}
                     className={`h-14 rounded-full items-center justify-center ${working ? 'bg-gray-700' : 'bg-primary-500'}`}
                 >
                     {working ? (
@@ -349,7 +365,14 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                 </Pressable>
 
                 {failure === null ? (
-                    <Pressable testID="auth-use-email" onPress={onUseEmail} className="items-center py-2">
+                    <Pressable
+                        testID="auth-use-email"
+                        onPress={onUseEmail}
+                        accessible
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.signInWithEmail')}
+                        className="items-center py-2"
+                    >
                         <Text size="sm" className="text-primary-400">
                             {t('auth.signInWithEmail')}
                         </Text>
@@ -362,13 +385,23 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                         <Pressable
                             testID="auth-device-retry"
                             onPress={handleGetStarted}
+                            accessible
+                            accessibilityRole="button"
+                            accessibilityLabel={t('auth.tryAgain')}
                             className="border border-primary-400 rounded-lg px-4 py-2"
                         >
                             <Text size="sm" className="text-primary-400">
                                 {t('auth.tryAgain')}
                             </Text>
                         </Pressable>
-                        <Pressable testID="auth-use-email" onPress={onUseEmail} className="py-1">
+                        <Pressable
+                            testID="auth-use-email"
+                            onPress={onUseEmail}
+                            accessible
+                            accessibilityRole="button"
+                            accessibilityLabel={t('auth.signInWithEmail')}
+                            className="py-1"
+                        >
                             <Text size="sm" className="text-primary-400">
                                 {t('auth.signInWithEmail')}
                             </Text>
@@ -377,6 +410,9 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                             testID="auth-device-support"
                             onPress={() => { void openSupport(); }}
                             className="py-1"
+                            accessible
+                            accessibilityRole="button"
+                            accessibilityLabel={t('account.contactSupport')}
                             accessibilityState={supportBusy ? { busy: true } : undefined}
                         >
                             {supportBusy ? (

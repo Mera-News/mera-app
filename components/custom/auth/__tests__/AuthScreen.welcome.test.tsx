@@ -147,6 +147,60 @@ describe('entry view selection', () => {
     });
 });
 
+describe('accessibility scoping (F2)', () => {
+    it('exactly ONE node carries the Get started label, and it is the button itself', async () => {
+        const { findByTestId, UNSAFE_root } = render(<AuthScreen />);
+        const cta = await findByTestId('auth-get-started');
+
+        expect(cta.props.accessibilityRole).toBe('button');
+        expect(cta.props.accessibilityLabel).toBe('auth.getStarted');
+
+        // Walk the rendered tree: no OTHER HOST node may carry the label — a
+        // wrapper carrying it is the full-screen phantom button VoiceOver and
+        // text-based automation both hit. Host nodes only (`type` is a
+        // string): composite layers of the same pressable legitimately relay
+        // the prop on its way to the single host view.
+        const labelled: unknown[] = [];
+        const walk = (node: any) => {
+            if (
+                typeof node?.type === 'string' &&
+                node?.props?.accessibilityLabel === 'auth.getStarted'
+            ) {
+                labelled.push(node);
+            }
+            (node?.children ?? []).forEach((c: any) => typeof c === 'object' && walk(c));
+        };
+        walk(UNSAFE_root);
+        expect(labelled).toHaveLength(1);
+    });
+
+    it('the full-screen wrappers are explicitly not accessibility elements', async () => {
+        const { findByTestId } = render(<AuthScreen />);
+        for (const id of ['auth-welcome-root', 'auth-welcome-logo-band', 'auth-welcome-actions']) {
+            const wrapper = await findByTestId(id);
+            expect(wrapper.props.accessible).toBe(false);
+            expect(wrapper.props.accessibilityLabel).toBeUndefined();
+        }
+    });
+
+    it('the secondary controls are buttons with their own labels', async () => {
+        mockSignIn.mockResolvedValue({ status: 'failed', reason: 'attestation-denied' });
+        const { findByTestId, findByText } = render(<AuthScreen />);
+        fireEvent.press(await findByTestId('auth-get-started'));
+        await findByText('auth.deviceSignInDenied');
+
+        for (const [id, label] of [
+            ['auth-device-retry', 'auth.tryAgain'],
+            ['auth-use-email', 'auth.signInWithEmail'],
+            ['auth-device-support', 'account.contactSupport'],
+        ] as const) {
+            const node = await findByTestId(id);
+            expect(node.props.accessibilityRole).toBe('button');
+            expect(node.props.accessibilityLabel).toBe(label);
+        }
+    });
+});
+
 describe('device sign-in success', () => {
     it('records the user, clears reauth state and navigates to /logged-in', async () => {
         mockSignIn.mockResolvedValue({ status: 'success', userId: 'anon-user-1' });
