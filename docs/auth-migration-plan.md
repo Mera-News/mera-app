@@ -2,31 +2,41 @@
 
 Wave token `auth-wave`. Every phase below is independently deployable and independently revertible.
 
-## Wave status: implementation complete 2026-08-17
+## Wave status: S1-S3 built and live on staging, 2026-08-17
 
-Everything buildable without prod-facing action is built, on branch `auth-wave` in the three sibling
-worktrees. Nothing is pushed, merged, applied, or released; all of that is the user's, deliberately.
+P-1 through P1 plus the full attestation programme S1-S3 are built on branch `auth-wave` in the three
+sibling worktrees, and `auth-wave` is pushed to origin in all three repos. mera-server is merged to
+`staging` (merge `ec04ade`) and fast-forwarded on `dev` (`d4e83d6`); staging serves it (revisions
+news-auth-staging-00037 / news-graphql-staging-00051 / news-async-staging-00063, all verified live:
+dev sign-in mints and resumes, direct `/sign-in/anonymous` 403s, zero error logs). Staging terraform
+carries the five attestation env vars (`APP_ATTEST_ENV=development`, team/bundle/package ids, dev
+bypass token in gitignored `staging/terraform.tfvars`), and all five manual indexes exist on
+`mera-staging` (nonce unique + TTL, device-key keyId/publicKeyPem unique, userId). Simulator e2e ran
+against staging via the dev bypass.
 
-| Repo | Commits on `auth-wave` |
-|---|---|
-| mera-app | `8f5210b` plan · `ce2f3dd` baseline · `a7ce396` corrections · `d98b656` P0b header |
-| mera-server | `0cfb5e8` P0a header · `4ffda33` P0a seam specs · `7326330` P1b trial emails |
-| mera-infra | `11d40e2` P1a PROMO_EPOCH `(NOT applied)` · `ff42ebe` P1a comments |
+S4 (recall bits) remains blocked on user-side externals: DeviceCheck keys and the Play Integrity
+device recall beta form (STILL UNSUBMITTED).
 
 Still open, in order:
-1. **User: merge** the three `auth-wave` branches when satisfied. mera-infra `main` moved ahead by
-   one commit (`f3aabec`) after the worktree was cut; different files, but rebase-check it.
-2. **User: terraform applies**, staging then prod, per the P1 checklist below. Prod mail is armed;
-   applying before 12:00 UTC on the 23rd gives the first cohort its D-2 notice on time.
-3. **User: 1.3.0 store release** carries P0b; header coverage begins as users update.
-4. **P3 cohort query on 2026-08-25**, read-only prod, query shown before running.
-5. **Post-merge fold-back:** `.claude/skills/mera-server-async/SKILL.md:184-190` still says the
-   trial notices never send; true until the infra change merges and applies, stale after. Revisit it
-   and its `variables.tf` line cite then.
-6. **Optional, zero-cost, still open:** submit the Play Integrity device recall beta interest form
-   to keep the held design's Android half unblocked on the calendar.
-7. mera-app worktree carries an uncommitted `package-lock.json` dedupe from install; deliberately
-   left unstaged.
+1. **User: merge** `auth-wave` into the target branches when satisfied (mera-app → `next-binary`,
+   mera-server → `main` when releasing, mera-infra → `main`). mera-infra `main` moved ahead by one
+   commit (`f3aabec`) after the worktree was cut; different files, but rebase-check it.
+2. **User: prod terraform apply** per the P1 checklist (PROMO_EPOCH before 12:00 UTC on the 23rd for
+   the D-2 notice; ONE email per user per window) and later the prod attestation env vars
+   (`APP_ATTEST_ENV=production`, no bypass token ever).
+3. **User: 1.3.0 store release** now carries P0b AND the attestation native module + sign-in flow.
+   Real-device App Attest verification against staging first (checklist in the wave report); confirm
+   Apple team id `2ZW73WVV7B` and the App Attest capability on the App ID.
+4. **User: staging cleanup when done testing**: staging epoch is still time-traveled at `2026-07-30`
+   (pinned in the worktree's gitignored `staging/terraform.tfvars`; an apply from any OTHER checkout
+   resets it to the 2026-08-11 default and blanks the bypass token).
+5. **P3 cohort query on 2026-08-25**, read-only prod, query shown before running — now informational
+   (the gate was overridden) but still worth measuring.
+6. **Play Integrity device recall beta form** (S4 calendar dependency) and Play Console: enable
+   `playintegrity.googleapis.com` + link the Cloud project, or Android sign-ins fall back to
+   `integrityUnverified: true`.
+7. mera-app worktree carries an uncommitted `package-lock.json` dedupe and staging-pointed `.env`;
+   both deliberately uncommitted.
 
 ## Why this exists
 
