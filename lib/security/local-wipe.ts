@@ -171,6 +171,46 @@ export async function wipeAllLocalUserData(): Promise<void> {
     // In-memory only; the keychain records behind it are already gone.
   }
 
+  // Staged backup files. This is the only part of the wipe that touches the
+  // FILESYSTEM, and its absence was a real leak: a backup blob is the user's
+  // whole persona in one file, and the wipe covered the keychain, AsyncStorage,
+  // RevenueCat, Intercom, Sentry, the PIN store and the database while leaving
+  // that file sitting in app storage for whoever signed in next.
+  //
+  // Deliberately BEFORE the database step, so the "DB last" ordering above
+  // still holds: a crash here leaves the database populated, which is the
+  // marker purgeOrphanedLocalData() reads to finish the job on the next launch.
+  //
+  // The blob is encrypted, but the recovery code is the user's and this is a
+  // wipe — "an attacker would need the code" is not a reason to leave a
+  // departed user's data on someone else's device.
+  try {
+    const { Directory, Paths } = require('expo-file-system');
+    const {
+      BACKUP_DOCUMENT_DIRECTORY,
+      BACKUP_SCRATCH_DIRECTORY,
+    } = require('@/lib/backup/types');
+    for (const [root, name] of [
+      [Paths.document, BACKUP_DOCUMENT_DIRECTORY],
+      [Paths.cache, BACKUP_SCRATCH_DIRECTORY],
+    ] as const) {
+      try {
+        const dir = new Directory(root, name);
+        if (dir.exists) dir.delete();
+      } catch (err) {
+        logger.addBreadcrumb(
+          'local-wipe: backup directory delete failed',
+          'local-wipe',
+          { name, message: err instanceof Error ? err.message : String(err) },
+          'warning',
+        );
+      }
+    }
+  } catch {
+    // expo-file-system unavailable (tests, or a launch so early the module is
+    // not there). Never block the wipe on it.
+  }
+
   // Last, and allowed to throw: WatermelonDB (persona, facts, topics, saved
   // articles, reading history, tracked stories, notifications, settings KV) plus
   // every in-memory Zustand store and the E2EE attestation cache.

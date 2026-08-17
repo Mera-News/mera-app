@@ -121,3 +121,17 @@ export type BackupCadence = 'off' | 'daily' | 'weekly' | 'manual';
  * names it, and `allowlist.test.ts` asserts the tripwire holds.
  */
 export const RESTORE_IN_PROGRESS_KEY = 'backup_restore_in_progress';
+
+/**
+ * Directory under `Paths.document` holding a staged blob, and the one under
+ * `Paths.cache` holding the exporter's plaintext scratch file.
+ *
+ * Both are named here rather than in the adapters because `lib/security/
+ * local-wipe.ts` has to delete them and must not have to guess. A blob is the
+ * user's whole persona in one file; before this existed the wipe covered the
+ * keychain, AsyncStorage, RevenueCat, Intercom, Sentry, the PIN store and the
+ * database, and touched the filesystem not at all — so a staged blob outlived a
+ * logout and sat on disk for the next person to sign in on that device.
+ */
+export const BACKUP_DOCUMENT_DIRECTORY = 'backup';
+export const BACKUP_SCRATCH_DIRECTORY = 'backup-scratch';
