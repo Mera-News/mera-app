@@ -266,6 +266,24 @@ async function signInDev(token: string): Promise<string> {
 // ─── Classification ──────────────────────────────────────────────────────────
 
 function classifyFailure(error: unknown): DeviceSignInResult {
+  const result = classify(error);
+  // One structured console line per failed attempt (F4). Fields only — never
+  // an error message and never a body, so no nonce or token can leak into it.
+  const server = error instanceof ServerRejection ? error : undefined;
+  const nativeCode = (error as { code?: unknown } | null)?.code;
+  logger.warn('[device-auth] sign-in failed', {
+    status: result.status,
+    ...(result.status === 'failed' ? { reason: result.reason } : {}),
+    ...(server
+      ? { path: server.path, httpStatus: server.status, code: server.code }
+      : typeof nativeCode === 'string'
+        ? { code: nativeCode }
+        : { errorName: error instanceof Error ? error.name : typeof error }),
+  });
+  return result;
+}
+
+function classify(error: unknown): DeviceSignInResult {
   if (error instanceof ServerRejection) {
     if (error.code === 'DEVICE_ATTESTATION_FAILED') {
       return { status: 'failed', reason: 'attestation-denied' };

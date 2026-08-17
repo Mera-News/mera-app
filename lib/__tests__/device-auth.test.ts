@@ -360,6 +360,37 @@ describe('server error handling', () => {
         expect(result).toEqual({ status: 'failed', reason: 'network' });
     });
 
+    it('every failure logs ONE structured console line, with no nonce or token in it (F4)', async () => {
+        const logger = (require('@/lib/logger') as { default: { warn: jest.Mock } }).default;
+        process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'super-secret-dev-token';
+        installServer({
+            '/device/sign-in/ios': () => ({
+                data: null,
+                error: { status: 400, code: 'DEVICE_ATTESTATION_FAILED' },
+            }),
+        });
+        mockGetItemAsync.mockImplementation(async (k: string) =>
+            k === KEY_SLOT ? 'stored-key' : null,
+        );
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+        await signInWithDevice();
+
+        expect(logger.warn).toHaveBeenCalledTimes(1);
+        const [message, context] = logger.warn.mock.calls[0];
+        expect(message).toBe('[device-auth] sign-in failed');
+        expect(context).toMatchObject({
+            status: 'failed',
+            reason: 'attestation-denied',
+            path: '/device/sign-in/ios',
+            httpStatus: 400,
+            code: 'DEVICE_ATTESTATION_FAILED',
+        });
+        const serialized = JSON.stringify(logger.warn.mock.calls[0]);
+        expect(serialized).not.toContain('nonce-');
+        expect(serialized).not.toContain('super-secret-dev-token');
+    });
+
     it('a retry starts over with a FRESH nonce', async () => {
         installServer({
             '/device/sign-in/ios': () => ({

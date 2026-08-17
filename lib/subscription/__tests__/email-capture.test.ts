@@ -81,7 +81,7 @@ describe('resolveAccountEmailView', () => {
         expect(
             resolveAccountEmailView({
                 storedEmail: 'real@example.com',
-                sessionUser: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true },
+                sessionUser: { email: 'x@anon.mera.news', isAnonymous: true },
             }),
         ).toEqual({ isAnonAccount: false, displayEmail: 'real@example.com' });
     });
@@ -90,7 +90,7 @@ describe('resolveAccountEmailView', () => {
         expect(
             resolveAccountEmailView({
                 storedEmail: null,
-                sessionUser: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true },
+                sessionUser: { email: 'x@anon.mera.news', isAnonymous: true },
             }),
         ).toEqual({ isAnonAccount: true, displayEmail: null });
     });
