@@ -378,6 +378,42 @@ jest.mock('react-native-purchases-ui', () => ({
   },
 }));
 
+// --- Deps banked for the next binary -------------------------------------
+// These three native modules ship in the store build so the features that use
+// them (tutorial/processing animations, the reading-stats share card) can go
+// out over the air later. Nothing imports them yet; the mocks exist so the
+// first consumer does not also have to fix the test setup.
+
+// lottie-react-native — native animation view. NO JSX in this file:
+// babel-preset-expo routes JSX through react-native-css-interop's runtime,
+// which then loads into EVERY suite at setup time. Hand back the RN primitive.
+jest.mock('lottie-react-native', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: View };
+});
+
+// react-native-view-shot — native view capture. Default export is a component;
+// the three capture helpers are named exports.
+jest.mock('react-native-view-shot', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: View,
+    captureRef: jest.fn(() => Promise.resolve('file:///tmp/mera-capture.png')),
+    captureScreen: jest.fn(() => Promise.resolve('file:///tmp/mera-capture.png')),
+    releaseCapture: jest.fn(),
+  };
+});
+
+// expo-sharing — hands a captured file to the OS share sheet. Only the runtime
+// module is used; its config plugin builds an inbound share EXTENSION and is
+// deliberately not registered in app.json.
+jest.mock('expo-sharing', () => ({
+  __esModule: true,
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  shareAsync: jest.fn(() => Promise.resolve()),
+}));
+
 // Silence console errors during tests
 global.console = {
   ...console,
