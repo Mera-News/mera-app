@@ -1,5 +1,4 @@
-// Backup crypto: the key, the recovery code the user writes down, and the
-// optional passphrase escrow.
+// Backup crypto: the key and the recovery code the user writes down.
 //
 // The key model was decided with the user: a device-generated 32-byte key,
 // shown once as a recovery code. The server never sees it. A "token generated
@@ -7,28 +6,27 @@
 // which would make the backup a copy of the data the privacy invariant says the
 // server must not hold.
 //
-// Two paths, and only one of them needs a KDF:
+// **The recovery code IS the key.** There is no passphrase, no KDF and no server
+// round-trip anywhere in this file, which is what makes it small.
 //
-//   recovery-code-v1                  the recovery code IS the key. No KDF, no
-//                                     server involvement, nothing to measure.
-//   recovery-code-v1+passphrase-escrow the same key, additionally wrapped under
-//                                     a passphrase-derived KEK and handed to the
-//                                     server as an opaque blob it cannot open.
+// An optional passphrase escrow was designed and then dropped from v1
+// (2026-08-17): it would have wrapped this key under a passphrase-derived KEK
+// and parked the wrapper server-side for users who lose their code. It was the
+// only thing here needing a *measured* KDF cost — human passphrases are
+// guessable, the wrapper would be guessable offline, and a rate limit on our
+// side is powerless against that, so the derivation has to be deliberately slow
+// and "slow" is a number you get from a device, not from a keyboard. If it ever
+// returns, `BackupHeader.algo` is the upgrade path, `@noble/hashes` ships
+// `argon2.js` (the option the plan recommends), and the server half is built and
+// parked on `mera-server` branch `backup-escrow`.
 //
 // Primitives are reused from what `lib/e2ee/e2ee-service.ts` already ships —
 // same libraries, same `.js` subpath import style — rather than introducing a
 // second crypto stack alongside it.
 
-import { xchacha20poly1305 } from '@noble/ciphers/chacha.js';
 import { randomBytes } from '@noble/ciphers/utils.js';
-import { pbkdf2Async } from '@noble/hashes/pbkdf2.js';
-import { scryptAsync } from '@noble/hashes/scrypt.js';
-import { sha256 } from '@noble/hashes/sha2.js';
-
-import type { KdfParams } from './types';
 
 export const BACKUP_KEY_BYTES = 32;
-const NONCE_BYTES = 24; // XChaCha20
 
 /**
  * Crockford Base32. `I`, `L`, `O` and `U` are absent by design: the first three
@@ -122,57 +120,4 @@ export function decodeRecoveryCode(code: string): Uint8Array | null {
   // fails with a far less helpful "wrong key".
   if (checkSymbol(key) !== check) return null;
   return key;
-}
-
-/**
- * Derive a key-encryption key from a passphrase, for the optional escrow path.
- *
- * **Cost comes from `params` and is never defaulted here.** The right cost is a
- * measurement, not a constant: `lib/security/pin-service.ts:8-24` records that
- * JS scrypt on Hermes cost *seconds per hash* and shipped a PIN-latency bug.
- * The budget for a backup passphrase is different from the PIN's — it is
- * derived twice in a lifetime rather than on every unlock, so it can afford to
- * be far slower — but "different" is not "unmeasured", and a constant chosen
- * here would be a guess wearing a number's clothes.
- */
-export async function deriveKek(passphrase: string, params: KdfParams): Promise<Uint8Array> {
-  const salt = Uint8Array.from(atob(params.salt), (c) => c.charCodeAt(0));
-  const pass = new TextEncoder().encode(passphrase.normalize('NFKC'));
-
-  if (params.name === 'scrypt') {
-    return scryptAsync(pass, salt, {
-      N: params.cost,
-      r: params.blockSize ?? 8,
-      p: params.parallelism ?? 1,
-      dkLen: 32,
-    });
-  }
-  return pbkdf2Async(sha256, pass, salt, { c: params.cost, dkLen: 32 });
-}
-
-/** Wrap the backup key under a passphrase-derived KEK. Output: nonce ‖ ct+tag. */
-export function wrapKey(kek: Uint8Array, key: Uint8Array): Uint8Array {
-  const nonce = randomBytes(NONCE_BYTES);
-  const ct = xchacha20poly1305(kek, nonce).encrypt(key);
-  const out = new Uint8Array(nonce.length + ct.length);
-  out.set(nonce, 0);
-  out.set(ct, nonce.length);
-  return out;
-}
-
-/**
- * Reverse `wrapKey`. Returns null on a wrong passphrase or a tampered blob —
- * the AEAD tag makes those indistinguishable, which is the correct amount of
- * information to give back.
- */
-export function unwrapKey(kek: Uint8Array, wrapped: Uint8Array): Uint8Array | null {
-  if (wrapped.length <= NONCE_BYTES) return null;
-  try {
-    const nonce = wrapped.subarray(0, NONCE_BYTES);
-    const ct = wrapped.subarray(NONCE_BYTES);
-    const key = xchacha20poly1305(kek, nonce).decrypt(ct);
-    return key.length === BACKUP_KEY_BYTES ? key : null;
-  } catch {
-    return null;
-  }
 }

@@ -7,13 +7,9 @@
 import {
   BACKUP_KEY_BYTES,
   decodeRecoveryCode,
-  deriveKek,
   encodeRecoveryCode,
   generateBackupKey,
-  unwrapKey,
-  wrapKey,
 } from '../crypto';
-import type { KdfParams } from '../types';
 
 const KEY = Uint8Array.from({ length: 32 }, (_, i) => i * 7 + 3);
 
@@ -100,92 +96,5 @@ describe('recovery code rejects bad input instead of returning a wrong key', () 
     expect(decodeRecoveryCode('')).toBeNull();
     expect(decodeRecoveryCode('A')).toBeNull();
     expect(decodeRecoveryCode('--')).toBeNull();
-  });
-});
-
-describe('passphrase escrow wrap/unwrap', () => {
-  const KEK = Uint8Array.from({ length: 32 }, (_, i) => i);
-
-  it('unwraps what it wrapped', () => {
-    expect(Array.from(unwrapKey(KEK, wrapKey(KEK, KEY))!)).toEqual(Array.from(KEY));
-  });
-
-  it('produces a different blob each time, so two escrows do not look alike', () => {
-    expect(Array.from(wrapKey(KEK, KEY))).not.toEqual(Array.from(wrapKey(KEK, KEY)));
-  });
-
-  it('returns null for the wrong KEK', () => {
-    const other = Uint8Array.from({ length: 32 }, (_, i) => i + 1);
-    expect(unwrapKey(other, wrapKey(KEK, KEY))).toBeNull();
-  });
-
-  it('returns null for a tampered blob', () => {
-    const wrapped = wrapKey(KEK, KEY);
-    wrapped[wrapped.length - 1] ^= 0xff;
-    expect(unwrapKey(KEK, wrapped)).toBeNull();
-  });
-
-  it('returns null for a truncated blob rather than reading past the nonce', () => {
-    expect(unwrapKey(KEK, new Uint8Array(10))).toBeNull();
-    expect(unwrapKey(KEK, new Uint8Array(0))).toBeNull();
-  });
-});
-
-describe('deriveKek', () => {
-  // Deliberately tiny costs. The REAL cost is a device measurement the KDF
-  // spike sets in KdfParams — nothing here may imply a shipping value.
-  const scryptParams: KdfParams = { name: 'scrypt', salt: btoa('salt-16-bytes!!!'), cost: 16, blockSize: 8, parallelism: 1 };
-  const pbkdf2Params: KdfParams = { name: 'pbkdf2', salt: btoa('salt-16-bytes!!!'), cost: 100 };
-
-  it('derives 32 bytes with scrypt', async () => {
-    expect(await deriveKek('correct horse', scryptParams)).toHaveLength(32);
-  });
-
-  it('derives 32 bytes with pbkdf2', async () => {
-    expect(await deriveKek('correct horse', pbkdf2Params)).toHaveLength(32);
-  });
-
-  it('is deterministic for the same passphrase and params', async () => {
-    const a = await deriveKek('correct horse', pbkdf2Params);
-    const b = await deriveKek('correct horse', pbkdf2Params);
-    expect(Array.from(a)).toEqual(Array.from(b));
-  });
-
-  it('differs for a different passphrase', async () => {
-    const a = await deriveKek('correct horse', pbkdf2Params);
-    const b = await deriveKek('correct horsf', pbkdf2Params);
-    expect(Array.from(a)).not.toEqual(Array.from(b));
-  });
-
-  it('differs for a different salt, so two users never share a KEK', async () => {
-    const a = await deriveKek('correct horse', pbkdf2Params);
-    const b = await deriveKek('correct horse', { ...pbkdf2Params, salt: btoa('other-16-bytes!!') });
-    expect(Array.from(a)).not.toEqual(Array.from(b));
-  });
-
-  it('normalises the passphrase so a composed and decomposed accent match', async () => {
-    // Written as explicit escapes, NOT as two literal accented words -- those
-    // would be identical bytes and the test would assert nothing. iOS and
-    // Android keyboards genuinely disagree here, so without NFKC a passphrase
-    // that looks identical on screen would fail to unlock the escrow.
-    const composed = 'caf\u00e9'; // e-acute as ONE codepoint
-    const decomposed = 'cafe\u0301'; // 'e' + combining acute
-    expect(composed).not.toBe(decomposed);
-
-    const a = await deriveKek(composed, pbkdf2Params);
-    const b = await deriveKek(decomposed, pbkdf2Params);
-    expect(Array.from(a)).toEqual(Array.from(b));
-  });
-
-  it('round-trips a real escrow: derive, wrap, derive again, unwrap', async () => {
-    const kek = await deriveKek('a passphrase', pbkdf2Params);
-    const wrapped = wrapKey(kek, KEY);
-    const again = await deriveKek('a passphrase', pbkdf2Params);
-    expect(Array.from(unwrapKey(again, wrapped)!)).toEqual(Array.from(KEY));
-  });
-
-  it('cannot unwrap with a KEK from the wrong passphrase', async () => {
-    const wrapped = wrapKey(await deriveKek('right', pbkdf2Params), KEY);
-    expect(unwrapKey(await deriveKek('wrong', pbkdf2Params), wrapped)).toBeNull();
   });
 });

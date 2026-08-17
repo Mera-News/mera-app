@@ -2,14 +2,14 @@
 //
 // Every other file in `lib/backup/` reads this one. It is deliberately free of
 // imports from `lib/database`, `lib/stores` and any native module so it can be
-// read by tests, by the exporter, by the importer and by the server-side escrow
-// without dragging a database or a TurboModule along.
+// read by tests, by the exporter and by the importer without dragging a database
+// or a TurboModule along.
 //
-// The blob is opaque ciphertext to everyone but the device that wrote it. The
-// server stores an escrow record it cannot open; the cloud provider stores a
-// file it cannot read. That is the whole point: the privacy invariant in the
-// root CLAUDE.md is why the server cannot be the recovery path, so the recovery
-// anchor has to be something the user holds.
+// The blob is opaque ciphertext to everyone but the device that wrote it — the
+// cloud provider stores a file it cannot read, and the server stores nothing at
+// all. That is the whole point: the privacy invariant in the root CLAUDE.md is
+// why the server cannot be the recovery path, so the recovery anchor has to be
+// something the user holds, which is the written-down recovery code.
 
 /** Bumped only for a change that an older reader cannot parse. */
 export const BACKUP_FORMAT_VERSION = 1;
@@ -21,29 +21,12 @@ export const BACKUP_FORMAT_VERSION = 1;
  */
 export const BACKUP_MAX_BYTES = 25 * 1024 * 1024;
 
-/** How the key that encrypts the blob was derived. */
-export type BackupAlgo =
-  /** 32 random bytes shown once as a recovery code. No passphrase involved. */
-  | 'recovery-code-v1'
-  /** Recovery code, additionally escrowed to the server wrapped by a passphrase-derived KEK. */
-  | 'recovery-code-v1+passphrase-escrow';
-
 /**
- * KDF parameters, stored in the header so a future reader can derive the same
- * KEK without guessing. The concrete algorithm is chosen by the P0 device spike
- * — this shape is what the spike is allowed to fill in, and nothing downstream
- * may hardcode a cost factor.
+ * How the blob's key is recovered. One value today; it exists as a field so a
+ * future scheme (the dropped passphrase escrow, most likely) is an additive
+ * change rather than a format break.
  */
-export interface KdfParams {
-  readonly name: 'scrypt' | 'pbkdf2';
-  /** Base64. Per-backup, never reused across users or devices. */
-  readonly salt: string;
-  /** scrypt N / pbkdf2 iterations. */
-  readonly cost: number;
-  /** scrypt only. */
-  readonly blockSize?: number;
-  readonly parallelism?: number;
-}
+export type BackupAlgo = 'recovery-code-v1';
 
 /** One table's contribution to the blob, as written by the exporter. */
 export interface BackupTableStat {
@@ -64,13 +47,12 @@ export interface BackupTableStat {
  * how it is read.
  *
  * Nothing in here may identify the user. It carries no user id, no email and no
- * device name: an escrow record the server cannot open is worth little if the
- * header next to it says who it belongs to.
+ * device name: the blob may sit in a cloud account shared with other people, and
+ * a header that names its owner would leak what the ciphertext protects.
  */
 export interface BackupHeader {
   readonly formatVersion: number;
   readonly algo: BackupAlgo;
-  readonly kdf: KdfParams | null;
   /** WatermelonDB `appSchema.version` the blob was written from. */
   readonly schemaVersion: number;
   /** `app.json` version, for diagnosing a blob written by a much older build. */
