@@ -26,9 +26,8 @@ import { Linking } from 'react-native';
 import { isRevenueCatConfigured } from '@/lib/revenuecat';
 import { useSupportAction } from '@/lib/intercom';
 import {
-    emailLooksAnonymous,
     requestEmailCapture,
-    userNeedsEmail,
+    resolveAccountEmailView,
 } from '@/lib/subscription/email-capture';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
@@ -61,26 +60,25 @@ const AppPreferencesTab: React.FC = () => {
     // explicit logout. Session is kept as the fallback for installs that signed
     // in before that row was hydrated here.
     const cachedEmail = useUserStore((s) => s.userEmail);
-    const userEmail = cachedEmail ?? session?.user?.email;
-    // Device sign-in accounts carry a fabricated @anon.mera.news address that
-    // must never be shown as if it were the user's. When the session has
-    // resolved it decides (isAnonymous / anon-domain / no email); when it has
-    // not (offline), only a POSITIVE anon-domain match on the cached email
-    // counts — a merely-missing email must not flip an email user's row.
-    const isAnonAccount = session?.user
-        ? userNeedsEmail(session.user)
-        : userEmail
-            ? emailLooksAnonymous(userEmail)
-            : false;
+    // ONE derivation for the identity footer and the "Add email address" row,
+    // shared with the email-capture module so precedence cannot drift. The
+    // rule that matters (F1): a real STORED email wins over the session,
+    // because the store flips the instant an in-session attach confirms while
+    // the session atom can stay stale until its next refetch. The fabricated
+    // @anon.mera.news address is never displayed as the user's.
+    const { isAnonAccount, displayEmail } = resolveAccountEmailView({
+        storedEmail: cachedEmail,
+        sessionUser: session?.user ?? null,
+    });
     const maskedEmail = React.useMemo(() => {
-        if (!userEmail) return null;
-        const atIdx = userEmail.lastIndexOf('@');
-        if (atIdx <= 0) return userEmail;
-        const local = userEmail.slice(0, atIdx);
-        const domain = userEmail.slice(atIdx);
+        if (!displayEmail) return null;
+        const atIdx = displayEmail.lastIndexOf('@');
+        if (atIdx <= 0) return displayEmail;
+        const local = displayEmail.slice(0, atIdx);
+        const domain = displayEmail.slice(atIdx);
         const visibleCount = Math.ceil(local.length / 2);
         return local.slice(0, visibleCount) + '•'.repeat(local.length - visibleCount) + domain;
-    }, [userEmail]);
+    }, [displayEmail]);
 
     // UI Store for modal state management
     const logoutModal = useLogoutModal();
@@ -430,7 +428,9 @@ const AppPreferencesTab: React.FC = () => {
                             <MaterialIcons name="language" size={24} color="#9ca3af" />
                         </Pressable>
                     </HStack>
-                    {maskedEmail && !isAnonAccount && (
+                    {/* displayEmail is already null for anonymous accounts, so
+                        no extra isAnonAccount guard is needed here. */}
+                    {maskedEmail && (
                         <Text size="xs" className="text-gray-500 mb-1">
                             {t('preferences.user', { email: maskedEmail })}
                         </Text>

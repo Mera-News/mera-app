@@ -43,6 +43,44 @@ export function userNeedsEmail(user: SessionUserLike | null | undefined): boolea
   return emailLooksAnonymous(user.email);
 }
 
+export interface AccountEmailView {
+  isAnonAccount: boolean;
+  /** What Settings may display (masked). Never the fabricated anon address. */
+  displayEmail: string | null;
+}
+
+/**
+ * The one derivation Settings uses for the identity footer and the
+ * "Add email address" row, extracted so it is testable and cannot drift.
+ *
+ * Precedence is the point (F1): a REAL stored email wins over the session,
+ * because the store updates the instant an in-session attach confirms while
+ * better-auth's session atom can stay stale until its next refetch — keying on
+ * the session first kept the row on screen until an app restart. When the
+ * stored email is absent or anonymous, a resolved session decides; an
+ * unresolved session (offline) only ever counts a POSITIVE anon-domain match,
+ * so a merely-missing email can never flag an email user as anonymous.
+ */
+export function resolveAccountEmailView({
+  storedEmail,
+  sessionUser,
+}: {
+  storedEmail: string | null | undefined;
+  sessionUser: SessionUserLike | null | undefined;
+}): AccountEmailView {
+  if (storedEmail && !emailLooksAnonymous(storedEmail)) {
+    return { isAnonAccount: false, displayEmail: storedEmail };
+  }
+  if (sessionUser) {
+    if (userNeedsEmail(sessionUser)) return { isAnonAccount: true, displayEmail: null };
+    return { isAnonAccount: false, displayEmail: sessionUser.email ?? null };
+  }
+  if (storedEmail) {
+    return { isAnonAccount: emailLooksAnonymous(storedEmail), displayEmail: null };
+  }
+  return { isAnonAccount: false, displayEmail: null };
+}
+
 /**
  * Whether the CURRENT account has no real email. Resolves false on any
  * error — when unsure, never nag. Session-based rather than local-cache-based:
@@ -118,7 +156,12 @@ export async function confirmEmailOtp(email: string, otp: string): Promise<Email
       try {
         const { useUserStore } =
           require('@/lib/stores/user-store') as typeof import('@/lib/stores/user-store');
-        void useUserStore.getState().hydrateFromDb();
+        // Synchronous, direct write — Settings derives its identity footer and
+        // the "Add email address" row from this value, and it must flip the
+        // moment the attach confirms, not on the next hydrate or restart (F1).
+        // This only ADDS the email; the cleared-only-by-explicit-logout
+        // contract on `cached_user_email` is untouched.
+        useUserStore.setState({ userEmail: email });
       } catch {
         // Store unavailable (tests) — nothing to refresh.
       }

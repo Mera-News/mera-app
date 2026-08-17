@@ -19,10 +19,10 @@ jest.mock('@/lib/database/services/setting-service', () => ({
     setSetting: (...args: unknown[]) => mockSetSetting(...args),
 }));
 
-const mockHydrateFromDb = jest.fn();
+const mockSetState = jest.fn();
 jest.mock('@/lib/stores/user-store', () => ({
     useUserStore: {
-        getState: () => ({ hydrateFromDb: mockHydrateFromDb }),
+        setState: (...args: unknown[]) => mockSetState(...args),
     },
 }));
 
@@ -39,6 +39,7 @@ import {
     maybeRequestEmailCaptureAfterPurchase,
     requestEmailCapture,
     requestEmailOtp,
+    resolveAccountEmailView,
     subscribeEmailCapture,
     userNeedsEmail,
 } from '../email-capture';
@@ -47,7 +48,6 @@ beforeEach(() => {
     jest.clearAllMocks();
     __resetEmailCaptureForTests();
     mockGetSession.mockResolvedValue(null);
-    mockHydrateFromDb.mockResolvedValue(undefined);
     mockSetSetting.mockResolvedValue(undefined);
 });
 
@@ -71,6 +71,47 @@ describe('emailLooksAnonymous / userNeedsEmail', () => {
         expect(userNeedsEmail({ email: 'x@anon.mera.news' })).toBe(true);
         expect(userNeedsEmail({ email: null })).toBe(true);
         expect(userNeedsEmail({ email: 'real@example.com' })).toBe(false);
+    });
+});
+
+describe('resolveAccountEmailView', () => {
+    it('F1 regression: a real STORED email wins over a stale anonymous session', () => {
+        // In-session attach: the store updated the instant confirm succeeded,
+        // but better-auth's session atom still holds the fabricated address.
+        expect(
+            resolveAccountEmailView({
+                storedEmail: 'real@example.com',
+                sessionUser: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true },
+            }),
+        ).toEqual({ isAnonAccount: false, displayEmail: 'real@example.com' });
+    });
+
+    it('pre-attach anonymous account: session decides, row shows, no address displayed', () => {
+        expect(
+            resolveAccountEmailView({
+                storedEmail: null,
+                sessionUser: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true },
+            }),
+        ).toEqual({ isAnonAccount: true, displayEmail: null });
+    });
+
+    it('email-signed-in user: not anonymous, via store or session fallback', () => {
+        expect(
+            resolveAccountEmailView({ storedEmail: 'a@b.com', sessionUser: null }),
+        ).toEqual({ isAnonAccount: false, displayEmail: 'a@b.com' });
+        expect(
+            resolveAccountEmailView({
+                storedEmail: null,
+                sessionUser: { email: 'a@b.com' },
+            }),
+        ).toEqual({ isAnonAccount: false, displayEmail: 'a@b.com' });
+    });
+
+    it('offline with nothing local: never claims anonymous (a missing email is not proof)', () => {
+        expect(resolveAccountEmailView({ storedEmail: null, sessionUser: null })).toEqual({
+            isAnonAccount: false,
+            displayEmail: null,
+        });
     });
 });
 
@@ -116,7 +157,7 @@ describe('requestEmailOtp', () => {
 });
 
 describe('confirmEmailOtp', () => {
-    it('on success caches the email, rehydrates the store and refreshes the session', async () => {
+    it('on success caches the email, updates the store IN-SESSION and refreshes the session', async () => {
         mockFetch.mockResolvedValue({ data: { success: true }, error: null });
 
         expect(await confirmEmailOtp('a@b.com', '123456')).toEqual({ ok: true });
@@ -126,7 +167,10 @@ describe('confirmEmailOtp', () => {
             body: { email: 'a@b.com', otp: '123456' },
         });
         expect(mockSetSetting).toHaveBeenCalledWith('cached_user_email', 'a@b.com');
-        expect(mockHydrateFromDb).toHaveBeenCalled();
+        // Synchronous store write, not a fire-and-forget hydrate: this is what
+        // makes Settings drop the "Add email address" row and show the masked
+        // email WITHOUT an app restart (F1).
+        expect(mockSetState).toHaveBeenCalledWith({ userEmail: 'a@b.com' });
         expect(mockGetSession).toHaveBeenCalled();
     });
 
@@ -138,7 +182,7 @@ describe('confirmEmailOtp', () => {
             errorCode: 'invalid-otp',
         });
         expect(mockSetSetting).not.toHaveBeenCalled();
-        expect(mockHydrateFromDb).not.toHaveBeenCalled();
+        expect(mockSetState).not.toHaveBeenCalled();
     });
 
     it('a throw resolves as a server error, never a crash', async () => {
