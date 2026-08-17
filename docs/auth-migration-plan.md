@@ -446,6 +446,18 @@ so nothing is invented mid-build:
   the existing emailOTP infrastructure, then written onto the same anonymous row with
   `emailVerified: true`. Never the plugin's link flow.
 
+**Wire contract as built by S2 (final).** All routes under the auth basePath; the client MUST call
+them through `authClient.$fetch` (the Expo plugin's cookie persistence is route-agnostic but applies
+only to its own fetch). `POST /device/nonce` takes `{purpose}`: `attest` (iOS attestation), `assert`
+(iOS sign-in), `integrity` (Android sign-in). iOS sign-in body is `{keyId, assertion, nonce}` (the
+nonce is the client data; no separate field). Android sign-in body is `{integrityToken, nonce,
+deviceId}` — deviceId is required because Play Integrity verdicts carry no device identity; it is the
+resume key, record keyed `play-integrity:<deviceId>`. Dev bypass body is `{token, deviceId}`, keyed
+`dev-bypass:<deviceId>`, and the route 404s unless `DEVICE_ATTESTATION_DEV_BYPASS_TOKEN` is set.
+Rate limits: 10/60s on `/device/*`, 3/60s on `/device/email/*`, in-memory per Cloud Run instance.
+Device-key records gained `userId` (nullable, bound once, never re-bound) — one more manual index per
+environment: `db.getCollection('device-key').createIndex({ userId: 1 }, { name: 'userId_1' })`.
+
 ### Active phase breakdown
 
 - **S1 — server attestation foundation** (news-auth, no binary): nonce store (atomic
