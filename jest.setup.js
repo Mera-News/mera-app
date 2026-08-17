@@ -146,9 +146,17 @@ jest.mock('react-native/Libraries/Utilities/Platform', () => {
 jest.mock('expo/fetch', () => ({ fetch: jest.fn() }));
 
 // llama.rn — native on-device inference binding. Never load the real one.
+// Revalidated against 0.12.9. It must cover everything modelManager.ts
+// imports, not just the two obvious entry points: an explicit factory that
+// omits an export makes it `undefined` at the call site, and the resulting
+// TypeError gets swallowed by whatever try/catch is nearest and reads as
+// "the model never loaded" rather than as a missing mock.
 jest.mock('llama.rn', () => ({
   initLlama: jest.fn(),
   releaseAllLlama: jest.fn(),
+  loadLlamaModelInfo: jest.fn(() => Promise.resolve({})),
+  toggleNativeLog: jest.fn(),
+  addNativeLogListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
 
 // react-native-fs — model download / filesystem access.

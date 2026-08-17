@@ -78,7 +78,7 @@
     "http-status-codes": "^2.3.0",
     "i18n-iso-countries": "^7.14.0",
     "i18next": "^25.10.10",
-    "llama.rn": "^0.11.2",
+    "llama.rn": "0.12.9",
     "lottie-react-native": "~7.3.4",
     "lucide-react-native": "^0.563.0",
     "nativewind": "^4.2.1",
