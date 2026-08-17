@@ -401,6 +401,39 @@ calendar dependency. Applying now costs nothing and preserves the option; discov
 
 ---
 
+## GATE OVERRIDDEN 2026-08-17 — the held design is now active
+
+The user chose to build ahead of the 08-25 cohort data, explicitly. Decisions taken at activation:
+- **CBOR via `cbor-x`** (approved dependency), all attestation checks hand-implemented against Apple's
+  documented steps and unit-tested. No dedicated verifier library.
+- **The 1.3.0 binary WAITS for the attestation native modules.** The user chose holding the binary over
+  shipping it now. Trial comms (Aug 23 deadline) are server-side and unaffected; header fleet coverage
+  ships whenever this binary does.
+- **Anonymous email domain `anon.mera.news`**, welcome email suppressed for anonymous users, billing
+  dispatcher treats `@anon.mera.news` exactly like no-email-address (SKIPPED, push still fires). Real
+  email written onto the same row at purchase; the plugin's link flow stays forbidden.
+
+### Active phase breakdown
+
+- **S1 — server attestation foundation** (news-auth, no binary): nonce store (atomic
+  `findOneAndDelete` consume + TTL GC) and per-device key store in Mongo; App Attest attest+assert
+  verification per the documented checks; Play Integrity behind a port with a Google adapter.
+  New env vars must be **lazily required** (clear failure at call time, never a boot throw): the
+  shared `auth.ts` boot trap and the Cloud Build image-only deploys make a boot-time requirement a
+  crash-loop. Tests before implementation, per the standing rule for attestation code.
+- **S2 — anonymous sign-in behind attestation** (news-auth + shared libs): mount `anonymous()` with
+  `disableDeleteAnonymousUser: true` + `emailDomainName`; deny direct `/sign-in/anonymous` calls via
+  a before-hook (the plugin exposes the route; unattested calls must 403); internal mint endpoint:
+  verify attestation, then `auth.api.signInAnonymous(...)`; welcome-email suppression; dispatcher
+  skip for the anon domain.
+- **S3 — client** (auth-wave worktree, rides the held 1.3.0 binary): native attestation modules via
+  config plugin (dependency ask happens at S3 start), sign-in flow, `pendingAuthUserId` call site,
+  both identity-gate copies, `readLocalIdentityState` untouched (the session cookie name does not
+  change). Native queue row added when the module choice is made.
+- **S4 — recall bits**, flag-gated, blocked on DeviceCheck keys and the Play Integrity beta form
+  (STILL UNSUBMITTED — user action).
+- One phase at a time, stop for review after each, per the standing rules.
+
 ## Held design: the smallest attestation version
 
 Fully specified so nothing is decided mid-implementation. Not broken into phases because it is gated on
