@@ -25,8 +25,11 @@ nothing is left to be decided mid-implementation. It is designed, not scheduled.
 
 ### Settled and out of scope
 
-- The persona is device-local. See the important nuance in P2: an explicit user-initiated backup feature
-  is separately in flight, and the principle is about **silent** recreation, not user-initiated portability.
+- **The persona must never live on Mera's server.** That is the actual invariant, and it is the one that
+  matters. Backups the user owns are fine and are being added on purpose: a device-local export and an
+  iCloud-based backup are both intended, and `lib/backup/` is that work. So persona data crossing a
+  reinstall or a new phone through a user-owned backup is a feature, not a violation. What may never
+  happen is persona data reaching our infrastructure.
 - The free trial is 14 days and collects no payment method up front. Not a meter, not a store
   introductory offer.
 
@@ -195,10 +198,9 @@ with and without the header, asserting both succeed and that the value reaches t
 OTA published from this branch reaches only 1.3.0 binaries, which in prod is nobody. On this base the
 header ships with the 1.3.0 store release and coverage begins as users update.
 
-If the header is wanted in the field sooner, the alternative is to base this one change on a branch
-matching the current prod binary and let it ride an OTA. That is a rollout choice and changes none of the
-code below. Check `eas channel:view` before any OTA: the repo version runs ahead of prod, and an update
-published against the wrong runtime version reaches nobody.
+**Decided: build on 1.3.0.** No OTA will be published to 1.3.0's predecessor for this, so the header
+reaches the fleet with the 1.3.0 store release and P3's coverage figures should be read with that in mind.
+The alternative of basing this change on the current-prod-binary branch to ride an OTA is closed.
 
 **Files:** `mera-app/lib/apollo-client.ts`, in `authLink` at `:315-329`. That is the only place GraphQL
 headers are assembled and the last link before transport. `lib/apollo-fetch.ts` is not touched.
@@ -274,25 +276,54 @@ not recallable, which is why the copy check precedes the apply.
 
 ---
 
-## P2 File the iOS backup exposure. No code.
+## P2 File one identity-in-backup interaction. No code.
 
-`Documents/watermelon.db` holds `facts`, `user_personas` and the `cached_user_id` sentinel. Apple
-documents that `Documents/` is included in both device and iCloud backups, and no exclusion flag exists
-anywhere in the app, the config plugins, or the WatermelonDB package. A restore or device migration
-therefore repopulates `facts`, and because the onboarding gate is a fact count rather than a boolean
-(`hasAnyFacts()` at `lib/database/services/fact-service.ts:226-229`), onboarding is skipped.
+**Corrected after review, because the original framing was wrong.** The invariant is that persona data
+never reaches Mera's server, not that it never crosses installs. iCloud-based backup is being added
+deliberately and `lib/backup/` is that work, so `facts` and `user_personas` surviving a restore or a new
+phone is the intended behaviour. There is no product-principle violation here, and the earlier claim that
+there was should not be carried forward.
 
-**The sharp version of this finding, which needs `lib/backup/` to state properly.** A user-facing backup
-and restore feature is in flight on this same branch (`lib/backup/allowlist.ts`, `types.ts`,
-`allowlist.test.ts`). Its `BACKUP_TABLES` deliberately includes the persona tables and deliberately
-**excludes** `cached_user_id`, `cached_user_email`, `last_authenticated_user_id`, `identity_fault` and
-`onboarding_state`, annotating `cached_user_id` as "the one that would do real damage". So the product's
-own position is clear: **the persona is portable by explicit user action; identity is never portable.**
+What remains is narrower and real, and it belongs to whoever owns `lib/backup/` rather than to this wave.
 
-The iOS platform-backup path restores the whole SQLite file, which means it restores `cached_user_id` and
-the entire settings table, silently, with no allowlist and no user intent. **It restores precisely the row
-the app's own backup contract singles out as dangerous.** That is the finding, and it is a stronger one
-than "the persona crosses installs".
+`lib/backup/allowlist.ts` draws a deliberate line: `BACKUP_TABLES` carries the persona tables, while
+`EXCLUDED_TABLES` and the excluded settings keys drop `cached_user_id`, `cached_user_email`,
+`last_authenticated_user_id`, `identity_fault` and `onboarding_state`. `cached_user_id` is annotated as
+"identity-gate sentinel — a mismatch triggers wipeAndProceed, so restoring it destroys the restore."
+
+The **platform** backup path does not honour that line. `Documents/watermelon.db` is in device and iCloud
+backup scope (Apple documents `Documents/` as backed up, and no exclusion flag exists anywhere in the app,
+the config plugins, or the WatermelonDB package), and a platform restore returns the **whole SQLite file**,
+including `cached_user_id` and the settings table entire. So the implicit path restores exactly the row the
+explicit contract refuses to carry, for exactly the reason that contract gives: a subsequent sign-in by a
+different user produces a `wipeAndProceed` verdict that destroys the persona the restore just delivered.
+
+That is the finding: **an unallowlisted platform restore can defeat the allowlisted feature being built on
+top of it.** It is an interaction between two backup mechanisms, not an auth problem, and it does not gate
+anything in this wave.
+
+Practical constraints for whoever picks it up, established during scouting so they are not rediscovered:
+
+- Setting the flag on the file where it is today is **impossible from JS**.
+  `NSURLIsExcludedFromBackupKey` is reachable only through `mkdir` options in
+  `@dr.pogodin/react-native-fs` (`ios/ReactNativeFs.mm:326-332`), which is directory-only with no
+  per-file setter, and `expo-file-system` has no backup surface at all. An in-place fix needs a config
+  plugin and a new binary. Note that excluding the file wholesale would also disable the iCloud backup
+  that is wanted, so exclusion is probably the wrong tool here anyway.
+- Apple states the flag is guidance rather than a guarantee, and that ordinary file operations can reset
+  it, so it must be re-set on every save.
+- Relocating the database is JS-only in API terms. `SQLiteAdapter` accepts an absolute path in `dbName`
+  and iOS honours it on both dispatchers (`native/shared/Sqlite.cpp:10-18`,
+  `objc/WMDatabaseDriver.m:22-34`), using the `/`-prefixed form and not `file://`. But it requires
+  refactoring `lib/database/index.ts:32` from a module-eval singleton to a factory or awaited bootstrap,
+  plus a synchronous move-if-present migration, and getting that wrong orphans every existing user's
+  database and empties every feed until a full re-sync.
+- The likelier correct shape is to make identity restoration explicit rather than to fight the file: have
+  restore clear or re-stamp the identity keys after a platform restore, so `cached_user_id` cannot outlive
+  the device that earned it. That is a `lib/backup/` design decision, not an auth one.
+
+`lib/backup/` and `lib/database/` have an active writer on `next-binary`, so the one-writer-per-path rule
+applies against that work too.
 
 **Filed rather than fixed, on evidence:**
 
@@ -474,10 +505,12 @@ For `non-native-rebuild-plans.md`:
 
 For `native-rebuild-plans.md`, because both need a new binary:
 
-- **iOS persona and identity cross device migration.** `Documents/watermelon.db` is in backup scope with
-  no exclusion, and the platform path restores `cached_user_id`, which `lib/backup/allowlist.ts`
-  explicitly refuses to carry. Include P2's three constraints, and use `lib/backup/` as the model for what
-  should and should not be portable.
+- **A platform restore can defeat the allowlisted backup feature.** `Documents/watermelon.db` is in device
+  and iCloud backup scope with no exclusion, so a platform restore returns the whole file including
+  `cached_user_id`, which `lib/backup/allowlist.ts` explicitly refuses to carry because "a mismatch
+  triggers wipeAndProceed, so restoring it destroys the restore". Persona portability is intended; identity
+  portability is not. Owner is `lib/backup/`. Full constraints in P2 of `docs/auth-migration-plan.md`,
+  including why file exclusion is probably the wrong tool given iCloud backup is wanted.
 - **The Android backup mitigation is unpinned.** The narrowed scope comes from expo-secure-store 55.0.15's
   config plugin defaulting `configureAndroidBackup: true`, not from anything in this repo, and no test
   asserts it. The plugin bails with a single buried `console.warn` if another config plugin writes
