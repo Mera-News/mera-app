@@ -147,12 +147,19 @@ export async function connectGoogleDrive(): Promise<boolean> {
   }
 }
 
-/** Disconnects Drive without touching the app's own session. */
+/**
+ * Disconnects Drive without touching the app's own session.
+ *
+ * A true no-op for the majority who never opted in: backup is opt-in, so most
+ * logouts must not initialise a Google SDK at all. `hasPreviousSignIn()` is
+ * synchronous and is the cheapest way to ask.
+ */
 export async function disconnectGoogleDrive(): Promise<void> {
   if (!isGoogleDriveConfigured()) return;
   try {
     ensureConfigured();
     const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+    if (!GoogleSignin.hasPreviousSignIn()) return;
     await GoogleSignin.signOut();
   } catch {
     // Already signed out, or the SDK is unavailable. Either way the outcome

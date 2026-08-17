@@ -243,6 +243,14 @@ describe('Drive availability is a TOKEN question, not a CloudKit one', () => {
     expect(config.webClientId).toBe('web-client-id');
   });
 
+  it('is a true no-op for the majority who never opted in', async () => {
+    // Backup is opt-in, so most logouts must not initialise a Google SDK at
+    // all — let alone call signOut on an account that was never connected.
+    mockGsi.hasPreviousSignIn.mockReturnValue(false);
+    await disconnectGoogleDrive();
+    expect(mockGsi.signOut).not.toHaveBeenCalled();
+  });
+
   it('disconnects without touching the app session', async () => {
     await disconnectGoogleDrive();
     expect(mockGsi.signOut).toHaveBeenCalled();
