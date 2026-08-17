@@ -428,31 +428,56 @@ jest.mock('expo-sharing', () => ({
 // resolve to null, so anything that transitively imports `lib/backup/**` gets a
 // null native handle rather than a clear error. Mock the public surface instead
 // — otherwise the breakage lands in suites that have nothing to do with backup.
-jest.mock('react-native-cloud-storage', () => ({
-  __esModule: true,
-  CloudStorage: {
-    getDefaultInstance: jest.fn(),
-    getDefaultProvider: jest.fn(() => 'ICloud'),
-    getProvider: jest.fn(() => 'ICloud'),
-    setProvider: jest.fn(),
-    getProviderOptions: jest.fn(() => ({})),
-    setProviderOptions: jest.fn(),
-    getSupportedProviders: jest.fn(() => ['ICloud', 'GoogleDrive']),
-    isCloudAvailable: jest.fn(() => Promise.resolve(true)),
-    exists: jest.fn(() => Promise.resolve(false)),
-    readFile: jest.fn(() => Promise.resolve('')),
-    writeFile: jest.fn(() => Promise.resolve()),
-    appendFile: jest.fn(() => Promise.resolve()),
-    downloadFile: jest.fn(() => Promise.resolve()),
-    unlink: jest.fn(() => Promise.resolve()),
-    readdir: jest.fn(() => Promise.resolve([])),
-    stat: jest.fn(() => Promise.resolve({ size: 0 })),
-  },
-  CloudStorageScope: { AppData: 'app_data', Documents: 'documents' },
-  CloudStorageProvider: { ICloud: 'icloud', GoogleDrive: 'google_drive' },
-  CloudStorageError: class CloudStorageError extends Error {},
-  CloudStorageErrorCode: {},
-}));
+// The real export is a CLASS with static mirrors of every instance method, and
+// lib/backup/providers/* constructs its own instance per provider (a shared
+// static default would mean configuring Drive reconfigured iCloud). So the mock
+// has to be a class too — an object literal passes `CloudStorage.readdir(...)`
+// and throws "not a constructor" on `new CloudStorage(...)`.
+jest.mock('react-native-cloud-storage', () => {
+  const methods = {
+    isCloudAvailable: () => Promise.resolve(true),
+    exists: () => Promise.resolve(false),
+    readFile: () => Promise.resolve(''),
+    writeFile: () => Promise.resolve(),
+    appendFile: () => Promise.resolve(),
+    uploadFile: () => Promise.resolve(),
+    downloadFile: () => Promise.resolve(),
+    unlink: () => Promise.resolve(),
+    mkdir: () => Promise.resolve(),
+    rmdir: () => Promise.resolve(),
+    readdir: () => Promise.resolve([]),
+    stat: () => Promise.resolve({ size: 0 }),
+    triggerSync: () => Promise.resolve(),
+    getProvider: () => 'ICloud',
+    setProvider: () => undefined,
+    getProviderOptions: () => ({}),
+    setProviderOptions: () => undefined,
+    subscribeToCloudAvailability: () => undefined,
+    unsubscribeFromCloudAvailability: () => undefined,
+  };
+  class CloudStorage {
+    constructor() {
+      for (const [name, impl] of Object.entries(methods)) this[name] = jest.fn(impl);
+    }
+  }
+  for (const [name, impl] of Object.entries(methods)) CloudStorage[name] = jest.fn(impl);
+  CloudStorage.getDefaultInstance = jest.fn(() => new CloudStorage());
+  CloudStorage.getDefaultProvider = jest.fn(() => 'ICloud');
+  CloudStorage.getSupportedProviders = jest.fn(() => ['ICloud', 'GoogleDrive']);
+
+  return {
+    __esModule: true,
+    CloudStorage,
+    CloudStorageScope: { AppData: 'app_data', Documents: 'documents' },
+    CloudStorageProvider: { ICloud: 'icloud', GoogleDrive: 'googledrive' },
+    CloudStorageError: class CloudStorageError extends Error {},
+    CloudStorageErrorCode: {
+      FILE_NOT_FOUND: 'ERR_FILE_NOT_FOUND',
+      DIRECTORY_NOT_FOUND: 'ERR_DIRECTORY_NOT_FOUND',
+      FILE_ALREADY_EXISTS: 'ERR_FILE_EXISTS',
+    },
+  };
+});
 
 // @react-native-google-signin/google-signin ships no jest mock of its own
 // (only a `build` dir), so this is hand-written. GoogleSigninButton is a
@@ -466,6 +491,7 @@ jest.mock('@react-native-google-signin/google-signin', () => {
       hasPlayServices: jest.fn(() => Promise.resolve(true)),
       signIn: jest.fn(() => Promise.resolve({ type: 'cancelled' })),
       signInSilently: jest.fn(() => Promise.resolve({ type: 'noSavedCredentialFound' })),
+      hasPreviousSignIn: jest.fn(() => false),
       signOut: jest.fn(() => Promise.resolve()),
       revokeAccess: jest.fn(() => Promise.resolve()),
       getCurrentUser: jest.fn(() => null),

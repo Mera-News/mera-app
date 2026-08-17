@@ -144,6 +144,19 @@ export async function wipeAllLocalUserData(): Promise<void> {
     // Never block the wipe on the support SDK.
   }
 
+  // And disconnect Google Drive, which holds a Google account natively for the
+  // same reason Intercom does. Left connected, the next person signing in on
+  // this device finds Drive backup already enabled against a stranger's account
+  // and uploads their persona into it. clearAuthStorage() does this too; both
+  // sign-out paths are independently complete by design, and the call is
+  // idempotent.
+  try {
+    const { disconnectGoogleDrive } = require('@/lib/backup/providers/google-drive');
+    await disconnectGoogleDrive();
+  } catch {
+    // Never block the wipe on the storage SDK.
+  }
+
   // And drop the Sentry user id, so post-logout errors are not attributed to the
   // user who just left. clearAuthStorage() does this too — both sign-out paths
   // are independently complete by design (see this file's header), and the call
