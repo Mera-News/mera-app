@@ -27,7 +27,7 @@
 
 import pako from 'pako';
 
-import { isBackedUpSettingKey } from './allowlist';
+import { RESTORE_REPLACED_TABLES, isBackedUpSettingKey } from './allowlist';
 import { openBlob, type BlobSource } from './blob';
 import { SECTION_ROWS_KEY, SECTION_TABLE_KEY } from './export';
 import type { BackupHeader, RestoreRefusal } from './types';
@@ -203,9 +203,11 @@ export async function importBackup(options: ImportOptions): Promise<ImportResult
     .map((t) => t.table)
     .filter((t) => t !== 'settings' && !(t in knownColumns));
 
-  const clearable = header.tables
-    .map((t) => t.table)
-    .filter((t) => t !== 'settings' && t in knownColumns);
+  // Cleared from the ALLOWLIST, never from the blob's own table list. A restore
+  // replaces the persona; deriving this from `header.tables[]` would let a blob
+  // declaring a subset write itself on top of the tables it did not declare,
+  // which is the mixed persona this whole lifecycle exists to prevent.
+  const clearable = RESTORE_REPLACED_TABLES.filter((t) => t in knownColumns);
 
   const perTable: Record<string, number> = {};
   const droppedColumns: Record<string, Set<string>> = {};

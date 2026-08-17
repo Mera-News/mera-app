@@ -22,18 +22,10 @@
 // preserve, not a coincidence — adding `settings` to the cleared set would make
 // identity-gate see an absent sentinel on the next launch.
 
-import { BACKUP_TABLES } from './allowlist';
+import { RESTORE_REPLACED_TABLES } from './allowlist';
 import { watermelonRowSink } from './adapters/watermelon-row-sink';
 
 export { restoreWasInterrupted } from './adapters/watermelon-row-sink';
-
-/**
- * Tables a torn restore may have written. `settings` is excluded for the same
- * reason the importer never clears it: the device's own keys live there.
- */
-export const RESTORE_WRITTEN_TABLES: readonly string[] = BACKUP_TABLES.filter(
-  (t) => t !== 'settings',
-);
 
 /**
  * Empties everything the interrupted restore was writing and clears the marker.
@@ -44,6 +36,6 @@ export const RESTORE_WRITTEN_TABLES: readonly string[] = BACKUP_TABLES.filter(
  * no separate bookkeeping can be lost.
  */
 export async function resetAfterTornRestore(): Promise<void> {
-  await watermelonRowSink.clearTables(RESTORE_WRITTEN_TABLES);
+  await watermelonRowSink.clearTables(RESTORE_REPLACED_TABLES);
   await watermelonRowSink.finishRestore();
 }

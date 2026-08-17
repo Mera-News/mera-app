@@ -47,6 +47,25 @@ export const BACKUP_TABLES: readonly string[] = [
 ];
 
 /**
+ * The tables a restore REPLACES: everything backed up except `settings`.
+ *
+ * A restore's semantics are "replace the persona", not "merge these tables".
+ * Deriving the clear list from the blob's own `header.tables[]` instead would
+ * mean a blob declaring a subset restores its persona ON TOP of the tables it
+ * did not declare — which is exactly the mixed persona `lifecycle.ts` exists to
+ * prevent. Today's exporter always emits every section, so the two agree and
+ * nothing fails; that is what makes it worth pinning rather than leaving to
+ * coincidence.
+ *
+ * `settings` is excluded because clearing it would take `cached_user_id`,
+ * `needs_reauth` and the PIN preference with it, and those belong to the device
+ * the restore is landing on.
+ */
+export const RESTORE_REPLACED_TABLES: readonly string[] = BACKUP_TABLES.filter(
+  (t) => t !== 'settings',
+);
+
+/**
  * Tables deliberately NOT backed up, each with the reason. A reason of
  * "regenerable" means the receiving device rebuilds it on its own; a reason of
  * "device-scoped" means restoring it would be wrong even though the data is
@@ -131,6 +150,8 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   dev_free_tier_lapse_acked: 'Entitlement UI latch, same reason.',
   onboarding_state: 'Device flow state; onboarding gates on local facts anyway.',
   push_token_fail_streak: 'Counts failures of a push token this device does not have.',
+  backup_recovery_code_confirmed:
+    'Records that THIS device showed the user their code. Restoring it onto a new device would assert a confirmation that never happened and let a backup upload under a key nobody has written down.',
   [RESTORE_IN_PROGRESS_KEY]:
     'Torn-restore marker for THIS device. Backing it up would restore a permanent "a restore is in progress" state onto the next device.',
 };

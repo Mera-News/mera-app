@@ -38,6 +38,11 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *   run (scoring-pipeline-store.ts). This one survived logout entirely before
  *   this module existed.
  * - `async_inference_pending_job_privkey` — its legacy single-slot predecessor.
+ * - `_backup_key` — the backup recovery code, which IS the key that decrypts
+ *   every blob this device has uploaded. Leaving it would let the next user on
+ *   the device open the previous user's cloud backups. Clearing it is also why
+ *   `adoptRecoveryCode` exists: after a re-login the cloud still holds blobs the
+ *   device can no longer read, and typing the code back in is the way home.
  */
 const SECURE_STORE_KEYS = [
   `${APP_SLUG}_cookie`,
@@ -45,6 +50,7 @@ const SECURE_STORE_KEYS = [
   `${APP_SLUG}_pin_record`,
   `${APP_SLUG}_pin_attempts`,
   `${APP_SLUG}_app_lock_enabled`,
+  `${APP_SLUG}_backup_key`,
   'async_pipeline_privkey',
   'async_inference_pending_job_privkey',
 ];

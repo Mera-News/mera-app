@@ -249,6 +249,23 @@ describe('settings are upserted, never cleared, and re-filtered on the way in', 
     expect(sink.cleared).toContain('facts');
   });
 
+  it('clears every replaced table even when the blob declares only some of them', async () => {
+    // A restore REPLACES the persona. Deriving the clear list from the blob's
+    // own header.tables[] would let a partial blob write itself on top of the
+    // tables it did not declare, which is the mixed persona lifecycle.ts
+    // exists to prevent. Today's exporter always emits every section, so this
+    // is the case that only a hand-made blob reaches.
+    const blob = await sealedByHand(section('facts', [{ id: 'f1', statement: 'a' }]), {
+      tables: [{ table: 'facts', rows: 1, rowsAvailable: 1 }],
+    });
+    const sink = new FakeSink();
+    await run(blob, sink);
+
+    expect(sink.cleared).toContain('messages');
+    expect(sink.cleared).toContain('tracked_stories');
+    expect(sink.cleared).not.toContain('settings');
+  });
+
   it('upserts allowlisted keys by key, carrying no row id', async () => {
     const sink = new FakeSink();
     await run(
