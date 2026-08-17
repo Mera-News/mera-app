@@ -4,8 +4,50 @@
 import type { InferParams, InferResult } from '../types';
 import { _getContext, _updateInferenceSpeed } from './modelManager';
 
+// llama.rn holds ONE context for the whole app and a completion mutates its KV
+// cache in place, so two overlapping calls interleave: the second one's prefill
+// lands on top of the first one's state. That corrupts the output and makes the
+// `timings` this file reports meaningless, which is why any latency measurement
+// taken before this lock existed could not be trusted. Every entry point that
+// touches the context is serialised through one chain.
+let llamaChain: Promise<unknown> = Promise.resolve();
+
+/** Runs `fn` once every earlier llama caller has settled. */
+function withLlamaLock<T>(fn: () => Promise<T>): Promise<T> {
+  // `.then(fn, fn)` runs fn whether the previous holder resolved OR rejected —
+  // one failed completion must not wedge every later one behind it.
+  const run = llamaChain.then(fn, fn);
+  llamaChain = run.catch(() => {});
+  return run;
+}
+
+/**
+ * Manual acquire for `inferStream`, which spans many awaits and so cannot be
+ * expressed as a single promise. Resolves once the lock is held; the caller
+ * MUST release it in a `finally`, or every later llama call waits forever.
+ */
+function acquireLlamaLock(): Promise<() => void> {
+  let release!: () => void;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const acquired = llamaChain.then(
+    () => release,
+    () => release,
+  );
+  llamaChain = acquired.then(() => held);
+  return acquired;
+}
+
 /** General-purpose on-device LLM inference. */
-export async function infer(params: InferParams): Promise<InferResult> {
+export function infer(params: InferParams): Promise<InferResult> {
+  return withLlamaLock(() => inferExclusive(params));
+}
+
+// The context lookup and the timing both belong INSIDE the lock: the context can
+// be disposed while a caller queues, and `latencyMs` must measure the completion
+// rather than the time spent waiting for the lock.
+async function inferExclusive(params: InferParams): Promise<InferResult> {
   const context = _getContext();
   if (!context) {
     throw new Error('No model loaded. Call initBaseModel() first.');
@@ -51,6 +93,17 @@ export async function infer(params: InferParams): Promise<InferResult> {
 
 /** Streaming variant of infer(). Yields tokens as they are generated. */
 export async function* inferStream(
+  params: InferParams,
+): AsyncGenerator<string> {
+  const release = await acquireLlamaLock();
+  try {
+    yield* inferStreamExclusive(params);
+  } finally {
+    release();
+  }
+}
+
+async function* inferStreamExclusive(
   params: InferParams,
 ): AsyncGenerator<string> {
   const context = _getContext();

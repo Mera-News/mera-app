@@ -359,3 +359,102 @@ describe('inferStream', () => {
     );
   });
 });
+
+// llama.rn has ONE context and a completion mutates its KV cache in place, so
+// overlapping calls corrupt each other's output and timings. These cover the
+// serialisation itself rather than any single call's arguments.
+describe('llama access is serialised', () => {
+  const RESULT = {
+    text: 'Paris',
+    tokens_predicted: 5,
+    tokens_evaluated: 20,
+    truncated: false,
+    timings: null,
+  };
+
+  // jest.clearAllMocks() only clears usage data, not implementations, and the
+  // suites above install persistent ones with mockImplementation.
+  beforeEach(() => {
+    mockCompletion.mockReset();
+    mockGetContext.mockReturnValue(mockContext);
+  });
+
+  const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+  function deferred<T>() {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>((res) => {
+      resolve = res;
+    });
+    return { promise, resolve };
+  }
+
+  it('does not start a second infer() until the first has settled', async () => {
+    const first = deferred<typeof RESULT>();
+    mockCompletion.mockReturnValueOnce(first.promise).mockResolvedValueOnce(RESULT);
+
+    const a = infer(BASE_PARAMS);
+    const b = infer(BASE_PARAMS);
+    await flush();
+
+    expect(mockCompletion).toHaveBeenCalledTimes(1);
+
+    first.resolve(RESULT);
+    await Promise.all([a, b]);
+    expect(mockCompletion).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not wedge the chain when a completion rejects', async () => {
+    mockCompletion
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce(RESULT);
+
+    await expect(infer(BASE_PARAMS)).rejects.toThrow('boom');
+    await expect(infer(BASE_PARAMS)).resolves.toMatchObject({ output: 'Paris' });
+  });
+
+  it('holds the lock for the whole of inferStream, not just its first await', async () => {
+    const streamDone = deferred<typeof RESULT>();
+    let emit: ((token: string) => void) | null = null;
+    mockCompletion.mockImplementationOnce(async (_opts: any, cb: any) => {
+      emit = (token: string) => cb({ token });
+      return streamDone.promise;
+    });
+
+    const collected: string[] = [];
+    const consume = (async () => {
+      for await (const token of inferStream(BASE_PARAMS)) collected.push(token);
+    })();
+    await flush();
+
+    mockCompletion.mockResolvedValueOnce(RESULT);
+    const queued = infer(BASE_PARAMS);
+    await flush();
+
+    // The stream still holds the lock, so the queued infer has not begun.
+    expect(mockCompletion).toHaveBeenCalledTimes(1);
+
+    emit!('hi');
+    streamDone.resolve(RESULT);
+    await consume;
+    await queued;
+
+    expect(collected).toEqual(['hi']);
+    expect(mockCompletion).toHaveBeenCalledTimes(2);
+  });
+
+  it('releases the lock when inferStream throws', async () => {
+    mockCompletion.mockImplementationOnce(async () => {
+      throw new Error('stream boom');
+    });
+
+    await expect(
+      (async () => {
+        for await (const _ of inferStream(BASE_PARAMS)) { /* noop */ }
+      })(),
+    ).rejects.toThrow('stream boom');
+
+    mockCompletion.mockResolvedValueOnce(RESULT);
+    await expect(infer(BASE_PARAMS)).resolves.toMatchObject({ output: 'Paris' });
+  });
+});
