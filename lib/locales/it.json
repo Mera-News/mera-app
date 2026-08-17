@@ -56,7 +56,20 @@
       "switchCancel": "Annulla"
     },
     "contentPolicy": "Norme sui contenuti",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "Impossibile completare il cambio di account",
+    "identitySwitchFailedBody": "Su questo dispositivo ci sono ancora i dati di un altro account. Mera deve cancellarli prima di poter continuare, e questa volta la cancellazione non è riuscita.",
+    "identitySwitchFailedWhy": "Non si perde nulla. Quei dati appartengono all'altro account e restano nel suo account Mera. Il tuo riparte da zero quando questo dispositivo è pulito.",
+    "identitySwitchFailedExhausted": "Non ha ancora funzionato. Esci e ricomincia per pulire questo dispositivo.",
+    "identitySwitchRetry": "Riprova",
+    "identitySwitchSignOut": "Esci e ricomincia",
+    "getStarted": "Inizia",
+    "deviceSignInWorking": "Accesso in corso",
+    "signInWithEmail": "Accedi con l'email",
+    "deviceSignInFailed": "Si è verificato un problema. Riprova o accedi con l'email.",
+    "deviceSignInDenied": "Impossibile verificare questo dispositivo. Riprova o accedi con l'email.",
+    "deviceSignInUnavailable": "L'accesso non è al momento disponibile. Riprova tra qualche minuto o accedi con l'email.",
+    "tryAgain": "Riprova"
   },
   "account": {
     "pendingTitle": "Account in attesa di approvazione",
@@ -984,7 +997,10 @@
     "followChatSeed": "Voglio seguire una storia.",
     "followChatIntro": "Dimmi cosa vuoi seguire e lo imposterò.",
     "emptyHintFollow": "Tocca il pulsante di follow e di' a Mera cosa vuoi stare al passo.",
-    "emptyCtaFollow": "Segui una storia"
+    "emptyCtaFollow": "Segui una storia",
+    "removeMemberAction": "Non fa parte di questa storia",
+    "removeMemberConfirmTitle": "Rimuovere questo articolo?",
+    "removeMemberConfirmBody": "Questo articolo viene rimosso dalla cronologia della storia. Mera continua a seguire la storia."
   },
   "whatsNew": {
     "title": "Novità",
@@ -2259,5 +2275,15 @@
   },
   "support": {
     "opening": "Apertura del supporto"
+  },
+  "emailCapture": {
+    "title": "Aggiungi la tua email",
+    "subtitle": "Ricevi le ricevute via email e recupera il tuo account se cambi telefono.",
+    "continue": "Continua",
+    "notNow": "Non ora",
+    "confirm": "Conferma",
+    "added": "Email aggiunta",
+    "addedDetail": "Le ricevute e il recupero dell'account useranno {{email}}.",
+    "settingsRow": "Aggiungi indirizzo email"
   }
 }

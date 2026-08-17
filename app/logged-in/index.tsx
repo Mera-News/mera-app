@@ -138,10 +138,11 @@ export default function LoggedInIndex() {
                 }
 
                 if (verdict === 'reauth') {
-                    // Unresolvable locally — OTP is the only way to learn which
-                    // side is stale. reauth:'1' is load-bearing: without it
-                    // login.tsx short-circuits on the existing session and
-                    // bounces straight back here.
+                    // Unresolvable locally — the user must re-prove identity on
+                    // /login (OTP, or device sign-in for an account with no
+                    // email; AuthScreen offers whichever applies). reauth:'1'
+                    // is load-bearing: without it login.tsx short-circuits on
+                    // the existing session and bounces straight back here.
                     if (!cancelled) {
                         router.replace({ pathname: '/login', params: { reauth: '1' } });
                     }

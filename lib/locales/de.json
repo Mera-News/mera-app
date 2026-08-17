@@ -56,7 +56,20 @@
       "switchCancel": "Abbrechen"
     },
     "contentPolicy": "Inhaltsrichtlinie",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "Der Kontowechsel konnte nicht abgeschlossen werden",
+    "identitySwitchFailedBody": "Auf diesem Gerät sind noch Daten eines anderen Kontos. Mera muss sie löschen, bevor es weitergehen kann, und das Löschen hat diesmal nicht funktioniert.",
+    "identitySwitchFailedWhy": "Es geht nichts verloren. Diese Daten gehören zum anderen Konto und bleiben dort erhalten. Dein Konto startet neu, sobald dieses Gerät leer ist.",
+    "identitySwitchFailedExhausted": "Das hat wieder nicht funktioniert. Melde dich ab und starte neu, um dieses Gerät zu leeren.",
+    "identitySwitchRetry": "Erneut versuchen",
+    "identitySwitchSignOut": "Abmelden und neu starten",
+    "getStarted": "Los geht's",
+    "deviceSignInWorking": "Du wirst angemeldet",
+    "signInWithEmail": "Mit E-Mail anmelden",
+    "deviceSignInFailed": "Etwas ist schiefgelaufen. Versuche es erneut oder melde dich mit E-Mail an.",
+    "deviceSignInDenied": "Dieses Gerät konnte nicht bestätigt werden. Versuche es erneut oder melde dich mit E-Mail an.",
+    "deviceSignInUnavailable": "Die Anmeldung ist gerade nicht verfügbar. Versuche es in ein paar Minuten erneut oder melde dich mit E-Mail an.",
+    "tryAgain": "Erneut versuchen"
   },
   "account": {
     "pendingTitle": "Konto wartet auf Freischaltung",
@@ -984,7 +997,10 @@
     "followChatSeed": "Ich möchte einer Geschichte folgen.",
     "followChatIntro": "Sag mir, was du verfolgen möchtest, und ich richte es ein.",
     "emptyHintFollow": "Tippe auf die Folgen-Schaltfläche und sag Mera, woran du dich gerne auf dem Laufenden halten möchtest.",
-    "emptyCtaFollow": "Folge einer Geschichte"
+    "emptyCtaFollow": "Folge einer Geschichte",
+    "removeMemberAction": "Gehört nicht zu dieser Story",
+    "removeMemberConfirmTitle": "Diesen Artikel entfernen?",
+    "removeMemberConfirmBody": "Dieser Artikel wird aus dem Verlauf der Story entfernt. Mera verfolgt die Story selbst weiter."
   },
   "whatsNew": {
     "title": "Neuigkeiten",
@@ -2259,5 +2275,15 @@
   },
   "support": {
     "opening": "Support wird geöffnet"
+  },
+  "emailCapture": {
+    "title": "E-Mail-Adresse hinzufügen",
+    "subtitle": "Erhalte Belege per E-Mail und stelle dein Konto wieder her, wenn du das Telefon wechselst.",
+    "continue": "Weiter",
+    "notNow": "Nicht jetzt",
+    "confirm": "Bestätigen",
+    "added": "E-Mail-Adresse hinzugefügt",
+    "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}.",
+    "settingsRow": "E-Mail-Adresse hinzufügen"
   }
 }

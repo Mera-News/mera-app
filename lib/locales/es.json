@@ -56,7 +56,20 @@
       "switchCancel": "Cancelar"
     },
     "contentPolicy": "Política de contenido",
-    "faq": "Preguntas frecuentes"
+    "faq": "Preguntas frecuentes",
+    "identitySwitchFailedTitle": "No pudimos completar el cambio de cuenta",
+    "identitySwitchFailedBody": "Los datos de otra cuenta siguen en este dispositivo. Mera debe borrarlos antes de que puedas continuar, y esta vez no se pudieron borrar.",
+    "identitySwitchFailedWhy": "No se pierde nada. Esos datos pertenecen a la otra cuenta y permanecen en su cuenta de Mera. La tuya empieza de cero cuando este dispositivo quede limpio.",
+    "identitySwitchFailedExhausted": "Sigue sin funcionar. Cierra sesión y empieza de nuevo para limpiar este dispositivo.",
+    "identitySwitchRetry": "Reintentar",
+    "identitySwitchSignOut": "Cerrar sesión y empezar de nuevo",
+    "getStarted": "Comenzar",
+    "deviceSignInWorking": "Iniciando sesión",
+    "signInWithEmail": "Iniciar sesión con correo",
+    "deviceSignInFailed": "Algo salió mal. Vuelve a intentarlo o inicia sesión con tu correo.",
+    "deviceSignInDenied": "No pudimos verificar este dispositivo. Vuelve a intentarlo o inicia sesión con tu correo.",
+    "deviceSignInUnavailable": "El inicio de sesión no está disponible en este momento. Inténtalo en unos minutos o inicia sesión con tu correo.",
+    "tryAgain": "Reintentar"
   },
   "account": {
     "pendingTitle": "Cuenta pendiente de aprobación",
@@ -984,7 +997,10 @@
     "followChatSeed": "Quiero seguir una historia.",
     "followChatIntro": "Cuéntame qué te gustaría seguir y lo configuraré.",
     "emptyHintFollow": "Toca el botón de seguimiento y dile a Mera qué quieres mantener.",
-    "emptyCtaFollow": "Seguir una historia"
+    "emptyCtaFollow": "Seguir una historia",
+    "removeMemberAction": "No es parte de esta historia",
+    "removeMemberConfirmTitle": "¿Quitar este artículo?",
+    "removeMemberConfirmBody": "Este artículo se quita de la cronología de la historia. Mera sigue la historia igualmente."
   },
   "whatsNew": {
     "title": "Novedades",
@@ -2259,5 +2275,15 @@
   },
   "support": {
     "opening": "Abriendo soporte"
+  },
+  "emailCapture": {
+    "title": "Añade tu correo",
+    "subtitle": "Recibe recibos por correo y recupera tu cuenta si cambias de teléfono.",
+    "continue": "Continuar",
+    "notNow": "Ahora no",
+    "confirm": "Confirmar",
+    "added": "Correo añadido",
+    "addedDetail": "Los recibos y la recuperación de la cuenta usarán {{email}}.",
+    "settingsRow": "Añadir correo electrónico"
   }
 }

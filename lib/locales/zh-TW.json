@@ -56,7 +56,20 @@
       "switchCancel": "取消"
     },
     "contentPolicy": "內容政策",
-    "faq": "常見問題"
+    "faq": "常見問題",
+    "identitySwitchFailedTitle": "無法完成帳戶切換",
+    "identitySwitchFailedBody": "此裝置上仍有另一個帳戶的資料。Mera 必須先清除這些資料才能繼續，而這次清除失敗了。",
+    "identitySwitchFailedWhy": "不會遺失任何內容。這些資料屬於另一個帳戶，會保留在其 Mera 帳戶中。此裝置清除後，你的帳戶將重新開始。",
+    "identitySwitchFailedExhausted": "仍然失敗。請登出並重新開始，以清除此裝置。",
+    "identitySwitchRetry": "再試一次",
+    "identitySwitchSignOut": "登出並重新開始",
+    "getStarted": "開始使用",
+    "deviceSignInWorking": "正在登入",
+    "signInWithEmail": "使用電子郵件登入",
+    "deviceSignInFailed": "發生錯誤。請再試一次，或使用電子郵件登入。",
+    "deviceSignInDenied": "無法驗證此裝置。請再試一次，或使用電子郵件登入。",
+    "deviceSignInUnavailable": "目前無法登入。請幾分鐘後再試，或使用電子郵件登入。",
+    "tryAgain": "再試一次"
   },
   "account": {
     "pendingTitle": "帳號待審核",
@@ -984,7 +997,10 @@
     "followChatSeed": "我想追蹤一則報導。",
     "followChatIntro": "告訴我你想追蹤的內容，我會為你設定。",
     "emptyHintFollow": "點擊追蹤按鈕並告訴Mera你想關注的內容。",
-    "emptyCtaFollow": "追蹤報導"
+    "emptyCtaFollow": "追蹤報導",
+    "removeMemberAction": "不屬於此報導",
+    "removeMemberConfirmTitle": "移除這篇文章？",
+    "removeMemberConfirmBody": "這篇文章將從報導的時間軸中移除。Mera 會繼續追蹤報導本身。"
   },
   "whatsNew": {
     "title": "更新內容",
@@ -2260,5 +2276,15 @@
   },
   "support": {
     "opening": "正在開啟支援"
+  },
+  "emailCapture": {
+    "title": "新增電子郵件",
+    "subtitle": "透過電子郵件接收收據，換手機時也能救回帳戶。",
+    "continue": "繼續",
+    "notNow": "暫時不要",
+    "confirm": "確認",
+    "added": "已新增電子郵件",
+    "addedDetail": "收據與帳戶救援將使用 {{email}}。",
+    "settingsRow": "新增電子郵件地址"
   }
 }

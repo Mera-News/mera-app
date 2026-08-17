@@ -1,0 +1,303 @@
+{
+  "_comment": "Backfill for pre-existing dictionary drift: en.json ran 9 keys ahead of the other 19 locales (auth.identitySwitchFailed* and trackedStories.removeMember*, added to en by hand at some point), which made _splice-fragments.mjs refuse EVERY new splice. en's entries here are byte-identical to en.json (mergeStrict tolerates equal values); the other 19 are the missing translations. Input to _splice-fragments.mjs.",
+  "en": {
+    "auth": {
+      "identitySwitchFailedTitle": "We couldn't finish switching accounts",
+      "identitySwitchFailedBody": "Another account's data is still on this device. Mera has to clear it before you can go any further, and clearing it did not work this time.",
+      "identitySwitchFailedWhy": "Nothing is lost. That data belongs to the other account and stays in their Mera account. Yours starts fresh once this device is clear.",
+      "identitySwitchFailedExhausted": "That still did not work. Sign out and start over to clear this device.",
+      "identitySwitchRetry": "Try again",
+      "identitySwitchSignOut": "Sign out and start over"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Not part of this story",
+      "removeMemberConfirmTitle": "Remove this article?",
+      "removeMemberConfirmBody": "This article is removed from the story's timeline. Mera keeps following the story itself."
+    }
+  },
+  "ar": {
+    "auth": {
+      "identitySwitchFailedTitle": "تعذّر إكمال تبديل الحسابات",
+      "identitySwitchFailedBody": "لا تزال بيانات حساب آخر على هذا الجهاز. يجب أن يمسحها Mera قبل أن تتمكن من المتابعة، ولم ينجح المسح هذه المرة.",
+      "identitySwitchFailedWhy": "لن يضيع أي شيء. تلك البيانات تخص الحساب الآخر وتبقى في حسابه على Mera. سيبدأ حسابك من جديد بمجرد أن يصبح هذا الجهاز فارغًا.",
+      "identitySwitchFailedExhausted": "لم ينجح ذلك أيضًا. سجّل الخروج وابدأ من جديد لمسح هذا الجهاز.",
+      "identitySwitchRetry": "إعادة المحاولة",
+      "identitySwitchSignOut": "تسجيل الخروج والبدء من جديد"
+    },
+    "trackedStories": {
+      "removeMemberAction": "ليست جزءًا من هذه القصة",
+      "removeMemberConfirmTitle": "هل تريد إزالة هذه المقالة؟",
+      "removeMemberConfirmBody": "تُزال هذه المقالة من الخط الزمني للقصة. يواصل Mera متابعة القصة نفسها."
+    }
+  },
+  "de": {
+    "auth": {
+      "identitySwitchFailedTitle": "Der Kontowechsel konnte nicht abgeschlossen werden",
+      "identitySwitchFailedBody": "Auf diesem Gerät sind noch Daten eines anderen Kontos. Mera muss sie löschen, bevor es weitergehen kann, und das Löschen hat diesmal nicht funktioniert.",
+      "identitySwitchFailedWhy": "Es geht nichts verloren. Diese Daten gehören zum anderen Konto und bleiben dort erhalten. Dein Konto startet neu, sobald dieses Gerät leer ist.",
+      "identitySwitchFailedExhausted": "Das hat wieder nicht funktioniert. Melde dich ab und starte neu, um dieses Gerät zu leeren.",
+      "identitySwitchRetry": "Erneut versuchen",
+      "identitySwitchSignOut": "Abmelden und neu starten"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Gehört nicht zu dieser Story",
+      "removeMemberConfirmTitle": "Diesen Artikel entfernen?",
+      "removeMemberConfirmBody": "Dieser Artikel wird aus dem Verlauf der Story entfernt. Mera verfolgt die Story selbst weiter."
+    }
+  },
+  "es": {
+    "auth": {
+      "identitySwitchFailedTitle": "No pudimos completar el cambio de cuenta",
+      "identitySwitchFailedBody": "Los datos de otra cuenta siguen en este dispositivo. Mera debe borrarlos antes de que puedas continuar, y esta vez no se pudieron borrar.",
+      "identitySwitchFailedWhy": "No se pierde nada. Esos datos pertenecen a la otra cuenta y permanecen en su cuenta de Mera. La tuya empieza de cero cuando este dispositivo quede limpio.",
+      "identitySwitchFailedExhausted": "Sigue sin funcionar. Cierra sesión y empieza de nuevo para limpiar este dispositivo.",
+      "identitySwitchRetry": "Reintentar",
+      "identitySwitchSignOut": "Cerrar sesión y empezar de nuevo"
+    },
+    "trackedStories": {
+      "removeMemberAction": "No es parte de esta historia",
+      "removeMemberConfirmTitle": "¿Quitar este artículo?",
+      "removeMemberConfirmBody": "Este artículo se quita de la cronología de la historia. Mera sigue la historia igualmente."
+    }
+  },
+  "fr": {
+    "auth": {
+      "identitySwitchFailedTitle": "Impossible de terminer le changement de compte",
+      "identitySwitchFailedBody": "Les données d'un autre compte sont encore sur cet appareil. Mera doit les effacer avant de continuer, et l'effacement n'a pas fonctionné cette fois.",
+      "identitySwitchFailedWhy": "Rien n'est perdu. Ces données appartiennent à l'autre compte et y restent. Le vôtre repart de zéro une fois cet appareil nettoyé.",
+      "identitySwitchFailedExhausted": "Cela n'a toujours pas fonctionné. Déconnectez-vous et recommencez pour nettoyer cet appareil.",
+      "identitySwitchRetry": "Réessayer",
+      "identitySwitchSignOut": "Se déconnecter et recommencer"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Ne fait pas partie de cette actualité",
+      "removeMemberConfirmTitle": "Retirer cet article ?",
+      "removeMemberConfirmBody": "Cet article est retiré de la chronologie de l'actualité. Mera continue de suivre l'actualité elle-même."
+    }
+  },
+  "hi": {
+    "auth": {
+      "identitySwitchFailedTitle": "हम खाता बदलना पूरा नहीं कर सके",
+      "identitySwitchFailedBody": "इस डिवाइस पर अब भी किसी दूसरे खाते का डेटा है. आगे बढ़ने से पहले Mera को उसे हटाना होगा, और इस बार वह हटाया नहीं जा सका.",
+      "identitySwitchFailedWhy": "कुछ भी नहीं खोएगा. वह डेटा दूसरे खाते का है और उनके Mera खाते में बना रहता है. यह डिवाइस साफ़ होते ही आपका खाता नए सिरे से शुरू होगा.",
+      "identitySwitchFailedExhausted": "यह अब भी काम नहीं कर रहा. इस डिवाइस को साफ़ करने के लिए साइन आउट करके फिर से शुरू करें.",
+      "identitySwitchRetry": "फिर से कोशिश करें",
+      "identitySwitchSignOut": "साइन आउट करके फिर से शुरू करें"
+    },
+    "trackedStories": {
+      "removeMemberAction": "यह इस स्टोरी का हिस्सा नहीं है",
+      "removeMemberConfirmTitle": "यह लेख हटाएं?",
+      "removeMemberConfirmBody": "यह लेख स्टोरी की टाइमलाइन से हटा दिया जाता है. Mera स्टोरी को फ़ॉलो करता रहेगा."
+    }
+  },
+  "id": {
+    "auth": {
+      "identitySwitchFailedTitle": "Kami tidak dapat menyelesaikan pergantian akun",
+      "identitySwitchFailedBody": "Data akun lain masih ada di perangkat ini. Mera harus menghapusnya sebelum Anda dapat melanjutkan, dan penghapusan kali ini tidak berhasil.",
+      "identitySwitchFailedWhy": "Tidak ada yang hilang. Data itu milik akun lain dan tetap ada di akun Mera mereka. Akun Anda mulai dari awal setelah perangkat ini bersih.",
+      "identitySwitchFailedExhausted": "Masih belum berhasil. Keluar dan mulai lagi untuk membersihkan perangkat ini.",
+      "identitySwitchRetry": "Coba lagi",
+      "identitySwitchSignOut": "Keluar dan mulai lagi"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Bukan bagian dari cerita ini",
+      "removeMemberConfirmTitle": "Hapus artikel ini?",
+      "removeMemberConfirmBody": "Artikel ini dihapus dari linimasa cerita. Mera tetap mengikuti ceritanya."
+    }
+  },
+  "it": {
+    "auth": {
+      "identitySwitchFailedTitle": "Impossibile completare il cambio di account",
+      "identitySwitchFailedBody": "Su questo dispositivo ci sono ancora i dati di un altro account. Mera deve cancellarli prima di poter continuare, e questa volta la cancellazione non è riuscita.",
+      "identitySwitchFailedWhy": "Non si perde nulla. Quei dati appartengono all'altro account e restano nel suo account Mera. Il tuo riparte da zero quando questo dispositivo è pulito.",
+      "identitySwitchFailedExhausted": "Non ha ancora funzionato. Esci e ricomincia per pulire questo dispositivo.",
+      "identitySwitchRetry": "Riprova",
+      "identitySwitchSignOut": "Esci e ricomincia"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Non fa parte di questa storia",
+      "removeMemberConfirmTitle": "Rimuovere questo articolo?",
+      "removeMemberConfirmBody": "Questo articolo viene rimosso dalla cronologia della storia. Mera continua a seguire la storia."
+    }
+  },
+  "ja": {
+    "auth": {
+      "identitySwitchFailedTitle": "アカウントの切り替えを完了できませんでした",
+      "identitySwitchFailedBody": "このデバイスには別のアカウントのデータが残っています。先に進むには Mera がそのデータを消去する必要がありますが、今回は消去できませんでした。",
+      "identitySwitchFailedWhy": "失われるものはありません。そのデータは別のアカウントのもので、そのアカウントに残ります。このデバイスがクリアされると、あなたのアカウントは新しく始まります。",
+      "identitySwitchFailedExhausted": "それでも解決しませんでした。ログアウトして最初からやり直し、このデバイスをクリアしてください。",
+      "identitySwitchRetry": "もう一度試す",
+      "identitySwitchSignOut": "ログアウトして最初からやり直す"
+    },
+    "trackedStories": {
+      "removeMemberAction": "このストーリーの一部ではない",
+      "removeMemberConfirmTitle": "この記事を削除しますか？",
+      "removeMemberConfirmBody": "この記事はストーリーのタイムラインから削除されます。Mera はストーリー自体を引き続きフォローします。"
+    }
+  },
+  "ko": {
+    "auth": {
+      "identitySwitchFailedTitle": "계정 전환을 완료할 수 없습니다",
+      "identitySwitchFailedBody": "이 기기에 아직 다른 계정의 데이터가 있습니다. 계속하려면 Mera가 이를 삭제해야 하는데 이번에는 삭제하지 못했습니다.",
+      "identitySwitchFailedWhy": "잃는 것은 없습니다. 해당 데이터는 다른 계정의 것이며 그 계정에 그대로 남습니다. 이 기기가 정리되면 내 계정은 새로 시작됩니다.",
+      "identitySwitchFailedExhausted": "여전히 해결되지 않았습니다. 로그아웃한 다음 처음부터 다시 시작하여 이 기기를 정리하세요.",
+      "identitySwitchRetry": "다시 시도",
+      "identitySwitchSignOut": "로그아웃하고 다시 시작"
+    },
+    "trackedStories": {
+      "removeMemberAction": "이 스토리에 속하지 않음",
+      "removeMemberConfirmTitle": "이 기사를 삭제할까요?",
+      "removeMemberConfirmBody": "이 기사는 스토리 타임라인에서 삭제됩니다. Mera는 스토리 자체를 계속 팔로우합니다."
+    }
+  },
+  "nl": {
+    "auth": {
+      "identitySwitchFailedTitle": "We konden het wisselen van account niet afronden",
+      "identitySwitchFailedBody": "Er staan nog gegevens van een ander account op dit apparaat. Mera moet die wissen voordat je verder kunt, en het wissen is deze keer niet gelukt.",
+      "identitySwitchFailedWhy": "Er gaat niets verloren. Die gegevens horen bij het andere account en blijven daar bewaard. Jouw account begint opnieuw zodra dit apparaat leeg is.",
+      "identitySwitchFailedExhausted": "Het is nog steeds niet gelukt. Log uit en begin opnieuw om dit apparaat leeg te maken.",
+      "identitySwitchRetry": "Opnieuw proberen",
+      "identitySwitchSignOut": "Uitloggen en opnieuw beginnen"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Hoort niet bij dit verhaal",
+      "removeMemberConfirmTitle": "Dit artikel verwijderen?",
+      "removeMemberConfirmBody": "Dit artikel wordt uit de tijdlijn van het verhaal verwijderd. Mera blijft het verhaal zelf volgen."
+    }
+  },
+  "pl": {
+    "auth": {
+      "identitySwitchFailedTitle": "Nie udało się dokończyć przełączania kont",
+      "identitySwitchFailedBody": "Na tym urządzeniu wciąż są dane innego konta. Mera musi je usunąć, zanim przejdziesz dalej, a tym razem usuwanie się nie powiodło.",
+      "identitySwitchFailedWhy": "Nic nie przepada. Te dane należą do innego konta i pozostają na jego koncie Mera. Twoje konto zacznie od nowa, gdy to urządzenie będzie czyste.",
+      "identitySwitchFailedExhausted": "To nadal nie zadziałało. Wyloguj się i zacznij od nowa, aby wyczyścić to urządzenie.",
+      "identitySwitchRetry": "Spróbuj ponownie",
+      "identitySwitchSignOut": "Wyloguj się i zacznij od nowa"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Nie należy do tej historii",
+      "removeMemberConfirmTitle": "Usunąć ten artykuł?",
+      "removeMemberConfirmBody": "Ten artykuł zostanie usunięty z osi czasu historii. Mera nadal śledzi samą historię."
+    }
+  },
+  "pt-BR": {
+    "auth": {
+      "identitySwitchFailedTitle": "Não foi possível concluir a troca de conta",
+      "identitySwitchFailedBody": "Os dados de outra conta ainda estão neste aparelho. O Mera precisa apagá-los antes de você continuar, e desta vez não foi possível apagar.",
+      "identitySwitchFailedWhy": "Nada é perdido. Esses dados pertencem à outra conta e continuam na conta Mera dela. A sua começa do zero quando este aparelho estiver limpo.",
+      "identitySwitchFailedExhausted": "Ainda não funcionou. Saia e comece de novo para limpar este aparelho.",
+      "identitySwitchRetry": "Tentar novamente",
+      "identitySwitchSignOut": "Sair e começar de novo"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Não faz parte desta história",
+      "removeMemberConfirmTitle": "Remover este artigo?",
+      "removeMemberConfirmBody": "Este artigo é removido da linha do tempo da história. O Mera continua acompanhando a história."
+    }
+  },
+  "ru": {
+    "auth": {
+      "identitySwitchFailedTitle": "Не удалось завершить смену аккаунта",
+      "identitySwitchFailedBody": "На этом устройстве остались данные другого аккаунта. Mera должна удалить их, прежде чем вы сможете продолжить, но в этот раз удалить не удалось.",
+      "identitySwitchFailedWhy": "Ничего не потеряется. Эти данные принадлежат другому аккаунту и остаются в нем. Ваш аккаунт начнется заново, когда это устройство будет очищено.",
+      "identitySwitchFailedExhausted": "Снова не получилось. Выйдите из аккаунта и начните заново, чтобы очистить это устройство.",
+      "identitySwitchRetry": "Повторить",
+      "identitySwitchSignOut": "Выйти и начать заново"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Не относится к этому сюжету",
+      "removeMemberConfirmTitle": "Убрать эту статью?",
+      "removeMemberConfirmBody": "Эта статья убирается из хронологии сюжета. Mera продолжит следить за самим сюжетом."
+    }
+  },
+  "th": {
+    "auth": {
+      "identitySwitchFailedTitle": "เราสลับบัญชีไม่สำเร็จ",
+      "identitySwitchFailedBody": "ยังมีข้อมูลของบัญชีอื่นอยู่ในอุปกรณ์นี้ Mera ต้องล้างข้อมูลนั้นก่อนคุณจึงจะไปต่อได้ และครั้งนี้การล้างข้อมูลไม่สำเร็จ",
+      "identitySwitchFailedWhy": "ไม่มีอะไรสูญหาย ข้อมูลนั้นเป็นของบัญชีอื่นและยังอยู่ในบัญชี Mera ของบัญชีนั้น บัญชีของคุณจะเริ่มต้นใหม่เมื่ออุปกรณ์นี้ถูกล้างแล้ว",
+      "identitySwitchFailedExhausted": "ยังไม่สำเร็จ ลงชื่อออกแล้วเริ่มใหม่เพื่อล้างอุปกรณ์นี้",
+      "identitySwitchRetry": "ลองอีกครั้ง",
+      "identitySwitchSignOut": "ลงชื่อออกและเริ่มใหม่"
+    },
+    "trackedStories": {
+      "removeMemberAction": "ไม่ใช่ส่วนหนึ่งของเรื่องนี้",
+      "removeMemberConfirmTitle": "นำบทความนี้ออกไหม",
+      "removeMemberConfirmBody": "บทความนี้จะถูกนำออกจากไทม์ไลน์ของเรื่อง Mera ยังคงติดตามตัวเรื่องต่อไป"
+    }
+  },
+  "tr": {
+    "auth": {
+      "identitySwitchFailedTitle": "Hesap değişimi tamamlanamadı",
+      "identitySwitchFailedBody": "Bu cihazda hâlâ başka bir hesabın verileri var. Devam edebilmen için Mera'nın bunları silmesi gerekiyor ve silme işlemi bu kez başarısız oldu.",
+      "identitySwitchFailedWhy": "Hiçbir şey kaybolmaz. Bu veriler diğer hesaba ait ve o hesabın Mera hesabında kalır. Bu cihaz temizlendiğinde seninki sıfırdan başlar.",
+      "identitySwitchFailedExhausted": "Yine olmadı. Bu cihazı temizlemek için çıkış yap ve baştan başla.",
+      "identitySwitchRetry": "Tekrar dene",
+      "identitySwitchSignOut": "Çıkış yap ve baştan başla"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Bu haberin parçası değil",
+      "removeMemberConfirmTitle": "Bu makale kaldırılsın mı?",
+      "removeMemberConfirmBody": "Bu makale haberin zaman çizelgesinden kaldırılır. Mera haberi takip etmeye devam eder."
+    }
+  },
+  "uk": {
+    "auth": {
+      "identitySwitchFailedTitle": "Не вдалося завершити зміну облікового запису",
+      "identitySwitchFailedBody": "На цьому пристрої досі є дані іншого облікового запису. Mera має видалити їх, перш ніж ви зможете продовжити, і цього разу видалення не вдалося.",
+      "identitySwitchFailedWhy": "Нічого не втрачається. Ці дані належать іншому обліковому запису та залишаються в ньому. Ваш почнеться заново, щойно цей пристрій буде очищено.",
+      "identitySwitchFailedExhausted": "Знову не вдалося. Вийдіть і почніть спочатку, щоб очистити цей пристрій.",
+      "identitySwitchRetry": "Повторити",
+      "identitySwitchSignOut": "Вийти й почати спочатку"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Не стосується цього сюжету",
+      "removeMemberConfirmTitle": "Прибрати цю статтю?",
+      "removeMemberConfirmBody": "Цю статтю буде прибрано з хронології сюжету. Mera продовжить стежити за самим сюжетом."
+    }
+  },
+  "vi": {
+    "auth": {
+      "identitySwitchFailedTitle": "Không thể hoàn tất việc chuyển tài khoản",
+      "identitySwitchFailedBody": "Dữ liệu của một tài khoản khác vẫn còn trên thiết bị này. Mera phải xóa dữ liệu đó trước khi bạn tiếp tục, và lần này việc xóa không thành công.",
+      "identitySwitchFailedWhy": "Không có gì bị mất. Dữ liệu đó thuộc về tài khoản kia và vẫn nằm trong tài khoản Mera của họ. Tài khoản của bạn sẽ bắt đầu mới khi thiết bị này được dọn sạch.",
+      "identitySwitchFailedExhausted": "Vẫn không thành công. Hãy đăng xuất và bắt đầu lại để dọn sạch thiết bị này.",
+      "identitySwitchRetry": "Thử lại",
+      "identitySwitchSignOut": "Đăng xuất và bắt đầu lại"
+    },
+    "trackedStories": {
+      "removeMemberAction": "Không thuộc câu chuyện này",
+      "removeMemberConfirmTitle": "Xóa bài viết này?",
+      "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện."
+    }
+  },
+  "zh-CN": {
+    "auth": {
+      "identitySwitchFailedTitle": "无法完成帐号切换",
+      "identitySwitchFailedBody": "此设备上仍有另一个帐号的数据。Mera 必须先清除这些数据才能继续，而这次清除失败了。",
+      "identitySwitchFailedWhy": "不会丢失任何内容。这些数据属于另一个帐号，会保留在其 Mera 帐号中。此设备清除后，你的帐号将全新开始。",
+      "identitySwitchFailedExhausted": "仍然失败。请退出登录并重新开始，以清除此设备。",
+      "identitySwitchRetry": "重试",
+      "identitySwitchSignOut": "退出登录并重新开始"
+    },
+    "trackedStories": {
+      "removeMemberAction": "不属于此报道",
+      "removeMemberConfirmTitle": "移除这篇文章？",
+      "removeMemberConfirmBody": "这篇文章将从报道的时间线中移除。Mera 会继续关注报道本身。"
+    }
+  },
+  "zh-TW": {
+    "auth": {
+      "identitySwitchFailedTitle": "無法完成帳戶切換",
+      "identitySwitchFailedBody": "此裝置上仍有另一個帳戶的資料。Mera 必須先清除這些資料才能繼續，而這次清除失敗了。",
+      "identitySwitchFailedWhy": "不會遺失任何內容。這些資料屬於另一個帳戶，會保留在其 Mera 帳戶中。此裝置清除後，你的帳戶將重新開始。",
+      "identitySwitchFailedExhausted": "仍然失敗。請登出並重新開始，以清除此裝置。",
+      "identitySwitchRetry": "再試一次",
+      "identitySwitchSignOut": "登出並重新開始"
+    },
+    "trackedStories": {
+      "removeMemberAction": "不屬於此報導",
+      "removeMemberConfirmTitle": "移除這篇文章？",
+      "removeMemberConfirmBody": "這篇文章將從報導的時間軸中移除。Mera 會繼續追蹤報導本身。"
+    }
+  }
+}

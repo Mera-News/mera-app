@@ -56,7 +56,20 @@
       "switchCancel": "Anuluj"
     },
     "contentPolicy": "Zasady dotyczące treści",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "Nie udało się dokończyć przełączania kont",
+    "identitySwitchFailedBody": "Na tym urządzeniu wciąż są dane innego konta. Mera musi je usunąć, zanim przejdziesz dalej, a tym razem usuwanie się nie powiodło.",
+    "identitySwitchFailedWhy": "Nic nie przepada. Te dane należą do innego konta i pozostają na jego koncie Mera. Twoje konto zacznie od nowa, gdy to urządzenie będzie czyste.",
+    "identitySwitchFailedExhausted": "To nadal nie zadziałało. Wyloguj się i zacznij od nowa, aby wyczyścić to urządzenie.",
+    "identitySwitchRetry": "Spróbuj ponownie",
+    "identitySwitchSignOut": "Wyloguj się i zacznij od nowa",
+    "getStarted": "Rozpocznij",
+    "deviceSignInWorking": "Logowanie",
+    "signInWithEmail": "Zaloguj się e-mailem",
+    "deviceSignInFailed": "Coś poszło nie tak. Spróbuj ponownie lub zaloguj się e-mailem.",
+    "deviceSignInDenied": "Nie udało się zweryfikować tego urządzenia. Spróbuj ponownie lub zaloguj się e-mailem.",
+    "deviceSignInUnavailable": "Logowanie jest teraz niedostępne. Spróbuj ponownie za kilka minut lub zaloguj się e-mailem.",
+    "tryAgain": "Spróbuj ponownie"
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",
@@ -1002,7 +1015,10 @@
     "followChatSeed": "Chcę śledzić historię.",
     "followChatIntro": "Powiedz mi, co chcesz śledzić, a to ustawię.",
     "emptyHintFollow": "Dotknij przycisk śledzenia i powiedz Mera, co chcesz śledzić.",
-    "emptyCtaFollow": "Śledź historię"
+    "emptyCtaFollow": "Śledź historię",
+    "removeMemberAction": "Nie należy do tej historii",
+    "removeMemberConfirmTitle": "Usunąć ten artykuł?",
+    "removeMemberConfirmBody": "Ten artykuł zostanie usunięty z osi czasu historii. Mera nadal śledzi samą historię."
   },
   "whatsNew": {
     "title": "Co nowego",
@@ -2289,5 +2305,15 @@
   },
   "support": {
     "opening": "Otwieranie wsparcia"
+  },
+  "emailCapture": {
+    "title": "Dodaj swój e-mail",
+    "subtitle": "Otrzymuj potwierdzenia e-mailem i odzyskaj konto po zmianie telefonu.",
+    "continue": "Dalej",
+    "notNow": "Nie teraz",
+    "confirm": "Potwierdź",
+    "added": "Dodano e-mail",
+    "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}.",
+    "settingsRow": "Dodaj adres e-mail"
   }
 }

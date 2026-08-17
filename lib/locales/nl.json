@@ -56,7 +56,20 @@
       "switchCancel": "Annuleren"
     },
     "contentPolicy": "Inhoudsbeleid",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "We konden het wisselen van account niet afronden",
+    "identitySwitchFailedBody": "Er staan nog gegevens van een ander account op dit apparaat. Mera moet die wissen voordat je verder kunt, en het wissen is deze keer niet gelukt.",
+    "identitySwitchFailedWhy": "Er gaat niets verloren. Die gegevens horen bij het andere account en blijven daar bewaard. Jouw account begint opnieuw zodra dit apparaat leeg is.",
+    "identitySwitchFailedExhausted": "Het is nog steeds niet gelukt. Log uit en begin opnieuw om dit apparaat leeg te maken.",
+    "identitySwitchRetry": "Opnieuw proberen",
+    "identitySwitchSignOut": "Uitloggen en opnieuw beginnen",
+    "getStarted": "Aan de slag",
+    "deviceSignInWorking": "Je wordt aangemeld",
+    "signInWithEmail": "Inloggen met e-mail",
+    "deviceSignInFailed": "Er is iets misgegaan. Probeer het opnieuw of log in met e-mail.",
+    "deviceSignInDenied": "We konden dit apparaat niet verifiëren. Probeer het opnieuw of log in met e-mail.",
+    "deviceSignInUnavailable": "Inloggen is nu even niet mogelijk. Probeer het over een paar minuten opnieuw of log in met e-mail.",
+    "tryAgain": "Opnieuw proberen"
   },
   "account": {
     "pendingTitle": "Account wacht op goedkeuring",
@@ -984,7 +997,10 @@
     "followChatSeed": "Ik wil een verhaal volgen.",
     "followChatIntro": "Vertel me wat je wilt volgen en ik stel het in.",
     "emptyHintFollow": "Tik op de volg-knop en vertel Mera wat je wilt bijhouden.",
-    "emptyCtaFollow": "Een verhaal volgen"
+    "emptyCtaFollow": "Een verhaal volgen",
+    "removeMemberAction": "Hoort niet bij dit verhaal",
+    "removeMemberConfirmTitle": "Dit artikel verwijderen?",
+    "removeMemberConfirmBody": "Dit artikel wordt uit de tijdlijn van het verhaal verwijderd. Mera blijft het verhaal zelf volgen."
   },
   "whatsNew": {
     "title": "Wat is er nieuw",
@@ -2259,5 +2275,15 @@
   },
   "support": {
     "opening": "Ondersteuning wordt geopend"
+  },
+  "emailCapture": {
+    "title": "Voeg je e-mailadres toe",
+    "subtitle": "Ontvang bonnen per e-mail en herstel je account als je van telefoon wisselt.",
+    "continue": "Doorgaan",
+    "notNow": "Niet nu",
+    "confirm": "Bevestigen",
+    "added": "E-mailadres toegevoegd",
+    "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}.",
+    "settingsRow": "E-mailadres toevoegen"
   }
 }

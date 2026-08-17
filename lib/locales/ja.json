@@ -56,7 +56,20 @@
       "switchCancel": "キャンセル"
     },
     "contentPolicy": "コンテンツポリシー",
-    "faq": "よくある質問"
+    "faq": "よくある質問",
+    "identitySwitchFailedTitle": "アカウントの切り替えを完了できませんでした",
+    "identitySwitchFailedBody": "このデバイスには別のアカウントのデータが残っています。先に進むには Mera がそのデータを消去する必要がありますが、今回は消去できませんでした。",
+    "identitySwitchFailedWhy": "失われるものはありません。そのデータは別のアカウントのもので、そのアカウントに残ります。このデバイスがクリアされると、あなたのアカウントは新しく始まります。",
+    "identitySwitchFailedExhausted": "それでも解決しませんでした。ログアウトして最初からやり直し、このデバイスをクリアしてください。",
+    "identitySwitchRetry": "もう一度試す",
+    "identitySwitchSignOut": "ログアウトして最初からやり直す",
+    "getStarted": "はじめる",
+    "deviceSignInWorking": "ログインしています",
+    "signInWithEmail": "メールでログイン",
+    "deviceSignInFailed": "エラーが発生しました。もう一度お試しいただくか、メールでログインしてください。",
+    "deviceSignInDenied": "このデバイスを確認できませんでした。もう一度お試しいただくか、メールでログインしてください。",
+    "deviceSignInUnavailable": "現在ログインをご利用いただけません。数分後にもう一度お試しいただくか、メールでログインしてください。",
+    "tryAgain": "もう一度試す"
   },
   "account": {
     "pendingTitle": "アカウントの承認待ちです",
@@ -984,7 +997,10 @@
     "followChatSeed": "ストーリーをフォローしたいです。",
     "followChatIntro": "フォローしたいことを教えてくださいセットアップします。",
     "emptyHintFollow": "フォローボタンをタップして、Meraに何を保持するかを伝えてください。",
-    "emptyCtaFollow": "ストーリーをフォロー"
+    "emptyCtaFollow": "ストーリーをフォロー",
+    "removeMemberAction": "このストーリーの一部ではない",
+    "removeMemberConfirmTitle": "この記事を削除しますか？",
+    "removeMemberConfirmBody": "この記事はストーリーのタイムラインから削除されます。Mera はストーリー自体を引き続きフォローします。"
   },
   "whatsNew": {
     "title": "新機能",
@@ -2259,5 +2275,15 @@
   },
   "support": {
     "opening": "サポートを開いています"
+  },
+  "emailCapture": {
+    "title": "メールアドレスを追加",
+    "subtitle": "レシートをメールで受け取り、機種変更時にアカウントを復元できます。",
+    "continue": "続行",
+    "notNow": "後で",
+    "confirm": "確認",
+    "added": "メールアドレスを追加しました",
+    "addedDetail": "レシートの受け取りとアカウントの復元に {{email}} を使用します。",
+    "settingsRow": "メールアドレスを追加"
   }
 }

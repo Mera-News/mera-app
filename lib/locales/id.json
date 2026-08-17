@@ -56,7 +56,20 @@
       "switchCancel": "Batal"
     },
     "contentPolicy": "Kebijakan Konten",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "Kami tidak dapat menyelesaikan pergantian akun",
+    "identitySwitchFailedBody": "Data akun lain masih ada di perangkat ini. Mera harus menghapusnya sebelum Anda dapat melanjutkan, dan penghapusan kali ini tidak berhasil.",
+    "identitySwitchFailedWhy": "Tidak ada yang hilang. Data itu milik akun lain dan tetap ada di akun Mera mereka. Akun Anda mulai dari awal setelah perangkat ini bersih.",
+    "identitySwitchFailedExhausted": "Masih belum berhasil. Keluar dan mulai lagi untuk membersihkan perangkat ini.",
+    "identitySwitchRetry": "Coba lagi",
+    "identitySwitchSignOut": "Keluar dan mulai lagi",
+    "getStarted": "Mulai",
+    "deviceSignInWorking": "Sedang masuk",
+    "signInWithEmail": "Masuk dengan email",
+    "deviceSignInFailed": "Terjadi kesalahan. Coba lagi atau masuk dengan email.",
+    "deviceSignInDenied": "Kami tidak dapat memverifikasi perangkat ini. Coba lagi atau masuk dengan email.",
+    "deviceSignInUnavailable": "Login tidak tersedia saat ini. Coba lagi dalam beberapa menit atau masuk dengan email.",
+    "tryAgain": "Coba lagi"
   },
   "account": {
     "pendingTitle": "Akun Menunggu Persetujuan",
@@ -984,7 +997,10 @@
     "followChatSeed": "Saya ingin mengikuti cerita.",
     "followChatIntro": "Beri tahu saya apa yang ingin Anda ikuti dan saya akan mengaturnya.",
     "emptyHintFollow": "Ketuk tombol ikuti dan beri tahu Mera apa yang ingin Anda ikuti.",
-    "emptyCtaFollow": "Ikuti cerita"
+    "emptyCtaFollow": "Ikuti cerita",
+    "removeMemberAction": "Bukan bagian dari cerita ini",
+    "removeMemberConfirmTitle": "Hapus artikel ini?",
+    "removeMemberConfirmBody": "Artikel ini dihapus dari linimasa cerita. Mera tetap mengikuti ceritanya."
   },
   "whatsNew": {
     "title": "Yang baru",
@@ -2259,5 +2275,15 @@
   },
   "support": {
     "opening": "Membuka dukungan"
+  },
+  "emailCapture": {
+    "title": "Tambahkan email Anda",
+    "subtitle": "Dapatkan tanda terima lewat email dan pulihkan akun Anda jika berganti ponsel.",
+    "continue": "Lanjutkan",
+    "notNow": "Nanti saja",
+    "confirm": "Konfirmasi",
+    "added": "Email ditambahkan",
+    "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}.",
+    "settingsRow": "Tambahkan alamat email"
   }
 }

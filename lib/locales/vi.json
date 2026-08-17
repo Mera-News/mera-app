@@ -56,7 +56,20 @@
       "switchCancel": "Hủy"
     },
     "contentPolicy": "Chính sách nội dung",
-    "faq": "Câu hỏi thường gặp"
+    "faq": "Câu hỏi thường gặp",
+    "identitySwitchFailedTitle": "Không thể hoàn tất việc chuyển tài khoản",
+    "identitySwitchFailedBody": "Dữ liệu của một tài khoản khác vẫn còn trên thiết bị này. Mera phải xóa dữ liệu đó trước khi bạn tiếp tục, và lần này việc xóa không thành công.",
+    "identitySwitchFailedWhy": "Không có gì bị mất. Dữ liệu đó thuộc về tài khoản kia và vẫn nằm trong tài khoản Mera của họ. Tài khoản của bạn sẽ bắt đầu mới khi thiết bị này được dọn sạch.",
+    "identitySwitchFailedExhausted": "Vẫn không thành công. Hãy đăng xuất và bắt đầu lại để dọn sạch thiết bị này.",
+    "identitySwitchRetry": "Thử lại",
+    "identitySwitchSignOut": "Đăng xuất và bắt đầu lại",
+    "getStarted": "Bắt đầu",
+    "deviceSignInWorking": "Đang đăng nhập",
+    "signInWithEmail": "Đăng nhập bằng email",
+    "deviceSignInFailed": "Đã xảy ra lỗi. Hãy thử lại hoặc đăng nhập bằng email.",
+    "deviceSignInDenied": "Không thể xác minh thiết bị này. Hãy thử lại hoặc đăng nhập bằng email.",
+    "deviceSignInUnavailable": "Hiện không thể đăng nhập. Hãy thử lại sau vài phút hoặc đăng nhập bằng email.",
+    "tryAgain": "Thử lại"
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",
@@ -984,7 +997,10 @@
     "followChatSeed": "Tôi muốn theo dõi một câu chuyện.",
     "followChatIntro": "Hãy cho tôi biết những gì bạn muốn theo dõi và tôi sẽ thiết lập nó.",
     "emptyHintFollow": "Nhấn nút theo dõi và cho Mera biết những gì bạn muốn theo dõi.",
-    "emptyCtaFollow": "Theo dõi một câu chuyện"
+    "emptyCtaFollow": "Theo dõi một câu chuyện",
+    "removeMemberAction": "Không thuộc câu chuyện này",
+    "removeMemberConfirmTitle": "Xóa bài viết này?",
+    "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện."
   },
   "whatsNew": {
     "title": "Có gì mới",
@@ -2260,5 +2276,15 @@
   },
   "support": {
     "opening": "Đang mở hỗ trợ"
+  },
+  "emailCapture": {
+    "title": "Thêm email của bạn",
+    "subtitle": "Nhận biên lai qua email và khôi phục tài khoản khi bạn đổi điện thoại.",
+    "continue": "Tiếp tục",
+    "notNow": "Để sau",
+    "confirm": "Xác nhận",
+    "added": "Đã thêm email",
+    "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}.",
+    "settingsRow": "Thêm địa chỉ email"
   }
 }

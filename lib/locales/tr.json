@@ -56,7 +56,20 @@
       "switchCancel": "İptal"
     },
     "contentPolicy": "İçerik Politikası",
-    "faq": "SSS"
+    "faq": "SSS",
+    "identitySwitchFailedTitle": "Hesap değişimi tamamlanamadı",
+    "identitySwitchFailedBody": "Bu cihazda hâlâ başka bir hesabın verileri var. Devam edebilmen için Mera'nın bunları silmesi gerekiyor ve silme işlemi bu kez başarısız oldu.",
+    "identitySwitchFailedWhy": "Hiçbir şey kaybolmaz. Bu veriler diğer hesaba ait ve o hesabın Mera hesabında kalır. Bu cihaz temizlendiğinde seninki sıfırdan başlar.",
+    "identitySwitchFailedExhausted": "Yine olmadı. Bu cihazı temizlemek için çıkış yap ve baştan başla.",
+    "identitySwitchRetry": "Tekrar dene",
+    "identitySwitchSignOut": "Çıkış yap ve baştan başla",
+    "getStarted": "Başla",
+    "deviceSignInWorking": "Giriş yapılıyor",
+    "signInWithEmail": "E-posta ile giriş yap",
+    "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin veya e-posta ile giriş yapın.",
+    "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin veya e-posta ile giriş yapın.",
+    "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
+    "tryAgain": "Tekrar dene"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",
@@ -986,7 +999,10 @@
     "followChatSeed": "Bir hikayeyi takip etmek istiyorum.",
     "followChatIntro": "Takip etmek istediğini söyle ve ben bunu kurtaracağım.",
     "emptyHintFollow": "Takip et düğmesine dokun ve Mera'ya neyi takip etmek istediğini söyle.",
-    "emptyCtaFollow": "Bir hikayeyi takip et"
+    "emptyCtaFollow": "Bir hikayeyi takip et",
+    "removeMemberAction": "Bu haberin parçası değil",
+    "removeMemberConfirmTitle": "Bu makale kaldırılsın mı?",
+    "removeMemberConfirmBody": "Bu makale haberin zaman çizelgesinden kaldırılır. Mera haberi takip etmeye devam eder."
   },
   "whatsNew": {
     "title": "Yenilikler",
@@ -2261,5 +2277,15 @@
   },
   "support": {
     "opening": "Destek açılıyor"
+  },
+  "emailCapture": {
+    "title": "E-postanı ekle",
+    "subtitle": "Makbuzları e-postayla al ve telefon değiştirirsen hesabını kurtar.",
+    "continue": "Devam",
+    "notNow": "Şimdi değil",
+    "confirm": "Onayla",
+    "added": "E-posta eklendi",
+    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak.",
+    "settingsRow": "E-posta adresi ekle"
   }
 }
