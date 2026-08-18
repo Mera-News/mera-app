@@ -517,6 +517,39 @@ environment: `db.getCollection('device-key').createIndex({ userId: 1 }, { name: 
   (STILL UNSUBMITTED — user action).
 - One phase at a time, stop for review after each, per the standing rules.
 
+### Fix round, 2026-08-18, from the staging e2e
+
+The simulator e2e (7/7 steps PASS against staging via the dev bypass) surfaced five findings; four
+were fixed the same day, test-first, and re-verified on-device:
+
+- **Settings now refreshes in-session after email attach** (was stale until restart). Confirm-success
+  writes `userEmail` into the user store synchronously and Settings derives the row and footer from
+  one pure `resolveAccountEmailView`, stored-real-email outranking the session. mera-app `9e40d36`.
+- **Logout is outage-proof.** Four sites awaited an unguarded `authClient.signOut()` BEFORE
+  `clearAuthStorage()`, so a backend outage aborted the local wipe and the device relaunched signed
+  in; an existing spec had codified the bug and was inverted. `clearAuthStorage()` is now the single
+  server-contact point, guarded and bounded by a 5s race. Invariant recorded in `mera-app-persona`
+  (4c): callers never prefix their own signOut. Verified on-device against a blackholed backend,
+  twice. mera-app `571ce98`.
+- **Email-attach OTP is a SHA-256 digest at rest** (was plaintext, readable from the DB). Legacy
+  plaintext rows are burned as expired, never compared. Deployed and verified live on staging
+  (row shows `otpHash`, no `otp`; seeded digest confirms; single-use). mera-server `384c813`,
+  staging merge `ed12844`. Note the parity fact: better-auth's own emailOTP stores sign-in codes
+  plaintext under our config (`storeOTP` defaults to `plain`); flipping to `'hashed'` is one line
+  but disables the plugin's `retrieveOTP` path. Left for the user to decide.
+- **Device sign-in failures log one structured warn line** (fields only, never nonce/token values).
+  mera-app `8bbcc78`.
+- **A11y phantom labels, partial by design.** Every app-owned full-screen wrapper answering an
+  aggregated "Get started" label is fixed (`accessible={false}`); four remaining phantoms are
+  expo-router / react-navigation / react-native-screens content views, non-hittable and never
+  focused by VoiceOver — framework aggregation that exists on every screen. Rule: UI automation
+  targets testIDs (`auth-get-started`, `auth-use-email`), never text. mera-app `c35f96b`, `4a6fc1b`.
+
+Staging state after the round: mera-server `staging` at merge `ed12844` (serving revisions
+news-auth-staging-00038 / news-graphql-staging-00051 / news-async-staging-00063), `dev` at
+`384c813`, mera-app `auth-wave` at `4a6fc1b`. E2e residue in `mera-staging`: a handful of throwaway
+anonymous users and consumed verification rows, plus test emails in the override inbox.
+
 ## Held design: the smallest attestation version
 
 Fully specified so nothing is decided mid-implementation. Not broken into phases because it is gated on
