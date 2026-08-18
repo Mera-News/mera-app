@@ -65,14 +65,19 @@ export const DEVICE_ID_STORE_KEY = `${APP_SLUG}_device_attest_device_id`;
 export const DEVICE_REF_STORE_KEY = `${APP_SLUG}_device_ref`;
 
 /**
- * Sever this device's account binding AND its trial-memory marker. Called on
- * account DELETION (ManageDataScreen) and by the refusal recovery below —
- * never on logout: since S10, sign-out PRESERVES the credentials so logging
- * in resumes the same account. Total: a failed delete only means the next
- * attempt repeats the severing.
+ * Sever this device's ACCOUNT binding. Called on account DELETION
+ * (ManageDataScreen) and by the refusal recovery below — never on logout:
+ * since S10, sign-out PRESERVES the credentials so logging in resumes the
+ * same account.
+ *
+ * DELIBERATELY EXCLUDES the deviceRef: it is the device's TRIAL HISTORY, not
+ * an account credential, and NO flow may clear it — the e2e proved that
+ * clearing it here handed out a fresh 14-day trial on every account
+ * deletion. Total: a failed delete only means the next attempt repeats the
+ * severing.
  */
 export async function clearDeviceAuthCredentials(): Promise<void> {
-  for (const key of [APP_ATTEST_KEY_ID_STORE_KEY, DEVICE_ID_STORE_KEY, DEVICE_REF_STORE_KEY]) {
+  for (const key of [APP_ATTEST_KEY_ID_STORE_KEY, DEVICE_ID_STORE_KEY]) {
     try {
       await secureStore.deleteItemAsync(key);
     } catch {

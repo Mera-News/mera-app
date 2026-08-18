@@ -167,6 +167,13 @@ describe('ManageDataScreen — delete account (grace-period flow)', () => {
         expect(calls).toEqual(
             expect.arrayContaining(['clearAuthStorage', 'clearDeviceAuthCredentials', 'dismissAll', 'replace', 'clearAllStores', 'toast']),
         );
+        // BUG 4 (S10 e2e): deletion used to land on '/', whose launch gate
+        // re-entered the app on the stale session atom and dumped the user
+        // into onboarding with a dead session. Deletion follows the LOGOUT
+        // route: the welcome view, with the same session-shortcut suppression.
+        expect(mockReplace).toHaveBeenCalledWith(
+            { pathname: '/login', params: { signedOut: '1' } },
+        );
         // clearAuthStorage (which owns the guarded server sign-out) must
         // precede clearAllStores — the local cleanup sequence.
         expect(calls.indexOf('clearAuthStorage')).toBeLessThan(calls.indexOf('clearAllStores'));

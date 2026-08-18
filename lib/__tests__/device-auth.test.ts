@@ -425,10 +425,11 @@ describe('refusal recovery (S10)', () => {
             const result = await signInWithDevice();
 
             expect(result).toMatchObject({ status: 'success', userId: 'user-2' });
-            // Severed: all three slots cleared before the retry.
+            // Severed: the ACCOUNT slots cleared before the retry; the
+            // deviceRef survives (trial history, never cleared by any flow).
             expect(mockDeleteItemAsync).toHaveBeenCalledWith(KEY_SLOT);
             expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY);
-            expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_REF_STORE_KEY);
+            expect(mockDeleteItemAsync).not.toHaveBeenCalledWith(DEVICE_REF_STORE_KEY);
             // Fresh enrollment happened exactly once.
             expect(mockGenerateKey).toHaveBeenCalledTimes(1);
             expect(signInCalls).toBe(2);
@@ -634,17 +635,49 @@ describe('server error handling', () => {
 });
 
 describe('clearDeviceAuthCredentials (S10: deletion severs, logout preserves)', () => {
-    it('deletes the key binding, the deviceId and the deviceRef marker', async () => {
+    it('deletes the ACCOUNT credentials only; the deviceRef is trial history and survives', async () => {
         await clearDeviceAuthCredentials();
         expect(mockDeleteItemAsync).toHaveBeenCalledWith(APP_ATTEST_KEY_ID_STORE_KEY);
         expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY);
-        expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_REF_STORE_KEY);
+        // The e2e proved the old behavior minted a FRESH trial after every
+        // deletion: severing must never touch the trial-memory anchor.
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith(DEVICE_REF_STORE_KEY);
+    });
+
+    it('deletion keeps the deviceRef, so the NEXT mint presents it and gets no trial', async () => {
+        // Post-deletion state: account creds severed, trial anchor kept.
+        const store: Record<string, string> = {
+            [APP_ATTEST_KEY_ID_STORE_KEY]: 'key-1',
+            [DEVICE_ID_STORE_KEY]: 'uuid-1',
+            [DEVICE_REF_STORE_KEY]: 'ref-kept',
+        };
+        mockGetItemAsync.mockImplementation(async (k: string) => store[k] ?? null);
+        mockDeleteItemAsync.mockImplementation(async (k: string) => {
+            delete store[k];
+        });
+        await clearDeviceAuthCredentials();
+        expect(store[DEVICE_REF_STORE_KEY]).toBe('ref-kept');
+
+        installServer({
+            '/device/sign-in/ios': () => ({
+                data: { user: { id: 'user-3' }, trialAvailable: false },
+                error: null,
+            }),
+        });
+        mockGenerateKey.mockResolvedValue('key-2');
+        mockAttestKey.mockResolvedValue('attestation-b64');
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+        const result = await signInWithDevice();
+
+        expect(callsTo('/device/sign-in/ios')[0][1].body).toMatchObject({ deviceRef: 'ref-kept' });
+        expect(result).toMatchObject({ status: 'success', trialAvailable: false });
     });
 
     it('is total: one failing delete does not stop the others', async () => {
         mockDeleteItemAsync.mockRejectedValueOnce(new Error('keychain locked'));
         await expect(clearDeviceAuthCredentials()).resolves.toBeUndefined();
-        expect(mockDeleteItemAsync).toHaveBeenCalledTimes(3);
+        expect(mockDeleteItemAsync).toHaveBeenCalledTimes(2);
     });
 });
 

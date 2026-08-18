@@ -196,7 +196,12 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 await clearDeviceAuthCredentials();
 
                 router.dismissAll();
-                router.replace('/');
+                // The LOGOUT route, not '/': the launch gate counts the
+                // still-stale better-auth session atom as identity and
+                // re-entered the app with a dead session (BUG 4). signedOut
+                // suppresses login.tsx's mirror-image shortcut until the atom
+                // actually clears.
+                router.replace({ pathname: '/login', params: { signedOut: '1' } });
 
                 await new Promise((resolve) => setTimeout(resolve, 0));
                 await clearAllStores();
