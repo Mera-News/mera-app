@@ -810,3 +810,26 @@ For `native-rebuild-plans.md`, because both need a new binary:
 - Never test attestation against production RevenueCat data. Use the sandbox restore-behaviour setting.
 - After each phase, hand over the exact by-hand device checks. Emulators do not exercise Play Integrity,
   and device recall is explicitly unsupported on emulators.
+
+## S10 — stable ID across logout, trial memory, email as the paid key (client, built 2026-08-18)
+
+Approved plan: `~/.claude/plans/your-role-you-are-glimmering-gosling.md`. Client half:
+
+- **Logout preserves the device binding** (keys OUT of local-wipe's SECURE_STORE_KEYS; specs
+  inverted); **deletion severs** via `clearDeviceAuthCredentials()` (both keys + `_device_ref`),
+  called from ManageDataScreen after clearAuthStorage.
+- **Refusal recovery**: 403 + DEVICE_ATTESTATION_FAILED/ACCOUNT_DELETED on a stored credential →
+  sever → one fresh-enroll retry (mirror of the invalid-key shape). 400/503/network never sever.
+- **Anchors**: `deviceRef` presented on every sign-in when stored, persisted from the response's raw
+  value (fresh-trial mints only carry it); ANDROID_ID as the Android `deviceId`
+  (expo-application promoted to a direct dependency at 55.0.16); dev bypass keeps its UUID and
+  presents deviceRef (how the simulator exercises anchors).
+- **Welcome-back screen** (top-level `/welcome-back`): fresh install + `trialAvailable: false` →
+  headline, consumed-trial body, Support ID + save hint, Continue → /logged-in (gates route to the
+  paywall). Only entry: the device sign-in success handler.
+- **Email at upgrade**: `ensureEmailBeforeCheckout()` gates the three presentPaywall call sites;
+  the S5 sheet runs as a required step (source 'checkout'); dismissal aborts; fails open on
+  uncertainty; post-purchase trigger stays as fallback. Settings shows the save-your-id hint.
+- Welcome-view copy revision rode along: CTA "Start reading", footer link "Already have an
+  account? Sign in" (superseded keys deleted from all 20 dictionaries via a scripted uniform
+  delete mirroring the splice script's guarantees).
