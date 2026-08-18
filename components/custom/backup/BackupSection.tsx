@@ -7,17 +7,27 @@
 // resting state is an offer, not an unfinished setup.
 //
 // **Setup reveals one step at a time, in place**, and the RECOVERY CODE COMES
-// FIRST. That order is not cosmetic: `runBackup` and `saveBackupToFile` both
-// refuse until the code is acknowledged, because a backup taken before then is
-// written under a key that exists only in the keychain — and the next logout
+// FIRST. That order is not cosmetic: `runBackup` refuses until the code is
+// acknowledged, because a backup taken before then is written under a key that
+// exists only in the keychain — and the next logout
 // wipes the keychain, leaving a file nobody can ever open that the user
 // believes is their backup. A provider-first flow would end at a button the
 // service declines.
 //
-// **"A file on this device" is listed first** because it is what most people
-// will pick. It is also the one destination that cannot be scheduled, so the
-// configured state shows how old the last copy is rather than implying that
-// something refreshes it.
+// **Every destination here can be written to unattended.** A "save to a file"
+// destination was built and removed on 2026-08-18: a share sheet needs a human,
+// so it could never be automated, and a backup nobody remembers to take is not
+// a backup. Anything added here has to clear that bar first.
+//
+// **The backup itself does NOT run here.** It runs in an OS background task
+// (`lib/background/backup-task.ts`), so the compression, encryption and upload
+// never compete with the app the user is actually using. This screen reads
+// `backup_last_run_at` and offers a button; that button is the only foreground
+// path that does real work, and it is a deliberate tap.
+//
+// The system decides when the background task runs, and on iOS that is usually
+// overnight. It can also decline entirely — Background App Refresh off, or Low
+// Power Mode — so the status is READ and said out loud rather than assumed.
 //
 // **`useToast()` and `useTranslation()` are read through refs.** Neither
 // guarantees a stable identity, and when they were in the load effect's
@@ -53,7 +63,6 @@ import {
   backupProviderId,
   backupWifiOnly,
   hydrateBackupSettings,
-  providerIsSchedulable,
   setBackupCadence,
   setBackupProviderId,
   setBackupWifiOnly,
@@ -73,7 +82,6 @@ import {
   isRecoveryCodeConfirmed,
   markRecoveryCodeConfirmed,
 } from '@/lib/backup/key-store';
-import { restoreBackupFromFile, saveBackupToFile } from '@/lib/backup/local-file';
 import {
   connectGoogleDrive,
   googleDriveProvider,
@@ -81,6 +89,7 @@ import {
   type DriveConnectResult,
 } from '@/lib/backup/providers/google-drive';
 import { icloudProvider, isICloudSupported } from '@/lib/backup/providers/icloud';
+import { backgroundBackupIsAvailable } from '@/lib/background/backup-task';
 import type { BackupCadence, BackupProvider } from '@/lib/backup/types';
 import logger from '@/lib/logger';
 
@@ -107,11 +116,11 @@ const BackupSection: React.FC = () => {
   const [typedCode, setTypedCode] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [icloudReady, setIcloudReady] = useState(false);
+  const [bgAvailable, setBgAvailable] = useState(true);
   const [driveReady, setDriveReady] = useState(false);
   const [showCode, setShowCode] = useState(false);
   const [restoreOptions, setRestoreOptions] = useState<readonly string[] | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<string | null>(null);
-  const [confirmFileRestore, setConfirmFileRestore] = useState(false);
   const [confirmOff, setConfirmOff] = useState(false);
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
@@ -153,13 +162,15 @@ const BackupSection: React.FC = () => {
     void (async () => {
       try {
         await hydrateBackupSettings();
-        const [ic, gd] = await Promise.all([
+        const [ic, gd, bg] = await Promise.all([
           isICloudSupported() ? icloudProvider.isAvailable() : Promise.resolve(false),
           isGoogleDriveConfigured() ? googleDriveProvider.isAvailable() : Promise.resolve(false),
+          backgroundBackupIsAvailable(),
         ]);
         if (cancelled) return;
         setIcloudReady(ic);
         setDriveReady(gd);
+        setBgAvailable(bg);
         const configured = backupProviderId() !== null && (await isRecoveryCodeConfirmed());
         if (cancelled) return;
         setStage(configured ? 'on' : 'off');
@@ -252,14 +263,7 @@ const BackupSection: React.FC = () => {
         if (cloud) await verifyProviderAccess(cloud);
 
         await setBackupProviderId(id);
-        if (providerIsSchedulable(id)) {
-          setStage('when');
-        } else {
-          // Nothing to schedule for a file the user keeps themselves.
-          await setBackupCadence('manual');
-          setStage('on');
-          refresh();
-        }
+        setStage('when');
       } catch (err) {
         fail(err, 'choose-provider');
       } finally {
@@ -310,13 +314,8 @@ const BackupSection: React.FC = () => {
     if (!id) return;
     try {
       setBusy('run');
-      const rows =
-        id === 'file'
-          ? (await saveBackupToFile()).header.tables.reduce((n, tb) => n + tb.rows, 0)
-          : (await runBackup(cloudProviderFor(id) as BackupProvider)).header.tables.reduce(
-              (n, tb) => n + tb.rows,
-              0,
-            );
+      const result = await runBackup(cloudProviderFor(id) as BackupProvider);
+      const rows = result.header.tables.reduce((n, tb) => n + tb.rows, 0);
       notify(
         'success',
         tRef.current('backup.doneTitle'),
@@ -385,26 +384,6 @@ const BackupSection: React.FC = () => {
     }
   }, [fail, notify, refresh, restoreTarget]);
 
-  const doFileRestore = useCallback(async () => {
-    setConfirmFileRestore(false);
-    try {
-      setBusy('restore');
-      const result = await restoreBackupFromFile();
-      // null means the picker was dismissed, which is not an outcome to report.
-      if (!result) return;
-      notify(
-        'success',
-        tRef.current('backup.restoredTitle'),
-        tRef.current('backup.restoredDescription', { count: result.rowsRestored }),
-      );
-      refresh();
-    } catch (err) {
-      fail(err, 'restore-file');
-    } finally {
-      setBusy(null);
-    }
-  }, [fail, notify, refresh]);
-
   const turnOff = useCallback(async () => {
     setConfirmOff(false);
     try {
@@ -471,12 +450,9 @@ const BackupSection: React.FC = () => {
     </Box>
   );
 
-  /** Where the file went, for the destination in play. */
-  const destinationHint = (id: BackupProviderId): string => {
-    if (id === 'google-drive') return t('backup.driveHiddenFolder');
-    if (id === 'icloud') return t('backup.icloudHiddenFolder');
-    return t('backup.fileWhereYouPutIt');
-  };
+  /** Where the backup actually lives, because neither is visible to the user. */
+  const destinationHint = (id: BackupProviderId): string =>
+    t(id === 'google-drive' ? 'backup.driveHiddenFolder' : 'backup.icloudHiddenFolder');
 
   const stalenessLine = (id: BackupProviderId) => {
     const last = backupLastRunAt();
@@ -488,9 +464,10 @@ const BackupSection: React.FC = () => {
       );
     }
     const age = Date.now() - last;
-    // Only the unscheduled destination can go stale without anyone noticing;
-    // a cloud provider is being refreshed on a cadence.
-    const stale = !providerIsSchedulable(id) && age > STALE_BACKUP_MS;
+    // A scheduled backup can still go stale, because the schedule only advances
+    // while the app is OPEN. Someone who does not launch the app for a month
+    // has a month-old backup and no reason to suspect it.
+    const stale = age > STALE_BACKUP_MS;
     return (
       <Text size="sm" className={stale ? 'text-amber-400' : 'text-gray-400'}>
         {stale
@@ -609,14 +586,6 @@ const BackupSection: React.FC = () => {
             {t('backup.whereDescription')}
           </Text>
 
-          {/* First, and the expected choice. */}
-          {row(
-            'save-alt',
-            t('backup.file'),
-            t('backup.fileHint'),
-            () => chooseProvider('file'),
-            { testID: 'backup-pick-file' },
-          )}
 
           {/* A provider the platform cannot ever support is not rendered at
               all: iCloud on Android is noise, not an option. One that IS
@@ -661,36 +630,34 @@ const BackupSection: React.FC = () => {
     }
 
     const id = backupProviderId() as BackupProviderId;
-    const schedulable = providerIsSchedulable(id);
     return (
       <VStack space="sm">
         <Box className="bg-gray-900 border border-gray-700 rounded-lg p-4">
           <Text className="text-white">
-            {t('backup.statusProvider', { provider: t(`backup.${
-              id === 'icloud' ? 'icloud' : id === 'google-drive' ? 'drive' : 'file'
-            }`) })}
+            {t('backup.statusProvider', {
+              provider: t(id === 'icloud' ? 'backup.icloud' : 'backup.drive'),
+            })}
           </Text>
           <Text size="xs" className="text-gray-500 mt-1">
             {destinationHint(id)}
           </Text>
           <Box className="mt-2">{stalenessLine(id)}</Box>
-          {schedulable && (
-            <Text size="sm" className="text-gray-400 mt-1">
-              {t('backup.statusCadence', { cadence: t(`backup.cadence.${backupCadence()}`) })}
-            </Text>
-          )}
+          <Text size="sm" className="text-gray-400 mt-1">
+            {t('backup.statusCadence', { cadence: t(`backup.cadence.${backupCadence()}`) })}
+          </Text>
+          {/* Restricted has to be a SENTENCE. Background App Refresh off or Low
+              Power Mode means backups never run on their own, and silence would
+              leave the user believing in a schedule they do not have. */}
+          <Text size="xs" className={bgAvailable ? 'text-gray-500 mt-1' : 'text-amber-400 mt-1'}>
+            {t(bgAvailable ? 'backup.runsInBackground' : 'backup.backgroundRestricted')}
+          </Text>
         </Box>
 
-        {row(
-          'backup',
-          schedulable ? t('backup.runNow') : t('backup.saveCopy'),
-          schedulable ? t('backup.runNowHint') : t('backup.saveCopyHint'),
-          backUpNow,
-          { testID: 'backup-run-now' },
-        )}
+        {row('backup', t('backup.runNow'), t('backup.runNowHint'), backUpNow, {
+          testID: 'backup-run-now',
+        })}
 
-        {schedulable &&
-          row(
+        {row(
             backupWifiOnly() ? 'wifi' : 'signal-cellular-alt',
             t('backup.wifiOnly'),
             backupWifiOnly() ? t('backup.wifiOnlyOn') : t('backup.wifiOnlyOff'),
@@ -698,21 +665,16 @@ const BackupSection: React.FC = () => {
               await setBackupWifiOnly(!backupWifiOnly());
               refresh();
             },
-            { testID: 'backup-wifi-toggle' },
-          )}
+          { testID: 'backup-wifi-toggle' },
+        )}
 
         {row('vpn-key', t('backup.showCode'), t('backup.showCodeHint'), openRecoveryCode, {
           testID: 'backup-show-code',
         })}
 
-        {schedulable &&
-          row('settings-backup-restore', t('backup.restore'), t('backup.restoreHint'),
-            openCloudRestore, { destructive: true, testID: 'backup-restore' })}
+        {row('settings-backup-restore', t('backup.restore'), t('backup.restoreHint'),
+          openCloudRestore, { destructive: true, testID: 'backup-restore' })}
 
-        {/* Offered whatever the destination: a file is the migration path
-            between devices AND between providers. */}
-        {row('folder-open', t('backup.restoreFile'), t('backup.restoreFileHint'), () =>
-          setConfirmFileRestore(true), { destructive: true, testID: 'backup-restore-file' })}
 
         {row('cloud-off', t('backup.turnOff'), t('backup.turnOffHint'), () => setConfirmOff(true), {
           destructive: true,
@@ -818,31 +780,6 @@ const BackupSection: React.FC = () => {
         </ModalContent>
       </Modal>
 
-      <Modal isOpen={confirmFileRestore} onClose={() => setConfirmFileRestore(false)}>
-        <ModalBackdrop />
-        <ModalContent className="bg-gray-900 border border-gray-700">
-          <ModalHeader>
-            <Text className="text-lg font-semibold text-red-400">
-              {t('backup.restoreConfirmTitle')}
-            </Text>
-          </ModalHeader>
-          <ModalBody>
-            <Text className="text-gray-300">{t('backup.restoreConfirmDescription')}</Text>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              variant="outline"
-              onPress={() => setConfirmFileRestore(false)}
-              className="mr-2"
-            >
-              <ButtonText>{t('common.cancel')}</ButtonText>
-            </Button>
-            <Button action="negative" onPress={doFileRestore} testID="backup-restore-file-confirm">
-              <ButtonText>{t('backup.restoreConfirmAction')}</ButtonText>
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
 
       <Modal isOpen={confirmOff} onClose={() => setConfirmOff(false)}>
         <ModalBackdrop />

@@ -61,12 +61,16 @@ export function hydrateAllStores(): Promise<void> {
     useTextScaleStore.getState().hydrate(),
     useTutorialsStore.getState().hydrate(),
     useStartupTabStore.getState().hydrate(),
-    // Not a Zustand store: a synchronous mirror of the backup preferences. It
-    // has to be warm before the scheduler evaluates the backup task's custom
-    // condition, which cannot be async — see lib/backup/backup-settings.ts.
-    // Reading an unhydrated mirror is safe (it defaults to "off") but would
-    // skip the first eligible run of the session.
-    require('../backup/backup-settings').hydrateBackupSettings(),
+    // Not a Zustand store: a synchronous mirror of the backup preferences,
+    // read by the settings section and by the background task's guards.
+    require('../backup/backup-settings')
+      .hydrateBackupSettings()
+      // Reconcile the OS background task with the hydrated cadence. A
+      // registration can be lost (reinstall, restore, the system dropping it),
+      // and the only moment we know the cadence is right after this read.
+      // Deliberately not awaited into the result and never allowed to reject.
+      .then(() => require('../background/backup-task').syncBackupTaskRegistration())
+      .catch(() => undefined),
   ])
     .then(() => {
       // Fire-and-forget: back-fill the persona's primary language_codes from the

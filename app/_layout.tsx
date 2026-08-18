@@ -61,6 +61,7 @@ import {
   defineInferenceTask,
   ensureSilentPushTaskRegistered,
 } from '@/lib/background/inference-task';
+import { defineBackupTask, syncBackupTaskRegistration } from '@/lib/background/backup-task';
 import * as Sentry from '@sentry/react-native';
 import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
@@ -76,13 +77,18 @@ import '@/lib/scheduler/tasks/sanity-backfill-task';
 import '@/lib/scheduler/tasks/persona-geo-task';
 import '@/lib/scheduler/tasks/feedback-cycle-task';
 import '@/lib/scheduler/tasks/entitlement-sync-task';
-import '@/lib/scheduler/tasks/backup-task';
 
 // Register the inference TaskManager task at module load so the
 // expo-notifications silent-push wake (phase-1-done / phase-2-done from the
 // inference gateway) can resolve the task name on cold start. The task is
 // response-unpacking only; fresh cycles are kicked off in the foreground.
 defineInferenceTask();
+
+// Same reason, different trigger: the OS resolves the JS entry point on a
+// BGTask wake and looks the task up by name, so it has to be DEFINED at module
+// load or the wake finds nothing. Registration is separate and happens after
+// settings hydrate, since it depends on the cadence.
+defineBackupTask();
 
 // Everything below the mandatory-update gate. Kept as its own component so the
 // gate can mount/unmount it as a unit: when an update is required (or while the

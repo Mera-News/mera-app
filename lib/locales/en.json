@@ -791,9 +791,6 @@
     "codeSaved": "I have saved my recovery code",
     "whereTitle": "Where to keep it",
     "whereDescription": "The copy is encrypted either way. This only decides who stores it.",
-    "file": "A file on this device",
-    "fileHint": "Save it to Files, or send it anywhere you like",
-    "fileWhereYouPutIt": "Wherever you saved the file",
     "icloud": "iCloud",
     "icloudReady": "Uses your iCloud storage",
     "icloudUnavailable": "Sign in to iCloud on this device to use this",
@@ -814,8 +811,8 @@
       "manual": "Only when I tap"
     },
     "cadenceHint": {
-      "daily": "Runs in the background once a day",
-      "weekly": "Runs in the background once a week",
+      "daily": "About once a day, usually overnight",
+      "weekly": "About once a week, usually overnight",
       "manual": "Nothing runs on its own"
     },
     "statusProvider": "Backing up to {{provider}}",
@@ -824,9 +821,7 @@
     "statusNever": "No backup saved yet",
     "statusStale": "Your last backup is {{days}} days old. Save a new copy.",
     "runNow": "Back up now",
-    "runNowHint": "Takes a moment on a large persona",
-    "saveCopy": "Save a new copy",
-    "saveCopyHint": "Nothing runs on its own, so save a copy from time to time",
+    "runNowHint": "Use this if the automatic backup has not run",
     "wifiOnly": "Wi-Fi only",
     "wifiOnlyOn": "On. Scheduled backups wait for Wi-Fi.",
     "wifiOnlyOff": "Off. Scheduled backups may use mobile data.",
@@ -835,8 +830,6 @@
     "restore": "Restore from a backup",
     "restoreHint": "Replaces the data on this device",
     "restoreEmpty": "There are no backups to restore yet.",
-    "restoreFile": "Restore from a file",
-    "restoreFileHint": "Pick a backup file. Replaces the data on this device.",
     "restoreConfirmTitle": "Replace the data on this device?",
     "restoreConfirmDescription": "Your facts, topics, chats, saved articles and reading history on this phone will be replaced by what is in the backup. This cannot be undone. Your account and subscription are not affected.",
     "restoreConfirmAction": "Replace",
@@ -849,7 +842,9 @@
     "doneDescription_other": "{{count}} items saved.",
     "restoredTitle": "Restore complete",
     "restoredDescription_one": "{{count}} item restored to this device.",
-    "restoredDescription_other": "{{count}} items restored to this device."
+    "restoredDescription_other": "{{count}} items restored to this device.",
+    "runsInBackground": "Runs on its own in the background, usually overnight",
+    "backgroundRestricted": "Background App Refresh is off, so backups cannot run on their own. Use Back up now, or turn it on in your device settings."
   },
   "preferences": {
     "manageSettings": "Manage your app settings and account",

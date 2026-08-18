@@ -93,29 +93,13 @@ describe('when the scheduler may run', () => {
     expect(scheduledBackupEnabled()).toBe(false);
   });
 
-  it('never runs for `file`, even on a daily cadence', async () => {
-    // A file the user filed away has no address this app holds. The unattended
-    // alternative is app-private storage, which is unreachable on Android and
-    // deleted with the app — a backup that is gone exactly when it is needed.
-    await setBackupProviderId('file');
-    await setBackupCadence('daily');
-    expect(scheduledBackupEnabled()).toBe(false);
-  });
-
-  it('says plainly which destinations can be written to unattended', () => {
+  it('says which destinations can be written to unattended', () => {
+    // Every provider qualifies today. The check exists because one did not: a
+    // "save to a file" destination was built and removed on 2026-08-18, since a
+    // share sheet needs a human and so could never be automated. Anything added
+    // here has to answer that question before it is offered.
     expect(providerIsSchedulable('icloud')).toBe(true);
     expect(providerIsSchedulable('google-drive')).toBe(true);
-    expect(providerIsSchedulable('file')).toBe(false);
-  });
-
-  it('round-trips `file` through the settings row', async () => {
-    await setBackupProviderId('file');
-    resetBackupSettingsMirror();
-    await hydrateBackupSettings();
-    // A provider value the mirror does not recognise falls back to null; this
-    // asserts 'file' is recognised rather than silently dropped.
-    expect(providerIsSchedulable('file')).toBe(false);
-    expect(scheduledBackupEnabled()).toBe(false);
   });
 
   it('runs immediately the first time, when there is no last run', async () => {

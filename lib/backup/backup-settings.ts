@@ -27,14 +27,16 @@ export const BACKUP_PROVIDER_KEY = 'backup_provider';
 export const BACKUP_WIFI_ONLY_KEY = 'backup_wifi_only';
 export const BACKUP_LAST_RUN_KEY = 'backup_last_run_at';
 
-/**
- * `'file'` is a destination, not a service: the user saves a copy and puts it
- * somewhere themselves. It is the option most people are expected to pick, and
- * it is the one that can never run unattended — see `scheduledBackupEnabled`.
- */
-export type BackupProviderId = 'icloud' | 'google-drive' | 'file';
+export type BackupProviderId = 'icloud' | 'google-drive';
 
-/** Providers a background task can actually write to. */
+/**
+ * Destinations the app can write to without the user present. Every provider
+ * qualifies today, and the list exists because one did not: a "save to a file"
+ * destination was built and removed on 2026-08-18. A file can NEVER be
+ * automated — the share sheet needs a human — and a backup nobody remembers to
+ * take is not a backup. Any future destination has to answer this question
+ * before it is offered.
+ */
 const SCHEDULABLE_PROVIDERS: readonly BackupProviderId[] = ['icloud', 'google-drive'];
 
 export const CADENCE_INTERVAL_MS: Readonly<Record<BackupCadence, number>> = {
@@ -101,16 +103,10 @@ export function backupLastRunAt(): number | null {
 /**
  * True when a scheduled backup is configured at all. The scheduler condition.
  *
- * Three separate ways to be false, and they are different situations rather
- * than one:
- *   - `off`     the user declined backup
- *   - `manual`  the user wants to press the button themselves
- *   - `file`    there is nothing to write to unattended. A file the user filed
- *               away has no address we hold, and the app-private alternative
- *               is unreachable on Android and deleted with the app.
- *
- * Collapsing any of them into "cadence !== 'off'" starts uploading for people
- * who said no.
+ * `off` and `manual` are both false and are different situations: off means the
+ * user declined, manual means they want to press the button themselves.
+ * Collapsing either into "cadence !== 'off'" starts uploading for people who
+ * said no. The provider check is the third gate — see SCHEDULABLE_PROVIDERS.
  */
 export function scheduledBackupEnabled(): boolean {
   if (mirror.cadence === 'off' || mirror.cadence === 'manual') return false;
@@ -123,7 +119,7 @@ export function providerIsSchedulable(provider: BackupProviderId): boolean {
 }
 
 function isProviderId(v: string | null): v is BackupProviderId {
-  return v === 'icloud' || v === 'google-drive' || v === 'file';
+  return v === 'icloud' || v === 'google-drive';
 }
 
 /** True when enough time has passed for the configured cadence. */
@@ -133,14 +129,34 @@ export function scheduledBackupIsDue(now: number): boolean {
   return now - mirror.lastRunAt >= CADENCE_INTERVAL_MS[mirror.cadence];
 }
 
+/**
+ * Registration follows the cadence, and it is done HERE rather than at the call
+ * sites so the two cannot drift. `off` and `manual` unregister the OS task
+ * outright instead of leaving one that wakes up and returns early.
+ *
+ * Required lazily to keep a cycle out of the graph: the background task imports
+ * this module for its guards.
+ */
+async function syncRegistration(): Promise<void> {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { syncBackupTaskRegistration } = require('@/lib/background/backup-task');
+    await syncBackupTaskRegistration();
+  } catch {
+    // The manual button and the staleness line both still work without it.
+  }
+}
+
 export async function setBackupCadence(cadence: BackupCadence): Promise<void> {
   mirror.cadence = cadence;
   await setSetting(BACKUP_CADENCE_KEY, cadence);
+  await syncRegistration();
 }
 
 export async function setBackupProviderId(provider: BackupProviderId): Promise<void> {
   mirror.provider = provider;
   await setSetting(BACKUP_PROVIDER_KEY, provider);
+  await syncRegistration();
 }
 
 export async function setBackupWifiOnly(wifiOnly: boolean): Promise<void> {

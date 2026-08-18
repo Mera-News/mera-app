@@ -79,6 +79,30 @@ function ensureDirectory(root: Directory, name: string): Directory {
   return dir;
 }
 
+/**
+ * Empties the blob directory before writing a new one.
+ *
+ * The `finally` in `runBackup` handles the normal path, but it only runs if
+ * code runs: a suspended process or an expired background task leaves the blob
+ * behind, and each one is up to `BACKUP_MAX_BYTES` of the user's persona
+ * sitting in app storage until the next logout wipe. Every file in here is
+ * either a finished upload that should already be gone or an abandoned
+ * attempt, and the directory is ours alone, so clearing it is unconditional.
+ */
+function clearStaleBlobs(dir: Directory): void {
+  try {
+    for (const entry of dir.list()) {
+      try {
+        entry.delete();
+      } catch {
+        // One undeletable file must not stop the backup that is about to run.
+      }
+    }
+  } catch {
+    // An unlistable directory is not a reason to refuse a backup.
+  }
+}
+
 /** Column names per table, from the LIVE schema, for the importer's drift check. */
 export function knownColumns(): Record<string, readonly string[]> {
   const out: Record<string, readonly string[]> = {};
@@ -114,6 +138,7 @@ export async function runBackup(
 
   const now = Date.now();
   const blobDir = ensureDirectory(Paths.document, BACKUP_DOCUMENT_DIRECTORY);
+  clearStaleBlobs(blobDir);
   const scratchDir = ensureDirectory(Paths.cache, BACKUP_SCRATCH_DIRECTORY);
   const filename = remoteFilenameFor(now);
   const blobFile = await RnfsFile.createEmpty(pathOf(blobDir, filename));

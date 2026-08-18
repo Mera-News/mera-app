@@ -151,6 +151,13 @@ jest.mock('@/lib/backup/backup-settings', () => ({
   hydrateBackupSettings: jest.fn(() => Promise.resolve()),
 }));
 
+// Chained off the hydration above to reconcile the OS background task with the
+// cadence. Unmocked it pulls in expo-background-task and sentry-init, which is
+// a lot of graph for a suite about store hydration.
+jest.mock('@/lib/background/backup-task', () => ({
+  syncBackupTaskRegistration: jest.fn(() => Promise.resolve()),
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: { captureException: jest.fn() },

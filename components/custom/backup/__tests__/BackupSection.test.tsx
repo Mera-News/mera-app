@@ -2,16 +2,16 @@
 //
 //   1. OPT-IN. Rendering the section must not mint a key, connect an account or
 //      write anything. Someone who wants no backups looks once and leaves.
-//   2. THE RECOVERY CODE COMES FIRST. Both `runBackup` and `saveBackupToFile`
-//      refuse until it is acknowledged, so a provider-first flow would end at a
-//      button the service declines.
+//   2. THE RECOVERY CODE COMES FIRST. `runBackup` refuses until it is
+//      acknowledged, so a provider-first flow would end at a button the
+//      service declines.
 //   3. A FAILED DRIVE CONNECT MUST NOT ADVANCE. The previous version compared a
 //      result OBJECT with `!result`, which is always false, so it proceeded on
 //      failure — and before that it returned a bare boolean, making a
 //      misconfigured build indistinguishable from a user cancelling. That is
 //      the "chooser appeared, nothing happened" report.
-//   4. `file` NEVER REACHES A CADENCE PICKER, because nothing can write to it
-//      unattended.
+//   4. A CLOUD DESTINATION IS VERIFIED before setup claims success, because
+//      sign-in succeeding does not prove the scope was granted.
 
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
@@ -43,15 +43,6 @@ jest.mock('@/lib/backup/backup-service', () => ({
     verifyProviderAccess: (p: unknown) => mockVerifyAccess(p),
 }));
 
-const mockSaveToFile = jest.fn(async () => {
-    calls.push('saveBackupToFile');
-    return { header: { tables: [{ table: 'facts', rows: 5, rowsAvailable: 5 }] }, blobBytes: 2 };
-});
-const mockRestoreFromFile = jest.fn(async () => { calls.push('restoreBackupFromFile'); return { rowsRestored: 9 }; });
-jest.mock('@/lib/backup/local-file', () => ({
-    saveBackupToFile: () => mockSaveToFile(),
-    restoreBackupFromFile: () => mockRestoreFromFile(),
-}));
 
 let mockProviderId: string | null = null;
 let mockLastRunAt: number | null = null;
@@ -63,7 +54,6 @@ jest.mock('@/lib/backup/backup-settings', () => ({
     backupCadence: () => 'daily',
     backupLastRunAt: () => mockLastRunAt,
     backupWifiOnly: () => true,
-    providerIsSchedulable: (p: string) => p === 'icloud' || p === 'google-drive',
     setBackupProviderId: (id: string) => mockSetProviderId(id),
     setBackupCadence: (c: string) => mockSetCadence(c),
     setBackupWifiOnly: jest.fn(async () => {}),
@@ -80,6 +70,11 @@ let mockICloudSupported = true;
 jest.mock('@/lib/backup/providers/icloud', () => ({
     icloudProvider: { id: 'icloud', isAvailable: jest.fn(async () => true) },
     isICloudSupported: () => mockICloudSupported,
+}));
+
+let mockBgAvailable = true;
+jest.mock('@/lib/background/backup-task', () => ({
+    backgroundBackupIsAvailable: jest.fn(async () => mockBgAvailable),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -157,6 +152,7 @@ beforeEach(() => {
     mockLastRunAt = null;
     mockICloudSupported = true;
     mockConnectResult = { ok: true };
+    mockBgAvailable = true;
     mockIsConfirmed.mockResolvedValue(false);
 });
 
@@ -167,7 +163,7 @@ async function reachWhere(r: ReturnType<typeof render>) {
     await waitFor(() => r.getByTestId('backup-code-saved'));
     fireEvent.press(r.getByTestId('backup-code-saved'));
     fireEvent.press(r.getByTestId('backup-code-continue'));
-    await waitFor(() => r.getByTestId('backup-pick-file'));
+    await waitFor(() => r.getByTestId('backup-pick-icloud'));
 }
 
 describe('opt-in', () => {
@@ -177,7 +173,6 @@ describe('opt-in', () => {
         expect(mockEnsureBackupKey).not.toHaveBeenCalled();
         expect(mockConnectDrive).not.toHaveBeenCalled();
         expect(mockRunBackup).not.toHaveBeenCalled();
-        expect(mockSaveToFile).not.toHaveBeenCalled();
         expect(mockSetCadence).not.toHaveBeenCalled();
     });
 });
@@ -204,26 +199,26 @@ describe('the recovery code comes first', () => {
     it('acknowledges the code strictly before a destination is recorded', async () => {
         const r = render(<BackupSection />);
         await reachWhere(r);
-        fireEvent.press(r.getByTestId('backup-pick-file'));
-        await waitFor(() => expect(mockSetProviderId).toHaveBeenCalledWith('file'));
-        expect(calls.indexOf('markRecoveryCodeConfirmed')).toBeLessThan(calls.indexOf('setProvider:file'));
+        fireEvent.press(r.getByTestId('backup-pick-icloud'));
+        await waitFor(() => expect(mockSetProviderId).toHaveBeenCalledWith('icloud'));
+        expect(calls.indexOf('markRecoveryCodeConfirmed')).toBeLessThan(calls.indexOf('setProvider:icloud'));
     });
 });
 
 describe('the destination list', () => {
-    it('offers a file first, and it is the expected choice', async () => {
-        const r = render(<BackupSection />);
-        await reachWhere(r);
-        r.getByTestId('backup-pick-file');
-    });
 
     it('does not render iCloud at all on a platform that can never support it', async () => {
         mockICloudSupported = false;
         const r = render(<BackupSection />);
-        await reachWhere(r);
-        // A permanently greyed-out row is noise, not an option.
+        await waitFor(() => r.getByTestId('backup-set-up'));
+        fireEvent.press(r.getByTestId('backup-set-up'));
+        await waitFor(() => r.getByTestId('backup-code-saved'));
+        fireEvent.press(r.getByTestId('backup-code-saved'));
+        fireEvent.press(r.getByTestId('backup-code-continue'));
+        // Anchored on the Drive row, since the whole point is that the iCloud
+        // one is absent: a permanently greyed-out option is noise, not a choice.
+        await waitFor(() => r.getByTestId('backup-pick-drive'));
         expect(r.queryByTestId('backup-pick-icloud')).toBeNull();
-        r.getByTestId('backup-pick-drive');
     });
 
     it('still renders iCloud where the platform supports it', async () => {
@@ -233,15 +228,7 @@ describe('the destination list', () => {
     });
 });
 
-describe('a file cannot be scheduled', () => {
-    it('skips the cadence step and forces manual', async () => {
-        const r = render(<BackupSection />);
-        await reachWhere(r);
-        fireEvent.press(r.getByTestId('backup-pick-file'));
-        await waitFor(() => expect(mockSetCadence).toHaveBeenCalledWith('manual'));
-        expect(r.queryByTestId('backup-cadence-daily')).toBeNull();
-    });
-
+describe('setting up a cloud destination', () => {
     it('offers a cadence for a cloud destination', async () => {
         const r = render(<BackupSection />);
         await reachWhere(r);
@@ -259,13 +246,6 @@ describe('a file cannot be scheduled', () => {
         expect(calls.indexOf('verifyProviderAccess')).toBeLessThan(calls.indexOf('setProvider:icloud'));
     });
 
-    it('does not verify anything for a file, because there is nothing to reach', async () => {
-        const r = render(<BackupSection />);
-        await reachWhere(r);
-        fireEvent.press(r.getByTestId('backup-pick-file'));
-        await waitFor(() => expect(mockSetProviderId).toHaveBeenCalled());
-        expect(mockVerifyAccess).not.toHaveBeenCalled();
-    });
 });
 
 describe('a failed Drive connect must not advance', () => {
@@ -319,7 +299,7 @@ describe('the new-phone path', () => {
         fireEvent.changeText(r.getByTestId('backup-code-input'), 'abcde fghjk');
         fireEvent.press(r.getByTestId('backup-adopt-continue'));
         await waitFor(() => expect(mockAdopt).toHaveBeenCalledWith('abcde fghjk'));
-        await waitFor(() => r.getByTestId('backup-pick-file'));
+        await waitFor(() => r.getByTestId('backup-pick-icloud'));
     });
 
     it('says the code is wrong and stays put', async () => {
@@ -336,49 +316,29 @@ describe('the new-phone path', () => {
 });
 
 describe('the configured state', () => {
-    it('saves a copy rather than uploading when the destination is a file', async () => {
-        mockProviderId = 'file';
-        mockIsConfirmed.mockResolvedValue(true);
-        const r = render(<BackupSection />);
-        await waitFor(() => r.getByTestId('backup-run-now'));
-        fireEvent.press(r.getByTestId('backup-run-now'));
-        await waitFor(() => expect(mockSaveToFile).toHaveBeenCalled());
-        expect(mockRunBackup).not.toHaveBeenCalled();
-    });
 
-    it('hides the cloud-only controls for a file destination', async () => {
-        mockProviderId = 'file';
-        mockIsConfirmed.mockResolvedValue(true);
-        const r = render(<BackupSection />);
-        await waitFor(() => r.getByTestId('backup-run-now'));
-        // Nothing runs on a schedule, so a Wi-Fi preference and a cloud restore
-        // list would both be controls over something that never happens.
-        expect(r.queryByTestId('backup-wifi-toggle')).toBeNull();
-        expect(r.queryByTestId('backup-restore')).toBeNull();
-    });
 
-    it('offers restore-from-a-file whatever the destination, as the migration path', async () => {
+
+
+    it('says plainly when the OS will not run background work', async () => {
+        // Silence here would leave the user believing in a schedule they do not
+        // have: Background App Refresh off means backups never run on their own.
+        mockBgAvailable = false;
         mockProviderId = 'icloud';
         mockIsConfirmed.mockResolvedValue(true);
         const r = render(<BackupSection />);
-        await waitFor(() => r.getByTestId('backup-restore-file'));
-        r.getByTestId('backup-wifi-toggle');
+        await waitFor(() => r.getByText('backup.backgroundRestricted'));
     });
 
-    it('needs an explicit confirmation before a file restore replaces anything', async () => {
-        mockProviderId = 'file';
+    it('says backups run in the background when the OS allows it', async () => {
+        mockProviderId = 'icloud';
         mockIsConfirmed.mockResolvedValue(true);
         const r = render(<BackupSection />);
-        await waitFor(() => r.getByTestId('backup-restore-file'));
-        fireEvent.press(r.getByTestId('backup-restore-file'));
-        await waitFor(() => r.getByTestId('backup-restore-file-confirm'));
-        expect(mockRestoreFromFile).not.toHaveBeenCalled();
-        fireEvent.press(r.getByTestId('backup-restore-file-confirm'));
-        await waitFor(() => expect(mockRestoreFromFile).toHaveBeenCalled());
+        await waitFor(() => r.getByText('backup.runsInBackground'));
     });
 
     it('forgets the key when backup is turned off, and only after confirming', async () => {
-        mockProviderId = 'file';
+        mockProviderId = 'icloud';
         mockIsConfirmed.mockResolvedValue(true);
         const r = render(<BackupSection />);
         await waitFor(() => r.getByTestId('backup-turn-off'));
