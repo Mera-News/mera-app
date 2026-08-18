@@ -620,6 +620,14 @@ Open cosmetic items observed repeatedly by the sim rounds, filed for their owner
 the email view keeps its own tour pill and has no back affordance (both pre-existing), and the
 "Before you continue" consent sheet re-arms on deep links and swallows taps until accepted.
 
+### S9, 2026-08-18: Support ID copy button
+
+Copy button beside the Settings Support ID row (expo-clipboard, already a dependency, first call
+site). Copies exactly the numeric id, haptic + localized 1.8s "Copied" swap, hidden when no id,
+a11y-labelled, both new keys in all 20 dictionaries. Client `b1fd98b`, verified on-device including
+the pasteboard round-trip (`pbpaste` printed exactly the displayed 7-digit id 4550245 — adaptive
+length live in the UI path).
+
 ## Held design: the smallest attestation version
 
 Fully specified so nothing is decided mid-implementation. Not broken into phases because it is gated on
