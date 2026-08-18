@@ -563,6 +563,13 @@ fabricated address itself is never rendered. Pre-S5 accounts have null and show 
 `c5778d8`, revision news-auth-staging-00039), client `556af09`, verified on-device (id 95290510,
 UI = DB = email local part, zero anon-address leaks).
 
+Refined same day to ADAPTIVE LENGTH (user decision): new IDs mint at 7 digits, escalating 7,7,8,9
+across collision retries; validators accept 6-12 digits both sides; uniqueness is enforced solely by
+the partial unique index + insert-retry, so digit count only tunes retry frequency and no ID is ever
+migrated. Server `a6dab49` (staging merge `71aba4a`, revision news-auth-staging-00040), client
+`ff023d5`. Verified live: fresh device minted 7-digit `1264427`; the pre-refinement account resumed
+with its 8-digit `19588512` unchanged.
+
 Known cosmetic repeat: the "Before you continue" consent sheet re-arms on deep-links into logged-in
 while onboarding is incomplete and swallows taps until accepted. Pre-existing behavior, not from
 this wave; noted for whoever owns onboarding.
