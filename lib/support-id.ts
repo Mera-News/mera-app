@@ -1,5 +1,8 @@
-// The 8-digit numeric support handle minted server-side for every new
-// anonymous account (auth wave S5). It is the LOOKUP KEY support uses instead
+// The numeric support handle minted server-side for every new anonymous
+// account (auth wave S5). VARIABLE LENGTH: the server mints 7 digits and
+// escalates to 8-9 under collision pressure; existing accounts carry 8. The
+// client accepts 6-12 digits, no leading zero, and passes the string through
+// UNCHANGED everywhere — never truncate, never pad. It is the LOOKUP KEY support uses instead
 // of an email address, survives an email attach, and never changes — so it can
 // ride every support surface automatically and the user never has to copy it.
 //
@@ -15,15 +18,22 @@ import { authClient } from '@/lib/auth-client';
 
 const SUPPORT_ID_FETCH_TIMEOUT_MS = 1_500;
 
+// 6-12 digits, no leading zero — deliberately wider than what the server
+// mints today (7-9) so a future escalation is not a client release.
+const SUPPORT_ID_PATTERN = /^[1-9]\d{5,11}$/;
+
 /** Extract and validate the support id from a session user object. Tolerates
- *  a numeric field; rejects anything that is not purely digits. */
+ *  a numeric field; rejects anything outside SUPPORT_ID_PATTERN. */
 export function readSupportIdFromUser(user: unknown): string | null {
   const raw = (user as { supportId?: unknown } | null | undefined)?.supportId;
-  if (typeof raw === 'number' && Number.isSafeInteger(raw) && raw >= 0) {
-    return String(raw);
-  }
-  if (typeof raw === 'string' && /^\d{1,16}$/.test(raw)) {
-    return raw;
+  const candidate =
+    typeof raw === 'number' && Number.isSafeInteger(raw) && raw >= 0
+      ? String(raw)
+      : typeof raw === 'string'
+        ? raw
+        : null;
+  if (candidate !== null && SUPPORT_ID_PATTERN.test(candidate)) {
+    return candidate;
   }
   return null;
 }

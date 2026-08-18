@@ -20,12 +20,21 @@ beforeEach(() => {
 });
 
 describe('readSupportIdFromUser', () => {
-    it('accepts the 8-digit string field and a numeric variant', () => {
+    it('accepts variable-length ids: 7 digits (new mints), 8 (existing), up to 12', () => {
+        expect(readSupportIdFromUser({ supportId: '1234567' })).toBe('1234567');
         expect(readSupportIdFromUser({ supportId: '12345678' })).toBe('12345678');
-        expect(readSupportIdFromUser({ supportId: 12345678 })).toBe('12345678');
+        expect(readSupportIdFromUser({ supportId: '123456789' })).toBe('123456789');
+        expect(readSupportIdFromUser({ supportId: '123456' })).toBe('123456');
+        expect(readSupportIdFromUser({ supportId: '123456789012' })).toBe('123456789012');
+        // Numeric variant tolerated, same bounds.
+        expect(readSupportIdFromUser({ supportId: 1234567 })).toBe('1234567');
     });
 
-    it('rejects absence and anything that is not purely digits', () => {
+    it('rejects too short, too long, leading zeros, and non-digits', () => {
+        expect(readSupportIdFromUser({ supportId: '12345' })).toBeNull();
+        expect(readSupportIdFromUser({ supportId: 12345 })).toBeNull();
+        expect(readSupportIdFromUser({ supportId: '1234567890123' })).toBeNull();
+        expect(readSupportIdFromUser({ supportId: '01234567' })).toBeNull();
         expect(readSupportIdFromUser(null)).toBeNull();
         expect(readSupportIdFromUser({})).toBeNull();
         expect(readSupportIdFromUser({ supportId: null })).toBeNull();
@@ -62,6 +71,14 @@ describe('getSupportId', () => {
 });
 
 describe('mailto builder', () => {
+    it('passes the id through UNCHANGED at any length — no truncation, no padding', () => {
+        expect(supportIdLine('1234567')).toBe('Support ID: 1234567');
+        expect(supportIdLine('123456789012')).toBe('Support ID: 123456789012');
+        expect(decodeURIComponent(buildSupportMailtoUrl('contact@mera.news', '1234567'))).toContain(
+            'Support ID: 1234567\n',
+        );
+    });
+
     it('pre-fills the body with the Support ID line so the user never copies it', () => {
         expect(supportIdLine('12345678')).toBe('Support ID: 12345678');
         const url = buildSupportMailtoUrl('contact@mera.news', '12345678');
