@@ -47,6 +47,13 @@ function resolveProvider(): BackupProvider | null {
     case 'google-drive':
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require('@/lib/backup/providers/google-drive').googleDriveProvider as BackupProvider;
+    case 'file':
+      // Stated rather than left to `default`. A file the user saved by hand has
+      // no address this task holds, so there is nothing to write to unattended.
+      // `scheduledBackupEnabled()` already keeps the job from being created at
+      // all; this is the second gate, so a future edit to either one cannot
+      // quietly start writing.
+      return null;
     default:
       return null;
   }

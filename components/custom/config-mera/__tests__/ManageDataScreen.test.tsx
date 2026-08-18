@@ -131,6 +131,12 @@ jest.mock('@/components/ui/toast', () => {
         ToastDescription: (p: any) => <Text {...p} />,
     };
 });
+// BackupSection holds its own state and reaches the whole backup stack,
+// expo-document-picker and expo-sharing. Unmocked it would drag all of that
+// into a suite about deleting an account, and every future backup import would
+// break this file for reasons unrelated to it.
+jest.mock('@/components/custom/backup/BackupSection', () => ({ __esModule: true, default: () => null }));
+
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (p: any) => <View {...p} /> };

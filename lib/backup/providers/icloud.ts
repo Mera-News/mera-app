@@ -36,11 +36,25 @@ function storage(): CloudStorage {
   return instance;
 }
 
+/**
+ * Whether this PLATFORM can ever offer iCloud. Synchronous and build-time, and
+ * deliberately separate from `isAvailable()`, which is a runtime question.
+ *
+ * The two must not be collapsed, because they call for opposite UI. On Android
+ * iCloud can never work, so the row should not exist at all — offering a
+ * permanently greyed-out option is noise. On iOS with the user signed out of
+ * iCloud it CAN work, so the row belongs there with a hint explaining what to
+ * do about it.
+ */
+export function isICloudSupported(): boolean {
+  return Platform.OS === 'ios';
+}
+
 export const icloudProvider: BackupProvider = {
   id: 'icloud',
 
   async isAvailable(): Promise<boolean> {
-    if (Platform.OS !== 'ios') return false;
+    if (!isICloudSupported()) return false;
     try {
       return await storage().isCloudAvailable();
     } catch {

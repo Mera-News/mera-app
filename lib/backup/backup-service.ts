@@ -80,7 +80,7 @@ function ensureDirectory(root: Directory, name: string): Directory {
 }
 
 /** Column names per table, from the LIVE schema, for the importer's drift check. */
-function knownColumns(): Record<string, readonly string[]> {
+export function knownColumns(): Record<string, readonly string[]> {
   const out: Record<string, readonly string[]> = {};
   for (const [table, def] of Object.entries(appSchema.tables)) {
     out[table] = Object.keys((def as { columns: Record<string, unknown> }).columns);
@@ -166,6 +166,30 @@ async function pruneOldBackups(provider: BackupProvider): Promise<void> {
       'backup-service',
       { message: err instanceof Error ? err.message : String(err) },
       'warning',
+    );
+  }
+}
+
+/**
+ * One real round trip against the provider, run at the END of setup.
+ *
+ * Sign-in succeeding does not prove the `drive.appdata` grant landed, and a
+ * token without that scope fails nothing until the first actual upload — which
+ * is a background task at 3am that nobody is watching. Listing is the cheapest
+ * call that genuinely exercises the grant: it reaches the API, so a missing
+ * scope 403s here, during setup, while the user is looking at the screen.
+ *
+ * An EMPTY result is a pass. "No backups yet" is the expected state for someone
+ * who has just finished setting up.
+ */
+export async function verifyProviderAccess(provider: BackupProvider): Promise<void> {
+  try {
+    await provider.list(REMOTE_FILENAME_PREFIX);
+  } catch (err) {
+    const reason = (err as { reason?: RestoreRefusal })?.reason ?? 'provider-unavailable';
+    throw new BackupServiceError(
+      reason,
+      `Could not reach ${provider.id}: ${err instanceof Error ? err.message : String(err)}`,
     );
   }
 }

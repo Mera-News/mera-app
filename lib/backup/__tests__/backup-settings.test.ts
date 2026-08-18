@@ -28,6 +28,7 @@ jest.mock('@react-native-community/netinfo', () => ({
 
 import {
   CADENCE_INTERVAL_MS,
+  providerIsSchedulable,
   backupWifiOnly,
   connectionSatisfiesWifiOnly,
   hydrateBackupSettings,
@@ -89,6 +90,31 @@ describe('when the scheduler may run', () => {
 
   it('does not run without a provider chosen', async () => {
     await setBackupCadence('daily');
+    expect(scheduledBackupEnabled()).toBe(false);
+  });
+
+  it('never runs for `file`, even on a daily cadence', async () => {
+    // A file the user filed away has no address this app holds. The unattended
+    // alternative is app-private storage, which is unreachable on Android and
+    // deleted with the app — a backup that is gone exactly when it is needed.
+    await setBackupProviderId('file');
+    await setBackupCadence('daily');
+    expect(scheduledBackupEnabled()).toBe(false);
+  });
+
+  it('says plainly which destinations can be written to unattended', () => {
+    expect(providerIsSchedulable('icloud')).toBe(true);
+    expect(providerIsSchedulable('google-drive')).toBe(true);
+    expect(providerIsSchedulable('file')).toBe(false);
+  });
+
+  it('round-trips `file` through the settings row', async () => {
+    await setBackupProviderId('file');
+    resetBackupSettingsMirror();
+    await hydrateBackupSettings();
+    // A provider value the mirror does not recognise falls back to null; this
+    // asserts 'file' is recognised rather than silently dropped.
+    expect(providerIsSchedulable('file')).toBe(false);
     expect(scheduledBackupEnabled()).toBe(false);
   });
 

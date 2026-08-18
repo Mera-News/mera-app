@@ -27,7 +27,15 @@ export const BACKUP_PROVIDER_KEY = 'backup_provider';
 export const BACKUP_WIFI_ONLY_KEY = 'backup_wifi_only';
 export const BACKUP_LAST_RUN_KEY = 'backup_last_run_at';
 
-export type BackupProviderId = 'icloud' | 'google-drive';
+/**
+ * `'file'` is a destination, not a service: the user saves a copy and puts it
+ * somewhere themselves. It is the option most people are expected to pick, and
+ * it is the one that can never run unattended — see `scheduledBackupEnabled`.
+ */
+export type BackupProviderId = 'icloud' | 'google-drive' | 'file';
+
+/** Providers a background task can actually write to. */
+const SCHEDULABLE_PROVIDERS: readonly BackupProviderId[] = ['icloud', 'google-drive'];
 
 export const CADENCE_INTERVAL_MS: Readonly<Record<BackupCadence, number>> = {
   off: Infinity,
@@ -63,7 +71,7 @@ export async function hydrateBackupSettings(): Promise<void> {
       getSetting(BACKUP_LAST_RUN_KEY),
     ]);
     mirror.cadence = isCadence(cadence) ? cadence : 'off';
-    mirror.provider = provider === 'icloud' || provider === 'google-drive' ? provider : null;
+    mirror.provider = isProviderId(provider) ? provider : null;
     // Absent means ON, matching the default above — a device that has never
     // been asked must not start uploading over cellular.
     mirror.wifiOnly = wifiOnly !== '0';
@@ -90,9 +98,32 @@ export function backupLastRunAt(): number | null {
   return mirror.lastRunAt;
 }
 
-/** True when a scheduled backup is configured at all. The scheduler condition. */
+/**
+ * True when a scheduled backup is configured at all. The scheduler condition.
+ *
+ * Three separate ways to be false, and they are different situations rather
+ * than one:
+ *   - `off`     the user declined backup
+ *   - `manual`  the user wants to press the button themselves
+ *   - `file`    there is nothing to write to unattended. A file the user filed
+ *               away has no address we hold, and the app-private alternative
+ *               is unreachable on Android and deleted with the app.
+ *
+ * Collapsing any of them into "cadence !== 'off'" starts uploading for people
+ * who said no.
+ */
 export function scheduledBackupEnabled(): boolean {
-  return mirror.cadence !== 'off' && mirror.cadence !== 'manual' && mirror.provider !== null;
+  if (mirror.cadence === 'off' || mirror.cadence === 'manual') return false;
+  return mirror.provider !== null && SCHEDULABLE_PROVIDERS.includes(mirror.provider);
+}
+
+/** Whether this destination can be written to without the user present. */
+export function providerIsSchedulable(provider: BackupProviderId): boolean {
+  return SCHEDULABLE_PROVIDERS.includes(provider);
+}
+
+function isProviderId(v: string | null): v is BackupProviderId {
+  return v === 'icloud' || v === 'google-drive' || v === 'file';
 }
 
 /** True when enough time has passed for the configured cadence. */

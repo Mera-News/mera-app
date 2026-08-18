@@ -127,23 +127,58 @@ export const googleDriveProvider: BackupProvider = {
 };
 
 /**
+ * Why an interactive connect did not finish.
+ *
+ * `cancelled` is separated from every failure on purpose. An earlier version
+ * returned a bare `false` for both, and the symptom was exactly what you would
+ * expect and nothing you could act on: the account chooser appeared, the user
+ * signed in, and the screen did nothing. A configuration fault is not a
+ * cancellation and must not be shown as one.
+ */
+export type DriveConnectResult =
+  | { readonly ok: true }
+  | { readonly ok: false; readonly reason: 'cancelled' }
+  /** Android `DEVELOPER_ERROR` (status code 10). */
+  | { readonly ok: false; readonly reason: 'misconfigured'; readonly detail: string }
+  | { readonly ok: false; readonly reason: 'play-services' }
+  | { readonly ok: false; readonly reason: 'unknown'; readonly detail: string };
+
+/** Android's `CommonStatusCodes.DEVELOPER_ERROR`, rejected as a string. */
+const DEVELOPER_ERROR_CODE = '10';
+
+/**
  * The interactive connect, for a button press only.
  *
- * Returns false on cancel rather than throwing: the user declining an account
- * chooser is an ordinary outcome, not an error to report.
+ * **`DEVELOPER_ERROR` is the one worth naming.** Android rejects with status
+ * code 10 when the OAuth client does not match the app — almost always because
+ * the signing certificate's SHA-1 is not registered on the Android client in
+ * the Google Cloud project. It is a build-configuration fault, so it reproduces
+ * every single time and never for a reason the user can fix, which makes
+ * swallowing it the worst possible handling: sign-in appears to succeed and the
+ * app just sits there.
  */
-export async function connectGoogleDrive(): Promise<boolean> {
-  if (!isGoogleDriveConfigured()) return false;
+export async function connectGoogleDrive(): Promise<DriveConnectResult> {
+  if (!isGoogleDriveConfigured()) {
+    return { ok: false, reason: 'misconfigured', detail: 'No Google client id in this build' };
+  }
   ensureConfigured();
-  const { GoogleSignin } = require('@react-native-google-signin/google-signin');
+  const { GoogleSignin, statusCodes } = require('@react-native-google-signin/google-signin');
   try {
     // Play Services can be absent or outdated on Android; on iOS this resolves
     // immediately.
     await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
     const result = await GoogleSignin.signIn();
-    return result?.type === 'success';
-  } catch {
-    return false;
+    if (result?.type === 'success') return { ok: true };
+    return { ok: false, reason: 'cancelled' };
+  } catch (err) {
+    const code = (err as { code?: string })?.code;
+    const detail = err instanceof Error ? err.message : String(err);
+    if (code === statusCodes?.SIGN_IN_CANCELLED) return { ok: false, reason: 'cancelled' };
+    if (code === statusCodes?.PLAY_SERVICES_NOT_AVAILABLE) {
+      return { ok: false, reason: 'play-services' };
+    }
+    if (code === DEVELOPER_ERROR_CODE) return { ok: false, reason: 'misconfigured', detail };
+    return { ok: false, reason: 'unknown', detail };
   }
 }
 
