@@ -605,6 +605,21 @@ one order that can still send trial mail.
 - Server `7c87a72` + `7406dd3`, staging merge `5fb5003` (revisions news-auth-00042,
   news-graphql-00052, news-async-00065, all verified). Infra `6e8362a` + `b234d7e`.
 
+### S8, 2026-08-18: welcome view rework
+
+User-requested. Final stack: logo band, "Learn about Mera" (outline, identical geometry to the CTA,
+navigates to the standalone /tutorials menu, which deliberately sits outside the session gate),
+"Get started" (filled), lower band with the tour pill removed on this view only, "Sign in with
+email" text link relocated directly above the policy row (recovery path kept after the consequence
+was flagged; never hidden), policy/footer. Failure state unchanged (Try again + email + support;
+failure escape has its own testID auth-use-email-failure). New i18n key auth.learnAboutMera in all
+20 dictionaries. Client `b85922a`, verified on-device (order, outline styling, menu navigation,
+email view, sign-in regression all pass).
+
+Open cosmetic items observed repeatedly by the sim rounds, filed for their owners, not this wave:
+the email view keeps its own tour pill and has no back affordance (both pre-existing), and the
+"Before you continue" consent sheet re-arms on deep links and swallows taps until accepted.
+
 ## Held design: the smallest attestation version
 
 Fully specified so nothing is decided mid-implementation. Not broken into phases because it is gated on
