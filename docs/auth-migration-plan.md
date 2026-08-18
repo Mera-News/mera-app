@@ -816,8 +816,14 @@ For `native-rebuild-plans.md`, because both need a new binary:
 Approved plan: `~/.claude/plans/your-role-you-are-glimmering-gosling.md`. Client half:
 
 - **Logout preserves the device binding** (keys OUT of local-wipe's SECURE_STORE_KEYS; specs
-  inverted); **deletion severs** via `clearDeviceAuthCredentials()` (both keys + `_device_ref`),
-  called from ManageDataScreen after clearAuthStorage.
+  inverted); **deletion severs** via `clearDeviceAuthCredentials()` (attest keyId + device UUID;
+  `_device_ref` is trial history and is cleared by NO flow — the first cut cleared it and handed
+  out a fresh trial per deletion), called from ManageDataScreen after clearAuthStorage. Deletion
+  success routes to `/login?signedOut=1` like logout.
+- **Install boundary** (e2e round 2): the keychain survives uninstall, so `has_launched` in the
+  settings table detects reinstall (absent + no cached_user_id); the launch gate then clears the
+  surviving cookie/account credentials, preserves `_device_ref`, ignores the stale session atom for
+  the process, and routes /login with `signedOut:1`. App updates are untouched (settings survive).
 - **Refusal recovery**: 403 + DEVICE_ATTESTATION_FAILED/ACCOUNT_DELETED on a stored credential →
   sever → one fresh-enroll retry (mirror of the invalid-key shape). 400/503/network never sever.
 - **Anchors**: `deviceRef` presented on every sign-in when stored, persisted from the response's raw
