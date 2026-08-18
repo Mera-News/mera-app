@@ -69,7 +69,8 @@
     "deviceSignInFailed": "エラーが発生しました。もう一度お試しいただくか、メールでログインしてください。",
     "deviceSignInDenied": "このデバイスを確認できませんでした。もう一度お試しいただくか、メールでログインしてください。",
     "deviceSignInUnavailable": "現在ログインをご利用いただけません。数分後にもう一度お試しいただくか、メールでログインしてください。",
-    "tryAgain": "もう一度試す"
+    "tryAgain": "もう一度試す",
+    "learnAboutMera": "Mera について知る"
   },
   "account": {
     "pendingTitle": "アカウントの承認待ちです",

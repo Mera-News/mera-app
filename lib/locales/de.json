@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Etwas ist schiefgelaufen. Versuche es erneut oder melde dich mit E-Mail an.",
     "deviceSignInDenied": "Dieses Gerät konnte nicht bestätigt werden. Versuche es erneut oder melde dich mit E-Mail an.",
     "deviceSignInUnavailable": "Die Anmeldung ist gerade nicht verfügbar. Versuche es in ein paar Minuten erneut oder melde dich mit E-Mail an.",
-    "tryAgain": "Erneut versuchen"
+    "tryAgain": "Erneut versuchen",
+    "learnAboutMera": "Mera kennenlernen"
   },
   "account": {
     "pendingTitle": "Konto wartet auf Freischaltung",

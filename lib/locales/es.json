@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Algo salió mal. Vuelve a intentarlo o inicia sesión con tu correo.",
     "deviceSignInDenied": "No pudimos verificar este dispositivo. Vuelve a intentarlo o inicia sesión con tu correo.",
     "deviceSignInUnavailable": "El inicio de sesión no está disponible en este momento. Inténtalo en unos minutos o inicia sesión con tu correo.",
-    "tryAgain": "Reintentar"
+    "tryAgain": "Reintentar",
+    "learnAboutMera": "Conoce Mera"
   },
   "account": {
     "pendingTitle": "Cuenta pendiente de aprobación",

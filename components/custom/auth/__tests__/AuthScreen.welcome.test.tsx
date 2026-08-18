@@ -26,7 +26,10 @@ jest.mock('@/components/custom/auth/PreviousUserView', () => {
     return { __esModule: true, default: () => <View testID="stub-previous-user-view" /> };
 });
 jest.mock('@/components/custom/auth/LanguageSelector', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/tutorials/TutorialLaunchButton', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/components/custom/tutorials/TutorialLaunchButton', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="stub-tutorial-launch" /> };
+});
 jest.mock('@/components/custom/PolicyPill', () => ({ __esModule: true, default: () => null }));
 jest.mock('react-native-css-interop/jsx-runtime', () => {
     const R = require('react/jsx-runtime');
@@ -68,8 +71,12 @@ jest.mock('react-native-safe-area-context', () => ({
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
 
 const mockRouterReplace = jest.fn();
+const mockRouterPush = jest.fn();
 jest.mock('expo-router', () => ({
-    router: { replace: (...a: any[]) => mockRouterReplace(...a) },
+    router: {
+        replace: (...a: any[]) => mockRouterReplace(...a),
+        push: (...a: any[]) => mockRouterPush(...a),
+    },
 }));
 
 const mockGetSetting = jest.fn();
@@ -106,6 +113,7 @@ jest.mock('@/lib/intercom', () => ({
 }));
 
 jest.mock('@/lib/version', () => ({ getAppVersionLabel: () => 'v1.3.0' }));
+jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn(async () => {}) }));
 jest.mock('@/lib/web-browser-utils', () => ({
     openInAppBrowser: jest.fn(),
     withAppLanguage: (u: string) => u,
@@ -201,13 +209,105 @@ describe('accessibility scoping (F2)', () => {
 
         for (const [id, label] of [
             ['auth-device-retry', 'auth.tryAgain'],
-            ['auth-use-email', 'auth.signInWithEmail'],
+            ['auth-use-email-failure', 'auth.signInWithEmail'],
             ['auth-device-support', 'account.contactSupport'],
         ] as const) {
             const node = await findByTestId(id);
             expect(node.props.accessibilityRole).toBe('button');
             expect(node.props.accessibilityLabel).toBe(label);
         }
+    });
+});
+
+describe('welcome-view button stack (S8)', () => {
+    /** Host testIDs in render order — the order assertion for the stack. */
+    const collectTestIds = (root: any): string[] => {
+        const ids: string[] = [];
+        const walk = (node: any) => {
+            if (typeof node?.type === 'string' && node?.props?.testID) ids.push(node.props.testID);
+            (node?.children ?? []).forEach((c: any) => typeof c === 'object' && walk(c));
+        };
+        walk(root);
+        return ids;
+    };
+
+    it('Learn about Mera sits ABOVE Get started, outline vs filled', async () => {
+        const { findByTestId, UNSAFE_root } = render(<AuthScreen />);
+        const learn = await findByTestId('auth-learn-mera');
+        const cta = await findByTestId('auth-get-started');
+
+        const ids = collectTestIds(UNSAFE_root);
+        expect(ids.indexOf('auth-learn-mera')).toBeGreaterThanOrEqual(0);
+        expect(ids.indexOf('auth-learn-mera')).toBeLessThan(ids.indexOf('auth-get-started'));
+
+        // Outline vs filled: same geometry (h-14 rounded-full), different fill.
+        expect(learn.props.className).toContain('h-14');
+        expect(learn.props.className).toContain('border');
+        expect(learn.props.className).not.toContain('bg-primary-500');
+        expect(cta.props.className).toContain('h-14');
+        expect(cta.props.className).toContain('bg-primary-500');
+
+        expect(learn.props.accessibilityRole).toBe('button');
+        expect(learn.props.accessibilityLabel).toBe('auth.learnAboutMera');
+    });
+
+    it('Learn about Mera opens the tutorials MENU route, not a chapter', async () => {
+        const { findByTestId } = render(<AuthScreen />);
+        fireEvent.press(await findByTestId('auth-learn-mera'));
+        expect(mockRouterPush).toHaveBeenCalledWith('/tutorials');
+    });
+
+    it('the footer tour pill is gone from the welcome view (it moved up), but stays on the email view', async () => {
+        mockAvailability.mockResolvedValue('native');
+        const welcome = render(<AuthScreen />);
+        await welcome.findByTestId('auth-get-started');
+        expect(welcome.queryByTestId('stub-tutorial-launch')).toBeNull();
+        welcome.unmount();
+
+        mockAvailability.mockResolvedValue('unavailable');
+        const email = render(<AuthScreen />);
+        await email.findByTestId('auth-email-input');
+        expect(email.queryByTestId('stub-tutorial-launch')).toBeTruthy();
+    });
+
+    it('Sign in with email is RELOCATED: below the action stack, directly above the policy row', async () => {
+        const { findByTestId, UNSAFE_root } = render(<AuthScreen />);
+        await findByTestId('auth-get-started');
+
+        // Present, styled as a text link, and OUTSIDE the action stack: the
+        // render order is learn -> get started -> ... -> email link (footer).
+        const ids = collectTestIds(UNSAFE_root);
+        expect(ids.indexOf('auth-learn-mera')).toBeLessThan(ids.indexOf('auth-get-started'));
+        expect(ids.indexOf('auth-get-started')).toBeLessThan(ids.indexOf('auth-use-email'));
+        // In the footer band, not among the CTA buttons.
+        const actions = await findByTestId('auth-welcome-actions');
+        const actionIds = collectTestIds(actions);
+        expect(actionIds).not.toContain('auth-use-email');
+
+        const link = await findByTestId('auth-use-email');
+        expect(link.props.accessibilityRole).toBe('button');
+        expect(link.props.accessibilityLabel).toBe('auth.signInWithEmail');
+        // Text-link styling, not a button shell.
+        expect(link.props.className ?? '').not.toContain('h-14');
+    });
+
+    it('the relocated email link still opens the email view', async () => {
+        const { findByTestId } = render(<AuthScreen />);
+        await findByTestId('auth-get-started');
+        fireEvent.press(await findByTestId('auth-use-email'));
+        expect(await findByTestId('auth-email-input')).toBeTruthy();
+    });
+
+    it('the failure state keeps its email escape (pre-S8 behavior), plus retry and support', async () => {
+        mockSignIn.mockResolvedValue({ status: 'failed', reason: 'attestation-denied' });
+        const { findByTestId, findByText } = render(<AuthScreen />);
+        fireEvent.press(await findByTestId('auth-get-started'));
+        await findByText('auth.deviceSignInDenied');
+
+        expect(await findByTestId('auth-device-retry')).toBeTruthy();
+        expect(await findByTestId('auth-device-support')).toBeTruthy();
+        fireEvent.press(await findByTestId('auth-use-email-failure'));
+        expect(await findByTestId('auth-email-input')).toBeTruthy();
     });
 });
 
@@ -242,7 +342,7 @@ describe('device sign-in success', () => {
 });
 
 describe('device sign-in failure', () => {
-    it('denied shows the denied copy with retry, email and support paths', async () => {
+    it('denied shows the denied copy with retry and support paths', async () => {
         mockSignIn.mockResolvedValue({ status: 'failed', reason: 'attestation-denied' });
         const { findByTestId, findByText } = render(<AuthScreen />);
 
@@ -250,7 +350,6 @@ describe('device sign-in failure', () => {
 
         await findByText('auth.deviceSignInDenied');
         expect(await findByTestId('auth-device-retry')).toBeTruthy();
-        expect(await findByTestId('auth-use-email')).toBeTruthy();
         expect(await findByTestId('auth-device-support')).toBeTruthy();
     });
 
@@ -262,17 +361,6 @@ describe('device sign-in failure', () => {
         fireEvent.press(await findByTestId('auth-device-retry'));
 
         await waitFor(() => expect(mockSignIn).toHaveBeenCalledTimes(2));
-    });
-
-    it('the email path from a failure state renders the email view', async () => {
-        mockSignIn.mockResolvedValue({ status: 'failed', reason: 'unknown' });
-        const { findByTestId, findByText } = render(<AuthScreen />);
-
-        fireEvent.press(await findByTestId('auth-get-started'));
-        await findByText('auth.deviceSignInFailed');
-        fireEvent.press(await findByTestId('auth-use-email'));
-
-        expect(await findByTestId('auth-email-input')).toBeTruthy();
     });
 
     it('unsupported mid-flow falls back to the email view silently', async () => {

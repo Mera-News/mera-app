@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Coś poszło nie tak. Spróbuj ponownie lub zaloguj się e-mailem.",
     "deviceSignInDenied": "Nie udało się zweryfikować tego urządzenia. Spróbuj ponownie lub zaloguj się e-mailem.",
     "deviceSignInUnavailable": "Logowanie jest teraz niedostępne. Spróbuj ponownie za kilka minut lub zaloguj się e-mailem.",
-    "tryAgain": "Spróbuj ponownie"
+    "tryAgain": "Spróbuj ponownie",
+    "learnAboutMera": "Poznaj aplikację Mera"
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",

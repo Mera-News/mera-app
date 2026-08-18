@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Un problème est survenu. Réessayez ou connectez-vous par e-mail.",
     "deviceSignInDenied": "Impossible de vérifier cet appareil. Réessayez ou connectez-vous par e-mail.",
     "deviceSignInUnavailable": "La connexion est momentanément indisponible. Réessayez dans quelques minutes ou connectez-vous par e-mail.",
-    "tryAgain": "Réessayer"
+    "tryAgain": "Réessayer",
+    "learnAboutMera": "Découvrir Mera"
   },
   "account": {
     "pendingTitle": "Compte en attente d'approbation",

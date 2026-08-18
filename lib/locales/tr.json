@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin veya e-posta ile giriş yapın.",
     "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin veya e-posta ile giriş yapın.",
     "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
-    "tryAgain": "Tekrar dene"
+    "tryAgain": "Tekrar dene",
+    "learnAboutMera": "Mera'yı tanıyın"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",

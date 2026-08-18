@@ -17,6 +17,7 @@ import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/t
 import { sendOTP } from '@/lib/auth-client';
 import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { deviceSignInAvailability, signInWithDevice, type DeviceSignInFailureReason } from '@/lib/device-auth';
+import { hapticLight } from '@/lib/haptics';
 import { useSupportAction } from '@/lib/intercom';
 import logger from '@/lib/logger';
 import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
@@ -30,13 +31,24 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import validator from 'validator';
 
+interface PreAuthFooterProps {
+    /** The welcome view hides the footer tour pill — its tutorial entry moved
+     *  up into the button stack as "Learn about Mera" (S8). The email view
+     *  keeps the pill. */
+    showTutorialLaunch?: boolean;
+    /** S8 amendment: the welcome view's "Sign in with email" lives HERE, as a
+     *  text link directly above the policy row — demoted from the action
+     *  stack, never hidden (it is the recovery path for existing users). */
+    onUseEmail?: () => void;
+}
+
 /**
  * The pre-flight cluster shared by the welcome and email views: language
  * selector, tutorial entry, policy pills, project links and version. Extracted
  * so the two entry views cannot drift — the layout commentary that used to sit
  * inline in EmailInputView still applies and lives on the call sites.
  */
-const PreAuthFooter: React.FC = () => {
+const PreAuthFooter: React.FC<PreAuthFooterProps> = ({ showTutorialLaunch = true, onUseEmail }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
 
@@ -86,8 +98,9 @@ const PreAuthFooter: React.FC = () => {
                     things you may want before signing in. It opens a full-screen
                     Modal (not a route — this screen is outside the logged-in
                     stack) and closes back to exactly this view. Owns its own
-                    visibility state, so this stays a one-line insertion. */}
-                <TutorialLaunchButton />
+                    visibility state, so this stays a one-line insertion.
+                    Hidden on the welcome view — see PreAuthFooterProps. */}
+                {showTutorialLaunch && <TutorialLaunchButton />}
 
                 {/* The "How to add a language" video chip lived here and is
                     gone on purpose. It taught the iOS Required-Downloads sheet
@@ -98,6 +111,25 @@ const PreAuthFooter: React.FC = () => {
                     Language (`language.watchGuide`), for someone who went
                     looking for it. */}
             </VStack>
+
+            {/* The relocated email path (welcome view only) — directly above
+                the policy row, keeping its text-link styling. */}
+            {onUseEmail && (
+                <Box className="items-center mb-3">
+                    <Pressable
+                        testID="auth-use-email"
+                        onPress={onUseEmail}
+                        accessible
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.signInWithEmail')}
+                        className="py-1"
+                    >
+                        <Text size="sm" className="text-primary-400">
+                            {t('auth.signInWithEmail')}
+                        </Text>
+                    </Pressable>
+                </Box>
+            )}
 
             {/* Policy buttons at bottom */}
             <Box className="items-center" style={{ paddingBottom: insets.bottom + 16 }}>
@@ -340,6 +372,26 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
             {/* The primary action, on the same line the email input occupies
                 in the sibling view. */}
             <VStack testID="auth-welcome-actions" accessible={false} space="md">
+                {/* Above Get started, deliberately: learning what Mera is comes
+                    before committing to it. Outline, same geometry as the CTA —
+                    a sibling action, not the primary. Opens the tutorials MENU
+                    (top-level /tutorials, deliberately outside the session
+                    gate) so the reader picks any chapter, not just the first. */}
+                <Pressable
+                    testID="auth-learn-mera"
+                    onPress={() => {
+                        void hapticLight();
+                        router.push('/tutorials');
+                    }}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={t('auth.learnAboutMera')}
+                    className="h-14 rounded-full items-center justify-center border border-primary-500 bg-transparent"
+                >
+                    <Text className="text-primary-500 text-base font-semibold">
+                        {t('auth.learnAboutMera')}
+                    </Text>
+                </Pressable>
                 <Pressable
                     testID="auth-get-started"
                     onPress={handleGetStarted}
@@ -364,20 +416,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                     )}
                 </Pressable>
 
-                {failure === null ? (
-                    <Pressable
-                        testID="auth-use-email"
-                        onPress={onUseEmail}
-                        accessible
-                        accessibilityRole="button"
-                        accessibilityLabel={t('auth.signInWithEmail')}
-                        className="items-center py-2"
-                    >
-                        <Text size="sm" className="text-primary-400">
-                            {t('auth.signInWithEmail')}
-                        </Text>
-                    </Pressable>
-                ) : (
+                {failure !== null && (
                     <VStack space="sm" className="items-center">
                         <Text size="sm" className="text-error-500 text-center" testID="auth-device-failure">
                             {failureText}
@@ -395,7 +434,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                             </Text>
                         </Pressable>
                         <Pressable
-                            testID="auth-use-email"
+                            testID="auth-use-email-failure"
                             onPress={onUseEmail}
                             accessible
                             accessibilityRole="button"
@@ -430,7 +469,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
             {/* Lower band — the gap between the action and the cluster. */}
             <Box style={{ flex: 1 }} />
 
-            <PreAuthFooter />
+            <PreAuthFooter showTutorialLaunch={false} onUseEmail={onUseEmail} />
         </Box>
     );
 };

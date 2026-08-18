@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Đã xảy ra lỗi. Hãy thử lại hoặc đăng nhập bằng email.",
     "deviceSignInDenied": "Không thể xác minh thiết bị này. Hãy thử lại hoặc đăng nhập bằng email.",
     "deviceSignInUnavailable": "Hiện không thể đăng nhập. Hãy thử lại sau vài phút hoặc đăng nhập bằng email.",
-    "tryAgain": "Thử lại"
+    "tryAgain": "Thử lại",
+    "learnAboutMera": "Tìm hiểu về Mera"
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",

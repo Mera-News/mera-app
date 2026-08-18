@@ -69,7 +69,8 @@
     "deviceSignInFailed": "문제가 발생했습니다. 다시 시도하거나 이메일로 로그인하세요.",
     "deviceSignInDenied": "이 기기를 확인할 수 없습니다. 다시 시도하거나 이메일로 로그인하세요.",
     "deviceSignInUnavailable": "지금은 로그인할 수 없습니다. 몇 분 후에 다시 시도하거나 이메일로 로그인하세요.",
-    "tryAgain": "다시 시도"
+    "tryAgain": "다시 시도",
+    "learnAboutMera": "Mera 알아보기"
   },
   "account": {
     "pendingTitle": "계정 승인 대기 중",

@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Algo deu errado. Tente novamente ou entre com e-mail.",
     "deviceSignInDenied": "Não foi possível verificar este dispositivo. Tente novamente ou entre com e-mail.",
     "deviceSignInUnavailable": "O login não está disponível no momento. Tente novamente em alguns minutos ou entre com e-mail.",
-    "tryAgain": "Tentar novamente"
+    "tryAgain": "Tentar novamente",
+    "learnAboutMera": "Conheça o Mera"
   },
   "account": {
     "pendingTitle": "Conta Pendente de Aprovação",

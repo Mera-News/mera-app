@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Si è verificato un problema. Riprova o accedi con l'email.",
     "deviceSignInDenied": "Impossibile verificare questo dispositivo. Riprova o accedi con l'email.",
     "deviceSignInUnavailable": "L'accesso non è al momento disponibile. Riprova tra qualche minuto o accedi con l'email.",
-    "tryAgain": "Riprova"
+    "tryAgain": "Riprova",
+    "learnAboutMera": "Scopri Mera"
   },
   "account": {
     "pendingTitle": "Account in attesa di approvazione",

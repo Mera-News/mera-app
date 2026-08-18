@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Er is iets misgegaan. Probeer het opnieuw of log in met e-mail.",
     "deviceSignInDenied": "We konden dit apparaat niet verifiëren. Probeer het opnieuw of log in met e-mail.",
     "deviceSignInUnavailable": "Inloggen is nu even niet mogelijk. Probeer het over een paar minuten opnieuw of log in met e-mail.",
-    "tryAgain": "Opnieuw proberen"
+    "tryAgain": "Opnieuw proberen",
+    "learnAboutMera": "Maak kennis met Mera"
   },
   "account": {
     "pendingTitle": "Account wacht op goedkeuring",

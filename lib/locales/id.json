@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Terjadi kesalahan. Coba lagi atau masuk dengan email.",
     "deviceSignInDenied": "Kami tidak dapat memverifikasi perangkat ini. Coba lagi atau masuk dengan email.",
     "deviceSignInUnavailable": "Login tidak tersedia saat ini. Coba lagi dalam beberapa menit atau masuk dengan email.",
-    "tryAgain": "Coba lagi"
+    "tryAgain": "Coba lagi",
+    "learnAboutMera": "Pelajari Mera"
   },
   "account": {
     "pendingTitle": "Akun Menunggu Persetujuan",

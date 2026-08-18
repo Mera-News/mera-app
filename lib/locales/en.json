@@ -69,7 +69,8 @@
     "deviceSignInFailed": "Something went wrong. Try again, or sign in with email.",
     "deviceSignInDenied": "We couldn't verify this device. Try again, or sign in with email.",
     "deviceSignInUnavailable": "Sign-in isn't available right now. Try again in a few minutes, or sign in with email.",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "learnAboutMera": "Learn about Mera"
   },
   "account": {
     "pendingTitle": "Subscribe to Mera",
