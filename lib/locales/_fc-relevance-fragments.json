@@ -1,0 +1,353 @@
+{
+  "_comment": "fc-relevance wave: externals-only fact-check chip. Input to _splice-fragments.mjs. 8 new keys (checkedByRelatedNote, searchFoundHeading, searchFoundEmpty, headerA11y, dashboard.noneFound, dashboard.factChecksFound with per-locale plurals: ru/uk/pl add _few/_many, ar adds _zero/_two/_few/_many) plus 4 retranslated existing keys (checkedByHeading, noCheckedBy, disclaimer, organisationA11y) requiring --allow-overwrite factCheck.checkedByHeading,factCheck.noCheckedBy,factCheck.disclaimer,factCheck.organisationA11y. ar.dashboard.factChecksFound_zero intentionally omits {{count}} (\"There are no fact checks. Tap to read\", idiomatic zero-form phrasing) - also currently unreachable, since the count line only renders when count > 1. Never edit the 20 dictionaries by hand.",
+  "ar": {
+    "factCheck": {
+      "checkedByHeading": "التحققات من الحقائق التي وجدتها البحث",
+      "noCheckedBy": "لم نجد تحققاً منشوراً من الحقائق حول هذه القصة. هذا لا يعني أن القصة خاطئة. معظم القصص لا تتم مراجعتها.",
+      "disclaimer": "هذا قراءة Mera الخاصة لبحث ويب، كتبتها الذكاء الاصطناعي. يمكن أن تكون خاطئة أو غير مكتملة، لذا اقرأ المصادر قبل الاعتماد عليها.",
+      "organisationA11y": "فتح فحص الحقائق الخاص بـ {{organisation}}، مقيم بـ {{rating}}، في متصفح التطبيق",
+      "checkedByRelatedNote": "هذه جاءت من بحث بالكلمات الرئيسية وقد تكون عن قصة مختلفة. افتح واحدة للتحقق.",
+      "searchFoundHeading": "ما وجده بحثنا",
+      "searchFoundEmpty": "لم يكن هناك ما يكفي من البحث لـ Mera لتلخيصه هنا.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "لم يتم العثور على تحققات منشورة من الحقائق",
+        "factChecksFound_zero": "لا توجد تحققات من الحقائق. اضغط للقراءة",
+        "factChecksFound_one": "{{count}} تحقق من الحقائق. اضغط للقراءة",
+        "factChecksFound_two": "{{count}} تحققان من الحقائق. اضغط للقراءة",
+        "factChecksFound_few": "{{count}} تحققات من الحقائق. اضغط للقراءة",
+        "factChecksFound_many": "{{count}} تحقق من الحقائق. اضغط للقراءة",
+        "factChecksFound_other": "{{count}} تحقق من الحقائق. اضغط للقراءة"
+      }
+    }
+  },
+  "de": {
+    "factCheck": {
+      "checkedByHeading": "Faktenchecks aus der Suche",
+      "noCheckedBy": "Wir haben keinen veröffentlichten Faktencheck über diese Geschichte gefunden. Das macht die Geschichte nicht falsch. Die meisten Geschichten werden niemals überprüft.",
+      "disclaimer": "Dies ist Meras eigene Auswertung einer Websuche, geschrieben von KI. Es kann falsch oder unvollständig sein, daher lies die Quellen, bevor du dich darauf verlässt.",
+      "organisationA11y": "Öffne Faktenchecks von {{organisation}}, bewertet {{rating}}, im In-App-Browser",
+      "checkedByRelatedNote": "Diese stammen aus einer Schlüsselwortsuche und können sich auf eine andere Geschichte beziehen. Öffne einen, um zu überprüfen.",
+      "searchFoundHeading": "Was unsere Suche gefunden hat",
+      "searchFoundEmpty": "Die Suche hat nicht genug für Mera gefunden, um dies zusammenzufassen.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Keine veröffentlichten Faktenchecks gefunden",
+        "factChecksFound_one": "{{count}} Faktencheck gefunden. Tippen zum Lesen",
+        "factChecksFound_other": "{{count}} Faktenchecks gefunden. Tippen zum Lesen"
+      }
+    }
+  },
+  "en": {
+    "factCheck": {
+      "checkedByHeading": "Fact checks the search found",
+      "noCheckedBy": "We didn't find a published fact check about this story. That doesn't make the story wrong. Most stories are never fact-checked.",
+      "disclaimer": "This is Mera's own reading of a web search, written by AI. It can be wrong or incomplete, so read the sources before relying on it.",
+      "organisationA11y": "Open {{organisation}}'s fact check, rated {{rating}}, in the in-app browser",
+      "checkedByRelatedNote": "These come from a keyword search and may be about a different story. Open one to check.",
+      "searchFoundHeading": "What our search found",
+      "searchFoundEmpty": "There wasn't enough from the search for Mera to summarise here.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "No published fact checks found",
+        "factChecksFound_one": "{{count}} fact check found. Tap to read",
+        "factChecksFound_other": "{{count}} fact checks found. Tap to read"
+      }
+    }
+  },
+  "es": {
+    "factCheck": {
+      "checkedByHeading": "Verificaciones de hechos encontradas",
+      "noCheckedBy": "No encontramos una verificación de hechos publicada sobre esta historia. Eso no significa que la historia sea falsa. La mayoría de las historias nunca se verifican.",
+      "disclaimer": "Esta es la lectura propia de Mera de una búsqueda web, escrita por IA. Puede ser incorrecta o incompleta, así que lee las fuentes antes de confiar en ella.",
+      "organisationA11y": "Abre la verificación de hechos de {{organisation}}, calificada {{rating}}, en el navegador en la aplicación",
+      "checkedByRelatedNote": "Estas provienen de una búsqueda de palabras clave y pueden ser sobre una historia diferente. Abre una para verificar.",
+      "searchFoundHeading": "Qué encontró nuestra búsqueda",
+      "searchFoundEmpty": "No había suficiente en la búsqueda para que Mera lo resumiera aquí.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "No se encontraron verificaciones de hechos publicadas",
+        "factChecksFound_one": "{{count}} verificación de hechos encontrada. Toca para leer",
+        "factChecksFound_other": "{{count}} verificaciones de hechos encontradas. Toca para leer"
+      }
+    }
+  },
+  "fr": {
+    "factCheck": {
+      "checkedByHeading": "Vérifications de faits trouvées par la recherche",
+      "noCheckedBy": "Nous n'avons pas trouvé de vérification de faits publiée sur cette histoire. Cela ne rend pas l'histoire fausse. La plupart des histoires ne sont jamais vérifiées.",
+      "disclaimer": "Ceci est la propre lecture de Mera d'une recherche web, écrite par l'IA. Cela peut être inexact ou incomplet, veuillez donc lire les sources avant de vous y fier.",
+      "organisationA11y": "Ouvrir la vérification de faits de {{organisation}}, notée {{rating}}, dans le navigateur intégré",
+      "checkedByRelatedNote": "Celles-ci proviennent d'une recherche par mots-clés et peuvent concerner une histoire différente. Ouvrez-en une pour vérifier.",
+      "searchFoundHeading": "Ce que notre recherche a trouvé",
+      "searchFoundEmpty": "Il n'y avait pas assez dans la recherche pour que Mera le résume ici.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Aucune vérification de faits publiée trouvée",
+        "factChecksFound_one": "{{count}} vérification de faits trouvée. Appuyez pour lire",
+        "factChecksFound_other": "{{count}} vérifications de faits trouvées. Appuyez pour lire"
+      }
+    }
+  },
+  "hi": {
+    "factCheck": {
+      "checkedByHeading": "सर्च में मिली फैक्ट चेक्स",
+      "noCheckedBy": "हमें इस स्टोरी के बारे में कोई प्रकाशित फैक्ट चेक नहीं मिली। इससे स्टोरी गलत नहीं है। अधिकांश स्टोरीज़ को कभी फैक्ट-चेक नहीं किया जाता है।",
+      "disclaimer": "यह Mera का वेब सर्च का अपना विश्लेषण है, जो AI द्वारा लिखा गया है। यह गलत या अधूरा हो सकता है, इसलिए इस पर निर्भर करने से पहले स्रोतों को पढ़ें।",
+      "organisationA11y": "{{organisation}} की तथ्य जांच खोलें, {{rating}} से मूल्यांकित, इन-ऐप ब्राउज़र में",
+      "checkedByRelatedNote": "ये कीवर्ड सर्च से आते हैं और किसी अलग स्टोरी के बारे में हो सकते हैं। जांचने के लिए एक खोलें।",
+      "searchFoundHeading": "हमारी सर्च ने क्या खोजा",
+      "searchFoundEmpty": "सर्च से Mera के लिए यहां सारांशित करने के लिए पर्याप्त नहीं था।",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "कोई प्रकाशित फैक्ट चेक नहीं मिली",
+        "factChecksFound_one": "{{count}} फैक्ट चेक मिली। पढ़ने के लिए टैप करें",
+        "factChecksFound_other": "{{count}} फैक्ट चेक्स मिलीं। पढ़ने के लिए टैप करें"
+      }
+    }
+  },
+  "id": {
+    "factCheck": {
+      "checkedByHeading": "Pemeriksaan fakta yang ditemukan pencarian",
+      "noCheckedBy": "Kami tidak menemukan pemeriksaan fakta yang dipublikasikan tentang cerita ini. Ini tidak berarti cerita tersebut salah. Sebagian besar cerita tidak pernah diperiksa.",
+      "disclaimer": "Ini adalah bacaan Mera sendiri dari pencarian web, ditulis oleh AI. Dapat salah atau tidak lengkap, jadi baca sumbernya sebelum mengandalkannya.",
+      "organisationA11y": "Buka pemeriksaan fakta {{organisation}}, dinilai {{rating}}, di browser dalam aplikasi",
+      "checkedByRelatedNote": "Ini berasal dari pencarian kata kunci dan mungkin tentang cerita yang berbeda. Buka salah satu untuk memeriksa.",
+      "searchFoundHeading": "Apa yang ditemukan pencarian kami",
+      "searchFoundEmpty": "Pencarian tidak memberikan cukup informasi bagi Mera untuk dirangkum di sini.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Tidak ada pemeriksaan fakta yang dipublikasikan ditemukan",
+        "factChecksFound_one": "{{count}} pemeriksaan fakta ditemukan. Ketuk untuk membaca",
+        "factChecksFound_other": "{{count}} pemeriksaan fakta ditemukan. Ketuk untuk membaca"
+      }
+    }
+  },
+  "it": {
+    "factCheck": {
+      "checkedByHeading": "Verifiche dei fatti trovate",
+      "noCheckedBy": "Non abbiamo trovato una verifica dei fatti pubblicata su questa storia. Ciò non rende la storia sbagliata. La maggior parte delle storie non viene mai verificata.",
+      "disclaimer": "Questa è la propria lettura di Mera di una ricerca web, scritta da IA. Può essere errata o incompleta, quindi leggi le fonti prima di affidarti ad essa.",
+      "organisationA11y": "Apri la verifica dei fatti di {{organisation}}, valutata {{rating}}, nel browser in-app",
+      "checkedByRelatedNote": "Queste provengono da una ricerca per parole chiave e potrebbero riguardare una storia diversa. Apri una per verificare.",
+      "searchFoundHeading": "Ciò che la ricerca ha trovato",
+      "searchFoundEmpty": "Non c'era abbastanza dalla ricerca per Mera riassumere qui.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Nessuna verifica dei fatti pubblicata trovata",
+        "factChecksFound_one": "{{count}} verifica dei fatti trovata. Tocca per leggere",
+        "factChecksFound_other": "{{count}} verifiche dei fatti trovate. Tocca per leggere"
+      }
+    }
+  },
+  "ja": {
+    "factCheck": {
+      "checkedByHeading": "検索で見つかったファクトチェック",
+      "noCheckedBy": "このストーリーについてファクトチェック機関が公開している内容は見つかりませんでした。これはストーリーが間違っているということではなく、ほとんどのストーリーはファクトチェックされていません。",
+      "disclaimer": "これはMeraがウェブ検索から得た独自の読解で、AIによって作成されています。間違っているか不完全である可能性があるため、依存する前にソースを読んでください。",
+      "organisationA11y": "{{organisation}}のファクトチェック（評価：{{rating}}）をアプリ内ブラウザで開く",
+      "checkedByRelatedNote": "これらはキーワード検索から取得したものであり、別のストーリーについても該当する可能性があります。確認するために1つを開いてください。",
+      "searchFoundHeading": "検索で見つかった内容",
+      "searchFoundEmpty": "検索から要約するのに十分な情報がありませんでした。",
+      "headerA11y": "{{title}}。{{status}}。{{action}}",
+      "dashboard": {
+        "noneFound": "公開されたファクトチェックは見つかりません",
+        "factChecksFound_one": "{{count}}件のファクトチェックが見つかりました。タップして読む",
+        "factChecksFound_other": "{{count}}件のファクトチェックが見つかりました。タップして読む"
+      }
+    }
+  },
+  "ko": {
+    "factCheck": {
+      "checkedByHeading": "검색에서 발견된 팩트 체크",
+      "noCheckedBy": "이 기사에 대해 발표한 팩트 체킹 기관을 찾을 수 없습니다. 이것이 기사가 틀렸다는 뜻은 아닙니다. 대부분의 기사는 팩트 체크되지 않습니다.",
+      "disclaimer": "메라가 웹 검색에서 얻은 자체 해석이며, AI가 작성했습니다. 틀리거나 불완전할 수 있으므로 신뢰하기 전에 출처를 읽으세요.",
+      "organisationA11y": "인앱 브라우저에서 {{organisation}}의 팩트 체크(평가: {{rating}})를 열기",
+      "checkedByRelatedNote": "이들은 키워드 검색에서 나온 것이며 다른 기사에 관한 것일 수 있습니다. 확인하려면 하나를 열어보세요.",
+      "searchFoundHeading": "검색에서 발견된 내용",
+      "searchFoundEmpty": "검색에서 메라가 요약할 수 있는 충분한 내용이 없었습니다.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "발표된 팩트 체크를 찾을 수 없음",
+        "factChecksFound_one": "{{count}}개의 팩트 체크를 찾았습니다. 탭하여 읽기",
+        "factChecksFound_other": "{{count}}개의 팩트 체크를 찾았습니다. 탭하여 읽기"
+      }
+    }
+  },
+  "nl": {
+    "factCheck": {
+      "checkedByHeading": "Feitchecks gevonden in de zoeking",
+      "noCheckedBy": "We hebben geen gepubliceerde feitencheck over dit artikel gevonden. Dat maakt het artikel niet onwaar. De meeste artikelen worden nooit feitgecheckt.",
+      "disclaimer": "Dit is Mera's eigen kijk op een websearch, geschreven door AI. Het kan onjuist of onvolledig zijn, dus lees de bronnen voordat je het vertrouwt.",
+      "organisationA11y": "Open de feitencheck van {{organisation}}, beoordeeld {{rating}}, in de in-app browser",
+      "checkedByRelatedNote": "Deze zijn afkomstig van een trefwoord zoeking en kunnen over een ander artikel gaan. Open er een om te controleren.",
+      "searchFoundHeading": "Wat onze zoeking gevonden heeft",
+      "searchFoundEmpty": "Er was niet genoeg uit de zoeking voor Mera om dit samen te vatten.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Geen gepubliceerde feitchecks gevonden",
+        "factChecksFound_one": "{{count}} feitencheck gevonden. Tik om te lezen",
+        "factChecksFound_other": "{{count}} feitchecks gevonden. Tik om te lezen"
+      }
+    }
+  },
+  "pl": {
+    "factCheck": {
+      "checkedByHeading": "Weryfikacje faktów znalezione przez wyszukiwanie",
+      "noCheckedBy": "Nie znaleźliśmy opublikowanej weryfikacji faktów na temat tego artykułu. To nie oznacza, że artykuł jest błędny. Większość artykułów nigdy nie jest weryfikowana.",
+      "disclaimer": "To jest własne rozumienie Mery wyników wyszukiwania internetowego, napisane przez AI. Może to być błędne lub niekompletne, więc przeczytaj źródła przed poleganiem na tym.",
+      "organisationA11y": "Otwórz weryfikację faktów {{organisation}}, ocenioną jako {{rating}}, w przeglądarce aplikacji",
+      "checkedByRelatedNote": "Pochodzą z wyszukiwania słów kluczowych i mogą dotyczyć innego artykułu. Otwórz jeden, aby sprawdzić.",
+      "searchFoundHeading": "Co znalazło nasze wyszukiwanie",
+      "searchFoundEmpty": "Wyników wyszukiwania było za mało, aby Mera mogła je tutaj streścić.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Nie znaleziono opublikowanych weryfikacji faktów",
+        "factChecksFound_one": "Znaleziono {{count}} weryfikację faktów. Dotknij, aby przeczytać",
+        "factChecksFound_few": "Znaleziono {{count}} weryfikacje faktów. Dotknij, aby przeczytać",
+        "factChecksFound_many": "Znaleziono {{count}} weryfikacji faktów. Dotknij, aby przeczytać",
+        "factChecksFound_other": "Znaleziono {{count}} weryfikacji faktów. Dotknij, aby przeczytać"
+      }
+    }
+  },
+  "pt-BR": {
+    "factCheck": {
+      "checkedByHeading": "Verificações de fatos encontradas na busca",
+      "noCheckedBy": "Não encontramos uma verificação de fatos publicada sobre esta história. Isso não significa que a história esteja errada. A maioria das histórias nunca é verificada.",
+      "disclaimer": "Esta é a leitura própria do Mera de uma busca na web, escrita por IA. Pode estar incorreta ou incompleta, portanto leia as fontes antes de confiar nela.",
+      "organisationA11y": "Abra a verificação de fatos de {{organisation}}, classificada como {{rating}}, no navegador do app",
+      "checkedByRelatedNote": "Vêm de uma busca por palavras-chave e podem ser sobre uma história diferente. Abra uma para verificar.",
+      "searchFoundHeading": "O que nossa busca encontrou",
+      "searchFoundEmpty": "A busca não forneceu informação suficiente para Mera resumir aqui.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Nenhuma verificação de fatos publicada encontrada",
+        "factChecksFound_one": "{{count}} verificação de fatos encontrada. Toque para ler",
+        "factChecksFound_other": "{{count}} verificações de fatos encontradas. Toque para ler"
+      }
+    }
+  },
+  "ru": {
+    "factCheck": {
+      "checkedByHeading": "Проверки фактов, найденные при поиске",
+      "noCheckedBy": "Мы не нашли опубликованную проверку фактов об этой истории. Это не делает историю неправильной. Большинство историй никогда не проверяются.",
+      "disclaimer": "Это собственное прочтение Mera результатов веб-поиска, написанное AI. Это может быть неправильным или неполным, поэтому прочитайте источники перед использованием.",
+      "organisationA11y": "Открыть проверку фактов {{organisation}}, оценённую как {{rating}}, во встроенном браузере",
+      "checkedByRelatedNote": "Они получены из поиска по ключевым словам и могут относиться к другой истории. Откройте один, чтобы проверить.",
+      "searchFoundHeading": "Что нашел наш поиск",
+      "searchFoundEmpty": "Результатов поиска недостаточно для резюме.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Опубликованные проверки фактов не найдены",
+        "factChecksFound_one": "{{count}} проверка фактов найдена. Нажмите для чтения",
+        "factChecksFound_few": "{{count}} проверки фактов найдены. Нажмите для чтения",
+        "factChecksFound_many": "{{count}} проверок фактов найдено. Нажмите для чтения",
+        "factChecksFound_other": "{{count}} проверок фактов найдено. Нажмите для чтения"
+      }
+    }
+  },
+  "th": {
+    "factCheck": {
+      "checkedByHeading": "การตรวจสอบข้อเท็จจริงที่ค้นหาพบ",
+      "noCheckedBy": "เราไม่พบการตรวจสอบข้อเท็จจริงที่เผยแพร่เกี่ยวกับเรื่องนี้ นั่นไม่ได้หมายความว่าเรื่องนี้ผิด เนื่องจากเรื่องราวส่วนใหญ่ไม่เคยได้รับการตรวจสอบข้อเท็จจริง",
+      "disclaimer": "นี่คือการอ่านของ Mera เองจากการค้นหาเว็บ เขียนโดย AI อาจผิดหรือไม่สมบูรณ์ ดังนั้นโปรดอ่านแหล่งข้อมูลก่อนที่จะไว้วางใจ",
+      "organisationA11y": "เปิดการตรวจสอบข้อมูลของ {{organisation}} ซึ่งได้รับการให้คะแนน {{rating}} ในเบราว์เซอร์ในแอป",
+      "checkedByRelatedNote": "สิ่งเหล่านี้มาจากการค้นหาคำสำคัญ และอาจเกี่ยวกับเรื่องอื่น เปิดหนึ่งเรื่องเพื่อตรวจสอบ",
+      "searchFoundHeading": "สิ่งที่ค้นหาของเราพบ",
+      "searchFoundEmpty": "ไม่มีข้อมูลเพียงพอจากการค้นหาสำหรับ Mera ที่จะสรุปได้ที่นี่",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "ไม่พบการตรวจสอบข้อเท็จจริงที่เผยแพร่",
+        "factChecksFound_one": "พบ {{count}} การตรวจสอบข้อเท็จจริง แตะเพื่ออ่าน",
+        "factChecksFound_other": "พบ {{count}} การตรวจสอบข้อเท็จจริง แตะเพื่ออ่าน"
+      }
+    }
+  },
+  "tr": {
+    "factCheck": {
+      "checkedByHeading": "Aramanın bulduğu gerçek kontrolleri",
+      "noCheckedBy": "Bu hikaye hakkında yayınlanmış bir gerçek kontrolü bulamadık. Bu hikayelenin yanlış olduğu anlamına gelmez. Çoğu hikaye hiçbir zaman kontrol edilmez.",
+      "disclaimer": "Bu, yapay zeka tarafından yazılan bir web aramasının Mera'nın kendi okumasıdır. Hatalı veya eksik olabilir, bu nedenle ona güvenmeden önce kaynakları okuyun.",
+      "organisationA11y": "{{organisation}} tarafından yapılan gerçek kontrolünü açın, {{rating}} ile değerlendirilmiş, uygulama içi tarayıcıda",
+      "checkedByRelatedNote": "Bunlar anahtar sözcük aramasından gelir ve farklı bir hikaye hakkında olabilir. Kontrol etmek için birini açın.",
+      "searchFoundHeading": "Aramamızın bulduğu",
+      "searchFoundEmpty": "Arama, Mera'nın burada özet yapabileceği kadar bilgi sağlamadı.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Yayınlanmış gerçek kontrolü bulunamadı",
+        "factChecksFound_one": "{{count}} gerçek kontrolü bulundu. Okumak için dokunun",
+        "factChecksFound_other": "{{count}} gerçek kontrolü bulundu. Okumak için dokunun"
+      }
+    }
+  },
+  "uk": {
+    "factCheck": {
+      "checkedByHeading": "Перевірки фактів, знайдені при пошуку",
+      "noCheckedBy": "Ми не знайшли опубліковану перевірку фактів для цієї новини. Це не означає, що новина неправильна. Більшість новин ніколи не перевіряються.",
+      "disclaimer": "Це власне розуміння Mera результатів веб-пошуку, написане AI. Воно може бути неправильним або неповним, тому прочитайте джерела перед використанням.",
+      "organisationA11y": "Відкрити перевірку фактів {{organisation}}, оцінену як {{rating}}, у вбудованому браузері",
+      "checkedByRelatedNote": "Вони отримані з пошуку за ключовими словами і можуть стосуватися іншої новини. Відкрийте один, щоб перевірити.",
+      "searchFoundHeading": "Що знайшов наш пошук",
+      "searchFoundEmpty": "Результатів пошуку недостатньо для резюме.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Опубліковані перевірки фактів не знайдені",
+        "factChecksFound_one": "{{count}} перевірка фактів знайдена. Натисніть для читання",
+        "factChecksFound_few": "{{count}} перевірки фактів знайдені. Натисніть для читання",
+        "factChecksFound_many": "{{count}} перевірок фактів знайдено. Натисніть для читання",
+        "factChecksFound_other": "{{count}} перевірок фактів знайдено. Натисніть для читання"
+      }
+    }
+  },
+  "vi": {
+    "factCheck": {
+      "checkedByHeading": "Các kiểm chứng được tìm thấy",
+      "noCheckedBy": "Chúng tôi không tìm thấy bất kỳ kiểm chứng nào được công bố về câu chuyện này. Điều đó không có nghĩa là câu chuyện sai. Phần lớn các câu chuyện không bao giờ được kiểm chứng.",
+      "disclaimer": "Đây là cách đọc của Mera từ tìm kiếm web, được viết bởi AI. Nó có thể sai hoặc không hoàn chỉnh, vì vậy vui lòng đọc các nguồn trước khi dựa vào nó.",
+      "organisationA11y": "Mở kiểm chứng của {{organisation}}, được đánh giá {{rating}}, trong trình duyệt trong ứng dụng",
+      "checkedByRelatedNote": "Những điều này xuất phát từ tìm kiếm từ khóa và có thể về một câu chuyện khác. Mở một trong những điều đó để kiểm tra.",
+      "searchFoundHeading": "Những gì tìm kiếm của chúng tôi tìm thấy",
+      "searchFoundEmpty": "Tìm kiếm không cung cấp đủ thông tin để Mera tóm tắt tại đây.",
+      "headerA11y": "{{title}}. {{status}}. {{action}}",
+      "dashboard": {
+        "noneFound": "Không tìm thấy kiểm chứng được công bố",
+        "factChecksFound_one": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc",
+        "factChecksFound_other": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc"
+      }
+    }
+  },
+  "zh-CN": {
+    "factCheck": {
+      "checkedByHeading": "搜索发现的事实核查",
+      "noCheckedBy": "我们未能找到关于此故事的已发布事实核查。这并不意味着故事是错误的。大多数故事都未曾被事实核查。",
+      "disclaimer": "这是 Mera 对网络搜索的自我解读，由 AI 撰写。可能有误或不完整，在依赖之前请阅读来源。",
+      "organisationA11y": "在应用内浏览器中打开 {{organisation}} 的事实核查（评级：{{rating}}）",
+      "checkedByRelatedNote": "这些来自关键词搜索，可能与不同的故事有关。打开其中一个进行检查。",
+      "searchFoundHeading": "搜索发现的内容",
+      "searchFoundEmpty": "搜索中没有足够的内容供 Mera 在此总结。",
+      "headerA11y": "{{title}}。{{status}}。{{action}}",
+      "dashboard": {
+        "noneFound": "未发现已发布的事实核查",
+        "factChecksFound_one": "找到 {{count}} 项事实核查。点按以阅读",
+        "factChecksFound_other": "找到 {{count}} 项事实核查。点按以阅读"
+      }
+    }
+  },
+  "zh-TW": {
+    "factCheck": {
+      "checkedByHeading": "搜尋發現的事實查證",
+      "noCheckedBy": "我們未能找到關於此故事的已發佈事實查證。這不表示故事有誤。大多數故事都未曾被事實查證過。",
+      "disclaimer": "這是 Mera 對網路搜尋的自我解讀，由 AI 撰寫。可能有誤或不完整，在依賴之前請先閱讀來源。",
+      "organisationA11y": "在應用內瀏覽器中開啟 {{organisation}} 的事實查證（評等：{{rating}}）",
+      "checkedByRelatedNote": "這些來自關鍵字搜尋，可能與不同的故事有關。打開其中一個進行檢查。",
+      "searchFoundHeading": "搜尋發現的內容",
+      "searchFoundEmpty": "搜尋中沒有足夠的內容供 Mera 在此總結。",
+      "headerA11y": "{{title}}。{{status}}。{{action}}",
+      "dashboard": {
+        "noneFound": "未發現已發佈的事實查證",
+        "factChecksFound_one": "找到 {{count}} 項事實查證。點按以閱讀",
+        "factChecksFound_other": "找到 {{count}} 項事實查證。點按以閱讀"
+      }
+    }
+  }
+}

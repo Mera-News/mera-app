@@ -1492,7 +1492,7 @@
     "citationsHeading": "Fontes consultadas",
     "noCitations": "Esta verificação não citou nenhuma página específica. Isso não é uma busca mal-sucedida — trate o resumo com um pouco mais de cautela sem fontes para apontar.",
     "sourceFallback": "Fonte {{index}}",
-    "disclaimer": "Mera não verifica os fatos das notícias em si. Este é um resumo de IA de uma pesquisa na web por verificações de fatos publicadas — pode estar errado ou incompleto, então leia as fontes antes de confiar nela.",
+    "disclaimer": "Esta é a leitura própria do Mera de uma busca na web, escrita por IA. Pode estar incorreta ou incompleta, portanto leia as fontes antes de confiar nela.",
     "verdict": {
       "supported": {
         "label": "Consistente com fontes",
@@ -1526,7 +1526,7 @@
       "unverifiable": "Não foi possível confirmar",
       "unknown": "Não claro"
     },
-    "checkedByHeading": "Verificadores de fatos que abordaram isto",
+    "checkedByHeading": "Verificações de fatos encontradas na busca",
     "dashboard": {
       "deleteA11y": "Excluir essa verificação de fatos",
       "empty": "Você ainda não verificou nenhuma alegação. Toque na marca de seleção sob uma história para perguntar ao Mera sobre isso — o resultado aparece aqui assim que estiver pronto.",
@@ -1539,11 +1539,14 @@
       "articleGone": "O artigo expirou, então não pode ser aberto. A verificação de fatos que encontramos é mantida aqui.",
       "couldNotCheck": "Não conseguimos verificar quem publicou sobre isso. Toque para ver o que a busca encontrou.",
       "moreOrganisations_one": "+{{count}} outra",
-      "moreOrganisations_other": "+{{count}} outras"
+      "moreOrganisations_other": "+{{count}} outras",
+      "noneFound": "Nenhuma verificação de fatos publicada encontrada",
+      "factChecksFound_one": "{{count}} verificação de fatos encontrada. Toque para ler",
+      "factChecksFound_other": "{{count}} verificações de fatos encontradas. Toque para ler"
     },
     "explainer": "Mera não verifica os fatos das notícias em si. Ela pesquisa o que organizações de verificação de fatos estabelecidas já publicaram sobre essa história.",
-    "noCheckedBy": "Nenhuma organização de verificação de fatos que pesquisamos publicou sobre essa história. Isso não torna a história falsa — a maioria das histórias nunca é verificada.",
-    "organisationA11y": "Abrir verificação de fatos de {{organisation}} no navegador do aplicativo",
+    "noCheckedBy": "Não encontramos uma verificação de fatos publicada sobre esta história. Isso não significa que a história esteja errada. A maioria das histórias nunca é verificada.",
+    "organisationA11y": "Abra a verificação de fatos de {{organisation}}, classificada como {{rating}}, no navegador do app",
     "queued": "Esta verificação continua em execução em segundo plano. Você não precisa esperar aqui — é seguro sair do artigo.",
     "queuedHint": "O resultado aparece em Verificações de fatos no seu Painel assim que estiver pronto.",
     "citationA11y": "Abrir a fonte {{source}} no navegador do aplicativo",
@@ -1570,7 +1573,11 @@
     "checkedByMultipleNote": "Estas são avaliações independentes, cada uma na escala própria da organização — nem sempre concordam entre si.",
     "ownReadingHeading": "Leitura própria da Mera — secundária ao parecer acima",
     "collapseA11y": "Ocultar esta checagem",
-    "expandA11y": "Mostrar esta checagem"
+    "expandA11y": "Mostrar esta checagem",
+    "checkedByRelatedNote": "Vêm de uma busca por palavras-chave e podem ser sobre uma história diferente. Abra uma para verificar.",
+    "searchFoundHeading": "O que nossa busca encontrou",
+    "searchFoundEmpty": "A busca não forneceu informação suficiente para Mera resumir aqui.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Priorizar esta fonte",

@@ -1499,7 +1499,7 @@
     "citationsHeading": "Sources consultées",
     "noCitations": "Cette vérification n'a cité aucune page spécifique. Ce n'est pas un échec — traitez le résumé avec un peu plus de prudence sans sources à consulter.",
     "sourceFallback": "Source {{index}}",
-    "disclaimer": "Mera ne vérifie pas les faits de l'actualité elle-même. Ceci est un résumé généré par l'IA d'une recherche web pour les vérifications de faits publiées — il peut être inexact ou incomplet, veuillez donc lire les sources avant de vous y fier.",
+    "disclaimer": "Ceci est la propre lecture de Mera d'une recherche web, écrite par l'IA. Cela peut être inexact ou incomplet, veuillez donc lire les sources avant de vous y fier.",
     "verdict": {
       "supported": {
         "label": "Cohérent avec les sources",
@@ -1533,7 +1533,7 @@
       "unverifiable": "Impossible de confirmer",
       "unknown": "Peu clair"
     },
-    "checkedByHeading": "Vérificateurs de faits ayant couvert ce sujet",
+    "checkedByHeading": "Vérifications de faits trouvées par la recherche",
     "dashboard": {
       "deleteA11y": "Supprimer cette vérification de fait",
       "empty": "Vous n'avez pas encore vérifié d'affirmations. Appuyez sur la coche sous une histoire pour demander à Mera — le résultat s'affiche ici une fois prêt.",
@@ -1546,11 +1546,14 @@
       "articleGone": "L'article a expiré, il ne peut donc pas être ouvert. La vérification des faits que nous avons trouvée est conservée ici.",
       "couldNotCheck": "Nous n'avons pas pu vérifier qui a publié à ce sujet. Touchez pour voir ce que la recherche a trouvé.",
       "moreOrganisations_one": "+{{count}} autre",
-      "moreOrganisations_other": "+{{count}} autres"
+      "moreOrganisations_other": "+{{count}} autres",
+      "noneFound": "Aucune vérification de faits publiée trouvée",
+      "factChecksFound_one": "{{count}} vérification de faits trouvée. Appuyez pour lire",
+      "factChecksFound_other": "{{count}} vérifications de faits trouvées. Appuyez pour lire"
     },
     "explainer": "Mera ne vérifie pas les faits de l'actualité elle-même. Elle recherche ce que les organismes de vérification de faits établis ont déjà publié sur cette histoire.",
-    "noCheckedBy": "Aucun organisme de vérification de faits que nous avons consulté n'a publié sur cette histoire. Cela ne rend pas l'histoire fausse — la plupart des histoires ne sont jamais vérifiées.",
-    "organisationA11y": "Ouvrir la vérification de faits de {{organisation}} dans le navigateur intégré",
+    "noCheckedBy": "Nous n'avons pas trouvé de vérification de faits publiée sur cette histoire. Cela ne rend pas l'histoire fausse. La plupart des histoires ne sont jamais vérifiées.",
+    "organisationA11y": "Ouvrir la vérification de faits de {{organisation}}, notée {{rating}}, dans le navigateur intégré",
     "queued": "Cette vérification s'exécute en arrière-plan. Vous n'avez pas besoin d'attendre ici — c'est parfait de quitter l'article.",
     "queuedHint": "Le résultat s'affiche sous Vérifications de faits sur votre Tableau de bord une fois prêt.",
     "citationA11y": "Ouvrir la source {{source}} dans le navigateur intégré",
@@ -1577,7 +1580,11 @@
     "checkedByMultipleNote": "Il s'agit d'évaluations indépendantes, chacune selon l'échelle propre à cette organisation — elles ne concordent pas toujours entre elles.",
     "ownReadingHeading": "Lecture propre à Mera — secondaire par rapport au verdict ci-dessus",
     "collapseA11y": "Masquer cette vérification",
-    "expandA11y": "Afficher cette vérification"
+    "expandA11y": "Afficher cette vérification",
+    "checkedByRelatedNote": "Celles-ci proviennent d'une recherche par mots-clés et peuvent concerner une histoire différente. Ouvrez-en une pour vérifier.",
+    "searchFoundHeading": "Ce que notre recherche a trouvé",
+    "searchFoundEmpty": "Il n'y avait pas assez dans la recherche pour que Mera le résume ici.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioriser cette source",

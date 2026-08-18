@@ -1493,7 +1493,7 @@
     "citationsHeading": "参考的来源",
     "noCitations": "本检查未引用任何特定页面。这不是搜索失败——缺少来源指向时，请对摘要多加谨慎对待。",
     "sourceFallback": "来源{{index}}",
-    "disclaimer": "Mera 不是对新闻本身进行事实核查。这是网络搜索已发布事实核查的 AI 总结——可能有错误或不完整，在依赖之前请阅读来源。",
+    "disclaimer": "这是 Mera 对网络搜索的自我解读，由 AI 撰写。可能有误或不完整，在依赖之前请阅读来源。",
     "verdict": {
       "supported": {
         "label": "与来源一致",
@@ -1527,7 +1527,7 @@
       "unverifiable": "无法确认",
       "unknown": "不清楚"
     },
-    "checkedByHeading": "核实过此内容的事实核查机构",
+    "checkedByHeading": "搜索发现的事实核查",
     "dashboard": {
       "deleteA11y": "删除此事实核查",
       "empty": "您还没有核查过任何声明。在故事下方点击勾号以向 Mera 查询——一旦结果准备好，就会显示在这里。",
@@ -1540,11 +1540,14 @@
       "articleGone": "该文章已过期，因此无法打开。我们找到的事实核查保存在此处。",
       "couldNotCheck": "我们无法确认有谁就此发表过查核。点按可查看搜索到的内容。",
       "moreOrganisations_one": "还有 {{count}} 家",
-      "moreOrganisations_other": "还有 {{count}} 家"
+      "moreOrganisations_other": "还有 {{count}} 家",
+      "noneFound": "未发现已发布的事实核查",
+      "factChecksFound_one": "找到 {{count}} 项事实核查。点按以阅读",
+      "factChecksFound_other": "找到 {{count}} 项事实核查。点按以阅读"
     },
     "explainer": "Mera 不是对新闻本身进行事实核查。它搜索已建立的事实核查机构已经发布的有关此故事的内容。",
-    "noCheckedBy": "我们搜索的事实核查机构都未发布过关于此故事的内容。这并不意味着此故事是错误的——大多数故事从未被事实核查。",
-    "organisationA11y": "在应用内浏览器中打开 {{organisation}} 的事实核查",
+    "noCheckedBy": "我们未能找到关于此故事的已发布事实核查。这并不意味着故事是错误的。大多数故事都未曾被事实核查。",
+    "organisationA11y": "在应用内浏览器中打开 {{organisation}} 的事实核查（评级：{{rating}}）",
     "queued": "这项检查在后台继续运行。您不需要在这里等待——可以安全地离开本文。",
     "queuedHint": "一旦结果准备好，它将出现在您仪表板上的事实核查下。",
     "citationA11y": "在应用内浏览器中打开来源 {{source}}",
@@ -1571,7 +1574,11 @@
     "checkedByMultipleNote": "这些是各自独立的评级,分别采用相关机构自己的标准——彼此不一定一致。",
     "ownReadingHeading": "Mera 自己的解读——次于上方的结论",
     "collapseA11y": "隐藏此项事实查核",
-    "expandA11y": "显示此项事实查核"
+    "expandA11y": "显示此项事实查核",
+    "checkedByRelatedNote": "这些来自关键词搜索，可能与不同的故事有关。打开其中一个进行检查。",
+    "searchFoundHeading": "搜索发现的内容",
+    "searchFoundEmpty": "搜索中没有足够的内容供 Mera 在此总结。",
+    "headerA11y": "{{title}}。{{status}}。{{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "优先考虑此来源",

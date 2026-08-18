@@ -1493,7 +1493,7 @@
     "citationsHeading": "Các nguồn được tham khảo",
     "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại — hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
     "sourceFallback": "Nguồn {{index}}",
-    "disclaimer": "Mera không kiểm chứng tin tức trực tiếp. Đây là tóm tắt AI của tìm kiếm web cho các kiểm chứng sự kiện được công bố — nó có thể sai hoặc không đầy đủ, vì vậy hãy đọc các nguồn trước khi dựa vào nó.",
+    "disclaimer": "Đây là cách đọc của Mera từ tìm kiếm web, được viết bởi AI. Nó có thể sai hoặc không hoàn chỉnh, vì vậy vui lòng đọc các nguồn trước khi dựa vào nó.",
     "verdict": {
       "supported": {
         "label": "Phù hợp với các nguồn",
@@ -1527,7 +1527,7 @@
       "unverifiable": "Không thể xác nhận",
       "unknown": "Không rõ"
     },
-    "checkedByHeading": "Các tổ chức kiểm chứng đã đề cập",
+    "checkedByHeading": "Các kiểm chứng được tìm thấy",
     "dashboard": {
       "deleteA11y": "Xóa kiểm chứng sự kiện này",
       "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera — kết quả sẽ xuất hiện ở đây khi sẵn sàng.",
@@ -1540,11 +1540,14 @@
       "articleGone": "Bài viết đã hết hạn, nên không thể mở được. Kiểm tra sự thật mà chúng tôi tìm thấy được giữ lại ở đây.",
       "couldNotCheck": "Chúng tôi không kiểm tra được ai đã đăng về việc này. Chạm để xem kết quả tìm kiếm.",
       "moreOrganisations_one": "+{{count}} nữa",
-      "moreOrganisations_other": "+{{count}} nữa"
+      "moreOrganisations_other": "+{{count}} nữa",
+      "noneFound": "Không tìm thấy kiểm chứng được công bố",
+      "factChecksFound_one": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc",
+      "factChecksFound_other": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc"
     },
     "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
-    "noCheckedBy": "Không có tổ chức kiểm chứng nào trong tìm kiếm của chúng tôi đã công bố về câu chuyện này. Điều này không có nghĩa là câu chuyện sai — hầu hết các câu chuyện không bao giờ được kiểm chứng.",
-    "organisationA11y": "Mở kiểm tra sự thật của {{organisation}} trong trình duyệt trong ứng dụng",
+    "noCheckedBy": "Chúng tôi không tìm thấy bất kỳ kiểm chứng nào được công bố về câu chuyện này. Điều đó không có nghĩa là câu chuyện sai. Phần lớn các câu chuyện không bao giờ được kiểm chứng.",
+    "organisationA11y": "Mở kiểm chứng của {{organisation}}, được đánh giá {{rating}}, trong trình duyệt trong ứng dụng",
     "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây — có thể rời khỏi bài viết.",
     "queuedHint": "Kết quả sẽ xuất hiện dưới mục Kiểm tra sự thật trên Dashboard khi sẵn sàng.",
     "citationA11y": "Mở nguồn {{source}} trong trình duyệt trong ứng dụng",
@@ -1571,7 +1574,11 @@
     "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó — chúng không phải lúc nào cũng thống nhất với nhau.",
     "ownReadingHeading": "Nhận định riêng của Mera — thứ yếu so với kết luận ở trên",
     "collapseA11y": "Ẩn phần kiểm chứng này",
-    "expandA11y": "Hiện phần kiểm chứng này"
+    "expandA11y": "Hiện phần kiểm chứng này",
+    "checkedByRelatedNote": "Những điều này xuất phát từ tìm kiếm từ khóa và có thể về một câu chuyện khác. Mở một trong những điều đó để kiểm tra.",
+    "searchFoundHeading": "Những gì tìm kiếm của chúng tôi tìm thấy",
+    "searchFoundEmpty": "Tìm kiếm không cung cấp đủ thông tin để Mera tóm tắt tại đây.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",
