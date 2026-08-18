@@ -96,7 +96,14 @@ import logger from '@/lib/logger';
 /** Past this, the "save a new copy" nudge turns amber. */
 export const STALE_BACKUP_MS = 30 * 24 * 60 * 60 * 1000;
 
-type Stage = 'loading' | 'off' | 'code' | 'where' | 'when' | 'on' | 'adopt';
+/**
+ * `where` and `restoreWhere` ask DIFFERENT questions and must stay separate.
+ * `where` is "where should backups go" (setup). `restoreWhere` is "where is my
+ * existing backup" (recovery). Wiring the recovery path to `where` — which is
+ * what shipped first — meant entering a recovery code silently configured
+ * backup and never restored anything.
+ */
+type Stage = 'loading' | 'off' | 'code' | 'where' | 'when' | 'on' | 'adopt' | 'restoreWhere';
 
 const CADENCES: Exclude<BackupCadence, 'off'>[] = ['daily', 'weekly', 'manual'];
 
@@ -121,6 +128,8 @@ const BackupSection: React.FC = () => {
   const [showCode, setShowCode] = useState(false);
   const [restoreOptions, setRestoreOptions] = useState<readonly string[] | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<string | null>(null);
+  /** Set only on the recovery path: where the EXISTING backup is being read from. */
+  const [restoreSource, setRestoreSource] = useState<BackupProviderId | null>(null);
   const [confirmOff, setConfirmOff] = useState(false);
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
@@ -240,28 +249,57 @@ const BackupSection: React.FC = () => {
     [notify],
   );
 
+  /**
+   * Connect (if needed) and prove the credential really works. Shared by both
+   * pickers so the recovery path gets the same round trip as setup: without it
+   * a Drive scope problem would surface as an empty backup list rather than an
+   * error, which reads as "you have no backups" — the worst possible lie to
+   * tell someone who is restoring.
+   */
+  const reachProvider = useCallback(
+    async (id: BackupProviderId): Promise<BackupProvider | null> => {
+      if (id === 'google-drive' && !driveReady) {
+        const result = await connectGoogleDrive();
+        if (!result.ok) {
+          reportDriveFailure(result);
+          return null;
+        }
+        setDriveReady(true);
+      }
+      const cloud = cloudProviderFor(id);
+      if (cloud) await verifyProviderAccess(cloud);
+      return cloud;
+    },
+    [driveReady, reportDriveFailure],
+  );
+
+  /** Recovery path: read the existing backups from the chosen destination. */
+  const chooseRestoreSource = useCallback(
+    async (id: BackupProviderId) => {
+      try {
+        setBusy(id);
+        const cloud = await reachProvider(id);
+        if (!cloud) return;
+        setRestoreSource(id);
+        setRestoreOptions(await listBackups(cloud));
+      } catch (err) {
+        fail(err, 'choose-restore-source');
+      } finally {
+        setBusy(null);
+      }
+    },
+    [fail, reachProvider],
+  );
+
   const chooseProvider = useCallback(
     async (id: BackupProviderId) => {
       try {
         setBusy(id);
-        if (id === 'google-drive' && !driveReady) {
-          const result = await connectGoogleDrive();
-          // `result` is an OBJECT, so `!result` is always false. An earlier
-          // version tested it that way and advanced on failure.
-          if (!result.ok) {
-            reportDriveFailure(result);
-            return;
-          }
-          setDriveReady(true);
-        }
-
-        // One real round trip before declaring success. Sign-in succeeding does
-        // not prove the drive.appdata grant landed, and a token without it
-        // fails nothing until the first upload, on a background task nobody is
-        // watching.
-        const cloud = cloudProviderFor(id);
-        if (cloud) await verifyProviderAccess(cloud);
-
+        // Returns null when the user cancelled or the connect failed; the
+        // failure has already been reported. `!result.ok` matters here — an
+        // earlier version compared the result OBJECT with `!result`, which is
+        // always false, and advanced on failure.
+        if (!(await reachProvider(id))) return;
         await setBackupProviderId(id);
         setStage('when');
       } catch (err) {
@@ -270,7 +308,7 @@ const BackupSection: React.FC = () => {
         setBusy(null);
       }
     },
-    [driveReady, fail, refresh, reportDriveFailure],
+    [fail, reachProvider],
   );
 
   const chooseCadence = useCallback(
@@ -299,7 +337,8 @@ const BackupSection: React.FC = () => {
         return;
       }
       setTypedCode('');
-      setStage('where');
+      // The recovery picker, not the setup picker. See the Stage comment.
+      setStage('restoreWhere');
     } catch (err) {
       fail(err, 'adopt-code');
     } finally {
@@ -361,8 +400,32 @@ const BackupSection: React.FC = () => {
     }
   }, [fail]);
 
+  /**
+   * Restart the JS runtime so every store re-hydrates from the restored
+   * database. Same mechanism `OTAUpdateModal` uses for an in-place restart.
+   *
+   * If it fails there is nothing clever to do — the data IS restored, the app
+   * is just showing stale state — so the user is told to reopen the app rather
+   * than left with a success message and an unchanged screen.
+   */
+  const reloadApp = useCallback(async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const Updates = require('expo-updates');
+      await Updates.reloadAsync();
+    } catch (err) {
+      logger.captureException(err, { tags: { screen: 'backup', action: 'reload' } });
+      notify(
+        'success',
+        tRef.current('backup.restoredTitle'),
+        tRef.current('backup.restartNeeded'),
+      );
+    }
+  }, [notify]);
+
   const doCloudRestore = useCallback(async () => {
-    const id = backupProviderId();
+    // `restoreSource` on the recovery path, the configured provider otherwise.
+    const id = restoreSource ?? backupProviderId();
     const cloud = id ? cloudProviderFor(id) : null;
     if (!cloud || !restoreTarget) return;
     const target = restoreTarget;
@@ -371,18 +434,32 @@ const BackupSection: React.FC = () => {
     try {
       setBusy('restore');
       const result = await runRestore(cloud, target);
+
+      // Remember where the backup came from, so the section lands configured
+      // rather than asking the user to set up something they clearly already
+      // have. Cadence stays at its default until they choose one.
+      if (restoreSource) await setBackupProviderId(restoreSource);
+
       notify(
         'success',
         tRef.current('backup.restoredTitle'),
         tRef.current('backup.restoredDescription', { count: result.rowsRestored }),
       );
-      refresh();
+
+      // RELOAD, do not try to re-hydrate. The restore replaced rows underneath
+      // every Zustand store in the app, and those stores hydrated once at
+      // startup — without this the user is told "13 items restored" and then
+      // sees exactly the empty persona they had a moment ago, until they kill
+      // the app themselves. Re-hydrating each store individually would mean
+      // enumerating them here and getting it wrong the next time one is added.
+      await reloadApp();
     } catch (err) {
       fail(err, 'run-restore');
     } finally {
       setBusy(null);
     }
-  }, [fail, notify, refresh, restoreTarget]);
+  }, [fail, notify, reloadApp, restoreSource, restoreTarget]);
+
 
   const turnOff = useCallback(async () => {
     setConfirmOff(false);
@@ -612,6 +689,33 @@ const BackupSection: React.FC = () => {
       );
     }
 
+    if (stage === 'restoreWhere') {
+      return (
+        <VStack space="sm">
+          <Text className="text-white font-semibold">{t('backup.restoreWhereTitle')}</Text>
+          <Text size="sm" className="text-gray-400">
+            {t('backup.restoreWhereDescription')}
+          </Text>
+          {isICloudSupported() &&
+            (icloudReady
+              ? row('cloud', t('backup.icloud'), t('backup.restoreLookHere'), () =>
+                  chooseRestoreSource('icloud'), { testID: 'backup-restore-from-icloud' })
+              : row('cloud-off', t('backup.icloud'), t('backup.icloudUnavailable'), () => {}, {
+                  disabled: true,
+                  testID: 'backup-restore-from-icloud',
+                }))}
+          {isGoogleDriveConfigured() &&
+            row(
+              'add-to-drive',
+              t('backup.drive'),
+              driveReady ? t('backup.restoreLookHere') : t('backup.driveConnect'),
+              () => chooseRestoreSource('google-drive'),
+              { testID: 'backup-restore-from-drive' },
+            )}
+        </VStack>
+      );
+    }
+
     if (stage === 'when') {
       return (
         <VStack space="sm">
@@ -666,6 +770,16 @@ const BackupSection: React.FC = () => {
               refresh();
             },
           { testID: 'backup-wifi-toggle' },
+        )}
+
+        {/* Without this the cadence chosen during setup was permanent: the
+            picker only existed in the setup flow. */}
+        {row(
+          'schedule',
+          t('backup.changeSchedule'),
+          t(`backup.cadence.${backupCadence()}`),
+          () => setStage('when'),
+          { testID: 'backup-change-schedule' },
         )}
 
         {row('vpn-key', t('backup.showCode'), t('backup.showCodeHint'), openRecoveryCode, {

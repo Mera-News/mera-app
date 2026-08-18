@@ -829,7 +829,7 @@
     "showCodeHint": "The code you wrote down when you set this up",
     "restore": "Restore from a backup",
     "restoreHint": "Replaces the data on this device",
-    "restoreEmpty": "There are no backups to restore yet.",
+    "restoreEmpty": "No backups found here. If you used a different Google account or iCloud account before, sign in with that one instead.",
     "restoreConfirmTitle": "Replace the data on this device?",
     "restoreConfirmDescription": "Your facts, topics, chats, saved articles and reading history on this phone will be replaced by what is in the backup. This cannot be undone. Your account and subscription are not affected.",
     "restoreConfirmAction": "Replace",
@@ -844,7 +844,12 @@
     "restoredDescription_one": "{{count}} item restored to this device.",
     "restoredDescription_other": "{{count}} items restored to this device.",
     "runsInBackground": "Runs on its own in the background, usually overnight",
-    "backgroundRestricted": "Background App Refresh is off, so backups cannot run on their own. Use Back up now, or turn it on in your device settings."
+    "backgroundRestricted": "Background App Refresh is off, so backups cannot run on their own. Use Back up now, or turn it on in your device settings.",
+    "restoreWhereTitle": "Where is your backup?",
+    "restoreWhereDescription": "Pick where you saved it. You will see what is there before anything is replaced.",
+    "restoreLookHere": "Look for my backup here",
+    "restartNeeded": "Your data is back. Close and reopen the app to see it.",
+    "changeSchedule": "Backup schedule"
   },
   "preferences": {
     "manageSettings": "Manage your app settings and account",

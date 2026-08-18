@@ -39,7 +39,7 @@ const mockVerifyAccess = jest.fn(async (_p?: unknown) => { calls.push('verifyPro
 jest.mock('@/lib/backup/backup-service', () => ({
     runBackup: () => mockRunBackup(),
     runRestore: jest.fn(async () => ({ rowsRestored: 0 })),
-    listBackups: jest.fn(async () => []),
+    listBackups: () => mockListBackups(),
     verifyProviderAccess: (p: unknown) => mockVerifyAccess(p),
 }));
 
@@ -76,6 +76,14 @@ let mockBgAvailable = true;
 jest.mock('@/lib/background/backup-task', () => ({
     backgroundBackupIsAvailable: jest.fn(async () => mockBgAvailable),
 }));
+
+const mockReload = jest.fn(async () => { calls.push('reloadApp'); });
+jest.mock('expo-updates', () => ({ reloadAsync: () => mockReload() }));
+
+const mockListBackups = jest.fn(async () => {
+    calls.push('listBackups');
+    return ['/mera-backup/mera-backup-2026-08-18T00-00-00-000Z.bin'];
+});
 
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
@@ -291,7 +299,11 @@ describe('the new-phone path', () => {
         await waitFor(() => r.getByTestId('backup-code-input'));
     });
 
-    it('adopts a good code and moves on to pick a source', async () => {
+    it('lands on the RESTORE picker, not the setup picker', async () => {
+        // The bug this pins, found on device: adopting a code dropped the user
+        // into "where should backups go" and quietly configured backup, so the
+        // restore never ran. "Where is my backup" and "where should backups go"
+        // are different questions and need different screens.
         const r = render(<BackupSection />);
         await waitFor(() => r.getByTestId('backup-already-have'));
         fireEvent.press(r.getByTestId('backup-already-have'));
@@ -299,7 +311,35 @@ describe('the new-phone path', () => {
         fireEvent.changeText(r.getByTestId('backup-code-input'), 'abcde fghjk');
         fireEvent.press(r.getByTestId('backup-adopt-continue'));
         await waitFor(() => expect(mockAdopt).toHaveBeenCalledWith('abcde fghjk'));
-        await waitFor(() => r.getByTestId('backup-pick-icloud'));
+
+        await waitFor(() => r.getByTestId('backup-restore-from-icloud'));
+        expect(r.queryByTestId('backup-pick-icloud')).toBeNull();
+        // And nothing has been configured as a backup destination yet.
+        expect(mockSetProviderId).not.toHaveBeenCalled();
+        expect(mockSetCadence).not.toHaveBeenCalled();
+    });
+
+    it('lists what is actually there, then restores and RELOADS the app', async () => {
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByTestId('backup-already-have'));
+        fireEvent.press(r.getByTestId('backup-already-have'));
+        await waitFor(() => r.getByTestId('backup-code-input'));
+        fireEvent.changeText(r.getByTestId('backup-code-input'), 'code');
+        fireEvent.press(r.getByTestId('backup-adopt-continue'));
+        await waitFor(() => r.getByTestId('backup-restore-from-icloud'));
+
+        fireEvent.press(r.getByTestId('backup-restore-from-icloud'));
+        await waitFor(() => expect(mockListBackups).toHaveBeenCalled());
+
+        fireEvent.press(r.getByText('mera-backup-2026-08-18T00-00-00-000Z.bin'));
+        await waitFor(() => r.getByTestId('backup-restore-confirm'));
+        fireEvent.press(r.getByTestId('backup-restore-confirm'));
+
+        // The restore replaced rows under every Zustand store, all of which
+        // hydrated at startup. Without a reload the user is told "restored" and
+        // shown the empty persona they already had.
+        await waitFor(() => expect(calls).toContain('reloadApp'));
+        expect(mockSetProviderId).toHaveBeenCalledWith('icloud');
     });
 
     it('says the code is wrong and stays put', async () => {
@@ -335,6 +375,19 @@ describe('the configured state', () => {
         mockIsConfirmed.mockResolvedValue(true);
         const r = render(<BackupSection />);
         await waitFor(() => r.getByText('backup.runsInBackground'));
+    });
+
+    it('lets the schedule be changed after setup', async () => {
+        // It could not be: the cadence picker only existed in the setup flow,
+        // so whatever was chosen once was permanent.
+        mockProviderId = 'icloud';
+        mockIsConfirmed.mockResolvedValue(true);
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByTestId('backup-change-schedule'));
+        fireEvent.press(r.getByTestId('backup-change-schedule'));
+        await waitFor(() => r.getByTestId('backup-cadence-weekly'));
+        fireEvent.press(r.getByTestId('backup-cadence-weekly'));
+        await waitFor(() => expect(mockSetCadence).toHaveBeenCalledWith('weekly'));
     });
 
     it('forgets the key when backup is turned off, and only after confirming', async () => {
