@@ -2278,7 +2278,8 @@
     "opening": "Membuka dukungan",
     "supportId": "ID dukungan: {{id}}",
     "copySupportId": "Salin ID dukungan",
-    "copied": "Disalin"
+    "copied": "Disalin",
+    "saveHint": "Simpan ID ini. Dukungan dapat menemukan akun Anda dengan ID ini."
   },
   "emailCapture": {
     "title": "Tambahkan email Anda",
@@ -2289,5 +2290,10 @@
     "added": "Email ditambahkan",
     "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}.",
     "settingsRow": "Tambahkan alamat email"
+  },
+  "welcomeBack": {
+    "title": "Selamat datang kembali",
+    "body": "Perangkat ini sudah menggunakan uji coba gratisnya. Untuk terus membaca dengan semua fitur Mera, pilih paket setelah melanjutkan.",
+    "continue": "Lanjutkan"
   }
 }

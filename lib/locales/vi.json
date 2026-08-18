@@ -2279,7 +2279,8 @@
     "opening": "Đang mở hỗ trợ",
     "supportId": "ID hỗ trợ: {{id}}",
     "copySupportId": "Sao chép ID hỗ trợ",
-    "copied": "Đã sao chép"
+    "copied": "Đã sao chép",
+    "saveHint": "Hãy lưu ID này. Bộ phận hỗ trợ có thể tìm tài khoản của bạn bằng ID này."
   },
   "emailCapture": {
     "title": "Thêm email của bạn",
@@ -2290,5 +2291,10 @@
     "added": "Đã thêm email",
     "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}.",
     "settingsRow": "Thêm địa chỉ email"
+  },
+  "welcomeBack": {
+    "title": "Chào mừng bạn quay lại",
+    "body": "Thiết bị này đã dùng bản dùng thử miễn phí. Để tiếp tục đọc với đầy đủ tính năng của Mera, hãy chọn một gói sau khi tiếp tục.",
+    "continue": "Tiếp tục"
   }
 }

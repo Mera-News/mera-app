@@ -2279,7 +2279,8 @@
     "opening": "正在打开支持",
     "supportId": "支持 ID：{{id}}",
     "copySupportId": "复制支持 ID",
-    "copied": "已复制"
+    "copied": "已复制",
+    "saveHint": "请保存此 ID。支持团队可以通过它找到你的帐号。"
   },
   "emailCapture": {
     "title": "添加电子邮件",
@@ -2290,5 +2291,10 @@
     "added": "已添加电子邮件",
     "addedDetail": "收据和帐号找回将使用 {{email}}。",
     "settingsRow": "添加电子邮件地址"
+  },
+  "welcomeBack": {
+    "title": "欢迎回来",
+    "body": "此设备已使用过免费试用。要继续使用 Mera 的全部功能阅读，请在继续后选择一个方案。",
+    "continue": "继续"
   }
 }

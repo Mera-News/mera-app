@@ -2308,7 +2308,8 @@
     "opening": "Otwieranie wsparcia",
     "supportId": "Identyfikator pomocy: {{id}}",
     "copySupportId": "Kopiuj identyfikator pomocy",
-    "copied": "Skopiowano"
+    "copied": "Skopiowano",
+    "saveHint": "Zapisz ten identyfikator. Pomoc może dzięki niemu znaleźć Twoje konto."
   },
   "emailCapture": {
     "title": "Dodaj swój e-mail",
@@ -2319,5 +2320,10 @@
     "added": "Dodano e-mail",
     "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}.",
     "settingsRow": "Dodaj adres e-mail"
+  },
+  "welcomeBack": {
+    "title": "Witaj ponownie",
+    "body": "To urządzenie wykorzystało już bezpłatny okres próbny. Aby dalej czytać ze wszystkimi funkcjami Mera, wybierz plan po przejściu dalej.",
+    "continue": "Dalej"
   }
 }

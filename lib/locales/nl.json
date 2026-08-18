@@ -2278,7 +2278,8 @@
     "opening": "Ondersteuning wordt geopend",
     "supportId": "Support-ID: {{id}}",
     "copySupportId": "Support-ID kopiëren",
-    "copied": "Gekopieerd"
+    "copied": "Gekopieerd",
+    "saveHint": "Bewaar deze ID. Support kan je account ermee vinden."
   },
   "emailCapture": {
     "title": "Voeg je e-mailadres toe",
@@ -2289,5 +2290,10 @@
     "added": "E-mailadres toegevoegd",
     "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}.",
     "settingsRow": "E-mailadres toevoegen"
+  },
+  "welcomeBack": {
+    "title": "Welkom terug",
+    "body": "Dit apparaat heeft zijn gratis proefperiode al gebruikt. Kies na het doorgaan een abonnement om met alle functies van Mera te blijven lezen.",
+    "continue": "Doorgaan"
   }
 }

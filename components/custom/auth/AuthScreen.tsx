@@ -16,7 +16,16 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { sendOTP } from '@/lib/auth-client';
 import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
-import { deviceSignInAvailability, signInWithDevice, type DeviceSignInFailureReason } from '@/lib/device-auth';
+import {
+    deviceSignInAvailability,
+    signInWithDevice,
+    type DeviceSignInFailureReason,
+    type DeviceSignInResult,
+} from '@/lib/device-auth';
+
+/** The success variant — what WelcomeView hands its caller so the
+ *  welcome-back verdict can steer routing. */
+type DeviceSignInSuccess = Extract<DeviceSignInResult, { status: 'success' }>;
 import { hapticLight } from '@/lib/haptics';
 import { useSupportAction } from '@/lib/intercom';
 import logger from '@/lib/logger';
@@ -292,8 +301,9 @@ interface WelcomeViewProps {
     /** Switch to the email view — the secondary path, and the fallback every
      *  failure state offers. */
     onUseEmail: () => void;
-    /** Device sign-in completed and the identity bookkeeping is done. */
-    onSuccess: (userId: string) => void;
+    /** Device sign-in completed and the identity bookkeeping is done. The full
+     *  success result travels so the caller can route on `welcomeBack`. */
+    onSuccess: (result: DeviceSignInSuccess) => void;
 }
 
 /**
@@ -329,7 +339,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
             // Device sign-in re-proves which account this device holds, same
             // as an OTP verify — the other site that clears the fault.
             clearIdentityFault().catch(() => {});
-            onSuccess(result.userId);
+            onSuccess(result);
             // Leave `working` true: the caller replaces this screen.
             return;
         }
@@ -553,9 +563,20 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     // waiting on login.tsx's session Redirect could strand a signed-in user on
     // this screen. Either way the identity gates key on the recorded
     // pendingAuthUserId, not on the atom.
-    const handleDeviceSignInSuccess = (userId: string) => {
+    //
+    // S10: a fresh-looking install whose trial is consumed routes to the
+    // dedicated welcome-back screen INSTEAD of /logged-in — the only trigger
+    // that screen has, which is what keeps it out of mid-session flows.
+    // (Reauth mode cannot produce welcomeBack: stored credentials existed.)
+    const handleDeviceSignInSuccess = (result: DeviceSignInSuccess) => {
         if (onLoginSuccess) {
-            onLoginSuccess(userId);
+            onLoginSuccess(result.userId);
+            return;
+        }
+        if (result.welcomeBack) {
+            // Cast: not in the generated typed-route map until the next expo
+            // typegen run — same precedent as pin-lock in app/index.tsx.
+            router.replace('/welcome-back' as never);
             return;
         }
         router.replace('/logged-in');

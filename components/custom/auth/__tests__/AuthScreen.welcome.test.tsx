@@ -313,7 +313,12 @@ describe('welcome-view button stack (S8)', () => {
 
 describe('device sign-in success', () => {
     it('records the user, clears reauth state and navigates to /logged-in', async () => {
-        mockSignIn.mockResolvedValue({ status: 'success', userId: 'anon-user-1' });
+        mockSignIn.mockResolvedValue({
+            status: 'success',
+            userId: 'anon-user-1',
+            trialAvailable: true,
+            welcomeBack: false,
+        });
         const { findByTestId } = render(<AuthScreen />);
 
         fireEvent.press(await findByTestId('auth-get-started'));
@@ -329,8 +334,30 @@ describe('device sign-in success', () => {
         );
     });
 
+    it('S10: welcomeBack true routes to the dedicated welcome-back screen, never /logged-in', async () => {
+        mockSignIn.mockResolvedValue({
+            status: 'success',
+            userId: 'anon-user-2',
+            trialAvailable: false,
+            welcomeBack: true,
+        });
+        const { findByTestId } = render(<AuthScreen />);
+
+        fireEvent.press(await findByTestId('auth-get-started'));
+
+        await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/welcome-back'));
+        expect(mockRouterReplace).not.toHaveBeenCalledWith('/logged-in');
+        // Bookkeeping is identical either way.
+        expect(mockRecordAuthenticatedUser).toHaveBeenCalledWith('anon-user-2');
+    });
+
     it('reauth mode hands the userId to onLoginSuccess instead of navigating', async () => {
-        mockSignIn.mockResolvedValue({ status: 'success', userId: 'anon-user-1' });
+        mockSignIn.mockResolvedValue({
+            status: 'success',
+            userId: 'anon-user-1',
+            trialAvailable: true,
+            welcomeBack: false,
+        });
         const onLoginSuccess = jest.fn();
         const { findByTestId } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 

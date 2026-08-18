@@ -2278,7 +2278,8 @@
     "opening": "Opening support",
     "supportId": "Support ID: {{id}}",
     "copySupportId": "Copy support ID",
-    "copied": "Copied"
+    "copied": "Copied",
+    "saveHint": "Save this ID. Support can find your account with it."
   },
   "emailCapture": {
     "title": "Add your email",
@@ -2289,5 +2290,10 @@
     "added": "Email added",
     "addedDetail": "Receipts and account recovery will use {{email}}.",
     "settingsRow": "Add email address"
+  },
+  "welcomeBack": {
+    "title": "Welcome back",
+    "body": "This device already used its free trial. To keep reading with Mera's full features, choose a plan after you continue.",
+    "continue": "Continue"
   }
 }

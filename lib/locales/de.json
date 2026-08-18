@@ -2278,7 +2278,8 @@
     "opening": "Support wird geöffnet",
     "supportId": "Support-ID: {{id}}",
     "copySupportId": "Support-ID kopieren",
-    "copied": "Kopiert"
+    "copied": "Kopiert",
+    "saveHint": "Speichere diese ID. Der Support findet dein Konto damit."
   },
   "emailCapture": {
     "title": "E-Mail-Adresse hinzufügen",
@@ -2289,5 +2290,10 @@
     "added": "E-Mail-Adresse hinzugefügt",
     "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}.",
     "settingsRow": "E-Mail-Adresse hinzufügen"
+  },
+  "welcomeBack": {
+    "title": "Willkommen zurück",
+    "body": "Dieses Gerät hat seine kostenlose Testphase bereits genutzt. Wähle nach dem Fortfahren einen Tarif, um mit allen Funktionen von Mera weiterzulesen.",
+    "continue": "Weiter"
   }
 }

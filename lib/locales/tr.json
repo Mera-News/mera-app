@@ -2280,7 +2280,8 @@
     "opening": "Destek açılıyor",
     "supportId": "Destek kimliği: {{id}}",
     "copySupportId": "Destek kimliğini kopyala",
-    "copied": "Kopyalandı"
+    "copied": "Kopyalandı",
+    "saveHint": "Bu kimliği kaydet. Destek ekibi hesabını bununla bulabilir."
   },
   "emailCapture": {
     "title": "E-postanı ekle",
@@ -2291,5 +2292,10 @@
     "added": "E-posta eklendi",
     "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak.",
     "settingsRow": "E-posta adresi ekle"
+  },
+  "welcomeBack": {
+    "title": "Tekrar hoş geldin",
+    "body": "Bu cihaz ücretsiz deneme süresini zaten kullandı. Mera'nın tüm özellikleriyle okumaya devam etmek için devam ettikten sonra bir plan seç.",
+    "continue": "Devam"
   }
 }

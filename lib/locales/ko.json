@@ -2278,7 +2278,8 @@
     "opening": "고객 지원을 여는 중",
     "supportId": "지원 ID: {{id}}",
     "copySupportId": "지원 ID 복사",
-    "copied": "복사됨"
+    "copied": "복사됨",
+    "saveHint": "이 ID를 저장해 두세요. 지원팀이 이 ID로 계정을 찾을 수 있습니다."
   },
   "emailCapture": {
     "title": "이메일 추가",
@@ -2289,5 +2290,10 @@
     "added": "이메일이 추가되었습니다",
     "addedDetail": "영수증과 계정 복구에 {{email}}을(를) 사용합니다.",
     "settingsRow": "이메일 주소 추가"
+  },
+  "welcomeBack": {
+    "title": "다시 오신 것을 환영합니다",
+    "body": "이 기기는 무료 체험을 이미 사용했습니다. Mera의 모든 기능으로 계속 읽으려면 계속한 후 요금제를 선택하세요.",
+    "continue": "계속"
   }
 }

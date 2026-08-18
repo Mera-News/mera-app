@@ -2279,7 +2279,8 @@
     "opening": "正在開啟支援",
     "supportId": "支援 ID：{{id}}",
     "copySupportId": "複製支援 ID",
-    "copied": "已複製"
+    "copied": "已複製",
+    "saveHint": "請保存此 ID。支援團隊可以透過它找到你的帳戶。"
   },
   "emailCapture": {
     "title": "新增電子郵件",
@@ -2290,5 +2291,10 @@
     "added": "已新增電子郵件",
     "addedDetail": "收據與帳戶救援將使用 {{email}}。",
     "settingsRow": "新增電子郵件地址"
+  },
+  "welcomeBack": {
+    "title": "歡迎回來",
+    "body": "此裝置已使用過免費試用。若要繼續使用 Mera 的完整功能閱讀，請在繼續後選擇方案。",
+    "continue": "繼續"
   }
 }
