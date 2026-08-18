@@ -161,10 +161,11 @@ describe('ManageDataScreen — delete account (grace-period flow)', () => {
         await waitFor(() => expect(mockClearAllStores).toHaveBeenCalled());
 
         expect(calls).toEqual(
-            expect.arrayContaining(['signOut', 'clearAuthStorage', 'dismissAll', 'replace', 'clearAllStores', 'toast']),
+            expect.arrayContaining(['clearAuthStorage', 'dismissAll', 'replace', 'clearAllStores', 'toast']),
         );
-        // signOut must precede clearAllStores — the local cleanup sequence.
-        expect(calls.indexOf('signOut')).toBeLessThan(calls.indexOf('clearAllStores'));
+        // clearAuthStorage (which owns the guarded server sign-out) must
+        // precede clearAllStores — the local cleanup sequence.
+        expect(calls.indexOf('clearAuthStorage')).toBeLessThan(calls.indexOf('clearAllStores'));
     });
 
     it('a resolved {error} (non-2xx, no throw) is treated as FAILURE — no sign-out, no success toast', async () => {

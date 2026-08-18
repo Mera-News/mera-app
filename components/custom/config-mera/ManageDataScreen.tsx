@@ -184,7 +184,9 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             serverDeleteSucceeded = true;
 
             try {
-                await authClient.signOut();
+                // clearAuthStorage() owns the (guarded, bounded) server
+                // sign-out — see its header. A direct signOut here once let a
+                // network failure skip the whole local cleanup silently.
                 await clearAuthStorage();
 
                 router.dismissAll();

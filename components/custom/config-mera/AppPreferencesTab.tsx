@@ -94,7 +94,10 @@ const AppPreferencesTab: React.FC = () => {
             setModalProcessing('logout', true);
             closeModal('logout');
 
-            await authClient.signOut();
+            // No direct authClient.signOut() here: clearAuthStorage() owns
+            // the server sign-out, guarded and bounded. A direct unguarded
+            // await once let a staging outage reject into the catch below with
+            // NOTHING cleared — the device relaunched signed in.
             await clearAuthStorage();
             // ── PAST THIS LINE NOTHING MAY THROW ──────────────────────────
             // clearAuthStorage() has already deleted the cookie, so the device

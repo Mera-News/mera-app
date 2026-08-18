@@ -217,8 +217,10 @@ export async function wipeAllLocalUserData(): Promise<void> {
  */
 export async function signOutAndWipe(): Promise<void> {
   try {
-    const { authClient, clearAuthStorage } = require('@/lib/auth-client');
-    await authClient.signOut();
+    // clearAuthStorage() owns the (guarded, bounded) server sign-out; a
+    // direct authClient.signOut() before it would reject on an outage and
+    // skip the cookie deletion, leaving the wipe below as the only cover.
+    const { clearAuthStorage } = require('@/lib/auth-client');
     await clearAuthStorage();
   } catch (err) {
     logger.addBreadcrumb(

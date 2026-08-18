@@ -162,14 +162,32 @@ describe('Settings → Logout', () => {
         // before the data they render disappears underneath them.
         expect(calls.indexOf('replace')).toBeLessThan(calls.indexOf('wipeAllLocalUserData'));
 
+        // No direct 'signOut' entry: the ONLY server contact lives inside
+        // clearAuthStorage(), where it is guarded and bounded — a direct
+        // unguarded call here is what once let a staging outage abort the
+        // whole local logout.
         expect(calls).toEqual([
-            'signOut',
             'clearAuthStorage',
             'setLockEnabled',
             'deleteSetting:cached_user_id',
             'replace',
             'wipeAllLocalUserData',
         ]);
+    });
+
+    it('a rejecting server sign-out cannot stop the local logout (outage = still signed out)', async () => {
+        // The observed field bug: logout during a staging outage relaunched
+        // signed IN. The handler must never await the server unguarded — local
+        // truth wins, exactly as the never-silent-logout invariant demands in
+        // the other direction.
+        mockSignOut.mockRejectedValue(new TypeError('Network request failed'));
+        const { getByText } = render(<AppPreferencesTab />);
+        pressSignOut(getByText);
+
+        await waitFor(() => expect(mockWipeAll).toHaveBeenCalled());
+        expect(mockClearAuthStorage).toHaveBeenCalled();
+        expect(mockDeleteSetting).toHaveBeenCalledWith('cached_user_id');
+        expect(mockReplace).toHaveBeenCalledWith({ pathname: '/login', params: { signedOut: '1' } });
     });
 
     it('lands on /login with signedOut:"1", never on the launch gate', async () => {
@@ -235,16 +253,12 @@ describe('Settings → Logout', () => {
         expect(mockReplace).toHaveBeenCalled();
     });
 
-    it('a failing server sign-out leaves local state untouched rather than half-wiped', async () => {
-        mockSignOut.mockRejectedValueOnce(new Error('network down'));
-        const { getByText } = render(<AppPreferencesTab />);
-        pressSignOut(getByText);
-
-        await waitFor(() => expect(mockSetModalProcessing).toHaveBeenCalledWith('logout', false));
-        expect(mockDeleteSetting).not.toHaveBeenCalled();
-        expect(mockWipeAll).not.toHaveBeenCalled();
-        expect(mockReplace).not.toHaveBeenCalled();
-    });
+    // The spec that used to sit here — "a failing server sign-out leaves local
+    // state untouched" — encoded the field bug it was meant to prevent: logout
+    // during a staging outage left the device signed IN across relaunches.
+    // The user pressed the button, so local truth wins; the rejecting-sign-out
+    // case is covered above, and the server call itself now lives guarded and
+    // bounded inside clearAuthStorage().
 });
 
 describe('Settings → tutorials row', () => {

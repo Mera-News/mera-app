@@ -363,6 +363,40 @@ describe('clearAuthStorage', () => {
     await expect(clearAuthStorage()).resolves.not.toThrow();
   });
 
+  // The user pressed the button, so local state clears regardless of network —
+  // the inverse of the never-silent-logout invariant: both demand local truth
+  // wins. A server outage must not leave the device signed in.
+  it('still deletes the cookie keys when the server sign-out REJECTS', async () => {
+    mockSignOut.mockRejectedValueOnce(new TypeError('Network request failed'));
+    await clearAuthStorage();
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith(
+      expect.stringContaining('_cookie'),
+      expect.anything(),
+    );
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith(
+      expect.stringContaining('_session_data'),
+      expect.anything(),
+    );
+  });
+
+  it('does not wait forever on a HANGING server sign-out — the local wipe is bounded', async () => {
+    jest.useFakeTimers();
+    try {
+      // Never resolves: a connection that black-holes during an outage.
+      mockSignOut.mockImplementationOnce(() => new Promise(() => {}));
+      const pending = clearAuthStorage();
+      // Advance past the sign-out bound; the local deletion must proceed.
+      await jest.advanceTimersByTimeAsync(6000);
+      await pending;
+      expect(mockDeleteItemAsync).toHaveBeenCalledWith(
+        expect.stringContaining('_cookie'),
+        expect.anything(),
+      );
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('does not throw even if deleteItemAsync rejects', async () => {
     mockSignOut.mockResolvedValueOnce(undefined);
     mockDeleteItemAsync.mockRejectedValue(new Error('key not found'));
