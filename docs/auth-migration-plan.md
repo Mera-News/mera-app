@@ -588,6 +588,23 @@ news-async.** The kill is dispatcher code; the currently deployed prod dispatche
 applying the epoch var first would mass-email the cohort with the old code. Epoch-then-merge is the
 one order that can still send trial mail.
 
+### S7, 2026-08-18: welcome email off by default, Android dev-build testing enabled
+
+- **Welcome email is gated behind `WELCOME_EMAIL_ENABLED`** (exact string 'true', read lazily; absent
+  = no send, logic preserved for the user's future opt-in communication channel). Unset everywhere,
+  so no welcome email sends anywhere once this reaches an environment. The S2 anonymous suppression
+  stays as an independent layer. With S6, no trial-related text reaches any inbox by default.
+- **`PLAY_INTEGRITY_ALLOW_UNRECOGNIZED` (staging only, never prod)**: downgrades exactly the
+  `app-not-recognized:*` and `app-not-licensed:*` reason families so sideloaded dev builds can test
+  the real integrity path; device-integrity, nonce, package and api-error semantics unchanged.
+  Relaxed sign-ins are marked on the device-key row (`integrityRelaxedReasons`, reset per sign-in)
+  and warn-logged; `integrityUnverified` now means exactly "api-error present" so outage and
+  relaxation never masquerade as each other.
+- Staging infra: relaxation var applied (news-auth revision 00042); `sync_news_cron_paused` variable
+  added so the ingest pause survives applies (tfvars-pinned true in this checkout, default false).
+- Server `7c87a72` + `7406dd3`, staging merge `5fb5003` (revisions news-auth-00042,
+  news-graphql-00052, news-async-00065, all verified). Infra `6e8362a` + `b234d7e`.
+
 ## Held design: the smallest attestation version
 
 Fully specified so nothing is decided mid-implementation. Not broken into phases because it is gated on
