@@ -177,7 +177,7 @@ export async function confirmEmailOtp(email: string, otp: string): Promise<Email
 
 // ─── Capture-request registry ────────────────────────────────────────────────
 
-export type EmailCaptureSource = 'purchase' | 'settings';
+export type EmailCaptureSource = 'purchase' | 'settings' | 'checkout';
 
 type EmailCaptureListener = (source: EmailCaptureSource) => void;
 
@@ -217,7 +217,49 @@ export async function maybeRequestEmailCaptureAfterPurchase(): Promise<void> {
   }
 }
 
+// ─── Email-before-checkout gate (S10) ────────────────────────────────────────
+//
+// Paying users key on a verified email, nothing else — so the paywall entry
+// points call ensureEmailBeforeCheckout() and only proceed when it resolves
+// true. The sheet reports its outcome through completeEmailCapture(); a
+// dismissal aborts checkout (the purchase CTA simply does nothing further).
+
+let checkoutResolver: ((verified: boolean) => void) | null = null;
+
+/** Called by EmailCaptureHost when the sheet closes. Safe no-op for the
+ *  settings/post-purchase presentations, which gate nothing. */
+export function completeEmailCapture(outcome: 'verified' | 'dismissed'): void {
+  const resolver = checkoutResolver;
+  checkoutResolver = null;
+  resolver?.(outcome === 'verified');
+}
+
+/**
+ * Resolve true when checkout may proceed: the account already has a real
+ * email, OR the sheet just verified one. False only when the user dismissed
+ * the required step. Fails OPEN on uncertainty (unreadable session, no host
+ * mounted) — the email requirement must never brick a purchase, and the
+ * post-purchase trigger remains the fallback collector.
+ */
+export async function ensureEmailBeforeCheckout(): Promise<boolean> {
+  let needsEmail = false;
+  try {
+    needsEmail = await accountNeedsEmail();
+  } catch {
+    return true;
+  }
+  if (!needsEmail) return true;
+  if (listeners.size === 0) return true;
+  // Supersede any dangling gate before arming a new one.
+  completeEmailCapture('dismissed');
+  return new Promise<boolean>((resolve) => {
+    checkoutResolver = resolve;
+    requestEmailCapture('checkout');
+  });
+}
+
 /** Test seam. */
 export function __resetEmailCaptureForTests(): void {
   listeners.clear();
+  checkoutResolver = null;
 }

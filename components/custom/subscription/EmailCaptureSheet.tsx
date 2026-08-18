@@ -31,6 +31,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import {
+    completeEmailCapture,
     confirmEmailOtp,
     requestEmailOtp,
     subscribeEmailCapture,
@@ -42,9 +43,13 @@ type Step = 'email' | 'otp' | 'done';
 interface EmailCaptureSheetProps {
     isOpen: boolean;
     onClose: () => void;
+    /** Reported on EVERY close: 'verified' when the flow reached done,
+     *  'dismissed' otherwise. The S10 checkout gate keys on it; the settings
+     *  and post-purchase presentations ignore it. */
+    onOutcome?: (outcome: 'verified' | 'dismissed') => void;
 }
 
-export function EmailCaptureSheet({ isOpen, onClose }: EmailCaptureSheetProps) {
+export function EmailCaptureSheet({ isOpen, onClose, onOutcome }: EmailCaptureSheetProps) {
     const { t } = useTranslation();
     const [step, setStep] = useState<Step>('email');
     const [email, setEmail] = useState('');
@@ -71,6 +76,13 @@ export function EmailCaptureSheet({ isOpen, onClose }: EmailCaptureSheetProps) {
         const timer = setInterval(() => setResendCooldown((s) => s - 1), 1000);
         return () => clearInterval(timer);
     }, [resendCooldown]);
+
+    // Every exit funnels through here so the outcome can never be skipped —
+    // including the Modal's own backdrop/back-button close.
+    const handleSheetClose = useCallback(() => {
+        onOutcome?.(step === 'done' ? 'verified' : 'dismissed');
+        onClose();
+    }, [onClose, onOutcome, step]);
 
     const errorFor = useCallback(
         (code: EmailCaptureErrorCode): string => {
@@ -135,7 +147,7 @@ export function EmailCaptureSheet({ isOpen, onClose }: EmailCaptureSheetProps) {
     };
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} size="md">
+        <Modal isOpen={isOpen} onClose={handleSheetClose} size="md">
             <ModalBackdrop />
             <ModalContent testID="email-capture-sheet">
                 {step === 'email' && (
@@ -173,7 +185,7 @@ export function EmailCaptureSheet({ isOpen, onClose }: EmailCaptureSheetProps) {
                             <HStack space="md" className="items-center justify-end w-full">
                                 <Pressable
                                     testID="email-capture-not-now"
-                                    onPress={onClose}
+                                    onPress={handleSheetClose}
                                     className="px-4 py-2"
                                 >
                                     <Text className="text-gray-400 text-base">
@@ -298,7 +310,7 @@ export function EmailCaptureSheet({ isOpen, onClose }: EmailCaptureSheetProps) {
                         <ModalFooter className="pt-2">
                             <Pressable
                                 testID="email-capture-done"
-                                onPress={onClose}
+                                onPress={handleSheetClose}
                                 className="bg-primary-500 rounded-lg px-5 py-2 items-center justify-center"
                             >
                                 <Text className="text-black text-base font-semibold">
@@ -326,5 +338,11 @@ export default function EmailCaptureHost() {
 
     const handleClose = useCallback(() => setIsOpen(false), []);
 
-    return <EmailCaptureSheet isOpen={isOpen} onClose={handleClose} />;
+    return (
+        <EmailCaptureSheet
+            isOpen={isOpen}
+            onClose={handleClose}
+            onOutcome={completeEmailCapture}
+        />
+    );
 }

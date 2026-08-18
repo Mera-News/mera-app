@@ -497,6 +497,11 @@ const AppPreferencesTab: React.FC = () => {
                             </Pressable>
                         </HStack>
                     )}
+                    {supportId && (
+                        <Text size="xs" className="text-gray-500 mb-1 text-center" testID="settings-support-id-hint">
+                            {t('support.saveHint')}
+                        </Text>
+                    )}
                     <Text size="xs" className="text-gray-500">
                         {t('preferences.appVersion', { version: getAppVersionLabel() })}
                     </Text>

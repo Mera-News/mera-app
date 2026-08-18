@@ -33,6 +33,8 @@ jest.mock('@/lib/logger', () => ({
 
 import {
     __resetEmailCaptureForTests,
+    completeEmailCapture,
+    ensureEmailBeforeCheckout,
     accountNeedsEmail,
     confirmEmailOtp,
     emailLooksAnonymous,
@@ -217,6 +219,62 @@ describe('capture-request registry', () => {
         requestEmailCapture('purchase');
 
         expect(seen).toEqual(['purchase']);
+    });
+});
+
+describe('ensureEmailBeforeCheckout (S10)', () => {
+    const anonSession = () =>
+        mockGetSession.mockResolvedValue({
+            data: { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true } },
+        });
+
+    it('a verified-email account goes straight through, no sheet', async () => {
+        mockGetSession.mockResolvedValue({
+            data: { user: { id: 'u1', email: 'real@example.com' } },
+        });
+        const seen: string[] = [];
+        subscribeEmailCapture((source) => seen.push(source));
+
+        expect(await ensureEmailBeforeCheckout()).toBe(true);
+        expect(seen).toEqual([]);
+    });
+
+    it('an anonymous account raises the checkout sheet and proceeds ONLY on verified', async () => {
+        anonSession();
+        const seen: string[] = [];
+        subscribeEmailCapture((source) => seen.push(source));
+
+        const gate = ensureEmailBeforeCheckout();
+        // Let the async needs-email check settle and arm the resolver.
+        await new Promise((r) => setTimeout(r, 0));
+        expect(seen).toEqual(['checkout']);
+
+        completeEmailCapture('verified');
+        expect(await gate).toBe(true);
+    });
+
+    it('a dismissed sheet aborts checkout (resolves false)', async () => {
+        anonSession();
+        subscribeEmailCapture(() => {});
+
+        const gate = ensureEmailBeforeCheckout();
+        await new Promise((r) => setTimeout(r, 0));
+        completeEmailCapture('dismissed');
+        expect(await gate).toBe(false);
+    });
+
+    it('fails OPEN: unreadable session or no mounted host never bricks a purchase', async () => {
+        mockGetSession.mockRejectedValue(new Error('offline'));
+        expect(await ensureEmailBeforeCheckout()).toBe(true);
+
+        anonSession();
+        // No listeners subscribed — no host to present the sheet.
+        expect(await ensureEmailBeforeCheckout()).toBe(true);
+    });
+
+    it('completeEmailCapture with no armed gate is a safe no-op (settings/purchase closes)', () => {
+        expect(() => completeEmailCapture('verified')).not.toThrow();
+        expect(() => completeEmailCapture('dismissed')).not.toThrow();
     });
 });
 

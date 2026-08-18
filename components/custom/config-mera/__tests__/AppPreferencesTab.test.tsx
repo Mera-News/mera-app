@@ -320,6 +320,8 @@ describe('Settings footer → Support ID', () => {
         const { findByTestId } = render(<AppPreferencesTab />);
         const row = await findByTestId('settings-support-id');
         expect(row.props.children).toBe('support.supportId');
+        // S10: the save-your-id hint rides with the row.
+        expect(await findByTestId('settings-support-id-hint')).toBeTruthy();
     });
 
     it('shows the id for an email-attached account too (it survives attach)', async () => {

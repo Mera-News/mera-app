@@ -10,6 +10,7 @@ import { fetchUserBilling, refreshUserBillingAfterPurchase } from '@/lib/billing
 import { resolvePlanDisplay } from '@/lib/subscription/plan-display';
 import type { UserBillingInfo } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
+import { ensureEmailBeforeCheckout } from '@/lib/subscription/email-capture';
 import { getActiveEntitlementInfo, getActiveTier, getCustomerInfoSafe, getOfferingSafe, logRevenueCatDiagnostics } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
@@ -175,6 +176,9 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
 
     const handleViewPlans = async () => {
         try {
+            // S10: verified email is required before checkout for anonymous
+            // accounts; a dismissed sheet aborts quietly.
+            if (!(await ensureEmailBeforeCheckout())) return;
             const offering = await getOfferingSafe();
             // Browsing/upgrading from settings — show a close button so the user
             // can dismiss without purchasing (unlike the hard gate).
