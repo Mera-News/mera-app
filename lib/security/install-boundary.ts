@@ -29,6 +29,7 @@
 import Constants from 'expo-constants';
 
 import logger from '@/lib/logger';
+import { releaseAuthReadQuarantine } from '@/lib/security/install-boundary-latch';
 import { secureStore } from '@/lib/utils/secure-store-adapter';
 
 const APP_SLUG = Constants.expoConfig?.slug || 'app';
@@ -92,15 +93,6 @@ export async function enforceInstallBoundary(): Promise<void> {
         logger.warn('[install-boundary] cleared surviving credentials from a previous install', {
           cleared: true,
         });
-        // Nudge the session atom toward signed-out; routing never trusts it
-        // in this process (see wasInstallBoundaryReset).
-        try {
-          const { authClient } =
-            require('@/lib/auth-client') as typeof import('@/lib/auth-client');
-          void authClient.getSession().catch(() => {});
-        } catch {
-          // Never block launch on the nudge.
-        }
       }
     }
 
@@ -110,6 +102,21 @@ export async function enforceInstallBoundary(): Promise<void> {
     logger.captureException(error, {
       tags: { service: 'install-boundary' },
     });
+  } finally {
+    // Release the sync-read quarantine on EVERY outcome, then poke the
+    // session signal so better-auth's atom refetches against the
+    // now-authoritative keychain: the quarantined first /get-session went out
+    // cookie-less and answered null, and without this poke a normal launch
+    // would sit signed-out-looking until some auth route happened to notify.
+    releaseAuthReadQuarantine();
+    try {
+      const { authClient } = require('@/lib/auth-client') as {
+        authClient: { $store?: { notify?: (signal: string) => void } };
+      };
+      authClient.$store?.notify?.('$sessionSignal');
+    } catch {
+      // Never block launch on the poke.
+    }
   }
 }
 

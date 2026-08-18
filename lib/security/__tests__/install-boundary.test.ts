@@ -20,9 +20,9 @@ jest.mock('@/lib/utils/secure-store-adapter', () => ({
     },
 }));
 
-const mockGetSession = jest.fn(async (..._a: unknown[]) => null);
+const mockNotify = jest.fn();
 jest.mock('@/lib/auth-client', () => ({
-    authClient: { getSession: (...a: unknown[]) => mockGetSession(...a) },
+    authClient: { $store: { notify: (...a: unknown[]) => mockNotify(...a) } },
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -41,10 +41,15 @@ import {
     HAS_LAUNCHED_SETTING_KEY,
     wasInstallBoundaryReset,
 } from '../install-boundary';
+import {
+    __resetAuthReadQuarantineForTests,
+    isAuthReadQuarantined,
+} from '../install-boundary-latch';
 
 beforeEach(() => {
     jest.clearAllMocks();
     __resetInstallBoundaryForTests();
+    __resetAuthReadQuarantineForTests();
     mockGetSetting.mockResolvedValue(null);
     mockSetSetting.mockResolvedValue(undefined);
     mockGetItemAsync.mockResolvedValue(null);
@@ -123,4 +128,35 @@ it('latches once per process', async () => {
     await enforceInstallBoundary();
     await enforceInstallBoundary();
     expect(mockGetSetting.mock.calls.filter(([k]) => k === HAS_LAUNCHED_SETTING_KEY)).toHaveLength(1);
+});
+
+describe('auth-read quarantine (S12: the get-session race)', () => {
+    it('is latched at import time and released after the boundary decides, then pokes the session signal', async () => {
+        // BEFORE the boundary: the racing /get-session must find no cookie.
+        expect(isAuthReadQuarantined('mera_cookie')).toBe(true);
+        expect(isAuthReadQuarantined('mera_session_data')).toBe(true);
+        expect(isAuthReadQuarantined('mera_device_ref')).toBe(false);
+
+        await enforceInstallBoundary();
+
+        expect(isAuthReadQuarantined('mera_cookie')).toBe(false);
+        // The atom refetches against the now-authoritative keychain.
+        expect(mockNotify).toHaveBeenCalledWith('$sessionSignal');
+    });
+
+    it('releases on the marker-present path too', async () => {
+        mockGetSetting.mockImplementation(async (k: string) =>
+            k === HAS_LAUNCHED_SETTING_KEY ? '1' : null,
+        );
+        await enforceInstallBoundary();
+        expect(isAuthReadQuarantined('mera_cookie')).toBe(false);
+        expect(mockNotify).toHaveBeenCalledWith('$sessionSignal');
+    });
+
+    it('releases even when the settings read throws (fail-safe path)', async () => {
+        mockGetSetting.mockRejectedValue(new Error('cold DB'));
+        await enforceInstallBoundary();
+        expect(isAuthReadQuarantined('mera_cookie')).toBe(false);
+        expect(mockNotify).toHaveBeenCalledWith('$sessionSignal');
+    });
 });

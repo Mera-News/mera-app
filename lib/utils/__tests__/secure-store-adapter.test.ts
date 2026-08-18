@@ -145,3 +145,47 @@ describe('keychain options across all methods', () => {
     }
   });
 });
+
+// ── S12 install-boundary quarantine (sync reads only) ───────────────────────
+import {
+  __resetAuthReadQuarantineForTests,
+  releaseAuthReadQuarantine,
+} from '@/lib/security/install-boundary-latch';
+
+describe('secureStore.getItem under the install-boundary quarantine', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    __resetAuthReadQuarantineForTests();
+  });
+  afterAll(() => releaseAuthReadQuarantine());
+
+  it('answers null for the auth/device keys while latched — without touching the keychain', () => {
+    (mockGetItem as jest.Mock).mockReturnValue('real-value');
+    for (const key of [
+      'meraapp_cookie',
+      'meraapp_session_data',
+      'meraapp_appattest_key_id',
+      'meraapp_device_attest_device_id',
+    ]) {
+      expect(secureStore.getItem(key)).toBeNull();
+    }
+    expect(mockGetItem).not.toHaveBeenCalled();
+  });
+
+  it('never gates non-auth keys, and never gates the deviceRef (async-only key)', () => {
+    (mockGetItem as jest.Mock).mockReturnValue('real-value');
+    expect(secureStore.getItem('myKey')).toBe('real-value');
+    expect(secureStore.getItem('meraapp_device_ref')).toBe('real-value');
+  });
+
+  it('reads normally once the boundary releases the latch', () => {
+    (mockGetItem as jest.Mock).mockReturnValue('real-value');
+    releaseAuthReadQuarantine();
+    expect(secureStore.getItem('meraapp_cookie')).toBe('real-value');
+  });
+
+  it('async reads are deliberately NOT gated (the boundary itself uses them)', async () => {
+    mockGetItemAsync.mockResolvedValueOnce('real-value');
+    await expect(secureStore.getItemAsync('meraapp_cookie')).resolves.toBe('real-value');
+  });
+});

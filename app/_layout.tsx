@@ -92,6 +92,17 @@ defineInferenceTask();
 function AppRoot() {
   const navigationRef = useNavigationContainerRef();
 
+  // Install-boundary safety net (S12): app/index.tsx awaits this before its
+  // identity reads on the normal path, but a deep link can mount a different
+  // first screen and would otherwise leave the auth-read quarantine latched
+  // forever. Latched once per process; a second call is free.
+  useEffect(() => {
+    void (async () => {
+      const { enforceInstallBoundary } = await import('@/lib/security/install-boundary');
+      await enforceInstallBoundary();
+    })();
+  }, []);
+
   // react-navigation theme, tracked to the app's color scheme (pinned dark
   // today via GluestackUIProvider mode="dark"). Supplies dark surfaces so the
   // NativeTabs per-tab wrapper never paints react-navigation's default light
