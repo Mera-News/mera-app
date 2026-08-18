@@ -38,14 +38,14 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *   run (scoring-pipeline-store.ts). This one survived logout entirely before
  *   this module existed.
  * - `async_inference_pending_job_privkey` — its legacy single-slot predecessor.
- * - `_appattest_key_id` — the App Attest key bound to this device's account
- *   (lib/device-auth.ts). MUST die with the account's local presence: the
- *   server resumes whichever user a key is bound to, so a surviving keyId
- *   would sign the NEXT person on this device into the PREVIOUS person's
- *   account. Same class of leak as the RevenueCat/Intercom/Drive rule.
- * - `_device_attest_device_id` — the stable device id the Android sign-in and
- *   the staging dev bypass resume an account by, cleared for the same reason
- *   (it selects an account server-side).
+ *
+ * DELIBERATELY ABSENT (S10): the device sign-in credentials
+ * (`_appattest_key_id`, `_device_attest_device_id`, `_device_ref`). They
+ * SURVIVE every sign-out flavor so that logging in again resumes the SAME
+ * account — the device is the account's credential by design. Only account
+ * DELETION and the refusal recovery sever them, via
+ * `clearDeviceAuthCredentials()` (lib/device-auth.ts). Logout still wipes all
+ * local DATA; only the server-side binding survives.
  */
 const SECURE_STORE_KEYS = [
   `${APP_SLUG}_cookie`,
@@ -55,8 +55,6 @@ const SECURE_STORE_KEYS = [
   `${APP_SLUG}_app_lock_enabled`,
   'async_pipeline_privkey',
   'async_inference_pending_job_privkey',
-  `${APP_SLUG}_appattest_key_id`,
-  `${APP_SLUG}_device_attest_device_id`,
 ];
 
 /** The only AsyncStorage key the app has ever written (a since-deleted LLM

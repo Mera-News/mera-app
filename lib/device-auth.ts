@@ -58,6 +58,28 @@ export const APP_ATTEST_KEY_ID_STORE_KEY = `${APP_SLUG}_appattest_key_id`;
  *  resume key) and by the staging dev bypass. */
 export const DEVICE_ID_STORE_KEY = `${APP_SLUG}_device_attest_device_id`;
 
+/** Keychain slot for the server-minted device reference (S10 trial-memory
+ *  anchor). Returned raw once at first mint, presented on every sign-in
+ *  thereafter; on iOS the keychain survives reinstall, which is the point. */
+export const DEVICE_REF_STORE_KEY = `${APP_SLUG}_device_ref`;
+
+/**
+ * Sever this device's account binding AND its trial-memory marker. Called on
+ * account DELETION (ManageDataScreen) and by the refusal recovery below —
+ * never on logout: since S10, sign-out PRESERVES the credentials so logging
+ * in resumes the same account. Total: a failed delete only means the next
+ * attempt repeats the severing.
+ */
+export async function clearDeviceAuthCredentials(): Promise<void> {
+  for (const key of [APP_ATTEST_KEY_ID_STORE_KEY, DEVICE_ID_STORE_KEY, DEVICE_REF_STORE_KEY]) {
+    try {
+      await secureStore.deleteItemAsync(key);
+    } catch {
+      // Keychain hiccup — severing is retried by whatever triggered it next.
+    }
+  }
+}
+
 // Read at call time, not module scope: Metro inlines EXPO_PUBLIC_* wherever it
 // appears, and call-time reads keep the module testable without resetModules.
 function readDevBypassToken(): string {

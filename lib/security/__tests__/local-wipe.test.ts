@@ -84,11 +84,13 @@ describe('wipeAllLocalUserData — the complete list', () => {
         // The regression that motivated this module: nothing cleared these.
         expect(mockDeleteItemAsync).toHaveBeenCalledWith('async_pipeline_privkey');
         expect(mockDeleteItemAsync).toHaveBeenCalledWith('async_inference_pending_job_privkey');
-        // Device sign-in credentials select an ACCOUNT server-side (the App
-        // Attest key resumes whichever user it is bound to), so they must not
-        // outlive the account's local presence.
-        expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_appattest_key_id');
-        expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_device_attest_device_id');
+        // S10 INVERSION, deliberate: device sign-in credentials SURVIVE every
+        // sign-out flavor so login resumes the same account (the reported
+        // logout-loses-the-account bug). Only account DELETION and refusal
+        // recovery sever them, via clearDeviceAuthCredentials().
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_appattest_key_id');
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_device_attest_device_id');
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_device_ref');
 
         expect(mockAsyncRemove).toHaveBeenCalledWith('mera.cycle.capabilityToken');
         expect(mockLogoutRevenueCat).toHaveBeenCalled();

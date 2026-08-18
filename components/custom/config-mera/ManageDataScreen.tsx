@@ -8,6 +8,7 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
+import { clearDeviceAuthCredentials } from '@/lib/device-auth';
 import database from '@/lib/database';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
@@ -188,6 +189,11 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                 // sign-out — see its header. A direct signOut here once let a
                 // network failure skip the whole local cleanup silently.
                 await clearAuthStorage();
+                // DELETION SEVERS the device binding (S10). Logout preserves
+                // it so login resumes the account; deletion must not — a
+                // preserved key would silently REACTIVATE the account during
+                // its grace period on the next sign-in.
+                await clearDeviceAuthCredentials();
 
                 router.dismissAll();
                 router.replace('/');

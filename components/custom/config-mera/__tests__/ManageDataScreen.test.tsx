@@ -16,6 +16,10 @@ const calls: string[] = [];
 const mockFetch = jest.fn();
 const mockSignOut = jest.fn(async () => { calls.push('signOut'); });
 const mockClearAuthStorage = jest.fn(async () => { calls.push('clearAuthStorage'); });
+const mockClearDeviceAuthCredentials = jest.fn(async () => { calls.push('clearDeviceAuthCredentials'); });
+jest.mock('@/lib/device-auth', () => ({
+    clearDeviceAuthCredentials: () => mockClearDeviceAuthCredentials(),
+}));
 jest.mock('@/lib/auth-client', () => ({
     authClient: {
         $fetch: (...a: any[]) => mockFetch(...a),
@@ -161,11 +165,14 @@ describe('ManageDataScreen — delete account (grace-period flow)', () => {
         await waitFor(() => expect(mockClearAllStores).toHaveBeenCalled());
 
         expect(calls).toEqual(
-            expect.arrayContaining(['clearAuthStorage', 'dismissAll', 'replace', 'clearAllStores', 'toast']),
+            expect.arrayContaining(['clearAuthStorage', 'clearDeviceAuthCredentials', 'dismissAll', 'replace', 'clearAllStores', 'toast']),
         );
         // clearAuthStorage (which owns the guarded server sign-out) must
         // precede clearAllStores — the local cleanup sequence.
         expect(calls.indexOf('clearAuthStorage')).toBeLessThan(calls.indexOf('clearAllStores'));
+        // DELETION SEVERS (S10): the device binding must fall with the account,
+        // or a preserved key reactivates it during the grace period.
+        expect(calls.indexOf('clearDeviceAuthCredentials')).toBeLessThan(calls.indexOf('clearAllStores'));
     });
 
     it('a resolved {error} (non-2xx, no throw) is treated as FAILURE — no sign-out, no success toast', async () => {

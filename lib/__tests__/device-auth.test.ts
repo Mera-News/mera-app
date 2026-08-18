@@ -71,6 +71,8 @@ import { Platform } from 'react-native';
 import {
     APP_ATTEST_KEY_ID_STORE_KEY,
     DEVICE_ID_STORE_KEY,
+    DEVICE_REF_STORE_KEY,
+    clearDeviceAuthCredentials,
     deviceSignInAvailability,
     signInWithDevice,
 } from '../device-auth';
@@ -409,6 +411,21 @@ describe('server error handling', () => {
         const nonces = mockGenerateAssertion.mock.calls.map(([, hash]) => hash);
         expect(nonces[0]).not.toEqual(nonces[1]);
         expect(callsTo('/device/nonce')).toHaveLength(2);
+    });
+});
+
+describe('clearDeviceAuthCredentials (S10: deletion severs, logout preserves)', () => {
+    it('deletes the key binding, the deviceId and the deviceRef marker', async () => {
+        await clearDeviceAuthCredentials();
+        expect(mockDeleteItemAsync).toHaveBeenCalledWith(APP_ATTEST_KEY_ID_STORE_KEY);
+        expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY);
+        expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_REF_STORE_KEY);
+    });
+
+    it('is total: one failing delete does not stop the others', async () => {
+        mockDeleteItemAsync.mockRejectedValueOnce(new Error('keychain locked'));
+        await expect(clearDeviceAuthCredentials()).resolves.toBeUndefined();
+        expect(mockDeleteItemAsync).toHaveBeenCalledTimes(3);
     });
 });
 
