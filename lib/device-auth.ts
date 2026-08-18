@@ -114,11 +114,12 @@ export type DeviceSignInResult =
       trialAvailable: boolean | null;
       /** S12: THIS sign-in minted a new account whose trial is already
        *  consumed — the caller routes to the welcome-back screen instead of
-       *  /logged-in. `trialAvailable` is a MINT-path-only response field
-       *  (resumes never carry it), so `=== false` is exactly "denied mint".
-       *  The earlier fresh-install predicate was self-defeating: the
-       *  deviceRef survives everything by design, so no device ever looked
-       *  fresh and the screen never fired. */
+       *  /logged-in. `minted === true && trialAvailable === false`, both from
+       *  the response: trialAvailable rides EVERY response (a promoIneligible
+       *  account's routine resume carries false, so it alone would show
+       *  welcome-back on every login of a denied account), and `minted` is
+       *  true only when the call CREATED the user. An absent `minted` (older
+       *  server) counts as false so nothing fires against a stale deploy. */
       welcomeBack: boolean;
     }
   /** No native attestation on this device and no dev bypass configured —
@@ -187,12 +188,17 @@ interface SessionResponseLike {
   user?: { id?: string };
   deviceRef?: unknown;
   trialAvailable?: unknown;
+  minted?: unknown;
 }
 
 interface ParsedSignIn {
   userId: string;
   deviceRef: string | null;
   trialAvailable: boolean | null;
+  /** True only when this call CREATED the user (server commit b13da0d);
+   *  false on every resume, including the bind-race loser, and when the
+   *  field is absent (older server). */
+  minted: boolean;
 }
 
 /** Pull the user id out of a better-auth session response. */
@@ -212,6 +218,7 @@ function parseSignIn(path: string, data: SessionResponseLike): ParsedSignIn {
     deviceRef:
       typeof data?.deviceRef === 'string' && data.deviceRef.length > 0 ? data.deviceRef : null,
     trialAvailable: typeof data?.trialAvailable === 'boolean' ? data.trialAvailable : null,
+    minted: data?.minted === true,
   };
 }
 
@@ -496,9 +503,10 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
       status: 'success',
       userId: parsed.userId,
       trialAvailable: parsed.trialAvailable,
-      // A denied MINT is by definition a returning device — no freshness
-      // check. Resumes carry no trialAvailable, so they can never match.
-      welcomeBack: parsed.trialAvailable === false,
+      // A denied MINT, and only a mint: trialAvailable false also rides the
+      // routine resumes of a promoIneligible account, which must never see
+      // this screen again.
+      welcomeBack: parsed.minted && parsed.trialAvailable === false,
     };
   } catch (error) {
     return classifyFailure(error);

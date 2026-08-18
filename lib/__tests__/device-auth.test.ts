@@ -356,20 +356,16 @@ describe('deviceRef anchor (S10)', () => {
     });
 });
 
-describe('welcome-back gating (S12 predicate: a denied MINT, nothing else)', () => {
-    // trialAvailable is a MINT-path-only response field (resumes never carry
-    // it), so `trialAvailable === false` IS "this sign-in minted a new account
-    // and the trial is consumed". The old fresh-install predicate was
-    // self-defeating: the deviceRef deliberately survives everything, so no
-    // device ever looked fresh and /welcome-back never fired (r2 e2e).
-    const mintServer = (trialAvailable: boolean | undefined) =>
+describe('welcome-back gating (S12: minted === true AND trialAvailable === false)', () => {
+    // `trialAvailable` rides EVERY sign-in response (deploy-verified), resumes
+    // included — a promoIneligible account's routine resume carries false. The
+    // server therefore ships `minted` (true only when the call CREATED the
+    // user); the gate requires both, and treats an absent `minted` (older
+    // server) as false so nothing fires against a stale deployment.
+    const signInServer = (fields: Record<string, unknown>) =>
         installServer({
             '/device/sign-in/ios': () => ({
-                data: {
-                    user: { id: 'user-1' },
-                    deviceRef: 'ref-minted',
-                    ...(trialAvailable === undefined ? {} : { trialAvailable }),
-                },
+                data: { user: { id: 'user-1' }, ...fields },
                 error: null,
             }),
         });
@@ -380,24 +376,38 @@ describe('welcome-back gating (S12 predicate: a denied MINT, nothing else)', () 
         mockGenerateAssertion.mockResolvedValue('assertion-b64');
     });
 
-    it('denied mint (trialAvailable false) -> welcomeBack true, EVEN with a surviving deviceRef (the r2 repro)', async () => {
+    it('denied MINT -> welcomeBack true, even with a surviving deviceRef', async () => {
         mockGetItemAsync.mockImplementation(async (k: string) =>
             k === DEVICE_REF_STORE_KEY ? 'ref-survivor' : null,
         );
-        mintServer(false);
+        signInServer({ minted: true, trialAvailable: false, deviceRef: 'ref-minted' });
         expect(await signInWithDevice()).toMatchObject({ status: 'success', welcomeBack: true });
     });
 
-    it('denied mint on a truly fresh device -> welcomeBack true', async () => {
-        mintServer(false);
-        expect(await signInWithDevice()).toMatchObject({ welcomeBack: true });
+    it('REGRESSION: a denied RESUME (minted false, trialAvailable false) never routes to welcome-back', async () => {
+        // The routine logout -> login of a promoIneligible account. The
+        // trialAvailable-only predicate would have shown /welcome-back on
+        // every one of these, forever.
+        mockGetItemAsync.mockImplementation(async (k: string) =>
+            k === KEY_SLOT ? 'stored-key' : null,
+        );
+        signInServer({ minted: false, trialAvailable: false });
+        expect(await signInWithDevice()).toMatchObject({
+            welcomeBack: false,
+            trialAvailable: false,
+        });
     });
 
-    it('granted mint (true) or resume (field absent) -> welcomeBack false', async () => {
-        mintServer(true);
+    it('granted mint and trial-eligible resume -> welcomeBack false', async () => {
+        signInServer({ minted: true, trialAvailable: true });
         expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
-        mintServer(undefined);
-        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false, trialAvailable: null });
+        signInServer({ minted: false, trialAvailable: true });
+        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
+    });
+
+    it('minted ABSENT (older server) is false: never fires, even with trialAvailable false', async () => {
+        signInServer({ trialAvailable: false });
+        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
     });
 });
 
