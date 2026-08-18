@@ -2308,7 +2308,9 @@
   },
   "support": {
     "opening": "Открытие поддержки",
-    "supportId": "ID поддержки: {{id}}"
+    "supportId": "ID поддержки: {{id}}",
+    "copySupportId": "Копировать ID поддержки",
+    "copied": "Скопировано"
   },
   "emailCapture": {
     "title": "Добавьте электронную почту",

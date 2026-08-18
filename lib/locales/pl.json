@@ -2306,7 +2306,9 @@
   },
   "support": {
     "opening": "Otwieranie wsparcia",
-    "supportId": "Identyfikator pomocy: {{id}}"
+    "supportId": "Identyfikator pomocy: {{id}}",
+    "copySupportId": "Kopiuj identyfikator pomocy",
+    "copied": "Skopiowano"
   },
   "emailCapture": {
     "title": "Dodaj swój e-mail",

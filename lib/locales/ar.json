@@ -2346,7 +2346,9 @@
   },
   "support": {
     "opening": "جارٍ فتح الدعم",
-    "supportId": "معرّف الدعم: {{id}}"
+    "supportId": "معرّف الدعم: {{id}}",
+    "copySupportId": "نسخ معرّف الدعم",
+    "copied": "تم النسخ"
   },
   "emailCapture": {
     "title": "أضف بريدك الإلكتروني",

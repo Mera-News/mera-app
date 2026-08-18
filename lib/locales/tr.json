@@ -2278,7 +2278,9 @@
   },
   "support": {
     "opening": "Destek açılıyor",
-    "supportId": "Destek kimliği: {{id}}"
+    "supportId": "Destek kimliği: {{id}}",
+    "copySupportId": "Destek kimliğini kopyala",
+    "copied": "Kopyalandı"
   },
   "emailCapture": {
     "title": "E-postanı ekle",

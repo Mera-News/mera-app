@@ -2276,7 +2276,9 @@
   },
   "support": {
     "opening": "Opening support",
-    "supportId": "Support ID: {{id}}"
+    "supportId": "Support ID: {{id}}",
+    "copySupportId": "Copy support ID",
+    "copied": "Copied"
   },
   "emailCapture": {
     "title": "Add your email",

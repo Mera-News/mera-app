@@ -30,6 +30,8 @@ import {
     resolveAccountEmailView,
 } from '@/lib/subscription/email-capture';
 import { readSupportIdFromUser } from '@/lib/support-id';
+import * as Clipboard from 'expo-clipboard';
+import { hapticLight } from '@/lib/haptics';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -71,10 +73,35 @@ const AppPreferencesTab: React.FC = () => {
         storedEmail: cachedEmail,
         sessionUser: session?.user ?? null,
     });
-    // The 8-digit support handle minted for device sign-in accounts; it
-    // survives an email attach, so it shows for anonymous AND email-attached
-    // accounts. Session-only by design: absent (null) simply hides the row.
+    // The support handle minted for device sign-in accounts; it survives an
+    // email attach, so it shows for anonymous AND email-attached accounts.
+    // Session-only by design: absent (null) simply hides the row.
     const supportId = readSupportIdFromUser(session?.user);
+
+    // Copy-to-clipboard feedback: no copy idiom existed in the app before this,
+    // so the shape is the smallest honest one — haptic plus a brief localized
+    // "Copied" swap that reverts on its own. Copies ONLY the numeric id.
+    const [supportIdCopied, setSupportIdCopied] = React.useState(false);
+    const supportIdCopyTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    React.useEffect(
+        () => () => {
+            if (supportIdCopyTimer.current) clearTimeout(supportIdCopyTimer.current);
+        },
+        [],
+    );
+    const handleCopySupportId = async () => {
+        if (!supportId) return;
+        try {
+            await Clipboard.setStringAsync(supportId);
+        } catch {
+            // Clipboard unavailable — no feedback state, nothing to undo.
+            return;
+        }
+        void hapticLight();
+        setSupportIdCopied(true);
+        if (supportIdCopyTimer.current) clearTimeout(supportIdCopyTimer.current);
+        supportIdCopyTimer.current = setTimeout(() => setSupportIdCopied(false), 1800);
+    };
     const maskedEmail = React.useMemo(() => {
         if (!displayEmail) return null;
         const atIdx = displayEmail.lastIndexOf('@');
@@ -444,9 +471,31 @@ const AppPreferencesTab: React.FC = () => {
                         </Text>
                     )}
                     {supportId && (
-                        <Text size="xs" className="text-gray-500 mb-1" testID="settings-support-id">
-                            {t('support.supportId', { id: supportId })}
-                        </Text>
+                        // accessible={false} on the row wrapper (F2 discipline):
+                        // the text and the button carry their own semantics.
+                        <HStack space="xs" className="items-center mb-1" accessible={false}>
+                            <Text size="xs" className="text-gray-500" testID="settings-support-id">
+                                {t('support.supportId', { id: supportId })}
+                            </Text>
+                            <Pressable
+                                testID="settings-support-id-copy"
+                                onPress={() => { void handleCopySupportId(); }}
+                                hitSlop={8}
+                                accessible
+                                accessibilityRole="button"
+                                accessibilityLabel={
+                                    supportIdCopied ? t('support.copied') : t('support.copySupportId')
+                                }
+                            >
+                                {supportIdCopied ? (
+                                    <Text size="xs" className="text-primary-400">
+                                        {t('support.copied')}
+                                    </Text>
+                                ) : (
+                                    <MaterialIcons name="content-copy" size={14} color="#9ca3af" />
+                                )}
+                            </Pressable>
+                        </HStack>
                     )}
                     <Text size="xs" className="text-gray-500">
                         {t('preferences.appVersion', { version: getAppVersionLabel() })}

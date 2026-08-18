@@ -2278,7 +2278,9 @@
   },
   "support": {
     "opening": "सहायता खोली जा रही है",
-    "supportId": "सहायता आईडी: {{id}}"
+    "supportId": "सहायता आईडी: {{id}}",
+    "copySupportId": "सहायता आईडी कॉपी करें",
+    "copied": "कॉपी किया गया"
   },
   "emailCapture": {
     "title": "अपना ईमेल जोड़ें",

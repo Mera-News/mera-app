@@ -2283,7 +2283,9 @@
   },
   "support": {
     "opening": "Ouverture de l'assistance",
-    "supportId": "ID d'assistance : {{id}}"
+    "supportId": "ID d'assistance : {{id}}",
+    "copySupportId": "Copier l'ID d'assistance",
+    "copied": "Copié"
   },
   "emailCapture": {
     "title": "Ajoutez votre e-mail",

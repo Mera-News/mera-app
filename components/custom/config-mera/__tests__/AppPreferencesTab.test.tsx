@@ -7,7 +7,7 @@
 //
 // ORDER is the assertion that matters, not presence — the buggy version already
 // called replace() and dismissAll(). Every mock below appends to `calls`.
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 const calls: string[] = [];
@@ -135,6 +135,10 @@ jest.mock('@/lib/feedback', () => ({ showFeedback: jest.fn() }));
 jest.mock('@/lib/sentry-init', () => ({ SENTRY_ENABLED: false }));
 jest.mock('@/lib/web-browser-utils', () => ({ openInAppBrowser: jest.fn(), withAppLanguage: (u: string) => u }));
 jest.mock('@/lib/version', () => ({ getAppVersionLabel: () => 'v0.0.0 · test' }));
+const mockSetStringAsync = jest.fn(async (_s: string) => true);
+jest.mock('expo-clipboard', () => ({ setStringAsync: (s: string) => mockSetStringAsync(s) }));
+const mockHapticLight = jest.fn(async () => {});
+jest.mock('@/lib/haptics', () => ({ hapticLight: () => mockHapticLight() }));
 jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguageStore: (sel: any) => sel({ appLanguage: 'en' }) }));
 
 import AppPreferencesTab from '../AppPreferencesTab';
@@ -263,6 +267,51 @@ describe('Settings → Logout', () => {
     // The user pressed the button, so local truth wins; the rejecting-sign-out
     // case is covered above, and the server call itself now lives guarded and
     // bounded inside clearAuthStorage().
+});
+
+describe('Settings footer → Support ID copy button (S9)', () => {
+    it('copies EXACTLY the numeric id — never the label, never an email', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '1234567' } };
+        const { findByTestId } = render(<AppPreferencesTab />);
+
+        fireEvent.press(await findByTestId('settings-support-id-copy'));
+
+        await waitFor(() => expect(mockSetStringAsync).toHaveBeenCalledTimes(1));
+        expect(mockSetStringAsync).toHaveBeenCalledWith('1234567');
+        expect(mockHapticLight).toHaveBeenCalled();
+    });
+
+    it('shows a brief Copied state and reverts', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '1234567' } };
+        const { findByTestId, queryByText, getByText } = render(<AppPreferencesTab />);
+        const button = await findByTestId('settings-support-id-copy');
+
+        expect(queryByText('support.copied')).toBeNull();
+
+        jest.useFakeTimers();
+        try {
+            fireEvent.press(button);
+            // Flush the async clipboard write so the state lands.
+            await act(async () => {
+                await Promise.resolve();
+            });
+            expect(getByText('support.copied')).toBeTruthy();
+
+            act(() => {
+                jest.advanceTimersByTime(2000);
+            });
+            expect(queryByText('support.copied')).toBeNull();
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('is absent when the account has no supportId', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'real@example.com' } };
+        const { queryByTestId, findByText } = render(<AppPreferencesTab />);
+        await findByText('preferences.manageSettings');
+        expect(queryByTestId('settings-support-id-copy')).toBeNull();
+    });
 });
 
 describe('Settings footer → Support ID', () => {

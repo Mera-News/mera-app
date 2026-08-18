@@ -2277,7 +2277,9 @@
   },
   "support": {
     "opening": "Đang mở hỗ trợ",
-    "supportId": "ID hỗ trợ: {{id}}"
+    "supportId": "ID hỗ trợ: {{id}}",
+    "copySupportId": "Sao chép ID hỗ trợ",
+    "copied": "Đã sao chép"
   },
   "emailCapture": {
     "title": "Thêm email của bạn",

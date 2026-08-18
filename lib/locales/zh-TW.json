@@ -2277,7 +2277,9 @@
   },
   "support": {
     "opening": "正在開啟支援",
-    "supportId": "支援 ID：{{id}}"
+    "supportId": "支援 ID：{{id}}",
+    "copySupportId": "複製支援 ID",
+    "copied": "已複製"
   },
   "emailCapture": {
     "title": "新增電子郵件",

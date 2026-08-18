@@ -2276,7 +2276,9 @@
   },
   "support": {
     "opening": "サポートを開いています",
-    "supportId": "サポートID: {{id}}"
+    "supportId": "サポートID: {{id}}",
+    "copySupportId": "サポートIDをコピー",
+    "copied": "コピーしました"
   },
   "emailCapture": {
     "title": "メールアドレスを追加",
