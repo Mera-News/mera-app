@@ -2289,8 +2289,7 @@
     "notNow": "Để sau",
     "confirm": "Xác nhận",
     "added": "Đã thêm email",
-    "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}.",
-    "settingsRow": "Thêm địa chỉ email"
+    "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}."
   },
   "welcomeBack": {
     "title": "Chào mừng bạn quay lại",

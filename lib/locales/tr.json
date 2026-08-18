@@ -2290,8 +2290,7 @@
     "notNow": "Şimdi değil",
     "confirm": "Onayla",
     "added": "E-posta eklendi",
-    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak.",
-    "settingsRow": "E-posta adresi ekle"
+    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak."
   },
   "welcomeBack": {
     "title": "Tekrar hoş geldin",

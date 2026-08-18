@@ -2288,8 +2288,7 @@
     "notNow": "Non ora",
     "confirm": "Conferma",
     "added": "Email aggiunta",
-    "addedDetail": "Le ricevute e il recupero dell'account useranno {{email}}.",
-    "settingsRow": "Aggiungi indirizzo email"
+    "addedDetail": "Le ricevute e il recupero dell'account useranno {{email}}."
   },
   "welcomeBack": {
     "title": "Bentornato",

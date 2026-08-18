@@ -25,10 +25,7 @@ import React from 'react';
 import { Linking } from 'react-native';
 import { isRevenueCatConfigured } from '@/lib/revenuecat';
 import { useSupportAction } from '@/lib/intercom';
-import {
-    requestEmailCapture,
-    resolveAccountEmailView,
-} from '@/lib/subscription/email-capture';
+import { resolveAccountEmailView } from '@/lib/subscription/email-capture';
 import { readSupportIdFromUser } from '@/lib/support-id';
 import * as Clipboard from 'expo-clipboard';
 import { hapticLight } from '@/lib/haptics';
@@ -69,7 +66,12 @@ const AppPreferencesTab: React.FC = () => {
     // because the store flips the instant an in-session attach confirms while
     // the session atom can stay stale until its next refetch. The fabricated
     // @anon.mera.news address is never displayed as the user's.
-    const { isAnonAccount, displayEmail } = resolveAccountEmailView({
+    // S11: the "Add email address" row is gone — email attach happens at
+    // checkout (required) and via the post-purchase fallback only. Settings
+    // keeps the Support ID block and the masked email for accounts that have
+    // one; isAnonAccount is no longer consumed here (displayEmail is already
+    // null for anonymous accounts).
+    const { displayEmail } = resolveAccountEmailView({
         storedEmail: cachedEmail,
         sessionUser: session?.user ?? null,
     });
@@ -303,19 +305,6 @@ const AppPreferencesTab: React.FC = () => {
             icon: 'storage',
             onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
         },
-        // Only for accounts that came in via device sign-in and never added a
-        // real email. Opens the same sheet the post-purchase offer uses; the
-        // host is mounted in app/logged-in/_layout.tsx.
-        ...(isAnonAccount
-            ? [
-                {
-                    id: 'add-email',
-                    title: t('emailCapture.settingsRow'),
-                    icon: 'alternate-email' as const,
-                    onPress: () => requestEmailCapture('settings'),
-                },
-            ]
-            : []),
         {
             id: 'observability',
             title: t('observability.title'),

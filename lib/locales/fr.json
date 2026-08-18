@@ -2295,8 +2295,7 @@
     "notNow": "Pas maintenant",
     "confirm": "Confirmer",
     "added": "E-mail ajouté",
-    "addedDetail": "Les reçus et la récupération du compte utiliseront {{email}}.",
-    "settingsRow": "Ajouter une adresse e-mail"
+    "addedDetail": "Les reçus et la récupération du compte utiliseront {{email}}."
   },
   "welcomeBack": {
     "title": "Bon retour",

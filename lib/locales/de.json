@@ -2288,8 +2288,7 @@
     "notNow": "Nicht jetzt",
     "confirm": "Bestätigen",
     "added": "E-Mail-Adresse hinzugefügt",
-    "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}.",
-    "settingsRow": "E-Mail-Adresse hinzufügen"
+    "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}."
   },
   "welcomeBack": {
     "title": "Willkommen zurück",

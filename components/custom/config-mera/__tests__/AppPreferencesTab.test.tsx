@@ -269,6 +269,21 @@ describe('Settings → Logout', () => {
     // bounded inside clearAuthStorage().
 });
 
+describe('Settings → Add email address row (S11: removed)', () => {
+    it('is NEVER rendered, even for an anonymous account (email attach lives at checkout + post-purchase only)', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '1234567' } };
+        const { queryByTestId, queryByText, findByText } = render(<AppPreferencesTab />);
+        await findByText('preferences.manageSettings');
+
+        expect(queryByTestId('settings-row-add-email')).toBeNull();
+        expect(queryByText('emailCapture.settingsRow')).toBeNull();
+        // The rest of the support block is untouched: id row, copy, hint.
+        expect(queryByTestId('settings-support-id')).toBeTruthy();
+        expect(queryByTestId('settings-support-id-copy')).toBeTruthy();
+        expect(queryByTestId('settings-support-id-hint')).toBeTruthy();
+    });
+});
+
 describe('Settings footer → Support ID copy button (S9)', () => {
     it('copies EXACTLY the numeric id — never the label, never an email', async () => {
         mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '1234567' } };

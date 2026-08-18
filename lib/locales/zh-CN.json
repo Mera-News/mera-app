@@ -2289,8 +2289,7 @@
     "notNow": "以后再说",
     "confirm": "确认",
     "added": "已添加电子邮件",
-    "addedDetail": "收据和帐号找回将使用 {{email}}。",
-    "settingsRow": "添加电子邮件地址"
+    "addedDetail": "收据和帐号找回将使用 {{email}}。"
   },
   "welcomeBack": {
     "title": "欢迎回来",

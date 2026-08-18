@@ -2288,8 +2288,7 @@
     "notNow": "Ahora no",
     "confirm": "Confirmar",
     "added": "Correo añadido",
-    "addedDetail": "Los recibos y la recuperación de la cuenta usarán {{email}}.",
-    "settingsRow": "Añadir correo electrónico"
+    "addedDetail": "Los recibos y la recuperación de la cuenta usarán {{email}}."
   },
   "welcomeBack": {
     "title": "Hola de nuevo",

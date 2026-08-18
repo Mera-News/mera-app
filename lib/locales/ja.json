@@ -2288,8 +2288,7 @@
     "notNow": "後で",
     "confirm": "確認",
     "added": "メールアドレスを追加しました",
-    "addedDetail": "レシートの受け取りとアカウントの復元に {{email}} を使用します。",
-    "settingsRow": "メールアドレスを追加"
+    "addedDetail": "レシートの受け取りとアカウントの復元に {{email}} を使用します。"
   },
   "welcomeBack": {
     "title": "おかえりなさい",

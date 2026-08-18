@@ -2318,8 +2318,7 @@
     "notNow": "Nie teraz",
     "confirm": "Potwierdź",
     "added": "Dodano e-mail",
-    "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}.",
-    "settingsRow": "Dodaj adres e-mail"
+    "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}."
   },
   "welcomeBack": {
     "title": "Witaj ponownie",

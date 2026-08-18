@@ -2288,8 +2288,7 @@
     "notNow": "Niet nu",
     "confirm": "Bevestigen",
     "added": "E-mailadres toegevoegd",
-    "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}.",
-    "settingsRow": "E-mailadres toevoegen"
+    "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}."
   },
   "welcomeBack": {
     "title": "Welkom terug",

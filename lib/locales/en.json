@@ -2288,8 +2288,7 @@
     "notNow": "Not now",
     "confirm": "Confirm",
     "added": "Email added",
-    "addedDetail": "Receipts and account recovery will use {{email}}.",
-    "settingsRow": "Add email address"
+    "addedDetail": "Receipts and account recovery will use {{email}}."
   },
   "welcomeBack": {
     "title": "Welcome back",

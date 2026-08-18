@@ -2288,8 +2288,7 @@
     "notNow": "Nanti saja",
     "confirm": "Konfirmasi",
     "added": "Email ditambahkan",
-    "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}.",
-    "settingsRow": "Tambahkan alamat email"
+    "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}."
   },
   "welcomeBack": {
     "title": "Selamat datang kembali",

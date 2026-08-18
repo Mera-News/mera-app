@@ -2289,8 +2289,7 @@
     "notNow": "暫時不要",
     "confirm": "確認",
     "added": "已新增電子郵件",
-    "addedDetail": "收據與帳戶救援將使用 {{email}}。",
-    "settingsRow": "新增電子郵件地址"
+    "addedDetail": "收據與帳戶救援將使用 {{email}}。"
   },
   "welcomeBack": {
     "title": "歡迎回來",

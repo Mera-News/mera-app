@@ -2288,8 +2288,7 @@
     "notNow": "나중에",
     "confirm": "확인",
     "added": "이메일이 추가되었습니다",
-    "addedDetail": "영수증과 계정 복구에 {{email}}을(를) 사용합니다.",
-    "settingsRow": "이메일 주소 추가"
+    "addedDetail": "영수증과 계정 복구에 {{email}}을(를) 사용합니다."
   },
   "welcomeBack": {
     "title": "다시 오신 것을 환영합니다",
