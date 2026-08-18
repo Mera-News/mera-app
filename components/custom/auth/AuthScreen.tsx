@@ -556,7 +556,11 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     if (currentView === 'welcome') {
         return (
             // No opaque fill: the AbstractGradientBackdrop below is the page background.
-            <Box className="flex-1">
+            // accessible={false}: plain full-screen container views otherwise
+            // answer an AGGREGATED accessibility label (the first labelled
+            // descendant, "Get started") and surface as full-screen phantom
+            // elements to XCUITest — see the F2 spec in the welcome test.
+            <Box testID="auth-welcome-screen" accessible={false} className="flex-1">
                 {/* Page background. Must be the FIRST child so it paints behind
                     everything else on the page. */}
                 <AbstractGradientBackdrop />

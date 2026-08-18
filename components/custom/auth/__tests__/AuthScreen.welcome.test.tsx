@@ -176,7 +176,17 @@ describe('accessibility scoping (F2)', () => {
 
     it('the full-screen wrappers are explicitly not accessibility elements', async () => {
         const { findByTestId } = render(<AuthScreen />);
-        for (const id of ['auth-welcome-root', 'auth-welcome-logo-band', 'auth-welcome-actions']) {
+        // auth-welcome-screen is the AuthScreen-side outer Box — on-device it
+        // was the deepest of the phantom full-screen "Get started" Others
+        // (plain RN container views answer an AGGREGATED accessibilityLabel);
+        // the explicit accessible={false} marking is what stops that, proven
+        // on-device by auth-welcome-root going label-less after the same fix.
+        for (const id of [
+            'auth-welcome-screen',
+            'auth-welcome-root',
+            'auth-welcome-logo-band',
+            'auth-welcome-actions',
+        ]) {
             const wrapper = await findByTestId(id);
             expect(wrapper.props.accessible).toBe(false);
             expect(wrapper.props.accessibilityLabel).toBeUndefined();
