@@ -302,7 +302,25 @@ export async function fetchCachedFactCheck(
 /** Statuses `requestFactCheck` treats as "not yet confirmed" — see
  *  `isTerminalStatus`. `failed` is included: the server's own recovery cron
  *  re-drives it, so from a device that only ever reads, a `failed` row is
- *  indistinguishable from one still in flight. */
+ *  indistinguishable from one still in flight.
+ *
+ *  ⚠️ A TERMINAL ROW IS NEVER RE-READ, AND THAT IS A DECISION, NOT AN
+ *  OVERSIGHT. Nothing in this app re-asks the server about a `complete` or
+ *  `blocked` row: this sweep skips them by construction, and `useFactCheck`
+ *  polls only while a non-terminal row exists. So a row whose stored payload
+ *  was written BEFORE a server-side change stays on the device, unchanged,
+ *  until retention drops it — up to 90 days for a row with a populated
+ *  `checkedBy` (see `deleteExpiredFactChecks`).
+ *
+ *  This was raised as a heal/re-read proposal (re-ask terminal rows once so a
+ *  server-side correction reaches devices that already cached the old answer)
+ *  and DECLINED. Re-asking every terminal row costs a billable server read per
+ *  row with no way to tell a stale row from a current one — the payload
+ *  carries no marker of which server revision produced it — so the sweep would
+ *  re-bill the whole table to correct the rare row. If a future change makes
+ *  stored payloads systematically wrong, the honest fix is a payload version
+ *  marker the server sets and this sweep filters on, not an unconditional
+ *  re-read. */
 const NON_TERMINAL_STATUSES = ['pending', 'running', 'failed'] as const;
 
 /** Combined cap across every non-terminal status this sweeps — r14 P2b's own
