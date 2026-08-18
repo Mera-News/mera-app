@@ -33,7 +33,19 @@ const KEY = Uint8Array.from({ length: 32 }, (_, i) => i + 1);
 const KNOWN_COLUMNS: Record<string, readonly string[]> = Object.fromEntries(
   BACKUP_TABLES.filter((t) => t !== 'settings').map((t) => [
     t,
-    ['statement', 'weight', 'created_at', 'conversation_id', 'content', 'surface', 'requested_at'],
+    [
+      'statement',
+      'weight',
+      'created_at',
+      'fact_id',
+      'text',
+      'topic_id',
+      'llm_headline',
+      'article_id',
+      'saved_at',
+      'description_en',
+      'visited_at',
+    ],
   ]),
 );
 
@@ -173,8 +185,8 @@ describe('export → import round trip', () => {
         { id: 'f1', statement: 'I follow EU policy', weight: 1.5 },
         { id: 'f2', statement: 'I cycle', weight: 1 },
       ],
-      conversations: [{ id: 'c1', surface: 'chat', created_at: 4 }],
-      messages: [{ id: 'm1', conversation_id: 'c1', content: 'hi', created_at: 5 }],
+      topics: [{ id: 't1', fact_id: 'f1', text: 'EU policy' }],
+      saved_article_suggestions: [{ id: 's1', article_id: 'a1', saved_at: 5 }],
     });
 
     const sink = new FakeSink();
@@ -184,11 +196,11 @@ describe('export → import round trip', () => {
       { id: 'f1', statement: 'I follow EU policy', weight: 1.5 },
       { id: 'f2', statement: 'I cycle', weight: 1 },
     ]);
-    expect(sink.tables.messages).toEqual([
-      { id: 'm1', conversation_id: 'c1', content: 'hi', created_at: 5 },
+    expect(sink.tables.saved_article_suggestions).toEqual([
+      { id: 's1', article_id: 'a1', saved_at: 5 },
     ]);
     expect(result.rowsRestored).toBe(4);
-    expect(result.perTable).toEqual({ facts: 2, conversations: 1, messages: 1 });
+    expect(result.perTable).toEqual({ facts: 2, topics: 1, saved_article_suggestions: 1 });
     expect(result.skippedTables).toEqual([]);
     expect(result.fromNewerSchema).toBe(false);
   });
@@ -226,7 +238,7 @@ describe('export → import round trip', () => {
       content += alphabet[(lcg >>> 26) % alphabet.length];
     }
     const blob = await sealedByExporter({
-      messages: [{ id: 'm1', conversation_id: 'c1', content, created_at: 1 }],
+      saved_article_suggestions: [{ id: 's1', article_id: 'a1', description_en: content }],
     });
     const opened = await openBlob(KEY, blob);
     const frameSizes: number[] = [];
@@ -235,7 +247,7 @@ describe('export → import round trip', () => {
 
     const sink = new FakeSink();
     await run(blob, sink);
-    expect(sink.tables.messages[0].content).toBe(content);
+    expect(sink.tables.saved_article_suggestions[0].description_en).toBe(content);
   });
 });
 
@@ -261,7 +273,7 @@ describe('settings are upserted, never cleared, and re-filtered on the way in', 
     const sink = new FakeSink();
     await run(blob, sink);
 
-    expect(sink.cleared).toContain('messages');
+    expect(sink.cleared).toContain('saved_article_suggestions');
     expect(sink.cleared).toContain('tracked_stories');
     expect(sink.cleared).not.toContain('settings');
   });

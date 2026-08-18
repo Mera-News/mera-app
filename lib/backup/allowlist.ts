@@ -22,25 +22,18 @@ export const BACKUP_TABLES: readonly string[] = [
   // Persona core. The reason this feature exists.
   'facts',
   'user_personas',
+  // `topics.fact_id` points at facts, so facts come first.
   'topics',
   'locations',
   'persona_suppressions',
   'persona_summary_strings',
-  'persona_change_log',
 
-  // Explicit curation the user performed by hand.
+  // Explicit curation the user performed by hand. Not the feed.
   'publication_preferences',
-  'saved_article_suggestions',
+  // `tracked_stories.topic_id` points at topics.
   'tracked_stories',
-
-  // Conversation history. `conversations` before `messages`.
-  'conversations',
-  'messages',
-
-  // Long-lived user history that no resync reproduces.
+  'saved_article_suggestions',
   'publication_visits',
-  'article_feedback',
-  'fact_checks',
 
   // Key-value settings, filtered per-key by BACKUP_SETTING_KEYS below.
   'settings',
@@ -86,6 +79,16 @@ export const EXCLUDED_TABLES: Readonly<Record<string, string>> = {
     'Device-scoped scheduler bookkeeping. Restoring it replays stale run timestamps against a device that never ran them.',
   inference_jobs:
     'In-flight on-device job queue. Its rows reference work the new device is not doing, and some carry per-run key material.',
+  conversations:
+    'Chat history. Owner call 2026-08-18: a backup carries the persona, not the transcripts that shaped it. The facts a conversation produced ARE backed up, which is the part that changes what the user sees.',
+  messages:
+    'Chat history, same call. It was also the largest backed-up table by a wide margin and the only one that still needed a row cap.',
+  article_feedback:
+    'Per-article reactions. Article data, and its lasting effect is already in facts, suppressions and topic weights.',
+  fact_checks:
+    'Keyed to specific articles, and every row is re-derivable by asking again. The server also expires them at 90d.',
+  persona_change_log:
+    'Audit trail of how the persona was edited. The persona itself restores correctly without it, and it is history about a device rather than user data.',
 };
 
 /**
@@ -167,14 +170,13 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
  * unbounded; the header records `rowsAvailable` alongside `rows` so the restore
  * UI can say so instead of implying completeness.
  *
- * Only tables that grow without bound are capped.
+ * Only two tables need one now. Both grow with ordinary use and both carry a
+ * full article payload per row, so they dominate the blob; everything else in
+ * the allowlist is bounded by deliberate user action.
  */
 export const TABLE_ROW_CAPS: Readonly<Record<string, number>> = {
-  messages: 20_000,
+  saved_article_suggestions: 10_000,
   publication_visits: 20_000,
-  persona_change_log: 10_000,
-  article_feedback: 10_000,
-  fact_checks: 2_000,
 };
 
 /**
@@ -182,22 +184,17 @@ export const TABLE_ROW_CAPS: Readonly<Record<string, number>> = {
  *
  * "Newest-first" is not decoration, it is the whole meaning of a cap. A
  * WatermelonDB row id is a random string, so paging a capped table by `id`
- * takes an ARBITRARY N of the user's rows — a user with 60k messages would get
- * 20k scattered ones, mostly old, and every small round-trip test would still
- * pass. Every capped table must therefore name a monotonic column here, and
- * `allowlist.test.ts` asserts the two records have identical keys and that the
- * column exists in `schema.ts`.
+ * takes an ARBITRARY N of the user's rows — mostly old ones — and every small
+ * round-trip test would still pass. `allowlist.test.ts` asserts the two records
+ * have identical keys and that the column exists in `schema.ts`.
  *
  * `id` is the tiebreaker at the call site: without one, two rows sharing a
  * timestamp can swap places between pages and OFFSET paging silently drops or
  * duplicates a row.
  */
 export const TABLE_CAP_ORDER_COLUMN: Readonly<Record<string, string>> = {
-  messages: 'created_at',
+  saved_article_suggestions: 'saved_at',
   publication_visits: 'visited_at',
-  persona_change_log: 'created_at',
-  article_feedback: 'created_at',
-  fact_checks: 'requested_at',
 };
 
 /** True when a settings key is carried, by exact match or by prefix family. */

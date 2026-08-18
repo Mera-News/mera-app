@@ -147,16 +147,19 @@ describe('round trip', () => {
   it('writes every allowlisted table as a section, in allowlist order', async () => {
     const { blob } = await run({
       facts: [{ id: 'f1', statement: 'a', created_at: 1 }],
-      messages: [{ id: 'm1', conversation_id: 'c1', content: 'hi', created_at: 5 }],
-      conversations: [{ id: 'c1', surface: 'chat', created_at: 4 }],
+      topics: [{ id: 't1', fact_id: 'f1', text: 'EU policy' }],
+      tracked_stories: [{ id: 's1', topic_id: 't1', llm_headline: 'x' }],
     });
 
     const { sections } = await decode(blob);
     expect(sections.map((s) => s.table)).toEqual([...BACKUP_TABLES]);
-    // `conversations` before `messages`: the importer seeds `_raw.id`, and a
-    // child row written before its parent is a dangling read, not an error.
-    expect(sections.findIndex((s) => s.table === 'conversations')).toBeLessThan(
-      sections.findIndex((s) => s.table === 'messages'),
+    // Parents first: the importer seeds `_raw.id`, and a child row written
+    // before its parent is a dangling read, not an error WatermelonDB raises.
+    expect(sections.findIndex((s) => s.table === 'facts')).toBeLessThan(
+      sections.findIndex((s) => s.table === 'topics'),
+    );
+    expect(sections.findIndex((s) => s.table === 'topics')).toBeLessThan(
+      sections.findIndex((s) => s.table === 'tracked_stories'),
     );
   });
 
@@ -200,22 +203,24 @@ describe('the multi-chunk seal — what blob.test.ts structurally cannot reach',
     // ~600 KB of incompressible text, so deflate emits well over pako's 16 KB
     // output chunk several times over.
     const { blob } = await run({
-      messages: Array.from({ length: 6 }, (_, i) => ({
-        id: `m${i}`,
-        conversation_id: 'c1',
-        content: highEntropyText(100_000),
-        created_at: i,
+      saved_article_suggestions: Array.from({ length: 6 }, (_, i) => ({
+        id: `s${i}`,
+        article_id: `a${i}`,
+        description_en: highEntropyText(100_000),
+        saved_at: i,
       })),
     });
 
     const { frameCount, sections } = await decode(blob);
     expect(frameCount).toBeGreaterThanOrEqual(3);
-    expect(sections.find((s) => s.table === 'messages')?.rows).toHaveLength(6);
+    expect(sections.find((s) => s.table === 'saved_article_suggestions')?.rows).toHaveLength(6);
   });
 
   it('spans more than one scratch read, so paging the plaintext is exercised', async () => {
     const { result } = await run({
-      messages: [{ id: 'm1', conversation_id: 'c1', content: highEntropyText(700_000), created_at: 1 }],
+      saved_article_suggestions: [
+        { id: 's1', article_id: 'a1', description_en: highEntropyText(700_000), saved_at: 1 },
+      ],
     });
     // SEAL_READ_BYTES is 256 KB, so this is three passes round the read loop —
     // enough for a bug in the read offset to show up as a corrupt inflate.
@@ -252,11 +257,11 @@ describe('the header describes what was actually written', () => {
 });
 
 describe('caps keep the newest rows', () => {
-  const CAP = TABLE_ROW_CAPS.fact_checks;
+  const CAP = TABLE_ROW_CAPS.saved_article_suggestions;
 
   it('orders a capped table by its timestamp descending, id ascending', () => {
-    expect(orderForTable('fact_checks')).toEqual([
-      { column: 'requested_at', desc: true },
+    expect(orderForTable('saved_article_suggestions')).toEqual([
+      { column: 'saved_at', desc: true },
       { column: 'id' },
     ]);
     expect(orderForTable('facts')).toEqual([{ column: 'id' }]);
@@ -266,18 +271,24 @@ describe('caps keep the newest rows', () => {
     // Ids ascend while timestamps DESCEND, so an id-ordered exporter would keep
     // the oldest rows and this assertion is what catches it.
     const rows = Array.from({ length: CAP + 25 }, (_, i) => ({
-      id: `fc${String(i).padStart(5, '0')}`,
-      requested_at: CAP + 25 - i,
+      id: `sv${String(i).padStart(6, '0')}`,
+      saved_at: CAP + 25 - i,
     }));
-    const { blob, result } = await run({ fact_checks: rows });
+    const { blob, result } = await run({ saved_article_suggestions: rows });
 
-    const stat = result.header.tables.find((t) => t.table === 'fact_checks');
-    expect(stat).toEqual({ table: 'fact_checks', rows: CAP, rowsAvailable: CAP + 25 });
+    const stat = result.header.tables.find((t) => t.table === 'saved_article_suggestions');
+    expect(stat).toEqual({
+      table: 'saved_article_suggestions',
+      rows: CAP,
+      rowsAvailable: CAP + 25,
+    });
 
-    const written = (await decode(blob)).sections.find((s) => s.table === 'fact_checks')!.rows;
+    const written = (await decode(blob)).sections.find(
+      (s) => s.table === 'saved_article_suggestions',
+    )!.rows;
     expect(written).toHaveLength(CAP);
-    expect(written[0].requested_at).toBe(CAP + 25);
-    expect(Math.min(...written.map((r) => r.requested_at as number))).toBe(26);
+    expect(written[0].saved_at).toBe(CAP + 25);
+    expect(Math.min(...written.map((r) => r.saved_at as number))).toBe(26);
   });
 
   it('leaves an uncapped table whole', async () => {
@@ -338,12 +349,12 @@ describe('refusals', () => {
     // ciphertext ceiling. Measured, not assumed: 30 MB sealed to 22.7 MB and
     // this test passed while asserting nothing.
     const rows = Array.from({ length: 40 }, (_, i) => ({
-      id: `m${i}`,
-      conversation_id: 'c1',
-      content: highEntropyText(1_000_000),
-      created_at: i,
+      id: `s${i}`,
+      article_id: `a${i}`,
+      description_en: highEntropyText(1_000_000),
+      saved_at: i,
     }));
-    await expect(run({ messages: rows })).rejects.toMatchObject({
+    await expect(run({ saved_article_suggestions: rows })).rejects.toMatchObject({
       name: 'BackupExportError',
       reason: 'too-large',
     });

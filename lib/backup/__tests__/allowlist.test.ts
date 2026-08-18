@@ -76,13 +76,26 @@ describe('backup allowlist vs the live schema', () => {
     }
   });
 
-  it('orders conversations before messages, and facts before their dependants', () => {
+  it('orders parents before the rows that reference them', () => {
     // The importer seeds _raw.id and writes in this order, so a child arriving
     // before its parent dangles rather than throwing.
     const at = (t: string) => BACKUP_TABLES.indexOf(t);
-    expect(at('conversations')).toBeLessThan(at('messages'));
+    expect(at('facts')).toBeLessThan(at('topics'));            // topics.fact_id
+    expect(at('topics')).toBeLessThan(at('tracked_stories'));  // tracked_stories.topic_id
     expect(at('facts')).toBeLessThan(at('persona_summary_strings'));
-    expect(at('facts')).toBeLessThan(at('persona_change_log'));
+  });
+
+  it('carries no feed or chat data, which is the whole point of the allowlist', () => {
+    // Owner call 2026-08-18: back up the persona and what the user curated by
+    // hand, not the article stream that flowed past it. `saved_article_suggestions`
+    // and `publication_visits` are the deliberate exceptions — a save is an act
+    // of curation, and reading history is the user's own record.
+    for (const t of ['article_suggestions', 'conversations', 'messages', 'article_feedback']) {
+      expect(BACKUP_TABLES).not.toContain(t);
+      expect(EXCLUDED_TABLES).toHaveProperty(t);
+    }
+    expect(BACKUP_TABLES).toContain('saved_article_suggestions');
+    expect(BACKUP_TABLES).toContain('publication_visits');
   });
 
   it('caps only tables it actually backs up', () => {
