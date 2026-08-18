@@ -12,6 +12,8 @@
  * No React, no network, never throws.
  */
 
+import type { CheckedByStatus } from './fact-check-types';
+
 /** Lifecycle values the runner writes. `complete` and `blocked` are terminal;
  *  `pending`/`running` are legacy (pre-pivot server statuses, still valid on an
  *  old stored row) and `processing` is the on-device runner's equivalent. */
@@ -221,12 +223,81 @@ export function describeVerdict(raw: string | null | undefined): {
  */
 export type VerdictPresentation = 'lead' | 'secondary' | 'suppressed';
 
+/**
+ * @deprecated SUPERSEDED BY {@link describeExternalChecks}. Mera no longer
+ * presents a verdict of its own on the article surfaces, so there is no longer
+ * a question of how our verdict ranks against an organisation's — the chip is
+ * externals-only. This is kept only until `FactCheckBadge`, `FactCheckCard` and
+ * `FactCheckPanel` have moved across, and is deleted in the same wave. Do not
+ * add a new caller.
+ */
 export function describeVerdictPresentation(
     verdict: string | null | undefined,
     checkedByCount: number,
 ): VerdictPresentation {
     if (checkedByCount <= 0) return 'lead';
     return normalizeVerdict(verdict) === 'unverifiable' ? 'suppressed' : 'secondary';
+}
+
+/**
+ * WHICH SINGLE LINE THE FACT-CHECK CHIP SHOWS. The whole of that decision, in
+ * one total function, for every surface that renders it.
+ *
+ * ── WHY THIS IS NOT A VERDICT ANY MORE ───────────────────────────────────
+ * Established fact checkers are the authority on this surface and Mera states
+ * no verdict of its own beside them. The article panel used to lead with our
+ * own reading whenever no organisation had published, which meant a machine's
+ * reading of a news story was presented as a finding — and when an organisation
+ * HAD published, the two sat on one card competing. Neither happens now:
+ * `verdict` is not an input to this function at all. `describeVerdict` still
+ * exists and is still correct, but only the QUICK in-chat card uses it, where
+ * the answer is ephemeral, explicitly asked for, and never cached.
+ *
+ * ── WHY RELEVANCE IS NOT AN INPUT EITHER ─────────────────────────────────
+ * `checkedByCount` is a count of organisations the SERVER has already gated for
+ * relevance to this article. There is no relevance signal on the wire for a
+ * client to re-judge with (see `fact-check-types.ts`), and there must not be a
+ * client-side re-judgement: an external rating that contradicts the article is
+ * exactly the case this feature exists to surface, so any client rule that
+ * dropped externals on disagreement would delete the finding.
+ *
+ * ── THE ORDER, WHICH IS THE POINT ────────────────────────────────────────
+ *   pending         not terminal. Nothing to report yet, honestly.
+ *   blocked         terminal with no evidence at all. Never an answer.
+ *   published       one or more gated organisations. Their own rating leads,
+ *                   verbatim, on their own scale — see `describeOrganisationVerdict`.
+ *   unavailable     the ClaimReview lookup did not run. We know NOTHING about
+ *                   who has ruled, and must not say "nobody has published".
+ *   none-published  we looked and nobody has published. The ~96% case, and a
+ *                   real answer rather than a gap.
+ *
+ * ⚠️ `unavailable` NOW OUTRANKS `none-published`, WHICH LOOKS LIKE A REVERT OF
+ * AN EARLIER CORRECTION AND IS NOT. That correction moved `unavailable` BELOW
+ * the verdict, because a tier-1 outage must not suppress a tier-2 answer we
+ * actually held. There is no tier-2 answer on this chip any more, so nothing is
+ * being suppressed: the only remaining question is whether tier 1 ran, which is
+ * precisely what `checkedByStatus` answers. Collapsing these two back together
+ * would render "nobody has published" on an outage, the one thing
+ * `checkedByStatus` exists to prevent.
+ */
+export type ExternalChecksOutcome =
+    | 'pending'
+    | 'blocked'
+    | 'published'
+    | 'unavailable'
+    | 'none-published';
+
+export function describeExternalChecks(
+    status: string | null | undefined,
+    checkedByCount: number,
+    checkedByStatus: CheckedByStatus | undefined,
+): ExternalChecksOutcome {
+    if (!isTerminalStatus(status)) return 'pending';
+    if (typeof status === 'string' && status.trim().toLowerCase() === 'blocked') return 'blocked';
+    if (checkedByCount > 0) return 'published';
+    // Absent ⇒ 'searched': the only meaning an empty `checkedBy` ever had
+    // before the field existed. See `CheckedByStatus`.
+    return checkedByStatus === 'unavailable' ? 'unavailable' : 'none-published';
 }
 
 /**
