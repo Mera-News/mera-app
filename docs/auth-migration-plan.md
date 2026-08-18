@@ -628,6 +628,45 @@ a11y-labelled, both new keys in all 20 dictionaries. Client `b1fd98b`, verified 
 the pasteboard round-trip (`pbpaste` printed exactly the displayed 7-digit id 4550245 — adaptive
 length live in the UI path).
 
+### S10-S12, 2026-08-18: one identity per device, trial memory, final green
+
+The settled product shape (fourth design iteration, user-approved): logout/login resumes the SAME
+account (device credentials survive every sign-out; cleared only by account deletion or 403-refusal
+recovery); device fingerprints gate ONLY the trial, never account resumption (reinstall and
+post-delete mints get a new Support ID with `promoIneligible: true` when the device's anchors say
+the trial was consumed); paying users key on a verified email required at checkout (Settings
+add-email row removed; entry points are the checkout gate + post-purchase fallback); store restore
+carries entitlements with no login and changes nothing about the session.
+
+Mechanics: `device-anchor` collection (`device-ref` = server-minted 256-bit keychain marker that
+survives reinstall AND deletion and is cleared by NO flow; `android-id` = ANDROid_ID; `device-uuid`
+= dev/sim path), hash-at-rest, unique {type, valueHash} (manual index per environment).
+`promoIneligible` (input: false) threads through every entitlement evaluation point. Sign-in
+responses carry `trialAvailable` (all) + `minted` (true only when the call created the user) +
+one-time `deviceRef` on fresh mints. Welcome-back predicate: `minted && !trialAvailable` — two
+earlier predicates were provably wrong (trialAvailable-only fires on every denied login;
+install-freshness never fires because the deviceRef survives everything). Install boundary:
+`has_launched` in the settings table + `cached_user_id` conjunction (app updates never sign out),
+clearing session/attest keys but never the deviceRef, with an import-time sync-read latch because
+better-auth's launch get-session raced the async clears and its response re-persisted the dead
+session. OTP emails bypass the staging recipient override per-send-call (S11); all other categories
+stay overridden by default.
+
+Verified: three on-device passes (two caught 8 real bugs total, all fixed), final pass ALL GREEN —
+fresh install lands signed out, denied mint shows Welcome back then paywall, session survives
+relaunch, denied resume never shows Welcome back, delete routes to welcome and stays denied, one
+deviceRef anchor matched across mint/reinstall/delete/mint. Staging: server merge `e722097`
+(news-auth-00047), client `181d6a5`. Server suite 3173, client 8001.
+
+Open cosmetic (filed, not this wave): the paywall's "Continue without a plan" bottom link
+intermittently ignores the first tap at viewport edge.
+
+**Prod checklist additions from S10-S12:** create on `mera-db` the `device-anchor`
+`{type: 1, valueHash: 1}` unique index and the `user` `supportId_1` partial unique index (plus S1's
+four attestation indexes); the trial-email kill, OTP override bypass (no-op in prod), minted flag,
+and welcome gate all ship with the `main` merge. `dev` is NOT fast-forwardable (fc-relevance wave
+diverged at `4bc0d47`); reconciliation is a deliberate user merge.
+
 ## Held design: the smallest attestation version
 
 Fully specified so nothing is decided mid-implementation. Not broken into phases because it is gated on
