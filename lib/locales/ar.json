@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "لم ينجح ذلك أيضًا. سجّل الخروج وابدأ من جديد لمسح هذا الجهاز.",
     "identitySwitchRetry": "إعادة المحاولة",
     "identitySwitchSignOut": "تسجيل الخروج والبدء من جديد",
-    "getStarted": "ابدأ",
     "deviceSignInWorking": "جارٍ تسجيل دخولك",
-    "signInWithEmail": "تسجيل الدخول بالبريد الإلكتروني",
     "deviceSignInFailed": "حدث خطأ ما. حاول مرة أخرى أو سجّل الدخول بالبريد الإلكتروني.",
     "deviceSignInDenied": "تعذّر التحقق من هذا الجهاز. حاول مرة أخرى أو سجّل الدخول بالبريد الإلكتروني.",
     "deviceSignInUnavailable": "تسجيل الدخول غير متاح حاليًا. حاول بعد بضع دقائق أو سجّل الدخول بالبريد الإلكتروني.",
     "tryAgain": "إعادة المحاولة",
-    "learnAboutMera": "تعرّف على Mera"
+    "learnAboutMera": "تعرّف على Mera",
+    "startReading": "ابدأ القراءة",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟ سجّل الدخول"
   },
   "account": {
     "pendingTitle": "الحساب بانتظار الموافقة",

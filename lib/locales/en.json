@@ -63,14 +63,14 @@
       "switchConfirm": "Yes, clear data and switch user",
       "switchCancel": "Cancel"
     },
-    "getStarted": "Get started",
     "deviceSignInWorking": "Signing you in",
-    "signInWithEmail": "Sign in with email",
     "deviceSignInFailed": "Something went wrong. Try again, or sign in with email.",
     "deviceSignInDenied": "We couldn't verify this device. Try again, or sign in with email.",
     "deviceSignInUnavailable": "Sign-in isn't available right now. Try again in a few minutes, or sign in with email.",
     "tryAgain": "Try again",
-    "learnAboutMera": "Learn about Mera"
+    "learnAboutMera": "Learn about Mera",
+    "startReading": "Start reading",
+    "alreadyHaveAccount": "Already have an account? Sign in"
   },
   "account": {
     "pendingTitle": "Subscribe to Mera",

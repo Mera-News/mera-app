@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "यह अब भी काम नहीं कर रहा. इस डिवाइस को साफ़ करने के लिए साइन आउट करके फिर से शुरू करें.",
     "identitySwitchRetry": "फिर से कोशिश करें",
     "identitySwitchSignOut": "साइन आउट करके फिर से शुरू करें",
-    "getStarted": "शुरू करें",
     "deviceSignInWorking": "साइन इन किया जा रहा है",
-    "signInWithEmail": "ईमेल से साइन इन करें",
     "deviceSignInFailed": "कुछ गड़बड़ हो गई. फिर से कोशिश करें या ईमेल से साइन इन करें.",
     "deviceSignInDenied": "हम इस डिवाइस की पुष्टि नहीं कर सके. फिर से कोशिश करें या ईमेल से साइन इन करें.",
     "deviceSignInUnavailable": "साइन इन अभी उपलब्ध नहीं है. कुछ मिनट बाद कोशिश करें या ईमेल से साइन इन करें.",
     "tryAgain": "फिर से कोशिश करें",
-    "learnAboutMera": "Mera के बारे में जानें"
+    "learnAboutMera": "Mera के बारे में जानें",
+    "startReading": "पढ़ना शुरू करें",
+    "alreadyHaveAccount": "पहले से खाता है? साइन इन करें"
   },
   "account": {
     "pendingTitle": "खाता अनुमोदन लंबित",

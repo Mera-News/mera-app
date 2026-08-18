@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "Yine olmadı. Bu cihazı temizlemek için çıkış yap ve baştan başla.",
     "identitySwitchRetry": "Tekrar dene",
     "identitySwitchSignOut": "Çıkış yap ve baştan başla",
-    "getStarted": "Başla",
     "deviceSignInWorking": "Giriş yapılıyor",
-    "signInWithEmail": "E-posta ile giriş yap",
     "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin veya e-posta ile giriş yapın.",
     "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin veya e-posta ile giriş yapın.",
     "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
     "tryAgain": "Tekrar dene",
-    "learnAboutMera": "Mera'yı tanıyın"
+    "learnAboutMera": "Mera'yı tanıyın",
+    "startReading": "Okumaya başla",
+    "alreadyHaveAccount": "Zaten hesabın var mı? Giriş yap"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",

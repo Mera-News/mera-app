@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "それでも解決しませんでした。ログアウトして最初からやり直し、このデバイスをクリアしてください。",
     "identitySwitchRetry": "もう一度試す",
     "identitySwitchSignOut": "ログアウトして最初からやり直す",
-    "getStarted": "はじめる",
     "deviceSignInWorking": "ログインしています",
-    "signInWithEmail": "メールでログイン",
     "deviceSignInFailed": "エラーが発生しました。もう一度お試しいただくか、メールでログインしてください。",
     "deviceSignInDenied": "このデバイスを確認できませんでした。もう一度お試しいただくか、メールでログインしてください。",
     "deviceSignInUnavailable": "現在ログインをご利用いただけません。数分後にもう一度お試しいただくか、メールでログインしてください。",
     "tryAgain": "もう一度試す",
-    "learnAboutMera": "Mera について知る"
+    "learnAboutMera": "Mera について知る",
+    "startReading": "読み始める",
+    "alreadyHaveAccount": "すでにアカウントをお持ちですか？ログイン"
   },
   "account": {
     "pendingTitle": "アカウントの承認待ちです",

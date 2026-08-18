@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "Non ha ancora funzionato. Esci e ricomincia per pulire questo dispositivo.",
     "identitySwitchRetry": "Riprova",
     "identitySwitchSignOut": "Esci e ricomincia",
-    "getStarted": "Inizia",
     "deviceSignInWorking": "Accesso in corso",
-    "signInWithEmail": "Accedi con l'email",
     "deviceSignInFailed": "Si è verificato un problema. Riprova o accedi con l'email.",
     "deviceSignInDenied": "Impossibile verificare questo dispositivo. Riprova o accedi con l'email.",
     "deviceSignInUnavailable": "L'accesso non è al momento disponibile. Riprova tra qualche minuto o accedi con l'email.",
     "tryAgain": "Riprova",
-    "learnAboutMera": "Scopri Mera"
+    "learnAboutMera": "Scopri Mera",
+    "startReading": "Inizia a leggere",
+    "alreadyHaveAccount": "Hai già un account? Accedi"
   },
   "account": {
     "pendingTitle": "Account in attesa di approvazione",

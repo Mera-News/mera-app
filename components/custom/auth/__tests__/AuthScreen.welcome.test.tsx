@@ -161,7 +161,7 @@ describe('accessibility scoping (F2)', () => {
         const cta = await findByTestId('auth-get-started');
 
         expect(cta.props.accessibilityRole).toBe('button');
-        expect(cta.props.accessibilityLabel).toBe('auth.getStarted');
+        expect(cta.props.accessibilityLabel).toBe('auth.startReading');
 
         // Walk the rendered tree: no OTHER HOST node may carry the label — a
         // wrapper carrying it is the full-screen phantom button VoiceOver and
@@ -172,7 +172,7 @@ describe('accessibility scoping (F2)', () => {
         const walk = (node: any) => {
             if (
                 typeof node?.type === 'string' &&
-                node?.props?.accessibilityLabel === 'auth.getStarted'
+                node?.props?.accessibilityLabel === 'auth.startReading'
             ) {
                 labelled.push(node);
             }
@@ -209,7 +209,7 @@ describe('accessibility scoping (F2)', () => {
 
         for (const [id, label] of [
             ['auth-device-retry', 'auth.tryAgain'],
-            ['auth-use-email-failure', 'auth.signInWithEmail'],
+            ['auth-use-email-failure', 'auth.alreadyHaveAccount'],
             ['auth-device-support', 'account.contactSupport'],
         ] as const) {
             const node = await findByTestId(id);
@@ -286,7 +286,7 @@ describe('welcome-view button stack (S8)', () => {
 
         const link = await findByTestId('auth-use-email');
         expect(link.props.accessibilityRole).toBe('button');
-        expect(link.props.accessibilityLabel).toBe('auth.signInWithEmail');
+        expect(link.props.accessibilityLabel).toBe('auth.alreadyHaveAccount');
         // Text-link styling, not a button shell.
         expect(link.props.className ?? '').not.toContain('h-14');
     });

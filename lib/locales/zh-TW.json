@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "仍然失敗。請登出並重新開始，以清除此裝置。",
     "identitySwitchRetry": "再試一次",
     "identitySwitchSignOut": "登出並重新開始",
-    "getStarted": "開始使用",
     "deviceSignInWorking": "正在登入",
-    "signInWithEmail": "使用電子郵件登入",
     "deviceSignInFailed": "發生錯誤。請再試一次，或使用電子郵件登入。",
     "deviceSignInDenied": "無法驗證此裝置。請再試一次，或使用電子郵件登入。",
     "deviceSignInUnavailable": "目前無法登入。請幾分鐘後再試，或使用電子郵件登入。",
     "tryAgain": "再試一次",
-    "learnAboutMera": "認識 Mera"
+    "learnAboutMera": "認識 Mera",
+    "startReading": "開始閱讀",
+    "alreadyHaveAccount": "已有帳戶？登入"
   },
   "account": {
     "pendingTitle": "帳號待審核",

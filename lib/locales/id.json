@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "Masih belum berhasil. Keluar dan mulai lagi untuk membersihkan perangkat ini.",
     "identitySwitchRetry": "Coba lagi",
     "identitySwitchSignOut": "Keluar dan mulai lagi",
-    "getStarted": "Mulai",
     "deviceSignInWorking": "Sedang masuk",
-    "signInWithEmail": "Masuk dengan email",
     "deviceSignInFailed": "Terjadi kesalahan. Coba lagi atau masuk dengan email.",
     "deviceSignInDenied": "Kami tidak dapat memverifikasi perangkat ini. Coba lagi atau masuk dengan email.",
     "deviceSignInUnavailable": "Login tidak tersedia saat ini. Coba lagi dalam beberapa menit atau masuk dengan email.",
     "tryAgain": "Coba lagi",
-    "learnAboutMera": "Pelajari Mera"
+    "learnAboutMera": "Pelajari Mera",
+    "startReading": "Mulai membaca",
+    "alreadyHaveAccount": "Sudah punya akun? Masuk"
   },
   "account": {
     "pendingTitle": "Akun Menunggu Persetujuan",

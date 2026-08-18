@@ -121,11 +121,11 @@ const PreAuthFooter: React.FC<PreAuthFooterProps> = ({ showTutorialLaunch = true
                         onPress={onUseEmail}
                         accessible
                         accessibilityRole="button"
-                        accessibilityLabel={t('auth.signInWithEmail')}
+                        accessibilityLabel={t('auth.alreadyHaveAccount')}
                         className="py-1"
                     >
                         <Text size="sm" className="text-primary-400">
-                            {t('auth.signInWithEmail')}
+                            {t('auth.alreadyHaveAccount')}
                         </Text>
                     </Pressable>
                 </Box>
@@ -398,7 +398,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                     disabled={working}
                     accessible
                     accessibilityRole="button"
-                    accessibilityLabel={working ? t('auth.deviceSignInWorking') : t('auth.getStarted')}
+                    accessibilityLabel={working ? t('auth.deviceSignInWorking') : t('auth.startReading')}
                     accessibilityState={working ? { busy: true, disabled: true } : undefined}
                     className={`h-14 rounded-full items-center justify-center ${working ? 'bg-gray-700' : 'bg-primary-500'}`}
                 >
@@ -411,7 +411,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                         </HStack>
                     ) : (
                         <Text className="text-black text-base font-semibold">
-                            {t('auth.getStarted')}
+                            {t('auth.startReading')}
                         </Text>
                     )}
                 </Pressable>
@@ -438,11 +438,11 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                             onPress={onUseEmail}
                             accessible
                             accessibilityRole="button"
-                            accessibilityLabel={t('auth.signInWithEmail')}
+                            accessibilityLabel={t('auth.alreadyHaveAccount')}
                             className="py-1"
                         >
                             <Text size="sm" className="text-primary-400">
-                                {t('auth.signInWithEmail')}
+                                {t('auth.alreadyHaveAccount')}
                             </Text>
                         </Pressable>
                         <Pressable

@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "仍然失败。请退出登录并重新开始，以清除此设备。",
     "identitySwitchRetry": "重试",
     "identitySwitchSignOut": "退出登录并重新开始",
-    "getStarted": "开始使用",
     "deviceSignInWorking": "正在登录",
-    "signInWithEmail": "使用电子邮件登录",
     "deviceSignInFailed": "出了点问题。请重试，或使用电子邮件登录。",
     "deviceSignInDenied": "无法验证此设备。请重试，或使用电子邮件登录。",
     "deviceSignInUnavailable": "目前无法登录。请几分钟后重试，或使用电子邮件登录。",
     "tryAgain": "重试",
-    "learnAboutMera": "了解 Mera"
+    "learnAboutMera": "了解 Mera",
+    "startReading": "开始阅读",
+    "alreadyHaveAccount": "已有帐号？登录"
   },
   "account": {
     "pendingTitle": "账户待审核",

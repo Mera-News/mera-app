@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "To nadal nie zadziałało. Wyloguj się i zacznij od nowa, aby wyczyścić to urządzenie.",
     "identitySwitchRetry": "Spróbuj ponownie",
     "identitySwitchSignOut": "Wyloguj się i zacznij od nowa",
-    "getStarted": "Rozpocznij",
     "deviceSignInWorking": "Logowanie",
-    "signInWithEmail": "Zaloguj się e-mailem",
     "deviceSignInFailed": "Coś poszło nie tak. Spróbuj ponownie lub zaloguj się e-mailem.",
     "deviceSignInDenied": "Nie udało się zweryfikować tego urządzenia. Spróbuj ponownie lub zaloguj się e-mailem.",
     "deviceSignInUnavailable": "Logowanie jest teraz niedostępne. Spróbuj ponownie za kilka minut lub zaloguj się e-mailem.",
     "tryAgain": "Spróbuj ponownie",
-    "learnAboutMera": "Poznaj aplikację Mera"
+    "learnAboutMera": "Poznaj aplikację Mera",
+    "startReading": "Zacznij czytać",
+    "alreadyHaveAccount": "Masz już konto? Zaloguj się"
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",

@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "Das hat wieder nicht funktioniert. Melde dich ab und starte neu, um dieses Gerät zu leeren.",
     "identitySwitchRetry": "Erneut versuchen",
     "identitySwitchSignOut": "Abmelden und neu starten",
-    "getStarted": "Los geht's",
     "deviceSignInWorking": "Du wirst angemeldet",
-    "signInWithEmail": "Mit E-Mail anmelden",
     "deviceSignInFailed": "Etwas ist schiefgelaufen. Versuche es erneut oder melde dich mit E-Mail an.",
     "deviceSignInDenied": "Dieses Gerät konnte nicht bestätigt werden. Versuche es erneut oder melde dich mit E-Mail an.",
     "deviceSignInUnavailable": "Die Anmeldung ist gerade nicht verfügbar. Versuche es in ein paar Minuten erneut oder melde dich mit E-Mail an.",
     "tryAgain": "Erneut versuchen",
-    "learnAboutMera": "Mera kennenlernen"
+    "learnAboutMera": "Mera kennenlernen",
+    "startReading": "Jetzt lesen",
+    "alreadyHaveAccount": "Schon ein Konto? Anmelden"
   },
   "account": {
     "pendingTitle": "Konto wartet auf Freischaltung",

@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "Снова не получилось. Выйдите из аккаунта и начните заново, чтобы очистить это устройство.",
     "identitySwitchRetry": "Повторить",
     "identitySwitchSignOut": "Выйти и начать заново",
-    "getStarted": "Начать",
     "deviceSignInWorking": "Выполняется вход",
-    "signInWithEmail": "Войти по электронной почте",
     "deviceSignInFailed": "Что-то пошло не так. Повторите попытку или войдите по электронной почте.",
     "deviceSignInDenied": "Не удалось подтвердить это устройство. Повторите попытку или войдите по электронной почте.",
     "deviceSignInUnavailable": "Вход сейчас недоступен. Повторите попытку через несколько минут или войдите по электронной почте.",
     "tryAgain": "Повторить",
-    "learnAboutMera": "Узнайте о Mera"
+    "learnAboutMera": "Узнайте о Mera",
+    "startReading": "Начать читать",
+    "alreadyHaveAccount": "Уже есть аккаунт? Войти"
   },
   "account": {
     "pendingTitle": "Учётная запись ожидает подтверждения",

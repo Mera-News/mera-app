@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "Het is nog steeds niet gelukt. Log uit en begin opnieuw om dit apparaat leeg te maken.",
     "identitySwitchRetry": "Opnieuw proberen",
     "identitySwitchSignOut": "Uitloggen en opnieuw beginnen",
-    "getStarted": "Aan de slag",
     "deviceSignInWorking": "Je wordt aangemeld",
-    "signInWithEmail": "Inloggen met e-mail",
     "deviceSignInFailed": "Er is iets misgegaan. Probeer het opnieuw of log in met e-mail.",
     "deviceSignInDenied": "We konden dit apparaat niet verifiëren. Probeer het opnieuw of log in met e-mail.",
     "deviceSignInUnavailable": "Inloggen is nu even niet mogelijk. Probeer het over een paar minuten opnieuw of log in met e-mail.",
     "tryAgain": "Opnieuw proberen",
-    "learnAboutMera": "Maak kennis met Mera"
+    "learnAboutMera": "Maak kennis met Mera",
+    "startReading": "Beginnen met lezen",
+    "alreadyHaveAccount": "Heb je al een account? Inloggen"
   },
   "account": {
     "pendingTitle": "Account wacht op goedkeuring",

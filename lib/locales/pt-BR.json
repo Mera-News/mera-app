@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "Ainda não funcionou. Saia e comece de novo para limpar este aparelho.",
     "identitySwitchRetry": "Tentar novamente",
     "identitySwitchSignOut": "Sair e começar de novo",
-    "getStarted": "Começar",
     "deviceSignInWorking": "Fazendo login",
-    "signInWithEmail": "Entrar com e-mail",
     "deviceSignInFailed": "Algo deu errado. Tente novamente ou entre com e-mail.",
     "deviceSignInDenied": "Não foi possível verificar este dispositivo. Tente novamente ou entre com e-mail.",
     "deviceSignInUnavailable": "O login não está disponível no momento. Tente novamente em alguns minutos ou entre com e-mail.",
     "tryAgain": "Tentar novamente",
-    "learnAboutMera": "Conheça o Mera"
+    "learnAboutMera": "Conheça o Mera",
+    "startReading": "Começar a ler",
+    "alreadyHaveAccount": "Já tem uma conta? Faça login"
   },
   "account": {
     "pendingTitle": "Conta Pendente de Aprovação",

@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "Vẫn không thành công. Hãy đăng xuất và bắt đầu lại để dọn sạch thiết bị này.",
     "identitySwitchRetry": "Thử lại",
     "identitySwitchSignOut": "Đăng xuất và bắt đầu lại",
-    "getStarted": "Bắt đầu",
     "deviceSignInWorking": "Đang đăng nhập",
-    "signInWithEmail": "Đăng nhập bằng email",
     "deviceSignInFailed": "Đã xảy ra lỗi. Hãy thử lại hoặc đăng nhập bằng email.",
     "deviceSignInDenied": "Không thể xác minh thiết bị này. Hãy thử lại hoặc đăng nhập bằng email.",
     "deviceSignInUnavailable": "Hiện không thể đăng nhập. Hãy thử lại sau vài phút hoặc đăng nhập bằng email.",
     "tryAgain": "Thử lại",
-    "learnAboutMera": "Tìm hiểu về Mera"
+    "learnAboutMera": "Tìm hiểu về Mera",
+    "startReading": "Bắt đầu đọc",
+    "alreadyHaveAccount": "Đã có tài khoản? Đăng nhập"
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",

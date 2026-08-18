@@ -63,14 +63,14 @@
     "identitySwitchFailedExhausted": "ยังไม่สำเร็จ ลงชื่อออกแล้วเริ่มใหม่เพื่อล้างอุปกรณ์นี้",
     "identitySwitchRetry": "ลองอีกครั้ง",
     "identitySwitchSignOut": "ลงชื่อออกและเริ่มใหม่",
-    "getStarted": "เริ่มต้น",
     "deviceSignInWorking": "กำลังลงชื่อเข้าใช้",
-    "signInWithEmail": "ลงชื่อเข้าใช้ด้วยอีเมล",
     "deviceSignInFailed": "เกิดข้อผิดพลาด ลองอีกครั้งหรือลงชื่อเข้าใช้ด้วยอีเมล",
     "deviceSignInDenied": "เรายืนยันอุปกรณ์นี้ไม่ได้ ลองอีกครั้งหรือลงชื่อเข้าใช้ด้วยอีเมล",
     "deviceSignInUnavailable": "ขณะนี้ลงชื่อเข้าใช้ไม่ได้ ลองอีกครั้งในอีกไม่กี่นาทีหรือลงชื่อเข้าใช้ด้วยอีเมล",
     "tryAgain": "ลองอีกครั้ง",
-    "learnAboutMera": "เรียนรู้เกี่ยวกับ Mera"
+    "learnAboutMera": "เรียนรู้เกี่ยวกับ Mera",
+    "startReading": "เริ่มอ่าน",
+    "alreadyHaveAccount": "มีบัญชีอยู่แล้วใช่ไหม ลงชื่อเข้าใช้"
   },
   "account": {
     "pendingTitle": "บัญชีรอการอนุมัติ",
