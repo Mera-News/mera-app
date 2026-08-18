@@ -356,8 +356,13 @@ describe('deviceRef anchor (S10)', () => {
     });
 });
 
-describe('welcome-back gating (S10)', () => {
-    const freshServer = (trialAvailable: boolean | undefined) =>
+describe('welcome-back gating (S12 predicate: a denied MINT, nothing else)', () => {
+    // trialAvailable is a MINT-path-only response field (resumes never carry
+    // it), so `trialAvailable === false` IS "this sign-in minted a new account
+    // and the trial is consumed". The old fresh-install predicate was
+    // self-defeating: the deviceRef deliberately survives everything, so no
+    // device ever looked fresh and /welcome-back never fired (r2 e2e).
+    const mintServer = (trialAvailable: boolean | undefined) =>
         installServer({
             '/device/sign-in/ios': () => ({
                 data: {
@@ -375,24 +380,24 @@ describe('welcome-back gating (S10)', () => {
         mockGenerateAssertion.mockResolvedValue('assertion-b64');
     });
 
-    it('fresh install + trialAvailable false -> welcomeBack true', async () => {
-        freshServer(false);
+    it('denied mint (trialAvailable false) -> welcomeBack true, EVEN with a surviving deviceRef (the r2 repro)', async () => {
+        mockGetItemAsync.mockImplementation(async (k: string) =>
+            k === DEVICE_REF_STORE_KEY ? 'ref-survivor' : null,
+        );
+        mintServer(false);
         expect(await signInWithDevice()).toMatchObject({ status: 'success', welcomeBack: true });
     });
 
-    it('fresh install + trialAvailable true or absent -> welcomeBack false', async () => {
-        freshServer(true);
-        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
-        freshServer(undefined);
-        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false, trialAvailable: null });
+    it('denied mint on a truly fresh device -> welcomeBack true', async () => {
+        mintServer(false);
+        expect(await signInWithDevice()).toMatchObject({ welcomeBack: true });
     });
 
-    it('ANY stored credential -> welcomeBack false even when the trial is consumed', async () => {
-        mockGetItemAsync.mockImplementation(async (k: string) =>
-            k === DEVICE_REF_STORE_KEY ? 'ref-stored' : null,
-        );
-        freshServer(false);
+    it('granted mint (true) or resume (field absent) -> welcomeBack false', async () => {
+        mintServer(true);
         expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
+        mintServer(undefined);
+        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false, trialAvailable: null });
     });
 });
 

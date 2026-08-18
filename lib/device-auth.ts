@@ -112,9 +112,13 @@ export type DeviceSignInResult =
       /** Server verdict on trial eligibility; null when the response carried
        *  none (older server) — treated as available. */
       trialAvailable: boolean | null;
-      /** S10: fresh-looking install whose trial is already consumed — the
-       *  caller routes to the welcome-back screen instead of /logged-in.
-       *  True ONLY for `no stored credentials + trialAvailable === false`. */
+      /** S12: THIS sign-in minted a new account whose trial is already
+       *  consumed — the caller routes to the welcome-back screen instead of
+       *  /logged-in. `trialAvailable` is a MINT-path-only response field
+       *  (resumes never carry it), so `=== false` is exactly "denied mint".
+       *  The earlier fresh-install predicate was self-defeating: the
+       *  deviceRef survives everything by design, so no device ever looked
+       *  fresh and the screen never fired. */
       welcomeBack: boolean;
     }
   /** No native attestation on this device and no dev bypass configured —
@@ -492,7 +496,9 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
       status: 'success',
       userId: parsed.userId,
       trialAvailable: parsed.trialAvailable,
-      welcomeBack: !hadStoredCredentials && parsed.trialAvailable === false,
+      // A denied MINT is by definition a returning device — no freshness
+      // check. Resumes carry no trialAvailable, so they can never match.
+      welcomeBack: parsed.trialAvailable === false,
     };
   } catch (error) {
     return classifyFailure(error);
