@@ -550,6 +550,23 @@ news-auth-staging-00038 / news-graphql-staging-00051 / news-async-staging-00063)
 `384c813`, mera-app `auth-wave` at `4a6fc1b`. E2e residue in `mera-staging`: a handful of throwaway
 anonymous users and consumed verification rows, plus test emails in the override inbox.
 
+### S5, 2026-08-18: support IDs and OTP parity
+
+User-requested after the real-device test. Every new anonymous account mints an 8-digit numeric
+`supportId` (crypto-random, unique via partial index `supportId_1`, `input: false`), which is also
+the anonymous email's local part (`<id>@anon.mera.news`); it survives email attach and rides
+`session.user.supportId`. Client shows it in the Settings footer, pre-fills it in the support mailto
+body, the Sentry feedback payload (`user.support_id`) and the Intercom custom attributes; the
+fabricated address itself is never rendered. Pre-S5 accounts have null and show nothing. Also
+`storeOTP: 'hashed'` on the emailOTP plugin (user approved): sign-in codes are hashed at rest and
+"resend" now always issues a fresh code, invalidating the old one. Server `6bacc06` (staging merge
+`c5778d8`, revision news-auth-staging-00039), client `556af09`, verified on-device (id 95290510,
+UI = DB = email local part, zero anon-address leaks).
+
+Known cosmetic repeat: the "Before you continue" consent sheet re-arms on deep-links into logged-in
+while onboarding is incomplete and swallows taps until accepted. Pre-existing behavior, not from
+this wave; noted for whoever owns onboarding.
+
 ## Held design: the smallest attestation version
 
 Fully specified so nothing is decided mid-implementation. Not broken into phases because it is gated on
