@@ -30,6 +30,7 @@
 // client data; the HTTP bodies carry the raw nonce string and the hashing
 // happens only on the way into the native calls.
 
+import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 import * as Crypto from 'expo-crypto';
 import { Platform } from 'react-native';
@@ -100,7 +101,17 @@ export type DeviceSignInFailureReason =
   | 'unknown';
 
 export type DeviceSignInResult =
-  | { status: 'success'; userId: string }
+  | {
+      status: 'success';
+      userId: string;
+      /** Server verdict on trial eligibility; null when the response carried
+       *  none (older server) — treated as available. */
+      trialAvailable: boolean | null;
+      /** S10: fresh-looking install whose trial is already consumed — the
+       *  caller routes to the welcome-back screen instead of /logged-in.
+       *  True ONLY for `no stored credentials + trialAvailable === false`. */
+      welcomeBack: boolean;
+    }
   /** No native attestation on this device and no dev bypass configured —
    *  callers route to the email sign-in path. */
   | { status: 'unsupported' }
@@ -165,6 +176,14 @@ async function fetchNonce(purpose: NoncePurpose): Promise<string> {
 
 interface SessionResponseLike {
   user?: { id?: string };
+  deviceRef?: unknown;
+  trialAvailable?: unknown;
+}
+
+interface ParsedSignIn {
+  userId: string;
+  deviceRef: string | null;
+  trialAvailable: boolean | null;
 }
 
 /** Pull the user id out of a better-auth session response. */
@@ -174,6 +193,47 @@ function requireUserId(path: string, data: SessionResponseLike): string {
     throw new ServerRejection(path, undefined, 'MALFORMED_SESSION_RESPONSE');
   }
   return userId;
+}
+
+/** Parse the sign-in response, tolerating servers that carry neither S10
+ *  field. */
+function parseSignIn(path: string, data: SessionResponseLike): ParsedSignIn {
+  return {
+    userId: requireUserId(path, data),
+    deviceRef:
+      typeof data?.deviceRef === 'string' && data.deviceRef.length > 0 ? data.deviceRef : null,
+    trialAvailable: typeof data?.trialAvailable === 'boolean' ? data.trialAvailable : null,
+  };
+}
+
+/** The stored trial-memory anchor. Best-effort: an unreadable keychain reads
+ *  as absent HERE (the strict read rule applies to the App Attest keyId, whose
+ *  false-absence would mint a second account; a missing anchor only costs the
+ *  server one unanchored mint). */
+function readStoredDeviceRef(): Promise<string | null> {
+  return secureStore.getItemAsync(DEVICE_REF_STORE_KEY).catch(() => null);
+}
+
+/** Persist the server-minted anchor (returned raw exactly once, at mint). */
+async function storeDeviceRef(parsed: ParsedSignIn): Promise<void> {
+  if (!parsed.deviceRef) return;
+  try {
+    await secureStore.setItemAsync(DEVICE_REF_STORE_KEY, parsed.deviceRef);
+  } catch {
+    // Anchor persistence is best-effort; the next mint re-issues one.
+  }
+}
+
+/** ANDROID_ID — the Android trial-memory anchor (survives reinstall, resets
+ *  on factory reset). Null on failure or an empty value → stored-UUID
+ *  fallback. */
+function readAndroidHardwareId(): string | null {
+  try {
+    const id = Application.getAndroidId();
+    return typeof id === 'string' && id.length > 0 ? id : null;
+  } catch {
+    return null;
+  }
 }
 
 // ─── Hash and base64 helpers ─────────────────────────────────────────────────
@@ -233,19 +293,23 @@ async function enrollIos(): Promise<string> {
 /** Fresh nonce → assertion over the nonce → POST sign-in/ios. The nonce IS
  *  the client data (final S2 contract): the body carries it raw, and only the
  *  native call receives its hash. */
-async function assertAndSignInIos(keyId: string): Promise<string> {
+async function assertAndSignInIos(keyId: string): Promise<ParsedSignIn> {
   const nonce = await fetchNonce('assert');
   const clientDataHash = await sha256Base64(nonce);
   const assertion = await generateAssertion(keyId, clientDataHash);
+  const deviceRef = await readStoredDeviceRef();
   const data = await post<SessionResponseLike>('/device/sign-in/ios', {
     keyId,
     assertion,
     nonce,
+    ...(deviceRef ? { deviceRef } : {}),
   });
-  return requireUserId('/device/sign-in/ios', data);
+  const parsed = parseSignIn('/device/sign-in/ios', data);
+  await storeDeviceRef(parsed);
+  return parsed;
 }
 
-async function signInIos(): Promise<string> {
+async function signInIos(): Promise<ParsedSignIn> {
   const storedKeyId = await readStoredKeyId();
   if (!storedKeyId) {
     const keyId = await enrollIos();
@@ -263,26 +327,51 @@ async function signInIos(): Promise<string> {
   }
 }
 
-async function signInAndroid(): Promise<string> {
+async function signInAndroid(): Promise<ParsedSignIn> {
   const nonce = await fetchNonce('integrity');
   const integrityToken = await requestIntegrityToken(nonce, readPlayIntegrityProject());
-  // deviceId is REQUIRED here: Play Integrity verdicts carry no device
-  // identity, so this stable UUID is what the server resumes an account by.
-  const deviceId = await readOrCreateDeviceId();
+  // ANDROID_ID doubles as the trial-memory anchor (S10): it survives
+  // reinstall, which the stored UUID cannot. Fallback keeps sign-in alive on
+  // the rare device where the read fails.
+  const deviceId = readAndroidHardwareId() ?? (await readOrCreateDeviceId());
+  const deviceRef = await readStoredDeviceRef();
   const data = await post<SessionResponseLike>('/device/sign-in/android', {
     integrityToken,
     nonce,
     deviceId,
+    ...(deviceRef ? { deviceRef } : {}),
   });
-  return requireUserId('/device/sign-in/android', data);
+  const parsed = parseSignIn('/device/sign-in/android', data);
+  await storeDeviceRef(parsed);
+  return parsed;
 }
 
 /** Staging-only bypass: the route exists only where the server has
- *  DEVICE_ATTESTATION_DEV_BYPASS_TOKEN set (404 elsewhere). */
-async function signInDev(token: string): Promise<string> {
+ *  DEVICE_ATTESTATION_DEV_BYPASS_TOKEN set (404 elsewhere). Keeps the stored
+ *  UUID deviceId — the simulator exercises the anchor flow through deviceRef. */
+async function signInDev(token: string): Promise<ParsedSignIn> {
   const deviceId = await readOrCreateDeviceId();
-  const data = await post<SessionResponseLike>('/device/sign-in/dev', { token, deviceId });
-  return requireUserId('/device/sign-in/dev', data);
+  const deviceRef = await readStoredDeviceRef();
+  const data = await post<SessionResponseLike>('/device/sign-in/dev', {
+    token,
+    deviceId,
+    ...(deviceRef ? { deviceRef } : {}),
+  });
+  const parsed = parseSignIn('/device/sign-in/dev', data);
+  await storeDeviceRef(parsed);
+  return parsed;
+}
+
+/** 403 refusal of a STORED credential: the server no longer honors this
+ *  device's binding (bound user missing, or the account was deleted). Distinct
+ *  from a 400 (this attempt was rejected) and 503 (try later) — only the 403s
+ *  sever. */
+function isServerRefusal(error: unknown): boolean {
+  return (
+    error instanceof ServerRejection &&
+    error.status === 403 &&
+    (error.code === 'DEVICE_ATTESTATION_FAILED' || error.code === 'ACCOUNT_DELETED')
+  );
 }
 
 // ─── Classification ──────────────────────────────────────────────────────────
@@ -351,23 +440,55 @@ function classify(error: unknown): DeviceSignInResult {
 export async function signInWithDevice(): Promise<DeviceSignInResult> {
   try {
     const supported = await isSupported();
-    let userId: string;
+    let runFlow: (() => Promise<ParsedSignIn>) | null = null;
     if (!supported) {
       const token = readDevBypassToken();
       if (!token) return { status: 'unsupported' };
-      userId = await signInDev(token);
+      runFlow = () => signInDev(token);
     } else if (Platform.OS === 'ios') {
-      userId = await signInIos();
+      runFlow = signInIos;
     } else if (Platform.OS === 'android') {
-      userId = await signInAndroid();
+      runFlow = signInAndroid;
     } else {
       return { status: 'unsupported' };
+    }
+
+    // Snapshot BEFORE the attempt. Best-effort reads: this drives the
+    // refusal-recovery gate and the welcome-back gate, not the strict
+    // keychain rule (signInIos keeps its own strict read).
+    const [storedKey, storedDeviceId, storedRef] = await Promise.all([
+      secureStore.getItemAsync(APP_ATTEST_KEY_ID_STORE_KEY).catch(() => null),
+      secureStore.getItemAsync(DEVICE_ID_STORE_KEY).catch(() => null),
+      secureStore.getItemAsync(DEVICE_REF_STORE_KEY).catch(() => null),
+    ]);
+    const hadStoredCredentials = Boolean(storedKey || storedDeviceId || storedRef);
+
+    let parsed: ParsedSignIn;
+    try {
+      parsed = await runFlow();
+    } catch (error) {
+      // REFUSAL RECOVERY (S10): a stored credential the server refuses with a
+      // 403 is dead (bound user gone, or account deleted) — sever everything
+      // and re-enroll fresh, ONCE. Mirrors the ERR_ATTEST_INVALID_KEY shape.
+      // 400/503/network never clear credentials, and a fresh install has
+      // nothing to recover.
+      if (!hadStoredCredentials || !isServerRefusal(error)) throw error;
+      logger.warn('[device-auth] stored credential refused; severing and re-enrolling once', {
+        code: (error as ServerRejection).code,
+      });
+      await clearDeviceAuthCredentials();
+      parsed = await runFlow();
     }
 
     // Best-effort session-atom refresh. The recorder is what routing trusts.
     void authClient.getSession().catch(() => {});
 
-    return { status: 'success', userId };
+    return {
+      status: 'success',
+      userId: parsed.userId,
+      trialAvailable: parsed.trialAvailable,
+      welcomeBack: !hadStoredCredentials && parsed.trialAvailable === false,
+    };
   } catch (error) {
     return classifyFailure(error);
   }

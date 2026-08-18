@@ -57,6 +57,11 @@ jest.mock('expo-constants', () => ({
     default: { expoConfig: { slug: 'mera' } },
 }));
 
+const mockGetAndroidId = jest.fn((): string | null => 'android-hw-1');
+jest.mock('expo-application', () => ({
+    getAndroidId: () => mockGetAndroidId(),
+}));
+
 // Deterministic hash stand-in: the value only has to travel intact from the
 // hashing step to the native call / server body assertions below.
 jest.mock('expo-crypto', () => ({
@@ -116,6 +121,7 @@ beforeEach(() => {
     mockSetItemAsync.mockResolvedValue(undefined);
     mockDeleteItemAsync.mockResolvedValue(undefined);
     mockGetSession.mockResolvedValue(null);
+    mockGetAndroidId.mockReturnValue('android-hw-1');
 });
 
 afterAll(() => {
@@ -131,7 +137,12 @@ describe('iOS first-run enrollment', () => {
 
         const result = await signInWithDevice();
 
-        expect(result).toEqual({ status: 'success', userId: 'user-1' });
+        expect(result).toEqual({
+            status: 'success',
+            userId: 'user-1',
+            trialAvailable: null,
+            welcomeBack: false,
+        });
 
         // Enrollment used nonce-1 (purpose attest); sign-in used nonce-2
         // (purpose assert). Never the same nonce.
@@ -187,7 +198,7 @@ describe('iOS resume', () => {
 
         const result = await signInWithDevice();
 
-        expect(result).toEqual({ status: 'success', userId: 'user-1' });
+        expect(result).toMatchObject({ status: 'success', userId: 'user-1' });
         expect(mockGenerateKey).not.toHaveBeenCalled();
         expect(mockAttestKey).not.toHaveBeenCalled();
         expect(callsTo('/device/attest/ios')).toHaveLength(0);
@@ -222,7 +233,7 @@ describe('iOS invalid-key recovery', () => {
 
         const result = await signInWithDevice();
 
-        expect(result).toEqual({ status: 'success', userId: 'user-1' });
+        expect(result).toMatchObject({ status: 'success', userId: 'user-1' });
         expect(mockDeleteItemAsync).toHaveBeenCalledWith(KEY_SLOT);
         expect(mockSetItemAsync).toHaveBeenCalledWith(KEY_SLOT, 'key-2');
         expect(mockGenerateAssertion).toHaveBeenLastCalledWith('key-2', expect.any(String));
@@ -245,7 +256,7 @@ describe('iOS invalid-key recovery', () => {
 });
 
 describe('Android', () => {
-    it('requests a classic integrity token with the nonce and posts it with the deviceId', async () => {
+    it('sends ANDROID_ID as the deviceId (the S10 trial-memory anchor)', async () => {
         (Platform as { OS: string }).OS = 'android';
         process.env.EXPO_PUBLIC_PLAY_INTEGRITY_PROJECT = '123456';
         installServer();
@@ -253,14 +264,27 @@ describe('Android', () => {
 
         const result = await signInWithDevice();
 
-        expect(result).toEqual({ status: 'success', userId: 'user-1' });
+        expect(result).toMatchObject({ status: 'success', userId: 'user-1' });
         expect(callsTo('/device/nonce')[0][1].body).toEqual({ purpose: 'integrity' });
         expect(mockRequestIntegrityToken).toHaveBeenCalledWith('nonce-1', '123456');
-        // deviceId is REQUIRED: it is the resume key (integrity verdicts carry
-        // no device identity), the same persisted UUID the dev bypass uses.
         expect(callsTo('/device/sign-in/android')[0][1].body).toEqual({
             integrityToken: 'integrity-token',
             nonce: 'nonce-1',
+            deviceId: 'android-hw-1',
+        });
+    });
+
+    it('falls back to the stored UUID when getAndroidId throws or is empty', async () => {
+        (Platform as { OS: string }).OS = 'android';
+        installServer();
+        mockRequestIntegrityToken.mockResolvedValue('integrity-token');
+        mockGetAndroidId.mockImplementation(() => {
+            throw new Error('unavailable');
+        });
+
+        await signInWithDevice();
+
+        expect(callsTo('/device/sign-in/android')[0][1].body).toMatchObject({
             deviceId: 'dev-uuid-1',
         });
         expect(mockSetItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY, 'dev-uuid-1');
@@ -277,6 +301,196 @@ describe('Android', () => {
     });
 });
 
+describe('deviceRef anchor (S10)', () => {
+    it('presents the stored deviceRef on sign-in and stores a returned one', async () => {
+        mockGetItemAsync.mockImplementation(async (k: string) =>
+            k === KEY_SLOT ? 'stored-key' : k === DEVICE_REF_STORE_KEY ? 'ref-stored' : null,
+        );
+        installServer({
+            '/device/sign-in/ios': () => ({
+                data: { user: { id: 'user-1' }, deviceRef: 'ref-fresh', trialAvailable: true },
+                error: null,
+            }),
+        });
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+        const result = await signInWithDevice();
+
+        expect(callsTo('/device/sign-in/ios')[0][1].body).toMatchObject({ deviceRef: 'ref-stored' });
+        expect(mockSetItemAsync).toHaveBeenCalledWith(DEVICE_REF_STORE_KEY, 'ref-fresh');
+        expect(result).toMatchObject({ status: 'success', trialAvailable: true });
+    });
+
+    it('omits deviceRef entirely when none is stored (first mint), then stores the minted one', async () => {
+        installServer({
+            '/device/sign-in/ios': () => ({
+                data: { user: { id: 'user-1' }, deviceRef: 'ref-minted' },
+                error: null,
+            }),
+        });
+        mockGenerateKey.mockResolvedValue('key-1');
+        mockAttestKey.mockResolvedValue('attestation-b64');
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+        await signInWithDevice();
+
+        expect(callsTo('/device/sign-in/ios')[0][1].body).not.toHaveProperty('deviceRef');
+        expect(mockSetItemAsync).toHaveBeenCalledWith(DEVICE_REF_STORE_KEY, 'ref-minted');
+    });
+
+    it('the dev bypass keeps its stored UUID deviceId and presents the deviceRef too', async () => {
+        mockIsSupported.mockResolvedValue(false);
+        process.env.EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN = 'dev-token';
+        mockGetItemAsync.mockImplementation(async (k: string) =>
+            k === DEVICE_REF_STORE_KEY ? 'ref-stored' : null,
+        );
+        installServer();
+
+        await signInWithDevice();
+
+        expect(callsTo('/device/sign-in/dev')[0][1].body).toEqual({
+            token: 'dev-token',
+            deviceId: 'dev-uuid-1',
+            deviceRef: 'ref-stored',
+        });
+    });
+});
+
+describe('welcome-back gating (S10)', () => {
+    const freshServer = (trialAvailable: boolean | undefined) =>
+        installServer({
+            '/device/sign-in/ios': () => ({
+                data: {
+                    user: { id: 'user-1' },
+                    deviceRef: 'ref-minted',
+                    ...(trialAvailable === undefined ? {} : { trialAvailable }),
+                },
+                error: null,
+            }),
+        });
+
+    beforeEach(() => {
+        mockGenerateKey.mockResolvedValue('key-1');
+        mockAttestKey.mockResolvedValue('attestation-b64');
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+    });
+
+    it('fresh install + trialAvailable false -> welcomeBack true', async () => {
+        freshServer(false);
+        expect(await signInWithDevice()).toMatchObject({ status: 'success', welcomeBack: true });
+    });
+
+    it('fresh install + trialAvailable true or absent -> welcomeBack false', async () => {
+        freshServer(true);
+        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
+        freshServer(undefined);
+        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false, trialAvailable: null });
+    });
+
+    it('ANY stored credential -> welcomeBack false even when the trial is consumed', async () => {
+        mockGetItemAsync.mockImplementation(async (k: string) =>
+            k === DEVICE_REF_STORE_KEY ? 'ref-stored' : null,
+        );
+        freshServer(false);
+        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
+    });
+});
+
+describe('refusal recovery (S10)', () => {
+    const refusal = (code: string) => ({ data: null, error: { status: 403, code } });
+
+    it.each(['DEVICE_ATTESTATION_FAILED', 'ACCOUNT_DELETED'])(
+        'a stored credential refused with 403 %s severs and re-enrolls ONCE, then succeeds',
+        async (code) => {
+            // Stateful keychain: severing must make the retry re-enroll, so
+            // the mock has to actually forget deleted keys.
+            const store: Record<string, string> = { [KEY_SLOT]: 'stored-key' };
+            mockGetItemAsync.mockImplementation(async (k: string) => store[k] ?? null);
+            mockDeleteItemAsync.mockImplementation(async (k: string) => {
+                delete store[k];
+            });
+            let signInCalls = 0;
+            installServer({
+                '/device/sign-in/ios': () => {
+                    signInCalls += 1;
+                    return signInCalls === 1
+                        ? refusal(code)
+                        : { data: { user: { id: 'user-2' } }, error: null };
+                },
+            });
+            mockGenerateKey.mockResolvedValue('key-2');
+            mockAttestKey.mockResolvedValue('attestation-b64');
+            mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+            const result = await signInWithDevice();
+
+            expect(result).toMatchObject({ status: 'success', userId: 'user-2' });
+            // Severed: all three slots cleared before the retry.
+            expect(mockDeleteItemAsync).toHaveBeenCalledWith(KEY_SLOT);
+            expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY);
+            expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_REF_STORE_KEY);
+            // Fresh enrollment happened exactly once.
+            expect(mockGenerateKey).toHaveBeenCalledTimes(1);
+            expect(signInCalls).toBe(2);
+        },
+    );
+
+    it('recovers once and ONLY once: a second 403 surfaces as failure', async () => {
+        const store: Record<string, string> = { [KEY_SLOT]: 'stored-key' };
+        mockGetItemAsync.mockImplementation(async (k: string) => store[k] ?? null);
+        mockDeleteItemAsync.mockImplementation(async (k: string) => {
+            delete store[k];
+        });
+        installServer({
+            '/device/sign-in/ios': () => refusal('DEVICE_ATTESTATION_FAILED'),
+        });
+        mockGenerateKey.mockResolvedValue('key-2');
+        mockAttestKey.mockResolvedValue('attestation-b64');
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+        const result = await signInWithDevice();
+
+        expect(result).toEqual({ status: 'failed', reason: 'attestation-denied' });
+        expect(mockGenerateKey).toHaveBeenCalledTimes(1);
+    });
+
+    it('a 400 DEVICE_ATTESTATION_FAILED never clears credentials', async () => {
+        mockGetItemAsync.mockImplementation(async (k: string) =>
+            k === KEY_SLOT ? 'stored-key' : null,
+        );
+        installServer({
+            '/device/sign-in/ios': () => ({
+                data: null,
+                error: { status: 400, code: 'DEVICE_ATTESTATION_FAILED' },
+            }),
+        });
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+        const result = await signInWithDevice();
+
+        expect(result).toEqual({ status: 'failed', reason: 'attestation-denied' });
+        expect(mockDeleteItemAsync).not.toHaveBeenCalled();
+    });
+
+    it('a fresh install (nothing stored) never retries on 403', async () => {
+        let signInCalls = 0;
+        installServer({
+            '/device/sign-in/ios': () => {
+                signInCalls += 1;
+                return refusal('DEVICE_ATTESTATION_FAILED');
+            },
+        });
+        mockGenerateKey.mockResolvedValue('key-1');
+        mockAttestKey.mockResolvedValue('attestation-b64');
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+
+        const result = await signInWithDevice();
+
+        expect(result).toEqual({ status: 'failed', reason: 'attestation-denied' });
+        expect(signInCalls).toBe(1);
+    });
+});
+
 describe('dev bypass', () => {
     it('used only when unsupported AND the env token is set; persists a stable deviceId', async () => {
         mockIsSupported.mockResolvedValue(false);
@@ -285,7 +499,12 @@ describe('dev bypass', () => {
 
         const result = await signInWithDevice();
 
-        expect(result).toEqual({ status: 'success', userId: 'user-1' });
+        expect(result).toEqual({
+            status: 'success',
+            userId: 'user-1',
+            trialAvailable: null,
+            welcomeBack: false,
+        });
         expect(callsTo('/device/sign-in/dev')[0][1].body).toEqual({
             token: 'dev-token',
             deviceId: 'dev-uuid-1',
