@@ -74,21 +74,12 @@ interface FactCheckPanelProps {
  * `FactCheckBadge`), and the expanded body's own section is headed "What our
  * search found" rather than a ruling like "Consistent with sources".
  *
- * THIS REVERSES PIVOT P8h IN THE OPPOSITE DIRECTION FROM ITS OWN FIX. P8h's
- * ranking rule (`describeVerdictPresentation` — deleted this wave, its job is
- * gone, not just its name) made an organisation's rating outrank a confident
- * Mera verdict once one existed, but still let Mera's own verdict lead the
- * chip whenever `checkedBy` was empty — and a real screenshot caught exactly
- * that leading to a false headline once: a true story, several off-topic
- * externals rated False, Mera's own well-evidenced "Consistent with sources"
- * still won the chip because it was the EXTERNALS that were actually
- * irrelevant, not absent. This wave removes Mera's verdict from the chip and
- * body ENTIRELY rather than trying to rank it against externals: the two
- * failure modes (a wrong Mera verdict heading a true story, and a
- * right-but-off-topic external heading it) share one root cause — the client
- * has no relevance signal for individual `checkedBy` entries, see
- * `fact-check-types.ts` — so removing Mera's verdict from the decision
- * surface entirely closes both at once instead of re-ranking them.
+ * THIS SUPERSEDES PIVOT P8h. Do not reintroduce a rule that ranks Mera's
+ * verdict against organisation ratings: the wire carries no relevance signal
+ * for individual `checkedBy` entries (see `fact-check-types.ts`), so the
+ * client cannot tell a wrong Mera verdict on a true story from a
+ * right-but-off-topic external. Both failure modes share that root cause,
+ * and keeping Mera's verdict off this decision surface entirely closes both.
  */
 const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     articleId,
