@@ -2274,7 +2274,8 @@
     }
   },
   "support": {
-    "opening": "Ondersteuning wordt geopend"
+    "opening": "Ondersteuning wordt geopend",
+    "supportId": "Support-ID: {{id}}"
   },
   "emailCapture": {
     "title": "Voeg je e-mailadres toe",

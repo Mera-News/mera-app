@@ -2274,7 +2274,8 @@
     }
   },
   "support": {
-    "opening": "サポートを開いています"
+    "opening": "サポートを開いています",
+    "supportId": "サポートID: {{id}}"
   },
   "emailCapture": {
     "title": "メールアドレスを追加",

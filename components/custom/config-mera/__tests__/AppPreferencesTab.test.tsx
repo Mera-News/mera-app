@@ -15,8 +15,11 @@ const calls: string[] = [];
 // --- the logout sequence's collaborators ----------------------------------
 const mockSignOut = jest.fn(async () => { calls.push('signOut'); });
 const mockClearAuthStorage = jest.fn(async () => { calls.push('clearAuthStorage'); });
+// Mutable so individual tests can hand the tab a resolved session (the
+// support-id row and the anon-account row both derive from it).
+let mockSessionData: { user: Record<string, unknown> } | null = null;
 jest.mock('@/lib/auth-client', () => ({
-    authClient: { signOut: () => mockSignOut(), useSession: () => ({ data: null }) },
+    authClient: { signOut: () => mockSignOut(), useSession: () => ({ data: mockSessionData }) },
     clearAuthStorage: () => mockClearAuthStorage(),
 }));
 
@@ -143,6 +146,7 @@ beforeEach(() => {
     jest.clearAllMocks();
     calls.length = 0;
     mockCanDismiss = false;
+    mockSessionData = null;
 });
 
 describe('Settings → Logout', () => {
@@ -259,6 +263,33 @@ describe('Settings → Logout', () => {
     // The user pressed the button, so local truth wins; the rejecting-sign-out
     // case is covered above, and the server call itself now lives guarded and
     // bounded inside clearAuthStorage().
+});
+
+describe('Settings footer → Support ID', () => {
+    it('shows the id when the session user carries one (anonymous account)', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '12345678' } };
+        const { findByTestId } = render(<AppPreferencesTab />);
+        const row = await findByTestId('settings-support-id');
+        expect(row.props.children).toBe('support.supportId');
+    });
+
+    it('shows the id for an email-attached account too (it survives attach)', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'real@example.com', supportId: '12345678' } };
+        const { findByTestId } = render(<AppPreferencesTab />);
+        expect(await findByTestId('settings-support-id')).toBeTruthy();
+    });
+
+    it('hides the row when the account has no supportId or the session is unresolved', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'real@example.com' } };
+        const { queryByTestId, findByText } = render(<AppPreferencesTab />);
+        await findByText('preferences.manageSettings');
+        expect(queryByTestId('settings-support-id')).toBeNull();
+
+        mockSessionData = null;
+        const second = render(<AppPreferencesTab />);
+        await second.findByText('preferences.manageSettings');
+        expect(second.queryByTestId('settings-support-id')).toBeNull();
+    });
 });
 
 describe('Settings → tutorials row', () => {

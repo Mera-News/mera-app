@@ -1,0 +1,23 @@
+{
+  "_comment": "auth-wave S5: the Settings support-id row. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": { "support": { "supportId": "Support ID: {{id}}" } },
+  "ar": { "support": { "supportId": "معرّف الدعم: {{id}}" } },
+  "de": { "support": { "supportId": "Support-ID: {{id}}" } },
+  "es": { "support": { "supportId": "ID de soporte: {{id}}" } },
+  "fr": { "support": { "supportId": "ID d'assistance : {{id}}" } },
+  "hi": { "support": { "supportId": "सहायता आईडी: {{id}}" } },
+  "id": { "support": { "supportId": "ID dukungan: {{id}}" } },
+  "it": { "support": { "supportId": "ID assistenza: {{id}}" } },
+  "ja": { "support": { "supportId": "サポートID: {{id}}" } },
+  "ko": { "support": { "supportId": "지원 ID: {{id}}" } },
+  "nl": { "support": { "supportId": "Support-ID: {{id}}" } },
+  "pl": { "support": { "supportId": "Identyfikator pomocy: {{id}}" } },
+  "pt-BR": { "support": { "supportId": "ID de suporte: {{id}}" } },
+  "ru": { "support": { "supportId": "ID поддержки: {{id}}" } },
+  "th": { "support": { "supportId": "รหัสฝ่ายสนับสนุน: {{id}}" } },
+  "tr": { "support": { "supportId": "Destek kimliği: {{id}}" } },
+  "uk": { "support": { "supportId": "ID підтримки: {{id}}" } },
+  "vi": { "support": { "supportId": "ID hỗ trợ: {{id}}" } },
+  "zh-CN": { "support": { "supportId": "支持 ID：{{id}}" } },
+  "zh-TW": { "support": { "supportId": "支援 ID：{{id}}" } }
+}

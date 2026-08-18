@@ -2274,7 +2274,8 @@
     }
   },
   "support": {
-    "opening": "고객 지원을 여는 중"
+    "opening": "고객 지원을 여는 중",
+    "supportId": "지원 ID: {{id}}"
   },
   "emailCapture": {
     "title": "이메일 추가",

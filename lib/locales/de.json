@@ -2274,7 +2274,8 @@
     }
   },
   "support": {
-    "opening": "Support wird geöffnet"
+    "opening": "Support wird geöffnet",
+    "supportId": "Support-ID: {{id}}"
   },
   "emailCapture": {
     "title": "E-Mail-Adresse hinzufügen",

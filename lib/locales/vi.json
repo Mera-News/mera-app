@@ -2275,7 +2275,8 @@
     }
   },
   "support": {
-    "opening": "Đang mở hỗ trợ"
+    "opening": "Đang mở hỗ trợ",
+    "supportId": "ID hỗ trợ: {{id}}"
   },
   "emailCapture": {
     "title": "Thêm email của bạn",

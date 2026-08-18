@@ -2274,7 +2274,8 @@
     }
   },
   "support": {
-    "opening": "Membuka dukungan"
+    "opening": "Membuka dukungan",
+    "supportId": "ID dukungan: {{id}}"
   },
   "emailCapture": {
     "title": "Tambahkan email Anda",

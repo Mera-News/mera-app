@@ -2275,7 +2275,8 @@
     }
   },
   "support": {
-    "opening": "正在開啟支援"
+    "opening": "正在開啟支援",
+    "supportId": "支援 ID：{{id}}"
   },
   "emailCapture": {
     "title": "新增電子郵件",

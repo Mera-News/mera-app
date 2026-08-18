@@ -2281,7 +2281,8 @@
     }
   },
   "support": {
-    "opening": "Ouverture de l'assistance"
+    "opening": "Ouverture de l'assistance",
+    "supportId": "ID d'assistance : {{id}}"
   },
   "emailCapture": {
     "title": "Ajoutez votre e-mail",

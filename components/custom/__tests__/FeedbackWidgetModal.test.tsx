@@ -83,7 +83,7 @@ jest.mock('@/lib/stores/mera-protocol-store', () => ({
 
 const mockSessionRef = {
     current: { user: { id: 'u1', email: 'session@example.com' } } as
-        | { user: { id: string; email: string } }
+        | { user: { id: string; email: string; supportId?: string; isAnonymous?: boolean } }
         | null,
 };
 jest.mock('@/lib/auth-client', () => ({
@@ -135,5 +135,26 @@ describe('FeedbackWidgetModal identity', () => {
 
         expect(mockWidgetProps.current.useSentryUser.email).toBe('session@example.com');
         expect(Sentry.setUser).toHaveBeenCalledWith({ id: 'u1' });
+    });
+});
+
+describe('FeedbackWidgetModal support id (S5)', () => {
+    it('attaches support_id to the Sentry user when the session carries one', () => {
+        mockSessionRef.current = {
+            user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '12345678' },
+        };
+        render(<FeedbackWidgetModal />);
+
+        expect(Sentry.setUser).toHaveBeenCalledWith({ id: 'u1', support_id: '12345678' });
+    });
+
+    it('never prefills the fabricated anonymous address as the reporter email', () => {
+        mockLocalRef.current = { userId: 'u1', userEmail: null };
+        mockSessionRef.current = {
+            user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '12345678' },
+        };
+        render(<FeedbackWidgetModal />);
+
+        expect(mockWidgetProps.current.useSentryUser.email).toBe('');
     });
 });

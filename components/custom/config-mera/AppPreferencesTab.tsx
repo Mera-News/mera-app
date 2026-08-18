@@ -29,6 +29,7 @@ import {
     requestEmailCapture,
     resolveAccountEmailView,
 } from '@/lib/subscription/email-capture';
+import { readSupportIdFromUser } from '@/lib/support-id';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -70,6 +71,10 @@ const AppPreferencesTab: React.FC = () => {
         storedEmail: cachedEmail,
         sessionUser: session?.user ?? null,
     });
+    // The 8-digit support handle minted for device sign-in accounts; it
+    // survives an email attach, so it shows for anonymous AND email-attached
+    // accounts. Session-only by design: absent (null) simply hides the row.
+    const supportId = readSupportIdFromUser(session?.user);
     const maskedEmail = React.useMemo(() => {
         if (!displayEmail) return null;
         const atIdx = displayEmail.lastIndexOf('@');
@@ -436,6 +441,11 @@ const AppPreferencesTab: React.FC = () => {
                     {maskedEmail && (
                         <Text size="xs" className="text-gray-500 mb-1">
                             {t('preferences.user', { email: maskedEmail })}
+                        </Text>
+                    )}
+                    {supportId && (
+                        <Text size="xs" className="text-gray-500 mb-1" testID="settings-support-id">
+                            {t('support.supportId', { id: supportId })}
                         </Text>
                     )}
                     <Text size="xs" className="text-gray-500">

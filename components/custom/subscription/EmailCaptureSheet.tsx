@@ -107,6 +107,9 @@ export function EmailCaptureSheet({ isOpen, onClose }: EmailCaptureSheetProps) {
         const result = await requestEmailOtp(email.trim());
         setBusy(false);
         if (result.ok) {
+            // The server hashes OTPs at rest: a resend ALWAYS issues a fresh
+            // code and invalidates the previous one, which is why the input is
+            // cleared here rather than left for a re-submit.
             setOtp('');
             setResendCooldown(30);
         } else {

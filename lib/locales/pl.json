@@ -2304,7 +2304,8 @@
     }
   },
   "support": {
-    "opening": "Otwieranie wsparcia"
+    "opening": "Otwieranie wsparcia",
+    "supportId": "Identyfikator pomocy: {{id}}"
   },
   "emailCapture": {
     "title": "Dodaj swój e-mail",
