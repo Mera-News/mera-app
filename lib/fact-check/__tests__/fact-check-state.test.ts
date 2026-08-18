@@ -10,7 +10,6 @@ import {
     describeExternalChecks,
     describeOrganisationVerdict,
     describeVerdict,
-    describeVerdictPresentation,
     FACT_CHECK_SEED_MESSAGE_KEY,
     isTerminalStatus,
     normalizeVerdict,
@@ -248,55 +247,6 @@ describe('timing constants', () => {
     it('exposes the seed-message key the tick and the chat starter chip share', () => {
         expect(typeof FACT_CHECK_SEED_MESSAGE_KEY).toBe('string');
         expect(FACT_CHECK_SEED_MESSAGE_KEY.length).toBeGreaterThan(0);
-    });
-});
-
-// describeVerdictPresentation — pivot P8h. The server can now legitimately
-// write `verdict: 'unverifiable'` alongside a POPULATED `checkedBy` (the
-// re-check path: nothing found day 0, clamped; a fact-checker publishes day
-// 2, checkedBy fills in, the verdict is deliberately not re-opened). A real
-// screenshot caught the sibling bug — a confident verdict chip sitting next
-// to "no organisation has published" — and this is the same contradiction
-// shape one hop later: "couldn't confirm" next to a named organisation's own
-// ruling reads as us not knowing something we plainly do.
-describe('describeVerdictPresentation', () => {
-    it('leads with our own verdict when nobody has published — the normal ~96% case, unchanged', () => {
-        expect(describeVerdictPresentation('supported', 0)).toBe('lead');
-        expect(describeVerdictPresentation('unverifiable', 0)).toBe('lead');
-        expect(describeVerdictPresentation(null, 0)).toBe('lead');
-    });
-
-    // ── THE MUST-FAIL CASE ──────────────────────────────────────────────────
-    // A row that is `unverifiable` WITH a populated checkedBy must never
-    // present as though nothing is known — "suppressed" is the only correct
-    // answer, because "couldn't confirm" is factually wrong once an
-    // organisation HAS ruled, not merely unhelpful.
-    it('SUPPRESSES our own verdict when it is unverifiable and an organisation has ruled', () => {
-        expect(describeVerdictPresentation('unverifiable', 1)).toBe('suppressed');
-        expect(describeVerdictPresentation('UNVERIFIABLE', 3)).toBe('suppressed');
-        expect(describeVerdictPresentation('  unverifiable  ', 1)).toBe('suppressed');
-    });
-
-    it('demotes (never hides) a non-unverifiable verdict once an organisation has ruled — informational, not competing', () => {
-        expect(describeVerdictPresentation('supported', 1)).toBe('secondary');
-        expect(describeVerdictPresentation('disputed', 2)).toBe('secondary');
-        expect(describeVerdictPresentation('mixed', 1)).toBe('secondary');
-        expect(describeVerdictPresentation('unsupported', 1)).toBe('secondary');
-    });
-
-    it('never returns "lead" once checkedBy is populated, whatever the verdict — two verdicts at equal weight is the contradiction this function exists to prevent', () => {
-        const verdicts = ['supported', 'disputed', 'unsupported', 'mixed', 'unverifiable', 'some-unrecognised-token', null, undefined];
-        for (const v of verdicts) {
-            expect(describeVerdictPresentation(v, 1)).not.toBe('lead');
-        }
-    });
-
-    it('treats an unrecognised verdict token as non-unverifiable (secondary, not suppressed) once checkedBy is populated', () => {
-        // normalizeVerdict buckets anything undocumented as 'unknown', which
-        // is NOT 'unverifiable' — an unrecognised token must not silently
-        // gain the suppression behaviour reserved for the one documented
-        // zero-evidence bucket.
-        expect(describeVerdictPresentation('mostly-true-ish', 1)).toBe('secondary');
     });
 });
 

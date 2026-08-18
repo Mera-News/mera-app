@@ -185,61 +185,6 @@ export function describeVerdict(raw: string | null | undefined): {
 }
 
 /**
- * How prominently to show OUR OWN verdict chip, given whether a named
- * fact-checking organisation has ALSO ruled on this story (`checkedBy`).
- *
- * BACKGROUND (pivot P8h). The server used to let a confident verdict through
- * on zero evidence — the failure mode a real screenshot caught: a green
- * "Consistent with sources" chip sitting directly above "No fact-checking
- * organisation we searched has published on this story" and "This check
- * didn't cite any specific pages." `clampVerdictToEvidence` now forces
- * `unverifiable` server-side when BOTH `citations` and `checkedBy` are empty
- * at write time. But `checkedBy` can fill in LATER on the re-check path (day
- * 0: nothing found, clamped to `unverifiable`; day 2: a fact-checker
- * publishes) and the verdict is deliberately NOT re-opened when that happens
- * — restoring the model's original ungrounded verdict would put back the very
- * answer the clamp exists to remove, and deriving a verdict from the
- * organisation's own rating would misquote a scale that isn't ours (see
- * `describeOrganisationVerdict`). So a row can now legitimately be
- * `verdict: 'unverifiable'` WITH a populated `checkedBy` — same shape of
- * contradiction as the screenshot, one hop later.
- *
- * `checkedBy` empty (the ~96% normal case) → `'lead'`: our own reading is the
- * only signal there is, so it renders exactly as before.
- *
- * `checkedBy` populated → an organisation's OWN verbatim rating is the
- * primary answer now, never ours — see `describeOrganisationVerdict`'s own
- * rationale for why it can't be routed through our vocabulary. Showing both
- * at equal weight is the exact contradiction this function exists to prevent,
- * so it is never `'lead'` in this branch:
- *   - our own verdict is `'unverifiable'` → `'suppressed'`. "Couldn't
- *     confirm" next to a named organisation's rating isn't a hedge, it's
- *     factually wrong — we DO have an answer, just not from us. There is
- *     nothing to lose by dropping a token that carries zero information here.
- *   - any other verdict → `'secondary'`. Our own AI reading (which claims it
- *     leaned on, its own hedge) may still be informative, so it stays, but
- *     demoted below the organisations and re-labelled so it can never be
- *     mistaken for a competing ruling — see `factCheck.ownReadingHeading`.
- */
-export type VerdictPresentation = 'lead' | 'secondary' | 'suppressed';
-
-/**
- * @deprecated SUPERSEDED BY {@link describeExternalChecks}. Mera no longer
- * presents a verdict of its own on the article surfaces, so there is no longer
- * a question of how our verdict ranks against an organisation's — the chip is
- * externals-only. This is kept only until `FactCheckBadge`, `FactCheckCard` and
- * `FactCheckPanel` have moved across, and is deleted in the same wave. Do not
- * add a new caller.
- */
-export function describeVerdictPresentation(
-    verdict: string | null | undefined,
-    checkedByCount: number,
-): VerdictPresentation {
-    if (checkedByCount <= 0) return 'lead';
-    return normalizeVerdict(verdict) === 'unverifiable' ? 'suppressed' : 'secondary';
-}
-
-/**
  * WHICH SINGLE LINE THE FACT-CHECK CHIP SHOWS. The whole of that decision, in
  * one total function, for every surface that renders it.
  *
