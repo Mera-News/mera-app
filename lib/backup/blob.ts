@@ -28,10 +28,10 @@
 //
 // IO is injected rather than imported. `lib/backup` stays free of native modules
 // so this is testable in Node against an in-memory buffer, and the exporter
-// supplies the RNFS-backed implementation. Verified on-device 2026-08-17 that
-// `RNFS.write(path, b64, position, 'base64')` places bytes at a BYTE offset on
-// both platforms (iOS `seekToFileOffset:`, Android `RandomAccessFile.seek`), so
-// the sequential-position writing below is sound.
+// supplies the RNFS-backed implementation. Verified ON DEVICE on both platforms
+// (iOS 26.5.2 and Android 33) that `RNFS.write(path, b64, position, 'base64')`
+// places bytes at a BYTE offset, not at an offset into the base64 TEXT, so the
+// sequential-position writing below is sound. `dev-probe.ts` is the check.
 
 import { xchacha20poly1305 } from '@noble/ciphers/chacha.js';
 import { randomBytes } from '@noble/ciphers/utils.js';

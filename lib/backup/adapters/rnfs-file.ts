@@ -1,11 +1,13 @@
 // The RNFS-backed file, satisfying `BlobSink`, `BlobSource` and `ScratchFile`.
 //
-// `RNFS.write(path, data, position, 'base64')` places bytes at a BYTE offset on
-// both platforms — verified on device 2026-08-17 by `dev-probe.ts` (iOS 26.5.2,
-// three frames of 7/11/5 bytes, none a multiple of 3, byte-exact round trip
-// plus a matching native sha256) and by reading the Android implementation,
-// which does `Base64.decode` then `RandomAccessFile.seek`. That is the whole
-// reason the codec can write frames sequentially by position.
+// `RNFS.write(path, data, position, 'base64')` places bytes at a BYTE offset,
+// not at an offset into the base64 TEXT. Verified ON DEVICE on both platforms
+// by `dev-probe.ts`: iOS 26.5.2 and Android 33, three frames of 7/11/5 bytes
+// (none a multiple of 3, so `=` padding would land mid-stream if the offset
+// were into the encoded text), byte-exact round trip, plus a matching NATIVE
+// sha256 — an independent check, because reading back through the same base64
+// path that wrote it could hide a symmetric bug. That is the whole reason the
+// codec can write frames sequentially by position.
 //
 // This file is native-coupled on purpose and nothing in the backup CORE
 // (`types`, `allowlist`, `crypto`, `blob`, `export`, `import`) may import it.

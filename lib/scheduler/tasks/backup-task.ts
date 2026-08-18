@@ -14,6 +14,18 @@
 //
 // The Wi-Fi check is in the handler rather than in a condition because it is
 // async and `TaskCondition`'s custom check is synchronous.
+//
+// **Everything except the synchronous condition helpers is require()d INSIDE
+// the handler, and that is a cold-start decision, not a style one.** This file
+// is side-effect imported from `app/_layout.tsx`, so a static import here
+// evaluates at boot on every launch. Static imports pulled in the whole backup
+// stack — the codec, @noble/ciphers, @noble/hashes, pako, RNFS,
+// expo-file-system — plus `react-native-cloud-storage`, which resolves TWO
+// TurboModules at module scope and has no other importer in the app. All of
+// that for a feature that is OFF by default and, for most users, never turned
+// on. `backup-settings` stays static because the scheduler evaluates its
+// condition synchronously and it only reaches `setting-service`, which is
+// already on the boot path.
 
 import {
   backupProviderId,
@@ -22,9 +34,6 @@ import {
   scheduledBackupEnabled,
   scheduledBackupIsDue,
 } from '@/lib/backup/backup-settings';
-import { runBackup } from '@/lib/backup/backup-service';
-import { googleDriveProvider } from '@/lib/backup/providers/google-drive';
-import { icloudProvider } from '@/lib/backup/providers/icloud';
 import type { BackupProvider } from '@/lib/backup/types';
 
 import { AppScheduler } from '../AppScheduler';
@@ -33,9 +42,11 @@ import { backgroundWorkIsIdle } from '../background-idle';
 function resolveProvider(): BackupProvider | null {
   switch (backupProviderId()) {
     case 'icloud':
-      return icloudProvider;
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require('@/lib/backup/providers/icloud').icloudProvider as BackupProvider;
     case 'google-drive':
-      return googleDriveProvider;
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require('@/lib/backup/providers/google-drive').googleDriveProvider as BackupProvider;
     default:
       return null;
   }
@@ -50,7 +61,9 @@ AppScheduler.register({
     { type: 'db-ready' },
     { type: 'network' },
     // Reads the synchronous mirror in backup-settings.ts, which exists
-    // precisely because this callback cannot be async.
+    // precisely because this callback cannot be async. It is also what keeps
+    // the whole backup stack off the boot path: this returns false without
+    // loading any of it.
     { type: 'custom', check: scheduledBackupEnabled },
     // An export holds a WatermelonDB reader for its snapshot phase, blocking
     // every writer. Deferring to an idle app is what keeps that out of the way
@@ -81,6 +94,9 @@ AppScheduler.register({
       ctx.markNoOp();
       return;
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { runBackup } = require('@/lib/backup/backup-service') as typeof import('@/lib/backup/backup-service');
 
     const result = await runBackup(provider, (progress) => {
       ctx.reportProgress({ step: progress.phase, current: progress.rowsWritten });
