@@ -15,18 +15,17 @@
 
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { Pressable } from 'react-native';
 
 const calls: string[] = [];
 
 const mockEnsureBackupKey = jest.fn(async () => { calls.push('ensureBackupKey'); return 'ABCDE-FGHJK'; });
 const mockMarkConfirmed = jest.fn(async () => { calls.push('markRecoveryCodeConfirmed'); });
 const mockIsConfirmed = jest.fn(async () => false);
-const mockAdopt = jest.fn(async (_c: string) => { calls.push('adoptRecoveryCode'); return true; });
 jest.mock('@/lib/backup/key-store', () => ({
     ensureBackupKey: () => mockEnsureBackupKey(),
     markRecoveryCodeConfirmed: () => mockMarkConfirmed(),
     isRecoveryCodeConfirmed: () => mockIsConfirmed(),
-    adoptRecoveryCode: (c: string) => mockAdopt(c),
     getRecoveryCode: jest.fn(async () => 'ABCDE-FGHJK'),
     clearBackupKey: jest.fn(async () => { calls.push('clearBackupKey'); }),
 }));
@@ -84,6 +83,14 @@ const mockListBackups = jest.fn(async () => {
     calls.push('listBackups');
     return ['/mera-backup/mera-backup-2026-08-18T00-00-00-000Z.bin'];
 });
+
+jest.mock('@/components/custom/backup/BackupRecoveryFlow', () => ({
+    __esModule: true,
+    default: (props: { onSkip: () => void }) => mockRecoveryFlow(props),
+}));
+const mockRecoveryFlow = ({ onSkip }: { onSkip: () => void }) => (
+    <Pressable testID="recovery-flow" onPress={onSkip} />
+);
 
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
@@ -292,66 +299,20 @@ describe('a failed Drive connect must not advance', () => {
 });
 
 describe('the new-phone path', () => {
+    it('hands off to the shared recovery flow rather than keeping a second copy', async () => {
+        // The flow itself is covered by BackupRecoveryFlow.test. What matters
+        // HERE is only that this surface delegates: onboarding runs the same
+        // component, and the confirm wording, the connect-and-verify round trip
+        // and the post-restore reload must not drift between the two.
+        const r = render(<BackupSection />);
+        await waitFor(() => r.getByTestId('backup-already-have'));
+        fireEvent.press(r.getByTestId('backup-already-have'));
+        await waitFor(() => r.getByTestId('recovery-flow'));
+    });
+
     it('is reachable with backup off, because a fresh install has no key', async () => {
         const r = render(<BackupSection />);
         await waitFor(() => r.getByTestId('backup-already-have'));
-        fireEvent.press(r.getByTestId('backup-already-have'));
-        await waitFor(() => r.getByTestId('backup-code-input'));
-    });
-
-    it('lands on the RESTORE picker, not the setup picker', async () => {
-        // The bug this pins, found on device: adopting a code dropped the user
-        // into "where should backups go" and quietly configured backup, so the
-        // restore never ran. "Where is my backup" and "where should backups go"
-        // are different questions and need different screens.
-        const r = render(<BackupSection />);
-        await waitFor(() => r.getByTestId('backup-already-have'));
-        fireEvent.press(r.getByTestId('backup-already-have'));
-        await waitFor(() => r.getByTestId('backup-code-input'));
-        fireEvent.changeText(r.getByTestId('backup-code-input'), 'abcde fghjk');
-        fireEvent.press(r.getByTestId('backup-adopt-continue'));
-        await waitFor(() => expect(mockAdopt).toHaveBeenCalledWith('abcde fghjk'));
-
-        await waitFor(() => r.getByTestId('backup-restore-from-icloud'));
-        expect(r.queryByTestId('backup-pick-icloud')).toBeNull();
-        // And nothing has been configured as a backup destination yet.
-        expect(mockSetProviderId).not.toHaveBeenCalled();
-        expect(mockSetCadence).not.toHaveBeenCalled();
-    });
-
-    it('lists what is actually there, then restores and RELOADS the app', async () => {
-        const r = render(<BackupSection />);
-        await waitFor(() => r.getByTestId('backup-already-have'));
-        fireEvent.press(r.getByTestId('backup-already-have'));
-        await waitFor(() => r.getByTestId('backup-code-input'));
-        fireEvent.changeText(r.getByTestId('backup-code-input'), 'code');
-        fireEvent.press(r.getByTestId('backup-adopt-continue'));
-        await waitFor(() => r.getByTestId('backup-restore-from-icloud'));
-
-        fireEvent.press(r.getByTestId('backup-restore-from-icloud'));
-        await waitFor(() => expect(mockListBackups).toHaveBeenCalled());
-
-        fireEvent.press(r.getByText('mera-backup-2026-08-18T00-00-00-000Z.bin'));
-        await waitFor(() => r.getByTestId('backup-restore-confirm'));
-        fireEvent.press(r.getByTestId('backup-restore-confirm'));
-
-        // The restore replaced rows under every Zustand store, all of which
-        // hydrated at startup. Without a reload the user is told "restored" and
-        // shown the empty persona they already had.
-        await waitFor(() => expect(calls).toContain('reloadApp'));
-        expect(mockSetProviderId).toHaveBeenCalledWith('icloud');
-    });
-
-    it('says the code is wrong and stays put', async () => {
-        mockAdopt.mockResolvedValueOnce(false);
-        const r = render(<BackupSection />);
-        await waitFor(() => r.getByTestId('backup-already-have'));
-        fireEvent.press(r.getByTestId('backup-already-have'));
-        await waitFor(() => r.getByTestId('backup-code-input'));
-        fireEvent.changeText(r.getByTestId('backup-code-input'), 'nope');
-        fireEvent.press(r.getByTestId('backup-adopt-continue'));
-        await waitFor(() => expect(calls).toContain('toast'));
-        r.getByTestId('backup-code-input');
     });
 });
 

@@ -75,7 +75,6 @@ import {
   verifyProviderAccess,
 } from '@/lib/backup/backup-service';
 import {
-  adoptRecoveryCode,
   clearBackupKey,
   ensureBackupKey,
   getRecoveryCode,
@@ -89,6 +88,7 @@ import {
   type DriveConnectResult,
 } from '@/lib/backup/providers/google-drive';
 import { icloudProvider, isICloudSupported } from '@/lib/backup/providers/icloud';
+import BackupRecoveryFlow from '@/components/custom/backup/BackupRecoveryFlow';
 import { backgroundBackupIsAvailable } from '@/lib/background/backup-task';
 import type { BackupCadence, BackupProvider } from '@/lib/backup/types';
 import logger from '@/lib/logger';
@@ -103,7 +103,7 @@ export const STALE_BACKUP_MS = 30 * 24 * 60 * 60 * 1000;
  * what shipped first — meant entering a recovery code silently configured
  * backup and never restored anything.
  */
-type Stage = 'loading' | 'off' | 'code' | 'where' | 'when' | 'on' | 'adopt' | 'restoreWhere';
+type Stage = 'loading' | 'off' | 'code' | 'where' | 'when' | 'on' | 'recover';
 
 const CADENCES: Exclude<BackupCadence, 'off'>[] = ['daily', 'weekly', 'manual'];
 
@@ -120,7 +120,6 @@ const BackupSection: React.FC = () => {
   const [stage, setStage] = useState<Stage>('loading');
   const [code, setCode] = useState<string | null>(null);
   const [codeSaved, setCodeSaved] = useState(false);
-  const [typedCode, setTypedCode] = useState('');
   const [busy, setBusy] = useState<string | null>(null);
   const [icloudReady, setIcloudReady] = useState(false);
   const [bgAvailable, setBgAvailable] = useState(true);
@@ -128,8 +127,6 @@ const BackupSection: React.FC = () => {
   const [showCode, setShowCode] = useState(false);
   const [restoreOptions, setRestoreOptions] = useState<readonly string[] | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<string | null>(null);
-  /** Set only on the recovery path: where the EXISTING backup is being read from. */
-  const [restoreSource, setRestoreSource] = useState<BackupProviderId | null>(null);
   const [confirmOff, setConfirmOff] = useState(false);
   const [version, setVersion] = useState(0);
   const refresh = useCallback(() => setVersion((v) => v + 1), []);
@@ -273,23 +270,6 @@ const BackupSection: React.FC = () => {
     [driveReady, reportDriveFailure],
   );
 
-  /** Recovery path: read the existing backups from the chosen destination. */
-  const chooseRestoreSource = useCallback(
-    async (id: BackupProviderId) => {
-      try {
-        setBusy(id);
-        const cloud = await reachProvider(id);
-        if (!cloud) return;
-        setRestoreSource(id);
-        setRestoreOptions(await listBackups(cloud));
-      } catch (err) {
-        fail(err, 'choose-restore-source');
-      } finally {
-        setBusy(null);
-      }
-    },
-    [fail, reachProvider],
-  );
 
   const chooseProvider = useCallback(
     async (id: BackupProviderId) => {
@@ -324,27 +304,6 @@ const BackupSection: React.FC = () => {
     [fail, refresh],
   );
 
-  // ---- the new-phone path --------------------------------------------------
-
-  const adoptCode = useCallback(async () => {
-    try {
-      setBusy('adopt');
-      const ok = await adoptRecoveryCode(typedCode);
-      if (!ok) {
-        // Every failure here is a typo, and Crockford already forgives case,
-        // hyphens and the I/L/O confusions. So this really does mean wrong.
-        notify('error', tRef.current('backup.codeWrongTitle'), tRef.current('backup.codeWrong'));
-        return;
-      }
-      setTypedCode('');
-      // The recovery picker, not the setup picker. See the Stage comment.
-      setStage('restoreWhere');
-    } catch (err) {
-      fail(err, 'adopt-code');
-    } finally {
-      setBusy(null);
-    }
-  }, [fail, notify, typedCode]);
 
   // ---- actions -------------------------------------------------------------
 
@@ -424,8 +383,10 @@ const BackupSection: React.FC = () => {
   }, [notify]);
 
   const doCloudRestore = useCallback(async () => {
-    // `restoreSource` on the recovery path, the configured provider otherwise.
-    const id = restoreSource ?? backupProviderId();
+    // Always the configured provider here: this path is only reachable from
+    // the configured state, where the key is already on the device. The
+    // code-first recovery path lives in BackupRecoveryFlow.
+    const id = backupProviderId();
     const cloud = id ? cloudProviderFor(id) : null;
     if (!cloud || !restoreTarget) return;
     const target = restoreTarget;
@@ -434,11 +395,6 @@ const BackupSection: React.FC = () => {
     try {
       setBusy('restore');
       const result = await runRestore(cloud, target);
-
-      // Remember where the backup came from, so the section lands configured
-      // rather than asking the user to set up something they clearly already
-      // have. Cadence stays at its default until they choose one.
-      if (restoreSource) await setBackupProviderId(restoreSource);
 
       notify(
         'success',
@@ -458,7 +414,7 @@ const BackupSection: React.FC = () => {
     } finally {
       setBusy(null);
     }
-  }, [fail, notify, reloadApp, restoreSource, restoreTarget]);
+  }, [fail, notify, reloadApp, restoreTarget]);
 
 
   const turnOff = useCallback(async () => {
@@ -580,7 +536,7 @@ const BackupSection: React.FC = () => {
           <Pressable
             testID="backup-already-have"
             className="py-2"
-            onPress={() => setStage('adopt')}
+            onPress={() => setStage('recover')}
             disabled={busy !== null}
           >
             <Text size="sm" className="text-blue-400 text-center">
@@ -591,39 +547,19 @@ const BackupSection: React.FC = () => {
       );
     }
 
-    if (stage === 'adopt') {
+    if (stage === 'recover') {
+      // Delegated: `OnboardingScreen` runs the identical flow as a pre-wizard
+      // step, and the confirm wording, the connect-and-verify round trip and
+      // the post-restore reload must not drift between the two.
       return (
-        <VStack space="sm">
-          <Text className="text-white font-semibold">{t('backup.adoptTitle')}</Text>
-          <Text size="sm" className="text-gray-400">
-            {t('backup.adoptDescription')}
-          </Text>
-          <Input className="border-gray-700">
-            <InputField
-              testID="backup-code-input"
-              value={typedCode}
-              onChangeText={setTypedCode}
-              placeholder={t('backup.adoptPlaceholder')}
-              autoCapitalize="characters"
-              autoCorrect={false}
-              style={{ fontFamily: 'monospace' }}
-            />
-          </Input>
-          <Button
-            onPress={adoptCode}
-            isDisabled={typedCode.trim().length === 0 || busy !== null}
-            testID="backup-adopt-continue"
-          >
-            <ButtonText>{t('backup.continue')}</ButtonText>
-          </Button>
-          <Pressable className="py-2" onPress={() => setStage('off')} disabled={busy !== null}>
-            <Text size="sm" className="text-gray-500 text-center">
-              {t('common.cancel')}
-            </Text>
-          </Pressable>
-        </VStack>
+        <BackupRecoveryFlow
+          skipLabel={t('common.cancel')}
+          onSkip={() => setStage('off')}
+          onRestoredWithoutReload={refresh}
+        />
       );
     }
+
 
     if (stage === 'code') {
       return (
@@ -689,32 +625,6 @@ const BackupSection: React.FC = () => {
       );
     }
 
-    if (stage === 'restoreWhere') {
-      return (
-        <VStack space="sm">
-          <Text className="text-white font-semibold">{t('backup.restoreWhereTitle')}</Text>
-          <Text size="sm" className="text-gray-400">
-            {t('backup.restoreWhereDescription')}
-          </Text>
-          {isICloudSupported() &&
-            (icloudReady
-              ? row('cloud', t('backup.icloud'), t('backup.restoreLookHere'), () =>
-                  chooseRestoreSource('icloud'), { testID: 'backup-restore-from-icloud' })
-              : row('cloud-off', t('backup.icloud'), t('backup.icloudUnavailable'), () => {}, {
-                  disabled: true,
-                  testID: 'backup-restore-from-icloud',
-                }))}
-          {isGoogleDriveConfigured() &&
-            row(
-              'add-to-drive',
-              t('backup.drive'),
-              driveReady ? t('backup.restoreLookHere') : t('backup.driveConnect'),
-              () => chooseRestoreSource('google-drive'),
-              { testID: 'backup-restore-from-drive' },
-            )}
-        </VStack>
-      );
-    }
 
     if (stage === 'when') {
       return (

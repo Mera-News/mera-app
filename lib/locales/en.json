@@ -849,7 +849,9 @@
     "restoreWhereDescription": "Pick where you saved it. You will see what is there before anything is replaced.",
     "restoreLookHere": "Look for my backup here",
     "restartNeeded": "Your data is back. Close and reopen the app to see it.",
-    "changeSchedule": "Backup schedule"
+    "changeSchedule": "Backup schedule",
+    "onboardingIntro": "If you have used Mera before, enter your recovery code and we will bring back your facts, topics and settings. You can skip this and start fresh.",
+    "onboardingSkip": "Skip, I am new here"
   },
   "preferences": {
     "manageSettings": "Manage your app settings and account",
