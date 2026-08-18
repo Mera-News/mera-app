@@ -8,26 +8,13 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import type { CheckedByStatus, FactCheckedByEntry } from '@/lib/fact-check/fact-check-types';
-import {
-    describeCheckedBy,
-    describeVerdict,
-    describeVerdictPresentation,
-    isTerminalStatus,
-    type FactCheckTone,
-} from '@/lib/fact-check/fact-check-state';
+import { describeCheckedBy } from '@/lib/fact-check/fact-check-state';
 import type { StoredFactCheck } from '@/lib/database/services/fact-check-record-service';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
-
-/** Same rule as the detail panel: no red, ever. See FactCheckPanel. */
-const TONE_CLASSES: Record<FactCheckTone, { chip: string; text: string }> = {
-    positive: { chip: 'bg-success-900', text: 'text-success-400' },
-    caution: { chip: 'bg-warning-900', text: 'text-warning-400' },
-    neutral: { chip: 'bg-gray-800', text: 'text-gray-300' },
-};
 
 interface FactCheckCardProps {
     readonly item: StoredFactCheck;
@@ -44,23 +31,21 @@ interface FactCheckCardProps {
  * One stored fact check, as it appears on the Dashboard block and the
  * /logged-in/fact-checks list.
  *
- * The card's job is to answer "who checked this story, and what did they say" —
- * so EVERY organisation in `checkedBy` is listed, each with its own verdict and
- * its own tappable link. Collapsing them to a single aggregate verdict is
- * exactly what this card must not do: the aggregate is the model's reading, the
- * per-organisation rows are the actual reporting.
+ * The card's job is to answer "who checked this story, and what did they
+ * say" — the badge carries the lead organisation's own rating, and every
+ * OTHER gated organisation's NAME is listed below it in plain text, so the
+ * data stays reachable even though this surface has no expandable body.
+ * Ratings and links for the non-lead organisations live one tap away, on the
+ * article screen this row opens.
  *
  * A row whose check has not finished yet renders as "still searching" rather
  * than being hidden — the user asked for it, and a request that vanishes from
  * every surface until it completes is indistinguishable from one that was
  * dropped.
  *
- * PIVOT P8h — same rule as `FactCheckPanel`: once `checkedBy` is populated,
- * an organisation's own rating leads and our verdict chip is demoted
- * ('secondary', plain text under a relabelled heading) or suppressed
- * outright when it is `'unverifiable'` (see `describeVerdictPresentation`) —
- * "Couldn't confirm" next to a named organisation's own rating is not a
- * hedge, it is wrong.
+ * EXTERNALS ARE THE AUTHORITY (fc-relevance wave). The badge is
+ * externals-only in every state — see `FactCheckBadge`'s file header — so
+ * this card never derives or displays a verdict of Mera's own.
  */
 const FactCheckCard: React.FC<FactCheckCardProps> = ({
     item,
@@ -70,22 +55,16 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
 }) => {
     const { t } = useTranslation();
 
-    const resolved = isTerminalStatus(item.status);
-    const blocked = item.status === 'blocked';
-    const verdictInfo = resolved && !blocked ? describeVerdict(item.verdict) : null;
     const checkedBy = (item.payload as { checkedBy?: FactCheckedByEntry[] } | null)?.checkedBy;
     const checkedByStatus = (item.payload as { checkedByStatus?: CheckedByStatus } | null)?.checkedByStatus;
-    const organisations = describeCheckedBy(checkedBy);
-    const organisationCount = organisations.length;
-    const leadOrganisation = organisations[0];
-    // Only meaningful once the row is resolved — a pending row has not looked
-    // yet, which is a third thing again and is handled by its own branch first.
-    const lookupUnavailable = resolved && !blocked && checkedByStatus === 'unavailable';
-    const hasCheckedBy = organisationCount > 0;
-    const presentation = describeVerdictPresentation(item.verdict, organisationCount);
-    // The sources block, our own reading, the claims and the disclaimer all
-    // moved to the article screen with the rest of the full card — this row is
-    // a pointer to that answer, not a second copy of it.
+    // Unique names only, comma-joined, in first-appearance order. The same
+    // organisation can legitimately appear more than once in `checkedBy` (one
+    // entry per claim it ruled on) — this line exists purely so every gated
+    // organisation stays reachable by name on a surface with no expandable
+    // body, not to enumerate individual claims.
+    const organisationNames = Array.from(
+        new Set(describeCheckedBy(checkedBy).map((entry) => entry.organisation.trim())),
+    );
 
     return (
         // The delete control is a SIBLING of the tappable body, absolutely
@@ -156,12 +135,22 @@ const FactCheckCard: React.FC<FactCheckCardProps> = ({
                 header so the two surfaces cannot drift. */}
             <FactCheckBadge
                 status={item.status}
-                verdict={item.verdict}
                 checkedBy={checkedBy}
                 checkedByStatus={checkedByStatus}
                 testIDPrefix={testIDPrefix}
                 testIDSuffix={item.id}
             />
+
+            {organisationNames.length > 0 && (
+                <Text
+                    size="xs"
+                    className="text-gray-500"
+                    numberOfLines={2}
+                    testID={`${testIDPrefix}-org-names-${item.id}`}
+                >
+                    {organisationNames.join(', ')}
+                </Text>
+            )}
                 </VStack>
             </Pressable>
 
