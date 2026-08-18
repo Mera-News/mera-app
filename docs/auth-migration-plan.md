@@ -574,6 +574,20 @@ Known cosmetic repeat: the "Before you continue" consent sheet re-arms on deep-l
 while onboarding is incomplete and swallows taps until accepted. Pre-existing behavior, not from
 this wave; noted for whoever owns onboarding.
 
+### S6, 2026-08-18: trial emails killed for everyone, push-only
+
+User decision: no trial-related email to anyone, ever. The dispatcher now skips the email leg for
+`trial_ending` / `trial_ended` unconditionally (reason `trial-email-disabled`, checked before the
+address logic and before outbox reclaim), push unchanged. Deliberately code, not a flag. Server
+`973d039`, staging merge `cac521c`, revision news-async-staging-00064. Verified live with a seeded
+sweep-shaped row: email skipped with the new reason, no email-notification row, dispatcher clean.
+The welcome email still mentions the 14-day trial (email sign-ups only) — separate user decision.
+
+**PROD ORDERING RULE: merge mera-server `main` BEFORE ever applying PROMO_EPOCH to prod
+news-async.** The kill is dispatcher code; the currently deployed prod dispatcher predates it, so
+applying the epoch var first would mass-email the cohort with the old code. Epoch-then-merge is the
+one order that can still send trial mail.
+
 ## Held design: the smallest attestation version
 
 Fully specified so nothing is decided mid-implementation. Not broken into phases because it is gated on
