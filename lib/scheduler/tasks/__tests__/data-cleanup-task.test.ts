@@ -34,6 +34,10 @@ jest.mock('@/lib/database/services/fact-check-record-service', () => ({
   deleteExpiredFactChecks: jest.fn(),
 }));
 
+jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
+  deleteOrphanedFactCheckRetention: jest.fn(),
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
@@ -54,6 +58,7 @@ const { refreshSuggestionsInStoreUnsafe: mockRefreshSuggestionsInStoreUnsafe } =
 const { deleteOlderThan: mockDeleteOldImpressions } = jest.requireMock('@/lib/database/services/story-impression-service') as any;
 const { deleteOlderThan: mockDeleteOldNotifications } = jest.requireMock('@/lib/database/services/notification-service') as any;
 const { deleteExpiredFactChecks: mockDeleteExpiredFactChecks } = jest.requireMock('@/lib/database/services/fact-check-record-service') as any;
+const { deleteOrphanedFactCheckRetention: mockDeleteOrphanedRetention } = jest.requireMock('@/lib/database/services/saved-article-suggestion-service') as any;
 
 const registeredDef = mockRegister.mock.calls[0]?.[0];
 
@@ -109,6 +114,7 @@ describe('data-cleanup-task handler', () => {
     mockDeleteOldImpressions.mockResolvedValue(0);
     mockDeleteOldNotifications.mockResolvedValue(0);
     mockDeleteExpiredFactChecks.mockResolvedValue(0);
+    mockDeleteOrphanedRetention.mockResolvedValue(0);
   });
 
   it('calls pruneOldJobs', async () => {
@@ -249,6 +255,30 @@ describe('data-cleanup-task handler', () => {
     mockDeleteExpiredFactChecks.mockRejectedValueOnce(new Error('fact-check prune error'));
 
     await expect(registeredDef.handler(undefined, makeCtx())).rejects.toThrow('fact-check prune error');
+  });
+
+  it('sweeps orphaned fact-check retention rows AFTER the fact-check prune', async () => {
+    await registeredDef.handler(undefined, makeCtx());
+
+    expect(mockDeleteOrphanedRetention).toHaveBeenCalledTimes(1);
+    // Order is load-bearing: the retention sweep decides "orphaned" by looking
+    // at what the fact-check prune left behind. Running it first would keep a
+    // snapshot for a row the very same tick then deletes.
+    const pruneOrder = mockDeleteExpiredFactChecks.mock.invocationCallOrder[0];
+    const sweepOrder = mockDeleteOrphanedRetention.mock.invocationCallOrder[0];
+    expect(sweepOrder).toBeGreaterThan(pruneOrder);
+  });
+
+  it('logs the released retention count when > 0, stays quiet at 0', async () => {
+    mockDeleteOrphanedRetention.mockResolvedValue(2);
+    const ctx = makeCtx();
+    await registeredDef.handler(undefined, ctx);
+    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('2 unreferenced fact-check article snapshots'));
+
+    mockDeleteOrphanedRetention.mockResolvedValue(0);
+    const quietCtx = makeCtx();
+    await registeredDef.handler(undefined, quietCtx);
+    expect(quietCtx.log).not.toHaveBeenCalledWith(expect.stringContaining('snapshots'));
   });
 });
 

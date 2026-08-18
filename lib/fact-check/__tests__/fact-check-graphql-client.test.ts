@@ -23,6 +23,13 @@ jest.mock('../../database/services/fact-check-record-service', () => ({
     listFactChecksByStatus: (...a: any[]) => mockListFactChecksByStatus(...a),
 }));
 
+// Retention write — mocked both to keep the real service's SQLite-opening
+// database import out of this suite and to assert the keep inputs.
+const mockKeepArticleForFactCheck = jest.fn();
+jest.mock('../../database/services/saved-article-suggestion-service', () => ({
+    keepArticleForFactCheck: (...a: any[]) => mockKeepArticleForFactCheck(...a),
+}));
+
 jest.mock('../../logger', () => ({
     __esModule: true,
     default: { captureException: jest.fn() },
@@ -159,6 +166,68 @@ describe('requestFactCheck', () => {
         expect(mockUpsertFactCheck).toHaveBeenCalledTimes(2);
         expect(mockUpsertFactCheck.mock.calls[0][0].status).toBe('complete');
         expect(mockUpsertFactCheck.mock.calls[1][0].status).toBe('complete');
+    });
+
+    // ── Retention: a fact-checked article is kept openable like a saved one ──
+
+    it('passes a caller-supplied keep input through to the retention write verbatim', async () => {
+        mockQuery.mockResolvedValue({ data: { factCheck: TERMINAL_ROW } });
+        const keep = { articleId: 'a1', article: { _id: 'a1' } as never };
+
+        await requestFactCheck('a1', 'Fallback title', keep);
+
+        expect(mockKeepArticleForFactCheck).toHaveBeenCalledTimes(1);
+        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith(keep);
+    });
+
+    it('degrades to the server row fields (title/url/publication) when no keep input is given', async () => {
+        mockQuery.mockResolvedValue({
+            data: {
+                factCheck: {
+                    ...TERMINAL_ROW,
+                    articleUrl: 'https://example.com/a',
+                    publicationName: 'The Paper',
+                },
+            },
+        });
+
+        await requestFactCheck('a1', 'Fallback title');
+
+        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith({
+            articleId: 'a1',
+            title: 'A headline',
+            articleUrl: 'https://example.com/a',
+            publicationName: 'The Paper',
+        });
+    });
+
+    it('keeps a title-only degraded snapshot on the pending-stub (no row) branch', async () => {
+        mockQuery.mockResolvedValue({ data: { factCheck: null } });
+
+        await requestFactCheck('a1', 'A headline');
+
+        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith({
+            articleId: 'a1',
+            title: 'A headline',
+            articleUrl: null,
+            publicationName: null,
+        });
+    });
+
+    it('does not keep anything when the request itself failed', async () => {
+        mockQuery.mockRejectedValue(new Error('network blip'));
+        await requestFactCheck('a1');
+        expect(mockKeepArticleForFactCheck).not.toHaveBeenCalled();
+    });
+
+    it('a failed keep never fails the ask or degrades the outcome', async () => {
+        mockQuery.mockResolvedValue({ data: { factCheck: TERMINAL_ROW } });
+        mockKeepArticleForFactCheck.mockRejectedValueOnce(new Error('db closed'));
+
+        await expect(requestFactCheck('a1')).resolves.toEqual({
+            terminal: true,
+            row: TERMINAL_ROW,
+        });
     });
 });
 
@@ -311,6 +380,27 @@ describe('mirrorArticleFactCheck', () => {
 
         await expect(mirrorArticleFactCheck('a1', TERMINAL_ROW as never)).resolves.toBe(false);
     });
+
+    it('retains the article: passes the keep input through, or degrades to row fields', async () => {
+        const keep = { articleId: 'a1', article: { _id: 'a1' } as never };
+        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never, null, keep);
+        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith(keep);
+
+        mockKeepArticleForFactCheck.mockClear();
+        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never);
+        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith({
+            articleId: 'a1',
+            title: 'A headline',
+            articleUrl: null,
+            publicationName: null,
+        });
+    });
+
+    it('does not keep anything when the mirror write failed', async () => {
+        mockUpsertFactCheck.mockRejectedValueOnce(new Error('db closed'));
+        await mirrorArticleFactCheck('a1', TERMINAL_ROW as never);
+        expect(mockKeepArticleForFactCheck).not.toHaveBeenCalled();
+    });
 });
 
 
@@ -360,5 +450,13 @@ describe('fetchCachedFactCheck', () => {
     it('ignores an empty article id', async () => {
         await expect(fetchCachedFactCheck('')).resolves.toBe(false);
         expect(mockQuery).not.toHaveBeenCalled();
+    });
+
+    it('threads the keep input through to the mirror retention write', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { cachedFactCheck: TERMINAL_ROW } });
+        const keep = { articleId: 'a1', suggestion: { _id: 's1' } as never };
+
+        await expect(fetchCachedFactCheck('a1', keep)).resolves.toBe(true);
+        expect(mockKeepArticleForFactCheck).toHaveBeenCalledWith(keep);
     });
 });

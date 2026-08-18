@@ -301,6 +301,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         row._id ?? articleId,
                         row.factCheck,
                         row.title_en_internal_only ?? row.title,
+                        // Full article in hand: retain it so the check stays
+                        // openable after the 48h prune.
+                        { articleId: row._id ?? articleId, article: row },
                     );
                 }
             })
@@ -436,6 +439,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
         const asked = requestArticleFactCheck({
             articleId: article._id ?? articleId,
             title: article.title_en_internal_only ?? article.title ?? '',
+            article,
         });
         if (!asked) return;
         toast.show({

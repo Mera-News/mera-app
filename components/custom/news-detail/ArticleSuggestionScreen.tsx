@@ -445,7 +445,16 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     useEffect(() => {
         const id = suggestion?.articleId;
         if (!id || !isConnected) return;
-        void fetchCachedFactCheck(id);
+        // Full suggestion in hand: a mirrored check retains the article so it
+        // stays openable after the 48h prune. The snapshot is read at
+        // articleId-change time on purpose — depending on the suggestion's
+        // object identity would re-issue this network read on every store
+        // refresh.
+        void fetchCachedFactCheck(
+            id,
+            suggestion ? { articleId: id, suggestion } : undefined,
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [suggestion?.articleId, isConnected]);
 
     // Same-story siblings are surfaced two ways: `localSiblings` (above) groups
@@ -505,6 +514,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         const asked = requestArticleFactCheck({
             articleId: suggestion.articleId,
             title: suggestion.title_en ?? suggestion.title_original ?? '',
+            suggestion,
         });
         if (!asked) return;
         toast.show({

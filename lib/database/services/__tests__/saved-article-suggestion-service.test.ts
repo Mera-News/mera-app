@@ -6,10 +6,23 @@ jest.mock('@/lib/database/index', () => {
   return makeDatabaseMock();
 });
 
+// The service reads fact_checks only through this one function — mock it so
+// each test states whether the article is still referenced by a check.
+jest.mock('../fact-check-record-service', () => ({
+  listFactChecksForArticle: jest.fn(async () => []),
+}));
+
+// Mocked so retention tests can assert it is NEVER published for a keep — a
+// retention row must not flip any bookmark.
+jest.mock('@/lib/saved-state', () => ({
+  publishSavedState: jest.fn(),
+}));
+
 import database from '@/lib/database/index';
 import { makeRecord } from '@/lib/__test-helpers__/mockDatabase';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
+import { listFactChecksForArticle } from '../fact-check-record-service';
 import {
   saveSuggestion,
   saveStandaloneArticle,
@@ -18,8 +31,13 @@ import {
   loadSavedSuggestions,
   loadSavedItems,
   deleteSavedSuggestion,
+  keepArticleForFactCheck,
+  releaseFactCheckRetention,
+  deleteOrphanedFactCheckRetention,
 } from '../saved-article-suggestion-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
+
+const mockListFactChecks = listFactChecksForArticle as jest.Mock;
 
 const db = database as any;
 const TABLE = 'saved_article_suggestions';
@@ -102,6 +120,7 @@ function makeArticle(overrides: Partial<NewsArticle> = {}): NewsArticle {
 beforeEach(() => {
   jest.clearAllMocks();
   db._setRows(TABLE, []);
+  mockListFactChecks.mockResolvedValue([]);
   jest.spyOn(Date, 'now').mockReturnValue(NOW);
 });
 
@@ -439,5 +458,301 @@ describe('date parsing on save', () => {
 
     await saveSuggestion(makeSuggestion({ createdAt: NOW as any }));
     expect(captured.createdAt).toEqual(new Date(NOW));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Fact-check retention
+// ---------------------------------------------------------------------------
+
+const { publishSavedState } = require('@/lib/saved-state');
+
+/** Hook col.create to capture the record the writer builds. */
+function captureCreate(col: any) {
+  const captured: { rec: any } = { rec: null };
+  col.create.mockImplementationOnce(async (fn: (r: any) => void) => {
+    const rec = makeRecord({ _raw: { id: undefined } });
+    fn(rec);
+    captured.rec = rec;
+    return rec;
+  });
+  return captured;
+}
+
+describe('keepArticleForFactCheck', () => {
+  it('creates an article-keyed fact_check row from a full article, without publishing saved state', async () => {
+    db._setRows(TABLE, []);
+    const col = db._collections[TABLE] ?? db.get(TABLE);
+    const captured = captureCreate(col);
+
+    await keepArticleForFactCheck({ articleId: 'art-9', article: makeArticle() });
+
+    expect(col.create).toHaveBeenCalledTimes(1);
+    expect(captured.rec._raw.id).toBe('art-9');
+    expect(captured.rec.articleId).toBe('art-9');
+    expect(captured.rec.origin).toBe('fact_check');
+    expect(captured.rec.titleEn).toBe('Standalone headline');
+    expect(captured.rec.publicationName).toBe('Die Zeit');
+    expect(captured.rec.savedAt).toBeInstanceOf(Date);
+    expect(publishSavedState).not.toHaveBeenCalled();
+  });
+
+  it('creates a fact_check row from a full suggestion, keyed by the ARTICLE id', async () => {
+    db._setRows(TABLE, []);
+    const col = db._collections[TABLE] ?? db.get(TABLE);
+    const captured = captureCreate(col);
+
+    await keepArticleForFactCheck({
+      articleId: 'art-1',
+      suggestion: makeSuggestion(),
+    });
+
+    // Keyed by article id, NOT the suggestion _id — the article-detail
+    // fallback looks rows up by article id.
+    expect(captured.rec._raw.id).toBe('art-1');
+    expect(captured.rec.articleId).toBe('art-1');
+    expect(captured.rec.origin).toBe('fact_check');
+    expect(captured.rec.titleEn).toBe('A headline');
+  });
+
+  it('creates a degraded row from server-row fields when no full shape is in hand', async () => {
+    db._setRows(TABLE, []);
+    const col = db._collections[TABLE] ?? db.get(TABLE);
+    const captured = captureCreate(col);
+
+    await keepArticleForFactCheck({
+      articleId: 'art-7',
+      title: 'Server title',
+      articleUrl: 'https://example.com/srv',
+      publicationName: 'Server Pub',
+    });
+
+    expect(captured.rec._raw.id).toBe('art-7');
+    expect(captured.rec.origin).toBe('fact_check');
+    expect(captured.rec.titleEn).toBe('Server title');
+    expect(captured.rec.titleOriginal).toBe('Server title');
+    expect(captured.rec.articleUrl).toBe('https://example.com/srv');
+    expect(captured.rec.publicationName).toBe('Server Pub');
+    expect(captured.rec.relevance).toBe(0);
+  });
+
+  it('leaves a user-saved row alone', async () => {
+    const existing = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'article' });
+    db._setRows(TABLE, [existing]);
+    const col = db._collections[TABLE] ?? db.get(TABLE);
+
+    await keepArticleForFactCheck({ articleId: 'art-9', article: makeArticle() });
+
+    expect(existing.update).not.toHaveBeenCalled();
+    expect(col.create).not.toHaveBeenCalled();
+    expect(existing.origin).toBe('article');
+  });
+
+  it('never lets a degraded input overwrite an existing snapshot', async () => {
+    const existing = makeSavedRecord({
+      id: 'art-9',
+      articleId: 'art-9',
+      origin: 'fact_check',
+      titleEn: 'Rich snapshot title',
+    });
+    db._setRows(TABLE, [existing]);
+
+    await keepArticleForFactCheck({ articleId: 'art-9', title: 'Poorer title' });
+
+    expect(existing.update).not.toHaveBeenCalled();
+    expect(existing.titleEn).toBe('Rich snapshot title');
+  });
+
+  it('refreshes an existing fact_check row from a full shape without bumping savedAt', async () => {
+    const staleSavedAt = new Date(NOW - 99999);
+    const existing = makeSavedRecord({
+      id: 'art-9',
+      articleId: 'art-9',
+      origin: 'fact_check',
+      titleEn: 'Old title',
+      savedAt: staleSavedAt,
+    });
+    db._setRows(TABLE, [existing]);
+
+    await keepArticleForFactCheck({ articleId: 'art-9', article: makeArticle() });
+
+    expect(existing.update).toHaveBeenCalledTimes(1);
+    expect(existing.titleEn).toBe('Standalone headline');
+    expect(existing.origin).toBe('fact_check');
+    expect(existing.savedAt).toBe(staleSavedAt);
+  });
+
+  it('does nothing for a blank articleId', async () => {
+    await keepArticleForFactCheck({ articleId: '  ', title: 'x' });
+    expect(database.write).not.toHaveBeenCalled();
+  });
+});
+
+describe('isSuggestionSaved with retention rows', () => {
+  it('does NOT count a fact_check retention row as saved', async () => {
+    db._setRows(TABLE, [
+      makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'fact_check' }),
+    ]);
+    expect(await isSuggestionSaved('art-9')).toBe(false);
+  });
+
+  it('still counts null-origin (pre-v38) rows as saved', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'sugg-1', origin: null })]);
+    expect(await isSuggestionSaved('sugg-1')).toBe(true);
+  });
+});
+
+describe('Saved-screen reads exclude retention rows', () => {
+  it('loadSavedItems drops fact_check rows and keeps the rest', async () => {
+    db._setRows(TABLE, [
+      makeSavedRecord({ id: 'sugg-1', origin: 'suggestion' }),
+      makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'fact_check' }),
+      makeSavedRecord({ id: 'art-5', articleId: 'art-5', origin: 'article' }),
+    ]);
+    const items = await loadSavedItems();
+    expect(items).toHaveLength(2);
+    expect(items.map((i) => i.origin)).toEqual(['suggestion', 'article']);
+  });
+
+  it('loadSavedSuggestions drops fact_check rows', async () => {
+    db._setRows(TABLE, [
+      makeSavedRecord({ id: 'sugg-1' }),
+      makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'fact_check' }),
+    ]);
+    const result = await loadSavedSuggestions();
+    expect(result.map((r) => r._id)).toEqual(['sugg-1']);
+  });
+
+  it('getSavedSuggestionByServerId still RETURNS a fact_check row (the open path depends on it)', async () => {
+    db._setRows(TABLE, [
+      makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'fact_check' }),
+    ]);
+    const result = await getSavedSuggestionByServerId('art-9');
+    expect(result).not.toBeNull();
+    expect(result!.articleId).toBe('art-9');
+  });
+});
+
+describe('deleteSavedSuggestion with live fact checks', () => {
+  it('downgrades an article-keyed row to fact_check instead of destroying it', async () => {
+    mockListFactChecks.mockResolvedValue([{ id: 'fc-1' }]);
+    const row = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'article' });
+    db._setRows(TABLE, [row]);
+
+    const result = await deleteSavedSuggestion('art-9');
+
+    expect(result).toBe(true);
+    expect(row.destroyPermanently).not.toHaveBeenCalled();
+    expect(row.origin).toBe('fact_check');
+    expect(publishSavedState).toHaveBeenCalledWith('art-9', false);
+  });
+
+  it('transfers a suggestion-keyed row to an article-keyed retention row', async () => {
+    mockListFactChecks.mockResolvedValue([{ id: 'fc-1' }]);
+    const row = makeSavedRecord({ id: 'sugg-1', articleId: 'art-1' });
+    db._setRows(TABLE, [row]);
+    const col = db._collections[TABLE] ?? db.get(TABLE);
+    const captured = captureCreate(col);
+
+    const result = await deleteSavedSuggestion('sugg-1');
+
+    expect(result).toBe(true);
+    expect(captured.rec._raw.id).toBe('art-1');
+    expect(captured.rec.articleId).toBe('art-1');
+    expect(captured.rec.origin).toBe('fact_check');
+    expect(captured.rec.titleEn).toBe('A headline');
+    expect(row.destroyPermanently).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips the transfer when an article-keyed row already exists', async () => {
+    mockListFactChecks.mockResolvedValue([{ id: 'fc-1' }]);
+    const row = makeSavedRecord({ id: 'sugg-1', articleId: 'art-1' });
+    const retention = makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'fact_check' });
+    db._setRows(TABLE, [row, retention]);
+    const col = db._collections[TABLE] ?? db.get(TABLE);
+
+    await deleteSavedSuggestion('sugg-1');
+
+    expect(col.create).not.toHaveBeenCalled();
+    expect(row.destroyPermanently).toHaveBeenCalledTimes(1);
+    expect(retention.destroyPermanently).not.toHaveBeenCalled();
+  });
+
+  it('destroys outright when no fact check references the article', async () => {
+    mockListFactChecks.mockResolvedValue([]);
+    const row = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'article' });
+    db._setRows(TABLE, [row]);
+
+    await deleteSavedSuggestion('art-9');
+
+    expect(row.destroyPermanently).toHaveBeenCalledTimes(1);
+    expect(row.origin).toBe('article');
+  });
+});
+
+describe('releaseFactCheckRetention', () => {
+  it('destroys the retention row when the last fact check is gone', async () => {
+    mockListFactChecks.mockResolvedValue([]);
+    const row = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'fact_check' });
+    db._setRows(TABLE, [row]);
+
+    expect(await releaseFactCheckRetention('art-9')).toBe(true);
+    expect(row.destroyPermanently).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the row while other claim rows still reference the article', async () => {
+    mockListFactChecks.mockResolvedValue([{ id: 'fc-2' }]);
+    const row = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'fact_check' });
+    db._setRows(TABLE, [row]);
+
+    expect(await releaseFactCheckRetention('art-9')).toBe(false);
+    expect(row.destroyPermanently).not.toHaveBeenCalled();
+  });
+
+  it('never destroys a user-saved row', async () => {
+    mockListFactChecks.mockResolvedValue([]);
+    const row = makeSavedRecord({ id: 'art-9', articleId: 'art-9', origin: 'article' });
+    db._setRows(TABLE, [row]);
+
+    expect(await releaseFactCheckRetention('art-9')).toBe(false);
+    expect(row.destroyPermanently).not.toHaveBeenCalled();
+  });
+
+  it('returns false for a blank articleId', async () => {
+    expect(await releaseFactCheckRetention('')).toBe(false);
+  });
+});
+
+describe('deleteOrphanedFactCheckRetention', () => {
+  it('destroys only the unreferenced fact_check rows', async () => {
+    const orphan = makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'fact_check' });
+    const referenced = makeSavedRecord({ id: 'art-2', articleId: 'art-2', origin: 'fact_check' });
+    // The fake query ignores predicates, so ONLY seed fact_check rows here —
+    // the production query filters on origin.
+    db._setRows(TABLE, [orphan, referenced]);
+    mockListFactChecks.mockImplementation(async (articleId: string) =>
+      articleId === 'art-2' ? [{ id: 'fc-1' }] : [],
+    );
+
+    const count = await deleteOrphanedFactCheckRetention();
+
+    expect(count).toBe(1);
+    expect(db.batch).toHaveBeenCalledTimes(1);
+    expect(orphan.prepareDestroyPermanently).toHaveBeenCalledTimes(1);
+    expect(referenced.prepareDestroyPermanently).not.toHaveBeenCalled();
+  });
+
+  it('returns 0 and writes nothing when every row is still referenced', async () => {
+    const referenced = makeSavedRecord({ id: 'art-2', articleId: 'art-2', origin: 'fact_check' });
+    db._setRows(TABLE, [referenced]);
+    mockListFactChecks.mockResolvedValue([{ id: 'fc-1' }]);
+
+    expect(await deleteOrphanedFactCheckRetention()).toBe(0);
+    expect(database.write).not.toHaveBeenCalled();
+  });
+
+  it('returns 0 on an empty table', async () => {
+    db._setRows(TABLE, []);
+    expect(await deleteOrphanedFactCheckRetention()).toBe(0);
   });
 });

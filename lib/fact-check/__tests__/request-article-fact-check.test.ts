@@ -66,7 +66,32 @@ describe('requestArticleFactCheck', () => {
         expect(requestArticleFactCheck(article)).toBe(true);
 
         expect(mockRequestFactCheck).toHaveBeenCalledTimes(1);
-        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline');
+        // No full shape supplied ⇒ no keep input; the client degrades to the
+        // server row's own fields for the retention snapshot.
+        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', undefined);
+    });
+
+    // ── Retention pass-through ─────────────────────────────────────────────
+    // A fact-checked article is kept openable like a saved one; the tick is
+    // where the screens hand over the full shape they already have.
+    it('passes the full article through as the retention keep input', () => {
+        const fullArticle = { _id: 'a1', title: 'A headline' } as never;
+        requestArticleFactCheck({ ...article, article: fullArticle });
+
+        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', {
+            articleId: 'a1',
+            article: fullArticle,
+        });
+    });
+
+    it('passes the full suggestion through as the retention keep input', () => {
+        const suggestion = { _id: 's1', articleId: 'a1' } as never;
+        requestArticleFactCheck({ ...article, suggestion });
+
+        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', {
+            articleId: 'a1',
+            suggestion,
+        });
     });
 
     // The whole point of the rewire.
@@ -131,6 +156,6 @@ describe('requestArticleFactCheck', () => {
         mockProcessingMode = 'ON_DEVICE';
 
         expect(requestArticleFactCheck(article)).toBe(true);
-        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline');
+        expect(mockRequestFactCheck).toHaveBeenCalledWith('a1', 'A headline', undefined);
     });
 });

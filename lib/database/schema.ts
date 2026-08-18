@@ -131,12 +131,14 @@ export default appSchema({
       ],
     }),
 
-    // Device-local "save for later". User-owned, long-lived state (30-day TTL,
-    // pruned by data-cleanup-task) — NOT wiped on the article_suggestions
-    // resync. Every card-renderable field is snapshotted off the source
-    // ForYouSuggestion at save time so the row renders fully even after the
-    // ephemeral feed row is gone. WMDB row `id` == the source ArticleSuggestion
-    // server `_id`. `saved_at` is indexed for the TTL range scan.
+    // Device-local "save for later". User-owned, long-lived state (no TTL;
+    // rows persist until the user deletes them, or — for 'fact_check' origin
+    // rows — until the last referencing fact check goes) — NOT wiped on the
+    // article_suggestions resync. Every card-renderable field is snapshotted
+    // off the source ForYouSuggestion at save time so the row renders fully
+    // even after the ephemeral feed row is gone. WMDB row `id` == the source
+    // ArticleSuggestion server `_id` ('fact_check' rows key on the article
+    // `_id` instead). `saved_at` is indexed for the backup row-cap ordering.
     tableSchema({
       name: 'saved_article_suggestions',
       columns: [
@@ -156,11 +158,14 @@ export default appSchema({
         { name: 'image_url', type: 'string', isOptional: true },
         { name: 'matched_topic_texts_json', type: 'string', isOptional: true },
         // Origin discriminator (schema v38): 'suggestion' (default semantics —
-        // a saved ForYouSuggestion) or 'article' (a standalone NewsArticle saved
-        // from a non-personalized surface). Null on rows saved before v38 ⇒
-        // treated as 'suggestion'. Every card-renderable column above already
-        // tolerates a standalone article snapshot, so no extra columns are
-        // needed for the 'article' origin.
+        // a saved ForYouSuggestion), 'article' (a standalone NewsArticle saved
+        // from a non-personalized surface), or 'fact_check' (a retention
+        // snapshot that keeps a fact-checked article openable after the 48h
+        // feed prune — not a save: hidden from the Saved screen and bookmark
+        // state, released when the last fact check for the article goes). Null
+        // on rows saved before v38 ⇒ treated as 'suggestion'. Every
+        // card-renderable column above already tolerates a standalone article
+        // snapshot, so no extra columns are needed for the non-default origins.
         { name: 'origin', type: 'string', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'first_pub_date', type: 'number' },
