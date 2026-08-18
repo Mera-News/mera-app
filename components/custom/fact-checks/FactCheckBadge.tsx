@@ -159,7 +159,19 @@ export const FactCheckBadge: React.FC<FactCheckBadgeProps> = ({
                 <VStack space="xs" testID={id('organisation')}>
                     <Box className="self-start rounded-full bg-gray-800 px-3 py-1">
                         {/* Verbatim, on that organisation's own scale — see
-                            the file header. */}
+                            the file header. NOT always a short word: a real
+                            prod row had Full Fact's `verdict` as a full
+                            sentence ("The video shows the aftermath of an
+                            accidental explosion in..."). `numberOfLines={1}`
+                            plus the caller's width cap (see FactCheckPanel's
+                            `max-w-[55%]` wrapper) lets RN's native ellipsis
+                            do the truncation — the full, untruncated string
+                            is always what's passed here and to every a11y
+                            label; only the on-screen glyphs are cut, never
+                            the text itself. The expanded list
+                            (FactCheckSources) has no such cap on purpose —
+                            it has room, and a reader who opened it asked for
+                            the whole sentence. */}
                         <Text size={size} className="font-semibold text-gray-200" numberOfLines={1}>
                             {copy.leadText}
                         </Text>

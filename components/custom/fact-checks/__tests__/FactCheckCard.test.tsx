@@ -329,4 +329,26 @@ describe('FactCheckCard', () => {
             expect(queryByTestId('fc-org-names-row1')).toBeNull();
         });
     });
+
+    // Real-data finding: a prod organisation `verdict` can be a full sentence
+    // (Full Fact's ClaimReview entries are prose, not a short rating). This
+    // card uses the same FactCheckBadge as the article panel, so the same
+    // one-line cap applies here too — see FactCheckBadge's file header.
+    it('caps the chip to one line for a sentence-length organisation verdict', () => {
+        const sentence = "The video shows the aftermath of an accidental explosion in Lebanon in 2020 and doesn't relate to the Netherlands.";
+        const { getByText } = render(
+            <FactCheckCard
+                item={stored({
+                    payload: {
+                        _id: 'fc1', status: 'complete', verdict: 'supported',
+                        checkedBy: [{ organisation: 'Full Fact', url: 'https://fullfact.org/x', verdict: sentence }],
+                    },
+                })}
+                onPress={jest.fn()}
+                testIDPrefix="fc"
+            />,
+        );
+        const chipText = getByText(`Full Fact: ${sentence}`);
+        expect(chipText.props.numberOfLines).toBe(1);
+    });
 });

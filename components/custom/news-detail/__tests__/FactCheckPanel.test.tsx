@@ -678,4 +678,53 @@ describe('FactCheckPanel', () => {
             expect(label).toContain('Alt News: False');
         });
     });
+
+    // ── Real-data finding: an organisation's own `verdict` string is not
+    // always a short rating like "False" — a prod row had Full Fact's own
+    // ClaimReview entry as a full sentence ("The video shows the aftermath
+    // of an accidental explosion..."). The chip must still cap to one line
+    // (native ellipsis via numberOfLines, never string-slicing) while the
+    // expanded list and every accessibility label carry the verbatim,
+    // UNTRUNCATED sentence — truncating an a11y label or the expanded detail
+    // would hide information a sighted reader gets simply by opening the
+    // card. ──────────────────────────────────────────────────────────────
+    describe('a sentence-length organisation verdict', () => {
+        const SENTENCE_VERDICT = "The video shows the aftermath of an accidental explosion in Lebanon in 2020 and doesn't relate to the Netherlands.";
+        const sentenceRow = () => storedRow({
+            payload: {
+                ...storedRow().payload,
+                checkedBy: [{ organisation: 'Full Fact', url: 'https://fullfact.org/x', verdict: SENTENCE_VERDICT }],
+            },
+        });
+
+        it('caps the chip to one line, passing the FULL sentence rather than slicing it', () => {
+            hookState({ phase: 'terminal', rows: [sentenceRow()] });
+            const { getByTestId, getByText } = renderClosed();
+            // The full string is what's rendered — RN's native ellipsis
+            // (numberOfLines + the default 'tail' ellipsizeMode) does the
+            // visual truncation, not this component cutting the string.
+            const chipText = getByText(`Full Fact: ${SENTENCE_VERDICT}`);
+            expect(chipText.props.numberOfLines).toBe(1);
+            expect(getByTestId('fact-check-0-organisation-header')).toBeTruthy();
+        });
+
+        it('shows the full sentence, unwrapped, in the expanded organisation list', () => {
+            hookState({ phase: 'terminal', rows: [sentenceRow()] });
+            const { getByText } = renderPanel();
+            // No numberOfLines here on purpose — the expanded card has room,
+            // and a reader who opened it asked for the detail, not a
+            // preview of it.
+            const detail = getByText(SENTENCE_VERDICT);
+            expect(detail.props.numberOfLines).toBeUndefined();
+        });
+
+        it('carries the full sentence, untruncated, into both accessibility labels', () => {
+            hookState({ phase: 'terminal', rows: [sentenceRow()] });
+            const { getByTestId } = renderPanel();
+            const headerLabel = getByTestId('fact-check-0-toggle').props.accessibilityLabel as string;
+            expect(headerLabel).toContain(SENTENCE_VERDICT);
+            const orgLabel = getByTestId('fact-check-0-org-0').props.accessibilityLabel as string;
+            expect(orgLabel).toContain(SENTENCE_VERDICT);
+        });
+    });
 });
