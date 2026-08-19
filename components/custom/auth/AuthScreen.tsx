@@ -610,35 +610,35 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                         {/* Compact outline pill sized to its label (support
                             is an outline button everywhere except the
                             settings menu row). py-3 keeps the 44pt target. */}
-                        <Pressable
-                            testID="auth-device-support"
-                            onPress={() => { void openSupport(); }}
-                            className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
-                            accessible
-                            accessibilityRole="button"
-                            accessibilityLabel={t('account.contactSupport')}
-                            accessibilityState={supportBusy ? { busy: true } : undefined}
-                        >
-                            {supportBusy ? (
-                                <Spinner size="small" color="#6B7280" />
-                            ) : (
-                                <HStack space="xs" className="items-center">
-                                    {/* Material support_agent, matching the
-                                        dark-ramp primary literal the language
-                                        selector uses for icon tinting. */}
-                                    <MaterialIcons name="support-agent" size={18} color="rgb(237, 167, 126)" />
-                                    <Text size="sm" className="text-primary-500 font-semibold">
-                                        {t('account.contactSupport')}
-                                    </Text>
-                                </HStack>
-                            )}
-                        </Pressable>
                     </VStack>
                 )}
             </VStack>
 
             {/* Lower band — the gap between the action and the footer. */}
             <Box style={{ flex: 1 }} />
+
+            {/* Support anchors the bottom-RIGHT, directly above the legal
+                footer — always available on this page, not just after a
+                failure. Icon-only circle (48pt = a real target); the
+                accessibility label still says where it goes. Icon tint is the
+                dark-ramp primary literal the language selector uses. */}
+            <Box accessible={false} className="items-end mb-3">
+                <Pressable
+                    testID="auth-device-support"
+                    onPress={() => { void openSupport(); }}
+                    className="w-12 h-12 rounded-full border border-primary-500 bg-transparent items-center justify-center"
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={t('account.contactSupport')}
+                    accessibilityState={supportBusy ? { busy: true } : undefined}
+                >
+                    {supportBusy ? (
+                        <Spinner size="small" color="#6B7280" />
+                    ) : (
+                        <MaterialIcons name="support-agent" size={22} color="rgb(237, 167, 126)" />
+                    )}
+                </Pressable>
+            </Box>
 
             <LegalFooter />
         </Box>
