@@ -14,7 +14,6 @@ import { deleteSetting } from '@/lib/database/services/setting-service';
 import { usePinStore } from '@/lib/stores/pin-store';
 import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
-import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { getAppVersionLabel } from '@/lib/version';
@@ -381,9 +380,11 @@ const AppPreferencesTab: React.FC = () => {
 
                 {/* Bottom action block (user call, 2026-08-19): Talk to
                     support and Report a Bug share the second-to-last row half
-                    and half — support spans it alone in dev builds, where
-                    SENTRY_ENABLED is false and showFeedback would no-op — and
-                    Logout sits centered on its own row beneath them. Rows are
+                    and half, and Logout sits centered on its own row beneath
+                    them. Report a Bug renders UNCONDITIONALLY (user call) so
+                    dev layouts match release — but in dev builds Sentry is off
+                    and showFeedback() no-ops, so the button is inert there;
+                    per CLAUDE.md, never use it while in dev. Rows are
                     deliberately NOT disabled while support opens: re-entry is
                     guarded by a ref inside useSupportAction, so a second tap
                     is a no-op without the row greying out and looking broken. */}
@@ -415,27 +416,25 @@ const AppPreferencesTab: React.FC = () => {
                             )}
                         </Pressable>
                     </GlassPanel>
-                    {SENTRY_ENABLED && (
-                        <GlassPanel
-                            radius={8}
-                            className="flex-1"
-                            fallbackClassName="border border-primary-400/50 bg-transparent"
+                    <GlassPanel
+                        radius={8}
+                        className="flex-1"
+                        fallbackClassName="border border-primary-400/50 bg-transparent"
+                    >
+                        <Pressable
+                            testID="settings-row-report-bug"
+                            className="flex-row items-center justify-center py-3 px-2"
+                            onPress={showFeedback}
+                            accessibilityRole="button"
                         >
-                            <Pressable
-                                testID="settings-row-report-bug"
-                                className="flex-row items-center justify-center py-3 px-2"
-                                onPress={showFeedback}
-                                accessibilityRole="button"
-                            >
-                                <HStack space="xs" className="items-center">
-                                    <MaterialIcons name="bug-report" size={18} color="rgb(237, 167, 126)" />
-                                    <Text className="text-base text-primary-400" numberOfLines={1}>
-                                        {t('preferences.reportBug')}
-                                    </Text>
-                                </HStack>
-                            </Pressable>
-                        </GlassPanel>
-                    )}
+                            <HStack space="xs" className="items-center">
+                                <MaterialIcons name="bug-report" size={18} color="rgb(237, 167, 126)" />
+                                <Text className="text-base text-primary-400" numberOfLines={1}>
+                                    {t('preferences.reportBug')}
+                                </Text>
+                            </HStack>
+                        </Pressable>
+                    </GlassPanel>
                 </HStack>
                 <GlassPanel
                     radius={8}

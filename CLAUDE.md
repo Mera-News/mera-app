@@ -56,6 +56,9 @@ publication-preferences,saved-suggestions,not-interested,hygiene,tutorials}`. Re
 8. Verify UI changes on a simulator yourself before declaring them done. Load `mera-app-harness`.
 9. Ask whether the server should do any client-side aggregation, filtering, or deduplication before
    you write it. Escalate at 50+ lines of aggregation logic or N sequential API calls.
+10. The settings "Report a Bug" button renders in every build but is INERT in dev (Sentry is off
+    unless `EXPO_PUBLIC_SENTRY_IN_DEV=true`, so `showFeedback()` no-ops). Never use it while in
+    dev; nothing is sent and no error is shown.
 
 ## Deeper docs
 
