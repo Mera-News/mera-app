@@ -299,10 +299,11 @@ describe('accessibility scoping (F2)', () => {
         fireEvent.press(await advanceToConsent(r));
         await r.findByText('auth.deviceSignInDenied');
 
+        // (The support control left this cluster 2026-08-19 — it lives on
+        // the welcome-back screen now, as an icon-only circle.)
         for (const [id, label] of [
             ['auth-device-retry', 'auth.tryAgain'],
             ['auth-use-email-failure', 'auth.alreadyHaveAccount'],
-            ['auth-device-support', 'account.contactSupport'],
         ] as const) {
             const node = await r.findByTestId(id);
             expect(node.props.accessibilityRole).toBe('button');
@@ -519,7 +520,7 @@ describe('device sign-in success', () => {
 });
 
 describe('device sign-in failure', () => {
-    it('denied shows the denied copy with retry and support paths', async () => {
+    it('denied shows the denied copy with retry and the email escape', async () => {
         mockSignIn.mockResolvedValue({ status: 'failed', reason: 'attestation-denied' });
         const r = render(<AuthScreen />);
 
@@ -527,7 +528,7 @@ describe('device sign-in failure', () => {
 
         await r.findByText('auth.deviceSignInDenied');
         expect(await r.findByTestId('auth-device-retry')).toBeTruthy();
-        expect(await r.findByTestId('auth-device-support')).toBeTruthy();
+        expect(await r.findByTestId('auth-use-email-failure')).toBeTruthy();
     });
 
     it('retry re-runs the WHOLE flow (a fresh signInWithDevice call)', async () => {

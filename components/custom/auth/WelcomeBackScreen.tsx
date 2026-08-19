@@ -22,13 +22,20 @@ import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
+import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { useSupportAction } from '@/lib/intercom';
 import { getSupportId } from '@/lib/support-id';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const WelcomeBackScreen: React.FC = () => {
     const { t } = useTranslation();
+    const insets = useSafeAreaInsets();
+    // Opens the Intercom Messenger, or quietly degrades to Mail
+    // (useSupportAction's contract) — no email address renders.
+    const { busy: supportBusy, openSupport } = useSupportAction();
     const [supportId, setSupportId] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,6 +143,29 @@ const WelcomeBackScreen: React.FC = () => {
                     </Pressable>
                 </VStack>
             </Box>
+
+            {/* Support anchors the bottom-right corner — this is the screen
+                where a returning user most wants a human (their trial is
+                gone), and the Support ID they would quote sits right above.
+                Icon-only circle (48pt target); the accessibility label still
+                says where it goes. Icon tint is the dark-ramp primary literal
+                the language selector uses. */}
+            <Pressable
+                testID="welcome-back-support"
+                onPress={() => { void openSupport(); }}
+                accessible
+                accessibilityRole="button"
+                accessibilityLabel={t('account.contactSupport')}
+                accessibilityState={supportBusy ? { busy: true } : undefined}
+                className="absolute w-12 h-12 rounded-full border border-primary-500 bg-transparent items-center justify-center"
+                style={{ bottom: insets.bottom + 24, right: 20 }}
+            >
+                {supportBusy ? (
+                    <Spinner size="small" color="#6B7280" />
+                ) : (
+                    <MaterialIcons name="support-agent" size={22} color="rgb(237, 167, 126)" />
+                )}
+            </Pressable>
         </Box>
     );
 };

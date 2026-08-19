@@ -24,6 +24,17 @@ jest.mock('@/components/ui/pressable', () => {
     return { Pressable: (p: any) => <Pressable {...p} /> };
 });
 jest.mock('react-i18next', () => ({ useTranslation: () => ({ t: (k: string) => k }) }));
+jest.mock('react-native-safe-area-context', () => ({
+    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+}));
+jest.mock('@/components/ui/spinner', () => {
+    const { View } = require('react-native');
+    return { Spinner: (p: any) => <View {...p} /> };
+});
+const mockOpenSupport = jest.fn();
+jest.mock('@/lib/intercom', () => ({
+    useSupportAction: () => ({ busy: false, openSupport: mockOpenSupport }),
+}));
 
 const mockRouterReplace = jest.fn();
 jest.mock('expo-router', () => ({
