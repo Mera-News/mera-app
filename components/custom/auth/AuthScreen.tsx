@@ -5,7 +5,6 @@ import LegalFooter from '@/components/custom/auth/LegalFooter';
 import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
-import PolicyPill from '@/components/custom/PolicyPill';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -521,21 +520,38 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                     </Text>
                 </VStack>
 
-                {/* Chips, side by side — the same PolicyPill the settings
-                    screens use for legal links. `space="lg"` (16pt) on
-                    purpose: PolicyPill carries a 6pt hitSlop on each side and
-                    RN resolves overlapping touch regions by z-order, so the
-                    gap must stay wider than the two slops combined (12pt) or
-                    a tap between them silently opens the LATER chip. */}
-                <HStack accessible={false} space="lg" className="items-center justify-center flex-wrap">
-                    <PolicyPill
-                        label={t('consent.termsLink')}
+                {/* Two outline buttons, half and half — the same primary
+                    outline the welcome view's secondary actions wear, so the
+                    legal links read as real destinations rather than fine
+                    print. `py-3` instead of a fixed height: several locales
+                    run long here and must wrap without clipping. Real padding,
+                    no hitSlop — overlapping slops resolve by z-order and a tap
+                    in the gap would silently open the LATER button. */}
+                <HStack accessible={false} space="md" className="items-stretch">
+                    <Pressable
+                        testID="auth-consent-terms"
+                        accessible
+                        accessibilityRole="link"
+                        accessibilityLabel={t('consent.termsLink')}
                         onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}
-                    />
-                    <PolicyPill
-                        label={t('consent.privacyLink')}
+                        className="flex-1 rounded-full border border-primary-500 bg-transparent items-center justify-center py-3 px-3"
+                    >
+                        <Text size="sm" className="text-primary-500 font-semibold text-center">
+                            {t('consent.termsLink')}
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        testID="auth-consent-privacy"
+                        accessible
+                        accessibilityRole="link"
+                        accessibilityLabel={t('consent.privacyLink')}
                         onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}
-                    />
+                        className="flex-1 rounded-full border border-primary-500 bg-transparent items-center justify-center py-3 px-3"
+                    >
+                        <Text size="sm" className="text-primary-500 font-semibold text-center">
+                            {t('consent.privacyLink')}
+                        </Text>
+                    </Pressable>
                 </HStack>
 
                 <Pressable
