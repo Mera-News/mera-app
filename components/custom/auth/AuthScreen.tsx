@@ -589,11 +589,14 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                             accessible
                             accessibilityRole="button"
                             accessibilityLabel={t('auth.tryAgain')}
-                            className="border border-primary-400 rounded-lg px-4 py-2"
+                            className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
                         >
-                            <Text size="sm" className="text-primary-400">
-                                {t('auth.tryAgain')}
-                            </Text>
+                            <HStack space="xs" className="items-center">
+                                <MaterialIcons name="refresh" size={18} color="rgb(237, 167, 126)" />
+                                <Text size="sm" className="text-primary-500 font-semibold">
+                                    {t('auth.tryAgain')}
+                                </Text>
+                            </HStack>
                         </Pressable>
                         <Pressable
                             testID="auth-use-email-failure"
