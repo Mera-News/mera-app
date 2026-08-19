@@ -601,9 +601,9 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                             accessible
                             accessibilityRole="button"
                             accessibilityLabel={t('auth.alreadyHaveAccount')}
-                            className="py-1"
+                            className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
                         >
-                            <Text size="sm" className="text-primary-400">
+                            <Text size="sm" className="text-primary-500 font-semibold text-center">
                                 {t('auth.alreadyHaveAccount')}
                             </Text>
                         </Pressable>
