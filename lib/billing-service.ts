@@ -210,6 +210,28 @@ export interface BillingRefreshResult {
  * is why the right response is a bounded "activating…" state that eventually
  * settles rather than a spinner that waits forever.
  */
+/**
+ * A confirmed purchase lands on the persona surface, wherever it was made
+ * from (user call, 2026-08-19). Fresh purchasers have no persona yet, so they
+ * go through the /logged-in gate, which routes an entitled fact-less account
+ * into the onboarding wizard (the persona is what makes the Dashboard worth
+ * landing on); accounts that already hold facts go straight to the Dashboard
+ * tab. Lazy requires + total catch: this file is imported by non-UI code and
+ * a navigation nicety must never fail or delay a purchase refresh.
+ */
+async function navigateToPersonaAfterPurchase(): Promise<void> {
+    try {
+        const { hasAnyFacts } =
+            require('@/lib/database/services/fact-service') as typeof import('@/lib/database/services/fact-service');
+        const { router } = require('expo-router') as typeof import('expo-router');
+        const hasFacts = await hasAnyFacts().catch(() => false);
+        router.replace(hasFacts ? '/logged-in/app_container/for_you' : '/logged-in');
+    } catch {
+        // Navigation unavailable (tests, headless) — the purchase already
+        // succeeded; staying put is acceptable.
+    }
+}
+
 export async function refreshUserBillingAfterPurchase(
     previousTier: string | null | undefined,
     options: RefreshBillingOptions = {},
@@ -233,6 +255,10 @@ export async function refreshUserBillingAfterPurchase(
                 // a real email for receipts and recovery. Fire-and-forget — an
                 // email nag must never delay or fail the purchase refresh.
                 void maybeRequestEmailCaptureAfterPurchase();
+                // And the landing (user call, 2026-08-19): a confirmed purchase
+                // sends the user to their persona surface no matter which
+                // screen the purchase started from. Also fire-and-forget.
+                void navigateToPersonaAfterPurchase();
                 return { billing, confirmed: true };
             }
         }
