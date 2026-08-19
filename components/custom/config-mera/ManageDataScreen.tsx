@@ -388,6 +388,25 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                         reasons that have nothing to do with backup. */}
                     <BackupSection />
 
+                    {/* Observability lives here since 2026-08-19 (user call):
+                        a diagnostics surface belongs with the data tools, not
+                        among everyday preferences. Neutral row, deliberately
+                        outside the red destructive list below. */}
+                    <Pressable
+                        testID="manage-data-observability"
+                        onPress={() => router.push('/logged-in/preferences/observability' as any)}
+                        accessibilityRole="button"
+                        className="flex-row items-center justify-between py-3 px-4 mb-4 rounded-lg border border-gray-700 bg-transparent"
+                    >
+                        <Box className="flex-row items-center" style={{ gap: 12 }}>
+                            <MaterialIcons name="monitor-heart" size={22} color="#9ca3af" />
+                            <Text className="text-base text-white">
+                                {t('observability.title')}
+                            </Text>
+                        </Box>
+                        <MaterialIcons name="chevron-right" size={20} color="#999999" />
+                    </Pressable>
+
                     <VStack space="md">
                         {options.map(renderOption)}
                     </VStack>

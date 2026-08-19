@@ -294,14 +294,11 @@ const AppPreferencesTab: React.FC = () => {
             icon: 'storage',
             onPress: () => routerHook.push('/logged-in/preferences/manage-data' as any),
         },
-        {
-            id: 'observability',
-            title: t('observability.title'),
-            icon: 'monitor-heart',
-            onPress: () => routerHook.push('/logged-in/preferences/observability' as any),
-        },
         ...subscriptionOptions,
     ];
+    // Observability moved into the Manage data screen (user call, 2026-08-19):
+    // it is a diagnostics surface, and the settings list stays for everyday
+    // preferences.
     // Support, Report a Bug and Logout left this array (2026-08-19, user
     // call): they render as a dedicated bottom block after the row list —
     // support + bug half-and-half on one row, Logout centered beneath.
