@@ -1,0 +1,21 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+group = 'news.mera.deviceattest'
+version = '1.0.0'
+
+android {
+  namespace "news.mera.deviceattest"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+}
+
+dependencies {
+  // Play Integrity is the unavoidable platform SDK for integrity verdicts —
+  // declared here, in the module that owns it, not in the app.
+  implementation 'com.google.android.play:integrity:1.4.0'
+}

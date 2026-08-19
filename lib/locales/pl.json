@@ -56,7 +56,21 @@
       "switchCancel": "Anuluj"
     },
     "contentPolicy": "Zasady dotyczące treści",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "Nie udało się dokończyć przełączania kont",
+    "identitySwitchFailedBody": "Na tym urządzeniu wciąż są dane innego konta. Mera musi je usunąć, zanim przejdziesz dalej, a tym razem usuwanie się nie powiodło.",
+    "identitySwitchFailedWhy": "Nic nie przepada. Te dane należą do innego konta i pozostają na jego koncie Mera. Twoje konto zacznie od nowa, gdy to urządzenie będzie czyste.",
+    "identitySwitchFailedExhausted": "To nadal nie zadziałało. Wyloguj się i zacznij od nowa, aby wyczyścić to urządzenie.",
+    "identitySwitchRetry": "Spróbuj ponownie",
+    "identitySwitchSignOut": "Wyloguj się i zacznij od nowa",
+    "deviceSignInWorking": "Logowanie",
+    "deviceSignInFailed": "Coś poszło nie tak. Spróbuj ponownie lub zaloguj się e-mailem.",
+    "deviceSignInDenied": "Nie udało się zweryfikować tego urządzenia. Spróbuj ponownie lub zaloguj się e-mailem.",
+    "deviceSignInUnavailable": "Logowanie jest teraz niedostępne. Spróbuj ponownie za kilka minut lub zaloguj się e-mailem.",
+    "tryAgain": "Spróbuj ponownie",
+    "learnAboutMera": "Poznaj aplikację Mera",
+    "startReading": "Zacznij czytać",
+    "alreadyHaveAccount": "Masz już konto? Zaloguj się"
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",
@@ -1002,7 +1016,10 @@
     "followChatSeed": "Chcę śledzić historię.",
     "followChatIntro": "Powiedz mi, co chcesz śledzić, a to ustawię.",
     "emptyHintFollow": "Dotknij przycisk śledzenia i powiedz Mera, co chcesz śledzić.",
-    "emptyCtaFollow": "Śledź historię"
+    "emptyCtaFollow": "Śledź historię",
+    "removeMemberAction": "Nie należy do tej historii",
+    "removeMemberConfirmTitle": "Usunąć ten artykuł?",
+    "removeMemberConfirmBody": "Ten artykuł zostanie usunięty z osi czasu historii. Mera nadal śledzi samą historię."
   },
   "whatsNew": {
     "title": "Co nowego",
@@ -1522,7 +1539,7 @@
     "citationsHeading": "Konsultowane źródła",
     "noCitations": "To sprawdzenie nie powołało się na żadne konkretne strony. To nie oznacza niepowodzenia — potraktuj streszczenie z większą ostrożnością bez źródeł do poparcia.",
     "sourceFallback": "Źródło {{index}}",
-    "disclaimer": "Mera nie weryfikuje wiadomości sama. To jest podsumowanie AI z wyszukiwania internetowego opublikowanych weryfikacji faktów — może być nieprawidłowe lub niekompletne, więc przeczytaj źródła przed poleganiem na tym.",
+    "disclaimer": "To jest własne rozumienie Mery wyników wyszukiwania internetowego, napisane przez AI. Może to być błędne lub niekompletne, więc przeczytaj źródła przed poleganiem na tym.",
     "verdict": {
       "supported": {
         "label": "Zgodne ze źródłami",
@@ -1556,7 +1573,7 @@
       "unverifiable": "Nie udało się potwierdzić",
       "unknown": "Niejasne"
     },
-    "checkedByHeading": "Organizacje weryfikujące fakty, które zajęły się tą sprawą",
+    "checkedByHeading": "Weryfikacje faktów znalezione przez wyszukiwanie",
     "dashboard": {
       "deleteA11y": "Usuń tę weryfikację faktów",
       "empty": "Nie sprawdziłeś jeszcze żadnych twierdzeń. Dotknij haczyka pod artykułem, aby zapytać Merę — wynik pojawi się tu, gdy będzie gotowy.",
@@ -1569,11 +1586,16 @@
       "articleGone": "Artykuł wygasł, dlatego nie można go otworzyć. Znaleziona weryfikacja faktów jest przechowywana tutaj.",
       "couldNotCheck": "Nie udało się sprawdzić, kto o tym pisał. Dotknij, aby zobaczyć, co znalazło wyszukiwanie.",
       "moreOrganisations_one": "+{{count}} więcej",
-      "moreOrganisations_other": "+{{count}} więcej"
+      "moreOrganisations_other": "+{{count}} więcej",
+      "noneFound": "Nie znaleziono opublikowanych weryfikacji faktów",
+      "factChecksFound_one": "Znaleziono {{count}} weryfikację faktów. Dotknij, aby przeczytać",
+      "factChecksFound_few": "Znaleziono {{count}} weryfikacje faktów. Dotknij, aby przeczytać",
+      "factChecksFound_many": "Znaleziono {{count}} weryfikacji faktów. Dotknij, aby przeczytać",
+      "factChecksFound_other": "Znaleziono {{count}} weryfikacji faktów. Dotknij, aby przeczytać"
     },
     "explainer": "Mera nie weryfikuje wiadomości sama. Wyszukuje to, co ustalone organizacje weryfikujące fakty już opublikowały na temat tej historii.",
-    "noCheckedBy": "Żadna z przeszukanych organizacji weryfikujących fakty nie opublikowała na temat tego artykułu. To nie oznacza, że artykuł jest nieprawidłowy — większość artykułów nigdy nie jest weryfikowana.",
-    "organisationA11y": "Otwórz sprawdzenie faktów {{organisation}} w przeglądarce aplikacji",
+    "noCheckedBy": "Nie znaleźliśmy opublikowanej weryfikacji faktów na temat tego artykułu. To nie oznacza, że artykuł jest błędny. Większość artykułów nigdy nie jest weryfikowana.",
+    "organisationA11y": "Otwórz weryfikację faktów {{organisation}}, ocenioną jako {{rating}}, w przeglądarce aplikacji",
     "queued": "To sprawdzenie trwa w tle. Nie musisz tu czekać — możesz opuścić artykuł.",
     "queuedHint": "Wynik pojawi się w sekcji Sprawdzenia faktów na Desce, gdy będzie gotowy.",
     "citationA11y": "Otwórz źródło {{source}} w przeglądarce aplikacji",
@@ -1600,7 +1622,11 @@
     "checkedByMultipleNote": "To niezależne oceny, każda w skali danej organizacji — nie zawsze są ze sobą zgodne.",
     "ownReadingHeading": "Ocena własna Mera — drugorzędna wobec werdyktu powyżej",
     "collapseA11y": "Ukryj to sprawdzenie faktów",
-    "expandA11y": "Pokaż to sprawdzenie faktów"
+    "expandA11y": "Pokaż to sprawdzenie faktów",
+    "checkedByRelatedNote": "Pochodzą z wyszukiwania słów kluczowych i mogą dotyczyć innego artykułu. Otwórz jeden, aby sprawdzić.",
+    "searchFoundHeading": "Co znalazło nasze wyszukiwanie",
+    "searchFoundEmpty": "Wyników wyszukiwania było za mało, aby Mera mogła je tutaj streścić.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Uprioritetnij to źródło",
@@ -2288,6 +2314,24 @@
     }
   },
   "support": {
-    "opening": "Otwieranie wsparcia"
+    "opening": "Otwieranie wsparcia",
+    "supportId": "Identyfikator pomocy: {{id}}",
+    "copySupportId": "Kopiuj identyfikator pomocy",
+    "copied": "Skopiowano",
+    "saveHint": "Zapisz ten identyfikator. Pomoc może dzięki niemu znaleźć Twoje konto."
+  },
+  "emailCapture": {
+    "title": "Dodaj swój e-mail",
+    "subtitle": "Otrzymuj potwierdzenia e-mailem i odzyskaj konto po zmianie telefonu.",
+    "continue": "Dalej",
+    "notNow": "Nie teraz",
+    "confirm": "Potwierdź",
+    "added": "Dodano e-mail",
+    "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}."
+  },
+  "welcomeBack": {
+    "title": "Witaj ponownie",
+    "body": "To urządzenie wykorzystało już bezpłatny okres próbny. Aby dalej czytać ze wszystkimi funkcjami Mera, wybierz plan po przejściu dalej.",
+    "continue": "Dalej"
   }
 }

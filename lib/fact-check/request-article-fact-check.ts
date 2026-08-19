@@ -49,15 +49,26 @@ import { hapticLight } from '../haptics';
 import { getAiAccess } from '../stores/subscription-store';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { requestFactCheck } from './fact-check-graphql-client';
+import type { FactCheckKeepInput } from '../database/services/saved-article-suggestion-service';
+import type { ForYouSuggestion } from '../stores/for-you-store';
+import type { NewsArticle } from '../generated/graphql-types';
 
 /** The article the tick was tapped on. `title` is a fallback label for the
  *  local row while the server's own snapshot is still unknown — the server
  *  sends back its own `articleTitle` and that wins. `suggestionId` is no longer
  *  read (it existed to address the chat's suggestion row) and is kept off the
- *  interface rather than accepted and ignored. */
+ *  interface rather than accepted and ignored.
+ *
+ *  `article` / `suggestion` are OPTIONAL full shapes used only for retention
+ *  snapshotting (a fact-checked article is kept openable like a saved one);
+ *  the request itself still needs only `articleId` + `title`, and a caller
+ *  without a full shape in hand gets a degraded snapshot built from the
+ *  server's own row. */
 export interface FactCheckArticle {
     readonly articleId: string;
     readonly title: string;
+    readonly article?: NewsArticle;
+    readonly suggestion?: ForYouSuggestion;
 }
 
 /**
@@ -80,9 +91,16 @@ export function requestArticleFactCheck(article: FactCheckArticle): boolean {
     if (getAiAccess() === 'locked') return false;
 
     hapticLight();
+    // Retention input built HERE, behind the gates above: a gated no-op must
+    // not create a retention row.
+    const keep: FactCheckKeepInput | undefined = article.article
+        ? { articleId: article.articleId, article: article.article }
+        : article.suggestion
+            ? { articleId: article.articleId, suggestion: article.suggestion }
+            : undefined;
     // Not awaited: the tap's job is to lodge the ask. Everything after it is
     // the panel's, driven by the local row this writes and by `useFactCheck`'s
     // live subscription to it.
-    void requestFactCheck(article.articleId, article.title);
+    void requestFactCheck(article.articleId, article.title, keep);
     return true;
 }

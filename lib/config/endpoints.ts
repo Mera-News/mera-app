@@ -105,6 +105,23 @@ export const INTERCOM_IOS_KEY: string =
 export const INTERCOM_ANDROID_KEY: string =
   process.env.EXPO_PUBLIC_INTERCOM_ANDROID_KEY || '';
 
+// Google OAuth client ids, for the Drive backup provider. Optional (not
+// requireEnv) for the same reason as the two groups above: a build without them
+// must still launch, and Drive simply reports itself unavailable.
+//
+// Both are PUBLIC identifiers, inlined into the bundle and shipped in the
+// binary by design. The web client's SECRET is never used by the mobile SDK and
+// must not appear anywhere in this app.
+//
+// The web id is needed on BOTH platforms despite its name — it is the audience
+// the ID token is minted for, not a website's id. There is deliberately no
+// ANDROID id: that client is matched implicitly by package name plus SHA-1
+// signing certificate and its id is never passed to the SDK.
+export const GOOGLE_WEB_CLIENT_ID: string =
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || '';
+export const GOOGLE_IOS_CLIENT_ID: string =
+  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || '';
+
 // Dev-only override for the mandatory-update gate. The gate skips in dev builds
 // by default so the team isn't locked out while the server's min-version floor
 // is set high; set EXPO_PUBLIC_FORCE_UPDATE_IN_DEV=true to exercise it locally.

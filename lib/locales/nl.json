@@ -56,7 +56,21 @@
       "switchCancel": "Annuleren"
     },
     "contentPolicy": "Inhoudsbeleid",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "We konden het wisselen van account niet afronden",
+    "identitySwitchFailedBody": "Er staan nog gegevens van een ander account op dit apparaat. Mera moet die wissen voordat je verder kunt, en het wissen is deze keer niet gelukt.",
+    "identitySwitchFailedWhy": "Er gaat niets verloren. Die gegevens horen bij het andere account en blijven daar bewaard. Jouw account begint opnieuw zodra dit apparaat leeg is.",
+    "identitySwitchFailedExhausted": "Het is nog steeds niet gelukt. Log uit en begin opnieuw om dit apparaat leeg te maken.",
+    "identitySwitchRetry": "Opnieuw proberen",
+    "identitySwitchSignOut": "Uitloggen en opnieuw beginnen",
+    "deviceSignInWorking": "Je wordt aangemeld",
+    "deviceSignInFailed": "Er is iets misgegaan. Probeer het opnieuw of log in met e-mail.",
+    "deviceSignInDenied": "We konden dit apparaat niet verifiëren. Probeer het opnieuw of log in met e-mail.",
+    "deviceSignInUnavailable": "Inloggen is nu even niet mogelijk. Probeer het over een paar minuten opnieuw of log in met e-mail.",
+    "tryAgain": "Opnieuw proberen",
+    "learnAboutMera": "Maak kennis met Mera",
+    "startReading": "Beginnen met lezen",
+    "alreadyHaveAccount": "Heb je al een account? Inloggen"
   },
   "account": {
     "pendingTitle": "Account wacht op goedkeuring",
@@ -984,7 +998,10 @@
     "followChatSeed": "Ik wil een verhaal volgen.",
     "followChatIntro": "Vertel me wat je wilt volgen en ik stel het in.",
     "emptyHintFollow": "Tik op de volg-knop en vertel Mera wat je wilt bijhouden.",
-    "emptyCtaFollow": "Een verhaal volgen"
+    "emptyCtaFollow": "Een verhaal volgen",
+    "removeMemberAction": "Hoort niet bij dit verhaal",
+    "removeMemberConfirmTitle": "Dit artikel verwijderen?",
+    "removeMemberConfirmBody": "Dit artikel wordt uit de tijdlijn van het verhaal verwijderd. Mera blijft het verhaal zelf volgen."
   },
   "whatsNew": {
     "title": "Wat is er nieuw",
@@ -1492,7 +1509,7 @@
     "citationsHeading": "Geraadpleegde bronnen",
     "noCitations": "Deze controle heeft geen specifieke bronnen aangehaald. Dat betekent niet dat de zoeking is mislukt — wees voorzichtig met de samenvatting zonder bronnen om naar te verwijzen.",
     "sourceFallback": "Bron {{index}}",
-    "disclaimer": "Mera controleert het nieuws niet zelf. Dit is een AI-samenvatting van een websearch naar gepubliceerde feitchecks — het kan onjuist of onvolledig zijn, dus lees de bronnen voordat je er op vertrouwt.",
+    "disclaimer": "Dit is Mera's eigen kijk op een websearch, geschreven door AI. Het kan onjuist of onvolledig zijn, dus lees de bronnen voordat je het vertrouwt.",
     "verdict": {
       "supported": {
         "label": "Consistent met bronnen",
@@ -1526,7 +1543,7 @@
       "unverifiable": "Kon niet bevestigen",
       "unknown": "Onduidelijk"
     },
-    "checkedByHeading": "Feitcheckers die dit hebben onderzocht",
+    "checkedByHeading": "Feitchecks gevonden in de zoeking",
     "dashboard": {
       "deleteA11y": "Deze feitcheck verwijderen",
       "empty": "Je hebt nog geen claims gecontroleerd. Tik het vinkje onder een artikel om Mera erover te vragen — het resultaat verschijnt hier zodra het klaar is.",
@@ -1539,11 +1556,14 @@
       "articleGone": "Het artikel is verlopen en kan niet worden geopend. De feitencontrole die we hebben gevonden, blijft hier behouden.",
       "couldNotCheck": "We konden niet nagaan wie hierover iets heeft gepubliceerd. Tik om te zien wat de zoekopdracht wel vond.",
       "moreOrganisations_one": "+{{count}} meer",
-      "moreOrganisations_other": "+{{count}} meer"
+      "moreOrganisations_other": "+{{count}} meer",
+      "noneFound": "Geen gepubliceerde feitchecks gevonden",
+      "factChecksFound_one": "{{count}} feitencheck gevonden. Tik om te lezen",
+      "factChecksFound_other": "{{count}} feitchecks gevonden. Tik om te lezen"
     },
     "explainer": "Mera controleert het nieuws niet zelf. Het zoekt naar wat gevestigde feitcheckorganisaties al over dit artikel hebben gepubliceerd.",
-    "noCheckedBy": "Geen van de feitcheckorganisaties die we hebben doorzocht, heeft iets over dit artikel gepubliceerd. Dat maakt het artikel niet onjuist — de meeste artikelen worden nooit feitgecheckt.",
-    "organisationA11y": "Open de feitencheck van {{organisation}} in de in-app browser",
+    "noCheckedBy": "We hebben geen gepubliceerde feitencheck over dit artikel gevonden. Dat maakt het artikel niet onwaar. De meeste artikelen worden nooit feitgecheckt.",
+    "organisationA11y": "Open de feitencheck van {{organisation}}, beoordeeld {{rating}}, in de in-app browser",
     "queued": "Deze controle wordt op de achtergrond uitgevoerd. Je hoeft hier niet op te wachten — je kunt het artikel gerust verlaten.",
     "queuedHint": "Het resultaat verschijnt onder Feitenchecks op je Dashboard zodra het klaar is.",
     "citationA11y": "Open bron {{source}} in de in-app browser",
@@ -1570,7 +1590,11 @@
     "checkedByMultipleNote": "Dit zijn onafhankelijke beoordelingen, elk op de eigen schaal van die organisatie — ze zijn het niet altijd met elkaar eens.",
     "ownReadingHeading": "Mera's eigen kijk — ondergeschikt aan het oordeel hierboven",
     "collapseA11y": "Deze factcheck verbergen",
-    "expandA11y": "Deze factcheck tonen"
+    "expandA11y": "Deze factcheck tonen",
+    "checkedByRelatedNote": "Deze zijn afkomstig van een trefwoord zoeking en kunnen over een ander artikel gaan. Open er een om te controleren.",
+    "searchFoundHeading": "Wat onze zoeking gevonden heeft",
+    "searchFoundEmpty": "Er was niet genoeg uit de zoeking voor Mera om dit samen te vatten.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Deze bron prioriteren",
@@ -2258,6 +2282,24 @@
     }
   },
   "support": {
-    "opening": "Ondersteuning wordt geopend"
+    "opening": "Ondersteuning wordt geopend",
+    "supportId": "Support-ID: {{id}}",
+    "copySupportId": "Support-ID kopiëren",
+    "copied": "Gekopieerd",
+    "saveHint": "Bewaar deze ID. Support kan je account ermee vinden."
+  },
+  "emailCapture": {
+    "title": "Voeg je e-mailadres toe",
+    "subtitle": "Ontvang bonnen per e-mail en herstel je account als je van telefoon wisselt.",
+    "continue": "Doorgaan",
+    "notNow": "Niet nu",
+    "confirm": "Bevestigen",
+    "added": "E-mailadres toegevoegd",
+    "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}."
+  },
+  "welcomeBack": {
+    "title": "Welkom terug",
+    "body": "Dit apparaat heeft zijn gratis proefperiode al gebruikt. Kies na het doorgaan een abonnement om met alle functies van Mera te blijven lezen.",
+    "continue": "Doorgaan"
   }
 }

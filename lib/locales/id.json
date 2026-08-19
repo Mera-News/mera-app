@@ -56,7 +56,21 @@
       "switchCancel": "Batal"
     },
     "contentPolicy": "Kebijakan Konten",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "Kami tidak dapat menyelesaikan pergantian akun",
+    "identitySwitchFailedBody": "Data akun lain masih ada di perangkat ini. Mera harus menghapusnya sebelum Anda dapat melanjutkan, dan penghapusan kali ini tidak berhasil.",
+    "identitySwitchFailedWhy": "Tidak ada yang hilang. Data itu milik akun lain dan tetap ada di akun Mera mereka. Akun Anda mulai dari awal setelah perangkat ini bersih.",
+    "identitySwitchFailedExhausted": "Masih belum berhasil. Keluar dan mulai lagi untuk membersihkan perangkat ini.",
+    "identitySwitchRetry": "Coba lagi",
+    "identitySwitchSignOut": "Keluar dan mulai lagi",
+    "deviceSignInWorking": "Sedang masuk",
+    "deviceSignInFailed": "Terjadi kesalahan. Coba lagi atau masuk dengan email.",
+    "deviceSignInDenied": "Kami tidak dapat memverifikasi perangkat ini. Coba lagi atau masuk dengan email.",
+    "deviceSignInUnavailable": "Login tidak tersedia saat ini. Coba lagi dalam beberapa menit atau masuk dengan email.",
+    "tryAgain": "Coba lagi",
+    "learnAboutMera": "Pelajari Mera",
+    "startReading": "Mulai membaca",
+    "alreadyHaveAccount": "Sudah punya akun? Masuk"
   },
   "account": {
     "pendingTitle": "Akun Menunggu Persetujuan",
@@ -984,7 +998,10 @@
     "followChatSeed": "Saya ingin mengikuti cerita.",
     "followChatIntro": "Beri tahu saya apa yang ingin Anda ikuti dan saya akan mengaturnya.",
     "emptyHintFollow": "Ketuk tombol ikuti dan beri tahu Mera apa yang ingin Anda ikuti.",
-    "emptyCtaFollow": "Ikuti cerita"
+    "emptyCtaFollow": "Ikuti cerita",
+    "removeMemberAction": "Bukan bagian dari cerita ini",
+    "removeMemberConfirmTitle": "Hapus artikel ini?",
+    "removeMemberConfirmBody": "Artikel ini dihapus dari linimasa cerita. Mera tetap mengikuti ceritanya."
   },
   "whatsNew": {
     "title": "Yang baru",
@@ -1492,7 +1509,7 @@
     "citationsHeading": "Sumber yang dikonsultasi",
     "noCitations": "Pemeriksaan ini tidak mengutip halaman tertentu. Itu bukan pencarian yang gagal — perlakukan ringkasan dengan sedikit lebih hati-hati tanpa sumber untuk ditunjuk.",
     "sourceFallback": "Sumber {{index}}",
-    "disclaimer": "Mera tidak memeriksa fakta berita itu sendiri. Ini adalah ringkasan AI dari pencarian web untuk pemeriksaan fakta yang dipublikasikan — ini bisa salah atau tidak lengkap, jadi baca sumbernya sebelum bergantung padanya.",
+    "disclaimer": "Ini adalah bacaan Mera sendiri dari pencarian web, ditulis oleh AI. Dapat salah atau tidak lengkap, jadi baca sumbernya sebelum mengandalkannya.",
     "verdict": {
       "supported": {
         "label": "Konsisten dengan sumber",
@@ -1526,7 +1543,7 @@
       "unverifiable": "Tidak dapat dikonfirmasi",
       "unknown": "Tidak jelas"
     },
-    "checkedByHeading": "Pemeriksa fakta yang meliput ini",
+    "checkedByHeading": "Pemeriksaan fakta yang ditemukan pencarian",
     "dashboard": {
       "deleteA11y": "Hapus pemeriksaan fakta ini",
       "empty": "Anda belum memeriksa klaim apa pun. Ketuk centang di bawah cerita untuk bertanya kepada Mera tentangnya — hasil muncul di sini setelah siap.",
@@ -1539,11 +1556,14 @@
       "articleGone": "Artikel telah kadaluarsa, sehingga tidak dapat dibuka. Pemeriksaan fakta yang kami temukan disimpan di sini.",
       "couldNotCheck": "Kami tidak bisa memeriksa siapa yang sudah menerbitkan soal ini. Ketuk untuk melihat hasil pencariannya.",
       "moreOrganisations_one": "+{{count}} lagi",
-      "moreOrganisations_other": "+{{count}} lagi"
+      "moreOrganisations_other": "+{{count}} lagi",
+      "noneFound": "Tidak ada pemeriksaan fakta yang dipublikasikan ditemukan",
+      "factChecksFound_one": "{{count}} pemeriksaan fakta ditemukan. Ketuk untuk membaca",
+      "factChecksFound_other": "{{count}} pemeriksaan fakta ditemukan. Ketuk untuk membaca"
     },
     "explainer": "Mera tidak memeriksa fakta berita itu sendiri. Mera mencari apa yang telah dipublikasikan organisasi pemeriksa fakta yang sudah mapan tentang cerita ini.",
-    "noCheckedBy": "Tidak ada organisasi pemeriksa fakta yang kami cari yang telah mempublikasikan cerita ini. Itu tidak membuat cerita salah — sebagian besar cerita tidak pernah diperiksa faktanya.",
-    "organisationA11y": "Buka pemeriksaan fakta {{organisation}} di browser dalam aplikasi",
+    "noCheckedBy": "Kami tidak menemukan pemeriksaan fakta yang dipublikasikan tentang cerita ini. Ini tidak berarti cerita tersebut salah. Sebagian besar cerita tidak pernah diperiksa.",
+    "organisationA11y": "Buka pemeriksaan fakta {{organisation}}, dinilai {{rating}}, di browser dalam aplikasi",
     "queued": "Pemeriksaan ini tetap berjalan di latar belakang. Anda tidak perlu menunggu di sini — tidak masalah meninggalkan artikel.",
     "queuedHint": "Hasil muncul di bawah Pemeriksaan fakta di Dashboard Anda setelah siap.",
     "citationA11y": "Buka sumber {{source}} di browser dalam aplikasi",
@@ -1570,7 +1590,11 @@
     "checkedByMultipleNote": "Ini adalah penilaian independen, masing-masing berdasarkan skala organisasi itu sendiri — sehingga tidak selalu sejalan satu sama lain.",
     "ownReadingHeading": "Pembacaan Mera sendiri — bersifat sekunder terhadap putusan di atas",
     "collapseA11y": "Sembunyikan cek fakta ini",
-    "expandA11y": "Tampilkan cek fakta ini"
+    "expandA11y": "Tampilkan cek fakta ini",
+    "checkedByRelatedNote": "Ini berasal dari pencarian kata kunci dan mungkin tentang cerita yang berbeda. Buka salah satu untuk memeriksa.",
+    "searchFoundHeading": "Apa yang ditemukan pencarian kami",
+    "searchFoundEmpty": "Pencarian tidak memberikan cukup informasi bagi Mera untuk dirangkum di sini.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioritaskan sumber ini",
@@ -2258,6 +2282,24 @@
     }
   },
   "support": {
-    "opening": "Membuka dukungan"
+    "opening": "Membuka dukungan",
+    "supportId": "ID dukungan: {{id}}",
+    "copySupportId": "Salin ID dukungan",
+    "copied": "Disalin",
+    "saveHint": "Simpan ID ini. Dukungan dapat menemukan akun Anda dengan ID ini."
+  },
+  "emailCapture": {
+    "title": "Tambahkan email Anda",
+    "subtitle": "Dapatkan tanda terima lewat email dan pulihkan akun Anda jika berganti ponsel.",
+    "continue": "Lanjutkan",
+    "notNow": "Nanti saja",
+    "confirm": "Konfirmasi",
+    "added": "Email ditambahkan",
+    "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}."
+  },
+  "welcomeBack": {
+    "title": "Selamat datang kembali",
+    "body": "Perangkat ini sudah menggunakan uji coba gratisnya. Untuk terus membaca dengan semua fitur Mera, pilih paket setelah melanjutkan.",
+    "continue": "Lanjutkan"
   }
 }

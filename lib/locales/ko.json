@@ -56,7 +56,21 @@
       "switchCancel": "취소"
     },
     "contentPolicy": "콘텐츠 정책",
-    "faq": "자주 묻는 질문"
+    "faq": "자주 묻는 질문",
+    "identitySwitchFailedTitle": "계정 전환을 완료할 수 없습니다",
+    "identitySwitchFailedBody": "이 기기에 아직 다른 계정의 데이터가 있습니다. 계속하려면 Mera가 이를 삭제해야 하는데 이번에는 삭제하지 못했습니다.",
+    "identitySwitchFailedWhy": "잃는 것은 없습니다. 해당 데이터는 다른 계정의 것이며 그 계정에 그대로 남습니다. 이 기기가 정리되면 내 계정은 새로 시작됩니다.",
+    "identitySwitchFailedExhausted": "여전히 해결되지 않았습니다. 로그아웃한 다음 처음부터 다시 시작하여 이 기기를 정리하세요.",
+    "identitySwitchRetry": "다시 시도",
+    "identitySwitchSignOut": "로그아웃하고 다시 시작",
+    "deviceSignInWorking": "로그인하는 중",
+    "deviceSignInFailed": "문제가 발생했습니다. 다시 시도하거나 이메일로 로그인하세요.",
+    "deviceSignInDenied": "이 기기를 확인할 수 없습니다. 다시 시도하거나 이메일로 로그인하세요.",
+    "deviceSignInUnavailable": "지금은 로그인할 수 없습니다. 몇 분 후에 다시 시도하거나 이메일로 로그인하세요.",
+    "tryAgain": "다시 시도",
+    "learnAboutMera": "Mera 알아보기",
+    "startReading": "읽기 시작",
+    "alreadyHaveAccount": "이미 계정이 있나요? 로그인"
   },
   "account": {
     "pendingTitle": "계정 승인 대기 중",
@@ -984,7 +998,10 @@
     "followChatSeed": "스토리를 팔로우하고 싶습니다.",
     "followChatIntro": "팔로우하고 싶은 것을 알려주면 설정하겠습니다.",
     "emptyHintFollow": "팔로우 버튼을 탭하고 Mera에 계속 지켜보고 싶은 것을 알려주세요.",
-    "emptyCtaFollow": "스토리 팔로우"
+    "emptyCtaFollow": "스토리 팔로우",
+    "removeMemberAction": "이 스토리에 속하지 않음",
+    "removeMemberConfirmTitle": "이 기사를 삭제할까요?",
+    "removeMemberConfirmBody": "이 기사는 스토리 타임라인에서 삭제됩니다. Mera는 스토리 자체를 계속 팔로우합니다."
   },
   "whatsNew": {
     "title": "새로운 기능",
@@ -1492,7 +1509,7 @@
     "citationsHeading": "검토한 출처",
     "noCitations": "이 확인에서 특정 페이지를 인용하지 않았습니다. 검색 실패가 아닙니다 — 출처가 없으므로 요약을 좀 더 주의 깊게 다루세요.",
     "sourceFallback": "출처 {{index}}",
-    "disclaimer": "메라는 뉴스를 직접 팩트 체크하지 않습니다. 이것은 발표된 팩트 체크의 웹 검색에 대한 AI 요약이므로 잘못되거나 불완전할 수 있습니다. 신뢰하기 전에 출처를 읽으세요.",
+    "disclaimer": "메라가 웹 검색에서 얻은 자체 해석이며, AI가 작성했습니다. 틀리거나 불완전할 수 있으므로 신뢰하기 전에 출처를 읽으세요.",
     "verdict": {
       "supported": {
         "label": "출처와 일관성 있음",
@@ -1526,7 +1543,7 @@
       "unverifiable": "확인 불가",
       "unknown": "불명확"
     },
-    "checkedByHeading": "이 사안을 다룬 팩트 체커",
+    "checkedByHeading": "검색에서 발견된 팩트 체크",
     "dashboard": {
       "deleteA11y": "이 팩트 체크 삭제",
       "empty": "아직 확인한 주장이 없습니다. 기사 아래의 체크 아이콘을 탭하여 Mera에 물어보세요 — 결과가 준비되면 여기에 표시됩니다.",
@@ -1539,11 +1556,14 @@
       "articleGone": "이 기사는 만료되어 열 수 없습니다. 찾은 팩트체크는 여기에 유지됩니다.",
       "couldNotCheck": "누가 이에 대해 발표했는지 확인하지 못했습니다. 검색에서 찾은 내용을 보려면 탭하세요.",
       "moreOrganisations_one": "외 {{count}}곳",
-      "moreOrganisations_other": "외 {{count}}곳"
+      "moreOrganisations_other": "외 {{count}}곳",
+      "noneFound": "발표된 팩트 체크를 찾을 수 없음",
+      "factChecksFound_one": "{{count}}개의 팩트 체크를 찾았습니다. 탭하여 읽기",
+      "factChecksFound_other": "{{count}}개의 팩트 체크를 찾았습니다. 탭하여 읽기"
     },
     "explainer": "메라는 뉴스를 직접 팩트 체크하지 않습니다. 확인된 팩트 체킹 기관이 이 기사에 대해 발표한 내용을 검색합니다.",
-    "noCheckedBy": "검색한 팩트 체킹 기관 중 이 기사에 대해 발표한 곳이 없습니다. 이것이 기사가 틀렸다는 뜻은 아닙니다. 대부분의 기사는 팩트 체크되지 않습니다.",
-    "organisationA11y": "{{organisation}}의 팩트 체크를 인앱 브라우저에서 열기",
+    "noCheckedBy": "이 기사에 대해 발표한 팩트 체킹 기관을 찾을 수 없습니다. 이것이 기사가 틀렸다는 뜻은 아닙니다. 대부분의 기사는 팩트 체크되지 않습니다.",
+    "organisationA11y": "인앱 브라우저에서 {{organisation}}의 팩트 체크(평가: {{rating}})를 열기",
     "queued": "이 확인은 백그라운드에서 계속 실행됩니다. 여기서 기다릴 필요가 없습니다 — 기사를 떠나도 괜찮습니다.",
     "queuedHint": "결과가 준비되면 대시보드의 팩트 체크 섹션에 나타납니다.",
     "citationA11y": "출처 {{source}}를 인앱 브라우저에서 열기",
@@ -1570,7 +1590,11 @@
     "checkedByMultipleNote": "이는 각 기관이 독자적인 기준으로 독립적으로 평가한 결과이며, 서로 항상 일치하지는 않습니다.",
     "ownReadingHeading": "메라의 자체 해석 — 위 판정에 대해 부차적인 견해",
     "collapseA11y": "이 팩트 체크 숨기기",
-    "expandA11y": "이 팩트 체크 보기"
+    "expandA11y": "이 팩트 체크 보기",
+    "checkedByRelatedNote": "이들은 키워드 검색에서 나온 것이며 다른 기사에 관한 것일 수 있습니다. 확인하려면 하나를 열어보세요.",
+    "searchFoundHeading": "검색에서 발견된 내용",
+    "searchFoundEmpty": "검색에서 메라가 요약할 수 있는 충분한 내용이 없었습니다.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "이 출처 우선순위 지정",
@@ -2258,6 +2282,24 @@
     }
   },
   "support": {
-    "opening": "고객 지원을 여는 중"
+    "opening": "고객 지원을 여는 중",
+    "supportId": "지원 ID: {{id}}",
+    "copySupportId": "지원 ID 복사",
+    "copied": "복사됨",
+    "saveHint": "이 ID를 저장해 두세요. 지원팀이 이 ID로 계정을 찾을 수 있습니다."
+  },
+  "emailCapture": {
+    "title": "이메일 추가",
+    "subtitle": "이메일로 영수증을 받고 휴대전화를 바꿔도 계정을 복구할 수 있습니다.",
+    "continue": "계속",
+    "notNow": "나중에",
+    "confirm": "확인",
+    "added": "이메일이 추가되었습니다",
+    "addedDetail": "영수증과 계정 복구에 {{email}}을(를) 사용합니다."
+  },
+  "welcomeBack": {
+    "title": "다시 오신 것을 환영합니다",
+    "body": "이 기기는 무료 체험을 이미 사용했습니다. Mera의 모든 기능으로 계속 읽으려면 계속한 후 요금제를 선택하세요.",
+    "continue": "계속"
   }
 }

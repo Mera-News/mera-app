@@ -15,9 +15,11 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
 // server poll). Properties pinned here because nothing else enforces them:
 //   • absent renders nothing at all;
 //   • a processing row below the progress delay renders nothing (no flash);
-//   • the hedging disclaimer and the citation list render with EVERY verdict;
+//   • the hedging disclaimer and the citation list render with EVERY row;
 //   • an insecure citation is shown but never opened;
-//   • several terminal rows STACK — one card per claim.
+//   • several terminal rows STACK — one card per claim;
+//   • EXTERNALS ARE THE AUTHORITY — the chip and body never present a verdict
+//     of Mera's own, in any state (fc-relevance wave).
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 jest.mock('react-i18next', () => ({
@@ -86,8 +88,9 @@ function hookState(overrides: Record<string, unknown> = {}) {
 
 // The panel now starts CLOSED: the header carries the finding as a badge and
 // the body is one tap away. Most tests here are about the BODY, so this helper
-// opens every card it finds. Tests that are about the collapse itself use
-// `renderClosed` below and drive the toggle themselves.
+// opens every card it finds. Tests that are about the collapse itself, or
+// about the header chip alone, use `renderClosed` below and drive the toggle
+// themselves.
 const renderClosed = () => render(<FactCheckPanel articleId="a1" />);
 
 const renderPanel = () => {
@@ -207,31 +210,26 @@ describe('FactCheckPanel', () => {
         expect(getByText('factCheck.queuedHint')).toBeTruthy();
     });
 
-    it('renders the terminal verdict for a cached result, no action button anywhere', () => {
+    it('renders a terminal result for a cached check, no action button anywhere', () => {
         hookState({ phase: 'terminal', rows: [storedRow()] });
-        const { getByTestId, queryByTestId, getByText } = renderPanel();
+        const { getByTestId, queryByTestId } = renderPanel();
         expect(getByTestId('fact-check-panel')).toBeTruthy();
         expect(queryByTestId('spinner')).toBeNull();
-        expect(getByTestId('fact-check-0-verdict-header')).toBeTruthy();
-        expect(getByText('factCheck.verdict.supported.label')).toBeTruthy();
+        // Default fixture has an empty, searched `checkedBy` — the chip says
+        // so plainly. See the "when checkedBy is populated" describe block
+        // below for the organisation-led branch.
+        expect(getByTestId('fact-check-0-none-found-header')).toBeTruthy();
         // The retired full-width action button is gone for good — there is
         // exactly one way in now, the action-row tick.
         expect(queryByTestId('fact-check-action')).toBeNull();
     });
 
-    it('always shows the hedging disclaimer and the citations — including for "supported"', () => {
+    it('always shows the hedging disclaimer and the citations', () => {
         hookState({ phase: 'terminal', rows: [storedRow()] });
         const { getByText, getByTestId } = renderPanel();
         expect(getByText('factCheck.disclaimer')).toBeTruthy();
         expect(getByText('factCheck.citationsHeading')).toBeTruthy();
         expect(getByTestId('fact-check-0-citation-0')).toBeTruthy();
-    });
-
-    it('reads an unknown verdict as the hedged generic copy, never the raw token', () => {
-        hookState({ phase: 'terminal', rows: [storedRow({ verdict: 'MOSTLY_TRUE' })] });
-        const { getByText, queryByText } = renderPanel();
-        expect(getByText('factCheck.verdict.unknown.label')).toBeTruthy();
-        expect(queryByText('MOSTLY_TRUE')).toBeNull();
     });
 
     it('renders the per-claim breakdown', () => {
@@ -311,6 +309,23 @@ describe('FactCheckPanel', () => {
         expect(queryByText('factCheck.assessment.unknown')).toBeNull();
     });
 
+    it('includes the organisation rating in its link accessibility label', () => {
+        hookState({
+            phase: 'terminal',
+            rows: [storedRow({
+                payload: {
+                    ...storedRow().payload,
+                    checkedBy: [{ organisation: 'Full Fact', url: 'https://fullfact.org/a', verdict: 'disputed' }],
+                },
+            })],
+        });
+        const { getByTestId } = renderPanel();
+        const label = getByTestId('fact-check-0-org-0').props.accessibilityLabel as string;
+        expect(label).toContain('factCheck.organisationA11y');
+        expect(label).toContain('Full Fact');
+        expect(label).toContain('factCheck.assessment.disputed');
+    });
+
     it('says so plainly when no organisation covered the story', () => {
         hookState({
             phase: 'terminal',
@@ -336,7 +351,9 @@ describe('FactCheckPanel', () => {
     // unverifiable, and every array empty, when the ClaimReview lookup and the
     // web search both ran but turned up nothing usable — no model is even
     // called. This must render as a real, hedged answer, never a blank or
-    // near-blank card.
+    // near-blank card. Mera's own section falls back to `searchFoundEmpty`
+    // rather than a verdict-bucket sentence — see the file header on why
+    // `describeVerdict` is no longer this component's concern at all.
     it('renders a real answer — not a blank card — for complete/unverifiable with every array empty', () => {
         hookState({
             phase: 'terminal',
@@ -356,9 +373,9 @@ describe('FactCheckPanel', () => {
         });
         const { getByTestId, getByText } = renderPanel();
         expect(getByTestId('fact-check-panel')).toBeTruthy();
-        expect(getByTestId('fact-check-0-verdict-header')).toBeTruthy();
-        expect(getByText('factCheck.verdict.unverifiable.label')).toBeTruthy();
-        expect(getByText('factCheck.verdict.unverifiable.detail')).toBeTruthy();
+        expect(getByTestId('fact-check-0-none-found-header')).toBeTruthy();
+        expect(getByText('factCheck.searchFoundHeading')).toBeTruthy();
+        expect(getByText('factCheck.searchFoundEmpty')).toBeTruthy();
         expect(getByText('factCheck.noCheckedBy')).toBeTruthy();
         expect(getByText('factCheck.noCitations')).toBeTruthy();
         expect(getByText('factCheck.disclaimer')).toBeTruthy();
@@ -389,6 +406,13 @@ describe('FactCheckPanel', () => {
         expect(queryByText('factCheck.checkedByUnavailable')).toBeNull();
     });
 
+    // `unavailable` now OUTRANKS `none-published` in the CHIP, which looks
+    // like a revert of the earlier tier-1/tier-2 correction and is not — see
+    // `describeExternalChecks`'s own comment. That correction moved
+    // `unavailable` below Mera's own verdict because a tier-1 outage must not
+    // suppress a tier-2 answer we actually held. There is no tier-2 answer on
+    // this chip any more (fc-relevance wave), so nothing is being suppressed:
+    // the only remaining question is whether the organisation lookup ran.
     it('NEVER claims nobody published when the lookup was unavailable — the fabricated-all-clear this feature exists to prevent', () => {
         hookState({
             phase: 'terminal',
@@ -397,16 +421,15 @@ describe('FactCheckPanel', () => {
             })],
         });
         const { getByText, queryByText, getByTestId, queryByTestId } = renderPanel();
-        // `checkedByStatus` is about TIER 1 only. The tier 2 verdict we DO
-        // have still shows in the header badge — suppressing it would throw
-        // away a real finding — while the attribution gap is told in the body.
-        expect(queryByTestId('fact-check-0-unavailable-header')).toBeNull();
+        expect(getByTestId('fact-check-0-unavailable-header')).toBeTruthy();
+        expect(queryByTestId('fact-check-0-none-found-header')).toBeNull();
         expect(getByTestId('fact-check-0-checked-by-unavailable')).toBeTruthy();
         expect(getByText('factCheck.checkedByUnavailable')).toBeTruthy();
         expect(queryByText('factCheck.noCheckedBy')).toBeNull();
-        // The narrative verdict and its sources still render — an unavailable
-        // Tier 1 lookup must not suppress the Tier 2 answer we DO have.
-        expect(getByTestId('fact-check-0-verdict-header')).toBeTruthy();
+        // Mera's OWN evidence section — the search-found summary and
+        // citations — still renders in full. An unavailable Tier 1 lookup
+        // must not suppress it.
+        expect(getByText('factCheck.searchFoundHeading')).toBeTruthy();
         expect(getByTestId('fact-check-0-citation-0')).toBeTruthy();
     });
 
@@ -427,14 +450,15 @@ describe('FactCheckPanel', () => {
         expect(queryByText('factCheck.noCheckedBy')).toBeNull();
     });
 
-    // ── PIVOT P8h — checkedBy leads, our own verdict never contradicts it ───
-    // A real screenshot caught a green "Consistent with sources" chip sitting
-    // above "No fact-checking organisation we searched has published on this
-    // story". The server now clamps that at write time, but the SAME
-    // contradiction can still arrive one hop later: `verdict: 'unverifiable'`
-    // WITH a populated `checkedBy` (the re-check path — see
-    // `describeVerdictPresentation`'s own comment). These tests cover the
-    // render layer's half of that fix.
+    // ── fc-relevance wave — EXTERNALS ARE THE AUTHORITY, and Mera's own
+    // verdict never styles or words the chip or the body, in ANY state. This
+    // supersedes PIVOT P8h in the opposite direction from an earlier plan for
+    // this wave (own verdict always leads): that still failed on an
+    // off-topic external outranking a TRUE story, just with the roles
+    // reversed — a real screenshot caught exactly the mirror-image defect
+    // (see the file header). Removing Mera's verdict from the chip and body
+    // entirely, rather than re-ranking it against externals, is what these
+    // tests pin. ─────────────────────────────────────────────────────────────
     describe('when checkedBy is populated', () => {
         const withOrg = (verdict: string, extra: Record<string, unknown> = {}) => storedRow({
             verdict,
@@ -447,50 +471,49 @@ describe('FactCheckPanel', () => {
         });
 
         // ── THE MUST-FAIL TEST ───────────────────────────────────────────────
-        // Sabotaged (see report), this must go RED if 'unverifiable' next to a
-        // named organisation is ever allowed to render as though nothing is
-        // known — i.e. if the suppression below is removed or bypassed.
-        it('NEVER shows "unverifiable" alongside a named organisation — the chip is suppressed, not just relabelled', () => {
+        // Sabotaged (see report), this must go RED if Mera's own verdict is
+        // ever allowed to own the chip or lead the body again, in any state.
+        it('the organisation leads everywhere and Mera never renders a verdict of its own — even when its own reading is unverifiable', () => {
             hookState({ phase: 'terminal', rows: [withOrg('unverifiable')] });
-            const { queryByTestId, queryByText, getByText } = renderPanel();
+            const { getByTestId, queryByTestId, queryByText, getByText } = renderPanel();
 
-            // The organisation's own ruling is present and is the answer.
-            expect(getByText('Alt News')).toBeTruthy();
-            expect(getByText('False')).toBeTruthy();
+            expect(getByTestId('fact-check-0-organisation-header')).toBeTruthy();
+            expect(getByText('Alt News: False')).toBeTruthy();
 
-            // Our own verdict — in EITHER its leading OR its demoted form —
-            // must not appear at all once it is 'unverifiable' here.
+            // No verdict label, chip, or "secondary" reading anywhere on the
+            // card, for any verdict value — these testIDs and copy keys must
+            // never exist on this component again.
             expect(queryByTestId('fact-check-0-verdict-header')).toBeNull();
             expect(queryByTestId('fact-check-0-verdict-secondary')).toBeNull();
+            expect(queryByTestId('fact-check-0-none-found-header')).toBeNull();
             expect(queryByText('factCheck.verdict.unverifiable.label')).toBeNull();
             expect(queryByText('factCheck.verdict.unverifiable.detail')).toBeNull();
+            expect(queryByText('factCheck.ownReadingHeading')).toBeNull();
         });
 
-        it('leads with the organisation, not our own chip, for a non-unverifiable verdict too — demoted, never equal weight', () => {
+        it('renders identically for a well-evidenced verdict too — the chip and body are verdict-independent', () => {
             hookState({ phase: 'terminal', rows: [withOrg('supported')] });
-            const { getByTestId, queryByTestId, getByText } = renderPanel();
+            const { getByTestId, queryByTestId, getByText, queryByText } = renderPanel();
 
-            // The demoted form exists (informational), the leading (chip)
-            // form does not — a coloured pill next to a named ruling is the
-            // contradiction this demotion removes.
+            expect(getByTestId('fact-check-0-organisation-header')).toBeTruthy();
+            expect(getByText('Alt News: False')).toBeTruthy();
             expect(queryByTestId('fact-check-0-verdict-header')).toBeNull();
-            expect(getByTestId('fact-check-0-verdict-secondary')).toBeTruthy();
-            expect(getByText('factCheck.ownReadingHeading')).toBeTruthy();
-            expect(getByText('Alt News')).toBeTruthy();
+            expect(queryByTestId('fact-check-0-verdict-secondary')).toBeNull();
+            expect(queryByText('factCheck.verdict.supported.label')).toBeNull();
         });
 
-        it('renders the organisation list BEFORE our own reading in document order', () => {
+        it('renders the organisation list BEFORE Mera\'s own evidence in document order', () => {
             hookState({ phase: 'terminal', rows: [withOrg('supported')] });
             const { toJSON } = renderPanel();
             const tree = JSON.stringify(toJSON());
             const orgIndex = tree.indexOf('Alt News');
-            const ownReadingIndex = tree.indexOf('factCheck.ownReadingHeading');
+            const ownReadingIndex = tree.indexOf('factCheck.searchFoundHeading');
             expect(orgIndex).toBeGreaterThan(-1);
             expect(ownReadingIndex).toBeGreaterThan(-1);
             expect(orgIndex).toBeLessThan(ownReadingIndex);
         });
 
-        it('still shows the leading chip (unchanged) when checkedBy is empty, even for the same unverifiable verdict', () => {
+        it('still renders Mera\'s own evidence section, unconditionally, when checkedBy is empty', () => {
             hookState({
                 phase: 'terminal',
                 rows: [storedRow({
@@ -498,9 +521,12 @@ describe('FactCheckPanel', () => {
                     payload: { ...storedRow().payload, verdict: 'unverifiable', checkedBy: [] },
                 })],
             });
-            const { getByTestId, queryByTestId } = renderPanel();
-            expect(getByTestId('fact-check-0-verdict-header')).toBeTruthy();
-            expect(queryByTestId('fact-check-0-own-reading')).toBeNull();
+            const { getByTestId } = renderPanel();
+            expect(getByTestId('fact-check-0-none-found-header')).toBeTruthy();
+            // Own-reading is now an unconditional section, not gated on
+            // `hasCheckedBy` any more — it renders every time the card is
+            // open, whether or not any organisation was found.
+            expect(getByTestId('fact-check-0-own-reading')).toBeTruthy();
         });
 
         it('warns that ratings may disagree once two or more organisations are listed', () => {
@@ -526,6 +552,30 @@ describe('FactCheckPanel', () => {
             const { queryByTestId } = renderPanel();
             expect(queryByTestId('fact-check-0-multiple-organisations-note')).toBeNull();
         });
+
+        it('adds a colourless count line under the chip when more than one organisation is gated as relevant', () => {
+            hookState({
+                phase: 'terminal',
+                rows: [storedRow({
+                    payload: {
+                        ...storedRow().payload,
+                        checkedBy: [
+                            { organisation: 'India Today', url: 'https://x', verdict: 'False' },
+                            { organisation: 'AFP Fact Check', url: 'https://y', verdict: 'Misleading' },
+                        ],
+                    },
+                })],
+            });
+            const { getByTestId, getByText } = renderClosed();
+            expect(getByTestId('fact-check-0-organisation-header')).toBeTruthy();
+            expect(getByText('India Today: False')).toBeTruthy();
+            // The TOTAL count, not "count - 1 more" the way the retired
+            // `moreOrganisations` key worked — "found" describes the whole
+            // search result set, and the chip showing one of them doesn't
+            // change how many were found.
+            expect(getByTestId('fact-check-0-count-header')).toBeTruthy();
+            expect(getByText('factCheck.dashboard.factChecksFound::{"count":2}')).toBeTruthy();
+        });
     });
 
     it('renders the blocked terminal state instead of a verdict', () => {
@@ -533,6 +583,8 @@ describe('FactCheckPanel', () => {
         const { getByText, queryByTestId } = renderPanel();
         expect(getByText('factCheck.blocked')).toBeTruthy();
         expect(queryByTestId('fact-check-0-verdict-header')).toBeNull();
+        expect(queryByTestId('fact-check-0-none-found-header')).toBeNull();
+        expect(queryByTestId('fact-check-0-organisation-header')).toBeNull();
     });
 
     // Several checks per article now stack — post-v52 an article can carry one
@@ -548,16 +600,16 @@ describe('FactCheckPanel', () => {
         const { getByTestId, getByText } = renderPanel();
         expect(getByTestId('fact-check-0-result')).toBeTruthy();
         expect(getByTestId('fact-check-1-result')).toBeTruthy();
-        expect(getByText('factCheck.verdict.supported.label')).toBeTruthy();
-        expect(getByText('factCheck.verdict.disputed.label')).toBeTruthy();
+        expect(getByText('Claim one')).toBeTruthy();
+        expect(getByText('Claim two')).toBeTruthy();
     });
 
     // ── The r14-shaped bug this pivot must not reintroduce ──────────────────
     // A poll that gives up must render something DIFFERENT from both "nobody
     // asked" (absent → null) and "checked, nothing to show" (a terminal row
-    // with an empty checkedBy still renders a full verdict card). This test
-    // FAILS if 'stalled' is ever treated the same as 'absent': absent renders
-    // `null` from `toJSON()`, so asserting a non-null tree here is exactly the
+    // with an empty checkedBy still renders a full card). This test FAILS if
+    // 'stalled' is ever treated the same as 'absent': absent renders `null`
+    // from `toJSON()`, so asserting a non-null tree here is exactly the
     // assertion that distinguishes "gave up" from "no result".
     it('renders a distinguishable "still checking" state when the poll gives up — never identical to absent/no-result', () => {
         hookState({ phase: 'stalled', showProgress: false, rows: [storedRow({ status: 'pending', payload: null })] });
@@ -569,8 +621,9 @@ describe('FactCheckPanel', () => {
         // Not the working block's copy — that promises an imminent answer,
         // which is no longer honest once the poll has actually given up.
         expect(queryByTestId('fact-check-working')).toBeNull();
-        // Not a fabricated terminal verdict either.
-        expect(queryByTestId('fact-check-0-verdict-header')).toBeNull();
+        // Not a fabricated terminal result either — the row is `pending`, so
+        // it never reaches `terminalRows` and no per-row chip exists at all.
+        expect(queryByTestId('fact-check-0-none-found-header')).toBeNull();
     });
 
     it('shows the working indicator ABOVE an already-terminal row when a second claim is mid-check', () => {
@@ -585,5 +638,93 @@ describe('FactCheckPanel', () => {
         const { getByTestId } = renderPanel();
         expect(getByTestId('fact-check-working')).toBeTruthy();
         expect(getByTestId('fact-check-0-result')).toBeTruthy();
+    });
+
+    // ── The header accessibility label — new this wave. An explicit
+    // accessibilityLabel on a Pressable swallows every descendant Text's own
+    // announcement, so without composing one a screen reader heard only
+    // "Show this fact check" and never the title or the chip's finding. ────
+    describe('the header accessibility label', () => {
+        it('composes title, status and action into one label', () => {
+            hookState({ phase: 'terminal', rows: [storedRow({ claim: 'A specific claim.' })] });
+            const { getByTestId } = renderClosed();
+            const label = getByTestId('fact-check-0-toggle').props.accessibilityLabel as string;
+            expect(label).toContain('factCheck.headerA11y');
+            expect(label).toContain('A specific claim.');
+            expect(label).toContain('factCheck.dashboard.noneFound');
+            expect(label).toContain('factCheck.expandA11y');
+        });
+
+        it('reflects the collapse action once the card is open', () => {
+            hookState({ phase: 'terminal', rows: [storedRow()] });
+            const { getByTestId } = renderClosed();
+            fireEvent.press(getByTestId('fact-check-0-toggle'));
+            const label = getByTestId('fact-check-0-toggle').props.accessibilityLabel as string;
+            expect(label).toContain('factCheck.collapseA11y');
+        });
+
+        it('carries the lead organisation into the label when one was found', () => {
+            hookState({
+                phase: 'terminal',
+                rows: [storedRow({
+                    payload: {
+                        ...storedRow().payload,
+                        checkedBy: [{ organisation: 'Alt News', url: 'https://altnews.in/x', verdict: 'False' }],
+                    },
+                })],
+            });
+            const { getByTestId } = renderClosed();
+            const label = getByTestId('fact-check-0-toggle').props.accessibilityLabel as string;
+            expect(label).toContain('Alt News: False');
+        });
+    });
+
+    // ── Real-data finding: an organisation's own `verdict` string is not
+    // always a short rating like "False" — a prod row had Full Fact's own
+    // ClaimReview entry as a full sentence ("The video shows the aftermath
+    // of an accidental explosion..."). The chip must still cap to one line
+    // (native ellipsis via numberOfLines, never string-slicing) while the
+    // expanded list and every accessibility label carry the verbatim,
+    // UNTRUNCATED sentence — truncating an a11y label or the expanded detail
+    // would hide information a sighted reader gets simply by opening the
+    // card. ──────────────────────────────────────────────────────────────
+    describe('a sentence-length organisation verdict', () => {
+        const SENTENCE_VERDICT = "The video shows the aftermath of an accidental explosion in Lebanon in 2020 and doesn't relate to the Netherlands.";
+        const sentenceRow = () => storedRow({
+            payload: {
+                ...storedRow().payload,
+                checkedBy: [{ organisation: 'Full Fact', url: 'https://fullfact.org/x', verdict: SENTENCE_VERDICT }],
+            },
+        });
+
+        it('caps the chip to one line, passing the FULL sentence rather than slicing it', () => {
+            hookState({ phase: 'terminal', rows: [sentenceRow()] });
+            const { getByTestId, getByText } = renderClosed();
+            // The full string is what's rendered — RN's native ellipsis
+            // (numberOfLines + the default 'tail' ellipsizeMode) does the
+            // visual truncation, not this component cutting the string.
+            const chipText = getByText(`Full Fact: ${SENTENCE_VERDICT}`);
+            expect(chipText.props.numberOfLines).toBe(1);
+            expect(getByTestId('fact-check-0-organisation-header')).toBeTruthy();
+        });
+
+        it('shows the full sentence, unwrapped, in the expanded organisation list', () => {
+            hookState({ phase: 'terminal', rows: [sentenceRow()] });
+            const { getByText } = renderPanel();
+            // No numberOfLines here on purpose — the expanded card has room,
+            // and a reader who opened it asked for the detail, not a
+            // preview of it.
+            const detail = getByText(SENTENCE_VERDICT);
+            expect(detail.props.numberOfLines).toBeUndefined();
+        });
+
+        it('carries the full sentence, untruncated, into both accessibility labels', () => {
+            hookState({ phase: 'terminal', rows: [sentenceRow()] });
+            const { getByTestId } = renderPanel();
+            const headerLabel = getByTestId('fact-check-0-toggle').props.accessibilityLabel as string;
+            expect(headerLabel).toContain(SENTENCE_VERDICT);
+            const orgLabel = getByTestId('fact-check-0-org-0').props.accessibilityLabel as string;
+            expect(orgLabel).toContain(SENTENCE_VERDICT);
+        });
     });
 });

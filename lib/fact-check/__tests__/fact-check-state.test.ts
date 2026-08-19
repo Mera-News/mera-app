@@ -7,9 +7,9 @@
 import {
     describeAssessment,
     describeCheckedBy,
+    describeExternalChecks,
     describeOrganisationVerdict,
     describeVerdict,
-    describeVerdictPresentation,
     FACT_CHECK_SEED_MESSAGE_KEY,
     isTerminalStatus,
     normalizeVerdict,
@@ -250,52 +250,53 @@ describe('timing constants', () => {
     });
 });
 
-// describeVerdictPresentation — pivot P8h. The server can now legitimately
-// write `verdict: 'unverifiable'` alongside a POPULATED `checkedBy` (the
-// re-check path: nothing found day 0, clamped; a fact-checker publishes day
-// 2, checkedBy fills in, the verdict is deliberately not re-opened). A real
-// screenshot caught the sibling bug — a confident verdict chip sitting next
-// to "no organisation has published" — and this is the same contradiction
-// shape one hop later: "couldn't confirm" next to a named organisation's own
-// ruling reads as us not knowing something we plainly do.
-describe('describeVerdictPresentation', () => {
-    it('leads with our own verdict when nobody has published — the normal ~96% case, unchanged', () => {
-        expect(describeVerdictPresentation('supported', 0)).toBe('lead');
-        expect(describeVerdictPresentation('unverifiable', 0)).toBe('lead');
-        expect(describeVerdictPresentation(null, 0)).toBe('lead');
-    });
-
-    // ── THE MUST-FAIL CASE ──────────────────────────────────────────────────
-    // A row that is `unverifiable` WITH a populated checkedBy must never
-    // present as though nothing is known — "suppressed" is the only correct
-    // answer, because "couldn't confirm" is factually wrong once an
-    // organisation HAS ruled, not merely unhelpful.
-    it('SUPPRESSES our own verdict when it is unverifiable and an organisation has ruled', () => {
-        expect(describeVerdictPresentation('unverifiable', 1)).toBe('suppressed');
-        expect(describeVerdictPresentation('UNVERIFIABLE', 3)).toBe('suppressed');
-        expect(describeVerdictPresentation('  unverifiable  ', 1)).toBe('suppressed');
-    });
-
-    it('demotes (never hides) a non-unverifiable verdict once an organisation has ruled — informational, not competing', () => {
-        expect(describeVerdictPresentation('supported', 1)).toBe('secondary');
-        expect(describeVerdictPresentation('disputed', 2)).toBe('secondary');
-        expect(describeVerdictPresentation('mixed', 1)).toBe('secondary');
-        expect(describeVerdictPresentation('unsupported', 1)).toBe('secondary');
-    });
-
-    it('never returns "lead" once checkedBy is populated, whatever the verdict — two verdicts at equal weight is the contradiction this function exists to prevent', () => {
-        const verdicts = ['supported', 'disputed', 'unsupported', 'mixed', 'unverifiable', 'some-unrecognised-token', null, undefined];
-        for (const v of verdicts) {
-            expect(describeVerdictPresentation(v, 1)).not.toBe('lead');
+// describeExternalChecks — the externals-only chip. Established fact checkers
+// are the authority on this surface; Mera states no verdict of its own beside
+// them, so `verdict` is not an input to this function at all. The observed bug
+// this replaces: a true article whose every claim our own check rated supported
+// rendered as "India Today: False +7 more", because one unrelated ClaimReview
+// entry was enough to take over the chip AND demote our own reading.
+describe('describeExternalChecks', () => {
+    it('reports pending for every non-terminal status, whatever else is present', () => {
+        for (const status of ['pending', 'running', 'failed', '', null, undefined]) {
+            expect(describeExternalChecks(status, 3, 'searched')).toBe('pending');
         }
     });
 
-    it('treats an unrecognised verdict token as non-unverifiable (secondary, not suppressed) once checkedBy is populated', () => {
-        // normalizeVerdict buckets anything undocumented as 'unknown', which
-        // is NOT 'unverifiable' — an unrecognised token must not silently
-        // gain the suppression behaviour reserved for the one documented
-        // zero-evidence bucket.
-        expect(describeVerdictPresentation('mostly-true-ish', 1)).toBe('secondary');
+    it('reports blocked for a terminal row that found no evidence at all', () => {
+        expect(describeExternalChecks('blocked', 0, 'searched')).toBe('blocked');
+        expect(describeExternalChecks('  BLOCKED ', 0, undefined)).toBe('blocked');
+    });
+
+    it('leads with the organisations once the server-gated list is non-empty', () => {
+        expect(describeExternalChecks('complete', 1, 'searched')).toBe('published');
+        expect(describeExternalChecks('complete', 8, 'searched')).toBe('published');
+    });
+
+    // A populated list is a real, attributed answer; the lookup plainly ran to
+    // produce it, so a stale 'unavailable' must not talk us out of showing it.
+    it('prefers the organisations over an unavailable tier-1 status', () => {
+        expect(describeExternalChecks('complete', 2, 'unavailable')).toBe('published');
+    });
+
+    // ── THE MUST-FAIL CASE ──────────────────────────────────────────────────
+    // "We could not look" and "we looked and nobody has published" are
+    // byte-identical in `checkedBy`. Collapsing them renders a fabricated
+    // all-clear on an outage, which is the single thing `checkedByStatus`
+    // exists to prevent.
+    it('never reports none-published when the lookup did not run', () => {
+        expect(describeExternalChecks('complete', 0, 'unavailable')).toBe('unavailable');
+        expect(describeExternalChecks('complete', 0, 'unavailable')).not.toBe('none-published');
+    });
+
+    it('reports none-published when tier 1 searched and found nobody — the ~96% case, a real answer', () => {
+        expect(describeExternalChecks('complete', 0, 'searched')).toBe('none-published');
+    });
+
+    // A row stored before `checkedByStatus` existed carries no status at all,
+    // and 'searched' is the only meaning an empty checkedBy ever had then.
+    it('treats an absent checkedByStatus as searched, never as unavailable', () => {
+        expect(describeExternalChecks('complete', 0, undefined)).toBe('none-published');
     });
 });
 

@@ -54,6 +54,22 @@ jest.mock('@/lib/database/services/setting-service', () => ({
     deleteSetting: (k: string) => mockDeleteSetting(k),
 }));
 
+// expo-file-system, for the staged-backup step. `exists` is a getter on the
+// real Directory, so it is one here too.
+const mockDirDelete = jest.fn((name: string) => { calls.push(`rmdir:${name}`); });
+let mockDirExists = true;
+jest.mock('expo-file-system', () => ({
+    Paths: { document: 'doc://', cache: 'cache://' },
+    // No parameter properties: jest's out-of-scope check reads `private root`
+    // as a variable reference and refuses the whole factory.
+    Directory: class {
+        name: string;
+        constructor(_root: string, name: string) { this.name = name; }
+        get exists() { return mockDirExists; }
+        delete() { mockDirDelete(this.name); }
+    },
+}));
+
 const mockRouterReplace = jest.fn((_target: unknown) => { calls.push('router.replace'); });
 jest.mock('expo-router', () => ({
     router: { canDismiss: () => false, replace: (t: unknown) => mockRouterReplace(t) },
@@ -84,6 +100,13 @@ describe('wipeAllLocalUserData — the complete list', () => {
         // The regression that motivated this module: nothing cleared these.
         expect(mockDeleteItemAsync).toHaveBeenCalledWith('async_pipeline_privkey');
         expect(mockDeleteItemAsync).toHaveBeenCalledWith('async_inference_pending_job_privkey');
+        // S10 INVERSION, deliberate: device sign-in credentials SURVIVE every
+        // sign-out flavor so login resumes the same account (the reported
+        // logout-loses-the-account bug). Only account DELETION and refusal
+        // recovery sever them, via clearDeviceAuthCredentials().
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_appattest_key_id');
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_device_attest_device_id');
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_device_ref');
 
         expect(mockAsyncRemove).toHaveBeenCalledWith('mera.cycle.capabilityToken');
         expect(mockLogoutRevenueCat).toHaveBeenCalled();
@@ -112,6 +135,39 @@ describe('wipeAllLocalUserData — the complete list', () => {
         mockLogoutRevenueCat.mockRejectedValueOnce(new Error('rc offline'));
         await wipeAllLocalUserData();
         expect(mockClearAllStores).toHaveBeenCalled();
+    });
+
+    // A backup blob is the user's whole persona in one file. Before this step
+    // existed the wipe touched the filesystem not at all, so a staged blob
+    // outlived a logout and waited on disk for whoever signed in next.
+    it('deletes the staged backup blob and the exporter scratch directory', async () => {
+        await wipeAllLocalUserData();
+        expect(calls).toContain('rmdir:backup');
+        expect(calls).toContain('rmdir:backup-scratch');
+    });
+
+    it('deletes them BEFORE the database, so DB-last still holds', async () => {
+        await wipeAllLocalUserData();
+        expect(calls.indexOf('rmdir:backup')).toBeLessThan(calls.indexOf('clearAllStores'));
+    });
+
+    it('a failing directory delete does not stop the database wipe', async () => {
+        mockDirDelete.mockImplementationOnce(() => { throw new Error('EPERM'); });
+        await wipeAllLocalUserData();
+        expect(mockClearAllStores).toHaveBeenCalled();
+        // And the SECOND directory is still attempted — one unreadable path
+        // must not orphan the other.
+        expect(calls).toContain('rmdir:backup-scratch');
+    });
+
+    it('does not try to delete a directory that is not there', async () => {
+        mockDirExists = false;
+        try {
+            await wipeAllLocalUserData();
+            expect(mockDirDelete).not.toHaveBeenCalled();
+        } finally {
+            mockDirExists = true;
+        }
     });
 });
 

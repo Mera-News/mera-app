@@ -17,6 +17,7 @@ import {
   CLOUD_REASON_SYSTEM_PROMPT,
   LOCAL_REASON_SYSTEM_PROMPT,
   buildBatchScoringUserMessage,
+  buildLocalReasonUserMessage,
   buildReasonUserMessage,
 } from './prompts';
 import {
@@ -159,7 +160,16 @@ async function generateReasonForCandidate(
   userContext: string,
   relevance: number,
 ): Promise<string> {
-  const userMessage = buildReasonUserMessage({
+  const onDevice = isOnDeviceMode();
+  // The two builders differ ONLY in field order. Local leads with `User Context`
+  // so llama.cpp's prefix cache can reuse the fact bank across a batch instead
+  // of re-prefilling it per article; cloud keeps the shared builder byte-for-byte,
+  // because `golden-prompts.test.ts` pins it and cloud quality is calibrated
+  // against it. This is the only place the two paths diverge on the user message.
+  const buildUserMessage = onDevice
+    ? buildLocalReasonUserMessage
+    : buildReasonUserMessage;
+  const userMessage = buildUserMessage({
     userContext,
     articleTitle: candidate.titleEn ?? '',
     articleDescription: candidate.descriptionEn ?? '',
@@ -167,7 +177,7 @@ async function generateReasonForCandidate(
     relevance,
     relatedFacts: candidate.relatedFacts.map((f) => f.statement),
   });
-  const output = isOnDeviceMode()
+  const output = onDevice
     ? await completeLocal({
         systemPrompt: LOCAL_REASON_SYSTEM_PROMPT,
         prompt: userMessage,

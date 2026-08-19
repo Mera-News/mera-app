@@ -39,6 +39,10 @@ import {
     listFactChecksByStatus,
     upsertFactCheck,
 } from '../database/services/fact-check-record-service';
+import {
+    keepArticleForFactCheck,
+    type FactCheckKeepInput,
+} from '../database/services/saved-article-suggestion-service';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import type { FactCheck as GeneratedFactCheck } from '../generated/graphql-types';
 import { FACT_CHECK_FIELDS } from './fact-check-fields';
@@ -52,6 +56,37 @@ const GET_FACT_CHECK = gql`
     }
   }
 `;
+
+/**
+ * Retain the checked article like a saved one, so the check stays openable
+ * after the 48h feed prune (`keepArticleForFactCheck` is the single retention
+ * write; it swallows its own failures). The screens pass a full article or
+ * suggestion snapshot through `keep`; every other caller (the chat pill, the
+ * reconcile sweep, the poll loop) degrades to what the server row itself
+ * carries — title, url, publication — which `keepArticleForFactCheck` will
+ * never let overwrite a richer snapshot already captured.
+ */
+async function keepCheckedArticle(
+    articleId: string,
+    keep: FactCheckKeepInput | undefined,
+    row: FactCheckRow | null,
+    articleTitle?: string | null,
+): Promise<void> {
+    try {
+        await keepArticleForFactCheck(
+            keep ?? {
+                articleId,
+                title: row?.articleTitle ?? articleTitle ?? null,
+                articleUrl: row?.articleUrl ?? null,
+                publicationName: row?.publicationName ?? null,
+            },
+        );
+    } catch {
+        // `keepArticleForFactCheck` swallows and logs its own failures; this
+        // catch only defends the contract — a failed keep must never turn a
+        // successful ask into a degraded outcome.
+    }
+}
 
 /** One read of `factCheck(articleId)`. `terminal` is derived from `row.status`
  *  via `isTerminalStatus` — the same predicate the render layer uses — so a
@@ -106,6 +141,7 @@ export async function fetchFactCheck(articleId: string): Promise<FactCheckQueryO
 export async function requestFactCheck(
     articleId: string,
     articleTitle?: string | null,
+    keep?: FactCheckKeepInput,
 ): Promise<FactCheckQueryOutcome> {
     try {
         const outcome = await fetchFactCheck(articleId);
@@ -133,6 +169,7 @@ export async function requestFactCheck(
                 payload: null,
             });
         }
+        await keepCheckedArticle(articleId, keep, outcome.row, articleTitle);
         return outcome;
     } catch (err) {
         logger.captureException(err, {
@@ -175,6 +212,7 @@ export async function mirrorArticleFactCheck(
     // and narrow ONCE, here, rather than making every screen cast.
     factCheck: FactCheckRow | GeneratedFactCheck | null | undefined,
     articleTitle?: string | null,
+    keep?: FactCheckKeepInput,
 ): Promise<boolean> {
     if (!factCheck || !articleId) return false;
 
@@ -188,6 +226,7 @@ export async function mirrorArticleFactCheck(
             verdict: row.verdict ?? null,
             payload: row,
         });
+        await keepCheckedArticle(articleId, keep, row, articleTitle);
         return true;
     } catch (err) {
         logger.captureException(err, {
@@ -232,7 +271,10 @@ const GET_CACHED_FACT_CHECK = gql`
  * Never throws — a failed lookup costs the reader a missing panel, never a
  * failed article open.
  */
-export async function fetchCachedFactCheck(articleId: string): Promise<boolean> {
+export async function fetchCachedFactCheck(
+    articleId: string,
+    keep?: FactCheckKeepInput,
+): Promise<boolean> {
     if (!articleId) return false;
     if (!useMeraProtocolStore.getState().autoCommunityFactCheck) return false;
 
@@ -247,7 +289,7 @@ export async function fetchCachedFactCheck(articleId: string): Promise<boolean> 
         // never been checked by anybody. Nothing is written, and the panel
         // renders nothing, which is the correct answer.
         if (!row) return false;
-        return await mirrorArticleFactCheck(articleId, row);
+        return await mirrorArticleFactCheck(articleId, row, null, keep);
     } catch (err) {
         logger.captureException(err, {
             tags: { service: 'fact-check-graphql-client', method: 'fetchCachedFactCheck' },
@@ -260,7 +302,25 @@ export async function fetchCachedFactCheck(articleId: string): Promise<boolean> 
 /** Statuses `requestFactCheck` treats as "not yet confirmed" — see
  *  `isTerminalStatus`. `failed` is included: the server's own recovery cron
  *  re-drives it, so from a device that only ever reads, a `failed` row is
- *  indistinguishable from one still in flight. */
+ *  indistinguishable from one still in flight.
+ *
+ *  ⚠️ A TERMINAL ROW IS NEVER RE-READ, AND THAT IS A DECISION, NOT AN
+ *  OVERSIGHT. Nothing in this app re-asks the server about a `complete` or
+ *  `blocked` row: this sweep skips them by construction, and `useFactCheck`
+ *  polls only while a non-terminal row exists. So a row whose stored payload
+ *  was written BEFORE a server-side change stays on the device, unchanged,
+ *  until retention drops it — up to 90 days for a row with a populated
+ *  `checkedBy` (see `deleteExpiredFactChecks`).
+ *
+ *  This was raised as a heal/re-read proposal (re-ask terminal rows once so a
+ *  server-side correction reaches devices that already cached the old answer)
+ *  and DECLINED. Re-asking every terminal row costs a billable server read per
+ *  row with no way to tell a stale row from a current one — the payload
+ *  carries no marker of which server revision produced it — so the sweep would
+ *  re-bill the whole table to correct the rare row. If a future change makes
+ *  stored payloads systematically wrong, the honest fix is a payload version
+ *  marker the server sets and this sweep filters on, not an unconditional
+ *  re-read. */
 const NON_TERMINAL_STATUSES = ['pending', 'running', 'failed'] as const;
 
 /** Combined cap across every non-terminal status this sweeps — r14 P2b's own

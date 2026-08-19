@@ -1,5 +1,6 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import OnboardingWizard from "@/components/custom/onboarding/OnboardingWizard";
+import BackupRecoveryFlow from "@/components/custom/backup/BackupRecoveryFlow";
 import { Box } from "@/components/ui/box";
 import { Spinner } from "@/components/ui/spinner";
 import { hasAnyFacts } from "@/lib/database/services/fact-service";
@@ -20,6 +21,7 @@ import {
     resolveEntitlementForOnboarding,
 } from "@/lib/subscription/onboarding-paywall";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface OnboardingScreenProps {
     /**
@@ -76,7 +78,9 @@ interface OnboardingScreenProps {
  * server session can no longer bounce a user through onboarding.
  */
 const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onPaywall, onFreeTierMode }) => {
+    const { t } = useTranslation();
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showRestoreOffer, setShowRestoreOffer] = useState(false);
     const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
     // Fail-closed state, mirroring app/logged-in/index.tsx rather than
     // inventing a second shape. This screen needs its own copy because
@@ -162,8 +166,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
 
                 if (verdict === 'reauth') {
                     // Unresolvable locally. onLoginRedirect routes to
-                    // /login?reauth=1 — the reauth param is load-bearing, see
-                    // app/logged-in/onboarding.tsx.
+                    // /login?reauth=1, where AuthScreen offers OTP or device
+                    // sign-in (for accounts with no email) — the reauth param
+                    // is load-bearing, see app/logged-in/onboarding.tsx.
                     if (!cancelled) handlersRef.current.onLoginRedirect();
                     return;
                 }
@@ -296,7 +301,17 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 return;
             }
 
-            setShowOnboarding(true);
+            // ── OFFER A RESTORE BEFORE BUILDING A PERSONA FROM SCRATCH ───
+            //
+            // Reached only with ZERO local facts, which is exactly the state a
+            // returning user is in on a new phone. Asking here costs one tap to
+            // decline and saves them rebuilding months of persona by hand.
+            //
+            // It does NOT need to skip the wizard itself: onboarding gates on
+            // local facts, a restore writes facts, and the restore reloads the
+            // app — so the next pass through this very check takes the
+            // `hasFacts` branch above and calls onComplete(). One gate, not two.
+            setShowRestoreOffer(true);
             setIsCheckingOnboarding(false);
         };
 
@@ -334,6 +349,28 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 <AbstractGradientBackdrop />
 
                 <Spinner size="large" />
+            </Box>
+        );
+    }
+
+    if (showRestoreOffer) {
+        return (
+            <Box className="flex-1 justify-center px-6">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+                <BackupRecoveryFlow
+                    introText={t('backup.onboardingIntro')}
+                    skipLabel={t('backup.onboardingSkip')}
+                    onSkip={() => {
+                        setShowRestoreOffer(false);
+                        setShowOnboarding(true);
+                    }}
+                    // Only if the reload failed. The data IS restored, so
+                    // sending them into the wizard would have them rebuild a
+                    // persona they already have.
+                    onRestoredWithoutReload={() => handlersRef.current.onComplete()}
+                />
             </Box>
         );
     }

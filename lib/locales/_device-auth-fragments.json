@@ -1,0 +1,423 @@
+{
+  "_comment": "auth-wave S3: device sign-in and email-at-purchase strings. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand and never fan this work out file-by-file.",
+  "en": {
+    "auth": {
+      "getStarted": "Get started",
+      "deviceSignInWorking": "Signing you in",
+      "signInWithEmail": "Sign in with email",
+      "deviceSignInFailed": "Something went wrong. Try again, or sign in with email.",
+      "deviceSignInDenied": "We couldn't verify this device. Try again, or sign in with email.",
+      "deviceSignInUnavailable": "Sign-in isn't available right now. Try again in a few minutes, or sign in with email.",
+      "tryAgain": "Try again"
+    },
+    "emailCapture": {
+      "title": "Add your email",
+      "subtitle": "Get receipts by email and recover your account if you switch phones.",
+      "continue": "Continue",
+      "notNow": "Not now",
+      "confirm": "Confirm",
+      "added": "Email added",
+      "addedDetail": "Receipts and account recovery will use {{email}}.",
+      "settingsRow": "Add email address"
+    }
+  },
+  "ar": {
+    "auth": {
+      "getStarted": "ابدأ",
+      "deviceSignInWorking": "جارٍ تسجيل دخولك",
+      "signInWithEmail": "تسجيل الدخول بالبريد الإلكتروني",
+      "deviceSignInFailed": "حدث خطأ ما. حاول مرة أخرى أو سجّل الدخول بالبريد الإلكتروني.",
+      "deviceSignInDenied": "تعذّر التحقق من هذا الجهاز. حاول مرة أخرى أو سجّل الدخول بالبريد الإلكتروني.",
+      "deviceSignInUnavailable": "تسجيل الدخول غير متاح حاليًا. حاول بعد بضع دقائق أو سجّل الدخول بالبريد الإلكتروني.",
+      "tryAgain": "إعادة المحاولة"
+    },
+    "emailCapture": {
+      "title": "أضف بريدك الإلكتروني",
+      "subtitle": "احصل على الإيصالات عبر البريد الإلكتروني واسترجع حسابك إذا غيّرت هاتفك.",
+      "continue": "متابعة",
+      "notNow": "ليس الآن",
+      "confirm": "تأكيد",
+      "added": "تمت إضافة البريد الإلكتروني",
+      "addedDetail": "سيتم استخدام {{email}} للإيصالات واسترجاع الحساب.",
+      "settingsRow": "إضافة بريد إلكتروني"
+    }
+  },
+  "de": {
+    "auth": {
+      "getStarted": "Los geht's",
+      "deviceSignInWorking": "Du wirst angemeldet",
+      "signInWithEmail": "Mit E-Mail anmelden",
+      "deviceSignInFailed": "Etwas ist schiefgelaufen. Versuche es erneut oder melde dich mit E-Mail an.",
+      "deviceSignInDenied": "Dieses Gerät konnte nicht bestätigt werden. Versuche es erneut oder melde dich mit E-Mail an.",
+      "deviceSignInUnavailable": "Die Anmeldung ist gerade nicht verfügbar. Versuche es in ein paar Minuten erneut oder melde dich mit E-Mail an.",
+      "tryAgain": "Erneut versuchen"
+    },
+    "emailCapture": {
+      "title": "E-Mail-Adresse hinzufügen",
+      "subtitle": "Erhalte Belege per E-Mail und stelle dein Konto wieder her, wenn du das Telefon wechselst.",
+      "continue": "Weiter",
+      "notNow": "Nicht jetzt",
+      "confirm": "Bestätigen",
+      "added": "E-Mail-Adresse hinzugefügt",
+      "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}.",
+      "settingsRow": "E-Mail-Adresse hinzufügen"
+    }
+  },
+  "es": {
+    "auth": {
+      "getStarted": "Comenzar",
+      "deviceSignInWorking": "Iniciando sesión",
+      "signInWithEmail": "Iniciar sesión con correo",
+      "deviceSignInFailed": "Algo salió mal. Vuelve a intentarlo o inicia sesión con tu correo.",
+      "deviceSignInDenied": "No pudimos verificar este dispositivo. Vuelve a intentarlo o inicia sesión con tu correo.",
+      "deviceSignInUnavailable": "El inicio de sesión no está disponible en este momento. Inténtalo en unos minutos o inicia sesión con tu correo.",
+      "tryAgain": "Reintentar"
+    },
+    "emailCapture": {
+      "title": "Añade tu correo",
+      "subtitle": "Recibe recibos por correo y recupera tu cuenta si cambias de teléfono.",
+      "continue": "Continuar",
+      "notNow": "Ahora no",
+      "confirm": "Confirmar",
+      "added": "Correo añadido",
+      "addedDetail": "Los recibos y la recuperación de la cuenta usarán {{email}}.",
+      "settingsRow": "Añadir correo electrónico"
+    }
+  },
+  "fr": {
+    "auth": {
+      "getStarted": "Commencer",
+      "deviceSignInWorking": "Connexion en cours",
+      "signInWithEmail": "Se connecter par e-mail",
+      "deviceSignInFailed": "Un problème est survenu. Réessayez ou connectez-vous par e-mail.",
+      "deviceSignInDenied": "Impossible de vérifier cet appareil. Réessayez ou connectez-vous par e-mail.",
+      "deviceSignInUnavailable": "La connexion est momentanément indisponible. Réessayez dans quelques minutes ou connectez-vous par e-mail.",
+      "tryAgain": "Réessayer"
+    },
+    "emailCapture": {
+      "title": "Ajoutez votre e-mail",
+      "subtitle": "Recevez vos reçus par e-mail et récupérez votre compte si vous changez de téléphone.",
+      "continue": "Continuer",
+      "notNow": "Pas maintenant",
+      "confirm": "Confirmer",
+      "added": "E-mail ajouté",
+      "addedDetail": "Les reçus et la récupération du compte utiliseront {{email}}.",
+      "settingsRow": "Ajouter une adresse e-mail"
+    }
+  },
+  "hi": {
+    "auth": {
+      "getStarted": "शुरू करें",
+      "deviceSignInWorking": "साइन इन किया जा रहा है",
+      "signInWithEmail": "ईमेल से साइन इन करें",
+      "deviceSignInFailed": "कुछ गड़बड़ हो गई. फिर से कोशिश करें या ईमेल से साइन इन करें.",
+      "deviceSignInDenied": "हम इस डिवाइस की पुष्टि नहीं कर सके. फिर से कोशिश करें या ईमेल से साइन इन करें.",
+      "deviceSignInUnavailable": "साइन इन अभी उपलब्ध नहीं है. कुछ मिनट बाद कोशिश करें या ईमेल से साइन इन करें.",
+      "tryAgain": "फिर से कोशिश करें"
+    },
+    "emailCapture": {
+      "title": "अपना ईमेल जोड़ें",
+      "subtitle": "ईमेल से रसीदें पाएं और फ़ोन बदलने पर अपना खाता वापस पाएं.",
+      "continue": "जारी रखें",
+      "notNow": "अभी नहीं",
+      "confirm": "पुष्टि करें",
+      "added": "ईमेल जोड़ा गया",
+      "addedDetail": "रसीदों और खाता वापस पाने के लिए {{email}} का इस्तेमाल होगा.",
+      "settingsRow": "ईमेल पता जोड़ें"
+    }
+  },
+  "id": {
+    "auth": {
+      "getStarted": "Mulai",
+      "deviceSignInWorking": "Sedang masuk",
+      "signInWithEmail": "Masuk dengan email",
+      "deviceSignInFailed": "Terjadi kesalahan. Coba lagi atau masuk dengan email.",
+      "deviceSignInDenied": "Kami tidak dapat memverifikasi perangkat ini. Coba lagi atau masuk dengan email.",
+      "deviceSignInUnavailable": "Login tidak tersedia saat ini. Coba lagi dalam beberapa menit atau masuk dengan email.",
+      "tryAgain": "Coba lagi"
+    },
+    "emailCapture": {
+      "title": "Tambahkan email Anda",
+      "subtitle": "Dapatkan tanda terima lewat email dan pulihkan akun Anda jika berganti ponsel.",
+      "continue": "Lanjutkan",
+      "notNow": "Nanti saja",
+      "confirm": "Konfirmasi",
+      "added": "Email ditambahkan",
+      "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}.",
+      "settingsRow": "Tambahkan alamat email"
+    }
+  },
+  "it": {
+    "auth": {
+      "getStarted": "Inizia",
+      "deviceSignInWorking": "Accesso in corso",
+      "signInWithEmail": "Accedi con l'email",
+      "deviceSignInFailed": "Si è verificato un problema. Riprova o accedi con l'email.",
+      "deviceSignInDenied": "Impossibile verificare questo dispositivo. Riprova o accedi con l'email.",
+      "deviceSignInUnavailable": "L'accesso non è al momento disponibile. Riprova tra qualche minuto o accedi con l'email.",
+      "tryAgain": "Riprova"
+    },
+    "emailCapture": {
+      "title": "Aggiungi la tua email",
+      "subtitle": "Ricevi le ricevute via email e recupera il tuo account se cambi telefono.",
+      "continue": "Continua",
+      "notNow": "Non ora",
+      "confirm": "Conferma",
+      "added": "Email aggiunta",
+      "addedDetail": "Le ricevute e il recupero dell'account useranno {{email}}.",
+      "settingsRow": "Aggiungi indirizzo email"
+    }
+  },
+  "ja": {
+    "auth": {
+      "getStarted": "はじめる",
+      "deviceSignInWorking": "ログインしています",
+      "signInWithEmail": "メールでログイン",
+      "deviceSignInFailed": "エラーが発生しました。もう一度お試しいただくか、メールでログインしてください。",
+      "deviceSignInDenied": "このデバイスを確認できませんでした。もう一度お試しいただくか、メールでログインしてください。",
+      "deviceSignInUnavailable": "現在ログインをご利用いただけません。数分後にもう一度お試しいただくか、メールでログインしてください。",
+      "tryAgain": "もう一度試す"
+    },
+    "emailCapture": {
+      "title": "メールアドレスを追加",
+      "subtitle": "レシートをメールで受け取り、機種変更時にアカウントを復元できます。",
+      "continue": "続行",
+      "notNow": "後で",
+      "confirm": "確認",
+      "added": "メールアドレスを追加しました",
+      "addedDetail": "レシートの受け取りとアカウントの復元に {{email}} を使用します。",
+      "settingsRow": "メールアドレスを追加"
+    }
+  },
+  "ko": {
+    "auth": {
+      "getStarted": "시작하기",
+      "deviceSignInWorking": "로그인하는 중",
+      "signInWithEmail": "이메일로 로그인",
+      "deviceSignInFailed": "문제가 발생했습니다. 다시 시도하거나 이메일로 로그인하세요.",
+      "deviceSignInDenied": "이 기기를 확인할 수 없습니다. 다시 시도하거나 이메일로 로그인하세요.",
+      "deviceSignInUnavailable": "지금은 로그인할 수 없습니다. 몇 분 후에 다시 시도하거나 이메일로 로그인하세요.",
+      "tryAgain": "다시 시도"
+    },
+    "emailCapture": {
+      "title": "이메일 추가",
+      "subtitle": "이메일로 영수증을 받고 휴대전화를 바꿔도 계정을 복구할 수 있습니다.",
+      "continue": "계속",
+      "notNow": "나중에",
+      "confirm": "확인",
+      "added": "이메일이 추가되었습니다",
+      "addedDetail": "영수증과 계정 복구에 {{email}}을(를) 사용합니다.",
+      "settingsRow": "이메일 주소 추가"
+    }
+  },
+  "nl": {
+    "auth": {
+      "getStarted": "Aan de slag",
+      "deviceSignInWorking": "Je wordt aangemeld",
+      "signInWithEmail": "Inloggen met e-mail",
+      "deviceSignInFailed": "Er is iets misgegaan. Probeer het opnieuw of log in met e-mail.",
+      "deviceSignInDenied": "We konden dit apparaat niet verifiëren. Probeer het opnieuw of log in met e-mail.",
+      "deviceSignInUnavailable": "Inloggen is nu even niet mogelijk. Probeer het over een paar minuten opnieuw of log in met e-mail.",
+      "tryAgain": "Opnieuw proberen"
+    },
+    "emailCapture": {
+      "title": "Voeg je e-mailadres toe",
+      "subtitle": "Ontvang bonnen per e-mail en herstel je account als je van telefoon wisselt.",
+      "continue": "Doorgaan",
+      "notNow": "Niet nu",
+      "confirm": "Bevestigen",
+      "added": "E-mailadres toegevoegd",
+      "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}.",
+      "settingsRow": "E-mailadres toevoegen"
+    }
+  },
+  "pl": {
+    "auth": {
+      "getStarted": "Rozpocznij",
+      "deviceSignInWorking": "Logowanie",
+      "signInWithEmail": "Zaloguj się e-mailem",
+      "deviceSignInFailed": "Coś poszło nie tak. Spróbuj ponownie lub zaloguj się e-mailem.",
+      "deviceSignInDenied": "Nie udało się zweryfikować tego urządzenia. Spróbuj ponownie lub zaloguj się e-mailem.",
+      "deviceSignInUnavailable": "Logowanie jest teraz niedostępne. Spróbuj ponownie za kilka minut lub zaloguj się e-mailem.",
+      "tryAgain": "Spróbuj ponownie"
+    },
+    "emailCapture": {
+      "title": "Dodaj swój e-mail",
+      "subtitle": "Otrzymuj potwierdzenia e-mailem i odzyskaj konto po zmianie telefonu.",
+      "continue": "Dalej",
+      "notNow": "Nie teraz",
+      "confirm": "Potwierdź",
+      "added": "Dodano e-mail",
+      "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}.",
+      "settingsRow": "Dodaj adres e-mail"
+    }
+  },
+  "pt-BR": {
+    "auth": {
+      "getStarted": "Começar",
+      "deviceSignInWorking": "Fazendo login",
+      "signInWithEmail": "Entrar com e-mail",
+      "deviceSignInFailed": "Algo deu errado. Tente novamente ou entre com e-mail.",
+      "deviceSignInDenied": "Não foi possível verificar este dispositivo. Tente novamente ou entre com e-mail.",
+      "deviceSignInUnavailable": "O login não está disponível no momento. Tente novamente em alguns minutos ou entre com e-mail.",
+      "tryAgain": "Tentar novamente"
+    },
+    "emailCapture": {
+      "title": "Adicione seu e-mail",
+      "subtitle": "Receba recibos por e-mail e recupere sua conta se trocar de celular.",
+      "continue": "Continuar",
+      "notNow": "Agora não",
+      "confirm": "Confirmar",
+      "added": "E-mail adicionado",
+      "addedDetail": "Recibos e recuperação da conta usarão {{email}}.",
+      "settingsRow": "Adicionar e-mail"
+    }
+  },
+  "ru": {
+    "auth": {
+      "getStarted": "Начать",
+      "deviceSignInWorking": "Выполняется вход",
+      "signInWithEmail": "Войти по электронной почте",
+      "deviceSignInFailed": "Что-то пошло не так. Повторите попытку или войдите по электронной почте.",
+      "deviceSignInDenied": "Не удалось подтвердить это устройство. Повторите попытку или войдите по электронной почте.",
+      "deviceSignInUnavailable": "Вход сейчас недоступен. Повторите попытку через несколько минут или войдите по электронной почте.",
+      "tryAgain": "Повторить"
+    },
+    "emailCapture": {
+      "title": "Добавьте электронную почту",
+      "subtitle": "Получайте чеки по электронной почте и восстанавливайте аккаунт при смене телефона.",
+      "continue": "Продолжить",
+      "notNow": "Не сейчас",
+      "confirm": "Подтвердить",
+      "added": "Почта добавлена",
+      "addedDetail": "Чеки и восстановление аккаунта будут привязаны к {{email}}.",
+      "settingsRow": "Добавить электронную почту"
+    }
+  },
+  "th": {
+    "auth": {
+      "getStarted": "เริ่มต้น",
+      "deviceSignInWorking": "กำลังลงชื่อเข้าใช้",
+      "signInWithEmail": "ลงชื่อเข้าใช้ด้วยอีเมล",
+      "deviceSignInFailed": "เกิดข้อผิดพลาด ลองอีกครั้งหรือลงชื่อเข้าใช้ด้วยอีเมล",
+      "deviceSignInDenied": "เรายืนยันอุปกรณ์นี้ไม่ได้ ลองอีกครั้งหรือลงชื่อเข้าใช้ด้วยอีเมล",
+      "deviceSignInUnavailable": "ขณะนี้ลงชื่อเข้าใช้ไม่ได้ ลองอีกครั้งในอีกไม่กี่นาทีหรือลงชื่อเข้าใช้ด้วยอีเมล",
+      "tryAgain": "ลองอีกครั้ง"
+    },
+    "emailCapture": {
+      "title": "เพิ่มอีเมลของคุณ",
+      "subtitle": "รับใบเสร็จทางอีเมลและกู้คืนบัญชีของคุณเมื่อเปลี่ยนโทรศัพท์",
+      "continue": "ต่อไป",
+      "notNow": "ไว้ทีหลัง",
+      "confirm": "ยืนยัน",
+      "added": "เพิ่มอีเมลแล้ว",
+      "addedDetail": "ใบเสร็จและการกู้คืนบัญชีจะใช้ {{email}}",
+      "settingsRow": "เพิ่มที่อยู่อีเมล"
+    }
+  },
+  "tr": {
+    "auth": {
+      "getStarted": "Başla",
+      "deviceSignInWorking": "Giriş yapılıyor",
+      "signInWithEmail": "E-posta ile giriş yap",
+      "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin veya e-posta ile giriş yapın.",
+      "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin veya e-posta ile giriş yapın.",
+      "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
+      "tryAgain": "Tekrar dene"
+    },
+    "emailCapture": {
+      "title": "E-postanı ekle",
+      "subtitle": "Makbuzları e-postayla al ve telefon değiştirirsen hesabını kurtar.",
+      "continue": "Devam",
+      "notNow": "Şimdi değil",
+      "confirm": "Onayla",
+      "added": "E-posta eklendi",
+      "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak.",
+      "settingsRow": "E-posta adresi ekle"
+    }
+  },
+  "uk": {
+    "auth": {
+      "getStarted": "Почати",
+      "deviceSignInWorking": "Виконується вхід",
+      "signInWithEmail": "Увійти через електронну пошту",
+      "deviceSignInFailed": "Щось пішло не так. Спробуйте ще раз або увійдіть через електронну пошту.",
+      "deviceSignInDenied": "Не вдалося підтвердити цей пристрій. Спробуйте ще раз або увійдіть через електронну пошту.",
+      "deviceSignInUnavailable": "Вхід зараз недоступний. Спробуйте через кілька хвилин або увійдіть через електронну пошту.",
+      "tryAgain": "Повторити"
+    },
+    "emailCapture": {
+      "title": "Додайте електронну пошту",
+      "subtitle": "Отримуйте квитанції електронною поштою та відновлюйте обліковий запис у разі зміни телефона.",
+      "continue": "Продовжити",
+      "notNow": "Не зараз",
+      "confirm": "Підтвердити",
+      "added": "Пошту додано",
+      "addedDetail": "Квитанції та відновлення облікового запису використовуватимуть {{email}}.",
+      "settingsRow": "Додати електронну пошту"
+    }
+  },
+  "vi": {
+    "auth": {
+      "getStarted": "Bắt đầu",
+      "deviceSignInWorking": "Đang đăng nhập",
+      "signInWithEmail": "Đăng nhập bằng email",
+      "deviceSignInFailed": "Đã xảy ra lỗi. Hãy thử lại hoặc đăng nhập bằng email.",
+      "deviceSignInDenied": "Không thể xác minh thiết bị này. Hãy thử lại hoặc đăng nhập bằng email.",
+      "deviceSignInUnavailable": "Hiện không thể đăng nhập. Hãy thử lại sau vài phút hoặc đăng nhập bằng email.",
+      "tryAgain": "Thử lại"
+    },
+    "emailCapture": {
+      "title": "Thêm email của bạn",
+      "subtitle": "Nhận biên lai qua email và khôi phục tài khoản khi bạn đổi điện thoại.",
+      "continue": "Tiếp tục",
+      "notNow": "Để sau",
+      "confirm": "Xác nhận",
+      "added": "Đã thêm email",
+      "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}.",
+      "settingsRow": "Thêm địa chỉ email"
+    }
+  },
+  "zh-CN": {
+    "auth": {
+      "getStarted": "开始使用",
+      "deviceSignInWorking": "正在登录",
+      "signInWithEmail": "使用电子邮件登录",
+      "deviceSignInFailed": "出了点问题。请重试，或使用电子邮件登录。",
+      "deviceSignInDenied": "无法验证此设备。请重试，或使用电子邮件登录。",
+      "deviceSignInUnavailable": "目前无法登录。请几分钟后重试，或使用电子邮件登录。",
+      "tryAgain": "重试"
+    },
+    "emailCapture": {
+      "title": "添加电子邮件",
+      "subtitle": "通过电子邮件接收收据，换手机时也能找回帐号。",
+      "continue": "继续",
+      "notNow": "以后再说",
+      "confirm": "确认",
+      "added": "已添加电子邮件",
+      "addedDetail": "收据和帐号找回将使用 {{email}}。",
+      "settingsRow": "添加电子邮件地址"
+    }
+  },
+  "zh-TW": {
+    "auth": {
+      "getStarted": "開始使用",
+      "deviceSignInWorking": "正在登入",
+      "signInWithEmail": "使用電子郵件登入",
+      "deviceSignInFailed": "發生錯誤。請再試一次，或使用電子郵件登入。",
+      "deviceSignInDenied": "無法驗證此裝置。請再試一次，或使用電子郵件登入。",
+      "deviceSignInUnavailable": "目前無法登入。請幾分鐘後再試，或使用電子郵件登入。",
+      "tryAgain": "再試一次"
+    },
+    "emailCapture": {
+      "title": "新增電子郵件",
+      "subtitle": "透過電子郵件接收收據，換手機時也能救回帳戶。",
+      "continue": "繼續",
+      "notNow": "暫時不要",
+      "confirm": "確認",
+      "added": "已新增電子郵件",
+      "addedDetail": "收據與帳戶救援將使用 {{email}}。",
+      "settingsRow": "新增電子郵件地址"
+    }
+  }
+}

@@ -31,6 +31,7 @@ import {
 } from '@/lib/database/services/article-suggestion-service';
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { useFeedCounts } from '@/lib/hooks/use-feed-counts';
+import { formatProbeReport, runBlobPrimitivesProbe, type ProbeReport } from '@/lib/backup/dev-probe';
 import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { HStack } from '@/components/ui/hstack';
@@ -577,6 +578,20 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
 
     const [copied, setCopied] = useState(false);
 
+    // Backup blob probe — __DEV__ only, see the section at the bottom of the render.
+    const [probe, setProbe] = useState<ProbeReport | null>(null);
+    const [probeRunning, setProbeRunning] = useState(false);
+
+    const handleRunProbe = useCallback(async () => {
+        setProbeRunning(true);
+        setProbe(null);
+        try {
+            setProbe(await runBlobPrimitivesProbe());
+        } finally {
+            setProbeRunning(false);
+        }
+    }, []);
+
     const handleCopy = useCallback(async () => {
         const allTaskNames = new Set([...Object.keys(taskCurrentStatus), ...Object.keys(taskLastRun)]);
         const tasks: Record<string, { status: string | null; lastRun: number | null }> = {};
@@ -989,6 +1004,60 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                     <Text size="sm" className="text-gray-600 py-2">
                         {loadingDb ? t('common.loading') : t('observability.notLoaded')}
                     </Text>
+                )}
+
+                {/*
+                  * Backup blob primitives probe. __DEV__ ONLY — this never renders in a
+                  * release build, which is why its copy is hardcoded English rather than
+                  * going through i18n: it is a developer diagnostic, not user-facing text,
+                  * and adding 20 locale entries for it would be noise.
+                  *
+                  * It answers whether RNFS.write at a byte offset round-trips and whether
+                  * pako actually streams under Hermes. `blob.ts` is designed on the answer.
+                  */}
+                {__DEV__ && (
+                    <>
+                        <SectionHeader title="Backup blob probe (dev)" />
+                        <Pressable
+                            onPress={probeRunning ? undefined : handleRunProbe}
+                            disabled={probeRunning}
+                            className="bg-gray-900 rounded-xl px-4 py-3 mt-1"
+                            testID="observability-run-blob-probe"
+                        >
+                            <Text size="sm" className="text-white text-center">
+                                {probeRunning ? 'Running…' : 'Run blob probe'}
+                            </Text>
+                        </Pressable>
+
+                        {probe && (
+                            <VStack space="xs" className="mt-3">
+                                <Text
+                                    size="sm"
+                                    className={probe.allPassed ? 'text-green-500' : 'text-red-500'}
+                                >
+                                    {probe.allPassed ? 'ALL PASSED' : 'FAILED'} — {probe.platform}
+                                </Text>
+                                {probe.error ? (
+                                    <Text size="xs" className="text-red-500">threw: {probe.error}</Text>
+                                ) : null}
+                                {probe.checks.map((c) => (
+                                    <VStack key={c.name} className="py-1">
+                                        <Text size="xs" className={c.pass ? 'text-green-500' : 'text-red-500'}>
+                                            {c.pass ? 'PASS' : 'FAIL'}  {c.name}
+                                        </Text>
+                                        <Text size="xs" className="text-gray-500">{c.detail}</Text>
+                                    </VStack>
+                                ))}
+                                <Pressable
+                                    onPress={() => Share.share({ message: formatProbeReport(probe) })}
+                                    className="bg-gray-900 rounded-xl px-4 py-3 mt-2"
+                                    testID="observability-share-blob-probe"
+                                >
+                                    <Text size="sm" className="text-white text-center">Share report</Text>
+                                </Pressable>
+                            </VStack>
+                        )}
+                    </>
                 )}
             </ScrollView>
         </Box>

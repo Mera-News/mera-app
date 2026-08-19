@@ -9,8 +9,28 @@
 //                           let user B skip onboarding on user A's device)
 //   - local read failure  → wizard (never a persona-less feed)
 // No AccountService / network call is involved at all.
-import { render, waitFor } from '@testing-library/react-native';
+// Stubbed because the real component reaches `@/components/ui/spinner` ->
+// ActivityIndicator, whose native component spec jest cannot parse: an unmocked
+// import fails this suite AT IMPORT, so it contributes zero tests rather than
+// one clear failure.
+//
+// The JSX lives OUTSIDE the factory on purpose. babel-preset-expo routes JSX
+// through react-native-css-interop, and that runtime reference is out of scope
+// inside a jest.mock factory ("Invalid variable access: _ReactNativeCSSInterop").
+// The `mock` prefix is what lets the factory reference it, and the indirection
+// through a call keeps it out of the temporal dead zone.
+jest.mock('@/components/custom/backup/BackupRecoveryFlow', () => ({
+    __esModule: true,
+    default: (props: { onSkip: () => void }) => mockRecoveryFlow(props),
+}));
+
+const mockRecoveryFlow = ({ onSkip }: { onSkip: () => void }) => (
+    <Pressable testID="recovery-skip" onPress={onSkip} />
+);
+
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { Pressable } from 'react-native';
 
 // Decorative, and it drags in react-native-reanimated (no worklets runtime
 // under Jest) — stub it out of the module graph entirely.
@@ -156,10 +176,18 @@ function renderScreen(
 }
 
 describe('OnboardingScreen fact gate', () => {
-    it('shows the wizard when the user has 0 local facts (server stage is irrelevant)', async () => {
+    it('offers a RESTORE before the wizard when the user has 0 local facts', async () => {
+        // Zero local facts is exactly the state a returning user is in on a new
+        // phone, so they are asked before being made to rebuild a persona by
+        // hand. The wizard is still one tap away.
         mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return false; });
-        const { queryByTestId, onComplete } = renderScreen();
+        const { queryByTestId, getByTestId, onComplete } = renderScreen();
 
+        await waitFor(() => expect(queryByTestId('recovery-skip')).toBeTruthy());
+        expect(queryByTestId('onboarding-wizard')).toBeNull();
+        expect(onComplete).not.toHaveBeenCalled();
+
+        fireEvent.press(getByTestId('recovery-skip'));
         await waitFor(() => expect(queryByTestId('onboarding-wizard')).toBeTruthy());
         expect(onComplete).not.toHaveBeenCalled();
     });
@@ -263,10 +291,15 @@ describe('OnboardingScreen fact gate', () => {
         expect(mockSetUserId).not.toHaveBeenCalled();
     });
 
-    it('shows the wizard when the local fact count throws', async () => {
+    it('reaches the wizard when the local fact count throws', async () => {
+        // An unreadable DB is treated as "no facts", which lands on the restore
+        // offer and then the wizard. Onboarding is recoverable; a persona-less
+        // feed is not.
         mockHasAnyFacts.mockImplementation(async () => { throw new Error('db unreadable'); });
-        const { queryByTestId, onComplete } = renderScreen();
+        const { queryByTestId, getByTestId, onComplete } = renderScreen();
 
+        await waitFor(() => expect(queryByTestId('recovery-skip')).toBeTruthy());
+        fireEvent.press(getByTestId('recovery-skip'));
         await waitFor(() => expect(queryByTestId('onboarding-wizard')).toBeTruthy());
         expect(onComplete).not.toHaveBeenCalled();
     });

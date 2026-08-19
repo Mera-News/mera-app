@@ -12,6 +12,8 @@
  * No React, no network, never throws.
  */
 
+import type { CheckedByStatus } from './fact-check-types';
+
 /** Lifecycle values the runner writes. `complete` and `blocked` are terminal;
  *  `pending`/`running` are legacy (pre-pivot server statuses, still valid on an
  *  old stored row) and `processing` is the on-device runner's equivalent. */
@@ -183,50 +185,64 @@ export function describeVerdict(raw: string | null | undefined): {
 }
 
 /**
- * How prominently to show OUR OWN verdict chip, given whether a named
- * fact-checking organisation has ALSO ruled on this story (`checkedBy`).
+ * WHICH SINGLE LINE THE FACT-CHECK CHIP SHOWS. The whole of that decision, in
+ * one total function, for every surface that renders it.
  *
- * BACKGROUND (pivot P8h). The server used to let a confident verdict through
- * on zero evidence — the failure mode a real screenshot caught: a green
- * "Consistent with sources" chip sitting directly above "No fact-checking
- * organisation we searched has published on this story" and "This check
- * didn't cite any specific pages." `clampVerdictToEvidence` now forces
- * `unverifiable` server-side when BOTH `citations` and `checkedBy` are empty
- * at write time. But `checkedBy` can fill in LATER on the re-check path (day
- * 0: nothing found, clamped to `unverifiable`; day 2: a fact-checker
- * publishes) and the verdict is deliberately NOT re-opened when that happens
- * — restoring the model's original ungrounded verdict would put back the very
- * answer the clamp exists to remove, and deriving a verdict from the
- * organisation's own rating would misquote a scale that isn't ours (see
- * `describeOrganisationVerdict`). So a row can now legitimately be
- * `verdict: 'unverifiable'` WITH a populated `checkedBy` — same shape of
- * contradiction as the screenshot, one hop later.
+ * ── WHY THIS IS NOT A VERDICT ANY MORE ───────────────────────────────────
+ * Established fact checkers are the authority on this surface and Mera states
+ * no verdict of its own beside them. The article panel used to lead with our
+ * own reading whenever no organisation had published, which meant a machine's
+ * reading of a news story was presented as a finding — and when an organisation
+ * HAD published, the two sat on one card competing. Neither happens now:
+ * `verdict` is not an input to this function at all. `describeVerdict` still
+ * exists and is still correct, but only the QUICK in-chat card uses it, where
+ * the answer is ephemeral, explicitly asked for, and never cached.
  *
- * `checkedBy` empty (the ~96% normal case) → `'lead'`: our own reading is the
- * only signal there is, so it renders exactly as before.
+ * ── WHY RELEVANCE IS NOT AN INPUT EITHER ─────────────────────────────────
+ * `checkedByCount` is a count of organisations the SERVER has already gated for
+ * relevance to this article. There is no relevance signal on the wire for a
+ * client to re-judge with (see `fact-check-types.ts`), and there must not be a
+ * client-side re-judgement: an external rating that contradicts the article is
+ * exactly the case this feature exists to surface, so any client rule that
+ * dropped externals on disagreement would delete the finding.
  *
- * `checkedBy` populated → an organisation's OWN verbatim rating is the
- * primary answer now, never ours — see `describeOrganisationVerdict`'s own
- * rationale for why it can't be routed through our vocabulary. Showing both
- * at equal weight is the exact contradiction this function exists to prevent,
- * so it is never `'lead'` in this branch:
- *   - our own verdict is `'unverifiable'` → `'suppressed'`. "Couldn't
- *     confirm" next to a named organisation's rating isn't a hedge, it's
- *     factually wrong — we DO have an answer, just not from us. There is
- *     nothing to lose by dropping a token that carries zero information here.
- *   - any other verdict → `'secondary'`. Our own AI reading (which claims it
- *     leaned on, its own hedge) may still be informative, so it stays, but
- *     demoted below the organisations and re-labelled so it can never be
- *     mistaken for a competing ruling — see `factCheck.ownReadingHeading`.
+ * ── THE ORDER, WHICH IS THE POINT ────────────────────────────────────────
+ *   pending         not terminal. Nothing to report yet, honestly.
+ *   blocked         terminal with no evidence at all. Never an answer.
+ *   published       one or more gated organisations. Their own rating leads,
+ *                   verbatim, on their own scale — see `describeOrganisationVerdict`.
+ *   unavailable     the ClaimReview lookup did not run. We know NOTHING about
+ *                   who has ruled, and must not say "nobody has published".
+ *   none-published  we looked and nobody has published. The ~96% case, and a
+ *                   real answer rather than a gap.
+ *
+ * ⚠️ `unavailable` NOW OUTRANKS `none-published`, WHICH LOOKS LIKE A REVERT OF
+ * AN EARLIER CORRECTION AND IS NOT. That correction moved `unavailable` BELOW
+ * the verdict, because a tier-1 outage must not suppress a tier-2 answer we
+ * actually held. There is no tier-2 answer on this chip any more, so nothing is
+ * being suppressed: the only remaining question is whether tier 1 ran, which is
+ * precisely what `checkedByStatus` answers. Collapsing these two back together
+ * would render "nobody has published" on an outage, the one thing
+ * `checkedByStatus` exists to prevent.
  */
-export type VerdictPresentation = 'lead' | 'secondary' | 'suppressed';
+export type ExternalChecksOutcome =
+    | 'pending'
+    | 'blocked'
+    | 'published'
+    | 'unavailable'
+    | 'none-published';
 
-export function describeVerdictPresentation(
-    verdict: string | null | undefined,
+export function describeExternalChecks(
+    status: string | null | undefined,
     checkedByCount: number,
-): VerdictPresentation {
-    if (checkedByCount <= 0) return 'lead';
-    return normalizeVerdict(verdict) === 'unverifiable' ? 'suppressed' : 'secondary';
+    checkedByStatus: CheckedByStatus | undefined,
+): ExternalChecksOutcome {
+    if (!isTerminalStatus(status)) return 'pending';
+    if (typeof status === 'string' && status.trim().toLowerCase() === 'blocked') return 'blocked';
+    if (checkedByCount > 0) return 'published';
+    // Absent ⇒ 'searched': the only meaning an empty `checkedBy` ever had
+    // before the field existed. See `CheckedByStatus`.
+    return checkedByStatus === 'unavailable' ? 'unavailable' : 'none-published';
 }
 
 /**

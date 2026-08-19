@@ -31,8 +31,28 @@
 // hazard. The default below is deliberately `true` (the post-cutover state
 // under test); the false case is its own test.
 
+// Stubbed because the real component reaches `@/components/ui/spinner` ->
+// ActivityIndicator, whose native component spec jest cannot parse: an unmocked
+// import fails this suite AT IMPORT, so it contributes zero tests rather than
+// one clear failure.
+//
+// The JSX lives OUTSIDE the factory on purpose. babel-preset-expo routes JSX
+// through react-native-css-interop, and that runtime reference is out of scope
+// inside a jest.mock factory ("Invalid variable access: _ReactNativeCSSInterop").
+// The `mock` prefix is what lets the factory reference it, and the indirection
+// through a call keeps it out of the temporal dead zone.
+jest.mock('@/components/custom/backup/BackupRecoveryFlow', () => ({
+    __esModule: true,
+    default: (props: { onSkip: () => void }) => mockRecoveryFlow(props),
+}));
+
+const mockRecoveryFlow = ({ onSkip }: { onSkip: () => void }) => (
+    <Pressable testID="recovery-skip" onPress={onSkip} />
+);
+
 import { act, render } from '@testing-library/react-native';
 import React from 'react';
+import { Pressable } from 'react-native';
 
 // ── ship gate, flippable per test ──────────────────────────────────────────
 const gates = {
@@ -188,6 +208,17 @@ beforeEach(() => {
     useSubscriptionStore.getState().reset();
 });
 
+/**
+ * What "reached onboarding" means in this suite.
+ *
+ * The onboarding path now BEGINS with the restore offer — a returning user is
+ * asked for a recovery code before being made to rebuild a persona by hand —
+ * and the wizard is one skip further on. This suite is about the PAYWALL
+ * ordering, so it asserts on the first screen of that path rather than on the
+ * wizard specifically; the wizard's own mounting is OnboardingScreen.test's.
+ */
+const ONBOARDING_ENTRY = 'recovery-skip';
+
 describe('paywall before onboarding', () => {
     it('no active tier + no local facts → the paywall, NOT onboarding', async () => {
         mockServerAnswer = { subscriptionTier: 'none' };
@@ -198,6 +229,7 @@ describe('paywall before onboarding', () => {
         expect(onPaywall).toHaveBeenCalledTimes(1);
         // The whole point: the wizard — whose step 2 is the Mera chat that 401s
         // without an entitlement — never mounts.
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onComplete).not.toHaveBeenCalled();
@@ -209,7 +241,7 @@ describe('paywall before onboarding', () => {
         const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
     });
@@ -224,7 +256,7 @@ describe('paywall before onboarding', () => {
         const { onPaywall, queryByTestId } = renderGate();
         await flush();
 
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
     });
 
@@ -275,6 +307,7 @@ describe('paywall before onboarding', () => {
         expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onComplete).not.toHaveBeenCalled();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
         expect(queryByTestId('onboarding-gate-spinner')).toBeTruthy();
 
@@ -282,6 +315,7 @@ describe('paywall before onboarding', () => {
         act(() => { jest.advanceTimersByTime(ONBOARDING_ENTITLEMENT_WAIT_MS - 1); });
         await flush();
         expect(onPaywall).not.toHaveBeenCalled();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
 
         // And still BOUNDED — the hold ends rather than running forever.
@@ -289,7 +323,7 @@ describe('paywall before onboarding', () => {
         await flush();
         expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
 
         jest.useRealTimers();
     });
@@ -327,7 +361,7 @@ describe('paywall before onboarding', () => {
         act(() => { jest.advanceTimersByTime(1); });
         await flush();
 
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
 
         jest.useRealTimers();
@@ -343,7 +377,7 @@ describe('paywall before onboarding', () => {
         const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         // Offline is answered from memory, so nothing is even attempted.
@@ -367,13 +401,14 @@ describe('paywall before onboarding', () => {
 
         // It really did hold: the answer is not being taken from memory early.
         expect(queryByTestId('onboarding-gate-spinner')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
         expect(mockSyncEntitlement).toHaveBeenCalledTimes(1);
 
         act(() => { jest.advanceTimersByTime(ONBOARDING_ENTITLEMENT_WAIT_MS + 1); });
         await flush();
 
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
 
@@ -390,6 +425,7 @@ describe('paywall before onboarding', () => {
         await flush();
 
         expect(onPaywall).toHaveBeenCalledTimes(1);
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
     });
 
@@ -406,7 +442,7 @@ describe('paywall before onboarding', () => {
         // offline than the wizard is, and the wizard is the one that does not
         // mis-accuse a granted user.
         expect(onPaywall).not.toHaveBeenCalled();
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
     });
 
     it("a DISMISSED device with an unresolvable verdict still fails open, and never loops to the paywall", async () => {
@@ -423,7 +459,7 @@ describe('paywall before onboarding', () => {
 
         expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
     });
 
     it('a resolved verdict is written to the device so a LATER cold start can trust it', async () => {
@@ -497,6 +533,7 @@ describe('paywall before onboarding', () => {
         // Not back to the paywall they just dismissed...
         expect(onPaywall).not.toHaveBeenCalled();
         // ...and not into onboarding either, whose chat cannot work here.
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
         expect(onComplete).not.toHaveBeenCalled();
     });
@@ -510,7 +547,7 @@ describe('paywall before onboarding', () => {
         const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onPaywall).not.toHaveBeenCalled();
     });
@@ -525,7 +562,7 @@ describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commi
         const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(queryByTestId('onboarding-wizard')).toBeTruthy();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
         expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         // The zero-cost property: deriveAiAccess short-circuits to 'entitled',
@@ -544,6 +581,7 @@ describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commi
         await flush();
 
         expect(onPaywall).toHaveBeenCalledTimes(1);
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
     });
 });

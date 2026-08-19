@@ -56,7 +56,21 @@
       "switchCancel": "Hủy"
     },
     "contentPolicy": "Chính sách nội dung",
-    "faq": "Câu hỏi thường gặp"
+    "faq": "Câu hỏi thường gặp",
+    "identitySwitchFailedTitle": "Không thể hoàn tất việc chuyển tài khoản",
+    "identitySwitchFailedBody": "Dữ liệu của một tài khoản khác vẫn còn trên thiết bị này. Mera phải xóa dữ liệu đó trước khi bạn tiếp tục, và lần này việc xóa không thành công.",
+    "identitySwitchFailedWhy": "Không có gì bị mất. Dữ liệu đó thuộc về tài khoản kia và vẫn nằm trong tài khoản Mera của họ. Tài khoản của bạn sẽ bắt đầu mới khi thiết bị này được dọn sạch.",
+    "identitySwitchFailedExhausted": "Vẫn không thành công. Hãy đăng xuất và bắt đầu lại để dọn sạch thiết bị này.",
+    "identitySwitchRetry": "Thử lại",
+    "identitySwitchSignOut": "Đăng xuất và bắt đầu lại",
+    "deviceSignInWorking": "Đang đăng nhập",
+    "deviceSignInFailed": "Đã xảy ra lỗi. Hãy thử lại hoặc đăng nhập bằng email.",
+    "deviceSignInDenied": "Không thể xác minh thiết bị này. Hãy thử lại hoặc đăng nhập bằng email.",
+    "deviceSignInUnavailable": "Hiện không thể đăng nhập. Hãy thử lại sau vài phút hoặc đăng nhập bằng email.",
+    "tryAgain": "Thử lại",
+    "learnAboutMera": "Tìm hiểu về Mera",
+    "startReading": "Bắt đầu đọc",
+    "alreadyHaveAccount": "Đã có tài khoản? Đăng nhập"
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",
@@ -984,7 +998,10 @@
     "followChatSeed": "Tôi muốn theo dõi một câu chuyện.",
     "followChatIntro": "Hãy cho tôi biết những gì bạn muốn theo dõi và tôi sẽ thiết lập nó.",
     "emptyHintFollow": "Nhấn nút theo dõi và cho Mera biết những gì bạn muốn theo dõi.",
-    "emptyCtaFollow": "Theo dõi một câu chuyện"
+    "emptyCtaFollow": "Theo dõi một câu chuyện",
+    "removeMemberAction": "Không thuộc câu chuyện này",
+    "removeMemberConfirmTitle": "Xóa bài viết này?",
+    "removeMemberConfirmBody": "Bài viết này bị xóa khỏi dòng thời gian của câu chuyện. Mera vẫn tiếp tục theo dõi câu chuyện."
   },
   "whatsNew": {
     "title": "Có gì mới",
@@ -1493,7 +1510,7 @@
     "citationsHeading": "Các nguồn được tham khảo",
     "noCitations": "Kiểm tra này không trích dẫn bất kỳ trang nào cụ thể. Đây không phải là tìm kiếm thất bại — hãy xem xét tóm tắt một cách cẩn thận hơn khi không có nguồn để tham khảo.",
     "sourceFallback": "Nguồn {{index}}",
-    "disclaimer": "Mera không kiểm chứng tin tức trực tiếp. Đây là tóm tắt AI của tìm kiếm web cho các kiểm chứng sự kiện được công bố — nó có thể sai hoặc không đầy đủ, vì vậy hãy đọc các nguồn trước khi dựa vào nó.",
+    "disclaimer": "Đây là cách đọc của Mera từ tìm kiếm web, được viết bởi AI. Nó có thể sai hoặc không hoàn chỉnh, vì vậy vui lòng đọc các nguồn trước khi dựa vào nó.",
     "verdict": {
       "supported": {
         "label": "Phù hợp với các nguồn",
@@ -1527,7 +1544,7 @@
       "unverifiable": "Không thể xác nhận",
       "unknown": "Không rõ"
     },
-    "checkedByHeading": "Các tổ chức kiểm chứng đã đề cập",
+    "checkedByHeading": "Các kiểm chứng được tìm thấy",
     "dashboard": {
       "deleteA11y": "Xóa kiểm chứng sự kiện này",
       "empty": "Bạn chưa kiểm tra bất kỳ khẳng định nào. Nhấn vào dấu tích dưới một bài viết để hỏi Mera — kết quả sẽ xuất hiện ở đây khi sẵn sàng.",
@@ -1540,11 +1557,14 @@
       "articleGone": "Bài viết đã hết hạn, nên không thể mở được. Kiểm tra sự thật mà chúng tôi tìm thấy được giữ lại ở đây.",
       "couldNotCheck": "Chúng tôi không kiểm tra được ai đã đăng về việc này. Chạm để xem kết quả tìm kiếm.",
       "moreOrganisations_one": "+{{count}} nữa",
-      "moreOrganisations_other": "+{{count}} nữa"
+      "moreOrganisations_other": "+{{count}} nữa",
+      "noneFound": "Không tìm thấy kiểm chứng được công bố",
+      "factChecksFound_one": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc",
+      "factChecksFound_other": "Tìm thấy {{count}} kiểm chứng. Chạm để đọc"
     },
     "explainer": "Mera không kiểm chứng tin tức trực tiếp. Nó tìm kiếm những gì các tổ chức kiểm chứng đã công bố về câu chuyện này.",
-    "noCheckedBy": "Không có tổ chức kiểm chứng nào trong tìm kiếm của chúng tôi đã công bố về câu chuyện này. Điều này không có nghĩa là câu chuyện sai — hầu hết các câu chuyện không bao giờ được kiểm chứng.",
-    "organisationA11y": "Mở kiểm tra sự thật của {{organisation}} trong trình duyệt trong ứng dụng",
+    "noCheckedBy": "Chúng tôi không tìm thấy bất kỳ kiểm chứng nào được công bố về câu chuyện này. Điều đó không có nghĩa là câu chuyện sai. Phần lớn các câu chuyện không bao giờ được kiểm chứng.",
+    "organisationA11y": "Mở kiểm chứng của {{organisation}}, được đánh giá {{rating}}, trong trình duyệt trong ứng dụng",
     "queued": "Kiểm tra này tiếp tục chạy trong nền. Bạn không phải chờ đợi ở đây — có thể rời khỏi bài viết.",
     "queuedHint": "Kết quả sẽ xuất hiện dưới mục Kiểm tra sự thật trên Dashboard khi sẵn sàng.",
     "citationA11y": "Mở nguồn {{source}} trong trình duyệt trong ứng dụng",
@@ -1571,7 +1591,11 @@
     "checkedByMultipleNote": "Đây là các đánh giá độc lập, mỗi đánh giá theo thang riêng của tổ chức đó — chúng không phải lúc nào cũng thống nhất với nhau.",
     "ownReadingHeading": "Nhận định riêng của Mera — thứ yếu so với kết luận ở trên",
     "collapseA11y": "Ẩn phần kiểm chứng này",
-    "expandA11y": "Hiện phần kiểm chứng này"
+    "expandA11y": "Hiện phần kiểm chứng này",
+    "checkedByRelatedNote": "Những điều này xuất phát từ tìm kiếm từ khóa và có thể về một câu chuyện khác. Mở một trong những điều đó để kiểm tra.",
+    "searchFoundHeading": "Những gì tìm kiếm của chúng tôi tìm thấy",
+    "searchFoundEmpty": "Tìm kiếm không cung cấp đủ thông tin để Mera tóm tắt tại đây.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Ưu tiên nguồn này",
@@ -2259,6 +2283,24 @@
     }
   },
   "support": {
-    "opening": "Đang mở hỗ trợ"
+    "opening": "Đang mở hỗ trợ",
+    "supportId": "ID hỗ trợ: {{id}}",
+    "copySupportId": "Sao chép ID hỗ trợ",
+    "copied": "Đã sao chép",
+    "saveHint": "Hãy lưu ID này. Bộ phận hỗ trợ có thể tìm tài khoản của bạn bằng ID này."
+  },
+  "emailCapture": {
+    "title": "Thêm email của bạn",
+    "subtitle": "Nhận biên lai qua email và khôi phục tài khoản khi bạn đổi điện thoại.",
+    "continue": "Tiếp tục",
+    "notNow": "Để sau",
+    "confirm": "Xác nhận",
+    "added": "Đã thêm email",
+    "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}."
+  },
+  "welcomeBack": {
+    "title": "Chào mừng bạn quay lại",
+    "body": "Thiết bị này đã dùng bản dùng thử miễn phí. Để tiếp tục đọc với đầy đủ tính năng của Mera, hãy chọn một gói sau khi tiếp tục.",
+    "continue": "Tiếp tục"
   }
 }

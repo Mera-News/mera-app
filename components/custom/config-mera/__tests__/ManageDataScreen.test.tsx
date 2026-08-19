@@ -16,6 +16,10 @@ const calls: string[] = [];
 const mockFetch = jest.fn();
 const mockSignOut = jest.fn(async () => { calls.push('signOut'); });
 const mockClearAuthStorage = jest.fn(async () => { calls.push('clearAuthStorage'); });
+const mockClearDeviceAuthCredentials = jest.fn(async () => { calls.push('clearDeviceAuthCredentials'); });
+jest.mock('@/lib/device-auth', () => ({
+    clearDeviceAuthCredentials: () => mockClearDeviceAuthCredentials(),
+}));
 jest.mock('@/lib/auth-client', () => ({
     authClient: {
         $fetch: (...a: any[]) => mockFetch(...a),
@@ -131,6 +135,12 @@ jest.mock('@/components/ui/toast', () => {
         ToastDescription: (p: any) => <Text {...p} />,
     };
 });
+// BackupSection holds its own state and reaches the whole backup stack.
+// Unmocked it would drag all of that into a suite about deleting an account,
+// and every future backup import would break this file for reasons unrelated
+// to it.
+jest.mock('@/components/custom/backup/BackupSection', () => ({ __esModule: true, default: () => null }));
+
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (p: any) => <View {...p} /> };
@@ -161,10 +171,21 @@ describe('ManageDataScreen — delete account (grace-period flow)', () => {
         await waitFor(() => expect(mockClearAllStores).toHaveBeenCalled());
 
         expect(calls).toEqual(
-            expect.arrayContaining(['signOut', 'clearAuthStorage', 'dismissAll', 'replace', 'clearAllStores', 'toast']),
+            expect.arrayContaining(['clearAuthStorage', 'clearDeviceAuthCredentials', 'dismissAll', 'replace', 'clearAllStores', 'toast']),
         );
-        // signOut must precede clearAllStores — the local cleanup sequence.
-        expect(calls.indexOf('signOut')).toBeLessThan(calls.indexOf('clearAllStores'));
+        // BUG 4 (S10 e2e): deletion used to land on '/', whose launch gate
+        // re-entered the app on the stale session atom and dumped the user
+        // into onboarding with a dead session. Deletion follows the LOGOUT
+        // route: the welcome view, with the same session-shortcut suppression.
+        expect(mockReplace).toHaveBeenCalledWith(
+            { pathname: '/login', params: { signedOut: '1' } },
+        );
+        // clearAuthStorage (which owns the guarded server sign-out) must
+        // precede clearAllStores — the local cleanup sequence.
+        expect(calls.indexOf('clearAuthStorage')).toBeLessThan(calls.indexOf('clearAllStores'));
+        // DELETION SEVERS (S10): the device binding must fall with the account,
+        // or a preserved key reactivates it during the grace period.
+        expect(calls.indexOf('clearDeviceAuthCredentials')).toBeLessThan(calls.indexOf('clearAllStores'));
     });
 
     it('a resolved {error} (non-2xx, no throw) is treated as FAILURE — no sign-out, no success toast', async () => {

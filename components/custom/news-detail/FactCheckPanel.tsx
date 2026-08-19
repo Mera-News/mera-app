@@ -1,6 +1,6 @@
 import { Box } from '@/components/ui/box';
 import { SearchCheck } from 'lucide-react-native';
-import FactCheckBadge from '@/components/custom/fact-checks/FactCheckBadge';
+import FactCheckBadge, { describeBadgeStatusText } from '@/components/custom/fact-checks/FactCheckBadge';
 import { GLASS_EDGE, GlassPlate } from '@/components/custom/GlassSurface';
 import { HStack } from '@/components/ui/hstack';
 import { Spinner } from '@/components/ui/spinner';
@@ -10,9 +10,6 @@ import FactCheckSources from '@/components/custom/fact-checks/FactCheckSources';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import {
     describeAssessment,
-    describeCheckedBy,
-    describeVerdict,
-    describeVerdictPresentation,
     isTerminalStatus,
     type FactCheckTone,
 } from '@/lib/fact-check/fact-check-state';
@@ -25,9 +22,12 @@ import { useTranslation } from 'react-i18next';
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 /**
- * Tone → classes. There is no red anywhere by design: an LLM verdict that
- * renders like a court judgement on a true story is the failure mode this
- * feature has to avoid, so the strongest colour available is amber "caution".
+ * Tone → classes, for the per-claim assessment badges only. The header chip
+ * is externals-only and carries no tone at all any more — see
+ * `FactCheckBadge`'s own file header for why. This stays "no red" for the
+ * original reason: a claim assessment is still Mera's own AI reading of one
+ * claim, and a confident red badge on a claim from a true story is the
+ * failure this feature exists to avoid.
  */
 const TONE_CLASSES: Record<FactCheckTone, { chip: string; text: string }> = {
     positive: { chip: 'bg-success-900', text: 'text-success-400' },
@@ -60,32 +60,26 @@ interface FactCheckPanelProps {
  *                own honest "still checking" block instead, distinct from
  *                both "nothing" and "checked, no result" — see
  *                `factCheck.stillChecking` and `POLL_CEILING_MS`.
- *   terminal   → verdict chip → summary → claims → `FactCheckSources` →
- *                disclaimer, ONE CARD PER ROW. Several checks per article now
- *                stack: the user can pick more than one claim, and post-v52
- *                each claim gets its own row and its own card.
+ *   terminal   → header chip (externals-only) → external fact checks found →
+ *                Mera's own evidence → sources consulted → disclaimer, ONE
+ *                CARD PER ROW. Several checks per article now stack: the
+ *                user can pick more than one claim, and post-v52 each claim
+ *                gets its own row and its own card.
  *
- * `checkedBy` — the organisations, each with its own verdict and a link — is
- * the primary answer; the AI summary is context around it. An EMPTY
- * `checkedBy` is the normal outcome for most stories, not a failure: see
- * `factCheck.noCheckedBy`.
+ * EXTERNALS ARE THE AUTHORITY (fc-relevance wave). Established fact-checking
+ * organisations — gated for relevance to this article by the SERVER — lead
+ * the card, in the collapsed chip and in the expanded body, always FIRST.
+ * Mera presents no verdict of its own anywhere on this surface any more: the
+ * chip is built purely from `checkedBy` / `checkedByStatus` (see
+ * `FactCheckBadge`), and the expanded body's own section is headed "What our
+ * search found" rather than a ruling like "Consistent with sources".
  *
- * PIVOT P8h — WHEN checkedBy IS POPULATED, IT LEADS, NOT OUR OWN VERDICT
- * CHIP. A real screenshot caught a green "Consistent with sources" chip
- * sitting directly above "No fact-checking organisation we searched has
- * published on this story" — a confident verdict on zero evidence, "the
- * failure mode that looks exactly like success" per the server's own
- * `clampVerdictToEvidence` comment. The server now clamps that at write
- * time, but a row can still legitimately arrive `verdict: 'unverifiable'`
- * WITH a populated `checkedBy` (the re-check path: nothing found on day 0,
- * clamped; a fact-checker publishes on day 2, `checkedBy` fills in, the
- * verdict is deliberately NOT re-opened — see `describeVerdictPresentation`).
- * "Couldn't confirm" next to a named organisation's own rating is the same
- * contradiction, one hop later. So: `checkedBy` populated ⇒ `FactCheckSources`
- * renders FIRST, and our own verdict chip is either demoted (a plain,
- * relabelled line under "Mera's own reading") or suppressed outright when it
- * is `'unverifiable'` — see `describeVerdictPresentation`'s own reasoning for
- * why suppression, not just demotion, is correct there.
+ * THIS SUPERSEDES PIVOT P8h. Do not reintroduce a rule that ranks Mera's
+ * verdict against organisation ratings: the wire carries no relevance signal
+ * for individual `checkedBy` entries (see `fact-check-types.ts`), so the
+ * client cannot tell a wrong Mera verdict on a true story from a
+ * right-but-off-topic external. Both failure modes share that root cause,
+ * and keeping Mera's verdict off this decision surface entirely closes both.
  */
 const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     articleId,
@@ -95,18 +89,20 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
     const { phase, showProgress, rows } = useFactCheck(articleId);
 
     /**
-     * Which cards the reader has folded away, keyed by row id.
+     * Which cards the reader has expanded, keyed by row id.
      *
-     * OPEN BY DEFAULT, and absence means open — a result the user asked for
-     * should never arrive already hidden. Keyed by id rather than index so a
-     * second check arriving (rows are prepended/stacked) cannot slide the
-     * collapsed state onto a different card.
+     * CLOSED BY DEFAULT. The header chip already carries the finding (which
+     * organisations were found, or that none were) at a glance, so folding a
+     * card costs nothing the reader hasn't already seen — unlike the
+     * pre-badge design this comment used to describe, where collapsing hid
+     * the card's only content. Keyed by id rather than index so a second
+     * check arriving (rows are prepended/stacked) cannot slide the expanded
+     * state onto a different card.
      *
      * Deliberately NOT persisted. This is a reading-posture preference for the
      * screen in front of you, not a setting; storing it would mean a check the
-     * user collapsed weeks ago is still hidden when they return to the article
-     * having forgotten they did it, which reads as the fact check having
-     * vanished. Cheap to re-collapse, expensive to debug.
+     * user expanded weeks ago is still open when they return to the article
+     * having forgotten they did it. Cheap to re-expand, expensive to debug.
      */
     const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
     const toggle = React.useCallback((id: string) => {
@@ -165,30 +161,14 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
             {terminalRows.map((row, index) => {
                 const payload = row.payload;
                 const blocked = row.status === 'blocked';
-                // `verdict` is read from the mirrored COLUMN, not the payload —
-                // it stays available even if `payload_json` failed to parse
-                // (the service degrades that to "we know a check exists, we
-                // just can't render its detail").
-                const verdictInfo = !blocked ? describeVerdict(row.verdict) : null;
                 const claims = payload?.claims ?? [];
                 const citations = payload?.citations ?? [];
                 const checkedBy = payload?.checkedBy;
                 const checkedByStatus = payload?.checkedByStatus;
                 const rowPrefix = `${testIDPrefix}-${index}`;
                 const isOpen = expanded[row.id] === true;
-                // See the file header (PIVOT P8h) — an organisation's own
-                // rating leads once one exists; ours never competes with it.
-                const organisationCount = describeCheckedBy(checkedBy).length;
-                const hasCheckedBy = organisationCount > 0;
-                const presentation = describeVerdictPresentation(row.verdict, organisationCount);
-                const sources = (
-                    <FactCheckSources
-                        checkedBy={checkedBy}
-                        checkedByStatus={checkedByStatus}
-                        citations={citations}
-                        testIDPrefix={rowPrefix}
-                    />
-                );
+                const headerTitle = row.claim ?? t('factCheck.title');
+                const badgeStatusText = describeBadgeStatusText(t, row.status, checkedBy, checkedByStatus);
 
                 return (
                     /* GLASS, and the platform branch is the PRIMITIVE's, not
@@ -211,13 +191,12 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                         <GlassPlate />
                         <VStack space="sm" className="p-3">
                         {/* THE WHOLE HEADER IS THE TOGGLE, not just the chevron.
-                            A verdict card is tall — organisations, summary, per
-                            claim assessments, sources, disclaimer — and on a
-                            phone it can bury the article the reader came for.
-                            Folding it leaves this one line, so the check is
-                            still visibly THERE and one tap from returning;
-                            removing it outright would read as the fact check
-                            having failed or disappeared. */}
+                            A verdict card is tall — organisations, our reading, every
+                            claim, sources and the disclaimer — and on a phone it can
+                            bury the article the reader came for. Folding it leaves
+                            this one line, so the check is still visibly THERE and
+                            one tap from returning; removing it outright would read
+                            as the fact check having failed or disappeared. */}
                         <Pressable
                             testID={`${rowPrefix}-toggle`}
                             onPress={() => toggle(row.id)}
@@ -227,15 +206,23 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                             // body is foldable at all — the chevron is
                             // decorative to them.
                             accessibilityState={{ expanded: isOpen }}
-                            accessibilityLabel={
-                                isOpen ? t('factCheck.collapseA11y') : t('factCheck.expandA11y')
-                            }
+                            // COMPOSED, not just the toggle verb: an explicit
+                            // accessibilityLabel on a Pressable swallows every
+                            // descendant Text's own announcement, so without
+                            // this a screen reader heard only "Show this fact
+                            // check" and never the title or the chip's finding
+                            // underneath it.
+                            accessibilityLabel={t('factCheck.headerA11y', {
+                                title: headerTitle,
+                                status: badgeStatusText,
+                                action: isOpen ? t('factCheck.collapseA11y') : t('factCheck.expandA11y'),
+                            })}
                             // Row height is the tap target; the chevron alone
                             // would be a ~16px one.
                             hitSlop={8}
                         >
-                            <HStack space="xs" className="items-center">
-                                <SearchCheck size={16} strokeWidth={2} color={ACCENT} />
+                            <HStack space="xs" className="items-start">
+                                <SearchCheck size={16} strokeWidth={2} color={ACCENT} style={{ marginTop: 2 }} />
                                 {/* `row.claim` is the STORED column — populated
                                     only on a legacy per-claim row (pre-pivot
                                     on-device checks). A server (whole-article)
@@ -255,20 +242,19 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                                         {t('factCheck.title')}
                                     </Text>
                                 )}
-                                {/* The finding itself, on the header line, so a
-                                    closed card still answers the question. Same
-                                    component the Dashboard card uses — which
-                                    badge wins is a correctness rule, not
-                                    styling, and it must not be restated here.
-                                    See FactCheckBadge. */}
-                                <FactCheckBadge
-                                    status={row.status}
-                                    verdict={row.verdict}
-                                    checkedBy={checkedBy}
-                                    checkedByStatus={checkedByStatus}
-                                    testIDPrefix={rowPrefix}
-                                    testIDSuffix="header"
-                                />
+                                {/* Externals-only, in every state — see
+                                    FactCheckBadge. Capped so a long
+                                    organisation name can never crowd the
+                                    title off the row. */}
+                                <Box className="flex-shrink max-w-[55%]">
+                                    <FactCheckBadge
+                                        status={row.status}
+                                        checkedBy={checkedBy}
+                                        checkedByStatus={checkedByStatus}
+                                        testIDPrefix={rowPrefix}
+                                        testIDSuffix="header"
+                                    />
+                                </Box>
                                 <MaterialIcons
                                     name={isOpen ? 'expand-less' : 'expand-more'}
                                     size={20}
@@ -281,114 +267,95 @@ const FactCheckPanel: React.FC<FactCheckPanelProps> = ({
                             so, and there is nothing else to show for a check
                             that found no evidence at all. Repeating it here
                             stated one finding twice. */}
-                        {!isOpen || blocked ? null : verdictInfo ? (
+                        {!isOpen || blocked ? null : (
                             <VStack space="sm">
-                                {/* checkedBy LEADS when populated — see the file
-                                    header (PIVOT P8h). Positioned above our own
-                                    reading rather than the other way around, so
-                                    the organisation's own verbatim rating is the
-                                    first thing read, not a chip that may
-                                    contradict it further down. */}
-                                {hasCheckedBy && sources}
+                                {/* EXTERNAL FACT CHECKS FIRST — they are the
+                                    authority on this surface, always ahead of
+                                    Mera's own evidence. Renders its own
+                                    honest empty-state sentence, with no
+                                    heading over it, when nothing was found —
+                                    see FactCheckSources. */}
+                                <FactCheckSources
+                                    section="organisations"
+                                    checkedBy={checkedBy}
+                                    checkedByStatus={checkedByStatus}
+                                    testIDPrefix={rowPrefix}
+                                />
 
-                                {presentation !== 'suppressed' && (
-                                    <VStack
-                                        space="sm"
-                                        testID={hasCheckedBy ? `${rowPrefix}-own-reading` : undefined}
-                                    >
-                                        {hasCheckedBy && (
-                                            <Text size="xs" className="text-gray-400 font-semibold uppercase">
-                                                {t('factCheck.ownReadingHeading')}
-                                            </Text>
-                                        )}
-                                        {/* NO CHIP HERE WHEN OURS IS THE LEAD —
-                                            the header badge already carries it,
-                                            and the same finding stated twice on
-                                            one card reads as two findings. The
-                                            'secondary' case DOES still render:
-                                            there the header shows the
-                                            ORGANISATION's rating, so this is a
-                                            different statement, deliberately
-                                            demoted to plain tone-only text under
-                                            its own heading. */}
-                                        {presentation === 'secondary' && (
-                                            <Text
-                                                size="sm"
-                                                testID={`${rowPrefix}-verdict-secondary`}
-                                                className={`font-semibold ${TONE_CLASSES[verdictInfo.tone].text}`}
-                                            >
-                                                {t(verdictInfo.labelKey as any)}
-                                            </Text>
-                                        )}
+                                {/* MERA'S OWN EVIDENCE, reworded away from a
+                                    ruling. `payload.summary` is Mera's own
+                                    prose; the fallback below exists so this
+                                    section is never blank when the search
+                                    genuinely found nothing to synthesise —
+                                    see F2's honest complete/every-array-empty
+                                    outcome, covered in the tests. */}
+                                <VStack space="sm" testID={`${rowPrefix}-own-reading`}>
+                                    <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                                        {t('factCheck.searchFoundHeading')}
+                                    </Text>
+                                    {payload?.summary ? (
+                                        <TranslatableDynamic
+                                            text={payload.summary}
+                                            size="sm"
+                                            className="text-gray-300"
+                                        />
+                                    ) : (
                                         <Text size="sm" className="text-gray-300">
-                                            {t(verdictInfo.detailKey as any)}
+                                            {t('factCheck.searchFoundEmpty')}
                                         </Text>
+                                    )}
 
-                                        {payload?.summary ? (
-                                            <TranslatableDynamic
-                                                text={payload.summary}
-                                                size="sm"
-                                                className="text-gray-300"
-                                            />
-                                        ) : null}
-
-                                        {claims.length > 0 && (
-                                            <VStack space="xs" className="mt-1">
-                                                <Text size="xs" className="text-gray-400 font-semibold uppercase">
-                                                    {t('factCheck.claimsHeading')}
-                                                </Text>
-                                                {claims.map((claim, claimIndex) => {
-                                                    const info = describeAssessment(claim.assessment);
-                                                    return (
-                                                        <VStack
-                                                            key={`claim-${claimIndex}`}
-                                                            space="xs"
-                                                            testID={`${rowPrefix}-claim-${claimIndex}`}
-                                                            className="border-l-2 border-gray-700 pl-2 py-1"
+                                    {claims.length > 0 && (
+                                        <VStack space="xs" className="mt-1">
+                                            <Text size="xs" className="text-gray-400 font-semibold uppercase">
+                                                {t('factCheck.claimsHeading')}
+                                            </Text>
+                                            {claims.map((claim, claimIndex) => {
+                                                const info = describeAssessment(claim.assessment);
+                                                return (
+                                                    <VStack
+                                                        key={`claim-${claimIndex}`}
+                                                        space="xs"
+                                                        testID={`${rowPrefix}-claim-${claimIndex}`}
+                                                        className="border-l-2 border-gray-700 pl-2 py-1"
+                                                    >
+                                                        <TranslatableDynamic
+                                                            text={claim.claim}
+                                                            size="sm"
+                                                            className="text-gray-200"
+                                                        />
+                                                        <Text
+                                                            size="xs"
+                                                            className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
                                                         >
+                                                            {t(info.labelKey as any)}
+                                                        </Text>
+                                                        {claim.note ? (
                                                             <TranslatableDynamic
-                                                                text={claim.claim}
-                                                                size="sm"
-                                                                className="text-gray-200"
-                                                            />
-                                                            <Text
+                                                                text={claim.note}
                                                                 size="xs"
-                                                                className={`font-semibold ${TONE_CLASSES[info.tone].text}`}
-                                                            >
-                                                                {t(info.labelKey as any)}
-                                                            </Text>
-                                                            {claim.note ? (
-                                                                <TranslatableDynamic
-                                                                    text={claim.note}
-                                                                    size="xs"
-                                                                    className="text-gray-400"
-                                                                />
-                                                            ) : null}
-                                                        </VStack>
-                                                    );
-                                                })}
-                                            </VStack>
-                                        )}
-                                    </VStack>
-                                )}
+                                                                className="text-gray-400"
+                                                            />
+                                                        ) : null}
+                                                    </VStack>
+                                                );
+                                            })}
+                                        </VStack>
+                                    )}
+                                </VStack>
 
-                                {/* WHO CHECKED IT, and everything the reader can
-                                    go read for themselves. Shared with the
-                                    Dashboard cards (FactCheckSources) so the two
-                                    surfaces cannot drift. It sits directly above
-                                    the disclaimer on purpose: that sentence
-                                    tells the reader to read the sources before
-                                    relying on it, which is only true once these
-                                    are tappable. When checkedBy is empty this is
-                                    its ORIGINAL position (unchanged); when
-                                    populated it already rendered above, first. */}
-                                {!hasCheckedBy && sources}
+                                {/* Sources Mera's own search leaned on. */}
+                                <FactCheckSources
+                                    section="citations"
+                                    citations={citations}
+                                    testIDPrefix={rowPrefix}
+                                />
 
                                 <Text size="xs" className="text-gray-400 mt-1">
                                     {t('factCheck.disclaimer')}
                                 </Text>
                             </VStack>
-                        ) : null}
+                        )}
                         </VStack>
                     </Box>
                 );

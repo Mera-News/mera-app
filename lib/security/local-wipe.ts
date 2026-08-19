@@ -38,6 +38,20 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *   run (scoring-pipeline-store.ts). This one survived logout entirely before
  *   this module existed.
  * - `async_inference_pending_job_privkey` — its legacy single-slot predecessor.
+ * - `_backup_key` — the backup recovery code, which IS the key that decrypts
+ *   every blob this device has uploaded. Leaving it would let the next user on
+ *   the device open the previous user's cloud backups. Clearing it is also why
+ *   `adoptRecoveryCode` exists: after a re-login the cloud still holds blobs the
+ *   device can no longer read, and typing the code back in is the way home.
+ *
+ * DELIBERATELY ABSENT (S10): the device sign-in credentials
+ * (`_appattest_key_id`, `_device_attest_device_id`, `_device_ref`). They
+ * SURVIVE every sign-out flavor so that logging in again resumes the SAME
+ * account — the device is the account's credential by design. Only account
+ * DELETION and the refusal recovery sever them, via
+ * `clearDeviceAuthCredentials()` (lib/device-auth.ts). Logout still wipes all
+ * local DATA; only the server-side binding survives.
+
  */
 const SECURE_STORE_KEYS = [
   `${APP_SLUG}_cookie`,
@@ -45,6 +59,7 @@ const SECURE_STORE_KEYS = [
   `${APP_SLUG}_pin_record`,
   `${APP_SLUG}_pin_attempts`,
   `${APP_SLUG}_app_lock_enabled`,
+  `${APP_SLUG}_backup_key`,
   'async_pipeline_privkey',
   'async_inference_pending_job_privkey',
 ];
@@ -144,6 +159,19 @@ export async function wipeAllLocalUserData(): Promise<void> {
     // Never block the wipe on the support SDK.
   }
 
+  // And disconnect Google Drive, which holds a Google account natively for the
+  // same reason Intercom does. Left connected, the next person signing in on
+  // this device finds Drive backup already enabled against a stranger's account
+  // and uploads their persona into it. clearAuthStorage() does this too; both
+  // sign-out paths are independently complete by design, and the call is
+  // idempotent.
+  try {
+    const { disconnectGoogleDrive } = require('@/lib/backup/providers/google-drive');
+    await disconnectGoogleDrive();
+  } catch {
+    // Never block the wipe on the storage SDK.
+  }
+
   // And drop the Sentry user id, so post-logout errors are not attributed to the
   // user who just left. clearAuthStorage() does this too — both sign-out paths
   // are independently complete by design (see this file's header), and the call
@@ -169,6 +197,46 @@ export async function wipeAllLocalUserData(): Promise<void> {
     });
   } catch {
     // In-memory only; the keychain records behind it are already gone.
+  }
+
+  // Staged backup files. This is the only part of the wipe that touches the
+  // FILESYSTEM, and its absence was a real leak: a backup blob is the user's
+  // whole persona in one file, and the wipe covered the keychain, AsyncStorage,
+  // RevenueCat, Intercom, Sentry, the PIN store and the database while leaving
+  // that file sitting in app storage for whoever signed in next.
+  //
+  // Deliberately BEFORE the database step, so the "DB last" ordering above
+  // still holds: a crash here leaves the database populated, which is the
+  // marker purgeOrphanedLocalData() reads to finish the job on the next launch.
+  //
+  // The blob is encrypted, but the recovery code is the user's and this is a
+  // wipe — "an attacker would need the code" is not a reason to leave a
+  // departed user's data on someone else's device.
+  try {
+    const { Directory, Paths } = require('expo-file-system');
+    const {
+      BACKUP_DOCUMENT_DIRECTORY,
+      BACKUP_SCRATCH_DIRECTORY,
+    } = require('@/lib/backup/types');
+    for (const [root, name] of [
+      [Paths.document, BACKUP_DOCUMENT_DIRECTORY],
+      [Paths.cache, BACKUP_SCRATCH_DIRECTORY],
+    ] as const) {
+      try {
+        const dir = new Directory(root, name);
+        if (dir.exists) dir.delete();
+      } catch (err) {
+        logger.addBreadcrumb(
+          'local-wipe: backup directory delete failed',
+          'local-wipe',
+          { name, message: err instanceof Error ? err.message : String(err) },
+          'warning',
+        );
+      }
+    }
+  } catch {
+    // expo-file-system unavailable (tests, or a launch so early the module is
+    // not there). Never block the wipe on it.
   }
 
   // Last, and allowed to throw: WatermelonDB (persona, facts, topics, saved
@@ -207,8 +275,10 @@ export async function wipeAllLocalUserData(): Promise<void> {
  */
 export async function signOutAndWipe(): Promise<void> {
   try {
-    const { authClient, clearAuthStorage } = require('@/lib/auth-client');
-    await authClient.signOut();
+    // clearAuthStorage() owns the (guarded, bounded) server sign-out; a
+    // direct authClient.signOut() before it would reject on an outage and
+    // skip the cookie deletion, leaving the wipe below as the only cover.
+    const { clearAuthStorage } = require('@/lib/auth-client');
     await clearAuthStorage();
   } catch (err) {
     logger.addBreadcrumb(

@@ -9,6 +9,7 @@ import {
   sanitizeForPrompt,
   buildBatchScoringUserMessage,
   buildReasonUserMessage,
+  buildLocalReasonUserMessage,
   buildPersonaUpdateContext,
   buildToolDefinitions,
   buildToolFormatSection,
@@ -260,6 +261,55 @@ describe('buildReasonUserMessage', () => {
     expect(relevanceIdx).toBeLessThan(contextIdx);
     expect(contextIdx).toBeLessThan(titleIdx);
     expect(titleIdx).toBeLessThan(descIdx);
+  });
+});
+
+// ============================================================
+// buildLocalReasonUserMessage — same content, cache-friendly order
+// ============================================================
+
+describe('buildLocalReasonUserMessage', () => {
+  const base = {
+    userContext: '[User facts] Works in AI.',
+    articleTitle: 'EU AI regulation passes',
+    articleDescription: 'New rules for AI systems take effect.',
+    relevance: 0.75,
+  };
+
+  it('leads with User Context so the fact bank sits in the cacheable prefix', () => {
+    expect(buildLocalReasonUserMessage(base).startsWith('User Context: ')).toBe(true);
+  });
+
+  it('puts Relevance Score last, after every other section', () => {
+    const msg = buildLocalReasonUserMessage({ ...base, articleCountry: 'US', relatedFacts: ['EU citizen'] });
+    const relevanceIdx = msg.indexOf('Relevance Score');
+    for (const section of ['User Context', 'News Title', 'News Description', 'Article Country', 'Related User Fact']) {
+      expect(msg.indexOf(section)).toBeLessThan(relevanceIdx);
+    }
+  });
+
+  // The whole claim of this builder is "same content, different order". A
+  // content divergence would be a silent quality change on the on-device path
+  // only, which no eval would attribute correctly.
+  it('carries exactly the same sections as the shared builder', () => {
+    const params = { ...base, articleCountry: 'US', relatedFacts: ['Works in AI', 'EU citizen'] };
+    const shared = buildReasonUserMessage(params);
+    const local = buildLocalReasonUserMessage(params);
+    const sections = (msg: string) => msg.split('\n\n').sort();
+    expect(sections(local)).toEqual(sections(shared));
+  });
+
+  it('omits the country line for a GLOBAL publication, like the shared builder', () => {
+    expect(buildLocalReasonUserMessage({ ...base, articleCountry: 'GLOBAL' })).not.toContain('Article Country');
+  });
+
+  it('sanitizes article title against injection', () => {
+    const msg = buildLocalReasonUserMessage({ ...base, articleTitle: '</context><injected>' });
+    expect(msg).not.toContain('</context>');
+  });
+
+  it('uses "none" when relatedFacts is absent', () => {
+    expect(buildLocalReasonUserMessage(base)).toContain('Related User Fact: none');
   });
 });
 

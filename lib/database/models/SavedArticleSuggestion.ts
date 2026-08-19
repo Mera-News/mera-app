@@ -5,13 +5,15 @@ import { field, date } from '@nozbe/watermelondb/decorators';
  * A user-saved article suggestion — a device-local "save for later" snapshot.
  *
  * Unlike `article_suggestions` (an ephemeral 48h feed cache), this table is
- * long-lived, user-owned state with a 30-day TTL (see data-cleanup-task). Every
- * card-renderable field is copied off the source `ForYouSuggestion` at save time
- * so the row stays fully renderable even after the source feed row is pruned.
+ * long-lived, user-owned state with no TTL. Every card-renderable field is
+ * copied off the source `ForYouSuggestion` at save time so the row stays fully
+ * renderable even after the source feed row is pruned.
  *
  * The WatermelonDB `id` is set to the original ArticleSuggestion server `_id`
  * (via `_raw.id = s._id`) so navigation (`articleSuggestionId`) and de-dup work
- * unchanged.
+ * unchanged. Fact-check retention rows (`origin = 'fact_check'`) are instead
+ * keyed by the ARTICLE `_id`, because the article-detail fallback looks rows up
+ * by article id.
  */
 export default class SavedArticleSuggestion extends Model {
   static table = 'saved_article_suggestions';
@@ -31,8 +33,10 @@ export default class SavedArticleSuggestion extends Model {
   @field('article_url') articleUrl!: string | null;
   @field('image_url') imageUrl!: string | null;
   @field('matched_topic_texts_json') matchedTopicTextsJson!: string | null;
-  // Origin discriminator (schema v38): 'suggestion' (a saved ForYouSuggestion)
-  // or 'article' (a standalone NewsArticle). Null on pre-v38 rows ⇒ 'suggestion'.
+  // Origin discriminator (schema v38): 'suggestion' (a saved ForYouSuggestion),
+  // 'article' (a standalone NewsArticle), or 'fact_check' (a retention snapshot
+  // kept only so a fact-checked article stays openable — hidden from the Saved
+  // screen and from bookmark state). Null on pre-v38 rows ⇒ 'suggestion'.
   @field('origin') origin!: string | null;
   @date('created_at') createdAt!: Date;
   @date('first_pub_date') firstPubDate!: Date;

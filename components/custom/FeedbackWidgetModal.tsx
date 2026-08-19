@@ -17,6 +17,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import MeraLogo from '@/components/custom/MeraLogo';
 import { authClient } from '@/lib/auth-client';
+import { emailLooksAnonymous } from '@/lib/subscription/email-capture';
+import { readSupportIdFromUser } from '@/lib/support-id';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useFeedbackStore, useFeedbackVisible } from '@/lib/stores/feedback-store';
 import { useUserStore } from '@/lib/stores/user-store';
@@ -33,10 +35,13 @@ import { useUserStore } from '@/lib/stores/user-store';
 // deliberately and from one place (lib/observability/sentry-scope.ts), for every
 // session — so setting it again here bought nothing and leaked by accident.
 // Do not re-add per-surface scope writes.
-function attachFeedbackMetadata(userId: string | undefined): void {
+function attachFeedbackMetadata(userId: string | undefined, supportId: string | null): void {
     // Id only — no email/ip/username. lib/sentry-init.ts documents the contract.
+    // support_id is the 8-digit support handle, minted to be the NON-PII lookup
+    // key, so it rides the feedback payload for the same reason the email does
+    // not. Conditional: absent stays absent.
     if (userId) {
-        Sentry.setUser({ id: userId });
+        Sentry.setUser({ id: userId, ...(supportId ? { support_id: supportId } : {}) });
     }
 }
 
@@ -81,7 +86,14 @@ const FeedbackWidgetModal: React.FC = () => {
     const localUserId = useUserStore((s) => s.userId);
     const localUserEmail = useUserStore((s) => s.userEmail);
     const userId = localUserId ?? session?.user?.id;
-    const userEmail = localUserEmail ?? session?.user?.email;
+    // The fabricated @anon.mera.news address must never be shown or prefilled
+    // as if it were the user's — an anonymous account simply has no email here.
+    const sessionEmail = session?.user?.email;
+    const userEmail =
+        localUserEmail ?? (sessionEmail && !emailLooksAnonymous(sessionEmail) ? sessionEmail : undefined);
+    // The support handle rides the feedback payload so a report from an
+    // anonymous account is traceable without an email.
+    const supportId = readSupportIdFromUser(session?.user);
 
     // On open, set the feedback identifier so it's on the scope before the user
     // submits. The diagnostic tags/context that used to be set here now come
@@ -90,8 +102,8 @@ const FeedbackWidgetModal: React.FC = () => {
         if (!SENTRY_ENABLED || !visible) {
             return;
         }
-        attachFeedbackMetadata(userId);
-    }, [visible, userId]);
+        attachFeedbackMetadata(userId, supportId);
+    }, [visible, userId, supportId]);
 
     // captureFeedback no-ops without Sentry.init, so there's nothing to show.
     if (!SENTRY_ENABLED || !visible) {

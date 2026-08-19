@@ -61,6 +61,7 @@ import {
   defineInferenceTask,
   ensureSilentPushTaskRegistered,
 } from '@/lib/background/inference-task';
+import { defineBackupTask, syncBackupTaskRegistration } from '@/lib/background/backup-task';
 import * as Sentry from '@sentry/react-native';
 import { DUMP_QUERIES_ENABLED } from '@/lib/config/endpoints';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
@@ -83,6 +84,12 @@ import '@/lib/scheduler/tasks/entitlement-sync-task';
 // response-unpacking only; fresh cycles are kicked off in the foreground.
 defineInferenceTask();
 
+// Same reason, different trigger: the OS resolves the JS entry point on a
+// BGTask wake and looks the task up by name, so it has to be DEFINED at module
+// load or the wake finds nothing. Registration is separate and happens after
+// settings hydrate, since it depends on the cadence.
+defineBackupTask();
+
 // Everything below the mandatory-update gate. Kept as its own component so the
 // gate can mount/unmount it as a unit: when an update is required (or while the
 // version check is still resolving) this never mounts, so NONE of the boot
@@ -91,6 +98,17 @@ defineInferenceTask();
 // truly quiescent (nothing in the background).
 function AppRoot() {
   const navigationRef = useNavigationContainerRef();
+
+  // Install-boundary safety net (S12): app/index.tsx awaits this before its
+  // identity reads on the normal path, but a deep link can mount a different
+  // first screen and would otherwise leave the auth-read quarantine latched
+  // forever. Latched once per process; a second call is free.
+  useEffect(() => {
+    void (async () => {
+      const { enforceInstallBoundary } = await import('@/lib/security/install-boundary');
+      await enforceInstallBoundary();
+    })();
+  }, []);
 
   // react-navigation theme, tracked to the app's color scheme (pinned dark
   // today via GluestackUIProvider mode="dark"). Supplies dark surfaces so the

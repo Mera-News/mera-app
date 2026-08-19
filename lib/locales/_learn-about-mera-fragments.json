@@ -1,0 +1,23 @@
+{
+  "_comment": "auth-wave S8: the welcome view's tutorial entry button. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": { "auth": { "learnAboutMera": "Learn about Mera" } },
+  "ar": { "auth": { "learnAboutMera": "تعرّف على Mera" } },
+  "de": { "auth": { "learnAboutMera": "Mera kennenlernen" } },
+  "es": { "auth": { "learnAboutMera": "Conoce Mera" } },
+  "fr": { "auth": { "learnAboutMera": "Découvrir Mera" } },
+  "hi": { "auth": { "learnAboutMera": "Mera के बारे में जानें" } },
+  "id": { "auth": { "learnAboutMera": "Pelajari Mera" } },
+  "it": { "auth": { "learnAboutMera": "Scopri Mera" } },
+  "ja": { "auth": { "learnAboutMera": "Mera について知る" } },
+  "ko": { "auth": { "learnAboutMera": "Mera 알아보기" } },
+  "nl": { "auth": { "learnAboutMera": "Maak kennis met Mera" } },
+  "pl": { "auth": { "learnAboutMera": "Poznaj aplikację Mera" } },
+  "pt-BR": { "auth": { "learnAboutMera": "Conheça o Mera" } },
+  "ru": { "auth": { "learnAboutMera": "Узнайте о Mera" } },
+  "th": { "auth": { "learnAboutMera": "เรียนรู้เกี่ยวกับ Mera" } },
+  "tr": { "auth": { "learnAboutMera": "Mera'yı tanıyın" } },
+  "uk": { "auth": { "learnAboutMera": "Дізнайтеся про Mera" } },
+  "vi": { "auth": { "learnAboutMera": "Tìm hiểu về Mera" } },
+  "zh-CN": { "auth": { "learnAboutMera": "了解 Mera" } },
+  "zh-TW": { "auth": { "learnAboutMera": "認識 Mera" } }
+}

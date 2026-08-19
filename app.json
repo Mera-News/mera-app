@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mera",
     "slug": "meraapp",
-    "version": "1.2.7",
+    "version": "1.3.0",
     "orientation": "portrait",
     "runtimeVersion": {
       "policy": "appVersion"
@@ -24,6 +24,7 @@
       "icon": "./assets/icons/ios-dark.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "Mera does not record audio. This notice is required because an on-device AI component references the microphone API. The microphone is never accessed without your permission.",
         "UIUserInterfaceStyle": "Dark",
         "UIBackgroundModes": [
           "remote-notification"
@@ -143,7 +144,7 @@
           "android": {
             "enableMinifyInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true,
-            "extraProguardRules": "# Hermes\n-keep class com.facebook.hermes.unicode.** { *; }\n-keep class com.facebook.jni.** { *; }\n\n# React Native bridge / turbomodules / UI manager\n-keep class com.facebook.react.turbomodule.** { *; }\n-keep class com.facebook.react.bridge.** { *; }\n-keep class com.facebook.react.uimanager.** { *; }\n-keepclassmembers class * { @com.facebook.react.bridge.ReactMethod *; }\n-keepclassmembers class * { @com.facebook.react.uimanager.annotations.ReactProp *; }\n\n# Expo Modules Core (reflection-based module loading)\n-keep class expo.modules.** { *; }\n\n# WatermelonDB (JSI + bridge)\n-keep class com.nozbe.watermelondb.** { *; }\n\n# llama.rn (JSI bindings)\n-keep class com.rnllama.** { *; }\n\n# onnxruntime\n-keep class ai.onnxruntime.** { *; }\n\n# OkHttp / OkIO\n-dontwarn okhttp3.**\n-dontwarn okio.**\n\n# Kotlin metadata required by Expo modules at runtime\n-keep class kotlin.Metadata { *; }\n-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod"
+            "extraProguardRules": "# Hermes\n-keep class com.facebook.hermes.unicode.** { *; }\n-keep class com.facebook.jni.** { *; }\n\n# React Native bridge / turbomodules / UI manager\n-keep class com.facebook.react.turbomodule.** { *; }\n-keep class com.facebook.react.bridge.** { *; }\n-keep class com.facebook.react.uimanager.** { *; }\n-keepclassmembers class * { @com.facebook.react.bridge.ReactMethod *; }\n-keepclassmembers class * { @com.facebook.react.uimanager.annotations.ReactProp *; }\n\n# Expo Modules Core (reflection-based module loading)\n-keep class expo.modules.** { *; }\n\n# WatermelonDB (JSI + bridge)\n-keep class com.nozbe.watermelondb.** { *; }\n\n# llama.rn (JSI bindings)\n-keep class com.rnllama.** { *; }\n\n# Lottie (reflection-based animation model parsing; without this a release\n# build renders blank animations rather than failing)\n-keep class com.airbnb.lottie.** { *; }\n\n# OkHttp / OkIO\n-dontwarn okhttp3.**\n-dontwarn okio.**\n\n# Kotlin metadata required by Expo modules at runtime\n-keep class kotlin.Metadata { *; }\n-keepattributes *Annotation*,Signature,InnerClasses,EnclosingMethod"
           }
         }
       ],
@@ -153,6 +154,18 @@
         {
           "useManualInit": true,
           "intercomRegion": "US"
+        }
+      ],
+      [
+        "react-native-cloud-storage",
+        {
+          "iCloudContainerEnvironment": "Production"
+        }
+      ],
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.454136165020-ucg71begsenaak3ppmhma54bcbm0s9tr"
         }
       ]
     ],

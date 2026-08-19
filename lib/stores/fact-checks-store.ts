@@ -26,6 +26,7 @@ import {
     listFactChecks,
     type StoredFactCheck,
 } from '../database/services/fact-check-record-service';
+import { releaseFactCheckRetention } from '../database/services/saved-article-suggestion-service';
 
 /** How many the Dashboard block shows before "View all". */
 export const DASHBOARD_FACT_CHECK_PREVIEW = 3;
@@ -70,10 +71,20 @@ export const useFactChecksStore = create<FactChecksState>((set, get) => ({
     },
 
     remove: async (id: string) => {
+        // Captured before the optimistic filter drops it — the retention
+        // release below needs the article id.
+        const item = get().items.find((it) => it.id === id);
         // Optimistic: the delete is local-only and the service swallows its own
         // failures, so waiting would only make the row linger under the finger.
         set((state) => ({ items: state.items.filter((it) => it.id !== id) }));
         await deleteFactCheck(id);
+        // Deleting the LAST fact check for an article releases its retention
+        // snapshot (the release checks that itself, and never touches a row the
+        // user saved). Hooked here rather than in the record service so the two
+        // DB services stay import-cycle free.
+        if (item?.articleId) {
+            await releaseFactCheckRetention(item.articleId);
+        }
     },
 }));
 

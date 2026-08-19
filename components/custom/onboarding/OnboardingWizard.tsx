@@ -192,7 +192,10 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
             setIsLoggingOut(true);
             setShowServerErrorModal(false);
 
-            await authClient.signOut();
+            // clearAuthStorage() owns the (guarded, bounded) server sign-out.
+            // This path fires precisely when the server is erroring, so a
+            // direct unguarded signOut here was near-guaranteed to abort the
+            // eject with nothing cleared.
             await clearAuthStorage();
 
             // Note: no dismissAll() here — onboarding is already at the top of the stack

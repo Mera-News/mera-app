@@ -50,6 +50,7 @@ jest.mock('../prompts', () => ({
   LOCAL_REASON_SYSTEM_PROMPT: 'sys',
   buildBatchScoringUserMessage: jest.fn(() => 'prompt'),
   buildReasonUserMessage: jest.fn(() => 'prompt'),
+  buildLocalReasonUserMessage: jest.fn(() => 'prompt'),
 }));
 
 import {

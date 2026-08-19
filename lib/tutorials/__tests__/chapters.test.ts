@@ -8,12 +8,19 @@
 //     returns the key string back when a key is missing, so asserting through
 //     `t()` would pass on exactly the failure this is for — hence `lookupKey`
 //     against the parsed JSON.
-//  2. NO ANIMATION RUNTIME. This wave ships without `lottie-react-native` in
-//     `package.json`, and Metro resolves `require()` at BUNDLE time — so a
-//     single uncommented mention of it under `components/custom/tutorials/`
-//     would be a build error that no runtime guard could catch, on a wave whose
-//     headline benefit is being OTA-able. The check is mechanical because the
-//     rule is one grep away from being broken by a well-meaning edit.
+//  2. NO ANIMATION RUNTIME IN THE SOURCE. Metro resolves `require()` at BUNDLE
+//     time, so a single uncommented mention of `lottie` under
+//     `components/custom/tutorials/` ends up in the OTA bundle. The check is
+//     mechanical because the rule is one grep away from being broken by a
+//     well-meaning edit.
+//     UPDATED: `lottie-react-native` is now a dependency — it is banked in the
+//     next binary so the animation pass and the processing-animation wave can
+//     ship over the air later. That does NOT relax this rule. `runtimeVersion`
+//     is `appVersion`, and users on the pre-Lottie runtime have a binary with
+//     no Lottie in it; an OTA published to that runtime referencing Lottie
+//     crashes for exactly them. The source stays clean until the animation pass
+//     runs against the binary that carries it, and that wave is what deletes
+//     this rule — deliberately, not incidentally.
 //  3. Chapter `welcome` carries no mera logo — the user's explicit instruction
 //     for the pre-auth chapter.
 //  4. NO CHAPTER TEACHES A DECOY / NOISE-INJECTION FEATURE. Mera has none:
@@ -287,10 +294,16 @@ describe('no animation runtime', () => {
     expect(total).toBeGreaterThan(5);
   });
 
-  it('does not depend on an animation package', () => {
+  // Was: "does not depend on an animation package". The dependency is now
+  // banked in the binary on purpose, so absence is no longer the contract —
+  // a clean SOURCE tree is (see the check above). This asserts the dependency
+  // stays put: dropping it would silently re-block the animation pass and the
+  // processing-animation wave, both of which are waiting on a binary to carry
+  // it, and neither of which would fail here.
+  it('keeps the banked animation dependency in package.json', () => {
     const pkg = JSON.parse(
       fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'),
     ) as { dependencies?: Record<string, string> };
-    expect(pkg.dependencies?.['lottie-react-native']).toBeUndefined();
+    expect(pkg.dependencies?.['lottie-react-native']).toBeDefined();
   });
 });

@@ -2,6 +2,7 @@ import { deleteOldSuggestions } from '@/lib/database/services/article-suggestion
 import { deleteOlderThan as deleteOldImpressions } from '@/lib/database/services/story-impression-service';
 import { deleteOlderThan as deleteOldNotifications } from '@/lib/database/services/notification-service';
 import { deleteExpiredFactChecks } from '@/lib/database/services/fact-check-record-service';
+import { deleteOrphanedFactCheckRetention } from '@/lib/database/services/saved-article-suggestion-service';
 import { refreshSuggestionsInStoreUnsafe } from '@/lib/services/SuggestionSyncService';
 import { AppScheduler } from '../AppScheduler';
 import { backgroundWorkIsIdle } from '../background-idle';
@@ -59,6 +60,16 @@ AppScheduler.register({
     );
     if (factCheckCount > 0) {
       ctx.log(`pruned ${factCheckCount} fact checks (unattributed >7d, any >90d)`);
+    }
+
+    // After the fact-check sweep: drop retention snapshots (origin
+    // 'fact_check' in saved_article_suggestions) that no fact_checks row
+    // references any more. This is the ONLY sweep those rows get — it also
+    // catches rows orphaned by a backup restore, since the saved table is
+    // backed up and fact_checks deliberately is not.
+    const retentionCount = await deleteOrphanedFactCheckRetention();
+    if (retentionCount > 0) {
+      ctx.log(`released ${retentionCount} unreferenced fact-check article snapshots`);
     }
   },
 });

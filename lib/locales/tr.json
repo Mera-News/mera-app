@@ -56,7 +56,21 @@
       "switchCancel": "İptal"
     },
     "contentPolicy": "İçerik Politikası",
-    "faq": "SSS"
+    "faq": "SSS",
+    "identitySwitchFailedTitle": "Hesap değişimi tamamlanamadı",
+    "identitySwitchFailedBody": "Bu cihazda hâlâ başka bir hesabın verileri var. Devam edebilmen için Mera'nın bunları silmesi gerekiyor ve silme işlemi bu kez başarısız oldu.",
+    "identitySwitchFailedWhy": "Hiçbir şey kaybolmaz. Bu veriler diğer hesaba ait ve o hesabın Mera hesabında kalır. Bu cihaz temizlendiğinde seninki sıfırdan başlar.",
+    "identitySwitchFailedExhausted": "Yine olmadı. Bu cihazı temizlemek için çıkış yap ve baştan başla.",
+    "identitySwitchRetry": "Tekrar dene",
+    "identitySwitchSignOut": "Çıkış yap ve baştan başla",
+    "deviceSignInWorking": "Giriş yapılıyor",
+    "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin veya e-posta ile giriş yapın.",
+    "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin veya e-posta ile giriş yapın.",
+    "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
+    "tryAgain": "Tekrar dene",
+    "learnAboutMera": "Mera'yı tanıyın",
+    "startReading": "Okumaya başla",
+    "alreadyHaveAccount": "Zaten hesabın var mı? Giriş yap"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",
@@ -986,7 +1000,10 @@
     "followChatSeed": "Bir hikayeyi takip etmek istiyorum.",
     "followChatIntro": "Takip etmek istediğini söyle ve ben bunu kurtaracağım.",
     "emptyHintFollow": "Takip et düğmesine dokun ve Mera'ya neyi takip etmek istediğini söyle.",
-    "emptyCtaFollow": "Bir hikayeyi takip et"
+    "emptyCtaFollow": "Bir hikayeyi takip et",
+    "removeMemberAction": "Bu haberin parçası değil",
+    "removeMemberConfirmTitle": "Bu makale kaldırılsın mı?",
+    "removeMemberConfirmBody": "Bu makale haberin zaman çizelgesinden kaldırılır. Mera haberi takip etmeye devam eder."
   },
   "whatsNew": {
     "title": "Yenilikler",
@@ -1494,7 +1511,7 @@
     "citationsHeading": "Danışılan kaynaklar",
     "noCitations": "Bu kontrol herhangi bir belirli sayfaya atıf yapmadı. Bu başarısız bir arama değil — kaynaklar olmadan özeti biraz daha dikkatle ele alın.",
     "sourceFallback": "Kaynak {{index}}",
-    "disclaimer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Bu, yayımlanmış doğruluk kontrolleri için yapılan bir web aramasının AI özeti olup, yanlış veya eksik olabilir. Güvenmeden önce kaynakları okuyun.",
+    "disclaimer": "Bu, yapay zeka tarafından yazılan bir web aramasının Mera'nın kendi okumasıdır. Hatalı veya eksik olabilir, bu nedenle ona güvenmeden önce kaynakları okuyun.",
     "verdict": {
       "supported": {
         "label": "Kaynaklarla tutarlı",
@@ -1528,7 +1545,7 @@
       "unverifiable": "Doğrulanamadı",
       "unknown": "Belirsiz"
     },
-    "checkedByHeading": "Bu haberi inceleyen doğruluk kontrol kuruluşları",
+    "checkedByHeading": "Aramanın bulduğu gerçek kontrolleri",
     "dashboard": {
       "deleteA11y": "Bu doğruluk kontrolünü sil",
       "empty": "Henüz herhangi bir iddia kontrol etmediniz. Bir hikayenin altındaki işareti dokunarak Mera'ya sorular sorun — sonuç hazır olduğunda buraya gelir.",
@@ -1541,11 +1558,14 @@
       "articleGone": "Makale süresi dolmuş, bu nedenle açılamıyor. Bulduğumuz gerçek kontrolü burada saklıyoruz.",
       "couldNotCheck": "Bu konuda kimin yayın yaptığını kontrol edemedik. Aramanın ne bulduğunu görmek için dokunun.",
       "moreOrganisations_one": "+{{count}} tane daha",
-      "moreOrganisations_other": "+{{count}} tane daha"
+      "moreOrganisations_other": "+{{count}} tane daha",
+      "noneFound": "Yayınlanmış gerçek kontrolü bulunamadı",
+      "factChecksFound_one": "{{count}} gerçek kontrolü bulundu. Okumak için dokunun",
+      "factChecksFound_other": "{{count}} gerçek kontrolü bulundu. Okumak için dokunun"
     },
     "explainer": "Mera kendisi haberler üzerinde doğruluk kontrolü yapmaz. Resmi doğruluk kontrol kuruluşlarının bu haber hakkında yayımladıklarını arar.",
-    "noCheckedBy": "Aradığımız hiçbir doğruluk kontrol kuruluşu bu haber hakkında bilgi yayımlamadı. Bu haberin yanlış olduğu anlamına gelmez — çoğu haber hiçbir zaman doğruluk kontrolünden geçmez.",
-    "organisationA11y": "{{organisation}}'nın gerçek kontrolünü uygulama içinde aç",
+    "noCheckedBy": "Bu hikaye hakkında yayınlanmış bir gerçek kontrolü bulamadık. Bu hikayelenin yanlış olduğu anlamına gelmez. Çoğu hikaye hiçbir zaman kontrol edilmez.",
+    "organisationA11y": "{{organisation}} tarafından yapılan gerçek kontrolünü açın, {{rating}} ile değerlendirilmiş, uygulama içi tarayıcıda",
     "queued": "Bu kontrol arka planda çalışmaya devam ediyor. Burada beklemenize gerek yok — makaleyi terk etseniz bile sorun değil.",
     "queuedHint": "Sonuç hazır olduğunda Panoda Gerçek Kontroller altında görüntülenir.",
     "citationA11y": "{{source}} kaynağını uygulama içinde aç",
@@ -1572,7 +1592,11 @@
     "checkedByMultipleNote": "Bunlar birbirinden bağımsız değerlendirmelerdir, her biri ilgili kuruluşun kendi ölçeğine göredir — her zaman birbiriyle uyuşmayabilir.",
     "ownReadingHeading": "Mera'nın kendi değerlendirmesi — yukarıdaki karara ikincil",
     "collapseA11y": "Bu doğrulamayı gizle",
-    "expandA11y": "Bu doğrulamayı göster"
+    "expandA11y": "Bu doğrulamayı göster",
+    "checkedByRelatedNote": "Bunlar anahtar sözcük aramasından gelir ve farklı bir hikaye hakkında olabilir. Kontrol etmek için birini açın.",
+    "searchFoundHeading": "Aramamızın bulduğu",
+    "searchFoundEmpty": "Arama, Mera'nın burada özet yapabileceği kadar bilgi sağlamadı.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Bu kaynağı önceliklendır",
@@ -2260,6 +2284,24 @@
     }
   },
   "support": {
-    "opening": "Destek açılıyor"
+    "opening": "Destek açılıyor",
+    "supportId": "Destek kimliği: {{id}}",
+    "copySupportId": "Destek kimliğini kopyala",
+    "copied": "Kopyalandı",
+    "saveHint": "Bu kimliği kaydet. Destek ekibi hesabını bununla bulabilir."
+  },
+  "emailCapture": {
+    "title": "E-postanı ekle",
+    "subtitle": "Makbuzları e-postayla al ve telefon değiştirirsen hesabını kurtar.",
+    "continue": "Devam",
+    "notNow": "Şimdi değil",
+    "confirm": "Onayla",
+    "added": "E-posta eklendi",
+    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak."
+  },
+  "welcomeBack": {
+    "title": "Tekrar hoş geldin",
+    "body": "Bu cihaz ücretsiz deneme süresini zaten kullandı. Mera'nın tüm özellikleriyle okumaya devam etmek için devam ettikten sonra bir plan seç.",
+    "continue": "Devam"
   }
 }

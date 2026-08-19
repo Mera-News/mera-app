@@ -146,9 +146,17 @@ jest.mock('react-native/Libraries/Utilities/Platform', () => {
 jest.mock('expo/fetch', () => ({ fetch: jest.fn() }));
 
 // llama.rn — native on-device inference binding. Never load the real one.
+// Revalidated against 0.12.9. It must cover everything modelManager.ts
+// imports, not just the two obvious entry points: an explicit factory that
+// omits an export makes it `undefined` at the call site, and the resulting
+// TypeError gets swallowed by whatever try/catch is nearest and reads as
+// "the model never loaded" rather than as a missing mock.
 jest.mock('llama.rn', () => ({
   initLlama: jest.fn(),
   releaseAllLlama: jest.fn(),
+  loadLlamaModelInfo: jest.fn(() => Promise.resolve({})),
+  toggleNativeLog: jest.fn(),
+  addNativeLogListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
 
 // react-native-fs — model download / filesystem access.
@@ -377,6 +385,126 @@ jest.mock('react-native-purchases-ui', () => ({
     RESTORED: 'RESTORED',
   },
 }));
+
+// --- Deps banked for the next binary -------------------------------------
+// These three native modules ship in the store build so the features that use
+// them (tutorial/processing animations, the reading-stats share card) can go
+// out over the air later. Nothing imports them yet; the mocks exist so the
+// first consumer does not also have to fix the test setup.
+
+// lottie-react-native — native animation view. NO JSX in this file:
+// babel-preset-expo routes JSX through react-native-css-interop's runtime,
+// which then loads into EVERY suite at setup time. Hand back the RN primitive.
+jest.mock('lottie-react-native', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: View };
+});
+
+// react-native-view-shot — native view capture. Default export is a component;
+// the three capture helpers are named exports.
+jest.mock('react-native-view-shot', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: View,
+    captureRef: jest.fn(() => Promise.resolve('file:///tmp/mera-capture.png')),
+    captureScreen: jest.fn(() => Promise.resolve('file:///tmp/mera-capture.png')),
+    releaseCapture: jest.fn(),
+  };
+});
+
+// expo-sharing — hands a captured file to the OS share sheet. Only the runtime
+// module is used; its config plugin builds an inbound share EXTENSION and is
+// deliberately not registered in app.json.
+jest.mock('expo-sharing', () => ({
+  __esModule: true,
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  shareAsync: jest.fn(() => Promise.resolve()),
+}));
+
+// --- Backup & restore native modules ------------------------------------
+// react-native-cloud-storage resolves TWO TurboModules at MODULE scope
+// (`CloudStorageCloudKit`, `CloudStorageLocalFileSystem`). Under Jest those
+// resolve to null, so anything that transitively imports `lib/backup/**` gets a
+// null native handle rather than a clear error. Mock the public surface instead
+// — otherwise the breakage lands in suites that have nothing to do with backup.
+// The real export is a CLASS with static mirrors of every instance method, and
+// lib/backup/providers/* constructs its own instance per provider (a shared
+// static default would mean configuring Drive reconfigured iCloud). So the mock
+// has to be a class too — an object literal passes `CloudStorage.readdir(...)`
+// and throws "not a constructor" on `new CloudStorage(...)`.
+jest.mock('react-native-cloud-storage', () => {
+  const methods = {
+    isCloudAvailable: () => Promise.resolve(true),
+    exists: () => Promise.resolve(false),
+    readFile: () => Promise.resolve(''),
+    writeFile: () => Promise.resolve(),
+    appendFile: () => Promise.resolve(),
+    uploadFile: () => Promise.resolve(),
+    downloadFile: () => Promise.resolve(),
+    unlink: () => Promise.resolve(),
+    mkdir: () => Promise.resolve(),
+    rmdir: () => Promise.resolve(),
+    readdir: () => Promise.resolve([]),
+    stat: () => Promise.resolve({ size: 0 }),
+    triggerSync: () => Promise.resolve(),
+    getProvider: () => 'ICloud',
+    setProvider: () => undefined,
+    getProviderOptions: () => ({}),
+    setProviderOptions: () => undefined,
+    subscribeToCloudAvailability: () => undefined,
+    unsubscribeFromCloudAvailability: () => undefined,
+  };
+  class CloudStorage {
+    constructor() {
+      for (const [name, impl] of Object.entries(methods)) this[name] = jest.fn(impl);
+    }
+  }
+  for (const [name, impl] of Object.entries(methods)) CloudStorage[name] = jest.fn(impl);
+  CloudStorage.getDefaultInstance = jest.fn(() => new CloudStorage());
+  CloudStorage.getDefaultProvider = jest.fn(() => 'ICloud');
+  CloudStorage.getSupportedProviders = jest.fn(() => ['ICloud', 'GoogleDrive']);
+
+  return {
+    __esModule: true,
+    CloudStorage,
+    CloudStorageScope: { AppData: 'app_data', Documents: 'documents' },
+    CloudStorageProvider: { ICloud: 'icloud', GoogleDrive: 'googledrive' },
+    CloudStorageError: class CloudStorageError extends Error {},
+    CloudStorageErrorCode: {
+      FILE_NOT_FOUND: 'ERR_FILE_NOT_FOUND',
+      DIRECTORY_NOT_FOUND: 'ERR_DIRECTORY_NOT_FOUND',
+      FILE_ALREADY_EXISTS: 'ERR_FILE_EXISTS',
+    },
+  };
+});
+
+// @react-native-google-signin/google-signin ships no jest mock of its own
+// (only a `build` dir), so this is hand-written. GoogleSigninButton is a
+// component: no JSX here, hand back the RN primitive.
+jest.mock('@react-native-google-signin/google-signin', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    GoogleSignin: {
+      configure: jest.fn(),
+      hasPlayServices: jest.fn(() => Promise.resolve(true)),
+      signIn: jest.fn(() => Promise.resolve({ type: 'cancelled' })),
+      signInSilently: jest.fn(() => Promise.resolve({ type: 'noSavedCredentialFound' })),
+      hasPreviousSignIn: jest.fn(() => false),
+      signOut: jest.fn(() => Promise.resolve()),
+      revokeAccess: jest.fn(() => Promise.resolve()),
+      getCurrentUser: jest.fn(() => null),
+      getTokens: jest.fn(() => Promise.resolve({ accessToken: 'test-access-token' })),
+    },
+    GoogleSigninButton: View,
+    statusCodes: {
+      SIGN_IN_CANCELLED: 'SIGN_IN_CANCELLED',
+      IN_PROGRESS: 'IN_PROGRESS',
+      PLAY_SERVICES_NOT_AVAILABLE: 'PLAY_SERVICES_NOT_AVAILABLE',
+    },
+  };
+});
 
 // Silence console errors during tests
 global.console = {

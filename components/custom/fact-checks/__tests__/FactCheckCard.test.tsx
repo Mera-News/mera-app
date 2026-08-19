@@ -108,10 +108,10 @@ describe('FactCheckCard', () => {
         expect(onPress).not.toHaveBeenCalled();
     });
 
-    // The card is COMPACT: organisation links, citations, our reading, the
-    // claims and the disclaimer all live on the article screen this row opens.
-    // Nothing inside the body is independently tappable any more, so the whole
-    // row is one target and a tap can only mean "open the article".
+    // The card is COMPACT: organisation LINKS, citations, Mera's own reading,
+    // the claims and the disclaimer all live on the article screen this row
+    // opens. Nothing inside the body is independently tappable any more, so
+    // the whole row is one target and a tap can only mean "open the article".
     it('renders no tappable source links — the body is one target', () => {
         const onPress = jest.fn();
         const { queryByTestId, getByTestId } = render(
@@ -154,9 +154,11 @@ describe('FactCheckCard', () => {
     });
 
     // F2's honest "searched and found nothing to synthesise from" outcome —
-    // same property FactCheckPanel pins: this must render a real, hedged
-    // verdict, never a blank card, on the Dashboard/list surface too.
-    it('renders a real answer for complete/unverifiable with every array empty', () => {
+    // this card has no expandable body, so the badge itself is the whole
+    // answer here: it must never be blank, but it also never renders Mera's
+    // own verdict any more (EXTERNALS ARE THE AUTHORITY, fc-relevance wave —
+    // see FactCheckBadge). Searched + nothing found is "none-published".
+    it('shows "no published fact checks found" for complete/unverifiable with every array empty', () => {
         const { getByTestId, getByText, queryByText } = render(
             <FactCheckCard
                 item={stored({
@@ -171,10 +173,8 @@ describe('FactCheckCard', () => {
                 testIDPrefix="fc"
             />,
         );
-        // Compact: the verdict badge is the whole answer on this row. The
-        // "nobody published" prose is part of the full card, one tap away.
-        expect(getByTestId('fc-verdict-row1')).toBeTruthy();
-        expect(getByText('factCheck.verdict.unverifiable.label')).toBeTruthy();
+        expect(getByTestId('fc-none-found-row1')).toBeTruthy();
+        expect(getByText('factCheck.dashboard.noneFound')).toBeTruthy();
         expect(queryByText('factCheck.noCheckedBy')).toBeNull();
     });
 
@@ -182,6 +182,16 @@ describe('FactCheckCard', () => {
     // SEPARATE render path (the Dashboard block and the fact-checks list) and
     // must not independently regress into claiming "nobody published" for a
     // lookup that never ran.
+    //
+    // `unavailable` now OUTRANKS `none-published` here, which looks like a
+    // revert of an earlier correction and is not — see
+    // `describeExternalChecks`'s own comment in fact-check-state.ts. The
+    // earlier fix moved `unavailable` below Mera's OWN verdict, because a
+    // tier-1 outage must not suppress a tier-2 answer we actually held. This
+    // chip carries no tier-2 answer any more (Mera's verdict is never shown
+    // here), so nothing is being suppressed: the only remaining question is
+    // whether the organisation lookup ran, which is exactly what this
+    // assertion checks.
     it('never claims nobody published when the ClaimReview lookup was unavailable', () => {
         const { getByText, queryByText, getByTestId, queryByTestId } = render(
             <FactCheckCard
@@ -196,23 +206,13 @@ describe('FactCheckCard', () => {
                 testIDPrefix="fc"
             />,
         );
-        // THE INVARIANT IS "NEVER CLAIM NOBODY PUBLISHED", and it holds: the
-        // row shows our own verdict, which for this payload is "couldn't
-        // confirm" — accurate, non-committal, and not a claim about who has
-        // published.
-        //
-        // It does NOT show "we could not check" INSTEAD of the verdict.
-        // `checkedByStatus` is about TIER 1 (could we see whether an
-        // organisation ruled); the verdict is TIER 2, our own reading. An
-        // unavailable tier 1 must not suppress a tier 2 answer we have — the
-        // server already clamps a verdict to `unverifiable` when there is no
-        // evidence behind it, so what shows here is a real finding.
-        expect(getByTestId('fc-verdict-row1')).toBeTruthy();
-        expect(queryByTestId('fc-unavailable-row1')).toBeNull();
+        expect(getByTestId('fc-unavailable-row1')).toBeTruthy();
+        expect(getByText('factCheck.dashboard.couldNotCheck')).toBeTruthy();
+        expect(queryByTestId('fc-none-found-row1')).toBeNull();
         expect(queryByText('factCheck.noCheckedBy')).toBeNull();
     });
 
-    it('shows the verdict when the lookup ran and found nothing', () => {
+    it('shows "no published fact checks found" when the lookup ran and found nothing', () => {
         const { getByTestId, queryByText } = render(
             <FactCheckCard
                 item={stored({
@@ -225,14 +225,18 @@ describe('FactCheckCard', () => {
                 testIDPrefix="fc"
             />,
         );
-        // Searched and found nothing is a REAL answer, so the row shows our
-        // verdict badge — and must NOT borrow the "we couldn't look" line.
-        expect(getByTestId('fc-verdict-row1')).toBeTruthy();
+        expect(getByTestId('fc-none-found-row1')).toBeTruthy();
         expect(queryByText('factCheck.dashboard.couldNotCheck')).toBeNull();
     });
 
-    // ── PIVOT P8h — same rule as FactCheckPanel: checkedBy leads, our own
-    // verdict never contradicts a named organisation's own ruling. ──────────
+    // ── fc-relevance wave — EXTERNALS ARE THE AUTHORITY, and Mera's own
+    // verdict never styles or words this chip, in ANY state. This supersedes
+    // PIVOT P8h in the opposite direction from an earlier plan for this wave,
+    // which would have had Mera's own (well-evidenced) verdict lead instead:
+    // that still failed on an off-topic external outranking a TRUE story,
+    // just with the roles reversed. Removing Mera's verdict from the chip
+    // entirely, rather than re-ranking it against externals, is what these
+    // tests pin. ─────────────────────────────────────────────────────────────
     describe('when checkedBy is populated', () => {
         const withOrg = (verdict: string | null) => stored({
             verdict,
@@ -245,33 +249,32 @@ describe('FactCheckCard', () => {
         });
 
         // ── THE MUST-FAIL TEST (Dashboard card half) ────────────────────────
-        it('NEVER shows "unverifiable" alongside a named organisation on the Dashboard card either', () => {
+        // Sabotaged (see report), this must go RED if Mera's own verdict is
+        // ever allowed to own this chip again, in any state.
+        it('the organisation leads, verbatim, and Mera never renders a verdict of its own here', () => {
             const { getByTestId, queryByTestId, queryByText, getByText } = render(
                 <FactCheckCard item={withOrg('unverifiable')} onPress={jest.fn()} testIDPrefix="fc" />,
             );
-            // Compact form makes this structural rather than a matter of
-            // ordering: with one badge available, it is the ORGANISATION's,
-            // quoted verbatim, and ours is not rendered at all.
             expect(getByTestId('fc-organisation-row1')).toBeTruthy();
             expect(getByText('Alt News: False')).toBeTruthy();
+            expect(queryByTestId('fc-none-found-row1')).toBeNull();
             expect(queryByTestId('fc-verdict-row1')).toBeNull();
+            expect(queryByTestId('fc-verdict-secondary-row1')).toBeNull();
             expect(queryByText('factCheck.verdict.unverifiable.label')).toBeNull();
         });
 
-        it('demotes (never the leading chip) a non-unverifiable verdict once an organisation has ruled', () => {
-            const { getByTestId, queryByTestId, queryByText } = render(
+        it('renders identically for a well-evidenced verdict too — the chip is verdict-independent', () => {
+            const { getByTestId, queryByTestId, getByText, queryByText } = render(
                 <FactCheckCard item={withOrg('supported')} onPress={jest.fn()} testIDPrefix="fc" />,
             );
-            // Not merely demoted here — absent. "Consistent with sources" on a
-            // row where Alt News said False is the original defect at its
-            // smallest, and the compact card cannot show both.
-            expect(queryByTestId('fc-verdict-row1')).toBeNull();
-            expect(queryByTestId('fc-verdict-secondary-row1')).toBeNull();
             expect(getByTestId('fc-organisation-row1')).toBeTruthy();
+            expect(getByText('Alt News: False')).toBeTruthy();
+            expect(queryByTestId('fc-verdict-row1')).toBeNull();
+            expect(queryByTestId('fc-none-found-row1')).toBeNull();
             expect(queryByText('factCheck.verdict.supported.label')).toBeNull();
         });
 
-        it('still leads with the chip (unchanged) when checkedBy is empty, even for the same verdict', () => {
+        it('still shows "no published fact checks found" when checkedBy is empty, even for the same verdict', () => {
             const { getByTestId, queryByTestId } = render(
                 <FactCheckCard
                     item={stored({
@@ -282,8 +285,70 @@ describe('FactCheckCard', () => {
                     testIDPrefix="fc"
                 />,
             );
-            expect(getByTestId('fc-verdict-row1')).toBeTruthy();
+            expect(getByTestId('fc-none-found-row1')).toBeTruthy();
+            expect(queryByTestId('fc-verdict-row1')).toBeNull();
             expect(queryByTestId('fc-verdict-secondary-row1')).toBeNull();
         });
+    });
+
+    // ── The organisation-names line — reachability on a surface with no
+    // expandable body. New this wave. ───────────────────────────────────────
+    describe('the organisation-names line', () => {
+        it('lists every gated organisation name, deduped, comma-joined, first-appearance order', () => {
+            const { getByTestId } = render(
+                <FactCheckCard
+                    item={stored({
+                        payload: {
+                            _id: 'fc1', status: 'complete', verdict: 'supported',
+                            checkedBy: [
+                                { organisation: 'India Today', url: 'https://a', verdict: 'False' },
+                                { organisation: 'AFP Fact Check', url: 'https://b', verdict: 'False' },
+                                { organisation: 'AFP Fact Check', url: 'https://c', verdict: 'Misleading' },
+                                { organisation: 'Full Fact', url: 'https://d', verdict: 'False' },
+                            ],
+                        },
+                    })}
+                    onPress={jest.fn()}
+                    testIDPrefix="fc"
+                />,
+            );
+            const line = getByTestId('fc-org-names-row1');
+            expect(line.props.children).toBe('India Today, AFP Fact Check, Full Fact');
+        });
+
+        it('renders no organisation-names line when nothing was found', () => {
+            const { queryByTestId } = render(
+                <FactCheckCard
+                    item={stored({
+                        payload: { _id: 'fc1', status: 'complete', verdict: 'supported', checkedBy: [] },
+                    })}
+                    onPress={jest.fn()}
+                    testIDPrefix="fc"
+                />,
+            );
+            expect(queryByTestId('fc-org-names-row1')).toBeNull();
+        });
+    });
+
+    // Real-data finding: a prod organisation `verdict` can be a full sentence
+    // (Full Fact's ClaimReview entries are prose, not a short rating). This
+    // card uses the same FactCheckBadge as the article panel, so the same
+    // one-line cap applies here too — see FactCheckBadge's file header.
+    it('caps the chip to one line for a sentence-length organisation verdict', () => {
+        const sentence = "The video shows the aftermath of an accidental explosion in Lebanon in 2020 and doesn't relate to the Netherlands.";
+        const { getByText } = render(
+            <FactCheckCard
+                item={stored({
+                    payload: {
+                        _id: 'fc1', status: 'complete', verdict: 'supported',
+                        checkedBy: [{ organisation: 'Full Fact', url: 'https://fullfact.org/x', verdict: sentence }],
+                    },
+                })}
+                onPress={jest.fn()}
+                testIDPrefix="fc"
+            />,
+        );
+        const chipText = getByText(`Full Fact: ${sentence}`);
+        expect(chipText.props.numberOfLines).toBe(1);
     });
 });

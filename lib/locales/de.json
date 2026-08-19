@@ -56,7 +56,21 @@
       "switchCancel": "Abbrechen"
     },
     "contentPolicy": "Inhaltsrichtlinie",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "Der Kontowechsel konnte nicht abgeschlossen werden",
+    "identitySwitchFailedBody": "Auf diesem Gerät sind noch Daten eines anderen Kontos. Mera muss sie löschen, bevor es weitergehen kann, und das Löschen hat diesmal nicht funktioniert.",
+    "identitySwitchFailedWhy": "Es geht nichts verloren. Diese Daten gehören zum anderen Konto und bleiben dort erhalten. Dein Konto startet neu, sobald dieses Gerät leer ist.",
+    "identitySwitchFailedExhausted": "Das hat wieder nicht funktioniert. Melde dich ab und starte neu, um dieses Gerät zu leeren.",
+    "identitySwitchRetry": "Erneut versuchen",
+    "identitySwitchSignOut": "Abmelden und neu starten",
+    "deviceSignInWorking": "Du wirst angemeldet",
+    "deviceSignInFailed": "Etwas ist schiefgelaufen. Versuche es erneut oder melde dich mit E-Mail an.",
+    "deviceSignInDenied": "Dieses Gerät konnte nicht bestätigt werden. Versuche es erneut oder melde dich mit E-Mail an.",
+    "deviceSignInUnavailable": "Die Anmeldung ist gerade nicht verfügbar. Versuche es in ein paar Minuten erneut oder melde dich mit E-Mail an.",
+    "tryAgain": "Erneut versuchen",
+    "learnAboutMera": "Mera kennenlernen",
+    "startReading": "Jetzt lesen",
+    "alreadyHaveAccount": "Schon ein Konto? Anmelden"
   },
   "account": {
     "pendingTitle": "Konto wartet auf Freischaltung",
@@ -984,7 +998,10 @@
     "followChatSeed": "Ich möchte einer Geschichte folgen.",
     "followChatIntro": "Sag mir, was du verfolgen möchtest, und ich richte es ein.",
     "emptyHintFollow": "Tippe auf die Folgen-Schaltfläche und sag Mera, woran du dich gerne auf dem Laufenden halten möchtest.",
-    "emptyCtaFollow": "Folge einer Geschichte"
+    "emptyCtaFollow": "Folge einer Geschichte",
+    "removeMemberAction": "Gehört nicht zu dieser Story",
+    "removeMemberConfirmTitle": "Diesen Artikel entfernen?",
+    "removeMemberConfirmBody": "Dieser Artikel wird aus dem Verlauf der Story entfernt. Mera verfolgt die Story selbst weiter."
   },
   "whatsNew": {
     "title": "Neuigkeiten",
@@ -1492,7 +1509,7 @@
     "citationsHeading": "Konsultierte Quellen",
     "noCitations": "Diese Überprüfung hat keine spezifischen Quellenangaben. Das ist keine fehlgeschlagene Suche – behandle die Zusammenfassung einfach mit etwas mehr Vorsicht, wenn es keine Quellen gibt.",
     "sourceFallback": "Quelle {{index}}",
-    "disclaimer": "Mera überprüft keine Nachrichten selbst. Das ist eine KI-Zusammenfassung einer Websuche nach veröffentlichten Faktenchecks – es kann falsch oder unvollständig sein, daher lies die Quellen, bevor du dich darauf verlässt.",
+    "disclaimer": "Dies ist Meras eigene Auswertung einer Websuche, geschrieben von KI. Es kann falsch oder unvollständig sein, daher lies die Quellen, bevor du dich darauf verlässt.",
     "verdict": {
       "supported": {
         "label": "Mit Quellen übereingestimmt",
@@ -1526,7 +1543,7 @@
       "unverifiable": "Konnte nicht bestätigt werden",
       "unknown": "Unklar"
     },
-    "checkedByHeading": "Fact-Checker, die dies überprüft haben",
+    "checkedByHeading": "Faktenchecks aus der Suche",
     "dashboard": {
       "deleteA11y": "Diesen Factencheck löschen",
       "empty": "Du hast noch keine Aussagen überprüft. Tippe auf das Häkchen unter einem Artikel, um Mera danach zu fragen – das Ergebnis wird hier angezeigt, sobald es verfügbar ist.",
@@ -1539,11 +1556,14 @@
       "articleGone": "Der Artikel ist abgelaufen und kann nicht mehr geöffnet werden. Die gefundene Faktenprüfung wird hier beibehalten.",
       "couldNotCheck": "Wir konnten nicht prüfen, wer dazu etwas veröffentlicht hat. Tippe, um zu sehen, was die Suche gefunden hat.",
       "moreOrganisations_one": "+{{count}} weitere",
-      "moreOrganisations_other": "+{{count}} weitere"
+      "moreOrganisations_other": "+{{count}} weitere",
+      "noneFound": "Keine veröffentlichten Faktenchecks gefunden",
+      "factChecksFound_one": "{{count}} Faktencheck gefunden. Tippen zum Lesen",
+      "factChecksFound_other": "{{count}} Faktenchecks gefunden. Tippen zum Lesen"
     },
     "explainer": "Mera überprüft keine Nachrichten selbst. Es sucht nach dem, was etablierte Fact-Check-Organisationen bereits über diese Story veröffentlicht haben.",
-    "noCheckedBy": "Keine der durchsuchten Fact-Check-Organisationen hat etwas über diese Story veröffentlicht. Das macht die Story nicht falsch – die meisten Stories werden nie überprüft.",
-    "organisationA11y": "Faktencheck von {{organisation}} im integrierten Browser öffnen",
+    "noCheckedBy": "Wir haben keinen veröffentlichten Faktencheck über diese Geschichte gefunden. Das macht die Geschichte nicht falsch. Die meisten Geschichten werden niemals überprüft.",
+    "organisationA11y": "Öffne Faktenchecks von {{organisation}}, bewertet {{rating}}, im In-App-Browser",
     "queued": "Diese Überprüfung läuft im Hintergrund weiter. Du brauchst hier nicht zu warten – es ist völlig in Ordnung, den Artikel zu verlassen.",
     "queuedHint": "Das Ergebnis findest du auf deinem Dashboard unter \"Faktenchecks\", sobald es verfügbar ist.",
     "citationA11y": "Quelle {{source}} im integrierten Browser öffnen",
@@ -1570,7 +1590,11 @@
     "checkedByMultipleNote": "Dies sind unabhängige Bewertungen, jede nach der eigenen Skala der jeweiligen Organisation — sie stimmen nicht immer miteinander überein.",
     "ownReadingHeading": "Meras eigene Einschätzung — nachrangig zur oben genannten Bewertung",
     "collapseA11y": "Diesen Faktencheck ausblenden",
-    "expandA11y": "Diesen Faktencheck anzeigen"
+    "expandA11y": "Diesen Faktencheck anzeigen",
+    "checkedByRelatedNote": "Diese stammen aus einer Schlüsselwortsuche und können sich auf eine andere Geschichte beziehen. Öffne einen, um zu überprüfen.",
+    "searchFoundHeading": "Was unsere Suche gefunden hat",
+    "searchFoundEmpty": "Die Suche hat nicht genug für Mera gefunden, um dies zusammenzufassen.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Diese Quelle priorisieren",
@@ -2258,6 +2282,24 @@
     }
   },
   "support": {
-    "opening": "Support wird geöffnet"
+    "opening": "Support wird geöffnet",
+    "supportId": "Support-ID: {{id}}",
+    "copySupportId": "Support-ID kopieren",
+    "copied": "Kopiert",
+    "saveHint": "Speichere diese ID. Der Support findet dein Konto damit."
+  },
+  "emailCapture": {
+    "title": "E-Mail-Adresse hinzufügen",
+    "subtitle": "Erhalte Belege per E-Mail und stelle dein Konto wieder her, wenn du das Telefon wechselst.",
+    "continue": "Weiter",
+    "notNow": "Nicht jetzt",
+    "confirm": "Bestätigen",
+    "added": "E-Mail-Adresse hinzugefügt",
+    "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}."
+  },
+  "welcomeBack": {
+    "title": "Willkommen zurück",
+    "body": "Dieses Gerät hat seine kostenlose Testphase bereits genutzt. Wähle nach dem Fortfahren einen Tarif, um mit allen Funktionen von Mera weiterzulesen.",
+    "continue": "Weiter"
   }
 }

@@ -11,11 +11,33 @@
  * locally rather than imported from `lib/generated/graphql-types.ts` because
  * the server side of this wave (agent S1) had not landed at the time this file
  * was written — importing a codegen'd type that does not exist yet would block
- * every file below this one on a different agent's timeline. Once S1 reports
- * landed and `npm run codegen` has been re-run, this file's shape should be
- * diffed against the generated `FactCheck` type and any drift resolved (ideally
- * by re-pointing these aliases at the generated type, the way the pre-pivot
- * `fact-check-service.ts` did).
+ * every file below this one on a different agent's timeline.
+ *
+ * THAT DIFF HAS NOW BEEN DONE against the generated `FactCheck` /
+ * `FactCheckOrganisation` / `FactCheckCitation` / `FactCheckClaim` in
+ * `lib/generated/graphql-types.ts`. Every field matches by name and by inner
+ * type. Three fields are LOOSER here than on the wire, all deliberately:
+ *
+ *   generated                          here
+ *   createdAt: DateTime!               createdAt?: string | number | null
+ *   attempts: Int!                     attempts?: number | null
+ *   checkedByStatus: String!           checkedByStatus?: CheckedByStatus
+ *
+ * DO NOT "FIX" THOSE BY RE-POINTING AT THE GENERATED TYPE. `FactCheckRow`
+ * describes two different objects that happen to share a name: a payload fresh
+ * off the wire, AND a payload replayed out of `payload_json` on the device,
+ * which may have been written by an older build of this app. The generated type
+ * only ever describes the first. A row stored before `checkedByStatus` existed
+ * genuinely does not carry it (see `CheckedByStatus` below), and the same is
+ * true of any field added later. Adopting the server's non-null guarantees
+ * would assert something stored rows do not honour, and the failure would land
+ * at render time on the oldest rows rather than at the type boundary.
+ *
+ * The generated `FactCheckOrganisation` carries `organisation`, `url`,
+ * `verdict`, `summary` and NOTHING ELSE — in particular no relevance score and
+ * no reviewed-claim text. Relevance of a `checkedBy` entry to the article is
+ * therefore not knowable client-side and is not attempted here; it is
+ * guaranteed by the server's own gate before the row is ever sent.
  *
  * THE ONE FIELD THE OLD SERVER TYPE DID NOT HAVE: `checkedByStatus`. An empty
  * `checkedBy[]` is ambiguous on its own — it means either "nobody has

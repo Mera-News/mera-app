@@ -1,0 +1,23 @@
+{
+  "_comment": "auth-wave S9: the Settings support-id copy button. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": { "support": { "copySupportId": "Copy support ID", "copied": "Copied" } },
+  "ar": { "support": { "copySupportId": "نسخ معرّف الدعم", "copied": "تم النسخ" } },
+  "de": { "support": { "copySupportId": "Support-ID kopieren", "copied": "Kopiert" } },
+  "es": { "support": { "copySupportId": "Copiar ID de soporte", "copied": "Copiado" } },
+  "fr": { "support": { "copySupportId": "Copier l'ID d'assistance", "copied": "Copié" } },
+  "hi": { "support": { "copySupportId": "सहायता आईडी कॉपी करें", "copied": "कॉपी किया गया" } },
+  "id": { "support": { "copySupportId": "Salin ID dukungan", "copied": "Disalin" } },
+  "it": { "support": { "copySupportId": "Copia ID assistenza", "copied": "Copiato" } },
+  "ja": { "support": { "copySupportId": "サポートIDをコピー", "copied": "コピーしました" } },
+  "ko": { "support": { "copySupportId": "지원 ID 복사", "copied": "복사됨" } },
+  "nl": { "support": { "copySupportId": "Support-ID kopiëren", "copied": "Gekopieerd" } },
+  "pl": { "support": { "copySupportId": "Kopiuj identyfikator pomocy", "copied": "Skopiowano" } },
+  "pt-BR": { "support": { "copySupportId": "Copiar ID de suporte", "copied": "Copiado" } },
+  "ru": { "support": { "copySupportId": "Копировать ID поддержки", "copied": "Скопировано" } },
+  "th": { "support": { "copySupportId": "คัดลอกรหัสฝ่ายสนับสนุน", "copied": "คัดลอกแล้ว" } },
+  "tr": { "support": { "copySupportId": "Destek kimliğini kopyala", "copied": "Kopyalandı" } },
+  "uk": { "support": { "copySupportId": "Копіювати ID підтримки", "copied": "Скопійовано" } },
+  "vi": { "support": { "copySupportId": "Sao chép ID hỗ trợ", "copied": "Đã sao chép" } },
+  "zh-CN": { "support": { "copySupportId": "复制支持 ID", "copied": "已复制" } },
+  "zh-TW": { "support": { "copySupportId": "複製支援 ID", "copied": "已複製" } }
+}

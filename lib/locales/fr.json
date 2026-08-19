@@ -56,7 +56,21 @@
       "switchCancel": "Annuler"
     },
     "contentPolicy": "Politique de contenu",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "identitySwitchFailedTitle": "Impossible de terminer le changement de compte",
+    "identitySwitchFailedBody": "Les données d'un autre compte sont encore sur cet appareil. Mera doit les effacer avant de continuer, et l'effacement n'a pas fonctionné cette fois.",
+    "identitySwitchFailedWhy": "Rien n'est perdu. Ces données appartiennent à l'autre compte et y restent. Le vôtre repart de zéro une fois cet appareil nettoyé.",
+    "identitySwitchFailedExhausted": "Cela n'a toujours pas fonctionné. Déconnectez-vous et recommencez pour nettoyer cet appareil.",
+    "identitySwitchRetry": "Réessayer",
+    "identitySwitchSignOut": "Se déconnecter et recommencer",
+    "deviceSignInWorking": "Connexion en cours",
+    "deviceSignInFailed": "Un problème est survenu. Réessayez ou connectez-vous par e-mail.",
+    "deviceSignInDenied": "Impossible de vérifier cet appareil. Réessayez ou connectez-vous par e-mail.",
+    "deviceSignInUnavailable": "La connexion est momentanément indisponible. Réessayez dans quelques minutes ou connectez-vous par e-mail.",
+    "tryAgain": "Réessayer",
+    "learnAboutMera": "Découvrir Mera",
+    "startReading": "Commencer à lire",
+    "alreadyHaveAccount": "Vous avez déjà un compte ? Connectez-vous"
   },
   "account": {
     "pendingTitle": "Compte en attente d'approbation",
@@ -990,7 +1004,10 @@
     "followChatSeed": "Je veux suivre une histoire.",
     "followChatIntro": "Dites-moi ce que vous voulez suivre et je le mettrai en place.",
     "emptyHintFollow": "Appuyez sur le bouton de suivi et dites à Mera ce que vous voulez rester informé.",
-    "emptyCtaFollow": "Suivre une histoire"
+    "emptyCtaFollow": "Suivre une histoire",
+    "removeMemberAction": "Ne fait pas partie de cette actualité",
+    "removeMemberConfirmTitle": "Retirer cet article ?",
+    "removeMemberConfirmBody": "Cet article est retiré de la chronologie de l'actualité. Mera continue de suivre l'actualité elle-même."
   },
   "whatsNew": {
     "title": "Nouveautés",
@@ -1499,7 +1516,7 @@
     "citationsHeading": "Sources consultées",
     "noCitations": "Cette vérification n'a cité aucune page spécifique. Ce n'est pas un échec — traitez le résumé avec un peu plus de prudence sans sources à consulter.",
     "sourceFallback": "Source {{index}}",
-    "disclaimer": "Mera ne vérifie pas les faits de l'actualité elle-même. Ceci est un résumé généré par l'IA d'une recherche web pour les vérifications de faits publiées — il peut être inexact ou incomplet, veuillez donc lire les sources avant de vous y fier.",
+    "disclaimer": "Ceci est la propre lecture de Mera d'une recherche web, écrite par l'IA. Cela peut être inexact ou incomplet, veuillez donc lire les sources avant de vous y fier.",
     "verdict": {
       "supported": {
         "label": "Cohérent avec les sources",
@@ -1533,7 +1550,7 @@
       "unverifiable": "Impossible de confirmer",
       "unknown": "Peu clair"
     },
-    "checkedByHeading": "Vérificateurs de faits ayant couvert ce sujet",
+    "checkedByHeading": "Vérifications de faits trouvées par la recherche",
     "dashboard": {
       "deleteA11y": "Supprimer cette vérification de fait",
       "empty": "Vous n'avez pas encore vérifié d'affirmations. Appuyez sur la coche sous une histoire pour demander à Mera — le résultat s'affiche ici une fois prêt.",
@@ -1546,11 +1563,14 @@
       "articleGone": "L'article a expiré, il ne peut donc pas être ouvert. La vérification des faits que nous avons trouvée est conservée ici.",
       "couldNotCheck": "Nous n'avons pas pu vérifier qui a publié à ce sujet. Touchez pour voir ce que la recherche a trouvé.",
       "moreOrganisations_one": "+{{count}} autre",
-      "moreOrganisations_other": "+{{count}} autres"
+      "moreOrganisations_other": "+{{count}} autres",
+      "noneFound": "Aucune vérification de faits publiée trouvée",
+      "factChecksFound_one": "{{count}} vérification de faits trouvée. Appuyez pour lire",
+      "factChecksFound_other": "{{count}} vérifications de faits trouvées. Appuyez pour lire"
     },
     "explainer": "Mera ne vérifie pas les faits de l'actualité elle-même. Elle recherche ce que les organismes de vérification de faits établis ont déjà publié sur cette histoire.",
-    "noCheckedBy": "Aucun organisme de vérification de faits que nous avons consulté n'a publié sur cette histoire. Cela ne rend pas l'histoire fausse — la plupart des histoires ne sont jamais vérifiées.",
-    "organisationA11y": "Ouvrir la vérification de faits de {{organisation}} dans le navigateur intégré",
+    "noCheckedBy": "Nous n'avons pas trouvé de vérification de faits publiée sur cette histoire. Cela ne rend pas l'histoire fausse. La plupart des histoires ne sont jamais vérifiées.",
+    "organisationA11y": "Ouvrir la vérification de faits de {{organisation}}, notée {{rating}}, dans le navigateur intégré",
     "queued": "Cette vérification s'exécute en arrière-plan. Vous n'avez pas besoin d'attendre ici — c'est parfait de quitter l'article.",
     "queuedHint": "Le résultat s'affiche sous Vérifications de faits sur votre Tableau de bord une fois prêt.",
     "citationA11y": "Ouvrir la source {{source}} dans le navigateur intégré",
@@ -1577,7 +1597,11 @@
     "checkedByMultipleNote": "Il s'agit d'évaluations indépendantes, chacune selon l'échelle propre à cette organisation — elles ne concordent pas toujours entre elles.",
     "ownReadingHeading": "Lecture propre à Mera — secondaire par rapport au verdict ci-dessus",
     "collapseA11y": "Masquer cette vérification",
-    "expandA11y": "Afficher cette vérification"
+    "expandA11y": "Afficher cette vérification",
+    "checkedByRelatedNote": "Celles-ci proviennent d'une recherche par mots-clés et peuvent concerner une histoire différente. Ouvrez-en une pour vérifier.",
+    "searchFoundHeading": "Ce que notre recherche a trouvé",
+    "searchFoundEmpty": "Il n'y avait pas assez dans la recherche pour que Mera le résume ici.",
+    "headerA11y": "{{title}}. {{status}}. {{action}}"
   },
   "sourcePrefControl": {
     "prioritiseA11y": "Prioriser cette source",
@@ -2265,6 +2289,24 @@
     }
   },
   "support": {
-    "opening": "Ouverture de l'assistance"
+    "opening": "Ouverture de l'assistance",
+    "supportId": "ID d'assistance : {{id}}",
+    "copySupportId": "Copier l'ID d'assistance",
+    "copied": "Copié",
+    "saveHint": "Conservez cet ID. L'assistance peut retrouver votre compte grâce à lui."
+  },
+  "emailCapture": {
+    "title": "Ajoutez votre e-mail",
+    "subtitle": "Recevez vos reçus par e-mail et récupérez votre compte si vous changez de téléphone.",
+    "continue": "Continuer",
+    "notNow": "Pas maintenant",
+    "confirm": "Confirmer",
+    "added": "E-mail ajouté",
+    "addedDetail": "Les reçus et la récupération du compte utiliseront {{email}}."
+  },
+  "welcomeBack": {
+    "title": "Bon retour",
+    "body": "Cet appareil a déjà utilisé son essai gratuit. Pour continuer à lire avec toutes les fonctionnalités de Mera, choisissez une formule après avoir continué.",
+    "continue": "Continuer"
   }
 }

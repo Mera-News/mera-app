@@ -1,4 +1,5 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
+import BackupSection from '@/components/custom/backup/BackupSection';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
@@ -8,6 +9,7 @@ import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
 import { authClient, clearAuthStorage } from '@/lib/auth-client';
+import { clearDeviceAuthCredentials } from '@/lib/device-auth';
 import database from '@/lib/database';
 import { AppScheduler } from '@/lib/scheduler/AppScheduler';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
@@ -184,11 +186,23 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
             serverDeleteSucceeded = true;
 
             try {
-                await authClient.signOut();
+                // clearAuthStorage() owns the (guarded, bounded) server
+                // sign-out — see its header. A direct signOut here once let a
+                // network failure skip the whole local cleanup silently.
                 await clearAuthStorage();
+                // DELETION SEVERS the device binding (S10). Logout preserves
+                // it so login resumes the account; deletion must not — a
+                // preserved key would silently REACTIVATE the account during
+                // its grace period on the next sign-in.
+                await clearDeviceAuthCredentials();
 
                 router.dismissAll();
-                router.replace('/');
+                // The LOGOUT route, not '/': the launch gate counts the
+                // still-stale better-auth session atom as identity and
+                // re-entered the app with a dead session (BUG 4). signedOut
+                // suppresses login.tsx's mirror-image shortcut until the atom
+                // actually clears.
+                router.replace({ pathname: '/login', params: { signedOut: '1' } });
 
                 await new Promise((resolve) => setTimeout(resolve, 0));
                 await clearAllStores();
@@ -364,6 +378,15 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                     <Text size="sm" className="text-gray-400 mb-5">
                         {t('manageData.description')}
                     </Text>
+
+                    {/* Backup is the one CONSTRUCTIVE thing on this screen, so it
+                        sits above the destructive list and is deliberately not
+                        drawn in the red every row below uses. It holds its own
+                        state: lifting that into this component would also mean
+                        every module it reaches had to be mocked in
+                        ManageDataScreen.test.tsx, breaking a passing suite for
+                        reasons that have nothing to do with backup. */}
+                    <BackupSection />
 
                     <VStack space="md">
                         {options.map(renderOption)}
