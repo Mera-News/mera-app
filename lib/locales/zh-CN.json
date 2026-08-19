@@ -70,7 +70,18 @@
     "tryAgain": "重试",
     "learnAboutMera": "了解 Mera",
     "startReading": "开始阅读",
-    "alreadyHaveAccount": "已有帐号？登录"
+    "alreadyHaveAccount": "已有帐号？登录",
+    "chooseLanguageTitle": "选择您的语言",
+    "chooseLanguageHint": "您可以随时在设置中更改。",
+    "continue": "继续",
+    "firstTimeHint": "第一次使用 Mera？先来快速了解一下吧。",
+    "readyHint": "准备好开始使用 Mera 了吗？",
+    "getStarted": "开始使用",
+    "paidUserHint": "已经是付费用户？",
+    "signIn": "登录",
+    "aboutLegal": "关于 Mera 与法律信息",
+    "sourceCode": "源代码",
+    "website": "网站"
   },
   "account": {
     "pendingTitle": "账户待审核",
@@ -1610,7 +1621,9 @@
     "accepting": "保存中…",
     "errorTitle": "无法保存您的接受",
     "errorDescription": "请检查您的连接并重试。",
-    "retry": "重试"
+    "retry": "重试",
+    "welcomeTitle": "欢迎使用 Mera",
+    "welcomeBody": "点按\"同意并继续\"即表示您接受我们的服务条款和隐私政策。"
   },
   "tutorials": {
     "entryRow": "了解 Mera",
@@ -2299,8 +2312,8 @@
     "addedDetail": "收据和帐号找回将使用 {{email}}。"
   },
   "welcomeBack": {
-    "title": "欢迎回来",
-    "body": "此设备已使用过免费试用。要继续使用 Mera 的全部功能阅读，请在继续后选择一个方案。",
+    "title": "欢迎回到 Mera",
+    "body": "这台设备之前似乎使用过 Mera，因此免费试用已被使用。您可以继续使用新账号阅读，也可以随时选择一个套餐来获得完整体验。",
     "continue": "继续"
   }
 }

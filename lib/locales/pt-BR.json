@@ -70,7 +70,18 @@
     "tryAgain": "Tentar novamente",
     "learnAboutMera": "Conheça o Mera",
     "startReading": "Começar a ler",
-    "alreadyHaveAccount": "Já tem uma conta? Faça login"
+    "alreadyHaveAccount": "Já tem uma conta? Faça login",
+    "chooseLanguageTitle": "Escolha seu idioma",
+    "chooseLanguageHint": "Você pode mudar isso a qualquer momento nas Configurações.",
+    "continue": "Continuar",
+    "firstTimeHint": "Novo no Mera? Comece com um tour rápido.",
+    "readyHint": "Pronto para fazer o Mera ser seu?",
+    "getStarted": "Começar",
+    "paidUserHint": "Já é um usuário pago?",
+    "signIn": "Entrar",
+    "aboutLegal": "Sobre o Mera e informações legais",
+    "sourceCode": "Código-fonte",
+    "website": "Site"
   },
   "account": {
     "pendingTitle": "Conta Pendente de Aprovação",
@@ -1605,11 +1616,13 @@
     "body": "Atualizamos nossos Termos de Serviço e Política de Privacidade. Por favor, revise e aceite para continuar usando Mera.",
     "termsLink": "Termos de Serviço",
     "privacyLink": "Política de Privacidade",
-    "accept": "Concordar e Continuar",
+    "accept": "Concordar e continuar",
     "accepting": "Salvando…",
     "errorTitle": "Não foi possível salvar sua aceitação",
     "errorDescription": "Por favor, verifique sua conexão e tente novamente.",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "welcomeTitle": "Boas-vindas ao Mera",
+    "welcomeBody": "Toque em \"Concordar e continuar\" para aceitar nossos Termos de Serviço e nossa Política de Privacidade."
   },
   "tutorials": {
     "entryRow": "Saiba mais sobre o Mera",
@@ -2298,8 +2311,8 @@
     "addedDetail": "Recibos e recuperação da conta usarão {{email}}."
   },
   "welcomeBack": {
-    "title": "Que bom ter você de volta",
-    "body": "Este aparelho já usou o período de teste gratuito. Para continuar lendo com todos os recursos do Mera, escolha um plano depois de continuar.",
+    "title": "Que bom ter você de volta ao Mera",
+    "body": "Parece que o Mera já esteve neste aparelho, então o teste gratuito já foi usado. Você pode continuar lendo com sua nova conta ou escolher um plano a qualquer momento para ter a experiência completa.",
     "continue": "Continuar"
   }
 }

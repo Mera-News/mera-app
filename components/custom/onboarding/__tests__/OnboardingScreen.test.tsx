@@ -176,10 +176,12 @@ function renderScreen(
 }
 
 describe('OnboardingScreen fact gate', () => {
-    it('offers a RESTORE before the wizard when the user has 0 local facts', async () => {
+    it('offers a RESTORE before the wizard when an EMAIL user has 0 local facts', async () => {
         // Zero local facts is exactly the state a returning user is in on a new
         // phone, so they are asked before being made to rebuild a persona by
-        // hand. The wizard is still one tap away.
+        // hand. The wizard is still one tap away. This suite's default
+        // getSetting returns a value for every key, so `cached_user_email`
+        // reads as present — the email sign-in case.
         mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return false; });
         const { queryByTestId, getByTestId, onComplete } = renderScreen();
 
@@ -189,6 +191,22 @@ describe('OnboardingScreen fact gate', () => {
 
         fireEvent.press(getByTestId('recovery-skip'));
         await waitFor(() => expect(queryByTestId('onboarding-wizard')).toBeTruthy());
+        expect(onComplete).not.toHaveBeenCalled();
+    });
+
+    it('a DEVICE-minted user (no cached_user_email) skips the restore offer straight to the wizard', async () => {
+        // A device sign-in never writes `cached_user_email`, and a
+        // device-minted account is brand new — it has no backup to bring
+        // back, so the offer would only be a confusing extra screen between
+        // "Get started" and the wizard.
+        mockHasAnyFacts.mockImplementation(async () => { callOrder.push('count'); return false; });
+        mockGetSetting.mockImplementation(async (k: string) =>
+            k === 'cached_user_email' ? null : 'u1',
+        );
+        const { queryByTestId, onComplete } = renderScreen();
+
+        await waitFor(() => expect(queryByTestId('onboarding-wizard')).toBeTruthy());
+        expect(queryByTestId('recovery-skip')).toBeNull();
         expect(onComplete).not.toHaveBeenCalled();
     });
 

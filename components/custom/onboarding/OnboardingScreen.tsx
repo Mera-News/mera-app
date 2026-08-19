@@ -303,15 +303,32 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
 
             // ── OFFER A RESTORE BEFORE BUILDING A PERSONA FROM SCRATCH ───
             //
-            // Reached only with ZERO local facts, which is exactly the state a
-            // returning user is in on a new phone. Asking here costs one tap to
-            // decline and saves them rebuilding months of persona by hand.
+            // EMAIL SIGN-INS ONLY. `cached_user_email` is written by exactly
+            // the email/OTP verify paths (OTPVerificationView,
+            // DeepLinkVerifyScreen) plus checkout email-attach — which happens
+            // after onboarding, so it cannot leak into this gate. A device
+            // sign-in never writes it, and a device-minted account is by
+            // definition brand new: it has no backup to bring back, so the
+            // offer would only be a confusing extra screen between "Get
+            // started" and the wizard. Anonymous reinstallers who DID keep a
+            // recovery code still have the Settings > Manage data path.
+            //
+            // For email users the ask is worth one tap: zero local facts is
+            // exactly the state a returning user is in on a new phone, and
+            // declining costs a tap while accepting saves rebuilding months of
+            // persona by hand.
             //
             // It does NOT need to skip the wizard itself: onboarding gates on
             // local facts, a restore writes facts, and the restore reloads the
             // app — so the next pass through this very check takes the
             // `hasFacts` branch above and calls onComplete(). One gate, not two.
-            setShowRestoreOffer(true);
+            const emailSignIn = !!(await getSetting('cached_user_email'));
+            if (cancelled) return;
+            if (emailSignIn) {
+                setShowRestoreOffer(true);
+            } else {
+                setShowOnboarding(true);
+            }
             setIsCheckingOnboarding(false);
         };
 

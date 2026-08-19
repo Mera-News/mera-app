@@ -70,7 +70,18 @@
     "tryAgain": "다시 시도",
     "learnAboutMera": "Mera 알아보기",
     "startReading": "읽기 시작",
-    "alreadyHaveAccount": "이미 계정이 있나요? 로그인"
+    "alreadyHaveAccount": "이미 계정이 있나요? 로그인",
+    "chooseLanguageTitle": "언어를 선택하세요",
+    "chooseLanguageHint": "설정에서 언제든지 변경할 수 있습니다.",
+    "continue": "계속",
+    "firstTimeHint": "Mera가 처음이신가요? 빠른 둘러보기로 시작하세요.",
+    "readyHint": "Mera를 시작할 준비가 되셨나요?",
+    "getStarted": "시작하기",
+    "paidUserHint": "이미 유료 사용자이신가요?",
+    "signIn": "로그인",
+    "aboutLegal": "Mera 정보 및 법적 고지",
+    "sourceCode": "소스 코드",
+    "website": "웹사이트"
   },
   "account": {
     "pendingTitle": "계정 승인 대기 중",
@@ -1605,11 +1616,13 @@
     "body": "서비스 이용약관과 개인정보 처리방침을 업데이트했습니다. Mera를 계속 사용하려면 검토하고 동의해 주세요.",
     "termsLink": "서비스 이용약관",
     "privacyLink": "개인정보 처리방침",
-    "accept": "동의 및 계속",
+    "accept": "동의하고 계속",
     "accepting": "저장 중…",
     "errorTitle": "동의를 저장할 수 없습니다",
     "errorDescription": "연결을 확인하고 다시 시도해 주세요.",
-    "retry": "다시 시도"
+    "retry": "다시 시도",
+    "welcomeTitle": "Mera에 오신 것을 환영합니다",
+    "welcomeBody": "\"동의하고 계속\"을 탭하면 서비스 약관과 개인정보 처리방침에 동의하게 됩니다."
   },
   "tutorials": {
     "entryRow": "메라에 대해 알아보기",
@@ -2298,8 +2311,8 @@
     "addedDetail": "영수증과 계정 복구에 {{email}}을(를) 사용합니다."
   },
   "welcomeBack": {
-    "title": "다시 오신 것을 환영합니다",
-    "body": "이 기기는 무료 체험을 이미 사용했습니다. Mera의 모든 기능으로 계속 읽으려면 계속한 후 요금제를 선택하세요.",
+    "title": "Mera에 다시 오신 것을 환영합니다",
+    "body": "이 기기에서 이전에 Mera를 사용한 것으로 보여 무료 체험은 이미 사용되었습니다. 새 계정으로 계속 이용하거나, 언제든지 요금제를 선택해 모든 기능을 사용할 수 있습니다.",
     "continue": "계속"
   }
 }

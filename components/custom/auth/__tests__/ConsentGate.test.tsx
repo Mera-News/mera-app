@@ -97,10 +97,14 @@ jest.mock('@/lib/auth-client', () => ({
 const mockFetchLegalVersions = jest.fn();
 const mockAcceptLegal = jest.fn();
 const mockNeedsConsent = jest.fn();
+// Default false: the latch only suppresses when some OTHER surface (pre-auth
+// consent step, silent email stamp) already recorded acceptance this process.
+const mockWasAcceptedThisProcess = jest.fn((..._a: unknown[]) => false);
 jest.mock('../legal-consent', () => ({
     fetchLegalVersions: (...a: unknown[]) => mockFetchLegalVersions(...a),
     acceptLegal: (...a: unknown[]) => mockAcceptLegal(...a),
     needsConsent: (...a: unknown[]) => mockNeedsConsent(...a),
+    wasLegalAcceptedThisProcess: (...a: unknown[]) => mockWasAcceptedThisProcess(...a),
 }));
 
 import ConsentGate from '../ConsentGate';
@@ -121,6 +125,17 @@ describe('ConsentGate', () => {
         mockSessionRef.current = { user: { id: 'user-1', termsVersion: null, privacyVersion: null } };
         mockFetchLegalVersions.mockResolvedValue(CURRENT);
         mockNeedsConsent.mockReturnValue(true);
+        mockWasAcceptedThisProcess.mockReturnValue(false);
+    });
+
+    it('renders nothing when another surface already accepted this process (cross-component latch)', async () => {
+        // The pre-auth consent step / silent email stamp mark the latch; the
+        // gate must stand down even though the cached session still reports
+        // stale versions (needsConsent true).
+        mockWasAcceptedThisProcess.mockReturnValue(true);
+        const { toJSON } = render(<ConsentGate />);
+        await flush();
+        expect(toJSON()).toBeNull();
     });
 
     it('renders nothing while the session is still pending', () => {

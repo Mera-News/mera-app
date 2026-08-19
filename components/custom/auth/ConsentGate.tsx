@@ -17,6 +17,7 @@ import {
     acceptLegal,
     fetchLegalVersions,
     needsConsent,
+    wasLegalAcceptedThisProcess,
     type ConsentSessionUser,
     type LegalVersions,
 } from './legal-consent';
@@ -83,7 +84,15 @@ export default function ConsentGate() {
     }, [userId]);
 
     const user = session?.user as ConsentSessionUser | undefined;
-    const shown = !isPending && !accepted && needsConsent(user, current);
+    // wasLegalAcceptedThisProcess covers acceptance that happened OUTSIDE this
+    // component before the session atom could reflect it: the pre-auth consent
+    // step (device path) and the silent email-path stamp. Without it this gate
+    // would re-prompt a user who agreed seconds ago on the auth screen.
+    const shown =
+        !isPending &&
+        !accepted &&
+        !wasLegalAcceptedThisProcess(userId) &&
+        needsConsent(user, current);
 
     const handleAccept = useCallback(async () => {
         if (!current) return;
@@ -191,15 +200,18 @@ export default function ConsentGate() {
                     ) : null}
                 </ScrollView>
 
+                {/* Same geometry and fill as every other primary CTA on the
+                    auth surfaces (welcome, consent step, welcome-back) — this
+                    gate used to be the one white button in the app. */}
                 <Button
                     testID="consent-accept"
                     onPress={handleAccept}
                     disabled={busy || !current}
-                    className="mt-6 bg-white rounded-full"
+                    className="mt-6 h-14 bg-primary-500 rounded-full"
                     size="lg"
                 >
                     {busy ? <Spinner size="small" className="mr-2" /> : null}
-                    <ButtonText className="text-black">
+                    <ButtonText className="text-black font-semibold">
                         {busy ? t('consent.accepting') : error ? t('consent.retry') : t('consent.accept')}
                     </ButtonText>
                 </Button>

@@ -1,10 +1,10 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
+import LegalFooter from '@/components/custom/auth/LegalFooter';
 import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
-import PolicyPill from '@/components/custom/PolicyPill';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -15,7 +15,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { sendOTP } from '@/lib/auth-client';
-import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
 import {
     deviceSignInAvailability,
     signInWithDevice,
@@ -23,146 +23,67 @@ import {
     type DeviceSignInResult,
 } from '@/lib/device-auth';
 
-/** The success variant — what WelcomeView hands its caller so the
+/** The success variant — what the consent step hands its caller so the
  *  welcome-back verdict can steer routing. */
 type DeviceSignInSuccess = Extract<DeviceSignInResult, { status: 'success' }>;
 import { hapticLight } from '@/lib/haptics';
 import { useSupportAction } from '@/lib/intercom';
 import logger from '@/lib/logger';
 import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
+import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useUserStore } from '@/lib/stores/user-store';
-import { getAppVersionLabel } from '@/lib/version';
 import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
-import { FontAwesome, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import validator from 'validator';
+import {
+    acceptLegal,
+    fetchLegalVersions,
+    markLegalAcceptedThisProcess,
+    silentlyAcceptLegal,
+    type LegalVersions,
+} from './legal-consent';
 
 interface PreAuthFooterProps {
-    /** The welcome view hides the footer tour pill — its tutorial entry moved
-     *  up into the button stack as "Learn about Mera" (S8). The email view
-     *  keeps the pill. */
+    /** The email view keeps the tour pill; views that surface the tutorials
+     *  elsewhere (none currently — the welcome view has its own footer) may
+     *  hide it. */
     showTutorialLaunch?: boolean;
-    /** S8 amendment: the welcome view's "Sign in with email" lives HERE, as a
-     *  text link directly above the policy row — demoted from the action
-     *  stack, never hidden (it is the recovery path for existing users). */
-    onUseEmail?: () => void;
 }
 
 /**
- * The pre-flight cluster shared by the welcome and email views: language
- * selector, tutorial entry, policy pills, project links and version. Extracted
- * so the two entry views cannot drift — the layout commentary that used to sit
- * inline in EmailInputView still applies and lives on the call sites.
+ * The pre-flight cluster for the EMAIL view: language selector, tutorial
+ * entry, and the legal footer. The welcome view no longer shares this —
+ * language is chosen on its own first-launch stage and the welcome view
+ * renders LegalFooter directly — so this cluster now serves the users who
+ * were routed straight to email (device sign-in unavailable) and never saw
+ * the language stage.
  */
-const PreAuthFooter: React.FC<PreAuthFooterProps> = ({ showTutorialLaunch = true, onUseEmail }) => {
-    const insets = useSafeAreaInsets();
-    const { t } = useTranslation();
-
-    const handlePrivacyPolicyPress = async () => {
-        await openInAppBrowser(withAppLanguage(PRIVACY_URL));
-    };
-
-    const handleTermsOfServicePress = async () => {
-        await openInAppBrowser(withAppLanguage(TERMS_URL));
-    };
-
-    const handleContentPolicyPress = async () => {
-        await openInAppBrowser(withAppLanguage(CONTENT_POLICY_URL));
-    };
-
-    const handleFAQPress = async () => {
-        await openInAppBrowser(withAppLanguage(FAQ_URL));
-    };
-
-    const handleGithubPress = async () => {
-        await openInAppBrowser(GITHUB_URL);
-    };
-
-    const handleWebsitePress = async () => {
-        await openInAppBrowser(WEBSITE_URL);
-    };
-
+const PreAuthFooter: React.FC<PreAuthFooterProps> = ({ showTutorialLaunch = true }) => {
     return (
         <>
-            {/* Language cluster. The word ticker, the selector, the download
-                hint and the guide link are ONE group and must read as one:
-                8pt between them, 24pt to the policy row below and the whole
-                lower band above. The 24pt matters — the guide link borrows the
-                policy pills' shape, so at an equal gap it would read as a
-                fifth pill instead of the last line of this group. Grouping is
-                by proximity alone — no card, no border — because this screen's
-                only chrome is the gradient backdrop, and a container here
-                would compete with it.
+            {/* Language cluster. The word ticker, the selector and the tour
+                pill are ONE group and must read as one: 8pt between them, 24pt
+                to the legal footer below. Grouping is by proximity alone — no
+                card, no border — because this screen's only chrome is the
+                gradient backdrop, and a container here would compete with it.
                 Anchored at the bottom rather than floating in the middle: it
                 is a pre-flight setting, not the reason anyone opened this
                 screen. */}
             <VStack space="sm" className="mb-6">
                 <LanguageSelector />
 
-                {/* The tour. Sits WITH the language cluster rather than above the
-                    policy pills because it belongs to the same pre-flight group:
-                    things you may want before signing in. It opens a full-screen
-                    Modal (not a route — this screen is outside the logged-in
-                    stack) and closes back to exactly this view. Owns its own
-                    visibility state, so this stays a one-line insertion.
-                    Hidden on the welcome view — see PreAuthFooterProps. */}
+                {/* The tour. Sits WITH the language cluster rather than above
+                    the legal footer because it belongs to the same pre-flight
+                    group: things you may want before signing in. It opens a
+                    full-screen Modal (not a route — this screen is outside the
+                    logged-in stack) and closes back to exactly this view. */}
                 {showTutorialLaunch && <TutorialLaunchButton />}
-
-                {/* The "How to add a language" video chip lived here and is
-                    gone on purpose. It taught the iOS Required-Downloads sheet
-                    to someone who has not opened that sheet and, on this
-                    screen, is trying to type an email — the same reason the
-                    standing download hint came out of LanguageSelector. The
-                    video is still one tap away where it belongs, in Settings →
-                    Language (`language.watchGuide`), for someone who went
-                    looking for it. */}
             </VStack>
 
-            {/* The relocated email path (welcome view only) — directly above
-                the policy row, keeping its text-link styling. */}
-            {onUseEmail && (
-                <Box className="items-center mb-3">
-                    <Pressable
-                        testID="auth-use-email"
-                        onPress={onUseEmail}
-                        accessible
-                        accessibilityRole="button"
-                        accessibilityLabel={t('auth.alreadyHaveAccount')}
-                        className="py-1"
-                    >
-                        <Text size="sm" className="text-primary-400">
-                            {t('auth.alreadyHaveAccount')}
-                        </Text>
-                    </Pressable>
-                </Box>
-            )}
-
-            {/* Policy buttons at bottom */}
-            <Box className="items-center" style={{ paddingBottom: insets.bottom + 16 }}>
-                <HStack space="xs" className="items-center justify-center flex-wrap">
-                    <PolicyPill label={t('auth.privacyPolicy')} onPress={handlePrivacyPolicyPress} />
-                    <PolicyPill label={t('auth.termsOfService')} onPress={handleTermsOfServicePress} />
-                    <PolicyPill label={t('auth.contentPolicy')} onPress={handleContentPolicyPress} />
-                    <PolicyPill label={t('auth.faq')} onPress={handleFAQPress} />
-                </HStack>
-                <HStack space="lg" className="items-center mt-3">
-                    <Pressable onPress={handleGithubPress} hitSlop={8}>
-                        <FontAwesome name="github" size={20} color="#9ca3af" />
-                    </Pressable>
-                    <Pressable onPress={handleWebsitePress} hitSlop={8}>
-                        <MaterialIcons name="language" size={22} color="#9ca3af" />
-                    </Pressable>
-                </HStack>
-                <Text size="xs" className="text-gray-500 mt-1">
-                    {getAppVersionLabel()}
-                </Text>
-                <Text size="xs" className="text-gray-500 mt-1">
-                    © {new Date().getFullYear()} Mera Labs B.V.
-                </Text>
-            </Box>
+            <LegalFooter />
         </>
     );
 };
@@ -238,7 +159,7 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
 
     return (
         // Three bands, top to bottom: the logo's air, the email row, and the
-        // language cluster sitting on the policy footer. The two <Box>es with
+        // language cluster sitting on the legal footer. The two <Box>es with
         // a raw `flex` split ALL the slack the cluster and footer leave over,
         // 5:1 — that ratio, not a hardcoded offset, is what puts the mark in
         // the upper half and the input near the vertical centre, and it holds
@@ -297,9 +218,209 @@ const EmailInputView: React.FC<EmailInputViewProps> = ({ onOTPSent, initialEmail
     );
 };
 
+interface LanguageStageViewProps {
+    /** The chosen (or confirmed default) language is persisted; move on. */
+    onContinue: () => void;
+}
+
+/**
+ * The true first-launch stage: nothing but the logo and the language choice.
+ * The device locale arrives preselected (app-language-store hydrates it in
+ * memory), so most people confirm with one tap on Continue; anyone else picks
+ * from the selector first. Continue persists the choice to the `app_language`
+ * settings ROW — whose absence is the "never explicitly picked" signal the
+ * mount effect keys on — so this stage shows exactly once per install.
+ */
+const LanguageStageView: React.FC<LanguageStageViewProps> = ({ onContinue }) => {
+    const { t } = useTranslation();
+    const [saving, setSaving] = useState(false);
+
+    const handleContinue = async () => {
+        if (saving) return;
+        setSaving(true);
+        void hapticLight();
+        try {
+            // Idempotent when a picker choice already wrote the row; for the
+            // one-tap confirm this is the write that makes the default stick.
+            await useAppLanguageStore
+                .getState()
+                .setAppLanguage(useAppLanguageStore.getState().appLanguage);
+        } catch {
+            // The store logs its own failures. A missed persist only means
+            // this stage shows once more next launch — never strand the user.
+        }
+        onContinue();
+    };
+
+    return (
+        // Same three-band skeleton as the sibling views (see EmailInputView's
+        // layout note), same F2 accessibility scoping: wrappers are
+        // accessible={false}, only the pressables carry labels.
+        <Box testID="auth-language-root" accessible={false} className="flex-1 px-5">
+            {/* Upper band — the logo owns it and is centred in it. */}
+            <Box accessible={false} className="items-center justify-center" style={{ flex: 5 }}>
+                <MeraLogo size={150} animated />
+            </Box>
+
+            <VStack testID="auth-language-cluster" accessible={false} space="md">
+                <VStack accessible={false} space="xs">
+                    <Text size="lg" className="text-white font-semibold text-center">
+                        {t('auth.chooseLanguageTitle')}
+                    </Text>
+                    <Text size="xs" className="text-gray-500 text-center">
+                        {t('auth.chooseLanguageHint')}
+                    </Text>
+                </VStack>
+
+                <LanguageSelector />
+
+                <Pressable
+                    testID="auth-language-continue"
+                    onPress={handleContinue}
+                    disabled={saving}
+                    accessible
+                    accessibilityRole="button"
+                    accessibilityLabel={t('auth.continue')}
+                    accessibilityState={saving ? { busy: true, disabled: true } : undefined}
+                    className={`h-14 rounded-full items-center justify-center ${saving ? 'bg-gray-700' : 'bg-primary-500'}`}
+                >
+                    {saving ? (
+                        <Spinner size="small" color="white" />
+                    ) : (
+                        <Text className="text-black text-base font-semibold">
+                            {t('auth.continue')}
+                        </Text>
+                    )}
+                </Pressable>
+            </VStack>
+
+            {/* Lower band — keeps the cluster off the home indicator. */}
+            <Box style={{ flex: 1 }} />
+        </Box>
+    );
+};
+
 interface WelcomeViewProps {
-    /** Switch to the email view — the secondary path, and the fallback every
-     *  failure state offers. */
+    /** Switch to the email view — the existing-user path. */
+    onUseEmail: () => void;
+    /** Advance to the consent step; sign-in itself runs there. */
+    onGetStarted: () => void;
+}
+
+/**
+ * The guided welcome for new users: three actions, each introduced by one
+ * short hint line so a first-time reader knows which button is theirs
+ * without reading anything else. Sign-in machinery lives on the consent
+ * step now — "Get started" only advances the stage.
+ */
+const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onGetStarted }) => {
+    const { t } = useTranslation();
+
+    return (
+        // ── ACCESSIBILITY SCOPING (F2) ──────────────────────────────────────
+        // The band wrappers are layout only, and they are explicitly
+        // `accessible={false}`: left implicit, the full-screen containers were
+        // surfaced to VoiceOver/XCUITest as phantom "Get started" elements
+        // claiming the whole screen (label aggregation from the one labelled
+        // descendant). Accessibility lives ONLY on the pressables, each with
+        // its own role and label.
+        //
+        // The hint lines grew this stack past the email view's input line, so
+        // the old CTA-to-input register between the two views is deliberately
+        // gone (S13); the 5:1 band ratio itself still holds the cluster in
+        // the lower half on any screen height.
+        <Box testID="auth-welcome-root" accessible={false} className="flex-1 px-5">
+            {/* Upper band — the logo owns it and is centred in it. */}
+            <Box
+                testID="auth-welcome-logo-band"
+                accessible={false}
+                className="items-center justify-center"
+                style={{ flex: 5 }}
+            >
+                <MeraLogo size={150} animated />
+            </Box>
+
+            <VStack testID="auth-welcome-actions" accessible={false} space="lg">
+                {/* First-timers first: learning what Mera is comes before
+                    committing to it. Outline, same geometry as the CTA — a
+                    sibling action, not the primary. Opens the tutorials MENU
+                    (top-level /tutorials, deliberately outside the session
+                    gate) so the reader picks any chapter, not just the first. */}
+                <VStack accessible={false} space="sm">
+                    <Text size="sm" className="text-gray-400 text-center">
+                        {t('auth.firstTimeHint')}
+                    </Text>
+                    <Pressable
+                        testID="auth-learn-mera"
+                        onPress={() => {
+                            void hapticLight();
+                            router.push('/tutorials');
+                        }}
+                        accessible
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.learnAboutMera')}
+                        className="h-14 rounded-full items-center justify-center border border-primary-500 bg-transparent"
+                    >
+                        <Text className="text-primary-500 text-base font-semibold">
+                            {t('auth.learnAboutMera')}
+                        </Text>
+                    </Pressable>
+                </VStack>
+
+                <VStack accessible={false} space="sm">
+                    <Text size="sm" className="text-gray-400 text-center">
+                        {t('auth.readyHint')}
+                    </Text>
+                    <Pressable
+                        testID="auth-get-started"
+                        onPress={() => {
+                            void hapticLight();
+                            onGetStarted();
+                        }}
+                        accessible
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.getStarted')}
+                        className="h-14 rounded-full items-center justify-center bg-primary-500"
+                    >
+                        <Text className="text-black text-base font-semibold">
+                            {t('auth.getStarted')}
+                        </Text>
+                    </Pressable>
+                </VStack>
+
+                {/* The existing-user path, framed for the people it is really
+                    for since the auth wave: paid users signed in with the email
+                    they verified at checkout. A text link, not a third button —
+                    three buttons of equal weight would bury the primary. */}
+                <VStack accessible={false} space="xs" className="items-center">
+                    <Text size="xs" className="text-gray-500 text-center">
+                        {t('auth.paidUserHint')}
+                    </Text>
+                    <Pressable
+                        testID="auth-use-email"
+                        onPress={onUseEmail}
+                        accessible
+                        accessibilityRole="button"
+                        accessibilityLabel={t('auth.signIn')}
+                        className="py-1"
+                    >
+                        <Text size="sm" className="text-primary-400 font-semibold">
+                            {t('auth.signIn')}
+                        </Text>
+                    </Pressable>
+                </VStack>
+            </VStack>
+
+            {/* Lower band — the gap between the actions and the footer. */}
+            <Box style={{ flex: 1 }} />
+
+            <LegalFooter />
+        </Box>
+    );
+};
+
+interface ConsentStepViewProps {
+    /** Switch to the email view — the fallback every failure state offers. */
     onUseEmail: () => void;
     /** Device sign-in completed and the identity bookkeeping is done. The full
      *  success result travels so the caller can route on `welcomeBack`. */
@@ -307,22 +428,40 @@ interface WelcomeViewProps {
 }
 
 /**
- * The device sign-in entry for new users: one "Get started" CTA running the
- * attestation flow (lib/device-auth.ts), with email sign-in as the secondary
- * path. Same three-band layout as EmailInputView — logo air above, action at
- * the input line, pre-flight cluster on the footer — so switching between the
- * two views moves nothing the eye is anchored to.
+ * Step 2 after "Get started": the one-decision consent page (WhatsApp's
+ * welcome-consent shape — a sentence, the two links, one button). "Agree and
+ * continue" runs the whole device sign-in; acceptance is POSTed right after
+ * the session exists, because /accept-legal is an authenticated route. If the
+ * versions fetch or the POST fails we proceed anyway — ConsentGate is the
+ * fail-open safety net and will simply ask again.
+ *
+ * Email sign-ins NEVER pass through here: they accepted at their original
+ * sign-up and are stamped silently (silentlyAcceptLegal).
  */
-const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
+const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess }) => {
     const { t } = useTranslation();
     const [working, setWorking] = useState(false);
     const [failure, setFailure] = useState<DeviceSignInFailureReason | null>(null);
+    const [versions, setVersions] = useState<LegalVersions | null>(null);
     // "Contact support" may silently open Mail instead of the Messenger
     // (useSupportAction's contract) — the label says "Message support", which
     // reads true either way.
     const { busy: supportBusy, openSupport } = useSupportAction();
 
-    const handleGetStarted = async () => {
+    // Prefetched so acceptance can be stamped the moment sign-in succeeds.
+    // Unguarded server query (pre-paywall by its schema doc); null just means
+    // the stamp is skipped and ConsentGate asks post-login.
+    useEffect(() => {
+        let cancelled = false;
+        void fetchLegalVersions().then((v) => {
+            if (!cancelled) setVersions(v);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const handleAgree = async () => {
         if (working) return;
         setWorking(true);
         setFailure(null);
@@ -339,6 +478,13 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
             // Device sign-in re-proves which account this device holds, same
             // as an OTP verify — the other site that clears the fault.
             clearIdentityFault().catch(() => {});
+            // Stamp the acceptance the user just gave, now that the
+            // authenticated route can take it. Latch only on success: a failed
+            // stamp should let ConsentGate re-ask.
+            if (versions) {
+                const stamped = await acceptLegal(versions);
+                if (stamped.ok) markLegalAcceptedThisProcess(result.userId);
+            }
             onSuccess(result);
             // Leave `working` true: the caller replaces this screen.
             return;
@@ -361,54 +507,59 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                 : t('auth.deviceSignInFailed');
 
     return (
-        // ── ACCESSIBILITY SCOPING (F2) ──────────────────────────────────────
-        // The band wrappers are layout only, and they are explicitly
-        // `accessible={false}`: left implicit, the full-screen containers were
-        // surfaced to VoiceOver/XCUITest as phantom "Get started" elements
-        // claiming the whole screen (label aggregation from the one labelled
-        // descendant). Accessibility lives ONLY on the pressables, each with
-        // its own role and label.
-        <Box testID="auth-welcome-root" accessible={false} className="flex-1 px-5">
-            {/* Upper band — the logo owns it and is centred in it. */}
-            <Box
-                testID="auth-welcome-logo-band"
-                accessible={false}
-                className="items-center justify-center"
-                style={{ flex: 5 }}
-            >
-                <MeraLogo size={150} animated />
+        // Same three-band skeleton and F2 scoping as the sibling views.
+        <Box testID="auth-consent-root" accessible={false} className="flex-1 px-5">
+            {/* Upper band — smaller logo: this page is about the sentence,
+                not the mark. */}
+            <Box accessible={false} className="items-center justify-center" style={{ flex: 5 }}>
+                <MeraLogo size={120} animated />
             </Box>
 
-            {/* The primary action, on the same line the email input occupies
-                in the sibling view. */}
-            <VStack testID="auth-welcome-actions" accessible={false} space="md">
-                {/* Above Get started, deliberately: learning what Mera is comes
-                    before committing to it. Outline, same geometry as the CTA —
-                    a sibling action, not the primary. Opens the tutorials MENU
-                    (top-level /tutorials, deliberately outside the session
-                    gate) so the reader picks any chapter, not just the first. */}
-                <Pressable
-                    testID="auth-learn-mera"
-                    onPress={() => {
-                        void hapticLight();
-                        router.push('/tutorials');
-                    }}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={t('auth.learnAboutMera')}
-                    className="h-14 rounded-full items-center justify-center border border-primary-500 bg-transparent"
-                >
-                    <Text className="text-primary-500 text-base font-semibold">
-                        {t('auth.learnAboutMera')}
+            <VStack testID="auth-consent-cluster" accessible={false} space="md">
+                <VStack accessible={false} space="sm">
+                    <Text size="2xl" className="text-white font-semibold text-center">
+                        {t('consent.welcomeTitle')}
                     </Text>
-                </Pressable>
+                    <Text size="md" className="text-gray-300 text-center">
+                        {t('consent.welcomeBody')}
+                    </Text>
+                </VStack>
+
+                {/* `py-3` on each row, NOT a vertical hitSlop: a symmetric
+                    hitSlop on two links this close together makes their touch
+                    regions overlap, and RN resolves an overlap by z-order —
+                    a tap in the gap would silently open the LATER link. Real
+                    padding cannot overlap. (Same note as ConsentGate.) */}
+                <VStack accessible={false} space="xs" className="items-center">
+                    <Pressable
+                        accessibilityRole="link"
+                        accessibilityLabel={t('consent.termsLink')}
+                        className="py-3"
+                        onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}
+                    >
+                        <Text size="sm" className="text-primary-400 underline">
+                            {t('consent.termsLink')}
+                        </Text>
+                    </Pressable>
+                    <Pressable
+                        accessibilityRole="link"
+                        accessibilityLabel={t('consent.privacyLink')}
+                        className="py-3"
+                        onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}
+                    >
+                        <Text size="sm" className="text-primary-400 underline">
+                            {t('consent.privacyLink')}
+                        </Text>
+                    </Pressable>
+                </VStack>
+
                 <Pressable
-                    testID="auth-get-started"
-                    onPress={handleGetStarted}
+                    testID="auth-consent-agree"
+                    onPress={handleAgree}
                     disabled={working}
                     accessible
                     accessibilityRole="button"
-                    accessibilityLabel={working ? t('auth.deviceSignInWorking') : t('auth.startReading')}
+                    accessibilityLabel={working ? t('auth.deviceSignInWorking') : t('consent.accept')}
                     accessibilityState={working ? { busy: true, disabled: true } : undefined}
                     className={`h-14 rounded-full items-center justify-center ${working ? 'bg-gray-700' : 'bg-primary-500'}`}
                 >
@@ -421,7 +572,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                         </HStack>
                     ) : (
                         <Text className="text-black text-base font-semibold">
-                            {t('auth.startReading')}
+                            {t('consent.accept')}
                         </Text>
                     )}
                 </Pressable>
@@ -433,7 +584,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                         </Text>
                         <Pressable
                             testID="auth-device-retry"
-                            onPress={handleGetStarted}
+                            onPress={handleAgree}
                             accessible
                             accessibilityRole="button"
                             accessibilityLabel={t('auth.tryAgain')}
@@ -476,10 +627,10 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onSuccess }) => {
                 )}
             </VStack>
 
-            {/* Lower band — the gap between the action and the cluster. */}
+            {/* Lower band — the gap between the action and the footer. */}
             <Box style={{ flex: 1 }} />
 
-            <PreAuthFooter showTutorialLaunch={false} onUseEmail={onUseEmail} />
+            <LegalFooter />
         </Box>
     );
 };
@@ -488,7 +639,7 @@ interface AuthScreenProps {
     onLoginSuccess?: (userId: string) => void;
 }
 
-type ViewMode = 'loading' | 'previous' | 'welcome' | 'email' | 'otp';
+type ViewMode = 'loading' | 'previous' | 'language' | 'welcome' | 'consent' | 'email' | 'otp';
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     const [currentView, setCurrentView] = useState<ViewMode>('loading');
@@ -501,17 +652,21 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     // at OTP-verify and post-auth-routing respectively, and both are cleared
     // on logout / "Login with other user".
     //
-    // Fresh devices land on the WELCOME view (device sign-in) when attestation
-    // — or the staging dev bypass — is available, and fall straight through to
-    // the email view otherwise, so an unsupported device never sees a dead
-    // CTA. Email stays mounted forever as the path for existing users.
+    // Fresh devices land on the LANGUAGE stage the very first time (no
+    // `app_language` settings row yet — the row is only ever written by an
+    // explicit choice, so its absence means "never picked"), then on the
+    // WELCOME view every time after, when attestation — or the staging dev
+    // bypass — is available. Unsupported devices fall straight through to the
+    // email view so they never see a dead CTA. Email stays mounted forever as
+    // the path for existing users.
     useEffect(() => {
         let cancelled = false;
         (async () => {
             try {
-                const [email, userId, availability] = await Promise.all([
+                const [email, userId, appLanguageRow, availability] = await Promise.all([
                     getSetting('cached_user_email'),
                     getSetting('cached_user_id'),
+                    getSetting('app_language'),
                     deviceSignInAvailability(),
                 ]);
                 if (cancelled) return;
@@ -520,7 +675,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     setCachedUserId(userId);
                     setCurrentView('previous');
                 } else if (availability !== 'unavailable') {
-                    setCurrentView('welcome');
+                    setCurrentView(appLanguageRow ? 'welcome' : 'language');
                 } else {
                     setCurrentView('email');
                 }
@@ -539,6 +694,10 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     };
 
     const handleVerificationSuccess = (userId: string) => {
+        // Email users accepted the terms at their original sign-up, so the
+        // consent page never prompts them — stamp the current versions
+        // silently instead (fire-and-forget; fail-open by contract).
+        void silentlyAcceptLegal(userId);
         setPendingEmail('');
         onLoginSuccess?.(userId);
     };
@@ -555,6 +714,14 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
 
     const handleUseEmail = () => {
         setCurrentView('email');
+    };
+
+    const handleLanguageChosen = () => {
+        setCurrentView('welcome');
+    };
+
+    const handleGetStarted = () => {
+        setCurrentView('consent');
     };
 
     // Device sign-in completed. Reauth mode gets the same callback the OTP
@@ -613,6 +780,19 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
         );
     }
 
+    if (currentView === 'language') {
+        return (
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box testID="auth-language-screen" accessible={false} className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
+                <LanguageStageView onContinue={handleLanguageChosen} />
+            </Box>
+        );
+    }
+
     if (currentView === 'welcome') {
         return (
             // No opaque fill: the AbstractGradientBackdrop below is the page background.
@@ -625,7 +805,20 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
                     everything else on the page. */}
                 <AbstractGradientBackdrop />
 
-                <WelcomeView onUseEmail={handleUseEmail} onSuccess={handleDeviceSignInSuccess} />
+                <WelcomeView onUseEmail={handleUseEmail} onGetStarted={handleGetStarted} />
+            </Box>
+        );
+    }
+
+    if (currentView === 'consent') {
+        return (
+            // No opaque fill: the AbstractGradientBackdrop below is the page background.
+            <Box testID="auth-consent-screen" accessible={false} className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
+
+                <ConsentStepView onUseEmail={handleUseEmail} onSuccess={handleDeviceSignInSuccess} />
             </Box>
         );
     }

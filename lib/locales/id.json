@@ -70,7 +70,18 @@
     "tryAgain": "Coba lagi",
     "learnAboutMera": "Pelajari Mera",
     "startReading": "Mulai membaca",
-    "alreadyHaveAccount": "Sudah punya akun? Masuk"
+    "alreadyHaveAccount": "Sudah punya akun? Masuk",
+    "chooseLanguageTitle": "Pilih bahasa Anda",
+    "chooseLanguageHint": "Anda dapat mengubahnya kapan saja di Pengaturan.",
+    "continue": "Lanjutkan",
+    "firstTimeHint": "Baru mengenal Mera? Mulai dengan tur singkat.",
+    "readyHint": "Siap menjadikan Mera milik Anda?",
+    "getStarted": "Mulai",
+    "paidUserHint": "Sudah menjadi pengguna berbayar?",
+    "signIn": "Masuk",
+    "aboutLegal": "Tentang Mera & legal",
+    "sourceCode": "Kode sumber",
+    "website": "Situs web"
   },
   "account": {
     "pendingTitle": "Akun Menunggu Persetujuan",
@@ -1605,11 +1616,13 @@
     "body": "Kami telah memperbarui Ketentuan Layanan dan Kebijakan Privasi kami. Silakan tinjau dan terima untuk terus menggunakan Mera.",
     "termsLink": "Ketentuan Layanan",
     "privacyLink": "Kebijakan Privasi",
-    "accept": "Setuju & Lanjutkan",
+    "accept": "Setuju dan lanjutkan",
     "accepting": "Menyimpan…",
     "errorTitle": "Tidak dapat menyimpan penerimaan Anda",
     "errorDescription": "Silakan periksa koneksi Anda dan coba lagi.",
-    "retry": "Coba lagi"
+    "retry": "Coba lagi",
+    "welcomeTitle": "Selamat datang di Mera",
+    "welcomeBody": "Ketuk \"Setuju dan lanjutkan\" untuk menerima Ketentuan Layanan dan Kebijakan Privasi kami."
   },
   "tutorials": {
     "entryRow": "Pelajari tentang Mera",
@@ -2298,8 +2311,8 @@
     "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}."
   },
   "welcomeBack": {
-    "title": "Selamat datang kembali",
-    "body": "Perangkat ini sudah menggunakan uji coba gratisnya. Untuk terus membaca dengan semua fitur Mera, pilih paket setelah melanjutkan.",
+    "title": "Selamat datang kembali di Mera",
+    "body": "Sepertinya Mera pernah ada di perangkat ini, jadi uji coba gratisnya sudah terpakai. Anda tetap bisa membaca dengan akun baru, atau memilih paket kapan saja untuk pengalaman lengkap.",
     "continue": "Lanjutkan"
   }
 }

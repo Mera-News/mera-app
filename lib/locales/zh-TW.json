@@ -70,7 +70,18 @@
     "tryAgain": "再試一次",
     "learnAboutMera": "認識 Mera",
     "startReading": "開始閱讀",
-    "alreadyHaveAccount": "已有帳戶？登入"
+    "alreadyHaveAccount": "已有帳戶？登入",
+    "chooseLanguageTitle": "選擇您的語言",
+    "chooseLanguageHint": "您可以隨時在設定中更改。",
+    "continue": "繼續",
+    "firstTimeHint": "第一次使用 Mera？先來快速導覽一下吧。",
+    "readyHint": "準備好開始使用 Mera 了嗎？",
+    "getStarted": "開始使用",
+    "paidUserHint": "已經是付費使用者？",
+    "signIn": "登入",
+    "aboutLegal": "關於 Mera 與法律資訊",
+    "sourceCode": "原始碼",
+    "website": "網站"
   },
   "account": {
     "pendingTitle": "帳號待審核",
@@ -1610,7 +1621,9 @@
     "accepting": "儲存中……",
     "errorTitle": "無法儲存你的同意",
     "errorDescription": "請檢查你的連線並重試。",
-    "retry": "重試"
+    "retry": "重試",
+    "welcomeTitle": "歡迎使用 Mera",
+    "welcomeBody": "點按「同意並繼續」即表示您接受我們的服務條款與隱私權政策。"
   },
   "tutorials": {
     "entryRow": "了解 Mera",
@@ -2299,8 +2312,8 @@
     "addedDetail": "收據與帳戶救援將使用 {{email}}。"
   },
   "welcomeBack": {
-    "title": "歡迎回來",
-    "body": "此裝置已使用過免費試用。若要繼續使用 Mera 的完整功能閱讀，請在繼續後選擇方案。",
+    "title": "歡迎回到 Mera",
+    "body": "這部裝置之前似乎使用過 Mera，因此免費試用已經使用完畢。您可以繼續使用新帳號閱讀，也可以隨時選擇方案以獲得完整體驗。",
     "continue": "繼續"
   }
 }

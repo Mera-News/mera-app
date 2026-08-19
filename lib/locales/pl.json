@@ -70,7 +70,18 @@
     "tryAgain": "Spróbuj ponownie",
     "learnAboutMera": "Poznaj aplikację Mera",
     "startReading": "Zacznij czytać",
-    "alreadyHaveAccount": "Masz już konto? Zaloguj się"
+    "alreadyHaveAccount": "Masz już konto? Zaloguj się",
+    "chooseLanguageTitle": "Wybierz swój język",
+    "chooseLanguageHint": "Możesz to zmienić w każdej chwili w Ustawieniach.",
+    "continue": "Kontynuuj",
+    "firstTimeHint": "Nowy w Mera? Zacznij od krótkiego przewodnika.",
+    "readyHint": "Gotowy, aby Mera stała się Twoja?",
+    "getStarted": "Rozpocznij",
+    "paidUserHint": "Masz już płatne konto?",
+    "signIn": "Zaloguj się",
+    "aboutLegal": "O Mera i informacje prawne",
+    "sourceCode": "Kod źródłowy",
+    "website": "Strona internetowa"
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",
@@ -1641,7 +1652,9 @@
     "accepting": "Zapisywanie…",
     "errorTitle": "Nie można zapisać Twojej akceptacji",
     "errorDescription": "Sprawdź połączenie i spróbuj ponownie.",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "welcomeTitle": "Witamy w Mera",
+    "welcomeBody": "Dotknij \"Zgadzam się i kontynuuję\", aby zaakceptować nasz Regulamin i Politykę prywatności."
   },
   "tutorials": {
     "entryRow": "Dowiedz się więcej o Merze",
@@ -2330,8 +2343,8 @@
     "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}."
   },
   "welcomeBack": {
-    "title": "Witaj ponownie",
-    "body": "To urządzenie wykorzystało już bezpłatny okres próbny. Aby dalej czytać ze wszystkimi funkcjami Mera, wybierz plan po przejściu dalej.",
+    "title": "Witamy ponownie w Mera",
+    "body": "Wygląda na to, że Mera była już na tym urządzeniu, więc bezpłatny okres próbny został już wykorzystany. Możesz dalej czytać na nowym koncie lub w każdej chwili wybrać plan, aby korzystać z pełni możliwości.",
     "continue": "Dalej"
   }
 }

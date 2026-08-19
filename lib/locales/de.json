@@ -70,7 +70,18 @@
     "tryAgain": "Erneut versuchen",
     "learnAboutMera": "Mera kennenlernen",
     "startReading": "Jetzt lesen",
-    "alreadyHaveAccount": "Schon ein Konto? Anmelden"
+    "alreadyHaveAccount": "Schon ein Konto? Anmelden",
+    "chooseLanguageTitle": "Wähle deine Sprache",
+    "chooseLanguageHint": "Du kannst das jederzeit in den Einstellungen ändern.",
+    "continue": "Weiter",
+    "firstTimeHint": "Neu bei Mera? Starte mit einer kurzen Tour.",
+    "readyHint": "Bereit, Mera zu deinem zu machen?",
+    "getStarted": "Los geht's",
+    "paidUserHint": "Schon zahlender Nutzer?",
+    "signIn": "Anmelden",
+    "aboutLegal": "Über Mera & Rechtliches",
+    "sourceCode": "Quellcode",
+    "website": "Website"
   },
   "account": {
     "pendingTitle": "Konto wartet auf Freischaltung",
@@ -1605,11 +1616,13 @@
     "body": "Wir haben unsere Nutzungsbedingungen und Datenschutzrichtlinie aktualisiert. Bitte überprüfe und akzeptiere sie, um Mera weiterhin zu nutzen.",
     "termsLink": "Nutzungsbedingungen",
     "privacyLink": "Datenschutzrichtlinie",
-    "accept": "Akzeptieren und fortfahren",
+    "accept": "Zustimmen und weiter",
     "accepting": "Wird gespeichert...",
     "errorTitle": "Akzeptanz konnte nicht gespeichert werden",
     "errorDescription": "Bitte überprüfe deine Verbindung und versuche es erneut.",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "welcomeTitle": "Willkommen bei Mera",
+    "welcomeBody": "Tippe auf \"Zustimmen und weiter\", um unsere Nutzungsbedingungen und Datenschutzerklärung zu akzeptieren."
   },
   "tutorials": {
     "entryRow": "Mehr über Mera erfahren",
@@ -2298,8 +2311,8 @@
     "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}."
   },
   "welcomeBack": {
-    "title": "Willkommen zurück",
-    "body": "Dieses Gerät hat seine kostenlose Testphase bereits genutzt. Wähle nach dem Fortfahren einen Tarif, um mit allen Funktionen von Mera weiterzulesen.",
+    "title": "Willkommen zurück bei Mera",
+    "body": "Mera war offenbar schon einmal auf diesem Gerät, daher wurde die kostenlose Testphase bereits genutzt. Du kannst mit deinem neuen Konto weiterlesen oder jederzeit einen Plan für das volle Erlebnis wählen.",
     "continue": "Weiter"
   }
 }

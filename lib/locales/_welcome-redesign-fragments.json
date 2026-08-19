@@ -1,0 +1,483 @@
+{
+ "_comment": "welcome-redesign: language-first stage, guided welcome hints, Get started CTA, consent step copy, legal footer, welcome-back rephrase. Input to _splice-fragments.mjs with --allow-overwrite consent.accept,welcomeBack.title,welcomeBack.body. Never edit the 20 dictionaries by hand.",
+ "en": {
+  "auth": {
+   "chooseLanguageTitle": "Choose your language",
+   "chooseLanguageHint": "You can change this anytime in Settings.",
+   "continue": "Continue",
+   "firstTimeHint": "New to Mera? Start with a quick tour.",
+   "readyHint": "Ready to make Mera yours?",
+   "getStarted": "Get started",
+   "paidUserHint": "Already a paid user?",
+   "signIn": "Sign in",
+   "aboutLegal": "About Mera & legal",
+   "sourceCode": "Source code",
+   "website": "Website"
+  },
+  "consent": {
+   "welcomeTitle": "Welcome to Mera",
+   "welcomeBody": "Tap \"Agree and continue\" to accept our Terms of Service and Privacy Policy.",
+   "accept": "Agree and continue"
+  },
+  "welcomeBack": {
+   "title": "Welcome back to Mera",
+   "body": "It looks like Mera has been on this device before, so the free trial has already been used. You can keep browsing with your new account, or pick a plan anytime for the full experience."
+  }
+ },
+ "ar": {
+  "auth": {
+   "chooseLanguageTitle": "اختر لغتك",
+   "chooseLanguageHint": "يمكنك تغييرها في أي وقت من الإعدادات.",
+   "continue": "متابعة",
+   "firstTimeHint": "جديد على Mera؟ ابدأ بجولة سريعة.",
+   "readyHint": "هل أنت مستعد لجعل Mera لك؟",
+   "getStarted": "ابدأ الآن",
+   "paidUserHint": "هل أنت مشترك مدفوع بالفعل؟",
+   "signIn": "تسجيل الدخول",
+   "aboutLegal": "حول Mera والشروط القانونية",
+   "sourceCode": "الكود المصدري",
+   "website": "الموقع الإلكتروني"
+  },
+  "consent": {
+   "welcomeTitle": "مرحبًا بك في Mera",
+   "welcomeBody": "انقر على \"الموافقة والمتابعة\" لقبول شروط الخدمة وسياسة الخصوصية.",
+   "accept": "الموافقة والمتابعة"
+  },
+  "welcomeBack": {
+   "title": "مرحبًا بعودتك إلى Mera",
+   "body": "يبدو أن Mera كان مثبتًا على هذا الجهاز من قبل، لذلك تم استخدام الفترة التجريبية المجانية بالفعل. يمكنك متابعة التصفح بحسابك الجديد، أو اختيار خطة في أي وقت للحصول على التجربة الكاملة."
+  }
+ },
+ "de": {
+  "auth": {
+   "chooseLanguageTitle": "Wähle deine Sprache",
+   "chooseLanguageHint": "Du kannst das jederzeit in den Einstellungen ändern.",
+   "continue": "Weiter",
+   "firstTimeHint": "Neu bei Mera? Starte mit einer kurzen Tour.",
+   "readyHint": "Bereit, Mera zu deinem zu machen?",
+   "getStarted": "Los geht's",
+   "paidUserHint": "Schon zahlender Nutzer?",
+   "signIn": "Anmelden",
+   "aboutLegal": "Über Mera & Rechtliches",
+   "sourceCode": "Quellcode",
+   "website": "Website"
+  },
+  "consent": {
+   "welcomeTitle": "Willkommen bei Mera",
+   "welcomeBody": "Tippe auf \"Zustimmen und weiter\", um unsere Nutzungsbedingungen und Datenschutzerklärung zu akzeptieren.",
+   "accept": "Zustimmen und weiter"
+  },
+  "welcomeBack": {
+   "title": "Willkommen zurück bei Mera",
+   "body": "Mera war offenbar schon einmal auf diesem Gerät, daher wurde die kostenlose Testphase bereits genutzt. Du kannst mit deinem neuen Konto weiterlesen oder jederzeit einen Plan für das volle Erlebnis wählen."
+  }
+ },
+ "es": {
+  "auth": {
+   "chooseLanguageTitle": "Elige tu idioma",
+   "chooseLanguageHint": "Puedes cambiarlo en cualquier momento en Ajustes.",
+   "continue": "Continuar",
+   "firstTimeHint": "¿Nuevo en Mera? Empieza con un recorrido rápido.",
+   "readyHint": "¿Listo para hacer Mera tuyo?",
+   "getStarted": "Empezar",
+   "paidUserHint": "¿Ya tienes una suscripción de pago?",
+   "signIn": "Iniciar sesión",
+   "aboutLegal": "Acerca de Mera y avisos legales",
+   "sourceCode": "Código fuente",
+   "website": "Sitio web"
+  },
+  "consent": {
+   "welcomeTitle": "Te damos la bienvenida a Mera",
+   "welcomeBody": "Toca \"Aceptar y continuar\" para aceptar nuestros Términos del Servicio y la Política de Privacidad.",
+   "accept": "Aceptar y continuar"
+  },
+  "welcomeBack": {
+   "title": "Bienvenido de nuevo a Mera",
+   "body": "Parece que Mera ya estuvo en este dispositivo, así que la prueba gratuita ya se usó. Puedes seguir navegando con tu cuenta nueva o elegir un plan en cualquier momento para la experiencia completa."
+  }
+ },
+ "fr": {
+  "auth": {
+   "chooseLanguageTitle": "Choisissez votre langue",
+   "chooseLanguageHint": "Vous pourrez la changer à tout moment dans les réglages.",
+   "continue": "Continuer",
+   "firstTimeHint": "Nouveau sur Mera ? Commencez par une visite rapide.",
+   "readyHint": "Prêt à faire de Mera le vôtre ?",
+   "getStarted": "Commencer",
+   "paidUserHint": "Déjà abonné payant ?",
+   "signIn": "Se connecter",
+   "aboutLegal": "À propos de Mera et mentions légales",
+   "sourceCode": "Code source",
+   "website": "Site web"
+  },
+  "consent": {
+   "welcomeTitle": "Bienvenue sur Mera",
+   "welcomeBody": "Touchez \"Accepter et continuer\" pour accepter nos Conditions d'utilisation et notre Politique de confidentialité.",
+   "accept": "Accepter et continuer"
+  },
+  "welcomeBack": {
+   "title": "Bon retour sur Mera",
+   "body": "Il semble que Mera ait déjà été installé sur cet appareil, l'essai gratuit a donc déjà été utilisé. Vous pouvez continuer à lire avec votre nouveau compte, ou choisir une formule à tout moment pour l'expérience complète."
+  }
+ },
+ "hi": {
+  "auth": {
+   "chooseLanguageTitle": "अपनी भाषा चुनें",
+   "chooseLanguageHint": "आप इसे कभी भी सेटिंग्स में बदल सकते हैं.",
+   "continue": "जारी रखें",
+   "firstTimeHint": "Mera पर नए हैं? एक छोटे टूर से शुरुआत करें.",
+   "readyHint": "Mera को अपना बनाने के लिए तैयार हैं?",
+   "getStarted": "शुरू करें",
+   "paidUserHint": "पहले से पेड यूज़र हैं?",
+   "signIn": "साइन इन करें",
+   "aboutLegal": "Mera के बारे में और कानूनी जानकारी",
+   "sourceCode": "सोर्स कोड",
+   "website": "वेबसाइट"
+  },
+  "consent": {
+   "welcomeTitle": "Mera में आपका स्वागत है",
+   "welcomeBody": "हमारी सेवा की शर्तें और गोपनीयता नीति स्वीकार करने के लिए \"सहमत हों और आगे बढ़ें\" पर टैप करें.",
+   "accept": "सहमत हों और आगे बढ़ें"
+  },
+  "welcomeBack": {
+   "title": "Mera में वापसी पर स्वागत है",
+   "body": "लगता है Mera पहले भी इस डिवाइस पर था, इसलिए मुफ़्त ट्रायल पहले ही इस्तेमाल हो चुका है. आप अपने नए अकाउंट से पढ़ना जारी रख सकते हैं, या पूरे अनुभव के लिए कभी भी कोई प्लान चुन सकते हैं."
+  }
+ },
+ "id": {
+  "auth": {
+   "chooseLanguageTitle": "Pilih bahasa Anda",
+   "chooseLanguageHint": "Anda dapat mengubahnya kapan saja di Pengaturan.",
+   "continue": "Lanjutkan",
+   "firstTimeHint": "Baru mengenal Mera? Mulai dengan tur singkat.",
+   "readyHint": "Siap menjadikan Mera milik Anda?",
+   "getStarted": "Mulai",
+   "paidUserHint": "Sudah menjadi pengguna berbayar?",
+   "signIn": "Masuk",
+   "aboutLegal": "Tentang Mera & legal",
+   "sourceCode": "Kode sumber",
+   "website": "Situs web"
+  },
+  "consent": {
+   "welcomeTitle": "Selamat datang di Mera",
+   "welcomeBody": "Ketuk \"Setuju dan lanjutkan\" untuk menerima Ketentuan Layanan dan Kebijakan Privasi kami.",
+   "accept": "Setuju dan lanjutkan"
+  },
+  "welcomeBack": {
+   "title": "Selamat datang kembali di Mera",
+   "body": "Sepertinya Mera pernah ada di perangkat ini, jadi uji coba gratisnya sudah terpakai. Anda tetap bisa membaca dengan akun baru, atau memilih paket kapan saja untuk pengalaman lengkap."
+  }
+ },
+ "it": {
+  "auth": {
+   "chooseLanguageTitle": "Scegli la tua lingua",
+   "chooseLanguageHint": "Puoi cambiarla in qualsiasi momento nelle Impostazioni.",
+   "continue": "Continua",
+   "firstTimeHint": "Nuovo su Mera? Inizia con un breve tour.",
+   "readyHint": "Pronto a rendere Mera tuo?",
+   "getStarted": "Inizia",
+   "paidUserHint": "Sei già un utente a pagamento?",
+   "signIn": "Accedi",
+   "aboutLegal": "Informazioni su Mera e note legali",
+   "sourceCode": "Codice sorgente",
+   "website": "Sito web"
+  },
+  "consent": {
+   "welcomeTitle": "Ti diamo il benvenuto su Mera",
+   "welcomeBody": "Tocca \"Accetta e continua\" per accettare i nostri Termini di servizio e l'Informativa sulla privacy.",
+   "accept": "Accetta e continua"
+  },
+  "welcomeBack": {
+   "title": "Bentornato su Mera",
+   "body": "Sembra che Mera sia già stato su questo dispositivo, quindi la prova gratuita è già stata usata. Puoi continuare a leggere con il tuo nuovo account, oppure scegliere un piano in qualsiasi momento per l'esperienza completa."
+  }
+ },
+ "ja": {
+  "auth": {
+   "chooseLanguageTitle": "言語を選択してください",
+   "chooseLanguageHint": "設定でいつでも変更できます。",
+   "continue": "続行",
+   "firstTimeHint": "Meraは初めてですか？まずはクイックツアーをどうぞ。",
+   "readyHint": "Meraを自分のものにする準備はできましたか？",
+   "getStarted": "はじめる",
+   "paidUserHint": "すでに有料ユーザーですか？",
+   "signIn": "サインイン",
+   "aboutLegal": "Meraについて・法的情報",
+   "sourceCode": "ソースコード",
+   "website": "ウェブサイト"
+  },
+  "consent": {
+   "welcomeTitle": "Meraへようこそ",
+   "welcomeBody": "「同意して続行」をタップすると、利用規約とプライバシーポリシーに同意したことになります。",
+   "accept": "同意して続行"
+  },
+  "welcomeBack": {
+   "title": "Meraへおかえりなさい",
+   "body": "このデバイスでは以前Meraが使われていたようで、無料トライアルはすでに利用済みです。新しいアカウントでこのまま閲覧を続けることも、いつでもプランを選んでフル機能を利用することもできます。"
+  }
+ },
+ "ko": {
+  "auth": {
+   "chooseLanguageTitle": "언어를 선택하세요",
+   "chooseLanguageHint": "설정에서 언제든지 변경할 수 있습니다.",
+   "continue": "계속",
+   "firstTimeHint": "Mera가 처음이신가요? 빠른 둘러보기로 시작하세요.",
+   "readyHint": "Mera를 시작할 준비가 되셨나요?",
+   "getStarted": "시작하기",
+   "paidUserHint": "이미 유료 사용자이신가요?",
+   "signIn": "로그인",
+   "aboutLegal": "Mera 정보 및 법적 고지",
+   "sourceCode": "소스 코드",
+   "website": "웹사이트"
+  },
+  "consent": {
+   "welcomeTitle": "Mera에 오신 것을 환영합니다",
+   "welcomeBody": "\"동의하고 계속\"을 탭하면 서비스 약관과 개인정보 처리방침에 동의하게 됩니다.",
+   "accept": "동의하고 계속"
+  },
+  "welcomeBack": {
+   "title": "Mera에 다시 오신 것을 환영합니다",
+   "body": "이 기기에서 이전에 Mera를 사용한 것으로 보여 무료 체험은 이미 사용되었습니다. 새 계정으로 계속 이용하거나, 언제든지 요금제를 선택해 모든 기능을 사용할 수 있습니다."
+  }
+ },
+ "nl": {
+  "auth": {
+   "chooseLanguageTitle": "Kies je taal",
+   "chooseLanguageHint": "Je kunt dit altijd wijzigen in Instellingen.",
+   "continue": "Doorgaan",
+   "firstTimeHint": "Nieuw bij Mera? Begin met een korte rondleiding.",
+   "readyHint": "Klaar om Mera van jou te maken?",
+   "getStarted": "Aan de slag",
+   "paidUserHint": "Al een betalende gebruiker?",
+   "signIn": "Inloggen",
+   "aboutLegal": "Over Mera & juridisch",
+   "sourceCode": "Broncode",
+   "website": "Website"
+  },
+  "consent": {
+   "welcomeTitle": "Welkom bij Mera",
+   "welcomeBody": "Tik op \"Akkoord en doorgaan\" om onze Servicevoorwaarden en ons Privacybeleid te accepteren.",
+   "accept": "Akkoord en doorgaan"
+  },
+  "welcomeBack": {
+   "title": "Welkom terug bij Mera",
+   "body": "Het lijkt erop dat Mera al eerder op dit apparaat stond, dus de gratis proefperiode is al gebruikt. Je kunt blijven lezen met je nieuwe account, of op elk moment een abonnement kiezen voor de volledige ervaring."
+  }
+ },
+ "pl": {
+  "auth": {
+   "chooseLanguageTitle": "Wybierz swój język",
+   "chooseLanguageHint": "Możesz to zmienić w każdej chwili w Ustawieniach.",
+   "continue": "Kontynuuj",
+   "firstTimeHint": "Nowy w Mera? Zacznij od krótkiego przewodnika.",
+   "readyHint": "Gotowy, aby Mera stała się Twoja?",
+   "getStarted": "Rozpocznij",
+   "paidUserHint": "Masz już płatne konto?",
+   "signIn": "Zaloguj się",
+   "aboutLegal": "O Mera i informacje prawne",
+   "sourceCode": "Kod źródłowy",
+   "website": "Strona internetowa"
+  },
+  "consent": {
+   "welcomeTitle": "Witamy w Mera",
+   "welcomeBody": "Dotknij \"Zgadzam się i kontynuuję\", aby zaakceptować nasz Regulamin i Politykę prywatności.",
+   "accept": "Zgadzam się i kontynuuję"
+  },
+  "welcomeBack": {
+   "title": "Witamy ponownie w Mera",
+   "body": "Wygląda na to, że Mera była już na tym urządzeniu, więc bezpłatny okres próbny został już wykorzystany. Możesz dalej czytać na nowym koncie lub w każdej chwili wybrać plan, aby korzystać z pełni możliwości."
+  }
+ },
+ "pt-BR": {
+  "auth": {
+   "chooseLanguageTitle": "Escolha seu idioma",
+   "chooseLanguageHint": "Você pode mudar isso a qualquer momento nas Configurações.",
+   "continue": "Continuar",
+   "firstTimeHint": "Novo no Mera? Comece com um tour rápido.",
+   "readyHint": "Pronto para fazer o Mera ser seu?",
+   "getStarted": "Começar",
+   "paidUserHint": "Já é um usuário pago?",
+   "signIn": "Entrar",
+   "aboutLegal": "Sobre o Mera e informações legais",
+   "sourceCode": "Código-fonte",
+   "website": "Site"
+  },
+  "consent": {
+   "welcomeTitle": "Boas-vindas ao Mera",
+   "welcomeBody": "Toque em \"Concordar e continuar\" para aceitar nossos Termos de Serviço e nossa Política de Privacidade.",
+   "accept": "Concordar e continuar"
+  },
+  "welcomeBack": {
+   "title": "Que bom ter você de volta ao Mera",
+   "body": "Parece que o Mera já esteve neste aparelho, então o teste gratuito já foi usado. Você pode continuar lendo com sua nova conta ou escolher um plano a qualquer momento para ter a experiência completa."
+  }
+ },
+ "ru": {
+  "auth": {
+   "chooseLanguageTitle": "Выберите язык",
+   "chooseLanguageHint": "Вы можете изменить его в любой момент в настройках.",
+   "continue": "Продолжить",
+   "firstTimeHint": "Впервые в Mera? Начните с короткого обзора.",
+   "readyHint": "Готовы сделать Mera своим?",
+   "getStarted": "Начать",
+   "paidUserHint": "Уже есть платная подписка?",
+   "signIn": "Войти",
+   "aboutLegal": "О Mera и правовая информация",
+   "sourceCode": "Исходный код",
+   "website": "Сайт"
+  },
+  "consent": {
+   "welcomeTitle": "Добро пожаловать в Mera",
+   "welcomeBody": "Нажмите \"Принять и продолжить\", чтобы принять наши Условия использования и Политику конфиденциальности.",
+   "accept": "Принять и продолжить"
+  },
+  "welcomeBack": {
+   "title": "С возвращением в Mera",
+   "body": "Похоже, Mera уже была на этом устройстве, поэтому бесплатный пробный период уже использован. Вы можете продолжить чтение с новым аккаунтом или в любой момент выбрать план для полного доступа."
+  }
+ },
+ "th": {
+  "auth": {
+   "chooseLanguageTitle": "เลือกภาษาของคุณ",
+   "chooseLanguageHint": "คุณเปลี่ยนได้ทุกเมื่อในการตั้งค่า",
+   "continue": "ดำเนินการต่อ",
+   "firstTimeHint": "เพิ่งรู้จัก Mera ใช่ไหม เริ่มจากทัวร์สั้นๆ ก่อนได้",
+   "readyHint": "พร้อมทำให้ Mera เป็นของคุณหรือยัง",
+   "getStarted": "เริ่มต้นใช้งาน",
+   "paidUserHint": "เป็นผู้ใช้แบบชำระเงินอยู่แล้วใช่ไหม",
+   "signIn": "ลงชื่อเข้าใช้",
+   "aboutLegal": "เกี่ยวกับ Mera และข้อกฎหมาย",
+   "sourceCode": "ซอร์สโค้ด",
+   "website": "เว็บไซต์"
+  },
+  "consent": {
+   "welcomeTitle": "ยินดีต้อนรับสู่ Mera",
+   "welcomeBody": "แตะ \"ยอมรับและดำเนินการต่อ\" เพื่อยอมรับข้อกำหนดในการให้บริการและนโยบายความเป็นส่วนตัวของเรา",
+   "accept": "ยอมรับและดำเนินการต่อ"
+  },
+  "welcomeBack": {
+   "title": "ยินดีต้อนรับกลับสู่ Mera",
+   "body": "ดูเหมือนว่าอุปกรณ์นี้เคยใช้ Mera มาก่อน ช่วงทดลองใช้ฟรีจึงถูกใช้ไปแล้ว คุณยังอ่านต่อได้ด้วยบัญชีใหม่ หรือเลือกแพ็กเกจได้ทุกเมื่อเพื่อประสบการณ์แบบเต็มรูปแบบ"
+  }
+ },
+ "tr": {
+  "auth": {
+   "chooseLanguageTitle": "Dilinizi seçin",
+   "chooseLanguageHint": "Bunu istediğiniz zaman Ayarlar'dan değiştirebilirsiniz.",
+   "continue": "Devam et",
+   "firstTimeHint": "Mera'da yeni misiniz? Kısa bir turla başlayın.",
+   "readyHint": "Mera'yı kendinize göre yapmaya hazır mısınız?",
+   "getStarted": "Başla",
+   "paidUserHint": "Zaten ücretli kullanıcı mısınız?",
+   "signIn": "Giriş yap",
+   "aboutLegal": "Mera hakkında ve yasal bilgiler",
+   "sourceCode": "Kaynak kodu",
+   "website": "Web sitesi"
+  },
+  "consent": {
+   "welcomeTitle": "Mera'ya hoş geldiniz",
+   "welcomeBody": "Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmek için \"Kabul et ve devam et\"e dokunun.",
+   "accept": "Kabul et ve devam et"
+  },
+  "welcomeBack": {
+   "title": "Mera'ya tekrar hoş geldiniz",
+   "body": "Görünüşe göre Mera bu cihazda daha önce kullanılmış, bu yüzden ücretsiz deneme zaten kullanılmış durumda. Yeni hesabınızla okumaya devam edebilir veya tam deneyim için istediğiniz zaman bir plan seçebilirsiniz."
+  }
+ },
+ "uk": {
+  "auth": {
+   "chooseLanguageTitle": "Оберіть свою мову",
+   "chooseLanguageHint": "Ви можете змінити її будь-коли в налаштуваннях.",
+   "continue": "Продовжити",
+   "firstTimeHint": "Уперше в Mera? Почніть із короткого огляду.",
+   "readyHint": "Готові зробити Mera своїм?",
+   "getStarted": "Почати",
+   "paidUserHint": "Уже маєте платну підписку?",
+   "signIn": "Увійти",
+   "aboutLegal": "Про Mera та правова інформація",
+   "sourceCode": "Вихідний код",
+   "website": "Вебсайт"
+  },
+  "consent": {
+   "welcomeTitle": "Вітаємо в Mera",
+   "welcomeBody": "Натисніть \"Погодитися й продовжити\", щоб прийняти наші Умови надання послуг і Політику конфіденційності.",
+   "accept": "Погодитися й продовжити"
+  },
+  "welcomeBack": {
+   "title": "З поверненням до Mera",
+   "body": "Схоже, Mera вже була на цьому пристрої, тому безкоштовний пробний період уже використано. Ви можете читати далі з новим обліковим записом або будь-коли обрати план для повного доступу."
+  }
+ },
+ "vi": {
+  "auth": {
+   "chooseLanguageTitle": "Chọn ngôn ngữ của bạn",
+   "chooseLanguageHint": "Bạn có thể thay đổi bất cứ lúc nào trong Cài đặt.",
+   "continue": "Tiếp tục",
+   "firstTimeHint": "Mới dùng Mera? Hãy bắt đầu với chuyến tham quan nhanh.",
+   "readyHint": "Sẵn sàng biến Mera thành của bạn?",
+   "getStarted": "Bắt đầu",
+   "paidUserHint": "Đã là người dùng trả phí?",
+   "signIn": "Đăng nhập",
+   "aboutLegal": "Về Mera và pháp lý",
+   "sourceCode": "Mã nguồn",
+   "website": "Trang web"
+  },
+  "consent": {
+   "welcomeTitle": "Chào mừng bạn đến với Mera",
+   "welcomeBody": "Nhấn \"Đồng ý và tiếp tục\" để chấp nhận Điều khoản dịch vụ và Chính sách quyền riêng tư của chúng tôi.",
+   "accept": "Đồng ý và tiếp tục"
+  },
+  "welcomeBack": {
+   "title": "Chào mừng bạn quay lại Mera",
+   "body": "Có vẻ Mera đã từng được cài trên thiết bị này, nên bản dùng thử miễn phí đã được sử dụng. Bạn vẫn có thể tiếp tục đọc với tài khoản mới, hoặc chọn một gói bất cứ lúc nào để có trải nghiệm đầy đủ."
+  }
+ },
+ "zh-CN": {
+  "auth": {
+   "chooseLanguageTitle": "选择您的语言",
+   "chooseLanguageHint": "您可以随时在设置中更改。",
+   "continue": "继续",
+   "firstTimeHint": "第一次使用 Mera？先来快速了解一下吧。",
+   "readyHint": "准备好开始使用 Mera 了吗？",
+   "getStarted": "开始使用",
+   "paidUserHint": "已经是付费用户？",
+   "signIn": "登录",
+   "aboutLegal": "关于 Mera 与法律信息",
+   "sourceCode": "源代码",
+   "website": "网站"
+  },
+  "consent": {
+   "welcomeTitle": "欢迎使用 Mera",
+   "welcomeBody": "点按\"同意并继续\"即表示您接受我们的服务条款和隐私政策。",
+   "accept": "同意并继续"
+  },
+  "welcomeBack": {
+   "title": "欢迎回到 Mera",
+   "body": "这台设备之前似乎使用过 Mera，因此免费试用已被使用。您可以继续使用新账号阅读，也可以随时选择一个套餐来获得完整体验。"
+  }
+ },
+ "zh-TW": {
+  "auth": {
+   "chooseLanguageTitle": "選擇您的語言",
+   "chooseLanguageHint": "您可以隨時在設定中更改。",
+   "continue": "繼續",
+   "firstTimeHint": "第一次使用 Mera？先來快速導覽一下吧。",
+   "readyHint": "準備好開始使用 Mera 了嗎？",
+   "getStarted": "開始使用",
+   "paidUserHint": "已經是付費使用者？",
+   "signIn": "登入",
+   "aboutLegal": "關於 Mera 與法律資訊",
+   "sourceCode": "原始碼",
+   "website": "網站"
+  },
+  "consent": {
+   "welcomeTitle": "歡迎使用 Mera",
+   "welcomeBody": "點按「同意並繼續」即表示您接受我們的服務條款與隱私權政策。",
+   "accept": "同意並繼續"
+  },
+  "welcomeBack": {
+   "title": "歡迎回到 Mera",
+   "body": "這部裝置之前似乎使用過 Mera，因此免費試用已經使用完畢。您可以繼續使用新帳號閱讀，也可以隨時選擇方案以獲得完整體驗。"
+  }
+ }
+}

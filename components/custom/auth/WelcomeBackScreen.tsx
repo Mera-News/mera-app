@@ -9,24 +9,29 @@
  * the paywall / free tier as usual — this screen only explains WHY there is
  * no fresh trial and hands over the Support ID.
  *
- * A11y per F2: wrappers are accessible={false}; the button carries its own
+ * A11y per F2: wrappers are accessible={false}; the buttons carry their own
  * role and label.
  */
+import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
+import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getSupportId } from '@/lib/support-id';
+import { MaterialIcons } from '@expo/vector-icons';
 
 const WelcomeBackScreen: React.FC = () => {
     const { t } = useTranslation();
     const [supportId, setSupportId] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
+    const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -35,8 +40,24 @@ const WelcomeBackScreen: React.FC = () => {
         });
         return () => {
             cancelled = true;
+            if (copyTimer.current) clearTimeout(copyTimer.current);
         };
     }, []);
+
+    // Same copy affordance as the Settings Support ID row: exact string,
+    // transient "Copied" state, no toast (the label change IS the feedback).
+    const handleCopy = async () => {
+        if (!supportId) return;
+        try {
+            await Clipboard.setStringAsync(supportId);
+        } catch {
+            // Clipboard unavailable — no feedback state, nothing to undo.
+            return;
+        }
+        setCopied(true);
+        if (copyTimer.current) clearTimeout(copyTimer.current);
+        copyTimer.current = setTimeout(() => setCopied(false), 1800);
+    };
 
     const handleContinue = () => {
         router.replace('/logged-in');
@@ -60,13 +81,41 @@ const WelcomeBackScreen: React.FC = () => {
 
                     {supportId && (
                         <VStack accessible={false} space="xs" className="items-center mt-2">
-                            <Text
-                                size="sm"
-                                className="text-gray-400"
-                                testID="welcome-back-support-id"
+                            {/* The one thing worth keeping from this screen: the
+                                account's handle for support. A bordered pill so it
+                                reads as a THING to save, not a sentence to skim,
+                                with the copy affordance right on it. */}
+                            <HStack
+                                accessible={false}
+                                space="md"
+                                className="items-center border border-gray-700 rounded-full px-5 py-2.5"
                             >
-                                {t('support.supportId', { id: supportId })}
-                            </Text>
+                                <Text
+                                    size="md"
+                                    className="text-white font-semibold"
+                                    testID="welcome-back-support-id"
+                                >
+                                    {t('support.supportId', { id: supportId })}
+                                </Text>
+                                <Pressable
+                                    testID="welcome-back-copy-support-id"
+                                    onPress={handleCopy}
+                                    hitSlop={8}
+                                    accessible
+                                    accessibilityRole="button"
+                                    accessibilityLabel={
+                                        copied ? t('support.copied') : t('support.copySupportId')
+                                    }
+                                >
+                                    {copied ? (
+                                        <Text size="sm" className="text-primary-400">
+                                            {t('support.copied')}
+                                        </Text>
+                                    ) : (
+                                        <MaterialIcons name="content-copy" size={18} color="#9ca3af" />
+                                    )}
+                                </Pressable>
+                            </HStack>
                             <Text size="xs" className="text-gray-500 text-center">
                                 {t('support.saveHint')}
                             </Text>

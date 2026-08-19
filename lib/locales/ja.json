@@ -70,7 +70,18 @@
     "tryAgain": "もう一度試す",
     "learnAboutMera": "Mera について知る",
     "startReading": "読み始める",
-    "alreadyHaveAccount": "すでにアカウントをお持ちですか？ログイン"
+    "alreadyHaveAccount": "すでにアカウントをお持ちですか？ログイン",
+    "chooseLanguageTitle": "言語を選択してください",
+    "chooseLanguageHint": "設定でいつでも変更できます。",
+    "continue": "続行",
+    "firstTimeHint": "Meraは初めてですか？まずはクイックツアーをどうぞ。",
+    "readyHint": "Meraを自分のものにする準備はできましたか？",
+    "getStarted": "はじめる",
+    "paidUserHint": "すでに有料ユーザーですか？",
+    "signIn": "サインイン",
+    "aboutLegal": "Meraについて・法的情報",
+    "sourceCode": "ソースコード",
+    "website": "ウェブサイト"
   },
   "account": {
     "pendingTitle": "アカウントの承認待ちです",
@@ -1609,7 +1620,9 @@
     "accepting": "保存中…",
     "errorTitle": "あなたの受け入れを保存できませんでした",
     "errorDescription": "接続を確認してもう一度お試しください。",
-    "retry": "もう一度お試しください"
+    "retry": "もう一度お試しください",
+    "welcomeTitle": "Meraへようこそ",
+    "welcomeBody": "「同意して続行」をタップすると、利用規約とプライバシーポリシーに同意したことになります。"
   },
   "tutorials": {
     "entryRow": "Meraについて学ぶ",
@@ -2298,8 +2311,8 @@
     "addedDetail": "レシートの受け取りとアカウントの復元に {{email}} を使用します。"
   },
   "welcomeBack": {
-    "title": "おかえりなさい",
-    "body": "このデバイスでは無料トライアルをすでに利用済みです。Mera のすべての機能で読み続けるには、続行後にプランをお選びください。",
+    "title": "Meraへおかえりなさい",
+    "body": "このデバイスでは以前Meraが使われていたようで、無料トライアルはすでに利用済みです。新しいアカウントでこのまま閲覧を続けることも、いつでもプランを選んでフル機能を利用することもできます。",
     "continue": "続行"
   }
 }

@@ -70,7 +70,18 @@
     "tryAgain": "Thử lại",
     "learnAboutMera": "Tìm hiểu về Mera",
     "startReading": "Bắt đầu đọc",
-    "alreadyHaveAccount": "Đã có tài khoản? Đăng nhập"
+    "alreadyHaveAccount": "Đã có tài khoản? Đăng nhập",
+    "chooseLanguageTitle": "Chọn ngôn ngữ của bạn",
+    "chooseLanguageHint": "Bạn có thể thay đổi bất cứ lúc nào trong Cài đặt.",
+    "continue": "Tiếp tục",
+    "firstTimeHint": "Mới dùng Mera? Hãy bắt đầu với chuyến tham quan nhanh.",
+    "readyHint": "Sẵn sàng biến Mera thành của bạn?",
+    "getStarted": "Bắt đầu",
+    "paidUserHint": "Đã là người dùng trả phí?",
+    "signIn": "Đăng nhập",
+    "aboutLegal": "Về Mera và pháp lý",
+    "sourceCode": "Mã nguồn",
+    "website": "Trang web"
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",
@@ -1606,11 +1617,13 @@
     "body": "Chúng tôi đã cập nhật Điều khoản dịch vụ và Chính sách bảo mật. Vui lòng xem xét và chấp nhận chúng để tiếp tục sử dụng Mera.",
     "termsLink": "Điều khoản dịch vụ",
     "privacyLink": "Chính sách bảo mật",
-    "accept": "Đồng ý và Tiếp tục",
+    "accept": "Đồng ý và tiếp tục",
     "accepting": "Đang lưu...",
     "errorTitle": "Không thể lưu chấp nhận của bạn",
     "errorDescription": "Vui lòng kiểm tra kết nối của bạn và thử lại.",
-    "retry": "Thử lại"
+    "retry": "Thử lại",
+    "welcomeTitle": "Chào mừng bạn đến với Mera",
+    "welcomeBody": "Nhấn \"Đồng ý và tiếp tục\" để chấp nhận Điều khoản dịch vụ và Chính sách quyền riêng tư của chúng tôi."
   },
   "tutorials": {
     "entryRow": "Tìm hiểu về Mera",
@@ -2299,8 +2312,8 @@
     "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}."
   },
   "welcomeBack": {
-    "title": "Chào mừng bạn quay lại",
-    "body": "Thiết bị này đã dùng bản dùng thử miễn phí. Để tiếp tục đọc với đầy đủ tính năng của Mera, hãy chọn một gói sau khi tiếp tục.",
+    "title": "Chào mừng bạn quay lại Mera",
+    "body": "Có vẻ Mera đã từng được cài trên thiết bị này, nên bản dùng thử miễn phí đã được sử dụng. Bạn vẫn có thể tiếp tục đọc với tài khoản mới, hoặc chọn một gói bất cứ lúc nào để có trải nghiệm đầy đủ.",
     "continue": "Tiếp tục"
   }
 }

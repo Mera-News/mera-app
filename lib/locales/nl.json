@@ -70,7 +70,18 @@
     "tryAgain": "Opnieuw proberen",
     "learnAboutMera": "Maak kennis met Mera",
     "startReading": "Beginnen met lezen",
-    "alreadyHaveAccount": "Heb je al een account? Inloggen"
+    "alreadyHaveAccount": "Heb je al een account? Inloggen",
+    "chooseLanguageTitle": "Kies je taal",
+    "chooseLanguageHint": "Je kunt dit altijd wijzigen in Instellingen.",
+    "continue": "Doorgaan",
+    "firstTimeHint": "Nieuw bij Mera? Begin met een korte rondleiding.",
+    "readyHint": "Klaar om Mera van jou te maken?",
+    "getStarted": "Aan de slag",
+    "paidUserHint": "Al een betalende gebruiker?",
+    "signIn": "Inloggen",
+    "aboutLegal": "Over Mera & juridisch",
+    "sourceCode": "Broncode",
+    "website": "Website"
   },
   "account": {
     "pendingTitle": "Account wacht op goedkeuring",
@@ -1609,7 +1620,9 @@
     "accepting": "Opslaan...",
     "errorTitle": "Kon je acceptatie niet opslaan",
     "errorDescription": "Controleer je verbinding en probeer het opnieuw.",
-    "retry": "Opnieuw proberen"
+    "retry": "Opnieuw proberen",
+    "welcomeTitle": "Welkom bij Mera",
+    "welcomeBody": "Tik op \"Akkoord en doorgaan\" om onze Servicevoorwaarden en ons Privacybeleid te accepteren."
   },
   "tutorials": {
     "entryRow": "Meer over Mera",
@@ -2298,8 +2311,8 @@
     "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}."
   },
   "welcomeBack": {
-    "title": "Welkom terug",
-    "body": "Dit apparaat heeft zijn gratis proefperiode al gebruikt. Kies na het doorgaan een abonnement om met alle functies van Mera te blijven lezen.",
+    "title": "Welkom terug bij Mera",
+    "body": "Het lijkt erop dat Mera al eerder op dit apparaat stond, dus de gratis proefperiode is al gebruikt. Je kunt blijven lezen met je nieuwe account, of op elk moment een abonnement kiezen voor de volledige ervaring.",
     "continue": "Doorgaan"
   }
 }

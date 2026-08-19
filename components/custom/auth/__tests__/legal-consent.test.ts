@@ -26,7 +26,9 @@ jest.mock('@/lib/logger', () => ({
 
 import logger from '@/lib/logger';
 import {
-    acceptLegal, fetchLegalVersions, needsConsent,
+    __resetLegalConsentLatchForTests,
+    acceptLegal, fetchLegalVersions, markLegalAcceptedThisProcess, needsConsent,
+    silentlyAcceptLegal, wasLegalAcceptedThisProcess,
 } from '../legal-consent';
 
 describe('needsConsent', () => {
@@ -124,5 +126,65 @@ describe('acceptLegal', () => {
         const result = await acceptLegal(versions);
         expect(result).toEqual({ ok: false });
         expect(logger.captureException).toHaveBeenCalled();
+    });
+});
+
+describe('process latch', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        __resetLegalConsentLatchForTests();
+    });
+
+    it('is per-user: marking one user does not suppress another', () => {
+        markLegalAcceptedThisProcess('u1');
+        expect(wasLegalAcceptedThisProcess('u1')).toBe(true);
+        expect(wasLegalAcceptedThisProcess('u2')).toBe(false);
+    });
+
+    it('answers false for null/undefined ids (an unresolved session never counts as accepted)', () => {
+        markLegalAcceptedThisProcess('u1');
+        expect(wasLegalAcceptedThisProcess(null)).toBe(false);
+        expect(wasLegalAcceptedThisProcess(undefined)).toBe(false);
+    });
+});
+
+describe('silentlyAcceptLegal (email path)', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        __resetLegalConsentLatchForTests();
+    });
+
+    it('marks the latch FIRST, then stamps the fetched versions', async () => {
+        mockQuery.mockResolvedValue({
+            data: { appConfig: { termsVersion: 't1', privacyVersion: 'p1' } },
+        });
+        mockFetch.mockResolvedValue({ data: { ok: true }, error: null });
+
+        await silentlyAcceptLegal('email-user');
+
+        expect(wasLegalAcceptedThisProcess('email-user')).toBe(true);
+        expect(mockFetch).toHaveBeenCalledWith('/accept-legal', expect.objectContaining({
+            method: 'POST',
+            body: { termsVersion: 't1', privacyVersion: 'p1' },
+        }));
+    });
+
+    it('keeps the latch even when the stamp cannot run (versions fetch fails) — suppressed this process, re-derived next launch', async () => {
+        mockQuery.mockRejectedValue(new Error('offline'));
+
+        await silentlyAcceptLegal('email-user');
+
+        expect(wasLegalAcceptedThisProcess('email-user')).toBe(true);
+        expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('never throws, even when the POST rejects at the network level', async () => {
+        mockQuery.mockResolvedValue({
+            data: { appConfig: { termsVersion: 't1', privacyVersion: 'p1' } },
+        });
+        mockFetch.mockRejectedValue(new Error('offline'));
+
+        await expect(silentlyAcceptLegal('email-user')).resolves.toBeUndefined();
+        expect(wasLegalAcceptedThisProcess('email-user')).toBe(true);
     });
 });

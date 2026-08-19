@@ -70,7 +70,18 @@
     "tryAgain": "Tekrar dene",
     "learnAboutMera": "Mera'yı tanıyın",
     "startReading": "Okumaya başla",
-    "alreadyHaveAccount": "Zaten hesabın var mı? Giriş yap"
+    "alreadyHaveAccount": "Zaten hesabın var mı? Giriş yap",
+    "chooseLanguageTitle": "Dilinizi seçin",
+    "chooseLanguageHint": "Bunu istediğiniz zaman Ayarlar'dan değiştirebilirsiniz.",
+    "continue": "Devam et",
+    "firstTimeHint": "Mera'da yeni misiniz? Kısa bir turla başlayın.",
+    "readyHint": "Mera'yı kendinize göre yapmaya hazır mısınız?",
+    "getStarted": "Başla",
+    "paidUserHint": "Zaten ücretli kullanıcı mısınız?",
+    "signIn": "Giriş yap",
+    "aboutLegal": "Mera hakkında ve yasal bilgiler",
+    "sourceCode": "Kaynak kodu",
+    "website": "Web sitesi"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",
@@ -1607,11 +1618,13 @@
     "body": "Hizmet Şartlarımız ve Gizlilik Politikamız güncelledik. Mera'yı kullanmaya devam etmek için lütfen bunları gözden geçir ve kabul et.",
     "termsLink": "Hizmet Şartları",
     "privacyLink": "Gizlilik Politikası",
-    "accept": "Kabul Et ve Devam",
+    "accept": "Kabul et ve devam et",
     "accepting": "Kaydediliyor...",
     "errorTitle": "Kabulün kaydedilemedi",
     "errorDescription": "Lütfen bağlantını kontrol et ve tekrar dene.",
-    "retry": "Tekrar Dene"
+    "retry": "Tekrar Dene",
+    "welcomeTitle": "Mera'ya hoş geldiniz",
+    "welcomeBody": "Hizmet Şartlarımızı ve Gizlilik Politikamızı kabul etmek için \"Kabul et ve devam et\"e dokunun."
   },
   "tutorials": {
     "entryRow": "Mera hakkında bilgi edin",
@@ -2300,8 +2313,8 @@
     "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak."
   },
   "welcomeBack": {
-    "title": "Tekrar hoş geldin",
-    "body": "Bu cihaz ücretsiz deneme süresini zaten kullandı. Mera'nın tüm özellikleriyle okumaya devam etmek için devam ettikten sonra bir plan seç.",
+    "title": "Mera'ya tekrar hoş geldiniz",
+    "body": "Görünüşe göre Mera bu cihazda daha önce kullanılmış, bu yüzden ücretsiz deneme zaten kullanılmış durumda. Yeni hesabınızla okumaya devam edebilir veya tam deneyim için istediğiniz zaman bir plan seçebilirsiniz.",
     "continue": "Devam"
   }
 }

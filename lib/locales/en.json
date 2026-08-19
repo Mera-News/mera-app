@@ -70,7 +70,18 @@
     "tryAgain": "Try again",
     "learnAboutMera": "Learn about Mera",
     "startReading": "Start reading",
-    "alreadyHaveAccount": "Already have an account? Sign in"
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "chooseLanguageTitle": "Choose your language",
+    "chooseLanguageHint": "You can change this anytime in Settings.",
+    "continue": "Continue",
+    "firstTimeHint": "New to Mera? Start with a quick tour.",
+    "readyHint": "Ready to make Mera yours?",
+    "getStarted": "Get started",
+    "paidUserHint": "Already a paid user?",
+    "signIn": "Sign in",
+    "aboutLegal": "About Mera & legal",
+    "sourceCode": "Source code",
+    "website": "Website"
   },
   "account": {
     "pendingTitle": "Subscribe to Mera",
@@ -1689,11 +1700,13 @@
     "body": "We've updated our Terms of Service and Privacy Policy. Please review and accept them to keep using Mera.",
     "termsLink": "Terms of Service",
     "privacyLink": "Privacy Policy",
-    "accept": "Agree & Continue",
+    "accept": "Agree and continue",
     "accepting": "Saving…",
     "errorTitle": "Couldn't save your acceptance",
     "errorDescription": "Please check your connection and try again.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "welcomeTitle": "Welcome to Mera",
+    "welcomeBody": "Tap \"Agree and continue\" to accept our Terms of Service and Privacy Policy."
   },
   "tutorials": {
     "entryRow": "Learn about Mera",
@@ -2382,8 +2395,8 @@
     "addedDetail": "Receipts and account recovery will use {{email}}."
   },
   "welcomeBack": {
-    "title": "Welcome back",
-    "body": "This device already used its free trial. To keep reading with Mera's full features, choose a plan after you continue.",
+    "title": "Welcome back to Mera",
+    "body": "It looks like Mera has been on this device before, so the free trial has already been used. You can keep browsing with your new account, or pick a plan anytime for the full experience.",
     "continue": "Continue"
   }
 }

@@ -211,13 +211,13 @@ beforeEach(() => {
 /**
  * What "reached onboarding" means in this suite.
  *
- * The onboarding path now BEGINS with the restore offer — a returning user is
- * asked for a recovery code before being made to rebuild a persona by hand —
- * and the wizard is one skip further on. This suite is about the PAYWALL
- * ordering, so it asserts on the first screen of that path rather than on the
- * wizard specifically; the wizard's own mounting is OnboardingScreen.test's.
+ * The restore offer opens the onboarding path ONLY for email sign-ins
+ * (`cached_user_email` present — see OnboardingScreen's gate); this suite's
+ * identity is a device-minted user (`cached_user_id` only), so its onboarding
+ * path begins at the wizard itself. This suite is about the PAYWALL ordering;
+ * the restore-offer gating is OnboardingScreen.test's.
  */
-const ONBOARDING_ENTRY = 'recovery-skip';
+const ONBOARDING_ENTRY = 'onboarding-wizard';
 
 describe('paywall before onboarding', () => {
     it('no active tier + no local facts → the paywall, NOT onboarding', async () => {

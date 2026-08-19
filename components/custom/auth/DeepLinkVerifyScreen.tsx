@@ -7,6 +7,7 @@ import { authClient } from '@/lib/auth-client';
 import { setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
 import { recordAuthenticatedUser } from '@/lib/security/identity-gate';
+import { silentlyAcceptLegal } from './legal-consent';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
 
@@ -45,6 +46,12 @@ export default function DeepLinkVerifyScreen({ otp, email, type }: Props) {
                     // state and not a route param.
                     recordAuthenticatedUser(data.user.id);
                     setSetting('cached_user_email', email).catch(() => {});
+                    // Email users accepted the terms at their original
+                    // sign-up — stamp the current versions silently so the
+                    // consent surfaces never prompt them. Mirrored from
+                    // AuthScreen.handleVerificationSuccess because this route
+                    // bypasses AuthScreen entirely.
+                    void silentlyAcceptLegal(data.user.id);
                     router.replace('/logged-in/onboarding');
                 }
             } catch (err: any) {

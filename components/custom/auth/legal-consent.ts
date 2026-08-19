@@ -117,3 +117,47 @@ export async function acceptLegal(versions: LegalVersions): Promise<AcceptLegalR
         return { ok: false };
     }
 }
+
+// ── Cross-component acceptance latch ────────────────────────────────────────
+//
+// better-auth-expo caches `session_data` locally, so a freshly-POSTed
+// acceptance is not guaranteed to be visible on the next `useSession()` read
+// (ConsentGate documents the same race for its own in-component latch). This
+// set extends the latch ACROSS components: the pre-auth consent step
+// (AuthScreen) and the silent email-path stamp both mark it, and ConsentGate
+// stands down for a marked user for the rest of the process. Process-lived by
+// design: the next launch re-derives from the session, which by then carries
+// the stamps — and if a stamp never landed, re-deriving is exactly what we
+// want (fail-open re-prompt, this module's standing contract).
+const acceptedThisProcess = new Set<string>();
+
+export function markLegalAcceptedThisProcess(userId: string): void {
+    acceptedThisProcess.add(userId);
+}
+
+export function wasLegalAcceptedThisProcess(userId: string | null | undefined): boolean {
+    return !!userId && acceptedThisProcess.has(userId);
+}
+
+/** Test-only: clears the process latch between cases. */
+export function __resetLegalConsentLatchForTests(): void {
+    acceptedThisProcess.clear();
+}
+
+/**
+ * Email-path stamp: records the CURRENT terms/privacy versions on an account
+ * without prompting. Email users accepted at their original sign-up, so the
+ * consent page never shows for them (product decision); this keeps their
+ * server stamps current so the overlay gate has nothing left to ask. The
+ * latch is marked FIRST — if the network stamp fails, the gate stays
+ * suppressed for this process and simply re-checks next session.
+ */
+export async function silentlyAcceptLegal(userId: string): Promise<void> {
+    markLegalAcceptedThisProcess(userId);
+    try {
+        const versions = await fetchLegalVersions();
+        if (versions) await acceptLegal(versions);
+    } catch {
+        // Both callees capture their own failures; nothing further to record.
+    }
+}

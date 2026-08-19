@@ -70,7 +70,18 @@
     "tryAgain": "Reintentar",
     "learnAboutMera": "Conoce Mera",
     "startReading": "Empezar a leer",
-    "alreadyHaveAccount": "¿Ya tienes una cuenta? Inicia sesión"
+    "alreadyHaveAccount": "¿Ya tienes una cuenta? Inicia sesión",
+    "chooseLanguageTitle": "Elige tu idioma",
+    "chooseLanguageHint": "Puedes cambiarlo en cualquier momento en Ajustes.",
+    "continue": "Continuar",
+    "firstTimeHint": "¿Nuevo en Mera? Empieza con un recorrido rápido.",
+    "readyHint": "¿Listo para hacer Mera tuyo?",
+    "getStarted": "Empezar",
+    "paidUserHint": "¿Ya tienes una suscripción de pago?",
+    "signIn": "Iniciar sesión",
+    "aboutLegal": "Acerca de Mera y avisos legales",
+    "sourceCode": "Código fuente",
+    "website": "Sitio web"
   },
   "account": {
     "pendingTitle": "Cuenta pendiente de aprobación",
@@ -1609,7 +1620,9 @@
     "accepting": "Guardando...",
     "errorTitle": "No se pudo guardar tu aceptación",
     "errorDescription": "Por favor, comprueba tu conexión e intenta de nuevo.",
-    "retry": "Intentar de nuevo"
+    "retry": "Intentar de nuevo",
+    "welcomeTitle": "Te damos la bienvenida a Mera",
+    "welcomeBody": "Toca \"Aceptar y continuar\" para aceptar nuestros Términos del Servicio y la Política de Privacidad."
   },
   "tutorials": {
     "entryRow": "Aprende sobre Mera",
@@ -2298,8 +2311,8 @@
     "addedDetail": "Los recibos y la recuperación de la cuenta usarán {{email}}."
   },
   "welcomeBack": {
-    "title": "Hola de nuevo",
-    "body": "Este dispositivo ya usó su prueba gratuita. Para seguir leyendo con todas las funciones de Mera, elige un plan después de continuar.",
+    "title": "Bienvenido de nuevo a Mera",
+    "body": "Parece que Mera ya estuvo en este dispositivo, así que la prueba gratuita ya se usó. Puedes seguir navegando con tu cuenta nueva o elegir un plan en cualquier momento para la experiencia completa.",
     "continue": "Continuar"
   }
 }

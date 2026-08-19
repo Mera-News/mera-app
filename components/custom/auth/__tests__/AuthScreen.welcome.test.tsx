@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-// AuthScreen.welcome.test.tsx — the device sign-in entry view.
+// AuthScreen.welcome.test.tsx — the staged pre-auth flow (S13 redesign).
 //
 // What must hold:
-//  - A fresh device with attestation (or the dev bypass) available lands on
-//    the WELCOME view; without either it falls straight to the email view, so
-//    no user ever sees a dead CTA. A remembered previous user outranks both.
-//  - Success mirrors OTPVerificationView's bookkeeping: recordAuthenticatedUser
-//    BEFORE navigation, needsReauth cleared, identity fault cleared. Normal
-//    mode navigates itself to /logged-in (the session atom is not trusted to
-//    settle); reauth mode hands the userId to onLoginSuccess instead.
+//  - A device that has NEVER explicitly picked a language (no `app_language`
+//    settings row) lands on the LANGUAGE stage first; Continue persists the
+//    preselected value through setAppLanguage and advances to the welcome
+//    view. With the row present, welcome renders directly. A remembered
+//    previous user outranks both; no attestation falls straight to email.
+//  - "Get started" advances to the CONSENT step; the device sign-in runs from
+//    "Agree and continue" there, mirroring OTPVerificationView's bookkeeping:
+//    recordAuthenticatedUser BEFORE navigation, needsReauth cleared, identity
+//    fault cleared, and the just-given consent stamped via acceptLegal (latch
+//    marked only when the stamp lands).
 //  - Every failure state offers retry AND the email path, and retry re-runs
 //    the whole flow (fresh nonce lives inside signInWithDevice).
 
@@ -25,12 +28,18 @@ jest.mock('@/components/custom/auth/PreviousUserView', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: () => <View testID="stub-previous-user-view" /> };
 });
-jest.mock('@/components/custom/auth/LanguageSelector', () => ({ __esModule: true, default: () => null }));
+jest.mock('@/components/custom/auth/LanguageSelector', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="stub-language-selector" /> };
+});
+jest.mock('@/components/custom/auth/LegalFooter', () => {
+    const { View } = require('react-native');
+    return { __esModule: true, default: () => <View testID="stub-legal-footer" /> };
+});
 jest.mock('@/components/custom/tutorials/TutorialLaunchButton', () => {
     const { View } = require('react-native');
     return { __esModule: true, default: () => <View testID="stub-tutorial-launch" /> };
 });
-jest.mock('@/components/custom/PolicyPill', () => ({ __esModule: true, default: () => null }));
 jest.mock('react-native-css-interop/jsx-runtime', () => {
     const R = require('react/jsx-runtime');
     return { jsx: R.jsx, jsxs: R.jsxs, Fragment: R.Fragment };
@@ -107,12 +116,31 @@ jest.mock('@/lib/stores/user-store', () => ({
     useUserStore: { getState: () => ({ setNeedsReauth: mockSetNeedsReauth }) },
 }));
 
+// The store's getState is read twice by the language stage (current value +
+// the persist call); a plain object with a stable jest.fn is enough.
+const mockSetAppLanguage = jest.fn(async (_lang: string) => {});
+jest.mock('@/lib/stores/app-language-store', () => ({
+    useAppLanguageStore: {
+        getState: () => ({ appLanguage: 'en', setAppLanguage: mockSetAppLanguage }),
+    },
+}));
+
+const mockFetchLegalVersions = jest.fn();
+const mockAcceptLegal = jest.fn();
+const mockMarkAccepted = jest.fn();
+const mockSilentlyAcceptLegal = jest.fn(async (..._a: any[]) => {});
+jest.mock('../legal-consent', () => ({
+    fetchLegalVersions: (...a: any[]) => mockFetchLegalVersions(...a),
+    acceptLegal: (...a: any[]) => mockAcceptLegal(...a),
+    markLegalAcceptedThisProcess: (...a: any[]) => mockMarkAccepted(...a),
+    silentlyAcceptLegal: (...a: any[]) => mockSilentlyAcceptLegal(...a),
+}));
+
 const mockOpenSupport = jest.fn();
 jest.mock('@/lib/intercom', () => ({
     useSupportAction: () => ({ busy: false, openSupport: mockOpenSupport }),
 }));
 
-jest.mock('@/lib/version', () => ({ getAppVersionLabel: () => 'v1.3.0' }));
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn(async () => {}) }));
 jest.mock('@/lib/web-browser-utils', () => ({
     openInAppBrowser: jest.fn(),
@@ -125,16 +153,39 @@ jest.mock('@/lib/logger', () => ({
 
 import AuthScreen from '../AuthScreen';
 
+const CURRENT = { termsVersion: '2026-08-01', privacyVersion: '2026-08-01' };
+
 beforeEach(() => {
     jest.clearAllMocks();
-    mockGetSetting.mockResolvedValue(null);
+    // Default: language already chosen (the row exists) — most tests start on
+    // the welcome view. The language-stage cases override to null.
+    mockGetSetting.mockImplementation(async (k: string) =>
+        k === 'app_language' ? 'en' : null,
+    );
     mockAvailability.mockResolvedValue('native');
+    mockFetchLegalVersions.mockResolvedValue(CURRENT);
+    mockAcceptLegal.mockResolvedValue({ ok: true });
 });
 
+/** Press "Get started" on the welcome view, landing on the consent step. */
+async function advanceToConsent(r: ReturnType<typeof render>) {
+    fireEvent.press(await r.findByTestId('auth-get-started'));
+    return r.findByTestId('auth-consent-agree');
+}
+
 describe('entry view selection', () => {
-    it('fresh device with attestation available lands on the welcome view', async () => {
+    it('a device that never picked a language lands on the LANGUAGE stage', async () => {
+        mockGetSetting.mockResolvedValue(null); // no app_language row
+        const { findByTestId, queryByTestId } = render(<AuthScreen />);
+        expect(await findByTestId('auth-language-continue')).toBeTruthy();
+        expect(queryByTestId('auth-get-started')).toBeNull();
+        expect(queryByTestId('stub-language-selector')).toBeTruthy();
+    });
+
+    it('with the app_language row present, welcome renders directly (no language stage)', async () => {
         const { findByTestId, queryByTestId } = render(<AuthScreen />);
         expect(await findByTestId('auth-get-started')).toBeTruthy();
+        expect(queryByTestId('auth-language-continue')).toBeNull();
         expect(queryByTestId('auth-email-input')).toBeNull();
     });
 
@@ -147,11 +198,42 @@ describe('entry view selection', () => {
 
     it('a remembered previous user outranks the welcome view', async () => {
         mockGetSetting.mockImplementation(async (k: string) =>
-            k === 'cached_user_email' ? 'a@b.com' : k === 'cached_user_id' ? 'u1' : null,
+            k === 'cached_user_email' ? 'a@b.com' : k === 'cached_user_id' ? 'u1' : 'en',
         );
         const { queryByTestId, findByTestId } = render(<AuthScreen />);
         expect(await findByTestId('stub-previous-user-view')).toBeTruthy();
         expect(queryByTestId('auth-get-started')).toBeNull();
+    });
+});
+
+describe('language stage (S13)', () => {
+    it('Continue persists the preselected language through setAppLanguage, then advances to welcome', async () => {
+        mockGetSetting.mockResolvedValue(null);
+        const { findByTestId } = render(<AuthScreen />);
+
+        fireEvent.press(await findByTestId('auth-language-continue'));
+
+        expect(await findByTestId('auth-get-started')).toBeTruthy();
+        expect(mockSetAppLanguage).toHaveBeenCalledWith('en');
+    });
+
+    it('still advances (once, next launch re-asks) when the persist throws', async () => {
+        mockGetSetting.mockResolvedValue(null);
+        mockSetAppLanguage.mockRejectedValueOnce(new Error('db closed'));
+        const { findByTestId } = render(<AuthScreen />);
+
+        fireEvent.press(await findByTestId('auth-language-continue'));
+
+        expect(await findByTestId('auth-get-started')).toBeTruthy();
+    });
+
+    it('the language stage shows no welcome actions and no footer chrome', async () => {
+        mockGetSetting.mockResolvedValue(null);
+        const { findByTestId, queryByTestId } = render(<AuthScreen />);
+        await findByTestId('auth-language-continue');
+        expect(queryByTestId('auth-learn-mera')).toBeNull();
+        expect(queryByTestId('auth-use-email')).toBeNull();
+        expect(queryByTestId('stub-legal-footer')).toBeNull();
     });
 });
 
@@ -161,7 +243,7 @@ describe('accessibility scoping (F2)', () => {
         const cta = await findByTestId('auth-get-started');
 
         expect(cta.props.accessibilityRole).toBe('button');
-        expect(cta.props.accessibilityLabel).toBe('auth.startReading');
+        expect(cta.props.accessibilityLabel).toBe('auth.getStarted');
 
         // Walk the rendered tree: no OTHER HOST node may carry the label — a
         // wrapper carrying it is the full-screen phantom button VoiceOver and
@@ -172,7 +254,7 @@ describe('accessibility scoping (F2)', () => {
         const walk = (node: any) => {
             if (
                 typeof node?.type === 'string' &&
-                node?.props?.accessibilityLabel === 'auth.startReading'
+                node?.props?.accessibilityLabel === 'auth.getStarted'
             ) {
                 labelled.push(node);
             }
@@ -201,25 +283,35 @@ describe('accessibility scoping (F2)', () => {
         }
     });
 
-    it('the secondary controls are buttons with their own labels', async () => {
+    it('the consent-step wrappers are scoped the same way', async () => {
+        const r = render(<AuthScreen />);
+        await advanceToConsent(r);
+        for (const id of ['auth-consent-screen', 'auth-consent-root', 'auth-consent-cluster']) {
+            const wrapper = await r.findByTestId(id);
+            expect(wrapper.props.accessible).toBe(false);
+            expect(wrapper.props.accessibilityLabel).toBeUndefined();
+        }
+    });
+
+    it('the secondary failure controls are buttons with their own labels', async () => {
         mockSignIn.mockResolvedValue({ status: 'failed', reason: 'attestation-denied' });
-        const { findByTestId, findByText } = render(<AuthScreen />);
-        fireEvent.press(await findByTestId('auth-get-started'));
-        await findByText('auth.deviceSignInDenied');
+        const r = render(<AuthScreen />);
+        fireEvent.press(await advanceToConsent(r));
+        await r.findByText('auth.deviceSignInDenied');
 
         for (const [id, label] of [
             ['auth-device-retry', 'auth.tryAgain'],
             ['auth-use-email-failure', 'auth.alreadyHaveAccount'],
             ['auth-device-support', 'account.contactSupport'],
         ] as const) {
-            const node = await findByTestId(id);
+            const node = await r.findByTestId(id);
             expect(node.props.accessibilityRole).toBe('button');
             expect(node.props.accessibilityLabel).toBe(label);
         }
     });
 });
 
-describe('welcome-view button stack (S8)', () => {
+describe('welcome-view action stack (S13)', () => {
     /** Host testIDs in render order — the order assertion for the stack. */
     const collectTestIds = (root: any): string[] => {
         const ids: string[] = [];
@@ -231,14 +323,20 @@ describe('welcome-view button stack (S8)', () => {
         return ids;
     };
 
-    it('Learn about Mera sits ABOVE Get started, outline vs filled', async () => {
-        const { findByTestId, UNSAFE_root } = render(<AuthScreen />);
+    it('order is learn -> get started -> sign-in link, hints above their buttons', async () => {
+        const { findByTestId, findByText, UNSAFE_root } = render(<AuthScreen />);
         const learn = await findByTestId('auth-learn-mera');
         const cta = await findByTestId('auth-get-started');
 
         const ids = collectTestIds(UNSAFE_root);
         expect(ids.indexOf('auth-learn-mera')).toBeGreaterThanOrEqual(0);
         expect(ids.indexOf('auth-learn-mera')).toBeLessThan(ids.indexOf('auth-get-started'));
+        expect(ids.indexOf('auth-get-started')).toBeLessThan(ids.indexOf('auth-use-email'));
+
+        // The three hint lines render.
+        expect(await findByText('auth.firstTimeHint')).toBeTruthy();
+        expect(await findByText('auth.readyHint')).toBeTruthy();
+        expect(await findByText('auth.paidUserHint')).toBeTruthy();
 
         // Outline vs filled: same geometry (h-14 rounded-full), different fill.
         expect(learn.props.className).toContain('h-14');
@@ -257,8 +355,7 @@ describe('welcome-view button stack (S8)', () => {
         expect(mockRouterPush).toHaveBeenCalledWith('/tutorials');
     });
 
-    it('the footer tour pill is gone from the welcome view (it moved up), but stays on the email view', async () => {
-        mockAvailability.mockResolvedValue('native');
+    it('the footer tour pill stays off the welcome view but on the email view', async () => {
         const welcome = render(<AuthScreen />);
         await welcome.findByTestId('auth-get-started');
         expect(welcome.queryByTestId('stub-tutorial-launch')).toBeNull();
@@ -270,44 +367,85 @@ describe('welcome-view button stack (S8)', () => {
         expect(email.queryByTestId('stub-tutorial-launch')).toBeTruthy();
     });
 
-    it('Sign in with email is RELOCATED: below the action stack, directly above the policy row', async () => {
-        const { findByTestId, UNSAFE_root } = render(<AuthScreen />);
+    it('no language selector on the welcome view; the legal footer renders', async () => {
+        const { findByTestId, queryByTestId } = render(<AuthScreen />);
         await findByTestId('auth-get-started');
+        expect(queryByTestId('stub-language-selector')).toBeNull();
+        expect(queryByTestId('stub-legal-footer')).toBeTruthy();
+    });
 
-        // Present, styled as a text link, and OUTSIDE the action stack: the
-        // render order is learn -> get started -> ... -> email link (footer).
-        const ids = collectTestIds(UNSAFE_root);
-        expect(ids.indexOf('auth-learn-mera')).toBeLessThan(ids.indexOf('auth-get-started'));
-        expect(ids.indexOf('auth-get-started')).toBeLessThan(ids.indexOf('auth-use-email'));
-        // In the footer band, not among the CTA buttons.
-        const actions = await findByTestId('auth-welcome-actions');
-        const actionIds = collectTestIds(actions);
-        expect(actionIds).not.toContain('auth-use-email');
-
+    it('the sign-in link is a text link (no button shell) labeled Sign in and opens the email view', async () => {
+        const { findByTestId } = render(<AuthScreen />);
         const link = await findByTestId('auth-use-email');
         expect(link.props.accessibilityRole).toBe('button');
-        expect(link.props.accessibilityLabel).toBe('auth.alreadyHaveAccount');
-        // Text-link styling, not a button shell.
+        expect(link.props.accessibilityLabel).toBe('auth.signIn');
         expect(link.props.className ?? '').not.toContain('h-14');
-    });
 
-    it('the relocated email link still opens the email view', async () => {
-        const { findByTestId } = render(<AuthScreen />);
-        await findByTestId('auth-get-started');
-        fireEvent.press(await findByTestId('auth-use-email'));
+        fireEvent.press(link);
         expect(await findByTestId('auth-email-input')).toBeTruthy();
     });
+});
 
-    it('the failure state keeps its email escape (pre-S8 behavior), plus retry and support', async () => {
-        mockSignIn.mockResolvedValue({ status: 'failed', reason: 'attestation-denied' });
-        const { findByTestId, findByText } = render(<AuthScreen />);
-        fireEvent.press(await findByTestId('auth-get-started'));
-        await findByText('auth.deviceSignInDenied');
+describe('consent step (S13)', () => {
+    it('Get started advances to the consent step — no sign-in yet', async () => {
+        const r = render(<AuthScreen />);
+        const agree = await advanceToConsent(r);
+        expect(agree).toBeTruthy();
+        expect(mockSignIn).not.toHaveBeenCalled();
+        // The one-decision page: title, body, both policy links.
+        expect(await r.findByText('consent.welcomeTitle')).toBeTruthy();
+        expect(await r.findByText('consent.welcomeBody')).toBeTruthy();
+        expect(await r.findByText('consent.termsLink')).toBeTruthy();
+        expect(await r.findByText('consent.privacyLink')).toBeTruthy();
+    });
 
-        expect(await findByTestId('auth-device-retry')).toBeTruthy();
-        expect(await findByTestId('auth-device-support')).toBeTruthy();
-        fireEvent.press(await findByTestId('auth-use-email-failure'));
-        expect(await findByTestId('auth-email-input')).toBeTruthy();
+    it('Agree and continue runs the device sign-in and stamps the acceptance', async () => {
+        mockSignIn.mockResolvedValue({
+            status: 'success',
+            userId: 'anon-user-1',
+            trialAvailable: true,
+            welcomeBack: false,
+        });
+        const r = render(<AuthScreen />);
+
+        fireEvent.press(await advanceToConsent(r));
+
+        await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/logged-in'));
+        expect(mockAcceptLegal).toHaveBeenCalledWith(CURRENT);
+        expect(mockMarkAccepted).toHaveBeenCalledWith('anon-user-1');
+    });
+
+    it('a failed stamp does NOT mark the latch (ConsentGate re-asks) but still navigates', async () => {
+        mockAcceptLegal.mockResolvedValue({ ok: false });
+        mockSignIn.mockResolvedValue({
+            status: 'success',
+            userId: 'anon-user-1',
+            trialAvailable: true,
+            welcomeBack: false,
+        });
+        const r = render(<AuthScreen />);
+
+        fireEvent.press(await advanceToConsent(r));
+
+        await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/logged-in'));
+        expect(mockMarkAccepted).not.toHaveBeenCalled();
+    });
+
+    it('an unresolved versions fetch skips the stamp entirely and still signs in', async () => {
+        mockFetchLegalVersions.mockReturnValue(new Promise(() => {})); // never resolves
+        mockSignIn.mockResolvedValue({
+            status: 'success',
+            userId: 'anon-user-1',
+            trialAvailable: true,
+            welcomeBack: false,
+        });
+        const r = render(<AuthScreen />);
+
+        fireEvent.press(await advanceToConsent(r));
+
+        await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/logged-in'));
+        expect(mockAcceptLegal).not.toHaveBeenCalled();
+        expect(mockMarkAccepted).not.toHaveBeenCalled();
     });
 });
 
@@ -319,9 +457,9 @@ describe('device sign-in success', () => {
             trialAvailable: true,
             welcomeBack: false,
         });
-        const { findByTestId } = render(<AuthScreen />);
+        const r = render(<AuthScreen />);
 
-        fireEvent.press(await findByTestId('auth-get-started'));
+        fireEvent.press(await advanceToConsent(r));
 
         await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/logged-in'));
         expect(mockRecordAuthenticatedUser).toHaveBeenCalledWith('anon-user-1');
@@ -341,9 +479,9 @@ describe('device sign-in success', () => {
             trialAvailable: false,
             welcomeBack: true,
         });
-        const { findByTestId } = render(<AuthScreen />);
+        const r = render(<AuthScreen />);
 
-        fireEvent.press(await findByTestId('auth-get-started'));
+        fireEvent.press(await advanceToConsent(r));
 
         await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/welcome-back'));
         expect(mockRouterReplace).not.toHaveBeenCalledWith('/logged-in');
@@ -359,9 +497,9 @@ describe('device sign-in success', () => {
             welcomeBack: false,
         });
         const onLoginSuccess = jest.fn();
-        const { findByTestId } = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
+        const r = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
 
-        fireEvent.press(await findByTestId('auth-get-started'));
+        fireEvent.press(await advanceToConsent(r));
 
         await waitFor(() => expect(onLoginSuccess).toHaveBeenCalledWith('anon-user-1'));
         expect(mockRouterReplace).not.toHaveBeenCalled();
@@ -371,31 +509,70 @@ describe('device sign-in success', () => {
 describe('device sign-in failure', () => {
     it('denied shows the denied copy with retry and support paths', async () => {
         mockSignIn.mockResolvedValue({ status: 'failed', reason: 'attestation-denied' });
-        const { findByTestId, findByText } = render(<AuthScreen />);
+        const r = render(<AuthScreen />);
 
-        fireEvent.press(await findByTestId('auth-get-started'));
+        fireEvent.press(await advanceToConsent(r));
 
-        await findByText('auth.deviceSignInDenied');
-        expect(await findByTestId('auth-device-retry')).toBeTruthy();
-        expect(await findByTestId('auth-device-support')).toBeTruthy();
+        await r.findByText('auth.deviceSignInDenied');
+        expect(await r.findByTestId('auth-device-retry')).toBeTruthy();
+        expect(await r.findByTestId('auth-device-support')).toBeTruthy();
     });
 
     it('retry re-runs the WHOLE flow (a fresh signInWithDevice call)', async () => {
         mockSignIn.mockResolvedValue({ status: 'failed', reason: 'network' });
-        const { findByTestId } = render(<AuthScreen />);
+        const r = render(<AuthScreen />);
 
-        fireEvent.press(await findByTestId('auth-get-started'));
-        fireEvent.press(await findByTestId('auth-device-retry'));
+        fireEvent.press(await advanceToConsent(r));
+        fireEvent.press(await r.findByTestId('auth-device-retry'));
 
         await waitFor(() => expect(mockSignIn).toHaveBeenCalledTimes(2));
     });
 
+    it('the failure state keeps its email escape', async () => {
+        mockSignIn.mockResolvedValue({ status: 'failed', reason: 'attestation-denied' });
+        const r = render(<AuthScreen />);
+        fireEvent.press(await advanceToConsent(r));
+        await r.findByText('auth.deviceSignInDenied');
+
+        fireEvent.press(await r.findByTestId('auth-use-email-failure'));
+        expect(await r.findByTestId('auth-email-input')).toBeTruthy();
+    });
+
     it('unsupported mid-flow falls back to the email view silently', async () => {
         mockSignIn.mockResolvedValue({ status: 'unsupported' });
-        const { findByTestId } = render(<AuthScreen />);
+        const r = render(<AuthScreen />);
 
-        fireEvent.press(await findByTestId('auth-get-started'));
+        fireEvent.press(await advanceToConsent(r));
 
-        expect(await findByTestId('auth-email-input')).toBeTruthy();
+        expect(await r.findByTestId('auth-email-input')).toBeTruthy();
+    });
+});
+
+describe('email path consent', () => {
+    it('OTP verification success silently stamps consent instead of prompting', async () => {
+        mockAvailability.mockResolvedValue('unavailable');
+        // Reach into the stubbed OTP view path indirectly: the handler is
+        // AuthScreen's, so drive it through the email view's onOTPSent →
+        // handleVerificationSuccess chain via the stub's props.
+        const otpModule = jest.requireMock('@/components/custom/auth/OTPVerificationView');
+        // `any`: assigned from inside the stub component's render, which TS
+        // cannot see, so a typed declaration narrows to `never` at the call.
+        let capturedOnSuccess: any = null;
+        otpModule.default = (p: any) => {
+            capturedOnSuccess = p.onVerificationSuccess;
+            const { View } = require('react-native');
+            return <View testID="stub-otp-view" />;
+        };
+
+        const onLoginSuccess = jest.fn();
+        const r = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
+        const emailInput = await r.findByTestId('auth-email-input');
+        fireEvent.changeText(emailInput, 'a@b.com');
+        fireEvent.press(await r.findByTestId('auth-send-otp'));
+        await r.findByTestId('stub-otp-view');
+
+        capturedOnSuccess?.('email-user-1');
+        expect(mockSilentlyAcceptLegal).toHaveBeenCalledWith('email-user-1');
+        expect(onLoginSuccess).toHaveBeenCalledWith('email-user-1');
     });
 });
