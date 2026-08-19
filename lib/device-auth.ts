@@ -39,6 +39,7 @@ import {
   attestKey,
   generateAssertion,
   generateKey,
+  isIntegrityUnavailableError,
   isInvalidKeyError,
   isSupported,
   requestIntegrityToken,
@@ -53,6 +54,12 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *  (lib/security/local-wipe.ts) so the next person on the device mints a fresh
  *  account instead of resuming this one. */
 export const APP_ATTEST_KEY_ID_STORE_KEY = `${APP_SLUG}_appattest_key_id`;
+
+/** Holds the keyId of the last key that COMPLETED a sign-in. A stored key
+ *  that never has (enrollment accepted client-side but effectively rejected
+ *  or mis-stored server-side) is a "virgin" key: an assert-400 on it severs
+ *  and re-enrolls once, where a proven key's 400 stays a plain denial. */
+export const APP_ATTEST_KEY_PROVEN_STORE_KEY = `${APP_SLUG}_appattest_key_proven`;
 
 /** Keychain slot for the stable random deviceId. Required by the Android
  *  sign-in (Play Integrity verdicts carry no device identity, so this is the
@@ -77,7 +84,11 @@ export const DEVICE_REF_STORE_KEY = `${APP_SLUG}_device_ref`;
  * severing.
  */
 export async function clearDeviceAuthCredentials(): Promise<void> {
-  for (const key of [APP_ATTEST_KEY_ID_STORE_KEY, DEVICE_ID_STORE_KEY]) {
+  for (const key of [
+    APP_ATTEST_KEY_ID_STORE_KEY,
+    APP_ATTEST_KEY_PROVEN_STORE_KEY,
+    DEVICE_ID_STORE_KEY,
+  ]) {
     try {
       await secureStore.deleteItemAsync(key);
     } catch {
@@ -268,10 +279,12 @@ function readStoredKeyId(): Promise<string | null> {
 }
 
 async function clearStoredKeyId(): Promise<void> {
-  try {
-    await secureStore.deleteItemAsync(APP_ATTEST_KEY_ID_STORE_KEY);
-  } catch {
-    // A failed delete only means the next attempt retries the same recovery.
+  for (const key of [APP_ATTEST_KEY_ID_STORE_KEY, APP_ATTEST_KEY_PROVEN_STORE_KEY]) {
+    try {
+      await secureStore.deleteItemAsync(key);
+    } catch {
+      // A failed delete only means the next attempt retries the same recovery.
+    }
   }
 }
 
@@ -322,6 +335,13 @@ async function assertAndSignInIos(keyId: string): Promise<ParsedSignIn> {
   });
   const parsed = parseSignIn('/device/sign-in/ios', data);
   await storeDeviceRef(parsed);
+  // The key has now completed a full assert + sign-in round trip: PROVEN.
+  // Best-effort — an unproven marker only means one extra recovery is armed.
+  try {
+    await secureStore.setItemAsync(APP_ATTEST_KEY_PROVEN_STORE_KEY, keyId);
+  } catch {
+    // Non-fatal.
+  }
   return parsed;
 }
 
@@ -334,9 +354,31 @@ async function signInIos(): Promise<ParsedSignIn> {
   try {
     return await assertAndSignInIos(storedKeyId);
   } catch (error) {
-    // The stored key vanished (reinstall, device migration, restore — App
-    // Attest keys survive none of them). Clear it and restart from scratch.
-    if (!isInvalidKeyError(error)) throw error;
+    // Recovery 1: the stored key vanished (reinstall, device migration,
+    // restore — App Attest keys survive none of them).
+    // Recovery 2: a 400 assert rejection on a VIRGIN key — one that never
+    // completed a sign-in. Seen in prod (MERA-APP team-id misconfig): the
+    // enrollment went wrong server-side after the client had a key, so every
+    // later assert 400s forever with no way out short of reinstall. A PROVEN
+    // key's 400 stays a plain denial: it once worked, and re-enrolling would
+    // destroy a good binding on a server verdict. An UNREADABLE proven marker
+    // counts as proven — never sever on uncertainty.
+    let recoverable = isInvalidKeyError(error);
+    if (
+      !recoverable &&
+      error instanceof ServerRejection &&
+      error.status === 400 &&
+      error.code === 'DEVICE_ATTESTATION_FAILED'
+    ) {
+      let provenKeyId: string | null;
+      try {
+        provenKeyId = await secureStore.getItemAsync(APP_ATTEST_KEY_PROVEN_STORE_KEY);
+      } catch {
+        provenKeyId = storedKeyId;
+      }
+      recoverable = provenKeyId !== storedKeyId;
+    }
+    if (!recoverable) throw error;
     await clearStoredKeyId();
     const keyId = await enrollIos();
     return assertAndSignInIos(keyId);
@@ -431,6 +473,15 @@ function classify(error: unknown): DeviceSignInResult {
     return { status: 'failed', reason: 'attestation-unavailable' };
   }
   if (code === 'ERR_ATTEST_UNSUPPORTED') {
+    return { status: 'unsupported' };
+  }
+  // MERA-APP-6P: Play Integrity codes meaning this environment can
+  // structurally never attest (no/old Play Store, non-GMS) — the same quiet
+  // path as isSupported() === false: the welcome view skips to the email
+  // view. Deliberately BEFORE the capture below: an environment fact, not an
+  // error; classifyFailure's single warn line is the only telemetry.
+  // Transient integrity codes fall through and stay retryable.
+  if (isIntegrityUnavailableError(error)) {
     return { status: 'unsupported' };
   }
   if (error instanceof TypeError) {

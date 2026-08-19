@@ -19,6 +19,13 @@ jest.mock('@/modules/mera-device-attest', () => ({
     requestIntegrityToken: (...args: unknown[]) => mockRequestIntegrityToken(...args),
     isInvalidKeyError: (e: unknown) =>
         (e as { code?: string } | null)?.code === 'ERR_ATTEST_INVALID_KEY',
+    // The REAL classifier: duplicating it here would make the spec test a copy.
+    isIntegrityUnavailableError: (e: unknown) =>
+        (
+            jest.requireActual('../../modules/mera-device-attest/index') as {
+                isIntegrityUnavailableError: (err: unknown) => boolean;
+            }
+        ).isIntegrityUnavailableError(e),
 }));
 
 const mockFetch = jest.fn();
@@ -75,6 +82,7 @@ import { Platform } from 'react-native';
 
 import {
     APP_ATTEST_KEY_ID_STORE_KEY,
+    APP_ATTEST_KEY_PROVEN_STORE_KEY,
     DEVICE_ID_STORE_KEY,
     DEVICE_REF_STORE_KEY,
     clearDeviceAuthCredentials,
@@ -470,9 +478,15 @@ describe('refusal recovery (S10)', () => {
         expect(mockGenerateKey).toHaveBeenCalledTimes(1);
     });
 
-    it('a 400 DEVICE_ATTESTATION_FAILED never clears credentials', async () => {
+    it('a 400 DEVICE_ATTESTATION_FAILED on a proven key never clears anything', async () => {
+        // Proven key: the virgin-key recovery (its own describe) must not
+        // fire, and a 400 must never touch deviceId/deviceRef either way.
         mockGetItemAsync.mockImplementation(async (k: string) =>
-            k === KEY_SLOT ? 'stored-key' : null,
+            k === KEY_SLOT
+                ? 'stored-key'
+                : k === APP_ATTEST_KEY_PROVEN_STORE_KEY
+                    ? 'stored-key'
+                    : null,
         );
         installServer({
             '/device/sign-in/ios': () => ({
@@ -635,8 +649,14 @@ describe('server error handling', () => {
                 error: { status: 400, code: 'DEVICE_ATTESTATION_FAILED' },
             }),
         });
+        // Proven key, so the 400 surfaces directly (no in-call recovery) and
+        // the two user-level retries are exactly two nonces.
         mockGetItemAsync.mockImplementation(async (k: string) =>
-            k === KEY_SLOT ? 'stored-key' : null,
+            k === KEY_SLOT
+                ? 'stored-key'
+                : k === APP_ATTEST_KEY_PROVEN_STORE_KEY
+                    ? 'stored-key'
+                    : null,
         );
         mockGenerateAssertion.mockResolvedValue('assertion-b64');
 
@@ -653,6 +673,7 @@ describe('clearDeviceAuthCredentials (S10: deletion severs, logout preserves)', 
     it('deletes the ACCOUNT credentials only; the deviceRef is trial history and survives', async () => {
         await clearDeviceAuthCredentials();
         expect(mockDeleteItemAsync).toHaveBeenCalledWith(APP_ATTEST_KEY_ID_STORE_KEY);
+        expect(mockDeleteItemAsync).toHaveBeenCalledWith(APP_ATTEST_KEY_PROVEN_STORE_KEY);
         expect(mockDeleteItemAsync).toHaveBeenCalledWith(DEVICE_ID_STORE_KEY);
         // The e2e proved the old behavior minted a FRESH trial after every
         // deletion: severing must never touch the trial-memory anchor.
@@ -692,7 +713,134 @@ describe('clearDeviceAuthCredentials (S10: deletion severs, logout preserves)', 
     it('is total: one failing delete does not stop the others', async () => {
         mockDeleteItemAsync.mockRejectedValueOnce(new Error('keychain locked'));
         await expect(clearDeviceAuthCredentials()).resolves.toBeUndefined();
-        expect(mockDeleteItemAsync).toHaveBeenCalledTimes(2);
+        expect(mockDeleteItemAsync).toHaveBeenCalledTimes(3);
+    });
+});
+
+describe('Play Integrity structural unavailability (MERA-APP-6P)', () => {
+    const integrityRejection = (code: number) =>
+        Object.assign(
+            new Error(`Play Integrity token request failed: Integrity API error (${code}): x.`),
+            { code: 'ERR_ATTEST_INTEGRITY_FAILED' },
+        );
+
+    beforeEach(() => {
+        (Platform as { OS: string }).OS = 'android';
+        installServer();
+    });
+
+    it('a permanent code (API_NOT_AVAILABLE) maps to the quiet UNSUPPORTED outcome, no Sentry capture', async () => {
+        const logger = (require('@/lib/logger') as { default: Record<string, jest.Mock> }).default;
+        mockRequestIntegrityToken.mockRejectedValue(integrityRejection(-1));
+
+        const result = await signInWithDevice();
+
+        expect(result).toEqual({ status: 'unsupported' });
+        expect(logger.captureException).not.toHaveBeenCalled();
+        expect(logger.captureMessage).not.toHaveBeenCalled();
+        // At most one structured warn line.
+        expect(logger.warn.mock.calls.length).toBeLessThanOrEqual(1);
+    });
+
+    it('a transient code (NETWORK_ERROR) keeps the retryable failure state', async () => {
+        mockRequestIntegrityToken.mockRejectedValue(integrityRejection(-3));
+        const result = await signInWithDevice();
+        expect(result).toEqual({ status: 'failed', reason: 'unknown' });
+    });
+
+    it('the existing isSupported=false path is unchanged', async () => {
+        mockIsSupported.mockResolvedValue(false);
+        const result = await signInWithDevice();
+        expect(result).toEqual({ status: 'unsupported' });
+        expect(mockFetch).not.toHaveBeenCalled();
+    });
+});
+
+describe('virgin-key assert rejection (rejected-enrollment recovery)', () => {
+    // The prod gap: enrollment's server attest failed AFTER the client had a
+    // key (or the server mis-stored it), so every later assert 400s forever.
+    // A 400 on a key that has NEVER completed a sign-in severs and re-enrolls
+    // once; a PROVEN key's 400 stays a plain denial.
+    const statefulKeychain = (initial: Record<string, string>) => {
+        const store: Record<string, string> = { ...initial };
+        mockGetItemAsync.mockImplementation(async (k: string) => store[k] ?? null);
+        mockDeleteItemAsync.mockImplementation(async (k: string) => {
+            delete store[k];
+        });
+        mockSetItemAsync.mockImplementation(async (k: string, v: string) => {
+            store[k] = v;
+        });
+        return store;
+    };
+
+    beforeEach(() => {
+        mockGenerateKey.mockResolvedValue('key-2');
+        mockAttestKey.mockResolvedValue('attestation-b64');
+        mockGenerateAssertion.mockResolvedValue('assertion-b64');
+    });
+
+    it('assert 400 on a VIRGIN stored key severs it and re-enrolls once, then succeeds and marks proven', async () => {
+        const store = statefulKeychain({ [APP_ATTEST_KEY_ID_STORE_KEY]: 'virgin-key' });
+        let signInCalls = 0;
+        installServer({
+            '/device/sign-in/ios': () => {
+                signInCalls += 1;
+                return signInCalls === 1
+                    ? { data: null, error: { status: 400, code: 'DEVICE_ATTESTATION_FAILED' } }
+                    : { data: { user: { id: 'user-2' } }, error: null };
+            },
+        });
+
+        const result = await signInWithDevice();
+
+        expect(result).toMatchObject({ status: 'success', userId: 'user-2' });
+        expect(mockGenerateKey).toHaveBeenCalledTimes(1);
+        expect(signInCalls).toBe(2);
+        expect(store[APP_ATTEST_KEY_ID_STORE_KEY]).toBe('key-2');
+        expect(store[APP_ATTEST_KEY_PROVEN_STORE_KEY]).toBe('key-2');
+    });
+
+    it('recovers once and ONLY once: a persistent 400 surfaces as attestation-denied', async () => {
+        statefulKeychain({ [APP_ATTEST_KEY_ID_STORE_KEY]: 'virgin-key' });
+        installServer({
+            '/device/sign-in/ios': () => ({
+                data: null,
+                error: { status: 400, code: 'DEVICE_ATTESTATION_FAILED' },
+            }),
+        });
+
+        const result = await signInWithDevice();
+
+        expect(result).toEqual({ status: 'failed', reason: 'attestation-denied' });
+        expect(mockGenerateKey).toHaveBeenCalledTimes(1);
+    });
+
+    it('assert 400 on a PROVEN key does NOT sever: a once-working binding is never destroyed on a denial', async () => {
+        statefulKeychain({
+            [APP_ATTEST_KEY_ID_STORE_KEY]: 'proven-key',
+            [APP_ATTEST_KEY_PROVEN_STORE_KEY]: 'proven-key',
+        });
+        installServer({
+            '/device/sign-in/ios': () => ({
+                data: null,
+                error: { status: 400, code: 'DEVICE_ATTESTATION_FAILED' },
+            }),
+        });
+
+        const result = await signInWithDevice();
+
+        expect(result).toEqual({ status: 'failed', reason: 'attestation-denied' });
+        expect(mockGenerateKey).not.toHaveBeenCalled();
+        expect(mockDeleteItemAsync).not.toHaveBeenCalledWith(APP_ATTEST_KEY_ID_STORE_KEY);
+    });
+
+    it('a successful resume marks the stored key proven', async () => {
+        const store = statefulKeychain({ [APP_ATTEST_KEY_ID_STORE_KEY]: 'stored-key' });
+        installServer();
+
+        await signInWithDevice();
+
+        expect(store[APP_ATTEST_KEY_PROVEN_STORE_KEY]).toBe('stored-key');
     });
 });
 

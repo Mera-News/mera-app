@@ -44,6 +44,7 @@ const BOUNDARY_CLEARED_KEYS = [
   `${APP_SLUG}_cookie`,
   `${APP_SLUG}_session_data`,
   `${APP_SLUG}_appattest_key_id`,
+  `${APP_SLUG}_appattest_key_proven`,
   `${APP_SLUG}_device_attest_device_id`,
 ];
 

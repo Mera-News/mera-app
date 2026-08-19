@@ -61,6 +61,7 @@ it('fresh install with a surviving session: clears cookie + account creds, PRESE
         mera_cookie: 'c',
         mera_session_data: 's',
         mera_appattest_key_id: 'k',
+        mera_appattest_key_proven: 'k',
         mera_device_attest_device_id: 'u',
         mera_device_ref: 'ref',
     };
@@ -74,6 +75,7 @@ it('fresh install with a surviving session: clears cookie + account creds, PRESE
     expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_cookie');
     expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_session_data');
     expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_appattest_key_id');
+    expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_appattest_key_proven');
     expect(mockDeleteItemAsync).toHaveBeenCalledWith('mera_device_attest_device_id');
     expect(mockDeleteItemAsync).not.toHaveBeenCalledWith('mera_device_ref');
     expect(store.mera_device_ref).toBe('ref');
