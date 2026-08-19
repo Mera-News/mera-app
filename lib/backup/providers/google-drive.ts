@@ -53,6 +53,29 @@ export function isGoogleDriveConfigured(): boolean {
   return GOOGLE_WEB_CLIENT_ID !== '';
 }
 
+/**
+ * Whether the google-signin NATIVE module is linked into this binary. Probed
+ * via the non-enforcing TurboModuleRegistry lookup BEFORE any require of the
+ * package: the package's module factory calls getEnforcing at import time, and
+ * although every caller here already catches the resulting throw, Metro's
+ * guarded require still REPORTS the factory error to LogBox in dev — so a
+ * dev-client built without the module showed a scary "Uncaught Error" toast
+ * the moment BackupSection probed availability (sim-caught, 2026-08-19). The
+ * probe is cached: linkage cannot change within a process.
+ */
+let nativeLinked: boolean | null = null;
+function googleSigninNativeLinked(): boolean {
+  if (nativeLinked !== null) return nativeLinked;
+  try {
+    const { TurboModuleRegistry } =
+      require('react-native') as typeof import('react-native');
+    nativeLinked = TurboModuleRegistry.get('RNGoogleSignin') != null;
+  } catch {
+    nativeLinked = false;
+  }
+  return nativeLinked;
+}
+
 function ensureConfigured(): void {
   if (configured) return;
   const { GoogleSignin } = require('@react-native-google-signin/google-signin');
@@ -76,6 +99,7 @@ function ensureConfigured(): void {
  */
 async function currentAccessToken(): Promise<string | null> {
   if (!isGoogleDriveConfigured()) return null;
+  if (!googleSigninNativeLinked()) return null;
   try {
     ensureConfigured();
     const { GoogleSignin } = require('@react-native-google-signin/google-signin');
@@ -161,6 +185,9 @@ export async function connectGoogleDrive(): Promise<DriveConnectResult> {
   if (!isGoogleDriveConfigured()) {
     return { ok: false, reason: 'misconfigured', detail: 'No Google client id in this build' };
   }
+  if (!googleSigninNativeLinked()) {
+    return { ok: false, reason: 'misconfigured', detail: 'Google Sign-In native module not in this build' };
+  }
   ensureConfigured();
   const { GoogleSignin, statusCodes } = require('@react-native-google-signin/google-signin');
   try {
@@ -191,6 +218,7 @@ export async function connectGoogleDrive(): Promise<DriveConnectResult> {
  */
 export async function disconnectGoogleDrive(): Promise<void> {
   if (!isGoogleDriveConfigured()) return;
+  if (!googleSigninNativeLinked()) return;
   try {
     ensureConfigured();
     const { GoogleSignin } = require('@react-native-google-signin/google-signin');
