@@ -26,7 +26,7 @@
  */
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Modal, StyleSheet, View } from 'react-native';
+import { Modal, Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Clipboard from 'expo-clipboard';
 import validator from 'validator';
@@ -117,20 +117,56 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
         return () => clearInterval(timer);
     }, [resendCooldown]);
 
+    // ── OUTCOME IS DEFERRED UNTIL THE MODAL HAS ACTUALLY DISMISSED ─────────
+    //
+    // e2e-proven bug (2026-08-19): reporting the outcome synchronously with
+    // onClose() let the checkout gate resolve while this full-screen Modal was
+    // still animating out — RevenueCat then presented its paywall on THIS
+    // modal's dying view controller and UIKit silently dropped it ("whose view
+    // is not in the window hierarchy"), turning "Continue to payment" into a
+    // dead end. Same trap class LanguageSelector documents for the iOS
+    // language sheet; same cure: flush on the Modal's onDismiss, which fires
+    // only after the dismissal transition finishes. onDismiss is iOS-only, so
+    // Android (where RevenueCat presents on the activity, not the dying modal
+    // host) flushes as soon as `isOpen` flips false, and an unmount flush
+    // backstops both so an armed gate can never dangle.
+    const pendingOutcome = useRef<EmailCaptureOutcome | null>(null);
+    const onOutcomeRef = useRef(onOutcome);
+    useEffect(() => {
+        onOutcomeRef.current = onOutcome;
+    });
+
+    const flushPendingOutcome = useCallback(() => {
+        const outcome = pendingOutcome.current;
+        pendingOutcome.current = null;
+        if (outcome) onOutcomeRef.current?.(outcome);
+    }, []);
+
+    const closeWith = useCallback(
+        (outcome: EmailCaptureOutcome) => {
+            pendingOutcome.current = outcome;
+            onClose();
+        },
+        [onClose],
+    );
+
+    useEffect(() => {
+        if (!isOpen && Platform.OS !== 'ios') flushPendingOutcome();
+    }, [flushPendingOutcome, isOpen]);
+    useEffect(() => () => flushPendingOutcome(), [flushPendingOutcome]);
+
     // Every ORDINARY exit funnels through here so the outcome can never be
     // skipped — including Android's hardware back (onRequestClose). The
     // informed skip deliberately does NOT use this funnel.
     const handleSheetClose = useCallback(() => {
-        onOutcome?.(step === 'done' ? 'verified' : 'dismissed');
-        onClose();
-    }, [onClose, onOutcome, step]);
+        closeWith(step === 'done' ? 'verified' : 'dismissed');
+    }, [closeWith, step]);
 
     // The ONE way a 'skipped' outcome can be produced: the consequence step's
     // explicit confirm.
     const handleSkipConfirm = useCallback(() => {
-        onOutcome?.('skipped');
-        onClose();
-    }, [onClose, onOutcome]);
+        closeWith('skipped');
+    }, [closeWith]);
 
     // Same copy affordance as Settings and the welcome-back screen: exact
     // string, transient "Copied" swap, no toast.
@@ -217,6 +253,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
             transparent
             statusBarTranslucent
             onRequestClose={handleSheetClose}
+            onDismiss={flushPendingOutcome}
         >
             <GluestackUIProvider mode="dark">
                 {/* OPAQUE BASE, load-bearing: AbstractGradientBackdrop is

@@ -41,11 +41,22 @@ jest.mock('@/components/ui/gluestack-ui-provider', () => ({
 }));
 // RN's Modal pulls an untransformed ESM native-component spec into jest; the
 // page's behaviour has nothing to do with the host view, so render children
-// straight through (FeedbackTreeOverlay recipe). visible=false renders null.
-jest.mock('react-native/Libraries/Modal/Modal', () => ({
-    __esModule: true,
-    default: (props: any) => (props.visible === false ? null : props.children),
-}));
+// straight through. STATEFUL variant of the FeedbackTreeOverlay recipe: the
+// outcome contract now flushes on the Modal's onDismiss (the paywall-race
+// fix), so the mock must fire onDismiss when `visible` flips false, exactly
+// as iOS does after the dismissal animation.
+jest.mock('react-native/Libraries/Modal/Modal', () => {
+    const React = require('react');
+    const MockModal = (props: any) => {
+        const prev = React.useRef(props.visible);
+        React.useEffect(() => {
+            if (prev.current !== false && props.visible === false) props.onDismiss?.();
+            prev.current = props.visible;
+        });
+        return props.visible === false ? null : props.children;
+    };
+    return { __esModule: true, default: MockModal };
+});
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (p: any) => <View {...p} /> };
@@ -76,6 +87,27 @@ jest.mock('@/lib/subscription/email-capture', () => ({
 
 import { EmailCaptureSheet } from '../EmailCaptureSheet';
 
+/**
+ * Renders the sheet the way EmailCaptureHost does: onClose flips isOpen false,
+ * which dismisses the (mocked) Modal, which fires onDismiss — the point where
+ * the outcome is now reported (the paywall-race fix). Tests must go through
+ * this wrapper or the deferred outcome never flushes.
+ */
+function HostedSheet({ onOutcome, onClose, source }: any) {
+    const [open, setOpen] = React.useState(true);
+    return (
+        <EmailCaptureSheet
+            isOpen={open}
+            source={source}
+            onOutcome={onOutcome}
+            onClose={() => {
+                onClose?.();
+                setOpen(false);
+            }}
+        />
+    );
+}
+
 beforeEach(() => {
     jest.clearAllMocks();
     mockGetSupportId.mockResolvedValue('5013076');
@@ -85,19 +117,19 @@ it('Not now reports dismissed', async () => {
     const onOutcome = jest.fn();
     const onClose = jest.fn();
     const { findByTestId } = render(
-        <EmailCaptureSheet isOpen onClose={onClose} source="checkout" onOutcome={onOutcome} />,
+        <HostedSheet onClose={onClose} source="checkout" onOutcome={onOutcome} />,
     );
 
     fireEvent.press(await findByTestId('email-capture-not-now'));
 
-    expect(onOutcome).toHaveBeenCalledWith('dismissed');
+    await waitFor(() => expect(onOutcome).toHaveBeenCalledWith('dismissed'));
     expect(onClose).toHaveBeenCalled();
 });
 
 it('the full email -> OTP -> done flow reports verified on close', async () => {
     const onOutcome = jest.fn();
     const { findByTestId } = render(
-        <EmailCaptureSheet isOpen onClose={jest.fn()} source="checkout" onOutcome={onOutcome} />,
+        <HostedSheet onClose={jest.fn()} source="checkout" onOutcome={onOutcome} />,
     );
 
     fireEvent.changeText(await findByTestId('email-capture-email-input'), 'a@b.com');
@@ -128,7 +160,7 @@ it('skip -> consequence step -> explicit confirm reports SKIPPED and closes', as
     const onOutcome = jest.fn();
     const onClose = jest.fn();
     const { findByTestId, findByText } = render(
-        <EmailCaptureSheet isOpen onClose={onClose} source="checkout" onOutcome={onOutcome} />,
+        <HostedSheet onClose={onClose} source="checkout" onOutcome={onOutcome} />,
     );
 
     fireEvent.press(await findByTestId('email-capture-skip'));
@@ -139,7 +171,9 @@ it('skip -> consequence step -> explicit confirm reports SKIPPED and closes', as
 
     fireEvent.press(await findByTestId('email-capture-skip-confirm'));
 
-    expect(onOutcome).toHaveBeenCalledWith('skipped');
+    // Deferred to the Modal's onDismiss (paywall-race fix): the outcome must
+    // arrive only after the dismissal completes, never synchronously.
+    await waitFor(() => expect(onOutcome).toHaveBeenCalledWith('skipped'));
     expect(onClose).toHaveBeenCalled();
 });
 
@@ -169,40 +203,20 @@ it('a null Support ID hides the pill but keeps the consequence step usable', asy
 it('hardware back (onRequestClose) from the consequence step still reports DISMISSED', async () => {
     const onOutcome = jest.fn();
     const onClose = jest.fn();
-    const { findByTestId, UNSAFE_root } = render(
-        <EmailCaptureSheet isOpen onClose={onClose} source="checkout" onOutcome={onOutcome} />,
+    const { findByTestId } = render(
+        <HostedSheet onClose={onClose} source="checkout" onOutcome={onOutcome} />,
     );
 
     fireEvent.press(await findByTestId('email-capture-skip'));
 
-    // The RN Modal is mocked to render children directly, so drive the
-    // component's own funnel the way onRequestClose would: find the mock and
-    // invoke the prop captured at render time via the component instance.
-    const modalModule = jest.requireMock('react-native/Libraries/Modal/Modal');
-    expect(modalModule).toBeTruthy();
-    // Re-render path: simulate the hardware back by calling the same handler
-    // the Modal receives. The mock renders children only, so reach the prop
-    // through the element tree.
-    const findModalProps = (node: any): any => {
-        if (node?.props?.onRequestClose) return node.props;
-        for (const child of node?.children ?? []) {
-            if (typeof child === 'object') {
-                const hit = findModalProps(child);
-                if (hit) return hit;
-            }
-        }
-        return null;
-    };
-    const props = findModalProps(UNSAFE_root);
-    // The mocked Modal strips itself from the host tree; fall back to the
-    // dedicated back affordance, which uses the SAME dismissal funnel.
-    if (props) {
-        props.onRequestClose();
-    } else {
-        fireEvent.press(await findByTestId('email-capture-skip-back'));
-        fireEvent.press(await findByTestId('email-capture-not-now'));
-    }
+    // The mocked Modal renders children only, so drive the SAME funnel the
+    // hardware back uses via the dedicated back affordances: skip-back returns
+    // to the email step, Not now closes through handleSheetClose — exactly
+    // what onRequestClose invokes.
+    fireEvent.press(await findByTestId('email-capture-skip-back'));
+    fireEvent.press(await findByTestId('email-capture-not-now'));
 
-    expect(onOutcome).toHaveBeenCalledWith('dismissed');
+    await waitFor(() => expect(onOutcome).toHaveBeenCalledWith('dismissed'));
     expect(onOutcome).not.toHaveBeenCalledWith('skipped');
+    expect(onClose).toHaveBeenCalled();
 });
