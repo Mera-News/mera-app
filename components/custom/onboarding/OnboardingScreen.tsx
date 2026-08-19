@@ -166,8 +166,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
 
                 if (verdict === 'reauth') {
                     // Unresolvable locally. onLoginRedirect routes to
-                    // /login?reauth=1 — the reauth param is load-bearing, see
-                    // app/logged-in/onboarding.tsx.
+                    // /login?reauth=1, where AuthScreen offers OTP or device
+                    // sign-in (for accounts with no email) — the reauth param
+                    // is load-bearing, see app/logged-in/onboarding.tsx.
                     if (!cancelled) handlersRef.current.onLoginRedirect();
                     return;
                 }

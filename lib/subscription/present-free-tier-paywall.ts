@@ -19,6 +19,7 @@ import { refreshUserBillingAfterPurchase } from '@/lib/billing-service';
 import logger from '@/lib/logger';
 import { getOfferingSafe } from '@/lib/revenuecat';
 import { useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { ensureEmailBeforeCheckout } from '@/lib/subscription/email-capture';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
 import { showSubscriptionActivatedToast } from '@/lib/subscription/activation-toast';
 import { rememberLastKnownTier } from '@/lib/subscription/last-known-tier';
@@ -55,6 +56,9 @@ import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
  */
 export async function presentFreeTierPaywall(source: string): Promise<void> {
     try {
+        // S10: paying users key on a verified email — the required attach step
+        // runs BEFORE the sheet. A dismissal aborts checkout quietly.
+        if (!(await ensureEmailBeforeCheckout())) return;
         const offering = await getOfferingSafe();
         const result = await RevenueCatUI.presentPaywall({
             ...(offering ? { offering } : {}),

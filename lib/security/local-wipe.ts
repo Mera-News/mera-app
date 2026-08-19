@@ -43,6 +43,15 @@ const APP_SLUG = Constants.expoConfig?.slug || 'app';
  *   the device open the previous user's cloud backups. Clearing it is also why
  *   `adoptRecoveryCode` exists: after a re-login the cloud still holds blobs the
  *   device can no longer read, and typing the code back in is the way home.
+ *
+ * DELIBERATELY ABSENT (S10): the device sign-in credentials
+ * (`_appattest_key_id`, `_device_attest_device_id`, `_device_ref`). They
+ * SURVIVE every sign-out flavor so that logging in again resumes the SAME
+ * account — the device is the account's credential by design. Only account
+ * DELETION and the refusal recovery sever them, via
+ * `clearDeviceAuthCredentials()` (lib/device-auth.ts). Logout still wipes all
+ * local DATA; only the server-side binding survives.
+
  */
 const SECURE_STORE_KEYS = [
   `${APP_SLUG}_cookie`,
@@ -266,8 +275,10 @@ export async function wipeAllLocalUserData(): Promise<void> {
  */
 export async function signOutAndWipe(): Promise<void> {
   try {
-    const { authClient, clearAuthStorage } = require('@/lib/auth-client');
-    await authClient.signOut();
+    // clearAuthStorage() owns the (guarded, bounded) server sign-out; a
+    // direct authClient.signOut() before it would reject on an outage and
+    // skip the cookie deletion, leaving the wipe below as the only cover.
+    const { clearAuthStorage } = require('@/lib/auth-client');
     await clearAuthStorage();
   } catch (err) {
     logger.addBreadcrumb(

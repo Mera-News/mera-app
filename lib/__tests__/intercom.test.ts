@@ -21,6 +21,21 @@ jest.mock('@/lib/stores/user-store', () => ({
   useUserStore: { getState: () => ({ userId: 'user-1', userEmail: 'a@b.test' }) },
 }));
 
+// Support-id plumbing: the real mailto builder (that IS the behavior under
+// test), a controllable fetch. Mocked wholesale rather than requireActual —
+// the real module imports auth-client, whose expo secure-store sync API is not
+// available in this suite.
+const mockGetSupportId = jest.fn(async (..._a: unknown[]): Promise<string | null> => null);
+const mockIsOnline = jest.fn(() => true);
+jest.mock('@/lib/support-id', () => ({
+  getSupportId: (...a: unknown[]) => mockGetSupportId(...a),
+  buildSupportMailtoUrl: (email: string, id: string | null) =>
+    id ? `mailto:${email}?body=${encodeURIComponent(`Support ID: ${id}\n\n`)}` : `mailto:${email}`,
+}));
+jest.mock('@/lib/stores/network-store', () => ({
+  isOnline: () => mockIsOnline(),
+}));
+
 // A MUTABLE mock object, not a per-test jest.doMock. doMock is not scoped to
 // the test that calls it: it re-registers the module for every subsequent
 // require in the file, so one "no key configured" test silently disabled
@@ -66,6 +81,8 @@ beforeEach(() => {
   jest.resetModules();
   jest.clearAllMocks();
   configureKeys();
+  mockIsOnline.mockReturnValue(true);
+  mockGetSupportId.mockResolvedValue(null);
   mockQuery.mockResolvedValue({
     data: { intercomIdentity: { jwt: 'jwt-1', expiresAt: '2026-01-01' } },
   });
@@ -224,5 +241,90 @@ describe('every failure degrades to the mailto fallback', () => {
     const m = loadModule();
     native.present.mockRejectedValue(new Error('boom'));
     await expect(m.presentIntercomMessenger()).resolves.toBe(false);
+  });
+});
+
+// S5: the support id rides every support surface automatically.
+// Required at module scope: RNTL registers its cleanup hooks on import, which
+// jest-circus forbids inside a test body. The module under test is ALSO
+// captured at module scope for the hook tests: loadModule() runs after
+// jest.resetModules(), which would hand the hook a SECOND React copy and a
+// null dispatcher under RNTL's renderer. Config and collaborators are read at
+// call time, so the top-level instance sees the same mutable mocks.
+const { renderHook, act } = require('@testing-library/react-native');
+const intercomTop = require('../intercom') as typeof import('../intercom');
+
+// react-native exposes Linking through a LAZY GETTER, so after the
+// jest.resetModules() in beforeEach the module under test reaches a FRESH
+// Linking instance — the spy must be installed per test, post-reset, on
+// require('react-native').Linking, never on a top-level capture.
+function spyOnOpenURL() {
+  const { Linking } = require('react-native');
+  return jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
+}
+
+describe('support id autofill', () => {
+  it('Intercom login carries support_id as a custom attribute when known', async () => {
+    mockGetSupportId.mockResolvedValue('12345678');
+    const m = loadModule();
+    await expect(m.presentIntercomMessenger()).resolves.toBe(true);
+    expect(native.loginUserWithUserAttributes).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        customAttributes: { support_id: '12345678' },
+      }),
+    );
+  });
+
+  it('Intercom login omits the attribute entirely when the id is unknown', async () => {
+    const m = loadModule();
+    await expect(m.presentIntercomMessenger()).resolves.toBe(true);
+    const args = native.loginUserWithUserAttributes.mock.calls[0][0];
+    expect(args).not.toHaveProperty('customAttributes');
+  });
+
+  it('the mailto fallback body carries the Support ID line', async () => {
+    const openURL = spyOnOpenURL();
+    try {
+      // No Intercom keys -> the hook takes the mailto path directly.
+      mockEndpoints.INTERCOM_APP_ID = '';
+      mockEndpoints.INTERCOM_IOS_KEY = '';
+      mockEndpoints.INTERCOM_ANDROID_KEY = '';
+      mockGetSupportId.mockResolvedValue('12345678');
+
+      const onMailFailed = jest.fn();
+      const { result } = renderHook(() => intercomTop.useSupportAction(onMailFailed));
+      await act(async () => {
+        await result.current.openSupport();
+      });
+
+      expect(onMailFailed).not.toHaveBeenCalled();
+      expect(mockGetSupportId).toHaveBeenCalledTimes(1);
+      expect(openURL).toHaveBeenCalledTimes(1);
+      const url = String(openURL.mock.calls[0][0]);
+      expect(url.startsWith('mailto:')).toBe(true);
+      expect(decodeURIComponent(url)).toContain('Support ID: 12345678');
+    } finally {
+      openURL.mockRestore();
+    }
+  });
+
+  it('offline mailto opens immediately with no id fetch (bare mailto)', async () => {
+    const openURL = spyOnOpenURL();
+    try {
+      mockEndpoints.INTERCOM_APP_ID = '';
+      mockIsOnline.mockReturnValue(false);
+
+      const { result } = renderHook(() => intercomTop.useSupportAction());
+      await act(async () => {
+        await result.current.openSupport();
+      });
+
+      expect(mockGetSupportId).not.toHaveBeenCalled();
+      const url = String(openURL.mock.calls[0][0]);
+      expect(url).toMatch(/^mailto:[^?]+$/);
+    } finally {
+      openURL.mockRestore();
+    }
   });
 });

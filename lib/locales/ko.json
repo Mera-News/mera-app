@@ -56,7 +56,21 @@
       "switchCancel": "취소"
     },
     "contentPolicy": "콘텐츠 정책",
-    "faq": "자주 묻는 질문"
+    "faq": "자주 묻는 질문",
+    "identitySwitchFailedTitle": "계정 전환을 완료할 수 없습니다",
+    "identitySwitchFailedBody": "이 기기에 아직 다른 계정의 데이터가 있습니다. 계속하려면 Mera가 이를 삭제해야 하는데 이번에는 삭제하지 못했습니다.",
+    "identitySwitchFailedWhy": "잃는 것은 없습니다. 해당 데이터는 다른 계정의 것이며 그 계정에 그대로 남습니다. 이 기기가 정리되면 내 계정은 새로 시작됩니다.",
+    "identitySwitchFailedExhausted": "여전히 해결되지 않았습니다. 로그아웃한 다음 처음부터 다시 시작하여 이 기기를 정리하세요.",
+    "identitySwitchRetry": "다시 시도",
+    "identitySwitchSignOut": "로그아웃하고 다시 시작",
+    "deviceSignInWorking": "로그인하는 중",
+    "deviceSignInFailed": "문제가 발생했습니다. 다시 시도하거나 이메일로 로그인하세요.",
+    "deviceSignInDenied": "이 기기를 확인할 수 없습니다. 다시 시도하거나 이메일로 로그인하세요.",
+    "deviceSignInUnavailable": "지금은 로그인할 수 없습니다. 몇 분 후에 다시 시도하거나 이메일로 로그인하세요.",
+    "tryAgain": "다시 시도",
+    "learnAboutMera": "Mera 알아보기",
+    "startReading": "읽기 시작",
+    "alreadyHaveAccount": "이미 계정이 있나요? 로그인"
   },
   "account": {
     "pendingTitle": "계정 승인 대기 중",
@@ -984,7 +998,10 @@
     "followChatSeed": "스토리를 팔로우하고 싶습니다.",
     "followChatIntro": "팔로우하고 싶은 것을 알려주면 설정하겠습니다.",
     "emptyHintFollow": "팔로우 버튼을 탭하고 Mera에 계속 지켜보고 싶은 것을 알려주세요.",
-    "emptyCtaFollow": "스토리 팔로우"
+    "emptyCtaFollow": "스토리 팔로우",
+    "removeMemberAction": "이 스토리에 속하지 않음",
+    "removeMemberConfirmTitle": "이 기사를 삭제할까요?",
+    "removeMemberConfirmBody": "이 기사는 스토리 타임라인에서 삭제됩니다. Mera는 스토리 자체를 계속 팔로우합니다."
   },
   "whatsNew": {
     "title": "새로운 기능",
@@ -2265,6 +2282,24 @@
     }
   },
   "support": {
-    "opening": "고객 지원을 여는 중"
+    "opening": "고객 지원을 여는 중",
+    "supportId": "지원 ID: {{id}}",
+    "copySupportId": "지원 ID 복사",
+    "copied": "복사됨",
+    "saveHint": "이 ID를 저장해 두세요. 지원팀이 이 ID로 계정을 찾을 수 있습니다."
+  },
+  "emailCapture": {
+    "title": "이메일 추가",
+    "subtitle": "이메일로 영수증을 받고 휴대전화를 바꿔도 계정을 복구할 수 있습니다.",
+    "continue": "계속",
+    "notNow": "나중에",
+    "confirm": "확인",
+    "added": "이메일이 추가되었습니다",
+    "addedDetail": "영수증과 계정 복구에 {{email}}을(를) 사용합니다."
+  },
+  "welcomeBack": {
+    "title": "다시 오신 것을 환영합니다",
+    "body": "이 기기는 무료 체험을 이미 사용했습니다. Mera의 모든 기능으로 계속 읽으려면 계속한 후 요금제를 선택하세요.",
+    "continue": "계속"
   }
 }

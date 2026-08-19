@@ -7,6 +7,7 @@ import ReauthBanner from '@/components/custom/ReauthBanner';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
 import LapseInterstitialGate from '@/components/custom/subscription/LapseInterstitialGate';
 import FirstOpenPaywallGate from '@/components/custom/subscription/FirstOpenPaywallGate';
+import EmailCaptureHost from '@/components/custom/subscription/EmailCaptureSheet';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
 import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
 
@@ -212,6 +213,11 @@ export default function LoggedInLayout() {
       {/* Mutually exclusive with the gate above: this one requires
           hasEverSubscribed === false, which a lapse rules out. */}
       <FirstOpenPaywallGate />
+      {/* Renders nothing until the email-capture registry raises a request —
+          post-purchase for an anonymous (device sign-in) account, or the
+          Settings "Add email address" row. Mounted here, once, for the same
+          reason as the gates above. */}
+      <EmailCaptureHost />
       {/* MUST be last: renders an in-place full-screen overlay (not a
           navigation, unlike the two gates above) when the session user's
           accepted terms/privacy versions are missing or stale, and needs to

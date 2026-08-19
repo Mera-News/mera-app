@@ -56,7 +56,21 @@
       "switchCancel": "取消"
     },
     "contentPolicy": "内容政策",
-    "faq": "常见问题"
+    "faq": "常见问题",
+    "identitySwitchFailedTitle": "无法完成帐号切换",
+    "identitySwitchFailedBody": "此设备上仍有另一个帐号的数据。Mera 必须先清除这些数据才能继续，而这次清除失败了。",
+    "identitySwitchFailedWhy": "不会丢失任何内容。这些数据属于另一个帐号，会保留在其 Mera 帐号中。此设备清除后，你的帐号将全新开始。",
+    "identitySwitchFailedExhausted": "仍然失败。请退出登录并重新开始，以清除此设备。",
+    "identitySwitchRetry": "重试",
+    "identitySwitchSignOut": "退出登录并重新开始",
+    "deviceSignInWorking": "正在登录",
+    "deviceSignInFailed": "出了点问题。请重试，或使用电子邮件登录。",
+    "deviceSignInDenied": "无法验证此设备。请重试，或使用电子邮件登录。",
+    "deviceSignInUnavailable": "目前无法登录。请几分钟后重试，或使用电子邮件登录。",
+    "tryAgain": "重试",
+    "learnAboutMera": "了解 Mera",
+    "startReading": "开始阅读",
+    "alreadyHaveAccount": "已有帐号？登录"
   },
   "account": {
     "pendingTitle": "账户待审核",
@@ -984,7 +998,10 @@
     "followChatSeed": "我想关注一则报道。",
     "followChatIntro": "告诉我您想关注什么，我会设置它。",
     "emptyHintFollow": "点击关注按钮并告诉Mera您想跟踪什么。",
-    "emptyCtaFollow": "关注报道"
+    "emptyCtaFollow": "关注报道",
+    "removeMemberAction": "不属于此报道",
+    "removeMemberConfirmTitle": "移除这篇文章？",
+    "removeMemberConfirmBody": "这篇文章将从报道的时间线中移除。Mera 会继续关注报道本身。"
   },
   "whatsNew": {
     "title": "更新内容",
@@ -2266,6 +2283,24 @@
     }
   },
   "support": {
-    "opening": "正在打开支持"
+    "opening": "正在打开支持",
+    "supportId": "支持 ID：{{id}}",
+    "copySupportId": "复制支持 ID",
+    "copied": "已复制",
+    "saveHint": "请保存此 ID。支持团队可以通过它找到你的帐号。"
+  },
+  "emailCapture": {
+    "title": "添加电子邮件",
+    "subtitle": "通过电子邮件接收收据，换手机时也能找回帐号。",
+    "continue": "继续",
+    "notNow": "以后再说",
+    "confirm": "确认",
+    "added": "已添加电子邮件",
+    "addedDetail": "收据和帐号找回将使用 {{email}}。"
+  },
+  "welcomeBack": {
+    "title": "欢迎回来",
+    "body": "此设备已使用过免费试用。要继续使用 Mera 的全部功能阅读，请在继续后选择一个方案。",
+    "continue": "继续"
   }
 }

@@ -1,0 +1,23 @@
+{
+  "_comment": "auth-wave S10: welcome-view copy revision (Start reading CTA, Already have an account? Sign in link). Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": { "auth": { "startReading": "Start reading", "alreadyHaveAccount": "Already have an account? Sign in" } },
+  "ar": { "auth": { "startReading": "ابدأ القراءة", "alreadyHaveAccount": "هل لديك حساب بالفعل؟ سجّل الدخول" } },
+  "de": { "auth": { "startReading": "Jetzt lesen", "alreadyHaveAccount": "Schon ein Konto? Anmelden" } },
+  "es": { "auth": { "startReading": "Empezar a leer", "alreadyHaveAccount": "¿Ya tienes una cuenta? Inicia sesión" } },
+  "fr": { "auth": { "startReading": "Commencer à lire", "alreadyHaveAccount": "Vous avez déjà un compte ? Connectez-vous" } },
+  "hi": { "auth": { "startReading": "पढ़ना शुरू करें", "alreadyHaveAccount": "पहले से खाता है? साइन इन करें" } },
+  "id": { "auth": { "startReading": "Mulai membaca", "alreadyHaveAccount": "Sudah punya akun? Masuk" } },
+  "it": { "auth": { "startReading": "Inizia a leggere", "alreadyHaveAccount": "Hai già un account? Accedi" } },
+  "ja": { "auth": { "startReading": "読み始める", "alreadyHaveAccount": "すでにアカウントをお持ちですか？ログイン" } },
+  "ko": { "auth": { "startReading": "읽기 시작", "alreadyHaveAccount": "이미 계정이 있나요? 로그인" } },
+  "nl": { "auth": { "startReading": "Beginnen met lezen", "alreadyHaveAccount": "Heb je al een account? Inloggen" } },
+  "pl": { "auth": { "startReading": "Zacznij czytać", "alreadyHaveAccount": "Masz już konto? Zaloguj się" } },
+  "pt-BR": { "auth": { "startReading": "Começar a ler", "alreadyHaveAccount": "Já tem uma conta? Faça login" } },
+  "ru": { "auth": { "startReading": "Начать читать", "alreadyHaveAccount": "Уже есть аккаунт? Войти" } },
+  "th": { "auth": { "startReading": "เริ่มอ่าน", "alreadyHaveAccount": "มีบัญชีอยู่แล้วใช่ไหม ลงชื่อเข้าใช้" } },
+  "tr": { "auth": { "startReading": "Okumaya başla", "alreadyHaveAccount": "Zaten hesabın var mı? Giriş yap" } },
+  "uk": { "auth": { "startReading": "Почати читати", "alreadyHaveAccount": "Уже маєте обліковий запис? Увійти" } },
+  "vi": { "auth": { "startReading": "Bắt đầu đọc", "alreadyHaveAccount": "Đã có tài khoản? Đăng nhập" } },
+  "zh-CN": { "auth": { "startReading": "开始阅读", "alreadyHaveAccount": "已有帐号？登录" } },
+  "zh-TW": { "auth": { "startReading": "開始閱讀", "alreadyHaveAccount": "已有帳戶？登入" } }
+}

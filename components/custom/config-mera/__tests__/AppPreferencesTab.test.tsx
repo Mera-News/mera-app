@@ -7,7 +7,7 @@
 //
 // ORDER is the assertion that matters, not presence — the buggy version already
 // called replace() and dismissAll(). Every mock below appends to `calls`.
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 const calls: string[] = [];
@@ -15,8 +15,11 @@ const calls: string[] = [];
 // --- the logout sequence's collaborators ----------------------------------
 const mockSignOut = jest.fn(async () => { calls.push('signOut'); });
 const mockClearAuthStorage = jest.fn(async () => { calls.push('clearAuthStorage'); });
+// Mutable so individual tests can hand the tab a resolved session (the
+// support-id row and the anon-account row both derive from it).
+let mockSessionData: { user: Record<string, unknown> } | null = null;
 jest.mock('@/lib/auth-client', () => ({
-    authClient: { signOut: () => mockSignOut(), useSession: () => ({ data: null }) },
+    authClient: { signOut: () => mockSignOut(), useSession: () => ({ data: mockSessionData }) },
     clearAuthStorage: () => mockClearAuthStorage(),
 }));
 
@@ -132,6 +135,10 @@ jest.mock('@/lib/feedback', () => ({ showFeedback: jest.fn() }));
 jest.mock('@/lib/sentry-init', () => ({ SENTRY_ENABLED: false }));
 jest.mock('@/lib/web-browser-utils', () => ({ openInAppBrowser: jest.fn(), withAppLanguage: (u: string) => u }));
 jest.mock('@/lib/version', () => ({ getAppVersionLabel: () => 'v0.0.0 · test' }));
+const mockSetStringAsync = jest.fn(async (_s: string) => true);
+jest.mock('expo-clipboard', () => ({ setStringAsync: (s: string) => mockSetStringAsync(s) }));
+const mockHapticLight = jest.fn(async () => {});
+jest.mock('@/lib/haptics', () => ({ hapticLight: () => mockHapticLight() }));
 jest.mock('@/lib/stores/app-language-store', () => ({ useAppLanguageStore: (sel: any) => sel({ appLanguage: 'en' }) }));
 
 import AppPreferencesTab from '../AppPreferencesTab';
@@ -143,6 +150,7 @@ beforeEach(() => {
     jest.clearAllMocks();
     calls.length = 0;
     mockCanDismiss = false;
+    mockSessionData = null;
 });
 
 describe('Settings → Logout', () => {
@@ -162,14 +170,32 @@ describe('Settings → Logout', () => {
         // before the data they render disappears underneath them.
         expect(calls.indexOf('replace')).toBeLessThan(calls.indexOf('wipeAllLocalUserData'));
 
+        // No direct 'signOut' entry: the ONLY server contact lives inside
+        // clearAuthStorage(), where it is guarded and bounded — a direct
+        // unguarded call here is what once let a staging outage abort the
+        // whole local logout.
         expect(calls).toEqual([
-            'signOut',
             'clearAuthStorage',
             'setLockEnabled',
             'deleteSetting:cached_user_id',
             'replace',
             'wipeAllLocalUserData',
         ]);
+    });
+
+    it('a rejecting server sign-out cannot stop the local logout (outage = still signed out)', async () => {
+        // The observed field bug: logout during a staging outage relaunched
+        // signed IN. The handler must never await the server unguarded — local
+        // truth wins, exactly as the never-silent-logout invariant demands in
+        // the other direction.
+        mockSignOut.mockRejectedValue(new TypeError('Network request failed'));
+        const { getByText } = render(<AppPreferencesTab />);
+        pressSignOut(getByText);
+
+        await waitFor(() => expect(mockWipeAll).toHaveBeenCalled());
+        expect(mockClearAuthStorage).toHaveBeenCalled();
+        expect(mockDeleteSetting).toHaveBeenCalledWith('cached_user_id');
+        expect(mockReplace).toHaveBeenCalledWith({ pathname: '/login', params: { signedOut: '1' } });
     });
 
     it('lands on /login with signedOut:"1", never on the launch gate', async () => {
@@ -235,15 +261,100 @@ describe('Settings → Logout', () => {
         expect(mockReplace).toHaveBeenCalled();
     });
 
-    it('a failing server sign-out leaves local state untouched rather than half-wiped', async () => {
-        mockSignOut.mockRejectedValueOnce(new Error('network down'));
-        const { getByText } = render(<AppPreferencesTab />);
-        pressSignOut(getByText);
+    // The spec that used to sit here — "a failing server sign-out leaves local
+    // state untouched" — encoded the field bug it was meant to prevent: logout
+    // during a staging outage left the device signed IN across relaunches.
+    // The user pressed the button, so local truth wins; the rejecting-sign-out
+    // case is covered above, and the server call itself now lives guarded and
+    // bounded inside clearAuthStorage().
+});
 
-        await waitFor(() => expect(mockSetModalProcessing).toHaveBeenCalledWith('logout', false));
-        expect(mockDeleteSetting).not.toHaveBeenCalled();
-        expect(mockWipeAll).not.toHaveBeenCalled();
-        expect(mockReplace).not.toHaveBeenCalled();
+describe('Settings → Add email address row (S11: removed)', () => {
+    it('is NEVER rendered, even for an anonymous account (email attach lives at checkout + post-purchase only)', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '1234567' } };
+        const { queryByTestId, queryByText, findByText } = render(<AppPreferencesTab />);
+        await findByText('preferences.manageSettings');
+
+        expect(queryByTestId('settings-row-add-email')).toBeNull();
+        expect(queryByText('emailCapture.settingsRow')).toBeNull();
+        // The rest of the support block is untouched: id row, copy, hint.
+        expect(queryByTestId('settings-support-id')).toBeTruthy();
+        expect(queryByTestId('settings-support-id-copy')).toBeTruthy();
+        expect(queryByTestId('settings-support-id-hint')).toBeTruthy();
+    });
+});
+
+describe('Settings footer → Support ID copy button (S9)', () => {
+    it('copies EXACTLY the numeric id — never the label, never an email', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '1234567' } };
+        const { findByTestId } = render(<AppPreferencesTab />);
+
+        fireEvent.press(await findByTestId('settings-support-id-copy'));
+
+        await waitFor(() => expect(mockSetStringAsync).toHaveBeenCalledTimes(1));
+        expect(mockSetStringAsync).toHaveBeenCalledWith('1234567');
+        expect(mockHapticLight).toHaveBeenCalled();
+    });
+
+    it('shows a brief Copied state and reverts', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '1234567' } };
+        const { findByTestId, queryByText, getByText } = render(<AppPreferencesTab />);
+        const button = await findByTestId('settings-support-id-copy');
+
+        expect(queryByText('support.copied')).toBeNull();
+
+        jest.useFakeTimers();
+        try {
+            fireEvent.press(button);
+            // Flush the async clipboard write so the state lands.
+            await act(async () => {
+                await Promise.resolve();
+            });
+            expect(getByText('support.copied')).toBeTruthy();
+
+            act(() => {
+                jest.advanceTimersByTime(2000);
+            });
+            expect(queryByText('support.copied')).toBeNull();
+        } finally {
+            jest.useRealTimers();
+        }
+    });
+
+    it('is absent when the account has no supportId', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'real@example.com' } };
+        const { queryByTestId, findByText } = render(<AppPreferencesTab />);
+        await findByText('preferences.manageSettings');
+        expect(queryByTestId('settings-support-id-copy')).toBeNull();
+    });
+});
+
+describe('Settings footer → Support ID', () => {
+    it('shows the id when the session user carries one (anonymous account)', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'x@anon.mera.news', isAnonymous: true, supportId: '12345678' } };
+        const { findByTestId } = render(<AppPreferencesTab />);
+        const row = await findByTestId('settings-support-id');
+        expect(row.props.children).toBe('support.supportId');
+        // S10: the save-your-id hint rides with the row.
+        expect(await findByTestId('settings-support-id-hint')).toBeTruthy();
+    });
+
+    it('shows the id for an email-attached account too (it survives attach)', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'real@example.com', supportId: '12345678' } };
+        const { findByTestId } = render(<AppPreferencesTab />);
+        expect(await findByTestId('settings-support-id')).toBeTruthy();
+    });
+
+    it('hides the row when the account has no supportId or the session is unresolved', async () => {
+        mockSessionData = { user: { id: 'u1', email: 'real@example.com' } };
+        const { queryByTestId, findByText } = render(<AppPreferencesTab />);
+        await findByText('preferences.manageSettings');
+        expect(queryByTestId('settings-support-id')).toBeNull();
+
+        mockSessionData = null;
+        const second = render(<AppPreferencesTab />);
+        await second.findByText('preferences.manageSettings');
+        expect(second.queryByTestId('settings-support-id')).toBeNull();
     });
 });
 

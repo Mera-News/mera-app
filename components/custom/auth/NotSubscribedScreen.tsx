@@ -19,6 +19,7 @@ import { setSetting } from "@/lib/database/services/setting-service";
 // string constant.
 import { FIRST_OPEN_DISMISSED_SETTING_KEY } from "@/lib/subscription/first-open-dismissal";
 import logger from "@/lib/logger";
+import { ensureEmailBeforeCheckout } from "@/lib/subscription/email-capture";
 import {
     getCustomerInfoSafe,
     getOfferingSafe,
@@ -195,6 +196,9 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
      */
     const presentPaywall = useCallback(async () => {
         if (!isRevenueCatConfigured()) return;
+        // S10: verified email is required before checkout for anonymous
+        // accounts; a dismissed sheet aborts quietly (the screen stays up).
+        if (!(await ensureEmailBeforeCheckout())) return;
         setBusy(true);
         setMessage(null);
         try {

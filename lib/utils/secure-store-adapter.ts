@@ -9,6 +9,7 @@
 
 import * as SecureStore from 'expo-secure-store';
 import logger from '@/lib/logger';
+import { isAuthReadQuarantined } from '@/lib/security/install-boundary-latch';
 
 const KEYCHAIN_OPTS: SecureStore.SecureStoreOptions = {
   keychainAccessible: SecureStore.AFTER_FIRST_UNLOCK_THIS_DEVICE_ONLY,
@@ -61,6 +62,11 @@ export const secureStore = {
     }
   },
   getItem: (key: string) => {
+    // Install-boundary quarantine (S12): until the boundary has decided,
+    // sync reads of the auth/device keys answer null so the launch-time
+    // /get-session cannot race the boundary's deletes and re-persist a
+    // previous install's session. See install-boundary-latch.ts.
+    if (isAuthReadQuarantined(key)) return null;
     try {
       return SecureStore.getItem(key, KEYCHAIN_OPTS);
     } catch (err) {

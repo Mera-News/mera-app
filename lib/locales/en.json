@@ -62,7 +62,15 @@
       "switchBody": "Switching users will permanently delete all of this user's data on this device. This cannot be undone.",
       "switchConfirm": "Yes, clear data and switch user",
       "switchCancel": "Cancel"
-    }
+    },
+    "deviceSignInWorking": "Signing you in",
+    "deviceSignInFailed": "Something went wrong. Try again, or sign in with email.",
+    "deviceSignInDenied": "We couldn't verify this device. Try again, or sign in with email.",
+    "deviceSignInUnavailable": "Sign-in isn't available right now. Try again in a few minutes, or sign in with email.",
+    "tryAgain": "Try again",
+    "learnAboutMera": "Learn about Mera",
+    "startReading": "Start reading",
+    "alreadyHaveAccount": "Already have an account? Sign in"
   },
   "account": {
     "pendingTitle": "Subscribe to Mera",
@@ -2358,6 +2366,24 @@
     }
   },
   "support": {
-    "opening": "Opening support"
+    "opening": "Opening support",
+    "supportId": "Support ID: {{id}}",
+    "copySupportId": "Copy support ID",
+    "copied": "Copied",
+    "saveHint": "Save this ID. Support can find your account with it."
+  },
+  "emailCapture": {
+    "title": "Add your email",
+    "subtitle": "Get receipts by email and recover your account if you switch phones.",
+    "continue": "Continue",
+    "notNow": "Not now",
+    "confirm": "Confirm",
+    "added": "Email added",
+    "addedDetail": "Receipts and account recovery will use {{email}}."
+  },
+  "welcomeBack": {
+    "title": "Welcome back",
+    "body": "This device already used its free trial. To keep reading with Mera's full features, choose a plan after you continue.",
+    "continue": "Continue"
   }
 }

@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["MeraDeviceAttestModule"]
+  },
+  "android": {
+    "modules": ["news.mera.deviceattest.MeraDeviceAttestModule"]
+  }
+}

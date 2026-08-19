@@ -121,9 +121,17 @@ export const getJwtToken = async (): Promise<string | null> => {
     }
 };
 
+// How long the best-effort server sign-out may hold up the LOCAL sign-out.
+const SIGN_OUT_TIMEOUT_MS = 5_000;
+
 // Clears the keys better-auth-expo actually writes (verified against
 // node_modules/@better-auth/expo/dist/client.mjs:98-99). Called only from
 // explicit user-initiated logout flows.
+//
+// THE ONLY PLACE the server sign-out happens. Callers must NOT prefix this
+// with their own `await authClient.signOut()`: unguarded, that await turned a
+// server outage into an aborted logout (nothing local cleared, device
+// relaunched signed in). Here it is guarded and bounded instead.
 export const clearAuthStorage = async () => {
     invalidateJwtCache();
     // The refusal belonged to the user who just left. Not folded into
@@ -164,8 +172,19 @@ export const clearAuthStorage = async () => {
     } catch {
         // Never block a sign-out on telemetry.
     }
+    // Best-effort server sign-out, guarded AND bounded. The user pressed the
+    // button, so local state clears regardless of network — the inverse of the
+    // never-silent-logout invariant, and the same principle: local truth wins.
+    // Unbounded, a black-holed connection during an outage held this await
+    // forever, the user killed the app, and the device relaunched signed in.
+    // On timeout the request stays in flight harmlessly; the cookie deletion
+    // below is what actually signs this device out, and the server session
+    // ages out on its own.
     try {
-        await authClient.signOut();
+        await Promise.race([
+            authClient.signOut(),
+            new Promise((resolve) => setTimeout(resolve, SIGN_OUT_TIMEOUT_MS)),
+        ]);
     } catch {
         // Ignore — we still want to wipe local state below.
     }

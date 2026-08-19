@@ -56,7 +56,21 @@
       "switchCancel": "Cancelar"
     },
     "contentPolicy": "Política de conteúdo",
-    "faq": "Perguntas frequentes"
+    "faq": "Perguntas frequentes",
+    "identitySwitchFailedTitle": "Não foi possível concluir a troca de conta",
+    "identitySwitchFailedBody": "Os dados de outra conta ainda estão neste aparelho. O Mera precisa apagá-los antes de você continuar, e desta vez não foi possível apagar.",
+    "identitySwitchFailedWhy": "Nada é perdido. Esses dados pertencem à outra conta e continuam na conta Mera dela. A sua começa do zero quando este aparelho estiver limpo.",
+    "identitySwitchFailedExhausted": "Ainda não funcionou. Saia e comece de novo para limpar este aparelho.",
+    "identitySwitchRetry": "Tentar novamente",
+    "identitySwitchSignOut": "Sair e começar de novo",
+    "deviceSignInWorking": "Fazendo login",
+    "deviceSignInFailed": "Algo deu errado. Tente novamente ou entre com e-mail.",
+    "deviceSignInDenied": "Não foi possível verificar este dispositivo. Tente novamente ou entre com e-mail.",
+    "deviceSignInUnavailable": "O login não está disponível no momento. Tente novamente em alguns minutos ou entre com e-mail.",
+    "tryAgain": "Tentar novamente",
+    "learnAboutMera": "Conheça o Mera",
+    "startReading": "Começar a ler",
+    "alreadyHaveAccount": "Já tem uma conta? Faça login"
   },
   "account": {
     "pendingTitle": "Conta Pendente de Aprovação",
@@ -984,7 +998,10 @@
     "followChatSeed": "Quero acompanhar uma história.",
     "followChatIntro": "Diga-me o que você gostaria de acompanhar e vou configurar.",
     "emptyHintFollow": "Toque o botão de acompanhamento e diga ao Mera o que você quer manter atualizado.",
-    "emptyCtaFollow": "Acompanhar uma história"
+    "emptyCtaFollow": "Acompanhar uma história",
+    "removeMemberAction": "Não faz parte desta história",
+    "removeMemberConfirmTitle": "Remover este artigo?",
+    "removeMemberConfirmBody": "Este artigo é removido da linha do tempo da história. O Mera continua acompanhando a história."
   },
   "whatsNew": {
     "title": "Novidades",
@@ -2265,6 +2282,24 @@
     }
   },
   "support": {
-    "opening": "Abrindo o suporte"
+    "opening": "Abrindo o suporte",
+    "supportId": "ID de suporte: {{id}}",
+    "copySupportId": "Copiar ID de suporte",
+    "copied": "Copiado",
+    "saveHint": "Guarde este ID. O suporte pode encontrar sua conta com ele."
+  },
+  "emailCapture": {
+    "title": "Adicione seu e-mail",
+    "subtitle": "Receba recibos por e-mail e recupere sua conta se trocar de celular.",
+    "continue": "Continuar",
+    "notNow": "Agora não",
+    "confirm": "Confirmar",
+    "added": "E-mail adicionado",
+    "addedDetail": "Recibos e recuperação da conta usarão {{email}}."
+  },
+  "welcomeBack": {
+    "title": "Que bom ter você de volta",
+    "body": "Este aparelho já usou o período de teste gratuito. Para continuar lendo com todos os recursos do Mera, escolha um plano depois de continuar.",
+    "continue": "Continuar"
   }
 }

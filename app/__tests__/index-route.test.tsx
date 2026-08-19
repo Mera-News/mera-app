@@ -38,6 +38,13 @@ jest.mock('@/lib/security/launch-route', () => ({
 const mockPurge = jest.fn(async () => true);
 jest.mock('@/lib/security/local-wipe', () => ({ purgeOrphanedLocalData: () => mockPurge() }));
 
+const mockEnforceBoundary = jest.fn(async () => {});
+let mockBoundaryReset = false;
+jest.mock('@/lib/security/install-boundary', () => ({
+    enforceInstallBoundary: () => mockEnforceBoundary(),
+    wasInstallBoundaryReset: () => mockBoundaryReset,
+}));
+
 const mockPinInit = jest.fn(async () => {});
 let mockPinState = { initialized: true, pinSet: false, lockEnabled: false, locked: false };
 jest.mock('@/lib/stores/pin-store', () => ({
@@ -50,6 +57,7 @@ beforeEach(() => {
     jest.clearAllMocks();
     mockSession = null;
     mockIdentityState = 'absent';
+    mockBoundaryReset = false;
     mockPinState = { initialized: true, pinSet: false, lockEnabled: false, locked: false };
 });
 
@@ -110,4 +118,38 @@ describe('launch gate — offline mode iff credentials survive', () => {
     });
 
 
+});
+
+describe('install-boundary reset (S10)', () => {
+    it('runs the boundary check on every launch pass', async () => {
+        renderGate();
+        await waitFor(() => expect(mockRedirect).toHaveBeenCalled());
+        expect(mockEnforceBoundary).toHaveBeenCalled();
+    });
+
+    it('after a boundary reset, a stale session atom does NOT count as identity and /login carries signedOut', async () => {
+        mockBoundaryReset = true;
+        mockIdentityState = 'absent';
+        // The atom still holds the pre-reset session (fetched with the cookie
+        // the reset just deleted) — it must be ignored.
+        mockSession = { user: { id: 'stale-user' } };
+
+        renderGate();
+
+        await waitFor(() => expect(mockRedirect).toHaveBeenCalled());
+        expect(mockRedirect).toHaveBeenCalledWith({
+            pathname: '/login',
+            params: { signedOut: '1' },
+        });
+    });
+
+    it('without a reset the session enhancement still works (fresh-login window)', async () => {
+        mockBoundaryReset = false;
+        mockIdentityState = 'absent';
+        mockSession = { user: { id: 'fresh-user' } };
+
+        renderGate();
+
+        await waitFor(() => expect(mockRedirect).toHaveBeenCalledWith('/logged-in'));
+    });
 });

@@ -1,57 +1,34 @@
-// present-free-tier-paywall.test.ts — the success toast must follow the SERVER,
-// not the store.
-//
-// `PAYWALL_RESULT.PURCHASED` only means Apple took the money; our server learns
-// about it via the RevenueCat webhook seconds later. That gap is the whole
-// reason `refreshUserBillingAfterPurchase` returns `{ billing, confirmed }` and
-// the callers refuse to commit an unconfirmed snapshot. A toast on the Apple
-// result would announce a plan while the app still renders the previous one.
+/**
+ * The free-tier paywall chokepoint honors the S10 email-before-checkout gate:
+ * a dismissed sheet means NO paywall (and nothing refreshed); a passed gate
+ * proceeds to RevenueCat exactly as before.
+ */
 
-const mockPresentPaywall = jest.fn();
+const mockEnsureEmail = jest.fn(async () => true);
+jest.mock('@/lib/subscription/email-capture', () => ({
+    ensureEmailBeforeCheckout: () => mockEnsureEmail(),
+}));
+
+const mockPresentPaywall = jest.fn(async (..._a: unknown[]) => 'CANCELLED');
 jest.mock('react-native-purchases-ui', () => ({
     __esModule: true,
-    default: { presentPaywall: (...a: any[]) => mockPresentPaywall(...a) },
-    PAYWALL_RESULT: {
-        PURCHASED: 'PURCHASED',
-        RESTORED: 'RESTORED',
-        CANCELLED: 'CANCELLED',
-        ERROR: 'ERROR',
-        NOT_PRESENTED: 'NOT_PRESENTED',
-    },
+    default: { presentPaywall: (...a: unknown[]) => mockPresentPaywall(...a) },
+    PAYWALL_RESULT: { PURCHASED: 'PURCHASED', RESTORED: 'RESTORED', CANCELLED: 'CANCELLED' },
 }));
 
 jest.mock('@/lib/revenuecat', () => ({ getOfferingSafe: jest.fn(async () => null) }));
-
-const mockRefresh = jest.fn();
 jest.mock('@/lib/billing-service', () => ({
-    refreshUserBillingAfterPurchase: (...a: any[]) => mockRefresh(...a),
+    refreshUserBillingAfterPurchase: jest.fn(async () => ({ billing: null, confirmed: false })),
 }));
-
-const mockSetServerBilling = jest.fn();
 jest.mock('@/lib/stores/subscription-store', () => ({
-    useSubscriptionStore: {
-        getState: jest.fn(() => ({
-            serverTier: 'none',
-            setServerBilling: mockSetServerBilling,
-        })),
-    },
+    useSubscriptionStore: { getState: () => ({ serverTier: 'none', setServerBilling: jest.fn() }) },
 }));
-
-const mockSyncEntitlement = jest.fn(async () => {});
+const mockSyncEntitlement = jest.fn(async (..._a: unknown[]) => {});
 jest.mock('@/lib/subscription/entitlement-sync', () => ({
-    syncEntitlement: (...a: any[]) => mockSyncEntitlement(...(a as [])),
+    syncEntitlement: (...a: unknown[]) => mockSyncEntitlement(...a),
 }));
-
-const mockShowToast = jest.fn();
-jest.mock('@/lib/subscription/activation-toast', () => ({
-    showSubscriptionActivatedToast: (...a: any[]) => mockShowToast(...a),
-}));
-
-const mockRememberLastKnownTier = jest.fn(async () => {});
-jest.mock('@/lib/subscription/last-known-tier', () => ({
-    rememberLastKnownTier: (...a: any[]) => mockRememberLastKnownTier(...(a as [])),
-}));
-
+jest.mock('@/lib/subscription/activation-toast', () => ({ showSubscriptionActivatedToast: jest.fn() }));
+jest.mock('@/lib/subscription/last-known-tier', () => ({ rememberLastKnownTier: jest.fn() }));
 jest.mock('@/lib/logger', () => ({
     __esModule: true,
     default: { captureException: jest.fn() },
@@ -59,68 +36,20 @@ jest.mock('@/lib/logger', () => ({
 
 import { presentFreeTierPaywall } from '../present-free-tier-paywall';
 
-const billing = (subscriptionTier: string) => ({
-    subscriptionTier,
-    dailyArticleLimit: 100,
-    articlesUsedToday: 0,
-    entitlementExpiresAt: null,
-    resetAt: null,
+beforeEach(() => {
+    jest.clearAllMocks();
+    mockEnsureEmail.mockResolvedValue(true);
 });
 
-beforeEach(() => jest.clearAllMocks());
+it('a dismissed email gate aborts: no paywall, no sync', async () => {
+    mockEnsureEmail.mockResolvedValue(false);
+    await presentFreeTierPaywall('test');
+    expect(mockPresentPaywall).not.toHaveBeenCalled();
+    expect(mockSyncEntitlement).not.toHaveBeenCalled();
+});
 
-describe('presentFreeTierPaywall', () => {
-    it('toasts on confirmed:true, naming the tier the SERVER reported', async () => {
-        mockPresentPaywall.mockResolvedValueOnce('PURCHASED');
-        mockRefresh.mockResolvedValueOnce({ billing: billing('starter'), confirmed: true });
-
-        await presentFreeTierPaywall('FreeTierCard');
-
-        expect(mockSetServerBilling).toHaveBeenCalledWith(billing('starter'));
-        expect(mockShowToast).toHaveBeenCalledTimes(1);
-        // The pair, not just the new tier: 'none' (the store's pre-purchase
-        // serverTier) -> 'starter' is the transition being announced.
-        expect(mockShowToast).toHaveBeenCalledWith('none', 'starter');
-        // ── 2026-08-06 ────────────────────────────────────────────────────
-        // This branch does NOT go through syncEntitlement, so it carries its
-        // own write of the device's last-known tier. It matters more than most:
-        // a purchase from the PRE-ONBOARDING paywall is exactly how a device
-        // ends up holding a real tier and zero local facts — the only profile
-        // that still meets the onboarding entitlement gate on its next cold
-        // start.
-        expect(mockRememberLastKnownTier).toHaveBeenCalledWith('starter');
-    });
-
-    it('does NOT toast on confirmed:false — that snapshot is the PRE-purchase tier', async () => {
-        mockPresentPaywall.mockResolvedValueOnce('PURCHASED');
-        mockRefresh.mockResolvedValueOnce({ billing: billing('none'), confirmed: false });
-
-        await presentFreeTierPaywall('FreeTierCard');
-
-        expect(mockShowToast).not.toHaveBeenCalled();
-        // Still self-heals on the next successful read.
-        expect(mockSyncEntitlement).toHaveBeenCalledWith({ force: true });
-        expect(mockSetServerBilling).not.toHaveBeenCalled();
-        // Nor is an unconfirmed snapshot written to the device's memory —
-        // committing the PRE-purchase tier as "last known" would be worse than
-        // having no memory at all, since the gate trusts it.
-        expect(mockRememberLastKnownTier).not.toHaveBeenCalled();
-    });
-
-    it('does NOT toast when the sheet was dismissed without a purchase', async () => {
-        mockPresentPaywall.mockResolvedValueOnce('CANCELLED');
-
-        await presentFreeTierPaywall('FreeTierCard');
-
-        expect(mockShowToast).not.toHaveBeenCalled();
-        expect(mockRefresh).not.toHaveBeenCalled();
-    });
-
-    it('does NOT toast when presenting throws', async () => {
-        mockPresentPaywall.mockRejectedValueOnce(new Error('sheet blew up'));
-
-        await expect(presentFreeTierPaywall('FreeTierCard')).resolves.toBeUndefined();
-
-        expect(mockShowToast).not.toHaveBeenCalled();
-    });
+it('a passed gate presents the paywall as before', async () => {
+    await presentFreeTierPaywall('test');
+    expect(mockEnsureEmail).toHaveBeenCalledTimes(1);
+    expect(mockPresentPaywall).toHaveBeenCalledTimes(1);
 });

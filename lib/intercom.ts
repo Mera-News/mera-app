@@ -287,9 +287,22 @@ export async function presentIntercomMessenger(): Promise<boolean> {
       const { userId, userEmail } = require('@/lib/stores/user-store')
         .useUserStore.getState();
       if (!userId || moved()) return false;
+      // Attach the support handle as a custom attribute at login so support
+      // can look an anonymous account up without an email. Best-effort and
+      // bounded inside getSupportId(); lazy require per the cycle note there.
+      let supportId: string | null = null;
+      try {
+        supportId = await (
+          require('@/lib/support-id') as typeof import('@/lib/support-id')
+        ).getSupportId();
+      } catch {
+        supportId = null;
+      }
+      if (moved()) return false;
       await Intercom.loginUserWithUserAttributes({
         userId,
         ...(userEmail ? { email: userEmail } : {}),
+        ...(supportId ? { customAttributes: { support_id: supportId } } : {}),
       });
     }
 
@@ -371,15 +384,30 @@ export function useSupportAction(onMailFailed?: () => void) {
     inFlight.current = true;
     try {
       const { SUPPORT_EMAIL } = require('@/lib/config/branding');
+      const { isOnline } = require('@/lib/stores/network-store');
       const openMail = async () => {
         try {
-          await Linking.openURL(`mailto:${SUPPORT_EMAIL}`);
+          // Pre-fill the support id so the user never has to copy it. Lazy
+          // require (support-id -> auth-client -> this module is a cycle) and
+          // online-only: the offline contract above is "open mail
+          // IMMEDIATELY", and the id fetch is a session read.
+          let supportId: string | null = null;
+          if (isOnline()) {
+            try {
+              supportId = await (
+                require('@/lib/support-id') as typeof import('@/lib/support-id')
+              ).getSupportId();
+            } catch {
+              supportId = null;
+            }
+          }
+          const { buildSupportMailtoUrl } =
+            require('@/lib/support-id') as typeof import('@/lib/support-id');
+          await Linking.openURL(buildSupportMailtoUrl(SUPPORT_EMAIL, supportId));
         } catch {
           onMailFailed?.();
         }
       };
-
-      const { isOnline } = require('@/lib/stores/network-store');
       if (!isIntercomEnabled() || !isOnline()) {
         await openMail();
         return;

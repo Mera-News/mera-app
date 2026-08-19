@@ -126,10 +126,11 @@ export function resolveIdentity({
   // session must never eject a user who has local data to read.
   //
   // Still exactly that, and provably so: `pendingAuthUserId` is non-null only
-  // after `signIn.emailOtp` RESOLVED, which requires the network. An offline
-  // device has none, so `effective === sessionUserId` and this function is
-  // byte-identical to what it was. The two offline cases in the test file are
-  // the regression guard for that claim and must never need editing.
+  // after a sign-in call (OTP or device) RESOLVED, which requires the network.
+  // An offline device has none, so `effective === sessionUserId` and this
+  // function is byte-identical to what it was. The two offline cases in the
+  // test file are the regression guard for that claim and must never need
+  // editing.
   if (!effective) return 'coherent';
 
   // Signed in with nothing stamped on disk yet (fresh login). The wipe is a
@@ -145,9 +146,10 @@ export function resolveIdentity({
 // Authenticated-user recorder
 // ---------------------------------------------------------------------------
 //
-// Who signed in during THIS process. Written at both sign-in sites
-// (OTPVerificationView, DeepLinkVerifyScreen), read by the two identity gates,
-// and cleared the moment it is consumed.
+// Who signed in during THIS process. Written at all three sign-in sites
+// (OTPVerificationView, DeepLinkVerifyScreen, and AuthScreen's WelcomeView for
+// device sign-in), read by the two identity gates, and cleared the moment it
+// is consumed.
 //
 // WHY MODULE STATE AND NOT A ROUTE PARAM. `/logged-in` is reachable from the
 // app's registered URL scheme, so a route param would let a crafted deep link
@@ -166,9 +168,9 @@ export function resolveIdentity({
 let pendingAuthUserId: string | null = null;
 
 /**
- * Record a COMPLETED authentication. Call only after `signIn.emailOtp` has
- * resolved with a user — never optimistically, or an offline device could hold
- * an id it never proved.
+ * Record a COMPLETED authentication. Call only after the sign-in call
+ * (`signIn.emailOtp`, or the device sign-in POST) has resolved with a user —
+ * never optimistically, or an offline device could hold an id it never proved.
  */
 export function recordAuthenticatedUser(userId: string | null | undefined): void {
   pendingAuthUserId = userId || null;
@@ -326,10 +328,12 @@ export async function hasIdentityFault(): Promise<boolean> {
 }
 
 /**
- * Clears the fault after the user re-proves identity via OTP. Called from the
- * OTP success handler alongside the existing `setNeedsReauth(false)` — NOT from
- * the auth-failure breaker's success path, because an unrelated query
- * succeeding proves nothing about the userId argument the 403 was about.
+ * Clears the fault after the user re-proves identity — via OTP, or via device
+ * sign-in (an assertion resumes the account the device key is bound to, which
+ * is the same proof). Called from those success handlers alongside the
+ * existing `setNeedsReauth(false)` — NOT from the auth-failure breaker's
+ * success path, because an unrelated query succeeding proves nothing about the
+ * userId argument the 403 was about.
  */
 export async function clearIdentityFault(): Promise<void> {
   faultTriggered = false;

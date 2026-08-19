@@ -56,7 +56,21 @@
       "switchCancel": "取消"
     },
     "contentPolicy": "內容政策",
-    "faq": "常見問題"
+    "faq": "常見問題",
+    "identitySwitchFailedTitle": "無法完成帳戶切換",
+    "identitySwitchFailedBody": "此裝置上仍有另一個帳戶的資料。Mera 必須先清除這些資料才能繼續，而這次清除失敗了。",
+    "identitySwitchFailedWhy": "不會遺失任何內容。這些資料屬於另一個帳戶，會保留在其 Mera 帳戶中。此裝置清除後，你的帳戶將重新開始。",
+    "identitySwitchFailedExhausted": "仍然失敗。請登出並重新開始，以清除此裝置。",
+    "identitySwitchRetry": "再試一次",
+    "identitySwitchSignOut": "登出並重新開始",
+    "deviceSignInWorking": "正在登入",
+    "deviceSignInFailed": "發生錯誤。請再試一次，或使用電子郵件登入。",
+    "deviceSignInDenied": "無法驗證此裝置。請再試一次，或使用電子郵件登入。",
+    "deviceSignInUnavailable": "目前無法登入。請幾分鐘後再試，或使用電子郵件登入。",
+    "tryAgain": "再試一次",
+    "learnAboutMera": "認識 Mera",
+    "startReading": "開始閱讀",
+    "alreadyHaveAccount": "已有帳戶？登入"
   },
   "account": {
     "pendingTitle": "帳號待審核",
@@ -984,7 +998,10 @@
     "followChatSeed": "我想追蹤一則報導。",
     "followChatIntro": "告訴我你想追蹤的內容，我會為你設定。",
     "emptyHintFollow": "點擊追蹤按鈕並告訴Mera你想關注的內容。",
-    "emptyCtaFollow": "追蹤報導"
+    "emptyCtaFollow": "追蹤報導",
+    "removeMemberAction": "不屬於此報導",
+    "removeMemberConfirmTitle": "移除這篇文章？",
+    "removeMemberConfirmBody": "這篇文章將從報導的時間軸中移除。Mera 會繼續追蹤報導本身。"
   },
   "whatsNew": {
     "title": "更新內容",
@@ -2266,6 +2283,24 @@
     }
   },
   "support": {
-    "opening": "正在開啟支援"
+    "opening": "正在開啟支援",
+    "supportId": "支援 ID：{{id}}",
+    "copySupportId": "複製支援 ID",
+    "copied": "已複製",
+    "saveHint": "請保存此 ID。支援團隊可以透過它找到你的帳戶。"
+  },
+  "emailCapture": {
+    "title": "新增電子郵件",
+    "subtitle": "透過電子郵件接收收據，換手機時也能救回帳戶。",
+    "continue": "繼續",
+    "notNow": "暫時不要",
+    "confirm": "確認",
+    "added": "已新增電子郵件",
+    "addedDetail": "收據與帳戶救援將使用 {{email}}。"
+  },
+  "welcomeBack": {
+    "title": "歡迎回來",
+    "body": "此裝置已使用過免費試用。若要繼續使用 Mera 的完整功能閱讀，請在繼續後選擇方案。",
+    "continue": "繼續"
   }
 }

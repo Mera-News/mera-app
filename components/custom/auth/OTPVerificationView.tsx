@@ -105,9 +105,11 @@ const OTPVerificationView: React.FC<OTPVerificationViewProps> = ({ email, onVeri
                 setSetting('cached_user_email', email).catch(() => {});
                 // A successful sign-in resolves any pending re-auth prompt.
                 useUserStore.getState().setNeedsReauth(false);
-                // ...including an identity fault (ownership-403). This is the
-                // ONLY place it clears: the user has just re-proved which
-                // account they are, which is precisely what the fault could not
+                // ...including an identity fault (ownership-403). Cleared only
+                // where identity is RE-PROVED — here, and the device sign-in
+                // success handler (AuthScreen's WelcomeView), whose assertion
+                // is the same proof. The user has just re-proved which account
+                // they are, which is precisely what the fault could not
                 // determine locally. Deliberately not tied to the auth-failure
                 // breaker's success path — an unrelated query succeeding proves
                 // nothing about the userId argument the 403 was about.

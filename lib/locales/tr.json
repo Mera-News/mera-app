@@ -56,7 +56,21 @@
       "switchCancel": "İptal"
     },
     "contentPolicy": "İçerik Politikası",
-    "faq": "SSS"
+    "faq": "SSS",
+    "identitySwitchFailedTitle": "Hesap değişimi tamamlanamadı",
+    "identitySwitchFailedBody": "Bu cihazda hâlâ başka bir hesabın verileri var. Devam edebilmen için Mera'nın bunları silmesi gerekiyor ve silme işlemi bu kez başarısız oldu.",
+    "identitySwitchFailedWhy": "Hiçbir şey kaybolmaz. Bu veriler diğer hesaba ait ve o hesabın Mera hesabında kalır. Bu cihaz temizlendiğinde seninki sıfırdan başlar.",
+    "identitySwitchFailedExhausted": "Yine olmadı. Bu cihazı temizlemek için çıkış yap ve baştan başla.",
+    "identitySwitchRetry": "Tekrar dene",
+    "identitySwitchSignOut": "Çıkış yap ve baştan başla",
+    "deviceSignInWorking": "Giriş yapılıyor",
+    "deviceSignInFailed": "Bir sorun oluştu. Tekrar deneyin veya e-posta ile giriş yapın.",
+    "deviceSignInDenied": "Bu cihaz doğrulanamadı. Tekrar deneyin veya e-posta ile giriş yapın.",
+    "deviceSignInUnavailable": "Giriş şu anda kullanılamıyor. Birkaç dakika sonra tekrar deneyin veya e-posta ile giriş yapın.",
+    "tryAgain": "Tekrar dene",
+    "learnAboutMera": "Mera'yı tanıyın",
+    "startReading": "Okumaya başla",
+    "alreadyHaveAccount": "Zaten hesabın var mı? Giriş yap"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",
@@ -986,7 +1000,10 @@
     "followChatSeed": "Bir hikayeyi takip etmek istiyorum.",
     "followChatIntro": "Takip etmek istediğini söyle ve ben bunu kurtaracağım.",
     "emptyHintFollow": "Takip et düğmesine dokun ve Mera'ya neyi takip etmek istediğini söyle.",
-    "emptyCtaFollow": "Bir hikayeyi takip et"
+    "emptyCtaFollow": "Bir hikayeyi takip et",
+    "removeMemberAction": "Bu haberin parçası değil",
+    "removeMemberConfirmTitle": "Bu makale kaldırılsın mı?",
+    "removeMemberConfirmBody": "Bu makale haberin zaman çizelgesinden kaldırılır. Mera haberi takip etmeye devam eder."
   },
   "whatsNew": {
     "title": "Yenilikler",
@@ -2267,6 +2284,24 @@
     }
   },
   "support": {
-    "opening": "Destek açılıyor"
+    "opening": "Destek açılıyor",
+    "supportId": "Destek kimliği: {{id}}",
+    "copySupportId": "Destek kimliğini kopyala",
+    "copied": "Kopyalandı",
+    "saveHint": "Bu kimliği kaydet. Destek ekibi hesabını bununla bulabilir."
+  },
+  "emailCapture": {
+    "title": "E-postanı ekle",
+    "subtitle": "Makbuzları e-postayla al ve telefon değiştirirsen hesabını kurtar.",
+    "continue": "Devam",
+    "notNow": "Şimdi değil",
+    "confirm": "Onayla",
+    "added": "E-posta eklendi",
+    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak."
+  },
+  "welcomeBack": {
+    "title": "Tekrar hoş geldin",
+    "body": "Bu cihaz ücretsiz deneme süresini zaten kullandı. Mera'nın tüm özellikleriyle okumaya devam etmek için devam ettikten sonra bir plan seç.",
+    "continue": "Devam"
   }
 }

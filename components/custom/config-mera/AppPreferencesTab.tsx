@@ -25,6 +25,10 @@ import React from 'react';
 import { Linking } from 'react-native';
 import { isRevenueCatConfigured } from '@/lib/revenuecat';
 import { useSupportAction } from '@/lib/intercom';
+import { resolveAccountEmailView } from '@/lib/subscription/email-capture';
+import { readSupportIdFromUser } from '@/lib/support-id';
+import * as Clipboard from 'expo-clipboard';
+import { hapticLight } from '@/lib/haptics';
 import { useTranslation } from 'react-i18next';
 import { LANGUAGE_WORD_BY_CODE } from '@/lib/language-words';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
@@ -56,16 +60,59 @@ const AppPreferencesTab: React.FC = () => {
     // explicit logout. Session is kept as the fallback for installs that signed
     // in before that row was hydrated here.
     const cachedEmail = useUserStore((s) => s.userEmail);
-    const userEmail = cachedEmail ?? session?.user?.email;
+    // ONE derivation for the identity footer and the "Add email address" row,
+    // shared with the email-capture module so precedence cannot drift. The
+    // rule that matters (F1): a real STORED email wins over the session,
+    // because the store flips the instant an in-session attach confirms while
+    // the session atom can stay stale until its next refetch. The fabricated
+    // @anon.mera.news address is never displayed as the user's.
+    // S11: the "Add email address" row is gone — email attach happens at
+    // checkout (required) and via the post-purchase fallback only. Settings
+    // keeps the Support ID block and the masked email for accounts that have
+    // one; isAnonAccount is no longer consumed here (displayEmail is already
+    // null for anonymous accounts).
+    const { displayEmail } = resolveAccountEmailView({
+        storedEmail: cachedEmail,
+        sessionUser: session?.user ?? null,
+    });
+    // The support handle minted for device sign-in accounts; it survives an
+    // email attach, so it shows for anonymous AND email-attached accounts.
+    // Session-only by design: absent (null) simply hides the row.
+    const supportId = readSupportIdFromUser(session?.user);
+
+    // Copy-to-clipboard feedback: no copy idiom existed in the app before this,
+    // so the shape is the smallest honest one — haptic plus a brief localized
+    // "Copied" swap that reverts on its own. Copies ONLY the numeric id.
+    const [supportIdCopied, setSupportIdCopied] = React.useState(false);
+    const supportIdCopyTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    React.useEffect(
+        () => () => {
+            if (supportIdCopyTimer.current) clearTimeout(supportIdCopyTimer.current);
+        },
+        [],
+    );
+    const handleCopySupportId = async () => {
+        if (!supportId) return;
+        try {
+            await Clipboard.setStringAsync(supportId);
+        } catch {
+            // Clipboard unavailable — no feedback state, nothing to undo.
+            return;
+        }
+        void hapticLight();
+        setSupportIdCopied(true);
+        if (supportIdCopyTimer.current) clearTimeout(supportIdCopyTimer.current);
+        supportIdCopyTimer.current = setTimeout(() => setSupportIdCopied(false), 1800);
+    };
     const maskedEmail = React.useMemo(() => {
-        if (!userEmail) return null;
-        const atIdx = userEmail.lastIndexOf('@');
-        if (atIdx <= 0) return userEmail;
-        const local = userEmail.slice(0, atIdx);
-        const domain = userEmail.slice(atIdx);
+        if (!displayEmail) return null;
+        const atIdx = displayEmail.lastIndexOf('@');
+        if (atIdx <= 0) return displayEmail;
+        const local = displayEmail.slice(0, atIdx);
+        const domain = displayEmail.slice(atIdx);
         const visibleCount = Math.ceil(local.length / 2);
         return local.slice(0, visibleCount) + '•'.repeat(local.length - visibleCount) + domain;
-    }, [userEmail]);
+    }, [displayEmail]);
 
     // UI Store for modal state management
     const logoutModal = useLogoutModal();
@@ -81,7 +128,10 @@ const AppPreferencesTab: React.FC = () => {
             setModalProcessing('logout', true);
             closeModal('logout');
 
-            await authClient.signOut();
+            // No direct authClient.signOut() here: clearAuthStorage() owns
+            // the server sign-out, guarded and bounded. A direct unguarded
+            // await once let a staging outage reject into the catch below with
+            // NOTHING cleared — the device relaunched signed in.
             await clearAuthStorage();
             // ── PAST THIS LINE NOTHING MAY THROW ──────────────────────────
             // clearAuthStorage() has already deleted the cookie, so the device
@@ -402,9 +452,43 @@ const AppPreferencesTab: React.FC = () => {
                             <MaterialIcons name="language" size={24} color="#9ca3af" />
                         </Pressable>
                     </HStack>
+                    {/* displayEmail is already null for anonymous accounts, so
+                        no extra isAnonAccount guard is needed here. */}
                     {maskedEmail && (
                         <Text size="xs" className="text-gray-500 mb-1">
                             {t('preferences.user', { email: maskedEmail })}
+                        </Text>
+                    )}
+                    {supportId && (
+                        // accessible={false} on the row wrapper (F2 discipline):
+                        // the text and the button carry their own semantics.
+                        <HStack space="xs" className="items-center mb-1" accessible={false}>
+                            <Text size="xs" className="text-gray-500" testID="settings-support-id">
+                                {t('support.supportId', { id: supportId })}
+                            </Text>
+                            <Pressable
+                                testID="settings-support-id-copy"
+                                onPress={() => { void handleCopySupportId(); }}
+                                hitSlop={8}
+                                accessible
+                                accessibilityRole="button"
+                                accessibilityLabel={
+                                    supportIdCopied ? t('support.copied') : t('support.copySupportId')
+                                }
+                            >
+                                {supportIdCopied ? (
+                                    <Text size="xs" className="text-primary-400">
+                                        {t('support.copied')}
+                                    </Text>
+                                ) : (
+                                    <MaterialIcons name="content-copy" size={14} color="#9ca3af" />
+                                )}
+                            </Pressable>
+                        </HStack>
+                    )}
+                    {supportId && (
+                        <Text size="xs" className="text-gray-500 mb-1 text-center" testID="settings-support-id-hint">
+                            {t('support.saveHint')}
                         </Text>
                     )}
                     <Text size="xs" className="text-gray-500">
