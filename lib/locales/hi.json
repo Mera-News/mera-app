@@ -89,7 +89,7 @@
     "enquiries": "किसी भी पूछताछ के लिए आप मेल भेज सकते हैं",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "रिफ्रेश 🔄",
-    "contactSupport": "सहायता को संदेश भेजें"
+    "contactSupport": "सहायता टीम से बात करें"
   },
   "feed": {
     "updatedAt": "अपडेट हुआ {{time}}",
@@ -507,7 +507,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "गोपनीयता नीति",
     "termsOfService": "सेवा की शर्तें",
-    "support": "सहायता",
+    "support": "सहायता टीम से बात करें",
     "manageData": "डेटा प्रबंधित करें",
     "deleteAccount": "खाता हटाएं",
     "logout": "लॉग आउट",

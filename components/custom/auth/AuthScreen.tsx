@@ -5,6 +5,7 @@ import LegalFooter from '@/components/custom/auth/LegalFooter';
 import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
 import PreviousUserView from '@/components/custom/auth/PreviousUserView';
+import PolicyPill from '@/components/custom/PolicyPill';
 import { getSetting } from '@/lib/database/services/setting-service';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -515,33 +516,22 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                     </Text>
                 </VStack>
 
-                {/* `py-3` on each row, NOT a vertical hitSlop: a symmetric
-                    hitSlop on two links this close together makes their touch
-                    regions overlap, and RN resolves an overlap by z-order —
-                    a tap in the gap would silently open the LATER link. Real
-                    padding cannot overlap. (Same note as ConsentGate.) */}
-                <VStack accessible={false} space="xs" className="items-center">
-                    <Pressable
-                        accessibilityRole="link"
-                        accessibilityLabel={t('consent.termsLink')}
-                        className="py-3"
+                {/* Chips, side by side — the same PolicyPill the settings
+                    screens use for legal links. `space="lg"` (16pt) on
+                    purpose: PolicyPill carries a 6pt hitSlop on each side and
+                    RN resolves overlapping touch regions by z-order, so the
+                    gap must stay wider than the two slops combined (12pt) or
+                    a tap between them silently opens the LATER chip. */}
+                <HStack accessible={false} space="lg" className="items-center justify-center flex-wrap">
+                    <PolicyPill
+                        label={t('consent.termsLink')}
                         onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}
-                    >
-                        <Text size="sm" className="text-primary-400 underline">
-                            {t('consent.termsLink')}
-                        </Text>
-                    </Pressable>
-                    <Pressable
-                        accessibilityRole="link"
-                        accessibilityLabel={t('consent.privacyLink')}
-                        className="py-3"
+                    />
+                    <PolicyPill
+                        label={t('consent.privacyLink')}
                         onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}
-                    >
-                        <Text size="sm" className="text-primary-400 underline">
-                            {t('consent.privacyLink')}
-                        </Text>
-                    </Pressable>
-                </VStack>
+                    />
+                </HStack>
 
                 <Pressable
                     testID="auth-consent-agree"
@@ -596,10 +586,13 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                                 {t('auth.alreadyHaveAccount')}
                             </Text>
                         </Pressable>
+                        {/* Compact outline pill sized to its label (support
+                            is an outline button everywhere except the
+                            settings menu row). py-3 keeps the 44pt target. */}
                         <Pressable
                             testID="auth-device-support"
                             onPress={() => { void openSupport(); }}
-                            className="py-1"
+                            className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
                             accessible
                             accessibilityRole="button"
                             accessibilityLabel={t('account.contactSupport')}
@@ -608,9 +601,15 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                             {supportBusy ? (
                                 <Spinner size="small" color="#6B7280" />
                             ) : (
-                                <Text size="sm" className="text-gray-400">
-                                    {t('account.contactSupport')}
-                                </Text>
+                                <HStack space="xs" className="items-center">
+                                    {/* Material support_agent, matching the
+                                        dark-ramp primary literal the language
+                                        selector uses for icon tinting. */}
+                                    <MaterialIcons name="support-agent" size={18} color="rgb(237, 167, 126)" />
+                                    <Text size="sm" className="text-primary-500 font-semibold">
+                                        {t('account.contactSupport')}
+                                    </Text>
+                                </HStack>
                             )}
                         </Pressable>
                     </VStack>

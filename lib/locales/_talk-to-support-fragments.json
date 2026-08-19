@@ -1,0 +1,163 @@
+{
+ "_comment": "Support button label: Message support / Support -> Talk to support, everywhere (account.contactSupport + settings row preferences.support). Input to _splice-fragments.mjs with --allow-overwrite account.contactSupport,preferences.support.",
+ "en": {
+  "account": {
+   "contactSupport": "Talk to support"
+  },
+  "preferences": {
+   "support": "Talk to support"
+  }
+ },
+ "ar": {
+  "account": {
+   "contactSupport": "تحدث إلى الدعم"
+  },
+  "preferences": {
+   "support": "تحدث إلى الدعم"
+  }
+ },
+ "de": {
+  "account": {
+   "contactSupport": "Mit dem Support sprechen"
+  },
+  "preferences": {
+   "support": "Mit dem Support sprechen"
+  }
+ },
+ "es": {
+  "account": {
+   "contactSupport": "Hablar con soporte"
+  },
+  "preferences": {
+   "support": "Hablar con soporte"
+  }
+ },
+ "fr": {
+  "account": {
+   "contactSupport": "Contacter l'assistance"
+  },
+  "preferences": {
+   "support": "Contacter l'assistance"
+  }
+ },
+ "hi": {
+  "account": {
+   "contactSupport": "सहायता टीम से बात करें"
+  },
+  "preferences": {
+   "support": "सहायता टीम से बात करें"
+  }
+ },
+ "id": {
+  "account": {
+   "contactSupport": "Hubungi dukungan"
+  },
+  "preferences": {
+   "support": "Hubungi dukungan"
+  }
+ },
+ "it": {
+  "account": {
+   "contactSupport": "Parla con l'assistenza"
+  },
+  "preferences": {
+   "support": "Parla con l'assistenza"
+  }
+ },
+ "ja": {
+  "account": {
+   "contactSupport": "サポートに問い合わせる"
+  },
+  "preferences": {
+   "support": "サポートに問い合わせる"
+  }
+ },
+ "ko": {
+  "account": {
+   "contactSupport": "지원팀에 문의"
+  },
+  "preferences": {
+   "support": "지원팀에 문의"
+  }
+ },
+ "nl": {
+  "account": {
+   "contactSupport": "Praat met support"
+  },
+  "preferences": {
+   "support": "Praat met support"
+  }
+ },
+ "pl": {
+  "account": {
+   "contactSupport": "Porozmawiaj z pomocą"
+  },
+  "preferences": {
+   "support": "Porozmawiaj z pomocą"
+  }
+ },
+ "pt-BR": {
+  "account": {
+   "contactSupport": "Falar com o suporte"
+  },
+  "preferences": {
+   "support": "Falar com o suporte"
+  }
+ },
+ "ru": {
+  "account": {
+   "contactSupport": "Связаться с поддержкой"
+  },
+  "preferences": {
+   "support": "Связаться с поддержкой"
+  }
+ },
+ "th": {
+  "account": {
+   "contactSupport": "พูดคุยกับฝ่ายสนับสนุน"
+  },
+  "preferences": {
+   "support": "พูดคุยกับฝ่ายสนับสนุน"
+  }
+ },
+ "tr": {
+  "account": {
+   "contactSupport": "Destek ekibiyle görüşün"
+  },
+  "preferences": {
+   "support": "Destek ekibiyle görüşün"
+  }
+ },
+ "uk": {
+  "account": {
+   "contactSupport": "Звернутися до підтримки"
+  },
+  "preferences": {
+   "support": "Звернутися до підтримки"
+  }
+ },
+ "vi": {
+  "account": {
+   "contactSupport": "Trò chuyện với bộ phận hỗ trợ"
+  },
+  "preferences": {
+   "support": "Trò chuyện với bộ phận hỗ trợ"
+  }
+ },
+ "zh-CN": {
+  "account": {
+   "contactSupport": "联系支持团队"
+  },
+  "preferences": {
+   "support": "联系支持团队"
+  }
+ },
+ "zh-TW": {
+  "account": {
+   "contactSupport": "聯絡支援團隊"
+  },
+  "preferences": {
+   "support": "聯絡支援團隊"
+  }
+ }
+}

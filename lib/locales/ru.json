@@ -89,7 +89,7 @@
     "enquiries": "По любым вопросам вы можете написать на",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Обновить 🔄",
-    "contactSupport": "Написать в поддержку"
+    "contactSupport": "Связаться с поддержкой"
   },
   "feed": {
     "updatedAt": "Обновлено {{time}}",
@@ -519,7 +519,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Политика конфиденциальности",
     "termsOfService": "Условия использования",
-    "support": "Поддержка",
+    "support": "Связаться с поддержкой",
     "manageData": "Управление данными",
     "deleteAccount": "Удалить учётную запись",
     "logout": "Выйти",

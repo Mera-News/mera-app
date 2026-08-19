@@ -89,7 +89,7 @@
     "enquiries": "如有任何疑問，您可以發送郵件至",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "重新整理 🔄",
-    "contactSupport": "聯絡支援"
+    "contactSupport": "聯絡支援團隊"
   },
   "feed": {
     "updatedAt": "更新於 {{time}}",
@@ -507,7 +507,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "隱私政策",
     "termsOfService": "服務條款",
-    "support": "支援",
+    "support": "聯絡支援團隊",
     "manageData": "管理資料",
     "deleteAccount": "刪除帳號",
     "logout": "登出",

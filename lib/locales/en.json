@@ -89,7 +89,7 @@
     "enquiries": "For any enquiries you can send a mail to",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Refresh",
-    "contactSupport": "Message support"
+    "contactSupport": "Talk to support"
   },
   "subscription": {
     "title": "Free isn't free.",
@@ -887,7 +887,7 @@
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
     "contentPolicy": "Content Policy",
-    "support": "Support",
+    "support": "Talk to support",
     "faq": "FAQ",
     "reportBug": "Report a Bug",
     "manageData": "Manage Data",

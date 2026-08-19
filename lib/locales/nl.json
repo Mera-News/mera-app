@@ -89,7 +89,7 @@
     "enquiries": "Voor vragen kun je een e-mail sturen naar",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Vernieuwen 🔄",
-    "contactSupport": "Contact met ondersteuning"
+    "contactSupport": "Praat met support"
   },
   "feed": {
     "updatedAt": "Bijgewerkt {{time}}",
@@ -507,7 +507,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Privacybeleid",
     "termsOfService": "Servicevoorwaarden",
-    "support": "Ondersteuning",
+    "support": "Praat met support",
     "manageData": "Gegevens beheren",
     "deleteAccount": "Account verwijderen",
     "logout": "Uitloggen",

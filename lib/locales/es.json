@@ -89,7 +89,7 @@
     "enquiries": "Para cualquier consulta puedes enviar un correo a",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Actualizar 🔄",
-    "contactSupport": "Escribir a soporte"
+    "contactSupport": "Hablar con soporte"
   },
   "feed": {
     "updatedAt": "Actualizado {{time}}",
@@ -507,7 +507,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Política de privacidad",
     "termsOfService": "Términos del servicio",
-    "support": "Soporte",
+    "support": "Hablar con soporte",
     "manageData": "Gestionar datos",
     "deleteAccount": "Eliminar cuenta",
     "logout": "Cerrar sesión",

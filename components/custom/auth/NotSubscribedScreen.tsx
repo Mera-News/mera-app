@@ -4,13 +4,14 @@ import { Box } from "@/components/ui/box";
 import { Button, ButtonIcon, ButtonText } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { HelpCircleIcon, RepeatIcon } from "@/components/ui/icon";
+import { HStack } from "@/components/ui/hstack";
 import { Spinner } from "@/components/ui/spinner";
 import { Pressable } from "@/components/ui/pressable";
-import { isIntercomEnabled, useSupportAction } from "@/lib/intercom";
+import { useSupportAction } from "@/lib/intercom";
 import { Text } from "@/components/ui/text";
 import { VStack } from "@/components/ui/vstack";
 import { authClient } from "@/lib/auth-client";
-import { SUPPORT_EMAIL } from "@/lib/config/branding";
+import { MaterialIcons } from "@expo/vector-icons";
 import { fetchUserBilling } from "@/lib/billing-service";
 import { setSetting } from "@/lib/database/services/setting-service";
 // From the leaf module, NOT from FirstOpenPaywallGate: that component pulls in
@@ -34,7 +35,7 @@ import { isSandboxPurchaseOnProduction } from "@/lib/subscription/sandbox-enviro
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Linking, TouchableOpacity, View } from "react-native";
+import { View } from "react-native";
 // Via the ui layer rather than `react-native` directly: it is the same
 // component, and every other screen's test can stub one module path instead of
 // partially mocking the whole react-native module.
@@ -64,10 +65,6 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
     const { data: session, isPending: isSessionPending } = authClient.useSession();
     const router = useRouter();
     const { t } = useTranslation();
-    // Bundle-time, so it is stable for the life of the screen and safe to
-    // branch layout on. Never `isIntercomConfigured()`, which is false until a
-    // lazy init resolves.
-    const supportEnabled = isIntercomEnabled();
     const { busy: supportBusy, openSupport } = useSupportAction();
     const [busy, setBusy] = useState(false);
     // Which control owns the current `busy` window. `busy` gates BOTH the CTA
@@ -561,68 +558,41 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                   </VStack>
                       </GlassPanel>
 
-                      {/* The mail link is a SIBLING of the sentence, not a
-                          TouchableOpacity nested inside its <Text>. That nesting is
-                          not merely untidy: RN lays a nested touchable out as an
-                          inline view with no intrinsic size on iOS, so the link was
-                          effectively untappable — and there was nowhere to hang a
-                          hitSlop even if it had been. As its own control it gets a
-                          real 44pt-class target (py-2 + hitSlop) and an explicit
-                          link role. */}
-                      {/* Two different affordances pointing at two different
-                          destinations, so they get different copy.
-
-                          The Messenger is a single self-contained control with
-                          NO lead-in: "For any enquiries you can send a mail to"
-                          followed by "Message support" reads as "send a mail to
-                          Message support", which is broken in English and worse
-                          in verb-final languages.
-
-                          The mail fallback keeps TODAY's exact two-line block,
-                          verbatim, so nothing regresses for a build with no
-                          Intercom key. */}
+                      {/* ONE support affordance, no email address on screen.
+                          The support address used to render here as a mailto
+                          fallback for builds without an Intercom key; support
+                          is Intercom now, so the button is unconditional and
+                          openSupport() itself degrades to the Mail app when
+                          the Messenger cannot initialise (useSupportAction's
+                          contract) — the label reads true either way. */}
                       <VStack space="xs" className="items-center">
-                          {supportEnabled ? (
-                              <Pressable
-                                  onPress={() => { void openSupport(); }}
-                                  accessibilityRole="button"
-                                  accessibilityState={supportBusy ? { busy: true } : undefined}
-                                  accessibilityLabel={
-                                      supportBusy ? t('support.opening') : t('account.contactSupport')
-                                  }
-                                  className="py-2 px-4 min-h-[44px] justify-center"
-                              >
-                                  {supportBusy ? (
-                                      <Spinner size="small" />
-                                  ) : (
-                                      <Text size="sm" className="text-primary-400 text-center">
+                          {/* Compact outline pill sized to its label — the
+                              support affordance everywhere except the settings
+                              menu, which keeps its row (deliberate exception).
+                              py-3 keeps the target in the 44pt class. */}
+                          <Pressable
+                              onPress={() => { void openSupport(); }}
+                              accessibilityRole="button"
+                              accessibilityState={supportBusy ? { busy: true } : undefined}
+                              accessibilityLabel={
+                                  supportBusy ? t('support.opening') : t('account.contactSupport')
+                              }
+                              className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3"
+                          >
+                              {supportBusy ? (
+                                  <Spinner size="small" />
+                              ) : (
+                                  <HStack space="xs" className="items-center">
+                                      {/* Material support_agent, tinted with the
+                                          dark-ramp primary literal (same as the
+                                          language selector's icon tint). */}
+                                      <MaterialIcons name="support-agent" size={18} color="rgb(237, 167, 126)" />
+                                      <Text size="sm" className="text-primary-500 font-semibold text-center">
                                           {t('account.contactSupport')}
                                       </Text>
-                                  )}
-                              </Pressable>
-                          ) : (
-                              <>
-                                  <Text size="sm" className="text-gray-400 text-center">
-                                      {t('account.enquiries')}
-                                  </Text>
-                                  <TouchableOpacity
-                                      onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}
-                                      accessibilityRole="link"
-                                      accessibilityLabel={t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
-                                      hitSlop={{ top: 12, bottom: 12, left: 16, right: 16 }}
-                                      // Inline style, not `py-2`: this is a bare
-                                      // react-native TouchableOpacity and nothing else in
-                                      // components/ puts a className on one, so there is no
-                                      // evidence cssInterop is wired for it — a className
-                                      // here would silently be a no-op.
-                                      style={{ paddingVertical: 8 }}
-                                  >
-                                      <Text size="sm" className="text-primary-400 text-center">
-                                          {t('account.contactEmail', { supportEmail: SUPPORT_EMAIL })}
-                                      </Text>
-                                  </TouchableOpacity>
-                              </>
-                          )}
+                                  </HStack>
+                              )}
+                          </Pressable>
                       </VStack>
                   </VStack>
               </ScrollView>

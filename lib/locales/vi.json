@@ -89,7 +89,7 @@
     "enquiries": "Nếu có thắc mắc, bạn có thể gửi email đến",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Làm mới 🔄",
-    "contactSupport": "Liên hệ hỗ trợ"
+    "contactSupport": "Trò chuyện với bộ phận hỗ trợ"
   },
   "feed": {
     "updatedAt": "Cập nhật lúc {{time}}",
@@ -507,7 +507,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Chính sách bảo mật",
     "termsOfService": "Điều khoản dịch vụ",
-    "support": "Hỗ trợ",
+    "support": "Trò chuyện với bộ phận hỗ trợ",
     "manageData": "Quản lý dữ liệu",
     "deleteAccount": "Xóa tài khoản",
     "logout": "Đăng xuất",

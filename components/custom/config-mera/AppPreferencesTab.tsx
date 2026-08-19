@@ -12,7 +12,7 @@ import { authClient, clearAuthStorage } from '@/lib/auth-client';
 import { wipeAllLocalUserData } from '@/lib/security/local-wipe';
 import { deleteSetting } from '@/lib/database/services/setting-service';
 import { usePinStore } from '@/lib/stores/pin-store';
-import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, SUPPORT_EMAIL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
+import { CONTENT_POLICY_URL, FAQ_URL, GITHUB_URL, PRIVACY_URL, TERMS_URL, WEBSITE_URL } from '@/lib/config/branding';
 import { showFeedback } from '@/lib/feedback';
 import { SENTRY_ENABLED } from '@/lib/sentry-init';
 import { useLogoutModal, useUIStore } from '@/lib/stores/ui-store';
@@ -285,15 +285,6 @@ const AppPreferencesTab: React.FC = () => {
             onPress: () => routerHook.push('/logged-in/preferences/display' as any),
         },
         {
-            id: 'support',
-            title: t('preferences.support'),
-            icon: 'support-agent',
-            // Opens the Intercom Messenger, or falls back to mail. The whole
-            // decision lives in useSupportAction so this row, the paywall
-            // footer and BlockedBanner cannot drift apart.
-            onPress: () => { void openSupport(); },
-        },
-        {
             id: 'faq',
             title: t('preferences.faq'),
             icon: 'help-outline',
@@ -326,6 +317,16 @@ const AppPreferencesTab: React.FC = () => {
                 },
             ]
             : []),
+        {
+            id: 'support',
+            title: t('preferences.support'),
+            icon: 'support-agent',
+            // Opens the Intercom Messenger, or falls back to mail. The whole
+            // decision lives in useSupportAction so this row, the paywall
+            // footer and BlockedBanner cannot drift apart. Sits at the BOTTOM,
+            // directly above Logout (user call, 2026-08-19).
+            onPress: () => { void openSupport(); },
+        },
         {
             id: 'logout',
             title: t('preferences.logout'),

@@ -89,7 +89,7 @@
     "enquiries": "Sorularınız için şu adrese e-posta gönderebilirsiniz:",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Yenile 🔄",
-    "contactSupport": "Desteğe yazın"
+    "contactSupport": "Destek ekibiyle görüşün"
   },
   "feed": {
     "updatedAt": "{{time}} güncellendi",
@@ -507,7 +507,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Gizlilik Politikası",
     "termsOfService": "Hizmet Şartları",
-    "support": "Destek",
+    "support": "Destek ekibiyle görüşün",
     "manageData": "Verileri Yönet",
     "deleteAccount": "Hesabı Sil",
     "logout": "Çıkış Yap",

@@ -89,7 +89,7 @@
     "enquiries": "З будь-яких питань ви можете надіслати листа на",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "Оновити 🔄",
-    "contactSupport": "Написати в підтримку"
+    "contactSupport": "Звернутися до підтримки"
   },
   "feed": {
     "updatedAt": "Оновлено {{time}}",
@@ -519,7 +519,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "Політика конфіденційності",
     "termsOfService": "Умови надання послуг",
-    "support": "Підтримка",
+    "support": "Звернутися до підтримки",
     "manageData": "Керування даними",
     "deleteAccount": "Видалити обліковий запис",
     "logout": "Вийти",

@@ -89,7 +89,7 @@
     "enquiries": "문의 사항이 있으시면 다음 주소로 이메일을 보내 주세요",
     "contactEmail": "{{supportEmail}} ✉️",
     "refresh": "새로고침 🔄",
-    "contactSupport": "고객 지원에 문의하기"
+    "contactSupport": "지원팀에 문의"
   },
   "feed": {
     "updatedAt": "{{time}} 업데이트됨",
@@ -507,7 +507,7 @@
     "meraProtocol": "Mera Protocol",
     "privacyPolicy": "개인정보 처리방침",
     "termsOfService": "서비스 이용약관",
-    "support": "고객 지원",
+    "support": "지원팀에 문의",
     "manageData": "데이터 관리",
     "deleteAccount": "계정 삭제",
     "logout": "로그아웃",
