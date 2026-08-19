@@ -81,7 +81,9 @@
     "signIn": "登录",
     "aboutLegal": "关于 Mera 与法律信息",
     "sourceCode": "源代码",
-    "website": "网站"
+    "website": "网站",
+    "failedToSendBody": "OTP 发送失败",
+    "signingYouIn": "正在登录…"
   },
   "account": {
     "pendingTitle": "账户待审核",
@@ -312,7 +314,10 @@
     "savedDescription": "您的通知设置已更新。",
     "saveFailedTitle": "保存失败",
     "saveFailedDescription": "无法保存您的偏好设置，请重试。",
-    "timeNudge": "选择一个您可以阅读、思考和规划的时间——每天一两次就足够了。"
+    "timeNudge": "选择一个您可以阅读、思考和规划的时间——每天一两次就足够了。",
+    "maxHoursReachedDescription": "最多可选择 {{count}} 个时间",
+    "maxHoursReachedTitle": "已达上限",
+    "selectedCount": "已选择：{{selected}}/{{max}}"
   },
   "language": {
     "title": "语言",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "自动获取社区事实查核",
     "autoCommunityFactCheckOn": "每次打开文章时都会查询",
     "autoCommunityFactCheckOff": "仅在你点按时才查询",
-    "autoCommunityFactCheckDescription": "事实查核是共享的。当有人请求查核某条报道，结果会随该报道保存，任何人都能看到。开启后，Mera 会在你每次打开文章时寻找已有的查核。保持关闭，Mera 只在你点按事实查核按钮时才去寻找，这样请求查核仍是你针对单条报道做出的选择。"
+    "autoCommunityFactCheckDescription": "事实查核是共享的。当有人请求查核某条报道，结果会随该报道保存，任何人都能看到。开启后，Mera 会在你每次打开文章时寻找已有的查核。保持关闭，Mera 只在你点按事实查核按钮时才去寻找，这样请求查核仍是你针对单条报道做出的选择。",
+    "loadFailedDescription": "无法加载 Mera Protocol 设置。",
+    "loadFailedTitle": "加载失败"
   },
   "manageData": {
     "deleting": "删除中...",
@@ -627,11 +634,16 @@
         "title": "服务不可用"
       }
     },
-    "accountRestrictedContact": "联系支持"
+    "accountRestrictedContact": "联系支持",
+    "networkErrorBody": "无法连接。请检查你的网络连接。",
+    "networkErrorTitle": "网络错误"
   },
   "download": {
     "modelDownloading": "正在下载 AI 模型...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol 现已可以使用。",
+    "completeTitle": "下载完成",
+    "failedTitle": "下载失败"
   },
   "chat": {
     "startingChat": "正在启动对话...",
@@ -640,7 +652,30 @@
     "reloadingModel": "正在重新加载 AI 模型... {{percent}}%",
     "waitingForResponse": "等待响应中...",
     "typeMessage": "输入消息...",
-    "inferenceError": "我们目前无法连接到 Mera 推理服务，请稍后重试。"
+    "inferenceError": "我们目前无法连接到 Mera 推理服务，请稍后重试。",
+    "send": "发送",
+    "streamingLabels": {
+      "adaptingFeed": "正在调整信息流",
+      "analyzing": "正在分析",
+      "buildingProfile": "正在构建画像",
+      "calibrating": "正在校准",
+      "connectingDots": "正在串联线索",
+      "contextualizing": "正在梳理背景",
+      "detectingPatterns": "正在识别模式",
+      "discoveringThemes": "正在发现主题",
+      "evaluatingSignals": "正在评估信号",
+      "learningPreferences": "正在学习偏好",
+      "mappingInterests": "正在梳理兴趣",
+      "optimizing": "正在优化",
+      "personalizing": "正在个性化",
+      "processing": "正在处理",
+      "refiningTaste": "正在细化偏好",
+      "synthesizing": "正在整合",
+      "tuningRelevance": "正在调优相关性",
+      "understanding": "正在理解",
+      "updatingModel": "正在更新模型",
+      "weighingTopics": "正在权衡话题"
+    }
   },
   "personaChat": {
     "introMessage": "你好！我是 Mera，你的个人新闻助手。\n\n为了找到真正对你重要的新闻，我需要了解一些关于你的情况。你住在哪里、做什么工作、关注的兴趣是什么、追踪哪些股票、家人住在哪里。随你愿意分享多少。\n\n如果这让你有些顾虑，那是很好的本能。把个人数据交给做应用的公司并不明智。Mera 的构建方式不同：你告诉我的一切都保存在你的设备上，而不是在我们的服务器上。问我它如何工作，或者说「帮我设置一下」，我们就开始吧。"
@@ -1151,7 +1186,13 @@
     "tooCluttered": "混乱／太多广告",
     "tooSlow": "加载太慢",
     "wrongPlace": "错误的地点",
-    "wrongTopic": "错误的话题"
+    "wrongTopic": "错误的话题",
+    "aBitMore": "多一点",
+    "aLotMore": "多很多",
+    "followStory": "关注这则报道",
+    "moreAboutTopic": "更多这个话题的内容",
+    "moreFromPublication": "更多来自这个来源的内容",
+    "moreNewsFromPlace": "更多这个地方的新闻"
   },
   "topicPlan": {
     "title": "我将追踪的话题",
@@ -2320,5 +2361,94 @@
     "title": "欢迎回到 Mera",
     "body": "这台设备之前似乎使用过 Mera，因此免费试用已被使用。您可以继续使用新账号阅读，也可以随时选择一个套餐来获得完整体验。",
     "continue": "继续"
+  },
+  "videoPlayer": {
+    "closeA11y": "关闭视频",
+    "openInBrowser": "在浏览器中打开",
+    "playbackError": "无法播放该视频。"
+  },
+  "backup": {
+    "adoptDescription": "这是你在另一台设备上设置备份时写下的代码。大小写、空格和连字符都不影响。",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "输入你的恢复代码",
+    "alreadyHave": "我已有备份",
+    "backgroundRestricted": "后台 App 刷新已关闭，备份无法自动运行。请使用“立即备份”，或在设备设置中开启它。",
+    "cadence": {
+      "daily": "每天",
+      "manual": "仅在我点按时",
+      "off": "关闭",
+      "weekly": "每周"
+    },
+    "cadenceHint": {
+      "daily": "大约每天一次，通常在夜间",
+      "manual": "不会自动运行任何内容",
+      "weekly": "大约每周一次，通常在夜间"
+    },
+    "changeSchedule": "备份计划",
+    "codeDescription": "写下来并妥善保管。它是打开备份的唯一方式。一旦丢失，包括我们在内，没有人能找回你的数据。",
+    "codeSaved": "我已保存恢复代码",
+    "codeTitle": "你的恢复代码",
+    "codeWrong": "请再检查一遍。除了空格和大小写，每个字符都很重要。",
+    "codeWrongTitle": "代码不正确",
+    "continue": "继续",
+    "doneDescription_one": "已保存 {{count}} 个项目。",
+    "doneDescription_other": "已保存 {{count}} 个项目。",
+    "doneTitle": "备份完成",
+    "drive": "Google Drive",
+    "driveConnect": "点按以关联你的 Google 账号",
+    "driveFailed": "Google 登录失败。请稍后重试。",
+    "driveFailedTitle": "无法连接 Google Drive",
+    "driveHiddenFolder": "保存在 Drive 的隐藏应用存储空间中。你不会在文件列表里看到它，只能在 Drive 设置的“管理应用”中找到。",
+    "driveMisconfigured": "此版本的应用未配置 Google 登录。",
+    "drivePlayServices": "使用 Drive 需要此设备上的 Google Play 服务为最新版本。",
+    "driveReady": "使用你的 Google Drive 存储空间",
+    "errorDescription": "操作失败。请检查网络连接后重试。",
+    "errorTitle": "出了点问题",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "保存在此应用专用的 iCloud 存储空间中，不在你的 iCloud Drive 文件里",
+    "icloudReady": "使用你的 iCloud 存储空间",
+    "icloudUnavailable": "请先在此设备上登录 iCloud",
+    "offDescription": "保留一份你的事实、话题、聊天、保存的文章和阅读历史的副本，换新手机时就不用从头开始。此功能为可选项，在你完成设置之前不会运行任何内容。",
+    "offPrivacy": "副本在发送到任何地方之前，会先在此设备上加密。存储方无法读取，我们也不能。因此，你接下来拿到的恢复代码是找回数据的唯一途径。",
+    "onboardingIntro": "如果你以前用过 Mera，输入你的恢复代码，我们会找回你的事实、话题和设置。你也可以跳过，从头开始。",
+    "onboardingSkip": "跳过，我是新用户",
+    "restartNeeded": "你的数据已恢复。关闭并重新打开应用即可看到。",
+    "restore": "从备份恢复",
+    "restoreConfirmAction": "替换",
+    "restoreConfirmDescription": "这部手机上的事实、话题、聊天、保存的文章和阅读历史将被备份中的内容替换。此操作无法撤消。你的账号和订阅不受影响。",
+    "restoreConfirmTitle": "要替换此设备上的数据吗？",
+    "restoreEmpty": "这里没有找到备份。如果你之前使用的是其他 Google 账号或 iCloud 账号，请改用那个账号登录。",
+    "restoreHint": "会替换此设备上的数据",
+    "restoreLookHere": "在这里查找我的备份",
+    "restoreWhereDescription": "选择你当时保存的位置。在替换任何内容之前，你会先看到那里有什么。",
+    "restoreWhereTitle": "你的备份在哪里？",
+    "restoredDescription_one": "已将 {{count}} 个项目恢复到此设备。",
+    "restoredDescription_other": "已将 {{count}} 个项目恢复到此设备。",
+    "restoredTitle": "恢复完成",
+    "restoring": "恢复中…",
+    "runNow": "立即备份",
+    "runNowHint": "自动备份未运行时可使用",
+    "runsInBackground": "会在后台自动运行，通常在夜间",
+    "setUp": "备份你的数据",
+    "shareCode": "分享或保存代码",
+    "showCode": "显示恢复代码",
+    "showCodeHint": "你设置时写下的代码",
+    "statusCadence": "计划：{{cadence}}",
+    "statusLast": "上次备份：{{when}}",
+    "statusNever": "还没有保存过备份",
+    "statusProvider": "备份到 {{provider}}",
+    "statusStale": "你的上次备份已是 {{days}} 天前。请保存新副本。",
+    "title": "备份",
+    "turnOff": "关闭备份",
+    "turnOffAction": "关闭",
+    "turnOffConfirm": "备份将停止，此设备也会清除你的恢复代码。已保存的副本会留在原处，再次打开它们需要你写下的那个代码。",
+    "turnOffHint": "停止备份，并在此设备上清除代码",
+    "whenTitle": "备份频率",
+    "whereDescription": "无论选哪种，副本都会加密。这里只决定由谁来存储。",
+    "whereTitle": "保存在哪里",
+    "wifiOnly": "仅限 Wi-Fi",
+    "wifiOnlyOff": "已关闭。计划备份可能会使用移动数据。",
+    "wifiOnlyOn": "已开启。计划备份会等待连接 Wi-Fi。",
+    "working": "处理中…"
   }
 }

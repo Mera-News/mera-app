@@ -81,7 +81,9 @@
     "signIn": "登入",
     "aboutLegal": "關於 Mera 與法律資訊",
     "sourceCode": "原始碼",
-    "website": "網站"
+    "website": "網站",
+    "failedToSendBody": "無法傳送 OTP",
+    "signingYouIn": "正在登入…"
   },
   "account": {
     "pendingTitle": "帳號待審核",
@@ -312,7 +314,10 @@
     "savedDescription": "您的通知設定已更新。",
     "saveFailedTitle": "儲存失敗",
     "saveFailedDescription": "無法儲存您的偏好設定，請再試一次。",
-    "timeNudge": "選擇您可以閱讀、思考和計畫的時間——一天一次或兩次就足夠了。"
+    "timeNudge": "選擇您可以閱讀、思考和計畫的時間——一天一次或兩次就足夠了。",
+    "maxHoursReachedDescription": "最多可選擇 {{count}} 個時間",
+    "maxHoursReachedTitle": "已達上限",
+    "selectedCount": "已選擇：{{selected}}/{{max}}"
   },
   "language": {
     "title": "語言",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "自動取得社群事實查核",
     "autoCommunityFactCheckOn": "每次開啟文章時都會查詢",
     "autoCommunityFactCheckOff": "僅在你點按時才查詢",
-    "autoCommunityFactCheckDescription": "事實查核是共享的。當有人請求查核某則報導，結果會隨該報導保存，任何人都能看到。開啟後，Mera 會在你每次開啟文章時尋找已有的查核。保持關閉，Mera 只在你點按事實查核按鈕時才去尋找，這樣請求查核仍是你針對單則報導做出的選擇。"
+    "autoCommunityFactCheckDescription": "事實查核是共享的。當有人請求查核某則報導，結果會隨該報導保存，任何人都能看到。開啟後，Mera 會在你每次開啟文章時尋找已有的查核。保持關閉，Mera 只在你點按事實查核按鈕時才去尋找，這樣請求查核仍是你針對單則報導做出的選擇。",
+    "loadFailedDescription": "無法載入 Mera Protocol 設定。",
+    "loadFailedTitle": "載入失敗"
   },
   "manageData": {
     "deleting": "刪除中...",
@@ -627,11 +634,16 @@
         "title": "服務無法使用"
       }
     },
-    "accountRestrictedContact": "聯絡支援"
+    "accountRestrictedContact": "聯絡支援",
+    "networkErrorBody": "無法連線。請檢查您的網路連線。",
+    "networkErrorTitle": "網路錯誤"
   },
   "download": {
     "modelDownloading": "正在下載 AI Model...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol 已可使用。",
+    "completeTitle": "下載完成",
+    "failedTitle": "下載失敗"
   },
   "chat": {
     "startingChat": "正在啟動聊天...",
@@ -640,7 +652,30 @@
     "reloadingModel": "正在重新載入 AI Model... {{percent}}%",
     "waitingForResponse": "等待回應中...",
     "typeMessage": "輸入訊息...",
-    "inferenceError": "我們目前無法連線至 Mera 推論服務。請稍後再試。"
+    "inferenceError": "我們目前無法連線至 Mera 推論服務。請稍後再試。",
+    "send": "傳送",
+    "streamingLabels": {
+      "adaptingFeed": "正在調整動態",
+      "analyzing": "正在分析",
+      "buildingProfile": "正在建立輪廓",
+      "calibrating": "正在校準",
+      "connectingDots": "正在串連線索",
+      "contextualizing": "正在梳理脈絡",
+      "detectingPatterns": "正在偵測模式",
+      "discoveringThemes": "正在發掘題材",
+      "evaluatingSignals": "正在評估訊號",
+      "learningPreferences": "正在學習偏好",
+      "mappingInterests": "正在梳理興趣",
+      "optimizing": "正在最佳化",
+      "personalizing": "正在個人化",
+      "processing": "正在處理",
+      "refiningTaste": "正在微調品味",
+      "synthesizing": "正在統整",
+      "tuningRelevance": "正在調校相關性",
+      "understanding": "正在理解",
+      "updatingModel": "正在更新模型",
+      "weighingTopics": "正在衡量主題"
+    }
   },
   "personaChat": {
     "introMessage": "嗨！我是 Mera，你的個人新聞助理。\n\n為了找到對你真正重要的新聞，我需要了解一些關於你的事。你住在哪裡、從事什麼工作、追蹤的興趣、持有的股票、家人住在哪裡。隨你願意分享多少。\n\n如果這讓你有些猶豫，那是很好的直覺。把個人資料交給做應用的公司並不明智。Mera 的建構方式不同：你告訴我的一切都儲存在你的裝置上，而不是在我們的伺服器上。問我它如何運作，或說「幫我設定」，我們就開始吧。"
@@ -1151,7 +1186,13 @@
     "tooCluttered": "混亂／廣告太多",
     "tooSlow": "載入速度太慢",
     "wrongPlace": "地點錯誤",
-    "wrongTopic": "主題錯誤"
+    "wrongTopic": "主題錯誤",
+    "aBitMore": "多一點",
+    "aLotMore": "多很多",
+    "followStory": "追蹤這則報導",
+    "moreAboutTopic": "更多這個主題的內容",
+    "moreFromPublication": "更多來自這個來源的內容",
+    "moreNewsFromPlace": "更多這個地方的新聞"
   },
   "topicPlan": {
     "title": "我將追蹤的主題",
@@ -2320,5 +2361,94 @@
     "title": "歡迎回到 Mera",
     "body": "這部裝置之前似乎使用過 Mera，因此免費試用已經使用完畢。您可以繼續使用新帳號閱讀，也可以隨時選擇方案以獲得完整體驗。",
     "continue": "繼續"
+  },
+  "videoPlayer": {
+    "closeA11y": "關閉影片",
+    "openInBrowser": "在瀏覽器中開啟",
+    "playbackError": "無法播放這部影片。"
+  },
+  "backup": {
+    "adoptDescription": "這是您在另一台裝置上設定備份時寫下的代碼。大小寫、空格和連字號都不影響。",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "輸入您的復原代碼",
+    "alreadyHave": "我已經有備份",
+    "backgroundRestricted": "「背景 App 重新整理」已關閉，備份無法自動執行。請使用「立即備份」，或在裝置設定中開啟。",
+    "cadence": {
+      "daily": "每天",
+      "manual": "只在我點按時",
+      "off": "關閉",
+      "weekly": "每週"
+    },
+    "cadenceHint": {
+      "daily": "大約每天一次，通常在夜間",
+      "manual": "不會自動執行任何動作",
+      "weekly": "大約每週一次，通常在夜間"
+    },
+    "changeSchedule": "備份排程",
+    "codeDescription": "請寫下來並妥善保管。它是唯一能開啟備份的方式。一旦遺失，包括我們在內，沒有人能救回您的資料。",
+    "codeSaved": "我已儲存復原代碼",
+    "codeTitle": "您的復原代碼",
+    "codeWrong": "請再檢查一次。除了空格和大小寫，每個字元都很重要。",
+    "codeWrongTitle": "代碼不正確",
+    "continue": "繼續",
+    "doneDescription_one": "已儲存 {{count}} 個項目。",
+    "doneDescription_other": "已儲存 {{count}} 個項目。",
+    "doneTitle": "備份完成",
+    "drive": "Google Drive",
+    "driveConnect": "點一下以連結您的 Google 帳戶",
+    "driveFailed": "Google 登入失敗。請稍後再試一次。",
+    "driveFailedTitle": "無法連接 Google Drive",
+    "driveHiddenFolder": "存放在 Drive 的隱藏應用程式儲存空間。您不會在檔案中看到它，只能在 Drive 設定的「管理應用程式」中找到。",
+    "driveMisconfigured": "此版本的 App 尚未設定 Google 登入。",
+    "drivePlayServices": "此裝置需要最新版的 Google Play 服務才能使用 Drive。",
+    "driveReady": "使用您的 Google Drive 儲存空間",
+    "errorDescription": "剛才沒有成功。請檢查連線後再試一次。",
+    "errorTitle": "發生錯誤",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "存放在此 App 專用的 iCloud 儲存空間，不在您的 iCloud Drive 檔案中",
+    "icloudReady": "使用您的 iCloud 儲存空間",
+    "icloudUnavailable": "請先在此裝置上登入 iCloud",
+    "offDescription": "保留一份您的事實、主題、聊天、儲存的文章與閱讀紀錄的副本，換新手機時就不必從頭開始。此功能為選用，在您完成設定前不會執行任何動作。",
+    "offPrivacy": "副本在送出之前會先在此裝置上加密。儲存方無法讀取，我們也不能。因此，您接下來取得的復原代碼是唯一能重新開啟備份的方式。",
+    "onboardingIntro": "如果您用過 Mera，輸入您的復原代碼，我們會找回您的事實、主題和設定。您也可以略過，重新開始。",
+    "onboardingSkip": "略過，我是新用戶",
+    "restartNeeded": "您的資料回來了。關閉並重新開啟 App 即可看到。",
+    "restore": "從備份還原",
+    "restoreConfirmAction": "取代",
+    "restoreConfirmDescription": "這支手機上的事實、主題、聊天、儲存的文章與閱讀紀錄，將被備份中的內容取代。此操作無法復原。您的帳戶與訂閱不受影響。",
+    "restoreConfirmTitle": "要取代此裝置上的資料嗎？",
+    "restoreEmpty": "這裡找不到備份。如果您之前使用的是其他 Google 帳戶或 iCloud 帳戶，請改用該帳戶登入。",
+    "restoreHint": "會取代此裝置上的資料",
+    "restoreLookHere": "在這裡尋找我的備份",
+    "restoreWhereDescription": "選擇您當時儲存的位置。在取代任何內容之前，您會先看到那裡有什麼。",
+    "restoreWhereTitle": "您的備份在哪裡？",
+    "restoredDescription_one": "已將 {{count}} 個項目還原到此裝置。",
+    "restoredDescription_other": "已將 {{count}} 個項目還原到此裝置。",
+    "restoredTitle": "還原完成",
+    "restoring": "還原中…",
+    "runNow": "立即備份",
+    "runNowHint": "自動備份未執行時可使用",
+    "runsInBackground": "會在背景自動執行，通常在夜間",
+    "setUp": "備份您的資料",
+    "shareCode": "分享或儲存代碼",
+    "showCode": "顯示復原代碼",
+    "showCodeHint": "您設定時寫下的代碼",
+    "statusCadence": "排程：{{cadence}}",
+    "statusLast": "上次備份:{{when}}",
+    "statusNever": "尚未儲存任何備份",
+    "statusProvider": "備份至 {{provider}}",
+    "statusStale": "您的上次備份已是 {{days}} 天前。請儲存新的副本。",
+    "title": "備份",
+    "turnOff": "關閉備份",
+    "turnOffAction": "關閉",
+    "turnOffConfirm": "備份會停止，此裝置也會清除您的復原代碼。已儲存的副本會留在原處，之後要再開啟就需要您寫下的那組代碼。",
+    "turnOffHint": "停止備份，並讓此裝置清除代碼",
+    "whenTitle": "備份頻率",
+    "whereDescription": "無論選哪一種，副本都會加密。這裡只決定由誰儲存。",
+    "whereTitle": "要保存在哪裡",
+    "wifiOnly": "僅限 Wi-Fi",
+    "wifiOnlyOff": "已關閉。排程備份可能會使用行動數據。",
+    "wifiOnlyOn": "已開啟。排程備份會等待 Wi-Fi 連線。",
+    "working": "處理中…"
   }
 }

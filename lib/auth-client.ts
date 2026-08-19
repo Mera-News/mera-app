@@ -1,4 +1,5 @@
 import { expoClient } from "@better-auth/expo/client";
+import i18next from 'i18next';
 import { emailOTPClient, jwtClient } from "better-auth/client/plugins";
 import { createAuthClient } from "better-auth/react";
 import Constants from 'expo-constants';
@@ -45,7 +46,7 @@ export const sendOTP = async (email: string): Promise<{ success: boolean; error?
         if (error) {
             return {
                 success: false,
-                error: error.message || 'Failed to send OTP',
+                error: error.message || i18next.t('auth.failedToSendBody'),
             };
         }
 
@@ -55,7 +56,7 @@ export const sendOTP = async (email: string): Promise<{ success: boolean; error?
     } catch (error: any) {
         return {
             success: false,
-            error: error.message || 'Failed to send OTP',
+            error: error.message || i18next.t('auth.failedToSendBody'),
         };
     }
 };

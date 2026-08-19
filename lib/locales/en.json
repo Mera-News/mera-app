@@ -81,7 +81,9 @@
     "signIn": "Sign in",
     "aboutLegal": "About Mera & legal",
     "sourceCode": "Source code",
-    "website": "Website"
+    "website": "Website",
+    "failedToSendBody": "Failed to send OTP",
+    "signingYouIn": "Signing you in…"
   },
   "account": {
     "pendingTitle": "Subscribe to Mera",
@@ -607,7 +609,10 @@
     "savedTitle": "Preferences Saved",
     "savedDescription": "Your notification settings have been updated.",
     "saveFailedTitle": "Save Failed",
-    "saveFailedDescription": "Failed to save your preferences. Please try again."
+    "saveFailedDescription": "Failed to save your preferences. Please try again.",
+    "maxHoursReachedDescription": "You can select up to {{count}} hours",
+    "maxHoursReachedTitle": "Maximum Reached",
+    "selectedCount": "Selected: {{selected}}/{{max}}"
   },
   "language": {
     "title": "Language",
@@ -764,7 +769,9 @@
     "autoCommunityFactCheckTitle": "Auto community fact check",
     "autoCommunityFactCheckOn": "Looked up on every article you open",
     "autoCommunityFactCheckOff": "Looked up only when you tap the button",
-    "autoCommunityFactCheckDescription": "Fact checks are shared. When one reader asks for a story to be checked, the result is kept against that story and anyone can see it. Turn this on and Mera looks for an existing check every time you open an article. Leave it off and Mera looks only when you tap the fact check button, so asking stays something you choose to do on one story at a time."
+    "autoCommunityFactCheckDescription": "Fact checks are shared. When one reader asks for a story to be checked, the result is kept against that story and anyone can see it. Turn this on and Mera looks for an existing check every time you open an article. Leave it off and Mera looks only when you tap the fact check button, so asking stays something you choose to do on one story at a time.",
+    "loadFailedDescription": "Failed to load Mera Protocol settings.",
+    "loadFailedTitle": "Load Failed"
   },
   "manageData": {
     "exportHistoryTitle": "Export reading history",
@@ -1009,11 +1016,16 @@
         "message": "Something went wrong while picking news for you. We'll keep trying: pull down to refresh if it continues."
       }
     },
-    "accountRestrictedContact": "Message support"
+    "accountRestrictedContact": "Message support",
+    "networkErrorBody": "Unable to connect. Please check your internet connection.",
+    "networkErrorTitle": "Network Error"
   },
   "download": {
     "modelDownloading": "Downloading AI model...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol is now ready for use.",
+    "completeTitle": "Download Complete",
+    "failedTitle": "Download Failed"
   },
   "chat": {
     "startingChat": "Starting chat...",
@@ -1022,7 +1034,30 @@
     "reloadingModel": "Reloading AI model... {{percent}}%",
     "waitingForResponse": "Waiting for response...",
     "typeMessage": "Type a message...",
-    "inferenceError": "We're having trouble reaching the Mera inference service right now. Please try again in a moment."
+    "inferenceError": "We're having trouble reaching the Mera inference service right now. Please try again in a moment.",
+    "send": "Send",
+    "streamingLabels": {
+      "adaptingFeed": "Adapting feed",
+      "analyzing": "Analyzing",
+      "buildingProfile": "Building profile",
+      "calibrating": "Calibrating",
+      "connectingDots": "Connecting dots",
+      "contextualizing": "Contextualizing",
+      "detectingPatterns": "Detecting patterns",
+      "discoveringThemes": "Discovering themes",
+      "evaluatingSignals": "Evaluating signals",
+      "learningPreferences": "Learning preferences",
+      "mappingInterests": "Mapping interests",
+      "optimizing": "Optimizing",
+      "personalizing": "Personalizing",
+      "processing": "Processing",
+      "refiningTaste": "Refining taste",
+      "synthesizing": "Synthesizing",
+      "tuningRelevance": "Tuning relevance",
+      "understanding": "Understanding",
+      "updatingModel": "Updating model",
+      "weighingTopics": "Weighing topics"
+    }
   },
   "personaChat": {
     "introMessage": "Hi, I'm Mera, your personal news assistant.\n\nTo find news that actually matters to you, I need to know a bit about you. Where you live, what you do, hobbies you follow, stocks you track, where your family lives. Share as much or as little as you like.\n\nIf that gives you pause, good instinct. It's not wise to hand personal data to an app company. Mera is built differently: everything you tell me is saved on your device, not on our servers. Ask me how that works, or say 'help me set up' and we'll get started."
@@ -1340,7 +1375,13 @@
     "showLessEntity": "Show less of {{entity}}",
     "showLessPlace": "Show less of {{place}}",
     "thisCategory": "This category",
-    "tellMeraWhy": "Tell Mera why"
+    "tellMeraWhy": "Tell Mera why",
+    "aBitMore": "A bit more",
+    "aLotMore": "A lot more",
+    "followStory": "Follow this story",
+    "moreAboutTopic": "More about this topic",
+    "moreFromPublication": "More from this publication",
+    "moreNewsFromPlace": "More news from this place"
   },
   "topicPlan": {
     "title": "Topics I'll track",
@@ -2403,5 +2444,10 @@
     "title": "Welcome back to Mera",
     "body": "It looks like Mera has been on this device before, so the free trial has already been used. You can keep browsing with your new account, or pick a plan anytime for the full experience.",
     "continue": "Continue"
+  },
+  "videoPlayer": {
+    "closeA11y": "Close video",
+    "openInBrowser": "Open in browser",
+    "playbackError": "Could not play the video."
   }
 }

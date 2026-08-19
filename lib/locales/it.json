@@ -81,7 +81,9 @@
     "signIn": "Accedi",
     "aboutLegal": "Informazioni su Mera e note legali",
     "sourceCode": "Codice sorgente",
-    "website": "Sito web"
+    "website": "Sito web",
+    "failedToSendBody": "Invio del codice OTP non riuscito",
+    "signingYouIn": "Accesso in corso…"
   },
   "account": {
     "pendingTitle": "Account in attesa di approvazione",
@@ -312,7 +314,10 @@
     "savedDescription": "Le impostazioni delle notifiche sono state aggiornate.",
     "saveFailedTitle": "Salvataggio non riuscito",
     "saveFailedDescription": "Impossibile salvare le preferenze. Per favore riprova.",
-    "timeNudge": "Scegli un momento in cui puoi leggere, pensare e pianificare — una o due volte al giorno è sufficiente."
+    "timeNudge": "Scegli un momento in cui puoi leggere, pensare e pianificare — una o due volte al giorno è sufficiente.",
+    "maxHoursReachedDescription": "Puoi selezionare fino a {{count}} ore",
+    "maxHoursReachedTitle": "Massimo raggiunto",
+    "selectedCount": "Selezionate: {{selected}}/{{max}}"
   },
   "language": {
     "title": "Lingua",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "Verifica della community automatica",
     "autoCommunityFactCheckOn": "Cercata a ogni articolo aperto",
     "autoCommunityFactCheckOff": "Cercata solo quando la chiedi",
-    "autoCommunityFactCheckDescription": "Le verifiche sono condivise. Quando qualcuno chiede di verificare una notizia, il risultato resta legato a quella notizia e chiunque può vederlo. Con questa opzione attiva, Mera cerca una verifica esistente ogni volta che apri un articolo. Lasciandola spenta, Mera cerca solo quando tocchi il pulsante di verifica, così chiedere resta una scelta che fai su una notizia alla volta."
+    "autoCommunityFactCheckDescription": "Le verifiche sono condivise. Quando qualcuno chiede di verificare una notizia, il risultato resta legato a quella notizia e chiunque può vederlo. Con questa opzione attiva, Mera cerca una verifica esistente ogni volta che apri un articolo. Lasciandola spenta, Mera cerca solo quando tocchi il pulsante di verifica, così chiedere resta una scelta che fai su una notizia alla volta.",
+    "loadFailedDescription": "Impossibile caricare le impostazioni di Mera Protocol.",
+    "loadFailedTitle": "Caricamento non riuscito"
   },
   "manageData": {
     "deleting": "Eliminazione...",
@@ -627,11 +634,16 @@
         "title": "Servizio non disponibile"
       }
     },
-    "accountRestrictedContact": "Contatta il supporto"
+    "accountRestrictedContact": "Contatta il supporto",
+    "networkErrorBody": "Impossibile connettersi. Controlla la tua connessione a internet.",
+    "networkErrorTitle": "Errore di rete"
   },
   "download": {
     "modelDownloading": "Download del modello AI...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol è ora pronto all'uso.",
+    "completeTitle": "Download completato",
+    "failedTitle": "Download non riuscito"
   },
   "chat": {
     "startingChat": "Avvio della chat...",
@@ -640,7 +652,30 @@
     "reloadingModel": "Ricaricamento del modello AI... {{percent}}%",
     "waitingForResponse": "In attesa di risposta...",
     "typeMessage": "Scrivi un messaggio...",
-    "inferenceError": "Al momento stiamo riscontrando problemi nel raggiungere il servizio di inferenza Mera. Per favore riprova tra un momento."
+    "inferenceError": "Al momento stiamo riscontrando problemi nel raggiungere il servizio di inferenza Mera. Per favore riprova tra un momento.",
+    "send": "Invia",
+    "streamingLabels": {
+      "adaptingFeed": "Adattamento del feed",
+      "analyzing": "Analisi",
+      "buildingProfile": "Creazione profilo",
+      "calibrating": "Calibrazione",
+      "connectingDots": "Collego i punti",
+      "contextualizing": "Contestualizzazione",
+      "detectingPatterns": "Ricerca di schemi",
+      "discoveringThemes": "Scoperta di temi",
+      "evaluatingSignals": "Valutazione dei segnali",
+      "learningPreferences": "Apprendo le preferenze",
+      "mappingInterests": "Mappa degli interessi",
+      "optimizing": "Ottimizzazione",
+      "personalizing": "Personalizzazione",
+      "processing": "Elaborazione",
+      "refiningTaste": "Affino i gusti",
+      "synthesizing": "Sintesi",
+      "tuningRelevance": "Regolazione della rilevanza",
+      "understanding": "Comprensione",
+      "updatingModel": "Aggiornamento del modello",
+      "weighingTopics": "Peso degli argomenti"
+    }
   },
   "personaChat": {
     "introMessage": "Ciao! Sono Mera, la tua assistente personale di notizie.\n\nPer trovare notizie che contano davvero per te, ho bisogno di conoscerti un po'. Dove vivi, di cosa ti occupi, hobby che segui, azioni che monitori, dove vive la tua famiglia. Condividi tutto o poco, come preferisci.\n\nSe questo ti preoccupa, è un buon istinto. Non è saggio affidare dati personali a una società che sviluppa app. Mera è costruita diversamente: tutto quello che mi dici viene salvato sul tuo dispositivo, non sui nostri server. Chiedimi come funziona, o di' semplicemente 'aiutami a configurarlo' e iniziamo."
@@ -1150,7 +1185,13 @@
     "tooCluttered": "Disordinato / troppi annunci",
     "tooSlow": "Troppo lento da caricare",
     "wrongPlace": "Posto sbagliato",
-    "wrongTopic": "Argomento sbagliato"
+    "wrongTopic": "Argomento sbagliato",
+    "aBitMore": "Un po' di più",
+    "aLotMore": "Molto di più",
+    "followStory": "Segui questa storia",
+    "moreAboutTopic": "Altro su questo argomento",
+    "moreFromPublication": "Altro da questa testata",
+    "moreNewsFromPlace": "Altre notizie da questo luogo"
   },
   "topicPlan": {
     "title": "Argomenti che monitorerò",
@@ -2319,5 +2360,94 @@
     "title": "Bentornato su Mera",
     "body": "Sembra che Mera sia già stato su questo dispositivo, quindi la prova gratuita è già stata usata. Puoi continuare a leggere con il tuo nuovo account, oppure scegliere un piano in qualsiasi momento per l'esperienza completa.",
     "continue": "Continua"
+  },
+  "videoPlayer": {
+    "closeA11y": "Chiudi video",
+    "openInBrowser": "Apri nel browser",
+    "playbackError": "Impossibile riprodurre il video."
+  },
+  "backup": {
+    "adoptDescription": "È il codice che hai annotato quando hai configurato il backup sull'altro dispositivo. Maiuscole, spazi e trattini non contano.",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "Inserisci il tuo codice di recupero",
+    "alreadyHave": "Ho già un backup",
+    "backgroundRestricted": "L'aggiornamento in background è disattivato, quindi i backup non possono partire da soli. Usa Esegui backup ora, oppure attivalo nelle impostazioni del dispositivo.",
+    "cadence": {
+      "daily": "Ogni giorno",
+      "manual": "Solo quando lo chiedo io",
+      "off": "Disattivato",
+      "weekly": "Ogni settimana"
+    },
+    "cadenceHint": {
+      "daily": "Circa una volta al giorno, di solito di notte",
+      "manual": "Non parte nulla da solo",
+      "weekly": "Circa una volta alla settimana, di solito di notte"
+    },
+    "changeSchedule": "Programmazione dei backup",
+    "codeDescription": "Annotalo e conservalo in un posto sicuro. È l'unica cosa che può aprire il tuo backup. Se lo perdi, nessuno può recuperare i tuoi dati, nemmeno noi.",
+    "codeSaved": "Ho salvato il mio codice di recupero",
+    "codeTitle": "Il tuo codice di recupero",
+    "codeWrong": "Controllalo di nuovo. Ogni carattere conta, tranne spazi e maiuscole.",
+    "codeWrongTitle": "Questo codice non è corretto",
+    "continue": "Continua",
+    "doneDescription_one": "{{count}} elemento salvato.",
+    "doneDescription_other": "{{count}} elementi salvati.",
+    "doneTitle": "Backup completato",
+    "drive": "Google Drive",
+    "driveConnect": "Tocca per collegare il tuo account Google",
+    "driveFailed": "Google non è riuscito a farti accedere. Riprova tra un momento.",
+    "driveFailedTitle": "Impossibile collegare Google Drive",
+    "driveHiddenFolder": "Nello spazio nascosto per le app di Drive. Non lo vedrai tra i tuoi file, solo nelle impostazioni di Drive, in Gestisci app.",
+    "driveMisconfigured": "L'accesso con Google non è configurato per questa versione dell'app.",
+    "drivePlayServices": "Questo dispositivo ha bisogno di una versione aggiornata di Google Play Services per usare Drive.",
+    "driveReady": "Usa il tuo spazio di archiviazione di Google Drive",
+    "errorDescription": "Non ha funzionato. Controlla la connessione e riprova.",
+    "errorTitle": "Qualcosa è andato storto",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "Nello spazio iCloud privato di questa app, non tra i tuoi file di iCloud Drive",
+    "icloudReady": "Usa il tuo spazio di archiviazione iCloud",
+    "icloudUnavailable": "Accedi a iCloud su questo dispositivo per usare questa opzione",
+    "offDescription": "Conserva una copia dei tuoi dati, argomenti, chat, articoli salvati e cronologia di lettura, così un telefono nuovo non significa ricominciare da capo. È facoltativo e non parte nulla finché non lo configuri.",
+    "offPrivacy": "La copia viene cifrata su questo dispositivo prima di andare ovunque. Chi la conserva non può leggerla, e nemmeno noi. Per questo il codice di recupero che riceverai è l'unico modo per rientrare.",
+    "onboardingIntro": "Se hai già usato Mera, inserisci il tuo codice di recupero e recupereremo i tuoi dati, argomenti e impostazioni. Puoi saltare questo passaggio e iniziare da zero.",
+    "onboardingSkip": "Salta, sono nuovo qui",
+    "restartNeeded": "I tuoi dati sono tornati. Chiudi e riapri l'app per vederli.",
+    "restore": "Ripristina da un backup",
+    "restoreConfirmAction": "Sostituisci",
+    "restoreConfirmDescription": "I tuoi dati, argomenti, chat, articoli salvati e cronologia di lettura su questo telefono verranno sostituiti da ciò che c'è nel backup. Questa operazione non si può annullare. Il tuo account e il tuo abbonamento non vengono toccati.",
+    "restoreConfirmTitle": "Sostituire i dati su questo dispositivo?",
+    "restoreEmpty": "Nessun backup trovato qui. Se prima usavi un altro account Google o iCloud, accedi con quello.",
+    "restoreHint": "Sostituisce i dati su questo dispositivo",
+    "restoreLookHere": "Cerca il mio backup qui",
+    "restoreWhereDescription": "Scegli dove l'hai salvato. Vedrai cosa contiene prima che qualcosa venga sostituito.",
+    "restoreWhereTitle": "Dove si trova il tuo backup?",
+    "restoredDescription_one": "{{count}} elemento ripristinato su questo dispositivo.",
+    "restoredDescription_other": "{{count}} elementi ripristinati su questo dispositivo.",
+    "restoredTitle": "Ripristino completato",
+    "restoring": "Ripristino…",
+    "runNow": "Esegui backup ora",
+    "runNowHint": "Usalo se il backup automatico non è partito",
+    "runsInBackground": "Parte da solo in background, di solito di notte",
+    "setUp": "Esegui il backup dei tuoi dati",
+    "shareCode": "Condividi o salva il codice",
+    "showCode": "Mostra codice di recupero",
+    "showCodeHint": "Il codice che hai annotato durante la configurazione",
+    "statusCadence": "Programmazione: {{cadence}}",
+    "statusLast": "Ultimo backup {{when}}",
+    "statusNever": "Nessun backup salvato finora",
+    "statusProvider": "Backup su {{provider}}",
+    "statusStale": "Il tuo ultimo backup risale a {{days}} giorni fa. Salvane una copia nuova.",
+    "title": "Backup",
+    "turnOff": "Disattiva il backup",
+    "turnOffAction": "Disattiva",
+    "turnOffConfirm": "I backup si interrompono e questo dispositivo dimentica il tuo codice di recupero. Le copie già salvate restano dove sono, e ti servirà il codice che hai annotato per riaprirle.",
+    "turnOffHint": "Interrompe i backup e dimentica il codice su questo dispositivo",
+    "whenTitle": "Frequenza",
+    "whereDescription": "La copia è cifrata in ogni caso. Questo decide solo chi la conserva.",
+    "whereTitle": "Dove conservarlo",
+    "wifiOnly": "Solo Wi-Fi",
+    "wifiOnlyOff": "Disattivato. I backup programmati possono usare i dati mobili.",
+    "wifiOnlyOn": "Attivo. I backup programmati aspettano il Wi-Fi.",
+    "working": "In corso…"
   }
 }

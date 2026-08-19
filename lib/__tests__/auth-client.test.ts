@@ -53,6 +53,11 @@ jest.mock('../config/endpoints', () => ({
 // subscription store (and react-native-purchases behind it) out of this suite,
 // while letting us assert the lock is recorded through the SHARED mechanism.
 jest.mock('../subscription/ai-lock', () => ({ recordAiLocked: jest.fn() }));
+jest.mock('i18next', () => ({
+  __esModule: true,
+  default: { t: (k: string) => k },
+  t: (k: string) => k,
+}));
 
 import { sendOTP, getJwtToken, invalidateJwtCache, clearAuthStorage } from '../auth-client';
 import { _resetJwtSubscriptionGateForTests } from '../subscription/jwt-subscription-gate';
@@ -100,10 +105,10 @@ describe('sendOTP', () => {
     expect(result).toEqual({ success: false, error: 'Too many attempts' });
   });
 
-  it('returns { success: false, error: "Failed to send OTP" } when error has no message', async () => {
+  it('falls back to the localized failed-to-send copy when error has no message', async () => {
     mockSendVerificationOtp.mockResolvedValueOnce({ error: {} });
     const result = await sendOTP('user@example.com');
-    expect(result).toEqual({ success: false, error: 'Failed to send OTP' });
+    expect(result).toEqual({ success: false, error: 'auth.failedToSendBody' });
   });
 
   it('returns { success: false, error } when the promise rejects', async () => {

@@ -81,7 +81,9 @@
     "signIn": "Giriş yap",
     "aboutLegal": "Mera hakkında ve yasal bilgiler",
     "sourceCode": "Kaynak kodu",
-    "website": "Web sitesi"
+    "website": "Web sitesi",
+    "failedToSendBody": "OTP gönderilemedi",
+    "signingYouIn": "Giriş yapılıyor…"
   },
   "account": {
     "pendingTitle": "Hesap Onay Bekliyor",
@@ -312,7 +314,10 @@
     "saveFailedTitle": "Kaydetme Başarısız",
     "saveFailedDescription": "Tercihler kaydedilemedi. Lütfen tekrar dene.",
     "timeDescriptionOnboarding": "Haberlerine ne zaman göz atmak istediğini seç",
-    "timeNudge": "Okuyabileceğiniz, düşünebileceğiniz ve planlayabileceğiniz bir zamanı seçin — günde bir veya iki kez yeterlidir."
+    "timeNudge": "Okuyabileceğiniz, düşünebileceğiniz ve planlayabileceğiniz bir zamanı seçin — günde bir veya iki kez yeterlidir.",
+    "maxHoursReachedDescription": "En fazla {{count}} saat seçebilirsin",
+    "maxHoursReachedTitle": "Üst sınıra ulaşıldı",
+    "selectedCount": "Seçilen: {{selected}}/{{max}}"
   },
   "language": {
     "title": "Dil",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "Otomatik topluluk doğrulaması",
     "autoCommunityFactCheckOn": "Açtığınız her haberde aranır",
     "autoCommunityFactCheckOff": "Yalnızca siz istediğinizde aranır",
-    "autoCommunityFactCheckDescription": "Doğrulamalar ortaktır. Biri bir haberin doğrulanmasını istediğinde sonuç o haberle birlikte saklanır ve herkes görebilir. Bunu açarsanız Mera, açtığınız her haberde mevcut bir doğrulama arar. Kapalı bırakırsanız Mera yalnızca doğrulama düğmesine dokunduğunuzda arar; böylece istemek, tek bir haber için bilerek yaptığınız bir şey olarak kalır."
+    "autoCommunityFactCheckDescription": "Doğrulamalar ortaktır. Biri bir haberin doğrulanmasını istediğinde sonuç o haberle birlikte saklanır ve herkes görebilir. Bunu açarsanız Mera, açtığınız her haberde mevcut bir doğrulama arar. Kapalı bırakırsanız Mera yalnızca doğrulama düğmesine dokunduğunuzda arar; böylece istemek, tek bir haber için bilerek yaptığınız bir şey olarak kalır.",
+    "loadFailedDescription": "Mera Protocol ayarları yüklenemedi.",
+    "loadFailedTitle": "Yükleme başarısız"
   },
   "manageData": {
     "deleting": "Siliniyor...",
@@ -627,11 +634,16 @@
         "title": "Servis kullanılamıyor"
       }
     },
-    "accountRestrictedContact": "Desteğe yazın"
+    "accountRestrictedContact": "Desteğe yazın",
+    "networkErrorBody": "Bağlanılamıyor. İnternet bağlantını kontrol et.",
+    "networkErrorTitle": "Ağ hatası"
   },
   "download": {
     "modelDownloading": "AI modeli indiriliyor...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol artık kullanıma hazır.",
+    "completeTitle": "İndirme tamamlandı",
+    "failedTitle": "İndirme başarısız"
   },
   "chat": {
     "startingChat": "Sohbet başlatılıyor...",
@@ -640,7 +652,30 @@
     "reloadingModel": "AI modeli yeniden yükleniyor... {{percent}}%",
     "waitingForResponse": "Yanıt bekleniyor...",
     "typeMessage": "Bir mesaj yaz...",
-    "inferenceError": "Şu anda Mera çıkarım hizmetine ulaşmakta sorun yaşıyoruz. Lütfen bir süre sonra tekrar dene."
+    "inferenceError": "Şu anda Mera çıkarım hizmetine ulaşmakta sorun yaşıyoruz. Lütfen bir süre sonra tekrar dene.",
+    "send": "Gönder",
+    "streamingLabels": {
+      "adaptingFeed": "Akışı uyarlıyor",
+      "analyzing": "Analiz ediyor",
+      "buildingProfile": "Profil oluşturuyor",
+      "calibrating": "Kalibre ediyor",
+      "connectingDots": "Bağlantıları kuruyor",
+      "contextualizing": "Bağlama oturtuyor",
+      "detectingPatterns": "Örüntüleri buluyor",
+      "discoveringThemes": "Temaları keşfediyor",
+      "evaluatingSignals": "Sinyalleri değerlendiriyor",
+      "learningPreferences": "Tercihleri öğreniyor",
+      "mappingInterests": "İlgi alanlarını belirliyor",
+      "optimizing": "Optimize ediyor",
+      "personalizing": "Kişiselleştiriyor",
+      "processing": "İşliyor",
+      "refiningTaste": "Beğenileri netleştiriyor",
+      "synthesizing": "Sentezliyor",
+      "tuningRelevance": "Alaka düzeyini ayarlıyor",
+      "understanding": "Anlıyor",
+      "updatingModel": "Modeli güncelliyor",
+      "weighingTopics": "Konuları tartıyor"
+    }
   },
   "personaChat": {
     "introMessage": "Merhaba! Ben Mera, kişisel haber asistanın.\n\nSana gerçekten önemli olan haberleri bulmak için senin hakkında biraz bilgiye ihtiyacım var. Nerede yaşıyorsun, ne iş yapıyorsun, hangi hobilerin var, hangi hisseleri takip ediyorsun, ailen nerede yaşıyor. İstediğin kadar veya az paylaşabilirsin.\n\nEğer bu seni biraz şüpheye düşürürse, içgüdün doğru. Kişisel verileri bir uygulama şirketi vermeye akıllıca demek değil. Mera farklı şekilde inşa edildi: bana söylediğin her şey cihazında kaydedilir, sunucularımızda değil. Bana nasıl çalıştığını sorabilirsin, ya da 'kurulumda bana yardım et' de ve başlayalım."
@@ -1152,7 +1187,13 @@
     "tooCluttered": "Karmaşık / çok fazla reklam",
     "tooSlow": "Yüklemesi çok uzun",
     "wrongPlace": "Yanlış konum",
-    "wrongTopic": "Yanlış konu"
+    "wrongTopic": "Yanlış konu",
+    "aBitMore": "Biraz daha fazla",
+    "aLotMore": "Çok daha fazla",
+    "followStory": "Bu hikayeyi takip et",
+    "moreAboutTopic": "Bu konu hakkında daha fazla",
+    "moreFromPublication": "Bu yayından daha fazla",
+    "moreNewsFromPlace": "Bu yerden daha fazla haber"
   },
   "topicPlan": {
     "title": "Takip edeceğim konular",
@@ -2321,5 +2362,94 @@
     "title": "Mera'ya tekrar hoş geldiniz",
     "body": "Görünüşe göre Mera bu cihazda daha önce kullanılmış, bu yüzden ücretsiz deneme zaten kullanılmış durumda. Yeni hesabınızla okumaya devam edebilir veya tam deneyim için istediğiniz zaman bir plan seçebilirsiniz.",
     "continue": "Devam"
+  },
+  "videoPlayer": {
+    "closeA11y": "Videoyu kapat",
+    "openInBrowser": "Tarayıcıda aç",
+    "playbackError": "Video oynatılamadı."
+  },
+  "backup": {
+    "adoptDescription": "Bu, diğer cihazında yedeklemeyi kurarken not ettiğin kod. Büyük harfler, boşluklar ve tireler fark etmez.",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "Kurtarma kodunu gir",
+    "alreadyHave": "Zaten bir yedeğim var",
+    "backgroundRestricted": "Arka Planda Yenileme kapalı, bu yüzden yedeklemeler kendiliğinden çalışamaz. Şimdi yedekle'yi kullan veya cihaz ayarlarından aç.",
+    "cadence": {
+      "daily": "Her gün",
+      "manual": "Yalnızca ben dokununca",
+      "off": "Kapalı",
+      "weekly": "Her hafta"
+    },
+    "cadenceHint": {
+      "daily": "Yaklaşık günde bir, genellikle gece",
+      "manual": "Hiçbir şey kendiliğinden çalışmaz",
+      "weekly": "Yaklaşık haftada bir, genellikle gece"
+    },
+    "changeSchedule": "Yedekleme zamanlaması",
+    "codeDescription": "Bunu not et ve güvenli bir yerde sakla. Yedeğini açabilecek tek şey bu. Kaybedersen verilerini kimse kurtaramaz, biz bile.",
+    "codeSaved": "Kurtarma kodumu kaydettim",
+    "codeTitle": "Kurtarma kodun",
+    "codeWrong": "Tekrar kontrol et. Boşluk ve büyük-küçük harf dışında her karakter önemli.",
+    "codeWrongTitle": "Bu kod doğru değil",
+    "continue": "Devam et",
+    "doneDescription_one": "{{count}} öğe kaydedildi.",
+    "doneDescription_other": "{{count}} öğe kaydedildi.",
+    "doneTitle": "Yedekleme tamamlandı",
+    "drive": "Google Drive",
+    "driveConnect": "Google hesabını bağlamak için dokun",
+    "driveFailed": "Google girişini yapamadı. Birazdan tekrar dene.",
+    "driveFailedTitle": "Google Drive bağlanamadı",
+    "driveHiddenFolder": "Drive'ın gizli uygulama depolama alanında. Dosyalarının arasında görünmez; yalnızca Drive ayarlarında, Uygulamaları yönet bölümünde görünür.",
+    "driveMisconfigured": "Google Sign-In bu uygulama sürümü için ayarlanmamış.",
+    "drivePlayServices": "Drive'ı kullanmak için bu cihazda güncel Google Play hizmetleri gerekiyor.",
+    "driveReady": "Google Drive depolama alanını kullanır",
+    "errorDescription": "Bu işe yaramadı. Bağlantını kontrol edip tekrar dene.",
+    "errorTitle": "Bir şeyler ters gitti",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "Bu uygulamanın özel iCloud depolama alanında, iCloud Drive dosyalarının arasında değil",
+    "icloudReady": "iCloud depolama alanını kullanır",
+    "icloudUnavailable": "Bunu kullanmak için bu cihazda iCloud'a giriş yap",
+    "offDescription": "Gerçeklerinin, konularının, sohbetlerinin, kaydedilen makalelerinin ve okuma geçmişinin bir kopyasını sakla; böylece yeni bir telefon her şeye baştan başlamak anlamına gelmez. Bu isteğe bağlıdır ve sen kurana kadar hiçbir şey çalışmaz.",
+    "offPrivacy": "Kopya, herhangi bir yere gitmeden önce bu cihazda şifrelenir. Onu saklayan okuyamaz, biz de okuyamayız. Bu yüzden birazdan alacağın kurtarma kodu geri dönmenin tek yoludur.",
+    "onboardingIntro": "Mera'yı daha önce kullandıysan kurtarma kodunu gir; gerçeklerini, konularını ve ayarlarını geri getirelim. Bunu atlayıp sıfırdan da başlayabilirsin.",
+    "onboardingSkip": "Atla, buraya yeniyim",
+    "restartNeeded": "Verilerin geri geldi. Görmek için uygulamayı kapatıp yeniden aç.",
+    "restore": "Yedekten geri yükle",
+    "restoreConfirmAction": "Değiştir",
+    "restoreConfirmDescription": "Bu telefondaki gerçeklerin, konuların, sohbetlerin, kaydedilen makalelerin ve okuma geçmişin yedekteki içerikle değiştirilecek. Bu geri alınamaz. Hesabın ve aboneliğin etkilenmez.",
+    "restoreConfirmTitle": "Bu cihazdaki veriler değiştirilsin mi?",
+    "restoreEmpty": "Burada yedek bulunamadı. Daha önce farklı bir Google hesabı veya iCloud hesabı kullandıysan onunla giriş yap.",
+    "restoreHint": "Bu cihazdaki verilerin yerine geçer",
+    "restoreLookHere": "Yedeğimi burada ara",
+    "restoreWhereDescription": "Nereye kaydettiğini seç. Bir şey değiştirilmeden önce orada ne olduğunu görürsün.",
+    "restoreWhereTitle": "Yedeğin nerede?",
+    "restoredDescription_one": "{{count}} öğe bu cihaza geri yüklendi.",
+    "restoredDescription_other": "{{count}} öğe bu cihaza geri yüklendi.",
+    "restoredTitle": "Geri yükleme tamamlandı",
+    "restoring": "Geri yükleniyor…",
+    "runNow": "Şimdi yedekle",
+    "runNowHint": "Otomatik yedekleme çalışmadıysa bunu kullan",
+    "runsInBackground": "Arka planda kendiliğinden çalışır, genellikle gece",
+    "setUp": "Verilerini yedekle",
+    "shareCode": "Kodu paylaş veya kaydet",
+    "showCode": "Kurtarma kodunu göster",
+    "showCodeHint": "Bunu kurarken not ettiğin kod",
+    "statusCadence": "Zamanlama: {{cadence}}",
+    "statusLast": "Son yedekleme: {{when}}",
+    "statusNever": "Henüz kayıtlı yedek yok",
+    "statusProvider": "Yedekleme konumu: {{provider}}",
+    "statusStale": "Son yedeğin {{days}} günlük. Yeni bir kopya kaydet.",
+    "title": "Yedekleme",
+    "turnOff": "Yedeklemeyi kapat",
+    "turnOffAction": "Kapat",
+    "turnOffConfirm": "Yedeklemeler durur ve bu cihaz kurtarma kodunu unutur. Zaten kaydettiğin kopyalar olduğu yerde kalır ve onları yeniden açmak için not ettiğin kod gerekir.",
+    "turnOffHint": "Yedeklemeleri durdurur ve bu cihazdaki kodu unutur",
+    "whenTitle": "Ne sıklıkta",
+    "whereDescription": "Kopya her durumda şifrelenir. Bu yalnızca onu kimin saklayacağını belirler.",
+    "whereTitle": "Nerede saklanacak",
+    "wifiOnly": "Yalnızca Wi-Fi",
+    "wifiOnlyOff": "Kapalı. Zamanlanmış yedeklemeler mobil veri kullanabilir.",
+    "wifiOnlyOn": "Açık. Zamanlanmış yedeklemeler Wi-Fi bekler.",
+    "working": "Çalışıyor…"
   }
 }

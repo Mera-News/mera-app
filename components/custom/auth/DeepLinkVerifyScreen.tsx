@@ -10,6 +10,7 @@ import { recordAuthenticatedUser } from '@/lib/security/identity-gate';
 import { silentlyAcceptLegal } from './legal-consent';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
     otp?: string;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export default function DeepLinkVerifyScreen({ otp, email, type }: Props) {
+    const { t } = useTranslation();
     const hasAttempted = useRef(false);
 
     useEffect(() => {
@@ -73,7 +75,7 @@ export default function DeepLinkVerifyScreen({ otp, email, type }: Props) {
                 <MeraLogo size={120} />
             </Box>
             <Spinner size="large" color="white" />
-            <Text size="md" className="text-typography-500 mt-4">Signing you in…</Text>
+            <Text size="md" className="text-typography-500 mt-4">{t('auth.signingYouIn')}</Text>
         </Box>
     );
 }

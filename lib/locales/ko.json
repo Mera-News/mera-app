@@ -81,7 +81,9 @@
     "signIn": "로그인",
     "aboutLegal": "Mera 정보 및 법적 고지",
     "sourceCode": "소스 코드",
-    "website": "웹사이트"
+    "website": "웹사이트",
+    "failedToSendBody": "OTP를 보내지 못했습니다",
+    "signingYouIn": "로그인하는 중…"
   },
   "account": {
     "pendingTitle": "계정 승인 대기 중",
@@ -312,7 +314,10 @@
     "saveFailedTitle": "저장 실패",
     "saveFailedDescription": "환경설정을 저장하지 못했습니다. 다시 시도해 주세요.",
     "timeDescriptionOnboarding": "뉴스를 확인하고 싶은 시간을 선택해 주세요",
-    "timeNudge": "읽고, 생각하고, 계획할 수 있는 시간을 선택하세요. 하루에 한두 번이면 충분합니다."
+    "timeNudge": "읽고, 생각하고, 계획할 수 있는 시간을 선택하세요. 하루에 한두 번이면 충분합니다.",
+    "maxHoursReachedDescription": "시간은 최대 {{count}}개까지 선택할 수 있습니다",
+    "maxHoursReachedTitle": "최대 개수 도달",
+    "selectedCount": "선택됨: {{selected}}/{{max}}"
   },
   "language": {
     "title": "언어",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "커뮤니티 팩트 체크 자동 조회",
     "autoCommunityFactCheckOn": "기사를 열 때마다 조회합니다",
     "autoCommunityFactCheckOff": "요청할 때만 조회합니다",
-    "autoCommunityFactCheckDescription": "팩트 체크는 공유됩니다. 누군가 어떤 기사에 대한 확인을 요청하면 결과가 그 기사에 저장되어 누구나 볼 수 있습니다. 켜 두면 Mera가 기사를 열 때마다 기존 체크를 찾습니다. 꺼 두면 팩트 체크 버튼을 눌렀을 때만 찾으므로, 요청은 기사마다 직접 선택하는 행동으로 남습니다."
+    "autoCommunityFactCheckDescription": "팩트 체크는 공유됩니다. 누군가 어떤 기사에 대한 확인을 요청하면 결과가 그 기사에 저장되어 누구나 볼 수 있습니다. 켜 두면 Mera가 기사를 열 때마다 기존 체크를 찾습니다. 꺼 두면 팩트 체크 버튼을 눌렀을 때만 찾으므로, 요청은 기사마다 직접 선택하는 행동으로 남습니다.",
+    "loadFailedDescription": "Mera Protocol 설정을 불러오지 못했습니다.",
+    "loadFailedTitle": "불러오기 실패"
   },
   "manageData": {
     "deleting": "삭제 중...",
@@ -627,11 +634,16 @@
         "title": "서비스를 이용할 수 없음"
       }
     },
-    "accountRestrictedContact": "고객 지원에 문의하기"
+    "accountRestrictedContact": "고객 지원에 문의하기",
+    "networkErrorBody": "연결할 수 없습니다. 인터넷 연결을 확인해 주세요.",
+    "networkErrorTitle": "네트워크 오류"
   },
   "download": {
     "modelDownloading": "AI 모델 다운로드 중...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "이제 Mera Protocol을 사용할 수 있습니다.",
+    "completeTitle": "다운로드 완료",
+    "failedTitle": "다운로드 실패"
   },
   "chat": {
     "startingChat": "채팅 시작 중...",
@@ -640,7 +652,30 @@
     "reloadingModel": "AI 모델 다시 로딩 중... {{percent}}%",
     "waitingForResponse": "응답 대기 중...",
     "typeMessage": "메시지를 입력하세요...",
-    "inferenceError": "현재 Mera 추론 서비스에 연결하는 데 문제가 있습니다. 잠시 후 다시 시도해 주세요."
+    "inferenceError": "현재 Mera 추론 서비스에 연결하는 데 문제가 있습니다. 잠시 후 다시 시도해 주세요.",
+    "send": "보내기",
+    "streamingLabels": {
+      "adaptingFeed": "피드 조정 중",
+      "analyzing": "분석하는 중",
+      "buildingProfile": "프로필 구성 중",
+      "calibrating": "조정하는 중",
+      "connectingDots": "연결점 찾는 중",
+      "contextualizing": "맥락 파악 중",
+      "detectingPatterns": "패턴 감지 중",
+      "discoveringThemes": "테마 발견 중",
+      "evaluatingSignals": "신호 평가 중",
+      "learningPreferences": "취향 학습 중",
+      "mappingInterests": "관심사 파악 중",
+      "optimizing": "최적화하는 중",
+      "personalizing": "맞춤 설정 중",
+      "processing": "처리하는 중",
+      "refiningTaste": "취향 다듬는 중",
+      "synthesizing": "종합하는 중",
+      "tuningRelevance": "관련성 조율 중",
+      "understanding": "이해하는 중",
+      "updatingModel": "모델 업데이트 중",
+      "weighingTopics": "토픽 비중 계산 중"
+    }
   },
   "personaChat": {
     "introMessage": "안녕하세요! 저는 Mera, 당신의 개인 뉴스 어시스턴트입니다.\n\n당신에게 정말 중요한 뉴스를 찾으려면 당신에 대해 조금 알아야 합니다. 어디에 사시는지, 무엇을 하시는지, 따르시는 취미, 추적하시는 주식, 가족이 어디에 사시는지. 편한 만큼 공유해 주세요.\n\n만약 이것이 조금 불안하다면, 그것은 좋은 직감입니다. 개인 데이터를 앱 개발 회사에 맡기는 것은 현명하지 않습니다. Mera는 다르게 만들어졌습니다. 당신이 제게 말씀하시는 모든 것은 당신의 기기에 저장되며, 저희 서버에는 저장되지 않습니다. 어떻게 작동하는지 물어보세요, 또는 '설정 도와줘'라고 말씀해 주시면 시작합니다."
@@ -1150,7 +1185,13 @@
     "tooCluttered": "복잡함 / 광고가 너무 많습니다",
     "tooSlow": "로드가 너무 느립니다",
     "wrongPlace": "잘못된 지역",
-    "wrongTopic": "잘못된 주제"
+    "wrongTopic": "잘못된 주제",
+    "aBitMore": "조금 더",
+    "aLotMore": "훨씬 더 많이",
+    "followStory": "이 스토리 팔로우",
+    "moreAboutTopic": "이 토픽 더 보기",
+    "moreFromPublication": "이 소스의 기사 더 보기",
+    "moreNewsFromPlace": "이 지역 뉴스 더 보기"
   },
   "topicPlan": {
     "title": "추적할 토픽",
@@ -2319,5 +2360,94 @@
     "title": "Mera에 다시 오신 것을 환영합니다",
     "body": "이 기기에서 이전에 Mera를 사용한 것으로 보여 무료 체험은 이미 사용되었습니다. 새 계정으로 계속 이용하거나, 언제든지 요금제를 선택해 모든 기능을 사용할 수 있습니다.",
     "continue": "계속"
+  },
+  "videoPlayer": {
+    "closeA11y": "동영상 닫기",
+    "openInBrowser": "브라우저에서 열기",
+    "playbackError": "동영상을 재생할 수 없습니다."
+  },
+  "backup": {
+    "adoptDescription": "다른 기기에서 백업을 설정할 때 적어 둔 코드입니다. 대소문자, 공백, 하이픈은 구분하지 않습니다.",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "복구 코드를 입력하세요",
+    "alreadyHave": "이미 백업이 있습니다",
+    "backgroundRestricted": "백그라운드 앱 새로 고침이 꺼져 있어 백업이 자동으로 실행될 수 없습니다. '지금 백업'을 사용하거나 기기 설정에서 켜 주세요.",
+    "cadence": {
+      "daily": "매일",
+      "manual": "직접 탭할 때만",
+      "off": "사용 안 함",
+      "weekly": "매주"
+    },
+    "cadenceHint": {
+      "daily": "하루에 한 번 정도, 주로 야간에 실행됩니다",
+      "manual": "자동으로는 아무것도 실행되지 않습니다",
+      "weekly": "일주일에 한 번 정도, 주로 야간에 실행됩니다"
+    },
+    "changeSchedule": "백업 일정",
+    "codeDescription": "적어서 안전한 곳에 보관하세요. 백업을 열 수 있는 것은 이 코드뿐입니다. 잃어버리면 저희를 포함해 누구도 데이터를 복구할 수 없습니다.",
+    "codeSaved": "복구 코드를 저장했습니다",
+    "codeTitle": "내 복구 코드",
+    "codeWrong": "다시 확인해 주세요. 공백과 대소문자를 제외한 모든 문자가 중요합니다.",
+    "codeWrongTitle": "코드가 올바르지 않습니다",
+    "continue": "계속",
+    "doneDescription_one": "항목 {{count}}개를 저장했습니다.",
+    "doneDescription_other": "항목 {{count}}개를 저장했습니다.",
+    "doneTitle": "백업 완료",
+    "drive": "Google Drive",
+    "driveConnect": "탭하여 Google 계정을 연결하세요",
+    "driveFailed": "Google 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.",
+    "driveFailedTitle": "Google Drive에 연결할 수 없습니다",
+    "driveHiddenFolder": "Drive의 숨겨진 앱 저장 공간에 보관됩니다. 파일 목록에는 보이지 않고 Drive 설정의 '앱 관리'에서만 확인할 수 있습니다.",
+    "driveMisconfigured": "이 앱 빌드에는 Google 로그인이 설정되어 있지 않습니다.",
+    "drivePlayServices": "Drive를 사용하려면 이 기기의 Google Play 서비스가 최신 버전이어야 합니다.",
+    "driveReady": "Google Drive 저장 공간을 사용합니다",
+    "errorDescription": "작동하지 않았습니다. 연결을 확인하고 다시 시도해 주세요.",
+    "errorTitle": "문제가 발생했습니다",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "iCloud Drive 파일이 아니라 이 앱 전용 iCloud 저장 공간에 보관됩니다",
+    "icloudReady": "iCloud 저장 공간을 사용합니다",
+    "icloudUnavailable": "사용하려면 이 기기에서 iCloud에 로그인하세요",
+    "offDescription": "사실, 토픽, 채팅, 저장한 기사, 열람 기록의 사본을 보관해 두면 새 휴대전화에서도 처음부터 다시 시작할 필요가 없습니다. 이 기능은 선택 사항이며 설정하기 전에는 아무것도 실행되지 않습니다.",
+    "offPrivacy": "사본은 어디로든 전송되기 전에 이 기기에서 암호화됩니다. 보관하는 쪽도, 저희도 내용을 읽을 수 없습니다. 그래서 다음 단계에서 받는 복구 코드가 다시 접근할 수 있는 유일한 방법입니다.",
+    "onboardingIntro": "이전에 Mera를 사용했다면 복구 코드를 입력하세요. 사실, 토픽, 설정을 다시 가져옵니다. 건너뛰고 새로 시작할 수도 있습니다.",
+    "onboardingSkip": "건너뛰기, 처음 사용합니다",
+    "restartNeeded": "데이터가 돌아왔습니다. 앱을 닫았다가 다시 열면 표시됩니다.",
+    "restore": "백업에서 복원",
+    "restoreConfirmAction": "대체",
+    "restoreConfirmDescription": "이 휴대전화의 사실, 토픽, 채팅, 저장한 기사, 열람 기록이 백업의 내용으로 대체됩니다. 이 작업은 되돌릴 수 없습니다. 계정과 구독에는 영향이 없습니다.",
+    "restoreConfirmTitle": "이 기기의 데이터를 대체할까요?",
+    "restoreEmpty": "여기에서 백업을 찾지 못했습니다. 이전에 다른 Google 계정이나 iCloud 계정을 사용했다면 그 계정으로 로그인해 보세요.",
+    "restoreHint": "이 기기의 데이터를 대체합니다",
+    "restoreLookHere": "여기에서 백업 찾기",
+    "restoreWhereDescription": "저장한 위치를 선택하세요. 무엇이든 대체되기 전에 그곳에 있는 내용을 먼저 확인할 수 있습니다.",
+    "restoreWhereTitle": "백업이 어디에 있나요?",
+    "restoredDescription_one": "항목 {{count}}개를 이 기기로 복원했습니다.",
+    "restoredDescription_other": "항목 {{count}}개를 이 기기로 복원했습니다.",
+    "restoredTitle": "복원 완료",
+    "restoring": "복원 중…",
+    "runNow": "지금 백업",
+    "runNowHint": "자동 백업이 실행되지 않았을 때 사용하세요",
+    "runsInBackground": "백그라운드에서 자동으로 실행되며 주로 야간에 진행됩니다",
+    "setUp": "데이터 백업하기",
+    "shareCode": "코드 공유 또는 저장",
+    "showCode": "복구 코드 보기",
+    "showCodeHint": "설정할 때 적어 둔 코드입니다",
+    "statusCadence": "일정: {{cadence}}",
+    "statusLast": "마지막 백업: {{when}}",
+    "statusNever": "저장된 백업이 아직 없습니다",
+    "statusProvider": "백업 위치: {{provider}}",
+    "statusStale": "마지막 백업이 {{days}}일 지났습니다. 새 사본을 저장하세요.",
+    "title": "백업",
+    "turnOff": "백업 끄기",
+    "turnOffAction": "끄기",
+    "turnOffConfirm": "백업이 중단되고 이 기기에서 복구 코드가 삭제됩니다. 이미 저장된 사본은 그대로 남으며, 다시 열려면 적어 둔 코드가 필요합니다.",
+    "turnOffHint": "백업을 중단하고 이 기기에서 코드를 지웁니다",
+    "whenTitle": "백업 주기",
+    "whereDescription": "어느 쪽을 선택해도 사본은 암호화됩니다. 여기서는 보관할 곳만 정합니다.",
+    "whereTitle": "보관 위치",
+    "wifiOnly": "Wi-Fi에서만",
+    "wifiOnlyOff": "사용 안 함. 예약된 백업이 모바일 데이터를 사용할 수 있습니다.",
+    "wifiOnlyOn": "사용 중. 예약된 백업은 Wi-Fi 연결을 기다립니다.",
+    "working": "작업 중…"
   }
 }

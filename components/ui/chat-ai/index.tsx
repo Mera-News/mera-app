@@ -30,6 +30,7 @@ import {
   View,
 } from 'react-native';
 import Markdown from 'react-native-markdown-display';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/typography/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
@@ -241,6 +242,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
   { onSubmit, placeholder, disabled = false },
   ref,
 ) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const inputRef = useRef<TextInput>(null);
 
@@ -300,7 +302,7 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
       <Button
         onPress={handleSend}
         isDisabled={isSendDisabled}
-        accessibilityLabel="Send"
+        accessibilityLabel={t('chat.send')}
         hitSlop={8}
         className="w-9 h-9 p-0 rounded-full bg-primary-400 data-[active=true]:bg-primary-300 data-[active=true]:scale-90"
       >

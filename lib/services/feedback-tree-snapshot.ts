@@ -349,20 +349,20 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
   likeRoot: [
     {
       id: 'more_about_topic',
-      labelKey: 'feedback.more_about_topic',
+      labelKey: 'feedbackTree.moreAboutTopic',
       labelDefault: 'More about this topic',
       icon: 'label',
       visibleIf: { has_matched_topics: true },
       children: [
         {
           id: 'a_lot_more',
-          labelKey: 'feedback.a_lot_more',
+          labelKey: 'feedbackTree.aLotMore',
           labelDefault: 'A lot more',
           leaf: { actions: [{ type: 'set_topic_weight', topics: 'from_selection', delta: 0.3 }] },
         },
         {
           id: 'a_bit_more',
-          labelKey: 'feedback.a_bit_more',
+          labelKey: 'feedbackTree.aBitMore',
           labelDefault: 'A bit more',
           leaf: { actions: [{ type: 'set_topic_weight', topics: 'from_selection', delta: 0.15 }] },
         },
@@ -370,14 +370,14 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
     },
     {
       id: 'more_from_publication',
-      labelKey: 'feedback.more_from_publication',
+      labelKey: 'feedbackTree.moreFromPublication',
       labelDefault: 'More from this publication',
       icon: 'newspaper',
       leaf: { actions: [{ type: 'set_publication_pref', value: 'boost' }] },
     },
     {
       id: 'more_news_from_place',
-      labelKey: 'feedback.more_news_from_place',
+      labelKey: 'feedbackTree.moreNewsFromPlace',
       labelDefault: 'More news from this place',
       icon: 'location-on',
       // No visibleIf: has_geo_mismatch is dislike-specific ("wrong place");
@@ -396,7 +396,7 @@ export const BUNDLED_FEEDBACK_TREE: FeedbackTree = {
     },
     {
       id: 'follow_story',
-      labelKey: 'feedback.follow_story',
+      labelKey: 'feedbackTree.followStory',
       labelDefault: 'Follow this story',
       icon: 'forum',
       leaf: { openChat: true },

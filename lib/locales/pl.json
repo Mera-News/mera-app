@@ -81,7 +81,9 @@
     "signIn": "Zaloguj się",
     "aboutLegal": "O Mera i informacje prawne",
     "sourceCode": "Kod źródłowy",
-    "website": "Strona internetowa"
+    "website": "Strona internetowa",
+    "failedToSendBody": "Nie udało się wysłać kodu OTP",
+    "signingYouIn": "Logujemy Cię…"
   },
   "account": {
     "pendingTitle": "Konto oczekuje na zatwierdzenie",
@@ -324,7 +326,10 @@
     "saveFailedTitle": "Zapis nieudany",
     "saveFailedDescription": "Nie udało się zapisać preferencji. Spróbuj ponownie.",
     "timeDescriptionOnboarding": "Wybierz, kiedy chcesz być na bieżąco z wiadomościami",
-    "timeNudge": "Wybierz czas, kiedy możesz czytać, myśleć i planować — raz lub dwa razy dziennie to wystarczająco."
+    "timeNudge": "Wybierz czas, kiedy możesz czytać, myśleć i planować — raz lub dwa razy dziennie to wystarczająco.",
+    "maxHoursReachedDescription": "Możesz wybrać maksymalnie {{count}} godz.",
+    "maxHoursReachedTitle": "Osiągnięto maksimum",
+    "selectedCount": "Wybrano: {{selected}}/{{max}}"
   },
   "language": {
     "title": "Język",
@@ -481,7 +486,9 @@
     "autoCommunityFactCheckTitle": "Automatyczne sprawdzenie społeczności",
     "autoCommunityFactCheckOn": "Sprawdzane przy każdym otwartym artykule",
     "autoCommunityFactCheckOff": "Sprawdzane tylko na żądanie",
-    "autoCommunityFactCheckDescription": "Sprawdzenia faktów są wspólne. Gdy ktoś poprosi o sprawdzenie materiału, wynik zostaje zapisany przy nim i każdy może go zobaczyć. Po włączeniu Mera szuka istniejącego sprawdzenia przy każdym otwartym artykule. Po wyłączeniu Mera szuka tylko wtedy, gdy dotkniesz przycisku sprawdzenia, więc pytanie pozostaje świadomym wyborem przy pojedynczym materiale."
+    "autoCommunityFactCheckDescription": "Sprawdzenia faktów są wspólne. Gdy ktoś poprosi o sprawdzenie materiału, wynik zostaje zapisany przy nim i każdy może go zobaczyć. Po włączeniu Mera szuka istniejącego sprawdzenia przy każdym otwartym artykule. Po wyłączeniu Mera szuka tylko wtedy, gdy dotkniesz przycisku sprawdzenia, więc pytanie pozostaje świadomym wyborem przy pojedynczym materiale.",
+    "loadFailedDescription": "Nie udało się wczytać ustawień Mera Protocol.",
+    "loadFailedTitle": "Nie udało się wczytać"
   },
   "manageData": {
     "deleting": "Usuwanie...",
@@ -639,11 +646,16 @@
         "title": "Usługa niedostępna"
       }
     },
-    "accountRestrictedContact": "Napisz do wsparcia"
+    "accountRestrictedContact": "Napisz do wsparcia",
+    "networkErrorBody": "Nie można się połączyć. Sprawdź połączenie z internetem.",
+    "networkErrorTitle": "Błąd sieci"
   },
   "download": {
     "modelDownloading": "Pobieranie modelu AI...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol jest gotowy do użycia.",
+    "completeTitle": "Pobieranie ukończone",
+    "failedTitle": "Pobieranie nie powiodło się"
   },
   "chat": {
     "startingChat": "Uruchamianie czatu...",
@@ -652,7 +664,30 @@
     "reloadingModel": "Ponowne ładowanie modelu AI... {{percent}}%",
     "waitingForResponse": "Oczekiwanie na odpowiedź...",
     "typeMessage": "Wpisz wiadomość...",
-    "inferenceError": "Mamy teraz problemy z dotarciem do usługi wnioskowania Mera. Spróbuj ponownie za chwilę."
+    "inferenceError": "Mamy teraz problemy z dotarciem do usługi wnioskowania Mera. Spróbuj ponownie za chwilę.",
+    "send": "Wyślij",
+    "streamingLabels": {
+      "adaptingFeed": "Dostosowywanie strumienia",
+      "analyzing": "Analizowanie",
+      "buildingProfile": "Budowanie profilu",
+      "calibrating": "Kalibrowanie",
+      "connectingDots": "Łączenie wątków",
+      "contextualizing": "Ustalanie kontekstu",
+      "detectingPatterns": "Wykrywanie wzorców",
+      "discoveringThemes": "Odkrywanie motywów",
+      "evaluatingSignals": "Ocenianie sygnałów",
+      "learningPreferences": "Poznawanie preferencji",
+      "mappingInterests": "Mapowanie zainteresowań",
+      "optimizing": "Optymalizowanie",
+      "personalizing": "Personalizowanie",
+      "processing": "Przetwarzanie",
+      "refiningTaste": "Doprecyzowanie gustu",
+      "synthesizing": "Synteza",
+      "tuningRelevance": "Strojenie trafności",
+      "understanding": "Rozumienie",
+      "updatingModel": "Aktualizowanie modelu",
+      "weighingTopics": "Ważenie tematów"
+    }
   },
   "personaChat": {
     "introMessage": "Cześć! Jestem Mera, Twój osobisty asystent wiadomości.\n\nAby znaleźć wiadomości, które Cię naprawdę dotyczą, muszę wiedzieć o Tobie trochę więcej. Gdzie mieszkasz, czym się zajmujesz, jakie masz hobby, które akcje śledzisz, gdzie mieszka Twoja rodzina. Możesz udostępnić tyle lub mało, ile chcesz.\n\nJeśli to Cię niepokoi, masz rację. Nie mądrze oddawać dane osobiste firmie, która tworzy aplikacje. Mera jest zbudowana inaczej: wszystko, co mi powiesz, jest zapisywane na Twoim urządzeniu, a nie na naszych serwerach. Zapytaj mnie, jak to działa, lub powiedz 'pomóż mi w konfiguracji' i zaczniemy."
@@ -1168,7 +1203,13 @@
     "tooCluttered": "Zaśmiecone / zbyt wiele reklam",
     "tooSlow": "Za wolno się ładuje",
     "wrongPlace": "Zła lokalizacja",
-    "wrongTopic": "Zły temat"
+    "wrongTopic": "Zły temat",
+    "aBitMore": "Trochę więcej",
+    "aLotMore": "Dużo więcej",
+    "followStory": "Obserwuj tę historię",
+    "moreAboutTopic": "Więcej o tym temacie",
+    "moreFromPublication": "Więcej z tego źródła",
+    "moreNewsFromPlace": "Więcej wiadomości z tego miejsca"
   },
   "topicPlan": {
     "title": "Tematy, które będę śledzić",
@@ -2351,5 +2392,98 @@
     "title": "Witamy ponownie w Mera",
     "body": "Wygląda na to, że Mera była już na tym urządzeniu, więc bezpłatny okres próbny został już wykorzystany. Możesz dalej czytać na nowym koncie lub w każdej chwili wybrać plan, aby korzystać z pełni możliwości.",
     "continue": "Dalej"
+  },
+  "videoPlayer": {
+    "closeA11y": "Zamknij film",
+    "openInBrowser": "Otwórz w przeglądarce",
+    "playbackError": "Nie można odtworzyć filmu."
+  },
+  "backup": {
+    "adoptDescription": "To kod, który zapisałeś, konfigurując kopię zapasową na swoim drugim urządzeniu. Wielkość liter, spacje i myślniki nie mają znaczenia.",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "Wpisz kod odzyskiwania",
+    "alreadyHave": "Mam już kopię zapasową",
+    "backgroundRestricted": "Odświeżanie w tle jest wyłączone, więc kopie zapasowe nie mogą działać samodzielnie. Użyj opcji Utwórz kopię teraz albo włącz odświeżanie w ustawieniach urządzenia.",
+    "cadence": {
+      "daily": "Codziennie",
+      "manual": "Tylko gdy dotknę",
+      "off": "Wyłączone",
+      "weekly": "Co tydzień"
+    },
+    "cadenceHint": {
+      "daily": "Mniej więcej raz dziennie, zwykle w nocy",
+      "manual": "Nic nie uruchamia się samo",
+      "weekly": "Mniej więcej raz w tygodniu, zwykle w nocy"
+    },
+    "changeSchedule": "Harmonogram kopii zapasowych",
+    "codeDescription": "Zapisz go i przechowuj w bezpiecznym miejscu. Tylko on może otworzyć Twoją kopię zapasową. Jeśli go zgubisz, nikt nie odzyska Twoich danych, nawet my.",
+    "codeSaved": "Mam zapisany kod odzyskiwania",
+    "codeTitle": "Twój kod odzyskiwania",
+    "codeWrong": "Sprawdź go jeszcze raz. Liczy się każdy znak, poza spacjami i wielkością liter.",
+    "codeWrongTitle": "Ten kod się nie zgadza",
+    "continue": "Dalej",
+    "doneDescription_few": "Zapisano {{count}} elementy.",
+    "doneDescription_many": "Zapisano {{count}} elementów.",
+    "doneDescription_one": "Zapisano {{count}} element.",
+    "doneDescription_other": "Zapisano {{count}} elementu.",
+    "doneTitle": "Kopia zapasowa ukończona",
+    "drive": "Google Drive",
+    "driveConnect": "Dotknij, aby połączyć konto Google",
+    "driveFailed": "Google nie mógł Cię zalogować. Spróbuj ponownie za chwilę.",
+    "driveFailedTitle": "Nie udało się połączyć z Google Drive",
+    "driveHiddenFolder": "W ukrytym magazynie aplikacji w Google Drive. Nie zobaczysz jej wśród swoich plików, tylko w ustawieniach Google Drive, w sekcji Zarządzaj aplikacjami.",
+    "driveMisconfigured": "Google Sign-In nie jest skonfigurowany dla tej wersji aplikacji.",
+    "drivePlayServices": "Do korzystania z Google Drive to urządzenie potrzebuje aktualnych usług Google Play.",
+    "driveReady": "Korzysta z Twojego miejsca w Google Drive",
+    "errorDescription": "Nie udało się. Sprawdź połączenie i spróbuj ponownie.",
+    "errorTitle": "Coś poszło nie tak",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "W prywatnym magazynie iCloud tej aplikacji, nie wśród Twoich plików iCloud Drive",
+    "icloudReady": "Korzysta z Twojego miejsca w iCloud",
+    "icloudUnavailable": "Zaloguj się do iCloud na tym urządzeniu, aby z tego korzystać",
+    "offDescription": "Zachowaj kopię swoich faktów, tematów, czatów, zapisanych artykułów i historii czytania, aby nowy telefon nie oznaczał zaczynania od zera. To opcjonalne i nic się nie dzieje, dopóki tego nie skonfigurujesz.",
+    "offPrivacy": "Kopia jest szyfrowana na tym urządzeniu, zanim gdziekolwiek trafi. Kto ją przechowuje, nie może jej odczytać, my też nie. Dlatego kod odzyskiwania, który zaraz otrzymasz, to jedyna droga powrotu.",
+    "onboardingIntro": "Jeśli używałeś już Mera, wpisz kod odzyskiwania, a przywrócimy Twoje fakty, tematy i ustawienia. Możesz to pominąć i zacząć od nowa.",
+    "onboardingSkip": "Pomiń, zaczynam od nowa",
+    "restartNeeded": "Twoje dane wróciły. Zamknij aplikację i otwórz ją ponownie, aby je zobaczyć.",
+    "restore": "Przywróć z kopii zapasowej",
+    "restoreConfirmAction": "Zastąp",
+    "restoreConfirmDescription": "Twoje fakty, tematy, czaty, zapisane artykuły i historia czytania na tym telefonie zostaną zastąpione zawartością kopii zapasowej. Nie można tego cofnąć. Twoje konto i subskrypcja pozostaną bez zmian.",
+    "restoreConfirmTitle": "Zastąpić dane na tym urządzeniu?",
+    "restoreEmpty": "Nie znaleziono tu żadnych kopii zapasowych. Jeśli wcześniej używałeś innego konta Google lub iCloud, zaloguj się na tamto konto.",
+    "restoreHint": "Zastępuje dane na tym urządzeniu",
+    "restoreLookHere": "Szukaj mojej kopii tutaj",
+    "restoreWhereDescription": "Wybierz, gdzie została zapisana. Zanim cokolwiek zostanie zastąpione, zobaczysz, co tam jest.",
+    "restoreWhereTitle": "Gdzie jest Twoja kopia zapasowa?",
+    "restoredDescription_few": "Przywrócono {{count}} elementy na to urządzenie.",
+    "restoredDescription_many": "Przywrócono {{count}} elementów na to urządzenie.",
+    "restoredDescription_one": "Przywrócono {{count}} element na to urządzenie.",
+    "restoredDescription_other": "Przywrócono {{count}} elementu na to urządzenie.",
+    "restoredTitle": "Przywracanie ukończone",
+    "restoring": "Przywracanie…",
+    "runNow": "Utwórz kopię teraz",
+    "runNowHint": "Użyj tego, jeśli automatyczna kopia zapasowa się nie wykonała",
+    "runsInBackground": "Działa samodzielnie w tle, zwykle w nocy",
+    "setUp": "Utwórz kopię zapasową danych",
+    "shareCode": "Udostępnij lub zapisz kod",
+    "showCode": "Pokaż kod odzyskiwania",
+    "showCodeHint": "Kod, który zapisałeś podczas konfiguracji",
+    "statusCadence": "Harmonogram: {{cadence}}",
+    "statusLast": "Ostatnia kopia zapasowa: {{when}}",
+    "statusNever": "Nie zapisano jeszcze żadnej kopii zapasowej",
+    "statusProvider": "Kopia zapasowa w {{provider}}",
+    "statusStale": "Twoja ostatnia kopia zapasowa ma {{days}} dni. Zapisz nową kopię.",
+    "title": "Kopia zapasowa",
+    "turnOff": "Wyłącz kopię zapasową",
+    "turnOffAction": "Wyłącz",
+    "turnOffConfirm": "Kopie zapasowe zostaną zatrzymane, a to urządzenie zapomni Twój kod odzyskiwania. Już zapisane kopie zostaną tam, gdzie są, a do ich otwarcia będzie potrzebny zapisany przez Ciebie kod.",
+    "turnOffHint": "Zatrzymuje kopie zapasowe i usuwa kod z tego urządzenia",
+    "whenTitle": "Jak często",
+    "whereDescription": "Kopia i tak jest zaszyfrowana. Tu decydujesz tylko, kto ją przechowuje.",
+    "whereTitle": "Gdzie przechowywać kopię",
+    "wifiOnly": "Tylko Wi-Fi",
+    "wifiOnlyOff": "Wyłączone. Zaplanowane kopie mogą używać danych mobilnych.",
+    "wifiOnlyOn": "Włączone. Zaplanowane kopie czekają na Wi-Fi.",
+    "working": "Przetwarzanie…"
   }
 }

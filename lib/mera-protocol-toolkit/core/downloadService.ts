@@ -3,6 +3,7 @@
 // Progress comes from RNFS native callbacks (no more polling)
 
 import * as Notifications from 'expo-notifications';
+import i18next from 'i18next';
 import logger from '../../logger';
 import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import type { BaseModelDownloadConfig } from '../types';
@@ -36,8 +37,8 @@ async function showCompletionNotification(): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       identifier: 'model-download-complete',
       content: {
-        title: 'Download Complete',
-        body: 'Mera Protocol is now ready for use.',
+        title: i18next.t('download.completeTitle'),
+        body: i18next.t('download.completeBody'),
         data: { type: 'model-download-complete' },
       },
       trigger: null,
@@ -52,7 +53,7 @@ async function showErrorNotification(message: string): Promise<void> {
     await Notifications.scheduleNotificationAsync({
       identifier: 'model-download-error',
       content: {
-        title: 'Download Failed',
+        title: i18next.t('download.failedTitle'),
         body: message,
         data: { type: 'model-download-error' },
       },

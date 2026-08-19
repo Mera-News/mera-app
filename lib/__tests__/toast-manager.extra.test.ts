@@ -47,6 +47,12 @@ jest.mock('react', () => ({
   ),
 }));
 
+jest.mock('i18next', () => ({
+  __esModule: true,
+  default: { t: (k: string) => k },
+  t: (k: string) => k,
+}));
+
 jest.mock('../logger', () => ({
   __esModule: true,
   default: {
@@ -105,7 +111,7 @@ describe('ToastManager render callback bodies', () => {
       toastManager.showNetworkError();
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-1' }) as any;
-      expect(bodyTextOf(result)).toContain('Unable to connect');
+      expect(bodyTextOf(result)).toContain('errors.networkErrorBody');
     });
 
     it('render function uses custom message when provided', () => {
@@ -133,7 +139,7 @@ describe('ToastManager render callback bodies', () => {
       toastManager.showNetworkError();
       const [opts] = toast.show.mock.calls[0];
       const result = opts.render({ id: 'toast-5' }) as any;
-      expect(titleTextOf(result)).toBe('Network Error');
+      expect(titleTextOf(result)).toBe('errors.networkErrorTitle');
     });
   });
 

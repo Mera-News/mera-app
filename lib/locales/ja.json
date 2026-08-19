@@ -81,7 +81,9 @@
     "signIn": "サインイン",
     "aboutLegal": "Meraについて・法的情報",
     "sourceCode": "ソースコード",
-    "website": "ウェブサイト"
+    "website": "ウェブサイト",
+    "failedToSendBody": "OTPを送信できませんでした",
+    "signingYouIn": "サインインしています…"
   },
   "account": {
     "pendingTitle": "アカウントの承認待ちです",
@@ -312,7 +314,10 @@
     "savedDescription": "通知設定が更新されました。",
     "saveFailedTitle": "保存に失敗しました",
     "saveFailedDescription": "設定の保存に失敗しました。もう一度お試しください。",
-    "timeNudge": "読んだり、考えたり、計画したりできるときを選んでください。1日1～2回で十分です。"
+    "timeNudge": "読んだり、考えたり、計画したりできるときを選んでください。1日1～2回で十分です。",
+    "maxHoursReachedDescription": "時間は最大{{count}}個まで選択できます",
+    "maxHoursReachedTitle": "上限に達しました",
+    "selectedCount": "選択中: {{selected}}/{{max}}"
   },
   "language": {
     "title": "言語",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "コミュニティのファクトチェックを自動取得",
     "autoCommunityFactCheckOn": "記事を開くたびに照会します",
     "autoCommunityFactCheckOff": "求めたときだけ照会します",
-    "autoCommunityFactCheckDescription": "ファクトチェックは共有されます。誰かが記事の確認を依頼すると、その結果は記事に紐づいて保存され、誰でも見られます。オンにすると、記事を開くたびに Mera が既存のチェックを探します。オフのままなら、ファクトチェックのボタンを押したときだけ探すので、依頼はあくまで記事ごとにご自身で選ぶ行為のままです。"
+    "autoCommunityFactCheckDescription": "ファクトチェックは共有されます。誰かが記事の確認を依頼すると、その結果は記事に紐づいて保存され、誰でも見られます。オンにすると、記事を開くたびに Mera が既存のチェックを探します。オフのままなら、ファクトチェックのボタンを押したときだけ探すので、依頼はあくまで記事ごとにご自身で選ぶ行為のままです。",
+    "loadFailedDescription": "Mera Protocol の設定を読み込めませんでした。",
+    "loadFailedTitle": "読み込みに失敗しました"
   },
   "manageData": {
     "deleting": "削除中...",
@@ -627,11 +634,16 @@
         "title": "サービスを利用できません"
       }
     },
-    "accountRestrictedContact": "サポートに問い合わせる"
+    "accountRestrictedContact": "サポートに問い合わせる",
+    "networkErrorBody": "接続できません。インターネット接続を確認してください。",
+    "networkErrorTitle": "ネットワークエラー"
   },
   "download": {
     "modelDownloading": "AIモデルをダウンロード中...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol を利用できるようになりました。",
+    "completeTitle": "ダウンロード完了",
+    "failedTitle": "ダウンロード失敗"
   },
   "chat": {
     "startingChat": "チャットを開始中...",
@@ -640,7 +652,30 @@
     "reloadingModel": "AIモデルを再読み込み中... {{percent}}%",
     "waitingForResponse": "応答を待っています...",
     "typeMessage": "メッセージを入力...",
-    "inferenceError": "現在Mera推論サービスへの接続に問題があります。しばらくしてからもう一度お試しください。"
+    "inferenceError": "現在Mera推論サービスへの接続に問題があります。しばらくしてからもう一度お試しください。",
+    "send": "送信",
+    "streamingLabels": {
+      "adaptingFeed": "フィードを調整中",
+      "analyzing": "分析中",
+      "buildingProfile": "プロフィール作成中",
+      "calibrating": "調整中",
+      "connectingDots": "関連付け中",
+      "contextualizing": "文脈を整理中",
+      "detectingPatterns": "パターンを検出中",
+      "discoveringThemes": "テーマを発見中",
+      "evaluatingSignals": "シグナルを評価中",
+      "learningPreferences": "好みを学習中",
+      "mappingInterests": "興味を整理中",
+      "optimizing": "最適化中",
+      "personalizing": "パーソナライズ中",
+      "processing": "処理中",
+      "refiningTaste": "好みを微調整中",
+      "synthesizing": "統合中",
+      "tuningRelevance": "関連度を調整中",
+      "understanding": "理解中",
+      "updatingModel": "モデルを更新中",
+      "weighingTopics": "トピックを重み付け中"
+    }
   },
   "personaChat": {
     "introMessage": "こんにちは！私はMera、あなたの個人ニュースアシスタントです。\n\nあなたにとって本当に重要なニュースを見つけるには、あなたのことを少し知る必要があります。どこに住んでいるか、何をしているか、どんな趣味があるか、どんな銘柄を追跡しているか、ご家族がどこに住んでいるか。できるだけ多くでもいいし、少なくてもいい、あなたのペースで。\n\nもし躊躇するなら、それは良い本能です。個人データをアプリ開発会社に託すのは得策ではありません。Meraは違う作りです。あなたが私に話すすべてはあなたのデバイスに保存され、サーバーには保存されません。どうやって動くかは聞いてください、または'セットアップを手伝ってください'と言ってもらえれば、始めましょう。"
@@ -1150,7 +1185,13 @@
     "tooCluttered": "雑然としている / 広告が多い",
     "tooSlow": "読み込みが遅い",
     "wrongPlace": "場所が間違っている",
-    "wrongTopic": "トピックが間違っている"
+    "wrongTopic": "トピックが間違っている",
+    "aBitMore": "少し多く",
+    "aLotMore": "かなり多く",
+    "followStory": "このストーリーをフォロー",
+    "moreAboutTopic": "このトピックをもっと",
+    "moreFromPublication": "このソースの記事をもっと",
+    "moreNewsFromPlace": "この地域のニュースをもっと"
   },
   "topicPlan": {
     "title": "追跡するトピック",
@@ -2319,5 +2360,94 @@
     "title": "Meraへおかえりなさい",
     "body": "このデバイスでは以前Meraが使われていたようで、無料トライアルはすでに利用済みです。新しいアカウントでこのまま閲覧を続けることも、いつでもプランを選んでフル機能を利用することもできます。",
     "continue": "続行"
+  },
+  "videoPlayer": {
+    "closeA11y": "動画を閉じる",
+    "openInBrowser": "ブラウザで開く",
+    "playbackError": "動画を再生できませんでした。"
+  },
+  "backup": {
+    "adoptDescription": "別のデバイスでバックアップを設定したときに書き留めたコードです。大文字・小文字、スペース、ハイフンは区別されません。",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "リカバリーコードを入力",
+    "alreadyHave": "すでにバックアップがあります",
+    "backgroundRestricted": "「Appのバックグラウンド更新」がオフのため、バックアップを自動で実行できません。「今すぐバックアップ」を使うか、デバイスの設定でオンにしてください。",
+    "cadence": {
+      "daily": "毎日",
+      "manual": "タップしたときのみ",
+      "off": "オフ",
+      "weekly": "毎週"
+    },
+    "cadenceHint": {
+      "daily": "1日に1回程度、通常は夜間に実行されます",
+      "manual": "自動では何も実行されません",
+      "weekly": "週に1回程度、通常は夜間に実行されます"
+    },
+    "changeSchedule": "バックアップのスケジュール",
+    "codeDescription": "書き留めて安全な場所に保管してください。バックアップを開けるのはこのコードだけです。紛失すると、私たちを含め誰もデータを復元できません。",
+    "codeSaved": "リカバリーコードを保存しました",
+    "codeTitle": "あなたのリカバリーコード",
+    "codeWrong": "もう一度確認してください。スペースと大文字・小文字以外は、すべての文字が重要です。",
+    "codeWrongTitle": "コードが正しくありません",
+    "continue": "続行",
+    "doneDescription_one": "{{count}}件の項目を保存しました。",
+    "doneDescription_other": "{{count}}件の項目を保存しました。",
+    "doneTitle": "バックアップ完了",
+    "drive": "Google Drive",
+    "driveConnect": "タップして Google アカウントを接続",
+    "driveFailed": "Google へのサインインに失敗しました。しばらくしてからもう一度お試しください。",
+    "driveFailedTitle": "Google Drive に接続できませんでした",
+    "driveHiddenFolder": "Drive の非表示のアプリ用ストレージに保管されます。ファイル一覧には表示されず、Drive の設定の「アプリを管理」でのみ確認できます。",
+    "driveMisconfigured": "このビルドのアプリでは Google ログインが設定されていません。",
+    "drivePlayServices": "Drive を使うには、このデバイスの Google Play 開発者サービスを最新の状態にする必要があります。",
+    "driveReady": "Google Drive のストレージを使用します",
+    "errorDescription": "うまくいきませんでした。接続を確認してもう一度お試しください。",
+    "errorTitle": "問題が発生しました",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "iCloud Drive のファイルではなく、このアプリ専用の iCloud ストレージに保管されます",
+    "icloudReady": "iCloud ストレージを使用します",
+    "icloudUnavailable": "利用するには、このデバイスで iCloud にサインインしてください",
+    "offDescription": "ファクト、トピック、チャット、保存した記事、閲覧履歴のコピーを保管して、新しいスマートフォンでも最初からやり直さずに済むようにします。これは任意で、設定するまで何も実行されません。",
+    "offPrivacy": "コピーはどこかへ送られる前に、このデバイス上で暗号化されます。保管する側も、私たちも中身を読むことはできません。だからこそ、次に表示されるリカバリーコードだけが元に戻る唯一の手段です。",
+    "onboardingIntro": "以前に Mera を使っていた場合は、リカバリーコードを入力してください。ファクト、トピック、設定を復元します。スキップして新しく始めることもできます。",
+    "onboardingSkip": "スキップして新しく始める",
+    "restartNeeded": "データが戻りました。アプリを閉じて開き直すと表示されます。",
+    "restore": "バックアップから復元",
+    "restoreConfirmAction": "置き換える",
+    "restoreConfirmDescription": "このスマートフォンのファクト、トピック、チャット、保存した記事、閲覧履歴が、バックアップの内容に置き換えられます。この操作は元に戻せません。アカウントとサブスクリプションには影響しません。",
+    "restoreConfirmTitle": "このデバイスのデータを置き換えますか？",
+    "restoreEmpty": "ここにはバックアップが見つかりませんでした。以前に別の Google アカウントや iCloud アカウントを使っていた場合は、そちらでサインインしてください。",
+    "restoreHint": "このデバイスのデータを置き換えます",
+    "restoreLookHere": "ここでバックアップを探す",
+    "restoreWhereDescription": "保存した場所を選んでください。置き換える前に、そこにある内容を確認できます。",
+    "restoreWhereTitle": "バックアップはどこにありますか？",
+    "restoredDescription_one": "{{count}}件の項目をこのデバイスに復元しました。",
+    "restoredDescription_other": "{{count}}件の項目をこのデバイスに復元しました。",
+    "restoredTitle": "復元完了",
+    "restoring": "復元中…",
+    "runNow": "今すぐバックアップ",
+    "runNowHint": "自動バックアップが実行されていない場合に使用します",
+    "runsInBackground": "バックグラウンドで自動的に実行されます。通常は夜間です。",
+    "setUp": "データをバックアップ",
+    "shareCode": "コードを共有または保存",
+    "showCode": "リカバリーコードを表示",
+    "showCodeHint": "設定時に書き留めたコードです",
+    "statusCadence": "スケジュール: {{cadence}}",
+    "statusLast": "前回のバックアップ: {{when}}",
+    "statusNever": "バックアップはまだありません",
+    "statusProvider": "バックアップ先: {{provider}}",
+    "statusStale": "前回のバックアップから{{days}}日経っています。新しいコピーを保存してください。",
+    "title": "バックアップ",
+    "turnOff": "バックアップをオフにする",
+    "turnOffAction": "オフにする",
+    "turnOffConfirm": "バックアップが停止し、このデバイスからリカバリーコードが消去されます。すでに保存したコピーはそのまま残り、再び開くには書き留めたコードが必要です。",
+    "turnOffHint": "バックアップを停止し、このデバイスからコードを消去します",
+    "whenTitle": "頻度",
+    "whereDescription": "どちらを選んでもコピーは暗号化されます。ここでは保管先を選ぶだけです。",
+    "whereTitle": "保管場所",
+    "wifiOnly": "Wi-Fi のみ",
+    "wifiOnlyOff": "オフ。スケジュールされたバックアップはモバイルデータ通信を使うことがあります。",
+    "wifiOnlyOn": "オン。スケジュールされたバックアップは Wi-Fi 接続を待ちます。",
+    "working": "処理中…"
   }
 }

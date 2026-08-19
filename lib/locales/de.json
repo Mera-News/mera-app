@@ -81,7 +81,9 @@
     "signIn": "Anmelden",
     "aboutLegal": "Über Mera & Rechtliches",
     "sourceCode": "Quellcode",
-    "website": "Website"
+    "website": "Website",
+    "failedToSendBody": "OTP konnte nicht gesendet werden",
+    "signingYouIn": "Du wirst angemeldet…"
   },
   "account": {
     "pendingTitle": "Konto wartet auf Freischaltung",
@@ -312,7 +314,10 @@
     "saveFailedTitle": "Speichern fehlgeschlagen",
     "saveFailedDescription": "Ihre Einstellungen konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
     "timeDescriptionOnboarding": "Wählen Sie, wann Sie sich über Ihre Nachrichten informieren möchten",
-    "timeNudge": "Wähle eine Zeit, in der du lesen, denken und planen kannst – ein- oder zweimal am Tag ist ausreichend."
+    "timeNudge": "Wähle eine Zeit, in der du lesen, denken und planen kannst – ein- oder zweimal am Tag ist ausreichend.",
+    "maxHoursReachedDescription": "Du kannst bis zu {{count}} Stunden auswählen",
+    "maxHoursReachedTitle": "Maximum erreicht",
+    "selectedCount": "Ausgewählt: {{selected}}/{{max}}"
   },
   "language": {
     "title": "Sprache",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "Automatischer Community-Faktencheck",
     "autoCommunityFactCheckOn": "Wird bei jedem geöffneten Artikel abgefragt",
     "autoCommunityFactCheckOff": "Wird nur auf Tippen abgefragt",
-    "autoCommunityFactCheckDescription": "Faktenchecks werden geteilt. Wenn eine Person einen Check für eine Meldung anfordert, wird das Ergebnis bei dieser Meldung gespeichert und alle können es sehen. Ist dies aktiviert, sucht Mera bei jedem geöffneten Artikel nach einem vorhandenen Check. Bleibt es aus, sucht Mera nur, wenn du auf die Faktencheck-Schaltfläche tippst, sodass das Nachfragen eine bewusste Entscheidung für eine einzelne Meldung bleibt."
+    "autoCommunityFactCheckDescription": "Faktenchecks werden geteilt. Wenn eine Person einen Check für eine Meldung anfordert, wird das Ergebnis bei dieser Meldung gespeichert und alle können es sehen. Ist dies aktiviert, sucht Mera bei jedem geöffneten Artikel nach einem vorhandenen Check. Bleibt es aus, sucht Mera nur, wenn du auf die Faktencheck-Schaltfläche tippst, sodass das Nachfragen eine bewusste Entscheidung für eine einzelne Meldung bleibt.",
+    "loadFailedDescription": "Die Mera Protocol-Einstellungen konnten nicht geladen werden.",
+    "loadFailedTitle": "Laden fehlgeschlagen"
   },
   "manageData": {
     "deleting": "Wird gelöscht...",
@@ -627,11 +634,16 @@
         "title": "Dienst nicht verfügbar"
       }
     },
-    "accountRestrictedContact": "Support kontaktieren"
+    "accountRestrictedContact": "Support kontaktieren",
+    "networkErrorBody": "Keine Verbindung möglich. Prüfe deine Internetverbindung.",
+    "networkErrorTitle": "Netzwerkfehler"
   },
   "download": {
     "modelDownloading": "KI-Modell wird heruntergeladen...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol ist jetzt einsatzbereit.",
+    "completeTitle": "Download abgeschlossen",
+    "failedTitle": "Download fehlgeschlagen"
   },
   "chat": {
     "startingChat": "Chat wird gestartet...",
@@ -640,7 +652,30 @@
     "reloadingModel": "KI-Modell wird neu geladen... {{percent}}%",
     "waitingForResponse": "Auf Antwort wird gewartet...",
     "typeMessage": "Nachricht eingeben...",
-    "inferenceError": "Der Mera-Inferenzdienst ist gerade nicht erreichbar. Bitte versuchen Sie es in einem Moment erneut."
+    "inferenceError": "Der Mera-Inferenzdienst ist gerade nicht erreichbar. Bitte versuchen Sie es in einem Moment erneut.",
+    "send": "Senden",
+    "streamingLabels": {
+      "adaptingFeed": "Feed anpassen",
+      "analyzing": "Analysieren",
+      "buildingProfile": "Profil aufbauen",
+      "calibrating": "Kalibrieren",
+      "connectingDots": "Zusammenhänge finden",
+      "contextualizing": "Einordnen",
+      "detectingPatterns": "Muster erkennen",
+      "discoveringThemes": "Themen entdecken",
+      "evaluatingSignals": "Signale auswerten",
+      "learningPreferences": "Vorlieben lernen",
+      "mappingInterests": "Interessen erfassen",
+      "optimizing": "Optimieren",
+      "personalizing": "Personalisieren",
+      "processing": "Verarbeiten",
+      "refiningTaste": "Geschmack verfeinern",
+      "synthesizing": "Zusammenführen",
+      "tuningRelevance": "Relevanz abstimmen",
+      "understanding": "Verstehen",
+      "updatingModel": "Modell aktualisieren",
+      "weighingTopics": "Themen gewichten"
+    }
   },
   "personaChat": {
     "introMessage": "Hallo! Ich bin Mera, Ihr persönlicher Nachrichten-Assistent.\n\nUm Nachrichten zu finden, die wirklich zählen, brauche ich ein wenig über Sie zu wissen. Wo Sie wohnen, was Sie beruflich machen, welchen Hobbys Sie nachgehen, welche Aktien Sie verfolgen, wo Ihre Familie lebt. Teilen Sie so viel oder so wenig mit, wie Sie möchten.\n\nWenn das Sie ins Grübeln bringt, gutes Gespür. Es ist nicht ratsam, persönliche Daten an eine App-Firma zu übergeben. Mera ist anders aufgebaut: Alles, das Sie mir erzählen, wird auf Ihrem Gerät gespeichert, nicht auf unseren Servern. Fragen Sie mich, wie das funktioniert, oder sagen Sie 'Hilf mir bei der Einrichtung' und wir können beginnen."
@@ -1150,7 +1185,13 @@
     "tooCluttered": "Unübersichtlich / zu viele Anzeigen",
     "tooSlow": "Lädt zu langsam",
     "wrongPlace": "Falscher Ort",
-    "wrongTopic": "Falsches Thema"
+    "wrongTopic": "Falsches Thema",
+    "aBitMore": "Etwas mehr",
+    "aLotMore": "Viel mehr",
+    "followStory": "Dieser Story folgen",
+    "moreAboutTopic": "Mehr zu diesem Thema",
+    "moreFromPublication": "Mehr von dieser Publikation",
+    "moreNewsFromPlace": "Mehr Nachrichten aus diesem Ort"
   },
   "topicPlan": {
     "title": "Themen, die ich verfolge",
@@ -2319,5 +2360,94 @@
     "title": "Willkommen zurück bei Mera",
     "body": "Mera war offenbar schon einmal auf diesem Gerät, daher wurde die kostenlose Testphase bereits genutzt. Du kannst mit deinem neuen Konto weiterlesen oder jederzeit einen Plan für das volle Erlebnis wählen.",
     "continue": "Weiter"
+  },
+  "videoPlayer": {
+    "closeA11y": "Video schließen",
+    "openInBrowser": "Im Browser öffnen",
+    "playbackError": "Das Video konnte nicht abgespielt werden."
+  },
+  "backup": {
+    "adoptDescription": "Das ist der Code, den du beim Einrichten des Backups auf deinem anderen Gerät notiert hast. Großbuchstaben, Leerzeichen und Bindestriche spielen keine Rolle.",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "Wiederherstellungscode eingeben",
+    "alreadyHave": "Ich habe schon ein Backup",
+    "backgroundRestricted": "Hintergrundaktualisierung ist aus, daher können Backups nicht von allein laufen. Nutze „Jetzt sichern“ oder aktiviere sie in den Geräteeinstellungen.",
+    "cadence": {
+      "daily": "Jeden Tag",
+      "manual": "Nur wenn ich tippe",
+      "off": "Aus",
+      "weekly": "Jede Woche"
+    },
+    "cadenceHint": {
+      "daily": "Etwa einmal am Tag, meist über Nacht",
+      "manual": "Nichts läuft von allein",
+      "weekly": "Etwa einmal pro Woche, meist über Nacht"
+    },
+    "changeSchedule": "Backup-Zeitplan",
+    "codeDescription": "Schreib ihn auf und bewahre ihn sicher auf. Er ist das Einzige, was dein Backup öffnen kann. Wenn du ihn verlierst, kann niemand deine Daten wiederherstellen, auch wir nicht.",
+    "codeSaved": "Ich habe meinen Wiederherstellungscode gespeichert",
+    "codeTitle": "Dein Wiederherstellungscode",
+    "codeWrong": "Prüfe ihn noch einmal. Jedes Zeichen zählt, nur Leerzeichen und Groß- und Kleinschreibung nicht.",
+    "codeWrongTitle": "Dieser Code stimmt nicht",
+    "continue": "Weiter",
+    "doneDescription_one": "{{count}} Element gespeichert.",
+    "doneDescription_other": "{{count}} Elemente gespeichert.",
+    "doneTitle": "Backup abgeschlossen",
+    "drive": "Google Drive",
+    "driveConnect": "Tippe, um dein Google-Konto zu verbinden",
+    "driveFailed": "Google konnte dich nicht anmelden. Versuch es gleich noch einmal.",
+    "driveFailedTitle": "Google Drive konnte nicht verbunden werden",
+    "driveHiddenFolder": "Im verborgenen App-Speicher von Drive. Du siehst es nicht bei deinen Dateien, sondern nur in den Drive-Einstellungen unter „Apps verwalten“.",
+    "driveMisconfigured": "Google Sign-In ist für diese Version der App nicht eingerichtet.",
+    "drivePlayServices": "Für Drive braucht dieses Gerät aktuelle Google Play-Dienste.",
+    "driveReady": "Nutzt deinen Google Drive-Speicher",
+    "errorDescription": "Das hat nicht geklappt. Prüfe deine Verbindung und versuche es noch einmal.",
+    "errorTitle": "Etwas ist schiefgelaufen",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "Im privaten iCloud-Speicher dieser App, nicht in deinen iCloud Drive-Dateien",
+    "icloudReady": "Nutzt deinen iCloud-Speicher",
+    "icloudUnavailable": "Melde dich auf diesem Gerät bei iCloud an, um das zu nutzen",
+    "offDescription": "Bewahre eine Kopie deiner Fakten, Themen, Chats, gespeicherten Artikel und deines Leseverlaufs auf, damit ein neues Telefon nicht bedeutet, von vorn anzufangen. Das ist optional, und nichts läuft, bevor du es einrichtest.",
+    "offPrivacy": "Die Kopie wird auf diesem Gerät verschlüsselt, bevor sie irgendwohin geht. Wer sie speichert, kann sie nicht lesen, und wir auch nicht. Deshalb ist der Wiederherstellungscode, den du als Nächstes bekommst, der einzige Weg zurück.",
+    "onboardingIntro": "Wenn du Mera schon einmal genutzt hast, gib deinen Wiederherstellungscode ein, und wir holen deine Fakten, Themen und Einstellungen zurück. Du kannst das überspringen und neu anfangen.",
+    "onboardingSkip": "Überspringen, ich bin neu hier",
+    "restartNeeded": "Deine Daten sind zurück. Schließe die App und öffne sie neu, um sie zu sehen.",
+    "restore": "Aus einem Backup wiederherstellen",
+    "restoreConfirmAction": "Ersetzen",
+    "restoreConfirmDescription": "Deine Fakten, Themen, Chats, gespeicherten Artikel und dein Leseverlauf auf diesem Telefon werden durch den Inhalt des Backups ersetzt. Das lässt sich nicht rückgängig machen. Dein Konto und dein Abo sind nicht betroffen.",
+    "restoreConfirmTitle": "Daten auf diesem Gerät ersetzen?",
+    "restoreEmpty": "Hier wurden keine Backups gefunden. Wenn du vorher ein anderes Google-Konto oder iCloud-Konto genutzt hast, melde dich stattdessen damit an.",
+    "restoreHint": "Ersetzt die Daten auf diesem Gerät",
+    "restoreLookHere": "Hier nach meinem Backup suchen",
+    "restoreWhereDescription": "Wähle aus, wo du es gespeichert hast. Du siehst, was dort liegt, bevor etwas ersetzt wird.",
+    "restoreWhereTitle": "Wo ist dein Backup?",
+    "restoredDescription_one": "{{count}} Element auf diesem Gerät wiederhergestellt.",
+    "restoredDescription_other": "{{count}} Elemente auf diesem Gerät wiederhergestellt.",
+    "restoredTitle": "Wiederherstellung abgeschlossen",
+    "restoring": "Wird wiederhergestellt…",
+    "runNow": "Jetzt sichern",
+    "runNowHint": "Nutze das, wenn das automatische Backup nicht gelaufen ist",
+    "runsInBackground": "Läuft von allein im Hintergrund, meist über Nacht",
+    "setUp": "Daten sichern",
+    "shareCode": "Code teilen oder speichern",
+    "showCode": "Wiederherstellungscode anzeigen",
+    "showCodeHint": "Der Code, den du beim Einrichten notiert hast",
+    "statusCadence": "Zeitplan: {{cadence}}",
+    "statusLast": "Letztes Backup {{when}}",
+    "statusNever": "Noch kein Backup gespeichert",
+    "statusProvider": "Backup in {{provider}}",
+    "statusStale": "Dein letztes Backup ist {{days}} Tage alt. Speichere eine neue Kopie.",
+    "title": "Backup",
+    "turnOff": "Backup deaktivieren",
+    "turnOffAction": "Deaktivieren",
+    "turnOffConfirm": "Backups werden gestoppt, und dieses Gerät vergisst deinen Wiederherstellungscode. Bereits gespeicherte Kopien bleiben, wo sie sind, und du brauchst den notierten Code, um sie wieder zu öffnen.",
+    "turnOffHint": "Stoppt Backups und vergisst den Code auf diesem Gerät",
+    "whenTitle": "Wie oft",
+    "whereDescription": "Die Kopie ist so oder so verschlüsselt. Hier entscheidest du nur, wer sie speichert.",
+    "whereTitle": "Wo die Kopie gespeichert wird",
+    "wifiOnly": "Nur Wi-Fi",
+    "wifiOnlyOff": "Aus. Geplante Backups können mobile Daten nutzen.",
+    "wifiOnlyOn": "An. Geplante Backups warten auf Wi-Fi.",
+    "working": "Wird ausgeführt…"
   }
 }

@@ -2,6 +2,7 @@ import { Box } from '@/components/ui/box';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     FlatList,
     NativeScrollEvent,
@@ -96,6 +97,7 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
     use24h = false,
     height,
 }) => {
+    const { t } = useTranslation();
     const toast = useToast();
     const listRef = useRef<FlatList<number>>(null);
     // The settled index value itself is unused; only the setter drives the
@@ -133,16 +135,16 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
                     placement: 'top',
                     render: () => (
                         <Toast action="error" variant="solid">
-                            <ToastTitle>Maximum Reached</ToastTitle>
+                            <ToastTitle>{t('notifications.maxHoursReachedTitle')}</ToastTitle>
                             <ToastDescription>
-                                You can select up to {maxHours} hours
+                                {t('notifications.maxHoursReachedDescription', { count: maxHours })}
                             </ToastDescription>
                         </Toast>
                     ),
                 });
             }
         },
-        [selectedHours, onHoursChange, maxHours, toast],
+        [selectedHours, onHoursChange, maxHours, toast, t],
     );
 
     useEffect(() => {
@@ -204,7 +206,10 @@ const NotificationHourWheel: React.FC<NotificationHourWheelProps> = ({
 
             {showCounter && (
                 <Text size="sm" className="text-center mt-2 text-typography-500">
-                    Selected: {selectedHours.length}/{maxHours}
+                    {t('notifications.selectedCount', {
+                        selected: selectedHours.length,
+                        max: maxHours,
+                    })}
                 </Text>
             )}
         </Box>

@@ -81,7 +81,9 @@
     "signIn": "Đăng nhập",
     "aboutLegal": "Về Mera và pháp lý",
     "sourceCode": "Mã nguồn",
-    "website": "Trang web"
+    "website": "Trang web",
+    "failedToSendBody": "Gửi mã OTP thất bại",
+    "signingYouIn": "Đang đăng nhập cho bạn…"
   },
   "account": {
     "pendingTitle": "Tài khoản đang chờ phê duyệt",
@@ -312,7 +314,10 @@
     "savedDescription": "Cài đặt thông báo của bạn đã được cập nhật.",
     "saveFailedTitle": "Lưu thất bại",
     "saveFailedDescription": "Không thể lưu tùy chọn của bạn. Vui lòng thử lại.",
-    "timeNudge": "Chọn một thời gian khi bạn có thể đọc, suy nghĩ và lên kế hoạch — một hoặc hai lần một ngày là đủ."
+    "timeNudge": "Chọn một thời gian khi bạn có thể đọc, suy nghĩ và lên kế hoạch — một hoặc hai lần một ngày là đủ.",
+    "maxHoursReachedDescription": "Bạn có thể chọn tối đa {{count}} giờ",
+    "maxHoursReachedTitle": "Đã đạt mức tối đa",
+    "selectedCount": "Đã chọn: {{selected}}/{{max}}"
   },
   "language": {
     "title": "Ngôn ngữ",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "Tự động kiểm chứng cộng đồng",
     "autoCommunityFactCheckOn": "Tra cứu mỗi khi bạn mở một bài",
     "autoCommunityFactCheckOff": "Chỉ tra cứu khi bạn yêu cầu",
-    "autoCommunityFactCheckDescription": "Các kiểm chứng được dùng chung. Khi một người yêu cầu kiểm chứng một tin, kết quả được lưu cùng tin đó và ai cũng xem được. Bật lên, Mera sẽ tìm kiểm chứng sẵn có mỗi lần bạn mở một bài. Để tắt, Mera chỉ tìm khi bạn chạm nút kiểm chứng, nên việc yêu cầu vẫn là điều bạn chủ động làm với từng tin."
+    "autoCommunityFactCheckDescription": "Các kiểm chứng được dùng chung. Khi một người yêu cầu kiểm chứng một tin, kết quả được lưu cùng tin đó và ai cũng xem được. Bật lên, Mera sẽ tìm kiểm chứng sẵn có mỗi lần bạn mở một bài. Để tắt, Mera chỉ tìm khi bạn chạm nút kiểm chứng, nên việc yêu cầu vẫn là điều bạn chủ động làm với từng tin.",
+    "loadFailedDescription": "Không thể tải cài đặt Mera Protocol.",
+    "loadFailedTitle": "Tải thất bại"
   },
   "manageData": {
     "deleting": "Đang xóa...",
@@ -627,11 +634,16 @@
         "title": "Dịch vụ không khả dụng"
       }
     },
-    "accountRestrictedContact": "Liên hệ hỗ trợ"
+    "accountRestrictedContact": "Liên hệ hỗ trợ",
+    "networkErrorBody": "Không thể kết nối. Vui lòng kiểm tra kết nối Internet của bạn.",
+    "networkErrorTitle": "Lỗi mạng"
   },
   "download": {
     "modelDownloading": "Đang tải AI Model...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol đã sẵn sàng để sử dụng.",
+    "completeTitle": "Tải xuống hoàn tất",
+    "failedTitle": "Tải xuống thất bại"
   },
   "chat": {
     "startingChat": "Đang bắt đầu trò chuyện...",
@@ -640,7 +652,30 @@
     "reloadingModel": "Đang tải lại AI Model... {{percent}}%",
     "waitingForResponse": "Đang chờ phản hồi...",
     "typeMessage": "Nhập tin nhắn...",
-    "inferenceError": "Chúng tôi đang gặp sự cố khi kết nối đến dịch vụ suy luận Mera. Vui lòng thử lại sau ít phút."
+    "inferenceError": "Chúng tôi đang gặp sự cố khi kết nối đến dịch vụ suy luận Mera. Vui lòng thử lại sau ít phút.",
+    "send": "Gửi",
+    "streamingLabels": {
+      "adaptingFeed": "Đang điều chỉnh bảng tin",
+      "analyzing": "Đang phân tích",
+      "buildingProfile": "Đang xây dựng hồ sơ",
+      "calibrating": "Đang hiệu chỉnh",
+      "connectingDots": "Đang kết nối dữ kiện",
+      "contextualizing": "Đang đặt bối cảnh",
+      "detectingPatterns": "Đang phát hiện quy luật",
+      "discoveringThemes": "Đang khám phá chủ điểm",
+      "evaluatingSignals": "Đang đánh giá tín hiệu",
+      "learningPreferences": "Đang học sở thích",
+      "mappingInterests": "Đang xác định mối quan tâm",
+      "optimizing": "Đang tối ưu hóa",
+      "personalizing": "Đang cá nhân hóa",
+      "processing": "Đang xử lý",
+      "refiningTaste": "Đang tinh chỉnh gu đọc",
+      "synthesizing": "Đang tổng hợp",
+      "tuningRelevance": "Đang tinh chỉnh mức liên quan",
+      "understanding": "Đang tìm hiểu",
+      "updatingModel": "Đang cập nhật mô hình",
+      "weighingTopics": "Đang cân nhắc chủ đề"
+    }
   },
   "personaChat": {
     "introMessage": "Xin chào! Mình là Mera, trợ lý tin tức cá nhân của bạn.\n\nĐể tìm những tin tức thực sự quan trọng với bạn, mình cần biết một chút về bạn. Bạn sống ở đâu, làm nghề gì, những sở thích nào, theo dõi những cổ phiếu nào, gia đình sống ở đâu. Chia sẻ bao nhiêu hay bao ít tùy bạn.\n\nNếu điều này khiến bạn do dự, đó là bản năng tốt. Không nên trao dữ liệu cá nhân cho một công ty làm ứng dụng. Mera được xây dựng khác: mọi thứ bạn kể cho mình đều được lưu trên thiết bị của bạn, không phải trên máy chủ của chúng mình. Hỏi mình cách nó hoạt động, hoặc nói 'giúp mình thiết lập' và chúng ta sẽ bắt đầu."
@@ -1151,7 +1186,13 @@
     "tooCluttered": "Lộn xộn / quá nhiều quảng cáo",
     "tooSlow": "Tải quá chậm",
     "wrongPlace": "Sai địa điểm",
-    "wrongTopic": "Chủ đề sai"
+    "wrongTopic": "Chủ đề sai",
+    "aBitMore": "Nhiều hơn một chút",
+    "aLotMore": "Nhiều hơn hẳn",
+    "followStory": "Theo dõi câu chuyện này",
+    "moreAboutTopic": "Thêm về chủ đề này",
+    "moreFromPublication": "Thêm từ nguồn báo này",
+    "moreNewsFromPlace": "Thêm tin tức từ nơi này"
   },
   "topicPlan": {
     "title": "Chủ đề mình sẽ theo dõi",
@@ -2320,5 +2361,94 @@
     "title": "Chào mừng bạn quay lại Mera",
     "body": "Có vẻ Mera đã từng được cài trên thiết bị này, nên bản dùng thử miễn phí đã được sử dụng. Bạn vẫn có thể tiếp tục đọc với tài khoản mới, hoặc chọn một gói bất cứ lúc nào để có trải nghiệm đầy đủ.",
     "continue": "Tiếp tục"
+  },
+  "videoPlayer": {
+    "closeA11y": "Đóng video",
+    "openInBrowser": "Mở trong trình duyệt",
+    "playbackError": "Không phát được video."
+  },
+  "backup": {
+    "adoptDescription": "Đây là mã bạn đã ghi lại khi thiết lập sao lưu trên thiết bị kia. Chữ hoa, dấu cách và dấu gạch ngang không quan trọng.",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "Nhập mã khôi phục của bạn",
+    "alreadyHave": "Tôi đã có bản sao lưu",
+    "backgroundRestricted": "Làm mới ứng dụng trong nền đang tắt, nên sao lưu không thể tự chạy. Dùng Sao lưu ngay, hoặc bật tính năng này trong cài đặt thiết bị.",
+    "cadence": {
+      "daily": "Hằng ngày",
+      "manual": "Chỉ khi tôi nhấn",
+      "off": "Tắt",
+      "weekly": "Hằng tuần"
+    },
+    "cadenceHint": {
+      "daily": "Khoảng một lần mỗi ngày, thường vào ban đêm",
+      "manual": "Không có gì tự chạy",
+      "weekly": "Khoảng một lần mỗi tuần, thường vào ban đêm"
+    },
+    "changeSchedule": "Lịch sao lưu",
+    "codeDescription": "Ghi lại mã này và cất ở nơi an toàn. Đây là thứ duy nhất có thể mở bản sao lưu của bạn. Nếu làm mất, không ai có thể khôi phục dữ liệu của bạn, kể cả chúng tôi.",
+    "codeSaved": "Tôi đã lưu mã khôi phục",
+    "codeTitle": "Mã khôi phục của bạn",
+    "codeWrong": "Kiểm tra lại. Mọi ký tự đều quan trọng, trừ dấu cách và chữ hoa.",
+    "codeWrongTitle": "Mã này không đúng",
+    "continue": "Tiếp tục",
+    "doneDescription_one": "Đã lưu {{count}} mục.",
+    "doneDescription_other": "Đã lưu {{count}} mục.",
+    "doneTitle": "Sao lưu hoàn tất",
+    "drive": "Google Drive",
+    "driveConnect": "Nhấn để kết nối tài khoản Google của bạn",
+    "driveFailed": "Google không đăng nhập được cho bạn. Thử lại sau giây lát.",
+    "driveFailedTitle": "Không thể kết nối Google Drive",
+    "driveHiddenFolder": "Trong kho lưu trữ ứng dụng ẩn của Drive. Bạn sẽ không thấy nó trong các tệp của mình, chỉ thấy trong phần cài đặt Drive, mục Quản lý ứng dụng.",
+    "driveMisconfigured": "Google Sign-In chưa được thiết lập cho bản dựng này của ứng dụng.",
+    "drivePlayServices": "Thiết bị này cần Google Play services phiên bản mới để dùng Drive.",
+    "driveReady": "Dùng bộ nhớ Google Drive của bạn",
+    "errorDescription": "Thao tác không thành công. Kiểm tra kết nối và thử lại.",
+    "errorTitle": "Đã xảy ra lỗi",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "Trong kho lưu trữ iCloud riêng của ứng dụng này, không nằm trong các tệp iCloud Drive của bạn",
+    "icloudReady": "Dùng bộ nhớ iCloud của bạn",
+    "icloudUnavailable": "Đăng nhập iCloud trên thiết bị này để dùng tùy chọn này",
+    "offDescription": "Giữ một bản sao các dữ kiện, chủ đề, cuộc trò chuyện, bài viết đã lưu và lịch sử đọc của bạn, để khi đổi điện thoại mới bạn không phải bắt đầu lại từ đầu. Tính năng này là tùy chọn và sẽ không có gì chạy cho đến khi bạn thiết lập.",
+    "offPrivacy": "Bản sao được mã hóa ngay trên thiết bị này trước khi gửi đi bất cứ đâu. Bên lưu trữ không đọc được, và chúng tôi cũng vậy. Vì thế mã khôi phục bạn nhận được ở bước tiếp theo là cách duy nhất để truy cập lại.",
+    "onboardingIntro": "Nếu bạn từng dùng Mera, hãy nhập mã khôi phục và chúng tôi sẽ đưa các dữ kiện, chủ đề và cài đặt của bạn trở lại. Bạn có thể bỏ qua và bắt đầu mới.",
+    "onboardingSkip": "Bỏ qua, tôi là người mới",
+    "restartNeeded": "Dữ liệu của bạn đã trở lại. Đóng và mở lại ứng dụng để xem.",
+    "restore": "Khôi phục từ bản sao lưu",
+    "restoreConfirmAction": "Thay thế",
+    "restoreConfirmDescription": "Các dữ kiện, chủ đề, cuộc trò chuyện, bài viết đã lưu và lịch sử đọc trên điện thoại này sẽ được thay bằng nội dung trong bản sao lưu. Không thể hoàn tác. Tài khoản và gói đăng ký của bạn không bị ảnh hưởng.",
+    "restoreConfirmTitle": "Thay thế dữ liệu trên thiết bị này?",
+    "restoreEmpty": "Không tìm thấy bản sao lưu nào ở đây. Nếu trước đây bạn dùng tài khoản Google hoặc tài khoản iCloud khác, hãy đăng nhập bằng tài khoản đó.",
+    "restoreHint": "Thay thế dữ liệu trên thiết bị này",
+    "restoreLookHere": "Tìm bản sao lưu của tôi ở đây",
+    "restoreWhereDescription": "Chọn nơi bạn đã lưu. Bạn sẽ thấy nội dung ở đó trước khi bất cứ thứ gì bị thay thế.",
+    "restoreWhereTitle": "Bản sao lưu của bạn ở đâu?",
+    "restoredDescription_one": "Đã khôi phục {{count}} mục về thiết bị này.",
+    "restoredDescription_other": "Đã khôi phục {{count}} mục về thiết bị này.",
+    "restoredTitle": "Khôi phục hoàn tất",
+    "restoring": "Đang khôi phục…",
+    "runNow": "Sao lưu ngay",
+    "runNowHint": "Dùng khi sao lưu tự động chưa chạy",
+    "runsInBackground": "Tự chạy trong nền, thường vào ban đêm",
+    "setUp": "Sao lưu dữ liệu của bạn",
+    "shareCode": "Chia sẻ hoặc lưu mã",
+    "showCode": "Hiện mã khôi phục",
+    "showCodeHint": "Mã bạn đã ghi lại khi thiết lập",
+    "statusCadence": "Lịch: {{cadence}}",
+    "statusLast": "Sao lưu gần nhất {{when}}",
+    "statusNever": "Chưa có bản sao lưu nào",
+    "statusProvider": "Đang sao lưu vào {{provider}}",
+    "statusStale": "Bản sao lưu gần nhất của bạn đã {{days}} ngày. Hãy lưu bản mới.",
+    "title": "Sao lưu",
+    "turnOff": "Tắt sao lưu",
+    "turnOffAction": "Tắt",
+    "turnOffConfirm": "Sao lưu sẽ dừng và thiết bị này sẽ quên mã khôi phục của bạn. Các bản sao đã lưu vẫn còn nguyên, và bạn sẽ cần mã đã ghi lại để mở chúng lần sau.",
+    "turnOffHint": "Dừng sao lưu và quên mã trên thiết bị này",
+    "whenTitle": "Tần suất",
+    "whereDescription": "Bản sao đều được mã hóa dù chọn cách nào. Lựa chọn này chỉ quyết định ai là bên lưu trữ.",
+    "whereTitle": "Lưu ở đâu",
+    "wifiOnly": "Chỉ dùng Wi-Fi",
+    "wifiOnlyOff": "Tắt. Các bản sao lưu theo lịch có thể dùng dữ liệu di động.",
+    "wifiOnlyOn": "Bật. Các bản sao lưu theo lịch sẽ chờ Wi-Fi.",
+    "working": "Đang xử lý…"
   }
 }

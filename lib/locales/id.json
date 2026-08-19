@@ -81,7 +81,9 @@
     "signIn": "Masuk",
     "aboutLegal": "Tentang Mera & legal",
     "sourceCode": "Kode sumber",
-    "website": "Situs web"
+    "website": "Situs web",
+    "failedToSendBody": "Gagal mengirim kode OTP",
+    "signingYouIn": "Sedang masuk…"
   },
   "account": {
     "pendingTitle": "Akun Menunggu Persetujuan",
@@ -312,7 +314,10 @@
     "saveFailedTitle": "Gagal Menyimpan",
     "saveFailedDescription": "Gagal menyimpan preferensi Anda. Silakan coba lagi.",
     "timeDescriptionOnboarding": "Pilih kapan Anda ingin mengejar ketinggalan berita Anda",
-    "timeNudge": "Pilih waktu ketika Anda dapat membaca, berpikir, dan merencanakan — sekali atau dua kali sehari sudah cukup."
+    "timeNudge": "Pilih waktu ketika Anda dapat membaca, berpikir, dan merencanakan — sekali atau dua kali sehari sudah cukup.",
+    "maxHoursReachedDescription": "Anda dapat memilih hingga {{count}} jam",
+    "maxHoursReachedTitle": "Maksimum Tercapai",
+    "selectedCount": "Dipilih: {{selected}}/{{max}}"
   },
   "language": {
     "title": "Bahasa",
@@ -469,7 +474,9 @@
     "autoCommunityFactCheckTitle": "Cek fakta komunitas otomatis",
     "autoCommunityFactCheckOn": "Dicari di setiap artikel yang Anda buka",
     "autoCommunityFactCheckOff": "Dicari hanya saat Anda meminta",
-    "autoCommunityFactCheckDescription": "Cek fakta bersifat bersama. Saat seseorang meminta sebuah berita diperiksa, hasilnya disimpan bersama berita itu dan siapa pun bisa melihatnya. Jika dinyalakan, Mera mencari cek yang sudah ada setiap kali Anda membuka artikel. Jika dibiarkan mati, Mera hanya mencari ketika Anda mengetuk tombol cek fakta, sehingga meminta tetap menjadi pilihan Anda pada satu berita."
+    "autoCommunityFactCheckDescription": "Cek fakta bersifat bersama. Saat seseorang meminta sebuah berita diperiksa, hasilnya disimpan bersama berita itu dan siapa pun bisa melihatnya. Jika dinyalakan, Mera mencari cek yang sudah ada setiap kali Anda membuka artikel. Jika dibiarkan mati, Mera hanya mencari ketika Anda mengetuk tombol cek fakta, sehingga meminta tetap menjadi pilihan Anda pada satu berita.",
+    "loadFailedDescription": "Gagal memuat pengaturan Mera Protocol.",
+    "loadFailedTitle": "Gagal Memuat"
   },
   "manageData": {
     "deleting": "Menghapus...",
@@ -627,11 +634,16 @@
         "title": "Layanan tidak tersedia"
       }
     },
-    "accountRestrictedContact": "Hubungi dukungan"
+    "accountRestrictedContact": "Hubungi dukungan",
+    "networkErrorBody": "Tidak dapat terhubung. Periksa koneksi internet Anda.",
+    "networkErrorTitle": "Kesalahan Jaringan"
   },
   "download": {
     "modelDownloading": "Mengunduh AI model...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol siap digunakan.",
+    "completeTitle": "Unduhan Selesai",
+    "failedTitle": "Unduhan Gagal"
   },
   "chat": {
     "startingChat": "Memulai obrolan...",
@@ -640,7 +652,30 @@
     "reloadingModel": "Memuat ulang AI model... {{percent}}%",
     "waitingForResponse": "Menunggu respons...",
     "typeMessage": "Ketik pesan...",
-    "inferenceError": "Kami mengalami masalah dalam menjangkau layanan inferensi Mera saat ini. Silakan coba lagi sesaat lagi."
+    "inferenceError": "Kami mengalami masalah dalam menjangkau layanan inferensi Mera saat ini. Silakan coba lagi sesaat lagi.",
+    "send": "Kirim",
+    "streamingLabels": {
+      "adaptingFeed": "Menyesuaikan umpan",
+      "analyzing": "Menganalisis",
+      "buildingProfile": "Membangun profil",
+      "calibrating": "Mengkalibrasi",
+      "connectingDots": "Menghubungkan titik",
+      "contextualizing": "Menyusun konteks",
+      "detectingPatterns": "Mendeteksi pola",
+      "discoveringThemes": "Menemukan tema",
+      "evaluatingSignals": "Mengevaluasi sinyal",
+      "learningPreferences": "Mempelajari preferensi",
+      "mappingInterests": "Memetakan minat",
+      "optimizing": "Mengoptimalkan",
+      "personalizing": "Mempersonalisasi",
+      "processing": "Memproses",
+      "refiningTaste": "Menajamkan selera",
+      "synthesizing": "Merangkum",
+      "tuningRelevance": "Menyetel relevansi",
+      "understanding": "Memahami",
+      "updatingModel": "Memperbarui model",
+      "weighingTopics": "Menimbang topik"
+    }
   },
   "personaChat": {
     "introMessage": "Hai! Aku Mera, asisten berita pribadimu.\n\nUntuk mencari berita yang benar-benar penting bagi kamu, aku perlu tahu sedikit tentang dirimu. Di mana kamu tinggal, apa pekerjaan kamu, hobi yang kamu ikuti, saham yang kamu pantau, di mana keluargamu tinggal. Ceritakan sebanyak atau sesedikit yang kamu mau.\n\nJika ini membuatmu ragu-ragu, itu adalah naluri yang baik. Tidak bijak memberikan data pribadi kepada perusahaan pengembang aplikasi. Mera dibangun berbeda: semua yang kamu ceritakan kepada aku disimpan di perangkatmu, bukan di server kami. Tanya padaku cara kerjanya, atau bilang 'bantu aku menyiapkannya' dan kita akan mulai."
@@ -1150,7 +1185,13 @@
     "tooCluttered": "Berantakan / terlalu banyak iklan",
     "tooSlow": "Terlalu lambat untuk dimuat",
     "wrongPlace": "Tempat yang salah",
-    "wrongTopic": "Topik yang salah"
+    "wrongTopic": "Topik yang salah",
+    "aBitMore": "Sedikit lebih banyak",
+    "aLotMore": "Jauh lebih banyak",
+    "followStory": "Ikuti cerita ini",
+    "moreAboutTopic": "Lebih lanjut tentang topik ini",
+    "moreFromPublication": "Lebih banyak dari publikasi ini",
+    "moreNewsFromPlace": "Lebih banyak berita dari tempat ini"
   },
   "topicPlan": {
     "title": "Topik yang akan saya lacak",
@@ -2319,5 +2360,94 @@
     "title": "Selamat datang kembali di Mera",
     "body": "Sepertinya Mera pernah ada di perangkat ini, jadi uji coba gratisnya sudah terpakai. Anda tetap bisa membaca dengan akun baru, atau memilih paket kapan saja untuk pengalaman lengkap.",
     "continue": "Lanjutkan"
+  },
+  "videoPlayer": {
+    "closeA11y": "Tutup video",
+    "openInBrowser": "Buka di browser",
+    "playbackError": "Tidak dapat memutar video."
+  },
+  "backup": {
+    "adoptDescription": "Ini kode yang Anda catat saat menyiapkan pencadangan di perangkat Anda yang lain. Huruf besar, spasi, dan tanda hubung tidak berpengaruh.",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "Masukkan kode pemulihan Anda",
+    "alreadyHave": "Saya sudah punya cadangan",
+    "backgroundRestricted": "Penyegaran App Latar Belakang nonaktif, sehingga pencadangan tidak dapat berjalan sendiri. Gunakan Cadangkan sekarang, atau aktifkan di pengaturan perangkat Anda.",
+    "cadence": {
+      "daily": "Setiap hari",
+      "manual": "Hanya saat saya ketuk",
+      "off": "Nonaktif",
+      "weekly": "Setiap minggu"
+    },
+    "cadenceHint": {
+      "daily": "Sekitar sekali sehari, biasanya saat malam",
+      "manual": "Tidak ada yang berjalan sendiri",
+      "weekly": "Sekitar sekali seminggu, biasanya saat malam"
+    },
+    "changeSchedule": "Jadwal pencadangan",
+    "codeDescription": "Catat kode ini dan simpan di tempat yang aman. Hanya kode ini yang dapat membuka cadangan Anda. Jika hilang, tidak ada yang dapat memulihkan data Anda, termasuk kami.",
+    "codeSaved": "Saya sudah menyimpan kode pemulihan",
+    "codeTitle": "Kode pemulihan Anda",
+    "codeWrong": "Periksa lagi. Setiap karakter penting, kecuali spasi dan huruf besar.",
+    "codeWrongTitle": "Kode tidak cocok",
+    "continue": "Lanjutkan",
+    "doneDescription_one": "{{count}} item disimpan.",
+    "doneDescription_other": "{{count}} item disimpan.",
+    "doneTitle": "Pencadangan selesai",
+    "drive": "Google Drive",
+    "driveConnect": "Ketuk untuk menghubungkan akun Google Anda",
+    "driveFailed": "Proses masuk dengan Google gagal. Coba lagi sebentar lagi.",
+    "driveFailedTitle": "Tidak dapat menghubungkan Google Drive",
+    "driveHiddenFolder": "Di penyimpanan aplikasi tersembunyi milik Drive. Anda tidak akan melihatnya di antara file Anda, hanya di setelan Drive, bagian Kelola aplikasi.",
+    "driveMisconfigured": "Login dengan Google belum disiapkan untuk build aplikasi ini.",
+    "drivePlayServices": "Perangkat ini memerlukan layanan Google Play versi terbaru untuk menggunakan Drive.",
+    "driveReady": "Menggunakan penyimpanan Google Drive Anda",
+    "errorDescription": "Tidak berhasil. Periksa koneksi Anda dan coba lagi.",
+    "errorTitle": "Terjadi kesalahan",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "Di penyimpanan iCloud pribadi milik aplikasi ini, bukan di file iCloud Drive Anda",
+    "icloudReady": "Menggunakan penyimpanan iCloud Anda",
+    "icloudUnavailable": "Masuk ke iCloud di perangkat ini untuk menggunakannya",
+    "offDescription": "Simpan salinan fakta, topik, chat, artikel tersimpan, dan riwayat baca Anda, sehingga ponsel baru tidak berarti mulai dari awal. Ini opsional dan tidak ada yang berjalan sampai Anda menyiapkannya.",
+    "offPrivacy": "Salinan dienkripsi di perangkat ini sebelum dikirim ke mana pun. Pihak yang menyimpannya tidak dapat membacanya, begitu juga kami. Karena itulah kode pemulihan yang Anda dapatkan berikutnya adalah satu-satunya cara untuk membukanya kembali.",
+    "onboardingIntro": "Jika Anda pernah menggunakan Mera sebelumnya, masukkan kode pemulihan Anda dan kami akan mengembalikan fakta, topik, dan pengaturan Anda. Anda bisa melewati ini dan mulai dari awal.",
+    "onboardingSkip": "Lewati, saya baru di sini",
+    "restartNeeded": "Data Anda sudah kembali. Tutup dan buka kembali aplikasi untuk melihatnya.",
+    "restore": "Pulihkan dari cadangan",
+    "restoreConfirmAction": "Ganti",
+    "restoreConfirmDescription": "Fakta, topik, chat, artikel tersimpan, dan riwayat baca Anda di ponsel ini akan diganti dengan isi cadangan. Tindakan ini tidak dapat dibatalkan. Akun dan langganan Anda tidak terpengaruh.",
+    "restoreConfirmTitle": "Ganti data di perangkat ini?",
+    "restoreEmpty": "Tidak ada cadangan ditemukan di sini. Jika sebelumnya Anda memakai akun Google atau akun iCloud yang berbeda, masuk dengan akun itu.",
+    "restoreHint": "Mengganti data di perangkat ini",
+    "restoreLookHere": "Cari cadangan saya di sini",
+    "restoreWhereDescription": "Pilih tempat Anda menyimpannya. Anda akan melihat isinya sebelum ada yang diganti.",
+    "restoreWhereTitle": "Di mana cadangan Anda?",
+    "restoredDescription_one": "{{count}} item dipulihkan ke perangkat ini.",
+    "restoredDescription_other": "{{count}} item dipulihkan ke perangkat ini.",
+    "restoredTitle": "Pemulihan selesai",
+    "restoring": "Memulihkan…",
+    "runNow": "Cadangkan sekarang",
+    "runNowHint": "Gunakan ini jika pencadangan otomatis belum berjalan",
+    "runsInBackground": "Berjalan sendiri di latar belakang, biasanya saat malam",
+    "setUp": "Cadangkan data Anda",
+    "shareCode": "Bagikan atau simpan kode",
+    "showCode": "Tampilkan kode pemulihan",
+    "showCodeHint": "Kode yang Anda catat saat menyiapkan ini",
+    "statusCadence": "Jadwal: {{cadence}}",
+    "statusLast": "Cadangan terakhir {{when}}",
+    "statusNever": "Belum ada cadangan tersimpan",
+    "statusProvider": "Mencadangkan ke {{provider}}",
+    "statusStale": "Cadangan terakhir Anda sudah {{days}} hari. Simpan salinan baru.",
+    "title": "Pencadangan",
+    "turnOff": "Nonaktifkan pencadangan",
+    "turnOffAction": "Nonaktifkan",
+    "turnOffConfirm": "Pencadangan berhenti dan perangkat ini tidak lagi menyimpan kode pemulihan Anda. Salinan yang sudah tersimpan tetap di tempatnya, dan Anda akan memerlukan kode yang Anda catat untuk membukanya lagi.",
+    "turnOffHint": "Menghentikan pencadangan dan menghapus kode dari perangkat ini",
+    "whenTitle": "Seberapa sering",
+    "whereDescription": "Salinan tetap dienkripsi apa pun pilihannya. Ini hanya menentukan siapa yang menyimpannya.",
+    "whereTitle": "Di mana menyimpannya",
+    "wifiOnly": "Hanya Wi-Fi",
+    "wifiOnlyOff": "Nonaktif. Pencadangan terjadwal dapat menggunakan data seluler.",
+    "wifiOnlyOn": "Aktif. Pencadangan terjadwal menunggu Wi-Fi.",
+    "working": "Memproses…"
   }
 }

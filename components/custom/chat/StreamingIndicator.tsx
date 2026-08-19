@@ -1,6 +1,7 @@
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Text } from '@/components/ui/text';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
     useAnimatedStyle,
@@ -11,28 +12,28 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 
-const STREAMING_LABELS = [
-    'Understanding',
-    'Analyzing',
-    'Connecting dots',
-    'Contextualizing',
-    'Synthesizing',
-    'Personalizing',
-    'Mapping interests',
-    'Learning preferences',
-    'Building profile',
-    'Calibrating',
-    'Processing',
-    'Refining taste',
-    'Detecting patterns',
-    'Adapting feed',
-    'Evaluating signals',
-    'Updating model',
-    'Weighing topics',
-    'Discovering themes',
-    'Tuning relevance',
-    'Optimizing',
-];
+const STREAMING_LABEL_KEYS = [
+    'chat.streamingLabels.understanding',
+    'chat.streamingLabels.analyzing',
+    'chat.streamingLabels.connectingDots',
+    'chat.streamingLabels.contextualizing',
+    'chat.streamingLabels.synthesizing',
+    'chat.streamingLabels.personalizing',
+    'chat.streamingLabels.mappingInterests',
+    'chat.streamingLabels.learningPreferences',
+    'chat.streamingLabels.buildingProfile',
+    'chat.streamingLabels.calibrating',
+    'chat.streamingLabels.processing',
+    'chat.streamingLabels.refiningTaste',
+    'chat.streamingLabels.detectingPatterns',
+    'chat.streamingLabels.adaptingFeed',
+    'chat.streamingLabels.evaluatingSignals',
+    'chat.streamingLabels.updatingModel',
+    'chat.streamingLabels.weighingTopics',
+    'chat.streamingLabels.discoveringThemes',
+    'chat.streamingLabels.tuningRelevance',
+    'chat.streamingLabels.optimizing',
+] as const;
 
 const STREAMING_LABEL_CYCLE_MS = 2000;
 // Half of the label crossfade. The caption fades OUT over this window, swaps
@@ -66,6 +67,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     color,
     dotsOnly = false,
 }) => {
+    const { t } = useTranslation();
     const [labelIndex, setLabelIndex] = useState(0);
     const labelColor = color ?? DEFAULT_LABEL_COLOR;
     const dotColor = color ?? DEFAULT_DOT_COLOR;
@@ -81,7 +83,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
         const interval = setInterval(() => {
             labelOpacity.value = withTiming(0, { duration: LABEL_FADE_MS });
             swapTimer = setTimeout(() => {
-                setLabelIndex((i) => (i + 1) % STREAMING_LABELS.length);
+                setLabelIndex((i) => (i + 1) % STREAMING_LABEL_KEYS.length);
                 labelOpacity.value = withTiming(1, { duration: LABEL_FADE_MS });
             }, LABEL_FADE_MS);
         }, STREAMING_LABEL_CYCLE_MS);
@@ -134,7 +136,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                             size="sm"
                             style={[streamingIndicatorStyles.label, { color: labelColor }]}
                         >
-                            {STREAMING_LABELS[labelIndex]}
+                            {t(STREAMING_LABEL_KEYS[labelIndex])}
                         </Text>
                     </Animated.View>
                 )}

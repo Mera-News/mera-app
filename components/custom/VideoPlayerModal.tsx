@@ -10,6 +10,7 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import React from 'react';
 import { Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 
 interface VideoPlayerModalProps {
     /** Whether the modal is shown. The player is mounted only while visible. */
@@ -48,6 +49,7 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ visible, uri, onClo
 
 const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, onClose }) => {
     const insets = useSafeAreaInsets();
+    const { t } = useTranslation();
     const player = useVideoPlayer(uri, (p) => {
         p.loop = false;
         p.play();
@@ -75,7 +77,7 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, on
                 <Box className="absolute inset-0 items-center justify-center p-6">
                     <MaterialIcons name="error-outline" size={40} color="#EF4444" />
                     <Text className="text-white mt-3 text-center">
-                        Could not play the video.
+                        {t('videoPlayer.playbackError')}
                     </Text>
                     <Pressable
                         onPress={() => {
@@ -84,7 +86,7 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, on
                         }}
                         className="mt-4 bg-gray-800 rounded-lg px-5 py-3"
                     >
-                        <Text className="text-violet-400 font-medium">Open in browser</Text>
+                        <Text className="text-violet-400 font-medium">{t('videoPlayer.openInBrowser')}</Text>
                     </Pressable>
                 </Box>
             )}
@@ -95,7 +97,7 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, on
                     onPress={onClose}
                     hitSlop={12}
                     accessibilityRole="button"
-                    accessibilityLabel="Close video"
+                    accessibilityLabel={t('videoPlayer.closeA11y')}
                     className="bg-gray-900/80 rounded-full p-3 shadow-hard-2"
                 >
                     <MaterialIcons name="close" size={24} color="#ffffff" />

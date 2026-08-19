@@ -165,9 +165,9 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                 placement: 'top',
                 render: () => (
                     <Toast action="error" variant="solid">
-                        <ToastTitle>Setup Failed</ToastTitle>
+                        <ToastTitle>{t('notifications.setupFailedTitle')}</ToastTitle>
                         <ToastDescription>
-                            Failed to enable notifications. Please try again.
+                            {t('notifications.setupFailedDescription')}
                         </ToastDescription>
                     </Toast>
                 ),

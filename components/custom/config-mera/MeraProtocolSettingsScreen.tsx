@@ -215,8 +215,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 placement: 'top',
                 render: () => (
                     <Toast action="error" variant="solid">
-                        <ToastTitle>Load Failed</ToastTitle>
-                        <ToastDescription>Failed to load Mera Protocol settings.</ToastDescription>
+                        <ToastTitle>{t('meraProtocol.loadFailedTitle')}</ToastTitle>
+                        <ToastDescription>{t('meraProtocol.loadFailedDescription')}</ToastDescription>
                     </Toast>
                 ),
             });

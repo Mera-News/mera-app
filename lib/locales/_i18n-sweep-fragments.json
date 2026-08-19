@@ -1,0 +1,1243 @@
+{
+ "_comment": "i18n-sweep: 42 previously hardcoded user-facing strings moved to i18n (swarm, 2026-08-19). Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+ "en": {
+  "auth": {
+   "failedToSendBody": "Failed to send OTP",
+   "signingYouIn": "Signing you in…"
+  },
+  "chat": {
+   "send": "Send",
+   "streamingLabels": {
+    "adaptingFeed": "Adapting feed",
+    "analyzing": "Analyzing",
+    "buildingProfile": "Building profile",
+    "calibrating": "Calibrating",
+    "connectingDots": "Connecting dots",
+    "contextualizing": "Contextualizing",
+    "detectingPatterns": "Detecting patterns",
+    "discoveringThemes": "Discovering themes",
+    "evaluatingSignals": "Evaluating signals",
+    "learningPreferences": "Learning preferences",
+    "mappingInterests": "Mapping interests",
+    "optimizing": "Optimizing",
+    "personalizing": "Personalizing",
+    "processing": "Processing",
+    "refiningTaste": "Refining taste",
+    "synthesizing": "Synthesizing",
+    "tuningRelevance": "Tuning relevance",
+    "understanding": "Understanding",
+    "updatingModel": "Updating model",
+    "weighingTopics": "Weighing topics"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol is now ready for use.",
+   "completeTitle": "Download Complete",
+   "failedTitle": "Download Failed"
+  },
+  "errors": {
+   "networkErrorBody": "Unable to connect. Please check your internet connection.",
+   "networkErrorTitle": "Network Error"
+  },
+  "feedbackTree": {
+   "aBitMore": "A bit more",
+   "aLotMore": "A lot more",
+   "followStory": "Follow this story",
+   "moreAboutTopic": "More about this topic",
+   "moreFromPublication": "More from this publication",
+   "moreNewsFromPlace": "More news from this place"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Failed to load Mera Protocol settings.",
+   "loadFailedTitle": "Load Failed"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "You can select up to {{count}} hours",
+   "maxHoursReachedTitle": "Maximum Reached",
+   "selectedCount": "Selected: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Close video",
+   "openInBrowser": "Open in browser",
+   "playbackError": "Could not play the video."
+  }
+ },
+ "ar": {
+  "auth": {
+   "failedToSendBody": "فشل إرسال رمز OTP",
+   "signingYouIn": "جارٍ تسجيل دخولك…"
+  },
+  "chat": {
+   "send": "إرسال",
+   "streamingLabels": {
+    "adaptingFeed": "تكييف الخلاصة",
+    "analyzing": "جارٍ التحليل",
+    "buildingProfile": "بناء الملف",
+    "calibrating": "جارٍ المعايرة",
+    "connectingDots": "ربط الأفكار",
+    "contextualizing": "وضع السياق",
+    "detectingPatterns": "اكتشاف الأنماط",
+    "discoveringThemes": "اكتشاف المحاور",
+    "evaluatingSignals": "تقييم الإشارات",
+    "learningPreferences": "تعلّم التفضيلات",
+    "mappingInterests": "رصد الاهتمامات",
+    "optimizing": "جارٍ التحسين",
+    "personalizing": "جارٍ التخصيص",
+    "processing": "جارٍ المعالجة",
+    "refiningTaste": "صقل الذوق",
+    "synthesizing": "جارٍ التوليف",
+    "tuningRelevance": "ضبط الملاءمة",
+    "understanding": "جارٍ الفهم",
+    "updatingModel": "تحديث النموذج",
+    "weighingTopics": "موازنة المواضيع"
+   }
+  },
+  "download": {
+   "completeBody": "أصبح Mera Protocol جاهزًا للاستخدام.",
+   "completeTitle": "اكتمل التنزيل",
+   "failedTitle": "فشل التنزيل"
+  },
+  "errors": {
+   "networkErrorBody": "تعذّر الاتصال. يرجى التحقق من اتصالك بالإنترنت.",
+   "networkErrorTitle": "خطأ في الشبكة"
+  },
+  "feedbackTree": {
+   "aBitMore": "أكثر قليلًا",
+   "aLotMore": "أكثر بكثير",
+   "followStory": "متابعة هذه القصة",
+   "moreAboutTopic": "المزيد عن هذا الموضوع",
+   "moreFromPublication": "المزيد من هذا المصدر",
+   "moreNewsFromPlace": "المزيد من أخبار هذا المكان"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "فشل تحميل إعدادات Mera Protocol.",
+   "loadFailedTitle": "فشل التحميل"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "يمكنك اختيار {{count}} ساعات كحد أقصى",
+   "maxHoursReachedTitle": "تم بلوغ الحد الأقصى",
+   "selectedCount": "تم الاختيار: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "إغلاق الفيديو",
+   "openInBrowser": "فتح في المتصفح",
+   "playbackError": "تعذّر تشغيل الفيديو."
+  }
+ },
+ "de": {
+  "auth": {
+   "failedToSendBody": "OTP konnte nicht gesendet werden",
+   "signingYouIn": "Du wirst angemeldet…"
+  },
+  "chat": {
+   "send": "Senden",
+   "streamingLabels": {
+    "adaptingFeed": "Feed anpassen",
+    "analyzing": "Analysieren",
+    "buildingProfile": "Profil aufbauen",
+    "calibrating": "Kalibrieren",
+    "connectingDots": "Zusammenhänge finden",
+    "contextualizing": "Einordnen",
+    "detectingPatterns": "Muster erkennen",
+    "discoveringThemes": "Themen entdecken",
+    "evaluatingSignals": "Signale auswerten",
+    "learningPreferences": "Vorlieben lernen",
+    "mappingInterests": "Interessen erfassen",
+    "optimizing": "Optimieren",
+    "personalizing": "Personalisieren",
+    "processing": "Verarbeiten",
+    "refiningTaste": "Geschmack verfeinern",
+    "synthesizing": "Zusammenführen",
+    "tuningRelevance": "Relevanz abstimmen",
+    "understanding": "Verstehen",
+    "updatingModel": "Modell aktualisieren",
+    "weighingTopics": "Themen gewichten"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol ist jetzt einsatzbereit.",
+   "completeTitle": "Download abgeschlossen",
+   "failedTitle": "Download fehlgeschlagen"
+  },
+  "errors": {
+   "networkErrorBody": "Keine Verbindung möglich. Prüfe deine Internetverbindung.",
+   "networkErrorTitle": "Netzwerkfehler"
+  },
+  "feedbackTree": {
+   "aBitMore": "Etwas mehr",
+   "aLotMore": "Viel mehr",
+   "followStory": "Dieser Story folgen",
+   "moreAboutTopic": "Mehr zu diesem Thema",
+   "moreFromPublication": "Mehr von dieser Publikation",
+   "moreNewsFromPlace": "Mehr Nachrichten aus diesem Ort"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Die Mera Protocol-Einstellungen konnten nicht geladen werden.",
+   "loadFailedTitle": "Laden fehlgeschlagen"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Du kannst bis zu {{count}} Stunden auswählen",
+   "maxHoursReachedTitle": "Maximum erreicht",
+   "selectedCount": "Ausgewählt: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Video schließen",
+   "openInBrowser": "Im Browser öffnen",
+   "playbackError": "Das Video konnte nicht abgespielt werden."
+  }
+ },
+ "es": {
+  "auth": {
+   "failedToSendBody": "No se pudo enviar el código OTP",
+   "signingYouIn": "Iniciando sesión…"
+  },
+  "chat": {
+   "send": "Enviar",
+   "streamingLabels": {
+    "adaptingFeed": "Adaptando el feed",
+    "analyzing": "Analizando",
+    "buildingProfile": "Creando perfil",
+    "calibrating": "Calibrando",
+    "connectingDots": "Atando cabos",
+    "contextualizing": "Contextualizando",
+    "detectingPatterns": "Detectando patrones",
+    "discoveringThemes": "Descubriendo temáticas",
+    "evaluatingSignals": "Evaluando señales",
+    "learningPreferences": "Aprendiendo preferencias",
+    "mappingInterests": "Mapeando intereses",
+    "optimizing": "Optimizando",
+    "personalizing": "Personalizando",
+    "processing": "Procesando",
+    "refiningTaste": "Afinando gustos",
+    "synthesizing": "Sintetizando",
+    "tuningRelevance": "Ajustando relevancia",
+    "understanding": "Comprendiendo",
+    "updatingModel": "Actualizando modelo",
+    "weighingTopics": "Sopesando temas"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol ya está listo para usarse.",
+   "completeTitle": "Descarga completada",
+   "failedTitle": "Error de descarga"
+  },
+  "errors": {
+   "networkErrorBody": "No se pudo conectar. Verifica tu conexión a internet.",
+   "networkErrorTitle": "Error de red"
+  },
+  "feedbackTree": {
+   "aBitMore": "Un poco más",
+   "aLotMore": "Mucho más",
+   "followStory": "Seguir esta historia",
+   "moreAboutTopic": "Más sobre este tema",
+   "moreFromPublication": "Más de esta publicación",
+   "moreNewsFromPlace": "Más noticias de este lugar"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "No se pudieron cargar los ajustes de Mera Protocol.",
+   "loadFailedTitle": "Error al cargar"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Puedes seleccionar hasta {{count}} horas",
+   "maxHoursReachedTitle": "Máximo alcanzado",
+   "selectedCount": "Seleccionadas: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Cerrar video",
+   "openInBrowser": "Abrir en el navegador",
+   "playbackError": "No se pudo reproducir el video."
+  }
+ },
+ "fr": {
+  "auth": {
+   "failedToSendBody": "Échec de l'envoi du code OTP",
+   "signingYouIn": "Connexion en cours…"
+  },
+  "chat": {
+   "send": "Envoyer",
+   "streamingLabels": {
+    "adaptingFeed": "Adaptation du fil",
+    "analyzing": "Analyse",
+    "buildingProfile": "Création du profil",
+    "calibrating": "Calibrage",
+    "connectingDots": "Recoupements",
+    "contextualizing": "Contextualisation",
+    "detectingPatterns": "Détection de tendances",
+    "discoveringThemes": "Découverte de thèmes",
+    "evaluatingSignals": "Évaluation des signaux",
+    "learningPreferences": "Apprentissage des préférences",
+    "mappingInterests": "Cartographie des intérêts",
+    "optimizing": "Optimisation",
+    "personalizing": "Personnalisation",
+    "processing": "Traitement",
+    "refiningTaste": "Affinage des goûts",
+    "synthesizing": "Synthèse",
+    "tuningRelevance": "Réglage de la pertinence",
+    "understanding": "Compréhension",
+    "updatingModel": "Mise à jour du modèle",
+    "weighingTopics": "Pondération des sujets"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol est maintenant prêt à être utilisé.",
+   "completeTitle": "Téléchargement terminé",
+   "failedTitle": "Échec du téléchargement"
+  },
+  "errors": {
+   "networkErrorBody": "Connexion impossible. Vérifiez votre connexion Internet.",
+   "networkErrorTitle": "Erreur réseau"
+  },
+  "feedbackTree": {
+   "aBitMore": "Un peu plus",
+   "aLotMore": "Beaucoup plus",
+   "followStory": "Suivre cette actualité",
+   "moreAboutTopic": "Plus sur ce sujet",
+   "moreFromPublication": "Plus de cette publication",
+   "moreNewsFromPlace": "Plus d'actualités de ce lieu"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Impossible de charger les paramètres de Mera Protocol.",
+   "loadFailedTitle": "Échec du chargement"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Vous pouvez sélectionner jusqu'à {{count}} heures",
+   "maxHoursReachedTitle": "Maximum atteint",
+   "selectedCount": "Sélection : {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Fermer la vidéo",
+   "openInBrowser": "Ouvrir dans le navigateur",
+   "playbackError": "Impossible de lire la vidéo."
+  }
+ },
+ "hi": {
+  "auth": {
+   "failedToSendBody": "OTP भेजने में विफल",
+   "signingYouIn": "आपको साइन इन किया जा रहा है…"
+  },
+  "chat": {
+   "send": "भेजें",
+   "streamingLabels": {
+    "adaptingFeed": "फीड ढाली जा रही है",
+    "analyzing": "विश्लेषण हो रहा है",
+    "buildingProfile": "प्रोफ़ाइल बन रही है",
+    "calibrating": "कैलिब्रेट हो रहा है",
+    "connectingDots": "कड़ियाँ जोड़ी जा रही हैं",
+    "contextualizing": "संदर्भ जोड़ा जा रहा है",
+    "detectingPatterns": "पैटर्न पहचाने जा रहे हैं",
+    "discoveringThemes": "थीम खोजी जा रही हैं",
+    "evaluatingSignals": "संकेत परखे जा रहे हैं",
+    "learningPreferences": "पसंद सीखी जा रही है",
+    "mappingInterests": "रुचियाँ मैप हो रही हैं",
+    "optimizing": "ऑप्टिमाइज़ हो रहा है",
+    "personalizing": "पर्सनलाइज़ हो रहा है",
+    "processing": "प्रोसेस हो रहा है",
+    "refiningTaste": "पसंद निखारी जा रही है",
+    "synthesizing": "सार तैयार हो रहा है",
+    "tuningRelevance": "प्रासंगिकता ट्यून हो रही है",
+    "understanding": "समझा जा रहा है",
+    "updatingModel": "मॉडल अपडेट हो रहा है",
+    "weighingTopics": "विषय तौले जा रहे हैं"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol अब उपयोग के लिए तैयार है।",
+   "completeTitle": "डाउनलोड पूरा हुआ",
+   "failedTitle": "डाउनलोड विफल"
+  },
+  "errors": {
+   "networkErrorBody": "कनेक्ट नहीं हो पा रहा है। कृपया अपना इंटरनेट कनेक्शन जाँचें।",
+   "networkErrorTitle": "नेटवर्क त्रुटि"
+  },
+  "feedbackTree": {
+   "aBitMore": "थोड़ा ज़्यादा",
+   "aLotMore": "बहुत ज़्यादा",
+   "followStory": "इस स्टोरी को फ़ॉलो करें",
+   "moreAboutTopic": "इस विषय के बारे में और",
+   "moreFromPublication": "इस प्रकाशन से और",
+   "moreNewsFromPlace": "इस जगह से और समाचार"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Mera Protocol सेटिंग्स लोड करने में विफल।",
+   "loadFailedTitle": "लोड विफल"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "आप अधिकतम {{count}} घंटे चुन सकते हैं",
+   "maxHoursReachedTitle": "अधिकतम सीमा पूरी हुई",
+   "selectedCount": "चयनित: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "वीडियो बंद करें",
+   "openInBrowser": "ब्राउज़र में खोलें",
+   "playbackError": "वीडियो चलाया नहीं जा सका।"
+  }
+ },
+ "id": {
+  "auth": {
+   "failedToSendBody": "Gagal mengirim kode OTP",
+   "signingYouIn": "Sedang masuk…"
+  },
+  "chat": {
+   "send": "Kirim",
+   "streamingLabels": {
+    "adaptingFeed": "Menyesuaikan umpan",
+    "analyzing": "Menganalisis",
+    "buildingProfile": "Membangun profil",
+    "calibrating": "Mengkalibrasi",
+    "connectingDots": "Menghubungkan titik",
+    "contextualizing": "Menyusun konteks",
+    "detectingPatterns": "Mendeteksi pola",
+    "discoveringThemes": "Menemukan tema",
+    "evaluatingSignals": "Mengevaluasi sinyal",
+    "learningPreferences": "Mempelajari preferensi",
+    "mappingInterests": "Memetakan minat",
+    "optimizing": "Mengoptimalkan",
+    "personalizing": "Mempersonalisasi",
+    "processing": "Memproses",
+    "refiningTaste": "Menajamkan selera",
+    "synthesizing": "Merangkum",
+    "tuningRelevance": "Menyetel relevansi",
+    "understanding": "Memahami",
+    "updatingModel": "Memperbarui model",
+    "weighingTopics": "Menimbang topik"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol siap digunakan.",
+   "completeTitle": "Unduhan Selesai",
+   "failedTitle": "Unduhan Gagal"
+  },
+  "errors": {
+   "networkErrorBody": "Tidak dapat terhubung. Periksa koneksi internet Anda.",
+   "networkErrorTitle": "Kesalahan Jaringan"
+  },
+  "feedbackTree": {
+   "aBitMore": "Sedikit lebih banyak",
+   "aLotMore": "Jauh lebih banyak",
+   "followStory": "Ikuti cerita ini",
+   "moreAboutTopic": "Lebih lanjut tentang topik ini",
+   "moreFromPublication": "Lebih banyak dari publikasi ini",
+   "moreNewsFromPlace": "Lebih banyak berita dari tempat ini"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Gagal memuat pengaturan Mera Protocol.",
+   "loadFailedTitle": "Gagal Memuat"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Anda dapat memilih hingga {{count}} jam",
+   "maxHoursReachedTitle": "Maksimum Tercapai",
+   "selectedCount": "Dipilih: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Tutup video",
+   "openInBrowser": "Buka di browser",
+   "playbackError": "Tidak dapat memutar video."
+  }
+ },
+ "it": {
+  "auth": {
+   "failedToSendBody": "Invio del codice OTP non riuscito",
+   "signingYouIn": "Accesso in corso…"
+  },
+  "chat": {
+   "send": "Invia",
+   "streamingLabels": {
+    "adaptingFeed": "Adattamento del feed",
+    "analyzing": "Analisi",
+    "buildingProfile": "Creazione profilo",
+    "calibrating": "Calibrazione",
+    "connectingDots": "Collego i punti",
+    "contextualizing": "Contestualizzazione",
+    "detectingPatterns": "Ricerca di schemi",
+    "discoveringThemes": "Scoperta di temi",
+    "evaluatingSignals": "Valutazione dei segnali",
+    "learningPreferences": "Apprendo le preferenze",
+    "mappingInterests": "Mappa degli interessi",
+    "optimizing": "Ottimizzazione",
+    "personalizing": "Personalizzazione",
+    "processing": "Elaborazione",
+    "refiningTaste": "Affino i gusti",
+    "synthesizing": "Sintesi",
+    "tuningRelevance": "Regolazione della rilevanza",
+    "understanding": "Comprensione",
+    "updatingModel": "Aggiornamento del modello",
+    "weighingTopics": "Peso degli argomenti"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol è ora pronto all'uso.",
+   "completeTitle": "Download completato",
+   "failedTitle": "Download non riuscito"
+  },
+  "errors": {
+   "networkErrorBody": "Impossibile connettersi. Controlla la tua connessione a internet.",
+   "networkErrorTitle": "Errore di rete"
+  },
+  "feedbackTree": {
+   "aBitMore": "Un po' di più",
+   "aLotMore": "Molto di più",
+   "followStory": "Segui questa storia",
+   "moreAboutTopic": "Altro su questo argomento",
+   "moreFromPublication": "Altro da questa testata",
+   "moreNewsFromPlace": "Altre notizie da questo luogo"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Impossibile caricare le impostazioni di Mera Protocol.",
+   "loadFailedTitle": "Caricamento non riuscito"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Puoi selezionare fino a {{count}} ore",
+   "maxHoursReachedTitle": "Massimo raggiunto",
+   "selectedCount": "Selezionate: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Chiudi video",
+   "openInBrowser": "Apri nel browser",
+   "playbackError": "Impossibile riprodurre il video."
+  }
+ },
+ "ja": {
+  "auth": {
+   "failedToSendBody": "OTPを送信できませんでした",
+   "signingYouIn": "サインインしています…"
+  },
+  "chat": {
+   "send": "送信",
+   "streamingLabels": {
+    "adaptingFeed": "フィードを調整中",
+    "analyzing": "分析中",
+    "buildingProfile": "プロフィール作成中",
+    "calibrating": "調整中",
+    "connectingDots": "関連付け中",
+    "contextualizing": "文脈を整理中",
+    "detectingPatterns": "パターンを検出中",
+    "discoveringThemes": "テーマを発見中",
+    "evaluatingSignals": "シグナルを評価中",
+    "learningPreferences": "好みを学習中",
+    "mappingInterests": "興味を整理中",
+    "optimizing": "最適化中",
+    "personalizing": "パーソナライズ中",
+    "processing": "処理中",
+    "refiningTaste": "好みを微調整中",
+    "synthesizing": "統合中",
+    "tuningRelevance": "関連度を調整中",
+    "understanding": "理解中",
+    "updatingModel": "モデルを更新中",
+    "weighingTopics": "トピックを重み付け中"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol を利用できるようになりました。",
+   "completeTitle": "ダウンロード完了",
+   "failedTitle": "ダウンロード失敗"
+  },
+  "errors": {
+   "networkErrorBody": "接続できません。インターネット接続を確認してください。",
+   "networkErrorTitle": "ネットワークエラー"
+  },
+  "feedbackTree": {
+   "aBitMore": "少し多く",
+   "aLotMore": "かなり多く",
+   "followStory": "このストーリーをフォロー",
+   "moreAboutTopic": "このトピックをもっと",
+   "moreFromPublication": "このソースの記事をもっと",
+   "moreNewsFromPlace": "この地域のニュースをもっと"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Mera Protocol の設定を読み込めませんでした。",
+   "loadFailedTitle": "読み込みに失敗しました"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "時間は最大{{count}}個まで選択できます",
+   "maxHoursReachedTitle": "上限に達しました",
+   "selectedCount": "選択中: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "動画を閉じる",
+   "openInBrowser": "ブラウザで開く",
+   "playbackError": "動画を再生できませんでした。"
+  }
+ },
+ "ko": {
+  "auth": {
+   "failedToSendBody": "OTP를 보내지 못했습니다",
+   "signingYouIn": "로그인하는 중…"
+  },
+  "chat": {
+   "send": "보내기",
+   "streamingLabels": {
+    "adaptingFeed": "피드 조정 중",
+    "analyzing": "분석하는 중",
+    "buildingProfile": "프로필 구성 중",
+    "calibrating": "조정하는 중",
+    "connectingDots": "연결점 찾는 중",
+    "contextualizing": "맥락 파악 중",
+    "detectingPatterns": "패턴 감지 중",
+    "discoveringThemes": "테마 발견 중",
+    "evaluatingSignals": "신호 평가 중",
+    "learningPreferences": "취향 학습 중",
+    "mappingInterests": "관심사 파악 중",
+    "optimizing": "최적화하는 중",
+    "personalizing": "맞춤 설정 중",
+    "processing": "처리하는 중",
+    "refiningTaste": "취향 다듬는 중",
+    "synthesizing": "종합하는 중",
+    "tuningRelevance": "관련성 조율 중",
+    "understanding": "이해하는 중",
+    "updatingModel": "모델 업데이트 중",
+    "weighingTopics": "토픽 비중 계산 중"
+   }
+  },
+  "download": {
+   "completeBody": "이제 Mera Protocol을 사용할 수 있습니다.",
+   "completeTitle": "다운로드 완료",
+   "failedTitle": "다운로드 실패"
+  },
+  "errors": {
+   "networkErrorBody": "연결할 수 없습니다. 인터넷 연결을 확인해 주세요.",
+   "networkErrorTitle": "네트워크 오류"
+  },
+  "feedbackTree": {
+   "aBitMore": "조금 더",
+   "aLotMore": "훨씬 더 많이",
+   "followStory": "이 스토리 팔로우",
+   "moreAboutTopic": "이 토픽 더 보기",
+   "moreFromPublication": "이 소스의 기사 더 보기",
+   "moreNewsFromPlace": "이 지역 뉴스 더 보기"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Mera Protocol 설정을 불러오지 못했습니다.",
+   "loadFailedTitle": "불러오기 실패"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "시간은 최대 {{count}}개까지 선택할 수 있습니다",
+   "maxHoursReachedTitle": "최대 개수 도달",
+   "selectedCount": "선택됨: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "동영상 닫기",
+   "openInBrowser": "브라우저에서 열기",
+   "playbackError": "동영상을 재생할 수 없습니다."
+  }
+ },
+ "nl": {
+  "auth": {
+   "failedToSendBody": "Kan OTP niet verzenden",
+   "signingYouIn": "Je wordt ingelogd…"
+  },
+  "chat": {
+   "send": "Verzenden",
+   "streamingLabels": {
+    "adaptingFeed": "Feed aanpassen",
+    "analyzing": "Analyseren",
+    "buildingProfile": "Profiel opbouwen",
+    "calibrating": "Kalibreren",
+    "connectingDots": "Verbanden leggen",
+    "contextualizing": "Context geven",
+    "detectingPatterns": "Patronen herkennen",
+    "discoveringThemes": "Thema's ontdekken",
+    "evaluatingSignals": "Signalen beoordelen",
+    "learningPreferences": "Voorkeuren leren",
+    "mappingInterests": "Interesses in kaart brengen",
+    "optimizing": "Optimaliseren",
+    "personalizing": "Personaliseren",
+    "processing": "Verwerken",
+    "refiningTaste": "Smaak verfijnen",
+    "synthesizing": "Samenvoegen",
+    "tuningRelevance": "Relevantie afstemmen",
+    "understanding": "Begrijpen",
+    "updatingModel": "Model bijwerken",
+    "weighingTopics": "Onderwerpen wegen"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol is nu klaar voor gebruik.",
+   "completeTitle": "Download voltooid",
+   "failedTitle": "Download mislukt"
+  },
+  "errors": {
+   "networkErrorBody": "Kan geen verbinding maken. Controleer je internetverbinding.",
+   "networkErrorTitle": "Netwerkfout"
+  },
+  "feedbackTree": {
+   "aBitMore": "Iets meer",
+   "aLotMore": "Veel meer",
+   "followStory": "Dit verhaal volgen",
+   "moreAboutTopic": "Meer over dit onderwerp",
+   "moreFromPublication": "Meer van deze publicatie",
+   "moreNewsFromPlace": "Meer nieuws uit deze plaats"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Kan de Mera Protocol-instellingen niet laden.",
+   "loadFailedTitle": "Laden mislukt"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Je kunt maximaal {{count}} uur selecteren",
+   "maxHoursReachedTitle": "Maximum bereikt",
+   "selectedCount": "Geselecteerd: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Video sluiten",
+   "openInBrowser": "Openen in browser",
+   "playbackError": "Kan de video niet afspelen."
+  }
+ },
+ "pl": {
+  "auth": {
+   "failedToSendBody": "Nie udało się wysłać kodu OTP",
+   "signingYouIn": "Logujemy Cię…"
+  },
+  "chat": {
+   "send": "Wyślij",
+   "streamingLabels": {
+    "adaptingFeed": "Dostosowywanie strumienia",
+    "analyzing": "Analizowanie",
+    "buildingProfile": "Budowanie profilu",
+    "calibrating": "Kalibrowanie",
+    "connectingDots": "Łączenie wątków",
+    "contextualizing": "Ustalanie kontekstu",
+    "detectingPatterns": "Wykrywanie wzorców",
+    "discoveringThemes": "Odkrywanie motywów",
+    "evaluatingSignals": "Ocenianie sygnałów",
+    "learningPreferences": "Poznawanie preferencji",
+    "mappingInterests": "Mapowanie zainteresowań",
+    "optimizing": "Optymalizowanie",
+    "personalizing": "Personalizowanie",
+    "processing": "Przetwarzanie",
+    "refiningTaste": "Doprecyzowanie gustu",
+    "synthesizing": "Synteza",
+    "tuningRelevance": "Strojenie trafności",
+    "understanding": "Rozumienie",
+    "updatingModel": "Aktualizowanie modelu",
+    "weighingTopics": "Ważenie tematów"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol jest gotowy do użycia.",
+   "completeTitle": "Pobieranie ukończone",
+   "failedTitle": "Pobieranie nie powiodło się"
+  },
+  "errors": {
+   "networkErrorBody": "Nie można się połączyć. Sprawdź połączenie z internetem.",
+   "networkErrorTitle": "Błąd sieci"
+  },
+  "feedbackTree": {
+   "aBitMore": "Trochę więcej",
+   "aLotMore": "Dużo więcej",
+   "followStory": "Obserwuj tę historię",
+   "moreAboutTopic": "Więcej o tym temacie",
+   "moreFromPublication": "Więcej z tego źródła",
+   "moreNewsFromPlace": "Więcej wiadomości z tego miejsca"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Nie udało się wczytać ustawień Mera Protocol.",
+   "loadFailedTitle": "Nie udało się wczytać"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Możesz wybrać maksymalnie {{count}} godz.",
+   "maxHoursReachedTitle": "Osiągnięto maksimum",
+   "selectedCount": "Wybrano: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Zamknij film",
+   "openInBrowser": "Otwórz w przeglądarce",
+   "playbackError": "Nie można odtworzyć filmu."
+  }
+ },
+ "pt-BR": {
+  "auth": {
+   "failedToSendBody": "Falha ao enviar o código OTP",
+   "signingYouIn": "Fazendo login…"
+  },
+  "chat": {
+   "send": "Enviar",
+   "streamingLabels": {
+    "adaptingFeed": "Adaptando o feed",
+    "analyzing": "Analisando",
+    "buildingProfile": "Montando perfil",
+    "calibrating": "Calibrando",
+    "connectingDots": "Ligando os pontos",
+    "contextualizing": "Contextualizando",
+    "detectingPatterns": "Detectando padrões",
+    "discoveringThemes": "Descobrindo temas",
+    "evaluatingSignals": "Avaliando sinais",
+    "learningPreferences": "Aprendendo preferências",
+    "mappingInterests": "Mapeando interesses",
+    "optimizing": "Otimizando",
+    "personalizing": "Personalizando",
+    "processing": "Processando",
+    "refiningTaste": "Refinando gostos",
+    "synthesizing": "Sintetizando",
+    "tuningRelevance": "Ajustando relevância",
+    "understanding": "Entendendo",
+    "updatingModel": "Atualizando modelo",
+    "weighingTopics": "Ponderando tópicos"
+   }
+  },
+  "download": {
+   "completeBody": "O Mera Protocol está pronto para uso.",
+   "completeTitle": "Download concluído",
+   "failedTitle": "Falha no download"
+  },
+  "errors": {
+   "networkErrorBody": "Não foi possível conectar. Verifique sua conexão com a internet.",
+   "networkErrorTitle": "Erro de rede"
+  },
+  "feedbackTree": {
+   "aBitMore": "Um pouco mais",
+   "aLotMore": "Muito mais",
+   "followStory": "Seguir esta história",
+   "moreAboutTopic": "Mais sobre este tópico",
+   "moreFromPublication": "Mais desta publicação",
+   "moreNewsFromPlace": "Mais notícias deste lugar"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Não foi possível carregar as configurações do Mera Protocol.",
+   "loadFailedTitle": "Falha ao carregar"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Você pode selecionar até {{count}} horas",
+   "maxHoursReachedTitle": "Máximo atingido",
+   "selectedCount": "Selecionadas: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Fechar vídeo",
+   "openInBrowser": "Abrir no navegador",
+   "playbackError": "Não foi possível reproduzir o vídeo."
+  }
+ },
+ "ru": {
+  "auth": {
+   "failedToSendBody": "Не удалось отправить одноразовый код",
+   "signingYouIn": "Выполняется вход…"
+  },
+  "chat": {
+   "send": "Отправить",
+   "streamingLabels": {
+    "adaptingFeed": "Адаптирую ленту",
+    "analyzing": "Анализирую",
+    "buildingProfile": "Строю профиль",
+    "calibrating": "Калибрую",
+    "connectingDots": "Связываю факты",
+    "contextualizing": "Учитываю контекст",
+    "detectingPatterns": "Ищу закономерности",
+    "discoveringThemes": "Выявляю сюжеты",
+    "evaluatingSignals": "Оцениваю сигналы",
+    "learningPreferences": "Запоминаю предпочтения",
+    "mappingInterests": "Изучаю интересы",
+    "optimizing": "Оптимизирую",
+    "personalizing": "Персонализирую",
+    "processing": "Обрабатываю",
+    "refiningTaste": "Уточняю вкус",
+    "synthesizing": "Обобщаю",
+    "tuningRelevance": "Настраиваю релевантность",
+    "understanding": "Вникаю",
+    "updatingModel": "Обновляю модель",
+    "weighingTopics": "Взвешиваю темы"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol готов к использованию.",
+   "completeTitle": "Загрузка завершена",
+   "failedTitle": "Ошибка загрузки"
+  },
+  "errors": {
+   "networkErrorBody": "Не удалось подключиться. Проверьте подключение к интернету.",
+   "networkErrorTitle": "Ошибка сети"
+  },
+  "feedbackTree": {
+   "aBitMore": "Немного больше",
+   "aLotMore": "Намного больше",
+   "followStory": "Отслеживать эту историю",
+   "moreAboutTopic": "Подробнее об этой теме",
+   "moreFromPublication": "Больше от этого издания",
+   "moreNewsFromPlace": "Больше новостей из этого места"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Не удалось загрузить настройки Mera Protocol.",
+   "loadFailedTitle": "Ошибка загрузки"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Можно выбрать не более {{count}} ч.",
+   "maxHoursReachedTitle": "Достигнут максимум",
+   "selectedCount": "Выбрано: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Закрыть видео",
+   "openInBrowser": "Открыть в браузере",
+   "playbackError": "Не удалось воспроизвести видео."
+  }
+ },
+ "th": {
+  "auth": {
+   "failedToSendBody": "ส่งรหัส OTP ไม่สำเร็จ",
+   "signingYouIn": "กำลังลงชื่อเข้าใช้…"
+  },
+  "chat": {
+   "send": "ส่ง",
+   "streamingLabels": {
+    "adaptingFeed": "กำลังปรับฟีด",
+    "analyzing": "กำลังวิเคราะห์",
+    "buildingProfile": "กำลังสร้างโปรไฟล์",
+    "calibrating": "กำลังปรับเทียบ",
+    "connectingDots": "กำลังเชื่อมโยง",
+    "contextualizing": "กำลังใส่บริบท",
+    "detectingPatterns": "กำลังหารูปแบบ",
+    "discoveringThemes": "กำลังค้นหาธีม",
+    "evaluatingSignals": "กำลังประเมินสัญญาณ",
+    "learningPreferences": "กำลังเรียนรู้ความชอบ",
+    "mappingInterests": "กำลังสำรวจความสนใจ",
+    "optimizing": "กำลังเพิ่มประสิทธิภาพ",
+    "personalizing": "กำลังปรับในแบบของคุณ",
+    "processing": "กำลังประมวลผล",
+    "refiningTaste": "กำลังขัดเกลารสนิยม",
+    "synthesizing": "กำลังสังเคราะห์",
+    "tuningRelevance": "กำลังปรับความเกี่ยวข้อง",
+    "understanding": "กำลังทำความเข้าใจ",
+    "updatingModel": "กำลังอัปเดตโมเดล",
+    "weighingTopics": "กำลังชั่งน้ำหนักหัวข้อ"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol พร้อมใช้งานแล้ว",
+   "completeTitle": "ดาวน์โหลดเสร็จแล้ว",
+   "failedTitle": "ดาวน์โหลดไม่สำเร็จ"
+  },
+  "errors": {
+   "networkErrorBody": "เชื่อมต่อไม่ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณ",
+   "networkErrorTitle": "เครือข่ายผิดพลาด"
+  },
+  "feedbackTree": {
+   "aBitMore": "เพิ่มอีกเล็กน้อย",
+   "aLotMore": "เพิ่มอีกมาก",
+   "followStory": "ติดตามเรื่องนี้",
+   "moreAboutTopic": "เพิ่มเติมเกี่ยวกับหัวข้อนี้",
+   "moreFromPublication": "เพิ่มเติมจากสำนักข่าวนี้",
+   "moreNewsFromPlace": "ข่าวเพิ่มเติมจากสถานที่นี้"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "ไม่สามารถโหลดการตั้งค่า Mera Protocol ได้",
+   "loadFailedTitle": "โหลดไม่สำเร็จ"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "คุณเลือกได้สูงสุด {{count}} ชั่วโมง",
+   "maxHoursReachedTitle": "ถึงจำนวนสูงสุดแล้ว",
+   "selectedCount": "เลือกแล้ว: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "ปิดวิดีโอ",
+   "openInBrowser": "เปิดในเบราว์เซอร์",
+   "playbackError": "ไม่สามารถเล่นวิดีโอได้"
+  }
+ },
+ "tr": {
+  "auth": {
+   "failedToSendBody": "OTP gönderilemedi",
+   "signingYouIn": "Giriş yapılıyor…"
+  },
+  "chat": {
+   "send": "Gönder",
+   "streamingLabels": {
+    "adaptingFeed": "Akışı uyarlıyor",
+    "analyzing": "Analiz ediyor",
+    "buildingProfile": "Profil oluşturuyor",
+    "calibrating": "Kalibre ediyor",
+    "connectingDots": "Bağlantıları kuruyor",
+    "contextualizing": "Bağlama oturtuyor",
+    "detectingPatterns": "Örüntüleri buluyor",
+    "discoveringThemes": "Temaları keşfediyor",
+    "evaluatingSignals": "Sinyalleri değerlendiriyor",
+    "learningPreferences": "Tercihleri öğreniyor",
+    "mappingInterests": "İlgi alanlarını belirliyor",
+    "optimizing": "Optimize ediyor",
+    "personalizing": "Kişiselleştiriyor",
+    "processing": "İşliyor",
+    "refiningTaste": "Beğenileri netleştiriyor",
+    "synthesizing": "Sentezliyor",
+    "tuningRelevance": "Alaka düzeyini ayarlıyor",
+    "understanding": "Anlıyor",
+    "updatingModel": "Modeli güncelliyor",
+    "weighingTopics": "Konuları tartıyor"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol artık kullanıma hazır.",
+   "completeTitle": "İndirme tamamlandı",
+   "failedTitle": "İndirme başarısız"
+  },
+  "errors": {
+   "networkErrorBody": "Bağlanılamıyor. İnternet bağlantını kontrol et.",
+   "networkErrorTitle": "Ağ hatası"
+  },
+  "feedbackTree": {
+   "aBitMore": "Biraz daha fazla",
+   "aLotMore": "Çok daha fazla",
+   "followStory": "Bu hikayeyi takip et",
+   "moreAboutTopic": "Bu konu hakkında daha fazla",
+   "moreFromPublication": "Bu yayından daha fazla",
+   "moreNewsFromPlace": "Bu yerden daha fazla haber"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Mera Protocol ayarları yüklenemedi.",
+   "loadFailedTitle": "Yükleme başarısız"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "En fazla {{count}} saat seçebilirsin",
+   "maxHoursReachedTitle": "Üst sınıra ulaşıldı",
+   "selectedCount": "Seçilen: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Videoyu kapat",
+   "openInBrowser": "Tarayıcıda aç",
+   "playbackError": "Video oynatılamadı."
+  }
+ },
+ "uk": {
+  "auth": {
+   "failedToSendBody": "Не вдалося надіслати одноразовий код",
+   "signingYouIn": "Виконується вхід…"
+  },
+  "chat": {
+   "send": "Надіслати",
+   "streamingLabels": {
+    "adaptingFeed": "Адаптую стрічку",
+    "analyzing": "Аналізую",
+    "buildingProfile": "Будую профіль",
+    "calibrating": "Калібрую",
+    "connectingDots": "Пов'язую факти",
+    "contextualizing": "Враховую контекст",
+    "detectingPatterns": "Шукаю закономірності",
+    "discoveringThemes": "Виявляю сюжети",
+    "evaluatingSignals": "Оцінюю сигнали",
+    "learningPreferences": "Запам'ятовую вподобання",
+    "mappingInterests": "Вивчаю інтереси",
+    "optimizing": "Оптимізую",
+    "personalizing": "Персоналізую",
+    "processing": "Обробляю",
+    "refiningTaste": "Уточнюю смак",
+    "synthesizing": "Узагальнюю",
+    "tuningRelevance": "Налаштовую релевантність",
+    "understanding": "Вникаю",
+    "updatingModel": "Оновлюю модель",
+    "weighingTopics": "Зважую теми"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol готовий до використання.",
+   "completeTitle": "Завантаження завершено",
+   "failedTitle": "Помилка завантаження"
+  },
+  "errors": {
+   "networkErrorBody": "Не вдалося підключитися. Перевірте підключення до інтернету.",
+   "networkErrorTitle": "Помилка мережі"
+  },
+  "feedbackTree": {
+   "aBitMore": "Трохи більше",
+   "aLotMore": "Набагато більше",
+   "followStory": "Відстежувати цю історію",
+   "moreAboutTopic": "Докладніше про цю тему",
+   "moreFromPublication": "Більше від цього видання",
+   "moreNewsFromPlace": "Більше новин із цього місця"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Не вдалося завантажити налаштування Mera Protocol.",
+   "loadFailedTitle": "Не вдалося завантажити"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Можна вибрати не більше {{count}} год.",
+   "maxHoursReachedTitle": "Досягнуто максимум",
+   "selectedCount": "Вибрано: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Закрити відео",
+   "openInBrowser": "Відкрити в браузері",
+   "playbackError": "Не вдалося відтворити відео."
+  }
+ },
+ "vi": {
+  "auth": {
+   "failedToSendBody": "Gửi mã OTP thất bại",
+   "signingYouIn": "Đang đăng nhập cho bạn…"
+  },
+  "chat": {
+   "send": "Gửi",
+   "streamingLabels": {
+    "adaptingFeed": "Đang điều chỉnh bảng tin",
+    "analyzing": "Đang phân tích",
+    "buildingProfile": "Đang xây dựng hồ sơ",
+    "calibrating": "Đang hiệu chỉnh",
+    "connectingDots": "Đang kết nối dữ kiện",
+    "contextualizing": "Đang đặt bối cảnh",
+    "detectingPatterns": "Đang phát hiện quy luật",
+    "discoveringThemes": "Đang khám phá chủ điểm",
+    "evaluatingSignals": "Đang đánh giá tín hiệu",
+    "learningPreferences": "Đang học sở thích",
+    "mappingInterests": "Đang xác định mối quan tâm",
+    "optimizing": "Đang tối ưu hóa",
+    "personalizing": "Đang cá nhân hóa",
+    "processing": "Đang xử lý",
+    "refiningTaste": "Đang tinh chỉnh gu đọc",
+    "synthesizing": "Đang tổng hợp",
+    "tuningRelevance": "Đang tinh chỉnh mức liên quan",
+    "understanding": "Đang tìm hiểu",
+    "updatingModel": "Đang cập nhật mô hình",
+    "weighingTopics": "Đang cân nhắc chủ đề"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol đã sẵn sàng để sử dụng.",
+   "completeTitle": "Tải xuống hoàn tất",
+   "failedTitle": "Tải xuống thất bại"
+  },
+  "errors": {
+   "networkErrorBody": "Không thể kết nối. Vui lòng kiểm tra kết nối Internet của bạn.",
+   "networkErrorTitle": "Lỗi mạng"
+  },
+  "feedbackTree": {
+   "aBitMore": "Nhiều hơn một chút",
+   "aLotMore": "Nhiều hơn hẳn",
+   "followStory": "Theo dõi câu chuyện này",
+   "moreAboutTopic": "Thêm về chủ đề này",
+   "moreFromPublication": "Thêm từ nguồn báo này",
+   "moreNewsFromPlace": "Thêm tin tức từ nơi này"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "Không thể tải cài đặt Mera Protocol.",
+   "loadFailedTitle": "Tải thất bại"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "Bạn có thể chọn tối đa {{count}} giờ",
+   "maxHoursReachedTitle": "Đã đạt mức tối đa",
+   "selectedCount": "Đã chọn: {{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "Đóng video",
+   "openInBrowser": "Mở trong trình duyệt",
+   "playbackError": "Không phát được video."
+  }
+ },
+ "zh-CN": {
+  "auth": {
+   "failedToSendBody": "OTP 发送失败",
+   "signingYouIn": "正在登录…"
+  },
+  "chat": {
+   "send": "发送",
+   "streamingLabels": {
+    "adaptingFeed": "正在调整信息流",
+    "analyzing": "正在分析",
+    "buildingProfile": "正在构建画像",
+    "calibrating": "正在校准",
+    "connectingDots": "正在串联线索",
+    "contextualizing": "正在梳理背景",
+    "detectingPatterns": "正在识别模式",
+    "discoveringThemes": "正在发现主题",
+    "evaluatingSignals": "正在评估信号",
+    "learningPreferences": "正在学习偏好",
+    "mappingInterests": "正在梳理兴趣",
+    "optimizing": "正在优化",
+    "personalizing": "正在个性化",
+    "processing": "正在处理",
+    "refiningTaste": "正在细化偏好",
+    "synthesizing": "正在整合",
+    "tuningRelevance": "正在调优相关性",
+    "understanding": "正在理解",
+    "updatingModel": "正在更新模型",
+    "weighingTopics": "正在权衡话题"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol 现已可以使用。",
+   "completeTitle": "下载完成",
+   "failedTitle": "下载失败"
+  },
+  "errors": {
+   "networkErrorBody": "无法连接。请检查你的网络连接。",
+   "networkErrorTitle": "网络错误"
+  },
+  "feedbackTree": {
+   "aBitMore": "多一点",
+   "aLotMore": "多很多",
+   "followStory": "关注这则报道",
+   "moreAboutTopic": "更多这个话题的内容",
+   "moreFromPublication": "更多来自这个来源的内容",
+   "moreNewsFromPlace": "更多这个地方的新闻"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "无法加载 Mera Protocol 设置。",
+   "loadFailedTitle": "加载失败"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "最多可选择 {{count}} 个时间",
+   "maxHoursReachedTitle": "已达上限",
+   "selectedCount": "已选择：{{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "关闭视频",
+   "openInBrowser": "在浏览器中打开",
+   "playbackError": "无法播放该视频。"
+  }
+ },
+ "zh-TW": {
+  "auth": {
+   "failedToSendBody": "無法傳送 OTP",
+   "signingYouIn": "正在登入…"
+  },
+  "chat": {
+   "send": "傳送",
+   "streamingLabels": {
+    "adaptingFeed": "正在調整動態",
+    "analyzing": "正在分析",
+    "buildingProfile": "正在建立輪廓",
+    "calibrating": "正在校準",
+    "connectingDots": "正在串連線索",
+    "contextualizing": "正在梳理脈絡",
+    "detectingPatterns": "正在偵測模式",
+    "discoveringThemes": "正在發掘題材",
+    "evaluatingSignals": "正在評估訊號",
+    "learningPreferences": "正在學習偏好",
+    "mappingInterests": "正在梳理興趣",
+    "optimizing": "正在最佳化",
+    "personalizing": "正在個人化",
+    "processing": "正在處理",
+    "refiningTaste": "正在微調品味",
+    "synthesizing": "正在統整",
+    "tuningRelevance": "正在調校相關性",
+    "understanding": "正在理解",
+    "updatingModel": "正在更新模型",
+    "weighingTopics": "正在衡量主題"
+   }
+  },
+  "download": {
+   "completeBody": "Mera Protocol 已可使用。",
+   "completeTitle": "下載完成",
+   "failedTitle": "下載失敗"
+  },
+  "errors": {
+   "networkErrorBody": "無法連線。請檢查您的網路連線。",
+   "networkErrorTitle": "網路錯誤"
+  },
+  "feedbackTree": {
+   "aBitMore": "多一點",
+   "aLotMore": "多很多",
+   "followStory": "追蹤這則報導",
+   "moreAboutTopic": "更多這個主題的內容",
+   "moreFromPublication": "更多來自這個來源的內容",
+   "moreNewsFromPlace": "更多這個地方的新聞"
+  },
+  "meraProtocol": {
+   "loadFailedDescription": "無法載入 Mera Protocol 設定。",
+   "loadFailedTitle": "載入失敗"
+  },
+  "notifications": {
+   "maxHoursReachedDescription": "最多可選擇 {{count}} 個時間",
+   "maxHoursReachedTitle": "已達上限",
+   "selectedCount": "已選擇：{{selected}}/{{max}}"
+  },
+  "videoPlayer": {
+   "closeA11y": "關閉影片",
+   "openInBrowser": "在瀏覽器中開啟",
+   "playbackError": "無法播放這部影片。"
+  }
+ }
+}

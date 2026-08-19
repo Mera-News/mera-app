@@ -139,8 +139,8 @@ class ToastManager {
             return;
         }
 
-        const message = customMessage || 'Unable to connect. Please check your internet connection.';
-        this.showPlainToast('error', 'Network Error', message, 4000);
+        const message = customMessage || i18next.t('errors.networkErrorBody');
+        this.showPlainToast('error', i18next.t('errors.networkErrorTitle'), message, 4000);
     }
 
     /**

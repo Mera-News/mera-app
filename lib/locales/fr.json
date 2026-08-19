@@ -81,7 +81,9 @@
     "signIn": "Se connecter",
     "aboutLegal": "À propos de Mera et mentions légales",
     "sourceCode": "Code source",
-    "website": "Site web"
+    "website": "Site web",
+    "failedToSendBody": "Échec de l'envoi du code OTP",
+    "signingYouIn": "Connexion en cours…"
   },
   "account": {
     "pendingTitle": "Compte en attente d'approbation",
@@ -317,7 +319,10 @@
     "savedDescription": "Vos paramètres de notification ont été mis à jour.",
     "saveFailedTitle": "Échec de l'enregistrement",
     "saveFailedDescription": "Impossible d'enregistrer vos préférences. Veuillez réessayer.",
-    "timeNudge": "Choisissez une heure où vous pourrez lire, réfléchir et planifier — une ou deux fois par jour, c'est amplement suffisant."
+    "timeNudge": "Choisissez une heure où vous pourrez lire, réfléchir et planifier — une ou deux fois par jour, c'est amplement suffisant.",
+    "maxHoursReachedDescription": "Vous pouvez sélectionner jusqu'à {{count}} heures",
+    "maxHoursReachedTitle": "Maximum atteint",
+    "selectedCount": "Sélection : {{selected}}/{{max}}"
   },
   "language": {
     "title": "Langue",
@@ -474,7 +479,9 @@
     "autoCommunityFactCheckTitle": "Vérification communautaire automatique",
     "autoCommunityFactCheckOn": "Recherchée à chaque article ouvert",
     "autoCommunityFactCheckOff": "Recherchée uniquement si vous la demandez",
-    "autoCommunityFactCheckDescription": "Les vérifications sont partagées. Quand une personne demande à faire vérifier un article, le résultat est conservé avec cet article et tout le monde peut le consulter. Activez cette option et Mera cherche une vérification existante à chaque article que vous ouvrez. Laissez-la désactivée et Mera ne cherche que lorsque vous touchez le bouton de vérification, de sorte que demander reste un geste choisi, article par article."
+    "autoCommunityFactCheckDescription": "Les vérifications sont partagées. Quand une personne demande à faire vérifier un article, le résultat est conservé avec cet article et tout le monde peut le consulter. Activez cette option et Mera cherche une vérification existante à chaque article que vous ouvrez. Laissez-la désactivée et Mera ne cherche que lorsque vous touchez le bouton de vérification, de sorte que demander reste un geste choisi, article par article.",
+    "loadFailedDescription": "Impossible de charger les paramètres de Mera Protocol.",
+    "loadFailedTitle": "Échec du chargement"
   },
   "manageData": {
     "deleting": "Suppression...",
@@ -632,11 +639,16 @@
         "title": "Service indisponible"
       }
     },
-    "accountRestrictedContact": "Contacter l'assistance"
+    "accountRestrictedContact": "Contacter l'assistance",
+    "networkErrorBody": "Connexion impossible. Vérifiez votre connexion Internet.",
+    "networkErrorTitle": "Erreur réseau"
   },
   "download": {
     "modelDownloading": "Téléchargement de l'AI Model...",
-    "modelProgress": "{{percent}}%"
+    "modelProgress": "{{percent}}%",
+    "completeBody": "Mera Protocol est maintenant prêt à être utilisé.",
+    "completeTitle": "Téléchargement terminé",
+    "failedTitle": "Échec du téléchargement"
   },
   "chat": {
     "startingChat": "Démarrage de la conversation...",
@@ -645,7 +657,30 @@
     "reloadingModel": "Rechargement de l'AI Model... {{percent}}%",
     "waitingForResponse": "En attente de la réponse...",
     "typeMessage": "Tapez un message...",
-    "inferenceError": "Nous avons du mal à joindre le service d'inférence Mera pour le moment. Veuillez réessayer dans un instant."
+    "inferenceError": "Nous avons du mal à joindre le service d'inférence Mera pour le moment. Veuillez réessayer dans un instant.",
+    "send": "Envoyer",
+    "streamingLabels": {
+      "adaptingFeed": "Adaptation du fil",
+      "analyzing": "Analyse",
+      "buildingProfile": "Création du profil",
+      "calibrating": "Calibrage",
+      "connectingDots": "Recoupements",
+      "contextualizing": "Contextualisation",
+      "detectingPatterns": "Détection de tendances",
+      "discoveringThemes": "Découverte de thèmes",
+      "evaluatingSignals": "Évaluation des signaux",
+      "learningPreferences": "Apprentissage des préférences",
+      "mappingInterests": "Cartographie des intérêts",
+      "optimizing": "Optimisation",
+      "personalizing": "Personnalisation",
+      "processing": "Traitement",
+      "refiningTaste": "Affinage des goûts",
+      "synthesizing": "Synthèse",
+      "tuningRelevance": "Réglage de la pertinence",
+      "understanding": "Compréhension",
+      "updatingModel": "Mise à jour du modèle",
+      "weighingTopics": "Pondération des sujets"
+    }
   },
   "personaChat": {
     "introMessage": "Bonjour ! Je suis Mera, votre assistante d'actualités personnelle.\n\nPour trouver des actualités qui vous intéressent vraiment, j'ai besoin de connaître quelques détails vous concernant. Où vous vivez, ce que vous faites, les loisirs que vous aimez, les actions que vous suivez, où vit votre famille. Partagez ce que vous voulez, un peu ou beaucoup.\n\nSi cela vous fait hésiter, c'est un bon instinct. Il n'est pas judicieux de confier des données personnelles à une société d'applications. Mera est construite différemment : tout ce que vous me dites est enregistré sur votre appareil, pas sur nos serveurs. Demandez-moi comment cela fonctionne, ou dites « Aidez-moi à configurer » et nous commencerons."
@@ -1156,7 +1191,13 @@
     "tooCluttered": "Encombré / trop de publicités",
     "tooSlow": "Trop lent à charger",
     "wrongPlace": "Mauvais endroit",
-    "wrongTopic": "Mauvais sujet"
+    "wrongTopic": "Mauvais sujet",
+    "aBitMore": "Un peu plus",
+    "aLotMore": "Beaucoup plus",
+    "followStory": "Suivre cette actualité",
+    "moreAboutTopic": "Plus sur ce sujet",
+    "moreFromPublication": "Plus de cette publication",
+    "moreNewsFromPlace": "Plus d'actualités de ce lieu"
   },
   "topicPlan": {
     "title": "Sujets que je vais suivre",
@@ -2326,5 +2367,94 @@
     "title": "Bon retour sur Mera",
     "body": "Il semble que Mera ait déjà été installé sur cet appareil, l'essai gratuit a donc déjà été utilisé. Vous pouvez continuer à lire avec votre nouveau compte, ou choisir une formule à tout moment pour l'expérience complète.",
     "continue": "Continuer"
+  },
+  "videoPlayer": {
+    "closeA11y": "Fermer la vidéo",
+    "openInBrowser": "Ouvrir dans le navigateur",
+    "playbackError": "Impossible de lire la vidéo."
+  },
+  "backup": {
+    "adoptDescription": "C'est le code que vous avez noté en configurant la sauvegarde sur votre autre appareil. Les majuscules, les espaces et les tirets n'ont pas d'importance.",
+    "adoptPlaceholder": "ABCDE-FGHJK-MNPQR…",
+    "adoptTitle": "Saisissez votre code de récupération",
+    "alreadyHave": "J'ai déjà une sauvegarde",
+    "backgroundRestricted": "L'actualisation en arrière-plan est désactivée, donc les sauvegardes ne peuvent pas se lancer seules. Utilisez Sauvegarder maintenant, ou activez-la dans les réglages de votre appareil.",
+    "cadence": {
+      "daily": "Tous les jours",
+      "manual": "Seulement quand je le demande",
+      "off": "Désactivée",
+      "weekly": "Toutes les semaines"
+    },
+    "cadenceHint": {
+      "daily": "Environ une fois par jour, généralement la nuit",
+      "manual": "Rien ne se lance automatiquement",
+      "weekly": "Environ une fois par semaine, généralement la nuit"
+    },
+    "changeSchedule": "Programmation des sauvegardes",
+    "codeDescription": "Notez-le et gardez-le en lieu sûr. C'est la seule chose qui peut ouvrir votre sauvegarde. Si vous le perdez, personne ne pourra récupérer vos données, pas même nous.",
+    "codeSaved": "J'ai enregistré mon code de récupération",
+    "codeTitle": "Votre code de récupération",
+    "codeWrong": "Vérifiez-le à nouveau. Chaque caractère compte, sauf les espaces et les majuscules.",
+    "codeWrongTitle": "Ce code n'est pas le bon",
+    "continue": "Continuer",
+    "doneDescription_one": "{{count}} élément enregistré.",
+    "doneDescription_other": "{{count}} éléments enregistrés.",
+    "doneTitle": "Sauvegarde terminée",
+    "drive": "Google Drive",
+    "driveConnect": "Appuyez pour connecter votre compte Google",
+    "driveFailed": "Google n'a pas pu vous connecter. Réessayez dans un instant.",
+    "driveFailedTitle": "Impossible de connecter Google Drive",
+    "driveHiddenFolder": "Dans le stockage caché des applis de Drive. Vous ne le verrez pas parmi vos fichiers, seulement dans les paramètres de Drive, sous Gérer les applications.",
+    "driveMisconfigured": "La connexion Google n'est pas configurée pour cette version de l'appli.",
+    "drivePlayServices": "Cet appareil a besoin d'une version à jour des services Google Play pour utiliser Drive.",
+    "driveReady": "Utilise votre stockage Google Drive",
+    "errorDescription": "Ça n'a pas fonctionné. Vérifiez votre connexion et réessayez.",
+    "errorTitle": "Une erreur est survenue",
+    "icloud": "iCloud",
+    "icloudHiddenFolder": "Dans le stockage iCloud privé de cette appli, pas dans vos fichiers iCloud Drive",
+    "icloudReady": "Utilise votre stockage iCloud",
+    "icloudUnavailable": "Connectez-vous à iCloud sur cet appareil pour utiliser cette option",
+    "offDescription": "Conservez une copie de vos informations, sujets, discussions, articles enregistrés et historique de lecture, pour qu'un nouveau téléphone ne signifie pas repartir de zéro. C'est facultatif et rien ne se lance tant que vous ne l'avez pas configuré.",
+    "offPrivacy": "La copie est chiffrée sur cet appareil avant d'aller où que ce soit. Celui qui la stocke ne peut pas la lire, et nous non plus. C'est pourquoi le code de récupération que vous allez recevoir est le seul moyen d'y accéder à nouveau.",
+    "onboardingIntro": "Si vous avez déjà utilisé Mera, saisissez votre code de récupération et nous restaurerons vos informations, sujets et réglages. Vous pouvez ignorer cette étape et repartir de zéro.",
+    "onboardingSkip": "Ignorer, je suis nouveau ici",
+    "restartNeeded": "Vos données sont de retour. Fermez et rouvrez l'appli pour les voir.",
+    "restore": "Restaurer une sauvegarde",
+    "restoreConfirmAction": "Remplacer",
+    "restoreConfirmDescription": "Vos informations, sujets, discussions, articles enregistrés et historique de lecture sur ce téléphone seront remplacés par le contenu de la sauvegarde. Cette action est irréversible. Votre compte et votre abonnement ne sont pas concernés.",
+    "restoreConfirmTitle": "Remplacer les données de cet appareil ?",
+    "restoreEmpty": "Aucune sauvegarde trouvée ici. Si vous utilisiez un autre compte Google ou iCloud, connectez-vous plutôt avec celui-là.",
+    "restoreHint": "Remplace les données de cet appareil",
+    "restoreLookHere": "Chercher ma sauvegarde ici",
+    "restoreWhereDescription": "Choisissez où vous l'avez enregistrée. Vous verrez son contenu avant tout remplacement.",
+    "restoreWhereTitle": "Où se trouve votre sauvegarde ?",
+    "restoredDescription_one": "{{count}} élément restauré sur cet appareil.",
+    "restoredDescription_other": "{{count}} éléments restaurés sur cet appareil.",
+    "restoredTitle": "Restauration terminée",
+    "restoring": "Restauration…",
+    "runNow": "Sauvegarder maintenant",
+    "runNowHint": "Utilisez ceci si la sauvegarde automatique ne s'est pas lancée",
+    "runsInBackground": "Se lance automatiquement en arrière-plan, généralement la nuit",
+    "setUp": "Sauvegarder vos données",
+    "shareCode": "Partager ou enregistrer le code",
+    "showCode": "Afficher le code de récupération",
+    "showCodeHint": "Le code que vous avez noté lors de la configuration",
+    "statusCadence": "Programmation : {{cadence}}",
+    "statusLast": "Dernière sauvegarde {{when}}",
+    "statusNever": "Aucune sauvegarde enregistrée pour l'instant",
+    "statusProvider": "Sauvegarde sur {{provider}}",
+    "statusStale": "Votre dernière sauvegarde date de {{days}} jours. Enregistrez-en une nouvelle.",
+    "title": "Sauvegarde",
+    "turnOff": "Désactiver la sauvegarde",
+    "turnOffAction": "Désactiver",
+    "turnOffConfirm": "Les sauvegardes s'arrêtent et cet appareil oublie votre code de récupération. Les copies déjà enregistrées restent où elles sont, et il vous faudra le code que vous avez noté pour les rouvrir.",
+    "turnOffHint": "Arrête les sauvegardes et oublie le code sur cet appareil",
+    "whenTitle": "Fréquence",
+    "whereDescription": "La copie est chiffrée dans tous les cas. Cela décide seulement qui la stocke.",
+    "whereTitle": "Où la conserver",
+    "wifiOnly": "Wi-Fi uniquement",
+    "wifiOnlyOff": "Désactivé. Les sauvegardes programmées peuvent utiliser les données mobiles.",
+    "wifiOnlyOn": "Activé. Les sauvegardes programmées attendent le Wi-Fi.",
+    "working": "En cours…"
   }
 }
