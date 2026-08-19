@@ -40,7 +40,6 @@ interface PreferenceOption {
     title: string;
     icon: keyof typeof MaterialIcons.glyphMap;
     onPress: () => void;
-    type?: 'normal' | 'danger' | 'feedback';
 }
 
 const AppPreferencesTab: React.FC = () => {
@@ -303,52 +302,13 @@ const AppPreferencesTab: React.FC = () => {
             onPress: () => routerHook.push('/logged-in/preferences/observability' as any),
         },
         ...subscriptionOptions,
-        // "Report a Bug" sits just above Logout, tinted Mera-orange so it reads
-        // as distinct from the neutral rows. Only shown when Sentry is enabled
-        // (showFeedback() no-ops otherwise). Tapping opens the feedback popup.
-        ...(SENTRY_ENABLED
-            ? [
-                {
-                    id: 'report-bug',
-                    title: t('preferences.reportBug'),
-                    icon: 'bug-report' as const,
-                    onPress: showFeedback,
-                    type: 'feedback' as const,
-                },
-            ]
-            : []),
-        {
-            id: 'support',
-            title: t('preferences.support'),
-            icon: 'support-agent',
-            // Opens the Intercom Messenger, or falls back to mail. The whole
-            // decision lives in useSupportAction so this row, the paywall
-            // footer and BlockedBanner cannot drift apart. Sits at the BOTTOM,
-            // directly above Logout (user call, 2026-08-19).
-            onPress: () => { void openSupport(); },
-        },
-        {
-            id: 'logout',
-            title: t('preferences.logout'),
-            icon: 'logout',
-            onPress: () => openModal('logout'),
-            type: 'danger',
-        },
-
     ];
+    // Support, Report a Bug and Logout left this array (2026-08-19, user
+    // call): they render as a dedicated bottom block after the row list —
+    // support + bug half-and-half on one row, Logout centered beneath.
 
     // Render option item as outline button
     const renderOption = (option: PreferenceOption) => {
-        const isDanger = option.type === 'danger';
-        const isFeedback = option.type === 'feedback';
-        const textColor = isDanger
-            ? 'text-red-400'
-            : isFeedback
-                ? 'text-primary-400'
-                : 'text-white';
-        // Tint the feedback row's border to match its Mera-orange label.
-        const borderColor = isFeedback ? 'border-primary-400/50' : 'border-gray-700';
-
         // Liquid Glass row: GlassPanel owns the rounded/clipped outer surface
         // (glass fill on iOS 26+, nothing otherwise) — the Pressable inside
         // keeps its original padding/layout untouched, and the fallback
@@ -359,7 +319,7 @@ const AppPreferencesTab: React.FC = () => {
                 key={option.id}
                 radius={8}
                 className="mb-3"
-                fallbackClassName={`border ${borderColor} bg-transparent`}
+                fallbackClassName="border border-gray-700 bg-transparent"
             >
                 <Pressable
                     // One line, every row. This list had NO testIDs at all, so
@@ -368,46 +328,25 @@ const AppPreferencesTab: React.FC = () => {
                     className="flex-row items-center justify-between py-3 px-4"
                     onPress={option.onPress}
                     accessibilityRole="button"
-                    // "busy", not "disabled": the control still accepts input,
-                    // it is just working. Announcing it as disabled would be a
-                    // lie to a screen reader.
-                    accessibilityState={
-                        option.id === 'support' && supportBusy ? { busy: true } : undefined
-                    }
-                    accessibilityLabel={
-                        option.id === 'support' && supportBusy
-                            ? t('support.opening')
-                            : undefined
-                    }
                 >
                     {option.id === 'language' ? (
                         <HStack className="items-center flex-1" space="md">
-                            <Text className={`text-base ${textColor}`}>
+                            <Text className="text-base text-white">
                                 {LANGUAGE_WORD_BY_CODE[appLanguage] ?? 'Language'}
                             </Text>
                             <LanguageWordTicker />
                         </HStack>
                     ) : (
-                        <Text className={`text-base ${textColor}`}>
+                        <Text className="text-base text-white">
                             {option.title}
                         </Text>
                     )}
-                    {/* The spinner takes the chevron's slot rather than
-                        sitting beside it, so the row does not reflow while
-                        support is opening. Both are 20px in a 20px box. The
-                        row is deliberately NOT disabled: re-entry is guarded
-                        by a ref inside useSupportAction, so a second tap is a
-                        no-op without the row greying out and looking broken. */}
                     <Box className="w-5 h-5 items-center justify-center">
-                        {option.id === 'support' && supportBusy ? (
-                            <Spinner size="small" />
-                        ) : (
-                            <MaterialIcons
-                                name="chevron-right"
-                                size={20}
-                                color="#999999"
-                            />
-                        )}
+                        <MaterialIcons
+                            name="chevron-right"
+                            size={20}
+                            color="#999999"
+                        />
                     </Box>
                 </Pressable>
             </GlassPanel>
@@ -439,6 +378,81 @@ const AppPreferencesTab: React.FC = () => {
                 <VStack>
                     {preferenceOptions.map(renderOption)}
                 </VStack>
+
+                {/* Bottom action block (user call, 2026-08-19): Talk to
+                    support and Report a Bug share the second-to-last row half
+                    and half — support spans it alone in dev builds, where
+                    SENTRY_ENABLED is false and showFeedback would no-op — and
+                    Logout sits centered on its own row beneath them. Rows are
+                    deliberately NOT disabled while support opens: re-entry is
+                    guarded by a ref inside useSupportAction, so a second tap
+                    is a no-op without the row greying out and looking broken. */}
+                <HStack space="sm" className="mb-3">
+                    <GlassPanel
+                        radius={8}
+                        className="flex-1"
+                        fallbackClassName="border border-gray-700 bg-transparent"
+                    >
+                        <Pressable
+                            testID="settings-row-support"
+                            className="flex-row items-center justify-center py-3 px-2"
+                            onPress={() => { void openSupport(); }}
+                            accessibilityRole="button"
+                            accessibilityState={supportBusy ? { busy: true } : undefined}
+                            accessibilityLabel={
+                                supportBusy ? t('support.opening') : t('preferences.support')
+                            }
+                        >
+                            {supportBusy ? (
+                                <Spinner size="small" />
+                            ) : (
+                                <HStack space="xs" className="items-center">
+                                    <MaterialIcons name="support-agent" size={18} color="rgb(237, 167, 126)" />
+                                    <Text className="text-base text-white" numberOfLines={1}>
+                                        {t('preferences.support')}
+                                    </Text>
+                                </HStack>
+                            )}
+                        </Pressable>
+                    </GlassPanel>
+                    {SENTRY_ENABLED && (
+                        <GlassPanel
+                            radius={8}
+                            className="flex-1"
+                            fallbackClassName="border border-primary-400/50 bg-transparent"
+                        >
+                            <Pressable
+                                testID="settings-row-report-bug"
+                                className="flex-row items-center justify-center py-3 px-2"
+                                onPress={showFeedback}
+                                accessibilityRole="button"
+                            >
+                                <HStack space="xs" className="items-center">
+                                    <MaterialIcons name="bug-report" size={18} color="rgb(237, 167, 126)" />
+                                    <Text className="text-base text-primary-400" numberOfLines={1}>
+                                        {t('preferences.reportBug')}
+                                    </Text>
+                                </HStack>
+                            </Pressable>
+                        </GlassPanel>
+                    )}
+                </HStack>
+                <GlassPanel
+                    radius={8}
+                    className="mb-3"
+                    fallbackClassName="border border-gray-700 bg-transparent"
+                >
+                    <Pressable
+                        testID="settings-row-logout"
+                        className="items-center justify-center py-3 px-4"
+                        onPress={() => openModal('logout')}
+                        accessibilityRole="button"
+                    >
+                        <Text className="text-base text-red-400">
+                            {t('preferences.logout')}
+                        </Text>
+                    </Pressable>
+                </GlassPanel>
                 <Box className="items-center py-4">
                     <HStack space="sm" className="items-center justify-center flex-wrap mb-4">
                         <PolicyPill label={t('preferences.privacyPolicy')} onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))} />
