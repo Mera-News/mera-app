@@ -390,9 +390,9 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onGetStarted }) =
 
                 {/* The existing-user path, framed for the people it is really
                     for since the auth wave: paid users signed in with the email
-                    they verified at checkout. A text link, not a third button —
-                    three buttons of equal weight would bury the primary. */}
-                <VStack accessible={false} space="xs" className="items-center">
+                    they verified at checkout. Outline like Learn about Mera —
+                    the filled CTA between them stays the only primary. */}
+                <VStack accessible={false} space="sm">
                     <Text size="xs" className="text-gray-500 text-center">
                         {t('auth.paidUserHint')}
                     </Text>
@@ -402,9 +402,9 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onGetStarted }) =
                         accessible
                         accessibilityRole="button"
                         accessibilityLabel={t('auth.signIn')}
-                        className="py-1"
+                        className="h-14 rounded-full items-center justify-center border border-primary-500 bg-transparent"
                     >
-                        <Text size="sm" className="text-primary-400 font-semibold">
+                        <Text className="text-primary-500 text-base font-semibold">
                             {t('auth.signIn')}
                         </Text>
                     </Pressable>

@@ -374,14 +374,18 @@ describe('welcome-view action stack (S13)', () => {
         expect(queryByTestId('stub-legal-footer')).toBeTruthy();
     });
 
-    it('the sign-in link is a text link (no button shell) labeled Sign in and opens the email view', async () => {
+    it('the sign-in action is an OUTLINE button labeled Sign in and opens the email view', async () => {
         const { findByTestId } = render(<AuthScreen />);
-        const link = await findByTestId('auth-use-email');
-        expect(link.props.accessibilityRole).toBe('button');
-        expect(link.props.accessibilityLabel).toBe('auth.signIn');
-        expect(link.props.className ?? '').not.toContain('h-14');
+        const signIn = await findByTestId('auth-use-email');
+        expect(signIn.props.accessibilityRole).toBe('button');
+        expect(signIn.props.accessibilityLabel).toBe('auth.signIn');
+        // Same geometry as Learn about Mera; the filled CTA between them stays
+        // the only primary.
+        expect(signIn.props.className).toContain('h-14');
+        expect(signIn.props.className).toContain('border');
+        expect(signIn.props.className).not.toContain('bg-primary-500');
 
-        fireEvent.press(link);
+        fireEvent.press(signIn);
         expect(await findByTestId('auth-email-input')).toBeTruthy();
     });
 });
