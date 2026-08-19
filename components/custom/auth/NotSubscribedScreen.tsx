@@ -530,28 +530,27 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           </ButtonText>
                                       </Button>
 
-                                      {/* Demoted from an outlined button to a link,
-                                          but the rules that governed it are unchanged
+                                      {/* Outlined again, in the exact shape of the
+                                          Learn button above (same explicit
+                                          border-white/30 — Gluestack's outline
+                                          default is invisible on this glass panel).
+                                          The rules that governed it are unchanged
                                           and still load-bearing: Mera News Free is a
                                           legitimate destination, not an escape hatch
                                           to be hidden, and this is the ONLY way off
                                           the screen. So it stays never disabled (even
                                           while `busy` holds for ~12s, which would
                                           otherwise strand a user behind a request they
-                                          did not ask for), never guilt-worded, and at
-                                          the same size as the buttons above it rather
-                                          than smaller — subordinate by weight, not by
-                                          legibility. `lg` is also what puts its touch
-                                          target on 44pt: a link variant has no fill,
-                                          so the row height IS the target. */}
+                                          did not ask for), never guilt-worded, and
+                                          `lg` keeps the 44pt target. */}
                                       <Button
                                           testID="not-subscribed-continue"
                                           onPress={handleContinueWithoutPlan}
-                                          variant="link"
-                                          className="w-full rounded-full"
+                                          variant="outline"
+                                          className="w-full rounded-full border-white/30"
                                           size="lg"
                                       >
-                                          <ButtonText className="text-gray-400 underline">
+                                          <ButtonText className="text-white">
                                               {t('freeTier.continueWithoutPlan')}
                                           </ButtonText>
                                       </Button>
