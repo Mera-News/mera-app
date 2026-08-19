@@ -21,6 +21,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.mera.news",
+      "appleTeamId": "Q8RA98G9S9",
       "icon": "./assets/icons/ios-dark.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
