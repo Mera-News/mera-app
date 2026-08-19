@@ -24,6 +24,7 @@
       "icon": "./assets/icons/ios-dark.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
+        "NSMicrophoneUsageDescription": "Mera does not record audio. This notice is required because an on-device AI component references the microphone API. The microphone is never accessed without your permission.",
         "UIUserInterfaceStyle": "Dark",
         "UIBackgroundModes": [
           "remote-notification"
