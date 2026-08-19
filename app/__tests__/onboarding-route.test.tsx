@@ -44,26 +44,19 @@ jest.mock('@/lib/database/services/setting-service', () => ({
 
 // Stand-in for the gate: immediately pulls whichever escape hatch the test asks
 // for, so the route's handlers are exercised without the real gate's DB reads.
-let mockInvoke: 'login' | 'complete' | 'paywall' | 'free-tier' | null = null;
+let mockInvoke: 'login' | 'complete' | 'free-tier' | null = null;
 jest.mock('@/components/custom/onboarding/OnboardingScreen', () => {
     const React2 = require('react');
-    const GateStub = ({ onLoginRedirect, onComplete, onPaywall, onFreeTierMode }: any) => {
+    const GateStub = ({ onLoginRedirect, onComplete, onFreeTierMode }: any) => {
         React2.useEffect(() => {
             if (mockInvoke === 'login') onLoginRedirect();
             if (mockInvoke === 'complete') onComplete();
-            if (mockInvoke === 'paywall') onPaywall();
             if (mockInvoke === 'free-tier') onFreeTierMode();
-        }, [onLoginRedirect, onComplete, onPaywall, onFreeTierMode]);
+        }, [onLoginRedirect, onComplete, onFreeTierMode]);
         return null;
     };
     return { __esModule: true, default: GateStub };
 });
-
-// The route hands the paywall escape hatch to navigateToPaywall() rather than
-// issuing its own replace — that function owns the in-flight guard that stops
-// two near-simultaneous triggers stacking two paywall screens.
-const mockNavigateToPaywall = jest.fn();
-jest.mock('@/lib/nav-state', () => ({ navigateToPaywall: (...a: any[]) => mockNavigateToPaywall(...a) }));
 
 import Onboarding from '../logged-in/onboarding';
 
@@ -105,17 +98,6 @@ describe('onboarding route', () => {
         });
     });
 
-    it('onPaywall goes through navigateToPaywall in its DEFAULT mode', async () => {
-        mockInvoke = 'paywall';
-        render(<Onboarding />);
-
-        await waitFor(() => expect(mockNavigateToPaywall).toHaveBeenCalledTimes(1));
-        // No 'lapsed' argument: this is the primary conversion moment and
-        // deliberately gets the screen's auto-presented purchase sheet.
-        expect(mockNavigateToPaywall).toHaveBeenCalledWith();
-        expect(mockReplace).not.toHaveBeenCalled();
-    });
-
     it('onFreeTierMode lands on the FEED, not the fromOnboarding dashboard', async () => {
         mockInvoke = 'free-tier';
         render(<Onboarding />);
@@ -124,7 +106,6 @@ describe('onboarding route', () => {
         await waitFor(() =>
             expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
         );
-        expect(mockNavigateToPaywall).not.toHaveBeenCalled();
     });
 
     // ── local-first identity ─────────────────────────────────────────────

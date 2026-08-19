@@ -149,7 +149,6 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   async_pipeline_privkey: 'Private key material.',
   last_known_subscription_tier:
     'Entitlement must resolve against the NEW device billing, never be asserted by a restored file.',
-  free_tier_first_open_dismissed: 'Entitlement UI latch, same reason.',
   dev_free_tier_lapse_acked: 'Entitlement UI latch, same reason.',
   onboarding_state: 'Device flow state; onboarding gates on local facts anyway.',
   push_token_fail_streak: 'Counts failures of a push token this device does not have.',

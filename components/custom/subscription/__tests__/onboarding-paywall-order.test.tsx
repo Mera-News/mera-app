@@ -162,13 +162,11 @@ import {
     decideOnboardingEntry,
     waitForAiAccessResolved,
 } from '@/lib/subscription/onboarding-paywall';
-import { FIRST_OPEN_DISMISSED_SETTING_KEY } from '@/lib/subscription/first-open-dismissal';
 import { LAST_KNOWN_TIER_SETTING_KEY } from '@/lib/subscription/last-known-tier';
 
 function renderGate() {
     const onComplete = jest.fn();
     const onLoginRedirect = jest.fn();
-    const onPaywall = jest.fn();
     const onFreeTierMode = jest.fn();
     const utils = render(
         <OnboardingScreen
@@ -176,11 +174,10 @@ function renderGate() {
             sessionUserId="u1"
             onLoginRedirect={onLoginRedirect}
             onComplete={onComplete}
-            onPaywall={onPaywall}
             onFreeTierMode={onFreeTierMode}
         />,
     );
-    return { ...utils, onComplete, onLoginRedirect, onPaywall, onFreeTierMode };
+    return { ...utils, onComplete, onLoginRedirect, onFreeTierMode };
 }
 
 /**
@@ -219,30 +216,30 @@ beforeEach(() => {
  */
 const ONBOARDING_ENTRY = 'onboarding-wizard';
 
-describe('paywall before onboarding', () => {
-    it('no active tier + no local facts → the paywall, NOT onboarding', async () => {
+describe('unentitled entry before onboarding', () => {
+    it('no active tier + no local facts → Mera News Free, NOT onboarding', async () => {
         mockServerAnswer = { subscriptionTier: 'none' };
 
-        const { onPaywall, onFreeTierMode, onComplete, queryByTestId } = renderGate();
+        const { onFreeTierMode, onComplete, queryByTestId } = renderGate();
         await flush();
 
-        expect(onPaywall).toHaveBeenCalledTimes(1);
+        // The standalone paywall screen is gone (2026-08-19): 'locked' lands
+        // on the free feed, whose FreeTierCard carries the pitch and actions.
+        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
         // The whole point: the wizard — whose step 2 is the Mera chat that 401s
         // without an entitlement — never mounts.
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
-        expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onComplete).not.toHaveBeenCalled();
     });
 
     it('active tier + no local facts → onboarding, and no paywall', async () => {
         mockServerAnswer = { subscriptionTier: 'professional' };
 
-        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
     });
 
@@ -253,11 +250,11 @@ describe('paywall before onboarding', () => {
     it('a trialing user resolves to a real tier and is treated as active', async () => {
         mockServerAnswer = { subscriptionTier: 'starter' };
 
-        const { onPaywall, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onPaywall).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
     });
 
     // ── EXPECTATION CHANGED 2026-08-06 (owner decision) ─────────────────────
@@ -298,13 +295,12 @@ describe('paywall before onboarding', () => {
         // `cached_user_id`, so the absence here is the point.
         expect(mockSettings[LAST_KNOWN_TIER_SETTING_KEY]).toBeUndefined();
 
-        const { onPaywall, onFreeTierMode, onComplete, queryByTestId } = renderGate();
+        const { onFreeTierMode, onComplete, queryByTestId } = renderGate();
         await flush();
 
         // The HOLD is unchanged: nothing is decided while the wait is running.
         // No lock flashed at a possible subscriber, no onboarding flashed at a
         // possible non-subscriber — just the existing spinner.
-        expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onComplete).not.toHaveBeenCalled();
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
@@ -314,14 +310,13 @@ describe('paywall before onboarding', () => {
         // Still holding well into the wait window.
         act(() => { jest.advanceTimersByTime(ONBOARDING_ENTITLEMENT_WAIT_MS - 1); });
         await flush();
-        expect(onPaywall).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
 
         // And still BOUNDED — the hold ends rather than running forever.
         act(() => { jest.advanceTimersByTime(2); });
         await flush();
-        expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
 
@@ -351,18 +346,18 @@ describe('paywall before onboarding', () => {
         // The server WILL answer, with the grant applied — a shade too late.
         mockServerAnswer = { subscriptionTier: 'starter' };
 
-        const { onPaywall, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         // It held instead of routing, AND it actually asked the server.
-        expect(onPaywall).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(mockSyncEntitlement).toHaveBeenCalledTimes(1);
 
         act(() => { jest.advanceTimersByTime(1); });
         await flush();
 
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onPaywall).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
 
         jest.useRealTimers();
     });
@@ -374,11 +369,10 @@ describe('paywall before onboarding', () => {
         mockIsConnected = false;
         mockServerAnswer = null;
 
-        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         // Offline is answered from memory, so nothing is even attempted.
         expect(mockSyncEntitlement).not.toHaveBeenCalled();
@@ -396,7 +390,7 @@ describe('paywall before onboarding', () => {
         mockIsConnected = true;
         mockServerAnswer = null;
 
-        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         // It really did hold: the answer is not being taken from memory early.
@@ -409,22 +403,21 @@ describe('paywall before onboarding', () => {
         await flush();
 
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
 
         jest.useRealTimers();
     });
 
-    it('an unresolvable verdict trusts a last-known tier of "none" → the paywall, not the wizard', async () => {
+    it('an unresolvable verdict trusts a last-known tier of "none" → Mera News Free, not the wizard', async () => {
         // 'none' IS a resolution — the server said this user has no plan — and
         // it must read as locked rather than as "never resolved".
         mockSettings[LAST_KNOWN_TIER_SETTING_KEY] = 'none';
         mockIsConnected = false;
 
-        const { onPaywall, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(onPaywall).toHaveBeenCalledTimes(1);
+        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
     });
@@ -433,7 +426,7 @@ describe('paywall before onboarding', () => {
         mockIsConnected = false;
         mockServerAnswer = null;
 
-        const { onPaywall, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         // No timers advanced: the offline branch still returns immediately
@@ -441,23 +434,6 @@ describe('paywall before onboarding', () => {
         // Its destination is now onboarding — a paywall is no more usable
         // offline than the wizard is, and the wizard is the one that does not
         // mis-accuse a granted user.
-        expect(onPaywall).not.toHaveBeenCalled();
-        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-    });
-
-    it("a DISMISSED device with an unresolvable verdict still fails open, and never loops to the paywall", async () => {
-        // The anti-loop rule survives the r13 reversal, just by a shorter
-        // route: `'unknown'` no longer reaches the dismissal branch at all, so
-        // a user who said no once cannot meet the paywall again on a launch
-        // where nothing answered.
-        mockSettings[FIRST_OPEN_DISMISSED_SETTING_KEY] = 'true';
-        mockIsConnected = false;
-        mockServerAnswer = null;
-
-        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
-        await flush();
-
-        expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
     });
@@ -476,7 +452,6 @@ describe('paywall before onboarding', () => {
         // Never answers, so the whole wait window is spent holding.
         mockServerAnswer = null;
 
-        const onPaywall = jest.fn();
         const onComplete = jest.fn();
         const onLoginRedirect = jest.fn();
         const onFreeTierMode = jest.fn();
@@ -489,7 +464,6 @@ describe('paywall before onboarding', () => {
                 sessionUserId="u1"
                 onLoginRedirect={() => onLoginRedirect()}
                 onComplete={() => onComplete()}
-                onPaywall={() => onPaywall()}
                 onFreeTierMode={() => onFreeTierMode()}
             />
         );
@@ -517,40 +491,11 @@ describe('paywall before onboarding', () => {
         act(() => { jest.advanceTimersByTime(ONBOARDING_ENTITLEMENT_WAIT_MS + 1); });
         await flush();
         expect(onComplete).not.toHaveBeenCalled();
-        expect(onPaywall).not.toHaveBeenCalled();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
 
         jest.useRealTimers();
     });
 
-    it('dismissed + no tier → Mera News Free, onboarding skipped, no paywall loop', async () => {
-        mockServerAnswer = { subscriptionTier: 'none' };
-        mockSettings[FIRST_OPEN_DISMISSED_SETTING_KEY] = 'true';
-
-        const { onPaywall, onFreeTierMode, onComplete, queryByTestId } = renderGate();
-        await flush();
-
-        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
-        // Not back to the paywall they just dismissed...
-        expect(onPaywall).not.toHaveBeenCalled();
-        // ...and not into onboarding either, whose chat cannot work here.
-        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
-        expect(queryByTestId('onboarding-wizard')).toBeNull();
-        expect(onComplete).not.toHaveBeenCalled();
-    });
-
-    it('dismissed THEN subscribed → onboarding proceeds (dismissal never strands them)', async () => {
-        // The dismissal flag is still set from the earlier refusal — it is
-        // device-local and permanent — but the tier is now real.
-        mockSettings[FIRST_OPEN_DISMISSED_SETTING_KEY] = 'true';
-        mockServerAnswer = { subscriptionTier: 'professional' };
-
-        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
-        await flush();
-
-        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onFreeTierMode).not.toHaveBeenCalled();
-        expect(onPaywall).not.toHaveBeenCalled();
-    });
 });
 
 describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commits in)', () => {
@@ -559,11 +504,10 @@ describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commi
         // Deliberately the state that WOULD lock a user with the gate on.
         mockServerAnswer = { subscriptionTier: 'none' };
 
-        const { onPaywall, onFreeTierMode, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onPaywall).not.toHaveBeenCalled();
         expect(onFreeTierMode).not.toHaveBeenCalled();
         // The zero-cost property: deriveAiAccess short-circuits to 'entitled',
         // so resolveEntitlementForOnboarding returns on its first statement —
@@ -571,16 +515,16 @@ describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commi
         expect(mockSyncEntitlement).not.toHaveBeenCalled();
     });
 
-    it('the dev override still reaches the paywall with the ship gate off', async () => {
+    it('the dev override still reaches Mera News Free with the ship gate off', async () => {
         // DEV_FORCE_AI_ACCESS sits ABOVE the ship gate, so the simulator harness
         // can drive this reorder before the flag flips.
         gates.FREE_TIER_MODE_ENABLED = false;
         gates.DEV_FORCE_AI_ACCESS = 'locked';
 
-        const { onPaywall, queryByTestId } = renderGate();
+        const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(onPaywall).toHaveBeenCalledTimes(1);
+        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
         expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
         expect(queryByTestId('onboarding-wizard')).toBeNull();
     });
@@ -588,35 +532,18 @@ describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commi
 
 describe('decideOnboardingEntry', () => {
     it('ONLY an entitled verdict opens the wizard', () => {
-        expect(decideOnboardingEntry({ aiAccess: 'entitled', firstOpenDismissed: false })).toBe('onboarding');
-        expect(decideOnboardingEntry({ aiAccess: 'entitled', firstOpenDismissed: true })).toBe('onboarding');
+        expect(decideOnboardingEntry({ aiAccess: 'entitled' })).toBe('onboarding');
     });
 
-    it('locked splits on the device-local dismissal', () => {
-        expect(decideOnboardingEntry({ aiAccess: 'locked', firstOpenDismissed: false })).toBe('paywall');
-        expect(decideOnboardingEntry({ aiAccess: 'locked', firstOpenDismissed: true })).toBe('free-tier');
+    it('locked goes to Mera News Free (the standalone paywall screen is gone; FreeTierCard is the pitch)', () => {
+        expect(decideOnboardingEntry({ aiAccess: 'locked' })).toBe('free-tier');
     });
 
-    // ── EXPECTATION CHANGED TWICE. Both reversals are deliberate. ───────────
-    //
-    // 2026-08-06 these moved from 'onboarding' to 'paywall': with the ship gate
-    // armed, `'unknown'` was every cold start that had not heard from billing,
-    // and sending those users into the wizard was a production regression.
-    //
-    // r13 moves them back, for a reason that did not exist then: the server now
-    // GRANTS every account a free 14-day Starter window and enforces it
-    // server-side. Two things follow. `'unknown'` is now narrower still — since
-    // `resolveEntitlementForOnboarding` keys on OUR SERVER having answered, a
-    // RevenueCat-derived 'locked' no longer masquerades as a resolution — and a
-    // pessimistic guess is now the expensive one, because it paywalls exactly
-    // the new users the grant exists to convert. Guessing 'onboarding' grants
-    // no server content: an unentitled user meets a 402 and lands in the
-    // free-tier UI on the next pass.
     it("'unknown' means our server has never answered → fail OPEN to onboarding", () => {
-        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: false })).toBe('onboarding');
-        // Dismissal does not change it: 'unknown' is not a refusal to respect,
-        // it is an absence of information, and the server is the enforcer.
-        expect(decideOnboardingEntry({ aiAccess: 'unknown', firstOpenDismissed: true })).toBe('onboarding');
+        // Not a refusal to respect, an absence of information - and the server
+        // is the enforcer (r13 grant reasoning, unchanged by the paywall-screen
+        // removal).
+        expect(decideOnboardingEntry({ aiAccess: 'unknown' })).toBe('onboarding');
     });
 });
 

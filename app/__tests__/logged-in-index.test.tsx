@@ -123,18 +123,11 @@ jest.mock('@/lib/subscription/entitlement-sync', () => ({ syncEntitlement: jest.
 // components/custom/subscription/__tests__/onboarding-paywall-order.test.tsx.
 // The default verdict is the pass-through one, so every pre-existing assertion
 // here describes an entitled user and is unchanged.
-const mockNavigateToPaywall = jest.fn();
-jest.mock('@/lib/nav-state', () => ({ navigateToPaywall: () => mockNavigateToPaywall() }));
 const mockResolveEntitlement = jest.fn(async () => 'entitled' as string);
 const mockDecideEntry = jest.fn(() => 'onboarding' as string);
 jest.mock('@/lib/subscription/onboarding-paywall', () => ({
     resolveEntitlementForOnboarding: (...a: any[]) => mockResolveEntitlement(...(a as [])),
     decideOnboardingEntry: (...a: any[]) => mockDecideEntry(...(a as [])),
-}));
-const mockReadFirstOpenDismissed = jest.fn(async () => false);
-jest.mock('@/lib/subscription/first-open-dismissal', () => ({
-    FIRST_OPEN_DISMISSED_SETTING_KEY: 'free_tier_first_open_dismissed',
-    readFirstOpenDismissed: () => mockReadFirstOpenDismissed(),
 }));
 
 import LoggedInIndex from '../logged-in/index';
@@ -157,7 +150,6 @@ beforeEach(() => {
     mockHasAnyFacts.mockResolvedValue(true);
     mockResolveEntitlement.mockResolvedValue('entitled');
     mockDecideEntry.mockReturnValue('onboarding');
-    mockReadFirstOpenDismissed.mockResolvedValue(false);
 });
 
 describe('cold-start identity gate', () => {
@@ -504,17 +496,15 @@ describe('cold-start paywall ordering', () => {
         );
     });
 
-    it('a locked, never-dismissed user gets the paywall instead of onboarding', async () => {
-        mockHasAnyFacts.mockResolvedValue(false);
-        mockResolveEntitlement.mockResolvedValue('locked');
-        mockDecideEntry.mockReturnValue('paywall');
-        render(<LoggedInIndex />);
 
-        await waitFor(() => expect(mockNavigateToPaywall).toHaveBeenCalledTimes(1));
-        expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
-    });
 
-    it('a locked, already-dismissed user lands on Mera News Free, not onboarding', async () => {
+
+
+
+    it('a locked user lands on Mera News Free (feed + FreeTierCard), not onboarding', async () => {
+        // The standalone paywall screen was removed 2026-08-19 — 'locked'
+        // routes straight to the free feed, whose FreeTierCard carries the
+        // pitch, Subscribe and support.
         mockHasAnyFacts.mockResolvedValue(false);
         mockResolveEntitlement.mockResolvedValue('locked');
         mockDecideEntry.mockReturnValue('free-tier');
@@ -523,49 +513,13 @@ describe('cold-start paywall ordering', () => {
         await waitFor(() =>
             expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
         );
-        expect(mockNavigateToPaywall).not.toHaveBeenCalled();
         expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
+        expect(mockDecideEntry).toHaveBeenCalledWith({ aiAccess: 'locked' });
     });
 
-    // Renamed and widened 2026-08-06. The guard was `aiAccess === 'locked'`; it
-    // is now `aiAccess !== 'entitled'`, because `'unknown'` diverts too.
-    it('skips the dismissal read on the entitled path — the subscriber pays for no DB read', async () => {
-        mockHasAnyFacts.mockResolvedValue(false);
-        render(<LoggedInIndex />);
-        await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
-        expect(mockReadFirstOpenDismissed).not.toHaveBeenCalled();
-    });
-
-    // ── THE ANTI-LOOP GUARD (2026-08-06) ────────────────────────────────────
-    //
-    // `'unknown'` now means "this device has never resolved a tier", and it
-    // diverts exactly like `'locked'`. If this copy of the guard were left at
-    // `=== 'locked'`, `firstOpenDismissed` would be hard-coded `false` for such
-    // a device — so a user who already dismissed the paywall would be sent back
-    // to it on every launch, forever. This guard and OnboardingScreen's must
-    // stay identical; the sibling assertion lives in
-    // components/custom/subscription/__tests__/onboarding-paywall-order.test.tsx.
-    it("reads the dismissal flag on an 'unknown' verdict too, not just 'locked'", async () => {
+    it("an 'unknown' verdict that survives the resolve also goes to Mera News Free", async () => {
         mockHasAnyFacts.mockResolvedValue(false);
         mockResolveEntitlement.mockResolvedValue('unknown');
-        mockDecideEntry.mockReturnValue('paywall');
-
-        render(<LoggedInIndex />);
-
-        await waitFor(() => expect(mockNavigateToPaywall).toHaveBeenCalledTimes(1));
-        expect(mockReadFirstOpenDismissed).toHaveBeenCalledTimes(1);
-        // And the real answer is what reaches the decision — not a hard-coded
-        // `false` that would defeat the dismissal.
-        expect(mockDecideEntry).toHaveBeenCalledWith({
-            aiAccess: 'unknown',
-            firstOpenDismissed: false,
-        });
-    });
-
-    it("an 'unknown' verdict on a DISMISSED device goes to Mera News Free, never back to the paywall", async () => {
-        mockHasAnyFacts.mockResolvedValue(false);
-        mockResolveEntitlement.mockResolvedValue('unknown');
-        mockReadFirstOpenDismissed.mockResolvedValue(true);
         mockDecideEntry.mockReturnValue('free-tier');
 
         render(<LoggedInIndex />);
@@ -573,12 +527,7 @@ describe('cold-start paywall ordering', () => {
         await waitFor(() =>
             expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
         );
-        expect(mockDecideEntry).toHaveBeenCalledWith({
-            aiAccess: 'unknown',
-            firstOpenDismissed: true,
-        });
-        expect(mockNavigateToPaywall).not.toHaveBeenCalled();
-        expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
+        expect(mockDecideEntry).toHaveBeenCalledWith({ aiAccess: 'unknown' });
     });
 
     it('an already-onboarded user pays for none of it (requirement: no regression)', async () => {
@@ -589,6 +538,5 @@ describe('cold-start paywall ordering', () => {
             expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
         );
         expect(mockResolveEntitlement).not.toHaveBeenCalled();
-        expect(mockNavigateToPaywall).not.toHaveBeenCalled();
     });
 });

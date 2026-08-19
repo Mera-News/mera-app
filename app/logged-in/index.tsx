@@ -18,9 +18,7 @@ import { useUserStore } from "@/lib/stores/user-store";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
 import { useSubscriptionStore } from "@/lib/stores/subscription-store";
 import { loginRevenueCat } from "@/lib/revenuecat";
-import { navigateToPaywall } from "@/lib/nav-state";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
-import { readFirstOpenDismissed } from "@/lib/subscription/first-open-dismissal";
 import { readStartupTab } from "@/lib/navigation/startup-tab";
 import {
     decideOnboardingEntry,
@@ -320,20 +318,11 @@ export default function LoggedInIndex() {
                 });
                 if (cancelled) return;
 
-                // `!== 'entitled'`, not `=== 'locked'`. Since 2026-08-06
-                // `'unknown'` (never-resolved device) diverts as well, and
-                // hard-coding `false` for it would push a user who already
-                // dismissed the paywall back into it on every launch. This
-                // guard and OnboardingScreen's must stay identical.
-                const firstOpenDismissed =
-                    aiAccess !== 'entitled' ? await readFirstOpenDismissed() : false;
-                if (cancelled) return;
-
-                switch (decideOnboardingEntry({ aiAccess, firstOpenDismissed })) {
-                    case 'paywall':
-                        navigateToPaywall();
-                        return;
+                switch (decideOnboardingEntry({ aiAccess })) {
                     case 'free-tier':
+                        // Mera News Free: the feed's FreeTierCard carries the
+                        // pitch, Subscribe and support (the standalone paywall
+                        // screen was removed 2026-08-19).
                         router.replace('/logged-in/app_container/feed');
                         return;
                     default:

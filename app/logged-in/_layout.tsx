@@ -5,8 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FeedbackWidgetModal from '@/components/custom/FeedbackWidgetModal';
 import ReauthBanner from '@/components/custom/ReauthBanner';
 import FloatingChatHost from '@/components/custom/floating-chat/FloatingChatHost';
-import LapseInterstitialGate from '@/components/custom/subscription/LapseInterstitialGate';
-import FirstOpenPaywallGate from '@/components/custom/subscription/FirstOpenPaywallGate';
 import EmailCaptureHost from '@/components/custom/subscription/EmailCaptureSheet';
 import ConsentGate from '@/components/custom/auth/ConsentGate';
 import IdentitySwitchWatcher from '@/components/custom/auth/IdentitySwitchWatcher';
@@ -32,13 +30,6 @@ export default function LoggedInLayout() {
         />
         <Stack.Screen
           name="onboarding"
-          options={{
-            headerShown: false,
-            animation: 'slide_from_right'
-          }}
-        />
-        <Stack.Screen
-          name="not-subscribed"
           options={{
             headerShown: false,
             animation: 'slide_from_right'
@@ -206,17 +197,12 @@ export default function LoggedInLayout() {
           unresolved session unconditionally (that is the offline path) and
           fires at most once per process. */}
       <IdentitySwitchWatcher />
-      {/* Renders nothing — a mounted effect. Lives here, once, so it watches
-          the whole logged-in tree instead of one screen, and so it survives the
-          tab switches a per-screen mount would miss. */}
-      <LapseInterstitialGate />
-      {/* Mutually exclusive with the gate above: this one requires
-          hasEverSubscribed === false, which a lapse rules out. */}
-      <FirstOpenPaywallGate />
       {/* Renders nothing until the email-capture registry raises a request —
-          post-purchase for an anonymous (device sign-in) account, or the
-          Settings "Add email address" row. Mounted here, once, for the same
-          reason as the gates above. */}
+          post-purchase for an anonymous (device sign-in) account. Mounted
+          here, once, so it survives tab switches. (The lapse and first-open
+          paywall gates that used to sit here died with the standalone paywall
+          screen, 2026-08-19 — Mera News Free plus FreeTierCard is the whole
+          unentitled experience now.) */}
       <EmailCaptureHost />
       {/* MUST be last: renders an in-place full-screen overlay (not a
           navigation, unlike the two gates above) when the session user's

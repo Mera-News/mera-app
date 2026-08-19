@@ -1,9 +1,14 @@
 import GlassPanel from '@/components/custom/cards/GlassPanel';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Heading } from '@/components/ui/heading';
+import { HStack } from '@/components/ui/hstack';
+import { Pressable } from '@/components/ui/pressable';
+import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
+import { useSupportAction } from '@/lib/intercom';
 import { useAiAccess } from '@/lib/stores/subscription-store';
 import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -59,6 +64,7 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
     const { t } = useTranslation();
     const router = useRouter();
     const aiAccess = useAiAccess();
+    const { busy: supportBusy, openSupport } = useSupportAction();
 
     const handleSeePlans = useCallback(async () => {
         if (onSeePlans) {
@@ -100,6 +106,11 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
                 {t('subscription.para3NoTrial')}
             </Text>
 
+            {/* The standalone paywall screen died 2026-08-19 (user call) and
+                its two actions moved HERE: the Subscribe CTA (same
+                presentFreeTierPaywall purchase path this card always had, now
+                wearing the paywall's label) and the app-standard Talk to
+                support pill. This card is the whole unentitled pitch now. */}
             <Button
                 testID="free-tier-card-cta"
                 onPress={handleSeePlans}
@@ -107,7 +118,7 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
                 size="md"
             >
                 <ButtonText className="text-white">
-                    {t('freeTier.seePlans')}
+                    {t('subscription.subscribeNow')}
                 </ButtonText>
             </Button>
 
@@ -122,6 +133,34 @@ const FreeTierCard: React.FC<FreeTierCardProps> = ({
                     {t('tutorials.learnAboutMera')}
                 </ButtonText>
             </Button>
+
+            {/* Compact outline pill sized to its label — the support
+                affordance everywhere except the settings menu. py-3 keeps the
+                target in the 44pt class. openSupport opens the Intercom
+                Messenger, or quietly degrades to Mail (useSupportAction's
+                contract) — no email address ever renders. */}
+            <Pressable
+                testID="free-tier-card-support"
+                onPress={() => { void openSupport(); }}
+                accessible
+                accessibilityRole="button"
+                accessibilityState={supportBusy ? { busy: true } : undefined}
+                accessibilityLabel={
+                    supportBusy ? t('support.opening') : t('account.contactSupport')
+                }
+                className="self-center rounded-full border border-primary-500 bg-transparent px-5 py-3 mt-4"
+            >
+                {supportBusy ? (
+                    <Spinner size="small" />
+                ) : (
+                    <HStack space="xs" className="items-center">
+                        <MaterialIcons name="support-agent" size={18} color="rgb(237, 167, 126)" />
+                        <Text size="sm" className="text-primary-500 font-semibold">
+                            {t('account.contactSupport')}
+                        </Text>
+                    </HStack>
+                )}
+            </Pressable>
         </GlassPanel>
     );
 };

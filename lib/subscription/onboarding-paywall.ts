@@ -67,9 +67,10 @@ export const ONBOARDING_ENTITLEMENT_WAIT_MS = 8_000;
 
 /** What the pre-onboarding gate decided to do. */
 export type OnboardingEntry =
-    /** No active plan, never dismissed → the existing paywall screen. */
-    | 'paywall'
-    /** No active plan, already dismissed → Mera News Free, onboarding skipped. */
+    /** No active plan → Mera News Free (feed + FreeTierCard), onboarding
+     *  skipped. The standalone paywall screen was removed 2026-08-19 (user
+     *  call): its copy and actions live on FreeTierCard now, so 'locked'
+     *  routes straight to the free feed with no interstitial. */
     | 'free-tier'
     /** Active plan (or an unresolvable verdict) → the wizard, as before. */
     | 'onboarding';
@@ -83,16 +84,6 @@ export interface OnboardingEntryInputs {
      * loading state this gate exists to hold.
      */
     aiAccess: AiAccess;
-    /**
-     * `readFirstOpenDismissed()` — consulted on every non-entitled branch.
-     *
-     * Callers MUST read it whenever `aiAccess !== 'entitled'`, not just on
-     * `'locked'`: since 2026-08-06 `'unknown'` also diverts, and a caller that
-     * hard-coded `false` there would send a user who already dismissed the
-     * paywall straight back to it — the dismiss → paywall → dismiss loop
-     * `first-open-dismissal.ts` exists to prevent.
-     */
-    firstOpenDismissed: boolean;
 }
 
 /**
@@ -110,7 +101,6 @@ export interface OnboardingEntryInputs {
  */
 export function decideOnboardingEntry({
     aiAccess,
-    firstOpenDismissed,
 }: OnboardingEntryInputs): OnboardingEntry {
     if (aiAccess === 'entitled') return 'onboarding';
 
@@ -141,11 +131,14 @@ export function decideOnboardingEntry({
     // never answered on this device" — not "RevenueCat says no".
     if (aiAccess === 'unknown') return 'onboarding';
 
-    // `'locked'` is a real, server-backed refusal. Dismissal must not loop back
-    // to the paywall, and must not strand the user un-onboarded either: the
-    // moment they subscribe the verdict becomes `'entitled'` and onboarding
-    // runs on the next pass.
-    return firstOpenDismissed ? 'free-tier' : 'paywall';
+    // `'locked'` is a real, server-backed refusal → Mera News Free. The feed's
+    // FreeTierCard carries the pitch, the Subscribe CTA and support; there is
+    // no interstitial to dismiss and no dismissal flag anymore. Not stranded
+    // un-onboarded either: the moment they subscribe the verdict becomes
+    // `'entitled'` and onboarding runs on the next pass. The load-bearing part
+    // of the old 'paywall' entry survives unchanged: an unentitled user never
+    // mounts the wizard, whose persona-chat prewarm would 401.
+    return 'free-tier';
 }
 
 /**

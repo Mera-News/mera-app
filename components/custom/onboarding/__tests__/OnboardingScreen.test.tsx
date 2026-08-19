@@ -128,10 +128,6 @@ jest.mock('@/lib/subscription/onboarding-paywall', () => ({
     resolveEntitlementForOnboarding: (...a: any[]) => mockResolveEntitlement(...(a as [])),
     decideOnboardingEntry: (...a: any[]) => mockDecideEntry(...(a as [])),
 }));
-jest.mock('@/lib/subscription/first-open-dismissal', () => ({
-    FIRST_OPEN_DISMISSED_SETTING_KEY: 'free_tier_first_open_dismissed',
-    readFirstOpenDismissed: jest.fn(async () => false),
-}));
 
 import OnboardingScreen from '../OnboardingScreen';
 
@@ -160,7 +156,6 @@ function renderScreen(
     onLoginRedirect = jest.fn(),
     props: { userId?: string; sessionUserId?: string } = {},
 ) {
-    const onPaywall = jest.fn();
     const onFreeTierMode = jest.fn();
     const utils = render(
         <OnboardingScreen
@@ -168,11 +163,10 @@ function renderScreen(
             sessionUserId={'sessionUserId' in props ? props.sessionUserId : 'u1'}
             onLoginRedirect={onLoginRedirect}
             onComplete={onComplete}
-            onPaywall={onPaywall}
             onFreeTierMode={onFreeTierMode}
         />,
     );
-    return { ...utils, onComplete, onLoginRedirect, onPaywall, onFreeTierMode };
+    return { ...utils, onComplete, onLoginRedirect, onFreeTierMode };
 }
 
 describe('OnboardingScreen fact gate', () => {

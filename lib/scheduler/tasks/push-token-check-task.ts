@@ -1,6 +1,5 @@
 import { checkPushTokenRevocation } from '@/lib/notification-service';
 import { AppScheduler } from '../AppScheduler';
-import { getCurrentPathname } from '@/lib/nav-state';
 
 AppScheduler.register({
   name: 'push-token-check',
@@ -10,11 +9,6 @@ AppScheduler.register({
   conditions: [
     { type: 'network' },
     { type: 'authenticated' },
-    // Skip while gated behind the paywall (server calls would 402).
-    {
-      type: 'custom',
-      check: () => !getCurrentPathname().includes('not-subscribed'),
-    },
   ],
   timeout: 10_000,
   maxAttempts: 2,

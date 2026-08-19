@@ -15,7 +15,6 @@ import {
 } from "@/lib/security/identity-gate";
 import { clearPreviousUserData, useUserStore } from "@/lib/stores";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
-import { readFirstOpenDismissed } from "@/lib/subscription/first-open-dismissal";
 import {
     decideOnboardingEntry,
     resolveEntitlementForOnboarding,
@@ -46,18 +45,12 @@ interface OnboardingScreenProps {
     onLoginRedirect: () => void;
     onComplete: () => void;
     /**
-     * No active plan and the first-open paywall has not been dismissed on this
-     * device → present the paywall INSTEAD of the wizard. See
-     * `lib/subscription/onboarding-paywall.ts` for why the order matters.
-     */
-    onPaywall: () => void;
-    /**
-     * No active plan, but the paywall was already dismissed → Mera News Free
-     * with onboarding skipped. Deliberately NOT `onComplete`: that one carries
+     * No active plan → Mera News Free with onboarding skipped (the standalone
+     * paywall screen was removed 2026-08-19; FreeTierCard on the feed carries
+     * its pitch and actions). Deliberately NOT `onComplete`: that one carries
      * `fromOnboarding: "1"` and lands on the Dashboard, which is a claim about
      * a wizard that never ran. Mera News Free's established destination is the
-     * feed — the same one `NotSubscribedScreen`'s "Continue without a plan"
-     * uses.
+     * feed.
      */
     onFreeTierMode: () => void;
 }
@@ -77,7 +70,7 @@ interface OnboardingScreenProps {
  * Consequence: this gate needs no network at all. It works offline and a dead
  * server session can no longer bounce a user through onboarding.
  */
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onPaywall, onFreeTierMode }) => {
+const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUserId, onLoginRedirect, onComplete, onFreeTierMode }) => {
     const { t } = useTranslation();
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showRestoreOffer, setShowRestoreOffer] = useState(false);
@@ -119,9 +112,9 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
     // Written in an effect, never during render (React Compiler is enabled).
     // `useRef`'s initializer already carries the mount-time identities, and this
     // effect is declared BEFORE the gate's so the refresh always lands first.
-    const handlersRef = useRef({ onLoginRedirect, onComplete, onPaywall, onFreeTierMode });
+    const handlersRef = useRef({ onLoginRedirect, onComplete, onFreeTierMode });
     useEffect(() => {
-        handlersRef.current = { onLoginRedirect, onComplete, onPaywall, onFreeTierMode };
+        handlersRef.current = { onLoginRedirect, onComplete, onFreeTierMode };
     });
 
     useEffect(() => {
@@ -283,21 +276,11 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
             });
             if (cancelled) return;
 
-            // Only consulted when it can change the outcome — no DB read on the
-            // subscriber path. `!== 'entitled'` rather than `=== 'locked'`:
-            // since 2026-08-06 `'unknown'` diverts too, and hard-coding `false`
-            // there would send a user who already dismissed the paywall straight
-            // back to it, forever.
-            const firstOpenDismissed =
-                aiAccess !== 'entitled' ? await readFirstOpenDismissed() : false;
-            if (cancelled) return;
-
-            const entry = decideOnboardingEntry({ aiAccess, firstOpenDismissed });
+            const entry = decideOnboardingEntry({ aiAccess });
             if (entry !== 'onboarding') {
-                // Leave the spinner mounted: both callbacks replace this route,
+                // Leave the spinner mounted: the callback replaces this route,
                 // so rendering anything else here would only flash.
-                if (entry === 'paywall') handlersRef.current.onPaywall();
-                else handlersRef.current.onFreeTierMode();
+                handlersRef.current.onFreeTierMode();
                 return;
             }
 

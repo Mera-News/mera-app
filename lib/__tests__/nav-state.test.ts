@@ -1,9 +1,7 @@
 // nav-state — the module-level pathname mirror non-React code reads, plus the
-// idempotent paywall navigation and the app-wide "a screen just came into view"
-// signal that refreshes relative timestamps.
-
-const mockReplace = jest.fn();
-jest.mock('expo-router', () => ({ router: { replace: (...a: unknown[]) => mockReplace(...a) } }));
+// app-wide "a screen just came into view" signal that refreshes relative
+// timestamps. (navigateToPaywall lived here until the standalone paywall
+// screen was removed, 2026-08-19.)
 
 const mockNotifyTimeTick = jest.fn();
 jest.mock('../time-tick', () => ({ notifyTimeTick: () => mockNotifyTimeTick() }));
@@ -15,7 +13,6 @@ jest.mock('../translation-queue', () => ({
 
 import {
   getCurrentPathname,
-  navigateToPaywall,
   setCurrentPathname,
 } from '../nav-state';
 
@@ -69,25 +66,3 @@ describe('setCurrentPathname', () => {
   });
 });
 
-describe('navigateToPaywall', () => {
-  it('navigates once and swallows a second concurrent call', () => {
-    navigateToPaywall();
-    navigateToPaywall();
-    expect(mockReplace).toHaveBeenCalledTimes(1);
-    expect(mockReplace).toHaveBeenCalledWith('/logged-in/not-subscribed');
-  });
-
-  it('no-ops when already on the paywall', () => {
-    setCurrentPathname('/logged-in/not-subscribed');
-    navigateToPaywall();
-    expect(mockReplace).not.toHaveBeenCalled();
-  });
-
-  it('re-arms once the route settles somewhere else', () => {
-    navigateToPaywall();
-    expect(mockReplace).toHaveBeenCalledTimes(1);
-    setCurrentPathname('/logged-in/app_container/feed'); // clears the in-flight guard
-    navigateToPaywall();
-    expect(mockReplace).toHaveBeenCalledTimes(2);
-  });
-});
