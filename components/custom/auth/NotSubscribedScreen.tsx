@@ -547,7 +547,7 @@ export default function NotSubscribedScreen({ reason }: NotSubscribedScreenProps
                                           testID="not-subscribed-continue"
                                           onPress={handleContinueWithoutPlan}
                                           variant="outline"
-                                          className="w-full rounded-full border-white/30"
+                                          className="self-center rounded-full border-white/30 px-6"
                                           size="lg"
                                       >
                                           <ButtonText className="text-white">
