@@ -43,7 +43,6 @@ import {
     fetchLegalVersions,
     markLegalAcceptedThisProcess,
     silentlyAcceptLegal,
-    type LegalVersions,
 } from './legal-consent';
 
 interface PreAuthFooterProps {
@@ -442,24 +441,10 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
     const { t } = useTranslation();
     const [working, setWorking] = useState(false);
     const [failure, setFailure] = useState<DeviceSignInFailureReason | null>(null);
-    const [versions, setVersions] = useState<LegalVersions | null>(null);
     // "Contact support" may silently open Mail instead of the Messenger
     // (useSupportAction's contract) — the label says "Message support", which
     // reads true either way.
     const { busy: supportBusy, openSupport } = useSupportAction();
-
-    // Prefetched so acceptance can be stamped the moment sign-in succeeds.
-    // Unguarded server query (pre-paywall by its schema doc); null just means
-    // the stamp is skipped and ConsentGate asks post-login.
-    useEffect(() => {
-        let cancelled = false;
-        void fetchLegalVersions().then((v) => {
-            if (!cancelled) setVersions(v);
-        });
-        return () => {
-            cancelled = true;
-        };
-    }, []);
 
     const handleAgree = async () => {
         if (working) return;
@@ -478,9 +463,14 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
             // Device sign-in re-proves which account this device holds, same
             // as an OTP verify — the other site that clears the fault.
             clearIdentityFault().catch(() => {});
-            // Stamp the acceptance the user just gave, now that the
-            // authenticated route can take it. Latch only on success: a failed
-            // stamp should let ConsentGate re-ask.
+            // Stamp the acceptance the user just gave. Fetched HERE, not
+            // prefetched at mount: appConfig requires a SESSION ("pre-paywall"
+            // in its schema doc means before entitlement, not before auth —
+            // the pre-auth fetch 401s, e2e-proven on staging), and a silently
+            // failed prefetch dropped the stamp AND the latch, so ConsentGate
+            // re-prompted right after the user had just agreed. Latch only on
+            // a landed stamp: a failed one should let ConsentGate re-ask.
+            const versions = await fetchLegalVersions();
             if (versions) {
                 const stamped = await acceptLegal(versions);
                 if (stamped.ok) markLegalAcceptedThisProcess(result.userId);

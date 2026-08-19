@@ -403,7 +403,7 @@ describe('consent step (S13)', () => {
         expect(await r.findByText('consent.privacyLink')).toBeTruthy();
     });
 
-    it('Agree and continue runs the device sign-in and stamps the acceptance', async () => {
+    it('Agree and continue runs the device sign-in and stamps the acceptance AFTER the session exists', async () => {
         mockSignIn.mockResolvedValue({
             status: 'success',
             userId: 'anon-user-1',
@@ -412,9 +412,17 @@ describe('consent step (S13)', () => {
         });
         const r = render(<AuthScreen />);
 
-        fireEvent.press(await advanceToConsent(r));
+        const agree = await advanceToConsent(r);
+        // No prefetch: appConfig requires a session, so a mount-time fetch
+        // 401s pre-auth (e2e-proven on staging) and silently dropped the
+        // stamp + latch — the exact overlay-flash bug this ordering fixes.
+        expect(mockFetchLegalVersions).not.toHaveBeenCalled();
+        fireEvent.press(agree);
 
         await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/logged-in'));
+        expect(mockFetchLegalVersions.mock.invocationCallOrder[0]).toBeGreaterThan(
+            mockSignIn.mock.invocationCallOrder[0],
+        );
         expect(mockAcceptLegal).toHaveBeenCalledWith(CURRENT);
         expect(mockMarkAccepted).toHaveBeenCalledWith('anon-user-1');
     });
@@ -435,8 +443,8 @@ describe('consent step (S13)', () => {
         expect(mockMarkAccepted).not.toHaveBeenCalled();
     });
 
-    it('an unresolved versions fetch skips the stamp entirely and still signs in', async () => {
-        mockFetchLegalVersions.mockReturnValue(new Promise(() => {})); // never resolves
+    it('a failed versions fetch (null) skips the stamp entirely and still signs in', async () => {
+        mockFetchLegalVersions.mockResolvedValue(null); // fetch failed, fail-open
         mockSignIn.mockResolvedValue({
             status: 'success',
             userId: 'anon-user-1',
