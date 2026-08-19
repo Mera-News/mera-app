@@ -2340,7 +2340,12 @@
     "notNow": "Nie teraz",
     "confirm": "Potwierdź",
     "added": "Dodano e-mail",
-    "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}."
+    "addedDetail": "Potwierdzenia i odzyskiwanie konta będą używać adresu {{email}}.",
+    "skip": "Kontynuuj bez e-maila",
+    "skipTitle": "Kontynuować bez adresu e-mail?",
+    "skipBody1": "Bez adresu e-mail Twoje konto nie może przenieść się na inną platformę. Jeśli zmienisz iOS na Androida lub odwrotnie, zaczniesz tam od nowego konta.",
+    "skipBody2": "Pomoc techniczna może znaleźć Twój zakup tylko po identyfikatorze pomocy. Skopiuj go i zapisz w bezpiecznym miejscu.",
+    "skipConfirm": "Przejdź do płatności"
   },
   "welcomeBack": {
     "title": "Witamy ponownie w Mera",

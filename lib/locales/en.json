@@ -2392,7 +2392,12 @@
     "notNow": "Not now",
     "confirm": "Confirm",
     "added": "Email added",
-    "addedDetail": "Receipts and account recovery will use {{email}}."
+    "addedDetail": "Receipts and account recovery will use {{email}}.",
+    "skip": "Continue without email",
+    "skipTitle": "Continue without an email?",
+    "skipBody1": "Without an email, your account can't move to another platform. If you switch between iOS and Android, you'll start with a new account there.",
+    "skipBody2": "Support can only find your purchase with your Support ID. Copy it and keep it somewhere safe.",
+    "skipConfirm": "Continue to payment"
   },
   "welcomeBack": {
     "title": "Welcome back to Mera",

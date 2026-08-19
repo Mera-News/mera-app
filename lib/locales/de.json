@@ -2308,7 +2308,12 @@
     "notNow": "Nicht jetzt",
     "confirm": "Bestätigen",
     "added": "E-Mail-Adresse hinzugefügt",
-    "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}."
+    "addedDetail": "Belege und Kontowiederherstellung laufen jetzt über {{email}}.",
+    "skip": "Ohne E-Mail fortfahren",
+    "skipTitle": "Ohne E-Mail fortfahren?",
+    "skipBody1": "Ohne E-Mail kann dein Konto nicht auf eine andere Plattform umziehen. Wenn du zwischen iOS und Android wechselst, startest du dort mit einem neuen Konto.",
+    "skipBody2": "Der Support kann deinen Kauf nur über deine Support-ID finden. Kopiere sie und bewahre sie sicher auf.",
+    "skipConfirm": "Weiter zur Zahlung"
   },
   "welcomeBack": {
     "title": "Willkommen zurück bei Mera",

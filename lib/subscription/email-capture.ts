@@ -203,12 +203,45 @@ export function subscribeEmailCapture(listener: EmailCaptureListener): () => voi
 }
 
 /**
+ * Settings row marking an INFORMED skip: the user read the consequence step at
+ * checkout and chose to continue without an email. Once set, the post-purchase
+ * fallback never auto-asks again on this install (user decision, 2026-08-19).
+ * The checkout-time page itself still appears on future purchases — it is part
+ * of that flow, and they can skip it again. Deliberately device-local: it is
+ * excluded from backup (lib/backup/allowlist.ts) so a restored file cannot
+ * silence the ask on a new device.
+ */
+export const EMAIL_CAPTURE_SKIPPED_SETTING_KEY = 'email_capture_skipped';
+
+function persistEmailCaptureSkip(): void {
+  try {
+    const { setSetting } =
+      require('@/lib/database/services/setting-service') as typeof import('@/lib/database/services/setting-service');
+    void setSetting(EMAIL_CAPTURE_SKIPPED_SETTING_KEY, '1').catch(() => {});
+  } catch {
+    // Settings unavailable (tests) — worst case is one extra post-purchase ask.
+  }
+}
+
+async function emailCaptureWasSkipped(): Promise<boolean> {
+  try {
+    const { getSetting } =
+      require('@/lib/database/services/setting-service') as typeof import('@/lib/database/services/setting-service');
+    return !!(await getSetting(EMAIL_CAPTURE_SKIPPED_SETTING_KEY));
+  } catch {
+    return false;
+  }
+}
+
+/**
  * The post-purchase trigger, called from refreshUserBillingAfterPurchase once
  * the server confirmed the new tier. Checks the account first so users who
- * signed in with email are never interrupted.
+ * signed in with email are never interrupted, and stands down permanently once
+ * the user has made an informed skip at checkout.
  */
 export async function maybeRequestEmailCaptureAfterPurchase(): Promise<void> {
   try {
+    if (await emailCaptureWasSkipped()) return;
     if (await accountNeedsEmail()) {
       requestEmailCapture('purchase');
     }
@@ -217,29 +250,34 @@ export async function maybeRequestEmailCaptureAfterPurchase(): Promise<void> {
   }
 }
 
-// ─── Email-before-checkout gate (S10) ────────────────────────────────────────
+// ─── Email-before-checkout gate (S10, informed skip since 2026-08-19) ────────
 //
-// Paying users key on a verified email, nothing else — so the paywall entry
-// points call ensureEmailBeforeCheckout() and only proceed when it resolves
-// true. The sheet reports its outcome through completeEmailCapture(); a
-// dismissal aborts checkout (the purchase CTA simply does nothing further).
+// The paywall entry points call ensureEmailBeforeCheckout() and only proceed
+// when it resolves true. The page reports its outcome through
+// completeEmailCapture(): 'verified' and 'skipped' both let checkout proceed —
+// a skip is only reachable through the consequence step, so it is an informed
+// decision — while 'dismissed' (Not now, hardware back) aborts checkout.
 
-let checkoutResolver: ((verified: boolean) => void) | null = null;
+export type EmailCaptureOutcome = 'verified' | 'dismissed' | 'skipped';
 
-/** Called by EmailCaptureHost when the sheet closes. Safe no-op for the
- *  settings/post-purchase presentations, which gate nothing. */
-export function completeEmailCapture(outcome: 'verified' | 'dismissed'): void {
+let checkoutResolver: ((proceed: boolean) => void) | null = null;
+
+/** Called by EmailCaptureHost when the page closes. Safe no-op for the
+ *  post-purchase presentation, which gates nothing. */
+export function completeEmailCapture(outcome: EmailCaptureOutcome): void {
+  if (outcome === 'skipped') persistEmailCaptureSkip();
   const resolver = checkoutResolver;
   checkoutResolver = null;
-  resolver?.(outcome === 'verified');
+  resolver?.(outcome === 'verified' || outcome === 'skipped');
 }
 
 /**
  * Resolve true when checkout may proceed: the account already has a real
- * email, OR the sheet just verified one. False only when the user dismissed
- * the required step. Fails OPEN on uncertainty (unreadable session, no host
- * mounted) — the email requirement must never brick a purchase, and the
- * post-purchase trigger remains the fallback collector.
+ * email, the page just verified one, OR the user made an informed skip.
+ * False only when the user dismissed the step outright. Fails OPEN on
+ * uncertainty (unreadable session, no host mounted) — the email step must
+ * never brick a purchase, and the post-purchase trigger remains the fallback
+ * collector.
  */
 export async function ensureEmailBeforeCheckout(): Promise<boolean> {
   let needsEmail = false;

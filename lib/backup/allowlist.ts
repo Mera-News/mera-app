@@ -150,6 +150,8 @@ export const FORBIDDEN_SETTING_KEYS: Readonly<Record<string, string>> = {
   last_known_subscription_tier:
     'Entitlement must resolve against the NEW device billing, never be asserted by a restored file.',
   dev_free_tier_lapse_acked: 'Entitlement UI latch, same reason.',
+  email_capture_skipped:
+    'Device-local prompt preference (informed email skip at checkout). A restored file must not silence the ask on a new device.',
   onboarding_state: 'Device flow state; onboarding gates on local facts anyway.',
   push_token_fail_streak: 'Counts failures of a push token this device does not have.',
   backup_cadence:

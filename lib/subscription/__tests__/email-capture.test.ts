@@ -15,8 +15,10 @@ jest.mock('@/lib/auth-client', () => ({
 }));
 
 const mockSetSetting = jest.fn();
+const mockGetSetting = jest.fn();
 jest.mock('@/lib/database/services/setting-service', () => ({
     setSetting: (...args: unknown[]) => mockSetSetting(...args),
+    getSetting: (...args: unknown[]) => mockGetSetting(...args),
 }));
 
 const mockSetState = jest.fn();
@@ -33,6 +35,7 @@ jest.mock('@/lib/logger', () => ({
 
 import {
     __resetEmailCaptureForTests,
+    EMAIL_CAPTURE_SKIPPED_SETTING_KEY,
     completeEmailCapture,
     ensureEmailBeforeCheckout,
     accountNeedsEmail,
@@ -51,6 +54,7 @@ beforeEach(() => {
     __resetEmailCaptureForTests();
     mockGetSession.mockResolvedValue(null);
     mockSetSetting.mockResolvedValue(undefined);
+    mockGetSetting.mockResolvedValue(null);
 });
 
 describe('emailLooksAnonymous / userNeedsEmail', () => {
@@ -272,6 +276,17 @@ describe('ensureEmailBeforeCheckout (S10)', () => {
         expect(await ensureEmailBeforeCheckout()).toBe(true);
     });
 
+    it('an INFORMED SKIP lets checkout proceed (resolves true) and persists the flag', async () => {
+        anonSession();
+        subscribeEmailCapture(() => {});
+
+        const gate = ensureEmailBeforeCheckout();
+        await new Promise((r) => setTimeout(r, 0));
+        completeEmailCapture('skipped');
+        expect(await gate).toBe(true);
+        expect(mockSetSetting).toHaveBeenCalledWith(EMAIL_CAPTURE_SKIPPED_SETTING_KEY, '1');
+    });
+
     it('completeEmailCapture with no armed gate is a safe no-op (settings/purchase closes)', () => {
         expect(() => completeEmailCapture('verified')).not.toThrow();
         expect(() => completeEmailCapture('dismissed')).not.toThrow();
@@ -294,5 +309,19 @@ describe('maybeRequestEmailCaptureAfterPurchase', () => {
         });
         await maybeRequestEmailCaptureAfterPurchase();
         expect(seen).toEqual(['purchase']);
+    });
+
+    it('stands down PERMANENTLY once the informed skip flag is set, even for anon accounts', async () => {
+        const seen: string[] = [];
+        subscribeEmailCapture((source) => seen.push(source));
+        mockGetSetting.mockImplementation(async (k: string) =>
+            k === EMAIL_CAPTURE_SKIPPED_SETTING_KEY ? '1' : null,
+        );
+        mockGetSession.mockResolvedValue({
+            data: { user: { id: 'u1', email: 'x@anon.mera.news' } },
+        });
+
+        await maybeRequestEmailCaptureAfterPurchase();
+        expect(seen).toEqual([]);
     });
 });

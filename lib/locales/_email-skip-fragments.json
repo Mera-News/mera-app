@@ -1,0 +1,143 @@
+{
+ "_comment": "welcome-redesign P4: informed email skip at checkout (consequence step + Support ID). Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+ "en": { "emailCapture": {
+  "skip": "Continue without email",
+  "skipTitle": "Continue without an email?",
+  "skipBody1": "Without an email, your account can't move to another platform. If you switch between iOS and Android, you'll start with a new account there.",
+  "skipBody2": "Support can only find your purchase with your Support ID. Copy it and keep it somewhere safe.",
+  "skipConfirm": "Continue to payment"
+ } },
+ "ar": { "emailCapture": {
+  "skip": "المتابعة بدون بريد إلكتروني",
+  "skipTitle": "هل تريد المتابعة بدون بريد إلكتروني؟",
+  "skipBody1": "بدون بريد إلكتروني، لا يمكن نقل حسابك إلى منصة أخرى. إذا انتقلت بين iOS وAndroid، فستبدأ بحساب جديد هناك.",
+  "skipBody2": "لا يمكن للدعم العثور على عملية الشراء إلا من خلال معرّف الدعم الخاص بك. انسخه واحتفظ به في مكان آمن.",
+  "skipConfirm": "المتابعة إلى الدفع"
+ } },
+ "de": { "emailCapture": {
+  "skip": "Ohne E-Mail fortfahren",
+  "skipTitle": "Ohne E-Mail fortfahren?",
+  "skipBody1": "Ohne E-Mail kann dein Konto nicht auf eine andere Plattform umziehen. Wenn du zwischen iOS und Android wechselst, startest du dort mit einem neuen Konto.",
+  "skipBody2": "Der Support kann deinen Kauf nur über deine Support-ID finden. Kopiere sie und bewahre sie sicher auf.",
+  "skipConfirm": "Weiter zur Zahlung"
+ } },
+ "es": { "emailCapture": {
+  "skip": "Continuar sin correo",
+  "skipTitle": "¿Continuar sin correo electrónico?",
+  "skipBody1": "Sin un correo, tu cuenta no puede pasar a otra plataforma. Si cambias entre iOS y Android, empezarás con una cuenta nueva.",
+  "skipBody2": "Soporte solo puede encontrar tu compra con tu ID de soporte. Cópialo y guárdalo en un lugar seguro.",
+  "skipConfirm": "Continuar al pago"
+ } },
+ "fr": { "emailCapture": {
+  "skip": "Continuer sans e-mail",
+  "skipTitle": "Continuer sans e-mail ?",
+  "skipBody1": "Sans e-mail, votre compte ne peut pas passer sur une autre plateforme. Si vous passez d'iOS à Android ou inversement, vous repartirez avec un nouveau compte.",
+  "skipBody2": "L'assistance ne peut retrouver votre achat qu'avec votre ID d'assistance. Copiez-le et conservez-le en lieu sûr.",
+  "skipConfirm": "Continuer vers le paiement"
+ } },
+ "hi": { "emailCapture": {
+  "skip": "ईमेल के बिना जारी रखें",
+  "skipTitle": "ईमेल के बिना जारी रखें?",
+  "skipBody1": "ईमेल के बिना आपका अकाउंट किसी दूसरे प्लेटफ़ॉर्म पर नहीं जा सकता. अगर आप iOS और Android के बीच स्विच करते हैं, तो वहां आपको नए अकाउंट से शुरुआत करनी होगी.",
+  "skipBody2": "सहायता टीम आपकी खरीदारी सिर्फ़ आपके सपोर्ट ID से ढूंढ सकती है. इसे कॉपी करके किसी सुरक्षित जगह सहेज लें.",
+  "skipConfirm": "भुगतान के लिए आगे बढ़ें"
+ } },
+ "id": { "emailCapture": {
+  "skip": "Lanjutkan tanpa email",
+  "skipTitle": "Lanjutkan tanpa email?",
+  "skipBody1": "Tanpa email, akun Anda tidak dapat pindah ke platform lain. Jika Anda beralih antara iOS dan Android, Anda akan memulai dengan akun baru di sana.",
+  "skipBody2": "Dukungan hanya dapat menemukan pembelian Anda dengan ID dukungan Anda. Salin dan simpan di tempat yang aman.",
+  "skipConfirm": "Lanjutkan ke pembayaran"
+ } },
+ "it": { "emailCapture": {
+  "skip": "Continua senza email",
+  "skipTitle": "Continuare senza email?",
+  "skipBody1": "Senza un'email, il tuo account non può passare a un'altra piattaforma. Se passi da iOS ad Android o viceversa, lì ripartirai con un nuovo account.",
+  "skipBody2": "L'assistenza può trovare il tuo acquisto solo con il tuo ID assistenza. Copialo e conservalo in un posto sicuro.",
+  "skipConfirm": "Continua al pagamento"
+ } },
+ "ja": { "emailCapture": {
+  "skip": "メールなしで続行",
+  "skipTitle": "メールアドレスなしで続けますか？",
+  "skipBody1": "メールアドレスがないと、アカウントを別のプラットフォームに移行できません。iOSとAndroidを切り替える場合は、新しいアカウントで始めることになります。",
+  "skipBody2": "サポートはサポートIDでのみ購入を確認できます。コピーして安全な場所に保管してください。",
+  "skipConfirm": "支払いに進む"
+ } },
+ "ko": { "emailCapture": {
+  "skip": "이메일 없이 계속",
+  "skipTitle": "이메일 없이 계속할까요?",
+  "skipBody1": "이메일이 없으면 계정을 다른 플랫폼으로 옮길 수 없습니다. iOS와 Android 간에 전환하면 새 계정으로 시작하게 됩니다.",
+  "skipBody2": "지원팀은 지원 ID로만 구매 내역을 찾을 수 있습니다. 복사해서 안전한 곳에 보관하세요.",
+  "skipConfirm": "결제 계속하기"
+ } },
+ "nl": { "emailCapture": {
+  "skip": "Doorgaan zonder e-mail",
+  "skipTitle": "Doorgaan zonder e-mail?",
+  "skipBody1": "Zonder e-mail kan je account niet naar een ander platform verhuizen. Als je wisselt tussen iOS en Android, begin je daar met een nieuw account.",
+  "skipBody2": "Support kan je aankoop alleen vinden met je support-ID. Kopieer het en bewaar het op een veilige plek.",
+  "skipConfirm": "Doorgaan naar betaling"
+ } },
+ "pl": { "emailCapture": {
+  "skip": "Kontynuuj bez e-maila",
+  "skipTitle": "Kontynuować bez adresu e-mail?",
+  "skipBody1": "Bez adresu e-mail Twoje konto nie może przenieść się na inną platformę. Jeśli zmienisz iOS na Androida lub odwrotnie, zaczniesz tam od nowego konta.",
+  "skipBody2": "Pomoc techniczna może znaleźć Twój zakup tylko po identyfikatorze pomocy. Skopiuj go i zapisz w bezpiecznym miejscu.",
+  "skipConfirm": "Przejdź do płatności"
+ } },
+ "pt-BR": { "emailCapture": {
+  "skip": "Continuar sem e-mail",
+  "skipTitle": "Continuar sem e-mail?",
+  "skipBody1": "Sem um e-mail, sua conta não pode migrar para outra plataforma. Se você trocar entre iOS e Android, começará com uma conta nova lá.",
+  "skipBody2": "O suporte só consegue encontrar sua compra pelo seu ID de suporte. Copie e guarde em um lugar seguro.",
+  "skipConfirm": "Continuar para o pagamento"
+ } },
+ "ru": { "emailCapture": {
+  "skip": "Продолжить без почты",
+  "skipTitle": "Продолжить без электронной почты?",
+  "skipBody1": "Без почты ваш аккаунт нельзя перенести на другую платформу. Если вы перейдёте с iOS на Android или наоборот, там придётся начать с нового аккаунта.",
+  "skipBody2": "Поддержка сможет найти вашу покупку только по ID поддержки. Скопируйте его и сохраните в надёжном месте.",
+  "skipConfirm": "Перейти к оплате"
+ } },
+ "th": { "emailCapture": {
+  "skip": "ดำเนินการต่อโดยไม่ใช้อีเมล",
+  "skipTitle": "ดำเนินการต่อโดยไม่มีอีเมลใช่ไหม",
+  "skipBody1": "หากไม่มีอีเมล บัญชีของคุณจะย้ายไปยังแพลตฟอร์มอื่นไม่ได้ ถ้าคุณสลับระหว่าง iOS กับ Android คุณจะต้องเริ่มต้นด้วยบัญชีใหม่",
+  "skipBody2": "ฝ่ายสนับสนุนจะค้นหาการซื้อของคุณได้จาก Support ID เท่านั้น คัดลอกและเก็บไว้ในที่ปลอดภัย",
+  "skipConfirm": "ไปที่การชำระเงิน"
+ } },
+ "tr": { "emailCapture": {
+  "skip": "E-posta olmadan devam et",
+  "skipTitle": "E-posta olmadan devam edilsin mi?",
+  "skipBody1": "E-posta olmadan hesabınız başka bir platforma taşınamaz. iOS ile Android arasında geçiş yaparsanız orada yeni bir hesapla başlarsınız.",
+  "skipBody2": "Destek, satın alımınızı yalnızca destek kimliğinizle bulabilir. Kopyalayın ve güvenli bir yerde saklayın.",
+  "skipConfirm": "Ödemeye devam et"
+ } },
+ "uk": { "emailCapture": {
+  "skip": "Продовжити без пошти",
+  "skipTitle": "Продовжити без електронної пошти?",
+  "skipBody1": "Без пошти ваш обліковий запис не можна перенести на іншу платформу. Якщо ви перейдете з iOS на Android чи навпаки, там доведеться почати з нового облікового запису.",
+  "skipBody2": "Підтримка зможе знайти вашу покупку лише за ID підтримки. Скопіюйте його та збережіть у надійному місці.",
+  "skipConfirm": "Перейти до оплати"
+ } },
+ "vi": { "emailCapture": {
+  "skip": "Tiếp tục không cần email",
+  "skipTitle": "Tiếp tục mà không có email?",
+  "skipBody1": "Không có email, tài khoản của bạn không thể chuyển sang nền tảng khác. Nếu bạn chuyển giữa iOS và Android, bạn sẽ bắt đầu với tài khoản mới ở đó.",
+  "skipBody2": "Bộ phận hỗ trợ chỉ có thể tìm thấy giao dịch mua của bạn bằng Support ID. Hãy sao chép và lưu ở nơi an toàn.",
+  "skipConfirm": "Tiếp tục thanh toán"
+ } },
+ "zh-CN": { "emailCapture": {
+  "skip": "不填邮箱继续",
+  "skipTitle": "不填写邮箱就继续吗？",
+  "skipBody1": "没有邮箱，您的账号无法迁移到其他平台。如果您在 iOS 和 Android 之间切换，将需要在新平台上使用新账号。",
+  "skipBody2": "支持团队只能通过您的支持 ID 找到您的购买记录。请复制并妥善保存。",
+  "skipConfirm": "继续付款"
+ } },
+ "zh-TW": { "emailCapture": {
+  "skip": "不填電子郵件繼續",
+  "skipTitle": "不填寫電子郵件就繼續嗎？",
+  "skipBody1": "沒有電子郵件，您的帳號無法轉移到其他平台。如果您在 iOS 和 Android 之間切換，將需要在新平台上使用新帳號。",
+  "skipBody2": "支援團隊只能透過您的支援 ID 找到您的購買紀錄。請複製並妥善保存。",
+  "skipConfirm": "繼續付款"
+ } }
+}

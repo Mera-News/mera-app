@@ -2308,7 +2308,12 @@
     "notNow": "Niet nu",
     "confirm": "Bevestigen",
     "added": "E-mailadres toegevoegd",
-    "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}."
+    "addedDetail": "Bonnen en accountherstel gebruiken voortaan {{email}}.",
+    "skip": "Doorgaan zonder e-mail",
+    "skipTitle": "Doorgaan zonder e-mail?",
+    "skipBody1": "Zonder e-mail kan je account niet naar een ander platform verhuizen. Als je wisselt tussen iOS en Android, begin je daar met een nieuw account.",
+    "skipBody2": "Support kan je aankoop alleen vinden met je support-ID. Kopieer het en bewaar het op een veilige plek.",
+    "skipConfirm": "Doorgaan naar betaling"
   },
   "welcomeBack": {
     "title": "Welkom terug bij Mera",

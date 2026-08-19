@@ -2309,7 +2309,12 @@
     "notNow": "以后再说",
     "confirm": "确认",
     "added": "已添加电子邮件",
-    "addedDetail": "收据和帐号找回将使用 {{email}}。"
+    "addedDetail": "收据和帐号找回将使用 {{email}}。",
+    "skip": "不填邮箱继续",
+    "skipTitle": "不填写邮箱就继续吗？",
+    "skipBody1": "没有邮箱，您的账号无法迁移到其他平台。如果您在 iOS 和 Android 之间切换，将需要在新平台上使用新账号。",
+    "skipBody2": "支持团队只能通过您的支持 ID 找到您的购买记录。请复制并妥善保存。",
+    "skipConfirm": "继续付款"
   },
   "welcomeBack": {
     "title": "欢迎回到 Mera",

@@ -2308,7 +2308,12 @@
     "notNow": "Nanti saja",
     "confirm": "Konfirmasi",
     "added": "Email ditambahkan",
-    "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}."
+    "addedDetail": "Tanda terima dan pemulihan akun akan menggunakan {{email}}.",
+    "skip": "Lanjutkan tanpa email",
+    "skipTitle": "Lanjutkan tanpa email?",
+    "skipBody1": "Tanpa email, akun Anda tidak dapat pindah ke platform lain. Jika Anda beralih antara iOS dan Android, Anda akan memulai dengan akun baru di sana.",
+    "skipBody2": "Dukungan hanya dapat menemukan pembelian Anda dengan ID dukungan Anda. Salin dan simpan di tempat yang aman.",
+    "skipConfirm": "Lanjutkan ke pembayaran"
   },
   "welcomeBack": {
     "title": "Selamat datang kembali di Mera",

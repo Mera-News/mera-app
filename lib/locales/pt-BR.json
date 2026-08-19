@@ -2308,7 +2308,12 @@
     "notNow": "Agora não",
     "confirm": "Confirmar",
     "added": "E-mail adicionado",
-    "addedDetail": "Recibos e recuperação da conta usarão {{email}}."
+    "addedDetail": "Recibos e recuperação da conta usarão {{email}}.",
+    "skip": "Continuar sem e-mail",
+    "skipTitle": "Continuar sem e-mail?",
+    "skipBody1": "Sem um e-mail, sua conta não pode migrar para outra plataforma. Se você trocar entre iOS e Android, começará com uma conta nova lá.",
+    "skipBody2": "O suporte só consegue encontrar sua compra pelo seu ID de suporte. Copie e guarde em um lugar seguro.",
+    "skipConfirm": "Continuar para o pagamento"
   },
   "welcomeBack": {
     "title": "Que bom ter você de volta ao Mera",

@@ -2309,7 +2309,12 @@
     "notNow": "Để sau",
     "confirm": "Xác nhận",
     "added": "Đã thêm email",
-    "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}."
+    "addedDetail": "Biên lai và khôi phục tài khoản sẽ dùng {{email}}.",
+    "skip": "Tiếp tục không cần email",
+    "skipTitle": "Tiếp tục mà không có email?",
+    "skipBody1": "Không có email, tài khoản của bạn không thể chuyển sang nền tảng khác. Nếu bạn chuyển giữa iOS và Android, bạn sẽ bắt đầu với tài khoản mới ở đó.",
+    "skipBody2": "Bộ phận hỗ trợ chỉ có thể tìm thấy giao dịch mua của bạn bằng Support ID. Hãy sao chép và lưu ở nơi an toàn.",
+    "skipConfirm": "Tiếp tục thanh toán"
   },
   "welcomeBack": {
     "title": "Chào mừng bạn quay lại Mera",

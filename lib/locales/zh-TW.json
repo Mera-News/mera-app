@@ -2309,7 +2309,12 @@
     "notNow": "暫時不要",
     "confirm": "確認",
     "added": "已新增電子郵件",
-    "addedDetail": "收據與帳戶救援將使用 {{email}}。"
+    "addedDetail": "收據與帳戶救援將使用 {{email}}。",
+    "skip": "不填電子郵件繼續",
+    "skipTitle": "不填寫電子郵件就繼續嗎？",
+    "skipBody1": "沒有電子郵件，您的帳號無法轉移到其他平台。如果您在 iOS 和 Android 之間切換，將需要在新平台上使用新帳號。",
+    "skipBody2": "支援團隊只能透過您的支援 ID 找到您的購買紀錄。請複製並妥善保存。",
+    "skipConfirm": "繼續付款"
   },
   "welcomeBack": {
     "title": "歡迎回到 Mera",

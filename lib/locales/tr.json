@@ -2310,7 +2310,12 @@
     "notNow": "Şimdi değil",
     "confirm": "Onayla",
     "added": "E-posta eklendi",
-    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak."
+    "addedDetail": "Makbuzlar ve hesap kurtarma için {{email}} kullanılacak.",
+    "skip": "E-posta olmadan devam et",
+    "skipTitle": "E-posta olmadan devam edilsin mi?",
+    "skipBody1": "E-posta olmadan hesabınız başka bir platforma taşınamaz. iOS ile Android arasında geçiş yaparsanız orada yeni bir hesapla başlarsınız.",
+    "skipBody2": "Destek, satın alımınızı yalnızca destek kimliğinizle bulabilir. Kopyalayın ve güvenli bir yerde saklayın.",
+    "skipConfirm": "Ödemeye devam et"
   },
   "welcomeBack": {
     "title": "Mera'ya tekrar hoş geldiniz",
