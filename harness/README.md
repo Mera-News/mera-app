@@ -180,10 +180,17 @@ These don't fail loudly — they hand you a confident wrong answer. Each cost re
   `agent-device clipboard write "<text>"` → tap the field → press the **Paste** menu-item ref.
   (This is separate from the testID-swallowing note above: the wrapper `Box` carries the testID, but
   even once you can *find* the field you still can't type into it.)
-- **`agent-device` rejects a UDID** (`DEVICE_NOT_FOUND`); `--device "iPhone 17 Pro"` is the only
-  selector that works. That matters because **two simulators share that name** — only
-  `0B26B8EF-B252-4E87-8F81-8CAA8597091D` has the app and the resident account; the other is empty.
-  Since you can't disambiguate by UDID, boot exactly one and confirm with
+- **`--device` matches the device NAME exactly; `--udid` is what takes a UDID.** The resolver
+  normalizes (lowercase, `_`→space, collapse whitespace) then compares with `===`, so
+  `--device iphone_17_pro` resolves but there is no prefix, substring or fuzzy fallback. Passing an
+  id to it fails: `--device 0B26B8EF-…` → `DEVICE_NOT_FOUND: No device named 0B26B8EF-…`. The
+  separate **`--udid 0B26B8EF-…`** flag does work, though it is **undocumented in `--help`** —
+  confirmed in the source and by a successful run on agent-device 0.20.1, so its absence from
+  `--help` is not evidence this is stale, but do re-check it after an upgrade. Because matching is
+  exact, `iPhone 17 Pro Max`, `iPhone 17` and `iPhone 17e` are distinct names that never collide
+  with `iPhone 17 Pro` — no two
+  simulators share a name. `0B26B8EF-B252-4E87-8F81-8CAA8597091D` is the one with the app and the
+  resident account, so prefer `--udid` when you want certainty, and still confirm with
   `xcrun simctl list devices booted` before trusting anything you see.
 - **The Profile screen's list resists programmatic scrolling** — `scroll` / `fling` / `gesture swipe`
   all failed to move it, and two attempts landed on the tab bar and switched tabs instead. If you
