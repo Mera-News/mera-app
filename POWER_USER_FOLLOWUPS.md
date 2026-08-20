@@ -471,5 +471,9 @@ they bought is queued.
 
 Separately, the *reason* the change was deferred rather than immediate is store configuration, not
 code: an immediate upgrade requires the new product to be ranked above the old one within the App
-Store subscription group. `storekit/Mera.storekit` encodes the intended ranking (Professional 1,
-Individual 2, Starter 3) so the corrected behaviour can be exercised locally.
+Store subscription group. The intended ranking is Professional 1, Individual 2, Starter 3, and it
+is set in App Store Connect on the `Mera News Plans` subscription group, which is the only place it
+takes effect. It cannot be exercised locally: no `.storekit` file is attached to the `Mera` scheme
+and none can be, because `npx expo prebuild` regenerates `/ios` wholesale and destroys any
+hand-added `StoreKitConfigurationFileReference`. Sandbox testing against the real store is the only
+way to observe the corrected behaviour.

@@ -7,12 +7,20 @@
 // would be a paywall bypass. Callers render from exactly what this returns —
 // there is no follow-up hydration call to make here.
 //
-// It is also GUARDED (`SubscriptionGuard` + authenticated), unlike the older
-// `searchArticlesVector`. A locked-out caller gets a 402 the same shape the
-// four other guarded AI queries already get (see `isNotSubscribedError`) — this
-// module classifies that shape into `NewsSearchErrorKind` so `useNewsSearch`
-// (and the screen) can render a "search needs a plan" message instead of a
-// generic failure.
+// It is AUTHENTICATED but NOT subscription-gated. It used to carry
+// `SubscriptionGuard`; the server removed it deliberately, because search is a
+// discovery surface a Mera News Free reader must be able to use — the same
+// reader can already browse Explore and open an article. See the reasoning on
+// `NewsSearchResolver.searchNews`.
+//
+// The `'not-subscribed'` branch below is therefore UNREACHABLE today. It is kept
+// rather than deleted so that re-adding the guard server-side cannot produce a
+// generic "something went wrong" on a paywall, but do not treat its existence
+// as evidence that search is gated.
+//
+// The server is also HYBRID now, not semantic-only: an Atlas Search text leg
+// fused with the vector leg by reciprocal rank. Each leg degrades on its own, so
+// a provider or index outage shows up as weaker results rather than an error.
 //
 // Never throws: every failure — network, GraphQL, auth — resolves to
 // `{ ok: false, kind }` so callers never need a try/catch of their own.
@@ -23,7 +31,13 @@ import logger from '@/lib/logger';
 import type { NewsSearchHit } from '@/lib/generated/graphql-types';
 import { isNotSubscribedError } from '@/lib/subscription/not-subscribed-error';
 
-/** The server rejects queries shorter than this — callers must not fire below it. */
+/**
+ * Client-side floor. This is OURS, not the server's — `searchNews` rejects only
+ * an empty query. It exists so a single character does not spend a round trip
+ * (and, on a cache miss, a paid embedding call) on a query that cannot be
+ * meaningful. Enforced twice on purpose: here, and in `useNewsSearch` so the
+ * panel clears the instant the user deletes back below it.
+ */
 export const SEARCH_NEWS_MIN_QUERY_LENGTH = 2;
 
 /** Server-side cap on `searchNews` results (see schema.gql / server resolver). */

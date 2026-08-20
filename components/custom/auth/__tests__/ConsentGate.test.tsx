@@ -100,11 +100,13 @@ const mockNeedsConsent = jest.fn();
 // Default false: the latch only suppresses when some OTHER surface (pre-auth
 // consent step, silent email stamp) already recorded acceptance this process.
 const mockWasAcceptedThisProcess = jest.fn((..._a: unknown[]) => false);
+const mockMarkAcceptedThisProcess = jest.fn();
 jest.mock('../legal-consent', () => ({
     fetchLegalVersions: (...a: unknown[]) => mockFetchLegalVersions(...a),
     acceptLegal: (...a: unknown[]) => mockAcceptLegal(...a),
     needsConsent: (...a: unknown[]) => mockNeedsConsent(...a),
     wasLegalAcceptedThisProcess: (...a: unknown[]) => mockWasAcceptedThisProcess(...a),
+    markLegalAcceptedThisProcess: (...a: unknown[]) => mockMarkAcceptedThisProcess(...a),
 }));
 
 import ConsentGate from '../ConsentGate';
@@ -260,5 +262,58 @@ describe('ConsentGate', () => {
         await flush();
 
         expect(getByTestId('consent-accept')).toBeTruthy();
+    });
+
+    // --- consent-double-prompt fix ---
+
+    it('marks the CROSS-COMPONENT latch on a successful accept, not just local state', async () => {
+        mockAcceptLegal.mockResolvedValue({ ok: true });
+        const { getByTestId } = render(<ConsentGate />);
+        await flush();
+
+        fireEvent.press(getByTestId('consent-accept'));
+        await flush();
+
+        // Local `accepted` alone is reset by the userId effect on any session
+        // re-settle; the shared latch is what survives a layout remount.
+        expect(mockMarkAcceptedThisProcess).toHaveBeenCalledWith('user-1');
+    });
+
+    it('silently re-POSTs an owed stamp for a latched user and never renders', async () => {
+        // The user consented on the pre-auth step (latch set) but the session
+        // still reads as unstamped — the stamp did not land.
+        mockWasAcceptedThisProcess.mockReturnValue(true);
+        mockNeedsConsent.mockReturnValue(true);
+        mockAcceptLegal.mockResolvedValue({ ok: true });
+
+        const { queryByTestId } = render(<ConsentGate />);
+        await flush();
+
+        expect(queryByTestId('consent-screen')).toBeNull();
+        expect(mockAcceptLegal).toHaveBeenCalledWith(CURRENT);
+    });
+
+    it('the silent retry fires at most once per user across re-renders', async () => {
+        mockWasAcceptedThisProcess.mockReturnValue(true);
+        mockNeedsConsent.mockReturnValue(true);
+        mockAcceptLegal.mockResolvedValue({ ok: true });
+
+        const { rerender } = render(<ConsentGate />);
+        await flush();
+        rerender(<ConsentGate />);
+        await flush();
+
+        expect(mockAcceptLegal).toHaveBeenCalledTimes(1);
+    });
+
+    it('does NOT silently POST when the latched user already reads as stamped', async () => {
+        mockWasAcceptedThisProcess.mockReturnValue(true);
+        mockNeedsConsent.mockReturnValue(false);
+
+        const { queryByTestId } = render(<ConsentGate />);
+        await flush();
+
+        expect(queryByTestId('consent-screen')).toBeNull();
+        expect(mockAcceptLegal).not.toHaveBeenCalled();
     });
 });

@@ -428,7 +428,7 @@ describe('consent step (S13)', () => {
         expect(mockMarkAccepted).toHaveBeenCalledWith('anon-user-1');
     });
 
-    it('a failed stamp does NOT mark the latch (ConsentGate re-asks) but still navigates', async () => {
+    it('a failed stamp STILL marks the latch — the user agreed, so ConsentGate must not re-ask', async () => {
         mockAcceptLegal.mockResolvedValue({ ok: false });
         mockSignIn.mockResolvedValue({
             status: 'success',
@@ -441,10 +441,13 @@ describe('consent step (S13)', () => {
         fireEvent.press(await advanceToConsent(r));
 
         await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/logged-in'));
-        expect(mockMarkAccepted).not.toHaveBeenCalled();
+        // Consent is a fact about what the user did, not about whether the
+        // POST landed. ConsentGate retries the write silently rather than
+        // re-interrogating somebody who agreed on the previous frame.
+        expect(mockMarkAccepted).toHaveBeenCalledWith('anon-user-1');
     });
 
-    it('a failed versions fetch (null) skips the stamp entirely and still signs in', async () => {
+    it('a failed versions fetch (null) skips the POST but still marks the latch', async () => {
         mockFetchLegalVersions.mockResolvedValue(null); // fetch failed, fail-open
         mockSignIn.mockResolvedValue({
             status: 'success',
@@ -458,7 +461,24 @@ describe('consent step (S13)', () => {
 
         await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/logged-in'));
         expect(mockAcceptLegal).not.toHaveBeenCalled();
-        expect(mockMarkAccepted).not.toHaveBeenCalled();
+        expect(mockMarkAccepted).toHaveBeenCalledWith('anon-user-1');
+    });
+
+    it('marks the latch BEFORE the network work, so no await can strand it', async () => {
+        mockSignIn.mockResolvedValue({
+            status: 'success',
+            userId: 'anon-user-1',
+            trialAvailable: true,
+            welcomeBack: false,
+        });
+        const r = render(<AuthScreen />);
+
+        fireEvent.press(await advanceToConsent(r));
+
+        await waitFor(() => expect(mockMarkAccepted).toHaveBeenCalled());
+        expect(mockMarkAccepted.mock.invocationCallOrder[0]).toBeLessThan(
+            mockFetchLegalVersions.mock.invocationCallOrder[0],
+        );
     });
 });
 

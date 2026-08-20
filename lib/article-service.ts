@@ -813,8 +813,10 @@ export class ArticleService {
      * `clusters { clusterId confidence stableClusterId }` for the feed's collapse
      * logic) plus the daily-delivery-cap signal — the
      * cap is charged server-side at this delivery point, so `dailyLimitReached`
-     * is true (with `resetAt`) when the cap clipped the response. Chunk size
-     * matches the server's max-50 limit; the flags are OR'd across chunks.
+     * is true (with `resetAt`) when the cap clipped the response. `CHUNK` is 50
+     * because the server rejects an `articlesForTopicsByIds` call carrying more
+     * than 50 ids: the two limits are one contract and must move together. The
+     * flags are OR'd across chunks.
      */
     static async getArticlesForTopicsByIds(
         articleIds: string[],
