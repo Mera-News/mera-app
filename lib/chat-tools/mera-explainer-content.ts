@@ -128,7 +128,7 @@ What is being built is one new repository with four deployable parts, all source
 None of that is finished. It is described in the future tense on purpose.`,
 
   // ---------------------------------------------------------------------------
-  plans_and_limits: `There are three plans — Starter, Individual and Professional — and they differ in exactly one thing: how many candidate articles can be analysed for you per day. Starter is the smallest daily capacity, Individual is roughly double it, and Professional is the largest by a wide margin.
+  plans_and_limits: `There are three plans, Starter, Individual and Professional, and they differ in exactly one thing: how many candidate articles can be analysed for you per day. Starter covers up to 250 candidate articles a day, Individual up to 1,000, and Professional up to 10,000. The plans screen in the app is the authority on those figures, because it reads them from the store rather than from anything written down here.
 
 Prices are deliberately not quoted here. They are set per country and per currency by the App Store and Google Play, and the exact figure for where you are is shown on the plans screen in the app, which reads it from the store rather than from anything written down in advance. Any number quoted from memory would eventually be the wrong one for somebody.
 
