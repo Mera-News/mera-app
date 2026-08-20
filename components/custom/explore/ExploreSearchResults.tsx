@@ -33,9 +33,9 @@ interface ExploreSearchResultsProps {
  *   - 'loading' → debounce settled, fetch in flight.
  *   - 'error'   → 402 (`not-subscribed`) gets its own "needs a plan" message
  *                 + a paywall entry point; anything else is a generic retry.
- *   - 'success' with zero hits → a gentle empty state — `searchNews` is a
- *     semantic search over the last 48h, not the full archive, so "no
- *     articles found" would overstate what was actually searched.
+ *   - 'success' with zero hits → a gentle empty state — `searchNews` covers the
+ *     last 48h, not the full archive, so "no articles found" would overstate
+ *     what was actually searched.
  *   - 'success' with hits → the results themselves, one compact row each.
  */
 const ExploreSearchResults: React.FC<ExploreSearchResultsProps> = ({

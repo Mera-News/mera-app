@@ -404,7 +404,7 @@ type NewsPublishersResponse {
 }
 
 """
-A semantic search hit. Deliberately headline-only — hydrate the ids you want through the metered articlesForTopicsByIds to get body text and the link.
+A hybrid (text + semantic) search hit. Deliberately headline-only — hydrate the ids you want through the metered articlesForTopicsByIds to get body text and the link.
 """
 type NewsSearchHit {
   _id: ID!
@@ -417,7 +417,9 @@ type NewsSearchHit {
   pubDate: String!
   publication_name: String
 
-  """Atlas vector-search cosine score (0–1)."""
+  """
+  Reciprocal-rank-fusion score across the text and semantic legs. Ordering signal only, with no absolute scale. Do not threshold on it.
+  """
   score: Float!
 
   """English headline (translated at ingest)."""
@@ -719,7 +721,7 @@ type Query {
   ): EmbeddingSearchResponse!
 
   """
-  Semantic search over the last 48h of articles. Headline-only results — hydrate ids via articlesForTopicsByIds. Capped at 25 results.
+  Hybrid text + semantic search over the last 48h of articles. Headline-only results — hydrate ids via articlesForTopicsByIds. Capped at 25 results.
   """
   searchNews(
     """Max results, clamped to 25."""

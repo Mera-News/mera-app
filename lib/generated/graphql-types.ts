@@ -423,7 +423,7 @@ export type NewsPublishersResponse = {
   pageInfo: CursorPageInfo;
 };
 
-/** A semantic search hit. Deliberately headline-only — hydrate the ids you want through the metered articlesForTopicsByIds to get body text and the link. */
+/** A hybrid (text + semantic) search hit. Deliberately headline-only — hydrate the ids you want through the metered articlesForTopicsByIds to get body text and the link. */
 export type NewsSearchHit = {
   __typename?: 'NewsSearchHit';
   _id: Scalars['ID']['output'];
@@ -433,7 +433,7 @@ export type NewsSearchHit = {
   /** Publication timestamp (ISO 8601). */
   pubDate: Scalars['String']['output'];
   publication_name?: Maybe<Scalars['String']['output']>;
-  /** Atlas vector-search cosine score (0–1). */
+  /** Reciprocal-rank-fusion score across the text and semantic legs. Ordering signal only, with no absolute scale. Do not threshold on it. */
   score: Scalars['Float']['output'];
   /** English headline (translated at ingest). */
   title_en: Scalars['String']['output'];
@@ -615,7 +615,7 @@ export type Query = {
   relatedArticles: Array<ArticleSummary>;
   /** Vector search using cosine similarity (scores 0–1). */
   searchArticlesVector: EmbeddingSearchResponse;
-  /** Semantic search over the last 48h of articles. Headline-only results — hydrate ids via articlesForTopicsByIds. Capped at 25 results. */
+  /** Hybrid text + semantic search over the last 48h of articles. Headline-only results — hydrate ids via articlesForTopicsByIds. Capped at 25 results. */
   searchNews: Array<NewsSearchHit>;
   searchPublishers: SearchPublishersResponse;
   /** A country's precomputed, cluster-deduplicated top headlines (each big story appears once), paged over the materialized edition. A null or "GLOBAL" countryCode spans all countries. Falls back to the live path (editionBuiltAt: null) when no edition exists yet. */
