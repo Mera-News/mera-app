@@ -184,8 +184,11 @@ These don't fail loudly — they hand you a confident wrong answer. Each cost re
   normalizes (lowercase, `_`→space, collapse whitespace) then compares with `===`, so
   `--device iphone_17_pro` resolves but there is no prefix, substring or fuzzy fallback. Passing an
   id to it fails: `--device 0B26B8EF-…` → `DEVICE_NOT_FOUND: No device named 0B26B8EF-…`. The
-  separate **`--udid 0B26B8EF-…`** flag does work. Because matching is exact, `iPhone 17 Pro Max`,
-  `iPhone 17` and `iPhone 17e` are distinct names that never collide with `iPhone 17 Pro` — no two
+  separate **`--udid 0B26B8EF-…`** flag does work, though it is **undocumented in `--help`** —
+  confirmed in the source and by a successful run on agent-device 0.20.1, so its absence from
+  `--help` is not evidence this is stale, but do re-check it after an upgrade. Because matching is
+  exact, `iPhone 17 Pro Max`, `iPhone 17` and `iPhone 17e` are distinct names that never collide
+  with `iPhone 17 Pro` — no two
   simulators share a name. `0B26B8EF-B252-4E87-8F81-8CAA8597091D` is the one with the app and the
   resident account, so prefer `--udid` when you want certainty, and still confirm with
   `xcrun simctl list devices booted` before trusting anything you see.
