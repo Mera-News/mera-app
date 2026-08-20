@@ -1,21 +1,17 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { BackHandler, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
-import { Button, ButtonText } from '@/components/ui/button';
-import { Pressable } from '@/components/ui/pressable';
+import ConsentContent from '@/components/custom/auth/ConsentContent';
 import { ScrollView } from '@/components/ui/scroll-view';
-import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
-import { PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
-import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import {
     acceptLegal,
     fetchLegalVersions,
+    markLegalAcceptedThisProcess,
     needsConsent,
     wasLegalAcceptedThisProcess,
     type ConsentSessionUser,
@@ -102,10 +98,45 @@ export default function ConsentGate() {
         setBusy(false);
         if (result.ok) {
             setAccepted(true);
+            // Mark the SHARED latch, not just the local one. `accepted` is
+            // component state and the effect above resets it on any userId
+            // change — including a transient null while the session atom
+            // re-settles — so a remount of the logged-in layout would
+            // re-derive "needed?" from a session that still reports the old
+            // stamps and prompt a user who just accepted. This was the only
+            // accept path in the app that did not mark it.
+            if (userId) markLegalAcceptedThisProcess(userId);
         } else {
             setError(true);
         }
-    }, [current]);
+    }, [current, userId]);
+
+    // An acceptance we KNOW happened but the server may not have recorded.
+    //
+    // The latch says this user consented in THIS process — the pre-auth
+    // consent step marks it the moment device sign-in returns. If the session
+    // nonetheless still reads as needing consent, the stamp did not land: a
+    // failed versions fetch, a rejected POST, a device offline for those two
+    // calls. Retry it silently. The user already agreed; re-asking them is not
+    // a fix for a failed write, it IS the bug this gate was producing.
+    //
+    // Deliberately NOT derived from `shown`: the latch is one of `shown`'s
+    // four ANDs, so `shown` is false for a latched user by construction and
+    // the component returns null before rendering. Anything gated on it would
+    // be dead code that ships as a silent no-op. The ref bounds it to one POST
+    // per user, so a re-render cannot double-submit.
+    const owedStampFor = useRef<string | null>(null);
+    useEffect(() => {
+        if (!userId || !current) return;
+        if (!wasLegalAcceptedThisProcess(userId)) return;
+        if (!needsConsent(user, current)) return;
+        if (owedStampFor.current === userId) return;
+        owedStampFor.current = userId;
+        // Fire-and-forget on purpose: no spinner, no error surface, no effect
+        // on what this gate shows. acceptLegal already reports its own
+        // failures to Sentry.
+        void acceptLegal(current);
+    }, [userId, current, user]);
 
     // Swallow the Android hardware back button while shown — there is no
     // navigation out of this gate other than accepting.
@@ -134,20 +165,17 @@ export default function ConsentGate() {
                 fine, because expo-router already paints an opaque navigation
                 background underneath it. This gate is an absolute overlay ON TOP
                 of a live logged-in tree, so there is no such background — without
-                this fill the paywall behind it showed straight through the text
-                and the screen read as a modal over another screen.
+                this fill the screen behind showed straight through the text and
+                the gate read as a modal over another screen.
 
                 Black specifically: the app is dark-mode only on a pure-black
                 page, which is the ground the backdrop's alphas were tuned for. */}
             <View testID="consent-backdrop-fill" style={[StyleSheet.absoluteFill, { backgroundColor: '#000000' }]} />
             <AbstractGradientBackdrop />
 
-            {/* Page layout, not dialog layout: content flows from the top and the
-                commit action sits at the bottom edge, so it reads as a screen the
-                user is on rather than a card over the screen behind. The
-                ScrollView is what keeps it a page at large Dynamic Type sizes —
-                this copy is legally required to be readable, so it must never be
-                clipped by a fixed-height box. */}
+            {/* The ScrollView is what keeps this a page at large Dynamic Type
+                sizes — this copy is legally required to be readable, so it must
+                never be clipped by a fixed-height box. */}
             <View
                 className="flex-1 px-8"
                 style={{ paddingTop: insets.top + 32, paddingBottom: insets.bottom + 24 }}
@@ -156,65 +184,24 @@ export default function ConsentGate() {
                     contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
                     showsVerticalScrollIndicator={false}
                 >
-                    <Text accessibilityRole="header" className="text-white text-3xl font-bold">
-                        {t('consent.title')}
-                    </Text>
-                    <Text className="text-gray-300 text-base mt-4 leading-relaxed">
-                        {t('consent.body')}
-                    </Text>
-
-                    {/* `py-3` on each row, NOT a vertical hitSlop. Both are ways to
-                        reach Apple's 44pt minimum around ~20pt of text, but a
-                        symmetric hitSlop on two links this close together makes
-                        their touch regions overlap, and RN resolves an overlap by
-                        z-order rather than by proximity — a tap in the gap would
-                        silently open the LATER link. Real padding cannot overlap,
-                        so the stack's own spacing drops to `xs` to compensate. */}
-                    <VStack space="xs" className="mt-8">
-                        <Pressable
-                            accessibilityRole="link"
-                            accessibilityLabel={t('consent.termsLink')}
-                            className="py-3"
-                            onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}
-                        >
-                            <Text className="text-primary-400 text-base underline">
-                                {t('consent.termsLink')}
+                    <ConsentContent
+                        testIDPrefix="consent"
+                        acceptTestID="consent-accept"
+                        title={t('consent.title')}
+                        body={t('consent.body')}
+                        ctaLabel={error ? t('consent.retry') : t('consent.accept')}
+                        busyLabel={t('consent.accepting')}
+                        busy={busy}
+                        disabled={!current}
+                        onAccept={handleAccept}
+                    >
+                        {error ? (
+                            <Text testID="consent-error" className="text-red-400 text-sm text-center">
+                                {t('consent.errorDescription')}
                             </Text>
-                        </Pressable>
-                        <Pressable
-                            accessibilityRole="link"
-                            accessibilityLabel={t('consent.privacyLink')}
-                            className="py-3"
-                            onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}
-                        >
-                            <Text className="text-primary-400 text-base underline">
-                                {t('consent.privacyLink')}
-                            </Text>
-                        </Pressable>
-                    </VStack>
-
-                    {error ? (
-                        <Text className="text-red-400 text-sm mt-6">
-                            {t('consent.errorDescription')}
-                        </Text>
-                    ) : null}
+                        ) : null}
+                    </ConsentContent>
                 </ScrollView>
-
-                {/* Same geometry and fill as every other primary CTA on the
-                    auth surfaces (welcome, consent step, welcome-back) — this
-                    gate used to be the one white button in the app. */}
-                <Button
-                    testID="consent-accept"
-                    onPress={handleAccept}
-                    disabled={busy || !current}
-                    className="mt-6 h-14 bg-primary-500 rounded-full"
-                    size="lg"
-                >
-                    {busy ? <Spinner size="small" className="mr-2" /> : null}
-                    <ButtonText className="text-black font-semibold">
-                        {busy ? t('consent.accepting') : error ? t('consent.retry') : t('consent.accept')}
-                    </ButtonText>
-                </Button>
             </View>
         </View>
     );

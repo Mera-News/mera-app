@@ -1,6 +1,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import MeraLogo from '@/components/custom/MeraLogo';
 import LanguageSelector from '@/components/custom/auth/LanguageSelector';
+import ConsentContent from '@/components/custom/auth/ConsentContent';
 import LegalFooter from '@/components/custom/auth/LegalFooter';
 import TutorialLaunchButton from '@/components/custom/tutorials/TutorialLaunchButton';
 import OTPVerificationView from '@/components/custom/auth/OTPVerificationView';
@@ -15,7 +16,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { sendOTP } from '@/lib/auth-client';
-import { PRIVACY_URL, TERMS_URL } from '@/lib/config/branding';
 import {
     deviceSignInAvailability,
     signInWithDevice,
@@ -31,7 +31,6 @@ import logger from '@/lib/logger';
 import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useUserStore } from '@/lib/stores/user-store';
-import { openInAppBrowser, withAppLanguage } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
@@ -463,18 +462,28 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
             // Device sign-in re-proves which account this device holds, same
             // as an OTP verify — the other site that clears the fault.
             clearIdentityFault().catch(() => {});
-            // Stamp the acceptance the user just gave. Fetched HERE, not
-            // prefetched at mount: appConfig requires a SESSION ("pre-paywall"
-            // in its schema doc means before entitlement, not before auth —
-            // the pre-auth fetch 401s, e2e-proven on staging), and a silently
-            // failed prefetch dropped the stamp AND the latch, so ConsentGate
-            // re-prompted right after the user had just agreed. Latch only on
-            // a landed stamp: a failed one should let ConsentGate re-ask.
+            // Latch FIRST, unconditionally, and only then do the network work.
+            //
+            // Consent is a fact about what the user just did, not about
+            // whether a call succeeded: they tapped "Agree and continue" on
+            // the previous frame. The latch records that fact so ConsentGate
+            // stands down for the rest of this process.
+            //
+            // This used to latch only on a landed stamp, on the reasoning that
+            // a failed one should let ConsentGate re-ask. It does re-ask —
+            // immediately, as a blocking screen, wearing "we've updated our
+            // terms" copy, to somebody who installed the app a minute ago.
+            // A failed WRITE is ours to retry, which ConsentGate now does
+            // silently; it is not grounds to re-interrogate the user. Same
+            // ordering as silentlyAcceptLegal on the email path, which is why
+            // that path never produced this bug.
+            markLegalAcceptedThisProcess(result.userId);
+            // Fetched HERE, not prefetched at mount: appConfig requires a
+            // SESSION ("pre-paywall" in its schema doc means before
+            // entitlement, not before auth — the pre-auth fetch 401s,
+            // e2e-proven on staging).
             const versions = await fetchLegalVersions();
-            if (versions) {
-                const stamped = await acceptLegal(versions);
-                if (stamped.ok) markLegalAcceptedThisProcess(result.userId);
-            }
+            if (versions) await acceptLegal(versions);
             onSuccess(result);
             // Leave `working` true: the caller replaces this screen.
             return;
@@ -505,74 +514,15 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                 <MeraLogo size={120} animated />
             </Box>
 
-            <VStack testID="auth-consent-cluster" accessible={false} space="md">
-                <VStack accessible={false} space="sm">
-                    <Text size="2xl" className="text-white font-semibold text-center">
-                        {t('consent.welcomeTitle')}
-                    </Text>
-                    <Text size="md" className="text-gray-300 text-center">
-                        {t('consent.welcomeBody')}
-                    </Text>
-                </VStack>
-
-                {/* Two outline buttons, half and half — the same primary
-                    outline the welcome view's secondary actions wear, so the
-                    legal links read as real destinations rather than fine
-                    print. `py-3` instead of a fixed height: several locales
-                    run long here and must wrap without clipping. Real padding,
-                    no hitSlop — overlapping slops resolve by z-order and a tap
-                    in the gap would silently open the LATER button. */}
-                <HStack accessible={false} space="md" className="items-stretch">
-                    <Pressable
-                        testID="auth-consent-terms"
-                        accessible
-                        accessibilityRole="link"
-                        accessibilityLabel={t('consent.termsLink')}
-                        onPress={() => openInAppBrowser(withAppLanguage(TERMS_URL))}
-                        className="flex-1 rounded-full border border-primary-500 bg-transparent items-center justify-center py-3 px-3"
-                    >
-                        <Text size="sm" className="text-primary-500 font-semibold text-center">
-                            {t('consent.termsLink')}
-                        </Text>
-                    </Pressable>
-                    <Pressable
-                        testID="auth-consent-privacy"
-                        accessible
-                        accessibilityRole="link"
-                        accessibilityLabel={t('consent.privacyLink')}
-                        onPress={() => openInAppBrowser(withAppLanguage(PRIVACY_URL))}
-                        className="flex-1 rounded-full border border-primary-500 bg-transparent items-center justify-center py-3 px-3"
-                    >
-                        <Text size="sm" className="text-primary-500 font-semibold text-center">
-                            {t('consent.privacyLink')}
-                        </Text>
-                    </Pressable>
-                </HStack>
-
-                <Pressable
-                    testID="auth-consent-agree"
-                    onPress={handleAgree}
-                    disabled={working}
-                    accessible
-                    accessibilityRole="button"
-                    accessibilityLabel={working ? t('auth.deviceSignInWorking') : t('consent.accept')}
-                    accessibilityState={working ? { busy: true, disabled: true } : undefined}
-                    className={`h-14 rounded-full items-center justify-center ${working ? 'bg-gray-700' : 'bg-primary-500'}`}
-                >
-                    {working ? (
-                        <HStack space="sm" className="items-center">
-                            <Spinner size="small" color="white" />
-                            <Text className="text-white text-base font-semibold">
-                                {t('auth.deviceSignInWorking')}
-                            </Text>
-                        </HStack>
-                    ) : (
-                        <Text className="text-black text-base font-semibold">
-                            {t('consent.accept')}
-                        </Text>
-                    )}
-                </Pressable>
-
+            <ConsentContent
+                testIDPrefix="auth-consent"
+                title={t('consent.welcomeTitle')}
+                body={t('consent.welcomeBody')}
+                ctaLabel={t('consent.accept')}
+                busyLabel={t('auth.deviceSignInWorking')}
+                busy={working}
+                onAccept={handleAgree}
+            >
                 {failure !== null && (
                     <VStack space="sm" className="items-center">
                         <Text size="sm" className="text-error-500 text-center" testID="auth-device-failure">
@@ -605,12 +555,9 @@ const ConsentStepView: React.FC<ConsentStepViewProps> = ({ onUseEmail, onSuccess
                                 {t('auth.alreadyHaveAccount')}
                             </Text>
                         </Pressable>
-                        {/* Compact outline pill sized to its label (support
-                            is an outline button everywhere except the
-                            settings menu row). py-3 keeps the 44pt target. */}
                     </VStack>
                 )}
-            </VStack>
+            </ConsentContent>
 
             {/* Lower band — the gap between the action and the footer. */}
             <Box style={{ flex: 1 }} />
