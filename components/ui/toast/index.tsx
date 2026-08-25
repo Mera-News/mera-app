@@ -314,8 +314,9 @@ type IToastProps = React.ComponentProps<typeof Root> & {
   className?: string;
   /**
    * This toast is shown with `duration: null` — it stays on screen until
-   * something closes it. Set by `OTAUpdatePrompt` and
-   * `TranslationUnavailablePrompt`.
+   * something closes it. `TranslationUnavailablePrompt` is the only caller
+   * (the OTA prompt was the other one; OTA updates are silent now and it
+   * renders nothing at all, see `OTASilentUpdater`).
    *
    * NOW PURELY DECLARATIVE. It used to force the flat fill instead of glass, for
    * a COST reason: a `UIVisualEffectView` re-samples its backdrop every frame

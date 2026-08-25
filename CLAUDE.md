@@ -62,5 +62,5 @@ publication-preferences,saved-suggestions,not-interested,hygiene,tutorials}`. Re
 
 ## Deeper docs
 
-- `NEWS_HARNESS.md` (379 lines): AI feed flow. `COMMANDS.md` (212): npm, Expo, EAS, OTA, version bump.
+- `NEWS_HARNESS.md` (379 lines): AI feed flow. `COMMANDS.md` (230): npm, Expo, EAS, OTA (silent), version bump.
 - `harness/README.md` (243), `harness/README-android.md` (341). Gluestack: https://v4.gluestack.io/ui/docs/components/

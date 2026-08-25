@@ -20,11 +20,13 @@ import {
  * server-side English (`title_en` / `description_en`) instead of interrupting
  * the read (see TranslatableDynamic).
  *
- * Modelled on OTAUpdatePrompt: a persistent, non-modal toast where the whole
- * surface IS the control. Deliberately NOT a bottom sheet — a bottom sheet
- * that keeps appearing is the bug being fixed here — and deliberately not a
- * blocking dialog, because the user is mid-article and nothing here needs an
- * answer before they can carry on reading.
+ * A persistent, non-modal toast where the whole surface IS the control. It is
+ * now the only `duration: null` toast in the app (the OTA prompt was the other
+ * one; OTA updates are silent and render nothing, see `OTASilentUpdater`).
+ * Deliberately NOT a bottom sheet — a bottom sheet that keeps appearing is the
+ * bug being fixed here — and deliberately not a blocking dialog, because the
+ * user is mid-article and nothing here needs an answer before they can carry
+ * on reading.
  *
  * Two states, and only two, because two is all the platform lets us tell
  * apart honestly:

@@ -149,6 +149,18 @@ eas build --profile production --platform ios --auto-submit
 
 OTA works for **JS/TS, styling, and GraphQL** changes only. A **new native build is required** for: native deps, SDK bumps, `app.json` native config, new native modules, or a `version` change (runtime version is `appVersion`).
 
+**OTA updates are silent.** Publishing does not notify, prompt or interrupt anyone. The app downloads
+the new bundle in the background (`OTASilentUpdater`) and expo-updates launches it at the user's next
+cold start, so a publish reaches an active user only once they fully quit and reopen the app. Budget
+for that lag; there is no way to hurry a specific user along.
+
+**There is exactly one way to block a user on an update, and it is not OTA.** Raise
+`APP_VERSION_IOS_MIN_SUPPORTED` / `APP_VERSION_ANDROID_MIN_SUPPORTED` in `mera-infra/cloud-run.tf` and
+`terraform apply`. That drives `NativeUpdateGate` -> `ForceUpdateScreen`, a full-screen non-dismissible
+"Update required" with a store link. It gates on the **store version** (`app.json` `version`), so it is
+only useful once a build carrying the fix is actually live in the App Store / Play Store — raising the
+floor above every shipped build locks every user out with nowhere to go.
+
 Channels map to profiles: `development`, `preview`, `production`.
 
 ```bash

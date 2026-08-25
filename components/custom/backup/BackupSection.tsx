@@ -361,7 +361,8 @@ const BackupSection: React.FC = () => {
 
   /**
    * Restart the JS runtime so every store re-hydrates from the restored
-   * database. Same mechanism `OTAUpdateModal` uses for an in-place restart.
+   * database. Same `Updates.reloadAsync()` mechanism the language-change
+   * restart uses (`LanguageSettingsScreen`, `LanguageSelector`).
    *
    * If it fails there is nothing clever to do — the data IS restored, the app
    * is just showing stale state — so the user is told to reopen the app rather
