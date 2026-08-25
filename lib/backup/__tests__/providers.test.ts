@@ -97,6 +97,18 @@ jest.mock('react-native', () => ({
   get Platform() {
     return { OS: mockPlatformOS, select: (o: Record<string, unknown>) => o[mockPlatformOS] };
   },
+  // google-drive.ts probes TurboModuleRegistry for 'RNGoogleSignin' BEFORE it
+  // requires the package, to keep a dev client built without the module from
+  // throwing at import time. Without this the destructure throws, the probe
+  // caches `nativeLinked = false`, and every token-path test below short-
+  // circuits to "not connected" — which is what it did until this mock existed.
+  //
+  // Effectively a constant for this file: the provider caches linkage for the
+  // life of the process (linkage cannot change within one), so a test wanting
+  // the UNLINKED path needs jest.resetModules(), not a flag flip here.
+  TurboModuleRegistry: {
+    get: (name: string) => (name === 'RNGoogleSignin' ? {} : null),
+  },
 }));
 
 import { googleDriveProvider, disconnectGoogleDrive } from '../providers/google-drive';
