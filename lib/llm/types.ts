@@ -38,6 +38,23 @@ export interface ConversationMessage {
   role: 'user' | 'assistant';
   content: string;
   toolCalls?: ToolCallRecord[];
+  /**
+   * A turn the MODEL must read but the user must never see.
+   *
+   * Set only on `role: 'user'`. Filtered out of the transcript
+   * (`deriveThreadItems`) AND out of persistence (`useChatPersistence`), so it
+   * exists for exactly one inference call and leaves no trace.
+   *
+   * It is a user turn rather than a nudge because the on-device path requires
+   * one: `buildPromptFromMessages` flattens the thread to `User:` / `Assistant:`
+   * and injects <context> onto the last USER turn — end the prompt on
+   * `Assistant:` and a 4B model continues its own previous message.
+   *
+   * Deliberately NOT a third `role`: that would ripple through
+   * conversation-service, the DB column, useChatPersistence and ChatThread for
+   * no gain, since nothing is ever stored.
+   */
+  hidden?: boolean;
 }
 
 // ---------------------------------------------------------------------------

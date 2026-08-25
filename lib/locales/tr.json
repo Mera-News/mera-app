@@ -457,7 +457,7 @@
     "webSearchTitle": "Sohbette web araması",
     "webSearchOn": "Açık - Mera soruyu cevaplamak için web'i arayabilir",
     "webSearchOff": "Kapalı",
-    "webSearchDescription": "Bu açık olduğunda, Mera soruyu cevaplamak için web'i arayabilir. Yazdığın arama sözcükleri sunucumuza ve bir arama sağlayıcısına gönderiliyor. Başka hiçbir şey onlarla gitmiyor - gerçekleriniz yok, akışınız yok, kim olduğunuz yok. Varsayılan olarak kapalı.",
+    "webSearchDescription": "Bu açıkken Mera bir soruyu yanıtlamak için web'de arama yapabilir. Mera arama kelimelerini sorduğun şeyden yazar ve sunucumuza, oradan da bir arama sağlayıcısına yalnızca o kelimeleri gönderir. Yanında başka hiçbir şey gitmez: hesap yok, cihaz yok, kim olduğunu söyleyen hiçbir şey yok. Varsayılan olarak açık. Buradan istediğin zaman kapat, Mera aramayı bırakır.",
     "deepInterviewTitle": "Daha derin sorular",
     "deepInterviewOn": "Açık - Mera dikkat, endişeler ve kararlar hakkında soruyor",
     "deepInterviewOff": "Kapalı",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "Güncelleme gerekli",
     "updateRequiredBody": "Devam etmek için lütfen Mera'yı en son sürüme güncelleyin.",
     "updateCta": "Güncelle"
-  },
-  "ota": {
-    "updateReady": "Güncelleme hazır",
-    "modalBody": "Mera'nın yeni bir sürümü indirildi ve kullanıma hazır. Her şeyin sorunsuz çalışmasını sağlamak için şimdi güncelleyin.",
-    "updateNow": "Şimdi Güncelle"
   },
   "feedback": {
     "fabLabel": "Hata bildir",
@@ -2451,5 +2446,15 @@
     "wifiOnlyOff": "Kapalı. Zamanlanmış yedeklemeler mobil veri kullanabilir.",
     "wifiOnlyOn": "Açık. Zamanlanmış yedeklemeler Wi-Fi bekler.",
     "working": "Çalışıyor…"
+  },
+  "factChoice": {
+    "titleSingle": "Bunu kişiliğine eklensin mi?",
+    "titleChoose": "Hangisini kastettin?",
+    "add": "Ekle",
+    "dismiss": "Atla",
+    "dismissedTitle": "Eklenmedi",
+    "dismissedSummary": "Hiçbir şey kaydedilmedi. Mera'ya ne demek istediğini söyle, tekrar denesin.",
+    "expired": "Bu daha önceki bir sohbetten, bu yüzden artık eklenemez.",
+    "resolveBeforeContinuing": "Devam etmeden önce bir okuma seç ya da Atla'ya dokun."
   }
 }

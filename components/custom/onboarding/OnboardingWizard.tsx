@@ -24,6 +24,7 @@ import {
 } from '../../../lib/stores/onboarding-store';
 import {
     useFloatingChatHasUnresolvedTopicPlans,
+    useFloatingChatUnresolvedCounts,
     useFloatingChatStore,
 } from '../../../lib/stores/floating-chat-store';
 import { isOnline, useIsOnline } from '../../../lib/stores/network-store';
@@ -100,6 +101,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
     // published by ChatSessionView (which owns the resolution logic) and is 0
     // whenever no chat session is mounted, so this can only bite on step 1.
     const hasUnresolvedTopicPlans = useFloatingChatHasUnresolvedTopicPlans();
+    const unresolvedCounts = useFloatingChatUnresolvedCounts();
 
     // Initialize userId and pre-populate with existing user data on mount
     useEffect(() => {
@@ -240,7 +242,12 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 render: () => (
                     <Toast action="warning" variant="solid">
                         <ToastDescription>
-                            {t('topicPlan.resolveBeforeContinuing')}
+                            {/* The two cards ask different things, so the toast
+                                must not offer to "save or discard the topics"
+                                over a card that shows no topics yet. */}
+                            {unresolvedCounts.factChoices > 0
+                                ? t('factChoice.resolveBeforeContinuing')
+                                : t('topicPlan.resolveBeforeContinuing')}
                         </ToastDescription>
                     </Toast>
                 ),

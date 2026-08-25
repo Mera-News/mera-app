@@ -75,6 +75,7 @@ import {
   retryTopicGeneration,
   MAX_FACT_LENGTH,
 } from '../tool-handlers';
+import { commitFactChoices } from '../fact-commit';
 import {
   addFact,
   deleteFact,
@@ -154,49 +155,53 @@ describe('MAX_FACT_LENGTH', () => {
 // handleSaveExtractedFacts
 // ============================================================
 
-describe('handleSaveExtractedFacts', () => {
-  it('returns success with factsSaved=0 when no facts provided', async () => {
+describe('handleSaveExtractedFacts — OFFERS, never writes', () => {
+  // The whole point of this handler after propose-then-save: it must not touch
+  // the database. Every assertion that it DID write moved to fact-commit.test.ts.
+  it('returns an empty staged result when no facts provided', async () => {
     const result = await handleSaveExtractedFacts({ extracted_user_information: [] });
-    expect(result).toEqual({ success: true, factsSaved: 0, savedFacts: [], conflicts: [] });
+    expect(result).toEqual({
+      success: true,
+      staged: true,
+      factsSaved: 0,
+      savedFacts: [],
+      conflicts: [],
+      pendingFacts: [],
+    });
     expect(mockAddFact).not.toHaveBeenCalled();
   });
 
-  it('returns success with factsSaved=0 when extracted_user_information is missing', async () => {
+  it('returns an empty staged result when extracted_user_information is missing', async () => {
     const result = await handleSaveExtractedFacts({});
-    expect(result).toEqual({ success: true, factsSaved: 0, savedFacts: [], conflicts: [] });
+    expect(result).toMatchObject({ success: true, staged: true, factsSaved: 0, pendingFacts: [] });
   });
 
-  it('saves a new fact and increments factsSaved', async () => {
-    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Lives in Amsterdam' } as never);
-
+  it('WRITES NOTHING and generates no topics for a perfectly good fact', async () => {
     const result = await handleSaveExtractedFacts({
       extracted_user_information: ['Lives in Amsterdam'],
     });
 
-    expect(mockAddFact).toHaveBeenCalledWith('Lives in Amsterdam', undefined, undefined);
-    expect(result).toMatchObject({ success: true, factsSaved: 1 });
-  });
-
-  // Without this trigger a newly-stated home country would not surface in
-  // Explore until the next 24h `persona-geo` run.
-  it('kicks off the geo-derivation sweep after saving facts', async () => {
-    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Lives in Amsterdam' } as never);
-
-    await handleSaveExtractedFacts({ extracted_user_information: ['Lives in Amsterdam'] });
-
-    expect(runGeoDerivationSweep).toHaveBeenCalledWith({ force: true });
-  });
-
-  it('does not run the geo sweep when nothing was saved', async () => {
-    await handleSaveExtractedFacts({ extracted_user_information: [] });
-
+    expect(mockAddFact).not.toHaveBeenCalled();
     expect(runGeoDerivationSweep).not.toHaveBeenCalled();
+    expect(result).toMatchObject({ staged: true, factsSaved: 0, savedFacts: [] });
+    expect(result.pendingFacts).toEqual([
+      { index: 0, options: ['Lives in Amsterdam'], questionnaireAttribute: null },
+    ]);
   });
 
-  it('saves a fact object with questionnaire metadata', async () => {
-    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Senior ML engineer' } as never);
+  // `factsSaved: 0` is load-bearing: deriveCard falls back to reading the tool
+  // INPUT when `savedFacts` is absent, so a staged turn without an explicit zero
+  // would render "Saved to your persona" for facts that were never saved.
+  it('always reports factsSaved: 0 while staged', async () => {
+    const result = await handleSaveExtractedFacts({
+      extracted_user_information: ['A', 'Lives in Amsterdam'],
+    });
+    expect(result.factsSaved).toBe(0);
+    expect(result.savedFacts).toEqual([]);
+  });
 
-    await handleSaveExtractedFacts({
+  it('carries the questionnaire attribute through to the card', async () => {
+    const result = await handleSaveExtractedFacts({
       extracted_user_information: [
         {
           statement: 'Senior ML engineer',
@@ -205,181 +210,99 @@ describe('handleSaveExtractedFacts', () => {
       ],
     });
 
-    expect(mockAddFact).toHaveBeenCalledWith(
-      'Senior ML engineer',
-      undefined,
-      expect.objectContaining({
-        attribute: 'profession: job role and industry',
-      }),
-    );
+    // It must reach addFact eventually — resolveUserLocationFact keys on it.
+    expect(result.pendingFacts).toEqual([
+      {
+        index: 0,
+        options: ['Senior ML engineer'],
+        questionnaireAttribute: 'profession: job role and industry',
+      },
+    ]);
   });
 
-  it('rejects facts exceeding MAX_FACT_LENGTH', async () => {
-    const longFact = 'a'.repeat(MAX_FACT_LENGTH + 1);
+  it('offers alternatives as extra options on the SAME group', async () => {
     const result = await handleSaveExtractedFacts({
-      extracted_user_information: [longFact],
+      extracted_user_information: [
+        {
+          statement: 'Follows Sporting CP, the Portuguese football club',
+          alternatives: ['Interested in football clubs generally'],
+        },
+      ],
     });
-    expect(mockAddFact).not.toHaveBeenCalled();
-    expect(result).toMatchObject({ factsSaved: 0 });
-    expect(logger.warn).toHaveBeenCalled();
+
+    expect(result.pendingFacts).toEqual([
+      {
+        index: 0,
+        options: [
+          'Follows Sporting CP, the Portuguese football club',
+          'Interested in football clubs generally',
+        ],
+        questionnaireAttribute: null,
+      },
+    ]);
+  });
+
+  it('gives each distinct fact its own group', async () => {
+    const result = await handleSaveExtractedFacts({
+      extracted_user_information: ['Lives in Amsterdam', 'Works in AI'],
+    });
+    const groups = result.pendingFacts as { options: string[] }[];
+    expect(groups).toHaveLength(2);
+    expect(groups.map((g) => g.options)).toEqual([['Lives in Amsterdam'], ['Works in AI']]);
+  });
+
+  // The accept/reject rules still run BEFORE the card, so a reading that could
+  // never be saved is not offered and then refused after the tap.
+  it('rejects facts exceeding MAX_FACT_LENGTH', async () => {
+    const result = await handleSaveExtractedFacts({
+      extracted_user_information: ['x'.repeat(201)],
+    });
+    expect(result.pendingFacts).toEqual([]);
   });
 
   it('rejects empty / whitespace-only facts', async () => {
+    const result = await handleSaveExtractedFacts({ extracted_user_information: ['   ', ''] });
+    expect(result.pendingFacts).toEqual([]);
+  });
+
+  it('rejects meta-conversational facts', async () => {
     const result = await handleSaveExtractedFacts({
-      extracted_user_information: ['', '   '],
+      extracted_user_information: ['User is setting up profile'],
     });
-    expect(mockAddFact).not.toHaveBeenCalled();
-    expect(result).toMatchObject({ factsSaved: 0 });
-  });
-
-  it('rejects meta-conversational facts (User is setting up profile)', async () => {
-    await handleSaveExtractedFacts({
-      extracted_user_information: ['User is setting up persona'],
-    });
-    expect(mockAddFact).not.toHaveBeenCalled();
-  });
-
-  it('rejects facts matching "user wants to update profile" pattern', async () => {
-    await handleSaveExtractedFacts({
-      extracted_user_information: ['updating profile preferences'],
-    });
-    expect(mockAddFact).not.toHaveBeenCalled();
+    expect(result.pendingFacts).toEqual([]);
   });
 
   it('deduplicates against existing facts (case/space insensitive)', async () => {
-    mockGetFacts.mockResolvedValueOnce([
-      { id: 'existing', statement: 'Lives in Amsterdam' } as never,
-    ]);
+    mockGetFacts.mockResolvedValue([
+      { id: 'e1', statement: 'Lives  in AMSTERDAM', questionnaireAttribute: null },
+    ] as never);
 
     const result = await handleSaveExtractedFacts({
-      extracted_user_information: ['lives in amsterdam'], // duplicate (case-insensitive)
+      extracted_user_information: ['lives in amsterdam'],
     });
 
-    expect(mockAddFact).not.toHaveBeenCalled();
-    expect(result).toMatchObject({ factsSaved: 0 });
+    expect(result.pendingFacts).toEqual([]);
   });
 
-  it('saves multiple non-duplicate facts', async () => {
-    mockAddFact
-      .mockResolvedValueOnce({ id: 'f1', statement: 'fact 1' } as never)
-      .mockResolvedValueOnce({ id: 'f2', statement: 'fact 2' } as never);
-
-    const result = await handleSaveExtractedFacts({
-      extracted_user_information: ['fact 1', 'fact 2'],
-    });
-
-    expect(mockAddFact).toHaveBeenCalledTimes(2);
-    expect(result).toMatchObject({ factsSaved: 2 });
-  });
-
-  it('returns savedFacts enrichment with {id, statement} for each saved fact', async () => {
-    mockAddFact
-      .mockResolvedValueOnce({ id: 'f1', statement: 'fact 1' } as never)
-      .mockResolvedValueOnce({ id: 'f2', statement: 'fact 2' } as never);
-
-    const result = await handleSaveExtractedFacts({
-      extracted_user_information: ['fact 1', 'fact 2'],
-    });
-
-    expect(result).toMatchObject({
-      success: true,
-      factsSaved: 2,
-      savedFacts: [
-        { id: 'f1', statement: 'fact 1' },
-        { id: 'f2', statement: 'fact 2' },
-      ],
-    });
-  });
-
-  it('returns an empty savedFacts array when nothing is saved', async () => {
-    const result = await handleSaveExtractedFacts({ extracted_user_information: [] });
-    expect(result).toMatchObject({ savedFacts: [] });
-  });
-
-  it('calls notifyFactMutation after saving facts', async () => {
-    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'new fact' } as never);
-
-    await handleSaveExtractedFacts({ extracted_user_information: ['new fact'] });
-
-    expect(mockNotifyFactMutation).toHaveBeenCalled();
-  });
-
-  it('calls cloudBatchComplete for topic generation in cloud mode', async () => {
-    (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'CLOUD' });
-    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'new fact' } as never);
-    mockCloudBatchComplete.mockResolvedValueOnce([]);
-
-    await handleSaveExtractedFacts({ extracted_user_information: ['new fact'] });
-
-    // cloudBatchComplete is called asynchronously via batchGenerateTopics.catch
-    // Give the microtask queue a chance to flush.
-    await new Promise((r) => setTimeout(r, 0));
-    expect(mockCloudBatchComplete).toHaveBeenCalled();
-  });
-
-  it('enqueues a topic_gen job in on-device mode', async () => {
-    (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'OnDevice' });
-    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'AI news interest' } as never);
-
-    await handleSaveExtractedFacts({ extracted_user_information: ['AI news interest'] });
-
-    await new Promise((r) => setTimeout(r, 0));
-    expect(mockHasPendingJob).toHaveBeenCalledWith('topic_gen', 'factId', 'f1');
-  });
-
-  it('does not enqueue topic_gen job when one already exists', async () => {
-    (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'OnDevice' });
-    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'a new fact' } as never);
-    mockHasPendingJob.mockResolvedValueOnce(true); // already pending
-
-    await handleSaveExtractedFacts({ extracted_user_information: ['a new fact'] });
-    await new Promise((r) => setTimeout(r, 0));
-
-    expect(mockEnqueueJob).not.toHaveBeenCalled();
-  });
-
-  it('Wave 11: returns an empty conflicts array when nothing conflicts', async () => {
-    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'Likes cycling' } as never);
-    const result = await handleSaveExtractedFacts({
-      extracted_user_information: ['Likes cycling'],
-    });
-    expect(result).toMatchObject({ conflicts: [] });
-  });
-
-  it('Wave 11: surfaces a save-time conflict against a same-subject existing fact', async () => {
-    // Pre-existing residence fact; the new one is a same-key correction.
-    mockGetFacts.mockResolvedValueOnce([
-      { id: 'e1', statement: 'Lives in Paris, France', questionnaireAttribute: 'location: residence' } as never,
-    ]);
-    mockAddFact.mockResolvedValueOnce({ id: 'n1', statement: 'Lives in Berlin, Germany' } as never);
+  it('drops a duplicate READING but keeps the rest of its group', async () => {
+    mockGetFacts.mockResolvedValue([
+      { id: 'e1', statement: 'Interested in football clubs generally', questionnaireAttribute: null },
+    ] as never);
 
     const result = await handleSaveExtractedFacts({
       extracted_user_information: [
-        { statement: 'Lives in Berlin, Germany', questionnaire_attribute: 'location: city' },
+        {
+          statement: 'Follows Sporting CP',
+          alternatives: ['Interested in football clubs generally'],
+        },
       ],
     });
 
-    expect(result.conflicts).toMatchObject([
-      { newFactId: 'n1', existingFactId: 'e1', kind: 'attribute' },
+    expect(result.pendingFacts).toEqual([
+      { index: 0, options: ['Follows Sporting CP'], questionnaireAttribute: null },
     ]);
   });
-
-  it('handles a mix of new and duplicate facts correctly', async () => {
-    mockGetFacts.mockResolvedValueOnce([{ id: 'old', statement: 'Existing fact' } as never]);
-    mockAddFact.mockResolvedValueOnce({ id: 'new', statement: 'New fact' } as never);
-
-    const result = await handleSaveExtractedFacts({
-      extracted_user_information: ['Existing fact', 'New fact'],
-    });
-
-    expect(mockAddFact).toHaveBeenCalledTimes(1);
-    expect(result).toMatchObject({ factsSaved: 1 });
-  });
 });
-
-// ============================================================
-// handleUpdateUserConfig
-// ============================================================
 
 describe('handleUpdateUserConfig', () => {
   it('returns message when language_codes is missing', async () => {
@@ -652,7 +575,7 @@ describe('handleIssueWarning', () => {
 // batchGenerateTopics (internal, exercised via handleSaveExtractedFacts cloud path)
 // ============================================================
 
-describe('batchGenerateTopics (via handleSaveExtractedFacts cloud path)', () => {
+describe('batchGenerateTopics (via the fact-commit cloud path)', () => {
   const { buildCloudBatchCallsForFact, mergeRealOutputsForFact } =
     require('../../mera-protocol/topic-generation-service') as {
       buildCloudBatchCallsForFact: jest.Mock;
@@ -663,9 +586,12 @@ describe('batchGenerateTopics (via handleSaveExtractedFacts cloud path)', () => 
     (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'CLOUD' });
   });
 
-  /** Helper: save a fact and wait for all microtasks (the fire-and-forget chain). */
+  /** Helper: COMMIT a fact and wait for all microtasks (the fire-and-forget chain).
+   *  Topic generation moved here when saving became propose-then-commit: the
+   *  tool call only offers readings now, so driving this through the handler
+   *  would exercise nothing. */
   async function saveAndFlush(statement: string): Promise<void> {
-    await handleSaveExtractedFacts({ extracted_user_information: [statement] });
+    await commitFactChoices([{ statement }]);
     // Flush the .catch(() => ...) chain from batchGenerateTopics
     await new Promise((r) => setImmediate(r));
     await new Promise((r) => setImmediate(r));

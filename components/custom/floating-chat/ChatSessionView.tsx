@@ -15,6 +15,8 @@ import logger from '@/lib/logger';
 import type { ConversationMessage } from '@/lib/llm/types';
 import {
   useFloatingChatQuickFactChecks,
+  useFloatingChatToolCallResults,
+  useFloatingChatTopicPlanTurnRequest,
   useFloatingChatStore,
   type ChatContext,
 } from '@/lib/stores/floating-chat-store';
@@ -26,6 +28,9 @@ import { useTranslation } from 'react-i18next';
 import ChatThread from './ChatThread';
 import RequestUnblockModal from './RequestUnblockModal';
 import { deriveThreadItems } from './deriveThreadItems';
+import { decideTopicPlanTurn } from './topic-plan-turn';
+import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
+import { getAiAccess } from '@/lib/stores/subscription-store';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
 
@@ -42,6 +47,8 @@ export interface ChatSessionViewProps {
   messages: ConversationMessage[];
   status: 'idle' | 'streaming';
   sendMessage: (text: string) => void;
+  /** Starts a turn the user never sees. Used by the topic-plan discard reply. */
+  sendHiddenTurn: (text: string) => void;
   isBlocked: boolean;
   blockedReason: string | null;
   error: string | null;
@@ -64,6 +71,7 @@ export default function ChatSessionView({
   messages,
   status,
   sendMessage,
+  sendHiddenTurn,
   isBlocked,
   blockedReason,
   error,
@@ -141,6 +149,7 @@ export default function ChatSessionView({
   // and they are deliberately never persisted — a quick answer is a snapshot of
   // what the web said at that moment, not a stored verdict.
   const quickFactChecks = useFloatingChatQuickFactChecks();
+  const toolCallResults = useFloatingChatToolCallResults();
 
   // The claim picker is CLOUD-only — `proposeFactCheck` is neither declared nor
   // described in the LOCAL prompt (its rules are ~1,200 tokens against a ~3,072
@@ -162,6 +171,7 @@ export default function ChatSessionView({
         articleContext,
         optimisationPlan,
         quickFactChecks,
+        toolCallResults,
       }),
     [
       messages,
@@ -173,6 +183,7 @@ export default function ChatSessionView({
       articleContext,
       optimisationPlan,
       quickFactChecks,
+      toolCallResults,
     ],
   );
 
@@ -192,7 +203,27 @@ export default function ChatSessionView({
     [items],
   );
   const { unresolved: unresolvedTopicPlans } = useTopicPlanResolutions(topicPlanFactIds);
-  const hasUnresolvedTopicPlans = unresolvedTopicPlans.length > 0;
+
+  // Propose-before-save gate. A fact-choice card is unanswered until its tool
+  // result has been rewritten by a commit or a dismissal, and it blocks the
+  // input for the same reason a topic plan does: the user must not walk away
+  // from a question Mera is still holding open.
+  //
+  // STALE cards are excluded. A card derived from an EARLIER conversation can
+  // never be committed, so counting it would let "View previous messages"
+  // re-block the composer with no way to clear it.
+  const unresolvedFactChoices = useMemo(
+    () =>
+      items.filter(
+        (item) =>
+          item.kind === 'fact-choice-card'
+          && !item.stale
+          && toolCallResults[item.resultKey] === undefined,
+      ).length,
+    [items, toolCallResults],
+  );
+
+  const hasUnresolvedTopicPlans = unresolvedTopicPlans.length > 0 || unresolvedFactChoices > 0;
 
   // Publish the count so surfaces OUTSIDE this component — the onboarding
   // wizard's Next button — gate on the same signal. Without this the input is
@@ -202,12 +233,20 @@ export default function ChatSessionView({
   useEffect(() => {
     useFloatingChatStore.getState().setUnresolvedTopicPlanCount(unresolvedTopicPlans.length);
   }, [unresolvedTopicPlans.length]);
+  useEffect(() => {
+    useFloatingChatStore.getState().setUnresolvedFactChoiceCount(unresolvedFactChoices);
+  }, [unresolvedFactChoices]);
   useEffect(
     () => () => {
       useFloatingChatStore.getState().setUnresolvedTopicPlanCount(0);
+      useFloatingChatStore.getState().setUnresolvedFactChoiceCount(0);
+      // A nonce that outlives its thread would fire a "you rejected my topics"
+      // reply into whatever conversation mounts next.
+      useFloatingChatStore.getState().clearTopicPlanTurnRequest();
     },
     [],
   );
+
 
   // Mirror generation state into the floating-chat store (bubble shimmer etc).
   // Store writes must never happen inline during render.
@@ -348,6 +387,57 @@ export default function ChatSessionView({
   const effectiveBlocked = isBlocked || personaBlock.blocked;
   const effectiveBlockedReason = blockedReason ?? personaBlock.reason;
 
+  // --- Discard → Mera replies ------------------------------------------------
+  //
+  // A discarded topic plan is the user rejecting a suggestion, and they are owed
+  // a response. The card only REQUESTS (a nonce); the decision of when it may
+  // fire is `decideTopicPlanTurn`, kept pure and unit-tested because every rule
+  // in it fails invisibly. All of its inputs are in the dep array, which is what
+  // lets a request parked behind an unresolved sibling card fire once the gate
+  // finally clears — and what makes "Discard all" produce exactly ONE turn.
+  const topicPlanTurnRequest = useFloatingChatTopicPlanTurnRequest();
+  const lastFiredTurnRef = useRef<number | null>(null);
+  useEffect(() => {
+    const decision = decideTopicPlanTurn({
+      request: topicPlanTurnRequest,
+      lastFired: lastFiredTurnRef.current,
+      unresolvedCount: unresolvedTopicPlans.length + unresolvedFactChoices,
+      isStreaming,
+      blocked: effectiveBlocked,
+      aiLocked: getAiAccess() === 'locked',
+    });
+    if (decision === 'wait') return;
+
+    const store = useFloatingChatStore.getState();
+    if (decision === 'drop') {
+      // Keep the NOTES — they still belong in <context> on the next real turn.
+      // Only the proactive reply is abandoned.
+      store.clearTopicPlanTurnRequest();
+      return;
+    }
+
+    const body = buildTopicPlanTurnBody(store.topicPlanNotes, { compact: isOnDevice });
+    if (!body) {
+      store.clearTopicPlanTurnRequest();
+      return;
+    }
+    // Set ONLY on the fire path: marking it on an early return would silently
+    // kill the mechanism for the rest of the session.
+    lastFiredTurnRef.current = topicPlanTurnRequest;
+    store.clearTopicPlanTurnRequest();
+    store.setTopicPlanTurnInFlight(true);
+    setIntroMessage(null);
+    sendHiddenTurn(body);
+  }, [
+    topicPlanTurnRequest,
+    unresolvedTopicPlans.length,
+    unresolvedFactChoices,
+    isStreaming,
+    effectiveBlocked,
+    isOnDevice,
+    sendHiddenTurn,
+  ]);
+
   // Once blocked, check (once) whether a request is already PENDING so we show
   // "Pending Review" instead of the "Request Unblock" CTA.
   useEffect(() => {
@@ -445,7 +535,11 @@ export default function ChatSessionView({
     : error
       ? `${t('chat.inferenceError')} (${error})`
       : hasUnresolvedTopicPlans
-        ? t('topicPlan.resolveBeforeContinuing')
+        // The two cards ask different things. A fact-choice card shows no topics
+        // yet, so offering to "choose an action" over the topics reads as a bug.
+        ? unresolvedFactChoices > 0
+          ? t('factChoice.resolveBeforeContinuing')
+          : t('topicPlan.resolveBeforeContinuing')
         : null;
 
   if (isLoading) {

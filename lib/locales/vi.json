@@ -457,7 +457,7 @@
     "webSearchTitle": "Tìm kiếm web trong chat",
     "webSearchOn": "Bật - Mera có thể tìm kiếm trên web để trả lời câu hỏi",
     "webSearchOff": "Tắt",
-    "webSearchDescription": "Khi điều này bật, Mera có thể tìm kiếm trên web để trả lời câu hỏi. Các từ tìm kiếm mà bạn nhập được gửi đến máy chủ của chúng tôi và cho nhà cung cấp tìm kiếm. Không có gì khác đi cùng - không phải thông tin của bạn, không phải bản tin của bạn, không phải danh tính của bạn. Tắt theo mặc định.",
+    "webSearchDescription": "Khi bật, Mera có thể tìm trên web để trả lời một câu hỏi. Mera tự soạn từ khoá tìm kiếm từ điều bạn hỏi và chỉ gửi những từ đó tới máy chủ của chúng tôi rồi tới nhà cung cấp tìm kiếm. Không có gì khác đi kèm: không tài khoản, không thiết bị, không gì cho biết bạn là ai. Bật sẵn theo mặc định. Tắt ở đây bất cứ lúc nào và Mera sẽ ngừng tìm.",
     "deepInterviewTitle": "Các câu hỏi sâu hơn",
     "deepInterviewOn": "Bật - Mera hỏi về sự chú ý, lo lắng và quyết định",
     "deepInterviewOff": "Tắt",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "Cần cập nhật",
     "updateRequiredBody": "Vui lòng cập nhật Mera lên phiên bản mới nhất để tiếp tục.",
     "updateCta": "Cập nhật"
-  },
-  "ota": {
-    "updateReady": "Cập nhật sẵn sàng",
-    "modalBody": "Phiên bản mới của Mera đã được tải xuống và sẵn sàng. Cập nhật ngay bây giờ để mọi thứ hoạt động trơn tru.",
-    "updateNow": "Cập nhật Ngay"
   },
   "feedback": {
     "fabLabel": "Báo cáo lỗi",
@@ -2450,5 +2445,15 @@
     "wifiOnlyOff": "Tắt. Các bản sao lưu theo lịch có thể dùng dữ liệu di động.",
     "wifiOnlyOn": "Bật. Các bản sao lưu theo lịch sẽ chờ Wi-Fi.",
     "working": "Đang xử lý…"
+  },
+  "factChoice": {
+    "titleSingle": "Thêm điều này vào persona của bạn?",
+    "titleChoose": "Bạn muốn nói tới cái nào?",
+    "add": "Thêm",
+    "dismiss": "Bỏ qua",
+    "dismissedTitle": "Chưa thêm",
+    "dismissedSummary": "Không có gì được lưu. Hãy nói cho Mera biết ý bạn và Mera sẽ thử lại.",
+    "expired": "Đây là từ cuộc trò chuyện trước, nên không thể thêm nữa.",
+    "resolveBeforeContinuing": "Chọn một cách hiểu, hoặc chạm Bỏ qua, trước khi tiếp tục."
   }
 }

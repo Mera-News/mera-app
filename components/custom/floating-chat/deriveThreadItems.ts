@@ -495,6 +495,36 @@ function savedFactsWithIds(result: Record<string, unknown>): Array<{ id: string;
   return out;
 }
 
+/**
+ * Readings offered but not yet chosen — the seed for the fact-choice card.
+ *
+ * Validated field by field like every other result reader here: a malformed
+ * group is dropped rather than rendered as an empty card the user cannot answer,
+ * which would block the composer forever.
+ */
+function pendingFactsFromResult(
+  result: Record<string, unknown>,
+): { index: number; options: string[]; questionnaireAttribute: string | null }[] {
+  const value = result.pendingFacts;
+  if (!Array.isArray(value)) return [];
+  const out: { index: number; options: string[]; questionnaireAttribute: string | null }[] = [];
+  value.forEach((entry, fallbackIndex) => {
+    const rec = asRecord(entry);
+    if (!rec) return;
+    const options = Array.isArray(rec.options)
+      ? rec.options.filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
+      : [];
+    if (options.length === 0) return;
+    out.push({
+      index: typeof rec.index === 'number' ? rec.index : fallbackIndex,
+      options,
+      questionnaireAttribute:
+        typeof rec.questionnaireAttribute === 'string' ? rec.questionnaireAttribute : null,
+    });
+  });
+  return out;
+}
+
 /** Defensively validate the FactConflict[] echoed by the save result. */
 function conflictsFromResult(result: Record<string, unknown>): FactConflict[] {
   const value = result.conflicts;
@@ -535,10 +565,25 @@ function emitMessage(
   out: ChatThreadItem[],
   message: ConversationMessage,
   keyPrefix: 'hist' | 'live',
+  toolCallResults: Record<string, Record<string, unknown>> = {},
+  stale = false,
 ): void {
+  // A hidden turn is the model's business only — it produces no bubble and no
+  // cards. Filtered here rather than at the call sites so every source (live,
+  // resume, history) is covered by one line.
+  if (message.hidden) return;
+
   const cards: ChatThreadItem[] = [];
   if (message.role === 'assistant' && message.toolCalls) {
-    message.toolCalls.forEach((tc, idx) => {
+    message.toolCalls.forEach((tc0, idx) => {
+      // A tool result REWRITTEN after the fact wins over the persisted one. A
+      // fact-choice card commits from the UI long after the model's call
+      // returned `staged: true`, and every card below reads `savedFacts` off the
+      // result — so the commit rewrites the result rather than teaching each
+      // card a second source. Keyed by message id + INDEX: local tool-call ids
+      // are `local-tc-${n}` and collide across messages.
+      const override = toolCallResults[`${message.id}::${idx}`];
+      const tc = override ? { ...tc0, result: override, status: 'done' as const } : tc0;
       // Proposal cards take precedence — a `proposeChanges` call never doubles
       // as a fact card (and applyProposal/cancelProposal surface nothing).
       const proposal =
@@ -580,6 +625,24 @@ function emitMessage(
             key: `topic-plan-${message.id}-${idx}-${fact.id}`,
             factId: fact.id,
             factStatement: fact.statement,
+          });
+        });
+        // Propose-before-save: readings still awaiting a tap. Mutually exclusive
+        // with the topic-plan cards above — a result carries `pendingFacts`
+        // BEFORE the commit and `savedFacts` after it, never both.
+        pendingFactsFromResult(result).forEach((group) => {
+          cards.push({
+            kind: 'fact-choice-card',
+            key: `fact-choice-${message.id}-${idx}-${group.index}`,
+            resultKey: `${message.id}::${idx}`,
+            groupIndex: group.index,
+            options: group.options,
+            questionnaireAttribute: group.questionnaireAttribute,
+            // A card derived from an EARLIER conversation can never be committed
+            // — its context is gone — so it renders inert and, crucially, is not
+            // counted by the composer gate. Revealing history must not re-block
+            // the input.
+            stale,
           });
         });
       }
@@ -650,9 +713,12 @@ export function deriveThreadItems(opts: {
    * could not search" as "I found nothing".
    */
   quickFactChecks?: QuickFactCheckEntry[];
+  /** Tool results rewritten by a card commit, keyed `${messageId}::${toolCallIndex}`. */
+  toolCallResults?: Record<string, Record<string, unknown>>;
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
+  const toolCallResults = opts.toolCallResults ?? {};
   const out: ChatThreadItem[] = [];
 
   // --- Pinned optimisation-plan card (always first when present) ---
@@ -684,7 +750,8 @@ export function deriveThreadItems(opts: {
       });
     }
     prevConversationId = persisted.conversationId;
-    emitMessage(out, toConversationMessage(persisted), 'hist');
+    // stale: true — an earlier conversation's card can never be committed.
+    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults, true);
   }
 
   // --- Divider between OLDER conversations and the current one ---
@@ -696,7 +763,9 @@ export function deriveThreadItems(opts: {
   const sortedResume = [...resume].sort((a, b) => a.createdAt - b.createdAt);
   const resumeIds = new Set(sortedResume.map((m) => m.id));
   for (const persisted of sortedResume) {
-    emitMessage(out, toConversationMessage(persisted), 'hist');
+    // Resumed CURRENT-conversation messages are live for this purpose: their
+    // cards are still answerable, so they are not stale.
+    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults);
   }
 
   // --- Intro pseudo-message: suppressed once the conversation has resumed
@@ -713,7 +782,7 @@ export function deriveThreadItems(opts: {
   // --- Live session (skip anything already rendered via resume) ---
   for (const message of live) {
     if (resumeIds.has(message.id)) continue;
-    emitMessage(out, message, 'live');
+    emitMessage(out, message, 'live', toolCallResults);
   }
 
   // --- Typing indicator ---

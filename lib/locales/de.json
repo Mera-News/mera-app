@@ -457,7 +457,7 @@
     "webSearchTitle": "Websuche im Chat",
     "webSearchOn": "An, Mera kann das Web durchsuchen, um eine Frage zu beantworten",
     "webSearchOff": "Aus",
-    "webSearchDescription": "Wenn dies an ist, kann Mera das Web durchsuchen, um eine Frage zu beantworten. Die Suchworte, die du eingibst, werden an unseren Server und an einen Suchdienstleister gesendet. Nichts anderes geht damit mit, nicht deine Fakten, nicht dein Feed, nicht wer du bist. Standardmäßig aus.",
+    "webSearchDescription": "Wenn dies aktiviert ist, kann Mera im Web suchen, um eine Frage zu beantworten. Mera formuliert die Suchbegriffe aus deiner Frage und sendet nur diese Wörter an unseren Server und weiter an einen Suchanbieter. Sonst geht nichts mit: kein Konto, kein Gerät, nichts, was sagt, wer du bist. Standardmäßig aktiviert. Schalte es hier jederzeit aus, dann sucht Mera nicht mehr.",
     "deepInterviewTitle": "Tiefere Fragen",
     "deepInterviewOn": "An, Mera stellt Fragen zu Aufmerksamkeit, Sorgen und Entscheidungen",
     "deepInterviewOff": "Aus",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "Update erforderlich",
     "updateRequiredBody": "Bitte aktualisiere Mera auf die neueste Version, um fortzufahren.",
     "updateCta": "Aktualisieren"
-  },
-  "ota": {
-    "updateReady": "Update bereit",
-    "modalBody": "Eine neue Version von Mera wurde heruntergeladen und ist einsatzbereit. Aktualisiere jetzt, um alles reibungslos zu halten.",
-    "updateNow": "Jetzt aktualisieren"
   },
   "feedback": {
     "fabLabel": "Fehler melden",
@@ -2449,5 +2444,15 @@
     "wifiOnlyOff": "Aus. Geplante Backups können mobile Daten nutzen.",
     "wifiOnlyOn": "An. Geplante Backups warten auf Wi-Fi.",
     "working": "Wird ausgeführt…"
+  },
+  "factChoice": {
+    "titleSingle": "Das zu deiner Persona hinzufügen?",
+    "titleChoose": "Was hast du gemeint?",
+    "add": "Hinzufügen",
+    "dismiss": "Überspringen",
+    "dismissedTitle": "Nicht hinzugefügt",
+    "dismissedSummary": "Es wurde nichts gespeichert. Sag Mera, was du gemeint hast, dann versucht es Mera erneut.",
+    "expired": "Das stammt aus einem früheren Chat und kann nicht mehr hinzugefügt werden.",
+    "resolveBeforeContinuing": "Wähle eine Lesart oder tippe auf Überspringen, bevor du fortfährst."
   }
 }

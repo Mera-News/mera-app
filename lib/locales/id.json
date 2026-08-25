@@ -457,7 +457,7 @@
     "webSearchTitle": "Pencarian web dalam chat",
     "webSearchOn": "Aktif - Mera dapat mencari web untuk menjawab pertanyaan",
     "webSearchOff": "Nonaktif",
-    "webSearchDescription": "Ketika ini aktif, Mera dapat mencari web untuk menjawab pertanyaan. Kata-kata pencarian yang Anda ketik dikirim ke server kami dan ke penyedia pencarian. Tidak ada yang lain yang ikut serta, bukan fakta Anda, bukan feed Anda, bukan siapa Anda. Nonaktif secara default.",
+    "webSearchDescription": "Saat ini aktif, Mera bisa mencari di web untuk menjawab pertanyaan. Mera menyusun kata pencarian dari apa yang kamu tanyakan, dan hanya mengirim kata-kata itu ke server kami lalu ke penyedia pencarian. Tidak ada yang lain ikut: tanpa akun, tanpa perangkat, tanpa apa pun yang menyebut siapa kamu. Aktif secara bawaan. Matikan di sini kapan saja dan Mera berhenti mencari.",
     "deepInterviewTitle": "Pertanyaan lebih dalam",
     "deepInterviewOn": "Aktif - Mera bertanya tentang perhatian, kekhawatiran, dan keputusan",
     "deepInterviewOff": "Nonaktif",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "Pembaruan diperlukan",
     "updateRequiredBody": "Harap perbarui Mera ke versi terbaru untuk melanjutkan.",
     "updateCta": "Perbarui"
-  },
-  "ota": {
-    "updateReady": "Pembaruan siap",
-    "modalBody": "Versi baru Mera telah diunduh dan siap digunakan. Perbarui sekarang untuk menjaga semuanya berjalan lancar.",
-    "updateNow": "Perbarui Sekarang"
   },
   "feedback": {
     "fabLabel": "Laporkan bug",
@@ -2449,5 +2444,15 @@
     "wifiOnlyOff": "Nonaktif. Pencadangan terjadwal dapat menggunakan data seluler.",
     "wifiOnlyOn": "Aktif. Pencadangan terjadwal menunggu Wi-Fi.",
     "working": "Memproses…"
+  },
+  "factChoice": {
+    "titleSingle": "Tambahkan ini ke persona kamu?",
+    "titleChoose": "Yang mana maksudmu?",
+    "add": "Tambahkan",
+    "dismiss": "Lewati",
+    "dismissedTitle": "Tidak ditambahkan",
+    "dismissedSummary": "Tidak ada yang disimpan. Beri tahu Mera maksudmu dan Mera akan mencoba lagi.",
+    "expired": "Ini dari obrolan sebelumnya, jadi tidak bisa ditambahkan lagi.",
+    "resolveBeforeContinuing": "Pilih satu makna, atau ketuk Lewati, sebelum lanjut."
   }
 }

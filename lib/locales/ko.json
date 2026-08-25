@@ -457,7 +457,7 @@
     "webSearchTitle": "채팅에서 웹 검색",
     "webSearchOn": "켜짐. Mera가 질문에 답하기 위해 웹을 검색할 수 있습니다",
     "webSearchOff": "꺼짐",
-    "webSearchDescription": "켜면 Mera가 질문에 답하기 위해 웹을 검색할 수 있습니다. 입력한 검색어는 서버로, 그 다음 검색 제공자로 전송됩니다. 팩트, 피드, 또는 당신이 누구인지를 포함한 다른 것은 함께 전송되지 않습니다. 기본값은 꺼짐입니다.",
+    "webSearchDescription": "켜져 있으면 Mera가 질문에 답하기 위해 웹을 검색할 수 있습니다. Mera는 질문한 내용에서 검색어를 만들고, 그 단어만 저희 서버를 거쳐 검색 제공업체로 보냅니다. 그 외에는 아무것도 함께 가지 않습니다. 계정도, 기기도, 당신이 누구인지 알려주는 것도 없습니다. 기본으로 켜져 있습니다. 여기서 언제든 끄면 Mera는 검색을 멈춥니다.",
     "deepInterviewTitle": "더 깊은 질문",
     "deepInterviewOn": "켜짐. Mera가 관심, 걱정, 결정에 대해 묻습니다",
     "deepInterviewOff": "꺼짐",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "업데이트 필요",
     "updateRequiredBody": "계속하려면 Mera를 최신 버전으로 업데이트하세요.",
     "updateCta": "업데이트"
-  },
-  "ota": {
-    "updateReady": "업데이트 준비 완료",
-    "modalBody": "Mera의 새 버전이 다운로드되어 준비되었습니다. 모든 것이 원활하게 실행되도록 지금 업데이트하세요.",
-    "updateNow": "지금 업데이트"
   },
   "feedback": {
     "fabLabel": "버그 신고",
@@ -2449,5 +2444,15 @@
     "wifiOnlyOff": "사용 안 함. 예약된 백업이 모바일 데이터를 사용할 수 있습니다.",
     "wifiOnlyOn": "사용 중. 예약된 백업은 Wi-Fi 연결을 기다립니다.",
     "working": "작업 중…"
+  },
+  "factChoice": {
+    "titleSingle": "이걸 페르소나에 추가할까요",
+    "titleChoose": "어느 쪽을 말한 건가요",
+    "add": "추가",
+    "dismiss": "건너뛰기",
+    "dismissedTitle": "추가하지 않음",
+    "dismissedSummary": "아무것도 저장하지 않았습니다. 무슨 뜻이었는지 Mera에게 알려주면 다시 시도합니다.",
+    "expired": "이전 대화에서 온 것이라 이제는 추가할 수 없습니다.",
+    "resolveBeforeContinuing": "계속하기 전에 하나를 고르거나 건너뛰기를 누르세요."
   }
 }

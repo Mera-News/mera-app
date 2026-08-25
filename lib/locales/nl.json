@@ -457,7 +457,7 @@
     "webSearchTitle": "Websearch in chat",
     "webSearchOn": "Aan: Mera kan het web doorzoeken om een vraag te beantwoorden",
     "webSearchOff": "Uit",
-    "webSearchDescription": "Als dit aan is, kan Mera het web doorzoeken om een vraag te beantwoorden. De zoekwoorden die je typt, worden naar onze server gestuurd en naar een zoekprovider. Niets anders gaat mee. Niet je feiten, niet je feed, niet wie je bent. Standaard uit.",
+    "webSearchDescription": "Als dit aanstaat, kan Mera op het web zoeken om een vraag te beantwoorden. Mera stelt de zoekwoorden op uit wat je vroeg en stuurt alleen die woorden naar onze server en door naar een zoekaanbieder. Er gaat verder niets mee: geen account, geen apparaat, niets dat zegt wie je bent. Staat standaard aan. Zet het hier op elk moment uit en Mera stopt met zoeken.",
     "deepInterviewTitle": "Diepere vragen",
     "deepInterviewOn": "Aan: Mera vraagt naar aandacht, zorgen en beslissingen",
     "deepInterviewOff": "Uit",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "Update vereist",
     "updateRequiredBody": "Werk Mera bij naar de nieuwste versie om door te gaan.",
     "updateCta": "Bijwerken"
-  },
-  "ota": {
-    "updateReady": "Update gereed",
-    "modalBody": "Een nieuwe versie van Mera is gedownload en klaar voor gebruik. Update nu om alles soepel te laten werken.",
-    "updateNow": "Nu updaten"
   },
   "feedback": {
     "fabLabel": "Bug melden",
@@ -2449,5 +2444,15 @@
     "wifiOnlyOff": "Uit. Geplande back-ups kunnen mobiele data gebruiken.",
     "wifiOnlyOn": "Aan. Geplande back-ups wachten op Wi-Fi.",
     "working": "Bezig…"
+  },
+  "factChoice": {
+    "titleSingle": "Dit aan je persona toevoegen?",
+    "titleChoose": "Welke bedoelde je?",
+    "add": "Toevoegen",
+    "dismiss": "Overslaan",
+    "dismissedTitle": "Niet toegevoegd",
+    "dismissedSummary": "Er is niets opgeslagen. Vertel Mera wat je bedoelde, dan probeert het het opnieuw.",
+    "expired": "Dit komt uit een eerdere chat en kan niet meer worden toegevoegd.",
+    "resolveBeforeContinuing": "Kies een lezing of tik op Overslaan voordat je verdergaat."
   }
 }

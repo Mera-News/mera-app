@@ -46,6 +46,22 @@ export type ChatThreadItem =
   // Wave 11 U-B2 — in-chat topic-planning widget for one saved fact. Subscribes
   // to the fact's live topic rows (observeByFact) inside the component.
   | { kind: 'topic-plan-card'; key: string; factId: string; factStatement: string }
+  /**
+   * Readings Mera is OFFERING for one extracted fact, awaiting a tap. Nothing
+   * has been written when this renders — that is the whole point of it.
+   * `resultKey` is `${messageId}::${toolCallIndex}`, the key the commit writes
+   * its rewritten tool result under.
+   */
+  | {
+      kind: 'fact-choice-card';
+      key: string;
+      resultKey: string;
+      groupIndex: number;
+      options: string[];
+      questionnaireAttribute: string | null;
+      /** Derived from an earlier conversation: inert, and not counted by the gate. */
+      stale: boolean;
+    }
   // Wave 11 U-B1 — save-time fact-conflict resolution card.
   | { kind: 'conflict-card'; key: string; conflict: FactConflict }
   // pivot P8c — the QUICK fact check the user started by tapping a claim pill,

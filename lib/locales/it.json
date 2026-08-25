@@ -457,7 +457,7 @@
     "webSearchTitle": "Ricerca web in chat",
     "webSearchOn": "Attiva; Mera può cercare il web per rispondere a una domanda",
     "webSearchOff": "Spegnere",
-    "webSearchDescription": "Quando è attivato, Mera può cercare il web per rispondere a una domanda. Le parole di ricerca che digiti sono inviate al nostro server e a un provider di ricerca. Nient'altro va con loro; non i tuoi fatti, non il tuo feed, non chi sei. Disattivato per impostazione predefinita.",
+    "webSearchDescription": "Quando è attivo, Mera può cercare sul web per rispondere a una domanda. Mera scrive le parole di ricerca partendo dalla tua domanda e invia solo quelle parole al nostro server e poi a un motore di ricerca. Non parte nient'altro: nessun account, nessun dispositivo, niente che dica chi sei. Attivo di default. Disattivalo qui quando vuoi e Mera smette di cercare.",
     "deepInterviewTitle": "Domande più profonde",
     "deepInterviewOn": "Attiva; Mera chiede informazioni su attenzione, preoccupazioni e decisioni",
     "deepInterviewOff": "Spegnere",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "Aggiornamento necessario",
     "updateRequiredBody": "Aggiorna Mera all'ultima versione per continuare.",
     "updateCta": "Aggiorna"
-  },
-  "ota": {
-    "updateReady": "Aggiornamento pronto",
-    "modalBody": "Una nuova versione di Mera è stata scaricata ed è pronta. Aggiorna ora per mantenere tutto funzionante senza problemi.",
-    "updateNow": "Aggiorna ora"
   },
   "feedback": {
     "fabLabel": "Segnala un bug",
@@ -2449,5 +2444,15 @@
     "wifiOnlyOff": "Disattivato. I backup programmati possono usare i dati mobili.",
     "wifiOnlyOn": "Attivo. I backup programmati aspettano il Wi-Fi.",
     "working": "In corso…"
+  },
+  "factChoice": {
+    "titleSingle": "Aggiungere questo al tuo persona?",
+    "titleChoose": "Quale intendevi?",
+    "add": "Aggiungi",
+    "dismiss": "Salta",
+    "dismissedTitle": "Non aggiunto",
+    "dismissedSummary": "Non è stato salvato nulla. Di' a Mera cosa intendevi e riproverà.",
+    "expired": "Viene da una chat precedente, quindi non può più essere aggiunto.",
+    "resolveBeforeContinuing": "Scegli un'interpretazione o tocca Salta prima di continuare."
   }
 }

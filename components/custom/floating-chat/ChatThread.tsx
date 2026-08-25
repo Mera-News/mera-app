@@ -27,6 +27,7 @@ import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard from './ProposalCard';
 import QuickFactCheckCard from './QuickFactCheckCard';
+import FactChoiceCard from './FactChoiceCard';
 import TopicPlanCard from './TopicPlanCard';
 import TopicPlanSaveAllRow from './TopicPlanSaveAllRow';
 import ConflictResolutionCard from './ConflictResolutionCard';
@@ -144,6 +145,17 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       case 'topic-plan-card':
         return <TopicPlanCard factId={item.factId} factStatement={item.factStatement} />;
+
+      case 'fact-choice-card':
+        return (
+          <FactChoiceCard
+            resultKey={item.resultKey}
+            groupIndex={item.groupIndex}
+            options={item.options}
+            questionnaireAttribute={item.questionnaireAttribute}
+            stale={item.stale}
+          />
+        );
 
       case 'conflict-card':
         return <ConflictResolutionCard conflict={item.conflict} />;

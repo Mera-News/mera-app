@@ -1,0 +1,303 @@
+{
+  "_comment": "propose-before-save wave: the fact-choice card (8 new factChoice.* keys) plus the retranslated meraProtocol.webSearchDescription, which went false when web search became on-by-default and when Mera began composing the query itself rather than sending the words the user typed. Requires --allow-overwrite meraProtocol.webSearchDescription,factChoice.titleSingle,factChoice.titleChoose,factChoice.add,factChoice.dismiss,factChoice.dismissedTitle,factChoice.dismissedSummary,factChoice.expired,factChoice.resolveBeforeContinuing (the English was settled in en.json first, so every key collides there). Never edit the 20 dictionaries by hand.",
+  "en": {
+    "meraProtocol": {
+      "webSearchDescription": "When this is on, Mera can search the web to answer a question. Mera writes the search words from what you asked, and sends only those words to our server and on to a search provider. Nothing else goes with them: no account, no device, nothing that says who you are. On by default. Turn it off here at any time and Mera stops searching."
+    },
+    "factChoice": {
+      "titleSingle": "Add this to your persona?",
+      "titleChoose": "Which one did you mean?",
+      "add": "Add",
+      "dismiss": "Skip",
+      "dismissedTitle": "Not added",
+      "dismissedSummary": "Nothing was saved. Tell Mera what you meant and it will try again.",
+      "expired": "This is from an earlier chat, so it can no longer be added.",
+      "resolveBeforeContinuing": "Pick a reading, or tap Skip, before continuing."
+    }
+  },
+  "de": {
+    "meraProtocol": {
+      "webSearchDescription": "Wenn dies aktiviert ist, kann Mera im Web suchen, um eine Frage zu beantworten. Mera formuliert die Suchbegriffe aus deiner Frage und sendet nur diese Wörter an unseren Server und weiter an einen Suchanbieter. Sonst geht nichts mit: kein Konto, kein Gerät, nichts, was sagt, wer du bist. Standardmäßig aktiviert. Schalte es hier jederzeit aus, dann sucht Mera nicht mehr."
+    },
+    "factChoice": {
+      "titleSingle": "Das zu deiner Persona hinzufügen?",
+      "titleChoose": "Was hast du gemeint?",
+      "add": "Hinzufügen",
+      "dismiss": "Überspringen",
+      "dismissedTitle": "Nicht hinzugefügt",
+      "dismissedSummary": "Es wurde nichts gespeichert. Sag Mera, was du gemeint hast, dann versucht es Mera erneut.",
+      "expired": "Das stammt aus einem früheren Chat und kann nicht mehr hinzugefügt werden.",
+      "resolveBeforeContinuing": "Wähle eine Lesart oder tippe auf Überspringen, bevor du fortfährst."
+    }
+  },
+  "es": {
+    "meraProtocol": {
+      "webSearchDescription": "Cuando esto está activado, Mera puede buscar en la web para responder una pregunta. Mera redacta las palabras de búsqueda a partir de lo que preguntaste y envía solo esas palabras a nuestro servidor y de ahí a un proveedor de búsqueda. No va nada más: ninguna cuenta, ningún dispositivo, nada que diga quién eres. Activado de forma predeterminada. Desactívalo aquí cuando quieras y Mera dejará de buscar."
+    },
+    "factChoice": {
+      "titleSingle": "¿Añadir esto a tu persona?",
+      "titleChoose": "¿A cuál te referías?",
+      "add": "Añadir",
+      "dismiss": "Omitir",
+      "dismissedTitle": "No añadido",
+      "dismissedSummary": "No se guardó nada. Dile a Mera qué querías decir y lo intentará de nuevo.",
+      "expired": "Esto viene de un chat anterior, así que ya no se puede añadir.",
+      "resolveBeforeContinuing": "Elige una opción o toca Omitir antes de continuar."
+    }
+  },
+  "fr": {
+    "meraProtocol": {
+      "webSearchDescription": "Quand cette option est activée, Mera peut chercher sur le web pour répondre à une question. Mera rédige les mots de recherche à partir de ta question et n'envoie que ces mots à notre serveur, puis à un moteur de recherche. Rien d'autre ne part avec : aucun compte, aucun appareil, rien qui dise qui tu es. Activé par défaut. Désactive-le ici quand tu veux et Mera arrête de chercher."
+    },
+    "factChoice": {
+      "titleSingle": "Ajouter ceci à ton persona ?",
+      "titleChoose": "Lequel voulais-tu dire ?",
+      "add": "Ajouter",
+      "dismiss": "Passer",
+      "dismissedTitle": "Non ajouté",
+      "dismissedSummary": "Rien n'a été enregistré. Dis à Mera ce que tu voulais dire et il réessaiera.",
+      "expired": "Cela vient d'une conversation précédente et ne peut plus être ajouté.",
+      "resolveBeforeContinuing": "Choisis une interprétation ou appuie sur Passer avant de continuer."
+    }
+  },
+  "it": {
+    "meraProtocol": {
+      "webSearchDescription": "Quando è attivo, Mera può cercare sul web per rispondere a una domanda. Mera scrive le parole di ricerca partendo dalla tua domanda e invia solo quelle parole al nostro server e poi a un motore di ricerca. Non parte nient'altro: nessun account, nessun dispositivo, niente che dica chi sei. Attivo di default. Disattivalo qui quando vuoi e Mera smette di cercare."
+    },
+    "factChoice": {
+      "titleSingle": "Aggiungere questo al tuo persona?",
+      "titleChoose": "Quale intendevi?",
+      "add": "Aggiungi",
+      "dismiss": "Salta",
+      "dismissedTitle": "Non aggiunto",
+      "dismissedSummary": "Non è stato salvato nulla. Di' a Mera cosa intendevi e riproverà.",
+      "expired": "Viene da una chat precedente, quindi non può più essere aggiunto.",
+      "resolveBeforeContinuing": "Scegli un'interpretazione o tocca Salta prima di continuare."
+    }
+  },
+  "nl": {
+    "meraProtocol": {
+      "webSearchDescription": "Als dit aanstaat, kan Mera op het web zoeken om een vraag te beantwoorden. Mera stelt de zoekwoorden op uit wat je vroeg en stuurt alleen die woorden naar onze server en door naar een zoekaanbieder. Er gaat verder niets mee: geen account, geen apparaat, niets dat zegt wie je bent. Staat standaard aan. Zet het hier op elk moment uit en Mera stopt met zoeken."
+    },
+    "factChoice": {
+      "titleSingle": "Dit aan je persona toevoegen?",
+      "titleChoose": "Welke bedoelde je?",
+      "add": "Toevoegen",
+      "dismiss": "Overslaan",
+      "dismissedTitle": "Niet toegevoegd",
+      "dismissedSummary": "Er is niets opgeslagen. Vertel Mera wat je bedoelde, dan probeert het het opnieuw.",
+      "expired": "Dit komt uit een eerdere chat en kan niet meer worden toegevoegd.",
+      "resolveBeforeContinuing": "Kies een lezing of tik op Overslaan voordat je verdergaat."
+    }
+  },
+  "pt-BR": {
+    "meraProtocol": {
+      "webSearchDescription": "Quando isto está ligado, a Mera pode pesquisar na web para responder a uma pergunta. A Mera escreve as palavras de busca a partir do que você perguntou e envia só essas palavras para o nosso servidor e daí para um provedor de busca. Nada mais vai junto: nenhuma conta, nenhum aparelho, nada que diga quem você é. Ligado por padrão. Desligue aqui quando quiser e a Mera para de pesquisar."
+    },
+    "factChoice": {
+      "titleSingle": "Adicionar isto ao seu persona?",
+      "titleChoose": "Qual você quis dizer?",
+      "add": "Adicionar",
+      "dismiss": "Pular",
+      "dismissedTitle": "Não adicionado",
+      "dismissedSummary": "Nada foi salvo. Diga à Mera o que você quis dizer e ela tentará de novo.",
+      "expired": "Isto é de uma conversa anterior, então não pode mais ser adicionado.",
+      "resolveBeforeContinuing": "Escolha uma leitura ou toque em Pular antes de continuar."
+    }
+  },
+  "pl": {
+    "meraProtocol": {
+      "webSearchDescription": "Gdy to jest włączone, Mera może szukać w sieci, aby odpowiedzieć na pytanie. Mera układa słowa wyszukiwania na podstawie twojego pytania i wysyła tylko te słowa na nasz serwer, a stamtąd do dostawcy wyszukiwania. Nic więcej z nimi nie idzie: żadnego konta, żadnego urządzenia, niczego, co mówi, kim jesteś. Domyślnie włączone. Wyłącz to tutaj w dowolnej chwili, a Mera przestanie szukać."
+    },
+    "factChoice": {
+      "titleSingle": "Dodać to do twojej persony?",
+      "titleChoose": "Co miałeś na myśli?",
+      "add": "Dodaj",
+      "dismiss": "Pomiń",
+      "dismissedTitle": "Nie dodano",
+      "dismissedSummary": "Nic nie zostało zapisane. Powiedz Merze, o co ci chodziło, a spróbuje ponownie.",
+      "expired": "To pochodzi z wcześniejszej rozmowy, więc nie można już tego dodać.",
+      "resolveBeforeContinuing": "Wybierz znaczenie lub dotknij Pomiń, zanim przejdziesz dalej."
+    }
+  },
+  "ru": {
+    "meraProtocol": {
+      "webSearchDescription": "Когда это включено, Mera может искать в интернете, чтобы ответить на вопрос. Mera составляет поисковые слова из твоего вопроса и отправляет только эти слова на наш сервер и дальше поисковому провайдеру. Больше ничего с ними не уходит: ни аккаунта, ни устройства, ничего, что говорит, кто ты. Включено по умолчанию. Выключи здесь в любой момент, и Mera перестанет искать."
+    },
+    "factChoice": {
+      "titleSingle": "Добавить это в твою персону?",
+      "titleChoose": "Что ты имел в виду?",
+      "add": "Добавить",
+      "dismiss": "Пропустить",
+      "dismissedTitle": "Не добавлено",
+      "dismissedSummary": "Ничего не сохранено. Скажи Mera, что ты имел в виду, и она попробует снова.",
+      "expired": "Это из более раннего чата, поэтому добавить уже нельзя.",
+      "resolveBeforeContinuing": "Выбери вариант или нажми Пропустить, прежде чем продолжить."
+    }
+  },
+  "uk": {
+    "meraProtocol": {
+      "webSearchDescription": "Коли це увімкнено, Mera може шукати в інтернеті, щоб відповісти на запитання. Mera складає пошукові слова з твого запитання й надсилає лише ці слова на наш сервер і далі пошуковому провайдеру. Більше нічого з ними не йде: ні акаунта, ні пристрою, нічого, що каже, хто ти. Увімкнено за замовчуванням. Вимкни це тут будь-коли, і Mera перестане шукати."
+    },
+    "factChoice": {
+      "titleSingle": "Додати це до твоєї персони?",
+      "titleChoose": "Що ти мав на увазі?",
+      "add": "Додати",
+      "dismiss": "Пропустити",
+      "dismissedTitle": "Не додано",
+      "dismissedSummary": "Нічого не збережено. Скажи Mera, що ти мав на увазі, і вона спробує ще раз.",
+      "expired": "Це з попереднього чату, тож додати вже не можна.",
+      "resolveBeforeContinuing": "Обери варіант або торкнись Пропустити, перш ніж продовжити."
+    }
+  },
+  "tr": {
+    "meraProtocol": {
+      "webSearchDescription": "Bu açıkken Mera bir soruyu yanıtlamak için web'de arama yapabilir. Mera arama kelimelerini sorduğun şeyden yazar ve sunucumuza, oradan da bir arama sağlayıcısına yalnızca o kelimeleri gönderir. Yanında başka hiçbir şey gitmez: hesap yok, cihaz yok, kim olduğunu söyleyen hiçbir şey yok. Varsayılan olarak açık. Buradan istediğin zaman kapat, Mera aramayı bırakır."
+    },
+    "factChoice": {
+      "titleSingle": "Bunu kişiliğine eklensin mi?",
+      "titleChoose": "Hangisini kastettin?",
+      "add": "Ekle",
+      "dismiss": "Atla",
+      "dismissedTitle": "Eklenmedi",
+      "dismissedSummary": "Hiçbir şey kaydedilmedi. Mera'ya ne demek istediğini söyle, tekrar denesin.",
+      "expired": "Bu daha önceki bir sohbetten, bu yüzden artık eklenemez.",
+      "resolveBeforeContinuing": "Devam etmeden önce bir okuma seç ya da Atla'ya dokun."
+    }
+  },
+  "id": {
+    "meraProtocol": {
+      "webSearchDescription": "Saat ini aktif, Mera bisa mencari di web untuk menjawab pertanyaan. Mera menyusun kata pencarian dari apa yang kamu tanyakan, dan hanya mengirim kata-kata itu ke server kami lalu ke penyedia pencarian. Tidak ada yang lain ikut: tanpa akun, tanpa perangkat, tanpa apa pun yang menyebut siapa kamu. Aktif secara bawaan. Matikan di sini kapan saja dan Mera berhenti mencari."
+    },
+    "factChoice": {
+      "titleSingle": "Tambahkan ini ke persona kamu?",
+      "titleChoose": "Yang mana maksudmu?",
+      "add": "Tambahkan",
+      "dismiss": "Lewati",
+      "dismissedTitle": "Tidak ditambahkan",
+      "dismissedSummary": "Tidak ada yang disimpan. Beri tahu Mera maksudmu dan Mera akan mencoba lagi.",
+      "expired": "Ini dari obrolan sebelumnya, jadi tidak bisa ditambahkan lagi.",
+      "resolveBeforeContinuing": "Pilih satu makna, atau ketuk Lewati, sebelum lanjut."
+    }
+  },
+  "vi": {
+    "meraProtocol": {
+      "webSearchDescription": "Khi bật, Mera có thể tìm trên web để trả lời một câu hỏi. Mera tự soạn từ khoá tìm kiếm từ điều bạn hỏi và chỉ gửi những từ đó tới máy chủ của chúng tôi rồi tới nhà cung cấp tìm kiếm. Không có gì khác đi kèm: không tài khoản, không thiết bị, không gì cho biết bạn là ai. Bật sẵn theo mặc định. Tắt ở đây bất cứ lúc nào và Mera sẽ ngừng tìm."
+    },
+    "factChoice": {
+      "titleSingle": "Thêm điều này vào persona của bạn?",
+      "titleChoose": "Bạn muốn nói tới cái nào?",
+      "add": "Thêm",
+      "dismiss": "Bỏ qua",
+      "dismissedTitle": "Chưa thêm",
+      "dismissedSummary": "Không có gì được lưu. Hãy nói cho Mera biết ý bạn và Mera sẽ thử lại.",
+      "expired": "Đây là từ cuộc trò chuyện trước, nên không thể thêm nữa.",
+      "resolveBeforeContinuing": "Chọn một cách hiểu, hoặc chạm Bỏ qua, trước khi tiếp tục."
+    }
+  },
+  "th": {
+    "meraProtocol": {
+      "webSearchDescription": "เมื่อเปิดใช้งาน Mera จะค้นหาบนเว็บเพื่อตอบคำถามได้ Mera จะเขียนคำค้นหาจากสิ่งที่คุณถาม และส่งเฉพาะคำเหล่านั้นไปยังเซิร์ฟเวอร์ของเราแล้วต่อไปยังผู้ให้บริการค้นหา ไม่มีอย่างอื่นไปด้วย ไม่มีบัญชี ไม่มีอุปกรณ์ ไม่มีสิ่งใดที่บอกว่าคุณเป็นใคร เปิดไว้เป็นค่าเริ่มต้น ปิดที่นี่ได้ทุกเมื่อแล้ว Mera จะหยุดค้นหา"
+    },
+    "factChoice": {
+      "titleSingle": "เพิ่มสิ่งนี้ลงในเพอร์โซนาของคุณไหม",
+      "titleChoose": "คุณหมายถึงอันไหน",
+      "add": "เพิ่ม",
+      "dismiss": "ข้าม",
+      "dismissedTitle": "ไม่ได้เพิ่ม",
+      "dismissedSummary": "ยังไม่มีการบันทึกอะไร บอก Mera ว่าคุณหมายถึงอะไร แล้วจะลองใหม่",
+      "expired": "อันนี้มาจากแชทก่อนหน้า จึงเพิ่มไม่ได้แล้ว",
+      "resolveBeforeContinuing": "เลือกความหมายหนึ่ง หรือแตะข้าม ก่อนไปต่อ"
+    }
+  },
+  "hi": {
+    "meraProtocol": {
+      "webSearchDescription": "जब यह चालू होता है, Mera किसी सवाल का जवाब देने के लिए वेब पर खोज कर सकता है। Mera आपके सवाल से खोज के शब्द खुद बनाता है और सिर्फ़ वही शब्द हमारे सर्वर पर और आगे किसी खोज सेवा को भेजता है। उनके साथ और कुछ नहीं जाता: कोई खाता नहीं, कोई डिवाइस नहीं, ऐसा कुछ नहीं जो बताए कि आप कौन हैं। यह डिफ़ॉल्ट रूप से चालू है। इसे यहाँ कभी भी बंद करें और Mera खोजना बंद कर देगा।"
+    },
+    "factChoice": {
+      "titleSingle": "इसे अपने पर्सोना में जोड़ें?",
+      "titleChoose": "आपका मतलब किससे था?",
+      "add": "जोड़ें",
+      "dismiss": "छोड़ें",
+      "dismissedTitle": "नहीं जोड़ा गया",
+      "dismissedSummary": "कुछ भी सेव नहीं हुआ। Mera को बताएं कि आपका मतलब क्या था, यह फिर कोशिश करेगा।",
+      "expired": "यह पहले की बातचीत से है, इसलिए अब इसे जोड़ा नहीं जा सकता।",
+      "resolveBeforeContinuing": "आगे बढ़ने से पहले कोई एक अर्थ चुनें, या छोड़ें दबाएं।"
+    }
+  },
+  "ja": {
+    "meraProtocol": {
+      "webSearchDescription": "オンにすると、Mera は質問に答えるためにウェブを検索できます。Mera はあなたの質問から検索語を作り、その語だけを当社のサーバー経由で検索プロバイダーに送ります。ほかには何も送られません。アカウントも、端末も、あなたが誰かを示すものも送りません。初期設定でオンです。ここでいつでもオフにでき、そうすると Mera は検索しなくなります。"
+    },
+    "factChoice": {
+      "titleSingle": "これをあなたのペルソナに追加しますか",
+      "titleChoose": "どちらの意味でしたか",
+      "add": "追加",
+      "dismiss": "スキップ",
+      "dismissedTitle": "追加していません",
+      "dismissedSummary": "何も保存していません。どういう意味だったか Mera に伝えると、もう一度試します。",
+      "expired": "これは前のチャットのものなので、もう追加できません。",
+      "resolveBeforeContinuing": "続ける前に、どれか選ぶかスキップをタップしてください。"
+    }
+  },
+  "ko": {
+    "meraProtocol": {
+      "webSearchDescription": "켜져 있으면 Mera가 질문에 답하기 위해 웹을 검색할 수 있습니다. Mera는 질문한 내용에서 검색어를 만들고, 그 단어만 저희 서버를 거쳐 검색 제공업체로 보냅니다. 그 외에는 아무것도 함께 가지 않습니다. 계정도, 기기도, 당신이 누구인지 알려주는 것도 없습니다. 기본으로 켜져 있습니다. 여기서 언제든 끄면 Mera는 검색을 멈춥니다."
+    },
+    "factChoice": {
+      "titleSingle": "이걸 페르소나에 추가할까요",
+      "titleChoose": "어느 쪽을 말한 건가요",
+      "add": "추가",
+      "dismiss": "건너뛰기",
+      "dismissedTitle": "추가하지 않음",
+      "dismissedSummary": "아무것도 저장하지 않았습니다. 무슨 뜻이었는지 Mera에게 알려주면 다시 시도합니다.",
+      "expired": "이전 대화에서 온 것이라 이제는 추가할 수 없습니다.",
+      "resolveBeforeContinuing": "계속하기 전에 하나를 고르거나 건너뛰기를 누르세요."
+    }
+  },
+  "zh-CN": {
+    "meraProtocol": {
+      "webSearchDescription": "开启后，Mera 可以搜索网络来回答问题。Mera 会根据你的提问写出搜索词，只把这些词发送到我们的服务器，再转给搜索服务商。不会一起发送别的东西：没有账号，没有设备，没有任何说明你是谁的信息。默认开启。你可以随时在这里关闭，Mera 就不再搜索。"
+    },
+    "factChoice": {
+      "titleSingle": "把这条加入你的画像吗",
+      "titleChoose": "你指的是哪一个",
+      "add": "添加",
+      "dismiss": "跳过",
+      "dismissedTitle": "未添加",
+      "dismissedSummary": "什么都没有保存。告诉 Mera 你的意思，它会再试一次。",
+      "expired": "这条来自更早的对话，已经无法添加。",
+      "resolveBeforeContinuing": "继续之前，请选一个理解，或点跳过。"
+    }
+  },
+  "zh-TW": {
+    "meraProtocol": {
+      "webSearchDescription": "開啟後，Mera 可以搜尋網路來回答問題。Mera 會根據你的提問寫出搜尋字詞，只把這些字詞送到我們的伺服器，再轉給搜尋服務商。不會一起送出其他東西：沒有帳號，沒有裝置，沒有任何說明你是誰的資訊。預設開啟。你可以隨時在這裡關閉，Mera 就不再搜尋。"
+    },
+    "factChoice": {
+      "titleSingle": "把這條加入你的人物設定嗎",
+      "titleChoose": "你指的是哪一個",
+      "add": "新增",
+      "dismiss": "略過",
+      "dismissedTitle": "未新增",
+      "dismissedSummary": "什麼都沒有儲存。告訴 Mera 你的意思，它會再試一次。",
+      "expired": "這條來自較早的對話，已經無法新增。",
+      "resolveBeforeContinuing": "繼續之前，請選一個理解，或點略過。"
+    }
+  },
+  "ar": {
+    "meraProtocol": {
+      "webSearchDescription": "عندما يكون هذا مفعّلاً، يمكن لـ Mera البحث في الويب للإجابة عن سؤال. تكتب Mera كلمات البحث مما سألت عنه، وترسل تلك الكلمات فقط إلى خادمنا ثم إلى مزوّد بحث. لا يذهب معها شيء آخر: لا حساب، ولا جهاز، ولا أي شيء يقول من أنت. مفعّل افتراضياً. أوقفه من هنا في أي وقت وستتوقف Mera عن البحث."
+    },
+    "factChoice": {
+      "titleSingle": "هل نضيف هذا إلى شخصيتك؟",
+      "titleChoose": "أيّهما قصدت؟",
+      "add": "إضافة",
+      "dismiss": "تخطٍ",
+      "dismissedTitle": "لم تتم الإضافة",
+      "dismissedSummary": "لم يُحفظ شيء. أخبر Mera بما قصدته وسيحاول مرة أخرى.",
+      "expired": "هذا من محادثة سابقة، لذا لم يعد بالإمكان إضافته.",
+      "resolveBeforeContinuing": "اختر أحد المعاني، أو اضغط تخطٍ، قبل المتابعة."
+    }
+  }
+}

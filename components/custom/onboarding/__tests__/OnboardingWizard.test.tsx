@@ -101,9 +101,14 @@ const mockSetSuppressed = jest.fn();
 // so the existing navigation tests keep exercising the unblocked path; the gate
 // itself is asserted in its own describe block below.
 let mockHasUnresolvedTopicPlans = false;
+// Which KIND of card is pending decides the toast wording, so the two counts are
+// mocked separately. Defaults to the topic-plan branch, which is what every
+// pre-existing gate assertion below expects.
+let mockUnresolvedCounts = { topicPlans: 0, factChoices: 0 };
 jest.mock('@/lib/stores/floating-chat-store', () => ({
     useFloatingChatStore: { getState: () => ({ collapse: mockCollapse, setSuppressed: mockSetSuppressed }) },
     useFloatingChatHasUnresolvedTopicPlans: () => mockHasUnresolvedTopicPlans,
+    useFloatingChatUnresolvedCounts: () => mockUnresolvedCounts,
 }));
 
 let mockOnline = true;

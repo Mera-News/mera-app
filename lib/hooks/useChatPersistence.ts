@@ -16,6 +16,7 @@
 import { useEffect, useRef } from 'react';
 import { appendMessage } from '../database/services/conversation-service';
 import type { ConversationMessage } from '../llm/types';
+import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
 
 function hasPendingToolCalls(message: ConversationMessage): boolean {
@@ -61,12 +62,24 @@ export function useChatPersistence(
         }
 
         persistedIdsRef.current.add(message.id);
+        // MERGE ANY TOOL-RESULT OVERRIDE recorded before this row existed.
+        //
+        // An assistant message persists only once its turn finalises, so a user
+        // who taps a fact-choice card quickly writes the override BEFORE there
+        // is a row to patch. `patchMessageToolCallResult` no-ops in that case;
+        // this is the other half, and together they close the race at one seam
+        // rather than by polling.
+        const overrides = useFloatingChatStore.getState().toolCallResults;
+        const mergedToolCalls = toolCalls.map((tc, idx) => {
+          const override = overrides[`${message.id}::${idx}`];
+          return override ? { ...tc, result: override, status: 'done' as const } : tc;
+        });
         appendMessage(
           conversationId,
           {
             role: 'assistant',
             content: message.content,
-            toolCalls: toolCalls.length > 0 ? toolCalls : undefined,
+            toolCalls: mergedToolCalls.length > 0 ? mergedToolCalls : undefined,
           },
           message.id,
         ).catch((error) => {
@@ -74,6 +87,13 @@ export function useChatPersistence(
             error: String(error),
           });
         });
+        return;
+      }
+
+      // A HIDDEN turn is never written. Claiming the id first is what stops the
+      // effect retrying it on every re-render.
+      if (message.hidden) {
+        persistedIdsRef.current.add(message.id);
         return;
       }
 

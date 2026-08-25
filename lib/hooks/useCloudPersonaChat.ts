@@ -45,6 +45,8 @@ export interface UseCloudPersonaChatResult {
   messages: ConversationMessage[];
   status: 'idle' | 'streaming';
   sendMessage: (text: string) => void;
+  /** Runs a turn the user never sees. See startTurn's `visible` argument. */
+  sendHiddenTurn: (text: string) => void;
   latestAssistantContent: string;
   isBlocked: boolean;
   blockedReason: string | null;
@@ -137,6 +139,25 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
   );
 
   const isStreamingRef = useRef(false);
+  /** Covers the WHOLE turn including the fire-and-forget forced-extraction tail,
+   *  which outlives isStreamingRef. See startTurn. */
+  const turnBusyRef = useRef(false);
+  /** True while the forced pass owns the busy release. */
+  const forcedPassRef = useRef(false);
+  /** A hidden turn that arrived mid-turn, waiting for the current one to settle. */
+  const pendingHiddenTurnRef = useRef<string | null>(null);
+
+  /** Held in a ref so `flushPendingHiddenTurn` can re-enter `startTurn` without
+   *  the two useCallbacks depending on each other. */
+  const startTurnRef = useRef<((text: string, visible: boolean) => void) | null>(null);
+
+  const flushPendingHiddenTurn = useCallback(() => {
+    const pending = pendingHiddenTurnRef.current;
+    if (!pending) return;
+    pendingHiddenTurnRef.current = null;
+    startTurnRef.current?.(pending, false);
+  }, []);
+
   const agentRef = useRef(agent);
   agentRef.current = agent;
 
@@ -398,6 +419,10 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       const forcedExtractionTools = (): ToolDefinition[] => {
         const store = useFloatingChatStore.getState();
         if (store.proposal) return [];
+        //  4. No topic-plan reply turn is in flight. That turn's note tells the
+        //     model to save NOTHING, and 'required' would oblige
+        //     saveExtractedFacts — forcing the one action the note forbids.
+        if (store.topicPlanTurnInFlight) return [];
         return agentRef.current.getForcedExtractionTools?.() ?? [];
       };
 
@@ -510,6 +535,19 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // empty text — the CLOUD prompt hard-requires text in every response.
       const needsContinuation = calledKnowledgeTool || first.accContent.trim() === '';
 
+      // PROD-VISIBLE SIGNAL FOR "the model answered in prose and staged
+      // nothing". Every other line on this path is `logger.debug`, which is a
+      // no-op in a release build (lib/logger.ts) — so the follow-story refusal
+      // users reported could only be diagnosed by reproducing it in a dev build.
+      // `warn` reaches Sentry as a breadcrumb. NO user text, no query, no reply:
+      // the tool names and the agent id are the whole payload.
+      if (first.toolCalls.length === 0 && first.accContent.trim() !== '') {
+        logger.warn(`${TAG} turn produced prose and no tool calls`, {
+          agent: agentRef.current.id.replace(/-[^-]+$/, ''),
+          declaredTools: (agentRef.current.getToolDefinitions?.() ?? []).length,
+        });
+      }
+
       // Forced extraction is owed on the original condition, unchanged: the user
       // already has a reply but nothing was extracted. With no text the
       // continuation is the better instrument (visible reply AND another chance
@@ -521,7 +559,12 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       const startForcedExtraction = () => {
         const forcedTools = forcedExtractionTools();
         if (forcedTools.length > 0) {
-          void runForcedExtraction(assistantId, forcedTools);
+          forcedPassRef.current = true;
+          void runForcedExtraction(assistantId, forcedTools).finally(() => {
+            forcedPassRef.current = false;
+            turnBusyRef.current = false;
+            flushPendingHiddenTurn();
+          });
         } else {
           logger.debug(`${TAG} forced extraction skipped (gate)`, {
             reason: useFloatingChatStore.getState().proposal
@@ -570,15 +613,31 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
 
       if (needsForcedExtraction) startForcedExtraction();
     },
-    [],
+    [flushPendingHiddenTurn],
   );
 
-  const sendMessage = useCallback(
-    (text: string) => {
+  /**
+   * One turn. `visible: false` runs it without ever appending a
+   * `ConversationMessage`, so nothing is drawn and — because useChatPersistence
+   * reads `messages`, not the wire — nothing is stored either. The model still
+   * sees an ordinary trailing `user` turn with fresh <context> on it.
+   */
+  const startTurn = useCallback(
+    (text: string, visible: boolean) => {
       const store = useCloudChatStore.getState();
-      logger.debug(`${TAG} sendMessage`, { text, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
-      if (isStreamingRef.current || store.isBlocked) {
-        logger.debug(`${TAG} sendMessage BLOCKED`, { isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
+      logger.debug(`${TAG} startTurn`, { visible, isStreaming: isStreamingRef.current, isBlocked: store.isBlocked });
+      // turnBusyRef, not isStreamingRef: startForcedExtraction dispatches with
+      // `void`, so the forced pass OUTLIVES this function's finally. A turn
+      // started in that window would push a `user` wire message before the
+      // forced pass appends its `tool` replies, leaving an orphan `tool` with no
+      // matching `tool_calls` — which most OpenAI-compatible endpoints reject.
+      if (turnBusyRef.current || isStreamingRef.current || store.isBlocked) {
+        if (!visible) {
+          // Queued rather than dropped: the user tapped Discard and is owed a
+          // reply, so it fires when the current work settles.
+          pendingHiddenTurnRef.current = text;
+          logger.debug(`${TAG} hidden turn queued`);
+        }
         return;
       }
       const trimmed = text.trim();
@@ -587,13 +646,16 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       logger.debug(`${TAG} sendMessage proceeding`, { text: trimmed });
       store.setError(null);
 
-      const userMsg: ConversationMessage = {
-        id: `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        role: 'user',
-        content: trimmed,
-      };
-      store.setMessages((prev) => [...prev, userMsg]);
+      if (visible) {
+        const userMsg: ConversationMessage = {
+          id: `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          role: 'user',
+          content: trimmed,
+        };
+        store.setMessages((prev) => [...prev, userMsg]);
+      }
 
+      turnBusyRef.current = true;
       isStreamingRef.current = true;
       store.setStatus('streaming');
 
@@ -632,14 +694,25 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
           useCloudChatStore.getState().setError(msg);
         } finally {
-          logger.debug(`${TAG} sendMessage done, setting idle`);
+          logger.debug(`${TAG} startTurn done, setting idle`);
           useCloudChatStore.getState().setStatus('idle');
           isStreamingRef.current = false;
+          useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);
+          // The forced pass, when one is running, owns the release instead.
+          if (!forcedPassRef.current) {
+            turnBusyRef.current = false;
+            flushPendingHiddenTurn();
+          }
         }
       })();
     },
-    [runSingleShot],
+    [runSingleShot, flushPendingHiddenTurn],
   );
+
+  startTurnRef.current = startTurn;
+
+  const sendMessage = useCallback((text: string) => startTurn(text, true), [startTurn]);
+  const sendHiddenTurn = useCallback((text: string) => startTurn(text, false), [startTurn]);
 
   const latestAssistantContent = (() => {
     // Skip empty assistant placeholders (e.g. from tool-call rounds that returned no text)
@@ -653,6 +726,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
     messages,
     status,
     sendMessage,
+    sendHiddenTurn,
     latestAssistantContent,
     isBlocked,
     blockedReason,

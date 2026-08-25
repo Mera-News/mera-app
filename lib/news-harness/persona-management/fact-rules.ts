@@ -14,6 +14,18 @@ export type FactEntry =
   | {
       statement: string;
       questionnaire_attribute?: string;
+      /**
+       * 0-3 ALTERNATIVE readings of the same thing the user said, offered
+       * alongside `statement` so the user picks which one Mera saves.
+       *
+       * This exists because extraction used to resolve an ambiguous proper noun
+       * by rewriting it — "interested in sporting football club" became
+       * "Interested in sporting a football club", which silently decided that
+       * `sporting` was a verb and destroyed the club. A reading the user did not
+       * choose is a guess, and a guess that reaches topic generation as a fact
+       * cannot be told apart from one they meant.
+       */
+      alternatives?: string[];
     };
 
 /** `level`/`levelCategory` are DEAD: the legacy level-based questionnaire is
@@ -30,6 +42,9 @@ export interface NormalizedFactEntry {
     levelCategory?: string;
     attribute?: string;
   };
+  /** Extra readings offered beside `statement`. Never populated for the legacy
+   *  string form, which by construction offers exactly one reading. */
+  alternatives?: string[];
 }
 
 export function normalizeFactEntry(entry: FactEntry): NormalizedFactEntry {
@@ -40,6 +55,9 @@ export function normalizeFactEntry(entry: FactEntry): NormalizedFactEntry {
     statement: entry.statement ?? '',
     questionnaire: entry.questionnaire_attribute
       ? { attribute: entry.questionnaire_attribute }
+      : undefined,
+    alternatives: Array.isArray(entry.alternatives)
+      ? entry.alternatives.filter((a): a is string => typeof a === 'string')
       : undefined,
   };
 }
@@ -107,4 +125,75 @@ export function filterNewFacts(
   }
 
   return { accepted, rejected };
+}
+
+// ---------------------------------------------------------------------------
+// Fact CHOICE groups — propose-before-save
+// ---------------------------------------------------------------------------
+
+/** How many readings one card may offer. The user asked for as few as possible:
+ *  one when the input is unambiguous, never more than this. */
+export const MAX_FACT_CHOICE_OPTIONS = 4;
+
+/**
+ * One fact Mera is OFFERING, with the readings it is offering for it.
+ *
+ * `options[0]` is the model's preferred reading. A group with one option is the
+ * unambiguous case and is still a group — the user still taps, which is what
+ * makes the tap mean "save this" rather than "stop showing me this".
+ */
+export interface FactChoiceGroup {
+  options: string[];
+  questionnaire?: NormalizedFactEntry['questionnaire'];
+}
+
+/**
+ * Turns the tool's `extracted_user_information` array into offerable groups.
+ *
+ * ONE ARRAY ELEMENT = ONE FACT = ONE GROUP, and its readings live on the
+ * element. That is what keeps "several distinct facts in one turn" and "several
+ * readings of one fact" from competing: N facts give N independent cards, so
+ * nothing has to be squeezed through a single proposal-level flag.
+ *
+ * Every option runs the SAME accept/reject rules a saved fact used to run
+ * (`filterNewFacts`), so a duplicate or over-long reading is dropped from the
+ * card rather than offered and then refused after the tap. A group whose every
+ * option is rejected yields no group at all — there is nothing to ask about.
+ */
+export function filterFactChoiceGroups(
+  entries: FactEntry[],
+  existingStatements: Iterable<string>,
+): { groups: FactChoiceGroup[]; rejected: RejectedFact[] } {
+  const groups: FactChoiceGroup[] = [];
+  const rejected: RejectedFact[] = [];
+
+  for (const entry of entries) {
+    const { statement, questionnaire, alternatives } = normalizeFactEntry(entry);
+    // Preferred reading first, then alternatives, deduped against each other so
+    // a model that repeats itself does not render the same row twice.
+    const candidates = [statement, ...(alternatives ?? [])];
+    const seen = new Set<string>();
+    const unique: string[] = [];
+    for (const c of candidates) {
+      const key = normalizeStatement(c ?? '');
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      unique.push(c);
+    }
+
+    const { accepted, rejected: groupRejected } = filterNewFacts(unique, existingStatements);
+    rejected.push(...groupRejected);
+    if (accepted.length === 0) continue;
+
+    groups.push({
+      options: accepted.slice(0, MAX_FACT_CHOICE_OPTIONS).map((a) => a.statement),
+      // The attribute belongs to the FACT, not to a reading of it, so it is
+      // taken from the entry rather than from whichever option survived.
+      // It must reach `addFact`: resolveUserLocationFact keys on it, and a
+      // residence fact that loses it stops anchoring every future topic run.
+      questionnaire,
+    });
+  }
+
+  return { groups, rejected };
 }

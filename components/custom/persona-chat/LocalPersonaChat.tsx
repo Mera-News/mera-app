@@ -39,6 +39,7 @@ export default function LocalPersonaChat({
       messages={chat.messages}
       status={chat.status}
       sendMessage={chat.sendMessage}
+      sendHiddenTurn={chat.sendHiddenTurn}
       isBlocked={chat.isBlocked}
       blockedReason={chat.blockedReason}
       error={chat.error}

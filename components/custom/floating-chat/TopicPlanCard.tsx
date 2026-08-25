@@ -173,7 +173,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
     setIsResolving(true);
     hapticSuccess();
     try {
-      await saveTopicPlan(factId);
+      await saveTopicPlan(factId, factStatement);
     } finally {
       setIsResolving(false);
     }
@@ -192,7 +192,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
     setIsResolving(true);
     hapticSuccess();
     try {
-      await discardTopicPlan(factId);
+      await discardTopicPlan(factId, factStatement);
     } finally {
       setIsResolving(false);
       setConfirmDiscard(false);

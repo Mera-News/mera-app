@@ -457,7 +457,7 @@
     "webSearchTitle": "Búsqueda web en el chat",
     "webSearchOn": "Activado; Mera puede buscar en la web para responder una pregunta",
     "webSearchOff": "Desactivado",
-    "webSearchDescription": "Cuando está activado, Mera puede buscar en la web para responder una pregunta. Las palabras de búsqueda que escribas se envían a nuestro servidor y a un proveedor de búsqueda. Nada más va con ellas; no tus hechos, no tu feed, no quién eres. Desactivado por defecto.",
+    "webSearchDescription": "Cuando esto está activado, Mera puede buscar en la web para responder una pregunta. Mera redacta las palabras de búsqueda a partir de lo que preguntaste y envía solo esas palabras a nuestro servidor y de ahí a un proveedor de búsqueda. No va nada más: ninguna cuenta, ningún dispositivo, nada que diga quién eres. Activado de forma predeterminada. Desactívalo aquí cuando quieras y Mera dejará de buscar.",
     "deepInterviewTitle": "Preguntas más profundas",
     "deepInterviewOn": "Activado; Mera pregunta sobre atención, preocupaciones y decisiones",
     "deepInterviewOff": "Desactivado",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "Actualización necesaria",
     "updateRequiredBody": "Actualiza Mera a la última versión para continuar.",
     "updateCta": "Actualizar"
-  },
-  "ota": {
-    "updateReady": "Actualización lista",
-    "modalBody": "Se ha descargado una nueva versión de Mera y está lista para usar. Actualiza ahora para mantener todo funcionando sin problemas.",
-    "updateNow": "Actualizar ahora"
   },
   "feedback": {
     "fabLabel": "Reportar un error",
@@ -2449,5 +2444,15 @@
     "wifiOnlyOff": "Desactivado. Las copias programadas pueden usar datos móviles.",
     "wifiOnlyOn": "Activado. Las copias programadas esperan a tener Wi-Fi.",
     "working": "Procesando…"
+  },
+  "factChoice": {
+    "titleSingle": "¿Añadir esto a tu persona?",
+    "titleChoose": "¿A cuál te referías?",
+    "add": "Añadir",
+    "dismiss": "Omitir",
+    "dismissedTitle": "No añadido",
+    "dismissedSummary": "No se guardó nada. Dile a Mera qué querías decir y lo intentará de nuevo.",
+    "expired": "Esto viene de un chat anterior, así que ya no se puede añadir.",
+    "resolveBeforeContinuing": "Elige una opción o toca Omitir antes de continuar."
   }
 }

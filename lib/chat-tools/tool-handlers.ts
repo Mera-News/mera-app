@@ -2,13 +2,11 @@
 // Extracted from on-device-chat-agent.ts so both paths share identical tool execution logic.
 
 import {
-  addFact,
   deleteFact,
   getFacts,
   updateFact,
 } from '../database/services/fact-service';
 import { getSetting } from '../database/services/setting-service';
-import { runGeoDerivationSweep } from '../database/services/geo-derivation-service';
 import { AccountService } from '../account-service';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
@@ -19,12 +17,11 @@ import { inferenceQueue } from '../inference/InferenceQueue';
 import { cloudComplete, cloudBatchComplete, HEDGE_DELAY_MS } from '../llm/cloudComplete';
 import logger from '../logger';
 import {
-  filterNewFacts,
+  filterFactChoiceGroups,
   normalizeStatement,
   type FactEntry,
 } from '@/lib/news-harness/persona-management/fact-rules';
 import { generateTopicsForFactsBatch } from '@/lib/news-harness/persona-management/topic-generation';
-import { detectFactConflicts } from '@/lib/news-harness/persona-management/fact-conflict';
 import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import { syncLlmTopicsForFact } from '../database/services/topic-service';
@@ -105,88 +102,71 @@ async function getStoredUserId(): Promise<string | null> {
   return userId;
 }
 
-/** Saves extracted facts to local DB, immediately generates topics and submits to server. */
+/**
+ * OFFERS extracted facts for the user to confirm. Writes NOTHING.
+ *
+ * This used to save every fact and fire topic generation before it returned, so
+ * the "Topics I'll track" card was an undo, not a confirmation. That is how
+ * "I'm interested in sporting football club" became the saved fact "Interested
+ * in sporting a football club" — one inserted article decided that `sporting`
+ * was a verb, and topic generation then had no entity to anchor to and fell back
+ * to the user's city.
+ *
+ * Now it returns `pendingFacts` and stops. `commitFactChoices` (fact-commit.ts)
+ * does the writing, once the user taps a reading on a FactChoiceCard.
+ *
+ * `factsSaved: 0` in the returned shape is LOAD-BEARING, not decoration.
+ * `deriveThreadItems.deriveCard` falls back to reading this tool's INPUT when
+ * `savedFacts` is absent, so without an explicit zero every staged turn would
+ * render a "Saved to your persona" card listing candidate statements that were
+ * never saved — a lie on the exact surface this change exists to make honest.
+ */
 export async function handleSaveExtractedFacts(
   args: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   const facts = args.extracted_user_information as FactEntry[] | undefined;
 
-  let factsSaved = 0;
-  const savedFactEntries: Array<{ id: string; statement: string }> = [];
-  // Enriched with the questionnaire attribute so save-time conflict detection can
-  // match on the attribute key (see detectFactConflicts).
-  const savedFactsForConflict: Array<{
-    id: string;
-    statement: string;
-    questionnaireAttribute?: string | null;
-  }> = [];
-  let conflicts: ReturnType<typeof detectFactConflicts> = [];
-
-  if (Array.isArray(facts) && facts.length > 0) {
-    // Load existing facts for dedup — local LLMs often re-emit known facts.
-    const existingFacts = await getFacts();
-    const existingStatements = existingFacts.map((f) => normalizeStatement(f.statement));
-
-    // The accept/reject DECISIONS are the harness's pure fact-rules; this handler
-    // keeps the side effects (logging, DB writes, notify, topic-gen trigger).
-    const { accepted, rejected } = filterNewFacts(facts, existingStatements);
-
-    for (const r of rejected) {
-      if (r.reason === 'too-long') {
-        logger.warn('Rejected fact exceeding max length', {
-          length: r.statement.length,
-          preview: r.statement.substring(0, 80),
-        });
-      } else if (r.reason === 'meta') {
-        logger.debug('Rejected meta-conversational fact', { statement: r.statement });
-      }
-    }
-
-    for (const a of accepted) {
-      // Save fact locally (Rule #1: facts never leave the device)
-      const savedFact = await addFact(a.statement, undefined, a.questionnaire);
-      factsSaved++;
-      savedFactEntries.push({ id: savedFact.id, statement: a.statement });
-      savedFactsForConflict.push({
-        id: savedFact.id,
-        statement: a.statement,
-        questionnaireAttribute: a.questionnaire?.attribute ?? null,
-      });
-    }
-
-    // Save-time conflict detection (U-B1) — deterministic, no LLM call. Compares
-    // the just-saved facts against the PRE-existing bank so the chat can surface a
-    // ConflictResolutionCard when the user seems to be correcting an earlier fact.
-    conflicts = detectFactConflicts(
-      savedFactsForConflict,
-      existingFacts.map((f) => ({
-        id: f.id,
-        statement: f.statement,
-        questionnaireAttribute: f.questionnaireAttribute ?? null,
-      })),
-    );
-
-    // Notify once after all facts are saved (avoids WatermelonDB cache race from per-fact notifications)
-    useFloatingChatStore.getState().notifyFactMutation();
-
-    // Generate topics for all new facts
-    triggerTopicGeneration(savedFactEntries);
-
-    // Derive countries from the new facts now instead of waiting up to 24h for
-    // the `persona-geo` task. Called directly (not via AppScheduler.trigger) so
-    // it is independent of that task's frequency gate; `force` bypasses ONLY
-    // the cooldown, never the fact-fingerprint, so repeated saves in one chat
-    // session don't each fire a fresh LLM call. Fire-and-forget.
-    void runGeoDerivationSweep({ force: true }).catch((err: unknown) =>
-      logger.warn('[saveExtractedFacts] Geo derivation failed', { error: String(err) }),
-    );
+  if (!Array.isArray(facts) || facts.length === 0) {
+    return { success: true, staged: true, factsSaved: 0, savedFacts: [], conflicts: [], pendingFacts: [] };
   }
+
+  // Load existing facts for dedup — local LLMs often re-emit known facts, and a
+  // reading that duplicates one is dropped from the CARD rather than offered and
+  // then refused after the tap.
+  const existingFacts = await getFacts();
+  const existingStatements = existingFacts.map((f) => normalizeStatement(f.statement));
+
+  // The accept/reject DECISIONS stay the harness's pure fact-rules; this handler
+  // keeps the side effects, which are now logging and nothing else.
+  const { groups, rejected } = filterFactChoiceGroups(facts, existingStatements);
+
+  for (const r of rejected) {
+    if (r.reason === 'too-long') {
+      logger.warn('Rejected fact exceeding max length', {
+        length: r.statement.length,
+        preview: r.statement.substring(0, 80),
+      });
+    } else if (r.reason === 'meta') {
+      logger.debug('Rejected meta-conversational fact', { statement: r.statement });
+    }
+  }
+
+  logger.debug('[saveExtractedFacts] staged', {
+    groups: groups.length,
+    options: groups.map((g) => g.options.length),
+  });
 
   return {
     success: true,
-    factsSaved,
-    savedFacts: savedFactEntries,
-    conflicts,
+    staged: true,
+    factsSaved: 0,
+    savedFacts: [],
+    conflicts: [],
+    pendingFacts: groups.map((g, index) => ({
+      index,
+      options: g.options,
+      questionnaireAttribute: g.questionnaire?.attribute ?? null,
+    })),
   };
 }
 

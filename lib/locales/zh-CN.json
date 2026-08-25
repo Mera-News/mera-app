@@ -457,7 +457,7 @@
     "webSearchTitle": "聊天中的网络搜索",
     "webSearchOn": "开启，Mera可以搜索网络来回答问题",
     "webSearchOff": "关闭",
-    "webSearchDescription": "打开时，Mera可以搜索网络来回答问题。您输入的搜索词被发送到我们的服务器以及搜索提供商。没有其他内容随之而来，不是您的事实，不是您的资讯，不是您是谁。默认关闭。",
+    "webSearchDescription": "开启后，Mera 可以搜索网络来回答问题。Mera 会根据你的提问写出搜索词，只把这些词发送到我们的服务器，再转给搜索服务商。不会一起发送别的东西：没有账号，没有设备，没有任何说明你是谁的信息。默认开启。你可以随时在这里关闭，Mera 就不再搜索。",
     "deepInterviewTitle": "更深入的问题",
     "deepInterviewOn": "开启，Mera询问关于关注、担忧和决策",
     "deepInterviewOff": "关闭",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "需要更新",
     "updateRequiredBody": "请将 Mera 更新到最新版本以继续。",
     "updateCta": "更新"
-  },
-  "ota": {
-    "updateReady": "更新已就绪",
-    "modalBody": "Mera 的新版本已下载，准备就绪。立即更新以确保一切顺利运行。",
-    "updateNow": "立即更新"
   },
   "feedback": {
     "fabLabel": "报告问题",
@@ -2450,5 +2445,15 @@
     "wifiOnlyOff": "已关闭。计划备份可能会使用移动数据。",
     "wifiOnlyOn": "已开启。计划备份会等待连接 Wi-Fi。",
     "working": "处理中…"
+  },
+  "factChoice": {
+    "titleSingle": "把这条加入你的画像吗",
+    "titleChoose": "你指的是哪一个",
+    "add": "添加",
+    "dismiss": "跳过",
+    "dismissedTitle": "未添加",
+    "dismissedSummary": "什么都没有保存。告诉 Mera 你的意思，它会再试一次。",
+    "expired": "这条来自更早的对话，已经无法添加。",
+    "resolveBeforeContinuing": "继续之前，请选一个理解，或点跳过。"
   }
 }

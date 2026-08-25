@@ -457,7 +457,7 @@
     "webSearchTitle": "Busca na web no chat",
     "webSearchOn": "Ativada - Mera pode buscar na web para responder uma pergunta",
     "webSearchOff": "Desativada",
-    "webSearchDescription": "Quando ativada, Mera pode buscar na web para responder uma pergunta. As palavras que você digita são enviadas ao nosso servidor e então a um provedor de busca. Nada mais vai com elas, não seus fatos, não seu feed, não quem você é. Desativado por padrão.",
+    "webSearchDescription": "Quando isto está ligado, a Mera pode pesquisar na web para responder a uma pergunta. A Mera escreve as palavras de busca a partir do que você perguntou e envia só essas palavras para o nosso servidor e daí para um provedor de busca. Nada mais vai junto: nenhuma conta, nenhum aparelho, nada que diga quem você é. Ligado por padrão. Desligue aqui quando quiser e a Mera para de pesquisar.",
     "deepInterviewTitle": "Perguntas mais profundas",
     "deepInterviewOn": "Ativada - Mera pergunta sobre atenção, preocupações e decisões",
     "deepInterviewOff": "Desativada",
@@ -791,11 +791,6 @@
     "updateRequiredTitle": "Atualização necessária",
     "updateRequiredBody": "Atualize o Mera para a versão mais recente para continuar.",
     "updateCta": "Atualizar"
-  },
-  "ota": {
-    "updateReady": "Atualização disponível",
-    "modalBody": "Uma nova versão do Mera foi baixada e está pronta. Atualize agora para manter tudo funcionando perfeitamente.",
-    "updateNow": "Atualizar agora"
   },
   "feedback": {
     "fabLabel": "Relatar um problema",
@@ -2449,5 +2444,15 @@
     "wifiOnlyOff": "Desativado. Backups programados podem usar dados móveis.",
     "wifiOnlyOn": "Ativado. Backups programados esperam o Wi-Fi.",
     "working": "Processando…"
+  },
+  "factChoice": {
+    "titleSingle": "Adicionar isto ao seu persona?",
+    "titleChoose": "Qual você quis dizer?",
+    "add": "Adicionar",
+    "dismiss": "Pular",
+    "dismissedTitle": "Não adicionado",
+    "dismissedSummary": "Nada foi salvo. Diga à Mera o que você quis dizer e ela tentará de novo.",
+    "expired": "Isto é de uma conversa anterior, então não pode mais ser adicionado.",
+    "resolveBeforeContinuing": "Escolha uma leitura ou toque em Pular antes de continuar."
   }
 }

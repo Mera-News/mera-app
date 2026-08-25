@@ -128,6 +128,44 @@ export async function appendMessage(
 }
 
 /**
+ * Rewrites ONE tool call's result on a persisted message.
+ *
+ * Exists because a fact-choice card commits from the UI long after the model's
+ * tool call returned `staged: true`, and every downstream card reads
+ * `savedFacts` off the PERSISTED result. Rewriting the row is what makes the
+ * commit survive a relaunch; the in-memory override in floating-chat-store is
+ * only what makes it instant.
+ *
+ * A missing row is not an error: an assistant message persists only once the
+ * turn finalises, so a very fast tap can land first. `useChatPersistence` merges
+ * the override in at write time for exactly that case, and this call no-ops.
+ */
+export async function patchMessageToolCallResult(
+  messageId: string,
+  toolCallIndex: number,
+  result: Record<string, unknown>,
+): Promise<boolean> {
+  try {
+    const record = await messagesCol.find(messageId);
+    const parsed = parseToolCalls(record.toolCallsJson);
+    if (!parsed || !parsed[toolCallIndex]) return false;
+    // READ-PATCH-WRITE the whole array: only the one call's result changes, and
+    // every sibling call on the same message is preserved byte for byte.
+    const next = parsed.map((tc, i) =>
+      i === toolCallIndex ? { ...tc, result, status: 'done' as const } : tc,
+    );
+    await database.write(async () => {
+      await record.update((m) => {
+        m.toolCallsJson = JSON.stringify(next);
+      });
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Loads all messages for one conversation, oldest-first. Powers resuming the
  * CURRENT app-session conversation when the popover reopens (its live state may
  * have been torn down on collapse).

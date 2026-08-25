@@ -263,13 +263,18 @@ export class PersonaUpdateAgent implements IAgent {
     const facts = await getFacts();
     const suppressions = await this.loadActiveSuppressions();
     // Re-injected every turn so the one-shot LOCAL path can resolve a confirm.
-    const proposal = useFloatingChatStore.getState().proposal;
+    const { proposal, topicPlanNotes } = useFloatingChatStore.getState();
 
     return buildPersonaContext(
       {
         facts,
         suppressions,
         proposal,
+        // What the user did with topic-plan cards. This is the ONLY channel that
+        // reaches the model identically on both engines — buildContext runs
+        // fresh every turn on cloud and on-device, and is never persisted or
+        // shown to the user.
+        topicPlanNotes,
         includeFiltersBlock: this.turnPlan.includeFiltersBlock,
       },
       { buildContext: buildPersonaUpdateContext },

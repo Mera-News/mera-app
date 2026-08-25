@@ -1,8 +1,13 @@
 import { create } from 'zustand';
+import { useShallow } from 'zustand/react/shallow';
 import { getAiAccess } from './subscription-store';
 import type { StagedProposal } from '../llm/types';
 import type { QuickFactCheckAnswer } from '../chat-tools/quick-fact-check-handler';
 import type { TrackFeedbackSubject } from '../news-harness/core/types';
+import {
+    MAX_TOPIC_PLAN_NOTES,
+    type TopicPlanNote,
+} from '../news-harness/persona-management/topic-plan-notes';
 
 /** Terminal resolution of a save-time fact conflict (U-B1). */
 export type ConflictResolution = 'kept-both' | 'replaced' | 'merged' | 'dismissed';
@@ -109,6 +114,45 @@ interface FloatingChatState {
     // re-deriving it. Reset to 0 when the session unmounts: a block that
     // outlived its cards would be unclearable.
     unresolvedTopicPlanCount: number;
+    // How many FACT-CHOICE cards in the mounted thread are still unanswered.
+    // Same job as unresolvedTopicPlanCount, for the card that now precedes it:
+    // published by ChatSessionView and read by the onboarding wizard.
+    unresolvedFactChoiceCount: number;
+    // Tool RESULTS rewritten after the fact, keyed `${messageId}::${toolCallIndex}`.
+    //
+    // A fact-choice card commits from the UI, long after the model's tool call
+    // returned `staged: true`. Everything downstream — the "Saved to your
+    // persona" card, conflict cards, topic-plan cards, the composer gate — reads
+    // `savedFacts` off the PERSISTED tool result, so rather than teach each of
+    // them a second source, the commit rewrites the result and they all keep
+    // working unchanged.
+    //
+    // Keyed by message id + call INDEX, never by `tc.id`: local ids are
+    // `local-tc-${counter}` and collide across messages.
+    //
+    // DELIBERATELY NOT CLEARED on a context switch, unlike `proposal` and
+    // `quickFactChecks` below. This is a record of writes that already happened,
+    // not in-flight consent — dropping it would revert committed cards to
+    // unresolved and re-block the composer against facts that are live in the
+    // database.
+    toolCallResults: Record<string, Record<string, unknown>>;
+    // What the user did with topic-plan cards this APP SESSION, oldest-first.
+    //
+    // NEVER DRAINED when a turn fires. Cloud's wireMessages survive a remount
+    // but the local engine keeps its messages in component state and loses them
+    // when the popover closes — draining would give cloud a durable record and
+    // local nothing, which is exactly the cross-engine divergence this channel
+    // exists to avoid. Redundancy on cloud costs ~40 tokens.
+    topicPlanNotes: TopicPlanNote[];
+    // Monotonic nonce: a DISCARD asks for a model turn. Edge-triggered, and
+    // cleared aggressively — a nonce that outlives its thread would fire a
+    // "you rejected my topics" reply into a brand-new conversation.
+    topicPlanTurnRequest: number | null;
+    // True from the moment that turn is dispatched until it settles. Read by
+    // useCloudPersonaChat's forcedExtractionTools(): a forced
+    // `tool_choice:'required'` would oblige saveExtractedFacts on the very turn
+    // whose note says to save nothing.
+    topicPlanTurnInFlight: boolean;
     // Quick fact checks started in THIS thread, oldest-first. See
     // QuickFactCheckEntry: in-memory only, never persisted, cleared whenever the
     // thread is (a stale answer about another article would be worse than none).
@@ -132,6 +176,12 @@ interface FloatingChatState {
     setTopicPlanSettled: (factId: string) => void;
     setTopicPlanDiscarded: (factId: string) => void;
     setUnresolvedTopicPlanCount: (count: number) => void;
+    setUnresolvedFactChoiceCount: (count: number) => void;
+    setToolCallResult: (key: string, result: Record<string, unknown>) => void;
+    addTopicPlanNote: (note: TopicPlanNote) => void;
+    requestTopicPlanTurn: () => void;
+    clearTopicPlanTurnRequest: () => void;
+    setTopicPlanTurnInFlight: (value: boolean) => void;
     beginQuickFactCheck: (entry: QuickFactCheckEntry) => void;
     settleQuickFactCheck: (
         id: string,
@@ -171,6 +221,11 @@ const initialState = {
     discardedTopicPlans: {} as Record<string, boolean>,
     resolvedConflicts: {} as Record<string, ConflictResolution>,
     unresolvedTopicPlanCount: 0,
+    unresolvedFactChoiceCount: 0,
+    toolCallResults: {} as Record<string, Record<string, unknown>>,
+    topicPlanNotes: [] as TopicPlanNote[],
+    topicPlanTurnRequest: null as number | null,
+    topicPlanTurnInFlight: false,
     quickFactChecks: [] as QuickFactCheckEntry[],
     conversationId: null as string | null,
 };
@@ -218,6 +273,8 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
                           pendingInitialMessage: null,
                           proposal: null,
                           quickFactChecks: [],
+                          topicPlanNotes: [],
+                          topicPlanTurnRequest: null,
                       }
                     : {}),
             };
@@ -233,6 +290,8 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             isExpanded: true,
             proposal: null,
             quickFactChecks: [],
+            topicPlanNotes: [],
+            topicPlanTurnRequest: null,
             // Null id = "create a fresh conversation" (fresh thread per thumbs
             // tap). The zustand set is atomic, so the null id and the pending
             // message land in one commit — the old thread unmounts before its
@@ -255,6 +314,8 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             pendingInitialMessage: null,
             proposal: null,
             quickFactChecks: [],
+            topicPlanNotes: [],
+            topicPlanTurnRequest: null,
             conversationId: null,
         }));
     },
@@ -297,6 +358,29 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
             state.unresolvedTopicPlanCount === count ? {} : { unresolvedTopicPlanCount: count },
         ),
 
+    setUnresolvedFactChoiceCount: (count) =>
+        set((state) =>
+            state.unresolvedFactChoiceCount === count ? {} : { unresolvedFactChoiceCount: count },
+        ),
+
+    setToolCallResult: (key, result) =>
+        set((state) => ({ toolCallResults: { ...state.toolCallResults, [key]: result } })),
+
+    addTopicPlanNote: (note) =>
+        set((state) => ({
+            topicPlanNotes: [...state.topicPlanNotes, note].slice(-MAX_TOPIC_PLAN_NOTES),
+        })),
+
+    // Date.now() is fine as a nonce here: it only has to DIFFER from the last
+    // one the view fired, and two discards cannot land in the same millisecond
+    // through a sequential await loop.
+    requestTopicPlanTurn: () => set({ topicPlanTurnRequest: Date.now() }),
+
+    clearTopicPlanTurnRequest: () => set({ topicPlanTurnRequest: null }),
+
+    setTopicPlanTurnInFlight: (value) =>
+        set((state) => (state.topicPlanTurnInFlight === value ? {} : { topicPlanTurnInFlight: value })),
+
     beginQuickFactCheck: (entry) =>
         set((state) => ({ quickFactChecks: [...state.quickFactChecks, entry] })),
 
@@ -328,7 +412,16 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
 
     setConversationId: (id) => set({ conversationId: id }),
 
-    requestNewChat: () => set({ conversationId: null, quickFactChecks: [] }),
+    // The nonce MUST die here. A discard parked behind an unresolved sibling
+    // card would otherwise fire its "you rejected my topics" reply into the
+    // brand-new conversation this call is creating.
+    requestNewChat: () =>
+        set({
+            conversationId: null,
+            quickFactChecks: [],
+            topicPlanNotes: [],
+            topicPlanTurnRequest: null,
+        }),
 
     reset: () => set({ ...initialState }),
 }));
@@ -347,9 +440,26 @@ export const useFloatingChatSettledTopicPlans = () =>
     useFloatingChatStore((state) => state.settledTopicPlans);
 export const useFloatingChatDiscardedTopicPlans = () =>
     useFloatingChatStore((state) => state.discardedTopicPlans);
-/** Boolean (not the count) so subscribers only re-render when the gate flips. */
+/** Boolean (not the count) so subscribers only re-render when the gate flips.
+ *  Covers BOTH card kinds: a fact choice and a topic plan block the same
+ *  surfaces for the same reason, and the onboarding wizard needs one signal. */
 export const useFloatingChatHasUnresolvedTopicPlans = () =>
-    useFloatingChatStore((state) => state.unresolvedTopicPlanCount > 0);
+    useFloatingChatStore(
+        (state) => state.unresolvedTopicPlanCount > 0 || state.unresolvedFactChoiceCount > 0,
+    );
+/** The two counts separately, for a caller that must say WHICH card is pending
+ *  (the onboarding toast picks its wording from this). */
+export const useFloatingChatUnresolvedCounts = () =>
+    useFloatingChatStore(
+        useShallow((state) => ({
+            topicPlans: state.unresolvedTopicPlanCount,
+            factChoices: state.unresolvedFactChoiceCount,
+        })),
+    );
+export const useFloatingChatTopicPlanTurnRequest = () =>
+    useFloatingChatStore((state) => state.topicPlanTurnRequest);
+export const useFloatingChatToolCallResults = () =>
+    useFloatingChatStore((state) => state.toolCallResults);
 export const useFloatingChatResolvedConflicts = () =>
     useFloatingChatStore((state) => state.resolvedConflicts);
 export const useFloatingChatQuickFactChecks = () =>

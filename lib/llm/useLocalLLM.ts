@@ -75,6 +75,8 @@ export interface UseLocalLLMResult {
   messages: ConversationMessage[];
   status: LocalLLMStatus;
   sendMessage: (text: string) => void;
+  /** Runs a turn the user never sees. See startTurn's `hidden` argument. */
+  sendHiddenTurn: (text: string) => void;
   latestAssistantContent: string;
   isBlocked: boolean;
   blockedReason: string | null;
@@ -556,19 +558,29 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
     [agent],
   );
 
-  const sendMessage = useCallback(
-    (text: string) => {
+  /**
+   * One turn. `hidden` makes it invisible to the user and unpersisted, while the
+   * model still reads it as an ordinary trailing `user` turn.
+   *
+   * It HAS to be a user turn on this path: buildPromptFromMessages flattens the
+   * thread to `User:` / `Assistant:` and injects <context> onto the last USER
+   * turn, so a prompt ending on `Assistant:` makes a 4B model continue its own
+   * previous message.
+   */
+  const startTurn = useCallback(
+    (text: string, hidden: boolean) => {
       if (isStreamingRef.current || isBlocked) return;
       const trimmed = text.trim();
       if (!trimmed) return;
 
-      logger.debug(`${TAG} sendMessage`, { text: trimmed });
+      logger.debug(`${TAG} startTurn`, { text: trimmed, hidden });
       setError(null);
 
       const userMsg: ConversationMessage = {
         id: `user-${Date.now()}-${Math.random().toString(36).slice(2)}`,
         role: 'user',
         content: trimmed,
+        ...(hidden ? { hidden: true } : {}),
       };
       const newMessages = [...messagesRef.current, userMsg];
       messagesRef.current = newMessages;
@@ -582,6 +594,9 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
     [isBlocked, runInference],
   );
 
+  const sendMessage = useCallback((text: string) => startTurn(text, false), [startTurn]);
+  const sendHiddenTurn = useCallback((text: string) => startTurn(text, true), [startTurn]);
+
   const latestAssistantContent = (() => {
     const lastAssistant = [...messages].reverse().find((m) => m.role === 'assistant');
     return lastAssistant?.content ?? '';
@@ -591,6 +606,7 @@ export function useLocalLLM(agent: IAgent): UseLocalLLMResult {
     messages,
     status,
     sendMessage,
+    sendHiddenTurn,
     latestAssistantContent,
     isBlocked,
     blockedReason,

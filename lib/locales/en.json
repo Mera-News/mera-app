@@ -713,7 +713,7 @@
     "webSearchTitle": "Web search in chat",
     "webSearchOn": "On — Mera can search the web to answer a question",
     "webSearchOff": "Off",
-    "webSearchDescription": "When this is on, Mera can search the web to answer a question. The search words you type are sent to our server and on to a search provider. Nothing else goes with them — not your facts, not your feed, not who you are. Off by default.",
+    "webSearchDescription": "When this is on, Mera can search the web to answer a question. Mera writes the search words from what you asked, and sends only those words to our server and on to a search provider. Nothing else goes with them: no account, no device, nothing that says who you are. On by default. Turn it off here at any time and Mera stops searching.",
     "deepInterviewTitle": "Deeper questions",
     "deepInterviewOn": "On — Mera asks about attention, worries and decisions",
     "deepInterviewOff": "Off",
@@ -1188,11 +1188,6 @@
     "updateRequiredBody": "Please update Mera to the latest version to continue.",
     "updateCta": "Update"
   },
-  "ota": {
-    "updateReady": "Update ready",
-    "modalBody": "A new version of Mera has been downloaded and is ready to go. Update now to keep everything running smoothly.",
-    "updateNow": "Update now"
-  },
   "feedback": {
     "fabLabel": "Report a bug",
     "formTitle": "Report a Bug",
@@ -1404,6 +1399,16 @@
     "discardedTitle": "Discarded",
     "discardedSummary": "This fact and its topics were removed.",
     "resolveBeforeContinuing": "Please choose an action before continuing."
+  },
+  "factChoice": {
+    "titleSingle": "Add this to your persona?",
+    "titleChoose": "Which one did you mean?",
+    "add": "Add",
+    "dismiss": "Skip",
+    "dismissedTitle": "Not added",
+    "dismissedSummary": "Nothing was saved. Tell Mera what you meant and it will try again.",
+    "expired": "This is from an earlier chat, so it can no longer be added.",
+    "resolveBeforeContinuing": "Pick a reading, or tap Skip, before continuing."
   },
   "conflict": {
     "title": "Possible conflict",

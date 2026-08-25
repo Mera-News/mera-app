@@ -469,7 +469,7 @@
     "webSearchTitle": "Wyszukiwanie w sieci w czacie",
     "webSearchOn": "Włączone, Mera może przeszukiwać sieć, aby odpowiedzieć na pytanie",
     "webSearchOff": "Wyłączone",
-    "webSearchDescription": "Gdy to jest włączone, Mera może przeszukiwać sieć, aby odpowiedzieć na pytanie. Słowa wyszukiwania, które wpiszesz, są wysyłane na nasz serwer i do dostawcy wyszukiwania. Nic innego nie idzie z nimi, nie Twoje fakty, nie Twój kanał, nie to, kim jesteś. Domyślnie wyłączone.",
+    "webSearchDescription": "Gdy to jest włączone, Mera może szukać w sieci, aby odpowiedzieć na pytanie. Mera układa słowa wyszukiwania na podstawie twojego pytania i wysyła tylko te słowa na nasz serwer, a stamtąd do dostawcy wyszukiwania. Nic więcej z nimi nie idzie: żadnego konta, żadnego urządzenia, niczego, co mówi, kim jesteś. Domyślnie włączone. Wyłącz to tutaj w dowolnej chwili, a Mera przestanie szukać.",
     "deepInterviewTitle": "Głębsze pytania",
     "deepInterviewOn": "Włączone, Mera pyta o uwagę, obawy i decyzje",
     "deepInterviewOff": "Wyłączone",
@@ -803,11 +803,6 @@
     "updateRequiredTitle": "Wymagana aktualizacja",
     "updateRequiredBody": "Zaktualizuj Mera do najnowszej wersji, aby kontynuować.",
     "updateCta": "Aktualizuj"
-  },
-  "ota": {
-    "updateReady": "Aktualizacja gotowa",
-    "modalBody": "Nowa wersja Mera została pobrana i jest gotowa. Zaktualizuj teraz, aby wszystko działało bezproblemowo.",
-    "updateNow": "Zaktualizuj"
   },
   "feedback": {
     "fabLabel": "Zgłoś błąd",
@@ -2485,5 +2480,15 @@
     "wifiOnlyOff": "Wyłączone. Zaplanowane kopie mogą używać danych mobilnych.",
     "wifiOnlyOn": "Włączone. Zaplanowane kopie czekają na Wi-Fi.",
     "working": "Przetwarzanie…"
+  },
+  "factChoice": {
+    "titleSingle": "Dodać to do twojej persony?",
+    "titleChoose": "Co miałeś na myśli?",
+    "add": "Dodaj",
+    "dismiss": "Pomiń",
+    "dismissedTitle": "Nie dodano",
+    "dismissedSummary": "Nic nie zostało zapisane. Powiedz Merze, o co ci chodziło, a spróbuje ponownie.",
+    "expired": "To pochodzi z wcześniejszej rozmowy, więc nie można już tego dodać.",
+    "resolveBeforeContinuing": "Wybierz znaczenie lub dotknij Pomiń, zanim przejdziesz dalej."
   }
 }
