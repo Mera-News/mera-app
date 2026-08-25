@@ -147,6 +147,22 @@ const SETTING_SHOW_EXTRACTED_METADATA = 'mera_show_extracted_metadata';
 // them, which is what "part of the product" means.
 const RETIRED_SETTING_FACT_CHECK = 'mera_fact_check';
 const SETTING_AUTO_COMMUNITY_FACT_CHECK = 'mera_auto_community_fact_check';
+/**
+ * One-shot marker for the web-search default flip.
+ *
+ * Web search used to be opt-in and OFF, and the flip to on-by-default was a
+ * deliberate product decision to reach EVERY device, not just fresh installs —
+ * so the first hydrate after the update DELETES whatever
+ * `mera_web_search_in_chat` held, including an explicit 'false', and writes
+ * this marker. Same shape as the retired fact-check sweep above and for the
+ * same reason: a stored preference for a default that no longer exists is not
+ * a preference anyone expressed about the current app.
+ *
+ * It is a marker and NOT a retirement: the toggle is still on the Mera Protocol
+ * screen, so an opt-out made AFTER the flip is honoured forever. Only the one
+ * pre-flip value is discarded, and only once.
+ */
+const SETTING_WEB_SEARCH_FORCED_ON = 'mera_web_search_forced_on_v1';
 const LEGACY_SETTING_PROTOCOL_ENABLED = 'mera_protocol_enabled';
 /** Retired with the legacy questionnaire-level persona flow. Never read — kept
  *  only so `reset()` clears the orphaned row from devices that persisted it. */
@@ -162,7 +178,10 @@ const initialState = {
   processingMode: DEFAULT_PROCESSING_MODE,
   injectNoise: false,
   relevanceV4: false,
-  webSearchInChat: false,
+  // ON by default since the web-search wave. Its twin — the marker branch in
+  // `hydrateFromDb` — must agree, or the hydrate overwrites this on every
+  // existing device and the feature ships dark.
+  webSearchInChat: true,
   deepInterview: false,
   showExtractedMetadata: false,
   // ON by default. Its twin — the absent branch in `hydrateFromDb` — must
@@ -262,6 +281,12 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
     deleteSetting(SETTING_INJECT_NOISE).catch(() => { });
     deleteSetting(SETTING_RELEVANCE_V4).catch(() => { });
     deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
+    // The marker goes too. A reset device is a fresh device, and a fresh device
+    // gets the current default — leaving the marker behind would make the next
+    // hydrate honour an absent row as "on" anyway, but leaving it AND a stale
+    // value behind is how a reset silently preserves a preference it just
+    // deleted.
+    deleteSetting(SETTING_WEB_SEARCH_FORCED_ON).catch(() => { });
     deleteSetting(SETTING_DEEP_INTERVIEW).catch(() => { });
     deleteSetting(SETTING_SHOW_EXTRACTED_METADATA).catch(() => { });
     deleteSetting(RETIRED_SETTING_FACT_CHECK).catch(() => { });
@@ -283,6 +308,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         deepInterviewValue,
         showExtractedMetadataValue,
         autoCommunityFactCheckValue,
+        webSearchForcedOnValue,
       ] = await Promise.all([
         getSetting(SETTING_PROCESSING_MODE),
         getSetting(LEGACY_SETTING_PROTOCOL_ENABLED),
@@ -293,6 +319,7 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
         getSetting(SETTING_DEEP_INTERVIEW),
         getSetting(SETTING_SHOW_EXTRACTED_METADATA),
         getSetting(SETTING_AUTO_COMMUNITY_FACT_CHECK),
+        getSetting(SETTING_WEB_SEARCH_FORCED_ON),
       ]);
       // One-shot cleanup: the retired v2 key is never read — the switch starts
       // off regardless of what v2 was set to — just swept so it doesn't linger.
@@ -324,14 +351,29 @@ export const useMeraProtocolStore = create<MeraProtocolState>((set) => ({
       } else if (relevanceV4Value === 'false') {
         updates.relevanceV4 = false;
       }
-      // ABSENT ⇒ OFF, deliberately: only an explicit 'true' turns either of
-      // these on. A device that has never seen the toggle must not inherit an
-      // on state from a missing row — for webSearchInChat that is the
-      // difference between a query leaving the device and not.
-      if (webSearchValue === 'true') {
+      // WEB SEARCH: ABSENT ⇒ ON, and a one-shot sweep of whatever came before.
+      //
+      // This is the exact inverse of the rule that used to live here, and the
+      // reversal is the decision, not a slip. The old comment read "a device
+      // that has never seen the toggle must not inherit an on state from a
+      // missing row"; web search is now part of the product rather than an
+      // opt-in, so an absent row means the default, and the default is on.
+      //
+      // The marker makes the sweep happen ONCE. Before it exists, any stored
+      // value — including an explicit 'false' set while the feature was opt-in
+      // — is deleted and the setting comes up on. After it exists, an explicit
+      // 'false' is honoured forever, because that one was chosen against the
+      // current default by a user looking at the current switch.
+      //
+      // `deepInterview` below keeps the old absent ⇒ OFF rule. It is not the
+      // same kind of setting: it changes what Mera ASKS the user, and nothing
+      // about it became part of the product.
+      if (webSearchForcedOnValue !== 'true') {
         updates.webSearchInChat = true;
-      } else if (webSearchValue === 'false') {
-        updates.webSearchInChat = false;
+        deleteSetting(SETTING_WEB_SEARCH_IN_CHAT).catch(() => { });
+        setSetting(SETTING_WEB_SEARCH_FORCED_ON, 'true').catch(() => { });
+      } else {
+        updates.webSearchInChat = webSearchValue !== 'false';
       }
       if (deepInterviewValue === 'true') {
         updates.deepInterview = true;

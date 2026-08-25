@@ -55,10 +55,26 @@ describe('buildTutorialHelpContext', () => {
 });
 
 describe('buildTutorialHelpPrompt', () => {
-    it('states plainly that it has no tools and changes nothing', () => {
-        const prompt = buildTutorialHelpPrompt();
-        expect(prompt).toContain('NO tools');
-        expect(prompt).toMatch(/never say or imply that you have changed anything/i);
+    it('states plainly that it changes nothing, in both tool states', () => {
+        for (const webSearch of [false, true]) {
+            const prompt = buildTutorialHelpPrompt({ webSearch });
+            expect(prompt).toMatch(/You can CHANGE NOTHING/);
+            expect(prompt).toMatch(/never say or imply that you have changed anything/i);
+        }
+    });
+
+    it('says it has no tools at all only when it genuinely has none', () => {
+        expect(buildTutorialHelpPrompt()).toContain('no tools at all');
+        expect(buildTutorialHelpPrompt({ webSearch: true })).not.toContain('no tools at all');
+    });
+
+    // The one tool it may carry is read-only, and it must never displace the
+    // pinned facts: a searched answer about mera itself is how the chapters get
+    // contradicted by a marketing page.
+    it('tells it to answer about mera from the prompt, never from a search', () => {
+        const prompt = buildTutorialHelpPrompt({ webSearch: true });
+        expect(prompt).toContain('webSearch');
+        expect(prompt).toMatch(/never from a search/i);
     });
 
     it('pins the privacy facts the chapters correct', () => {

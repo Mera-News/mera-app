@@ -737,7 +737,8 @@ describe('getArticleFeedbackToolDefinitions', () => {
       const names = getArticleFeedbackToolDefinitions('CLOUD', true).map((t) => t.function.name);
       expect(names).toContain('webSearch');
       const tool = getArticleFeedbackToolDefinitions('CLOUD', true).find((t) => t.function.name === 'webSearch')!;
-      expect(tool.function.parameters.properties.query).toBeDefined();
+      expect(tool.function.parameters.properties.queries).toBeDefined();
+      expect(tool.function.parameters.required).toEqual(['queries']);
     });
 
     it('never declares webSearch in LOCAL, even with the toggle on — the one-shot path cannot read a tool result', () => {

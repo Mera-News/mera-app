@@ -41,7 +41,31 @@ jest.mock('../../translation-service', () => ({
 
 jest.mock('../../logger', () => ({
   __esModule: true,
-  default: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn() },
+  default: { warn: jest.fn(), error: jest.fn(), info: jest.fn(), debug: jest.fn(), captureMessage: jest.fn() },
+}));
+
+const mockMeraProtocolGetState = jest.fn();
+
+jest.mock('../../stores/mera-protocol-store', () => ({
+  useMeraProtocolStore: {
+    getState: (...args: unknown[]) => mockMeraProtocolGetState(...args),
+  },
+}));
+
+jest.mock('../../generated/graphql-types', () => ({
+  ProcessingMode: { OnDevice: 'ON_DEVICE', Cloud: 'CLOUD' },
+}));
+
+const mockHandleSearchNews = jest.fn();
+
+jest.mock('../../chat-tools/news-search-handler', () => ({
+  handleSearchNews: (...args: unknown[]) => mockHandleSearchNews(...args),
+}));
+
+const mockHandleWebSearch = jest.fn();
+
+jest.mock('../../chat-tools/web-search-handler', () => ({
+  handleWebSearch: (...args: unknown[]) => mockHandleWebSearch(...args),
 }));
 
 import { FollowStoryAgent } from '../agents/FollowStoryAgent';
@@ -54,6 +78,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockFloatingChatGetState.mockReturnValue({ proposal: null, context: { kind: 'follow-story' } });
   mockAppLanguageGetState.mockReturnValue({ appLanguage: 'en' });
+  mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: true });
+  mockHandleSearchNews.mockResolvedValue({ articles: [] });
+  mockHandleWebSearch.mockResolvedValue({ searched: true, searches: [] });
   mockExecuteProposalActions.mockResolvedValue({
     applied: 1,
     errors: [],
@@ -106,12 +133,64 @@ describe('FollowStoryAgent — identity and prompt', () => {
     expect(await makeAgent().buildSystemPrompt(false)).toContain('**English**');
   });
 
-  it('exposes proposeTrack + cancelProposal, and deliberately NOT applyProposal', () => {
+  it('exposes the proposal and retrieval tools, and deliberately NOT applyProposal', () => {
+    const names = makeAgent()
+      .getToolDefinitions()
+      .map((t) => t.function.name);
+
+    expect(names).toEqual(['proposeTrack', 'cancelProposal', 'searchNews', 'webSearch']);
+    expect(names).not.toContain('applyProposal');
+  });
+
+  it('drops webSearch when the user has the toggle off', () => {
+    mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: false });
+
+    const names = makeAgent()
+      .getToolDefinitions()
+      .map((t) => t.function.name);
+
+    expect(names).toEqual(['proposeTrack', 'cancelProposal', 'searchNews']);
+  });
+
+  it('offers no retrieval at all on the on-device path', () => {
+    mockMeraProtocolGetState.mockReturnValue({
+      processingMode: 'ON_DEVICE',
+      webSearchInChat: true,
+    });
+
     const names = makeAgent()
       .getToolDefinitions()
       .map((t) => t.function.name);
 
     expect(names).toEqual(['proposeTrack', 'cancelProposal']);
+  });
+
+  // THE REGRESSION GUARD for "toggle on, still refuses": the prompt is cached,
+  // so if the toggle is not part of the cache key the model keeps being told it
+  // cannot search while the tool payload says it can.
+  it('rebuilds the system prompt when the web-search toggle flips', async () => {
+    const agent = makeAgent();
+    mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: false });
+    const before = await agent.buildSystemPrompt(false);
+
+    mockMeraProtocolGetState.mockReturnValue({ processingMode: 'CLOUD', webSearchInChat: true });
+    const after = await agent.buildSystemPrompt(false);
+
+    expect(after).not.toBe(before);
+    expect(after).toContain('webSearch');
+  });
+
+  it('executes the retrieval tools instead of refusing them', async () => {
+    const agent = makeAgent();
+    mockHandleSearchNews.mockResolvedValue({ articles: [{ title: 'H' }] });
+
+    await expect(agent.executeTool('searchNews', { query: 'Sporting CP' })).resolves.toEqual({
+      result: { articles: [{ title: 'H' }] },
+    });
+    expect(mockHandleSearchNews).toHaveBeenCalledWith({ query: 'Sporting CP' });
+
+    await agent.executeTool('webSearch', { queries: ['Sporting CP news'] });
+    expect(mockHandleWebSearch).toHaveBeenCalledWith({ queries: ['Sporting CP news'] });
   });
 
   // A forced pass with tool_choice:'required' would stage a follow nobody asked

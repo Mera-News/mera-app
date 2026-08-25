@@ -12,6 +12,9 @@
 // This is the thin RN adapter: prompt/context/tool construction all live in the
 // RN-free brain at lib/news-harness/follow-story.
 
+import { ProcessingMode } from '../../generated/graphql-types';
+import { handleSearchNews } from '../../chat-tools/news-search-handler';
+import { handleWebSearch } from '../../chat-tools/web-search-handler';
 import { decideProposeTrack } from '../../news-harness/article-feedback/agent-core';
 import {
   buildFollowStoryContext,
@@ -22,6 +25,7 @@ import {
 import logger from '../../logger';
 import { useAppLanguageStore } from '../../stores/app-language-store';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
+import { useMeraProtocolStore } from '../../stores/mera-protocol-store';
 import { SUPPORTED_LANGUAGES } from '../../translation-service';
 import type { IAgent, ToolDefinition, ToolExecutionResult } from '../types';
 
@@ -37,23 +41,56 @@ export class FollowStoryAgent implements IAgent {
   private cachedSystemPrompt: string | null = null;
   private lastNeedsToolFormat: boolean | null = null;
   private lastLanguageName: string | null = null;
+  private lastCanSearch: boolean | null = null;
+  private lastWebSearch: boolean | null = null;
+
+  /**
+   * The retrieval gates, read from the store and shared by `buildSystemPrompt`
+   * and `getToolDefinitions` so the prompt and the tool payload for one turn
+   * always agree.
+   */
+  private searchGates(): { mode: 'CLOUD' | 'LOCAL'; canSearch: boolean; webSearch: boolean } {
+    const protocol = useMeraProtocolStore.getState();
+    const mode: 'CLOUD' | 'LOCAL' =
+      protocol.processingMode === ProcessingMode.OnDevice ? 'LOCAL' : 'CLOUD';
+    return {
+      mode,
+      canSearch: mode === 'CLOUD',
+      webSearch: mode === 'CLOUD' && protocol.webSearchInChat === true,
+    };
+  }
 
   async buildSystemPrompt(needsToolFormat: boolean): Promise<string> {
     const appLanguage = useAppLanguageStore.getState().appLanguage;
     const languageName =
       SUPPORTED_LANGUAGES.find((l) => l.code === appLanguage)?.name ?? 'English';
+    const { canSearch, webSearch } = this.searchGates();
 
+    // canSearch and webSearch ARE PART OF THE CACHE KEY. Without them a prompt
+    // built while the toggle was off keeps telling the model it cannot look
+    // anything up after the user turns it on, while getToolDefinitions() hands
+    // over the tool — the "toggle on, still refuses" bug ArticleFeedbackAgent
+    // already had reported against it.
     if (
       this.cachedSystemPrompt
       && this.lastNeedsToolFormat === needsToolFormat
       && this.lastLanguageName === languageName
+      && this.lastCanSearch === canSearch
+      && this.lastWebSearch === webSearch
     ) {
       return this.cachedSystemPrompt;
     }
 
-    this.cachedSystemPrompt = buildFollowStorySystemPrompt({ needsToolFormat, languageName });
+    this.cachedSystemPrompt = buildFollowStorySystemPrompt({
+      needsToolFormat,
+      languageName,
+      canSearch,
+      webSearch,
+    });
     this.lastNeedsToolFormat = needsToolFormat;
     this.lastLanguageName = languageName;
+    this.lastCanSearch = canSearch;
+    this.lastWebSearch = webSearch;
     return this.cachedSystemPrompt;
   }
 
@@ -72,7 +109,8 @@ export class FollowStoryAgent implements IAgent {
   // --- IAgent: tool definitions ---
 
   getToolDefinitions(): ToolDefinition[] {
-    return getFollowStoryToolDefinitions();
+    const { mode, webSearch } = this.searchGates();
+    return getFollowStoryToolDefinitions(mode, webSearch);
   }
 
   /**
@@ -99,6 +137,15 @@ export class FollowStoryAgent implements IAgent {
 
       case 'cancelProposal':
         return { result: { cancelled: true }, sideEffects: { proposalResolved: 'cancelled' } };
+
+      // The two grounding tools. Without them this agent had no article, no
+      // index and a rule against inventing entities, so a user naming a story
+      // from this week left it nothing to do but ask again or refuse.
+      case 'searchNews':
+        return { result: await handleSearchNews(args) };
+
+      case 'webSearch':
+        return { result: await handleWebSearch(args) };
 
       case 'applyProposal':
         // NOT offered in getToolDefinitions, and refused here even if a model

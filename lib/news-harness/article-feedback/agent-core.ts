@@ -596,13 +596,18 @@ const WEB_SEARCH_TOOL: ToolDefinition = {
   function: {
     name: 'webSearch',
     description:
-      'Search the public web when the user asks something the article metadata (title/publication/description) cannot answer and you would otherwise be guessing. The user has explicitly enabled this. Only the search words are sent — never the article, the user\'s facts, or their feed.',
+      'Search the public web when the user asks something the article metadata (title/publication/description) cannot answer and you would otherwise be guessing. Only the search words are sent — never the article, the user\'s facts, or their feed.',
     parameters: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'Search terms, 2-200 characters.' },
+        queries: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Up to 4 search queries, 2-200 characters each. Put EVERYTHING you need to look up in this ONE call: they are searched at the same time. Never search one thing, read the result, and then search the next.',
+        },
       },
-      required: ['query'],
+      required: ['queries'],
     },
   },
 };

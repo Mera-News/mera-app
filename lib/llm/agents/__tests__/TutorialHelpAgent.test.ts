@@ -27,6 +27,20 @@ jest.mock('@/lib/translation-service', () => ({
     ],
 }));
 
+const mockProtocol = { processingMode: 'CLOUD', webSearchInChat: true };
+jest.mock('@/lib/stores/mera-protocol-store', () => ({
+    useMeraProtocolStore: { getState: () => mockProtocol },
+}));
+
+jest.mock('@/lib/generated/graphql-types', () => ({
+    ProcessingMode: { OnDevice: 'ON_DEVICE', Cloud: 'CLOUD' },
+}));
+
+const mockHandleWebSearch = jest.fn();
+jest.mock('@/lib/chat-tools/web-search-handler', () => ({
+    handleWebSearch: (...args: unknown[]) => mockHandleWebSearch(...args),
+}));
+
 import { TutorialHelpAgent } from '../TutorialHelpAgent';
 
 describe('TutorialHelpAgent', () => {
@@ -39,9 +53,40 @@ describe('TutorialHelpAgent', () => {
         expect(new TutorialHelpAgent('u1', null).id).toBe('tutorial-help-u1');
     });
 
-    it('offers NO tools — this is the whole point of the class', () => {
+    // THE POINT OF THE CLASS: `webSearch` is read-only. Every tool that could
+    // MUTATE the reader's profile or settings must stay absent, because routing
+    // a tutorial question at an agent that had them is the bug this class exists
+    // to prevent.
+    it('offers webSearch and nothing that can change anything', () => {
         const agent = new TutorialHelpAgent('u1', 'tutorials/privacy/what-leaves');
-        expect(agent.getToolDefinitions()).toEqual([]);
+        expect(agent.getToolDefinitions().map((t) => t.function.name)).toEqual(['webSearch']);
+    });
+
+    it('offers NO tools at all when the user has web search off', () => {
+        mockProtocol.webSearchInChat = false;
+        try {
+            expect(new TutorialHelpAgent('u1', null).getToolDefinitions()).toEqual([]);
+        } finally {
+            mockProtocol.webSearchInChat = true;
+        }
+    });
+
+    it('offers NO tools on the on-device path — that turn cannot read a result', () => {
+        mockProtocol.processingMode = 'ON_DEVICE';
+        try {
+            expect(new TutorialHelpAgent('u1', null).getToolDefinitions()).toEqual([]);
+        } finally {
+            mockProtocol.processingMode = 'CLOUD';
+        }
+    });
+
+    it('executes webSearch instead of refusing it', async () => {
+        mockHandleWebSearch.mockResolvedValue({ searched: true, searches: [] });
+        const agent = new TutorialHelpAgent('u1', null);
+
+        await agent.executeTool('webSearch', { queries: ['who won'] });
+
+        expect(mockHandleWebSearch).toHaveBeenCalledWith({ queries: ['who won'] });
     });
 
     it('offers no forced-extraction tools either, so that pass is skipped', () => {

@@ -332,10 +332,15 @@ describe('getPersonaToolDefinitions', () => {
       expect(names).not.toContain('webSearch');
     });
 
-    it('takes a required query and is a KNOWLEDGE tool', () => {
+    // MULTI-QUERY IS THE ADVERTISED SHAPE. Every gateway call goes through a
+    // shared FIFO granting one caller every 3s, so a model that searches three
+    // things one at a time waits at least 6s in the queue alone. The schema is
+    // what makes it batch them.
+    it('takes a required queries ARRAY and is a KNOWLEDGE tool', () => {
       const def = getPersonaToolDefinitions('CONFIG', buildToolDefinitions, 'full', 'CLOUD', true)
         .find((d) => d.function.name === 'webSearch')!;
-      expect(def.function.parameters.required).toEqual(['query']);
+      expect(def.function.parameters.required).toEqual(['queries']);
+      expect((def.function.parameters.properties as any).queries.type).toBe('array');
       expect(KNOWLEDGE_TOOL_NAMES.has('webSearch')).toBe(true);
     });
   });

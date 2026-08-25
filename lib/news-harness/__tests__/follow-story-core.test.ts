@@ -134,8 +134,28 @@ describe('buildFollowStoryContext', () => {
 });
 
 describe('getFollowStoryToolDefinitions', () => {
-  it('offers proposeTrack + cancelProposal only', () => {
-    expect(getFollowStoryToolDefinitions().map((t) => t.function.name)).toEqual([
+  it('offers the proposal tools plus searchNews on CLOUD', () => {
+    expect(getFollowStoryToolDefinitions('CLOUD', false).map((t) => t.function.name)).toEqual([
+      'proposeTrack',
+      'cancelProposal',
+      'searchNews',
+    ]);
+  });
+
+  it('adds webSearch only when the user has it on', () => {
+    expect(getFollowStoryToolDefinitions('CLOUD', true).map((t) => t.function.name)).toContain(
+      'webSearch',
+    );
+    expect(getFollowStoryToolDefinitions('CLOUD', false).map((t) => t.function.name)).not.toContain(
+      'webSearch',
+    );
+  });
+
+  // The LOCAL turn is one-shot — useLocalLLM never pushes a `role:'tool'`
+  // message back — so a search whose result the model can never read is
+  // strictly worse than no tool, and the 3072-token budget cannot spare it.
+  it('offers NO retrieval on LOCAL, whatever the toggle says', () => {
+    expect(getFollowStoryToolDefinitions('LOCAL', true).map((t) => t.function.name)).toEqual([
       'proposeTrack',
       'cancelProposal',
     ]);

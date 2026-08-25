@@ -25,7 +25,14 @@ jest.mock('../../llm/gateway-rate-limiter', () => ({
   pauseFor: (...args: unknown[]) => mockPauseFor(...args),
 }));
 
-import { MAX_QUERY_CHARS, MIN_QUERY_CHARS, SEARCH_UNAVAILABLE, searchWeb } from '../web-search-client';
+import {
+  MAX_BATCH_QUERIES,
+  MAX_QUERY_CHARS,
+  MIN_QUERY_CHARS,
+  SEARCH_UNAVAILABLE,
+  searchWeb,
+  searchWebBatch,
+} from '../web-search-client';
 
 const mockFetch = jest.fn();
 
@@ -296,5 +303,175 @@ describe('searchWeb', () => {
       json: () => Promise.reject(new SyntaxError('not json')),
     });
     expect((await searchWeb('anything')).ok).toBe(false);
+  });
+});
+
+describe('searchWebBatch', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetJwtToken.mockResolvedValue('jwt-abc');
+    mockAcquire.mockResolvedValue(undefined);
+    global.fetch = mockFetch as unknown as typeof fetch;
+    mockFetch.mockResolvedValue(jsonResponse(200, { searches: [] }));
+  });
+
+  // THE REASON THIS FUNCTION EXISTS. The limiter grants one caller every 3s, so
+  // three separate searches are at least 6s of queueing before any of them is
+  // even sent. One grant, one request, N queries fanned out server-side.
+  it('takes ONE limiter grant and makes ONE request for the whole batch', async () => {
+    mockFetch.mockResolvedValue(
+      jsonResponse(200, {
+        searches: [
+          { query: 'aa', results: [] },
+          { query: 'bb', results: [] },
+          { query: 'cc', results: [] },
+        ],
+      }),
+    );
+
+    await searchWebBatch(['aa', 'bb', 'cc']);
+
+    expect(mockAcquire).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    const body = JSON.parse((mockFetch.mock.calls[0][1] as { body: string }).body);
+    expect(body).toEqual({ queries: ['aa', 'bb', 'cc'] });
+  });
+
+  it('sends nothing but the queries, bearing the session JWT', async () => {
+    await searchWebBatch(['first query', 'second query']);
+
+    const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
+    expect(Object.keys(JSON.parse(init.body as string))).toEqual(['queries']);
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer jwt-abc');
+  });
+
+  it('uses the single-query shape for a lone query, so an old gateway still answers', async () => {
+    mockFetch.mockResolvedValue(jsonResponse(200, { results: [{ title: 'T', url: 'https://u.test' }] }));
+
+    const outcome = await searchWebBatch(['only one']);
+
+    const body = JSON.parse((mockFetch.mock.calls[0][1] as { body: string }).body);
+    expect(body).toEqual({ query: 'only one' });
+    expect(outcome).toEqual({
+      ok: true,
+      searches: [{ query: 'only one', results: [{ title: 'T', url: 'https://u.test', snippet: '' }] }],
+    });
+  });
+
+  it('trims, drops blanks, dedupes, and caps at the ceiling', async () => {
+    await searchWebBatch(['  aa  ', 'aa', '', '   ', 'bb', 'cc', 'dd', 'ee', 'ff']);
+
+    const body = JSON.parse((mockFetch.mock.calls[0][1] as { body: string }).body);
+    expect(body.queries).toEqual(['aa', 'bb', 'cc', 'dd']);
+    expect(body.queries).toHaveLength(MAX_BATCH_QUERIES);
+  });
+
+  // Length is checked HERE so that a 400 from the server can only mean "this
+  // gateway does not understand the batch shape" — which is what the fallback
+  // below keys on.
+  it('refuses an out-of-bounds query per entry, without failing the batch', async () => {
+    mockFetch.mockResolvedValue(
+      jsonResponse(200, { searches: [{ query: 'fine query', results: [] }] }),
+    );
+
+    const outcome = await searchWebBatch([
+      'x'.repeat(MAX_QUERY_CHARS + 1),
+      'y'.repeat(MIN_QUERY_CHARS - 1),
+      'fine query',
+    ]);
+
+    expect(outcome.ok).toBe(true);
+    const searches = (outcome as { searches: { query: string; error?: string }[] }).searches;
+    expect(searches.filter((e) => e.error).length).toBe(2);
+    const body = JSON.parse((mockFetch.mock.calls[0][1] as { body: string }).body);
+    expect(body).toEqual({ query: 'fine query' });
+  });
+
+  it('400 falls back to one request per query — deploy skew, the gateway predates batching', async () => {
+    mockFetch
+      .mockResolvedValueOnce(jsonResponse(400, {}))
+      .mockResolvedValue(jsonResponse(200, { results: [] }));
+
+    const outcome = await searchWebBatch(['aa', 'bb']);
+
+    // 1 batch attempt + 2 singles.
+    expect(mockFetch).toHaveBeenCalledTimes(3);
+    expect(JSON.parse((mockFetch.mock.calls[1][1] as { body: string }).body)).toEqual({ query: 'aa' });
+    expect(outcome.ok).toBe(true);
+    expect((outcome as { searches: unknown[] }).searches).toHaveLength(2);
+  });
+
+  // A 404 means the ROUTE is gone, and searchWeb posts to the same URL — so
+  // retrying per query would spend a limiter grant each to reach the identical
+  // answer. Fail once, immediately.
+  it('404 does NOT fall back', async () => {
+    mockFetch.mockResolvedValue(jsonResponse(404, {}));
+
+    const outcome = await searchWebBatch(['aa', 'bb']);
+
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(outcome).toMatchObject({ ok: false, status: 404, code: SEARCH_UNAVAILABLE });
+  });
+
+  it('503 is a whole-batch "we did not search", never an empty result set', async () => {
+    mockFetch.mockResolvedValue(jsonResponse(503, { code: SEARCH_UNAVAILABLE }));
+
+    const outcome = await searchWebBatch(['aa', 'bb']);
+
+    expect(outcome).toMatchObject({ ok: false, code: SEARCH_UNAVAILABLE });
+    expect((outcome as { searches?: unknown }).searches).toBeUndefined();
+  });
+
+  it('backs the shared limiter off after a 429', async () => {
+    mockFetch.mockResolvedValue(jsonResponse(429, {}));
+
+    await searchWebBatch(['aa', 'bb']);
+
+    expect(mockPauseFor).toHaveBeenCalled();
+  });
+
+  // The per-entry form of "we did not search". It must not arrive as results:[].
+  it('turns a per-entry code into an error entry, not an empty one', async () => {
+    mockFetch.mockResolvedValue(
+      jsonResponse(200, {
+        searches: [
+          { query: 'aa', results: [{ title: 'T', url: 'https://u.test', snippet: 's' }] },
+          { query: 'bb', code: SEARCH_UNAVAILABLE, reason: 'upstream-rate-limited' },
+        ],
+      }),
+    );
+
+    const outcome = await searchWebBatch(['aa', 'bb']);
+    const searches = (outcome as { searches: { results?: unknown; error?: string }[] }).searches;
+
+    expect(searches[0].results).toHaveLength(1);
+    expect(searches[1].results).toBeUndefined();
+    expect(typeof searches[1].error).toBe('string');
+    expect(searches[1].error).toContain('NOTHING was searched');
+  });
+
+  it('refuses without a token, and without touching the network', async () => {
+    mockGetJwtToken.mockResolvedValue(null);
+
+    const outcome = await searchWebBatch(['aa', 'bb']);
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({ ok: false, status: 401 });
+  });
+
+  it('never throws on a transport failure', async () => {
+    mockFetch.mockRejectedValue(new Error('ECONNRESET'));
+
+    await expect(searchWebBatch(['aa', 'bb'])).resolves.toMatchObject({
+      ok: false,
+      code: SEARCH_UNAVAILABLE,
+    });
+  });
+
+  it('refuses an empty list without a request', async () => {
+    const outcome = await searchWebBatch([]);
+
+    expect(mockFetch).not.toHaveBeenCalled();
+    expect(outcome).toMatchObject({ ok: false, status: 400 });
   });
 });

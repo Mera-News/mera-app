@@ -683,11 +683,21 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 </Text>
             </Box>
 
-            {/* Web search in chat (item 13) — OFF by default. The description
-                states plainly that the query leaves the device, in the toggle
-                itself rather than buried in the privacy block below: this is
-                the one setting on this screen that sends anything to a third
-                party, so the disclosure has to be where the switch is. */}
+            {/* Web search in chat (item 13) — ON by default since the
+                web-search wave, and forced on once for every existing device
+                (see mera-protocol-store's SETTING_WEB_SEARCH_FORCED_ON). The
+                description states plainly that the query leaves the device, in
+                the toggle itself rather than buried in the privacy block below:
+                this is the one setting on this screen that sends anything to a
+                third party, so the disclosure has to be where the switch is —
+                and now that it is on by default, that disclosure is the only
+                thing standing between the user and a surprise.
+
+                NOT `disabled={readOnly}`, unlike every other switch here. A
+                free-tier read-only user can no longer be left unable to turn
+                OFF something that is now on by default: turning a privacy
+                setting off must never be behind a paywall. Turning it back ON
+                still is. */}
             <Box className="px-5 mb-6" testID="mera-protocol-web-search">
                 <HStack space="md" className="items-center justify-between">
                     <HStack space="md" className="items-center flex-1">
@@ -714,7 +724,8 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         value={webSearchInChat}
                         onToggle={() => store.setWebSearchInChat(!webSearchInChat)}
                         size="md"
-                        disabled={readOnly}
+                        // Off is always reachable; on is what read-only gates.
+                        disabled={readOnly && !webSearchInChat}
                         testID="mera-protocol-web-search-switch"
                     />
                 </HStack>

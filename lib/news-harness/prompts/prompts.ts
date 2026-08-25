@@ -79,7 +79,7 @@ export function buildToolDefinitions(
       type: 'function',
       function: {
         name: 'saveExtractedFacts',
-        description: 'Persist facts from the user message. Call in every response (empty array if no new facts).',
+        description: 'OFFER facts from the user message for them to confirm. Nothing is saved until the user taps a reading on the card. Call in every response (empty array if no new facts).',
         parameters: {
           type: 'object',
           properties: {
@@ -89,8 +89,13 @@ export function buildToolDefinitions(
               items: {
                 type: 'object',
                 properties: {
-                  statement: { type: 'string', description: 'Fact in English, <200 chars' },
+                  statement: { type: 'string', description: 'Fact in English, <200 chars. Your BEST reading of what they said.' },
                   questionnaire_attribute: { type: 'string', description: 'Full attribute string (e.g. "location: neighborhood/area, city, and country")' },
+                  alternatives: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: '0-3 OTHER readings of the SAME thing they said, offered beside `statement` so they pick. Add one ONLY when the readings would produce DIFFERENT topics. Omit when there is one sensible reading — one option is one tap.',
+                  },
                 },
                 required: ['statement'],
               },
@@ -485,6 +490,10 @@ ${conversationGuide}
 ## Facts
 - ENGLISH ONLY. Translate meaning into natural English; preserve specifics (places, names, numbers). Never generalize.
   GOOD "Lives near Brixton, London, UK" / BAD "Lives in London". GOOD "Senior ML engineer at DeepMind" / BAD "Works in tech".
+- **YOU OFFER, YOU DO NOT DECIDE.** Nothing is saved when you call saveExtractedFacts — the user taps a reading first. So never write "saved", "added" or "I've noted that" in your reply; say what you are offering, or ask. Each array element is ONE fact you are proposing.
+- **ALTERNATIVES — as few as possible, never more than 3.** Add them ONLY when the readings would retrieve DIFFERENT news. One sensible reading → omit "alternatives" entirely, which is one tap for the user. Put the reading that keeps the user's own words FIRST. Example: user says "interested in sporting football club" → {"statement":"Follows Sporting CP, the Portuguese football club","alternatives":["Interested in football clubs generally"]}.
+- **AMBIGUOUS FACT? EXTRACT IT ALONE.** If one thing the user said has more than one reading, propose only that fact this turn and resolve it before extracting anything else — a card per fact is how the user answers one question at a time.
+- **NEVER REPAIR GRAMMAR ACROSS A POSSIBLE NAME.** Do not insert, remove or change an article ("a", "the") or a preposition inside a span that could be a proper noun — a club, company, place, product or team. Keep the user's own wording and capitalisation for that span, even when the result reads awkwardly. Smoothing the phrase silently PICKS one reading and destroys the other. "interested in sporting football club" names **Sporting** the club; ✗ "Interested in sporting a football club" (that inserted "a" decides "sporting" is a verb and the club is gone). If two readings are genuinely possible, keep the user's span verbatim and ASK which they meant — never guess in the statement.
 - ATOMIC — one concept per fact. "interested in AI and blockchain" → two facts. "software engineer & expat from India" → two facts (profession and identity are different concepts).
 - **IDENTITY COMPOSITION — the ONE exception to ATOMIC.** Country of ORIGIN and current RESIDENCE are a SINGLE concept: apart they are useless, together they are the whole fact. "expat from India" + Known: "Lives in Amsterdam, Netherlands" → ONE fact "Expat from India living in Amsterdam, Netherlands, Europe". ✗ NEVER split into "Expatriate / lives outside country of origin" + "Originally from India". "Expatriate / lives outside country of origin" names no country at all — it is a placeholder, never a fact. If the current city is not known yet, save ONE fact naming the origin ("Expat originally from India") and ASK for the current city, then compose. Nothing else composes — this exception covers origin × residence and nothing more.
 - <200 chars. No "User" prefix. Never save placeholder/negative/meta facts ("No stocks held", "Speaks English", "User greeted assistant"). Never save language prefs as facts (use updateUserConfig).
@@ -557,6 +566,9 @@ ${rulesSection}
 
 ## Facts (saveExtractedFacts.statement)
 - ENGLISH ONLY. Translate meaning to natural English; preserve specifics (places, names, numbers). GOOD "Senior ML engineer at DeepMind" / BAD "Works in tech".
+- NOTHING SAVES until the user taps. You OFFER readings; never say "saved" or "added".
+- Never add or remove "a"/"the" inside a possible NAME. "sporting football club" → Sporting the club, NOT "sporting a football club".
+- alternatives: 0-3 other readings, only when they retrieve different news. One reading → omit.
 - ATOMIC — one concept per fact. "interested in AI and blockchain" → two facts. "software engineer & expat from India" → two facts (profession ≠ identity). BUT origin + residence = ONE fact.
 - <200 chars. No "User" prefix. Never save greetings, navigation ("Help me start"), negatives ("No stocks held"), meta facts ("User greeted assistant"), or language prefs (use updateUserConfig).
 - Cross-reference Known Facts ONLY for the same subject. "got promoted to senior" + known "Works at Google" → "Senior engineer at Google". Never combine different subjects (workplace ≠ parents' location).
@@ -582,13 +594,24 @@ export function buildPersonaUpdateContext(params: {
   /** not-interested P4a: pre-rendered body of the in-flight staged proposal.
    *  Re-injected every turn so the one-shot LOCAL path can still confirm. */
   pendingProposal?: string;
+  /** Pre-rendered record of what the user did with topic-plan cards this
+   *  session. Omitted (not empty-stated) when they have answered none. */
+  topicPlanNotesList?: string;
 }): string {
-  const { knownFactsList, filtersList, pendingProposal } = params;
+  const { knownFactsList, filtersList, pendingProposal, topicPlanNotesList } = params;
 
   const blocks: string[] = [];
 
   blocks.push(`## Known Facts\n${knownFactsList}`);
 
+  // Placed AFTER Known Facts (which it annotates) and BEFORE the filters and
+  // pending-proposal blocks, so `## PENDING PROPOSAL`'s imperative tail stays
+  // the last thing in <context> exactly as it was.
+  if (topicPlanNotesList) {
+    blocks.push(
+      `## TOPIC PLAN DECISIONS (already applied — do not repeat or undo them)\n${topicPlanNotesList}`,
+    );
+  }
   if (filtersList) {
     blocks.push(
       `## YOUR FILTERS (already hidden — retire_suppression removes one by [id])\n${filtersList}`,

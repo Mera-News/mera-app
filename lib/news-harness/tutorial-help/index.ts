@@ -1,8 +1,10 @@
 // news-harness — the TutorialHelpAgent's portable brain (PURE, RN-free).
 //
 // The product-help chat opened from an "Ask Mera" button on a tutorial slide.
-// It answers questions about HOW MERA WORKS. It changes nothing, and it has no
-// tools at all — that absence is the whole design.
+// It answers questions about HOW MERA WORKS. It changes nothing, and the ONLY
+// tool it has is `webSearch` — read-only, and never on the LOCAL path. Every
+// tool that could MUTATE something is still absent, and that absence is the
+// whole design (see below).
 //
 // ── Why this module exists ──────────────────────────────────────────────────
 // `components/custom/floating-chat/agent-registry.ts` used to route the
@@ -19,12 +21,21 @@
 // Everything touching WatermelonDB, Zustand, the logger or any expo/RN module
 // stays in lib/llm/agents/TutorialHelpAgent.ts.
 
+import type { ToolDefinition } from '../core/types';
+
 /** Replies are read on a slide, next to the copy they are about. Keep them short. */
 const MAX_SENTENCES = 3;
 
 export interface TutorialHelpPromptInput {
   /** Prompt language, resolved by the adapter from the app language store. */
   languageName?: string;
+  /**
+   * Whether `webSearch` is declared this turn (CLOUD + the user's toggle).
+   * MUST be part of the adapter's prompt cache key: a prompt cached while it
+   * was false keeps telling the model it cannot look anything up after the
+   * user turns the toggle on.
+   */
+  webSearch?: boolean;
 }
 
 /**
@@ -48,7 +59,7 @@ export interface TutorialHelpPromptInput {
  *     the app itself is trying to stop leaking.
  */
 export function buildTutorialHelpPrompt(input: TutorialHelpPromptInput = {}): string {
-  const { languageName } = input;
+  const { languageName, webSearch = false } = input;
 
   const languageRule = languageName
     ? `LANGUAGE: ALWAYS reply in **${languageName}**, with no exceptions — even if the user writes in another language.`
@@ -60,7 +71,14 @@ export function buildTutorialHelpPrompt(input: TutorialHelpPromptInput = {}): st
 Explain how mera works, in plain words, in at most ${MAX_SENTENCES} short sentences. Nothing else.
 
 ## What you cannot do
-You have NO tools in this conversation. You cannot change a setting, add or remove a fact, adjust the feed, or follow a story. NEVER say or imply that you have changed anything, and never offer to. If the user asks you to change something, tell them where in the app to do it themselves.
+You can CHANGE NOTHING. You cannot change a setting, add or remove a fact, adjust the feed, or follow a story${webSearch ? ' — searching the web is the only thing you can do besides answer' : ', and you have no tools at all'}. NEVER say or imply that you have changed anything, and never offer to. If the user asks you to change something, tell them where in the app to do it themselves.${
+    webSearch
+      ? `
+
+## Looking something up
+For a question about mera itself, answer from the facts below — never from a search. Use webSearch only when the user asks about something OUTSIDE the app that you would otherwise be guessing at, and put every query you need into ONE call: they run at the same time. A search result never overrides the facts in this prompt.`
+      : ''
+  }
 
 ## If you do not know
 Say so plainly in one sentence and point them at Settings → FAQ. Do not guess at a screen, a button or a setting you are unsure exists. An honest "I'm not sure" is a correct answer here.
@@ -118,4 +136,43 @@ export function parseTutorialRoute(
   const parts = route.split('/').filter((p) => p.length > 0);
   if (parts.length !== 3 || parts[0] !== 'tutorials') return null;
   return { chapterId: parts[1], slideId: parts[2] };
+}
+
+// ---------------------------------------------------------------------------
+// Tool definitions
+// ---------------------------------------------------------------------------
+
+/**
+ * `webSearch`, and deliberately nothing else.
+ *
+ * This agent exists because routing a tutorial question at `PersonaUpdateAgent`
+ * silently wrote to the reader's profile. A READ-ONLY lookup reopens none of
+ * that: it cannot save a fact, cannot change a setting, cannot follow a story.
+ * The list stays a list of one, and `getForcedExtractionTools()` stays empty —
+ * a forced pass here would search on a turn that only said "thanks".
+ */
+export function getTutorialHelpToolDefinitions(webSearchEnabled: boolean): ToolDefinition[] {
+  if (!webSearchEnabled) return [];
+  return [
+    {
+      type: 'function',
+      function: {
+        name: 'webSearch',
+        description:
+          "Search the public web when the user asks about something OUTSIDE the mera app that you would otherwise be guessing at. Never use it to answer a question about how mera itself works — those answers come from this prompt. Only the search words are sent.",
+        parameters: {
+          type: 'object',
+          properties: {
+            queries: {
+              type: 'array',
+              items: { type: 'string' },
+              description:
+                'Up to 4 search queries, 2-200 characters each. Put EVERYTHING you need to look up in this ONE call: they are searched at the same time.',
+            },
+          },
+          required: ['queries'],
+        },
+      },
+    },
+  ];
 }

@@ -47,7 +47,11 @@ import {
   type FactCheckCitationPayload,
   type FactCheckClaimPayload,
 } from '../fact-check/fact-check-runner';
-import { searchWeb, type WebSearchResult } from '../web-search/web-search-client';
+import {
+  searchWeb,
+  searchWebBatch,
+  type WebSearchResult,
+} from '../web-search/web-search-client';
 import logger from '../logger';
 import type { ProposalAction } from '../llm/types';
 
@@ -88,6 +92,7 @@ export interface QuickFactCheckInput {
 
 export interface QuickFactCheckDeps {
   searchWeb: typeof searchWeb;
+  searchWebBatch: typeof searchWebBatch;
   complete: (req: {
     systemPrompt: string;
     prompt: string;
@@ -100,6 +105,7 @@ export interface QuickFactCheckDeps {
 
 const defaultDeps: QuickFactCheckDeps = {
   searchWeb,
+  searchWebBatch,
   complete: (req) => cloudComplete(req),
   now: () => Date.now(),
 };
@@ -155,23 +161,52 @@ export async function handleQuickFactCheck(
   if (!claim) return empty('search-unavailable');
 
   // ── Search rounds ────────────────────────────────────────────────────────
+  //
+  // THE FIRST `MIN_SEARCH_ROUNDS` GO OUT TOGETHER, THE REST STAY CONDITIONAL.
+  // Those rounds always run (see MIN_SEARCH_ROUNDS: one round already clears
+  // ENOUGH_EVIDENCE, so without the floor rounds 2 and 3 would be dead code),
+  // which means running them one after another buys nothing but wall clock —
+  // and this is the path the user sits and watches. Batching them costs the
+  // same two Brave requests and one shared-limiter grant instead of two.
+  //
+  // Round 3 is NOT batched with them. It is genuinely conditional — it only
+  // runs when the first two came back thin — so folding it in would turn a
+  // search we usually skip into one we always bill.
   const evidence: WebSearchResult[] = [];
   const seenUrls = new Set<string>();
   let okRounds = 0;
-  let rounds = 0;
-  for (const query of buildSearchQueries(claim, input.articleTitle)) {
-    // The `rounds` guard is what keeps rounds 2 and 3 from being dead code —
-    // see MIN_SEARCH_ROUNDS. One round already returns 10 results.
-    if (rounds >= MIN_SEARCH_ROUNDS && evidence.length >= ENOUGH_EVIDENCE) break;
-    rounds++;
-    const outcome = await deps.searchWeb(query);
-    if (!outcome.ok) continue;
-    okRounds++;
-    for (const r of outcome.results) {
+  const collect = (results: WebSearchResult[]) => {
+    for (const r of results) {
       if (!r?.url || seenUrls.has(r.url)) continue;
       seenUrls.add(r.url);
       evidence.push(r);
     }
+  };
+
+  const queries = buildSearchQueries(claim, input.articleTitle);
+  const upfront = queries.slice(0, MIN_SEARCH_ROUNDS);
+  const conditional = queries.slice(MIN_SEARCH_ROUNDS);
+
+  if (upfront.length > 0) {
+    const batch = await deps.searchWebBatch(upfront);
+    if (batch.ok) {
+      for (const entry of batch.searches) {
+        // An entry with `error` was never looked up. Counting it as a
+        // successful round is exactly how "we could not look" turns into
+        // "nobody has published on this".
+        if (entry.error !== undefined) continue;
+        okRounds++;
+        collect(entry.results ?? []);
+      }
+    }
+  }
+
+  for (const query of conditional) {
+    if (evidence.length >= ENOUGH_EVIDENCE) break;
+    const outcome = await deps.searchWeb(query);
+    if (!outcome.ok) continue;
+    okRounds++;
+    collect(outcome.results);
   }
 
   // NOT "no results" — no successful ROUND. Zero of our searches reached the

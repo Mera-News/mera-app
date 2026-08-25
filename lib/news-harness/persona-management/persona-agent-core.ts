@@ -21,6 +21,10 @@
 // dependency (and its `en` locale) in the shipped bundle for the inverse
 // direction (code → name); here it is used for name → ISO alpha-3.
 import countries from 'i18n-iso-countries';
+import {
+  formatTopicPlanNotesBlock,
+  type TopicPlanNote,
+} from './topic-plan-notes';
 import en from 'i18n-iso-countries/langs/en.json';
 
 import type {
@@ -586,6 +590,9 @@ export interface PersonaContextInput {
    *  block — decided by measurement in planPersonaPrompt, never by a threshold
    *  hardcoded in here. Defaults to true (a caller with no plan renders it). */
   includeFiltersBlock?: boolean;
+  /** What the user did with topic-plan cards this session. Absent/empty ⇒ no
+   *  block and no prompt cost — see formatTopicPlanNotesBlock. */
+  topicPlanNotes?: TopicPlanNote[];
 }
 
 export type BuildContextFn = typeof buildPersonaUpdateContext;
@@ -616,6 +623,9 @@ export function buildPersonaContext(
   // A pending proposal is NEVER dropped — without it the one-shot LOCAL path
   // cannot resolve a confirm at all, and it is a handful of tokens.
   const pendingProposal = formatPendingProposal(input.proposal);
+  // Returns undefined when the user has answered no cards, which is what keeps
+  // the call args below byte-identical for everyone else.
+  const topicPlanNotesList = formatTopicPlanNotesBlock(input.topicPlanNotes);
   // The FILTERS block is the FIRST thing this feature yields when a turn can't
   // afford it (see PERSONA_PROMPT_LADDER); the caller's plan decides.
   const filtersList =
@@ -627,6 +637,7 @@ export function buildPersonaContext(
   return buildContextFn({
     ...base,
     ...(filtersList ? { filtersList } : {}),
+    ...(topicPlanNotesList ? { topicPlanNotesList } : {}),
     ...(pendingProposal ? { pendingProposal } : {}),
   });
 }
@@ -784,13 +795,18 @@ const WEB_SEARCH_TOOL: ToolDefinition = {
   function: {
     name: 'webSearch',
     description:
-      'Search the public web when the answer is not in Mera\'s news index and you would otherwise be guessing. The user has explicitly enabled this. Only the search words are sent — never the user\'s facts or feed. Prefer searchNews for anything about current events.',
+      'Search the public web when the answer is not in Mera\'s news index and you would otherwise be guessing. Only the search words are sent — never the user\'s facts or feed. Prefer searchNews for anything about current events.',
     parameters: {
       type: 'object',
       properties: {
-        query: { type: 'string', description: 'Search terms, 2-200 characters.' },
+        queries: {
+          type: 'array',
+          items: { type: 'string' },
+          description:
+            'Up to 4 search queries, 2-200 characters each. Put EVERYTHING you need to look up in this ONE call: they are searched at the same time. Never search one thing, read the result, and then search the next.',
+        },
       },
-      required: ['query'],
+      required: ['queries'],
     },
   },
 };

@@ -51,7 +51,8 @@ const initialState = {
     processingMode: ProcessingMode.Cloud,
     injectNoise: false,
     relevanceV4: false,
-    webSearchInChat: false,
+    // Mirrors the store's own initialState — ON by default since the flip.
+    webSearchInChat: true,
     deepInterview: false,
     showExtractedMetadata: false,
     selectedModelId: 'mera-qwen3.5-4b',
@@ -169,9 +170,12 @@ describe('useMeraProtocolStore', () => {
 
     // ── setWebSearchInChat / setDeepInterview (items 13 + 17) ────────────────
 
-    it('both new toggles start OFF', () => {
+    // Web search is ON by default and deepInterview is not. They are different
+    // kinds of setting: web search is part of the product now, deepInterview
+    // changes what Mera ASKS the user and stayed opt-in.
+    it('web search starts ON, deep interview starts OFF', () => {
         const state = useMeraProtocolStore.getState();
-        expect(state.webSearchInChat).toBe(false);
+        expect(state.webSearchInChat).toBe(true);
         expect(state.deepInterview).toBe(false);
     });
 
@@ -443,38 +447,82 @@ describe('useMeraProtocolStore', () => {
         expect(useMeraProtocolStore.getState().deepInterview).toBe(true);
     });
 
-    // ABSENT ⇒ OFF. A device that has never seen the toggle must not inherit
-    // an on state from a missing row — for web search that is the difference
-    // between a query leaving the device and not.
-    it('hydrateFromDb leaves both toggles OFF when their rows are absent or junk', async () => {
+    // ABSENT ⇒ OFF for deepInterview: a device that has never seen THAT toggle
+    // must not inherit an on state from a missing row.
+    it('hydrateFromDb leaves deepInterview OFF when its row is absent or junk', async () => {
         for (const stored of [null, 'yes', '1', '']) {
-            useMeraProtocolStore.setState({ webSearchInChat: false, deepInterview: false });
+            useMeraProtocolStore.setState({ deepInterview: false });
             mockGetSetting.mockImplementation(() => Promise.resolve(stored as string | null));
 
             await useMeraProtocolStore.getState().hydrateFromDb();
 
-            expect(useMeraProtocolStore.getState().webSearchInChat).toBe(false);
             expect(useMeraProtocolStore.getState().deepInterview).toBe(false);
         }
     });
 
-    it('hydrateFromDb turns both toggles back OFF on an explicit "false"', async () => {
-        useMeraProtocolStore.setState({ webSearchInChat: true, deepInterview: true });
+    it('hydrateFromDb turns deepInterview back OFF on an explicit "false"', async () => {
+        useMeraProtocolStore.setState({ deepInterview: true });
         mockGetSetting.mockImplementation((k: string) =>
-            Promise.resolve(
-                k === 'mera_web_search_in_chat' || k === 'mera_deep_interview' ? 'false' : null,
-            ),
+            Promise.resolve(k === 'mera_deep_interview' ? 'false' : null),
         );
 
         await useMeraProtocolStore.getState().hydrateFromDb();
 
-        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(false);
         expect(useMeraProtocolStore.getState().deepInterview).toBe(false);
     });
 
-    it('reset() clears both new setting rows', () => {
+    // ── the web-search default flip ─────────────────────────────────────────
+    //
+    // Reaching EVERY device, not just fresh installs, was the decision. The
+    // marker is what makes it happen once and stay reversible afterwards.
+
+    it('discards a pre-flip explicit "false" exactly once, and says so on disk', async () => {
+        useMeraProtocolStore.setState({ webSearchInChat: false });
+        mockGetSetting.mockImplementation((k: string) =>
+            Promise.resolve(k === 'mera_web_search_in_chat' ? 'false' : null),
+        );
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
+        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_web_search_in_chat');
+        expect(mockSetSetting).toHaveBeenCalledWith('mera_web_search_forced_on_v1', 'true');
+    });
+
+    it('honours an opt-out made AFTER the flip, forever', async () => {
+        useMeraProtocolStore.setState({ webSearchInChat: true });
+        mockGetSetting.mockImplementation((k: string) => {
+            if (k === 'mera_web_search_forced_on_v1') return Promise.resolve('true');
+            if (k === 'mera_web_search_in_chat') return Promise.resolve('false');
+            return Promise.resolve(null);
+        });
+
+        await useMeraProtocolStore.getState().hydrateFromDb();
+
+        expect(useMeraProtocolStore.getState().webSearchInChat).toBe(false);
+        // The sweep must not run a second time.
+        expect(mockDeleteSetting).not.toHaveBeenCalledWith('mera_web_search_in_chat');
+    });
+
+    it('leaves web search ON for an absent row once the marker exists', async () => {
+        for (const stored of [null, 'yes', '1', '']) {
+            useMeraProtocolStore.setState({ webSearchInChat: false });
+            mockGetSetting.mockImplementation((k: string) =>
+                Promise.resolve(
+                    k === 'mera_web_search_forced_on_v1' ? 'true' : (stored as string | null),
+                ),
+            );
+
+            await useMeraProtocolStore.getState().hydrateFromDb();
+
+            expect(useMeraProtocolStore.getState().webSearchInChat).toBe(true);
+        }
+    });
+
+    it('reset() clears both new setting rows, and the flip marker with them', () => {
         useMeraProtocolStore.getState().reset();
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_web_search_in_chat');
+        expect(mockDeleteSetting).toHaveBeenCalledWith('mera_web_search_forced_on_v1');
         expect(mockDeleteSetting).toHaveBeenCalledWith('mera_deep_interview');
     });
 

@@ -34,6 +34,7 @@ jest.mock('@/lib/llm/cloudComplete', () => ({ __esModule: true, cloudComplete: j
 jest.mock('@/lib/web-search/web-search-client', () => ({
   __esModule: true,
   searchWeb: jest.fn(),
+  searchWebBatch: jest.fn(),
   MIN_QUERY_CHARS: 2,
   MAX_QUERY_CHARS: 200,
 }));
@@ -63,6 +64,20 @@ const UNAVAILABLE = { ok: false as const, error: 'Search is switched off…', st
 /** The gateway's "we searched, nothing there" shape: 200 with an empty list. */
 const SEARCHED_EMPTY = { ok: true as const, results: [] };
 
+/**
+ * Turns one single-query outcome into the batch equivalent, so a test can keep
+ * describing "what the provider does" once. A whole-batch `ok:false` is the
+ * client's "we never looked at ANY of these"; an `ok:true` batch answers each
+ * query with the same outcome.
+ */
+function batchFrom(search: any) {
+  return jest.fn(async (queries: string[]) =>
+    search.ok
+      ? { ok: true, searches: queries.map((query) => ({ query, results: search.results })) }
+      : search,
+  );
+}
+
 function deps(options: { search: any; answer?: string; throwOnSynthesis?: boolean }) {
   const complete = jest.fn(async () => {
     if (options.throwOnSynthesis) throw new Error('model died');
@@ -70,6 +85,7 @@ function deps(options: { search: any; answer?: string; throwOnSynthesis?: boolea
   });
   return {
     searchWeb: jest.fn(async () => options.search),
+    searchWebBatch: batchFrom(options.search),
     complete,
     now: () => 1_700_000_000_000,
   };
@@ -130,15 +146,20 @@ describe('a search that never happened is not a search that found nothing', () =
     expect(new Set(keys).size).toBe(outcomes.length);
   });
 
+  // One entry unavailable, one with hits, inside the SAME batch. The batch as a
+  // whole is `ok`, so the per-entry split is the only thing that can tell them
+  // apart — counting entries instead of successes would call this two rounds.
   it('treats a MIXED run as searched — one good round is a search that happened', async () => {
-    const searchWeb = jest
-      .fn()
-      .mockResolvedValueOnce(UNAVAILABLE)
-      .mockResolvedValueOnce({ ok: true, results: RESULTS })
-      .mockResolvedValue(SEARCHED_EMPTY);
+    const searchWebBatch = jest.fn(async (queries: string[]) => ({
+      ok: true as const,
+      searches: [
+        { query: queries[0], error: 'NOTHING was searched', code: 'search-unavailable' as const },
+        { query: queries[1], results: RESULTS },
+      ],
+    }));
     const answer = await handleQuickFactCheck(
       { claim: CLAIM, articleTitle: TITLE },
-      { ...deps({ search: SEARCHED_EMPTY, answer: '{"verdict":"disputed","summary":"S","citations":[1]}' }), searchWeb },
+      { ...deps({ search: SEARCHED_EMPTY, answer: '{"verdict":"disputed","summary":"S","citations":[1]}' }), searchWebBatch },
     );
 
     expect(answer.outcome).toBe('answered');
@@ -151,6 +172,7 @@ describe('a search that never happened is not a search that found nothing', () =
 
     expect(answer.outcome).toBe('search-unavailable');
     expect(d.searchWeb).not.toHaveBeenCalled();
+    expect(d.searchWebBatch).not.toHaveBeenCalled();
   });
 });
 
@@ -180,18 +202,44 @@ describe('the answered path', () => {
     expect(answer.citations.map((c) => c.uri)).toEqual(['https://politifact.com/a']);
   });
 
+  // The two mandatory rounds now leave in ONE request. They must still be TWO
+  // DIFFERENT queries — round 2 adds the fact-check register and surfaces
+  // different documents, which is the entire reason MIN_SEARCH_ROUNDS exists.
   it('runs at least two rounds so the fact-check register query is not dead code', async () => {
     const d = deps({ search: { ok: true, results: RESULTS }, answer: answerJson });
     await handleQuickFactCheck({ claim: CLAIM, articleTitle: TITLE }, d);
 
-    expect(d.searchWeb.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(d.searchWebBatch).toHaveBeenCalledTimes(1);
+    const sent = d.searchWebBatch.mock.calls[0][0] as string[];
+    expect(sent.length).toBeGreaterThanOrEqual(2);
+    expect(new Set(sent).size).toBe(sent.length);
+  });
+
+  // Round 3 is conditional by design: two rounds already return ~20 results, so
+  // folding it into the batch would turn a search we usually skip into one we
+  // always bill.
+  it('does not spend the conditional round once the batch found enough', async () => {
+    const plenty = Array.from({ length: 10 }, (_, i) => ({
+      title: `Source ${i}`,
+      url: `https://source.invalid/${i}`,
+      snippet: 's',
+    }));
+    const d = deps({ search: { ok: true, results: plenty }, answer: answerJson });
+    await handleQuickFactCheck({ claim: CLAIM, articleTitle: TITLE }, d);
+
+    expect(d.searchWeb).not.toHaveBeenCalled();
   });
 
   it('never sends the claim verbatim as a query', async () => {
     const d = deps({ search: { ok: true, results: RESULTS }, answer: answerJson });
     await handleQuickFactCheck({ claim: CLAIM, articleTitle: TITLE }, d);
 
-    for (const [query] of d.searchWeb.mock.calls as unknown as [string][]) {
+    const sent = [
+      ...((d.searchWebBatch.mock.calls[0]?.[0] ?? []) as string[]),
+      ...(d.searchWeb.mock.calls as unknown as [string][]).map(([q]) => q),
+    ];
+    expect(sent.length).toBeGreaterThan(0);
+    for (const query of sent) {
       expect(query).not.toBe(CLAIM);
       expect(query.length).toBeLessThanOrEqual(200);
     }
