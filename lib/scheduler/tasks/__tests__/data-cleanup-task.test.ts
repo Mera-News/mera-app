@@ -35,7 +35,7 @@ jest.mock('@/lib/database/services/fact-check-record-service', () => ({
 }));
 
 jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
-  deleteOrphanedFactCheckRetention: jest.fn(),
+  deleteOrphanedRetention: jest.fn(),
 }));
 
 jest.mock('@/lib/logger', () => ({
@@ -58,7 +58,7 @@ const { refreshSuggestionsInStoreUnsafe: mockRefreshSuggestionsInStoreUnsafe } =
 const { deleteOlderThan: mockDeleteOldImpressions } = jest.requireMock('@/lib/database/services/story-impression-service') as any;
 const { deleteOlderThan: mockDeleteOldNotifications } = jest.requireMock('@/lib/database/services/notification-service') as any;
 const { deleteExpiredFactChecks: mockDeleteExpiredFactChecks } = jest.requireMock('@/lib/database/services/fact-check-record-service') as any;
-const { deleteOrphanedFactCheckRetention: mockDeleteOrphanedRetention } = jest.requireMock('@/lib/database/services/saved-article-suggestion-service') as any;
+const { deleteOrphanedRetention: mockDeleteOrphanedRetention } = jest.requireMock('@/lib/database/services/saved-article-suggestion-service') as any;
 
 const registeredDef = mockRegister.mock.calls[0]?.[0];
 
@@ -273,7 +273,7 @@ describe('data-cleanup-task handler', () => {
     mockDeleteOrphanedRetention.mockResolvedValue(2);
     const ctx = makeCtx();
     await registeredDef.handler(undefined, ctx);
-    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('2 unreferenced fact-check article snapshots'));
+    expect(ctx.log).toHaveBeenCalledWith(expect.stringContaining('2 unreferenced retained article snapshots'));
 
     mockDeleteOrphanedRetention.mockResolvedValue(0);
     const quietCtx = makeCtx();

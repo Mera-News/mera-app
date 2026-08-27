@@ -47,7 +47,10 @@ import { withRetry } from '@/lib/utils/retry';
 import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
 import { reconcileTrackedStories } from './tracked-story-reconcile';
-import { migrateLegacyTrackedStories } from '@/lib/tracking/track-actions';
+import {
+  backfillTrackedStoryRetention,
+  migrateLegacyTrackedStories,
+} from '@/lib/tracking/track-actions';
 
 /** Number of missing ids hydrated + persisted + enqueued per iteration. Kept at
  *  25 so each `getArticlesForTopicsByIds` call is a single server query (its
@@ -972,11 +975,26 @@ export async function stepHydratePersistEnqueue(
       });
     })
     .finally(() => {
-      reconcileTrackedStories().catch((err) => {
-        logger.captureException(err, {
-          tags: { component: 'feed-sync-steps', method: 'reconcileTrackedStories' },
+      reconcileTrackedStories()
+        .catch((err) => {
+          logger.captureException(err, {
+            tags: { component: 'feed-sync-steps', method: 'reconcileTrackedStories' },
+          });
+        })
+        .finally(() => {
+          // One-shot, self-disabling: retain the members of stories followed
+          // before retention existed, for whichever of them are still inside
+          // the 48h suggestion window. Last in the chain so it sees the members
+          // this cycle just added.
+          backfillTrackedStoryRetention().catch((err) => {
+            logger.captureException(err, {
+              tags: {
+                component: 'feed-sync-steps',
+                method: 'backfillTrackedStoryRetention',
+              },
+            });
+          });
         });
-      });
     });
 
   return {

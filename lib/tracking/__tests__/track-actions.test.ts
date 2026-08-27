@@ -15,6 +15,22 @@ jest.mock('../../database/services/tracked-story-service', () => ({
   findActiveTrackedId: jest.fn(),
   getTrackedStoryById: jest.fn(),
   getLegacyTrackedForMigration: jest.fn(),
+  listTrackedMemberArticleIds: jest.fn(async () => new Set<string>()),
+  removeMemberSnapshot: jest.fn(),
+}));
+
+jest.mock('../../database/services/article-suggestion-service', () => ({
+  getSuggestionByArticleId: jest.fn(async () => null),
+}));
+
+jest.mock('../../database/services/saved-article-suggestion-service', () => ({
+  keepArticleForTrackedStory: jest.fn(async () => {}),
+  releaseTrackedStoryRetention: jest.fn(async () => false),
+}));
+
+jest.mock('../../database/services/setting-service', () => ({
+  getSetting: jest.fn(async () => null),
+  setSetting: jest.fn(async () => {}),
 }));
 
 jest.mock('../../database/services/topic-service', () => ({

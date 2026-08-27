@@ -6,12 +6,12 @@
 // the ephemeral article_suggestions feed cache is pruned. The WMDB row id ==
 // the source suggestion's server `_id`.
 //
-// The table also backs FACT-CHECK RETENTION (`origin = 'fact_check'`): a fact
-// check must keep its article openable after the 48h feed prune and the
-// server's own expiry, exactly like a save does. Those rows are not saves —
-// they never publish bookmark state, never appear on the Saved screen, and are
-// released when the last fact check for the article goes. See
-// `keepArticleForFactCheck` below.
+// The table also backs RETENTION, for two independent reasons (see
+// RETENTION_ORIGINS): a fact check and a followed story each need their article
+// to stay openable after the 48h feed prune and the server's own expiry, exactly
+// like a save does. Retention rows are not saves — they never publish bookmark
+// state, never appear on the Saved screen, and are released once NO reason still
+// holds them. See `keepArticleForRetention` below.
 
 import { Q } from '@nozbe/watermelondb';
 import { publishSavedState } from '@/lib/saved-state';
@@ -19,6 +19,10 @@ import database from '../index';
 import logger from '../../logger';
 import { ArticleSuggestionStatus } from '../article-suggestion-status';
 import { listFactChecksForArticle } from './fact-check-record-service';
+import {
+  isTrackedStoryMember,
+  listTrackedMemberArticleIds,
+} from './tracked-story-service';
 import type SavedArticleSuggestionModel from '../models/SavedArticleSuggestion';
 import type { ForYouSuggestion, ClusterMembership } from '../../stores/for-you-store';
 import type { NewsArticle } from '../../generated/graphql-types';
@@ -33,8 +37,46 @@ export interface StandaloneSaveContext {
   surface?: string;
 }
 
+/**
+ * The origins that mark a row as RETENTION rather than a user save.
+ *
+ * One constant, not a literal at each site, because the origin is filtered in
+ * four places and a new reason leaking onto the Saved screen — rendering a
+ * bookmark for an article the reader never saved, whose un-save tap then
+ * destroys someone else's retention copy — is the obvious failure mode.
+ */
+export const RETENTION_ORIGINS = ['fact_check', 'tracked_story'] as const;
+export type RetentionOrigin = (typeof RETENTION_ORIGINS)[number];
+
+/** Is this row retention rather than a user save? A NULL origin (pre-v38 rows)
+ *  is a user save and must answer false. */
+function isRetentionOrigin(origin: string | null | undefined): boolean {
+  return RETENTION_ORIGINS.includes(origin as RetentionOrigin);
+}
+
+/**
+ * Which reasons still hold this article's retention row.
+ *
+ * `origin` is a single scalar and can only record ONE reason, so it cannot
+ * answer this. Without the check the two reasons destroy each other's rows: an
+ * article retained by a fact check whose story the reader then follows would
+ * lose its retention the moment that fact check is deleted, even though the
+ * story is still followed — the exact bug this retention exists to prevent,
+ * reached through a different door.
+ */
+async function retentionReasonsLive(
+  articleId: string,
+): Promise<{ factCheck: boolean; trackedStory: boolean }> {
+  const [checks, tracked] = await Promise.all([
+    listFactChecksForArticle(articleId),
+    isTrackedStoryMember(articleId),
+  ]);
+  return { factCheck: checks.length > 0, trackedStory: tracked };
+}
+
 /** A saved row, discriminated by origin so the Saved screen can render the right
- *  card variant (suggestion card vs standalone card). */
+ *  card variant (suggestion card vs standalone card). Retention rows never
+ *  reach here — see RETENTION_ORIGINS. */
 export type SavedItem =
   | { origin: 'suggestion'; suggestion: ForYouSuggestion }
   | { origin: 'article'; savedId: string; article: NewsArticle };
@@ -106,19 +148,44 @@ export async function saveStandaloneArticle(
 // --- Read ---
 
 /** "Did the USER save this" — the question every bookmark surface asks. A
- *  fact-check retention row is not a save: counting it would render a filled
- *  bookmark on an article the user never saved, and the un-save tap would then
- *  destroy the retention copy. */
+ *  retention row is not a save: counting it would render a filled bookmark on an
+ *  article the user never saved, and the un-save tap would then destroy the
+ *  retention copy. */
 export async function isSuggestionSaved(serverId: string): Promise<boolean> {
   const row = await findRow(serverId);
-  return row !== null && row.origin !== 'fact_check';
+  return row !== null && !isRetentionOrigin(row.origin);
 }
 
+/**
+ * The open path's lookup. Deliberately UNFILTERED by origin — resolving a
+ * retention row here is the entire point of retention, and adding an origin
+ * filter would break both retention reasons with a symptom identical to the bug
+ * they exist to prevent ("This article is no longer available").
+ */
 export async function getSavedSuggestionByServerId(
   serverId: string,
 ): Promise<ForYouSuggestion | null> {
   const row = await findRow(serverId);
   return row ? toForYouSuggestion(row) : null;
+}
+
+/**
+ * Same lookup, plus whether the row is a user SAVE or RETENTION.
+ *
+ * The detail screen needs the distinction for one reason: a save is the offline
+ * path and earns the "showing cached content" banner, while a retention row is
+ * resolved ONLINE (the server simply expired the article) where that banner
+ * would be false and would contradict the working Read button below it.
+ */
+export async function getSavedSuggestionWithKind(
+  serverId: string,
+): Promise<{ suggestion: ForYouSuggestion; retained: boolean } | null> {
+  const row = await findRow(serverId);
+  if (!row) return null;
+  return {
+    suggestion: toForYouSuggestion(row),
+    retained: isRetentionOrigin(row.origin),
+  };
 }
 
 /** All saved suggestions, newest-saved first. Maps EVERY row (both origins) to a
@@ -130,7 +197,7 @@ export async function loadSavedSuggestions(): Promise<ForYouSuggestion[]> {
     .fetch();
   // JS filter, not Q.notEq: SQL `!=` also excludes the NULL origin of pre-v38
   // rows, which are user saves and must stay.
-  return rows.filter((row) => row.origin !== 'fact_check').map(toForYouSuggestion);
+  return rows.filter((row) => !isRetentionOrigin(row.origin)).map(toForYouSuggestion);
 }
 
 /** All saved rows, newest-saved first, discriminated by origin so the Saved
@@ -140,11 +207,11 @@ export async function loadSavedItems(): Promise<SavedItem[]> {
   const rows = await savedSuggestionsCol
     .query(Q.sortBy('saved_at', Q.desc))
     .fetch();
-  // Fact-check retention rows are not saves and must not reach the Saved
-  // screen. Filter BEFORE mapping: the mapper treats every non-'article'
-  // origin as a suggestion card. JS filter, not Q.notEq (see loadSavedSuggestions).
+  // Retention rows are not saves and must not reach the Saved screen. Filter
+  // BEFORE mapping: the mapper treats every non-'article' origin as a
+  // suggestion card. JS filter, not Q.notEq (see loadSavedSuggestions).
   return rows
-    .filter((row) => row.origin !== 'fact_check')
+    .filter((row) => !isRetentionOrigin(row.origin))
     .map((row) =>
       row.origin === 'article'
         ? { origin: 'article' as const, savedId: row.id, article: toNewsArticle(row) }
@@ -226,11 +293,13 @@ export async function deleteSavedSuggestion(serverId: string): Promise<boolean> 
 
 // --- Fact-check retention ---
 
-/** What a fact-check keep has in hand. The full shapes come from the two
- *  article screens; the degraded shape is built from the server's own
- *  FactCheckRow (title/url/publication) when no screen object is available —
- *  enough for the article-detail fallback to render the read block. */
-export type FactCheckKeepInput =
+/** What a keep has in hand. The full shapes come from the two article screens
+ *  (fact check) or the local suggestion row (followed story); the degraded shape
+ *  is built from the server's own FactCheckRow (title/url/publication) when no
+ *  richer object is available — enough for the article-detail fallback to render
+ *  the read block, but with no description and often no image, so callers should
+ *  reach for a full shape whenever one exists. */
+export type RetentionKeepInput =
   | { articleId: string; article: NewsArticle }
   | { articleId: string; suggestion: ForYouSuggestion }
   | {
@@ -240,31 +309,49 @@ export type FactCheckKeepInput =
       publicationName?: string | null;
     };
 
+/** Historical name for {@link RetentionKeepInput}, kept so the fact-check call
+ *  sites read unchanged. */
+export type FactCheckKeepInput = RetentionKeepInput;
+
 /**
- * Retain the article a fact check references, like a save does, so it stays
- * openable after the 48h feed prune. Article-keyed row (`_raw.id` = article
- * `_id`), `origin = 'fact_check'`.
+ * Retain an article, like a save does, so it stays openable after the 48h feed
+ * prune and the server's own expiry. Article-keyed row (`_raw.id` = article
+ * `_id`), stamped with the reason that asked for it.
  *
  * NOT a save: never publishes bookmark state and never bumps `savedAt` on an
- * existing row. A user-saved row (any other origin) already retains the
- * article and is left alone — the un-save path downgrades it to 'fact_check'
- * while checks still reference it. A degraded input never overwrites an
- * existing snapshot: the fact-check poll loop re-enters with row-derived data
- * on every poll and must not wipe a rich snapshot captured at request time.
+ * existing row. A USER-saved row already retains the article and is left alone —
+ * the un-save path downgrades it back to a retention origin while a reason still
+ * holds it. A degraded input never overwrites an existing snapshot: the
+ * fact-check poll loop re-enters with row-derived data on every poll and must
+ * not wipe a rich snapshot captured at request time.
  *
- * Never throws — a failed keep must never fail the fact-check ask it rode in on.
+ * A row already held by the OTHER reason is upgraded in place, not skipped, and
+ * keeps its existing origin rather than churning it — `origin` only decides
+ * which sweep classifies the row, and both sweeps check both reasons anyway.
+ * Bailing here instead (the pre-tracked_story behaviour) would silently record
+ * no retention for the second reason.
+ *
+ * Never throws — a failed keep must never fail the action it rode in on.
  */
-export async function keepArticleForFactCheck(
-  input: FactCheckKeepInput,
+export async function keepArticleForRetention(
+  input: RetentionKeepInput,
+  origin: RetentionOrigin,
 ): Promise<void> {
   const articleId = (input?.articleId ?? '').trim();
   if (!articleId) return;
   try {
     const existing = await findRow(articleId);
-    if (existing && existing.origin !== 'fact_check') return;
+    // Only a USER save blocks the keep. A sibling retention origin does not.
+    if (existing && !isRetentionOrigin(existing.origin)) return;
 
     const full = 'article' in input || 'suggestion' in input;
     if (existing && !full) return;
+
+    // Captured BEFORE the update: `apply` runs against the existing record, and
+    // the two snapshot helpers stamp their own origin ('article'/'suggestion')
+    // on the way through — so reading `existing.origin` inside `apply` reads the
+    // value the helper just wrote, not the one the row had.
+    const priorOrigin = existing?.origin ?? null;
 
     const apply = (r: SavedArticleSuggestionModel) => {
       if ('article' in input) {
@@ -291,7 +378,8 @@ export async function keepArticleForFactCheck(
         r.firstPubDate = new Date();
       }
       // After the helpers: both stamp their own origin ('article'/'suggestion').
-      r.origin = 'fact_check';
+      // Keep an existing retention row's origin rather than churning it.
+      r.origin = priorOrigin && isRetentionOrigin(priorOrigin) ? priorOrigin : origin;
     };
 
     await database.write(async () => {
@@ -309,27 +397,75 @@ export async function keepArticleForFactCheck(
     logger.captureException(err, {
       tags: {
         service: 'saved-article-suggestion-service',
-        method: 'keepArticleForFactCheck',
+        method: 'keepArticleForRetention',
       },
-      extra: { articleId },
+      extra: { articleId, origin },
     });
   }
 }
 
+/** Back-compat wrapper so the fact-check call sites read unchanged. */
+export async function keepArticleForFactCheck(
+  input: RetentionKeepInput,
+): Promise<void> {
+  return keepArticleForRetention(input, 'fact_check');
+}
+
+/** Retain a followed story's member article. Always prefer a full
+ *  `suggestion` input: the degraded shape carries no description and no image,
+ *  and the article URL is the whole reason this retention exists — without it
+ *  the detail screen renders a header with no Read button. */
+export async function keepArticleForTrackedStory(
+  input: RetentionKeepInput,
+): Promise<void> {
+  return keepArticleForRetention(input, 'tracked_story');
+}
+
 /**
- * Drop the retention row for an article whose fact check was just deleted —
- * but only when it was the LAST one (post-v52 an article can hold several
- * claim rows) and only a 'fact_check'-origin row (a user save is not ours to
- * destroy). Returns whether a row was destroyed.
+ * Drop an article's retention row now that ONE reason has let go of it —
+ * but only if no OTHER reason still holds it, and never a user save.
+ *
+ * The cross-reason check is the whole point. `origin` records one reason, so
+ * without it deleting a fact check would destroy the row of an article whose
+ * story is still followed, and unfollowing would destroy the row of an article
+ * whose fact check is still live. Either way the reader gets "This article is no
+ * longer available" on a story they explicitly kept.
+ *
+ * Returns whether a row was destroyed. Never throws.
  */
-export async function releaseFactCheckRetention(
+async function releaseRetention(
   articleId: string,
+  reason: RetentionOrigin,
 ): Promise<boolean> {
-  if (!articleId) return false;
+  const id = (articleId ?? '').trim();
+  if (!id) return false;
   try {
-    if ((await listFactChecksForArticle(articleId)).length > 0) return false;
-    const row = await findRow(articleId);
-    if (!row || row.origin !== 'fact_check') return false;
+    const reasons = await retentionReasonsLive(id);
+    const survivor: RetentionOrigin | null = reasons.factCheck
+      ? 'fact_check'
+      : reasons.trackedStory
+        ? 'tracked_story'
+        : null;
+
+    const row = await findRow(id);
+    // A user save owns the row; releasing a retention reason is not our cue to
+    // destroy it. Same guard the pre-tracked_story code had, generalized.
+    if (!row || !isRetentionOrigin(row.origin)) return false;
+
+    if (survivor !== null) {
+      // Something still holds it. Re-stamp so the origin names a LIVE reason —
+      // otherwise the row keeps pointing at the reason that just let go and the
+      // wrong sweep would treat it as an orphan.
+      if (row.origin !== survivor) {
+        await database.write(async () => {
+          await row.update((r) => {
+            r.origin = survivor;
+          });
+        });
+      }
+      return false;
+    }
+
     await database.write(async () => {
       await row.destroyPermanently();
     });
@@ -338,30 +474,63 @@ export async function releaseFactCheckRetention(
     logger.captureException(err, {
       tags: {
         service: 'saved-article-suggestion-service',
-        method: 'releaseFactCheckRetention',
+        method: 'releaseRetention',
       },
-      extra: { articleId },
+      extra: { articleId: id, reason },
     });
     return false;
   }
 }
 
 /**
- * Safety-net sweep (data-cleanup task): destroy every 'fact_check'-origin row
- * whose article no longer has any fact_checks row. Catches rows orphaned by a
- * backup restore (this table is backed up, `fact_checks` deliberately is not)
- * and any missed delete path. Returns the number destroyed.
+ * The last fact check for an article was deleted (post-v52 an article can hold
+ * several claim rows). Release its retention unless a followed story still
+ * holds it.
  */
-export async function deleteOrphanedFactCheckRetention(): Promise<number> {
+export async function releaseFactCheckRetention(
+  articleId: string,
+): Promise<boolean> {
+  return releaseRetention(articleId, 'fact_check');
+}
+
+/**
+ * A followed story dropped this member — the story was deleted, or the reader
+ * disowned the article. Release its retention unless a fact check still holds it.
+ *
+ * Callers must release AFTER the snapshot is gone: `isTrackedStoryMember` reads
+ * the snapshots, so releasing first would still see the article as a member and
+ * decline every time.
+ */
+export async function releaseTrackedStoryRetention(
+  articleId: string,
+): Promise<boolean> {
+  return releaseRetention(articleId, 'tracked_story');
+}
+
+/**
+ * Safety-net sweep (data-cleanup task): destroy every retention row that no
+ * reason still holds. Catches rows orphaned by a backup restore (this table is
+ * backed up, `fact_checks` and tracked stories are not necessarily in step with
+ * it) and any missed release path. Returns the number destroyed.
+ *
+ * Checks BOTH reasons per row regardless of the row's own origin — a row stamped
+ * 'fact_check' whose check is gone may still be a live followed-story member,
+ * and destroying it here would undo the release path's cross-reason care.
+ */
+export async function deleteOrphanedRetention(): Promise<number> {
   try {
     const rows = await savedSuggestionsCol
-      .query(Q.where('origin', 'fact_check'))
+      .query(Q.where('origin', Q.oneOf([...RETENTION_ORIGINS])))
       .fetch();
     if (rows.length === 0) return 0;
+    // One query for the whole tracked-story reference set rather than one per
+    // row: the fact-check side is already per-article and cheap, this is not.
+    const trackedIds = await listTrackedMemberArticleIds();
     const orphans: SavedArticleSuggestionModel[] = [];
     for (const row of rows) {
+      if (trackedIds.has(row.articleId)) continue;
       // eslint-disable-next-line no-await-in-loop -- tiny set: one row per
-      // fact-checked article, and this runs once a day off the UI path.
+      // retained article, and this runs once a day off the UI path.
       const refs = await listFactChecksForArticle(row.articleId);
       if (refs.length === 0) orphans.push(row);
     }
@@ -374,7 +543,7 @@ export async function deleteOrphanedFactCheckRetention(): Promise<number> {
     logger.captureException(err, {
       tags: {
         service: 'saved-article-suggestion-service',
-        method: 'deleteOrphanedFactCheckRetention',
+        method: 'deleteOrphanedRetention',
       },
     });
     return 0;

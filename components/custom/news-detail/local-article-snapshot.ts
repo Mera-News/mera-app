@@ -17,6 +17,12 @@
 // Two local snapshots can stand in, tried in order of fidelity:
 //   'saved' — a "save for later" row (a standalone article's saved row is keyed
 //             by the article's own server id, see saved-article-suggestion-service).
+//   'retained' — the same table, but a row the app kept on the reader's behalf
+//             rather than one they saved: a fact-checked article, or a member of
+//             a followed story. Same fidelity as 'saved' and resolved the same
+//             way; a SEPARATE source only because it is reached ONLINE, when the
+//             server has simply expired the article, so the caller must not show
+//             the offline "showing cached content" banner over it.
 //   'visit' — the publication-visit log, written every time the reader opened an
 //             article. Its snapshot columns carry the title (both variants),
 //             source language, image, publisher and — the two that actually
@@ -27,7 +33,7 @@
 // that block has nothing to act on. A SAVED row is kept regardless — it is the
 // offline-reading path, where the title and description are the point.
 
-import { getSavedSuggestionByServerId } from '@/lib/database/services/saved-article-suggestion-service';
+import { getSavedSuggestionWithKind } from '@/lib/database/services/saved-article-suggestion-service';
 import {
     getVisitedArticleById,
     type VisitedArticle,
@@ -36,7 +42,7 @@ import type { NewsArticle } from '@/lib/generated/graphql-types';
 import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 
 /** Where a rendered article came from when it did not come from the server. */
-export type SnapshotSource = 'saved' | 'visit';
+export type SnapshotSource = 'saved' | 'retained' | 'visit';
 
 export interface LocalArticleSnapshot {
     readonly article: NewsArticle;
@@ -94,9 +100,12 @@ export const visitToNewsArticle = (
 export async function findLocalArticleSnapshot(
     articleId: string,
 ): Promise<LocalArticleSnapshot | null> {
-    const saved = await getSavedSuggestionByServerId(articleId);
+    const saved = await getSavedSuggestionWithKind(articleId);
     if (saved) {
-        return { article: savedSuggestionToNewsArticle(saved), source: 'saved' };
+        return {
+            article: savedSuggestionToNewsArticle(saved.suggestion),
+            source: saved.retained ? 'retained' : 'saved',
+        };
     }
 
     const visited = await getVisitedArticleById(articleId);

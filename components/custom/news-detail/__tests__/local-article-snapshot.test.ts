@@ -10,9 +10,9 @@
 // after 48h while this device's read history keeps 30 days, so most rows in the
 // per-publication history point at an article `articleById` returns null for.
 
-const mockGetSavedSuggestionByServerId = jest.fn();
+const mockGetSavedSuggestionWithKind = jest.fn();
 jest.mock('@/lib/database/services/saved-article-suggestion-service', () => ({
-  getSavedSuggestionByServerId: (...a: any[]) => mockGetSavedSuggestionByServerId(...a),
+  getSavedSuggestionWithKind: (...a: any[]) => mockGetSavedSuggestionWithKind(...a),
 }));
 
 const mockGetVisitedArticleById = jest.fn();
@@ -56,7 +56,7 @@ const makeSaved = (overrides: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
-  mockGetSavedSuggestionByServerId.mockResolvedValue(null);
+  mockGetSavedSuggestionWithKind.mockResolvedValue(null);
   mockGetVisitedArticleById.mockResolvedValue(null);
 });
 
@@ -66,7 +66,7 @@ describe('findLocalArticleSnapshot', () => {
   });
 
   it('prefers a saved row and does not even look at the visit log', async () => {
-    mockGetSavedSuggestionByServerId.mockResolvedValue(makeSaved());
+    mockGetSavedSuggestionWithKind.mockResolvedValue({ suggestion: makeSaved(), retained: false });
     const result = await findLocalArticleSnapshot('art-1');
     expect(result?.source).toBe('saved');
     expect(result?.article.article_url).toBe('https://zeit.de/saved');
@@ -92,14 +92,14 @@ describe('findLocalArticleSnapshot', () => {
   });
 
   it('keeps a saved row with no URL — that path is for offline READING', async () => {
-    mockGetSavedSuggestionByServerId.mockResolvedValue(makeSaved({ article_url: null }));
+    mockGetSavedSuggestionWithKind.mockResolvedValue({ suggestion: makeSaved({ article_url: null }), retained: false });
     const result = await findLocalArticleSnapshot('art-1');
     expect(result?.source).toBe('saved');
   });
 
   it('looks both stores up by the article id it was given', async () => {
     await findLocalArticleSnapshot('art-42');
-    expect(mockGetSavedSuggestionByServerId).toHaveBeenCalledWith('art-42');
+    expect(mockGetSavedSuggestionWithKind).toHaveBeenCalledWith('art-42');
     expect(mockGetVisitedArticleById).toHaveBeenCalledWith('art-42');
   });
 });

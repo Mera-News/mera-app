@@ -25,13 +25,12 @@ import {
     backfillSnapshotSource,
     getTrackedStoryById,
     markSeen,
-    removeMemberSnapshot,
     type SnapshotSourcePatch,
 } from '@/lib/database/services/tracked-story-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { hapticLight } from '@/lib/haptics';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
-import { deleteTrackedStoryById } from '@/lib/tracking/track-actions';
+import { deleteTrackedStoryById, disownStoryMember } from '@/lib/tracking/track-actions';
 import { buildTimeline, type TimelineCard } from './merge-timeline';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -199,7 +198,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
         setConfirmRemove(null);
         if (!card?.articleId) return;
         setCards((prev) => prev.filter((c) => c.articleId !== card.articleId));
-        await removeMemberSnapshot(trackedStoryId, card.articleId);
+        await disownStoryMember(trackedStoryId, card.articleId);
     }, [confirmRemove, trackedStoryId]);
 
     // Monotonic run token — each load() invalidates prior in-flight runs, and

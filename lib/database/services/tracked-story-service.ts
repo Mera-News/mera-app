@@ -163,6 +163,59 @@ export async function trackStory(input: TrackStoryInput): Promise<TrackedStoryMo
   return created;
 }
 
+/**
+ * Is this article a member of any ACTIVE followed story?
+ *
+ * The retention question, asked from the saved-suggestion service: a retention
+ * row may only be destroyed once no reason still holds it. Reads the SNAPSHOTS,
+ * not `member_article_ids` — the ids are the reconcile's already-considered
+ * ledger and deliberately outlive a snapshot the reader disowned, so keying
+ * retention on them would keep a row alive for an article the reader removed.
+ */
+export async function isTrackedStoryMember(articleId: string): Promise<boolean> {
+  const target = (articleId ?? '').trim();
+  if (!target) return false;
+  try {
+    const rows = await collection.query(Q.where('status', 'active')).fetch();
+    return rows.some((r) =>
+      (r.memberSnapshots ?? []).some((s) => s?.articleId === target),
+    );
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'tracked-story-service', method: 'isTrackedStoryMember' },
+      extra: { articleId: target },
+    });
+    // Fail CLOSED for a destructive caller: an unreadable membership must not
+    // read as "nothing references this", which would drop a live retention row.
+    return true;
+  }
+}
+
+/** Every article id held by an active followed story's snapshots. The sweep's
+ *  reference set — one query instead of one per candidate row. */
+export async function listTrackedMemberArticleIds(): Promise<Set<string>> {
+  try {
+    const rows = await collection.query(Q.where('status', 'active')).fetch();
+    const ids = new Set<string>();
+    for (const r of rows) {
+      for (const s of r.memberSnapshots ?? []) {
+        if (s?.articleId) ids.add(s.articleId);
+      }
+    }
+    return ids;
+  } catch (err) {
+    logger.captureException(err, {
+      tags: {
+        service: 'tracked-story-service',
+        method: 'listTrackedMemberArticleIds',
+      },
+    });
+    // Same fail-closed reasoning: the sweep treats an unreadable set as "cannot
+    // prove anything is orphaned" and destroys nothing this pass.
+    return new Set<string>();
+  }
+}
+
 /** Unfollow a story (hard delete). Never throws. */
 export async function untrackStory(id: string): Promise<void> {
   try {

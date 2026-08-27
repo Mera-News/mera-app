@@ -130,6 +130,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     // reader, so they must not share one banner:
     //   'saved' — offline, restored from a "save for later" row. Gets the
     //              "showing cached content" banner.
+    //   'retained' — the app kept this article on the reader's behalf (a fact
+    //              check, or a followed story's member). Reached ONLINE, past
+    //              the server's 48h TTL. Gets NO banner — see the render.
     //   'visit'  — the server no longer has this article (48h TTL) but the
     //              reader has opened it before, so the visit log still holds a
     //              snapshot. Happens ONLINE, most often from the per-publication
@@ -652,16 +655,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         {/* Only the 'saved' snapshot gets a banner. That one is
                             the offline path, where "showing cached content" is
                             true and the read button may not even work.
-                            'visit' is deliberately silent: it happens ONLINE,
-                            and the only thing missing is Mera's server copy —
-                            the publisher's page is right there and the
-                            read/translate block below opens it. Every warning
+                            'visit' and 'retained' are deliberately silent: both
+                            happen ONLINE, and the only thing missing is Mera's
+                            server copy — the publisher's page is right there and
+                            the read/translate block below opens it. Every warning
                             string this app owns ("no longer available",
                             "offline: showing cached") would contradict the
                             working Read button a few lines further down. An
-                            honest 'visit' string — "Mera no longer has this
-                            story, you can still open it at the publisher" — is
-                            new copy, and new copy means the 20-locale wave. */}
+                            honest string — "Mera no longer has this story, you
+                            can still open it at the publisher" — is new copy, and
+                            new copy means the 20-locale wave. */}
                         {snapshotSource === 'saved' && (
                             <HStack className="items-center bg-warning-900 rounded-lg px-3 py-2 mb-2" space="sm">
                                 <Icon as={AlertCircleIcon} size="sm" className="text-warning-400" />

@@ -12,6 +12,14 @@ jest.mock('../fact-check-record-service', () => ({
   listFactChecksForArticle: jest.fn(async () => []),
 }));
 
+// The service reads followed-story membership only through these — mock them so
+// each test states whether a story still holds the article. This is the OTHER
+// retention reason; the two must not destroy each other's rows.
+jest.mock('../tracked-story-service', () => ({
+  isTrackedStoryMember: jest.fn(async () => false),
+  listTrackedMemberArticleIds: jest.fn(async () => new Set<string>()),
+}));
+
 // Mocked so retention tests can assert it is NEVER published for a keep — a
 // retention row must not flip any bookmark.
 jest.mock('@/lib/saved-state', () => ({
@@ -24,6 +32,10 @@ import type { ForYouSuggestion } from '@/lib/stores/for-you-store';
 import { ArticleSuggestionStatus } from '@/lib/database/article-suggestion-status';
 import { listFactChecksForArticle } from '../fact-check-record-service';
 import {
+  isTrackedStoryMember,
+  listTrackedMemberArticleIds,
+} from '../tracked-story-service';
+import {
   saveSuggestion,
   saveStandaloneArticle,
   isSuggestionSaved,
@@ -32,12 +44,17 @@ import {
   loadSavedItems,
   deleteSavedSuggestion,
   keepArticleForFactCheck,
+  keepArticleForTrackedStory,
   releaseFactCheckRetention,
-  deleteOrphanedFactCheckRetention,
+  releaseTrackedStoryRetention,
+  deleteOrphanedRetention,
+  getSavedSuggestionWithKind,
 } from '../saved-article-suggestion-service';
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 
 const mockListFactChecks = listFactChecksForArticle as jest.Mock;
+const mockIsTrackedMember = isTrackedStoryMember as jest.Mock;
+const mockTrackedMemberIds = listTrackedMemberArticleIds as jest.Mock;
 
 const db = database as any;
 const TABLE = 'saved_article_suggestions';
@@ -121,6 +138,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   db._setRows(TABLE, []);
   mockListFactChecks.mockResolvedValue([]);
+  mockIsTrackedMember.mockResolvedValue(false);
+  mockTrackedMemberIds.mockResolvedValue(new Set<string>());
   jest.spyOn(Date, 'now').mockReturnValue(NOW);
 });
 
@@ -723,7 +742,7 @@ describe('releaseFactCheckRetention', () => {
   });
 });
 
-describe('deleteOrphanedFactCheckRetention', () => {
+describe('deleteOrphanedRetention', () => {
   it('destroys only the unreferenced fact_check rows', async () => {
     const orphan = makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'fact_check' });
     const referenced = makeSavedRecord({ id: 'art-2', articleId: 'art-2', origin: 'fact_check' });
@@ -734,7 +753,7 @@ describe('deleteOrphanedFactCheckRetention', () => {
       articleId === 'art-2' ? [{ id: 'fc-1' }] : [],
     );
 
-    const count = await deleteOrphanedFactCheckRetention();
+    const count = await deleteOrphanedRetention();
 
     expect(count).toBe(1);
     expect(db.batch).toHaveBeenCalledTimes(1);
@@ -747,12 +766,141 @@ describe('deleteOrphanedFactCheckRetention', () => {
     db._setRows(TABLE, [referenced]);
     mockListFactChecks.mockResolvedValue([{ id: 'fc-1' }]);
 
-    expect(await deleteOrphanedFactCheckRetention()).toBe(0);
+    expect(await deleteOrphanedRetention()).toBe(0);
     expect(database.write).not.toHaveBeenCalled();
   });
 
   it('returns 0 on an empty table', async () => {
     db._setRows(TABLE, []);
-    expect(await deleteOrphanedFactCheckRetention()).toBe(0);
+    expect(await deleteOrphanedRetention()).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Two retention reasons, one `origin` scalar
+//
+// `origin` records ONE reason, so it cannot answer "is anything still holding
+// this row". Without the cross-reason check the two reasons destroy each other's
+// rows and the article becomes unopenable — the exact bug retention exists to
+// prevent, reached through a different door.
+// ---------------------------------------------------------------------------
+
+/** Current rows in the saved table, via the fake collection. */
+function rows(): any[] {
+  const col = db._collections[TABLE] ?? db.get(TABLE);
+  return col._rows;
+}
+
+describe('retention across two reasons', () => {
+  it('records a tracked-story keep on a row a fact check already holds', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'fact_check' })]);
+
+    await keepArticleForTrackedStory({
+      articleId: 'art-1',
+      suggestion: makeSuggestion({ description_en: 'Richer copy' }),
+    });
+
+    const row = rows()[0];
+    // Upgraded in place, not skipped. Bailing here (the pre-tracked_story
+    // guard) would leave the story with no retention of its own.
+    expect(row.descriptionEn).toBe('Richer copy');
+    // Origin is not churned: it only decides which sweep classifies the row,
+    // and both sweeps check both reasons.
+    expect(row.origin).toBe('fact_check');
+  });
+
+  it('KEEPS the row when the fact check goes but the story still follows it', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'fact_check' })]);
+    mockListFactChecks.mockResolvedValue([]);
+    mockIsTrackedMember.mockResolvedValue(true);
+
+    const destroyed = await releaseFactCheckRetention('art-1');
+
+    expect(destroyed).toBe(false);
+    expect(rows()).toHaveLength(1);
+    // Re-stamped to the surviving reason, so the row no longer names the reason
+    // that just let go and the sweep classifies it correctly.
+    expect(rows()[0].origin).toBe('tracked_story');
+  });
+
+  it('KEEPS the row when the story unfollows but a fact check still holds it', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'tracked_story' })]);
+    mockIsTrackedMember.mockResolvedValue(false);
+    mockListFactChecks.mockResolvedValue([{ id: 'fc-1' }]);
+
+    const destroyed = await releaseTrackedStoryRetention('art-1');
+
+    expect(destroyed).toBe(false);
+    expect(rows()).toHaveLength(1);
+    expect(rows()[0].origin).toBe('fact_check');
+  });
+
+  it('destroys the row only once BOTH reasons have let go', async () => {
+    const row = makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'tracked_story' });
+    db._setRows(TABLE, [row]);
+    mockIsTrackedMember.mockResolvedValue(false);
+    mockListFactChecks.mockResolvedValue([]);
+
+    const destroyed = await releaseTrackedStoryRetention('art-1');
+
+    expect(destroyed).toBe(true);
+    expect(row.destroyPermanently).toHaveBeenCalledTimes(1);
+  });
+
+  it('never destroys a user save when a retention reason lets go', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'article' })]);
+    mockIsTrackedMember.mockResolvedValue(false);
+
+    expect(await releaseTrackedStoryRetention('art-1')).toBe(false);
+    expect(rows()).toHaveLength(1);
+    expect(rows()[0].origin).toBe('article');
+  });
+
+  it('spares a tracked-story row the sweep would otherwise call orphaned', async () => {
+    const tracked = makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'tracked_story' });
+    const orphan = makeSavedRecord({ id: 'art-2', articleId: 'art-2', origin: 'fact_check' });
+    db._setRows(TABLE, [tracked, orphan]);
+    // Nothing fact-checks either, but a story still holds art-1. The sweep must
+    // check BOTH reasons per row regardless of the row's own origin.
+    mockListFactChecks.mockResolvedValue([]);
+    mockTrackedMemberIds.mockResolvedValue(new Set(['art-1']));
+
+    const n = await deleteOrphanedRetention();
+
+    expect(n).toBe(1);
+    expect(tracked.prepareDestroyPermanently).not.toHaveBeenCalled();
+    expect(orphan.prepareDestroyPermanently).toHaveBeenCalledTimes(1);
+  });
+
+  it('hides a tracked_story row from every Saved-screen read', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'tracked_story' })]);
+
+    expect(await isSuggestionSaved('art-1')).toBe(false);
+    expect(await loadSavedSuggestions()).toEqual([]);
+    expect(await loadSavedItems()).toEqual([]);
+  });
+
+  it('still RESOLVES a tracked_story row on the open path, flagged as retained', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'tracked_story' })]);
+
+    // The whole point of retention: the detail screen's fallback must find it.
+    expect(await getSavedSuggestionByServerId('art-1')).not.toBeNull();
+    const kind = await getSavedSuggestionWithKind('art-1');
+    // `retained` keeps the offline "showing cached content" banner off a row
+    // reached ONLINE past the server's 48h TTL.
+    expect(kind?.retained).toBe(true);
+  });
+
+  it('reports a user save as NOT retained, so the banner still fires offline', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'article' })]);
+    expect((await getSavedSuggestionWithKind('art-1'))?.retained).toBe(false);
+  });
+
+  it('degraded keep never overwrites a rich snapshot', async () => {
+    db._setRows(TABLE, [makeSavedRecord({ id: 'art-1', articleId: 'art-1', origin: 'tracked_story' })]);
+
+    await keepArticleForTrackedStory({ articleId: 'art-1', title: 'Bare' });
+
+    expect(rows()[0].titleEn).toBe('A headline');
   });
 });

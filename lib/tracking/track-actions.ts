@@ -18,9 +18,17 @@ import {
   findActiveTrackedId,
   getTrackedStoryById,
   getLegacyTrackedForMigration,
+  listTrackedMemberArticleIds,
+  removeMemberSnapshot,
   type TrackedStoryMemberSnapshot,
 } from '../database/services/tracked-story-service';
 import { createTopics, retire } from '../database/services/topic-service';
+import { getSuggestionByArticleId } from '../database/services/article-suggestion-service';
+import {
+  keepArticleForTrackedStory,
+  releaseTrackedStoryRetention,
+} from '../database/services/saved-article-suggestion-service';
+import { getSetting, setSetting } from '../database/services/setting-service';
 import { enqueueJob, hasPendingJob } from '../database/services/inference-job-service';
 import {
   handleTrackedStoryMigrateJob,
@@ -137,6 +145,72 @@ export async function trackStoryWithProposal(
     llmHeadline: label || searchText,
     initialSnapshot: snapshotFromSubject(subject),
   });
+
+  // 3. Retain the seed article on device, the way a save does.
+  //
+  // Without this the story outlives its own articles: the member snapshot holds
+  // no description and no URL, `article_suggestions` is pruned at 48h, and the
+  // server drops the article at 48h too — so opening a two-day-old member from
+  // a story the reader deliberately followed shows "no longer available".
+  //
+  // Resolve the local suggestion first. `subject` is a FeedbackSubject and
+  // carries neither the description nor the article URL, and the URL is the
+  // whole point: without it the detail screen renders a header with no Read
+  // button. Degrade to the subject only when the row is genuinely gone.
+  await retainStoryMember(subject.articleId, {
+    title: subject.title,
+    publicationName: subject.publicationName,
+  });
+}
+
+/**
+ * Retain one followed-story member article on device.
+ *
+ * Never throws: retention is a durability nicety and must not fail the follow,
+ * or the sync, that it rode in on.
+ */
+export async function retainStoryMember(
+  articleId: string,
+  fallback?: { title?: string | null; publicationName?: string | null },
+): Promise<void> {
+  const id = (articleId ?? '').trim();
+  if (!id) return;
+  try {
+    const suggestion = await getSuggestionByArticleId(id);
+    if (suggestion) {
+      await keepArticleForTrackedStory({ articleId: id, suggestion });
+      return;
+    }
+    if (fallback?.title || fallback?.publicationName) {
+      await keepArticleForTrackedStory({
+        articleId: id,
+        title: fallback.title ?? null,
+        publicationName: fallback.publicationName ?? null,
+      });
+    }
+  } catch (err) {
+    logger.warn('[track-actions] member retention failed', {
+      articleId: id,
+      error: String(err),
+    });
+  }
+}
+
+/**
+ * Drop one member from a followed story at the reader's request, and release its
+ * retention.
+ *
+ * Order matters: `removeMemberSnapshot` first, release second. The release asks
+ * whether any active story still holds the article, and that question reads the
+ * SNAPSHOTS — releasing first would still see the article as a member and
+ * decline every time.
+ */
+export async function disownStoryMember(
+  trackedStoryId: string,
+  articleId: string,
+): Promise<void> {
+  await removeMemberSnapshot(trackedStoryId, articleId);
+  await releaseTrackedStoryRetention(articleId);
 }
 
 /**
@@ -153,14 +227,26 @@ export async function trackStoryWithProposal(
  */
 export async function deleteTrackedStoryById(id: string): Promise<void> {
   if (!id) return;
+  let memberIds: string[] = [];
   try {
     const row = await getTrackedStoryById(id);
+    // Read the members BEFORE the row goes: the release below asks whether any
+    // active story still holds each article, so it needs the list from a row
+    // that no longer exists to know what to ask about.
+    memberIds = (row?.memberSnapshots ?? []).map((s) => s.articleId);
     const topicId = row?.topicId ?? null;
     if (topicId) await retire(topicId);
   } catch (err) {
     logger.warn('[track-actions] topic retire failed', { id, error: String(err) });
   }
   await untrackStory(id);
+  // Release after the row is gone, and one at a time rather than in parallel:
+  // each release re-checks every OTHER active story, so an article still
+  // followed elsewhere (or still fact-checked) keeps its retention.
+  // Bounded by MAX_MEMBER_SNAPSHOTS.
+  for (const articleId of memberIds) {
+    await releaseTrackedStoryRetention(articleId);
+  }
 }
 
 /** Unfollow the active story matching `subject` (no-op when none matches).
@@ -192,6 +278,47 @@ export function observeSubjectTrackedId(subject: FeedbackSubject) {
     stableClusterId: subject.stableClusterId ?? null,
     articleId: subject.articleId,
   });
+}
+
+/** Settings key guarding the one-shot retention backfill below. */
+const RETENTION_BACKFILL_KEY = 'tracked_story_retention_backfilled';
+
+/**
+ * ONE-SHOT: retain the members of stories that were already followed before
+ * retention existed.
+ *
+ * Those stories have members with no retention row, and for any member the
+ * server has already dropped there is nothing left to retain — that coverage is
+ * gone from both sides and cannot be recovered. What this DOES rescue is every
+ * member whose `article_suggestions` row is still inside its 48h window, which
+ * is the whole recent tail of every followed story.
+ *
+ * Guarded by a settings flag rather than re-run each sync: unlike
+ * `migrateLegacyTrackedStories` this is not a cheap no-op once complete — it
+ * would re-read every member of every story on every cycle forever.
+ *
+ * Returns how many members it retained. Never throws.
+ */
+export async function backfillTrackedStoryRetention(): Promise<number> {
+  try {
+    if (await getSetting(RETENTION_BACKFILL_KEY)) return 0;
+    const ids = await listTrackedMemberArticleIds();
+    let count = 0;
+    // One-shot, off the UI path, bounded by MAX_MEMBER_SNAPSHOTS per story.
+    for (const articleId of ids) {
+      const suggestion = await getSuggestionByArticleId(articleId);
+      if (!suggestion) continue; // already past the 48h prune — unrecoverable
+      await keepArticleForTrackedStory({ articleId, suggestion });
+      count += 1;
+    }
+    // Stamp only on a clean pass. A throw leaves the flag unset so the next
+    // sync retries rather than silently skipping the backfill forever.
+    await setSetting(RETENTION_BACKFILL_KEY, String(Date.now()));
+    return count;
+  } catch (err) {
+    logger.warn('[track-actions] retention backfill failed', { error: String(err) });
+    return 0;
+  }
 }
 
 /**

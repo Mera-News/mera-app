@@ -23,6 +23,7 @@ import {
   applyUpdates,
   stampChecked,
 } from '@/lib/database/services/tracked-story-service';
+import { retainStoryMember } from '@/lib/tracking/track-actions';
 import logger from '@/lib/logger';
 
 /** Safe pubDate → ms for a suggestion row (Date column or number). */
@@ -96,6 +97,18 @@ async function reconcileByTopic(): Promise<void> {
           newMemberIds: fresh.map((r) => r.id),
           newSnapshots: fresh.map(snapshotFromSuggestion),
         });
+        // Retain each new member on device, the way a save does. This is the
+        // moment the full row is in hand: `article_suggestions` is pruned at
+        // 48h and the server drops the article at 48h too, so a member not
+        // retained now becomes unopenable the day after tomorrow — on a story
+        // the reader explicitly asked to follow.
+        // Bounded per story per cycle, and already off the UI path.
+        for (const row of fresh) {
+          await retainStoryMember(row.id, {
+            title: row.titleEn,
+            publicationName: row.publicationName,
+          });
+        }
       }
     } catch (err) {
       logger.captureException(err, {

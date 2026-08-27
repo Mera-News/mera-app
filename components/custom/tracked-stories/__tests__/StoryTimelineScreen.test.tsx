@@ -109,7 +109,6 @@ jest.mock('@/lib/database/services/tracked-story-service', () => ({
     markSeen: (...a: any[]) => mockMarkSeen(...(a as [])),
     advanceSeenWatermark: (...a: any[]) => mockAdvanceSeenWatermark(...(a as [])),
     backfillSnapshotSource: jest.fn(async () => {}),
-    removeMemberSnapshot: (...a: any[]) => mockRemoveMemberSnapshot(...(a as [])),
 }));
 jest.mock('@/lib/database/services/article-suggestion-service', () => ({
     getGroupingRowsByIds: jest.fn(async () => []),
@@ -119,6 +118,10 @@ jest.mock('@/lib/article-service', () => ({
 }));
 jest.mock('@/lib/tracking/track-actions', () => ({
     deleteTrackedStoryById: jest.fn(async () => {}),
+    // Disowning a member now drops the snapshot AND releases the article's
+    // on-device retention, so the screen calls this instead of reaching into
+    // tracked-story-service directly.
+    disownStoryMember: (...a: any[]) => mockRemoveMemberSnapshot(...(a as [])),
 }));
 jest.mock('@/lib/hooks/use-open-article', () => ({ useOpenArticle: () => jest.fn() }));
 

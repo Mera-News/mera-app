@@ -24,6 +24,7 @@ const mockGetAllLocations = jest.fn();
 const mockGetHeadlineDepths = jest.fn();
 const mockReconcileTrackedStories = jest.fn();
 const mockMigrateLegacyTrackedStories = jest.fn();
+const mockBackfillTrackedStoryRetention = jest.fn(async () => 0);
 const mockCaptureException = jest.fn();
 const mockRunPersonaMigrationIfNeeded = jest.fn();
 
@@ -113,6 +114,7 @@ jest.mock('../tracked-story-reconcile', () => ({
 
 jest.mock('@/lib/tracking/track-actions', () => ({
   migrateLegacyTrackedStories: (...args: any[]) => mockMigrateLegacyTrackedStories(...args),
+  backfillTrackedStoryRetention: () => mockBackfillTrackedStoryRetention(),
 }));
 
 jest.mock('@/lib/logger', () => ({

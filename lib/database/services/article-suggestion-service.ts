@@ -1334,6 +1334,35 @@ export async function getReasonedSuggestionIdForArticle(
 }
 
 /**
+ * Find the newest local suggestion for an ARTICLE id (returns null if none).
+ *
+ * The retention path's lookup: a followed story is created from a
+ * `FeedbackSubject`, which carries no description and no article URL, so the
+ * keep has to reach for the local row before the 48h prune takes it. Unlike
+ * {@link getReasonedSuggestionIdForArticle} this does NOT require a reason — a
+ * reason-less row still holds the URL and description that make the article
+ * openable, which is the only thing retention needs.
+ */
+export async function getSuggestionByArticleId(
+  articleId: string,
+): Promise<ForYouSuggestion | null> {
+  if (!articleId) return null;
+  try {
+    const rows = await articleSuggestionsCol
+      .query(Q.where('article_id', articleId), Q.sortBy('created_at', Q.desc))
+      .fetch();
+    // Mirror the SQL in JS so the result does not depend on the query engine
+    // (and the predicate-ignoring test double stays honest).
+    const row = rows.find((r) => r.articleId === articleId);
+    if (!row) return null;
+    const factIds = await loadFactIdsBySuggestion([row.id]);
+    return toForYouSuggestion(row, factIds.get(row.id) ?? []);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Find a suggestion by server id (returns null if not present).
  */
 export async function getSuggestionByServerId(serverId: string): Promise<ForYouSuggestion | null> {

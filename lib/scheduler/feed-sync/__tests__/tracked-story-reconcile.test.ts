@@ -22,6 +22,10 @@ jest.mock('@/lib/database/services/notification-service', () => ({
   notify: (...args: any[]) => mockNotify(...args),
 }));
 
+jest.mock('@/lib/tracking/track-actions', () => ({
+  retainStoryMember: jest.fn(async () => {}),
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
