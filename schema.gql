@@ -700,7 +700,8 @@ type Query {
   ): PublicationSourcesResponse! @deprecated(reason: "Use newsPublishers and publicationSourcesForNewsPublisher queries instead")
   publicationSourcesForNewsPublisher(publisherId: ID!): PublicationSourcesForPublisherResponse!
   recentArticleCount: Int!
-  relatedArticles(articleId: ID!, stableClusterId: String): [ArticleSummary!]!
+  relatedArticles(articleId: ID!, stableClusterId: String): [ArticleSummary!]! @deprecated(reason: "Unbounded. Use relatedArticlesPage.")
+  relatedArticlesPage(after: String, articleId: ID!, context: RelatedArticlesContextInput, excludeIds: [ID!], first: Int = 10, sortMode: RelatedSortMode = RELEVANCE, stableClusterId: String): RelatedArticlesPage!
 
   """Vector search using cosine similarity (scores 0–1)."""
   searchArticlesVector(
@@ -753,6 +754,59 @@ type Query {
   unblockRequestStatus(userId: ID!): UnblockRequest
   userBilling: UserBillingInfo!
   userPersonaByUserId(userId: ID!): UserPersona
+}
+
+"""
+Anonymous, ephemeral reader signals used to order the RELEVANCE mode. Never persisted, never cached, never linked to a user.
+"""
+input RelatedArticlesContextInput {
+  """App-UI language BASE tag (`zh`, not `zh-Hans`)."""
+  appLanguageBase: String
+
+  """Home country, ISO alpha-3."""
+  homeCountryAlpha3: String
+
+  """The reader's other countries, ISO alpha-3, ranked weight-desc."""
+  otherCountriesAlpha3: [String!]
+
+  """Countries whose sources the reader explicitly prefers, ISO alpha-3."""
+  preferredCountriesAlpha3: [String!]
+
+  """Publications the reader explicitly prefers, normalized names."""
+  preferredPublications: [String!]
+}
+
+"""
+One page of sibling coverage for an article, already ordered server-side.
+"""
+type RelatedArticlesPage {
+  articles: [ArticleSummary!]!
+  pageInfo: CursorPageInfo!
+
+  """
+  The `after` cursor did not resolve and this page restarts at index 0. Clients must REPLACE their list, not append.
+  """
+  restarted: Boolean!
+}
+
+"""
+Ordering for relatedArticlesPage. RELEVANCE is the tiered country-block order; the two date modes are flat.
+"""
+enum RelatedSortMode {
+  """
+  Flat publish-date descending. Undated rows sort last here too, so NEWEST is not the exact reverse of OLDEST.
+  """
+  NEWEST
+
+  """
+  Flat publish-date ascending. Country blocking is bypassed entirely; undated rows sort last.
+  """
+  OLDEST
+
+  """
+  Default. Preferred sources, then the viewed article country, then other countries biggest-block-first, then countryless. The only mode that consults the reader context.
+  """
+  RELEVANCE
 }
 
 input RequestUnblockInput {

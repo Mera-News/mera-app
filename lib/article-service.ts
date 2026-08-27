@@ -5,13 +5,15 @@ import {
     ArticleIdsForTopicsResponse,
     ArticlesForPublicationSourceResponse,
     ArticlesForTopicsByIdsResponse,
-    ArticleSummary,
     ArticleWithClusters,
     NewsArticle,
     NewsCluster,
     NewsClustersResponse,
     PersonaQueryInput,
     PersonaQueryResult,
+    RelatedArticlesContextInput,
+    RelatedArticlesPage,
+    RelatedSortMode,
     TopHeadlinesForCountryResponse,
     TopicPaginationInput,
 } from './generated/graphql-types';
@@ -399,21 +401,54 @@ const GET_NEWS_CLUSTER_FOR_ARTICLE = gql`
 
 // Placeholder to keep line reference intact
 
-// GraphQL Query fetching the live sibling articles for a given article. Used
-// by the detail screen's "Related articles" section. Returns every sibling in
-// one shot; pagination can be added later if needed.
-const GET_RELATED_ARTICLES = gql`
-  query GetRelatedArticles($articleId: ID!, $stableClusterId: String) {
-    relatedArticles(articleId: $articleId, stableClusterId: $stableClusterId) {
-      _id
-      title_en
-      description_en
-      article_url
-      image_url
-      country_code
-      publication_name
-      language_code
-      pubDate
+// One ORDERED page of sibling coverage for an article, for the detail screens'
+// "Related articles" section.
+//
+// The server owns the ordering. It has to: the country-block order ranks each
+// block by its size across the whole candidate set, so a page's order depends on
+// rows that are not in it, and ordering client-side after paging would produce
+// blocks sized to whatever 10 rows happened to arrive. `context` carries the
+// reader's geo/language signals for that ordering — anonymous, ephemeral, and
+// deliberately not part of any server cache key.
+//
+// The unpaged `relatedArticles` query still exists server-side for bundles
+// already in the field, but nothing in this build calls it.
+const GET_RELATED_ARTICLES_PAGE = gql`
+  query GetRelatedArticlesPage(
+    $articleId: ID!
+    $stableClusterId: String
+    $sortMode: RelatedSortMode
+    $context: RelatedArticlesContextInput
+    $excludeIds: [ID!]
+    $first: Int
+    $after: String
+  ) {
+    relatedArticlesPage(
+      articleId: $articleId
+      stableClusterId: $stableClusterId
+      sortMode: $sortMode
+      context: $context
+      excludeIds: $excludeIds
+      first: $first
+      after: $after
+    ) {
+      articles {
+        _id
+        title_en
+        description_en
+        article_url
+        image_url
+        country_code
+        publication_name
+        language_code
+        pubDate
+      }
+      pageInfo {
+        endCursor
+        hasNextPage
+        pageSize
+      }
+      restarted
     }
   }
 `;
@@ -963,27 +998,56 @@ export class ArticleService {
     }
 
     /**
-     * Fetch live sibling articles for a given article via the server's
-     * cluster-article-link snapshot. Used by the detail screen's "Related
-     * articles" section. Returns the empty list if the article has no live
-     * cluster (e.g. cluster TTL'd out).
+     * Fetch ONE ordered page of sibling coverage for an article.
+     *
+     * `after` is the previous page's `endCursor`. A response with
+     * `restarted: true` means that cursor no longer resolved server-side (the
+     * story was re-clustered, or the ordered list expired) and the page starts
+     * from the top again — the caller must REPLACE its accumulated rows rather
+     * than append, or it stacks a second copy of page 1 under what is already on
+     * screen. There is no way to detect that from the rows themselves.
      */
-    static async getRelatedArticles(
-        articleId: string,
-        stableClusterId?: string,
-    ): Promise<ArticleSummary[]> {
+    static async getRelatedArticlesPage(input: {
+        articleId: string;
+        stableClusterId?: string | null;
+        sortMode?: RelatedSortMode | null;
+        context?: RelatedArticlesContextInput | null;
+        excludeIds?: string[] | null;
+        first?: number;
+        after?: string | null;
+    }): Promise<RelatedArticlesPage> {
         try {
-            const { data } = await client.query<{ relatedArticles: ArticleSummary[] }>({
-                query: GET_RELATED_ARTICLES,
-                // Prefer the retained stable-story id: the server maps it to the
-                // current clustering generation, so related siblings stay aligned
-                // with the size the headline card advertised even after re-clustering.
-                variables: { articleId, stableClusterId },
+            const { data } = await client.query<{
+                relatedArticlesPage: RelatedArticlesPage;
+            }>({
+                query: GET_RELATED_ARTICLES_PAGE,
+                variables: {
+                    articleId: input.articleId,
+                    // Prefer the retained stable-story id: the server maps it to
+                    // the current clustering generation, so the page a reader is
+                    // scrolling stays anchored to one story even across a
+                    // re-clustering run.
+                    stableClusterId: input.stableClusterId ?? null,
+                    sortMode: input.sortMode ?? null,
+                    context: input.context ?? null,
+                    excludeIds: input.excludeIds ?? null,
+                    first: input.first ?? null,
+                    after: input.after ?? null,
+                },
                 fetchPolicy: 'no-cache',
             });
-            return data?.relatedArticles ?? [];
+            return (
+                data?.relatedArticlesPage ?? {
+                    articles: [],
+                    pageInfo: { endCursor: null, hasNextPage: false, pageSize: 0 },
+                    restarted: false,
+                }
+            );
         } catch (error) {
-            this.reportQueryError('getRelatedArticles', error, { articleId, stableClusterId });
+            this.reportQueryError('getRelatedArticlesPage', error, {
+                articleId: input.articleId,
+                stableClusterId: input.stableClusterId,
+            });
             throw error;
         }
     }

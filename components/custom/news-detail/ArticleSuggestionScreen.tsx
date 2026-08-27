@@ -22,7 +22,6 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { Toast, ToastDescription, ToastTitle, useToast } from '@/components/ui/toast';
 import { VStack } from '@/components/ui/vstack';
-import { ArticleService } from '@/lib/article-service';
 import {
     deleteSuggestionByServerId,
     getSuggestionByServerId,
@@ -51,6 +50,7 @@ import {
     orderRelatedArticles,
     type RelatedSortable,
 } from '@/lib/feed-grouping/related-articles-sort';
+import { useRelatedPagination } from './use-related-pagination';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
@@ -71,12 +71,6 @@ interface ArticleSuggestionScreenProps {
 }
 
 const SCROLL_THRESHOLD = 300;
-// The related-articles footer list renders unvirtualized (`.map`), so on
-// mount it's capped to a small initial window and grows as the user scrolls
-// near the bottom — keeps first-render cost bounded on stories with a large
-// related set.
-const INITIAL_RELATED_COUNT = 6;
-const RELATED_COUNT_INCREMENT = 10;
 
 // Map ArticleSummary → NewsArticle-shaped object for ArticleStandaloneCompactCard
 // (the existing card type works against NewsArticle fields). Hoisted to module
@@ -250,9 +244,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // Dashboard's Saved list) corrects this screen's bookmark without a remount.
     const savedOverride = useSavedOverride(articleSuggestionId);
     const isSaved = savedOverride ?? savedFromDb;
-    const [related, setRelated] = useState<ArticleSummary[]>([]);
     const [isLoading, setIsLoading] = useState(!storeSuggestion);
-    const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showScrollToTop, setShowScrollToTop] = useState(false);
     const insets = useSafeAreaInsets();
@@ -268,26 +260,28 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     const isConnected = useIsConnected();
     const scrollViewRef = useRef<SmoothScrollViewRef>(null);
 
-    // Merged, flat "Related Articles" list: local cluster siblings + the server
-    // `relatedArticles` join, deduped by article id (drop rows whose id equals
-    // the opened article or any local sibling), then ordered into contiguous
-    // per-country blocks via `orderRelatedArticles` — this suggestion's country
-    // first, then the remaining countries biggest-block first. Ordering runs over
-    // the FULL list here, before the render-time `visibleRelatedCount` window, so
-    // block sizes never become window-relative. Local siblings navigate to the
-    // richer suggestion-detail route; server rows to the article-detail route
-    // (encoded by whether `suggestionId` is set).
     // How the reader wants the related list ordered. ONE persisted setting
     // shared with the article-detail route — see related-sort-store.
     const relatedSortMode = useRelatedSortStore((s) => s.mode);
     const setRelatedSortMode = useRelatedSortStore((s) => s.setMode);
 
-    const relatedEntries = useMemo<RelatedEntry[]>(() => {
+    // The related list is now TWO blocks, not one merged ordering.
+    //
+    // Local siblings lead, ordered here over just that set. They are the
+    // reader's own personalized cards for this story, they exist offline, and
+    // they tap into the richer suggestion-detail route — so they cannot be part
+    // of a server page.
+    //
+    // Server coverage follows, ordered and paged BY THE SERVER 10 rows at a
+    // time. The two cannot be interleaved any more: the country-block order
+    // ranks each block by its size across the whole candidate set, so a page's
+    // order depends on rows that are not in it, and the server can only size
+    // blocks over what it serves. A country holding both local and server rows
+    // therefore appears in two places — the same shape the tier-P head block has
+    // always had (see related-articles-sort.ts), not a new anomaly.
+    const localEntries = useMemo<RelatedEntry[]>(() => {
         if (!suggestion) return [];
-        const siblingArticleIds = new Set<string>(
-            localSiblings.map((s) => s.articleId),
-        );
-        const siblingEntries: RelatedEntry[] = localSiblings.map((s) => ({
+        const entries: RelatedEntry[] = localSiblings.map((s) => ({
             id: s.articleId,
             languageCode: s.language_code,
             countryCodeAlpha3: s.country_code,
@@ -296,27 +290,53 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
             article: suggestionToNewsArticle(s),
             suggestionId: s._id,
         }));
-        const serverEntries: RelatedEntry[] = related
-            .filter(
-                (a) =>
-                    a._id !== suggestion.articleId &&
-                    !siblingArticleIds.has(a._id),
-            )
-            .map((a) => ({
+        return orderRelatedArticles(
+            entries,
+            suggestion.country_code ?? null,
+            userCtx,
+            relatedSortMode,
+        );
+    }, [localSiblings, suggestion, userCtx, relatedSortMode]);
+
+    // Excluded SERVER-side, before ordering. Filtering the dedupe client-side
+    // after the server counted these toward `first: 10` would short-change every
+    // page (10 fetched, 2 rendered, hasNextPage still true) AND size the tier-B
+    // blocks over a set the reader never sees.
+    const excludeIds = useMemo(
+        () => localEntries.map((e) => e.id),
+        [localEntries],
+    );
+
+    const {
+        entries: serverRows,
+        isLoadingInitial: isLoadingRelated,
+        isLoadingMore: isLoadingMoreRelated,
+        loadMore: loadMoreRelated,
+    } = useRelatedPagination({
+        articleId: suggestion?.articleId ?? null,
+        sortMode: relatedSortMode,
+        ctx: userCtx,
+        excludeIds,
+        isConnected,
+    });
+
+    const serverEntries = useMemo<RelatedEntry[]>(
+        () =>
+            serverRows.map((a) => ({
                 id: a._id,
                 languageCode: a.language_code ?? null,
                 countryCodeAlpha3: a.country_code ?? null,
                 publicationName: a.publication_name ?? null,
                 pubDateMs: toPubDateMs(a.pubDate),
                 article: toNewsArticle(a),
-            }));
-        return orderRelatedArticles(
-            [...siblingEntries, ...serverEntries],
-            suggestion.country_code ?? null,
-            userCtx,
-            relatedSortMode,
-        );
-    }, [localSiblings, related, suggestion, userCtx, relatedSortMode]);
+            })),
+        [serverRows],
+    );
+
+    const relatedEntries = useMemo<RelatedEntry[]>(
+        () => [...localEntries, ...serverEntries],
+        [localEntries, serverEntries],
+    );
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -328,30 +348,13 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
 
     // The feedback tree's "Show related coverage" nudge. The related articles
     // are this page's footer, so the answer is to scroll there, not to navigate.
-    // Landing at the bottom trips `onEndReached` → `handleRelatedEndReached`, so
-    // the list grows underneath: the user arrives at what WAS the bottom with
-    // more related rows appearing below. That is the intended reading of the
-    // nudge, not a mis-scroll.
+    // Landing at the bottom trips `onEndReached` → `loadMoreRelated`, so the
+    // list grows underneath: the user arrives at what WAS the bottom with more
+    // coverage appearing below. That is the intended reading of the nudge, not a
+    // mis-scroll.
     const scrollToRelated = useCallback(() => {
         scrollViewRef.current?.scrollToEnd(true);
     }, []);
-
-    // Related-list lazy growth: start small, grow when the user scrolls near
-    // the bottom (SmoothScrollView's `onEndReached`, FlatList-like — fires
-    // once per approach, re-arms after scrolling back up).
-    const [visibleRelatedCount, setVisibleRelatedCount] = useState(INITIAL_RELATED_COUNT);
-    const handleRelatedEndReached = useCallback(() => {
-        setVisibleRelatedCount((prev) => prev + RELATED_COUNT_INCREMENT);
-    }, []);
-    // Reset the visible window when the underlying list identity changes
-    // (navigating to a different suggestion re-mounts nothing here since this
-    // screen instance is keyed per-route, but guard anyway for safety).
-    // Also reset on a sort change: the reader re-sorted to see a DIFFERENT set
-    // of rows at the top, and keeping a grown window would silently change how
-    // much of the list is on screen at the same time as its order.
-    useEffect(() => {
-        setVisibleRelatedCount(INITIAL_RELATED_COUNT);
-    }, [suggestion?._id, relatedSortMode]);
 
     // Hydrate the suggestion from local DB if it wasn't already in the store
     // (e.g. deep-link from notification before store hydration completes).
@@ -390,39 +393,6 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         };
     }, [articleSuggestionId, storeSuggestion, t]);
 
-    // Lazy-load related articles once we know the article id.
-    useEffect(() => {
-        const articleId = suggestion?.articleId;
-        // Parity with ArticleDetailScreen: no point round-tripping a live query
-        // with no network — leave the section to its LOCAL siblings rather than
-        // logging a guaranteed failure on every offline view. (The local-sibling
-        // half of this screen's two-source merge still works offline, which is
-        // why this screen degrades better than the article one.)
-        if (!articleId || !isConnected) return;
-        let cancelled = false;
-        setIsLoadingRelated(true);
-        ArticleService.getRelatedArticles(articleId)
-            .then((rows) => {
-                if (!cancelled) setRelated(rows);
-            })
-            .catch((err) => {
-                logger.captureException(err, {
-                    tags: { screen: 'ArticleSuggestionScreen', method: 'getRelatedArticles' },
-                    extra: { articleId },
-                });
-                // Non-fatal — related articles are supplementary
-            })
-            .finally(() => {
-                if (!cancelled) setIsLoadingRelated(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-        // `isConnected` is a dep so the fetch RE-runs when connectivity returns —
-        // without it, a screen opened offline would never populate the server
-        // half of the related list even after the network came back.
-    }, [suggestion?.articleId, isConnected]);
-
     // THE COMMUNITY CHECK, for the screen every FEED card lands on.
     //
     // This screen renders from a local `article_suggestions` row and never
@@ -432,8 +402,8 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
     // surface the bug was actually reported from.
     //
     // Deliberately its OWN effect rather than a branch inside the related-
-    // articles fetch above: they fail independently, and a fact-check lookup
-    // that throws must not cost the reader their related articles.
+    // articles fetch: they fail independently, and a fact-check lookup that
+    // throws must not cost the reader their related articles.
     //
     // `fetchCachedFactCheck` re-checks `autoCommunityFactCheck` itself, so this
     // gate is the fast path and not the only defence. On a miss it writes
@@ -457,11 +427,10 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [suggestion?.articleId, isConnected]);
 
-    // Same-story siblings are surfaced two ways: `localSiblings` (above) groups
-    // the user's own store rows that the feed collapsed, and
-    // `relatedArticles(articleId)` (above) joins the server's current clustering
-    // generation. Both are merged, deduped by article id, and sorted into the
-    // single flat "Related Articles" footer list by the `relatedEntries` memo.
+    // Same-story siblings are surfaced two ways: `localEntries` groups the
+    // user's own store rows that the feed collapsed and renders them as the head
+    // block, and `relatedArticlesPage` pages the server's current clustering
+    // generation beneath it, ordered server-side and excluding the head block.
 
     // Reflect whether this suggestion is already saved for later.
     useEffect(() => {
@@ -668,7 +637,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
-                onEndReached={handleRelatedEndReached}
+                onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}
                 aboveReason={
@@ -778,11 +747,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                             generation cluster join (tapping into article-detail),
                             deduped by article id and ordered by the user's
                             language/country signals first. Local rows render
-                            immediately; the spinner row is appended while the
-                            server join is still loading. Renders unvirtualized
-                            (`.map`), so only a `visibleRelatedCount` window is
-                            shown initially and grows as the user scrolls near
-                            the bottom (see `handleRelatedEndReached`). */}
+                            immediately and work offline; server pages arrive 10
+                            at a time as the reader scrolls, already ordered.
+                            Renders unvirtualized (`.map`), which is why the page
+                            size is the render budget as much as the network
+                            one. */}
                         {(relatedEntries.length > 0 || isLoadingRelated) && (
                             <VStack space="md">
                                 <HStack className="items-center justify-between" space="sm">
@@ -795,7 +764,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         testIDPrefix="related-sort"
                                     />
                                 </HStack>
-                                {relatedEntries.slice(0, visibleRelatedCount).map((entry, index) => (
+                                {relatedEntries.map((entry, index) => (
                                     <ArticleStandaloneCompactCard
                                         key={entry.id || `related-${index}`}
                                         article={entry.article}
@@ -816,7 +785,7 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                                         subjectExtras={{ surface: 'detail' }}
                                     />
                                 ))}
-                                {isLoadingRelated && (
+                                {(isLoadingRelated || isLoadingMoreRelated) && (
                                     <Box className="items-center justify-center py-4">
                                         <Spinner size="small" />
                                     </Box>

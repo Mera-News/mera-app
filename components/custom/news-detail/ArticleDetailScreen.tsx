@@ -39,7 +39,7 @@ import { useSavedOverride } from '@/lib/saved-state';
 import { isOpenedId } from '@/lib/stores/fact-rows-selector';
 import { useIsConnected, useNetworkStore } from '@/lib/stores/network-store';
 import { useOpenedStoriesStore } from '@/lib/stores/opened-stories-store';
-import { orderRelatedArticles } from '@/lib/feed-grouping/related-articles-sort';
+import { useRelatedPagination } from './use-related-pagination';
 import { useRelatedSortStore } from '@/lib/stores/related-sort-store';
 import { secureUrlOrNull } from '@/lib/secure-url';
 import { useAiAccess } from '@/lib/stores/subscription-store';
@@ -48,7 +48,7 @@ import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-
 import { openArticleInAppBrowser } from '@/lib/web-browser-utils';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -96,14 +96,12 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const { t } = useTranslation();
     const toast = useToast();
     const [article, setArticle] = useState<NewsArticle | null>(null);
-    const [related, setRelated] = useState<ArticleSummary[]>([]);
     const [savedFromDb, setSavedFromDb] = useState(false);
     // See lib/saved-state — a save/delete on any other surface (notably the
     // Dashboard's Saved list) corrects this screen's bookmark without a remount.
     const savedOverride = useSavedOverride(article?._id ?? articleId);
     const isSaved = savedOverride ?? savedFromDb;
     const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingRelated, setIsLoadingRelated] = useState(false);
     const [error, setError] = useState<string | null>(null);
     // The tick's icon state — a pure observer of the stored rows, same hook
     // `FactCheckPanel` uses below. Two independent subscriptions to the same
@@ -160,36 +158,28 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     const [retryNonce, setRetryNonce] = useState(0);
     const hadOfflineFailureRef = useRef(false);
 
-    // Country of the article being viewed — anchors the related list's first
-    // block (see `orderRelatedArticles`). Null until the article resolves, which
-    // costs at most one reorder of the memo below.
-    const currentCountryAlpha3 = article?.publicationSource?.country_code ?? null;
-
     // How the reader wants the related list ordered. ONE persisted setting
     // shared with the suggestion-detail route — see related-sort-store.
     const relatedSortMode = useRelatedSortStore((s) => s.mode);
     const setRelatedSortMode = useRelatedSortStore((s) => s.setMode);
 
-    // Server related rows, ordered into contiguous per-country blocks: this
-    // article's country first, then the remaining countries biggest-block first,
-    // countryless rows last; within a block, language → publication → date → id.
-    // Non-mutating; `userCtx === null` (still loading) only relaxes the
-    // language/rank preferences, the blocks still form. In 'oldest'/'newest'
-    // mode the country blocking is bypassed entirely (see orderRelatedArticles).
-    const sortedRelated = useMemo(() => {
-        const entries = related.map((a) => ({
-            id: a._id,
-            languageCode: a.language_code ?? null,
-            countryCodeAlpha3: a.country_code ?? null,
-            publicationName: a.publication_name ?? null,
-            pubDateMs: (() => {
-                const ms = Date.parse(a.pubDate);
-                return Number.isNaN(ms) ? null : ms;
-            })(),
-            summary: a,
-        }));
-        return orderRelatedArticles(entries, currentCountryAlpha3, userCtx, relatedSortMode);
-    }, [related, currentCountryAlpha3, userCtx, relatedSortMode]);
+    // Related coverage, ordered and paged BY THE SERVER, 10 rows at a time.
+    // The ordering cannot live here any more: country blocks are ranked by their
+    // size across the whole candidate set, so a page's order depends on rows
+    // that are not in it. `userCtx` ships as anonymous args purely to order the
+    // response — see use-related-pagination.
+    const {
+        entries: related,
+        isLoadingInitial: isLoadingRelated,
+        isLoadingMore: isLoadingMoreRelated,
+        loadMore: loadMoreRelated,
+    } = useRelatedPagination({
+        articleId: article?._id ?? null,
+        stableClusterId,
+        sortMode: relatedSortMode,
+        ctx: userCtx,
+        isConnected,
+    });
 
     const handleScrollPositionChange = useCallback((y: number) => {
         setShowScrollToTop(y > SCROLL_THRESHOLD);
@@ -201,6 +191,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
 
     // The feedback tree's "Show related coverage" nudge. The related articles
     // are this page's footer, so the answer is to scroll there, not to navigate.
+    // Landing at the bottom trips `onEndReached` -> `loadMoreRelated`, so the
+    // list grows underneath: the reader arrives at what WAS the bottom with more
+    // coverage appearing below. That is the intended reading of the nudge, not a
+    // mis-scroll — same behaviour the suggestion route has always had.
     const scrollToRelated = useCallback(() => {
         scrollViewRef.current?.scrollToEnd(true);
     }, []);
@@ -349,33 +343,6 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
             setRetryNonce((n) => n + 1);
         }
     }, [isConnected]);
-
-    useEffect(() => {
-        // No point round-tripping a live query with no network — leave the
-        // related-articles section empty rather than logging a guaranteed
-        // failure on every offline article view.
-        if (!article?._id || !isConnected) return;
-        let cancelled = false;
-        setIsLoadingRelated(true);
-        // Pass stableClusterId through so the server can prefer the stable
-        // cross-run cluster over the (possibly already-wiped) live cluster id.
-        ArticleService.getRelatedArticles(article._id, stableClusterId)
-            .then((rows) => {
-                if (!cancelled) setRelated(rows);
-            })
-            .catch((err) => {
-                logger.captureException(err, {
-                    tags: { screen: 'ArticleDetailScreen', method: 'getRelatedArticles' },
-                    extra: { articleId: article._id },
-                });
-            })
-            .finally(() => {
-                if (!cancelled) setIsLoadingRelated(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [article?._id, isConnected, stableClusterId]);
 
     // Reflect whether this standalone article is already saved for later. The
     // saved row id for a standalone article is the article's own `_id`.
@@ -677,6 +644,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                 onTitleDisplayChange={handleTitleDisplayChange}
                 scrollViewRef={scrollViewRef}
                 onScrollPositionChange={handleScrollPositionChange}
+                onEndReached={loadMoreRelated}
                 contentTopInset={insets.top}
                 contentBottomInset={insets.bottom + 20}
                 aboveReason={
@@ -817,14 +785,23 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                                         <Spinner size="small" />
                                     </Box>
                                 ) : (
-                                    sortedRelated.map((entry, index) => (
-                                        <ArticleStandaloneCompactCard
-                                            key={entry.id || `related-${index}`}
-                                            article={summaryToNewsArticle(entry.summary)}
-                                            onPress={() => handleRelatedPress(entry.id)}
-                                            subjectExtras={{ surface: 'detail' }}
-                                        />
-                                    ))
+                                    <>
+                                        {/* Server order is final — no client
+                                            re-sort. See useRelatedPagination. */}
+                                        {related.map((entry, index) => (
+                                            <ArticleStandaloneCompactCard
+                                                key={entry._id || `related-${index}`}
+                                                article={summaryToNewsArticle(entry)}
+                                                onPress={() => handleRelatedPress(entry._id)}
+                                                subjectExtras={{ surface: 'detail' }}
+                                            />
+                                        ))}
+                                        {isLoadingMoreRelated ? (
+                                            <Box className="items-center justify-center py-4">
+                                                <Spinner size="small" />
+                                            </Box>
+                                        ) : null}
+                                    </>
                                 )}
                             </VStack>
                         )}

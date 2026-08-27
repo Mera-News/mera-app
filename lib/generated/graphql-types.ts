@@ -612,7 +612,9 @@ export type Query = {
   publicationSources: PublicationSourcesResponse;
   publicationSourcesForNewsPublisher: PublicationSourcesForPublisherResponse;
   recentArticleCount: Scalars['Int']['output'];
+  /** @deprecated Unbounded. Use relatedArticlesPage. */
   relatedArticles: Array<ArticleSummary>;
+  relatedArticlesPage: RelatedArticlesPage;
   /** Vector search using cosine similarity (scores 0–1). */
   searchArticlesVector: EmbeddingSearchResponse;
   /** Hybrid text + semantic search over the last 48h of articles. Headline-only results — hydrate ids via articlesForTopicsByIds. Capped at 25 results. */
@@ -755,6 +757,17 @@ export type QueryRelatedArticlesArgs = {
 };
 
 
+export type QueryRelatedArticlesPageArgs = {
+  after?: InputMaybe<Scalars['String']['input']>;
+  articleId: Scalars['ID']['input'];
+  context?: InputMaybe<RelatedArticlesContextInput>;
+  excludeIds?: InputMaybe<Array<Scalars['ID']['input']>>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  sortMode?: InputMaybe<RelatedSortMode>;
+  stableClusterId?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type QuerySearchArticlesVectorArgs = {
   cutoffHours?: InputMaybe<Scalars['Int']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -792,6 +805,39 @@ export type QueryUnblockRequestStatusArgs = {
 export type QueryUserPersonaByUserIdArgs = {
   userId: Scalars['ID']['input'];
 };
+
+/** Anonymous, ephemeral reader signals used to order the RELEVANCE mode. Never persisted, never cached, never linked to a user. */
+export type RelatedArticlesContextInput = {
+  /** App-UI language BASE tag (`zh`, not `zh-Hans`). */
+  appLanguageBase?: InputMaybe<Scalars['String']['input']>;
+  /** Home country, ISO alpha-3. */
+  homeCountryAlpha3?: InputMaybe<Scalars['String']['input']>;
+  /** The reader's other countries, ISO alpha-3, ranked weight-desc. */
+  otherCountriesAlpha3?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Countries whose sources the reader explicitly prefers, ISO alpha-3. */
+  preferredCountriesAlpha3?: InputMaybe<Array<Scalars['String']['input']>>;
+  /** Publications the reader explicitly prefers, normalized names. */
+  preferredPublications?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+/** One page of sibling coverage for an article, already ordered server-side. */
+export type RelatedArticlesPage = {
+  __typename?: 'RelatedArticlesPage';
+  articles: Array<ArticleSummary>;
+  pageInfo: CursorPageInfo;
+  /** The `after` cursor did not resolve and this page restarts at index 0. Clients must REPLACE their list, not append. */
+  restarted: Scalars['Boolean']['output'];
+};
+
+/** Ordering for relatedArticlesPage. RELEVANCE is the tiered country-block order; the two date modes are flat. */
+export enum RelatedSortMode {
+  /** Flat publish-date descending. Undated rows sort last here too, so NEWEST is not the exact reverse of OLDEST. */
+  Newest = 'NEWEST',
+  /** Flat publish-date ascending. Country blocking is bypassed entirely; undated rows sort last. */
+  Oldest = 'OLDEST',
+  /** Default. Preferred sources, then the viewed article country, then other countries biggest-block-first, then countryless. The only mode that consults the reader context. */
+  Relevance = 'RELEVANCE'
+}
 
 export type RequestUnblockInput = {
   chatHistory: Array<ChatMessageInput>;

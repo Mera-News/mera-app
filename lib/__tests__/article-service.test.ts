@@ -589,32 +589,70 @@ describe('ArticleService.getArticlesForTopicsByIds', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// getRelatedArticles
+// getRelatedArticlesPage
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('ArticleService.getRelatedArticles', () => {
+describe('ArticleService.getRelatedArticlesPage', () => {
     beforeEach(() => jest.clearAllMocks());
 
-    it('returns related articles on success', async () => {
-        const articles = [
+    const page = (over: Record<string, unknown> = {}) => ({
+        articles: [
             { _id: 'r1', title_en: 'Related 1', description_en: null, article_url: 'https://x.com/1', image_url: null, country_code: 'US', publication_name: 'Pub', language_code: 'en', pubDate: '2024-01-01' },
-        ];
-        mockQuery.mockResolvedValueOnce({ data: { relatedArticles: articles } });
-        const result = await ArticleService.getRelatedArticles('art-1');
-        expect(result).toEqual(articles);
+        ],
+        pageInfo: { endCursor: 'r1', hasNextPage: true, pageSize: 1 },
+        restarted: false,
+        ...over,
     });
 
-    it('returns empty array when data.relatedArticles is null/undefined', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { relatedArticles: null } });
-        const result = await ArticleService.getRelatedArticles('art-1');
-        expect(result).toEqual([]);
+    it('returns the page on success', async () => {
+        const p = page();
+        mockQuery.mockResolvedValueOnce({ data: { relatedArticlesPage: p } });
+        const result = await ArticleService.getRelatedArticlesPage({ articleId: 'art-1' });
+        expect(result).toEqual(p);
     });
 
-    it('passes articleId as variable', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { relatedArticles: [] } });
-        await ArticleService.getRelatedArticles('the-article-id');
+    it('returns an empty CLOSED page when the field is null/undefined', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { relatedArticlesPage: null } });
+        const result = await ArticleService.getRelatedArticlesPage({ articleId: 'art-1' });
+        // hasNextPage false matters more than the empty array: a caller that
+        // kept paging on a null response would loop.
+        expect(result.articles).toEqual([]);
+        expect(result.pageInfo.hasNextPage).toBe(false);
+        expect(result.restarted).toBe(false);
+    });
+
+    it('surfaces the restarted flag so the caller can replace instead of append', async () => {
+        mockQuery.mockResolvedValueOnce({
+            data: { relatedArticlesPage: page({ restarted: true }) },
+        });
+        const result = await ArticleService.getRelatedArticlesPage({
+            articleId: 'art-1',
+            after: 'a-dead-cursor',
+        });
+        expect(result.restarted).toBe(true);
+    });
+
+    it('sends every paging variable, nulling the ones not supplied', async () => {
+        mockQuery.mockResolvedValueOnce({ data: { relatedArticlesPage: page() } });
+        await ArticleService.getRelatedArticlesPage({
+            articleId: 'the-article-id',
+            stableClusterId: 'stable-1',
+            first: 10,
+            after: 'cursor-1',
+            excludeIds: ['local-1'],
+        });
         expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({ variables: { articleId: 'the-article-id' } }),
+            expect.objectContaining({
+                variables: {
+                    articleId: 'the-article-id',
+                    stableClusterId: 'stable-1',
+                    sortMode: null,
+                    context: null,
+                    excludeIds: ['local-1'],
+                    first: 10,
+                    after: 'cursor-1',
+                },
+            }),
         );
     });
 
@@ -622,12 +660,14 @@ describe('ArticleService.getRelatedArticles', () => {
         const err = new Error('related articles failed');
         mockQuery.mockRejectedValueOnce(err);
 
-        await expect(ArticleService.getRelatedArticles('art-1')).rejects.toThrow('related articles failed');
+        await expect(
+            ArticleService.getRelatedArticlesPage({ articleId: 'art-1' }),
+        ).rejects.toThrow('related articles failed');
         expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
             err,
             expect.objectContaining({
-                tags: { service: 'article-service', method: 'getRelatedArticles' },
-                extra: { articleId: 'art-1' },
+                tags: { service: 'article-service', method: 'getRelatedArticlesPage' },
+                extra: { articleId: 'art-1', stableClusterId: undefined },
             }),
         );
     });
