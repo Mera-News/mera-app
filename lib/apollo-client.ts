@@ -23,7 +23,11 @@ import {
     recordServerTransportFailure,
     useNetworkStore,
 } from './stores/network-store';
-import { instrumentedFetch, isRequestTimeoutError } from './apollo-fetch';
+import {
+    instrumentedFetch,
+    isRequestTimeoutError,
+    requestElapsedMs,
+} from './apollo-fetch';
 import { clientHeaderValue } from './observability/client-header';
 import { toastManager } from './toast-manager';
 import { GRAPHQL_SERVER_ENDPOINT } from './config/endpoints';
@@ -225,11 +229,27 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
         } else {
             // Online (or not yet known to be otherwise) — a real signal, log
             // it as before.
+            // `timeout` is its own tag, not just a message: a client-side
+            // 30s abort and a fast transport failure are the same
+            // `type: 'network'` event otherwise, so the two could not be told
+            // apart in Sentry — which is what made the persona-query aborts
+            // invisible. `elapsedMs` carries the real duration; assuming it
+            // equals REQUEST_ABORT_MS would hide a request that died early.
+            const timedOut = isRequestTimeoutError(error);
             logger.captureException(error, {
-                tags: { source: 'apollo-error-link', type: 'network' },
+                tags: {
+                    source: 'apollo-error-link',
+                    type: 'network',
+                    timeout: timedOut ? 'true' : 'false',
+                    // Grouped-by-operation in Sentry: which query is timing out
+                    // is the first question asked and the hardest to answer
+                    // from a stack trace that is identical for all of them.
+                    operation: operation.operationName ?? 'unknown',
+                },
                 extra: {
                     operationName: operation.operationName,
                     statusCode,
+                    elapsedMs: requestElapsedMs(error),
                 },
             });
         }

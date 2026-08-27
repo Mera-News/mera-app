@@ -8,6 +8,7 @@
 import {
     instrumentedFetch,
     isRequestTimeoutError,
+    requestElapsedMs,
     REQUEST_ABORT_MS,
     SLOW_REQUEST_MS,
 } from '@/lib/apollo-fetch';
@@ -115,6 +116,11 @@ describe('instrumentedFetch', () => {
         // produces the same "no statusCode" shape, and counting those would let
         // ordinary navigation fake a server outage.
         expect(isRequestTimeoutError(caught)).toBe(true);
+        // Elapsed is measured, not assumed to equal REQUEST_ABORT_MS: a request
+        // that dies early and one that rides the full ceiling must be
+        // distinguishable in Sentry, which is the whole reason this is carried.
+        expect(requestElapsedMs(caught)).toBeGreaterThanOrEqual(REQUEST_ABORT_MS);
+        expect(requestElapsedMs(new Error('some other failure'))).toBeNull();
     });
 
     it('releases the slow bookkeeping when a slow request eventually FAILS', async () => {

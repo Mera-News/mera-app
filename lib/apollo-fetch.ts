@@ -44,10 +44,23 @@ export const REQUEST_ABORT_MS = 30_000;
  */
 export interface TimeoutError extends Error {
     isRequestTimeout: true;
+    /** Wall-clock ms from request start to abort. Carried on the error so the
+     *  error link can report the real elapsed time rather than assuming it
+     *  equals REQUEST_ABORT_MS — a request aborted by our timer and one that
+     *  failed at 2s otherwise reach Sentry looking identical. */
+    elapsedMs: number;
 }
 
 export function isRequestTimeoutError(error: unknown): boolean {
     return (error as TimeoutError | null)?.isRequestTimeout === true;
+}
+
+/** Elapsed ms recorded on a timeout error, or null for any other failure. */
+export function requestElapsedMs(error: unknown): number | null {
+    const e = error as TimeoutError | null;
+    return e?.isRequestTimeout === true && typeof e.elapsedMs === 'number'
+        ? e.elapsedMs
+        : null;
 }
 
 /**
@@ -70,6 +83,7 @@ export const instrumentedFetch: typeof fetch = async (input, init) => {
         else callerSignal.addEventListener('abort', onCallerAbort);
     }
 
+    const startedAt = Date.now();
     let timedOut = false;
     let markedSlow = false;
 
@@ -89,7 +103,10 @@ export const instrumentedFetch: typeof fetch = async (input, init) => {
         if (timedOut) {
             const timeoutError = Object.assign(
                 new Error(`Request timed out after ${REQUEST_ABORT_MS}ms`),
-                { isRequestTimeout: true as const },
+                {
+                    isRequestTimeout: true as const,
+                    elapsedMs: Date.now() - startedAt,
+                },
             );
             throw timeoutError;
         }
