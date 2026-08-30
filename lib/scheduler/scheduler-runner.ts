@@ -3,7 +3,11 @@ import type { Job, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
 import logger from '@/lib/logger';
-import { isNonRetryableError, isUnauthenticatedError } from '@/lib/utils/retry';
+import {
+  isCancellationError,
+  isNonRetryableError,
+  isUnauthenticatedError,
+} from '@/lib/utils/retry';
 
 function defaultBackoff(attempt: number): number {
   return ([30_000, 60_000, 120_000][attempt - 1] ?? 120_000);
@@ -88,7 +92,22 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
     // Sentry MERA-APP-3P/42/4V/64: 181 events in 30 days from two users, in
     // bursts of a dozen per cold start. The auth breaker's single trip event is
     // the signal; the reschedule bookkeeping above is unaffected.
-    if (isUnauthenticatedError(err)) {
+    //
+    // A CANCELLATION is suppressed here for the same reason, and it needs its
+    // own branch: this capture calls Sentry DIRECTLY (withScope, to attach the
+    // scheduler.* tags), so it does NOT inherit the cancellation and 401 rules
+    // that live in logger.captureException. A task torn down mid-flight throws
+    // createCancellationError() from feed-sync-steps, which is a fact about the
+    // app's lifecycle, not a defect. Any future reporting path that bypasses
+    // logger has to repeat both checks — this is the only one that does.
+    if (isCancellationError(err)) {
+      logger.addBreadcrumb(
+        `[${definition.name}] cancelled — Sentry capture suppressed`,
+        'scheduler',
+        { jobId: job.id, attempt: job.attempt, exhausted },
+        'info',
+      );
+    } else if (isUnauthenticatedError(err)) {
       logger.addBreadcrumb(
         `[${definition.name}] UNAUTHENTICATED — Sentry capture suppressed`,
         'scheduler',

@@ -316,6 +316,24 @@ describe('run — failure handling', () => {
     },
   );
 
+  // This capture calls Sentry DIRECTLY (withScope, for the scheduler.* tags), so
+  // it does NOT inherit the rules that live in logger.captureException — it has
+  // to repeat them. A feed-sync step torn down mid-flight throws
+  // createCancellationError(); reporting that spends an issue on a non-event.
+  it('does NOT capture a cancellation to Sentry — breadcrumb only', async () => {
+    const err = Object.assign(new Error('aborted'), { name: 'AbortError' });
+    const job = makeJob({ attempt: 1, maxAttempts: 3 });
+    await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
+    expect(mockLogAddBreadcrumb).toHaveBeenCalledWith(
+      expect.stringContaining('cancelled'),
+      'scheduler',
+      expect.objectContaining({ jobId: 'job-test-1' }),
+      'info',
+    );
+  });
+
   it('still records the failure and its retry bookkeeping for a 401', async () => {
     const err = Object.assign(new Error('401'), { statusCode: 401 });
     const job = makeJob({ attempt: 1, maxAttempts: 3 });

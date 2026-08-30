@@ -57,6 +57,10 @@ function classifySuppression(
   // existed. Both now attach `statusCode` to the error, but the status is also
   // routinely passed here as a tag or extra, so honour that too rather than
   // depending on every future call site remembering the field.
+  // Strict `=== 401` against the NUMBER on purpose: `extra.status` is a generic
+  // field and other call sites pass a domain status STRING through it
+  // (fact-check-record-service's 'pending'/'done'), which must never be read as
+  // an auth failure and silently swallowed.
   if (options.tags?.status === '401' || options.extra?.status === 401) return 'auth';
   return null;
 }
