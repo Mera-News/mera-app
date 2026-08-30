@@ -43,7 +43,7 @@ import {
 import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import logger from '@/lib/logger';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
-import { withRetry } from '@/lib/utils/retry';
+import { createCancellationError, withRetry } from '@/lib/utils/retry';
 import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
 import { reconcileTrackedStories } from './tracked-story-reconcile';
@@ -249,7 +249,7 @@ export async function stepFetchTopicIds(
   _userPersonaId: string,
   ctx: TaskContext,
 ): Promise<FetchTopicIdsResult> {
-  if (ctx.signal.aborted) throw new Error('aborted');
+  if (ctx.signal.aborted) throw createCancellationError();
 
   // P7e: close the sync-vs-migration race. On a fresh upgrade/login both
   // `feed-sync` and the one-time persona migration fire on app-foreground with
@@ -592,7 +592,7 @@ export async function stepDiff(
   result: FetchTopicIdsResult,
   ctx: TaskContext,
 ): Promise<DiffResult> {
-  if (ctx.signal.aborted) throw new Error('aborted');
+  if (ctx.signal.aborted) throw createCancellationError();
 
   const { serverArticleIds, articleToTopicTexts, personaMeta, freeTopicTexts } =
     result;
@@ -651,7 +651,7 @@ export async function stepHydratePersistEnqueue(
   ctx: TaskContext,
   opts: HydratePersistEnqueueOptions,
 ): Promise<HydratePersistEnqueueResult> {
-  if (ctx.signal.aborted) throw new Error('aborted');
+  if (ctx.signal.aborted) throw createCancellationError();
 
   const { missingIds, articleToTopicTexts, personaMeta } = diffResult;
   // Fail METERED, not free. A DiffResult that never went through the billing
@@ -1006,7 +1006,7 @@ export async function stepHydratePersistEnqueue(
 }
 
 export async function stepScore(ctx: TaskContext): Promise<number> {
-  if (ctx.signal.aborted) throw new Error('aborted');
+  if (ctx.signal.aborted) throw createCancellationError();
   const { runScoringPass } = await import('@/lib/services/SuggestionSyncService');
   return runScoringPass();
 }

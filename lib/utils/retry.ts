@@ -111,11 +111,11 @@ export async function withRetry<T>(
 ): Promise<T> {
   let delay = 100;
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    if (signal?.aborted) throw new Error('aborted');
+    if (signal?.aborted) throw createCancellationError();
     try {
       return await op();
     } catch (err) {
-      if (signal?.aborted) throw new Error('aborted');
+      if (signal?.aborted) throw createCancellationError();
       // Never retry a permanent client-side failure — rethrow immediately so
       // the caller (and scheduler) can treat it as terminal.
       if (isNonRetryableError(err)) throw err;
@@ -126,4 +126,30 @@ export async function withRetry<T>(
     }
   }
   throw new Error(`${tag} withRetry: unexpected exit`);
+}
+
+/**
+ * The one way to signal "this operation was CANCELLED", as opposed to "this
+ * operation failed".
+ *
+ * `name` is 'AbortError' so it matches the same predicate the Apollo error link
+ * already uses to keep a screen unmount from faking a server outage
+ * (`isCancellation` in lib/apollo-client.ts); `message` stays the literal
+ * 'aborted' that `lib/utils/transient-error.ts` substring-matches on, so both
+ * existing readers keep working unchanged.
+ *
+ * A cancellation is not a defect: nobody can act on "the user navigated away
+ * mid-request", and reporting it spends an issue on a non-event (Sentry
+ * MERA-APP-6W). `logger.captureException` drops these, which is why every abort
+ * throw in the app should come from here rather than `new Error('aborted')`.
+ */
+export function createCancellationError(): Error {
+  const err = new Error('aborted');
+  err.name = 'AbortError';
+  return err;
+}
+
+/** True when `error` represents a cancellation rather than a failure. */
+export function isCancellationError(error: unknown): boolean {
+  return (error as { name?: string } | undefined)?.name === 'AbortError';
 }

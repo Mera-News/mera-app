@@ -76,6 +76,14 @@ jest.mock('@/lib/article-service', () => ({
 
 jest.mock('@/lib/utils/retry', () => ({
   withRetry: (fn: any, signal: any) => mockWithRetry(fn, signal),
+  // Explicit factory: every export this module CALLS has to be listed here, or
+  // it is undefined at the call site and the failure names the mock's shape
+  // rather than the missing export.
+  createCancellationError: () => {
+    const err = new Error('aborted');
+    err.name = 'AbortError';
+    return err;
+  },
 }));
 
 jest.mock('@/lib/services/SuggestionSyncService', () => ({

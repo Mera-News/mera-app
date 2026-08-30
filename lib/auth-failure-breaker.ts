@@ -155,6 +155,15 @@ export function recordAuthFailure(): void {
         level: 'warning',
         tags: { source: 'auth-breaker', type: 'auth' },
         extra: { consecutiveFailures: failuresAtTrip, recheck: outcome },
+        // This message is emitted from a .then() callback, so its stack is
+        // whatever async frames happened to be live at the time. Sentry groups
+        // captureMessage on that stack, which split ONE recurring event across
+        // four issues (MERA-APP-6J / 5P / 65 / 6R), one of them attributed to
+        // persistFeedMetadata — a function that has nothing to do with auth.
+        // The message IS the identity here; pin it so the breaker keeps
+        // producing exactly one issue, which is the whole point of a breaker
+        // that trips once.
+        fingerprint: ['auth-breaker-tripped'],
       });
       pauseFeedSync();
     });

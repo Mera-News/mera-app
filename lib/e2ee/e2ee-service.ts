@@ -27,6 +27,27 @@ import { withRetry } from '../utils/retry';
 import { getCachedAttestation, setCachedAttestation } from './e2ee-cache';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 
+/**
+ * A NEAR attestation HTTP failure, carrying the status as a FIELD rather than
+ * only inside the message.
+ *
+ * `isUnauthenticatedError` (lib/utils/retry.ts) reads `statusCode` /
+ * `response.status`; a plain `new Error("... (401): ...")` exposes neither, so
+ * the app's 401 rule could not see these at all and a dead session reported a
+ * second, separate Sentry issue from here (MERA-APP-18: 2726 events,
+ * MERA-APP-23). The status is still interpolated into the message so existing
+ * log readers and the e2ee tests that match /NEAR attestation failed \(403\)/
+ * keep working.
+ */
+class NearAttestationError extends Error {
+  readonly statusCode: number;
+  constructor(status: number, body: string) {
+    super(`NEAR attestation failed (${status}): ${body.slice(0, 200)}`);
+    this.name = 'NearAttestationError';
+    this.statusCode = status;
+  }
+}
+
 const TAG = '[E2EE]';
 
 /** Signing/encryption algorithm family, keyed off the attestation key length.
@@ -230,7 +251,7 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
       const r = await fetchWithTimeout(url, { headers });
       if (r.status >= 500) {
         const body = await r.text().catch(() => '');
-        throw new Error(`NEAR attestation failed (${r.status}): ${body.slice(0, 200)}`);
+        throw new NearAttestationError(r.status, body);
       }
       return r;
     },
@@ -240,7 +261,7 @@ export async function fetchModelPublicKey(model: string): Promise<ModelAttestati
   );
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`NEAR attestation failed (${res.status}): ${body.slice(0, 200)}`);
+    throw new NearAttestationError(res.status, body);
   }
   const data = (await res.json()) as Record<string, unknown>;
   const mas = data.model_attestations as Record<string, unknown>[] | undefined;
@@ -354,7 +375,7 @@ export async function fetchAttestationForVerification(
   const res = await fetchWithTimeout(url, { headers });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`NEAR attestation failed (${res.status}): ${body.slice(0, 200)}`);
+    throw new NearAttestationError(res.status, body);
   }
   const data = (await res.json()) as Record<string, unknown>;
   const mas = data.model_attestations as RawModelAttestation[] | undefined;

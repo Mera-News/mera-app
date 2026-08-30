@@ -297,3 +297,96 @@ describe('logger.withErrorCapture', () => {
     expect(mockCaptureException).not.toHaveBeenCalled();
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THE 401 RULE AND THE CANCELLATION RULE
+//
+// These live in logger.captureException rather than at each catch site, because
+// the per-site version silently covered only 3 of ~8 sites and a single dead
+// session shipped five separate Sentry issues (MERA-APP-3P/18/23/6Q + the
+// breaker's own trip). Each case below is one of those issue shapes.
+// ─────────────────────────────────────────────────────────────────────────────
+describe('logger.captureException suppression rules', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  function authFailureCount(): number {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const breaker = require('../auth-failure-breaker') as typeof import('../auth-failure-breaker');
+    return breaker._getBreakerState().consecutiveFailures;
+  }
+
+  function resetBreaker(): void {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const breaker = require('../auth-failure-breaker') as typeof import('../auth-failure-breaker');
+    breaker._resetForTests();
+  }
+
+  it('does not report a network 401 and feeds the auth breaker instead', () => {
+    resetBreaker();
+    const before = authFailureCount();
+    // The shape account-service sees: Apollo's ServerError (MERA-APP-3P).
+    const err = Object.assign(new Error('Response not successful: Received status code 401'), {
+      statusCode: 401,
+    });
+
+    logger.captureException(err, { tags: { service: 'account-service' } });
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
+    expect(mockAddBreadcrumb).toHaveBeenCalled();
+    expect(authFailureCount()).toBe(before + 1);
+  });
+
+  it('does not report a NEAR attestation 401 (status carried as a field, not just in the message)', () => {
+    resetBreaker();
+    // Before this rule the status lived only inside the message string, so no
+    // predicate could see it — that is why MERA-APP-18 reached 2726 events.
+    const err = Object.assign(
+      new Error('NEAR attestation failed (401): {"error":"Unauthorized"}'),
+      { statusCode: 401 },
+    );
+
+    logger.captureException(err, { tags: { service: 'e2ee-service' } });
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
+  });
+
+  it('drops a cancellation outright without touching the auth breaker', () => {
+    resetBreaker();
+    const before = authFailureCount();
+    // createCancellationError's shape (MERA-APP-6W).
+    const err = Object.assign(new Error('aborted'), { name: 'AbortError' });
+
+    logger.captureException(err);
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
+    expect(authFailureCount()).toBe(before);
+  });
+
+  it('still reports every other error, including a 500', () => {
+    resetBreaker();
+    const err = Object.assign(new Error('server exploded'), { statusCode: 500 });
+
+    logger.captureException(err, { tags: { service: 'account-service' } });
+
+    expect(mockCaptureException).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('logger.captureMessage fingerprint', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  // The option was accepted by the type and then dropped, so captureMessage
+  // grouped on its (async, unstable) stack — splitting the single string
+  // 'Auth circuit breaker tripped' across MERA-APP-6J/5P/65/6R.
+  it('forwards fingerprint to Sentry so a message groups on identity, not stack', () => {
+    logger.captureMessage('Auth circuit breaker tripped', {
+      level: 'warning',
+      fingerprint: ['auth-breaker-tripped'],
+    });
+
+    expect(mockCaptureMessage).toHaveBeenCalledWith(
+      'Auth circuit breaker tripped',
+      expect.objectContaining({ fingerprint: ['auth-breaker-tripped'] }),
+    );
+  });
+});
