@@ -328,8 +328,15 @@ export async function sendInferenceRequest(args: {
     // Was logger.warn — that's only a breadcrumb, so the failure stayed
     // silent and the only Sentry signal was the 30s empty-feed watchdog.
     // Surface as an exception so the *source* of a stalled cycle is loud.
+    // `statusCode` as a FIELD, not only interpolated into the message: the
+    // app's 401 rule (logger.captureException) reads the status off the error
+    // object, and an Error whose status exists only in its text is invisible to
+    // it — which is how a dead session kept reporting from here as well as from
+    // the auth breaker (MERA-APP-6Q).
     logger.captureException(
-      new Error(`${TAG} submit failed ${res.status}`),
+      Object.assign(new Error(`${TAG} submit failed ${res.status}`), {
+        statusCode: res.status,
+      }),
       {
         tags: { service: 'submitInferenceJob', status: String(res.status) },
         extra: { url: JOBS_API, status: res.status, body: text.slice(0, 500) },

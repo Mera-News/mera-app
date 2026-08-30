@@ -41,6 +41,7 @@ interface CaptureExceptionOptions {
 // time. Failing open (reporting the event) is the safe direction on any throw.
 function classifySuppression(
   error: Error,
+  options: CaptureExceptionOptions,
 ): 'auth' | 'cancelled' | null {
   try {
     const { isUnauthenticatedError, isCancellationError } =
@@ -50,6 +51,13 @@ function classifySuppression(
   } catch {
     // Predicate unavailable (test harness, partial module graph) — report it.
   }
+  // A hand-built `new Error(\`... failed ${res.status}\`)` carries its status in
+  // the TEXT, where no predicate can reach it — that shape is what kept
+  // e2ee-service and submitInferenceJob reporting dead sessions after the rule
+  // existed. Both now attach `statusCode` to the error, but the status is also
+  // routinely passed here as a tag or extra, so honour that too rather than
+  // depending on every future call site remembering the field.
+  if (options.tags?.status === '401' || options.extra?.status === 401) return 'auth';
   return null;
 }
 
@@ -80,7 +88,7 @@ const logger = {
     // See the block comment above classifySuppression. Runs BEFORE the __DEV__
     // console log so a suppressed event is quiet in development too — otherwise
     // a red console line would keep suggesting these are still being reported.
-    const suppression = classifySuppression(errorObject);
+    const suppression = classifySuppression(errorObject, options);
     if (suppression === 'cancelled') return '';
     if (suppression === 'auth') {
       logger.addBreadcrumb(

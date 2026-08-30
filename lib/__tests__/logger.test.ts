@@ -362,6 +362,18 @@ describe('logger.captureException suppression rules', () => {
     expect(authFailureCount()).toBe(before);
   });
 
+  it('suppresses a hand-built error whose status is only a tag', () => {
+    resetBreaker();
+    // submitInferenceJob's shape (MERA-APP-6Q): the status is interpolated into
+    // the message and passed as a tag, where no error-shape predicate reaches it.
+    logger.captureException(new Error('[submitInferenceJob] submit failed 401'), {
+      tags: { service: 'submitInferenceJob', status: '401' },
+      extra: { status: 401 },
+    });
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
+  });
+
   it('still reports every other error, including a 500', () => {
     resetBreaker();
     const err = Object.assign(new Error('server exploded'), { statusCode: 500 });
