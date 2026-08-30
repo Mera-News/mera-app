@@ -1805,6 +1805,34 @@ describe('persistAndLinkV2Suggestions', () => {
     expect(col.prepareCreate).toHaveBeenCalledTimes(1);
   });
 
+  // MERA-APP-6K. The hydration query returns one row per (article, matched
+  // topic), so an article matching two topics arrives twice. Both copies missed
+  // the existing-row check and the same id was prepareCreate'd twice into one
+  // batch, which SQLite rejects wholesale — "sqlite error 1555 (UNIQUE
+  // constraint failed: article_suggestions.id)" — discarding every insert in
+  // that sync, not just the duplicate.
+  it('inserts a duplicated article id exactly once', async () => {
+    db._setRows('article_suggestions', []);
+    db._setRows('article_suggestion_facts', []);
+    mockGetFacts.mockResolvedValueOnce([]);
+
+    const article = makeArticleWithClusters({ _id: 'art-dupe' });
+    const col = db._collections['article_suggestions'];
+    col.prepareCreate = jest.fn((fn: (r: any) => void) => {
+      const rec = makeRawRecord('art-dupe');
+      fn(rec);
+      return rec;
+    });
+
+    const result = await persistAndLinkV2Suggestions(
+      [article, { ...article }],
+      new Map([['art-dupe', ['berlin']]]),
+    );
+
+    expect(col.prepareCreate).toHaveBeenCalledTimes(1);
+    expect(result.insertedCount).toBe(1);
+  });
+
   it('links facts that match article topic texts', async () => {
     db._setRows('article_suggestions', []);
     mockGetFacts.mockResolvedValueOnce([

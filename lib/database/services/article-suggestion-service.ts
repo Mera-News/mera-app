@@ -1912,11 +1912,38 @@ export async function persistAndLinkV2Suggestions(
 ): Promise<{ insertedCount: number; linkedCount: number }> {
   if (fetched.length === 0) return { insertedCount: 0, linkedCount: 0 };
 
+  // Dedupe by article id BEFORE anything else. The hydration query returns one
+  // row per (article, matched topic), so an article matching two topics — or
+  // sitting in two clusters — arrives twice in `fetched`. Both copies then
+  // missed the existing-row check identically and the SAME id was
+  // prepareCreate'd twice into one batch, which SQLite rejects wholesale:
+  // "sqlite error 1555 (UNIQUE constraint failed: article_suggestions.id)"
+  // (MERA-APP-6K). The batch is atomic, so one duplicated article discarded the
+  // entire sync's inserts, not just its own row.
+  //
+  // First copy wins: the per-article metadata below is derived from
+  // `personaMeta` maps keyed by article id, which are identical for every copy,
+  // so the copies are interchangeable.
+  //
+  // NOT fixed here: the existing-row read below still happens outside
+  // `database.write`, so two CONCURRENT callers (feed-sync racing a manual
+  // refresh) could both read "absent" and both insert. Closing that needs the
+  // read moved inside the writer, which the fact resolution between them makes
+  // non-trivial. The in-batch duplicate above is the deterministic cause and
+  // the one the reported failure matches.
+  const deduped: ArticleWithClusters[] = [];
+  const seenIds = new Set<string>();
+  for (const a of fetched) {
+    if (seenIds.has(a._id)) continue;
+    seenIds.add(a._id);
+    deduped.push(a);
+  }
+
   const existingRows = await articleSuggestionsCol
-    .query(Q.where('id', Q.oneOf(fetched.map((a) => a._id))))
+    .query(Q.where('id', Q.oneOf(deduped.map((a) => a._id))))
     .fetch();
   const existingById = new Map(existingRows.map((r) => [r.id, r]));
-  const toInsert = fetched.filter((a) => !existingById.has(a._id));
+  const toInsert = deduped.filter((a) => !existingById.has(a._id));
 
   // Updates to already-persisted rows: a changed cluster membership and/or the
   // P7e matched-topics backfill. Each field is optional and applied only when
@@ -1927,7 +1954,7 @@ export async function persistAndLinkV2Suggestions(
     nextClusterJson?: string;
     nextMatchedTopicsJson?: string;
   }[] = [];
-  for (const a of fetched) {
+  for (const a of deduped) {
     const row = existingById.get(a._id);
     if (!row) continue;
     const update: {

@@ -106,6 +106,32 @@ const GOOGLE_TRANSLATE_CODE_MAP: Record<string, string> = {
 };
 
 /**
+ * The language code to hand the NATIVE translator, which is not always the
+ * app's canonical code.
+ *
+ * Android's bridge resolves the tag through ML Kit's
+ * `TranslateLanguage.fromLanguageTag`, which only knows bare ISO-639-1 tags —
+ * it returns null for every script-suffixed code the app uses, and the module
+ * then throws `Invalid target language: zh-Hans` (MERA-APP-6H). The support
+ * check already reduced to the primary subtag
+ * (`ANDROID_TRANSLATION_SOURCE_CODES.has(primarySubtag(...))`, see
+ * canTranslateIntoLanguage) while the CALL passed the full tag, so Android
+ * answered "yes, I can translate into zh-Hans" and then rejected it — the
+ * asymmetry is the bug, and this makes both halves agree.
+ *
+ * ML Kit has one Chinese model (Simplified), so zh-Hant readers get Simplified
+ * output on Android rather than nothing. That is the platform's own limit.
+ *
+ * iOS is passed through unchanged: Apple's Translation framework takes BCP-47
+ * and needs the script subtag to tell the two Chinese scripts apart.
+ */
+function nativeTargetLangCode(targetLangCode: string): string {
+    if (Platform.OS !== 'android') return targetLangCode;
+    const canonical = canonicalizeLanguageCode(targetLangCode) ?? targetLangCode;
+    return primarySubtag(canonical);
+}
+
+/**
  * Build a Google Translate URL that opens the given article page translated
  * into the user's app language. `sl=auto` lets Google auto-detect the source
  * (avoids source-code mapping issues); `tl` is the app language mapped through
@@ -653,7 +679,12 @@ function callNativeWithTimeout(
 ): Promise<string | null> {
     const call = onTranslateTask({
         input: text,
-        targetLangCode,
+        // The app's canonical code is NOT always what the native translator
+        // accepts — see nativeTargetLangCode. Every other use of
+        // `targetLangCode` in this module (the block map, the verified set,
+        // the failure counters) deliberately keeps the canonical code, so the
+        // conversion happens here and nowhere else.
+        targetLangCode: nativeTargetLangCode(targetLangCode),
         sourceLangCode,
         // Required on Android: the Kotlin bridge rejects undefined
         // values for these keys. iOS ignores them.
