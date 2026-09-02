@@ -38,17 +38,10 @@
 // hidden for them. If you are re-adding a `processingMode` check here, check
 // first that you are not confusing the chat's claim picker with the server's
 // article check; they are different features now.
-//
-// FACT CHECK ENABLED — NEW. `factCheckEnabled` (Mera Protocol settings,
-// persisted as `mera_fact_check`, default on) used to be decorative: it
-// persisted and nothing read it. The tick, the panel and the article mirror all
-// honour it now. Checked here as well as at the call sites, matching how
-// entitlement is enforced in both places.
 
 import { hapticLight } from '../haptics';
 import { isChatLocked } from '../chat-tools/free-tier-gate';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
-import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { requestFactCheck } from './fact-check-graphql-client';
 import type { FactCheckKeepInput } from '../database/services/saved-article-suggestion-service';
 import type { ForYouSuggestion } from '../stores/for-you-store';

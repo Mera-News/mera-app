@@ -11,6 +11,7 @@
 const mockRequestFactCheck = jest.fn();
 const mockHapticLight = jest.fn();
 const mockOpenArticleFeedback = jest.fn();
+const mockExpand = jest.fn();
 
 jest.mock('../fact-check-graphql-client', () => ({
     requestFactCheck: (...args: unknown[]) => mockRequestFactCheck(...args),
@@ -26,6 +27,7 @@ jest.mock('../../stores/floating-chat-store', () => ({
     useFloatingChatStore: {
         getState: () => ({
             openArticleFeedback: (...args: unknown[]) => mockOpenArticleFeedback(...args),
+            expand: (...args: unknown[]) => mockExpand(...args),
         }),
     },
 }));
@@ -46,8 +48,13 @@ jest.mock('../../stores/mera-protocol-store', () => ({
 }));
 
 let mockAiAccess = 'entitled';
+// `serverTier` matters as much as the verdict: `isChatLocked()` refuses to act
+// on a 'locked' reading the SERVER has not confirmed, so a test that sets only
+// the verdict is describing a cold start, not a free-tier user.
+let mockServerTier: string | null = 'starter';
 jest.mock('../../stores/subscription-store', () => ({
     getAiAccess: () => mockAiAccess,
+    useSubscriptionStore: { getState: () => ({ serverTier: mockServerTier }) },
 }));
 
 import { requestArticleFactCheck } from '../request-article-fact-check';
@@ -114,23 +121,47 @@ describe('requestArticleFactCheck', () => {
         expect(mockHapticLight).not.toHaveBeenCalled();
     });
 
-    // ── The entitlement gate — KEPT ────────────────────────────────────────
-    // Both server resolvers sit behind SubscriptionGuard, so a locked tap could
-    // only ever produce an error. It used to be enforced for free by routing
-    // through the chat store; with the chat gone it has to be explicit.
+    // ── The entitlement gate ──────────────────────────────────────────────
+    // A locked tap must never reach the server: the ask is billable and starts
+    // a job. What CHANGED this wave is what the user gets instead. It used to
+    // be nothing at all, which read as a broken button; it is now the chat
+    // popup, where Mera explains that fact checks need a plan.
     describe('free-tier gate', () => {
-        it('no-ops when AI access is locked', () => {
+        beforeEach(() => {
             mockAiAccess = 'locked';
+            mockServerTier = 'none';
+        });
 
+        it('issues no server ask when locked', () => {
+            // `false` means "no billable ask was issued", NOT "nothing
+            // happened" — the popup below opens on this same path.
             expect(requestArticleFactCheck(article)).toBe(false);
             expect(mockRequestFactCheck).not.toHaveBeenCalled();
         });
 
-        it('does not even fire the haptic when locked — no partial affordance', () => {
-            mockAiAccess = 'locked';
+        it('opens the chat on the fact-check context instead of dead-ending', () => {
             requestArticleFactCheck(article);
 
-            expect(mockHapticLight).not.toHaveBeenCalled();
+            expect(mockExpand).toHaveBeenCalledWith({
+                kind: 'fact-check',
+                articleId: 'a1',
+                articleTitle: 'A headline',
+            });
+            // The tap is answered, so it gets its haptic. The old assertion
+            // here was the opposite, and was correct while the tap led
+            // nowhere.
+            expect(mockHapticLight).toHaveBeenCalled();
+        });
+
+        it('does NOT gate on an unconfirmed locked reading', () => {
+            // Cold start: RevenueCat has answered 'locked' from an empty cache
+            // but our server has not spoken. Refusing here would tell a paying
+            // subscriber their fact check needs a plan, on every launch.
+            mockServerTier = null;
+
+            expect(requestArticleFactCheck(article)).toBe(true);
+            expect(mockRequestFactCheck).toHaveBeenCalled();
+            expect(mockExpand).not.toHaveBeenCalled();
         });
     });
 

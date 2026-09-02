@@ -1,0 +1,283 @@
+{
+  "_comment": "free-tier-v2 wave: the chat popup now OPENS on the free tier and Mera explains the tier on the surface the user actually touched. 7 new keys under freeTier.chatIntro, one per chat surface, rendered as the intro pseudo-message by ChatSessionView. No collisions: freeTier.seePlans already exists in all 20 with the right label and is reused, not re-added. Input to _splice-fragments.mjs, PLUS one RETRANSLATED existing key, freeTier.chatBubble, which said \"I can't build your feed\" — false from this wave on, since the free tier keeps building the feed. Requires --allow-overwrite freeTier.chatBubble.",
+  "ar": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "متابعة القصص تحتاج إلى خطة. كانت Mera ستراقب هذه القصة وتخبرك عند أي تطور.",
+        "articleFeedback": "ضبط موجزك حسب ملاحظاتك يحتاج إلى خطة. موجزك يستمر في العمل على أي حال.",
+        "persona": "التحدث إلى Mera يحتاج إلى خطة. اهتماماتك وبياناتك تبقى على هذا الجهاز.",
+        "optimisationPlan": "المراجعة اليومية تحتاج إلى خطة. كانت Mera ستطالع موجزك كل يوم وتقترح ما يمكن تغييره.",
+        "tutorialHelp": "سؤال Mera عن التطبيق يحتاج إلى خطة. الأدلة في المساعدة تغطي معظم الأمر.",
+        "factCheck": "تدقيق الحقائق يحتاج إلى خطة. كانت Mera ستبحث عن ذلك وتعرض لك من نشره أيضًا.",
+        "default": "المحادثة تحتاج إلى خطة. موجزك يستمر في العمل."
+      },
+      "chatBubble": "كل ما أعرفه عنك يبقى على هذا الجهاز. في الخطة المجانية أواصل بناء موجزك من اثنين من اهتماماتك. المحادثة وتدقيق الحقائق والقصص المتابَعة تحتاج إلى خطة."
+    }
+  },
+  "de": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Verfolgte Storys benötigen einen Plan. Mera würde diese im Blick behalten und dir sagen, wenn sich etwas tut.",
+        "articleFeedback": "Deinen Feed anhand von Feedback anzupassen benötigt einen Plan. Dein Feed läuft so oder so weiter.",
+        "persona": "Mit Mera zu sprechen benötigt einen Plan. Deine Interessen und Fakten bleiben auf diesem Gerät.",
+        "optimisationPlan": "Die tägliche Übersicht benötigt einen Plan. Mera würde deinen Feed jeden Tag ansehen und Änderungen vorschlagen.",
+        "tutorialHelp": "Mera etwas über die App zu fragen benötigt einen Plan. Die Anleitungen in der Hilfe decken das meiste ab.",
+        "factCheck": "Faktenchecks benötigen einen Plan. Mera würde das nachschlagen und dir zeigen, wer sonst darüber berichtet hat.",
+        "default": "Der Chat benötigt einen Plan. Dein Feed läuft weiter."
+      },
+      "chatBubble": "Alles, was ich über dich weiß, bleibt auf diesem Gerät. Im kostenlosen Tarif baue ich deinen Feed weiter aus zwei deiner Interessen auf. Chat, Faktenchecks und verfolgte Storys benötigen einen Plan."
+    }
+  },
+  "en": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Followed stories need a plan. Mera would watch this one and tell you when it moves.",
+        "articleFeedback": "Tuning your feed from feedback needs a plan. Your feed keeps running either way.",
+        "persona": "Talking to Mera needs a plan. Your interests and facts stay on this device.",
+        "optimisationPlan": "The daily review needs a plan. Mera would look at your feed each day and suggest what to change.",
+        "tutorialHelp": "Asking Mera about the app needs a plan. The guides in Help cover most of it.",
+        "factCheck": "Fact checks need a plan. Mera would look this up and show you who else reported it.",
+        "default": "Chat needs a plan. Your feed keeps running."
+      },
+      "chatBubble": "Everything I know about you stays on this device. On the free plan I keep building your feed from two of your interests. Chat, fact checks and followed stories need a plan."
+    }
+  },
+  "es": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Seguir historias necesita un plan. Mera vigilaría esta y te avisaría cuando avance.",
+        "articleFeedback": "Ajustar tu feed a partir de tus comentarios necesita un plan. Tu feed sigue funcionando igualmente.",
+        "persona": "Hablar con Mera necesita un plan. Tus intereses y datos se quedan en este dispositivo.",
+        "optimisationPlan": "El repaso diario necesita un plan. Mera revisaría tu feed cada día y sugeriría qué cambiar.",
+        "tutorialHelp": "Preguntarle a Mera sobre la app necesita un plan. Las guías de Ayuda cubren casi todo.",
+        "factCheck": "Las verificaciones necesitan un plan. Mera lo buscaría y te mostraría quién más lo ha publicado.",
+        "default": "El chat necesita un plan. Tu feed sigue funcionando."
+      },
+      "chatBubble": "Todo lo que sé de ti se queda en este dispositivo. En el plan gratuito sigo construyendo tu feed a partir de dos de tus intereses. El chat, las verificaciones y las historias seguidas necesitan un plan."
+    }
+  },
+  "fr": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Le suivi des histoires nécessite un plan. Mera surveillerait celle-ci et vous préviendrait quand elle évolue.",
+        "articleFeedback": "Ajuster votre fil à partir de vos retours nécessite un plan. Votre fil continue de fonctionner dans tous les cas.",
+        "persona": "Parler à Mera nécessite un plan. Vos centres d'intérêt et vos informations restent sur cet appareil.",
+        "optimisationPlan": "Le bilan quotidien nécessite un plan. Mera examinerait votre fil chaque jour et suggérerait quoi changer.",
+        "tutorialHelp": "Poser des questions à Mera sur l'application nécessite un plan. Les guides de l'aide couvrent l'essentiel.",
+        "factCheck": "Les vérifications des faits nécessitent un plan. Mera ferait la recherche et vous montrerait qui d'autre en a parlé.",
+        "default": "Le chat nécessite un plan. Votre fil continue de fonctionner."
+      },
+      "chatBubble": "Tout ce que je sais de vous reste sur cet appareil. Avec l'offre gratuite, je continue à construire votre fil à partir de deux de vos centres d'intérêt. Le chat, les vérifications des faits et le suivi des histoires nécessitent un plan."
+    }
+  },
+  "hi": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "कहानियाँ फ़ॉलो करने के लिए योजना चाहिए। Mera इस कहानी पर नज़र रखती और आगे बढ़ने पर आपको बताती।",
+        "articleFeedback": "आपकी प्रतिक्रिया से फ़ीड को ढालने के लिए योजना चाहिए। आपकी फ़ीड वैसे भी चलती रहती है।",
+        "persona": "Mera से बात करने के लिए योजना चाहिए। आपकी रुचियाँ और जानकारी इसी डिवाइस पर रहती हैं।",
+        "optimisationPlan": "रोज़ की समीक्षा के लिए योजना चाहिए। Mera हर दिन आपकी फ़ीड देखती और बदलाव सुझाती।",
+        "tutorialHelp": "ऐप के बारे में Mera से पूछने के लिए योजना चाहिए। मदद में दी गई गाइड ज़्यादातर बातें बताती हैं।",
+        "factCheck": "तथ्य जाँच के लिए योजना चाहिए। Mera इसे खोजती और दिखाती कि और किसने यह ख़बर दी है।",
+        "default": "चैट के लिए योजना चाहिए। आपकी फ़ीड चलती रहती है।"
+      },
+      "chatBubble": "आपके बारे में मैं जो कुछ जानती हूँ, वह इसी डिवाइस पर रहता है। मुफ़्त योजना में मैं आपकी दो रुचियों से आपकी फ़ीड बनाती रहती हूँ। चैट, तथ्य जाँच और फ़ॉलो की गई कहानियों के लिए योजना चाहिए।"
+    }
+  },
+  "id": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Mengikuti cerita memerlukan paket. Mera akan memantau cerita ini dan memberi tahu Anda saat ada perkembangan.",
+        "articleFeedback": "Menyesuaikan feed Anda dari masukan memerlukan paket. Feed Anda tetap berjalan.",
+        "persona": "Berbicara dengan Mera memerlukan paket. Minat dan data Anda tetap di perangkat ini.",
+        "optimisationPlan": "Tinjauan harian memerlukan paket. Mera akan melihat feed Anda setiap hari dan menyarankan apa yang perlu diubah.",
+        "tutorialHelp": "Bertanya kepada Mera tentang aplikasi memerlukan paket. Panduan di Bantuan mencakup sebagian besar.",
+        "factCheck": "Pemeriksaan fakta memerlukan paket. Mera akan mencarinya dan menunjukkan siapa lagi yang memberitakannya.",
+        "default": "Obrolan memerlukan paket. Feed Anda tetap berjalan."
+      },
+      "chatBubble": "Semua yang saya ketahui tentang Anda tetap di perangkat ini. Pada paket gratis saya terus menyusun feed Anda dari dua minat Anda. Obrolan, pemeriksaan fakta, dan cerita yang diikuti memerlukan paket."
+    }
+  },
+  "it": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Seguire le storie richiede un piano. Mera terrebbe d'occhio questa e ti direbbe quando si muove.",
+        "articleFeedback": "Regolare il tuo feed in base ai feedback richiede un piano. Il tuo feed continua a funzionare comunque.",
+        "persona": "Parlare con Mera richiede un piano. I tuoi interessi e i tuoi dati restano su questo dispositivo.",
+        "optimisationPlan": "Il riepilogo quotidiano richiede un piano. Mera guarderebbe il tuo feed ogni giorno e suggerirebbe cosa cambiare.",
+        "tutorialHelp": "Chiedere a Mera informazioni sull'app richiede un piano. Le guide nella sezione Aiuto coprono quasi tutto.",
+        "factCheck": "Le verifiche dei fatti richiedono un piano. Mera farebbe la ricerca e ti mostrerebbe chi altro ne ha parlato.",
+        "default": "La chat richiede un piano. Il tuo feed continua a funzionare."
+      },
+      "chatBubble": "Tutto quello che so di te resta su questo dispositivo. Con il piano gratuito continuo a costruire il tuo feed a partire da due dei tuoi interessi. La chat, le verifiche dei fatti e le storie seguite richiedono un piano."
+    }
+  },
+  "ja": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "ストーリーのフォローはプランが必要です。Meraがこのストーリーを見守り、動きがあればお知らせします。",
+        "articleFeedback": "フィードバックからフィードを調整するにはプランが必要です。フィードはそのまま使えます。",
+        "persona": "Meraとの会話はプランが必要です。あなたの興味や情報はこの端末に残ります。",
+        "optimisationPlan": "毎日の振り返りはプランが必要です。Meraが毎日フィードを確認し、変更点を提案します。",
+        "tutorialHelp": "アプリについてMeraに質問するにはプランが必要です。ヘルプのガイドでほとんどの内容を確認できます。",
+        "factCheck": "ファクトチェックはプランが必要です。Meraが調べて、ほかにどこが報じているかをお見せします。",
+        "default": "チャットはプランが必要です。フィードはそのまま使えます。"
+      },
+      "chatBubble": "あなたについて知っていることはすべてこの端末に残ります。無料プランでも、あなたの興味2つからフィードを作り続けます。チャット、ファクトチェック、フォロー中のストーリーはプランが必要です。"
+    }
+  },
+  "ko": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "스토리 팔로우에는 플랜이 필요합니다. Mera가 이 스토리를 지켜보고 진전이 있으면 알려드립니다.",
+        "articleFeedback": "피드백으로 피드를 조정하려면 플랜이 필요합니다. 피드는 그대로 작동합니다.",
+        "persona": "Mera와의 대화에는 플랜이 필요합니다. 관심사와 정보는 이 기기에 남아 있습니다.",
+        "optimisationPlan": "일일 리뷰에는 플랜이 필요합니다. Mera가 매일 피드를 살펴보고 바꿀 점을 제안합니다.",
+        "tutorialHelp": "앱에 대해 Mera에게 물어보려면 플랜이 필요합니다. 도움말의 가이드가 대부분을 다룹니다.",
+        "factCheck": "팩트 체크에는 플랜이 필요합니다. Mera가 찾아보고 어디에서 또 보도했는지 보여드립니다.",
+        "default": "채팅에는 플랜이 필요합니다. 피드는 그대로 작동합니다."
+      },
+      "chatBubble": "당신에 대해 제가 아는 모든 것은 이 기기에 남아 있습니다. 무료 플랜에서도 관심사 두 가지로 피드를 계속 만들어 드립니다. 채팅, 팩트 체크, 팔로우한 스토리에는 플랜이 필요합니다."
+    }
+  },
+  "nl": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Verhalen volgen vereist een abonnement. Mera zou dit verhaal in de gaten houden en je laten weten wanneer er iets gebeurt.",
+        "articleFeedback": "Je feed bijstellen op basis van feedback vereist een abonnement. Je feed blijft hoe dan ook werken.",
+        "persona": "Met Mera praten vereist een abonnement. Je interesses en gegevens blijven op dit apparaat.",
+        "optimisationPlan": "Het dagelijkse overzicht vereist een abonnement. Mera zou je feed elke dag bekijken en voorstellen wat je kunt aanpassen.",
+        "tutorialHelp": "Mera iets over de app vragen vereist een abonnement. De handleidingen in Help behandelen het meeste.",
+        "factCheck": "Feitencontroles vereisen een abonnement. Mera zou dit opzoeken en je laten zien wie er nog meer over bericht heeft.",
+        "default": "Chatten vereist een abonnement. Je feed blijft werken."
+      },
+      "chatBubble": "Alles wat ik over je weet, blijft op dit apparaat. Met het gratis abonnement blijf ik je feed opbouwen uit twee van je interesses. Chatten, feitencontroles en gevolgde verhalen vereisen een abonnement."
+    }
+  },
+  "pl": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Śledzenie historii wymaga planu. Mera obserwowałaby tę historię i dawała znać, gdy coś się zmieni.",
+        "articleFeedback": "Dostrajanie kanału na podstawie opinii wymaga planu. Twój kanał i tak działa dalej.",
+        "persona": "Rozmowa z Merą wymaga planu. Twoje zainteresowania i dane zostają na tym urządzeniu.",
+        "optimisationPlan": "Codzienny przegląd wymaga planu. Mera codziennie sprawdzałaby twój kanał i proponowała zmiany.",
+        "tutorialHelp": "Pytanie Mery o aplikację wymaga planu. Poradniki w Pomocy obejmują większość tematów.",
+        "factCheck": "Sprawdzanie faktów wymaga planu. Mera wyszukałaby to i pokazała, kto jeszcze o tym pisał.",
+        "default": "Czat wymaga planu. Twój kanał działa dalej."
+      },
+      "chatBubble": "Wszystko, co o tobie wiem, zostaje na tym urządzeniu. W darmowym planie nadal buduję twój kanał na podstawie dwóch twoich zainteresowań. Czat, sprawdzanie faktów i śledzone historie wymagają planu."
+    }
+  },
+  "pt-BR": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Acompanhar histórias precisa de um plano. A Mera ficaria de olho nesta e avisaria quando houvesse novidades.",
+        "articleFeedback": "Ajustar seu feed a partir dos seus comentários precisa de um plano. Seu feed continua funcionando de todo jeito.",
+        "persona": "Falar com a Mera precisa de um plano. Seus interesses e informações ficam neste aparelho.",
+        "optimisationPlan": "A revisão diária precisa de um plano. A Mera olharia seu feed todo dia e sugeriria o que mudar.",
+        "tutorialHelp": "Perguntar à Mera sobre o app precisa de um plano. Os guias na Ajuda cobrem quase tudo.",
+        "factCheck": "As checagens de fatos precisam de um plano. A Mera pesquisaria isso e mostraria quem mais noticiou.",
+        "default": "O chat precisa de um plano. Seu feed continua funcionando."
+      },
+      "chatBubble": "Tudo o que sei sobre você fica neste aparelho. No plano gratuito eu continuo montando seu feed a partir de dois dos seus interesses. Chat, checagens de fatos e histórias acompanhadas precisam de um plano."
+    }
+  },
+  "ru": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Отслеживание историй доступно с планом. Mera следила бы за этой историей и сообщала о новых событиях.",
+        "articleFeedback": "Настройка ленты по вашим отзывам доступна с планом. Ваша лента продолжает работать в любом случае.",
+        "persona": "Общение с Mera доступно с планом. Ваши интересы и данные остаются на этом устройстве.",
+        "optimisationPlan": "Ежедневный обзор доступен с планом. Mera каждый день просматривала бы ленту и предлагала, что изменить.",
+        "tutorialHelp": "Вопросы к Mera о приложении доступны с планом. Руководства в разделе помощи охватывают почти всё.",
+        "factCheck": "Проверка фактов доступна с планом. Mera нашла бы источники и показала, кто ещё об этом писал.",
+        "default": "Чат доступен с планом. Ваша лента продолжает работать."
+      },
+      "chatBubble": "Всё, что я знаю о вас, остаётся на этом устройстве. На бесплатном плане я продолжаю собирать вашу ленту по двум вашим интересам. Чат, проверка фактов и отслеживаемые истории доступны с планом."
+    }
+  },
+  "th": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "การติดตามเรื่องราวต้องมีแพ็กเกจ Mera จะคอยติดตามเรื่องนี้และแจ้งคุณเมื่อมีความคืบหน้า",
+        "articleFeedback": "การปรับฟีดจากความคิดเห็นของคุณต้องมีแพ็กเกจ ฟีดของคุณยังทำงานตามปกติ",
+        "persona": "การพูดคุยกับ Mera ต้องมีแพ็กเกจ ความสนใจและข้อมูลของคุณยังอยู่บนอุปกรณ์นี้",
+        "optimisationPlan": "การสรุปประจำวันต้องมีแพ็กเกจ Mera จะดูฟีดของคุณทุกวันและแนะนำสิ่งที่ควรปรับ",
+        "tutorialHelp": "การถาม Mera เกี่ยวกับแอปต้องมีแพ็กเกจ คู่มือในหน้าช่วยเหลือครอบคลุมเกือบทั้งหมด",
+        "factCheck": "การตรวจสอบข้อเท็จจริงต้องมีแพ็กเกจ Mera จะค้นหาให้และแสดงว่ามีใครรายงานเรื่องนี้อีกบ้าง",
+        "default": "แชทต้องมีแพ็กเกจ ฟีดของคุณยังทำงานตามปกติ"
+      },
+      "chatBubble": "ทุกอย่างที่ฉันรู้เกี่ยวกับคุณยังอยู่บนอุปกรณ์นี้ ในแพ็กเกจฟรี ฉันยังสร้างฟีดให้คุณจากความสนใจสองอย่างของคุณ แชท การตรวจสอบข้อเท็จจริง และเรื่องราวที่ติดตามต้องมีแพ็กเกจ"
+    }
+  },
+  "tr": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Haber takibi bir plan gerektirir. Mera bunu izler ve geliştiğinde sana haber verirdi.",
+        "articleFeedback": "Geri bildirimlerinle akışını ayarlamak bir plan gerektirir. Akışın her durumda çalışmaya devam eder.",
+        "persona": "Mera ile konuşmak bir plan gerektirir. İlgi alanların ve bilgilerin bu cihazda kalır.",
+        "optimisationPlan": "Günlük değerlendirme bir plan gerektirir. Mera her gün akışına bakar ve neyi değiştireceğini önerirdi.",
+        "tutorialHelp": "Mera'ya uygulamayı sormak bir plan gerektirir. Yardım bölümündeki rehberler çoğunu kapsıyor.",
+        "factCheck": "Doğruluk kontrolleri bir plan gerektirir. Mera bunu araştırır ve başka kimlerin haber yaptığını gösterirdi.",
+        "default": "Sohbet bir plan gerektirir. Akışın çalışmaya devam eder."
+      },
+      "chatBubble": "Senin hakkında bildiğim her şey bu cihazda kalır. Ücretsiz planda ilgi alanlarından ikisini kullanarak akışını oluşturmaya devam ediyorum. Sohbet, doğruluk kontrolleri ve takip edilen haberler bir plan gerektirir."
+    }
+  },
+  "uk": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Відстеження історій доступне з планом. Mera стежила б за цією історією та повідомляла про новини.",
+        "articleFeedback": "Налаштування стрічки за вашими відгуками доступне з планом. Ваша стрічка працює й далі.",
+        "persona": "Спілкування з Mera доступне з планом. Ваші інтереси та дані лишаються на цьому пристрої.",
+        "optimisationPlan": "Щоденний огляд доступний з планом. Mera щодня переглядала б вашу стрічку й пропонувала, що змінити.",
+        "tutorialHelp": "Запитання до Mera про застосунок доступні з планом. Посібники в довідці охоплюють майже все.",
+        "factCheck": "Перевірка фактів доступна з планом. Mera знайшла б джерела та показала, хто ще про це писав.",
+        "default": "Чат доступний з планом. Ваша стрічка працює й далі."
+      },
+      "chatBubble": "Усе, що я знаю про вас, лишається на цьому пристрої. На безкоштовному плані я далі збираю вашу стрічку за двома вашими інтересами. Чат, перевірка фактів і відстежувані історії доступні з планом."
+    }
+  },
+  "vi": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "Theo dõi câu chuyện cần có gói dịch vụ. Mera sẽ theo dõi câu chuyện này và báo cho bạn khi có diễn biến mới.",
+        "articleFeedback": "Điều chỉnh bảng tin từ phản hồi của bạn cần có gói dịch vụ. Bảng tin của bạn vẫn hoạt động bình thường.",
+        "persona": "Trò chuyện với Mera cần có gói dịch vụ. Sở thích và thông tin của bạn vẫn nằm trên thiết bị này.",
+        "optimisationPlan": "Bản đánh giá hằng ngày cần có gói dịch vụ. Mera sẽ xem bảng tin của bạn mỗi ngày và đề xuất điều cần thay đổi.",
+        "tutorialHelp": "Hỏi Mera về ứng dụng cần có gói dịch vụ. Các hướng dẫn trong phần Trợ giúp bao quát hầu hết.",
+        "factCheck": "Kiểm chứng thông tin cần có gói dịch vụ. Mera sẽ tra cứu và cho bạn biết những ai khác đã đưa tin.",
+        "default": "Trò chuyện cần có gói dịch vụ. Bảng tin của bạn vẫn hoạt động."
+      },
+      "chatBubble": "Mọi điều tôi biết về bạn đều nằm trên thiết bị này. Ở gói miễn phí, tôi vẫn xây dựng bảng tin của bạn từ hai mối quan tâm của bạn. Trò chuyện, kiểm chứng thông tin và câu chuyện đang theo dõi cần có gói dịch vụ."
+    }
+  },
+  "zh-CN": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "追踪报道需要订阅计划。Mera 会盯着这条报道，有进展时告诉你。",
+        "articleFeedback": "根据你的反馈调整信息流需要订阅计划。你的信息流照常运行。",
+        "persona": "和 Mera 聊天需要订阅计划。你的兴趣和资料都留在这台设备上。",
+        "optimisationPlan": "每日回顾需要订阅计划。Mera 会每天查看你的信息流，并建议可以调整的地方。",
+        "tutorialHelp": "向 Mera 咨询应用相关问题需要订阅计划。帮助中的指南涵盖了大部分内容。",
+        "factCheck": "事实核查需要订阅计划。Mera 会去查证，并告诉你还有谁报道过。",
+        "default": "聊天需要订阅计划。你的信息流照常运行。"
+      },
+      "chatBubble": "我了解你的一切都留在这台设备上。在免费计划下，我会继续根据你的两个兴趣来构建信息流。聊天、事实核查和追踪报道需要订阅计划。"
+    }
+  },
+  "zh-TW": {
+    "freeTier": {
+      "chatIntro": {
+        "followStory": "追蹤報導需要訂閱方案。Mera 會盯著這則報導，有進展時通知你。",
+        "articleFeedback": "依你的回饋調整資訊流需要訂閱方案。你的資訊流照常運作。",
+        "persona": "和 Mera 聊天需要訂閱方案。你的興趣和資料都留在這台裝置上。",
+        "optimisationPlan": "每日回顧需要訂閱方案。Mera 會每天查看你的資訊流，並建議可以調整的地方。",
+        "tutorialHelp": "向 Mera 詢問應用程式的問題需要訂閱方案。說明中的指南涵蓋了大部分內容。",
+        "factCheck": "事實查核需要訂閱方案。Mera 會去查證，並告訴你還有誰報導過。",
+        "default": "聊天需要訂閱方案。你的資訊流照常運作。"
+      },
+      "chatBubble": "我了解你的一切都留在這台裝置上。在免費方案下，我會繼續依你的兩個興趣建立資訊流。聊天、事實查核和追蹤報導需要訂閱方案。"
+    }
+  }
+}
