@@ -116,7 +116,7 @@ export default function ChatSessionView({
   // ambient condition closes before topic generation has finished.
   const chatLocked = isChatLocked() && !isOnboardingRunActive(onboardingRun);
   const introText = chatLocked
-    ? t(openerKeyForContext(context) as 'personaChat.introMessage')
+    ? t(openerKeyForContext(context))
     : context.kind === 'optimisation-plan'
       ? // The pinned plan card IS the content — no persona intro line beneath it.
         null
