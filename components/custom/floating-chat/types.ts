@@ -120,4 +120,14 @@ export interface ChatThreadProps {
   isRefreshingBlockStatus: boolean;
   onSend: (text: string) => void;
   isInputDisabled: boolean;
+  /**
+   * Mera News Free. Replaces the whole composer row with a single full-width
+   * "See plans" button — NOT a disabled text field. There is deliberately
+   * nothing to focus and nothing to type into, so the popup offers exactly one
+   * action. Also suppresses the starter chips and the two AI notices, which
+   * otherwise render in this state and describe a chat the user cannot use.
+   */
+  freeTierLocked: boolean;
+  /** Opens the paywall from the free-tier composer slot. */
+  onSeePlans: () => void;
 }

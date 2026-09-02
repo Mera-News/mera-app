@@ -25,6 +25,7 @@ import { generateTopicsForFactsBatch } from '@/lib/news-harness/persona-manageme
 import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import { syncLlmTopicsForFact } from '../database/services/topic-service';
+import { isChatLocked } from './free-tier-gate';
 
 // MAX_FACT_LENGTH's canonical home is the harness fact-rules module; re-exported
 // here so existing importers of it from tool-handlers keep working.
@@ -218,6 +219,13 @@ export async function startTopicGeneration(
 ): Promise<void> {
   if (savedFactEntries.length === 0) return;
 
+  // Mera News Free: topic generation is an LLM call, so it is paid. This is
+  // the single entry for BOTH engines (cloud batch below, on-device queue job
+  // in the else branch), so one return closes both. The queue's own handler is
+  // guarded separately — a job enqueued before this shipped is still in the
+  // persisted `inference_jobs` table and would otherwise drain on next boot.
+  if (isChatLocked()) return;
+
   const useCloud =
     useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
 
@@ -305,6 +313,10 @@ export async function retryTopicGeneration(
   factStatement: string,
 ): Promise<void> {
   if (inFlightCloudTopicGen.has(factId)) return; // fast path: already running
+  // Separate entry point (TopicPlanCard's "try again"), so it needs its own
+  // guard: it clears the error marker and calls through, which would mint the
+  // topics the main path just refused.
+  if (isChatLocked()) return;
   try {
     await clearTopicGenError(factId);
   } catch (err: unknown) {

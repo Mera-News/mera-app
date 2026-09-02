@@ -38,15 +38,24 @@ const FloatingChatHost: React.FC = () => {
     // 'entitled' costs a subscriber nothing (still fires the moment
     // entitlement resolves) and keeps a locked user's token request off the
     // wire entirely.
+    //
+    // KEEP THE `!== 'entitled'` POLARITY. The host below now renders in EVERY
+    // state including 'locked', so this line is the only thing keeping a
+    // free-tier user's attestation + JWT request off the wire. `aiAccess`
+    // starts 'unknown' for every user, so the intuitive-looking
+    // `!== 'locked'` would prewarm during that window and 403 for a free-tier
+    // user. There is deliberately no matching early return below any more;
+    // the two are not meant to agree.
     useEffect(() => {
         if (aiAccess !== 'entitled') return;
         prewarmCloudChat();
     }, [aiAccess]);
 
-    // Mera News Free: no chat surface anywhere. `'unknown'` (cold-start, not
-    // yet heard from RevenueCat/server) must fall through to rendering — only
-    // a confirmed 'locked' hides the host.
-    if (aiAccess === 'locked') return null;
+    // Mera News Free renders the host too. It used to return null, which is
+    // why a locked user's tap on any chat entry point did nothing at all —
+    // there was no popover in the tree to open. The popup is now how the free
+    // tier is explained (ChatSessionView picks a per-surface opener and
+    // refuses to dispatch a turn), so it has to exist.
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="box-none">

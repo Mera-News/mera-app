@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { getAiAccess } from './subscription-store';
+import { isChatLocked } from '../chat-tools/free-tier-gate';
 import type { StagedProposal } from '../llm/types';
 import type { QuickFactCheckAnswer } from '../chat-tools/quick-fact-check-handler';
 import type { TrackFeedbackSubject } from '../news-harness/core/types';
@@ -70,6 +70,11 @@ export type ChatContext =
     // the FollowStoryAgent scopes the story from free text and stages the same
     // proposeTrack scope pills the article surface stages.
     | { kind: 'follow-story' }
+    // Free-tier only: the article fact-check tick, which for an entitled user
+    // lodges a SERVER ask and never opens chat at all. A locked user gets the
+    // popup instead of the silent no-op that used to be their whole experience
+    // of tapping it. No entitled path constructs this.
+    | { kind: 'fact-check'; articleId: string; articleTitle?: string }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {
@@ -248,12 +253,12 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     ...initialState,
 
     expand: (context) => {
-        // Mera News Free: chat must not open anywhere in the app. This is the
-        // single chokepoint every call site (article actions, track button,
-        // notifications, ...) funnels through, so gating here covers all of
-        // them without touching each call site. A silent no-op is correct —
-        // callers are fire-and-forget and never await/branch on this call.
-        if (getAiAccess() === 'locked') return;
+        // Mera News Free USED to no-op here, so a locked user's tap did
+        // nothing at all. It now OPENS: the popup is how the free tier is
+        // explained, in Mera's own voice, on the surface the user actually
+        // touched. Everything that made opening unsafe is gated deeper —
+        // ChatSessionView refuses to dispatch a turn and mounts no engine — so
+        // there is nothing left for this chokepoint to protect.
         set((state) => {
             // Switching to a different context must start a fresh thread so a
             // stale persona chat never bleeds into an article-feedback session.
@@ -282,11 +287,19 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     },
 
     openArticleFeedback: (context, initialMessage) => {
-        // Same free-tier chokepoint as `expand` above.
-        if (getAiAccess() === 'locked') return;
+        // Opens on the free tier too (see `expand`), with ONE difference: the
+        // seeded message is DROPPED. `pendingInitialMessage` auto-sends a user
+        // turn on mount, so keeping it would render a user bubble that can
+        // never be answered — and, before the send guard existed, would have
+        // spent a model call to produce a refusal. The opener says the right
+        // thing without it.
+        // `isChatLocked()`, not `getAiAccess()`: this must FAIL OPEN. A bare
+        // 'locked' read is true on every cold start before the server answers,
+        // which would silently swallow a paying user's thumbs-down message.
+        const locked = isChatLocked();
         set(() => ({
             context,
-            pendingInitialMessage: initialMessage,
+            pendingInitialMessage: locked ? null : initialMessage,
             isExpanded: true,
             proposal: null,
             quickFactChecks: [],
@@ -302,10 +315,8 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     },
 
     openOptimisationPlan: () => {
-        // Same chokepoint: this opens the same chat popover as expand/
-        // openArticleFeedback (just pre-staged on the plan-card context), so a
-        // free-tier user must not be able to reach it either.
-        if (getAiAccess() === 'locked') return;
+        // Opens on the free tier too (see `expand`); the plan card itself
+        // loads nothing for a locked user and the opener explains why.
         set(() => ({
             // Fresh thread showing only the plan card (no auto-send). Null id is
             // the "create a fresh conversation" signal MeraChatSession watches.

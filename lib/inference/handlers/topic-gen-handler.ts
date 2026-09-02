@@ -14,6 +14,7 @@ import { syncLlmTopicsForFact } from '../../database/services/topic-service';
 import { useFloatingChatStore } from '../../stores/floating-chat-store';
 import logger from '../../logger';
 import type { Fact } from '../../mera-protocol-toolkit/types';
+import { isChatLocked } from '@/lib/chat-tools/free-tier-gate';
 
 export interface TopicGenPayload {
   factId: string;
@@ -53,6 +54,16 @@ export function buildTopicGenContext(
 export async function handleTopicGenJob(
   payload: TopicGenPayload,
 ): Promise<TopicGenResult> {
+  // Mera News Free. Guarding the ENQUEUE site is not enough: `inference_jobs`
+  // is a persisted table, so a topic_gen job queued before the gate shipped
+  // outlives it and would drain here on the next boot, minting topics for a
+  // user the gate now refuses. Returning an empty result COMPLETES the job so
+  // it leaves the queue, rather than throwing and leaving it to retry forever.
+  if (isChatLocked()) {
+    logger.debug('[topic-gen] skipped: free tier', { factId: payload.factId });
+    return { topics: [] };
+  }
+
   const allFacts = await getFacts();
   const { userLocation, otherFacts } = buildTopicGenContext(allFacts, payload.factId);
 
