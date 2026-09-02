@@ -195,6 +195,60 @@ describe('fetchModelPublicKey', () => {
     expect(mockSetCachedAttestation).toHaveBeenCalledWith('test-model', result);
   });
 
+  // MERA-APP-71. The 30-minute cache is only written once a fetch RESOLVES, so
+  // on a cold cache every concurrent caller started its own request —
+  // prewarmCloudChat alone fires three in one Promise.allSettled, and the
+  // scoring pipeline adds one per batch submit. The gateway's throttler
+  // answered with ThrottlerException: Too Many Requests and the 429 failed a
+  // scoring batch.
+  it('collapses concurrent cold-cache callers onto ONE request', async () => {
+    const { publicKeyHex } = makeModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+
+    const [a, b, c] = await Promise.all([
+      fetchModelPublicKey('test-model'),
+      fetchModelPublicKey('test-model'),
+      fetchModelPublicKey('test-model'),
+    ]);
+
+    expect(mockGlobalFetch).toHaveBeenCalledTimes(1);
+    expect(a).toBe(b);
+    expect(b).toBe(c);
+  });
+
+  it('does not collapse DIFFERENT models onto one request', async () => {
+    const { publicKeyHex } = makeModelKeyHex();
+    mockGlobalFetch.mockResolvedValue(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+
+    await Promise.all([
+      fetchModelPublicKey('model-a'),
+      fetchModelPublicKey('model-b'),
+    ]);
+
+    expect(mockGlobalFetch).toHaveBeenCalledTimes(2);
+  });
+
+  // The in-flight entry is cleared in a `finally`, so a throttled or otherwise
+  // failed attempt must not poison the next caller — otherwise one 429 would
+  // wedge attestation for the rest of the session.
+  it('retries after a failed in-flight fetch rather than caching the rejection', async () => {
+    const { publicKeyHex } = makeModelKeyHex();
+    mockGlobalFetch.mockResolvedValueOnce(makeResponse(429, 'ThrottlerException'));
+
+    await expect(fetchModelPublicKey('test-model')).rejects.toThrow(/429/);
+
+    mockGlobalFetch.mockResolvedValueOnce(
+      makeResponse(200, makeAttestationBody(publicKeyHex)),
+    );
+    const result = await fetchModelPublicKey('test-model');
+
+    expect(result.publicKey).toBe(publicKeyHex);
+  });
+
   it('includes Authorization header when JWT is available', async () => {
     const { publicKeyHex } = makeModelKeyHex();
     mockGlobalFetch.mockResolvedValueOnce(

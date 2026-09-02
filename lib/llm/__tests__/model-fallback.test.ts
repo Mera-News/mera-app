@@ -1,16 +1,23 @@
 // Tests for lib/llm/model-fallback.ts — session-scoped primary→fallback switch.
-// Pure module; only the logger is mocked (the real one pulls in Sentry).
+// The logger is mocked (the real one pulls in Sentry) and so is the network
+// store, whose real module reaches NetInfo.
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
     captureMessage: jest.fn(),
     captureException: jest.fn(),
+    addBreadcrumb: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
     info: jest.fn(),
   },
+}));
+
+let mockIsConnected = true;
+jest.mock('@/lib/stores/network-store', () => ({
+  useNetworkStore: { getState: () => ({ isConnected: mockIsConnected }) },
 }));
 
 import {
@@ -227,5 +234,61 @@ describe('model-fallback', () => {
       expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
       expect(resolveModel(SMALL_MODEL)).toBe(SMALL_MODEL);
     });
+  });
+});
+
+
+// MERA-APP-6Y. cloudComplete only forwards TIMEOUT-class failures here, but an
+// offline device on a stalled socket produces a timeout too — so a backgrounded
+// phone with no link concluded the NEAR primary was down and demoted the whole
+// session to the fallback. Engagement is sticky and once-per-session, so one
+// tunnel cost every later call.
+describe('reportModelFailure connectivity gate', () => {
+  beforeEach(() => {
+    __resetForTests();
+    jest.clearAllMocks();
+    mockIsConnected = true;
+  });
+
+  afterEach(() => {
+    mockIsConnected = true;
+  });
+
+  it('does not engage the fallback while the device is offline', () => {
+    mockIsConnected = false;
+
+    reportModelFailure(BIG_MODEL);
+
+    expect(isFallbackEngaged(BIG_MODEL)).toBe(false);
+    expect(resolveModel(BIG_MODEL)).toBe(BIG_MODEL);
+    expect(logger.captureMessage).not.toHaveBeenCalled();
+    expect(logger.addBreadcrumb).toHaveBeenCalledWith(
+      expect.stringContaining('device offline'),
+      'model-fallback',
+      expect.objectContaining({ model: BIG_MODEL }),
+      'info',
+    );
+  });
+
+  it('still engages once the device is back online', () => {
+    mockIsConnected = false;
+    reportModelFailure(BIG_MODEL);
+    expect(isFallbackEngaged(BIG_MODEL)).toBe(false);
+
+    mockIsConnected = true;
+    reportModelFailure(BIG_MODEL);
+
+    expect(isFallbackEngaged(BIG_MODEL)).toBe(true);
+    expect(resolveModel(BIG_MODEL)).toBe(MODEL_FALLBACKS[BIG_MODEL]);
+  });
+
+  // isConnected is seeded optimistically true, so an unknown connectivity state
+  // must still report — erring toward a visible incident, not a silent one.
+  it('engages when connectivity is unknown-but-optimistic', () => {
+    mockIsConnected = true;
+
+    reportModelFailure(SMALL_MODEL);
+
+    expect(isFallbackEngaged(SMALL_MODEL)).toBe(true);
   });
 });

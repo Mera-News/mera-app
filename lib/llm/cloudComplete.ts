@@ -1087,8 +1087,25 @@ export async function* cloudChatStream(
   if (!response.ok) {
     takeStreamHandle(response)?.release();
     const errorText = await response.text().catch(() => '');
-    logger.error(`${TAG} cloudChatStream HTTP error`, undefined, { status: response.status, errorText });
-    throw new Error(`E2EE chat failed: ${response.status} ${response.statusText} — ${errorText}`);
+    // BREADCRUMB, not a capture. This throw is always caught and reported by
+    // useCloudPersonaChat's `sendMessage failed` handler, so a capture here
+    // filed the SAME failure a second time under a different title — one HTTP
+    // error became MERA-APP-72 and MERA-APP-73, same trace, same three events.
+    // The diagnostics ride along on the breadcrumb, so the surviving event
+    // still carries the status and body.
+    logger.addBreadcrumb(
+      `${TAG} cloudChatStream HTTP error`,
+      'cloud-chat',
+      { status: response.status, errorText },
+      'error',
+    );
+    // statusCode as a FIELD so the 401 rule in logger.captureException can see
+    // it — a chat call made on a dead session is the auth breaker's story, not
+    // its own issue.
+    throw Object.assign(
+      new Error(`E2EE chat failed: ${response.status} ${response.statusText} — ${errorText}`),
+      { statusCode: response.status },
+    );
   }
 
   let textYielded = false;

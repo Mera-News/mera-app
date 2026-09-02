@@ -232,10 +232,38 @@ export class ModelKeyAlgoMismatchError extends ModelKeyValidationError {
 // not one per batch.
 const reportedBadModelKeys = new Set<string>();
 
+// In-flight attestation fetches, keyed by model.
+//
+// The 30-minute cache is only populated once a fetch RESOLVES, so on a cold
+// cache every concurrent caller missed and started its own request. That is a
+// stampede against a single endpoint: `prewarmCloudChat` alone fires three of
+// these in one `Promise.allSettled` (lib/llm/prewarm.ts), and the scoring
+// pipeline adds one per batch submit via `rebuildE2EEContext`. The gateway's
+// NestJS throttler answered exactly as it should — `ThrottlerException: Too
+// Many Requests` — and the 429 surfaced as a failed batch (MERA-APP-71).
+//
+// Deduping here rather than at each call site: the callers are independent
+// (prewarm, chat, scoring) and none of them can see the others. Mirrors
+// `_pendingJwtRequest` in auth-client, which solved this same problem for the
+// JWT. Entries are removed in a `finally` so a REJECTED fetch is retryable
+// immediately — a throttled attempt must not poison the next one.
+const pendingAttestations = new Map<string, Promise<ModelAttestation>>();
+
 export async function fetchModelPublicKey(model: string): Promise<ModelAttestation> {
   const cached = getCachedAttestation(model);
   if (cached) return cached;
 
+  const inFlight = pendingAttestations.get(model);
+  if (inFlight) return inFlight;
+
+  const run = fetchModelPublicKeyUncached(model).finally(() => {
+    pendingAttestations.delete(model);
+  });
+  pendingAttestations.set(model, run);
+  return run;
+}
+
+async function fetchModelPublicKeyUncached(model: string): Promise<ModelAttestation> {
   // Dev-only timing: this is the uncached NEAR pass-through — the dominant
   // first-chat-latency hop we prewarm against. Cache hits above never reach here.
   const attestStartMs = Date.now();

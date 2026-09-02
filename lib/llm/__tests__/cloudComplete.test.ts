@@ -55,6 +55,7 @@ jest.mock('@/lib/logger', () => ({
   default: {
     captureException: jest.fn(),
     captureMessage: jest.fn(),
+    addBreadcrumb: jest.fn(),
     warn: jest.fn(),
     error: jest.fn(),
     debug: jest.fn(),
@@ -1555,6 +1556,43 @@ describe('cloudChatStream', () => {
     expect(mockFetch).toHaveBeenCalledTimes(3);
     resetModelFallback();
   }, 10_000);
+
+  // MERA-APP-72 / MERA-APP-73. This throw is always caught and reported by
+  // useCloudPersonaChat's `sendMessage failed` handler, so capturing it here
+  // too filed ONE HTTP failure as two Sentry issues with different titles —
+  // same trace, same three events. The diagnostics move to a breadcrumb so the
+  // surviving event still carries the status and body.
+  it('breadcrumbs an HTTP failure rather than capturing it a second time', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(400, 'Decryption failed'));
+
+    await expect(
+      collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] })),
+    ).rejects.toThrow(/E2EE chat failed: 400/);
+
+    expect(logger.error).not.toHaveBeenCalledWith(
+      expect.stringContaining('cloudChatStream HTTP error'),
+      expect.anything(),
+      expect.anything(),
+    );
+    expect(logger.addBreadcrumb).toHaveBeenCalledWith(
+      expect.stringContaining('cloudChatStream HTTP error'),
+      'cloud-chat',
+      expect.objectContaining({ status: 400 }),
+      'error',
+    );
+  });
+
+  // statusCode as a FIELD, not only interpolated into the message, so the 401
+  // rule in logger.captureException can see a chat call made on a dead session
+  // and leave it to the auth breaker. Asserted on a 400 because a real 401 takes
+  // authFetch's token-refresh retry path, which is a different test's subject.
+  it('attaches statusCode to the thrown HTTP error', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(400, 'Decryption failed'));
+
+    await expect(
+      collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] })),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
 
   it('sends tools and tool_choice when tools are provided', async () => {
     mockFetch.mockResolvedValueOnce(
