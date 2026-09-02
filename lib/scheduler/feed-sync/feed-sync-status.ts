@@ -38,6 +38,28 @@ export function publishSyncError(
   retryAt?: number,
   failedAtState?: FeedSyncState,
 ): void {
+  // THESE HEADLINES CANNOT CURRENTLY RENDER. Verified, and it applies to EVERY
+  // entry below, not just one or two of them.
+  //
+  // The chain: this function always publishes `state: 'failed'`; the only live
+  // render of `syncStatusMessage.headlineKey` is
+  // `components/custom/for-you/FeedStatusDetails.tsx:106`, and it is gated on
+  // `isSyncActive`, which explicitly excludes `'failed'` (:89-94). The only two
+  // other components reading `headlineKey` — `NewsPollingBanner` and
+  // `MeraProtocolProcessingStatus` — have no importers anywhere in the app.
+  //
+  // So the strings this map names are unreachable through this path. The
+  // daily-cap notice the user actually sees is driven separately, off
+  // `dailyLimitResetAt` in that same component.
+  //
+  // WHY NOTHING IS DELETED. The keys stay in 20 locale dictionaries and the
+  // entries stay here: removing them is a 20-locale pass for something no user
+  // can see, and this is one gate change away from mattering again. The comment
+  // exists so the next person does not write, translate and review new copy for
+  // an invisible string — which nearly happened during free-tier-v2 for
+  // `sync.noTopics` and `sync.dailyLimitReached`. If you need one of these
+  // visible, fix the `isSyncActive` gate; do not rewrite the copy and assume it
+  // shipped.
   const headlineMap: Record<SyncErrorCode, string> = {
     offline:               'sync.waitingForConnection',
     'server-unreachable':  'sync.serverUnavailable',
