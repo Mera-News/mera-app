@@ -36,8 +36,8 @@ jest.mock('@/lib/stores/importance-filter-store', () => ({
     useImportanceFilterStore: (selector: any) => selector({ dashboardThreshold: mockDashboardThreshold }),
 }));
 
-// Reanimated: render Animated.FlatList as header + items (or empty), and stub
-// the scroll-handler hooks so composition doesn't crash.
+// Reanimated: render Animated.FlatList as header + items (or empty) + footer,
+// and stub the scroll-handler hooks so composition doesn't crash.
 jest.mock('react-native-reanimated', () => {
     const ReactLib = require('react');
     const asNode = (c: any) =>
@@ -47,6 +47,7 @@ jest.mock('react-native-reanimated', () => {
         renderItem,
         keyExtractor,
         ListHeaderComponent,
+        ListFooterComponent,
         ListEmptyComponent,
     }: any) => {
         const items = data ?? [];
@@ -66,6 +67,12 @@ jest.mock('react-native-reanimated', () => {
                 ),
             );
         });
+        // Footer LAST, and rendered even when `data` is empty — both match real
+        // FlatList, which draws ListFooterComponent alongside ListEmptyComponent.
+        // The mock omitted it entirely until the free-tier card moved down here,
+        // so a footer regression was previously untestable on this surface.
+        const footer = asNode(ListFooterComponent);
+        if (footer) kids.push(ReactLib.createElement(ReactLib.Fragment, { key: 'lf' }, footer));
         return ReactLib.createElement(ReactLib.Fragment, null, kids);
     };
     return {
@@ -143,13 +150,18 @@ jest.mock('@/components/custom/for-you/BreakingStrip', () => ({
     __esModule: true,
     default: () => null,
 }));
-// Same reason as BreakingStrip: it's list-header chrome this suite doesn't
-// assert on. It also reaches MeraLogo, whose `createAnimatedComponent(G)` the
-// reanimated mock above deliberately doesn't provide.
-jest.mock('@/components/custom/subscription/FreeTierCard', () => ({
-    __esModule: true,
-    default: () => null,
-}));
+// Stubbed rather than rendered: the real card reaches MeraLogo, whose
+// `createAnimatedComponent(G)` the reanimated mock above deliberately doesn't
+// provide. It renders a MARKER rather than null so the D6 placement test below
+// can assert where in the list it lands — the real card's own locked/entitled
+// gating is FreeTierCard's suite, not this one.
+jest.mock('@/components/custom/subscription/FreeTierCard', () => {
+    const { Text } = require('react-native');
+    return {
+        __esModule: true,
+        default: ({ surface }: { surface: string }) => <Text>{`freetier:${surface}`}</Text>,
+    };
+});
 
 jest.mock('react-native-safe-area-context', () => ({
     useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
@@ -325,6 +337,32 @@ function makeHeadlineRow(
         groups,
     };
 }
+
+// D6: the free-tier card is the LAST thing in the list. It used to head it,
+// above the breaking strip, which put a 401pt plan pitch between the reader and
+// their news on the Dashboard's first paint.
+describe('DashboardSectionsFeed — free-tier card placement', () => {
+    beforeEach(() => {
+        mockDashboardThreshold = 'low';
+    });
+
+    it('renders the free-tier card AFTER the sections, not before them', () => {
+        const { toJSON, getByText } = renderFeed([
+            makeRow('f1', [makeGroup('g1', 5000, 5000)]),
+        ]);
+        expect(getByText('freetier:dashboard')).toBeTruthy();
+
+        // Order, not mere presence: a header mount would also satisfy the
+        // assertion above, and a header mount is exactly the bug D6 fixes.
+        const tree = JSON.stringify(toJSON());
+        expect(tree.indexOf('freetier:dashboard')).toBeGreaterThan(tree.indexOf('card:g1'));
+    });
+
+    it('still renders it when there are no sections at all', () => {
+        const { getByText } = renderFeed([]);
+        expect(getByText('freetier:dashboard')).toBeTruthy();
+    });
+});
 
 describe('DashboardSectionsFeed — headline sections', () => {
     beforeEach(() => {

@@ -1,0 +1,263 @@
+{
+  "_comment": "free-tier-v2 wave, FEED/DASHBOARD scout. 5 new keys. feedStatus.mode{Processing,Error,Limited} give FeedStatusIndicator a state-dependent accessibility label (the capped state was signalled by amber ink alone; feedStatus.idle already exists and is reused for idle/deferred, not re-added). feed.dailyLimit.free{Title,BodyWithTime} are the FREE-TIER variant of the daily cap notice: for a free user the cap is the product, not a failure, so it must not reuse the amber failure copy a Professional user sees. No collisions, no --allow-overwrite needed. The existing feed.dailyLimit.body (the untimed 'unlock tomorrow' string) is deliberately NOT retranslated: it is false west of UTC and is now unreachable, since a reset instant always exists.",
+  "ar": {
+    "feedStatus": {
+      "modeProcessing": "جارٍ تحديث موجزك",
+      "modeError": "مشكلة في الموجز",
+      "modeLimited": "تم بلوغ حد المقالات اليومي"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "هذه مقالات اليوم",
+        "freeBodyWithTime": "لديك كل ما أرسلته Mera اليوم. تصفح ما هو على جهازك. يصل المزيد في {{time}}."
+      }
+    }
+  },
+  "de": {
+    "feedStatus": {
+      "modeProcessing": "Dein Feed wird aktualisiert",
+      "modeError": "Problem mit dem Feed",
+      "modeLimited": "Tageslimit für Artikel erreicht"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Das sind die Artikel für heute",
+        "freeBodyWithTime": "Du hast alles, was Mera heute geschickt hat. Sieh dir an, was auf deinem Gerät ist. Mehr kommt um {{time}}."
+      }
+    }
+  },
+  "en": {
+    "feedStatus": {
+      "modeProcessing": "Updating your feed",
+      "modeError": "Feed problem",
+      "modeLimited": "Daily article limit reached"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "That's today's articles",
+        "freeBodyWithTime": "You have everything Mera sent today. Browse what's on your device. More arrive at {{time}}."
+      }
+    }
+  },
+  "es": {
+    "feedStatus": {
+      "modeProcessing": "Actualizando tu feed",
+      "modeError": "Problema con el feed",
+      "modeLimited": "Límite diario de artículos alcanzado"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Estos son los artículos de hoy",
+        "freeBodyWithTime": "Tienes todo lo que Mera envió hoy. Explora lo que está en tu dispositivo. Llegan más a las {{time}}."
+      }
+    }
+  },
+  "fr": {
+    "feedStatus": {
+      "modeProcessing": "Mise à jour de votre fil",
+      "modeError": "Problème de fil",
+      "modeLimited": "Limite quotidienne d'articles atteinte"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Voilà les articles du jour",
+        "freeBodyWithTime": "Vous avez tout ce que Mera a envoyé aujourd'hui. Parcourez ce qui est sur votre appareil. D'autres arrivent à {{time}}."
+      }
+    }
+  },
+  "hi": {
+    "feedStatus": {
+      "modeProcessing": "आपकी फ़ीड अपडेट हो रही है",
+      "modeError": "फ़ीड में समस्या",
+      "modeLimited": "आज की लेख सीमा पूरी हो गई"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "आज के लेख इतने ही",
+        "freeBodyWithTime": "Mera ने आज जो भेजा, वह सब आपके पास है। जो आपके डिवाइस पर है उसे पढ़ें। और लेख {{time}} बजे आएंगे।"
+      }
+    }
+  },
+  "id": {
+    "feedStatus": {
+      "modeProcessing": "Memperbarui feed Anda",
+      "modeError": "Masalah pada feed",
+      "modeLimited": "Batas artikel harian tercapai"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Itu artikel untuk hari ini",
+        "freeBodyWithTime": "Anda punya semua yang Mera kirim hari ini. Jelajahi yang ada di perangkat Anda. Lainnya datang pukul {{time}}."
+      }
+    }
+  },
+  "it": {
+    "feedStatus": {
+      "modeProcessing": "Aggiornamento del feed",
+      "modeError": "Problema con il feed",
+      "modeLimited": "Limite giornaliero di articoli raggiunto"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Questi sono gli articoli di oggi",
+        "freeBodyWithTime": "Hai tutto quello che Mera ha inviato oggi. Sfoglia quello che è sul tuo dispositivo. Altri arrivano alle {{time}}."
+      }
+    }
+  },
+  "ja": {
+    "feedStatus": {
+      "modeProcessing": "フィードを更新しています",
+      "modeError": "フィードの問題",
+      "modeLimited": "1日の記事上限に達しました"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "今日の記事はここまでです",
+        "freeBodyWithTime": "Mera が今日お届けした記事はすべて揃っています。デバイスにある記事をお読みください。次は {{time}} に届きます。"
+      }
+    }
+  },
+  "ko": {
+    "feedStatus": {
+      "modeProcessing": "피드를 업데이트하는 중",
+      "modeError": "피드 문제",
+      "modeLimited": "일일 기사 한도에 도달함"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "오늘의 기사는 여기까지입니다",
+        "freeBodyWithTime": "Mera가 오늘 보낸 기사를 모두 받았습니다. 기기에 있는 기사를 살펴보세요. {{time}}에 더 도착합니다."
+      }
+    }
+  },
+  "nl": {
+    "feedStatus": {
+      "modeProcessing": "Je feed wordt bijgewerkt",
+      "modeError": "Probleem met de feed",
+      "modeLimited": "Daglimiet voor artikelen bereikt"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Dit zijn de artikelen van vandaag",
+        "freeBodyWithTime": "Je hebt alles wat Mera vandaag heeft gestuurd. Bekijk wat er op je apparaat staat. Om {{time}} komt er meer bij."
+      }
+    }
+  },
+  "pl": {
+    "feedStatus": {
+      "modeProcessing": "Aktualizowanie kanału",
+      "modeError": "Problem z kanałem",
+      "modeLimited": "Osiągnięto dzienny limit artykułów"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "To wszystkie dzisiejsze artykuły",
+        "freeBodyWithTime": "Masz wszystko, co Mera wysłała dzisiaj. Przejrzyj to, co jest na urządzeniu. Więcej pojawi się o {{time}}."
+      }
+    }
+  },
+  "pt-BR": {
+    "feedStatus": {
+      "modeProcessing": "Atualizando seu feed",
+      "modeError": "Problema no feed",
+      "modeLimited": "Limite diário de artigos atingido"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Esses são os artigos de hoje",
+        "freeBodyWithTime": "Você tem tudo o que a Mera enviou hoje. Veja o que está no seu dispositivo. Mais chegam às {{time}}."
+      }
+    }
+  },
+  "ru": {
+    "feedStatus": {
+      "modeProcessing": "Обновляем вашу ленту",
+      "modeError": "Проблема с лентой",
+      "modeLimited": "Дневной лимит статей достигнут"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Это все статьи на сегодня",
+        "freeBodyWithTime": "У вас есть всё, что Mera прислала сегодня. Читайте то, что уже на устройстве. Новые появятся в {{time}}."
+      }
+    }
+  },
+  "th": {
+    "feedStatus": {
+      "modeProcessing": "กำลังอัปเดตฟีดของคุณ",
+      "modeError": "ฟีดมีปัญหา",
+      "modeLimited": "ถึงขีดจำกัดบทความรายวันแล้ว"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "บทความของวันนี้มีเท่านี้",
+        "freeBodyWithTime": "คุณได้รับทุกอย่างที่ Mera ส่งมาวันนี้แล้ว อ่านบทความที่อยู่ในเครื่องของคุณได้เลย บทความใหม่จะมาถึงเวลา {{time}}"
+      }
+    }
+  },
+  "tr": {
+    "feedStatus": {
+      "modeProcessing": "Akışınız güncelleniyor",
+      "modeError": "Akış sorunu",
+      "modeLimited": "Günlük makale sınırına ulaşıldı"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Bugünün makaleleri bu kadar",
+        "freeBodyWithTime": "Mera'nın bugün gönderdiği her şey elinizde. Cihazınızdakilere göz atın. Yenileri {{time}} saatinde geliyor."
+      }
+    }
+  },
+  "uk": {
+    "feedStatus": {
+      "modeProcessing": "Оновлюємо вашу стрічку",
+      "modeError": "Проблема зі стрічкою",
+      "modeLimited": "Досягнуто денний ліміт статей"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Це всі статті на сьогодні",
+        "freeBodyWithTime": "У вас є все, що Mera надіслала сьогодні. Перегляньте те, що вже на пристрої. Нові з'являться о {{time}}."
+      }
+    }
+  },
+  "vi": {
+    "feedStatus": {
+      "modeProcessing": "Đang cập nhật bảng tin của bạn",
+      "modeError": "Sự cố bảng tin",
+      "modeLimited": "Đã đạt giới hạn bài viết hằng ngày"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "Đó là các bài viết của hôm nay",
+        "freeBodyWithTime": "Bạn đã có mọi thứ Mera gửi hôm nay. Hãy xem những gì có trên thiết bị của bạn. Sẽ có thêm vào lúc {{time}}."
+      }
+    }
+  },
+  "zh-CN": {
+    "feedStatus": {
+      "modeProcessing": "正在更新你的信息流",
+      "modeError": "信息流出现问题",
+      "modeLimited": "已达到每日文章上限"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "今天的文章就这些",
+        "freeBodyWithTime": "Mera 今天发送的内容你都已收到。看看设备上已有的文章吧。{{time}} 会有更多。"
+      }
+    }
+  },
+  "zh-TW": {
+    "feedStatus": {
+      "modeProcessing": "正在更新你的資訊流",
+      "modeError": "資訊流發生問題",
+      "modeLimited": "已達每日文章上限"
+    },
+    "feed": {
+      "dailyLimit": {
+        "freeTitle": "今天的文章就這些",
+        "freeBodyWithTime": "Mera 今天傳送的內容你都已收到。看看裝置上已有的文章吧。{{time}} 會有更多。"
+      }
+    }
+  }
+}
