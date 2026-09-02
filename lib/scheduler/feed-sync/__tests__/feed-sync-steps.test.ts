@@ -456,6 +456,86 @@ describe('stepFetchTopicIds', () => {
     expect(result.personaMeta?.headlineCountryCode?.has('art-both')).toBe(false);
   });
 
+  // ── BILLING GUARANTEE: topic ids are ordered BEFORE headline ids ─────────
+  //
+  // The server truncates a clipped response in pure request order, so the
+  // insertion order of `matchedTopics` decides what a capped user's daily
+  // allowance is spent on. Nothing else in this suite would catch a refactor
+  // that sorted `serverArticleIds`, swapped the two inversion loops, or merged
+  // them — the metadata assertions above all pass regardless of order.
+
+  it('orders topic-matched ids BEFORE headline ids (billing guarantee)', async () => {
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: 'f1', locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({
+      topicResults: [
+        {
+          topicText: 'ai',
+          articleIds: ['art-topic'],
+          matchMeta: [],
+          nextCursor: null,
+          hasNextPage: false,
+        },
+      ],
+      headlineResults: [
+        {
+          scope: 'GLOBAL',
+          countryCode: null,
+          articleIds: ['art-headline'],
+          clusterSizes: [],
+          stableClusterIds: [],
+        },
+      ],
+    });
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    // Exact array equality, not `toContain`: order IS the assertion here.
+    expect(result.serverArticleIds).toEqual(['art-topic', 'art-headline']);
+  });
+
+  it('keeps an article matched by BOTH a topic and a headline in its topic-loop position', async () => {
+    // 'art-both' is returned by the headline scope too. It must keep the slot
+    // the topic loop gave it — otherwise a headline could displace an interest
+    // article later into the request and change what the cap clips.
+    mockGetActive.mockResolvedValue([
+      { id: 't1', text: 'ai', weight: 0.8, highPriority: false, factId: 'f1', locationId: null },
+    ] as any);
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({
+      topicResults: [
+        {
+          topicText: 'ai',
+          articleIds: ['art-both'],
+          matchMeta: [],
+          nextCursor: null,
+          hasNextPage: false,
+        },
+      ],
+      headlineResults: [
+        {
+          scope: 'GLOBAL',
+          countryCode: null,
+          articleIds: ['art-headline-only', 'art-both'],
+          clusterSizes: [],
+          stableClusterIds: [],
+        },
+      ],
+    });
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(result.serverArticleIds).toEqual(['art-both', 'art-headline-only']);
+    // Its ORDER comes from the topic loop, but it still carries the headline
+    // scope: the first-writer guard at the headline loop only defends against a
+    // SECOND scope, not against a topic match. Asserted so the two facts are
+    // not conflated — order and scope are decided by different rules here, and
+    // `partitionStoryIds` reads the scope to keep this article METERED.
+    expect(result.personaMeta?.headlineScope?.get('art-both')).toBe('GLOBAL');
+  });
+
   // ── strictMatch: tighten the server's floor for followed stories only ────
 
   const topicRow = (over: Record<string, any>) => ({

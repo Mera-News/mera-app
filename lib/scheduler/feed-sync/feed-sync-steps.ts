@@ -536,6 +536,22 @@ async function fetchTopicIdsPersona(
     });
   }
 
+  // BILLING GUARANTEE — insertion order is load-bearing, do not reorder.
+  //
+  // `matchedTopics` is a Map, so `[...keys()]` yields INSERTION order, and the
+  // topic loop above runs before the headline loop. The server truncates a
+  // clipped response in pure request order, so topic-matched articles are
+  // charged FIRST and top headlines are what the daily cap clips. Sorting this
+  // array, swapping the two loops, or merging them would silently spend a
+  // capped user's entire allowance on headlines — and every existing test
+  // would still pass.
+  //
+  // SCOPE, honestly: this is exact at the id-list level and SOFT at the
+  // hydration boundary. `chunkArray(personaIds, 25)` is drained by a pool of
+  // HYDRATE_CONCURRENCY = 3 workers, so three chunks are in flight at once and
+  // the clip lands within roughly +/-3 chunks (~75 articles) of the boundary,
+  // not on it. The guarantee is "headlines are clipped before interests", not
+  // "article N exactly".
   const serverArticleIds = [...matchedTopics.keys()];
   logger.debug(`[feed-sync-steps] articleIdsForPersona returned ${serverArticleIds.length} article ids`);
   ctx.log(`server returned ${serverArticleIds.length} article ids (persona path)`);
