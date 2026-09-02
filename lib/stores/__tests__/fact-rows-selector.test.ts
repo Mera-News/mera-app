@@ -88,6 +88,74 @@ function snapshots(
   };
 }
 
+// --- free-tier lock (D32) -------------------------------------------------
+
+describe('buildFactRows free-tier lock', () => {
+  const twoFacts = () =>
+    snapshots(
+      [['t1', { factId: 'f1' }], ['t2', { factId: 'f2' }]],
+      [['f1', { statement: 'Unlocked' }], ['f2', { statement: 'Paused' }]],
+    );
+  const a = () => sugg({ _id: 'a', matchedTopics: [{ topicId: 't1', text: 'x' }] });
+  const b = () => sugg({ _id: 'b', matchedTopics: [{ topicId: 't2', text: 'y' }] });
+
+  it('renders only sections whose fact is unlocked', () => {
+    const snap = { ...twoFacts(), unlockedFactIds: new Set(['f1']) };
+    const { rows } = buildFactRows([a(), b()], snap, new Set(), NOW);
+    expect(rows.map((r) => r.factId)).toEqual(['f1']);
+  });
+
+  // The whole point of D32: the Facts screen calls f2 Paused, so a Dashboard
+  // section headed "Paused" carrying fresh cards makes the app contradict
+  // itself. Pinning the card count, not just the row, because a surviving row
+  // with zero groups would still render a header.
+  it('drops the locked fact section entirely, cards and all', () => {
+    const snap = { ...twoFacts(), unlockedFactIds: new Set(['f1']) };
+    const { rows } = buildFactRows([a(), b()], snap, new Set(), NOW);
+    expect(rows.find((r) => r.factId === 'f2')).toBeUndefined();
+    expect(rows.flatMap((r) => r.groups.map((g) => g.data._id))).toEqual(['a']);
+  });
+
+  // FAILS OPEN, in both spellings of "no restriction". An entitled user and an
+  // unresolved entitlement must both see everything; the alternative is a
+  // paying subscriber silently losing sections.
+  it.each([
+    ['absent', {}],
+    ['null', { unlockedFactIds: null }],
+  ])('applies no restriction when unlockedFactIds is %s', (_label, extra) => {
+    const snap = { ...twoFacts(), ...extra };
+    const { rows } = buildFactRows([a(), b()], snap, new Set(), NOW);
+    expect(rows.map((r) => r.factId).sort()).toEqual(['f1', 'f2']);
+  });
+
+  // An EMPTY set is a real restriction meaning "nothing is unlocked", and must
+  // not be confused with absence. This is the case a `capped: false` caller
+  // would hit if it passed its empty set through instead of null.
+  it('an empty set locks everything', () => {
+    const snap = { ...twoFacts(), unlockedFactIds: new Set<string>() };
+    const { rows } = buildFactRows([a(), b()], snap, new Set(), NOW);
+    expect(rows).toEqual([]);
+  });
+
+  // A locked row takes the SAME branch as an unowned one, which for a CO-MATCHED
+  // headline means it disappears: step 0's denominator excludes co-matched
+  // headlines from their scope section (they belong to their fact's section), so
+  // there is no scope row waiting to catch it. Pinned because the obvious
+  // reading of the code is that it survives in the GLOBAL section, and it does
+  // not.
+  it('drops a locked-fact co-matched headline (its scope section does not exist)', () => {
+    const snap = { ...twoFacts(), unlockedFactIds: new Set(['f1']) };
+    const headline = sugg({
+      _id: 'h',
+      headlineScope: 'GLOBAL',
+      matchedTopics: [{ topicId: 't2', text: 'y' }],
+    });
+    const { rows } = buildFactRows([a(), headline], snap, new Set(), NOW);
+    expect(rows.find((r) => r.factId === 'f2')).toBeUndefined();
+    expect(rows.flatMap((r) => r.groups.map((g) => g.data._id))).toEqual(['a']);
+  });
+});
+
 // --- ownership → fact rows ------------------------------------------------
 
 describe('buildFactRows ownership', () => {

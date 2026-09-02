@@ -34,7 +34,8 @@
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Pressable } from '@/components/ui/pressable';
 import { type FeedStatusMode } from '@/lib/feed-status-mode';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
+import { AccessibilityInfo } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -71,6 +72,33 @@ function inkFor(mode: FeedStatusMode): string {
     }
 }
 
+/**
+ * The state half of the accessibility label.
+ *
+ * Ink is the ONLY thing that separated these states, which made the capped
+ * state (amber) and the error state (red) identical to a screen reader: the
+ * label was a constant "Open feed status" in every mode. `deferred` folds onto
+ * `idle` here for the same reason it shares the resting colour — it is a
+ * pipeline count the reader cannot act on.
+ */
+function a11yStateKey(mode: FeedStatusMode): string {
+    // Returns a plain string, read through `tAny` below. Three of these four
+    // keys (`modeProcessing` / `modeError` / `modeLimited`) arrive with the
+    // free-tier locale splice; `lib/i18n/types.ts` types `t()` off en.json, so
+    // a literal here would not compile until that run lands. The key is also
+    // genuinely dynamic, which is what `tAny` exists for in this file family.
+    switch (mode) {
+        case 'processing':
+            return 'feedStatus.modeProcessing';
+        case 'error':
+            return 'feedStatus.modeError';
+        case 'limited':
+            return 'feedStatus.modeLimited';
+        default:
+            return 'feedStatus.idle';
+    }
+}
+
 export interface FeedStatusIndicatorProps {
     readonly mode: FeedStatusMode;
     /** Whether the detail panel this opens is currently showing. */
@@ -86,6 +114,7 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
     testID,
 }) => {
     const { t } = useTranslation();
+    const tAny = t as (key: string) => string;
     const processing = mode === 'processing';
 
     // `reactCompiler: true` is on, and MeraLogo.tsx:31-35 records that branching
@@ -100,6 +129,24 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
     }, [processing, scale]);
     const scaleStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
+    // Announce the two states the user cannot see. A label change alone is not
+    // announced by VoiceOver/TalkBack unless focus happens to be on this glyph,
+    // and entering the capped state is precisely the moment the reader is
+    // somewhere else in the list. `announceForAccessibility` is a no-op when no
+    // screen reader is running, so this costs nothing in the normal case.
+    //
+    // Seeded from the FIRST render's mode rather than from a sentinel, so a
+    // screen that mounts already capped does not fire an announcement for a
+    // state the user just navigated into on purpose.
+    const prevMode = useRef<FeedStatusMode>(mode);
+    useEffect(() => {
+        const was = prevMode.current;
+        prevMode.current = mode;
+        if (was === mode) return;
+        if (mode !== 'limited' && mode !== 'error') return;
+        AccessibilityInfo.announceForAccessibility(tAny(a11yStateKey(mode)));
+    }, [mode, tAny]);
+
     return (
         <Pressable
             testID={testID}
@@ -109,7 +156,13 @@ export const FeedStatusIndicator: React.FC<FeedStatusIndicatorProps> = ({
             hitSlop={12}
             accessibilityRole="button"
             accessibilityState={{ expanded }}
-            accessibilityLabel={t(expanded ? 'feedStatus.collapseA11y' : 'feedStatus.openA11y')}
+            // State FIRST, then the action. A screen-reader user needs to know
+            // the feed is capped before they know they can open a panel about
+            // it; the reverse order buries the only new information behind a
+            // string that never changes.
+            accessibilityLabel={`${tAny(a11yStateKey(mode))}. ${t(
+                expanded ? 'feedStatus.collapseA11y' : 'feedStatus.openA11y',
+            )}`}
             className="items-center justify-center"
         >
             {/* The scale lives on this wrapper, not on the Svg: transforms do not

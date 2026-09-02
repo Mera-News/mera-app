@@ -14,6 +14,7 @@ import {
     useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import { formatCount } from '@/lib/utils/format-count';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
@@ -71,6 +72,9 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
     onBeforeNavigate,
 }) => {
     const { t } = useTranslation();
+    // Also the carrier for the two free-tier daily-limit keys, which arrive
+    // with the free-tier locale splice (lib/i18n/types.ts types `t()` off
+    // en.json, so a literal would not compile before that run lands).
     const tAny = t as any;
     const appLanguage = useAppLanguage();
     const router = useRouter();
@@ -105,9 +109,28 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                         : t('feedStatus.idle');
 
     const isDailyLimited = dailyLimitResetAt != null && Date.now() < dailyLimitResetAt;
+    // Formatted in the DEVICE's timezone from an absolute instant, which is what
+    // makes this correct west of UTC. The cap resets at 00:00 UTC, which is 5pm
+    // the SAME DAY in Los Angeles — so any copy that says "tomorrow" is simply
+    // false for a large share of users. There is no untimed branch here on
+    // purpose: `FeedSyncMachine` falls back to `nextUtcMidnightMs()` whenever the
+    // server omits `resetAt`, so a reset instant always exists and the "tomorrow"
+    // wording is unreachable rather than translated twenty times.
     const dailyResetTime = dailyLimitResetAt
         ? new Date(dailyLimitResetAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
         : '';
+    // FREE TIER: the cap is the PRODUCT, not a failure. A Professional user who
+    // burned ten thousand articles has hit a genuine limit and should see the
+    // amber warning treatment; a free user reaching their daily allowance is the
+    // system working exactly as sold. Reusing one string and one red-adjacent
+    // panel for both is what makes the free tier read as broken.
+    //
+    // `useAiAccess()` is the optimistic reader, which is the right one for a
+    // render decision — see the reader table in
+    // lib/subscription/free-tier-topic-access.ts. `'unknown'` falls to the
+    // paid-style copy, which is the safe direction: it never tells a subscriber
+    // their plan is a free one.
+    const isFreeTier = useAiAccess() === 'locked';
 
     const showCloudProgress = asyncJobTotalCount > 0;
     const showDeviceProgress = deviceTotalCount > 0;
@@ -154,14 +177,36 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                 <StatRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} />
             )}
 
-            {/* Daily limit */}
+            {/* Daily limit. Two tones: neutral for the free tier (normal daily
+                state), amber for a paid plan (a limit the user did not expect
+                to meet). */}
             {isDailyLimited && (
-                <Box className="bg-warning-900 rounded-lg px-3 py-2">
-                    <Text size="sm" className="text-warning-400 font-semibold">
-                        {t('feed.dailyLimit.title')}
+                <Box
+                    testID={isFreeTier ? 'feed-status-daily-limit-free' : 'feed-status-daily-limit'}
+                    className={
+                        isFreeTier
+                            ? 'rounded-lg px-3 py-2'
+                            : 'bg-warning-900 rounded-lg px-3 py-2'
+                    }
+                    style={isFreeTier ? { backgroundColor: '#1f2937' } : undefined}
+                >
+                    <Text
+                        size="sm"
+                        className={
+                            isFreeTier
+                                ? 'text-white font-semibold'
+                                : 'text-warning-400 font-semibold'
+                        }
+                    >
+                        {tAny(isFreeTier ? 'feed.dailyLimit.freeTitle' : 'feed.dailyLimit.title')}
                     </Text>
                     <Text size="xs" className="text-typography-300 mt-1">
-                        {t('feed.dailyLimit.bodyWithTime', { time: dailyResetTime })}
+                        {tAny(
+                            isFreeTier
+                                ? 'feed.dailyLimit.freeBodyWithTime'
+                                : 'feed.dailyLimit.bodyWithTime',
+                            { time: dailyResetTime },
+                        )}
                     </Text>
                     {/* Same pill as the Profile usage card, and the same
                         destination — the cap is a plan limit, so management (which

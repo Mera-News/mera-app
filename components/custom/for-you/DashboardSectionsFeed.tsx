@@ -249,25 +249,26 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     [onPressSuggestion, openedIds, openFactFeed],
   );
 
-  // Composed, not replaced: the free-tier card sits ABOVE the breaking strip,
-  // and both are above the sections. Mounted here rather than threaded down
-  // from ForYouScreen as a prop because this component is the Dashboard's list
-  // and its only consumer — a prop would be indirection with one caller.
-  //
-  // The card reads entitlement itself and renders null unless locked, so this
-  // costs an empty fragment in the normal case, and every section below keeps
-  // rendering underneath it when it does appear. Nothing is hidden or replaced.
+  // Mounted here rather than threaded down from ForYouScreen as a prop because
+  // this component is the Dashboard's list and its only consumer — a prop would
+  // be indirection with one caller.
   const ListHeader = useMemo(
-    () => (
-      <>
-        <FreeTierCard surface="dashboard" />
-        {breaking.length > 0 ? (
-          <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
-        ) : null}
-      </>
-    ),
+    () =>
+      breaking.length > 0 ? (
+        <BreakingStrip items={breaking} onPressItem={onPressSuggestion} />
+      ) : null,
     [breaking, onPressSuggestion],
   );
+
+  // D6: the free-tier card is the LAST thing in this list, after every section.
+  // It used to head the list, above the breaking strip; that put a 401pt plan
+  // pitch between the reader and their news on both main surfaces at once (the
+  // Feed carried the same card as its own header until D36 moved it down too).
+  //
+  // The card reads entitlement itself and renders null unless locked — and null
+  // during the `'unknown'` window of a cold start, so a subscriber never sees it
+  // flash — which is why this mount is unconditional and needs no gate here.
+  const ListFooter = useMemo(() => <FreeTierCard surface="dashboard" />, []);
 
   return (
     <Box className="flex-1" testID="dashboard-sections-feed-root">
@@ -278,6 +279,7 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         keyExtractor={(it) => it.key}
         renderItem={renderItem}
         ListHeaderComponent={ListHeader}
+        ListFooterComponent={ListFooter}
         ListEmptyComponent={ListEmptyComponent}
         refreshControl={
           onRefresh ? (

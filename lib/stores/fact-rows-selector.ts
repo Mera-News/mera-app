@@ -33,6 +33,14 @@
 // none. The `…DenominatorNone` strings still exist in all 20 locales as an
 // unreachable guard — do not read their presence as evidence the state occurs.
 //
+// FREE-TIER LOCK (D32): when `snapshots.unlockedFactIds` is present, a group
+// whose owning fact is not in it is routed as if no fact owned it — into its
+// headline scope section if it has one, otherwise dropped. A fact section with
+// no surviving groups then disappears through the SAME zero-card drop above, so
+// this adds one predicate to an existing step rather than a second removal
+// mechanism. It is a render filter and nothing else: no row is deleted, no id is
+// tombstoned, and the feed-order store is not touched.
+//
 // Section membership additionally requires the fact link to be RELEVANCE-BACKED
 // (`isSectionMemberEligible` + `isFactSectionViable`, feed-select/ownership).
 // Ownership alone answers "which fact did this story MATCH?" from topic weights
@@ -331,6 +339,23 @@ export interface FactRowsSnapshots {
   locations: Map<string, LocationSnapshot>;
   /** factId → real fact statement (for the header reveal). */
   factStatements: Map<string, string>;
+  /**
+   * FREE-TIER LOCK (D32). The fact ids whose sections may render. Absent or
+   * `null` means NO restriction, which is how a paying subscriber and an
+   * unresolved entitlement both behave — this fails OPEN, deliberately and in
+   * the same direction as every other free-tier gate in the wave.
+   *
+   * Supplied by the caller rather than derived here, because this module is
+   * pure: `deriveFreeTierAccess` (lib/subscription/free-tier-topic-access)
+   * owns the rule, and the screen passes its `unlockedFactIds` straight
+   * through. Re-deriving "which facts are unlocked" here would be the second
+   * copy of a rule that must have exactly one.
+   *
+   * NOT eviction. This drops a Dashboard SECTION from a render; it never
+   * touches `removeIds`, the feed-order store, or any `memberIds` tombstone,
+   * and the underlying rows stay on the device untouched.
+   */
+  unlockedFactIds?: ReadonlySet<string> | null;
 }
 
 // --- helpers --------------------------------------------------------------
@@ -722,12 +747,35 @@ export function buildFactRows(
     // per the brief: the bar is the existing one, not a new one.
     if (!isSectionMemberEligible(group.bucket)) continue;
     const projection = ownershipProjection(rep);
-    const factId = resolveOwningFactLenient(
+    const owningFactId = resolveOwningFactLenient(
       projection,
       snapshots.topics,
       snapshots.facts,
       hpMult,
     );
+    // FREE-TIER LOCK (D32). A locked fact's section must not render at all: the
+    // Facts screen shows that fact as Paused, and a Dashboard section headed
+    // with the same fact carrying fresh cards makes the app contradict itself.
+    //
+    // A locked row falls through to the SAME branch as an unowned one rather
+    // than getting its own removal path. In practice that means it is DROPPED:
+    // step 0's denominator deliberately excludes co-matched headlines (a
+    // headline that resolves an owning fact belongs to that fact's section), so
+    // a locked co-matched row usually finds no scope section waiting and the
+    // optional-chained push below is a no-op. It lands in a scope section only
+    // when other, non-co-matched headlines already created one.
+    //
+    // That is accepted rather than fixed. Making the denominator lock-aware
+    // would give the free tier a section the paid tier does not have, and D3
+    // stops these rows arriving at all — this is only reachable for the ~48h a
+    // downgrade's already-fetched cards survive.
+    //
+    // Absent `unlockedFactIds` ⇒ no restriction (see FactRowsSnapshots).
+    const factId =
+      owningFactId &&
+      (!snapshots.unlockedFactIds || snapshots.unlockedFactIds.has(owningFactId))
+        ? owningFactId
+        : null;
     if (!factId) {
       // No fact owns it. A top-headline row still has a home — its scope's
       // section. Anything else (negative/suppressed or factless) stays dropped.

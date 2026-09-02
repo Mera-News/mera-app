@@ -772,23 +772,44 @@ const FeedScreen: React.FC = () => {
   // even when `data` is empty — without this the zero-item case would show the
   // AllCaughtUpCard twice (the empty-state chain in `renderEmpty` already owns
   // that case, and still does).
+  //
+  // D36: `FreeTierCard` rides at the BOTTOM of this footer, below the caught-up
+  // card. It used to be `ListHeaderComponent` — correct when Mera News Free
+  // meant an empty feed and the card was the only thing on screen, and wrong now
+  // that the free tier is real capped access: a 401pt plan pitch pinned above
+  // the first real article makes the app's main reading surface open on an
+  // advert. At the end it is the natural next thing after "you're all caught
+  // up", and it costs a reader who keeps scrolling nothing.
+  //
+  // It is NOT inside the `listData.length > 0` guard. The empty case is exactly
+  // when a free user most needs the explanation, and `renderEmpty`'s chain owns
+  // the AllCaughtUpCard duplication problem, not this card — which renders null
+  // for everyone except a locked user anyway (see FreeTierCard).
   const listFooter = useMemo(
-    () =>
-      listData.length > 0 ? (
-        <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-          <AllCaughtUpCard
-            compact
-            feedThreshold={feedThreshold}
-            onLowerPriority={onLowerPriority}
-          />
+    () => (
+      <>
+        {listData.length > 0 ? (
+          <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
+            <AllCaughtUpCard
+              compact
+              feedThreshold={feedThreshold}
+              onLowerPriority={onLowerPriority}
+            />
+          </Box>
+        ) : null}
+        <Box style={{ marginTop: 16 }}>
+          <FreeTierCard surface="feed" />
         </Box>
-      ) : null,
+      </>
+    ),
     [listData.length, feedThreshold, onLowerPriority],
   );
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
-  // Mera News Free: `FreeTierCard` (the list header) already explains, at
+  // Mera News Free: `FreeTierCard` (in `listFooter` since D36 — still rendered
+  // in the empty case, because FlatList draws its footer alongside
+  // ListEmptyComponent) already explains, at
   // length, that Mera isn't building this feed right now. NoGeneratedInterestsCard
   // would sit directly under it saying a blunter version of the same thing
   // ("Mera cannot analyze news for you" / "create your user persona"), which is
@@ -936,15 +957,9 @@ const FeedScreen: React.FC = () => {
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
-        // Free-tier upsell — a locked user's plan-explainer, pinned above
-        // the rows. The card reads entitlement itself and renders nothing once
-        // unlocked, so this mount is unconditional; see FreeTierCard.
-        // Plain header, not `stickyHeaderIndices`: this list grows upward via
-        // `maintainVisibleContentPosition` + `autoscrollToTopThreshold` (prepend
-        // on ingest, reset-to-top on refresh), and sticky headers are known to
-        // fight that anchoring. Not worth forcing for a header that already
-        // sits at the visual top on first paint.
-        ListHeaderComponent={<FreeTierCard surface="feed" />}
+        // D36: no ListHeaderComponent. `FreeTierCard` moved into `listFooter`
+        // below — see the comment there for why the top of the Feed is the one
+        // place this card must not be.
         ListFooterComponent={listFooter}
         initialNumToRender={4}
         // 7 → 5 (Area B). Feed cards are tall — roughly one per screen — so 7

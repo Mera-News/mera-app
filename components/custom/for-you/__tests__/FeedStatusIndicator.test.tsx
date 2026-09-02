@@ -152,12 +152,64 @@ describe('FeedStatusIndicator', () => {
     });
 
     it('advertises open vs collapse to screen readers', () => {
+        // Substring match: the label now leads with the STATE and ends with the
+        // action (see a11yStateKey). Matching the action alone is still the
+        // right assertion for this test — the state half has its own below.
         const { queryByLabelText, rerender } = renderIndicator({ expanded: false });
-        expect(queryByLabelText(OPEN_A11Y)).toBeTruthy();
+        expect(queryByLabelText(new RegExp(OPEN_A11Y))).toBeTruthy();
 
         rerender(
             <FeedStatusIndicator mode="processing" expanded onPress={jest.fn()} testID={TEST_ID} />,
         );
-        expect(queryByLabelText(COLLAPSE_A11Y)).toBeTruthy();
+        expect(queryByLabelText(new RegExp(COLLAPSE_A11Y))).toBeTruthy();
+    });
+
+    // The capped state used to be signalled by amber ink and NOTHING else, so a
+    // screen-reader user was told "Open feed status" whether the feed was fine,
+    // broken, or out of articles for the day. These two tests are the whole
+    // reason the label is composed.
+    it.each([
+        ['processing', 'feedStatus.modeProcessing'],
+        ['error', 'feedStatus.modeError'],
+        ['limited', 'feedStatus.modeLimited'],
+        ['idle', 'feedStatus.idle'],
+        ['deferred', 'feedStatus.idle'],
+    ] as const)('names the %s state in its accessibility label', (mode, key) => {
+        const { queryByLabelText } = renderIndicator({ mode });
+        expect(queryByLabelText(new RegExp(`^${key}\\.`))).toBeTruthy();
+    });
+
+    it('announces entering limited and error, but not idle', () => {
+        const { AccessibilityInfo } = require('react-native');
+        const announce = jest
+            .spyOn(AccessibilityInfo, 'announceForAccessibility')
+            .mockImplementation(() => {});
+        try {
+            // Mounting already-capped must NOT announce: the user navigated here.
+            const { rerender } = renderIndicator({ mode: 'limited' });
+            expect(announce).not.toHaveBeenCalled();
+
+            const at = (mode: 'idle' | 'limited' | 'error') =>
+                rerender(
+                    <FeedStatusIndicator
+                        mode={mode}
+                        expanded={false}
+                        onPress={jest.fn()}
+                        testID={TEST_ID}
+                    />,
+                );
+
+            at('idle');
+            expect(announce).not.toHaveBeenCalled();
+
+            at('limited');
+            expect(announce).toHaveBeenCalledWith('feedStatus.modeLimited');
+
+            at('error');
+            expect(announce).toHaveBeenCalledWith('feedStatus.modeError');
+            expect(announce).toHaveBeenCalledTimes(2);
+        } finally {
+            announce.mockRestore();
+        }
     });
 });
