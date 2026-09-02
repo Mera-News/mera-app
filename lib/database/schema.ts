@@ -173,10 +173,6 @@ export default appSchema({
       ],
     }),
 
-    // The set of article_suggestion server `_id`s the server has handed us in
-    // the user's 24h window. Decoupled from `article_suggestions` so we can
-    // remember "the server still owes us data for this id" even if its
-    // hydrated row gets discarded post-scoring (relevance ≤ 0.3) or never
     // ── User / Persona ────────────────────────────────────────────
 
     tableSchema({
