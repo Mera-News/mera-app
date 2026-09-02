@@ -1,7 +1,6 @@
 import { useUserStore } from '@/lib/stores/user-store';
 import { feedSyncMachine } from '../feed-sync/FeedSyncMachine';
 import { AppScheduler } from '../AppScheduler';
-import { getAiAccess } from '@/lib/stores/subscription-store';
 import logger from '@/lib/logger';
 
 AppScheduler.register({
@@ -13,19 +12,35 @@ AppScheduler.register({
     { type: 'network' },
     { type: 'authenticated' },
     { type: 'db-ready' },
-    // Mera News Free: every one of the four queries this task runs is behind
-    // SubscriptionGuard, so a locked device would fire four 402s a minute,
-    // forever, and get nothing back. Gating here stops the requests, not just
-    // the notice.
+    // NO TIER CONDITION HERE, deliberately — see below before adding one back.
     //
-    // `!== 'locked'` rather than `=== 'entitled'` on purpose: 'unknown' must
-    // still sync. Cold start reaches this condition before the first
-    // `userBilling` answer lands, and treating "we haven't heard yet" as locked
-    // would silently cost a paying user their first sync of every launch.
-    {
-      type: 'custom',
-      check: () => getAiAccess() !== 'locked',
-    },
+    // This used to be `getAiAccess() !== 'locked'`, because all four queries
+    // this task runs sat behind SubscriptionGuard and a locked device would
+    // fire four 402s a minute forever. Mera News Free removes that guard: a
+    // free device is entitled to a metered daily allowance, so 'locked' now
+    // means "free", not "no access", and skipping the sync would leave every
+    // free user with a permanently empty Dashboard.
+    //
+    // REQUIRES THE SERVER HALF. Cap-reached now answers HTTP 200 with
+    // `dailyLimitReached: true` instead of throwing 402. If SubscriptionGuard
+    // is ever restored on those queries without restoring a condition here,
+    // this task goes back to a 402 loop.
+    //
+    // "Skip a pointless round trip" and "skip the sync" are NOT the same
+    // predicate, which is the trap to avoid if you reintroduce a gate. A free
+    // user with zero unlocked topics still has work to do: they degrade to
+    // headline scopes plus geo inside `stepFetchTopicIds` and get a real feed.
+    // A tier condition that blocks them outright would delete that path
+    // silently.
+    //
+    // Enforcement of the free-tier limits is NOT here and must not move here.
+    // `trigger()` bypasses `_conditionsMet` entirely, so pull-to-refresh and
+    // the tab re-tap run this task with none of its conditions applied —
+    // anything gated only here is ungated on the manual path. The topic filter
+    // lives in `stepFetchTopicIds`, which is on both paths.
+    // `aiAccessForSchedulerCondition()` exists for a future condition that
+    // genuinely only saves a round trip; nothing here qualifies today.
+
     // Don't burn a round trip every 60s once the daily cap has clipped a run:
     // the server will just clip again until the reset. Gating here rather than
     // inside the machine also stops the wasted request, not merely the notice.

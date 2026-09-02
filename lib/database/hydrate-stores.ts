@@ -61,6 +61,14 @@ export function hydrateAllStores(): Promise<void> {
     useTextScaleStore.getState().hydrate(),
     useTutorialsStore.getState().hydrate(),
     useStartupTabStore.getState().hydrate(),
+    // Not a Zustand store either: a synchronous mirror of the last resolved
+    // subscription tier, read by `feed-sync`'s scheduler condition. It MUST be
+    // inside this Promise.all rather than after it — `database-store.ready`
+    // flips in the `.finally()` below, and `feed-sync` carries a `db-ready`
+    // condition, so being in here is exactly what guarantees the mirror is
+    // populated before any tier-dependent task is eligible to run. Moving it
+    // after the await would silently reopen the cold-start hole it closes.
+    require('../subscription/free-tier-topic-access').hydrateLastKnownTierMirror(),
     // Not a Zustand store: a synchronous mirror of the backup preferences,
     // read by the settings section and by the background task's guards.
     require('../backup/backup-settings')

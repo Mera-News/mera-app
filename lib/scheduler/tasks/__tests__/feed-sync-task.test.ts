@@ -75,6 +75,19 @@ describe('feed-sync-task registration', () => {
     expect(types).toContain('db-ready');
   });
 
+  // Mera News Free: a free device MUST sync. The tier condition that used to
+  // sit here (`getAiAccess() !== 'locked'`) would now leave every free user
+  // with a permanently empty Dashboard, and a free user with zero unlocked
+  // topics would never reach the headline degrade in stepFetchTopicIds.
+  //
+  // Asserted as an exact COUNT because the sibling assertion above uses
+  // `toContain`, which passes whether there are one or five custom conditions —
+  // so it cannot catch a reintroduced tier gate. This can.
+  it('has exactly one custom condition (the daily cap) and no tier gate', () => {
+    const custom = registeredDef.conditions.filter((c: any) => c.type === 'custom');
+    expect(custom).toHaveLength(1);
+  });
+
   it('is exclusive', () => {
     expect(registeredDef.exclusive).toBe(true);
   });

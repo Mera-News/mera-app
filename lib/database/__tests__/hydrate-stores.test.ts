@@ -151,6 +151,16 @@ jest.mock('@/lib/backup/backup-settings', () => ({
   hydrateBackupSettings: jest.fn(() => Promise.resolve()),
 }));
 
+// The second non-store entry in that same Promise.all: the synchronous
+// last-known-tier mirror that `feed-sync`'s scheduler condition reads. Mocked
+// for the same reason as the one above — unmocked it reaches the real
+// setting-service, which opens SQLite at import and kills the WORKER rather
+// than failing an assertion, so the error names nothing useful.
+const mockHydrateLastKnownTierMirror = jest.fn(() => Promise.resolve());
+jest.mock('@/lib/subscription/free-tier-topic-access', () => ({
+  hydrateLastKnownTierMirror: () => mockHydrateLastKnownTierMirror(),
+}));
+
 // Chained off the hydration above to reconcile the OS background task with the
 // cadence. Unmocked it pulls in expo-background-task and sentry-init, which is
 // a lot of graph for a suite about store hydration.
@@ -214,6 +224,41 @@ describe('hydrateAllStores', () => {
   it('calls setReady(true) via finally even when a store hydration fails', async () => {
     mockUserHydrateFromDb.mockRejectedValueOnce(new Error('user hydrate fail'));
     await expect(hydrateAllStores()).rejects.toThrow('user hydrate fail');
+    expect(mockSetReady).toHaveBeenCalledWith(true);
+  });
+
+  // ── RD5: the last-known-tier mirror hydrates INSIDE the Promise.all ────────
+  //
+  // `feed-sync` reads that mirror from a SYNCHRONOUS scheduler condition, and
+  // the only thing making that safe is this ordering: the mirror is populated
+  // before `database-store.ready` flips, and `feed-sync` carries a `db-ready`
+  // condition, so it cannot run against an empty mirror. Moving the hydrate
+  // after the await would compile, pass every other test in this file, and
+  // silently reopen the cold-start hole — which is exactly why it is pinned.
+
+  it('hydrates the last-known-tier mirror', async () => {
+    await hydrateAllStores();
+    expect(mockHydrateLastKnownTierMirror).toHaveBeenCalledTimes(1);
+  });
+
+  it('does NOT flip ready until the tier mirror has resolved', async () => {
+    let releaseMirror: () => void = () => undefined;
+    mockHydrateLastKnownTierMirror.mockReturnValueOnce(
+      new Promise<void>((resolve) => {
+        releaseMirror = resolve;
+      }),
+    );
+
+    const done = hydrateAllStores();
+    // Let every other member of the Promise.all settle. If the mirror were
+    // hydrated after the await (or not awaited at all), ready would be set by
+    // now and this assertion would fail.
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(mockSetReady).not.toHaveBeenCalled();
+
+    releaseMirror();
+    await done;
     expect(mockSetReady).toHaveBeenCalledWith(true);
   });
 
