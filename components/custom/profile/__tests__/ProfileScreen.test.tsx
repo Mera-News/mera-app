@@ -249,20 +249,24 @@ describe('ProfileScreen', () => {
         expect(getByTestId('mera-logo')).toBeTruthy();
     });
 
-    it('locked → tapping the Mera row opens the paywall, never the chat', async () => {
+    it('locked → tapping the Mera row opens the CHAT, not the paywall', async () => {
+        // REVERSED this wave. It used to open the paywall, because
+        // FloatingChatHost rendered nothing while locked and the morph had no
+        // popover to target. The host mounts in every state now, and the chat
+        // is the better destination: the popup opens on the persona opener,
+        // which explains the tier and offers "See plans" as its one action.
+        // Going straight to a purchase sheet skipped the explanation.
         mockAiAccess = 'locked';
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() => expect(getByTestId('mera-chat-invite-locked')).toBeTruthy());
         // The entitled testID must NOT be present — the two states have to stay
-        // distinguishable now that both are pressable.
+        // distinguishable now that both open the same destination.
         expect(queryByTestId('mera-chat-invite')).toBeNull();
 
         fireEvent.press(getByTestId('mera-chat-invite-locked'));
-        expect(mockPresentFreeTierPaywall).toHaveBeenCalledWith('MeraChatInvite');
-        // `FloatingChatHost` renders nothing while locked, so a morph here would
-        // target an unmounted popover.
-        expect(mockExpand).not.toHaveBeenCalled();
+        expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
+        expect(mockPresentFreeTierPaywall).not.toHaveBeenCalled();
     });
 
     it('locked → the About-you facts heading and list still render', async () => {
