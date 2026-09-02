@@ -28,13 +28,24 @@
 //     is active returns null rather than a second token, so a stray caller
 //     cannot quietly open a parallel exemption.
 //
-// What this deliberately does NOT do is decide WHO deserves a run. That is the
-// routing decision in `lib/subscription/onboarding-paywall.ts`, which is the
-// persona area's, and it has already been made by the time the wizard mounts.
+// ## What this module deliberately does NOT decide
+//
+// It does not decide WHO deserves a run. That condition belongs to the routing
+// in `lib/subscription/onboarding-paywall.ts`, which this module does not own,
+// and which has already been evaluated by the time the wizard mounts.
+//
+// If you are here to "harden" this by re-deriving that condition locally —
+// counting facts, reading a tier, inspecting a route — stop. That is the
+// original D29 mistake in a different costume: every ambient condition that
+// looks equivalent to "this is a first run" has already changed state by the
+// time the guarded work executes. The credential is the token. The decision is
+// upstream. Keeping those separate is the design, not an omission.
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
+import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import logger from '@/lib/logger';
+import { isChatLocked } from './free-tier-gate';
 
 declare const ONBOARDING_RUN_BRAND: unique symbol;
 
@@ -86,8 +97,22 @@ export function useOnboardingRunToken(active: boolean): OnboardingRunToken | nul
     const token = tokenRef.current;
     const [granted, setGranted] = useState(false);
 
+    // Subscribed, not read once. `isChatLocked()` is a plain function, so
+    // without a reactive dependency the effect below would evaluate it exactly
+    // once, at mount — and on a cold start that is the `'unknown'` window,
+    // before the server has answered. The mint would be refused, the tier would
+    // resolve to locked a moment later, and the wizard would sit there gated
+    // with no exemption and no way to get one: precisely the stranded zero-fact
+    // user D29 exists to rescue. Re-running when `serverTier` changes closes it.
+    const serverTier = useSubscriptionStore((s) => s.serverTier);
+
     useEffect(() => {
         if (!active) return;
+        // A token is only meaningful against a gate. If this user is not
+        // actually on the free tier — genuinely entitled, or transiently
+        // unresolved — there is nothing to exempt, so refusing to mint costs
+        // nothing and keeps a token minted outside the free tier inert.
+        if (!isChatLocked()) return;
         if (liveRuns.size > 0) {
             logger.warn('[onboarding-run] refused: a run is already live');
             return;
@@ -98,7 +123,7 @@ export function useOnboardingRunToken(active: boolean): OnboardingRunToken | nul
             liveRuns.delete(token);
             setGranted(false);
         };
-    }, [active, token]);
+    }, [active, token, serverTier]);
 
     return active && granted ? token : null;
 }

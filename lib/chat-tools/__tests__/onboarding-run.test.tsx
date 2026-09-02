@@ -4,11 +4,30 @@
 
 import { renderHook, act } from '@testing-library/react-native';
 
+// The mint refuses unless the user is actually on the free tier, so these
+// tests have to put them there. `serverTier` is not decoration: a null tier is
+// the cold-start 'unknown' window, and the mint must refuse during it.
+let mockAiAccess = 'locked';
+let mockServerTier: string | null = 'none';
+jest.mock('@/lib/stores/subscription-store', () => ({
+    getAiAccess: () => mockAiAccess,
+    useSubscriptionStore: Object.assign(
+        (selector: (s: { serverTier: string | null }) => unknown) =>
+            selector({ serverTier: mockServerTier }),
+        { getState: () => ({ serverTier: mockServerTier }) },
+    ),
+}));
+
 import {
     isOnboardingRunActive,
     useOnboardingRunToken,
     type OnboardingRunToken,
 } from '../onboarding-run';
+
+beforeEach(() => {
+    mockAiAccess = 'locked';
+    mockServerTier = 'none';
+});
 
 describe('isOnboardingRunActive', () => {
     it('refuses absent tokens, so every guard defaults to NO exemption', () => {
@@ -58,10 +77,12 @@ describe('useOnboardingRunToken', () => {
     });
 
     it('revokes when the run goes inactive without unmounting', () => {
-        const { result, rerender } = renderHook(
-            ({ active }) => useOnboardingRunToken(active),
-            { initialProps: { active: true } },
-        );
+        const { result, rerender } = renderHook<
+            OnboardingRunToken | null,
+            { active: boolean }
+        >(({ active }) => useOnboardingRunToken(active), {
+            initialProps: { active: true },
+        });
         const token = result.current;
         expect(isOnboardingRunActive(token)).toBe(true);
 
@@ -83,6 +104,39 @@ describe('useOnboardingRunToken', () => {
 
         first.unmount();
         second.unmount();
+    });
+
+    it('refuses to mint for an ENTITLED user: no gate, nothing to exempt', () => {
+        mockAiAccess = 'entitled';
+        mockServerTier = 'starter';
+
+        const { result } = renderHook(() => useOnboardingRunToken(true));
+
+        expect(result.current).toBeNull();
+    });
+
+    it('refuses to mint during the cold-start unknown window', () => {
+        // A 'locked' reading the server has not confirmed is not the free
+        // tier, it is an unanswered question.
+        mockServerTier = null;
+
+        const { result } = renderHook(() => useOnboardingRunToken(true));
+
+        expect(result.current).toBeNull();
+    });
+
+    it('MINTS once the server resolves, without a remount', () => {
+        // The race the reactive dep exists for. The wizard mounts during the
+        // unknown window, so a mint evaluated once at mount would refuse
+        // forever and strand the exact zero-fact user D29 rescues.
+        mockServerTier = null;
+        const { result, rerender } = renderHook(() => useOnboardingRunToken(true));
+        expect(result.current).toBeNull();
+
+        mockServerTier = 'none';
+        act(() => rerender(undefined));
+
+        expect(isOnboardingRunActive(result.current)).toBe(true);
     });
 
     it('lets a later run start once the previous one has ended', () => {
