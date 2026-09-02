@@ -42,10 +42,11 @@
 // Everything here is inert until that flag flips. `DEV_FORCE_AI_ACCESS` sits
 // above the ship gate, so the simulator harness can still drive every branch.
 
-import { getAiAccess, useSubscriptionStore } from '@/lib/stores/subscription-store';
+import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import { loginRevenueCat } from '@/lib/revenuecat';
 import { syncEntitlement } from '@/lib/subscription/entitlement-sync';
-import { aiAccessIsServerResolved, type AiAccess } from '@/lib/subscription/ai-access';
+import { type AiAccess } from '@/lib/subscription/ai-access';
+import { serverResolvedAiAccess } from '@/lib/subscription/free-tier-topic-access';
 import {
     aiAccessFromLastKnownTier,
     readLastKnownTier,
@@ -274,21 +275,9 @@ export function waitForAiAccessResolved(timeoutMs: number): Promise<AiAccess> {
     });
 }
 
-/**
- * `getAiAccess()`, but `'unknown'` until OUR SERVER has actually answered.
- *
- * The single discriminator this whole gate turns on. `deriveAiAccess` is
- * allowed to answer optimistically from RevenueCat — that is right for the
- * surfaces it feeds, where a just-completed purchase should unlock chrome
- * seconds before our webhook lands. It is wrong for ROUTING, because RevenueCat
- * has no knowledge of the server's free 14-day Starter grant and answers from
- * local cache long before our GraphQL round trip completes. Taking its
- * `'locked'` as final is what would paywall a granted user.
- *
- * Not a general-purpose replacement for `getAiAccess`: use it only where a
- * wrong guess ROUTES a user somewhere, never where it merely renders.
- */
-function serverResolvedAiAccess(): AiAccess {
-    const { serverTier } = useSubscriptionStore.getState();
-    return aiAccessIsServerResolved(serverTier) ? getAiAccess() : 'unknown';
-}
+// `serverResolvedAiAccess` used to live here as a private helper. It moved to
+// `lib/subscription/free-tier-topic-access.ts` (imported above) when the free
+// tier gained a second decision that needs the same strict reader: the topic
+// filter inside feed sync. Two copies of "has OUR SERVER answered yet" would
+// drift, and the drift would be invisible — one surface routing on RevenueCat's
+// optimistic guess while the other waits for the server.

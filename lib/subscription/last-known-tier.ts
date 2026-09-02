@@ -44,6 +44,53 @@ import type { AiAccess } from '@/lib/subscription/ai-access';
 
 export const LAST_KNOWN_TIER_SETTING_KEY = 'last_known_subscription_tier';
 
+// ---- Synchronous mirror ---------------------------------------------------
+//
+// A scheduler `TaskCondition`'s `check` is SYNCHRONOUS, but this value lives in
+// WatermelonDB behind an async read. An async accessor cast into that signature
+// compiles and a Promise is always truthy, so the condition would pass
+// unconditionally — green types, green tests, dead gate. So the tier is also
+// held in module state. Same pattern, and same reason, as
+// `lib/backup/backup-settings.ts`.
+//
+// Safe rather than a second source of truth ONLY because of an ordering
+// guarantee: `hydrateLastKnownTierMirror()` runs inside `hydrateAllStores()`'s
+// `Promise.all`, `database-store.ready` flips in that function's `.finally()`,
+// and `feed-sync` carries a `db-ready` condition — so the mirror is populated
+// before any tier-dependent task is eligible to run.
+//
+// It holds the RAW TIER, never a derived `AiAccess`, for the same reason the
+// persisted row does (see the file header).
+//
+// Three writes keep it honest, and missing any one of them is a real bug:
+// hydrate at startup, write through on every `rememberLastKnownTier`, and RESET
+// on `clearLastKnownTier`. The reset is the one with a security consequence:
+// module state survives a logout, so a mirror left populated would hand the
+// next user on the device the previous user's tier — the cross-user leak the
+// settings row itself no longer has.
+let mirror: string | null = null;
+
+/**
+ * Populate the mirror. Called from `hydrateAllStores`' `Promise.all`.
+ *
+ * Never rejects: one unreadable settings row must not take startup hydration
+ * down with it. An unreadable row leaves the mirror at "nothing remembered",
+ * which reads as `'unknown'` — the same answer a first-ever launch gives.
+ */
+export async function hydrateLastKnownTierMirror(): Promise<void> {
+    mirror = await readLastKnownTier();
+}
+
+/** The mirrored tier, synchronously. `null` ⇒ nothing remembered. */
+export function lastKnownTierMirror(): string | null {
+    return mirror;
+}
+
+/** Test-only: drop the mirror so suites do not leak state between cases. */
+export function __resetLastKnownTierMirrorForTests(): void {
+    mirror = null;
+}
+
 /**
  * The settings service, required LAZILY and inside each function's try/catch.
  *
@@ -78,6 +125,10 @@ export async function rememberLastKnownTier(
     tier: string | null | undefined,
 ): Promise<void> {
     if (!tier) return;
+    // Mirror FIRST, and outside the try: the sync readers must not lag the
+    // persisted row. A hydrate-only mirror is stale from the first entitlement
+    // sync onward, which is exactly when it starts being consulted.
+    mirror = tier;
     try {
         await settingService().setSetting(LAST_KNOWN_TIER_SETTING_KEY, tier);
     } catch {
@@ -102,6 +153,11 @@ export async function readLastKnownTier(): Promise<string | null> {
 
 /** Wipe the memory. Called on logout and on a user switch. */
 export async function clearLastKnownTier(): Promise<void> {
+    // Before the await, and never inside the try: module state survives a
+    // logout, so a mirror left populated hands the NEXT user on this device the
+    // previous user's tier. That must not depend on a database delete
+    // succeeding.
+    mirror = null;
     try {
         await settingService().deleteSetting(LAST_KNOWN_TIER_SETTING_KEY);
     } catch {
