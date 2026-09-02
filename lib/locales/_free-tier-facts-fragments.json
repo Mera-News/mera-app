@@ -1,0 +1,263 @@
+{
+  "_comment": "free-tier-v2 P3: the facts-list group headers, the Paused badge and the explainer sheet that names the two-oldest-facts rule. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "freeTier": {
+      "factsInFeedHeader": "In your feed",
+      "factsPausedHeader": "Paused",
+      "factsPausedSubtitle": "These stay saved. A plan turns them all on.",
+      "pausedBadge": "Paused",
+      "pausedRowHint": "Paused. Tap to see why.",
+      "explainerTitle": "Your first two interests",
+      "explainerBody": "Mera News Free follows the two interests you added first. Everything else stays saved on this device, exactly as you left it.",
+      "explainerBody2": "A plan turns them all back on.",
+      "explainerDismiss": "Not now"
+    }
+  },
+  "ar": {
+    "freeTier": {
+      "factsInFeedHeader": "في موجزك",
+      "factsPausedHeader": "متوقفة مؤقتًا",
+      "factsPausedSubtitle": "تبقى محفوظة. الخطة تُفعّلها كلها.",
+      "pausedBadge": "متوقف مؤقتًا",
+      "pausedRowHint": "متوقف مؤقتًا. اضغط لمعرفة السبب.",
+      "explainerTitle": "أول اهتمامين لديك",
+      "explainerBody": "يتابع Mera News Free الاهتمامين اللذين أضفتهما أولًا. كل ما عدا ذلك يبقى محفوظًا على هذا الجهاز، تمامًا كما تركته.",
+      "explainerBody2": "الخطة تُعيد تفعيلها كلها.",
+      "explainerDismiss": "ليس الآن"
+    }
+  },
+  "de": {
+    "freeTier": {
+      "factsInFeedHeader": "In deinem Feed",
+      "factsPausedHeader": "Pausiert",
+      "factsPausedSubtitle": "Diese bleiben gespeichert. Ein Plan schaltet alle ein.",
+      "pausedBadge": "Pausiert",
+      "pausedRowHint": "Pausiert. Tippe, um zu erfahren, warum.",
+      "explainerTitle": "Deine ersten zwei Interessen",
+      "explainerBody": "Mera News Free folgt den zwei Interessen, die du zuerst hinzugefügt hast. Alles andere bleibt auf diesem Gerät gespeichert, genau so, wie du es verlassen hast.",
+      "explainerBody2": "Ein Plan schaltet sie alle wieder ein.",
+      "explainerDismiss": "Jetzt nicht"
+    }
+  },
+  "es": {
+    "freeTier": {
+      "factsInFeedHeader": "En tu feed",
+      "factsPausedHeader": "En pausa",
+      "factsPausedSubtitle": "Estos se mantienen guardados. Un plan los activa todos.",
+      "pausedBadge": "En pausa",
+      "pausedRowHint": "En pausa. Toca para saber por qué.",
+      "explainerTitle": "Tus dos primeros intereses",
+      "explainerBody": "Mera News Free sigue los dos intereses que añadiste primero. Todo lo demás se mantiene guardado en este dispositivo, tal como lo dejaste.",
+      "explainerBody2": "Un plan los vuelve a activar todos.",
+      "explainerDismiss": "Ahora no"
+    }
+  },
+  "fr": {
+    "freeTier": {
+      "factsInFeedHeader": "Dans votre fil",
+      "factsPausedHeader": "En pause",
+      "factsPausedSubtitle": "Ils restent enregistrés. Un plan les active tous.",
+      "pausedBadge": "En pause",
+      "pausedRowHint": "En pause. Appuyez pour savoir pourquoi.",
+      "explainerTitle": "Vos deux premiers centres d'intérêt",
+      "explainerBody": "Mera News Free suit les deux centres d'intérêt que vous avez ajoutés en premier. Tout le reste reste enregistré sur cet appareil, exactement comme vous l'avez laissé.",
+      "explainerBody2": "Un plan les réactive tous.",
+      "explainerDismiss": "Pas maintenant"
+    }
+  },
+  "hi": {
+    "freeTier": {
+      "factsInFeedHeader": "आपके फ़ीड में",
+      "factsPausedHeader": "रोका गया",
+      "factsPausedSubtitle": "ये सहेजे रहते हैं। एक योजना इन सभी को चालू कर देती है।",
+      "pausedBadge": "रोका गया",
+      "pausedRowHint": "रोका गया। कारण जानने के लिए टैप करें।",
+      "explainerTitle": "आपकी पहली दो रुचियाँ",
+      "explainerBody": "Mera News Free उन दो रुचियों को फ़ॉलो करता है जिन्हें आपने पहले जोड़ा था। बाकी सब कुछ इस डिवाइस पर सहेजा रहता है, ठीक वैसे ही जैसे आपने छोड़ा था।",
+      "explainerBody2": "एक योजना इन सभी को फिर से चालू कर देती है।",
+      "explainerDismiss": "अभी नहीं"
+    }
+  },
+  "id": {
+    "freeTier": {
+      "factsInFeedHeader": "Di feed Anda",
+      "factsPausedHeader": "Dijeda",
+      "factsPausedSubtitle": "Ini tetap tersimpan. Paket mengaktifkan semuanya.",
+      "pausedBadge": "Dijeda",
+      "pausedRowHint": "Dijeda. Ketuk untuk tahu alasannya.",
+      "explainerTitle": "Dua minat pertama Anda",
+      "explainerBody": "Mera News Free mengikuti dua minat yang pertama Anda tambahkan. Selebihnya tetap tersimpan di perangkat ini, persis seperti yang Anda tinggalkan.",
+      "explainerBody2": "Paket mengaktifkan semuanya kembali.",
+      "explainerDismiss": "Nanti saja"
+    }
+  },
+  "it": {
+    "freeTier": {
+      "factsInFeedHeader": "Nel tuo feed",
+      "factsPausedHeader": "In pausa",
+      "factsPausedSubtitle": "Restano salvati. Un piano li attiva tutti.",
+      "pausedBadge": "In pausa",
+      "pausedRowHint": "In pausa. Tocca per scoprire perché.",
+      "explainerTitle": "I tuoi primi due interessi",
+      "explainerBody": "Mera News Free segue i due interessi che hai aggiunto per primi. Tutto il resto resta salvato su questo dispositivo, esattamente come l'hai lasciato.",
+      "explainerBody2": "Un piano li riattiva tutti.",
+      "explainerDismiss": "Non ora"
+    }
+  },
+  "ja": {
+    "freeTier": {
+      "factsInFeedHeader": "フィードに表示中",
+      "factsPausedHeader": "一時停止中",
+      "factsPausedSubtitle": "これらは保存されたままです。プランを開始するとすべて有効になります。",
+      "pausedBadge": "一時停止中",
+      "pausedRowHint": "一時停止中。理由を見るにはタップしてください。",
+      "explainerTitle": "最初に追加した2つの興味",
+      "explainerBody": "Mera News Free では、最初に追加した2つの興味をフォローします。それ以外はすべて、残したままの状態でこの端末に保存されます。",
+      "explainerBody2": "プランを開始すると、すべて再び有効になります。",
+      "explainerDismiss": "後で"
+    }
+  },
+  "ko": {
+    "freeTier": {
+      "factsInFeedHeader": "내 피드에 표시 중",
+      "factsPausedHeader": "일시 중지됨",
+      "factsPausedSubtitle": "저장된 상태로 유지됩니다. 플랜을 시작하면 모두 켜집니다.",
+      "pausedBadge": "일시 중지됨",
+      "pausedRowHint": "일시 중지됨. 이유를 보려면 탭하세요.",
+      "explainerTitle": "처음 추가한 관심사 두 개",
+      "explainerBody": "Mera News Free는 처음 추가한 관심사 두 개를 팔로우합니다. 나머지는 모두 남겨둔 그대로 이 기기에 저장되어 있습니다.",
+      "explainerBody2": "플랜을 시작하면 모두 다시 켜집니다.",
+      "explainerDismiss": "나중에"
+    }
+  },
+  "nl": {
+    "freeTier": {
+      "factsInFeedHeader": "In je feed",
+      "factsPausedHeader": "Gepauzeerd",
+      "factsPausedSubtitle": "Deze blijven bewaard. Een plan zet ze allemaal aan.",
+      "pausedBadge": "Gepauzeerd",
+      "pausedRowHint": "Gepauzeerd. Tik om te zien waarom.",
+      "explainerTitle": "Je eerste twee interesses",
+      "explainerBody": "Mera News Free volgt de twee interesses die je als eerste hebt toegevoegd. Al het andere blijft op dit apparaat bewaard, precies zoals je het hebt achtergelaten.",
+      "explainerBody2": "Een plan zet ze allemaal weer aan.",
+      "explainerDismiss": "Niet nu"
+    }
+  },
+  "pl": {
+    "freeTier": {
+      "factsInFeedHeader": "W twoim kanale",
+      "factsPausedHeader": "Wstrzymane",
+      "factsPausedSubtitle": "Pozostają zapisane. Plan włącza je wszystkie.",
+      "pausedBadge": "Wstrzymane",
+      "pausedRowHint": "Wstrzymane. Dotknij, aby zobaczyć dlaczego.",
+      "explainerTitle": "Twoje pierwsze dwa zainteresowania",
+      "explainerBody": "Mera News Free śledzi dwa zainteresowania, które dodałeś jako pierwsze. Cała reszta pozostaje zapisana na tym urządzeniu, dokładnie tak, jak ją zostawiłeś.",
+      "explainerBody2": "Plan włącza je wszystkie z powrotem.",
+      "explainerDismiss": "Nie teraz"
+    }
+  },
+  "pt-BR": {
+    "freeTier": {
+      "factsInFeedHeader": "No seu feed",
+      "factsPausedHeader": "Pausados",
+      "factsPausedSubtitle": "Eles continuam salvos. Um plano ativa todos.",
+      "pausedBadge": "Pausado",
+      "pausedRowHint": "Pausado. Toque para saber por quê.",
+      "explainerTitle": "Seus dois primeiros interesses",
+      "explainerBody": "O Mera News Free segue os dois interesses que você adicionou primeiro. Todo o resto continua salvo neste dispositivo, exatamente como você deixou.",
+      "explainerBody2": "Um plano ativa todos de novo.",
+      "explainerDismiss": "Agora não"
+    }
+  },
+  "ru": {
+    "freeTier": {
+      "factsInFeedHeader": "В вашей ленте",
+      "factsPausedHeader": "На паузе",
+      "factsPausedSubtitle": "Они останутся сохранёнными. План включит их все.",
+      "pausedBadge": "На паузе",
+      "pausedRowHint": "На паузе. Нажмите, чтобы узнать почему.",
+      "explainerTitle": "Ваши первые два интереса",
+      "explainerBody": "Mera News Free следит за двумя интересами, которые вы добавили первыми. Всё остальное останется сохранённым на этом устройстве, ровно так, как вы это оставили.",
+      "explainerBody2": "План снова включит их все.",
+      "explainerDismiss": "Не сейчас"
+    }
+  },
+  "th": {
+    "freeTier": {
+      "factsInFeedHeader": "ในฟีดของคุณ",
+      "factsPausedHeader": "หยุดชั่วคราว",
+      "factsPausedSubtitle": "รายการเหล่านี้ยังถูกบันทึกไว้ แผนจะเปิดใช้งานทั้งหมด",
+      "pausedBadge": "หยุดชั่วคราว",
+      "pausedRowHint": "หยุดชั่วคราว แตะเพื่อดูเหตุผล",
+      "explainerTitle": "ความสนใจสองรายการแรกของคุณ",
+      "explainerBody": "Mera News Free จะติดตามความสนใจสองรายการที่คุณเพิ่มไว้ก่อน ส่วนที่เหลือทั้งหมดยังถูกบันทึกไว้ในอุปกรณ์นี้ เหมือนที่คุณทิ้งไว้ทุกอย่าง",
+      "explainerBody2": "แผนจะเปิดใช้งานทั้งหมดอีกครั้ง",
+      "explainerDismiss": "ไว้ทีหลัง"
+    }
+  },
+  "tr": {
+    "freeTier": {
+      "factsInFeedHeader": "Akışınızda",
+      "factsPausedHeader": "Duraklatıldı",
+      "factsPausedSubtitle": "Bunlar kayıtlı kalır. Bir plan hepsini açar.",
+      "pausedBadge": "Duraklatıldı",
+      "pausedRowHint": "Duraklatıldı. Nedenini görmek için dokunun.",
+      "explainerTitle": "İlk iki ilgi alanınız",
+      "explainerBody": "Mera News Free, ilk eklediğiniz iki ilgi alanını takip eder. Geri kalan her şey bıraktığınız gibi bu cihazda kayıtlı kalır.",
+      "explainerBody2": "Bir plan hepsini yeniden açar.",
+      "explainerDismiss": "Şimdi değil"
+    }
+  },
+  "uk": {
+    "freeTier": {
+      "factsInFeedHeader": "У вашій стрічці",
+      "factsPausedHeader": "Призупинено",
+      "factsPausedSubtitle": "Вони залишаються збереженими. План увімкне їх усі.",
+      "pausedBadge": "Призупинено",
+      "pausedRowHint": "Призупинено. Натисніть, щоб дізнатися чому.",
+      "explainerTitle": "Ваші перші два інтереси",
+      "explainerBody": "Mera News Free стежить за двома інтересами, які ви додали першими. Усе інше залишається збереженим на цьому пристрої, точно так, як ви це залишили.",
+      "explainerBody2": "План знову увімкне їх усі.",
+      "explainerDismiss": "Не зараз"
+    }
+  },
+  "vi": {
+    "freeTier": {
+      "factsInFeedHeader": "Trong bảng tin của bạn",
+      "factsPausedHeader": "Đã tạm dừng",
+      "factsPausedSubtitle": "Chúng vẫn được lưu. Một gói sẽ bật tất cả.",
+      "pausedBadge": "Đã tạm dừng",
+      "pausedRowHint": "Đã tạm dừng. Chạm để xem lý do.",
+      "explainerTitle": "Hai mối quan tâm đầu tiên của bạn",
+      "explainerBody": "Mera News Free theo dõi hai mối quan tâm bạn đã thêm đầu tiên. Mọi thứ khác vẫn được lưu trên thiết bị này, đúng như bạn đã để lại.",
+      "explainerBody2": "Một gói sẽ bật lại tất cả.",
+      "explainerDismiss": "Để sau"
+    }
+  },
+  "zh-CN": {
+    "freeTier": {
+      "factsInFeedHeader": "在你的信息流中",
+      "factsPausedHeader": "已暂停",
+      "factsPausedSubtitle": "它们仍会保存。订阅计划会全部开启。",
+      "pausedBadge": "已暂停",
+      "pausedRowHint": "已暂停。点按了解原因。",
+      "explainerTitle": "你最先添加的两个兴趣",
+      "explainerBody": "Mera News Free 会关注你最先添加的两个兴趣。其余内容都会原样保存在这台设备上。",
+      "explainerBody2": "订阅计划会重新全部开启。",
+      "explainerDismiss": "暂不"
+    }
+  },
+  "zh-TW": {
+    "freeTier": {
+      "factsInFeedHeader": "在您的資訊流中",
+      "factsPausedHeader": "已暫停",
+      "factsPausedSubtitle": "它們仍會保存。訂閱方案會全部開啟。",
+      "pausedBadge": "已暫停",
+      "pausedRowHint": "已暫停。點按了解原因。",
+      "explainerTitle": "您最先加入的兩個興趣",
+      "explainerBody": "Mera News Free 會追蹤您最先加入的兩個興趣。其餘內容都會原樣保存在這台裝置上。",
+      "explainerBody2": "訂閱方案會重新全部開啟。",
+      "explainerDismiss": "暫不"
+    }
+  }
+}
