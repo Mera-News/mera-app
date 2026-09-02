@@ -2,7 +2,7 @@
 //
 // Friction this removes (the repo rule: name it or don't add the pattern): the
 // purchase call sites — ProfileScreen, ManageSubscriptionScreen,
-// PersonaL1MeraProtocol, presentFreeTierPaywall and NotSubscribedScreen — share
+// presentFreeTierPaywall and NotSubscribedScreen — share
 // one contract, `{ billing, confirmed }` from `refreshUserBillingAfterPurchase`,
 // and each already branches on `confirmed` the same way. The toast hangs off that
 // same branch everywhere, so it is one behaviour, not five copies.
