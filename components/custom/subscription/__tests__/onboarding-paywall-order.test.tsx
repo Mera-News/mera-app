@@ -217,19 +217,22 @@ beforeEach(() => {
 const ONBOARDING_ENTRY = 'onboarding-wizard';
 
 describe('unentitled entry before onboarding', () => {
-    it('no active tier + no local facts → Mera News Free, NOT onboarding', async () => {
+    // D29 REVERSED THIS. It used to assert that a locked user never mounts the
+    // wizard, because step 2's persona chat would 401. That rule still holds
+    // for a locked user WITH facts; it does not hold for one with none, who
+    // otherwise has no route to a working product except paying. The 401 is no
+    // longer the outcome: the chat surfaces open for a locked user and the
+    // onboarding-run token exempts this single run.
+    it('no active tier + NO local facts → the wizard runs once (D29 carve-out)', async () => {
         mockServerAnswer = { subscriptionTier: 'none' };
 
         const { onFreeTierMode, onComplete, queryByTestId } = renderGate();
         await flush();
 
-        // The standalone paywall screen is gone (2026-08-19): 'locked' lands
-        // on the free feed, whose FreeTierCard carries the pitch and actions.
-        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
-        // The whole point: the wizard — whose step 2 is the Mera chat that 401s
-        // without an entitlement — never mounts.
-        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
-        expect(queryByTestId('onboarding-wizard')).toBeNull();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
+        // NOT sent to the free feed: there is nothing there for a user with no
+        // interests, which is the whole reason the carve-out exists.
+        expect(onFreeTierMode).not.toHaveBeenCalled();
         expect(onComplete).not.toHaveBeenCalled();
     });
 
@@ -408,18 +411,19 @@ describe('unentitled entry before onboarding', () => {
         jest.useRealTimers();
     });
 
-    it('an unresolvable verdict trusts a last-known tier of "none" → Mera News Free, not the wizard', async () => {
-        // 'none' IS a resolution — the server said this user has no plan — and
-        // it must read as locked rather than as "never resolved".
+    it('an unresolvable verdict trusts a last-known tier of "none" as LOCKED', async () => {
+        // The subject of this test is unchanged: 'none' IS a resolution — the
+        // server said this user has no plan — and must read as locked rather
+        // than as "never resolved". Only the destination moved: with zero facts
+        // a locked user now gets the D29 wizard run rather than the free feed.
         mockSettings[LAST_KNOWN_TIER_SETTING_KEY] = 'none';
         mockIsConnected = false;
 
         const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
-        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
-        expect(queryByTestId('onboarding-wizard')).toBeNull();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
     });
 
     it('a never-resolved OFFLINE device fails open without waiting', async () => {
@@ -515,18 +519,19 @@ describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commi
         expect(mockSyncEntitlement).not.toHaveBeenCalled();
     });
 
-    it('the dev override still reaches Mera News Free with the ship gate off', async () => {
-        // DEV_FORCE_AI_ACCESS sits ABOVE the ship gate, so the simulator harness
-        // can drive this reorder before the flag flips.
+    it('the dev override still forces a locked verdict with the ship gate off', async () => {
+        // Subject unchanged: DEV_FORCE_AI_ACCESS sits ABOVE the ship gate, so
+        // the harness can drive this branch before the flag flips. The forced
+        // 'locked' now lands on the D29 wizard run, because this device has no
+        // facts.
         gates.FREE_TIER_MODE_ENABLED = false;
         gates.DEV_FORCE_AI_ACCESS = 'locked';
 
         const { onFreeTierMode, queryByTestId } = renderGate();
         await flush();
 
-        expect(onFreeTierMode).toHaveBeenCalledTimes(1);
-        expect(queryByTestId(ONBOARDING_ENTRY)).toBeNull();
-        expect(queryByTestId('onboarding-wizard')).toBeNull();
+        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
+        expect(onFreeTierMode).not.toHaveBeenCalled();
     });
 });
 
@@ -535,8 +540,23 @@ describe('decideOnboardingEntry', () => {
         expect(decideOnboardingEntry({ aiAccess: 'entitled' })).toBe('onboarding');
     });
 
-    it('locked goes to Mera News Free (the standalone paywall screen is gone; FreeTierCard is the pitch)', () => {
-        expect(decideOnboardingEntry({ aiAccess: 'locked' })).toBe('free-tier');
+    // D29. The fact count is the marker: no flag, nothing to migrate or clear.
+    it('locked with ZERO facts opens the wizard (the carve-out)', () => {
+        expect(decideOnboardingEntry({ aiAccess: 'locked', hasAnyFacts: false })).toBe('onboarding');
+        // Defaulted, because both real callers only reach this on their
+        // zero-fact branch.
+        expect(decideOnboardingEntry({ aiAccess: 'locked' })).toBe('onboarding');
+    });
+
+    it('locked WITH facts still goes to Mera News Free', () => {
+        expect(decideOnboardingEntry({ aiAccess: 'locked', hasAnyFacts: true })).toBe('free-tier');
+    });
+
+    // One fact ends the carve-out. Abandoning the wizard leaves zero facts and
+    // offers it again, which is wanted rather than a hole.
+    it('the carve-out closes the moment a single fact exists', () => {
+        expect(decideOnboardingEntry({ aiAccess: 'locked', hasAnyFacts: false })).toBe('onboarding');
+        expect(decideOnboardingEntry({ aiAccess: 'locked', hasAnyFacts: true })).toBe('free-tier');
     });
 
     it("'unknown' means our server has never answered → fail OPEN to onboarding", () => {

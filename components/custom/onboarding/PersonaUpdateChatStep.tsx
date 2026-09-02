@@ -27,7 +27,9 @@ import {
 import { getFacts } from '@/lib/database/services/fact-service';
 import { prewarmCloudChat } from '@/lib/llm/prewarm';
 import logger from '@/lib/logger';
+import { useOnboardingRunToken } from '@/lib/chat-tools/onboarding-run';
 import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
+import { useAiAccess } from '@/lib/stores/subscription-store';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -58,6 +60,25 @@ export default function PersonaUpdateChatStep({
 
   const hasInitialized = useRef(false);
   const surfaceRef = useRef<'ONBOARDING' | 'CONFIG'>('ONBOARDING');
+
+  // ── D29: proof of a sanctioned free-tier onboarding run ────────────────
+  //
+  // A locked user only reaches this wizard through the zero-fact carve-out in
+  // `decideOnboardingEntry`, so being locked HERE is exactly that run. The
+  // token exempts it from the fact and topic gates; without it the wizard
+  // would be a dead end for the one cohort it exists to rescue.
+  //
+  // Derived REACTIVELY rather than captured at routing time, and that matters:
+  // entitlement can resolve from `'unknown'` to `'locked'` after the wizard has
+  // already mounted (the routing gate fails open on `'unknown'`). A value
+  // frozen at mount would leave that user inside a wizard whose chat had just
+  // closed, with no token and no way out. This mints the moment it flips.
+  //
+  // Minting is not self-authorising: `useOnboardingRunToken` refuses unless the
+  // chat is genuinely locked, revokes on unmount and on going inactive, and
+  // returns null for a second concurrent run.
+  const isFreeTierZeroFactRun = useAiAccess() === 'locked';
+  const onboardingRun = useOnboardingRunToken(isFreeTierZeroFactRun);
 
   // Warm the cloud-chat critical path (attestation + JWT) the moment the step
   // mounts, so the user's first message isn't gated on the cold fetches.
@@ -178,6 +199,7 @@ export default function PersonaUpdateChatStep({
         resumeMessages={resumeMessages}
         isLoading={false}
         loadingMessage={t('chat.startingChat')}
+        onboardingRun={onboardingRun}
       />
     </KeyboardAvoidingView>
   );

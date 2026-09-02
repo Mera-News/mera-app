@@ -85,6 +85,21 @@ export interface OnboardingEntryInputs {
      * loading state this gate exists to hold.
      */
     aiAccess: AiAccess;
+    /**
+     * D29. Whether this device holds any persona fact at all.
+     *
+     * The FACT COUNT IS THE MARKER for the free-tier onboarding carve-out, and
+     * deliberately so: there is no "run spent" flag, no settings key, and
+     * nothing to migrate or clear. One fact and the carve-out is over; abandon
+     * the wizard with none and it is offered again, which is the wanted
+     * behaviour rather than a hole.
+     *
+     * Defaults to `false` because both existing callers only reach this
+     * function on their zero-fact branch — each early-returns above it when
+     * `hasAnyFacts()` is true. A future caller that may hold facts must pass
+     * this explicitly.
+     */
+    hasAnyFacts?: boolean;
 }
 
 /**
@@ -102,6 +117,7 @@ export interface OnboardingEntryInputs {
  */
 export function decideOnboardingEntry({
     aiAccess,
+    hasAnyFacts = false,
 }: OnboardingEntryInputs): OnboardingEntry {
     if (aiAccess === 'entitled') return 'onboarding';
 
@@ -132,13 +148,39 @@ export function decideOnboardingEntry({
     // never answered on this device" — not "RevenueCat says no".
     if (aiAccess === 'unknown') return 'onboarding';
 
-    // `'locked'` is a real, server-backed refusal → Mera News Free. The feed's
-    // FreeTierCard carries the pitch, the Subscribe CTA and support; there is
-    // no interstitial to dismiss and no dismissal flag anymore. Not stranded
-    // un-onboarded either: the moment they subscribe the verdict becomes
-    // `'entitled'` and onboarding runs on the next pass. The load-bearing part
-    // of the old 'paywall' entry survives unchanged: an unentitled user never
-    // mounts the wizard, whose persona-chat prewarm would 401.
+    // ── D29: THE ZERO-FACT CARVE-OUT ─────────────────────────────────────
+    //
+    // A locked user with NO facts has no route to a working product at all.
+    // They were sent to Mera News Free, which serves a feed built from their
+    // interests — of which they have none, and no way to make any, because
+    // every path that creates a fact was closed to them. The only exit was to
+    // pay. So: zero facts buys one run of the ONBOARDING WIZARD.
+    //
+    // The wizard, not open persona chat. It is a bounded flow that already
+    // produces facts and terminates on its own; routing to free chat would
+    // reopen the conversational path this wave closed and would need a spend
+    // marker to stop being unlimited.
+    //
+    // Nothing marks the run as spent, because the fact count already does.
+    //
+    // This REVERSES, for this cohort only, the rule that an unentitled account
+    // never mounts the wizard (whose step 2 persona chat would 401). What makes
+    // that safe is new: the chat surfaces now open for a locked user, and the
+    // onboarding-run token minted in PersonaUpdateChatStep exempts this one run
+    // from the fact and topic gates. Without that token the wizard would be a
+    // dead end, so the two changes are a pair and neither is safe alone.
+    if (!hasAnyFacts) return 'onboarding';
+
+    // `'locked'` WITH facts → Mera News Free. The feed's FreeTierCard carries
+    // the pitch, the Subscribe CTA and support. Not stranded un-onboarded
+    // either: the moment they subscribe the verdict becomes `'entitled'`.
+    //
+    // REACHABILITY, stated because it is invisible from here: both callers
+    // today (`OnboardingScreen` and `app/logged-in/index.tsx`) early-return
+    // before this function whenever `hasAnyFacts()` is true, so neither can
+    // currently reach this line. It is kept rather than deleted because the
+    // branch is the correct answer to the question asked, and a future caller
+    // that resolves entry WITHOUT a fact gate would need it.
     return 'free-tier';
 }
 

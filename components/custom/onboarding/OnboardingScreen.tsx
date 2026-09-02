@@ -276,7 +276,10 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
             });
             if (cancelled) return;
 
-            const entry = decideOnboardingEntry({ aiAccess });
+            // `hasFacts` is provably false here (the early return above), but
+            // it is passed rather than hardcoded so the D29 carve-out stays
+            // correct if that guard ever moves.
+            const entry = decideOnboardingEntry({ aiAccess, hasAnyFacts: hasFacts });
             if (entry !== 'onboarding') {
                 // Leave the spinner mounted: the callback replaces this route,
                 // so rendering anything else here would only flash.
