@@ -25,15 +25,20 @@ export interface FreeTierCardProps {
 }
 
 /**
- * The one big card that explains Mera News Free, pinned to the TOP of the
- * Dashboard/Feed list.
+ * The one big card that explains Mera News Free, pinned to the END of the
+ * Dashboard and Feed lists.
  *
- * It is a HEADER, never an empty state. Everything already on the device keeps
- * rendering underneath it, scrollable and tappable — that is the whole promise
- * of this mode, and replacing the list would break it. The existing
- * `renderEmpty()` chains are untouched: once the cached rows genuinely age out
- * via the normal TTL sweep, this card sitting above an ordinary empty list is
- * the correct end state, needing no new branch.
+ * It used to be a list HEADER on both. It moved to the footer (D36) once the
+ * free tier became real capped access rather than a wall: a user who still
+ * gets a feed should meet the feed first and the pitch after it, not be asked
+ * to scroll past an advertisement to reach content they are entitled to.
+ *
+ * It is never an empty state. Everything already on the device keeps rendering
+ * above it, scrollable and tappable — that is the whole promise of this mode,
+ * and replacing the list would break it. The existing `renderEmpty()` chains
+ * are untouched: once the cached rows genuinely age out via the normal TTL
+ * sweep, this card below an ordinary empty list is the correct end state,
+ * needing no new branch.
  *
  * Reads `useAiAccess()` itself and renders `null` unless locked, so callers can
  * mount it unconditionally and cannot forget the check. `'unknown'` renders

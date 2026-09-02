@@ -8,7 +8,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 
-export type FreeTierNoticeSurface = 'chat' | 'stories-header';
+export type FreeTierNoticeSurface = 'stories-header';
 
 export interface FreeTierInlineNoticeProps {
     readonly surface: FreeTierNoticeSurface;
@@ -26,12 +26,16 @@ export interface FreeTierInlineNoticeProps {
  * Each surface gets its own sentence because each one is answering a different
  * question the user just asked by arriving there.
  *
+ * There used to be a `'chat'` variant standing where a chat invite would have
+ * been. It never had a caller, and the free tier no longer wants one: the chat
+ * popup OPENS for a free user now, carrying a contextual first message, rather
+ * than being replaced by a row explaining its absence.
+ *
  * `as const` on the key map is load-bearing: `t` is typed against the literal
  * union generated from en.json, so a widened `string` would not type-check and
  * a typo'd key would render as a raw path on a device instead of failing here.
  */
 const NOTICE_KEY = {
-    chat: 'freeTier.chatNotice',
     'stories-header': 'freeTier.storiesNotice',
 } as const satisfies Record<FreeTierNoticeSurface, string>;
 
