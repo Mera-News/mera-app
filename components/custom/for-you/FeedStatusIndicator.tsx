@@ -82,11 +82,11 @@ function inkFor(mode: FeedStatusMode): string {
  * pipeline count the reader cannot act on.
  */
 function a11yStateKey(mode: FeedStatusMode): string {
-    // Returns a plain string, read through `tAny` below. Three of these four
-    // keys (`modeProcessing` / `modeError` / `modeLimited`) arrive with the
-    // free-tier locale splice; `lib/i18n/types.ts` types `t()` off en.json, so
-    // a literal here would not compile until that run lands. The key is also
-    // genuinely dynamic, which is what `tAny` exists for in this file family.
+    // Returns a plain string, read through `tAny` below. All four keys exist in
+    // all 20 dictionaries, so this is NOT a missing-key workaround: the key is
+    // genuinely COMPUTED from `mode`, which is what `tAny` exists for in this
+    // file family. Do not "fix" it to a typed `t()` — there is no literal here
+    // to type.
     switch (mode) {
         case 'processing':
             return 'feedStatus.modeProcessing';

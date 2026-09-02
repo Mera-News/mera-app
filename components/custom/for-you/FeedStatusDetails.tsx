@@ -72,9 +72,8 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
     onBeforeNavigate,
 }) => {
     const { t } = useTranslation();
-    // Also the carrier for the two free-tier daily-limit keys, which arrive
-    // with the free-tier locale splice (lib/i18n/types.ts types `t()` off
-    // en.json, so a literal would not compile before that run lands).
+    // For the DYNAMIC key below (`syncStatusMessage.headlineKey`) only. Every
+    // literal key in this file goes through the typed `t()`.
     const tAny = t as any;
     const appLanguage = useAppLanguage();
     const router = useRouter();
@@ -198,10 +197,10 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                                 : 'text-warning-400 font-semibold'
                         }
                     >
-                        {tAny(isFreeTier ? 'feed.dailyLimit.freeTitle' : 'feed.dailyLimit.title')}
+                        {t(isFreeTier ? 'feed.dailyLimit.freeTitle' : 'feed.dailyLimit.title')}
                     </Text>
                     <Text size="xs" className="text-typography-300 mt-1">
-                        {tAny(
+                        {t(
                             isFreeTier
                                 ? 'feed.dailyLimit.freeBodyWithTime'
                                 : 'feed.dailyLimit.bodyWithTime',
