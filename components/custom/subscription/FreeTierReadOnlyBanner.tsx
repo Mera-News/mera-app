@@ -1,24 +1,4 @@
-import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
-import { Text } from '@/components/ui/text';
-import { VStack } from '@/components/ui/vstack';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback } from 'react';
-import { useTranslation } from 'react-i18next';
-
-export type FreeTierReadOnlySurface =
-    | 'mera-protocol'
-    | 'persona'
-    | 'facts'
-    | 'publications';
-
-export interface FreeTierReadOnlyBannerProps {
-    readonly surface: FreeTierReadOnlySurface;
-    /** Defaults to presenting the RevenueCat paywall. */
-    readonly onSeePlans?: () => void;
-}
 
 /**
  * Whether the AI settings screens are read-only.
@@ -31,58 +11,25 @@ export interface FreeTierReadOnlyBannerProps {
  *
  * `'unknown'` is not read-only: a paying user must not find their switches
  * frozen for the first second of a cold start.
+ *
+ * ## Why this file has no component in it any more
+ *
+ * It used to also export a pinned-bottom banner explaining the frozen controls,
+ * mounted on five screens. The banner was removed as a product decision; the
+ * DISABLING it explained was not.
+ *
+ * The file and this export deliberately kept their names. Renaming or re-homing
+ * the hook would have meant edits at seven call sites plus three jest mocks
+ * that pin `useFreeTierReadOnly: () => false`, and a mistake in any of those
+ * grants a free user write access to a settings screen with every suite still
+ * green. Five deletions and no rename is the whole change, which is a diff a
+ * reviewer can check by eye — and by eye is the only way, since nothing tests
+ * the removed component.
+ *
+ * Four of the five screens it explained (publications, sources, Mera Protocol
+ * settings, persona audit) now disable their controls with no on-screen reason.
+ * That is the accepted trade, not an oversight.
  */
 export function useFreeTierReadOnly(): boolean {
     return useAiAccess() === 'locked';
 }
-
-/**
- * Pinned-bottom explanation for a screen whose controls `useFreeTierReadOnly`
- * has just disabled. Renders `null` when not locked, so screens can mount it
- * unconditionally.
- */
-const FreeTierReadOnlyBanner: React.FC<FreeTierReadOnlyBannerProps> = ({
-    surface,
-    onSeePlans,
-}) => {
-    const { t } = useTranslation();
-    const readOnly = useFreeTierReadOnly();
-
-    const handleSeePlans = useCallback(async () => {
-        if (onSeePlans) {
-            onSeePlans();
-            return;
-        }
-        await presentFreeTierPaywall('FreeTierReadOnlyBanner');
-    }, [onSeePlans]);
-
-    if (!readOnly) return null;
-
-    return (
-        <HStack
-            testID="free-tier-readonly-banner"
-            accessibilityLabel={`free-tier-readonly-${surface}`}
-            space="sm"
-            className="items-start px-4 py-3 border-t border-white/10 bg-black/60"
-        >
-            <MaterialIcons
-                name="lock-outline"
-                size={18}
-                color="rgb(156, 163, 175)"
-                style={{ marginTop: 2 }}
-            />
-            <VStack space="xs" className="flex-1">
-                <Text size="sm" className="text-gray-300">
-                    {t('freeTier.readOnlyBanner')}
-                </Text>
-                <Pressable onPress={handleSeePlans} hitSlop={8}>
-                    <Text size="sm" className="text-primary-400 font-medium">
-                        {t('freeTier.seePlans')}
-                    </Text>
-                </Pressable>
-            </VStack>
-        </HStack>
-    );
-};
-
-export default FreeTierReadOnlyBanner;

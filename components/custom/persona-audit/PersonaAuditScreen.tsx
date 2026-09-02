@@ -8,7 +8,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
+import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import type PersonaChangeLogModel from '@/lib/database/models/PersonaChangeLog';
 import {
     observeRecent,
@@ -179,9 +179,6 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                 />
             )}
 
-            {/* Pinned outside the FlatList (not a scrolled child) so it stays on
-                screen and explains why revert is frozen. */}
-            <FreeTierReadOnlyBanner surface="persona" />
 
             <Modal isOpen={confirmRow !== null} onClose={() => setConfirmRow(null)} size="sm">
                 <ModalBackdrop />

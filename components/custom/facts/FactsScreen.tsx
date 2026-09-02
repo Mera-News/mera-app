@@ -1,5 +1,5 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
-import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
+import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -141,10 +141,6 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
                 </ScrollView>
             </Box>
 
-            {/* Pinned outside the inner Box (which hosts the absolute-inset
-                loading/empty overlays) so it stays on screen and explains why
-                fact/topic editing is frozen. */}
-            <FreeTierReadOnlyBanner surface="facts" />
 
             {/* Privacy notice */}
             <Modal isOpen={showPrivacyInfo} onClose={() => setShowPrivacyInfo(false)} size="sm">

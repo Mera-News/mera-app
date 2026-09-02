@@ -38,7 +38,7 @@ import {
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
-import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
+import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
 import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -1107,9 +1107,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                     {renderContent()}
                 </ScrollView>
 
-                {/* Pinned outside the ScrollView (not a scrolled child) so it stays
-                    on screen and explains why the controls above are frozen. */}
-                <FreeTierReadOnlyBanner surface="mera-protocol" />
             </Box>
         </GluestackUIProvider>
     );

@@ -1,6 +1,6 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { alpha3ToAlpha2 } from '@/components/custom/locations/location-display';
-import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
+import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -224,9 +224,6 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                 />
             )}
 
-            {/* Pinned outside the FlatList (not a scrolled child) so it stays on
-                screen and explains why boost/downrank/mute/clear are frozen. */}
-            <FreeTierReadOnlyBanner surface="publications" />
         </Box>
     );
 };

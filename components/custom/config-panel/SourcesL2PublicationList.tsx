@@ -14,7 +14,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import FreeTierReadOnlyBanner, { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
+import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { normPublicationName } from '@/lib/feed-grouping/geo-language-priority';
 import { observeActive as observeActivePublicationPreferences } from '@/lib/database/services/publication-preference-service';
 import {
@@ -371,11 +371,6 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 />
             )}
 
-            {/* DISABLE, never hide (see FreeTierReadOnlyBanner's own header) — the
-                L2 ↑/↓ control is disabled under the same `surface="publications"`
-                gate as the dedicated Source-preferences screen, so it needs the
-                same pinned explanation rather than going silently dead. */}
-            <FreeTierReadOnlyBanner surface="publications" />
         </Box>
     );
 };
