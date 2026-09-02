@@ -64,6 +64,50 @@ export const HYDRATE_CHUNK_SIZE = 25;
 export const HYDRATE_CONCURRENCY = 3;
 
 /**
+ * Per-topic retrieval depth for a server-resolved FREE user. Paid tiers are
+ * untouched and keep whatever `buildRetrievalProfile` computed (up to
+ * `TOPIC_LIMIT_MAX` = 40).
+ *
+ * WHY A CLAMP AND NOT A SMALLER PROFILE. `buildRetrievalProfile` derives depth
+ * from topic weight, and that mapping is shared with the harness and the paid
+ * path. Narrowing it there would change retrieval for everyone; clamping the
+ * result here keeps the shared logic identical and makes the free-tier rule one
+ * subtraction that is trivial to remove.
+ *
+ * WHY 12. At the default weight a topic asks for 40, so four unlocked topics
+ * alone request 160 ids against a daily cap of 100: the whole day's allowance
+ * arrives in the first sync and the user hits a wall before mid-morning. 12
+ * keeps four topics at 48 ids, which leaves room for the headline scopes
+ * underneath the cap for a single-country reader (48 + 2 scopes x 20 = 88).
+ *
+ * NOT SUFFICIENT ON ITS OWN, and deliberately recorded here rather than in a
+ * report nobody re-reads: headline depth is the dominant term for a reader with
+ * several countries. `DEFAULT_HEADLINE_LIMIT_PER_SCOPE` is 20 and
+ * `MAX_COUNTRY_SCOPES` is 5, so a five-country reader still requests 48 + 120 =
+ * 168 and is clipped every sync. The topic-before-headline ordering above means
+ * the clip lands on headlines rather than on their interests, which is the
+ * right failure, but pacing for that reader needs a headline-depth clamp too.
+ */
+export const FREE_TIER_TOPIC_LIMIT = 12;
+
+/**
+ * Clamp per-topic retrieval depth. Pure; returns the SAME array identity when
+ * nothing exceeds the ceiling, so the paid path allocates nothing.
+ *
+ * Only ever lowers a limit. A topic already asking for less than the ceiling is
+ * left exactly as `buildRetrievalProfile` computed it — this is a cap, not an
+ * assignment, so a deliberately shallow topic is never widened into costing
+ * more than it asked for.
+ */
+export function clampTopicDepth<T extends { limit: number }>(
+  topics: readonly T[],
+  maxLimit: number,
+): T[] {
+  if (topics.every((t) => t.limit <= maxLimit)) return topics as T[];
+  return topics.map((t) => (t.limit <= maxLimit ? t : { ...t, limit: maxLimit }));
+}
+
+/**
  * P9 hard-filter reconcile for the gate's propagation half. Propagated rows are
  * written terminal `complete` with a donor's relevance and never enter
  * computeMathStage/computeAndScore — which is where `screenHardSuppressions`

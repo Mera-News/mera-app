@@ -144,6 +144,8 @@ import {
   partitionStoryIds,
   HYDRATE_CHUNK_SIZE,
   HYDRATE_CONCURRENCY,
+  clampTopicDepth,
+  FREE_TIER_TOPIC_LIMIT,
 } from '../feed-sync-steps';
 import type {
   FetchTopicIdsResult,
@@ -801,6 +803,49 @@ describe('stepDiff', () => {
 });
 
 // ── billing partition (followed stories are quota-exempt) ───────────────────
+
+// ── D28: free-tier per-topic depth clamp ─────────────────────────────────────
+
+describe('clampTopicDepth', () => {
+  const t = (id: string, limit: number) => ({ topicId: id, text: id, limit, effectiveWeight: 1 });
+
+  it('lowers only the topics above the ceiling', () => {
+    const out = clampTopicDepth([t('a', 40), t('b', 8)], 12);
+    expect(out.map((x) => x.limit)).toEqual([12, 8]);
+  });
+
+  it('never RAISES a topic that asked for less — it is a cap, not an assignment', () => {
+    const out = clampTopicDepth([t('a', 8), t('b', 3)], 12);
+    expect(out.map((x) => x.limit)).toEqual([8, 3]);
+  });
+
+  it('returns the same array identity when nothing exceeds the ceiling (paid path allocates nothing)', () => {
+    const input = [t('a', 8), t('b', 12)];
+    expect(clampTopicDepth(input, 12)).toBe(input);
+  });
+
+  it('does not mutate the input topics', () => {
+    const input = [t('a', 40)];
+    clampTopicDepth(input, 12);
+    expect(input[0].limit).toBe(40);
+  });
+
+  it('preserves every other field on a clamped topic', () => {
+    const [out] = clampTopicDepth([t('a', 40)], 12);
+    expect(out).toEqual({ topicId: 'a', text: 'a', limit: 12, effectiveWeight: 1 });
+  });
+
+  it('handles an empty topic list', () => {
+    expect(clampTopicDepth([], 12)).toEqual([]);
+  });
+
+  it('FREE_TIER_TOPIC_LIMIT keeps four default-weight topics under the 100/day cap', () => {
+    // Four topics at the profile's default depth of 40 would request 160 ids
+    // against a cap of 100 — the whole day in one sync. The constant exists to
+    // make that arithmetic false, so assert the arithmetic, not the literal.
+    expect(FREE_TIER_TOPIC_LIMIT * 4).toBeLessThan(100);
+  });
+});
 
 describe('computeFreeTopicTexts', () => {
   const T = (text: string, provenance: string) => ({ text, provenance });
