@@ -27,9 +27,21 @@ const mockMigrateLegacyTrackedStories = jest.fn();
 const mockBackfillTrackedStoryRetention = jest.fn(async () => 0);
 const mockCaptureException = jest.fn();
 const mockRunPersonaMigrationIfNeeded = jest.fn();
+const mockGetFactSectionSnapshots = jest.fn();
+const mockResolveAiAccessForFetch = jest.fn();
 
 jest.mock('@/lib/database/services/fact-service', () => ({
   getFacts: (...args: any[]) => mockGetFacts(...args),
+  getFactSectionSnapshots: () => mockGetFactSectionSnapshots(),
+}));
+
+// Only the ENFORCEMENT reader is stubbed; `deriveFreeTierAccess` runs for REAL
+// (it is pure), so these tests exercise the actual two-oldest-facts rule and the
+// actual tracked-topic exemption rather than a stand-in that could drift from
+// it. The real module loads cleanly here — nothing in its graph needs native.
+jest.mock('@/lib/subscription/free-tier-topic-access', () => ({
+  ...jest.requireActual('@/lib/subscription/free-tier-topic-access'),
+  resolveAiAccessForFetch: () => mockResolveAiAccessForFetch(),
 }));
 
 jest.mock('@/lib/database/services/topic-service', () => ({
@@ -223,6 +235,10 @@ beforeEach(() => {
   mockReconcileTrackedStories.mockResolvedValue(undefined);
   mockMigrateLegacyTrackedStories.mockResolvedValue(0);
   mockLoadUserGeoLanguageContext.mockResolvedValue(null);
+  // Default: entitled. Every pre-existing test in this file therefore keeps its
+  // exact prior behaviour — the free-tier filter is inert for a paid user.
+  mockResolveAiAccessForFetch.mockResolvedValue('entitled');
+  mockGetFactSectionSnapshots.mockResolvedValue([]);
   mockRunPersonaMigrationIfNeeded.mockResolvedValue({
     ran: false,
     factsMigrated: 0,
@@ -718,6 +734,241 @@ describe('stepFetchTopicIds', () => {
     );
   });
 
+});
+
+// ── Mera News Free: the retrieval filter, the clamp and the degrade ─────────
+
+describe('stepFetchTopicIds — free tier', () => {
+  // Two facts, oldest first. f-old and f-old2 are the unlocked pair; f-new is
+  // locked, so its topics must never reach the wire.
+  const FACTS = [
+    { id: 'f-old', createdAtMs: 1_000, weight: null, statement: '', sectionTitle: null },
+    { id: 'f-old2', createdAtMs: 2_000, weight: null, statement: '', sectionTitle: null },
+    { id: 'f-new', createdAtMs: 9_000, weight: null, statement: '', sectionTitle: null },
+  ];
+
+  const row = (over: Record<string, any>) => ({
+    id: over.id,
+    text: over.text,
+    weight: over.weight ?? 0.8,
+    highPriority: false,
+    factId: over.factId ?? null,
+    locationId: null,
+    provenance: over.provenance ?? 'llm',
+  });
+
+  const asFree = () => {
+    mockResolveAiAccessForFetch.mockResolvedValue('locked');
+    mockGetFactSectionSnapshots.mockResolvedValue(FACTS as any);
+  };
+
+  const sentTopics = () => mockGetArticleIdsForPersona.mock.calls[0][0].topics as any[];
+
+  beforeEach(() => {
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetArticleIdsForPersona.mockResolvedValue({ topicResults: [], headlineResults: [] });
+  });
+
+  it('sends ONLY topics under the two oldest facts', async () => {
+    asFree();
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'unlocked one', factId: 'f-old' }),
+      row({ id: 't2', text: 'unlocked two', factId: 'f-old2' }),
+      row({ id: 't3', text: 'locked one', factId: 'f-new' }),
+    ] as any);
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(sentTopics().map((t) => t.text).sort()).toEqual(['unlocked one', 'unlocked two']);
+  });
+
+  it('sends EVERY topic for an entitled user (the filter is inert)', async () => {
+    mockResolveAiAccessForFetch.mockResolvedValue('entitled');
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'a', factId: 'f-old' }),
+      row({ id: 't3', text: 'b', factId: 'f-new' }),
+    ] as any);
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(sentTopics()).toHaveLength(2);
+  });
+
+  it('sends EVERY topic when the tier is unknown (fails OPEN)', async () => {
+    // A cold start that has never resolved a tier must not lock a paying user
+    // out of their own feed.
+    mockResolveAiAccessForFetch.mockResolvedValue('unknown');
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'a', factId: 'f-old' }),
+      row({ id: 't3', text: 'b', factId: 'f-new' }),
+    ] as any);
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(sentTopics()).toHaveLength(2);
+  });
+
+  // ── D26: followed stories are exempt from the lock ──────────────────────
+
+  it('sends a TRACKED topic even though it has no fact (D26)', async () => {
+    asFree();
+    mockGetActive.mockResolvedValue([
+      row({ id: 't3', text: 'locked interest', factId: 'f-new' }),
+      row({ id: 't9', text: 'followed story', factId: null, provenance: 'tracked' }),
+    ] as any);
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(sentTopics().map((t) => t.text)).toEqual(['followed story']);
+  });
+
+  it('keeps a tracked-only topic QUOTA-EXEMPT under the cap (the half a filter test misses)', async () => {
+    // The billing partition is derived from the same snapshot the filter
+    // narrows. If narrowing dropped tracked rows, `freeTopicTexts` would go
+    // empty and every followed-story article would start charging against the
+    // 100/day cap — silently, since the filter test above would still pass.
+    asFree();
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'unlocked interest', factId: 'f-old' }),
+      row({ id: 't9', text: 'followed story', factId: null, provenance: 'tracked' }),
+    ] as any);
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(result.freeTopicTexts).toEqual(new Set(['followed story']));
+    expect(sentTopics().find((t) => t.text === 'followed story')?.strictMatch).toBe(true);
+  });
+
+  it('a text carried by a tracked topic AND a LOCKED interest is FREE, not charged', async () => {
+    // The locked interest is never sent, so the article can only have arrived
+    // via the followed story. Charging it would break the promise that
+    // following a story never consumes the daily allowance.
+    asFree();
+    mockGetActive.mockResolvedValue([
+      row({ id: 't3', text: 'Gaza Ceasefire', factId: 'f-new' }),
+      row({ id: 't9', text: 'gaza ceasefire', factId: null, provenance: 'tracked' }),
+    ] as any);
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(result.freeTopicTexts).toEqual(new Set(['gaza ceasefire']));
+  });
+
+  it('a text carried by a tracked topic AND an UNLOCKED interest stays METERED', async () => {
+    // Both are sent, so the article would have arrived anyway. Metered wins.
+    asFree();
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'Gaza Ceasefire', factId: 'f-old' }),
+      row({ id: 't9', text: 'gaza ceasefire', factId: null, provenance: 'tracked' }),
+    ] as any);
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(result.freeTopicTexts?.size).toBe(0);
+  });
+
+  // ── D28: the depth clamp ────────────────────────────────────────────────
+
+  it('clamps per-topic depth to FREE_TIER_TOPIC_LIMIT', async () => {
+    asFree();
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'a', factId: 'f-old', weight: 1 }),
+    ] as any);
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(sentTopics()[0].limit).toBe(FREE_TIER_TOPIC_LIMIT);
+  });
+
+  it('does NOT clamp an entitled user', async () => {
+    mockResolveAiAccessForFetch.mockResolvedValue('entitled');
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'a', factId: 'f-old', weight: 1 }),
+    ] as any);
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(sentTopics()[0].limit).toBeGreaterThan(FREE_TIER_TOPIC_LIMIT);
+  });
+
+  // ── SPEC 2 / A-2: degrade instead of throwing ───────────────────────────
+
+  it('degrades to headline scopes when a capped user has ZERO unlocked topics', async () => {
+    asFree();
+    mockGetAllLocations.mockResolvedValue([
+      { countryCode: 'NL', role: 'home', weight: 1, validUntil: null },
+    ] as any);
+    mockGetActive.mockResolvedValue([
+      row({ id: 't3', text: 'locked only', factId: 'f-new' }),
+    ] as any);
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(sentTopics()).toHaveLength(0);
+    expect(mockGetArticleIdsForPersona.mock.calls[0][0].topHeadlines.scopes.length).toBeGreaterThan(0);
+    expect(result.serverArticleIds).toEqual([]);
+  });
+
+  it('still THROWS for an entitled user with no positively-weighted topics', async () => {
+    mockResolveAiAccessForFetch.mockResolvedValue('entitled');
+    mockGetAllLocations.mockResolvedValue([
+      { countryCode: 'NL', role: 'home', weight: 1, validUntil: null },
+    ] as any);
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'a', factId: 'f-old', weight: -1 }),
+    ] as any);
+
+    await expect(stepFetchTopicIds('p-1', makeCtx())).rejects.toThrow('no-topics-configured');
+  });
+
+  it('degrades via the GLOBAL scope even with NO locations at all', async () => {
+    // buildRetrievalProfile pushes a GLOBAL scope unconditionally, so a capped
+    // user always has something to degrade to and the sync never dead-ends on
+    // an empty unlocked set. Asserted because the fallback in the source reads
+    // as if it could throw here, and this records that it cannot.
+    asFree();
+    mockGetAllLocations.mockResolvedValue([]);
+    mockGetActive.mockResolvedValue([
+      row({ id: 't3', text: 'locked only', factId: 'f-new' }),
+    ] as any);
+
+    const result = await stepFetchTopicIds('p-1', makeCtx());
+
+    const scopes = mockGetArticleIdsForPersona.mock.calls[0][0].topHeadlines.scopes;
+    expect(scopes.map((sc: any) => sc.scope)).toEqual(['GLOBAL']);
+    expect(result.serverArticleIds).toEqual([]);
+  });
+
+  // ── MAJOR 4: the legacy path is a lock and billing bypass ───────────────
+
+  it('a capped user with an EMPTY topics table never takes the legacy path', async () => {
+    // fetchTopicIdsLegacy reads fact.metadata.topics for every fact at
+    // limitPerTopic 100 and knows nothing about the lock.
+    asFree();
+    mockGetAllLocations.mockResolvedValue([
+      { countryCode: 'NL', role: 'home', weight: 1, validUntil: null },
+    ] as any);
+    mockGetActive.mockResolvedValue([] as any);
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(mockGetArticleIdsForTopics).not.toHaveBeenCalled();
+    expect(mockGetArticleIdsForPersona).toHaveBeenCalled();
+  });
+
+  it('an ENTITLED user with an empty topics table still takes the legacy path', async () => {
+    mockResolveAiAccessForFetch.mockResolvedValue('entitled');
+    mockGetActive.mockResolvedValue([] as any);
+    mockGetFacts.mockResolvedValue([
+      { id: 'f1', statement: 's', metadata: { topics: ['legacy topic'] } },
+    ] as any);
+    mockGetArticleIdsForTopics.mockResolvedValue({ results: [] });
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(mockGetArticleIdsForTopics).toHaveBeenCalled();
+    expect(mockGetArticleIdsForPersona).not.toHaveBeenCalled();
+  });
 });
 
 // ── stepDiff ──────────────────────────────────────────────────────────────────
