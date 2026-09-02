@@ -46,7 +46,8 @@
 // entitlement is enforced in both places.
 
 import { hapticLight } from '../haptics';
-import { getAiAccess } from '../stores/subscription-store';
+import { isChatLocked } from '../chat-tools/free-tier-gate';
+import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { requestFactCheck } from './fact-check-graphql-client';
 import type { FactCheckKeepInput } from '../database/services/saved-article-suggestion-service';
@@ -74,10 +75,14 @@ export interface FactCheckArticle {
 /**
  * Ask the server for this article's fact check.
  *
- * Fire-and-forget and never throws: a locked free-tier reader, or one who has
- * turned fact checking off, is silently ignored (both states also hide the
- * tick), and `requestFactCheck` swallows its own transport failures — a failed
- * ask degrades to "no answer yet", which is what the panel would show anyway.
+ * Fire-and-forget and never throws: a reader who has turned fact checking off
+ * is silently ignored (that state also hides the tick), and `requestFactCheck`
+ * swallows its own transport failures — a failed ask degrades to "no answer
+ * yet", which is what the panel would show anyway.
+ *
+ * A FREE-TIER reader is no longer silent: the tap opens the chat popup on the
+ * fact-check context, where Mera explains that fact checks need a plan. It
+ * used to return false and do nothing at all, which read as a broken button.
  *
  * Returns whether the request was actually issued, so a caller (and the tests)
  * can tell a gated no-op from a real ask.
@@ -86,9 +91,27 @@ export function requestArticleFactCheck(article: FactCheckArticle): boolean {
     if (!article?.articleId) return false;
     // Read straight off the stores rather than through the hooks: this is a
     // plain function, not a component. `.getState()` is zustand's supported
-    // outside-React read, and `getAiAccess()` is the imperative twin the store
-    // exposes for exactly these callers.
-    if (getAiAccess() === 'locked') return false;
+    // outside-React read.
+    //
+    // Mera News Free: open the popup instead of the old silent no-op, then
+    // return false — the return value means "a billable server ask was
+    // issued", and none was. Callers and tests key on that meaning, so opening
+    // a popup must not flip it to true.
+    //
+    // This returns BEFORE the retention block below on purpose. Opening a
+    // popup is not a fact check, so a free user's tap must not pin the article
+    // into saved_article_suggestions. Moving the popup call below the
+    // retention build would silently start creating rows for taps that check
+    // nothing.
+    if (isChatLocked()) {
+        hapticLight();
+        useFloatingChatStore.getState().expand({
+            kind: 'fact-check',
+            articleId: article.articleId,
+            articleTitle: article.title,
+        });
+        return false;
+    }
 
     hapticLight();
     // Retention input built HERE, behind the gates above: a gated no-op must

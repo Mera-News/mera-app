@@ -6,7 +6,6 @@ import { Text } from '@/components/ui/text';
 import { hapticMedium } from '@/lib/haptics';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { useAiAccess } from '@/lib/stores/subscription-store';
-import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef } from 'react';
@@ -55,25 +54,19 @@ const MeraChatInvite: React.FC = () => {
     }, [publishCenter]);
 
     // Mera News Free: the row itself is UNCHANGED — same speech bubble, same
-    // animated logo, same layout an entitled user sees. Two things differ, and
-    // both are about the chat that isn't there:
-    //   1. Mera says the free-tier paragraph instead of the invite, so the mode
-    //      is explained in Mera's own voice rather than by a different-looking
-    //      card appearing where the invite used to be.
-    //   2. Tapping opens the PAYWALL rather than the chat. It cannot open the
-    //      chat: `FloatingChatHost` renders nothing when locked, so the morph
-    //      would target a popover that isn't mounted. An earlier revision made
-    //      the row inert instead, on the reasoning that a speech bubble should
-    //      not advertise a purchase — that was overruled, and the paywall is the
-    //      better answer anyway: the bubble is the one surface that has just
-    //      finished saying "a plan switches me back on", so a tap landing on
-    //      nothing reads as a bug rather than as restraint.
+    // animated logo, same layout an entitled user sees. Only the copy differs:
+    // Mera says the free-tier paragraph instead of the invite, so the mode is
+    // explained in Mera's own voice rather than by a different-looking card
+    // appearing where the invite used to be.
+    //
+    // Tapping now opens the CHAT in both states. It previously opened the
+    // paywall, because `FloatingChatHost` rendered nothing when locked and the
+    // morph would have targeted a popover that was not mounted. The host now
+    // mounts in every state, so that constraint is gone — and the chat is the
+    // better destination: the popup opens on the persona opener, which explains
+    // the tier and offers "See plans" as its single action. Going straight to a
+    // purchase sheet from a speech bubble skipped the explanation.
     const locked = aiAccess === 'locked';
-
-    const openPaywall = useCallback(() => {
-        void hapticMedium();
-        void presentFreeTierPaywall('MeraChatInvite');
-    }, []);
 
     const content = (
         <HStack className="items-center" space="md">
@@ -130,7 +123,7 @@ const MeraChatInvite: React.FC = () => {
     return (
         <Pressable
             testID={locked ? 'mera-chat-invite-locked' : 'mera-chat-invite'}
-            onPress={locked ? openPaywall : openChat}
+            onPress={openChat}
             className="mx-4 mb-5"
         >
             {content}
