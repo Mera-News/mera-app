@@ -24,6 +24,7 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
+import { useOnboardingRun } from '@/lib/chat-tools/onboarding-run';
 import { patchMessageToolCallResult } from '@/lib/database/services/conversation-service';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
@@ -92,6 +93,12 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     }
   };
 
+  // D29: null outside a wizard run, so the commit carries no exemption
+  // anywhere else. Read from context rather than threaded as a prop because
+  // this card renders under ChatThread's item switch, three levels from the
+  // session view and with nothing else here interested in entitlement.
+  const onboardingRun = useOnboardingRun();
+
   const handleAdd = async () => {
     if (busy || stale || isResolved) return;
     setBusy(true);
@@ -106,7 +113,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           // from every future topic run.
           questionnaire: questionnaireAttribute ? { attribute: questionnaireAttribute } : undefined,
         },
-      ]);
+      ], { onboardingRun });
       await writeResult({
         success: true,
         factsSaved: savedFacts.length,

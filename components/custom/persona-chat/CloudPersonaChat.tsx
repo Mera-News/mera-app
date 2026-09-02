@@ -7,6 +7,7 @@ import { createAgentForContext } from '@/components/custom/floating-chat/agent-r
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
 import { useCloudPersonaChat } from '@/lib/hooks/useCloudPersonaChat';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
+import type { OnboardingRunToken } from '@/lib/chat-tools/onboarding-run';
 import React, { useMemo } from 'react';
 
 export interface CloudPersonaChatProps {
@@ -17,6 +18,8 @@ export interface CloudPersonaChatProps {
   resumeMessages?: PersistedMessage[];
   isLoading: boolean;
   loadingMessage?: string;
+  /** D29: passed straight through to ChatSessionView. See onboarding-run.ts. */
+  onboardingRun?: OnboardingRunToken | null;
 }
 
 export default function CloudPersonaChat({
@@ -27,6 +30,7 @@ export default function CloudPersonaChat({
   resumeMessages,
   isLoading,
   loadingMessage,
+  onboardingRun = null,
 }: CloudPersonaChatProps) {
   const agent = useMemo(
     () => createAgentForContext(context, userId, surface),
@@ -36,6 +40,7 @@ export default function CloudPersonaChat({
 
   return (
     <ChatSessionView
+      onboardingRun={onboardingRun}
       messages={chat.messages}
       status={chat.status}
       sendMessage={chat.sendMessage}

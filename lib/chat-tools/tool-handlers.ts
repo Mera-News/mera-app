@@ -26,6 +26,7 @@ import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-s
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import { syncLlmTopicsForFact } from '../database/services/topic-service';
 import { isChatLocked } from './free-tier-gate';
+import { isOnboardingRunActive, type OnboardingRunToken } from './onboarding-run';
 
 // MAX_FACT_LENGTH's canonical home is the harness fact-rules module; re-exported
 // here so existing importers of it from tool-handlers keep working.
@@ -205,8 +206,20 @@ export function isTopicGenerationInFlight(factId: string): boolean {
  */
 export function triggerTopicGeneration(
   savedFactEntries: Array<{ id: string; statement: string }>,
+  opts: TopicGenerationOptions = {},
 ): void {
-  void startTopicGeneration(savedFactEntries);
+  void startTopicGeneration(savedFactEntries, opts);
+}
+
+/**
+ * D29. `onboardingRun` is the ONLY way past the free-tier topic-generation
+ * gate. It must be a live token from a mounted onboarding wizard — never a
+ * boolean, never read from a store, and never inferred from the fact count,
+ * which has already closed by the time this runs (`fact-commit.ts` writes the
+ * fact BEFORE it calls here). See lib/chat-tools/onboarding-run.ts.
+ */
+export interface TopicGenerationOptions {
+  readonly onboardingRun?: OnboardingRunToken | null;
 }
 
 /**
@@ -216,6 +229,7 @@ export function triggerTopicGeneration(
  */
 export async function startTopicGeneration(
   savedFactEntries: Array<{ id: string; statement: string }>,
+  opts: TopicGenerationOptions = {},
 ): Promise<void> {
   if (savedFactEntries.length === 0) return;
 
@@ -224,7 +238,7 @@ export async function startTopicGeneration(
   // in the else branch), so one return closes both. The queue's own handler is
   // guarded separately — a job enqueued before this shipped is still in the
   // persisted `inference_jobs` table and would otherwise drain on next boot.
-  if (isChatLocked()) return;
+  if (isChatLocked() && !isOnboardingRunActive(opts.onboardingRun)) return;
 
   const useCloud =
     useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
@@ -311,12 +325,13 @@ async function clearTopicGenError(factId: string): Promise<void> {
 export async function retryTopicGeneration(
   factId: string,
   factStatement: string,
+  opts: TopicGenerationOptions = {},
 ): Promise<void> {
   if (inFlightCloudTopicGen.has(factId)) return; // fast path: already running
   // Separate entry point (TopicPlanCard's "try again"), so it needs its own
   // guard: it clears the error marker and calls through, which would mint the
   // topics the main path just refused.
-  if (isChatLocked()) return;
+  if (isChatLocked() && !isOnboardingRunActive(opts.onboardingRun)) return;
   try {
     await clearTopicGenError(factId);
   } catch (err: unknown) {
@@ -325,7 +340,7 @@ export async function retryTopicGeneration(
       error: String(err),
     });
   }
-  await startTopicGeneration([{ id: factId, statement: factStatement }]);
+  await startTopicGeneration([{ id: factId, statement: factStatement }], opts);
 }
 
 /**

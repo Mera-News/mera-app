@@ -82,10 +82,39 @@ describe('commitFactChoices', () => {
     // One batch, not one per card — the same single round trip a multi-fact
     // turn used to make.
     expect(mockTriggerTopicGeneration).toHaveBeenCalledTimes(1);
-    expect(mockTriggerTopicGeneration).toHaveBeenCalledWith([
+    // Asserted on the ENTRIES argument alone: this test is about batching, not
+    // about the arity of the call, so a later options argument must not break
+    // it. The D29 options bag is covered in its own test below.
+    expect(mockTriggerTopicGeneration.mock.calls[0][0]).toEqual([
       { id: 'f1', statement: 'A fact' },
       { id: 'f2', statement: 'B fact' },
     ]);
+  });
+
+  it('carries NO onboarding exemption by default', async () => {
+    // The default has to be "no exemption": every commit outside a wizard run
+    // reaches the same function, and a truthy default would hand the entire
+    // free cohort unmetered topic generation.
+    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'A fact' });
+
+    await commitFactChoices([{ statement: 'A fact' }]);
+
+    expect(mockTriggerTopicGeneration.mock.calls[0][1]).toEqual({
+      onboardingRun: undefined,
+    });
+  });
+
+  it('forwards the onboarding run token when one is supplied', async () => {
+    mockAddFact.mockResolvedValueOnce({ id: 'f1', statement: 'A fact' });
+    const token = { pretend: 'token' } as never;
+
+    await commitFactChoices([{ statement: 'A fact' }], { onboardingRun: token });
+
+    // Forwarded verbatim. `commitFactChoices` does not judge the token; only
+    // `isOnboardingRunActive` does, against its private registry.
+    expect(mockTriggerTopicGeneration.mock.calls[0][1]).toEqual({
+      onboardingRun: token,
+    });
   });
 
   it('notifies the fact mutation once, after every write', async () => {

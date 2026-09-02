@@ -12,38 +12,36 @@
 // callers would invert the dependency and break those two. Do not "tidy" it
 // there.
 
-import {
-    getAiAccess,
-    useSubscriptionStore,
-} from '@/lib/stores/subscription-store';
-import { aiAccessIsServerResolved } from '@/lib/subscription/ai-access';
+import { serverResolvedAiAccess } from '@/lib/subscription/free-tier-topic-access';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
 
 /**
  * Is the AI layer closed for this user RIGHT NOW, with the server having
  * actually said so?
  *
- * ## Never use `getAiAccess() === 'locked'` on its own for this
+ * ## Which of the four readers, and why
  *
- * It returns `'locked'` from an identified-but-empty RevenueCat CustomerInfo
- * while `serverTier` is still `null` — i.e. on every cold start, before the
- * `userBilling` round trip lands. A bare `=== 'locked'` check therefore tells a
- * PAYING subscriber that chat needs a plan, for the first second of every
- * launch. `aiAccessIsServerResolved` is the existing helper that distinguishes
- * "the server answered" from "we have not heard yet", and it already mirrors
- * the dev-override and ship-gate short-circuits, so the two compose exactly.
+ * `free-tier-topic-access.ts` documents four, and picking the wrong one fails
+ * silently. This uses `serverResolvedAiAccess()`, the strict SYNCHRONOUS one:
+ *
+ *   - NOT `useAiAccess()` / `getAiAccess()`. Those are optimistic and answer
+ *     `'locked'` from an identified-but-empty RevenueCat CustomerInfo seconds
+ *     before our server replies, so a bare `=== 'locked'` tells a PAYING
+ *     subscriber that chat needs a plan for the first second of every launch.
+ *   - NOT `resolveAiAccessForFetch()`. That one is async, and the decision
+ *     points here (`handleSend`, an intro string during render) have no `await`
+ *     available. It is also the FETCH-filtering reader; chat is neither a fetch
+ *     nor billed per turn against the daily cap.
  *
  * ## Fails OPEN
  *
- * Unknown, unresolved, or a throw from the store all return `false` (not
- * locked). Wrongly refusing a subscriber is worse than briefly allowing one
- * extra action, and the surfaces below are all recoverable.
+ * `'unknown'` and a throw both return `false` (not locked). Wrongly refusing a
+ * subscriber is worse than briefly allowing one extra action, and every surface
+ * gated here is recoverable.
  */
 export function isChatLocked(): boolean {
     try {
-        const { serverTier } = useSubscriptionStore.getState();
-        if (!aiAccessIsServerResolved(serverTier)) return false;
-        return getAiAccess() === 'locked';
+        return serverResolvedAiAccess() === 'locked';
     } catch {
         // A store read should not throw, but a gate that crashes the chat is a
         // worse failure than a gate that lets one action through.
