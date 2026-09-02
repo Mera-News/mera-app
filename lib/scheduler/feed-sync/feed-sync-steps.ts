@@ -96,6 +96,49 @@ export const HYDRATE_CONCURRENCY = 3;
 export const FREE_TIER_TOPIC_LIMIT = 12;
 
 /**
+ * How many COUNTRY headline scopes a server-resolved FREE user gets. GLOBAL is
+ * always kept on top of this, so the free tier reads as "global plus local".
+ *
+ * WHY SCOPE COUNT AND NOT PER-SCOPE DEPTH. Both would bring the id total under
+ * the cap, but they fail differently. Cutting depth thins EVERY edition, so a
+ * five-country reader gets five sparse-looking headline surfaces and the
+ * per-scope depth screen renders a handful of rows each. Cutting the scope
+ * COUNT keeps the surviving editions at full depth and makes the free tier
+ * narrower rather than thinner — which is the shape of the rest of it: two
+ * interests, global and local news. Multi-country breadth is a paid
+ * characteristic in exactly the way multi-interest breadth is.
+ *
+ * THE FIRST COUNTRY IS THE PRIMARY ONE, and that is a real dependency rather
+ * than an accident: `buildRetrievalProfile` sorts countries by best location
+ * weight descending (tiebreak on code) before slicing, so taking the first
+ * COUNTRY scope takes the reader's strongest country. If that ordering ever
+ * became arbitrary this would silently keep an arbitrary country instead, so
+ * the ordering is asserted in the tests rather than assumed here.
+ */
+export const FREE_TIER_MAX_COUNTRY_SCOPES = 1;
+
+/**
+ * Keep at most `maxCountryScopes` COUNTRY scopes, in the order given. GLOBAL is
+ * never dropped: it is the one edition that needs no persona geo at all, and it
+ * is what makes the zero-unlocked-topics degrade always land somewhere.
+ *
+ * Pure, and returns the SAME array identity when nothing is dropped so the paid
+ * path allocates nothing.
+ */
+export function clampHeadlineScopes<T extends { scope: string }>(
+  scopes: readonly T[],
+  maxCountryScopes: number,
+): T[] {
+  let countrySeen = 0;
+  const kept = scopes.filter((s) => {
+    if (s.scope !== 'COUNTRY') return true;
+    countrySeen += 1;
+    return countrySeen <= maxCountryScopes;
+  });
+  return kept.length === scopes.length ? (scopes as T[]) : kept;
+}
+
+/**
  * Clamp per-topic retrieval depth. Pure; returns the SAME array identity when
  * nothing exceeds the ceiling, so the paid path allocates nothing.
  *
@@ -518,6 +561,15 @@ async function fetchTopicIdsPersona(
     ? clampTopicDepth(profile.topics, FREE_TIER_TOPIC_LIMIT)
     : profile.topics;
 
+  // D39: and clamp the number of headline SCOPES. Without this the topic clamp
+  // only half-delivers the pacing: headline depth is the dominant term for a
+  // multi-country reader and D3 never reaches it, because scopes come from
+  // `locations` rather than from topics. Five countries at 20 each is 120 ids
+  // before a single interest is counted.
+  const profileHeadlineScopes = freeTier.capped
+    ? clampHeadlineScopes(profile.headlineScopes, FREE_TIER_MAX_COUNTRY_SCOPES)
+    : profile.headlineScopes;
+
   if (profileTopics.length === 0) {
     // A CAPPED user degrades rather than failing: headline scopes plus geo are
     // still a real feed, and this is the ordinary first-run state for someone
@@ -536,7 +588,7 @@ async function fetchTopicIdsPersona(
     // true: `buildRetrievalProfile` pushes a GLOBAL scope unconditionally, so a
     // capped user always has somewhere to degrade to. Kept so this cannot start
     // sending a topic-less, scope-less query if that ever changes.
-    const canDegrade = freeTier.capped && profile.headlineScopes.length > 0;
+    const canDegrade = freeTier.capped && profileHeadlineScopes.length > 0;
     if (!canDegrade) {
       throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
     }
@@ -598,7 +650,7 @@ async function fetchTopicIdsPersona(
     // the two can't disagree — a larger value here was simply dead.
     limitPerTopic: 40,
     topHeadlines: {
-      scopes: profile.headlineScopes.map((s) => ({
+      scopes: profileHeadlineScopes.map((s) => ({
         scope: s.scope === 'COUNTRY' ? HeadlineScope.Country : HeadlineScope.Global,
         countryCode: s.countryCode ?? null,
         // OMITTED, not null, when this scope uses the request-level default.
@@ -611,9 +663,9 @@ async function fetchTopicIdsPersona(
     },
   };
 
-  ctx.log(`fetching persona ids for ${profileTopics.length} topics + ${profile.headlineScopes.length} scopes`);
+  ctx.log(`fetching persona ids for ${profileTopics.length} topics + ${profileHeadlineScopes.length} scopes`);
   logger.debug(
-    `[feed-sync-steps] calling articleIdsForPersona: ${profileTopics.length} topics, ${profile.headlineScopes.length} headline scopes`,
+    `[feed-sync-steps] calling articleIdsForPersona: ${profileTopics.length} topics, ${profileHeadlineScopes.length} headline scopes`,
   );
 
   const res = await withRetry(() => ArticleService.getArticleIdsForPersona(query), ctx.signal);

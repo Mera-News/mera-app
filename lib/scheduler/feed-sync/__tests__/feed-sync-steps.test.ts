@@ -158,6 +158,8 @@ import {
   HYDRATE_CONCURRENCY,
   clampTopicDepth,
   FREE_TIER_TOPIC_LIMIT,
+  clampHeadlineScopes,
+  FREE_TIER_MAX_COUNTRY_SCOPES,
 } from '../feed-sync-steps';
 import type {
   FetchTopicIdsResult,
@@ -736,6 +738,31 @@ describe('stepFetchTopicIds', () => {
 
 });
 
+describe('clampHeadlineScopes', () => {
+  const c = (code: string) => ({ scope: 'COUNTRY', countryCode: code });
+  const g = { scope: 'GLOBAL' };
+
+  it('keeps the first N country scopes and always keeps GLOBAL', () => {
+    const out = clampHeadlineScopes([c('NL'), c('IN'), c('DE'), g], 1);
+    expect(out).toEqual([c('NL'), g]);
+  });
+
+  it('never drops GLOBAL even at a limit of zero', () => {
+    expect(clampHeadlineScopes([c('NL'), g], 0)).toEqual([g]);
+  });
+
+  it('returns the same array identity when nothing is dropped', () => {
+    const input = [c('NL'), g];
+    expect(clampHeadlineScopes(input, 1)).toBe(input);
+  });
+
+  it('does not mutate the input', () => {
+    const input = [c('NL'), c('IN'), g];
+    clampHeadlineScopes(input, 1);
+    expect(input).toHaveLength(3);
+  });
+});
+
 // ── Mera News Free: the retrieval filter, the clamp and the degrade ─────────
 
 describe('stepFetchTopicIds — free tier', () => {
@@ -937,6 +964,111 @@ describe('stepFetchTopicIds — free tier', () => {
     const scopes = mockGetArticleIdsForPersona.mock.calls[0][0].topHeadlines.scopes;
     expect(scopes.map((sc: any) => sc.scope)).toEqual(['GLOBAL']);
     expect(result.serverArticleIds).toEqual([]);
+  });
+
+  // ── D39: headline SCOPE clamp, and the cold-start id budget ─────────────
+
+  const FIVE_COUNTRIES = [
+    { countryCode: 'NL', role: 'home', weight: 0.9, validUntil: null },
+    { countryCode: 'IN', role: 'home', weight: 0.5, validUntil: null },
+    { countryCode: 'DE', role: 'home', weight: 0.4, validUntil: null },
+    { countryCode: 'FR', role: 'home', weight: 0.3, validUntil: null },
+    { countryCode: 'BE', role: 'home', weight: 0.2, validUntil: null },
+  ];
+
+  const sentScopes = () =>
+    mockGetArticleIdsForPersona.mock.calls[0][0].topHeadlines.scopes as any[];
+
+  /** Ids this query asks the server for, per-scope and per-topic overrides
+   *  honoured exactly as the server resolves them. */
+  const requestedIdCount = () => {
+    const q = mockGetArticleIdsForPersona.mock.calls[0][0];
+    const topicIds = q.topics.reduce(
+      (n: number, t: any) => n + (t.limit ?? q.limitPerTopic),
+      0,
+    );
+    const scopeIds = q.topHeadlines.scopes.reduce(
+      (n: number, sc: any) => n + (sc.limit ?? q.topHeadlines.limitPerScope),
+      0,
+    );
+    return topicIds + scopeIds;
+  };
+
+  const fourTopics = () =>
+    mockGetActive.mockResolvedValue([
+      row({ id: 't1', text: 'a', factId: 'f-old', weight: 1 }),
+      row({ id: 't2', text: 'b', factId: 'f-old', weight: 1 }),
+      row({ id: 't3', text: 'c', factId: 'f-old2', weight: 1 }),
+      row({ id: 't4', text: 'd', factId: 'f-old2', weight: 1 }),
+    ] as any);
+
+  it('clamps a five-country free user to GLOBAL plus their PRIMARY country', async () => {
+    asFree();
+    mockGetAllLocations.mockResolvedValue(FIVE_COUNTRIES as any);
+    fourTopics();
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    // NL is the highest-weighted country, so it is the one that survives. This
+    // asserts the ordering dependency the clamp relies on: if
+    // buildRetrievalProfile stopped sorting countries by weight, the clamp
+    // would keep an arbitrary country and this would fail.
+    // Wire shape: the query builder sends an explicit `countryCode: null` on
+    // GLOBAL, so this is the payload the server actually receives.
+    expect(sentScopes()).toEqual([
+      { scope: 'COUNTRY', countryCode: 'NL' },
+      { scope: 'GLOBAL', countryCode: null },
+    ]);
+  });
+
+  it('leaves an entitled five-country user with all six scopes', async () => {
+    mockResolveAiAccessForFetch.mockResolvedValue('entitled');
+    mockGetAllLocations.mockResolvedValue(FIVE_COUNTRIES as any);
+    fourTopics();
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(sentScopes()).toHaveLength(6);
+  });
+
+  // THE BUDGET. Both clamps exist to make one number true, so the number is
+  // asserted directly rather than inferred from the two clamps separately. A
+  // future change to either one that pushed a free user back over the daily
+  // cap would fail here even if both clamps still "worked".
+  it('a free five-country reader requests 88 ids on a cold start, under the 100/day cap', async () => {
+    asFree();
+    mockGetAllLocations.mockResolvedValue(FIVE_COUNTRIES as any);
+    fourTopics();
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    // 4 topics x 12 (topic clamp) + 2 scopes x 20 (scope clamp) = 88.
+    expect(requestedIdCount()).toBe(88);
+    expect(requestedIdCount()).toBeLessThan(100);
+  });
+
+  it('a free SINGLE-country reader requests the same 88 ids', async () => {
+    // The whole point of clamping scope count rather than depth: the budget no
+    // longer depends on how many countries the persona spans.
+    asFree();
+    mockGetAllLocations.mockResolvedValue([FIVE_COUNTRIES[0]] as any);
+    fourTopics();
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    expect(requestedIdCount()).toBe(88);
+  });
+
+  it('an entitled five-country reader is well over the free budget (clamps are free-only)', async () => {
+    mockResolveAiAccessForFetch.mockResolvedValue('entitled');
+    mockGetAllLocations.mockResolvedValue(FIVE_COUNTRIES as any);
+    fourTopics();
+
+    await stepFetchTopicIds('p-1', makeCtx());
+
+    // 4 x 40 + 6 x 20 = 280. Recorded so the contrast is explicit: nothing in
+    // this change may narrow a paid reader.
+    expect(requestedIdCount()).toBe(280);
   });
 
   // ── MAJOR 4: the legacy path is a lock and billing bypass ───────────────
