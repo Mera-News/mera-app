@@ -179,7 +179,9 @@
     "dailyLimit": {
       "body": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda: artikel baru terbuka besok.",
       "bodyWithTime": "Tidak ada artikel baru yang dapat diambil untuk saat ini. Jelajahi artikel yang sudah ada di perangkat Anda: artikel baru terbuka pada {{time}}.",
-      "title": "Batas artikel harian tercapai"
+      "title": "Batas artikel harian tercapai",
+      "freeTitle": "Itu artikel untuk hari ini",
+      "freeBodyWithTime": "Anda punya semua yang Mera kirim hari ini. Jelajahi yang ada di perangkat Anda. Lainnya datang pukul {{time}}."
     },
     "analysingProgress": "Menganalisis {{done}} dari {{total}} artikel",
     "waitingForNextBatch_one": "{{count}} artikel baru menunggu batch analisis berikutnya",
@@ -1007,7 +1009,10 @@
     "openA11y": "Buka status feed",
     "close": "Tutup",
     "expandA11y": "Tampilkan detail status feed",
-    "collapseA11y": "Sembunyikan detail status feed"
+    "collapseA11y": "Sembunyikan detail status feed",
+    "modeProcessing": "Memperbarui feed Anda",
+    "modeError": "Masalah pada feed",
+    "modeLimited": "Batas artikel harian tercapai"
   },
   "trackedStories": {
     "emptyTitle": "Belum ada cerita yang diikuti",
@@ -1528,7 +1533,7 @@
   "freeTier": {
     "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",
     "cardTitle": "Anda menggunakan Mera News Free",
-    "chatBubble": "Semua yang aku tahu tentang Anda tetap di perangkat ini, dan tidak ada yang telah Anda simpan atau ikuti yang hilang. Tanpa paket, aku tidak bisa membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru untuk Anda. Mulai paket dan aku akan melanjutkan dari tempat kami berhenti.",
+    "chatBubble": "Semua yang saya ketahui tentang Anda tetap di perangkat ini. Pada paket gratis saya terus menyusun feed Anda dari dua minat Anda. Obrolan, pemeriksaan fakta, dan cerita yang diikuti memerlukan paket.",
     "chatNotice": "Obrolan Mera memerlukan paket. Persona dan fakta Anda tetap di perangkat ini, bagaimanapun.",
     "continueWithoutPlan": "Lanjutkan tanpa paket",
     "lapseBody": "Tidak ada yang diambil. Apa pun yang telah Anda simpan, ikuti, atau baca adalah milik Anda, di perangkat ini, selamanya. Anda menggunakan Mera News Free sekarang. Yang berhenti adalah lapisan AI itu sendiri, jadi feed personal Anda, dasbor, pelacakan cerita baru, dan obrolan Mera tetap tidak aktif sampai Anda memulai paket lagi.",
@@ -1539,7 +1544,25 @@
     "trackBody": "Cerita yang sudah Anda ikuti tetap menyimpan semua yang telah dikumpulkan. Mengikuti cerita baru memerlukan paket aktif.",
     "trackDismiss": "Nanti saja",
     "trackTitle": "Pelacakan cerita memerlukan paket",
-    "trackedStoriesEmptyBody": "Belum ada cerita yang diikuti. Mengikuti cerita memerlukan paket, dan apa pun yang Anda ikuti kemudian tetap di perangkat ini untuk Anda simpan."
+    "trackedStoriesEmptyBody": "Belum ada cerita yang diikuti. Mengikuti cerita memerlukan paket, dan apa pun yang Anda ikuti kemudian tetap di perangkat ini untuk Anda simpan.",
+    "factsInFeedHeader": "Di feed Anda",
+    "factsPausedHeader": "Dijeda",
+    "factsPausedSubtitle": "Ini tetap tersimpan. Paket mengaktifkan semuanya.",
+    "pausedBadge": "Dijeda",
+    "pausedRowHint": "Dijeda. Ketuk untuk tahu alasannya.",
+    "explainerTitle": "Dua minat pertama Anda",
+    "explainerBody": "Mera News Free mengikuti dua minat yang pertama Anda tambahkan. Selebihnya tetap tersimpan di perangkat ini, persis seperti yang Anda tinggalkan.",
+    "explainerBody2": "Paket mengaktifkan semuanya kembali.",
+    "explainerDismiss": "Nanti saja",
+    "chatIntro": {
+      "followStory": "Mengikuti cerita memerlukan paket. Mera akan memantau cerita ini dan memberi tahu Anda saat ada perkembangan.",
+      "articleFeedback": "Menyesuaikan feed Anda dari masukan memerlukan paket. Feed Anda tetap berjalan.",
+      "persona": "Berbicara dengan Mera memerlukan paket. Minat dan data Anda tetap di perangkat ini.",
+      "optimisationPlan": "Tinjauan harian memerlukan paket. Mera akan melihat feed Anda setiap hari dan menyarankan apa yang perlu diubah.",
+      "tutorialHelp": "Bertanya kepada Mera tentang aplikasi memerlukan paket. Panduan di Bantuan mencakup sebagian besar.",
+      "factCheck": "Pemeriksaan fakta memerlukan paket. Mera akan mencarinya dan menunjukkan siapa lagi yang memberitakannya.",
+      "default": "Obrolan memerlukan paket. Feed Anda tetap berjalan."
+    }
   },
   "relatedSort": {
     "a11yLabel": "Urutkan artikel terkait",

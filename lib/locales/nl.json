@@ -182,7 +182,9 @@
     "dailyLimit": {
       "body": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden morgen ontgrendeld.",
       "bodyWithTime": "Er kunnen voorlopig geen nieuwe artikelen worden opgehaald. Blader door de artikelen die al op je apparaat staan. Nieuwe artikelen worden om {{time}} ontgrendeld.",
-      "title": "Daglimiet voor artikelen bereikt"
+      "title": "Daglimiet voor artikelen bereikt",
+      "freeTitle": "Dit zijn de artikelen van vandaag",
+      "freeBodyWithTime": "Je hebt alles wat Mera vandaag heeft gestuurd. Bekijk wat er op je apparaat staat. Om {{time}} komt er meer bij."
     },
     "exploreCta": "Bekijk Verkennen",
     "statsPublishedPending_one": "{{formatted}} artikel is gepubliceerd in de afgelopen 24 uur.",
@@ -1007,7 +1009,10 @@
     "openA11y": "Feedstatus openen",
     "close": "Sluiten",
     "expandA11y": "Feedstatus-details tonen",
-    "collapseA11y": "Feedstatus-details verbergen"
+    "collapseA11y": "Feedstatus-details verbergen",
+    "modeProcessing": "Je feed wordt bijgewerkt",
+    "modeError": "Probleem met de feed",
+    "modeLimited": "Daglimiet voor artikelen bereikt"
   },
   "trackedStories": {
     "emptyTitle": "Nog geen verhalen gevolgd",
@@ -1528,7 +1533,7 @@
   "freeTier": {
     "cardBody": "Het AI-deel van Mera is voor nu uitgeschakeld. Alles wat je hebt opgeslagen, gevolgd of gelezen blijft op dit apparaat, en Verkennen toont nog steeds vandaags nieuws. Zonder een plan zal Mera je feed niet opbouwen, je vragen niet beantwoorden en geen nieuwe verhalen niet volgen. Start een plan en alles komt terug.",
     "cardTitle": "Je bent op Mera News Free",
-    "chatBubble": "Alles wat ik van je weet blijft op dit apparaat, en niets wat je hebt opgeslagen of gevolgd verdwijnt. Zonder een plan kan ik je feed niet opbouwen, je vragen niet beantwoorden of nieuwe verhalen niet voor je volgen. Start er een en ik ga verder waar ik ben gebleven.",
+    "chatBubble": "Alles wat ik over je weet, blijft op dit apparaat. Met het gratis abonnement blijf ik je feed opbouwen uit twee van je interesses. Chatten, feitencontroles en gevolgde verhalen vereisen een abonnement.",
     "chatNotice": "Mera chat hoort bij een plan. Je persona en feiten blijven toch op dit apparaat.",
     "continueWithoutPlan": "Doorgaan zonder plan",
     "lapseBody": "Er is niets weggehaald. Alles wat je hebt opgeslagen, gevolgd of gelezen is van jou, op dit apparaat, altijd. Je bent op Mera News Free. Wat pauzeert is de AI-laag zelf, dus je persoonlijke feed, dashboard, volgen van nieuwe verhalen en Mera chat blijven uit totdat je weer een plan start.",
@@ -1539,7 +1544,25 @@
     "trackBody": "De verhalen die je al volgt houden alles wat ze hebben verzameld. Een nieuw verhaal starten heeft een actief plan nodig.",
     "trackDismiss": "Niet nu",
     "trackTitle": "Verhaalvolging hoort bij een plan",
-    "trackedStoriesEmptyBody": "Nog niets gevolgd. Een verhaal volgen hoort bij een plan, en wat je later volgt blijft op dit apparaat, voor jou."
+    "trackedStoriesEmptyBody": "Nog niets gevolgd. Een verhaal volgen hoort bij een plan, en wat je later volgt blijft op dit apparaat, voor jou.",
+    "factsInFeedHeader": "In je feed",
+    "factsPausedHeader": "Gepauzeerd",
+    "factsPausedSubtitle": "Deze blijven bewaard. Een plan zet ze allemaal aan.",
+    "pausedBadge": "Gepauzeerd",
+    "pausedRowHint": "Gepauzeerd. Tik om te zien waarom.",
+    "explainerTitle": "Je eerste twee interesses",
+    "explainerBody": "Mera News Free volgt de twee interesses die je als eerste hebt toegevoegd. Al het andere blijft op dit apparaat bewaard, precies zoals je het hebt achtergelaten.",
+    "explainerBody2": "Een plan zet ze allemaal weer aan.",
+    "explainerDismiss": "Niet nu",
+    "chatIntro": {
+      "followStory": "Verhalen volgen vereist een abonnement. Mera zou dit verhaal in de gaten houden en je laten weten wanneer er iets gebeurt.",
+      "articleFeedback": "Je feed bijstellen op basis van feedback vereist een abonnement. Je feed blijft hoe dan ook werken.",
+      "persona": "Met Mera praten vereist een abonnement. Je interesses en gegevens blijven op dit apparaat.",
+      "optimisationPlan": "Het dagelijkse overzicht vereist een abonnement. Mera zou je feed elke dag bekijken en voorstellen wat je kunt aanpassen.",
+      "tutorialHelp": "Mera iets over de app vragen vereist een abonnement. De handleidingen in Help behandelen het meeste.",
+      "factCheck": "Feitencontroles vereisen een abonnement. Mera zou dit opzoeken en je laten zien wie er nog meer over bericht heeft.",
+      "default": "Chatten vereist een abonnement. Je feed blijft werken."
+    }
   },
   "relatedSort": {
     "a11yLabel": "Gerelateerde artikelen sorteren",

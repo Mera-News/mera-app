@@ -179,7 +179,9 @@
     "dailyLimit": {
       "body": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın. Yeni makaleler yarın açılır.",
       "bodyWithTime": "Şimdilik yeni makale getirilemiyor. Cihazınızdaki mevcut makalelere göz atın. Yeni makaleler {{time}} saatinde açılır.",
-      "title": "Günlük makale sınırına ulaşıldı"
+      "title": "Günlük makale sınırına ulaşıldı",
+      "freeTitle": "Bugünün makaleleri bu kadar",
+      "freeBodyWithTime": "Mera'nın bugün gönderdiği her şey elinizde. Cihazınızdakilere göz atın. Yenileri {{time}} saatinde geliyor."
     },
     "analysingProgress": "{{total}} makaleden {{done}} tanesi analiz ediliyor",
     "waitingForNextBatch_one": "{{count}} yeni makale bir sonraki analiz grubunu bekliyor",
@@ -1007,7 +1009,10 @@
     "openA11y": "Akış durumunu aç",
     "close": "Kapat",
     "expandA11y": "Akış durumu ayrıntılarını göster",
-    "collapseA11y": "Akış durumu ayrıntılarını gizle"
+    "collapseA11y": "Akış durumu ayrıntılarını gizle",
+    "modeProcessing": "Akışınız güncelleniyor",
+    "modeError": "Akış sorunu",
+    "modeLimited": "Günlük makale sınırına ulaşıldı"
   },
   "trackedStories": {
     "emptyTitle": "Henüz takip edilen haber yok",
@@ -1530,7 +1535,7 @@
   "freeTier": {
     "cardBody": "Mera'nın yapay zeka kısmı şu an kapalı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey bu cihazda kalıyor ve Keşfet sekmesinde hâlâ bugünün haberlerine erişebilirsiniz. Bir plan olmadan Mera sizin akışınızı oluşturamaz, sorularınızı cevaplayamaz ya da yeni haberleri takip edemez. Bir plan başlatın ve her şey geri gelir.",
     "cardTitle": "Mera News Free'desiniz",
-    "chatBubble": "Hakkınızda bildiğim her şey bu cihazda kalıyor, kaydettiğiniz ya da takip ettiğiniz hiçbir şey yok olmaz. Fakat bir plan olmadan sizin için akış oluşturamam, sorularınızı cevaplayamam ya da yeni haberleri takip edemem. Bir plan başlatın ve tam olarak kaldığımız yerden devam edeceğim.",
+    "chatBubble": "Senin hakkında bildiğim her şey bu cihazda kalır. Ücretsiz planda ilgi alanlarından ikisini kullanarak akışını oluşturmaya devam ediyorum. Sohbet, doğruluk kontrolleri ve takip edilen haberler bir plan gerektirir.",
     "chatNotice": "Mera sohbeti bir plan ile birlikte geliyor. Profiliniz ve gerçekleriniz her zaman bu cihazda kalıyor.",
     "continueWithoutPlan": "Plan olmadan devam edin",
     "lapseBody": "Hiçbir şey alınmadı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey sizindir, bu cihazda, daima. Buradan itibaren Mera News Free'desiniz. Yapay zeka katmanı duruyor, yani kişiselleştirilmiş akışınız, paneliniz, haber takibiniz ve Mera sohbetiniz yeni bir plan başlatana kadar kapalı kalacak.",
@@ -1541,7 +1546,25 @@
     "trackBody": "Zaten takip ettiğiniz haberler, topladıkları her şeyi koruyor. Yenisini başlatmak aktif bir plan gerektirir.",
     "trackDismiss": "Şimdi değil",
     "trackTitle": "Haber takibi bir plan ile birlikte geliyor",
-    "trackedStoriesEmptyBody": "Henüz takip edilen haber yok. Bir haberi takip etmek bir plan gerektirir, takip ettiğiniz her şey bu cihazda kalıyor, sizindir."
+    "trackedStoriesEmptyBody": "Henüz takip edilen haber yok. Bir haberi takip etmek bir plan gerektirir, takip ettiğiniz her şey bu cihazda kalıyor, sizindir.",
+    "factsInFeedHeader": "Akışınızda",
+    "factsPausedHeader": "Duraklatıldı",
+    "factsPausedSubtitle": "Bunlar kayıtlı kalır. Bir plan hepsini açar.",
+    "pausedBadge": "Duraklatıldı",
+    "pausedRowHint": "Duraklatıldı. Nedenini görmek için dokunun.",
+    "explainerTitle": "İlk iki ilgi alanınız",
+    "explainerBody": "Mera News Free, ilk eklediğiniz iki ilgi alanını takip eder. Geri kalan her şey bıraktığınız gibi bu cihazda kayıtlı kalır.",
+    "explainerBody2": "Bir plan hepsini yeniden açar.",
+    "explainerDismiss": "Şimdi değil",
+    "chatIntro": {
+      "followStory": "Haber takibi bir plan gerektirir. Mera bunu izler ve geliştiğinde sana haber verirdi.",
+      "articleFeedback": "Geri bildirimlerinle akışını ayarlamak bir plan gerektirir. Akışın her durumda çalışmaya devam eder.",
+      "persona": "Mera ile konuşmak bir plan gerektirir. İlgi alanların ve bilgilerin bu cihazda kalır.",
+      "optimisationPlan": "Günlük değerlendirme bir plan gerektirir. Mera her gün akışına bakar ve neyi değiştireceğini önerirdi.",
+      "tutorialHelp": "Mera'ya uygulamayı sormak bir plan gerektirir. Yardım bölümündeki rehberler çoğunu kapsıyor.",
+      "factCheck": "Doğruluk kontrolleri bir plan gerektirir. Mera bunu araştırır ve başka kimlerin haber yaptığını gösterirdi.",
+      "default": "Sohbet bir plan gerektirir. Akışın çalışmaya devam eder."
+    }
   },
   "relatedSort": {
     "a11yLabel": "İlgili makaleleri sırala",

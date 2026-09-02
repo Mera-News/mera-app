@@ -179,7 +179,9 @@
     "dailyLimit": {
       "body": "目前無法擷取新的文章。你可以瀏覽裝置上已有的文章——新文章將於明天解鎖。",
       "bodyWithTime": "目前無法擷取新的文章。你可以瀏覽裝置上已有的文章——新文章將於 {{time}} 解鎖。",
-      "title": "已達每日文章上限"
+      "title": "已達每日文章上限",
+      "freeTitle": "今天的文章就這些",
+      "freeBodyWithTime": "Mera 今天傳送的內容你都已收到。看看裝置上已有的文章吧。{{time}} 會有更多。"
     },
     "analysingProgress": "正在分析 {{total}} 篇文章中的第 {{done}} 篇",
     "waitingForNextBatch_one": "{{count}} 篇新文章正在等待下一批分析",
@@ -1007,7 +1009,10 @@
     "expandA11y": "顯示動態狀態詳情",
     "collapseA11y": "隱藏動態狀態詳情",
     "close": "關閉",
-    "published": "已發佈"
+    "published": "已發佈",
+    "modeProcessing": "正在更新你的資訊流",
+    "modeError": "資訊流發生問題",
+    "modeLimited": "已達每日文章上限"
   },
   "trackedStories": {
     "emptyTitle": "還沒有追蹤任何報導",
@@ -1529,7 +1534,7 @@
   "freeTier": {
     "cardBody": "Mera 的 AI 部分現已關閉。您已儲存、追蹤或閱讀的任何內容都保留在此裝置上，「探索」仍有今日頭條。沒有訂閱方案時，Mera 無法為您建立動態、回答問題或追蹤新報導。訂閱方案後，一切都會恢復。",
     "cardTitle": "您正在使用 Mera News 免費版",
-    "chatBubble": "我對您的所有認識都保留在此裝置上，您已儲存或追蹤的任何內容都不會消失。不過沒有訂閱方案，我無法為您建立動態、回答問題或追蹤新報導。訂閱方案，我會從我們停下的地方繼續。",
+    "chatBubble": "我了解你的一切都留在這台裝置上。在免費方案下，我會繼續依你的兩個興趣建立資訊流。聊天、事實查核和追蹤報導需要訂閱方案。",
     "chatNotice": "Mera 聊天需要訂閱方案。您的人物誌和事實無論如何都會保留在此裝置上。",
     "continueWithoutPlan": "先不訂閱方案",
     "lapseBody": "沒有任何內容被移除。您已儲存、追蹤或閱讀的任何內容都屬於您，永遠保留在此裝置上。從這裡開始，您使用的是 Mera News 免費版。暫停的是 AI 層本身，所以您的個人化動態、儀表板、新報導追蹤和 Mera 聊天將保持關閉，直到您再次訂閱方案。",
@@ -1540,7 +1545,25 @@
     "trackBody": "您已追蹤的報導會保留它們收集的所有內容。開始追蹤新報導需要有效的訂閱方案。",
     "trackDismiss": "暫時不用",
     "trackTitle": "報導追蹤需要訂閱方案",
-    "trackedStoriesEmptyBody": "還沒有追蹤任何報導。追蹤報導需要訂閱方案，您之後追蹤的任何內容都會保留在此裝置上供您保管。"
+    "trackedStoriesEmptyBody": "還沒有追蹤任何報導。追蹤報導需要訂閱方案，您之後追蹤的任何內容都會保留在此裝置上供您保管。",
+    "factsInFeedHeader": "在您的資訊流中",
+    "factsPausedHeader": "已暫停",
+    "factsPausedSubtitle": "它們仍會保存。訂閱方案會全部開啟。",
+    "pausedBadge": "已暫停",
+    "pausedRowHint": "已暫停。點按了解原因。",
+    "explainerTitle": "您最先加入的兩個興趣",
+    "explainerBody": "Mera News Free 會追蹤您最先加入的兩個興趣。其餘內容都會原樣保存在這台裝置上。",
+    "explainerBody2": "訂閱方案會重新全部開啟。",
+    "explainerDismiss": "暫不",
+    "chatIntro": {
+      "followStory": "追蹤報導需要訂閱方案。Mera 會盯著這則報導，有進展時通知你。",
+      "articleFeedback": "依你的回饋調整資訊流需要訂閱方案。你的資訊流照常運作。",
+      "persona": "和 Mera 聊天需要訂閱方案。你的興趣和資料都留在這台裝置上。",
+      "optimisationPlan": "每日回顧需要訂閱方案。Mera 會每天查看你的資訊流，並建議可以調整的地方。",
+      "tutorialHelp": "向 Mera 詢問應用程式的問題需要訂閱方案。說明中的指南涵蓋了大部分內容。",
+      "factCheck": "事實查核需要訂閱方案。Mera 會去查證，並告訴你還有誰報導過。",
+      "default": "聊天需要訂閱方案。你的資訊流照常運作。"
+    }
   },
   "relatedSort": {
     "a11yLabel": "排序相關文章",

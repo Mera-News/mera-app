@@ -165,7 +165,9 @@
     "dailyLimit": {
       "title": "Daily article limit reached",
       "bodyWithTime": "No new articles can be fetched for now. Browse the articles already on your device. New articles unlock at {{time}}.",
-      "body": "No new articles can be fetched for now. Browse the articles already on your device. New articles unlock tomorrow."
+      "body": "No new articles can be fetched for now. Browse the articles already on your device. New articles unlock tomorrow.",
+      "freeTitle": "That's today's articles",
+      "freeBodyWithTime": "You have everything Mera sent today. Browse what's on your device. More arrive at {{time}}."
     },
     "newBadge": "NEW",
     "newsCluster": "News Cluster",
@@ -487,7 +489,10 @@
     "openA11y": "Open feed status",
     "expandA11y": "Show feed status details",
     "collapseA11y": "Hide feed status details",
-    "close": "Close"
+    "close": "Close",
+    "modeProcessing": "Updating your feed",
+    "modeError": "Feed problem",
+    "modeLimited": "Daily article limit reached"
   },
   "trackedStories": {
     "followFabLabel": "Follow a new story",
@@ -1734,12 +1739,30 @@
     "trackDismiss": "Not now",
     "readOnlyBanner": "Everything here is yours to read, plan or no plan. These settings only change what Mera does while a plan is active.",
     "chatNotice": "Mera chat comes with a plan. Your persona and facts stay on this device either way.",
-    "chatBubble": "Everything I know about you stays on this device, and nothing you've saved or followed goes away. Without a plan though, I can't build your feed, answer your questions, or follow new stories for you. Start one and I'll pick up right where we left off.",
+    "chatBubble": "Everything I know about you stays on this device. On the free plan I keep building your feed from two of your interests. Chat, fact checks and followed stories need a plan.",
     "storiesNotice": "The stories you already follow keep everything they've collected. Starting a new one needs an active plan.",
     "trackedStoriesEmptyBody": "Nothing followed yet. Following a story comes with a plan, and whatever you follow later stays on this device, yours to keep.",
     "lapseTitle": "Your Mera plan has ended",
     "lapseBody": "Nothing has been taken away. Anything you've saved, followed or read is yours, on this device, always. You're on Mera News Free from here. What pauses is the AI layer itself, so your personalized feed, dashboard, new story tracking and Mera chat stay off until you start a plan again.",
-    "continueWithoutPlan": "Continue without a plan"
+    "continueWithoutPlan": "Continue without a plan",
+    "factsInFeedHeader": "In your feed",
+    "factsPausedHeader": "Paused",
+    "factsPausedSubtitle": "These stay saved. A plan turns them all on.",
+    "pausedBadge": "Paused",
+    "pausedRowHint": "Paused. Tap to see why.",
+    "explainerTitle": "Your first two interests",
+    "explainerBody": "Mera News Free follows the two interests you added first. Everything else stays saved on this device, exactly as you left it.",
+    "explainerBody2": "A plan turns them all back on.",
+    "explainerDismiss": "Not now",
+    "chatIntro": {
+      "followStory": "Followed stories need a plan. Mera would watch this one and tell you when it moves.",
+      "articleFeedback": "Tuning your feed from feedback needs a plan. Your feed keeps running either way.",
+      "persona": "Talking to Mera needs a plan. Your interests and facts stay on this device.",
+      "optimisationPlan": "The daily review needs a plan. Mera would look at your feed each day and suggest what to change.",
+      "tutorialHelp": "Asking Mera about the app needs a plan. The guides in Help cover most of it.",
+      "factCheck": "Fact checks need a plan. Mera would look this up and show you who else reported it.",
+      "default": "Chat needs a plan. Your feed keeps running."
+    }
   },
   "consent": {
     "title": "Before you continue",

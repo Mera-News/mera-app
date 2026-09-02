@@ -179,7 +179,9 @@
     "dailyLimit": {
       "body": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于明天解锁。",
       "bodyWithTime": "暂时无法获取新文章。你可以浏览设备上已有的文章——新文章将于 {{time}} 解锁。",
-      "title": "已达每日文章上限"
+      "title": "已达每日文章上限",
+      "freeTitle": "今天的文章就这些",
+      "freeBodyWithTime": "Mera 今天发送的内容你都已收到。看看设备上已有的文章吧。{{time}} 会有更多。"
     },
     "analysingProgress": "正在分析 {{done}}/{{total}} 篇文章",
     "waitingForNextBatch_one": "{{count}} 篇新文章等待下一批分析",
@@ -1007,7 +1009,10 @@
     "expandA11y": "显示资讯状态详情",
     "collapseA11y": "隐藏资讯状态详情",
     "close": "关闭",
-    "published": "已发布"
+    "published": "已发布",
+    "modeProcessing": "正在更新你的信息流",
+    "modeError": "信息流出现问题",
+    "modeLimited": "已达到每日文章上限"
   },
   "trackedStories": {
     "emptyTitle": "还没有关注任何报道",
@@ -1529,7 +1534,7 @@
   "freeTier": {
     "cardBody": "Mera 的 AI 部分暂时已关闭。你保存、关注或阅读过的任何内容都会保留在此设备上，探索标签页仍有今日新闻。没有计划的情况下，Mera 无法生成你的资讯、回答你的问题或追踪新报道。选择一个计划，一切都会恢复。",
     "cardTitle": "你正在使用 Mera News 免费版",
-    "chatBubble": "我所了解的关于你的一切都保留在此设备上，你保存或关注的内容不会消失。不过，没有计划的话，我无法为你生成资讯、回答你的问题或追踪新报道。选择一个计划，我会从上次的地方继续。",
+    "chatBubble": "我了解你的一切都留在这台设备上。在免费计划下，我会继续根据你的两个兴趣来构建信息流。聊天、事实核查和追踪报道需要订阅计划。",
     "chatNotice": "Mera 聊天需要订阅计划。无论如何，你的用户画像和事实都保留在此设备上。",
     "continueWithoutPlan": "暂不选择计划",
     "lapseBody": "没有任何内容被删除。你保存、关注或阅读过的任何内容仍属于你，保留在此设备上，永远都在。从现在起你使用的是 Mera News 免费版。暂停的只是 AI 层，因此你的个性化资讯、仪表盘、新报道追踪和 Mera 聊天将保持关闭，直到你再次选择计划。",
@@ -1540,7 +1545,25 @@
     "trackBody": "你已关注的报道会保留它们收集的所有内容。开始关注新报道需要有效的订阅计划。",
     "trackDismiss": "稍后",
     "trackTitle": "报道追踪需要订阅计划",
-    "trackedStoriesEmptyBody": "还没有关注任何报道。关注报道需要有效的订阅计划。你之后关注的任何报道都会保留在此设备上，永远属于你。"
+    "trackedStoriesEmptyBody": "还没有关注任何报道。关注报道需要有效的订阅计划。你之后关注的任何报道都会保留在此设备上，永远属于你。",
+    "factsInFeedHeader": "在你的信息流中",
+    "factsPausedHeader": "已暂停",
+    "factsPausedSubtitle": "它们仍会保存。订阅计划会全部开启。",
+    "pausedBadge": "已暂停",
+    "pausedRowHint": "已暂停。点按了解原因。",
+    "explainerTitle": "你最先添加的两个兴趣",
+    "explainerBody": "Mera News Free 会关注你最先添加的两个兴趣。其余内容都会原样保存在这台设备上。",
+    "explainerBody2": "订阅计划会重新全部开启。",
+    "explainerDismiss": "暂不",
+    "chatIntro": {
+      "followStory": "追踪报道需要订阅计划。Mera 会盯着这条报道，有进展时告诉你。",
+      "articleFeedback": "根据你的反馈调整信息流需要订阅计划。你的信息流照常运行。",
+      "persona": "和 Mera 聊天需要订阅计划。你的兴趣和资料都留在这台设备上。",
+      "optimisationPlan": "每日回顾需要订阅计划。Mera 会每天查看你的信息流，并建议可以调整的地方。",
+      "tutorialHelp": "向 Mera 咨询应用相关问题需要订阅计划。帮助中的指南涵盖了大部分内容。",
+      "factCheck": "事实核查需要订阅计划。Mera 会去查证，并告诉你还有谁报道过。",
+      "default": "聊天需要订阅计划。你的信息流照常运行。"
+    }
   },
   "relatedSort": {
     "a11yLabel": "对相关文章排序",

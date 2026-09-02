@@ -179,7 +179,9 @@
     "dailyLimit": {
       "body": "Nenhum novo artigo pode ser buscado por enquanto. Explore os artigos já disponíveis no seu dispositivo. Novos artigos serão liberados amanhã.",
       "bodyWithTime": "Nenhum novo artigo pode ser buscado por enquanto. Explore os artigos já disponíveis no seu dispositivo. Novos artigos serão liberados às {{time}}.",
-      "title": "Limite diário de artigos atingido"
+      "title": "Limite diário de artigos atingido",
+      "freeTitle": "Esses são os artigos de hoje",
+      "freeBodyWithTime": "Você tem tudo o que a Mera enviou hoje. Veja o que está no seu dispositivo. Mais chegam às {{time}}."
     },
     "analysingProgress": "Analisando {{done}} de {{total}} artigos",
     "waitingForNextBatch_one": "{{count}} novo artigo aguardando o próximo lote de análise",
@@ -1007,7 +1009,10 @@
     "openA11y": "Abrir status do feed",
     "close": "Fechar",
     "expandA11y": "Mostrar detalhes do status do feed",
-    "collapseA11y": "Ocultar detalhes do status do feed"
+    "collapseA11y": "Ocultar detalhes do status do feed",
+    "modeProcessing": "Atualizando seu feed",
+    "modeError": "Problema no feed",
+    "modeLimited": "Limite diário de artigos atingido"
   },
   "trackedStories": {
     "emptyTitle": "Nenhuma história seguida ainda",
@@ -1528,7 +1533,7 @@
   "freeTier": {
     "cardBody": "A parte de IA do Mera está desativada por enquanto. Tudo que você salvou, seguiu ou leu fica neste dispositivo, e Explorar ainda mostra as manchetes de hoje. Sem um plano, Mera não monta seu feed, não responde suas perguntas e não acompanha novas histórias. Comece um plano e tudo volta.",
     "cardTitle": "Você está no Mera News Free",
-    "chatBubble": "Tudo que sei sobre você fica neste dispositivo, e nada que você salvou ou seguiu desaparece. Sem um plano, porém, não consigo montar seu feed, responder suas perguntas ou acompanhar novas histórias para você. Comece um plano e continuo de onde paramos.",
+    "chatBubble": "Tudo o que sei sobre você fica neste aparelho. No plano gratuito eu continuo montando seu feed a partir de dois dos seus interesses. Chat, checagens de fatos e histórias acompanhadas precisam de um plano.",
     "chatNotice": "Chat Mera vem com um plano. Seu perfil e fatos ficam neste dispositivo de qualquer forma.",
     "continueWithoutPlan": "Continuar sem plano",
     "lapseBody": "Nada foi removido. Tudo que você salvou, seguiu ou leu é seu, neste dispositivo, sempre. Você está no Mera News Free daqui para frente. O que pausa é a camada de IA em si, então seu feed personalizado, painel, acompanhamento de novas histórias e chat Mera ficam desativados até você começar um plano novamente.",
@@ -1539,7 +1544,25 @@
     "trackBody": "As histórias que você já segue mantêm tudo que coletaram. Começar uma nova requer um plano ativo.",
     "trackDismiss": "Depois",
     "trackTitle": "Acompanhamento de histórias vem com um plano",
-    "trackedStoriesEmptyBody": "Nenhuma história acompanhada ainda. Acompanhar uma história vem com um plano, e qualquer coisa que você acompanhe depois fica neste dispositivo, sua para guardar."
+    "trackedStoriesEmptyBody": "Nenhuma história acompanhada ainda. Acompanhar uma história vem com um plano, e qualquer coisa que você acompanhe depois fica neste dispositivo, sua para guardar.",
+    "factsInFeedHeader": "No seu feed",
+    "factsPausedHeader": "Pausados",
+    "factsPausedSubtitle": "Eles continuam salvos. Um plano ativa todos.",
+    "pausedBadge": "Pausado",
+    "pausedRowHint": "Pausado. Toque para saber por quê.",
+    "explainerTitle": "Seus dois primeiros interesses",
+    "explainerBody": "O Mera News Free segue os dois interesses que você adicionou primeiro. Todo o resto continua salvo neste dispositivo, exatamente como você deixou.",
+    "explainerBody2": "Um plano ativa todos de novo.",
+    "explainerDismiss": "Agora não",
+    "chatIntro": {
+      "followStory": "Acompanhar histórias precisa de um plano. A Mera ficaria de olho nesta e avisaria quando houvesse novidades.",
+      "articleFeedback": "Ajustar seu feed a partir dos seus comentários precisa de um plano. Seu feed continua funcionando de todo jeito.",
+      "persona": "Falar com a Mera precisa de um plano. Seus interesses e informações ficam neste aparelho.",
+      "optimisationPlan": "A revisão diária precisa de um plano. A Mera olharia seu feed todo dia e sugeriria o que mudar.",
+      "tutorialHelp": "Perguntar à Mera sobre o app precisa de um plano. Os guias na Ajuda cobrem quase tudo.",
+      "factCheck": "As checagens de fatos precisam de um plano. A Mera pesquisaria isso e mostraria quem mais noticiou.",
+      "default": "O chat precisa de um plano. Seu feed continua funcionando."
+    }
   },
   "relatedSort": {
     "a11yLabel": "Ordenar artigos relacionados",

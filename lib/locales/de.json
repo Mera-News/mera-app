@@ -179,7 +179,9 @@
     "dailyLimit": {
       "body": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden morgen freigeschaltet.",
       "bodyWithTime": "Momentan können keine neuen Artikel geladen werden. Stöbere in den Artikeln, die schon auf deinem Gerät sind – neue Artikel werden um {{time}} freigeschaltet.",
-      "title": "Tägliches Artikellimit erreicht"
+      "title": "Tägliches Artikellimit erreicht",
+      "freeTitle": "Das sind die Artikel für heute",
+      "freeBodyWithTime": "Du hast alles, was Mera heute geschickt hat. Sieh dir an, was auf deinem Gerät ist. Mehr kommt um {{time}}."
     },
     "analysingProgress": "{{done}} von {{total}} Artikeln werden analysiert",
     "waitingForNextBatch_one": "{{count}} neuer Artikel wartet auf die nächste Analyserunde",
@@ -1007,7 +1009,10 @@
     "openA11y": "Feed-Status öffnen",
     "close": "Schließen",
     "expandA11y": "Feed-Status-Details anzeigen",
-    "collapseA11y": "Feed-Status-Details verbergen"
+    "collapseA11y": "Feed-Status-Details verbergen",
+    "modeProcessing": "Dein Feed wird aktualisiert",
+    "modeError": "Problem mit dem Feed",
+    "modeLimited": "Tageslimit für Artikel erreicht"
   },
   "trackedStories": {
     "emptyTitle": "Noch keine gefolgten Geschichten",
@@ -1528,7 +1533,7 @@
   "freeTier": {
     "cardBody": "Der KI-Teil von Mera ist momentan ausgeschaltet. Alles, das du gespeichert, verfolgt oder gelesen hast, bleibt auf diesem Gerät, und der Tab \"Entdecken\" zeigt weiterhin die heutigen Schlagzeilen. Ohne einen Plan wird Mera deinen Feed nicht zusammenstellen, deine Fragen nicht beantworten oder neue Geschichten nicht verfolgen. Starte einen Plan und alles kommt zurück.",
     "cardTitle": "Du nutzt Mera News Free",
-    "chatBubble": "Alles, das ich über dich weiß, bleibt auf diesem Gerät, und nichts, das du gespeichert oder verfolgt hast, geht verloren. Ohne einen Plan kann ich aber deinen Feed nicht zusammenstellen, deine Fragen nicht beantworten oder neue Geschichten für dich verfolgen. Starte einen und ich mache genau da weiter, wo wir aufgehört haben.",
+    "chatBubble": "Alles, was ich über dich weiß, bleibt auf diesem Gerät. Im kostenlosen Tarif baue ich deinen Feed weiter aus zwei deiner Interessen auf. Chat, Faktenchecks und verfolgte Storys benötigen einen Plan.",
     "chatNotice": "Mera Chat benötigt einen Plan. Deine Persona und Fakten bleiben auf diesem Gerät, egal wie.",
     "continueWithoutPlan": "Fahre ohne Plan fort",
     "lapseBody": "Nichts wurde dir weggenommen. Alles, das du gespeichert, verfolgt oder gelesen hast, gehört dir, auf diesem Gerät, immer. Du nutzt ab hier Mera News Free. Was pausiert, ist die KI-Schicht selbst. Daher bleiben dein personalisierter Feed, dein Dashboard, die Verfolgung neuer Geschichten und Mera Chat deaktiviert, bis du wieder einen Plan startest.",
@@ -1539,7 +1544,25 @@
     "trackBody": "Die Geschichten, die du bereits verfolgst, behalten alles, das sie gesammelt haben. Eine neue zu starten erfordert einen aktiven Plan.",
     "trackDismiss": "Jetzt nicht",
     "trackTitle": "Story-Verfolgung benötigt einen Plan",
-    "trackedStoriesEmptyBody": "Noch keine Geschichten verfolgt. Eine Geschichte zu verfolgen benötigt einen Plan, und was du später verfolgst, bleibt auf diesem Gerät, gehört dir."
+    "trackedStoriesEmptyBody": "Noch keine Geschichten verfolgt. Eine Geschichte zu verfolgen benötigt einen Plan, und was du später verfolgst, bleibt auf diesem Gerät, gehört dir.",
+    "factsInFeedHeader": "In deinem Feed",
+    "factsPausedHeader": "Pausiert",
+    "factsPausedSubtitle": "Diese bleiben gespeichert. Ein Plan schaltet alle ein.",
+    "pausedBadge": "Pausiert",
+    "pausedRowHint": "Pausiert. Tippe, um zu erfahren, warum.",
+    "explainerTitle": "Deine ersten zwei Interessen",
+    "explainerBody": "Mera News Free folgt den zwei Interessen, die du zuerst hinzugefügt hast. Alles andere bleibt auf diesem Gerät gespeichert, genau so, wie du es verlassen hast.",
+    "explainerBody2": "Ein Plan schaltet sie alle wieder ein.",
+    "explainerDismiss": "Jetzt nicht",
+    "chatIntro": {
+      "followStory": "Verfolgte Storys benötigen einen Plan. Mera würde diese im Blick behalten und dir sagen, wenn sich etwas tut.",
+      "articleFeedback": "Deinen Feed anhand von Feedback anzupassen benötigt einen Plan. Dein Feed läuft so oder so weiter.",
+      "persona": "Mit Mera zu sprechen benötigt einen Plan. Deine Interessen und Fakten bleiben auf diesem Gerät.",
+      "optimisationPlan": "Die tägliche Übersicht benötigt einen Plan. Mera würde deinen Feed jeden Tag ansehen und Änderungen vorschlagen.",
+      "tutorialHelp": "Mera etwas über die App zu fragen benötigt einen Plan. Die Anleitungen in der Hilfe decken das meiste ab.",
+      "factCheck": "Faktenchecks benötigen einen Plan. Mera würde das nachschlagen und dir zeigen, wer sonst darüber berichtet hat.",
+      "default": "Der Chat benötigt einen Plan. Dein Feed läuft weiter."
+    }
   },
   "relatedSort": {
     "a11yLabel": "Verwandte Artikel sortieren",

@@ -179,7 +179,9 @@
     "dailyLimit": {
       "body": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo: nuovi articoli si sbloccano domani.",
       "bodyWithTime": "Al momento non è possibile recuperare nuovi articoli. Sfoglia gli articoli già presenti sul tuo dispositivo: nuovi articoli si sbloccano alle {{time}}.",
-      "title": "Limite giornaliero di articoli raggiunto"
+      "title": "Limite giornaliero di articoli raggiunto",
+      "freeTitle": "Questi sono gli articoli di oggi",
+      "freeBodyWithTime": "Hai tutto quello che Mera ha inviato oggi. Sfoglia quello che è sul tuo dispositivo. Altri arrivano alle {{time}}."
     },
     "analysingProgress": "Analisi di {{done}} di {{total}} articoli",
     "waitingForNextBatch_one": "{{count}} nuovo articolo in attesa del prossimo lotto di analisi",
@@ -1007,7 +1009,10 @@
     "openA11y": "Apri stato del feed",
     "close": "Chiudi",
     "expandA11y": "Mostra dettagli stato del feed",
-    "collapseA11y": "Nascondi dettagli stato del feed"
+    "collapseA11y": "Nascondi dettagli stato del feed",
+    "modeProcessing": "Aggiornamento del feed",
+    "modeError": "Problema con il feed",
+    "modeLimited": "Limite giornaliero di articoli raggiunto"
   },
   "trackedStories": {
     "emptyTitle": "Ancora nessuna storia seguita",
@@ -1528,7 +1533,7 @@
   "freeTier": {
     "cardBody": "La parte AI di Mera è disattivata per ora. Tutto ciò che hai salvato, seguito o letto rimane su questo dispositivo, e Esplora ha ancora le notizie di oggi. Senza un piano, Mera non costruirà il tuo feed, non risponderà alle tue domande né seguirà le nuove storie. Avvia un piano e tutto torna.",
     "cardTitle": "Sei su Mera News Free",
-    "chatBubble": "Tutto ciò che conosco di te rimane su questo dispositivo, e nulla di ciò che hai salvato o seguito scompare. Senza un piano però, non riesco a costruire il tuo feed, rispondere alle tue domande, o seguire le nuove storie per te. Avvia un piano e riprenderò esattamente da dove ci eravamo fermati.",
+    "chatBubble": "Tutto quello che so di te resta su questo dispositivo. Con il piano gratuito continuo a costruire il tuo feed a partire da due dei tuoi interessi. La chat, le verifiche dei fatti e le storie seguite richiedono un piano.",
     "chatNotice": "Mera chat viene fornita con un piano. Il tuo profilo e i tuoi fatti rimangono su questo dispositivo comunque.",
     "continueWithoutPlan": "Continua senza un piano",
     "lapseBody": "Nulla è stato tolto. Tutto ciò che hai salvato, seguito o letto è tuo, su questo dispositivo, sempre. Da qui in poi sei su Mera News Free. Ciò che si ferma è lo strato AI stesso, quindi il tuo feed personalizzato, dashboard, tracciamento di nuove storie e Mera chat rimangono disattivati finché non avvi di nuovo un piano.",
@@ -1539,7 +1544,25 @@
     "trackBody": "Le storie che già segui mantengono tutto ciò che hanno raccolto. Iniziarne una nuova richiede un piano attivo.",
     "trackDismiss": "Non adesso",
     "trackTitle": "Tracciare le storie richiede un piano",
-    "trackedStoriesEmptyBody": "Nessuna storia seguita ancora. Seguire le storie richiede un piano, e qualunque cosa tu segua più tardi rimane su questo dispositivo, tua per sempre."
+    "trackedStoriesEmptyBody": "Nessuna storia seguita ancora. Seguire le storie richiede un piano, e qualunque cosa tu segua più tardi rimane su questo dispositivo, tua per sempre.",
+    "factsInFeedHeader": "Nel tuo feed",
+    "factsPausedHeader": "In pausa",
+    "factsPausedSubtitle": "Restano salvati. Un piano li attiva tutti.",
+    "pausedBadge": "In pausa",
+    "pausedRowHint": "In pausa. Tocca per scoprire perché.",
+    "explainerTitle": "I tuoi primi due interessi",
+    "explainerBody": "Mera News Free segue i due interessi che hai aggiunto per primi. Tutto il resto resta salvato su questo dispositivo, esattamente come l'hai lasciato.",
+    "explainerBody2": "Un piano li riattiva tutti.",
+    "explainerDismiss": "Non ora",
+    "chatIntro": {
+      "followStory": "Seguire le storie richiede un piano. Mera terrebbe d'occhio questa e ti direbbe quando si muove.",
+      "articleFeedback": "Regolare il tuo feed in base ai feedback richiede un piano. Il tuo feed continua a funzionare comunque.",
+      "persona": "Parlare con Mera richiede un piano. I tuoi interessi e i tuoi dati restano su questo dispositivo.",
+      "optimisationPlan": "Il riepilogo quotidiano richiede un piano. Mera guarderebbe il tuo feed ogni giorno e suggerirebbe cosa cambiare.",
+      "tutorialHelp": "Chiedere a Mera informazioni sull'app richiede un piano. Le guide nella sezione Aiuto coprono quasi tutto.",
+      "factCheck": "Le verifiche dei fatti richiedono un piano. Mera farebbe la ricerca e ti mostrerebbe chi altro ne ha parlato.",
+      "default": "La chat richiede un piano. Il tuo feed continua a funzionare."
+    }
   },
   "relatedSort": {
     "a11yLabel": "Ordina articoli correlati",

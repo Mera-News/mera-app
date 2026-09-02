@@ -179,7 +179,9 @@
     "dailyLimit": {
       "body": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil. De nouveaux articles seront débloqués demain.",
       "bodyWithTime": "Aucun nouvel article ne peut être récupéré pour le moment. Parcourez les articles déjà présents sur votre appareil. De nouveaux articles seront débloqués à {{time}}.",
-      "title": "Limite quotidienne d'articles atteinte"
+      "title": "Limite quotidienne d'articles atteinte",
+      "freeTitle": "Voilà les articles du jour",
+      "freeBodyWithTime": "Vous avez tout ce que Mera a envoyé aujourd'hui. Parcourez ce qui est sur votre appareil. D'autres arrivent à {{time}}."
     },
     "analysingProgress": "Analyse de {{done}} sur {{total}} articles",
     "waitingForNextBatch_one": "{{count}} nouvel article en attente du prochain lot d'analyse",
@@ -1013,7 +1015,10 @@
     "openA11y": "Ouvrir l'état du fil",
     "close": "Fermer",
     "expandA11y": "Afficher les détails de l'état du fil",
-    "collapseA11y": "Masquer les détails de l'état du fil"
+    "collapseA11y": "Masquer les détails de l'état du fil",
+    "modeProcessing": "Mise à jour de votre fil",
+    "modeError": "Problème de fil",
+    "modeLimited": "Limite quotidienne d'articles atteinte"
   },
   "trackedStories": {
     "emptyTitle": "Aucune actualité suivie pour l'instant",
@@ -1535,7 +1540,7 @@
   "freeTier": {
     "cardBody": "La partie IA de Mera est désactivée pour l'instant. Tout ce que vous avez enregistré, suivi ou lu reste sur cet appareil, et l'onglet Explorez affiche toujours les principales actualités du jour. Sans plan, Mera ne peut pas construire votre fil, répondre à vos questions ou suivre de nouvelles histoires. Commencez un plan et tout revient.",
     "cardTitle": "Vous utilisez Mera News Gratuit",
-    "chatBubble": "Tout ce que je sais sur vous reste sur cet appareil, et rien de ce que vous avez enregistré ou suivi ne disparaît. Sans plan, je ne peux pas construire votre fil, répondre à vos questions ou suivre de nouvelles histoires pour vous. Commencez un plan et je reprendrai là où nous nous étions arrêtés.",
+    "chatBubble": "Tout ce que je sais de vous reste sur cet appareil. Avec l'offre gratuite, je continue à construire votre fil à partir de deux de vos centres d'intérêt. Le chat, les vérifications des faits et le suivi des histoires nécessitent un plan.",
     "chatNotice": "Mera chat est fourni avec un plan. Votre profil et vos informations restent sur cet appareil de toute façon.",
     "continueWithoutPlan": "Continuer sans plan",
     "lapseBody": "Rien n'a été supprimé. Tout ce que vous avez enregistré, suivi ou lu vous appartient, sur cet appareil, toujours. Vous utilisez Mera News Gratuit désormais. Ce qui s'arrête, c'est la couche IA elle-même, donc votre fil personnalisé, votre tableau de bord, le suivi des nouvelles histoires et Mera chat restent désactivés jusqu'à ce que vous recommenciez un plan.",
@@ -1546,7 +1551,25 @@
     "trackBody": "Les histoires que vous suivez déjà conservent toutes leurs données. Suivre une nouvelle histoire nécessite un plan actif.",
     "trackDismiss": "Pas maintenant",
     "trackTitle": "Le suivi des histoires nécessite un plan",
-    "trackedStoriesEmptyBody": "Rien de suivi pour l'instant. Suivre une histoire nécessite un plan, et tout ce que vous suivrez plus tard restera sur cet appareil, à vous de conserver."
+    "trackedStoriesEmptyBody": "Rien de suivi pour l'instant. Suivre une histoire nécessite un plan, et tout ce que vous suivrez plus tard restera sur cet appareil, à vous de conserver.",
+    "factsInFeedHeader": "Dans votre fil",
+    "factsPausedHeader": "En pause",
+    "factsPausedSubtitle": "Ils restent enregistrés. Un plan les active tous.",
+    "pausedBadge": "En pause",
+    "pausedRowHint": "En pause. Appuyez pour savoir pourquoi.",
+    "explainerTitle": "Vos deux premiers centres d'intérêt",
+    "explainerBody": "Mera News Free suit les deux centres d'intérêt que vous avez ajoutés en premier. Tout le reste reste enregistré sur cet appareil, exactement comme vous l'avez laissé.",
+    "explainerBody2": "Un plan les réactive tous.",
+    "explainerDismiss": "Pas maintenant",
+    "chatIntro": {
+      "followStory": "Le suivi des histoires nécessite un plan. Mera surveillerait celle-ci et vous préviendrait quand elle évolue.",
+      "articleFeedback": "Ajuster votre fil à partir de vos retours nécessite un plan. Votre fil continue de fonctionner dans tous les cas.",
+      "persona": "Parler à Mera nécessite un plan. Vos centres d'intérêt et vos informations restent sur cet appareil.",
+      "optimisationPlan": "Le bilan quotidien nécessite un plan. Mera examinerait votre fil chaque jour et suggérerait quoi changer.",
+      "tutorialHelp": "Poser des questions à Mera sur l'application nécessite un plan. Les guides de l'aide couvrent l'essentiel.",
+      "factCheck": "Les vérifications des faits nécessitent un plan. Mera ferait la recherche et vous montrerait qui d'autre en a parlé.",
+      "default": "Le chat nécessite un plan. Votre fil continue de fonctionner."
+    }
   },
   "relatedSort": {
     "a11yLabel": "Trier les articles connexes",
