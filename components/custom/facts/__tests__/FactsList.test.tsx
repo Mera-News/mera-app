@@ -32,9 +32,10 @@ jest.mock('../FactAccordion', () => {
     const { View, Text, Pressable } = require('react-native');
     return {
         __esModule: true,
-        default: ({ fact, onDeletePress, onToggle }: any) => (
+        default: ({ fact, onDeletePress, onToggle, capped, unlocked }: any) => (
             <View>
                 <Text>{fact.statement}</Text>
+                <Text>{`state-${fact.id}-${!capped ? 'uncapped' : unlocked ? 'live' : 'paused'}`}</Text>
                 <Pressable accessibilityLabel={`delete-${fact.id}`} onPress={() => onDeletePress(fact)} />
                 <Pressable accessibilityLabel={`toggle-${fact.id}`} onPress={() => onToggle(fact.id)} />
             </View>
@@ -122,12 +123,34 @@ jest.mock('@/lib/stores/user-store', () => ({
 
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { error: jest.fn(), warn: jest.fn() } }));
 
+// Stubbed because it imports `components/ui/button`, which reaches
+// ActivityIndicator and fails this suite at IMPORT, not at render.
+jest.mock('@/components/custom/subscription/FreeTierExplainerSheet', () => ({
+    __esModule: true,
+    default: () => null,
+}));
+
+jest.mock('@/components/ui/text', () => ({
+    Text: (p: any) => { const { Text } = require('react-native'); return <Text {...p} />; },
+}));
+jest.mock('@/components/ui/vstack', () => ({
+    VStack: (p: any) => { const { View } = require('react-native'); return <View {...p} />; },
+}));
+
+const mockAiAccessRef = { current: 'entitled' as 'entitled' | 'locked' | 'unknown' };
+jest.mock('@/lib/stores/subscription-store', () => ({
+    useAiAccess: () => mockAiAccessRef.current,
+    getAiAccess: () => mockAiAccessRef.current,
+    useSubscriptionStore: { getState: () => ({ serverTier: null }) },
+}));
+
 import FactsList from '../FactsList';
 
 beforeEach(() => {
     jest.clearAllMocks();
     mockSessionRef.current = { user: { id: 'u1' } };
     mockLocalUserIdRef.current = 'u1';
+    mockAiAccessRef.current = 'entitled';
 });
 
 describe('FactsList', () => {
@@ -206,5 +229,59 @@ describe('FactsList', () => {
         await waitFor(() =>
             expect(onFactsChange).toHaveBeenCalledWith([{ id: 'f1', statement: 'Lives in Pune' }]),
         );
+    });
+
+    // --- Mera News Free: the two-oldest-facts cap -----------------------
+    describe('free tier', () => {
+        const threeFacts = [
+            { id: 'new', statement: 'Newest interest', createdAt: '2026-03-01T00:00:00.000Z', metadata: { topics: ['Formula 1'] } },
+            { id: 'old', statement: 'Oldest interest', createdAt: '2026-01-01T00:00:00.000Z', metadata: { topics: ['Lisbon'] } },
+            { id: 'mid', statement: 'Middle interest', createdAt: '2026-02-01T00:00:00.000Z', metadata: { topics: ['Energy'] } },
+        ];
+
+        it('renders no free-tier chrome for an entitled user', async () => {
+            mockGetFacts.mockResolvedValue(threeFacts);
+            const { queryByTestId, getByText } = render(<FactsList />);
+            await waitFor(() => expect(getByText('Oldest interest')).toBeTruthy());
+            expect(queryByTestId('facts-header-in-feed')).toBeNull();
+            expect(queryByTestId('facts-header-paused')).toBeNull();
+            expect(getByText('state-old-uncapped')).toBeTruthy();
+        });
+
+        it('groups the two OLDEST facts as live and the rest as paused', async () => {
+            mockAiAccessRef.current = 'locked';
+            mockGetFacts.mockResolvedValue(threeFacts);
+            const { getByTestId, getByText } = render(<FactsList />);
+            await waitFor(() => expect(getByText('Oldest interest')).toBeTruthy());
+
+            expect(getByTestId('facts-header-in-feed')).toBeTruthy();
+            expect(getByTestId('facts-header-paused')).toBeTruthy();
+            // Oldest two live, newest paused -- by creation time, not list order.
+            expect(getByText('state-old-live')).toBeTruthy();
+            expect(getByText('state-mid-live')).toBeTruthy();
+            expect(getByText('state-new-paused')).toBeTruthy();
+        });
+
+        it('puts the live facts ABOVE the paused ones', async () => {
+            mockAiAccessRef.current = 'locked';
+            mockGetFacts.mockResolvedValue(threeFacts);
+            const { getAllByText, getByText } = render(<FactsList />);
+            await waitFor(() => expect(getByText('Oldest interest')).toBeTruthy());
+            // getFacts() sorts NEWEST first, so without the reorder the live
+            // facts would render at the bottom of the list.
+            const order = getAllByText(/^state-/).map((n) => n.props.children);
+            expect(order).toEqual(['state-old-live', 'state-mid-live', 'state-new-paused']);
+        });
+
+        it('still groups correctly when the device holds only one fact', async () => {
+            mockAiAccessRef.current = 'locked';
+            mockGetFacts.mockResolvedValue([threeFacts[1]]);
+            const { getByTestId, queryByTestId, getByText } = render(<FactsList />);
+            await waitFor(() => expect(getByText('Oldest interest')).toBeTruthy());
+            expect(getByTestId('facts-header-in-feed')).toBeTruthy();
+            // Nothing is paused, so that header must not appear.
+            expect(queryByTestId('facts-header-paused')).toBeNull();
+            expect(getByText('state-old-live')).toBeTruthy();
+        });
     });
 });

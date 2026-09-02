@@ -27,6 +27,13 @@ function round1(n: number): number {
     return Math.round(n * 10) / 10;
 }
 
+/** Matches `topic-service.normalizeTopicText`, reimplemented rather than
+ *  imported: this is a render-layer comparison and pulling `lib/database` into
+ *  a presentational component would widen its import graph for nothing. */
+function normalizeTopic(s: string): string {
+    return s.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
 interface FactAccordionProps {
     readonly fact: Fact;
     readonly isExpanded: boolean;
@@ -38,6 +45,18 @@ interface FactAccordionProps {
      *  influence nudge in particular has no parent handler to gate, since
      *  `handleInfluence` below calls `nudgeFactWeight` directly. */
     readonly readOnly: boolean;
+    /** Mera News Free is applying the two-oldest-facts cap. */
+    readonly capped: boolean;
+    /** This fact is one of the two that stay live. Meaningless unless `capped`. */
+    readonly unlocked: boolean;
+    /** Normalized topic texts already rendered under an unlocked fact above.
+     *  A paused fact does not repeat them: the same text under both a live and
+     *  a paused fact is real (createTopics keys on `(normalized_text, fact_id)`)
+     *  and showing it twice, once as working and once as paused, is
+     *  incomprehensible. Retrieval is untouched, so the text is still fetched. */
+    readonly hiddenTopics: ReadonlySet<string>;
+    /** Opens the explainer sheet. */
+    readonly onExplain: () => void;
     readonly onToggle: (factId: string) => void;
     readonly onDeletePress: (fact: Fact) => void;
     readonly onFactArticles: (fact: Fact) => void;
@@ -62,6 +81,10 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     articleCountByTopic,
     isGeneratingMore,
     readOnly,
+    capped,
+    unlocked,
+    hiddenTopics,
+    onExplain,
     onToggle,
     onDeletePress,
     onFactArticles,
@@ -105,8 +128,13 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
         [influence, fact.id],
     );
 
-    const factTopics = fact.metadata?.topics ?? [];
-    const expectedTopicCount = factTopics.length;
+    const paused = capped && !unlocked;
+    const allFactTopics = fact.metadata?.topics ?? [];
+    // See `hiddenTopics`. Only a paused fact hides anything.
+    const factTopics = paused
+        ? allFactTopics.filter((t) => !hiddenTopics.has(normalizeTopic(t)))
+        : allFactTopics;
+    const expectedTopicCount = allFactTopics.length;
     const topicGenError = fact.metadata?.topicGenError?.[0];
     const topicsSettled = !!topicGenError || expectedTopicCount > 0;
     const totalCount = factTopics.reduce(
@@ -118,9 +146,14 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
         <GlassPanel className="mx-4 mb-3" fallbackClassName="bg-transparent">
             {/* Accordion header */}
             <HStack className="px-4 py-3 items-center">
-                <Pressable onPress={() => onDeletePress(fact)} disabled={readOnly} hitSlop={8} className="mr-3">
-                    <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
-                </Pressable>
+                {/* Hidden, not disabled, while capped. `disabled` left it at full
+                    #ef4444, so it read as a live destructive control that
+                    silently did nothing on every press. */}
+                {!capped && (
+                    <Pressable onPress={() => onDeletePress(fact)} disabled={readOnly} hitSlop={8} className="mr-3">
+                        <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
+                    </Pressable>
+                )}
                 <Pressable onPress={() => onToggle(fact.id)} className="flex-1 mr-2">
                     <TranslatableDynamic
                         text={fact.statement}
@@ -130,8 +163,20 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                     />
                 </Pressable>
                 <HStack space="xs" className="items-center">
-                    {!topicsSettled && <Spinner size="small" />}
-                    {topicsSettled && totalCount > 0 && (
+                    {paused && (
+                        <Box
+                            testID={`fact-paused-badge-${fact.id}`}
+                            className="rounded-full border border-white/20 px-2.5 py-1"
+                        >
+                            <Text size="xs" className="text-gray-400">
+                                {t('freeTier.pausedBadge')}
+                            </Text>
+                        </Box>
+                    )}
+                    {!paused && !topicsSettled && <Spinner size="small" />}
+                    {/* No article count on a paused fact: nothing is fetched for
+                        it, so the number would be a frozen leftover. */}
+                    {!paused && topicsSettled && totalCount > 0 && (
                         <Button
                             variant="outline"
                             size="xs"
@@ -154,7 +199,23 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
             {/* Accordion body */}
             {isExpanded && (
                 <Box className="px-4 py-3">
-                    {/* Influence — how strongly this fact dampens its topics */}
+                    {/* Influence, in three states.
+                        - Paused: hidden entirely. A percentage control reporting
+                          100% on a fact contributing nothing is worse than
+                          absent, especially sitting above the upgrade line.
+                        - Capped but live: the value without the steppers. It
+                          still means something; it just is not adjustable.
+                        - Entitled: unchanged. */}
+                    {paused ? null : capped ? (
+                        <HStack className="items-center justify-between pb-3 mb-3">
+                            <Text size="sm" className="text-gray-400 font-medium">
+                                {t('facts.influence', { defaultValue: 'Influence' })}
+                            </Text>
+                            <Text size="sm" className="text-gray-200">
+                                {Math.round(influence * 100)}%
+                            </Text>
+                        </HStack>
+                    ) : (
                     <HStack className="items-center justify-between pb-3 mb-3">
                         <Text size="sm" className="text-gray-400 font-medium">
                             {t('facts.influence', { defaultValue: 'Influence' })}
@@ -191,6 +252,19 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                             </Pressable>
                         </HStack>
                     </HStack>
+                    )}
+                    {/* The one affordance a paused fact has: say why, in one tap. */}
+                    {paused && (
+                        <Pressable
+                            testID={`fact-paused-hint-${fact.id}`}
+                            onPress={onExplain}
+                            className="pb-3 mb-3"
+                        >
+                            <Text size="sm" className="text-primary-400">
+                                {t('freeTier.pausedRowHint')}
+                            </Text>
+                        </Pressable>
+                    )}
                     {topicGenError ? (
                         <Text className="text-red-400 text-sm">
                             {t('configPanel.topicGenFailed', { error: topicGenError })}
@@ -213,40 +287,59 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                                     className="text-gray-200 flex-1 mr-2 capitalize"
                                                     numberOfLines={2}
                                                 />
-                                                <Text size="xs" className="text-gray-500">
-                                                    {t('configPanel.articleCount', { count })}
-                                                </Text>
+                                                {!paused && (
+                                                    <Text size="xs" className="text-gray-500">
+                                                        {t('configPanel.articleCount', { count })}
+                                                    </Text>
+                                                )}
                                             </HStack>
                                         </Pressable>
-                                        <Pressable
-                                            onPress={() => onDeleteTopic(fact, topicText)}
-                                            disabled={readOnly}
-                                            hitSlop={8}
-                                            className="ml-1"
-                                        >
-                                            <MaterialIcons name="delete-outline" size={16} color="#6b7280" />
-                                        </Pressable>
+                                        {/* Same defect as the fact-level control:
+                                            disabled but full-strength, so it read
+                                            live and did nothing. Hidden while
+                                            capped. */}
+                                        {!capped && (
+                                            <Pressable
+                                                onPress={() => onDeleteTopic(fact, topicText)}
+                                                disabled={readOnly}
+                                                hitSlop={8}
+                                                className="ml-1"
+                                            >
+                                                <MaterialIcons name="delete-outline" size={16} color="#6b7280" />
+                                            </Pressable>
+                                        )}
                                     </HStack>
                                 );
                             })}
-                            <Pressable onPress={() => onAddTopic(fact)} disabled={readOnly} className="mt-1">
-                                <HStack className="items-center" space="xs">
-                                    <MaterialIcons name="add" size={16} color={readOnly ? '#374151' : '#60a5fa'} />
-                                    <Text size="sm" className={readOnly ? 'text-gray-600' : 'text-blue-400'}>{t('configPanel.addTopic')}</Text>
-                                </HStack>
-                            </Pressable>
-                            {isGeneratingMore ? (
-                                <HStack className="items-center mt-1" space="xs">
-                                    <Spinner size="small" />
-                                    <Text size="sm" className="text-typography-400">{t('configPanel.generatingMoreTopics')}</Text>
-                                </HStack>
-                            ) : (
-                                <Pressable onPress={() => onGenerateMore(fact)} disabled={readOnly} className="mt-1">
-                                    <HStack className="items-center" space="xs">
-                                        <MaterialIcons name="auto-awesome" size={16} color={readOnly ? '#374151' : '#60a5fa'} />
-                                        <Text size="sm" className={readOnly ? 'text-gray-600' : 'text-blue-400'}>{t('configPanel.generateMoreTopics')}</Text>
-                                    </HStack>
-                                </Pressable>
+                            {/* No topic creation on Mera News Free. Adding is
+                                refused in the chat tool too (D17), and
+                                "Generate more" is an LLM call, which is paid
+                                (D24): a user who cannot add one topic by hand
+                                but can have a model mint ten would be
+                                incoherent. Removed rather than disabled so the
+                                next reader does not read them as reachable. */}
+                            {!capped && (
+                                <>
+                                    <Pressable onPress={() => onAddTopic(fact)} disabled={readOnly} className="mt-1">
+                                        <HStack className="items-center" space="xs">
+                                            <MaterialIcons name="add" size={16} color={readOnly ? '#374151' : '#60a5fa'} />
+                                            <Text size="sm" className={readOnly ? 'text-gray-600' : 'text-blue-400'}>{t('configPanel.addTopic')}</Text>
+                                        </HStack>
+                                    </Pressable>
+                                    {isGeneratingMore ? (
+                                        <HStack className="items-center mt-1" space="xs">
+                                            <Spinner size="small" />
+                                            <Text size="sm" className="text-typography-400">{t('configPanel.generatingMoreTopics')}</Text>
+                                        </HStack>
+                                    ) : (
+                                        <Pressable onPress={() => onGenerateMore(fact)} disabled={readOnly} className="mt-1">
+                                            <HStack className="items-center" space="xs">
+                                                <MaterialIcons name="auto-awesome" size={16} color={readOnly ? '#374151' : '#60a5fa'} />
+                                                <Text size="sm" className={readOnly ? 'text-gray-600' : 'text-blue-400'}>{t('configPanel.generateMoreTopics')}</Text>
+                                            </HStack>
+                                        </Pressable>
+                                    )}
+                                </>
                             )}
                         </VStack>
                     )}

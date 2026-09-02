@@ -13,8 +13,13 @@ import { useForYouStore } from '@/lib/stores/for-you-store';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { router } from 'expo-router';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react';
+import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useAiAccess } from '@/lib/stores/subscription-store';
+import { deriveFreeTierAccess } from '@/lib/subscription/free-tier-topic-access';
+import FreeTierExplainerSheet from '@/components/custom/subscription/FreeTierExplainerSheet';
+import { Text } from '@/components/ui/text';
+import { VStack } from '@/components/ui/vstack';
 import AddTopicModal from './AddTopicModal';
 import DeleteFactModal from './DeleteFactModal';
 import FactAccordion from './FactAccordion';
@@ -81,6 +86,36 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
     const [isAddingTopic, setIsAddingTopic] = useState(false);
     const [generateMoreFact, setGenerateMoreFact] = useState<Fact | null>(null);
     const [generatingMoreFactIds, setGeneratingMoreFactIds] = useState<Set<string>>(new Set());
+
+    const [explainerOpen, setExplainerOpen] = useState(false);
+
+    // The free-tier cap. `deriveFreeTierAccess` is called directly rather than
+    // through a store slice: this component already loads the facts, so the
+    // ages are in hand and no new persisted state is needed.
+    const aiAccess = useAiAccess();
+    const access = useMemo(
+        () => deriveFreeTierAccess(
+            aiAccess,
+            localFacts.map((f) => ({ id: f.id, createdAtMs: new Date(f.createdAt).getTime() })),
+        ),
+        [aiAccess, localFacts],
+    );
+
+    const { liveFacts, pausedFacts, hiddenTopics } = useMemo(() => {
+        if (!access.capped) {
+            return { liveFacts: localFacts, pausedFacts: [], hiddenTopics: new Set<string>() };
+        }
+        const live = localFacts.filter((f) => access.isFactUnlocked(f.id));
+        const paused = localFacts.filter((f) => !access.isFactUnlocked(f.id));
+        // Texts already shown as live. A paused fact does not repeat them.
+        const shown = new Set<string>();
+        for (const f of live) {
+            for (const t of f.metadata?.topics ?? []) {
+                shown.add(t.toLowerCase().trim().replace(/\s+/g, ' '));
+            }
+        }
+        return { liveFacts: live, pausedFacts: paused, hiddenTopics: shown };
+    }, [access, localFacts]);
 
     const isChatExpanded = useFloatingChatIsExpanded();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
@@ -356,46 +391,97 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
         }
     }, [generateMoreFact, generatingMoreFactIds, userId, isOnDeviceProcessing, clearGeneratingMore, showGenerateMoreFailedToast, loadLocalFacts, fetchUserPersona]);
 
+    const renderFact = (fact: Fact) => (
+        <FactAccordion
+            key={fact.id}
+            fact={fact}
+            isExpanded={expandedFactIds.has(fact.id)}
+            articleCountByTopic={articleCountByTopic}
+            isGeneratingMore={generatingMoreFactIds.has(fact.id)}
+            readOnly={readOnly}
+            capped={access.capped}
+            unlocked={access.isFactUnlocked(fact.id)}
+            hiddenTopics={hiddenTopics}
+            onExplain={() => setExplainerOpen(true)}
+            onToggle={toggleFact}
+            onDeletePress={handleDeletePress}
+            onFactArticles={handleFactArticlesPress}
+            onTopicPress={handleTopicPress}
+            onDeleteTopic={handleDeleteTopic}
+            onAddTopic={handleAddTopicPress}
+            onGenerateMore={handleGenerateMorePress}
+        />
+    );
+
     return (
         <>
-            {localFacts.map((fact) => (
-                <FactAccordion
-                    key={fact.id}
-                    fact={fact}
-                    isExpanded={expandedFactIds.has(fact.id)}
-                    articleCountByTopic={articleCountByTopic}
-                    isGeneratingMore={generatingMoreFactIds.has(fact.id)}
-                    readOnly={readOnly}
-                    onToggle={toggleFact}
-                    onDeletePress={handleDeletePress}
-                    onFactArticles={handleFactArticlesPress}
-                    onTopicPress={handleTopicPress}
-                    onDeleteTopic={handleDeleteTopic}
-                    onAddTopic={handleAddTopicPress}
-                    onGenerateMore={handleGenerateMorePress}
-                />
-            ))}
+            {!access.capped && localFacts.map(renderFact)}
 
-            <AddTopicModal
-                isOpen={addTopicFact !== null}
-                value={addTopicText}
-                isAdding={isAddingTopic}
-                onChangeText={setAddTopicText}
-                onConfirm={handleAddTopicConfirm}
-                onCancel={handleAddTopicCancel}
-            />
+            {/* Capped: the two live facts first, then the rest. Without the
+                reorder the live ones sit at the BOTTOM, because getFacts()
+                sorts newest-first and the two oldest are therefore last. */}
+            {access.capped && (
+                <>
+                    {liveFacts.length > 0 && (
+                        <Text
+                            testID="facts-header-in-feed"
+                            size="sm"
+                            className="text-gray-400 font-medium px-4 pb-2"
+                        >
+                            {t('freeTier.factsInFeedHeader')}
+                        </Text>
+                    )}
+                    {liveFacts.map(renderFact)}
 
-            <GenerateMoreModal
-                isOpen={generateMoreFact !== null}
-                onConfirm={handleGenerateMoreConfirm}
-                onCancel={handleGenerateMoreCancel}
-            />
+                    {pausedFacts.length > 0 && (
+                        <VStack space="xs" className="px-4 pt-3 pb-2">
+                            <Text
+                                testID="facts-header-paused"
+                                size="sm"
+                                className="text-gray-400 font-medium"
+                            >
+                                {t('freeTier.factsPausedHeader')}
+                            </Text>
+                            <Text size="xs" className="text-gray-500">
+                                {t('freeTier.factsPausedSubtitle')}
+                            </Text>
+                        </VStack>
+                    )}
+                    {pausedFacts.map(renderFact)}
+                </>
+            )}
 
-            <DeleteFactModal
-                fact={factToDelete}
-                isDeleting={isDeleting}
-                onConfirm={handleDeleteConfirm}
-                onCancel={handleDeleteCancel}
+            {/* Topic creation and fact deletion are unreachable while capped, so
+                their modals are not mounted either. */}
+            {!access.capped && (
+                <>
+                    <AddTopicModal
+                        isOpen={addTopicFact !== null}
+                        value={addTopicText}
+                        isAdding={isAddingTopic}
+                        onChangeText={setAddTopicText}
+                        onConfirm={handleAddTopicConfirm}
+                        onCancel={handleAddTopicCancel}
+                    />
+
+                    <GenerateMoreModal
+                        isOpen={generateMoreFact !== null}
+                        onConfirm={handleGenerateMoreConfirm}
+                        onCancel={handleGenerateMoreCancel}
+                    />
+
+                    <DeleteFactModal
+                        fact={factToDelete}
+                        isDeleting={isDeleting}
+                        onConfirm={handleDeleteConfirm}
+                        onCancel={handleDeleteCancel}
+                    />
+                </>
+            )}
+
+            <FreeTierExplainerSheet
+                isOpen={explainerOpen}
+                onClose={() => setExplainerOpen(false)}
             />
         </>
     );
