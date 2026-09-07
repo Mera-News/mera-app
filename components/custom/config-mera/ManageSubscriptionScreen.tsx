@@ -355,6 +355,30 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                         </Text>
                     ) : null}
 
+                    {/* ── STARTER IS FREE ──────────────────────────────────
+                        Shown to anyone without a PAID subscription. This is the
+                        durable home for the message: a one-time sheet is seen
+                        once and gone, and the place a user asks what plan they
+                        are on is where the answer should live permanently.
+
+                        Keyed on `isPremium` (a real RevenueCat entitlement) and
+                        NOT on the tier string, because the server reports
+                        `starter` for a granted account exactly as it does for a
+                        bought one, so the tier alone cannot tell them apart. */}
+                    {!isPremium ? (
+                        <Box
+                            testID="manage-starter-free"
+                            className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mt-4"
+                        >
+                            <Text className="text-white font-semibold text-base">
+                                {t('subscription.starterFreeTitle')}
+                            </Text>
+                            <Text size="sm" className="text-gray-400 mt-2 leading-relaxed">
+                                {t('subscription.starterFreeBody')}
+                            </Text>
+                        </Box>
+                    ) : null}
+
                     {/* Hero plan card */}
                     <Box className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mt-4">
                         <HStack className="items-center">
