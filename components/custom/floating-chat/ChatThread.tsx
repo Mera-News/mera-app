@@ -57,8 +57,6 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   isRefreshingBlockStatus,
   onSend,
   isInputDisabled,
-  freeTierLocked,
-  onSeePlans,
 }) => {
   const { t } = useTranslation();
 
@@ -79,10 +77,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   const hasRealMessage = items.some(
     (item) => item.kind === 'message' && item.message.id !== 'intro',
   );
-  // Suppressed on the free tier: chips are tappable prompts, and a locked
-  // session refuses to dispatch a turn, so every one of them would be a dead
-  // tap sitting directly under a message explaining that chat needs a plan.
-  const showChips = !freeTierLocked && !hasRealMessage && starterChips.length > 0;
+  const showChips = !hasRealMessage && starterChips.length > 0;
 
   // Every topic-plan card in the thread — TopicPlanSaveAllRow filters these
   // against the settled map itself, keeping this component store-free.
@@ -206,15 +201,8 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           (floating bubble → ChatSessionView, persona chat → CloudPersonaChat
           / LocalPersonaChat, onboarding step 1 → PersonaUpdateChatStep →
           CloudPersonaChat — all of which mount this ChatThread). */}
-      {/* Both AI notices are suppressed on the free tier. They render whenever
-          the thread has no real message, which is exactly the locked state, so
-          a free user's FIRST EVER chat popup would open with a warning that
-          misusing the assistant can get their account blocked — about an
-          assistant they have not been given. */}
       <View style={styles.aiInteractionRow}>
-        {!freeTierLocked && (
-          <AiDisclosureCaption text={t('floatingChat.aiInteractionNotice')} />
-        )}
+        <AiDisclosureCaption text={t('floatingChat.aiInteractionNotice')} />
       </View>
       <View style={styles.listWrap}>
         <ConversationContent
@@ -224,7 +212,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           hasOlder={hasOlder}
           isLoadingOlder={isLoadingOlder}
           header={
-            showHistoryButton || showChips || (!hasRealMessage && !freeTierLocked) ? (
+            showHistoryButton || showChips || !hasRealMessage ? (
               <View style={styles.header}>
                 {showHistoryButton && (
                   <View style={styles.historyButtonRow}>
@@ -242,7 +230,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
                     </Pressable>
                   </View>
                 )}
-                {!hasRealMessage && !freeTierLocked && (
+                {!hasRealMessage && (
                   <View style={styles.noticeRow}>
                     <MaterialIcons name="info-outline" size={14} color="rgb(140, 140, 140)" />
                     <Text size="xs" style={styles.noticeText}>
@@ -311,32 +299,12 @@ const ChatThread: React.FC<ChatThreadProps> = ({
 
       <TopicPlanSaveAllRow factIds={topicPlanFactIds} />
 
-      {freeTierLocked ? (
-        // D31: a single full-width action in the composer's slot, NOT a
-        // disabled text field. Nothing to focus, nothing to type into, one
-        // thing to do. A dead input invites a tap, then explains nothing.
-        <Pressable
-          style={styles.seePlansButton}
-          onPress={() => {
-            hapticLight();
-            onSeePlans();
-          }}
-          accessibilityRole="button"
-          accessibilityLabel={t('freeTier.seePlans')}
-          testID="chat-free-tier-see-plans"
-        >
-          <Text size="sm" style={styles.seePlansText}>
-            {t('freeTier.seePlans')}
-          </Text>
-        </Pressable>
-      ) : (
-        <PromptInput
-          ref={promptRef}
-          onSubmit={onSend}
-          placeholder={t('floatingChat.inputPlaceholder')}
-          disabled={isInputDisabled || blockedMessage !== null}
-        />
-      )}
+      <PromptInput
+        ref={promptRef}
+        onSubmit={onSend}
+        placeholder={t('floatingChat.inputPlaceholder')}
+        disabled={isInputDisabled || blockedMessage !== null}
+      />
     </Conversation>
   );
 };
@@ -347,21 +315,6 @@ const styles = StyleSheet.create({
   },
   header: {
     gap: 4,
-  },
-  seePlansButton: {
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 22,
-    marginHorizontal: 4,
-    marginTop: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.10)',
-    borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255, 255, 255, 0.22)',
-  },
-  seePlansText: {
-    color: 'rgb(240, 240, 240)',
-    fontWeight: '600',
   },
   aiInteractionRow: {
     paddingHorizontal: 4,

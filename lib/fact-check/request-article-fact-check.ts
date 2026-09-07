@@ -40,8 +40,6 @@
 // article check; they are different features now.
 
 import { hapticLight } from '../haptics';
-import { isChatLocked } from '../chat-tools/free-tier-gate';
-import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { requestFactCheck } from './fact-check-graphql-client';
 import type { FactCheckKeepInput } from '../database/services/saved-article-suggestion-service';
 import type { ForYouSuggestion } from '../stores/for-you-store';
@@ -86,26 +84,6 @@ export function requestArticleFactCheck(article: FactCheckArticle): boolean {
     // plain function, not a component. `.getState()` is zustand's supported
     // outside-React read.
     //
-    // Mera News Free: open the popup instead of the old silent no-op, then
-    // return false — the return value means "a billable server ask was
-    // issued", and none was. Callers and tests key on that meaning, so opening
-    // a popup must not flip it to true.
-    //
-    // This returns BEFORE the retention block below on purpose. Opening a
-    // popup is not a fact check, so a free user's tap must not pin the article
-    // into saved_article_suggestions. Moving the popup call below the
-    // retention build would silently start creating rows for taps that check
-    // nothing.
-    if (isChatLocked()) {
-        hapticLight();
-        useFloatingChatStore.getState().expand({
-            kind: 'fact-check',
-            articleId: article.articleId,
-            articleTitle: article.title,
-        });
-        return false;
-    }
-
     hapticLight();
     // Retention input built HERE, behind the gates above: a gated no-op must
     // not create a retention row.

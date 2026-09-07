@@ -234,37 +234,34 @@ describe('ProfileScreen', () => {
     // The row must stay the SAME row an entitled user sees — same speech
     // bubble, same logo — with Mera speaking the free-tier script instead of
     // the invite, and nothing to tap.
-    it('locked → Mera speaks the free-tier paragraph (invite copy gone)', async () => {
+    it('speaks the ordinary invite copy, with no free-tier variant', async () => {
+        // Was "locked -> Mera speaks the free-tier paragraph". There is no
+        // free-tier paragraph any more: `freeTier.chatBubble` claimed chat
+        // needed a plan, which is false now that Starter is free, so the
+        // branch was deleted rather than given a third value.
         mockAiAccess = 'locked';
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { queryByText, getByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('mera-chat-invite-locked')).toBeTruthy());
+        await waitFor(() => expect(getByTestId('mera-chat-invite')).toBeTruthy());
 
-        // One static paragraph in the bubble, not the former cycling script.
-        expect(getByTestId('mera-chat-invite-bubble-locked')).toBeTruthy();
-        expect(queryByText('freeTier.chatBubble')).toBeTruthy();
-
-        expect(queryByText('profile.meraInvite')).toBeNull();
-        // Same presentation, not a substitute card: the logo is still there.
+        expect(queryByText('profile.meraInvite')).toBeTruthy();
+        expect(queryByText('freeTier.chatBubble')).toBeNull();
+        // Same presentation as before: the logo is still there.
         expect(getByTestId('mera-logo')).toBeTruthy();
     });
 
-    it('locked → tapping the Mera row opens the CHAT, not the paywall', async () => {
-        // REVERSED this wave. It used to open the paywall, because
-        // FloatingChatHost rendered nothing while locked and the morph had no
-        // popover to target. The host mounts in every state now, and the chat
-        // is the better destination: the popup opens on the persona opener,
-        // which explains the tier and offers "See plans" as its one action.
-        // Going straight to a purchase sheet skipped the explanation.
+    it('tapping the Mera row opens the chat, with no tier variant at all', async () => {
+        // THIRD state for this assertion, and the simplest. It asserted the
+        // paywall, then the chat-when-locked. Starter is now free for everyone,
+        // so there is no locked row, no `mera-chat-invite-locked` testID and no
+        // second copy string: one row, one destination, whatever the tier.
         mockAiAccess = 'locked';
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
-        await waitFor(() => expect(getByTestId('mera-chat-invite-locked')).toBeTruthy());
-        // The entitled testID must NOT be present — the two states have to stay
-        // distinguishable now that both open the same destination.
-        expect(queryByTestId('mera-chat-invite')).toBeNull();
+        await waitFor(() => expect(getByTestId('mera-chat-invite')).toBeTruthy());
+        expect(queryByTestId('mera-chat-invite-locked')).toBeNull();
 
-        fireEvent.press(getByTestId('mera-chat-invite-locked'));
+        fireEvent.press(getByTestId('mera-chat-invite'));
         expect(mockExpand).toHaveBeenCalledWith({ kind: 'persona' });
         expect(mockPresentFreeTierPaywall).not.toHaveBeenCalled();
     });

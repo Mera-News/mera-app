@@ -5,7 +5,6 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { hapticMedium } from '@/lib/haptics';
 import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
-import { useAiAccess } from '@/lib/stores/subscription-store';
 import { subscribeScrollTick } from '@/lib/visibility-tick';
 import { useFocusEffect } from 'expo-router';
 import React, { useCallback, useEffect, useRef } from 'react';
@@ -18,9 +17,7 @@ const LOGO_SIZE = 56;
 /**
  * Static, in-flow Mera CTA on the Profile tab — a comic speech bubble on the
  * left with the Mera logo on the right, reading as dialogue coming out of the
- * icon. Tapping the row opens the persona chat — except on Mera News Free,
- * where the same row renders inert and Mera says the free-tier sentence
- * instead (see the `locked` branch below).
+ * icon. Tapping the row opens the persona chat.
  *
  * Replaces the former draggable FloatingMeraBubble (removed from ProfileTabScreen
  * in this wave). Because ChatPopover morphs the chat open from the store's
@@ -32,7 +29,6 @@ const LOGO_SIZE = 56;
 const MeraChatInvite: React.FC = () => {
     const { t } = useTranslation();
     const iconRef = useRef<View>(null);
-    const aiAccess = useAiAccess();
 
     const publishCenter = useCallback(() => {
         iconRef.current?.measureInWindow((x, y, w, h) => {
@@ -53,21 +49,6 @@ const MeraChatInvite: React.FC = () => {
         useFloatingChatStore.getState().expand({ kind: 'persona' });
     }, [publishCenter]);
 
-    // Mera News Free: the row itself is UNCHANGED — same speech bubble, same
-    // animated logo, same layout an entitled user sees. Only the copy differs:
-    // Mera says the free-tier paragraph instead of the invite, so the mode is
-    // explained in Mera's own voice rather than by a different-looking card
-    // appearing where the invite used to be.
-    //
-    // Tapping now opens the CHAT in both states. It previously opened the
-    // paywall, because `FloatingChatHost` rendered nothing when locked and the
-    // morph would have targeted a popover that was not mounted. The host now
-    // mounts in every state, so that constraint is gone — and the chat is the
-    // better destination: the popup opens on the persona opener, which explains
-    // the tier and offers "See plans" as its single action. Going straight to a
-    // purchase sheet from a speech bubble skipped the explanation.
-    const locked = aiAccess === 'locked';
-
     const content = (
         <HStack className="items-center" space="md">
             {/* Speech bubble (left) — comic dialogue coming out of the logo. Glass
@@ -82,18 +63,8 @@ const MeraChatInvite: React.FC = () => {
                     edge={false}
                     style={styles.bubbleBorder}
                 >
-                    {/* Same node either way, only the string differs. Locked,
-                        Mera explains the mode in her own first-person voice
-                        (what stays, what she can't do, how to switch her back
-                        on); entitled, it's the ordinary invite. Both are
-                        phrased so they hold for a user who has saved and
-                        followed nothing — see the note on freeTier.cardBody. */}
-                    <Text
-                        testID={locked ? 'mera-chat-invite-bubble-locked' : undefined}
-                        className="text-white"
-                        style={styles.bubbleText}
-                    >
-                        {t(locked ? 'freeTier.chatBubble' : 'profile.meraInvite')}
+                    <Text className="text-white" style={styles.bubbleText}>
+                        {t('profile.meraInvite')}
                     </Text>
                 </GlassPanel>
                 {/* Right-edge tail pointing at the logo (rotated square whose
@@ -111,18 +82,9 @@ const MeraChatInvite: React.FC = () => {
         </HStack>
     );
 
-    // The measured `bubbleCenter` keeps being published while locked. It costs
-    // one store write nothing currently reads (ChatPopover is unmounted), and
-    // it means the morph origin is already correct the instant a purchase
-    // unlocks the chat, with no first-tap-from-the-corner artefact.
-    //
-    // Both branches are a Pressable, so the row keeps its press feedback in
-    // either state; only the destination differs. The locked testID stays
-    // `mera-chat-invite-locked` — it is what the free-tier tests key on to tell
-    // the two states apart, and both are now pressable.
     return (
         <Pressable
-            testID={locked ? 'mera-chat-invite-locked' : 'mera-chat-invite'}
+            testID="mera-chat-invite"
             onPress={openChat}
             className="mx-4 mb-5"
         >

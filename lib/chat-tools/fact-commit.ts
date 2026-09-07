@@ -20,7 +20,6 @@ import { runGeoDerivationSweep } from '../database/services/geo-derivation-servi
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import logger from '../logger';
 import { triggerTopicGeneration } from './tool-handlers';
-import type { OnboardingRunToken } from './onboarding-run';
 
 export interface FactChoiceCommit {
   /** The reading the user tapped. */
@@ -44,13 +43,6 @@ export interface FactCommitOptions {
    * message. Excluding them preserves the shipped behaviour.
    */
   excludeFactIds?: string[];
-  /**
-   * D29. Proof of a live onboarding wizard run, forwarded to topic generation.
-   * It is the only thing that opens the free-tier topic-generation gate, and it
-   * has to travel WITH the commit: by the time generation runs the fact is
-   * already written, so nothing ambient can still tell that this was a wizard.
-   */
-  onboardingRun?: OnboardingRunToken | null;
 }
 
 /**
@@ -121,10 +113,7 @@ export async function commitFactChoices(
   useFloatingChatStore.getState().notifyFactMutation();
 
   if (freshEntries.length > 0) {
-    // D29: carries the wizard run token when the commit happens inside an
-    // onboarding run, which is the only way the free-tier topic-generation gate
-    // opens. Absent everywhere else, so the default stays "no exemption".
-    triggerTopicGeneration(freshEntries, { onboardingRun: options.onboardingRun });
+    triggerTopicGeneration(freshEntries);
     // Derive countries now instead of waiting up to 24h for the `persona-geo`
     // task. `force` bypasses ONLY the cooldown, never the fact-fingerprint, so
     // repeated commits in one session don't each fire a fresh LLM call.

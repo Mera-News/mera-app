@@ -31,13 +31,10 @@ import { deriveThreadItems } from './deriveThreadItems';
 import { decideTopicPlanTurn } from './topic-plan-turn';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
 import { getAiAccess } from '@/lib/stores/subscription-store';
-import { isChatLocked, openerKeyForContext } from '@/lib/chat-tools/free-tier-gate';
 import {
-  isOnboardingRunActive,
   OnboardingRunContext,
   type OnboardingRunToken,
 } from '@/lib/chat-tools/onboarding-run';
-import { presentFreeTierPaywall } from '@/lib/subscription/present-free-tier-paywall';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
 
@@ -105,19 +102,8 @@ export default function ChatSessionView({
   // Intro copy depends on the context: the article-feedback surfaces open with a
   // "what can I do for you" line (article vs. suggestion variant); everything
   // else keeps the persona intro.
-  //
-  // Mera News Free wins over every branch below, including the
-  // optimisation-plan `null`: on the free tier the opener IS the content, and a
-  // locked plan card renders nothing, so falling through would leave an empty
-  // popup that explains nothing.
-  // D29: a free user with zero facts gets ONE wizard run, so they can create
-  // the two interests the rest of the product depends on. The exemption is the
-  // TOKEN, never a fact count — see lib/chat-tools/onboarding-run.ts for why an
-  // ambient condition closes before topic generation has finished.
-  const chatLocked = isChatLocked() && !isOnboardingRunActive(onboardingRun);
-  const introText = chatLocked
-    ? t(openerKeyForContext(context))
-    : context.kind === 'optimisation-plan'
+  const introText =
+    context.kind === 'optimisation-plan'
       ? // The pinned plan card IS the content — no persona intro line beneath it.
         null
       : context.kind === 'follow-story'
@@ -502,14 +488,6 @@ export default function ChatSessionView({
     setUnblockPending(true);
   }, []);
 
-  // Free-tier CTA. The popover stays open behind the sheet: dismissing the
-  // paywall returns the user to the opener that explained why they are seeing
-  // it, rather than to a blank screen.
-  const handleSeePlans = useCallback(() => {
-    void hapticMedium();
-    void presentFreeTierPaywall('chat-free-tier');
-  }, []);
-
   const handleSend = useCallback(
     (text: string) => {
       const trimmed = text.trim();
@@ -517,18 +495,11 @@ export default function ChatSessionView({
       // Disabling PromptInput is not enough: the auto-send effect below and the
       // starter chips both call this directly, bypassing the input entirely.
       if (hasUnresolvedTopicPlans) return;
-      // Mera News Free. THIS is the real gate, not the composer: on the free
-      // tier there is no text input at all (ChatThread renders a "See plans"
-      // button in its place), but this function is still reachable from the
-      // starter chips and from the pendingInitialMessage auto-send. A turn
-      // here would spend a model call to produce a refusal the opener has
-      // already given.
-      if (chatLocked) return;
       void hapticMedium();
       setIntroMessage(null);
       sendMessage(trimmed);
     },
-    [isStreaming, effectiveBlocked, hasUnresolvedTopicPlans, chatLocked, sendMessage],
+    [isStreaming, effectiveBlocked, hasUnresolvedTopicPlans, sendMessage],
   );
 
   // Chips send their canned message through the same path (haptic included).
@@ -618,8 +589,6 @@ export default function ChatSessionView({
         isRefreshingBlockStatus={isRefreshingBlockStatus}
         onSend={handleSend}
         isInputDisabled={isStreaming || effectiveBlocked}
-        freeTierLocked={chatLocked}
-        onSeePlans={handleSeePlans}
       />
       {!!userId && conversationId && (
         <RequestUnblockModal

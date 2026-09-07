@@ -1,3 +1,14 @@
+// DEAD MODULE, PENDING DELETION (starter-free).
+//
+// Its only purpose was exempting the onboarding wizard from the free-tier chat
+// gate, and that gate is gone. It survives one commit longer than the gate
+// because `PersonaUpdateChatStep` still calls `useOnboardingRunToken`, and
+// deleting this first would break the build. Delete this file and its test the
+// moment that call goes; nothing else references it.
+//
+// The free-tier narrowing has already been removed, since it depended on the
+// deleted `free-tier-gate`. Tokens still mint, and nothing reads them.
+//
 // The onboarding-wizard exemption from the free-tier chat gate (D29).
 //
 // A free user with ZERO facts must get ONE wizard run, or they can never create
@@ -43,9 +54,7 @@
 
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
-import { useSubscriptionStore } from '@/lib/stores/subscription-store';
 import logger from '@/lib/logger';
-import { isChatLocked } from './free-tier-gate';
 
 declare const ONBOARDING_RUN_BRAND: unique symbol;
 
@@ -97,22 +106,8 @@ export function useOnboardingRunToken(active: boolean): OnboardingRunToken | nul
     const token = tokenRef.current;
     const [granted, setGranted] = useState(false);
 
-    // Subscribed, not read once. `isChatLocked()` is a plain function, so
-    // without a reactive dependency the effect below would evaluate it exactly
-    // once, at mount — and on a cold start that is the `'unknown'` window,
-    // before the server has answered. The mint would be refused, the tier would
-    // resolve to locked a moment later, and the wizard would sit there gated
-    // with no exemption and no way to get one: precisely the stranded zero-fact
-    // user D29 exists to rescue. Re-running when `serverTier` changes closes it.
-    const serverTier = useSubscriptionStore((s) => s.serverTier);
-
     useEffect(() => {
         if (!active) return;
-        // A token is only meaningful against a gate. If this user is not
-        // actually on the free tier — genuinely entitled, or transiently
-        // unresolved — there is nothing to exempt, so refusing to mint costs
-        // nothing and keeps a token minted outside the free tier inert.
-        if (!isChatLocked()) return;
         if (liveRuns.size > 0) {
             logger.warn('[onboarding-run] refused: a run is already live');
             return;
@@ -123,7 +118,7 @@ export function useOnboardingRunToken(active: boolean): OnboardingRunToken | nul
             liveRuns.delete(token);
             setGranted(false);
         };
-    }, [active, token, serverTier]);
+    }, [active, token]);
 
     return active && granted ? token : null;
 }

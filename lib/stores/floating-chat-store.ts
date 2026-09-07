@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { isChatLocked } from '../chat-tools/free-tier-gate';
 import type { StagedProposal } from '../llm/types';
 import type { QuickFactCheckAnswer } from '../chat-tools/quick-fact-check-handler';
 import type { TrackFeedbackSubject } from '../news-harness/core/types';
@@ -70,11 +69,6 @@ export type ChatContext =
     // the FollowStoryAgent scopes the story from free text and stages the same
     // proposeTrack scope pills the article surface stages.
     | { kind: 'follow-story' }
-    // Free-tier only: the article fact-check tick, which for an entitled user
-    // lodges a SERVER ask and never opens chat at all. A locked user gets the
-    // popup instead of the silent no-op that used to be their whole experience
-    // of tapping it. No entitled path constructs this.
-    | { kind: 'fact-check'; articleId: string; articleTitle?: string }
     | { kind: 'generic'; route: string };
 
 interface FloatingChatState {
@@ -287,19 +281,9 @@ export const useFloatingChatStore = create<FloatingChatState>((set, get) => ({
     },
 
     openArticleFeedback: (context, initialMessage) => {
-        // Opens on the free tier too (see `expand`), with ONE difference: the
-        // seeded message is DROPPED. `pendingInitialMessage` auto-sends a user
-        // turn on mount, so keeping it would render a user bubble that can
-        // never be answered — and, before the send guard existed, would have
-        // spent a model call to produce a refusal. The opener says the right
-        // thing without it.
-        // `isChatLocked()`, not `getAiAccess()`: this must FAIL OPEN. A bare
-        // 'locked' read is true on every cold start before the server answers,
-        // which would silently swallow a paying user's thumbs-down message.
-        const locked = isChatLocked();
         set(() => ({
             context,
-            pendingInitialMessage: locked ? null : initialMessage,
+            pendingInitialMessage: initialMessage,
             isExpanded: true,
             proposal: null,
             quickFactChecks: [],
