@@ -7,7 +7,6 @@ import { createAgentForContext } from '@/components/custom/floating-chat/agent-r
 import type { PersistedMessage } from '@/lib/database/services/conversation-service';
 import { useLocalLLM } from '@/lib/llm/useLocalLLM';
 import type { ChatContext } from '@/lib/stores/floating-chat-store';
-import type { OnboardingRunToken } from '@/lib/chat-tools/onboarding-run';
 import React, { useMemo } from 'react';
 
 export interface LocalPersonaChatProps {
@@ -18,8 +17,6 @@ export interface LocalPersonaChatProps {
   resumeMessages?: PersistedMessage[];
   isLoading: boolean;
   loadingMessage?: string;
-  /** D29: passed straight through to ChatSessionView. See onboarding-run.ts. */
-  onboardingRun?: OnboardingRunToken | null;
 }
 
 export default function LocalPersonaChat({
@@ -30,7 +27,6 @@ export default function LocalPersonaChat({
   resumeMessages,
   isLoading,
   loadingMessage,
-  onboardingRun = null,
 }: LocalPersonaChatProps) {
   const agent = useMemo(
     () => createAgentForContext(context, userId, surface),
@@ -40,7 +36,6 @@ export default function LocalPersonaChat({
 
   return (
     <ChatSessionView
-      onboardingRun={onboardingRun}
       messages={chat.messages}
       status={chat.status}
       sendMessage={chat.sendMessage}

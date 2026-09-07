@@ -31,10 +31,6 @@ import { deriveThreadItems } from './deriveThreadItems';
 import { decideTopicPlanTurn } from './topic-plan-turn';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
 import { getAiAccess } from '@/lib/stores/subscription-store';
-import {
-  OnboardingRunContext,
-  type OnboardingRunToken,
-} from '@/lib/chat-tools/onboarding-run';
 import { useTopicPlanResolutions } from './useTopicPlanResolutions';
 import type { StarterChip } from './types';
 
@@ -69,14 +65,6 @@ export interface ChatSessionViewProps {
   resumeMessages?: PersistedMessage[];
   isLoading: boolean;
   loadingMessage?: string;
-  /**
-   * D29. Proof of a live onboarding wizard run, which exempts this session from
-   * the free-tier gate: composer live, no free-tier opener, `handleSend` works
-   * normally. Absent (the default) means no exemption, so every other surface
-   * is gated without opting in. Unforgeable by construction — see
-   * lib/chat-tools/onboarding-run.ts.
-   */
-  onboardingRun?: OnboardingRunToken | null;
 }
 
 export default function ChatSessionView({
@@ -93,7 +81,6 @@ export default function ChatSessionView({
   resumeMessages,
   isLoading,
   loadingMessage,
-  onboardingRun = null,
 }: ChatSessionViewProps) {
   const { t } = useTranslation();
   const isStreaming = status === 'streaming';
@@ -567,7 +554,7 @@ export default function ChatSessionView({
   }
 
   return (
-    <OnboardingRunContext.Provider value={onboardingRun}>
+    <>
       <ChatThread
         items={items}
         isStreaming={isStreaming}
@@ -599,7 +586,7 @@ export default function ChatSessionView({
           onSubmitted={handleUnblockSubmitted}
         />
       )}
-    </OnboardingRunContext.Provider>
+    </>
   );
 }
 
