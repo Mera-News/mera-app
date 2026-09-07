@@ -49,10 +49,6 @@ jest.mock('../config/endpoints', () => ({
   DUMP_QUERIES_ENABLED: false,
 }));
 
-// The gate lazily requires this on the first refusal; stubbing it keeps the real
-// subscription store (and react-native-purchases behind it) out of this suite,
-// while letting us assert the lock is recorded through the SHARED mechanism.
-jest.mock('../subscription/ai-lock', () => ({ recordAiLocked: jest.fn() }));
 jest.mock('i18next', () => ({
   __esModule: true,
   default: { t: (k: string) => k },
@@ -60,10 +56,12 @@ jest.mock('i18next', () => ({
 }));
 
 import { sendOTP, getJwtToken, invalidateJwtCache, clearAuthStorage } from '../auth-client';
-import { _resetJwtSubscriptionGateForTests } from '../subscription/jwt-subscription-gate';
+import {
+  _resetJwtSubscriptionGateForTests,
+  isJwtSubscriptionLocked,
+} from '../subscription/jwt-subscription-gate';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const mockRecordAiLocked: jest.Mock = require('../subscription/ai-lock').recordAiLocked;
 
 // Grab mock fn references via require() — same module cache that auth-client uses
 // internally, guaranteeing we reference the EXACT same jest.fn() instances.
@@ -238,13 +236,19 @@ describe('getJwtToken + the /token subscription gate', () => {
     expect(mockGetSession).toHaveBeenCalledTimes(1);
   });
 
-  it('records the lock through recordAiLocked, not a parallel flag', async () => {
+  // This used to assert the refusal was recorded through `recordAiLocked`, the
+  // mechanism shared with the 402 path. That module is deleted: it wrote
+  // `serverTier: 'none'`, a tier no account carries now. The LATCH survived the
+  // deletion and is what the refusal is recorded in, so the property is
+  // asserted through it instead of being dropped.
+  it('latches the refusal for the rest of the session', async () => {
     mockGetSession.mockResolvedValue({ data: { session: { id: 's1' } } });
     mockToken.mockResolvedValue({ error: subscriptionRequired, data: null });
 
+    expect(isJwtSubscriptionLocked()).toBe(false);
     await getJwtToken();
 
-    expect(mockRecordAiLocked).toHaveBeenCalledWith('token');
+    expect(isJwtSubscriptionLocked()).toBe(true);
   });
 
   it('does not treat it as an expired session or a fault (no Sentry event)', async () => {
@@ -253,8 +257,8 @@ describe('getJwtToken + the /token subscription gate', () => {
 
     await getJwtToken();
 
-    // An unsubscribed user being refused a JWT is the system working — the same
-    // stance ai-lock.ts takes on a 402.
+    // An unsubscribed user being refused a JWT is the system working, not a
+    // fault to report.
     expect(mockLoggerCaptureException).not.toHaveBeenCalled();
   });
 
@@ -271,7 +275,7 @@ describe('getJwtToken + the /token subscription gate', () => {
     expect(await getJwtToken()).toBeNull();
 
     expect(mockToken).toHaveBeenCalledTimes(1);
-    expect(mockRecordAiLocked).toHaveBeenCalledWith('token');
+    expect(isJwtSubscriptionLocked()).toBe(true);
     expect(mockLoggerCaptureException).not.toHaveBeenCalled();
   });
 
@@ -285,7 +289,7 @@ describe('getJwtToken + the /token subscription gate', () => {
     expect(await getJwtToken()).toBeNull();
 
     expect(mockToken).toHaveBeenCalledTimes(2);
-    expect(mockRecordAiLocked).not.toHaveBeenCalled();
+    expect(isJwtSubscriptionLocked()).toBe(false);
   });
 
   it('mints a real JWT again once the lock is lifted — no app restart', async () => {
