@@ -62,12 +62,6 @@ const ROWS: { key: RowKey; icon: keyof typeof MaterialIcons.glyphMap; titleKey: 
  */
 const WhatsNewSheet: React.FC = () => {
   const { t } = useTranslation();
-  // TEMPORARY hatch for the two Starter keys used as literals here. `t()` is
-  // typed off en.json (lib/i18n/types.ts) with no codegen step, so a key that
-  // has not been spliced yet fails tsc. Convert both to typed `t()` once the
-  // starter-free splice lands. The per-row keys below already go through a cast
-  // because they are computed.
-  const tAny = t as (key: string) => string;
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -116,13 +110,13 @@ const WhatsNewSheet: React.FC = () => {
       <ModalContent className="bg-gray-950 border border-gray-800">
         <ModalHeader>
           <Heading size="xl" className="text-white">
-            {tAny('whatsNew.starterTitle')}
+            {t('whatsNew.starterTitle')}
           </Heading>
         </ModalHeader>
         <ModalBody>
           <VStack space="lg" className="py-1">
             <Text size="sm" className="text-typography-400">
-              {tAny('whatsNew.starterIntro')}
+              {t('whatsNew.starterIntro')}
             </Text>
             {ROWS.map((row) => (
               <HStack key={row.key} className="items-start" space="md">
