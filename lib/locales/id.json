@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "{{count}} hari tersisa",
     "trialDaysLeft_other": "{{count}} hari tersisa",
     "trialEndsOn": "Uji coba gratis Anda berakhir {{date}}",
-    "trialNoPaymentDetails": "Tidak ada detail pembayaran dalam file, jadi tidak ada yang perlu dibatalkan. Saat uji coba berakhir, Anda akan beralih ke paket gratis kecuali Anda memilih untuk berlangganan."
+    "trialNoPaymentDetails": "Tidak ada detail pembayaran dalam file, jadi tidak ada yang perlu dibatalkan. Saat uji coba berakhir, Anda akan beralih ke paket gratis kecuali Anda memilih untuk berlangganan.",
+    "starterFreeTitle": "Anda memakai Starter, gratis",
+    "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti."
   },
   "tabs": {
     "deck": "Umpan",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "Tab Profil & Pengaturan",
     "tabsBody": "Profil dan pengaturan Anda kini berada di tab masing-masing di bagian bawah.",
     "resyncTitle": "Feed Anda sedang disinkronkan ulang",
-    "resyncBody": "Kami sedang membangun ulang feed Anda dengan mesin baru. Akan terisi sebentar lagi."
+    "resyncBody": "Kami sedang membangun ulang feed Anda dengan mesin baru. Akan terisi sebentar lagi.",
+    "starterTitle": "Starter dari kami",
+    "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
+    "starterArticlesTitle": "250 artikel sehari",
+    "starterArticlesBody": "Mera menganalisis hingga 250 artikel untuk Anda setiap hari.",
+    "starterInterestsTitle": "Semua minat Anda",
+    "starterInterestsBody": "Tambahkan sebanyak yang Anda mau. Mera mengikuti semuanya.",
+    "starterChatTitle": "Chat dan cek fakta",
+    "starterChatBody": "Tanya Mera tentang berita apa pun, dan uji klaim dengan cek fakta yang sudah diterbitkan.",
+    "starterStoriesTitle": "Cerita yang diikuti",
+    "starterStoriesBody": "Ikuti sebuah cerita dan Mera terus mengawasinya untuk Anda."
   },
   "notificationCenter": {
     "title": "Notifikasi",

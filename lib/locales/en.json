@@ -145,7 +145,9 @@
     "trialDaysLeft_one": "{{count}} day left",
     "trialDaysLeft_other": "{{count}} days left",
     "trialEndsOn": "Your free trial ends {{date}}",
-    "trialNoPaymentDetails": "No payment details are on file, so there's nothing to cancel. When the trial ends, you'll move to the free plan unless you choose to subscribe."
+    "trialNoPaymentDetails": "No payment details are on file, so there's nothing to cancel. When the trial ends, you'll move to the free plan unless you choose to subscribe.",
+    "starterFreeTitle": "You're on Starter, free",
+    "starterFreeBody": "We want you to see what Mera is for, so every account includes the full Starter plan at no cost. That is 250 articles a day, all your interests, chat, fact checks and followed stories."
   },
   "feed": {
     "updatedAt": "Updated {{time}}",
@@ -539,7 +541,17 @@
     "tabsTitle": "Profile & Settings tabs",
     "tabsBody": "Your profile and settings now live in their own tabs at the bottom.",
     "resyncTitle": "Your feed is re-syncing",
-    "resyncBody": "We're rebuilding your feed with the new engine; it'll fill in shortly."
+    "resyncBody": "We're rebuilding your feed with the new engine; it'll fill in shortly.",
+    "starterTitle": "Starter is on us",
+    "starterIntro": "To help you see what Mera is for, every account now includes the full Starter plan at no cost.",
+    "starterArticlesTitle": "250 articles a day",
+    "starterArticlesBody": "Mera analyzes up to 250 articles for you every day.",
+    "starterInterestsTitle": "All your interests",
+    "starterInterestsBody": "Add as many as you like. Mera follows every one.",
+    "starterChatTitle": "Chat and fact checks",
+    "starterChatBody": "Ask Mera about any story, and check claims against published fact checks.",
+    "starterStoriesTitle": "Followed stories",
+    "starterStoriesBody": "Follow a story and Mera keeps watching it for you."
   },
   "notificationCenter": {
     "title": "Notifications",

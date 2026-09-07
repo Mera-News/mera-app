@@ -116,17 +116,21 @@ jest.mock('@/lib/stores/network-store', () => ({
     probeServerReachable: () => mockProbeServerReachable(),
 }));
 
-// The pre-onboarding paywall gate is stubbed to its pass-through verdict here
-// so this suite stays about FACTS and IDENTITY. Its real graph reaches
-// react-native-purchases and Apollo, neither of which can be constructed in this
-// environment, and its own behaviour is covered end-to-end (with the real
-// feature-gates → ai-access → store chain) in
-// components/custom/subscription/__tests__/onboarding-paywall-order.test.tsx.
-const mockResolveEntitlement = jest.fn(async () => 'entitled' as string);
-const mockDecideEntry = jest.fn(() => 'onboarding' as string);
+// Entitlement warmup is stubbed so this suite stays about FACTS and IDENTITY.
+// Its real graph reaches react-native-purchases and Apollo, neither of which can
+// be constructed in this environment.
+//
+// It is fire-and-forget now: there is no verdict to stub, because there is no
+// longer a routing decision to make. A zero-fact user reaches the wizard
+// whatever entitlement says, so what used to be a gate is a warm-up call whose
+// only assertable property is that it FIRES.
+//
+// EXPLICIT FACTORY: any export OnboardingScreen calls must be listed here, or
+// it is `undefined` at the call site and the failure names the caller rather
+// than the mock.
+const mockStartWarmup = jest.fn();
 jest.mock('@/lib/subscription/onboarding-paywall', () => ({
-    resolveEntitlementForOnboarding: (...a: any[]) => mockResolveEntitlement(...(a as [])),
-    decideOnboardingEntry: (...a: any[]) => mockDecideEntry(...(a as [])),
+    startEntitlementWarmup: (...a: any[]) => mockStartWarmup(...(a as [])),
 }));
 
 import OnboardingScreen from '../OnboardingScreen';
@@ -144,8 +148,8 @@ beforeEach(() => {
     mockReadPendingAuthUserId.mockReturnValue(null);
     mockGetSetting.mockResolvedValue('u1');
     mockProbeServerReachable.mockResolvedValue(true);
-    mockResolveEntitlement.mockResolvedValue('entitled');
-    mockDecideEntry.mockReturnValue('onboarding');
+    mockStartWarmup.mockResolvedValue('entitled');
+    mockStartWarmup.mockReturnValue('onboarding');
 });
 
 // `userId` is the EFFECTIVE owner (session ?? cached); `sessionUserId` is the

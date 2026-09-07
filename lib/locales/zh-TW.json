@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "剩餘 {{count}} 天",
     "trialDaysLeft_other": "剩餘 {{count}} 天",
     "trialEndsOn": "您的免費試用期於 {{date}} 結束",
-    "trialNoPaymentDetails": "檔案中沒有任何付款詳細資訊，所以沒有任何項目可取消。試用結束時，除非您選擇訂閱，否則您將轉換為免費方案。"
+    "trialNoPaymentDetails": "檔案中沒有任何付款詳細資訊，所以沒有任何項目可取消。試用結束時，除非您選擇訂閱，否則您將轉換為免費方案。",
+    "starterFreeTitle": "您正在使用 Starter，免費",
+    "starterFreeBody": "我們希望您看到 Mera 是做什麼的，所以每個帳號都免費包含完整的 Starter 方案。也就是每天 250 篇文章、您的所有興趣、聊天、事實查核和已追蹤的報導。"
   },
   "tabs": {
     "deck": "資訊流",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "個人資料與設定標籤頁",
     "tabsBody": "你的個人資料與設定現在位於底部各自獨立的標籤頁中。",
     "resyncTitle": "你的動態正在重新同步",
-    "resyncBody": "我們正在用新引擎重建你的動態——很快就會補齊完成。"
+    "resyncBody": "我們正在用新引擎重建你的動態——很快就會補齊完成。",
+    "starterTitle": "Starter 由我們招待",
+    "starterIntro": "為了讓您看到 Mera 是做什麼的，現在每個帳號都免費包含完整的 Starter 方案。",
+    "starterArticlesTitle": "每天 250 篇文章",
+    "starterArticlesBody": "Mera 每天為您分析最多 250 篇文章。",
+    "starterInterestsTitle": "您的所有興趣",
+    "starterInterestsBody": "想加多少都可以。Mera 會追蹤每一個。",
+    "starterChatTitle": "聊天和事實查核",
+    "starterChatBody": "就任何報導向 Mera 提問，並用已發布的事實查核來驗證說法。",
+    "starterStoriesTitle": "已追蹤的報導",
+    "starterStoriesBody": "追蹤一則報導，Mera 會替您持續留意。"
   },
   "notificationCenter": {
     "title": "通知",

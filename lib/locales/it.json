@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "{{count}} giorno rimasto",
     "trialDaysLeft_other": "{{count}} giorni rimasti",
     "trialEndsOn": "La tua prova gratuita termina {{date}}",
-    "trialNoPaymentDetails": "Non ci sono dettagli di pagamento registrati, quindi non c'è nulla da annullare. Quando la prova termina, passerai al piano gratuito a meno che tu non scelga di sottoscrivere."
+    "trialNoPaymentDetails": "Non ci sono dettagli di pagamento registrati, quindi non c'è nulla da annullare. Quando la prova termina, passerai al piano gratuito a meno che tu non scelga di sottoscrivere.",
+    "starterFreeTitle": "Sei su Starter, gratis",
+    "starterFreeBody": "Vogliamo che tu veda a cosa serve Mera, quindi ogni account include il piano Starter completo senza costi. Sono 250 articoli al giorno, tutti i tuoi interessi, chat, fact check e storie seguite."
   },
   "tabs": {
     "deck": "Notizie",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "Schede Profilo e Impostazioni",
     "tabsBody": "Il tuo profilo e le impostazioni ora vivono nelle proprie schede in basso.",
     "resyncTitle": "Il tuo feed si sta risincronizzando",
-    "resyncBody": "Stiamo ricostruendo il tuo feed con il nuovo motore. Si riempirà a breve."
+    "resyncBody": "Stiamo ricostruendo il tuo feed con il nuovo motore. Si riempirà a breve.",
+    "starterTitle": "Starter offriamo noi",
+    "starterIntro": "Perché tu veda a cosa serve Mera, ogni account include ora il piano Starter completo senza costi.",
+    "starterArticlesTitle": "250 articoli al giorno",
+    "starterArticlesBody": "Mera analizza fino a 250 articoli per te ogni giorno.",
+    "starterInterestsTitle": "Tutti i tuoi interessi",
+    "starterInterestsBody": "Aggiungine quanti vuoi. Mera li segue tutti.",
+    "starterChatTitle": "Chat e fact checking",
+    "starterChatBody": "Chiedi a Mera di qualsiasi notizia e confronta le affermazioni con i fact check pubblicati.",
+    "starterStoriesTitle": "Storie seguite",
+    "starterStoriesBody": "Segui una storia e Mera continua a tenerla d'occhio per te."
   },
   "notificationCenter": {
     "title": "Notifiche",

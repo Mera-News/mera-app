@@ -15,10 +15,7 @@ import {
 } from "@/lib/security/identity-gate";
 import { clearPreviousUserData, useUserStore } from "@/lib/stores";
 import { probeServerReachable, useNetworkStore } from "@/lib/stores/network-store";
-import {
-    decideOnboardingEntry,
-    resolveEntitlementForOnboarding,
-} from "@/lib/subscription/onboarding-paywall";
+import { startEntitlementWarmup } from "@/lib/subscription/onboarding-paywall";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -250,42 +247,20 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ userId, sessionUser
                 return;
             }
 
-            // ── PAYWALL BEFORE ONBOARDING ────────────────────────────────
+            // ── WARM ENTITLEMENT, DO NOT WAIT ON IT ──────────────────────
             //
-            // This is the ordering fix, and it lives HERE rather than in
-            // app/logged-in/index.tsx because this component is the only
-            // mounter of OnboardingWizard: DeepLinkVerifyScreen redirects
-            // straight to /logged-in/onboarding and never touches the
-            // cold-start gate, so a check placed only there would be bypassed
-            // by that doorway.
+            // This used to hold the splash for up to 8 seconds resolving a
+            // verdict, then send a user with no plan away from the wizard,
+            // because step 2's Mera chat was refused a token without a
+            // subscription. Starter is granted to every account now, so every
+            // outcome of that wait led here anyway. A wait whose branches have
+            // converged is pure latency, and it was charged to the slowest
+            // launch there is: a brand-new user's first.
             //
-            // 2026-08-06: app/login.tsx was a second such doorway and is no
-            // longer one — it now redirects to /logged-in, which resolves
-            // identity, local facts and entitlement like every other entry.
-            //
-            // Reached only with ZERO local facts, so an already-onboarded user
-            // never pays for any of it. `isCheckingOnboarding` stays true for
-            // the whole await, which is what keeps the existing spinner up
-            // instead of flashing the wizard at someone who is about to be sent
-            // to the paywall.
-            const aiAccess = await resolveEntitlementForOnboarding({
-                userId,
-                // Re-read rather than reusing the value from the identity gate
-                // above: several awaits have happened since.
-                isConnected: useNetworkStore.getState().isConnected,
-            });
-            if (cancelled) return;
-
-            // `hasFacts` is provably false here (the early return above), but
-            // it is passed rather than hardcoded so the D29 carve-out stays
-            // correct if that guard ever moves.
-            const entry = decideOnboardingEntry({ aiAccess, hasAnyFacts: hasFacts });
-            if (entry !== 'onboarding') {
-                // Leave the spinner mounted: the callback replaces this route,
-                // so rendering anything else here would only flash.
-                handlersRef.current.onFreeTierMode();
-                return;
-            }
+            // The calls still FIRE. `loginRevenueCat` is not optional: without
+            // it a later purchase attaches to the anonymous RevenueCat id and
+            // the entitlement lands on nobody.
+            startEntitlementWarmup(userId);
 
             // ── OFFER A RESTORE BEFORE BUILDING A PERSONA FROM SCRATCH ───
             //

@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "Còn {{count}} ngày",
     "trialDaysLeft_other": "Còn {{count}} ngày",
     "trialEndsOn": "Dùng thử miễn phí của bạn kết thúc {{date}}",
-    "trialNoPaymentDetails": "Không có chi tiết thanh toán nào trong tệp, vì vậy không có gì để hủy. Khi dùng thử kết thúc, bạn sẽ chuyển sang gói miễn phí trừ khi bạn chọn đăng ký."
+    "trialNoPaymentDetails": "Không có chi tiết thanh toán nào trong tệp, vì vậy không có gì để hủy. Khi dùng thử kết thúc, bạn sẽ chuyển sang gói miễn phí trừ khi bạn chọn đăng ký.",
+    "starterFreeTitle": "Bạn đang dùng Starter, miễn phí",
+    "starterFreeBody": "Chúng tôi muốn bạn thấy Mera dùng để làm gì, nên mọi tài khoản đều có trọn gói Starter miễn phí. Đó là 250 bài mỗi ngày, tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi."
   },
   "tabs": {
     "deck": "Bảng tin",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "Các tab Hồ sơ & Cài đặt",
     "tabsBody": "Hồ sơ và cài đặt của bạn giờ đây nằm trong các tab riêng ở phía dưới.",
     "resyncTitle": "Bản tin của bạn đang đồng bộ lại",
-    "resyncBody": "Chúng tôi đang xây dựng lại bản tin của bạn với công cụ mới: nó sẽ sớm được lấp đầy."
+    "resyncBody": "Chúng tôi đang xây dựng lại bản tin của bạn với công cụ mới: nó sẽ sớm được lấp đầy.",
+    "starterTitle": "Starter do chúng tôi mời",
+    "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
+    "starterArticlesTitle": "250 bài mỗi ngày",
+    "starterArticlesBody": "Mera phân tích tối đa 250 bài mỗi ngày cho bạn.",
+    "starterInterestsTitle": "Tất cả mối quan tâm của bạn",
+    "starterInterestsBody": "Thêm bao nhiêu tùy bạn. Mera theo dõi tất cả.",
+    "starterChatTitle": "Trò chuyện và kiểm chứng",
+    "starterChatBody": "Hỏi Mera về bất kỳ tin nào, và đối chiếu các tuyên bố với những kiểm chứng đã công bố.",
+    "starterStoriesTitle": "Câu chuyện đang theo dõi",
+    "starterStoriesBody": "Theo dõi một câu chuyện và Mera sẽ tiếp tục dõi theo giúp bạn."
   },
   "notificationCenter": {
     "title": "Thông báo",

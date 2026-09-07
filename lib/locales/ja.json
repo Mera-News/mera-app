@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "あと{{count}}日",
     "trialDaysLeft_other": "あと{{count}}日",
     "trialEndsOn": "無料トライアルは{{date}}に終了します",
-    "trialNoPaymentDetails": "支払い詳細がファイルに保存されていないため、キャンセルするものはありません。トライアルが終わると、購読を選択しない限り、無料プランに移行します。"
+    "trialNoPaymentDetails": "支払い詳細がファイルに保存されていないため、キャンセルするものはありません。トライアルが終わると、購読を選択しない限り、無料プランに移行します。",
+    "starterFreeTitle": "Starter をご利用中です。無料です",
+    "starterFreeBody": "Mera が何のためにあるかを知っていただきたいので、すべてのアカウントに Starter プランのすべてを無料で含めています。1日250件の記事、あなたのすべての興味、チャット、ファクトチェック、フォロー中のストーリーが使えます。"
   },
   "tabs": {
     "deck": "フィード",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "プロフィールと設定のタブ",
     "tabsBody": "プロフィールと設定は、今では下部の専用タブに配置されています。",
     "resyncTitle": "フィードを再同期しています",
-    "resyncBody": "新しいエンジンでフィードを再構築しています — まもなく表示されます。"
+    "resyncBody": "新しいエンジンでフィードを再構築しています — まもなく表示されます。",
+    "starterTitle": "Starter は無料です",
+    "starterIntro": "Mera が何のためにあるかを知っていただけるよう、すべてのアカウントに Starter プランのすべてを無料で含めています。",
+    "starterArticlesTitle": "1日250件の記事",
+    "starterArticlesBody": "Mera は毎日、最大250件の記事をあなたのために分析します。",
+    "starterInterestsTitle": "あなたのすべての興味",
+    "starterInterestsBody": "いくつでも追加できます。Mera はそのすべてをフォローします。",
+    "starterChatTitle": "チャットとファクトチェック",
+    "starterChatBody": "どのニュースについても Mera に質問でき、主張を公開されたファクトチェックと照らし合わせられます。",
+    "starterStoriesTitle": "フォロー中のストーリー",
+    "starterStoriesBody": "ストーリーをフォローすると、Mera が代わりに追い続けます。"
   },
   "notificationCenter": {
     "title": "通知",

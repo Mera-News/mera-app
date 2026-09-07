@@ -941,7 +941,9 @@
     "trialDaysLeft_one": "{{count}} jour restant",
     "trialDaysLeft_other": "{{count}} jours restants",
     "trialEndsOn": "Votre essai gratuit se termine {{date}}",
-    "trialNoPaymentDetails": "Aucun détail de paiement n'est enregistré, donc il n'y a rien à annuler. Lorsque l'essai se termine, vous passerez au plan gratuit sauf si vous choisissez de vous abonner."
+    "trialNoPaymentDetails": "Aucun détail de paiement n'est enregistré, donc il n'y a rien à annuler. Lorsque l'essai se termine, vous passerez au plan gratuit sauf si vous choisissez de vous abonner.",
+    "starterFreeTitle": "Vous êtes sur Starter, gratuitement",
+    "starterFreeBody": "Nous voulons que vous voyiez à quoi sert Mera, alors chaque compte inclut le forfait Starter complet sans frais. Cela fait 250 articles par jour, tous vos centres d'intérêt, le chat, les vérifications et les histoires suivies."
   },
   "tabs": {
     "deck": "Fil d'actu",
@@ -1065,7 +1067,17 @@
     "tabsTitle": "Onglets Profil et Paramètres",
     "tabsBody": "Votre profil et vos paramètres vivent désormais dans leurs propres onglets en bas de l'écran.",
     "resyncTitle": "Votre fil se resynchronise",
-    "resyncBody": "Nous reconstruisons votre fil avec le nouveau moteur. Il se remplira sous peu."
+    "resyncBody": "Nous reconstruisons votre fil avec le nouveau moteur. Il se remplira sous peu.",
+    "starterTitle": "Starter est offert",
+    "starterIntro": "Pour que vous voyiez à quoi sert Mera, chaque compte inclut désormais le forfait Starter complet, sans frais.",
+    "starterArticlesTitle": "250 articles par jour",
+    "starterArticlesBody": "Mera analyse jusqu'à 250 articles pour vous chaque jour.",
+    "starterInterestsTitle": "Tous vos centres d'intérêt",
+    "starterInterestsBody": "Ajoutez-en autant que vous voulez. Mera les suit tous.",
+    "starterChatTitle": "Chat et vérifications",
+    "starterChatBody": "Interrogez Mera sur n'importe quelle actualité et confrontez les affirmations aux vérifications publiées.",
+    "starterStoriesTitle": "Histoires suivies",
+    "starterStoriesBody": "Suivez une histoire et Mera continue de la surveiller pour vous."
   },
   "notificationCenter": {
     "title": "Notifications",

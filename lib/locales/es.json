@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "{{count}} día restante",
     "trialDaysLeft_other": "{{count}} días restantes",
     "trialEndsOn": "Tu prueba gratuita termina {{date}}",
-    "trialNoPaymentDetails": "No hay detalles de pago en el archivo, así que no hay nada que cancelar. Cuando termine la prueba, pasarás al plan gratuito a menos que elijas suscribirte."
+    "trialNoPaymentDetails": "No hay detalles de pago en el archivo, así que no hay nada que cancelar. Cuando termine la prueba, pasarás al plan gratuito a menos que elijas suscribirte.",
+    "starterFreeTitle": "Estás en Starter, gratis",
+    "starterFreeBody": "Queremos que veas para qué sirve Mera, así que todas las cuentas incluyen el plan Starter completo sin coste. Son 250 artículos al día, todos tus intereses, chat, verificaciones e historias seguidas."
   },
   "tabs": {
     "deck": "Noticias",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "Pestañas de Perfil y Ajustes",
     "tabsBody": "Tu perfil y tus ajustes ahora tienen sus propias pestañas en la parte inferior.",
     "resyncTitle": "Tu feed se está resincronizando",
-    "resyncBody": "Estamos reconstruyendo tu feed con el nuevo motor. Se completará en breve."
+    "resyncBody": "Estamos reconstruyendo tu feed con el nuevo motor. Se completará en breve.",
+    "starterTitle": "Starter corre por nuestra cuenta",
+    "starterIntro": "Para que veas para qué sirve Mera, todas las cuentas incluyen ahora el plan Starter completo sin coste.",
+    "starterArticlesTitle": "250 artículos al día",
+    "starterArticlesBody": "Mera analiza hasta 250 artículos para ti cada día.",
+    "starterInterestsTitle": "Todos tus intereses",
+    "starterInterestsBody": "Añade los que quieras. Mera sigue todos.",
+    "starterChatTitle": "Chat y verificaciones",
+    "starterChatBody": "Pregunta a Mera sobre cualquier noticia y contrasta afirmaciones con verificaciones publicadas.",
+    "starterStoriesTitle": "Historias seguidas",
+    "starterStoriesBody": "Sigue una historia y Mera la vigila por ti."
   },
   "notificationCenter": {
     "title": "Notificaciones",

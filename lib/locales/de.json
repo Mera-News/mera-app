@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "{{count}} Tag verbleibend",
     "trialDaysLeft_other": "{{count}} Tage verbleibend",
     "trialEndsOn": "Deine kostenlose Testversion endet {{date}}",
-    "trialNoPaymentDetails": "Es sind keine Zahlungsdaten hinterlegt, daher gibt es nichts zu kündigen. Wenn die Testversion endet, wechselst du zum kostenlosen Plan, es sei denn, du entschließt dich zu abonnieren."
+    "trialNoPaymentDetails": "Es sind keine Zahlungsdaten hinterlegt, daher gibt es nichts zu kündigen. Wenn die Testversion endet, wechselst du zum kostenlosen Plan, es sei denn, du entschließt dich zu abonnieren.",
+    "starterFreeTitle": "Du bist auf Starter, kostenlos",
+    "starterFreeBody": "Wir möchten, dass du siehst, wofür Mera da ist. Deshalb enthält jedes Konto den vollen Starter-Plan kostenlos: 250 Artikel pro Tag, alle deine Interessen, Chat, Faktenchecks und verfolgte Geschichten."
   },
   "tabs": {
     "deck": "Nachrichten",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "Profil- und Einstellungen-Tabs",
     "tabsBody": "Ihr Profil und Ihre Einstellungen befinden sich jetzt in eigenen Tabs am unteren Rand.",
     "resyncTitle": "Ihr Feed wird neu synchronisiert",
-    "resyncBody": "Wir bauen Ihren Feed mit der neuen Engine neu auf. Er füllt sich in Kürze."
+    "resyncBody": "Wir bauen Ihren Feed mit der neuen Engine neu auf. Er füllt sich in Kürze.",
+    "starterTitle": "Starter geht auf uns",
+    "starterIntro": "Damit du siehst, wofür Mera da ist, enthält jetzt jedes Konto den vollen Starter-Plan kostenlos.",
+    "starterArticlesTitle": "250 Artikel pro Tag",
+    "starterArticlesBody": "Mera analysiert täglich bis zu 250 Artikel für dich.",
+    "starterInterestsTitle": "Alle deine Interessen",
+    "starterInterestsBody": "Füge so viele hinzu, wie du möchtest. Mera verfolgt jedes einzelne.",
+    "starterChatTitle": "Chat und Faktenchecks",
+    "starterChatBody": "Frag Mera zu jeder Meldung, und prüfe Aussagen anhand veröffentlichter Faktenchecks.",
+    "starterStoriesTitle": "Verfolgte Geschichten",
+    "starterStoriesBody": "Folge einer Geschichte, und Mera behält sie für dich im Blick."
   },
   "notificationCenter": {
     "title": "Benachrichtigungen",

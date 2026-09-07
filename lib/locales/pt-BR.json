@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "{{count}} dia restante",
     "trialDaysLeft_other": "{{count}} dias restantes",
     "trialEndsOn": "Seu teste gratuito termina {{date}}",
-    "trialNoPaymentDetails": "Nenhum detalhe de pagamento está no arquivo, então não há nada a cancelar. Quando o teste terminar, você será movido para o plano gratuito, a menos que escolha se inscrever."
+    "trialNoPaymentDetails": "Nenhum detalhe de pagamento está no arquivo, então não há nada a cancelar. Quando o teste terminar, você será movido para o plano gratuito, a menos que escolha se inscrever.",
+    "starterFreeTitle": "Você está no Starter, grátis",
+    "starterFreeBody": "Queremos que você veja para que serve o Mera, então toda conta inclui o plano Starter completo sem custo. São 250 artigos por dia, todos os seus interesses, chat, checagens e histórias acompanhadas."
   },
   "tabs": {
     "deck": "Feed",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "Abas Perfil e Configurações",
     "tabsBody": "Seu perfil e configurações agora ficam em abas próprias na parte inferior.",
     "resyncTitle": "Seu feed está sendo ressincronizado",
-    "resyncBody": "Estamos reconstruindo seu feed com o novo mecanismo. Ele será preenchido em breve."
+    "resyncBody": "Estamos reconstruindo seu feed com o novo mecanismo. Ele será preenchido em breve.",
+    "starterTitle": "Starter é por nossa conta",
+    "starterIntro": "Para você ver para que serve o Mera, toda conta agora inclui o plano Starter completo sem custo.",
+    "starterArticlesTitle": "250 artigos por dia",
+    "starterArticlesBody": "O Mera analisa até 250 artigos para você todos os dias.",
+    "starterInterestsTitle": "Todos os seus interesses",
+    "starterInterestsBody": "Adicione quantos quiser. O Mera acompanha todos.",
+    "starterChatTitle": "Chat e checagens",
+    "starterChatBody": "Pergunte ao Mera sobre qualquer notícia e confronte afirmações com checagens publicadas.",
+    "starterStoriesTitle": "Histórias acompanhadas",
+    "starterStoriesBody": "Acompanhe uma história e o Mera continua de olho nela para você."
   },
   "notificationCenter": {
     "title": "Notificações",

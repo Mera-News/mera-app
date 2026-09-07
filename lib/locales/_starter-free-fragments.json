@@ -1,0 +1,363 @@
+{
+  "_comment": "starter-free P3: the Starter-is-free message. whatsNew.starter* is the one-time sheet (feed scout, new key whats_new_starter_seen, existing users only); subscription.starterFree* is the durable block on ManageSubscriptionScreen. Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "whatsNew": {
+      "starterTitle": "Starter is on us",
+      "starterIntro": "To help you see what Mera is for, every account now includes the full Starter plan at no cost.",
+      "starterArticlesTitle": "250 articles a day",
+      "starterArticlesBody": "Mera analyzes up to 250 articles for you every day.",
+      "starterInterestsTitle": "All your interests",
+      "starterInterestsBody": "Add as many as you like. Mera follows every one.",
+      "starterChatTitle": "Chat and fact checks",
+      "starterChatBody": "Ask Mera about any story, and check claims against published fact checks.",
+      "starterStoriesTitle": "Followed stories",
+      "starterStoriesBody": "Follow a story and Mera keeps watching it for you."
+    },
+    "subscription": {
+      "starterFreeTitle": "You're on Starter, free",
+      "starterFreeBody": "We want you to see what Mera is for, so every account includes the full Starter plan at no cost. That is 250 articles a day, all your interests, chat, fact checks and followed stories."
+    }
+  },
+  "ar": {
+    "whatsNew": {
+      "starterTitle": "Starter على حسابنا",
+      "starterIntro": "لكي ترى ما الغرض من Mera، أصبح كل حساب يتضمن خطة Starter كاملة دون تكلفة.",
+      "starterArticlesTitle": "250 مقالًا يوميًا",
+      "starterArticlesBody": "يحلل Mera لك ما يصل إلى 250 مقالًا كل يوم.",
+      "starterInterestsTitle": "كل اهتماماتك",
+      "starterInterestsBody": "أضف ما تشاء. يتابع Mera كل واحد منها.",
+      "starterChatTitle": "الدردشة وتدقيق الحقائق",
+      "starterChatBody": "اسأل Mera عن أي خبر، وقارن الادعاءات بعمليات تدقيق الحقائق المنشورة.",
+      "starterStoriesTitle": "القصص المتابَعة",
+      "starterStoriesBody": "تابع قصة وسيواصل Mera مراقبتها نيابة عنك."
+    },
+    "subscription": {
+      "starterFreeTitle": "أنت على Starter، مجانًا",
+      "starterFreeBody": "نريدك أن ترى ما الغرض من Mera، لذلك يتضمن كل حساب خطة Starter كاملة دون تكلفة. أي 250 مقالًا يوميًا، وكل اهتماماتك، والدردشة، وتدقيق الحقائق، والقصص المتابَعة."
+    }
+  },
+  "de": {
+    "whatsNew": {
+      "starterTitle": "Starter geht auf uns",
+      "starterIntro": "Damit du siehst, wofür Mera da ist, enthält jetzt jedes Konto den vollen Starter-Plan kostenlos.",
+      "starterArticlesTitle": "250 Artikel pro Tag",
+      "starterArticlesBody": "Mera analysiert täglich bis zu 250 Artikel für dich.",
+      "starterInterestsTitle": "Alle deine Interessen",
+      "starterInterestsBody": "Füge so viele hinzu, wie du möchtest. Mera verfolgt jedes einzelne.",
+      "starterChatTitle": "Chat und Faktenchecks",
+      "starterChatBody": "Frag Mera zu jeder Meldung, und prüfe Aussagen anhand veröffentlichter Faktenchecks.",
+      "starterStoriesTitle": "Verfolgte Geschichten",
+      "starterStoriesBody": "Folge einer Geschichte, und Mera behält sie für dich im Blick."
+    },
+    "subscription": {
+      "starterFreeTitle": "Du bist auf Starter, kostenlos",
+      "starterFreeBody": "Wir möchten, dass du siehst, wofür Mera da ist. Deshalb enthält jedes Konto den vollen Starter-Plan kostenlos: 250 Artikel pro Tag, alle deine Interessen, Chat, Faktenchecks und verfolgte Geschichten."
+    }
+  },
+  "es": {
+    "whatsNew": {
+      "starterTitle": "Starter corre por nuestra cuenta",
+      "starterIntro": "Para que veas para qué sirve Mera, todas las cuentas incluyen ahora el plan Starter completo sin coste.",
+      "starterArticlesTitle": "250 artículos al día",
+      "starterArticlesBody": "Mera analiza hasta 250 artículos para ti cada día.",
+      "starterInterestsTitle": "Todos tus intereses",
+      "starterInterestsBody": "Añade los que quieras. Mera sigue todos.",
+      "starterChatTitle": "Chat y verificaciones",
+      "starterChatBody": "Pregunta a Mera sobre cualquier noticia y contrasta afirmaciones con verificaciones publicadas.",
+      "starterStoriesTitle": "Historias seguidas",
+      "starterStoriesBody": "Sigue una historia y Mera la vigila por ti."
+    },
+    "subscription": {
+      "starterFreeTitle": "Estás en Starter, gratis",
+      "starterFreeBody": "Queremos que veas para qué sirve Mera, así que todas las cuentas incluyen el plan Starter completo sin coste. Son 250 artículos al día, todos tus intereses, chat, verificaciones e historias seguidas."
+    }
+  },
+  "fr": {
+    "whatsNew": {
+      "starterTitle": "Starter est offert",
+      "starterIntro": "Pour que vous voyiez à quoi sert Mera, chaque compte inclut désormais le forfait Starter complet, sans frais.",
+      "starterArticlesTitle": "250 articles par jour",
+      "starterArticlesBody": "Mera analyse jusqu'à 250 articles pour vous chaque jour.",
+      "starterInterestsTitle": "Tous vos centres d'intérêt",
+      "starterInterestsBody": "Ajoutez-en autant que vous voulez. Mera les suit tous.",
+      "starterChatTitle": "Chat et vérifications",
+      "starterChatBody": "Interrogez Mera sur n'importe quelle actualité et confrontez les affirmations aux vérifications publiées.",
+      "starterStoriesTitle": "Histoires suivies",
+      "starterStoriesBody": "Suivez une histoire et Mera continue de la surveiller pour vous."
+    },
+    "subscription": {
+      "starterFreeTitle": "Vous êtes sur Starter, gratuitement",
+      "starterFreeBody": "Nous voulons que vous voyiez à quoi sert Mera, alors chaque compte inclut le forfait Starter complet sans frais. Cela fait 250 articles par jour, tous vos centres d'intérêt, le chat, les vérifications et les histoires suivies."
+    }
+  },
+  "hi": {
+    "whatsNew": {
+      "starterTitle": "Starter हमारी ओर से",
+      "starterIntro": "आप देख सकें कि Mera किस लिए है, इसके लिए अब हर खाते में पूरा Starter प्लान मुफ़्त शामिल है।",
+      "starterArticlesTitle": "हर दिन 250 लेख",
+      "starterArticlesBody": "Mera हर दिन आपके लिए 250 तक लेखों का विश्लेषण करता है।",
+      "starterInterestsTitle": "आपकी सभी रुचियाँ",
+      "starterInterestsBody": "जितनी चाहें जोड़ें। Mera हर एक को फ़ॉलो करता है।",
+      "starterChatTitle": "चैट और फ़ैक्ट चेक",
+      "starterChatBody": "किसी भी खबर के बारे में Mera से पूछें, और दावों को प्रकाशित फ़ैक्ट चेक से परखें।",
+      "starterStoriesTitle": "फ़ॉलो की गई कहानियाँ",
+      "starterStoriesBody": "किसी कहानी को फ़ॉलो करें और Mera उस पर नज़र रखता है।"
+    },
+    "subscription": {
+      "starterFreeTitle": "आप Starter पर हैं, मुफ़्त",
+      "starterFreeBody": "हम चाहते हैं कि आप देखें कि Mera किस लिए है, इसलिए हर खाते में पूरा Starter प्लान मुफ़्त शामिल है। यानी हर दिन 250 लेख, आपकी सभी रुचियाँ, चैट, फ़ैक्ट चेक और फ़ॉलो की गई कहानियाँ।"
+    }
+  },
+  "id": {
+    "whatsNew": {
+      "starterTitle": "Starter dari kami",
+      "starterIntro": "Agar Anda bisa melihat untuk apa Mera ada, kini setiap akun mendapat paket Starter lengkap tanpa biaya.",
+      "starterArticlesTitle": "250 artikel sehari",
+      "starterArticlesBody": "Mera menganalisis hingga 250 artikel untuk Anda setiap hari.",
+      "starterInterestsTitle": "Semua minat Anda",
+      "starterInterestsBody": "Tambahkan sebanyak yang Anda mau. Mera mengikuti semuanya.",
+      "starterChatTitle": "Chat dan cek fakta",
+      "starterChatBody": "Tanya Mera tentang berita apa pun, dan uji klaim dengan cek fakta yang sudah diterbitkan.",
+      "starterStoriesTitle": "Cerita yang diikuti",
+      "starterStoriesBody": "Ikuti sebuah cerita dan Mera terus mengawasinya untuk Anda."
+    },
+    "subscription": {
+      "starterFreeTitle": "Anda memakai Starter, gratis",
+      "starterFreeBody": "Kami ingin Anda melihat untuk apa Mera ada, jadi setiap akun mendapat paket Starter lengkap tanpa biaya. Itu berarti 250 artikel sehari, semua minat Anda, chat, cek fakta, dan cerita yang diikuti."
+    }
+  },
+  "it": {
+    "whatsNew": {
+      "starterTitle": "Starter offriamo noi",
+      "starterIntro": "Perché tu veda a cosa serve Mera, ogni account include ora il piano Starter completo senza costi.",
+      "starterArticlesTitle": "250 articoli al giorno",
+      "starterArticlesBody": "Mera analizza fino a 250 articoli per te ogni giorno.",
+      "starterInterestsTitle": "Tutti i tuoi interessi",
+      "starterInterestsBody": "Aggiungine quanti vuoi. Mera li segue tutti.",
+      "starterChatTitle": "Chat e fact checking",
+      "starterChatBody": "Chiedi a Mera di qualsiasi notizia e confronta le affermazioni con i fact check pubblicati.",
+      "starterStoriesTitle": "Storie seguite",
+      "starterStoriesBody": "Segui una storia e Mera continua a tenerla d'occhio per te."
+    },
+    "subscription": {
+      "starterFreeTitle": "Sei su Starter, gratis",
+      "starterFreeBody": "Vogliamo che tu veda a cosa serve Mera, quindi ogni account include il piano Starter completo senza costi. Sono 250 articoli al giorno, tutti i tuoi interessi, chat, fact check e storie seguite."
+    }
+  },
+  "ja": {
+    "whatsNew": {
+      "starterTitle": "Starter は無料です",
+      "starterIntro": "Mera が何のためにあるかを知っていただけるよう、すべてのアカウントに Starter プランのすべてを無料で含めています。",
+      "starterArticlesTitle": "1日250件の記事",
+      "starterArticlesBody": "Mera は毎日、最大250件の記事をあなたのために分析します。",
+      "starterInterestsTitle": "あなたのすべての興味",
+      "starterInterestsBody": "いくつでも追加できます。Mera はそのすべてをフォローします。",
+      "starterChatTitle": "チャットとファクトチェック",
+      "starterChatBody": "どのニュースについても Mera に質問でき、主張を公開されたファクトチェックと照らし合わせられます。",
+      "starterStoriesTitle": "フォロー中のストーリー",
+      "starterStoriesBody": "ストーリーをフォローすると、Mera が代わりに追い続けます。"
+    },
+    "subscription": {
+      "starterFreeTitle": "Starter をご利用中です。無料です",
+      "starterFreeBody": "Mera が何のためにあるかを知っていただきたいので、すべてのアカウントに Starter プランのすべてを無料で含めています。1日250件の記事、あなたのすべての興味、チャット、ファクトチェック、フォロー中のストーリーが使えます。"
+    }
+  },
+  "ko": {
+    "whatsNew": {
+      "starterTitle": "Starter는 무료입니다",
+      "starterIntro": "Mera가 무엇을 위한 것인지 직접 보실 수 있도록, 이제 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다.",
+      "starterArticlesTitle": "하루 250개 기사",
+      "starterArticlesBody": "Mera가 매일 최대 250개의 기사를 분석해 드립니다.",
+      "starterInterestsTitle": "모든 관심사",
+      "starterInterestsBody": "원하는 만큼 추가하세요. Mera가 전부 팔로우합니다.",
+      "starterChatTitle": "채팅과 팩트체크",
+      "starterChatBody": "어떤 뉴스든 Mera에게 물어보고, 주장을 공개된 팩트체크와 대조해 보세요.",
+      "starterStoriesTitle": "팔로우 중인 스토리",
+      "starterStoriesBody": "스토리를 팔로우하면 Mera가 대신 계속 지켜봅니다."
+    },
+    "subscription": {
+      "starterFreeTitle": "Starter를 무료로 이용 중입니다",
+      "starterFreeBody": "Mera가 무엇을 위한 것인지 직접 보시길 바라기에, 모든 계정에 Starter 플랜 전체가 무료로 포함됩니다. 하루 250개 기사, 모든 관심사, 채팅, 팩트체크, 팔로우 중인 스토리를 사용할 수 있습니다."
+    }
+  },
+  "nl": {
+    "whatsNew": {
+      "starterTitle": "Starter krijg je van ons",
+      "starterIntro": "Zodat je ziet waar Mera voor is, bevat elk account nu het volledige Starter-plan zonder kosten.",
+      "starterArticlesTitle": "250 artikelen per dag",
+      "starterArticlesBody": "Mera analyseert elke dag tot 250 artikelen voor je.",
+      "starterInterestsTitle": "Al je interesses",
+      "starterInterestsBody": "Voeg er zoveel toe als je wilt. Mera volgt ze allemaal.",
+      "starterChatTitle": "Chat en factchecks",
+      "starterChatBody": "Vraag Mera van alles over een bericht en toets beweringen aan gepubliceerde factchecks.",
+      "starterStoriesTitle": "Gevolgde verhalen",
+      "starterStoriesBody": "Volg een verhaal en Mera houdt het voor je in de gaten."
+    },
+    "subscription": {
+      "starterFreeTitle": "Je zit op Starter, gratis",
+      "starterFreeBody": "We willen dat je ziet waar Mera voor is, dus elk account bevat het volledige Starter-plan zonder kosten. Dat is 250 artikelen per dag, al je interesses, chat, factchecks en gevolgde verhalen."
+    }
+  },
+  "pl": {
+    "whatsNew": {
+      "starterTitle": "Starter na nasz koszt",
+      "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
+      "starterArticlesTitle": "250 artykułów dziennie",
+      "starterArticlesBody": "Mera analizuje dla ciebie do 250 artykułów każdego dnia.",
+      "starterInterestsTitle": "Wszystkie twoje zainteresowania",
+      "starterInterestsBody": "Dodaj ich tyle, ile chcesz. Mera śledzi każde.",
+      "starterChatTitle": "Czat i sprawdzanie faktów",
+      "starterChatBody": "Zapytaj Merę o dowolną wiadomość i zestaw twierdzenia z opublikowanymi analizami faktów.",
+      "starterStoriesTitle": "Śledzone historie",
+      "starterStoriesBody": "Śledź historię, a Mera będzie ją dla ciebie obserwować."
+    },
+    "subscription": {
+      "starterFreeTitle": "Masz plan Starter, za darmo",
+      "starterFreeBody": "Chcemy, żebyś zobaczył, do czego służy Mera, dlatego każde konto zawiera pełny plan Starter bez opłat. To 250 artykułów dziennie, wszystkie twoje zainteresowania, czat, sprawdzanie faktów i śledzone historie."
+    }
+  },
+  "pt-BR": {
+    "whatsNew": {
+      "starterTitle": "Starter é por nossa conta",
+      "starterIntro": "Para você ver para que serve o Mera, toda conta agora inclui o plano Starter completo sem custo.",
+      "starterArticlesTitle": "250 artigos por dia",
+      "starterArticlesBody": "O Mera analisa até 250 artigos para você todos os dias.",
+      "starterInterestsTitle": "Todos os seus interesses",
+      "starterInterestsBody": "Adicione quantos quiser. O Mera acompanha todos.",
+      "starterChatTitle": "Chat e checagens",
+      "starterChatBody": "Pergunte ao Mera sobre qualquer notícia e confronte afirmações com checagens publicadas.",
+      "starterStoriesTitle": "Histórias acompanhadas",
+      "starterStoriesBody": "Acompanhe uma história e o Mera continua de olho nela para você."
+    },
+    "subscription": {
+      "starterFreeTitle": "Você está no Starter, grátis",
+      "starterFreeBody": "Queremos que você veja para que serve o Mera, então toda conta inclui o plano Starter completo sem custo. São 250 artigos por dia, todos os seus interesses, chat, checagens e histórias acompanhadas."
+    }
+  },
+  "ru": {
+    "whatsNew": {
+      "starterTitle": "Starter за наш счёт",
+      "starterIntro": "Чтобы вы увидели, для чего нужен Mera, теперь каждый аккаунт включает полный план Starter бесплатно.",
+      "starterArticlesTitle": "250 статей в день",
+      "starterArticlesBody": "Mera анализирует для вас до 250 статей каждый день.",
+      "starterInterestsTitle": "Все ваши интересы",
+      "starterInterestsBody": "Добавляйте сколько хотите. Mera следит за каждым.",
+      "starterChatTitle": "Чат и проверка фактов",
+      "starterChatBody": "Спросите Mera о любой новости и сверьте утверждения с опубликованными проверками фактов.",
+      "starterStoriesTitle": "Отслеживаемые истории",
+      "starterStoriesBody": "Отслеживайте историю, и Mera продолжит следить за ней для вас."
+    },
+    "subscription": {
+      "starterFreeTitle": "У вас Starter, бесплатно",
+      "starterFreeBody": "Мы хотим, чтобы вы увидели, для чего нужен Mera, поэтому каждый аккаунт включает полный план Starter бесплатно. Это 250 статей в день, все ваши интересы, чат, проверка фактов и отслеживаемые истории."
+    }
+  },
+  "th": {
+    "whatsNew": {
+      "starterTitle": "Starter เราออกให้",
+      "starterIntro": "เพื่อให้คุณเห็นว่า Mera มีไว้เพื่ออะไร ทุกบัญชีจึงได้รับแผน Starter แบบเต็มโดยไม่มีค่าใช้จ่าย",
+      "starterArticlesTitle": "วันละ 250 บทความ",
+      "starterArticlesBody": "Mera วิเคราะห์บทความให้คุณสูงสุดวันละ 250 บทความ",
+      "starterInterestsTitle": "ความสนใจทั้งหมดของคุณ",
+      "starterInterestsBody": "เพิ่มได้มากเท่าที่ต้องการ Mera ติดตามให้ทุกรายการ",
+      "starterChatTitle": "แชทและการตรวจสอบข้อเท็จจริง",
+      "starterChatBody": "ถาม Mera เกี่ยวกับข่าวใดก็ได้ และเทียบข้อกล่าวอ้างกับการตรวจสอบข้อเท็จจริงที่เผยแพร่แล้ว",
+      "starterStoriesTitle": "เรื่องราวที่ติดตาม",
+      "starterStoriesBody": "ติดตามเรื่องราวแล้ว Mera จะคอยติดตามให้คุณต่อไป"
+    },
+    "subscription": {
+      "starterFreeTitle": "คุณกำลังใช้ Starter ฟรี",
+      "starterFreeBody": "เราอยากให้คุณเห็นว่า Mera มีไว้เพื่ออะไร ทุกบัญชีจึงได้รับแผน Starter แบบเต็มโดยไม่มีค่าใช้จ่าย นั่นคือวันละ 250 บทความ ความสนใจทั้งหมดของคุณ แชท การตรวจสอบข้อเท็จจริง และเรื่องราวที่ติดตาม"
+    }
+  },
+  "tr": {
+    "whatsNew": {
+      "starterTitle": "Starter bizden",
+      "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
+      "starterArticlesTitle": "Günde 250 haber",
+      "starterArticlesBody": "Mera her gün sizin için en fazla 250 haberi analiz eder.",
+      "starterInterestsTitle": "Tüm ilgi alanlarınız",
+      "starterInterestsBody": "İstediğiniz kadar ekleyin. Mera hepsini takip eder.",
+      "starterChatTitle": "Sohbet ve doğruluk kontrolü",
+      "starterChatBody": "Herhangi bir haber hakkında Mera'ya sorun ve iddiaları yayımlanmış doğruluk kontrolleriyle karşılaştırın.",
+      "starterStoriesTitle": "Takip edilen haberler",
+      "starterStoriesBody": "Bir haberi takip edin, Mera sizin için izlemeyi sürdürsün."
+    },
+    "subscription": {
+      "starterFreeTitle": "Starter kullanıyorsunuz, ücretsiz",
+      "starterFreeBody": "Mera'nın ne işe yaradığını görmenizi istiyoruz, bu yüzden her hesap tam Starter planını ücretsiz içeriyor. Bu, günde 250 haber, tüm ilgi alanlarınız, sohbet, doğruluk kontrolleri ve takip edilen haberler demek."
+    }
+  },
+  "uk": {
+    "whatsNew": {
+      "starterTitle": "Starter за наш рахунок",
+      "starterIntro": "Щоб ви побачили, для чого потрібен Mera, тепер кожен обліковий запис містить повний план Starter безкоштовно.",
+      "starterArticlesTitle": "250 статей на день",
+      "starterArticlesBody": "Mera аналізує для вас до 250 статей щодня.",
+      "starterInterestsTitle": "Усі ваші інтереси",
+      "starterInterestsBody": "Додавайте скільки хочете. Mera стежить за кожним.",
+      "starterChatTitle": "Чат і перевірка фактів",
+      "starterChatBody": "Запитайте Mera про будь-яку новину та звірте твердження з опублікованими перевірками фактів.",
+      "starterStoriesTitle": "Відстежувані історії",
+      "starterStoriesBody": "Стежте за історією, і Mera продовжить спостерігати за нею для вас."
+    },
+    "subscription": {
+      "starterFreeTitle": "У вас Starter, безкоштовно",
+      "starterFreeBody": "Ми хочемо, щоб ви побачили, для чого потрібен Mera, тож кожен обліковий запис містить повний план Starter безкоштовно. Це 250 статей на день, усі ваші інтереси, чат, перевірка фактів і відстежувані історії."
+    }
+  },
+  "vi": {
+    "whatsNew": {
+      "starterTitle": "Starter do chúng tôi mời",
+      "starterIntro": "Để bạn thấy Mera dùng để làm gì, mọi tài khoản giờ đều có trọn gói Starter miễn phí.",
+      "starterArticlesTitle": "250 bài mỗi ngày",
+      "starterArticlesBody": "Mera phân tích tối đa 250 bài mỗi ngày cho bạn.",
+      "starterInterestsTitle": "Tất cả mối quan tâm của bạn",
+      "starterInterestsBody": "Thêm bao nhiêu tùy bạn. Mera theo dõi tất cả.",
+      "starterChatTitle": "Trò chuyện và kiểm chứng",
+      "starterChatBody": "Hỏi Mera về bất kỳ tin nào, và đối chiếu các tuyên bố với những kiểm chứng đã công bố.",
+      "starterStoriesTitle": "Câu chuyện đang theo dõi",
+      "starterStoriesBody": "Theo dõi một câu chuyện và Mera sẽ tiếp tục dõi theo giúp bạn."
+    },
+    "subscription": {
+      "starterFreeTitle": "Bạn đang dùng Starter, miễn phí",
+      "starterFreeBody": "Chúng tôi muốn bạn thấy Mera dùng để làm gì, nên mọi tài khoản đều có trọn gói Starter miễn phí. Đó là 250 bài mỗi ngày, tất cả mối quan tâm của bạn, trò chuyện, kiểm chứng và câu chuyện đang theo dõi."
+    }
+  },
+  "zh-CN": {
+    "whatsNew": {
+      "starterTitle": "Starter 由我们买单",
+      "starterIntro": "为了让你看到 Mera 是做什么的，现在每个账号都免费包含完整的 Starter 计划。",
+      "starterArticlesTitle": "每天 250 篇文章",
+      "starterArticlesBody": "Mera 每天为你分析最多 250 篇文章。",
+      "starterInterestsTitle": "你的所有兴趣",
+      "starterInterestsBody": "想加多少都可以。Mera 会关注每一个。",
+      "starterChatTitle": "聊天和事实核查",
+      "starterChatBody": "就任何报道向 Mera 提问，并用已发布的事实核查来验证说法。",
+      "starterStoriesTitle": "已关注的报道",
+      "starterStoriesBody": "关注一条报道，Mera 会替你持续留意。"
+    },
+    "subscription": {
+      "starterFreeTitle": "你正在使用 Starter，免费",
+      "starterFreeBody": "我们希望你看到 Mera 是做什么的，所以每个账号都免费包含完整的 Starter 计划。也就是每天 250 篇文章、你的所有兴趣、聊天、事实核查和已关注的报道。"
+    }
+  },
+  "zh-TW": {
+    "whatsNew": {
+      "starterTitle": "Starter 由我們招待",
+      "starterIntro": "為了讓您看到 Mera 是做什麼的，現在每個帳號都免費包含完整的 Starter 方案。",
+      "starterArticlesTitle": "每天 250 篇文章",
+      "starterArticlesBody": "Mera 每天為您分析最多 250 篇文章。",
+      "starterInterestsTitle": "您的所有興趣",
+      "starterInterestsBody": "想加多少都可以。Mera 會追蹤每一個。",
+      "starterChatTitle": "聊天和事實查核",
+      "starterChatBody": "就任何報導向 Mera 提問，並用已發布的事實查核來驗證說法。",
+      "starterStoriesTitle": "已追蹤的報導",
+      "starterStoriesBody": "追蹤一則報導，Mera 會替您持續留意。"
+    },
+    "subscription": {
+      "starterFreeTitle": "您正在使用 Starter，免費",
+      "starterFreeBody": "我們希望您看到 Mera 是做什麼的，所以每個帳號都免費包含完整的 Starter 方案。也就是每天 250 篇文章、您的所有興趣、聊天、事實查核和已追蹤的報導。"
+    }
+  }
+}

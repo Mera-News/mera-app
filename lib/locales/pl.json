@@ -949,7 +949,9 @@
     "trialDaysLeft_one": "{{count}} dzień pozostał",
     "trialDaysLeft_other": "{{count}} dni pozostało",
     "trialEndsOn": "Twoja bezpłatna próba kończy się {{date}}",
-    "trialNoPaymentDetails": "Brak danych karty płatniczej w systemie, więc nie ma nic do anulowania. Po zakończeniu próby przejdziesz do planu bezpłatnego, chyba że zdecydujesz się zasubskrybować."
+    "trialNoPaymentDetails": "Brak danych karty płatniczej w systemie, więc nie ma nic do anulowania. Po zakończeniu próby przejdziesz do planu bezpłatnego, chyba że zdecydujesz się zasubskrybować.",
+    "starterFreeTitle": "Masz plan Starter, za darmo",
+    "starterFreeBody": "Chcemy, żebyś zobaczył, do czego służy Mera, dlatego każde konto zawiera pełny plan Starter bez opłat. To 250 artykułów dziennie, wszystkie twoje zainteresowania, czat, sprawdzanie faktów i śledzone historie."
   },
   "tabs": {
     "deck": "Strumień",
@@ -1077,7 +1079,17 @@
     "tabsTitle": "Zakładki Profil i Ustawienia",
     "tabsBody": "Twój profil i ustawienia znajdują się teraz we własnych zakładkach na dole.",
     "resyncTitle": "Twój kanał jest ponownie synchronizowany",
-    "resyncBody": "Odbudowujemy Twój kanał za pomocą nowego silnika. Wkrótce zostanie uzupełniony."
+    "resyncBody": "Odbudowujemy Twój kanał za pomocą nowego silnika. Wkrótce zostanie uzupełniony.",
+    "starterTitle": "Starter na nasz koszt",
+    "starterIntro": "Żebyś zobaczył, do czego służy Mera, każde konto zawiera teraz pełny plan Starter bez opłat.",
+    "starterArticlesTitle": "250 artykułów dziennie",
+    "starterArticlesBody": "Mera analizuje dla ciebie do 250 artykułów każdego dnia.",
+    "starterInterestsTitle": "Wszystkie twoje zainteresowania",
+    "starterInterestsBody": "Dodaj ich tyle, ile chcesz. Mera śledzi każde.",
+    "starterChatTitle": "Czat i sprawdzanie faktów",
+    "starterChatBody": "Zapytaj Merę o dowolną wiadomość i zestaw twierdzenia z opublikowanymi analizami faktów.",
+    "starterStoriesTitle": "Śledzone historie",
+    "starterStoriesBody": "Śledź historię, a Mera będzie ją dla ciebie obserwować."
   },
   "notificationCenter": {
     "title": "Powiadomienia",

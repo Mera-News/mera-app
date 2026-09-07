@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "{{count}} gün kaldı",
     "trialDaysLeft_other": "{{count}} gün kaldı",
     "trialEndsOn": "Ücretsiz denemeniz {{date}} tarihinde sona eriyor",
-    "trialNoPaymentDetails": "Dosyada ödeme bilgisi olmadığı için iptal edilecek bir şey yok. Deneme süresi sona erdiğinde, abonelik yapmamayı seçmediğiniz sürece ücretsiz plana geçersiniz."
+    "trialNoPaymentDetails": "Dosyada ödeme bilgisi olmadığı için iptal edilecek bir şey yok. Deneme süresi sona erdiğinde, abonelik yapmamayı seçmediğiniz sürece ücretsiz plana geçersiniz.",
+    "starterFreeTitle": "Starter kullanıyorsunuz, ücretsiz",
+    "starterFreeBody": "Mera'nın ne işe yaradığını görmenizi istiyoruz, bu yüzden her hesap tam Starter planını ücretsiz içeriyor. Bu, günde 250 haber, tüm ilgi alanlarınız, sohbet, doğruluk kontrolleri ve takip edilen haberler demek."
   },
   "tabs": {
     "deck": "Akış",
@@ -1061,7 +1063,17 @@
     "tabsTitle": "Profil ve Ayarlar sekmeleri",
     "tabsBody": "Profilin ve ayarların artık altta kendi sekmelerinde.",
     "resyncTitle": "Akışın yeniden senkronize ediliyor",
-    "resyncBody": "Akışını yeni motorla yeniden oluşturuyoruz: kısa süre içinde dolacak."
+    "resyncBody": "Akışını yeni motorla yeniden oluşturuyoruz: kısa süre içinde dolacak.",
+    "starterTitle": "Starter bizden",
+    "starterIntro": "Mera'nın ne işe yaradığını görebilmeniz için artık her hesap tam Starter planını ücretsiz içeriyor.",
+    "starterArticlesTitle": "Günde 250 haber",
+    "starterArticlesBody": "Mera her gün sizin için en fazla 250 haberi analiz eder.",
+    "starterInterestsTitle": "Tüm ilgi alanlarınız",
+    "starterInterestsBody": "İstediğiniz kadar ekleyin. Mera hepsini takip eder.",
+    "starterChatTitle": "Sohbet ve doğruluk kontrolü",
+    "starterChatBody": "Herhangi bir haber hakkında Mera'ya sorun ve iddiaları yayımlanmış doğruluk kontrolleriyle karşılaştırın.",
+    "starterStoriesTitle": "Takip edilen haberler",
+    "starterStoriesBody": "Bir haberi takip edin, Mera sizin için izlemeyi sürdürsün."
   },
   "notificationCenter": {
     "title": "Bildirimler",

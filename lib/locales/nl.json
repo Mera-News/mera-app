@@ -935,7 +935,9 @@
     "trialDaysLeft_one": "{{count}} dag resterend",
     "trialDaysLeft_other": "{{count}} dagen resterend",
     "trialEndsOn": "Je gratis proefperiode eindigt op {{date}}",
-    "trialNoPaymentDetails": "Er zijn geen betalingsgegevens opgeslagen, dus er is niets om te annuleren. Als de proefperiode afloopt, ga je naar het gratis plan tenzij je je abonneert."
+    "trialNoPaymentDetails": "Er zijn geen betalingsgegevens opgeslagen, dus er is niets om te annuleren. Als de proefperiode afloopt, ga je naar het gratis plan tenzij je je abonneert.",
+    "starterFreeTitle": "Je zit op Starter, gratis",
+    "starterFreeBody": "We willen dat je ziet waar Mera voor is, dus elk account bevat het volledige Starter-plan zonder kosten. Dat is 250 artikelen per dag, al je interesses, chat, factchecks en gevolgde verhalen."
   },
   "tabs": {
     "deck": "Feed",
@@ -1059,7 +1061,17 @@
     "tabsTitle": "Tabbladen Profiel & Instellingen",
     "tabsBody": "Je profiel en instellingen staan nu in hun eigen tabbladen onderaan.",
     "resyncTitle": "Je feed wordt opnieuw gesynchroniseerd",
-    "resyncBody": "We bouwen je feed opnieuw op met de nieuwe engine. Het wordt binnenkort aangevuld."
+    "resyncBody": "We bouwen je feed opnieuw op met de nieuwe engine. Het wordt binnenkort aangevuld.",
+    "starterTitle": "Starter krijg je van ons",
+    "starterIntro": "Zodat je ziet waar Mera voor is, bevat elk account nu het volledige Starter-plan zonder kosten.",
+    "starterArticlesTitle": "250 artikelen per dag",
+    "starterArticlesBody": "Mera analyseert elke dag tot 250 artikelen voor je.",
+    "starterInterestsTitle": "Al je interesses",
+    "starterInterestsBody": "Voeg er zoveel toe als je wilt. Mera volgt ze allemaal.",
+    "starterChatTitle": "Chat en factchecks",
+    "starterChatBody": "Vraag Mera van alles over een bericht en toets beweringen aan gepubliceerde factchecks.",
+    "starterStoriesTitle": "Gevolgde verhalen",
+    "starterStoriesBody": "Volg een verhaal en Mera houdt het voor je in de gaten."
   },
   "notificationCenter": {
     "title": "Meldingen",

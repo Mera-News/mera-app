@@ -21,8 +21,7 @@ import { loginRevenueCat } from "@/lib/revenuecat";
 import { syncEntitlement } from "@/lib/subscription/entitlement-sync";
 import { readStartupTab } from "@/lib/navigation/startup-tab";
 import {
-    decideOnboardingEntry,
-    resolveEntitlementForOnboarding,
+    startEntitlementWarmup,
 } from "@/lib/subscription/onboarding-paywall";
 import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
@@ -296,39 +295,21 @@ export default function LoggedInIndex() {
                     return;
                 }
 
-                // ── PAYWALL BEFORE ONBOARDING ────────────────────────────
+                // ── ZERO FACTS ⇒ THE WIZARD ─────────────────────────────
                 //
-                // Zero facts ⇒ the wizard is next, and the wizard's step 2 is a
-                // Mera chat that cannot work without an entitlement (see
-                // lib/subscription/onboarding-paywall.ts). Resolve billing
-                // BEFORE the redirect so a user with no plan meets the paywall
-                // rather than a 401.
+                // This used to resolve entitlement first and hold the splash
+                // for up to 8 seconds deciding between the wizard and a
+                // paywall. Every outcome of that wait now routes to the same
+                // place: Starter is granted to every account, so there is no
+                // verdict that sends a user anywhere else.
                 //
-                // The same decision is enforced again in OnboardingScreen,
-                // which is the actual chokepoint — DeepLinkVerifyScreen
-                // redirects straight to /logged-in/onboarding and never reaches
-                // this file. (app/login.tsx used to do the same; since
-                // 2026-08-06 it redirects here instead.) This copy exists so the
-                // cold-start path resolves in place instead of bouncing through
-                // that route. Both call the same two functions; the logic has
-                // one home.
-                const aiAccess = await resolveEntitlementForOnboarding({
-                    userId,
-                    isConnected: useNetworkStore.getState().isConnected,
-                });
-                if (cancelled) return;
-
-                switch (decideOnboardingEntry({ aiAccess })) {
-                    case 'free-tier':
-                        // Mera News Free: the feed's FreeTierCard carries the
-                        // pitch, Subscribe and support (the standalone paywall
-                        // screen was removed 2026-08-19).
-                        router.replace('/logged-in/app_container/feed');
-                        return;
-                    default:
-                        router.replace('/logged-in/onboarding');
-                        return;
-                }
+                // `startEntitlementWarmup` still FIRES the two calls the wait
+                // used to make. `loginRevenueCat` is the load-bearing one:
+                // without it a later purchase attaches to an anonymous
+                // RevenueCat id. It is fire-and-forget now rather than awaited.
+                startEntitlementWarmup(userId);
+                router.replace('/logged-in/onboarding');
+                return;
             } catch (error) {
                 // NARROWED. This used to drop every failure into the feed,
                 // which is fail-OPEN for anything that went wrong before we

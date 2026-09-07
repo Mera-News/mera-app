@@ -117,17 +117,18 @@ jest.mock('@/lib/revenuecat', () => ({ loginRevenueCat: jest.fn(async () => null
 // cannot be constructed in this environment. Routing is what's under test here.
 jest.mock('@/lib/subscription/entitlement-sync', () => ({ syncEntitlement: jest.fn(async () => undefined) }));
 
-// Pre-onboarding paywall gate. Stubbed for the same reason as the two mocks
-// above (its real graph reaches react-native-purchases and Apollo) and so this
-// suite stays about identity + facts. Its behaviour is covered end-to-end in
-// components/custom/subscription/__tests__/onboarding-paywall-order.test.tsx.
-// The default verdict is the pass-through one, so every pre-existing assertion
-// here describes an entitled user and is unchanged.
-const mockResolveEntitlement = jest.fn(async () => 'entitled' as string);
-const mockDecideEntry = jest.fn(() => 'onboarding' as string);
+// Entitlement warmup. Stubbed for the same reason as the two mocks above (its
+// real graph reaches react-native-purchases and Apollo) and so this suite stays
+// about identity + facts.
+//
+// There is no verdict to stub any more: Starter is granted to every account, so
+// a zero-fact user reaches the wizard regardless and the call is fire-and-forget.
+//
+// EXPLICIT FACTORY: any export the screen calls must be listed here, or it is
+// `undefined` at the call site and the failure names the caller, not the mock.
+const mockStartWarmup = jest.fn();
 jest.mock('@/lib/subscription/onboarding-paywall', () => ({
-    resolveEntitlementForOnboarding: (...a: any[]) => mockResolveEntitlement(...(a as [])),
-    decideOnboardingEntry: (...a: any[]) => mockDecideEntry(...(a as [])),
+    startEntitlementWarmup: (...a: any[]) => mockStartWarmup(...(a as [])),
 }));
 
 import LoggedInIndex from '../logged-in/index';
@@ -148,8 +149,6 @@ beforeEach(() => {
     mockAssertPersonaOwner.mockResolvedValue(false);
     mockClearPreviousUserData.mockResolvedValue(undefined);
     mockHasAnyFacts.mockResolvedValue(true);
-    mockResolveEntitlement.mockResolvedValue('entitled');
-    mockDecideEntry.mockReturnValue('onboarding');
 });
 
 describe('cold-start identity gate', () => {
@@ -484,59 +483,15 @@ describe('cold-start fact gate', () => {
 // instead). What is asserted here is the WIRING of the cold-start copy: that
 // the resolve happens before the onboarding redirect, and never on the
 // has-facts path.
-describe('cold-start paywall ordering', () => {
-    it('resolves entitlement BEFORE redirecting to onboarding', async () => {
+describe('cold-start entitlement warmup', () => {
+    // What used to be a routing gate is a warm-up call. The load-bearing part
+    // is that it FIRES: without `loginRevenueCat` inside it, a purchase made
+    // later attaches to the anonymous RevenueCat id and lands on nobody.
+    it('fires the warmup and redirects to onboarding without waiting on it', async () => {
         mockHasAnyFacts.mockResolvedValue(false);
         render(<LoggedInIndex />);
 
         await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/logged-in/onboarding'));
-        expect(mockResolveEntitlement).toHaveBeenCalledTimes(1);
-        expect(mockResolveEntitlement.mock.invocationCallOrder[0]).toBeLessThan(
-            mockReplace.mock.invocationCallOrder[0],
-        );
-    });
-
-
-
-
-
-
-    it('a locked user lands on Mera News Free (feed + FreeTierCard), not onboarding', async () => {
-        // The standalone paywall screen was removed 2026-08-19 — 'locked'
-        // routes straight to the free feed, whose FreeTierCard carries the
-        // pitch, Subscribe and support.
-        mockHasAnyFacts.mockResolvedValue(false);
-        mockResolveEntitlement.mockResolvedValue('locked');
-        mockDecideEntry.mockReturnValue('free-tier');
-        render(<LoggedInIndex />);
-
-        await waitFor(() =>
-            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
-        );
-        expect(mockReplace).not.toHaveBeenCalledWith('/logged-in/onboarding');
-        expect(mockDecideEntry).toHaveBeenCalledWith({ aiAccess: 'locked' });
-    });
-
-    it("an 'unknown' verdict that survives the resolve also goes to Mera News Free", async () => {
-        mockHasAnyFacts.mockResolvedValue(false);
-        mockResolveEntitlement.mockResolvedValue('unknown');
-        mockDecideEntry.mockReturnValue('free-tier');
-
-        render(<LoggedInIndex />);
-
-        await waitFor(() =>
-            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
-        );
-        expect(mockDecideEntry).toHaveBeenCalledWith({ aiAccess: 'unknown' });
-    });
-
-    it('an already-onboarded user pays for none of it (requirement: no regression)', async () => {
-        mockHasAnyFacts.mockResolvedValue(true);
-        render(<LoggedInIndex />);
-
-        await waitFor(() =>
-            expect(mockReplace).toHaveBeenCalledWith('/logged-in/app_container/feed'),
-        );
-        expect(mockResolveEntitlement).not.toHaveBeenCalled();
+        expect(mockStartWarmup).toHaveBeenCalledTimes(1);
     });
 });
