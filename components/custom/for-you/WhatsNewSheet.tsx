@@ -36,7 +36,7 @@ type RowKey = 'articles' | 'interests' | 'chat' | 'stories';
 const ROWS: { key: RowKey; icon: keyof typeof MaterialIcons.glyphMap; titleKey: string; bodyKey: string }[] = [
   { key: 'articles', icon: 'dynamic-feed', titleKey: 'whatsNew.starterArticlesTitle', bodyKey: 'whatsNew.starterArticlesBody' },
   { key: 'interests', icon: 'auto-awesome', titleKey: 'whatsNew.starterInterestsTitle', bodyKey: 'whatsNew.starterInterestsBody' },
-  { key: 'chat', icon: 'person', titleKey: 'whatsNew.starterChatTitle', bodyKey: 'whatsNew.starterChatBody' },
+  { key: 'chat', icon: 'chat-bubble-outline', titleKey: 'whatsNew.starterChatTitle', bodyKey: 'whatsNew.starterChatBody' },
   { key: 'stories', icon: 'sync', titleKey: 'whatsNew.starterStoriesTitle', bodyKey: 'whatsNew.starterStoriesBody' },
 ];
 
