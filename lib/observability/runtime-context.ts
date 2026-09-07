@@ -34,7 +34,6 @@ export interface RuntimeContext {
   onboarding_stage: string;
   processing_mode: string;
   relevance_v4: boolean;
-  free_tier_mode: boolean;
   model_state: string;
   /**
    * Device connectivity AND whether the server is answering — these are

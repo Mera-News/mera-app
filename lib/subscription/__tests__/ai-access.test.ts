@@ -46,11 +46,14 @@ describe('deriveAiAccess', () => {
             ).toBe('entitled');
         });
 
-        it('serverTier wins over RevenueCat when the server has answered', () => {
+        // The server having ANSWERED is the whole test now. Starter is a
+        // permanent read-time baseline, so the tier string can no longer be a
+        // refusal and 'none' is not a value the server sends.
+        it('any answer from the server means entitled', () => {
             const { deriveAiAccess } = loadAiAccess();
             expect(
-                deriveAiAccess({ serverTier: 'none', hasCustomerInfo: true, isPremium: true }),
-            ).toBe('locked');
+                deriveAiAccess({ serverTier: 'starter', hasCustomerInfo: false, isPremium: false }),
+            ).toBe('entitled');
             expect(
                 deriveAiAccess({ serverTier: 'individual', hasCustomerInfo: true, isPremium: false }),
             ).toBe('entitled');

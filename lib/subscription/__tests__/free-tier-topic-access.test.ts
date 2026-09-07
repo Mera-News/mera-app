@@ -121,14 +121,16 @@ describe('deriveFreeTierAccess', () => {
 
 describe('resolveAiAccessForFetch', () => {
     it('prefers the server over this device memory when both are present', async () => {
-        setServerTier('none');
-        mockSettingsRow = 'starter';
-        await expect(resolveAiAccessForFetch()).resolves.toBe('locked');
+        setServerTier('starter');
+        mockSettingsRow = null;
+        await expect(resolveAiAccessForFetch()).resolves.toBe('entitled');
     });
 
-    it('falls back to a remembered locked tier when the server is silent', async () => {
+    // 'none' is no longer a refusal anywhere: not from the server, and not
+    // from a device that remembered one under the old model.
+    it('a remembered tier is entitled, whatever it says', async () => {
         mockSettingsRow = 'none';
-        await expect(resolveAiAccessForFetch()).resolves.toBe('locked');
+        await expect(resolveAiAccessForFetch()).resolves.toBe('entitled');
     });
 
     it('falls back to a remembered paid tier when the server is silent', async () => {
@@ -168,7 +170,7 @@ describe('aiAccessForSchedulerCondition (the synchronous mirror)', () => {
         expect(aiAccessForSchedulerCondition()).toBe('unknown');
         await rememberLastKnownTier('none');
         expect(lastKnownTierMirror()).toBe('none');
-        expect(aiAccessForSchedulerCondition()).toBe('locked');
+        expect(aiAccessForSchedulerCondition()).toBe('entitled');
     });
 
     // The one with a security consequence: module state survives a logout, so
@@ -193,7 +195,7 @@ describe('aiAccessForSchedulerCondition (the synchronous mirror)', () => {
 describe('serverResolvedAiAccess', () => {
     it('is unknown until our server has answered', () => {
         expect(serverResolvedAiAccess()).toBe('unknown');
-        setServerTier('none');
-        expect(serverResolvedAiAccess()).toBe('locked');
+        setServerTier('starter');
+        expect(serverResolvedAiAccess()).toBe('entitled');
     });
 });

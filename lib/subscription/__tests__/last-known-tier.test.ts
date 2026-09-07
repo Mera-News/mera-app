@@ -112,8 +112,10 @@ describe('aiAccessFromLastKnownTier', () => {
         expect(aiAccessFromLastKnownTier('')).toBe('unknown');
     });
 
-    it("'none' ⇒ locked", () => {
-        expect(aiAccessFromLastKnownTier('none')).toBe('locked');
+    // No account carries 'none' any more, and a device that remembered one
+    // under the old model must not be held to it forever.
+    it("'none' ⇒ entitled, not locked", () => {
+        expect(aiAccessFromLastKnownTier('none')).toBe('entitled');
     });
 
     it('any other tier ⇒ entitled', () => {

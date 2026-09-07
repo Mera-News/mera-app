@@ -22,8 +22,6 @@ jest.mock('@/lib/revenuecat', () => ({
     syncRevenueCatAttributes: jest.fn(async () => {}),
 }));
 
-const mockRecordAiLocked = jest.fn();
-jest.mock('../ai-lock', () => ({ recordAiLocked: (...a: any[]) => mockRecordAiLocked(...a) }));
 
 const mockFetchUserBilling = jest.fn();
 const mockFetchUserBillingLapseState = jest.fn(async () => null);
@@ -119,16 +117,19 @@ describe('isSubscriptionRequiredAuthError', () => {
 });
 
 describe('the latch', () => {
-    it('records the lock through the EXISTING shared mechanism, not a parallel flag', () => {
+    // It used to also drive `recordAiLocked`, pinning the store to
+    // `serverTier: 'none'`. That module is gone with the tier it wrote: no
+    // account carries 'none', so writing it would manufacture a refusal the
+    // server never gave. The LATCH is the load-bearing half and is unchanged.
+    it('latches so this session stops re-minting a refused JWT', () => {
         recordJwtSubscriptionLocked();
         expect(isJwtSubscriptionLocked()).toBe(true);
-        expect(mockRecordAiLocked).toHaveBeenCalledWith('token');
     });
 
     it('is idempotent — a second refusal costs nothing', () => {
         recordJwtSubscriptionLocked();
         recordJwtSubscriptionLocked();
-        expect(mockRecordAiLocked).toHaveBeenCalledTimes(1);
+        expect(isJwtSubscriptionLocked()).toBe(true);
     });
 
     it('clears explicitly', () => {

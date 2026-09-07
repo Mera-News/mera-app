@@ -60,9 +60,11 @@ export interface AiAccessInputs {
 export function deriveAiAccess(inputs: AiAccessInputs): AiAccess {
     if (__DEV__ && DEV_FORCE_AI_ACCESS !== null) return DEV_FORCE_AI_ACCESS;
 
-    if (inputs.serverTier !== null) {
-        return inputs.serverTier === 'none' ? 'locked' : 'entitled';
-    }
+    // The server having ANSWERED is now the whole test. Every account without a
+    // purchase carries Starter as a permanent read-time baseline, so the tier
+    // string can no longer be a refusal — `'none'` is not a value the server
+    // sends any more. Comparing against it would be a branch nothing can enter.
+    if (inputs.serverTier !== null) return 'entitled';
 
     // RevenueCat may GRANT, and may NEVER deny.
     //

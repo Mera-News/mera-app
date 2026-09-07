@@ -169,11 +169,12 @@ export async function clearLastKnownTier(): Promise<void> {
 /**
  * Re-derive an `AiAccess` from a persisted tier.
  *
- * `null` (never resolved) stays `'unknown'` — the gate must be able to tell
- * "no history" apart from "history says locked", because only the first one
- * falls through to the paywall on its own.
+ * `null` (never resolved) stays `'unknown'`; any remembered tier is
+ * `'entitled'`. A remembered `'none'` used to mean locked, but no account
+ * carries that tier any more, and a device that resolved one under the old
+ * model must not be held to it forever.
  */
 export function aiAccessFromLastKnownTier(tier: string | null): AiAccess {
     if (!tier) return 'unknown';
-    return tier === 'none' ? 'locked' : 'entitled';
+    return 'entitled';
 }

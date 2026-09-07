@@ -96,29 +96,22 @@ export function isJwtSubscriptionLocked(): boolean {
 }
 
 /**
- * Latch the refusal and record it through the EXISTING shared mechanism.
+ * Latch the refusal for the rest of this session.
  *
- * `recordAiLocked` sets `serverTier: 'none'` (so `deriveAiAccess` returns
- * `'locked'` and the guarded surfaces stop firing doomed queries) AND forces a
- * `syncEntitlement` — which is what makes this self-correcting: `userBilling`
- * stays ungated server-side, so it confirms or overturns the verdict a moment
- * later, and an overturn clears this latch via `setServerBilling`.
+ * It used to also call `recordAiLocked`, which wrote `serverTier: 'none'` so
+ * `deriveAiAccess` would return `'locked'` and the guarded surfaces would stop
+ * firing doomed queries. That write is gone with the tier it wrote: no account
+ * carries `'none'` any more, so pinning the store to it would manufacture a
+ * refusal the server never gave.
+ *
+ * The LATCH is the load-bearing half and is unchanged — it is what stops this
+ * session re-minting a JWT that was just refused. It is lifted by
+ * `clearJwtSubscriptionLock`.
  *
  * Idempotent: only the first refusal of a session does any work.
  */
 export function recordJwtSubscriptionLocked(): void {
-    if (locked) return;
     locked = true;
-    try {
-        // Lazy: ai-lock → subscription-store → jwt-subscription-gate is a cycle
-        // at module-eval time. Required here, it is not.
-        // eslint-disable-next-line @typescript-eslint/no-require-imports -- deliberate, see above.
-        const { recordAiLocked } = require('./ai-lock') as typeof import('./ai-lock');
-        recordAiLocked('token');
-    } catch {
-        // Best-effort — the latch is the load-bearing part, and the store may
-        // not exist (unit tests, very early boot).
-    }
 }
 
 /**

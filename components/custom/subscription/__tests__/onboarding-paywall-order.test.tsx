@@ -532,8 +532,8 @@ describe('waitForAiAccessResolved', () => {
 
     it('resolves as soon as the store leaves unknown', async () => {
         const pending = waitForAiAccessResolved(60_000);
-        useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'none' });
-        await expect(pending).resolves.toBe('locked');
+        useSubscriptionStore.getState().setServerBilling({ subscriptionTier: 'starter' });
+        await expect(pending).resolves.toBe('entitled');
     });
 
     it('resolves immediately when the verdict is already known', async () => {
