@@ -136,10 +136,6 @@ describe('subscription-store — an offline CustomerInfo must not fake a downgra
     expect(useSubscriptionStore.getState().isPremium).toBe(false);
   });
 
-  // Asserted as "not locked" rather than a specific verdict so the test holds
-  // whichever way FREE_TIER_MODE_ENABLED is set — the gate is committed false
-  // and flipped true locally, and `locked` is the only outcome that renders the
-  // Mera News Free card.
   it('never reports locked off an ANONYMOUS CustomerInfo', () => {
     useSubscriptionStore.getState().setCustomerInfo({
       entitlements: { active: {} },
@@ -150,18 +146,22 @@ describe('subscription-store — an offline CustomerInfo must not fake a downgra
     expect(getAiAccess()).not.toBe('locked');
   });
 
-  it('does report locked once the customer is identified and unentitled', () => {
+  // INVERTED for Starter-for-everyone. An identified, unentitled CustomerInfo
+  // used to mean 'locked'. It now describes a fully entitled user: the Starter
+  // grant is server-side and RevenueCat has no knowledge of it. Since
+  // RevenueCat answers from local cache long before our GraphQL round trip,
+  // the old behaviour put a 'locked' window on every cold start for everyone
+  // who had not paid. 'unknown' is the honest verdict until the server speaks.
+  it('never reports locked off an IDENTIFIED but unentitled CustomerInfo either', () => {
     useSubscriptionStore.getState().setCustomerInfo({
       entitlements: { active: {} },
       allPurchasedProductIdentifiers: [],
       originalAppUserId: '6a73cbcc19632e639560a9cb',
     } as any);
 
-    // Only meaningful while the ship gate is on; when it is off everything is
-    // 'entitled' by design, which is not a locked flash either.
     const verdict = getAiAccess();
-    expect(['locked', 'entitled']).toContain(verdict);
-    expect(verdict).not.toBe('unknown');
+    expect(verdict).not.toBe('locked');
+    expect(verdict).toBe('unknown');
   });
 
   it('does not crash on a payload with no history field at all', () => {

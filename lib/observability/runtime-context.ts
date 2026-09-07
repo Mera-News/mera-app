@@ -12,7 +12,6 @@
 // Every read is non-reactive `getState()` — these run at event time and on
 // store-change callbacks, never inside a React render.
 
-import { FREE_TIER_MODE_ENABLED } from '@/lib/config/feature-gates';
 import { useAppLanguageStore } from '@/lib/stores/app-language-store';
 import { useMeraProtocolStore } from '@/lib/stores/mera-protocol-store';
 import { useNetworkStore } from '@/lib/stores/network-store';
@@ -63,7 +62,6 @@ export function getRuntimeContext(): RuntimeContext {
     onboarding_stage: userPersona?.onboardingStage ?? 'unknown',
     processing_mode: processingMode,
     relevance_v4: relevanceV4,
-    free_tier_mode: FREE_TIER_MODE_ENABLED,
     model_state: modelState,
     network_connected: isConnected,
     server_reachable: serverReachable,

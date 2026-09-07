@@ -1,21 +1,18 @@
 // ai-access.test.ts — tests for the pure derive functions in ai-access.ts.
 //
-// `feature-gates.ts` exports plain module-level consts, so exercising both
-// sides of FREE_TIER_MODE_ENABLED (currently `false` in ship state — see the
-// module's own comment) requires jest.resetModules() + jest.doMock() per test,
-// the same pattern lib/config/__tests__/branding.test.ts uses for env-driven
-// modules. `require` (not `import`) after the mock so we get a fresh module
-// graph reading the mocked constants.
+// `feature-gates.ts` exports plain module-level consts, so driving the dev
+// overrides requires jest.resetModules() + jest.doMock() per test, the same
+// pattern lib/config/__tests__/branding.test.ts uses for env-driven modules.
+// `require` (not `import`) after the mock so we get a fresh module graph
+// reading the mocked constants.
 
 function loadAiAccess(gates: {
-    FREE_TIER_MODE_ENABLED?: boolean;
     DEV_FORCE_AI_ACCESS?: 'entitled' | 'locked' | null;
     DEV_FORCE_LAPSED?: boolean;
 } = {}) {
     jest.resetModules();
     jest.doMock('@/lib/config/feature-gates', () => ({
         __esModule: true,
-        FREE_TIER_MODE_ENABLED: gates.FREE_TIER_MODE_ENABLED ?? false,
         DEV_FORCE_AI_ACCESS: gates.DEV_FORCE_AI_ACCESS ?? null,
         DEV_FORCE_LAPSED: gates.DEV_FORCE_LAPSED ?? false,
     }));
@@ -31,41 +28,9 @@ afterEach(() => {
 });
 
 describe('deriveAiAccess', () => {
-    describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false, current ship state)', () => {
-        it('returns entitled for every input, regardless of server/RevenueCat signals', () => {
-            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: false });
-
-            expect(
-                deriveAiAccess({ serverTier: 'none', hasCustomerInfo: false, isPremium: false }),
-            ).toBe('entitled');
-            expect(
-                deriveAiAccess({ serverTier: null, hasCustomerInfo: false, isPremium: false }),
-            ).toBe('entitled');
-            expect(
-                deriveAiAccess({ serverTier: 'professional', hasCustomerInfo: true, isPremium: true }),
-            ).toBe('entitled');
-            expect(
-                deriveAiAccess({ serverTier: null, hasCustomerInfo: true, isPremium: false }),
-            ).toBe('entitled');
-        });
-
-        it('the dev override still wins over the ship gate (it sits above it)', () => {
-            const { deriveAiAccess } = loadAiAccess({
-                FREE_TIER_MODE_ENABLED: false,
-                DEV_FORCE_AI_ACCESS: 'locked',
-            });
-            expect(
-                deriveAiAccess({ serverTier: null, hasCustomerInfo: false, isPremium: false }),
-            ).toBe('locked');
-        });
-    });
-
-    describe('ship gate ON (FREE_TIER_MODE_ENABLED = true — simulates post-cutover)', () => {
+    describe('verdict precedence', () => {
         it('__DEV__ override takes precedence over everything else', () => {
-            const { deriveAiAccess } = loadAiAccess({
-                FREE_TIER_MODE_ENABLED: true,
-                DEV_FORCE_AI_ACCESS: 'locked',
-            });
+            const { deriveAiAccess } = loadAiAccess({ DEV_FORCE_AI_ACCESS: 'locked' });
             // Server says entitled, RevenueCat says entitled — override still wins.
             expect(
                 deriveAiAccess({ serverTier: 'professional', hasCustomerInfo: true, isPremium: true }),
@@ -73,10 +38,7 @@ describe('deriveAiAccess', () => {
         });
 
         it('__DEV__ override is only consulted in dev builds', () => {
-            const { deriveAiAccess } = loadAiAccess({
-                FREE_TIER_MODE_ENABLED: true,
-                DEV_FORCE_AI_ACCESS: 'locked',
-            });
+            const { deriveAiAccess } = loadAiAccess({ DEV_FORCE_AI_ACCESS: 'locked' });
             (global as any).__DEV__ = false;
             // With __DEV__ false, falls through to serverTier.
             expect(
@@ -85,7 +47,7 @@ describe('deriveAiAccess', () => {
         });
 
         it('serverTier wins over RevenueCat when the server has answered', () => {
-            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
+            const { deriveAiAccess } = loadAiAccess();
             expect(
                 deriveAiAccess({ serverTier: 'none', hasCustomerInfo: true, isPremium: true }),
             ).toBe('locked');
@@ -94,18 +56,28 @@ describe('deriveAiAccess', () => {
             ).toBe('entitled');
         });
 
-        it('falls back to RevenueCat when the server has not answered yet', () => {
-            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
+        // RevenueCat may GRANT, and may NEVER deny. An identified-but-empty
+        // CustomerInfo used to mean 'locked'; under Starter-for-everyone it
+        // describes a fully ENTITLED user, because the grant is server-side and
+        // RevenueCat has no knowledge of it. Since RevenueCat answers from
+        // local cache long before our GraphQL round trip, denying on it put a
+        // 'locked' window on EVERY cold start for every user who had not paid.
+        it('grants from RevenueCat, but never denies, while the server is silent', () => {
+            const { deriveAiAccess } = loadAiAccess();
             expect(
                 deriveAiAccess({ serverTier: null, hasCustomerInfo: true, isPremium: true }),
             ).toBe('entitled');
-            expect(
-                deriveAiAccess({ serverTier: null, hasCustomerInfo: true, isPremium: false }),
-            ).toBe('locked');
+            const empty = deriveAiAccess({
+                serverTier: null,
+                hasCustomerInfo: true,
+                isPremium: false,
+            });
+            expect(empty).toBe('unknown');
+            expect(empty).not.toBe('locked');
         });
 
         it('returns unknown — never locked — when neither the server nor RevenueCat has answered', () => {
-            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
+            const { deriveAiAccess } = loadAiAccess();
             const result = deriveAiAccess({
                 serverTier: null,
                 hasCustomerInfo: false,
@@ -121,14 +93,14 @@ describe('deriveAiAccess', () => {
         // logIn — reading that as "not subscribed" is what flashed Mera News
         // Free at a paying subscriber on every cold start.
         it('an entitlement grants even while RevenueCat is still anonymous', () => {
-            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
+            const { deriveAiAccess } = loadAiAccess();
             expect(
                 deriveAiAccess({ serverTier: null, hasCustomerInfo: false, isPremium: true }),
             ).toBe('entitled');
         });
 
         it('an ANONYMOUS empty answer is unknown, not locked', () => {
-            const { deriveAiAccess } = loadAiAccess({ FREE_TIER_MODE_ENABLED: true });
+            const { deriveAiAccess } = loadAiAccess();
             const result = deriveAiAccess({
                 // hasCustomerInfo: false is how the store reports "we hold a
                 // CustomerInfo, but it is the anonymous one".

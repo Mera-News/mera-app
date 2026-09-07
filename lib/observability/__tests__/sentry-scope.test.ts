@@ -129,7 +129,6 @@ describe('sentry-scope', () => {
         onboarding_stage: 'COMPLETE',
         processing_mode: 'CLOUD',
         relevance_v4: 'true',
-        free_tier_mode: expect.any(String),
         model_state: 'not_downloaded',
         network_connected: 'true',
         server_reachable: 'false',

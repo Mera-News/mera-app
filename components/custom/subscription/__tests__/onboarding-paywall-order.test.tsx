@@ -19,17 +19,13 @@
 // leaves are stubbed: RevenueCat (native), entitlement-sync (Apollo), the local
 // DB services, and the wizard itself.
 //
-// ## Driving FREE_TIER_MODE_ENABLED
+// ## Driving the dev overrides
 //
-// lib/subscription/__tests__/ai-access.test.ts flips the ship gate with
-// jest.resetModules() + jest.doMock(). That pattern is unusable in a suite that
-// RENDERS: resetModules hands the component a second copy of `react`, and two
-// React instances in one tree is an invalid-hook-call. A getter on the mocked
-// module is the equivalent that survives rendering — Babel compiles a named
-// import to a property access on the module object, so the getter is read at
-// call time and the flag is genuinely live. Same coverage, no module-identity
-// hazard. The default below is deliberately `true` (the post-cutover state
-// under test); the false case is its own test.
+// A getter on the mocked feature-gates module, rather than jest.resetModules()
+// + jest.doMock(): resetModules hands the component a second copy of `react`,
+// and two React instances in one tree is an invalid-hook-call. Babel compiles
+// a named import to a property access, so a getter is read at call time and
+// stays genuinely live under rendering.
 
 // Stubbed because the real component reaches `@/components/ui/spinner` ->
 // ActivityIndicator, whose native component spec jest cannot parse: an unmocked
@@ -54,15 +50,13 @@ import { act, render } from '@testing-library/react-native';
 import React from 'react';
 import { Pressable } from 'react-native';
 
-// ── ship gate, flippable per test ──────────────────────────────────────────
+// ── dev overrides, flippable per test ─────────────────────────────────────
 const gates = {
-    FREE_TIER_MODE_ENABLED: true,
     DEV_FORCE_AI_ACCESS: null as 'entitled' | 'locked' | null,
     DEV_FORCE_LAPSED: false,
 };
 jest.mock('@/lib/config/feature-gates', () => ({
     __esModule: true,
-    get FREE_TIER_MODE_ENABLED() { return gates.FREE_TIER_MODE_ENABLED; },
     get DEV_FORCE_AI_ACCESS() { return gates.DEV_FORCE_AI_ACCESS; },
     get DEV_FORCE_LAPSED() { return gates.DEV_FORCE_LAPSED; },
     get HEADLINE_DEPTH_UI_ENABLED() { return false; },
@@ -197,7 +191,6 @@ async function flush() {
 
 beforeEach(() => {
     jest.clearAllMocks();
-    gates.FREE_TIER_MODE_ENABLED = true;
     gates.DEV_FORCE_AI_ACCESS = null;
     mockIsConnected = true;
     mockSettings = { cached_user_id: 'u1' };
@@ -268,7 +261,7 @@ describe('unentitled entry before onboarding', () => {
     // gate was inert: "a timeout can never leave a user worse off than before
     // this change".
     //
-    // It shipped, `FREE_TIER_MODE_ENABLED` flipped true, and the assumption
+    // It shipped, the gate went live, and the assumption
     // failed in production. With the gate armed, `'unknown'` is the state of
     // EVERY cold start before billing answers — not a rare degraded-network
     // case — so a slow server dropped brand-new users into the persona chat
@@ -500,39 +493,6 @@ describe('unentitled entry before onboarding', () => {
         jest.useRealTimers();
     });
 
-});
-
-describe('ship gate OFF (FREE_TIER_MODE_ENABLED = false — the state this commits in)', () => {
-    it("behaves exactly as today: straight to onboarding, and doesn't even ask the server", async () => {
-        gates.FREE_TIER_MODE_ENABLED = false;
-        // Deliberately the state that WOULD lock a user with the gate on.
-        mockServerAnswer = { subscriptionTier: 'none' };
-
-        const { onFreeTierMode, queryByTestId } = renderGate();
-        await flush();
-
-        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onFreeTierMode).not.toHaveBeenCalled();
-        // The zero-cost property: deriveAiAccess short-circuits to 'entitled',
-        // so resolveEntitlementForOnboarding returns on its first statement —
-        // no round trip, no store subscription, no added splash latency.
-        expect(mockSyncEntitlement).not.toHaveBeenCalled();
-    });
-
-    it('the dev override still forces a locked verdict with the ship gate off', async () => {
-        // Subject unchanged: DEV_FORCE_AI_ACCESS sits ABOVE the ship gate, so
-        // the harness can drive this branch before the flag flips. The forced
-        // 'locked' now lands on the D29 wizard run, because this device has no
-        // facts.
-        gates.FREE_TIER_MODE_ENABLED = false;
-        gates.DEV_FORCE_AI_ACCESS = 'locked';
-
-        const { onFreeTierMode, queryByTestId } = renderGate();
-        await flush();
-
-        expect(queryByTestId(ONBOARDING_ENTRY)).toBeTruthy();
-        expect(onFreeTierMode).not.toHaveBeenCalled();
-    });
 });
 
 describe('decideOnboardingEntry', () => {

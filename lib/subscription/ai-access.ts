@@ -11,7 +11,6 @@
 // would go stale the first time one of its three writers forgot to recompute.
 
 import {
-    FREE_TIER_MODE_ENABLED,
     DEV_FORCE_AI_ACCESS,
     DEV_FORCE_LAPSED,
 } from '@/lib/config/feature-gates';
@@ -61,30 +60,31 @@ export interface AiAccessInputs {
 export function deriveAiAccess(inputs: AiAccessInputs): AiAccess {
     if (__DEV__ && DEV_FORCE_AI_ACCESS !== null) return DEV_FORCE_AI_ACCESS;
 
-    // Ship gate. While false this wave is inert and the app behaves exactly as
-    // it did before it — see FREE_TIER_MODE_ENABLED for why the OTA must not be
-    // the cutover. Below the dev override so the harness can still drive every
-    // state; above everything else so nothing can leak past it.
-    if (!FREE_TIER_MODE_ENABLED) return 'entitled';
-
     if (inputs.serverTier !== null) {
         return inputs.serverTier === 'none' ? 'locked' : 'entitled';
     }
 
-    // Asymmetric on purpose: RevenueCat may GRANT on any evidence, but may only
-    // DENY on evidence about an identified customer.
+    // RevenueCat may GRANT, and may NEVER deny.
     //
     // An active entitlement is a fact regardless of which customer record holds
-    // it — including a purchase made before `Purchases.logIn` runs, which is a
-    // real path (the pre-onboarding paywall). Granting on it is what lets a
-    // just-completed purchase work seconds before our webhook lands.
+    // it — including a purchase made before `Purchases.logIn` runs. Granting on
+    // it is what lets a just-completed purchase work seconds before our webhook
+    // lands.
     //
-    // The absence of an entitlement is only meaningful once RevenueCat knows who
-    // it is being asked about. While anonymous it knows nothing, and the honest
-    // answer is 'unknown' — surfaces hold their loading state instead of
-    // flashing Mera News Free at someone who has paid.
+    // It used to be allowed to deny too, on an identified-but-empty
+    // CustomerInfo. That is now WRONG BY CONSTRUCTION: every account without a
+    // purchase holds Starter, granted server-side, and RevenueCat has no
+    // knowledge of that grant and never will — the same reason
+    // `aiAccessIsServerResolved` exists. An empty CustomerInfo therefore
+    // describes a fully entitled user, and since RevenueCat answers from local
+    // cache far faster than a GraphQL round trip, denying on it produced a
+    // `'locked'` window on EVERY cold start, for every user who had not paid.
+    //
+    // `'unknown'` is the honest answer while only RevenueCat has spoken:
+    // surfaces hold their loading state rather than acting on a verdict our
+    // server has not given. A real refusal now comes from one place, the server
+    // saying `'none'` above.
     if (inputs.isPremium) return 'entitled';
-    if (inputs.hasCustomerInfo) return 'locked';
 
     return 'unknown';
 }
@@ -107,13 +107,12 @@ export function deriveAiAccess(inputs: AiAccessInputs): AiAccess {
  * `aiAccess !== 'unknown'` is therefore NOT the right test for "have we heard
  * enough to route". This is.
  *
- * The two short-circuits above `deriveAiAccess`'s server branch are mirrored
- * here, because in both the server is genuinely irrelevant: the dev override
- * outranks every signal, and with the ship gate off the verdict is a constant.
+ * The short-circuit above `deriveAiAccess`'s server branch is mirrored here,
+ * because there the server is genuinely irrelevant: the dev override outranks
+ * every signal.
  */
 export function aiAccessIsServerResolved(serverTier: string | null): boolean {
     if (__DEV__ && DEV_FORCE_AI_ACCESS !== null) return true;
-    if (!FREE_TIER_MODE_ENABLED) return true;
     return serverTier !== null;
 }
 
