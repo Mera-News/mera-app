@@ -13,12 +13,7 @@ import {
   type PersonaPersistMeta,
   type MatchedTopicMeta,
 } from '@/lib/database/services/article-suggestion-service';
-import { getFacts, getFactSectionSnapshots } from '@/lib/database/services/fact-service';
-import {
-  deriveFreeTierAccess,
-  resolveAiAccessForFetch,
-  type FreeTierAccess,
-} from '@/lib/subscription/free-tier-topic-access';
+import { getFacts } from '@/lib/database/services/fact-service';
 import {
   getActive as getActiveTopics,
   normalizeTopicText,
@@ -67,93 +62,6 @@ export const HYDRATE_CHUNK_SIZE = 25;
  *  serializes writes internally, so per-chunk persists are safe to interleave;
  *  the gate+enqueue step is separately serialized behind a promise chain. */
 export const HYDRATE_CONCURRENCY = 3;
-
-/**
- * Per-topic retrieval depth for a server-resolved FREE user. Paid tiers are
- * untouched and keep whatever `buildRetrievalProfile` computed (up to
- * `TOPIC_LIMIT_MAX` = 40).
- *
- * WHY A CLAMP AND NOT A SMALLER PROFILE. `buildRetrievalProfile` derives depth
- * from topic weight, and that mapping is shared with the harness and the paid
- * path. Narrowing it there would change retrieval for everyone; clamping the
- * result here keeps the shared logic identical and makes the free-tier rule one
- * subtraction that is trivial to remove.
- *
- * WHY 12. At the default weight a topic asks for 40, so four unlocked topics
- * alone request 160 ids against a daily cap of 100: the whole day's allowance
- * arrives in the first sync and the user hits a wall before mid-morning. 12
- * keeps four topics at 48 ids, which leaves room for the headline scopes
- * underneath the cap for a single-country reader (48 + 2 scopes x 20 = 88).
- *
- * NOT SUFFICIENT ON ITS OWN, and deliberately recorded here rather than in a
- * report nobody re-reads: headline depth is the dominant term for a reader with
- * several countries. `DEFAULT_HEADLINE_LIMIT_PER_SCOPE` is 20 and
- * `MAX_COUNTRY_SCOPES` is 5, so a five-country reader still requests 48 + 120 =
- * 168 and is clipped every sync. The topic-before-headline ordering above means
- * the clip lands on headlines rather than on their interests, which is the
- * right failure, but pacing for that reader needs a headline-depth clamp too.
- */
-export const FREE_TIER_TOPIC_LIMIT = 12;
-
-/**
- * How many COUNTRY headline scopes a server-resolved FREE user gets. GLOBAL is
- * always kept on top of this, so the free tier reads as "global plus local".
- *
- * WHY SCOPE COUNT AND NOT PER-SCOPE DEPTH. Both would bring the id total under
- * the cap, but they fail differently. Cutting depth thins EVERY edition, so a
- * five-country reader gets five sparse-looking headline surfaces and the
- * per-scope depth screen renders a handful of rows each. Cutting the scope
- * COUNT keeps the surviving editions at full depth and makes the free tier
- * narrower rather than thinner — which is the shape of the rest of it: two
- * interests, global and local news. Multi-country breadth is a paid
- * characteristic in exactly the way multi-interest breadth is.
- *
- * THE FIRST COUNTRY IS THE PRIMARY ONE, and that is a real dependency rather
- * than an accident: `buildRetrievalProfile` sorts countries by best location
- * weight descending (tiebreak on code) before slicing, so taking the first
- * COUNTRY scope takes the reader's strongest country. If that ordering ever
- * became arbitrary this would silently keep an arbitrary country instead, so
- * the ordering is asserted in the tests rather than assumed here.
- */
-export const FREE_TIER_MAX_COUNTRY_SCOPES = 1;
-
-/**
- * Keep at most `maxCountryScopes` COUNTRY scopes, in the order given. GLOBAL is
- * never dropped: it is the one edition that needs no persona geo at all, and it
- * is what makes the zero-unlocked-topics degrade always land somewhere.
- *
- * Pure, and returns the SAME array identity when nothing is dropped so the paid
- * path allocates nothing.
- */
-export function clampHeadlineScopes<T extends { scope: string }>(
-  scopes: readonly T[],
-  maxCountryScopes: number,
-): T[] {
-  let countrySeen = 0;
-  const kept = scopes.filter((s) => {
-    if (s.scope !== 'COUNTRY') return true;
-    countrySeen += 1;
-    return countrySeen <= maxCountryScopes;
-  });
-  return kept.length === scopes.length ? (scopes as T[]) : kept;
-}
-
-/**
- * Clamp per-topic retrieval depth. Pure; returns the SAME array identity when
- * nothing exceeds the ceiling, so the paid path allocates nothing.
- *
- * Only ever lowers a limit. A topic already asking for less than the ceiling is
- * left exactly as `buildRetrievalProfile` computed it — this is a cap, not an
- * assignment, so a deliberately shallow topic is never widened into costing
- * more than it asked for.
- */
-export function clampTopicDepth<T extends { limit: number }>(
-  topics: readonly T[],
-  maxLimit: number,
-): T[] {
-  if (topics.every((t) => t.limit <= maxLimit)) return topics as T[];
-  return topics.map((t) => (t.limit <= maxLimit ? t : { ...t, limit: maxLimit }));
-}
 
 /**
  * P9 hard-filter reconcile for the gate's propagation half. Propagated rows are
@@ -365,50 +273,10 @@ export async function stepFetchTopicIds(
   // until then fall back end-to-end to the legacy metadata.topics path so the
   // feed degrades gracefully on devices that haven't migrated yet.
   const activeTopics = await getActiveTopics();
-
-  // Mera News Free, resolved ONCE for the whole sync so the retrieval filter,
-  // the legacy gate and the degrade all read the same verdict. A second read
-  // could disagree with the first if entitlement lands mid-sync.
-  const freeTier = await resolveFreeTierForSync();
-
-  // THE BRANCH READS THE UNFILTERED SET. This is load-bearing and easy to get
-  // wrong: filtering `activeTopics` before this check would make an empty
-  // UNLOCKED set satisfy `length === 0` and drop a free user into
-  // `fetchTopicIdsLegacy`, which reads `fact.metadata.topics` for EVERY fact on
-  // the device at `limitPerTopic: 100` and knows nothing about the lock. That
-  // is a lock bypass and a billing bypass in one line, and it would look like a
-  // working degrade.
-  //
-  // A capped user therefore NEVER takes the legacy path, even with an empty
-  // `topics` table (which happens when the persona migration above failed —
-  // it is wrapped in a try/catch). They go to the persona path with zero
-  // topics, which degrades to headline scopes plus geo. That is the same
-  // destination as the zero-unlocked-topics case below, so there is ONE
-  // degraded behaviour to reason about rather than two.
-  if (activeTopics.length === 0 && !freeTier.capped) {
+  if (activeTopics.length === 0) {
     return fetchTopicIdsLegacy(ctx);
   }
-  return fetchTopicIdsPersona(activeTopics, ctx, freeTier);
-}
-
-/**
- * The free-tier verdict for one sync.
- *
- * `resolveAiAccessForFetch()` is the ENFORCEMENT reader — server first, then
- * this device's remembered tier, then `'unknown'`. It is what closes the
- * cold-start hole: feed sync is dispatched before entitlement sync has answered
- * (registration order in `app/_layout.tsx`, and the foreground loop does not
- * await), so a store-only read would return `'unknown'` and fail open for the
- * entire free cohort on every launch.
- *
- * The facts query is skipped entirely unless the user is actually capped —
- * `deriveFreeTierAccess` ignores the list for any other verdict, so a paid or
- * unknown user pays nothing for this.
- */
-async function resolveFreeTierForSync(): Promise<FreeTierAccess> {
-  const aiAccess = await resolveAiAccessForFetch();
-  if (aiAccess !== 'locked') return deriveFreeTierAccess(aiAccess, []);
-  return deriveFreeTierAccess(aiAccess, await getFactSectionSnapshots());
+  return fetchTopicIdsPersona(activeTopics, ctx);
 }
 
 /**
@@ -500,7 +368,6 @@ export function partitionStoryIds(
 async function fetchTopicIdsPersona(
   activeTopics: Awaited<ReturnType<typeof getActiveTopics>>,
   ctx: TaskContext,
-  freeTier: FreeTierAccess,
 ): Promise<FetchTopicIdsResult> {
   const [factWeights, locations, headlineDepths] = await Promise.all([
     getFactWeightById(),
@@ -514,27 +381,8 @@ async function fetchTopicIdsPersona(
     }),
   ]);
 
-  // D3: on Mera News Free only the topics under the user's two OLDEST facts are
-  // retrieved. Everything else stays on the device, intact and visible, until a
-  // plan turns it back on — nothing here deletes anything.
-  //
-  // Filtered ROW-WISE. `isTopicUnlocked` takes the rows carrying a text and ORs
-  // them, and `buildRetrievalProfile` does not dedupe texts, so a text carried
-  // by both a locked and an unlocked fact still reaches the wire through its
-  // unlocked row. Passing one row at a time is therefore equivalent here and
-  // avoids grouping by text for no gain.
-  //
-  // `provenance` is passed because followed stories are EXEMPT: they carry
-  // `fact_id: null`, so the fact-age rule alone would lock every story the user
-  // chose to follow.
-  const retrievalTopics = freeTier.capped
-    ? activeTopics.filter((t) =>
-        freeTier.isTopicUnlocked([{ factId: t.factId, provenance: t.provenance }]),
-      )
-    : activeTopics;
-
   const profile = buildRetrievalProfile({
-    topics: retrievalTopics.map((t) => ({
+    topics: activeTopics.map((t) => ({
       topicId: t.id,
       text: t.text,
       weight: t.weight,
@@ -554,50 +402,14 @@ async function fetchTopicIdsPersona(
     headlineDepthByScope: headlineDepths,
   });
 
-  // D28: clamp per-topic depth for a capped user only. Applied AFTER the shared
-  // profile logic so paid tiers keep exactly what `buildRetrievalProfile`
-  // computed and the shared mapping is untouched.
-  const profileTopics = freeTier.capped
-    ? clampTopicDepth(profile.topics, FREE_TIER_TOPIC_LIMIT)
-    : profile.topics;
-
-  // D39: and clamp the number of headline SCOPES. Without this the topic clamp
-  // only half-delivers the pacing: headline depth is the dominant term for a
-  // multi-country reader and D3 never reaches it, because scopes come from
-  // `locations` rather than from topics. Five countries at 20 each is 120 ids
-  // before a single interest is counted.
-  const profileHeadlineScopes = freeTier.capped
-    ? clampHeadlineScopes(profile.headlineScopes, FREE_TIER_MAX_COUNTRY_SCOPES)
-    : profile.headlineScopes;
-
-  if (profileTopics.length === 0) {
-    // A CAPPED user degrades rather than failing: headline scopes plus geo are
-    // still a real feed, and this is the ordinary first-run state for someone
-    // whose two oldest facts happen to own no positively-weighted topics — and
-    // for anyone whose `topics` table is empty (see the legacy gate above).
-    //
-    // An ENTITLED user still throws, because for them it genuinely IS broken:
-    // topics exist but none has a positive effective weight (all negative or
-    // suppressed), and silently showing headlines would hide that.
-    //
-    // The discriminator is the server-resolved verdict, so a cold-start
-    // 'unknown' can never turn a real error into a shrug — `capped` is false
-    // for 'unknown' and this throws exactly as it always did.
-    //
-    // The headline-scope check is defence in depth and is currently always
-    // true: `buildRetrievalProfile` pushes a GLOBAL scope unconditionally, so a
-    // capped user always has somewhere to degrade to. Kept so this cannot start
-    // sending a topic-less, scope-less query if that ever changes.
-    const canDegrade = freeTier.capped && profileHeadlineScopes.length > 0;
-    if (!canDegrade) {
-      throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
-    }
-    ctx.log('no unlocked topics — degrading to headline scopes');
-    logger.info('[feed-sync-steps] free tier: no unlocked topics, headlines only');
+  if (profile.topics.length === 0) {
+    // Topics exist but none has a positive effective weight → nothing to
+    // retrieve (all negative/suppressed). Terminal, same as no-topics.
+    throw Object.assign(new Error('no-topics-configured'), { code: 'no-topics-configured' });
   }
 
   const textToTopicId = new Map<string, string>();
-  for (const t of profileTopics) {
+  for (const t of profile.topics) {
     if (!textToTopicId.has(t.text)) textToTopicId.set(t.text, t.topicId);
   }
 
@@ -606,18 +418,10 @@ async function fetchTopicIdsPersona(
   // "tracked-only" twice is exactly how the two would drift, and they must
   // agree — an article hydrated free because a followed story was its only
   // match is the same article that story asked the server to match strictly.
-  // Derived from the SET ACTUALLY SENT, not from every active topic. This
-  // partition attributes the server's response, and the server only answers for
-  // topics we asked about — deriving it from topics we withheld would
-  // mis-attribute. Concretely: a text carried by a followed story AND by a
-  // LOCKED interest arrives solely because of the followed story, since the
-  // interest was never sent, so it is correctly free. Deriving from the
-  // unfiltered set would charge it, breaking the promise that following a story
-  // never consumes the daily allowance.
-  const freeTopicTexts = computeFreeTopicTexts(retrievalTopics);
+  const freeTopicTexts = computeFreeTopicTexts(activeTopics);
 
   const query: PersonaQueryInput = {
-    topics: profileTopics.map((t): PersonaTopicInput => {
+    topics: profile.topics.map((t): PersonaTopicInput => {
       // Written as a typed variable + conditional assignment, NOT a conditional
       // spread. A spread bypasses excess-property checking, so a typo'd key
       // would compile — and an input field the server does not know fails the
@@ -650,7 +454,7 @@ async function fetchTopicIdsPersona(
     // the two can't disagree — a larger value here was simply dead.
     limitPerTopic: 40,
     topHeadlines: {
-      scopes: profileHeadlineScopes.map((s) => ({
+      scopes: profile.headlineScopes.map((s) => ({
         scope: s.scope === 'COUNTRY' ? HeadlineScope.Country : HeadlineScope.Global,
         countryCode: s.countryCode ?? null,
         // OMITTED, not null, when this scope uses the request-level default.
@@ -663,9 +467,9 @@ async function fetchTopicIdsPersona(
     },
   };
 
-  ctx.log(`fetching persona ids for ${profileTopics.length} topics + ${profileHeadlineScopes.length} scopes`);
+  ctx.log(`fetching persona ids for ${profile.topics.length} topics + ${profile.headlineScopes.length} scopes`);
   logger.debug(
-    `[feed-sync-steps] calling articleIdsForPersona: ${profileTopics.length} topics, ${profileHeadlineScopes.length} headline scopes`,
+    `[feed-sync-steps] calling articleIdsForPersona: ${profile.topics.length} topics, ${profile.headlineScopes.length} headline scopes`,
   );
 
   const res = await withRetry(() => ArticleService.getArticleIdsForPersona(query), ctx.signal);
@@ -734,13 +538,24 @@ async function fetchTopicIdsPersona(
 
   // BILLING GUARANTEE — insertion order is load-bearing, do not reorder.
   //
+  // THIS DECIDES WHAT EVERY USER LOSES TO TRUNCATION, EVERY DAY. It is not a
+  // guard for an edge case. Every account without a purchase now holds Starter
+  // (granted server-side, 250 articles per UTC day), and a typical persona asks
+  // for far more than that in a single sync — roughly 20 topics at up to 40
+  // each plus six headline scopes at 20 is on the order of 900 ids. So the cap
+  // clips essentially every reader on essentially every day, and the ONLY thing
+  // deciding whether it clips their own interests or the generic headlines is
+  // the order of this array.
+  //
   // `matchedTopics` is a Map, so `[...keys()]` yields INSERTION order, and the
   // topic loop above runs before the headline loop. The server truncates a
   // clipped response in pure request order, so topic-matched articles are
-  // charged FIRST and top headlines are what the daily cap clips. Sorting this
-  // array, swapping the two loops, or merging them would silently spend a
-  // capped user's entire allowance on headlines — and every existing test
-  // would still pass.
+  // charged FIRST and top headlines are what the cap clips. Sorting this array,
+  // swapping the two loops, or merging them would hand a reader a feed of
+  // global headlines instead of the subjects they actually chose — and every
+  // existing test would still pass, because the metadata assertions here hold
+  // regardless of order. Two tests below pin the order itself; they are the
+  // only thing standing between a refactor and that outcome.
   //
   // SCOPE, honestly: this is exact at the id-list level and SOFT at the
   // hydration boundary. `chunkArray(personaIds, 25)` is drained by a pool of
