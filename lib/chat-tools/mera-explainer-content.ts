@@ -72,7 +72,7 @@ Mera runs on iOS and Android, worldwide. The app interface is available in 20 la
 
 Reading a story in another language works in two ways. Your phone can translate on its own: Android handles 59 languages, downloading each model the first time it is needed, and an iPhone handles 20 today and 26 on iOS 27 and later, because Apple ships translation languages with the operating system. Independently of that, every article page offers to open the publisher through Google Translate, which covers more than 200 languages on both platforms with nothing to download. Mera itself never rewrites the article; the translating is done by the phone or by Google.
 
-Mera is built in the Netherlands, under the EU's GDPR, by a very small team. It is subscription-only: there are no ads, and your data is never sold. You are the customer, not the product.`,
+Mera is built in the Netherlands, under the EU's GDPR, by a very small team. There are no ads, and your data is never sold. You are the customer, not the product.`,
 
   // ---------------------------------------------------------------------------
   privacy_what_leaves_device: `Your profile never leaves your device. The personal facts you tell Mera, the profile built from them, your reading history, which articles you opened, which you dismissed, and everything you have said in this chat window are stored locally and are not sent to Mera's servers.
@@ -128,19 +128,19 @@ What is being built is one new repository with four deployable parts, all source
 None of that is finished. It is described in the future tense on purpose.`,
 
   // ---------------------------------------------------------------------------
-  plans_and_limits: `There are three plans, Starter, Individual and Professional, and they differ in exactly one thing: how many candidate articles can be analysed for you per day. Starter covers up to 250 candidate articles a day, Individual up to 1,000, and Professional up to 10,000. The plans screen in the app is the authority on those figures, because it reads them from the store rather than from anything written down here.
+  plans_and_limits: `Starter is free. Every account has it, with no card, no payment details and no subscription to start it, and it does not run out. Starter covers up to 250 candidate articles analysed for you a day, and it is the whole product: chat with Mera, fact checks, followed stories, alerts, explanations and every language.
+
+Above Starter there are two paid plans, Individual and Professional, and they differ from Starter in exactly one thing: how many candidate articles can be analysed for you per day. Individual covers up to 1,000 a day and Professional up to 10,000. The plans screen in the app is the authority on those figures, because it reads them from the store rather than from anything written down here.
 
 Prices are deliberately not quoted here. They are set per country and per currency by the App Store and Google Play, and the exact figure for where you are is shown on the plans screen in the app, which reads it from the store rather than from anything written down in advance. Any number quoted from memory would eventually be the wrong one for somebody.
 
-Every new account gets its first two weeks free, on the Starter capacity. That is granted by Mera itself, not by the App Store or Google Play, so it needs no payment details, no card, and no subscription to start it — nothing is charged and nothing auto-renews. When the two weeks end, nothing is taken away from what is already on your device; new AI analysis is what stops until you choose a plan.
+Every plan includes the complete Mera experience. There is no feature held back behind a higher tier: same personalisation, same alerts, same explanations, same languages, same chat. Only the daily analysis capacity changes.
 
-Every plan includes the complete Mera experience. There is no feature held back behind a higher tier: same personalisation, same alerts, same explanations, same languages. Only the daily analysis capacity changes.
-
-"Article analysis capacity" means the number of candidate articles an AI can examine for you in a day to decide whether, and why, each one actually matters to you. It is not the number of articles you will be shown; the great majority of candidates are analysed and then discarded as not relevant to you. That analysis is the expensive part, it is what your subscription pays for, and the per-day count of it is one of the few things Mera's servers hold against your account.
+"Article analysis capacity" means the number of candidate articles an AI can examine for you in a day to decide whether, and why, each one actually matters to you. It is not the number of articles you will be shown; the great majority of candidates are analysed and then discarded as not relevant to you. That analysis is the expensive part, and the per-day count of it is one of the few things Mera's servers hold against your account.
 
 Separately from the plan, you control interruptions: up to 24 alert opportunities per day at times you choose, with life-safety emergencies as the one exception that always breaks through.
 
-Subscriptions are managed through the App Store or Google Play, and there is a manage-subscription screen inside the app. You can cancel at any time. There are no ads on any plan, and your data is not sold on any plan; being subscription-funded is what makes that possible.`,
+A paid plan is managed through the App Store or Google Play, and there is a manage-subscription screen inside the app. You can cancel at any time, and cancelling puts you back on Starter rather than locking you out. There are no ads on any plan, and your data is not sold on any plan.`,
 
   // ---------------------------------------------------------------------------
   known_gaps: `Mera would rather you heard these from Mera than found them yourself. All of these are true right now.
