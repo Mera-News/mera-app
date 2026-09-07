@@ -102,8 +102,6 @@ import { useStatusDisclosure } from '@/lib/hooks/use-status-disclosure';
 import { ArticleSuggestionCard } from '@/components/custom/cards/ArticleSuggestionCard';
 import ScrollToTopFab from '@/components/custom/ScrollToTopFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
-import FreeTierCard from '@/components/custom/subscription/FreeTierCard';
-import { useAiAccess } from '@/lib/stores/subscription-store';
 import { scrollToTopWithRetry } from './scroll-to-top-with-retry';
 import { useVisibleIndex } from './use-visible-index';
 import { useFeedFunnelLog } from './use-feed-funnel-log';
@@ -772,52 +770,22 @@ const FeedScreen: React.FC = () => {
   // even when `data` is empty — without this the zero-item case would show the
   // AllCaughtUpCard twice (the empty-state chain in `renderEmpty` already owns
   // that case, and still does).
-  //
-  // D36: `FreeTierCard` rides at the BOTTOM of this footer, below the caught-up
-  // card. It used to be `ListHeaderComponent` — correct when Mera News Free
-  // meant an empty feed and the card was the only thing on screen, and wrong now
-  // that the free tier is real capped access: a 401pt plan pitch pinned above
-  // the first real article makes the app's main reading surface open on an
-  // advert. At the end it is the natural next thing after "you're all caught
-  // up", and it costs a reader who keeps scrolling nothing.
-  //
-  // It is NOT inside the `listData.length > 0` guard. The empty case is exactly
-  // when a free user most needs the explanation, and `renderEmpty`'s chain owns
-  // the AllCaughtUpCard duplication problem, not this card — which renders null
-  // for everyone except a locked user anyway (see FreeTierCard).
   const listFooter = useMemo(
-    () => (
-      <>
-        {listData.length > 0 ? (
-          <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
-            <AllCaughtUpCard
-              compact
-              feedThreshold={feedThreshold}
-              onLowerPriority={onLowerPriority}
-            />
-          </Box>
-        ) : null}
-        <Box style={{ marginTop: 16 }}>
-          <FreeTierCard surface="feed" />
+    () =>
+      listData.length > 0 ? (
+        <Box style={{ marginTop: 16 }} testID="feed-caught-up-footer">
+          <AllCaughtUpCard
+            compact
+            feedThreshold={feedThreshold}
+            onLowerPriority={onLowerPriority}
+          />
         </Box>
-      </>
-    ),
+      ) : null,
     [listData.length, feedThreshold, onLowerPriority],
   );
 
   // ── Empty-state chain (mirrors ForYouScreen.renderEmpty priority) ──
   const hasGeneratedInterests = useForYouHasGeneratedTopics();
-  // Mera News Free: `FreeTierCard` (in `listFooter` since D36 — still rendered
-  // in the empty case, because FlatList draws its footer alongside
-  // ListEmptyComponent) already explains, at
-  // length, that Mera isn't building this feed right now. NoGeneratedInterestsCard
-  // would sit directly under it saying a blunter version of the same thing
-  // ("Mera cannot analyze news for you" / "create your user persona"), which is
-  // both redundant and wrong advice here — a persona would not help, a plan
-  // would. Gated on `=== 'locked'` and NOT `!== 'entitled'` deliberately: during
-  // the `'unknown'` window of a cold start `FreeTierCard` renders null, so this
-  // card must still render or the screen is empty for that first second.
-  const freeTierCardShown = useAiAccess() === 'locked';
   const lastProcessingRunFinishedAt = useForYouLastProcessingRunFinishedAt();
   // Shared derivation (see components/custom/FeedSyncIndicator) — used here only
   // for the empty-state chain and the header auto-reveal. The header indicator
@@ -859,7 +827,7 @@ const FeedScreen: React.FC = () => {
       );
     }
     if (!hasGeneratedInterests) {
-      return freeTierCardShown ? null : <NoGeneratedInterestsCard />;
+      return <NoGeneratedInterestsCard />;
     }
     // Caught-up flash guard: only show AllCaughtUpCard once hydrated AND not
     // processing; otherwise the feed is still preparing.
@@ -957,9 +925,6 @@ const FeedScreen: React.FC = () => {
           flexGrow: 1,
         }}
         ListEmptyComponent={renderEmpty()}
-        // D36: no ListHeaderComponent. `FreeTierCard` moved into `listFooter`
-        // below — see the comment there for why the top of the Feed is the one
-        // place this card must not be.
         ListFooterComponent={listFooter}
         initialNumToRender={4}
         // 7 → 5 (Area B). Feed cards are tall — roughly one per screen — so 7

@@ -32,7 +32,7 @@ import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPublicationsList';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
-import { buildFactRows, type FactRowsSnapshots } from '@/lib/stores/fact-rows-selector';
+import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
 import { useUserGeoLanguageContext } from '@/lib/user-context/user-geo-language-context';
 import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
@@ -46,8 +46,6 @@ import { authClient } from '@/lib/auth-client';
 import { getFacts } from '@/lib/database/services/fact-service';
 import logger from '@/lib/logger';
 import { useForYouStore } from '@/lib/stores/for-you-store';
-import { useAiAccess } from '@/lib/stores/subscription-store';
-import { useFreeTierAccess } from '@/lib/subscription/free-tier-topic-access';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import {
     useForYouAsyncJobPhase,
@@ -239,15 +237,6 @@ const MeraNewsScreen: React.FC = () => {
     const suggestions = useForYouSuggestions();
 
     const hasGeneratedInterests = useForYouHasGeneratedTopics();
-    // Mera News Free: `DashboardSectionsFeed`'s list header already renders
-    // `FreeTierCard`, which explains this mode. NoGeneratedInterestsCard would
-    // sit right under it saying a blunter version of the same thing ("Mera
-    // cannot analyze news for you"), pointing the user at building a persona
-    // when a plan — not a persona — is what's missing. Same gate as FreeTierCard
-    // itself (`=== 'locked'`, never `!== 'entitled'`) so that during the
-    // `'unknown'` window of a cold start, where FreeTierCard renders null, this
-    // card is still there.
-    const freeTierCardShown = useAiAccess() === 'locked';
     const { articleCount, analysedCount, relevantCount } = useFeedCounts();
     const asyncJobPhase = useForYouAsyncJobPhase();
     const unscoredCount = useForYouUnscoredCount();
@@ -347,33 +336,10 @@ const MeraNewsScreen: React.FC = () => {
     // section-order input is frozen. Deliberately depending on `sortSnapshot`
     // itself (not `openedIds`) means this only recomputes on a resort, an
     // arrival, or a snapshot input change — never on a live open.
-    // FREE-TIER LOCK (D32). Fact ages come straight off the snapshot we already
-    // load — `FactSnapshot` carries `createdAtMs` — so this needs no extra read.
-    const factAges = useMemo(
-        () =>
-            snapshots
-                ? [...snapshots.facts].map(([id, f]) => ({ id, createdAtMs: f.createdAtMs }))
-                : [],
-        [snapshots],
-    );
-    // `useAiAccess()` is the OPTIMISTIC reader, and it is the correct one here:
-    // this is a render decision, and free-tier-topic-access.ts documents the
-    // split — rendering can absorb a cold-start wobble because it self-corrects
-    // within a second, whereas a FETCH cannot. The enforcement path uses
-    // `resolveAiAccessForFetch()` and lives in feed sync, not on this screen.
-    // `'unknown'` yields UNCAPPED, so an unresolved entitlement shows everything.
-    const freeTierAccess = useFreeTierAccess(useAiAccess(), factAges);
-
     const feed = useMemo(() => {
         if (!snapshots) return { breaking: [], rows: [] };
-        // Only pass the lock when it actually applies. `capped: false` must send
-        // `null`, not the (empty) set it carries, or an entitled user's every
-        // section would be filtered out.
-        const scoped: FactRowsSnapshots = freeTierAccess.capped
-            ? { ...snapshots, unlockedFactIds: freeTierAccess.unlockedFactIds }
-            : snapshots;
-        return buildFactRows(suggestions, scoped, sortSnapshot.openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
-    }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx, freeTierAccess]);
+        return buildFactRows(suggestions, snapshots, sortSnapshot.openedIds, Date.now(), DEFAULT_HARNESS_CONFIG, userGeoLanguageCtx);
+    }, [snapshots, suggestions, sortSnapshot, userGeoLanguageCtx]);
 
     const hasRenderableContent = feed.rows.length > 0 || feed.breaking.length > 0;
 
@@ -534,13 +500,13 @@ const MeraNewsScreen: React.FC = () => {
             );
         }
         if (!hasGeneratedInterests) {
-            return freeTierCardShown ? null : <NoGeneratedInterestsCard />;
+            return <NoGeneratedInterestsCard />;
         }
         if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
             return <FeedPreparingCard />;
         }
         return <AllCaughtUpCard />;
-    }, [showOnboardingWait, isLoading, hasGeneratedInterests, freeTierCardShown, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
+    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
 
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.

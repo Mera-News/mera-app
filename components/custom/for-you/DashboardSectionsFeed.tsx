@@ -1,5 +1,4 @@
 import BreakingStrip from '@/components/custom/for-you/BreakingStrip';
-import FreeTierCard from '@/components/custom/subscription/FreeTierCard';
 import FactSectionHeader from '@/components/custom/for-you/FactSectionHeader';
 import SectionGradientPanel from '@/components/custom/for-you/SectionGradientPanel';
 import SectionViewAllText from '@/components/custom/for-you/SectionViewAllText';
@@ -260,16 +259,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
     [breaking, onPressSuggestion],
   );
 
-  // D6: the free-tier card is the LAST thing in this list, after every section.
-  // It used to head the list, above the breaking strip; that put a 401pt plan
-  // pitch between the reader and their news on both main surfaces at once (the
-  // Feed carried the same card as its own header until D36 moved it down too).
-  //
-  // The card reads entitlement itself and renders null unless locked — and null
-  // during the `'unknown'` window of a cold start, so a subscriber never sees it
-  // flash — which is why this mount is unconditional and needs no gate here.
-  const ListFooter = useMemo(() => <FreeTierCard surface="dashboard" />, []);
-
   return (
     <Box className="flex-1" testID="dashboard-sections-feed-root">
       <Animated.FlatList
@@ -279,7 +268,6 @@ const DashboardSectionsFeed: React.FC<DashboardSectionsFeedProps> = ({
         keyExtractor={(it) => it.key}
         renderItem={renderItem}
         ListHeaderComponent={ListHeader}
-        ListFooterComponent={ListFooter}
         ListEmptyComponent={ListEmptyComponent}
         refreshControl={
           onRefresh ? (
