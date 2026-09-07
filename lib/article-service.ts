@@ -22,8 +22,6 @@ import logger from './logger';
 // the panel reads one shape, so a field added for one path must reach both.
 import { FACT_CHECK_FIELDS } from './fact-check/fact-check-fields';
 import { isUnauthenticatedError } from './utils/retry';
-import { isNotSubscribedError } from './subscription/not-subscribed-error';
-import { recordAiLocked } from './subscription/ai-lock';
 
 // GraphQL Query for fetching articles for a cluster (excluding already shown articles)
 const GET_ARTICLES_FOR_CLUSTER = gql`
@@ -720,15 +718,6 @@ export class ArticleService {
             }
             return { results: merged };
         } catch (error) {
-            // When the server forces subscriptions these queries 402
-            // (PAYMENT_REQUIRED). This no longer yanks the user to the paywall:
-            // Mera News Free is a legitimate place to be, and a redirect out of
-            // whatever they were reading would take away exactly what this mode
-            // promises to keep. Record the verdict; the surfaces react to it.
-            if (isNotSubscribedError(error)) {
-                recordAiLocked('topics');
-                throw error;
-            }
             // The apollo-error-link already captures this to Sentry; a
             // service-level captureException here would double-report (and, on a
             // retried storm, multiply). Leave a breadcrumb for context instead.
@@ -790,12 +779,6 @@ export class ArticleService {
 
             return { topicResults, headlineResults };
         } catch (error) {
-            // Same verdict, different query — see getArticleIdsForTopics. One
-            // shared flag, because SubscriptionGuard refused both for one reason.
-            if (isNotSubscribedError(error)) {
-                recordAiLocked('persona');
-                throw error;
-            }
             logger.addBreadcrumb(
                 '[ArticleService] getArticleIdsForPersona FAILED',
                 'article-service',
@@ -901,12 +884,6 @@ export class ArticleService {
             await Promise.all(workers);
             return { articles: results, dailyLimitReached, resetAt };
         } catch (error) {
-            // See getArticleIdsForTopics: the feed layer records the lock, it
-            // does not navigate.
-            if (isNotSubscribedError(error)) {
-                recordAiLocked('hydrate');
-                throw error;
-            }
             // apollo-error-link already captures this to Sentry — breadcrumb only
             // here to avoid double- (previously triple-) reporting.
             logger.addBreadcrumb(
@@ -980,13 +957,6 @@ export class ArticleService {
             await Promise.all(workers);
             return { articles: results };
         } catch (error) {
-            // Same policy as the metered sibling: SubscriptionGuard still
-            // applies to this query, so a NotSubscribed error still records the
-            // lock (tracked stories the device already holds stay readable).
-            if (isNotSubscribedError(error)) {
-                recordAiLocked('stories');
-                throw error;
-            }
             logger.addBreadcrumb(
                 '[ArticleService] getArticlesForStories FAILED',
                 'article-service',
