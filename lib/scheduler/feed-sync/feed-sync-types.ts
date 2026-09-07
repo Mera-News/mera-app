@@ -22,9 +22,6 @@ export type SyncErrorCode =
   | 'daily-limit'
   | 'storage-error'
   | 'scoring-unavailable'
-  // Mera News Free: the server refused the guarded AI queries with a 402. Not a
-  // failure — the app is working exactly as designed for a user without a plan.
-  | 'not-subscribed'
   | 'unknown';
 
 export interface SyncStatusMessage {
