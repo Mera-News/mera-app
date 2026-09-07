@@ -162,8 +162,10 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                 <StatRow label={t('feedStatus.lastProcessed')} value={lastProcessedLabel} />
             )}
 
-            {/* Daily limit. The cap is PER-TIER (100 free / 250 Starter / 1000
-                Individual / 10000 Professional), so every plan can reach this. */}
+            {/* Daily limit. The cap is PER-TIER: 250 Starter, which is what every
+                unpaid account now gets, then 1000 Individual and 10000
+                Professional. There is no separate free number because free and
+                Starter are the same thing. Every plan can reach this. */}
             {isDailyLimited && (
                 <Box testID="feed-status-daily-limit" className="bg-warning-900 rounded-lg px-3 py-2">
                     <Text size="sm" className="text-warning-400 font-semibold">
