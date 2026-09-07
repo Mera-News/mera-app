@@ -14,7 +14,6 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { normPublicationName } from '@/lib/feed-grouping/geo-language-priority';
 import { observeActive as observeActivePublicationPreferences } from '@/lib/database/services/publication-preference-service';
 import {
@@ -116,7 +115,6 @@ interface SourcesL2PublisherListProps {
 
 const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ countryCode, countryName, onBack }) => {
     const { t } = useTranslation();
-    const readOnly = useFreeTierReadOnly();
     const [publishers, setPublishers] = useState<NewsPublisher[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -247,7 +245,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
         ({ item }) => {
             const headerBadgeKind = commonSourceKind(item.publicationSources);
             const prefLevel = pubPrefLevels.get(normPublicationName(item.name) ?? '') ?? 'none';
-            const prefBusy = busyPublisherId === item._id || readOnly;
+            const prefBusy = busyPublisherId === item._id;
             return (
             <Box className="mx-4 mb-3">
                 <Accordion type="single" isCollapsible variant="unfilled" className="border border-gray-700 rounded-lg">
@@ -324,7 +322,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
             </Box>
             );
         },
-        [handleFeedPress, handleTopHeadlinesPress, handleChangePublisherPref, pubPrefLevels, busyPublisherId, readOnly, t]
+        [handleFeedPress, handleTopHeadlinesPress, handleChangePublisherPref, pubPrefLevels, busyPublisherId, t]
     );
 
     const keyExtractor = useCallback(

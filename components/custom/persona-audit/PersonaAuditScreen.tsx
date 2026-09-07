@@ -8,7 +8,6 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
-import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import type PersonaChangeLogModel from '@/lib/database/models/PersonaChangeLog';
 import {
     observeRecent,
@@ -34,7 +33,6 @@ interface PersonaAuditScreenProps {
 
 const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const readOnly = useFreeTierReadOnly();
     const [items, setItems] = useState<PersonaChangeLogModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [confirmRow, setConfirmRow] = useState<PersonaChangeLogModel | null>(null);
@@ -110,7 +108,6 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                                     <Pressable
                                         testID={`persona-audit-revert-${item.id}`}
                                         onPress={() => setConfirmRow(item)}
-                                        disabled={readOnly}
                                         hitSlop={8}
                                         accessibilityRole="button"
                                         accessibilityLabel={t('personaAudit.revert')}
@@ -146,7 +143,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                 </View>
             );
         },
-        [revertingId, readOnly, t],
+        [revertingId, t],
     );
 
     return (

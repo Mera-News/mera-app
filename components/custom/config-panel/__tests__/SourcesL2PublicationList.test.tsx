@@ -86,15 +86,6 @@ jest.mock('@/components/custom/config-panel/DrillDownHeader', () => {
     };
 });
 
-// Same pre-existing gap fixed in PublicationPreferencesScreen.test.tsx — this
-// screen also imports the free-tier gate, whose own import chain opens the
-// real WatermelonDB adapter unless mocked.
-jest.mock('@/components/custom/subscription/FreeTierReadOnlyBanner', () => ({
-    __esModule: true,
-    default: () => null,
-    useFreeTierReadOnly: () => mockReadOnly(),
-}));
-const mockReadOnly = jest.fn(() => false);
 
 const mockGetNewsPublishers = jest.fn();
 jest.mock('@/lib/source-service', () => ({
@@ -155,7 +146,6 @@ function mockPublishers(newsPublishers: any[]) {
 
 beforeEach(() => {
     jest.clearAllMocks();
-    mockReadOnly.mockReturnValue(false);
     observedPrefRows = [];
 });
 
@@ -290,13 +280,4 @@ describe('item 9 — L2 publisher-level ↑/↓ control', () => {
         );
     });
 
-    it('free-tier read-only disables the control', async () => {
-        mockReadOnly.mockReturnValue(true);
-        mockPublishers([makePublisher()]);
-        const { findByTestId } = render(
-            <SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />,
-        );
-        const upButton = await findByTestId('source-pref-publisher-pub-1-up');
-        expect(upButton.props.accessibilityState).toEqual(expect.objectContaining({ disabled: true }));
-    });
 });

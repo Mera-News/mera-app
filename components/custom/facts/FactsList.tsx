@@ -36,13 +36,6 @@ interface FactsListProps {
      *  doesn't need it since it already gates visibility via its own
      *  fact-count check. */
     readonly onFactsChange?: (facts: Fact[] | null) => void;
-    /** Free-tier read-only flag (see FreeTierReadOnlyBanner). Both
-     *  consumers (FactsScreen and ProfileScreen) pass their own
-     *  `useFreeTierReadOnly()` result; defaults to false only for callers
-     *  that don't wire it up. Threaded down to FactAccordion, which owns the
-     *  only mutating control (influence nudge) this component has no handler
-     *  for. */
-    readonly readOnly?: boolean;
 }
 
 /**
@@ -55,7 +48,7 @@ interface FactsListProps {
  * mount it (optionally wiring `onFactsChange`/a ref for its own loading/empty
  * chrome and pull-to-refresh).
  */
-const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, readOnly = false }, ref) => {
+const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange }, ref) => {
     // Identity is a LOCAL fact (lib/security/launch-route.ts). Every mutation
     // below writes to the on-device DB; the id is wanted only for the persona
     // refresh that follows. Read off the server session it went undefined
@@ -365,7 +358,6 @@ const FactsList = forwardRef<FactsListHandle, FactsListProps>(({ onFactsChange, 
                     isExpanded={expandedFactIds.has(fact.id)}
                     articleCountByTopic={articleCountByTopic}
                     isGeneratingMore={generatingMoreFactIds.has(fact.id)}
-                    readOnly={readOnly}
                     onToggle={toggleFact}
                     onDeletePress={handleDeletePress}
                     onFactArticles={handleFactArticlesPress}

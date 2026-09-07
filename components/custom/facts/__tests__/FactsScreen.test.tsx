@@ -70,11 +70,6 @@ jest.mock('@/components/ui/modal', () => {
 });
 
 jest.mock('@/components/custom/config-panel/DrillDownHeader', () => ({ __esModule: true, default: () => null }));
-jest.mock('@/components/custom/subscription/FreeTierReadOnlyBanner', () => ({
-    __esModule: true,
-    default: () => null,
-    useFreeTierReadOnly: () => false,
-}));
 jest.mock('@expo/vector-icons', () => {
     const { View } = require('react-native');
     return { MaterialIcons: (p: any) => <View {...p} /> };

@@ -3,7 +3,6 @@ import UsageWidget from '@/components/custom/UsageWidget';
 import FactsList from '@/components/custom/facts/FactsList';
 import MeraChatInvite from '@/components/custom/profile/MeraChatInvite';
 import HubRow from '@/components/custom/profile-hub/HubRow';
-import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonIcon, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -53,7 +52,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
     // ProfileScreen is only reached via the main tab navigator (after
     // onboarding, a separate route) — no isOnboarding exemption needed here,
     // unlike MeraProtocolSettingsScreen which is also mounted mid-onboarding.
-    const readOnly = useFreeTierReadOnly();
 
     const [factCount, setFactCount] = useState<number | null>(null);
     const [billing, setBilling] = useState<UserBillingInfo | null>(null);
@@ -271,7 +269,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                             </Text>
                         </HStack>
 
-                        <FactsList readOnly={readOnly} />
+                        <FactsList />
                     </Box>
                 )}
 

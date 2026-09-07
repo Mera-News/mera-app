@@ -16,14 +16,30 @@ import {
 } from '@/lib/config/feature-gates';
 
 /**
- * - `unknown` — we have not heard from the server OR RevenueCat yet. Surfaces
- *   must keep showing their existing loading state. Treating it as `locked`
- *   flashes Mera News Free at a paying subscriber on every cold start;
- *   treating it as `entitled` flashes real chrome at a locked user. Both are
- *   wrong, which is why this state is distinct and load-bearing.
- * - `entitled` — the AI layer is on.
- * - `locked` — Mera News Free: no NEW AI content, everything already on the
- *   device stays visible, scrollable and interactable.
+ * - `unknown` — we have not heard from the server yet. Surfaces must keep
+ *   showing their existing loading state rather than guessing in either
+ *   direction, which is why this state is distinct and load-bearing.
+ * - `entitled` — the AI layer is on. Every account reaches this once the
+ *   server answers.
+ * - `locked` — **NOTHING PRODUCES THIS ANY MORE. Do not write a new branch on
+ *   it, and do not treat an existing one as live code.**
+ *
+ *   Starter is granted to every account as a permanent read-time baseline, so
+ *   there is no longer a state that denies the AI layer. All three producers
+ *   were removed in the `starter-free` wave:
+ *     - `deriveAiAccess` denying on an identified-but-empty RevenueCat
+ *       CustomerInfo, which under a server-side grant described a fully
+ *       ENTITLED user and put a spurious `'locked'` window on every cold start;
+ *     - `deriveAiAccess` reading `serverTier === 'none'`, a tier the server no
+ *       longer sends;
+ *     - `recordAiLocked` (`ai-lock.ts`, deleted) pinning the store to `'none'`
+ *       from a 402 or a /token 403.
+ *
+ *   The member is KEPT deliberately rather than deleted. Around 30 call sites
+ *   across five areas still branch on it, and removing the member would break
+ *   all of them at once for no behavioural gain, since none of those branches
+ *   can be entered. Removing those consumers is separate, deliberate work; it
+ *   was scoped and explicitly declined, not overlooked.
  */
 export type AiAccess = 'unknown' | 'entitled' | 'locked';
 

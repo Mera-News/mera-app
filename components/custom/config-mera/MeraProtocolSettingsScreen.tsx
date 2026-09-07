@@ -38,7 +38,6 @@ import {
     useWebSearchInChat,
 } from '@/lib/stores/mera-protocol-store';
 import { Switch } from '@/components/ui/switch';
-import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { AttestationVerificationRow } from '@/components/custom/config-mera/AttestationVerificationRow';
 import BetaBadge from '@/components/custom/BetaBadge';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -92,11 +91,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     onModeChange,
 }) => {
     const { t } = useTranslation();
-    // Onboarding never has a plan yet — `useAiAccess()` can read 'locked' there
-    // for reasons that have nothing to do with Mera News Free. Forcing readOnly
-    // off during onboarding is load-bearing: freezing the mode pills here would
-    // strand a new user before they can even finish setup.
-    const readOnly = useFreeTierReadOnly() && !isOnboarding;
     const [isLoading, setIsLoading] = useState(!isOnboarding);
     const [isUpdatingMode, setIsUpdatingMode] = useState(false);
     const [requirementsResult, setRequirementsResult] = useState<SystemRequirementsResult | null>(null);
@@ -501,7 +495,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             <Pressable
                 key={mode}
                 onPress={() => selectMode(mode)}
-                disabled={isUpdatingMode || readOnly}
+                disabled={isUpdatingMode}
                 className={baseClass + stateClass}
             >
                 <VStack space="xs" className="items-center">
@@ -555,7 +549,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             {(modelState === 'downloaded' || modelState === 'ready') && (
                                 <Pressable
                                     onPress={handleDeleteModel}
-                                    disabled={readOnly}
                                     className="bg-red-950 rounded-full p-2"
                                 >
                                     <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
@@ -592,7 +585,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     variant="solid"
                                     size="md"
                                     onPress={handleDownloadModel}
-                                    isDisabled={readOnly}
                                 >
                                     <MaterialIcons name="cloud-download" size={18} color="#ffffff" style={{ marginRight: 8 }} />
                                     <ButtonText>{t('meraProtocol.downloadModel')}</ButtonText>
@@ -620,7 +612,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     variant="solid"
                                     size="md"
                                     onPress={handleDownloadModel}
-                                    isDisabled={readOnly}
                                 >
                                     <MaterialIcons name="refresh" size={18} color="#ffffff" style={{ marginRight: 8 }} />
                                     <ButtonText>{t('meraProtocol.retryDownload')}</ButtonText>
@@ -634,7 +625,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                     variant="outline"
                                     size="md"
                                     onPress={() => setShowUpdateModelConfirm(true)}
-                                    isDisabled={isUpdatingModel || readOnly}
+                                    isDisabled={isUpdatingModel}
                                 >
                                     <MaterialIcons name="system-update" size={18} color="#a78bfa" style={{ marginRight: 8 }} />
                                     <ButtonText className="text-purple-400">
@@ -674,7 +665,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         value={relevanceV4}
                         onToggle={() => store.setRelevanceV4(!relevanceV4)}
                         size="md"
-                        disabled={readOnly}
                         testID="mera-protocol-relevance-v4-switch"
                     />
                 </HStack>
@@ -693,11 +683,10 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                 and now that it is on by default, that disclosure is the only
                 thing standing between the user and a surprise.
 
-                NOT `disabled={readOnly}`, unlike every other switch here. A
-                free-tier read-only user can no longer be left unable to turn
-                OFF something that is now on by default: turning a privacy
-                setting off must never be behind a paywall. Turning it back ON
-                still is. */}
+                It was also the one switch never gated by the free-tier
+                read-only flag, because turning a privacy setting OFF must never
+                sit behind a paywall. That flag is gone now, so the exception
+                has nothing left to be an exception to. */}
             <Box className="px-5 mb-6" testID="mera-protocol-web-search">
                 <HStack space="md" className="items-center justify-between">
                     <HStack space="md" className="items-center flex-1">
@@ -724,8 +713,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         value={webSearchInChat}
                         onToggle={() => store.setWebSearchInChat(!webSearchInChat)}
                         size="md"
-                        // Off is always reachable; on is what read-only gates.
-                        disabled={readOnly && !webSearchInChat}
                         testID="mera-protocol-web-search-switch"
                     />
                 </HStack>
@@ -768,7 +755,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                 store.setAutoCommunityFactCheck(!autoCommunityFactCheck)
                             }
                             size="md"
-                            disabled={readOnly}
                             testID="mera-protocol-auto-community-fact-check-switch"
                         />
                     </HStack>
@@ -803,7 +789,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         value={deepInterview}
                         onToggle={() => store.setDeepInterview(!deepInterview)}
                         size="md"
-                        disabled={readOnly}
                         testID="mera-protocol-deep-interview-switch"
                     />
                 </HStack>
@@ -840,7 +825,6 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         value={showExtractedMetadata}
                         onToggle={() => store.setShowExtractedMetadata(!showExtractedMetadata)}
                         size="md"
-                        disabled={readOnly}
                         testID="mera-protocol-extracted-metadata-switch"
                     />
                 </HStack>

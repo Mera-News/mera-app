@@ -32,12 +32,6 @@ interface FactAccordionProps {
     readonly isExpanded: boolean;
     readonly articleCountByTopic: Map<string, number>;
     readonly isGeneratingMore: boolean;
-    /** Free-tier read-only flag, threaded from FactsList. Disables every
-     *  mutating control on this row (delete fact/topic, add topic, generate
-     *  more, influence nudge) while leaving expand/navigate untouched — the
-     *  influence nudge in particular has no parent handler to gate, since
-     *  `handleInfluence` below calls `nudgeFactWeight` directly. */
-    readonly readOnly: boolean;
     readonly onToggle: (factId: string) => void;
     readonly onDeletePress: (fact: Fact) => void;
     readonly onFactArticles: (fact: Fact) => void;
@@ -61,7 +55,6 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     isExpanded,
     articleCountByTopic,
     isGeneratingMore,
-    readOnly,
     onToggle,
     onDeletePress,
     onFactArticles,
@@ -118,7 +111,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
         <GlassPanel className="mx-4 mb-3" fallbackClassName="bg-transparent">
             {/* Accordion header */}
             <HStack className="px-4 py-3 items-center">
-                <Pressable onPress={() => onDeletePress(fact)} disabled={readOnly} hitSlop={8} className="mr-3">
+                <Pressable onPress={() => onDeletePress(fact)} hitSlop={8} className="mr-3">
                     <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
                 </Pressable>
                 <Pressable onPress={() => onToggle(fact.id)} className="flex-1 mr-2">
@@ -163,14 +156,14 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                             <Pressable
                                 accessibilityRole="button"
                                 accessibilityLabel={t('facts.lessInfluence', { defaultValue: 'Less influence' })}
-                                disabled={influenceMinReached || readOnly}
+                                disabled={influenceMinReached}
                                 onPress={() => handleInfluence(-1)}
                                 hitSlop={8}
                             >
                                 <MaterialIcons
                                     name="remove-circle-outline"
                                     size={22}
-                                    color={influenceMinReached || readOnly ? '#374151' : '#60a5fa'}
+                                    color={influenceMinReached ? '#374151' : '#60a5fa'}
                                 />
                             </Pressable>
                             <Text size="sm" className="text-gray-200" style={{ minWidth: 44, textAlign: 'center' }}>
@@ -179,14 +172,14 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                             <Pressable
                                 accessibilityRole="button"
                                 accessibilityLabel={t('facts.moreInfluence', { defaultValue: 'More influence' })}
-                                disabled={influenceMaxReached || readOnly}
+                                disabled={influenceMaxReached}
                                 onPress={() => handleInfluence(1)}
                                 hitSlop={8}
                             >
                                 <MaterialIcons
                                     name="add-circle-outline"
                                     size={22}
-                                    color={influenceMaxReached || readOnly ? '#374151' : '#60a5fa'}
+                                    color={influenceMaxReached ? '#374151' : '#60a5fa'}
                                 />
                             </Pressable>
                         </HStack>
@@ -220,7 +213,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                         </Pressable>
                                         <Pressable
                                             onPress={() => onDeleteTopic(fact, topicText)}
-                                            disabled={readOnly}
+                                           
                                             hitSlop={8}
                                             className="ml-1"
                                         >
@@ -229,10 +222,10 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                     </HStack>
                                 );
                             })}
-                            <Pressable onPress={() => onAddTopic(fact)} disabled={readOnly} className="mt-1">
+                            <Pressable onPress={() => onAddTopic(fact)} className="mt-1">
                                 <HStack className="items-center" space="xs">
-                                    <MaterialIcons name="add" size={16} color={readOnly ? '#374151' : '#60a5fa'} />
-                                    <Text size="sm" className={readOnly ? 'text-gray-600' : 'text-blue-400'}>{t('configPanel.addTopic')}</Text>
+                                    <MaterialIcons name="add" size={16} color="#60a5fa" />
+                                    <Text size="sm" className="text-blue-400">{t('configPanel.addTopic')}</Text>
                                 </HStack>
                             </Pressable>
                             {isGeneratingMore ? (
@@ -241,10 +234,10 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                     <Text size="sm" className="text-typography-400">{t('configPanel.generatingMoreTopics')}</Text>
                                 </HStack>
                             ) : (
-                                <Pressable onPress={() => onGenerateMore(fact)} disabled={readOnly} className="mt-1">
+                                <Pressable onPress={() => onGenerateMore(fact)} className="mt-1">
                                     <HStack className="items-center" space="xs">
-                                        <MaterialIcons name="auto-awesome" size={16} color={readOnly ? '#374151' : '#60a5fa'} />
-                                        <Text size="sm" className={readOnly ? 'text-gray-600' : 'text-blue-400'}>{t('configPanel.generateMoreTopics')}</Text>
+                                        <MaterialIcons name="auto-awesome" size={16} color="#60a5fa" />
+                                        <Text size="sm" className="text-blue-400">{t('configPanel.generateMoreTopics')}</Text>
                                     </HStack>
                                 </Pressable>
                             )}

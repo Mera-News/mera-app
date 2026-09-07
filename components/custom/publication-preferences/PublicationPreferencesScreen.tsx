@@ -1,6 +1,5 @@
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { alpha3ToAlpha2 } from '@/components/custom/locations/location-display';
-import { useFreeTierReadOnly } from '@/components/custom/subscription/FreeTierReadOnlyBanner';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -58,7 +57,6 @@ function levelForKind(kind: Exclude<PublicationPrefKind, 'mute'>): SourcePrefUiL
  */
 const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> = ({ onBack }) => {
     const { t } = useTranslation();
-    const readOnly = useFreeTierReadOnly();
     const [items, setItems] = useState<PublicationPreferenceModel[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     // Keyed on `pref.id`, not the display name/label — a scope row's label
@@ -184,12 +182,12 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                 // `disabled=` on the clear/kind Pressables), so folding
                 // free-tier read-only into it disables the row without
                 // threading a new prop into that child.
-                busy={busyId === item.id || readOnly}
+                busy={busyId === item.id}
                 onSetKind={handleSetKind}
                 onClear={handleClear}
             />
         ),
-        [busyId, readOnly, handleSetKind, handleClear],
+        [busyId, handleSetKind, handleClear],
     );
 
     return (
