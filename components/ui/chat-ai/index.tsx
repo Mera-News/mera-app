@@ -285,6 +285,13 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         placeholder={placeholder}
         placeholderTextColor="#6B7280"
         editable={!disabled}
+        // `editable={false}` alone does not tell a screen reader WHY the field
+        // is inert. VoiceOver/TalkBack read `accessibilityState.disabled`, and
+        // without it a blocked or mid-stream composer announces as an ordinary
+        // editable field the user can then fail to type into with no
+        // explanation. The placeholder is not a reliable substitute: it is not
+        // announced consistently once a field is non-editable.
+        accessibilityState={{ disabled }}
         keyboardAppearance="dark"
         returnKeyType="send"
         // Return sends instead of inserting a newline, and keeps the keyboard up
@@ -303,6 +310,12 @@ const PromptInput = forwardRef<PromptInputHandle, PromptInputProps>(function Pro
         onPress={handleSend}
         isDisabled={isSendDisabled}
         accessibilityLabel={t('chat.send')}
+        // `isDisabled` is a gluestack STYLING prop: it dims the fill through
+        // data-[disabled=true]:opacity-40 and stops the press, but it does not
+        // reach the accessibility tree. Without this the button announced as an
+        // available action while visibly dimmed and doing nothing — in the
+        // blocked state, and on every turn while a response streams.
+        accessibilityState={{ disabled: isSendDisabled }}
         hitSlop={8}
         className="w-9 h-9 p-0 rounded-full bg-primary-400 data-[active=true]:bg-primary-300 data-[active=true]:scale-90"
       >
