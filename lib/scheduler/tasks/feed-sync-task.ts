@@ -12,34 +12,28 @@ AppScheduler.register({
     { type: 'network' },
     { type: 'authenticated' },
     { type: 'db-ready' },
-    // NO TIER CONDITION HERE, deliberately — see below before adding one back.
+    // NO TIER CONDITION HERE, deliberately — read this before adding one back.
     //
-    // This used to be `getAiAccess() !== 'locked'`, because all four queries
-    // this task runs sat behind SubscriptionGuard and a locked device would
-    // fire four 402s a minute forever. Mera News Free removes that guard: a
-    // free device is entitled to a metered daily allowance, so 'locked' now
-    // means "free", not "no access", and skipping the sync would leave every
-    // free user with a permanently empty Dashboard.
+    // Every account syncs. An account with no subscription is a Starter
+    // account, not a locked one, so there is no tier for which skipping the
+    // sync is correct: gating here would leave those users with a permanently
+    // empty Dashboard while the server was willing to answer all along.
     //
-    // REQUIRES THE SERVER HALF. Cap-reached now answers HTTP 200 with
-    // `dailyLimitReached: true` instead of throwing 402. If SubscriptionGuard
-    // is ever restored on those queries without restoring a condition here,
-    // this task goes back to a 402 loop.
+    // The condition this replaced (`getAiAccess() !== 'locked'`) existed
+    // because the four queries sat behind SubscriptionGuard and a locked device
+    // fired four 402s a minute forever. Those guards are gone and the queries
+    // answer for everyone; cap-reached returns HTTP 200 with
+    // `dailyLimitReached: true` rather than throwing.
     //
     // "Skip a pointless round trip" and "skip the sync" are NOT the same
-    // predicate, which is the trap to avoid if you reintroduce a gate. A free
-    // user with zero unlocked topics still has work to do: they degrade to
-    // headline scopes plus geo inside `stepFetchTopicIds` and get a real feed.
-    // A tier condition that blocks them outright would delete that path
-    // silently.
+    // predicate, which is the trap if you ever reintroduce a gate here. The
+    // task's own test asserts the COUNT of custom conditions precisely so a
+    // reintroduced tier gate fails rather than shipping green.
     //
-    // Enforcement of the free-tier limits is NOT here and must not move here.
-    // `trigger()` bypasses `_conditionsMet` entirely, so pull-to-refresh and
-    // the tab re-tap run this task with none of its conditions applied —
-    // anything gated only here is ungated on the manual path. The topic filter
-    // lives in `stepFetchTopicIds`, which is on both paths.
-    // `aiAccessForSchedulerCondition()` exists for a future condition that
-    // genuinely only saves a round trip; nothing here qualifies today.
+    // And enforcement of anything must NOT live in a condition. `trigger()`
+    // bypasses `_conditionsMet` entirely, so pull-to-refresh and the tab re-tap
+    // run this task with none of its conditions applied — a check placed only
+    // here is ungated on the manual path. Put it in the task's steps.
 
     // Don't burn a round trip every 60s once the daily cap has clipped a run:
     // the server will just clip again until the reset. Gating here rather than
