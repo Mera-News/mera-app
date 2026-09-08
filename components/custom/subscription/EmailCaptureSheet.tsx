@@ -168,7 +168,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
         closeWith('skipped');
     }, [closeWith]);
 
-    // Same copy affordance as Settings and the welcome-back screen: exact
+    // Same copy affordance as Settings: exact
     // string, transient "Copied" swap, no toast.
     const handleCopySupportId = useCallback(async () => {
         if (!supportId) return;

@@ -149,7 +149,6 @@ describe('iOS first-run enrollment', () => {
             status: 'success',
             userId: 'user-1',
             trialAvailable: null,
-            welcomeBack: false,
         });
 
         // Enrollment used nonce-1 (purpose attest); sign-in used nonce-2
@@ -364,60 +363,6 @@ describe('deviceRef anchor (S10)', () => {
     });
 });
 
-describe('welcome-back gating (S12: minted === true AND trialAvailable === false)', () => {
-    // `trialAvailable` rides EVERY sign-in response (deploy-verified), resumes
-    // included — a promoIneligible account's routine resume carries false. The
-    // server therefore ships `minted` (true only when the call CREATED the
-    // user); the gate requires both, and treats an absent `minted` (older
-    // server) as false so nothing fires against a stale deployment.
-    const signInServer = (fields: Record<string, unknown>) =>
-        installServer({
-            '/device/sign-in/ios': () => ({
-                data: { user: { id: 'user-1' }, ...fields },
-                error: null,
-            }),
-        });
-
-    beforeEach(() => {
-        mockGenerateKey.mockResolvedValue('key-1');
-        mockAttestKey.mockResolvedValue('attestation-b64');
-        mockGenerateAssertion.mockResolvedValue('assertion-b64');
-    });
-
-    it('denied MINT -> welcomeBack true, even with a surviving deviceRef', async () => {
-        mockGetItemAsync.mockImplementation(async (k: string) =>
-            k === DEVICE_REF_STORE_KEY ? 'ref-survivor' : null,
-        );
-        signInServer({ minted: true, trialAvailable: false, deviceRef: 'ref-minted' });
-        expect(await signInWithDevice()).toMatchObject({ status: 'success', welcomeBack: true });
-    });
-
-    it('REGRESSION: a denied RESUME (minted false, trialAvailable false) never routes to welcome-back', async () => {
-        // The routine logout -> login of a promoIneligible account. The
-        // trialAvailable-only predicate would have shown /welcome-back on
-        // every one of these, forever.
-        mockGetItemAsync.mockImplementation(async (k: string) =>
-            k === KEY_SLOT ? 'stored-key' : null,
-        );
-        signInServer({ minted: false, trialAvailable: false });
-        expect(await signInWithDevice()).toMatchObject({
-            welcomeBack: false,
-            trialAvailable: false,
-        });
-    });
-
-    it('granted mint and trial-eligible resume -> welcomeBack false', async () => {
-        signInServer({ minted: true, trialAvailable: true });
-        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
-        signInServer({ minted: false, trialAvailable: true });
-        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
-    });
-
-    it('minted ABSENT (older server) is false: never fires, even with trialAvailable false', async () => {
-        signInServer({ trialAvailable: false });
-        expect(await signInWithDevice()).toMatchObject({ welcomeBack: false });
-    });
-});
 
 describe('refusal recovery (S10)', () => {
     const refusal = (code: string) => ({ data: null, error: { status: 403, code } });
@@ -533,7 +478,6 @@ describe('dev bypass', () => {
             status: 'success',
             userId: 'user-1',
             trialAvailable: null,
-            welcomeBack: false,
         });
         expect(callsTo('/device/sign-in/dev')[0][1].body).toEqual({
             token: 'dev-token',

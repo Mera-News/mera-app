@@ -122,16 +122,12 @@ export type DeviceSignInResult =
       userId: string;
       /** Server verdict on trial eligibility; null when the response carried
        *  none (older server) — treated as available. */
+      /** Mirrors the server field. It has NO CLIENT CONSUMER: the screen that
+       *  used to branch on it is deleted, there is no trial to be ineligible
+       *  for, and every account holds Starter. Kept because the server still
+       *  sends it on every sign-in and it is worth having in a log, not
+       *  because anything branches on it. */
       trialAvailable: boolean | null;
-      /** S12: THIS sign-in minted a new account whose trial is already
-       *  consumed — the caller routes to the welcome-back screen instead of
-       *  /logged-in. `minted === true && trialAvailable === false`, both from
-       *  the response: trialAvailable rides EVERY response (a promoIneligible
-       *  account's routine resume carries false, so it alone would show
-       *  welcome-back on every login of a denied account), and `minted` is
-       *  true only when the call CREATED the user. An absent `minted` (older
-       *  server) counts as false so nothing fires against a stale deploy. */
-      welcomeBack: boolean;
     }
   /** No native attestation on this device and no dev bypass configured —
    *  callers route to the email sign-in path. */
@@ -521,7 +517,7 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
     }
 
     // Snapshot BEFORE the attempt. Best-effort reads: this drives the
-    // refusal-recovery gate and the welcome-back gate, not the strict
+    // refusal-recovery gate, not the strict
     // keychain rule (signInIos keeps its own strict read).
     const [storedKey, storedDeviceId, storedRef] = await Promise.all([
       secureStore.getItemAsync(APP_ATTEST_KEY_ID_STORE_KEY).catch(() => null),
@@ -554,10 +550,6 @@ export async function signInWithDevice(): Promise<DeviceSignInResult> {
       status: 'success',
       userId: parsed.userId,
       trialAvailable: parsed.trialAvailable,
-      // A denied MINT, and only a mint: trialAvailable false also rides the
-      // routine resumes of a promoIneligible account, which must never see
-      // this screen again.
-      welcomeBack: parsed.minted && parsed.trialAvailable === false,
     };
   } catch (error) {
     return classifyFailure(error);

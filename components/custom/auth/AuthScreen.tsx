@@ -24,7 +24,7 @@ import {
 } from '@/lib/device-auth';
 
 /** The success variant — what the consent step hands its caller so the
- *  welcome-back verdict can steer routing. */
+ *  result can steer routing. */
 type DeviceSignInSuccess = Extract<DeviceSignInResult, { status: 'success' }>;
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
@@ -425,7 +425,7 @@ interface ConsentStepViewProps {
     /** Switch to the email view — the fallback every failure state offers. */
     onUseEmail: () => void;
     /** Device sign-in completed and the identity bookkeeping is done. The full
-     *  success result travels so the caller can route on `welcomeBack`. */
+     *  success result travels so the caller can route on it. */
     onSuccess: (result: DeviceSignInSuccess) => void;
 }
 
@@ -663,19 +663,13 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     // this screen. Either way the identity gates key on the recorded
     // pendingAuthUserId, not on the atom.
     //
-    // S10: a fresh-looking install whose trial is consumed routes to the
-    // dedicated welcome-back screen INSTEAD of /logged-in — the only trigger
-    // that screen has, which is what keeps it out of mid-session flows.
-    // (Reauth mode cannot produce welcomeBack: stored credentials existed.)
+    // Every successful device sign-in lands on /logged-in. A denied mint used
+    // to divert to a screen explaining why there was no fresh trial; there is
+    // no trial now, and the account it diverted already holds the full Starter
+    // experience, so the diversion had nothing left to say.
     const handleDeviceSignInSuccess = (result: DeviceSignInSuccess) => {
         if (onLoginSuccess) {
             onLoginSuccess(result.userId);
-            return;
-        }
-        if (result.welcomeBack) {
-            // Cast: not in the generated typed-route map until the next expo
-            // typegen run — same precedent as pin-lock in app/index.tsx.
-            router.replace('/welcome-back' as never);
             return;
         }
         router.replace('/logged-in');

@@ -300,7 +300,7 @@ describe('accessibility scoping (F2)', () => {
         await r.findByText('auth.deviceSignInDenied');
 
         // (The support control left this cluster 2026-08-19 — it lives on
-        // the welcome-back screen now, as an icon-only circle.)
+        // an icon-only circle.)
         for (const [id, label] of [
             ['auth-device-retry', 'auth.tryAgain'],
             ['auth-use-email-failure', 'auth.alreadyHaveAccount'],
@@ -409,7 +409,6 @@ describe('consent step (S13)', () => {
             status: 'success',
             userId: 'anon-user-1',
             trialAvailable: true,
-            welcomeBack: false,
         });
         const r = render(<AuthScreen />);
 
@@ -434,7 +433,6 @@ describe('consent step (S13)', () => {
             status: 'success',
             userId: 'anon-user-1',
             trialAvailable: true,
-            welcomeBack: false,
         });
         const r = render(<AuthScreen />);
 
@@ -453,7 +451,6 @@ describe('consent step (S13)', () => {
             status: 'success',
             userId: 'anon-user-1',
             trialAvailable: true,
-            welcomeBack: false,
         });
         const r = render(<AuthScreen />);
 
@@ -469,7 +466,6 @@ describe('consent step (S13)', () => {
             status: 'success',
             userId: 'anon-user-1',
             trialAvailable: true,
-            welcomeBack: false,
         });
         const r = render(<AuthScreen />);
 
@@ -488,7 +484,6 @@ describe('device sign-in success', () => {
             status: 'success',
             userId: 'anon-user-1',
             trialAvailable: true,
-            welcomeBack: false,
         });
         const r = render(<AuthScreen />);
 
@@ -505,20 +500,21 @@ describe('device sign-in success', () => {
         );
     });
 
-    it('S10: welcomeBack true routes to the dedicated welcome-back screen, never /logged-in', async () => {
+    // This used to divert a denied mint to a dedicated screen explaining why
+    // there was no fresh trial. There is no trial now, and the account already
+    // holds the full Starter experience, so it lands where every other
+    // successful sign-in does.
+    it('a denied mint routes to /logged-in like any other successful sign-in', async () => {
         mockSignIn.mockResolvedValue({
             status: 'success',
             userId: 'anon-user-2',
             trialAvailable: false,
-            welcomeBack: true,
         });
         const r = render(<AuthScreen />);
 
         fireEvent.press(await advanceToConsent(r));
 
-        await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/welcome-back'));
-        expect(mockRouterReplace).not.toHaveBeenCalledWith('/logged-in');
-        // Bookkeeping is identical either way.
+        await waitFor(() => expect(mockRouterReplace).toHaveBeenCalledWith('/logged-in'));
         expect(mockRecordAuthenticatedUser).toHaveBeenCalledWith('anon-user-2');
     });
 
@@ -527,7 +523,6 @@ describe('device sign-in success', () => {
             status: 'success',
             userId: 'anon-user-1',
             trialAvailable: true,
-            welcomeBack: false,
         });
         const onLoginSuccess = jest.fn();
         const r = render(<AuthScreen onLoginSuccess={onLoginSuccess} />);
