@@ -88,6 +88,11 @@ jest.mock('@/components/custom/UsageWidget', () => {
     const { View, Text, Pressable } = require('react-native');
     return {
         __esModule: true,
+        // `trialEndsAt` is DELIBERATELY still destructured and rendered here
+        // even though UsageWidget no longer accepts it: it is what makes the
+        // "never a trial" assertion meaningful. Drop it and that expectation
+        // passes because the testID could never appear, not because the screen
+        // stopped passing the prop.
         default: ({ used, limit, planLabel, trialEndsAt, onUpgrade, onInfoPress }: any) => (
             <View testID="usage-widget">
                 <Text>{`usage:${used}/${limit ?? '-'}`}</Text>
@@ -292,14 +297,16 @@ describe('ProfileScreen', () => {
         expect(getByText('configPanel.articleAnalysisTitle')).toBeTruthy();
     });
 
-    // ── Free-trial grant (r14 #16) ──────────────────────────────────────────
-    // `subscriptionTier: 'starter'` is what BOTH a granted trial user and a
-    // paying Starter subscriber report — `grantExpiresAt && !isPremium` (read
-    // from the store, independent of the `billing` fetch) is the only thing
-    // that tells them apart. Both cases below hold `subscriptionTier` fixed at
-    // 'starter' and flip only the store fields, to prove the label follows the
-    // right signal.
-    it('grantExpiresAt set + not premium → usage card labels the plan a free trial and passes the end date through', async () => {
+    // ── The plan label for a granted vs a paying account ────────────────────
+    // `subscriptionTier: 'starter'` is what BOTH report. Both cases hold it
+    // fixed and flip only the store fields.
+    //
+    // REGRESSION GUARD. This first case used to assert "Free Trial" and a
+    // countdown. The server still sends `grantExpiresAt` for an unpaid account
+    // inside the promo window, so the app rendered a trial that no longer
+    // exists — shipped to production before it was caught. The app now reads
+    // that field nowhere, and an unpaid account reads as Starter.
+    it('an unpaid account inside the grant window reads as Starter, never a trial', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         mockSubscriptionState = {
             serverTier: 'starter',
@@ -317,14 +324,14 @@ describe('ProfileScreen', () => {
             hasEverSubscribed: true,
             showLapseInterstitial: false,
         });
-        const { getByTestId } = render(<ProfileScreen userId="u1" />);
+        const { getByTestId, queryByTestId } = render(<ProfileScreen userId="u1" />);
         await waitFor(() =>
-            expect(getByTestId('usage-widget-plan-label').props.children).toBe('subscription.freeTrial'),
+            expect(getByTestId('usage-widget-plan-label').props.children).toBe('configPanel.starterPlan'),
         );
-        expect(getByTestId('usage-widget-trial-ends-at').props.children).toBe('2026-08-20T00:00:00.000Z');
+        expect(queryByTestId('usage-widget-trial-ends-at')).toBeNull();
     });
 
-    it('grantExpiresAt null (paying subscriber) → usage card shows the plain plan name, no trial label', async () => {
+    it('a paying subscriber shows the plain plan name', async () => {
         mockGetFacts.mockResolvedValue([{ id: 'f1', statement: 'x' }]);
         mockSubscriptionState = {
             serverTier: 'starter',

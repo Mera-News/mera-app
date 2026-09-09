@@ -46,16 +46,6 @@ interface UsageWidgetProps {
     resetAt?: string | null;
     /** Label for the reset row, e.g. "Resets". */
     resetLabel?: string;
-    /**
-     * ISO instant the server's free-trial grant ends. Pass only when the grant
-     * is what's providing access right now — callers gate this the same way
-     * `ManageSubscriptionScreen` does, `grantExpiresAt && !isPremium` from
-     * `useSubscriptionStore` — never for a paying subscriber. Days remaining
-     * are computed HERE, live, from this server timestamp against the device's
-     * current time; nothing is derived from a locally-stored "trial started
-     * at" value the device clock could be walked backward to inflate.
-     */
-    trialEndsAt?: string | null;
     /** Optional ⓘ icon next to the caption (e.g. opens an explainer modal). */
     onInfoPress?: () => void;
     /** Extra classes for outer margins (e.g. "mx-4 mb-3"). */
@@ -77,7 +67,6 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
     upgradeIcon = 'arrow-upward',
     resetAt,
     resetLabel,
-    trialEndsAt,
     onInfoPress,
     className,
 }) => {
@@ -96,17 +85,6 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
             month: 'short',
             day: 'numeric',
         });
-    })();
-
-    // Whole days remaining until the grant ends, computed fresh against
-    // Date.now() every render — never against a persisted "granted at" instant.
-    // Floors at 0 rather than going negative once the window has technically
-    // closed but this snapshot hasn't refetched yet.
-    const trialDaysRemaining = (() => {
-        if (!trialEndsAt) return null;
-        const end = new Date(trialEndsAt).getTime();
-        if (Number.isNaN(end)) return null;
-        return Math.max(0, Math.ceil((end - Date.now()) / (1000 * 60 * 60 * 24)));
     })();
 
     return (
@@ -138,7 +116,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                         ) : null}
                     </HStack>
                 </VStack>
-                {(planLabel || resetText || onUpgrade || trialDaysRemaining != null) ? (
+                {(planLabel || resetText || onUpgrade) ? (
                     <VStack className="items-end ml-3">
                         <HStack className="items-center" space="xs">
                             {planLabel ? (
@@ -159,15 +137,6 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                                 </Pressable>
                             ) : null}
                         </HStack>
-                        {trialDaysRemaining != null ? (
-                            <Text
-                                testID="usage-widget-trial-days"
-                                size="xs"
-                                className="text-amber-400 font-semibold mt-1"
-                            >
-                                {t('subscription.trialDaysLeft', { count: trialDaysRemaining })}
-                            </Text>
-                        ) : null}
                         {resetText ? (
                             <>
                                 <Text size="xs" className="text-gray-300 font-medium mt-1">{resetLabel}</Text>
