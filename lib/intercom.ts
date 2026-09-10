@@ -363,10 +363,16 @@ export async function sendIntercomPushToken(token: string): Promise<void> {
  * entry points so they cannot drift.
  *
  * Contract:
- *  - Offline, or no Intercom key in this bundle: open mail immediately. No
- *    spinner, no error. Email is genuinely BETTER offline — the composer opens,
- *    the user writes, and Mail queues it until there is a network. A Messenger
- *    that cannot connect is strictly worse than that.
+ *  - No device network link, or no Intercom key in this bundle: open mail
+ *    immediately. No spinner, no error. Email is genuinely BETTER offline — the
+ *    composer opens, the user writes, and Mail queues it until there is a
+ *    network. A Messenger that cannot connect is strictly worse than that.
+ *    The link check is `isConnected` (raw device state), deliberately NOT
+ *    `isOnline()`/`serverReachable` — that flag is a LATCH that flips false
+ *    after 2 consecutive Mera GraphQL transport failures and only clears on a
+ *    later Mera success. Intercom is a separate service with no relationship
+ *    to Mera's own API health, so gating on that latch meant an unrelated Mera
+ *    blip could silently route a support tap to email with nothing logged.
  *  - Otherwise: show a spinner, try the Messenger, and on ANY failure or after
  *    ~6s open mail instead, silently. The mailto fallback is today's behaviour,
  *    not an incident, so it gets no alert and no toast.
@@ -384,7 +390,7 @@ export function useSupportAction(onMailFailed?: () => void) {
     inFlight.current = true;
     try {
       const { SUPPORT_EMAIL } = require('@/lib/config/branding');
-      const { isOnline } = require('@/lib/stores/network-store');
+      const { isOnline, useNetworkStore } = require('@/lib/stores/network-store');
       const openMail = async () => {
         try {
           // Pre-fill the support id so the user never has to copy it. Lazy
@@ -408,7 +414,7 @@ export function useSupportAction(onMailFailed?: () => void) {
           onMailFailed?.();
         }
       };
-      if (!isIntercomEnabled() || !isOnline()) {
+      if (!isIntercomEnabled() || !useNetworkStore.getState().isConnected) {
         await openMail();
         return;
       }

@@ -27,6 +27,11 @@ jest.mock('@/lib/stores/user-store', () => ({
 // available in this suite.
 const mockGetSupportId = jest.fn(async (..._a: unknown[]): Promise<string | null> => null);
 const mockIsOnline = jest.fn(() => true);
+// `isConnected` is the raw device-link state the support gate checks.
+// Deliberately separate from `mockIsOnline` (Mera's own latched reachability)
+// so tests can prove the two are no longer conflated — see "a Mera-reachability
+// latch does not block Intercom" below.
+const mockIsConnected = jest.fn(() => true);
 jest.mock('@/lib/support-id', () => ({
   getSupportId: (...a: unknown[]) => mockGetSupportId(...a),
   buildSupportMailtoUrl: (email: string, id: string | null) =>
@@ -34,6 +39,7 @@ jest.mock('@/lib/support-id', () => ({
 }));
 jest.mock('@/lib/stores/network-store', () => ({
   isOnline: () => mockIsOnline(),
+  useNetworkStore: { getState: () => ({ isConnected: mockIsConnected() }) },
 }));
 
 // A MUTABLE mock object, not a per-test jest.doMock. doMock is not scoped to
@@ -82,6 +88,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   configureKeys();
   mockIsOnline.mockReturnValue(true);
+  mockIsConnected.mockReturnValue(true);
   mockGetSupportId.mockResolvedValue(null);
   mockQuery.mockResolvedValue({
     data: { intercomIdentity: { jwt: 'jwt-1', expiresAt: '2026-01-01' } },
@@ -253,6 +260,20 @@ describe('every failure degrades to the mailto fallback', () => {
 // call time, so the top-level instance sees the same mutable mocks.
 const { renderHook, act } = require('@testing-library/react-native');
 const intercomTop = require('../intercom') as typeof import('../intercom');
+// intercomTop's static `import Intercom from '@intercom/intercom-react-native'`
+// is frozen to whichever mock instance existed at THIS require, before any
+// jest.resetModules() in beforeEach — loadModule()'s `native` binds a DIFFERENT
+// instance per test and is not reachable from here. So intercomTop needs its
+// own configured instance, set up once: clearAllMocks() (in beforeEach) resets
+// call history, not `mockResolvedValue` config, so this survives every test.
+const nativeTop = require('@intercom/intercom-react-native')
+  .default as unknown as Record<string, jest.Mock>;
+nativeTop.initialize.mockResolvedValue(true);
+nativeTop.setUserJwt.mockResolvedValue(true);
+nativeTop.loginUserWithUserAttributes.mockResolvedValue(true);
+nativeTop.isUserLoggedIn.mockResolvedValue(false);
+nativeTop.logout.mockResolvedValue(true);
+nativeTop.present.mockResolvedValue(true);
 
 // react-native exposes Linking through a LAZY GETTER, so after the
 // jest.resetModules() in beforeEach the module under test reaches a FRESH
@@ -313,6 +334,7 @@ describe('support id autofill', () => {
     const openURL = spyOnOpenURL();
     try {
       mockEndpoints.INTERCOM_APP_ID = '';
+      mockIsConnected.mockReturnValue(false);
       mockIsOnline.mockReturnValue(false);
 
       const { result } = renderHook(() => intercomTop.useSupportAction());
@@ -326,5 +348,22 @@ describe('support id autofill', () => {
     } finally {
       openURL.mockRestore();
     }
+  });
+
+  // The bug this fix closes: a Mera GraphQL blip latches `serverReachable`
+  // (and therefore `isOnline()`) false until a later Mera request succeeds.
+  // Intercom is an unrelated third-party service, so that latch must not
+  // block "Talk to support" on a device that is genuinely connected.
+  it('a Mera-reachability latch does not block Intercom on a connected device', async () => {
+    mockIsConnected.mockReturnValue(true);
+    mockIsOnline.mockReturnValue(false);
+
+    const { result } = renderHook(() => intercomTop.useSupportAction());
+    await act(async () => {
+      await result.current.openSupport();
+    });
+
+    expect(intercomTop.isIntercomConfigured()).toBe(true);
+    expect(nativeTop.present).toHaveBeenCalledTimes(1);
   });
 });
