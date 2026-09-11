@@ -1,7 +1,6 @@
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import StoryTimelineScreen from '@/components/custom/tracked-stories/StoryTimelineScreen';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
@@ -25,14 +24,12 @@ export default function StoryTimeline() {
     };
 
     return (
-        <GluestackUIProvider mode="dark">
-            <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                <StoryTimelineScreen
-                    key={trackedStoryId}
-                    trackedStoryId={trackedStoryId}
-                    onBack={handleBack}
-                />
-            </ErrorBoundary>
-        </GluestackUIProvider>
+          <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+              <StoryTimelineScreen
+                  key={trackedStoryId}
+                  trackedStoryId={trackedStoryId}
+                  onBack={handleBack}
+              />
+          </ErrorBoundary>
     );
 }

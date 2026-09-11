@@ -2,7 +2,6 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import BackupSection from '@/components/custom/backup/BackupSection';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -353,184 +352,182 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
         : null;
 
     return (
-        <GluestackUIProvider mode="dark">
-            <Box className="flex-1">
-                {/* Page background. Must be the FIRST child so it paints behind
-                    everything else on the page. */}
-                <AbstractGradientBackdrop />
+          <Box className="flex-1">
+              {/* Page background. Must be the FIRST child so it paints behind
+                  everything else on the page. */}
+              <AbstractGradientBackdrop />
 
-                {onBack && (
-                    <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                        <Pressable
-                            onPress={onBack}
-                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                        >
-                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                        </Pressable>
-                    </Box>
-                )}
+              {onBack && (
+                  <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
+                      <Pressable
+                          onPress={onBack}
+                          className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                      >
+                          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                      </Pressable>
+                  </Box>
+              )}
 
-                <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                    <Text className="text-xl font-semibold text-white text-center">{t('manageData.title')}</Text>
-                </VStack>
+              <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
+                  <Text className="text-xl font-semibold text-white text-center">{t('manageData.title')}</Text>
+              </VStack>
 
-                <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-                    <Text size="sm" className="text-gray-400 mb-5">
-                        {t('manageData.description')}
-                    </Text>
+              <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
+                  <Text size="sm" className="text-gray-400 mb-5">
+                      {t('manageData.description')}
+                  </Text>
 
-                    {/* Backup is the one CONSTRUCTIVE thing on this screen, so it
-                        sits above the destructive list and is deliberately not
-                        drawn in the red every row below uses. It holds its own
-                        state: lifting that into this component would also mean
-                        every module it reaches had to be mocked in
-                        ManageDataScreen.test.tsx, breaking a passing suite for
-                        reasons that have nothing to do with backup. */}
-                    <BackupSection />
+                  {/* Backup is the one CONSTRUCTIVE thing on this screen, so it
+                      sits above the destructive list and is deliberately not
+                      drawn in the red every row below uses. It holds its own
+                      state: lifting that into this component would also mean
+                      every module it reaches had to be mocked in
+                      ManageDataScreen.test.tsx, breaking a passing suite for
+                      reasons that have nothing to do with backup. */}
+                  <BackupSection />
 
-                    {/* Observability lives here since 2026-08-19 (user call):
-                        a diagnostics surface belongs with the data tools, not
-                        among everyday preferences. Neutral row, deliberately
-                        outside the red destructive list below. */}
-                    <Pressable
-                        testID="manage-data-observability"
-                        onPress={() => router.push('/logged-in/preferences/observability' as any)}
-                        accessibilityRole="button"
-                        className="flex-row items-center justify-between py-3 px-4 mb-4 rounded-lg border border-gray-700 bg-transparent"
-                    >
-                        <Box className="flex-row items-center" style={{ gap: 12 }}>
-                            <MaterialIcons name="monitor-heart" size={22} color="#9ca3af" />
-                            <Text className="text-base text-white">
-                                {t('observability.title')}
-                            </Text>
-                        </Box>
-                        <MaterialIcons name="chevron-right" size={20} color="#999999" />
-                    </Pressable>
+                  {/* Observability lives here since 2026-08-19 (user call):
+                      a diagnostics surface belongs with the data tools, not
+                      among everyday preferences. Neutral row, deliberately
+                      outside the red destructive list below. */}
+                  <Pressable
+                      testID="manage-data-observability"
+                      onPress={() => router.push('/logged-in/preferences/observability' as any)}
+                      accessibilityRole="button"
+                      className="flex-row items-center justify-between py-3 px-4 mb-4 rounded-lg border border-gray-700 bg-transparent"
+                  >
+                      <Box className="flex-row items-center" style={{ gap: 12 }}>
+                          <MaterialIcons name="monitor-heart" size={22} color="#9ca3af" />
+                          <Text className="text-base text-white">
+                              {t('observability.title')}
+                          </Text>
+                      </Box>
+                      <MaterialIcons name="chevron-right" size={20} color="#999999" />
+                  </Pressable>
 
-                    <VStack space="md">
-                        {options.map(renderOption)}
-                    </VStack>
-                </ScrollView>
+                  <VStack space="md">
+                      {options.map(renderOption)}
+                  </VStack>
+              </ScrollView>
 
-                {/* Generic confirmation modal — covers every option except delete-account, which has its own two-step flow. */}
-                {confirmAction && activeOption && activeOption.id !== 'deleteAccount' && (
-                    <Modal isOpen={!!confirmAction} onClose={() => setConfirmAction(null)} size="sm">
-                        <ModalBackdrop />
-                        <ModalContent>
-                            <ModalHeader className="border-gray-700 pb-4">
-                                <Text className="text-xl font-semibold text-red-400">
-                                    {activeOption.title}
-                                </Text>
-                            </ModalHeader>
-                            <ModalBody className="py-6">
-                                <Text className="text-gray-300 text-base leading-relaxed">
-                                    {(activeOption as OptionEntry).modalDescription}
-                                </Text>
-                            </ModalBody>
-                            <ModalFooter className="border-t border-gray-700 pt-4">
-                                <VStack className="w-full" space="md">
-                                    <Button
-                                        action="negative"
-                                        onPress={handleConfirm}
-                                        disabled={isProcessing}
-                                        className="w-full"
-                                    >
-                                        <ButtonText>
-                                            {isProcessing ? t('manageData.deleting') : t('common.delete')}
-                                        </ButtonText>
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        action="secondary"
-                                        onPress={() => setConfirmAction(null)}
-                                        className="w-full"
-                                    >
-                                        <ButtonText>{t('common.cancel')}</ButtonText>
-                                    </Button>
-                                </VStack>
-                            </ModalFooter>
-                        </ModalContent>
-                    </Modal>
-                )}
+              {/* Generic confirmation modal — covers every option except delete-account, which has its own two-step flow. */}
+              {confirmAction && activeOption && activeOption.id !== 'deleteAccount' && (
+                  <Modal isOpen={!!confirmAction} onClose={() => setConfirmAction(null)} size="sm">
+                      <ModalBackdrop />
+                      <ModalContent>
+                          <ModalHeader className="border-gray-700 pb-4">
+                              <Text className="text-xl font-semibold text-red-400">
+                                  {activeOption.title}
+                              </Text>
+                          </ModalHeader>
+                          <ModalBody className="py-6">
+                              <Text className="text-gray-300 text-base leading-relaxed">
+                                  {(activeOption as OptionEntry).modalDescription}
+                              </Text>
+                          </ModalBody>
+                          <ModalFooter className="border-t border-gray-700 pt-4">
+                              <VStack className="w-full" space="md">
+                                  <Button
+                                      action="negative"
+                                      onPress={handleConfirm}
+                                      disabled={isProcessing}
+                                      className="w-full"
+                                  >
+                                      <ButtonText>
+                                          {isProcessing ? t('manageData.deleting') : t('common.delete')}
+                                      </ButtonText>
+                                  </Button>
+                                  <Button
+                                      variant="outline"
+                                      action="secondary"
+                                      onPress={() => setConfirmAction(null)}
+                                      className="w-full"
+                                  >
+                                      <ButtonText>{t('common.cancel')}</ButtonText>
+                                  </Button>
+                              </VStack>
+                          </ModalFooter>
+                      </ModalContent>
+                  </Modal>
+              )}
 
-                {/* Delete Account First Confirmation Modal */}
-                <Modal isOpen={showDeleteInitial} onClose={() => closeModal('deleteAccount')} size="sm">
-                    <ModalBackdrop />
-                    <ModalContent>
-                        <ModalHeader className="border-gray-700 pb-4">
-                            <Text className="text-xl font-semibold text-red-400">{t('preferences.deleteAccount')}</Text>
-                        </ModalHeader>
-                        <ModalBody className="py-6">
-                            <Text className="text-gray-300 text-base leading-relaxed mb-4">
-                                {t('preferences.deleteAccountConfirmGrace')}
-                            </Text>
-                            <Text className="text-red-400 text-sm font-medium">
-                                {t('preferences.deleteAccountWarningGrace')}
-                            </Text>
-                        </ModalBody>
-                        <ModalFooter className="border-t border-gray-700 pt-4">
-                            <VStack className="w-full" space="md">
-                                <Button
-                                    action="negative"
-                                    onPress={() => setDeleteAccountStep('confirm')}
-                                    className="w-full"
-                                >
-                                    <ButtonText>{t('preferences.continue')}</ButtonText>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    action="secondary"
-                                    onPress={() => closeModal('deleteAccount')}
-                                    className="w-full"
-                                >
-                                    <ButtonText>{t('common.cancel')}</ButtonText>
-                                </Button>
-                            </VStack>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
+              {/* Delete Account First Confirmation Modal */}
+              <Modal isOpen={showDeleteInitial} onClose={() => closeModal('deleteAccount')} size="sm">
+                  <ModalBackdrop />
+                  <ModalContent>
+                      <ModalHeader className="border-gray-700 pb-4">
+                          <Text className="text-xl font-semibold text-red-400">{t('preferences.deleteAccount')}</Text>
+                      </ModalHeader>
+                      <ModalBody className="py-6">
+                          <Text className="text-gray-300 text-base leading-relaxed mb-4">
+                              {t('preferences.deleteAccountConfirmGrace')}
+                          </Text>
+                          <Text className="text-red-400 text-sm font-medium">
+                              {t('preferences.deleteAccountWarningGrace')}
+                          </Text>
+                      </ModalBody>
+                      <ModalFooter className="border-t border-gray-700 pt-4">
+                          <VStack className="w-full" space="md">
+                              <Button
+                                  action="negative"
+                                  onPress={() => setDeleteAccountStep('confirm')}
+                                  className="w-full"
+                              >
+                                  <ButtonText>{t('preferences.continue')}</ButtonText>
+                              </Button>
+                              <Button
+                                  variant="outline"
+                                  action="secondary"
+                                  onPress={() => closeModal('deleteAccount')}
+                                  className="w-full"
+                              >
+                                  <ButtonText>{t('common.cancel')}</ButtonText>
+                              </Button>
+                          </VStack>
+                      </ModalFooter>
+                  </ModalContent>
+              </Modal>
 
-                {/* Delete Account Final Confirmation Modal */}
-                <Modal isOpen={showDeleteConfirm} onClose={() => closeModal('deleteAccount')} size="sm">
-                    <ModalBackdrop />
-                    <ModalContent className="bg-gray-900 border border-gray-700">
-                        <ModalHeader className="border-gray-700 pb-4">
-                            <Text className="text-xl font-semibold text-red-400">{t('preferences.finalConfirmation')}</Text>
-                        </ModalHeader>
-                        <ModalBody className="py-6">
-                            <Text className="text-gray-300 text-base leading-relaxed mb-4">
-                                {t('preferences.finalConfirmationBodyGrace')}
-                            </Text>
-                            <Text className="text-red-400 text-base font-semibold">
-                                {t('preferences.absolutelySure')}
-                            </Text>
-                        </ModalBody>
-                        <ModalFooter className="border-t border-gray-700 pt-4">
-                            <VStack className="w-full" space="md">
-                                <Button
-                                    action="negative"
-                                    onPress={handleDeleteAccount}
-                                    disabled={isDeletingAccount}
-                                    className="w-full"
-                                >
-                                    <ButtonText>
-                                        {isDeletingAccount ? t('preferences.deleting') : t('preferences.yesDeleteAccount')}
-                                    </ButtonText>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    action="secondary"
-                                    onPress={() => closeModal('deleteAccount')}
-                                    className="w-full"
-                                >
-                                    <ButtonText>{t('common.cancel')}</ButtonText>
-                                </Button>
-                            </VStack>
-                        </ModalFooter>
-                    </ModalContent>
-                </Modal>
-            </Box>
-        </GluestackUIProvider>
+              {/* Delete Account Final Confirmation Modal */}
+              <Modal isOpen={showDeleteConfirm} onClose={() => closeModal('deleteAccount')} size="sm">
+                  <ModalBackdrop />
+                  <ModalContent className="bg-gray-900 border border-gray-700">
+                      <ModalHeader className="border-gray-700 pb-4">
+                          <Text className="text-xl font-semibold text-red-400">{t('preferences.finalConfirmation')}</Text>
+                      </ModalHeader>
+                      <ModalBody className="py-6">
+                          <Text className="text-gray-300 text-base leading-relaxed mb-4">
+                              {t('preferences.finalConfirmationBodyGrace')}
+                          </Text>
+                          <Text className="text-red-400 text-base font-semibold">
+                              {t('preferences.absolutelySure')}
+                          </Text>
+                      </ModalBody>
+                      <ModalFooter className="border-t border-gray-700 pt-4">
+                          <VStack className="w-full" space="md">
+                              <Button
+                                  action="negative"
+                                  onPress={handleDeleteAccount}
+                                  disabled={isDeletingAccount}
+                                  className="w-full"
+                              >
+                                  <ButtonText>
+                                      {isDeletingAccount ? t('preferences.deleting') : t('preferences.yesDeleteAccount')}
+                                  </ButtonText>
+                              </Button>
+                              <Button
+                                  variant="outline"
+                                  action="secondary"
+                                  onPress={() => closeModal('deleteAccount')}
+                                  className="w-full"
+                              >
+                                  <ButtonText>{t('common.cancel')}</ButtonText>
+                              </Button>
+                          </VStack>
+                      </ModalFooter>
+                  </ModalContent>
+              </Modal>
+          </Box>
     );
 };
 

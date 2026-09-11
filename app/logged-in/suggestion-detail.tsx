@@ -1,7 +1,6 @@
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ArticleSuggestionScreen from '@/components/custom/news-detail/ArticleSuggestionScreen';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
@@ -30,15 +29,13 @@ export default function SuggestionDetail() {
     };
 
     return (
-        <GluestackUIProvider mode="dark">
-            <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                <ArticleSuggestionScreen
-                    key={articleSuggestionId}
-                    articleSuggestionId={articleSuggestionId}
-                    onBack={handleBack}
-                    backIcon={canGoBack ? 'back' : 'home'}
-                />
-            </ErrorBoundary>
-        </GluestackUIProvider>
+          <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+              <ArticleSuggestionScreen
+                  key={articleSuggestionId}
+                  articleSuggestionId={articleSuggestionId}
+                  onBack={handleBack}
+                  backIcon={canGoBack ? 'back' : 'home'}
+              />
+          </ErrorBoundary>
     );
 }

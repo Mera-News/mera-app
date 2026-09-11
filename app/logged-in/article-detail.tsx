@@ -1,7 +1,6 @@
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import ArticleDetailScreen from '@/components/custom/news-detail/ArticleDetailScreen';
-import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 
@@ -33,16 +32,14 @@ export default function ArticleDetail() {
     };
 
     return (
-        <GluestackUIProvider mode="dark">
-            <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                <ArticleDetailScreen
-                    key={articleId}
-                    articleId={articleId}
-                    stableClusterId={stableClusterId}
-                    onBack={handleBack}
-                    backIcon={canGoBack ? 'back' : 'home'}
-                />
-            </ErrorBoundary>
-        </GluestackUIProvider>
+          <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+              <ArticleDetailScreen
+                  key={articleId}
+                  articleId={articleId}
+                  stableClusterId={stableClusterId}
+                  onBack={handleBack}
+                  backIcon={canGoBack ? 'back' : 'home'}
+              />
+          </ErrorBoundary>
     );
 }
