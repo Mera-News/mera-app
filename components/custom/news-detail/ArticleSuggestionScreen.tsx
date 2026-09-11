@@ -579,11 +579,11 @@ const ArticleSuggestionScreen: React.FC<ArticleSuggestionScreenProps> = ({
                     accessibilityElementsHidden={true}
                     importantForAccessibility="no-hide-descendants"
                 />
-                <Text size="lg" className="text-typography-0 mt-4 text-center">
+                <Text size="lg" className="text-white mt-4 text-center">
                     {error || t('articleDetail.articleNotFound')}
                 </Text>
                 <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-typography-0">{t('common.goBack')}</Text>
+                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );

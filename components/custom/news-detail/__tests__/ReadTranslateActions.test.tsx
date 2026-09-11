@@ -331,7 +331,7 @@ describe('ReadTranslateActions', () => {
             const { getByText } = renderActions({ sourceLanguage: 'en' });
             const gtLabel = getByText('articleDetail.readOnGoogleTranslate');
             expect(styleOf(gtLabel).color).toBe(WHITE);
-            expect(gtLabel.props.className).toContain('text-typography-0');
+            expect(gtLabel.props.className).toContain('text-white');
 
             mockGetArticleTranslationSupport.mockReturnValue({ status: 'translatable' });
             const { getByText: getTranslatable } = renderActions();
