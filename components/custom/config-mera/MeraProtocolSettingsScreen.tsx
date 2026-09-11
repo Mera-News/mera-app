@@ -488,7 +488,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             : 'border-gray-700 bg-background-50';
 
         const iconColor = selected ? '#34d399' : '#9ca3af';
-        const titleClass = selected ? 'text-emerald-400' : 'text-typography-0';
+        const titleClass = selected ? 'text-emerald-400' : 'text-white';
 
         return (
             <Pressable
@@ -515,7 +515,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             {/* Header text for onboarding */}
             {isOnboarding && (
                 <VStack className="mb-8 px-5">
-                    <Text className="text-3xl font-bold text-typography-0 text-center mb-3">
+                    <Text className="text-3xl font-bold text-white text-center mb-3">
                         {t('meraProtocol.title')}
                     </Text>
                 </VStack>
@@ -524,7 +524,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             {/* Processing Mode Segmented Control */}
             <Box className="px-5 mb-6">
                 <HStack className="items-center justify-between mb-3">
-                    <Text className="text-typography-0 text-lg font-semibold">
+                    <Text className="text-white text-lg font-semibold">
                         {t('meraProtocol.processingModeTitle')}
                     </Text>
                     {isUpdatingMode && <Spinner size="small" />}
@@ -544,7 +544,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
                     <Box className="px-5 mb-6">
                         <HStack className="items-center justify-between mb-1">
-                            <Text className="text-typography-0 text-lg font-semibold">{t('meraProtocol.aiModel')}</Text>
+                            <Text className="text-white text-lg font-semibold">{t('meraProtocol.aiModel')}</Text>
                             {(modelState === 'downloaded' || modelState === 'ready') && (
                                 <Pressable
                                     onPress={handleDeleteModel}
@@ -650,7 +650,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             color={relevanceV4 ? "#10b981" : "#9ca3af"}
                         />
                         <VStack className="flex-1">
-                            <Text className="text-typography-0 text-base font-semibold">
+                            <Text className="text-white text-base font-semibold">
                                 {t('meraProtocol.relevanceV4Title')}
                             </Text>
                             <Text className="text-typography-500 text-sm mt-0.5">
@@ -696,7 +696,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         />
                         <VStack className="flex-1">
                             <HStack space="xs" className="items-center">
-                                <Text className="text-typography-0 text-base font-semibold">
+                                <Text className="text-white text-base font-semibold">
                                     {t('meraProtocol.webSearchTitle')}
                                 </Text>
                                 <BetaBadge />
@@ -738,7 +738,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                 color={autoCommunityFactCheck ? "#10b981" : "#9ca3af"}
                             />
                             <VStack className="flex-1">
-                                <Text className="text-typography-0 text-base font-semibold">
+                                <Text className="text-white text-base font-semibold">
                                     {t('meraProtocol.autoCommunityFactCheckTitle')}
                                 </Text>
                                 <Text className="text-typography-500 text-sm mt-0.5">
@@ -774,7 +774,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             color={deepInterview ? "#10b981" : "#9ca3af"}
                         />
                         <VStack className="flex-1">
-                            <Text className="text-typography-0 text-base font-semibold">
+                            <Text className="text-white text-base font-semibold">
                                 {t('meraProtocol.deepInterviewTitle')}
                             </Text>
                             <Text className="text-typography-500 text-sm mt-0.5">
@@ -810,7 +810,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             color={showExtractedMetadata ? "#10b981" : "#9ca3af"}
                         />
                         <VStack className="flex-1">
-                            <Text className="text-typography-0 text-base font-semibold">
+                            <Text className="text-white text-base font-semibold">
                                 {t('meraProtocol.extractedMetadataTitle')}
                             </Text>
                             <Text className="text-typography-500 text-sm mt-0.5">
@@ -1038,7 +1038,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                       </Box>
                   )}
                   <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                      <Text className="text-xl font-semibold text-typography-0 text-center">{t('meraProtocol.title')}</Text>
+                      <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
                   </VStack>
                   <VStack className="flex-1 justify-center items-center">
                       <Spinner size="large" />
@@ -1080,7 +1080,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
               )}
 
               <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                  <Text className="text-xl font-semibold text-typography-0 text-center">{t('meraProtocol.title')}</Text>
+                  <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
               </VStack>
 
               <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>

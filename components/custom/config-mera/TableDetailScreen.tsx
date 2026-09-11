@@ -120,7 +120,7 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
                 </Pressable>
                 <VStack className="items-center flex-1 mx-4">
-                    <Text className="text-typography-0 font-semibold text-base" numberOfLines={1}>
+                    <Text className="text-white font-semibold text-base" numberOfLines={1}>
                         {tableLabel(tableName)}
                     </Text>
                     <Text size="xs" className="text-gray-500">{subtitle}</Text>
@@ -167,7 +167,7 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                                 {rows.map((row, i) => (
                                     <TableRow
                                         key={String(row.id ?? i)}
-                                        className={i % 2 === 0 ? 'bg-background-0' : 'bg-gray-950'}
+                                        className={i % 2 === 0 ? 'bg-black' : 'bg-gray-950'}
                                     >
                                         {columns.map((col) => (
                                             <TableData
@@ -176,7 +176,7 @@ const TableDetailScreen: React.FC<TableDetailScreenProps> = ({ tableName, onBack
                                                 className="border border-gray-800 px-3 py-2"
                                                 style={{ minWidth: 110 }}
                                             >
-                                                <Text size="xs" className="text-typography-0">
+                                                <Text size="xs" className="text-white">
                                                     {formatCellValue(row[col])}
                                                 </Text>
                                             </TableData>

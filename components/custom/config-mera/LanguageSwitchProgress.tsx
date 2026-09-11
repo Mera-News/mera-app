@@ -66,7 +66,7 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
             <VStack space="sm">
                 <HStack space="md" className="items-center">
                     <ActivityIndicator size="small" color="#a78bfa" />
-                    <Text className="text-typography-0 text-base font-medium flex-1">
+                    <Text className="text-white text-base font-medium flex-1">
                         {t('language.switchingTitle', { language })}
                     </Text>
                 </HStack>
@@ -103,7 +103,7 @@ const LanguageSwitchProgress: React.FC<LanguageSwitchProgressProps> = ({ code, o
                         cannot read, which turns the nudge into the trap this
                         whole feature exists to remove. Do not "tidy" this into
                         a bare t() call. */}
-                    <Text className="text-typography-0 text-sm font-medium">
+                    <Text className="text-white text-sm font-medium">
                         {t('language.switchingCancel', { lng: previousLocale })}
                     </Text>
                 </Pressable>

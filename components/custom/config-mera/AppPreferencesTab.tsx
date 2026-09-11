@@ -327,13 +327,13 @@ const AppPreferencesTab: React.FC = () => {
                 >
                     {option.id === 'language' ? (
                         <HStack className="items-center flex-1" space="md">
-                            <Text className="text-base text-typography-0">
+                            <Text className="text-base text-white">
                                 {LANGUAGE_WORD_BY_CODE[appLanguage] ?? 'Language'}
                             </Text>
                             <LanguageWordTicker />
                         </HStack>
                     ) : (
-                        <Text className="text-base text-typography-0">
+                        <Text className="text-base text-white">
                             {option.title}
                         </Text>
                     )}
@@ -406,7 +406,7 @@ const AppPreferencesTab: React.FC = () => {
                             ) : (
                                 <HStack space="xs" className="items-center">
                                     <MaterialIcons name="support-agent" size={18} color="rgb(237, 167, 126)" />
-                                    <Text className="text-base text-typography-0" numberOfLines={1}>
+                                    <Text className="text-base text-white" numberOfLines={1}>
                                         {t('preferences.support')}
                                     </Text>
                                 </HStack>
@@ -516,7 +516,7 @@ const AppPreferencesTab: React.FC = () => {
                 <ModalBackdrop />
                 <ModalContent >
                     <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-typography-0">{t('preferences.signOutModalTitle')}</Text>
+                        <Text className="text-xl font-semibold text-white">{t('preferences.signOutModalTitle')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-6">
                         <Text className="text-gray-300 text-base leading-relaxed">

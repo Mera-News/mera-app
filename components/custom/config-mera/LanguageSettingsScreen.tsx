@@ -153,7 +153,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
 
               {/* Header */}
               <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                  <Text className="text-xl font-semibold text-typography-0 text-center">
+                  <Text className="text-xl font-semibold text-white text-center">
                       {t('language.title')}
                   </Text>
               </VStack>
@@ -166,7 +166,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                           <HStack space="md" className="items-center">
                               <MaterialIcons name="language" size={24} color="#a78bfa" />
                               <VStack className="flex-1">
-                                  <Text className="text-typography-0 text-lg font-semibold">
+                                  <Text className="text-white text-lg font-semibold">
                                       {t('language.appLanguage')}
                                   </Text>
                                   <Text className="text-typography-500 text-sm mt-0.5">
@@ -182,7 +182,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                               className={`flex-row items-center justify-between py-4 px-4 border border-gray-700 rounded-lg ${busy ? 'opacity-40' : ''}`}
                           >
                               <VStack>
-                                  <Text className="text-typography-0 text-base font-medium">
+                                  <Text className="text-white text-base font-medium">
                                       {selectedLanguage?.name ?? 'English'}
                                   </Text>
                                   <Text className="text-gray-400 text-sm">
@@ -235,7 +235,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                           <HStack space="md" className="items-center">
                               <MaterialIcons name="tune" size={24} color="#f59e0b" />
                               <VStack className="flex-1">
-                                  <Text className="text-typography-0 text-lg font-semibold">
+                                  <Text className="text-white text-lg font-semibold">
                                       {t('language.advanced')}
                                   </Text>
                                   <Text className="text-typography-500 text-sm mt-0.5">
@@ -281,7 +281,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                   </Text>
                                   <Text className="text-typography-400 text-sm">
                                       {t('language.managePacksPrefix')}{' '}
-                                      <Text className="text-typography-0 text-sm font-medium">
+                                      <Text className="text-white text-sm font-medium">
                                           {t('language.languagePacksIosPath')}
                                       </Text>
                                       .
@@ -331,9 +331,9 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
               onDismiss={notifyPickerDismissed}
           >
               <GluestackUIProvider mode="dark">
-                  <Box className="flex-1 bg-background-0" style={{ paddingTop: insets.top + 16 }}>
+                  <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
                       <HStack className="items-center justify-between px-5 pb-4">
-                          <Text className="text-typography-0 text-xl font-semibold">
+                          <Text className="text-white text-xl font-semibold">
                               {t('language.appLanguage')}
                           </Text>
                           <Pressable onPress={() => setShowLangPicker(false)}>
@@ -360,7 +360,7 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
                                   >
                                       <VStack>
                                           <Text
-                                              className={isSelected ? 'text-violet-400 font-semibold' : 'text-typography-0'}
+                                              className={isSelected ? 'text-violet-400 font-semibold' : 'text-white'}
                                           >
                                               {item.name}
                                           </Text>
