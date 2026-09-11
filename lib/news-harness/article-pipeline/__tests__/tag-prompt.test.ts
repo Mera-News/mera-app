@@ -173,6 +173,11 @@ describe('articleMetadataLine', () => {
 // ADD 1 — prompt injection
 // ---------------------------------------------------------------------------
 
+// Article content is nonce-fenced, and the nonce is random per prompt build, so
+// any assertion comparing two INDEPENDENT builds has to normalise it. What
+// these tests are about is the metadata line, not the fence.
+const stripNonce = (s: string) => s.replace(/[a-f0-9]{12}/g, 'NONCE');
+
 describe('ADD 1 — legacyTagPromptEnabled', () => {
   const tagged = [
     candidate('a1', {
@@ -188,7 +193,7 @@ describe('ADD 1 — legacyTagPromptEnabled', () => {
     const off = buildScoreCallForChunk(tagged, FACTS, BASE.relevanceSystemPrompt, BASE);
     const noConfigArg = buildScoreCallForChunk(tagged, FACTS, BASE.relevanceSystemPrompt);
     expect(BASE.legacyTagPromptEnabled).toBe(false);
-    expect(off.prompt).toBe(noConfigArg.prompt);
+    expect(stripNonce(off.prompt)).toBe(stripNonce(noConfigArg.prompt));
     expect(off.prompt).not.toContain(ARTICLE_METADATA_PREFIX);
   });
 
@@ -223,7 +228,7 @@ describe('ADD 1 — legacyTagPromptEnabled', () => {
       .split('\n')
       .filter((l) => !l.startsWith(ARTICLE_METADATA_PREFIX))
       .join('\n');
-    expect(stripped).toBe(off.prompt);
+    expect(stripNonce(stripped)).toBe(stripNonce(off.prompt));
   });
 
   it('throws rather than silently emitting a prompt that is not the measured one', () => {

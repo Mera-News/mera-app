@@ -21,6 +21,7 @@
 // dependency (and its `en` locale) in the shipped bundle for the inverse
 // direction (code → name); here it is used for name → ISO alpha-3.
 import countries from 'i18n-iso-countries';
+import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import {
   formatTopicPlanNotesBlock,
   type TopicPlanNote,
@@ -219,8 +220,17 @@ export function formatKnownFactsList(facts: ContextFact[]): string {
 
   if (displayFacts.length === 0) return 'Nothing yet.';
 
+  // Both halves are branded. A fact statement is publisher-INFLUENCED: the
+  // article-feedback agent proposes `add_fact` after reading a publisher
+  // description, so the text can carry whatever that description carried. Until
+  // now it was interpolated into <context> with no sanitisation at all, which
+  // meant a statement containing `</context>` closed our own context block.
   return displayFacts
-    .map((f) => `- '${f.questionnaireAttribute ?? 'other'}': ${f.statement}`)
+    .map(
+      (f) =>
+        `- '${asUntrusted(f.questionnaireAttribute ?? 'other', 60)}': `
+        + `${asUntrusted(f.statement, 500)}`,
+    )
     .join('\n');
 }
 
@@ -303,9 +313,14 @@ export function planPersonaPrompt(params: {
   return PERSONA_PROMPT_LADDER[PERSONA_PROMPT_LADDER.length - 1];
 }
 
-function truncFilter(text: string): string {
+function truncFilter(text: string): UntrustedText {
   const t = (text ?? '').trim();
-  return t.length > FILTER_PATTERN_TRUNC ? `${t.slice(0, FILTER_PATTERN_TRUNC - 1)}…` : t;
+  const truncated =
+    t.length > FILTER_PATTERN_TRUNC ? `${t.slice(0, FILTER_PATTERN_TRUNC - 1)}…` : t;
+  // A filter pattern is publisher-DERIVED: `add_suppression` mints it from an
+  // article's category, entity or publication name. Escaping runs after the
+  // truncation so a budget can never cut an escape sequence in half.
+  return asUntrusted(truncated, truncated.length);
 }
 
 /**
@@ -365,7 +380,7 @@ export function formatPendingProposal(
   proposal: StagedProposal | null | undefined,
 ): string | undefined {
   if (!proposal || proposal.actions.length === 0) return undefined;
-  return `${proposal.explanation}\nActions: ${proposal.actions.map(describeFilterAction).join('; ')}`;
+  return `${asUntrusted(proposal.explanation, 500)}\nActions: ${proposal.actions.map(describeFilterAction).join('; ')}`;
 }
 
 /** The one normalization every publication-name comparison in this feature

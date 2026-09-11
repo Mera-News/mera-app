@@ -1,6 +1,6 @@
 // news-harness — persona-summary prompt builder (PURE, RN-free).
 
-import { sanitizeForPrompt } from '../prompts/prompts';
+import { asUntrusted } from '../prompts/untrusted-text';
 import { MAX_FACTS_IN_PROMPT, MAX_STATEMENT_CHARS } from './config';
 import type { PersonaSummaryFactInput } from './types';
 
@@ -44,7 +44,7 @@ export function buildPersonaSummaryPrompt(
   selected: PersonaSummaryFactInput[],
 ): { system: string; user: string } {
   const lines = selected.map(
-    (f, i) => `${i + 1}. ${sanitizeForPrompt(f.statement, MAX_STATEMENT_CHARS)}`,
+    (f, i) => `${i + 1}. ${asUntrusted(f.statement, MAX_STATEMENT_CHARS)}`,
   );
   const user = `Facts about the user:\n${lines.join('\n')}\n\nWrite the description lines now as a JSON array.`;
   return { system: PERSONA_SUMMARY_SYSTEM_PROMPT, user };

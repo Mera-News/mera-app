@@ -9,7 +9,7 @@
 // Shares the 4096-ctx / 1024-out on-device budget, so the input is capped +
 // truncated. English-canonical (rendered via TranslatableDynamic downstream).
 
-import { sanitizeForPrompt } from '../prompts/prompts';
+import { asUntrusted } from '../prompts/untrusted-text';
 
 /** Max titles fed to the scope prompt. */
 export const MAX_SCOPE_TITLES = 8;
@@ -70,7 +70,7 @@ export function buildStoryScopePrompt(titles: string[], nowMs: number): StorySco
   const lines = (titles ?? [])
     .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
     .slice(0, MAX_SCOPE_TITLES)
-    .map((t, i) => `${i + 1}. ${sanitizeForPrompt(t, MAX_SCOPE_TITLE_CHARS)}`);
+    .map((t, i) => `${i + 1}. ${asUntrusted(t, MAX_SCOPE_TITLE_CHARS)}`);
   // UTC (not locale) so the prompt does not drift with the device timezone.
   const today = Number.isFinite(nowMs) ? new Date(nowMs).toISOString().slice(0, 10) : 'unknown';
   const user = `Today: ${today}\n\nTitles for this story:\n${lines.join('\n')}\n\nWrite the topic now as a JSON object with "label" and "search".`;

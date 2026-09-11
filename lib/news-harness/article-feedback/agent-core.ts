@@ -10,6 +10,7 @@
 // that thin adapter reads the data and hands plain values to this module.
 
 import { SUPPRESSION_KINDS } from '../core/types';
+import { asUntrusted, type UntrustedText } from '../prompts/untrusted-text';
 import { proposalRequiresUserChoice } from '../core/proposals';
 import {
   PROPOSE_FACT_CHECK_TOOL,
@@ -250,6 +251,24 @@ function trunc(text: string, max: number): string {
 }
 
 /**
+ * `trunc` for PUBLISHER-CONTROLLED text: same character budget as before, then
+ * sanitised and branded `UntrustedText`.
+ *
+ * Truncation runs on the raw string and escaping runs on the already-truncated
+ * result, so a budget can never cut an escape sequence in half. The second
+ * argument to `asUntrusted` is the truncated length precisely so it does not
+ * truncate a second time.
+ *
+ * Every field in the ARTICLE block flows through here. Before this existed the
+ * block used bare `trunc`, so a publisher could put `## ARTICLE` or a tool name
+ * in a description and have the model read it as structure.
+ */
+function untrustedTrunc(text: string, max: number): UntrustedText {
+  const truncated = trunc(text ?? '', max);
+  return asUntrusted(truncated, truncated.length);
+}
+
+/**
  * Epoch-ms → `YYYY-MM-DD` (UTC). UTC (not locale) on purpose: the rendered
  * prompt must be a pure function of the injected clock, so goldens stay pinnable
  * regardless of the runner's timezone. Returns null for a non-finite input.
@@ -431,18 +450,20 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
   if (ctx) {
     const s = ctx.suggestion;
     const title = s.title_en ?? s.title_original ?? fallbackTitle ?? '(untitled)';
-    const lines = [`Title: ${trunc(title, 160)}`];
+    const lines = [`Title: ${untrustedTrunc(title, 160)}`];
     if (publishedDay) lines.push(`Published: ${publishedDay}`);
-    if (s.publication_name) lines.push(`Publication: ${trunc(s.publication_name, 80)}`);
-    if (s.description_en) lines.push(`Description: ${trunc(s.description_en, descTrunc)}`);
+    if (s.publication_name) lines.push(`Publication: ${untrustedTrunc(s.publication_name, 80)}`);
+    if (s.description_en) lines.push(`Description: ${untrustedTrunc(s.description_en, descTrunc)}`);
     // Category + entities feed the "less of this" choose-one alternatives (one
     // line each; capped so the block stays compact).
-    if (ctx.category) lines.push(`Category: ${trunc(ctx.category, 60)}`);
+    if (ctx.category) lines.push(`Category: ${untrustedTrunc(ctx.category, 60)}`);
     const entities = (ctx.entities ?? []).slice(0, MAX_ARTICLE_ENTITIES);
-    if (entities.length > 0) lines.push(`Entities: ${entities.join(', ')}`);
+    if (entities.length > 0) {
+      lines.push(`Entities: ${entities.map((e) => untrustedTrunc(e, 60)).join(', ')}`);
+    }
     articleBlock = `## ARTICLE\n${lines.join('\n')}`;
   } else {
-    articleBlock = `## ARTICLE\nTitle: ${trunc(fallbackTitle ?? '(untitled)', 160)}`
+    articleBlock = `## ARTICLE\nTitle: ${untrustedTrunc(fallbackTitle ?? '(untitled)', 160)}`
       + (publishedDay ? `\nPublished: ${publishedDay}` : '');
   }
 
@@ -456,7 +477,7 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
     const reason = ctx.suggestion.reason?.trim();
     statusBlock =
       `## SUGGESTION STATUS\nRelevance score: ${score10}/10.`
-      + (reason ? ` Reason given: "${trunc(reason, 200)}"` : '');
+      + (reason ? ` Reason given: "${untrustedTrunc(reason, 200)}"` : '');
   } else {
     statusBlock = '## SUGGESTION STATUS\nUnscored — scoring has not finished yet.';
   }
@@ -502,7 +523,7 @@ export function buildFeedbackContext(input: FeedbackContextInput): string {
   const relatedCoverageBlock =
     coverageTitles.length > 0
       ? '## RELATED COVERAGE\n'
-        + coverageTitles.map((t) => `- ${trunc(t, RELATED_COVERAGE_TITLE_TRUNC)}`).join('\n')
+        + coverageTitles.map((t) => `- ${untrustedTrunc(t, RELATED_COVERAGE_TITLE_TRUNC)}`).join('\n')
         + '\nUse ONLY these when proposing track options.'
       : null;
 

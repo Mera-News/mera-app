@@ -13,7 +13,7 @@
 import {
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
-  sanitizeForPrompt,
+  asUntrusted,
 } from '../prompts/prompts';
 import { buildAttributeTextToIdMap, isLocationAttribute } from '../prompts/questionnaire-data';
 import { DEFAULT_HARNESS_CONFIG, type TopicGenConfig } from '../core/config';
@@ -49,18 +49,18 @@ export function buildBaseUserPrompt(
   >,
   includeOthers: boolean,
 ): string {
-  let prompt = `Fact: "${sanitizeForPrompt(inputs.factStatement)}"`;
+  let prompt = `Fact: "${asUntrusted(inputs.factStatement)}"`;
   if (inputs.userLocation) {
-    prompt += `\nUser location: ${sanitizeForPrompt(inputs.userLocation)}`;
+    prompt += `\nUser location: ${asUntrusted(inputs.userLocation)}`;
   }
   if (includeOthers && inputs.otherFacts.length > 0) {
     prompt += `\nOther user facts:\n${inputs.otherFacts
-      .map((s) => `- ${sanitizeForPrompt(s)}`)
+      .map((s) => `- ${asUntrusted(s)}`)
       .join('\n')}`;
   }
   if (inputs.excludeTopics && inputs.excludeTopics.length > 0) {
     prompt += `\nDo NOT repeat these existing topics:\n${inputs.excludeTopics
-      .map((s) => `- ${sanitizeForPrompt(s)}`)
+      .map((s) => `- ${asUntrusted(s)}`)
       .join('\n')}`;
   }
   return prompt;

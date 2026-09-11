@@ -1,6 +1,11 @@
 // Golden test: the old-path shim (lib/mera-protocol/scoring-service) and the
 // harness must build byte-identical score/reason BatchCalls. Prompts are NOT
 // mocked (real); only the shim's RN dependencies (LLM, DB, store, logger) are.
+//
+// "Byte-identical" now means identical MODULO the per-build article-fence
+// nonce, which is random by design and therefore differs between any two
+// independent builds. See `stripNonce` below, and the fence-shape assertions at
+// the end of the file which pin what the normalisation deliberately hides.
 
 jest.mock('@/lib/llm/completeLocal', () => ({ completeLocal: jest.fn() }));
 jest.mock('@/lib/database/services/calibration-service', () => ({
@@ -69,6 +74,18 @@ const mockGetFacts = getFacts as jest.MockedFunction<typeof getFacts>;
 
 const FACT_STATEMENTS = ['Lives in Amsterdam, Netherlands', 'Works in AI'];
 
+// Article content is fenced with a per-build random nonce, so two independent
+// builds of the same prompt differ in exactly that token and nowhere else. The
+// guarantee this file exists to pin is shim/harness STRUCTURAL identity, not
+// equality of a random value, so both sides are normalised before comparison
+// and the fence itself is asserted separately below.
+//
+// The shim (lib/mera-protocol/scoring-service) does not thread a nonce through,
+// so pinning the value instead of normalising it is not available here.
+const NONCE = /[a-f0-9]{12}/g;
+const stripNonce = (s: string) => s.replace(NONCE, 'NONCE');
+const stripNonces = (xs: string[]) => xs.map(stripNonce);
+
 function candidate(id: string): ScoringCandidate {
   return {
     id,
@@ -95,7 +112,9 @@ describe('golden — buildRelevanceCalls', () => {
 
     expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
     expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
-    expect(shim.calls.map((c) => c.prompt)).toEqual(harness.calls.map((c) => c.prompt));
+    expect(stripNonces(shim.calls.map((c) => c.prompt))).toEqual(
+      stripNonces(harness.calls.map((c) => c.prompt)),
+    );
     expect(shim.calls.map((c) => c.temperature)).toEqual(
       harness.calls.map((c) => c.temperature),
     );
@@ -119,7 +138,9 @@ describe('golden — buildReasonCallsForSubset', () => {
 
     expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
     expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
-    expect(shim.calls.map((c) => c.prompt)).toEqual(harness.calls.map((c) => c.prompt));
+    expect(stripNonces(shim.calls.map((c) => c.prompt))).toEqual(
+      stripNonces(harness.calls.map((c) => c.prompt)),
+    );
   });
 });
 
@@ -132,7 +153,7 @@ describe('harness buildScoreCallForChunk', () => {
 
 describe('golden — measured prompt sizes', () => {
   // These four numbers are the INPUTS to the batch-size arithmetic in
-  // core/config.ts (headlineArticlesPerScorePrompt = 5 × 4386/7036 → 3). They
+  // core/config.ts (headlineArticlesPerScorePrompt = 5 × 4454/7105 → 3). They
   // are pinned here so editing a prompt fails loudly instead of silently
   // invalidating that derivation — re-measure, redo the arithmetic, then update
   // both the comment and these pins together.
@@ -144,10 +165,16 @@ describe('golden — measured prompt sizes', () => {
   // above are all identity checks against the same const, so a whitespace slip
   // during the extraction would have passed every existing test.
   it('pins the estimated token size of each cloud scoring prompt', () => {
-    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4386);
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(4770);
-    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7036);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7625);
+    // Re-measured when the nonce-fence sentence was added to the two shared
+    // base prompts. The sentence is byte-identical in every family, so all four
+    // moved by the same amount (+68/+69) and the derivation below is intact:
+    //   5 * (4454 / 7105) = 3.1344 -> 3   (was 5 * (4386 / 7036) = 3.1163 -> 3)
+    // `headlineArticlesPerScorePrompt` therefore stays 3 and no
+    // DEFAULT_HARNESS_CONFIG literal changed.
+    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4454);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(4839);
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7105);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7693);
   });
 
   it('keeps the headline variants strictly additive over the live prompts', () => {
@@ -206,7 +233,9 @@ describe('golden — headline variant (P4b routing)', () => {
     expect(harness.scoreChunkSize).toBe(3);
     expect(shim.calls.map((c) => c.id)).toEqual(harness.calls.map((c) => c.id));
     expect(shim.calls.map((c) => c.system)).toEqual(harness.calls.map((c) => c.system));
-    expect(shim.calls.map((c) => c.prompt)).toEqual(harness.calls.map((c) => c.prompt));
+    expect(stripNonces(shim.calls.map((c) => c.prompt))).toEqual(
+      stripNonces(harness.calls.map((c) => c.prompt)),
+    );
     expect(shim.calls.every((c) => c.system === CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(
       true,
     );
@@ -240,5 +269,40 @@ describe('golden — headline variant (P4b routing)', () => {
     const systemById = new Map(shim.calls.map((c) => [c.id, c.system] as const));
     expect(systemById.get('reason:h')).toBe(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT);
     expect(systemById.get('reason:s')).toBe(CLOUD_REASON_SYSTEM_PROMPT);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The article fence. `stripNonce` above deliberately hides the nonce VALUE from
+// the identity comparisons, so these assertions pin everything about the fence
+// that normalisation would otherwise let through: that it is there at all, that
+// both sides agree on its shape, and that one prompt build uses ONE nonce.
+// ---------------------------------------------------------------------------
+
+describe('golden — article fence', () => {
+  it('fences every article block in both the shim and the harness build', async () => {
+    const candidates = [candidate('a'), candidate('b')];
+    const shim = await shimBuildRelevanceCalls(candidates);
+    const harness = harnessBuildRelevanceCalls(candidates, FACT_STATEMENTS);
+
+    for (const prompt of [shim.calls[0].prompt, harness.calls[0].prompt]) {
+      const opens = prompt.match(/<<ARTICLE [a-f0-9]{12}>>/g) ?? [];
+      const closes = prompt.match(/<<\/ARTICLE [a-f0-9]{12}>>/g) ?? [];
+      expect(opens).toHaveLength(2);
+      expect(closes).toHaveLength(2);
+      // One nonce per prompt build, not one per article.
+      expect(new Set([...opens, ...closes].map((m) => m.match(/[a-f0-9]{12}/)![0])).size).toBe(1);
+    }
+  });
+
+  it('gives two independent builds different nonces', async () => {
+    const first = await shimBuildRelevanceCalls([candidate('a')]);
+    const second = await shimBuildRelevanceCalls([candidate('a')]);
+    const nonceOf = (s: string) => s.match(/<<ARTICLE ([a-f0-9]{12})>>/)![1];
+
+    expect(nonceOf(first.calls[0].prompt)).not.toBe(nonceOf(second.calls[0].prompt));
+    // ...and the two are otherwise the same prompt, which is what makes the
+    // normalisation in the identity tests above safe rather than permissive.
+    expect(stripNonce(first.calls[0].prompt)).toBe(stripNonce(second.calls[0].prompt));
   });
 });

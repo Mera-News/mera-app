@@ -1,6 +1,6 @@
 // news-harness — story-headline prompt builder (PURE, RN-free).
 
-import { sanitizeForPrompt } from '../prompts/prompts';
+import { asUntrusted } from '../prompts/untrusted-text';
 import { MAX_HEADLINE_WORDS, MAX_TITLE_CHARS, MAX_TITLES } from './config';
 import type { StoryHeadlinePrompt } from './types';
 
@@ -28,7 +28,7 @@ export function buildStoryHeadlinePrompt(titles: string[]): StoryHeadlinePrompt 
   const lines = (titles ?? [])
     .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
     .slice(0, MAX_TITLES)
-    .map((t, i) => `${i + 1}. ${sanitizeForPrompt(t, MAX_TITLE_CHARS)}`);
+    .map((t, i) => `${i + 1}. ${asUntrusted(t, MAX_TITLE_CHARS)}`);
   const user = `Article titles for this story:\n${lines.join('\n')}\n\nWrite the one-line headline now as a JSON object.`;
   return { system: STORY_HEADLINE_SYSTEM_PROMPT, user };
 }
