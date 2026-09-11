@@ -71,10 +71,10 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
       // ("Works as a software engineer buildin…") was unreadable and the full
       // text appeared nowhere else.
       numberOfLines={2}
-      className="text-white"
+      className="text-typography-0"
     />
   ) : (
-    <Text size="lg" bold numberOfLines={2} className="text-white">
+    <Text size="lg" bold numberOfLines={2} className="text-typography-0">
       {title}
     </Text>
   );

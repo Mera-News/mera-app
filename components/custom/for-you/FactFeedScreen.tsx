@@ -290,7 +290,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
         <MaterialIcons name="arrow-forward" size={14} color="#6B7280" />
       </HStack>
       {isHeadlineSectionId(nextFact.factId) ? (
-        <Text size="md" bold numberOfLines={1} className="text-white text-center mt-1">
+        <Text size="md" bold numberOfLines={1} className="text-typography-0 text-center mt-1">
           {nextFactTitle}
         </Text>
       ) : (
@@ -300,7 +300,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
           size="md"
           bold
           numberOfLines={1}
-          className="text-white text-center mt-1"
+          className="text-typography-0 text-center mt-1"
         />
       )}
     </Pressable>
@@ -363,7 +363,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
               <Text size="xs" className="text-typography-500">{t('forYou.sectionPrefix')}</Text>
             )}
             {isHeadline ? (
-              <Text size="lg" bold numberOfLines={1} className="text-white">
+              <Text size="lg" bold numberOfLines={1} className="text-typography-0">
                 {statement}
               </Text>
             ) : (
@@ -373,7 +373,7 @@ const FactFeedScreen: React.FC<FactFeedScreenProps> = ({ factId, statement }) =>
                 size="xl"
                 bold
                 numberOfLines={1}
-                className="text-white"
+                className="text-typography-0"
               />
             )}
           </Box>

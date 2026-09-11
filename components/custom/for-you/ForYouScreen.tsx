@@ -673,7 +673,7 @@ const MeraNewsScreen: React.FC = () => {
                                 <View pointerEvents="none" className="flex-shrink min-w-0">
                                     <Heading
                                         size={titleSize}
-                                        className="text-white"
+                                        className="text-typography-0"
                                         numberOfLines={1}
                                         // SHRINK THE TYPE, DO NOT CUT THE WORD.
                                         // Sharing this row with the status mark,

@@ -109,7 +109,7 @@ const WhatsNewSheet: React.FC = () => {
       <ModalBackdrop />
       <ModalContent className="bg-gray-950 border border-gray-800">
         <ModalHeader>
-          <Heading size="xl" className="text-white">
+          <Heading size="xl" className="text-typography-0">
             {t('whatsNew.starterTitle')}
           </Heading>
         </ModalHeader>
@@ -127,7 +127,7 @@ const WhatsNewSheet: React.FC = () => {
                   <MaterialIcons name={row.icon} size={20} color={ACCENT} />
                 </Box>
                 <VStack className="flex-1 min-w-0">
-                  <Text size="sm" bold className="text-white">
+                  <Text size="sm" bold className="text-typography-0">
                     {t(row.titleKey as any)}
                   </Text>
                   <Text size="xs" className="text-typography-400">
