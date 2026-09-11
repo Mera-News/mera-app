@@ -129,7 +129,7 @@ const ScopeChipRow: React.FC<ScopeChipRowProps> = ({ scopes, selectedId, onSelec
                     <Text
                         size="sm"
                         numberOfLines={1}
-                        className={active ? 'text-pure-black font-semibold' : 'text-white'}
+                        className={active ? 'text-black font-semibold' : 'text-white'}
                     >
                         {label}
                     </Text>

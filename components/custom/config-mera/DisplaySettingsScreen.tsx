@@ -313,7 +313,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                       <Text
                         scaleTier="chrome"
                         style={{ fontSize: Math.round(13 * step) }}
-                        className={active ? 'text-pure-black font-bold' : 'text-gray-300 font-bold'}
+                        className={active ? 'text-black font-bold' : 'text-gray-300 font-bold'}
                       >
                         A
                       </Text>
@@ -321,7 +321,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                         size="2xs"
                         scaleTier="chrome"
                         numberOfLines={1}
-                        className={active ? 'text-pure-black' : 'text-gray-500'}
+                        className={active ? 'text-black' : 'text-gray-500'}
                       >
                         {label}
                       </Text>
@@ -500,7 +500,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                         size="2xs"
                         scaleTier="chrome"
                         numberOfLines={1}
-                        className={active ? 'text-pure-black mt-0.5' : 'text-gray-500 mt-0.5'}
+                        className={active ? 'text-black mt-0.5' : 'text-gray-500 mt-0.5'}
                       >
                         {label}
                       </Text>

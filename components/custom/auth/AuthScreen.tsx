@@ -289,7 +289,7 @@ const LanguageStageView: React.FC<LanguageStageViewProps> = ({ onContinue }) => 
                     {saving ? (
                         <Spinner size="small" color="white" />
                     ) : (
-                        <Text className="text-pure-black text-base font-semibold">
+                        <Text className="text-black text-base font-semibold">
                             {t('auth.continue')}
                         </Text>
                     )}
@@ -384,7 +384,7 @@ const WelcomeView: React.FC<WelcomeViewProps> = ({ onUseEmail, onGetStarted }) =
                         accessibilityLabel={t('auth.getStarted')}
                         className="h-14 rounded-full items-center justify-center bg-primary-500"
                     >
-                        <Text className="text-pure-black text-base font-semibold">
+                        <Text className="text-black text-base font-semibold">
                             {t('auth.getStarted')}
                         </Text>
                     </Pressable>

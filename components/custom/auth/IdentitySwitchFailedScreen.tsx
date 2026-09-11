@@ -146,7 +146,7 @@ export default function IdentitySwitchFailedScreen({ onRetry }: IdentitySwitchFa
               testID="identity-switch-sign-out"
               onPress={handleSignOut}
               variant="outline"
-              className="w-full rounded-full border-pure-white/30"
+              className="w-full rounded-full border-white/30"
               size="lg"
             >
               {signingOut ? <Spinner size="small" className="mr-2" /> : null}

@@ -233,7 +233,7 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
                                                     >
                                                         <Text
                                                             size="sm"
-                                                            className={selected ? 'text-pure-black' : 'text-gray-300'}
+                                                            className={selected ? 'text-black' : 'text-gray-300'}
                                                         >
                                                             {t('headlineDepth.optionLabel', { n: option })}
                                                         </Text>

@@ -145,7 +145,7 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                                     // helping. See lib/typography/policy.ts.
                                     scaleTier="chrome"
                                     numberOfLines={1}
-                                    className={active ? 'text-pure-black font-semibold' : 'text-primary-500 font-semibold'}
+                                    className={active ? 'text-black font-semibold' : 'text-primary-500 font-semibold'}
                                 >
                                     {t(tab.labelKey as any)}
                                 </Text>
@@ -167,7 +167,7 @@ const ForYouSubTabs: React.FC<ForYouSubTabsProps> = ({ activeSubTab, onSelect })
                                         <Text
                                             size="xs"
                                             scaleTier="chrome"
-                                            className={active ? 'text-primary-400 font-bold' : 'text-pure-black font-bold'}
+                                            className={active ? 'text-primary-400 font-bold' : 'text-black font-bold'}
                                         >
                                             {unseenTotal > 99 ? '99+' : unseenTotal}
                                         </Text>

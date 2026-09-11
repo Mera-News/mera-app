@@ -64,7 +64,7 @@ const HubRow: React.FC<HubRowProps> = ({
                         // and a hard 22pt box clipped it.
                         style={{ minWidth: 22, minHeight: 22, backgroundColor: badgeColor }}
                     >
-                        <Text size="xs" scaleTier="chrome" className="text-pure-black font-bold">{badgeCount}</Text>
+                        <Text size="xs" scaleTier="chrome" className="text-black font-bold">{badgeCount}</Text>
                     </VStack>
                 ) : null}
                 <MaterialIcons name="chevron-right" size={20} color="#6b7280" />

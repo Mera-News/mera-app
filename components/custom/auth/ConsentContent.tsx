@@ -137,7 +137,7 @@ const ConsentContent: React.FC<ConsentContentProps> = ({
                         </Text>
                     </HStack>
                 ) : (
-                    <Text className="text-pure-black text-base font-semibold">{ctaLabel}</Text>
+                    <Text className="text-black text-base font-semibold">{ctaLabel}</Text>
                 )}
             </Pressable>
 
