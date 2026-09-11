@@ -46,7 +46,7 @@ const InfoRow = ({ icon, label, value, isLast }: { icon: keyof typeof MaterialIc
     <HStack className={`items-center px-4 py-3 ${isLast ? '' : 'border-b border-gray-800'}`}>
         <MaterialIcons name={icon} size={16} color="#9ca3af" />
         <Text size="sm" className="text-gray-400 ml-3 flex-1">{label}</Text>
-        <Text size="sm" className="text-white" numberOfLines={1}>{value}</Text>
+        <Text size="sm" className="text-typography-0" numberOfLines={1}>{value}</Text>
     </HStack>
 );
 
@@ -317,7 +317,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                 <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
                 </Pressable>
-                <Text className="text-white font-semibold text-base flex-1 text-center mr-9">
+                <Text className="text-typography-0 font-semibold text-base flex-1 text-center mr-9">
                     {t('subscription.managePlan')}
                 </Text>
             </HStack>
@@ -360,7 +360,7 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                             testID="manage-starter-free"
                             className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mt-4"
                         >
-                            <Text className="text-white font-semibold text-base">
+                            <Text className="text-typography-0 font-semibold text-base">
                                 {t('subscription.starterFreeTitle')}
                             </Text>
                             <Text size="sm" className="text-gray-400 mt-2 leading-relaxed">
@@ -385,12 +385,12 @@ const ManageSubscriptionScreen: React.FC<ManageSubscriptionScreenProps> = ({ onB
                                     name, and 32px on 24px type (1.33) sliced the
                                     top off Devanagari/Thai marks. `text-2xl` now
                                     carries a script-safe 36px line box. */}
-                                <Text className="text-white font-bold text-2xl">
+                                <Text className="text-typography-0 font-bold text-2xl">
                                     {planLabelText()}
                                 </Text>
                             </VStack>
                             {priceString ? (
-                                <Text className="text-white font-semibold text-lg">{priceString}</Text>
+                                <Text className="text-typography-0 font-semibold text-lg">{priceString}</Text>
                             ) : null}
                         </HStack>
                         {statusPill ? <StatusPill text={statusPill.text} color={statusPill.color} /> : null}

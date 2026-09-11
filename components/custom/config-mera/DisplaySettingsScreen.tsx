@@ -247,7 +247,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
           >
             <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
           </Pressable>
-          <Text size="lg" className="text-white font-semibold">
+          <Text size="lg" className="text-typography-0 font-semibold">
             {t('display.screenTitle')}
           </Text>
         </HStack>
@@ -273,7 +273,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               <HStack space="md" className="items-center">
                 <MaterialIcons name="format-size" size={24} color="#9ca3af" />
                 <VStack className="flex-1">
-                  <Text className="text-base text-white">{t('display.textSizeTitle')}</Text>
+                  <Text className="text-base text-typography-0">{t('display.textSizeTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
                     {t('display.textSizeDescription')}
                   </Text>
@@ -343,7 +343,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               <Text size="2xs" className="text-gray-500 uppercase font-semibold">
                 {t('display.textSizePreviewLabel')}
               </Text>
-              <Text size="lg" className="text-white font-semibold">
+              <Text size="lg" className="text-typography-0 font-semibold">
                 {t('display.textSizePreviewHeadline')}
               </Text>
               <Text size="sm" className="text-gray-400">
@@ -374,7 +374,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                   color={blurImages ? '#10b981' : '#9ca3af'}
                 />
                 <VStack className="flex-1">
-                  <Text className="text-base text-white">{t('security.blurImagesTitle')}</Text>
+                  <Text className="text-base text-typography-0">{t('security.blurImagesTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
                     {t('security.blurImagesDescription')}
                   </Text>
@@ -393,7 +393,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                     color={staticGradient ? '#10b981' : '#9ca3af'}
                   />
                   <VStack className="flex-1">
-                    <Text className="text-base text-white">{t('display.staticGradientTitle')}</Text>
+                    <Text className="text-base text-typography-0">{t('display.staticGradientTitle')}</Text>
                     <Text size="sm" className="text-gray-400 mt-0.5">
                       {t('display.staticGradientDescription')}
                     </Text>
@@ -424,7 +424,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                   color={lockEnabled ? '#10b981' : '#9ca3af'}
                 />
                 <VStack className="flex-1">
-                  <Text className="text-base text-white">{t('security.requirePinTitle')}</Text>
+                  <Text className="text-base text-typography-0">{t('security.requirePinTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
                     {t('security.requirePinDescription')}
                   </Text>
@@ -448,7 +448,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                   setMode('verify');
                 }}
               >
-                <Text className="text-base text-white">{t('security.changePin')}</Text>
+                <Text className="text-base text-typography-0">{t('security.changePin')}</Text>
                 <MaterialIcons name="chevron-right" size={20} color="#999999" />
               </Pressable>
             )}
@@ -464,7 +464,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               <HStack space="md" className="items-center">
                 <MaterialIcons name="open-in-new" size={24} color="#9ca3af" />
                 <VStack className="flex-1">
-                  <Text className="text-base text-white">{t('display.startupTabTitle')}</Text>
+                  <Text className="text-base text-typography-0">{t('display.startupTabTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
                     {t('display.startupTabDescription')}
                   </Text>

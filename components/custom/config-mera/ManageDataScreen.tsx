@@ -369,7 +369,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
               )}
 
               <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                  <Text className="text-xl font-semibold text-white text-center">{t('manageData.title')}</Text>
+                  <Text className="text-xl font-semibold text-typography-0 text-center">{t('manageData.title')}</Text>
               </VStack>
 
               <ScrollView className="flex-1 px-5" contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
@@ -398,7 +398,7 @@ const ManageDataScreen: React.FC<ManageDataScreenProps> = ({ onBack }) => {
                   >
                       <Box className="flex-row items-center" style={{ gap: 12 }}>
                           <MaterialIcons name="monitor-heart" size={22} color="#9ca3af" />
-                          <Text className="text-base text-white">
+                          <Text className="text-base text-typography-0">
                               {t('observability.title')}
                           </Text>
                       </Box>

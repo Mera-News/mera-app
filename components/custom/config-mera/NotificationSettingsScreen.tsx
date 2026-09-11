@@ -271,7 +271,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
         <Box className="px-5 mb-6">
             {isOnboarding && (
                 <VStack className="mb-8">
-                    <Text className="text-3xl font-bold text-white text-center mb-3">
+                    <Text className="text-3xl font-bold text-typography-0 text-center mb-3">
                         {t('notifications.title')}
                     </Text>
                     <Text className="text-base text-typography-400 text-center">
@@ -289,7 +289,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                         color={notificationsEnabled ? "#10b981" : "#9ca3af"}
                     />
                     <VStack>
-                        <Text className="text-white text-lg font-semibold">
+                        <Text className="text-typography-0 text-lg font-semibold">
                             {t('notifications.pushNotifications')}
                         </Text>
                         {!isOnboarding && (
@@ -347,7 +347,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     const renderTimeSectionHeader = () => (
         <Box className="px-5 mb-2">
             {!isOnboarding && (
-                <Text className="text-white text-lg font-semibold mb-2">
+                <Text className="text-typography-0 text-lg font-semibold mb-2">
                     {t('notifications.timeTitle')}
                 </Text>
             )}
@@ -370,7 +370,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                 <Text size="sm" className="text-typography-500">
                     Selected
                 </Text>
-                <Text size="md" className="text-white font-semibold">
+                <Text size="md" className="text-typography-0 font-semibold">
                     {selectedHours.length}
                 </Text>
             </VStack>
@@ -389,7 +389,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     onPress={() => setUse24h(true)}
                     className={`px-3 py-1.5 rounded-full ${use24h ? 'bg-gray-700' : 'bg-transparent'}`}
                 >
-                    <Text size="xs" className={`font-medium ${use24h ? 'text-white' : 'text-gray-500'}`}>
+                    <Text size="xs" className={`font-medium ${use24h ? 'text-typography-0' : 'text-gray-500'}`}>
                         {t('notifications.format24h')}
                     </Text>
                 </Pressable>
@@ -397,7 +397,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                     onPress={() => setUse24h(false)}
                     className={`px-3 py-1.5 rounded-full ${!use24h ? 'bg-gray-700' : 'bg-transparent'}`}
                 >
-                    <Text size="xs" className={`font-medium ${!use24h ? 'text-white' : 'text-gray-500'}`}>
+                    <Text size="xs" className={`font-medium ${!use24h ? 'text-typography-0' : 'text-gray-500'}`}>
                         {t('notifications.formatAmPm')}
                     </Text>
                 </Pressable>
@@ -432,7 +432,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
                       </Box>
                   )}
                   <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                      <Text className="text-xl font-semibold text-white text-center">{t('notifications.title')}</Text>
+                      <Text className="text-xl font-semibold text-typography-0 text-center">{t('notifications.title')}</Text>
                   </VStack>
                   <VStack className="flex-1 justify-center items-center">
                       <Spinner size="large" />
@@ -482,7 +482,7 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
 
               {/* Header */}
               <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                  <Text className="text-xl font-semibold text-white text-center">{t('notifications.title')}</Text>
+                  <Text className="text-xl font-semibold text-typography-0 text-center">{t('notifications.title')}</Text>
               </VStack>
 
               {notificationsEnabled ? (
