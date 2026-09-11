@@ -194,6 +194,11 @@ export async function runCalibration(): Promise<CalibrationOutcome> {
       model: CALIBRATION_MODEL,
       maxTokens: CALIBRATION_MAX_TOKENS,
       temperature: CALIBRATION_TEMPERATURE,
+    }, {
+      // INTERACTIVE: this call only ever fires on an explicit in-chat confirm,
+      // so a person is waiting on it. Left on the default background lane it
+      // would queue behind a scoring cycle.
+      lane: 'interactive',
     });
     rawDeltas = parseCalibrationDeltas(output);
   } catch (err) {
