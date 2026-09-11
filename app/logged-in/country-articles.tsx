@@ -2,6 +2,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import CountryArticleList from '@/components/custom/config-panel/CountryArticleList';
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
@@ -19,22 +20,24 @@ export default function CountryArticles() {
     }
 
     return (
-          <View style={{ flex: 1 }}>
-              {/* Unpadded wrapper. The page backdrop is mounted HERE, not inside the
-                  SafeAreaView and not inside the screen component, so it spans the
-                  FULL screen including the safe areas — otherwise the insets leave
-                  black strips top and bottom. The content below keeps its insets. */}
-              <AbstractGradientBackdrop />
+        <GluestackUIProvider mode="dark">
+            <View style={{ flex: 1 }}>
+                {/* Unpadded wrapper. The page backdrop is mounted HERE, not inside the
+                    SafeAreaView and not inside the screen component, so it spans the
+                    FULL screen including the safe areas — otherwise the insets leave
+                    black strips top and bottom. The content below keeps its insets. */}
+                <AbstractGradientBackdrop />
 
-              <SafeAreaView style={{ flex: 1 }}>
-                  <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                      <CountryArticleList
-                          countryCode={params.countryCode}
-                          countryName={params.countryName ?? 'Top headlines'}
-                          onBack={() => router.back()}
-                      />
-                  </ErrorBoundary>
-              </SafeAreaView>
-          </View>
+                <SafeAreaView style={{ flex: 1 }}>
+                    <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+                        <CountryArticleList
+                            countryCode={params.countryCode}
+                            countryName={params.countryName ?? 'Top headlines'}
+                            onBack={() => router.back()}
+                        />
+                    </ErrorBoundary>
+                </SafeAreaView>
+            </View>
+        </GluestackUIProvider>
     );
 }

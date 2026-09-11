@@ -2,6 +2,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import TutorialsMenuScreen from '@/components/custom/tutorials/TutorialsMenuScreen';
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { router } from 'expo-router';
 import React from 'react';
 import { View } from 'react-native';
@@ -31,24 +32,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
  */
 export default function Tutorials() {
     return (
-          <View style={{ flex: 1 }}>
-              {/* Unpadded wrapper so the backdrop spans the safe areas; the
-                  content below keeps its insets. Same shape as every other
-                  pushed screen in this stack. */}
-              <AbstractGradientBackdrop />
+        <GluestackUIProvider mode="dark">
+            <View style={{ flex: 1 }}>
+                {/* Unpadded wrapper so the backdrop spans the safe areas; the
+                    content below keeps its insets. Same shape as every other
+                    pushed screen in this stack. */}
+                <AbstractGradientBackdrop />
 
-              <SafeAreaView testID="tutorials-screen" style={{ flex: 1 }}>
-                  <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                      <TutorialsMenuScreen
-                          onBack={() => router.back()}
-                          onOpenChapter={(chapterId) =>
-                              router.push(
-                                  `/tutorials/player?chapter=${chapterId}` as never,
-                              )
-                          }
-                      />
-                  </ErrorBoundary>
-              </SafeAreaView>
-          </View>
+                <SafeAreaView testID="tutorials-screen" style={{ flex: 1 }}>
+                    <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+                        <TutorialsMenuScreen
+                            onBack={() => router.back()}
+                            onOpenChapter={(chapterId) =>
+                                router.push(
+                                    `/tutorials/player?chapter=${chapterId}` as never,
+                                )
+                            }
+                        />
+                    </ErrorBoundary>
+                </SafeAreaView>
+            </View>
+        </GluestackUIProvider>
     );
 }

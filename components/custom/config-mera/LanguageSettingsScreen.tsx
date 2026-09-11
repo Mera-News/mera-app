@@ -119,273 +119,273 @@ const LanguageSettingsScreen: React.FC<LanguageSettingsScreenProps> = ({ onBack,
     };
 
     return (
-        <>
-          <Box className="flex-1">
-              {/* Page background. Must be the FIRST child so it paints behind
-                  everything else on the page. */}
-              <AbstractGradientBackdrop />
+        <GluestackUIProvider mode="dark">
+            <Box className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
 
-              {/* Floating Back Button */}
-              {onBack && (
-                  <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                      <Pressable
-                          testID="language-back"
-                          onPress={handleBack}
-                          disabled={busy}
-                          // Announced as disabled, not merely dimmed. The a11y
-                          // tree reported `enabled: true, hittable: false`
-                          // while probing, so VoiceOver offered a button that
-                          // silently did nothing — the sighted user sees the
-                          // 40% opacity, a screen-reader user got no signal at
-                          // all. `accessibilityState` is what carries it;
-                          // `disabled` alone does not on a Pressable.
-                          accessibilityState={{ disabled: busy }}
-                          className={`bg-gray-900 rounded-full p-3 shadow-hard-2 ${busy ? 'opacity-40' : ''}`}
-                      >
-                          <MaterialIcons
-                              name="arrow-back"
-                              size={24}
-                              color={busy ? '#6b7280' : '#ffffff'}
-                          />
-                      </Pressable>
-                  </Box>
-              )}
+                {/* Floating Back Button */}
+                {onBack && (
+                    <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
+                        <Pressable
+                            testID="language-back"
+                            onPress={handleBack}
+                            disabled={busy}
+                            // Announced as disabled, not merely dimmed. The a11y
+                            // tree reported `enabled: true, hittable: false`
+                            // while probing, so VoiceOver offered a button that
+                            // silently did nothing — the sighted user sees the
+                            // 40% opacity, a screen-reader user got no signal at
+                            // all. `accessibilityState` is what carries it;
+                            // `disabled` alone does not on a Pressable.
+                            accessibilityState={{ disabled: busy }}
+                            className={`bg-gray-900 rounded-full p-3 shadow-hard-2 ${busy ? 'opacity-40' : ''}`}
+                        >
+                            <MaterialIcons
+                                name="arrow-back"
+                                size={24}
+                                color={busy ? '#6b7280' : '#ffffff'}
+                            />
+                        </Pressable>
+                    </Box>
+                )}
 
-              {/* Header */}
-              <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                  <Text className="text-xl font-semibold text-white text-center">
-                      {t('language.title')}
-                  </Text>
-              </VStack>
+                {/* Header */}
+                <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
+                    <Text className="text-xl font-semibold text-white text-center">
+                        {t('language.title')}
+                    </Text>
+                </VStack>
 
-              <ScrollView className="flex-1 pt-1">
-                  <VStack className="px-5" space="xl">
+                <ScrollView className="flex-1 pt-1">
+                    <VStack className="px-5" space="xl">
 
-                      {/* App Language */}
-                      <VStack space="md">
-                          <HStack space="md" className="items-center">
-                              <MaterialIcons name="language" size={24} color="#a78bfa" />
-                              <VStack className="flex-1">
-                                  <Text className="text-white text-lg font-semibold">
-                                      {t('language.appLanguage')}
-                                  </Text>
-                                  <Text className="text-typography-500 text-sm mt-0.5">
-                                      {t('language.appLanguageDescription')}
-                                  </Text>
-                              </VStack>
-                          </HStack>
+                        {/* App Language */}
+                        <VStack space="md">
+                            <HStack space="md" className="items-center">
+                                <MaterialIcons name="language" size={24} color="#a78bfa" />
+                                <VStack className="flex-1">
+                                    <Text className="text-white text-lg font-semibold">
+                                        {t('language.appLanguage')}
+                                    </Text>
+                                    <Text className="text-typography-500 text-sm mt-0.5">
+                                        {t('language.appLanguageDescription')}
+                                    </Text>
+                                </VStack>
+                            </HStack>
 
-                          <Pressable
-                              testID="language-current-row"
-                              onPress={() => setShowLangPicker(true)}
-                              disabled={busy}
-                              className={`flex-row items-center justify-between py-4 px-4 border border-gray-700 rounded-lg ${busy ? 'opacity-40' : ''}`}
-                          >
-                              <VStack>
-                                  <Text className="text-white text-base font-medium">
-                                      {selectedLanguage?.name ?? 'English'}
-                                  </Text>
-                                  <Text className="text-gray-400 text-sm">
-                                      {selectedLanguage?.native ?? 'English'}
-                                  </Text>
-                              </VStack>
-                              <MaterialIcons name="chevron-right" size={20} color="#999999" />
-                          </Pressable>
+                            <Pressable
+                                testID="language-current-row"
+                                onPress={() => setShowLangPicker(true)}
+                                disabled={busy}
+                                className={`flex-row items-center justify-between py-4 px-4 border border-gray-700 rounded-lg ${busy ? 'opacity-40' : ''}`}
+                            >
+                                <VStack>
+                                    <Text className="text-white text-base font-medium">
+                                        {selectedLanguage?.name ?? 'English'}
+                                    </Text>
+                                    <Text className="text-gray-400 text-sm">
+                                        {selectedLanguage?.native ?? 'English'}
+                                    </Text>
+                                </VStack>
+                                <MaterialIcons name="chevron-right" size={20} color="#999999" />
+                            </Pressable>
 
-                          {busy && pendingCode ? (
-                              <LanguageSwitchProgress code={pendingCode} onCancel={cancel} />
-                          ) : null}
+                            {busy && pendingCode ? (
+                                <LanguageSwitchProgress code={pendingCode} onCancel={cancel} />
+                            ) : null}
 
-                          {/* Everything here is what a reader must act on, and
-                              nothing here is about on-device translation — that
-                              all lives under Advanced now. */}
-                          <VStack space="sm">
-                              {/* Read BEFORE the picker opens. Once Apple's
-                                  "Required Downloads" sheet is up it covers the
-                                  lower half of the screen, so this is the last
-                                  calm moment to say what that sheet expects.
-                                  iOS-only, from inside the component. */}
-                              <LanguageDownloadHint />
-                              {/* NOT platform-gated, and not Advanced: Google
-                                  Translate is not on-device translation, it is the
-                                  path that works for everyone with nothing to
-                                  download. A reader who cannot or will not fetch a
-                                  language pack has to leave this section already
-                                  knowing they can still read every article. Named
-                                  exactly as the article-page button is labelled. */}
-                              <Text className="text-typography-400 text-xs">
-                                  {t('language.googleTranslateAlways')}
-                              </Text>
-                          </VStack>
-                      </VStack>
+                            {/* Everything here is what a reader must act on, and
+                                nothing here is about on-device translation — that
+                                all lives under Advanced now. */}
+                            <VStack space="sm">
+                                {/* Read BEFORE the picker opens. Once Apple's
+                                    "Required Downloads" sheet is up it covers the
+                                    lower half of the screen, so this is the last
+                                    calm moment to say what that sheet expects.
+                                    iOS-only, from inside the component. */}
+                                <LanguageDownloadHint />
+                                {/* NOT platform-gated, and not Advanced: Google
+                                    Translate is not on-device translation, it is the
+                                    path that works for everyone with nothing to
+                                    download. A reader who cannot or will not fetch a
+                                    language pack has to leave this section already
+                                    knowing they can still read every article. Named
+                                    exactly as the article-page button is labelled. */}
+                                <Text className="text-typography-400 text-xs">
+                                    {t('language.googleTranslateAlways')}
+                                </Text>
+                            </VStack>
+                        </VStack>
 
-                      <Box className="border-b border-gray-800" />
+                        <Box className="border-b border-gray-800" />
 
-                      {/* Advanced — on-device translation, and only that.
-                          Split out because it is genuinely optional: the section
-                          above already leaves the reader able to read anything.
-                          A plain heading rather than a disclosure, deliberately;
-                          content the reader may actually need should not sit
-                          behind an interaction they have to guess at. */}
-                      <VStack
-                          testID="language-advanced-section"
-                          space="md"
-                          style={{ paddingBottom: insets.bottom + 32 }}
-                      >
-                          <HStack space="md" className="items-center">
-                              <MaterialIcons name="tune" size={24} color="#f59e0b" />
-                              <VStack className="flex-1">
-                                  <Text className="text-white text-lg font-semibold">
-                                      {t('language.advanced')}
-                                  </Text>
-                                  <Text className="text-typography-500 text-sm mt-0.5">
-                                      {t('language.advancedDescription')}
-                                  </Text>
-                              </VStack>
-                          </HStack>
+                        {/* Advanced — on-device translation, and only that.
+                            Split out because it is genuinely optional: the section
+                            above already leaves the reader able to read anything.
+                            A plain heading rather than a disclosure, deliberately;
+                            content the reader may actually need should not sit
+                            behind an interaction they have to guess at. */}
+                        <VStack
+                            testID="language-advanced-section"
+                            space="md"
+                            style={{ paddingBottom: insets.bottom + 32 }}
+                        >
+                            <HStack space="md" className="items-center">
+                                <MaterialIcons name="tune" size={24} color="#f59e0b" />
+                                <VStack className="flex-1">
+                                    <Text className="text-white text-lg font-semibold">
+                                        {t('language.advanced')}
+                                    </Text>
+                                    <Text className="text-typography-500 text-sm mt-0.5">
+                                        {t('language.advancedDescription')}
+                                    </Text>
+                                </VStack>
+                            </HStack>
 
-                          {Platform.OS === 'ios' && (
-                              <VStack space="sm">
-                                  <Text className="text-typography-400 text-sm">
-                                      {t('language.onDeviceTranslationHint')}
-                                  </Text>
-                                  {/* The one surviving guide button. The screen used
-                                      to offer this same video twice; it belongs with
-                                      the sentence that tells the reader to check iOS
-                                      settings, which is what the video shows. */}
-                                  <Pressable
-                                      onPress={handleWatchGuide}
-                                      className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
-                                  >
-                                      <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
-                                      <Text className="text-violet-400 text-sm font-medium flex-1">
-                                          {t('language.watchGuide')}
-                                      </Text>
-                                  </Pressable>
-                              </VStack>
-                          )}
+                            {Platform.OS === 'ios' && (
+                                <VStack space="sm">
+                                    <Text className="text-typography-400 text-sm">
+                                        {t('language.onDeviceTranslationHint')}
+                                    </Text>
+                                    {/* The one surviving guide button. The screen used
+                                        to offer this same video twice; it belongs with
+                                        the sentence that tells the reader to check iOS
+                                        settings, which is what the video shows. */}
+                                    <Pressable
+                                        onPress={handleWatchGuide}
+                                        className="flex-row items-center py-3 px-4 bg-gray-800 rounded-lg border border-gray-700"
+                                    >
+                                        <MaterialIcons name="play-circle-filled" size={20} color="#a78bfa" style={{ marginRight: 8 }} />
+                                        <Text className="text-violet-400 text-sm font-medium flex-1">
+                                            {t('language.watchGuide')}
+                                        </Text>
+                                    </Pressable>
+                                </VStack>
+                            )}
 
-                          {/* Language packs are PART of Advanced, not a section of
-                              their own. They had their own icon+heading and a
-                              bordered card, which is the screen's vocabulary for a
-                              top-level section — so Advanced read as two sections
-                              stacked rather than one. Heading and card are both gone;
-                              this is now plain prose continuing the sentence above
-                              it, with the settings shortcut as its only affordance.
-                              Do not re-wrap it in a Box: the chrome IS what made it
-                              look like a peer. */}
-                          {Platform.OS === 'ios' ? (
-                              <>
-                                  <Text className="text-typography-400 text-sm">
-                                      {t('language.languagePacksIos')}
-                                  </Text>
-                                  <Text className="text-typography-400 text-sm">
-                                      {t('language.managePacksPrefix')}{' '}
-                                      <Text className="text-white text-sm font-medium">
-                                          {t('language.languagePacksIosPath')}
-                                      </Text>
-                                      .
-                                  </Text>
-                              </>
-                          ) : (
-                              <Text className="text-typography-400 text-sm">
-                                  {t('language.languagePacksAndroid')}
-                              </Text>
-                          )}
+                            {/* Language packs are PART of Advanced, not a section of
+                                their own. They had their own icon+heading and a
+                                bordered card, which is the screen's vocabulary for a
+                                top-level section — so Advanced read as two sections
+                                stacked rather than one. Heading and card are both gone;
+                                this is now plain prose continuing the sentence above
+                                it, with the settings shortcut as its only affordance.
+                                Do not re-wrap it in a Box: the chrome IS what made it
+                                look like a peer. */}
+                            {Platform.OS === 'ios' ? (
+                                <>
+                                    <Text className="text-typography-400 text-sm">
+                                        {t('language.languagePacksIos')}
+                                    </Text>
+                                    <Text className="text-typography-400 text-sm">
+                                        {t('language.managePacksPrefix')}{' '}
+                                        <Text className="text-white text-sm font-medium">
+                                            {t('language.languagePacksIosPath')}
+                                        </Text>
+                                        .
+                                    </Text>
+                                </>
+                            ) : (
+                                <Text className="text-typography-400 text-sm">
+                                    {t('language.languagePacksAndroid')}
+                                </Text>
+                            )}
 
-                          {/* Kept as a button, not flattened to text: it is the one
-                              ACTION here, and it does exactly what the sentence above
-                              asks the reader to do. Without it the instruction is
-                              only followable via the video. */}
-                          <Pressable
-                              testID="language-open-os-settings"
-                              onPress={() =>
-                                  Platform.OS === 'ios'
-                                      ? Linking.openURL('App-Prefs:General')
-                                      : Linking.sendIntent('android.settings.LOCALE_SETTINGS')
-                              }
-                              className="flex-row items-center self-start py-2.5 px-3 bg-gray-800 rounded-lg border border-gray-700"
-                          >
-                              <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
-                              <Text className="text-violet-400 text-sm font-medium">
-                                  {t('language.openLanguageSettings')}
-                              </Text>
-                          </Pressable>
+                            {/* Kept as a button, not flattened to text: it is the one
+                                ACTION here, and it does exactly what the sentence above
+                                asks the reader to do. Without it the instruction is
+                                only followable via the video. */}
+                            <Pressable
+                                testID="language-open-os-settings"
+                                onPress={() =>
+                                    Platform.OS === 'ios'
+                                        ? Linking.openURL('App-Prefs:General')
+                                        : Linking.sendIntent('android.settings.LOCALE_SETTINGS')
+                                }
+                                className="flex-row items-center self-start py-2.5 px-3 bg-gray-800 rounded-lg border border-gray-700"
+                            >
+                                <MaterialIcons name="open-in-new" size={16} color="#a78bfa" style={{ marginRight: 8 }} />
+                                <Text className="text-violet-400 text-sm font-medium">
+                                    {t('language.openLanguageSettings')}
+                                </Text>
+                            </Pressable>
 
-                      </VStack>
+                        </VStack>
 
-                  </VStack>
-              </ScrollView>
-          </Box>
+                    </VStack>
+                </ScrollView>
+            </Box>
 
-          {/* Language Picker Modal */}
-          <Modal
-              visible={showLangPicker}
-              animationType="slide"
-              presentationStyle="pageSheet"
-              onRequestClose={() => setShowLangPicker(false)}
-              // THE HANDSHAKE. iOS fires this once the dismissal transition
-              // has actually finished; only then may the probe present
-              // Apple's system sheet. Presenting it during the dismissal is
-              // a hard native crash — see lib/hooks/use-language-switch.ts.
-              onDismiss={notifyPickerDismissed}
-          >
-              <GluestackUIProvider mode="dark">
-                  <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
-                      <HStack className="items-center justify-between px-5 pb-4">
-                          <Text className="text-white text-xl font-semibold">
-                              {t('language.appLanguage')}
-                          </Text>
-                          <Pressable onPress={() => setShowLangPicker(false)}>
-                              <MaterialIcons name="close" size={24} color="#ffffff" />
-                          </Pressable>
-                      </HStack>
-                      <FlatList
-                          data={SUPPORTED_LANGUAGES}
-                          keyExtractor={(item) => item.code}
-                          renderItem={({ item }) => {
-                              const isSelected = item.code === appLanguage;
-                              return (
-                                  <TouchableOpacity
-                                      onPress={() => handleSelectLanguage(item.code)}
-                                      style={{
-                                          flexDirection: 'row',
-                                          alignItems: 'center',
-                                          justifyContent: 'space-between',
-                                          paddingVertical: 14,
-                                          paddingHorizontal: 20,
-                                          borderBottomWidth: 1,
-                                          borderBottomColor: '#1f2937',
-                                      }}
-                                  >
-                                      <VStack>
-                                          <Text
-                                              className={isSelected ? 'text-violet-400 font-semibold' : 'text-white'}
-                                          >
-                                              {item.name}
-                                          </Text>
-                                          <Text className="text-gray-400 text-sm">
-                                              {item.native}
-                                          </Text>
-                                      </VStack>
-                                      {isSelected && (
-                                          <MaterialIcons name="check" size={20} color="#a78bfa" />
-                                      )}
-                                  </TouchableOpacity>
-                              );
-                          }}
-                          contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
-                      />
-                  </Box>
-              </GluestackUIProvider>
-          </Modal>
+            {/* Language Picker Modal */}
+            <Modal
+                visible={showLangPicker}
+                animationType="slide"
+                presentationStyle="pageSheet"
+                onRequestClose={() => setShowLangPicker(false)}
+                // THE HANDSHAKE. iOS fires this once the dismissal transition
+                // has actually finished; only then may the probe present
+                // Apple's system sheet. Presenting it during the dismissal is
+                // a hard native crash — see lib/hooks/use-language-switch.ts.
+                onDismiss={notifyPickerDismissed}
+            >
+                <GluestackUIProvider mode="dark">
+                    <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+                        <HStack className="items-center justify-between px-5 pb-4">
+                            <Text className="text-white text-xl font-semibold">
+                                {t('language.appLanguage')}
+                            </Text>
+                            <Pressable onPress={() => setShowLangPicker(false)}>
+                                <MaterialIcons name="close" size={24} color="#ffffff" />
+                            </Pressable>
+                        </HStack>
+                        <FlatList
+                            data={SUPPORTED_LANGUAGES}
+                            keyExtractor={(item) => item.code}
+                            renderItem={({ item }) => {
+                                const isSelected = item.code === appLanguage;
+                                return (
+                                    <TouchableOpacity
+                                        onPress={() => handleSelectLanguage(item.code)}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between',
+                                            paddingVertical: 14,
+                                            paddingHorizontal: 20,
+                                            borderBottomWidth: 1,
+                                            borderBottomColor: '#1f2937',
+                                        }}
+                                    >
+                                        <VStack>
+                                            <Text
+                                                className={isSelected ? 'text-violet-400 font-semibold' : 'text-white'}
+                                            >
+                                                {item.name}
+                                            </Text>
+                                            <Text className="text-gray-400 text-sm">
+                                                {item.native}
+                                            </Text>
+                                        </VStack>
+                                        {isSelected && (
+                                            <MaterialIcons name="check" size={20} color="#a78bfa" />
+                                        )}
+                                    </TouchableOpacity>
+                                );
+                            }}
+                            contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
+                        />
+                    </Box>
+                </GluestackUIProvider>
+            </Modal>
 
-          <VideoPlayerModal
-              visible={showGuideVideo}
-              uri={TRANSLATION_GUIDE_URL}
-              onClose={() => setShowGuideVideo(false)}
-          />
-        </>
+            <VideoPlayerModal
+                visible={showGuideVideo}
+                uri={TRANSLATION_GUIDE_URL}
+                onClose={() => setShowGuideVideo(false)}
+            />
+        </GluestackUIProvider>
     );
 };
 

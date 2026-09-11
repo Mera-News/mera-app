@@ -1,6 +1,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
@@ -416,28 +417,30 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
             );
         }
         return (
-              <Box className="flex-1">
-                  {/* Page background. Must be the FIRST child so it paints behind
-                      everything else on the page. */}
-                  <AbstractGradientBackdrop />
+            <GluestackUIProvider mode="dark">
+                <Box className="flex-1">
+                    {/* Page background. Must be the FIRST child so it paints behind
+                        everything else on the page. */}
+                    <AbstractGradientBackdrop />
 
-                  {onBack && (
-                      <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                          <Pressable
-                              onPress={onBack}
-                              className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                          >
-                              <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                          </Pressable>
-                      </Box>
-                  )}
-                  <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                      <Text className="text-xl font-semibold text-white text-center">{t('notifications.title')}</Text>
-                  </VStack>
-                  <VStack className="flex-1 justify-center items-center">
-                      <Spinner size="large" />
-                  </VStack>
-              </Box>
+                    {onBack && (
+                        <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
+                            <Pressable
+                                onPress={onBack}
+                                className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                            >
+                                <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                            </Pressable>
+                        </Box>
+                    )}
+                    <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
+                        <Text className="text-xl font-semibold text-white text-center">{t('notifications.title')}</Text>
+                    </VStack>
+                    <VStack className="flex-1 justify-center items-center">
+                        <Spinner size="large" />
+                    </VStack>
+                </Box>
+            </GluestackUIProvider>
         );
     }
 
@@ -463,55 +466,57 @@ const NotificationSettingsScreen: React.FC<NotificationSettingsScreenProps> = ({
     // toggle row and the save button (no outer ScrollView). When disabled,
     // the outer ScrollView is kept so the "Open Device Settings" CTA scrolls.
     return (
-          <Box className="flex-1">
-              {/* Page background. Must be the FIRST child so it paints behind
-                  everything else on the page. */}
-              <AbstractGradientBackdrop />
+        <GluestackUIProvider mode="dark">
+            <Box className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
 
-              {/* Floating Back Button */}
-              {onBack && (
-                  <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                      <Pressable
-                          onPress={onBack}
-                          className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                      >
-                          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                      </Pressable>
-                  </Box>
-              )}
+                {/* Floating Back Button */}
+                {onBack && (
+                    <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
+                        <Pressable
+                            onPress={onBack}
+                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                        >
+                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                        </Pressable>
+                    </Box>
+                )}
 
-              {/* Header */}
-              <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                  <Text className="text-xl font-semibold text-white text-center">{t('notifications.title')}</Text>
-              </VStack>
+                {/* Header */}
+                <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
+                    <Text className="text-xl font-semibold text-white text-center">{t('notifications.title')}</Text>
+                </VStack>
 
-              {notificationsEnabled ? (
-                  <Box className="flex-1 pt-1">
-                      {renderHeader()}
-                      <Box className="mx-5 mb-4 border-b border-gray-800" />
-                      {renderTimeSectionHeader()}
-                      {renderWheelWithSidebar()}
-                  </Box>
-              ) : (
-                  <ScrollView className="flex-1 pt-1">
-                      {renderHeader()}
-                  </ScrollView>
-              )}
+                {notificationsEnabled ? (
+                    <Box className="flex-1 pt-1">
+                        {renderHeader()}
+                        <Box className="mx-5 mb-4 border-b border-gray-800" />
+                        {renderTimeSectionHeader()}
+                        {renderWheelWithSidebar()}
+                    </Box>
+                ) : (
+                    <ScrollView className="flex-1 pt-1">
+                        {renderHeader()}
+                    </ScrollView>
+                )}
 
-              {/* Save Button */}
-              <VStack className="px-5" style={{ paddingBottom: insets.bottom + 32 }}>
-                  <Button
-                      action="primary"
-                      variant="solid"
-                      size="lg"
-                      onPress={handleSave}
-                      disabled={isSaving}
-                      className="w-full"
-                  >
-                      <ButtonText>{isSaving ? t('common.saving') : t('notifications.savePreferences')}</ButtonText>
-                  </Button>
-              </VStack>
-          </Box>
+                {/* Save Button */}
+                <VStack className="px-5" style={{ paddingBottom: insets.bottom + 32 }}>
+                    <Button
+                        action="primary"
+                        variant="solid"
+                        size="lg"
+                        onPress={handleSave}
+                        disabled={isSaving}
+                        className="w-full"
+                    >
+                        <ButtonText>{isSaving ? t('common.saving') : t('notifications.savePreferences')}</ButtonText>
+                    </Button>
+                </VStack>
+            </Box>
+        </GluestackUIProvider>
     );
 };
 

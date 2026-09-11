@@ -1,6 +1,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { HStack } from '@/components/ui/hstack';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
@@ -1022,28 +1023,30 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             );
         }
         return (
-              <Box className="flex-1">
-                  {/* Page background. Must be the FIRST child so it paints behind
-                      everything else on the page. */}
-                  <AbstractGradientBackdrop />
+            <GluestackUIProvider mode="dark">
+                <Box className="flex-1">
+                    {/* Page background. Must be the FIRST child so it paints behind
+                        everything else on the page. */}
+                    <AbstractGradientBackdrop />
 
-                  {onBack && (
-                      <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                          <Pressable
-                              onPress={onBack}
-                              className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                          >
-                              <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                          </Pressable>
-                      </Box>
-                  )}
-                  <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                      <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
-                  </VStack>
-                  <VStack className="flex-1 justify-center items-center">
-                      <Spinner size="large" />
-                  </VStack>
-              </Box>
+                    {onBack && (
+                        <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
+                            <Pressable
+                                onPress={onBack}
+                                className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                            >
+                                <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                            </Pressable>
+                        </Box>
+                    )}
+                    <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
+                        <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
+                    </VStack>
+                    <VStack className="flex-1 justify-center items-center">
+                        <Spinner size="large" />
+                    </VStack>
+                </Box>
+            </GluestackUIProvider>
         );
     }
 
@@ -1063,31 +1066,33 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     void isOnDevice;
 
     return (
-          <Box className="flex-1">
-              {/* Page background. Must be the FIRST child so it paints behind
-                  everything else on the page. */}
-              <AbstractGradientBackdrop />
+        <GluestackUIProvider mode="dark">
+            <Box className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
 
-              {onBack && (
-                  <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                      <Pressable
-                          onPress={onBack}
-                          className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                      >
-                          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                      </Pressable>
-                  </Box>
-              )}
+                {onBack && (
+                    <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
+                        <Pressable
+                            onPress={onBack}
+                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                        >
+                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                        </Pressable>
+                    </Box>
+                )}
 
-              <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                  <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
-              </VStack>
+                <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
+                    <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
+                </VStack>
 
-              <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
-                  {renderContent()}
-              </ScrollView>
+                <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
+                    {renderContent()}
+                </ScrollView>
 
-          </Box>
+            </Box>
+        </GluestackUIProvider>
     );
 };
 
