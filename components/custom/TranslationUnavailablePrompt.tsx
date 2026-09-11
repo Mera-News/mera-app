@@ -8,6 +8,7 @@ import {
     getNativeLanguageName,
     isTranslationVerified,
     probeTranslationLanguage,
+    TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS,
     useTranslationBlocked,
 } from '@/lib/translation-service';
 
@@ -77,7 +78,8 @@ const TranslationUnavailablePrompt: React.FC = () => {
         if (blocked) return;
         startupProbedRef.current = appLanguage;
         const handle = InteractionManager.runAfterInteractions(() => {
-            void probeTranslationLanguage(appLanguage).catch(() => {});
+            void probeTranslationLanguage(appLanguage, TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS)
+                .catch(() => {});
         });
         return () => handle.cancel();
     }, [appLanguage, blocked]);
@@ -129,6 +131,8 @@ const TranslationUnavailablePrompt: React.FC = () => {
                     body
                 ) : (
                     <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel={t('language.retry')}
                         onPress={() => {
                             // The probe, not a plain translateText. Since the
                             // native-call gate landed, an unverified language

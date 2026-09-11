@@ -47,6 +47,8 @@ import {
     probeTranslationLanguage,
     translateTextDetailed,
     TRANSLATION_FAILURE_THRESHOLD,
+    TRANSLATION_PROBE_TIMEOUT_MS,
+    TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS,
     VERIFIED_TRANSLATION_FAILURE_THRESHOLD,
     __resetTranslationStateForTests,
 } from '../translation-service';
@@ -591,6 +593,55 @@ describe('translateText', () => {
                 textPreview: 'Hello',
             }),
         );
+    });
+
+    it('logs a timed-out call as a breadcrumb, never as an error', async () => {
+        // Expected and self-healing (see TranslationTimeoutError's treatment in
+        // translation-service.ts) — must never page as a production error.
+        mockOnTranslateTask.mockImplementation(() => new Promise(() => {}));
+
+        const promise = probeTranslationLanguage('fr', TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS);
+        await jest.runAllTimersAsync();
+        const outcome = await promise;
+
+        expect(outcome).toBe('timeout');
+        expect(logger.warn).toHaveBeenCalledWith(
+            expect.stringContaining('timed out'),
+            expect.objectContaining({ targetLangCode: 'fr' }),
+        );
+        expect(logger.error).not.toHaveBeenCalled();
+        expect(logger.captureException).not.toHaveBeenCalled();
+    });
+
+    it('captures a native "operation was cancelled" error at warning level with a stable fingerprint', async () => {
+        // NOT the user's cancel button — useLanguageSwitch.cancel() never
+        // touches this promise. This is the native-module race
+        // (expo-translate-text's shared hostingController) or a backgrounding
+        // cancellation; either way it must stay CAPTURED (it is the only
+        // regression signal for a future native-side fix), just off the
+        // default error triage and grouped under one fingerprint regardless of
+        // Hermes' unreliable culprit.
+        mockOnTranslateTask.mockRejectedValue(new Error('The operation was cancelled.'));
+
+        const promise = probeTranslationLanguage('fr');
+        await jest.runAllTimersAsync();
+        const outcome = await promise;
+
+        expect(outcome).toBe('failed');
+        expect(logger.captureException).toHaveBeenCalledWith(
+            expect.any(Error),
+            expect.objectContaining({
+                level: 'warning',
+                fingerprint: ['translation-native-cancelled'],
+            }),
+        );
+        expect(logger.error).not.toHaveBeenCalled();
+    });
+
+    it('TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS is shorter than the gesture probe ceiling', () => {
+        expect(TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS).toBe(20_000);
+        expect(TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS)
+            .toBeLessThan(TRANSLATION_PROBE_TIMEOUT_MS);
     });
 
     it('returns null when translation has no translatedTexts field', async () => {

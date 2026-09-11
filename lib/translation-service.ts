@@ -655,6 +655,27 @@ const TRANSLATE_CALL_TIMEOUT_MS = 20_000;
  */
 export const TRANSLATION_PROBE_TIMEOUT_MS = 90_000;
 
+/**
+ * Ceiling for the ONE non-gesture probe: the once-per-launch re-verify in
+ * `TranslationUnavailablePrompt`, which asks the OS to confirm a language
+ * whose pack was already installed in a previous session.
+ *
+ * Deliberately shorter than {@link TRANSLATION_PROBE_TIMEOUT_MS}. That longer
+ * ceiling is justified by what sits on top of it — a spinner, a cancel
+ * button, copy that tells the user to stay and why — for the one deliberate
+ * gesture that may need to hold the wait open for a real download. The
+ * re-verify has none of that: it fires silently on mount, with
+ * `TRANSLATION_CONCURRENCY = 1` meaning it holds the app's only native slot
+ * the whole time, so every on-screen `<TranslatableDynamic>` renders English
+ * for as long as this runs. A pack that doesn't finish in this window simply
+ * isn't verified THIS session — the language falls back to English same as
+ * any other unverified one, and a late success still marks it verified via
+ * the `call.then` handler in {@link callNativeWithTimeout}, so the NEXT
+ * launch's re-verify (or a deliberate retry from the unavailable-translation
+ * prompt, which uses the full gesture ceiling) picks it up for free.
+ */
+export const TRANSLATION_STARTUP_VERIFY_TIMEOUT_MS = 20_000;
+
 class TranslationTimeoutError extends Error {
     constructor(ms: number) {
         super(`Translation call exceeded ${ms}ms`);
@@ -953,15 +974,54 @@ export function translateTextDetailed(
                         setTimeout(resolve, retryDelays[attempt]),
                     );
                 } else {
-                    logger.error('[TranslationService] Translation failed', err as Error, {
-                        textPreview: text.slice(0, 20),
-                        sourceLangCode,
-                        targetLangCode,
-                    });
-                    recordTranslationFailure(
-                        targetLangCode,
-                        err instanceof Error ? err.message : String(err),
-                    );
+                    const message = err instanceof Error ? err.message : String(err);
+                    if (err instanceof TranslationTimeoutError) {
+                        // Expected and self-healing, not a bug: the module's own
+                        // late-success handler (callNativeWithTimeout's `call.then`)
+                        // still verifies the language if the pack finishes
+                        // downloading after we gave up, and the probe path never
+                        // blocks permanently on a timeout. A breadcrumb is the
+                        // right weight — this must never page as an error.
+                        logger.warn('[TranslationService] Translation timed out', {
+                            textPreview: text.slice(0, 20),
+                            sourceLangCode,
+                            targetLangCode,
+                            isProbe,
+                        });
+                    } else if (/cancelled/i.test(message)) {
+                        // The native bridge's "operation was cancelled" is NOT the
+                        // user's cancel button — that path (useLanguageSwitch.cancel)
+                        // never touches this promise. It is a native-module defect
+                        // (expo-translate-text's shared hostingController, or the OS
+                        // tearing down the translation session on backgrounding) that
+                        // cannot be fixed from this repo. Kept at warning with a
+                        // stable fingerprint so every occurrence groups into ONE
+                        // issue rather than scattering across Hermes' unreliable
+                        // culprits — this is the only signal a future native-side fix
+                        // actually worked, so it must stay captured, just off the
+                        // default error triage. Do not route this through the
+                        // generic AbortError cancellation suppression in lib/logger —
+                        // that rule is for inert cancellations nobody can act on, and
+                        // this one is actionable evidence.
+                        logger.captureException(err, {
+                            level: 'warning',
+                            fingerprint: ['translation-native-cancelled'],
+                            extra: {
+                                message: '[TranslationService] Translation failed',
+                                textPreview: text.slice(0, 20),
+                                sourceLangCode,
+                                targetLangCode,
+                                isProbe,
+                            },
+                        });
+                    } else {
+                        logger.error('[TranslationService] Translation failed', err as Error, {
+                            textPreview: text.slice(0, 20),
+                            sourceLangCode,
+                            targetLangCode,
+                        });
+                    }
+                    recordTranslationFailure(targetLangCode, message);
                     return null;
                 }
             }
