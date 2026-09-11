@@ -6,6 +6,8 @@ import {
   tryTakeImmediate,
   _resetForTests,
   MIN_GATEWAY_INTERVAL_MS,
+  MIN_INTERACTIVE_INTERVAL_MS,
+  INTERACTIVE_MAX_PAUSE_MS,
 } from '../gateway-rate-limiter';
 
 const NOW = 1_700_000_000_000;
@@ -184,5 +186,166 @@ describe('_resetForTests', () => {
     acquire().then(resolved);
     await jest.advanceTimersByTimeAsync(0);
     expect(resolved).toHaveBeenCalled();
+  });
+});
+
+// ─── Two lanes ───────────────────────────────────────────────────────────────
+// Everything above this line predates the interactive lane and passes
+// UNMODIFIED, which is the proof that the background lane is untouched.
+
+describe('lanes', () => {
+  it('grants a queued interactive caller ahead of queued background callers', async () => {
+    const order: string[] = [];
+    // Spend the cold-start slot so everyone below has to queue.
+    await acquireGranted();
+
+    acquire('background').then(() => order.push('bg1'));
+    acquire('background').then(() => order.push('bg2'));
+    acquire('interactive').then(() => order.push('ui'));
+
+    // The interactive caller arrived LAST and is granted FIRST.
+    await jest.advanceTimersByTimeAsync(MIN_INTERACTIVE_INTERVAL_MS);
+    expect(order).toEqual(['ui']);
+
+    await jest.advanceTimersByTimeAsync(MIN_GATEWAY_INTERVAL_MS);
+    expect(order).toEqual(['ui', 'bg1']);
+
+    await jest.advanceTimersByTimeAsync(MIN_GATEWAY_INTERVAL_MS);
+    expect(order).toEqual(['ui', 'bg1', 'bg2']);
+  });
+
+  it('anchors an interactive grant on the last grant, not the background cadence', async () => {
+    // A background submit takes a slot, then a chat turn arrives 100ms later.
+    expect(tryTakeImmediate('background')).toBe(true);
+    await jest.advanceTimersByTimeAsync(100);
+
+    const resolved = jest.fn();
+    acquire('interactive').then(resolved);
+
+    // 900ms more completes the 1s interactive spacing. The background lane
+    // would still be 2s away.
+    await jest.advanceTimersByTimeAsync(MIN_INTERACTIVE_INTERVAL_MS - 100 - 1);
+    expect(resolved).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1);
+    expect(resolved).toHaveBeenCalled();
+
+    // ... and the background lane really was still waiting at that moment.
+    expect(tryTakeImmediate('background')).toBe(false);
+  });
+
+  it('spaces two interactive grants by MIN_INTERACTIVE_INTERVAL_MS', async () => {
+    const first = acquire('interactive');
+    await jest.advanceTimersByTimeAsync(0);
+    await first;
+
+    const second = jest.fn();
+    acquire('interactive').then(second);
+    await jest.advanceTimersByTimeAsync(MIN_INTERACTIVE_INTERVAL_MS - 1);
+    expect(second).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1);
+    expect(second).toHaveBeenCalled();
+  });
+
+  // THE CEILING. This is the property the per-user throttle actually cares
+  // about, so it is asserted directly over a mixed workload rather than
+  // inferred from the two spacings.
+  it('never issues two grants closer than MIN_INTERACTIVE_INTERVAL_MS, mixed lanes', async () => {
+    const grantTimes: number[] = [];
+    const lanes = [
+      'interactive', 'background', 'interactive', 'interactive',
+      'background', 'interactive', 'background', 'interactive',
+    ] as const;
+    for (const lane of lanes) {
+      acquire(lane).then(() => grantTimes.push(Date.now()));
+    }
+
+    // Well past what the whole mix needs.
+    await jest.advanceTimersByTimeAsync(60_000);
+    expect(grantTimes).toHaveLength(lanes.length);
+
+    for (let i = 1; i < grantTimes.length; i++) {
+      expect(grantTimes[i] - grantTimes[i - 1]).toBeGreaterThanOrEqual(
+        MIN_INTERACTIVE_INTERVAL_MS,
+      );
+    }
+    // 60 grants/minute is the implied device ceiling.
+    const span = grantTimes[grantTimes.length - 1] - grantTimes[0];
+    expect(grantTimes.length / Math.max(span, 1) * 60_000).toBeLessThanOrEqual(60);
+  });
+});
+
+describe('pauseFor and the interactive lane', () => {
+  it('caps an interactive wait at INTERACTIVE_MAX_PAUSE_MS while background serves the full pause', async () => {
+    pauseFor(60_000);
+
+    const ui = jest.fn();
+    const bg = jest.fn();
+    acquire('interactive').then(ui);
+    acquire('background').then(bg);
+
+    await jest.advanceTimersByTimeAsync(INTERACTIVE_MAX_PAUSE_MS - 1);
+    expect(ui).not.toHaveBeenCalled();
+
+    await jest.advanceTimersByTimeAsync(1);
+    expect(ui).toHaveBeenCalled();
+    expect(bg).not.toHaveBeenCalled();
+
+    // Background keeps honouring the whole Retry-After.
+    await jest.advanceTimersByTimeAsync(60_000 - INTERACTIVE_MAX_PAUSE_MS - 1);
+    expect(bg).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1);
+    expect(bg).toHaveBeenCalled();
+  });
+
+  it('honours a pause SHORTER than the interactive cap in full', async () => {
+    pauseFor(500);
+    const ui = jest.fn();
+    acquire('interactive').then(ui);
+
+    await jest.advanceTimersByTimeAsync(499);
+    expect(ui).not.toHaveBeenCalled();
+    await jest.advanceTimersByTimeAsync(1);
+    expect(ui).toHaveBeenCalled();
+  });
+});
+
+describe('acquire abort', () => {
+  it('rejects an aborted waiter and does not consume its grant', async () => {
+    await acquireGranted();
+
+    const controller = new AbortController();
+    const rejected = jest.fn();
+    acquire('background', controller.signal).catch((err: Error) => rejected(err.name));
+
+    const after = jest.fn();
+    acquire('background').then(after);
+
+    controller.abort();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(rejected).toHaveBeenCalledWith('AbortError');
+
+    // The abandoned waiter burned nothing: the next caller grants on the
+    // ORIGINAL schedule, not one interval later.
+    await jest.advanceTimersByTimeAsync(MIN_GATEWAY_INTERVAL_MS);
+    expect(after).toHaveBeenCalled();
+  });
+
+  it('rejects immediately when the signal is already aborted', async () => {
+    const controller = new AbortController();
+    controller.abort();
+    await expect(acquire('interactive', controller.signal)).rejects.toThrow();
+  });
+
+  it('does not let an abandoned interactive waiter hold up a background caller', async () => {
+    await acquireGranted();
+
+    const controller = new AbortController();
+    acquire('interactive', controller.signal).catch(() => undefined);
+    const bg = jest.fn();
+    acquire('background').then(bg);
+
+    controller.abort();
+    await jest.advanceTimersByTimeAsync(MIN_GATEWAY_INTERVAL_MS);
+    expect(bg).toHaveBeenCalled();
   });
 });
