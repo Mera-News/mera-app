@@ -8,6 +8,7 @@ import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
 import * as runner from './scheduler-runner';
 import { yieldToInteractionsWithTimeout } from './idle';
+import { jitteredInterval } from './jitter';
 import logger from '@/lib/logger';
 
 /** Ceiling on the "let the foreground transition's animations finish first"
@@ -16,11 +17,22 @@ import logger from '@/lib/logger';
  *  as not having started. */
 export const FOREGROUND_YIELD_TIMEOUT_MS = 200;
 
-/** Cooldown applied to an EXPLICIT foreground event, in place of the task's own
- *  frequency. A deliberate app-open should sync, not be swallowed by a 60s
- *  timer the previous (possibly no-op) run armed. Not zero: rapid app-switching
- *  would otherwise let a user storm the server. */
-export const FOREGROUND_MIN_GAP_MS = 5_000;
+/** Cooldown applied to an EXPLICIT WARM foreground event, in place of the
+ *  task's own frequency. A deliberate app-open should sync, not be swallowed by
+ *  a timer the previous (possibly no-op) run armed. Not zero: rapid
+ *  app-switching would otherwise let a user storm the server, and at 5s it
+ *  effectively did — alt-tabbing every six seconds synced every six seconds.
+ *  A minute is the shortest gap at which returning to the app still feels like
+ *  a fresh look rather than a poll. */
+export const FOREGROUND_MIN_GAP_MS = 60_000;
+
+/** The same cooldown for the COLD-START kick (`onStoresHydrated`), which is a
+ *  different event wearing the same shape. A cold start has no previous session
+ *  on screen: whatever `lastRun` says, the user is looking at rows restored from
+ *  disk and the first sync must not be gated behind a warm-foreground floor.
+ *  Kept at the old 5s value, so cold-start behaviour is UNCHANGED by the warm
+ *  floor moving. */
+export const COLD_START_MIN_GAP_MS = 5_000;
 
 /** Budget for the `getJwtToken()` credential pre-flight. Exceeding it passes
  *  the check optimistically rather than skipping the task — see
@@ -174,7 +186,10 @@ class _AppScheduler {
     // is looking at an empty feed right now.
     void yieldToInteractionsWithTimeout(FOREGROUND_YIELD_TIMEOUT_MS).then(() => {
       setTimeout(() => {
-        this._onForeground();
+        // coldStart: use the 5s floor, not the 60s warm one. See
+        // COLD_START_MIN_GAP_MS — the user is looking at restored rows, so the
+        // first sync of a session is never "rapid app-switching".
+        this._onForeground({ coldStart: true });
       }, COLD_START_SETTLE_MS);
     });
   }
@@ -196,7 +211,9 @@ class _AppScheduler {
       if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
 
       const lastRun = useSchedulerStore.getState().getLastRun(task.name) ?? 0;
-      const isDue = task.frequency === 0 || (now - lastRun) >= task.frequency;
+      const isDue =
+        task.frequency === 0 ||
+        (now - lastRun) >= jitteredInterval(task.name, task.frequency);
       if (!isDue) continue;
 
       // Skip purely event-driven tasks (frequency === 0 with triggers) — those
@@ -211,7 +228,7 @@ class _AppScheduler {
     }
   }
 
-  private _onForeground(): void {
+  private _onForeground(opts?: { coldStart?: boolean }): void {
     // Give the auth-failure breaker a chance to reset on foreground: a user who
     // re-authenticated (or whose keychain is now unlocked) shouldn't stay stuck
     // behind a paused feed-sync. If the session is still dead, the next run's
@@ -260,11 +277,20 @@ class _AppScheduler {
 
         const lastRun = useSchedulerStore.getState().getLastRun(task.name) ?? 0;
         // An explicit foreground is a user intent, not a timer tick, so the
-        // task's own frequency (60s for feed-sync) is the wrong gate — it gets
-        // armed by runs the user never saw. Fall back to a short floor that
-        // still stops rapid app-switching from storming the server. Tasks with
+        // task's own frequency (5min for feed-sync) is the wrong gate — it gets
+        // armed by runs the user never saw. Fall back to a floor that still
+        // stops rapid app-switching from storming the server. Tasks with
         // frequency 0 stay always-due, as everywhere else.
-        const minGap = Math.min(task.frequency, FOREGROUND_MIN_GAP_MS);
+        //
+        // The floor depends on WHICH foreground this is: a cold start gets the
+        // short one, a warm return gets the full minute. Jittered like every
+        // other due check, so a fleet that foregrounds together does not clear
+        // the floor together.
+        const floor = opts?.coldStart ? COLD_START_MIN_GAP_MS : FOREGROUND_MIN_GAP_MS;
+        const minGap = jitteredInterval(
+          task.name,
+          Math.min(task.frequency, floor),
+        );
         const isDue = task.frequency === 0 || (Date.now() - lastRun) >= minGap;
         if (!isDue) continue;
 

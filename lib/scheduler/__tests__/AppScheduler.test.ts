@@ -918,15 +918,16 @@ describe('AppScheduler — bounded foreground kick', () => {
     expect(mockCreateJob).toHaveBeenCalled();
   });
 
-  it('fires when the task ran 10s ago (the frequency gate no longer applies)', async () => {
+  it('fires when the task ran 90s ago (the frequency gate no longer applies)', async () => {
     const appStateHandler = await initThenRegisterForeground(makeTask({
       name: 'recent-run-fg-task',
-      frequency: 60_000,
+      frequency: 300_000,
       triggers: ['app-foreground'],
     }));
-    // 10s ago: inside the 60s frequency (would have been skipped before), but
-    // outside FOREGROUND_MIN_GAP_MS.
-    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 10_000);
+    // 90s ago: inside the 5min frequency (so a tick would skip it), but outside
+    // FOREGROUND_MIN_GAP_MS. This is the whole point of the foreground floor —
+    // a deliberate app-open is not a timer tick.
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 90_000);
 
     appStateHandler('active');
     await jest.advanceTimersByTimeAsync(0);
@@ -934,16 +935,54 @@ describe('AppScheduler — bounded foreground kick', () => {
     expect(mockCreateJob).toHaveBeenCalled();
   });
 
-  it('holds the 5s floor so rapid app-switching cannot storm the server', async () => {
+  // The fixture is 30s, NOT 2s, deliberately. 2s sits below both the old 5s
+  // floor and the current 60s one, so it passed either way and could not catch
+  // the floor being lowered back — the same "green because it never looked"
+  // shape as a toContain over conditions. 30s fires under the old value and is
+  // held under the new one, so this test now discriminates.
+  it('holds the 60s floor so rapid app-switching cannot storm the server', async () => {
     const appStateHandler = await initThenRegisterForeground(makeTask({
       name: 'floor-fg-task',
-      frequency: 60_000,
+      frequency: 300_000,
+      triggers: ['app-foreground'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 30_000);
+
+    appStateHandler('active');
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  // The cold-start kick is a DIFFERENT event wearing the same shape: a relaunch
+  // must sync against rows restored from disk, whatever the previous session
+  // stamped. Same fixture as the warm test above, opposite expectation — which
+  // is what pins the two floors apart.
+  it('uses the short cold-start floor on onStoresHydrated, where the warm floor would block', async () => {
+    AppScheduler.register(makeTask({
+      name: 'cold-start-fg-task',
+      frequency: 300_000,
+      triggers: ['app-foreground'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 30_000);
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'cold-start-fg-task' }));
+
+    AppScheduler.onStoresHydrated();
+    await jest.advanceTimersByTimeAsync(1_100);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('still holds the cold-start floor for a run 2s ago', async () => {
+    AppScheduler.register(makeTask({
+      name: 'cold-start-floor-task',
+      frequency: 300_000,
       triggers: ['app-foreground'],
     }));
     mockSchedulerStore.getLastRun.mockReturnValue(NOW - 2_000);
 
-    appStateHandler('active');
-    await jest.advanceTimersByTimeAsync(0);
+    AppScheduler.onStoresHydrated();
+    await jest.advanceTimersByTimeAsync(1_100);
 
     expect(mockCreateJob).not.toHaveBeenCalled();
   });

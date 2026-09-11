@@ -6,7 +6,13 @@ import logger from '@/lib/logger';
 AppScheduler.register({
   name: 'feed-sync',
   displayName: 'Feed Sync',
-  frequency: 60 * 1000,
+  // 5 MINUTES, not 60s. A steady-state run is two uncached round trips
+  // (articleIdsForPersona + recentArticleCount) that return nothing new, so at
+  // 60s a reader who leaves the app open costs 120 requests an hour to learn
+  // nothing. The pipeline itself only produces on the :00/:10/:20/:40 crons, so
+  // polling faster than the data changes buys latency that does not exist.
+  // Pull-to-refresh, the tab re-tap and every app-open still bypass this.
+  frequency: 5 * 60 * 1000,
   triggers: ['app-foreground', 'network-reconnect'],
   conditions: [
     { type: 'network' },

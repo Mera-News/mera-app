@@ -92,8 +92,17 @@ describe('feed-sync-task registration', () => {
     expect(registeredDef.exclusive).toBe(true);
   });
 
-  it('has a positive frequency (timer-driven)', () => {
-    expect(registeredDef.frequency).toBeGreaterThan(0);
+  // Asserted as a FLOOR, not a literal, and not merely `> 0`.
+  //
+  // `toBeGreaterThan(0)` passed at 60s and passes at 5min, so it could never
+  // catch a revert of the cadence decision — same blind spot as the `toContain`
+  // conditions assertion below. The floor is the load decision: a steady-state
+  // run is two uncached round trips that usually return nothing, and the
+  // ingest pipeline only produces on the :00/:10/:20/:40 crons, so a faster
+  // poll costs requests without cutting latency. Tuning the cadence UP is free;
+  // dropping it back under 5 minutes has to be a deliberate, visible change.
+  it('has a frequency of at least 5 minutes (timer-driven, server load)', () => {
+    expect(registeredDef.frequency).toBeGreaterThanOrEqual(5 * 60 * 1000);
   });
 
   it('has maxAttempts set', () => {
