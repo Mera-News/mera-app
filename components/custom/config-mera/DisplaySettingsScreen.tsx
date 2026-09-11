@@ -1,3 +1,5 @@
+import { THEME_COLORS } from '@/lib/theme';
+import { useThemeStore } from '@/lib/stores/theme-store';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import PinLockScreen from '@/components/custom/auth/PinLockScreen';
 import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
@@ -99,8 +101,19 @@ interface DisplaySettingsScreenProps {
  * header and `px-5` on the body, so the back arrow sat 4pt left of everything
  * it introduced.
  */
+/** Light and Dark only. See the Appearance block below for why System is absent. */
+const THEME_CHOICES = [
+  { value: 'dark' as const, labelKey: 'display.themeDark' as const, icon: 'dark-mode' as const },
+  { value: 'light' as const, labelKey: 'display.themeLight' as const, icon: 'light-mode' as const },
+];
+
 const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack }) => {
   const { t } = useTranslation();
+  // Three separate selectors, not one object: zustand compares by Object.is, so
+  // returning a fresh object would re-render this screen on every store write.
+  const themePreference = useThemeStore((s) => s.preference);
+  const themeHydrated = useThemeStore((s) => s.hydrated);
+  const setThemePreference = useThemeStore((s) => s.setPreference);
   const insets = useSafeAreaInsets();
   const toast = useToast();
 
@@ -357,6 +370,67 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
           </VStack>
 
           {/* ── Visuals ──────────────────────────────────────────────────── */}
+          {/* APPEARANCE.
+
+              Renders NO selection until the theme store has hydrated. The store
+              defaults to 'dark', so painting a selection early would show Dark
+              ticked to a user whose stored preference is Light, then silently
+              swap under them a frame later.
+
+              There is deliberately no "System" option. iOS pins
+              UIUserInterfaceStyle to Dark in app.json, so `Appearance` can never
+              report anything else and a System choice would quietly mean Dark.
+              It arrives with the native release that removes that pin. */}
+          <VStack className="px-5 mb-6">
+            <Text size="xs" className="text-gray-500 font-semibold mb-2 uppercase">
+              {t('display.sectionAppearance')}
+            </Text>
+
+            <VStack className="py-3 px-4 border border-gray-700 rounded-lg">
+              <Text className="text-base text-typography-0">{t('display.themeTitle')}</Text>
+              <Text size="sm" className="text-gray-400 mt-1 mb-3">
+                {t('display.themeDescription')}
+              </Text>
+
+              <HStack space="sm">
+                {THEME_CHOICES.map(({ value, labelKey, icon }) => {
+                  // `hydrated` gates the tick, not the press: a user who taps
+                  // before hydration still gets what they asked for.
+                  const active = themeHydrated && themePreference === value;
+                  return (
+                    <Pressable
+                      key={value}
+                      testID={`theme-option-${value}`}
+                      accessibilityRole="button"
+                      accessibilityState={{ selected: active }}
+                      onPress={() => void setThemePreference(value)}
+                      className={`flex-1 items-center justify-center rounded-lg border py-3 ${
+                        active
+                          ? 'bg-primary-400 border-primary-400'
+                          : 'bg-transparent border-gray-700'
+                      }`}
+                      style={{ minHeight: 44 }}
+                    >
+                      <HStack space="xs" className="items-center">
+                        <MaterialIcons
+                          name={icon}
+                          size={16}
+                          color={active ? THEME_COLORS.light.typography950 : THEME_COLORS.dark.typography600}
+                        />
+                        <Text
+                          scaleTier="chrome"
+                          className={active ? 'text-pure-black font-semibold' : 'text-gray-300 font-semibold'}
+                        >
+                          {t(labelKey)}
+                        </Text>
+                      </HStack>
+                    </Pressable>
+                  );
+                })}
+              </HStack>
+            </VStack>
+          </VStack>
+
           {/* Unlike before, this section is NOT gated as a whole: blur images
               (folded in from Security) must survive on Android, which only
               hides the static-gradient row below (see

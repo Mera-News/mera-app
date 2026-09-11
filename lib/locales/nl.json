@@ -1541,7 +1541,12 @@
     "sectionStartup": "Starttabblad",
     "startupTabA11y": "Starttabblad, {{label}}",
     "startupTabDescription": "Kies welk tabblad Mera opent wanneer je de app start.",
-    "startupTabTitle": "Open bij opstarten"
+    "startupTabTitle": "Open bij opstarten",
+    "sectionAppearance": "Weergave",
+    "themeTitle": "Thema",
+    "themeDescription": "Kies hoe Mera eruitziet.",
+    "themeDark": "Donker",
+    "themeLight": "Licht"
   },
   "freeTier": {
     "cardBody": "Het AI-deel van Mera is voor nu uitgeschakeld. Alles wat je hebt opgeslagen, gevolgd of gelezen blijft op dit apparaat, en Verkennen toont nog steeds vandaags nieuws. Zonder een plan zal Mera je feed niet opbouwen, je vragen niet beantwoorden en geen nieuwe verhalen niet volgen. Start een plan en alles komt terug.",

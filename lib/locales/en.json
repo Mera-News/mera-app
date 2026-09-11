@@ -1741,7 +1741,12 @@
     "sectionStartup": "Startup tab",
     "startupTabTitle": "Open on launch",
     "startupTabDescription": "Choose which tab Mera opens to when you launch the app.",
-    "startupTabA11y": "Startup tab, {{label}}"
+    "startupTabA11y": "Startup tab, {{label}}",
+    "sectionAppearance": "Appearance",
+    "themeTitle": "Theme",
+    "themeDescription": "Choose how Mera looks.",
+    "themeDark": "Dark",
+    "themeLight": "Light"
   },
   "freeTier": {
     "cardTitle": "You're on Mera News Free",

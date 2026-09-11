@@ -1611,7 +1611,12 @@
     "sectionStartup": "تبويب البدء",
     "startupTabA11y": "تبويب البدء، {{label}}",
     "startupTabDescription": "اختر التبويب الذي تفتح عليه تطبيق Mera عند تشغيله.",
-    "startupTabTitle": "فتح عند البدء"
+    "startupTabTitle": "فتح عند البدء",
+    "sectionAppearance": "المظهر",
+    "themeTitle": "السمة",
+    "themeDescription": "اختر شكل Mera.",
+    "themeDark": "داكن",
+    "themeLight": "فاتح"
   },
   "freeTier": {
     "cardBody": "جزء الذكاء الاصطناعي من Mera معطّل حاليًا. أي شيء حفظته أو تابعته أو قرأته يبقى على هذا الجهاز، وتبويب الاستكشاف يحتفظ بأخبار اليوم. بدون خطة، لن يُنشئ Mera موجزك ولن يجيب على أسئلتك ولن يتابع القصص الجديدة. ابدأ بخطة وسيعود كل شيء.",

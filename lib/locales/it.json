@@ -1541,7 +1541,12 @@
     "sectionStartup": "Scheda di avvio",
     "startupTabA11y": "Scheda di avvio, {{label}}",
     "startupTabDescription": "Scegli quale scheda Mera apre quando avvi l'app.",
-    "startupTabTitle": "Apri al lancio"
+    "startupTabTitle": "Apri al lancio",
+    "sectionAppearance": "Aspetto",
+    "themeTitle": "Tema",
+    "themeDescription": "Scegli come appare Mera.",
+    "themeDark": "Scuro",
+    "themeLight": "Chiaro"
   },
   "freeTier": {
     "cardBody": "La parte AI di Mera è disattivata per ora. Tutto ciò che hai salvato, seguito o letto rimane su questo dispositivo, e Esplora ha ancora le notizie di oggi. Senza un piano, Mera non costruirà il tuo feed, non risponderà alle tue domande né seguirà le nuove storie. Avvia un piano e tutto torna.",
