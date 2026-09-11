@@ -45,6 +45,14 @@ jest.mock('@sentry/react-native', () => ({
 
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
+  // The REAL classifier, deliberately — not a stub. The runner used to
+  // hand-repeat the 401 and cancellation checks, and the whole point of moving
+  // them behind one exported function is that this path gets the same answer
+  // logger.captureException would. A stub here could drift from the rule it is
+  // meant to be enforcing and these tests would still pass.
+  classifySuppression: (...args: any[]) =>
+    (jest.requireActual('@/lib/logger') as typeof import('@/lib/logger'))
+      .classifySuppression(...(args as [Error])),
   default: {
     info: (...args: any[]) => mockLogInfo(...args),
     warn: (...args: any[]) => mockLogWarn(...args),
@@ -307,19 +315,23 @@ describe('run — failure handling', () => {
       await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
 
       expect(mockCaptureException).not.toHaveBeenCalled();
+      // Assert the STRUCTURED class, not the prose. The breadcrumb text is now
+      // generated from the shared classifier's verdict, so pinning the wording
+      // would make this test a copy of a string rather than of the rule.
       expect(mockLogAddBreadcrumb).toHaveBeenCalledWith(
-        expect.stringContaining('UNAUTHENTICATED'),
+        expect.stringContaining('Sentry capture suppressed'),
         'scheduler',
-        expect.objectContaining({ jobId: 'job-test-1' }),
+        expect.objectContaining({ jobId: 'job-test-1', suppressed: 'auth' }),
         'warning',
       );
     },
   );
 
   // This capture calls Sentry DIRECTLY (withScope, for the scheduler.* tags), so
-  // it does NOT inherit the rules that live in logger.captureException — it has
-  // to repeat them. A feed-sync step torn down mid-flight throws
-  // createCancellationError(); reporting that spends an issue on a non-event.
+  // it cannot go through logger.captureException — it asks the shared
+  // classifier for the same verdict instead. A feed-sync step torn down
+  // mid-flight throws createCancellationError(); reporting that spends an issue
+  // on a non-event.
   it('does NOT capture a cancellation to Sentry — breadcrumb only', async () => {
     const err = Object.assign(new Error('aborted'), { name: 'AbortError' });
     const job = makeJob({ attempt: 1, maxAttempts: 3 });
@@ -327,9 +339,28 @@ describe('run — failure handling', () => {
 
     expect(mockCaptureException).not.toHaveBeenCalled();
     expect(mockLogAddBreadcrumb).toHaveBeenCalledWith(
-      expect.stringContaining('cancelled'),
+      expect.stringContaining('Sentry capture suppressed'),
       'scheduler',
-      expect.objectContaining({ jobId: 'job-test-1' }),
+      expect.objectContaining({ jobId: 'job-test-1', suppressed: 'cancelled' }),
+      'info',
+    );
+  });
+
+  // A class the runner never knew about reaches it for free now. This is the
+  // regression guard for the refactor: before it, a new class at the choke
+  // point left this path reporting, and nothing failed.
+  it('does NOT capture a no-credential error to Sentry — breadcrumb only', async () => {
+    const err = Object.assign(new Error('no device keypair'), {
+      name: 'NoCredentialError',
+    });
+    const job = makeJob({ attempt: 1, maxAttempts: 3 });
+    await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+    expect(mockCaptureException).not.toHaveBeenCalled();
+    expect(mockLogAddBreadcrumb).toHaveBeenCalledWith(
+      expect.stringContaining('Sentry capture suppressed'),
+      'scheduler',
+      expect.objectContaining({ jobId: 'job-test-1', suppressed: 'no-credential' }),
       'info',
     );
   });

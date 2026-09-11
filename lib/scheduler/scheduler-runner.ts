@@ -2,12 +2,8 @@ import * as Sentry from '@sentry/react-native';
 import type { Job, TaskDefinition } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
-import logger from '@/lib/logger';
-import {
-  isCancellationError,
-  isNonRetryableError,
-  isUnauthenticatedError,
-} from '@/lib/utils/retry';
+import logger, { classifySuppression } from '@/lib/logger';
+import { isNonRetryableError } from '@/lib/utils/retry';
 
 function defaultBackoff(attempt: number): number {
   return ([30_000, 60_000, 120_000][attempt - 1] ?? 120_000);
@@ -82,37 +78,29 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
     useSchedulerStore.getState().setJobFailed(job.id, exhausted, retryAt);
     try { transaction?.setStatus?.('internal_error'); } catch { /* best-effort */ }
 
-    // THE 401 RULE, THIRD AND LAST SITE. One dead session makes every
-    // authenticated call in the app fail identically, so a per-failure Sentry
-    // event buys hundreds of duplicates for a single root cause. The Apollo
-    // error link (`lib/apollo-client.ts`) and `ArticleService.reportQueryError`
-    // both already downgrade a 401 to a breadcrumb — but the rejection still
-    // propagates out of the task, and THIS capture had no exemption, so the
-    // storm simply re-formed here wearing `scheduler.*` tags instead. That is
-    // Sentry MERA-APP-3P/42/4V/64: 181 events in 30 days from two users, in
-    // bursts of a dozen per cold start. The auth breaker's single trip event is
-    // the signal; the reschedule bookkeeping above is unaffected.
+    // THE SUPPRESSION RULES REACH THIS PATH THROUGH THE SHARED CLASSIFIER.
     //
-    // A CANCELLATION is suppressed here for the same reason, and it needs its
-    // own branch: this capture calls Sentry DIRECTLY (withScope, to attach the
-    // scheduler.* tags), so it does NOT inherit the cancellation and 401 rules
-    // that live in logger.captureException. A task torn down mid-flight throws
-    // createCancellationError() from feed-sync-steps, which is a fact about the
-    // app's lifecycle, not a defect. Any future reporting path that bypasses
-    // logger has to repeat both checks — this is the only one that does.
-    if (isCancellationError(err)) {
+    // This is the one reporting path that cannot go through
+    // logger.captureException: it calls Sentry DIRECTLY inside a withScope so
+    // it can attach the `scheduler.*` tags. It used to re-implement the 401 and
+    // cancellation checks by hand, which meant every class added at the choke
+    // point silently missed it — a task that failed for a suppressed reason
+    // re-formed the storm here wearing scheduler tags instead (Sentry
+    // MERA-APP-3P/42/4V/64: 181 events in 30 days from two users, in bursts of
+    // a dozen per cold start). It now asks the classifier for the same answer
+    // logger would give, so a new class covers this path for free.
+    //
+    // The reschedule bookkeeping below is unaffected: a suppressed report is
+    // still a failed job and still retries.
+    const suppression = classifySuppression(
+      err instanceof Error ? err : new Error(String(err)),
+    );
+    if (suppression !== null) {
       logger.addBreadcrumb(
-        `[${definition.name}] cancelled — Sentry capture suppressed`,
+        `[${definition.name}] ${suppression} — Sentry capture suppressed`,
         'scheduler',
-        { jobId: job.id, attempt: job.attempt, exhausted },
-        'info',
-      );
-    } else if (isUnauthenticatedError(err)) {
-      logger.addBreadcrumb(
-        `[${definition.name}] UNAUTHENTICATED — Sentry capture suppressed`,
-        'scheduler',
-        { jobId: job.id, attempt: job.attempt, exhausted },
-        'warning',
+        { jobId: job.id, attempt: job.attempt, exhausted, suppressed: suppression },
+        suppression === 'auth' ? 'warning' : 'info',
       );
     } else {
       Sentry.withScope((scope) => {

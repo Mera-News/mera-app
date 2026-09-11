@@ -1,4 +1,5 @@
 import * as Sentry from '@sentry/react-native';
+import { AppState } from 'react-native';
 
 type LogLevel = 'debug' | 'info' | 'warning' | 'error' | 'fatal';
 
@@ -11,38 +12,104 @@ interface CaptureExceptionOptions {
   tags?: Record<string, string>;
   extra?: Record<string, unknown>;
   fingerprint?: string[];
+  /**
+   * INTERNAL. Opts out of captureMessage's default `fingerprint: [message]`.
+   *
+   * Set by `logger.error(message)` alone. The default is correct for the 11
+   * DIRECT captureMessage callers because every one of them emits a static
+   * string, so the text is a stable identity. `logger.error` is the opposite
+   * case: its messages are routinely built with template literals, so
+   * defaulting there would split one condition across an issue per distinct
+   * string. That path keeps grouping on its stack, unchanged.
+   */
+  _groupByStack?: true;
 }
 
-// THE 401 RULE AND THE CANCELLATION RULE, APPLIED ONCE.
+// THE SUPPRESSION RULES, APPLIED ONCE.
 //
-// Both used to be per-call-site opt-ins. `isUnauthenticatedError` was defined
-// once in lib/utils/retry.ts and then applied by hand at three sites (the
-// Apollo error link, ArticleService.reportQueryError, the scheduler runner),
-// which left every OTHER service catch reporting the same dead session. One
-// cold start with an expired session emitted five separate Sentry issues:
-// account-service's 401 (MERA-APP-3P), e2ee-service's NEAR attestation 401
-// (MERA-APP-18/23), submitInferenceJob's 401 (MERA-APP-6Q), the breaker's own
-// trip event, and the model-fallback message that followed from it. The rule
-// was correct and its coverage was the bug, so it moves to the one chokepoint
-// every reporting path already goes through.
+// Five classes of exception never become a Sentry issue, and the rule lives
+// HERE rather than at the catch sites. Each of them was a per-site opt-in once,
+// and in every case the rule was correct and its COVERAGE was the bug: a
+// predicate applied by hand at three or four places leaves every other catch in
+// the app reporting the same fact. `isUnauthenticatedError` was defined once in
+// lib/utils/retry.ts and applied at three sites while a fourth kept firing; the
+// offline gate lived only in the Apollo error link while ArticleService's own
+// catch re-reported every offline failure above it (MERA-APP-77); and
+// `isTransientNetworkError` is still hand-applied at six unrelated sites.
 //
-// A 401 becomes a breadcrumb and feeds recordAuthFailure(). The auth circuit
-// breaker's single trip event stays the ONLY Sentry signal for a dead session —
-// that is the whole design in lib/auth-failure-breaker.ts, and it only works if
-// nothing else reports the same fact.
+//   cancelled   A screen unmount, a superseded refresh, a scheduler task torn
+//               down mid-flight. Dropped outright — nobody can act on it and it
+//               is not evidence of anything (MERA-APP-6W).
 //
-// A cancellation (AbortError — a screen unmount, a superseded refresh, a
-// scheduler task torn down mid-flight) is dropped outright. Nobody can act on
-// it and it is not evidence of anything (MERA-APP-6W).
+//   auth        A 401. One dead session makes every query in the app fail the
+//               same way, so capturing each buys hundreds of duplicates for one
+//               root cause. Becomes a breadcrumb and feeds recordAuthFailure();
+//               the auth circuit breaker's single trip event stays the ONLY
+//               Sentry signal for a dead session. That is the whole design in
+//               lib/auth-failure-breaker.ts and it only works while nothing
+//               else reports the same fact.
 //
-// Both predicates are lazy-required for the reason auth-failure-breaker.ts
+//   offline     A network-shaped failure on a device that has told us it has no
+//               link. It carries no information: the request was doomed before
+//               it left. The user is already told (the offline band, and
+//               Explore's own empty state), and recordServerTransportFailure()
+//               in the Apollo error link runs BEFORE the reporting decision, so
+//               suppressing the event cannot blind the reachability latch.
+//               MERA-APP-77 (offline Explore fetch) and MERA-APP-78 (offline
+//               Expo push-token fetch, which is not even a GraphQL call and so
+//               could never be covered by the link's gate).
+//
+//   backgrounded-timeout
+//               Our own 30s client abort (lib/apollo-fetch.ts) raised while the
+//               app is not foreground. iOS deprioritises a backgrounded app's
+//               sockets, the run is retried on the next tick or foreground, and
+//               nothing user-visible depends on it. MERA-APP-79.
+//
+//   no-credential
+//               The device has no E2EE keypair yet (or it was cleared), so a
+//               call that needs one cannot be made. A state, not a defect.
+//               Deliberately does NOT call recordAuthFailure(): the session may
+//               be perfectly healthy, and feeding the auth breaker here would
+//               trip it and pause feed-sync over a missing local key.
+//
+// WHAT THIS DOES NOT COVER. beforeSend (lib/sentry-init.ts) is not the choke
+// point and must not become one: it cannot read a store (that file is the app's
+// first import and the module cycle is why it is shaped the way it is), and it
+// would drop the breadcrumb along with the event. It stays the privacy
+// scrubber. NATIVE crashes reach neither. And `captureMessage` deliberately
+// does NOT pass through here — every class below is defined by an ERROR
+// OBJECT's shape, and the one recurring message in this area is the auth
+// breaker's trip event, which is precisely the signal the auth rule preserves.
+//
+// The predicates are lazy-required for the reason auth-failure-breaker.ts
 // documents: logger is imported by nearly every module, so a static import of
-// utils/retry or auth-failure-breaker here would form a cycle at module-eval
-// time. Failing open (reporting the event) is the safe direction on any throw.
-function classifySuppression(
+// utils/retry, utils/transient-error, apollo-fetch or the network store would
+// form a cycle at module-eval time. Failing open (reporting the event) is the
+// safe direction on any throw.
+export type SuppressionClass =
+  | 'auth'
+  | 'cancelled'
+  | 'offline'
+  | 'backgrounded-timeout'
+  | 'no-credential';
+
+/**
+ * Exported so the ONE reporting path that cannot go through captureException
+ * still gets the same answer. lib/scheduler/scheduler-runner.ts calls Sentry
+ * directly inside a withScope (to attach its `scheduler.*` tags) and used to
+ * hand-repeat two of these checks; it now calls this instead, so a class added
+ * here reaches it for free. Any future direct-to-Sentry path must do the same.
+ */
+export function classifySuppression(
   error: Error,
-  options: CaptureExceptionOptions,
-): 'auth' | 'cancelled' | null {
+  options: CaptureExceptionOptions = {},
+): SuppressionClass | null {
+  // Duck-typed on the NAME so logger never imports lib/e2ee — that module
+  // reaches the stores and apollo-client, i.e. exactly the cycle this file
+  // avoids. Checked before anything that consults connectivity: a missing
+  // keypair is a local state and has nothing to do with the network.
+  if (error?.name === 'NoCredentialError') return 'no-credential';
+
   try {
     const { isUnauthenticatedError, isCancellationError } =
       require('./utils/retry') as typeof import('./utils/retry');
@@ -62,6 +129,53 @@ function classifySuppression(
   // (fact-check-record-service's 'pending'/'done'), which must never be read as
   // an auth failure and silently swallowed.
   if (options.tags?.status === '401' || options.extra?.status === 401) return 'auth';
+
+  try {
+    const { isTransientNetworkError } =
+      require('./utils/transient-error') as typeof import('./utils/transient-error');
+    const { useNetworkStore } =
+      require('./stores/network-store') as typeof import('./stores/network-store');
+
+    // `=== false`, never `!isConnected`. `isConnected` is seeded optimistically
+    // to "assume online" until NetInfo's first fetch resolves (the rationale is
+    // written out at lib/apollo-client.ts:199-208), so "not yet known" must
+    // fall on the REPORT side. And `isConnected` (raw device link), never
+    // `isOnline()` — that one is a LATCH meaning "Mera's GraphQL has been
+    // unhealthy", which is a different question, and reading it here would
+    // suppress exactly the server-down evidence we most want.
+    //
+    // THE COST, stated: isTransientNetworkError matches bare 'timeout',
+    // 'aborted', 'offline' and 'network request failed' anywhere in a message,
+    // so it is far too broad to use alone — the conjunction with a CONFIRMED
+    // offline device is doing all the work. A non-network defect whose message
+    // happens to contain one of those substrings, thrown while the device has
+    // no link, degrades to a breadcrumb. Accepted: in that window "the device
+    // is offline" is the dominant explanation for anything failing at all.
+    if (
+      useNetworkStore.getState().isConnected === false &&
+      isTransientNetworkError(error)
+    ) {
+      return 'offline';
+    }
+  } catch {
+    // Store or predicate unavailable — report it.
+  }
+
+  try {
+    const { isRequestTimeoutError } =
+      require('./apollo-fetch') as typeof import('./apollo-fetch');
+    // Only OUR marked 30s abort, never a bare AbortError: Apollo aborts on
+    // unsubscribe with the same shape, and that is a cancellation (already
+    // handled above). A synchronous property read of AppState.currentState,
+    // deliberately — no listener, no subscription, nothing at import time, in a
+    // module that sits under almost every other module in the app.
+    if (isRequestTimeoutError(error) && AppState.currentState !== 'active') {
+      return 'backgrounded-timeout';
+    }
+  } catch {
+    // Predicate unavailable — report it.
+  }
+
   return null;
 }
 
@@ -74,6 +188,17 @@ function recordAuthFailureSafely(): void {
     // best-effort — the breaker may not be available (e.g. in unit tests)
   }
 }
+
+/** One line per suppressed class, so a breadcrumb says WHY it was suppressed
+ *  rather than only that it was. `cancelled` is absent on purpose: it is
+ *  dropped outright, with no breadcrumb. */
+const SUPPRESSION_BREADCRUMB: Record<SuppressionClass, string> = {
+  auth: 'Suppressed 401 — auth breaker owns this signal',
+  cancelled: 'Suppressed cancellation',
+  offline: 'Suppressed network error — device is offline',
+  'backgrounded-timeout': 'Suppressed request timeout — app was not in foreground',
+  'no-credential': 'Suppressed missing-credential error — device has no keypair yet',
+};
 
 const logger = {
   /**
@@ -94,14 +219,19 @@ const logger = {
     // a red console line would keep suggesting these are still being reported.
     const suppression = classifySuppression(errorObject, options);
     if (suppression === 'cancelled') return '';
-    if (suppression === 'auth') {
+    if (suppression !== null) {
       logger.addBreadcrumb(
-        'Suppressed 401 — auth breaker owns this signal',
+        `${SUPPRESSION_BREADCRUMB[suppression]}: ${errorObject.message}`,
         tags?.service ?? 'logger',
-        { ...tags, ...extra },
-        'warning',
+        { ...tags, ...extra, suppressed: suppression },
+        suppression === 'auth' ? 'warning' : 'info',
       );
-      recordAuthFailureSafely();
+      // ONLY the 401 class feeds the breaker. A no-credential error means the
+      // device has no local keypair, which says nothing about the session —
+      // feeding it here would trip the breaker and pause feed-sync over a
+      // missing local key. Offline and backgrounded-timeout are not auth
+      // failures at all.
+      if (suppression === 'auth') recordAuthFailureSafely();
       return '';
     }
 
@@ -129,7 +259,7 @@ const logger = {
     message: string,
     options: CaptureExceptionOptions = {}
   ): string {
-    const { level = 'info', tags, extra, fingerprint } = options;
+    const { level = 'info', tags, extra, fingerprint, _groupByStack } = options;
 
     if (__DEV__) {
       console.info('[Logger]', message, JSON.stringify({ level, tags, extra }, null, 2));
@@ -137,15 +267,20 @@ const logger = {
 
     // `fingerprint` was accepted by the options type and then silently dropped
     // here, so every captureMessage grouped on its STACK. A message emitted
-    // from an async callback has an unstable stack, which split one recurring
-    // event across four Sentry issues (MERA-APP-6J/5P/65/6R are all the single
-    // string 'Auth circuit breaker tripped'). Callers that own a stable
-    // identity for their message pass it explicitly.
+    // from an async callback has whatever frames happen to be live, which split
+    // one recurring event across four Sentry issues (MERA-APP-6J/5P/65/6R are
+    // all the single string 'Auth circuit breaker tripped'). Passing it fixed
+    // that for callers who remembered to; defaulting it below fixes it for the
+    // ones who don't.
     return Sentry.captureMessage(message, {
       level: level as Sentry.SeverityLevel,
       tags,
       extra,
-      fingerprint,
+      // Default to the message itself. Every one of the 11 direct callers emits
+      // a STATIC string (the one template literal interpolates a module
+      // constant), so the text IS the identity and grouping on it is correct.
+      // auth-failure-breaker passes its own and keeps it.
+      fingerprint: fingerprint ?? (_groupByStack ? undefined : [message]),
     });
   },
 
@@ -272,7 +407,9 @@ const logger = {
     if (error) {
       this.captureException(error, { extra: { message, ...context } });
     } else {
-      this.captureMessage(message, { level: 'error', extra: context });
+      // `_groupByStack`: logger.error messages are commonly interpolated, so
+      // they keep the stack-based grouping they have always had.
+      this.captureMessage(message, { level: 'error', extra: context, _groupByStack: true });
     }
   },
 };
