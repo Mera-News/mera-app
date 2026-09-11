@@ -102,7 +102,7 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
             <Text
                 testID="all-caught-up-headline"
                 size={compact ? 'lg' : 'xl'}
-                className={`text-typography-0 text-center font-semibold ${compact ? 'mb-2' : 'mb-4'}`}
+                className={`text-white text-center font-semibold ${compact ? 'mb-2' : 'mb-4'}`}
             >
                 {t('feed.allCaughtUp')}
             </Text>

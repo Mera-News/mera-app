@@ -16,7 +16,6 @@
 //      otherwise expired (older superseded proposals, or in-memory store lost on
 //      app restart, dim out with no buttons).
 
-import { THEME_COLORS } from '@/lib/theme';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -36,8 +35,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)';
+
+// Mirror FactCard's entering (fade + slide + slight scale) so a freshly-staged
 // proposal lands with the same motion vocabulary as the fact cards.
 function proposalCardEntering() {
   'worklet';

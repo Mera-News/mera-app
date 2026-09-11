@@ -368,7 +368,7 @@ const ExploreScreen: React.FC = () => {
                 own wrapper has no background, so the overlay needs an opaque
                 or glass backing or article rows scroll visibly through the
                 chips. On iOS 26+ that backing is real Liquid Glass (GlassPlate);
-                everywhere else it falls back to opaque `bg-background-0`, since
+                everywhere else it falls back to opaque `bg-black`, since
                 GlassView paints nothing pre-26/off-iOS. The outer view is
                 UNPADDED — GlassPlate is an absolute fill and needs an unpadded
                 parent so its insets resolve against the full header, not just
@@ -506,7 +506,7 @@ const ExploreScreen: React.FC = () => {
                 chips underneath are never unmounted, re-keyed or re-fetched.
                 Clearing the query un-mounts this and reveals the untouched
                 scope list exactly as it was. `top: headerHeight` starts it
-                right under the pinned header; `bg-background-0` makes it fully opaque
+                right under the pinned header; `bg-black` makes it fully opaque
                 so the covered list never shows through. */}
             {search.isActive ? (
                 <Box

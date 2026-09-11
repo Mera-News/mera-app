@@ -77,7 +77,6 @@
 // Dashboard, and so do the counts. The status glyph opens the same detail panel
 // the bar used to expand into, and closes itself after 3s.
 
-import { THEME_COLORS } from '@/lib/theme';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import {
@@ -163,9 +162,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Was a hardcoded copy of dark primary-500. Single-sourced so it cannot drift
-// from the token it was copied from; see lib/theme/tokens.ts.
-const REFRESH_TINT = THEME_COLORS.dark.primary500;
+const REFRESH_TINT = '#EDA77E';
 
 /** Show the scroll-to-top FAB once the feed is scrolled past this many px. */
 const SCROLL_THRESHOLD = 300;

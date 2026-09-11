@@ -1,4 +1,3 @@
-import { THEME_COLORS } from '@/lib/theme';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
@@ -29,9 +28,7 @@ const PAGE_SIZE = 10;
 
 // Matches FeedScreen / DashboardSectionsFeed / StoryTimelineScreen, which each
 // declare it locally. A fourth copy beats a shared constant for one hex value.
-// Was a hardcoded copy of dark primary-500. Single-sourced so it cannot drift
-// from the token it was copied from; see lib/theme/tokens.ts.
-const REFRESH_TINT = THEME_COLORS.dark.primary500;
+const REFRESH_TINT = '#EDA77E';
 
 /**
  * Append `next` to `previous`, dropping any headline whose article id is

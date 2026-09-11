@@ -1,4 +1,3 @@
-import { THEME_COLORS } from '@/lib/theme';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
@@ -21,8 +20,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from '@/components/ui/pressable';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 export interface FeedStatusDetailsProps {
     /** Articles published across the app's sources this cycle (store `articleCount`) —

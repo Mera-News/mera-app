@@ -1,4 +1,3 @@
-import { useThemeColors } from '@/lib/theme';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
@@ -50,7 +49,6 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
     const userId = localUserId ?? session?.user?.id;
     const { fetchUserPersona } = useUserStore();
     const { t } = useTranslation();
-    const themeColors = useThemeColors();
     const isOnDeviceProcessing = useIsOnDeviceProcessing();
 
     const [refreshing, setRefreshing] = useState(false);
@@ -118,7 +116,7 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor={themeColors.refreshTint}
+                            tintColor="#ffffff"
                             colors={['#ffffff']}
                         />
                     }
@@ -149,7 +147,7 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
                     <ModalHeader className="pb-3">
                         <HStack className="items-center" space="xs">
                             <MaterialIcons name="shield" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-typography-0">{t('configPanel.privacyNoticeTitle')}</Text>
+                            <Text className="text-base font-semibold text-white">{t('configPanel.privacyNoticeTitle')}</Text>
                         </HStack>
                     </ModalHeader>
                     <ModalBody className="py-4">

@@ -37,7 +37,7 @@ const NoGeneratedInterestsCard: React.FC = () => {
             {/* Main message */}
             <Text
                 size="xl"
-                className="text-typography-0 text-center mb-4 font-semibold"
+                className="text-white text-center mb-4 font-semibold"
             >
                 {t('feed.noInterests')}
             </Text>

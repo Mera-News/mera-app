@@ -1,4 +1,3 @@
-import { useThemeColors } from '@/lib/theme';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -62,7 +61,6 @@ const VisitedPublicationsList: React.FC<Props> = ({
 }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
-    const themeColors = useThemeColors();
     const [items, setItems] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -221,7 +219,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor={themeColors.refreshTint}
+                            tintColor="#ffffff"
                             colors={['#ffffff']}
                             // Without this the spinner drops from behind the
                             // collapsing header — the same leg DashboardSectionsFeed

@@ -48,7 +48,7 @@ const HubRow: React.FC<HubRowProps> = ({
             <HStack className="items-center flex-1 mr-2" space="md">
                 <MaterialIcons name={icon} size={22} color={iconColor} />
                 <VStack className="flex-1">
-                    <Text className="text-base text-typography-0">{label}</Text>
+                    <Text className="text-base text-white">{label}</Text>
                     {subtitle ? (
                         <Text size="xs" className="text-gray-500 mt-0.5" numberOfLines={1}>
                             {subtitle}

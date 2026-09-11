@@ -1,4 +1,3 @@
-import { useThemeColors } from '@/lib/theme';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
@@ -48,7 +47,6 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     onBack,
 }) => {
     const { t } = useTranslation();
-    const themeColors = useThemeColors();
     const [items, setItems] = useState<VisitedArticle[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -157,7 +155,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor={themeColors.refreshTint}
+                            tintColor="#ffffff"
                             colors={['#ffffff']}
                         />
                     }

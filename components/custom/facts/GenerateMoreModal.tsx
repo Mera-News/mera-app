@@ -19,7 +19,7 @@ const GenerateMoreModal: React.FC<GenerateMoreModalProps> = ({ isOpen, onConfirm
             <ModalBackdrop />
             <ModalContent>
                 <ModalHeader className="pb-4">
-                    <Text className="text-xl font-semibold text-typography-0">{t('configPanel.generateMoreTopicsTitle')}</Text>
+                    <Text className="text-xl font-semibold text-white">{t('configPanel.generateMoreTopicsTitle')}</Text>
                 </ModalHeader>
                 <ModalBody className="py-4">
                     <Text className="text-gray-300 text-base leading-relaxed">

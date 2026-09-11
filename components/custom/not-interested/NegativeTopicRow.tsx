@@ -47,7 +47,7 @@ const NegativeTopicRow: React.FC<NegativeTopicRowProps> = ({
                 <TranslatableDynamic
                     text={topic.text}
                     size="md"
-                    className="text-typography-0 flex-1 ml-3 mr-2 capitalize"
+                    className="text-white flex-1 ml-3 mr-2 capitalize"
                     numberOfLines={2}
                 />
                 <View className="rounded-full px-2 py-0.5 mr-1 bg-gray-700">

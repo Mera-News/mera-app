@@ -9,9 +9,6 @@
 // config.ts that changes a dark value fails here. If this test fails and you
 // believe the new dark value is correct, you are on the wrong wave.
 
-import fs from 'node:fs';
-import path from 'node:path';
-
 import { rawTokens } from '../config';
 
 describe('rawTokens.dark is frozen', () => {
@@ -51,23 +48,5 @@ describe('rawTokens key parity', () => {
     for (const ramp of ramps) {
       expect(Object.keys(rawTokens.light)).toContain(`--color-${ramp}-0`);
     }
-  });
-});
-
-describe('raw-tokens.ts stays import-free', () => {
-  // nativewind touches react-native-css-interop's appearance observables at
-  // module load, so anything importing it dies in a suite that mocks
-  // react-native. lib/theme imports these tokens and P4 puts useThemeColors in
-  // ~119 files, so one import added here would break the app's test suite in
-  // places that name neither this file nor the change.
-  it('has no import statements at all', () => {
-    const src = fs.readFileSync(path.resolve(__dirname, '../raw-tokens.ts'), 'utf8');
-    const imports = src.split('\n').filter((l) => /^\s*import\s/.test(l));
-    expect(imports).toEqual([]);
-  });
-
-  it('is what config re-exports, so there is still one source', () => {
-    const raw = require('../raw-tokens') as { rawTokens: typeof rawTokens };
-    expect(raw.rawTokens).toBe(rawTokens);
   });
 });

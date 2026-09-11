@@ -250,7 +250,7 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
     >
       <MaterialIcons name={icon} size={20} color={disabled ? '#4b5563' : '#ffffff'} />
       <VStack className="ml-3 flex-1">
-        <Text className={disabled ? 'text-base text-gray-600' : 'text-base text-typography-0'}>
+        <Text className={disabled ? 'text-base text-gray-600' : 'text-base text-white'}>
           {label}
         </Text>
         <Text size="xs" className="text-gray-500">
@@ -264,7 +264,7 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
     <VStack space="sm">
       {step === 'code' ? (
         <>
-          <Text className="text-typography-0 font-semibold">{t('backup.adoptTitle')}</Text>
+          <Text className="text-white font-semibold">{t('backup.adoptTitle')}</Text>
           <Text size="sm" className="text-gray-400">
             {introText ?? t('backup.adoptDescription')}
           </Text>
@@ -289,7 +289,7 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
         </>
       ) : (
         <>
-          <Text className="text-typography-0 font-semibold">{t('backup.restoreWhereTitle')}</Text>
+          <Text className="text-white font-semibold">{t('backup.restoreWhereTitle')}</Text>
           <Text size="sm" className="text-gray-400">
             {t('backup.restoreWhereDescription')}
           </Text>
@@ -324,7 +324,7 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
         <ModalBackdrop />
         <ModalContent className="bg-gray-900 border border-gray-700">
           <ModalHeader>
-            <Text className="text-lg font-semibold text-typography-0">{t('backup.restore')}</Text>
+            <Text className="text-lg font-semibold text-white">{t('backup.restore')}</Text>
           </ModalHeader>
           <ModalBody>
             <VStack space="sm">
@@ -337,7 +337,7 @@ const BackupRecoveryFlow: React.FC<BackupRecoveryFlowProps> = ({
                     className="py-3 px-3 border border-gray-700 rounded-lg"
                     onPress={() => setTarget(path)}
                   >
-                    <Text className="text-typography-0">{path.split('/').pop()}</Text>
+                    <Text className="text-white">{path.split('/').pop()}</Text>
                   </Pressable>
                 ))
               )}

@@ -1,15 +1,13 @@
 // StarterChips — a wrap of outlined tappable chips shown at the start of an
 // empty thread. Presentational: fires onChipPress with the chip's message.
 
-import { THEME_COLORS } from '@/lib/theme';
 import { Text } from '@/components/ui/text';
 import { hapticLight } from '@/lib/haptics';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { StarterChip } from './types';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)';
 
 export interface StarterChipsProps {
   chips: StarterChip[];

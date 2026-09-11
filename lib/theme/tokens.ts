@@ -12,9 +12,7 @@
 // arrays. Do NOT rebuild this on `useUnstableNativeVariable`: it subscribes per
 // variable, and ~590 call sites would be a subscription storm.
 
-// Imported from raw-tokens, NOT config: config pulls in nativewind, which
-// breaks every suite that mocks react-native. See that file's header.
-import { rawTokens } from '@/components/ui/gluestack-ui-provider/raw-tokens';
+import { rawTokens } from '@/components/ui/gluestack-ui-provider/config';
 
 export type ThemeScheme = 'light' | 'dark';
 

@@ -48,7 +48,7 @@ const SubscribeConfirmDialog: React.FC<Props> = ({ publisherName, onYes, onNo })
         accessibilityLabel={t('subscriptions.confirmTitle', { publisher: publisherName })}
       >
         <ModalHeader className="border-gray-700 pb-4">
-          <Text className="text-xl font-semibold text-typography-0">
+          <Text className="text-xl font-semibold text-white">
             {t('subscriptions.confirmTitle', { publisher: publisherName })}
           </Text>
         </ModalHeader>

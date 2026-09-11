@@ -258,7 +258,7 @@ const ArticleSuggestionContainerImpl: React.FC<ArticleSuggestionContainerProps> 
             originalText={titleOriginal}
             originalLanguage={sourceLanguage}
             size={isCard ? 'lg' : '2xl'}
-            className={isCard ? '' : 'text-typography-0'}
+            className={isCard ? '' : 'text-white'}
             style={isCard ? undefined : { paddingTop: 8 }}
             showToggle={!isCard}
             onDisplayChange={onTitleDisplayChange}

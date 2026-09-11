@@ -285,7 +285,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                         >
                             <Heading
                                 size="4xl"
-                                className={embedded ? 'text-typography-0' : 'text-typography-0 ml-14'}
+                                className={embedded ? 'text-white' : 'text-white ml-14'}
                             >
                                 {t('savedSuggestions.title')}
                             </Heading>
@@ -325,7 +325,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader>
-                        <Heading size="lg" className="text-typography-0">
+                        <Heading size="lg" className="text-white">
                             {t('savedSuggestions.deleteConfirmTitle')}
                         </Heading>
                     </ModalHeader>

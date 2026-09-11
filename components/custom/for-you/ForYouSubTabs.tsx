@@ -1,4 +1,3 @@
-import { THEME_COLORS } from '@/lib/theme';
 import { HStack } from '@/components/ui/hstack';
 import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
@@ -8,8 +7,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ScrollView, View } from 'react-native';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 export type ForYouSubTab = 'feed' | 'stories' | 'saved' | 'history' | 'factChecks';
 

@@ -1,4 +1,3 @@
-import { THEME_COLORS } from '@/lib/theme';
 import FactCheckCard from '@/components/custom/fact-checks/FactCheckCard';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
@@ -21,9 +20,7 @@ import { RefreshControl } from 'react-native';
 import Animated, { useAnimatedScrollHandler } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Was a hardcoded copy of dark primary-500. Single-sourced so it cannot drift
-// from the token it was copied from; see lib/theme/tokens.ts.
-const REFRESH_TINT = THEME_COLORS.dark.primary500;
+const REFRESH_TINT = '#EDA77E';
 
 interface FactChecksPanelProps {
     /** True while this is the selected Dashboard chip. Drives the re-read on
@@ -143,7 +140,7 @@ const FactChecksPanel: React.FC<FactChecksPanelProps> = ({
                 testID="fact-checks-list"
                 ListHeaderComponent={
                     <VStack className="pb-2 mb-1" style={{ paddingTop: 8 }}>
-                        <Heading size="4xl" className="text-typography-0">
+                        <Heading size="4xl" className="text-white">
                             {t('factCheck.dashboard.listTitle')}
                         </Heading>
                         <Text size="sm" className="text-typography-400 mt-1">

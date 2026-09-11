@@ -71,7 +71,7 @@ const AccordionSection: React.FC<AccordionSectionProps> = ({
             accessibilityState={{ expanded: isExpanded }}
             className="flex-row items-center px-4 py-3 border-b border-gray-800"
         >
-            <Text size="md" className="text-typography-0 flex-1 mr-2">
+            <Text size="md" className="text-white flex-1 mr-2">
                 {title}
             </Text>
             <View
@@ -352,7 +352,7 @@ const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => 
                                             />
                                             <Text
                                                 size="md"
-                                                className="text-typography-0 flex-1 ml-3 mr-2 capitalize"
+                                                className="text-white flex-1 ml-3 mr-2 capitalize"
                                                 numberOfLines={2}
                                             >
                                                 {pref.publicationName}
@@ -404,7 +404,7 @@ const NotInterestedScreen: React.FC<NotInterestedScreenProps> = ({ onBack }) => 
                     <ModalHeader className="pb-3">
                         <HStack className="items-center" space="xs">
                             <MaterialIcons name="visibility" size={18} color={ACCENT} />
-                            <Text className="text-base font-semibold text-typography-0">
+                            <Text className="text-base font-semibold text-white">
                                 {t('notInterested.removeConfirmTitle')}
                             </Text>
                         </HStack>

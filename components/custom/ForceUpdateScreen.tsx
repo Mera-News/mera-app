@@ -45,7 +45,7 @@ export default function ForceUpdateScreen({ storeUrl }: { storeUrl: string | nul
       <AbstractGradientBackdrop />
 
       <MaterialIcons name="system-update" size={64} color="#FFFFFF" />
-      <Text className="text-typography-0 text-2xl font-bold mt-6 text-center">
+      <Text className="text-white text-2xl font-bold mt-6 text-center">
         {t('nativeUpdate.updateRequiredTitle')}
       </Text>
       <Text className="text-gray-400 text-base mt-3 text-center">

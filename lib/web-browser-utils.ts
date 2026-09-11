@@ -1,4 +1,3 @@
-import { useThemeStore } from '@/lib/stores/theme-store';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 
@@ -64,17 +63,6 @@ export function appendReferrer(url: string, medium: ReferrerMedium = 'referral')
 }
 
 /**
- * Chrome colours for the in-app browser, resolved from the theme store at CALL
- * TIME rather than at module load: this module is imported long before the
- * theme hydrates, so a module-level constant would freeze the default.
- */
-function browserChromeFor(scheme: 'light' | 'dark') {
-  return scheme === 'light'
-    ? { controls: '#9F3F20', toolbar: '#F4F3EE' }
-    : { controls: '#ffffff', toolbar: '#000000' };
-}
-
-/**
  * Opens a URL in an in-app browser.
  *
  * On Android, this explicitly selects a browser that supports Chrome Custom Tabs
@@ -84,13 +72,10 @@ function browserChromeFor(scheme: 'light' | 'dark') {
  * On iOS, this uses SFSafariViewController with PAGE_SHEET presentation.
  */
 export async function openInAppBrowser(url: string): Promise<WebBrowser.WebBrowserResult> {
-    const browserChrome = browserChromeFor(useThemeStore.getState().resolved);
     const baseOptions: WebBrowser.WebBrowserOpenOptions = {
         presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET,
-        // The in-app browser is a NATIVE surface: it cannot read a CSS variable,
-        // so the resolved scheme has to be pushed into it as literals.
-        controlsColor: browserChrome.controls,
-        toolbarColor: browserChrome.toolbar,
+        controlsColor: '#ffffff',
+        toolbarColor: '#000000',
     };
 
     if (Platform.OS === 'android') {

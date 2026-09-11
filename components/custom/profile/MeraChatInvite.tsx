@@ -63,7 +63,7 @@ const MeraChatInvite: React.FC = () => {
                     edge={false}
                     style={styles.bubbleBorder}
                 >
-                    <Text className="text-typography-0" style={styles.bubbleText}>
+                    <Text className="text-white" style={styles.bubbleText}>
                         {t('profile.meraInvite')}
                     </Text>
                 </GlassPanel>

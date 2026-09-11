@@ -82,7 +82,7 @@ const SuppressionRow: React.FC<SuppressionRowProps> = ({
                 <TranslatableDynamic
                     text={display}
                     size="md"
-                    className="text-typography-0 flex-1 ml-3 mr-2 capitalize"
+                    className="text-white flex-1 ml-3 mr-2 capitalize"
                     numberOfLines={2}
                 />
                 <View
