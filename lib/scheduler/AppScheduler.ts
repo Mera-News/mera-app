@@ -3,7 +3,7 @@ import { resetSlowRequests, useNetworkStore } from '@/lib/stores/network-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { useDatabaseStore } from '@/lib/stores/database-store';
 import { getJwtToken } from '@/lib/auth-client';
-import type { Job, TaskCondition, TaskDefinition } from './scheduler-types';
+import type { Job, TaskCondition, TaskDefinition, TriggerOutcome } from './scheduler-types';
 import { useSchedulerStore } from './scheduler-store';
 import * as persistence from './scheduler-persistence';
 import * as runner from './scheduler-runner';
@@ -33,6 +33,18 @@ export const FOREGROUND_MIN_GAP_MS = 60_000;
  *  Kept at the old 5s value, so cold-start behaviour is UNCHANGED by the warm
  *  floor moving. */
 export const COLD_START_MIN_GAP_MS = 5_000;
+
+/** Minimum gap between two USER-driven triggers of the same task.
+ *
+ *  `trigger()` deliberately bypasses every condition and every cadence gate, so
+ *  pull-to-refresh and the tab re-tap are the one path with no rate limit at
+ *  all. 3 seconds is enough to collapse a double-pull without ever telling a
+ *  user "no" on a deliberate second look: it bounds a pull-spammer, nothing
+ *  more. The steady-state saving is zero — see the cadence work, which is where
+ *  the requests actually went.
+ *
+ *  Exempt when the last run FAILED: that pull is a retry, not a repeat. */
+export const TRIGGER_DEBOUNCE_MS = 3_000;
 
 /** After a FAILED run, how long the 5s tick must leave a task alone.
  *
@@ -90,6 +102,10 @@ class _AppScheduler {
   // `lastRun` (which only a successful, non-no-op run stamps) and the thing
   // that stops a failing task re-firing on every 5s tick. Cleared on success.
   private lastFailureAt = new Map<string, number>();
+  // Last ACCEPTED trigger per task. Keyed on trigger time, not on `lastRun`:
+  // the tick and the foreground path stamp `lastRun` too, so keying on it would
+  // let a scheduled sync that finished a second ago swallow the user's pull.
+  private lastTriggerAt = new Map<string, number>();
 
   register<T>(definition: TaskDefinition<T>): void {
     this.tasks.set(definition.name, definition as TaskDefinition);
@@ -182,26 +198,70 @@ class _AppScheduler {
     }
   }
 
-  async trigger(taskName: string, input?: unknown): Promise<void> {
+  /**
+   * Run a task now, bypassing its conditions and every cadence gate.
+   *
+   * This is the manual path: pull-to-refresh, the tab re-tap, the config-screen
+   * buttons, and the runner's own retry ladder. The bypass is deliberate and
+   * load-bearing — a condition can therefore never be enforcement — but it also
+   * made this the one route with no rate limit at all, hence the debounce.
+   *
+   * @param opts.bypassDebounce Machine-driven trigger (the runner's retry
+   *   ladder). Skips the debounce CHECK and the STAMP: a machine retry must not
+   *   consume the window that exists to bound a human, or a pull arriving a
+   *   second after a retry is debounced by a run the user never asked for.
+   * @param opts.attempt Attempt number for the job this creates. The runner
+   *   passes `job.attempt + 1` so its ladder is genuinely bounded by
+   *   `maxAttempts`; everyone else starts at 1.
+   */
+  async trigger(
+    taskName: string,
+    input?: unknown,
+    opts?: { bypassDebounce?: boolean; attempt?: number },
+  ): Promise<TriggerOutcome> {
     const task = this.tasks.get(taskName);
     if (!task) throw new Error(`Unknown task: ${taskName}`);
     // A paused task never fires — including via the scheduler-runner retry path
     // that re-triggers by name.
     if (this.pausedTasks.has(taskName)) {
       logger.debug(`[AppScheduler] trigger skipped — task=${taskName} paused`);
-      return;
+      return 'paused';
     }
     // Honor exclusivity for triggered runs too (e.g. the scheduler-runner retry
     // path). A run already in progress supersedes the trigger — without this an
     // exclusive task could run concurrently with its own retry.
     if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) {
       logger.debug(`[AppScheduler] trigger skipped — task=${task.name} already running`);
-      return;
+      return 'busy';
     }
-    await this._enqueueAndRun(task, input);
+
+    if (!opts?.bypassDebounce) {
+      const lastTrigger = this.lastTriggerAt.get(task.name);
+      const now = Date.now();
+      if (lastTrigger !== undefined && (now - lastTrigger) < TRIGGER_DEBOUNCE_MS) {
+        // Exempt a retry: if the last run FAILED, this pull is the user asking
+        // again after being shown nothing, which is exactly when a debounce
+        // would feel broken. `lastRun` only moves on success, so comparing the
+        // two is the whole test.
+        const failedAt = this.lastFailureAt.get(task.name);
+        const lastRun = useSchedulerStore.getState().getLastRun(task.name) ?? 0;
+        const retryingAfterFailure = failedAt !== undefined && failedAt > lastRun;
+        if (!retryingAfterFailure) {
+          logger.debug(`[AppScheduler] trigger debounced — task=${task.name}`);
+          return 'debounced';
+        }
+      }
+      this.lastTriggerAt.set(task.name, now);
+    }
+
+    await this._enqueueAndRun(task, input, opts?.attempt);
+    return 'ran';
   }
 
   dispose(): void {
+    // A disposed scheduler has no trigger history. Also keeps the singleton
+    // from carrying a debounce window across jest tests, whose clock is frozen.
+    this.lastTriggerAt.clear();
     if (this.tickInterval) clearInterval(this.tickInterval);
     this.appStateSubscription?.remove();
     this.networkUnsubscribe?.();
@@ -482,7 +542,11 @@ class _AppScheduler {
     }
   }
 
-  private async _enqueueAndRun(task: TaskDefinition, input?: unknown): Promise<void> {
+  private async _enqueueAndRun(
+    task: TaskDefinition,
+    input?: unknown,
+    attempt?: number,
+  ): Promise<void> {
     // Hard stop when the app is gated behind a mandatory update — no background
     // task should execute, regardless of which trigger path (tick, foreground,
     // network, scheduled retry) reached here.
@@ -494,7 +558,7 @@ class _AppScheduler {
     if (task.exclusive) useSchedulerStore.getState().reserveTask(task.name);
     let job: Job;
     try {
-      job = await persistence.createJob(task, input);
+      job = await persistence.createJob(task, input, attempt);
     } catch (err) {
       // createJob failed — release the reservation so the task isn't stuck
       // permanently 'running' and blocking all future runs.

@@ -134,6 +134,7 @@ import {
   AUTH_PREFLIGHT_TIMEOUT_MS,
   FAILURE_TICK_BACKOFF_MS,
   FOREGROUND_YIELD_TIMEOUT_MS,
+  TRIGGER_DEBOUNCE_MS,
   RECONNECT_FAILURE_GAP_MS,
 } from '../AppScheduler';
 import type { TaskDefinition, TaskContext } from '../scheduler-types';
@@ -814,7 +815,7 @@ describe('AppScheduler.trigger', () => {
 
     await AppScheduler.trigger('manual-task');
 
-    expect(mockCreateJob).toHaveBeenCalledWith(task, undefined);
+    expect(mockCreateJob).toHaveBeenCalledWith(task, undefined, undefined);
     expect(mockRunnerRun).toHaveBeenCalled();
   });
 
@@ -824,7 +825,7 @@ describe('AppScheduler.trigger', () => {
 
     await AppScheduler.trigger('input-task', { key: 'val' });
 
-    expect(mockCreateJob).toHaveBeenCalledWith(task, { key: 'val' });
+    expect(mockCreateJob).toHaveBeenCalledWith(task, { key: 'val' }, undefined);
   });
 
   it('skips an exclusive task that is already running (retry must not run concurrently)', async () => {
@@ -1285,5 +1286,133 @@ describe('AppScheduler — network-reconnect gating', () => {
 
   it('RECONNECT_FAILURE_GAP_MS is shorter than the tick backoff', () => {
     expect(RECONNECT_FAILURE_GAP_MS).toBeLessThan(FAILURE_TICK_BACKOFF_MS);
+  });
+});
+
+// ── trigger debounce ───────────────────────────────────────────────────────
+// trigger() bypasses every condition and cadence gate by design, which made it
+// the one route with no rate limit at all: repeated pulls drove repeated syncs.
+describe('AppScheduler.trigger — debounce', () => {
+  it('returns "ran" for the first trigger', async () => {
+    AppScheduler.register(makeTask({ name: 'debounce-task' }));
+    await expect(AppScheduler.trigger('debounce-task')).resolves.toBe('ran');
+    expect(mockCreateJob).toHaveBeenCalledTimes(1);
+  });
+
+  it('debounces a second trigger inside the window and does not enqueue', async () => {
+    AppScheduler.register(makeTask({ name: 'debounce-task-2' }));
+    await AppScheduler.trigger('debounce-task-2');
+    jest.clearAllMocks();
+
+    await expect(AppScheduler.trigger('debounce-task-2')).resolves.toBe('debounced');
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('allows a trigger once the window has elapsed', async () => {
+    AppScheduler.register(makeTask({ name: 'debounce-task-3' }));
+    await AppScheduler.trigger('debounce-task-3');
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'debounce-task-3' }));
+
+    jest.setSystemTime(NOW + TRIGGER_DEBOUNCE_MS + 1);
+    await expect(AppScheduler.trigger('debounce-task-3')).resolves.toBe('ran');
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('is per task: task B is unaffected by task A', async () => {
+    AppScheduler.register(makeTask({ name: 'debounce-a' }));
+    AppScheduler.register(makeTask({ name: 'debounce-b' }));
+    await AppScheduler.trigger('debounce-a');
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'debounce-b' }));
+
+    await expect(AppScheduler.trigger('debounce-b')).resolves.toBe('ran');
+  });
+
+  // A pull after a failed run is the user asking again, not asking twice.
+  it('exempts a trigger when the last run FAILED', async () => {
+    AppScheduler.register(makeTask({ name: 'retry-pull-task' }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 60_000);
+    await AppScheduler.trigger('retry-pull-task');
+    AppScheduler.recordFailure('retry-pull-task');
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'retry-pull-task' }));
+
+    await expect(AppScheduler.trigger('retry-pull-task')).resolves.toBe('ran');
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  // The mirror of the above: a failure OLDER than the last success must not
+  // keep exempting every pull forever.
+  it('does NOT exempt when the failure predates the last successful run', async () => {
+    AppScheduler.register(makeTask({ name: 'stale-failure-task' }));
+    jest.setSystemTime(NOW - 120_000);
+    AppScheduler.recordFailure('stale-failure-task');
+    jest.setSystemTime(NOW);
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 60_000);
+
+    await AppScheduler.trigger('stale-failure-task');
+    jest.clearAllMocks();
+
+    await expect(AppScheduler.trigger('stale-failure-task')).resolves.toBe('debounced');
+  });
+
+  it('bypassDebounce runs inside the window (the runner ladder)', async () => {
+    AppScheduler.register(makeTask({ name: 'bypass-task' }));
+    await AppScheduler.trigger('bypass-task');
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'bypass-task' }));
+
+    await expect(
+      AppScheduler.trigger('bypass-task', undefined, { bypassDebounce: true }),
+    ).resolves.toBe('ran');
+  });
+
+  // bypassDebounce skips the STAMP as well as the check. Without this a machine
+  // retry would consume the window and debounce the user's very next pull.
+  it('bypassDebounce does not consume the window for the next user trigger', async () => {
+    AppScheduler.register(makeTask({ name: 'no-stamp-task' }));
+    await AppScheduler.trigger('no-stamp-task', undefined, { bypassDebounce: true });
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'no-stamp-task' }));
+
+    await expect(AppScheduler.trigger('no-stamp-task')).resolves.toBe('ran');
+  });
+
+  it('reports "paused" without consuming the window', async () => {
+    AppScheduler.register(makeTask({ name: 'paused-task' }));
+    AppScheduler.pauseTask('paused-task');
+    await expect(AppScheduler.trigger('paused-task')).resolves.toBe('paused');
+    AppScheduler.resumeTask('paused-task');
+
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'paused-task' }));
+    await expect(AppScheduler.trigger('paused-task')).resolves.toBe('ran');
+  });
+
+  it('reports "busy" for an exclusive task already running', async () => {
+    AppScheduler.register(makeTask({ name: 'busy-task', exclusive: true }));
+    mockSchedulerStore.isRunning.mockReturnValue(true);
+    await expect(AppScheduler.trigger('busy-task')).resolves.toBe('busy');
+  });
+
+  it('passes the attempt through to createJob', async () => {
+    const task = makeTask({ name: 'attempt-task' });
+    AppScheduler.register(task);
+    await AppScheduler.trigger('attempt-task', undefined, {
+      bypassDebounce: true,
+      attempt: 3,
+    });
+    expect(mockCreateJob).toHaveBeenCalledWith(task, undefined, 3);
+  });
+
+  it('dispose() clears the debounce window', async () => {
+    AppScheduler.register(makeTask({ name: 'dispose-task' }));
+    await AppScheduler.trigger('dispose-task');
+    AppScheduler.dispose();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'dispose-task' }));
+
+    AppScheduler.register(makeTask({ name: 'dispose-task' }));
+    await expect(AppScheduler.trigger('dispose-task')).resolves.toBe('ran');
   });
 });

@@ -395,7 +395,14 @@ describe('run — failure handling', () => {
     expect(jest.getTimerCount()).toBeGreaterThan(0);
 
     await jest.advanceTimersByTimeAsync(30_000);
-    expect(mockAppSchedulerTrigger).toHaveBeenCalledWith('feed-sync');
+    // The opts are the whole contract of the retry path, so assert them rather
+    // than just the task name: attempt+1 is what makes the ladder terminate,
+    // and bypassDebounce is what keeps a machine retry from consuming the
+    // window that bounds a human pull.
+    expect(mockAppSchedulerTrigger).toHaveBeenCalledWith('feed-sync', undefined, {
+      bypassDebounce: true,
+      attempt: 2,
+    });
   });
 
   it('does NOT schedule retry when job is exhausted', async () => {
@@ -445,7 +452,41 @@ describe('run — failure handling', () => {
 
     expect(mockMarkFailed).toHaveBeenCalledWith('job-test-1', err, false, expect.any(Number));
     await jest.advanceTimersByTimeAsync(30_000);
-    expect(mockAppSchedulerTrigger).toHaveBeenCalledWith('feed-sync');
+    expect(mockAppSchedulerTrigger).toHaveBeenCalledWith('feed-sync', undefined, {
+      bypassDebounce: true,
+      attempt: 2,
+    });
+  });
+
+  // ── the ladder must TERMINATE ───────────────────────────────────────────
+  // createJob used to hardcode attempt: 1, and the runner reschedules through
+  // AppScheduler.trigger() — so every retry minted a fresh attempt-1 job,
+  // `job.attempt >= maxAttempts` was never true, and this "3 attempts then give
+  // up" ladder was really an unbounded 30s loop. Asserting that the attempt
+  // increments is NOT enough: that passes on the broken code too, because the
+  // increment happened and was then thrown away. The terminal case is the test.
+  it('is TERMINAL on the third failure: no further retry is scheduled', async () => {
+    const err = new Error('still broken');
+    const job = makeJob({ attempt: 3, maxAttempts: 3 });
+    await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+    expect(mockMarkFailed).toHaveBeenCalledWith('job-test-1', err, true, undefined);
+
+    await jest.advanceTimersByTimeAsync(300_000);
+    expect(mockAppSchedulerTrigger).not.toHaveBeenCalled();
+  });
+
+  it('still reschedules on the second failure (the rung before terminal)', async () => {
+    const err = new Error('transient');
+    const job = makeJob({ attempt: 2, maxAttempts: 3 });
+    await run(job, makeDefinition({ handler: jest.fn().mockRejectedValue(err) }));
+
+    expect(mockMarkFailed).toHaveBeenCalledWith('job-test-1', err, false, expect.any(Number));
+    await jest.advanceTimersByTimeAsync(60_000);
+    expect(mockAppSchedulerTrigger).toHaveBeenCalledWith('feed-sync', undefined, {
+      bypassDebounce: true,
+      attempt: 3,
+    });
   });
 });
 

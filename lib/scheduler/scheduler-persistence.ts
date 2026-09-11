@@ -28,7 +28,21 @@ function modelToJob(m: SchedulerJobModel): Job {
   };
 }
 
-export async function createJob(task: TaskDefinition, input?: unknown): Promise<Job> {
+/**
+ * @param attempt Which attempt this job is. Defaults to 1.
+ *
+ *   Load-bearing, and it used to be hardcoded to 1. The runner's retry ladder
+ *   reschedules through `AppScheduler.trigger()`, which lands back here — so a
+ *   retry minted a fresh job at attempt 1, `job.attempt >= maxAttempts` was
+ *   never true, and the documented "3 attempts, then give up" ladder was in
+ *   fact an unbounded 30-second retry loop stopped only by a non-retryable
+ *   error. Any future path that creates a job for a RETRY must pass this.
+ */
+export async function createJob(
+  task: TaskDefinition,
+  input?: unknown,
+  attempt = 1,
+): Promise<Job> {
   const id = jobId();
   const now = Date.now();
   await database.write(async () => {
@@ -39,7 +53,7 @@ export async function createJob(task: TaskDefinition, input?: unknown): Promise<
       record.inputJson = input !== undefined ? JSON.stringify(input) : null;
       record.errorCode = null;
       record.errorMessage = null;
-      record.attempt = 1;
+      record.attempt = attempt;
       record.maxAttempts = task.maxAttempts ?? 3;
       record.scheduledAt = now;
       record.startedAt = null;
@@ -52,7 +66,7 @@ export async function createJob(task: TaskDefinition, input?: unknown): Promise<
     taskName: task.name,
     status: 'pending',
     input,
-    attempt: 1,
+    attempt,
     maxAttempts: task.maxAttempts ?? 3,
     scheduledAt: now,
   };

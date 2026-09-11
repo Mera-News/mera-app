@@ -222,6 +222,7 @@ describe('useFeedSyncRefresh', () => {
             .mockImplementation(async (name: string) => {
                 // Mirror the real synchronous half of trigger → _enqueueAndRun.
                 useSchedulerStore.getState().reserveTask(name);
+                return 'ran';
             });
 
         const { getByTestId } = render(
@@ -243,7 +244,7 @@ describe('useFeedSyncRefresh', () => {
 
     it('calls onPullStart (header reveal) even when every guard short-circuits', () => {
         const onPullStart = jest.fn();
-        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
         useNetworkStore.setState({ isConnected: false });
 
         render(<RefreshProbe onPullStart={onPullStart} />);
@@ -257,7 +258,7 @@ describe('useFeedSyncRefresh', () => {
 
     it('calls onPullAccepted once the pull has cleared both guards', () => {
         const onPullAccepted = jest.fn();
-        jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
 
         render(<RefreshProbe onPullAccepted={onPullAccepted} />);
         act(() => {
@@ -269,7 +270,7 @@ describe('useFeedSyncRefresh', () => {
 
     it('does not call onPullAccepted when offline', () => {
         const onPullAccepted = jest.fn();
-        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
         useNetworkStore.setState({ isConnected: false });
 
         render(<RefreshProbe onPullAccepted={onPullAccepted} />);
@@ -283,7 +284,7 @@ describe('useFeedSyncRefresh', () => {
 
     it('does not call onPullAccepted when feed-sync is paused by the auth breaker', () => {
         const onPullAccepted = jest.fn();
-        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
         AppScheduler.pauseTask('feed-sync');
 
         render(<RefreshProbe onPullAccepted={onPullAccepted} />);
@@ -300,6 +301,7 @@ describe('useFeedSyncRefresh', () => {
             .spyOn(AppScheduler, 'trigger')
             .mockImplementation(async (name: string) => {
                 useSchedulerStore.getState().reserveTask(name);
+                return 'ran';
             });
 
         render(<RefreshProbe />);
@@ -314,7 +316,7 @@ describe('useFeedSyncRefresh', () => {
     });
 
     it('does not flash the loader when the pull is a no-op — offline', () => {
-        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
         useNetworkStore.setState({ isConnected: false });
 
         const { getByTestId } = render(
@@ -333,7 +335,7 @@ describe('useFeedSyncRefresh', () => {
     });
 
     it('does not flash the loader when the pull is a no-op — task paused by the auth breaker', () => {
-        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
         AppScheduler.pauseTask('feed-sync');
 
         const { getByTestId } = render(
@@ -352,7 +354,7 @@ describe('useFeedSyncRefresh', () => {
     });
 
     it('skips a duplicate trigger while a run is already in flight, and adopts the spinner', () => {
-        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue(undefined);
+        const trigger = jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('ran');
 
         const { getByTestId } = render(
             <>
@@ -384,7 +386,7 @@ describe('useFeedSyncRefresh', () => {
     it('releases the spinner when the run ends, and does not re-raise it for the next background sync', () => {
         jest.spyOn(AppScheduler, 'trigger').mockImplementation(() => {
             useSchedulerStore.getState().reserveTask('feed-sync');
-            return Promise.resolve(undefined);
+            return Promise.resolve('ran' as const);
         });
 
         render(
@@ -409,5 +411,112 @@ describe('useFeedSyncRefresh', () => {
             useSchedulerStore.getState().reserveTask('feed-sync');
         });
         expect(lastRefresh.refreshing).toBe(false);
+    });
+});
+
+// ── debounced pull ─────────────────────────────────────────────────────────
+// trigger() now carries a short per-task debounce, so a second pull inside the
+// window returns 'debounced' and never starts a run. The scheduler's running
+// flag therefore never rises, and `refreshing` (schedulerRunning && userPulled)
+// must not be left waiting on a run that is not coming.
+describe('useFeedSyncRefresh — debounced pull', () => {
+    // Same reset as the sibling block: `refreshing` is
+    // `schedulerRunning && userPulled`, so a reserveTask left behind by an
+    // earlier test reads exactly like this hook failing to release the control.
+    beforeEach(() => {
+        useSchedulerStore.setState({
+            jobs: {},
+            taskCurrentStatus: {},
+            taskStartedAt: {},
+            runningCount: 0,
+            pendingCount: 0,
+        });
+        useNetworkStore.setState({ isConnected: true });
+        AppScheduler.resumeTask('feed-sync');
+        jest.restoreAllMocks();
+    });
+
+    it('releases the refresh control when the pull is debounced', async () => {
+        jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('debounced');
+
+        render(<RefreshProbe />);
+        await act(async () => {
+            lastRefresh.onRefresh();
+        });
+
+        expect(lastRefresh.refreshing).toBe(false);
+    });
+
+    it('does not reserve the task or raise the spinner on a debounced pull', async () => {
+        const trigger = jest
+            .spyOn(AppScheduler, 'trigger')
+            .mockResolvedValue('debounced');
+
+        render(<RefreshProbe />);
+        await act(async () => {
+            lastRefresh.onRefresh();
+        });
+
+        expect(trigger).toHaveBeenCalledWith('feed-sync');
+        expect(useSchedulerStore.getState().isRunning('feed-sync')).toBe(false);
+        expect(lastRefresh.refreshing).toBe(false);
+    });
+
+    // The contrast that makes the test above mean something: an accepted pull
+    // still holds the control down for the real run.
+    it('still holds the control for a pull that is accepted', async () => {
+        jest.spyOn(AppScheduler, 'trigger').mockImplementation(async (name: string) => {
+            useSchedulerStore.getState().reserveTask(name);
+            return 'ran';
+        });
+
+        render(<RefreshProbe />);
+        await act(async () => {
+            lastRefresh.onRefresh();
+        });
+
+        expect(lastRefresh.refreshing).toBe(true);
+    });
+
+    // The follow-on case: a scheduled sync starts moments after a debounced
+    // pull. The control must not go down over a run the user never asked for
+    // and cannot have caused.
+    //
+    // Note for anyone editing the hook: this passes with OR without the
+    // explicit `setUserPulled(false)` on the debounced branch, because the
+    // effect that clears userPulled on `!schedulerRunning` has already fired by
+    // then. That was verified by removing the line. This test pins the
+    // BEHAVIOUR, not that particular line.
+    it('does not adopt a later background sync after a debounced pull', async () => {
+        jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('debounced');
+
+        render(<RefreshProbe />);
+        await act(async () => {
+            lastRefresh.onRefresh();
+        });
+        expect(lastRefresh.refreshing).toBe(false);
+
+        // A scheduled run starts a moment later, with no gesture behind it.
+        await act(async () => {
+            useSchedulerStore.getState().reserveTask('feed-sync');
+        });
+
+        expect(lastRefresh.refreshing).toBe(false);
+    });
+
+    // onPullAccepted fires before the trigger resolves, so a debounced pull has
+    // already run the caller's side effects. That is deliberate and unchanged:
+    // the Feed tab's card-eviction sweep is keyed to the user's intent, not to
+    // whether this particular pull happened to win the debounce.
+    it('still fires onPullAccepted for a debounced pull', async () => {
+        jest.spyOn(AppScheduler, 'trigger').mockResolvedValue('debounced');
+        const onPullAccepted = jest.fn();
+
+        render(<RefreshProbe onPullAccepted={onPullAccepted} />);
+        await act(async () => {
+            lastRefresh.onRefresh();
+        });
+
+        expect(onPullAccepted).toHaveBeenCalled();
     });
 });

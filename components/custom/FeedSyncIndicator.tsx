@@ -195,11 +195,33 @@ export function useFeedSyncRefresh(
         // would be a no-op anyway (feed-sync is exclusive).
         if (useSchedulerStore.getState().isRunning(FEED_SYNC_TASK)) return;
 
-        void AppScheduler.trigger(FEED_SYNC_TASK).catch((err: unknown) => {
-            logger.captureException(err, {
-                tags: { component: 'FeedSyncIndicator', method: 'pull-to-refresh' },
+        void AppScheduler.trigger(FEED_SYNC_TASK)
+            .then((outcome) => {
+                // REDUNDANT BY DESIGN, and measured to be so: the effect above
+                // already clears userPulled on the next render, because a
+                // debounced pull never raises schedulerRunning and its
+                // `!schedulerRunning && userPulled` condition is therefore true
+                // immediately. Removing this line changes no observable
+                // behaviour and fails no test — that was checked, not assumed.
+                //
+                // It stays because it makes the debounced path legible where the
+                // decision is made, rather than leaving a reader to derive the
+                // release from an effect declared forty lines earlier. Do not
+                // add a test claiming to guard it; the tests below pin the
+                // observable contract (a debounced pull leaves the control down
+                // for nobody), which is the thing worth protecting.
+                //
+                // Deliberately no spinner hold and no message: the pull did not
+                // start a sync, and animating one would be a 'working...' the
+                // user cannot act on. The honest signal is the feed not
+                // changing.
+                if (outcome === 'debounced') setUserPulled(false);
+            })
+            .catch((err: unknown) => {
+                logger.captureException(err, {
+                    tags: { component: 'FeedSyncIndicator', method: 'pull-to-refresh' },
+                });
             });
-        });
     }, []);
 
     return { refreshing: schedulerRunning && userPulled, onRefresh };

@@ -25,6 +25,23 @@ export interface TaskContext {
   markNoOp: () => void;
 }
 
+/**
+ * What `AppScheduler.trigger()` did with the request.
+ *
+ * Returned rather than logged so a CALLER can react — pull-to-refresh needs to
+ * know a debounced pull will never raise the scheduler's running flag, or it
+ * leaves the refresh control waiting on a run that is not coming.
+ */
+export type TriggerOutcome =
+  /** Enqueued and run. */
+  | 'ran'
+  /** The task is paused (auth-failure breaker). */
+  | 'paused'
+  /** Exclusive and already running; the in-flight run supersedes this. */
+  | 'busy'
+  /** Inside the per-task trigger debounce window. */
+  | 'debounced';
+
 export interface TaskProgress {
   step?: string;
   current?: number;

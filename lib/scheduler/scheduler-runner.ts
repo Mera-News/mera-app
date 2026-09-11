@@ -132,7 +132,19 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
 
     if (retryAt) {
       const { AppScheduler } = require('./AppScheduler') as typeof import('./AppScheduler');
-      setTimeout(() => AppScheduler.trigger(definition.name), retryDelay);
+      setTimeout(
+        () =>
+          AppScheduler.trigger(definition.name, undefined, {
+            // A machine retry must not consume the debounce window that exists
+            // to bound a human pull.
+            bypassDebounce: true,
+            // Carry the attempt forward, or this ladder never ends: createJob
+            // used to mint every job at attempt 1, so `exhausted` above was
+            // never true and the backoff repeated at 30s indefinitely.
+            attempt: job.attempt + 1,
+          }),
+        retryDelay,
+      );
     }
 
   } finally {

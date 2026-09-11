@@ -110,6 +110,39 @@ describe('createJob', () => {
     expect(job2.maxAttempts).toBe(3);
   });
 
+  // ── the attempt must reach the ROW ──────────────────────────────────────
+  // This is the seam the unbounded-retry bug lived in. `record.attempt` was
+  // hardcoded to 1, and because the runner's retry ladder reschedules through
+  // AppScheduler.trigger() -> _enqueueAndRun -> createJob, every retry minted a
+  // fresh attempt-1 job. `job.attempt >= maxAttempts` was therefore never true
+  // and the "3 attempts then give up" ladder retried every 30s indefinitely.
+  //
+  // The runner's own terminal-case test CANNOT catch this: it calls run() with
+  // a job it constructs directly, so it never touches createJob. This is the
+  // test that discriminates, which is why it asserts the persisted record and
+  // not just the returned object.
+  it('defaults the attempt to 1', async () => {
+    const job = await createJob(makeTask());
+    expect(job.attempt).toBe(1);
+  });
+
+  it('honours an explicit attempt, on the returned job AND the persisted row', async () => {
+    const capturedRecord: Record<string, unknown> = {};
+    db._collections['scheduler_jobs'].create.mockImplementationOnce(
+      async (fn: (r: any) => void) => {
+        const rec = makeRecord({ _raw: {} });
+        fn(rec);
+        Object.assign(capturedRecord, rec);
+        return rec;
+      },
+    );
+
+    const job = await createJob(makeTask(), undefined, 3);
+
+    expect(job.attempt).toBe(3);
+    expect(capturedRecord.attempt).toBe(3);
+  });
+
   it('calls database.write and collection.create', async () => {
     await createJob(makeTask());
     expect(database.write).toHaveBeenCalledTimes(1);
