@@ -95,7 +95,7 @@ const PinKeypad: React.FC<PinKeypadProps> = ({
                   {key === 'backspace' ? (
                     <MaterialIcons name="backspace" size={24} color="#ffffff" />
                   ) : (
-                    <Text className="text-white text-2xl font-semibold">{key}</Text>
+                    <Text className="text-typography-0 text-2xl font-semibold">{key}</Text>
                   )}
                 </Pressable>
               );

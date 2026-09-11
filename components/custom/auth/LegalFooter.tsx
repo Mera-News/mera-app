@@ -72,9 +72,9 @@ const LegalFooter: React.FC = () => {
                 onRequestClose={() => setShowSheet(false)}
             >
                 <GluestackUIProvider mode="dark">
-                    <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+                    <Box className="flex-1 bg-background-0" style={{ paddingTop: insets.top + 16 }}>
                         <HStack className="items-center justify-between px-5 pb-4">
-                            <Text className="text-white text-xl font-semibold">
+                            <Text className="text-typography-0 text-xl font-semibold">
                                 {t('auth.aboutLegal')}
                             </Text>
                             <Pressable
@@ -108,7 +108,7 @@ const LegalFooter: React.FC = () => {
                                         borderBottomColor: '#1f2937',
                                     }}
                                 >
-                                    <Text className="text-white">{link.label}</Text>
+                                    <Text className="text-typography-0">{link.label}</Text>
                                     <MaterialIcons name="open-in-new" size={18} color="#9ca3af" />
                                 </TouchableOpacity>
                             ))}

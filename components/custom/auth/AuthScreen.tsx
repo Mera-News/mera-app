@@ -263,7 +263,7 @@ const LanguageStageView: React.FC<LanguageStageViewProps> = ({ onContinue }) => 
                 <VStack accessible={false} space="xs">
                     {/* Same greeting key the consent step uses — one string,
                         one translation, and the two stages read as one flow. */}
-                    <Text size="2xl" className="text-white font-semibold text-center">
+                    <Text size="2xl" className="text-typography-0 font-semibold text-center">
                         {t('consent.welcomeTitle')}
                     </Text>
                     <Text size="lg" className="text-gray-300 text-center">

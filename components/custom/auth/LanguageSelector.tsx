@@ -173,7 +173,7 @@ const LanguageSelector: React.FC = () => {
                     style={[styles.selectorButton, busy ? styles.selectorButtonDisabled : null]}
                 >
                     <HStack className="items-center" space="xs">
-                        <Text className="text-white text-lg">
+                        <Text className="text-typography-0 text-lg">
                             {selectedLanguage?.native ?? 'English'}
                         </Text>
                         <MaterialIcons name="expand-more" size={22} color="rgb(237, 167, 126)" />
@@ -209,9 +209,9 @@ const LanguageSelector: React.FC = () => {
                 onDismiss={notifyPickerDismissed}
             >
                 <GluestackUIProvider mode="dark">
-                    <Box className="flex-1 bg-black" style={{ paddingTop: insets.top + 16 }}>
+                    <Box className="flex-1 bg-background-0" style={{ paddingTop: insets.top + 16 }}>
                         <HStack className="items-center justify-between px-5 pb-4">
-                            <Text className="text-white text-xl font-semibold">
+                            <Text className="text-typography-0 text-xl font-semibold">
                                 {t('language.appLanguage')}
                             </Text>
                             <Pressable onPress={() => setShowPicker(false)}>
@@ -241,7 +241,7 @@ const LanguageSelector: React.FC = () => {
                                                 className={
                                                     isSelected
                                                         ? 'text-violet-400 font-semibold'
-                                                        : 'text-white'
+                                                        : 'text-typography-0'
                                                 }
                                             >
                                                 {item.name}

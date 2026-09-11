@@ -137,7 +137,7 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
           <MeraLogo size={88} />
 
           <VStack className="items-center" space="xs">
-            <Text className="text-white text-xl font-semibold">
+            <Text className="text-typography-0 text-xl font-semibold">
               {title ?? t('pin.lockTitle')}
             </Text>
             <Text className="text-typography-500 text-sm text-center">
@@ -176,7 +176,7 @@ const PinLockScreen: React.FC<PinLockScreenProps> = ({
           <ModalBackdrop />
           <ModalContent>
             <ModalHeader className="border-gray-700 pb-4">
-              <Text className="text-xl font-semibold text-white">{t('pin.forgotTitle')}</Text>
+              <Text className="text-xl font-semibold text-typography-0">{t('pin.forgotTitle')}</Text>
             </ModalHeader>
             <ModalBody className="py-6">
               <Text className="text-gray-300 text-base leading-relaxed">

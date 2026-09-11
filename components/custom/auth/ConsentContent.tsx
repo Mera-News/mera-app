@@ -77,7 +77,7 @@ const ConsentContent: React.FC<ConsentContentProps> = ({
     return (
         <VStack testID={`${testIDPrefix}-cluster`} accessible={false} space="md">
             <VStack accessible={false} space="sm">
-                <Text size="2xl" className="text-white font-semibold text-center">
+                <Text size="2xl" className="text-typography-0 font-semibold text-center">
                     {title}
                 </Text>
                 <Text size="md" className="text-gray-300 text-center">
@@ -132,7 +132,7 @@ const ConsentContent: React.FC<ConsentContentProps> = ({
                 {busy ? (
                     <HStack space="sm" className="items-center">
                         <Spinner size="small" color="white" />
-                        <Text className="text-white text-base font-semibold">
+                        <Text className="text-typography-0 text-base font-semibold">
                             {busyLabel ?? ctaLabel}
                         </Text>
                     </HStack>
