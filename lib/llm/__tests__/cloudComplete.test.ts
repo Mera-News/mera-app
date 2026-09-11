@@ -83,6 +83,10 @@ const mockRateLimiterPauseFor = jest.fn();
 jest.mock('../gateway-rate-limiter', () => ({
   acquire: (...args: unknown[]) => mockRateLimiterAcquire(...args),
   pauseFor: (...args: unknown[]) => mockRateLimiterPauseFor(...args),
+  // A CONSTANT the source reads, not just the functions it calls. Omitted, it
+  // is `undefined` at the comparison site and every interactive 429 silently
+  // takes the throw branch — the factory trap in its quietest form.
+  INTERACTIVE_MAX_PAUSE_MS: 2000,
 }));
 
 // ─── Imports ──────────────────────────────────────────────────────────────────
@@ -95,6 +99,8 @@ import {
   cloudChatStream,
   HEDGE_DELAY_MS,
   isAbortLike,
+  MAX_ATTEMPTS,
+  RateLimitedError,
   isCallerAbort,
   STREAM_IDLE_TIMEOUT_MS,
   UPSTREAM_ALIGNED_MAX_TIMEOUT_ATTEMPTS,
@@ -235,6 +241,10 @@ describe('authFetch', () => {
   beforeEach(() => {
     // Use mockReset (not clearAllMocks) so mockResolvedValueOnce queues are drained.
     mockFetch.mockReset();
+    // mockClear, NOT mockReset: acquire() must keep resolving, or every
+    // authFetch below would hang on a grant that never arrives.
+    mockRateLimiterAcquire.mockClear();
+    mockRateLimiterPauseFor.mockClear();
     mockGetJwtToken.mockReset();
     mockInvalidateJwtCache.mockReset();
     [(logger.captureException as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
@@ -372,6 +382,12 @@ describe('authFetch', () => {
         signal?.addEventListener('abort', () =>
           reject(Object.assign(new Error('aborted'), { name: 'AbortError' })),
         );
+        // Abort from INSIDE the request, once the listener is attached. The
+        // limiter grant now sits between authFetch and the fetch, so aborting
+        // from the outside would land before the request ever started — a real
+        // case, covered by its own spec below, but not THIS one, which is
+        // about a request aborted in flight.
+        controller.abort();
       }),
     );
 
@@ -381,7 +397,6 @@ describe('authFetch', () => {
       // Timeout far away — only the caller's abort can end this.
       { requestTimeoutMs: 60_000, maxTimeoutAttempts: 2 },
     );
-    controller.abort();
     const err: unknown = await promise.then(() => null, (e: unknown) => e);
 
     expect(err).toBeInstanceOf(CallerAbortError);
@@ -390,6 +405,21 @@ describe('authFetch', () => {
     expect(mockFetch).toHaveBeenCalledTimes(1);
     mockFetch.mockReset();
   }, 10_000);
+
+  it('spends NO request when the caller aborts while queued for a grant', async () => {
+    // The grant wait is real time on a busy device. A caller that goes away
+    // during it must cost nothing at all — not a request, not a retry.
+    const controller = new AbortController();
+    controller.abort();
+
+    const err: unknown = await authFetch(
+      'https://test.test/api',
+      { method: 'POST', signal: controller.signal },
+    ).then(() => null, (e: unknown) => e);
+
+    expect(err).toBeInstanceOf(CallerAbortError);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
 
   it('isCallerAbort rejects an ordinary abort/timeout error', () => {
     expect(isCallerAbort(Object.assign(new Error('aborted'), { name: 'AbortError' }))).toBe(false);
@@ -442,20 +472,148 @@ describe('authFetch', () => {
     );
   }, 10_000);
 
-  it('throws after exhausting 3 retries on persistent network error', async () => {
-    // Test with only 3 retries to keep total real sleep under 5000ms (500+1000+2000=3500ms).
-    // We verify the retry loop behavior, not the MAX_RETRIES constant.
+  it('recovers on the LAST attempt within MAX_ATTEMPTS', async () => {
     const persistentError = new Error('Always fails');
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < MAX_ATTEMPTS - 1; i++) {
       mockFetch.mockRejectedValueOnce(persistentError);
     }
     mockFetch.mockResolvedValueOnce(makeResponse(200));
 
-    // With only 4 failures, the 5th attempt should succeed
     const result = await authFetch('https://test.test/api', { method: 'POST' });
     expect(result.status).toBe(200);
-    expect(mockFetch).toHaveBeenCalledTimes(5);
+    expect(mockFetch).toHaveBeenCalledTimes(MAX_ATTEMPTS);
   }, 15_000);
+
+  it('gives up at MAX_ATTEMPTS on a persistent network error', async () => {
+    // The cap is the point: this used to be 11 requests and 511.5s of sleeping
+    // before a default caller surfaced anything.
+    const persistentError = new Error('Always fails');
+    for (let i = 0; i < MAX_ATTEMPTS + 3; i++) {
+      mockFetch.mockRejectedValueOnce(persistentError);
+    }
+
+    await expect(
+      authFetch('https://test.test/api', { method: 'POST' }),
+    ).rejects.toThrow('Always fails');
+    expect(mockFetch).toHaveBeenCalledTimes(MAX_ATTEMPTS);
+  }, 15_000);
+
+  // ─── 429, which authFetch did not handle at all before ────────────────────
+
+  /** makeResponse has no headers; these specs need Retry-After. */
+  function make429(retryAfterSeconds?: string): Response {
+    const resp = makeResponse(429) as Response & { headers?: unknown };
+    (resp as { headers: unknown }).headers = {
+      get: (name: string) =>
+        name === 'Retry-After' && retryAfterSeconds !== undefined
+          ? retryAfterSeconds
+          : null,
+    };
+    return resp;
+  }
+
+  it('pauses the device and retries ONCE on a background 429', async () => {
+    mockFetch
+      .mockResolvedValueOnce(make429('5'))
+      .mockResolvedValueOnce(makeResponse(200));
+
+    const result = await authFetch('https://test.test/api', { method: 'POST' });
+
+    expect(result.status).toBe(200);
+    expect(mockRateLimiterPauseFor).toHaveBeenCalledWith(5000);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('surfaces RateLimitedError on a SECOND 429 rather than looping', async () => {
+    mockFetch
+      .mockResolvedValueOnce(make429('5'))
+      .mockResolvedValueOnce(make429('5'));
+
+    const err: unknown = await authFetch('https://test.test/api', { method: 'POST' })
+      .then(() => null, (e: unknown) => e);
+
+    expect(err).toBeInstanceOf(RateLimitedError);
+    expect((err as RateLimitedError).statusCode).toBe(429);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  it('clamps a huge Retry-After to 60s', async () => {
+    mockFetch.mockResolvedValue(make429('86400'));
+    await authFetch('https://test.test/api', { method: 'POST' }).catch(() => null);
+    expect(mockRateLimiterPauseFor).toHaveBeenCalledWith(60_000);
+    mockFetch.mockReset();
+  });
+
+  it('falls back to a default backoff when Retry-After is absent', async () => {
+    mockFetch.mockResolvedValue(make429());
+    await authFetch('https://test.test/api', { method: 'POST' }).catch(() => null);
+    expect(mockRateLimiterPauseFor).toHaveBeenCalledWith(30_000);
+    mockFetch.mockReset();
+  });
+
+  // THE INTERACTIVE RULE. A person is watching a composer that cannot be
+  // cancelled, so a long throttle is surfaced instead of waited out. The
+  // device is paused either way.
+  it('throws immediately on an interactive 429 whose Retry-After exceeds the cap', async () => {
+    mockFetch.mockResolvedValueOnce(make429('30'));
+
+    const err: unknown = await authFetch(
+      'https://test.test/api',
+      { method: 'POST' },
+      { lane: 'interactive' },
+    ).then(() => null, (e: unknown) => e);
+
+    expect(err).toBeInstanceOf(RateLimitedError);
+    expect((err as RateLimitedError).retryAfterMs).toBe(30_000);
+    expect(mockRateLimiterPauseFor).toHaveBeenCalledWith(30_000);
+    // No second request: the point is that the turn ends, not that it waits.
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries an interactive 429 whose Retry-After is within the cap', async () => {
+    mockFetch
+      .mockResolvedValueOnce(make429('1'))
+      .mockResolvedValueOnce(makeResponse(200));
+
+    const result = await authFetch(
+      'https://test.test/api',
+      { method: 'POST' },
+      { lane: 'interactive' },
+    );
+
+    expect(result.status).toBe(200);
+    expect(mockFetch).toHaveBeenCalledTimes(2);
+  });
+
+  // ─── Limiter wiring ───────────────────────────────────────────────────────
+
+  it('takes a grant on the caller lane for EVERY attempt, retries included', async () => {
+    mockFetch
+      .mockResolvedValueOnce(makeResponse(503))
+      .mockResolvedValueOnce(makeResponse(200));
+
+    await authFetch('https://test.test/api', { method: 'POST' }, { lane: 'interactive' });
+
+    expect(mockRateLimiterAcquire).toHaveBeenCalledTimes(2);
+    expect(mockRateLimiterAcquire).toHaveBeenNthCalledWith(1, 'interactive', undefined);
+    expect(mockRateLimiterAcquire).toHaveBeenNthCalledWith(2, 'interactive', undefined);
+  });
+
+  it('defaults to the background lane', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(200));
+    await authFetch('https://test.test/api', { method: 'POST' });
+    expect(mockRateLimiterAcquire).toHaveBeenCalledWith('background', undefined);
+  });
+
+  it('skips the first grant when the caller already holds one', async () => {
+    mockFetch.mockResolvedValueOnce(makeResponse(200));
+    await authFetch(
+      'https://test.test/api',
+      { method: 'POST' },
+      { grantAlreadyHeld: true },
+    );
+    expect(mockRateLimiterAcquire).not.toHaveBeenCalled();
+  });
 
   it('returns non-5xx, non-401 response without retry (e.g. 404)', async () => {
     mockFetch.mockResolvedValueOnce(makeResponse(404));

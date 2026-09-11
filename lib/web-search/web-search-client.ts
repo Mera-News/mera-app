@@ -208,15 +208,22 @@ export async function searchWeb(query: string): Promise<WebSearchOutcome> {
   try {
     // Through the SHARED gateway limiter, like every other inference-gateway
     // call. This used to `fetch` directly: fine for one search, but the
-    // fact-check runner issues several in a burst and the gateway throttles at
-    // 30 req/60s PER IP — which, behind a carrier NAT, is shared with strangers.
+    // fact-check runner issues several in a burst and the gateway throttles
+    // per USER — so the whole device shares one budget, this call included.
     // Tripping it would surface as a 429, and a 429 here means "we never looked".
     //
     // RACED against the deadline, not merely awaited. `acquire()` resolves only
     // when its FIFO turn comes up, so a plain await here would ignore the
     // AbortController entirely and hang for however long the queue is — the
     // exact failure this deadline exists to prevent, moved one line earlier.
-    await raceDeadline(gatewayRateLimiter.acquire(), controller.signal);
+    await raceDeadline(
+      // INTERACTIVE: every caller of this module is a chat tool, so a person is
+      // waiting on the turn. The signal goes in too, so a search that loses the
+      // deadline race is spliced out of the queue instead of holding its
+      // position and burning a grant nobody uses.
+      gatewayRateLimiter.acquire('interactive', controller.signal),
+      controller.signal,
+    );
 
     const response = await fetch(WEB_SEARCH_API, {
       method: 'POST',
@@ -285,9 +292,9 @@ export type WebSearchBatchOutcome =
 /**
  * Several queries in ONE request. THE POINT IS THE LIMITER, not the network.
  *
- * `gatewayRateLimiter.acquire()` is a shared FIFO that grants one caller every
- * 3s (`lib/llm/gateway-rate-limiter.ts`), so three searches issued from this
- * device are at least 6s of pure queueing however concurrently they are
+ * `gatewayRateLimiter.acquire()` grants one INTERACTIVE caller every 1s
+ * (`lib/llm/gateway-rate-limiter.ts`), so three searches issued from this
+ * device are at least 2s of pure queueing however concurrently they are
  * written. This function takes ONE grant and makes ONE request; the gateway
  * fans the queries out to Brave itself. Spend is unchanged — N queries are
  * still N billed Brave requests.
@@ -347,7 +354,14 @@ export async function searchWebBatch(queries: string[]): Promise<WebSearchBatchO
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), BATCH_REQUEST_TIMEOUT_MS);
   try {
-    await raceDeadline(gatewayRateLimiter.acquire(), controller.signal);
+    await raceDeadline(
+      // INTERACTIVE: every caller of this module is a chat tool, so a person is
+      // waiting on the turn. The signal goes in too, so a search that loses the
+      // deadline race is spliced out of the queue instead of holding its
+      // position and burning a grant nobody uses.
+      gatewayRateLimiter.acquire('interactive', controller.signal),
+      controller.signal,
+    );
 
     const response = await fetch(WEB_SEARCH_API, {
       method: 'POST',

@@ -20,7 +20,7 @@ import { ProcessingMode } from '../generated/graphql-types';
 import logger from '../logger';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import { cloudComplete } from './cloudComplete';
-import { BIG_MODEL, MODEL_FALLBACKS, SMALL_MODEL } from './constants';
+import { BIG_MODEL, SMALL_MODEL } from './constants';
 
 // Model-warmup dedupe: unlike attestation/JWT (client-cached), a throwaway
 // completion actually hits the model on every call, so gate it to the
@@ -44,15 +44,25 @@ export function prewarmCloudChat(): void {
   }
 
   const startMs = Date.now();
-  // Fallback ATTESTATION is warmed too (key only, no throwaway completion): a
-  // hedge leg that has to fetch attestation cold starts several hundred ms
-  // behind and can lose a race it should win. Residual gap, accepted: this
-  // warms the key, not the MODEL, so a cold fallback can still lose — the
-  // 130s sequential fallback path remains the backstop.
+  // THE TWO PRIMARIES ONLY. Fallback attestations are fetched lazily, inside
+  // the build for whichever leg actually needs one.
+  //
+  // Every gateway call now takes a limiter grant, and these are serialised
+  // behind it — so each extra prewarm fetch pushes warmModel(), the dominant
+  // cold-start cost this file exists for, a further interval out. The old
+  // three-fetch shape spent that on BIG, fallback(BIG) and fallback(SMALL)
+  // while never warming SMALL_MODEL itself, which is what cloudChatStream
+  // defaults to and what every scoring call uses.
+  //
+  // Cost of going lazy, on the fallback path: a hedge leg that must attest
+  // cold pays one interactive grant plus one uncached attestation round trip
+  // before it can send. It only runs after 10s of total silence from the
+  // primary (HEDGE_DELAY_MS) and exists to rescue a stall, not to shave
+  // latency, so a second or two at the front of the rescue is the right trade
+  // for two fewer requests on every launch.
   void Promise.allSettled([
-    fetchModelPublicKey(BIG_MODEL),
-    fetchModelPublicKey(MODEL_FALLBACKS[BIG_MODEL]),
-    fetchModelPublicKey(MODEL_FALLBACKS[SMALL_MODEL]),
+    fetchModelPublicKey(BIG_MODEL, 'interactive'),
+    fetchModelPublicKey(SMALL_MODEL, 'interactive'),
     getJwtToken(),
   ]).then(
     (results) => {
@@ -101,7 +111,7 @@ async function warmModel(): Promise<void> {
       model: BIG_MODEL,
       maxTokens: 1,
       temperature: 0,
-    });
+    }, { lane: 'interactive' });
     logger.debug('[chat-timing] model warmup completion done');
   } catch (err) {
     // Best-effort only — swallow everything (no Sentry, no toast).

@@ -24,6 +24,7 @@ import {
   reportModelSuccess,
   resolveModel,
 } from './model-fallback';
+import * as gatewayRateLimiter from './gateway-rate-limiter';
 import { sseEvents } from './sse';
 import { estimateTokens } from './tokens';
 import type { BatchCall, ToolDefinition } from './types';
@@ -92,9 +93,9 @@ export const HEDGE_DELAY_MS = 10_000;
 export const STREAM_IDLE_TIMEOUT_MS = 30_000;
 
 /** Build auth headers, fetching a fresh JWT from the auth service. Throws if
- *  no token is available — sending an unauthenticated request just produces
- *  10 useless 401 retries (see authFetch) and surfaces as a confusing HTTP
- *  error downstream. Failing fast here gives the caller a clear cause. */
+ *  no token is available — sending an unauthenticated request just burns the
+ *  401 re-mint (see authFetch) and surfaces as a confusing HTTP error
+ *  downstream. Failing fast here gives the caller a clear cause. */
 async function getAuthHeaders(): Promise<Record<string, string>> {
   const token = await getJwtToken();
   if (!token) {
@@ -106,8 +107,76 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
   };
 }
 
-const MAX_RETRIES = 10;
+/** Total attempts for ANY gateway-bound call, the initial one included.
+ *
+ *  Was 10 RETRIES with an unjittered `BASE_DELAY_MS * 2 ** attempt`, which put
+ *  a default caller on 11 requests and 511.5s of pure sleeping before it gave
+ *  up — and on the 60s timeout path, ~19.5 minutes for one logical call. An
+ *  outage should cost a handful of attempts, not a loop: past the third retry
+ *  the gateway is down, not busy, and every extra attempt is budget spent
+ *  against the user's own per-user throttle. */
+export const MAX_ATTEMPTS = 4;
+
 const BASE_DELAY_MS = 500;
+
+/** Ceiling on the exponential term before jitter is applied. */
+const MAX_BACKOFF_MS = 8_000;
+
+/** Longest `Retry-After` we will honour. A gateway asking for more than a
+ *  minute is an outage, and the caller is better served by an error it can act
+ *  on than by a request held open. */
+const MAX_RETRY_AFTER_MS = 60_000;
+
+/** Backoff for a 429 that carries no usable `Retry-After`. Matches
+ *  submitInferenceJob and web-search-client, which already back off by this. */
+const DEFAULT_THROTTLE_BACKOFF_MS = 30_000;
+
+/**
+ * FULL JITTER (AWS "Exponential Backoff and Jitter"): a uniform pick from
+ * [0, backoff), not `backoff` itself.
+ *
+ * The old fixed delay meant every device that saw the same outage retried in
+ * the same millisecond, so the gateway got a synchronised wave per retry round
+ * — the shape that keeps an overloaded service overloaded. Spreading the
+ * attempts is most of the value of capping them.
+ */
+function backoffWithJitter(attempt: number): number {
+  const ceiling = Math.min(MAX_BACKOFF_MS, BASE_DELAY_MS * 2 ** attempt);
+  return Math.floor(Math.random() * ceiling);
+}
+
+/** Parse a `Retry-After` header (integer seconds) into a clamped ms value.
+ *  Falls back to {@link DEFAULT_THROTTLE_BACKOFF_MS} when absent or unusable. */
+export function retryAfterMsFrom(headers: Headers | undefined): number {
+  const raw = headers?.get?.('Retry-After');
+  const seconds = raw != null ? Number(raw) : NaN;
+  const ms = Number.isFinite(seconds) && seconds > 0
+    ? seconds * 1000
+    : DEFAULT_THROTTLE_BACKOFF_MS;
+  return Math.min(ms, MAX_RETRY_AFTER_MS);
+}
+
+/**
+ * The gateway throttled this device and the wait is too long to hold a person's
+ * turn open.
+ *
+ * `statusCode` is a FIELD so the app's 401/HTTP-status rule in
+ * `logger.captureException` reads it off the error, and so triage can tell a
+ * throttle apart from an outage. NOTE: a chat caller cannot yet act on the
+ * TYPE — `useCloudPersonaChat` flattens every error to a string before the UI
+ * sees it — so a 429 currently reads to the user as a generic inference error.
+ */
+export class RateLimitedError extends Error {
+  readonly statusCode = 429;
+  readonly retryAfterMs: number;
+  constructor(retryAfterMs: number) {
+    super(`Gateway rate limited: retry after ${retryAfterMs}ms`);
+    this.name = 'RateLimitedError';
+    this.retryAfterMs = retryAfterMs;
+    // Preserve instanceof across the TS/Babel transpile of `extends Error`.
+    Object.setPrototypeOf(this, RateLimitedError.prototype);
+  }
+}
 
 /** Default per-attempt timeout for cloud requests (scoring/batch). Inference can
  *  take a while on a cold model + large prompt, but anything past this is almost
@@ -127,11 +196,22 @@ export interface AuthFetchOptions {
   requestTimeoutMs?: number;
   /** Cap on the number of attempts that end in a 502 (the gateway's own
    *  upstream-timeout verdict) or a client timeout/network abort. Default
-   *  MAX_RETRIES + 1 (i.e. the original behavior — retry every 5xx/timeout up to
-   *  MAX_RETRIES). The chat path caps this at 2 so a persistently-cold model
+   *  {@link MAX_ATTEMPTS}, i.e. the whole attempt budget may be spent on the
+   *  cold-upstream family. The chat path caps this at 2 so a persistently-cold model
    *  surfaces the gateway's 502 in bounded time instead of a multi-minute loop.
    *  401 refresh and non-502 5xx retries are unaffected. */
   maxTimeoutAttempts?: number;
+  /** Which limiter lane this call belongs on. 'interactive' means a person is
+   *  waiting on it (a chat turn, the prewarm, a chat tool); everything else
+   *  stays on 'background', which is exactly the pacing every pre-existing
+   *  caller had. */
+  lane?: gatewayRateLimiter.GatewayLane;
+  /** The caller already took a limiter grant for this request's FIRST attempt,
+   *  so authFetch must not charge a second one. `sendHedged` sets it (it takes
+   *  the primary's grant itself, to keep HEDGE_DELAY_MS anchored on the send
+   *  rather than on queue entry); retries inside the loop always take their
+   *  own. Mirrors submitInferenceJob's flag of the same name. */
+  grantAlreadyHeld?: boolean;
   /** Keep the response BODY readable after {@link authFetch} returns. Normally
    *  authFetch tears the attempt down the moment headers arrive — correct when
    *  the caller immediately buffers, wrong for a stream that is only starting.
@@ -258,18 +338,51 @@ export async function authFetch(
   options: AuthFetchOptions = {},
 ): Promise<Response> {
   const requestTimeoutMs = options.requestTimeoutMs ?? REQUEST_TIMEOUT_MS;
-  const maxTimeoutAttempts = options.maxTimeoutAttempts ?? MAX_RETRIES + 1;
+  const maxTimeoutAttempts = options.maxTimeoutAttempts ?? MAX_ATTEMPTS;
+  const lane = options.lane ?? 'background';
+  const lastAttempt = MAX_ATTEMPTS - 1;
   let lastError: Error | null = null;
   // Counts attempts that ended in a 502 or a client timeout/network abort —
   // i.e. the "upstream is cold / unreachable" family the chat path caps.
   let timeoutAttempts = 0;
+  // One re-mint, one throttle retry. Latches rather than budget: a 401 that
+  // survives a fresh JWT is a dead session, and three honoured Retry-Afters
+  // would hold a call open for minutes.
+  let reminted = false;
+  let throttleRetried = false;
 
-  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+  for (let attempt = 0; attempt <= lastAttempt; attempt++) {
     // The ONLY reliable discriminator between a caller abort and our own
     // per-attempt timeout: the caller's original signal. The combined signal is
     // aborted by both. Checked at the loop top so an aborted leg that is mid
     // backoff exits here (sleep() is deliberately not abort-aware — the extra
     // wait is bounded and never turns into another request).
+    if (init.signal?.aborted) {
+      throw new CallerAbortError('authFetch: caller aborted', lastError);
+    }
+
+    // THE GRANT, PER ATTEMPT. A retry is a request: metering only the first
+    // attempt would let one logical call spend MAX_ATTEMPTS slots against a
+    // one-slot budget. This single seam covers every path above it — the
+    // sequential fallback retry, the hedge leg, the 401 re-mint, and both of
+    // cloudChatStream's re-sends.
+    //
+    // The caller's own signal is passed in so an abandoned waiter (a cancelled
+    // turn, a losing hedge leg) is spliced out of the queue instead of holding
+    // a position ahead of background callers and burning a grant nobody uses.
+    if (!(attempt === 0 && options.grantAlreadyHeld)) {
+      try {
+        await gatewayRateLimiter.acquire(lane, init.signal ?? undefined);
+      } catch (err) {
+        // The only rejection acquire() has is the caller's own abort.
+        throw new CallerAbortError('authFetch: caller aborted while queued', err);
+      }
+    }
+
+    // Re-check AFTER the grant wait, which can be long. A caller that went
+    // away while queued must not spend a request — and must not reach
+    // expoFetch with an already-aborted signal, where the abort has happened
+    // before anything is listening for it.
     if (init.signal?.aborted) {
       throw new CallerAbortError('authFetch: caller aborted', lastError);
     }
@@ -287,16 +400,54 @@ export async function authFetch(
         signal,
       });
 
-      if (response.status === 401 && attempt < MAX_RETRIES) {
-        logger.warn(`${TAG} 401 on attempt ${attempt + 1}, refreshing JWT`);
+      // ONE re-mint, latched. A 401 that survives a fresh JWT is a dead
+      // session, and re-minting against it just multiplies the auth breaker's
+      // evidence while the user waits.
+      if (response.status === 401 && !reminted && attempt < lastAttempt) {
+        reminted = true;
+        logger.warn(`${TAG} 401 on attempt ${attempt + 1}, refreshing JWT once`);
         invalidateJwtCache();
         const freshHeaders = await getAuthHeaders();
         init = {
           ...init,
           headers: { ...init.headers as Record<string, string>, ...freshHeaders },
         };
-        await sleep(BASE_DELAY_MS * 2 ** attempt);
+        await sleep(backoffWithJitter(attempt));
         continue;
+      }
+
+      // 429 — the gateway is throttling THIS USER. Back the whole device off
+      // either way; the lanes differ only in whether this call waits it out.
+      //
+      // Previously absent entirely: a 429 fell through to `return response`,
+      // so chat/complete/batch neither paused the limiter nor retried, while
+      // every other gateway caller in the app did pause. The user got
+      // `E2EE chat failed: 429` and the device kept re-storming.
+      if (response.status === 429) {
+        const retryAfterMs = retryAfterMsFrom(response.headers);
+        gatewayRateLimiter.pauseFor(retryAfterMs);
+        const waitable =
+          lane === 'background' ||
+          retryAfterMs <= gatewayRateLimiter.INTERACTIVE_MAX_PAUSE_MS;
+        if (!throttleRetried && waitable && attempt < lastAttempt) {
+          throttleRetried = true;
+          logger.warn(`${TAG} 429 on attempt ${attempt + 1}, retrying once`, {
+            retryAfterMs,
+            lane,
+          });
+          // NO sleep: the next attempt's acquire() waits out the pause we just
+          // set. Sleeping here as well would serve the same backoff twice.
+          continue;
+        }
+        // An interactive caller does not sit on a long throttle with a live
+        // composer and no way out. The device is paused regardless, so the
+        // user's retry lands on an already-paced limiter.
+        logger.warn(`${TAG} 429 on attempt ${attempt + 1}, surfacing`, {
+          retryAfterMs,
+          lane,
+          throttleRetried,
+        });
+        throw new RateLimitedError(retryAfterMs);
       }
 
       if (response.status === 502) {
@@ -305,9 +456,9 @@ export async function authFetch(
         // model just storms, so this counts against the (chat-capped) timeout
         // budget; once exhausted we surface the 502 rather than loop.
         timeoutAttempts += 1;
-        if (timeoutAttempts < maxTimeoutAttempts && attempt < MAX_RETRIES) {
+        if (timeoutAttempts < maxTimeoutAttempts && attempt < lastAttempt) {
           logger.warn(`${TAG} 502 on attempt ${attempt + 1}, retrying`);
-          await sleep(BASE_DELAY_MS * 2 ** attempt);
+          await sleep(backoffWithJitter(attempt));
           continue;
         }
         logger.warn(
@@ -316,11 +467,11 @@ export async function authFetch(
         return response;
       }
 
-      if (response.status >= 500 && attempt < MAX_RETRIES) {
+      if (response.status >= 500 && attempt < lastAttempt) {
         // Non-502 5xx (500/503/504) — transient gateway/app errors, keep the
         // original sane retry budget.
         logger.warn(`${TAG} ${response.status} on attempt ${attempt + 1}, retrying`);
-        await sleep(BASE_DELAY_MS * 2 ** attempt);
+        await sleep(backoffWithJitter(attempt));
         continue;
       }
 
@@ -337,6 +488,11 @@ export async function authFetch(
       }
       return response;
     } catch (err) {
+      // Our own deliberate throttle verdict, raised INSIDE the try. Without
+      // this it lands in the network-error path below, which counts it against
+      // the cold-upstream budget and retries — re-storming the very gateway
+      // that just asked us to stop.
+      if (err instanceof RateLimitedError) throw err;
       // A caller abort ends the call here: no budget spent, no retry, no sleep.
       if (init.signal?.aborted) {
         throw new CallerAbortError('authFetch: caller aborted', err);
@@ -351,12 +507,12 @@ export async function authFetch(
       }
       // Timeout/network failures share the cold-upstream budget with 502s.
       timeoutAttempts += 1;
-      if (attempt < MAX_RETRIES && timeoutAttempts < maxTimeoutAttempts) {
+      if (attempt < lastAttempt && timeoutAttempts < maxTimeoutAttempts) {
         logger.warn(`${TAG} fetch error on attempt ${attempt + 1}, retrying`, {
           error: lastError.message,
           timedOut: isAbort,
         });
-        await sleep(BASE_DELAY_MS * 2 ** attempt);
+        await sleep(backoffWithJitter(attempt));
       } else {
         break;
       }
@@ -536,8 +692,25 @@ async function sendHedged<C>(
     return { response, ctx, model };
   };
 
+  // TAKE THE PRIMARY'S GRANT HERE, not inside authFetch.
+  //
+  // The hedge timer is armed the moment the primary leg is created. With the
+  // limiter in front of authFetch, the primary's bytes leave when the queue
+  // permits — so on a busy interactive lane the timer could fire while the
+  // primary was still QUEUED, and HEDGE_DELAY_MS would quietly come to mean
+  // "10s including queue time" instead of "10s of upstream silence". Taking
+  // the grant first re-anchors it on the send. The hedge leg takes its own
+  // grant normally; it cannot delay the primary, which was granted ~10s
+  // earlier.
   const primaryController = new AbortController();
-  const primaryRaw = runLeg(primaryModel, primaryController.signal, options);
+  await gatewayRateLimiter.acquire(
+    options.lane ?? 'background',
+    primaryController.signal,
+  );
+  const primaryRaw = runLeg(primaryModel, primaryController.signal, {
+    ...options,
+    grantAlreadyHeld: true,
+  });
   // `track` attaches handlers immediately, so neither raw promise can ever be
   // an unhandled rejection, and the tagged promise never rejects.
   const primaryP = track('primary', primaryRaw);
@@ -748,7 +921,7 @@ export async function cloudComplete(
         { role: 'system', content: request.systemPrompt },
         { role: 'user', content: request.prompt },
       ];
-      const attemptCtx = await encryptMessages(messages, sendModel);
+      const attemptCtx = await encryptMessages(messages, sendModel, options.lane);
       const baseHeaders = await getAuthHeaders();
       return {
         init: {
@@ -825,7 +998,7 @@ export async function cloudBatchComplete(
     // Rebuilt per attempt — a fallback retry needs its own E2EE context and a
     // body encrypted under the fallback model's attestation key.
     async (sendModel) => {
-      const attemptCtx = await prepareE2EEContext(sendModel);
+      const attemptCtx = await prepareE2EEContext(sendModel, options.lane);
 
       const requests = calls.map((call) => {
         const messages = [
@@ -1040,9 +1213,12 @@ export async function* cloudChatStream(
   // would re-encrypt already-encrypted content (and under the wrong key).
   const buildChatRequest = async (sendModel: string) => {
     const messages = request.messages.map((m) => ({ ...m }));
+    // INTERACTIVE all the way down: a cold attestation cache makes this a real
+    // gateway request on the critical path of a user's turn.
     const attemptCtx = await encryptMessages(
       messages as { role: string; content: string;[k: string]: unknown }[],
       sendModel,
+      'interactive',
     );
 
     // Dev-only timing: JWT fetch on the first-chat path (cache hit ≈ 0ms, miss
@@ -1097,7 +1273,13 @@ export async function* cloudChatStream(
     // Chat has always used the gateway-aligned budget; every other cloud call
     // now shares it (plan A). Chat is the only user-facing path, so it is also
     // the only one that hedges and the only one that streams its body.
-    withUpstreamAlignedDefaults({ hedgeAfterMs: HEDGE_DELAY_MS, streamBody: true }),
+    // `lane: 'interactive'` is hardcoded, not a caller option: cloudChatStream
+    // is the only user-facing streaming path in the app.
+    withUpstreamAlignedDefaults({
+      hedgeAfterMs: HEDGE_DELAY_MS,
+      streamBody: true,
+      lane: 'interactive',
+    }),
   );
   logger.debug('[chat-timing] chat POST→response', {
     ms: Date.now() - postStartMs,
@@ -1164,7 +1346,7 @@ export async function* cloudChatStream(
       });
       const fresh = await buildChatRequest(sentModel);
       const freshResponse = await authFetch(CHAT_API, fresh.init, {
-        ...withUpstreamAlignedDefaults({ streamBody: true }),
+        ...withUpstreamAlignedDefaults({ streamBody: true, lane: 'interactive' }),
         maxTimeoutAttempts: 1,
       });
       if (freshResponse.ok) {
@@ -1244,7 +1426,7 @@ export async function* cloudChatStream(
   const retryModel = resolveModel(primary);
   const retry = await buildChatRequest(retryModel);
   const retryResponse = await authFetch(CHAT_API, retry.init, {
-    ...withUpstreamAlignedDefaults({ streamBody: true }),
+    ...withUpstreamAlignedDefaults({ streamBody: true, lane: 'interactive' }),
     maxTimeoutAttempts: 1,
   });
   if (!retryResponse.ok) {

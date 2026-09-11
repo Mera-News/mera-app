@@ -75,19 +75,36 @@ describe('prewarmCloudChat', () => {
     expect(mockCloudComplete).not.toHaveBeenCalled();
   });
 
-  it('warms attestation (BIG_MODEL + both hedge fallbacks) + JWT under cloud processing', async () => {
+  it('warms attestation for BOTH primaries + JWT under cloud processing', async () => {
     const prewarmCloudChat = loadPrewarm();
     prewarmCloudChat();
     await flush();
 
-    expect(mockFetchModelPublicKey).toHaveBeenCalledTimes(3);
-    expect(mockFetchModelPublicKey).toHaveBeenCalledWith(BIG_MODEL);
-    expect(mockFetchModelPublicKey).toHaveBeenCalledWith(MODEL_FALLBACKS[BIG_MODEL]);
-    expect(mockFetchModelPublicKey).toHaveBeenCalledWith(MODEL_FALLBACKS[SMALL_MODEL]);
+    // Two fetches, not three: the primaries the app actually sends against.
+    // Every gateway call now takes a limiter grant, so each extra prewarm
+    // fetch pushes the model warmup (the dominant cold cost) another interval
+    // out — and the old three-fetch shape warmed two FALLBACKS while never
+    // warming SMALL_MODEL, which is what cloudChatStream defaults to.
+    expect(mockFetchModelPublicKey).toHaveBeenCalledTimes(2);
+    expect(mockFetchModelPublicKey).toHaveBeenCalledWith(BIG_MODEL, 'interactive');
+    expect(mockFetchModelPublicKey).toHaveBeenCalledWith(SMALL_MODEL, 'interactive');
     expect(mockGetJwtToken).toHaveBeenCalled();
   });
 
-  it('warms the fallbacks KEY-only — no throwaway completion for them', async () => {
+  it('does NOT warm the hedge fallbacks — they attest lazily on first use', async () => {
+    const prewarmCloudChat = loadPrewarm();
+    prewarmCloudChat();
+    await flush();
+
+    const warmed = (mockFetchModelPublicKey.mock.calls as [string][]).map(([m]) => m);
+    // Only BIG's fallback is assertable this way: MODEL_FALLBACKS[SMALL_MODEL]
+    // IS BIG_MODEL in the current map, so "not warmed" could never hold for it
+    // and asserting it would be a check that can only fail.
+    expect(warmed).not.toContain(MODEL_FALLBACKS[BIG_MODEL]);
+    expect(warmed).toEqual([BIG_MODEL, SMALL_MODEL]);
+  });
+
+  it('warms the MODEL only for BIG_MODEL — no throwaway completion for the rest', async () => {
     const prewarmCloudChat = loadPrewarm();
     prewarmCloudChat();
     await flush();
@@ -98,10 +115,13 @@ describe('prewarmCloudChat', () => {
     expect(warmedModels).toEqual([BIG_MODEL]);
   });
 
-  it('swallows a failing FALLBACK attestation fetch (never blocks the primary warm)', async () => {
+  it('swallows a failing SECONDARY attestation fetch (never blocks the primary warm)', async () => {
+    // Keyed on SMALL_MODEL, which prewarm DOES fetch. Keying it on a fallback
+    // would make the rejection unreachable now that fallbacks attest lazily —
+    // the spec would pass without ever exercising the failure it names.
     mockFetchModelPublicKey.mockImplementation((model: unknown) =>
-      model === MODEL_FALLBACKS[BIG_MODEL]
-        ? Promise.reject(new Error('fallback attestation down'))
+      model === SMALL_MODEL
+        ? Promise.reject(new Error('attestation down'))
         : Promise.resolve({ publicKey: 'ab', algo: 'ed25519' }),
     );
 
@@ -182,7 +202,7 @@ describe('prewarmCloudChat', () => {
     const prewarmCloudChat = loadPrewarm();
     expect(() => prewarmCloudChat()).not.toThrow();
     await expect(flush()).resolves.toBeUndefined();
-    expect(mockFetchModelPublicKey).toHaveBeenCalledTimes(3);
+    expect(mockFetchModelPublicKey).toHaveBeenCalledTimes(2);
   });
 
   it('swallows a failing model completion without throwing', async () => {

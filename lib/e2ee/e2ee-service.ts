@@ -24,6 +24,7 @@ import { randomBytes } from '@noble/ciphers/utils.js';
 import { getJwtToken } from '../auth-client';
 import logger from '../logger';
 import { withRetry } from '../utils/retry';
+import * as gatewayRateLimiter from '../llm/gateway-rate-limiter';
 import { getCachedAttestation, setCachedAttestation } from './e2ee-cache';
 import { INFERENCE_ENDPOINT } from '@/lib/config/endpoints';
 
@@ -278,21 +279,39 @@ const reportedBadModelKeys = new Set<string>();
 // immediately — a throttled attempt must not poison the next one.
 const pendingAttestations = new Map<string, Promise<ModelAttestation>>();
 
-export async function fetchModelPublicKey(model: string): Promise<ModelAttestation> {
+/**
+ * `lane` is the limiter lane the underlying gateway request runs on. It
+ * defaults to 'background', which keeps every pre-existing caller (scoring,
+ * the inference queue, the hygiene sweep) on exactly the pacing it had; chat
+ * passes 'interactive' because a person is waiting on the turn this attests
+ * for.
+ *
+ * NOTE on the dedupe below: it collapses concurrent callers PER MODEL, so an
+ * interactive caller that joins a background caller's in-flight fetch inherits
+ * that request's timing. That is correct — the request is already scheduled —
+ * but it means the lane is a property of the first caller, not of every joiner.
+ */
+export async function fetchModelPublicKey(
+  model: string,
+  lane: gatewayRateLimiter.GatewayLane = 'background',
+): Promise<ModelAttestation> {
   const cached = getCachedAttestation(model);
   if (cached) return cached;
 
   const inFlight = pendingAttestations.get(model);
   if (inFlight) return inFlight;
 
-  const run = fetchModelPublicKeyUncached(model).finally(() => {
+  const run = fetchModelPublicKeyUncached(model, lane).finally(() => {
     pendingAttestations.delete(model);
   });
   pendingAttestations.set(model, run);
   return run;
 }
 
-async function fetchModelPublicKeyUncached(model: string): Promise<ModelAttestation> {
+async function fetchModelPublicKeyUncached(
+  model: string,
+  lane: gatewayRateLimiter.GatewayLane,
+): Promise<ModelAttestation> {
   // Dev-only timing: this is the uncached NEAR pass-through — the dominant
   // first-chat-latency hop we prewarm against. Cache hits above never reach here.
   const attestStartMs = Date.now();
@@ -310,6 +329,12 @@ async function fetchModelPublicKeyUncached(model: string): Promise<ModelAttestat
   const url =
     `${ATTESTATION_API}?model=${encodeURIComponent(model)}&signing_algo=ed25519`;
 
+  // ONE grant for the whole fetch, taken OUTSIDE withRetry. Inside the closure
+  // it would charge the background lane's 3s spacing per attempt on a path that
+  // already fans out on cold start; the retries below stay unmetered, which is
+  // the deliberate (and bounded) exception.
+  await gatewayRateLimiter.acquire(lane);
+
   const res = await withRetry(
     async () => {
       const r = await fetchWithTimeout(url, { headers });
@@ -320,10 +345,29 @@ async function fetchModelPublicKeyUncached(model: string): Promise<ModelAttestat
       return r;
     },
     undefined,
-    5,
+    // 2 retries, not 5. This endpoint is a NEAR pass-through with a 30s client
+    // timeout, so six attempts is three minutes of a cold start held open, and
+    // every attempt is unmetered budget. Past the third the gateway is down,
+    // not busy.
+    2,
     TAG,
   );
   if (!res.ok) {
+    // A 429 here is the throttle MERA-APP-71 actually hit, and this path was
+    // the last gateway caller that did not back the device off for it.
+    if (res.status === 429) {
+      const retryAfterHeader = res.headers?.get?.('Retry-After');
+      const retryAfterSec = retryAfterHeader ? Number(retryAfterHeader) : NaN;
+      const retryAfterMs =
+        Number.isFinite(retryAfterSec) && retryAfterSec > 0
+          ? Math.min(retryAfterSec * 1000, 60_000)
+          : 30_000;
+      gatewayRateLimiter.pauseFor(retryAfterMs);
+      logger.warn(`${TAG} attestation throttled (429) — pausing gateway calls`, {
+        model,
+        retryAfterMs,
+      });
+    }
     const body = await res.text().catch(() => '');
     throw new NearAttestationError(res.status, body);
   }
@@ -445,6 +489,11 @@ export async function fetchAttestationForVerification(
     `${ATTESTATION_API}?model=${encodeURIComponent(model)}` +
     `&signing_algo=ed25519&nonce=${encodeURIComponent(nonceHex)}`;
 
+  // INTERACTIVE, hardcoded: this function has exactly one caller, the user's
+  // verify tap, and it bypasses every cache — so it is always a real request
+  // with a person watching a spinner.
+  await gatewayRateLimiter.acquire('interactive');
+
   const res = await fetchWithTimeout(url, { headers });
   if (!res.ok) {
     const body = await res.text().catch(() => '');
@@ -467,8 +516,11 @@ export function generateAttestationNonce(): string {
   return bytesToHex(randomBytes(32));
 }
 
-export async function prepareE2EEContext(model: string): Promise<E2EEContext> {
-  const attestation = await fetchModelPublicKey(model);
+export async function prepareE2EEContext(
+  model: string,
+  lane: gatewayRateLimiter.GatewayLane = 'background',
+): Promise<E2EEContext> {
+  const attestation = await fetchModelPublicKey(model, lane);
   const { algo } = attestation;
 
   // Generate the client keypair on the algo's own curve. The server sees the
@@ -534,8 +586,9 @@ export async function rebuildE2EEContext(
   model: string,
   privKeyHex: string,
   algo: SigningAlgo,
+  lane: gatewayRateLimiter.GatewayLane = 'background',
 ): Promise<E2EEContext> {
-  const attestation = await fetchModelPublicKey(model);
+  const attestation = await fetchModelPublicKey(model, lane);
   if (attestation.algo !== algo) {
     throw new ModelKeyAlgoMismatchError(
       `${TAG} rebuildE2EEContext: attested algo ${attestation.algo} != stored ${algo} (model=${model}); cannot pair a ${algo} keypair with a ${attestation.algo} model key`,
@@ -579,8 +632,9 @@ export async function rebuildE2EEContext(
 export async function encryptMessages(
   messages: { role: string; content: string;[k: string]: unknown }[],
   model: string,
+  lane: gatewayRateLimiter.GatewayLane = 'background',
 ): Promise<E2EEContext> {
-  const ctx = await prepareE2EEContext(model);
+  const ctx = await prepareE2EEContext(model, lane);
   for (const msg of messages) {
     if (typeof msg.content !== 'string' || msg.content.length === 0) continue;
     msg.content = encryptContent(msg.content, ctx);

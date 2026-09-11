@@ -333,8 +333,11 @@ async function batchGenerateTopics(
         // dead air the user sits through. The single `complete` below is a
         // background touch-up and stays un-hedged.
         batchComplete: (calls, opts) =>
-          cloudBatchComplete(calls, opts?.model, { hedgeAfterMs: HEDGE_DELAY_MS }),
-        complete: (req) => cloudComplete(req),
+          cloudBatchComplete(calls, opts?.model, {
+            hedgeAfterMs: HEDGE_DELAY_MS,
+            lane: 'interactive',
+          }),
+        complete: (req) => cloudComplete(req, { lane: 'interactive' }),
       },
       personaStore: {
         getFacts: () => getFacts(),

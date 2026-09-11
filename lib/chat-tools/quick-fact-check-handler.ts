@@ -106,7 +106,9 @@ export interface QuickFactCheckDeps {
 const defaultDeps: QuickFactCheckDeps = {
   searchWeb,
   searchWebBatch,
-  complete: (req) => cloudComplete(req),
+  // INTERACTIVE: the quick check runs inside a chat turn, with the user
+  // watching a 90s synthesis deadline.
+  complete: (req) => cloudComplete(req, { lane: 'interactive' }),
   now: () => Date.now(),
 };
 

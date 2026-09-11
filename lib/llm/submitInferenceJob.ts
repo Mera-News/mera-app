@@ -221,7 +221,7 @@ export async function sendInferenceRequest(args: {
   //
   // SKIPPED when the caller already holds a grant — the slot is paid either
   // way, so charging twice only delays the POST (see `grantAlreadyHeld`).
-  if (!grantAlreadyHeld) await gatewayRateLimiter.acquire();
+  if (!grantAlreadyHeld) await gatewayRateLimiter.acquire('background');
 
   // Last thing before the bytes leave the device — one site covering every
   // submit path.
