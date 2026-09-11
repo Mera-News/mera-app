@@ -48,6 +48,35 @@ class NearAttestationError extends Error {
   }
 }
 
+/**
+ * There is no credential to attest with, so no request was made.
+ *
+ * `/api/attestation/report` sits behind the gateway's AuthGuard, so a fetch with
+ * no Authorization header is a GUARANTEED 401, not a maybe — and the header used
+ * to be conditional (`if (token) headers[...] = ...`), which sent exactly that
+ * request every time a background job ran before auth had settled. The weekly
+ * sanity audit fires ~2s into a cold launch, which is how MERA-APP-16 reached 67
+ * events: one user alone accounted for 41.
+ *
+ * A SEPARATE type from {@link NearAttestationError} on purpose. That one means
+ * "the server rejected us", carries `statusCode`, and correctly feeds the auth
+ * circuit breaker. This one means "we never asked", so it must NOT record an
+ * auth failure — a request that was never sent is no evidence about the session,
+ * and counting it would let ordinary cold starts trip a breaker that exists to
+ * detect a dead session. The logger classifies it duck-typed by `name`, so
+ * nothing here imports the classifier.
+ */
+export class NoCredentialError extends Error {
+  readonly name = 'NoCredentialError';
+  constructor(message: string) {
+    super(message);
+    // Re-set after super(): subclassing a built-in loses the prototype chain
+    // under Hermes, and the logger's duck-typed check reads `name` off the
+    // instance.
+    Object.setPrototypeOf(this, NoCredentialError.prototype);
+  }
+}
+
 const TAG = '[E2EE]';
 
 /** Signing/encryption algorithm family, keyed off the attestation key length.
@@ -268,8 +297,15 @@ async function fetchModelPublicKeyUncached(model: string): Promise<ModelAttestat
   // first-chat-latency hop we prewarm against. Cache hits above never reach here.
   const attestStartMs = Date.now();
   const token = await getJwtToken();
-  const headers: Record<string, string> = {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  // Fail BEFORE the network call. The route is guarded, so a tokenless request
+  // cannot succeed; sending it anyway bought a guaranteed 401 on every
+  // pre-session background sweep (MERA-APP-16). See NoCredentialError.
+  if (!token) {
+    throw new NoCredentialError(
+      'NEAR attestation skipped: no session token, request not attempted',
+    );
+  }
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
 
   const url =
     `${ATTESTATION_API}?model=${encodeURIComponent(model)}&signing_algo=ed25519`;

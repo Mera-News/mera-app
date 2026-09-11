@@ -58,6 +58,7 @@ import {
   fetchModelPublicKey,
   ModelKeyAlgoMismatchError,
   ModelKeyValidationError,
+  NoCredentialError,
   prepareE2EEContext,
   rebuildE2EEContext,
   encryptMessages,
@@ -261,18 +262,33 @@ describe('fetchModelPublicKey', () => {
     expect((fetchInit.headers as Record<string, string>)['Authorization']).toBe('Bearer test-jwt');
   });
 
-  it('omits Authorization header when JWT is null', async () => {
+  // Was "omits Authorization header when JWT is null" — that behaviour is gone.
+  // The route is behind the gateway's AuthGuard, so a tokenless fetch is a
+  // guaranteed 401, and sending it anyway is what made a pre-session background
+  // sweep report MERA-APP-16 on every cold launch. No credential now means no
+  // request at all.
+  it('throws NoCredentialError WITHOUT issuing a request when the JWT is null', async () => {
     mockGetJwtToken.mockResolvedValueOnce(null);
-    const { publicKeyHex } = makeModelKeyHex();
-    mockGlobalFetch.mockResolvedValueOnce(
-      makeResponse(200, makeAttestationBody(publicKeyHex)),
+
+    await expect(fetchModelPublicKey('test-model')).rejects.toThrow(NoCredentialError);
+    expect(mockGlobalFetch).not.toHaveBeenCalled();
+  });
+
+  // The distinction the auth breaker depends on: a 401 is the server rejecting
+  // a live attempt and IS evidence about the session; a missing token is not an
+  // attempt at all. Only the former may carry a status.
+  it('does not dress a missing credential up as a 401', async () => {
+    mockGetJwtToken.mockResolvedValueOnce(null);
+
+    const err = await fetchModelPublicKey('test-model').then(
+      () => null,
+      (e: Error) => e,
     );
 
-    await fetchModelPublicKey('test-model');
-
-    const [, fetchInit] = mockGlobalFetch.mock.calls[0] as [string, RequestInit];
-    const authHeader = (fetchInit.headers as Record<string, string>)?.['Authorization'];
-    expect(authHeader).toBeUndefined();
+    expect(err).toBeInstanceOf(NoCredentialError);
+    expect(err).not.toHaveProperty('statusCode');
+    // Duck-typed by the logger, so the name is load-bearing, not cosmetic.
+    expect((err as Error).name).toBe('NoCredentialError');
   });
 
   it('includes model param and signing_algo in query string', async () => {
