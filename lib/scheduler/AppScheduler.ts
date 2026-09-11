@@ -180,6 +180,16 @@ class _AppScheduler {
   }
 
   private async _tick(): Promise<void> {
+    // Timer-driven work is FOREGROUND-ONLY. iOS deprioritises a backgrounded
+    // app's sockets, so a request issued here runs its full 30s abort budget
+    // and fails for no reason anyone can act on (Sentry MERA-APP-79:
+    // GetRecentArticleCount, feed-sync, in_foreground false). Catch-up is this
+    // 5s interval itself, NOT the app-foreground trigger — data-cleanup,
+    // persona-hygiene and feedback-cycle declare no triggers at all, so gating
+    // on the trigger would strand them; they simply fire on the first tick
+    // after the app is active again.
+    if (AppState.currentState !== 'active') return;
+
     const now = Date.now();
     for (const task of this.tasks.values()) {
       if (this.pausedTasks.has(task.name)) continue;

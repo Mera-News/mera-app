@@ -1,6 +1,5 @@
 import { gql } from '@apollo/client';
 import client from './apollo-client';
-import { recordAuthFailure } from './auth-failure-breaker';
 import {
     ArticleIdsForTopicsResponse,
     ArticlesForPublicationSourceResponse,
@@ -21,7 +20,6 @@ import logger from './logger';
 // The field list is shared with `factCheck(articleId)` rather than restated:
 // the panel reads one shape, so a field added for one path must reach both.
 import { FACT_CHECK_FIELDS } from './fact-check/fact-check-fields';
-import { isUnauthenticatedError } from './utils/retry';
 
 // GraphQL Query for fetching articles for a cluster (excluding already shown articles)
 const GET_ARTICLES_FOR_CLUSTER = gql`
@@ -604,10 +602,10 @@ export type {
 // the server a Jina embed + vector search, so parallel batches would spike load.
 const MAX_TOPICS_PER_BATCH = 150;
 
-// `isUnauthenticatedError` used to be defined here. It now lives in
-// `lib/utils/retry.ts` so the scheduler runner can apply the SAME 401 rule
-// without importing this module (and with it the Apollo client). Behaviour is
-// unchanged; see the docstring there for why there is exactly one copy.
+// `isUnauthenticatedError` used to be defined here, then moved to
+// `lib/utils/retry.ts`. This module no longer applies it at all: every read
+// query below goes through the Apollo error link, which owns the 401 rule (and
+// every other suppression class) via `classifySuppression` in lib/logger.ts.
 
 // Article Service Class
 export class ArticleService {
@@ -632,44 +630,41 @@ export class ArticleService {
 
     /**
      * One error-reporting policy for every read query below. Extracted because
-     * the 401 rule has to be identical at a dozen catch sites — copies of it
-     * would drift, and a single drifting copy is enough to re-open the storm.
+     * the rule has to be identical at eleven catch sites — copies of it would
+     * drift, and a single drifting copy is enough to re-open a storm.
      *
-     * A 401 / UNAUTHENTICATED is NOT a per-request Sentry event. One dead
-     * session makes every query in the app fail the same way, so capturing each
-     * one buys hundreds of duplicate events for a single root cause (this is
-     * MERA-APP-3P/49/5P: 324 events from one user). Leave a breadcrumb and let
-     * the auth breaker's single trip event be the signal — the same policy the
-     * Apollo error link applies (see lib/apollo-client.ts).
+     * THIS NO LONGER CAPTURES. It leaves a breadcrumb and nothing else.
      *
-     * recordAuthFailure() is called here as well as in the error link. That
-     * double-counts a failure the link already saw, which only makes the
-     * breaker trip a request earlier — harmless now that tripping repairs
-     * before it pauses anything — and it keeps the policy correct for any
-     * rejection that never passes through the link.
+     * Every one of the eleven callers wraps `client.query`, so the Apollo error
+     * link (lib/apollo-client.ts) has ALREADY seen and classified the failure
+     * before the rejection reaches us: it owns the Sentry capture, the
+     * server-reachability signal, the auth breaker and the sync-failed banner.
+     * Capturing again here only bought a second event for one failure — and
+     * where the caller reports too (ScopeArticleList catches the rethrow and
+     * captures a third time), a third. That is Sentry MERA-APP-77: the tag
+     * `service=article-service` on those events is this method, firing above a
+     * link that had already suppressed its own capture for being offline.
      *
-     * Non-401 errors keep the unconditional capture they always had.
+     * The 401 branch is gone with it. It existed to keep a dead session from
+     * spending an event per query, and the link's UNAUTHENTICATED branch now
+     * covers both the `code` and the `statusCode` shape, so a second
+     * recordAuthFailure() here would only double-count into the same breaker.
+     *
+     * CONTROL FLOW IS UNCHANGED and must stay that way: ten callers rethrow
+     * after calling this, `getRecentArticleCount` returns 0, and the Explore
+     * list's `finally` depends on the rejection still arriving.
      */
     private static reportQueryError(
         method: string,
         error: unknown,
         extra?: Record<string, unknown>,
     ): void {
-        if (isUnauthenticatedError(error)) {
-            logger.addBreadcrumb(
-                `[ArticleService] ${method} UNAUTHENTICATED`,
-                'article-service',
-                { method, ...extra },
-                'warning',
-            );
-            recordAuthFailure();
-            return;
-        }
-
-        logger.captureException(error, {
-            tags: { service: 'article-service', method },
-            ...(extra ? { extra } : {}),
-        });
+        logger.addBreadcrumb(
+            `[ArticleService] ${method} failed`,
+            'article-service',
+            { method, ...extra },
+            'warning',
+        );
     }
 
     static async getRecentArticleCount(): Promise<number> {

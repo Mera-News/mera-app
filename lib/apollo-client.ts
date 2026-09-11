@@ -4,6 +4,11 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors';
 interface GraphQLErrorExtensions {
     exception?: { name?: string };
     code?: string;
+    /** Some resolvers report the auth failure as a status rather than a code.
+     *  `isUnauthenticatedError` (lib/utils/retry.ts) has always honoured both;
+     *  this link used to read `code` only, so the shapes carrying `statusCode`
+     *  fell through to the generic capture below. */
+    statusCode?: number;
 }
 import { SetContextLink } from '@apollo/client/link/context';
 import { ErrorLink } from '@apollo/client/link/error';
@@ -89,7 +94,12 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
             // auth gate in app/index.tsx routes to /login when useSession()
             // actually reports no session; let server truth drive that, not
             // a single error response.
-            if (errorCode === 'UNAUTHENTICATED') {
+            // Both shapes, deliberately. A 401 reported as `extensions.statusCode`
+            // used to miss this branch and land in the generic capture below —
+            // the same per-request storm the breaker exists to replace, just
+            // wearing `type: 'graphql'` instead. The shared predicate in
+            // lib/utils/retry.ts already accepted both; this link did not.
+            if (errorCode === 'UNAUTHENTICATED' || ext?.statusCode === 401) {
                 // Downgraded from a per-request Sentry capture to a breadcrumb:
                 // the auth-failure breaker's single trip event replaces the
                 // per-request storm (this used to emit ~700 events over two

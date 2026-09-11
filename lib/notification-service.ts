@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 import logger from './logger';
 import { AccountService } from './account-service';
 import { useUserStore } from './stores/user-store';
+import { useNetworkStore } from './stores/network-store';
 import { getSetting, setSetting } from './database/services/setting-service';
 import { ArticleSuggestionStatus } from './database/article-suggestion-status';
 
@@ -342,6 +343,31 @@ let pushTokenListener: Notifications.Subscription | null = null;
  */
 export async function ensurePushTokenRegistered(userId: string): Promise<void> {
     if (!userId) return;
+
+    // Don't spend a boot-time round trip on a device with no link.
+    // `getExpoPushTokenAsync` talks to Expo's push service, so on a cold start
+    // in airplane mode it fails with a bare "Network request failed"
+    // (MERA-APP-78). Skipping is SAFE rather than lossy: push-token-check-task
+    // runs hourly and on every foreground WITH a `{ type: 'network' }`
+    // condition, and `checkPushTokenRevocation` re-registers precisely when the
+    // persona carries no cached token — which is exactly the state a skipped
+    // boot leaves behind.
+    //
+    // `=== false`, never `!isConnected`. The store seeds optimistically until
+    // NetInfo's first fetch lands, so "not yet known" must still attempt. This
+    // is therefore an OPTIMISATION, not the fix: at 1.5s into a cold start the
+    // store may well still read `true` and let the request through. The real
+    // guarantee is the suppression class in logger.captureException, which runs
+    // at capture time when the store has the true answer.
+    if (useNetworkStore.getState().isConnected === false) {
+        logger.addBreadcrumb(
+            'ensurePushTokenRegistered skipped — device offline',
+            'notification-service',
+            { userId },
+            'info',
+        );
+        return;
+    }
 
     try {
         const token = await registerForPushNotificationsAsync(true);

@@ -1,6 +1,9 @@
 // AppScheduler.test.ts — unit tests for the AppScheduler orchestrator
 
 const mockAppStateAddEventListener = jest.fn();
+// `_tick` is foreground-only, so the whole suite runs as an ACTIVE app
+// unless a test says otherwise. `mock`-prefixed for jest hoisting.
+let mockAppStateCurrent = 'active';
 const mockLoadLastRunTimes = jest.fn();
 const mockMarkStaleCrashedJobs = jest.fn();
 const mockCreateJob = jest.fn();
@@ -45,6 +48,9 @@ const mockGetJwtToken = jest.fn();
 jest.mock('react-native', () => ({
   AppState: {
     addEventListener: (...args: any[]) => mockAppStateAddEventListener(...args),
+    get currentState() {
+      return mockAppStateCurrent;
+    },
   },
   InteractionManager: {
     // Only defined while `mockHangInteractions` is set — otherwise idle.ts takes its
@@ -163,6 +169,7 @@ beforeEach(() => {
 
   // Return a remove function from addEventListener
   mockAppStateAddEventListener.mockReturnValue({ remove: jest.fn() });
+  mockAppStateCurrent = 'active';
 
   // Reset the singleton's internal task registry so tests don't accumulate
   // tasks from previous tests (TypeScript `private` compiles to a plain JS
@@ -257,6 +264,41 @@ describe('AppScheduler — tick scheduling', () => {
 
     await AppScheduler.init();
     await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  // The tick is FOREGROUND-ONLY. A backgrounded app's requests run their full
+  // 30s abort budget and fail for no actionable reason (Sentry MERA-APP-79).
+  // Asserted in both directions so the gate cannot be deleted silently — the
+  // due-on-tick test above passes with or without it.
+  it('does NOT fire a due task while the app is backgrounded', async () => {
+    const task = makeTask({ name: 'bg-task', frequency: 10_000 });
+    AppScheduler.register(task);
+    mockSchedulerStore.getLastRun.mockReturnValue(null);
+    mockAppStateCurrent = 'background';
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  // Catch-up is the 5s interval itself, not the app-foreground trigger:
+  // data-cleanup, feedback-cycle and persona-hygiene declare `triggers: []`, so
+  // a trigger-based catch-up would strand them forever.
+  it('fires a task held back by the gate on the first tick after returning to active', async () => {
+    const task = makeTask({ name: 'catchup-task', frequency: 10_000 });
+    AppScheduler.register(task);
+    mockSchedulerStore.getLastRun.mockReturnValue(null);
+    mockAppStateCurrent = 'background';
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(mockCreateJob).not.toHaveBeenCalled();
+
+    mockAppStateCurrent = 'active';
+    await jest.advanceTimersByTimeAsync(5_000);
 
     expect(mockCreateJob).toHaveBeenCalled();
   });

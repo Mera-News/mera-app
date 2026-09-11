@@ -81,6 +81,17 @@ jest.mock('../stores/user-store', () => ({
   },
 }));
 
+// Mocked rather than left to the real store, which seeds isConnected from
+// whether NetInfo loaded at all — an implicit value this suite should not
+// depend on now that ensurePushTokenRegistered reads it.
+// `mock`-prefixed for jest hoisting.
+let mockIsConnected = true;
+jest.mock('../stores/network-store', () => ({
+  useNetworkStore: {
+    getState: () => ({ isConnected: mockIsConnected, serverReachable: true }),
+  },
+}));
+
 // logger: factory is self-contained
 jest.mock('../logger', () => ({
   __esModule: true,
@@ -500,11 +511,39 @@ describe('ensurePushTokenRegistered', () => {
     mockUserStoreState.userId = 'user-123';
     mockUserStoreState.userPersona = { expoPushToken: null };
     mockUserStoreState.setUserPersona.mockClear();
+    mockIsConnected = true;
   });
 
   it('returns early when userId is empty', async () => {
     await ensurePushTokenRegistered('');
     expect(mockGetPermissionsAsync).not.toHaveBeenCalled();
+  });
+
+  // MERA-APP-78: a cold start with no link still fired the Expo push-token
+  // fetch, which is not a GraphQL call and so was never covered by the Apollo
+  // link's offline gate. Skipping is safe — push-token-check-task re-registers
+  // hourly and on foreground, network-gated, exactly when the persona has no
+  // cached token.
+  it('skips the round trip entirely when the device is offline', async () => {
+    mockIsConnected = false;
+
+    await ensurePushTokenRegistered('user-123');
+
+    expect(mockGetPermissionsAsync).not.toHaveBeenCalled();
+    expect(mockGetExpoPushTokenAsync).not.toHaveBeenCalled();
+    expect(mockUpdateExpoPushTokenMutation).not.toHaveBeenCalled();
+  });
+
+  // `=== false`, not `!isConnected`: the store seeds optimistically until
+  // NetInfo's first fetch lands, so an unknown state must still attempt.
+  it('still attempts when connectivity is not yet known', async () => {
+    mockIsConnected = true;
+    mockGetPermissionsAsync.mockResolvedValueOnce({ status: 'granted', ios: {} });
+    mockGetExpoPushTokenAsync.mockResolvedValueOnce({ data: 'ExponentPushToken[t]' });
+
+    await ensurePushTokenRegistered('user-123');
+
+    expect(mockGetExpoPushTokenAsync).toHaveBeenCalled();
   });
 
   it('returns early when registerForPushNotificationsAsync returns null', async () => {

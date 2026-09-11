@@ -186,11 +186,15 @@ describe('ArticleService.getRecentArticleCount', () => {
         mockQuery.mockRejectedValueOnce(new Error('network failure'));
         const result = await ArticleService.getRecentArticleCount();
         expect(result).toBe(0);
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            expect.any(Error),
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getRecentArticleCount' },
-            }),
+        // The Apollo error link already captured this. reportQueryError only
+        // leaves a breadcrumb now — see its docstring for why the second
+        // capture was MERA-APP-77.
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getRecentArticleCount failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getRecentArticleCount' }),
+            'warning',
         );
     });
 });
@@ -656,19 +660,19 @@ describe('ArticleService.getRelatedArticlesPage', () => {
         );
     });
 
-    it('re-throws on error and logs captureException', async () => {
+    it('re-throws on error and leaves a breadcrumb only', async () => {
         const err = new Error('related articles failed');
         mockQuery.mockRejectedValueOnce(err);
 
         await expect(
             ArticleService.getRelatedArticlesPage({ articleId: 'art-1' }),
         ).rejects.toThrow('related articles failed');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getRelatedArticlesPage' },
-                extra: { articleId: 'art-1', stableClusterId: undefined },
-            }),
+expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getRelatedArticlesPage failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getRelatedArticlesPage', articleId: 'art-1' }),
+            'warning',
         );
     });
 });
@@ -748,17 +752,17 @@ describe('ArticleService.getArticleById', () => {
         }
     });
 
-    it('re-throws on error and logs with articleId', async () => {
+    it('re-throws on error and breadcrumbs with articleId', async () => {
         const err = new Error('article not found');
         mockQuery.mockRejectedValueOnce(err);
 
         await expect(ArticleService.getArticleById('art-x')).rejects.toThrow('article not found');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getArticleById' },
-                extra: { articleId: 'art-x' },
-            }),
+expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getArticleById failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getArticleById', articleId: 'art-x' }),
+            'warning',
         );
     });
 });
@@ -815,11 +819,12 @@ describe('ArticleService.getArticlesForCluster', () => {
         const err = new Error('cluster query failed');
         mockQuery.mockRejectedValueOnce(err);
         await expect(ArticleService.getArticlesForCluster('c-bad')).rejects.toThrow('cluster query failed');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getArticlesForCluster' },
-            }),
+expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getArticlesForCluster failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getArticlesForCluster' }),
+            'warning',
         );
     });
 });
@@ -877,7 +882,13 @@ describe('ArticleService.getArticlesForPublicationSource', () => {
         const err = new Error('pub source error');
         mockQuery.mockRejectedValueOnce(err);
         await expect(ArticleService.getArticlesForPublicationSource('pub-1')).rejects.toThrow('pub source error');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalled();
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getArticlesForPublicationSource failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getArticlesForPublicationSource' }),
+            'warning',
+        );
     });
 });
 
@@ -944,7 +955,13 @@ describe('ArticleService.getNewsClusters', () => {
         const err = new Error('clusters error');
         mockQuery.mockRejectedValueOnce(err);
         await expect(ArticleService.getNewsClusters()).rejects.toThrow('clusters error');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalled();
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getNewsClusters failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getNewsClusters' }),
+            'warning',
+        );
     });
 });
 
@@ -993,11 +1010,12 @@ describe('ArticleService.getNewsClustersForTopicText', () => {
         const err = new Error('topic text error');
         mockQuery.mockRejectedValueOnce(err);
         await expect(ArticleService.getNewsClustersForTopicText('bad topic')).rejects.toThrow('topic text error');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getNewsClustersForTopicText' },
-            }),
+expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getNewsClustersForTopicText failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getNewsClustersForTopicText' }),
+            'warning',
         );
     });
 });
@@ -1076,33 +1094,38 @@ describe('ArticleService.getTopHeadlinesForCountry', () => {
         const err = new Error('top headlines error');
         mockQuery.mockRejectedValueOnce(err);
         await expect(ArticleService.getTopHeadlinesForCountry('USA', {})).rejects.toThrow('top headlines error');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getTopHeadlinesForCountry' },
-            }),
+expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getTopHeadlinesForCountry failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getTopHeadlinesForCountry' }),
+            'warning',
         );
     });
 
-    // ── 401 policy: a dead session fails every query in the app the same way,
-    //    so each one must NOT become its own Sentry event (MERA-APP-3P/49/5P
-    //    was 324 of them). Breadcrumb + breaker, never captureException. ─────
-    it('does not capture a network 401 to Sentry — breadcrumb + recordAuthFailure', async () => {
+    // ── THE 401 POLICY NO LONGER LIVES HERE. Every query in this service goes
+    //    through the Apollo error link, which owns the 401 rule (and every
+    //    other suppression class, via classifySuppression in lib/logger.ts).
+    //    This service must not second-guess it: a duplicate recordAuthFailure
+    //    only double-counts into the same breaker, and a duplicate capture is
+    //    what MERA-APP-77 was. A 401 is therefore treated like any other
+    //    failure here — breadcrumb, rethrow, nothing else. ─────────────────
+    it('does not capture a network 401 and does not touch the breaker', async () => {
         mockQuery.mockRejectedValueOnce(Object.assign(new Error('Unauthorized'), { statusCode: 401 }));
 
         await expect(ArticleService.getTopHeadlinesForCountry('USA', {})).rejects.toThrow('Unauthorized');
 
         expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
-        expect(mockRecordAuthFailure).toHaveBeenCalledTimes(1);
+        expect(mockRecordAuthFailure).not.toHaveBeenCalled();
         expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
-            expect.stringContaining('getTopHeadlinesForCountry UNAUTHENTICATED'),
+            expect.stringContaining('getTopHeadlinesForCountry failed'),
             'article-service',
             expect.objectContaining({ method: 'getTopHeadlinesForCountry', countryCode: 'USA' }),
             'warning',
         );
     });
 
-    it('treats a GraphQL UNAUTHENTICATED the same as a network 401', async () => {
+    it('treats a GraphQL UNAUTHENTICATED the same way', async () => {
         mockQuery.mockRejectedValueOnce(
             new CombinedGraphQLErrors({
                 data: null,
@@ -1113,14 +1136,14 @@ describe('ArticleService.getTopHeadlinesForCountry', () => {
         await expect(ArticleService.getTopHeadlinesForCountry('USA', {})).rejects.toThrow();
 
         expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
-        expect(mockRecordAuthFailure).toHaveBeenCalledTimes(1);
+        expect(mockRecordAuthFailure).not.toHaveBeenCalled();
     });
 
-    it('still captures non-401 network errors', async () => {
+    it('does not capture a non-401 network error either', async () => {
         mockQuery.mockRejectedValueOnce(Object.assign(new Error('Server error'), { statusCode: 500 }));
 
         await expect(ArticleService.getTopHeadlinesForCountry('USA', {})).rejects.toThrow('Server error');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalled();
+        expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
         expect(mockRecordAuthFailure).not.toHaveBeenCalled();
     });
 });
@@ -1182,11 +1205,12 @@ describe('ArticleService.getNewsClusterForArticle', () => {
         const err = new Error('cluster for article failed');
         mockQuery.mockRejectedValueOnce(err);
         await expect(ArticleService.getNewsClusterForArticle('art-1')).rejects.toThrow('cluster for article failed');
-        expect((logger.captureException as jest.Mock)).toHaveBeenCalledWith(
-            err,
-            expect.objectContaining({
-                tags: { service: 'article-service', method: 'getNewsClusterForArticle' },
-            }),
+expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
+        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
+            expect.stringContaining('getNewsClusterForArticle failed'),
+            'article-service',
+            expect.objectContaining({ method: 'getNewsClusterForArticle' }),
+            'warning',
         );
     });
 });
