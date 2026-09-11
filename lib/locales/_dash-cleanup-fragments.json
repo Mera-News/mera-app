@@ -1,0 +1,138 @@
+{
+  "ar": {
+    "language": {
+      "translationUnavailableTapToRetry": "يتم عرض الإنجليزية الآن. اضغط لإعادة المحاولة.",
+      "switchFailedBody": "تعذر تجهيز حزمة ترجمة {{language}}، لذا ما زلت تستخدم {{previous}}. قد تكون لا تزال قيد التنزيل. أعد المحاولة بعد قليل.",
+      "switchTimedOutBody": "يستغرق تجهيز {{language}} وقتًا طويلاً، لذا ما زلت تستخدم {{previous}}. قد يكتمل التنزيل في الخلفية. أعد المحاولة قريبًا."
+    }
+  },
+  "de": {
+    "language": {
+      "translationUnavailableTapToRetry": "Momentan wird Englisch angezeigt. Tippen, um es erneut zu versuchen.",
+      "switchFailedBody": "Das Übersetzungspaket für {{language}} konnte nicht vorbereitet werden, daher verwendest du weiterhin {{previous}}. Es wird möglicherweise noch heruntergeladen. Versuche es gleich noch einmal.",
+      "switchTimedOutBody": "Die Vorbereitung von {{language}} dauert zu lange, daher verwendest du weiterhin {{previous}}. Der Download wird möglicherweise im Hintergrund fertig. Versuche es in Kürze noch einmal."
+    }
+  },
+  "en": {
+    "language": {
+      "translationUnavailableTapToRetry": "Showing English for now. Tap to try again.",
+      "switchFailedBody": "The {{language}} translation pack couldn't be prepared, so you're still using {{previous}}. It may still be downloading. Try again in a moment.",
+      "switchTimedOutBody": "Preparing {{language}} is taking too long, so you're still using {{previous}}. The download may finish in the background. Try again shortly."
+    }
+  },
+  "es": {
+    "language": {
+      "translationUnavailableTapToRetry": "Mostrando inglés por ahora. Toca para volver a intentarlo.",
+      "switchFailedBody": "El paquete de traducción de {{language}} no se pudo preparar, así que sigues usando {{previous}}. Puede que aún se esté descargando. Inténtalo de nuevo en un momento.",
+      "switchTimedOutBody": "Preparar {{language}} está tardando demasiado, así que sigues usando {{previous}}. La descarga podría terminar en segundo plano. Inténtalo de nuevo dentro de poco."
+    }
+  },
+  "fr": {
+    "language": {
+      "translationUnavailableTapToRetry": "Affichage de l'anglais pour l'instant. Appuyez pour réessayer.",
+      "switchFailedBody": "Le pack de traduction {{language}} n'a pas pu être préparé, donc tu utilises toujours {{previous}}. Il est peut-être encore en cours de téléchargement. Réessaie dans un instant.",
+      "switchTimedOutBody": "La préparation de {{language}} prend trop de temps, donc tu utilises toujours {{previous}}. Le téléchargement pourrait se terminer en arrière-plan. Réessaie bientôt."
+    }
+  },
+  "hi": {
+    "language": {
+      "translationUnavailableTapToRetry": "फ़िलहाल अंग्रेज़ी दिखाई जा रही है। फिर से कोशिश करने के लिए टैप करें।",
+      "switchFailedBody": "{{language}} का अनुवाद पैक तैयार नहीं हो सका, इसलिए आप अभी भी {{previous}} का उपयोग कर रहे हैं। हो सकता है यह अभी भी डाउनलोड हो रहा हो। थोड़ी देर बाद फिर से कोशिश करें।",
+      "switchTimedOutBody": "{{language}} तैयार करने में बहुत ज़्यादा समय लग रहा है, इसलिए आप अभी भी {{previous}} का उपयोग कर रहे हैं। डाउनलोड बैकग्राउंड में पूरा हो सकता है। थोड़ी देर में फिर से कोशिश करें।"
+    }
+  },
+  "id": {
+    "language": {
+      "translationUnavailableTapToRetry": "Menampilkan bahasa Inggris untuk saat ini. Ketuk untuk mencoba lagi.",
+      "switchFailedBody": "Paket terjemahan {{language}} tidak berhasil disiapkan, jadi kamu masih menggunakan {{previous}}. Paket ini mungkin masih dalam proses unduhan. Coba lagi sebentar lagi.",
+      "switchTimedOutBody": "Menyiapkan {{language}} memakan waktu terlalu lama, jadi kamu masih menggunakan {{previous}}. Unduhan mungkin selesai di latar belakang. Coba lagi sebentar lagi."
+    }
+  },
+  "it": {
+    "language": {
+      "translationUnavailableTapToRetry": "Al momento viene mostrato l'inglese. Tocca per riprovare.",
+      "switchFailedBody": "Non è stato possibile preparare il pacchetto di traduzione per {{language}}, quindi stai ancora usando {{previous}}. Potrebbe essere ancora in fase di download. Riprova tra poco.",
+      "switchTimedOutBody": "La preparazione di {{language}} sta richiedendo troppo tempo, quindi stai ancora usando {{previous}}. Il download potrebbe completarsi in background. Riprova a breve."
+    }
+  },
+  "ja": {
+    "language": {
+      "translationUnavailableTapToRetry": "現在は英語を表示しています。もう一度試すにはタップしてください。"
+    }
+  },
+  "ko": {
+    "language": {
+      "translationUnavailableTapToRetry": "지금은 영어로 표시하고 있습니다. 다시 시도하려면 탭하세요."
+    }
+  },
+  "nl": {
+    "language": {
+      "translationUnavailableTapToRetry": "Toont voorlopig Engels. Tik om het opnieuw te proberen.",
+      "switchFailedBody": "Het vertaalpakket voor {{language}} kon niet worden voorbereid, dus je gebruikt nog steeds {{previous}}. Het wordt mogelijk nog gedownload. Probeer het over een moment opnieuw.",
+      "switchTimedOutBody": "Het voorbereiden van {{language}} duurt te lang, dus je gebruikt nog steeds {{previous}}. De download kan op de achtergrond nog worden voltooid. Probeer het straks opnieuw."
+    }
+  },
+  "pl": {
+    "language": {
+      "translationUnavailableTapToRetry": "Obecnie wyświetlany jest angielski. Stuknij, aby spróbować ponownie.",
+      "switchFailedBody": "Nie udało się przygotować pakietu tłumaczeniowego na język {{language}}, więc nadal masz włączony język {{previous}}. Może wciąż się pobierać. Spróbuj ponownie za chwilę.",
+      "switchTimedOutBody": "Przygotowanie tłumaczenia na język {{language}} trwa zbyt długo, więc nadal masz włączony język {{previous}}. Pobieranie może zakończyć się w tle. Spróbuj ponownie za chwilę."
+    }
+  },
+  "pt-BR": {
+    "language": {
+      "translationUnavailableTapToRetry": "Mostrando inglês por enquanto. Toque para tentar novamente.",
+      "switchFailedBody": "Não foi possível preparar o pacote de tradução de {{language}}, então você ainda está usando {{previous}}. Ele pode ainda estar sendo baixado. Tente novamente em instantes.",
+      "switchTimedOutBody": "Preparar {{language}} está demorando demais, então você ainda está usando {{previous}}. O download pode terminar em segundo plano. Tente novamente em breve."
+    }
+  },
+  "ru": {
+    "language": {
+      "translationUnavailableTapToRetry": "Сейчас показывается английский. Нажмите, чтобы попробовать снова.",
+      "switchFailedBody": "Языковой пакет «{{language}}» не удалось подготовить, поэтому вы всё ещё используете {{previous}}. Возможно, он ещё скачивается. Попробуйте ещё раз через минуту.",
+      "switchTimedOutBody": "{{language}} слишком долго готовится, поэтому вы всё ещё используете {{previous}}. Загрузка может завершиться в фоновом режиме. Попробуйте снова через некоторое время."
+    }
+  },
+  "th": {
+    "language": {
+      "translationUnavailableTapToRetry": "ตอนนี้แสดงเป็นภาษาอังกฤษ แตะเพื่อลองใหม่",
+      "switchFailedBody": "ไม่สามารถเตรียมชุดข้อมูลแปลภาษา {{language}} ได้ คุณจึงยังคงใช้ {{previous}} อยู่ อาจกำลังดาวน์โหลดอยู่ ลองใหม่อีกครั้งในอีกสักครู่",
+      "switchTimedOutBody": "การเตรียมภาษา {{language}} ใช้เวลานานเกินไป คุณจึงยังคงใช้ {{previous}} อยู่ การดาวน์โหลดอาจเสร็จสิ้นในเบื้องหลัง ลองใหม่อีกครั้งในอีกสักครู่"
+    }
+  },
+  "tr": {
+    "language": {
+      "translationUnavailableTapToRetry": "Şimdilik İngilizce gösteriliyor. Tekrar denemek için dokunun.",
+      "switchFailedBody": "{{language}} çeviri paketi hazırlanamadı, bu yüzden hâlâ {{previous}} dilini kullanıyorsun. Hâlâ indiriliyor olabilir. Birazdan tekrar dene.",
+      "switchTimedOutBody": "{{language}} dilinin hazırlanması çok uzun sürüyor, bu yüzden hâlâ {{previous}} dilini kullanıyorsun. İndirme arka planda tamamlanabilir. Kısa süre sonra tekrar dene."
+    }
+  },
+  "uk": {
+    "language": {
+      "translationUnavailableTapToRetry": "Наразі показано англійську. Торкніться, щоб спробувати ще раз.",
+      "switchFailedBody": "Мовний пакет «{{language}}» не вдалося підготувати, тому ви все ще використовуєте «{{previous}}». Можливо, він ще завантажується. Спробуйте ще раз за хвилину.",
+      "switchTimedOutBody": "«{{language}}» готується занадто довго, тому ви все ще використовуєте «{{previous}}». Завантаження може завершитися у фоновому режимі. Спробуйте трохи пізніше."
+    }
+  },
+  "vi": {
+    "language": {
+      "translationUnavailableTapToRetry": "Hiện đang hiển thị tiếng Anh. Chạm để thử lại.",
+      "switchFailedBody": "Không thể chuẩn bị gói dịch {{language}}, vì vậy bạn vẫn đang dùng {{previous}}. Gói này có thể vẫn đang tải xuống. Hãy thử lại sau một lát.",
+      "switchTimedOutBody": "Việc chuẩn bị {{language}} đang mất quá nhiều thời gian, vì vậy bạn vẫn đang dùng {{previous}}. Quá trình tải xuống có thể vẫn đang hoàn tất ở chế độ nền. Hãy thử lại sau ít phút."
+    }
+  },
+  "zh-CN": {
+    "language": {
+      "translationUnavailableTapToRetry": "目前显示英文。点击重试。",
+      "switchFailedBody": "{{language}}翻译包未能准备好,你仍在使用{{previous}}。它可能仍在下载中。请稍后再试。",
+      "switchTimedOutBody": "准备{{language}}耗时过长,你仍在使用{{previous}}。下载可能仍在后台进行。请稍后再试。"
+    }
+  },
+  "zh-TW": {
+    "language": {
+      "translationUnavailableTapToRetry": "目前顯示英文。點擊重試。",
+      "switchFailedBody": "{{language}}翻譯包尚未準備完成,你目前仍在使用{{previous}}。它可能還在下載中。請稍後再試一次。",
+      "switchTimedOutBody": "準備{{language}}花費的時間過長,你目前仍在使用{{previous}}。下載可能仍在背景進行。請稍後再試一次。"
+    }
+  }
+}
