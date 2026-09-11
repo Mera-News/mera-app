@@ -22,8 +22,11 @@ import {
   buildToolDefinitions,
   buildPersonaUpdateContext,
 } from '../../lib/news-harness/prompts/prompts';
-
-const BIG_MODEL = 'deepseek-ai/DeepSeek-V4-Flash';
+import {
+  BIG_MODEL,
+  CHAT_MAX_OUTPUT_TOKENS,
+  CHAT_REASONING_HEADROOM_TOKENS,
+} from '../../lib/llm/constants';
 
 /** The exact CLOUD fact-extraction text as it stood BEFORE the r14 edits. */
 const REVERT_TO_PRE_R14: { from: string; to: string }[] = [
@@ -52,13 +55,21 @@ const USER_TURN = "I'm an expat from India";
 interface Args {
   runs: number;
   arm: 'before' | 'after';
+  /** Model id to post. Defaults to the shipped BIG_MODEL; override to probe a
+   *  candidate primary or fallback on the one thing the confirm/decline
+   *  fixtures cannot show — whether a fact-worthy turn yields real facts. */
+  model: string;
+  /** chat_template_kwargs.enable_thinking. Defaults ON, the app's chat gear. */
+  thinking: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { runs: 6, arm: 'after' };
+  const args: Args = { runs: 6, arm: 'after', model: BIG_MODEL, thinking: true };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--runs') args.runs = Number(argv[++i] ?? args.runs);
     else if (argv[i] === '--arm') args.arm = (argv[++i] as Args['arm']) ?? args.arm;
+    else if (argv[i] === '--model') args.model = argv[++i] ?? args.model;
+    else if (argv[i] === '--thinking') args.thinking = (argv[++i] ?? 'on') !== 'off';
   }
   return args;
 }
@@ -90,7 +101,12 @@ interface ToolCall {
   function?: { name?: string; arguments?: string };
 }
 
-async function runOnce(arm: Args['arm'], env: ReturnType<typeof loadHarnessEnv>) {
+async function runOnce(
+  arm: Args['arm'],
+  model: string,
+  thinking: boolean,
+  env: ReturnType<typeof loadHarnessEnv>,
+) {
   const context = buildPersonaUpdateContext({ knownFactsList: KNOWN_FACTS });
   const res = await fetch(`${env.nearAiBaseUrl}/chat/completions`, {
     method: 'POST',
@@ -99,15 +115,18 @@ async function runOnce(arm: Args['arm'], env: ReturnType<typeof loadHarnessEnv>)
       authorization: `Bearer ${env.nearAiApiKey}`,
     },
     body: JSON.stringify({
-      model: BIG_MODEL,
+      model,
       messages: [
         { role: 'system', content: systemPromptFor(arm) },
         { role: 'user', content: `${context}\n\n${USER_TURN}` },
       ],
       tools: buildToolDefinitions('ONBOARDING'),
       tool_choice: 'auto',
-      max_tokens: 1024,
+      // WIRE PARITY with cloudChatStream: answer budget + reasoning headroom,
+      // thinking ON.
+      max_tokens: CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
       temperature: 0.4,
+      chat_template_kwargs: { enable_thinking: thinking },
     }),
   });
   if (!res.ok) {
@@ -139,13 +158,16 @@ async function main(): Promise<number> {
   const args = parseArgs(process.argv.slice(2));
   const env = loadHarnessEnv();
   console.log(`arm  : ${args.arm}\nruns : ${args.runs}\nuser : "${USER_TURN}"`);
-  console.log(`known: ${KNOWN_FACTS}\nmodel: ${BIG_MODEL}\n`);
+  console.log(
+    `known: ${KNOWN_FACTS}\nmodel: ${args.model}${args.model === BIG_MODEL ? ' (BIG_MODEL)' : ' (override)'}\n` +
+      `thinking: ${args.thinking ? 'on' : 'off'}\n`,
+  );
 
   let composed = 0;
   let placeholder = 0;
   let totalFacts = 0;
   for (let i = 0; i < args.runs; i++) {
-    const out = await runOnce(args.arm, env);
+    const out = await runOnce(args.arm, args.model, args.thinking, env);
     if (out.error) {
       console.log(`  run ${i + 1}: ERROR ${out.error}`);
       continue;

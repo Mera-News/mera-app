@@ -3,7 +3,13 @@
 //
 //   npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/replay-persona-chat.ts \
-//     --fixture calibration-confirm --runs 20 --arm after
+//     --fixture calibration-confirm --runs 20 --arm after [--model <id>]
+//
+// `--model` overrides BIG_MODEL for the run. That is how a CANDIDATE primary or
+// fallback is probed before it goes into lib/llm/constants.ts: same prompt,
+// same tool schema, same thinking gear as the app, pass rate over N runs. Every
+// run prints finish_reason, completion tokens and the raw tool arguments, so an
+// empty `{}` or a leaked template marker is visible without a second script.
 //
 // WHY THIS EXISTS. The two defects this harness measures are STOCHASTIC: the
 // model sometimes calls the tool and sometimes does not. A single run — or a
@@ -24,8 +30,11 @@ import {
   buildToolDefinitions,
   buildPersonaUpdateContext,
 } from '../../lib/news-harness/prompts/prompts';
-
-const BIG_MODEL = 'deepseek-ai/DeepSeek-V4-Flash';
+import {
+  BIG_MODEL,
+  CHAT_MAX_OUTPUT_TOKENS,
+  CHAT_REASONING_HEADROOM_TOKENS,
+} from '../../lib/llm/constants';
 
 interface WireMsg {
   role: 'user' | 'assistant';
@@ -51,22 +60,48 @@ interface Args {
   arm: 'before' | 'after';
   /** Append the P2 `## PENDING INVITATION` block to <context>. */
   intent: boolean;
+  /** Model id to post. Defaults to the shipped BIG_MODEL. */
+  model: string;
+  /** chat_template_kwargs.enable_thinking. Defaults ON, the app's chat gear. */
+  thinking: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { fixture: 'calibration-confirm', runs: 20, arm: 'after', intent: false };
+  const args: Args = {
+    fixture: 'calibration-confirm',
+    runs: 20,
+    arm: 'after',
+    intent: false,
+    model: BIG_MODEL,
+    thinking: true,
+  };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--fixture') args.fixture = argv[++i] ?? args.fixture;
     else if (a === '--runs') args.runs = Number(argv[++i] ?? args.runs);
     else if (a === '--arm') args.arm = (argv[++i] as Args['arm']) ?? args.arm;
     else if (a === '--intent') args.intent = true;
+    else if (a === '--model') args.model = argv[++i] ?? args.model;
+    else if (a === '--thinking') args.thinking = (argv[++i] ?? 'on') !== 'off';
   }
   return args;
 }
 
 interface ToolCall {
-  function?: { name?: string };
+  function?: { name?: string; arguments?: string };
+}
+
+interface RunResult {
+  tools: string[];
+  /** Raw JSON arguments per tool call, in call order — schema conformance is
+   *  judged by eye on these, exactly as the 2026-08-03 probe did. */
+  args: string[];
+  text: string;
+  finishReason: string;
+  completionTokens: number | undefined;
+  /** Wall time of the HTTP call — a reasoning model pays its trace here. */
+  latencyMs: number;
+  error?: string;
 }
 
 /** The P2 intent block, verbatim as planned. Measured here BEFORE shipping it,
@@ -79,8 +114,19 @@ async function runOnce(
   fixture: Fixture,
   arm: Args['arm'],
   intent: boolean,
+  model: string,
+  thinking: boolean,
   env: ReturnType<typeof loadHarnessEnv>,
-): Promise<{ tools: string[]; text: string; error?: string }> {
+): Promise<RunResult> {
+  const failed = (error: string): RunResult => ({
+    tools: [],
+    args: [],
+    text: '',
+    finishReason: '-',
+    completionTokens: undefined,
+    latencyMs: 0,
+    error,
+  });
   const systemPrompt = buildPersonaUpdateStaticPrompt({
     surface: 'CONFIG',
     includeToolFormat: false, // cloud path uses native tool calling
@@ -106,6 +152,7 @@ async function runOnce(
     ),
   ];
 
+  const startedAt = Date.now();
   const res = await fetch(`${env.nearAiBaseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -113,25 +160,39 @@ async function runOnce(
       authorization: `Bearer ${env.nearAiApiKey}`,
     },
     body: JSON.stringify({
-      model: BIG_MODEL,
+      model,
       messages,
       tools: buildToolDefinitions('CONFIG'),
       tool_choice: 'auto',
-      max_tokens: 1024,
+      // cloudChatStream adds the reasoning headroom on top of the answer budget.
+      max_tokens: CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
       temperature: 0.4,
+      // WIRE PARITY: cloudChatStream hardcodes thinking ON for chat turns. A
+      // reasoning model measured with thinking off is a different gear from the
+      // one the app ships, and the trace shares max_tokens with the answer.
+      chat_template_kwargs: { enable_thinking: thinking },
     }),
   });
 
   if (!res.ok) {
-    return { tools: [], text: '', error: `HTTP ${res.status}: ${(await res.text()).slice(0, 200)}` };
+    return failed(`HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
   }
   const json = (await res.json()) as {
-    choices?: { message?: { content?: string | null; tool_calls?: ToolCall[] } }[];
+    choices?: {
+      message?: { content?: string | null; tool_calls?: ToolCall[] };
+      finish_reason?: string;
+    }[];
+    usage?: { completion_tokens?: number };
   };
-  const msg = json.choices?.[0]?.message;
+  const choice = json.choices?.[0];
+  const msg = choice?.message;
   return {
     tools: (msg?.tool_calls ?? []).map((c) => c.function?.name ?? '?'),
+    args: (msg?.tool_calls ?? []).map((c) => c.function?.arguments ?? ''),
     text: (msg?.content ?? '').slice(0, 120),
+    finishReason: choice?.finish_reason ?? '-',
+    completionTokens: json.usage?.completion_tokens,
+    latencyMs: Date.now() - startedAt,
   };
 }
 
@@ -152,18 +213,29 @@ async function main(): Promise<number> {
   console.log(`arm     : ${args.arm} (${args.arm === 'before' ? 'final user turn only' : 'full history'})`);
   console.log(`runs    : ${args.runs}`);
   console.log(`intent  : ${args.intent ? 'PENDING INVITATION block present (P2)' : 'absent'}`);
-  console.log(`model   : ${BIG_MODEL}\n`);
+  console.log(`model   : ${args.model}${args.model === BIG_MODEL ? ' (BIG_MODEL)' : ' (override)'}`);
+  console.log(`thinking: ${args.thinking ? 'on (app chat gear)' : 'off'}\n`);
 
   let pass = 0;
   let errors = 0;
+  let lengthCapped = 0;
+  const latencies: number[] = [];
   const toolTally = new Map<string, number>();
 
   for (let i = 0; i < args.runs; i++) {
-    let out;
+    let out: RunResult;
     try {
-      out = await runOnce(fixture, args.arm, args.intent, env);
+      out = await runOnce(fixture, args.arm, args.intent, args.model, args.thinking, env);
     } catch (err) {
-      out = { tools: [], text: '', error: String(err) };
+      out = {
+        tools: [],
+        args: [],
+        text: '',
+        finishReason: '-',
+        completionTokens: undefined,
+        latencyMs: 0,
+        error: String(err),
+      };
     }
     if (out.error) {
       errors++;
@@ -171,6 +243,8 @@ async function main(): Promise<number> {
       continue;
     }
     for (const t of out.tools) toolTally.set(t, (toolTally.get(t) ?? 0) + 1);
+    if (out.finishReason === 'length') lengthCapped++;
+    latencies.push(out.latencyMs);
 
     const { toolCalled, toolNotCalled } = fixture.expect;
     const ok = toolCalled
@@ -179,8 +253,17 @@ async function main(): Promise<number> {
         ? !out.tools.includes(toolNotCalled)
         : false;
     if (ok) pass++;
+    const argsShown = out.args.map((a) => a.replace(/\s+/g, ' ').slice(0, 160)).join(' | ');
     console.log(
-      `  run ${String(i + 1).padStart(2)}: ${ok ? 'PASS' : 'FAIL'} tools=[${out.tools.join(', ')}] "${out.text.replace(/\n/g, ' ')}"`,
+      `  run ${String(i + 1).padStart(2)}: ${ok ? 'PASS' : 'FAIL'} finish=${out.finishReason} ` +
+        `ctok=${out.completionTokens ?? '?'} ms=${out.latencyMs} tools=[${out.tools.join(', ')}] ` +
+        `args=${argsShown || '-'} "${out.text.replace(/\n/g, ' ')}"`,
+    );
+  }
+  if (lengthCapped > 0) {
+    console.log(
+      `\nWARNING ${lengthCapped} run(s) hit max_tokens (${CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS}) — the thinking ` +
+        'trace is competing with the answer for the chat budget.',
     );
   }
 
@@ -191,6 +274,11 @@ async function main(): Promise<number> {
       (errors ? `  [${errors} transport errors excluded]` : ''),
   );
   console.log('tool calls seen:', Object.fromEntries(toolTally));
+  if (latencies.length > 0) {
+    const sorted = [...latencies].sort((a, b) => a - b);
+    const p = (q: number) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
+    console.log(`latency ms: median=${p(0.5)} p90=${p(0.9)} max=${sorted[sorted.length - 1]}`);
+  }
   return 0;
 }
 

@@ -429,8 +429,8 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
       // ---------- Forced extraction safety-net ----------
       // The first pass runs with tool_choice:'auto' for a fast, single-round-trip
       // reply — but 'auto' lets the model answer conversationally and skip the
-      // mandatory saveExtractedFacts call (DeepSeek-V4-Flash does exactly this on
-      // fact-worthy messages). When the first pass returns text but ZERO tool
+      // mandatory saveExtractedFacts call (the BIG primary has been observed to
+      // do exactly this on fact-worthy messages). When the first pass returns text but ZERO tool
       // calls, run a background pass with tool_choice:'required' so extraction
       // always happens, WITHOUT blocking the reply the user already sees. It
       // streams into a hidden id that is never inserted via setMessages, so no

@@ -15,7 +15,8 @@ import {
 } from '../e2ee/e2ee-service';
 import { invalidateCachedAttestation } from '../e2ee/e2ee-cache';
 import logger from '../logger';
-import { SMALL_MODEL } from './constants';
+import { CHAT_REASONING_HEADROOM_TOKENS, SMALL_MODEL } from './constants';
+import { stripLeakedReasoning } from './reasoning-leak';
 import {
   fallbackFor,
   reportModelFailure,
@@ -777,7 +778,10 @@ export async function cloudComplete(
   const encContent = msg?.content || msg?.reasoning_content || '';
   if (!encContent) return '';
 
-  return decryptContent(encContent, ctx.privateKey, ctx.algo).trim();
+  // Thinking is OFF here, and on GLM that can leak the trace INTO content as
+  // `trace</think>answer` (lib/llm/reasoning-leak). Strip before the caller
+  // parses it as JSON or shows it as prose.
+  return stripLeakedReasoning(decryptContent(encContent, ctx.privateKey, ctx.algo)).trim();
 }
 
 /** E2EE batch completion via /v1/chat/completions/batch. Shares E2EE context across all items. */
@@ -931,7 +935,8 @@ function mapBatchResults(
     }
 
     try {
-      const output = decryptContent(encContent, privateKey, algo).trim();
+      // Same thinking-off leak guard as cloudComplete — see lib/llm/reasoning-leak.
+      const output = stripLeakedReasoning(decryptContent(encContent, privateKey, algo)).trim();
       if (output.length === 0) {
         logger.warn(`${TAG} batch item decrypted to empty string`, {
           id: call.id,
@@ -1059,7 +1064,13 @@ export async function* cloudChatStream(
       body.tool_choice = request.toolChoice ?? 'auto';
     }
     if (request.temperature !== undefined) body.temperature = request.temperature;
-    if (request.maxTokens !== undefined) body.max_tokens = request.maxTokens;
+    // Thinking is ON above, and on a reasoning model the trace is billed and
+    // capped inside the same max_tokens as the visible answer. The caller's
+    // budget is for the answer; the headroom is for the trace — see
+    // CHAT_REASONING_HEADROOM_TOKENS for the measurement behind the number.
+    if (request.maxTokens !== undefined) {
+      body.max_tokens = request.maxTokens + CHAT_REASONING_HEADROOM_TOKENS;
+    }
     if (request.maxCompletionTokens !== undefined) body.max_completion_tokens = request.maxCompletionTokens;
     if (request.topP !== undefined) body.top_p = request.topP;
     if (request.n !== undefined) body.n = request.n;

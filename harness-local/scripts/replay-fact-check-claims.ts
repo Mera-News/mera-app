@@ -45,9 +45,11 @@ import {
   buildFeedbackContext,
   getArticleFeedbackToolDefinitions,
 } from '../../lib/news-harness/article-feedback/agent-core';
-
-const BIG_MODEL = 'deepseek-ai/DeepSeek-V4-Flash';
-const CHAT_MAX_OUTPUT_TOKENS = 1024;
+import {
+  BIG_MODEL,
+  CHAT_MAX_OUTPUT_TOKENS,
+  CHAT_REASONING_HEADROOM_TOKENS,
+} from '../../lib/llm/constants';
 /** Prompt guidance is ≤6 words; this is the reporting threshold for a pill that
  *  will visibly wrap on a card. */
 const LABEL_WORD_LIMIT = 6;
@@ -234,7 +236,8 @@ async function runOnce(fixture: Fixture, apiKey: string, baseUrl: string): Promi
     ],
     tools: getArticleFeedbackToolDefinitions('CLOUD'),
     tool_choice: 'auto',
-    max_tokens: CHAT_MAX_OUTPUT_TOKENS,
+    // cloudChatStream adds the reasoning headroom on top of the answer budget.
+    max_tokens: CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
     chat_template_kwargs: { enable_thinking: true },
   };
 

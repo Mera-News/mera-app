@@ -10,7 +10,7 @@ describe('llm/constants', () => {
     });
 
     it('contains the expected model identifier', () => {
-      expect(BIG_MODEL).toBe('deepseek-ai/DeepSeek-V4-Flash');
+      expect(BIG_MODEL).toBe('z-ai/glm-5.3-flash');
     });
 
     it('follows the provider/model-name pattern', () => {

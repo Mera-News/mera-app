@@ -90,11 +90,13 @@ import {
   type SseEvent,
 } from '../cloudComplete';
 import { __resetForTests as resetModelFallback, isFallbackEngaged } from '../model-fallback';
-import { SMALL_MODEL } from '../constants';
+import { CHAT_REASONING_HEADROOM_TOKENS, MODEL_FALLBACKS, SMALL_MODEL } from '../constants';
 import type { BatchCall } from '../types';
 import logger from '@/lib/logger';
 
-const FALLBACK_MODEL = 'google/gemma-4-31B-it';
+// Derived, not pinned: the id itself is asserted in model-fallback.test.ts, and
+// these specs test the MECHANICS of falling back, whichever model that is.
+const FALLBACK_MODEL = MODEL_FALLBACKS[SMALL_MODEL];
 
 /** A rejection whose wording matches expo/fetch's cancellation. */
 function makeCanceledError(): Error {
@@ -1856,7 +1858,9 @@ describe('cloudChatStream', () => {
     const [, init] = mockFetch.mock.calls[0] as [string, RequestInit];
     const body = JSON.parse(init.body as string);
     expect(body.temperature).toBe(0.9);
-    expect(body.max_tokens).toBe(256);
+    // The chat stream runs thinking ON, so the wire budget is the caller's
+    // answer budget plus the reasoning headroom (constants.ts).
+    expect(body.max_tokens).toBe(256 + CHAT_REASONING_HEADROOM_TOKENS);
     expect(body.top_p).toBe(0.95);
     expect(body.presence_penalty).toBe(0.1);
     expect(body.frequency_penalty).toBe(0.2);

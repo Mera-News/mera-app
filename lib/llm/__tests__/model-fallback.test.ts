@@ -46,12 +46,13 @@ describe('model-fallback', () => {
 
   describe('MODEL_FALLBACKS wiring', () => {
     it('maps each primary to its class-appropriate TEE-served fallback', () => {
-      // BIG backs the persona chat, which needs FUNCTION TOOL CALLING — a live
-      // probe (2026-08-03) showed GLM-5.1 is the only ready non-primary model
-      // that returns schema-conformant tool arguments. SMALL uses JSON mode, so
-      // the cheaper Gemma is right there. Rationale in constants.ts.
-      expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('zai-org/GLM-5.1-FP8');
-      expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('google/gemma-4-31B-it');
+      // BIG backs the persona chat, which needs FUNCTION TOOL CALLING — the
+      // 2026-09-11 probe showed Qwen3.8-27B is the only other ready TEE model
+      // that returns schema-conformant tool arguments. SMALL runs JSON-shaped
+      // prompts with thinking off, where GLM 5.3 Flash parsed 52/52. Rationale
+      // and the full probe table live in constants.ts.
+      expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('Qwen/Qwen3.8-27B');
+      expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('z-ai/glm-5.3-flash');
     });
 
     it('never falls back to a model that is its own primary', () => {
