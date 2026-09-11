@@ -51,6 +51,11 @@ export {
     useSubscriptionTier,
 } from './subscription-store';
 export { useTutorialsStore } from './tutorials-store';
+// Theme preference. Deliberately NOT reset in clearAllStores below: the theme is
+// DEVICE state, not the signed-in user's data, and flipping the app back to dark
+// under someone who chose light is not part of logging out. Note the settings row
+// itself does not survive, because clearAllStores calls unsafeResetDatabase().
+export { useThemeStore, type ThemePreference, type ResolvedTheme } from './theme-store';
 
 // Selectors
 export * from './selectors';

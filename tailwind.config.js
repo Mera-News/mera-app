@@ -4,6 +4,9 @@ module.exports = {
   content: [
     './app/**/*.{html,js,jsx,ts,tsx,mdx}',
     './components/**/*.{html,js,jsx,ts,tsx,mdx}',
+    // lib/ was missing here. It holds no className today, but lib/theme/* now
+    // lives under it and a class Tailwind never scans is purged with no error.
+    './lib/**/*.{html,js,jsx,ts,tsx,mdx}',
     './utils/**/*.{html,js,jsx,ts,tsx,mdx}',
     './*.{html,js,jsx,ts,tsx,mdx}',
     './src/**/*.{html,js,jsx,ts,tsx,mdx}',
@@ -48,6 +51,7 @@ module.exports = {
           950: 'rgb(var(--color-secondary-950)/<alpha-value>)',
         },
         tertiary: {
+          0: 'rgb(var(--color-tertiary-0)/<alpha-value>)',
           50: 'rgb(var(--color-tertiary-50)/<alpha-value>)',
           100: 'rgb(var(--color-tertiary-100)/<alpha-value>)',
           200: 'rgb(var(--color-tertiary-200)/<alpha-value>)',
