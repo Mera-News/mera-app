@@ -97,6 +97,7 @@ const SEARCH_PUBLISHERS = gql`
         website_url
         country_code
         country_name
+        subscription_uri
         matchingSources {
           _id
           publication_name

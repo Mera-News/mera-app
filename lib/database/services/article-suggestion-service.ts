@@ -1729,7 +1729,7 @@ function toClusterMemberships(
   });
 }
 
-function parseClusterMemberships(
+export function parseClusterMemberships(
   json: string | null | undefined,
 ): ClusterMembership[] {
   if (!json) return [];

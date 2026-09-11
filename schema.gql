@@ -394,6 +394,7 @@ type NewsPublisher {
   name: String!
   publicationSources: [PublicationSource!]!
   publication_type: String
+  subscription_uri: String
   updatedAt: DateTime!
   website_url: String
 }
@@ -578,6 +579,7 @@ type PublisherSearchHit {
   country_name: String
   matchingSources: [PublicationSource!]!
   name: String!
+  subscription_uri: String
   website_url: String
 }
 

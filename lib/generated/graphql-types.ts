@@ -413,6 +413,7 @@ export type NewsPublisher = {
   name: Scalars['String']['output'];
   publicationSources: Array<PublicationSource>;
   publication_type?: Maybe<Scalars['String']['output']>;
+  subscription_uri?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['DateTime']['output'];
   website_url?: Maybe<Scalars['String']['output']>;
 };
@@ -570,6 +571,7 @@ export type PublisherSearchHit = {
   country_name?: Maybe<Scalars['String']['output']>;
   matchingSources: Array<PublicationSource>;
   name: Scalars['String']['output'];
+  subscription_uri?: Maybe<Scalars['String']['output']>;
   website_url?: Maybe<Scalars['String']['output']>;
 };
 

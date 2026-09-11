@@ -44,9 +44,12 @@ export function withAppLanguage(url: string): string {
  * (so we don't clobber a publisher's own campaign tracking).
  *
  * `medium` becomes the `utm_medium` value so callers can distinguish an
- * in-app open (`referral`, the default) from a share (`share`).
+ * in-app open (`referral`, the default), a share (`share`), and a tap through
+ * to a publisher's own subscribe page (`subscription`).
  */
-export function appendReferrer(url: string, medium: string = 'referral'): string {
+export type ReferrerMedium = 'referral' | 'share' | 'subscription';
+
+export function appendReferrer(url: string, medium: ReferrerMedium = 'referral'): string {
     if (!url) return url;
     // Don't override an existing campaign source.
     if (/[?&]utm_source=/i.test(url)) return url;

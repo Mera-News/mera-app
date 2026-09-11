@@ -70,6 +70,17 @@ export default class ArticleSuggestion extends Model {
   // v1 and v3 scores are not on the same scale, so one global gate silently
   // deletes rows the other scorer was never judged against.
   @field('scored_with_v3') scoredWithV3!: boolean | null;
+  // Subscription read (schema v54): how a publication the USER PAYS FOR
+  // covered this story, written by `lib/mera-protocol/stage-subscription-read.ts`.
+  // Built from the sibling's title, `descriptionEn` and existing enrichment
+  // only — the body is paywalled and never fetched, so nothing derived from
+  // this may be phrased as having read the article.
+  //
+  // NULL is the normal resting state, NOT a pending one: most rows have no
+  // subscribed sibling and never will, so the UI renders the card without a
+  // read line rather than a spinner.
+  @field('subscription_read') subscriptionRead!: string | null;
+  @field('subscription_read_at') subscriptionReadAt!: number | null;
   @date('created_at') createdAt!: Date;
   @date('first_pub_date') firstPubDate!: Date;
 
