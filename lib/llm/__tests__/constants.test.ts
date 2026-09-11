@@ -10,7 +10,7 @@ describe('llm/constants', () => {
     });
 
     it('contains the expected model identifier', () => {
-      expect(BIG_MODEL).toBe('z-ai/glm-5.3-flash');
+      expect(BIG_MODEL).toBe('Qwen/Qwen3.8-27B');
     });
 
     it('follows the provider/model-name pattern', () => {

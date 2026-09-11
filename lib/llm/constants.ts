@@ -2,7 +2,7 @@
 // BIG  — persona-update chat (tool-calling, multi-turn) and quick fact-check synthesis.
 // SMALL — everything else: topic generation, relevance scoring, reason generation.
 
-export const BIG_MODEL = 'z-ai/glm-5.3-flash';
+export const BIG_MODEL = 'Qwen/Qwen3.8-27B';
 export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
 
 /**
@@ -24,31 +24,40 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *
  * MEASURED 2026-09-11 (harness-local/scripts/replay-persona-chat.ts and
  * replay-fact-extraction.ts, 20 and 10 runs per cell, the app's prompt, tool
- * schema and thinking gear; `--model` selects the candidate):
+ * schema and thinking gear; `--model` selects the candidate, `--stream` times
+ * the SSE body the way cloudChatStream consumes it):
  *
  *                       confirm  decline  conv   facts  completion tokens (median / p90 / max)
  *   DeepSeek-V4-Flash    20/20    20/20   20/20   9/10     29 /  43 /   58   (deprecated 2026-09-17)
  *   z-ai/glm-5.3-flash   20/20    20/20   14/20  10/10    238 / 834 / 1024
  *   Qwen/Qwen3.8-27B     20/20    20/20    2/20  10/10    195 / 274 /  742
  *
+ *   First VISIBLE streamed delta, 15 runs (median / p90 / max):
+ *                       tool turn                 conversational turn
+ *   DeepSeek-V4-Flash    1.2s /  6.8s / 86s        1.2s / 10.0s / 75s
+ *   z-ai/glm-5.3-flash   4.0s / 10.7s / 47s        8.5s / 26.1s / 55s
+ *   Qwen/Qwen3.8-27B     3.3s /  4.5s /  8s        2.0s /  3.3s /  8s
+ *
  *   BIG (persona chat) needs FUNCTION TOOL CALLING with schema-conformant
  *   arguments. Both remaining models pass confirm, decline and fact extraction;
  *   `conv` ("thanks!" after an invitation) is a behavioural difference, not a
  *   schema failure — GLM asks for confirmation where DeepSeek staged the card,
- *   Qwen moves on. GLM is the primary (tools + json_mode + structured outputs,
- *   1M context, 131k output cap, $0.15/$0.50 per 1M). Qwen3.8-27B is the only
- *   other TEE model that calls tools correctly, so it is the fallback at
- *   $0.44/$3.30, about 3x per turn, on a path that only runs when the primary
- *   has stalled.
+ *   Qwen moves on, so calibration needs an explicit yes. Qwen3.8-27B is the
+ *   primary because the SPEED TAIL decides chat UX: its worst turn is ~8s where
+ *   GLM's is 55s, since GLM thinks far longer on conversational prompts. It
+ *   costs $0.44/$3.30 per 1M, ~3x GLM per turn, on the low-volume path. GLM
+ *   5.3 Flash is the fallback (tools + json_mode, $0.15/$0.50) and the only
+ *   other TEE model that calls tools correctly.
  *
  *   THINKING STAYS ON for chat, and the budget carries headroom for it (see
- *   CHAT_REASONING_HEADROOM_TOKENS). GLM's completion tokens include its trace:
- *   7 of 60 turns used 800+ and 3 hit the 1024 cap, one of them truncating a
- *   tool call's arguments to `{}`. Thinking OFF is not an option on GLM:
+ *   CHAT_REASONING_HEADROOM_TOKENS). Qwen3.8 honours `enable_thinking:false`
+ *   but drops to 17/20 confirm and 3/10 composed facts without its trace, so
+ *   the flag stays on. GLM's completion tokens include its trace: 7 of 60
+ *   turns used 800+ and 3 hit the 1024 cap, one of them truncating a tool
+ *   call's arguments to `{}`; and thinking OFF is not an option on GLM at all:
  *   `enable_thinking:false` and `reasoning_effort:'none'` both return the trace
  *   INSIDE `content` as `trace</think>answer` (2/2 on a short prompt), which is
- *   the prefill leak the local path already strips. Qwen3.8 honours the flag
- *   but drops to 17/20 confirm and 3/10 composed facts without its trace.
+ *   the prefill leak the local path already strips.
  *
  *   SMALL (scoring / topics / reasons) sends JSON-shaped prompts with thinking
  *   off, never function tools. GLM 5.3 Flash replayed the article pipeline
@@ -61,7 +70,7 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  * This map is the single point to change if a different fallback is chosen.
  */
 export const MODEL_FALLBACKS: Record<string, string> = {
-  [BIG_MODEL]: 'Qwen/Qwen3.8-27B',
+  [BIG_MODEL]: 'z-ai/glm-5.3-flash',
   [SMALL_MODEL]: 'z-ai/glm-5.3-flash',
 };
 
@@ -87,10 +96,10 @@ export const CHAT_MAX_OUTPUT_TOKENS = 1024;
  * Extra `max_tokens` the CLOUD chat stream adds on top of the caller's budget,
  * because the cloud chat gear is thinking ON and a reasoning model's trace is
  * billed and capped inside the same `max_tokens` as the visible answer.
- * Measured on the BIG primary: trace median ~240 tokens, p90 ~830, and the
- * 1024 budget alone truncated 3 of 60 turns (one lost a tool call's arguments).
- * 2048 covers every trace seen; a longer one still ends as `finish_reason:
- * length` rather than being hidden. The visible answer is not lengthened by
+ * Measured on GLM 5.3 Flash (the BIG fallback): trace median ~240 tokens, p90
+ * ~830, and the 1024 budget alone truncated 3 of 60 turns (one lost a tool
+ * call's arguments); Qwen3.8-27B peaks at ~740. 2048 covers every trace seen;
+ * a longer one still ends as `finish_reason: length` rather than being hidden. The visible answer is not lengthened by
  * this — the prompts bound it, and no measured turn came near 1024 of prose —
  * so the shared CHAT_MAX_OUTPUT_TOKENS keeps its meaning on both engines.
  *
