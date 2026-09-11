@@ -401,7 +401,7 @@ const TopicPlanCard: React.FC<TopicPlanCardProps> = ({ factId, factStatement }) 
           className="flex-1 rounded-full bg-primary-400"
           size="sm"
         >
-          <ButtonText className="text-white text-sm">{t('topicPlan.save')}</ButtonText>
+          <ButtonText className="text-typography-0 text-sm">{t('topicPlan.save')}</ButtonText>
         </Button>
       </View>
     </Animated.View>

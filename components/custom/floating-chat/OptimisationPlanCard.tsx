@@ -304,7 +304,7 @@ const OptimisationPlanCard: React.FC = () => {
           className="flex-1 rounded-full bg-primary-400"
           size="sm"
         >
-          <ButtonText className="text-white text-sm">
+          <ButtonText className="text-typography-0 text-sm">
             {t('optimisationPlan.apply')}
           </ButtonText>
         </Button>
