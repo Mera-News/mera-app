@@ -220,7 +220,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
             className="flex-1 rounded-full bg-primary-400"
             size="sm"
           >
-            <ButtonText className="text-typography-0 text-sm">{t('factChoice.add')}</ButtonText>
+            <ButtonText className="text-white text-sm">{t('factChoice.add')}</ButtonText>
           </Button>
         </View>
       )}
