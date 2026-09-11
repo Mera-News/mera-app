@@ -18,6 +18,15 @@ let mockNeedsReauth = false;
 const mockPauseTask = jest.fn();
 const mockResumeTask = jest.fn();
 
+// What `authLink` would put on the wire. Empty string = no Cookie header,
+// which is what better-auth's expo client returns for an expired cookie AND
+// for a read the install-boundary latch is quarantining.
+const mockGetCookie = jest.fn(() => 'mera_session=abc');
+// Mutable for the same reason as mockNeedsReauth: the `mock` prefix is
+// load-bearing, babel-jest rejects other out-of-scope names in a factory.
+let mockQuarantineActive = false;
+const mockGetItemAsync = jest.fn(async (_key: string): Promise<string | null> => null);
+
 jest.mock('../logger', () => ({
   __esModule: true,
   default: {
@@ -29,6 +38,7 @@ jest.mock('../logger', () => ({
 jest.mock('../auth-client', () => ({
   authClient: {
     getSession: (...args: any[]) => mockGetSession(...args),
+    getCookie: () => mockGetCookie(),
   },
   clearAuthStorage: (...args: any[]) => mockClearAuthStorage(...args),
   invalidateJwtCache: (...args: any[]) => mockInvalidateJwtCache(...args),
@@ -39,6 +49,21 @@ jest.mock('../scheduler/AppScheduler', () => ({
     pauseTask: (...args: any[]) => mockPauseTask(...args),
     resumeTask: (...args: any[]) => mockResumeTask(...args),
   },
+}));
+
+jest.mock('../security/install-boundary-latch', () => ({
+  isAuthReadQuarantineActive: () => mockQuarantineActive,
+}));
+
+jest.mock('../utils/secure-store-adapter', () => ({
+  secureStore: {
+    getItemAsync: (key: string) => mockGetItemAsync(key),
+  },
+}));
+
+jest.mock('expo-constants', () => ({
+  __esModule: true,
+  default: { expoConfig: { slug: 'mera' } },
 }));
 
 jest.mock('../stores/user-store', () => ({
@@ -66,6 +91,14 @@ beforeEach(() => {
   jest.clearAllMocks();
   _resetForTests();
   mockNeedsReauth = false;
+  mockQuarantineActive = false;
+  mockGetCookie.mockReturnValue('mera_session=abc');
+  mockGetItemAsync.mockResolvedValue(null);
+  // mockReset, not just clearAllMocks: `clear` empties recorded calls but does
+  // NOT drain queued mockResolvedValueOnce values, so an unconsumed one from a
+  // previous test leaks into the next and shows up as a wrong verdict far from
+  // its cause.
+  mockGetSession.mockReset();
   // Default: re-check finds a live session (so an incidental trip doesn't log out).
   mockGetSession.mockResolvedValue({ data: { session: { id: 's1' } } });
 });
@@ -122,7 +155,7 @@ describe('recordAuthFailure — tripping', () => {
       expect.objectContaining({
         level: 'warning',
         tags: { source: 'auth-breaker', type: 'auth' },
-        extra: { consecutiveFailures: 3, recheck: 'dead' },
+        extra: expect.objectContaining({ consecutiveFailures: 3, recheck: 'dead' }),
       }),
     );
     expect(mockPauseTask).toHaveBeenCalledWith('feed-sync');
@@ -480,5 +513,225 @@ describe('onNetworkReconnect', () => {
     await flush();
     expect(mockGetSession).toHaveBeenCalledTimes(2);
     expect(mockResumeTask).toHaveBeenCalledWith('feed-sync');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// MERA-APP-75. Two defects, one issue:
+//
+//  1. `recheck: 'dead'` was inferred from "the response carried no session",
+//     which is ALSO what a request with no Cookie header gets back. better-auth's
+//     expo client filters expired cookies client-side and the install-boundary
+//     latch hides the keychain at launch, so several unrelated causes all
+//     rendered as one opaque "dead".
+//  2. The trip path had no already-dead guard (onAppForeground and
+//     onNetworkReconnect both have one), so a session the app already knew was
+//     dead was re-reported on every cold start.
+// ---------------------------------------------------------------------------
+
+describe('no-credential: the re-check could not present anything', () => {
+  // The launch race: the latch answers null to sync auth reads until the
+  // install boundary decides, so the re-check goes out with no Cookie header
+  // and the server answers 200-with-no-session. Identical wire response to a
+  // genuinely dead session; the difference is entirely on our side.
+  async function tripNoCredential() {
+    mockQuarantineActive = true;
+    mockGetCookie.mockReturnValue('');
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+  }
+
+  it('asserts nothing: no Sentry event and no needsReauth flag', async () => {
+    // The whole bug. Byte-identical server response to the "DEAD session" test
+    // above; the only difference is that we had nothing to send.
+    await tripNoCredential();
+
+    expect(mockCaptureMessage).not.toHaveBeenCalled();
+    expect(mockSetNeedsReauth).not.toHaveBeenCalledWith(true);
+  });
+
+  it('still pauses feed-sync and leaves the breaker open for a retry', async () => {
+    // There is nothing to poll WITH, so the poller stops - but no verdict is
+    // persisted, which is what keeps the recovery paths open below.
+    await tripNoCredential();
+
+    expect(mockPauseTask).toHaveBeenCalledWith('feed-sync');
+    expect(_getBreakerState().breakerOpen).toBe(true);
+  });
+
+  it('self-heals on foreground once the latch has released', async () => {
+    // The recovery loop this outcome depends on, and the reason it must NOT
+    // set needsReauth: onAppForeground early-returns on that flag. Never
+    // setting it is what keeps the door open.
+    await tripNoCredential();
+    expect(_getBreakerState().breakerOpen).toBe(true);
+    jest.clearAllMocks();
+
+    // Boundary released, real cookie visible again, session was fine all along.
+    mockQuarantineActive = false;
+    mockGetCookie.mockReturnValue('mera_session=abc');
+    mockGetSession.mockResolvedValueOnce({ data: { session: { id: 's1' } } });
+
+    onAppForeground();
+    await flush();
+
+    expect(mockResumeTask).toHaveBeenCalledWith('feed-sync');
+    expect(_getBreakerState().breakerOpen).toBe(false);
+    expect(_getBreakerState().consecutiveFailures).toBe(0);
+  });
+
+  it('honours the 60s re-check cooldown after a no-credential outcome', async () => {
+    await tripNoCredential();
+    jest.clearAllMocks();
+    // Latch released; the breaker is still open awaiting a retry.
+    mockQuarantineActive = false;
+    mockGetCookie.mockReturnValue('mera_session=abc');
+
+    // A later failure must not hammer getSession: the bottom branch of
+    // recordAuthFailure is cooldown-gated, and no-credential is no exception.
+    recordAuthFailure();
+    expect(mockGetSession).not.toHaveBeenCalled();
+
+    // Past RECHECK_COOLDOWN_MS (60s), it re-asks.
+    const realNow = Date.now();
+    const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(realNow + 61_000);
+    try {
+      recordAuthFailure();
+      expect(mockGetSession).toHaveBeenCalledTimes(1);
+    } finally {
+      nowSpy.mockRestore();
+    }
+    await flush();
+  });
+});
+
+describe('one event per dead-state transition', () => {
+  async function tripDead() {
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+  }
+
+  it('reports the transition into the dead state', async () => {
+    mockNeedsReauth = false;
+    await tripDead();
+    expect(mockCaptureMessage).toHaveBeenCalledTimes(1);
+    expect(mockSetNeedsReauth).toHaveBeenCalledWith(true);
+  });
+
+  it('does NOT re-report a session already known dead, but still pauses', async () => {
+    // The cold-start case: breaker state died with the last process, the
+    // verdict did not. Re-earning the trip must not re-earn the event.
+    mockNeedsReauth = true;
+    await tripDead();
+
+    expect(mockCaptureMessage).not.toHaveBeenCalled();
+    expect(mockPauseTask).toHaveBeenCalledWith('feed-sync');
+  });
+});
+
+describe('the event says WHICH cause it was', () => {
+  it('a 200 with no session reports deadReason no-session', async () => {
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+
+    const extra = mockCaptureMessage.mock.calls[0][1].extra;
+    expect(extra.recheck).toBe('dead');
+    expect(extra.deadReason).toBe('no-session');
+    expect(extra.repeat).toBe(false);
+  });
+
+  it('an explicit 401 reports deadReason rejected, whatever we thought we sent', async () => {
+    mockGetSession.mockResolvedValueOnce({ data: null, error: { status: 401 } });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+
+    const extra = mockCaptureMessage.mock.calls[0][1].extra;
+    expect(extra.deadReason).toBe('rejected');
+  });
+
+  it('distinguishes an EXPIRED cookie from an absent one', async () => {
+    // Nothing on the wire, latch inactive, but the keychain still holds an
+    // entry: better-auth filtered it as expired. A real lapse, correctly dead,
+    // and now legible as such in Sentry.
+    mockGetCookie.mockReturnValue('');
+    mockQuarantineActive = false;
+    mockGetItemAsync.mockResolvedValue('{"mera_session":{"value":"x","expires":"2020-01-01"}}');
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+
+    const extra = mockCaptureMessage.mock.calls[0][1].extra;
+    expect(extra.credentialState).toBe('expired');
+    expect(extra.recheck).toBe('dead');
+  });
+
+  it('reports absent when the keychain holds nothing', async () => {
+    mockGetCookie.mockReturnValue('');
+    mockQuarantineActive = false;
+    mockGetItemAsync.mockResolvedValue(null);
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+
+    expect(mockCaptureMessage.mock.calls[0][1].extra.credentialState).toBe('absent');
+  });
+
+  it('reports unreadable when the keychain read rejects', async () => {
+    // A locked keychain still falls through to dead (closing that needs an
+    // adapter-side signal), but it no longer does so anonymously.
+    mockGetCookie.mockReturnValue('');
+    mockQuarantineActive = false;
+    mockGetItemAsync.mockRejectedValue(new Error('keychain locked'));
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+
+    expect(mockCaptureMessage.mock.calls[0][1].extra.credentialState).toBe('unreadable');
+  });
+
+  it('keeps the pinned fingerprint', async () => {
+    // Load-bearing: captureMessage otherwise groups on an async stack and one
+    // string becomes four issues.
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+
+    expect(mockCaptureMessage.mock.calls[0][1].fingerprint).toEqual(['auth-breaker-tripped']);
+  });
+});
+
+describe('recordAuthSuccess does not retract a verdict it cannot have earned', () => {
+  it('clears needsReauth when a credential was actually held', () => {
+    mockGetCookie.mockReturnValue('mera_session=abc');
+    recordAuthSuccess();
+    expect(mockSetNeedsReauth).toHaveBeenCalledWith(false);
+  });
+
+  it('does NOT clear needsReauth when there was no cookie to authenticate with', () => {
+    // The Apollo success link fires for ANY error-free result, including
+    // operations that carried no credential and needed none. Such a success
+    // cannot be evidence that our session is alive.
+    mockGetCookie.mockReturnValue('');
+    recordAuthSuccess();
+    expect(mockSetNeedsReauth).not.toHaveBeenCalled();
   });
 });

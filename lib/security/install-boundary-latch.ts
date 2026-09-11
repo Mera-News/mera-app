@@ -36,6 +36,16 @@ export function isAuthReadQuarantined(key: string): boolean {
   return QUARANTINED_KEY_SUFFIXES.some((suffix) => key.endsWith(suffix));
 }
 
+/** Whether the quarantine is still latched, with no key to spell. The auth
+ *  breaker samples this at the exact moment it reads the cookie: a request
+ *  built while this is true went out WITHOUT a credential, so a "no session"
+ *  answer to it proves nothing about the session. Zero-arg on purpose -
+ *  `isAuthReadQuarantined` would make every caller write `${APP_SLUG}_cookie`
+ *  out again, and a second copy of that key is a thing to keep in sync. */
+export function isAuthReadQuarantineActive(): boolean {
+  return authReadsQuarantined;
+}
+
 export function releaseAuthReadQuarantine(): void {
   authReadsQuarantined = false;
 }

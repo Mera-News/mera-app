@@ -28,6 +28,17 @@ const RECHECK_COOLDOWN_MS = 60_000;
 
 const FEED_SYNC_TASK = 'feed-sync';
 
+// NOT counting a failure while the auth-read quarantine is engaged was tried
+// and withdrawn. The latch defaults to ENGAGED at import and is released only
+// by `enforceInstallBoundary`, so in any process that never boots the launch
+// gate it stays engaged forever - and suppressing there blinds the breaker to
+// real 401s. lib/__tests__/logger.test.ts pins exactly that contract ("a
+// network 401 feeds the auth breaker"), written after one dead session shipped
+// five separate Sentry issues. The verdict gate in triggerRecheck is where the
+// cookie-less case is handled instead: it costs a transient feed-sync pause
+// during the launch window, and buys back nothing that the breaker needs to
+// stay blind for.
+
 // Module-level state (mirrors the in-flight-dedupe style of auth-client's JWT
 // cache). Reset in tests via _resetForTests().
 let consecutiveFailures = 0;
@@ -37,11 +48,42 @@ let lastRecheckAt = 0;
 // Monotonic — deliberately NOT reset by _resetForTests, so an abandoned run can
 // never collide with the token of the run that replaced it.
 let recheckToken = 0;
+// Details of the most recent re-check, for the trip callback to attach to its
+// Sentry event. Module state rather than a wider return type, to keep
+// RecheckOutcome a single value that callers can compare.
+let lastRecheckDetail: {
+  deadReason?: DeadReason;
+  credentialState: CredentialState;
+} = { credentialState: 'unknown' };
 
 // What the server-truth re-check concluded. Returned (rather than inferred
 // from breakerOpen) so callers can't confuse "session proved alive" with
 // "breaker closed by a concurrent recordAuthSuccess".
-type RecheckOutcome = 'alive' | 'dead' | 'inconclusive';
+//
+// 'no-credential' is NOT a weaker 'dead'. It means the re-check request went
+// out with no Cookie header at all, because the install-boundary latch was
+// hiding the keychain - so the server's "no session" answer describes OUR
+// request, not the session. Kept distinct from 'inconclusive' because that one
+// still reports (see the trip callback): only 'alive' and 'no-credential'
+// return without a Sentry event.
+type RecheckOutcome = 'alive' | 'dead' | 'inconclusive' | 'no-credential';
+
+// Why a 'dead' verdict was reached. 'rejected' is the server explicitly
+// refusing the credential we sent; 'no-session' is a 200 that simply carried
+// no session. Split because ONE string for both is what made MERA-APP-75
+// unreadable: four unrelated causes all rendered as "dead".
+type DeadReason = 'rejected' | 'no-session';
+
+// Diagnostic only - never gates a verdict. Answers "which of the cookie-less
+// causes was this" on the Sentry event.
+type CredentialState =
+  | 'present'      // getCookie() returned something: the server really saw it
+  | 'expired'      // nothing sent, but the keychain holds entries - better-auth
+                   // filters expired cookies client-side, so this is a real lapse
+  | 'absent'       // nothing sent and nothing stored
+  | 'quarantined'  // the install-boundary latch was hiding the sync read
+  | 'unreadable'   // the keychain read rejected (locked / transient)
+  | 'unknown';     // the probe itself failed; never blocks the verdict
 
 interface AuthErrorLike {
   status?: number;
@@ -118,6 +160,78 @@ function getNeedsReauth(): boolean {
 }
 
 /**
+ * What `authLink` would put on the wire right now. An empty string means it
+ * would send NO Cookie header - which better-auth's expo client returns both
+ * for an EXPIRED cookie (it filters expired entries client-side,
+ * @better-auth/expo/dist/client.mjs:78-90) and for a read the install-boundary
+ * latch is quarantining.
+ *
+ * Read SYNCHRONOUSLY at the moment a request is built. Sampled after an await
+ * it describes a different instant: the latch can release mid-flight, and we
+ * would then credit a cookie to a request that went out without one.
+ */
+function safeGetCookie(): string {
+  try {
+    const { authClient } =
+      require('./auth-client') as typeof import('./auth-client');
+    return authClient.getCookie() || '';
+  } catch {
+    return '';
+  }
+}
+
+/** Whether the install-boundary latch is hiding sync auth reads right now. */
+function isQuarantineActive(): boolean {
+  try {
+    const { isAuthReadQuarantineActive } =
+      require('./security/install-boundary-latch') as typeof import('./security/install-boundary-latch');
+    return isAuthReadQuarantineActive();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Diagnostic explainer for the Sentry event: which cookie-less cause was in
+ * play. Deliberately NOT part of any verdict - it runs after the decision is
+ * made and degrades to 'unknown' on any failure.
+ *
+ * Uses the ASYNC keychain API on purpose. That one is neither quarantined nor
+ * error-swallowing (lib/utils/secure-store-adapter.ts), so it is the only way
+ * to tell "nothing stored" from "stored but filtered out as expired", and a
+ * rejection from it is a genuinely unreadable keychain. Never returns or logs
+ * the cookie VALUE, only the derived state.
+ */
+async function readCredentialState(
+  cookieAtRequest: string,
+  quarantinedAtRequest: boolean,
+): Promise<CredentialState> {
+  if (cookieAtRequest) return 'present';
+  if (quarantinedAtRequest) return 'quarantined';
+
+  let raw: string | null;
+  try {
+    const { secureStore } =
+      require('./utils/secure-store-adapter') as typeof import('./utils/secure-store-adapter');
+    const Constants = (require('expo-constants') as { default?: { expoConfig?: { slug?: string } } })
+      .default;
+    const slug = Constants?.expoConfig?.slug || 'app';
+    raw = await secureStore.getItemAsync(`${slug}_cookie`);
+  } catch {
+    return 'unreadable';
+  }
+
+  try {
+    if (!raw) return 'absent';
+    const parsed = JSON.parse(raw) as Record<string, unknown> | null;
+    if (!parsed || typeof parsed !== 'object') return 'absent';
+    return Object.keys(parsed).length === 0 ? 'absent' : 'expired';
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
  * Records one auth failure (a 401 / UNAUTHENTICATED observed by the Apollo
  * ErrorLink or by a service-level catch). On the AUTH_FAILURE_THRESHOLD-th
  * consecutive failure the breaker trips: it attempts repair first (drop the
@@ -140,6 +254,15 @@ export function recordAuthFailure(): void {
     // this repair attempt rather than starting their own.
     breakerOpen = true;
     const failuresAtTrip = consecutiveFailures;
+    // Sampled BEFORE the re-check: if the app already knew this session was
+    // dead, this trip is rediscovering a state it has carried since the last
+    // launch and must not re-report it. Breaker state is module-local and dies
+    // with the process, but the verdict persists in the needs_reauth settings
+    // row and rehydrates, which is why "trips once" was only ever true PER
+    // PROCESS - MERA-APP-75 collected one event per cold start per user.
+    // The in-memory read suffices: app/logged-in/index.tsx awaits
+    // hydrateFromDb() before firing the authenticated queries that trip this.
+    const alreadyDead = getNeedsReauth();
 
     invalidateJwtCache();
     void triggerRecheck().then((outcome) => {
@@ -151,10 +274,40 @@ export function recordAuthFailure(): void {
       // that is fresher and stronger proof — pausing here would strand
       // feed-sync paused with breakerOpen === false, which nothing resumes.
       if (!breakerOpen) return;
+
+      // We never presented a credential, so nothing was proven. Pause the
+      // poller (there is nothing to poll WITH) but assert nothing: no
+      // needs_reauth, no Sentry event. Recovery needs no new machinery - the
+      // flag was never set, so onAppForeground / onNetworkReconnect do NOT
+      // early-return and re-ask once the latch releases; an 'alive' answer
+      // then closes the breaker and resumes feed-sync.
+      if (outcome === 'no-credential') {
+        logger.addBreadcrumb(
+          'Auth breaker re-check had no credential to present',
+          'auth-breaker',
+          { credentialState: lastRecheckDetail.credentialState },
+          'warning',
+        );
+        pauseFeedSync();
+        return;
+      }
+
+      // Report the TRANSITION into the dead state, not every rediscovery of
+      // it. Pausing stays unconditional below: it is idempotent, and skipping
+      // it would leave a known-dead session polling.
+      if (!alreadyDead) {
       logger.captureMessage('Auth circuit breaker tripped', {
         level: 'warning',
         tags: { source: 'auth-breaker', type: 'auth' },
-        extra: { consecutiveFailures: failuresAtTrip, recheck: outcome },
+        extra: {
+          consecutiveFailures: failuresAtTrip,
+          recheck: outcome,
+          // Which branch produced the verdict, and what we actually held at
+          // the time. Without these, unrelated causes are one opaque string.
+          deadReason: lastRecheckDetail.deadReason,
+          credentialState: lastRecheckDetail.credentialState,
+          repeat: alreadyDead,
+        },
         // This message is emitted from a .then() callback, so its stack is
         // whatever async frames happened to be live at the time. Sentry groups
         // captureMessage on that stack, which split ONE recurring event across
@@ -165,6 +318,7 @@ export function recordAuthFailure(): void {
         // that trips once.
         fingerprint: ['auth-breaker-tripped'],
       });
+      }
       pauseFeedSync();
     });
     return;
@@ -186,9 +340,20 @@ export function recordAuthFailure(): void {
 export function recordAuthSuccess(): void {
   const wasOpen = breakerOpen;
   consecutiveFailures = 0;
-  // A successful authenticated op proves the session is alive — clear any
-  // stale needs-reauth flag (idempotent no-op if it wasn't set).
-  setNeedsReauth(false);
+  // "Error-free response" is NOT the same as "authenticated response". The
+  // Apollo success link calls this for ANY result without errors, including
+  // ones for operations that carried no credential and needed none - and
+  // clearing needs_reauth on one of those retracts a confirmed-dead verdict
+  // that nothing re-establishes until the next trip. app/logged-in/index.tsx
+  // already carries a local workaround for this exact defect.
+  //
+  // We cannot see the operation from here, but we can see whether there was a
+  // credential to authenticate WITH: an empty cookie means this success cannot
+  // have been ours. Narrow, and it fails safe - a present cookie behaves
+  // exactly as before.
+  if (safeGetCookie()) {
+    setNeedsReauth(false);
+  }
   if (wasOpen) {
     breakerOpen = false;
     resumeFeedSync();
@@ -292,6 +457,15 @@ function triggerRecheck(): Promise<RecheckOutcome> {
     const { authClient } =
       require('./auth-client') as typeof import('./auth-client');
 
+    // Sampled SYNCHRONOUSLY, immediately before the request, because this is
+    // the only instant at which they describe the request we are about to
+    // make. The install-boundary latch can release mid-flight, and a cookie
+    // read after the await would credit a credential to a request that went
+    // out without one - reproducing the false 'dead' this exists to remove.
+    const cookieAtRequest = safeGetCookie();
+    const quarantinedAtRequest = isQuarantineActive();
+    lastRecheckDetail = { credentialState: 'unknown' };
+
     try {
       // disableCookieCache forces a server round-trip instead of trusting the
       // locally cached cookie — we need server truth here. (better-auth-expo
@@ -313,8 +487,27 @@ function triggerRecheck(): Promise<RecheckOutcome> {
 
       const error = result?.error;
       if (!error) {
-        // Server responded with no session — genuinely logged out. Flag for
-        // re-auth instead of ejecting; keep the breaker open so feed-sync
+        // A 200 carrying no session does NOT prove the session is dead - it is
+        // also exactly what a request with no Cookie header gets back. If the
+        // latch was hiding the keychain when we built this request, we asked
+        // the question anonymously and the answer is about us, not the session.
+        // (better-auth's expo client also drops EXPIRED cookies client-side, so
+        // a real lapse arrives here too, with the latch inactive - that one is
+        // a genuine 'dead' and still flags for re-auth.)
+        if (!cookieAtRequest && quarantinedAtRequest) {
+          lastRecheckDetail = { credentialState: 'quarantined' };
+          return 'no-credential';
+        }
+        lastRecheckDetail = {
+          deadReason: 'no-session',
+          credentialState: await readCredentialState(
+            cookieAtRequest,
+            quarantinedAtRequest,
+          ),
+        };
+        // Past the gate above, a credential really was available, so "no
+        // session" IS the server's verdict on it: genuinely logged out. Flag
+        // for re-auth instead of ejecting; keep the breaker open so feed-sync
         // stays paused until the user signs in again.
         setNeedsReauth(true);
         return 'dead';
@@ -322,6 +515,15 @@ function triggerRecheck(): Promise<RecheckOutcome> {
 
       const status = error.status ?? error.statusCode;
       if (status === 401 || status === 403) {
+        // An explicit rejection is server truth whatever we think we sent, so
+        // this branch is NOT gated on the credential state.
+        lastRecheckDetail = {
+          deadReason: 'rejected',
+          credentialState: await readCredentialState(
+            cookieAtRequest,
+            quarantinedAtRequest,
+          ),
+        };
         // Server explicitly rejected the session — flag for re-auth, no eject.
         setNeedsReauth(true);
         return 'dead';
@@ -335,6 +537,12 @@ function triggerRecheck(): Promise<RecheckOutcome> {
         { status },
         'warning',
       );
+      lastRecheckDetail = {
+        credentialState: await readCredentialState(
+          cookieAtRequest,
+          quarantinedAtRequest,
+        ),
+      };
       return 'inconclusive';
     } catch (e) {
       // Threw (typically a network failure) — keep the breaker open for retry.
@@ -344,6 +552,12 @@ function triggerRecheck(): Promise<RecheckOutcome> {
         { error: String(e) },
         'warning',
       );
+      lastRecheckDetail = {
+        credentialState: await readCredentialState(
+          cookieAtRequest,
+          quarantinedAtRequest,
+        ),
+      };
       return 'inconclusive';
     } finally {
       // Identity guard: onAppForeground abandons an in-flight re-check by
@@ -363,6 +577,7 @@ export function _resetForTests(): void {
   breakerOpen = false;
   pendingRecheck = null;
   lastRecheckAt = 0;
+  lastRecheckDetail = { credentialState: 'unknown' };
 }
 
 /** Test-only / diagnostics: current breaker state snapshot. */
