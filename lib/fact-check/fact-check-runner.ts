@@ -71,7 +71,29 @@
  */
 
 import type { WireMessage } from '../llm/cloudComplete';
+import type { UntrustedText } from '@/lib/news-harness/prompts/untrusted-text';
 import { MAX_QUERY_CHARS, type WebSearchResult } from '../web-search/web-search-client';
+
+/**
+ * A search hit whose prompt-bound fields have been through `asUntrusted`.
+ *
+ * WHY A TYPE AND NOT A SANITISE-INSIDE-THE-BUILDER CALL. `asUntrusted` is NOT
+ * idempotent: its fence escaping rewrites `<<` to `< <`, and an odd run walks
+ * on every pass — `<<<` becomes `< <<`, then `< < <`. Sanitising inside the
+ * builder would therefore double-process anything a caller had already
+ * sanitised and shift the prompt bytes under it. Requiring the brand pushes the
+ * single sanitise to the boundary where the untrusted string enters, which is
+ * also the only place that knows the right character budget.
+ *
+ * `url` is included because it is interpolated into the numbered block the model
+ * reads. Keep the RAW row for citations: those are rendered to the user, and
+ * this type is deliberately not the shape `resolveCitations` takes.
+ */
+export interface SanitisedEvidence {
+  title: UntrustedText;
+  url: UntrustedText;
+  snippet: UntrustedText;
+}
 
 // ───────────────────────────────────────────────────────────────────────────
 // Payload fragments
@@ -260,12 +282,31 @@ const SYNTHESIS_SYSTEM = [
   'unverifiable = the evidence does not settle it. At most 4 entries in "claims".',
 ].join('\n');
 
+/**
+ * The synthesis prompt.
+ *
+ * Every publisher- or web-controlled field it interpolates is typed
+ * `UntrustedText`, so a caller cannot hand it a raw string: the evidence rows,
+ * the article headline and the publication name all have to come through
+ * `asUntrusted` first. That is what makes this builder safe for a caller other
+ * than the one that exists today.
+ *
+ * `claim` is deliberately NOT branded. It is the sub-assertion the user picked
+ * off a fact-check card and confirmed, not a string a publisher wrote, and it is
+ * rendered back to the user verbatim — escaping it would put escaped text on
+ * screen. If a future caller ever derives a claim straight from article text
+ * without a confirm step, brand it then.
+ */
 export function buildSynthesisMessages(
   claim: string,
-  evidence: WebSearchResult[],
-  articleTitle?: string | null,
-  publicationName?: string | null,
+  evidence: readonly SanitisedEvidence[],
+  articleTitle?: UntrustedText | null,
+  publicationName?: UntrustedText | null,
 ): WireMessage[] {
+  // The 320-char slice runs on the ALREADY-ESCAPED snippet. That is safe in the
+  // one direction that matters: a slice only drops a suffix, and dropping
+  // characters cannot join two others back into a `<<` or a `>>`. It can cut a
+  // `< <` down to `< `, which is inert.
   const lines = evidence.map(
     (e, i) =>
       `[${i + 1}] ${e.title}\n${e.url}\n${(e.snippet ?? '').slice(0, 320)}`,

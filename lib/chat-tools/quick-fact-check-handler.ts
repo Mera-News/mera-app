@@ -248,10 +248,15 @@ export async function handleQuickFactCheck(
     // RAW values stay on `input` — they are rendered on the fact-check card and
     // sent to the server with the async request, so only this prompt-bound copy
     // is escaped.
-    input.articleTitle ? asUntrusted(input.articleTitle, input.articleTitle.length) : input.articleTitle,
+    // `null` rather than the original falsy value: the builder branches on
+    // truthiness anyway, and an empty string is a plain `string` that the
+    // branded parameter would (correctly) refuse.
+    input.articleTitle
+      ? asUntrusted(input.articleTitle, input.articleTitle.length)
+      : null,
     input.publicationName
       ? asUntrusted(input.publicationName, input.publicationName.length)
-      : input.publicationName,
+      : null,
   );
   const systemPrompt = typeof messages[0]?.content === 'string' ? messages[0].content : '';
   const prompt = typeof messages[1]?.content === 'string' ? messages[1].content : '';
