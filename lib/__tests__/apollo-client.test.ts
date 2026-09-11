@@ -8,7 +8,7 @@ jest.mock('@/lib/database/index', () => {
   return makeDatabaseMock();
 });
 
-import client, { shouldRetryOperation } from '@/lib/apollo-client';
+import client, { parseRetryAfterMs, shouldRetryOperation, throttleWaitMs } from '@/lib/apollo-client';
 import { gql } from '@apollo/client';
 import { __resetIdentityFaultForTests } from '@/lib/security/identity-gate';
 import {
@@ -254,6 +254,31 @@ describe('apollo-client', () => {
         expect.objectContaining({ state: 'failed', headlineKey: 'sync.syncFailed' }),
       );
     });
+
+    // The real caller, not a probe. AppVersionService is a best-effort startup
+    // check on a server-whitelisted public query with no relationship to the
+    // feed, so a throttled version check must not tell the user their news is
+    // broken. Asserted through the service rather than by restating its context
+    // object, so removing the opt-out at the call site fails here.
+    it('does not paint the banner for the app-version check', async () => {
+      // syncSpy is re-spied in beforeEach but jest.spyOn on an already-spied
+      // method returns the SAME mock, so its call log carries over from the
+      // preceding tests in this block. Clear it, or this assertion fails on
+      // someone else's banner.
+      syncSpy.mockClear();
+      const { AppVersionService } = require('@/lib/app-version-service');
+      await expect(AppVersionService.getVersionInfo()).rejects.toBeTruthy();
+      expect(syncSpy).not.toHaveBeenCalled();
+    });
+
+    // The opt-out suppresses the banner only. Losing the Sentry capture with it
+    // would turn a visible failure into a silent one.
+    it('still reports the app-version failure to Sentry', async () => {
+      const captureSpy = jest.spyOn(logger, 'captureException');
+      const { AppVersionService } = require('@/lib/app-version-service');
+      await expect(AppVersionService.getVersionInfo()).rejects.toBeTruthy();
+      expect(captureSpy).toHaveBeenCalled();
+    });
   });
 
   // ── errorLink Sentry-capture gating (Sentry MERA-APP-5F/4P/4N) ───────────
@@ -391,5 +416,102 @@ describe('apollo-client', () => {
       expect(useUserStore.getState().needsReauth).toBe(false);
       expect(captureSpy).toHaveBeenCalled();
     });
+  });
+});
+
+// ── Retry-After ────────────────────────────────────────────────────────────
+// ErrorLink's callback receives no headers, but the raw Response is reachable:
+// BaseHttpLink calls operation.setContext({ response }) before parsing, and
+// createOperation hands every link the same closure-backed context. For a real
+// HTTP 429 the response is on the ServerError itself, which is what the network
+// branch reads - RetryLink reuses the operation across attempts, so the context
+// copy can be a previous attempt's.
+describe('parseRetryAfterMs', () => {
+  const withHeader = (value: string | null) => ({
+    headers: { get: (name: string) => (name === 'retry-after' ? value : null) },
+  });
+
+  it('parses delta-seconds', () => {
+    expect(parseRetryAfterMs(withHeader('5'))).toBe(5000);
+  });
+
+  it('parses 0 as an immediate retry, not as absent', () => {
+    expect(parseRetryAfterMs(withHeader('0'))).toBe(0);
+  });
+
+  it('parses an HTTP-date into a forward delta', () => {
+    const at = new Date(Date.now() + 12_000).toUTCString();
+    const ms = parseRetryAfterMs(withHeader(at));
+    expect(ms).toBeGreaterThan(9_000);
+    expect(ms).toBeLessThanOrEqual(13_000);
+  });
+
+  it('treats a past HTTP-date as no instruction', () => {
+    const at = new Date(Date.now() - 60_000).toUTCString();
+    expect(parseRetryAfterMs(withHeader(at))).toBeNull();
+  });
+
+  it('returns null for an absent header', () => {
+    expect(parseRetryAfterMs(withHeader(null))).toBeNull();
+  });
+
+  it('returns null for garbage rather than throwing', () => {
+    expect(parseRetryAfterMs(withHeader('soon'))).toBeNull();
+    expect(parseRetryAfterMs(withHeader('-5'))).toBeNull();
+    expect(parseRetryAfterMs(withHeader(''))).toBeNull();
+  });
+
+  it('returns null when there is no response or no headers at all', () => {
+    expect(parseRetryAfterMs(undefined)).toBeNull();
+    expect(parseRetryAfterMs({})).toBeNull();
+    expect(parseRetryAfterMs({ headers: {} })).toBeNull();
+  });
+
+  it('returns null when headers.get throws', () => {
+    expect(
+      parseRetryAfterMs({ headers: { get: () => { throw new Error('nope'); } } }),
+    ).toBeNull();
+  });
+});
+
+describe('throttleWaitMs', () => {
+  it('falls back to exponential backoff when there is no header', () => {
+    expect(throttleWaitMs(null, 0)).toBe(500);
+    expect(throttleWaitMs(null, 1)).toBe(1000);
+    expect(throttleWaitMs(null, 2)).toBe(2000);
+  });
+
+  // The compliance half: jitter is ADDITIVE. A symmetric spread would send half
+  // of all retries back BEFORE the moment the server named, which is the one
+  // thing Retry-After forbids.
+  it('never returns less than the server asked for', () => {
+    for (let i = 0; i < 500; i++) {
+      expect(throttleWaitMs(5000, 0)).toBeGreaterThanOrEqual(5000);
+    }
+  });
+
+  it('adds at most 20 percent on top', () => {
+    for (let i = 0; i < 500; i++) {
+      expect(throttleWaitMs(5000, 0)).toBeLessThanOrEqual(6000);
+    }
+  });
+
+  // Without the spread, every client the server throttled with the same integer
+  // comes back in the same millisecond - the convoy the 429 was breaking up.
+  it('actually spreads, rather than returning a constant', () => {
+    const seen = new Set<number>();
+    for (let i = 0; i < 200; i++) seen.add(throttleWaitMs(5000, 0));
+    expect(seen.size).toBeGreaterThan(50);
+  });
+
+  it('caps the wait at 30s so three of them fit inside the 3min job timeout', () => {
+    for (let i = 0; i < 200; i++) {
+      expect(throttleWaitMs(600_000, 0)).toBe(30_000);
+    }
+    expect(throttleWaitMs(29_000, 0)).toBeLessThanOrEqual(30_000);
+  });
+
+  it('prefers the header over the backoff even late in the attempt sequence', () => {
+    expect(throttleWaitMs(5000, 2)).toBeGreaterThanOrEqual(5000);
   });
 });

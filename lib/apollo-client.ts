@@ -1,5 +1,5 @@
 import { ApolloClient, ApolloLink, InMemoryCache, Observable } from '@apollo/client';
-import { CombinedGraphQLErrors } from '@apollo/client/errors';
+import { CombinedGraphQLErrors, ServerError } from '@apollo/client/errors';
 
 interface GraphQLErrorExtensions {
     exception?: { name?: string };
@@ -51,6 +51,69 @@ const httpLink = new HttpLink({
 });
 
 const MAX_THROTTLE_RETRIES = 3;
+
+/** Ceiling on a single throttle wait, INTERACTIVE path.
+ *
+ *  30s, and deliberately NOT the 60s the background gateway uses. This link
+ *  sits under queries a user is waiting on, inside feed-sync's 3-minute job
+ *  timeout: 3 x 30s = 90s fits, 3 x 60s would not. A wait longer than half a
+ *  minute here is a wait nobody is still waiting for. The two caps differ by
+ *  design; harmonising them removes the reason each exists. */
+const THROTTLE_MAX_WAIT_MS = 30_000;
+
+/** Extra spread added on top of a server-supplied Retry-After, as a fraction.
+ *
+ *  ADDITIVE ONLY. A `Retry-After: 5` is the same 5 for every client the server
+ *  just throttled, so honouring it exactly re-forms the convoy the 429 was
+ *  trying to break up. Jittering it symmetrically would be worse than useless:
+ *  half the clients would come back BEFORE the moment the server named, which
+ *  is the one thing the header forbids. Up to +20% is always later than
+ *  instructed, so it is always compliant. */
+const RETRY_AFTER_JITTER_RATIO = 0.2;
+
+/**
+ * `Retry-After` in ms, or null when absent/unparseable.
+ *
+ * Handles both RFC 9110 forms: delta-seconds, and an HTTP-date. A date in the
+ * past, a negative delta, and anything non-numeric all read as "no usable
+ * instruction" rather than "retry immediately".
+ */
+export function parseRetryAfterMs(response: unknown): number | null {
+    const headers = (response as { headers?: { get?: (n: string) => string | null } } | undefined)
+        ?.headers;
+    if (typeof headers?.get !== 'function') return null;
+
+    let raw: string | null = null;
+    try {
+        raw = headers.get('retry-after');
+    } catch {
+        return null;
+    }
+    if (!raw) return null;
+
+    const trimmed = raw.trim();
+
+    // delta-seconds
+    if (/^\d+$/.test(trimmed)) {
+        const seconds = Number(trimmed);
+        return Number.isFinite(seconds) && seconds >= 0 ? seconds * 1000 : null;
+    }
+
+    // HTTP-date
+    const at = Date.parse(trimmed);
+    if (Number.isNaN(at)) return null;
+    const delta = at - Date.now();
+    return delta > 0 ? delta : null;
+}
+
+/** The wait to use for a throttled operation: the server's instruction when it
+ *  gave one (jittered up, capped), else our own exponential backoff. */
+export function throttleWaitMs(retryAfterMs: number | null, attempt: number): number {
+    const backoff = Math.min(500 * 2 ** attempt, 16000);
+    if (retryAfterMs === null) return backoff;
+    const jittered = retryAfterMs * (1 + Math.random() * RETRY_AFTER_JITTER_RATIO);
+    return Math.min(jittered, THROTTLE_MAX_WAIT_MS);
+}
 
 // Create error link to handle GraphQL errors (Apollo Client v4 syntax)
 const errorLink = new ErrorLink(({ error, operation, forward }) => {
@@ -118,7 +181,25 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
             if (errorCode === 'TOO_MANY_REQUESTS') {
                 const attempt = (operation.getContext().throttleRetryCount as number | undefined) ?? 0;
                 if (attempt < MAX_THROTTLE_RETRIES) {
-                    const delay = Math.min(500 * 2 ** attempt, 16000);
+                    // Honour the server's own instruction when it sent one.
+                    //
+                    // ErrorLink's callback is given no headers, but the raw
+                    // Response is reachable: BaseHttpLink calls
+                    // `operation.setContext({ response })` before parsing, and
+                    // createOperation gives every link in the chain the same
+                    // closure-backed context object (the same route this file
+                    // already uses for throttleRetryCount and noSyncStatus).
+                    //
+                    // Safe from staleness in THIS branch specifically: a
+                    // CombinedGraphQLErrors requires a parsed body, so the
+                    // response necessarily belongs to the attempt that just
+                    // failed. The network branch below cannot assume that,
+                    // because RetryLink reuses the operation across attempts -
+                    // so it reads the response off the error instead.
+                    const retryAfterMs = parseRetryAfterMs(
+                        operation.getContext().response,
+                    );
+                    const delay = throttleWaitMs(retryAfterMs, attempt);
                     return new Observable((observer) => {
                         const timer = setTimeout(() => {
                             operation.setContext({ throttleRetryCount: attempt + 1 });
@@ -185,6 +266,48 @@ const errorLink = new ErrorLink(({ error, operation, forward }) => {
                 recordServerReachable();
             } else {
                 recordServerTransportFailure();
+            }
+        }
+
+        // A throttle delivered as a real HTTP 429 rather than a 200 carrying
+        // extensions.code. Which shape news-graphql actually uses is a server
+        // question; both are handled so this link is correct either way, and
+        // the dead one costs a status comparison.
+        //
+        // The response is read off the ERROR, not off the operation context:
+        // RetryLink retries with the same operation object, so a transport
+        // failure that never produced a response would otherwise read the
+        // PREVIOUS attempt's headers out of the context. ServerError carries
+        // its own response and cannot go stale.
+        if (statusCode === StatusCodes.TOO_MANY_REQUESTS) {
+            const attempt = (operation.getContext().throttleRetryCount as number | undefined) ?? 0;
+            if (attempt < MAX_THROTTLE_RETRIES) {
+                const retryAfterMs = parseRetryAfterMs(
+                    ServerError.is(error) ? error.response : undefined,
+                );
+                const delay = throttleWaitMs(retryAfterMs, attempt);
+                logger.addBreadcrumb(
+                    'HTTP 429 — backing off',
+                    'apollo-error-link',
+                    {
+                        operationName: operation.operationName,
+                        attempt,
+                        delayMs: Math.round(delay),
+                        honouredRetryAfter: retryAfterMs !== null,
+                    },
+                    'info',
+                );
+                return new Observable((observer) => {
+                    const timer = setTimeout(() => {
+                        operation.setContext({ throttleRetryCount: attempt + 1 });
+                        forward(operation).subscribe({
+                            next: (value) => observer.next(value),
+                            error: (err) => observer.error(err),
+                            complete: () => observer.complete(),
+                        });
+                    }, delay);
+                    return () => clearTimeout(timer);
+                });
             }
         }
 
