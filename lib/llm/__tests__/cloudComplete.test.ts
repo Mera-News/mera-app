@@ -50,6 +50,12 @@ jest.mock('@/lib/e2ee/e2ee-service', () => ({
     mockEncryptMessages(...(args as [{ role: string; content: string }[]])),
 }));
 
+const mockInvalidateCachedAttestation = jest.fn();
+jest.mock('@/lib/e2ee/e2ee-cache', () => ({
+  invalidateCachedAttestation: (...args: unknown[]) =>
+    mockInvalidateCachedAttestation(...(args as [string])),
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
@@ -1299,7 +1305,11 @@ describe('session model fallback', () => {
     expect((logger.captureMessage as jest.Mock)).toHaveBeenCalledTimes(1);
     expect((logger.captureMessage as jest.Mock)).toHaveBeenCalledWith(
       'NEAR primary model failing — session fallback engaged',
-      { level: 'error', tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL } },
+      {
+        level: 'error',
+        tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL },
+        fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL],
+      },
     );
   }, 15_000);
 
@@ -1358,7 +1368,8 @@ describe('cloudChatStream', () => {
     mockGetJwtToken.mockReset();
     mockEncryptMessages.mockReset();
     mockDecryptContent.mockReset();
-    [(logger.captureException as jest.Mock), (logger.captureMessage as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
+    mockInvalidateCachedAttestation.mockReset();
+    [(logger.captureException as jest.Mock), (logger.captureMessage as jest.Mock), (logger.addBreadcrumb as jest.Mock), (logger.warn as jest.Mock), (logger.error as jest.Mock), (logger.debug as jest.Mock)].forEach((fn) => fn.mockReset());
     jest.useRealTimers();
     resetModelFallback();
     mockGetJwtToken.mockResolvedValue('test-jwt');
@@ -1563,7 +1574,9 @@ describe('cloudChatStream', () => {
   // same trace, same three events. The diagnostics move to a breadcrumb so the
   // surviving event still carries the status and body.
   it('breadcrumbs an HTTP failure rather than capturing it a second time', async () => {
-    mockFetch.mockResolvedValueOnce(makeResponse(400, 'Decryption failed'));
+    // Body is a plain 400 with no decrypt verdict, so the re-attest retry below
+    // stays out of this test's way — its subject is breadcrumb-not-capture.
+    mockFetch.mockResolvedValueOnce(makeResponse(400, {}, { text: 'Bad request' }));
 
     await expect(
       collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] })),
@@ -1587,11 +1600,170 @@ describe('cloudChatStream', () => {
   // and leave it to the auth breaker. Asserted on a 400 because a real 401 takes
   // authFetch's token-refresh retry path, which is a different test's subject.
   it('attaches statusCode to the thrown HTTP error', async () => {
-    mockFetch.mockResolvedValueOnce(makeResponse(400, 'Decryption failed'));
+    mockFetch.mockResolvedValueOnce(makeResponse(400, {}, { text: 'Bad request' }));
 
     await expect(
       collectStream(cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] })),
     ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  // MERA-APP-72. The provider's raw JSON used to be interpolated into this
+  // message, and ChatSessionView rendered the message verbatim — so a Portuguese
+  // user was shown `{"error":{"message":"Provider failed for model ...` on
+  // screen. The body moves to a field; the `E2EE chat failed: <status>` prefix
+  // is preserved because the specs above match on it.
+  it('keeps the response body OUT of the thrown message and on a field instead', async () => {
+    const body = '{"error":{"message":"Provider failed for model \'m\': boom"}}';
+    mockFetch.mockResolvedValueOnce(makeResponse(400, {}, { text: body }));
+
+    const err = await collectStream(
+      cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] }),
+    ).then(
+      () => null,
+      (e: Error) => e,
+    );
+
+    expect(err).not.toBeNull();
+    expect((err as Error).message).toBe('E2EE chat failed: 400');
+    expect((err as Error).message).not.toContain('Provider failed');
+    expect(err as unknown as { responseBody: string }).toMatchObject({ responseBody: body });
+  });
+
+  // ── The decrypt-failure re-attest (MERA-APP-72) ──────────────────────────
+  //
+  // NEAR answered 400 "Decryption failed" for a key NEAR itself had just
+  // attested. A stale cache was RULED OUT by the events: the three occurrences
+  // span two app launches, and the attestation cache is per-JS-context, so the
+  // second launch fetched a fresh key and still failed. The retry is bounded
+  // recovery, not the root-cause fix.
+  describe('decrypt-failure re-attest', () => {
+    const DECRYPT_400 = () =>
+      makeResponse(
+        400,
+        {},
+        {
+          text:
+            '{"error":{"message":"Provider failed for model ' +
+            "'deepseek-ai/DeepSeek-V4-Flash': Decryption failed\"}}",
+        },
+      );
+
+    it('invalidates that model\'s attestation and retries exactly once', async () => {
+      mockFetch
+        .mockResolvedValueOnce(DECRYPT_400())
+        .mockResolvedValueOnce(
+          makeResponse(200, {
+            choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }],
+          }),
+        );
+
+      const events = await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], model: SMALL_MODEL }),
+      );
+
+      expect(mockInvalidateCachedAttestation).toHaveBeenCalledWith(SMALL_MODEL);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(events.some((e) => e.type === 'text-delta')).toBe(true);
+    });
+
+    it('rebuilds the envelope rather than replaying the rejected one', async () => {
+      mockFetch
+        .mockResolvedValueOnce(DECRYPT_400())
+        .mockResolvedValueOnce(
+          makeResponse(200, {
+            choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }],
+          }),
+        );
+
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], model: SMALL_MODEL }),
+      );
+
+      // A fresh client keypair + model key means encryptMessages ran again for
+      // the retry; replaying the first body would have sent the ciphertext the
+      // node had already refused.
+      expect(mockEncryptMessages).toHaveBeenCalledTimes(2);
+    });
+
+    it('does NOT engage the session fallback — a 4xx is not model evidence', async () => {
+      mockFetch
+        .mockResolvedValueOnce(DECRYPT_400())
+        .mockResolvedValueOnce(
+          makeResponse(200, {
+            choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }],
+          }),
+        );
+
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], model: SMALL_MODEL }),
+      );
+
+      expect(isFallbackEngaged(SMALL_MODEL)).toBe(false);
+    });
+
+    it('surfaces the second failure without a third request', async () => {
+      mockFetch.mockResolvedValueOnce(DECRYPT_400()).mockResolvedValueOnce(DECRYPT_400());
+
+      await expect(
+        collectStream(
+          cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], model: SMALL_MODEL }),
+        ),
+      ).rejects.toThrow(/E2EE chat failed: 400/);
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it('leaves a NON-decrypt 400 alone', async () => {
+      mockFetch.mockResolvedValueOnce(makeResponse(400, {}, { text: 'Bad request' }));
+
+      await expect(
+        collectStream(
+          cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], model: SMALL_MODEL }),
+        ),
+      ).rejects.toThrow(/E2EE chat failed: 400/);
+
+      expect(mockInvalidateCachedAttestation).not.toHaveBeenCalled();
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('records algo and a model-key prefix on the breadcrumb', async () => {
+      mockFetch.mockResolvedValueOnce(DECRYPT_400()).mockResolvedValueOnce(DECRYPT_400());
+
+      await expect(
+        collectStream(
+          cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], model: SMALL_MODEL }),
+        ),
+      ).rejects.toThrow();
+
+      // The datum MERA-APP-72 could not be triaged without: which curve built
+      // the envelope that upstream refused.
+      expect(logger.addBreadcrumb).toHaveBeenCalledWith(
+        expect.stringContaining('cloudChatStream HTTP error'),
+        'cloud-chat',
+        expect.objectContaining({ status: 400, algo: 'ed25519', modelKeyFp: 'ccdd' }),
+        'error',
+      );
+    });
+
+    // The shared latch. Without it a re-attested request that reconnects and
+    // then dies mid-stream falls into the stream-death retry and issues a THIRD
+    // upstream call for one user turn.
+    it('cannot stack with the stream-death retry into a third request', async () => {
+      mockFetch
+        .mockResolvedValueOnce(DECRYPT_400())
+        .mockResolvedValueOnce(makeSseResponse(['data: {bad json\n\n']))
+        .mockResolvedValueOnce(
+          makeResponse(200, {
+            choices: [{ message: { content: 'never reached' }, finish_reason: 'stop' }],
+          }),
+        );
+
+      await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }], model: SMALL_MODEL }),
+      ).catch(() => null);
+
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
   });
 
   it('sends tools and tool_choice when tools are provided', async () => {
@@ -2301,7 +2473,11 @@ describe('hedged requests', () => {
     expect((logger.captureMessage as jest.Mock)).toHaveBeenCalledTimes(1);
     expect((logger.captureMessage as jest.Mock)).toHaveBeenCalledWith(
       'NEAR primary model slow — hedged fallback won, session fallback engaged',
-      { level: 'warning', tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL } },
+      {
+        level: 'warning',
+        tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL },
+        fingerprint: ['near-model-fallback', 'hedge', SMALL_MODEL],
+      },
     );
 
     // Engaged: the next call goes STRAIGHT to the fallback, with nothing left
@@ -2357,7 +2533,11 @@ describe('hedged requests', () => {
     expect((logger.captureMessage as jest.Mock)).toHaveBeenCalledTimes(1);
     expect((logger.captureMessage as jest.Mock)).toHaveBeenCalledWith(
       'NEAR primary model failing — session fallback engaged',
-      { level: 'error', tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL } },
+      {
+        level: 'error',
+        tags: { model: SMALL_MODEL, fallback: FALLBACK_MODEL },
+        fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL],
+      },
     );
 
     legs[1].d.resolve(okResponse('rescued'));

@@ -13,6 +13,7 @@ import {
   prepareE2EEContext,
   type SigningAlgo,
 } from '../e2ee/e2ee-service';
+import { invalidateCachedAttestation } from '../e2ee/e2ee-cache';
 import logger from '../logger';
 import { SMALL_MODEL } from './constants';
 import {
@@ -31,6 +32,14 @@ const TAG = '[CloudLLM]';
 
 const CHAT_API = `${INFERENCE_ENDPOINT}/v1/chat/completions`;
 const BATCH_API = `${INFERENCE_ENDPOINT}/v1/chat/completions/batch`;
+
+/** NEAR's own verdict when the serving TEE cannot open our request envelope,
+ *  surfaced as `400 {"error":{"message":"Provider failed for model '<id>':
+ *  Decryption failed"}}`. The text is UPSTREAM's, not the gateway's — the
+ *  gateway is a pure proxy and this string appears nowhere in it — so matching
+ *  on it is matching on NEAR's contract. Kept loose (case-insensitive, no model
+ *  id) because only the failure mode is load-bearing. */
+const DECRYPT_FAILURE_RE = /decryption failed/i;
 
 /** Per-attempt timeout for EVERY gateway-bound cloud call (chat, single
  *  completion, batch). It must exceed the gateway's own UPSTREAM_TIMEOUT_MS
@@ -1084,6 +1093,14 @@ export async function* cloudChatStream(
     status: response.status,
   });
 
+  // ONE shared latch for BOTH of this generator's retry paths — the
+  // decrypt-failure retry below and the stream-died-before-any-text retry at the
+  // end. Each is independently bounded, but they sit on the same call path: a
+  // decrypt retry that reconnects and then dies mid-stream would otherwise fall
+  // into the second retry and issue a THIRD request. One latch, set by whichever
+  // fires first, keeps the worst case at two.
+  let retried = false;
+
   if (!response.ok) {
     takeStreamHandle(response)?.release();
     const errorText = await response.text().catch(() => '');
@@ -1093,19 +1110,91 @@ export async function* cloudChatStream(
     // error became MERA-APP-72 and MERA-APP-73, same trace, same three events.
     // The diagnostics ride along on the breadcrumb, so the surviving event
     // still carries the status and body.
+    //
+    // `algo` and the model-key prefix are here because MERA-APP-72 could not be
+    // root-caused without them: a "Decryption failed" event carried no record of
+    // which curve built the envelope, and the two candidate causes (a wrong
+    // ecdsa wire format vs. a node/key mismatch at NEAR) point at different
+    // repos. The model key is public data and only its first 8 hex chars are
+    // kept — enough to tell two keys apart, not a secret.
     logger.addBreadcrumb(
       `${TAG} cloudChatStream HTTP error`,
       'cloud-chat',
-      { status: response.status, errorText },
+      {
+        status: response.status,
+        errorText,
+        model: sentModel,
+        algo: ctx.algo,
+        modelKeyFp: ctx.modelPubKeyHex?.slice(0, 8),
+      },
       'error',
     );
+
+    // NEAR could not decrypt the envelope built from the key NEAR itself had
+    // just attested. Re-attesting is the only client-side lever, and it is worth
+    // exactly ONE attempt: `buildChatRequest` mints a fresh client keypair and a
+    // fresh model key, which re-rolls the serving node and (since the fleet
+    // load-balances curves) possibly the algo family too.
+    //
+    // NOT a model failure: invariant — "4xx, auth, E2EE/decrypt and plain
+    // network errors say nothing about the model" — so this never calls
+    // reportModelFailure and never engages the session fallback.
+    //
+    // authFetch directly, NEVER sendWithModelFallback: chat passes
+    // `hedgeAfterMs`, so re-entering that helper would re-enter sendHedged and
+    // turn "one more request" into two plus a possible fallback engagement on a
+    // 4xx.
+    if (!retried && response.status === 400 && DECRYPT_FAILURE_RE.test(errorText)) {
+      retried = true;
+      invalidateCachedAttestation(sentModel);
+      logger.warn(`${TAG} upstream could not decrypt — re-attesting once`, {
+        model: sentModel,
+        algo: ctx.algo,
+      });
+      const fresh = await buildChatRequest(sentModel);
+      const freshResponse = await authFetch(CHAT_API, fresh.init, {
+        ...withUpstreamAlignedDefaults({ streamBody: true }),
+        maxTimeoutAttempts: 1,
+      });
+      if (freshResponse.ok) {
+        yield* consumeChatResponse(freshResponse, fresh.ctx.privateKey, fresh.ctx.algo);
+        return;
+      }
+      takeStreamHandle(freshResponse)?.release();
+      const freshErrorText = await freshResponse.text().catch(() => '');
+      logger.addBreadcrumb(
+        `${TAG} cloudChatStream HTTP error (after re-attest)`,
+        'cloud-chat',
+        {
+          status: freshResponse.status,
+          errorText: freshErrorText,
+          model: sentModel,
+          algo: fresh.ctx.algo,
+          modelKeyFp: fresh.ctx.modelPubKeyHex?.slice(0, 8),
+        },
+        'error',
+      );
+      throw Object.assign(new Error(`E2EE chat failed: ${freshResponse.status}`), {
+        statusCode: freshResponse.status,
+        responseBody: freshErrorText,
+      });
+    }
+
     // statusCode as a FIELD so the 401 rule in logger.captureException can see
     // it — a chat call made on a dead session is the auth breaker's story, not
     // its own issue.
-    throw Object.assign(
-      new Error(`E2EE chat failed: ${response.status} ${response.statusText} — ${errorText}`),
-      { statusCode: response.status },
-    );
+    //
+    // The body is deliberately NOT interpolated into the message. This string
+    // reaches the user: useCloudPersonaChat wraps it and ChatSessionView used to
+    // render it verbatim, so a provider's raw JSON was shown on screen, in
+    // English, to users in every locale (MERA-APP-72). It rides on
+    // `responseBody` and on the breadcrumb above instead, where triage still has
+    // it. The `E2EE chat failed: <status>` prefix is preserved verbatim — the
+    // existing specs match on it.
+    throw Object.assign(new Error(`E2EE chat failed: ${response.status}`), {
+      statusCode: response.status,
+      responseBody: errorText,
+    });
   }
 
   let textYielded = false;
@@ -1127,6 +1216,10 @@ export async function* cloudChatStream(
     // A decrypt failure is NOT: model-fallback.ts is explicit that "4xx, auth,
     // E2EE/decrypt and plain network errors say nothing about the model".
     if (isAbortLike(err) && !isCallerAbort(err)) reportModelFailure(primary);
+    // The decrypt-failure path above already spent this generator's one retry.
+    // Without this check a re-attested request that then died mid-stream would
+    // issue a THIRD upstream call for a single user turn.
+    if (retried) throw err;
     logger.warn(`${TAG} stream died before any text — one fresh attempt`, {
       failedModel: sentModel,
       error: String(err),
@@ -1134,9 +1227,11 @@ export async function* cloudChatStream(
   }
 
   // ONE fresh request, on whatever the primary now resolves to. Bounded by
-  // construction: this branch is only reachable with zero text yielded, and it
-  // never recurses.
-  const retry = await buildChatRequest(resolveModel(primary));
+  // construction: this branch is only reachable with zero text yielded, with the
+  // shared `retried` latch unset, and it never recurses.
+  retried = true;
+  const retryModel = resolveModel(primary);
+  const retry = await buildChatRequest(retryModel);
   const retryResponse = await authFetch(CHAT_API, retry.init, {
     ...withUpstreamAlignedDefaults({ streamBody: true }),
     maxTimeoutAttempts: 1,
@@ -1144,9 +1239,24 @@ export async function* cloudChatStream(
   if (!retryResponse.ok) {
     takeStreamHandle(retryResponse)?.release();
     const errorText = await retryResponse.text().catch(() => '');
-    throw new Error(
-      `E2EE chat failed: ${retryResponse.status} ${retryResponse.statusText} — ${errorText}`,
+    // Same reasoning as the first throw: the body rides on a field and a
+    // breadcrumb, never in the message that reaches the user's screen.
+    logger.addBreadcrumb(
+      `${TAG} cloudChatStream HTTP error (after stream-death retry)`,
+      'cloud-chat',
+      {
+        status: retryResponse.status,
+        errorText,
+        model: retryModel,
+        algo: retry.ctx.algo,
+        modelKeyFp: retry.ctx.modelPubKeyHex?.slice(0, 8),
+      },
+      'error',
     );
+    throw Object.assign(new Error(`E2EE chat failed: ${retryResponse.status}`), {
+      statusCode: retryResponse.status,
+      responseBody: errorText,
+    });
   }
   yield* consumeChatResponse(retryResponse, retry.ctx.privateKey, retry.ctx.algo);
 }

@@ -102,6 +102,7 @@ describe('model-fallback', () => {
         {
           level: 'error',
           tags: { model: SMALL_MODEL, fallback: MODEL_FALLBACKS[SMALL_MODEL] },
+          fingerprint: ['near-model-fallback', 'timeout', SMALL_MODEL],
         },
       );
     });
@@ -149,8 +150,51 @@ describe('model-fallback', () => {
         {
           level: 'warning',
           tags: { model: SMALL_MODEL, fallback: MODEL_FALLBACKS[SMALL_MODEL] },
+          fingerprint: ['near-model-fallback', 'hedge', SMALL_MODEL],
         },
       );
+    });
+
+    // Without an EXPLICIT fingerprint Sentry groups a message on the synthetic
+    // stacktrace it attaches, and this one is emitted from an async hedge
+    // continuation — one string filed as three issues titled after arbitrary
+    // frames (MERA-APP-7D / 7B / 6R).
+    it('passes a stable fingerprint that does not depend on the call stack', () => {
+      reportModelSlow(SMALL_MODEL);
+      const first = (logger.captureMessage as jest.Mock).mock.calls[0][1].fingerprint;
+
+      __resetForTests();
+      (logger.captureMessage as jest.Mock).mockClear();
+      reportModelSlow(SMALL_MODEL);
+      const second = (logger.captureMessage as jest.Mock).mock.calls[0][1].fingerprint;
+
+      expect(first).toEqual(second);
+      expect(first).toEqual(['near-model-fallback', 'hedge', SMALL_MODEL]);
+    });
+
+    // A stalled BIG primary and a stalled SMALL primary are different incidents
+    // and must not collapse into one issue.
+    it('fingerprints a different primary as a different incident', () => {
+      reportModelSlow(SMALL_MODEL);
+      const small = (logger.captureMessage as jest.Mock).mock.calls[0][1].fingerprint;
+
+      __resetForTests();
+      (logger.captureMessage as jest.Mock).mockClear();
+      reportModelSlow(BIG_MODEL);
+      const big = (logger.captureMessage as jest.Mock).mock.calls[0][1].fingerprint;
+
+      expect(small).not.toEqual(big);
+    });
+
+    // Same model, different cause — the guard set is shared so only the FIRST
+    // fires, but the fingerprint must still name the cause that did.
+    it('fingerprints a timeout differently from a hedge win', () => {
+      reportModelFailure(SMALL_MODEL);
+      expect((logger.captureMessage as jest.Mock).mock.calls[0][1].fingerprint).toEqual([
+        'near-model-fallback',
+        'timeout',
+        SMALL_MODEL,
+      ]);
     });
 
     it('never engages or reports for a model with no configured fallback', () => {

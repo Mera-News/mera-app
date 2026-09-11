@@ -54,17 +54,36 @@ function engage(model: string, cause: 'timeout' | 'hedge'): void {
   if (!fallback) return; // nothing to fall back to — leave the caller as-is
   if (engagedAt.has(model)) return; // already engaged; report once per session
   engagedAt.set(model, Date.now());
+  // EXPLICIT fingerprint, or Sentry groups these on the attached synthetic
+  // stacktrace. This message is emitted from inside an async hedge continuation,
+  // so that stack is whatever the engine happened to be unwinding: one string
+  // filed as THREE issues titled after arbitrary frames
+  // (`result._catch$argument_0`, `reportModelSlow`, `captureMessage` —
+  // MERA-APP-7D / 7B / 6R), one of them carrying scheduler frames that cannot
+  // call this function at all. `logger.captureMessage` forwards a fingerprint;
+  // it just has to be given one.
+  //
+  // Keyed on (cause, model) deliberately: a stalled BIG primary and a stalled
+  // SMALL primary are different incidents and stay separate issues, but each is
+  // ONE issue forever.
+  const fingerprint = ['near-model-fallback', cause, model];
   if (cause === 'timeout') {
     logger.captureMessage('NEAR primary model failing — session fallback engaged', {
       level: 'error',
       tags: { model, fallback },
+      fingerprint,
     });
     return;
   }
-  // A hedge win is a slow primary, not a dead one — warning, not error.
+  // A hedge win is a slow primary, not a dead one — warning, not error. It stays
+  // a reported event rather than a breadcrumb because engagement is sticky for
+  // the whole session (`reportModelSuccess` is a deliberate no-op) and the BIG
+  // fallback costs ~10x the primary — a silent hedge win means every later turn
+  // in that session runs at 10x with no signal anywhere.
   logger.captureMessage('NEAR primary model slow — hedged fallback won, session fallback engaged', {
     level: 'warning',
     tags: { model, fallback },
+    fingerprint,
   });
 }
 

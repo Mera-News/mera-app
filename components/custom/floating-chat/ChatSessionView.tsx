@@ -533,7 +533,14 @@ export default function ChatSessionView({
   const blockedMessage = effectiveBlocked
     ? effectiveBlockedReason ?? t('errors.accountRestricted')
     : error
-      ? `${t('chat.inferenceError')} (${error})`
+      // The raw error string is NOT appended. It is a bare string with no class
+      // to branch on, and what it carried was the provider's own English JSON
+      // (`{"error":{"message":"Provider failed for model ...: Decryption
+      // failed"}}`), rendered verbatim to users in every locale — MERA-APP-72
+      // caught it on a Portuguese device. `chat.inferenceError` already tells
+      // the user to try again in a moment, which is the only action available.
+      // Status and body stay on the cloudComplete breadcrumb for triage.
+      ? t('chat.inferenceError')
       : hasUnresolvedTopicPlans
         // The two cards ask different things. A fact-choice card shows no topics
         // yet, so offering to "choose an action" over the topics reads as a bug.
