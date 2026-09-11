@@ -1542,12 +1542,7 @@
     "sectionStartup": "啟動分頁",
     "startupTabA11y": "啟動分頁，{{label}}",
     "startupTabDescription": "選擇應用程式啟動時要開啟的分頁。",
-    "startupTabTitle": "啟動時開啟",
-    "sectionAppearance": "外觀",
-    "themeTitle": "主題",
-    "themeDescription": "選擇 Mera 的外觀。",
-    "themeDark": "深色",
-    "themeLight": "淺色"
+    "startupTabTitle": "啟動時開啟"
   },
   "freeTier": {
     "cardBody": "Mera 的 AI 部分現已關閉。您已儲存、追蹤或閱讀的任何內容都保留在此裝置上，「探索」仍有今日頭條。沒有訂閱方案時，Mera 無法為您建立動態、回答問題或追蹤新報導。訂閱方案後，一切都會恢復。",

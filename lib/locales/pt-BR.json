@@ -1541,12 +1541,7 @@
     "sectionStartup": "Aba ao iniciar",
     "startupTabA11y": "Aba ao iniciar, {{label}}",
     "startupTabDescription": "Escolha qual aba o Mera abre quando você inicia o app.",
-    "startupTabTitle": "Abrir ao iniciar",
-    "sectionAppearance": "Aparência",
-    "themeTitle": "Tema",
-    "themeDescription": "Escolha como o Mera aparece.",
-    "themeDark": "Escuro",
-    "themeLight": "Claro"
+    "startupTabTitle": "Abrir ao iniciar"
   },
   "freeTier": {
     "cardBody": "A parte de IA do Mera está desativada por enquanto. Tudo que você salvou, seguiu ou leu fica neste dispositivo, e Explorar ainda mostra as manchetes de hoje. Sem um plano, Mera não monta seu feed, não responde suas perguntas e não acompanha novas histórias. Comece um plano e tudo volta.",

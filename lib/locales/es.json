@@ -1541,12 +1541,7 @@
     "sectionStartup": "Pestaña de inicio",
     "startupTabA11y": "Pestaña de inicio, {{label}}",
     "startupTabDescription": "Elige qué pestaña abre Mera cuando inicias la app.",
-    "startupTabTitle": "Abrir al iniciar",
-    "sectionAppearance": "Apariencia",
-    "themeTitle": "Tema",
-    "themeDescription": "Elige cómo se ve Mera.",
-    "themeDark": "Oscuro",
-    "themeLight": "Claro"
+    "startupTabTitle": "Abrir al iniciar"
   },
   "freeTier": {
     "cardBody": "Por ahora, la parte de IA de Mera está desactivada. Todo lo que has guardado, seguido o leído permanece en este dispositivo, y Explorar sigue teniendo los titulares de hoy. Sin un plan, Mera no construirá tu feed, no responderá tus preguntas ni seguirá nuevas historias. Comienza un plan y todo vuelve.",

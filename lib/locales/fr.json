@@ -1548,12 +1548,7 @@
     "sectionStartup": "Onglet au démarrage",
     "startupTabA11y": "Onglet au démarrage, {{label}}",
     "startupTabDescription": "Choisissez l'onglet sur lequel Mera s'ouvre lorsque vous lancez l'application.",
-    "startupTabTitle": "Ouvrir au lancement",
-    "sectionAppearance": "Apparence",
-    "themeTitle": "Thème",
-    "themeDescription": "Choisissez l'apparence de Mera.",
-    "themeDark": "Sombre",
-    "themeLight": "Clair"
+    "startupTabTitle": "Ouvrir au lancement"
   },
   "freeTier": {
     "cardBody": "La partie IA de Mera est désactivée pour l'instant. Tout ce que vous avez enregistré, suivi ou lu reste sur cet appareil, et l'onglet Explorez affiche toujours les principales actualités du jour. Sans plan, Mera ne peut pas construire votre fil, répondre à vos questions ou suivre de nouvelles histoires. Commencez un plan et tout revient.",

@@ -1541,12 +1541,7 @@
     "sectionStartup": "Starttab",
     "startupTabA11y": "Starttab, {{label}}",
     "startupTabDescription": "Wähle den Tab, den Mera beim Start öffnet.",
-    "startupTabTitle": "Beim Start öffnen",
-    "sectionAppearance": "Erscheinungsbild",
-    "themeTitle": "Design",
-    "themeDescription": "Wählen Sie, wie Mera aussieht.",
-    "themeDark": "Dunkel",
-    "themeLight": "Hell"
+    "startupTabTitle": "Beim Start öffnen"
   },
   "freeTier": {
     "cardBody": "Der KI-Teil von Mera ist momentan ausgeschaltet. Alles, das du gespeichert, verfolgt oder gelesen hast, bleibt auf diesem Gerät, und der Tab \"Entdecken\" zeigt weiterhin die heutigen Schlagzeilen. Ohne einen Plan wird Mera deinen Feed nicht zusammenstellen, deine Fragen nicht beantworten oder neue Geschichten nicht verfolgen. Starte einen Plan und alles kommt zurück.",
