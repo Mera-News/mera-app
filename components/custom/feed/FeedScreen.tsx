@@ -1037,7 +1037,7 @@ const FeedScreen: React.FC = () => {
                   control. */}
                 <Heading
                   size={titleSize}
-                  className="text-typography-0"
+                  className="text-white"
                   numberOfLines={1}
                   adjustsFontSizeToFit
                   minimumFontScale={HEADER_TITLE_MIN_SCALE}
