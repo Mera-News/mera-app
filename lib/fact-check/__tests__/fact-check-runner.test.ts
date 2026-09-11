@@ -236,12 +236,18 @@ describe('buildSynthesisMessages', () => {
     expect(prompt).toContain('The claim overstates it.');
   });
 
-  // The reason the parameter is typed rather than sanitised inside: a second
-  // pass is NOT a no-op, so double-processing would shift bytes.
+  // The reason the parameter is typed rather than sanitised inside: sanitising
+  // twice can still shift bytes, so the brand has to prove it happened ONCE.
+  //
+  // The mechanism is the cap, not the escaping. Escaping is now idempotent on
+  // its own (a run of delimiters is spaced out in a single pass), but it
+  // LENGTHENS the string, and `maxLength` applies to the raw input. So handing
+  // an already-escaped string back with its original cap truncates it.
   it('is not safe to sanitise twice, which is why the brand is a type', () => {
-    const once = asUntrusted('<<<', 3);
-    const twice = asUntrusted(once, once.length);
+    const once = asUntrusted('a<<b', 4);
+    const twice = asUntrusted(once, 4);
 
+    expect(once).toBe('a< <b');
     expect(twice).not.toBe(once);
   });
 

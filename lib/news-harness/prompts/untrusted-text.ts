@@ -69,10 +69,16 @@ function stripStructuralTagsToFixpoint(input: string): string {
 function escapeStructuralSequences(input: string): string {
   return (
     input
-      // `<<` / `>>` are the article fence delimiters. Breaking the pair means no
+      // `<<` / `>>` are the article fence delimiters. Breaking them means no
       // publisher string can open or close a fence, whatever nonce it guesses.
-      .replace(/<</g, '< <')
-      .replace(/>>/g, '> >')
+      //
+      // Match the WHOLE run, not the pair. Replacing `<<` pairwise is not
+      // idempotent on an ODD run: `<<<` -> `< <<` leaves a live `<<` behind,
+      // and `<<<<` -> `< << <`. Spacing out every character of a run of two or
+      // more leaves no run of two behind, in one pass, so the property holds
+      // without iterating and a second pass over the result is a no-op.
+      .replace(/<{2,}/g, (run) => run.split('').join(' '))
+      .replace(/>{2,}/g, (run) => run.split('').join(' '))
       // `===== Article 3 =====` is the per-article banner. Any run of three or
       // more `=` is collapsed so a description cannot draw a new section header.
       .replace(/={3,}/g, '=')
