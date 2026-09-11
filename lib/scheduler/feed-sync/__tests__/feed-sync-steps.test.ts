@@ -75,7 +75,11 @@ jest.mock('@/lib/article-service', () => ({
 }));
 
 jest.mock('@/lib/utils/retry', () => ({
-  withRetry: (fn: any, signal: any) => mockWithRetry(fn, signal),
+  // Forwards ALL arguments, not just the first two. The same explicit-factory
+  // hazard as the missing-export one below, in its arity form: a mock that
+  // drops a trailing argument silently makes that argument unassertable, so a
+  // retry budget could be changed - or removed - with the suite still green.
+  withRetry: (...args: any[]) => mockWithRetry(...args),
   // Explicit factory: every export this module CALLS has to be listed here, or
   // it is undefined at the call site and the failure names the mock's shape
   // rather than the missing export.
@@ -347,10 +351,20 @@ describe('stepFetchTopicIds', () => {
 
     const ctx = makeCtx();
     await stepFetchTopicIds('p-1', ctx).catch(() => {});
-    // withRetry should have been called with the ctx.signal
+    // withRetry should have been called with the ctx.signal, and with an
+    // explicit retry budget of 1.
+    //
+    // The budget is asserted, not left to the default: every call here goes
+    // through Apollo, whose RetryLink already makes up to 3 transport attempts,
+    // so the old default of 3 stacked into 12 attempts per failing step and 36
+    // across the scheduler's job retries. It is 1 rather than 0 because
+    // RetryLink cannot see an HTTP 200 carrying errors[] - a resolver-level
+    // failure reaches `next`, not the error channel - and this is the only
+    // cover for that class.
     expect(mockWithRetry).toHaveBeenCalledWith(
       expect.any(Function),
       ctx.signal,
+      1,
     );
   });
 
@@ -1693,7 +1707,9 @@ describe('stepHydratePersistEnqueue', () => {
     const ctx = makeCtx();
     await stepHydratePersistEnqueue(diffResult, ctx, makeOpts());
 
-    expect(mockWithRetry).toHaveBeenCalledWith(expect.any(Function), ctx.signal);
+    // Budget asserted here too: the hydration path is where a stacked retry
+    // multiplied hardest, since every chunk carried its own.
+    expect(mockWithRetry).toHaveBeenCalledWith(expect.any(Function), ctx.signal, 1);
   });
 
   it('honors mid-loop abort: stops launching chunks beyond the in-flight pool', async () => {

@@ -44,6 +44,29 @@ import { loadUserGeoLanguageContext } from '@/lib/user-context/user-geo-language
 import logger from '@/lib/logger';
 import * as coldstartTimeline from '@/lib/diagnostics/coldstart-timeline';
 import { createCancellationError, withRetry } from '@/lib/utils/retry';
+
+/**
+ * Retries for the ArticleService calls below. ONE, not three, and not zero.
+ *
+ * Every call here goes out through Apollo, and Apollo's RetryLink already makes
+ * up to 3 jittered HTTP attempts on a transport failure. Stacking withRetry's
+ * default 3 on top of that made one failing step 4 x 3 = 12 attempts, and the
+ * scheduler's own 3 job attempts took it to 36.
+ *
+ * It is not 0, though, because RetryLink CANNOT see the failure that matters
+ * most here: an HTTP 200 carrying an `errors[]` array. RetryLink fires only
+ * from the observable's error channel, and a GraphQL-level error (a resolver
+ * timeout, an overloaded news-graphql returning INTERNAL_SERVER_ERROR) is
+ * delivered through `next` and turned into a rejection above the link chain.
+ * This single retry is the only cover for that class.
+ *
+ * So the layers are no longer three copies of one idea: Apollo owns transport,
+ * this owns resolver errors, the scheduler owns the cycle. Worst case per
+ * failing step is now 2 x 3 x 3 = 18.
+ *
+ * Do not "simplify" this to 0 as redundant with Apollo. It is not.
+ */
+const RESOLVER_ERROR_RETRIES = 1;
 import { yieldToEventLoop } from '../idle';
 import type { TaskContext } from '../scheduler-types';
 import { reconcileTrackedStories } from './tracked-story-reconcile';
@@ -472,7 +495,11 @@ async function fetchTopicIdsPersona(
     `[feed-sync-steps] calling articleIdsForPersona: ${profile.topics.length} topics, ${profile.headlineScopes.length} headline scopes`,
   );
 
-  const res = await withRetry(() => ArticleService.getArticleIdsForPersona(query), ctx.signal);
+  const res = await withRetry(
+    () => ArticleService.getArticleIdsForPersona(query),
+    ctx.signal,
+    RESOLVER_ERROR_RETRIES,
+  );
 
   const articleToTopicTexts = new Map<string, string[]>();
   const matchedTopics = new Map<string, MatchedTopicMeta[]>();
@@ -598,6 +625,7 @@ async function fetchTopicIdsLegacy(ctx: TaskContext): Promise<FetchTopicIdsResul
         { limitPerTopic: 100 },
       ),
     ctx.signal,
+    RESOLVER_ERROR_RETRIES,
   );
 
   const articleToTopicTexts = new Map<string, string[]>();
@@ -845,6 +873,7 @@ export async function stepHydratePersistEnqueue(
             ? ArticleService.getArticlesForStories(chunk, onChunkProgress)
             : ArticleService.getArticlesForTopicsByIds(chunk, onChunkProgress),
         ctx.signal,
+        RESOLVER_ERROR_RETRIES,
       );
       const chunkArticles = response.articles;
       if (response.dailyLimitReached) {
