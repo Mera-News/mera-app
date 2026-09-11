@@ -119,7 +119,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                 >
                     <SourceFlag countryCode={item.countryCode} size="xl" />
                     <VStack className="flex-1" space="xs">
-                        <Text size="md" className="text-white" numberOfLines={1}>
+                        <Text size="md" className="text-typography-0" numberOfLines={1}>
                             {item.publicationName}
                         </Text>
                         <Text size="xs" className="text-gray-400">
@@ -127,7 +127,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                         </Text>
                     </VStack>
                     <Box className="px-2.5 py-1 rounded-full border border-white">
-                        <Text size="xs" bold className="text-white">
+                        <Text size="xs" bold className="text-typography-0">
                             {item.visitCount}
                         </Text>
                     </Box>
@@ -140,7 +140,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
 
     const ListHeader = (
         <Box className="mx-4 mt-3 mb-2 p-3 rounded-lg border border-white">
-            <Text size="xs" italic className="text-white">
+            <Text size="xs" italic className="text-typography-0">
                 {t('publicationVisits.screenIntro')}
             </Text>
         </Box>

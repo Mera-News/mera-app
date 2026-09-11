@@ -29,7 +29,7 @@ const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
             <Card variant="elevated" size="sm" className="mx-4 mt-3 mb-2 rounded-xl">
                 <VStack className="p-3" space="sm">
                     <HStack className="items-center justify-between">
-                        <Text size="sm" bold className="text-white">
+                        <Text size="sm" bold className="text-typography-0">
                             {t('publicationVisits.topVisitedTitle')}
                         </Text>
                         <MaterialIcons name="chevron-right" size={18} color="#999999" />
@@ -45,7 +45,7 @@ const TopVisitedPublicationsCard: React.FC<Props> = ({ topPublications }) => {
                                     <SourceFlag countryCode={p.countryCode} size="lg" />
                                     <Text
                                         size="sm"
-                                        className="text-white flex-1"
+                                        className="text-typography-0 flex-1"
                                         numberOfLines={1}
                                     >
                                         {p.publicationName}
