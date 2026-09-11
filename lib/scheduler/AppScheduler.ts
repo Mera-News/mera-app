@@ -34,6 +34,28 @@ export const FOREGROUND_MIN_GAP_MS = 60_000;
  *  floor moving. */
 export const COLD_START_MIN_GAP_MS = 5_000;
 
+/** After a FAILED run, how long the 5s tick must leave a task alone.
+ *
+ *  A failed job deliberately does not stamp `lastRun` (scheduler-runner: the
+ *  frequency gate must not be armed by a run that accomplished nothing), and
+ *  the consequence was that `_tick()` found the task due again 5 seconds later,
+ *  forever. A persistently failing feed-sync re-ran as fast as it could fail.
+ *
+ *  60s rather than the task's own frequency, deliberately: a transient should
+ *  recover inside a minute, while a task that is genuinely broken is no longer
+ *  hammering. The frequency clause is still there and still binds in the
+ *  success case, so this only ever shortens the wait after a failure, never
+ *  lengthens the steady-state cadence. */
+export const FAILURE_TICK_BACKOFF_MS = 60_000;
+
+/** After a FAILED run, how long a network-reconnect must leave a task alone.
+ *
+ *  Much shorter than the tick's, and that asymmetry is the point: the most
+ *  common reason a run just failed IS that the device was offline, so a
+ *  reconnect arriving seconds later is the recovery, not a retry storm. Long
+ *  enough only to bound a link that is flapping on and off. */
+export const RECONNECT_FAILURE_GAP_MS = 15_000;
+
 /** Budget for the `getJwtToken()` credential pre-flight. Exceeding it passes
  *  the check optimistically rather than skipping the task — see
  *  `_checkAuthenticated`. */
@@ -64,6 +86,10 @@ class _AppScheduler {
   // init finishes. Previously such an event was simply dropped — and on a cold
   // resume that is exactly when it arrives.
   private pendingForegroundKick = false;
+  // Last FAILED run per task, stamped by scheduler-runner. The counterpart to
+  // `lastRun` (which only a successful, non-no-op run stamps) and the thing
+  // that stops a failing task re-firing on every 5s tick. Cleared on success.
+  private lastFailureAt = new Map<string, number>();
 
   register<T>(definition: TaskDefinition<T>): void {
     this.tasks.set(definition.name, definition as TaskDefinition);
@@ -86,6 +112,28 @@ class _AppScheduler {
 
   isPaused(name: string): boolean {
     return this.pausedTasks.has(name);
+  }
+
+  /** Called by scheduler-runner when a run FAILS. */
+  recordFailure(name: string): void {
+    this.lastFailureAt.set(name, Date.now());
+  }
+
+  /** Called by scheduler-runner when a run SUCCEEDS.
+   *
+   *  Set and clear both live in the runner, symmetric with `saveLastRun`.
+   *  Clearing on `_enqueueAndRun` completion instead would be a silent no-op:
+   *  `runner.run()` catches without rethrowing, so its promise resolves on
+   *  every outcome and the clear would land immediately after the record. */
+  clearFailure(name: string): void {
+    this.lastFailureAt.delete(name);
+  }
+
+  /** Ms since this task last failed, or null if it has not failed since the
+   *  last success. */
+  private _msSinceFailure(name: string): number | null {
+    const at = this.lastFailureAt.get(name);
+    return at === undefined ? null : Date.now() - at;
   }
 
   async init(): Promise<void> {
@@ -216,6 +264,18 @@ class _AppScheduler {
         (now - lastRun) >= jitteredInterval(task.name, task.frequency);
       if (!isDue) continue;
 
+      // Second clause, and it is not the same question as the first. A failed
+      // run leaves `lastRun` untouched on purpose, so the frequency check above
+      // stays open forever once a task starts failing — this is what stops the
+      // 5s tick turning that into a hot loop. Tick only: the foreground path
+      // reads `lastRun` alone (a user who opens the app should not wait out a
+      // failure they never saw) and the reconnect path has its own rule.
+      const sinceFailure = this._msSinceFailure(task.name);
+      if (sinceFailure !== null && sinceFailure < FAILURE_TICK_BACKOFF_MS) {
+        logger.debug(`[AppScheduler] tick-skipping task=${task.name} — failed ${Math.round(sinceFailure / 1000)}s ago`);
+        continue;
+      }
+
       // Skip purely event-driven tasks (frequency === 0 with triggers) — those
       // are only meant to fire on the declared events, not on a timer.
       const isTimerDriven = task.frequency > 0;
@@ -323,6 +383,32 @@ class _AppScheduler {
         if (this.pausedTasks.has(task.name)) continue;
         if (!task.triggers?.includes('network-reconnect')) continue;
         if (task.exclusive && useSchedulerStore.getState().isRunning(task.name)) continue;
+
+        // This path had NO time gate at all: every false->true NetInfo
+        // transition re-ran the task, so a flapping cell link re-synced on each
+        // flap. Two clauses, because they answer different questions:
+        //
+        //   lastRun >= 60s      bounds the flap — a link that bounces four
+        //                       times in a minute is one reconnect, not four.
+        //   lastFailureAt >= 15s keeps the tunnel-exit case working. The usual
+        //                       reason a run just failed IS that we were
+        //                       offline, and making that device wait out the
+        //                       60s floor would delay exactly the recovery the
+        //                       reconnect trigger exists to deliver.
+        //
+        // frequency-0 tasks stay always-due, as on every other path.
+        if (task.frequency !== 0) {
+          const lastRun = useSchedulerStore.getState().getLastRun(task.name) ?? 0;
+          const minGap = jitteredInterval(
+            task.name,
+            Math.min(task.frequency, FOREGROUND_MIN_GAP_MS),
+          );
+          if ((Date.now() - lastRun) < minGap) continue;
+        }
+
+        const sinceFailure = this._msSinceFailure(task.name);
+        if (sinceFailure !== null && sinceFailure < RECONNECT_FAILURE_GAP_MS) continue;
+
         if (!(await this._conditionsMet(task))) continue;
         void this._enqueueAndRun(task);
       }

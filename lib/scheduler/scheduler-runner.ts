@@ -54,6 +54,15 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
     const now = Date.now();
     await persistence.markCompleted(job.id, now);
     if (!noOp) await persistence.saveLastRun(definition.name, now);
+    // Clear the failure backoff: this task is healthy again, so the next tick
+    // should judge it on frequency alone. Paired with recordFailure below, and
+    // deliberately here rather than in AppScheduler._enqueueAndRun — run()
+    // catches without rethrowing, so a clear placed there would fire on every
+    // outcome, failures included, and the gate would never bite.
+    {
+      const { AppScheduler } = require('./AppScheduler') as typeof import('./AppScheduler');
+      AppScheduler.clearFailure(definition.name);
+    }
     useSchedulerStore.getState().setJobCompleted(job.id, now, !noOp);
     try { transaction?.setStatus?.('ok'); } catch { /* best-effort */ }
 
@@ -61,6 +70,15 @@ export async function run(job: Job, definition: TaskDefinition): Promise<void> {
     // A non-retryable error (e.g. a 4xx / BAD_USER_INPUT from the server) will
     // never succeed on a retry — rescheduling just re-runs the same doomed
     // request storm. Treat it as terminal: skip the maxAttempts reschedule.
+    // Stamp the failure before anything else in this branch: the 5s tick reads
+    // it to decide whether this task may run again, and a failed job does not
+    // stamp `lastRun`, so without this the frequency gate stays open and the
+    // tick re-fires the task every 5 seconds for as long as it keeps failing.
+    {
+      const { AppScheduler } = require('./AppScheduler') as typeof import('./AppScheduler');
+      AppScheduler.recordFailure(definition.name);
+    }
+
     const nonRetryable = isNonRetryableError(err);
     if (nonRetryable) {
       logger.addBreadcrumb(

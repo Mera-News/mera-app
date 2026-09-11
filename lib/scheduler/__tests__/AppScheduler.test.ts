@@ -132,7 +132,9 @@ jest.mock('@/lib/logger', () => ({
 import {
   AppScheduler,
   AUTH_PREFLIGHT_TIMEOUT_MS,
+  FAILURE_TICK_BACKOFF_MS,
   FOREGROUND_YIELD_TIMEOUT_MS,
+  RECONNECT_FAILURE_GAP_MS,
 } from '../AppScheduler';
 import type { TaskDefinition, TaskContext } from '../scheduler-types';
 
@@ -191,6 +193,7 @@ beforeEach(() => {
   // tasks from previous tests (TypeScript `private` compiles to a plain JS
   // property, so it is accessible at runtime via the `any` cast).
   (AppScheduler as any).tasks.clear();
+  (AppScheduler as any).lastFailureAt.clear();
 });
 
 afterEach(() => {
@@ -1089,3 +1092,198 @@ describe('AppScheduler — auth pre-flight time-box', () => {
 });
 
 export {};
+
+// ── failure backoff ────────────────────────────────────────────────────────
+// A failed job deliberately does NOT stamp `lastRun` (scheduler-runner keeps
+// the frequency gate from being armed by a run that accomplished nothing). The
+// consequence, before this gate existed, was that `_tick()` found the task due
+// again 5 seconds later and kept finding it due: a persistently failing
+// feed-sync re-ran as fast as it could fail, which is the single largest source
+// of failure-mode load on the server.
+describe('AppScheduler — failure backoff', () => {
+  it('does NOT re-fire a failed task on the next tick', async () => {
+    const task = makeTask({ name: 'failing-task', frequency: 10_000 });
+    AppScheduler.register(task);
+    mockSchedulerStore.getLastRun.mockReturnValue(null); // never succeeded
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+    expect(mockCreateJob).toHaveBeenCalledTimes(1);
+
+    AppScheduler.recordFailure('failing-task');
+    jest.clearAllMocks();
+
+    // Several ticks inside the backoff window.
+    await jest.advanceTimersByTimeAsync(FAILURE_TICK_BACKOFF_MS - 5_000);
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('re-fires once the failure backoff elapses', async () => {
+    const task = makeTask({ name: 'recovering-task', frequency: 10_000 });
+    AppScheduler.register(task);
+    mockSchedulerStore.getLastRun.mockReturnValue(null);
+
+    await AppScheduler.init();
+    AppScheduler.recordFailure('recovering-task');
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'recovering-task' }));
+
+    await jest.advanceTimersByTimeAsync(FAILURE_TICK_BACKOFF_MS + 5_000);
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  // The half a green suite hides: a gate that is never cleared also passes
+  // both tests above, and would then permanently throttle a healthy task.
+  it('clears the backoff on a successful run', async () => {
+    const task = makeTask({ name: 'cleared-task', frequency: 10_000 });
+    AppScheduler.register(task);
+    mockSchedulerStore.getLastRun.mockReturnValue(null);
+
+    await AppScheduler.init();
+    AppScheduler.recordFailure('cleared-task');
+    AppScheduler.clearFailure('cleared-task');
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'cleared-task' }));
+
+    await jest.advanceTimersByTimeAsync(10_000);
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  // markNoOp is NOT a failure. A skipped cycle must still retry promptly, or a
+  // single no-op turns into a dead zone repeated indefinitely.
+  it('leaves a no-op run free to re-fire on the next tick', async () => {
+    const task = makeTask({ name: 'noop-task', frequency: 10_000 });
+    AppScheduler.register(task);
+    mockSchedulerStore.getLastRun.mockReturnValue(null);
+
+    await AppScheduler.init();
+    await jest.advanceTimersByTimeAsync(0);
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'noop-task' }));
+
+    // No recordFailure: a no-op neither stamps lastRun nor counts as a failure.
+    await jest.advanceTimersByTimeAsync(5_000);
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  // Tick-only, deliberately. A user who opens the app should not be made to
+  // wait out a failure they never saw.
+  it('does not gate the foreground path on a recent failure', async () => {
+    const appStateHandler = await initThenRegisterForeground(makeTask({
+      name: 'fg-after-failure-task',
+      frequency: 300_000,
+      triggers: ['app-foreground'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 90_000);
+    AppScheduler.recordFailure('fg-after-failure-task');
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'fg-after-failure-task' }));
+
+    appStateHandler('active');
+    await jest.advanceTimersByTimeAsync(0);
+
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+});
+
+// ── network-reconnect gating ───────────────────────────────────────────────
+// This path had no time gate at all: every false->true NetInfo transition
+// re-ran the task, so a flapping link re-synced on every flap.
+describe('AppScheduler — network-reconnect gating', () => {
+  async function reconnect(): Promise<void> {
+    mockNetworkState.isConnected = true;
+    networkSubscribeFn?.({ isConnected: true }, { isConnected: false });
+    await jest.advanceTimersByTimeAsync(0);
+  }
+
+  it('does NOT re-fire when the task ran 30s ago (flap bound)', async () => {
+    AppScheduler.register(makeTask({
+      name: 'flap-task',
+      frequency: 300_000,
+      triggers: ['network-reconnect'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 30_000);
+
+    await AppScheduler.init();
+    jest.clearAllMocks();
+
+    await reconnect();
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('fires when the task last ran 90s ago', async () => {
+    AppScheduler.register(makeTask({
+      name: 'reconnect-due-task',
+      frequency: 300_000,
+      triggers: ['network-reconnect'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 90_000);
+
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'reconnect-due-task' }));
+
+    await reconnect();
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  // The tunnel-exit case, and the reason the reconnect failure gap is 15s
+  // rather than the tick's 60s: the usual reason a run just failed is that we
+  // were offline, so the reconnect IS the recovery.
+  it('fires 20s after a failure when lastRun is old (tunnel exit)', async () => {
+    AppScheduler.register(makeTask({
+      name: 'tunnel-task',
+      frequency: 300_000,
+      triggers: ['network-reconnect'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 600_000);
+    jest.setSystemTime(NOW - 20_000);
+    AppScheduler.recordFailure('tunnel-task');
+    jest.setSystemTime(NOW);
+
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'tunnel-task' }));
+
+    await reconnect();
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('does NOT fire 5s after a failure', async () => {
+    AppScheduler.register(makeTask({
+      name: 'just-failed-task',
+      frequency: 300_000,
+      triggers: ['network-reconnect'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 600_000);
+    jest.setSystemTime(NOW - 5_000);
+    AppScheduler.recordFailure('just-failed-task');
+    jest.setSystemTime(NOW);
+
+    await AppScheduler.init();
+    jest.clearAllMocks();
+
+    await reconnect();
+    expect(mockCreateJob).not.toHaveBeenCalled();
+  });
+
+  it('keeps frequency-0 tasks always-due on reconnect', async () => {
+    AppScheduler.register(makeTask({
+      name: 'always-due-reconnect-task',
+      frequency: 0,
+      triggers: ['network-reconnect'],
+    }));
+    mockSchedulerStore.getLastRun.mockReturnValue(NOW - 100);
+
+    await AppScheduler.init();
+    jest.clearAllMocks();
+    mockCreateJob.mockResolvedValue(makeJob({ taskName: 'always-due-reconnect-task' }));
+
+    await reconnect();
+    expect(mockCreateJob).toHaveBeenCalled();
+  });
+
+  it('RECONNECT_FAILURE_GAP_MS is shorter than the tick backoff', () => {
+    expect(RECONNECT_FAILURE_GAP_MS).toBeLessThan(FAILURE_TICK_BACKOFF_MS);
+  });
+});

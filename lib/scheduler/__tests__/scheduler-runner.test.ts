@@ -15,6 +15,8 @@ const mockLogInfo = jest.fn();
 const mockLogWarn = jest.fn();
 const mockLogAddBreadcrumb = jest.fn();
 const mockAppSchedulerTrigger = jest.fn();
+const mockAppSchedulerRecordFailure = jest.fn();
+const mockAppSchedulerClearFailure = jest.fn();
 
 jest.mock('@/lib/scheduler/scheduler-persistence', () => ({
   markRunning: (...args: any[]) => mockMarkRunning(...args),
@@ -61,10 +63,17 @@ jest.mock('@/lib/logger', () => ({
   },
 }));
 
-// AppScheduler is required dynamically inside runner.run() on retry path
+// AppScheduler is required dynamically inside runner.run() — on the retry path
+// and on BOTH outcome paths for the failure backoff.
+//
+// This factory must name every export run() calls: an explicit factory returns
+// undefined for anything it omits, and the failure is a TypeError at the call
+// site rather than a missing-mock message.
 jest.mock('@/lib/scheduler/AppScheduler', () => ({
   AppScheduler: {
     trigger: (...args: any[]) => mockAppSchedulerTrigger(...args),
+    recordFailure: (...args: any[]) => mockAppSchedulerRecordFailure(...args),
+    clearFailure: (...args: any[]) => mockAppSchedulerClearFailure(...args),
   },
 }));
 
@@ -514,3 +523,53 @@ describe('run — Sentry span', () => {
 });
 
 export {};
+
+// ── failure backoff bookkeeping ────────────────────────────────────────────
+// Set and clear both live HERE, symmetric with saveLastRun, and not in
+// AppScheduler._enqueueAndRun. run() catches without rethrowing, so its promise
+// resolves on every outcome — a clear placed at the call site would fire
+// immediately after the record and the tick gate would never bite.
+describe('run — failure backoff bookkeeping', () => {
+  it('clears the failure backoff on a successful run', async () => {
+    const task = makeDefinition({ name: 'ok-task' });
+    await run(makeJob({ taskName: 'ok-task' }), task);
+
+    expect(mockAppSchedulerClearFailure).toHaveBeenCalledWith('ok-task');
+    expect(mockAppSchedulerRecordFailure).not.toHaveBeenCalled();
+  });
+
+  it('records the failure when the handler throws', async () => {
+    const task = makeDefinition({
+      name: 'bad-task',
+      handler: jest.fn().mockRejectedValue(new Error('boom')),
+    });
+    await run(makeJob({ taskName: 'bad-task' }), task);
+
+    expect(mockAppSchedulerRecordFailure).toHaveBeenCalledWith('bad-task');
+    expect(mockAppSchedulerClearFailure).not.toHaveBeenCalled();
+  });
+
+  // A no-op is not a failure: the cycle was skipped, not broken, and it must
+  // stay free to retry on the next tick.
+  it('clears rather than records when the handler called markNoOp', async () => {
+    const task = makeDefinition({
+      name: 'noop-task',
+      handler: jest.fn(async (_i: unknown, ctx: any) => { ctx.markNoOp(); }),
+    });
+    await run(makeJob({ taskName: 'noop-task' }), task);
+
+    expect(mockAppSchedulerClearFailure).toHaveBeenCalledWith('noop-task');
+    expect(mockAppSchedulerRecordFailure).not.toHaveBeenCalled();
+  });
+
+  it('records the failure even when the error is non-retryable', async () => {
+    const err = Object.assign(new Error('bad input'), { statusCode: 400 });
+    const task = makeDefinition({
+      name: 'terminal-task',
+      handler: jest.fn().mockRejectedValue(err),
+    });
+    await run(makeJob({ taskName: 'terminal-task' }), task);
+
+    expect(mockAppSchedulerRecordFailure).toHaveBeenCalledWith('terminal-task');
+  });
+});
