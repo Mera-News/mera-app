@@ -190,6 +190,35 @@ export const rawTokens = {
        legible over a photograph, and a photograph is not lighter in light mode. */
     '--color-scrim': '0 0 0',
 
+    /* LEGACY TAILWIND ALIASES, light column. See the dark block for why these
+       are dedicated variables rather than an identity mapping onto typography.
+
+       The surface roles INVERT here and that is correct: gray-900 is a card
+       raised above near-black, so its light counterpart is LIGHTER than the
+       page, and gray-950 is recessed, so it goes darker. Side effect: gray-800
+       ends up darker than gray-900, reversing the Tailwind numeric intuition. */
+    '--color-legacy-white': '30 30 36',
+    '--color-legacy-black': '244 243 238',
+    '--color-legacy-gray-50': '30 30 36',
+    '--color-legacy-gray-100': '33 33 37',
+    '--color-legacy-gray-200': '39 39 43',
+    '--color-legacy-gray-300': '49 48 52',
+    '--color-legacy-gray-400': '79 77 78',
+    '--color-legacy-gray-500': '95 93 92',
+    '--color-legacy-gray-600': '107 104 100',
+    '--color-legacy-gray-700': '186 182 171',
+    '--color-legacy-gray-800': '218 216 209',
+    '--color-legacy-gray-900': '250 249 247',
+    '--color-legacy-gray-950': '237 236 230',
+
+    /* The five formerly hardcoded named stops. Four have no call sites left;
+       bg-background-dark has one, in components/ui/modal/index.tsx. */
+    '--color-typography-white': '30 30 36',
+    '--color-typography-gray': '107 104 100',
+    '--color-typography-black': '24 23 24',
+    '--color-background-light': '244 243 238',
+    '--color-background-dark': '30 30 36',
+
     /* Focus Ring Indicator - primary retoned to 195 104 60 (3.52:1); stock 216 121 67
        is 2.81:1 and Almond itself is 2.32:1, both under the 3:1 a focus ring needs. */
     '--color-indicator-primary': '195 104 60',
@@ -358,6 +387,37 @@ export const rawTokens = {
     /* A veil over media. Dark in BOTH schemes: a scrim exists to make text
        legible over a photograph, and a photograph is not lighter in light mode. */
     '--color-scrim': '0 0 0',
+
+    /* LEGACY TAILWIND ALIASES. Dark values are the EXACT Tailwind 3.4.18 hexes
+       these class names resolve to today, so aliasing them is provably a no-op
+       in dark. Light values are audited against four backdrops in
+       lib/theme/contrast-audit.ts, which is the single source and is asserted
+       against these by legacy-alias.test.ts.
+
+       Identity mapping (gray-N -> typography-N) WOULD NOT WORK: the dark
+       typography ramp is reversed, so the relationship inverts and every dark
+       screen shifts. Hence dedicated variables. */
+    '--color-legacy-white': '255 255 255',
+    '--color-legacy-black': '0 0 0',
+    '--color-legacy-gray-50': '249 250 251',
+    '--color-legacy-gray-100': '243 244 246',
+    '--color-legacy-gray-200': '229 231 235',
+    '--color-legacy-gray-300': '209 213 219',
+    '--color-legacy-gray-400': '156 163 175',
+    '--color-legacy-gray-500': '107 114 128',
+    '--color-legacy-gray-600': '75 85 99',
+    '--color-legacy-gray-700': '55 65 81',
+    '--color-legacy-gray-800': '31 41 55',
+    '--color-legacy-gray-900': '17 24 39',
+    '--color-legacy-gray-950': '3 7 18',
+
+    /* The five formerly hardcoded named stops. Four have no call sites left;
+       bg-background-dark has one, in components/ui/modal/index.tsx. */
+    '--color-typography-white': '255 255 255',
+    '--color-typography-gray': '212 212 212',
+    '--color-typography-black': '24 23 24',
+    '--color-background-light': '251 251 251',
+    '--color-background-dark': '24 23 25',
 
     /* Focus Ring Indicator */
     '--color-indicator-primary': '231 138 83',

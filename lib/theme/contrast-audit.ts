@@ -79,6 +79,11 @@ export interface AuditedColor {
 export const LEGACY_ALIAS_LIGHT: Readonly<Record<string, AuditedColor>> = Object.freeze({
   white: { rgb: [30, 30, 36], role: 'text', note: 'primary foreground' },
   black: { rgb: [244, 243, 238], role: 'surface', note: 'page surface' },
+  // gray-50 and gray-100 are NOT in the spec's table, but gray-100 has four live
+  // sites. Omitting a stop from the alias override drops it from the scale and
+  // the class is purged with no error, so both are defined here.
+  'gray-50': { rgb: [30, 30, 36], role: 'text' },
+  'gray-100': { rgb: [33, 33, 37], role: 'text' },
   'gray-200': { rgb: [39, 39, 43], role: 'text' },
   'gray-300': { rgb: [49, 48, 52], role: 'text' },
   'gray-400': { rgb: [79, 77, 78], role: 'text' },
