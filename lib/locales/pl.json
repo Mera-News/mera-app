@@ -351,7 +351,7 @@
     "retry": "Ponów",
     "watchGuide": "Zobacz, jak dodać język do urządzenia",
     "managePacksPrefix": "Aby zarządzać pobranymi językami, przejdź do",
-    "translationUnavailableTapToRetry": "Obecnie wyświetlany jest angielski. Stuknij, aby spróbować ponownie.",
+    "translationUnavailableTapToRetry": "Pakiet językowy {{language}} może wciąż być pobierany. Obecnie wyświetlany jest angielski. Stuknij, aby spróbować ponownie.",
     "translationUnavailableTitle": "Tłumaczenie niedostępne",
     "translationUnsupportedOnThisIos": "Twoja wersja iOS nie potrafi tłumaczyć na {{language}}. Wyświetlamy angielski — aktualizacja iOS to umożliwi.",
     "advanced": "Zaawansowane",

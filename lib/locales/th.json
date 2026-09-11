@@ -339,7 +339,7 @@
     "retry": "ลองใหม่",
     "watchGuide": "ดูวิธีเพิ่มภาษาลงในอุปกรณ์ของคุณ",
     "managePacksPrefix": "เพื่อจัดการภาษาที่ดาวน์โหลด ไปที่",
-    "translationUnavailableTapToRetry": "ตอนนี้แสดงเป็นภาษาอังกฤษ แตะเพื่อลองใหม่",
+    "translationUnavailableTapToRetry": "แพ็กเกจภาษา {{language}} อาจยังดาวน์โหลดอยู่ ตอนนี้แสดงเป็นภาษาอังกฤษ แตะเพื่อลองใหม่",
     "translationUnavailableTitle": "การแปลภาษาไม่พร้อมใช้งาน",
     "translationUnsupportedOnThisIos": "เวอร์ชัน iOS ของคุณไม่สามารถแปลเป็น {{language}} ได้ แสดง English — อัปเดต iOS จะเปิดใช้งานได้",
     "advanced": "ขั้นสูง",

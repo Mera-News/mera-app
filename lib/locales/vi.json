@@ -339,7 +339,7 @@
     "retry": "Thử lại",
     "watchGuide": "Xem cách thêm ngôn ngữ vào thiết bị của bạn",
     "managePacksPrefix": "Để quản lý các ngôn ngữ đã tải, hãy",
-    "translationUnavailableTapToRetry": "Hiện đang hiển thị tiếng Anh. Chạm để thử lại.",
+    "translationUnavailableTapToRetry": "Gói ngôn ngữ {{language}} có thể vẫn đang tải xuống. Hiện đang hiển thị tiếng Anh. Chạm để thử lại.",
     "translationUnavailableTitle": "Bản dịch không khả dụng",
     "translationUnsupportedOnThisIos": "Phiên bản iOS của bạn không thể dịch sang {{language}}. Hiển thị tiếng Anh — cập nhật iOS sẽ bật tính năng này.",
     "advanced": "Nâng cao",

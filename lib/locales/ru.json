@@ -351,7 +351,7 @@
     "retry": "Повторить",
     "watchGuide": "Посмотрите, как добавить язык на устройство",
     "managePacksPrefix": "Чтобы управлять загруженными языками, перейдите в",
-    "translationUnavailableTapToRetry": "Сейчас показывается английский. Нажмите, чтобы попробовать снова.",
+    "translationUnavailableTapToRetry": "Языковой пакет {{language}} всё ещё может загружаться. Сейчас показывается английский. Нажмите, чтобы попробовать снова.",
     "translationUnavailableTitle": "Перевод недоступен",
     "translationUnsupportedOnThisIos": "Ваша версия iOS не может переводить на {{language}}. Показываем английский — обновление iOS это включит.",
     "advanced": "Дополнительно",

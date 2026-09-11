@@ -339,7 +339,7 @@
     "retry": "重試",
     "watchGuide": "觀看如何為裝置新增語言",
     "managePacksPrefix": "要管理已下載的語言，請前往",
-    "translationUnavailableTapToRetry": "目前顯示英文。點擊重試。",
+    "translationUnavailableTapToRetry": "{{language}}語言包可能仍在下載。目前顯示英文。點擊重試。",
     "translationUnavailableTitle": "翻譯無法使用",
     "translationUnsupportedOnThisIos": "您的 iOS 版本無法翻譯為{{language}}。顯示英文——更新iOS可啟用。",
     "advanced": "進階",

@@ -654,7 +654,7 @@
     "advancedDescription": "On-device translation. Optional — everything above works without it.",
     "managePacksPrefix": "To manage downloaded languages, go to",
     "translationUnavailableTitle": "Translation unavailable",
-    "translationUnavailableTapToRetry": "Showing English for now. Tap to try again.",
+    "translationUnavailableTapToRetry": "The {{language}} language pack may still be downloading. Showing English for now. Tap to try again.",
     "translationUnsupportedOnThisIos": "Your version of iOS can't translate into {{language}}. Showing English instead — updating iOS will enable it.",
     "downloadHintBeforePrefix": "After you pick a language, iOS may ask you to download it. Tap the",
     "downloadHintBeforeSuffix": "next to each language in that sheet — nothing downloads until you do.",

@@ -339,7 +339,7 @@
     "retry": "Tentar novamente",
     "watchGuide": "Veja como adicionar um idioma ao seu dispositivo",
     "managePacksPrefix": "Para gerenciar idiomas baixados, vá para",
-    "translationUnavailableTapToRetry": "Mostrando inglês por enquanto. Toque para tentar novamente.",
+    "translationUnavailableTapToRetry": "O pacote de idioma {{language}} ainda pode estar sendo baixado. Mostrando inglês por enquanto. Toque para tentar novamente.",
     "translationUnavailableTitle": "Tradução indisponível",
     "translationUnsupportedOnThisIos": "Sua versão do iOS não consegue traduzir para {{language}}. Mostrando inglês — atualizar iOS habilitará isso.",
     "advanced": "Avançado",

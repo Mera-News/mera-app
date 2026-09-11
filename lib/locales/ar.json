@@ -363,7 +363,7 @@
     "retry": "إعادة المحاولة",
     "watchGuide": "شاهد كيفية إضافة لغة إلى جهازك",
     "managePacksPrefix": "لإدارة اللغات المُنزلة، اذهب إلى",
-    "translationUnavailableTapToRetry": "يتم عرض الإنجليزية الآن. اضغط لإعادة المحاولة.",
+    "translationUnavailableTapToRetry": "قد تكون حزمة اللغة {{language}} لا تزال قيد التنزيل. يتم عرض الإنجليزية الآن. اضغط لإعادة المحاولة.",
     "translationUnavailableTitle": "الترجمة غير متاحة",
     "translationUnsupportedOnThisIos": "إصدار iOS الخاص بك لا يمكنه الترجمة إلى {{language}}. عرض الإنجليزية بدلاً من ذلك — تحديث iOS سيجعل ذلك ممكناً.",
     "advanced": "متقدم",

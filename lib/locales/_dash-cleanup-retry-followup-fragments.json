@@ -1,0 +1,102 @@
+{
+  "ar": {
+    "language": {
+      "translationUnavailableTapToRetry": "قد تكون حزمة اللغة {{language}} لا تزال قيد التنزيل. يتم عرض الإنجليزية الآن. اضغط لإعادة المحاولة."
+    }
+  },
+  "de": {
+    "language": {
+      "translationUnavailableTapToRetry": "Das {{language}}-Sprachpaket wird möglicherweise noch heruntergeladen. Momentan wird Englisch angezeigt. Tippen, um es erneut zu versuchen."
+    }
+  },
+  "en": {
+    "language": {
+      "translationUnavailableTapToRetry": "The {{language}} language pack may still be downloading. Showing English for now. Tap to try again."
+    }
+  },
+  "es": {
+    "language": {
+      "translationUnavailableTapToRetry": "El paquete de idioma {{language}} podría seguir descargándose. Mostrando inglés por ahora. Toca para volver a intentarlo."
+    }
+  },
+  "fr": {
+    "language": {
+      "translationUnavailableTapToRetry": "Le pack de langue {{language}} est peut-être encore en téléchargement. Affichage de l'anglais pour l'instant. Appuyez pour réessayer."
+    }
+  },
+  "hi": {
+    "language": {
+      "translationUnavailableTapToRetry": "हो सकता है {{language}} भाषा पैकेज अभी भी डाउनलोड हो रहा हो। फ़िलहाल अंग्रेज़ी दिखाई जा रही है। फिर से कोशिश करने के लिए टैप करें।"
+    }
+  },
+  "id": {
+    "language": {
+      "translationUnavailableTapToRetry": "Paket bahasa {{language}} mungkin masih diunduh. Menampilkan bahasa Inggris untuk saat ini. Ketuk untuk mencoba lagi."
+    }
+  },
+  "it": {
+    "language": {
+      "translationUnavailableTapToRetry": "Il pacchetto linguistico {{language}} potrebbe essere ancora in download. Al momento viene mostrato l'inglese. Tocca per riprovare."
+    }
+  },
+  "ja": {
+    "language": {
+      "translationUnavailableTapToRetry": "{{language}}言語パックはまだダウンロード中の可能性があります。現在は英語を表示しています。もう一度試すにはタップしてください。"
+    }
+  },
+  "ko": {
+    "language": {
+      "translationUnavailableTapToRetry": "{{language}} 언어 팩이 아직 다운로드 중일 수 있습니다. 지금은 영어로 표시하고 있습니다. 다시 시도하려면 탭하세요."
+    }
+  },
+  "nl": {
+    "language": {
+      "translationUnavailableTapToRetry": "Het {{language}}-taalpakket wordt mogelijk nog steeds gedownload. Toont voorlopig Engels. Tik om het opnieuw te proberen."
+    }
+  },
+  "pl": {
+    "language": {
+      "translationUnavailableTapToRetry": "Pakiet językowy {{language}} może wciąż być pobierany. Obecnie wyświetlany jest angielski. Stuknij, aby spróbować ponownie."
+    }
+  },
+  "pt-BR": {
+    "language": {
+      "translationUnavailableTapToRetry": "O pacote de idioma {{language}} ainda pode estar sendo baixado. Mostrando inglês por enquanto. Toque para tentar novamente."
+    }
+  },
+  "ru": {
+    "language": {
+      "translationUnavailableTapToRetry": "Языковой пакет {{language}} всё ещё может загружаться. Сейчас показывается английский. Нажмите, чтобы попробовать снова."
+    }
+  },
+  "th": {
+    "language": {
+      "translationUnavailableTapToRetry": "แพ็กเกจภาษา {{language}} อาจยังดาวน์โหลดอยู่ ตอนนี้แสดงเป็นภาษาอังกฤษ แตะเพื่อลองใหม่"
+    }
+  },
+  "tr": {
+    "language": {
+      "translationUnavailableTapToRetry": "{{language}} dil paketi hâlâ indiriliyor olabilir. Şimdilik İngilizce gösteriliyor. Tekrar denemek için dokunun."
+    }
+  },
+  "uk": {
+    "language": {
+      "translationUnavailableTapToRetry": "Мовний пакет {{language}} ще може завантажуватися. Наразі показано англійську. Торкніться, щоб спробувати ще раз."
+    }
+  },
+  "vi": {
+    "language": {
+      "translationUnavailableTapToRetry": "Gói ngôn ngữ {{language}} có thể vẫn đang tải xuống. Hiện đang hiển thị tiếng Anh. Chạm để thử lại."
+    }
+  },
+  "zh-CN": {
+    "language": {
+      "translationUnavailableTapToRetry": "{{language}}语言包可能仍在下载。目前显示英文。点击重试。"
+    }
+  },
+  "zh-TW": {
+    "language": {
+      "translationUnavailableTapToRetry": "{{language}}語言包可能仍在下載。目前顯示英文。點擊重試。"
+    }
+  }
+}

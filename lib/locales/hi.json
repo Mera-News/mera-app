@@ -339,7 +339,7 @@
     "retry": "पुनः प्रयास करें",
     "watchGuide": "अपने डिवाइस में भाषा जोड़ने का तरीका देखें",
     "managePacksPrefix": "डाउनलोड की गई भाषाओं को प्रबंधित करने के लिए, यहाँ जाएं",
-    "translationUnavailableTapToRetry": "फ़िलहाल अंग्रेज़ी दिखाई जा रही है। फिर से कोशिश करने के लिए टैप करें।",
+    "translationUnavailableTapToRetry": "हो सकता है {{language}} भाषा पैकेज अभी भी डाउनलोड हो रहा हो। फ़िलहाल अंग्रेज़ी दिखाई जा रही है। फिर से कोशिश करने के लिए टैप करें।",
     "translationUnavailableTitle": "अनुवाद उपलब्ध नहीं",
     "translationUnsupportedOnThisIos": "आपका iOS संस्करण {{language}} में अनुवाद नहीं कर सकता। अभी अंग्रेजी दिखा रहे हैं — iOS अपडेट करने से यह संभव हो जाएगा।",
     "advanced": "उन्नत",

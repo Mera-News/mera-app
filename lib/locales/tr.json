@@ -339,7 +339,7 @@
     "retry": "Tekrar Dene",
     "watchGuide": "Cihazınıza dil eklemeyi izleyin",
     "managePacksPrefix": "İndirilen dilleri yönetmek için git",
-    "translationUnavailableTapToRetry": "Şimdilik İngilizce gösteriliyor. Tekrar denemek için dokunun.",
+    "translationUnavailableTapToRetry": "{{language}} dil paketi hâlâ indiriliyor olabilir. Şimdilik İngilizce gösteriliyor. Tekrar denemek için dokunun.",
     "translationUnavailableTitle": "Çeviri kullanılamıyor",
     "translationUnsupportedOnThisIos": "iOS sürümünüz {{language}} dilinde çeviremiyor. İngilizce gösteriliyor — iOS'u güncellemek bunu etkinleştirecektir.",
     "advanced": "Gelişmiş",
