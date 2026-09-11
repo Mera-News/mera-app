@@ -838,6 +838,30 @@ export async function processAllUnscored(
     });
   }
 
+  // Subscription reads: how a publication the user PAYS FOR covered each of
+  // these stories. Last, non-fatal, and cheap to skip — it exits on its first
+  // line for anyone with no subscriptions, which is almost everyone.
+  //
+  // Deliberately outside `totalProcessed`: that number is the scoring result
+  // the caller reports and acts on, and a read is optional polish that must
+  // never inflate or deflate it.
+  try {
+    // LAZY REQUIRE, deliberately. `stage-subscription-read` reaches
+    // `lib/database/index`, which constructs the SQLite adapter at module
+    // evaluation — a top-level import here would put that in the module graph
+    // of every suite that imports scoring-service, and the jest WORKER dies
+    // with `initializeJSI` rather than an assertion failing. Requiring it at
+    // the call site keeps the cost where the work is. Same shape as logger's
+    // lazy requires.
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { runSubscriptionReadStage } = require('./stage-subscription-read');
+    await runSubscriptionReadStage();
+  } catch (err) {
+    logger.captureException(err, {
+      tags: { service: 'scoring-service', method: 'processAllUnscored.subscriptionRead' },
+    });
+  }
+
   return totalProcessed;
 }
 

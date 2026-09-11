@@ -26,6 +26,25 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (k: string, o?: any) => o?.defaultValue ?? k }),
 }));
 
+// The screen gained a "Your subscriptions" section. Both the section and the
+// subscription service reach `lib/database/index`, which constructs the SQLite
+// adapter at module evaluation — so without these the jest WORKER dies with
+// `initializeJSI` and nothing in this file is named in the error.
+//
+// The section is stubbed rather than exercised: it has its own suite, and this
+// file is about the "Other sources" list.
+jest.mock('../SubscriptionsSection', () => ({
+    __esModule: true,
+    default: () => null,
+}));
+jest.mock('@/lib/database/services/user-publication-subscription-service', () => ({
+    // Empty set ⇒ nothing is suppressed, so every existing assertion about the
+    // lower list still describes the same list it always did.
+    getSubscribedSourceNameSet: jest.fn(async () => new Set<string>()),
+    normalizeSubscriptionName: (x: string) =>
+        (x ?? '').toLowerCase().trim().replace(/\s+/g, ' '),
+}));
+
 // jest-expo mis-transforms RN's ScrollView native-component file, which
 // FlatList pulls in transitively — proxy RN so ScrollView renders as a plain
 // View; every other export stays lazy/real. Same trick as LocationsScreen.test.

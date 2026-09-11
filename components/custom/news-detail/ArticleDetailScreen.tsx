@@ -33,6 +33,10 @@ import {
     isSuggestionSaved,
     saveStandaloneArticle,
 } from '@/lib/database/services/saved-article-suggestion-service';
+import {
+    getSubscribedCoverageForArticle,
+    type SubscribedCoverage,
+} from '@/lib/database/services/subscribed-sibling-service';
 import type { ArticleSummary, NewsArticle } from '@/lib/generated/graphql-types';
 import logger from '@/lib/logger';
 import { useSavedOverride } from '@/lib/saved-state';
@@ -86,6 +90,75 @@ const summaryToNewsArticle = (a: ArticleSummary): NewsArticle => ({
         } as NewsArticle['publicationSource'])
         : undefined,
 } as NewsArticle);
+
+/**
+ * "From your subscriptions" — coverage of this story by a publication the user
+ * pays for.
+ *
+ * Sourced LOCALLY from `article_suggestions` via the story's stable cluster id,
+ * not by partitioning the server-paged related list. Two consequences worth
+ * knowing before changing it:
+ *
+ *  - It never removes anything from "Related articles" below. The two lists are
+ *    independent, so an entry can legitimately appear in both, and
+ *    `RelatedSortDropdown` has no effect in here by design.
+ *  - It inherits no ordering from `orderRelatedArticles`, so it states its own:
+ *    newest publication first, chosen in `findSubscribedSiblings`.
+ *
+ * Three states, and the middle one is the one people get wrong: a sibling whose
+ * `subscription_read` is still null renders the CARD WITH NO READ LINE. No
+ * spinner, no "analysing" — a read may never be written for this row, and a
+ * permanent spinner would be a lie.
+ *
+ * Nothing here may imply we read the full article. The read is built from the
+ * sibling's title, English description and existing enrichment; subscription
+ * publishers paywall their bodies and we never fetch one.
+ */
+const SubscribedCoverageBlock: React.FC<{ readonly articleId: string }> = ({ articleId }) => {
+    const { t } = useTranslation();
+    const [coverage, setCoverage] = useState<SubscribedCoverage | null>(null);
+
+    useEffect(() => {
+        let cancelled = false;
+        void getSubscribedCoverageForArticle(articleId).then((result) => {
+            if (!cancelled) setCoverage(result);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [articleId]);
+
+    // Absent, not empty: no subscribed sibling means no heading either.
+    if (!coverage) return null;
+
+    return (
+        <VStack space="md">
+            <Heading size="lg" className="text-gray-300">
+                {t('articleDetail.relatedFromSubscriptions')}
+            </Heading>
+            <VStack space="sm">
+                {coverage.publicationName ? (
+                    <Text size="sm" className="text-gray-400">
+                        {coverage.publicationName}
+                    </Text>
+                ) : null}
+                {coverage.titleEn ? (
+                    <Text size="md" className="text-white">
+                        {coverage.titleEn}
+                    </Text>
+                ) : null}
+                <Text size="sm" className="text-gray-400">
+                    {t('subscriptions.coversThisStory')}
+                </Text>
+                {coverage.read ? (
+                    <Text size="sm" className="text-gray-300">
+                        {coverage.read}
+                    </Text>
+                ) : null}
+            </VStack>
+        </VStack>
+    );
+};
 
 const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
     articleId,
@@ -770,6 +843,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                             has asked about this article, which is the common
                             case. */}
                         <FactCheckPanel articleId={article._id ?? articleId} />
+
+                        <SubscribedCoverageBlock articleId={article._id ?? articleId} />
 
                         {(isLoadingRelated || related.length > 0) && (
                             <VStack space="md">

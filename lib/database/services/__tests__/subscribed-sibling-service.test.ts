@@ -99,7 +99,10 @@ describe('siblingIsReadable', () => {
 });
 
 describe('clusterIdsForRow', () => {
-  it('includes the stable id and every membership id', () => {
+  // STABLE ids only. A raw `clusterId` is a per-run HDBSCAN label in a
+  // different namespace from `stable_cluster_id`, so including one would widen
+  // the query with a value that can never match.
+  it('includes the stable id and every membership STABLE id, and no raw clusterId', () => {
     const r = row({
       stableClusterId: 'stable-1',
       clusterMembershipsJson: JSON.stringify([
@@ -107,7 +110,7 @@ describe('clusterIdsForRow', () => {
         { clusterId: 'c2', confidence: 0.4 },
       ]),
     });
-    expect(new Set(clusterIdsForRow(r))).toEqual(new Set(['stable-1', 'stable-2', 'c1', 'c2']));
+    expect(new Set(clusterIdsForRow(r))).toEqual(new Set(['stable-1', 'stable-2']));
   });
 
   it('survives a malformed membership blob', () => {
@@ -172,6 +175,36 @@ describe('findSubscribedSiblings', () => {
     db._setRows(TABLE, [anchor]);
     expect(await findSubscribedSiblings(anchor)).toEqual([]);
     expect(db._collections[TABLE].query).not.toHaveBeenCalled();
+  });
+
+  // Documented limitation: matching is on the INDEXED stable id only, because
+  // the membership list is JSON and unqueryable. A null-stable-id sibling is
+  // therefore never a candidate, which degrades to the "no subscribed sibling"
+  // state the UI already renders rather than to a wrong answer.
+  //
+  // Asserted on the QUERY ARGS, not on the result: the shared database mock
+  // ignores the Q.where predicate and hands back every row it was given, so a
+  // result-shaped assertion here would pass whatever the WHERE clause said and
+  // prove nothing.
+  it('narrows on stable_cluster_id only, never on a raw clusterId', async () => {
+    const anchor = row({
+      id: 'anchor',
+      publicationName: 'NOS',
+      stableClusterId: 'stable-1',
+      clusterMembershipsJson: JSON.stringify([
+        { clusterId: 'raw-1', confidence: 0.9, stableClusterId: 'stable-2' },
+      ]),
+      firstPubDate: T0,
+    });
+    db._setRows(TABLE, [anchor]);
+
+    await findSubscribedSiblings(anchor);
+
+    const clause = JSON.stringify(db._collections[TABLE].query.mock.calls[0]);
+    expect(clause).toContain('stable_cluster_id');
+    expect(clause).toContain('stable-1');
+    expect(clause).toContain('stable-2');
+    expect(clause).not.toContain('raw-1');
   });
 
   it('matches a source name that is not the publisher name', async () => {

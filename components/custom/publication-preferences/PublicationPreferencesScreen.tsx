@@ -17,10 +17,12 @@ import {
 import logger from '@/lib/logger';
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useState } from 'react';
+import { getSubscribedSourceNameSet, normalizeSubscriptionName } from '@/lib/database/services/user-publication-subscription-service';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native';
 import PublicationPrefRow from './PublicationPrefRow';
+import SubscriptionsSection from './SubscriptionsSection';
 
 interface PublicationPreferencesScreenProps {
     readonly onBack: () => void;
@@ -63,6 +65,42 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
     // ("India") can collide with a real publication called "India", which
     // would otherwise busy-lock the wrong row's chips.
     const [busyId, setBusyId] = useState<string | null>(null);
+    // Every SOURCE name covered by an active subscription, normalised. Used to
+    // keep a subscribed publication out of "Other sources" below.
+    const [subscribedSourceNames, setSubscribedSourceNames] = useState<Set<string>>(new Set());
+
+    useEffect(() => {
+        let cancelled = false;
+        void getSubscribedSourceNameSet().then((names) => {
+            if (!cancelled) setSubscribedSourceNames(names);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [items]);
+
+    /**
+     * "Other sources" = every preference row NOT covered by a subscription.
+     *
+     * Matched against the subscription's SOURCE-name set, never against its
+     * publisher name. A `publication_preferences` row is keyed by the source's
+     * `publication_name`, and a source name is frequently not the publisher's
+     * name, so comparing to the publisher name would leave the boosted row
+     * visible in both sections. That is the same trap `source_names_json`
+     * exists to prevent, one layer up.
+     *
+     * Scope rows (country predicates) are never suppressed: they are not a
+     * publication and can never be a subscription.
+     */
+    const otherSources = useMemo(
+        () =>
+            items.filter(
+                (p) =>
+                    p.scopeKind != null ||
+                    !subscribedSourceNames.has(normalizeSubscriptionName(p.publicationName)),
+            ),
+        [items, subscribedSourceNames],
+    );
 
     useEffect(() => {
         const sub = observeActive().subscribe((rows) => {
@@ -203,22 +241,39 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
                 <Box className="flex-1 items-center justify-center">
                     <Spinner size="large" />
                 </Box>
-            ) : items.length === 0 ? (
-                <VStack className="flex-1 items-center justify-center px-8" space="md">
-                    <MaterialIcons name="tune" size={56} color="#666666" />
-                    <Text size="md" className="text-gray-400 text-center">
-                        {t('publicationPrefs.empty', {
-                            defaultValue: "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here.",
-                        })}
-                    </Text>
-                </VStack>
             ) : (
                 <FlatList
-                    data={items}
+                    data={otherSources}
                     keyExtractor={(item) => item.id}
                     renderItem={renderItem}
                     contentContainerStyle={{ paddingBottom: 48 }}
                     showsVerticalScrollIndicator={false}
+                    // "Your subscriptions" is the list header rather than a
+                    // sibling above the FlatList so the whole screen scrolls as
+                    // one. It renders even when empty — the section is how the
+                    // feature is found, and one that appears only once you
+                    // already use it can never be discovered.
+                    ListHeaderComponent={
+                        <VStack space="xs">
+                            <SubscriptionsSection />
+                            <Text size="sm" className="text-gray-400 uppercase px-4 pt-4 pb-1">
+                                {t('subscriptions.otherSources')}
+                            </Text>
+                        </VStack>
+                    }
+                    // Only the LOWER section's empty state. The screen as a
+                    // whole is never empty now, because the subscriptions
+                    // section always renders.
+                    ListEmptyComponent={
+                        <VStack className="items-center px-8 py-10" space="md">
+                            <MaterialIcons name="tune" size={56} color="#666666" />
+                            <Text size="md" className="text-gray-400 text-center">
+                                {t('publicationPrefs.empty', {
+                                    defaultValue: "You haven't adjusted any sources yet. Boost, downrank or mute a publication from any article to see it here.",
+                                })}
+                            </Text>
+                        </VStack>
+                    }
                 />
             )}
 

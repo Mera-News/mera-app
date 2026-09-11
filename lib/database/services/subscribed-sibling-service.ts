@@ -61,12 +61,18 @@ export function siblingIsReadable(
   return sibling.firstPubDate.getTime() <= anchor.firstPubDate.getTime();
 }
 
-/** Every cluster id a row belongs to, stable ids included. */
+/**
+ * Every STABLE cluster id a row belongs to.
+ *
+ * Stable ids only, and deliberately not the raw `clusterId`s. Those live in a
+ * different namespace: they are per-run HDBSCAN labels, they are not what
+ * `stable_cluster_id` holds, and feeding them to a query against that column
+ * matches nothing while looking like it widens the search.
+ */
 export function clusterIdsForRow(row: ArticleSuggestionModel): string[] {
   const ids = new Set<string>();
   if (row.stableClusterId) ids.add(row.stableClusterId);
   for (const m of parseClusterMemberships(row.clusterMembershipsJson)) {
-    if (m.clusterId) ids.add(m.clusterId);
     if (m.stableClusterId) ids.add(m.stableClusterId);
   }
   return [...ids];
@@ -96,9 +102,16 @@ export async function findSubscribedSiblings(
   const clusterIds = clusterIdsForRow(anchor);
   if (clusterIds.length === 0) return [];
 
-  // Query on the indexed stable id, then filter memberships in JS. The
-  // membership list is JSON, so it is not queryable; this narrows the scan to
-  // the story first rather than reading the whole table.
+  // Matched on the INDEXED `stable_cluster_id` alone. `cluster_memberships_json`
+  // is JSON and therefore not queryable, and the alternative — scanning every
+  // row and parsing each blob on every article-detail mount — is not worth it
+  // for a block whose miss is a defined state.
+  //
+  // The accepted cost, stated rather than hidden: a sibling whose
+  // `stable_cluster_id` is NULL is not found even when its membership list
+  // overlaps the anchor's. That row simply does not produce a block, which is
+  // exactly the "no subscribed sibling" state the UI already renders. It is a
+  // missed opportunity, never a wrong answer.
   const candidates = await suggestionsCollection
     .query(Q.where('stable_cluster_id', Q.oneOf(clusterIds)))
     .fetch();
@@ -131,6 +144,68 @@ export async function findPrimarySubscribedSibling(
 ): Promise<ArticleSuggestionModel | null> {
   const siblings = await findSubscribedSiblings(anchor, subscribedNames);
   return siblings[0] ?? null;
+}
+
+/** What the article-detail block renders. */
+export interface SubscribedCoverage {
+  readonly siblingId: string;
+  readonly publicationName: string | null;
+  readonly titleEn: string | null;
+  readonly articleUrl: string | null;
+  readonly imageUrl: string | null;
+  readonly firstPubDate: Date;
+  /**
+   * The AI read, or null when none has been written yet.
+   *
+   * NULL is a resting state, not a pending one. The block shows the card with
+   * no read line: there is no spinner and no "analysing", because a read may
+   * never arrive for this row and a permanent spinner is a lie.
+   */
+  readonly read: string | null;
+}
+
+/**
+ * Resolves the subscribed-coverage block for an article detail screen.
+ *
+ * Returns null when there is nothing to show, which is the common case and is
+ * exactly what makes the block absent rather than empty.
+ */
+export async function getSubscribedCoverageForArticle(
+  articleId: string,
+): Promise<SubscribedCoverage | null> {
+  if (!articleId) return null;
+  try {
+    // The row id IS the server _id, and `article_id` is the other identifier
+    // the detail screen may hold, so try both rather than assuming which one
+    // the caller was given.
+    let anchor: ArticleSuggestionModel | null = null;
+    try {
+      anchor = await suggestionsCollection.find(articleId);
+    } catch {
+      const byArticle = await suggestionsCollection
+        .query(Q.where('article_id', articleId))
+        .fetch();
+      anchor = byArticle.find((r) => r.articleId === articleId) ?? null;
+    }
+    if (!anchor) return null;
+
+    const sibling = await findPrimarySubscribedSibling(anchor);
+    if (!sibling) return null;
+
+    return {
+      siblingId: sibling.id,
+      publicationName: sibling.publicationName,
+      titleEn: sibling.titleEn,
+      articleUrl: sibling.articleUrl,
+      imageUrl: sibling.imageUrl,
+      firstPubDate: sibling.firstPubDate,
+      read: anchor.subscriptionRead ?? null,
+    };
+  } catch {
+    // A render-path read. Degrading to "no block" is always safe; throwing
+    // here would take down the whole article detail screen.
+    return null;
+  }
 }
 
 /** Records a read against the ANCHOR row, which is where it renders. */
