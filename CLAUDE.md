@@ -50,7 +50,7 @@ publication-preferences,saved-suggestions,not-interested,hygiene,tutorials}`. Re
    change, update `schema.gql` and run `npm run codegen`.
 3. Settle copy in `lib/locales/en.json` first; translate the other 19 locales last, from exact keys.
 4. Only the explicit logout button logs a user out. Gate screens on local identity, session as fallback.
-5. Native-rebuild work leaves the wave: its own plan file plus a row in `../native-rebuild-plans.md`.
+5. Native-rebuild work leaves the wave: its own plan file under `../plans/`, listed in `../plans/PLAN_EXECUTION_ORDER.md`.
 6. Never put an account id, email, or personal name into a checked-in file.
 7. `.watchmanconfig` must never ignore `node_modules` or `.git`; Metro builds its module map from that crawl.
 8. Verify UI changes on a simulator yourself before declaring them done. Load `mera-app-harness`.
