@@ -1,6 +1,6 @@
 import React from 'react';
 import { createImage } from '@gluestack-ui/core/image/creator';
-import { Platform } from 'react-native';
+import { AccessibilityInfo, Platform } from 'react-native';
 import {
   Image as ExpoImage,
   type ImageContentFit,
@@ -49,6 +49,26 @@ const RESIZE_MODE_TO_CONTENT_FIT: Record<RNResizeMode, ImageContentFit> = {
 };
 
 /**
+ * Whether the reader has asked the OS to reduce motion.
+ *
+ * Module-level and read once at load, plus a subscription, exactly like
+ * `lib/toast-manager.ts`: this is consulted on every image render on an endless
+ * feed, so it must not be an async call or a hook. Defaults to "motion is fine"
+ * if the query fails, which is the same fallback toast-manager takes.
+ */
+let reduceMotion = false;
+AccessibilityInfo.isReduceMotionEnabled()
+  .then((enabled) => {
+    reduceMotion = enabled;
+  })
+  .catch(() => {
+    /* default: motion enabled */
+  });
+AccessibilityInfo.addEventListener('reduceMotionChanged', (enabled) => {
+  reduceMotion = enabled;
+});
+
+/**
  * Root shim passed to Gluestack's `createImage`. Swaps react-native's
  * `Image` for expo-image's native `Image` while keeping every existing call
  * site (which passes RN-style `resizeMode`, `source`, `style`, `onError`,
@@ -84,7 +104,10 @@ const ExpoImageRoot = React.forwardRef<
       // `cachePolicy="memory-disk"` explicitly for the rare image that is small,
       // long-lived and re-shown constantly (an avatar, a logo).
       cachePolicy={cachePolicy ?? 'disk'}
-      transition={transition ?? 150}
+      // A larger source makes the empty-then-pop moment more visible, so the
+      // cross-fade is part of shipping bigger images rather than polish. Under
+      // Reduce Motion it drops to 0: an instant swap, no animation.
+      transition={transition ?? (reduceMotion ? 0 : 150)}
       {...props}
     />
   );

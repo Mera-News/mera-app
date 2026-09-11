@@ -13,7 +13,10 @@ import { Image } from '@/components/ui/image';
 import { Pressable } from '@/components/ui/pressable';
 import { VStack } from '@/components/ui/vstack';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
-import React, { useState } from 'react';
+import React from 'react';
+import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
+import { HERO_TARGET_PX } from '@/lib/images/upgrade-image-url';
+import { recordHeroLoad } from '@/lib/images/image-resolution-stats';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -132,11 +135,19 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
   metaRowRightReserve = 0,
 }) => {
   const { t } = useTranslation();
-  const [imageFailed, setImageFailed] = useState(false);
   const blurImages = useBlurImagesStore((s) => s.blurImages);
+  // Two-step fallback: rewritten URL -> original -> placeholder. Keyed on
+  // `imageUrl` inside the hook, so a recycled row cannot inherit the previous
+  // article's failure. Skipped entirely under blur: at blurRadius 24 the extra
+  // bytes are decoded only to be destroyed.
+  const heroImage = useUpgradedImageSource(imageUrl, HERO_TARGET_PX, {
+    enabled: !blurImages,
+  });
 
   const displayTitle = titleEnglish || t('feed.newsCluster');
-  const showImage = !!imageUrl && !imageFailed;
+  // Unchanged meaning: a real image, not the placeholder. The h-48/h-28 band
+  // split and metaRowRightReserve depend on it.
+  const showImage = !!imageUrl && !heroImage.failed;
 
   const innerContent = (
     <>
@@ -156,12 +167,23 @@ const ArticleCardBaseImpl: React.FC<ArticleCardBaseProps> = ({
             }
           >
             <Image
-              source={{ uri: imageUrl! }}
+              source={{ uri: heroImage.uri! }}
               alt={displayTitle}
               className="w-full h-full"
               resizeMode="cover"
               recyclingKey={recyclingKey}
-              onError={() => setImageFailed(true)}
+              onError={heroImage.onError}
+              onLoad={(e) => {
+                // Source resolution is only knowable here; never parse it from
+                // the URL. Counts the decode that already happened, nothing
+                // about the reader.
+                recordHeroLoad({
+                  upgraded: heroImage.upgraded,
+                  sourceHeight: e?.source?.height ?? 0,
+                  rewriteAttempted: !blurImages,
+                  rewriteFellBack: heroImage.stage === 'original' && !blurImages,
+                });
+              }}
               blurRadius={blurImages ? 24 : undefined}
               // Feed heroes are decorative and arrive by the screenful, so their
               // fetch+decode must yield to anything the user is waiting on.

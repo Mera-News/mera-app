@@ -14,7 +14,9 @@ import { Pressable } from '@/components/ui/pressable';
 import { Text } from '@/components/ui/text';
 import { useBlurImagesStore } from '@/lib/stores/blur-images-store';
 import { useAdaptiveLineClamp } from '@/lib/typography/useAdaptiveLineClamp';
-import React, { useState } from 'react';
+import React from 'react';
+import { useUpgradedImageSource } from '@/lib/images/use-upgraded-image-source';
+import { COMPACT_TARGET_PX } from '@/lib/images/upgrade-image-url';
 
 /**
  * ArticleCompactCardBase — the compact card CHROME. Purely presentational:
@@ -148,8 +150,19 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
   // indistinguishable from no image — on every surface that renders this shared
   // chrome (saved suggestions, related articles, story timeline, publication
   // history, persona article list). ArticleCardBase does the same for the hero.
-  const [imageFailed, setImageFailed] = useState(false);
-  const showImage = !!imageUrl && !imageFailed;
+  // Two-step fallback: rewritten URL -> original -> no column. The compact
+  // target is small, so only the PARAMETERISED rules apply here; the binary
+  // rules (which jump to the full original with no size control) are skipped
+  // inside the hook, because a multi-megapixel original to fill 92pt is a
+  // bandwidth regression, not an upgrade.
+  //
+  // Failure still resolves to "no image column", NOT to the placeholder: see
+  // the note above. What the hook adds is a retry on the ORIGINAL before we get
+  // there, so a rewrite that 404s no longer costs the row its picture.
+  const rowImage = useUpgradedImageSource(imageUrl, COMPACT_TARGET_PX, {
+    enabled: !blurImages,
+  });
+  const showImage = !!imageUrl && !rowImage.failed;
 
   const surface = (
     <Card
@@ -260,12 +273,12 @@ const ArticleCompactCardBaseImpl: React.FC<ArticleCompactCardBaseProps> = ({
                 }}
               >
                 <Image
-                  source={{ uri: imageUrl! }}
+                  source={{ uri: rowImage.uri! }}
                   alt={displayTitle}
                   className="w-full h-full"
                   resizeMode="cover"
                   recyclingKey={recyclingKey}
-                  onError={() => setImageFailed(true)}
+                  onError={rowImage.onError}
                   blurRadius={blurImages ? 24 : undefined}
                   // Decorative, and these arrive by the screenful — yield decode
                   // work to whatever the user is waiting on. See the longer note
