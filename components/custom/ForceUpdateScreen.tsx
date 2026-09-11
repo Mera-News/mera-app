@@ -57,7 +57,7 @@ export default function ForceUpdateScreen({ storeUrl }: { storeUrl: string | nul
         className="mt-8 bg-white rounded-full px-8"
         size="lg"
       >
-        <ButtonText className="text-black">{t('nativeUpdate.updateCta')}</ButtonText>
+        <ButtonText className="text-pure-black">{t('nativeUpdate.updateCta')}</ButtonText>
       </Button>
     </View>
   );

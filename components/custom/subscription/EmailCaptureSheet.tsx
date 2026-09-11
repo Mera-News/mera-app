@@ -321,7 +321,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     {busy ? (
                                         <Spinner size="small" color="black" />
                                     ) : (
-                                        <Text className="text-black text-base font-semibold">
+                                        <Text className="text-pure-black text-base font-semibold">
                                             {t('emailCapture.continue')}
                                         </Text>
                                     )}
@@ -420,7 +420,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     {busy ? (
                                         <Spinner size="small" color="black" />
                                     ) : (
-                                        <Text className="text-black text-base font-semibold">
+                                        <Text className="text-pure-black text-base font-semibold">
                                             {t('emailCapture.confirm')}
                                         </Text>
                                     )}
@@ -502,7 +502,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('emailCapture.skipConfirm')}
                                     className="h-14 rounded-full items-center justify-center bg-primary-500 mt-2"
                                 >
-                                    <Text className="text-black text-base font-semibold">
+                                    <Text className="text-pure-black text-base font-semibold">
                                         {t('emailCapture.skipConfirm')}
                                     </Text>
                                 </Pressable>
@@ -537,7 +537,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('common.done')}
                                     className="h-14 rounded-full items-center justify-center bg-primary-500 mt-2"
                                 >
-                                    <Text className="text-black text-base font-semibold">
+                                    <Text className="text-pure-black text-base font-semibold">
                                         {t('common.done')}
                                     </Text>
                                 </Pressable>

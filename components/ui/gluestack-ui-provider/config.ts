@@ -175,6 +175,21 @@ export const rawTokens = {
     '--color-background-muted': '243 244 246',
     '--color-background-info': '235 248 254',
 
+    /* LITERAL ESCAPE HATCHES. Identical in both schemes, deliberately.
+       Most text-white / bg-black in this app means "primary foreground" or
+       "base surface" and must follow the theme. A minority means LITERALLY
+       white or black, because it sits on something that is not a themed
+       surface: a label on the Almond accent fill, a caption over a card image
+       gradient, a scrim, a hairline on media. In DARK MODE both readings render
+       the same pixels, so the dark diff is blind to the difference and light
+       mode breaks in exactly the places hardest to spot. These three names make
+       the intent explicit at the call site. */
+    '--color-pure-white': '255 255 255',
+    '--color-pure-black': '0 0 0',
+    /* A veil over media. Dark in BOTH schemes: a scrim exists to make text
+       legible over a photograph, and a photograph is not lighter in light mode. */
+    '--color-scrim': '0 0 0',
+
     /* Focus Ring Indicator - primary retoned to 195 104 60 (3.52:1); stock 216 121 67
        is 2.81:1 and Almond itself is 2.32:1, both under the 3:1 a focus ring needs. */
     '--color-indicator-primary': '195 104 60',
@@ -328,6 +343,21 @@ export const rawTokens = {
     '--color-background-success': '28 43 33',
     '--color-background-muted': '34 34 34',
     '--color-background-info': '26 40 46',
+
+    /* LITERAL ESCAPE HATCHES. Identical in both schemes, deliberately.
+       Most text-white / bg-black in this app means "primary foreground" or
+       "base surface" and must follow the theme. A minority means LITERALLY
+       white or black, because it sits on something that is not a themed
+       surface: a label on the Almond accent fill, a caption over a card image
+       gradient, a scrim, a hairline on media. In DARK MODE both readings render
+       the same pixels, so the dark diff is blind to the difference and light
+       mode breaks in exactly the places hardest to spot. These three names make
+       the intent explicit at the call site. */
+    '--color-pure-white': '255 255 255',
+    '--color-pure-black': '0 0 0',
+    /* A veil over media. Dark in BOTH schemes: a scrim exists to make text
+       legible over a photograph, and a photograph is not lighter in light mode. */
+    '--color-scrim': '0 0 0',
 
     /* Focus Ring Indicator */
     '--color-indicator-primary': '231 138 83',

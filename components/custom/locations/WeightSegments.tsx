@@ -37,7 +37,7 @@ const WeightSegments: React.FC<Props> = ({ value, onChange, compact = false }) =
             }`}
           >
             <Text
-              className={`${textSize} ${selected ? 'text-black font-semibold' : 'text-gray-300'}`}
+              className={`${textSize} ${selected ? 'text-pure-black font-semibold' : 'text-gray-300'}`}
             >
               {t(`locations.weight.${b.bucket}` as never)}
             </Text>

@@ -182,7 +182,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             <HStack className="items-center flex-wrap" space="xs">
                                 {unseen > 0 && (
                                     <Box className="rounded-full bg-primary-400 px-2 py-0.5">
-                                        <Text size="2xs" className="text-black font-bold">
+                                        <Text size="2xs" className="text-pure-black font-bold">
                                             {t('trackedStories.updatesBadge', { count: unseen })}
                                         </Text>
                                     </Box>

@@ -50,6 +50,12 @@ module.exports = {
           900: 'rgb(var(--color-secondary-900)/<alpha-value>)',
           950: 'rgb(var(--color-secondary-950)/<alpha-value>)',
         },
+        // Literal escape hatches; see config.ts. These deliberately do NOT
+        // change between schemes, so a site that means "actually white" keeps
+        // meaning it when light mode lands.
+        'pure-white': 'rgb(var(--color-pure-white)/<alpha-value>)',
+        'pure-black': 'rgb(var(--color-pure-black)/<alpha-value>)',
+        scrim: 'rgb(var(--color-scrim)/<alpha-value>)',
         tertiary: {
           0: 'rgb(var(--color-tertiary-0)/<alpha-value>)',
           50: 'rgb(var(--color-tertiary-50)/<alpha-value>)',

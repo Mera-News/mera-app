@@ -39,7 +39,7 @@ export const FullScreenErrorFallback: React.FC<ErrorFallbackProps> = ({
         size="lg"
       >
         <MaterialIcons name="refresh" size={18} color="#000" />
-        <ButtonText className="text-black ml-2">{t('common.retry')}</ButtonText>
+        <ButtonText className="text-pure-black ml-2">{t('common.retry')}</ButtonText>
       </Button>
     </View>
   );
