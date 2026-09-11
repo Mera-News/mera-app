@@ -103,6 +103,22 @@ jest.mock('@/lib/scheduler/scheduler-runner', () => ({
   run: (...args: any[]) => mockRunnerRun(...args),
 }));
 
+// Jitter is mocked to IDENTITY here, deliberately, and exercised for real in
+// lib/scheduler/__tests__/jitter.test.ts instead.
+//
+// Every interval fixture in this file is written against an exact boundary
+// (`lastRun = NOW - 5_001` against a 5_000 frequency, and friends). A live
+// +/-20% would move those boundaries and break the suite by ARITHMETIC rather
+// than by intent — which would be the worst kind of red: a real regression and
+// a fixture artefact look identical. Mocking it to 1.0 keeps every existing
+// assertion meaning exactly what its author wrote.
+jest.mock('../jitter', () => ({
+  JITTER_RATIO: 0.2,
+  jitterFactor: () => 1,
+  jitteredInterval: (_name: string, ms: number) => ms,
+  __setJitterSeedForTests: () => {},
+}));
+
 jest.mock('@/lib/logger', () => ({
   __esModule: true,
   default: {
