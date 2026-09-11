@@ -157,8 +157,10 @@ Then `npm install` in the two Node worktrees.
 
 Four things that stay in the real tree, because they belong to no branch:
 
-- The root runbooks, including `native-rebuild-plans.md` and `non-native-rebuild-plans.md`. The
-  `mera-news` root is not a git repo, so P2's entries pollute nothing.
+- The plan queue at `../../plans/PLAN_EXECUTION_ORDER.md` and the per-plan files beside it in
+  `../../plans/{ready_to_implement,blocked_on_user}/`. The `mera-news` root is not a git repo, so
+  P2's entries pollute nothing. (These replaced the root `native-rebuild-plans.md` and
+  `non-native-rebuild-plans.md` queue files, deleted 2026-09-11.)
 - The area skills at the root `.claude/skills/`, also unversioned. The fold-back edits them there.
 - `ios/` and `android/` are gitignored, so the app worktree has neither. Any build needs a prebuild.
 
@@ -779,7 +781,8 @@ P3.
 
 ## Side findings to file
 
-For `non-native-rebuild-plans.md`:
+For `../../plans/PLAN_EXECUTION_ORDER.md`, OTA side. **Both of these have since landed**, kept
+here for the record:
 
 - **Pending deletions are never purged.** `purge-pending-deletions` exists in code but no Cloud Scheduler
   job triggers it in either Terraform root, and no `ACCOUNT_DELETION_GRACE_DAYS` var exists anywhere.
@@ -795,7 +798,7 @@ For `non-native-rebuild-plans.md`:
   wave's baseline; not touched. Worth fixing because it will fail CI intermittently and train people to
   re-run rather than read.
 
-For `native-rebuild-plans.md`, because both need a new binary:
+For `../../plans/PLAN_EXECUTION_ORDER.md`, native side, because both need a new binary:
 
 - **A platform restore can defeat the allowlisted backup feature.** `Documents/watermelon.db` is in device
   and iCloud backup scope with no exclusion, so a platform restore returns the whole file including
