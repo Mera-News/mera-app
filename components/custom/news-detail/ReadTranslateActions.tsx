@@ -132,7 +132,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
     const googleFillClass = googleFilled
         ? 'bg-green-400/20 border-green-400'
         : 'border-white';
-    const googleLabelClass = googleFilled ? 'text-green-400' : 'text-white';
+    const googleLabelClass = googleFilled ? 'text-green-400' : 'text-typography-0';
     const publisherFillClass = sameLanguage
         ? 'bg-green-400/20 border-green-400'
         : support.status === 'translatable'
@@ -142,7 +142,7 @@ const ReadTranslateActions: React.FC<ReadTranslateActionsProps> = ({
         ? 'text-green-400'
         : support.status === 'translatable'
             ? 'text-green-400'
-            : 'text-white';
+            : 'text-typography-0';
 
     return (
         // `md` and not `xs`: the four things in this column — the action row

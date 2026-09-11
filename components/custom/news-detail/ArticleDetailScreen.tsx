@@ -143,7 +143,7 @@ const SubscribedCoverageBlock: React.FC<{ readonly articleId: string }> = ({ art
                     </Text>
                 ) : null}
                 {coverage.titleEn ? (
-                    <Text size="md" className="text-white">
+                    <Text size="md" className="text-typography-0">
                         {coverage.titleEn}
                     </Text>
                 ) : null}
@@ -595,11 +595,11 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                     accessibilityElementsHidden={true}
                     importantForAccessibility="no-hide-descendants"
                 />
-                <Text size="lg" className="text-white mt-4 text-center">
+                <Text size="lg" className="text-typography-0 mt-4 text-center">
                     {t('articleDetail.offlineUnavailable')}
                 </Text>
                 <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                    <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                    <Text size="md" className="text-typography-0">{t('common.goBack')}</Text>
                 </Pressable>
             </Box>
         );
@@ -632,7 +632,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                         accessibilityElementsHidden={true}
                         importantForAccessibility="no-hide-descendants"
                     />
-                    <Text size="lg" className="text-white mt-4 text-center">
+                    <Text size="lg" className="text-typography-0 mt-4 text-center">
                         {error || t('articleDetail.articleNotFound')}
                     </Text>
 
@@ -665,7 +665,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({
                     )}
 
                     <Pressable onPress={onBack} className="mt-6 bg-gray-800 rounded-lg px-6 py-3">
-                        <Text size="md" className="text-white">{t('common.goBack')}</Text>
+                        <Text size="md" className="text-typography-0">{t('common.goBack')}</Text>
                     </Pressable>
                 </ScrollView>
             </Box>
