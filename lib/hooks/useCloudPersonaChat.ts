@@ -8,6 +8,7 @@ import { useShallow } from 'zustand/react/shallow';
 import logger from '../logger';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
+
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
@@ -21,6 +22,17 @@ import {
 } from '../news-harness/persona-management/persona-agent-core';
 
 const TAG = '[CloudChat]';
+
+/** Next-frame scheduler for the streaming bubble. RN provides
+ *  requestAnimationFrame; the timeout fallback keeps the hook usable under a
+ *  test runtime without it. */
+const scheduleFrame = (cb: () => void): void => {
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(cb);
+  } else {
+    setTimeout(cb, 16);
+  }
+};
 
 // Cloud chat carries a TOKEN-BUDGETED window of recent turns (see
 // lib/news-harness/persona-management/history-window.ts). It used to send only
@@ -238,7 +250,44 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           maxTokens: CHAT_MAX_OUTPUT_TOKENS,
         });
 
+        // ONE store write per frame, not per token. Every SSE delta is a
+        // single token, so a 300-token reply used to be 300 `setMessages`
+        // calls, each cloning the message array and re-rendering the whole
+        // thread — on a low-end Android that render work competed with the
+        // per-token decrypt for the same JS thread. Text is accumulated on
+        // every delta as before; only the store write is deferred to the next
+        // frame. `flushContentRender` commits synchronously at stream end so
+        // nothing downstream (tool execution, persistence, tests) ever sees
+        // a bubble that lags the accumulated text.
+        let renderQueued = false;
+        let renderArmed = true;
+        const renderContent = () => {
+          renderQueued = false;
+          if (!renderArmed) return; // the stream failed; the error bubble owns the slot now
+          useCloudChatStore.getState().setMessages((prev) =>
+            prev.map((m) => m.id === targetId ? { ...m, content: accContent } : m),
+          );
+        };
+        const scheduleContentRender = () => {
+          if (renderQueued) return;
+          renderQueued = true;
+          scheduleFrame(renderContent);
+        };
+        const flushContentRender = () => {
+          if (renderQueued) renderContent();
+        };
+        // "Thinking…" is shown from the first reasoning delta until the first
+        // visible one. The flag lives on the store (the bubble reads it), and
+        // is cleared on every exit path so a failed stream never leaves it on.
+        let thinkingShown = false;
+        const setThinking = (on: boolean) => {
+          if (thinkingShown === on) return;
+          thinkingShown = on;
+          useCloudChatStore.getState().setThinking(on);
+        };
+
         let eventCount = 0;
+        try {
         for await (const event of stream) {
           eventCount++;
           if (eventCount <= 5 || event.type === 'finish' || event.type === 'error') {
@@ -248,14 +297,16 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
               ...(event.type === 'tool-call-delta' ? { name: event.name } : {}),
             });
           }
-          if (event.type === 'text-delta') {
+          if (event.type === 'reasoning') {
+            // Only while nothing visible has arrived; a hidden forced pass
+            // (suppressText) must not flip a bubble it never owned.
+            if (!suppressText && accContent === '' && toolCallAccumulators.size === 0) setThinking(true);
+          } else if (event.type === 'text-delta') {
+            setThinking(false);
             accContent += event.delta;
-            if (!suppressText) {
-              useCloudChatStore.getState().setMessages((prev) =>
-                prev.map((m) => m.id === targetId ? { ...m, content: accContent } : m),
-              );
-            }
+            if (!suppressText) scheduleContentRender();
           } else if (event.type === 'tool-call-delta') {
+            setThinking(false);
             // The model may send multiple tool calls with the same index (or all index 0).
             // Detect collision: if a NEW name arrives at an existing index, assign a new key.
             const existingAcc = toolCallAccumulators.get(event.index);
@@ -275,6 +326,11 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           } else if (event.type === 'error') {
             throw new Error(event.message);
           }
+        }
+        flushContentRender();
+        } finally {
+          renderArmed = false;
+          setThinking(false);
         }
         logger.debug(`${TAG} stream ended`, { totalEvents: eventCount, contentLength: accContent.length, toolCalls: toolCallAccumulators.size });
 

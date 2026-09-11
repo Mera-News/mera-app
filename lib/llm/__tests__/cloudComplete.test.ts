@@ -2247,6 +2247,34 @@ describe('cloudChatStream', () => {
       expect(decrypted).not.toContain('secretThought');
     });
 
+    it('signals the START of a reasoning trace exactly once, with no payload, before the first visible delta', async () => {
+      mockDecryptContent.mockImplementation((s: string) => `<${s}>`);
+      mockFetch.mockResolvedValueOnce(
+        makeSseResponse([
+          sseChunk({ choices: [{ delta: { content: null, reasoning_content: 'thought-1' }, finish_reason: null }] }),
+          sseChunk({ choices: [{ delta: { content: null, reasoning_content: 'thought-2' }, finish_reason: null }] }),
+          sseChunk({ choices: [{ delta: { content: 'hexA', reasoning_content: null }, finish_reason: null }] }),
+          // A trace resuming mid-answer must not re-signal: the bubble already has text.
+          sseChunk({ choices: [{ delta: { content: null, reasoning_content: 'thought-3' }, finish_reason: null }] }),
+          sseChunk({ choices: [{ delta: { content: 'hexB', reasoning_content: null }, finish_reason: 'stop' }] }),
+          SSE_DONE,
+        ]),
+      );
+
+      const events = await collectStream(
+        cloudChatStream({ messages: [{ role: 'user', content: 'Q' }] }),
+      );
+
+      expect(events).toEqual([
+        { type: 'reasoning' },
+        { type: 'text-delta', delta: '<hexA>' },
+        { type: 'text-delta', delta: '<hexB>' },
+        { type: 'finish', reason: 'stop' },
+      ]);
+      // The event carries nothing and the trace is never decrypted.
+      expect(mockDecryptContent).toHaveBeenCalledTimes(2);
+    });
+
     it('forwards fragmented tool-call deltas in the shapes the consumer already accumulates', async () => {
       mockFetch.mockResolvedValueOnce(
         makeSseResponse([

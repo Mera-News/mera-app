@@ -13,6 +13,10 @@ interface CloudChatState {
   blockedReason: string | null;
   error: string | null;
   wireMessages: WireMessage[];
+  /** True while the model is streaming a reasoning trace and nothing visible
+   *  has arrived yet. The trace itself is never stored or shown; this only
+   *  lets the typing bubble say "Thinking…" instead of pulsing in silence. */
+  thinking: boolean;
 
   // Actions
   setMessages: (messages: ConversationMessage[] | ((prev: ConversationMessage[]) => ConversationMessage[])) => void;
@@ -20,6 +24,7 @@ interface CloudChatState {
   setIsBlocked: (blocked: boolean) => void;
   setBlockedReason: (reason: string | null) => void;
   setError: (error: string | null) => void;
+  setThinking: (thinking: boolean) => void;
   pushWireMessage: (msg: WireMessage) => void;
   getWireMessages: () => WireMessage[];
   reset: () => void;
@@ -32,6 +37,7 @@ const initialState = {
   blockedReason: null as string | null,
   error: null as string | null,
   wireMessages: [] as WireMessage[],
+  thinking: false,
 };
 
 export const useCloudChatStore = create<CloudChatState>((set, get) => ({
@@ -51,6 +57,8 @@ export const useCloudChatStore = create<CloudChatState>((set, get) => ({
   setBlockedReason: (reason) => set({ blockedReason: reason }),
 
   setError: (error) => set({ error }),
+
+  setThinking: (thinking) => set((state) => (state.thinking === thinking ? state : { thinking })),
 
   pushWireMessage: (msg) =>
     set((state) => ({ wireMessages: [...state.wireMessages, msg] })),

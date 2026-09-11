@@ -60,12 +60,20 @@ interface StreamingIndicatorProps {
      * every swap.
      */
     dotsOnly?: boolean;
+    /**
+     * Static caption before the dots, no crossfade, no cycling. Only read with
+     * `dotsOnly`: the chat typing bubble sets it to "Thinking…" while a
+     * reasoning model streams its trace (3-12s on the BIG primary before the
+     * first visible token), so the wait reads as work rather than a stall.
+     */
+    label?: string;
 }
 
 const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     compact = false,
     color,
     dotsOnly = false,
+    label,
 }) => {
     const { t } = useTranslation();
     const [labelIndex, setLabelIndex] = useState(0);
@@ -129,6 +137,15 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                 {/* Only the WORD crossfades. The dots stay at full opacity: they
                     are the liveness signal, and the fade trough would otherwise
                     blank the whole indicator for a beat every cycle. */}
+                {dotsOnly && label ? (
+                    <Text
+                        testID="streaming-caption"
+                        size="sm"
+                        style={[streamingIndicatorStyles.label, { color: labelColor }]}
+                    >
+                        {label}
+                    </Text>
+                ) : null}
                 {!dotsOnly && (
                     <Animated.View style={labelStyle}>
                         <Text

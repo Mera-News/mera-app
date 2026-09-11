@@ -848,6 +848,11 @@ function sleep(ms: number): Promise<void> {
 
 export type SseEvent =
   | { type: 'text-delta'; delta: string }
+  /** The model has started a reasoning trace and nothing visible has arrived
+   *  yet. Emitted ONCE per stream, with no payload: the trace is dropped
+   *  undecrypted and must never reach the UI. It exists so the typing bubble
+   *  can say the wait is thinking, not a stall. */
+  | { type: 'reasoning' }
   | { type: 'tool-call-delta'; index: number; id?: string; name?: string; argumentsDelta: string }
   | { type: 'finish'; reason: 'stop' | 'tool_calls' | 'error' }
   | { type: 'error'; message: string };
@@ -1500,6 +1505,7 @@ async function* consumeSseChat(
     // chunk arrives this reinstates the same budget (a cold model may sit on an
     // open, silent stream). Every chunk after that tightens it.
     armIdle(UPSTREAM_ALIGNED_TIMEOUT_MS);
+    let reasoningSignalled = false;
     for await (const payload of sseEvents(reader, () => armIdle(STREAM_IDLE_TIMEOUT_MS))) {
       if (payload === '[DONE]') break;
       let chunk: ChatCompletionChunk;
@@ -1520,7 +1526,13 @@ async function* consumeSseChat(
 
       // `delta.reasoning_content` is chain-of-thought. It arrives as its own
       // field and may itself be an encrypted envelope; it is dropped WITHOUT
-      // decrypting, and must never be yielded as assistant text.
+      // decrypting, and must never be yielded as assistant text. Its ARRIVAL
+      // is signalled once, so the bubble can show "Thinking…" — on the BIG
+      // primary the trace runs 3-12s before the first visible token.
+      if (delta.reasoning_content && !reasoningSignalled) {
+        reasoningSignalled = true;
+        yield { type: 'reasoning' };
+      }
       if (delta.content) {
         yield { type: 'text-delta', delta: decryptContent(delta.content, privateKey, algo) };
       }

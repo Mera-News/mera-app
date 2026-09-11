@@ -150,6 +150,46 @@ describe('useCloudPersonaChat', () => {
   });
 
   describe('streaming text', () => {
+    it('shows "thinking" from the reasoning signal until the first visible delta, and never after the turn', async () => {
+      const seen: boolean[] = [];
+      let release!: () => void;
+      const gate = new Promise<void>((r) => { release = r; });
+      mockCloudChatStream.mockImplementation(async function* () {
+        yield { type: 'reasoning' } as SseEvent;
+        // Let the hook apply the flag before the first visible delta lands.
+        await gate;
+        seen.push(useCloudChatStore.getState().thinking);
+        yield { type: 'text-delta', delta: 'Hello' } as SseEvent;
+        seen.push(useCloudChatStore.getState().thinking);
+        yield { type: 'finish', reason: 'stop' } as SseEvent;
+      });
+
+      const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+      const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+      act(() => {
+        result.current.sendMessage('Hi there');
+      });
+      await waitFor(() => expect(useCloudChatStore.getState().thinking).toBe(true), { timeout: 3000 });
+      release();
+
+      await waitFor(
+        () => {
+          const asst = result.current.messages.find((m) => m.role === 'assistant');
+          expect(asst?.content).toBe('Hello');
+        },
+        { timeout: 3000 },
+      );
+      // true while the trace ran; false the moment the first delta was applied.
+      // The generator runs a SECOND time for the hidden forced-extraction pass
+      // (text + zero tool calls), which must never flip the flag: every later
+      // sample is false.
+      expect(seen.slice(0, 2)).toEqual([true, false]);
+      expect(seen.slice(2).every((v) => v === false)).toBe(true);
+      await waitFor(() => expect(result.current.status).toBe('idle'), { timeout: 3000 });
+      expect(useCloudChatStore.getState().thinking).toBe(false);
+    });
+
     it('accumulates text-delta events into assistant message content', async () => {
       mockCloudChatStream.mockImplementation(() =>
         makeSseStream([

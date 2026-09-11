@@ -16,6 +16,7 @@ import {
   type PromptInputHandle,
 } from '@/components/ui/chat-ai';
 import { hapticLight } from '@/lib/haptics';
+import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useContext, useEffect, useRef } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -59,6 +60,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   isInputDisabled,
 }) => {
   const { t } = useTranslation();
+  const isThinking = useCloudChatStore((s) => s.thinking);
 
   // Autofocus the input once the popover's open morph fully settles. Focusing
   // mid-morph fights the scale transform and janks the keyboard slide-up, so we
@@ -178,7 +180,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         return (
           <Message role="assistant">
             <MessageContent role="assistant">
-              <StreamingIndicator dotsOnly />
+              {/* "Thinking…" while the model's reasoning trace streams and
+                  nothing visible has arrived (3-12s on the BIG primary); bare
+                  dots once the first token is due. The trace itself is never
+                  rendered — the store carries only the boolean. */}
+              <StreamingIndicator dotsOnly label={isThinking ? t('floatingChat.thinking') : undefined} />
             </MessageContent>
           </Message>
         );
