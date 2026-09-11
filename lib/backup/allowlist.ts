@@ -30,6 +30,11 @@ export const BACKUP_TABLES: readonly string[] = [
 
   // Explicit curation the user performed by hand. Not the feed.
   'publication_preferences',
+  // The publications the user pays for. User-declared and device-only — no
+  // server row exists to re-derive it from, so losing it on a new phone means
+  // the user re-enters every one by hand. References nothing, so its position
+  // is free.
+  'user_publication_subscriptions',
   // `tracked_stories.topic_id` points at topics.
   'tracked_stories',
   'saved_article_suggestions',

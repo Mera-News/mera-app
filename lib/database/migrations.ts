@@ -1442,5 +1442,57 @@ export default schemaMigrations({
         unsafeExecuteSql('UPDATE tracked_stories SET latest_title = NULL;'),
       ],
     },
+    {
+      // Publisher subscriptions.
+      //
+      // ONE migration carrying both halves of the feature, because they ship
+      // together and a device must never land on a version where the table
+      // exists but the columns that render it do not.
+      //
+      // (1) `user_publication_subscriptions` — the publications the user has
+      // told us they pay for. Device-only by decision: there is no
+      // server-side userId -> publisher row anywhere in this feature.
+      //
+      // (2) two OPTIONAL columns on `article_suggestions`. `addColumns`, never
+      // a DROP+recreate: that table is the 48h score-propagation donor pool,
+      // and rebuilding it empties every device's feed until a full re-sync
+      // plus a cloud scoring round trip. Optional with no backfill is correct
+      // rather than lazy — every pre-v54 row was scored before subscriptions
+      // existed, so NULL is the truthful value and there is nothing to
+      // compute.
+      //
+      // No backup work is needed for (2). `lib/backup/allowlist.ts` classifies
+      // TABLES, and columns are derived from the live `appSchema` at runtime
+      // in both directions: the exporter reads whatever columns exist via
+      // `unsafeFetchRaw()`, and the importer takes its drift set from
+      // `knownColumns()` (`Object.keys(appSchema.tables[t].columns)`). Only a
+      // new TABLE carries an allowlist obligation, which is why (1) does and
+      // (2) does not.
+      toVersion: 54,
+      steps: [
+        createTable({
+          name: 'user_publication_subscriptions',
+          columns: [
+            { name: 'publisher_id', type: 'string', isIndexed: true },
+            { name: 'publisher_name', type: 'string' },
+            { name: 'publisher_name_norm', type: 'string', isIndexed: true },
+            { name: 'country_code', type: 'string' },
+            { name: 'subscription_uri', type: 'string', isOptional: true },
+            { name: 'source_names_json', type: 'string' },
+            { name: 'status', type: 'string', isIndexed: true },
+            { name: 'subscribed_at', type: 'number' },
+            { name: 'created_at', type: 'number' },
+            { name: 'updated_at', type: 'number' },
+          ],
+        }),
+        addColumns({
+          table: 'article_suggestions',
+          columns: [
+            { name: 'subscription_read', type: 'string', isOptional: true },
+            { name: 'subscription_read_at', type: 'number', isOptional: true },
+          ],
+        }),
+      ],
+    },
   ],
 });

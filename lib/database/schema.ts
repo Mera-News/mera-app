@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 53,
+  version: 54,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -117,6 +117,22 @@ export default appSchema({
         // NULL = legacy/v1 vintage = RENDER_GATE (0.4). That is exactly what
         // every pre-v50 row is, so no backfill is needed or wanted.
         { name: 'scored_with_v3', type: 'boolean', isOptional: true },
+        // ── Subscription read (schema v54) ─────────────────────────────
+        // A short read of how a publication the USER PAYS FOR covered this
+        // story, written by `lib/mera-protocol/stage-subscription-read.ts`
+        // after scoring and rendered in article detail's "From your
+        // subscriptions" block.
+        //
+        // Built from the sibling's title, `description_en` and existing
+        // enrichment ONLY. Subscription publishers paywall their bodies and
+        // we never fetch one, so nothing here may be phrased as having read
+        // the article.
+        //
+        // Both NULL is the normal resting state and is NOT a pending state:
+        // most rows have no subscribed sibling and never will. The block
+        // renders the card with no read line rather than a spinner.
+        { name: 'subscription_read', type: 'string', isOptional: true },
+        { name: 'subscription_read_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'first_pub_date', type: 'number' },
       ],
@@ -567,6 +583,51 @@ export default appSchema({
         // picked (rendered), `claim_key` its normalised hash (the key).
         { name: 'claim', type: 'string', isOptional: true },
         { name: 'claim_key', type: 'string', isOptional: true, isIndexed: true },
+      ],
+    }),
+
+    tableSchema({
+      name: 'user_publication_subscriptions',
+      // NOTE: the table comment goes HERE, after `name:`, never between
+      // `tableSchema({` and `name:`. `lib/backup/__tests__/allowlist.test.ts`
+      // parses this file as TEXT with /tableSchema\(\{\s*name:\s*'([^']+)'/,
+      // so a comment in that gap hides the table from the parser and the
+      // allowlist convergence check fails with a confusing "phantom table".
+      //
+      // Publications the user has told us they pay for. Long-lived,
+      // user-owned, NEVER wiped outside a logout wipe, and DEVICE-ONLY:
+      // there is deliberately no server-side userId -> publisher row, which
+      // is what keeps this clear of the no-user-to-topic invariant's spirit.
+      //
+      // `source_names_json` is the correctness-critical column. Articles
+      // carry a bare `publication_name`, which is the SOURCE's name, and a
+      // source's name is not guaranteed equal to its publisher's name. So
+      // matching a subscription to articles by `publisher_name` alone
+      // silently misses coverage. On add we resolve every one of the
+      // publisher's sources and store their normalised names here, and ALL
+      // article matching goes through that set.
+      //
+      // `status` is a soft delete mirroring `publication_preferences`:
+      // 'active' | 'cancelled' | 'declined'. 'declined' is its own resting
+      // state, not a deleted subscription — it records that the user said No
+      // to the "Did you subscribe?" prompt for this publisher, so the prompt
+      // never fires for them again.
+      columns: [
+        { name: 'publisher_id', type: 'string', isIndexed: true },
+        { name: 'publisher_name', type: 'string' },
+        { name: 'publisher_name_norm', type: 'string', isIndexed: true },
+        // Whatever the publisher record carries. Usually ISO alpha-3, but
+        // not always: "The Next Web" is country_code 'GLOBAL'. Anything
+        // joining this to an alpha-3 scope token must tolerate that.
+        { name: 'country_code', type: 'string' },
+        // Snapshot at add time. NULL is a first-class value meaning "this
+        // publisher has no consumer subscription product", not missing data.
+        { name: 'subscription_uri', type: 'string', isOptional: true },
+        { name: 'source_names_json', type: 'string' },
+        { name: 'status', type: 'string', isIndexed: true },
+        { name: 'subscribed_at', type: 'number' },
+        { name: 'created_at', type: 'number' },
+        { name: 'updated_at', type: 'number' },
       ],
     }),
   ],

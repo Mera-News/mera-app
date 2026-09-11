@@ -28,6 +28,7 @@ import PersonaSummaryString from './models/PersonaSummaryString';
 import TrackedStory from './models/TrackedStory';
 import TranslationCache from './models/TranslationCache';
 import FactCheckRecord from './models/FactCheckRecord';
+import UserPublicationSubscription from './models/UserPublicationSubscription';
 
 const adapter = new SQLiteAdapter({
   schema,
@@ -68,6 +69,7 @@ const database = new Database({
     TrackedStory,
     TranslationCache,
     FactCheckRecord,
+    UserPublicationSubscription,
   ],
 });
 
