@@ -107,7 +107,7 @@ const PreviousUserView: React.FC<PreviousUserViewProps> = ({
                 </Box>
 
                 <VStack space="lg" className="mb-8">
-                    <Text className="text-typography-0 text-2xl font-semibold text-center">
+                    <Text className="text-white text-2xl font-semibold text-center">
                         {t('auth.previousUser.title')}
                     </Text>
                     <Text className="text-gray-300 text-base text-center">

@@ -108,10 +108,10 @@ export default function IdentitySwitchFailedScreen({ onRetry }: IdentitySwitchFa
   }, []);
 
   return (
-    <Box className="flex-1 bg-background-0">
+    <Box className="flex-1 bg-black">
       <SafeAreaView style={{ flex: 1 }}>
         <VStack className="flex-1 items-center justify-center px-6" space="lg">
-          <Heading size="2xl" className="text-typography-0 text-center">
+          <Heading size="2xl" className="text-white text-center">
             {t('auth.identitySwitchFailedTitle')}
           </Heading>
 
@@ -137,7 +137,7 @@ export default function IdentitySwitchFailedScreen({ onRetry }: IdentitySwitchFa
               className="bg-primary-500 w-full rounded-full h-auto min-h-11 py-2.5"
               size="lg"
             >
-              <ButtonText className="text-typography-0 font-semibold">
+              <ButtonText className="text-white font-semibold">
                 {t('auth.identitySwitchRetry')}
               </ButtonText>
             </Button>
@@ -150,7 +150,7 @@ export default function IdentitySwitchFailedScreen({ onRetry }: IdentitySwitchFa
               size="lg"
             >
               {signingOut ? <Spinner size="small" className="mr-2" /> : null}
-              <ButtonText className="text-typography-0">
+              <ButtonText className="text-white">
                 {t('auth.identitySwitchSignOut')}
               </ButtonText>
             </Button>
