@@ -1,44 +1,23 @@
 'use client';
 import { vars } from 'nativewind';
 
-/**
- * The ONLY place raw RGB triples live.
- *
- * `rawTokens` holds the numbers; `config` holds the same numbers wrapped by
- * nativewind's `vars()`. `vars()` does not mutate its input, so both consumers
- * share one object and there is no second literal to drift from. The previous
- * attempt at light mode hand-mirrored the palette into a second file, and its
- * own comment admitted the copy would drift.
- *
- * DARK IS FROZEN. The dark block below is byte-identical to what shipped, and
- * `__tests__/raw-tokens.test.ts` pins it against a committed snapshot. Light
- * mode is additive: if a change to this file alters any dark value, that test
- * fails and the change is wrong. Only the light block may change.
- *
- * Every light value that carries text was audited against FOUR backdrops
- * (Parchment, raised, recessed, muted) rather than Parchment alone. The table
- * and the arithmetic live in `lib/theme/contrast-audit.ts`, which is executable
- * and asserted by `lib/theme/__tests__/contrast-audit.test.ts`.
- */
-export const rawTokens = {
-  light: {
-    /* Primary - Toasted Almond at 500, Molten Lava at 800. Accent identity is 500;
-       accent TEXT is 700+ (500 is 2.32:1 on Parchment and fails AA).
-       600 sits in the label dead band (L 0.207): border/icon/focus only, never text. */
+export const config = {
+  light: vars({
+    /* Primary - shadcn primary: rgb(216, 121, 67) warm orange */
     '--color-primary-0': '253 248 246',
-    '--color-primary-50': '251 237 230',
-    '--color-primary-100': '249 226 213',
-    '--color-primary-200': '244 204 181',
-    '--color-primary-300': '240 182 148',
-    '--color-primary-400': '235 160 116',
-    '--color-primary-500': '231 138 83',
-    '--color-primary-600': '191 101 58',
-    '--color-primary-700': '151 63 32',
-    '--color-primary-800': '111 26 7',
-    '--color-primary-900': '83 20 5',
-    '--color-primary-950': '61 14 4',
+    '--color-primary-50': '251 242 236',
+    '--color-primary-100': '247 228 217',
+    '--color-primary-200': '241 208 189',
+    '--color-primary-300': '234 181 152',
+    '--color-primary-400': '226 155 114',
+    '--color-primary-500': '216 121 67',
+    '--color-primary-600': '190 106 59',
+    '--color-primary-700': '162 91 50',
+    '--color-primary-800': '130 73 40',
+    '--color-primary-900': '97 54 30',
+    '--color-primary-950': '65 36 20',
 
-    /* Secondary - unchanged from stock, so light stays an exact mirror of dark. */
+    /* Secondary - shadcn secondary: rgb(82, 117, 117) teal */
     '--color-secondary-0': '246 248 248',
     '--color-secondary-50': '238 241 241',
     '--color-secondary-100': '220 227 227',
@@ -52,7 +31,7 @@ export const rawTokens = {
     '--color-secondary-900': '37 53 53',
     '--color-secondary-950': '25 35 35',
 
-    /* Tertiary - unchanged from stock. */
+    /* Tertiary - shadcn dark primary variant: rgb(231, 138, 83) */
     '--color-tertiary-0': '254 249 246',
     '--color-tertiary-50': '253 243 238',
     '--color-tertiary-100': '250 232 221',
@@ -66,7 +45,7 @@ export const rawTokens = {
     '--color-tertiary-900': '104 62 37',
     '--color-tertiary-950': '69 41 25',
 
-    /* Error - stock Gluestack light. Error TEXT is 700; 500-600 are fill-only. */
+    /* Error - shadcn destructive: rgb(239, 68, 68) */
     '--color-error-0': '254 246 246',
     '--color-error-50': '253 236 236',
     '--color-error-100': '252 218 218',
@@ -80,7 +59,7 @@ export const rawTokens = {
     '--color-error-900': '108 31 31',
     '--color-error-950': '72 20 20',
 
-    /* Success - stock Gluestack light. */
+    /* Success - default Gluestack green */
     '--color-success-0': '228 255 244',
     '--color-success-50': '202 255 232',
     '--color-success-100': '162 241 192',
@@ -94,7 +73,7 @@ export const rawTokens = {
     '--color-success-900': '20 83 45',
     '--color-success-950': '27 50 36',
 
-    /* Warning - stock Gluestack light. */
+    /* Warning - default Gluestack orange */
     '--color-warning-0': '255 249 245',
     '--color-warning-50': '255 244 236',
     '--color-warning-100': '255 231 213',
@@ -108,7 +87,7 @@ export const rawTokens = {
     '--color-warning-900': '108 56 19',
     '--color-warning-950': '84 45 18',
 
-    /* Info - stock Gluestack light. */
+    /* Info - default Gluestack blue */
     '--color-info-0': '236 248 254',
     '--color-info-50': '199 235 252',
     '--color-info-100': '162 221 250',
@@ -122,66 +101,61 @@ export const rawTokens = {
     '--color-info-900': '5 64 93',
     '--color-info-950': '3 38 56',
 
-    /* Typography - Silver at 300, Shadow Grey at 950.
-       300 and below is DECORATIVE ONLY. 400 is the first stop that clears AA 4.5:1
-       on all four light backdrops; see lib/theme/contrast-audit.ts. */
-    '--color-typography-0': '255 255 255',
-    '--color-typography-50': '250 250 248',
-    '--color-typography-100': '232 231 226',
-    '--color-typography-200': '205 203 194',
-    '--color-typography-300': '177 173 161',
-    '--color-typography-400': '107 104 100',
-    '--color-typography-500': '93 91 88',
-    '--color-typography-600': '79 77 77',
-    '--color-typography-700': '65 64 65',
-    '--color-typography-800': '51 50 53',
-    '--color-typography-900': '37 37 42',
-    '--color-typography-950': '30 30 36',
+    /* Typography */
+    '--color-typography-0': '254 254 255',
+    '--color-typography-50': '245 245 245',
+    '--color-typography-100': '229 229 229',
+    '--color-typography-200': '219 219 220',
+    '--color-typography-300': '212 212 212',
+    '--color-typography-400': '163 163 163',
+    '--color-typography-500': '140 140 140',
+    '--color-typography-600': '115 115 115',
+    '--color-typography-700': '82 82 82',
+    '--color-typography-800': '64 64 64',
+    '--color-typography-900': '38 38 39',
+    '--color-typography-950': '23 23 23',
 
-    /* Outline - 200 is the functional control border (3.05:1, clears the 3:1 in
-       WCAG 1.4.11). 100 and below are decorative hairlines and are NOT forced to 3:1. */
-    '--color-outline-0': '252 252 250',
-    '--color-outline-50': '246 245 241',
-    '--color-outline-100': '226 224 216',
-    '--color-outline-200': '143 139 132',
-    '--color-outline-300': '128 124 119',
-    '--color-outline-400': '113 110 106',
-    '--color-outline-500': '98 95 94',
-    '--color-outline-600': '83 81 81',
-    '--color-outline-700': '68 66 68',
-    '--color-outline-800': '53 52 55',
-    '--color-outline-900': '38 37 42',
-    '--color-outline-950': '26 26 31',
+    /* Outline */
+    '--color-outline-0': '253 254 254',
+    '--color-outline-50': '243 243 243',
+    '--color-outline-100': '230 230 230',
+    '--color-outline-200': '221 220 219',
+    '--color-outline-300': '211 211 211',
+    '--color-outline-400': '165 163 163',
+    '--color-outline-500': '140 141 141',
+    '--color-outline-600': '115 116 116',
+    '--color-outline-700': '83 82 82',
+    '--color-outline-800': '65 65 65',
+    '--color-outline-900': '39 38 36',
+    '--color-outline-950': '26 23 23',
 
-    /* Background - Parchment at 0, Silver at 400, Shadow Grey at 950.
-       No stop is lighter than 0; raised surfaces use the legacy gray-900 alias (P3). */
-    '--color-background-0': '244 243 238',
-    '--color-background-50': '240 239 233',
-    '--color-background-100': '233 232 225',
-    '--color-background-200': '219 217 208',
-    '--color-background-300': '198 195 185',
-    '--color-background-400': '177 173 161',
-    '--color-background-500': '150 147 138',
-    '--color-background-600': '124 121 116',
-    '--color-background-700': '97 95 93',
-    '--color-background-800': '70 69 70',
-    '--color-background-900': '43 43 47',
-    '--color-background-950': '30 30 36',
+    /* Background */
+    '--color-background-0': '255 255 255',
+    '--color-background-50': '246 246 246',
+    '--color-background-100': '242 241 241',
+    '--color-background-200': '220 219 219',
+    '--color-background-300': '213 212 212',
+    '--color-background-400': '162 163 163',
+    '--color-background-500': '142 142 142',
+    '--color-background-600': '116 116 116',
+    '--color-background-700': '83 82 82',
+    '--color-background-800': '65 64 64',
+    '--color-background-900': '39 38 37',
+    '--color-background-950': '18 18 18',
 
-    /* Background Special - stock Gluestack light. */
+    /* Background Special */
     '--color-background-error': '254 241 241',
     '--color-background-warning': '255 243 234',
     '--color-background-success': '237 252 242',
     '--color-background-muted': '243 244 246',
     '--color-background-info': '235 248 254',
 
-    /* Focus Ring Indicator - primary retoned to 195 104 60 (3.52:1); stock 216 121 67
-       is 2.81:1 and Almond itself is 2.32:1, both under the 3:1 a focus ring needs. */
-    '--color-indicator-primary': '195 104 60',
+    /* Focus Ring Indicator */
+    '--color-indicator-primary': '216 121 67',
     '--color-indicator-info': '83 153 236',
     '--color-indicator-error': '185 28 28',
-  },
-  dark: {
+  }),
+  dark: vars({
     /* Primary - shadcn dark primary: rgb(231, 138, 83) warm orange */
     '--color-primary-0': '69 41 25',
     '--color-primary-50': '104 62 37',
@@ -333,10 +307,5 @@ export const rawTokens = {
     '--color-indicator-primary': '231 138 83',
     '--color-indicator-info': '161 199 245',
     '--color-indicator-error': '232 70 69',
-  },
-} as const;
-
-export const config = {
-  light: vars(rawTokens.light),
-  dark: vars(rawTokens.dark),
+  }),
 };
