@@ -153,3 +153,22 @@ export function humanizeValue(value: string): string {
         default: return value;
     }
 }
+
+// ─── Image resolution ────────────────────────────────────────────────────────
+//
+// Plain English constants, like everything else in this file: the Observability
+// screen is an advanced view with a hardcoded title, and these rows are read
+// alongside raw table names and SCREAMING_SNAKE enums.
+
+/** Row labels for the image-resolution section, with the reading each gives. */
+export const IMAGE_RESOLUTION_LABELS = {
+    heroesLoaded: 'Hero images loaded',
+    belowMin: 'Below one screen pixel',
+    belowMinPct: 'Share below',
+    rewriteAttempted: 'Larger version requested',
+    rewriteServed: 'Larger version served',
+    rewriteFellBack: 'Fell back to the original',
+    medianUpgraded: 'Median height, upgraded',
+    medianPassthrough: 'Median height, untouched',
+    minHeroPx: 'Hero band, device pixels',
+} as const;

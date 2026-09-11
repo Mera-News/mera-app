@@ -14,6 +14,7 @@ import schema from '@/lib/database/schema';
 import logger from '@/lib/logger';
 import { getAllVisitedArticles } from '@/lib/database/services/publication-visit-service';
 import { buildReadingHistoryExport } from '@/lib/reading-history-export';
+import { getImageResolutionReport } from '@/lib/images/image-resolution-stats';
 import { formatTimeAgo } from '@/lib/utils/time-ago';
 import { useSchedulerStore } from '@/lib/scheduler/scheduler-store';
 import { useForYouStore } from '@/lib/stores/for-you-store';
@@ -58,6 +59,7 @@ import {
     humanizeValue,
     statusLabel,
     tableLabel,
+    IMAGE_RESOLUTION_LABELS,
 } from './observability-labels';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -373,6 +375,25 @@ const KVTable = ({ rows }: { rows: KVRow[] }) => (
         </Table>
     </Box>
 );
+
+/** Image-resolution rows. Reads the session counters; renders a dash rather
+ *  than a zero where a zero would be a lie (no samples yet). */
+const imageResolutionRows = (): KVRow[] => {
+    const r = getImageResolutionReport();
+    const L = IMAGE_RESOLUTION_LABELS;
+    const dash = (n: number | null) => (n == null ? '—' : String(n));
+    return [
+        [L.heroesLoaded, String(r.heroesLoaded), 'obs-heroes-loaded'],
+        [L.belowMin, String(r.belowMin)],
+        [L.belowMinPct, r.heroesLoaded === 0 ? '—' : `${r.belowMinPct}%`, 'obs-below-min-pct'],
+        [L.rewriteAttempted, String(r.rewriteAttempted)],
+        [L.rewriteServed, String(r.rewriteServed)],
+        [L.rewriteFellBack, String(r.rewriteFellBack)],
+        [L.medianUpgraded, dash(r.medianUpgradedHeight)],
+        [L.medianPassthrough, dash(r.medianPassthroughHeight)],
+        [L.minHeroPx, String(r.minHeroPx)],
+    ];
+};
 
 // ─── Screen ──────────────────────────────────────────────────────────────────
 
@@ -976,6 +997,12 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                         {loadingDb ? t('common.loading') : t('observability.notLoaded')}
                     </Text>
                 )}
+
+                {/* Image resolution — how big the images we actually drew were.
+                    Session-scoped counts of what the app already decoded to
+                    paint the screen; nothing about the reader is recorded. */}
+                <SectionHeader title="Image resolution (this session)" />
+                <KVTable rows={imageResolutionRows()} />
 
                 {/* Protocol */}
                 <SectionHeader title={t('observability.protocol')} />
