@@ -22,30 +22,6 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // LEGACY ALIASES. ~580 of the 670 legacy class occurrences resolve
-        // through these three names, which is why this is an alias flip rather
-        // than a 110-file class sweep. The NativeWind preset defines no colours
-        // at all, so these cleanly override Tailwind's defaults with no
-        // precedence fight, and <alpha-value> resolves through withAlphaVariable
-        // exactly as the eleven semantic ramps already do.
-        //
-        // A site that means LITERALLY white or black uses pure-white /
-        // pure-black instead (see P2); those deliberately do not move.
-        white: 'rgb(var(--color-legacy-white)/<alpha-value>)',
-        black: 'rgb(var(--color-legacy-black)/<alpha-value>)',
-        gray: {
-          50: 'rgb(var(--color-legacy-gray-50)/<alpha-value>)',
-          100: 'rgb(var(--color-legacy-gray-100)/<alpha-value>)',
-          200: 'rgb(var(--color-legacy-gray-200)/<alpha-value>)',
-          300: 'rgb(var(--color-legacy-gray-300)/<alpha-value>)',
-          400: 'rgb(var(--color-legacy-gray-400)/<alpha-value>)',
-          500: 'rgb(var(--color-legacy-gray-500)/<alpha-value>)',
-          600: 'rgb(var(--color-legacy-gray-600)/<alpha-value>)',
-          700: 'rgb(var(--color-legacy-gray-700)/<alpha-value>)',
-          800: 'rgb(var(--color-legacy-gray-800)/<alpha-value>)',
-          900: 'rgb(var(--color-legacy-gray-900)/<alpha-value>)',
-          950: 'rgb(var(--color-legacy-gray-950)/<alpha-value>)',
-        },
         primary: {
           0: 'rgb(var(--color-primary-0)/<alpha-value>)',
           50: 'rgb(var(--color-primary-50)/<alpha-value>)',
@@ -163,9 +139,9 @@ module.exports = {
           800: 'rgb(var(--color-typography-800)/<alpha-value>)',
           900: 'rgb(var(--color-typography-900)/<alpha-value>)',
           950: 'rgb(var(--color-typography-950)/<alpha-value>)',
-          white: 'rgb(var(--color-typography-white)/<alpha-value>)',
-          gray: 'rgb(var(--color-typography-gray)/<alpha-value>)',
-          black: 'rgb(var(--color-typography-black)/<alpha-value>)',
+          white: '#FFFFFF',
+          gray: '#D4D4D4',
+          black: '#181718',
         },
         outline: {
           0: 'rgb(var(--color-outline-0)/<alpha-value>)',
@@ -199,8 +175,8 @@ module.exports = {
           muted: 'rgb(var(--color-background-muted)/<alpha-value>)',
           success: 'rgb(var(--color-background-success)/<alpha-value>)',
           info: 'rgb(var(--color-background-info)/<alpha-value>)',
-          light: 'rgb(var(--color-background-light)/<alpha-value>)',
-          dark: 'rgb(var(--color-background-dark)/<alpha-value>)',
+          light: '#FBFBFB',
+          dark: '#181719',
         },
         indicator: {
           primary: 'rgb(var(--color-indicator-primary)/<alpha-value>)',
