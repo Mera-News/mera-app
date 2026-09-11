@@ -48,7 +48,7 @@ function StatRow({ label, value }: { label: string; value: string | number }) {
             <Text size="sm" className="text-typography-400">
                 {label}
             </Text>
-            <Text size="sm" className="text-typography-0 font-semibold">
+            <Text size="sm" className="text-white font-semibold">
                 {value}
             </Text>
         </HStack>
@@ -127,7 +127,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
             {/* Current stage */}
             <HStack className="items-center" space="sm">
                 <MaterialIcons name="sync" size={18} color={ACCENT} />
-                <Text size="sm" className="text-typography-0 font-semibold flex-1">
+                <Text size="sm" className="text-white font-semibold flex-1">
                     {stageMessage}
                 </Text>
             </HStack>
@@ -191,7 +191,7 @@ const FeedStatusDetails: React.FC<FeedStatusDetailsProps> = ({
                         >
                             <HStack className="items-center" space="xs">
                                 <MaterialIcons name="credit-card" size={12} color="#ffffff" />
-                                <Text size="xs" className="text-typography-0 font-semibold">
+                                <Text size="xs" className="text-white font-semibold">
                                     {t('subscription.manageBadge')}
                                 </Text>
                             </HStack>
