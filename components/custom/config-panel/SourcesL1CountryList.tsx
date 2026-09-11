@@ -82,7 +82,7 @@ const PublisherSearchRow: React.FC<{ hit: PublisherSearchHit }> = ({ hit }) => {
                     <HStack className="items-center flex-1 mr-3" space="md">
                         <Text className="text-2xl">{getFlagEmoji(hit.country_code)}</Text>
                         <VStack className="flex-1" space="xs">
-                            <Text className="text-base text-typography-0">{hit.name}</Text>
+                            <Text className="text-base text-white">{hit.name}</Text>
                             <Text size="xs" className="text-gray-500" numberOfLines={1}>
                                 {hit.country_name ?? getCountryName(hit.country_code)}
                                 {hit.website_url
@@ -355,7 +355,7 @@ const SourcesL1CountryList: React.FC = () => {
                                 "Top headlines" pill — "Antigua and Barbuda" ran
                                 straight through it. Two lines for a country name
                                 is fine; the row is already `h-auto`. */}
-                            <Text className="text-base text-typography-0 flex-1">{item.name}</Text>
+                            <Text className="text-base text-white flex-1">{item.name}</Text>
                         </HStack>
                         {/* Must not shrink: without this the pill would give up
                             width to the wrapping name and its own label would
@@ -428,7 +428,7 @@ const SourcesL1CountryList: React.FC = () => {
                         placeholderTextColor="#666666"
                         value={searchQuery}
                         onChangeText={setSearchQuery}
-                        className="text-typography-0"
+                        className="text-white"
                         autoCorrect={false}
                         autoCapitalize="none"
                     />

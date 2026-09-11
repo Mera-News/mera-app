@@ -253,7 +253,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                         <AccordionHeader>
                             <AccordionTrigger className="px-4 py-3">
                                 <VStack className="flex-1 mr-3" space="xs">
-                                    <AccordionTitleText className="text-typography-0 text-base">
+                                    <AccordionTitleText className="text-white text-base">
                                         {item.name}
                                     </AccordionTitleText>
                                     {item.website_url && (
@@ -300,7 +300,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                                     >
                                         <HStack className="items-center justify-between">
                                             <VStack className="flex-1 mr-3" space="xs">
-                                                <Text className="text-typography-0 text-sm capitalize">
+                                                <Text className="text-white text-sm capitalize">
                                                     {formatCategory(feed.category)}
                                                 </Text>
                                                 {feedBadgeKind && <SourceKindBadge kind={feedBadgeKind} />}

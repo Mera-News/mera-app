@@ -40,7 +40,7 @@ const DrillDownHeader: React.FC<DrillDownHeaderProps> = ({ title, titleContent, 
                     </Text>
                 )}
                 {titleContent ?? (
-                    <Text size="lg" className="text-typography-0 font-semibold" numberOfLines={titleNumberOfLines}>
+                    <Text size="lg" className="text-white font-semibold" numberOfLines={titleNumberOfLines}>
                         {title}
                     </Text>
                 )}
