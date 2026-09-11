@@ -723,6 +723,33 @@ describe('asUntrusted — forged prompt structure', () => {
   });
 });
 
+describe('asUntrusted — the escaper holds on its own', () => {
+  // The fence's safety must not rest on the nonce alone. Pairwise replacement
+  // was not idempotent on an ODD run, so a live `<<` survived into article
+  // text: '<<<' -> '< <<'. The whole run is now spaced out in one pass.
+  it.each(['<<<', '<<<<', '<<<<<', '>>>', '>>>>', '<<<>>>'])(
+    'leaves no fence delimiter in %s',
+    (input) => {
+      const out = asUntrusted(input);
+      expect(out).not.toContain('<<');
+      expect(out).not.toContain('>>');
+    },
+  );
+
+  it.each(['<<<', '<<<<', '>>>', '<<<>>>'])(
+    'is a no-op on a second pass over %s',
+    (input) => {
+      const once = asUntrusted(input);
+      expect(asUntrusted(once, once.length)).toBe(once);
+    },
+  );
+
+  it('leaves EVEN runs byte-identical, so the goldens do not move', () => {
+    expect(asUntrusted('<<ARTICLE x>>')).toBe('< <ARTICLE x> >');
+    expect(asUntrusted('<</ARTICLE 000000000000>>')).toBe('< </ARTICLE 000000000000> >');
+  });
+});
+
 describe('asUntrusted — truncation ordering', () => {
   it('applies maxLength to the RAW input, so a cap never lands mid-escape', () => {
     // Every character is escapable, and the cap sits exactly at the boundary.
