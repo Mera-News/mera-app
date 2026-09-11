@@ -38,9 +38,16 @@ jest.mock('../SubscriptionsSection', () => ({
     default: () => null,
 }));
 jest.mock('@/lib/database/services/user-publication-subscription-service', () => ({
-    // Empty set ⇒ nothing is suppressed, so every existing assertion about the
-    // lower list still describes the same list it always did.
-    getSubscribedSourceNameSet: jest.fn(async () => new Set<string>()),
+    // No active subscriptions ⇒ nothing is suppressed, so every existing
+    // assertion about the lower list still describes the same list it always
+    // did. Observed rather than fetched, matching the screen.
+    observeActive: () => ({
+        subscribe: (fn: (rows: unknown[]) => void) => {
+            fn([]);
+            return { unsubscribe: () => {} };
+        },
+    }),
+    parseSourceNames: () => [],
     normalizeSubscriptionName: (x: string) =>
         (x ?? '').toLowerCase().trim().replace(/\s+/g, ' '),
 }));

@@ -17,7 +17,11 @@ import {
 import logger from '@/lib/logger';
 import { ACTION_NAMES } from '@/lib/news-harness/persona-management/action-names';
 import { MaterialIcons } from '@expo/vector-icons';
-import { getSubscribedSourceNameSet, normalizeSubscriptionName } from '@/lib/database/services/user-publication-subscription-service';
+import {
+    normalizeSubscriptionName,
+    observeActive as observeActiveSubscriptions,
+    parseSourceNames,
+} from '@/lib/database/services/user-publication-subscription-service';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList } from 'react-native';
@@ -69,15 +73,24 @@ const PublicationPreferencesScreen: React.FC<PublicationPreferencesScreenProps> 
     // keep a subscribed publication out of "Other sources" below.
     const [subscribedSourceNames, setSubscribedSourceNames] = useState<Set<string>>(new Set());
 
+    // OBSERVED, not fetched once per `items` change. Keying this off `items`
+    // (the publication_preferences list) looked fine because adding a
+    // subscription also writes a preference row, so the refetch happened to
+    // fire — but REMOVING one calls `cancelSubscription`, which touches only
+    // `user_publication_subscriptions`. The preference list never changed, the
+    // set stayed stale, and the publication stayed hidden from "Other sources"
+    // until the screen was remounted. Observing the table it actually depends
+    // on removes the coincidence.
     useEffect(() => {
-        let cancelled = false;
-        void getSubscribedSourceNameSet().then((names) => {
-            if (!cancelled) setSubscribedSourceNames(names);
+        const sub = observeActiveSubscriptions().subscribe((rows) => {
+            const names = new Set<string>();
+            for (const row of rows) {
+                for (const name of parseSourceNames(row.sourceNamesJson)) names.add(name);
+            }
+            setSubscribedSourceNames(names);
         });
-        return () => {
-            cancelled = true;
-        };
-    }, [items]);
+        return () => sub.unsubscribe();
+    }, []);
 
     /**
      * "Other sources" = every preference row NOT covered by a subscription.
