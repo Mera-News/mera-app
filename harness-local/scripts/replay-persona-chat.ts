@@ -67,6 +67,9 @@ interface Args {
   /** Post `stream: true` and time the SSE body the way cloudChatStream sees it:
    *  first byte, first VISIBLE delta (content or tool_call), and completion. */
   stream: boolean;
+  /** `reasoning_effort` to post (none|low|medium|high|max); omitted by default.
+   *  NEAR validates the value, so a bad one 400s — usable as a control. */
+  effort?: string;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -88,6 +91,7 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--model') args.model = argv[++i] ?? args.model;
     else if (a === '--thinking') args.thinking = (argv[++i] ?? 'on') !== 'off';
     else if (a === '--stream') args.stream = true;
+    else if (a === '--effort') args.effort = argv[++i];
   }
   return args;
 }
@@ -126,6 +130,7 @@ async function runOnce(
   model: string,
   thinking: boolean,
   stream: boolean,
+  effort: string | undefined,
   env: ReturnType<typeof loadHarnessEnv>,
 ): Promise<RunResult> {
   const failed = (error: string): RunResult => ({
@@ -182,6 +187,7 @@ async function runOnce(
       // one the app ships, and the trace shares max_tokens with the answer.
       chat_template_kwargs: { enable_thinking: thinking },
       ...(stream ? { stream: true, stream_options: { include_usage: true } } : {}),
+      ...(effort ? { reasoning_effort: effort } : {}),
     }),
   });
 
@@ -304,7 +310,8 @@ async function main(): Promise<number> {
   console.log(`intent  : ${args.intent ? 'PENDING INVITATION block present (P2)' : 'absent'}`);
   console.log(`model   : ${args.model}${args.model === BIG_MODEL ? ' (BIG_MODEL)' : ' (override)'}`);
   console.log(`thinking: ${args.thinking ? 'on (app chat gear)' : 'off'}`);
-  console.log(`stream  : ${args.stream ? 'on — timing first visible delta' : 'off'}\n`);
+  console.log(`stream  : ${args.stream ? 'on — timing first visible delta' : 'off'}`);
+  console.log(`effort  : ${args.effort ?? '(not sent)'}\n`);
 
   let pass = 0;
   let errors = 0;
@@ -316,7 +323,7 @@ async function main(): Promise<number> {
   for (let i = 0; i < args.runs; i++) {
     let out: RunResult;
     try {
-      out = await runOnce(fixture, args.arm, args.intent, args.model, args.thinking, args.stream, env);
+      out = await runOnce(fixture, args.arm, args.intent, args.model, args.thinking, args.stream, args.effort, env);
     } catch (err) {
       out = {
         tools: [],

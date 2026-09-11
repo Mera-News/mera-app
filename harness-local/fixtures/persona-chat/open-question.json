@@ -1,0 +1,8 @@
+{
+  "description": "An OPEN-ENDED conversational question with no tool to call. Measures the thinking trace and time-to-first-visible-token on a prose turn — the shape a reasoning model can over-think. Passes when runCalibration is NOT called; read finish_reason, ctok and 'visible' for the real signal.",
+  "knownFacts": "- Lives in Utrecht, Netherlands\n- Follows Ajax Amsterdam",
+  "wire": [
+    { "role": "user", "content": "What kinds of news could you track for me? Give me a short overview, about 80 words." }
+  ],
+  "expect": { "toolNotCalled": "runCalibration" }
+}

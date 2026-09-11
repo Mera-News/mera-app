@@ -61,6 +61,8 @@ interface Args {
   model: string;
   /** chat_template_kwargs.enable_thinking. Defaults ON, the app's chat gear. */
   thinking: boolean;
+  /** `reasoning_effort` to post; omitted by default. */
+  effort?: string;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -70,6 +72,7 @@ function parseArgs(argv: string[]): Args {
     else if (argv[i] === '--arm') args.arm = (argv[++i] as Args['arm']) ?? args.arm;
     else if (argv[i] === '--model') args.model = argv[++i] ?? args.model;
     else if (argv[i] === '--thinking') args.thinking = (argv[++i] ?? 'on') !== 'off';
+    else if (argv[i] === '--effort') args.effort = argv[++i];
   }
   return args;
 }
@@ -105,6 +108,7 @@ async function runOnce(
   arm: Args['arm'],
   model: string,
   thinking: boolean,
+  effort: string | undefined,
   env: ReturnType<typeof loadHarnessEnv>,
 ) {
   const context = buildPersonaUpdateContext({ knownFactsList: KNOWN_FACTS });
@@ -127,6 +131,7 @@ async function runOnce(
       max_tokens: CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
       temperature: 0.4,
       chat_template_kwargs: { enable_thinking: thinking },
+      ...(effort ? { reasoning_effort: effort } : {}),
     }),
   });
   if (!res.ok) {
@@ -167,7 +172,7 @@ async function main(): Promise<number> {
   let placeholder = 0;
   let totalFacts = 0;
   for (let i = 0; i < args.runs; i++) {
-    const out = await runOnce(args.arm, args.model, args.thinking, env);
+    const out = await runOnce(args.arm, args.model, args.thinking, args.effort, env);
     if (out.error) {
       console.log(`  run ${i + 1}: ERROR ${out.error}`);
       continue;
