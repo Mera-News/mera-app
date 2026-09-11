@@ -5,10 +5,32 @@
 // produces cleanups it stores them and fires ONE `hygiene` notification whose
 // `review-hygiene` chip opens the dedicated review sheet.
 
+import { authClient } from '@/lib/auth-client';
 import { runHygieneSweep } from '@/lib/database/services/hygiene-service';
 import { runTopicTopup } from '@/lib/database/services/topic-topup-service';
 import { AppScheduler } from '../AppScheduler';
 import { backgroundWorkIsIdle } from '../background-idle';
+
+/**
+ * Is there a session credential on this device right now?
+ *
+ * `authClient.getCookie()` is the same LOCAL keychain read the Apollo auth link
+ * uses on every request — synchronous, no network, no billing. Deliberately not
+ * `getJwtToken()`, which is a network round trip and would put an auth call on
+ * the front of a weekly background sweep.
+ *
+ * Throws on a locked keychain (pre-first-unlock on a background wake), which is
+ * read as "no credential" — the right answer for a sweep, which can simply run
+ * later.
+ */
+function hasLocalCredential(): boolean {
+  try {
+    const cookie = authClient.getCookie();
+    return typeof cookie === 'string' && cookie.length > 0;
+  } catch {
+    return false;
+  }
+}
 
 const WEEKLY_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -29,7 +51,29 @@ AppScheduler.register({
   maxAttempts: 2,
   exclusive: true,
   handler: async (_input, ctx) => {
+    // No credential, no sweep. The audit inside runHygieneSweep is a BILLED
+    // cloud batch that cannot succeed without one, and failing it costs the
+    // user a week: the cooldown stamp would arm off a run that did nothing.
+    //
+    // markNoOp so `lastRun` is NOT stamped either — the weekly frequency gate
+    // must not be armed by a run that accomplished nothing, so the next tick
+    // retries as soon as a credential exists. Nothing is billed on this path,
+    // so retrying freely is safe.
+    //
+    // This is the cheap gate; topic-sanity-service additionally returns
+    // `skipped` for a credential that disappears MID-RUN, which the sweep
+    // handles by withholding its cooldown stamp while still letting the
+    // scheduler stamp lastRun.
+    if (!hasLocalCredential()) {
+      ctx.log('hygiene sweep skipped — no local session credential');
+      ctx.markNoOp();
+      return;
+    }
+
     const result = await runHygieneSweep();
+    if (result.sanitySkipped) {
+      ctx.log('sanity audit skipped — no E2EE credential; cooldown not stamped');
+    }
     if (!result.ran) {
       ctx.log(`hygiene sweep skipped — ${result.reason ?? 'not-eligible'}`);
     } else {

@@ -68,6 +68,14 @@ export interface SweepResult {
   ran: boolean;
   reason?: 'cooldown' | 'too_few_facts' | 'persona_too_young';
   proposalCount: number;
+  /**
+   * The LLM sanity audit did not run because the device has no E2EE
+   * credential. When true the cooldown stamp is deliberately WITHHELD, so the
+   * next scheduled sweep re-attempts the audit instead of waiting out a week
+   * it never used. The scheduler's own `lastRun` is still stamped (the task
+   * does NOT markNoOp), so the weekly cadence holds and nothing hammers.
+   */
+  sanitySkipped?: boolean;
 }
 
 /** Resolve `fn` normally, or `fallback` if it takes too long / throws. Never
@@ -248,7 +256,11 @@ export async function runHygieneSweep(opts?: {
       facts: facts.map((f) => ({ id: f.id, statement: f.statement })),
     }),
     SANITY_RACE_MS,
-    { incoherentFacts: [], audited: 0 },
+    // `skipped: false` explicitly. A TIMEOUT is not a skip — the audit was
+    // attempted and may well have been billed; only a missing credential means
+    // it never ran. Reading a timeout as a skip would withhold the cooldown
+    // stamp and re-issue the call on the next sweep.
+    { incoherentFacts: [], audited: 0, skipped: false },
   );
 
   if (facts.length < MIN_FACTS_FOR_SWEEP) {
@@ -290,7 +302,7 @@ export async function runHygieneSweep(opts?: {
   const proposals = analyzeHygiene(input);
 
   await publishWithCap(proposals);
-  await setSetting(LAST_SWEEP_KEY, String(now));
+  await stampSweep(now, sanity.skipped);
   notifyChange();
 
   if (proposals.length > 0) {
@@ -305,7 +317,18 @@ export async function runHygieneSweep(opts?: {
     });
   }
 
-  return { ran: true, proposalCount: proposals.length };
+  return { ran: true, proposalCount: proposals.length, sanitySkipped: sanity.skipped };
+}
+
+/**
+ * Stamp the KV cooldown, unless the sanity audit never ran for want of a
+ * credential. Every path that made a real sweep attempt stamps — including the
+ * two size/age early returns, which previously stamped nothing at all and so
+ * re-issued a billed audit on every scheduled run for a small or young persona.
+ */
+async function stampSweep(now: number, sanitySkipped: boolean): Promise<void> {
+  if (sanitySkipped) return;
+  await setSetting(LAST_SWEEP_KEY, String(now));
 }
 
 /**
@@ -318,15 +341,24 @@ export async function runHygieneSweep(opts?: {
  * the reason is preserved, so the caller's bookkeeping is unchanged.
  */
 async function publishSanityOnly(
-  sanity: { incoherentFacts: HygieneAnalyzeInput['incoherentFacts'] },
+  sanity: { incoherentFacts: HygieneAnalyzeInput['incoherentFacts']; skipped: boolean },
   facts: { id: string; statement: string }[],
   topics: HygieneAnalyzeInput['topics'],
   now: number,
   reason: 'too_few_facts' | 'persona_too_young',
 ): Promise<SweepResult> {
   const incoherentFacts = sanity.incoherentFacts ?? [];
+  // Stamped here, once, for every exit below: the sweep DID run, it just had
+  // nothing but sanity verdicts to publish. Withheld only when the audit never
+  // happened for want of a credential.
+  await stampSweep(now, sanity.skipped);
   if (incoherentFacts.length === 0) {
-    return { ran: false, reason, proposalCount: await getPendingCount() };
+    return {
+      ran: false,
+      reason,
+      proposalCount: await getPendingCount(),
+      sanitySkipped: sanity.skipped,
+    };
   }
 
   const proposals = analyzeHygiene({
@@ -341,7 +373,12 @@ async function publishSanityOnly(
   }).filter((p) => p.kind === 'incoherent_topics');
 
   if (proposals.length === 0) {
-    return { ran: false, reason, proposalCount: await getPendingCount() };
+    return {
+      ran: false,
+      reason,
+      proposalCount: await getPendingCount(),
+      sanitySkipped: sanity.skipped,
+    };
   }
 
   await publishWithCap(proposals);
@@ -355,7 +392,12 @@ async function publishSanityOnly(
     context: { count: proposals.length },
     actions: [{ id: 'review-hygiene', labelKey: 'hygiene.reviewChip' }],
   });
-  return { ran: false, reason, proposalCount: proposals.length };
+  return {
+    ran: false,
+    reason,
+    proposalCount: proposals.length,
+    sanitySkipped: sanity.skipped,
+  };
 }
 
 /**

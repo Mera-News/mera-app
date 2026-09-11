@@ -50,9 +50,23 @@ export interface SanityAuditResult {
   incoherentFacts: HygieneIncoherentFactInput[];
   /** Topics actually judged this run (for logging / tests). */
   audited: number;
+  /**
+   * The audit did not run because the device has no E2EE credential, NOT
+   * because it ran and found nothing.
+   *
+   * The distinction is load-bearing and cannot be recovered from
+   * `incoherentFacts.length === 0`: a clean corpus and an audit that never
+   * happened look identical there, and the sweep uses this to decide whether
+   * to stamp its cooldown. Stamping on a skip would cost the user a week of
+   * hygiene for a transient local state.
+   */
+  skipped: boolean;
 }
 
-const EMPTY: SanityAuditResult = { incoherentFacts: [], audited: 0 };
+const EMPTY: SanityAuditResult = { incoherentFacts: [], audited: 0, skipped: false };
+
+/** A run that never happened. Distinct from EMPTY — see `skipped`. */
+const SKIPPED: SanityAuditResult = { incoherentFacts: [], audited: 0, skipped: true };
 
 async function readCursor(): Promise<number> {
   const raw = Number(await getSetting(CURSOR_KEY));
@@ -169,8 +183,23 @@ export async function runSanityAudit(opts?: {
       (n, ids) => n + ids.length,
       0,
     );
-    return { incoherentFacts, audited };
+    return { incoherentFacts, audited, skipped: false };
   } catch (error) {
+    // A missing E2EE keypair is a STATE, not a defect: the device has not
+    // generated (or has cleared) its credential, so a billed batch could not
+    // have been made. Duck-typed on the name, matching the suppression class in
+    // lib/logger.ts, so this module does not import lib/e2ee either. Reported
+    // as a breadcrumb and surfaced as `skipped` so the sweep withholds its
+    // cooldown stamp instead of charging the user a week for it.
+    if ((error as { name?: string } | null)?.name === 'NoCredentialError') {
+      logger.addBreadcrumb(
+        'sanity audit skipped — device has no E2EE credential',
+        'topic-sanity-service',
+        { method: 'runSanityAudit' },
+        'info',
+      );
+      return SKIPPED;
+    }
     logger.captureException(error, {
       tags: { service: 'topic-sanity-service', method: 'runSanityAudit' },
     });

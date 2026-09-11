@@ -40,9 +40,10 @@ const mockRunSanityAudit: jest.Mock<
   Promise<{
     incoherentFacts: { factId: string; topicIds: string[]; fillTo: number }[];
     audited: number;
+    skipped: boolean;
   }>,
   []
-> = jest.fn(async () => ({ incoherentFacts: [], audited: 0 }));
+> = jest.fn(async () => ({ incoherentFacts: [], audited: 0, skipped: false }));
 jest.mock('../topic-sanity-service', () => ({
   runSanityAudit: (...a: unknown[]) => mockRunSanityAudit(...(a as [])),
   resetSanityCursor: jest.fn(async () => {}),
@@ -293,7 +294,7 @@ describe('sanity audit wiring', () => {
   beforeEach(() => {
     mockKv.clear();
     jest.clearAllMocks();
-    mockRunSanityAudit.mockResolvedValue({ incoherentFacts: [], audited: 0 });
+    mockRunSanityAudit.mockResolvedValue({ incoherentFacts: [], audited: 0, skipped: false });
     (factService.getFacts as jest.Mock).mockResolvedValue(factRows);
     (topicService.getAllTopicSnapshots as jest.Mock).mockResolvedValue(topicRows);
     (factService.getFactSectionSnapshots as jest.Mock).mockResolvedValue(
@@ -308,6 +309,7 @@ describe('sanity audit wiring', () => {
     mockRunSanityAudit.mockResolvedValue({
       incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
       audited: 1,
+      skipped: false,
     });
 
     const res = await runHygieneSweep({ force: true });
@@ -325,10 +327,47 @@ describe('sanity audit wiring', () => {
     expect(await getPendingProposals()).toEqual([]);
   });
 
+  // The size/age early returns used to stamp NOTHING, so a small or young
+  // persona re-issued the billed audit on every scheduled run — the cooldown
+  // never engaged for exactly the personas that hit these paths most.
+  it('stamps the cooldown on the too_few_facts path', async () => {
+    const res = await runHygieneSweep({ now: NOW, force: true });
+
+    expect(res.reason).toBe('too_few_facts');
+    expect(mockKv.get('hygiene_last_sweep_at')).toBe(String(NOW));
+  });
+
+  // A skip is not a result. Stamping here would cost the user a week of
+  // hygiene for a credential that may be back in a minute.
+  it('WITHHOLDS the cooldown stamp when the audit was skipped for no credential', async () => {
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [],
+      audited: 0,
+      skipped: true,
+    });
+
+    const res = await runHygieneSweep({ now: NOW, force: true });
+
+    expect(res.sanitySkipped).toBe(true);
+    expect(mockKv.get('hygiene_last_sweep_at')).toBeUndefined();
+  });
+
+  // The distinction the fallback literal exists to protect: a raced-out audit
+  // was attempted and possibly billed, so it must stamp like any other run.
+  it('DOES stamp when the audit merely timed out or threw', async () => {
+    mockRunSanityAudit.mockRejectedValue(new Error('gateway down'));
+
+    const res = await runHygieneSweep({ now: NOW, force: true });
+
+    expect(res.sanitySkipped).toBe(false);
+    expect(mockKv.get('hygiene_last_sweep_at')).toBe(String(NOW));
+  });
+
   it('never fires a SECOND notification — the sweep publishes once', async () => {
     mockRunSanityAudit.mockResolvedValue({
       incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
       audited: 1,
+      skipped: false,
     });
 
     await runHygieneSweep({ force: true });
@@ -365,6 +404,7 @@ describe('acceptProposal — generate_replacements is fail-closed', () => {
     mockRunSanityAudit.mockResolvedValue({
       incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
       audited: 1,
+      skipped: false,
     });
     (factService.getFacts as jest.Mock).mockResolvedValue([
       { id: 'f1', statement: 'Follows the Indian national cricket team' },
@@ -447,6 +487,7 @@ describe('presentation cap + backlog refill', () => {
         fillTo: 3,
       })),
       audited: n,
+      skipped: false,
     });
   }
 
@@ -520,6 +561,7 @@ describe('acceptProposal — incoherent_topics happy path (K-P5)', () => {
     mockRunSanityAudit.mockResolvedValue({
       incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
       audited: 1,
+      skipped: false,
     });
     (factService.getFacts as jest.Mock).mockResolvedValue([
       { id: 'f1', statement: 'Follows the Indian national cricket team' },
