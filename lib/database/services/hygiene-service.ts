@@ -348,11 +348,13 @@ async function publishSanityOnly(
   reason: 'too_few_facts' | 'persona_too_young',
 ): Promise<SweepResult> {
   const incoherentFacts = sanity.incoherentFacts ?? [];
-  // Stamped here, once, for every exit below: the sweep DID run, it just had
-  // nothing but sanity verdicts to publish. Withheld only when the audit never
-  // happened for want of a credential.
-  await stampSweep(now, sanity.skipped);
+  // NOTE ON ORDER: every stamp below comes AFTER the work it is recording, and
+  // the publishing exit stamps after `publishWithCap`. Stamping up front would
+  // arm the six-day cooldown even if the publish then threw — the retry would
+  // read `reason: 'cooldown'` and the user would lose the proposals for a week.
+  // The full-sweep path is ordered the same way for the same reason.
   if (incoherentFacts.length === 0) {
+    await stampSweep(now, sanity.skipped);
     return {
       ran: false,
       reason,
@@ -373,6 +375,7 @@ async function publishSanityOnly(
   }).filter((p) => p.kind === 'incoherent_topics');
 
   if (proposals.length === 0) {
+    await stampSweep(now, sanity.skipped);
     return {
       ran: false,
       reason,
@@ -382,6 +385,7 @@ async function publishSanityOnly(
   }
 
   await publishWithCap(proposals);
+  await stampSweep(now, sanity.skipped);
   notifyChange();
   void toastManager.showNotifiedToast({
     type: 'hygiene',

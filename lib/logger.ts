@@ -190,8 +190,9 @@ function recordAuthFailureSafely(): void {
 }
 
 /** One line per suppressed class, so a breadcrumb says WHY it was suppressed
- *  rather than only that it was. `cancelled` is absent on purpose: it is
- *  dropped outright, with no breadcrumb. */
+ *  rather than only that it was. The `cancelled` entry is never reached — that
+ *  class returns before the breadcrumb, with no trail at all — but the Record
+ *  is exhaustive so adding a class cannot compile without its text. */
 const SUPPRESSION_BREADCRUMB: Record<SuppressionClass, string> = {
   auth: 'Suppressed 401 — auth breaker owns this signal',
   cancelled: 'Suppressed cancellation',

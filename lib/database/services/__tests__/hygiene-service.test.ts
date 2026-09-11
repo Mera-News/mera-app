@@ -81,6 +81,7 @@ import {
   HYGIENE_PENDING_PRESENTATION_CAP,
   addSanityProposals,
 } from '../hygiene-service';
+import * as settingService from '../setting-service';
 import * as factService from '../fact-service';
 import * as topicService from '../topic-service';
 import * as executor from '../persona-action-executor';
@@ -361,6 +362,26 @@ describe('sanity audit wiring', () => {
 
     expect(res.sanitySkipped).toBe(false);
     expect(mockKv.get('hygiene_last_sweep_at')).toBe(String(NOW));
+  });
+
+  // Ordering, not just presence: an up-front stamp would arm the six-day
+  // cooldown even when the publish then threw, and the retry would read
+  // `reason: 'cooldown'` and drop the proposals for a week.
+  it('does NOT stamp the cooldown when publishing throws', async () => {
+    mockRunSanityAudit.mockResolvedValue({
+      incoherentFacts: [{ factId: 'f1', topicIds: ['t-bad'], fillTo: 3 }],
+      audited: 1,
+      skipped: false,
+    });
+    (settingService.setSetting as jest.Mock).mockImplementationOnce(
+      async (k: string) => {
+        if (k === 'hygiene_pending_proposals') throw new Error('disk full');
+      },
+    );
+
+    await expect(runHygieneSweep({ now: NOW, force: true })).rejects.toThrow('disk full');
+
+    expect(mockKv.get('hygiene_last_sweep_at')).toBeUndefined();
   });
 
   it('never fires a SECOND notification — the sweep publishes once', async () => {
