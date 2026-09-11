@@ -429,8 +429,17 @@ export async function fetchAttestationForVerification(
   nonceHex: string,
 ): Promise<{ attestation: RawModelAttestation; nonce: string }> {
   const token = await getJwtToken();
-  const headers: Record<string, string> = {};
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  // Same guard as the hot path: the route is behind the gateway's AuthGuard, so
+  // a tokenless request is a guaranteed 401 rather than a maybe. The verify tap
+  // is user-initiated, so this is rarer than the background sweep that produced
+  // MERA-APP-16 — but a 401 here would be just as meaningless, and the tap's own
+  // catch cannot tell one failure from another.
+  if (!token) {
+    throw new NoCredentialError(
+      'NEAR attestation skipped: no session token, request not attempted',
+    );
+  }
+  const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
 
   const url =
     `${ATTESTATION_API}?model=${encodeURIComponent(model)}` +

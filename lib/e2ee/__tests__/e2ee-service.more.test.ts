@@ -1010,14 +1010,32 @@ describe('fetchAttestationForVerification', () => {
     expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer test-jwt');
   });
 
-  it('omits Authorization when there is no token', async () => {
+  // Was "omits Authorization when there is no token". Same guard as the hot
+  // path: the route is behind the gateway's AuthGuard, so a tokenless request
+  // could only ever come back 401.
+  it('throws NoCredentialError WITHOUT issuing a request when there is no token', async () => {
     mockGetJwtToken.mockResolvedValueOnce(null);
-    mockGlobalFetch.mockResolvedValue(
-      makeResponse(200, { model_attestations: [{ signing_public_key: 'ab' }] }),
+
+    await expect(fetchAttestationForVerification('m', 'ff'.repeat(32))).rejects.toThrow(
+      NoCredentialError,
     );
-    await fetchAttestationForVerification('m', 'ff'.repeat(32));
-    const init = mockGlobalFetch.mock.calls[0][1] as RequestInit;
-    expect((init.headers as Record<string, string>)['Authorization']).toBeUndefined();
+    expect(mockGlobalFetch).not.toHaveBeenCalled();
+  });
+
+  // The verify tap's catch maps ANY throw to its own localized error state and
+  // never renders the message, so this must stay distinguishable by type rather
+  // than by text — and it must not masquerade as a server rejection.
+  it('does not dress the missing credential up as a 401', async () => {
+    mockGetJwtToken.mockResolvedValueOnce(null);
+
+    const err = await fetchAttestationForVerification('m', 'ff'.repeat(32)).then(
+      () => null,
+      (e: Error) => e,
+    );
+
+    expect(err).toBeInstanceOf(NoCredentialError);
+    expect(err).not.toHaveProperty('statusCode');
+    expect((err as Error).name).toBe('NoCredentialError');
   });
 
   it('throws on a non-ok response', async () => {
