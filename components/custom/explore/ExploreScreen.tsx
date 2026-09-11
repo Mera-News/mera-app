@@ -448,7 +448,7 @@ const ExploreScreen: React.FC = () => {
                             <>
                                 <Heading
                                     size="4xl"
-                                    className="text-white flex-1 mr-3"
+                                    className="text-typography-0 flex-1 mr-3"
                                     pointerEvents="none"
                                     // `flex-1` CLAIMS the row's remaining width.
                                     // `flex-shrink` let this column collapse toward
@@ -511,7 +511,7 @@ const ExploreScreen: React.FC = () => {
             {search.isActive ? (
                 <Box
                     testID="explore-search-overlay"
-                    className="bg-black"
+                    className="bg-background-0"
                     style={{
                         position: 'absolute',
                         top: headerHeight,
