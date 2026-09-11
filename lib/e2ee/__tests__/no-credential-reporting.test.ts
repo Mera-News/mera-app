@@ -24,6 +24,14 @@ jest.mock('@/lib/auth-client', () => ({
   invalidateJwtCache: jest.fn(),
 }));
 
+// The attestation fetch now takes a limiter grant before its request (the
+// gateway throttles per user, and /api/attestation/report counts). Mocked so
+// these specs do not sit through real 3s spacing between grants.
+jest.mock('@/lib/llm/gateway-rate-limiter', () => ({
+  acquire: jest.fn().mockResolvedValue(undefined),
+  pauseFor: jest.fn(),
+}));
+
 jest.mock('@/lib/config/endpoints', () => ({
   INFERENCE_ENDPOINT: 'https://inference.example.test',
 }));

@@ -73,6 +73,18 @@ jest.mock('@/lib/config/endpoints', () => ({
   INFERENCE_ENDPOINT: 'https://inference.example.test',
 }));
 
+// The limiter is REAL otherwise, and authFetch awaits acquire() on every
+// attempt — its grant resolves through a setTimeout even at 0ms, so under the
+// fake timers these retry specs rely on, every test in this file would hang.
+// Same explicit-factory trap as the logger mock above: any export the source
+// calls has to be listed here or it is `undefined` at the call site.
+const mockRateLimiterAcquire = jest.fn().mockResolvedValue(undefined);
+const mockRateLimiterPauseFor = jest.fn();
+jest.mock('../gateway-rate-limiter', () => ({
+  acquire: (...args: unknown[]) => mockRateLimiterAcquire(...args),
+  pauseFor: (...args: unknown[]) => mockRateLimiterPauseFor(...args),
+}));
+
 // ─── Imports ──────────────────────────────────────────────────────────────────
 
 import {
