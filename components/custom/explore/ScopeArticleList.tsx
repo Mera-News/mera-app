@@ -178,10 +178,24 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
                 setHeadlines(appendUniqueHeadlines([], rows));
                 setEndCursor(cursor);
                 setHasNextPage(more);
-            } catch (error) {
-                logger.captureException(error, {
-                    tags: { screen: 'ScopeArticleList', method: 'load', scope: scope.kind },
-                });
+            } catch {
+                // THE LINK OWNS THE CAPTURE. Every fetch on this screen goes
+                // through ArticleService.getTopHeadlinesForCountry ->
+                // client.query, so the Apollo error link has already seen,
+                // classified and reported this failure before the rejection
+                // arrives — and ArticleService.reportQueryError breadcrumbs
+                // above it for the same reason. Capturing a third time here is
+                // what made MERA-APP-77 one Sentry event per offline Explore
+                // load per layer. Breadcrumb only; the `finally` below still
+                // clears isLoading, and the three-way empty state
+                // (noArticles / serverUnavailable / offlineUnavailable) is what
+                // actually tells the user.
+                logger.addBreadcrumb(
+                    `[ScopeArticleList] load failed`,
+                    'ScopeArticleList',
+                    { method: 'load', scope: scope.kind },
+                    'warning',
+                );
             } finally {
                 setIsLoading(false);
             }
@@ -209,10 +223,14 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             setHeadlines(appendUniqueHeadlines([], rows));
             setEndCursor(cursor);
             setHasNextPage(more);
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { screen: 'ScopeArticleList', method: 'refresh', scope: scope.kind },
-            });
+        } catch {
+            // Breadcrumb only — see the mount load above.
+            logger.addBreadcrumb(
+                `[ScopeArticleList] refresh failed`,
+                'ScopeArticleList',
+                { method: 'refresh', scope: scope.kind },
+                'warning',
+            );
         } finally {
             setIsRefreshing(false);
         }
@@ -250,10 +268,14 @@ const ScopeArticleList: React.FC<ScopeArticleListProps> = ({
             setHeadlines((prev) => appendUniqueHeadlines(prev, rows));
             setEndCursor(cursor);
             setHasNextPage(more);
-        } catch (error) {
-            logger.captureException(error, {
-                tags: { screen: 'ScopeArticleList', method: 'loadMore', scope: scope.kind },
-            });
+        } catch {
+            // Breadcrumb only — see the mount load above.
+            logger.addBreadcrumb(
+                `[ScopeArticleList] loadMore failed`,
+                'ScopeArticleList',
+                { method: 'loadMore', scope: scope.kind },
+                'warning',
+            );
         } finally {
             setIsLoadingMore(false);
         }

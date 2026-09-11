@@ -112,7 +112,10 @@ jest.mock('@/components/custom/cards/ArticleStandaloneCompactCard', () => {
 
 jest.mock('@/lib/hooks/use-open-article', () => ({ useOpenArticle: () => jest.fn() }));
 jest.mock('@/lib/visibility-tick', () => ({ notifyScrollTick: jest.fn() }));
-jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn(), info: jest.fn() } }));
+jest.mock('@/lib/logger', () => ({
+    __esModule: true,
+    default: { captureException: jest.fn(), addBreadcrumb: jest.fn(), info: jest.fn() },
+}));
 
 // Capture what the screen hands the tab-press hook, so the "the icon re-tap and
 // the RefreshControl share ONE handler" contract is asserted rather than assumed.
@@ -132,6 +135,7 @@ jest.mock('@/lib/article-service', () => ({
 }));
 
 import ScopeArticleList from '../ScopeArticleList';
+import logger from '@/lib/logger';
 
 const scope = { id: 'world', kind: 'world', countryCodeAlpha3: null } as any;
 
@@ -156,6 +160,77 @@ beforeEach(() => {
 // hourly, so a later page can legitimately re-serve rows the client already
 // holds. The duplicate ARTICLE is the bug; the key warning is only its symptom,
 // so the assertion is that the row renders ONCE — not that its key is unique.
+// Every fetch here goes through ArticleService -> client.query, so the Apollo
+// error link has already captured the failure and ArticleService has already
+// breadcrumbed above it. A third report from the screen is what made one offline
+// Explore load cost several Sentry events (MERA-APP-77). The screen breadcrumbs
+// and nothing else — and the control flow around it must not change, because the
+// spinner and the three-way empty state are what the user actually sees.
+describe('ScopeArticleList — the link owns the capture', () => {
+    it('breadcrumbs a failed load instead of capturing it, and still clears the spinner', async () => {
+        mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+
+        const { queryByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+
+        await waitFor(() => expect(queryByTestId('explore-loading')).toBeNull());
+
+        expect(logger.captureException).not.toHaveBeenCalled();
+        expect(logger.addBreadcrumb).toHaveBeenCalledWith(
+            expect.stringContaining('load failed'),
+            'ScopeArticleList',
+            expect.objectContaining({ method: 'load' }),
+            'warning',
+        );
+        // The finally still ran, so the empty state — not a stuck spinner — is
+        // what renders. That is the user-visible half of "control flow unchanged".
+        expect(queryByTestId('explore-empty')).toBeTruthy();
+    });
+
+    it('breadcrumbs a failed refresh without capturing', async () => {
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a'], null, false));
+        const { getByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+        await waitFor(() => expect(getByTestId('card-a')).toBeTruthy());
+
+        mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+        await act(async () => {
+            await hookOptions.onRefresh();
+        });
+
+        expect(logger.captureException).not.toHaveBeenCalled();
+        expect(logger.addBreadcrumb).toHaveBeenCalledWith(
+            expect.stringContaining('refresh failed'),
+            'ScopeArticleList',
+            expect.objectContaining({ method: 'refresh' }),
+            'warning',
+        );
+    });
+
+    it('breadcrumbs a failed loadMore without capturing', async () => {
+        mockGetTopHeadlines.mockResolvedValueOnce(page(['a'], 'cur1', true));
+        const { getByTestId } = render(
+            <ScopeArticleList scope={scope} scrollHandler={stubScrollHandler} />,
+        );
+        await waitFor(() => expect(getByTestId('card-a')).toBeTruthy());
+
+        mockGetTopHeadlines.mockRejectedValueOnce(new Error('Network request failed'));
+        await act(async () => {
+            await mockListOnEndReached!();
+        });
+
+        expect(logger.captureException).not.toHaveBeenCalled();
+        expect(logger.addBreadcrumb).toHaveBeenCalledWith(
+            expect.stringContaining('loadMore failed'),
+            'ScopeArticleList',
+            expect.objectContaining({ method: 'loadMore' }),
+            'warning',
+        );
+    });
+});
+
 describe('ScopeArticleList — duplicate rows across pages', () => {
     it('drops a page-2 row that is already on screen instead of rendering it twice', async () => {
         mockGetTopHeadlines.mockResolvedValueOnce(page(['a', 'b'], 'cur1', true));
