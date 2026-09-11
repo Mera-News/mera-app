@@ -26,6 +26,7 @@
 // app's shared gateway limiter: it grants one caller every 3s, so a model that
 // searches three things in three turns waits at least 6s in the queue alone.
 
+import { asUntrusted, type UntrustedText } from '@/lib/news-harness/prompts/untrusted-text';
 import { useMeraProtocolStore } from '../stores/mera-protocol-store';
 import {
   MAX_BATCH_QUERIES,
@@ -51,6 +52,29 @@ const MAX_SNIPPET_CHARS = 220;
 function truncate(text: string, max: number): string {
   const t = (text ?? '').trim();
   return t.length > max ? `${t.slice(0, max - 1)}…` : t;
+}
+
+/**
+ * A search hit's text, sanitised and branded before it becomes tool-result text
+ * the model reads.
+ *
+ * This is the LEAST trusted content in the app: not a publisher we ingested but
+ * whatever a web page put in a title or a description tag. It reaches the model
+ * through the tool-result channel, which nothing else guards.
+ *
+ * ESCAPE-ONLY, NO FENCE, deliberately. A tool result is a different boundary
+ * from an article block: the model is being told "here is what search returned",
+ * not "here is the article", and the fence markers belong to the article framing
+ * in `lib/news-harness/prompts`. Escaping alone is what stops a hit forging one
+ * of those markers or an `===== Article N =====` banner from in here.
+ *
+ * `maxLength` is the ALREADY-TRUNCATED length so `asUntrusted` cannot cut a
+ * second time: truncation happens first (keeping the ellipsis the model has
+ * always seen), escaping second. Same ordering as the harness's own
+ * `untrustedTrunc`.
+ */
+function untrusted(text: string): UntrustedText {
+  return asUntrusted(text ?? '', (text ?? '').length);
 }
 
 /**
@@ -94,9 +118,12 @@ function shapeEntry(entry: WebSearchBatchEntry, maxResults: number) {
     query: entry.query,
     searched: true,
     results: results.slice(0, maxResults).map((r) => ({
-      title: r.title,
-      url: r.url,
-      snippet: truncate(r.snippet, MAX_SNIPPET_CHARS),
+      title: untrusted(r.title),
+      // Branded too: an ordinary URL round-trips through `asUntrusted`
+      // unchanged, and this one is prompt text the model cites back rather than
+      // a link anything renders, so there is nothing to keep raw for.
+      url: untrusted(r.url),
+      snippet: untrusted(truncate(r.snippet, MAX_SNIPPET_CHARS)),
     })),
   };
 }

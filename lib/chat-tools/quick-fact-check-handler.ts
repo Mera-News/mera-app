@@ -52,6 +52,7 @@ import {
   searchWebBatch,
   type WebSearchResult,
 } from '../web-search/web-search-client';
+import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
 import logger from '../logger';
 import type { ProposalAction } from '../llm/types';
 
@@ -223,11 +224,34 @@ export async function handleQuickFactCheck(
   // `resolveCitations` must all index the SAME list, or "citation [7]" resolves
   // to a page the model never saw.
   const shortlist = evidence.slice(0, MAX_EVIDENCE_IN_PROMPT);
+  // A PROMPT-ONLY view of the same rows: same order, same length, so the
+  // prompt's numbering, the citation index space and `resolveCitations` still
+  // index one list. `shortlist` itself stays RAW, because its titles and URLs
+  // are what get shown to the user as citations — sanitising those would put
+  // escaped text on screen to defend a boundary the screen is not on.
+  //
+  // Web-page titles and snippets are the least trusted strings the app handles,
+  // and `buildSynthesisMessages` interpolates them into a numbered
+  // `[1] title / url / snippet` structure the model reads positionally. Escaped
+  // here, not fenced: this is evidence handed to the model, not an article
+  // block, and the nonce fence belongs to that other framing.
+  const promptEvidence = shortlist.map((e) => ({
+    ...e,
+    title: asUntrusted(e.title ?? '', (e.title ?? '').length),
+    url: asUntrusted(e.url ?? '', (e.url ?? '').length),
+    snippet: asUntrusted(e.snippet ?? '', (e.snippet ?? '').length),
+  }));
   const messages = buildSynthesisMessages(
     claim,
-    shortlist,
-    input.articleTitle,
-    input.publicationName,
+    promptEvidence,
+    // The article's own headline and publication reach the prompt here. The
+    // RAW values stay on `input` — they are rendered on the fact-check card and
+    // sent to the server with the async request, so only this prompt-bound copy
+    // is escaped.
+    input.articleTitle ? asUntrusted(input.articleTitle, input.articleTitle.length) : input.articleTitle,
+    input.publicationName
+      ? asUntrusted(input.publicationName, input.publicationName.length)
+      : input.publicationName,
   );
   const systemPrompt = typeof messages[0]?.content === 'string' ? messages[0].content : '';
   const prompt = typeof messages[1]?.content === 'string' ? messages[1].content : '';

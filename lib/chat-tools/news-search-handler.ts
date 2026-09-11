@@ -13,6 +13,7 @@
 // query the app already makes, on the session the user is already using.
 
 import { gql } from '@apollo/client';
+import { asUntrusted } from '@/lib/news-harness/prompts/untrusted-text';
 import logger from '../logger';
 
 const SEARCH_NEWS_QUERY = gql`
@@ -97,10 +98,27 @@ export async function handleSearchNews(
 
     return {
       query,
+      // Title and publication are PUBLISHER-CONTROLLED and become tool-result
+      // text the model reads, so they cross the same boundary an article block
+      // does and go through the same constructor. ESCAPE-ONLY, no nonce fence:
+      // a tool result is framed to the model as "here is what the search
+      // returned", not as article content, and the fence belongs to that other
+      // framing in `lib/news-harness/prompts`.
+      //
+      // Each is passed its OWN length as the cap so `asUntrusted` sanitises
+      // without truncating: neither field is truncated today, and quietly
+      // introducing a character budget inside a security fix would be a
+      // behaviour change nobody reviewed. The server already caps this list.
+      //
+      // `id`, `country` and `date` stay untouched — they are ours or
+      // enum-shaped rather than publisher prose, and `id` in particular has to
+      // remain byte-exact because the model hands it back for hydration.
       articles: hits.map((h) => ({
         id: h._id,
-        title: h.title_en,
-        publication: h.publication_name ?? null,
+        title: asUntrusted(h.title_en ?? '', (h.title_en ?? '').length),
+        publication: h.publication_name
+          ? asUntrusted(h.publication_name, h.publication_name.length)
+          : null,
         country: h.country_code ?? null,
         date: toDay(h.pubDate),
       })),
