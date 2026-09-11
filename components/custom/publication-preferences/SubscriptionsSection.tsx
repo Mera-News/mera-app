@@ -152,7 +152,7 @@ const SubscriptionsSection: React.FC = () => {
           <HStack key={row.id} className="items-center justify-between px-4 py-3">
             <HStack space="sm" className="items-center flex-1">
               <Text size="md">{flagForAlpha2(alpha3ToAlpha2(row.countryCode))}</Text>
-              <Text size="md" className="text-white flex-1">
+              <Text size="md" className="text-typography-0 flex-1">
                 {row.publisherName}
               </Text>
             </HStack>

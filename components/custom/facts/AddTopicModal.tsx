@@ -30,7 +30,7 @@ const AddTopicModal: React.FC<AddTopicModalProps> = ({
             <ModalBackdrop />
             <ModalContent>
                 <ModalHeader className="pb-4">
-                    <Text className="text-xl font-semibold text-white">{t('configPanel.addTopic')}</Text>
+                    <Text className="text-xl font-semibold text-typography-0">{t('configPanel.addTopic')}</Text>
                 </ModalHeader>
                 <ModalBody className="py-4">
                     <Text className="text-gray-400 text-sm mb-4">

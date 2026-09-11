@@ -118,7 +118,7 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                     <TranslatableDynamic
                         text={fact.statement}
                         size="md"
-                        className="text-white capitalize"
+                        className="text-typography-0 capitalize"
                         numberOfLines={2}
                     />
                 </Pressable>

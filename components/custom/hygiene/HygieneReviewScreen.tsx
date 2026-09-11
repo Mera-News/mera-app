@@ -177,7 +177,7 @@ const HygieneReviewScreen: React.FC<HygieneReviewScreenProps> = ({ onBack }) => 
                             <TranslatableDynamic
                                 text={item.summary}
                                 size="md"
-                                className="text-white"
+                                className="text-typography-0"
                                 numberOfLines={4}
                             />
                             <Text className="text-sm" style={{ color: SUBTLE }} numberOfLines={3}>

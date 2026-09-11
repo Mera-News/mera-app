@@ -193,7 +193,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
         <VStack className="flex-1 px-5 pt-4" space="lg">
           <HStack className="items-center rounded-xl border border-gray-800 p-3" space="sm">
             <Text className="text-xl">{flagForAlpha2(chosen.countryCode) || '📍'}</Text>
-            <Text className="text-white text-base flex-1" numberOfLines={2}>
+            <Text className="text-typography-0 text-base flex-1" numberOfLines={2}>
               {chosen.label}
             </Text>
             <Pressable onPress={() => setChosen(null)} hitSlop={8} accessibilityRole="button">
@@ -241,7 +241,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
                 placeholderTextColor="#666666"
                 value={manualCity}
                 onChangeText={setManualCity}
-                className="text-white"
+                className="text-typography-0"
                 autoCorrect={false}
               />
             </Input>
@@ -258,7 +258,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
                 {selectedCountry ? (
                   <>
                     <Text className="text-xl">{selectedCountry.flag}</Text>
-                    <Text className="text-white text-base">{selectedCountry.name}</Text>
+                    <Text className="text-typography-0 text-base">{selectedCountry.name}</Text>
                   </>
                 ) : (
                   <Text className="text-gray-500 text-base">{t('locations.selectCountry')}</Text>
@@ -284,7 +284,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
                     placeholderTextColor="#666666"
                     value={countrySearch}
                     onChangeText={setCountrySearch}
-                    className="text-white"
+                    className="text-typography-0"
                     autoCorrect={false}
                   />
                 </Input>
@@ -303,7 +303,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
                     className="flex-row items-center px-3 py-3 border-b border-gray-800"
                   >
                     <Text className="text-xl mr-3">{item.flag}</Text>
-                    <Text className="text-white text-base">{item.name}</Text>
+                    <Text className="text-typography-0 text-base">{item.name}</Text>
                   </Pressable>
                 )}
               />
@@ -341,7 +341,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
             placeholderTextColor="#666666"
             value={query}
             onChangeText={setQuery}
-            className="text-white"
+            className="text-typography-0"
             autoCorrect={false}
             autoFocus
           />
@@ -377,7 +377,7 @@ const AddLocationView: React.FC<Props> = ({ onClose, onSaved, renderIdle }) => {
               className="flex-row items-center px-5 py-3 border-b border-gray-800"
             >
               <Text className="text-xl mr-3">{flagForAlpha2(item.countryCode) || '📍'}</Text>
-              <Text className="text-white text-base flex-1" numberOfLines={1}>
+              <Text className="text-typography-0 text-base flex-1" numberOfLines={1}>
                 {item.displayName}
               </Text>
               <MaterialIcons name="add" size={20} color={ACCENT} />

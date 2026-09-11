@@ -346,7 +346,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 <AbstractGradientBackdrop />
 
                 <Spinner size="large" />
-                <Text className="text-white mt-4">{t('common.loading')}</Text>
+                <Text className="text-typography-0 mt-4">{t('common.loading')}</Text>
             </Box>
         );
     }
@@ -391,7 +391,7 @@ const OnboardingWizard: React.FC<OnboardingWizardProps> = ({ userId: initialUser
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader className="border-gray-700 pb-4">
-                        <Text className="text-xl font-semibold text-white">{t('onboarding.connectionIssue')}</Text>
+                        <Text className="text-xl font-semibold text-typography-0">{t('onboarding.connectionIssue')}</Text>
                     </ModalHeader>
                     <ModalBody className="py-6">
                         <Text className="text-gray-300 text-base leading-relaxed">

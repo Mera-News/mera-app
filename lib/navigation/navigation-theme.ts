@@ -9,14 +9,15 @@
 
 import { DarkTheme, DefaultTheme, type Theme } from '@react-navigation/native';
 
-/** The app's dark background: pure black. Screens use `bg-black` and the root
+/** The app's dark background: pure black. Screens use `bg-background-0` and the root
  * Stack sets `contentStyle.backgroundColor` to '#000000'. */
 const DARK_BACKGROUND = '#000000';
 
-/** Design-system light background shade (tailwind.config.js `background.light`)
- * — a soft off-white, not pure #FFF. The app is dark-only today; this exists so
- * the navigation theme still tracks the color scheme if that ever changes. */
-const LIGHT_BACKGROUND = '#FBFBFB';
+/** Parchment, the light page surface (`--color-background-0` in the light
+ * block). Was a placeholder off-white chosen while the app was dark-only; it
+ * has to match the real light surface or every navigator wrapper paints a
+ * slightly different white than the screens it contains. */
+const LIGHT_BACKGROUND = '#F4F3EE';
 
 const darkNavigationTheme: Theme = {
   ...DarkTheme,

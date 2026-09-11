@@ -28,7 +28,7 @@ const DeleteFactModal: React.FC<DeleteFactModalProps> = ({ fact, isDeleting, onC
                         {t('configPanel.deleteFactConfirm')}
                     </Text>
                     {fact && (
-                        <Text className="text-white text-base font-medium mb-4 capitalize">
+                        <Text className="text-typography-0 text-base font-medium mb-4 capitalize">
                             &ldquo;{fact.statement}&rdquo;
                         </Text>
                     )}

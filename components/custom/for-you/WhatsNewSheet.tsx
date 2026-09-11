@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
@@ -19,7 +20,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 /** Settings KV flag gating the one-time sheet (existing setting-service pattern,
  *  same as `tabs_tooltip_seen`).

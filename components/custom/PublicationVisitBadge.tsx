@@ -68,11 +68,11 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
                     {...triggerProps}
                     onPress={openTooltip}
                     accessibilityLabel={t('publicationVisits.tooltipA11y')}
-                    className="rounded-lg p-3 bg-black border border-white"
+                    className="rounded-lg p-3 bg-background-0 border border-white"
                 >
                     <HStack className="items-center" space="sm">
                         <MaterialIcons name="visibility" size={16} color="#ffffff" />
-                        <Text size="xs" italic className="flex-1 text-white">
+                        <Text size="xs" italic className="flex-1 text-typography-0">
                             {t('publicationVisits.badge', {
                                 publication: publicationName,
                                 count,
@@ -84,17 +84,17 @@ const PublicationVisitBadge: React.FC<Props> = ({ publicationName, countryCode }
         >
             <PopoverBackdrop />
             <PopoverContent
-                className="bg-black border border-white"
+                className="bg-background-0 border border-white"
                 style={{ maxWidth: screenWidth - 32 }}
             >
-                <PopoverArrow className="bg-black border border-white" />
+                <PopoverArrow className="bg-background-0 border border-white" />
                 <PopoverBody>
-                    <Text size="xs" className="text-white">
+                    <Text size="xs" className="text-typography-0">
                         {t('publicationVisits.tooltipIntro')}{' '}
                         <Text
                             size="xs"
                             bold
-                            className="text-white underline"
+                            className="text-typography-0 underline"
                             onPress={openHistory}
                         >
                             {t('publicationVisits.tooltipLink')}

@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -10,7 +11,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 interface FactSectionHeaderProps {
   /** The fact's display title (rendered after the "News about:" prefix). */

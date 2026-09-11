@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
@@ -41,7 +42,9 @@ import { FlatList, ListRenderItem, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 /** Pull-to-refresh spinner tint — matches FeedScreen's. */
-const REFRESH_TINT = '#EDA77E';
+// Was a hardcoded copy of dark primary-500. Single-sourced so it cannot drift
+// from the token it was copied from; see lib/theme/tokens.ts.
+const REFRESH_TINT = THEME_COLORS.dark.primary500;
 
 interface StoryTimelineScreenProps {
     trackedStoryId: string;
@@ -379,7 +382,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                                 as="heading"
                                 size="xl"
                                 numberOfLines={2}
-                                className="text-white"
+                                className="text-typography-0"
                             />
                         )}
                         {/* Short copy — see TrackedStoriesScreen: this is a followed-
@@ -421,7 +424,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader>
-                        <Heading size="lg" className="text-white">
+                        <Heading size="lg" className="text-typography-0">
                             {t('trackedStories.deleteStoryConfirmTitle')}
                         </Heading>
                     </ModalHeader>
@@ -457,7 +460,7 @@ const StoryTimelineScreen: React.FC<StoryTimelineScreenProps> = ({ trackedStoryI
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader>
-                        <Heading size="lg" className="text-white">
+                        <Heading size="lg" className="text-typography-0">
                             {t('trackedStories.removeMemberConfirmTitle')}
                         </Heading>
                     </ModalHeader>

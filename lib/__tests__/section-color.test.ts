@@ -1,4 +1,4 @@
-import { hashString, sectionGradient } from '../section-color';
+import { SECTION_SCHEME, hashString, sectionColorAtAlpha, sectionGradient } from '../section-color';
 
 describe('hashString', () => {
   it('matches the known FNV-1a 32-bit answer for "abc"', () => {
@@ -79,5 +79,75 @@ describe('sectionGradient', () => {
     const spec = sectionGradient('some-fact-id');
     expect(spec.startOpacity).toBe(0.3);
     expect(spec.endOpacity).toBe(0);
+  });
+});
+
+// ADDED for light mode. The dark cases above are unchanged on purpose: the
+// scheme parameter defaults to 'dark', so every existing caller and assertion
+// keeps its meaning.
+describe('light scheme', () => {
+  it('defaults to dark, so existing callers are unaffected', () => {
+    expect(sectionGradient('fact-1')).toEqual(sectionGradient('fact-1', 'dark'));
+  });
+
+  it('uses a darker band and a stronger solid edge than dark mode', () => {
+    // Carrying the dark pair onto Parchment collapses yellow hues to 1.11:1.
+    expect(SECTION_SCHEME.light.lightness).toBeLessThan(SECTION_SCHEME.dark.lightness);
+    expect(SECTION_SCHEME.light.startOpacity).toBeGreaterThan(SECTION_SCHEME.dark.startOpacity);
+  });
+
+  it('keeps the hue, and only the hue, keyed to the factId', () => {
+    expect(sectionGradient('fact-1', 'light').hue).toBe(sectionGradient('fact-1', 'dark').hue);
+  });
+
+  it('builds base and hsla from the same per-scheme lightness', () => {
+    const spec = sectionGradient('fact-1', 'light');
+    expect(spec.base).toContain(`${SECTION_SCHEME.light.lightness}%`);
+    expect(spec.lightness).toBe(SECTION_SCHEME.light.lightness);
+    expect(sectionColorAtAlpha(spec.hue, 0.5, 'light')).toContain(
+      `${SECTION_SCHEME.light.lightness}%`,
+    );
+  });
+
+  it('reproduces the dark visibility floor across all 360 hues', () => {
+    // Measured, not asserted by comment. Composite each band onto its page and
+    // score band-vs-page; the light floor must not fall below the dark one by
+    // more than rounding.
+    const hsl2rgb = (h: number, s: number, l: number): [number, number, number] => {
+      const sn = s / 100;
+      const ln = l / 100;
+      const c = (1 - Math.abs(2 * ln - 1)) * sn;
+      const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+      const m = ln - c / 2;
+      const seg: [number, number, number][] = [
+        [c, x, 0], [x, c, 0], [0, c, x], [0, x, c], [x, 0, c], [c, 0, x],
+      ];
+      const [r, g, b] = seg[Math.floor(h / 60) % 6];
+      return [r, g, b].map((v) => Math.round((v + m) * 255)) as [number, number, number];
+    };
+    const over = (fg: number[], a: number, bg: number[]) =>
+      fg.map((v, i) => Math.round(v * a + bg[i] * (1 - a)));
+    const lum = (r: number[]) => {
+      const ch = (v: number) => {
+        const s2 = v / 255;
+        return s2 <= 0.04045 ? s2 / 12.92 : ((s2 + 0.055) / 1.055) ** 2.4;
+      };
+      return 0.2126 * ch(r[0]) + 0.7152 * ch(r[1]) + 0.0722 * ch(r[2]);
+    };
+    const ratio = (a: number[], b: number[]) => {
+      const [hi, lo] = [lum(a), lum(b)].sort((x, y) => y - x);
+      return (hi + 0.05) / (lo + 0.05);
+    };
+    const floor = (page: number[], l: number, alpha: number) => {
+      let min = Infinity;
+      for (let h = 0; h < 360; h++) {
+        min = Math.min(min, ratio(over(hsl2rgb(h, 52, l), alpha, page), page));
+      }
+      return min;
+    };
+    const dark = floor([18, 17, 19], SECTION_SCHEME.dark.lightness, SECTION_SCHEME.dark.startOpacity);
+    const light = floor([244, 243, 238], SECTION_SCHEME.light.lightness, SECTION_SCHEME.light.startOpacity);
+    expect(dark).toBeCloseTo(1.451, 2);
+    expect(light).toBeGreaterThan(dark - 0.01);
   });
 });

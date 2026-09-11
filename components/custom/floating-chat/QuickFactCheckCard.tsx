@@ -13,6 +13,7 @@
 // the other. That is deliberate: a model narrating this result would be free to
 // blur exactly those two, and no test of the underlying data would catch it.
 
+import { THEME_COLORS } from '@/lib/theme';
 import { Text } from '@/components/ui/text';
 import { describeVerdict } from '@/lib/fact-check/fact-check-state';
 import { quickFactCheckCopyKey } from '@/lib/chat-tools/quick-fact-check-handler';
@@ -33,7 +34,8 @@ import { useTranslation } from 'react-i18next';
 type PendingLocaleKey = 'factCheck.disclaimer';
 const k = (key: string) => key as PendingLocaleKey;
 
-const ACCENT = 'rgb(231, 138, 83)';
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 /** Sources shown inline. The rest are in the summary's citation numbers. */
 const MAX_SOURCES = 5;
 

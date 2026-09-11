@@ -101,7 +101,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                         left in place is how the clipping bug comes back the
                         moment a localized string lands in this slot.
                         `text-3xl` now carries a script-safe 45px line box. */}
-                    <Text className="text-white font-bold text-3xl">
+                    <Text className="text-typography-0 font-bold text-3xl">
                         {used}
                         {hasLimit ? (
                             <Text className="text-gray-400 font-semibold text-xl"> / {limit}</Text>
@@ -131,7 +131,7 @@ const UsageWidget: React.FC<UsageWidgetProps> = ({
                                     <HStack className="items-center" space="xs">
                                         <MaterialIcons name={upgradeIcon} size={12} color="#ffffff" />
                                         {upgradeLabel ? (
-                                            <Text size="xs" className="text-white font-semibold">{upgradeLabel}</Text>
+                                            <Text size="xs" className="text-typography-0 font-semibold">{upgradeLabel}</Text>
                                         ) : null}
                                     </HStack>
                                 </Pressable>

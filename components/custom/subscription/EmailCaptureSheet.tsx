@@ -284,7 +284,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'email' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-white font-semibold text-center">
+                                <Text size="2xl" className="text-typography-0 font-semibold text-center">
                                     {t('emailCapture.title')}
                                 </Text>
                                 <Text size="md" className="text-gray-300 text-center">
@@ -360,7 +360,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'otp' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-white font-semibold text-center">
+                                <Text size="2xl" className="text-typography-0 font-semibold text-center">
                                     {t('emailCapture.title')}
                                 </Text>
                                 <Text size="md" className="text-gray-300 text-center">
@@ -445,7 +445,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'skip-confirm' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-white font-semibold text-center">
+                                <Text size="2xl" className="text-typography-0 font-semibold text-center">
                                     {t('emailCapture.skipTitle')}
                                 </Text>
                                 <Text size="md" className="text-gray-300 text-center">
@@ -464,7 +464,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                         >
                                             <Text
                                                 size="md"
-                                                className="text-white font-semibold"
+                                                className="text-typography-0 font-semibold"
                                                 testID="email-capture-support-id"
                                             >
                                                 {t('support.supportId', { id: supportId })}
@@ -523,7 +523,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'done' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-white font-semibold text-center">
+                                <Text size="2xl" className="text-typography-0 font-semibold text-center">
                                     {t('emailCapture.added')}
                                 </Text>
                                 <Text size="md" className="text-gray-300 text-center">

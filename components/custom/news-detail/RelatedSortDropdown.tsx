@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import { CheckIcon, ChevronDownIcon, Icon } from '@/components/ui/icon';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
 import { Pressable } from '@/components/ui/pressable';
@@ -9,7 +10,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 // User-facing labels. Deliberately NOT the internal mode names: "relevance"
 // describes the algorithm (country blocks, then the reader's language and

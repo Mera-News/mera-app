@@ -154,7 +154,7 @@ const AddSubscriptionView: React.FC<Props> = ({ onChoose, disabled }) => {
               <Box className="py-3">
                 <HStack space="sm" className="items-center">
                   <Text size="md">{flagForAlpha2(alpha3ToAlpha2(hit.country_code))}</Text>
-                  <Text size="md" className="text-white flex-1">
+                  <Text size="md" className="text-typography-0 flex-1">
                     {hit.name}
                   </Text>
                 </HStack>

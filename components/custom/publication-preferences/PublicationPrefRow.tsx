@@ -79,7 +79,7 @@ const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, onS
             <HStack className="items-center justify-between">
                 {scopeChip ? (
                     <VStack className="flex-1 mr-2" space="xs">
-                        <Text size="md" className="text-white capitalize" numberOfLines={2}>
+                        <Text size="md" className="text-typography-0 capitalize" numberOfLines={2}>
                             {pref.publicationName}
                         </Text>
                         <View
@@ -99,7 +99,7 @@ const PublicationPrefRow: React.FC<PublicationPrefRowProps> = ({ pref, busy, onS
                         </View>
                     </VStack>
                 ) : (
-                    <Text size="md" className="text-white flex-1 mr-2 capitalize" numberOfLines={2}>
+                    <Text size="md" className="text-typography-0 flex-1 mr-2 capitalize" numberOfLines={2}>
                         {pref.publicationName}
                     </Text>
                 )}

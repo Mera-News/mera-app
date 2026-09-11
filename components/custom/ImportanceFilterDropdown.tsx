@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import { CheckIcon, ChevronDownIcon, Icon } from '@/components/ui/icon';
 import { Menu, MenuItem, MenuItemLabel } from '@/components/ui/menu';
 import { Pressable } from '@/components/ui/pressable';
@@ -12,7 +13,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Animated, View } from 'react-native';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 // Same label keys as RelevanceChip, for the same reason: the control and the
 // worded chip on each card must never disagree.

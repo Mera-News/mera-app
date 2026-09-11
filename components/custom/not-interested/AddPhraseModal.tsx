@@ -68,7 +68,7 @@ const AddPhraseModal: React.FC<AddPhraseModalProps> = ({ isOpen, onClose, onSubm
                 <ModalHeader className="pb-3">
                     <HStack className="items-center" space="xs">
                         <MaterialIcons name="visibility-off" size={18} color={ACCENT} />
-                        <Text className="text-base font-semibold text-white">
+                        <Text className="text-base font-semibold text-typography-0">
                             {t('notInterested.addPhraseTitle')}
                         </Text>
                     </HStack>
@@ -94,7 +94,7 @@ const AddPhraseModal: React.FC<AddPhraseModalProps> = ({ isOpen, onClose, onSubm
                         </Box>
                         <HStack className="items-center justify-between" space="md">
                             <VStack className="flex-1 mr-2">
-                                <Text size="sm" className="text-white">
+                                <Text size="sm" className="text-typography-0">
                                     {t('notInterested.addPhraseHardLabel')}
                                 </Text>
                                 <Text size="xs" className="text-gray-500 mt-0.5">

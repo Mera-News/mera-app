@@ -20,6 +20,7 @@
 // so routing this through the proposal slot would disable the forced-extraction
 // safety net for the whole pending window.
 
+import { THEME_COLORS } from '@/lib/theme';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -34,7 +35,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-const ACCENT = 'rgb(231, 138, 83)';
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 function cardEntering() {
   'worklet';

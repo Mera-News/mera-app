@@ -84,7 +84,7 @@ const NotificationBellButton: React.FC = () => {
                         paddingHorizontal: 3,
                     }}
                 >
-                    <Text className="text-white font-bold" size="2xs" scaleTier="chrome">
+                    <Text className="text-typography-0 font-bold" size="2xs" scaleTier="chrome">
                         {count > 99 ? '99+' : count}
                     </Text>
                 </View>

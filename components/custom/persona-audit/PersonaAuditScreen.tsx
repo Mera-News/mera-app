@@ -98,7 +98,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                             <TranslatableDynamic
                                 text={item.summary || t(`personaAudit.actionLabels.${display.labelKey}` as never)}
                                 size="md"
-                                className={reverted ? 'text-gray-500 flex-1 line-through' : 'text-white flex-1'}
+                                className={reverted ? 'text-gray-500 flex-1 line-through' : 'text-typography-0 flex-1'}
                                 numberOfLines={3}
                             />
                             {canRevert ? (
@@ -183,7 +183,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                     <ModalHeader className="pb-3">
                         <HStack className="items-center" space="xs">
                             <MaterialIcons name="undo" size={18} color={ACCENT} />
-                            <Text className="text-base font-semibold text-white">
+                            <Text className="text-base font-semibold text-typography-0">
                                 {t('personaAudit.revertConfirmTitle')}
                             </Text>
                         </HStack>
@@ -196,7 +196,7 @@ const PersonaAuditScreen: React.FC<PersonaAuditScreenProps> = ({ onBack }) => {
                             <TranslatableDynamic
                                 text={confirmRow.summary}
                                 size="sm"
-                                className="text-white font-medium"
+                                className="text-typography-0 font-medium"
                                 numberOfLines={3}
                             />
                         ) : null}

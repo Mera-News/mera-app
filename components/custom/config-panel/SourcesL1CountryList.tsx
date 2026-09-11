@@ -1,3 +1,4 @@
+import { useThemeColors } from '@/lib/theme';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
@@ -125,6 +126,7 @@ const PublisherSearchRow: React.FC<{ hit: PublisherSearchHit }> = ({ hit }) => {
 
 const SourcesL1CountryList: React.FC = () => {
     const { t } = useTranslation();
+    const themeColors = useThemeColors();
     const [countryCodes, setCountryCodes] = useState<string[]>([]);
     const [topPublications, setTopPublications] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -452,7 +454,7 @@ const SourcesL1CountryList: React.FC = () => {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor="#ffffff"
+                            tintColor={themeColors.refreshTint}
                             colors={['#ffffff']}
                         />
                     }

@@ -34,7 +34,7 @@ const LocationRolePicker: React.FC<Props> = ({ value, onChange }) => {
           >
             <MaterialIcons name={meta.icon} size={16} color={selected ? ACCENT : '#999999'} />
             <Text
-              className={`ml-2 text-sm ${selected ? 'text-white' : 'text-gray-300'}`}
+              className={`ml-2 text-sm ${selected ? 'text-typography-0' : 'text-gray-300'}`}
             >
               {t(`locations.roles.${meta.labelKey}` as never)}
             </Text>

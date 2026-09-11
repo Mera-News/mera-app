@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { View } from 'react-native';
@@ -17,7 +18,8 @@ import { useTranslation } from 'react-i18next';
 // `tintColor` so the selected tab picks up the app accent; everything else
 // (blur/liquid-glass on iOS 26, Material on Android) is left to the native
 // appearance — no custom tabBarStyle.
-const ACCENT = 'rgb(231, 138, 83)';
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 const { Icon, Label, VectorIcon } = NativeTabs.Trigger;
 

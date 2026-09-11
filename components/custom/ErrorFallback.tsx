@@ -22,7 +22,7 @@ export const FullScreenErrorFallback: React.FC<ErrorFallbackProps> = ({
     // on every screen that has one). `bg-black` here punched a hole through it.
     <View className="flex-1 items-center justify-center px-6">
       <MaterialIcons name="error-outline" size={64} color="#EF4444" />
-      <Text className="text-white text-xl font-semibold mt-6 text-center">
+      <Text className="text-typography-0 text-xl font-semibold mt-6 text-center">
         {t('errors.somethingWentWrong')}
       </Text>
       <Text className="text-gray-400 text-base mt-2 text-center">
@@ -53,7 +53,7 @@ export const InlineErrorFallback: React.FC<ErrorFallbackProps> = ({
   return (
     <View className="bg-gray-900 rounded-xl p-4 items-center justify-center my-2">
       <MaterialIcons name="error-outline" size={32} color="#EF4444" />
-      <Text className="text-white text-sm font-medium mt-3 text-center">
+      <Text className="text-typography-0 text-sm font-medium mt-3 text-center">
         {t('errors.failedToLoad')}
       </Text>
       {__DEV__ && (
@@ -67,7 +67,7 @@ export const InlineErrorFallback: React.FC<ErrorFallbackProps> = ({
         size="sm"
       >
         <MaterialIcons name="refresh" size={14} color="#fff" />
-        <ButtonText className="text-white text-sm ml-1">{t('common.retry')}</ButtonText>
+        <ButtonText className="text-typography-0 text-sm ml-1">{t('common.retry')}</ButtonText>
       </Button>
     </View>
   );
@@ -87,7 +87,7 @@ export const MinimalErrorFallback: React.FC<ErrorFallbackProps> = ({
         size="sm"
         className="ml-2"
       >
-        <ButtonText className="text-white text-sm underline">{t('common.retry')}</ButtonText>
+        <ButtonText className="text-typography-0 text-sm underline">{t('common.retry')}</ButtonText>
       </Button>
     </View>
   );

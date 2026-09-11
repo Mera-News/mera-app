@@ -11,6 +11,7 @@
 // markdown styles) rather than tva, while keeping the gluestack forwardRef /
 // context conventions for API compatibility.
 
+import { THEME_COLORS } from '@/lib/theme';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, {
   createContext,
@@ -35,8 +36,8 @@ import { Button } from '@/components/ui/button';
 import { MAX_FONT_SCALE, maxFontSizeMultiplierFor } from '@/lib/typography/policy';
 import { useTextScale } from '@/lib/typography/TextScaleContext';
 
-const ACCENT = 'rgb(231, 138, 83)';
-// Bubble surfaces float on the #1a1a1a panel: assistant slightly lighter than
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 // the panel, user lighter still, so the two roles read apart without borders.
 const ASSISTANT_SURFACE = '#232323';
 const USER_SURFACE = '#2e2e2e';

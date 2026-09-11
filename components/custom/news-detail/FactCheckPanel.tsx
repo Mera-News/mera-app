@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import { Box } from '@/components/ui/box';
 import { SearchCheck } from 'lucide-react-native';
 import FactCheckBadge, { describeBadgeStatusText } from '@/components/custom/fact-checks/FactCheckBadge';
@@ -19,7 +20,8 @@ import React from 'react';
 import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 /**
  * Tone → classes, for the per-claim assessment badges only. The header chip

@@ -17,6 +17,7 @@
 // Settlement is recorded in the floating-chat store (resolvedConflicts), keyed by
 // `${newFactId}:${existingFactId}`, mirroring resolvedProposals.
 
+import { THEME_COLORS } from '@/lib/theme';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
@@ -34,7 +35,8 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-const ACCENT = 'rgb(231, 138, 83)';
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 const WARN = 'rgb(233, 179, 83)';
 
 function cardEntering() {

@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import { Box } from '@/components/ui/box';
 import { Pressable } from '@/components/ui/pressable';
@@ -9,7 +10,8 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, type ListRenderItem } from 'react-native';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 /** Trailing ghost "+" chip id — a sentinel appended after the real scopes,
  *  never selectable/selected, navigates to the Sources screen (Item 7 —

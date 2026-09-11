@@ -1,3 +1,4 @@
+import { THEME_COLORS } from '@/lib/theme';
 import { Box } from '@/components/ui/box';
 import { SearchCheck } from 'lucide-react-native';
 import FactCheckBadge from '@/components/custom/fact-checks/FactCheckBadge';
@@ -14,7 +15,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-const ACCENT = 'rgb(231, 138, 83)'; // primary-400
+// Was a hardcoded copy of dark primary-400.
+const ACCENT = THEME_COLORS.dark.primary400;
 
 interface FactCheckCardProps {
     readonly item: StoredFactCheck;
