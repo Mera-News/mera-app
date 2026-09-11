@@ -235,7 +235,8 @@
     "sourceCountryA11y": "Pays de la source : {{country}}. Appuyez pour afficher le nom du pays.",
     "readOn": "Lire sur {{publication}}",
     "readOnGoogleTranslate": "Lire sur Google Translate",
-    "linkUnavailable": "Ce lien ne peut pas être ouvert de manière sécurisée, il n'est donc pas disponible ici."
+    "linkUnavailable": "Ce lien ne peut pas être ouvert de manière sécurisée, il n'est donc pas disponible ici.",
+    "relatedFromSubscriptions": "De vos abonnements"
   },
   "newsCluster": {
     "failedToLoad": "Impossible de charger les détails du groupe",
@@ -2496,5 +2497,27 @@
     "dismissedSummary": "Rien n'a été enregistré. Dis à Mera ce que tu voulais dire et il réessaiera.",
     "expired": "Cela vient d'une conversation précédente et ne peut plus être ajouté.",
     "resolveBeforeContinuing": "Choisis une interprétation ou appuie sur Passer avant de continuer."
+  },
+  "subscriptions": {
+    "sectionTitle": "Vos abonnements",
+    "otherSources": "Autres sources",
+    "empty": "Indiquez à Mera les publications auxquelles vous êtes abonné. Nous leur donnerons plus de poids dans votre fil et afficherons leur couverture des sujets qu'elles traitent.",
+    "add": "Ajouter un abonnement",
+    "close": "Fermer",
+    "remove": "Retirer",
+    "removeA11y": "Retirer {{publisher}}",
+    "searchPlaceholder": "Rechercher des publications",
+    "searchTooShort": "Saisissez au moins 2 caractères",
+    "searchInFlight": "Recherche en cours",
+    "searchNoResults": "Nous n'avons pas encore cet éditeur",
+    "searchError": "La recherche n'est pas disponible pour le moment",
+    "confirmTitle": "Vous êtes-vous abonné à {{publisher}} ?",
+    "confirmBody": "Nous donnerons plus de poids à {{publisher}} dans votre fil et afficherons sa couverture des sujets qu'il traite.",
+    "confirmYes": "Oui, je suis abonné",
+    "confirmNo": "Pas encore",
+    "iSubscribe": "Je suis abonné à cette publication",
+    "added": "{{publisher}} a été ajouté à vos abonnements",
+    "removed": "{{publisher}} a été retiré de vos abonnements",
+    "coversThisStory": "Votre abonnement couvre ce sujet."
   }
 }

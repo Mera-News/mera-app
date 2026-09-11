@@ -230,7 +230,8 @@
     "sourceCountryA11y": "Paese di origine: {{country}}. Tocca per mostrare il nome del paese.",
     "readOn": "Leggi su {{publication}}",
     "readOnGoogleTranslate": "Leggi su Google Translate",
-    "linkUnavailable": "Questo link non può essere aperto in modo sicuro, quindi non è disponibile qui."
+    "linkUnavailable": "Questo link non può essere aperto in modo sicuro, quindi non è disponibile qui.",
+    "relatedFromSubscriptions": "Dai tuoi abbonamenti"
   },
   "newsCluster": {
     "failedToLoad": "Caricamento dei dettagli del gruppo non riuscito",
@@ -2489,5 +2490,27 @@
     "dismissedSummary": "Non è stato salvato nulla. Di' a Mera cosa intendevi e riproverà.",
     "expired": "Viene da una chat precedente, quindi non può più essere aggiunto.",
     "resolveBeforeContinuing": "Scegli un'interpretazione o tocca Salta prima di continuare."
+  },
+  "subscriptions": {
+    "sectionTitle": "I tuoi abbonamenti",
+    "otherSources": "Altre fonti",
+    "empty": "Indica a Mera le testate per cui paghi. Daremo loro più peso nel tuo feed e mostreremo la loro copertura sulle notizie di cui si occupano.",
+    "add": "Aggiungi un abbonamento",
+    "close": "Chiudi",
+    "remove": "Rimuovi",
+    "removeA11y": "Rimuovi {{publisher}}",
+    "searchPlaceholder": "Cerca testate",
+    "searchTooShort": "Scrivi almeno 2 caratteri",
+    "searchInFlight": "Ricerca in corso",
+    "searchNoResults": "Non abbiamo ancora questo editore",
+    "searchError": "La ricerca non è disponibile in questo momento",
+    "confirmTitle": "Ti sei abbonato a {{publisher}}?",
+    "confirmBody": "Daremo più peso a {{publisher}} nel tuo feed e mostreremo la sua copertura sulle notizie di cui si occupa.",
+    "confirmYes": "Sì, sono abbonato",
+    "confirmNo": "Non ancora",
+    "iSubscribe": "Sono abbonato a questa",
+    "added": "{{publisher}} aggiunto ai tuoi abbonamenti",
+    "removed": "{{publisher}} rimosso dai tuoi abbonamenti",
+    "coversThisStory": "Il tuo abbonamento copre questa notizia."
   }
 }

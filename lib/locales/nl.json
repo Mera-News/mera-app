@@ -230,7 +230,8 @@
     "sourceCountryA11y": "Bronland: {{country}}. Tik om de landnaam te tonen.",
     "readOn": "Lezen op {{publication}}",
     "readOnGoogleTranslate": "Lezen op Google Translate",
-    "linkUnavailable": "Deze link kan niet veilig worden geopend, dus is deze hier niet beschikbaar."
+    "linkUnavailable": "Deze link kan niet veilig worden geopend, dus is deze hier niet beschikbaar.",
+    "relatedFromSubscriptions": "Uit je abonnementen"
   },
   "newsCluster": {
     "failedToLoad": "Clusterdetails laden mislukt",
@@ -2489,5 +2490,27 @@
     "dismissedSummary": "Er is niets opgeslagen. Vertel Mera wat je bedoelde, dan probeert het het opnieuw.",
     "expired": "Dit komt uit een eerdere chat en kan niet meer worden toegevoegd.",
     "resolveBeforeContinuing": "Kies een lezing of tik op Overslaan voordat je verdergaat."
+  },
+  "subscriptions": {
+    "sectionTitle": "Je abonnementen",
+    "otherSources": "Andere bronnen",
+    "empty": "Vertel Mera voor welke titels je betaalt. We geven ze meer gewicht in je feed en tonen hun berichtgeving bij nieuws waarover ze schrijven.",
+    "add": "Abonnement toevoegen",
+    "close": "Sluiten",
+    "remove": "Verwijderen",
+    "removeA11y": "{{publisher}} verwijderen",
+    "searchPlaceholder": "Zoek titels",
+    "searchTooShort": "Typ minstens 2 tekens",
+    "searchInFlight": "Bezig met zoeken",
+    "searchNoResults": "Deze uitgever hebben we nog niet",
+    "searchError": "Zoeken is nu niet beschikbaar",
+    "confirmTitle": "Heb je je op {{publisher}} geabonneerd?",
+    "confirmBody": "We geven {{publisher}} meer gewicht in je feed en tonen hun berichtgeving bij nieuws waarover ze schrijven.",
+    "confirmYes": "Ja, ik heb een abonnement",
+    "confirmNo": "Nog niet",
+    "iSubscribe": "Hierop ben ik geabonneerd",
+    "added": "{{publisher}} toegevoegd aan je abonnementen",
+    "removed": "{{publisher}} verwijderd uit je abonnementen",
+    "coversThisStory": "Je abonnement dekt dit nieuws."
   }
 }

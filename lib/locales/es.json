@@ -230,7 +230,8 @@
     "sourceCountryA11y": "País de origen: {{country}}. Toca para mostrar el nombre del país.",
     "readOn": "Leer en {{publication}}",
     "readOnGoogleTranslate": "Leer en Google Translate",
-    "linkUnavailable": "Este enlace no se puede abrir de forma segura, así que no está disponible aquí."
+    "linkUnavailable": "Este enlace no se puede abrir de forma segura, así que no está disponible aquí.",
+    "relatedFromSubscriptions": "De tus suscripciones"
   },
   "newsCluster": {
     "failedToLoad": "Error al cargar los detalles del grupo",
@@ -2489,5 +2490,27 @@
     "dismissedSummary": "No se guardó nada. Dile a Mera qué querías decir y lo intentará de nuevo.",
     "expired": "Esto viene de un chat anterior, así que ya no se puede añadir.",
     "resolveBeforeContinuing": "Elige una opción o toca Omitir antes de continuar."
+  },
+  "subscriptions": {
+    "sectionTitle": "Tus suscripciones",
+    "otherSources": "Otras fuentes",
+    "empty": "Dile a Mera a qué publicaciones estás suscrito. Les daremos más peso en tu feed y mostraremos su cobertura de las noticias que publican.",
+    "add": "Añadir una suscripción",
+    "close": "Cerrar",
+    "remove": "Quitar",
+    "removeA11y": "Quitar {{publisher}}",
+    "searchPlaceholder": "Buscar publicaciones",
+    "searchTooShort": "Escribe al menos 2 caracteres",
+    "searchInFlight": "Buscando",
+    "searchNoResults": "Todavía no tenemos esta publicación",
+    "searchError": "La búsqueda no está disponible ahora mismo",
+    "confirmTitle": "¿Te suscribiste a {{publisher}}?",
+    "confirmBody": "Le daremos más peso a {{publisher}} en tu feed y mostraremos su cobertura de las noticias que publica.",
+    "confirmYes": "Sí, estoy suscrito",
+    "confirmNo": "Todavía no",
+    "iSubscribe": "Estoy suscrito a esta",
+    "added": "{{publisher}} se añadió a tus suscripciones",
+    "removed": "{{publisher}} se quitó de tus suscripciones",
+    "coversThisStory": "Tu suscripción cubre esta noticia."
   }
 }

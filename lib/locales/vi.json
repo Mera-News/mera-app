@@ -230,7 +230,8 @@
     "sourceCountryA11y": "Quốc gia nguồn: {{country}}. Nhấn để hiển thị tên quốc gia.",
     "readOn": "Đọc trên {{publication}}",
     "readOnGoogleTranslate": "Đọc trên Google Dịch",
-    "linkUnavailable": "Liên kết này không thể được mở an toàn, vì vậy nó không khả dụng ở đây."
+    "linkUnavailable": "Liên kết này không thể được mở an toàn, vì vậy nó không khả dụng ở đây.",
+    "relatedFromSubscriptions": "Từ gói đăng ký của bạn"
   },
   "newsCluster": {
     "failedToLoad": "Không thể tải thông tin cụm",
@@ -2490,5 +2491,27 @@
     "dismissedSummary": "Không có gì được lưu. Hãy nói cho Mera biết ý bạn và Mera sẽ thử lại.",
     "expired": "Đây là từ cuộc trò chuyện trước, nên không thể thêm nữa.",
     "resolveBeforeContinuing": "Chọn một cách hiểu, hoặc chạm Bỏ qua, trước khi tiếp tục."
+  },
+  "subscriptions": {
+    "sectionTitle": "Gói đăng ký của bạn",
+    "otherSources": "Nguồn khác",
+    "empty": "Hãy cho Mera biết bạn trả phí cho những báo nào. Chúng tôi sẽ dành nhiều trọng số hơn cho họ trong bảng tin của bạn và hiển thị bài của họ ở những tin mà họ đưa.",
+    "add": "Thêm gói đăng ký",
+    "close": "Đóng",
+    "remove": "Xóa",
+    "removeA11y": "Xóa {{publisher}}",
+    "searchPlaceholder": "Tìm báo",
+    "searchTooShort": "Nhập ít nhất 2 ký tự",
+    "searchInFlight": "Đang tìm",
+    "searchNoResults": "Chúng tôi chưa có báo này",
+    "searchError": "Hiện không dùng được tìm kiếm",
+    "confirmTitle": "Bạn đã đăng ký {{publisher}} chưa?",
+    "confirmBody": "Chúng tôi sẽ dành nhiều trọng số hơn cho {{publisher}} trong bảng tin của bạn và hiển thị bài của họ ở những tin mà họ đưa.",
+    "confirmYes": "Có, tôi đã đăng ký",
+    "confirmNo": "Chưa",
+    "iSubscribe": "Tôi có đăng ký báo này",
+    "added": "Đã thêm {{publisher}} vào gói đăng ký của bạn",
+    "removed": "Đã xóa {{publisher}} khỏi gói đăng ký của bạn",
+    "coversThisStory": "Gói đăng ký của bạn có tin này."
   }
 }

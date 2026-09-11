@@ -254,7 +254,8 @@
     "sourceCountryA11y": "بلد المصدر: {{country}}. اضغط لعرض اسم البلد.",
     "readOn": "اقرأ على {{publication}}",
     "readOnGoogleTranslate": "اقرأ على Google Translate",
-    "linkUnavailable": "لا يمكن فتح هذا الرابط بشكل آمن، لذا غير متاح هنا."
+    "linkUnavailable": "لا يمكن فتح هذا الرابط بشكل آمن، لذا غير متاح هنا.",
+    "relatedFromSubscriptions": "من اشتراكاتك"
   },
   "newsCluster": {
     "failedToLoad": "فشل تحميل تفاصيل المجموعة",
@@ -2571,5 +2572,27 @@
     "dismissedSummary": "لم يُحفظ شيء. أخبر Mera بما قصدته وسيحاول مرة أخرى.",
     "expired": "هذا من محادثة سابقة، لذا لم يعد بالإمكان إضافته.",
     "resolveBeforeContinuing": "اختر أحد المعاني، أو اضغط تخطٍ، قبل المتابعة."
+  },
+  "subscriptions": {
+    "sectionTitle": "اشتراكاتك",
+    "otherSources": "مصادر أخرى",
+    "empty": "أخبر ميرا بالمنشورات التي تدفع مقابلها. سنمنحها وزنًا أكبر في موجزك ونعرض تغطيتها للأخبار التي تنشرها.",
+    "add": "إضافة اشتراك",
+    "close": "إغلاق",
+    "remove": "إزالة",
+    "removeA11y": "إزالة {{publisher}}",
+    "searchPlaceholder": "ابحث عن منشورات",
+    "searchTooShort": "اكتب حرفين على الأقل",
+    "searchInFlight": "جارٍ البحث",
+    "searchNoResults": "لا يتوفر هذا الناشر لدينا بعد",
+    "searchError": "البحث غير متاح في الوقت الحالي",
+    "confirmTitle": "هل اشتركت في {{publisher}}؟",
+    "confirmBody": "سنمنح {{publisher}} وزنًا أكبر في موجزك ونعرض تغطيتها للأخبار التي تنشرها.",
+    "confirmYes": "نعم، أنا مشترك",
+    "confirmNo": "ليس بعد",
+    "iSubscribe": "أنا مشترك في هذا",
+    "added": "تمت إضافة {{publisher}} إلى اشتراكاتك",
+    "removed": "تمت إزالة {{publisher}} من اشتراكاتك",
+    "coversThisStory": "اشتراكك يغطي هذا الخبر."
   }
 }

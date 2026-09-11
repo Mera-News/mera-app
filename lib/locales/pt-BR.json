@@ -230,7 +230,8 @@
     "sourceCountryA11y": "País de origem: {{country}}. Toque para exibir o nome do país.",
     "readOn": "Ler em {{publication}}",
     "readOnGoogleTranslate": "Ler no Google Translate",
-    "linkUnavailable": "Este link não pode ser aberto com segurança, então não está disponível aqui."
+    "linkUnavailable": "Este link não pode ser aberto com segurança, então não está disponível aqui.",
+    "relatedFromSubscriptions": "Das suas assinaturas"
   },
   "newsCluster": {
     "failedToLoad": "Falha ao carregar detalhes do grupo",
@@ -2489,5 +2490,27 @@
     "dismissedSummary": "Nada foi salvo. Diga à Mera o que você quis dizer e ela tentará de novo.",
     "expired": "Isto é de uma conversa anterior, então não pode mais ser adicionado.",
     "resolveBeforeContinuing": "Escolha uma leitura ou toque em Pular antes de continuar."
+  },
+  "subscriptions": {
+    "sectionTitle": "Suas assinaturas",
+    "otherSources": "Outras fontes",
+    "empty": "Diga ao Mera quais publicações você assina. Vamos dar mais peso a elas no seu feed e mostrar a cobertura delas nas notícias que publicam.",
+    "add": "Adicionar assinatura",
+    "close": "Fechar",
+    "remove": "Remover",
+    "removeA11y": "Remover {{publisher}}",
+    "searchPlaceholder": "Buscar publicações",
+    "searchTooShort": "Digite pelo menos 2 caracteres",
+    "searchInFlight": "Buscando",
+    "searchNoResults": "Ainda não temos esta publicação",
+    "searchError": "A busca não está disponível agora",
+    "confirmTitle": "Você assinou {{publisher}}?",
+    "confirmBody": "Vamos dar mais peso a {{publisher}} no seu feed e mostrar a cobertura nas notícias que publica.",
+    "confirmYes": "Sim, eu assino",
+    "confirmNo": "Ainda não",
+    "iSubscribe": "Eu assino esta",
+    "added": "{{publisher}} adicionada às suas assinaturas",
+    "removed": "{{publisher}} removida das suas assinaturas",
+    "coversThisStory": "Sua assinatura cobre esta notícia."
   }
 }

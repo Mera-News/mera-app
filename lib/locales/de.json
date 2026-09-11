@@ -230,7 +230,8 @@
     "sourceCountryA11y": "Quellenland: {{country}}. Tippen, um den Ländernamen anzuzeigen.",
     "readOn": "Bei {{publication}} lesen",
     "readOnGoogleTranslate": "Bei Google Translate lesen",
-    "linkUnavailable": "Dieser Link kann nicht sicher geöffnet werden, daher ist er hier nicht verfügbar."
+    "linkUnavailable": "Dieser Link kann nicht sicher geöffnet werden, daher ist er hier nicht verfügbar.",
+    "relatedFromSubscriptions": "Aus deinen Abos"
   },
   "newsCluster": {
     "failedToLoad": "Cluster-Details konnten nicht geladen werden",
@@ -2489,5 +2490,27 @@
     "dismissedSummary": "Es wurde nichts gespeichert. Sag Mera, was du gemeint hast, dann versucht es Mera erneut.",
     "expired": "Das stammt aus einem früheren Chat und kann nicht mehr hinzugefügt werden.",
     "resolveBeforeContinuing": "Wähle eine Lesart oder tippe auf Überspringen, bevor du fortfährst."
+  },
+  "subscriptions": {
+    "sectionTitle": "Deine Abos",
+    "otherSources": "Weitere Quellen",
+    "empty": "Sag Mera, für welche Publikationen du bezahlst. Wir gewichten sie in deinem Feed stärker und zeigen ihre Berichterstattung zu Themen, über die sie schreiben.",
+    "add": "Abo hinzufügen",
+    "close": "Schließen",
+    "remove": "Entfernen",
+    "removeA11y": "{{publisher}} entfernen",
+    "searchPlaceholder": "Publikationen suchen",
+    "searchTooShort": "Gib mindestens 2 Zeichen ein",
+    "searchInFlight": "Suche läuft",
+    "searchNoResults": "Diesen Anbieter haben wir noch nicht",
+    "searchError": "Die Suche ist gerade nicht verfügbar",
+    "confirmTitle": "Hast du {{publisher}} abonniert?",
+    "confirmBody": "Wir gewichten {{publisher}} in deinem Feed stärker und zeigen die Berichterstattung zu Themen, über die sie schreiben.",
+    "confirmYes": "Ja, ich habe ein Abo",
+    "confirmNo": "Noch nicht",
+    "iSubscribe": "Das habe ich abonniert",
+    "added": "{{publisher}} zu deinen Abos hinzugefügt",
+    "removed": "{{publisher}} aus deinen Abos entfernt",
+    "coversThisStory": "Dein Abo deckt diese Meldung ab."
   }
 }

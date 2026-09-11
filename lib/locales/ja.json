@@ -230,7 +230,8 @@
     "sourceCountryA11y": "情報源の国: {{country}}。タップすると国名が表示されます。",
     "readOn": "{{publication}}で読む",
     "readOnGoogleTranslate": "Google 翻訳で読む",
-    "linkUnavailable": "このリンクを安全に開くことができないため、ここでは利用できません。"
+    "linkUnavailable": "このリンクを安全に開くことができないため、ここでは利用できません。",
+    "relatedFromSubscriptions": "購読中のメディアから"
   },
   "newsCluster": {
     "failedToLoad": "クラスターの詳細を読み込めませんでした",
@@ -2489,5 +2490,27 @@
     "dismissedSummary": "何も保存していません。どういう意味だったか Mera に伝えると、もう一度試します。",
     "expired": "これは前のチャットのものなので、もう追加できません。",
     "resolveBeforeContinuing": "続ける前に、どれか選ぶかスキップをタップしてください。"
+  },
+  "subscriptions": {
+    "sectionTitle": "購読中のメディア",
+    "otherSources": "その他の情報源",
+    "empty": "購読しているメディアをMeraに教えてください。フィードでの重みを高くし、そのメディアが報じたニュースでは記事を表示します。",
+    "add": "購読を追加",
+    "close": "閉じる",
+    "remove": "削除",
+    "removeA11y": "{{publisher}}を削除",
+    "searchPlaceholder": "メディアを検索",
+    "searchTooShort": "2文字以上入力してください",
+    "searchInFlight": "検索中",
+    "searchNoResults": "このメディアはまだ登録されていません",
+    "searchError": "現在、検索を利用できません",
+    "confirmTitle": "{{publisher}}を購読しましたか？",
+    "confirmBody": "{{publisher}}のフィードでの重みを高くし、そのメディアが報じたニュースでは記事を表示します。",
+    "confirmYes": "はい、購読しています",
+    "confirmNo": "まだです",
+    "iSubscribe": "これを購読しています",
+    "added": "{{publisher}}を購読中のメディアに追加しました",
+    "removed": "{{publisher}}を購読中のメディアから削除しました",
+    "coversThisStory": "このニュースは購読でお読みいただけます。"
   }
 }

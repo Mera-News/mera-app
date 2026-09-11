@@ -230,7 +230,8 @@
     "sourceCountryA11y": "來源國家：{{country}}。點一下可顯示國家名稱。",
     "readOn": "在{{publication}}閱讀",
     "readOnGoogleTranslate": "在 Google 翻譯中閱讀",
-    "linkUnavailable": "此連結無法安全開啟，因此在此無法使用。"
+    "linkUnavailable": "此連結無法安全開啟，因此在此無法使用。",
+    "relatedFromSubscriptions": "來自您的訂閱"
   },
   "newsCluster": {
     "failedToLoad": "叢集詳情載入失敗",
@@ -2490,5 +2491,27 @@
     "dismissedSummary": "什麼都沒有儲存。告訴 Mera 你的意思，它會再試一次。",
     "expired": "這條來自較早的對話，已經無法新增。",
     "resolveBeforeContinuing": "繼續之前，請選一個理解，或點略過。"
+  },
+  "subscriptions": {
+    "sectionTitle": "您的訂閱",
+    "otherSources": "其他來源",
+    "empty": "告訴 Mera 您訂閱了哪些媒體。我們會在您的資訊流中提高它們的權重，並在它們報導過的新聞中顯示它們的報導。",
+    "add": "新增訂閱",
+    "close": "關閉",
+    "remove": "移除",
+    "removeA11y": "移除 {{publisher}}",
+    "searchPlaceholder": "搜尋媒體",
+    "searchTooShort": "請至少輸入 2 個字元",
+    "searchInFlight": "正在搜尋",
+    "searchNoResults": "我們尚未收錄這家媒體",
+    "searchError": "搜尋暫時無法使用",
+    "confirmTitle": "您訂閱了 {{publisher}} 嗎？",
+    "confirmBody": "我們會在您的資訊流中提高 {{publisher}} 的權重，並在它報導過的新聞中顯示它的報導。",
+    "confirmYes": "是的，我已訂閱",
+    "confirmNo": "還沒有",
+    "iSubscribe": "我訂閱了這家媒體",
+    "added": "已將 {{publisher}} 加入您的訂閱",
+    "removed": "已將 {{publisher}} 從您的訂閱中移除",
+    "coversThisStory": "您的訂閱涵蓋這則新聞。"
   }
 }

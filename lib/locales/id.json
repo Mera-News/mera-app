@@ -230,7 +230,8 @@
     "sourceCountryA11y": "Negara sumber: {{country}}. Ketuk untuk menampilkan nama negara.",
     "readOn": "Baca di {{publication}}",
     "readOnGoogleTranslate": "Baca di Google Translate",
-    "linkUnavailable": "Tautan ini tidak dapat dibuka dengan aman, jadi tidak tersedia di sini."
+    "linkUnavailable": "Tautan ini tidak dapat dibuka dengan aman, jadi tidak tersedia di sini.",
+    "relatedFromSubscriptions": "Dari langganan Anda"
   },
   "newsCluster": {
     "failedToLoad": "Gagal memuat detail klaster",
@@ -2489,5 +2490,27 @@
     "dismissedSummary": "Tidak ada yang disimpan. Beri tahu Mera maksudmu dan Mera akan mencoba lagi.",
     "expired": "Ini dari obrolan sebelumnya, jadi tidak bisa ditambahkan lagi.",
     "resolveBeforeContinuing": "Pilih satu makna, atau ketuk Lewati, sebelum lanjut."
+  },
+  "subscriptions": {
+    "sectionTitle": "Langganan Anda",
+    "otherSources": "Sumber lain",
+    "empty": "Beri tahu Mera publikasi mana yang Anda bayar. Kami akan memberi bobot lebih pada publikasi itu di feed Anda dan menampilkan liputan mereka untuk berita yang mereka tulis.",
+    "add": "Tambah langganan",
+    "close": "Tutup",
+    "remove": "Hapus",
+    "removeA11y": "Hapus {{publisher}}",
+    "searchPlaceholder": "Cari publikasi",
+    "searchTooShort": "Ketik minimal 2 karakter",
+    "searchInFlight": "Mencari",
+    "searchNoResults": "Kami belum punya penerbit ini",
+    "searchError": "Pencarian sedang tidak tersedia",
+    "confirmTitle": "Apakah Anda berlangganan {{publisher}}?",
+    "confirmBody": "Kami akan memberi bobot lebih pada {{publisher}} di feed Anda dan menampilkan liputan mereka untuk berita yang mereka tulis.",
+    "confirmYes": "Ya, saya berlangganan",
+    "confirmNo": "Belum",
+    "iSubscribe": "Saya berlangganan ini",
+    "added": "{{publisher}} ditambahkan ke langganan Anda",
+    "removed": "{{publisher}} dihapus dari langganan Anda",
+    "coversThisStory": "Langganan Anda mencakup berita ini."
   }
 }

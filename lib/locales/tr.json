@@ -230,7 +230,8 @@
     "sourceCountryA11y": "Kaynak ülke: {{country}}. Ülke adını göstermek için dokunun.",
     "readOn": "{{publication}}'da Oku",
     "readOnGoogleTranslate": "Google Translate'de Oku",
-    "linkUnavailable": "Bu bağlantı güvenli bir şekilde açılamıyor, bu yüzden burada mevcut değil."
+    "linkUnavailable": "Bu bağlantı güvenli bir şekilde açılamıyor, bu yüzden burada mevcut değil.",
+    "relatedFromSubscriptions": "Aboneliklerinizden"
   },
   "newsCluster": {
     "failedToLoad": "Küme ayrıntıları yüklenemedi",
@@ -2491,5 +2492,27 @@
     "dismissedSummary": "Hiçbir şey kaydedilmedi. Mera'ya ne demek istediğini söyle, tekrar denesin.",
     "expired": "Bu daha önceki bir sohbetten, bu yüzden artık eklenemez.",
     "resolveBeforeContinuing": "Devam etmeden önce bir okuma seç ya da Atla'ya dokun."
+  },
+  "subscriptions": {
+    "sectionTitle": "Abonelikleriniz",
+    "otherSources": "Diğer kaynaklar",
+    "empty": "Hangi yayınlara abone olduğunuzu Mera'ya söyleyin. Akışınızda onlara daha fazla ağırlık verir ve haberini yaptıkları konularda kendi haberlerini gösteririz.",
+    "add": "Abonelik ekle",
+    "close": "Kapat",
+    "remove": "Kaldır",
+    "removeA11y": "{{publisher}} yayınını kaldır",
+    "searchPlaceholder": "Yayın ara",
+    "searchTooShort": "En az 2 karakter yazın",
+    "searchInFlight": "Aranıyor",
+    "searchNoResults": "Bu yayıncı henüz bizde yok",
+    "searchError": "Arama şu anda kullanılamıyor",
+    "confirmTitle": "{{publisher}} yayınına abone oldunuz mu?",
+    "confirmBody": "Akışınızda {{publisher}} yayınına daha fazla ağırlık verir ve haberini yaptığı konularda kendi haberlerini gösteririz.",
+    "confirmYes": "Evet, aboneyim",
+    "confirmNo": "Henüz değil",
+    "iSubscribe": "Bu yayına aboneyim",
+    "added": "{{publisher}} aboneliklerinize eklendi",
+    "removed": "{{publisher}} aboneliklerinizden kaldırıldı",
+    "coversThisStory": "Aboneliğiniz bu haberi kapsıyor."
   }
 }

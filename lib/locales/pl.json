@@ -242,7 +242,8 @@
     "sourceCountryA11y": "Kraj źródła: {{country}}. Dotknij, aby wyświetlić nazwę kraju.",
     "readOn": "Czytaj w {{publication}}",
     "readOnGoogleTranslate": "Czytaj w Google Translate",
-    "linkUnavailable": "Tego linku nie można otworzyć bezpiecznie, dlatego nie jest tu dostępny."
+    "linkUnavailable": "Tego linku nie można otworzyć bezpiecznie, dlatego nie jest tu dostępny.",
+    "relatedFromSubscriptions": "Z Twoich subskrypcji"
   },
   "newsCluster": {
     "failedToLoad": "Nie udało się załadować szczegółów klastra",
@@ -2525,5 +2526,27 @@
     "dismissedSummary": "Nic nie zostało zapisane. Powiedz Merze, o co ci chodziło, a spróbuje ponownie.",
     "expired": "To pochodzi z wcześniejszej rozmowy, więc nie można już tego dodać.",
     "resolveBeforeContinuing": "Wybierz znaczenie lub dotknij Pomiń, zanim przejdziesz dalej."
+  },
+  "subscriptions": {
+    "sectionTitle": "Twoje subskrypcje",
+    "otherSources": "Inne źródła",
+    "empty": "Powiedz Merze, za które tytuły płacisz. Nadamy im większą wagę w Twoim strumieniu i pokażemy ich materiały przy tematach, które opisują.",
+    "add": "Dodaj subskrypcję",
+    "close": "Zamknij",
+    "remove": "Usuń",
+    "removeA11y": "Usuń {{publisher}}",
+    "searchPlaceholder": "Szukaj tytułów",
+    "searchTooShort": "Wpisz co najmniej 2 znaki",
+    "searchInFlight": "Szukam",
+    "searchNoResults": "Nie mamy jeszcze tego wydawcy",
+    "searchError": "Wyszukiwanie jest teraz niedostępne",
+    "confirmTitle": "Czy wykupiłeś subskrypcję {{publisher}}?",
+    "confirmBody": "Nadamy {{publisher}} większą wagę w Twoim strumieniu i pokażemy materiały przy tematach, które opisuje.",
+    "confirmYes": "Tak, mam subskrypcję",
+    "confirmNo": "Jeszcze nie",
+    "iSubscribe": "Mam subskrypcję tego tytułu",
+    "added": "Dodano {{publisher}} do Twoich subskrypcji",
+    "removed": "Usunięto {{publisher}} z Twoich subskrypcji",
+    "coversThisStory": "Twoja subskrypcja obejmuje ten temat."
   }
 }

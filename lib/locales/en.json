@@ -286,7 +286,8 @@
     "shareVia": "Shared via {{downloadUrl}}",
     "sourceCountryGlobal": "Worldwide",
     "sourceCountryA11y": "Source country: {{country}}. Tap to show the country name.",
-    "linkUnavailable": "This link can't be opened securely, so it isn't available here."
+    "linkUnavailable": "This link can't be opened securely, so it isn't available here.",
+    "relatedFromSubscriptions": "From your subscriptions"
   },
   "relatedSort": {
     "a11yLabel": "Sort related articles",
@@ -2489,5 +2490,27 @@
     "closeA11y": "Close video",
     "openInBrowser": "Open in browser",
     "playbackError": "Could not play the video."
+  },
+  "subscriptions": {
+    "sectionTitle": "Your subscriptions",
+    "otherSources": "Other sources",
+    "empty": "Tell Mera which publications you pay for. We'll give them more weight in your feed and show their coverage on stories they report.",
+    "add": "Add a subscription",
+    "close": "Close",
+    "remove": "Remove",
+    "removeA11y": "Remove {{publisher}}",
+    "searchPlaceholder": "Search publications",
+    "searchTooShort": "Type at least 2 characters",
+    "searchInFlight": "Searching",
+    "searchNoResults": "We don't have this publisher yet",
+    "searchError": "Search is unavailable right now",
+    "confirmTitle": "Did you subscribe to {{publisher}}?",
+    "confirmBody": "We'll give {{publisher}} more weight in your feed and show their coverage on stories they report.",
+    "confirmYes": "Yes, I subscribe",
+    "confirmNo": "Not yet",
+    "iSubscribe": "I subscribe to this",
+    "added": "Added {{publisher}} to your subscriptions",
+    "removed": "Removed {{publisher}} from your subscriptions",
+    "coversThisStory": "Your subscription covers this story."
   }
 }
