@@ -22,7 +22,7 @@ import {
   CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT,
   LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT,
   LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
-  sanitizeForPrompt,
+  asUntrusted,
 } from './prompts';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
@@ -123,7 +123,7 @@ export async function generateTopicsFromFact(
 ): Promise<string[]> {
   const output = await completeLocal({
     systemPrompt: LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT,
-    prompt: `Fact: "${sanitizeForPrompt(factStatement)}"\nGenerate 14 topics.`,
+    prompt: `Fact: "${asUntrusted(factStatement)}"\nGenerate 14 topics.`,
     // 1024 = the on-device max-output ceiling (see CLAUDE.md § LLM Prompt
     // Budget). Thinking is off, so this is a ceiling the ~55-100 token answer
     // never approaches. Not raised further: n_ctx is 4096 and the system prompt

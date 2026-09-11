@@ -14,7 +14,7 @@ jest.mock('../prompts', () => ({
   CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT: 'cloud-combo-sys',
   LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT: 'local-topic-sys',
   LOCAL_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT: 'local-combo-sys',
-  sanitizeForPrompt: jest.fn((s: string) => s), // pass-through for unit tests
+  asUntrusted: jest.fn((s: string) => s), // pass-through for unit tests
 }));
 
 import {
