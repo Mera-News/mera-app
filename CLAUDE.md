@@ -59,6 +59,14 @@ publication-preferences,saved-suggestions,not-interested,hygiene,tutorials}`. Re
 10. The settings "Report a Bug" button renders in every build but is INERT in dev (Sentry is off
     unless `EXPO_PUBLIC_SENTRY_IN_DEV=true`, so `showFeedback()` no-ops). Never use it while in
     dev; nothing is sent and no error is shown.
+11. **Device attestation cannot run on a simulator or emulator** (App Attest / Play Integrity are
+    hardware-backed), so device sign-in there works only against STAGING through the dev bypass:
+    `EXPO_PUBLIC_DEVICE_ATTEST_DEV_TOKEN` in `.env` must equal the `DEVICE_ATTESTATION_DEV_BYPASS_TOKEN`
+    env on `news-auth-staging` (the value in `mera-infra/staging/terraform.tfvars`, or read it off
+    the live service with `gcloud run services describe`; copy the bare value, the server answers
+    403 on any mismatch), and Metro must be restarted with `--clear` after any `.env` change or the
+    old value stays inlined. Prod has no bypass: a simulator can never sign in against prod except
+    by email OTP.
 
 ## Deeper docs
 
