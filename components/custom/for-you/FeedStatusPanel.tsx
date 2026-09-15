@@ -44,8 +44,11 @@ function ProcessingHeadline() {
     const snapshot = useProcessingSnapshot();
     const { isDeviceProcessing } = useForYouDeviceProcessing();
 
-    // The stage comes from the SAME resolver the processing card uses, so the
-    // panel and the card can never describe different steps of the same run.
+    // The stage comes from the same resolver the processing card uses AND the
+    // same shared high-water mark, which is what actually makes the panel and
+    // the card agree. The resolver alone is not enough: the mark used to be a
+    // per-mount ref, so a panel opened mid-run started from null and could name
+    // a LOWER step than the card was showing at that instant.
     //
     // It also makes `stages.fetching.headlines` reachable for the first time.
     // Those two lines and their amberSubline have been translated in all twenty

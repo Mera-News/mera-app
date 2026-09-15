@@ -34,16 +34,6 @@ const PROCESSING_STAGE_COUNT = STAGE_IDS.length;
 export const PROCESSING_CARD_HEIGHT = 300;
 
 /**
- * The chunk strip's reserved height, in points. Reserved whenever a run could
- * appear, including before the first batch exists.
- *
- * Chunk COUNT grows mid-run (the scoring gate re-elects held-back duplicate
- * siblings into new batches), so the strip must absorb that by making its
- * segments narrower. It must never get taller.
- */
-export const PROCESSING_STRIP_HEIGHT = 28;
-
-/**
  * Six, and every surface draws its bar from this rather than from a literal.
  *
  * It lives HERE and not beside the hook on purpose: `ProcessingArea` is
@@ -54,8 +44,70 @@ export const PROCESSING_STRIP_HEIGHT = 28;
  */
 export const PROCESSING_TOTAL_STAGES = PROCESSING_STAGE_COUNT;
 
+/**
+ * EVERY vertical number the card draws, in one object, in draw order.
+ *
+ * One object and not a scatter of classNames, for the reason the reading-stats
+ * share card learned the hard way: **a per-string size budget is not a layout
+ * budget, and it will pass while the layout overflows.** That card shipped a
+ * check asserting how many LINES each string wrapped to, in all twenty
+ * dictionaries, and it stayed green while the rendered footer was pushed clean
+ * off the canvas — in English. Line counts say nothing about the height of the
+ * stack once they are summed.
+ *
+ * Two things make the total checkable rather than notional, and both are why
+ * this object exists: the component RENDERS from it (inline, never a `mt-*`
+ * class that the test cannot see), and the test SUMS from it. A test holding
+ * its own copy of the spacing keeps passing after a layout change, which is the
+ * same trap wearing a different hat.
+ *
+ * `ProcessingArea.test.tsx` asserts the sum fits `PROCESSING_CARD_HEIGHT`. It
+ * did not, on the first build: 319 into a 300pt box with `overflow: hidden`,
+ * which clipped about 10pt off the top of the scene and 10pt off the bottom of
+ * the Explore button while every per-element assertion stayed green.
+ */
+export const PROCESSING_METRICS = {
+  /** The square animation block. */
+  sceneSize: 96,
+  labelGap: 12,
+  labelLineHeight: 22,
+  headlineGap: 6,
+  headlineLineHeight: 20,
+  /** Fixed: the longest locale must not grow the card and the shortest must not
+   *  shrink it. */
+  headlineLines: 2,
+  barGap: 12,
+  /** `components/ui/progress` at `size="xs"` is `h-1`. */
+  barHeight: 4,
+  /** Reserved whenever a run could appear, including before the first batch
+   *  exists. Chunk COUNT grows mid-run, so the strip absorbs that by making its
+   *  segments narrower; it must never get taller. */
+  stripHeight: 28,
+  progressLineHeight: 17,
+  ctaGap: 16,
+  /** `components/ui/button` at `size="sm"` is `h-9`. */
+  ctaHeight: 36,
+} as const;
+
+/** What the card actually asks its fixed-height box to draw. */
+export const PROCESSING_CONTENT_HEIGHT =
+  PROCESSING_METRICS.sceneSize +
+  PROCESSING_METRICS.labelGap +
+  PROCESSING_METRICS.labelLineHeight +
+  PROCESSING_METRICS.headlineGap +
+  PROCESSING_METRICS.headlineLineHeight * PROCESSING_METRICS.headlineLines +
+  PROCESSING_METRICS.barGap +
+  PROCESSING_METRICS.barHeight +
+  PROCESSING_METRICS.stripHeight +
+  PROCESSING_METRICS.progressLineHeight +
+  PROCESSING_METRICS.ctaGap +
+  PROCESSING_METRICS.ctaHeight;
+
 /** The square animation block inside the card, in points. */
-export const PROCESSING_SCENE_SIZE = 120;
+export const PROCESSING_SCENE_SIZE = PROCESSING_METRICS.sceneSize;
+
+/** The chunk strip's reserved height, in points. */
+export const PROCESSING_STRIP_HEIGHT = PROCESSING_METRICS.stripHeight;
 
 /** How long a rotating headline holds before the crossfade. */
 export const PROCESSING_HEADLINE_CYCLE_MS = 5000;

@@ -1,4 +1,3 @@
-import { useRef } from 'react';
 import { useReducedMotion } from 'react-native-reanimated';
 
 import { useFeedSyncRunning, useIsFeedProcessing } from '@/components/custom/FeedSyncIndicator';
@@ -15,11 +14,47 @@ import {
   useForYouChunkStates,
   useForYouDeviceProcessing,
   useForYouHydrationProgress,
+  useForYouLastProcessingRunFinishedAt,
   useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
 import type { ProcessingSnapshot } from './types';
 
 const EMPTY_CHUNKS: readonly [] = [];
+
+/**
+ * The stage high-water mark, MODULE-LEVEL and shared by every caller.
+ *
+ * It was a `useRef` and that was a bug with a comment claiming the opposite.
+ * This hook is called three times in a live run — the card, the panel's
+ * headline, the panel's chunk row — so a per-mount ref gave each surface its
+ * OWN mark. A panel opened mid-run starts at `null`, so the moment
+ * `asyncJobPhase` drops to idle while `syncState` is still `hydrating`, the
+ * panel resolves `downloading` while the card holds `summarising`: same run,
+ * two different steps, on screen together. The mark is a property of the RUN,
+ * not of a component instance, so it belongs where the run does.
+ *
+ * `runToken` closes the gap a bare module variable leaves. Both callers can be
+ * unmounted across a run boundary (the card renders only on an empty list, the
+ * panel only while expanded), so nothing would clear a stale high mark and the
+ * next run would start part-way down its own bar.
+ * `lastProcessingRunFinishedAt` changes exactly when a run ends, so comparing
+ * it is a free run identity.
+ *
+ * Written during render, which is safe here for the same reason the arrival
+ * diff in `FeedScreen` is: it is a monotonic max released only by `null`, so a
+ * double render under StrictMode computes the identical value.
+ */
+const mark: { stage: ProcessingStageId | null; runToken: number | null } = {
+  stage: null,
+  runToken: null,
+};
+
+/** Test seam. Nothing in the app calls this; the mark is released by the area
+ *  going invisible or by a new run. */
+export function _resetProcessingStageMarkForTests(): void {
+  mark.stage = null;
+  mark.runToken = null;
+}
 
 /**
  * The one subscription layer under the processing area. Every other component
@@ -54,12 +89,16 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
   const chunkStates = useForYouChunkStates();
   const batchProgress = useForYouBatchProgress();
   const { hydrationCompleted, hydrationTotal } = useForYouHydrationProgress();
+  const lastRunFinishedAt = useForYouLastProcessingRunFinishedAt();
 
   const reduceMotion = useReducedMotion();
   const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
   const animationsActive = useAnimationsActive();
 
-  const highWater = useRef<ProcessingStageId | null>(null);
+  if (mark.runToken !== lastRunFinishedAt) {
+    mark.runToken = lastRunFinishedAt;
+    mark.stage = null;
+  }
 
   const visible = schedulerRunning || isFeedProcessing;
   const stage = visible
@@ -70,11 +109,11 @@ export function useProcessingSnapshot(): ProcessingSnapshot {
         asyncJobPhase,
         isDeviceProcessing,
         chunks: chunkStates?.chunks ?? null,
-        previousStage: highWater.current,
+        previousStage: mark.stage,
       })
     : null;
 
-  highWater.current = stage;
+  mark.stage = stage;
 
   const stageIndex = stage ? processingStageIndex(stage) : 0;
 

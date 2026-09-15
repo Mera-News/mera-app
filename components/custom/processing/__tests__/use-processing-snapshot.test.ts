@@ -20,6 +20,7 @@ const flags = {
   reduceMotion: false,
   staticGradient: false,
   animationsActive: true,
+  lastRunFinishedAt: null as number | null,
 };
 
 jest.mock('@/components/custom/FeedSyncIndicator', () => ({
@@ -42,6 +43,7 @@ jest.mock('@/lib/stores/display-prefs-store', () => ({
 
 jest.mock('@/lib/stores/selectors', () => ({
   useForYouAsyncJobPhase: () => flags.asyncJobPhase,
+  useForYouLastProcessingRunFinishedAt: () => flags.lastRunFinishedAt,
   useForYouBatchProgress: () => flags.batchProgress,
   useForYouChunkStates: () => flags.chunkStates,
   useForYouDeviceProcessing: () => ({ isDeviceProcessing: flags.isDeviceProcessing }),
@@ -55,7 +57,10 @@ jest.mock('@/lib/stores/selectors', () => ({
 
 import { renderHook } from '@testing-library/react-native';
 
-import { useProcessingSnapshot } from '../use-processing-snapshot';
+import {
+  _resetProcessingStageMarkForTests,
+  useProcessingSnapshot,
+} from '../use-processing-snapshot';
 
 const reset = () =>
   Object.assign(flags, {
@@ -71,9 +76,15 @@ const reset = () =>
     reduceMotion: false,
     staticGradient: false,
     animationsActive: true,
+    lastRunFinishedAt: null,
   });
 
-beforeEach(reset);
+beforeEach(() => {
+  reset();
+  // The mark is module-level on purpose (see the hook). Tests have to release
+  // it themselves, the way a finished run or an invisible area does.
+  _resetProcessingStageMarkForTests();
+});
 
 describe('useProcessingSnapshot — the visibility predicate', () => {
   it('is invisible when nothing is running', () => {
@@ -133,6 +144,39 @@ describe('useProcessingSnapshot — the high-water ref', () => {
   });
 });
 
+describe('useProcessingSnapshot — the mark is SHARED, not per mount', () => {
+  // The card, the status panel's headline and the panel's chunk row all call
+  // this hook in one live run. A per-mount ref gave each its own mark, so a
+  // panel opened mid-run started at null and could name a LOWER step than the
+  // card was showing at that instant. Same run, two steps, on screen together.
+  it('a second surface mounting mid-run inherits the mark rather than starting over', () => {
+    flags.schedulerRunning = true;
+    flags.asyncJobPhase = 'reasons';
+    const card = renderHook(() => useProcessingSnapshot());
+    expect(card.result.current.stage).toBe('summarising');
+
+    // The panel opens now, and the phase has just dropped out for a tick.
+    flags.asyncJobPhase = 'idle';
+    flags.syncState = 'hydrating';
+    const panel = renderHook(() => useProcessingSnapshot());
+    expect(panel.result.current.stage).toBe('summarising');
+  });
+
+  it('a NEW run releases the mark even with every surface unmounted in between', () => {
+    // Both callers can be absent across a run boundary: the card renders only
+    // on an empty list, the panel only while expanded. Without a run identity
+    // nothing would clear the mark and the next run would start part-way down
+    // its own bar.
+    flags.schedulerRunning = true;
+    flags.asyncJobPhase = 'reasons';
+    expect(renderHook(() => useProcessingSnapshot()).result.current.stage).toBe('summarising');
+
+    flags.lastRunFinishedAt = 1_700_000_000_000;
+    flags.asyncJobPhase = 'idle';
+    expect(renderHook(() => useProcessingSnapshot()).result.current.stage).toBe('fetching');
+  });
+});
+
 describe('useProcessingSnapshot — the numbers it passes through', () => {
   it('reports hydration and article counts separately from chunk counts', () => {
     flags.schedulerRunning = true;
@@ -159,11 +203,12 @@ describe('useProcessingSnapshot — the numbers it passes through', () => {
     expect(result.current.stageValue).toBe(25);
 
     // fetching knows nothing, so it reports 0 rather than inventing a number.
-    // A FRESH mount, deliberately: within one mount the high-water ref holds
-    // `downloading` and refuses to go back to `fetching`, which is the designed
-    // behaviour and is asserted above.
+    // A NEW RUN, not just a fresh mount: the mark is shared across surfaces and
+    // released by a run boundary, so re-mounting alone would still hold
+    // `downloading`, which is the designed behaviour asserted above.
     reset();
     flags.schedulerRunning = true;
+    flags.lastRunFinishedAt = 1_700_000_000_001;
     const second = renderHook(() => useProcessingSnapshot());
     expect(second.result.current.stage).toBe('fetching');
     expect(second.result.current.stageValue).toBe(0);

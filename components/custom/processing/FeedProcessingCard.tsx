@@ -10,7 +10,7 @@ import { Text } from '@/components/ui/text';
 import { useForYouDeviceProcessing } from '@/lib/stores/selectors';
 
 import ProcessingArea from './ProcessingArea';
-import { PROCESSING_CARD_HEIGHT } from './types';
+import { PROCESSING_CARD_HEIGHT, PROCESSING_METRICS } from './types';
 import { useProcessingSnapshot } from './use-processing-snapshot';
 
 /**
@@ -76,7 +76,7 @@ const FeedProcessingCard: React.FC = () => {
                 variant="outline"
                 action="secondary"
                 size="sm"
-                className="mt-4"
+                style={{ marginTop: PROCESSING_METRICS.ctaGap, height: PROCESSING_METRICS.ctaHeight }}
                 onPress={() => router.navigate('/logged-in/app_container/around')}
             >
                 <ButtonText>{t('feed.exploreCta')}</ButtonText>

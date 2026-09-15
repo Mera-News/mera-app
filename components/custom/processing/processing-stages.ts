@@ -73,7 +73,8 @@ export const FETCHING_SUBLINE_KEY = 'feed.processing.stages.fetching.amberSublin
 export function stageDef(id: ProcessingStageId): StageDef {
   const found = PROCESSING_STAGES.find((s) => s.id === id);
   // Unreachable: `ProcessingStageId` is a closed union and the array is
-  // exhaustive over it, which `processing-stages.test.ts` asserts.
+  // exhaustive over it, asserted in
+  // `__tests__/animation-assets.test.ts` ("the registry covers every stage id").
   if (!found) throw new Error(`[processing] unknown stage ${id}`);
   return found;
 }

@@ -11,16 +11,13 @@ import ProcessingStageAnimation from './ProcessingStageAnimation';
 import { FETCHING_SUBLINE_KEY, ON_DEVICE_HEADLINES_KEY, stageDef } from './processing-stages';
 import {
     PROCESSING_HEADLINE_CYCLE_MS,
-    PROCESSING_STRIP_HEIGHT,
+    PROCESSING_METRICS as M,
     PROCESSING_TOTAL_STAGES,
     type ProcessingSnapshot,
 } from './types';
 
 /** Half of the headline crossfade. */
 const FADE_MS = 220;
-/** The headline box is exactly two lines at this leading, whatever the locale
- *  puts in it. Fixed so the card's own height cannot move. */
-const HEADLINE_LINE_HEIGHT = 20;
 
 interface ProcessingAreaProps {
     readonly snapshot: ProcessingSnapshot;
@@ -144,22 +141,28 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
                 testID="processing-stage-label"
                 size="md"
                 numberOfLines={1}
-                className="text-white text-center mt-4"
-                style={{ fontSize: 16, lineHeight: 22 }}
+                className="text-white text-center"
+                style={{ fontSize: 16, lineHeight: M.labelLineHeight, marginTop: M.labelGap }}
             >
                 {t(def.labelKey)}
             </Text>
 
             {/* Fixed two-line box. A one-line locale must not shrink the card
                 and a three-line one must not grow it. */}
-            <View style={{ height: HEADLINE_LINE_HEIGHT * 2, marginTop: 6, justifyContent: 'center' }}>
+            <View
+                style={{
+                    height: M.headlineLineHeight * M.headlineLines,
+                    marginTop: M.headlineGap,
+                    justifyContent: 'center',
+                }}
+            >
                 <Animated.View style={headlineStyle}>
                     <Text
                         testID="processing-headline"
                         size="sm"
                         numberOfLines={2}
                         className="text-gray-400 text-center"
-                        style={{ fontSize: 13, lineHeight: HEADLINE_LINE_HEIGHT }}
+                        style={{ fontSize: 13, lineHeight: M.headlineLineHeight }}
                     >
                         {headlines[index] ?? ''}
                     </Text>
@@ -173,7 +176,7 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
                     total: PROCESSING_TOTAL_STAGES,
                     name: t(def.labelKey),
                 })}
-                style={{ width: '100%', marginTop: 14 }}
+                style={{ width: '100%', marginTop: M.barGap }}
             >
                 <MultiStepProgressBar
                     totalStages={PROCESSING_TOTAL_STAGES}
@@ -185,7 +188,7 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
 
             {/* Reserved whether or not a run exists yet, so the first batch
                 appearing cannot change the card's height. */}
-            <View style={{ width: '100%', height: PROCESSING_STRIP_HEIGHT }}>
+            <View style={{ width: '100%', height: M.stripHeight }}>
                 {snapshot.chunksTotal > 0 ? (
                     <ChunkStrip
                         chunks={snapshot.chunks}
@@ -201,7 +204,7 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
                 size="xs"
                 numberOfLines={1}
                 className="text-gray-500 text-center"
-                style={{ fontSize: 12, lineHeight: 17 }}
+                style={{ fontSize: 12, lineHeight: M.progressLineHeight }}
             >
                 {progressLine}
             </Text>

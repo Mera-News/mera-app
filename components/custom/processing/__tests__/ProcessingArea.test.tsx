@@ -83,7 +83,14 @@ import React from 'react';
 import ProcessingArea from '../ProcessingArea';
 import { bucketChunks } from '../ChunkStrip';
 import { PROCESSING_STAGES } from '../processing-stages';
-import { PROCESSING_STAGE_IDS, type ChunkState, type ProcessingSnapshot } from '../types';
+import {
+  PROCESSING_CARD_HEIGHT,
+  PROCESSING_CONTENT_HEIGHT,
+  PROCESSING_METRICS,
+  PROCESSING_STAGE_IDS,
+  type ChunkState,
+  type ProcessingSnapshot,
+} from '../types';
 
 const snap = (over: Partial<ProcessingSnapshot> = {}): ProcessingSnapshot => ({
   visible: true,
@@ -100,6 +107,46 @@ const snap = (over: Partial<ProcessingSnapshot> = {}): ProcessingSnapshot => ({
   isStatic: false,
   animationsActive: true,
   ...over,
+});
+
+describe('the card is a fixed-height box, so the STACK has to fit it', () => {
+  // A per-string size budget is not a layout budget and it will pass while the
+  // layout overflows: the reading-stats share card shipped a per-locale line
+  // count that stayed green while the rendered footer was pushed off the
+  // canvas, in English. Every per-element assertion in this file was green at
+  // 319pt of content inside a 300pt box with overflow: hidden, which clipped
+  // about 10pt off the top of the scene and 10pt off the bottom of the Explore
+  // button.
+  //
+  // This sums from the SAME object the component renders from. A test holding
+  // its own copy of the spacing is the same trap wearing a different hat.
+  it('fits, with room to spare', () => {
+    expect(PROCESSING_CONTENT_HEIGHT).toBeLessThanOrEqual(PROCESSING_CARD_HEIGHT);
+  });
+
+  it('keeps a margin rather than sitting exactly on the boundary', () => {
+    // A reserve grazed is a reserve breached the next time a token moves.
+    expect(PROCESSING_CARD_HEIGHT - PROCESSING_CONTENT_HEIGHT).toBeGreaterThanOrEqual(8);
+  });
+
+  it('models every drawn row, so nothing can be added without appearing here', () => {
+    expect(Object.keys(PROCESSING_METRICS).sort()).toEqual(
+      [
+        'barGap',
+        'barHeight',
+        'ctaGap',
+        'ctaHeight',
+        'headlineGap',
+        'headlineLineHeight',
+        'headlineLines',
+        'labelGap',
+        'labelLineHeight',
+        'progressLineHeight',
+        'sceneSize',
+        'stripHeight',
+      ].sort(),
+    );
+  });
 });
 
 describe('ProcessingArea — the zero-asset configuration', () => {

@@ -14,6 +14,7 @@ import path from 'path';
 
 import { PROCESSING_ANIMATIONS } from '../animation-registry';
 import { TUTORIAL_ANIMATIONS } from '@/components/custom/tutorials/animation-registry';
+import { PROCESSING_STAGES } from '../processing-stages';
 import { PROCESSING_STAGE_IDS } from '../types';
 
 const REPO_ROOT = path.resolve(__dirname, '../../../..');
@@ -38,6 +39,12 @@ const read = (file: string): Bodymovin =>
   JSON.parse(fs.readFileSync(path.join(ASSET_DIR, file), 'utf8')) as Bodymovin;
 
 describe('animation assets — the registries point at real files', () => {
+  it('the registry covers every stage id', () => {
+    // `stageDef` throws on a miss and its comment calls that unreachable. This
+    // is what makes that true.
+    expect(PROCESSING_STAGES.map((s) => s.id)).toEqual([...PROCESSING_STAGE_IDS]);
+  });
+
   it('has a processing animation for every stage id', () => {
     expect(Object.keys(PROCESSING_ANIMATIONS).sort()).toEqual([...PROCESSING_STAGE_IDS].sort());
   });
