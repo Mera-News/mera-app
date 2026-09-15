@@ -45,6 +45,7 @@
 // Article titles never appear, under any setting. Publication names appear only
 // when the reader turns them on.
 
+import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import MeraLogo from '@/components/custom/MeraLogo';
 import { Box } from '@/components/ui/box';
@@ -139,10 +140,29 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
       ref={ref}
       collapsable={false}
       testID="share-stats-card"
-      style={{ width: host.width, height: host.height, backgroundColor: '#000000' }}
+      style={{ width: host.width, height: host.height }}
     >
+      {/* The card's background is the app's own, not a flat fill: the screens
+          this card is about are painted by AbstractGradientBackdrop over
+          `background-0`, and a share that looks like the app is the point.
+          It is INSIDE the captured host, so it reaches the PNG edge to edge
+          including both Instagram reserves.
+
+          `frame={0}` is what makes a capture reproducible, and the seed alone
+          would NOT have been enough: the seed fixes the colour SEQUENCE, while
+          the shared, time-driven step picks the position in it, so a seeded
+          backdrop still drifts every 45 seconds. Pinned, two shares of the same
+          stats produce identical files.
+
+          Contrast is unchanged by this: the blobs peak at alpha 0.38 over
+          `#121113`, which is exactly what the app already puts white text and
+          white-bordered panels over. */}
+      <Box className="absolute inset-0 bg-background-0">
+        <AbstractGradientBackdrop seed="mera-stats-card" frame={0} />
+      </Box>
+
       <Box
-        className="flex-1 bg-black"
+        className="flex-1"
         style={{
           paddingTop: topInset,
           paddingBottom: bottomReserve,

@@ -311,8 +311,8 @@ describe('frame pinning (the share-card capture guard)', () => {
   /** Every gradient stop colour currently on screen, in render order. */
   const stopColours = (tree: ReturnType<typeof render>): string[] =>
     tree.UNSAFE_root
-      .findAll((n) => n.props?.stopColor !== undefined)
-      .map((n) => String(n.props.stopColor));
+      .findAll((n: { props?: Record<string, unknown> }) => n.props?.stopColor !== undefined)
+      .map((n: { props: Record<string, unknown> }) => String(n.props.stopColor));
 
   it('renders identical colours for the same seed and frame, twice over', () => {
     const a = render(<Pinned seed="mera-stats-card" frame={0} />);

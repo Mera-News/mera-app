@@ -19,6 +19,18 @@
 // Importing the card's constants pulls in the card, which pulls in MeraLogo,
 // which pulls in reanimated. This file measures strings and renders nothing, so
 // the logo is stubbed out purely to keep the module graph loadable under jest.
+// AbstractGradientBackdrop drags in reanimated and react-native-svg, which have
+// no native side under jest. It has its own suite; here it is a prop recorder,
+// so the card's contract with it (seeded AND frame-pinned, or two shares of the
+// same stats produce different PNGs) is still asserted below.
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: () => null,
+  };
+});
+
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
 
 import {

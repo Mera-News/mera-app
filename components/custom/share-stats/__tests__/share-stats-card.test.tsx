@@ -13,6 +13,18 @@ import { emptyReadingStats, type ReadingStats } from '@/lib/stats/reading-stats'
 // ONE thing this suite cannot answer: whether an SVG glyph actually rasterises
 // into a captureRef PNG. Nothing in P0 exercised react-native-svg either, so
 // the brand mark is a device-verification item, not a covered one.
+// AbstractGradientBackdrop drags in reanimated and react-native-svg, which have
+// no native side under jest. It has its own suite; here it is a prop recorder,
+// so the card's contract with it (seeded AND frame-pinned, or two shares of the
+// same stats produce different PNGs) is still asserted below.
+jest.mock('@/components/custom/AbstractGradientBackdrop', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    default: (p: Record<string, unknown>) => <View testID="card-backdrop" {...p} />,
+  };
+});
+
 jest.mock('@/components/custom/MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: Record<string, unknown>) => <View testID="mera-logo" {...p} /> };
@@ -109,6 +121,18 @@ describe('ShareStatsCard', () => {
     // No denominator without an average: "based on 0 of 58" alongside no figure
     // reads as a broken card rather than as missing data.
     expect(screen.queryByText(/latencyCoverage/)).toBeNull();
+  });
+
+  it('mounts the app backdrop SEEDED AND FRAME-PINNED', () => {
+    // Both halves are load-bearing. The seed fixes the colour sequence; the
+    // frame fixes the position in it, because the backdrop's step is a shared,
+    // time-driven global. Seed alone and two shares of identical stats 45
+    // seconds apart produce different PNGs.
+    render(<ShareStatsCard stats={stats()} showPublicationNames={false} pixelRatio={3} />);
+
+    const backdrop = screen.getByTestId('card-backdrop');
+    expect(backdrop.props.seed).toBe('mera-stats-card');
+    expect(backdrop.props.frame).toBe(0);
   });
 
   it('labels the opened count partial, every time', () => {
