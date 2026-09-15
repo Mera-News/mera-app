@@ -40,9 +40,10 @@ line is for, and it is the line a piece most often fails.
 
 ## Validating one
 
-`spike-artefacts/animation-tooling/` carries the generator and the validator
-this set was built with. The validator decides every contract line a machine
-can decide, including the two that a screenshot cannot:
+`scripts/animations/` carries the generator and the validator this set was
+built with, and its own README says how to run them. The validator decides
+every contract line a machine can decide, including the two that a screenshot
+cannot:
 
 - **the middle-70% sweep** walks every shape through every frame's transform
   and reports the real bounding box, rather than trusting the numbers in the
