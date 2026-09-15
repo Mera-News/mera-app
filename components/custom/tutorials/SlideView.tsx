@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ScrollView } from '@/components/ui/scroll-view';
 
 import {
+    animationIdFor,
     slideAskKey,
     slideBodyKey,
     slideHeadlineKey,
@@ -122,7 +123,11 @@ const SlideView: React.FC<SlideViewProps> = ({
                 call `useSharedValue`, and `reactCompiler: true` means they must
                 never branch on a variant. */}
             <View testID="tutorial-slide-scene" pointerEvents="none">
-                <SceneView visual={slide.visual} stepLabels={stepLabels} />
+                <SceneView
+                    visual={slide.visual}
+                    animationId={animationIdFor(chapterId, slide.id)}
+                    stepLabels={stepLabels}
+                />
             </View>
 
             <View testID="tutorial-slide-copy" pointerEvents="none" style={styles.copy}>

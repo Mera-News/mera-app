@@ -8,19 +8,14 @@
 //     returns the key string back when a key is missing, so asserting through
 //     `t()` would pass on exactly the failure this is for — hence `lookupKey`
 //     against the parsed JSON.
-//  2. NO ANIMATION RUNTIME IN THE SOURCE. Metro resolves `require()` at BUNDLE
-//     time, so a single uncommented mention of `lottie` under
-//     `components/custom/tutorials/` ends up in the OTA bundle. The check is
-//     mechanical because the rule is one grep away from being broken by a
-//     well-meaning edit.
-//     UPDATED: `lottie-react-native` is now a dependency — it is banked in the
-//     next binary so the animation pass and the processing-animation wave can
-//     ship over the air later. That does NOT relax this rule. `runtimeVersion`
-//     is `appVersion`, and users on the pre-Lottie runtime have a binary with
-//     no Lottie in it; an OTA published to that runtime referencing Lottie
-//     crashes for exactly them. The source stays clean until the animation pass
-//     runs against the binary that carries it, and that wave is what deletes
-//     this rule — deliberately, not incidentally.
+//  2. THE ANIMATION DEPENDENCY STAYS IN package.json. It used to be the
+//     opposite rule — no `lottie` string anywhere in tutorials source, so that
+//     an OTA could never reference a player the installed binary lacked. That
+//     rule was written to be deleted by this wave and it was: the dependency is
+//     banked in `baff527`, an ancestor of the 1.3.1 version bump, so every
+//     1.3.1 binary carries it and one channel serves them all. What is left is
+//     the inverse assertion, because dropping the dependency now turns every
+//     hero in `animation-registry.ts` into a build error.
 //  3. Chapter `welcome` carries no mera logo — the user's explicit instruction
 //     for the pre-auth chapter.
 //  4. NO CHAPTER TEACHES A DECOY / NOISE-INJECTION FEATURE. Mera has none:
@@ -38,36 +33,6 @@ import { TUTORIAL_CHAPTERS, chaptersAtLevel, getChapter } from '../chapters';
 import { animationIdFor, keysForChapter, lookupKey } from '../keys';
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
-
-/** Source trees the no-animation rule applies to. */
-const GUARDED_DIRS = [
-  path.join(REPO_ROOT, 'components/custom/tutorials'),
-  path.join(REPO_ROOT, 'lib/tutorials'),
-];
-
-function sourceFilesUnder(dir: string): string[] {
-  if (!fs.existsSync(dir)) return [];
-  return fs
-    .readdirSync(dir, { withFileTypes: true })
-    .flatMap((entry) => {
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) return sourceFilesUnder(full);
-      return /\.(ts|tsx)$/.test(entry.name) ? [full] : [];
-    });
-}
-
-/**
- * Strip `//` and block comments so a DELIBERATELY commented-out registry entry
- * (the whole point of `animation-registry.ts`) does not trip the guard, while a
- * real import still does.
- */
-function stripComments(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .split('\n')
-    .map((line) => line.replace(/\/\/.*$/, ''))
-    .join('\n');
-}
 
 describe('TUTORIAL_CHAPTERS', () => {
   it('has twelve chapters split across the two levels', () => {
@@ -269,37 +234,25 @@ describe('tutorial copy', () => {
   });
 });
 
-describe('no animation runtime', () => {
-  it('never mentions lottie in tutorials source', () => {
-    const offenders: string[] = [];
-
-    for (const dir of GUARDED_DIRS) {
-      for (const file of sourceFilesUnder(dir)) {
-        // This spec file necessarily contains the word; skip itself.
-        if (file === __filename) continue;
-        const code = stripComments(fs.readFileSync(file, 'utf8'));
-        if (/lottie/i.test(code)) offenders.push(path.relative(REPO_ROOT, file));
-      }
-    }
-
-    expect(offenders).toEqual([]);
-  });
-
-  it('guards a directory that actually has files in it', () => {
-    // Without this, the check above passes vacuously if the tree ever moves.
-    const total = GUARDED_DIRS.reduce(
-      (sum, dir) => sum + sourceFilesUnder(dir).length,
-      0,
-    );
-    expect(total).toBeGreaterThan(5);
-  });
-
-  // Was: "does not depend on an animation package". The dependency is now
-  // banked in the binary on purpose, so absence is no longer the contract —
-  // a clean SOURCE tree is (see the check above). This asserts the dependency
-  // stays put: dropping it would silently re-block the animation pass and the
-  // processing-animation wave, both of which are waiting on a binary to carry
-  // it, and neither of which would fail here.
+describe('the animation runtime', () => {
+  // Was "no animation runtime", and both of its assertions are retired rather
+  // than weakened.
+  //
+  // The source grep (no `lottie` string under the guarded directories) existed
+  // to keep Lottie out of an OTA bundle while users were on a pre-Lottie
+  // runtime. That runtime is gone: `lottie-react-native` was banked in
+  // `baff527`, which is an ancestor of the 1.3.1 version bump, so every 1.3.1
+  // binary carries the native module and `runtimeVersion` is
+  // `{policy: 'appVersion'}`, meaning one channel serves all of them.
+  // `SceneView.tsx` imports the player outright now, so the grep would fail on
+  // the very change it was holding the door open for. Its companion ("guards a
+  // directory that actually has files in it") existed only to stop the grep
+  // passing vacuously and goes with it.
+  //
+  // What survives is the assertion below, which is the one that still protects
+  // something: drop the dependency and every hero in
+  // `components/custom/tutorials/animation-registry.ts` becomes a build error,
+  // and nothing else in the suite would say so.
   it('keeps the banked animation dependency in package.json', () => {
     const pkg = JSON.parse(
       fs.readFileSync(path.join(REPO_ROOT, 'package.json'), 'utf8'),

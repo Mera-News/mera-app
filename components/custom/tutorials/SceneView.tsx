@@ -1,12 +1,27 @@
 import React from 'react';
 import { View } from 'react-native';
+import LottieView from 'lottie-react-native';
+import { useReducedMotion } from 'react-native-reanimated';
 
+import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import type { SceneVisual } from '@/lib/tutorials/types';
 import ScenePlaceholder from './ScenePlaceholder';
+import { SCENE_HEIGHT } from './theme';
 import { animationSourceFor } from './animation-registry';
 
 interface SceneViewProps {
     readonly visual: SceneVisual;
+    /**
+     * The slide's derived animation id, `animationIdFor(chapterId, slide.id)`.
+     *
+     * DERIVED and not declared: `lib/tutorials/chapters.ts` carries no
+     * `animation` field on any slide and does not need one, so a hero is turned
+     * on by putting its file on disk and uncommenting one registry line, with
+     * no chapter edit at all. `visual.animation` still wins where a slide wants
+     * an id that is not its own, which nothing does today.
+     */
+    readonly animationId?: string;
     /** Resolved copy for a `steps` placeholder. */
     readonly stepLabels?: readonly string[];
 }
@@ -15,45 +30,63 @@ interface SceneViewProps {
  * The scene block at the top of a slide, and the ONE place the animation seam
  * lives.
  *
- * The registry lookup below is LIVE. It resolves to `undefined` for every id
- * today because `animation-registry.ts` ships with every entry commented out —
- * this wave carries no animation runtime, which is exactly why the module is
- * OTA-able. So the placeholder always wins, and that is the shipped design, not
- * a fallback.
+ * A slide draws its animation when `animation-registry.ts` has an uncommented
+ * entry for its id, and its `ScenePlaceholder` otherwise. Both are shipped
+ * visual layers and they coexist indefinitely: the placeholders are what ~53
+ * non-hero slides look like and they are good, so this is a swap where an asset
+ * exists, never a fallback for a missing one.
  *
- * ── Turning animations on later (P6) ────────────────────────────────────────
- * Uncomment the block below and its import, uncomment the matching entries in
- * `animation-registry.ts`, and re-cut the binary. Nothing else changes at any N
- * from 0 to 65 slides.
+ * The registry is the only file in the repo that may hold a tutorial animation
+ * `require()`, because Metro resolves `require()` at BUNDLE time: an entry
+ * pointing at a file that is not on disk is a build error no runtime guard can
+ * catch.
  *
- *   import LottieView from 'lottie-react-native';
- *   …
- *   if (source) {
- *     return (
- *       <View style={{ height: SCENE_HEIGHT }}>
- *         <LottieView
- *           source={source as never}
- *           autoPlay
- *           loop={visual.loop !== false}
- *           resizeMode="contain"
- *           style={{ flex: 1 }}
- *         />
- *       </View>
- *     );
- *   }
+ * ## Why the loop is gated twice
  *
- * Note this must stay a COMMENT until the package is installed: Metro resolves
- * `require`/`import` at BUNDLE time, so an uncommented import of a package that
- * is not in `package.json` is a build error no runtime guard can catch. That is
- * the trap `animation-registry.ts` exists to make unrepeatable, and
- * `lib/tutorials/__tests__/chapters.test.ts` asserts it mechanically.
+ * `autoPlay` is off under EITHER of two conditions and the two are different
+ * questions.
+ *
+ *  - `isStatic` is the USER'S standing preference: OS Reduce Motion, or the
+ *    app's own "Static background", which already defaults ON below 6 GB of
+ *    RAM. That one is answered by rendering a single frozen frame, because a
+ *    reader who asked for less motion should get a still picture rather than
+ *    nothing.
+ *  - `useAnimationsActive()` is whether anyone is LOOKING: it is false only
+ *    when the screen is blurred or the app is backgrounded. Tabs and pushed
+ *    routes stay mounted, so without it a hero keeps a native animation running
+ *    behind whatever the reader walked off to instead.
+ *
+ * `progress={0}` pins the frozen frame. Every piece in `assets/animations/` is
+ * authored so that frame 0 is the composition at rest, which is what makes a
+ * single frame a legitimate still rather than an arbitrary slice.
  */
-const SceneView: React.FC<SceneViewProps> = ({ visual, stepLabels }) => {
-    // Live seam. Always `undefined` today; kept wired so P6 is a one-file change
-    // rather than a re-plumb, and so a stray registry entry can never silently
-    // do nothing.
-    const source = animationSourceFor(visual.animation);
-    void source;
+const SceneView: React.FC<SceneViewProps> = ({ visual, animationId, stepLabels }) => {
+    const source = animationSourceFor(visual.animation ?? animationId);
+    const reduceMotion = useReducedMotion();
+    const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
+    const active = useAnimationsActive();
+    const isStatic = reduceMotion || staticGradient;
+
+    if (source) {
+        return (
+            <View
+                accessible
+                accessibilityRole="image"
+                testID="tutorial-scene-animation"
+                style={{ height: SCENE_HEIGHT }}
+            >
+                <LottieView
+                    source={source as never}
+                    autoPlay={!isStatic && active}
+                    progress={isStatic ? 0 : undefined}
+                    loop={visual.loop !== false}
+                    renderMode="AUTOMATIC"
+                    resizeMode="contain"
+                    style={{ flex: 1 }}
+                />
+            </View>
+        );
+    }
 
     return (
         <View accessible accessibilityRole="image">
