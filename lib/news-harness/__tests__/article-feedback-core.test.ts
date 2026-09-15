@@ -144,6 +144,37 @@ describe('buildArticleFeedbackSystemPrompt', () => {
   // summary. Moving the prompt text verbatim while the context still truncated
   // the description at 160 would carry the words and not the result — every rule
   // that measurement bought is a rule about what the model READS.
+  it('collapses whitespace at the BOUNDARY, then truncates at the render site', () => {
+    // Branding the context changed the ORDER these two steps run in, and this
+    // pins the consequence so it reads as deliberate rather than as drift.
+    //
+    // Before: the render site truncated the RAW string at 160, then sanitising
+    // collapsed the newlines inside that slice - so a run of newlines ate 30 of
+    // the 160 characters and the words after it never arrived.
+    // Now: `brandNullable` sanitises at the mapping boundary with the value's
+    // own length as the cap (so it never truncates), collapsing the whitespace
+    // FIRST, and the render site's 160 then applies to the collapsed text.
+    //
+    // Net effect: the same character budget now carries more visible WORDS.
+    // Safety is unchanged either way - both orders end sanitised - and the
+    // direction is toward more signal, which is why it was accepted.
+    const padded = `${'X'.repeat(140)}${'\n'.repeat(30)}TAILWORD`;
+    const ctx = { ...scoredContext() };
+    ctx.suggestion = { ...ctx.suggestion, description_en: u(padded) };
+
+    const rendered = buildFeedbackContext({
+      nowMs: NOW_MS,
+      facts: [],
+      context: ctx,
+      fallbackTitle: undefined,
+      proposal: null,
+    });
+
+    // Under the OLD order the 30 newlines would have consumed the budget and
+    // this word would have been cut.
+    expect(rendered).toContain('TAILWORD');
+  });
+
   it('widens the article description for the claim picker, and only for it', () => {
     const long = `${'A'.repeat(880)} END`;
     const ctx = { ...scoredContext() };
