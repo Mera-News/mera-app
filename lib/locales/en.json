@@ -2517,5 +2517,33 @@
     "added": "Added {{publisher}} to your subscriptions",
     "removed": "Removed {{publisher}} from your subscriptions",
     "coversThisStory": "Your subscription covers this story."
+  },
+  "shareStats": {
+    "entryA11y": "Share your reading stats",
+    "screenTitle": "Share your reading",
+    "screenSubtitle": "Last 30 days",
+    "preparing": "Preparing your card",
+    "emptyTitle": "Nothing to show yet",
+    "emptyBody": "Read a few articles and your card will fill up. Mera keeps 30 days of reading history on this device.",
+    "nameToggleLabel": "Show my top publications",
+    "nameTogglePrivacy": "Off by default. Publication names say a lot about you, so they only go on the card if you turn this on. Article titles are never included.",
+    "shareAction": "Share",
+    "shareDialogTitle": "My Mera reading stats",
+    "sharingUnavailable": "Sharing isn't available on this device.",
+    "shareFailed": "That didn't work. Try again.",
+    "card": {
+      "title": "My reading, last 30 days",
+      "publicationsLabel": "Publications you visited",
+      "countriesLabel": "Countries you read from",
+      "latencyLabel": "Average time from publish to read",
+      "latencyCoverage": "Based on {{sampled}} of {{total}} articles with a known publish time",
+      "latencyUnknown": "Not enough known publish times to work this out yet",
+      "openedLabel": "Articles opened",
+      "openedPartial": "Partial count. Mera only counts taps on your suggestion cards.",
+      "topPublicationsTitle": "Top publications",
+      "privacyLine": "Counted on my device only. Nothing left it.",
+      "latencyValue_one": "{{count}} hour",
+      "latencyValue_other": "{{count}} hours"
+    }
   }
 }

@@ -2518,5 +2518,32 @@
     "added": "Đã thêm {{publisher}} vào gói đăng ký của bạn",
     "removed": "Đã xóa {{publisher}} khỏi gói đăng ký của bạn",
     "coversThisStory": "Gói đăng ký của bạn có tin này."
+  },
+  "shareStats": {
+    "entryA11y": "Chia sẻ thống kê đọc của bạn",
+    "screenTitle": "Chia sẻ việc đọc của bạn",
+    "screenSubtitle": "30 ngày qua",
+    "preparing": "Đang chuẩn bị thẻ của bạn",
+    "emptyTitle": "Chưa có gì để hiển thị",
+    "emptyBody": "Đọc vài bài viết và thẻ của bạn sẽ đầy dần. Mera lưu 30 ngày lịch sử đọc trên thiết bị này.",
+    "nameToggleLabel": "Hiển thị các báo tôi đọc nhiều nhất",
+    "nameTogglePrivacy": "Mặc định tắt. Tên báo nói lên nhiều điều về bạn, nên chúng chỉ xuất hiện trên thẻ nếu bạn bật lên. Tiêu đề bài viết không bao giờ được đưa vào.",
+    "shareAction": "Chia sẻ",
+    "shareDialogTitle": "Thống kê đọc của tôi trên Mera",
+    "sharingUnavailable": "Thiết bị này không hỗ trợ chia sẻ.",
+    "shareFailed": "Không thành công. Hãy thử lại.",
+    "card": {
+      "title": "Việc đọc của tôi, 30 ngày qua",
+      "publicationsLabel": "Các báo bạn đã ghé",
+      "countriesLabel": "Các quốc gia bạn đã đọc",
+      "latencyLabel": "Thời gian trung bình từ khi đăng đến khi đọc",
+      "latencyCoverage": "Dựa trên {{sampled}} trong {{total}} bài có thời gian đăng đã biết",
+      "latencyUnknown": "Chưa đủ thời gian đăng đã biết để tính con số này",
+      "openedLabel": "Bài viết đã mở",
+      "openedPartial": "Số đếm một phần. Mera chỉ đếm lượt chạm vào thẻ gợi ý của bạn.",
+      "topPublicationsTitle": "Các báo đọc nhiều nhất",
+      "privacyLine": "Chỉ đếm trên máy của tôi. Không có gì rời khỏi máy.",
+      "latencyValue_other": "{{count}} giờ"
+    }
   }
 }

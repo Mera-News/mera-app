@@ -2517,5 +2517,33 @@
     "added": "{{publisher}} toegevoegd aan je abonnementen",
     "removed": "{{publisher}} verwijderd uit je abonnementen",
     "coversThisStory": "Je abonnement dekt dit nieuws."
+  },
+  "shareStats": {
+    "entryA11y": "Deel je leesstatistieken",
+    "screenTitle": "Deel je leesgedrag",
+    "screenSubtitle": "Afgelopen 30 dagen",
+    "preparing": "Je kaart wordt gemaakt",
+    "emptyTitle": "Nog niets te tonen",
+    "emptyBody": "Lees een paar artikelen en je kaart vult zich vanzelf. Mera bewaart 30 dagen leesgeschiedenis op dit apparaat.",
+    "nameToggleLabel": "Mijn meestgelezen bronnen tonen",
+    "nameTogglePrivacy": "Staat standaard uit. Namen van bronnen zeggen veel over je, dus ze komen alleen op de kaart als je dit aanzet. Artikeltitels staan er nooit op.",
+    "shareAction": "Delen",
+    "shareDialogTitle": "Mijn Mera-leesstatistieken",
+    "sharingUnavailable": "Delen is niet beschikbaar op dit apparaat.",
+    "shareFailed": "Dat is niet gelukt. Probeer het opnieuw.",
+    "card": {
+      "title": "Mijn leesgedrag, afgelopen 30 dagen",
+      "publicationsLabel": "Bezochte bronnen",
+      "countriesLabel": "Landen waaruit je leest",
+      "latencyLabel": "Gemiddelde tijd tussen publicatie en lezen",
+      "latencyCoverage": "Gebaseerd op {{sampled}} van {{total}} artikelen met een bekende publicatietijd",
+      "latencyUnknown": "Nog te weinig bekende publicatietijden om dit te berekenen",
+      "openedLabel": "Geopende artikelen",
+      "openedPartial": "Gedeeltelijke telling. Mera telt alleen tikken op je suggestiekaarten.",
+      "topPublicationsTitle": "Meestgelezen bronnen",
+      "privacyLine": "Alleen op mijn apparaat geteld. Er is niets weggegaan.",
+      "latencyValue_one": "{{count}} uur",
+      "latencyValue_other": "{{count}} uur"
+    }
   }
 }

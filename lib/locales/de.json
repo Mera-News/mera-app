@@ -2517,5 +2517,33 @@
     "added": "{{publisher}} zu deinen Abos hinzugefügt",
     "removed": "{{publisher}} aus deinen Abos entfernt",
     "coversThisStory": "Dein Abo deckt diese Meldung ab."
+  },
+  "shareStats": {
+    "entryA11y": "Deine Lesestatistik teilen",
+    "screenTitle": "Teile dein Lesen",
+    "screenSubtitle": "Letzte 30 Tage",
+    "preparing": "Deine Karte wird vorbereitet",
+    "emptyTitle": "Noch nichts zu zeigen",
+    "emptyBody": "Lies ein paar Artikel, dann füllt sich deine Karte. Mera behält 30 Tage Leseverlauf auf diesem Gerät.",
+    "nameToggleLabel": "Meine meistgelesenen Quellen zeigen",
+    "nameTogglePrivacy": "Standardmäßig aus. Quellennamen verraten viel über dich, deshalb landen sie nur auf der Karte, wenn du das einschaltest. Artikeltitel sind nie dabei.",
+    "shareAction": "Teilen",
+    "shareDialogTitle": "Meine Mera-Lesestatistik",
+    "sharingUnavailable": "Teilen ist auf diesem Gerät nicht verfügbar.",
+    "shareFailed": "Das hat nicht geklappt. Versuch es noch einmal.",
+    "card": {
+      "title": "Mein Lesen, letzte 30 Tage",
+      "publicationsLabel": "Besuchte Quellen",
+      "countriesLabel": "Länder, aus denen du liest",
+      "latencyLabel": "Durchschnittliche Zeit von Veröffentlichung bis Lesen",
+      "latencyCoverage": "Basierend auf {{sampled}} von {{total}} Artikeln mit bekanntem Veröffentlichungszeitpunkt",
+      "latencyUnknown": "Noch zu wenige bekannte Veröffentlichungszeiten für diesen Wert",
+      "openedLabel": "Geöffnete Artikel",
+      "openedPartial": "Teilzahl. Mera zählt nur Tippen auf deine Vorschlagskarten.",
+      "topPublicationsTitle": "Meistgelesene Quellen",
+      "privacyLine": "Nur auf meinem Gerät gezählt. Nichts hat es verlassen.",
+      "latencyValue_one": "{{count}} Stunde",
+      "latencyValue_other": "{{count}} Stunden"
+    }
   }
 }

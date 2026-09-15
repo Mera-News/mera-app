@@ -1,0 +1,606 @@
+{
+  "_comment": "ready-1 P2 stats share card: new shareStats namespace, 24 keys. latencyValue carries per-locale CLDR plural categories (ar zero/one/two/few/many/other; pl/ru/uk one/few/many/other; id/ja/ko/th/vi/zh-Hans/zh-Hant other only; the rest one/other). Placeholders: {{count}} on latencyValue, {{sampled}} and {{total}} on latencyCoverage. No em dashes anywhere - house rule for user-facing copy. Never edit the 20 dictionaries by hand.",
+  "ar": {
+    "shareStats": {
+      "entryA11y": "شارك إحصاءات قراءتك",
+      "screenTitle": "شارك قراءتك",
+      "screenSubtitle": "آخر 30 يوما",
+      "preparing": "جارٍ تجهيز بطاقتك",
+      "emptyTitle": "لا يوجد ما نعرضه بعد",
+      "emptyBody": "اقرأ بعض المقالات وستمتلئ بطاقتك. يحتفظ Mera بسجل قراءة لمدة 30 يوما على هذا الجهاز.",
+      "nameToggleLabel": "إظهار أبرز المصادر التي أقرأها",
+      "nameTogglePrivacy": "مغلق افتراضيا. أسماء المصادر تكشف الكثير عنك، لذا لا تظهر على البطاقة إلا إذا شغّلت هذا الخيار. عناوين المقالات لا تُدرج أبدا.",
+      "shareAction": "مشاركة",
+      "shareDialogTitle": "إحصاءات قراءتي على Mera",
+      "sharingUnavailable": "المشاركة غير متاحة على هذا الجهاز.",
+      "shareFailed": "لم ينجح ذلك. حاول مرة أخرى.",
+      "card": {
+        "title": "قراءتي خلال آخر 30 يوما",
+        "publicationsLabel": "المصادر التي زرتها",
+        "countriesLabel": "البلدان التي قرأت منها",
+        "latencyLabel": "متوسط الوقت بين النشر والقراءة",
+        "latencyCoverage": "بناء على {{sampled}} من {{total}} مقالا لها وقت نشر معروف",
+        "latencyUnknown": "لا توجد أوقات نشر معروفة كافية لحساب هذا بعد",
+        "openedLabel": "المقالات التي فُتحت",
+        "openedPartial": "عدد جزئي. يحسب Mera النقرات على بطاقات الاقتراحات فقط.",
+        "topPublicationsTitle": "أبرز المصادر",
+        "privacyLine": "حُسبت على جهازي فقط. لم يغادره شيء.",
+        "latencyValue_zero": "{{count}} ساعة",
+        "latencyValue_one": "ساعة واحدة",
+        "latencyValue_two": "ساعتان",
+        "latencyValue_few": "{{count}} ساعات",
+        "latencyValue_many": "{{count}} ساعة",
+        "latencyValue_other": "{{count}} ساعة"
+      }
+    }
+  },
+  "de": {
+    "shareStats": {
+      "entryA11y": "Deine Lesestatistik teilen",
+      "screenTitle": "Teile dein Lesen",
+      "screenSubtitle": "Letzte 30 Tage",
+      "preparing": "Deine Karte wird vorbereitet",
+      "emptyTitle": "Noch nichts zu zeigen",
+      "emptyBody": "Lies ein paar Artikel, dann füllt sich deine Karte. Mera behält 30 Tage Leseverlauf auf diesem Gerät.",
+      "nameToggleLabel": "Meine meistgelesenen Quellen zeigen",
+      "nameTogglePrivacy": "Standardmäßig aus. Quellennamen verraten viel über dich, deshalb landen sie nur auf der Karte, wenn du das einschaltest. Artikeltitel sind nie dabei.",
+      "shareAction": "Teilen",
+      "shareDialogTitle": "Meine Mera-Lesestatistik",
+      "sharingUnavailable": "Teilen ist auf diesem Gerät nicht verfügbar.",
+      "shareFailed": "Das hat nicht geklappt. Versuch es noch einmal.",
+      "card": {
+        "title": "Mein Lesen, letzte 30 Tage",
+        "publicationsLabel": "Besuchte Quellen",
+        "countriesLabel": "Länder, aus denen du liest",
+        "latencyLabel": "Durchschnittliche Zeit von Veröffentlichung bis Lesen",
+        "latencyCoverage": "Basierend auf {{sampled}} von {{total}} Artikeln mit bekanntem Veröffentlichungszeitpunkt",
+        "latencyUnknown": "Noch zu wenige bekannte Veröffentlichungszeiten für diesen Wert",
+        "openedLabel": "Geöffnete Artikel",
+        "openedPartial": "Teilzahl. Mera zählt nur Tippen auf deine Vorschlagskarten.",
+        "topPublicationsTitle": "Meistgelesene Quellen",
+        "privacyLine": "Nur auf meinem Gerät gezählt. Nichts hat es verlassen.",
+        "latencyValue_one": "{{count}} Stunde",
+        "latencyValue_other": "{{count}} Stunden"
+      }
+    }
+  },
+  "en": {
+    "shareStats": {
+      "entryA11y": "Share your reading stats",
+      "screenTitle": "Share your reading",
+      "screenSubtitle": "Last 30 days",
+      "preparing": "Preparing your card",
+      "emptyTitle": "Nothing to show yet",
+      "emptyBody": "Read a few articles and your card will fill up. Mera keeps 30 days of reading history on this device.",
+      "nameToggleLabel": "Show my top publications",
+      "nameTogglePrivacy": "Off by default. Publication names say a lot about you, so they only go on the card if you turn this on. Article titles are never included.",
+      "shareAction": "Share",
+      "shareDialogTitle": "My Mera reading stats",
+      "sharingUnavailable": "Sharing isn't available on this device.",
+      "shareFailed": "That didn't work. Try again.",
+      "card": {
+        "title": "My reading, last 30 days",
+        "publicationsLabel": "Publications you visited",
+        "countriesLabel": "Countries you read from",
+        "latencyLabel": "Average time from publish to read",
+        "latencyCoverage": "Based on {{sampled}} of {{total}} articles with a known publish time",
+        "latencyUnknown": "Not enough known publish times to work this out yet",
+        "openedLabel": "Articles opened",
+        "openedPartial": "Partial count. Mera only counts taps on your suggestion cards.",
+        "topPublicationsTitle": "Top publications",
+        "privacyLine": "Counted on my device only. Nothing left it.",
+        "latencyValue_one": "{{count}} hour",
+        "latencyValue_other": "{{count}} hours"
+      }
+    }
+  },
+  "es": {
+    "shareStats": {
+      "entryA11y": "Comparte tus estadísticas de lectura",
+      "screenTitle": "Comparte tu lectura",
+      "screenSubtitle": "Últimos 30 días",
+      "preparing": "Preparando tu tarjeta",
+      "emptyTitle": "Todavía no hay nada que mostrar",
+      "emptyBody": "Lee algunos artículos y tu tarjeta se irá llenando. Mera guarda 30 días de historial de lectura en este dispositivo.",
+      "nameToggleLabel": "Mostrar mis publicaciones principales",
+      "nameTogglePrivacy": "Desactivado por defecto. Los nombres de las publicaciones dicen mucho de ti, así que solo aparecen en la tarjeta si activas esto. Los títulos de los artículos nunca se incluyen.",
+      "shareAction": "Compartir",
+      "shareDialogTitle": "Mis estadísticas de lectura en Mera",
+      "sharingUnavailable": "Compartir no está disponible en este dispositivo.",
+      "shareFailed": "No funcionó. Inténtalo de nuevo.",
+      "card": {
+        "title": "Mi lectura, últimos 30 días",
+        "publicationsLabel": "Publicaciones que visitaste",
+        "countriesLabel": "Países de los que leíste",
+        "latencyLabel": "Tiempo medio entre la publicación y la lectura",
+        "latencyCoverage": "Basado en {{sampled}} de {{total}} artículos con hora de publicación conocida",
+        "latencyUnknown": "Todavía no hay suficientes horas de publicación conocidas para calcularlo",
+        "openedLabel": "Artículos abiertos",
+        "openedPartial": "Recuento parcial. Mera solo cuenta los toques en tus tarjetas de sugerencias.",
+        "topPublicationsTitle": "Publicaciones principales",
+        "privacyLine": "Calculado solo en mi dispositivo. Nada salió de él.",
+        "latencyValue_one": "{{count}} hora",
+        "latencyValue_other": "{{count}} horas"
+      }
+    }
+  },
+  "fr": {
+    "shareStats": {
+      "entryA11y": "Partager vos statistiques de lecture",
+      "screenTitle": "Partagez vos lectures",
+      "screenSubtitle": "30 derniers jours",
+      "preparing": "Préparation de votre carte",
+      "emptyTitle": "Rien à afficher pour l'instant",
+      "emptyBody": "Lisez quelques articles et votre carte se remplira. Mera conserve 30 jours d'historique de lecture sur cet appareil.",
+      "nameToggleLabel": "Afficher mes principales sources",
+      "nameTogglePrivacy": "Désactivé par défaut. Les noms des sources en disent long sur vous, ils n'apparaissent donc sur la carte que si vous activez cette option. Les titres d'articles ne sont jamais inclus.",
+      "shareAction": "Partager",
+      "shareDialogTitle": "Mes statistiques de lecture Mera",
+      "sharingUnavailable": "Le partage n'est pas disponible sur cet appareil.",
+      "shareFailed": "Ça n'a pas marché. Réessayez.",
+      "card": {
+        "title": "Mes lectures, 30 derniers jours",
+        "publicationsLabel": "Sources consultées",
+        "countriesLabel": "Pays dont vous avez lu la presse",
+        "latencyLabel": "Temps moyen entre la publication et la lecture",
+        "latencyCoverage": "Calculé sur {{sampled}} des {{total}} articles dont l'heure de publication est connue",
+        "latencyUnknown": "Pas encore assez d'heures de publication connues pour le calculer",
+        "openedLabel": "Articles ouverts",
+        "openedPartial": "Décompte partiel. Mera ne compte que les appuis sur vos cartes de suggestions.",
+        "topPublicationsTitle": "Principales sources",
+        "privacyLine": "Calculé uniquement sur mon appareil. Rien n'en est sorti.",
+        "latencyValue_one": "{{count}} heure",
+        "latencyValue_other": "{{count}} heures"
+      }
+    }
+  },
+  "hi": {
+    "shareStats": {
+      "entryA11y": "अपने पढ़ने के आंकड़े साझा करें",
+      "screenTitle": "अपना पढ़ना साझा करें",
+      "screenSubtitle": "पिछले 30 दिन",
+      "preparing": "आपका कार्ड तैयार हो रहा है",
+      "emptyTitle": "अभी दिखाने के लिए कुछ नहीं है",
+      "emptyBody": "कुछ लेख पढ़ें और आपका कार्ड भर जाएगा. Mera इस डिवाइस पर 30 दिन का पढ़ने का इतिहास रखता है.",
+      "nameToggleLabel": "मेरे प्रमुख प्रकाशन दिखाएं",
+      "nameTogglePrivacy": "डिफ़ॉल्ट रूप से बंद. प्रकाशनों के नाम आपके बारे में बहुत कुछ बताते हैं, इसलिए वे कार्ड पर तभी जाते हैं जब आप इसे चालू करें. लेखों के शीर्षक कभी शामिल नहीं होते.",
+      "shareAction": "साझा करें",
+      "shareDialogTitle": "Mera पर मेरे पढ़ने के आंकड़े",
+      "sharingUnavailable": "इस डिवाइस पर साझा करना उपलब्ध नहीं है.",
+      "shareFailed": "यह काम नहीं आया. फिर से कोशिश करें.",
+      "card": {
+        "title": "मेरा पढ़ना, पिछले 30 दिन",
+        "publicationsLabel": "आपने जिन प्रकाशनों को देखा",
+        "countriesLabel": "जिन देशों से आपने पढ़ा",
+        "latencyLabel": "प्रकाशन से पढ़ने तक का औसत समय",
+        "latencyCoverage": "{{total}} में से {{sampled}} लेखों पर आधारित जिनका प्रकाशन समय ज्ञात है",
+        "latencyUnknown": "इसे निकालने के लिए अभी पर्याप्त ज्ञात प्रकाशन समय नहीं हैं",
+        "openedLabel": "खोले गए लेख",
+        "openedPartial": "आंशिक गिनती. Mera सिर्फ़ आपके सुझाव कार्ड पर टैप गिनता है.",
+        "topPublicationsTitle": "प्रमुख प्रकाशन",
+        "privacyLine": "सिर्फ़ मेरे डिवाइस पर गिना गया. कुछ भी बाहर नहीं गया.",
+        "latencyValue_one": "{{count}} घंटा",
+        "latencyValue_other": "{{count}} घंटे"
+      }
+    }
+  },
+  "id": {
+    "shareStats": {
+      "entryA11y": "Bagikan statistik bacaan Anda",
+      "screenTitle": "Bagikan bacaan Anda",
+      "screenSubtitle": "30 hari terakhir",
+      "preparing": "Menyiapkan kartu Anda",
+      "emptyTitle": "Belum ada yang bisa ditampilkan",
+      "emptyBody": "Baca beberapa artikel dan kartu Anda akan terisi. Mera menyimpan riwayat bacaan 30 hari di perangkat ini.",
+      "nameToggleLabel": "Tampilkan penerbit teratas saya",
+      "nameTogglePrivacy": "Nonaktif secara bawaan. Nama penerbit mengungkap banyak hal tentang Anda, jadi nama itu hanya muncul di kartu kalau Anda mengaktifkannya. Judul artikel tidak pernah disertakan.",
+      "shareAction": "Bagikan",
+      "shareDialogTitle": "Statistik bacaan saya di Mera",
+      "sharingUnavailable": "Berbagi tidak tersedia di perangkat ini.",
+      "shareFailed": "Gagal. Coba lagi.",
+      "card": {
+        "title": "Bacaan saya, 30 hari terakhir",
+        "publicationsLabel": "Penerbit yang Anda kunjungi",
+        "countriesLabel": "Negara asal bacaan Anda",
+        "latencyLabel": "Rata-rata waktu dari terbit sampai dibaca",
+        "latencyCoverage": "Berdasarkan {{sampled}} dari {{total}} artikel yang waktu terbitnya diketahui",
+        "latencyUnknown": "Belum cukup waktu terbit yang diketahui untuk menghitung ini",
+        "openedLabel": "Artikel yang dibuka",
+        "openedPartial": "Hitungan sebagian. Mera hanya menghitung ketukan pada kartu saran Anda.",
+        "topPublicationsTitle": "Penerbit teratas",
+        "privacyLine": "Dihitung hanya di perangkat saya. Tidak ada yang keluar.",
+        "latencyValue_other": "{{count}} jam"
+      }
+    }
+  },
+  "it": {
+    "shareStats": {
+      "entryA11y": "Condividi le tue statistiche di lettura",
+      "screenTitle": "Condividi le tue letture",
+      "screenSubtitle": "Ultimi 30 giorni",
+      "preparing": "Preparazione della tua scheda",
+      "emptyTitle": "Ancora niente da mostrare",
+      "emptyBody": "Leggi qualche articolo e la tua scheda si riempirà. Mera conserva 30 giorni di cronologia di lettura su questo dispositivo.",
+      "nameToggleLabel": "Mostra le mie testate principali",
+      "nameTogglePrivacy": "Disattivato per impostazione predefinita. I nomi delle testate dicono molto di te, quindi finiscono sulla scheda solo se attivi questa opzione. I titoli degli articoli non vengono mai inclusi.",
+      "shareAction": "Condividi",
+      "shareDialogTitle": "Le mie statistiche di lettura su Mera",
+      "sharingUnavailable": "La condivisione non è disponibile su questo dispositivo.",
+      "shareFailed": "Non ha funzionato. Riprova.",
+      "card": {
+        "title": "Le mie letture, ultimi 30 giorni",
+        "publicationsLabel": "Testate che hai visitato",
+        "countriesLabel": "Paesi da cui hai letto",
+        "latencyLabel": "Tempo medio tra pubblicazione e lettura",
+        "latencyCoverage": "Calcolato su {{sampled}} articoli su {{total}} con orario di pubblicazione noto",
+        "latencyUnknown": "Non ci sono ancora abbastanza orari di pubblicazione noti per calcolarlo",
+        "openedLabel": "Articoli aperti",
+        "openedPartial": "Conteggio parziale. Mera conta solo i tocchi sulle tue schede di suggerimento.",
+        "topPublicationsTitle": "Testate principali",
+        "privacyLine": "Calcolato solo sul mio dispositivo. Non è uscito nulla.",
+        "latencyValue_one": "{{count}} ora",
+        "latencyValue_other": "{{count}} ore"
+      }
+    }
+  },
+  "ja": {
+    "shareStats": {
+      "entryA11y": "読書の記録を共有",
+      "screenTitle": "読書を共有",
+      "screenSubtitle": "過去30日間",
+      "preparing": "カードを準備しています",
+      "emptyTitle": "まだ表示できるものがありません",
+      "emptyBody": "記事をいくつか読むとカードが埋まります。Mera はこの端末に 30 日分の閲覧履歴を保存します。",
+      "nameToggleLabel": "よく読む媒体を表示",
+      "nameTogglePrivacy": "初期設定ではオフです。媒体名はあなたについて多くを語るため、オンにしたときだけカードに載ります。記事の見出しが含まれることはありません。",
+      "shareAction": "共有",
+      "shareDialogTitle": "Mera の読書記録",
+      "sharingUnavailable": "この端末では共有を利用できません。",
+      "shareFailed": "うまくいきませんでした。もう一度お試しください。",
+      "card": {
+        "title": "私の読書、過去30日間",
+        "publicationsLabel": "訪れた媒体",
+        "countriesLabel": "読んだ国",
+        "latencyLabel": "公開から読むまでの平均時間",
+        "latencyCoverage": "公開時刻がわかっている {{total}} 件中 {{sampled}} 件に基づく",
+        "latencyUnknown": "公開時刻がわかっている記事がまだ足りません",
+        "openedLabel": "開いた記事",
+        "openedPartial": "部分的な数です。Mera はおすすめカードのタップだけを数えます。",
+        "topPublicationsTitle": "よく読む媒体",
+        "privacyLine": "私の端末だけで数えました。外には何も出ていません。",
+        "latencyValue_other": "{{count}} 時間"
+      }
+    }
+  },
+  "ko": {
+    "shareStats": {
+      "entryA11y": "내 읽기 통계 공유하기",
+      "screenTitle": "읽기 기록 공유",
+      "screenSubtitle": "지난 30일",
+      "preparing": "카드를 준비하는 중",
+      "emptyTitle": "아직 보여줄 것이 없어요",
+      "emptyBody": "기사를 몇 개 읽으면 카드가 채워집니다. Mera는 이 기기에 30일간의 읽기 기록을 보관합니다.",
+      "nameToggleLabel": "자주 읽는 매체 표시",
+      "nameTogglePrivacy": "기본값은 꺼짐입니다. 매체 이름은 당신에 대해 많은 것을 말해주므로, 켤 때만 카드에 표시됩니다. 기사 제목은 절대 포함되지 않습니다.",
+      "shareAction": "공유",
+      "shareDialogTitle": "내 Mera 읽기 통계",
+      "sharingUnavailable": "이 기기에서는 공유를 사용할 수 없습니다.",
+      "shareFailed": "실패했어요. 다시 시도해 주세요.",
+      "card": {
+        "title": "내 읽기, 지난 30일",
+        "publicationsLabel": "방문한 매체",
+        "countriesLabel": "읽은 나라",
+        "latencyLabel": "게시부터 읽기까지 걸린 평균 시간",
+        "latencyCoverage": "게시 시각을 아는 {{total}}건 중 {{sampled}}건 기준",
+        "latencyUnknown": "아직 게시 시각을 아는 기사가 충분하지 않아요",
+        "openedLabel": "열어 본 기사",
+        "openedPartial": "일부만 센 값입니다. Mera는 추천 카드를 누른 횟수만 셉니다.",
+        "topPublicationsTitle": "자주 읽는 매체",
+        "privacyLine": "내 기기에서만 계산했어요. 기기 밖으로 나간 것은 없습니다.",
+        "latencyValue_other": "{{count}}시간"
+      }
+    }
+  },
+  "nl": {
+    "shareStats": {
+      "entryA11y": "Deel je leesstatistieken",
+      "screenTitle": "Deel je leesgedrag",
+      "screenSubtitle": "Afgelopen 30 dagen",
+      "preparing": "Je kaart wordt gemaakt",
+      "emptyTitle": "Nog niets te tonen",
+      "emptyBody": "Lees een paar artikelen en je kaart vult zich vanzelf. Mera bewaart 30 dagen leesgeschiedenis op dit apparaat.",
+      "nameToggleLabel": "Mijn meestgelezen bronnen tonen",
+      "nameTogglePrivacy": "Staat standaard uit. Namen van bronnen zeggen veel over je, dus ze komen alleen op de kaart als je dit aanzet. Artikeltitels staan er nooit op.",
+      "shareAction": "Delen",
+      "shareDialogTitle": "Mijn Mera-leesstatistieken",
+      "sharingUnavailable": "Delen is niet beschikbaar op dit apparaat.",
+      "shareFailed": "Dat is niet gelukt. Probeer het opnieuw.",
+      "card": {
+        "title": "Mijn leesgedrag, afgelopen 30 dagen",
+        "publicationsLabel": "Bezochte bronnen",
+        "countriesLabel": "Landen waaruit je leest",
+        "latencyLabel": "Gemiddelde tijd tussen publicatie en lezen",
+        "latencyCoverage": "Gebaseerd op {{sampled}} van {{total}} artikelen met een bekende publicatietijd",
+        "latencyUnknown": "Nog te weinig bekende publicatietijden om dit te berekenen",
+        "openedLabel": "Geopende artikelen",
+        "openedPartial": "Gedeeltelijke telling. Mera telt alleen tikken op je suggestiekaarten.",
+        "topPublicationsTitle": "Meestgelezen bronnen",
+        "privacyLine": "Alleen op mijn apparaat geteld. Er is niets weggegaan.",
+        "latencyValue_one": "{{count}} uur",
+        "latencyValue_other": "{{count}} uur"
+      }
+    }
+  },
+  "pl": {
+    "shareStats": {
+      "entryA11y": "Udostępnij swoje statystyki czytania",
+      "screenTitle": "Udostępnij swoje czytanie",
+      "screenSubtitle": "Ostatnie 30 dni",
+      "preparing": "Przygotowywanie karty",
+      "emptyTitle": "Nie ma jeszcze czego pokazać",
+      "emptyBody": "Przeczytaj kilka artykułów, a karta się zapełni. Mera przechowuje 30 dni historii czytania na tym urządzeniu.",
+      "nameToggleLabel": "Pokaż moje najczęściej czytane źródła",
+      "nameTogglePrivacy": "Domyślnie wyłączone. Nazwy źródeł mówią o tobie sporo, więc trafiają na kartę tylko wtedy, gdy to włączysz. Tytuły artykułów nigdy nie są dołączane.",
+      "shareAction": "Udostępnij",
+      "shareDialogTitle": "Moje statystyki czytania w Mera",
+      "sharingUnavailable": "Udostępnianie jest niedostępne na tym urządzeniu.",
+      "shareFailed": "Nie udało się. Spróbuj ponownie.",
+      "card": {
+        "title": "Moje czytanie, ostatnie 30 dni",
+        "publicationsLabel": "Odwiedzone źródła",
+        "countriesLabel": "Kraje, z których czytasz",
+        "latencyLabel": "Średni czas od publikacji do przeczytania",
+        "latencyCoverage": "Na podstawie {{sampled}} z {{total}} artykułów ze znaną godziną publikacji",
+        "latencyUnknown": "Za mało znanych godzin publikacji, aby to obliczyć",
+        "openedLabel": "Otwarte artykuły",
+        "openedPartial": "Liczba częściowa. Mera liczy tylko dotknięcia kart z propozycjami.",
+        "topPublicationsTitle": "Najczęściej czytane źródła",
+        "privacyLine": "Policzone tylko na moim urządzeniu. Nic go nie opuściło.",
+        "latencyValue_one": "{{count}} godzina",
+        "latencyValue_few": "{{count}} godziny",
+        "latencyValue_many": "{{count}} godzin",
+        "latencyValue_other": "{{count}} godziny"
+      }
+    }
+  },
+  "pt-BR": {
+    "shareStats": {
+      "entryA11y": "Compartilhe suas estatísticas de leitura",
+      "screenTitle": "Compartilhe sua leitura",
+      "screenSubtitle": "Últimos 30 dias",
+      "preparing": "Preparando seu card",
+      "emptyTitle": "Ainda não há nada para mostrar",
+      "emptyBody": "Leia alguns artigos e seu card vai se preencher. O Mera guarda 30 dias de histórico de leitura neste dispositivo.",
+      "nameToggleLabel": "Mostrar minhas publicações principais",
+      "nameTogglePrivacy": "Desativado por padrão. Nomes de publicações dizem muito sobre você, então só vão para o card se você ativar isso. Títulos de artigos nunca são incluídos.",
+      "shareAction": "Compartilhar",
+      "shareDialogTitle": "Minhas estatísticas de leitura no Mera",
+      "sharingUnavailable": "Compartilhar não está disponível neste dispositivo.",
+      "shareFailed": "Não deu certo. Tente de novo.",
+      "card": {
+        "title": "Minha leitura, últimos 30 dias",
+        "publicationsLabel": "Publicações que você visitou",
+        "countriesLabel": "Países de onde você leu",
+        "latencyLabel": "Tempo médio entre a publicação e a leitura",
+        "latencyCoverage": "Com base em {{sampled}} de {{total}} artigos com horário de publicação conhecido",
+        "latencyUnknown": "Ainda não há horários de publicação suficientes para calcular isso",
+        "openedLabel": "Artigos abertos",
+        "openedPartial": "Contagem parcial. O Mera conta apenas os toques nos seus cards de sugestão.",
+        "topPublicationsTitle": "Publicações principais",
+        "privacyLine": "Calculado só no meu aparelho. Nada saiu dele.",
+        "latencyValue_one": "{{count}} hora",
+        "latencyValue_other": "{{count}} horas"
+      }
+    }
+  },
+  "ru": {
+    "shareStats": {
+      "entryA11y": "Поделиться статистикой чтения",
+      "screenTitle": "Поделитесь чтением",
+      "screenSubtitle": "Последние 30 дней",
+      "preparing": "Готовим вашу карточку",
+      "emptyTitle": "Пока нечего показать",
+      "emptyBody": "Прочитайте несколько статей, и карточка заполнится. Mera хранит историю чтения за 30 дней на этом устройстве.",
+      "nameToggleLabel": "Показать мои основные издания",
+      "nameTogglePrivacy": "По умолчанию выключено. Названия изданий многое говорят о вас, поэтому они попадают на карточку, только если вы это включите. Заголовки статей не добавляются никогда.",
+      "shareAction": "Поделиться",
+      "shareDialogTitle": "Моя статистика чтения в Mera",
+      "sharingUnavailable": "Поделиться на этом устройстве нельзя.",
+      "shareFailed": "Не получилось. Попробуйте ещё раз.",
+      "card": {
+        "title": "Моё чтение за последние 30 дней",
+        "publicationsLabel": "Издания, которые вы открывали",
+        "countriesLabel": "Страны, откуда вы читали",
+        "latencyLabel": "Среднее время от публикации до прочтения",
+        "latencyCoverage": "По {{sampled}} из {{total}} статей с известным временем публикации",
+        "latencyUnknown": "Пока слишком мало известных времён публикации, чтобы это посчитать",
+        "openedLabel": "Открытые статьи",
+        "openedPartial": "Неполный подсчёт. Mera считает только нажатия на карточки предложений.",
+        "topPublicationsTitle": "Основные издания",
+        "privacyLine": "Посчитано только на моём устройстве. Ничего его не покинуло.",
+        "latencyValue_one": "{{count}} час",
+        "latencyValue_few": "{{count}} часа",
+        "latencyValue_many": "{{count}} часов",
+        "latencyValue_other": "{{count}} часа"
+      }
+    }
+  },
+  "th": {
+    "shareStats": {
+      "entryA11y": "แชร์สถิติการอ่านของคุณ",
+      "screenTitle": "แชร์การอ่านของคุณ",
+      "screenSubtitle": "30 วันที่ผ่านมา",
+      "preparing": "กำลังเตรียมการ์ดของคุณ",
+      "emptyTitle": "ยังไม่มีอะไรจะแสดง",
+      "emptyBody": "อ่านบทความสักสองสามเรื่องแล้วการ์ดของคุณจะเต็มขึ้น Mera เก็บประวัติการอ่าน 30 วันไว้บนเครื่องนี้",
+      "nameToggleLabel": "แสดงสำนักข่าวที่ฉันอ่านบ่อย",
+      "nameTogglePrivacy": "ปิดไว้เป็นค่าเริ่มต้น ชื่อสำนักข่าวบอกอะไรเกี่ยวกับคุณได้มาก จึงจะขึ้นบนการ์ดก็ต่อเมื่อคุณเปิดใช้งาน หัวข้อข่าวจะไม่ถูกใส่ลงไปเลย",
+      "shareAction": "แชร์",
+      "shareDialogTitle": "สถิติการอ่านของฉันใน Mera",
+      "sharingUnavailable": "อุปกรณ์นี้ใช้การแชร์ไม่ได้",
+      "shareFailed": "ไม่สำเร็จ ลองอีกครั้ง",
+      "card": {
+        "title": "การอ่านของฉัน 30 วันที่ผ่านมา",
+        "publicationsLabel": "สำนักข่าวที่คุณเข้าอ่าน",
+        "countriesLabel": "ประเทศที่คุณอ่านข่าวจาก",
+        "latencyLabel": "เวลาเฉลี่ยจากเผยแพร่ถึงอ่าน",
+        "latencyCoverage": "คำนวณจาก {{sampled}} จาก {{total}} บทความที่ทราบเวลาเผยแพร่",
+        "latencyUnknown": "ยังมีเวลาเผยแพร่ที่ทราบไม่พอจะคำนวณ",
+        "openedLabel": "บทความที่เปิดอ่าน",
+        "openedPartial": "เป็นตัวเลขบางส่วน Mera นับเฉพาะการแตะการ์ดแนะนำของคุณ",
+        "topPublicationsTitle": "สำนักข่าวที่อ่านบ่อย",
+        "privacyLine": "นับบนเครื่องของฉันเท่านั้น ไม่มีอะไรออกไปข้างนอก",
+        "latencyValue_other": "{{count}} ชั่วโมง"
+      }
+    }
+  },
+  "tr": {
+    "shareStats": {
+      "entryA11y": "Okuma istatistiklerini paylaş",
+      "screenTitle": "Okumanı paylaş",
+      "screenSubtitle": "Son 30 gün",
+      "preparing": "Kartın hazırlanıyor",
+      "emptyTitle": "Henüz gösterilecek bir şey yok",
+      "emptyBody": "Birkaç haber oku, kartın dolmaya başlasın. Mera bu cihazda 30 günlük okuma geçmişi tutar.",
+      "nameToggleLabel": "En çok okuduğum yayınları göster",
+      "nameTogglePrivacy": "Varsayılan olarak kapalı. Yayın adları senin hakkında çok şey söyler, bu yüzden yalnızca sen açarsan karta eklenir. Haber başlıkları hiçbir zaman yer almaz.",
+      "shareAction": "Paylaş",
+      "shareDialogTitle": "Mera okuma istatistiklerim",
+      "sharingUnavailable": "Bu cihazda paylaşım kullanılamıyor.",
+      "shareFailed": "Olmadı. Tekrar dene.",
+      "card": {
+        "title": "Okumalarım, son 30 gün",
+        "publicationsLabel": "Ziyaret ettiğin yayınlar",
+        "countriesLabel": "Haber okuduğun ülkeler",
+        "latencyLabel": "Yayından okumaya geçen ortalama süre",
+        "latencyCoverage": "Yayın saati bilinen {{total}} haberden {{sampled}} tanesine göre",
+        "latencyUnknown": "Bunu hesaplamak için bilinen yayın saati henüz yeterli değil",
+        "openedLabel": "Açılan haberler",
+        "openedPartial": "Kısmi sayım. Mera yalnızca öneri kartlarına dokunuşları sayar.",
+        "topPublicationsTitle": "En çok okunan yayınlar",
+        "privacyLine": "Yalnızca kendi cihazımda sayıldı. Hiçbir şey dışarı çıkmadı.",
+        "latencyValue_one": "{{count}} saat",
+        "latencyValue_other": "{{count}} saat"
+      }
+    }
+  },
+  "uk": {
+    "shareStats": {
+      "entryA11y": "Поділитися статистикою читання",
+      "screenTitle": "Поділіться читанням",
+      "screenSubtitle": "Останні 30 днів",
+      "preparing": "Готуємо вашу картку",
+      "emptyTitle": "Поки що нема чого показати",
+      "emptyBody": "Прочитайте кілька статей, і картка заповниться. Mera зберігає історію читання за 30 днів на цьому пристрої.",
+      "nameToggleLabel": "Показати мої основні видання",
+      "nameTogglePrivacy": "Типово вимкнено. Назви видань багато говорять про вас, тому вони потрапляють на картку, лише якщо ви це ввімкнете. Заголовки статей не додаються ніколи.",
+      "shareAction": "Поділитися",
+      "shareDialogTitle": "Моя статистика читання в Mera",
+      "sharingUnavailable": "Поділитися на цьому пристрої не можна.",
+      "shareFailed": "Не вийшло. Спробуйте ще раз.",
+      "card": {
+        "title": "Моє читання за останні 30 днів",
+        "publicationsLabel": "Видання, які ви відкривали",
+        "countriesLabel": "Країни, звідки ви читали",
+        "latencyLabel": "Середній час від публікації до прочитання",
+        "latencyCoverage": "За {{sampled}} із {{total}} статей із відомим часом публікації",
+        "latencyUnknown": "Поки замало відомих часів публікації, щоб це порахувати",
+        "openedLabel": "Відкриті статті",
+        "openedPartial": "Неповний підрахунок. Mera рахує лише натискання на картки пропозицій.",
+        "topPublicationsTitle": "Основні видання",
+        "privacyLine": "Пораховано лише на моєму пристрої. Нічого його не покинуло.",
+        "latencyValue_one": "{{count}} година",
+        "latencyValue_few": "{{count}} години",
+        "latencyValue_many": "{{count}} годин",
+        "latencyValue_other": "{{count}} години"
+      }
+    }
+  },
+  "vi": {
+    "shareStats": {
+      "entryA11y": "Chia sẻ thống kê đọc của bạn",
+      "screenTitle": "Chia sẻ việc đọc của bạn",
+      "screenSubtitle": "30 ngày qua",
+      "preparing": "Đang chuẩn bị thẻ của bạn",
+      "emptyTitle": "Chưa có gì để hiển thị",
+      "emptyBody": "Đọc vài bài viết và thẻ của bạn sẽ đầy dần. Mera lưu 30 ngày lịch sử đọc trên thiết bị này.",
+      "nameToggleLabel": "Hiển thị các báo tôi đọc nhiều nhất",
+      "nameTogglePrivacy": "Mặc định tắt. Tên báo nói lên nhiều điều về bạn, nên chúng chỉ xuất hiện trên thẻ nếu bạn bật lên. Tiêu đề bài viết không bao giờ được đưa vào.",
+      "shareAction": "Chia sẻ",
+      "shareDialogTitle": "Thống kê đọc của tôi trên Mera",
+      "sharingUnavailable": "Thiết bị này không hỗ trợ chia sẻ.",
+      "shareFailed": "Không thành công. Hãy thử lại.",
+      "card": {
+        "title": "Việc đọc của tôi, 30 ngày qua",
+        "publicationsLabel": "Các báo bạn đã ghé",
+        "countriesLabel": "Các quốc gia bạn đã đọc",
+        "latencyLabel": "Thời gian trung bình từ khi đăng đến khi đọc",
+        "latencyCoverage": "Dựa trên {{sampled}} trong {{total}} bài có thời gian đăng đã biết",
+        "latencyUnknown": "Chưa đủ thời gian đăng đã biết để tính con số này",
+        "openedLabel": "Bài viết đã mở",
+        "openedPartial": "Số đếm một phần. Mera chỉ đếm lượt chạm vào thẻ gợi ý của bạn.",
+        "topPublicationsTitle": "Các báo đọc nhiều nhất",
+        "privacyLine": "Chỉ đếm trên máy của tôi. Không có gì rời khỏi máy.",
+        "latencyValue_other": "{{count}} giờ"
+      }
+    }
+  },
+  "zh-CN": {
+    "shareStats": {
+      "entryA11y": "分享你的阅读统计",
+      "screenTitle": "分享你的阅读",
+      "screenSubtitle": "过去 30 天",
+      "preparing": "正在准备你的卡片",
+      "emptyTitle": "暂时没有可显示的内容",
+      "emptyBody": "读几篇文章，你的卡片就会慢慢填满。Mera 在这台设备上保留 30 天的阅读记录。",
+      "nameToggleLabel": "显示我常读的媒体",
+      "nameTogglePrivacy": "默认关闭。媒体名称会透露不少关于你的信息，所以只有你打开时才会出现在卡片上。文章标题永远不会被加入。",
+      "shareAction": "分享",
+      "shareDialogTitle": "我在 Mera 的阅读统计",
+      "sharingUnavailable": "此设备不支持分享。",
+      "shareFailed": "没有成功，请再试一次。",
+      "card": {
+        "title": "我的阅读，过去 30 天",
+        "publicationsLabel": "你访问过的媒体",
+        "countriesLabel": "你阅读的国家",
+        "latencyLabel": "从发布到阅读的平均时间",
+        "latencyCoverage": "基于 {{total}} 篇中已知发布时间的 {{sampled}} 篇",
+        "latencyUnknown": "已知发布时间的文章还不够，暂时算不出来",
+        "openedLabel": "打开过的文章",
+        "openedPartial": "这是部分统计。Mera 只统计你在推荐卡片上的点按。",
+        "topPublicationsTitle": "常读媒体",
+        "privacyLine": "只在我的设备上统计，没有任何数据离开。",
+        "latencyValue_other": "{{count}} 小时"
+      }
+    }
+  },
+  "zh-TW": {
+    "shareStats": {
+      "entryA11y": "分享你的閱讀統計",
+      "screenTitle": "分享你的閱讀",
+      "screenSubtitle": "過去 30 天",
+      "preparing": "正在準備你的卡片",
+      "emptyTitle": "目前沒有可顯示的內容",
+      "emptyBody": "讀幾篇文章，你的卡片就會慢慢填滿。Mera 在這台裝置上保留 30 天的閱讀紀錄。",
+      "nameToggleLabel": "顯示我常讀的媒體",
+      "nameTogglePrivacy": "預設關閉。媒體名稱會透露不少關於你的資訊，所以只有你開啟時才會出現在卡片上。文章標題永遠不會被加入。",
+      "shareAction": "分享",
+      "shareDialogTitle": "我在 Mera 的閱讀統計",
+      "sharingUnavailable": "此裝置不支援分享。",
+      "shareFailed": "沒有成功，請再試一次。",
+      "card": {
+        "title": "我的閱讀，過去 30 天",
+        "publicationsLabel": "你造訪過的媒體",
+        "countriesLabel": "你閱讀的國家",
+        "latencyLabel": "從發布到閱讀的平均時間",
+        "latencyCoverage": "基於 {{total}} 篇中已知發布時間的 {{sampled}} 篇",
+        "latencyUnknown": "已知發布時間的文章還不夠，暫時算不出來",
+        "openedLabel": "開啟過的文章",
+        "openedPartial": "這是部分統計。Mera 只統計你在推薦卡片上的點按。",
+        "topPublicationsTitle": "常讀媒體",
+        "privacyLine": "只在我的裝置上統計，沒有任何資料離開。",
+        "latencyValue_other": "{{count}} 小時"
+      }
+    }
+  }
+}

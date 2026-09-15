@@ -2599,5 +2599,37 @@
     "added": "تمت إضافة {{publisher}} إلى اشتراكاتك",
     "removed": "تمت إزالة {{publisher}} من اشتراكاتك",
     "coversThisStory": "اشتراكك يغطي هذا الخبر."
+  },
+  "shareStats": {
+    "entryA11y": "شارك إحصاءات قراءتك",
+    "screenTitle": "شارك قراءتك",
+    "screenSubtitle": "آخر 30 يوما",
+    "preparing": "جارٍ تجهيز بطاقتك",
+    "emptyTitle": "لا يوجد ما نعرضه بعد",
+    "emptyBody": "اقرأ بعض المقالات وستمتلئ بطاقتك. يحتفظ Mera بسجل قراءة لمدة 30 يوما على هذا الجهاز.",
+    "nameToggleLabel": "إظهار أبرز المصادر التي أقرأها",
+    "nameTogglePrivacy": "مغلق افتراضيا. أسماء المصادر تكشف الكثير عنك، لذا لا تظهر على البطاقة إلا إذا شغّلت هذا الخيار. عناوين المقالات لا تُدرج أبدا.",
+    "shareAction": "مشاركة",
+    "shareDialogTitle": "إحصاءات قراءتي على Mera",
+    "sharingUnavailable": "المشاركة غير متاحة على هذا الجهاز.",
+    "shareFailed": "لم ينجح ذلك. حاول مرة أخرى.",
+    "card": {
+      "title": "قراءتي خلال آخر 30 يوما",
+      "publicationsLabel": "المصادر التي زرتها",
+      "countriesLabel": "البلدان التي قرأت منها",
+      "latencyLabel": "متوسط الوقت بين النشر والقراءة",
+      "latencyCoverage": "بناء على {{sampled}} من {{total}} مقالا لها وقت نشر معروف",
+      "latencyUnknown": "لا توجد أوقات نشر معروفة كافية لحساب هذا بعد",
+      "openedLabel": "المقالات التي فُتحت",
+      "openedPartial": "عدد جزئي. يحسب Mera النقرات على بطاقات الاقتراحات فقط.",
+      "topPublicationsTitle": "أبرز المصادر",
+      "privacyLine": "حُسبت على جهازي فقط. لم يغادره شيء.",
+      "latencyValue_zero": "{{count}} ساعة",
+      "latencyValue_one": "ساعة واحدة",
+      "latencyValue_two": "ساعتان",
+      "latencyValue_few": "{{count}} ساعات",
+      "latencyValue_many": "{{count}} ساعة",
+      "latencyValue_other": "{{count}} ساعة"
+    }
   }
 }

@@ -2519,5 +2519,33 @@
     "added": "{{publisher}} aboneliklerinize eklendi",
     "removed": "{{publisher}} aboneliklerinizden kaldırıldı",
     "coversThisStory": "Aboneliğiniz bu haberi kapsıyor."
+  },
+  "shareStats": {
+    "entryA11y": "Okuma istatistiklerini paylaş",
+    "screenTitle": "Okumanı paylaş",
+    "screenSubtitle": "Son 30 gün",
+    "preparing": "Kartın hazırlanıyor",
+    "emptyTitle": "Henüz gösterilecek bir şey yok",
+    "emptyBody": "Birkaç haber oku, kartın dolmaya başlasın. Mera bu cihazda 30 günlük okuma geçmişi tutar.",
+    "nameToggleLabel": "En çok okuduğum yayınları göster",
+    "nameTogglePrivacy": "Varsayılan olarak kapalı. Yayın adları senin hakkında çok şey söyler, bu yüzden yalnızca sen açarsan karta eklenir. Haber başlıkları hiçbir zaman yer almaz.",
+    "shareAction": "Paylaş",
+    "shareDialogTitle": "Mera okuma istatistiklerim",
+    "sharingUnavailable": "Bu cihazda paylaşım kullanılamıyor.",
+    "shareFailed": "Olmadı. Tekrar dene.",
+    "card": {
+      "title": "Okumalarım, son 30 gün",
+      "publicationsLabel": "Ziyaret ettiğin yayınlar",
+      "countriesLabel": "Haber okuduğun ülkeler",
+      "latencyLabel": "Yayından okumaya geçen ortalama süre",
+      "latencyCoverage": "Yayın saati bilinen {{total}} haberden {{sampled}} tanesine göre",
+      "latencyUnknown": "Bunu hesaplamak için bilinen yayın saati henüz yeterli değil",
+      "openedLabel": "Açılan haberler",
+      "openedPartial": "Kısmi sayım. Mera yalnızca öneri kartlarına dokunuşları sayar.",
+      "topPublicationsTitle": "En çok okunan yayınlar",
+      "privacyLine": "Yalnızca kendi cihazımda sayıldı. Hiçbir şey dışarı çıkmadı.",
+      "latencyValue_one": "{{count}} saat",
+      "latencyValue_other": "{{count}} saat"
+    }
   }
 }

@@ -2518,5 +2518,32 @@
     "added": "已將 {{publisher}} 加入您的訂閱",
     "removed": "已將 {{publisher}} 從您的訂閱中移除",
     "coversThisStory": "您的訂閱涵蓋這則新聞。"
+  },
+  "shareStats": {
+    "entryA11y": "分享你的閱讀統計",
+    "screenTitle": "分享你的閱讀",
+    "screenSubtitle": "過去 30 天",
+    "preparing": "正在準備你的卡片",
+    "emptyTitle": "目前沒有可顯示的內容",
+    "emptyBody": "讀幾篇文章，你的卡片就會慢慢填滿。Mera 在這台裝置上保留 30 天的閱讀紀錄。",
+    "nameToggleLabel": "顯示我常讀的媒體",
+    "nameTogglePrivacy": "預設關閉。媒體名稱會透露不少關於你的資訊，所以只有你開啟時才會出現在卡片上。文章標題永遠不會被加入。",
+    "shareAction": "分享",
+    "shareDialogTitle": "我在 Mera 的閱讀統計",
+    "sharingUnavailable": "此裝置不支援分享。",
+    "shareFailed": "沒有成功，請再試一次。",
+    "card": {
+      "title": "我的閱讀，過去 30 天",
+      "publicationsLabel": "你造訪過的媒體",
+      "countriesLabel": "你閱讀的國家",
+      "latencyLabel": "從發布到閱讀的平均時間",
+      "latencyCoverage": "基於 {{total}} 篇中已知發布時間的 {{sampled}} 篇",
+      "latencyUnknown": "已知發布時間的文章還不夠，暫時算不出來",
+      "openedLabel": "開啟過的文章",
+      "openedPartial": "這是部分統計。Mera 只統計你在推薦卡片上的點按。",
+      "topPublicationsTitle": "常讀媒體",
+      "privacyLine": "只在我的裝置上統計，沒有任何資料離開。",
+      "latencyValue_other": "{{count}} 小時"
+    }
   }
 }

@@ -2517,5 +2517,32 @@
     "added": "{{publisher}}을(를) 구독 목록에 추가했습니다",
     "removed": "{{publisher}}을(를) 구독 목록에서 삭제했습니다",
     "coversThisStory": "구독 중인 매체가 이 뉴스를 다룹니다."
+  },
+  "shareStats": {
+    "entryA11y": "내 읽기 통계 공유하기",
+    "screenTitle": "읽기 기록 공유",
+    "screenSubtitle": "지난 30일",
+    "preparing": "카드를 준비하는 중",
+    "emptyTitle": "아직 보여줄 것이 없어요",
+    "emptyBody": "기사를 몇 개 읽으면 카드가 채워집니다. Mera는 이 기기에 30일간의 읽기 기록을 보관합니다.",
+    "nameToggleLabel": "자주 읽는 매체 표시",
+    "nameTogglePrivacy": "기본값은 꺼짐입니다. 매체 이름은 당신에 대해 많은 것을 말해주므로, 켤 때만 카드에 표시됩니다. 기사 제목은 절대 포함되지 않습니다.",
+    "shareAction": "공유",
+    "shareDialogTitle": "내 Mera 읽기 통계",
+    "sharingUnavailable": "이 기기에서는 공유를 사용할 수 없습니다.",
+    "shareFailed": "실패했어요. 다시 시도해 주세요.",
+    "card": {
+      "title": "내 읽기, 지난 30일",
+      "publicationsLabel": "방문한 매체",
+      "countriesLabel": "읽은 나라",
+      "latencyLabel": "게시부터 읽기까지 걸린 평균 시간",
+      "latencyCoverage": "게시 시각을 아는 {{total}}건 중 {{sampled}}건 기준",
+      "latencyUnknown": "아직 게시 시각을 아는 기사가 충분하지 않아요",
+      "openedLabel": "열어 본 기사",
+      "openedPartial": "일부만 센 값입니다. Mera는 추천 카드를 누른 횟수만 셉니다.",
+      "topPublicationsTitle": "자주 읽는 매체",
+      "privacyLine": "내 기기에서만 계산했어요. 기기 밖으로 나간 것은 없습니다.",
+      "latencyValue_other": "{{count}}시간"
+    }
   }
 }

@@ -2517,5 +2517,33 @@
     "added": "{{publisher}} se añadió a tus suscripciones",
     "removed": "{{publisher}} se quitó de tus suscripciones",
     "coversThisStory": "Tu suscripción cubre esta noticia."
+  },
+  "shareStats": {
+    "entryA11y": "Comparte tus estadísticas de lectura",
+    "screenTitle": "Comparte tu lectura",
+    "screenSubtitle": "Últimos 30 días",
+    "preparing": "Preparando tu tarjeta",
+    "emptyTitle": "Todavía no hay nada que mostrar",
+    "emptyBody": "Lee algunos artículos y tu tarjeta se irá llenando. Mera guarda 30 días de historial de lectura en este dispositivo.",
+    "nameToggleLabel": "Mostrar mis publicaciones principales",
+    "nameTogglePrivacy": "Desactivado por defecto. Los nombres de las publicaciones dicen mucho de ti, así que solo aparecen en la tarjeta si activas esto. Los títulos de los artículos nunca se incluyen.",
+    "shareAction": "Compartir",
+    "shareDialogTitle": "Mis estadísticas de lectura en Mera",
+    "sharingUnavailable": "Compartir no está disponible en este dispositivo.",
+    "shareFailed": "No funcionó. Inténtalo de nuevo.",
+    "card": {
+      "title": "Mi lectura, últimos 30 días",
+      "publicationsLabel": "Publicaciones que visitaste",
+      "countriesLabel": "Países de los que leíste",
+      "latencyLabel": "Tiempo medio entre la publicación y la lectura",
+      "latencyCoverage": "Basado en {{sampled}} de {{total}} artículos con hora de publicación conocida",
+      "latencyUnknown": "Todavía no hay suficientes horas de publicación conocidas para calcularlo",
+      "openedLabel": "Artículos abiertos",
+      "openedPartial": "Recuento parcial. Mera solo cuenta los toques en tus tarjetas de sugerencias.",
+      "topPublicationsTitle": "Publicaciones principales",
+      "privacyLine": "Calculado solo en mi dispositivo. Nada salió de él.",
+      "latencyValue_one": "{{count}} hora",
+      "latencyValue_other": "{{count}} horas"
+    }
   }
 }

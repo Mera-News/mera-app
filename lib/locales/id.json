@@ -2517,5 +2517,32 @@
     "added": "{{publisher}} ditambahkan ke langganan Anda",
     "removed": "{{publisher}} dihapus dari langganan Anda",
     "coversThisStory": "Langganan Anda mencakup berita ini."
+  },
+  "shareStats": {
+    "entryA11y": "Bagikan statistik bacaan Anda",
+    "screenTitle": "Bagikan bacaan Anda",
+    "screenSubtitle": "30 hari terakhir",
+    "preparing": "Menyiapkan kartu Anda",
+    "emptyTitle": "Belum ada yang bisa ditampilkan",
+    "emptyBody": "Baca beberapa artikel dan kartu Anda akan terisi. Mera menyimpan riwayat bacaan 30 hari di perangkat ini.",
+    "nameToggleLabel": "Tampilkan penerbit teratas saya",
+    "nameTogglePrivacy": "Nonaktif secara bawaan. Nama penerbit mengungkap banyak hal tentang Anda, jadi nama itu hanya muncul di kartu kalau Anda mengaktifkannya. Judul artikel tidak pernah disertakan.",
+    "shareAction": "Bagikan",
+    "shareDialogTitle": "Statistik bacaan saya di Mera",
+    "sharingUnavailable": "Berbagi tidak tersedia di perangkat ini.",
+    "shareFailed": "Gagal. Coba lagi.",
+    "card": {
+      "title": "Bacaan saya, 30 hari terakhir",
+      "publicationsLabel": "Penerbit yang Anda kunjungi",
+      "countriesLabel": "Negara asal bacaan Anda",
+      "latencyLabel": "Rata-rata waktu dari terbit sampai dibaca",
+      "latencyCoverage": "Berdasarkan {{sampled}} dari {{total}} artikel yang waktu terbitnya diketahui",
+      "latencyUnknown": "Belum cukup waktu terbit yang diketahui untuk menghitung ini",
+      "openedLabel": "Artikel yang dibuka",
+      "openedPartial": "Hitungan sebagian. Mera hanya menghitung ketukan pada kartu saran Anda.",
+      "topPublicationsTitle": "Penerbit teratas",
+      "privacyLine": "Dihitung hanya di perangkat saya. Tidak ada yang keluar.",
+      "latencyValue_other": "{{count}} jam"
+    }
   }
 }

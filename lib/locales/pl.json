@@ -2553,5 +2553,35 @@
     "added": "Dodano {{publisher}} do Twoich subskrypcji",
     "removed": "Usunięto {{publisher}} z Twoich subskrypcji",
     "coversThisStory": "Twoja subskrypcja obejmuje ten temat."
+  },
+  "shareStats": {
+    "entryA11y": "Udostępnij swoje statystyki czytania",
+    "screenTitle": "Udostępnij swoje czytanie",
+    "screenSubtitle": "Ostatnie 30 dni",
+    "preparing": "Przygotowywanie karty",
+    "emptyTitle": "Nie ma jeszcze czego pokazać",
+    "emptyBody": "Przeczytaj kilka artykułów, a karta się zapełni. Mera przechowuje 30 dni historii czytania na tym urządzeniu.",
+    "nameToggleLabel": "Pokaż moje najczęściej czytane źródła",
+    "nameTogglePrivacy": "Domyślnie wyłączone. Nazwy źródeł mówią o tobie sporo, więc trafiają na kartę tylko wtedy, gdy to włączysz. Tytuły artykułów nigdy nie są dołączane.",
+    "shareAction": "Udostępnij",
+    "shareDialogTitle": "Moje statystyki czytania w Mera",
+    "sharingUnavailable": "Udostępnianie jest niedostępne na tym urządzeniu.",
+    "shareFailed": "Nie udało się. Spróbuj ponownie.",
+    "card": {
+      "title": "Moje czytanie, ostatnie 30 dni",
+      "publicationsLabel": "Odwiedzone źródła",
+      "countriesLabel": "Kraje, z których czytasz",
+      "latencyLabel": "Średni czas od publikacji do przeczytania",
+      "latencyCoverage": "Na podstawie {{sampled}} z {{total}} artykułów ze znaną godziną publikacji",
+      "latencyUnknown": "Za mało znanych godzin publikacji, aby to obliczyć",
+      "openedLabel": "Otwarte artykuły",
+      "openedPartial": "Liczba częściowa. Mera liczy tylko dotknięcia kart z propozycjami.",
+      "topPublicationsTitle": "Najczęściej czytane źródła",
+      "privacyLine": "Policzone tylko na moim urządzeniu. Nic go nie opuściło.",
+      "latencyValue_one": "{{count}} godzina",
+      "latencyValue_few": "{{count}} godziny",
+      "latencyValue_many": "{{count}} godzin",
+      "latencyValue_other": "{{count}} godziny"
+    }
   }
 }

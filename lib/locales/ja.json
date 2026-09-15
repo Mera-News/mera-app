@@ -2517,5 +2517,32 @@
     "added": "{{publisher}}を購読中のメディアに追加しました",
     "removed": "{{publisher}}を購読中のメディアから削除しました",
     "coversThisStory": "このニュースは購読でお読みいただけます。"
+  },
+  "shareStats": {
+    "entryA11y": "読書の記録を共有",
+    "screenTitle": "読書を共有",
+    "screenSubtitle": "過去30日間",
+    "preparing": "カードを準備しています",
+    "emptyTitle": "まだ表示できるものがありません",
+    "emptyBody": "記事をいくつか読むとカードが埋まります。Mera はこの端末に 30 日分の閲覧履歴を保存します。",
+    "nameToggleLabel": "よく読む媒体を表示",
+    "nameTogglePrivacy": "初期設定ではオフです。媒体名はあなたについて多くを語るため、オンにしたときだけカードに載ります。記事の見出しが含まれることはありません。",
+    "shareAction": "共有",
+    "shareDialogTitle": "Mera の読書記録",
+    "sharingUnavailable": "この端末では共有を利用できません。",
+    "shareFailed": "うまくいきませんでした。もう一度お試しください。",
+    "card": {
+      "title": "私の読書、過去30日間",
+      "publicationsLabel": "訪れた媒体",
+      "countriesLabel": "読んだ国",
+      "latencyLabel": "公開から読むまでの平均時間",
+      "latencyCoverage": "公開時刻がわかっている {{total}} 件中 {{sampled}} 件に基づく",
+      "latencyUnknown": "公開時刻がわかっている記事がまだ足りません",
+      "openedLabel": "開いた記事",
+      "openedPartial": "部分的な数です。Mera はおすすめカードのタップだけを数えます。",
+      "topPublicationsTitle": "よく読む媒体",
+      "privacyLine": "私の端末だけで数えました。外には何も出ていません。",
+      "latencyValue_other": "{{count}} 時間"
+    }
   }
 }

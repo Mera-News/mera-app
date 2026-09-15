@@ -2517,5 +2517,33 @@
     "added": "{{publisher}} aggiunto ai tuoi abbonamenti",
     "removed": "{{publisher}} rimosso dai tuoi abbonamenti",
     "coversThisStory": "Il tuo abbonamento copre questa notizia."
+  },
+  "shareStats": {
+    "entryA11y": "Condividi le tue statistiche di lettura",
+    "screenTitle": "Condividi le tue letture",
+    "screenSubtitle": "Ultimi 30 giorni",
+    "preparing": "Preparazione della tua scheda",
+    "emptyTitle": "Ancora niente da mostrare",
+    "emptyBody": "Leggi qualche articolo e la tua scheda si riempirà. Mera conserva 30 giorni di cronologia di lettura su questo dispositivo.",
+    "nameToggleLabel": "Mostra le mie testate principali",
+    "nameTogglePrivacy": "Disattivato per impostazione predefinita. I nomi delle testate dicono molto di te, quindi finiscono sulla scheda solo se attivi questa opzione. I titoli degli articoli non vengono mai inclusi.",
+    "shareAction": "Condividi",
+    "shareDialogTitle": "Le mie statistiche di lettura su Mera",
+    "sharingUnavailable": "La condivisione non è disponibile su questo dispositivo.",
+    "shareFailed": "Non ha funzionato. Riprova.",
+    "card": {
+      "title": "Le mie letture, ultimi 30 giorni",
+      "publicationsLabel": "Testate che hai visitato",
+      "countriesLabel": "Paesi da cui hai letto",
+      "latencyLabel": "Tempo medio tra pubblicazione e lettura",
+      "latencyCoverage": "Calcolato su {{sampled}} articoli su {{total}} con orario di pubblicazione noto",
+      "latencyUnknown": "Non ci sono ancora abbastanza orari di pubblicazione noti per calcolarlo",
+      "openedLabel": "Articoli aperti",
+      "openedPartial": "Conteggio parziale. Mera conta solo i tocchi sulle tue schede di suggerimento.",
+      "topPublicationsTitle": "Testate principali",
+      "privacyLine": "Calcolato solo sul mio dispositivo. Non è uscito nulla.",
+      "latencyValue_one": "{{count}} ora",
+      "latencyValue_other": "{{count}} ore"
+    }
   }
 }
