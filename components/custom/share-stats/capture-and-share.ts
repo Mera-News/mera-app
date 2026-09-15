@@ -21,11 +21,30 @@
 // share extension, which would mean an app-group entitlement and an Xcode
 // target, and `shareAsync` needs none of it.
 
-import * as Haptics from 'expo-haptics';
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import { captureRef } from 'react-native-view-shot';
 import type { View } from 'react-native';
+
+// NOTHING NATIVE IS IMPORTED AT MODULE SCOPE IN THIS FILE.
+//
+// Expo Router eagerly imports every route file and everything below it at JS
+// boot, so a module-scope `import ... from 'expo-sharing'` here is evaluated
+// before the app has rendered anything. On a client whose BINARY lacks the
+// native module, that throws `Cannot find native module 'ExpoSharing'` during
+// boot and takes the WHOLE APP DOWN, not just this screen. It happened: the
+// Android harness emulator's dev client was built 2026-08-14, three days before
+// the commit that banked these modules, and it crashed at boot with exactly
+// that.
+//
+// The three modules are confirmed present in the 1.3.1 production binary, so
+// this is not a fix for a shipping bug. It is a fix for the BLAST RADIUS: a
+// share card is the least important thing in the app and must never be able to
+// stop it starting. Any older client, any future binary that drops a module,
+// and any dev client built before a dependency lands now loses the share
+// action and nothing else.
+//
+// The imports therefore live inside the action, and a failure to resolve them
+// is reported as `unavailable`, the same state as a device with no share sheet.
+// Keep the route file and the screen free of native imports at module scope
+// too; `share-stats-route-safety.test.ts` fails if this regresses.
 
 /** The share sheet shows this, so it is a name a human reads, not a uuid. */
 const CARD_FILENAME = 'mera-reading-stats.png';
@@ -44,8 +63,11 @@ export function toFileUri(uri: string): string {
 
 /** Best-effort removal of a previous card. Nothing captured is retained past
  *  the share flow: the PNG never reaches WatermelonDB, a cache the app reads
- *  back, or any sync. A failure here is not worth surfacing. */
-function removeIfPresent(file: File): void {
+ *  back, or any sync. A failure here is not worth surfacing.
+ *
+ *  Typed structurally rather than as `File`, because naming that type would
+ *  reintroduce the module-scope import this file exists to avoid. */
+function removeIfPresent(file: { exists: boolean; delete: () => void }): void {
   try {
     if (file.exists) file.delete();
   } catch {
@@ -75,6 +97,28 @@ export async function captureAndShare({
   hostHeight,
   dialogTitle,
 }: CaptureAndShareOptions): Promise<ShareStatsResult> {
+  let Sharing: typeof import('expo-sharing');
+  let Haptics: typeof import('expo-haptics');
+  let File: typeof import('expo-file-system').File;
+  let Paths: typeof import('expo-file-system').Paths;
+  let captureRef: typeof import('react-native-view-shot').captureRef;
+
+  try {
+    // Resolved HERE, on the user's tap, never at import time. A client whose
+    // binary lacks one of these throws on evaluation, and catching it costs the
+    // share button rather than the app.
+    [Sharing, Haptics, { File, Paths }, { captureRef }] = await Promise.all([
+      import('expo-sharing'),
+      import('expo-haptics'),
+      import('expo-file-system'),
+      import('react-native-view-shot'),
+    ]);
+  } catch {
+    // A missing native module IS unavailability, so the user gets the inline
+    // "sharing is not available" line rather than a generic failure.
+    return { status: 'unavailable' };
+  }
+
   try {
     // Gate BEFORE capturing. Rasterising a card nobody can share is work the
     // user waits for and never sees the point of.
