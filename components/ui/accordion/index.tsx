@@ -18,10 +18,7 @@ const accordionStyle = tva({
   base: 'w-full',
   variants: {
     variant: {
-      // Was `bg-white`, which now aliases to Shadow Grey in light mode and would
-      // paint a DARK card on a light page. This variant has no call sites, so the
-      // change moves no pixels today.
-      filled: 'bg-background-50 shadow-hard-2',
+      filled: 'bg-white shadow-hard-2',
       unfilled: '',
     },
     size: {

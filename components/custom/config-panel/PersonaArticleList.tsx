@@ -104,7 +104,7 @@ const PersonaArticleList: React.FC<PersonaArticleListProps> = ({ topicTexts, fac
                     <TranslatableDynamic
                         text={factStatement}
                         size="lg"
-                        className="text-typography-0 font-semibold"
+                        className="text-white font-semibold"
                         numberOfLines={0}
                     />
                 ) : undefined}

@@ -2,7 +2,6 @@
 // deleted / config updated) produced by a tool call. No delete/undo behavior
 // yet — display only.
 
-import { THEME_COLORS } from '@/lib/theme';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,8 +11,9 @@ import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import type { FactCardAction } from './types';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)';
+
+// Fade + slide up with a slight scale-up (0.97 → 1). Custom entering builder so
 // the scale rides the same ~280ms curve as the fade/slide (FadeInDown alone
 // can't express scale).
 function factCardEntering() {

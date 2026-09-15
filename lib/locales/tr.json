@@ -1543,12 +1543,7 @@
     "sectionStartup": "Başlangıç sekmesi",
     "startupTabA11y": "Başlangıç sekmesi, {{label}}",
     "startupTabDescription": "Mera uygulamasını açtığınızda hangi sekmede başlamasını istediğinizi seçin.",
-    "startupTabTitle": "Başlangıçta açılacak sekme",
-    "sectionAppearance": "Görünüm",
-    "themeTitle": "Tema",
-    "themeDescription": "Mera'nın nasıl görüneceğini seçin.",
-    "themeDark": "Koyu",
-    "themeLight": "Açık"
+    "startupTabTitle": "Başlangıçta açılacak sekme"
   },
   "freeTier": {
     "cardBody": "Mera'nın yapay zeka kısmı şu an kapalı. Kaydettiğiniz, takip ettiğiniz veya okuduğunuz her şey bu cihazda kalıyor ve Keşfet sekmesinde hâlâ bugünün haberlerine erişebilirsiniz. Bir plan olmadan Mera sizin akışınızı oluşturamaz, sorularınızı cevaplayamaz ya da yeni haberleri takip edemez. Bir plan başlatın ve her şey geri gelir.",

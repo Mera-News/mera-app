@@ -116,7 +116,7 @@ const PinSetupScreen: React.FC<PinSetupScreenProps> = ({
           <MeraLogo size={88} />
 
           <VStack className="items-center" space="xs">
-            <Text className="text-typography-0 text-xl font-semibold">{heading}</Text>
+            <Text className="text-white text-xl font-semibold">{heading}</Text>
             <Text className="text-typography-500 text-sm text-center">{sub}</Text>
           </VStack>
 

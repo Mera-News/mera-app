@@ -464,7 +464,7 @@ const BackupSection: React.FC = () => {
               ? 'text-base text-gray-600'
               : options.destructive
                 ? 'text-base text-red-400'
-                : 'text-base text-typography-0'
+                : 'text-base text-white'
           }
         >
           {title}
@@ -478,7 +478,7 @@ const BackupSection: React.FC = () => {
 
   const codeBox = () => (
     <Box className="bg-gray-900 border border-gray-700 rounded-lg p-4">
-      <Text className="text-typography-0 text-center" style={{ fontFamily: 'monospace', lineHeight: 26 }}>
+      <Text className="text-white text-center" style={{ fontFamily: 'monospace', lineHeight: 26 }}>
         {code ?? ''}
       </Text>
     </Box>
@@ -565,7 +565,7 @@ const BackupSection: React.FC = () => {
     if (stage === 'code') {
       return (
         <VStack space="sm">
-          <Text className="text-typography-0 font-semibold">{t('backup.codeTitle')}</Text>
+          <Text className="text-white font-semibold">{t('backup.codeTitle')}</Text>
           <Text size="sm" className="text-gray-400">
             {t('backup.codeDescription')}
           </Text>
@@ -595,7 +595,7 @@ const BackupSection: React.FC = () => {
     if (stage === 'where') {
       return (
         <VStack space="sm">
-          <Text className="text-typography-0 font-semibold">{t('backup.whereTitle')}</Text>
+          <Text className="text-white font-semibold">{t('backup.whereTitle')}</Text>
           <Text size="sm" className="text-gray-400">
             {t('backup.whereDescription')}
           </Text>
@@ -630,7 +630,7 @@ const BackupSection: React.FC = () => {
     if (stage === 'when') {
       return (
         <VStack space="sm">
-          <Text className="text-typography-0 font-semibold">{t('backup.whenTitle')}</Text>
+          <Text className="text-white font-semibold">{t('backup.whenTitle')}</Text>
           {CADENCES.map((c) =>
             row(
               c === 'manual' ? 'touch-app' : 'schedule',
@@ -648,7 +648,7 @@ const BackupSection: React.FC = () => {
     return (
       <VStack space="sm">
         <Box className="bg-gray-900 border border-gray-700 rounded-lg p-4">
-          <Text className="text-typography-0">
+          <Text className="text-white">
             {t('backup.statusProvider', {
               provider: t(id === 'icloud' ? 'backup.icloud' : 'backup.drive'),
             })}
@@ -713,7 +713,7 @@ const BackupSection: React.FC = () => {
     <Box className="border border-gray-700 rounded-lg p-4 mb-5" testID="backup-section">
       <Box className="flex-row items-center mb-3">
         <MaterialIcons name="cloud-upload" size={22} color="#ffffff" />
-        <Text className="ml-3 text-base text-typography-0 flex-1">{t('backup.title')}</Text>
+        <Text className="ml-3 text-base text-white flex-1">{t('backup.title')}</Text>
       </Box>
 
       {body()}
@@ -731,7 +731,7 @@ const BackupSection: React.FC = () => {
         <ModalBackdrop />
         <ModalContent className="bg-gray-900 border border-gray-700">
           <ModalHeader>
-            <Text className="text-lg font-semibold text-typography-0">{t('backup.codeTitle')}</Text>
+            <Text className="text-lg font-semibold text-white">{t('backup.codeTitle')}</Text>
           </ModalHeader>
           <ModalBody>
             <VStack space="md">
@@ -754,7 +754,7 @@ const BackupSection: React.FC = () => {
         <ModalBackdrop />
         <ModalContent className="bg-gray-900 border border-gray-700">
           <ModalHeader>
-            <Text className="text-lg font-semibold text-typography-0">{t('backup.restore')}</Text>
+            <Text className="text-lg font-semibold text-white">{t('backup.restore')}</Text>
           </ModalHeader>
           <ModalBody>
             <VStack space="sm">
@@ -767,7 +767,7 @@ const BackupSection: React.FC = () => {
                     className="py-3 px-3 border border-gray-700 rounded-lg"
                     onPress={() => setRestoreTarget(path)}
                   >
-                    <Text className="text-typography-0">{path.split('/').pop()}</Text>
+                    <Text className="text-white">{path.split('/').pop()}</Text>
                   </Pressable>
                 ))
               )}

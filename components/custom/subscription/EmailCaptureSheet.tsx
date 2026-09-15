@@ -284,7 +284,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'email' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-typography-0 font-semibold text-center">
+                                <Text size="2xl" className="text-white font-semibold text-center">
                                     {t('emailCapture.title')}
                                 </Text>
                                 <Text size="md" className="text-gray-300 text-center">
@@ -321,7 +321,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     {busy ? (
                                         <Spinner size="small" color="black" />
                                     ) : (
-                                        <Text className="text-pure-black text-base font-semibold">
+                                        <Text className="text-black text-base font-semibold">
                                             {t('emailCapture.continue')}
                                         </Text>
                                     )}
@@ -360,7 +360,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'otp' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-typography-0 font-semibold text-center">
+                                <Text size="2xl" className="text-white font-semibold text-center">
                                     {t('emailCapture.title')}
                                 </Text>
                                 <Text size="md" className="text-gray-300 text-center">
@@ -420,7 +420,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     {busy ? (
                                         <Spinner size="small" color="black" />
                                     ) : (
-                                        <Text className="text-pure-black text-base font-semibold">
+                                        <Text className="text-black text-base font-semibold">
                                             {t('emailCapture.confirm')}
                                         </Text>
                                     )}
@@ -445,7 +445,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'skip-confirm' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-typography-0 font-semibold text-center">
+                                <Text size="2xl" className="text-white font-semibold text-center">
                                     {t('emailCapture.skipTitle')}
                                 </Text>
                                 <Text size="md" className="text-gray-300 text-center">
@@ -464,7 +464,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                         >
                                             <Text
                                                 size="md"
-                                                className="text-typography-0 font-semibold"
+                                                className="text-white font-semibold"
                                                 testID="email-capture-support-id"
                                             >
                                                 {t('support.supportId', { id: supportId })}
@@ -502,7 +502,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('emailCapture.skipConfirm')}
                                     className="h-14 rounded-full items-center justify-center bg-primary-500 mt-2"
                                 >
-                                    <Text className="text-pure-black text-base font-semibold">
+                                    <Text className="text-black text-base font-semibold">
                                         {t('emailCapture.skipConfirm')}
                                     </Text>
                                 </Pressable>
@@ -523,7 +523,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
 
                         {step === 'done' && (
                             <VStack accessible={false} space="md">
-                                <Text size="2xl" className="text-typography-0 font-semibold text-center">
+                                <Text size="2xl" className="text-white font-semibold text-center">
                                     {t('emailCapture.added')}
                                 </Text>
                                 <Text size="md" className="text-gray-300 text-center">
@@ -537,7 +537,7 @@ export function EmailCaptureSheet({ isOpen, onClose, source, onOutcome }: EmailC
                                     accessibilityLabel={t('common.done')}
                                     className="h-14 rounded-full items-center justify-center bg-primary-500 mt-2"
                                 >
-                                    <Text className="text-pure-black text-base font-semibold">
+                                    <Text className="text-black text-base font-semibold">
                                         {t('common.done')}
                                     </Text>
                                 </Pressable>

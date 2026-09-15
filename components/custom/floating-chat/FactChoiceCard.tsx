@@ -20,7 +20,6 @@
 // so routing this through the proposal slot would disable the forced-extraction
 // safety net for the whole pending window.
 
-import { THEME_COLORS } from '@/lib/theme';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -35,8 +34,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)';
 
 function cardEntering() {
   'worklet';
@@ -222,7 +220,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
             className="flex-1 rounded-full bg-primary-400"
             size="sm"
           >
-            <ButtonText className="text-typography-0 text-sm">{t('factChoice.add')}</ButtonText>
+            <ButtonText className="text-white text-sm">{t('factChoice.add')}</ButtonText>
           </Button>
         </View>
       )}

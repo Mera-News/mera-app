@@ -1541,12 +1541,7 @@
     "sectionStartup": "Tab Startup",
     "startupTabA11y": "Tab Startup, {{label}}",
     "startupTabDescription": "Pilih tab mana yang dibuka Mera saat Anda meluncurkan aplikasi.",
-    "startupTabTitle": "Buka saat diluncurkan",
-    "sectionAppearance": "Tampilan",
-    "themeTitle": "Tema",
-    "themeDescription": "Pilih tampilan Mera.",
-    "themeDark": "Gelap",
-    "themeLight": "Terang"
+    "startupTabTitle": "Buka saat diluncurkan"
   },
   "freeTier": {
     "cardBody": "Bagian AI dari Mera saat ini dimatikan. Apa pun yang telah Anda simpan, ikuti, atau baca tetap tersimpan di perangkat ini, dan Eksplorasi masih menampilkan berita utama hari ini. Tanpa paket, Mera tidak akan membangun feed Anda, menjawab pertanyaan, atau mengikuti cerita baru. Mulai paket dan semuanya kembali.",

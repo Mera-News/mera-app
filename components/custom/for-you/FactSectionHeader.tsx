@@ -1,4 +1,3 @@
-import { THEME_COLORS } from '@/lib/theme';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -11,8 +10,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 interface FactSectionHeaderProps {
   /** The fact's display title (rendered after the "News about:" prefix). */
@@ -73,10 +71,10 @@ const FactSectionHeader: React.FC<FactSectionHeaderProps> = ({
       // ("Works as a software engineer buildin…") was unreadable and the full
       // text appeared nowhere else.
       numberOfLines={2}
-      className="text-typography-0"
+      className="text-white"
     />
   ) : (
-    <Text size="lg" bold numberOfLines={2} className="text-typography-0">
+    <Text size="lg" bold numberOfLines={2} className="text-white">
       {title}
     </Text>
   );

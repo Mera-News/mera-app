@@ -185,7 +185,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     has one. */}
                 <Heading
                     size="4xl"
-                    className="text-typography-0 flex-1 mr-3"
+                    className="text-white flex-1 mr-3"
                     numberOfLines={1}
                 >
                     {t('tabs.profile')}
@@ -201,8 +201,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     className="rounded-full flex-shrink-0"
                     onPress={() => router.push('/tutorials' as any)}
                 >
-                    <ButtonIcon as={HelpCircleIcon} className="mr-1 text-typography-0" />
-                    <ButtonText className="text-typography-0">
+                    <ButtonIcon as={HelpCircleIcon} className="mr-1 text-white" />
+                    <ButtonText className="text-white">
                         {t('tutorials.learnAboutMera')}
                     </ButtonText>
                 </Button>
@@ -276,7 +276,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ userId }) => {
                     <ModalHeader className="pb-3">
                         <HStack className="items-center" space="xs">
                             <MaterialIcons name="info-outline" size={18} color="#9ca3af" />
-                            <Text className="text-base font-semibold text-typography-0">{t('configPanel.articleAnalysisTitle')}</Text>
+                            <Text className="text-base font-semibold text-white">{t('configPanel.articleAnalysisTitle')}</Text>
                         </HStack>
                     </ModalHeader>
                     <ModalBody className="py-4">

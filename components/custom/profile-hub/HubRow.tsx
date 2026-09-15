@@ -48,7 +48,7 @@ const HubRow: React.FC<HubRowProps> = ({
             <HStack className="items-center flex-1 mr-2" space="md">
                 <MaterialIcons name={icon} size={22} color={iconColor} />
                 <VStack className="flex-1">
-                    <Text className="text-base text-typography-0">{label}</Text>
+                    <Text className="text-base text-white">{label}</Text>
                     {subtitle ? (
                         <Text size="xs" className="text-gray-500 mt-0.5" numberOfLines={1}>
                             {subtitle}
@@ -64,7 +64,7 @@ const HubRow: React.FC<HubRowProps> = ({
                         // and a hard 22pt box clipped it.
                         style={{ minWidth: 22, minHeight: 22, backgroundColor: badgeColor }}
                     >
-                        <Text size="xs" scaleTier="chrome" className="text-pure-black font-bold">{badgeCount}</Text>
+                        <Text size="xs" scaleTier="chrome" className="text-black font-bold">{badgeCount}</Text>
                     </VStack>
                 ) : null}
                 <MaterialIcons name="chevron-right" size={20} color="#6b7280" />

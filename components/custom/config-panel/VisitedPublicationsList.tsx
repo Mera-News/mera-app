@@ -1,4 +1,3 @@
-import { useThemeColors } from '@/lib/theme';
 import { SourceFlag } from '@/components/custom/SourceFlag';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
@@ -62,7 +61,6 @@ const VisitedPublicationsList: React.FC<Props> = ({
 }) => {
     const insets = useSafeAreaInsets();
     const { t } = useTranslation();
-    const themeColors = useThemeColors();
     const [items, setItems] = useState<VisitedPublication[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -125,7 +123,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                 >
                     <SourceFlag countryCode={item.countryCode} size="xl" />
                     <VStack className="flex-1" space="xs">
-                        <Text size="md" className="text-typography-0" numberOfLines={1}>
+                        <Text size="md" className="text-white" numberOfLines={1}>
                             {item.publicationName}
                         </Text>
                         <Text size="xs" className="text-gray-400">
@@ -133,7 +131,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                         </Text>
                     </VStack>
                     <Box className="px-2.5 py-1 rounded-full border border-white">
-                        <Text size="xs" bold className="text-typography-0">
+                        <Text size="xs" bold className="text-white">
                             {item.visitCount}
                         </Text>
                     </Box>
@@ -146,7 +144,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
 
     const ListHeader = (
         <Box className="mx-4 mt-3 mb-2 p-3 rounded-lg border border-white">
-            <Text size="xs" italic className="text-typography-0">
+            <Text size="xs" italic className="text-white">
                 {t('publicationVisits.screenIntro')}
             </Text>
         </Box>
@@ -243,7 +241,7 @@ const VisitedPublicationsList: React.FC<Props> = ({
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            tintColor={themeColors.refreshTint}
+                            tintColor="#ffffff"
                             colors={['#ffffff']}
                             // Without this the spinner drops from behind the
                             // collapsing header — the same leg DashboardSectionsFeed

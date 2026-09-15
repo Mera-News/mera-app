@@ -1,5 +1,3 @@
-import { THEME_COLORS } from '@/lib/theme';
-import { useThemeStore } from '@/lib/stores/theme-store';
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import PinLockScreen from '@/components/custom/auth/PinLockScreen';
 import PinSetupScreen from '@/components/custom/auth/PinSetupScreen';
@@ -101,19 +99,8 @@ interface DisplaySettingsScreenProps {
  * header and `px-5` on the body, so the back arrow sat 4pt left of everything
  * it introduced.
  */
-/** Light and Dark only. See the Appearance block below for why System is absent. */
-const THEME_CHOICES = [
-  { value: 'dark' as const, labelKey: 'display.themeDark' as const, icon: 'dark-mode' as const },
-  { value: 'light' as const, labelKey: 'display.themeLight' as const, icon: 'light-mode' as const },
-];
-
 const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack }) => {
   const { t } = useTranslation();
-  // Three separate selectors, not one object: zustand compares by Object.is, so
-  // returning a fresh object would re-render this screen on every store write.
-  const themePreference = useThemeStore((s) => s.preference);
-  const themeHydrated = useThemeStore((s) => s.hydrated);
-  const setThemePreference = useThemeStore((s) => s.setPreference);
   const insets = useSafeAreaInsets();
   const toast = useToast();
 
@@ -260,7 +247,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
           >
             <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
           </Pressable>
-          <Text size="lg" className="text-typography-0 font-semibold">
+          <Text size="lg" className="text-white font-semibold">
             {t('display.screenTitle')}
           </Text>
         </HStack>
@@ -286,7 +273,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               <HStack space="md" className="items-center">
                 <MaterialIcons name="format-size" size={24} color="#9ca3af" />
                 <VStack className="flex-1">
-                  <Text className="text-base text-typography-0">{t('display.textSizeTitle')}</Text>
+                  <Text className="text-base text-white">{t('display.textSizeTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
                     {t('display.textSizeDescription')}
                   </Text>
@@ -326,7 +313,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                       <Text
                         scaleTier="chrome"
                         style={{ fontSize: Math.round(13 * step) }}
-                        className={active ? 'text-pure-black font-bold' : 'text-gray-300 font-bold'}
+                        className={active ? 'text-black font-bold' : 'text-gray-300 font-bold'}
                       >
                         A
                       </Text>
@@ -334,7 +321,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                         size="2xs"
                         scaleTier="chrome"
                         numberOfLines={1}
-                        className={active ? 'text-pure-black' : 'text-gray-500'}
+                        className={active ? 'text-black' : 'text-gray-500'}
                       >
                         {label}
                       </Text>
@@ -356,7 +343,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               <Text size="2xs" className="text-gray-500 uppercase font-semibold">
                 {t('display.textSizePreviewLabel')}
               </Text>
-              <Text size="lg" className="text-typography-0 font-semibold">
+              <Text size="lg" className="text-white font-semibold">
                 {t('display.textSizePreviewHeadline')}
               </Text>
               <Text size="sm" className="text-gray-400">
@@ -370,67 +357,6 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
           </VStack>
 
           {/* ── Visuals ──────────────────────────────────────────────────── */}
-          {/* APPEARANCE.
-
-              Renders NO selection until the theme store has hydrated. The store
-              defaults to 'dark', so painting a selection early would show Dark
-              ticked to a user whose stored preference is Light, then silently
-              swap under them a frame later.
-
-              There is deliberately no "System" option. iOS pins
-              UIUserInterfaceStyle to Dark in app.json, so `Appearance` can never
-              report anything else and a System choice would quietly mean Dark.
-              It arrives with the native release that removes that pin. */}
-          <VStack className="px-5 mb-6">
-            <Text size="xs" className="text-gray-500 font-semibold mb-2 uppercase">
-              {t('display.sectionAppearance')}
-            </Text>
-
-            <VStack className="py-3 px-4 border border-gray-700 rounded-lg">
-              <Text className="text-base text-typography-0">{t('display.themeTitle')}</Text>
-              <Text size="sm" className="text-gray-400 mt-1 mb-3">
-                {t('display.themeDescription')}
-              </Text>
-
-              <HStack space="sm">
-                {THEME_CHOICES.map(({ value, labelKey, icon }) => {
-                  // `hydrated` gates the tick, not the press: a user who taps
-                  // before hydration still gets what they asked for.
-                  const active = themeHydrated && themePreference === value;
-                  return (
-                    <Pressable
-                      key={value}
-                      testID={`theme-option-${value}`}
-                      accessibilityRole="button"
-                      accessibilityState={{ selected: active }}
-                      onPress={() => void setThemePreference(value)}
-                      className={`flex-1 items-center justify-center rounded-lg border py-3 ${
-                        active
-                          ? 'bg-primary-400 border-primary-400'
-                          : 'bg-transparent border-gray-700'
-                      }`}
-                      style={{ minHeight: 44 }}
-                    >
-                      <HStack space="xs" className="items-center">
-                        <MaterialIcons
-                          name={icon}
-                          size={16}
-                          color={active ? THEME_COLORS.light.typography950 : THEME_COLORS.dark.typography600}
-                        />
-                        <Text
-                          scaleTier="chrome"
-                          className={active ? 'text-pure-black font-semibold' : 'text-gray-300 font-semibold'}
-                        >
-                          {t(labelKey)}
-                        </Text>
-                      </HStack>
-                    </Pressable>
-                  );
-                })}
-              </HStack>
-            </VStack>
-          </VStack>
-
           {/* Unlike before, this section is NOT gated as a whole: blur images
               (folded in from Security) must survive on Android, which only
               hides the static-gradient row below (see
@@ -448,7 +374,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                   color={blurImages ? '#10b981' : '#9ca3af'}
                 />
                 <VStack className="flex-1">
-                  <Text className="text-base text-typography-0">{t('security.blurImagesTitle')}</Text>
+                  <Text className="text-base text-white">{t('security.blurImagesTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
                     {t('security.blurImagesDescription')}
                   </Text>
@@ -467,7 +393,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                     color={staticGradient ? '#10b981' : '#9ca3af'}
                   />
                   <VStack className="flex-1">
-                    <Text className="text-base text-typography-0">{t('display.staticGradientTitle')}</Text>
+                    <Text className="text-base text-white">{t('display.staticGradientTitle')}</Text>
                     <Text size="sm" className="text-gray-400 mt-0.5">
                       {t('display.staticGradientDescription')}
                     </Text>
@@ -498,7 +424,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                   color={lockEnabled ? '#10b981' : '#9ca3af'}
                 />
                 <VStack className="flex-1">
-                  <Text className="text-base text-typography-0">{t('security.requirePinTitle')}</Text>
+                  <Text className="text-base text-white">{t('security.requirePinTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
                     {t('security.requirePinDescription')}
                   </Text>
@@ -522,7 +448,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                   setMode('verify');
                 }}
               >
-                <Text className="text-base text-typography-0">{t('security.changePin')}</Text>
+                <Text className="text-base text-white">{t('security.changePin')}</Text>
                 <MaterialIcons name="chevron-right" size={20} color="#999999" />
               </Pressable>
             )}
@@ -538,7 +464,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
               <HStack space="md" className="items-center">
                 <MaterialIcons name="open-in-new" size={24} color="#9ca3af" />
                 <VStack className="flex-1">
-                  <Text className="text-base text-typography-0">{t('display.startupTabTitle')}</Text>
+                  <Text className="text-base text-white">{t('display.startupTabTitle')}</Text>
                   <Text size="sm" className="text-gray-400 mt-0.5">
                     {t('display.startupTabDescription')}
                   </Text>
@@ -574,7 +500,7 @@ const DisplaySettingsScreen: React.FC<DisplaySettingsScreenProps> = ({ onBack })
                         size="2xs"
                         scaleTier="chrome"
                         numberOfLines={1}
-                        className={active ? 'text-pure-black mt-0.5' : 'text-gray-500 mt-0.5'}
+                        className={active ? 'text-black mt-0.5' : 'text-gray-500 mt-0.5'}
                       >
                         {label}
                       </Text>

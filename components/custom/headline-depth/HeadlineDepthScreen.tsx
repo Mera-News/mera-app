@@ -193,7 +193,7 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
                                     className="flex-row items-center px-4 py-3 border-b border-gray-800"
                                 >
                                     {glyph ? <Text className="text-xl mr-2">{glyph}</Text> : null}
-                                    <Text size="md" className="text-typography-0 flex-1 mr-2" numberOfLines={1}>
+                                    <Text size="md" className="text-white flex-1 mr-2" numberOfLines={1}>
                                         {label}
                                     </Text>
                                     <View
@@ -233,7 +233,7 @@ const HeadlineDepthScreen: React.FC<HeadlineDepthScreenProps> = ({ onBack }) => 
                                                     >
                                                         <Text
                                                             size="sm"
-                                                            className={selected ? 'text-pure-black' : 'text-gray-300'}
+                                                            className={selected ? 'text-black' : 'text-gray-300'}
                                                         >
                                                             {t('headlineDepth.optionLabel', { n: option })}
                                                         </Text>

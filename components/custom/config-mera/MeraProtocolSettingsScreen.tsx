@@ -1,6 +1,7 @@
 import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdrop';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { HStack } from '@/components/ui/hstack';
 import { Modal, ModalBackdrop, ModalBody, ModalContent, ModalFooter, ModalHeader } from '@/components/ui/modal';
 import { Pressable } from '@/components/ui/pressable';
@@ -488,7 +489,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             : 'border-gray-700 bg-background-50';
 
         const iconColor = selected ? '#34d399' : '#9ca3af';
-        const titleClass = selected ? 'text-emerald-400' : 'text-typography-0';
+        const titleClass = selected ? 'text-emerald-400' : 'text-white';
 
         return (
             <Pressable
@@ -515,7 +516,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             {/* Header text for onboarding */}
             {isOnboarding && (
                 <VStack className="mb-8 px-5">
-                    <Text className="text-3xl font-bold text-typography-0 text-center mb-3">
+                    <Text className="text-3xl font-bold text-white text-center mb-3">
                         {t('meraProtocol.title')}
                     </Text>
                 </VStack>
@@ -524,7 +525,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             {/* Processing Mode Segmented Control */}
             <Box className="px-5 mb-6">
                 <HStack className="items-center justify-between mb-3">
-                    <Text className="text-typography-0 text-lg font-semibold">
+                    <Text className="text-white text-lg font-semibold">
                         {t('meraProtocol.processingModeTitle')}
                     </Text>
                     {isUpdatingMode && <Spinner size="small" />}
@@ -544,7 +545,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
 
                     <Box className="px-5 mb-6">
                         <HStack className="items-center justify-between mb-1">
-                            <Text className="text-typography-0 text-lg font-semibold">{t('meraProtocol.aiModel')}</Text>
+                            <Text className="text-white text-lg font-semibold">{t('meraProtocol.aiModel')}</Text>
                             {(modelState === 'downloaded' || modelState === 'ready') && (
                                 <Pressable
                                     onPress={handleDeleteModel}
@@ -650,7 +651,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             color={relevanceV4 ? "#10b981" : "#9ca3af"}
                         />
                         <VStack className="flex-1">
-                            <Text className="text-typography-0 text-base font-semibold">
+                            <Text className="text-white text-base font-semibold">
                                 {t('meraProtocol.relevanceV4Title')}
                             </Text>
                             <Text className="text-typography-500 text-sm mt-0.5">
@@ -696,7 +697,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                         />
                         <VStack className="flex-1">
                             <HStack space="xs" className="items-center">
-                                <Text className="text-typography-0 text-base font-semibold">
+                                <Text className="text-white text-base font-semibold">
                                     {t('meraProtocol.webSearchTitle')}
                                 </Text>
                                 <BetaBadge />
@@ -738,7 +739,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                                 color={autoCommunityFactCheck ? "#10b981" : "#9ca3af"}
                             />
                             <VStack className="flex-1">
-                                <Text className="text-typography-0 text-base font-semibold">
+                                <Text className="text-white text-base font-semibold">
                                     {t('meraProtocol.autoCommunityFactCheckTitle')}
                                 </Text>
                                 <Text className="text-typography-500 text-sm mt-0.5">
@@ -774,7 +775,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             color={deepInterview ? "#10b981" : "#9ca3af"}
                         />
                         <VStack className="flex-1">
-                            <Text className="text-typography-0 text-base font-semibold">
+                            <Text className="text-white text-base font-semibold">
                                 {t('meraProtocol.deepInterviewTitle')}
                             </Text>
                             <Text className="text-typography-500 text-sm mt-0.5">
@@ -810,7 +811,7 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
                             color={showExtractedMetadata ? "#10b981" : "#9ca3af"}
                         />
                         <VStack className="flex-1">
-                            <Text className="text-typography-0 text-base font-semibold">
+                            <Text className="text-white text-base font-semibold">
                                 {t('meraProtocol.extractedMetadataTitle')}
                             </Text>
                             <Text className="text-typography-500 text-sm mt-0.5">
@@ -1022,28 +1023,30 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
             );
         }
         return (
-              <Box className="flex-1">
-                  {/* Page background. Must be the FIRST child so it paints behind
-                      everything else on the page. */}
-                  <AbstractGradientBackdrop />
+            <GluestackUIProvider mode="dark">
+                <Box className="flex-1">
+                    {/* Page background. Must be the FIRST child so it paints behind
+                        everything else on the page. */}
+                    <AbstractGradientBackdrop />
 
-                  {onBack && (
-                      <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                          <Pressable
-                              onPress={onBack}
-                              className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                          >
-                              <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                          </Pressable>
-                      </Box>
-                  )}
-                  <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                      <Text className="text-xl font-semibold text-typography-0 text-center">{t('meraProtocol.title')}</Text>
-                  </VStack>
-                  <VStack className="flex-1 justify-center items-center">
-                      <Spinner size="large" />
-                  </VStack>
-              </Box>
+                    {onBack && (
+                        <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
+                            <Pressable
+                                onPress={onBack}
+                                className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                            >
+                                <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                            </Pressable>
+                        </Box>
+                    )}
+                    <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
+                        <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
+                    </VStack>
+                    <VStack className="flex-1 justify-center items-center">
+                        <Spinner size="large" />
+                    </VStack>
+                </Box>
+            </GluestackUIProvider>
         );
     }
 
@@ -1063,31 +1066,33 @@ const MeraProtocolSettingsScreen: React.FC<MeraProtocolSettingsScreenProps> = ({
     void isOnDevice;
 
     return (
-          <Box className="flex-1">
-              {/* Page background. Must be the FIRST child so it paints behind
-                  everything else on the page. */}
-              <AbstractGradientBackdrop />
+        <GluestackUIProvider mode="dark">
+            <Box className="flex-1">
+                {/* Page background. Must be the FIRST child so it paints behind
+                    everything else on the page. */}
+                <AbstractGradientBackdrop />
 
-              {onBack && (
-                  <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
-                      <Pressable
-                          onPress={onBack}
-                          className="bg-gray-900 rounded-full p-3 shadow-hard-2"
-                      >
-                          <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
-                      </Pressable>
-                  </Box>
-              )}
+                {onBack && (
+                    <Box style={{ position: 'absolute', top: insets.top + 16, left: 16, zIndex: 20 }}>
+                        <Pressable
+                            onPress={onBack}
+                            className="bg-gray-900 rounded-full p-3 shadow-hard-2"
+                        >
+                            <MaterialIcons name="arrow-back" size={24} color="#ffffff" />
+                        </Pressable>
+                    </Box>
+                )}
 
-              <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
-                  <Text className="text-xl font-semibold text-typography-0 text-center">{t('meraProtocol.title')}</Text>
-              </VStack>
+                <VStack className="px-5 pb-5" style={{ paddingTop: insets.top + 16 }}>
+                    <Text className="text-xl font-semibold text-white text-center">{t('meraProtocol.title')}</Text>
+                </VStack>
 
-              <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
-                  {renderContent()}
-              </ScrollView>
+                <ScrollView className="flex-1 pt-1" contentContainerStyle={{ paddingBottom: 24 }}>
+                    {renderContent()}
+                </ScrollView>
 
-          </Box>
+            </Box>
+        </GluestackUIProvider>
     );
 };
 

@@ -11,6 +11,7 @@ import { ApolloProvider } from '@apollo/client/react';
 import { DatabaseProvider } from '@nozbe/watermelondb/DatabaseProvider';
 import { ThemeProvider } from '@react-navigation/native';
 import { router, Stack, useNavigationContainerRef, usePathname } from 'expo-router';
+import { useColorScheme } from 'nativewind';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { View } from 'react-native';
@@ -44,7 +45,6 @@ import { useModelLifecycle } from '@/lib/hooks/useModelLifecycle';
 import { useAppStateStore, useIsNavigationReady } from '@/lib/stores/app-state-store';
 import { setCurrentPathname } from '@/lib/nav-state';
 import { getNavigationTheme } from '@/lib/navigation/navigation-theme';
-import { useThemeStore } from '@/lib/stores/theme-store';
 import { initNetworkListener } from '@/lib/stores/network-store';
 import {
   applySentryUser,
@@ -84,16 +84,6 @@ import '@/lib/scheduler/tasks/entitlement-sync-task';
 // response-unpacking only; fresh cycles are kicked off in the foreground.
 defineInferenceTask();
 
-// Theme hydration is fired at MODULE IMPORT, not from AppRoot's bootstrap
-// effect: that effect runs BELOW GluestackUIProvider, so the first painted
-// frame would already have used the default. Firing here makes it the
-// process's first `settings` query. No splash gate: the default is dark and
-// the splash is #000000, so a dark user sees no flash and a light user sees at
-// most one dark frame. Adding a boot-blocking primitive in the same phase as
-// the provider rewiring would contaminate the one phase whose whole value is
-// being provably inert.
-void useThemeStore.getState().hydrateFromDb();
-
 // Same reason, different trigger: the OS resolves the JS entry point on a
 // BGTask wake and looks the task up by name, so it has to be DEFINED at module
 // load or the wake finds nothing. Registration is separate and happens after
@@ -120,16 +110,12 @@ function AppRoot() {
     })();
   }, []);
 
-  // react-navigation theme, tracked to the THEME STORE rather than to
-  // nativewind's colour scheme. Supplies dark surfaces so the NativeTabs
-  // per-tab wrapper never paints react-navigation's default light background,
-  // which is the white flash on tab switch.
-  //
-  // The store is the source of truth here for the same reason the provider
-  // indexes config[mode]: `useColorScheme()` resolves through native state that
-  // the iOS plist pin freezes, so it can never report anything but dark.
-  const resolvedTheme = useThemeStore((s) => s.resolved);
-  const navigationTheme = getNavigationTheme(resolvedTheme);
+  // react-navigation theme, tracked to the app's color scheme (pinned dark
+  // today via GluestackUIProvider mode="dark"). Supplies dark surfaces so the
+  // NativeTabs per-tab wrapper never paints react-navigation's default light
+  // background — the white flash on tab switch.
+  const { colorScheme } = useColorScheme();
+  const navigationTheme = getNavigationTheme(colorScheme === 'light' ? 'light' : 'dark');
 
   // Mirror the current route into a module variable so non-React code (the
   // Apollo error link) can avoid redundant navigations to the paywall.
@@ -392,16 +378,6 @@ function AppRoot() {
   );
 }
 
-// Holds the ONE theme subscription, for the same reason TextScaleProvider holds
-// the one text-size subscription: RootLayout below must stay subscription-free
-// so background activity can never re-render the update gate. A theme change
-// re-renders everything under it, which is correct and is user-initiated, not
-// background.
-function ThemedRootProvider({ children }: { children: React.ReactNode }) {
-  const resolvedTheme = useThemeStore((s) => s.resolved);
-  return <GluestackUIProvider mode={resolvedTheme}>{children}</GluestackUIProvider>;
-}
-
 // Root layout: providers + the mandatory-update gate ONLY. Deliberately holds no
 // store subscriptions or boot logic of its own, so background activity can never
 // re-render the gate / update screen — when blocked, the screen is static.
@@ -410,7 +386,7 @@ export default Sentry.wrap(function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <KeyboardProvider>
         <SafeAreaProvider>
-          <ThemedRootProvider>
+          <GluestackUIProvider mode="dark">
             {/* Publishes the user's in-app text size to every <Text>/<Heading>.
                 Outermost of the content providers so the update gate and the
                 toasts scale too — and it holds the ONE store subscription, so
@@ -423,7 +399,7 @@ export default Sentry.wrap(function RootLayout() {
               <AppRoot />
             </NativeUpdateGate>
             </TextScaleProvider>
-          </ThemedRootProvider>
+          </GluestackUIProvider>
         </SafeAreaProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>

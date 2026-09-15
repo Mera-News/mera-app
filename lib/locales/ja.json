@@ -1541,12 +1541,7 @@
     "sectionStartup": "スタートアップタブ",
     "startupTabA11y": "スタートアップタブ、{{label}}",
     "startupTabDescription": "アプリを起動したときにMeraが開くタブを選択します。",
-    "startupTabTitle": "起動時に開く",
-    "sectionAppearance": "外観",
-    "themeTitle": "テーマ",
-    "themeDescription": "Mera の見た目を選びます。",
-    "themeDark": "ダーク",
-    "themeLight": "ライト"
+    "startupTabTitle": "起動時に開く"
   },
   "freeTier": {
     "cardBody": "Meraが持つAI機能は現在オフになっています。保存した記事、フォローした記事、読んだ記事はすべてこのデバイスに残ります。探索タブには今日のニュースが引き続き表示されます。プランなしでは、Meraはフィードを作成したり、質問に答えたり、新しいストーリーをフォローできません。プランを開始すれば、すべてが戻ります。",

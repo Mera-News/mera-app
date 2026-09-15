@@ -348,7 +348,7 @@ export default function LoggedInIndex() {
 
     // Spinner while (and after) routing — the replace() unmounts this screen.
     return (
-        <Box className="flex-1 justify-center items-center bg-background-0">
+        <Box className="flex-1 justify-center items-center bg-black">
             <MeraLogo size={96} animated />
         </Box>
     );

@@ -200,7 +200,7 @@ export const PersonaStringSheet: React.FC<PersonaStringSheetProps> = ({
                             text={row.text}
                             as="heading"
                             size="xl"
-                            className="text-typography-0"
+                            className="text-white"
                             style={{ marginBottom: 16 }}
                         />
 
@@ -273,7 +273,7 @@ export const PersonaStringSheet: React.FC<PersonaStringSheetProps> = ({
                         >
                             <HStack className="items-center px-2 py-3" space="md">
                                 <MaterialIcons name="chat-bubble-outline" size={22} color={ACCENT} />
-                                <Text className="flex-1 text-typography-0" style={{ fontSize: 15, fontWeight: '600' }}>
+                                <Text className="flex-1 text-white" style={{ fontSize: 15, fontWeight: '600' }}>
                                     {t('profile.sheet.refine', { defaultValue: 'Refine with Mera' })}
                                 </Text>
                             </HStack>

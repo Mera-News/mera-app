@@ -58,7 +58,7 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, on
     const { status } = useEvent(player, 'statusChange', { status: player.status });
 
     return (
-        <Box className="flex-1 bg-background-0 items-center justify-center">
+        <Box className="flex-1 bg-black items-center justify-center">
             <VideoView
                 style={{ width: '100%', height: '100%' }}
                 player={player}
@@ -76,7 +76,7 @@ const PlayerContent: React.FC<{ uri: string; onClose: () => void }> = ({ uri, on
             {status === 'error' && (
                 <Box className="absolute inset-0 items-center justify-center p-6">
                     <MaterialIcons name="error-outline" size={40} color="#EF4444" />
-                    <Text className="text-typography-0 mt-3 text-center">
+                    <Text className="text-white mt-3 text-center">
                         {t('videoPlayer.playbackError')}
                     </Text>
                     <Pressable

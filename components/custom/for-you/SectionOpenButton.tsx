@@ -1,11 +1,9 @@
-import { THEME_COLORS } from '@/lib/theme';
 import { Pressable } from '@/components/ui/pressable';
 import { MaterialIcons } from '@expo/vector-icons';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 /** Visual diameter of the circular affordance. The tap target is lifted to the
  *  44pt minimum by `hitSlop` below rather than by inflating the circle, so the

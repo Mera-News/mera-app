@@ -113,7 +113,7 @@ export default function NativeUpdateGate({ children }: { children: ReactNode }) 
         // + svg animation for the few hundred ms of a version check would pull
         // that graph in ahead of the app itself. Not an oversight; don't "fix" it.
         return (
-            <View className="flex-1 bg-background-0 items-center justify-center">
+            <View className="flex-1 bg-black items-center justify-center">
                 <ActivityIndicator size="small" color="#FFFFFF" />
             </View>
         );

@@ -1,4 +1,3 @@
-import { THEME_COLORS } from '@/lib/theme';
 import { Button, ButtonText } from '@/components/ui/button';
 import { HStack } from '@/components/ui/hstack';
 import { Heading } from '@/components/ui/heading';
@@ -20,8 +19,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
-// Was a hardcoded copy of dark primary-400.
-const ACCENT = THEME_COLORS.dark.primary400;
+const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
 /** Settings KV flag gating the one-time sheet (existing setting-service pattern,
  *  same as `tabs_tooltip_seen`).
@@ -111,7 +109,7 @@ const WhatsNewSheet: React.FC = () => {
       <ModalBackdrop />
       <ModalContent className="bg-gray-950 border border-gray-800">
         <ModalHeader>
-          <Heading size="xl" className="text-typography-0">
+          <Heading size="xl" className="text-white">
             {t('whatsNew.starterTitle')}
           </Heading>
         </ModalHeader>
@@ -129,7 +127,7 @@ const WhatsNewSheet: React.FC = () => {
                   <MaterialIcons name={row.icon} size={20} color={ACCENT} />
                 </Box>
                 <VStack className="flex-1 min-w-0">
-                  <Text size="sm" bold className="text-typography-0">
+                  <Text size="sm" bold className="text-white">
                     {t(row.titleKey as any)}
                   </Text>
                   <Text size="xs" className="text-typography-400">

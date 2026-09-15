@@ -1542,12 +1542,7 @@
     "sectionStartup": "启动选项卡",
     "startupTabA11y": "启动选项卡，{{label}}",
     "startupTabDescription": "选择应用启动时打开的标签页。",
-    "startupTabTitle": "启动时打开",
-    "sectionAppearance": "外观",
-    "themeTitle": "主题",
-    "themeDescription": "选择 Mera 的外观。",
-    "themeDark": "深色",
-    "themeLight": "浅色"
+    "startupTabTitle": "启动时打开"
   },
   "freeTier": {
     "cardBody": "Mera 的 AI 部分暂时已关闭。你保存、关注或阅读过的任何内容都会保留在此设备上，探索标签页仍有今日新闻。没有计划的情况下，Mera 无法生成你的资讯、回答你的问题或追踪新报道。选择一个计划，一切都会恢复。",

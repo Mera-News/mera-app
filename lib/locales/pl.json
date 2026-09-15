@@ -1571,12 +1571,7 @@
     "sectionStartup": "Karta startowa",
     "startupTabA11y": "Karta startowa, {{label}}",
     "startupTabDescription": "Wybierz kartę, którą Mera otwiera podczas uruchomienia aplikacji.",
-    "startupTabTitle": "Otwórz przy uruchomieniu",
-    "sectionAppearance": "Wygląd",
-    "themeTitle": "Motyw",
-    "themeDescription": "Wybierz, jak wygląda Mera.",
-    "themeDark": "Ciemny",
-    "themeLight": "Jasny"
+    "startupTabTitle": "Otwórz przy uruchomieniu"
   },
   "freeTier": {
     "cardBody": "Część AI w Mera jest teraz wyłączona. Wszystko, co zapisałeś, śledziłeś lub czytałeś, zostaje na tym urządzeniu, a zakładka Odkrywaj wciąż zawiera dzisiejsze nagłówki. Bez planu Mera nie będzie budować Twojego kanału, odpowiadać na Twoje pytania ani śledzić nowych historii. Zacznij plan, a wszystko wróci do normy.",

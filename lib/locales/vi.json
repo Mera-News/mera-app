@@ -1542,12 +1542,7 @@
     "sectionStartup": "Tab khởi động",
     "startupTabA11y": "Tab khởi động, {{label}}",
     "startupTabDescription": "Chọn tab nào Mera sẽ mở khi bạn khởi chạy ứng dụng.",
-    "startupTabTitle": "Mở khi khởi chạy",
-    "sectionAppearance": "Giao diện",
-    "themeTitle": "Chủ đề",
-    "themeDescription": "Chọn cách Mera hiển thị.",
-    "themeDark": "Tối",
-    "themeLight": "Sáng"
+    "startupTabTitle": "Mở khi khởi chạy"
   },
   "freeTier": {
     "cardBody": "Phần AI của Mera đã bị tắt tạm thời. Mọi thứ bạn đã lưu, theo dõi hoặc đọc vẫn ở trên thiết bị này, và Khám phá vẫn có tin tức hôm nay. Nếu không có gói, Mera sẽ không tạo bảng tin, trả lời câu hỏi hoặc theo dõi câu chuyện mới. Hãy bắt đầu một gói và mọi thứ sẽ quay trở lại.",

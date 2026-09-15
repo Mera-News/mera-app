@@ -124,7 +124,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
           <HStack className="items-center" space="sm">
             <MaterialIcons name={meta.icon} size={22} color={ACCENT} />
             {flag ? <Text className="text-xl">{flag}</Text> : null}
-            <Text className="text-typography-0 text-base flex-1" numberOfLines={1}>
+            <Text className="text-white text-base flex-1" numberOfLines={1}>
               {composeLocationLabel(item)}
             </Text>
             <Pressable
@@ -270,7 +270,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
           <ModalHeader className="pb-3">
             <HStack className="items-center" space="xs">
               <MaterialIcons name="wrong-location" size={18} color={ACCENT} />
-              <Text className="text-base font-semibold text-typography-0">
+              <Text className="text-base font-semibold text-white">
                 {t('locations.deleteConfirmTitle')}
               </Text>
             </HStack>
@@ -280,7 +280,7 @@ const LocationsScreen: React.FC<Props> = ({ onBack }) => {
               {t('locations.deleteConfirmBody')}
             </Text>
             {confirmDelete ? (
-              <Text className="text-typography-0 font-medium mt-2">
+              <Text className="text-white font-medium mt-2">
                 {composeLocationLabel(confirmDelete)}
               </Text>
             ) : null}

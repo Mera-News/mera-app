@@ -2,6 +2,7 @@ import AbstractGradientBackdrop from '@/components/custom/AbstractGradientBackdr
 import ErrorBoundary from '@/components/custom/ErrorBoundary';
 import { FullScreenErrorFallback } from '@/components/custom/ErrorFallback';
 import TutorialPlayer from '@/components/custom/tutorials/TutorialPlayer';
+import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { PRE_AUTH_CHAPTER_ID } from '@/lib/tutorials/chapters';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
@@ -38,15 +39,17 @@ export default function TutorialPlayerRoute() {
     const params = useLocalSearchParams<{ chapter?: string }>();
 
     return (
-          <View style={{ flex: 1 }}>
-              <AbstractGradientBackdrop />
+        <GluestackUIProvider mode="dark">
+            <View style={{ flex: 1 }}>
+                <AbstractGradientBackdrop />
 
-              <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
-                  <TutorialPlayer
-                      chapterId={params.chapter ?? PRE_AUTH_CHAPTER_ID}
-                      onClose={() => router.back()}
-                  />
-              </ErrorBoundary>
-          </View>
+                <ErrorBoundary level="screen" FallbackComponent={FullScreenErrorFallback}>
+                    <TutorialPlayer
+                        chapterId={params.chapter ?? PRE_AUTH_CHAPTER_ID}
+                        onClose={() => router.back()}
+                    />
+                </ErrorBoundary>
+            </View>
+        </GluestackUIProvider>
     );
 }

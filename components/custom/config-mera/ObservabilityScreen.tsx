@@ -320,7 +320,7 @@ function feedFunnelRows(
 // stripes readable while the backdrop still shows through.
 //
 // ROW_EVEN must say `bg-transparent` EXPLICITLY, not '' — `TableRow`'s own base
-// style is `bg-black` (components/ui/table/styles.tsx), so an empty
+// style is `bg-background-0` (components/ui/table/styles.tsx), so an empty
 // className leaves the opaque default in place rather than clearing it. Same
 // reason the header rows below are tagged `bg-transparent` by hand.
 const TH_CLS = 'bg-white/10 px-3 py-2 border-b border-gray-800';
@@ -347,7 +347,7 @@ const MetricCard = ({ title, value, subtitle }: { title: string; value: string; 
         {/* No `leading-8` (1.33 on 24px type): most values are digits, but
             `schedulerStatus` is prose, and a tight line box clips tall marks.
             `text-2xl` now carries a script-safe 36px line box. */}
-        <Text className="text-typography-0 font-bold text-2xl">{value}</Text>
+        <Text className="text-white font-bold text-2xl">{value}</Text>
         {subtitle ? <Text size="xs" className="text-gray-500 mt-0.5">{subtitle}</Text> : null}
     </Box>
 );
@@ -367,7 +367,7 @@ const KVTable = ({ rows }: { rows: KVRow[] }) => (
                             <Text size="xs" className="text-gray-400">{k}</Text>
                         </TableData>
                         <TableData useRNView testID={testID} className={TD_CLS} style={{ flex: 1 }}>
-                            <Text size="xs" className="text-typography-0 text-right" numberOfLines={1}>{v}</Text>
+                            <Text size="xs" className="text-white text-right" numberOfLines={1}>{v}</Text>
                         </TableData>
                     </TableRow>
                 ))}
@@ -746,7 +746,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                 <Pressable onPress={onBack} className="bg-gray-900 rounded-full p-2" hitSlop={8}>
                     <MaterialIcons name="arrow-back" size={20} color="#ffffff" />
                 </Pressable>
-                <Text className="text-typography-0 font-semibold text-base">{t('observability.title')}</Text>
+                <Text className="text-white font-semibold text-base">{t('observability.title')}</Text>
                 <HStack space="sm" className="items-center">
                     <Pressable
                         onPress={() => void refresh()}
@@ -873,7 +873,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                                 className="flex-row items-center px-3 py-2.5"
                                             >
                                                 <Box className="flex-1">
-                                                    <Text size="xs" className="text-typography-0">{tableLabel(name)}</Text>
+                                                    <Text size="xs" className="text-white">{tableLabel(name)}</Text>
                                                     {subtitle ? (
                                                         <Text size="xs" className="text-gray-500 mt-0.5">{subtitle}</Text>
                                                     ) : null}
@@ -882,7 +882,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                             </Pressable>
                                         </TableData>
                                         <TableData useRNView className={TD_CLS} style={{ width: 90 }}>
-                                            <Text size="xs" className="text-typography-0 text-right">{count}</Text>
+                                            <Text size="xs" className="text-white text-right">{count}</Text>
                                         </TableData>
                                     </TableRow>
                                 ))}
@@ -929,7 +929,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                             <React.Fragment key={name}>
                                                 <TableRow className={rowCls}>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 200 }}>
-                                                        <Text size="xs" className="text-typography-0" numberOfLines={1}>{TASK_LABELS[name] ?? humanizeKey(name)}</Text>
+                                                        <Text size="xs" className="text-white" numberOfLines={1}>{TASK_LABELS[name] ?? humanizeKey(name)}</Text>
                                                     </TableData>
                                                     <TableData useRNView className={TD_CLS} style={{ width: 100 }}>
                                                         <HStack space="xs" className="items-center">
@@ -1051,7 +1051,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                             className="bg-gray-900 rounded-xl px-4 py-3 mt-1"
                             testID="observability-run-blob-probe"
                         >
-                            <Text size="sm" className="text-typography-0 text-center">
+                            <Text size="sm" className="text-white text-center">
                                 {probeRunning ? 'Running…' : 'Run blob probe'}
                             </Text>
                         </Pressable>
@@ -1080,7 +1080,7 @@ const ObservabilityScreen: React.FC<ObservabilityScreenProps> = ({ onBack }) => 
                                     className="bg-gray-900 rounded-xl px-4 py-3 mt-2"
                                     testID="observability-share-blob-probe"
                                 >
-                                    <Text size="sm" className="text-typography-0 text-center">Share report</Text>
+                                    <Text size="sm" className="text-white text-center">Share report</Text>
                                 </Pressable>
                             </VStack>
                         )}

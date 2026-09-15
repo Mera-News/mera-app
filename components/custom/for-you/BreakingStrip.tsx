@@ -67,7 +67,7 @@ const BreakingStrip: React.FC<BreakingStripProps> = ({ items, onPressItem }) => 
           originalLanguage={data.language_code ?? undefined}
           size="sm"
           numberOfLines={2}
-          className="text-typography-0"
+          className="text-white"
         />
       </Pressable>
     );

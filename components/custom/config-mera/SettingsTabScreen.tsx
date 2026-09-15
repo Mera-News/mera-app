@@ -44,7 +44,7 @@ const SettingsTabScreen: React.FC = () => {
                 {/* No `numberOfLines`: a 1-line clamp on a 36px title truncated the
                     screen's own name at large Dynamic Type sizes. Nothing below
                     depends on this row's height, so it wraps instead. */}
-                <Heading size="4xl" className="text-typography-0">
+                <Heading size="4xl" className="text-white">
                     {t('tabs.settings')}
                 </Heading>
             </HStack>

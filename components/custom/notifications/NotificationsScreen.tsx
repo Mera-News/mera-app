@@ -198,7 +198,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({ onBack }) => 
                 />
                 <VStack className="flex-1 ml-3" space="xs">
                     <HStack className="items-start justify-between">
-                        <Text className="text-typography-0 font-semibold flex-1" numberOfLines={2}>
+                        <Text className="text-white font-semibold flex-1" numberOfLines={2}>
                             {title}
                         </Text>
                         {n.status === 'unread' ? (

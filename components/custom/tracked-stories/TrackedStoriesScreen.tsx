@@ -182,7 +182,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                             <HStack className="items-center flex-wrap" space="xs">
                                 {unseen > 0 && (
                                     <Box className="rounded-full bg-primary-400 px-2 py-0.5">
-                                        <Text size="2xs" className="text-pure-black font-bold">
+                                        <Text size="2xs" className="text-black font-bold">
                                             {t('trackedStories.updatesBadge', { count: unseen })}
                                         </Text>
                                     </Box>
@@ -200,7 +200,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                                 as="heading"
                                 size="lg"
                                 numberOfLines={2}
-                                className="text-typography-0"
+                                className="text-white"
                             />
                             {/* A second title line used to sit here, fed by
                                 `latest_title`. That column was seeded at track
@@ -287,7 +287,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
     const ListEmpty = (
         <Box className="flex-1 items-center justify-center px-8 py-20">
             <MaterialIcons name="auto-awesome" size={48} color="#6B7280" />
-            <Text size="lg" className="text-typography-0 text-center font-semibold mt-4">
+            <Text size="lg" className="text-white text-center font-semibold mt-4">
                 {t('trackedStories.emptyTitle')}
             </Text>
             <Text size="sm" className="text-typography-400 text-center mt-2">
@@ -374,7 +374,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                         >
                             <Heading
                                 size="4xl"
-                                className={embedded ? 'text-typography-0' : 'text-typography-0 ml-14'}
+                                className={embedded ? 'text-white' : 'text-white ml-14'}
                             >
                                 {t('trackedStories.title')}
                             </Heading>
@@ -452,7 +452,7 @@ const TrackedStoriesScreen: React.FC<TrackedStoriesScreenProps> = ({
                 <ModalBackdrop />
                 <ModalContent>
                     <ModalHeader>
-                        <Heading size="lg" className="text-typography-0">
+                        <Heading size="lg" className="text-white">
                             {t('trackedStories.untrackConfirmTitle')}
                         </Heading>
                     </ModalHeader>
