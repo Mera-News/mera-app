@@ -73,6 +73,21 @@ const DESIGN_WIDTH = 360;
  */
 export const SAFE_RESERVE_PX = 250;
 
+/**
+ * Where the FIRST row of ink is allowed to start, in export pixels.
+ *
+ * Measured on a real 1080x1920 capture, the first ink row landed at 13.07% of
+ * the height while the reserve ends at 13.02%, so the wordmark was grazing the
+ * line by about 1.4 px. The reserve is the boundary, not a target to sit on:
+ * the logo is an SVG whose glyph fills its box, so its ink starts exactly at
+ * the padding edge with none of the leading that keeps a text run clear.
+ *
+ * 280 px is 14.58%, which clears the ruled 14.5% floor with a little room.
+ * The BOTTOM is unchanged: last ink measured 16.72% from the bottom, well
+ * inside its own reserve, so it needs no equivalent.
+ */
+export const TOP_INK_FLOOR_PX = 280;
+
 export interface ShareStatsCardProps {
   stats: ReadingStats;
   /** Off by default, everywhere. Publication names are revealing. */
@@ -109,7 +124,8 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
   const { t } = useTranslation();
   const host = hostSizeForScale(pixelRatio);
   const k = host.width / DESIGN_WIDTH;
-  const reserve = (SAFE_RESERVE_PX / EXPORT_HEIGHT) * host.height;
+  const bottomReserve = (SAFE_RESERVE_PX / EXPORT_HEIGHT) * host.height;
+  const topInset = (TOP_INK_FLOOR_PX / EXPORT_HEIGHT) * host.height;
 
   const averageHours = roundedAverageHours(stats.publishToRead);
   const { sampledArticles, totalArticles } = stats.publishToRead;
@@ -128,8 +144,8 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
       <Box
         className="flex-1 bg-black"
         style={{
-          paddingTop: reserve,
-          paddingBottom: reserve,
+          paddingTop: topInset,
+          paddingBottom: bottomReserve,
           paddingLeft: 28 * k,
           paddingRight: 28 * k,
         }}

@@ -84,8 +84,28 @@ export interface ReadingStats {
   /** Sorted by visitCount desc, then name asc for a stable tie-break. Only
    *  rendered when the naming opt-in is on. */
   topPublications: TopPublication[];
-  /** False when there is nothing worth sharing, so the caller can show an empty
-   *  state instead of a card full of zeroes. */
+  /**
+   * False when there is nothing worth sharing, so the caller shows an empty
+   * state instead of a card full of zeroes.
+   *
+   * Keyed on VISITS ALONE, deliberately. Three of the card's four figures
+   * (publications, countries, publish-to-read latency) come from
+   * `publication_visits`, so a device with impressions but no visits has one
+   * number and three blanks, which is not a card. It also makes Settings then
+   * Manage Data then "Clear viewing history" visibly work: that action calls
+   * `clearAllVisits()` and wipes ONLY `publication_visits`, so keying on
+   * impressions too left the screen showing a numeric card after a clear that
+   * had promised to empty it.
+   *
+   * `story_impressions` is deliberately NOT cleared by that action and must not
+   * be: it runs feed dedup and the read-story filter, so wiping it would
+   * resurrect already-read stories in the feed. Trading feed behaviour for a
+   * share-card number is the same mistake the plan forbids around
+   * `use-open-article.ts`. The residual is small and documented: right after a
+   * clear, the first new visit brings the card back with an `articlesOpened`
+   * that still counts pre-clear taps. The figure is labelled partial on the
+   * card, which is exactly the claim that stays true.
+   */
   hasAnyData: boolean;
 }
 
@@ -182,7 +202,7 @@ export function computeReadingStats({
     articlesOpened: openedArticleIds.size,
     publishToRead,
     topPublications,
-    hasAnyData: publications.size > 0 || openedArticleIds.size > 0,
+    hasAnyData: publications.size > 0,
   };
 }
 

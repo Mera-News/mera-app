@@ -178,7 +178,12 @@ describe('computeReadingStats', () => {
       });
 
       expect(stats.articlesOpened).toBe(1);
-      expect(stats.hasAnyData).toBe(true);
+      // Impressions alone do NOT make a shareable card: three of the four
+      // figures come from visits, so this device has one number and three
+      // blanks. It is also what makes "Clear viewing history" visibly work,
+      // since that action wipes visits and deliberately leaves impressions
+      // alone (they run feed dedup and the read-story filter).
+      expect(stats.hasAnyData).toBe(false);
     });
 
     it('applies the 30-day window itself, because the impressions table does not', () => {
@@ -209,6 +214,21 @@ describe('computeReadingStats', () => {
       });
 
       expect(stats.articlesOpened).toBe(0);
+      expect(stats.hasAnyData).toBe(false);
+    });
+
+    it('stays empty after a visit clear, even with impressions left behind', () => {
+      // The exact state the simulator hit: Manage Data cleared publication_visits
+      // and story_impressions survived, so the screen kept showing a numeric
+      // card after a dialog that promised to empty it.
+      const stats = computeReadingStats({
+        visits: [],
+        impressions: [impression({ articleId: 'survivor' })],
+        nowMs: NOW,
+      });
+
+      expect(stats.articlesOpened).toBe(1);
+      expect(stats.publicationCount).toBe(0);
       expect(stats.hasAnyData).toBe(false);
     });
 
