@@ -22,8 +22,13 @@ import {
     useForYouDeviceProcessing,
 } from '@/lib/stores/selectors';
 import React, { useEffect, useState } from 'react';
+import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+import ChunkStrip from '@/components/custom/processing/ChunkStrip';
+import { ON_DEVICE_HEADLINES_KEY, stageDef } from '@/components/custom/processing/processing-stages';
+import { PROCESSING_STRIP_HEIGHT } from '@/components/custom/processing/types';
+import { useProcessingSnapshot } from '@/components/custom/processing/use-processing-snapshot';
 import FeedStatusDetails from './FeedStatusDetails';
 
 /** The stage headline rotates through its text pool at this cadence. */
@@ -36,18 +41,29 @@ const HEADLINE_CYCLE_MS = 5000;
 function ProcessingHeadline() {
     const { t } = useTranslation();
     const tAny = t as any;
-    const asyncJobPhase = useForYouAsyncJobPhase();
+    const snapshot = useProcessingSnapshot();
     const { isDeviceProcessing } = useForYouDeviceProcessing();
 
-    const stageKey =
-        asyncJobPhase === 'reasons' ? 'cloudReasons'
-            : asyncJobPhase === 'relevance' ? 'cloudRelevance'
-                : isDeviceProcessing ? 'onDevice'
-                    : 'cloudRelevance';
-    const rawGenericLines = tAny(`feed.processing.stages.${stageKey}.headlines`, {
-        returnObjects: true,
-        defaultValue: [],
-    });
+    // The stage comes from the SAME resolver the processing card uses, so the
+    // panel and the card can never describe different steps of the same run.
+    //
+    // It also makes `stages.fetching.headlines` reachable for the first time.
+    // Those two lines and their amberSubline have been translated in all twenty
+    // dictionaries and shown to NOBODY: the old selection here was a three-way
+    // ternary over the async phase that could only ever return cloudReasons,
+    // cloudRelevance or onDevice, and the other live reader of the key was a
+    // component with no importers.
+    const stage = snapshot.stage;
+    const headlinesKey =
+        stage === null
+            ? null
+            : stage === 'analysing' && isDeviceProcessing
+              ? ON_DEVICE_HEADLINES_KEY
+              : stageDef(stage).headlinesKey;
+
+    const rawGenericLines = headlinesKey
+        ? tAny(headlinesKey, { returnObjects: true, defaultValue: [] })
+        : [];
     const pool = Array.isArray(rawGenericLines) ? (rawGenericLines as string[]) : [];
 
     const [index, setIndex] = useState(0);
@@ -59,7 +75,7 @@ function ProcessingHeadline() {
             HEADLINE_CYCLE_MS,
         );
         return () => clearInterval(interval);
-    }, [pool.length, stageKey]);
+    }, [pool.length, headlinesKey]);
 
     const line = pool[index] ?? pool[0] ?? '';
     if (!line) return null;
@@ -70,6 +86,35 @@ function ProcessingHeadline() {
                 {line}
             </Text>
         </Animated.View>
+    );
+}
+
+/**
+ * Per-batch state, the same strip the processing card draws.
+ *
+ * Gated on the snapshot's own `animationsActive && !isStatic` rather than left
+ * running: this sits inside a `GlassPanel`, which off the fallback path is a
+ * real `UIVisualEffectView`, and a blur re-samples its backdrop every frame
+ * that backdrop changes. The panel already only mounts while a reader has it
+ * open, and this keeps the pulse off even then when the screen is blurred or
+ * the app is backgrounded.
+ *
+ * Renders nothing, and reserves nothing, when there is no run: this row is
+ * inside collapsing chrome OUTSIDE the list, so nothing here is subject to the
+ * fixed-height rule the card lives under.
+ */
+function ChunkStripRow() {
+    const snapshot = useProcessingSnapshot();
+    if (snapshot.chunksTotal <= 0) return null;
+    return (
+        <View style={{ height: PROCESSING_STRIP_HEIGHT }}>
+            <ChunkStrip
+                chunks={snapshot.chunks}
+                ready={snapshot.chunksReady}
+                total={snapshot.chunksTotal}
+                active={snapshot.animationsActive && !snapshot.isStatic}
+            />
+        </View>
     );
 }
 
@@ -142,6 +187,7 @@ export const FeedStatusPanel: React.FC<FeedStatusPanelProps> = ({
                 />
                 {mode === 'processing' && <AnalysingProgress />}
                 {mode === 'processing' && <ProcessingHeadline />}
+                {mode === 'processing' && <ChunkStripRow />}
             </GlassPanel>
         </Animated.View>
     );

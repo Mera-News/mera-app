@@ -50,12 +50,24 @@ export const FEED_SYNC_TASK = 'feed-sync';
  * Any client-visible fetch/scoring work still in flight, derived purely from the
  * for-you store. Lifted verbatim out of ForYouScreen/FeedScreen, which had
  * identical copies — both still need it for their empty-state chain
- * (FeedPreparingCard vs AllCaughtUpCard) and header auto-reveal, so it stays a
+ * (FeedProcessingCard vs AllCaughtUpCard) and header auto-reveal, so it stays a
  * standalone hook rather than being buried in the component.
  *
  * Deliberately does NOT fold in the scheduler flag: the empty-state chain reads
  * this too, and "a scheduler job is enqueued" is not the same claim as "there is
  * feed work in flight". The scheduler flag is OR-ed in at the indicator only.
+ *
+ * THIRD READER, and it OR-s the two exactly as the indicator does:
+ * `components/custom/processing/use-processing-snapshot.ts` takes
+ * `useFeedSyncRunning() || useIsFeedProcessing()` as the processing area's
+ * visibility predicate, and takes both as separate inputs to the stage
+ * resolver. That is a deliberate reuse and not a fork, and the reason is the
+ * note below about the first happy-path publish being `hydrating`: an area
+ * driven off `syncStatusMessage` alone appears seconds after the pull, or never
+ * on the `missingIds.length === 0` branch. `reserveTask` is a synchronous
+ * `set()`, so the scheduler flag lights on the same JS tick as the pull, which
+ * is what makes the area appear on the same frame. If this predicate is ever
+ * narrowed, that surface breaks with it and nothing here will say so.
  *
  * Round-4 B note (preserved): the `unscoredCount > 0` term is intentionally
  * absent — deliberately-deferred rows (a sub-25 quantum waiting for the next

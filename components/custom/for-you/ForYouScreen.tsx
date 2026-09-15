@@ -19,7 +19,7 @@ import {
 } from '@/components/custom/GlassSurface';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
-import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
+import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
@@ -503,7 +503,7 @@ const MeraNewsScreen: React.FC = () => {
             return <NoGeneratedInterestsCard />;
         }
         if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
-            return <FeedPreparingCard />;
+            return <FeedProcessingCard />;
         }
         return <AllCaughtUpCard />;
     }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);

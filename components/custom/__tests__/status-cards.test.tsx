@@ -1,6 +1,11 @@
 // Status cards — surface coverage for the three non-article cards that render
 // as ROWS in the Feed / Dashboard lists: NoGeneratedInterestsCard,
-// FeedPreparingCard and OnboardingWaitingCard.
+// FeedProcessingCard and OnboardingWaitingCard.
+//
+// FeedProcessingCard replaced FeedPreparingCard and deliberately KEPT its
+// `feed-preparing-card` testID. That is not leftover debt: the simulator
+// harness runbooks address this surface by that id, and the assertions below
+// are about the card's SURFACE, which did not change hands.
 //
 // Why this file exists rather than a shared radius constant: the bug these
 // assertions guard against was STRUCTURAL, not a mistyped literal. All three
@@ -34,6 +39,35 @@ jest.mock('@/components/custom/chat/StreamingIndicator', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: () => <View testID="streaming-indicator" /> };
 });
+// FeedProcessingCard is a CONTAINER: it subscribes to the processing snapshot,
+// which reaches for-you-store and through it the WatermelonDB singleton at
+// import time. This file tests the card's SURFACE, so the inside is stubbed and
+// the outer box is left real. `ProcessingArea` has its own test.
+jest.mock('@/components/custom/processing/ProcessingArea', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: () => <View testID="processing-area" /> };
+});
+jest.mock('@/components/custom/processing/use-processing-snapshot', () => ({
+  useProcessingSnapshot: () => ({
+    visible: true,
+    stage: 'analysing',
+    stageIndex: 3,
+    stageValue: 50,
+    chunks: [],
+    chunksReady: 0,
+    chunksTotal: 0,
+    hydrationCompleted: 0,
+    hydrationTotal: 0,
+    analysedDone: 0,
+    analysedTotal: 0,
+    isStatic: false,
+    animationsActive: true,
+  }),
+  PROCESSING_TOTAL_STAGES: 6,
+}));
+jest.mock('@/lib/stores/selectors', () => ({
+  useForYouDeviceProcessing: () => ({ isDeviceProcessing: false }),
+}));
 jest.mock('@/components/custom/cards/CardGlassPlate', () => {
   const { View } = require('react-native');
   return {
@@ -60,13 +94,13 @@ jest.mock('@/components/ui/button', () => {
 
 import { render, screen } from '@testing-library/react-native';
 import React from 'react';
-import FeedPreparingCard from '../FeedPreparingCard';
+import FeedProcessingCard from '../processing/FeedProcessingCard';
 import NoGeneratedInterestsCard from '../NoGeneratedInterestsCard';
 import OnboardingWaitingCard from '../for-you/OnboardingWaitingCard';
 
 const CARDS: [string, React.FC, string][] = [
   ['NoGeneratedInterestsCard', NoGeneratedInterestsCard, 'no-interests-card'],
-  ['FeedPreparingCard', FeedPreparingCard, 'feed-preparing-card'],
+  ['FeedProcessingCard', FeedProcessingCard, 'feed-preparing-card'],
   ['OnboardingWaitingCard', OnboardingWaitingCard, 'onboarding-waiting-card'],
 ];
 

@@ -69,14 +69,26 @@ export type StageFallbackKind =
   | 'write'
   | 'stack';
 
-/** One row of the six-stage registry. Pure data: i18n KEY STRINGS only, never
- *  a `t()` call and never JSX. */
-export interface ProcessingStageDef {
+/**
+ * One row of the six-stage registry. Pure data: i18n KEY STRINGS only, never a
+ * `t()` call and never JSX.
+ *
+ * The key fields are the LITERAL union of what the registry actually holds, not
+ * `string`. i18n keys in this app are typed straight off `en.json` with no
+ * codegen step, so a widened `string` here would force every call site through
+ * the `tAny` escape hatch and throw away the one thing that catches a key
+ * typo at compile time. `processing-stages.ts` derives this from its own `as
+ * const` array, so adding a stage cannot forget to widen anything.
+ */
+export interface ProcessingStageDef<
+  L extends string = string,
+  H extends string = string,
+> {
   readonly id: ProcessingStageId;
   /** `t()` key for the stage's own short label. */
-  readonly labelKey: string;
+  readonly labelKey: L;
   /** `t()` key for the rotating headline pool. Resolves to an ARRAY. */
-  readonly headlinesKey: string;
+  readonly headlinesKey: H;
   /** Drawn when `animation-registry.ts` has no entry for this stage. */
   readonly fallback: StageFallbackKind;
 }

@@ -86,7 +86,7 @@ import {
   GlassPlate,
 } from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
-import FeedPreparingCard from '@/components/custom/FeedPreparingCard';
+import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import {
   useFeedSyncRefresh,
   useIsFeedProcessing,
@@ -840,7 +840,7 @@ const FeedScreen: React.FC = () => {
     // on the morning cold start, where the overnight rows aged out of the
     // window and the running sync genuinely will bring content back.
     if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
-      return <FeedPreparingCard />;
+      return <FeedProcessingCard />;
     }
     // The highest-value spot for the "lower the priority" nudge: when the
     // importance filter has hidden every story, this is the ONLY surface the

@@ -1,4 +1,4 @@
-import type { ProcessingStageDef } from './types';
+import type { ProcessingStageDef, ProcessingStageId } from './types';
 
 /**
  * The six stages, in the order the progress bar draws them.
@@ -14,7 +14,7 @@ import type { ProcessingStageDef } from './types';
  * status panel a reader has to open. The stage table puts all of them back on
  * the surface they were written for.
  */
-export const PROCESSING_STAGES: readonly ProcessingStageDef[] = [
+export const PROCESSING_STAGES = [
   {
     id: 'fetching',
     labelKey: 'feed.processing.stageLabels.fetching',
@@ -51,7 +51,11 @@ export const PROCESSING_STAGES: readonly ProcessingStageDef[] = [
     headlinesKey: 'feed.processing.stages.preparing.headlines',
     fallback: 'stack',
   },
-];
+] as const satisfies readonly ProcessingStageDef[];
+
+/** The registry's own row type, keys and all, so `t(def.labelKey)` stays typed
+ *  rather than falling back to `tAny`. */
+export type StageDef = (typeof PROCESSING_STAGES)[number];
 
 /**
  * The on-device variant of the analysing stage's headlines.
@@ -60,13 +64,13 @@ export const PROCESSING_STAGES: readonly ProcessingStageDef[] = [
  * above rather than two; only the copy differs, because on-device scoring can
  * honestly say nothing leaves the phone and the cloud round trip cannot.
  */
-export const ON_DEVICE_HEADLINES_KEY = 'feed.processing.stages.onDevice.headlines';
+export const ON_DEVICE_HEADLINES_KEY = 'feed.processing.stages.onDevice.headlines' as const;
 
 /** Shown under the fetching stage only. Already translated everywhere, and its
  *  only previous reader was a component with no importers. */
-export const FETCHING_SUBLINE_KEY = 'feed.processing.stages.fetching.amberSubline';
+export const FETCHING_SUBLINE_KEY = 'feed.processing.stages.fetching.amberSubline' as const;
 
-export function stageDef(id: ProcessingStageDef['id']): ProcessingStageDef {
+export function stageDef(id: ProcessingStageId): StageDef {
   const found = PROCESSING_STAGES.find((s) => s.id === id);
   // Unreachable: `ProcessingStageId` is a closed union and the array is
   // exhaustive over it, which `processing-stages.test.ts` asserts.
