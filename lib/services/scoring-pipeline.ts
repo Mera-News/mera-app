@@ -658,6 +658,74 @@ export function derivePipelineBatchProgress(run: PipelineRun): PipelineBatchProg
   return { done: done.size, total: total.size };
 }
 
+// ---------------------------------------------------------------------------
+// Chunk-state projection — the processing area's chunk strip reads this.
+// ---------------------------------------------------------------------------
+
+/** What one batch looks like to a reader watching it. */
+export type ChunkState = 'queued' | 'in-flight' | 'ready' | 'failed';
+
+export interface PipelineChunkStates {
+  /** One entry per batch, in `run.batches` order. */
+  readonly chunks: readonly ChunkState[];
+  readonly ready: number;
+  readonly total: number;
+}
+
+/**
+ * Project a run onto per-batch state.
+ *
+ * NOTHING NEW IS RECORDED. `PipelineBatch.phase` has been persisted since the
+ * multi-batch pipeline shipped and has simply never been projected; this is a
+ * pure read beside the two projections that already do exactly this shape of
+ * work, not instrumentation.
+ *
+ * It counts BATCHES, which is a different quantity from
+ * {@link derivePipelineBatchProgress}'s ARTICLE counts, and the two must never
+ * be reconciled on screen. A batch is up to 25 articles and the gate holds
+ * duplicate siblings back, so "3 of 8 batches" and "40 of 220 articles" are
+ * both true at the same instant and neither is the other's percentage.
+ *
+ * Chunk count can GROW mid-run: the gate re-elects held-back siblings into new
+ * batches, so `total` is not fixed when the strip first renders. That is a
+ * constraint on the strip (it must get narrower, never taller), not a defect
+ * here.
+ *
+ * Same idle rule as {@link derivePipelineBatchProgress}: every batch terminal
+ * means an empty array, so a finished run leaves no stale strip on screen. One
+ * definition of idle across all three projections, not three that have to be
+ * kept in lockstep.
+ */
+export function derivePipelineChunkStates(run: PipelineRun): PipelineChunkStates {
+  if (run.batches.every((b) => isTerminal(b.phase))) {
+    return { chunks: [], ready: 0, total: 0 };
+  }
+  const chunks = run.batches.map<ChunkState>((b) => {
+    if (b.phase === 'done') return 'ready';
+    if (b.phase === 'failed') return 'failed';
+    if (b.phase === 'queued') return 'queued';
+    // Everything between: submitting/waiting relevance, the crash-resumable
+    // `needs-reasons-submit` gap, submitting/waiting reasons. A reader does not
+    // need six words for "it is being worked on".
+    return 'in-flight';
+  });
+  return {
+    chunks,
+    ready: chunks.filter((c) => c === 'ready').length,
+    total: chunks.length,
+  };
+}
+
+/** Read the persisted run and project its chunk states. `null` when no run
+ *  exists / every batch is terminal, matching {@link getPipelineBatchProgress}
+ *  so the store's boot hydration has one rule to follow. */
+export async function getPipelineChunkStates(): Promise<PipelineChunkStates | null> {
+  const snap = await getPipeline();
+  if (!snap) return null;
+  const states = derivePipelineChunkStates(snap.run);
+  return states.total === 0 ? null : states;
+}
+
 /** Read the persisted run and project its article progress. `null` when no run
  *  exists / every batch is terminal. Consumed by the store's boot hydration.
  *  Idle is read off the projection's own zero total rather than
@@ -686,12 +754,16 @@ async function pushUiProgress(): Promise<void> {
     if (!snap || ui.phase === 'idle') {
       store.setAsyncJobPhase('idle');
       store.setBatchProgress(null);
+      store.setChunkStates(null);
     } else {
       // Two projections on purpose: the cloud-progress row wants the candidates
       // the cloud actually carries, the "Analysing X of Y articles" line wants
       // the articles those candidates cover. See derivePipelineBatchProgress.
       store.setAsyncJobPhase(ui.phase, ui.processedCount, ui.totalCount);
+      // Three projections over one snapshot, pushed together so the header, the
+      // progress line and the chunk strip can never describe different instants.
       store.setBatchProgress(derivePipelineBatchProgress(snap.run));
+      store.setChunkStates(derivePipelineChunkStates(snap.run));
     }
   } catch (err) {
     logger.captureException(err, {

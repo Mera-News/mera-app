@@ -87,6 +87,13 @@ export const useForYouAsyncJobTotalCount = () =>
 export const useForYouBatchProgress = () =>
     useForYouStore((state) => state.batchProgress);
 
+/** Per-batch state for the processing area's chunk strip. null when no run is
+ *  active. Counts BATCHES, and `useForYouBatchProgress` counts ARTICLES: both
+ *  are true at once and neither is the other's percentage, so never render them
+ *  as one ratio. */
+export const useForYouChunkStates = () =>
+    useForYouStore((state) => state.chunkStates);
+
 /** Epoch ms of the last finished processing run (cloud or on-device).
  *  null when no run has ever finished on this device. */
 export const useForYouLastProcessingRunFinishedAt = () =>

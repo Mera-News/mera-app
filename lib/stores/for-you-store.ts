@@ -13,6 +13,13 @@ import {
     type ArticleSuggestionStatus as ArticleSuggestionStatusType,
 } from '@/lib/database/article-suggestion-status';
 import type { ScoringErrorKind } from '@/lib/services/scoring-error';
+// TYPE-ONLY, and that is what makes it safe: scoring-pipeline reaches this
+// store through a lazy `require` inside pushUiProgress precisely to avoid a
+// load-time cycle, and a type import is erased before any of that runs. It is
+// preferred over a second structural copy here (which is what
+// `PipelineBatchProgress` below is) because the chunk projection's shape is
+// owned by the module that computes it and two copies can only drift.
+import type { PipelineChunkStates } from '@/lib/services/scoring-pipeline';
 // The render gate — the single source of truth the pre-filters below are kept
 // in lockstep with, rather than a second hardcoded copy of the cutoff. Only a
 // type import flows the other way (fact-rows-selector takes `ForYouSuggestion`
@@ -205,6 +212,13 @@ interface ForYouState {
     // shimmer's "Analysing X of Y articles" line + the status accordion.
     batchProgress: PipelineBatchProgress | null;
 
+    // Per-batch state for the processing area's chunk strip. Same source and
+    // same writer as `batchProgress` (pushUiProgress pushes both from one
+    // snapshot), and a DIFFERENT quantity: this counts batches, that counts
+    // articles. Never present one as the other's percentage. null when no run /
+    // all terminal.
+    chunkStates: PipelineChunkStates | null;
+
     // Sync status — set by FeedSyncMachine, read by UI
     syncStatusMessage: SyncStatusMessage | null;
     lastSyncAt: number | null;
@@ -261,6 +275,7 @@ interface ForYouState {
     ) => void;
     setAsyncJobProgress: (processedCount: number, totalCount: number) => void;
     setBatchProgress: (progress: PipelineBatchProgress | null) => void;
+    setChunkStates: (states: PipelineChunkStates | null) => void;
     clearData: () => Promise<void>;
     pruneOrphanedData: () => Promise<void>;
     hydrateSuggestionsFromDb: () => Promise<void>;
@@ -293,6 +308,7 @@ const initialState = {
     asyncJobProcessedCount: 0,
     asyncJobTotalCount: 0,
     batchProgress: null as PipelineBatchProgress | null,
+    chunkStates: null as PipelineChunkStates | null,
     syncStatusMessage: null as SyncStatusMessage | null,
     lastSyncAt: null as number | null,
     scoringError: null as ScoringErrorKind | null,
@@ -433,6 +449,8 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
         set({ asyncJobProcessedCount: processedCount, asyncJobTotalCount: totalCount }),
 
     setBatchProgress: (progress) => set({ batchProgress: progress }),
+
+    setChunkStates: (states) => set({ chunkStates: states }),
 
     setSyncStatusMessage: (msg) => set({ syncStatusMessage: msg }),
 
@@ -576,14 +594,14 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
             // Rehydrate the header's scoring phase/progress from the persisted
             // multi-batch pipeline run (replaces the legacy single-slot
             // getPendingAsyncJob read). idle when no run / all batches terminal.
-            const { getPipelineUiState, getPipelineBatchProgress } = await import(
-                '@/lib/services/scoring-pipeline'
-            );
+            const { getPipelineUiState, getPipelineBatchProgress, getPipelineChunkStates } =
+                await import('@/lib/services/scoring-pipeline');
 
-            const [meta, pipelineUi, batchProgress] = await Promise.all([
+            const [meta, pipelineUi, batchProgress, chunkStates] = await Promise.all([
                 loadFeedMetadata(),
                 getPipelineUiState(),
                 getPipelineBatchProgress(),
+                getPipelineChunkStates(),
             ]);
 
             const current = get().suggestions;
@@ -603,6 +621,7 @@ export const useForYouStore = create<ForYouState>()((set, get) => ({
                 asyncJobTotalCount:
                     pipelineUi.phase === 'idle' ? 0 : pipelineUi.totalCount,
                 batchProgress: pipelineUi.phase === 'idle' ? null : batchProgress,
+                chunkStates: pipelineUi.phase === 'idle' ? null : chunkStates,
             });
         } catch (err) {
             // Metadata hydration failed — leave defaults in place, but surface the error.

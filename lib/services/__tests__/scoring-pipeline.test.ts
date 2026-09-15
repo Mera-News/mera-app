@@ -289,6 +289,7 @@ import {
   derivePipelineUiState,
   getPipelineUiState,
   derivePipelineBatchProgress,
+  derivePipelineChunkStates,
   isFeedCold,
   _resetForTests,
   BATCH_SIZE,
@@ -2637,5 +2638,100 @@ describe('legacyNoteDemote — the orphaned-reason sweep reads the same config',
     // Persisted, not re-derived: this batch's results must decode as verdicts
     // even if an OTA turns the flag off while it is in flight.
     expect(currentRun().batches[0].noteMode).toBe(true);
+  });
+});
+
+describe('derivePipelineChunkStates', () => {
+  // The bucketing table, all eight BatchPhase values, so a phase added later
+  // fails here rather than silently rendering as `in-flight`.
+  it('buckets every phase', () => {
+    const run = makeRun([
+      { phase: 'queued', candidateIds: ['a'] },
+      { phase: 'submitting-relevance', candidateIds: ['b'] },
+      { phase: 'waiting-relevance', candidateIds: ['c'] },
+      { phase: 'needs-reasons-submit', candidateIds: ['d'] },
+      { phase: 'submitting-reasons', candidateIds: ['e'] },
+      { phase: 'waiting-reasons', candidateIds: ['f'] },
+      { phase: 'done', candidateIds: ['g'] },
+      { phase: 'failed', candidateIds: ['h'] },
+    ]);
+    expect(derivePipelineChunkStates(run).chunks).toEqual([
+      'queued',
+      'in-flight',
+      'in-flight',
+      'in-flight',
+      'in-flight',
+      'in-flight',
+      'ready',
+      'failed',
+    ]);
+  });
+
+  it('keeps run.batches order, so a failed chunk sits behind ready ones', () => {
+    const states = derivePipelineChunkStates(
+      makeRun([
+        { phase: 'done', candidateIds: ['a'] },
+        { phase: 'failed', candidateIds: ['b'] },
+        { phase: 'done', candidateIds: ['c'] },
+        { phase: 'waiting-relevance', candidateIds: ['d'] },
+      ]),
+    );
+    expect(states.chunks).toEqual(['ready', 'failed', 'ready', 'in-flight']);
+    expect(states.ready).toBe(2);
+    expect(states.total).toBe(4);
+  });
+
+  it('reports nothing once every batch is terminal, so no stale strip survives', () => {
+    // Same idle rule as derivePipelineBatchProgress: one definition of idle
+    // across the three projections, not three kept in lockstep by hand.
+    expect(
+      derivePipelineChunkStates(
+        makeRun([
+          { phase: 'done', candidateIds: ['a'] },
+          { phase: 'failed', candidateIds: ['b'] },
+        ]),
+      ),
+    ).toEqual({ chunks: [], ready: 0, total: 0 });
+  });
+
+  it('counts BATCHES, which is not derivePipelineBatchProgress\'s article count', () => {
+    // Both are true at the same instant and neither is the other\'s percentage.
+    // Presenting one as the other is the trap this pins.
+    const run = makeRun([
+      { phase: 'done', candidateIds: ['a', 'b', 'c'] },
+      { phase: 'waiting-relevance', candidateIds: ['d', 'e'] },
+    ]);
+    expect(derivePipelineChunkStates(run)).toEqual({
+      chunks: ['ready', 'in-flight'],
+      ready: 1,
+      total: 2,
+    });
+    expect(derivePipelineBatchProgress(run)).toEqual({ done: 3, total: 5 });
+  });
+
+  it('grows rather than resets when the gate elects more batches mid-run', () => {
+    // The gate re-elects held-back duplicate siblings into new batches, so
+    // `total` is not fixed when the strip first renders.
+    expect(
+      derivePipelineChunkStates(makeRun([{ phase: 'waiting-relevance', candidateIds: ['a'] }]))
+        .total,
+    ).toBe(1);
+    expect(
+      derivePipelineChunkStates(
+        makeRun([
+          { phase: 'waiting-relevance', candidateIds: ['a'] },
+          { phase: 'queued', candidateIds: ['b'] },
+          { phase: 'queued', candidateIds: ['c'] },
+        ]),
+      ).total,
+    ).toBe(3);
+  });
+
+  it('reports an empty run as idle rather than as a zero-length strip', () => {
+    expect(derivePipelineChunkStates(makeRun([]))).toEqual({
+      chunks: [],
+      ready: 0,
+      total: 0,
+    });
   });
 });
