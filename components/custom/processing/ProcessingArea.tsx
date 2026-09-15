@@ -8,7 +8,7 @@ import { Text } from '@/components/ui/text';
 
 import ChunkStrip from './ChunkStrip';
 import ProcessingStageAnimation from './ProcessingStageAnimation';
-import { ON_DEVICE_HEADLINES_KEY, stageDef } from './processing-stages';
+import { FETCHING_SUBLINE_KEY, ON_DEVICE_HEADLINES_KEY, stageDef } from './processing-stages';
 import {
     PROCESSING_HEADLINE_CYCLE_MS,
     PROCESSING_STRIP_HEIGHT,
@@ -129,7 +129,7 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
             total: snapshot.chunksTotal,
         });
     } else if (stage === 'fetching') {
-        progressLine = t('feed.processing.stages.fetching.amberSubline');
+        progressLine = t(FETCHING_SUBLINE_KEY);
     }
 
     return (
