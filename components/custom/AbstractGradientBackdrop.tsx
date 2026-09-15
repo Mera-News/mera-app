@@ -601,6 +601,22 @@ export interface AbstractGradientBackdropProps {
    * what the tab pages want: no identity to key off, just variety.
    */
   seed?: string;
+
+  /**
+   * Pins which colour in the seeded walk renders, freezing this instance on one
+   * frame. Omit it and the instance follows the shared, time-driven step exactly
+   * as before; every existing call site passes nothing and is unaffected.
+   *
+   * It exists because `seed` alone is not enough to make a backdrop
+   * reproducible. `seed` fixes the SEQUENCE; `step` picks the position in it,
+   * and `step` is a module-level global advanced by one `setInterval` at
+   * `COLOR_STEP_MS`, shared by every mounted instance. So a seeded backdrop
+   * still renders different colours 45 seconds apart.
+   *
+   * The share-stats card needs the pair: it rasterises its background into a
+   * PNG, and two shares of identical stats have to produce identical files.
+   */
+  frame?: number;
 }
 
 /**
@@ -674,7 +690,7 @@ const Field = ANDROID_STATIC_CSS ? CssBlobField : BlobField;
  */
 const BASE_HIDDEN = { opacity: 0 } as const;
 
-const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed }) => {
+const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({ seed, frame }) => {
   const reduceMotion = useReducedMotion();
   const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
 
@@ -726,7 +742,13 @@ const AbstractGradientBackdropImpl: React.FC<AbstractGradientBackdropProps> = ({
   // One engine for the whole app — see THE SHARED ENGINE above. Deliberately
   // NOT gated on focus; see the note above.
   useSharedEngine(!isStatic);
-  const step = useSyncExternalStore(stepStore.subscribe, stepStore.get, stepStore.get);
+  // The subscription is UNCONDITIONAL. Writing this as
+  // `frame ?? useSyncExternalStore(...)` reads better and is a hooks-order bug:
+  // `??` short-circuits, so a pinned instance would skip the hook and any later
+  // change to `frame` would change the number of hooks between renders.
+  // Subscribe always, then let an explicit `frame` win.
+  const liveStep = useSyncExternalStore(stepStore.subscribe, stepStore.get, stepStore.get);
+  const step = frame ?? liveStep;
 
   // Unseeded surfaces share the app-wide sequences, which is what makes every
   // screen the same background. A seed opts out into its own deterministic walk

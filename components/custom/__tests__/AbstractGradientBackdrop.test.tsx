@@ -289,3 +289,72 @@ describe('the shared step advances regardless of focus', () => {
     expect(backdropMetrics.steps).toBe(2);
   });
 });
+
+describe('frame pinning (the share-card capture guard)', () => {
+  // `seed` alone does NOT make a backdrop reproducible, which is the whole
+  // reason `frame` exists. `seed` fixes the SEQUENCE of colours; `step` picks
+  // the position in it, and `step` is a module-level global advanced by one
+  // interval shared across every mounted instance. So a seeded backdrop still
+  // renders different colours 45 seconds apart.
+  //
+  // The share-stats card rasterises its background into a PNG, so two shares of
+  // identical stats must produce identical files. These guard the pair.
+
+  function Pinned({ seed, frame }: { seed?: string; frame?: number }) {
+    return (
+      <NavigationContext.Provider value={makeNavigation(true)}>
+        <AbstractGradientBackdrop seed={seed} frame={frame} />
+      </NavigationContext.Provider>
+    );
+  }
+
+  /** Every gradient stop colour currently on screen, in render order. */
+  const stopColours = (tree: ReturnType<typeof render>): string[] =>
+    tree.UNSAFE_root
+      .findAll((n) => n.props?.stopColor !== undefined)
+      .map((n) => String(n.props.stopColor));
+
+  it('renders identical colours for the same seed and frame, twice over', () => {
+    const a = render(<Pinned seed="mera-stats-card" frame={0} />);
+    const first = stopColours(a);
+    a.unmount();
+
+    const b = render(<Pinned seed="mera-stats-card" frame={0} />);
+    const second = stopColours(b);
+
+    expect(first.length).toBeGreaterThan(0);
+    expect(second).toEqual(first);
+  });
+
+  it('does not move when the shared step advances', () => {
+    const tree = render(<Pinned seed="mera-stats-card" frame={0} />);
+    const before = stopColours(tree);
+
+    advanceOneStep();
+    advanceOneStep();
+    advanceOneStep();
+
+    expect(stopColours(tree)).toEqual(before);
+  });
+
+  it('actually selects, so the prop is not silently ignored', () => {
+    // Without this the two tests above would pass on a `frame` that did nothing.
+    const zero = render(<Pinned seed="mera-stats-card" frame={0} />);
+    const zeroColours = stopColours(zero);
+    zero.unmount();
+
+    const shifted = render(<Pinned seed="mera-stats-card" frame={3} />);
+
+    expect(stopColours(shifted)).not.toEqual(zeroColours);
+  });
+
+  it('leaves the store path untouched when frame is omitted', () => {
+    const tree = render(<Pinned seed="mera-stats-card" />);
+    const before = stopColours(tree);
+
+    advanceOneStep();
+
+    // Unpinned instances must still follow the shared, time-driven walk.
+    expect(stopColours(tree)).not.toEqual(before);
+  });
+});
