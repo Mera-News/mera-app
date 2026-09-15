@@ -1,0 +1,803 @@
+{
+  "_comment": "ready-2 P1 processing area: 12 new keys under feed.processing in all 20 dictionaries. Three headlines values are ARRAYS of exactly 2 strings and must stay arrays of the same length. Placeholders that must survive: {{done}}/{{total}} on downloadProgress, {{ready}}/{{total}} on chunks.ready and chunks.a11y, {{index}}/{{total}}/{{name}} on stageA11y. No plurals: every counted string is of the form 'x of y', which no language pluralises on the numerator here. 'Analysing' keeps the UK form to match feed.analysingProgress, its nearest sibling. No em dashes anywhere, house rule for user-facing copy. Never edit the 20 dictionaries by hand.",
+  "ar": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "البحث عن أخبار اليوم",
+          "downloading": "تنزيل المقالات",
+          "grouping": "تجميع القصص المكررة",
+          "analysing": "تحليل مدى الصلة",
+          "summarising": "كتابة ملاحظاتك",
+          "preparing": "تجهيز موجزك"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "جارٍ سحب مقالات اليوم إلى هاتفك.",
+              "لا شيء يُقرأ على خادم. تصل إليك أولا."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "القصة نفسها تُنشر غالبا في عشرات الأماكن في الوقت نفسه.",
+              "نختار نسخة واحدة من كل قصة حتى لا يتكرر موجزك."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "جارٍ ترتيب موجزك.",
+              "اقتربنا. ستظهر البطاقات الأولى من تلقاء نفسها."
+            ]
+          }
+        },
+        "downloadProgress": "تم تنزيل {{done}} من {{total}} مقالا",
+        "chunks": {
+          "ready": "اكتملت {{ready}} من {{total}} دفعة",
+          "a11y": "دفعات التحليل: اكتملت {{ready}} من {{total}}"
+        },
+        "stageA11y": "الخطوة {{index}} من {{total}}: {{name}}"
+      }
+    }
+  },
+  "de": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Nachrichten von heute finden",
+          "downloading": "Artikel werden geladen",
+          "grouping": "Doppelte Meldungen gruppieren",
+          "analysing": "Relevanz wird analysiert",
+          "summarising": "Notizen werden geschrieben",
+          "preparing": "Feed wird vorbereitet"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Die Artikel von heute kommen auf dein Telefon.",
+              "Nichts wird auf einem Server gelesen. Sie kommen zuerst zu dir."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Dieselbe Meldung erscheint oft an einem Dutzend Stellen gleichzeitig.",
+              "Wir wählen eine Fassung pro Meldung, damit dein Feed sich nicht wiederholt."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Dein Feed wird sortiert.",
+              "Gleich fertig. Die ersten Karten erscheinen von selbst."
+            ]
+          }
+        },
+        "downloadProgress": "{{done}} von {{total}} Artikeln geladen",
+        "chunks": {
+          "ready": "{{ready}} von {{total}} Analyserunden fertig",
+          "a11y": "Analyserunden: {{ready}} von {{total}} fertig"
+        },
+        "stageA11y": "Schritt {{index}} von {{total}}: {{name}}"
+      }
+    }
+  },
+  "en": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Finding today's news",
+          "downloading": "Downloading articles",
+          "grouping": "Grouping duplicate stories",
+          "analysing": "Analysing relevance",
+          "summarising": "Writing your notes",
+          "preparing": "Preparing your feed"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Pulling today's articles onto your phone.",
+              "Nothing is read on a server. They come to you first."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "The same story often runs in a dozen places at once.",
+              "Picking one version of each story so your feed is not repetitive."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Putting your feed in order.",
+              "Almost there. The first cards will appear on their own."
+            ]
+          }
+        },
+        "downloadProgress": "{{done}} of {{total}} articles downloaded",
+        "chunks": {
+          "ready": "{{ready}} of {{total}} analysis batches finished",
+          "a11y": "Analysis batches: {{ready}} of {{total}} finished"
+        },
+        "stageA11y": "Step {{index}} of {{total}}: {{name}}"
+      }
+    }
+  },
+  "es": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Buscando las noticias de hoy",
+          "downloading": "Descargando artículos",
+          "grouping": "Agrupando historias duplicadas",
+          "analysing": "Analizando la relevancia",
+          "summarising": "Escribiendo tus notas",
+          "preparing": "Preparando tu feed"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Trayendo los artículos de hoy a tu teléfono.",
+              "Nada se lee en un servidor. Llegan a ti primero."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "La misma historia suele publicarse en una docena de sitios a la vez.",
+              "Elegimos una versión de cada historia para que tu feed no se repita."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Ordenando tu feed.",
+              "Ya casi. Las primeras tarjetas aparecerán solas."
+            ]
+          }
+        },
+        "downloadProgress": "{{done}} de {{total}} artículos descargados",
+        "chunks": {
+          "ready": "{{ready}} de {{total}} tandas de análisis terminadas",
+          "a11y": "Tandas de análisis: {{ready}} de {{total}} terminadas"
+        },
+        "stageA11y": "Paso {{index}} de {{total}}: {{name}}"
+      }
+    }
+  },
+  "fr": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Recherche des actualités du jour",
+          "downloading": "Téléchargement des articles",
+          "grouping": "Regroupement des sujets en double",
+          "analysing": "Analyse de la pertinence",
+          "summarising": "Rédaction de vos notes",
+          "preparing": "Préparation de votre fil"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Les articles du jour arrivent sur votre téléphone.",
+              "Rien n'est lu sur un serveur. Ils vous parviennent d'abord."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Le même sujet paraît souvent à une dizaine d'endroits en même temps.",
+              "Nous gardons une version de chaque sujet pour que votre fil ne se répète pas."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Mise en ordre de votre fil.",
+              "Presque fini. Les premières cartes apparaîtront d'elles-mêmes."
+            ]
+          }
+        },
+        "downloadProgress": "{{done}} sur {{total}} articles téléchargés",
+        "chunks": {
+          "ready": "{{ready}} sur {{total}} lots d'analyse terminés",
+          "a11y": "Lots d'analyse : {{ready}} sur {{total}} terminés"
+        },
+        "stageA11y": "Étape {{index}} sur {{total}} : {{name}}"
+      }
+    }
+  },
+  "hi": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "आज की खबरें ढूंढी जा रही हैं",
+          "downloading": "लेख डाउनलोड हो रहे हैं",
+          "grouping": "एक जैसी खबरें एक साथ रखी जा रही हैं",
+          "analysing": "प्रासंगिकता का विश्लेषण हो रहा है",
+          "summarising": "आपके लिए नोट लिखे जा रहे हैं",
+          "preparing": "आपकी फ़ीड तैयार हो रही है"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "आज के लेख आपके फ़ोन पर आ रहे हैं।",
+              "कुछ भी सर्वर पर नहीं पढ़ा जाता। वे पहले आप तक पहुंचते हैं।"
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "एक ही खबर अक्सर एक साथ दर्जनों जगह छपती है।",
+              "हर खबर का एक ही रूप चुना जा रहा है ताकि आपकी फ़ीड दोहराई न जाए।"
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "आपकी फ़ीड को क्रम में लगाया जा रहा है।",
+              "बस थोड़ा और। पहले कार्ड अपने आप दिखने लगेंगे।"
+            ]
+          }
+        },
+        "downloadProgress": "{{total}} में से {{done}} लेख डाउनलोड हुए",
+        "chunks": {
+          "ready": "{{total}} में से {{ready}} विश्लेषण बैच पूरे हुए",
+          "a11y": "विश्लेषण बैच: {{total}} में से {{ready}} पूरे"
+        },
+        "stageA11y": "चरण {{index}} / {{total}}: {{name}}"
+      }
+    }
+  },
+  "id": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Mencari berita hari ini",
+          "downloading": "Mengunduh artikel",
+          "grouping": "Mengelompokkan berita yang sama",
+          "analysing": "Menganalisis relevansi",
+          "summarising": "Menulis catatan Anda",
+          "preparing": "Menyiapkan feed Anda"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Artikel hari ini sedang masuk ke ponsel Anda.",
+              "Tidak ada yang dibaca di server. Semuanya sampai ke Anda lebih dulu."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Berita yang sama sering terbit di belasan tempat sekaligus.",
+              "Kami memilih satu versi tiap berita agar feed Anda tidak berulang."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Menata urutan feed Anda.",
+              "Hampir selesai. Kartu pertama akan muncul dengan sendirinya."
+            ]
+          }
+        },
+        "downloadProgress": "{{done}} dari {{total}} artikel terunduh",
+        "chunks": {
+          "ready": "{{ready}} dari {{total}} putaran analisis selesai",
+          "a11y": "Putaran analisis: {{ready}} dari {{total}} selesai"
+        },
+        "stageA11y": "Langkah {{index}} dari {{total}}: {{name}}"
+      }
+    }
+  },
+  "it": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Cerco le notizie di oggi",
+          "downloading": "Scarico gli articoli",
+          "grouping": "Raggruppo le notizie doppie",
+          "analysing": "Analizzo la pertinenza",
+          "summarising": "Scrivo le tue note",
+          "preparing": "Preparo il tuo feed"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Gli articoli di oggi stanno arrivando sul tuo telefono.",
+              "Niente viene letto su un server. Arrivano prima a te."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "La stessa notizia esce spesso in una dozzina di posti insieme.",
+              "Scelgo una versione per ogni notizia, così il tuo feed non si ripete."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Metto in ordine il tuo feed.",
+              "Ci siamo quasi. Le prime schede compariranno da sole."
+            ]
+          }
+        },
+        "downloadProgress": "{{done}} di {{total}} articoli scaricati",
+        "chunks": {
+          "ready": "{{ready}} di {{total}} cicli di analisi completati",
+          "a11y": "Cicli di analisi: {{ready}} di {{total}} completati"
+        },
+        "stageA11y": "Passaggio {{index}} di {{total}}: {{name}}"
+      }
+    }
+  },
+  "ja": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "今日のニュースを探しています",
+          "downloading": "記事をダウンロード中",
+          "grouping": "重複する記事をまとめています",
+          "analysing": "関連度を分析中",
+          "summarising": "メモを作成中",
+          "preparing": "フィードを準備中"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "今日の記事をこの端末に取り込んでいます。",
+              "サーバーで読まれることはありません。まずあなたに届きます。"
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "同じ出来事が同時に何十もの媒体で報じられることがあります。",
+              "フィードが重複しないよう、各出来事から1本だけ選んでいます。"
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "フィードを並べ替えています。",
+              "もうすぐです。最初のカードは自動で表示されます。"
+            ]
+          }
+        },
+        "downloadProgress": "{{total}}件中{{done}}件の記事をダウンロード済み",
+        "chunks": {
+          "ready": "{{total}}件中{{ready}}件の分析バッチが完了",
+          "a11y": "分析バッチ: {{total}}件中{{ready}}件が完了"
+        },
+        "stageA11y": "ステップ {{index}}/{{total}}: {{name}}"
+      }
+    }
+  },
+  "ko": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "오늘의 뉴스를 찾는 중",
+          "downloading": "기사를 내려받는 중",
+          "grouping": "중복 기사를 묶는 중",
+          "analysing": "관련도를 분석하는 중",
+          "summarising": "메모를 작성하는 중",
+          "preparing": "피드를 준비하는 중"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "오늘의 기사를 휴대폰으로 가져오고 있습니다.",
+              "서버에서 읽지 않습니다. 먼저 사용자에게 옵니다."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "같은 사건이 동시에 수십 곳에서 보도되기도 합니다.",
+              "피드가 반복되지 않도록 사건마다 한 건만 고르고 있습니다."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "피드 순서를 정리하고 있습니다.",
+              "거의 다 됐습니다. 첫 카드는 저절로 나타납니다."
+            ]
+          }
+        },
+        "downloadProgress": "{{total}}개 중 {{done}}개 기사를 내려받았습니다",
+        "chunks": {
+          "ready": "{{total}}개 분석 배치 중 {{ready}}개 완료",
+          "a11y": "분석 배치: {{total}}개 중 {{ready}}개 완료"
+        },
+        "stageA11y": "{{total}}단계 중 {{index}}단계: {{name}}"
+      }
+    }
+  },
+  "nl": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Het nieuws van vandaag zoeken",
+          "downloading": "Artikelen downloaden",
+          "grouping": "Dubbele verhalen groeperen",
+          "analysing": "Relevantie analyseren",
+          "summarising": "Je notities schrijven",
+          "preparing": "Je feed klaarmaken"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "De artikelen van vandaag komen naar je telefoon.",
+              "Er wordt niets op een server gelezen. Ze komen eerst bij jou."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Hetzelfde verhaal verschijnt vaak op een stuk of tien plekken tegelijk.",
+              "We kiezen één versie per verhaal, zodat je feed zich niet herhaalt."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Je feed wordt op volgorde gezet.",
+              "Bijna klaar. De eerste kaarten verschijnen vanzelf."
+            ]
+          }
+        },
+        "downloadProgress": "{{done}} van {{total}} artikelen gedownload",
+        "chunks": {
+          "ready": "{{ready}} van {{total}} analyserondes klaar",
+          "a11y": "Analyserondes: {{ready}} van {{total}} klaar"
+        },
+        "stageA11y": "Stap {{index}} van {{total}}: {{name}}"
+      }
+    }
+  },
+  "pl": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Szukam dzisiejszych wiadomości",
+          "downloading": "Pobieram artykuły",
+          "grouping": "Grupuję powtarzające się tematy",
+          "analysing": "Analizuję trafność",
+          "summarising": "Piszę twoje notatki",
+          "preparing": "Przygotowuję twój feed"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Dzisiejsze artykuły trafiają na twój telefon.",
+              "Nic nie jest czytane na serwerze. Najpierw docierają do ciebie."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Ten sam temat często ukazuje się naraz w kilkunastu miejscach.",
+              "Wybieram jedną wersję każdego tematu, żeby feed się nie powtarzał."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Układam twój feed.",
+              "Już prawie. Pierwsze karty pojawią się same."
+            ]
+          }
+        },
+        "downloadProgress": "Pobrano {{done}} z {{total}} artykułów",
+        "chunks": {
+          "ready": "Ukończono {{ready}} z {{total}} partii analizy",
+          "a11y": "Partie analizy: ukończono {{ready}} z {{total}}"
+        },
+        "stageA11y": "Krok {{index}} z {{total}}: {{name}}"
+      }
+    }
+  },
+  "pt-BR": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Procurando as notícias de hoje",
+          "downloading": "Baixando artigos",
+          "grouping": "Agrupando matérias repetidas",
+          "analysing": "Analisando a relevância",
+          "summarising": "Escrevendo suas notas",
+          "preparing": "Preparando seu feed"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Os artigos de hoje estão chegando ao seu telefone.",
+              "Nada é lido em um servidor. Eles chegam primeiro a você."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "A mesma matéria costuma sair em uma dezena de lugares ao mesmo tempo.",
+              "Escolhemos uma versão de cada matéria para o seu feed não se repetir."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Colocando seu feed em ordem.",
+              "Quase lá. Os primeiros cards vão aparecer sozinhos."
+            ]
+          }
+        },
+        "downloadProgress": "{{done}} de {{total}} artigos baixados",
+        "chunks": {
+          "ready": "{{ready}} de {{total}} lotes de análise concluídos",
+          "a11y": "Lotes de análise: {{ready}} de {{total}} concluídos"
+        },
+        "stageA11y": "Etapa {{index}} de {{total}}: {{name}}"
+      }
+    }
+  },
+  "ru": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Ищем сегодняшние новости",
+          "downloading": "Загружаем статьи",
+          "grouping": "Объединяем повторяющиеся сюжеты",
+          "analysing": "Анализируем релевантность",
+          "summarising": "Пишем ваши заметки",
+          "preparing": "Готовим вашу ленту"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Сегодняшние статьи загружаются на ваш телефон.",
+              "Ничего не читается на сервере. Сначала они попадают к вам."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Один и тот же сюжет часто выходит сразу в десятке мест.",
+              "Выбираем по одной версии каждого сюжета, чтобы лента не повторялась."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Расставляем вашу ленту по порядку.",
+              "Почти готово. Первые карточки появятся сами."
+            ]
+          }
+        },
+        "downloadProgress": "Загружено {{done}} из {{total}} статей",
+        "chunks": {
+          "ready": "Готово {{ready}} из {{total}} партий анализа",
+          "a11y": "Партии анализа: готово {{ready}} из {{total}}"
+        },
+        "stageA11y": "Шаг {{index}} из {{total}}: {{name}}"
+      }
+    }
+  },
+  "th": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "กำลังค้นหาข่าววันนี้",
+          "downloading": "กำลังดาวน์โหลดบทความ",
+          "grouping": "กำลังจัดกลุ่มข่าวที่ซ้ำกัน",
+          "analysing": "กำลังวิเคราะห์ความเกี่ยวข้อง",
+          "summarising": "กำลังเขียนบันทึกให้คุณ",
+          "preparing": "กำลังเตรียมฟีดของคุณ"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "บทความของวันนี้กำลังมาที่โทรศัพท์ของคุณ",
+              "ไม่มีอะไรถูกอ่านบนเซิร์ฟเวอร์ ทุกอย่างมาถึงคุณก่อน"
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "ข่าวเดียวกันมักออกพร้อมกันเป็นสิบแห่ง",
+              "เราเลือกไว้ข่าวละหนึ่งฉบับ เพื่อให้ฟีดของคุณไม่ซ้ำ"
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "กำลังจัดลำดับฟีดของคุณ",
+              "ใกล้เสร็จแล้ว การ์ดแรกจะปรากฏขึ้นเอง"
+            ]
+          }
+        },
+        "downloadProgress": "ดาวน์โหลดแล้ว {{done}} จาก {{total}} บทความ",
+        "chunks": {
+          "ready": "เสร็จแล้ว {{ready}} จาก {{total}} ชุดการวิเคราะห์",
+          "a11y": "ชุดการวิเคราะห์: เสร็จแล้ว {{ready}} จาก {{total}}"
+        },
+        "stageA11y": "ขั้นที่ {{index}} จาก {{total}}: {{name}}"
+      }
+    }
+  },
+  "tr": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Bugünün haberleri aranıyor",
+          "downloading": "Makaleler indiriliyor",
+          "grouping": "Yinelenen haberler gruplanıyor",
+          "analysing": "İlgililik analiz ediliyor",
+          "summarising": "Notlarınız yazılıyor",
+          "preparing": "Akışınız hazırlanıyor"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Bugünün makaleleri telefonunuza geliyor.",
+              "Hiçbir şey bir sunucuda okunmuyor. Önce size ulaşıyorlar."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Aynı haber çoğu zaman aynı anda onlarca yerde çıkar.",
+              "Akışınız tekrar etmesin diye her haberden bir sürüm seçiyoruz."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Akışınız sıraya konuyor.",
+              "Neredeyse bitti. İlk kartlar kendiliğinden görünecek."
+            ]
+          }
+        },
+        "downloadProgress": "{{total}} makalenin {{done}} tanesi indirildi",
+        "chunks": {
+          "ready": "{{total}} analiz turundan {{ready}} tanesi tamamlandı",
+          "a11y": "Analiz turları: {{total}} turdan {{ready}} tanesi tamamlandı"
+        },
+        "stageA11y": "Adım {{index}} / {{total}}: {{name}}"
+      }
+    }
+  },
+  "uk": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Шукаємо сьогоднішні новини",
+          "downloading": "Завантажуємо статті",
+          "grouping": "Об'єднуємо повторювані сюжети",
+          "analysing": "Аналізуємо релевантність",
+          "summarising": "Пишемо ваші нотатки",
+          "preparing": "Готуємо вашу стрічку"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Сьогоднішні статті завантажуються на ваш телефон.",
+              "Нічого не читається на сервері. Спершу вони потрапляють до вас."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Той самий сюжет часто виходить одразу в десятку місць.",
+              "Обираємо по одній версії кожного сюжету, щоб стрічка не повторювалася."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Упорядковуємо вашу стрічку.",
+              "Майже готово. Перші картки з'являться самі."
+            ]
+          }
+        },
+        "downloadProgress": "Завантажено {{done}} із {{total}} статей",
+        "chunks": {
+          "ready": "Готово {{ready}} із {{total}} партій аналізу",
+          "a11y": "Партії аналізу: готово {{ready}} із {{total}}"
+        },
+        "stageA11y": "Крок {{index}} із {{total}}: {{name}}"
+      }
+    }
+  },
+  "vi": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "Đang tìm tin tức hôm nay",
+          "downloading": "Đang tải bài viết",
+          "grouping": "Đang gộp các tin trùng nhau",
+          "analysing": "Đang phân tích mức độ liên quan",
+          "summarising": "Đang viết ghi chú cho bạn",
+          "preparing": "Đang chuẩn bị bảng tin của bạn"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "Các bài viết hôm nay đang về máy của bạn.",
+              "Không có gì được đọc trên máy chủ. Chúng đến với bạn trước."
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "Cùng một tin thường xuất hiện ở cả chục nơi cùng lúc.",
+              "Chúng tôi chọn một bản cho mỗi tin để bảng tin của bạn không lặp lại."
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "Đang sắp xếp bảng tin của bạn.",
+              "Sắp xong rồi. Những thẻ đầu tiên sẽ tự hiện ra."
+            ]
+          }
+        },
+        "downloadProgress": "Đã tải {{done}} trong {{total}} bài viết",
+        "chunks": {
+          "ready": "Đã xong {{ready}} trong {{total}} đợt phân tích",
+          "a11y": "Đợt phân tích: đã xong {{ready}} trong {{total}}"
+        },
+        "stageA11y": "Bước {{index}} trên {{total}}: {{name}}"
+      }
+    }
+  },
+  "zh-CN": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "正在查找今天的新闻",
+          "downloading": "正在下载文章",
+          "grouping": "正在合并重复报道",
+          "analysing": "正在分析相关度",
+          "summarising": "正在写你的摘要",
+          "preparing": "正在准备你的信息流"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "今天的文章正在下载到你的手机上。",
+              "没有任何内容在服务器上被读取。它们先到你这里。"
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "同一件事常常同时出现在十几家媒体上。",
+              "每件事只保留一个版本，这样你的信息流不会重复。"
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "正在为你排列信息流。",
+              "快好了。第一批卡片会自动出现。"
+            ]
+          }
+        },
+        "downloadProgress": "已下载 {{total}} 篇中的 {{done}} 篇",
+        "chunks": {
+          "ready": "已完成 {{total}} 个分析批次中的 {{ready}} 个",
+          "a11y": "分析批次：已完成 {{total}} 个中的 {{ready}} 个"
+        },
+        "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}"
+      }
+    }
+  },
+  "zh-TW": {
+    "feed": {
+      "processing": {
+        "stageLabels": {
+          "fetching": "正在尋找今天的新聞",
+          "downloading": "正在下載文章",
+          "grouping": "正在合併重複報導",
+          "analysing": "正在分析相關度",
+          "summarising": "正在撰寫你的摘要",
+          "preparing": "正在準備你的資訊流"
+        },
+        "stages": {
+          "downloading": {
+            "headlines": [
+              "今天的文章正在下載到你的手機上。",
+              "沒有任何內容在伺服器上被讀取。它們會先到你這裡。"
+            ]
+          },
+          "grouping": {
+            "headlines": [
+              "同一件事常常同時出現在十幾家媒體上。",
+              "每件事只保留一個版本，這樣你的資訊流不會重複。"
+            ]
+          },
+          "preparing": {
+            "headlines": [
+              "正在為你排列資訊流。",
+              "快好了。第一批卡片會自動出現。"
+            ]
+          }
+        },
+        "downloadProgress": "已下載 {{total}} 篇中的 {{done}} 篇",
+        "chunks": {
+          "ready": "已完成 {{total}} 個分析批次中的 {{ready}} 個",
+          "a11y": "分析批次：已完成 {{total}} 個中的 {{ready}} 個"
+        },
+        "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}"
+      }
+    }
+  }
+}

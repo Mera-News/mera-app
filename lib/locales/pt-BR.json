@@ -159,8 +159,40 @@
             "Seu celular está classificando essas histórias para você.",
             "Isso acontece inteiramente no seu dispositivo: nada sai dele."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Os artigos de hoje estão chegando ao seu telefone.",
+            "Nada é lido em um servidor. Eles chegam primeiro a você."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "A mesma matéria costuma sair em uma dezena de lugares ao mesmo tempo.",
+            "Escolhemos uma versão de cada matéria para o seu feed não se repetir."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Colocando seu feed em ordem.",
+            "Quase lá. Os primeiros cards vão aparecer sozinhos."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Procurando as notícias de hoje",
+        "downloading": "Baixando artigos",
+        "grouping": "Agrupando matérias repetidas",
+        "analysing": "Analisando a relevância",
+        "summarising": "Escrevendo suas notas",
+        "preparing": "Preparando seu feed"
+      },
+      "downloadProgress": "{{done}} de {{total}} artigos baixados",
+      "chunks": {
+        "ready": "{{ready}} de {{total}} lotes de análise concluídos",
+        "a11y": "Lotes de análise: {{ready}} de {{total}} concluídos"
+      },
+      "stageA11y": "Etapa {{index}} de {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Emergência",

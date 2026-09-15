@@ -159,8 +159,40 @@
             "Je telefoon scoort deze artikelen voor jou.",
             "Dit gebeurt volledig op je apparaat: niets verlaat het."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "De artikelen van vandaag komen naar je telefoon.",
+            "Er wordt niets op een server gelezen. Ze komen eerst bij jou."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "Hetzelfde verhaal verschijnt vaak op een stuk of tien plekken tegelijk.",
+            "We kiezen één versie per verhaal, zodat je feed zich niet herhaalt."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Je feed wordt op volgorde gezet.",
+            "Bijna klaar. De eerste kaarten verschijnen vanzelf."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Het nieuws van vandaag zoeken",
+        "downloading": "Artikelen downloaden",
+        "grouping": "Dubbele verhalen groeperen",
+        "analysing": "Relevantie analyseren",
+        "summarising": "Je notities schrijven",
+        "preparing": "Je feed klaarmaken"
+      },
+      "downloadProgress": "{{done}} van {{total}} artikelen gedownload",
+      "chunks": {
+        "ready": "{{ready}} van {{total}} analyserondes klaar",
+        "a11y": "Analyserondes: {{ready}} van {{total}} klaar"
+      },
+      "stageA11y": "Stap {{index}} van {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Noodgeval",

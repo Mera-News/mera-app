@@ -159,8 +159,40 @@
             "您的手机正在为您对这些文章评分。",
             "这一步完全在您的设备上进行——没有任何数据离开设备。"
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "今天的文章正在下载到你的手机上。",
+            "没有任何内容在服务器上被读取。它们先到你这里。"
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "同一件事常常同时出现在十几家媒体上。",
+            "每件事只保留一个版本，这样你的信息流不会重复。"
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "正在为你排列信息流。",
+            "快好了。第一批卡片会自动出现。"
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "正在查找今天的新闻",
+        "downloading": "正在下载文章",
+        "grouping": "正在合并重复报道",
+        "analysing": "正在分析相关度",
+        "summarising": "正在写你的摘要",
+        "preparing": "正在准备你的信息流"
+      },
+      "downloadProgress": "已下载 {{total}} 篇中的 {{done}} 篇",
+      "chunks": {
+        "ready": "已完成 {{total}} 个分析批次中的 {{ready}} 个",
+        "a11y": "分析批次：已完成 {{total}} 个中的 {{ready}} 个"
+      },
+      "stageA11y": "第 {{index}} 步，共 {{total}} 步：{{name}}"
     },
     "sections": {
       "emergency": "紧急",

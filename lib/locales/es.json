@@ -159,8 +159,40 @@
             "Tu teléfono está puntuando estas historias para ti.",
             "Esto ocurre completamente en tu dispositivo: nada lo abandona."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Trayendo los artículos de hoy a tu teléfono.",
+            "Nada se lee en un servidor. Llegan a ti primero."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "La misma historia suele publicarse en una docena de sitios a la vez.",
+            "Elegimos una versión de cada historia para que tu feed no se repita."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Ordenando tu feed.",
+            "Ya casi. Las primeras tarjetas aparecerán solas."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Buscando las noticias de hoy",
+        "downloading": "Descargando artículos",
+        "grouping": "Agrupando historias duplicadas",
+        "analysing": "Analizando la relevancia",
+        "summarising": "Escribiendo tus notas",
+        "preparing": "Preparando tu feed"
+      },
+      "downloadProgress": "{{done}} de {{total}} artículos descargados",
+      "chunks": {
+        "ready": "{{ready}} de {{total}} tandas de análisis terminadas",
+        "a11y": "Tandas de análisis: {{ready}} de {{total}} terminadas"
+      },
+      "stageA11y": "Paso {{index}} de {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Emergencia",

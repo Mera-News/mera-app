@@ -159,8 +159,40 @@
             "Twój telefon ocenia te artykuły dla Ciebie.",
             "Dzieje się to w całości na Twoim urządzeniu: nic go nie opuszcza."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Dzisiejsze artykuły trafiają na twój telefon.",
+            "Nic nie jest czytane na serwerze. Najpierw docierają do ciebie."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "Ten sam temat często ukazuje się naraz w kilkunastu miejscach.",
+            "Wybieram jedną wersję każdego tematu, żeby feed się nie powtarzał."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Układam twój feed.",
+            "Już prawie. Pierwsze karty pojawią się same."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Szukam dzisiejszych wiadomości",
+        "downloading": "Pobieram artykuły",
+        "grouping": "Grupuję powtarzające się tematy",
+        "analysing": "Analizuję trafność",
+        "summarising": "Piszę twoje notatki",
+        "preparing": "Przygotowuję twój feed"
+      },
+      "downloadProgress": "Pobrano {{done}} z {{total}} artykułów",
+      "chunks": {
+        "ready": "Ukończono {{ready}} z {{total}} partii analizy",
+        "a11y": "Partie analizy: ukończono {{ready}} z {{total}}"
+      },
+      "stageA11y": "Krok {{index}} z {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Pilne",

@@ -223,8 +223,40 @@
             "Your phone is scoring these stories for you.",
             "This happens entirely on your device: nothing leaves it."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Pulling today's articles onto your phone.",
+            "Nothing is read on a server. They come to you first."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "The same story often runs in a dozen places at once.",
+            "Picking one version of each story so your feed is not repetitive."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Putting your feed in order.",
+            "Almost there. The first cards will appear on their own."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Finding today's news",
+        "downloading": "Downloading articles",
+        "grouping": "Grouping duplicate stories",
+        "analysing": "Analysing relevance",
+        "summarising": "Writing your notes",
+        "preparing": "Preparing your feed"
+      },
+      "downloadProgress": "{{done}} of {{total}} articles downloaded",
+      "chunks": {
+        "ready": "{{ready}} of {{total}} analysis batches finished",
+        "a11y": "Analysis batches: {{ready}} of {{total}} finished"
+      },
+      "stageA11y": "Step {{index}} of {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Emergency",

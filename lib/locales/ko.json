@@ -159,8 +159,40 @@
             "기기가 기사의 점수를 계산하고 있습니다.",
             "이 작업은 전적으로 기기에서 이루어집니다. 아무것도 외부로 전송되지 않습니다."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "오늘의 기사를 휴대폰으로 가져오고 있습니다.",
+            "서버에서 읽지 않습니다. 먼저 사용자에게 옵니다."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "같은 사건이 동시에 수십 곳에서 보도되기도 합니다.",
+            "피드가 반복되지 않도록 사건마다 한 건만 고르고 있습니다."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "피드 순서를 정리하고 있습니다.",
+            "거의 다 됐습니다. 첫 카드는 저절로 나타납니다."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "오늘의 뉴스를 찾는 중",
+        "downloading": "기사를 내려받는 중",
+        "grouping": "중복 기사를 묶는 중",
+        "analysing": "관련도를 분석하는 중",
+        "summarising": "메모를 작성하는 중",
+        "preparing": "피드를 준비하는 중"
+      },
+      "downloadProgress": "{{total}}개 중 {{done}}개 기사를 내려받았습니다",
+      "chunks": {
+        "ready": "{{total}}개 분석 배치 중 {{ready}}개 완료",
+        "a11y": "분석 배치: {{total}}개 중 {{ready}}개 완료"
+      },
+      "stageA11y": "{{total}}단계 중 {{index}}단계: {{name}}"
     },
     "sections": {
       "emergency": "긴급",

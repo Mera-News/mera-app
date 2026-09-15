@@ -159,8 +159,40 @@
             "Điện thoại của bạn đang chấm điểm các bài viết cho bạn.",
             "Bước này diễn ra hoàn toàn trên thiết bị của bạn: không có gì rời đi."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Các bài viết hôm nay đang về máy của bạn.",
+            "Không có gì được đọc trên máy chủ. Chúng đến với bạn trước."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "Cùng một tin thường xuất hiện ở cả chục nơi cùng lúc.",
+            "Chúng tôi chọn một bản cho mỗi tin để bảng tin của bạn không lặp lại."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Đang sắp xếp bảng tin của bạn.",
+            "Sắp xong rồi. Những thẻ đầu tiên sẽ tự hiện ra."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Đang tìm tin tức hôm nay",
+        "downloading": "Đang tải bài viết",
+        "grouping": "Đang gộp các tin trùng nhau",
+        "analysing": "Đang phân tích mức độ liên quan",
+        "summarising": "Đang viết ghi chú cho bạn",
+        "preparing": "Đang chuẩn bị bảng tin của bạn"
+      },
+      "downloadProgress": "Đã tải {{done}} trong {{total}} bài viết",
+      "chunks": {
+        "ready": "Đã xong {{ready}} trong {{total}} đợt phân tích",
+        "a11y": "Đợt phân tích: đã xong {{ready}} trong {{total}}"
+      },
+      "stageA11y": "Bước {{index}} trên {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Khẩn cấp",

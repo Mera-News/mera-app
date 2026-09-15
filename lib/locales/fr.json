@@ -159,8 +159,40 @@
             "Votre téléphone trie ces articles pour vous.",
             "Cette étape se déroule entièrement sur votre appareil : rien n'en sort."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Les articles du jour arrivent sur votre téléphone.",
+            "Rien n'est lu sur un serveur. Ils vous parviennent d'abord."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "Le même sujet paraît souvent à une dizaine d'endroits en même temps.",
+            "Nous gardons une version de chaque sujet pour que votre fil ne se répète pas."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Mise en ordre de votre fil.",
+            "Presque fini. Les premières cartes apparaîtront d'elles-mêmes."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Recherche des actualités du jour",
+        "downloading": "Téléchargement des articles",
+        "grouping": "Regroupement des sujets en double",
+        "analysing": "Analyse de la pertinence",
+        "summarising": "Rédaction de vos notes",
+        "preparing": "Préparation de votre fil"
+      },
+      "downloadProgress": "{{done}} sur {{total}} articles téléchargés",
+      "chunks": {
+        "ready": "{{ready}} sur {{total}} lots d'analyse terminés",
+        "a11y": "Lots d'analyse : {{ready}} sur {{total}} terminés"
+      },
+      "stageA11y": "Étape {{index}} sur {{total}} : {{name}}"
     },
     "sections": {
       "emergency": "Urgence",

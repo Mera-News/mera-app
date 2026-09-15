@@ -159,8 +159,40 @@
             "Ponsel Anda sedang memberi skor pada cerita-cerita ini untuk Anda.",
             "Ini terjadi sepenuhnya di perangkat Anda. Tidak ada yang keluar darinya."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Artikel hari ini sedang masuk ke ponsel Anda.",
+            "Tidak ada yang dibaca di server. Semuanya sampai ke Anda lebih dulu."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "Berita yang sama sering terbit di belasan tempat sekaligus.",
+            "Kami memilih satu versi tiap berita agar feed Anda tidak berulang."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Menata urutan feed Anda.",
+            "Hampir selesai. Kartu pertama akan muncul dengan sendirinya."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Mencari berita hari ini",
+        "downloading": "Mengunduh artikel",
+        "grouping": "Mengelompokkan berita yang sama",
+        "analysing": "Menganalisis relevansi",
+        "summarising": "Menulis catatan Anda",
+        "preparing": "Menyiapkan feed Anda"
+      },
+      "downloadProgress": "{{done}} dari {{total}} artikel terunduh",
+      "chunks": {
+        "ready": "{{ready}} dari {{total}} putaran analisis selesai",
+        "a11y": "Putaran analisis: {{ready}} dari {{total}} selesai"
+      },
+      "stageA11y": "Langkah {{index}} dari {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Darurat",

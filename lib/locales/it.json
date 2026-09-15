@@ -159,8 +159,40 @@
             "Il tuo telefono sta assegnando un punteggio a queste storie per te.",
             "Questo avviene interamente sul tuo dispositivo. Nulla lo abbandona."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Gli articoli di oggi stanno arrivando sul tuo telefono.",
+            "Niente viene letto su un server. Arrivano prima a te."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "La stessa notizia esce spesso in una dozzina di posti insieme.",
+            "Scelgo una versione per ogni notizia, così il tuo feed non si ripete."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Metto in ordine il tuo feed.",
+            "Ci siamo quasi. Le prime schede compariranno da sole."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Cerco le notizie di oggi",
+        "downloading": "Scarico gli articoli",
+        "grouping": "Raggruppo le notizie doppie",
+        "analysing": "Analizzo la pertinenza",
+        "summarising": "Scrivo le tue note",
+        "preparing": "Preparo il tuo feed"
+      },
+      "downloadProgress": "{{done}} di {{total}} articoli scaricati",
+      "chunks": {
+        "ready": "{{ready}} di {{total}} cicli di analisi completati",
+        "a11y": "Cicli di analisi: {{ready}} di {{total}} completati"
+      },
+      "stageA11y": "Passaggio {{index}} di {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Emergenza",

@@ -159,8 +159,40 @@
             "Telefonun bu hikayeleri senin için puanlıyor.",
             "Bu adım tamamen cihazında gerçekleşiyor: hiçbir şey dışarı çıkmıyor."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Bugünün makaleleri telefonunuza geliyor.",
+            "Hiçbir şey bir sunucuda okunmuyor. Önce size ulaşıyorlar."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "Aynı haber çoğu zaman aynı anda onlarca yerde çıkar.",
+            "Akışınız tekrar etmesin diye her haberden bir sürüm seçiyoruz."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Akışınız sıraya konuyor.",
+            "Neredeyse bitti. İlk kartlar kendiliğinden görünecek."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Bugünün haberleri aranıyor",
+        "downloading": "Makaleler indiriliyor",
+        "grouping": "Yinelenen haberler gruplanıyor",
+        "analysing": "İlgililik analiz ediliyor",
+        "summarising": "Notlarınız yazılıyor",
+        "preparing": "Akışınız hazırlanıyor"
+      },
+      "downloadProgress": "{{total}} makalenin {{done}} tanesi indirildi",
+      "chunks": {
+        "ready": "{{total}} analiz turundan {{ready}} tanesi tamamlandı",
+        "a11y": "Analiz turları: {{total}} turdan {{ready}} tanesi tamamlandı"
+      },
+      "stageA11y": "Adım {{index}} / {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Acil",

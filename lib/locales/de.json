@@ -159,8 +159,40 @@
             "Ihr Telefon bewertet diese Geschichten für Sie.",
             "Dies geschieht vollständig auf Ihrem Gerät: nichts verlässt es."
           ]
+        },
+        "downloading": {
+          "headlines": [
+            "Die Artikel von heute kommen auf dein Telefon.",
+            "Nichts wird auf einem Server gelesen. Sie kommen zuerst zu dir."
+          ]
+        },
+        "grouping": {
+          "headlines": [
+            "Dieselbe Meldung erscheint oft an einem Dutzend Stellen gleichzeitig.",
+            "Wir wählen eine Fassung pro Meldung, damit dein Feed sich nicht wiederholt."
+          ]
+        },
+        "preparing": {
+          "headlines": [
+            "Dein Feed wird sortiert.",
+            "Gleich fertig. Die ersten Karten erscheinen von selbst."
+          ]
         }
-      }
+      },
+      "stageLabels": {
+        "fetching": "Nachrichten von heute finden",
+        "downloading": "Artikel werden geladen",
+        "grouping": "Doppelte Meldungen gruppieren",
+        "analysing": "Relevanz wird analysiert",
+        "summarising": "Notizen werden geschrieben",
+        "preparing": "Feed wird vorbereitet"
+      },
+      "downloadProgress": "{{done}} von {{total}} Artikeln geladen",
+      "chunks": {
+        "ready": "{{ready}} von {{total}} Analyserunden fertig",
+        "a11y": "Analyserunden: {{ready}} von {{total}} fertig"
+      },
+      "stageA11y": "Schritt {{index}} von {{total}}: {{name}}"
     },
     "sections": {
       "emergency": "Notfall",
