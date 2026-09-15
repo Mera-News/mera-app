@@ -102,6 +102,10 @@ const VisitedPublicationsList: React.FC<Props> = ({
         [],
     );
 
+    const handleSharePress = useCallback(() => {
+        router.push('/logged-in/share-stats');
+    }, []);
+
     const handlePublicationPress = useCallback((item: VisitedPublication) => {
         router.push({
             pathname: '/logged-in/publication-history',
@@ -161,6 +165,24 @@ const VisitedPublicationsList: React.FC<Props> = ({
                     title={t('publicationVisits.visitedListTitle')}
                     subtitle={t('publicationVisits.last30Days')}
                     onBack={onBack}
+                    /* The share card's entry point. It lives HERE rather than
+                       on the Sources tab card because this is the screen where
+                       the reader already sees and owns this exact data, and
+                       DrillDownHeader needed no change to carry it. Absent in
+                       the embedded case, where the host owns the top chrome
+                       and this header is not rendered at all. */
+                    rightAction={
+                        <Pressable
+                            testID="share-stats-open"
+                            onPress={handleSharePress}
+                            hitSlop={12}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('shareStats.entryA11y')}
+                            className="p-1 rounded-full"
+                        >
+                            <MaterialIcons name="ios-share" size={20} color="#FFFFFF" />
+                        </Pressable>
+                    }
                 />
             )}
             {/* These two branches render INSTEAD of the list, so there is no
