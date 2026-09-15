@@ -155,14 +155,39 @@ import { useTranslation } from 'react-i18next';
 import { AppState, RefreshControl, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
 import Animated, {
+  FadeIn,
   runOnJS,
   useAnimatedScrollHandler,
   useComposedEventHandler,
+  useReducedMotion,
   useSharedValue,
 } from 'react-native-reanimated';
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REFRESH_TINT = '#EDA77E';
+
+// ── Arrival transition ──────────────────────────────────────────────────────
+//
+// ENTERING ONLY. No `exiting` and no `layout` on a list item: a layout
+// animation under `maintainVisibleContentPosition` is how the pull-to-refresh
+// bug class documented in `for-you/DashboardSectionsFeed.tsx` gets re-opened,
+// and the feed is insert-only anyway, so nothing ever leaves mid-session.
+//
+// It fires for CARDS THAT JUST ARRIVED and for nothing else. A FlatList mounts
+// and unmounts cells as the reader scrolls, so an unconditional `entering`
+// animates rows that have been in the list for minutes every time they
+// re-enter the window, which reads as the feed twitching rather than as
+// anything arriving. `arrivingIdsRef` below is the difference.
+const ARRIVAL_DURATION_MS = 220;
+const ARRIVAL_STAGGER_MS = 45;
+/** Past this many rows the stagger stops growing: a full sync can prepend
+ *  dozens, and a linear stagger would leave the last one waiting seconds. */
+const ARRIVAL_STAGGER_CAP = 5;
+/** How long an id stays eligible after its commit. Comfortably past the last
+ *  staggered start, and short enough that scrolling back to a row minutes later
+ *  never re-animates it. */
+const ARRIVAL_ELIGIBLE_MS = 600;
 
 /** Show the scroll-to-top FAB once the feed is scrolled past this many px. */
 const SCROLL_THRESHOLD = 300;
@@ -191,6 +216,7 @@ const FeedRow = React.memo(function FeedRow({
   onAskMera,
   onSaveToggled,
   feedbackHandlers,
+  enterDelay,
 }: {
   item: FeedListItem;
   onPress: (suggestion: ForYouSuggestion) => void;
@@ -198,6 +224,10 @@ const FeedRow = React.memo(function FeedRow({
   onAskMera: (suggestion: ForYouSuggestion) => void;
   onSaveToggled: (suggestion: ForYouSuggestion, saved: boolean) => void;
   feedbackHandlers: CardFeedbackHandlers;
+  /** ms to hold before this card's arrival transition, or null for no
+   *  transition at all — a row that was already here, or a reader who asked
+   *  for less motion. */
+  enterDelay: number | null;
 }) {
   const verdict = useFeedOrderStore((s) => s.verdicts[item.id]?.verdict ?? null);
   const path = useFeedOrderStore((s) => s.verdicts[item.id]?.path);
@@ -216,6 +246,15 @@ const FeedRow = React.memo(function FeedRow({
   const hasCardState = useFeedOrderStore((s) => !!s.cardStates[item.id]);
   const seen = openedExactly || hasCardState;
   return (
+    // The wrapper is UNCONDITIONAL and only `entering` varies, so the tree
+    // shape never changes between renders of the same row.
+    <Animated.View
+      entering={
+        enterDelay === null
+          ? undefined
+          : FadeIn.duration(ARRIVAL_DURATION_MS).delay(enterDelay)
+      }
+    >
     <ArticleSuggestionCard
       suggestion={item.suggestion}
       onPress={onPress}
@@ -238,6 +277,7 @@ const FeedRow = React.memo(function FeedRow({
       read={seen}
       flat
     />
+    </Animated.View>
   );
 });
 
@@ -247,6 +287,15 @@ const FeedScreen: React.FC = () => {
   const isFocused = useIsFocused();
 
   const { isLoading, errorMessage } = useFeedBootstrap();
+
+  // Reduce Motion, or the app's own "Static background", which already defaults
+  // ON below 6 GB of RAM. Either one means an arriving card simply appears:
+  // instant, no stagger, nothing to wait through. Same pair the processing
+  // area and the tutorial heroes read, and the same one-liner
+  // `AbstractGradientBackdrop` established.
+  const reduceMotion = useReducedMotion();
+  const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
+  const arrivalMotion = !reduceMotion && !staticGradient;
 
   // Collapsing header (hides on scroll-down, reveals on scroll-up) — shared
   // with the Dashboard tab.
@@ -546,6 +595,46 @@ const FeedScreen: React.FC = () => {
   listDataRef.current = listData;
   renderedIdsRef.current = useMemo(() => listData.map((it) => it.id), [listData]);
 
+  // ── Which cards just arrived ──────────────────────────────────────────────
+  //
+  // Derived DURING render, because Reanimated's `entering` runs when a cell
+  // MOUNTS: an effect would fire after the mount it needs to describe and the
+  // card would paint plain and then animate, which is a flash rather than an
+  // arrival.
+  //
+  // The whole computation is keyed on `listData`'s IDENTITY, so a re-render
+  // with the same list is a no-op and a double render under StrictMode cannot
+  // consume the set twice. `listData` is memoised above, so the identity is the
+  // honest signal of "the list changed".
+  //
+  // The first commit deliberately animates NOTHING: on a cold start every row
+  // is technically new, and flying the whole first screen in reads as a loading
+  // screen rather than as news arriving.
+  const seenRowIdsRef = useRef<Set<string> | null>(null);
+  const lastListRef = useRef<FeedListItem[] | null>(null);
+  const arrivingIdsRef = useRef<Set<string>>(new Set());
+  if (lastListRef.current !== listData) {
+    lastListRef.current = listData;
+    const previous = seenRowIdsRef.current;
+    const ids = listData.map((it) => it.id);
+    arrivingIdsRef.current =
+      previous === null ? new Set() : new Set(ids.filter((id) => !previous.has(id)));
+    seenRowIdsRef.current = new Set(ids);
+  }
+
+  // Eligibility expires. Without this, a row that arrived while the reader was
+  // at the top animates again the first time they scroll far enough down for
+  // the windowing to mount it, minutes later, which looks like a glitch rather
+  // than an arrival. No cleanup cancellation on purpose, matching the
+  // scroll-reset effect below: clearing the set twice is harmless and the timer
+  // must not be cancelled by the next ingest.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      arrivingIdsRef.current = new Set();
+    }, ARRIVAL_ELIGIBLE_MS);
+    return () => clearTimeout(timer);
+  }, [listData]);
+
   // Seed the pin the first time the list is non-empty. This is NOT redundant
   // with the extend inside the ingest effect: on a cold launch the first ingest
   // fires while `listData` is still empty (order empty, candidates just landed),
@@ -746,7 +835,7 @@ const FeedScreen: React.FC = () => {
   const onScroll = useComposedEventHandler([scrollHandler, tickHandler]);
 
   const renderItem = useCallback(
-    ({ item }: { item: FeedEntry }) => (
+    ({ item, index }: { item: FeedEntry; index: number }) => (
       <FeedRow
         item={item}
         onPress={openSuggestion}
@@ -754,9 +843,14 @@ const FeedScreen: React.FC = () => {
         onAskMera={onAskMera}
         onSaveToggled={onSaveToggled}
         feedbackHandlers={feedbackHandlers}
+        enterDelay={
+          arrivalMotion && arrivingIdsRef.current.has(item.id)
+            ? Math.min(index, ARRIVAL_STAGGER_CAP) * ARRIVAL_STAGGER_MS
+            : null
+        }
       />
     ),
-    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers],
+    [openSuggestion, onVerdict, onAskMera, onSaveToggled, feedbackHandlers, arrivalMotion],
   );
 
   const keyExtractor = useCallback((item: FeedEntry) => item.id, []);
