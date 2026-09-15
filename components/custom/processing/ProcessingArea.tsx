@@ -12,9 +12,9 @@ import { ON_DEVICE_HEADLINES_KEY, stageDef } from './processing-stages';
 import {
     PROCESSING_HEADLINE_CYCLE_MS,
     PROCESSING_STRIP_HEIGHT,
+    PROCESSING_TOTAL_STAGES,
     type ProcessingSnapshot,
 } from './types';
-import { PROCESSING_TOTAL_STAGES } from './use-processing-snapshot';
 
 /** Half of the headline crossfade. */
 const FADE_MS = 220;

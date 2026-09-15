@@ -17,7 +17,7 @@ import {
   useForYouHydrationProgress,
   useForYouSyncStatusMessage,
 } from '@/lib/stores/selectors';
-import { PROCESSING_STAGE_IDS, type ProcessingSnapshot } from './types';
+import type { ProcessingSnapshot } from './types';
 
 const EMPTY_CHUNKS: readonly [] = [];
 
@@ -141,6 +141,3 @@ function stageValueFor(
       return 0;
   }
 }
-
-/** Six, and the bar is drawn from this rather than from a literal. */
-export const PROCESSING_TOTAL_STAGES = PROCESSING_STAGE_IDS.length;

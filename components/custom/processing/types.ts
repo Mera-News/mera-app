@@ -13,8 +13,11 @@ export {
 } from '@/lib/services/processing-stage';
 export type { ChunkState } from '@/lib/services/scoring-pipeline';
 
+import { PROCESSING_STAGE_IDS as STAGE_IDS } from '@/lib/services/processing-stage';
 import type { ProcessingStageId } from '@/lib/services/processing-stage';
 import type { ChunkState } from '@/lib/services/scoring-pipeline';
+
+const PROCESSING_STAGE_COUNT = STAGE_IDS.length;
 
 /**
  * The in-list card's height, in points. FIXED, and not negotiable down to a
@@ -39,6 +42,17 @@ export const PROCESSING_CARD_HEIGHT = 300;
  * segments narrower. It must never get taller.
  */
 export const PROCESSING_STRIP_HEIGHT = 28;
+
+/**
+ * Six, and every surface draws its bar from this rather than from a literal.
+ *
+ * It lives HERE and not beside the hook on purpose: `ProcessingArea` is
+ * presentational, and importing anything from `use-processing-snapshot.ts`
+ * drags `FeedSyncIndicator` in, and through it `AppScheduler` and the
+ * WatermelonDB singleton, which is instantiated at import time. A component
+ * test then fails on `initializeJSI` with a stack that points at a constant.
+ */
+export const PROCESSING_TOTAL_STAGES = PROCESSING_STAGE_COUNT;
 
 /** The square animation block inside the card, in points. */
 export const PROCESSING_SCENE_SIZE = 120;
