@@ -21,30 +21,6 @@ import logger from './logger';
 // the panel reads one shape, so a field added for one path must reach both.
 import { FACT_CHECK_FIELDS } from './fact-check/fact-check-fields';
 
-// GraphQL Query for fetching articles for a cluster (excluding already shown articles)
-const GET_ARTICLES_FOR_CLUSTER = gql`
-  query GetArticlesForCluster($clusterId: ID!, $articleIdsToExclude: [ID!]) {
-    articlesForCluster(clusterId: $clusterId, articleIdsToExclude: $articleIdsToExclude) {
-      _id
-      title
-      title_en_internal_only
-      description
-      description_en_internal_only
-      original_language_code
-      pubDate
-      article_url
-      image_url
-      creator
-      source_uri
-      clusterConfidence
-      publicationSource {
-        _id
-        publication_name
-      }
-    }
-  }
-`;
-
 // GraphQL Query for fetching a single article by ID.
 const GET_ARTICLE_BY_ID = gql`
   query GetArticleById($id: ID!, $withFactCheck: Boolean!) {
@@ -1045,27 +1021,6 @@ export class ArticleService {
     /**
      * Get articles for a cluster, optionally excluding specific article IDs
      */
-    static async getArticlesForCluster(
-        clusterId: string,
-        articleIdsToExclude?: string[]
-    ): Promise<NewsArticle[]> {
-        try {
-            const { data } = await client.query<{ articlesForCluster: NewsArticle[] }>({
-                query: GET_ARTICLES_FOR_CLUSTER,
-                variables: {
-                    clusterId,
-                    articleIdsToExclude,
-                },
-                fetchPolicy: 'cache-first',
-            });
-
-            return data?.articlesForCluster || [];
-        } catch (error) {
-            this.reportQueryError('getArticlesForCluster', error, { clusterId, articleIdsToExclude });
-            throw error;
-        }
-    }
-
     /**
      * Get articles for a publication source with pagination
      */

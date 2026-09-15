@@ -768,68 +768,6 @@ expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// getArticlesForCluster
-// ─────────────────────────────────────────────────────────────────────────────
-
-describe('ArticleService.getArticlesForCluster', () => {
-    beforeEach(() => jest.clearAllMocks());
-
-    it('returns articles on success', async () => {
-        const articles = [makeArticle(), makeArticle({ _id: 'art-2' })];
-        mockQuery.mockResolvedValueOnce({ data: { articlesForCluster: articles } });
-        const result = await ArticleService.getArticlesForCluster('cluster-1');
-        expect(result).toEqual(articles);
-    });
-
-    it('returns empty array when data is falsy', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articlesForCluster: null } });
-        const result = await ArticleService.getArticlesForCluster('cluster-1');
-        expect(result).toEqual([]);
-    });
-
-    it('passes clusterId and articleIdsToExclude', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articlesForCluster: [] } });
-        await ArticleService.getArticlesForCluster('c-1', ['excl-1', 'excl-2']);
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                variables: { clusterId: 'c-1', articleIdsToExclude: ['excl-1', 'excl-2'] },
-            }),
-        );
-    });
-
-    it('passes undefined for articleIdsToExclude when not provided', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articlesForCluster: [] } });
-        await ArticleService.getArticlesForCluster('c-1');
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({
-                variables: { clusterId: 'c-1', articleIdsToExclude: undefined },
-            }),
-        );
-    });
-
-    it('uses cache-first fetchPolicy', async () => {
-        mockQuery.mockResolvedValueOnce({ data: { articlesForCluster: [] } });
-        await ArticleService.getArticlesForCluster('c-1');
-        expect(mockQuery).toHaveBeenCalledWith(
-            expect.objectContaining({ fetchPolicy: 'cache-first' }),
-        );
-    });
-
-    it('re-throws on error', async () => {
-        const err = new Error('cluster query failed');
-        mockQuery.mockRejectedValueOnce(err);
-        await expect(ArticleService.getArticlesForCluster('c-bad')).rejects.toThrow('cluster query failed');
-expect((logger.captureException as jest.Mock)).not.toHaveBeenCalled();
-        expect((logger.addBreadcrumb as jest.Mock)).toHaveBeenCalledWith(
-            expect.stringContaining('getArticlesForCluster failed'),
-            'article-service',
-            expect.objectContaining({ method: 'getArticlesForCluster' }),
-            'warning',
-        );
-    });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // getArticlesForPublicationSource
 // ─────────────────────────────────────────────────────────────────────────────
 
