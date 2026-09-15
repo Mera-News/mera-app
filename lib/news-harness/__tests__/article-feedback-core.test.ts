@@ -11,6 +11,7 @@ import {
   selectActiveFiltersForContext,
 } from '../article-feedback/agent-core';
 import { estimateTokens } from '@/lib/llm/tokens';
+import { asUntrusted } from '../prompts/untrusted-text';
 import { SUPPRESSION_KINDS } from '../core/types';
 import type {
   ActiveSuppressionView,
@@ -47,16 +48,24 @@ function fact(id: string, statement: string, topics?: string[]): Fact {
   };
 }
 
+/** Brands a fixture value the way the production boundary does. The cap is the
+ *  value's own length, so a fixture is never truncated here and the widened
+ *  claim-picker description below still arrives at full length - the same
+ *  reason `brandNullable` in ArticleFeedbackAgent uses that cap. */
+function u(value: string) {
+  return asUntrusted(value, value.length);
+}
+
 function scoredContext(overrides: Partial<SuggestionFeedbackContext['suggestion']> = {}): SuggestionFeedbackContext {
   return {
     suggestion: {
-      title_en: 'EU passes AI Act',
+      title_en: u('EU passes AI Act'),
       title_original: null,
-      description_en: 'The European Union has approved sweeping AI regulation.',
-      publication_name: 'Euronews',
+      description_en: u('The European Union has approved sweeping AI regulation.'),
+      publication_name: u('Euronews'),
       isScored: true,
       relevance: 0.62,
-      reason: 'Relates to your AI engineering work.',
+      reason: u('Relates to your AI engineering work.'),
       ...overrides,
     },
     matchedTopicTexts: ['EU AI regulation', 'AI policy'],
@@ -138,7 +147,7 @@ describe('buildArticleFeedbackSystemPrompt', () => {
   it('widens the article description for the claim picker, and only for it', () => {
     const long = `${'A'.repeat(880)} END`;
     const ctx = { ...scoredContext() };
-    ctx.suggestion = { ...ctx.suggestion, description_en: long };
+    ctx.suggestion = { ...ctx.suggestion, description_en: u(long) };
 
     const withFactCheck = buildFeedbackContext({
       nowMs: NOW_MS,
@@ -336,7 +345,7 @@ describe('buildFeedbackContext', () => {
     const ctx = buildFeedbackContext({
       nowMs: NOW_MS,
       facts: [],
-      context: scoredContext({ isScored: false, relevance: 0, reason: '' }),
+      context: scoredContext({ isScored: false, relevance: 0, reason: u('') }),
       fallbackTitle: undefined,
       proposal: null,
     });
@@ -347,7 +356,7 @@ describe('buildFeedbackContext', () => {
     const ctx = buildFeedbackContext({
       nowMs: NOW_MS,
       facts: [],
-      context: scoredContext({ reason: '' }),
+      context: scoredContext({ reason: u('') }),
       fallbackTitle: undefined,
       proposal: null,
     });
@@ -489,8 +498,8 @@ describe('buildFeedbackContext', () => {
         suggestion: scoredContext().suggestion,
         matchedTopicTexts: [],
         linkedFacts: [],
-        category: 'Politics',
-        entities: ['Narendra Modi', 'BJP', 'Lok Sabha', 'a', 'b', 'c', 'd', 'e', 'DROPPED'],
+        category: u('Politics'),
+        entities: ['Narendra Modi', 'BJP', 'Lok Sabha', 'a', 'b', 'c', 'd', 'e', 'DROPPED'].map(u),
       },
       fallbackTitle: undefined,
       proposal: null,
@@ -1147,8 +1156,8 @@ const filter = (over: Partial<ActiveSuppressionView> = {}): ActiveSuppressionVie
 function articleContext(): SuggestionFeedbackContext {
   return {
     ...scoredContext(),
-    entities: ['European Union', 'DeepMind'],
-    category: 'Technology',
+    entities: ['European Union', 'DeepMind'].map(u),
+    category: u('Technology'),
   };
 }
 

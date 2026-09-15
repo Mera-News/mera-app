@@ -39,6 +39,7 @@ import {
   decideProposeFactCheck,
   makeFactCheckSubject,
 } from '../../news-harness/fact-check';
+import { asUntrusted, type UntrustedText } from '../../news-harness/prompts/untrusted-text';
 import {
   chooseOneRefusal,
   proposalRequiresUserChoice,
@@ -53,6 +54,29 @@ import type {
 } from '../../news-harness/core/types';
 import type { FeedbackSubject } from '../../../components/custom/cards/feedback-subject';
 import type { IAgent, ToolDefinition, ToolExecutionResult } from '../types';
+
+/**
+ * Sanitises and brands one nullable publisher-derived field, keeping null and
+ * undefined as they were so an absent field stays absent rather than becoming
+ * an empty string the prompt would render as a blank line.
+ *
+ * The cap is the value's OWN length, which makes it a no-op cap by construction.
+ * That is load-bearing rather than lazy. `asUntrusted`'s `maxLength` applies to
+ * the RAW input, and every downstream render site in agent-core applies its own
+ * cap already - 160 for a title, 80 for a publication, 60 for a category or an
+ * entity, 200 for a reason, and 900 for a description on the claim-picker path,
+ * which is wider than `asUntrusted`'s 500-character default. Branding with that
+ * default here would silently narrow the claim-picker description from 900 to
+ * 500 and quietly move the separability measurement it was calibrated against.
+ * A named constant would have to track the widest of those caps forever; the
+ * value's own length cannot drift.
+ */
+function brandNullable<T extends string | null | undefined>(
+  value: T,
+): T extends string ? UntrustedText : T {
+  if (value == null) return value as T extends string ? UntrustedText : T;
+  return asUntrusted(value, value.length) as T extends string ? UntrustedText : T;
+}
 
 export class ArticleFeedbackAgent implements IAgent {
   readonly id: string;
@@ -128,24 +152,32 @@ export class ArticleFeedbackAgent implements IAgent {
 
   /** The joined suggestion row mapped into the harness's enum-free plain shape.
    *  Shared by buildContext (renders it) and proposeChanges (corroborates a
-   *  structured suppression value against it). */
+   *  structured suppression value against it).
+   *
+   *  This method IS the publisher boundary for the feedback agent: every
+   *  publisher-derived field on `SuggestionFeedbackContext` is typed
+   *  `UntrustedText`, so the compiler refuses a raw row value here rather than
+   *  leaving the boundary to be checked by reading. `matchedTopicTexts` and
+   *  `linkedFacts` pass through raw ON PURPOSE - they are the user's own topics
+   *  and persona facts, not publisher text, and branding them would assert
+   *  something false about where they came from. */
   private async loadArticleContext(): Promise<SuggestionFeedbackContext | null> {
     const ctx = await getSuggestionFeedbackContext(this.target);
     if (!ctx) return null;
     return {
       suggestion: {
-        title_en: ctx.suggestion.title_en,
-        title_original: ctx.suggestion.title_original,
-        publication_name: ctx.suggestion.publication_name,
-        description_en: ctx.suggestion.description_en,
+        title_en: brandNullable(ctx.suggestion.title_en),
+        title_original: brandNullable(ctx.suggestion.title_original),
+        publication_name: brandNullable(ctx.suggestion.publication_name),
+        description_en: brandNullable(ctx.suggestion.description_en),
         isScored: ctx.suggestion.status === ArticleSuggestionStatus.Complete,
         relevance: ctx.suggestion.relevance,
-        reason: ctx.suggestion.reason,
+        reason: brandNullable(ctx.suggestion.reason),
       },
       matchedTopicTexts: ctx.matchedTopicTexts,
       linkedFacts: ctx.linkedFacts,
-      entities: ctx.entities,
-      category: ctx.category,
+      entities: ctx.entities?.map((entity) => asUntrusted(entity, entity.length)),
+      category: brandNullable(ctx.category),
     };
   }
 

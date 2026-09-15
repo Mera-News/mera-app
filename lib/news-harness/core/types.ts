@@ -6,6 +6,7 @@
 // changes.
 
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
+import type { UntrustedText } from '../prompts/untrusted-text';
 export type { Fact };
 
 // ---------------------------------------------------------------------------
@@ -401,29 +402,38 @@ export interface ToolExecutionResult {
 /** Plain suggestion snapshot the feedback context is built from. Mirrors the
  *  fields the agent reads off the WatermelonDB `ForYouSuggestion` row. */
 export interface FeedbackSuggestion {
-  title_en?: string | null;
-  title_original?: string | null;
-  publication_name?: string | null;
-  description_en?: string | null;
+  title_en?: UntrustedText | null;
+  title_original?: UntrustedText | null;
+  publication_name?: UntrustedText | null;
+  description_en?: UntrustedText | null;
   /** true iff the suggestion status is Complete (scored) — the RN layer maps
    *  ArticleSuggestionStatus.Complete to this so the harness stays enum-free. */
   isScored: boolean;
   relevance: number;
-  reason?: string | null;
+  reason?: UntrustedText | null;
 }
 
 /** A suggestion joined with its matched topics and producing facts — the
- *  article-feedback equivalent of getSuggestionFeedbackContext's return. */
+ *  article-feedback equivalent of getSuggestionFeedbackContext's return.
+ *
+ *  `matchedTopicTexts` and `linkedFacts[].statement` are deliberately NOT
+ *  branded, and that is not an unfinished job. `asUntrusted` is specifically the
+ *  PUBLISHER boundary: these two are the user's OWN topics and persona facts,
+ *  written on this device, so branding them would assert something false about
+ *  where they came from and would hide the one distinction the brand exists to
+ *  make. Everything on this type that IS publisher-derived is branded. */
 export interface SuggestionFeedbackContext {
   suggestion: FeedbackSuggestion;
   matchedTopicTexts: string[];
   linkedFacts: { id: string; statement: string }[];
   /** Named entities the article mentions (≤8) — surfaces an entity-suppression
-   *  alternative in the "less of this" choose-one card. */
-  entities?: string[];
+   *  alternative in the "less of this" choose-one card. Model-derived FROM
+   *  publisher text, so untrusted like the text it came from. */
+  entities?: UntrustedText[];
   /** The article's controlled category, when known — surfaces a broader
-   *  category-suppression alternative. */
-  category?: string | null;
+   *  category-suppression alternative. Derived from publisher text, same as
+   *  `entities`. */
+  category?: UntrustedText | null;
 }
 
 /** Plain inputs to buildFeedbackContext — everything the agent has already
