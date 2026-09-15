@@ -89,6 +89,51 @@ export const SAFE_RESERVE_PX = 250;
  */
 export const TOP_INK_FLOOR_PX = 280;
 
+/**
+ * Every size the card lays out with, in design points on the 360-wide grid.
+ *
+ * Exported as ONE object because the height budget has to be checkable. Capture
+ * 5 overflowed with the naming toggle ON and three publications: the footer was
+ * clipped clean off the 1080x1920 PNG and the privacy line sat at 11.2% from
+ * the bottom, inside the Instagram reserve. The per-string locale budget did
+ * not catch it, and could not have: it measured how many LINES each string
+ * wraps to, never the TOTAL HEIGHT of the stack. `share-stats-locale-budget`
+ * now models that total off this object, so the card and its budget can never
+ * disagree about what the card is made of.
+ *
+ * The sizes below are what makes the worst case fit: names ON, three rows, in
+ * the longest locale. They are tighter than the first pass, which was sized by
+ * eye against English with names OFF.
+ */
+export const CARD_METRICS = {
+  outerPadding: 26,
+  panelPadding: 11,
+  tileGap: 10,
+  /** Leading multiplier for label and qualifier text. Sized for Devanagari and
+   *  Thai above-base marks, not for Latin. */
+  textLeading: 1.4,
+  /** Leading for numerals, which carry no above-base marks. */
+  numeralLeading: 1.15,
+  logoSize: 24,
+  wordmark: 18,
+  title: 12,
+  titleGap: 5,
+  tileNumeral: 38,
+  tileLabel: 10,
+  tileLabelGap: 3,
+  panelValue: 29,
+  panelValueUnknown: 13,
+  panelLabel: 10,
+  panelLabelGap: 5,
+  qualifier: 8.5,
+  qualifierGap: 2,
+  topListTitle: 9,
+  topRowText: 11,
+  topRowGap: 4,
+  footerGap: 4,
+  footerDomain: 10,
+} as const;
+
 export interface ShareStatsCardProps {
   stats: ReadingStats;
   /** Off by default, everywhere. Publication names are revealing. */
@@ -113,7 +158,7 @@ export function hostSizeForScale(pixelRatio: number): { width: number; height: n
  * smaller ratio because they carry no above-base marks and a 1.45 line box
  * around a 44pt figure opens a visible hole in the layout.
  */
-function type(size: number, k: number, leading = 1.45): TextStyle {
+function type(size: number, k: number, leading: number = CARD_METRICS.textLeading): TextStyle {
   const fontSize = size * k;
   return { fontSize, lineHeight: Math.ceil(fontSize * leading) };
 }
@@ -166,19 +211,19 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
         style={{
           paddingTop: topInset,
           paddingBottom: bottomReserve,
-          paddingLeft: 28 * k,
-          paddingRight: 28 * k,
+          paddingLeft: CARD_METRICS.outerPadding * k,
+          paddingRight: CARD_METRICS.outerPadding * k,
         }}
       >
         <VStack className="flex-1 justify-between">
           {/* --- brand + window ------------------------------------------- */}
           <VStack>
             <HStack className="items-center" style={{ columnGap: 8 * k }}>
-              <MeraLogo size={26 * k} />
+              <MeraLogo size={CARD_METRICS.logoSize * k} />
               <Text
                 allowFontScaling={false}
                 className="text-typography-0 font-semibold"
-                style={type(20, k, 1.2)}
+                style={type(CARD_METRICS.wordmark, k, CARD_METRICS.numeralLeading)}
               >
                 Mera News
               </Text>
@@ -186,14 +231,14 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
             <Text
               allowFontScaling={false}
               className="text-gray-400"
-              style={[type(13, k), { marginTop: 6 * k }]}
+              style={[type(CARD_METRICS.title, k), { marginTop: CARD_METRICS.titleGap * k }]}
             >
               {t('shareStats.card.title')}
             </Text>
           </VStack>
 
           {/* --- the two count tiles -------------------------------------- */}
-          <HStack style={{ columnGap: 12 * k }}>
+          <HStack style={{ columnGap: CARD_METRICS.tileGap * k }}>
             <CountTile
               k={k}
               value={stats.publicationCount}
@@ -213,7 +258,7 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
             <Text
               allowFontScaling={false}
               className="text-typography-0 font-semibold"
-              style={type(averageHours === null ? 15 : 34, k, 1.2)}
+              style={type(averageHours === null ? CARD_METRICS.panelValueUnknown : CARD_METRICS.panelValue, k, CARD_METRICS.numeralLeading)}
             >
               {averageHours === null
                 ? t('shareStats.card.latencyUnknown')
@@ -222,7 +267,7 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
             <Text
               allowFontScaling={false}
               className="text-typography-0"
-              style={[type(11, k), { marginTop: 6 * k }]}
+              style={[type(CARD_METRICS.panelLabel, k), { marginTop: CARD_METRICS.panelLabelGap * k }]}
             >
               {t('shareStats.card.latencyLabel')}
             </Text>
@@ -233,7 +278,7 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
               <Text
                 allowFontScaling={false}
                 className="text-gray-400"
-                style={[type(9.5, k), { marginTop: 4 * k }]}
+                style={[type(CARD_METRICS.qualifier, k), { marginTop: CARD_METRICS.qualifierGap * k }]}
               >
                 {t('shareStats.card.latencyCoverage', {
                   sampled: sampledArticles,
@@ -248,21 +293,21 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
             <Text
               allowFontScaling={false}
               className="text-typography-0 font-semibold"
-              style={type(34, k, 1.2)}
+              style={type(CARD_METRICS.panelValue, k, CARD_METRICS.numeralLeading)}
             >
               {String(stats.articlesOpened)}
             </Text>
             <Text
               allowFontScaling={false}
               className="text-typography-0"
-              style={[type(11, k), { marginTop: 6 * k }]}
+              style={[type(CARD_METRICS.panelLabel, k), { marginTop: CARD_METRICS.panelLabelGap * k }]}
             >
               {t('shareStats.card.openedLabel')}
             </Text>
             <Text
               allowFontScaling={false}
               className="text-gray-400"
-              style={[type(9.5, k), { marginTop: 4 * k }]}
+              style={[type(CARD_METRICS.qualifier, k), { marginTop: CARD_METRICS.qualifierGap * k }]}
             >
               {t('shareStats.card.openedPartial')}
             </Text>
@@ -277,7 +322,7 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
               <Text
                 allowFontScaling={false}
                 className="text-gray-400"
-                style={type(10, k)}
+                style={type(CARD_METRICS.topListTitle, k)}
               >
                 {t('shareStats.card.topPublicationsTitle')}
               </Text>
@@ -285,13 +330,13 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
                 <HStack
                   key={`${publication.publicationName}::${publication.countryCode ?? ''}`}
                   className="items-center"
-                  style={{ columnGap: 8 * k, marginTop: 6 * k }}
+                  style={{ columnGap: 8 * k, marginTop: CARD_METRICS.topRowGap * k }}
                 >
                   <SourceFlag countryCode={publication.countryCode} size="lg" />
                   <Text
                     allowFontScaling={false}
                     className="text-typography-0"
-                    style={type(12, k)}
+                    style={type(CARD_METRICS.topRowText, k)}
                     numberOfLines={1}
                   >
                     {publication.publicationName}
@@ -311,14 +356,14 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
             <Text
               allowFontScaling={false}
               className="text-gray-400"
-              style={type(9.5, k)}
+              style={type(CARD_METRICS.qualifier, k)}
             >
               {t('shareStats.card.privacyLine')}
             </Text>
             <Text
               allowFontScaling={false}
               className="text-typography-0"
-              style={[type(11, k), { marginTop: 6 * k }]}
+              style={[type(CARD_METRICS.footerDomain, k), { marginTop: CARD_METRICS.footerGap * k }]}
             >
               mera.news
             </Text>
@@ -337,7 +382,7 @@ const Panel: React.FC<{ k: number; testID: string; children: React.ReactNode }> 
   <Box
     testID={testID}
     className="rounded-lg border border-white"
-    style={{ padding: 14 * k }}
+    style={{ padding: CARD_METRICS.panelPadding * k }}
   >
     {children}
   </Box>
@@ -352,19 +397,19 @@ const CountTile: React.FC<{
   <Box
     testID={testID}
     className="flex-1 rounded-lg border border-white"
-    style={{ padding: 14 * k }}
+    style={{ padding: CARD_METRICS.panelPadding * k }}
   >
     <Text
       allowFontScaling={false}
       className="text-typography-0 font-semibold"
-      style={type(44, k, 1.15)}
+      style={type(CARD_METRICS.tileNumeral, k, CARD_METRICS.numeralLeading)}
     >
       {String(value)}
     </Text>
     <Text
       allowFontScaling={false}
       className="text-typography-0"
-      style={[type(11, k), { marginTop: 4 * k }]}
+      style={[type(CARD_METRICS.tileLabel, k), { marginTop: CARD_METRICS.tileLabelGap * k }]}
     >
       {label}
     </Text>

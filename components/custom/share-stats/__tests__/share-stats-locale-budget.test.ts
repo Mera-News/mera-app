@@ -34,6 +34,7 @@ jest.mock('@/components/custom/AbstractGradientBackdrop', () => {
 jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: () => null }));
 
 import {
+  CARD_METRICS,
   EXPORT_HEIGHT,
   EXPORT_WIDTH,
   SAFE_RESERVE_PX,
@@ -50,9 +51,9 @@ const DESIGN_WIDTH = 360;
 const DESIGN_HEIGHT = 640;
 
 // Layout constants copied from the card's own render, in design points.
-const OUTER_PADDING = 28;
-const PANEL_PADDING = 14;
-const TILE_GAP = 12;
+const OUTER_PADDING = CARD_METRICS.outerPadding;
+const PANEL_PADDING = CARD_METRICS.panelPadding;
+const TILE_GAP = CARD_METRICS.tileGap;
 
 const CARD_INNER = DESIGN_WIDTH - 2 * OUTER_PADDING;          // 304
 const PANEL_INNER = CARD_INNER - 2 * PANEL_PADDING;           // 276
@@ -134,24 +135,24 @@ const MEASURED: {
   vars?: Record<string, string | number>;
 }[] = [
   // Half-width tiles, so the tightest column on the card by a distance.
-  { key: 'publicationsLabel', fontSize: 11, column: TILE_INNER, maxLines: 3 },
-  { key: 'countriesLabel', fontSize: 11, column: TILE_INNER, maxLines: 3 },
+  { key: 'publicationsLabel', fontSize: CARD_METRICS.tileLabel, column: TILE_INNER, maxLines: 3 },
+  { key: 'countriesLabel', fontSize: CARD_METRICS.tileLabel, column: TILE_INNER, maxLines: 3 },
   // Full panel width.
-  { key: 'latencyLabel', fontSize: 11, column: PANEL_INNER, maxLines: 2 },
-  { key: 'latencyUnknown', fontSize: 15, column: PANEL_INNER, maxLines: 3 },
+  { key: 'latencyLabel', fontSize: CARD_METRICS.panelLabel, column: PANEL_INNER, maxLines: 2 },
+  { key: 'latencyUnknown', fontSize: CARD_METRICS.panelValueUnknown, column: PANEL_INNER, maxLines: 3 },
   {
     key: 'latencyCoverage',
-    fontSize: 9.5,
+    fontSize: CARD_METRICS.qualifier,
     column: PANEL_INNER,
     maxLines: 3,
     // Two-digit values are the realistic case and the widest common one.
     vars: { sampled: 41, total: 58 },
   },
-  { key: 'openedPartial', fontSize: 9.5, column: PANEL_INNER, maxLines: 3 },
-  { key: 'openedLabel', fontSize: 11, column: PANEL_INNER, maxLines: 2 },
+  { key: 'openedPartial', fontSize: CARD_METRICS.qualifier, column: PANEL_INNER, maxLines: 3 },
+  { key: 'openedLabel', fontSize: CARD_METRICS.panelLabel, column: PANEL_INNER, maxLines: 2 },
   // Footer, which has no panel padding.
-  { key: 'privacyLine', fontSize: 9.5, column: CARD_INNER, maxLines: 2 },
-  { key: 'title', fontSize: 13, column: CARD_INNER, maxLines: 2 },
+  { key: 'privacyLine', fontSize: CARD_METRICS.qualifier, column: CARD_INNER, maxLines: 2 },
+  { key: 'title', fontSize: CARD_METRICS.title, column: CARD_INNER, maxLines: 2 },
 ];
 
 function interpolate(template: string, vars?: Record<string, string | number>): string {
@@ -202,6 +203,130 @@ describe('share card copy fits the fixed 9:16 card in all 20 locales', () => {
           expect(lines).toBeLessThanOrEqual(spec.maxLines);
         });
       }
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// TOTAL HEIGHT, which is what actually overflowed.
+//
+// Capture 5 shipped a card whose "mera.news" footer was clipped clean off the
+// 1080x1920 PNG, with the privacy line pushed to 11.2% from the bottom, INSIDE
+// the Instagram reserve. English. Names ON, three publications.
+//
+// The per-string budget above passed the whole time and could not have caught
+// it: it measures how many LINES each string wraps to, never how tall the stack
+// is once they are added up. That is the gap this half closes. Anything that
+// measures the pieces has to measure the whole as well, or it is measuring the
+// wrong thing convincingly.
+//
+// The band does not scroll and the content does not shrink: React Native
+// children are `flexShrink: 0`, so anything over budget renders straight
+// through the reserve and off the canvas.
+// ---------------------------------------------------------------------------
+
+/** Rendered height of one text run: `type()`'s own line-height rule, times the
+ *  number of lines it wraps to. Mirrors `Math.ceil(fontSize * leading)`. */
+function textHeight(
+  text: string,
+  fontSize: number,
+  column: number,
+  leading: number = CARD_METRICS.textLeading,
+): number {
+  return Math.ceil(fontSize * leading) * lineCount(text, fontSize, column);
+}
+
+interface CardCopy {
+  card: Record<string, string>;
+}
+
+/** The card's stack height in design points, block by block, in render order. */
+function cardHeight(dict: CardCopy, opts: { names: boolean; rows: number }): number {
+  const m = CARD_METRICS;
+  const c = dict.card;
+
+  // Header: the logo row is the taller of the glyph and the wordmark's line box.
+  const header =
+    Math.max(m.logoSize, Math.ceil(m.wordmark * m.numeralLeading))
+    + m.titleGap
+    + textHeight(c.title, m.title, CARD_INNER);
+
+  // Tiles sit side by side, so the row is the taller of the two.
+  const tile = (label: string) =>
+    2 * m.panelPadding
+    + Math.ceil(m.tileNumeral * m.numeralLeading)
+    + m.tileLabelGap
+    + textHeight(label, m.tileLabel, TILE_INNER);
+  const tiles = Math.max(tile(c.publicationsLabel), tile(c.countriesLabel));
+
+  // Latency panel, in its populated state (the taller of the two branches, and
+  // the one that carries the coverage denominator).
+  const coverage = c.latencyCoverage.replace('{{sampled}}', '41').replace('{{total}}', '58');
+  const latency =
+    2 * m.panelPadding
+    + Math.ceil(m.panelValue * m.numeralLeading)
+    + m.panelLabelGap
+    + textHeight(c.latencyLabel, m.panelLabel, PANEL_INNER)
+    + m.qualifierGap
+    + textHeight(coverage, m.qualifier, PANEL_INNER);
+
+  const opened =
+    2 * m.panelPadding
+    + Math.ceil(m.panelValue * m.numeralLeading)
+    + m.panelLabelGap
+    + textHeight(c.openedLabel, m.panelLabel, PANEL_INNER)
+    + m.qualifierGap
+    + textHeight(c.openedPartial, m.qualifier, PANEL_INNER);
+
+  // The opt-in block is ABSENT when off, not empty, so it contributes nothing.
+  const topList = opts.names
+    ? textHeight(c.topPublicationsTitle, m.topListTitle, CARD_INNER)
+      + opts.rows * (m.topRowGap + Math.ceil(m.topRowText * m.textLeading))
+    : 0;
+
+  const footer =
+    textHeight(c.privacyLine, m.qualifier, CARD_INNER)
+    + m.footerGap
+    + Math.ceil(m.footerDomain * m.textLeading);
+
+  return header + tiles + latency + opened + topList + footer;
+}
+
+const BAND =
+  DESIGN_HEIGHT
+  - (TOP_INK_FLOOR_PX / EXPORT_HEIGHT) * DESIGN_HEIGHT
+  - (SAFE_RESERVE_PX / EXPORT_HEIGHT) * DESIGN_HEIGHT;
+
+describe('the whole card fits between the two Instagram reserves', () => {
+  for (const locale of LOCALES) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const dict = require(`@/lib/locales/${locale}.json`).shareStats as CardCopy;
+
+    it(`${locale} fits with the naming toggle OFF`, () => {
+      const height = cardHeight(dict, { names: false, rows: 0 });
+      if (height > BAND) {
+        throw new Error(
+          `${locale} names-OFF card is ${Math.round(height)}pt in a ${Math.round(BAND)}pt band, `
+          + `over by ${Math.round(height - BAND)}pt.`,
+        );
+      }
+      expect(height).toBeLessThanOrEqual(BAND);
+    });
+
+    it(`${locale} fits with the naming toggle ON and three publications`, () => {
+      // THE case capture 5 broke on. Three rows is what the preview screen
+      // requests, so it is the worst case the card can actually be asked to
+      // draw, not a hypothetical.
+      const height = cardHeight(dict, { names: true, rows: 3 });
+      if (height > BAND) {
+        throw new Error(
+          `${locale} names-ON card with 3 publications is ${Math.round(height)}pt in a `
+          + `${Math.round(BAND)}pt band, over by ${Math.round(height - BAND)}pt. The footer is `
+          + `what gets clipped. Honest levers: a smaller qualifier type scale, tighter panel `
+          + `padding, or fewer publications. NOT numberOfLines on a qualifier.`,
+        );
+      }
+      expect(height).toBeLessThanOrEqual(BAND);
     });
   }
 });
