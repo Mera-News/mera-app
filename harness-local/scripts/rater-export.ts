@@ -3,7 +3,7 @@
 //   npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/rater-export.ts <runDir> \
 //       [--merge <runDir2>] [--seed 12345] [--repeat 0] [--call-type reason]
-//       [--duplicate 8] [--include <rowId>,<rowId>]
+//       [--duplicate 8] [--sample 80] [--include <rowId>,<rowId>]
 //
 // --repeat selects ONE repeat, which is what a floor run wants: the repeats are
 // there to measure the noise floor, and asking a rater to judge the same prompt
@@ -32,6 +32,12 @@
 // runs of the same model under different prompt variants would otherwise
 // collapse into one label and the comparison would vanish. The key maps each
 // label back to its run and variant.
+//
+// --sample N keeps N rows PER ARM, drawn with the recorded seed and balanced,
+// so a batch stays inside one rater invocation. That matters more than the
+// extra rows would: the whole design rests on judging both arms in ONE
+// invocation so the pass-to-pass drift cancels, and splitting a batch to fit
+// re-exposes it. Forced ids are kept regardless of the sample.
 //
 // The key file is written SEPARATELY and must not be given to the rater. It is
 // what turns the blind scores back into a per-arm result.
@@ -166,6 +172,34 @@ function main(): number {
     );
   }
 
+  // Per-arm sampling, before duplication so the duplicates are drawn from what
+  // the rater will actually see.
+  const sampleIdx = argv.indexOf('--sample');
+  const sampleN = sampleIdx === -1 ? 0 : Number(argv[sampleIdx + 1]);
+  if (sampleIdx !== -1 && (!Number.isFinite(sampleN) || sampleN <= 0)) {
+    throw new Error('harness-local: --sample must be a positive number.');
+  }
+  let sampledOut = 0;
+  if (sampleN > 0) {
+    const sampleRng = mulberry32(seed ^ 0x2f9a1c07);
+    const byArm = new Map<string, RunRow[]>();
+    for (const r of rows) byArm.set(r.arm, [...(byArm.get(r.arm) ?? []), r]);
+    const kept: RunRow[] = [];
+    for (const [arm, list] of [...byArm.entries()].sort()) {
+      const forcedHere = list.filter((r) => forced.has(r.rowId));
+      const rest = shuffle(list.filter((r) => !forced.has(r.rowId)), sampleRng);
+      const room = Math.max(0, sampleN - forcedHere.length);
+      const take = [...forcedHere, ...rest.slice(0, room)];
+      if (list.length < sampleN) {
+        // eslint-disable-next-line no-console
+        console.warn(`!!  arm ${arm} has only ${list.length} row(s), fewer than --sample ${sampleN}.`);
+      }
+      sampledOut += list.length - take.length;
+      kept.push(...take);
+    }
+    rows = kept;
+  }
+
   // Export-time duplication, drawn with the SAME seeded PRNG so a given seed
   // reproduces the whole batch, duplicates included.
   const dupRng = mulberry32(seed ^ 0x5bf03635);
@@ -254,6 +288,7 @@ function main(): number {
         selectedRepeat: repeat,
         selectedCallType: callType,
         forcedRowIds: [...forced],
+        samplePerArm: sampleN > 0 ? sampleN : null,
         duplicatesAddedAtExport: addedDuplicates,
         sources,
         labels: Object.fromEntries(
@@ -283,6 +318,7 @@ function main(): number {
       `duplicates : ${dupCount}, indistinguishable in the export\n` +
       `call type  : ${callType ?? 'all'}\n` +
       `forced in  : ${forced.size}\n` +
+      `${sampleN > 0 ? `sampled    : ${sampleN} per arm, ${sampledOut} row(s) dropped\n` : ''}` +
       `arms       : ${arms.length} relabelled ${[...label.values()].join(', ')}\n` +
       `seed       : ${seed}\n` +
       `cohort     : VISIBLE (the rater is told which cohort it judges)\n` +

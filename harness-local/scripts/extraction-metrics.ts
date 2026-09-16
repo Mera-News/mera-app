@@ -24,9 +24,33 @@ import { join, resolve } from 'node:path';
 import { readJsonl } from '../lib/agreement';
 import type { RunRow } from '../lib/jsonl-writer';
 
-/** The characters the invariant bans from user-facing copy. The en dash is
- *  included because it is the same tell and just as easy to emit. */
-const BANNED = /[—–]/;
+/** The characters the invariant bans from user-facing copy.
+ *
+ *  The en dash counts ONLY when used AS a dash, that is with a non-digit on at
+ *  least one side. "2019-2024" is a range and legitimate; "the plan - and then"
+ *  is the tell. Counting every en dash would score date ranges as violations
+ *  and make the rate useless on news text, which is full of them. */
+const EM_DASH = /—/;
+const EN_DASH_AS_DASH = /(^|[^0-9])–|–([^0-9]|$)/;
+function hasBannedDash(text: string): boolean {
+  return EM_DASH.test(text) || EN_DASH_AS_DASH.test(text);
+}
+
+/**
+ * The assistant PROSE, which is what a user actually reads. A reasoning trace
+ * and any tool-call payload are stripped first: a dash inside a think block or
+ * inside JSON arguments never reaches the user, and counting it would blame a
+ * prompt for a violation it did not produce.
+ */
+function proseOf(row: RunRow): string {
+  let text = row.rawOutput;
+  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
+  const lastCloser = text.lastIndexOf('</think>');
+  if (lastCloser !== -1) text = text.slice(lastCloser + '</think>'.length);
+  text = text.replace(/```[\s\S]*?```/g, '');
+  text = text.replace(/\{[\s\S]*?"extracted_user_information"[\s\S]*?\}\s*\}/g, '');
+  return text.trim();
+}
 
 function statementsOf(row: RunRow): string[] {
   const out: string[] = [];
@@ -59,35 +83,54 @@ function main(): number {
 
   const arms = [...new Set(chat.map((r) => r.arm))].sort();
 
+  // ---- banned dashes, per variant per cohort, over PROSE -------------------
+  const variants = [...new Set(chat.map((r) => r.variant))].sort();
+  const cohorts = [...new Set(chat.map((r) => r.cohort))].sort();
   // eslint-disable-next-line no-console
-  console.log(`EM DASH RATE over ${chat.length} extraction row(s)`);
+  console.log(`BANNED DASH RATE over assistant PROSE (think and tool payloads stripped), ${chat.length} row(s)`);
   // eslint-disable-next-line no-console
-  console.log(`  ${'arm'.padEnd(40)}${'turns'.padStart(7)}${'prose'.padStart(10)}${'facts'.padStart(10)}${'stmts'.padStart(8)}${'bad stmts'.padStart(11)}`);
-  for (const arm of arms) {
-    const rs = chat.filter((r) => r.arm === arm);
-    const prose = rs.filter((r) => BANNED.test(r.rawOutput)).length;
-    const withFacts = rs.filter((r) => statementsOf(r).some((s) => BANNED.test(s))).length;
+  console.log(`  ${'variant | cohort'.padEnd(40)}${'turns'.padStart(7)}${'prose'.padStart(9)}${'stmts'.padStart(8)}${'bad stmts'.padStart(11)}`);
+  for (const v of variants) {
+    for (const c of cohorts) {
+      const rs = chat.filter((r) => r.variant === v && r.cohort === c);
+      if (rs.length === 0) continue;
+      const bad = rs.filter((r) => hasBannedDash(proseOf(r))).length;
+      const stmts = rs.flatMap(statementsOf);
+      const badStmts = stmts.filter((x) => hasBannedDash(x)).length;
+      // eslint-disable-next-line no-console
+      console.log(
+        `  ${`${v} | ${c}`.padEnd(40).slice(0, 40)}${String(rs.length).padStart(7)}${pct(bad, rs.length).padStart(9)}` +
+          `${String(stmts.length).padStart(8)}${pct(badStmts, stmts.length).padStart(11)}`,
+      );
+    }
+  }
+  // eslint-disable-next-line no-console
+  console.log(`  ${'TOTAL per variant'.padEnd(40)}`);
+  for (const v of variants) {
+    const rs = chat.filter((r) => r.variant === v);
+    const bad = rs.filter((r) => hasBannedDash(proseOf(r))).length;
     const stmts = rs.flatMap(statementsOf);
-    const badStmts = stmts.filter((s) => BANNED.test(s)).length;
     // eslint-disable-next-line no-console
     console.log(
-      `  ${arm.padEnd(40).slice(0, 40)}${String(rs.length).padStart(7)}${pct(prose, rs.length).padStart(10)}` +
-        `${pct(withFacts, rs.length).padStart(10)}${String(stmts.length).padStart(8)}${pct(badStmts, stmts.length).padStart(11)}`,
+      `  ${v.padEnd(40).slice(0, 40)}${String(rs.length).padStart(7)}${pct(bad, rs.length).padStart(9)}` +
+        `${String(stmts.length).padStart(8)}${pct(stmts.filter((x) => hasBannedDash(x)).length, stmts.length).padStart(11)}`,
     );
   }
   // eslint-disable-next-line no-console
-  console.log('  prose = the reply text; facts = rows whose SAVED statements carry one, which is the');
+  console.log('  prose = what the user reads. stmts = the SAVED fact statements, also user-facing');
   // eslint-disable-next-line no-console
-  console.log('  user-facing surface. A prompt can fix one and not the other, so both are shown.');
+  console.log('  (they render on the persona card), so a prompt can fix one and not the other.');
+  // eslint-disable-next-line no-console
+  console.log('  An en dash counts only when used AS a dash; "2019-2024" is a range, not a violation.');
 
   // ---- turn-0 tool agreement ------------------------------------------------
   // eslint-disable-next-line no-console
   console.log('\nTURN-0 TOOL AGREEMENT (the only fixture-determined turn, so repeats are comparable)');
   // eslint-disable-next-line no-console
-  console.log(`  ${'arm | cohort'.padEnd(40)}${'reps'.padStart(6)}${'same tools'.padStart(12)}${'same stmts'.padStart(12)}${'schema ok'.padStart(11)}`);
+  console.log(`  ${'variant | cohort'.padEnd(40)}${'reps'.padStart(6)}${'same tools'.padStart(12)}${'same stmts'.padStart(12)}${'schema ok'.padStart(11)}`);
   const cells = new Map<string, RunRow[]>();
   for (const r of chat.filter((x) => x.turnIndex === 0)) {
-    const k = `${r.arm} | ${r.cohort}`;
+    const k = `${r.variant} | ${r.cohort}`;
     cells.set(k, [...(cells.get(k) ?? []), r]);
   }
   for (const [k, rs] of [...cells.entries()].sort()) {

@@ -37,6 +37,15 @@ export function cellKey(row: RunRow): string {
   ].join(' | ');
 }
 
+/** A reasoning trace in the content, by either tell: a think tag, which
+ *  `reasoningLeak` already records, or the narration a thinking model opens
+ *  with when the tag is stripped but the habit is not. */
+function looksLikeTrace(row: RunRow): boolean {
+  if (row.reasoningLeak) return true;
+  const head = row.rawOutput.trimStart().slice(0, 40).toLowerCase();
+  return /^(let me|okay, let|first, i|i need to|we need to)/.test(head);
+}
+
 /** Flattens parsed tool arguments to comparable `path=value` leaves, so two
  *  calls that saved the same facts in a different key order still agree. */
 function leaves(value: unknown, prefix = ''): string[] {
@@ -161,6 +170,17 @@ export interface ArmRollup {
   truncatedCalls: number;
   /** Returned a reasoning trace inside `content`. */
   leakedCalls: number;
+  /** Produced nothing at all. */
+  emptyCalls: number;
+  /**
+   * Calls that produced something a caller could actually use: no transport
+   * error, not truncated, no reasoning trace in the content, and non-empty
+   * output. This is the ONE number a fallback screen should read first. An arm
+   * can look cheap and fast while being unusable, and the cost and latency
+   * columns cannot show that, because a refused or truncated call is often the
+   * fastest and cheapest one in the run.
+   */
+  usableCalls: number;
   /** finish_reason -> count, so "stop" versus "length" is visible per arm
    *  rather than averaged into a rate. */
   finishReasons: Record<string, number>;
@@ -321,7 +341,11 @@ export function computeAgreement(
       calls: armRows.length,
       errors: armRows.filter((r) => r.error !== null).length,
       truncatedCalls: armRows.filter((r) => r.truncated).length,
-      leakedCalls: armRows.filter((r) => r.reasoningLeak).length,
+      leakedCalls: armRows.filter((r) => looksLikeTrace(r)).length,
+      emptyCalls: armRows.filter((r) => r.error === null && r.rawOutput.trim().length === 0).length,
+      usableCalls: armRows.filter(
+        (r) => r.error === null && !r.truncated && !looksLikeTrace(r) && r.rawOutput.trim().length > 0,
+      ).length,
       finishReasons,
       promptTokens,
       completionTokens,
@@ -472,6 +496,23 @@ export function formatAgreementReport(r: AgreementReport): string {
     );
   }
   out.push('  tool-name / tool-args columns are the WORST cell in the arm, which is the floor.');
+
+  // The line a fallback screen reads first. Put ABOVE the damage detail, since
+  // an arm can look cheap and fast precisely BECAUSE its calls failed.
+  out.push('');
+  out.push('USABLE (no error, not truncated, no trace in content, non-empty). Read this before cost or latency.');
+  out.push(`  ${'arm / model'.padEnd(46)}${'calls'.padStart(7)}${'usable'.padStart(9)}${'err'.padStart(6)}${'trunc'.padStart(7)}${'trace'.padStart(7)}${'empty'.padStart(7)}`);
+  for (const a of r.arms) {
+    const rate = a.calls > 0 ? (a.usableCalls / a.calls) * 100 : 0;
+    out.push(
+      `  ${`${a.arm} / ${a.model}`.padEnd(46).slice(0, 46)}${String(a.calls).padStart(7)}` +
+        `${`${rate.toFixed(1)}%`.padStart(9)}${String(a.errors).padStart(6)}${String(a.truncatedCalls).padStart(7)}` +
+        `${String(a.leakedCalls).padStart(7)}${String(a.emptyCalls).padStart(7)}`,
+    );
+    if (rate < 90 && a.calls > 0) {
+      out.push('    ^ below 90% usable. This arm is not a candidate until that is fixed, whatever its cost line says.');
+    }
+  }
 
   // Truncation and trace leaks get their own block rather than a column,
   // because an arm that truncates most of its calls has not produced a slower

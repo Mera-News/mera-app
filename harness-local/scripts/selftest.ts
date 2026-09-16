@@ -372,6 +372,39 @@ async function main(): Promise<number> {
       computeAgreement(claimed).integrityFailures.some((x) => x.startsWith('RUNNER BUG')));
   }
 
+  // --- 11b2. the usable line, the one a fallback screen reads first --------
+  // An arm can look cheap and fast BECAUSE its calls failed: a refused or
+  // truncated call is often the fastest and cheapest in the run. So usable is
+  // shown above cost and latency, and an arm below 90% says so in words.
+  {
+    const healthy = [0, 1, 2].map((i) => row({ repeat: i }));
+    const good = formatAgreementReport(computeAgreement(healthy));
+    ck('usable line is present', good.includes('USABLE (no error'));
+    ck('a healthy arm reads 100%', good.includes('100.0%'));
+    ck('a healthy arm is not warned about', !good.includes('not a candidate until'));
+
+    const broken = [0, 1, 2].map((i) => row({
+      repeat: i, arm: 'bad', modelRequested: 'bad-model', modelSent: 'bad-model',
+      truncated: true, finishReason: 'length',
+    }));
+    const badRep = formatAgreementReport(computeAgreement(broken));
+    ck('a fully truncated arm reads 0% usable', badRep.includes('0.0%'));
+    ck('a sub-90% arm is called out', badRep.includes('not a candidate until'));
+
+    // the "Let me" narration counts as a trace even with no think tag
+    const narrated = computeAgreement([0, 1, 2].map((i) => row({
+      repeat: i, rawOutput: 'Let me think about this carefully. The answer is 0.4.',
+    })));
+    ck('narration prefix counts as a trace', narrated.arms[0].leakedCalls === 3,
+      String(narrated.arms[0].leakedCalls));
+    ck('narration makes the arm unusable', narrated.arms[0].usableCalls === 0);
+    // and ordinary prose does not
+    const plain = computeAgreement([0, 1, 2].map((i) => row({ repeat: i, rawOutput: 'The answer is 0.4.' })));
+    ck('ordinary prose is not a trace', plain.arms[0].leakedCalls === 0);
+    ck('empty output is counted and unusable',
+      computeAgreement([row({ rawOutput: '' })]).arms[0].emptyCalls === 1);
+  }
+
   // --- 11c. output damage is surfaced before any quality comparison --------
   // The live baseline found GLM returning its trace inside content and
   // truncating at the 320-token cap on every relevance batch, with
