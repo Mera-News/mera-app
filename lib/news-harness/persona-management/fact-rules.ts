@@ -88,15 +88,27 @@ export interface RejectedFact {
 /**
  * Applies the exact accept/reject rules the old handler applied inline, in order:
  *   empty → too-long (>200) → meta-conversational → duplicate (vs existing).
- * Duplicate detection is against `existingStatements` only — like the original,
- * facts accepted earlier in the same batch do NOT dedup against each other.
+ *
+ * `existingStatements` may be raw or already normalized: BOTH sides of the
+ * duplicate check run through `normalizeStatement`, so the caller carries no
+ * precondition. Duplicate detection is against `existingStatements` only — like
+ * the original, facts accepted earlier in the same batch do NOT dedup against
+ * each other.
  */
 export function filterNewFacts(
   entries: FactEntry[],
   existingStatements: Iterable<string>,
 ): { accepted: AcceptedFact[]; rejected: RejectedFact[] } {
+  // Normalized on INSERT as well as on lookup. Keying this set on whatever the
+  // caller happened to pass while probing it with a normalized key meant dedup
+  // worked ONLY for a caller that had already normalized. The one production
+  // caller does (tool-handlers), so the app was correct and the function was
+  // silently broken for everyone else: raw "Lives in Rotterdam, Netherlands"
+  // against an identical incoming statement was ACCEPTED as new.
+  // `normalizeStatement` is idempotent, so an already-normalized caller is
+  // unaffected and this changes no shipped behaviour.
   const existing = new Set<string>();
-  for (const s of existingStatements) existing.add(s);
+  for (const s of existingStatements) existing.add(normalizeStatement(s));
 
   const accepted: AcceptedFact[] = [];
   const rejected: RejectedFact[] = [];

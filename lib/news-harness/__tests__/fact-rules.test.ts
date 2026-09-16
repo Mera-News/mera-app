@@ -3,6 +3,7 @@
 
 import {
   MAX_FACT_LENGTH,
+  filterFactChoiceGroups,
   filterNewFacts,
   normalizeFactEntry,
   normalizeStatement,
@@ -92,6 +93,53 @@ describe('filterNewFacts', () => {
     );
     expect(accepted).toHaveLength(0);
     expect(rejected).toEqual([{ statement: 'lives in amsterdam', reason: 'duplicate' }]);
+  });
+
+  // The case above pre-normalizes, so it encoded the CALLER's precondition
+  // rather than the function's contract — which is exactly how the asymmetry
+  // below survived: the set was keyed on the raw string and probed with a
+  // normalized one, so dedup worked only for a caller that had already
+  // normalized. Production had (tool-handlers), so the app was correct and the
+  // function was not.
+  it('dedups against RAW existing statements, with no normalization by the caller', () => {
+    const { accepted, rejected } = filterNewFacts(
+      ['Lives in Rotterdam, Netherlands'],
+      ['Lives in Rotterdam, Netherlands'],
+    );
+    expect(accepted).toEqual([]);
+    expect(rejected).toEqual([
+      { statement: 'Lives in Rotterdam, Netherlands', reason: 'duplicate' },
+    ]);
+  });
+
+  it('dedups a RAW existing statement against a differently-cased incoming one', () => {
+    const { accepted } = filterNewFacts(
+      ['lives   in  ROTTERDAM, Netherlands'],
+      ['Lives in Rotterdam, Netherlands'],
+    );
+    expect(accepted).toEqual([]);
+  });
+
+  it('is unchanged for an ALREADY-normalized caller, which is what production passes', () => {
+    // normalizeStatement is idempotent, so normalizing on insert must be a no-op
+    // here. If this ever fails, the fix has become a silent behaviour change in
+    // the one shipped call path.
+    const { accepted, rejected } = filterNewFacts(
+      ['Lives in Rotterdam, Netherlands'],
+      [normalizeStatement('Lives in Rotterdam, Netherlands')],
+    );
+    expect(accepted).toEqual([]);
+    expect(rejected[0].reason).toBe('duplicate');
+  });
+
+  it('filterFactChoiceGroups inherits the same safety', () => {
+    // It forwards existingStatements to filterNewFacts untouched, so it carried
+    // the identical unstated precondition.
+    const { groups } = filterFactChoiceGroups(
+      [{ statement: 'Lives in Rotterdam, Netherlands' }],
+      ['Lives in Rotterdam, Netherlands'],
+    );
+    expect(groups).toEqual([]);
   });
 
   it('does NOT dedup accepted facts against each other within one batch', () => {
