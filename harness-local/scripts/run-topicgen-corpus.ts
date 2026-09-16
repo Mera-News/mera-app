@@ -255,7 +255,12 @@ async function main(): Promise<number> {
             const info = catalog[model];
             writeRow({
               rowId: newRowId(), dupOf: null, runId, repeat: rep,
-              cohort: `${args.cohort}/total${total}`, turnIndex: fi,
+              // COHORT STAYS THE COHORT. The count arm lives in `arm` only,
+              // never here: rater-export.ts keeps `cohort` visible on purpose
+              // (the adversarial hard fails are unjudgeable without it) and
+              // blinds `arm`, so folding the total into the cohort name would
+              // hand the rater the arm it is not supposed to see.
+              cohort: args.cohort, turnIndex: fi,
               arm: `${model}@${total}`, callType,
               interleaveGroup: `${total}:${fi}:${kind}`, lane: 'near', surface: 'TOPICGEN',
               variant: args.variant,
