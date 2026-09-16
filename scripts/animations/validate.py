@@ -182,6 +182,10 @@ FRAME0_REST_EXCEPTIONS = {
 # frame 0 is not a change the reader can notice.
 FAMILY_PEAK_FLOOR = 20.0
 
+# Shortest thing that can name a base family and say why it stands in. A floor
+# rather than a truthiness test: "ok" is a declaration, not a reason.
+MIN_EXCEPTION_REASON = 20
+
 
 # ── property evaluation ─────────────────────────────────────────────────────
 
@@ -400,6 +404,18 @@ def frame0_rest_problems(doc, asset_id, total):
             continue
         if (asset_id, fam) in FRAME0_REST_EXCEPTIONS:
             used.add(fam)
+            # The allowlist is the REASON, not the key. An entry whose reason
+            # is blank or a placeholder suppresses a dark family while telling
+            # the next reviewer nothing, which is the failure the allowlist
+            # exists to prevent rather than a lesser version of passing.
+            reason = (FRAME0_REST_EXCEPTIONS[(asset_id, fam)] or "").strip()
+            if len(reason) < MIN_EXCEPTION_REASON:
+                problems.append(
+                    f"family '{fam}-*' is allowlisted with no stated reason "
+                    f"({len(reason)} characters, floor is "
+                    f"{MIN_EXCEPTION_REASON}): name the layer family that "
+                    f"stands in for it at rest, or fix the asset"
+                )
             continue
         problems.append(
             f"family '{fam}-*' ({len(members)} layers) is entirely dark at "
