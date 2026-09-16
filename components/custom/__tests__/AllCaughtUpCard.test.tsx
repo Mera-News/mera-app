@@ -25,6 +25,33 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 jest.mock('expo-router', () => ({ router: { navigate: jest.fn() } }));
+
+// The roomy branch draws a Lottie idle scene, which brings in two gates that
+// the compact branch never needed.
+//
+// `jest.setup.js` does NOT mock react-native-reanimated: importing it throws on
+// the uninitialised worklets native module, and the error points at the import
+// line rather than at the cause. Hooks run unconditionally, so without this
+// mock EVERY spec in this file dies, compact-only ones included.
+// `lottie-react-native` IS mocked globally in jest.setup.js, so only one of the
+// two needs handling here.
+let mockReduceMotion = false;
+jest.mock('react-native-reanimated', () => ({
+  __esModule: true,
+  useReducedMotion: () => mockReduceMotion,
+}));
+
+let mockStaticGradient = false;
+jest.mock('@/lib/stores/display-prefs-store', () => ({
+  useDisplayPrefsStore: (sel: (s: { staticGradient: boolean }) => unknown) =>
+    sel({ staticGradient: mockStaticGradient }),
+}));
+
+let mockAnimationsActive = true;
+jest.mock('@/lib/hooks/use-is-focused-safe', () => ({
+  useAnimationsActive: () => mockAnimationsActive,
+}));
+
 jest.mock('../MeraLogo', () => {
   const { View } = require('react-native');
   return { __esModule: true, default: (p: any) => <View testID="mera-logo" {...p} /> };
@@ -57,6 +84,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 import { router } from 'expo-router';
 import AllCaughtUpCard from '../AllCaughtUpCard';
+import { PROCESSING_SCENE_SIZE } from '@/components/custom/processing/types';
 import en from '@/lib/locales/en.json';
 
 const rootClass = () => screen.getByTestId('all-caught-up-card').props.className as string;
@@ -101,13 +129,65 @@ describe('AllCaughtUpCard', () => {
     expect(rootClass()).toContain('mb-4');
   });
 
-  it('compact shrinks the logo and the vertical padding', () => {
-    render(<AllCaughtUpCard compact />);
-    const compactLogo = screen.getByTestId('mera-logo').props.size;
-    screen.unmount();
-    render(<AllCaughtUpCard />);
-    const roomyLogo = screen.getByTestId('mera-logo').props.size;
-    expect(compactLogo).toBeLessThan(roomyLogo);
+  // ── The two scene branches ──
+  //
+  // The roomy branch draws the `game-hud-idle` Lottie loop; the compact branch
+  // keeps the Mera mark. The split is the point, not an implementation detail:
+  // compact is the Feed's end-of-list footer, so a loop there would run at the
+  // bottom of every feed forever for no reader.
+  describe('the scene', () => {
+    beforeEach(() => {
+      mockReduceMotion = false;
+      mockStaticGradient = false;
+      mockAnimationsActive = true;
+    });
+
+    it('draws the idle Lottie scene on the roomy branch and no Mera mark', () => {
+      render(<AllCaughtUpCard />);
+      expect(screen.getByTestId('all-caught-up-idle-scene')).toBeTruthy();
+      expect(screen.queryByTestId('mera-logo')).toBeNull();
+    });
+
+    it('keeps the Mera mark at 64 on the compact branch and draws no idle scene', () => {
+      render(<AllCaughtUpCard compact />);
+      expect(screen.getByTestId('mera-logo').props.size).toBe(64);
+      expect(screen.queryByTestId('all-caught-up-idle-scene')).toBeNull();
+    });
+
+    // It has to sit at the SAME size as FeedProcessingCard's stage scene. The
+    // two cards swap when a sync starts and never render at once, so a
+    // different number here makes the scene jump at that moment, which reads
+    // as the card breaking rather than as work beginning.
+    it('sizes the scene box to the processing card stage scene', () => {
+      render(<AllCaughtUpCard />);
+      expect(screen.getByTestId('all-caught-up-idle-scene').props.style).toMatchObject({
+        width: PROCESSING_SCENE_SIZE,
+        height: PROCESSING_SCENE_SIZE,
+      });
+    });
+
+    // Never an empty box. `staticGradient` defaults ON below 6 GB of RAM, so a
+    // held frame 0 is the normal rendering on a large share of the fleet, not a
+    // rare degradation - and `game-hud-idle` is authored so frame 0 is the
+    // whole composition at rest.
+    it.each([
+      ['Reduce Motion', () => { mockReduceMotion = true; }],
+      ['the static-background preference', () => { mockStaticGradient = true; }],
+      ['a blurred or backgrounded screen', () => { mockAnimationsActive = false; }],
+    ])('holds frame 0 rather than playing, under %s', (_label, arrange) => {
+      arrange();
+      render(<AllCaughtUpCard />);
+      const lottie = screen.getByTestId('all-caught-up-idle-scene').children[0] as any;
+      expect(lottie.props.autoPlay).toBe(false);
+      expect(lottie.props.progress).toBe(0);
+    });
+
+    it('plays when motion is allowed and someone is looking', () => {
+      render(<AllCaughtUpCard />);
+      const lottie = screen.getByTestId('all-caught-up-idle-scene').children[0] as any;
+      expect(lottie.props.autoPlay).toBe(true);
+      expect(lottie.props.progress).toBeUndefined();
+    });
   });
 
   // ── The conditional CTA (r14 #9) ──

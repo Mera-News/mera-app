@@ -7,8 +7,14 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import type { ImportanceThreshold } from '@/lib/feed-ordering/importance-filter';
 import { router } from 'expo-router';
+import LottieView from 'lottie-react-native';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useReducedMotion } from 'react-native-reanimated';
+import { gameAnimationFor } from '@/components/custom/game-ui/animation-registry';
+import { PROCESSING_SCENE_SIZE } from '@/components/custom/processing/types';
+import { useAnimationsActive } from '@/lib/hooks/use-is-focused-safe';
+import { useDisplayPrefsStore } from '@/lib/stores/display-prefs-store';
 import MeraLogo from './MeraLogo';
 
 /**
@@ -62,6 +68,29 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
     onLowerPriority,
 }) => {
     const { t } = useTranslation();
+
+    // Two different questions, both asked, the same pair `use-processing-
+    // snapshot.ts` already resolves for the processing card.
+    //
+    //  - `isStatic` is the reader's standing PREFERENCE: OS Reduce Motion, or
+    //    the app's own "Static background", which already defaults ON below
+    //    6 GB of RAM. Answered with a held frame 0, never an empty box, because
+    //    on a large share of the fleet that frozen frame is the NORMAL
+    //    rendering rather than a rare degradation. `game-hud-idle` is authored
+    //    for it: both its layers are lit at frame 0 and its dim outer ring is
+    //    constant across all 96 frames, so the held frame is the complete
+    //    composition at its resting brightness.
+    //  - `animationsActive` is whether anyone is LOOKING. Tabs stay mounted, so
+    //    an ungated loop runs forever behind whatever the reader walked off to.
+    //    `use-is-focused-safe.ts`'s header warns against gating something that
+    //    conveys liveness of an in-flight operation on a NARROWER predicate;
+    //    this one is false only when the screen is blurred or the app is
+    //    backgrounded, and this card means the exact opposite of in-flight.
+    const reduceMotion = useReducedMotion();
+    const staticGradient = useDisplayPrefsStore((s) => s.staticGradient);
+    const animationsActive = useAnimationsActive();
+    const idlePlaying = animationsActive && !(reduceMotion || staticGradient);
+
     const [currentIndex, setCurrentIndex] = useState(0);
     const messages = t('feed.mindfulness', { returnObjects: true }) as string[];
 
@@ -92,11 +121,45 @@ const AllCaughtUpCard: React.FC<AllCaughtUpCardProps> = ({
                     : 'w-full py-20 px-6 items-center justify-center'
             }
         >
-            {/* Mera logo — animated: this card is a rest stop the user
-                actually dwells on, so the spotlight sweeps rather than
-                sitting on a frozen frame. */}
+            {/* The idle scene, on the ROOMY branch only.
+
+                It is drawn at PROCESSING_SCENE_SIZE because FeedProcessingCard
+                draws its stage scene at that size and at the same offset from
+                the card top. The two cards never render at once: they swap the
+                moment a sync starts. Matching the number means the swap does
+                not make the scene jump, and a jump there would read as the card
+                breaking rather than as work beginning. Imported from
+                processing/types.ts rather than from the hook file, which drags
+                FeedSyncIndicator and the WatermelonDB singleton in with it;
+                that is why the constants live in types.ts at all.
+
+                The COMPACT branch keeps the Mera mark and is deliberately
+                untouched. That branch is the Feed's end-of-list footer, so an
+                idle loop there runs at the bottom of every feed forever, next
+                to a logo whose own file already calls its sweep the expensive
+                permanent one. A cost with no reader. */}
             <Box className={compact ? 'mb-3' : 'mb-6'}>
-                <MeraLogo size={compact ? 64 : 100} animated />
+                {compact ? (
+                    <MeraLogo size={64} animated />
+                ) : (
+                    <Box
+                        testID="all-caught-up-idle-scene"
+                        style={{
+                            width: PROCESSING_SCENE_SIZE,
+                            height: PROCESSING_SCENE_SIZE,
+                        }}
+                    >
+                        <LottieView
+                            source={gameAnimationFor('game-hud-idle') as never}
+                            autoPlay={idlePlaying}
+                            progress={idlePlaying ? undefined : 0}
+                            loop
+                            renderMode="AUTOMATIC"
+                            resizeMode="contain"
+                            style={{ flex: 1 }}
+                        />
+                    </Box>
+                )}
             </Box>
 
             <Text
