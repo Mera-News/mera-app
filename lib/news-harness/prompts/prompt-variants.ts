@@ -106,11 +106,24 @@ const BASELINE: PromptVariantSpec = {
  * corpus places its payload deliberately between characters 500 and 1200, so
  * these arms are exactly the ones that feed it to the model. U4 has to be re-run
  * on each arm before it ships; a clean U4 at the 500 default says nothing about
- * them.
+ * them. That re-run was done and both arms passed at zero hard fails, with the
+ * complete instruction reaching the model for the first time at 800 and 1200
+ * (at 500 it is cut mid-clause), so the prompt's resistance is measured rather
+ * than assumed.
+ *
+ * OUTCOME: BOTH REJECTED. Neither moved the retrieval axis in four runs, and
+ * both cost more input. They stay registered so the question is reproducible;
+ * each carries its verdict in its own `description`, because an arm listed
+ * without its result is a trap for whoever reads the registry next.
  */
 const TRUNCATION_ARMS: PromptVariantSpec[] = [800, 1200].map((cap) => ({
   id: `trunc-${cap}`,
-  description: `Publisher title/description capped at ${cap} chars instead of the 500 default.`,
+  description:
+    `Publisher title/description capped at ${cap} chars instead of the 500 default. `
+    + 'MEASURED AND REJECTED: no detectable retrieval effect (must_show recall 70.3-73.0 and skip '
+    + 'leak 18.6-22.3 overlap the baseline in every run), higher input cost, so it loses under a '
+    + 'rule that ranks on cost when quality ties. Kept registered so the question is reproducible, '
+    + 'NOT because it is a candidate.',
   articleTextMaxLength: cap,
 }));
 
