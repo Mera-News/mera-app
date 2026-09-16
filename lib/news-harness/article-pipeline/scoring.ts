@@ -841,6 +841,69 @@ function clampToStakeBand(
 }
 
 /**
+ * The last complete, balanced top-level JSON array in `text`, or null.
+ *
+ * WHY THE LAST AND NOT THE FIRST. A thinking model writes a draft array while
+ * reasoning and its real answer at the end. z-ai/glm-5.3-flash does exactly
+ * that: the captured fixture in `__tests__/fixtures/glm-leaked-scoring.json`
+ * holds the array twice, once inside the trace and once after `</think>`.
+ * Taking the first reads the draft; taking the last reads the conclusion.
+ *
+ * Tracks string state so a bracket inside a JSON string cannot unbalance the
+ * scan, and only counts TOP-LEVEL arrays so a nested one is never returned on
+ * its own.
+ */
+function extractLastJsonArray(text: string): string | null {
+  let depth = 0;
+  let start = -1;
+  let last: string | null = null;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') { inString = true; continue; }
+    if (ch === '[') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (ch === ']') {
+      if (depth > 0) {
+        depth--;
+        if (depth === 0 && start !== -1) last = text.slice(start, i + 1);
+      }
+    }
+  }
+  return last;
+}
+
+/**
+ * True when `text` carries prose, i.e. anything a model might be THINKING in
+ * rather than answering with.
+ *
+ * This is the gate on the regex fallback. That fallback used to take the first
+ * numbers found anywhere, which on a leaked reasoning trace meant scraping
+ * "Article 0", "I'll go 0.60-0.63" and "Let's say 0.62" and returning them as
+ * scores — a measured, silent wrong answer that included a 1.00 EMERGENCY-tier
+ * score invented from the model's scratch work.
+ *
+ * A letter is the test because a legitimate bare list ("0.61, 0.22") has none
+ * and every trace has many. Deliberately strict: a chatty-but-correct
+ * "here you go: 0.61, 0.22" is now a clean failure too. That trade is
+ * one-sided — a chatty model that still answers is rare and costs one batch a
+ * fallback score, while a thinking model's trace is routine and cost us
+ * invented scores that nothing recorded as a failure.
+ */
+function looksLikeProse(text: string): boolean {
+  return /[A-Za-z]/.test(text);
+}
+
+/**
  * Parse a batched relevance response — a JSON array of N entries in input
  * order, where each entry is either a float in 0.0–1.1 (legacy format) or a
  * `{"k":"<stake>","s":<float>}` object (tiered format; `s` is clamped into
@@ -918,28 +981,83 @@ export function parseBatchRelevanceResponse(
     // fall through
   }
 
-  // Fallback: regex-extract every number from the string.
-  if (stats) stats.regexFallbacks++;
-  const matches = trimmed.match(/-?\d+\.?\d*/g) ?? [];
-  const nums = matches
-    .map((s) => parseFloat(s))
-    .filter((n) => !isNaN(n))
-    .map(clampRelevance);
+  // Second chance: the LAST balanced top-level array in the text. A thinking
+  // model prefixes its answer with a trace (and may draft the array inside it),
+  // so the array we want is the final one, not the first thing that parses.
+  const lastArray = extractLastJsonArray(trimmed);
+  if (lastArray) {
+    try {
+      const parsed: unknown = JSON.parse(lastArray);
+      if (Array.isArray(parsed)) {
+        const numbers = parsed.map((v) => {
+          if (typeof v === 'number') {
+            if (stats) {
+              stats.entries++;
+              stats.legacyNumberEntries++;
+            }
+            return clampRelevance(v);
+          }
+          if (
+            typeof v === 'object' &&
+            v !== null &&
+            typeof (v as { s?: unknown }).s === 'number'
+          ) {
+            if (stats) {
+              stats.entries++;
+              stats.tieredEntries++;
+            }
+            return clampToStakeBand(
+              (v as { s: number }).s,
+              (v as { k?: unknown }).k,
+              stats,
+            );
+          }
+          return NaN;
+        });
+        if (numbers.every((n) => !isNaN(n))) {
+          if (numbers.length === expectedCount) return numbers;
+          if (stats) stats.lengthMismatches++;
+          logger.warn(
+            'Batch relevance: recovered array length mismatch — padding with fallback',
+            { expected: expectedCount, got: numbers.length, id },
+          );
+          const padded = numbers.slice(0, expectedCount);
+          while (padded.length < expectedCount)
+            padded.push(config.fallbackRelevance);
+          return padded;
+        }
+      }
+    } catch {
+      // fall through to the prose gate
+    }
+  }
 
-  if (nums.length >= expectedCount) return nums.slice(0, expectedCount);
-  if (nums.length > 0) {
-    logger.warn(
-      'Batch relevance: regex fallback under-filled — padding with fallback',
-      {
-        expected: expectedCount,
-        got: nums.length,
-        id,
-        prompt,
-      },
-    );
-    const padded = [...nums];
-    while (padded.length < expectedCount) padded.push(config.fallbackRelevance);
-    return padded;
+  // Regex fallback, now gated on the text carrying NO prose. See
+  // `looksLikeProse`: scraping numbers out of a reasoning trace produced
+  // confident, wrong, unrecorded scores, which is worse than no answer.
+  if (!looksLikeProse(trimmed)) {
+    if (stats) stats.regexFallbacks++;
+    const matches = trimmed.match(/-?\d+\.?\d*/g) ?? [];
+    const nums = matches
+      .map((s) => parseFloat(s))
+      .filter((n) => !isNaN(n))
+      .map(clampRelevance);
+
+    if (nums.length >= expectedCount) return nums.slice(0, expectedCount);
+    if (nums.length > 0) {
+      logger.warn(
+        'Batch relevance: regex fallback under-filled — padding with fallback',
+        {
+          expected: expectedCount,
+          got: nums.length,
+          id,
+          prompt,
+        },
+      );
+      const padded = [...nums];
+      while (padded.length < expectedCount) padded.push(config.fallbackRelevance);
+      return padded;
+    }
   }
 
   if (stats) stats.totalFailures++;
@@ -1012,6 +1130,25 @@ function cutAtWordBoundary(text: string, max: number): string {
   return (lastSpace > 0 ? slice.slice(0, lastSpace) : slice).trimEnd();
 }
 
+/**
+ * Openers that mean the model is DELIBERATING rather than answering.
+ *
+ * A backstop, not the main defence — the structural checks in
+ * {@link parseReasonResponse} (a `</think>` closer, an unclosed `<think>`) carry
+ * the weight. This catches the case a thinking model produces with no tags at
+ * all, which is what z-ai/glm-5.3-flash does at the shipped 64-token reason
+ * budget: it returns "Let me analyze this article..." cut mid-word, and the old
+ * decoder handed that to the reader as the card's "why this matters to you".
+ *
+ * Deliberately narrow, anchored, and case-sensitive on the first letter,
+ * because real reasons start with capitals and some start with these letters:
+ * "Indian rail strike...", "Letting agents in Amsterdam...", "First-time buyer
+ * rules...". Each alternative therefore requires what FOLLOWS the word, not
+ * just the word.
+ */
+const DELIBERATION_OPENER =
+  /^(?:Let(?: me| us|'s) |First,? I |I(?:'ll| will| need to| am going to| should) |Okay,? |OK,? |Alright,? |Looking at (?:this|the) (?:article|user))/;
+
 export function parseReasonResponse(
   output: string,
   id: string,
@@ -1019,6 +1156,32 @@ export function parseReasonResponse(
   logger: HarnessLogger = NOOP_LOGGER,
 ): string {
   let text = output.trim();
+
+  // A leaked reasoning trace, handled BEFORE anything else so no later step can
+  // tidy one into something that reads like prose. Two shapes, both measured
+  // live against z-ai/glm-5.3-flash:
+  //
+  //  - `trace</think>answer` — keep only what follows the LAST closer. This is
+  //    the same rule as lib/llm/reasoning-leak, applied here so it also covers
+  //    the on-device path and harness-local, neither of which goes through
+  //    cloudComplete.
+  //  - an UNCLOSED `<think>` — the trace was cut before the model finished
+  //    thinking, so there is no answer in the string at all. Reject.
+  const lastCloser = text.lastIndexOf('</think>');
+  if (lastCloser !== -1) {
+    text = text.slice(lastCloser + '</think>'.length).trim();
+  } else if (text.includes('<think>')) {
+    logger.warn('Reason generation: unclosed reasoning trace — rejected', { id });
+    return '';
+  }
+
+  if (DELIBERATION_OPENER.test(text)) {
+    logger.warn('Reason generation: output is deliberation, not a reason', {
+      id,
+      output: text.slice(0, 120),
+    });
+    return '';
+  }
 
   try {
     const parsed: unknown = JSON.parse(text);

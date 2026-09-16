@@ -1,0 +1,22 @@
+{
+  "_provenance": {
+    "capturedAt": "2026-09-16T13:37:24.423Z",
+    "model": "z-ai/glm-5.3-flash",
+    "prompt": "CLOUD_REASON_SYSTEM_PROMPT + buildReasonUserMessage, goldset-348 article 0",
+    "why": "GLM leaks its reasoning trace into the user-facing reason string."
+  },
+  "truncated": {
+    "maxTokens": 64,
+    "finishReason": "length",
+    "completionTokens": 64,
+    "hasThinkCloser": false,
+    "output": "Let me analyze this article.\n\nArticle: \"After hacker attack, EU discusses AI laws with Anthropic and OpenAI\" — EU discussing AI legislation with Anthropic and OpenAI. The EU will have the world's first legislation to regulate technology.\n\nUser: Lives in Amsterdam, Netherlands (EU). Software engineer building consumer apps"
+  },
+  "complete": {
+    "maxTokens": 2048,
+    "finishReason": "stop",
+    "completionTokens": 520,
+    "hasThinkCloser": true,
+    "output": "Let me analyze this article.\n\nArticle: \"After hacker attack, EU discusses AI laws with Anthropic and OpenAI\" — EU discussing AI legislation with Anthropic and OpenAI, EU will have world's first legislation to regulate technology.\n\nUser: Lives in Amsterdam, Netherlands (EU). Software engineer building consumer apps. Interested in AI research. Tracks Dutch housing market. Cycling, F1, chess, learning Dutch.\n\nScore: 0.62.\n\nThe stake test: EU AI regulation is enforceable in the user's own jurisdiction (Netherlands is in the EU). The user builds consumer apps and is interested in AI research. EU AI legislation directly affects how AI products are built/distributed in the EU — this is a professional/venture domain stake. The anchor example: \"0.75 'EU AI Act enforcement begins for consumer AI apps' — compliance for his own product\" and \"0.68 'EU forces Google to open AI services to competitors' — structural platform ruling in his field.\"\n\nHere it's EU discussing AI laws with Anthropic and OpenAI — regulation being discussed that would apply in the user's jurisdiction. Score 0.62 — substantive, structural change with the user's country/jurisdiction named (EU covers Netherlands). The tone for 0.55–0.75: one hedge word, name the live bridge.\n\nReason must contain: (a) specific detail from article — EU discussing AI laws with Anthropic and OpenAI; (b) specific user fact — you build consumer apps in Amsterdam / your AI work in the EU; (c) tone matched to 0.62 — one hedge word.\n\nDraft: \"EU talks with Anthropic and OpenAI on AI laws may shape rules for the consumer apps you build in Amsterdam.\"\n\nThat's ≤25 words. Count: EU(1) talks(2) with(3) Anthropic(4) and(5) OpenAI(6) on(7) AI(8) laws(9) may(10) shape(11) rules(12) for(13) the(14) consumer(15) apps(16) you(17) build(18) in(19) Amsterdam(20). 20 words. Good.\n\nOne hedge word \"may\" — appropriate for 0.62. Names the article detail (EU, Anthropic, OpenAI, AI laws) and the user fact (consumer apps you build in Amsterdam).</think>EU talks with Anthropic and OpenAI on AI laws may shape rules for the consumer apps you build in Amsterdam."
+  }
+}

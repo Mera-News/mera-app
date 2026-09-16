@@ -118,12 +118,30 @@ describe('relevance decode stats — counting', () => {
     expect(stats.lengthMismatches).toBe(1);
   });
 
-  it('counts the regex fallback when the array is not valid JSON', () => {
+  it('counts the regex fallback on a bare number list with no prose', () => {
+    // UPDATED DELIBERATELY. This case used to read 'here you go: 0.61, 0.22'
+    // and assert the numbers were recovered. The regex path is now gated on the
+    // text carrying no prose, because scraping numbers out of a reasoning trace
+    // returned confident wrong scores that nothing recorded as a failure — see
+    // decoder-hardening.test.ts for the measured GLM case. A bare list is the
+    // narrow shape the fallback still serves.
     const stats = newRelevanceDecodeStats();
-    const scores = decode('here you go: 0.61, 0.22', 2, stats);
+    const scores = decode('0.61, 0.22', 2, stats);
     expect(scores).toEqual([0.61, 0.22]);
     expect(stats.regexFallbacks).toBe(1);
     expect(stats.entries).toBe(0);
+  });
+
+  it('does NOT regex-scrape the same numbers once prose precedes them', () => {
+    // The other half of the change, asserted so the gate cannot be quietly
+    // widened back.
+    const stats = newRelevanceDecodeStats();
+    expect(decode('here you go: 0.61, 0.22', 2, stats)).toEqual([
+      CFG.fallbackRelevance,
+      CFG.fallbackRelevance,
+    ]);
+    expect(stats.regexFallbacks).toBe(0);
+    expect(stats.totalFailures).toBe(1);
   });
 
   it('counts a total failure when nothing parses', () => {
@@ -131,7 +149,9 @@ describe('relevance decode stats — counting', () => {
     const scores = decode('I cannot help with that.', 2, stats);
     expect(scores).toEqual([CFG.fallbackRelevance, CFG.fallbackRelevance]);
     expect(stats.totalFailures).toBe(1);
-    expect(stats.regexFallbacks).toBe(1);
+    // regexFallbacks is now 0 here, not 1: the text is prose, so the regex path
+    // is never entered at all. The failure is recorded once, by totalFailures.
+    expect(stats.regexFallbacks).toBe(0);
   });
 
   it('accumulates across batches, which is how a run reports a rate', () => {

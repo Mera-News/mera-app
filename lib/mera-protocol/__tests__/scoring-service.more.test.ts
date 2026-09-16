@@ -1049,7 +1049,21 @@ describe('parseBatchRelevanceResponse (via decodeCloudBatchResults)', () => {
     expect(scoreMap.get('x')).toBe(0.75);
   });
 
-  it('uses regex fallback when output is not valid JSON array', () => {
+  it('does NOT regex-scrape numbers out of prose', () => {
+    // CHANGED 2026-09-16, and the old expectations are worth stating because
+    // they were the shim-side statement of a real defect: this case used to
+    // assert that 'score for a is 0.7 and b is 0.5' decoded to 0.7 and 0.5,
+    // and a sibling asserted 'score is 0.8' decoded to 0.8 plus a padded
+    // fallback.
+    //
+    // The regex path in parseBatchRelevanceResponse is now gated on the text
+    // carrying no prose. A thinking model leaks its reasoning into `content`,
+    // and scraping that for numbers returned them as scores: measured on
+    // z-ai/glm-5.3-flash, a call whose real answer was 0.56/0.28/0.26/0.29/0.72
+    // decoded to 1.00/0.00/0.75/0.55/0.60, an EMERGENCY-tier score invented
+    // from the model's scratch work, with nothing recorded as a failure.
+    // Prose is a clean decode failure now.
+    // See lib/news-harness/__tests__/decoder-hardening.test.ts.
     const c1 = makeCandidate('a');
     const c2 = makeCandidate('b');
     const { scoreMap } = decodeCloudBatchResults({
@@ -1057,20 +1071,22 @@ describe('parseBatchRelevanceResponse (via decodeCloudBatchResults)', () => {
       promptsById: new Map(),
       chunkIdToCandidates: new Map([['score:0', [c1, c2]]]),
     });
-    expect(scoreMap.get('a')).toBe(0.7);
-    expect(scoreMap.get('b')).toBe(0.5);
+    expect(scoreMap.get('a')).toBe(0.3);
+    expect(scoreMap.get('b')).toBe(0.3);
   });
 
-  it('pads with fallback when regex finds fewer values than expected', () => {
+  it('still recovers a bare number list that carries no prose', () => {
+    // The narrow shape the regex fallback still serves, pinned so the gate is
+    // not mistaken for "the fallback was deleted".
     const c1 = makeCandidate('a');
     const c2 = makeCandidate('b');
     const { scoreMap } = decodeCloudBatchResults({
-      batchResults: [{ id: 'score:0', output: 'score is 0.8' }],
+      batchResults: [{ id: 'score:0', output: '0.8, 0.5' }],
       promptsById: new Map(),
       chunkIdToCandidates: new Map([['score:0', [c1, c2]]]),
     });
     expect(scoreMap.get('a')).toBe(0.8);
-    expect(scoreMap.get('b')).toBe(0.3); // FALLBACK
+    expect(scoreMap.get('b')).toBe(0.5);
   });
 
   it('falls back to all-fallback when output has no parseable numbers', () => {
