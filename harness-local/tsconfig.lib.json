@@ -35,6 +35,7 @@
     "scripts/selftest.ts",
     "scripts/replay-persona-chat.ts",
     "scripts/run-newsharness-corpus.ts",
-    "scripts/run-persona-corpus.ts"
+    "scripts/run-persona-corpus.ts",
+    "scripts/run-topicgen-corpus.ts"
   ]
 }
