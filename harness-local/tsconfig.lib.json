@@ -38,6 +38,7 @@
     "scripts/run-persona-corpus.ts",
     "scripts/run-topicgen-corpus.ts",
     "scripts/fetch-staging-fixture.ts",
-    "scripts/rater-export.ts"
+    "scripts/rater-export.ts",
+    "scripts/rater-agreement.ts"
   ]
 }
