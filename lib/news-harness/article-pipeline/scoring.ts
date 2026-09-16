@@ -952,6 +952,66 @@ export function parseBatchRelevanceResponse(
   return new Array<number>(expectedCount).fill(config.fallbackRelevance);
 }
 
+/**
+ * Dash characters that get used as clause punctuation: em dash, en dash and
+ * horizontal bar. Hyphen-minus is deliberately NOT here — it is a real word
+ * joiner ("on-device", "AI-industry") and replacing it would corrupt prose.
+ */
+const CLAUSE_DASHES = /(\s*)([\u2014\u2013\u2015])(\s*)/g;
+
+/** Hard cap on a stored reason, applied at a word boundary. */
+const REASON_MAX_CHARS = 200;
+
+/**
+ * Replace a dash used as clause punctuation with a comma, leaving real ranges
+ * alone.
+ *
+ * WHY THE DECODER AND NOT JUST THE PROMPT. The reason is the only LLM-generated
+ * user-facing string in the feed, and house style has no em dashes. A prompt
+ * rule is advice the model can ignore; this is deterministic. It also covers
+ * the ON-DEVICE path for free, which a cloud prompt rule cannot: the local
+ * reason prompt carries its own copy of the voice rule rather than sharing the
+ * cloud constant, so only shared post-processing reaches both.
+ *
+ * THREE CASES THAT ARE NOT CLAUSE PUNCTUATION, each one a real output:
+ *  - Between digits it is a RANGE ("2014–2016", "10–15%"). Left exactly as it
+ *    was, whitespace included.
+ *  - Leading or trailing, there is no second clause to join, so a comma would
+ *    be worse than nothing. Dropped.
+ *  - A hyphen is not in the class at all, so hyphenated words are untouched.
+ *
+ * Never concatenates: "a—b" becomes "a, b", never "ab".
+ */
+function replaceClauseDashes(text: string): string {
+  return text.replace(
+    CLAUSE_DASHES,
+    (match: string, _pre: string, _dash: string, _post: string, offset: number, whole: string) => {
+      const before = whole.slice(0, offset);
+      const after = whole.slice(offset + match.length);
+      if (/\d$/.test(before) && /^\d/.test(after)) return match;
+      if (before.trim().length === 0) return '';
+      if (after.trim().length === 0) return '';
+      return ', ';
+    },
+  );
+}
+
+/**
+ * Cut to `max` characters at a word boundary.
+ *
+ * The prompt asks for 25 words or fewer, so reaching the cap already means
+ * something went wrong upstream. The old `slice(0, max)` then made it visibly
+ * broken by cutting mid-word. No ellipsis: a trailing "…" dresses a failure up
+ * as an intentional summary. A single token longer than the cap has no boundary
+ * to cut at, so it is hard-cut rather than emptied.
+ */
+function cutAtWordBoundary(text: string, max: number): string {
+  if (text.length <= max) return text;
+  const slice = text.slice(0, max);
+  const lastSpace = slice.lastIndexOf(' ');
+  return (lastSpace > 0 ? slice.slice(0, lastSpace) : slice).trimEnd();
+}
+
 export function parseReasonResponse(
   output: string,
   id: string,
@@ -981,11 +1041,15 @@ export function parseReasonResponse(
     .replace(/\*?\*?Relevance Score:?\s*[\d.]+\*?\*?/gi, '')
     .replace(/\*?\*?Why this matters to you:?\*?\*?\s*/gi, '')
     .replace(/[*#]+/g, '')
-    .replace(/\n+/g, ' ')
+    .replace(/\n+/g, ' ');
+  // Dashes are replaced BEFORE the whitespace collapse on purpose: ", " emitted
+  // where the model already had spaces around the dash would otherwise leave a
+  // double space, and the existing collapse cleans it up for free.
+  text = replaceClauseDashes(text)
     .replace(/\s{2,}/g, ' ')
     .trim();
 
-  if (text.length > 0) return text.slice(0, 200);
+  if (text.length > 0) return cutAtWordBoundary(text, REASON_MAX_CHARS);
 
   logger.warn('Reason generation: failed to parse LLM output', {
     output: output.trim(),
