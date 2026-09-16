@@ -66,6 +66,12 @@ const GET_NEWS_PUBLISHERS = gql`
         name
         website_url
         country_code
+        # The publisher's OWN subscribe page. Already on the NewsPublisher
+        # type and already selected by SEARCH_PUBLISHERS below; selecting it
+        # here too is what lets the Sources publisher list offer it without a
+        # second request. Null is a first-class value meaning the publisher
+        # has no consumer subscription product.
+        subscription_uri
         publicationSources {
           _id
           feed_url

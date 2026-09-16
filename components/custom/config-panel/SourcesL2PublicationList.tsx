@@ -14,6 +14,9 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
+import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
+import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
 import { normPublicationName } from '@/lib/feed-grouping/geo-language-priority';
 import { observeActive as observeActivePublicationPreferences } from '@/lib/database/services/publication-preference-service';
 import {
@@ -116,6 +119,15 @@ interface SourcesL2PublisherListProps {
 const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ countryCode, countryName, onBack }) => {
     const { t } = useTranslation();
     const [publishers, setPublishers] = useState<NewsPublisher[]>([]);
+    /**
+     * ONE flow for the whole list, never one per row.
+     *
+     * `useSubscribeFlow` registers an AppState listener and opens a
+     * WatermelonDB observation, so calling it inside `renderPublisher` would
+     * give every visible publisher its own copy of both, and a single return
+     * from a subscribe page would then race N identical confirm prompts.
+     */
+    const subscribeFlow = useSubscribeFlow();
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [endCursor, setEndCursor] = useState<string | null>(null);
@@ -284,6 +296,35 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                             </AccordionTrigger>
                         </AccordionHeader>
                         <AccordionContent className="px-0 pb-2 pt-0">
+                            {/* The publisher's own subscribe page, when the
+                                catalogue knows one and the reader has not
+                                already said they subscribe. Deliberately in
+                                the expanded BODY and not in the trigger row
+                                above: that row is already a pressable holding
+                                the pref control, the headlines button and the
+                                chevron, and a fourth target inside a gesture
+                                that also toggles the accordion is the exact
+                                collision the visited-publication rows avoid.
+                                This is a publisher's own paid product on
+                                their own site, not Mera's plan. */}
+                            {item.subscription_uri &&
+                            !subscribeFlow.isSubscribed(item._id) ? (
+                                <Box className="px-4 py-2.5 border-t border-gray-800">
+                                    <SubscribeAction
+                                        publisherName={item.name}
+                                        variant="inline"
+                                        testID={`sources-publisher-subscribe-${item._id}`}
+                                        onOpen={() =>
+                                            void subscribeFlow.begin({
+                                                publisherId: item._id,
+                                                publisherName: item.name,
+                                                countryCode: item.country_code,
+                                                subscriptionUri: item.subscription_uri ?? null,
+                                            })
+                                        }
+                                    />
+                                </Box>
+                            ) : null}
                             {item.publicationSources.length === 0 ? (
                                 <Text size="sm" className="text-gray-500 px-4 py-2">
                                     {t('sources.noFeedsAvailable')}
@@ -322,7 +363,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
             </Box>
             );
         },
-        [handleFeedPress, handleTopHeadlinesPress, handleChangePublisherPref, pubPrefLevels, busyPublisherId, t]
+        [handleFeedPress, handleTopHeadlinesPress, handleChangePublisherPref, pubPrefLevels, busyPublisherId, subscribeFlow, t]
     );
 
     const keyExtractor = useCallback(
@@ -369,6 +410,14 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 />
             )}
 
+            {/* One dialog for the whole list, outside both branches: a
+                confirm armed before a reload that emptied the list still has
+                somewhere to appear. */}
+            <SubscribeConfirmDialog
+                publisherName={subscribeFlow.confirming?.publisherName ?? null}
+                onYes={subscribeFlow.onYes}
+                onNo={subscribeFlow.onNo}
+            />
         </Box>
     );
 };

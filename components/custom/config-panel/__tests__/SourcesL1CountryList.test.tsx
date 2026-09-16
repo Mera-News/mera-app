@@ -129,6 +129,31 @@ jest.mock('@/lib/source-service', () => ({
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 
+// `use-subscribe-flow` opens a WatermelonDB observation and an AppState
+// listener; `SubscribeConfirmDialog` pulls `@/components/ui/modal` and
+// through it `@legendapp/motion`, which this suite's RN mock cannot load.
+// The real `SubscribeAction` is deliberately left unmocked so these suites
+// still render the affordance itself.
+const mockSubscribeBegin = jest.fn();
+const mockConfirmDirectly = jest.fn();
+let mockIsSubscribed = (_id: string) => false;
+jest.mock('@/components/custom/publication-preferences/use-subscribe-flow', () => ({
+    useSubscribeFlow: () => ({
+        subscriptions: { items: [], isLoading: false, busyId: null },
+        begin: mockSubscribeBegin,
+        confirmDirectly: mockConfirmDirectly,
+        confirming: null,
+        onYes: jest.fn(),
+        onNo: jest.fn(),
+        isSubscribed: (id: string) => mockIsSubscribed(id),
+    }),
+}));
+jest.mock('@/components/custom/publication-preferences/SubscribeConfirmDialog', () => ({
+    __esModule: true,
+    default: () => null,
+}));
+
+
 import SourcesL1CountryList from '../SourcesL1CountryList';
 
 describe('SourcesL1CountryList — browse-country toggle (Item 7)', () => {
@@ -305,5 +330,81 @@ describe('SourcesL1CountryList — publisher search (Item 8)', () => {
         // only the publisher hit shows.
         expect(queryByText('USA')).toBeNull();
         expect(queryByText('IND')).toBeNull();
+    });
+});
+
+describe('SourcesL1CountryList — subscribe from a publisher search hit', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        browseStore = [];
+        focusEffectCallbacks.length = 0;
+        mockIsSubscribed = () => false;
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+    const searchFor = async (hit: Record<string, unknown>) => {
+        mockSearchPublishers.mockResolvedValue({
+            publishers: [
+                {
+                    _id: 'pub-1',
+                    name: 'Times of India',
+                    country_code: 'IND',
+                    country_name: 'India',
+                    website_url: 'https://timesofindia.indiatimes.com',
+                    matchingSources: [],
+                    ...hit,
+                },
+            ],
+            pageInfo: { endCursor: null, hasNextPage: false, pageSize: 10 },
+        });
+        const utils = render(<SourcesL1CountryList />);
+        await act(async () => {
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+        act(() => {
+            fireEvent.changeText(
+                utils.getByPlaceholderText('sources.searchCountriesOrPublishers'),
+                'times',
+            );
+        });
+        await act(async () => {
+            jest.advanceTimersByTime(400);
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+        return utils;
+    };
+
+    it('renders NOTHING for a hit with no subscribe page', async () => {
+        const { queryByTestId } = await searchFor({ subscription_uri: null });
+        expect(queryByTestId('sources-search-subscribe-pub-1')).toBeNull();
+    });
+
+    it('renders NOTHING when the reader already subscribes to that publisher', async () => {
+        mockIsSubscribed = (id: string) => id === 'pub-1';
+        const { queryByTestId } = await searchFor({
+            subscription_uri: 'https://timesofindia.indiatimes.com/subscribe',
+        });
+        expect(queryByTestId('sources-search-subscribe-pub-1')).toBeNull();
+    });
+
+    it('offers the publisher OWN page when the hit carries one', async () => {
+        const { getByTestId } = await searchFor({
+            subscription_uri: 'https://timesofindia.indiatimes.com/subscribe',
+        });
+
+        fireEvent.press(getByTestId('sources-search-subscribe-pub-1'));
+
+        expect(mockSubscribeBegin).toHaveBeenCalledWith({
+            publisherId: 'pub-1',
+            publisherName: 'Times of India',
+            countryCode: 'IND',
+            subscriptionUri: 'https://timesofindia.indiatimes.com/subscribe',
+        });
     });
 });

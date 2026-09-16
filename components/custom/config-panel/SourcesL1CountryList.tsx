@@ -7,6 +7,9 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import TopVisitedPublicationsCard from '@/components/custom/config-panel/TopVisitedPublicationsCard';
+import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
+import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
+import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
 import { alpha3ToAlpha2 } from '@/components/custom/locations/location-display';
 import { AccountService } from '@/lib/account-service';
 import { getCountryName, getFlagEmoji } from '@/lib/country-utils';
@@ -49,8 +52,20 @@ type L1Row =
     | { readonly kind: 'country'; readonly item: CountryItem }
     | { readonly kind: 'publisher'; readonly item: PublisherSearchHit };
 
-/** One publisher search hit — name, the country it belongs to, and its matching feeds. */
-const PublisherSearchRow: React.FC<{ hit: PublisherSearchHit }> = ({ hit }) => {
+/**
+ * One publisher search hit — name, the country it belongs to, and its
+ * matching feeds.
+ *
+ * `onSubscribe` is passed DOWN rather than derived here. The flow it belongs
+ * to registers an AppState listener and a WatermelonDB observation, so a row
+ * that opened its own would give every visible hit a copy of both and race N
+ * confirm prompts off one return. Absent means no affordance: the parent has
+ * already decided there is no usable URI, or that the reader subscribes.
+ */
+const PublisherSearchRow: React.FC<{
+    hit: PublisherSearchHit;
+    onSubscribe?: () => void;
+}> = ({ hit, onSubscribe }) => {
     const { t } = useTranslation();
 
     const handlePublisherPress = useCallback(() => {
@@ -101,6 +116,21 @@ const PublisherSearchRow: React.FC<{ hit: PublisherSearchHit }> = ({ hit }) => {
                     </Button>
                 </HStack>
             </Pressable>
+            {/* Sits OUTSIDE the header Pressable above, which navigates to
+                this publisher's headlines. A nested target inside it would be
+                the same tap collision the visited-publication rows avoid.
+                This is the publisher's own paid product on their own site,
+                never Mera's plan. */}
+            {onSubscribe && (
+                <Box className="px-4 py-2 border-t border-gray-800">
+                    <SubscribeAction
+                        publisherName={hit.name}
+                        variant="inline"
+                        testID={`sources-search-subscribe-${hit._id}`}
+                        onOpen={onSubscribe}
+                    />
+                </Box>
+            )}
             {hit.matchingSources.length > 0 && (
                 <VStack className="border-t border-gray-800">
                     {hit.matchingSources.map((feed) => (
@@ -139,6 +169,8 @@ const SourcesL1CountryList: React.FC = () => {
     const [publisherHits, setPublisherHits] = useState<PublisherSearchHit[]>([]);
     const [isSearchingPublishers, setIsSearchingPublishers] = useState(false);
     const hasFetched = useRef(false);
+    /** ONE flow for the whole list. See `PublisherSearchRow` for why. */
+    const subscribeFlow = useSubscribeFlow();
     const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     // Guards against a slow, now-stale search response clobbering a faster
     // later one (classic out-of-order-resolution race on debounced typing).
@@ -382,14 +414,39 @@ const SourcesL1CountryList: React.FC = () => {
         [handleCountryPress, handleTopHeadlinesPress, handleToggleCountry, browseAlpha2, t]
     );
 
+    /**
+     * Eligibility is decided HERE, so a row is never handed a callback it
+     * cannot honour. Both conditions are required: no `subscription_uri`
+     * means the publisher has no consumer subscription product and there is
+     * nowhere honest to send anybody, and an active subscription means the
+     * reader has already answered this.
+     */
+    const subscribeHandlerFor = useCallback(
+        (hit: PublisherSearchHit): (() => void) | undefined => {
+            if (!hit.subscription_uri) return undefined;
+            if (subscribeFlow.isSubscribed(hit._id)) return undefined;
+            return () =>
+                void subscribeFlow.begin({
+                    publisherId: hit._id,
+                    publisherName: hit.name,
+                    countryCode: hit.country_code,
+                    subscriptionUri: hit.subscription_uri ?? null,
+                });
+        },
+        [subscribeFlow]
+    );
+
     const renderItem: ListRenderItem<L1Row> = useCallback(
         ({ item }) =>
             item.kind === 'publisher' ? (
-                <PublisherSearchRow hit={item.item} />
+                <PublisherSearchRow
+                    hit={item.item}
+                    onSubscribe={subscribeHandlerFor(item.item)}
+                />
             ) : (
                 renderCountryRow(item.item)
             ),
-        [renderCountryRow]
+        [renderCountryRow, subscribeHandlerFor]
     );
 
     const keyExtractor = useCallback(
@@ -458,6 +515,15 @@ const SourcesL1CountryList: React.FC = () => {
                     }
                 />
             )}
+
+            {/* One dialog for the whole list, outside both branches: a confirm
+                armed before a search that emptied the list still has somewhere
+                to appear. */}
+            <SubscribeConfirmDialog
+                publisherName={subscribeFlow.confirming?.publisherName ?? null}
+                onYes={subscribeFlow.onYes}
+                onNo={subscribeFlow.onNo}
+            />
         </Box>
     );
 };

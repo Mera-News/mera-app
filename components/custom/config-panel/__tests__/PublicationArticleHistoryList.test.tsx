@@ -29,10 +29,20 @@ jest.mock('react-native', () => {
         View,
         Text: host('Text'),
         RefreshControl: (props: any) => ReactLib.createElement(View, props),
-        FlatList: ({ data, renderItem, keyExtractor }: any) =>
+        Pressable: host('View'),
+        // ListHeaderComponent is RENDERED, not dropped. It used to be
+        // ignored here, which made every "the header is absent" assertion
+        // pass for the wrong reason: the mock never drew a header at all, so
+        // a gate that was wide open would still have looked shut.
+        FlatList: ({ data, renderItem, keyExtractor, ListHeaderComponent }: any) =>
             ReactLib.createElement(
                 ReactLib.Fragment,
                 null,
+                ReactLib.isValidElement(ListHeaderComponent)
+                    ? ListHeaderComponent
+                    : typeof ListHeaderComponent === 'function'
+                      ? ReactLib.createElement(ListHeaderComponent)
+                      : null,
                 (data ?? []).map((item: any, index: number) =>
                     ReactLib.createElement(
                         ReactLib.Fragment,
@@ -81,6 +91,42 @@ jest.mock('@/lib/database/services/publication-visit-service', () => ({
 }));
 
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
+
+// `use-subscribe-flow` opens a WatermelonDB observation and an AppState
+// listener; `SubscribeConfirmDialog` pulls `@/components/ui/modal` and
+// through it `@legendapp/motion`, which this suite's RN mock cannot load.
+// The real `SubscribeAction` is deliberately left unmocked so these suites
+// still render the affordance itself.
+const mockSubscribeBegin = jest.fn();
+const mockConfirmDirectly = jest.fn();
+let mockIsSubscribed = (_id: string) => false;
+jest.mock('@/components/custom/publication-preferences/use-subscribe-flow', () => ({
+    useSubscribeFlow: () => ({
+        subscriptions: { items: [], isLoading: false, busyId: null },
+        begin: mockSubscribeBegin,
+        confirmDirectly: mockConfirmDirectly,
+        confirming: null,
+        onYes: jest.fn(),
+        onNo: jest.fn(),
+        isSubscribed: (id: string) => mockIsSubscribed(id),
+    }),
+}));
+jest.mock('@/components/custom/publication-preferences/SubscribeConfirmDialog', () => ({
+    __esModule: true,
+    default: () => null,
+}));
+
+jest.mock('@/components/ui/hstack', () => { const { View } = require('react-native'); return { HStack: (p: any) => <View {...p} /> }; });
+jest.mock('@/components/ui/pressable', () => { const { Pressable } = require('react-native'); return { Pressable }; });
+jest.mock('@/components/ui/button', () => { const { View, Text } = require('react-native'); return { Button: (p: any) => <View {...p} />, ButtonText: (p: any) => <Text {...p} /> }; });
+
+// The name -> publisher resolution. Default is "no publisher", which is the
+// branch that must leave this screen byte-identical to before.
+const mockResolvePublisher = jest.fn().mockResolvedValue(null);
+jest.mock('@/lib/subscriptions/publisher-lookup', () => ({
+    resolvePublisherForSourceName: (...args: any[]) => mockResolvePublisher(...args),
+}));
+
 
 import PublicationArticleHistoryList from '../PublicationArticleHistoryList';
 
@@ -139,5 +185,63 @@ describe('PublicationArticleHistoryList — a tap goes to the detail screen', ()
         fireEvent.press(await findByTestId('card-https://zeit.de/story'));
         expect(mockOpenArticle).not.toHaveBeenCalled();
         expect(mockOpenArticleInAppBrowser).not.toHaveBeenCalled();
+    });
+});
+
+describe('PublicationArticleHistoryList — the publisher subscribe card', () => {
+    const PUBLISHER = {
+        publisherId: 'pub-zeit',
+        publisherName: 'Die Zeit',
+        countryCode: 'DEU',
+        subscriptionUri: 'https://www.zeit.de/abo',
+    };
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockIsSubscribed = () => false;
+        mockGetVisitsForPublication.mockResolvedValue([makeVisit()]);
+        mockResolvePublisher.mockResolvedValue(null);
+    });
+
+    it('renders NOTHING when the name resolves to no publisher', async () => {
+        const { queryByTestId } = renderList();
+        await waitFor(() => expect(mockResolvePublisher).toHaveBeenCalled());
+        expect(queryByTestId('publication-history-subscribe')).toBeNull();
+    });
+
+    it('renders NOTHING when the publisher has no subscribe page', async () => {
+        // Null is a first-class value meaning "no consumer subscription
+        // product", not missing data. It must never draw a dead button.
+        mockResolvePublisher.mockResolvedValue({ ...PUBLISHER, subscriptionUri: null });
+        const { queryByTestId } = renderList();
+        await waitFor(() => expect(mockResolvePublisher).toHaveBeenCalled());
+        expect(queryByTestId('publication-history-subscribe')).toBeNull();
+    });
+
+    it('renders NOTHING when the reader already subscribes to this publisher', async () => {
+        mockResolvePublisher.mockResolvedValue(PUBLISHER);
+        mockIsSubscribed = (id: string) => id === 'pub-zeit';
+        const { queryByTestId } = renderList();
+        await waitFor(() => expect(mockResolvePublisher).toHaveBeenCalled());
+        expect(queryByTestId('publication-history-subscribe')).toBeNull();
+    });
+
+    it('renders the card, and asks for the PUBLISHER page, when a real URI resolved', async () => {
+        mockResolvePublisher.mockResolvedValue(PUBLISHER);
+        const { findByTestId, getByTestId } = renderList();
+
+        fireEvent.press(await findByTestId('publication-history-subscribe'));
+        expect(mockSubscribeBegin).toHaveBeenCalledWith(PUBLISHER);
+
+        // The secondary path writes the subscription without a browser trip.
+        fireEvent.press(getByTestId('publication-history-subscribe-already'));
+        expect(mockConfirmDirectly).toHaveBeenCalledWith(PUBLISHER);
+    });
+
+    it('looks the publisher up by the SOURCE name and country it was routed with', async () => {
+        renderList();
+        await waitFor(() =>
+            expect(mockResolvePublisher).toHaveBeenCalledWith('Die Zeit', 'DEU'),
+        );
     });
 });

@@ -110,6 +110,31 @@ jest.mock('@/lib/database/services/publication-pref-ui-actions', () => ({
 
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { captureException: jest.fn() } }));
 
+// `use-subscribe-flow` opens a WatermelonDB observation and an AppState
+// listener; `SubscribeConfirmDialog` pulls `@/components/ui/modal` and
+// through it `@legendapp/motion`, which this suite's RN mock cannot load.
+// The real `SubscribeAction` is deliberately left unmocked so these suites
+// still render the affordance itself.
+const mockSubscribeBegin = jest.fn();
+const mockConfirmDirectly = jest.fn();
+let mockIsSubscribed = (_id: string) => false;
+jest.mock('@/components/custom/publication-preferences/use-subscribe-flow', () => ({
+    useSubscribeFlow: () => ({
+        subscriptions: { items: [], isLoading: false, busyId: null },
+        begin: mockSubscribeBegin,
+        confirmDirectly: mockConfirmDirectly,
+        confirming: null,
+        onYes: jest.fn(),
+        onNo: jest.fn(),
+        isSubscribed: (id: string) => mockIsSubscribed(id),
+    }),
+}));
+jest.mock('@/components/custom/publication-preferences/SubscribeConfirmDialog', () => ({
+    __esModule: true,
+    default: () => null,
+}));
+
+
 const mockRouterPush = jest.fn();
 jest.mock('expo-router', () => ({ router: { push: (...args: any[]) => mockRouterPush(...args) } }));
 
@@ -280,4 +305,59 @@ describe('item 9 — L2 publisher-level ↑/↓ control', () => {
         );
     });
 
+});
+
+describe('the publisher subscribe row', () => {
+    const renderL2 = () =>
+        render(<SourcesL2PublisherList countryCode="IND" countryName="India" onBack={jest.fn()} />);
+
+    beforeEach(() => {
+        mockIsSubscribed = () => false;
+    });
+
+    it('renders NOTHING for a publisher with no subscribe page', async () => {
+        // Every row in prod looks like this until the catalogue knows a URI,
+        // so this is the ordinary case, not an edge one.
+        mockPublishers([makePublisher({ subscription_uri: null })]);
+        const { queryByTestId } = renderL2();
+        await waitFor(() => expect(mockGetNewsPublishers).toHaveBeenCalled());
+        expect(queryByTestId('sources-publisher-subscribe-pub-1')).toBeNull();
+    });
+
+    it('renders NOTHING when the reader already subscribes to that publisher', async () => {
+        mockPublishers([makePublisher({ subscription_uri: 'https://thetimes.example/subscribe' })]);
+        mockIsSubscribed = (id: string) => id === 'pub-1';
+        const { queryByTestId } = renderL2();
+        await waitFor(() => expect(mockGetNewsPublishers).toHaveBeenCalled());
+        expect(queryByTestId('sources-publisher-subscribe-pub-1')).toBeNull();
+    });
+
+    it('offers the publisher OWN page when the catalogue carries one', async () => {
+        mockPublishers([makePublisher({ subscription_uri: 'https://thetimes.example/subscribe' })]);
+        const { findByTestId } = renderL2();
+
+        fireEvent.press(await findByTestId('sources-publisher-subscribe-pub-1'));
+
+        expect(mockSubscribeBegin).toHaveBeenCalledWith({
+            publisherId: 'pub-1',
+            publisherName: 'The Times',
+            countryCode: 'IN',
+            subscriptionUri: 'https://thetimes.example/subscribe',
+        });
+    });
+
+    it('gives each publisher its OWN testID, so an assertion cannot hit the wrong row', async () => {
+        mockPublishers([
+            makePublisher({ subscription_uri: 'https://a.example/sub' }),
+            makePublisher({ _id: 'pub-2', name: 'The Post', subscription_uri: 'https://b.example/sub' }),
+        ]);
+        const { findByTestId, getByTestId } = renderL2();
+
+        await findByTestId('sources-publisher-subscribe-pub-1');
+        fireEvent.press(getByTestId('sources-publisher-subscribe-pub-2'));
+
+        expect(mockSubscribeBegin).toHaveBeenCalledWith(
+            expect.objectContaining({ publisherId: 'pub-2', publisherName: 'The Post' }),
+        );
+    });
 });
