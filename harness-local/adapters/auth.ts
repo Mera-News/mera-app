@@ -14,7 +14,6 @@ import * as readline from 'node:readline';
 import type { HarnessEnv } from '../config/env';
 import { authCachePath } from '../config/local-data';
 
-const AUTH_CACHE_PATH = authCachePath();
 const SESSION_MAX_AGE_MS = 6 * 24 * 60 * 60 * 1000; // 6 days
 
 interface AuthCache {
@@ -23,18 +22,18 @@ interface AuthCache {
   savedAt: string;
 }
 
-function loadCache(): AuthCache | null {
-  if (!fs.existsSync(AUTH_CACHE_PATH)) return null;
+function loadCache(cachePath: string): AuthCache | null {
+  if (!fs.existsSync(cachePath)) return null;
   try {
-    const parsed = JSON.parse(fs.readFileSync(AUTH_CACHE_PATH, 'utf-8')) as AuthCache;
+    const parsed = JSON.parse(fs.readFileSync(cachePath, 'utf-8')) as AuthCache;
     return parsed?.savedAt ? parsed : null;
   } catch {
     return null;
   }
 }
 
-function saveCache(cache: AuthCache): void {
-  fs.writeFileSync(AUTH_CACHE_PATH, JSON.stringify(cache, null, 2) + '\n', 'utf-8');
+function saveCache(cachePath: string, cache: AuthCache): void {
+  fs.writeFileSync(cachePath, JSON.stringify(cache, null, 2) + '\n', 'utf-8');
 }
 
 function isCacheFresh(cache: AuthCache): boolean {
@@ -79,7 +78,12 @@ export async function getAuthHeaders(env: HarnessEnv): Promise<Record<string, st
     );
   }
 
-  const cached = loadCache();
+  // Resolved per call and per TARGET: a cached session belongs to exactly one
+  // environment, and a 6-day-fresh prod cookie replayed into a staging run is
+  // a silent wrong-environment read (see config/local-data.ts).
+  const cachePath = authCachePath(env.target);
+
+  const cached = loadCache(cachePath);
   if (cached && isCacheFresh(cached)) {
     if (cached.cookie) return { Cookie: cached.cookie };
     if (cached.bearer) return { Authorization: `Bearer ${cached.bearer}` };
@@ -136,7 +140,7 @@ export async function getAuthHeaders(env: HarnessEnv): Promise<Record<string, st
     );
   }
 
-  saveCache({ cookie, bearer, savedAt: new Date().toISOString() });
+  saveCache(cachePath, { cookie, bearer, savedAt: new Date().toISOString() });
 
   // Prefer the session cookie (the server accepts it directly); bearer() also
   // works via Authorization: Bearer <token> if only a token came back.

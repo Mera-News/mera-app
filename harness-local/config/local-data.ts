@@ -2,12 +2,15 @@
 //
 // All mutable state the harness scripts read/write (the persona fixture a
 // developer is actively editing, per-run output, cached auth sessions) lives
-// under a single gitignored folder at the repo root: `.local-test-data/`.
-// The only fixture tracked in git is `harness-local/fixtures/persona.example.json`.
+// under a single gitignored folder: `.local-test-data/`.
+// `harness-local/fixtures/**` is TRACKED in git (persona.example.json, the
+// goldset-348 pair, persona-chat/, persona-corpus/) — only `.env.harness` and
+// `.local-test-data/` are ignored.
 //
-// Paths here are resolved against `process.cwd()` (scripts are invoked from
-// the repo root via `npm run ...`), matching how harness-local/lib/run-writer.ts
-// already anchors its default runs root.
+// Paths here are resolved against `process.cwd()`, which for every wired npm
+// script is `mera-app/` — this repo's root, NOT the mera-news directory that
+// holds the seven repos. `harness-local/lib/run-writer.ts` anchors its default
+// runs root the same way.
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -27,8 +30,33 @@ export function defaultRunsRoot(): string {
   return path.join(localDataRoot(), 'runs');
 }
 
-export function authCachePath(): string {
-  return path.join(localDataRoot(), '.auth-cache.json');
+/** Legacy, un-namespaced cache path. Kept only so `authCachePath` can warn
+ *  about a leftover file: a session cached under it has no recorded target. */
+const LEGACY_AUTH_CACHE = '.auth-cache.json';
+
+let legacyWarned = false;
+
+/**
+ * Per-target session cache.
+ *
+ * NAMESPACED ON PURPOSE. This was ONE file for every target, and the cache is
+ * considered fresh for 6 days (adapters/auth.ts). A staging run started inside
+ * that window after a prod run therefore presented the PROD session and
+ * queried prod while reporting itself as staging — a silent wrong-environment
+ * read, not a visible failure. The target is part of the identity of a cached
+ * session, so it is part of the filename.
+ */
+export function authCachePath(target: 'local' | 'staging' | 'prod'): string {
+  const legacy = path.join(localDataRoot(), LEGACY_AUTH_CACHE);
+  if (!legacyWarned && fs.existsSync(legacy)) {
+    legacyWarned = true;
+    // eslint-disable-next-line no-console
+    console.warn(
+      `harness-local: ignoring the un-namespaced ${LEGACY_AUTH_CACHE} (its target is unknown). ` +
+        'Delete it once you have signed in again; sessions are now cached per target.',
+    );
+  }
+  return path.join(localDataRoot(), `.auth-cache.${target}.json`);
 }
 
 /**
