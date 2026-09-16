@@ -267,6 +267,39 @@ The two together are a control pair. A run where the prefix reaches the model in
 the first and not in the second is the cap working; either result alone proves
 nothing.
 
+## Known limits and follow-ups
+
+**Reason-gated metrics cannot compare arms, and nothing in the runner stops you
+trying.** NOT FIXED in this wave; recorded here with the numbers so the next
+person does not rediscover it from a false positive.
+
+Measured on the 348-article interleaved run of baseline against reason-v2, two
+variants that share all 70 relevance prompt hashes and therefore cannot have
+influenced the relevance pass at all:
+
+| | |
+|---|---|
+| articles scored by both arms | 348 |
+| identical relevance score | 210 (60.3%) |
+| crossed the 0.4 reason gate in opposite directions | 7 (2.0%) |
+| articles clearing the gate | baseline 91, reason-v2 92 |
+
+So 39.7% of articles get a different score from an identical prompt, purely
+from sampling at temperature 0.1, and the gated set of about 91 articles churns
+roughly 8% of its membership between arms for reasons unconnected to either
+prompt. That is enough to manufacture a delta of about one point on any
+per-article metric computed over *which articles received a reason call*, and it
+did: a skip-leak comparison flagged a 0.95-point difference between the two
+variants before this was understood.
+
+The fix, when someone wants it: compute the gated subset ONCE, from one arm,
+and reuse that same article set for every other arm, so the reason pass is
+measured over identical membership. It is a real change to what the run
+measures, not a bug fix, which is why it is a follow-up rather than a patch.
+
+Until then, compare arms on the relevance pass or on the reason TEXT, never on
+counts derived from gate membership.
+
 ## Gates
 
 There is no jest here, and `tsc -p harness-local/tsconfig.json` pulls in the app
