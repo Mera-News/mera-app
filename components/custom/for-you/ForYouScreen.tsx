@@ -32,6 +32,7 @@ import FactChecksPanel from '@/components/custom/fact-checks/FactChecksPanel';
 import FeedStatsSentence from '@/components/custom/for-you/FeedStatsSentence';
 import SavedSuggestionsScreen from '@/components/custom/saved-suggestions/SavedSuggestionsScreen';
 import VisitedPublicationsList from '@/components/custom/config-panel/VisitedPublicationsList';
+import ShareStatsFab from '@/components/custom/ShareStatsFab';
 import StatusBarScrim from '@/components/custom/StatusBarScrim';
 import { buildFactRows } from '@/lib/stores/fact-rows-selector';
 import { loadSectionSnapshots, type SectionSnapshots } from '@/lib/stores/section-snapshots';
@@ -581,19 +582,22 @@ const MeraNewsScreen: React.FC = () => {
                             entry label — but under its own testID, because a
                             shared id returns the FIRST match and would let an
                             assertion pass against the wrong instance. */}
-                        <View style={{ paddingTop: headerHeight, alignItems: 'flex-end', paddingHorizontal: 16 }}>
-                            <Pressable
-                                testID="dashboard-history-share"
-                                onPress={() => router.push('/logged-in/share-stats')}
-                                hitSlop={12}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('shareStats.entryA11y')}
-                                className="p-1 rounded-full"
-                            >
-                                <MaterialIcons name="ios-share" size={20} color="#FFFFFF" />
-                            </Pressable>
-                        </View>
                         <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
+                        {/* A FAB, floating over the list, NOT a row above it.
+                            The row version wrapped itself in `paddingTop:
+                            headerHeight` so it would clear the collapsing
+                            header, and the list below it pads by `headerHeight`
+                            too. Two offsets for one header left a screen-tall
+                            gap between the sub-tabs and the first row. Floating
+                            it removes the wrapper, so the list keeps the only
+                            header padding there is.
+
+                            Same geometry as ScrollToTopFab (right: 20, bottom:
+                            20 + inset + tab bar) so the two read as one family
+                            and land in the same place. They never co-occur:
+                            that one is mounted by FactFeedScreen, which is the
+                            Fact checks sub-tab, not this one. */}
+                        <ShareStatsFab onPress={() => router.push('/logged-in/share-stats')} />
                     </View>
                 )}
 
