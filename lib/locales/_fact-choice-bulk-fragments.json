@@ -1,0 +1,223 @@
+{
+  "_comment": "chatq wave: the inline Add all / Skip all row for a fact-choice group (4 new factChoice.* keys) plus the one new chatTopics.* line for the immediate-save topics card. ALL KEYS ARE NEW, so no --allow-overwrite is needed; run --check first. The card's own verbs (factChoice.add / factChoice.dismiss) and the chip affordances (topicPlan.delete / topicPlan.undo / topicPlan.title / topicPlan.generating / floatingChat.topicGenRetry) are REUSED unchanged, which is why the row says Add/Skip rather than Accept/Reject: a bulk control must name the same actions the cards name. {{count}} is a plain interpolation, not an i18next plural: the row only renders at 2 or more pending cards, so no locale ever needs its singular form. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "factChoice": {
+      "addAll": "Add all ({{count}})",
+      "skipAll": "Skip all",
+      "addAllA11y": "Add all {{count}} suggestions",
+      "skipAllA11y": "Skip all {{count}} suggestions"
+    },
+    "chatTopics": {
+      "none": "Saved. No topics to add right now."
+    }
+  },
+  "de": {
+    "factChoice": {
+      "addAll": "Alle hinzufügen ({{count}})",
+      "skipAll": "Alle überspringen",
+      "addAllA11y": "Alle {{count}} Vorschläge hinzufügen",
+      "skipAllA11y": "Alle {{count}} Vorschläge überspringen"
+    },
+    "chatTopics": {
+      "none": "Gespeichert. Gerade gibt es keine Themen zum Hinzufügen."
+    }
+  },
+  "es": {
+    "factChoice": {
+      "addAll": "Añadir todo ({{count}})",
+      "skipAll": "Omitir todo",
+      "addAllA11y": "Añadir las {{count}} sugerencias",
+      "skipAllA11y": "Omitir las {{count}} sugerencias"
+    },
+    "chatTopics": {
+      "none": "Guardado. Ahora mismo no hay temas que añadir."
+    }
+  },
+  "fr": {
+    "factChoice": {
+      "addAll": "Tout ajouter ({{count}})",
+      "skipAll": "Tout passer",
+      "addAllA11y": "Ajouter les {{count}} suggestions",
+      "skipAllA11y": "Passer les {{count}} suggestions"
+    },
+    "chatTopics": {
+      "none": "Enregistré. Aucun sujet à ajouter pour le moment."
+    }
+  },
+  "it": {
+    "factChoice": {
+      "addAll": "Aggiungi tutto ({{count}})",
+      "skipAll": "Salta tutto",
+      "addAllA11y": "Aggiungi tutti i {{count}} suggerimenti",
+      "skipAllA11y": "Salta tutti i {{count}} suggerimenti"
+    },
+    "chatTopics": {
+      "none": "Salvato. Al momento non ci sono argomenti da aggiungere."
+    }
+  },
+  "nl": {
+    "factChoice": {
+      "addAll": "Alles toevoegen ({{count}})",
+      "skipAll": "Alles overslaan",
+      "addAllA11y": "Alle {{count}} suggesties toevoegen",
+      "skipAllA11y": "Alle {{count}} suggesties overslaan"
+    },
+    "chatTopics": {
+      "none": "Opgeslagen. Er zijn nu geen onderwerpen om toe te voegen."
+    }
+  },
+  "pt-BR": {
+    "factChoice": {
+      "addAll": "Adicionar tudo ({{count}})",
+      "skipAll": "Pular tudo",
+      "addAllA11y": "Adicionar as {{count}} sugestões",
+      "skipAllA11y": "Pular as {{count}} sugestões"
+    },
+    "chatTopics": {
+      "none": "Salvo. No momento não há temas para adicionar."
+    }
+  },
+  "pl": {
+    "factChoice": {
+      "addAll": "Dodaj wszystko ({{count}})",
+      "skipAll": "Pomiń wszystko",
+      "addAllA11y": "Dodaj wszystkie {{count}} propozycje",
+      "skipAllA11y": "Pomiń wszystkie {{count}} propozycje"
+    },
+    "chatTopics": {
+      "none": "Zapisano. Na razie nie ma tematów do dodania."
+    }
+  },
+  "ru": {
+    "factChoice": {
+      "addAll": "Добавить все ({{count}})",
+      "skipAll": "Пропустить все",
+      "addAllA11y": "Добавить все {{count}} предложения",
+      "skipAllA11y": "Пропустить все {{count}} предложения"
+    },
+    "chatTopics": {
+      "none": "Сохранено. Сейчас нет тем для добавления."
+    }
+  },
+  "uk": {
+    "factChoice": {
+      "addAll": "Додати всі ({{count}})",
+      "skipAll": "Пропустити всі",
+      "addAllA11y": "Додати всі {{count}} пропозиції",
+      "skipAllA11y": "Пропустити всі {{count}} пропозиції"
+    },
+    "chatTopics": {
+      "none": "Збережено. Зараз немає тем для додавання."
+    }
+  },
+  "tr": {
+    "factChoice": {
+      "addAll": "Tümünü ekle ({{count}})",
+      "skipAll": "Tümünü atla",
+      "addAllA11y": "{{count}} önerinin tümünü ekle",
+      "skipAllA11y": "{{count}} önerinin tümünü atla"
+    },
+    "chatTopics": {
+      "none": "Kaydedildi. Şu anda eklenecek konu yok."
+    }
+  },
+  "id": {
+    "factChoice": {
+      "addAll": "Tambahkan semua ({{count}})",
+      "skipAll": "Lewati semua",
+      "addAllA11y": "Tambahkan semua {{count}} saran",
+      "skipAllA11y": "Lewati semua {{count}} saran"
+    },
+    "chatTopics": {
+      "none": "Tersimpan. Saat ini tidak ada topik untuk ditambahkan."
+    }
+  },
+  "vi": {
+    "factChoice": {
+      "addAll": "Thêm tất cả ({{count}})",
+      "skipAll": "Bỏ qua tất cả",
+      "addAllA11y": "Thêm tất cả {{count}} gợi ý",
+      "skipAllA11y": "Bỏ qua tất cả {{count}} gợi ý"
+    },
+    "chatTopics": {
+      "none": "Đã lưu. Hiện chưa có chủ đề nào để thêm."
+    }
+  },
+  "th": {
+    "factChoice": {
+      "addAll": "เพิ่มทั้งหมด ({{count}})",
+      "skipAll": "ข้ามทั้งหมด",
+      "addAllA11y": "เพิ่มข้อเสนอทั้ง {{count}} รายการ",
+      "skipAllA11y": "ข้ามข้อเสนอทั้ง {{count}} รายการ"
+    },
+    "chatTopics": {
+      "none": "บันทึกแล้ว ตอนนี้ยังไม่มีหัวข้อให้เพิ่ม"
+    }
+  },
+  "hi": {
+    "factChoice": {
+      "addAll": "सभी जोड़ें ({{count}})",
+      "skipAll": "सभी छोड़ें",
+      "addAllA11y": "सभी {{count}} सुझाव जोड़ें",
+      "skipAllA11y": "सभी {{count}} सुझाव छोड़ें"
+    },
+    "chatTopics": {
+      "none": "सेव हो गया। अभी जोड़ने के लिए कोई विषय नहीं है।"
+    }
+  },
+  "ja": {
+    "factChoice": {
+      "addAll": "すべて追加 ({{count}})",
+      "skipAll": "すべてスキップ",
+      "addAllA11y": "{{count}} 件の候補をすべて追加",
+      "skipAllA11y": "{{count}} 件の候補をすべてスキップ"
+    },
+    "chatTopics": {
+      "none": "保存しました。今のところ追加できるトピックはありません。"
+    }
+  },
+  "ko": {
+    "factChoice": {
+      "addAll": "모두 추가 ({{count}})",
+      "skipAll": "모두 건너뛰기",
+      "addAllA11y": "{{count}}개 제안 모두 추가",
+      "skipAllA11y": "{{count}}개 제안 모두 건너뛰기"
+    },
+    "chatTopics": {
+      "none": "저장했습니다. 지금은 추가할 주제가 없습니다."
+    }
+  },
+  "zh-CN": {
+    "factChoice": {
+      "addAll": "全部添加（{{count}}）",
+      "skipAll": "全部跳过",
+      "addAllA11y": "添加全部 {{count}} 条建议",
+      "skipAllA11y": "跳过全部 {{count}} 条建议"
+    },
+    "chatTopics": {
+      "none": "已保存。目前没有可添加的主题。"
+    }
+  },
+  "zh-TW": {
+    "factChoice": {
+      "addAll": "全部新增（{{count}}）",
+      "skipAll": "全部略過",
+      "addAllA11y": "新增全部 {{count}} 則建議",
+      "skipAllA11y": "略過全部 {{count}} 則建議"
+    },
+    "chatTopics": {
+      "none": "已儲存。目前沒有可新增的主題。"
+    }
+  },
+  "ar": {
+    "factChoice": {
+      "addAll": "إضافة الكل ({{count}})",
+      "skipAll": "تخطي الكل",
+      "addAllA11y": "إضافة كل الاقتراحات الـ {{count}}",
+      "skipAllA11y": "تخطي كل الاقتراحات الـ {{count}}"
+    },
+    "chatTopics": {
+      "none": "تم الحفظ. لا توجد مواضيع لإضافتها الآن."
+    }
+  }
+}
