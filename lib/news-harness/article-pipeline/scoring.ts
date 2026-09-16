@@ -709,10 +709,92 @@ const STAKE_SCORE_BANDS: Record<string, [number, number]> = {
   none: [0.05, 0.24],
 };
 
-function clampToStakeBand(s: number, k: unknown): number {
+/**
+ * Optional counters a CALLER may pass into {@link parseBatchRelevanceResponse}
+ * to learn how well the model held its own output contract on this batch.
+ *
+ * WHY THIS EXISTS. The relevance prompt tells the model that `s` "MUST lie
+ * inside the band of the `k` you chose. If your score wants to leave the band,
+ * your `k` is wrong." The decoder has always enforced that by CLAMPING — so a
+ * self-contradicting answer is silently corrected and the product is fine, but
+ * the fact that the model contradicted itself is thrown away. That fact is a
+ * direct, free measure of instruction-following: it needs no rater, no labels
+ * and no extra call, and it is available on every batch the scorer has ever
+ * run. `bandViolations` over `tieredEntries` is the metric; `bandViolationMass`
+ * carries the SIZE of the disagreement, because one answer off by 0.01 and one
+ * off by 0.6 are not the same finding.
+ *
+ * NOT INSTRUMENTATION. These count properties of MODEL OUTPUT within a single
+ * decode call. Nothing here observes, derives from, or is keyed to a reader —
+ * there is no row written, no counter persisted and no id of any kind. The
+ * accumulator is created by the caller, lives as long as the caller's run, and
+ * production passes none: omit the argument and this module behaves exactly as
+ * it did before, which is why every existing call site is untouched.
+ */
+export interface RelevanceDecodeStats {
+  /** Entries decoded from a well-formed JSON array, tiered or legacy. */
+  entries: number;
+  /** Entries that arrived as `{"k","s"}` — the only ones with a band to hold. */
+  tieredEntries: number;
+  /** Entries that arrived as a bare number (legacy shape, no `k`). */
+  legacyNumberEntries: number;
+  /** Tiered entries whose `k` is not in {@link STAKE_SCORE_BANDS}. These skip
+   *  band clamping entirely and fall back to a plain 0–1.1 clamp, so they are
+   *  worth separating from a violation: the contract was not broken, it was
+   *  not engaged. */
+  unknownStakeTags: number;
+  /** Tiered entries whose `s` fell outside the band its own `k` declares. */
+  bandViolations: number;
+  /** Total absolute distance the violations were moved by the clamp. Divide by
+   *  `bandViolations` for the mean severity. */
+  bandViolationMass: number;
+  /** The batch did not come back as a parseable JSON array at all and the
+   *  regex fallback ran. */
+  regexFallbacks: number;
+  /** The array parsed but did not hold `expectedCount` entries. */
+  lengthMismatches: number;
+  /** Nothing parseable at all — every article in the batch took
+   *  `fallbackRelevance`. */
+  totalFailures: number;
+}
+
+/** A zeroed accumulator. Callers that want stats create one and pass it in. */
+export function newRelevanceDecodeStats(): RelevanceDecodeStats {
+  return {
+    entries: 0,
+    tieredEntries: 0,
+    legacyNumberEntries: 0,
+    unknownStakeTags: 0,
+    bandViolations: 0,
+    bandViolationMass: 0,
+    regexFallbacks: 0,
+    lengthMismatches: 0,
+    totalFailures: 0,
+  };
+}
+
+function clampToStakeBand(
+  s: number,
+  k: unknown,
+  stats?: RelevanceDecodeStats,
+): number {
   const band = typeof k === 'string' ? STAKE_SCORE_BANDS[k] : undefined;
-  if (!band) return clampRelevance(s);
-  return Math.max(band[0], Math.min(band[1], clampRelevance(s)));
+  if (!band) {
+    if (stats) stats.unknownStakeTags++;
+    return clampRelevance(s);
+  }
+  const clamped = Math.max(band[0], Math.min(band[1], clampRelevance(s)));
+  if (stats) {
+    // Measure the violation against the RAW value, not the 0–1.1 clamp, so a
+    // wild `s` of 7.0 under `"k":"none"` reports its real distance instead of
+    // the distance left after another clamp already hid most of it.
+    const distance = s < band[0] ? band[0] - s : s > band[1] ? s - band[1] : 0;
+    if (distance > 0) {
+      stats.bandViolations++;
+      stats.bandViolationMass += distance;
+    }
+  }
+  return clamped;
 }
 
 /**
@@ -722,6 +804,12 @@ function clampToStakeBand(s: number, k: unknown): number {
  * the band declared by `k`). Falls back to extracting any numbers via regex
  * if the output isn't valid JSON. Always returns exactly `expectedCount`
  * scores, padding with the fallback relevance if the LLM returned fewer.
+ *
+ * `stats` is optional and write-only: pass a {@link newRelevanceDecodeStats}
+ * accumulator to learn how well the model held its output contract (see
+ * {@link RelevanceDecodeStats}). Omit it — as every production call site does —
+ * and the returned scores and every log line are byte-for-byte what they were
+ * before the parameter existed.
  */
 export function parseBatchRelevanceResponse(
   output: string,
@@ -730,6 +818,7 @@ export function parseBatchRelevanceResponse(
   prompt?: string,
   config: ArticlePipelineConfig = ARTICLE_CFG,
   logger: HarnessLogger = NOOP_LOGGER,
+  stats?: RelevanceDecodeStats,
 ): number[] {
   const trimmed = output.trim();
 
@@ -738,21 +827,33 @@ export function parseBatchRelevanceResponse(
     const parsed: unknown = JSON.parse(trimmed);
     if (Array.isArray(parsed)) {
       const numbers = parsed.map((v) => {
-        if (typeof v === 'number') return clampRelevance(v);
+        if (typeof v === 'number') {
+          if (stats) {
+            stats.entries++;
+            stats.legacyNumberEntries++;
+          }
+          return clampRelevance(v);
+        }
         if (
           typeof v === 'object' &&
           v !== null &&
           typeof (v as { s?: unknown }).s === 'number'
         ) {
+          if (stats) {
+            stats.entries++;
+            stats.tieredEntries++;
+          }
           return clampToStakeBand(
             (v as { s: number }).s,
             (v as { k?: unknown }).k,
+            stats,
           );
         }
         return NaN;
       });
       if (numbers.every((n) => !isNaN(n))) {
         if (numbers.length === expectedCount) return numbers;
+        if (stats) stats.lengthMismatches++;
         logger.warn(
           'Batch relevance: array length mismatch — padding with fallback',
           {
@@ -775,6 +876,7 @@ export function parseBatchRelevanceResponse(
   }
 
   // Fallback: regex-extract every number from the string.
+  if (stats) stats.regexFallbacks++;
   const matches = trimmed.match(/-?\d+\.?\d*/g) ?? [];
   const nums = matches
     .map((s) => parseFloat(s))
@@ -797,6 +899,7 @@ export function parseBatchRelevanceResponse(
     return padded;
   }
 
+  if (stats) stats.totalFailures++;
   logger.warn('Batch relevance: failed to parse output — using fallback for all', {
     output: trimmed,
     expected: expectedCount,

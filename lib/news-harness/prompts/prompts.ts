@@ -244,7 +244,13 @@ Never fabricate a connection. The reason must match the article — if the artic
 Output: single plain string, no prefixes, no markdown.`;
 
 // ---------------------------------------------------------------------------
-// HEADLINE variants (P4a — prompt authoring only; nothing routes to these yet).
+// HEADLINE variants — AUTHORED IN P4a, ROUTED SINCE P4b.
+//
+// The "nothing routes to these yet" note that stood here was true for exactly
+// one wave and then went stale. `article-pipeline/scoring.ts::resolveScoringVariant`
+// picks the headline pair for a bundle whose candidates are all headline-sourced,
+// and the routing is pinned by `__tests__/golden-prompts.test.ts`. Editing these
+// changes production.
 //
 // A top headline arrives for a different reason than every other article the
 // scorer sees: it was NOT retrieved because it matched one of the user's

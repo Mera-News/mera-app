@@ -244,7 +244,14 @@ export interface ArticlePipelineConfig {
   feedVerifierMaxTokens: number;
   /** System prompt for the second-pass FEED verifier. */
   feedVerifierSystemPrompt: string;
-  // --- HEADLINE variants (P4a — authored, not yet routed to) ----------------
+  // --- HEADLINE variants (P4b — AUTHORED AND ROUTED) ------------------------
+  // These were authored in P4a and were genuinely dead for one wave, which is
+  // what the old comment here described. P4b wired them: `resolveScoringVariant`
+  // returns 'headline' when every candidate in a bundle is headline-sourced,
+  // `relevanceSystemPromptFor` / `reasonSystemPromptFor` select on it, and
+  // `golden-prompts.test.ts` pins the shim and the harness routing to each
+  // other. They are live production prompts and belong in any quality
+  // measurement of the scorer.
   /** Top-headline articles bundled into one batched relevance prompt. Smaller
    *  than articlesPerScorePrompt because the headline rubric is longer and adds
    *  a second per-article procedure — see the literal's comment for the
