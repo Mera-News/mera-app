@@ -11,6 +11,7 @@
     "lint": "expo lint",
     "codegen": "graphql-codegen",
     "codegen:watch": "graphql-codegen --watch",
+    "check:animations": "python3 scripts/animations/validate.py assets/animations",
     "check:schema": "node scripts/check-schema.js",
     "update:development": "eas update --channel development && npx sentry-expo-upload-sourcemaps dist",
     "update:preview": "eas update --channel preview && npx sentry-expo-upload-sourcemaps dist",

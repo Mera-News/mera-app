@@ -26,6 +26,23 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
+    # The animation contract: canvas, transparency, palette, size ceiling,
+    # vector-only, the middle-70 safe area, loop seam closure, and frame 0 being
+    # the composition at rest. See assets/animations/README.md for what the gate
+    # decides and scripts/animations/README.md for the tooling.
+    #
+    # It runs here, early, because it needs neither node_modules nor .env and so
+    # fails fast. It is also the ONLY place these checks run: the jest mirror in
+    # components/custom/processing/__tests__/animation-assets.test.ts covers a
+    # subset and cannot evaluate a layer's opacity at a frame. Before this step
+    # existed the whole contract was guarded by a script somebody had to
+    # remember to type.
+    #
+    # python3 is on the ubuntu-latest runner image (3.12.3). If it ever is not,
+    # this fails loudly with a non-zero exit rather than skipping silently.
+    - name: Check animation assets
+      run: npm run check:animations
+
     # `expo lint` reads .env via the expo CLI. Provide the committed example so
     # the lint step has the EXPO_PUBLIC_* vars it expects (no live endpoints are
     # contacted — the test step below uses jest-expo mocks).
