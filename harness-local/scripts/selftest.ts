@@ -22,7 +22,7 @@ import { loadHarnessEnv } from '../config/env';
 import { authCachePath } from '../config/local-data';
 import {
   requireStagingTarget, assertStagingEndpoint, parseTargetFlag, applyTargetOverride,
-  isStagingHost, isProdMeraHost, STAGING_DEFAULTS,
+  applyEndpointOverrides, isStagingHost, isProdMeraHost, STAGING_DEFAULTS,
 } from '../lib/staging-guard';
 import {
   createJsonlWriter, hashMessages, newRowId, type RunRow,
@@ -56,7 +56,7 @@ function row(over: Partial<RunRow>): RunRow {
     rawOutput: 'out', toolCalls: [], parsedSchema: null,
     requestedCount: null, returnedCount: null, personaStateDelta: null,
     finishReason: 'stop', truncated: false,
-    usage: { promptTokens: 1000, completionTokens: 500, cachedTokens: 0 },
+    usage: { promptTokens: 1000, completionTokens: 500, cachedTokens: 0, reasoningTokens: 0 },
     cost: null, latencyMs: 100, ttVisibleMs: null, error: null, ...over,
   };
 }
@@ -251,6 +251,61 @@ async function main(): Promise<number> {
   ck('report mentions the model', txt.includes('Qwen/Qwen3.6-35B-A3B-FP8'));
   ck('report has a USD column', txt.includes('USD/100'));
 
+
+  // --- 10b. THE CASE THIS MACHINE IS ACTUALLY IN -----------------------------
+  // .env.harness sets the endpoints explicitly to the PROD hosts, and the
+  // loader passes a set endpoint through untouched, so --target staging alone
+  // hard-fails here. The per-endpoint flags are what make a staging run
+  // possible without editing a file the user edits in parallel.
+  {
+    const saved = {
+      t: process.env.NEWS_HARNESS_TARGET,
+      g: process.env.NEWS_HARNESS_GRAPHQL_ENDPOINT,
+      a: process.env.NEWS_HARNESS_AUTH_ENDPOINT,
+      i: process.env.NEWS_HARNESS_INFERENCE_ENDPOINT,
+    };
+    process.env.NEWS_HARNESS_GRAPHQL_ENDPOINT = 'https://graphql.mera.news/graphql';
+    process.env.NEWS_HARNESS_AUTH_ENDPOINT = 'https://auth.mera.news';
+    const cli = [
+      '--target', 'staging',
+      '--graphql-endpoint', STAGING_DEFAULTS.graphqlEndpoint,
+      '--auth-endpoint', STAGING_DEFAULTS.authEndpoint,
+      '--inference-endpoint', STAGING_DEFAULTS.inferenceEndpoint,
+    ];
+    applyTargetOverride(cli);
+    const applied = applyEndpointOverrides(cli);
+    ck('all three endpoint flags applied', applied.length === 3, applied.join(','));
+    const overridden = loadHarnessEnv({ require: 'staging' });
+    ck('CLI endpoint beats the prod value in the env file',
+      overridden.graphqlEndpoint === STAGING_DEFAULTS.graphqlEndpoint, overridden.graphqlEndpoint);
+    try { requireStagingTarget(overridden); ck('overridden config passes the guard', true); }
+    catch (e) { ck('overridden config passes the guard', false, String(e)); }
+    // and the override is still CHECKED, not merely obeyed
+    applyEndpointOverrides(['--graphql-endpoint', 'https://graphql.mera.news/graphql']);
+    throws('an overridden PROD endpoint is still refused',
+      () => requireStagingTarget(loadHarnessEnv({ require: 'staging' })), 'is the PROD host');
+    throws('endpoint flag with no value throws',
+      () => applyEndpointOverrides(['--auth-endpoint', '--target']), 'needs a URL');
+    for (const [k, v] of [['NEWS_HARNESS_TARGET', saved.t], ['NEWS_HARNESS_GRAPHQL_ENDPOINT', saved.g],
+      ['NEWS_HARNESS_AUTH_ENDPOINT', saved.a], ['NEWS_HARNESS_INFERENCE_ENDPOINT', saved.i]] as const) {
+      if (v === undefined) delete process.env[k]; else process.env[k] = v;
+    }
+  }
+
+  // --- 10c. a zero cache column must be reported as NOT REPORTED -------------
+  {
+    const rows = [0, 1, 2].map((i) => row({ repeat: i }));
+    const rep = formatAgreementReport(computeAgreement(rows));
+    ck('absent cache breakdown is stated', rep.includes('NOT REPORTED'));
+    const cached = computeAgreement(rows.map((r) => ({
+      ...r, usage: { promptTokens: 1000, completionTokens: 500, cachedTokens: 400, reasoningTokens: 0 },
+    })));
+    ck('a real cache count suppresses the note', cached.cacheBreakdownAbsent === false);
+    const thinking = computeAgreement(rows.map((r) => ({
+      ...r, usage: { promptTokens: 1000, completionTokens: 500, cachedTokens: 0, reasoningTokens: 240 },
+    })));
+    ck('reasoning tokens are surfaced', formatAgreementReport(thinking).includes('reasoning token'));
+  }
 
   // --- 11. latency is computed ONLY from interleaved, correctly-routed calls -
   // Two arms, three work units. Arm B skips g2 entirely, and its g1 call was

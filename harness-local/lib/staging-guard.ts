@@ -101,6 +101,43 @@ export function requireStagingTarget(env: {
   }
 }
 
+/**
+ * Per-endpoint CLI overrides, applied the same way and for the same reason as
+ * `applyTargetOverride`: written into process.env BEFORE dotenv runs, so the
+ * flag beats `.env.harness` without any runner editing a file the user also
+ * edits.
+ *
+ * WHY THIS IS NOT OPTIONAL POLISH. `.env.harness` on this machine sets the
+ * endpoints EXPLICITLY to the prod hosts, and the loader passes a set endpoint
+ * through untouched by design, so `--target staging` on its own hard-fails at
+ * the guard with "is the PROD host". Without these flags a staging run is
+ * impossible here unless someone edits that file, which is exactly what the
+ * user's parallel edits make unsafe. Overridden values still go through
+ * `assertStagingEndpoint` like any other: this changes WHERE the value comes
+ * from, never WHETHER it is checked.
+ *
+ * Returns the names of the variables it set, for the run manifest.
+ */
+export function applyEndpointOverrides(argv: string[]): string[] {
+  const FLAGS: Record<string, string> = {
+    '--graphql-endpoint': 'NEWS_HARNESS_GRAPHQL_ENDPOINT',
+    '--auth-endpoint': 'NEWS_HARNESS_AUTH_ENDPOINT',
+    '--inference-endpoint': 'NEWS_HARNESS_INFERENCE_ENDPOINT',
+  };
+  const applied: string[] = [];
+  for (const [flag, varName] of Object.entries(FLAGS)) {
+    const i = argv.indexOf(flag);
+    if (i === -1) continue;
+    const value = argv[i + 1]?.trim();
+    if (!value || value.startsWith('--')) {
+      throw new Error(`harness-local: ${flag} needs a URL.`);
+    }
+    process.env[varName] = value;
+    applied.push(varName);
+  }
+  return applied;
+}
+
 /** Reads `--target <t>` out of argv without consuming it, so a runner's own
  *  parser still sees the flag. Returns undefined when absent. */
 export function parseTargetFlag(argv: string[]): HarnessTarget | undefined {

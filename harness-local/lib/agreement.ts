@@ -158,6 +158,11 @@ export interface AgreementReport {
   cells: CellAgreement[];
   arms: ArmRollup[];
   callTypes: CallTypeRollup[];
+  /** True when NO row carried a cached-token count. NEAR returns
+   *  `prompt_tokens_details: null`, so this is the normal case, and the report
+   *  says it outright rather than letting a 0 cache column read as measured. */
+  cacheBreakdownAbsent: boolean;
+  reasoningTokens: number;
   /** Work units that not every arm completed. Their rows are excluded from the
    *  latency comparison and named here, because a silently smaller sample is
    *  how a speed claim goes wrong. */
@@ -364,9 +369,16 @@ export function computeAgreement(
     (a, b) => a.callType.localeCompare(b.callType) || a.arm.localeCompare(b.arm),
   );
 
+  const withUsage = scored.filter((r) => r.usage !== null);
   return {
     callTypes,
     nonInterleavedGroups,
+    cacheBreakdownAbsent:
+      withUsage.length > 0 && withUsage.every((r) => (r.usage as { cachedTokens: number }).cachedTokens === 0),
+    reasoningTokens: withUsage.reduce(
+      (n, r) => n + ((r.usage as { reasoningTokens?: number }).reasoningTokens ?? 0),
+      0,
+    ),
     runId: rows[0]?.runId ?? 'unknown',
     rowsTotal: rows.length,
     rowsScored: scored.length,
@@ -425,6 +437,17 @@ export function formatAgreementReport(r: AgreementReport): string {
   if (r.nonInterleavedGroups > 0) {
     out.push(
       `  NOTE: ${r.nonInterleavedGroups} work unit(s) were not completed by every arm and are excluded from the latency columns.`,
+    );
+  }
+  if (r.cacheBreakdownAbsent) {
+    out.push(
+      '  NOTE: no row carried a cached-token count (NEAR returns prompt_tokens_details: null), ' +
+        'so the cache-read rate never applied. A zero here means NOT REPORTED, not "nothing was cached".',
+    );
+  }
+  if (r.reasoningTokens > 0) {
+    out.push(
+      `  NOTE: ${r.reasoningTokens} reasoning token(s) billed inside the completion totals above.`,
     );
   }
   const misrouted = r.callTypes.reduce((n, c) => n + c.misroutedCalls, 0);

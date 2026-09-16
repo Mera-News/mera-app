@@ -26,6 +26,9 @@ export interface RowToolCall {
   /** Exactly what the provider sent, before any parse. A truncated or empty
    *  `{}` is a finding, and it is only visible here. */
   argumentsRaw: string;
+  /** POST-FILTER view: what `filterFactChoiceGroups` leaves, which is what the
+   *  user is actually offered. The rater scores this. `argumentsRaw` is the
+   *  pre-filter wire text, kept so a filtered-away call is still visible. */
   parsed: Record<string, unknown> | null;
   /** False when `parsed` is null or a required property of the tool's schema
    *  is absent. The runner judges this against the SHIPPED tool definitions. */
@@ -117,7 +120,21 @@ export interface RunRow {
   } | null;
   finishReason: string;
   truncated: boolean;
-  usage: { promptTokens: number; completionTokens: number; cachedTokens: number } | null;
+  /**
+   * `cachedTokens` is 0 on every NEAR response seen so far: the API returns
+   * `prompt_tokens_details: null`, so there is no cache breakdown to read. It
+   * is kept because the catalogue prices a cache-read rate and a future
+   * response may carry the field, but a zero here means NOT REPORTED, not
+   * "nothing was cached" — the summary says so rather than letting the column
+   * read as measured. `reasoningTokens` is the thinking trace, which the chat
+   * arm pays for inside its completion budget.
+   */
+  usage: {
+    promptTokens: number;
+    completionTokens: number;
+    cachedTokens: number;
+    reasoningTokens: number;
+  } | null;
   cost: RowCost | null;
   latencyMs: number;
   ttVisibleMs: number | null;
