@@ -126,6 +126,8 @@ export interface StatsCardProps {
   stampedAtMs: number;
   /** BCP-47 tag for the date. Undefined means the platform default. */
   locale?: string;
+  /** Explicit host size in POINTS for the on-screen path. Omitted = export. */
+  hostSize?: { width: number; height: number };
   /**
    * Whether the reach card names the reader's top publications.
    *
@@ -145,8 +147,13 @@ export interface StatsCardProps {
   showPublicationNames?: boolean;
 }
 
-function useK(pixelRatio: number): number {
-  return hostSizeForScale(pixelRatio).width / DESIGN_WIDTH;
+/** The design-grid scale for whichever host the card is being drawn into. The
+ *  on-screen host is fitted to the content-box ratio and is usually SMALLER
+ *  than the export host, so reading `k` off the export would draw type that
+ *  overflows the page it is actually in. */
+function useK(pixelRatio: number, hostSize?: { width: number; height: number }): number {
+  const width = hostSize?.width ?? hostSizeForScale(pixelRatio).width;
+  return width / DESIGN_WIDTH;
 }
 
 /** A figure and the label that names it. The label is never in the accent and
@@ -180,11 +187,11 @@ const Figure: React.FC<{
 // --- 1. REACH --------------------------------------------------------------
 
 export const ReachCard = React.forwardRef<View, StatsCardProps>(function ReachCard(
-  { stats, pixelRatio, stampedAtMs, locale, showPublicationNames = true },
+  { stats, pixelRatio, stampedAtMs, locale, hostSize, showPublicationNames = true },
   ref,
 ) {
   const { t } = useTranslation();
-  const k = useK(pixelRatio);
+  const k = useK(pixelRatio, hostSize);
   const m = REACH_METRICS;
 
   const bands = countryBands(stats, REACH_TOP_COUNTRIES);
@@ -210,6 +217,7 @@ export const ReachCard = React.forwardRef<View, StatsCardProps>(function ReachCa
       pixelRatio={pixelRatio}
       stampedAtMs={stampedAtMs}
       locale={locale}
+      hostSize={hostSize}
       testID="share-stats-card-reach"
     >
       <VStack style={{ rowGap: m.blockGap * k }}>
@@ -301,11 +309,11 @@ export const ReachCard = React.forwardRef<View, StatsCardProps>(function ReachCa
 // --- 2. KEEP ---------------------------------------------------------------
 
 export const KeepCard = React.forwardRef<View, StatsCardProps>(function KeepCard(
-  { stats, pixelRatio, stampedAtMs, locale },
+  { stats, pixelRatio, stampedAtMs, locale, hostSize },
   ref,
 ) {
   const { t } = useTranslation();
-  const k = useK(pixelRatio);
+  const k = useK(pixelRatio, hostSize);
   const m = KEEP_METRICS;
   const { savedArticles, followedStories } = stats.keptNow;
 
@@ -320,6 +328,7 @@ export const KeepCard = React.forwardRef<View, StatsCardProps>(function KeepCard
       pixelRatio={pixelRatio}
       stampedAtMs={stampedAtMs}
       locale={locale}
+      hostSize={hostSize}
       testID="share-stats-card-keep"
     >
       <VStack style={{ rowGap: m.blockGap * k }}>
@@ -373,11 +382,11 @@ export const KeepCard = React.forwardRef<View, StatsCardProps>(function KeepCard
 // --- 3. LANGUAGES ----------------------------------------------------------
 
 export const LanguagesCard = React.forwardRef<View, StatsCardProps>(function LanguagesCard(
-  { stats, pixelRatio, stampedAtMs, locale },
+  { stats, pixelRatio, stampedAtMs, locale, hostSize },
   ref,
 ) {
   const { t } = useTranslation();
-  const k = useK(pixelRatio);
+  const k = useK(pixelRatio, hostSize);
   const m = LANGUAGES_METRICS;
 
   const total = stats.languages.reduce((sum, l) => sum + l.visitCount, 0);
@@ -414,6 +423,7 @@ export const LanguagesCard = React.forwardRef<View, StatsCardProps>(function Lan
       pixelRatio={pixelRatio}
       stampedAtMs={stampedAtMs}
       locale={locale}
+      hostSize={hostSize}
       testID="share-stats-card-languages"
     >
       <VStack style={{ rowGap: m.blockGap * k }}>
@@ -482,11 +492,11 @@ export const LanguagesCard = React.forwardRef<View, StatsCardProps>(function Lan
 // --- 4. RHYTHM -------------------------------------------------------------
 
 export const RhythmCard = React.forwardRef<View, StatsCardProps>(function RhythmCard(
-  { stats, pixelRatio, stampedAtMs, locale },
+  { stats, pixelRatio, stampedAtMs, locale, hostSize },
   ref,
 ) {
   const { t } = useTranslation();
-  const k = useK(pixelRatio);
+  const k = useK(pixelRatio, hostSize);
   const m = RHYTHM_METRICS;
 
   // Seven initials, Monday first, from ONE comma-separated key rather than
@@ -503,6 +513,7 @@ export const RhythmCard = React.forwardRef<View, StatsCardProps>(function Rhythm
       pixelRatio={pixelRatio}
       stampedAtMs={stampedAtMs}
       locale={locale}
+      hostSize={hostSize}
       testID="share-stats-card-rhythm"
     >
       <VStack style={{ rowGap: m.blockGap * k }}>
@@ -545,11 +556,11 @@ export const RhythmCard = React.forwardRef<View, StatsCardProps>(function Rhythm
 // --- 5. PACE ---------------------------------------------------------------
 
 export const PaceCard = React.forwardRef<View, StatsCardProps>(function PaceCard(
-  { stats, pixelRatio, stampedAtMs, locale },
+  { stats, pixelRatio, stampedAtMs, locale, hostSize },
   ref,
 ) {
   const { t } = useTranslation();
-  const k = useK(pixelRatio);
+  const k = useK(pixelRatio, hostSize);
   const m = PACE_METRICS;
 
   const averageHours = roundedAverageHours(stats.publishToRead);
@@ -564,6 +575,7 @@ export const PaceCard = React.forwardRef<View, StatsCardProps>(function PaceCard
       pixelRatio={pixelRatio}
       stampedAtMs={stampedAtMs}
       locale={locale}
+      hostSize={hostSize}
       testID="share-stats-card-pace"
     >
       <VStack style={{ rowGap: m.blockGap * k }}>

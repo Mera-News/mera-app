@@ -72,7 +72,7 @@ describe('share-stats ink', () => {
     expect(files).toContain('card-shell.tsx');
     expect(files).toContain('stats-cards.tsx');
     expect(files).toContain('card-theme.ts');
-    expect(files.length).toBeGreaterThanOrEqual(6);
+    expect(files.length).toBeGreaterThanOrEqual(7);
 
     // Anchored on the SHELL, which is where colour is actually applied.
     // ShareStatsCard.tsx is a dispatcher and holds no colour of its own, so

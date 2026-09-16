@@ -22,7 +22,6 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
-import AnalyticsScreen from '@/components/custom/analytics/AnalyticsScreen';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
 import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
@@ -41,6 +40,7 @@ import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { Box } from '@/components/ui/box';
 import { Heading } from '@/components/ui/heading';
 import { HStack } from '@/components/ui/hstack';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { VStack } from '@/components/ui/vstack';
@@ -76,7 +76,7 @@ import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -196,14 +196,12 @@ const MeraNewsScreen: React.FC = () => {
     const [savedVisited, setSavedVisited] = useState(false);
     const [historyVisited, setHistoryVisited] = useState(false);
     const [factChecksVisited, setFactChecksVisited] = useState(false);
-    const [analyticsVisited, setAnalyticsVisited] = useState(false);
     const selectSubTab = useCallback((tab: ForYouSubTab) => {
         setActiveSubTab(tab);
         if (tab === 'stories') setStoriesVisited(true);
         if (tab === 'saved') setSavedVisited(true);
         if (tab === 'history') setHistoryVisited(true);
         if (tab === 'factChecks') setFactChecksVisited(true);
-        if (tab === 'analytics') setAnalyticsVisited(true);
         // Always reveal the header on a sub-tab switch.
         reveal();
         // ...and drop the scroll baseline. All four panels stay mounted behind
@@ -571,6 +569,30 @@ const MeraNewsScreen: React.FC = () => {
                 {/* History (lazy-mounted on first visit) */}
                 {historyVisited && (
                     <View style={{ flex: 1, display: activeSubTab === 'history' ? 'flex' : 'none' }} testID="dashboard-history-content">
+                        {/* Share control for the History tab.
+                            It lives HERE rather than in VisitedPublicationsList
+                            because that component suppresses its DrillDownHeader
+                            when embedded, on the stated grounds that the host
+                            owns the top chrome. This IS the host, so honouring
+                            that division is what puts the button here rather
+                            than un-suppressing a header the Dashboard already
+                            replaced. The affordance is the same one that file
+                            uses when standalone — ios-share, the shareStats
+                            entry label — but under its own testID, because a
+                            shared id returns the FIRST match and would let an
+                            assertion pass against the wrong instance. */}
+                        <View style={{ paddingTop: headerHeight, alignItems: 'flex-end', paddingHorizontal: 16 }}>
+                            <Pressable
+                                testID="dashboard-history-share"
+                                onPress={() => router.push('/logged-in/share-stats')}
+                                hitSlop={12}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('shareStats.entryA11y')}
+                                className="p-1 rounded-full"
+                            >
+                                <MaterialIcons name="ios-share" size={20} color="#FFFFFF" />
+                            </Pressable>
+                        </View>
                         <VisitedPublicationsList embedded active={activeSubTab === 'history'} onBack={() => selectSubTab('feed')} scrollHandler={scrollHandler} headerHeight={headerHeight} />
                     </View>
                 )}
@@ -585,19 +607,6 @@ const MeraNewsScreen: React.FC = () => {
                     </View>
                 )}
 
-                {/* Analytics (lazy-mounted on first visit). This pane does NOT
-                    scroll vertically: it is a horizontal pager whose every page
-                    fits by construction, which is why it takes `headerHeight`
-                    as STATIC padding rather than threading `scrollHandler`.
-                    The warning above about padding a wrapper is about a
-                    SCROLLING pane, where static padding reserves the space and
-                    leaves nothing to scroll under; that does not apply here and
-                    the header simply stays put. */}
-                {analyticsVisited && (
-                    <View style={{ flex: 1, display: activeSubTab === 'analytics' ? 'flex' : 'none' }} testID="dashboard-analytics-content">
-                        <AnalyticsScreen headerHeight={headerHeight} />
-                    </View>
-                )}
             </View>
 
             {/* Status-bar scrim — covers the Dynamic Island/clock/battery region

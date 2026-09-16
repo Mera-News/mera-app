@@ -116,10 +116,51 @@ export const SHELL_METRICS = {
   footerDomain: 10,
 } as const;
 
-/** Host size in POINTS for a given device scale. */
+/** Host size in POINTS for a given device scale. EXPORT path only. */
 export function hostSizeForScale(pixelRatio: number): { width: number; height: number } {
   const scale = Number.isFinite(pixelRatio) && pixelRatio > 0 ? pixelRatio : 1;
   return { width: EXPORT_WIDTH / scale, height: EXPORT_HEIGHT / scale };
+}
+
+/**
+ * The content box's aspect ratio, width over height. 1080 / 1420.
+ *
+ * This is the shape an ON-SCREEN card is fitted to. It is NOT the export FILE's
+ * ratio (1080/1920): the file carries 250px of empty reserve at each end for
+ * the social chrome to sit over, and reproducing those two blank bands on a
+ * phone would waste a fifth of the height showing nothing. What the reader sees
+ * on screen is the content box at true ratio; what they share is that same
+ * content with the reserves added back.
+ */
+export const INK_BOX_ASPECT = EXPORT_WIDTH / INK_BOX_HEIGHT_PX;
+
+/**
+ * The on-screen card size that fits `available` while preserving the content
+ * box's ratio.
+ *
+ * HEIGHT-BOUND by design. The page is nearly always taller-than-wide relative
+ * to 1080/1420 once the header, the screen chrome, the dots, the pill and the
+ * tab bar are taken out, so height is what actually runs out, and width follows
+ * from the ratio. Where the page is wider than the ratio allows, the card is
+ * narrower than the page and LETTERBOXES horizontally — space either side, which
+ * is correct, rather than a stretched card or a cropped one.
+ *
+ * Returns zeroes for a degenerate box so a caller renders nothing instead of a
+ * card with a negative dimension.
+ */
+export function fitCardToPage(available: { width: number; height: number }): {
+  width: number;
+  height: number;
+} {
+  const w = Number.isFinite(available.width) ? available.width : 0;
+  const h = Number.isFinite(available.height) ? available.height : 0;
+  if (w <= 0 || h <= 0) return { width: 0, height: 0 };
+
+  const byHeight = { width: h * INK_BOX_ASPECT, height: h };
+  if (byHeight.width <= w) return byHeight;
+  // The page is SHORTER than the ratio wants, so width binds instead. Still no
+  // crop and still no stretch: the card simply gets smaller.
+  return { width: w, height: w / INK_BOX_ASPECT };
 }
 
 /** One text style. ALWAYS emits `lineHeight` beside `fontSize`. */
@@ -173,18 +214,38 @@ export interface CardShellProps {
   stampedAtMs: number;
   /** BCP-47 tag for the date format. Undefined means the platform default. */
   locale?: string;
+  /**
+   * Explicit host size in POINTS, for the ON-SCREEN path.
+   *
+   * Omitted means the EXPORT path: the host is `hostSizeForScale(pixelRatio)`,
+   * 360x640 at 3x, with the two 250px reserves drawn as padding so the captured
+   * PNG carries them. Supplied means the card is being shown on a page rather
+   * than rasterised, so it is fitted to the content-box ratio and the reserves
+   * are not drawn — there is no social chrome on a phone screen to keep clear
+   * of, and drawing them would waste a fifth of the height on blank bands and
+   * make the on-screen card a differently proportioned preview of the file.
+   *
+   * Either way the CONTENT is identical and its budget is the same one:
+   * `share-stats-locale-budget` measures the 1080x1420 box, which is exactly
+   * what both paths lay the content into.
+   */
+  hostSize?: { width: number; height: number };
   testID: string;
   children: React.ReactNode;
 }
 
 const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
-  { title, windowLine, privacyLine, pixelRatio, stampedAtMs, locale, testID, children },
+  { title, windowLine, privacyLine, pixelRatio, stampedAtMs, locale, hostSize, testID, children },
   ref,
 ) {
-  const host = hostSizeForScale(pixelRatio);
+  const onScreen = hostSize !== undefined;
+  const host = hostSize ?? hostSizeForScale(pixelRatio);
   const k = host.width / DESIGN_WIDTH;
-  const reserve = (SAFE_RESERVE_PX / EXPORT_HEIGHT) * host.height;
-  const logoMargin = (LOGO_TOP_MARGIN_PX / EXPORT_HEIGHT) * host.height;
+  // On screen the host IS the content box, so there is no reserve to subtract.
+  // On the export path the host is the whole 1080x1920 file and the reserve is
+  // the padding that keeps ink out of the social chrome's way.
+  const reserve = onScreen ? 0 : (SAFE_RESERVE_PX / EXPORT_HEIGHT) * host.height;
+  const logoMargin = (LOGO_TOP_MARGIN_PX / INK_BOX_HEIGHT_PX) * (onScreen ? host.height : (INK_BOX_HEIGHT_PX / EXPORT_HEIGHT) * host.height);
   const m = SHELL_METRICS;
 
   return (

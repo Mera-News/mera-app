@@ -31,10 +31,12 @@ export {
   DESIGN_WIDTH,
   EXPORT_HEIGHT,
   EXPORT_WIDTH,
+  INK_BOX_ASPECT,
   INK_BOX_HEIGHT_PX,
   LOGO_TOP_MARGIN_PX,
   SAFE_RESERVE_PX,
   SHELL_METRICS,
+  fitCardToPage,
   hostSizeForScale,
 } from '@/components/custom/share-stats/card-shell';
 

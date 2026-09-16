@@ -21,13 +21,16 @@
 // whatever React last painted, which is how a card ends up carrying publication
 // names the reader just switched off.
 
-import ShareStatsCard, { hostSizeForScale } from '@/components/custom/share-stats/ShareStatsCard';
-import { ink } from '@/components/custom/share-stats/card-theme';
+import ShareCardPill from '@/components/custom/analytics/ShareCardPill';
+import ShareStatsCard, {
+  fitCardToPage,
+  hostSizeForScale,
+} from '@/components/custom/share-stats/ShareStatsCard';
+import { CARD_ACCENT, ink } from '@/components/custom/share-stats/card-theme';
 import { captureAndShare } from '@/components/custom/share-stats/capture-and-share';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
-import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
@@ -44,9 +47,24 @@ import { loadReadingStats } from '@/lib/stats/reading-stats-source';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { PixelRatio, ScrollView, useWindowDimensions, View } from 'react-native';
+import {
+  PixelRatio,
+  ScrollView,
+  useWindowDimensions,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import {
+  DOTS_ALLOWANCE,
+  HEADER_ALLOWANCE,
+  PILL_ALLOWANCE,
+} from '@/components/custom/share-stats/screen-metrics';
 
 type ShareMessage = 'unavailable' | 'failed' | null;
+
 
 interface Props {
   readonly onBack: () => void;
@@ -57,7 +75,8 @@ interface Props {
 
 const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack, requestedCard }) => {
   const { t, i18n } = useTranslation();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
 
   const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
   const [isLoading, setIsLoading] = useState(true);
@@ -80,9 +99,6 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack, requestedCard }) => 
 
   const pixelRatio = PixelRatio.get();
   const host = hostSizeForScale(pixelRatio);
-  // Leave a gutter either side so the card reads as a card rather than as the
-  // screen's background.
-  const previewScale = Math.min(1, (screenWidth - 96) / host.width);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,22 +163,64 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack, requestedCard }) => 
     setMessage(null);
   }, []);
 
-  // Which card this screen is showing. Resolved against what the device
-  // ACTUALLY has, so a share link can never land on a card of zeroes, and null
-  // only when there is no card at all.
+  // Every card this device has anything to say with, and the one the deep link
+  // asked for. `resolveStatsCardParam` validates an untrusted `card` param
+  // against the known ids AND against what is actually available, so the
+  // shipped no-param link still lands on a real card and `?card=foo` cannot
+  // open an empty one.
   const cards = availableCards(stats);
-  const activeCard: StatsCardId | null = resolveStatsCardParam(requestedCard, stats);
+  const landing: StatsCardId | null = resolveStatsCardParam(requestedCard, stats);
+  const landingIndex = Math.max(0, cards.indexOf(landing ?? cards[0]));
+  const [page, setPage] = useState(landingIndex);
+  const activeCard: StatsCardId | null = cards[page] ?? landing;
 
-  const card = activeCard ? (
+  const onMomentumEnd = useCallback(
+    (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const next = Math.round(event.nativeEvent.contentOffset.x / Math.max(screenWidth, 1));
+      setPage(Math.min(Math.max(next, 0), Math.max(cards.length - 1, 0)));
+    },
+    [screenWidth, cards.length],
+  );
+
+  /**
+   * The on-screen card's size, fitted to the EXPORT'S CONTENT-BOX RATIO.
+   *
+   * The card the reader sees must be the same SHAPE as the one they share, so
+   * it is fitted rather than stretched: `fitCardToPage` takes the space the
+   * page actually has and returns 1080/1420 inside it, letterboxing
+   * horizontally when the page is wider than the ratio allows.
+   *
+   * Height is the binding dimension, which is why this screen is full-screen
+   * and not a Dashboard pane. The earlier pane version had already spent its
+   * vertical budget on a collapsing header, a stats sentence and a sub-tab row
+   * before the card got any, so a 360x640 portrait host was simply clipped by
+   * the pager's bounds — which read as a landscape card with its heatmap sliced
+   * mid-row. Nothing was resized; it was cropped. A full-screen route removes
+   * the cause rather than shrinking the card to survive it.
+   */
+  const pageBox = {
+    width: screenWidth,
+    height:
+      screenHeight
+      - insets.top
+      - insets.bottom
+      - HEADER_ALLOWANCE
+      - DOTS_ALLOWANCE
+      - PILL_ALLOWANCE,
+  };
+  const cardSize = fitCardToPage(pageBox);
+
+  const renderCard = (id: StatsCardId) => (
     <ShareStatsCard
-      card={activeCard}
+      card={id}
       stats={stats}
       showPublicationNames={showNames}
       pixelRatio={pixelRatio}
       stampedAtMs={stampedAtMs}
       locale={i18n.language}
+      hostSize={cardSize}
     />
-  ) : null;
+  );
 
   return (
     <Box className="flex-1">
@@ -217,70 +275,87 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack, requestedCard }) => 
           </Text>
         </VStack>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-          {/* A transform does not change layout, so the box reserves the scaled
-              height itself or the content below it renders under the card. */}
-          <Box
-            className="items-center"
-            style={{ height: host.height * previewScale, marginTop: 16 }}
+        <View style={{ flex: 1 }}>
+          {/* The pager. A paging ScrollView rather than a Pan detector, so it
+              composes through the ordinary responder system and needs no
+              arbitration against anything added later. Nothing competes with it
+              here: this is a full-screen route, and the Dashboard's right-edge
+              strip that would have eaten the last 20pt is deleted outright. */}
+          <ScrollView
+            testID="share-stats-pager"
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={onMomentumEnd}
+            contentOffset={{ x: landingIndex * screenWidth, y: 0 }}
+            style={{ flexGrow: 0 }}
           >
-            <View
-              testID="share-stats-preview"
-              style={{
-                width: host.width,
-                height: host.height,
-                transform: [{ scale: previewScale }],
-                transformOrigin: 'top center',
-              }}
-            >
-              {card}
-            </View>
-          </Box>
+            {cards.map((id) => (
+              <View
+                key={id}
+                testID={`share-stats-page-${id}`}
+                style={{ width: screenWidth, alignItems: 'center', justifyContent: 'center' }}
+              >
+                {/* Letterboxed, never stretched and never cropped: the card is
+                    1080/1420 inside whatever the page has, centred, with space
+                    either side when the page is wider than the ratio allows. */}
+                <View style={{ width: cardSize.width, height: cardSize.height }}>
+                  {renderCard(id)}
+                </View>
+              </View>
+            ))}
+          </ScrollView>
 
-          <VStack className="px-5 mt-5" space="md">
-            <HStack className="items-center justify-between py-3 px-4 border border-gray-700 rounded-lg">
-              <VStack className="flex-1 pr-3">
-                <Text className="text-base text-white">
-                  {t('shareStats.nameToggleLabel')}
-                </Text>
-                <Text size="sm" className="mt-0.5" style={ink('muted')}>
-                  {t('shareStats.nameTogglePrivacy')}
-                </Text>
-              </VStack>
+          {/* An INDICATOR, not a control. Hidden from the screen reader: the
+              pager already announces itself and a second announcement is noise
+              rather than access. */}
+          <HStack
+            testID="share-stats-dots"
+            className="items-center justify-center"
+            style={{ columnGap: 7, height: DOTS_ALLOWANCE }}
+            accessibilityElementsHidden
+            importantForAccessibility="no-hide-descendants"
+          >
+            {cards.map((id, index) => (
+              <View
+                key={id}
+                testID={`share-stats-dot-${id}`}
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: index === page ? CARD_ACCENT : 'rgba(255,255,255,0.28)',
+                }}
+              />
+            ))}
+          </HStack>
+
+          <VStack style={{ height: PILL_ALLOWANCE }}>
+            <ShareCardPill
+              label={t('shareStats.shareAction')}
+              onPress={onShare}
+              disabled={pendingShare}
+              testID="share-stats-share-button"
+            />
+
+            <HStack className="items-center justify-center px-5 mt-2" space="sm">
+              {pendingShare ? <Spinner size="small" /> : null}
+              <Text size="sm" style={ink('muted')} numberOfLines={2}>
+                {message === null
+                  ? t('shareStats.nameTogglePrivacy')
+                  : message === 'unavailable'
+                    ? t('shareStats.sharingUnavailable')
+                    : t('shareStats.shareFailed')}
+              </Text>
               <Switch
                 testID="share-stats-names-switch"
                 value={showNames}
                 onToggle={onToggleNames}
-                size="md"
+                size="sm"
               />
             </HStack>
-
-            <Pressable
-              testID="share-stats-share-button"
-              onPress={onShare}
-              disabled={pendingShare}
-              accessibilityRole="button"
-              accessibilityLabel={t('shareStats.shareAction')}
-              className="py-4 rounded-lg border border-white items-center"
-            >
-              <HStack className="items-center" space="sm">
-                {pendingShare ? <Spinner size="small" /> : null}
-                <Text className="text-white font-semibold">
-                  {t('shareStats.shareAction')}
-                </Text>
-              </HStack>
-            </Pressable>
-
-            {/* Inline, never a silent no-op: a feature hides or it says why. */}
-            {message !== null && (
-              <Text testID="share-stats-message" size="sm" className="text-center" style={ink('muted')}>
-                {message === 'unavailable'
-                  ? t('shareStats.sharingUnavailable')
-                  : t('shareStats.shareFailed')}
-              </Text>
-            )}
           </VStack>
-        </ScrollView>
+        </View>
       )}
     </Box>
   );

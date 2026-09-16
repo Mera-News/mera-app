@@ -86,6 +86,7 @@ describe('no native import sits at module scope anywhere in the share path', () 
     'components/custom/share-stats/card-theme.ts',
     'components/custom/share-stats/card-shell.tsx',
     'components/custom/share-stats/stats-cards.tsx',
+    'components/custom/share-stats/screen-metrics.ts',
   ];
 
   for (const relative of FILES) {
@@ -137,6 +138,7 @@ describe('the file list covers the directory', () => {
       'card-theme.ts',
       'card-shell.tsx',
       'stats-cards.tsx',
+      'screen-metrics.ts',
     ].sort();
 
     expect(onDisk).toEqual(listed);
