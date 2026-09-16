@@ -23,6 +23,7 @@ import {
 } from '@/lib/news-harness/persona-management/fact-rules';
 import { generateTopicsForFactsBatch } from '@/lib/news-harness/persona-management/topic-generation';
 import { factChoiceGroupId } from './fact-choice-resolution';
+import { filterNearDuplicateTopics } from '@/lib/news-harness/persona-management/topic-dedupe';
 import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import { getActive, syncLlmTopicsForFact } from '../database/services/topic-service';
@@ -397,6 +398,26 @@ async function batchGenerateTopics(
       personaStore: {
         getFacts: () => getFacts(),
         updateFactMetadata: async (id, metadata) => {
+          // Reject near-duplicates of topics the user already has, BEFORE either
+          // write. The model is shown the exclude list and still returns an
+          // existing topic with a scope word swapped in ("Logistics employment"
+          // -> "Rotterdam logistics employment"), which every exact-match check
+          // passes; a blind rater flagged that shape on 12 of 56 rows. This is a
+          // mechanical rule, so it belongs in code where it is tested, not in a
+          // prompt where it is a suggestion.
+          if (Array.isArray(metadata.topics) && metadata.topics.length > 0) {
+            const { kept, rejected } = filterNearDuplicateTopics(
+              metadata.topics as string[],
+              existingTopicTexts,
+            );
+            if (rejected.length > 0) {
+              logger.debug('[topicGen] dropped near-duplicate topics', {
+                factId: id,
+                dropped: rejected.map((r) => `${r.topic} ~ ${r.duplicateOf}`),
+              });
+            }
+            metadata = { ...metadata, topics: kept };
+          }
           // Legacy dual-write: keep the fact.metadata.topics string list exactly
           // as before (older code paths + the config panel still read it).
           await updateFact(id, { metadata });
