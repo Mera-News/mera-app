@@ -154,6 +154,18 @@ describe('AllCaughtUpCard', () => {
       expect(screen.queryByTestId('all-caught-up-idle-scene')).toBeNull();
     });
 
+    // The orphan gate guards registry -> disk. This guards CONSUMER -> registry,
+    // which nothing else does: `gameAnimationFor` returns undefined for an id
+    // the map does not hold, `source={undefined}` renders nothing, and both tsc
+    // and the gate stay green while the card draws an empty box. It also pins
+    // which node the specs below are reading, so an assertion cannot pass by
+    // landing on a node that simply has no such prop.
+    it('resolves a real asset for the idle scene', () => {
+      render(<AllCaughtUpCard />);
+      const lottie = screen.getByTestId('all-caught-up-idle-scene').children[0] as any;
+      expect(lottie.props.source).toBeTruthy();
+    });
+
     // It has to sit at the SAME size as FeedProcessingCard's stage scene. The
     // two cards swap when a sync starts and never render at once, so a
     // different number here makes the scene jump at that moment, which reads
