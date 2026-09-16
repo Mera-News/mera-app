@@ -1,0 +1,293 @@
+// harness-local — self-test for the runner libraries.
+//
+// There is no jest in harness-local (the whole directory is excluded from the
+// app's jest run and tsconfig), and `tsc -p harness-local/tsconfig.json` pulls
+// in the app tree, where ~1,700 errors pre-exist. So this script IS the gate
+// for lib/: run it, check the exit code.
+//
+//   npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/selftest.ts
+//
+// EVERY assertion here carries its own control. A check that only ever sees
+// the healthy case cannot fail, and a suite of those is worse than no suite:
+// it reports green while measuring nothing. So each detector is shown firing
+// on planted damage as well as staying quiet on clean input.
+//
+// Node-only: never imported by the app bundle.
+
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { loadHarnessEnv } from '../config/env';
+import { authCachePath } from '../config/local-data';
+import {
+  requireStagingTarget, assertStagingEndpoint, parseTargetFlag, applyTargetOverride,
+  isStagingHost, isProdMeraHost, STAGING_DEFAULTS,
+} from '../lib/staging-guard';
+import {
+  createJsonlWriter, hashMessages, newRowId, type RunRow,
+} from '../lib/jsonl-writer';
+import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
+import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
+
+let f = 0;
+function ck(n: string, ok: boolean, d = ''): void {
+  if (!ok) f++;
+  // eslint-disable-next-line no-console
+  console.log(`${ok ? 'PASS' : 'FAIL'}  ${n}${d ? '  :: ' + d : ''}`);
+}
+function throws(n: string, fn: () => unknown, mustInclude: string): void {
+  try { fn(); ck(n, false, 'did NOT throw'); }
+  catch (e) { ck(n, String((e as Error).message).includes(mustInclude), String((e as Error).message).slice(0, 110)); }
+}
+
+const MSGS = [{ role: 'system', content: 'S' }, { role: 'user', content: 'U' }];
+
+function row(over: Partial<RunRow>): RunRow {
+  return {
+    rowId: newRowId(), dupOf: null, runId: 'r1', repeat: 0, cohort: 'good', turnIndex: 0,
+    arm: 'control', callType: 'chat-extraction', interleaveGroup: 'g0',
+    lane: 'near', surface: 'CONFIG', variant: 'baseline',
+    promptHash: hashMessages(MSGS), fenceNonce: 'N1',
+    modelRequested: 'Qwen/Qwen3.6-35B-A3B-FP8', modelSent: 'Qwen/Qwen3.6-35B-A3B-FP8',
+    fallbackFrom: null, hedged: false,
+    input: { systemPrompt: 'S', messages: MSGS, toolSchemaNames: ['saveFact'] },
+    personaStateIn: { factCount: 3, topicCount: 5, factsInPrompt: 3, turnsInPrompt: 1 },
+    rawOutput: 'out', toolCalls: [], parsedSchema: null,
+    requestedCount: null, returnedCount: null, personaStateDelta: null,
+    finishReason: 'stop', truncated: false,
+    usage: { promptTokens: 1000, completionTokens: 500, cachedTokens: 0 },
+    cost: null, latencyMs: 100, ttVisibleMs: null, error: null, ...over,
+  };
+}
+const tool = (name: string, parsed: Record<string, unknown>) =>
+  [{ name, argumentsRaw: JSON.stringify(parsed), parsed, schemaValid: true }];
+
+async function main(): Promise<number> {
+  console.log('== staging rail ==');
+  const STAGING = { target: 'staging' as const, graphqlEndpoint: STAGING_DEFAULTS.graphqlEndpoint, authEndpoint: STAGING_DEFAULTS.authEndpoint, inferenceEndpoint: STAGING_DEFAULTS.inferenceEndpoint };
+
+  // 1. positive control: the staging trio is accepted
+  try { requireStagingTarget(STAGING); ck('staging trio accepted', true); }
+  catch (e) { ck('staging trio accepted', false, String(e)); }
+
+  // 2. the exact prod values currently in .env.harness are refused, by name
+  throws('prod graphql refused as PROD', () => requireStagingTarget({ ...STAGING, graphqlEndpoint: 'https://graphql.mera.news/graphql' }), 'is the PROD host');
+  throws('prod auth refused as PROD', () => requireStagingTarget({ ...STAGING, authEndpoint: 'https://auth.mera.news' }), 'is the PROD host');
+  throws('prod inference refused as PROD', () => requireStagingTarget({ ...STAGING, inferenceEndpoint: 'https://inference.mera.news' }), 'is the PROD host');
+
+  // 3. target itself must be staging
+  throws('target=prod refused', () => requireStagingTarget({ ...STAGING, target: 'prod' as const }), 'staging-only');
+  throws('target=local refused', () => requireStagingTarget({ ...STAGING, target: 'local' as const }), 'staging-only');
+
+  // 4. suffix matching is DNS-suffix, not substring
+  throws('lookalike host refused', () => assertStagingEndpoint('X', 'https://staging.mera.news.evil.test/graphql'), 'not a *');
+  throws('substring-in-path refused', () => assertStagingEndpoint('X', 'https://graphql.mera.news/staging'), 'is the PROD host');
+  ck('isStagingHost true for staging', isStagingHost('https://graphql.staging.mera.news/graphql'));
+  ck('isProdMeraHost false for staging', !isProdMeraHost('https://graphql.staging.mera.news/graphql'));
+
+  // 5. --target override + parse
+  const argv = ['--cohorts', 'good', '--target', 'staging', '--repeat', '3'];
+  ck('parseTargetFlag reads staging', parseTargetFlag(argv) === 'staging');
+  delete process.env.NEWS_HARNESS_TARGET;
+  applyTargetOverride(argv);
+  ck('applyTargetOverride sets process.env', process.env.NEWS_HARNESS_TARGET === 'staging', String(process.env.NEWS_HARNESS_TARGET));
+  throws('bad --target value throws', () => parseTargetFlag(['--target', 'production']), "must be one of");
+  ck('no --target leaves undefined', parseTargetFlag(['--repeat', '3']) === undefined);
+
+  // 6. auth cache is namespaced and the three targets never collide
+  const paths = (['local', 'staging', 'prod'] as const).map((t) => authCachePath(t));
+  ck('cache paths distinct', new Set(paths).size === 3, paths.join(' | '));
+  ck('staging cache path named', paths[1].endsWith('.auth-cache.staging.json'), paths[1]);
+  ck('no path is the legacy name', paths.every((p) => !p.endsWith('/.auth-cache.json')));
+
+
+  console.log('\n== env loading ==');
+  // The guard section above set NEWS_HARNESS_TARGET. Clear it so dotenv can
+  // fill the value from .env.harness, which is what the 7 pre-existing scripts
+  // see. That ordering hazard is real, not test-only: applyTargetOverride wins
+  // over the file precisely because dotenv never overwrites a set variable.
+  delete process.env.NEWS_HARNESS_TARGET;
+
+  // A. the no-arg call the pre-existing scripts use still works and still
+  //    reports whatever the env file says. Asserting the INVARIANT rather than
+  //    a literal 'prod' keeps this green when the user edits that file, which
+  //    they do, in parallel, while this runs.
+  const legacy = loadHarnessEnv();
+  ck('no-arg load works', typeof legacy.nearAiBaseUrl === 'string', `${legacy.target} ${legacy.graphqlEndpoint}`);
+  ck('no-arg returns a valid target', ['local', 'staging', 'prod'].includes(legacy.target), legacy.target);
+  ck('no-arg does NOT fill staging defaults',
+    legacy.graphqlEndpoint === process.env.NEWS_HARNESS_GRAPHQL_ENDPOINT?.trim(),
+    legacy.graphqlEndpoint);
+
+  // B. the rail and the loaded config agree: staging-shaped passes, anything
+  //    else is refused. Both branches are a real assertion, so this check is
+  //    meaningful whichever way the user's env file is currently pointed.
+  const stagingShaped =
+    legacy.target === 'staging' &&
+    isStagingHost(legacy.graphqlEndpoint) &&
+    isStagingHost(legacy.authEndpoint);
+  try {
+    requireStagingTarget(legacy);
+    ck('rail verdict matches the loaded config', stagingShaped, `accepted target=${legacy.target}`);
+  } catch (e) {
+    ck('rail verdict matches the loaded config', !stagingShaped, String((e as Error).message).slice(0, 70));
+  }
+
+  // C. the staging rail FILLS a missing endpoint rather than throwing, and the
+  //    filled value passes its own guard.
+  const savedG = process.env.NEWS_HARNESS_GRAPHQL_ENDPOINT;
+  const savedA = process.env.NEWS_HARNESS_AUTH_ENDPOINT;
+  const savedI = process.env.NEWS_HARNESS_INFERENCE_ENDPOINT;
+  delete process.env.NEWS_HARNESS_GRAPHQL_ENDPOINT;
+  delete process.env.NEWS_HARNESS_AUTH_ENDPOINT;
+  delete process.env.NEWS_HARNESS_INFERENCE_ENDPOINT;
+  process.env.NEWS_HARNESS_TARGET = 'staging';
+  const railed = loadHarnessEnv({ require: 'staging' });
+  ck('rail fills the staging graphql default', railed.graphqlEndpoint === STAGING_DEFAULTS.graphqlEndpoint, railed.graphqlEndpoint);
+  ck('rail fills the staging inference default', railed.inferenceEndpoint === STAGING_DEFAULTS.inferenceEndpoint, String(railed.inferenceEndpoint));
+  try { requireStagingTarget(railed); ck('filled defaults pass the guard', true); }
+  catch (e) { ck('filled defaults pass the guard', false, String(e)); }
+  if (savedG !== undefined) process.env.NEWS_HARNESS_GRAPHQL_ENDPOINT = savedG;
+  if (savedA !== undefined) process.env.NEWS_HARNESS_AUTH_ENDPOINT = savedA;
+  if (savedI !== undefined) process.env.NEWS_HARNESS_INFERENCE_ENDPOINT = savedI;
+
+
+  console.log('\n== jsonl, agreement, cost ==');
+  // --- 1. hash is stable, and sensitive to a real change -----------------------
+  ck('hash stable across calls', hashMessages(MSGS) === hashMessages(MSGS));
+  ck('hash differs on changed content',
+    hashMessages(MSGS) !== hashMessages([{ role: 'system', content: 'S' }, { role: 'user', content: 'U2' }]));
+  ck('hash ignores extra keys',
+    hashMessages(MSGS) === hashMessages(MSGS.map((m) => ({ ...m, extra: 1 })) as never));
+
+  // --- 2. writer round-trips, duplicates get a new id -------------------------
+  const dir = mkdtempSync(join(tmpdir(), 'u2-'));
+  const w = createJsonlWriter({ dir, name: 'rows.jsonl' });
+  const base = w.write(row({}));
+  const dup = w.writeDuplicate(base);
+  const closed = w.close();
+  await closed;
+  const back = readJsonl(w.path);
+  ck('jsonl round-trip', back.length === 2, `${back.length} rows`);
+  ck('duplicate has new rowId', dup.rowId !== base.rowId);
+  ck('duplicate points at original', dup.dupOf === base.rowId);
+  ck('one row per line', readFileSync(w.path, 'utf8').trim().split('\n').length === 2);
+
+  // --- 3. POSITIVE CONTROL: identical repeats report a perfect floor ----------
+  const same = [0, 1, 2].map((i) => row({ repeat: i, toolCalls: tool('saveFact', { statement: 'A' }) }));
+  const rSame = computeAgreement(same);
+  ck('identical repeats: no integrity failure', rSame.integrityFailures.length === 0, rSame.integrityFailures.join('; '));
+  ck('identical repeats: names 100%', rSame.cells[0].toolNameAgreement === 1);
+  ck('identical repeats: args 100%', rSame.cells[0].toolArgJaccard === 1);
+  ck('identical repeats: exact 100%', rSame.cells[0].exactOutputRate === 1);
+
+  // --- 4. NEGATIVE CONTROL: planted drift must be DETECTED --------------------
+  const drift = [
+    row({ repeat: 0, toolCalls: tool('saveFact', { statement: 'A' }), rawOutput: 'x' }),
+    row({ repeat: 1, toolCalls: tool('proposeTrack', { statement: 'A' }), rawOutput: 'y' }),
+    row({ repeat: 2, toolCalls: tool('saveFact', { statement: 'B' }), rawOutput: 'z' }),
+  ];
+  const rDrift = computeAgreement(drift);
+  ck('planted drift: name agreement below 1', rDrift.cells[0].toolNameAgreement < 1, String(rDrift.cells[0].toolNameAgreement));
+  ck('planted drift: arg jaccard below 1', rDrift.cells[0].toolArgJaccard < 1, rDrift.cells[0].toolArgJaccard.toFixed(3));
+  ck('planted drift: exact output 0', rDrift.cells[0].exactOutputRate === 0);
+
+  // --- 5. the self-check: a split prompt hash is a RUNNER BUG, not noise ------
+  const split = [
+    row({ repeat: 0 }),
+    row({ repeat: 1, promptHash: 'sha256:different' }),
+    row({ repeat: 2 }),
+  ];
+  const rSplit = computeAgreement(split);
+  ck('split hash flagged as runner bug',
+    rSplit.integrityFailures.some((x) => x.startsWith('RUNNER BUG') && x.includes('promptHash')),
+    rSplit.integrityFailures[0] ?? 'none');
+  const nonceSplit = computeAgreement([row({ repeat: 0 }), row({ repeat: 1, fenceNonce: 'N2' }), row({ repeat: 2 })]);
+  ck('split nonce flagged', nonceSplit.integrityFailures.some((x) => x.includes('fence nonces')));
+
+  // --- 6. thin cell (n<3) is called out --------------------------------------
+  const thin = computeAgreement([row({ repeat: 0 }), row({ repeat: 1 })]);
+  ck('n=2 flagged as thin', thin.integrityFailures.some((x) => x.startsWith('THIN CELL')));
+
+  // --- 7. duplicates are EXCLUDED from the floor ------------------------------
+  const withDup = [...same, { ...same[0], rowId: newRowId(), dupOf: same[0].rowId }];
+  const rDup = computeAgreement(withDup);
+  ck('duplicate not scored', rDup.rowsScored === 3 && rDup.duplicateRows === 1, `${rDup.rowsScored}/${rDup.duplicateRows}`);
+
+  // --- 8. cost: real catalogue numbers, checked by hand ------------------------
+  const catalog: ModelCatalog = {
+    'z-ai/glm-5.3-flash': {
+      id: 'z-ai/glm-5.3-flash', name: 'GLM', ownedBy: 'nearai', isReady: true,
+      deprecationDate: null, pricing: { inputPerM: 0.15, outputPerM: 0.5, cachedInputPerM: 0.035 },
+      supportedFeatures: [], maxOutputLength: 131072, selfHosted: true,
+    },
+    'deepseek-ai/DeepSeek-V4-Flash': {
+      id: 'deepseek-ai/DeepSeek-V4-Flash', name: 'DS', ownedBy: 'nearai', isReady: true,
+      deprecationDate: '2026-09-17T13:00:00Z', pricing: { inputPerM: 0.17, outputPerM: 0.35, cachedInputPerM: 0.035 },
+      supportedFeatures: [], maxOutputLength: 8192, selfHosted: true,
+    },
+  };
+  // 1M prompt @0.15 + 1M completion @0.5 = 0.65 exactly.
+  const c1 = costOf(catalog['z-ai/glm-5.3-flash'], { promptTokens: 1_000_000, completionTokens: 1_000_000, cachedTokens: 0 });
+  ck('cost per 1M+1M is 0.65', Math.abs(c1 - 0.65) < 1e-9, c1.toFixed(6));
+  // half the prompt cached: 0.5M@0.15 + 0.5M@0.035 + 0 = 0.075 + 0.0175
+  const c2 = costOf(catalog['z-ai/glm-5.3-flash'], { promptTokens: 1_000_000, completionTokens: 0, cachedTokens: 500_000 });
+  ck('cached tokens billed at the cache rate', Math.abs(c2 - 0.0925) < 1e-9, c2.toFixed(6));
+  const c3 = costOf(catalog['z-ai/glm-5.3-flash'], { promptTokens: 100, completionTokens: 0, cachedTokens: 999_999 });
+  ck('over-reported cache clamps, never credits', c3 >= 0, c3.toFixed(9));
+
+  // --- 9. roster warnings: fires on the real deprecation, silent otherwise -----
+  const now = new Date('2026-09-16T12:00:00Z');
+  const warn = rosterWarnings(catalog, ['deepseek-ai/DeepSeek-V4-Flash'], { now });
+  ck('retiring model warns', warn.some((x) => x.startsWith('RETIRING')), warn[0] ?? 'none');
+  ck('healthy model is silent', rosterWarnings(catalog, ['z-ai/glm-5.3-flash'], { now }).length === 0);
+  ck('unknown id warns', rosterWarnings(catalog, ['deepseek/deepseek-v4.1-flash'], { now })[0]?.startsWith('MISSING') === true);
+  ck('past deprecation says RETIRED',
+    rosterWarnings(catalog, ['deepseek-ai/DeepSeek-V4-Flash'], { now: new Date('2026-10-01T00:00:00Z') })[0]?.startsWith('RETIRED') === true);
+
+  // --- 10. the report renders and names the arm ------------------------------
+  const txt = formatAgreementReport(computeAgreement(same.map((r) => ({ ...r, cost: { inputTokens: 1000, cachedInputTokens: 0, outputTokens: 500, usd: 0.0004 } })), catalog));
+  ck('report mentions the model', txt.includes('Qwen/Qwen3.6-35B-A3B-FP8'));
+  ck('report has a USD column', txt.includes('USD/100'));
+
+
+  // --- 11. latency is computed ONLY from interleaved, correctly-routed calls -
+  // Two arms, three work units. Arm B skips g2 entirely, and its g1 call was
+  // served by a fallback. Only g0 is comparable for both arms.
+  const armA = (g: string, ms: number, over: Partial<RunRow> = {}) =>
+    row({ arm: 'A', modelRequested: 'Qwen/Qwen3.6-35B-A3B-FP8', modelSent: 'Qwen/Qwen3.6-35B-A3B-FP8',
+      callType: 'relevance-batch', interleaveGroup: g, latencyMs: ms, ...over });
+  const armB = (g: string, ms: number, over: Partial<RunRow> = {}) =>
+    row({ arm: 'B', modelRequested: 'z-ai/glm-5.3-flash', modelSent: 'z-ai/glm-5.3-flash',
+      callType: 'relevance-batch', interleaveGroup: g, latencyMs: ms, ...over });
+  const mixed = computeAgreement([
+    armA('g0', 100), armB('g0', 200),
+    armA('g1', 9000), armB('g1', 50, { fallbackFrom: 'z-ai/glm-5.3-flash', modelSent: 'Qwen/Qwen3.6-35B-A3B-FP8' }),
+    armA('g2', 9999),
+  ]);
+  const ctA = mixed.callTypes.find((c) => c.arm === 'A');
+  const ctB = mixed.callTypes.find((c) => c.arm === 'B');
+  ck('lonely work unit excluded from latency', ctA?.interleavedCalls === 2, `A interleaved=${ctA?.interleavedCalls} of ${ctA?.calls}`);
+  ck('non-interleaved groups counted', mixed.nonInterleavedGroups === 1, String(mixed.nonInterleavedGroups));
+  ck('fallback-served call excluded', ctB?.misroutedCalls === 1 && ctB?.interleavedCalls === 1,
+    `B misrouted=${ctB?.misroutedCalls} interleaved=${ctB?.interleavedCalls}`);
+  ck('the 9999ms outlier never enters p95', (ctA?.maxMs ?? 0) < 9999, `A max=${ctA?.maxMs}`);
+  ck('call types split out', new Set(mixed.callTypes.map((c) => c.callType)).size >= 1);
+  const rpt = formatAgreementReport(mixed);
+  ck('report shows the per-call-type table', rpt.includes('PER ARM AND CALL TYPE'));
+  ck('report names the excluded units', rpt.includes('not completed by every arm'));
+  ck('report names the misrouted calls', rpt.includes('hedge winner'));
+  const streamed = computeAgreement([
+    armA('s0', 100, { ttVisibleMs: 40 }), armB('s0', 120, { ttVisibleMs: 60 }),
+  ]);
+  ck('time-to-first-visible reported when streaming',
+    streamed.callTypes.every((c) => c.ttVisibleP50Ms !== null),
+    JSON.stringify(streamed.callTypes.map((c) => c.ttVisibleP50Ms)));
+  ck('time-to-first-visible null when nothing streamed', ctA?.ttVisibleP50Ms === null);
+
+  console.log(`\n${f === 0 ? 'ALL PASS' : f + ' FAILURE(S)'}`);
+  return f === 0 ? 0 : 1;
+}
+
+main().then((c) => process.exit(c), (e) => { console.error(e); process.exit(1); });

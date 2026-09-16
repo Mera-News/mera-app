@@ -1,0 +1,34 @@
+{
+  "//": [
+    "Scoped typecheck for the harness-local runner libraries.",
+    "tsconfig.json pulls in ../lib/news-harness and, through it, app modules where",
+    "~1,700 errors pre-exist, so `tsc -p harness-local/tsconfig.json` cannot tell a",
+    "new mistake from the standing red. This file lists ONLY the runner libraries",
+    "and their own imports, so its exit code means something.",
+    "  npx tsc -p harness-local/tsconfig.lib.json"
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "module": "Preserve",
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "strict": true,
+    "types": ["node"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": "..",
+    "paths": { "@/*": ["./*"] }
+  },
+  "files": [
+    "lib/staging-guard.ts",
+    "lib/jsonl-writer.ts",
+    "lib/model-catalog.ts",
+    "lib/agreement.ts",
+    "lib/run-writer.ts",
+    "config/env.ts",
+    "config/local-data.ts",
+    "adapters/auth.ts",
+    "scripts/selftest.ts"
+  ]
+}
