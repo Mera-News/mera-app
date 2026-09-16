@@ -76,6 +76,14 @@ jest.mock('@/components/custom/cards/CardGlassPlate', () => {
     GLASS_CARD_EDGE: 'glass-edge',
   };
 });
+// IdleScene owns the only `react-native-reanimated` import on these surfaces,
+// and jest.setup.js does not mock reanimated: importing it throws on the
+// uninitialised worklets native module. Mocking the one component is the whole
+// reason that import was centralised there rather than inlined in each card.
+jest.mock('@/components/custom/IdleScene', () => {
+  const { View } = require('react-native');
+  return { __esModule: true, default: (p: any) => <View {...p} /> };
+});
 jest.mock('@/components/ui/box', () => {
   const { View } = require('react-native');
   return { Box: (p: any) => <View {...p} /> };

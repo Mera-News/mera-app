@@ -8,6 +8,7 @@ import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useForYouDeviceProcessing } from '@/lib/stores/selectors';
 
+import IdleScene from '@/components/custom/IdleScene';
 import ProcessingArea from './ProcessingArea';
 import { PROCESSING_CARD_HEIGHT, PROCESSING_METRICS } from './types';
 import { useProcessingSnapshot } from './use-processing-snapshot';
@@ -58,10 +59,24 @@ const FeedProcessingCard: React.FC = () => {
                 <ProcessingArea snapshot={snapshot} onDevice={isDeviceProcessing} />
             ) : (
                 // The area resolves to nothing only in the narrow window where
-                // the list is empty and no work is in flight. The old copy is
-                // the right thing to say there, and it keeps the card's height
-                // identical so nothing below it moves.
+                // the list is empty and no work is in flight, which in practice
+                // is a first launch before any run has finished.
+                //
+                // It used to be two lines of grey text on an empty card. It now
+                // carries the same idle scene the all-caught-up card draws, at
+                // PROCESSING_SCENE_SIZE and at the same offset from the card
+                // top, so moving between the three empty states never makes the
+                // artwork jump.
+                //
+                // The copy stays because it is TRUE here and the caught-up copy
+                // would not be: this branch is reached while a first feed is
+                // still being built, and telling that reader they are all
+                // caught up would be the same false claim the offline and
+                // capped states were just fixed to stop making.
                 <View style={{ alignItems: 'center' }}>
+                    <Box className="mb-6">
+                        <IdleScene testID="feed-preparing-idle-scene" />
+                    </Box>
                     <Text size="md" numberOfLines={2} className="text-gray-400 text-center">
                         {t('feed.preparingFeed')}
                     </Text>
