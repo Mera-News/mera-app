@@ -17,6 +17,11 @@ Checks, in contract order:
   5  <= 150 KB
   6  vector only: no image layers, empty `assets`, no expression fields
   7  subject inside the middle 70%: a frame-by-frame bbox sweep, not a guess
+  8  frame 0 is the composition AT REST, in both modes
+     8a nothing may be dark at frame 0, ever
+     8b no named family of two or more layers may be entirely dark at frame 0
+        while reaching real brightness elsewhere, unless it is declared in
+        FRAME0_REST_EXCEPTIONS with a reason
 
 Check 7 is the one that earns its keep. The spike FAILED it and had to correct
 it: the phone body first spanned 74% of canvas height and was shrunk from
@@ -72,6 +77,110 @@ EPS = 1e-3
 # arrives into, and counting that first barely-lit frame would fail every piece
 # for something no reader can see.
 VISIBLE_OPACITY = 8.0
+
+# ── check 8: frame 0 is the composition at rest ─────────────────────────────
+#
+# `staticGradient` defaults ON below 6 GB of RAM, which covers both floor
+# devices and an ordinary 4 GB iPhone, so a HELD FRAME 0 is the normal
+# rendering for a large share of the fleet rather than a rare accessibility
+# path. Frame 0 is therefore not the start of the animation, it is the
+# animation, for those readers. A reduced or still presentation may remove
+# MOTION; it may never remove MEANING-BEARING GEOMETRY.
+#
+# 8a has no allowlist and never will: a composition that is dark at frame 0
+# renders as an empty box, and there is no piece for which that is right.
+#
+# 8b is the narrower one. A family authored as a travelling beat - every member
+# on a `bell()`, 0 at both ends of its own window - is entirely dark at frame 0
+# while carrying the whole subject mid-composition, which is what
+# `processing-summarising`'s four `line-*` layers did: the static reader got a
+# lone note glyph with none of its lines, every time.
+#
+# The legitimate case is a TRANSIENT HIGHLIGHT drawn over a base that is itself
+# visible at rest. That earns an entry here with a stated reason, never a
+# loosened threshold: the reason is the thing a reviewer reads, and a heuristic
+# wide enough to admit a real highlight is wide enough to admit the defect.
+#
+# Keyed on (asset id, family) rather than family alone, so `head-*` being fine
+# in one piece never pre-authorises a `head-*` somewhere nobody looked. An
+# entry that no longer suppresses anything is reported as a problem for the
+# same reason an allowlist entry for an absent file is: it pre-authorises a
+# dark family for the next edit.
+FRAME0_REST_EXCEPTIONS = {
+    # Each reason names the layer family that STANDS IN for this one at rest.
+    # That is the reviewable part: an entry whose named base does not exist, or
+    # does not sit where this family sits, is a bad entry and readable as one.
+    ("feed-two-lists", "row-lit"): (
+        "the travelling highlight down the left column. `row-*` draws all five "
+        "rows at 20% at the same coordinates, so the still frame is the column "
+        "itself with nothing currently selected"
+    ),
+    ("feed-two-lists", "block-lit"): (
+        "the counterpart highlight on the right. `block-*` draws all four "
+        "section blocks at 20% at the same coordinates, so the two lists both "
+        "read at rest and only the selection is missing"
+    ),
+    ("filters-three-shelves", "arriving"): (
+        "marks travelling down onto a shelf. `shelf-*` and the six `kept-*` "
+        "squares hold the shelves and what is already on them, so the still "
+        "frame is three shelves with things put away, which is the slide"
+    ),
+    ("following-what-it-is", "pulse"): (
+        "the ring that expands out of a node as the read-head passes it. "
+        "`node-*` draws the node itself at 80% at the same coordinates, and "
+        "`rail-`/`tick-`/`card-*` hold the whole timeline"
+    ),
+    ("processing-analysing", "lit"): (
+        "the reading sweep's per-tile flash. `rest-{r}{c}` draws all sixteen "
+        "tiles at 16% at exactly these coordinates, so the still frame is the "
+        "field of articles with attention simply not moving over it"
+    ),
+    ("processing-downloading", "falling"): (
+        "cards in flight toward the shelf. `shelf-*` plus the two accent "
+        "`resident-*` rows draw a shelf that is already partly full, which the "
+        "generator's own note calls the point of the piece"
+    ),
+    ("processing-fetching", "signal"): (
+        "marks travelling in from the rim. `hub` and `hub-core` hold the "
+        "centre they arrive at, and the piece's own note says the boundary is "
+        "deliberately empty, so a rim crowded at rest would be the wrong still"
+    ),
+    ("processing-grouping", "mark"): (
+        "duplicates travelling toward a cluster. `core-*` draws all three "
+        "cluster rings at full opacity, so the still frame is the groups "
+        "themselves, which is what the stage is named for"
+    ),
+    ("processing-preparing", "card"): (
+        "cards arriving into the deck. `slot-*` draws all four slot outlines "
+        "at 18% at exactly these coordinates, so the still frame is the deck "
+        "arrangement with nothing currently in flight"
+    ),
+    ("processing-summarising", "head"): (
+        "the writing head is a travelling cursor, not geometry. It carries no "
+        "part of the note: it runs along `line-*`, which rests visible and dim "
+        "at frame 0, so the still frame is the whole composition with the "
+        "cursor simply not yet moving"
+    ),
+    ("sources-where-it-lives", "behind"): (
+        "the light behind a door, and it MUST be dark at rest: `door-*` draws "
+        "both doors closed at full opacity, and a closed door with its inside "
+        "already showing is the wrong picture, not a missing one"
+    ),
+    ("teaching-two-thumbs", "ripple"): (
+        "the ring a tap sends out. `pad-*` and `mark-*` draw both controls at "
+        "full opacity at the same coordinates, so the still frame is the two "
+        "controls, and the slide is about tapping them rather than about a ring"
+    ),
+    ("welcome-what", "reach"): (
+        "rings travelling outward from the centre. `you` holds the centre at "
+        "full opacity and the six `story-*` bars rest at 24%, so the still "
+        "frame is you and the stories, with only the reach between them paused"
+    ),
+}
+
+# A family whose peak never reaches this is dim everywhere, so being dark at
+# frame 0 is not a change the reader can notice.
+FAMILY_PEAK_FLOOR = 20.0
 
 
 # ── property evaluation ─────────────────────────────────────────────────────
@@ -221,6 +330,94 @@ def seam_problems(layer, total_frames):
     return problems
 
 
+# ── check 8: frame 0 at rest ────────────────────────────────────────────────
+
+def layer_opacity_at(layer, frame, total):
+    """Effective opacity of a layer at `frame`, on the 0-100 scale.
+
+    Zero outside the layer's own `ip`..`op` window, since a layer that is not
+    in yet draws nothing whatever its opacity property says. The shape group's
+    own transform opacity multiplies the layer's, and a layer holding several
+    groups is as lit as its brightest one.
+    """
+    if frame < layer.get("ip", 0) or frame > layer.get("op", total):
+        return 0.0
+    base = eval_prop(layer.get("ks", {}).get("o"), frame)[0]
+    groups = [sh for sh in layer.get("shapes", []) if sh.get("ty") == "gr"]
+    if not groups:
+        return base
+    best = 0.0
+    for group in groups:
+        gtr = next((i for i in group.get("it", []) if i.get("ty") == "tr"), None)
+        g = eval_prop(gtr.get("o"), frame)[0] if gtr is not None else 100.0
+        best = max(best, base * g / 100.0)
+    return best
+
+
+def family_of(name):
+    """'line-3' -> 'line'. A trailing -<digits> is the index within a family.
+
+    A name with no index is its own family, so two layers that share a name
+    exactly are still read as one family rather than slipping through.
+    """
+    if not name:
+        return ""
+    head, sep, tail = name.rpartition("-")
+    return head if sep and head and tail.isdigit() else name
+
+
+def frame0_rest_problems(doc, asset_id, total):
+    problems = []
+    layers = doc.get("layers", [])
+    if not layers:
+        return problems
+
+    # 8a - no allowlist, in either mode.
+    if not any(layer_opacity_at(l, 0, total) >= VISIBLE_OPACITY for l in layers):
+        problems.append(
+            f"nothing is lit at frame 0: every layer is below the "
+            f"{VISIBLE_OPACITY:.0f}% visible floor, so a reader holding frame 0 "
+            f"sees an empty box rather than the composition at rest"
+        )
+
+    # 8b - per named family, with a reasoned allowlist.
+    families = {}
+    for layer in layers:
+        families.setdefault(family_of(layer.get("nm")), []).append(layer)
+
+    used = set()
+    for fam, members in sorted(families.items()):
+        if len(members) < 2:
+            continue
+        if any(layer_opacity_at(m, 0, total) >= VISIBLE_OPACITY for m in members):
+            continue
+        peak = max(
+            layer_opacity_at(m, f, total)
+            for m in members
+            for f in range(total + 1)
+        )
+        if peak < FAMILY_PEAK_FLOOR:
+            continue
+        if (asset_id, fam) in FRAME0_REST_EXCEPTIONS:
+            used.add(fam)
+            continue
+        problems.append(
+            f"family '{fam}-*' ({len(members)} layers) is entirely dark at "
+            f"frame 0 but reaches {peak:.0f}% elsewhere, so a held frame 0 "
+            f"drops it from the composition. Give it a dim rest state, or "
+            f"declare it in FRAME0_REST_EXCEPTIONS with a reason"
+        )
+
+    for (ex_asset, ex_fam), _reason in sorted(FRAME0_REST_EXCEPTIONS.items()):
+        if ex_asset == asset_id and ex_fam not in used:
+            problems.append(
+                f"FRAME0_REST_EXCEPTIONS carries '{ex_fam}-*' for this file and "
+                f"it no longer suppresses anything: delete the entry rather "
+                f"than leaving a dark family pre-authorised"
+            )
+    return problems
+
+
 # ── checks 2, 4, 6 ──────────────────────────────────────────────────────────
 
 def walk_items(items):
@@ -315,6 +512,12 @@ def validate(path, one_shot=False):
         problems += expression_problems(layer)
         if not one_shot:
             problems += seam_problems(layer, total)
+
+    # Check 8 runs in BOTH modes. A one-shot is held at frame 0 by exactly the
+    # same readers, and playing once is not a reason to start from nothing.
+    problems += frame0_rest_problems(
+        doc, os.path.splitext(os.path.basename(path))[0], total
+    )
 
     lo_x = lo_y = float("inf")
     hi_x = hi_y = float("-inf")

@@ -203,15 +203,32 @@ def processing_analysing():
 
 
 # ── 5 · processing-summarising · "Writing your notes" ───────────────────────
-# Four lines writing themselves inside a note, left to right, with the writing
-# head running ahead of each. The card outline holds; the lines are drawn by an
-# x SCALE anchored at their left edge, which is how a fill gets a stroke's
-# drawing-on beat without a trim path.
+# Four lines being written inside a note, left to right, with the writing head
+# running along each. The card outline holds, and so do the lines: each one
+# RESTS at a dim accent and brightens as the head crosses it.
+#
+# The lines used to grow from zero width, drawn by an x SCALE anchored at their
+# left edge. That was wrong for the reader who never sees the motion.
+# `staticGradient` defaults ON below 6 GB of RAM, so a held frame 0 is the
+# normal rendering for a large share of the fleet, and a line that grows from
+# nothing is simply ABSENT there: the piece froze as a lone note glyph with
+# none of its lines. A still presentation may drop the MOTION; it may not drop
+# the GEOMETRY that carries the meaning, and on a piece called "writing your
+# notes" the notes are the meaning.
+#
+# So the width is fixed and the beat is carried by brightness over the same
+# start..end window the head travels, on the same schedule. Nothing is retimed.
+# The head keeps the exception in FRAME0_REST_EXCEPTIONS: a cursor is motion,
+# and it now rests over a line the reader can already see.
 def processing_summarising():
     ind = Ind()
     TOTAL = 114
     LINES = [(0, 400), (1, 340), (2, 380), (3, 250)]
     LEFT = CX - 210
+    # Written, but not the line being worked on. Well clear of validate.py's 8%
+    # visible floor rather than grazing it, and the same resting value
+    # `welcome-what` gives its `story-*` bars for the same "there, not lit" job.
+    REST = 24
     layers = [outline(ind(), "note", 470, 400, 34, ACCENT, 6,
                       stat([CX, CY, 0]), stat(100), stroke_op=55,
                       fill_colour=ACCENT, fill_op=8, op=TOTAL)]
@@ -219,15 +236,15 @@ def processing_summarising():
         y = CY - 120 + i * 80
         start = 6 + i * 22
         end = start + 20
-        # Anchored at the line's left edge: the rect is drawn to the RIGHT of
-        # the layer origin, so scaling x from 0 grows it rightward.
+        # Drawn to the RIGHT of the layer origin, so the line occupies its full
+        # width from the first frame. No scale: a static full-width rect is the
+        # thing that makes frame 0 the composition at rest.
         layers.append(bar(
             ind(), f"line-{i}", width, 22, 11, ACCENT,
             stat([LEFT, y, 0]),
-            keys([(0, [0]), (start, [0]), (start + 4, [88]), (94, [88]), (TOTAL, [0])]),
+            keys([(0, [REST]), (start, [REST]), (end, [88]), (94, [88]),
+                  (TOTAL, [REST])]),
             op=TOTAL, offset=(width / 2, 0),
-            scale=keys([(start, [0, 100, 100]), (end, [100, 100, 100]),
-                        (TOTAL, [100, 100, 100])], dim=3),
         ))
         layers.append(dot(
             ind(), f"head-{i}", 20, WHITE,
