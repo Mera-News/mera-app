@@ -66,6 +66,12 @@ interface Args {
   dryRun: boolean;
   duplicateEvery: number;
   maxTokens: Record<string, number>;
+  /** Force the pure fact-only arm. The split is otherwise DERIVED from whether
+   *  other facts exist (splitCount), so there is no way to ask for 4+0 on a
+   *  multi-fact persona: with others present, total=4 always yields 3+1. This
+   *  passes otherFacts EMPTY, which is what makes the combo call not exist
+   *  rather than merely be requested at zero. */
+  noCombo: boolean;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -80,6 +86,7 @@ function parseArgs(argv: string[]): Args {
     dryRun: false,
     duplicateEvery: 0,
     maxTokens: {},
+    noCombo: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -91,6 +98,7 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--repeat') args.repeat = Number(argv[++i]);
     else if (a === '--variant') args.variant = argv[++i] ?? args.variant;
     else if (a === '--dry-run') args.dryRun = true;
+    else if (a === '--no-combo') args.noCombo = true;
     else if (a === '--duplicate-every') args.duplicateEvery = Number(argv[++i]);
     else if (a === '--max-tokens') {
       for (const pair of (argv[++i] ?? '').split(',').filter(Boolean)) {
@@ -165,6 +173,7 @@ async function main(): Promise<number> {
     `run      : ${runId}\ntarget   : ${env.target}` +
       `${overridden.length ? `\noverride : ${overridden.join(', ')}` : ''}` +
       `\ncohort   : ${args.cohort}, accepting ${facts.length} fact(s) sequentially` +
+      `${args.noCombo ? '\nsplit    : --no-combo, factOnly only, otherFacts passed empty' : ''}` +
       `\nexisting : ${existingTopics.length} topics on the persona, all passed as excludeTopics` +
       `\narms     : ${args.arms.join(', ')}\ntotals   : ${args.totals.join(', ')}` +
       `\nrepeat   : ${args.repeat}\nvariant  : ${args.variant}` +
@@ -190,7 +199,13 @@ async function main(): Promise<number> {
 
       for (let fi = 0; fi < facts.length; fi++) {
         const fact = facts[fi];
-        const otherFacts = facts.filter((_, i) => i !== fi).map((f) => f.statement);
+        // --no-combo passes NO other facts, so buildCloudBatchCallsForFact
+        // emits the factOnly call and nothing else. The alternative, asking for
+        // a combo count of zero, is not the same experiment: the prompt would
+        // still carry the other facts.
+        const otherFacts = args.noCombo
+          ? []
+          : facts.filter((_, i) => i !== fi).map((f) => f.statement);
         const { factOnly: factOnlyCount, combo: comboCount } = splitCount(total, otherFacts.length > 0);
 
         for (const model of args.arms) {
@@ -261,7 +276,10 @@ async function main(): Promise<number> {
               // blinds `arm`, so folding the total into the cohort name would
               // hand the rater the arm it is not supposed to see.
               cohort: args.cohort, turnIndex: fi,
-              arm: `${model}@${total}`, callType,
+              // The arm records the SPLIT, not just the total, because 4+0 and
+              // 3+1 are different arms that share a total and the key is what a
+              // blinded rating is decoded against.
+              arm: `${model}@${total}(${factOnlyCount}+${comboCount})`, callType,
               interleaveGroup: `${total}:${fi}:${kind}`, lane: 'near', surface: 'TOPICGEN',
               variant: args.variant,
               promptHash: hashMessages([
