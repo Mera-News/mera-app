@@ -46,14 +46,16 @@ import {
 import { createRunWriter } from '../lib/run-writer';
 import { createJsonlWriter, hashMessages, newRowId, type CallType, type RunRow } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
+import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, rosterWarnings, TOPICGEN_ARM_MODELS } from '../lib/model-catalog';
-import { hasReasoningLeak, postCompletion } from '../lib/near-call';
+import { hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
 import { COHORTS, loadCohort, type CorpusFact } from '../lib/corpus';
 import {
   buildCloudBatchCallsForFact,
   parseTopicsFromOutput,
   splitCount,
 } from '../../lib/news-harness/persona-management/topic-generation';
+import { buildTopicGenSystemPrompt } from '../../lib/news-harness/prompts/persona-prompts';
 
 interface Args {
   label: string;
@@ -62,7 +64,7 @@ interface Args {
   totals: number[];
   accept: number;
   repeat: number;
-  variant: string;
+  variants: string[];
   dryRun: boolean;
   duplicateEvery: number;
   maxTokens: Record<string, number>;
@@ -82,7 +84,7 @@ function parseArgs(argv: string[]): Args {
     totals: [10],
     accept: 6,
     repeat: 3,
-    variant: 'baseline',
+    variants: ['baseline'],
     dryRun: false,
     duplicateEvery: 0,
     maxTokens: {},
@@ -96,7 +98,9 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--totals') args.totals = (argv[++i] ?? '').split(',').map(Number).filter((n) => n > 0);
     else if (a === '--accept') args.accept = Number(argv[++i]);
     else if (a === '--repeat') args.repeat = Number(argv[++i]);
-    else if (a === '--variant') args.variant = argv[++i] ?? args.variant;
+    else if (a === '--variant') {
+      args.variants = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+    }
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--no-combo') args.noCombo = true;
     else if (a === '--duplicate-every') args.duplicateEvery = Number(argv[++i]);
@@ -118,6 +122,7 @@ function parseArgs(argv: string[]): Args {
     throw new Error(`harness-local: unknown cohort '${args.cohort}'. Known: ${COHORTS.join(', ')}.`);
   }
   if (args.totals.length === 0) throw new Error('harness-local: --totals resolved to nothing.');
+  if (args.variants.length === 0) throw new Error('harness-local: --variant resolved to nothing.');
   if (args.repeat < 3) {
     // eslint-disable-next-line no-console
     console.warn(`\n!!  --repeat ${args.repeat} does not measure a noise floor.\n`);
@@ -163,20 +168,33 @@ async function main(): Promise<number> {
   const rows = createJsonlWriter({ dir: run.dir });
   const runId = run.dir.split('/').pop() ?? args.label;
 
-  const catalog = args.dryRun
-    ? {}
-    : await fetchModelCatalog({ baseUrl: env.nearAiBaseUrl, apiKey: env.nearAiApiKey, runDir: run.dir });
-  const warnings = args.dryRun ? [] : rosterWarnings(catalog, args.arms);
+  // Fetched even on a dry run: /v1/models is free, still answers on an
+  // exhausted key, and without it the cost estimate below cannot price
+  // anything. A failure is tolerated and named rather than silently producing
+  // a zero estimate.
+  let catalog: Awaited<ReturnType<typeof fetchModelCatalog>> = {};
+  let catalogError: string | null = null;
+  try {
+    catalog = await fetchModelCatalog({
+      baseUrl: env.nearAiBaseUrl,
+      apiKey: env.nearAiApiKey,
+      runDir: args.dryRun ? undefined : run.dir,
+    });
+  } catch (err) {
+    catalogError = err instanceof Error ? err.message : String(err);
+  }
+  const warnings = catalogError ? [`CATALOGUE UNAVAILABLE: ${catalogError}`] : rosterWarnings(catalog, args.arms);
+  const planned: PlannedCall[] = [];
 
   // eslint-disable-next-line no-console
   console.log(
-    `run      : ${runId}\ntarget   : ${env.target}` +
+    `run      : ${runId}\nrun dir  : ${run.dir}\ntarget   : ${env.target}` +
       `${overridden.length ? `\noverride : ${overridden.join(', ')}` : ''}` +
       `\ncohort   : ${args.cohort}, accepting ${facts.length} fact(s) sequentially` +
       `${args.noCombo ? '\nsplit    : --no-combo, factOnly only, otherFacts passed empty' : ''}` +
       `\nexisting : ${existingTopics.length} topics on the persona, all passed as excludeTopics` +
       `\narms     : ${args.arms.join(', ')}\ntotals   : ${args.totals.join(', ')}` +
-      `\nrepeat   : ${args.repeat}\nvariant  : ${args.variant}` +
+      `\nrepeat   : ${args.repeat}\nvariants : ${args.variants.join(', ')} (interleaved per fact)` +
       `\nmode     : ${args.dryRun ? 'DRY RUN, no calls' : 'live'}\n`,
   );
   for (const w of warnings) console.warn(`!!  ${w}`);
@@ -195,7 +213,11 @@ async function main(): Promise<number> {
     for (let rep = 0; rep < args.repeat; rep++) {
       // Each arm walks the SAME sequential accept, so their exclude lists grow
       // the same way and the comparison stays fair.
-      const acquired = new Map<string, string[]>(args.arms.map((m) => [m, [...existingTopics]]));
+      // One exclude list per ARM, and an arm is now (model, variant): two
+      // variants must not share an accumulated exclude list or each would be
+      // told not to repeat the other's output.
+      const armIds = args.arms.flatMap((m) => args.variants.map((v) => `${m}@${v}`));
+      const acquired = new Map<string, string[]>(armIds.map((a) => [a, [...existingTopics]]));
 
       for (let fi = 0; fi < facts.length; fi++) {
         const fact = facts[fi];
@@ -208,8 +230,14 @@ async function main(): Promise<number> {
           : facts.filter((_, i) => i !== fi).map((f) => f.statement);
         const { factOnly: factOnlyCount, combo: comboCount } = splitCount(total, otherFacts.length > 0);
 
+        // Prompt variants interleave with models, per fact, so both arms sit in
+        // one run and one time window. Between-run drift moved a control arm's
+        // kept count by 7 against a within-run floor of 4, which confounds any
+        // comparison made across separate runs.
+        for (const variantId of args.variants) {
         for (const model of args.arms) {
-          const excludeTopics = acquired.get(model) ?? [];
+          const armId = `${model}@${variantId}`;
+          const excludeTopics = acquired.get(armId) ?? [];
           // The production builder, so gear and prompts cannot drift from it.
           const calls = buildCloudBatchCallsForFact(
             {
@@ -220,6 +248,10 @@ async function main(): Promise<number> {
               excludeTopics,
             },
             `fact${fi}`,
+            {
+              factOnly: buildTopicGenSystemPrompt('factOnly', variantId),
+              combo: buildTopicGenSystemPrompt('combo', variantId),
+            },
           );
 
           for (const call of calls) {
@@ -227,6 +259,12 @@ async function main(): Promise<number> {
             const callType: CallType = kind === 'combo' ? 'topicgen-combo' : 'topicgen-factOnly';
             const requested = kind === 'combo' ? comboCount : factOnlyCount;
 
+            planned.push({
+              model,
+              systemChars: call.system.length,
+              promptChars: call.prompt.length,
+              maxOutputTokens: args.maxTokens[model] ?? call.maxTokens ?? 0,
+            });
             const result = args.dryRun
               ? {
                   content: dryRunTopics(fi, requested, kind, rep),
@@ -253,7 +291,7 @@ async function main(): Promise<number> {
             const topics = result.error ? [] : parseTopicsFromOutput(result.content, fact.statement);
 
             // Cross-fact collision bookkeeping, per arm and per count arm.
-            const bucketKey = `${model}|${total}|${rep}`;
+            const bucketKey = `${armId}|${total}|${rep}`;
             const bucket = crossFact.get(bucketKey) ?? new Map<string, Set<string>>();
             for (const t of topics) {
               const key = t.toLowerCase().trim();
@@ -265,7 +303,7 @@ async function main(): Promise<number> {
 
             // The exclude list grows as production's does, so the next fact in
             // this accept is told what this one already produced.
-            acquired.set(model, [...(acquired.get(model) ?? []), ...topics]);
+            acquired.set(armId, [...(acquired.get(armId) ?? []), ...topics]);
 
             const info = catalog[model];
             writeRow({
@@ -279,9 +317,9 @@ async function main(): Promise<number> {
               // The arm records the SPLIT, not just the total, because 4+0 and
               // 3+1 are different arms that share a total and the key is what a
               // blinded rating is decoded against.
-              arm: `${model}@${total}(${factOnlyCount}+${comboCount})`, callType,
+              arm: `${model}@${variantId}@${total}(${factOnlyCount}+${comboCount})`, callType,
               interleaveGroup: `${total}:${fi}:${kind}`, lane: 'near', surface: 'TOPICGEN',
-              variant: args.variant,
+              variant: variantId,
               promptHash: hashMessages([
                 { role: 'system', content: call.system },
                 { role: 'user', content: call.prompt },
@@ -329,8 +367,14 @@ async function main(): Promise<number> {
             });
           }
         }
+        }
       }
     }
+  }
+
+  if (args.dryRun) {
+    // eslint-disable-next-line no-console
+    console.log(`\n${formatCostEstimate(estimateRunCost(planned, catalog))}\n`);
   }
 
   await rows.close();
@@ -393,6 +437,20 @@ async function main(): Promise<number> {
 main().then(
   (code) => process.exit(code),
   (err) => {
+    // A spend limit ends the run on the FIRST refusal. Recording it as data
+    // produces a file full of empty rows that reads as a model failing, which
+    // is exactly what happened when the key hit its cap mid-run.
+    if (err instanceof SpendLimitError) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `\nSPEND LIMIT REACHED, run aborted on the first refusal.\n` +
+          `  spent : $${err.spent ?? 'unknown'}\n` +
+          `  limit : $${err.limit ?? 'unknown'}\n` +
+          `  rows written so far are in the run directory printed above.\n` +
+          `  provider said: ${err.message}\n`,
+      );
+      process.exit(3);
+    }
     // eslint-disable-next-line no-console
     console.error(err);
     process.exit(1);

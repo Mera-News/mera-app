@@ -27,6 +27,7 @@
     "lib/agreement.ts",
     "lib/run-writer.ts",
     "lib/near-call.ts",
+    "lib/cost-estimate.ts",
     "lib/corpus.ts",
     "lib/chat-turn.ts",
     "config/env.ts",

@@ -40,8 +40,9 @@ import {
   type RunRow,
 } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
+import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, HARNESS_ARM_MODELS, rosterWarnings } from '../lib/model-catalog';
-import { hasReasoningLeak, postCompletion } from '../lib/near-call';
+import { hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
 import {
   buildReasonCallsForSubset,
   buildScoreCallForChunk,
@@ -79,7 +80,7 @@ interface Args {
   arms: string[];
   repeat: number;
   limit: number;
-  variant: string;
+  variants: string[];
   fixture: string;
   dryRun: boolean;
   reason: boolean;
@@ -97,7 +98,7 @@ function parseArgs(argv: string[]): Args {
     arms: [...HARNESS_ARM_MODELS],
     repeat: 3,
     limit: 40,
-    variant: 'baseline',
+    variants: ['baseline'],
     fixture: resolve(__dirname, '..', 'fixtures', 'goldset-348.json'),
     dryRun: false,
     reason: true,
@@ -110,7 +111,9 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--arms') args.arms = (argv[++i] ?? '').split(',').filter(Boolean);
     else if (a === '--repeat') args.repeat = Number(argv[++i]);
     else if (a === '--limit') args.limit = Number(argv[++i]);
-    else if (a === '--variant') args.variant = argv[++i] ?? args.variant;
+    else if (a === '--variant') {
+      args.variants = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+    }
     else if (a === '--fixture') args.fixture = resolve(argv[++i] ?? args.fixture);
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--no-reason') args.reason = false;
@@ -142,6 +145,7 @@ function parseArgs(argv: string[]): Args {
     );
   }
   if (args.arms.length === 0) throw new Error('harness-local: --arms resolved to nothing.');
+  if (args.variants.length === 0) throw new Error('harness-local: --variant resolved to nothing.');
   return args;
 }
 
@@ -214,18 +218,32 @@ async function main(): Promise<number> {
   const rows = createJsonlWriter({ dir: run.dir });
   const runId = run.dir.split('/').pop() ?? args.label;
 
-  const catalog = args.dryRun
-    ? {}
-    : await fetchModelCatalog({ baseUrl: env.nearAiBaseUrl, apiKey: env.nearAiApiKey, runDir: run.dir });
-  const warnings = args.dryRun ? [] : rosterWarnings(catalog, args.arms);
+  // Fetched even on a dry run: /v1/models is free, still answers on an
+  // exhausted key, and without it the cost estimate below cannot price
+  // anything. A failure is tolerated and named rather than silently producing
+  // a zero estimate.
+  let catalog: Awaited<ReturnType<typeof fetchModelCatalog>> = {};
+  let catalogError: string | null = null;
+  try {
+    catalog = await fetchModelCatalog({
+      baseUrl: env.nearAiBaseUrl,
+      apiKey: env.nearAiApiKey,
+      runDir: args.dryRun ? undefined : run.dir,
+    });
+  } catch (err) {
+    catalogError = err instanceof Error ? err.message : String(err);
+  }
+  const warnings = catalogError ? [`CATALOGUE UNAVAILABLE: ${catalogError}`] : rosterWarnings(catalog, args.arms);
+  const planned: PlannedCall[] = [];
 
   // eslint-disable-next-line no-console
   console.log(
-    `run      : ${runId}\ntarget   : ${env.target} (${env.graphqlEndpoint})` +
+    `run      : ${runId}\nrun dir  : ${run.dir}\ntarget   : ${env.target} (${env.graphqlEndpoint})` +
       `${overridden.length ? `\noverride : ${overridden.join(', ')}` : ''}` +
       `\narms     : ${args.arms.join(', ')}\nrepeat   : ${args.repeat}` +
       `\narticles : ${candidates.length} from ${args.fixture}` +
-      `\nvariant  : ${args.variant}\nmode     : ${args.dryRun ? 'DRY RUN, no calls' : 'live'}\n`,
+      `\nvariants : ${args.variants.join(', ')} (interleaved per chunk, same time window)` +
+      `\nmode     : ${args.dryRun ? 'DRY RUN, no calls' : 'live'}\n`,
   );
   for (const w of warnings) console.warn(`!!  ${w}`);
 
@@ -234,8 +252,14 @@ async function main(): Promise<number> {
   const config = DEFAULT_HARNESS_CONFIG.articlePipeline;
   const scoringVariant = resolveScoringVariant(candidates);
   const chunks = chunk(candidates, scoreChunkSizeFor(config, scoringVariant));
-  const systemPrompt = relevanceSystemPromptFor(config, scoringVariant, args.variant);
-  const reasonSystem = reasonSystemPromptFor(config, scoringVariant, args.variant);
+  // One system prompt PER PROMPT VARIANT. Unknown ids throw here, before any
+  // call is made, rather than partway through a paid run.
+  const systemByVariant = new Map(
+    args.variants.map((v) => [v, relevanceSystemPromptFor(config, scoringVariant, v)]),
+  );
+  const reasonSystemByVariant = new Map(
+    args.variants.map((v) => [v, reasonSystemPromptFor(config, scoringVariant, v)]),
+  );
 
   // One accumulator per (arm, repeat), so the instruction-following rate is
   // attributable to an arm rather than smeared across the run.
@@ -256,23 +280,34 @@ async function main(): Promise<number> {
   // ---- relevance, arms interleaved PER CHUNK ------------------------------
   for (let ci = 0; ci < chunks.length; ci++) {
     const chunkCandidates = chunks[ci];
-    const built = buildScoreCallForChunk(
-      chunkCandidates,
-      factStatements,
-      systemPrompt,
-      config,
-      args.variant,
+    // Built once per variant, reused across repeats, so a cell holds one prompt
+    // and one fence nonce.
+    const builtByVariant = new Map(
+      args.variants.map((v) => [
+        v,
+        buildScoreCallForChunk(chunkCandidates, factStatements, systemByVariant.get(v) as string, config, v),
+      ]),
     );
-    // The news-harness scout's hash, not a raw one: it normalises the fence
-    // nonce first, so two identical calls agree instead of reporting a change
-    // on every single call.
-    const hash = promptHash(built.system, built.prompt);
 
     for (let rep = 0; rep < args.repeat; rep++) {
+      // PROMPT VARIANTS INTERLEAVE EXACTLY AS MODELS DO, inside the chunk loop.
+      // A control arm that cannot touch scoring moved the kept count by 7
+      // between two runs half an hour apart, against a within-run floor of 4,
+      // so ANY comparison across separate runs is confounded by drift. Both
+      // axes now sit in one run and one time window.
+      for (const variantId of args.variants) {
+      const built = builtByVariant.get(variantId) as { system: string; prompt: string };
+      const hash = promptHash(built.system, built.prompt);
       for (const model of args.arms) {
-        const statsKey = `${model}::${rep}`;
+        const statsKey = `${model}@${variantId}::${rep}`;
         const stats = decodeStats.get(statsKey) ?? newRelevanceDecodeStats();
         decodeStats.set(statsKey, stats);
+        planned.push({
+          model,
+          systemChars: built.system.length,
+          promptChars: built.prompt.length,
+          maxOutputTokens: args.maxTokens[model] ?? config.scoreBatchMaxTokens,
+        });
 
         const result = args.dryRun
           ? {
@@ -306,17 +341,18 @@ async function main(): Promise<number> {
               stats,
             );
         if (!result.error) {
-          const map = relevanceByArm.get(model) ?? {};
+          const armId = `${model}@${variantId}`;
+          const map = relevanceByArm.get(armId) ?? {};
           chunkCandidates.forEach((c, i) => { map[c.id] = scores[i] ?? 0; });
-          relevanceByArm.set(model, map);
+          relevanceByArm.set(armId, map);
         }
 
         const info = catalog[model];
         writeRow({
           rowId: newRowId(), dupOf: null, runId, repeat: rep,
-          cohort: 'goldset', turnIndex: ci, arm: model, callType: 'relevance-batch',
+          cohort: 'goldset', turnIndex: ci, arm: `${model}@${variantId}`, callType: 'relevance-batch',
           interleaveGroup: `chunk:${ci}`, lane: 'near', surface: 'SCORING',
-          variant: args.variant, promptHash: hash,
+          variant: variantId, promptHash: hash,
           // Stateless: the same chunk always builds the same prompt, once the
           // per-build fence nonce is normalised out (which promptHash does).
           promptDeterministic: true,
@@ -354,6 +390,7 @@ async function main(): Promise<number> {
           latencyMs: result.latencyMs, ttVisibleMs: null, error: result.error,
         });
       }
+      }
     }
   }
 
@@ -362,8 +399,9 @@ async function main(): Promise<number> {
   // judged on the articles that arm actually promoted, which is the situation
   // it faces in production.
   if (args.reason) {
-    for (const model of args.arms) {
-      const relevanceMap = relevanceByArm.get(model) ?? {};
+    for (const armId of [...relevanceByArm.keys()].sort()) {
+      const [model, variantId] = armId.split('@');
+      const relevanceMap = relevanceByArm.get(armId) ?? {};
       const reasonBundle = buildReasonCallsForSubset(
         candidates,
         relevanceMap,
@@ -372,13 +410,19 @@ async function main(): Promise<number> {
         config,
         undefined,
         false,
-        args.variant,
+        variantId,
       );
       // CloudCallBundle, not an array: the calls live on `.calls`.
       const reasonCalls = reasonBundle.calls;
       for (let ri = 0; ri < reasonCalls.length; ri++) {
         const call = reasonCalls[ri];
         for (let rep = 0; rep < args.repeat; rep++) {
+          planned.push({
+            model,
+            systemChars: (call.system ?? '').length,
+            promptChars: call.prompt.length,
+            maxOutputTokens: args.maxTokens[model] ?? config.reasonMaxTokens,
+          });
           const result = args.dryRun
             ? {
                 content: dryRunOutput('reason', 1, ri + rep),
@@ -389,7 +433,7 @@ async function main(): Promise<number> {
             : await postCompletion({
                 baseUrl: env.nearAiBaseUrl, apiKey: env.nearAiApiKey, model,
                 messages: [
-                  { role: 'system', content: call.system ?? reasonSystem },
+                  { role: 'system', content: call.system ?? (reasonSystemByVariant.get(variantId) as string) },
                   { role: 'user', content: call.prompt },
                 ],
                 temperature: config.reasonTemperature,
@@ -399,15 +443,15 @@ async function main(): Promise<number> {
           const info = catalog[model];
           writeRow({
             rowId: newRowId(), dupOf: null, runId, repeat: rep,
-            cohort: 'goldset', turnIndex: ri, arm: model, callType: 'reason',
+            cohort: 'goldset', turnIndex: ri, arm: armId, callType: 'reason',
             interleaveGroup: `reason:${ri}`, lane: 'near', surface: 'SCORING',
-            variant: args.variant,
-            promptHash: promptHash(call.system ?? reasonSystem, call.prompt),
+            variant: variantId,
+            promptHash: promptHash(call.system ?? (reasonSystemByVariant.get(variantId) as string), call.prompt),
             promptDeterministic: true,
             fenceNonce: extractFenceNonce(call.prompt), modelRequested: model, modelSent: result.modelSent,
             fallbackFrom: null, hedged: false,
             input: {
-              systemPrompt: call.system ?? reasonSystem,
+              systemPrompt: call.system ?? (reasonSystemByVariant.get(variantId) as string),
               messages: [{ role: 'user', content: call.prompt }],
               toolSchemaNames: [],
             },
@@ -442,6 +486,11 @@ async function main(): Promise<number> {
         }
       }
     }
+  }
+
+  if (args.dryRun) {
+    // eslint-disable-next-line no-console
+    console.log(`\n${formatCostEstimate(estimateRunCost(planned, catalog))}\n`);
   }
 
   await rows.close();
@@ -487,6 +536,20 @@ async function main(): Promise<number> {
 main().then(
   (code) => process.exit(code),
   (err) => {
+    // A spend limit ends the run on the FIRST refusal. Recording it as data
+    // produces a file full of empty rows that reads as a model failing, which
+    // is exactly what happened when the key hit its cap mid-run.
+    if (err instanceof SpendLimitError) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `\nSPEND LIMIT REACHED, run aborted on the first refusal.\n` +
+          `  spent : $${err.spent ?? 'unknown'}\n` +
+          `  limit : $${err.limit ?? 'unknown'}\n` +
+          `  rows written so far are in the run directory printed above.\n` +
+          `  provider said: ${err.message}\n`,
+      );
+      process.exit(3);
+    }
     // eslint-disable-next-line no-console
     console.error(err);
     process.exit(1);

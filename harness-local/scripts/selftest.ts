@@ -28,7 +28,8 @@ import {
   createJsonlWriter, extractFenceNonce, hashMessages, newRowId, type RunRow,
 } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
-import { hasReasoningLeak } from '../lib/near-call';
+import { hasReasoningLeak, parseSpendLimit, SpendLimitError } from '../lib/near-call';
+import { estimateRunCost, formatCostEstimate } from '../lib/cost-estimate';
 import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
 import { buildChatTurnBody, withContextOnLastUserTurn } from '../lib/chat-turn';
 import { filterNewFacts, normalizeStatement } from '../../lib/news-harness/persona-management/fact-rules';
@@ -425,6 +426,58 @@ async function main(): Promise<number> {
     ck('a short id is not mistaken for a nonce', extractFenceNonce('<<ARTICLE abc>>') === null);
     ck('two nonces in one prompt are both surfaced',
       extractFenceNonce('<<ARTICLE aaaaaaaaaaaa>> <<ARTICLE bbbbbbbbbbbb>>') === 'aaaaaaaaaaaa,bbbbbbbbbbbb');
+  }
+
+  // --- 11g. spend limit is detected and carries its figures ----------------
+  // Pinned on the VERBATIM body observed on 2026-09-16, so a wording change
+  // fails here rather than turning a run back into a file of empty rows.
+  {
+    const real = '{"error":{"message":"API key spend limit exceeded. Spent: $10.004511644, Limit: $10.00","type":"api_key_limit_exceeded","param":null,"code":null}}';
+    const e = parseSpendLimit(real);
+    ck('real 402 body is recognised', e instanceof SpendLimitError);
+    ck('spent is extracted', e?.spent === '10.004511644', String(e?.spent));
+    ck('limit is extracted', e?.limit === '10.00', String(e?.limit));
+    // the machine-readable type alone is enough, even without the figures
+    ck('type alone is enough',
+      parseSpendLimit('{"error":{"message":"no funds","type":"api_key_limit_exceeded"}}') instanceof SpendLimitError);
+    // and the human message alone is enough, if the type ever moves
+    ck('message alone is enough',
+      parseSpendLimit('{"error":{"message":"API key spend limit exceeded"}}') instanceof SpendLimitError);
+    // an ordinary error must NOT be mistaken for a spend limit
+    ck('a normal error is not a spend limit',
+      parseSpendLimit('{"error":{"message":"model is warming up","type":"server_error"}}') === null);
+    ck('a rate limit is not a spend limit',
+      parseSpendLimit('{"error":{"message":"Too many requests","type":"rate_limit"}}') === null);
+  }
+
+  // --- 11h. the cost estimate, checked against hand arithmetic --------------
+  {
+    const cat: ModelCatalog = {
+      m1: { id: 'm1', name: 'm1', ownedBy: 'nearai', isReady: true, deprecationDate: null,
+            pricing: { inputPerM: 0.17, outputPerM: 1.1, cachedInputPerM: 0.056 },
+            supportedFeatures: [], maxOutputLength: 8192, selfHosted: true },
+      m2: { id: 'm2', name: 'm2', ownedBy: 'nearai', isReady: true, deprecationDate: null,
+            pricing: { inputPerM: 0, outputPerM: 0, cachedInputPerM: 0 },
+            supportedFeatures: [], maxOutputLength: 0, selfHosted: true },
+    };
+    // 4000 chars at 4 chars/token = 1000 input tokens.
+    // floor   = 1000 * 0.17/1e6                    = 0.00017
+    // ceiling = floor + 320 * 1.1/1e6 = +0.000352  = 0.000522
+    const est = estimateRunCost(
+      [{ model: 'm1', systemChars: 2000, promptChars: 2000, maxOutputTokens: 320 }],
+      cat,
+    );
+    ck('input tokens estimated', est.byModel[0].estInputTokens === 1000, String(est.byModel[0].estInputTokens));
+    ck('floor is input only', Math.abs(est.usdFloor - 0.00017) < 1e-9, est.usdFloor.toFixed(8));
+    ck('ceiling adds max output', Math.abs(est.usdCeiling - 0.000522) < 1e-9, est.usdCeiling.toFixed(8));
+    ck('ceiling exceeds floor', est.usdCeiling > est.usdFloor);
+    // no cache discount is assumed, so the estimate cannot be too low
+    ck('no cache discount assumed', est.usdFloor > 1000 * cat.m1.pricing.cachedInputPerM / 1e6);
+    const un = estimateRunCost([{ model: 'm2', systemChars: 400, promptChars: 0, maxOutputTokens: 10 }], cat);
+    ck('a zero-priced model is flagged unpriced', un.unpriced.includes('m2'), un.unpriced.join(','));
+    ck('unpriced is not silently costed as zero', formatCostEstimate(un).includes('NOT PRICED'));
+    const missing = estimateRunCost([{ model: 'nope', systemChars: 40, promptChars: 0, maxOutputTokens: 1 }], cat);
+    ck('an unknown model is flagged too', missing.unpriced.includes('nope'));
   }
 
   console.log('\n== corpus ==');

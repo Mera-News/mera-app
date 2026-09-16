@@ -26,6 +26,55 @@ export function hasReasoningLeak(content: string): boolean {
   return content.length > 0 && stripLeakedReasoning(content) !== content;
 }
 
+/**
+ * The provider refused because the API key is out of budget. THROWN, not
+ * returned as a per-call error, because it is a run-ending condition and not a
+ * property of the call: every subsequent request will fail the same way. A run
+ * that records it as an ordinary error produces a file full of empty rows that
+ * looks like a model failing, which is what happened before this existed.
+ *
+ * Verified shape (2026-09-16):
+ *   HTTP 402
+ *   {"error":{"message":"API key spend limit exceeded. Spent: $10.004511644,
+ *     Limit: $10.00","type":"api_key_limit_exceeded",...}}
+ */
+export class SpendLimitError extends Error {
+  readonly spent: string | null;
+  readonly limit: string | null;
+  readonly raw: string;
+  constructor(message: string, spent: string | null, limit: string | null, raw: string) {
+    super(message);
+    this.name = 'SpendLimitError';
+    this.spent = spent;
+    this.limit = limit;
+    this.raw = raw;
+  }
+}
+
+/** Reads the spend figures out of the provider's message, when they are there.
+ *  Exported so the self-test can pin the shape: the provider could change this
+ *  wording, and a silent miss turns the run back into a file of empty rows. */
+export function parseSpendLimit(body: string): SpendLimitError | null {
+  let type: string | undefined;
+  let message = '';
+  try {
+    const parsed = JSON.parse(body) as { error?: { message?: string; type?: string } };
+    type = parsed.error?.type;
+    message = parsed.error?.message ?? '';
+  } catch {
+    message = body;
+  }
+  // Keyed on the machine-readable type first, with the human message as a
+  // fallback so a shape change does not silently turn this back into 91 error
+  // rows.
+  const isLimit =
+    type === 'api_key_limit_exceeded' || /spend limit exceeded|quota|insufficient/i.test(message);
+  if (!isLimit) return null;
+  const spent = /Spent:\s*\$?([0-9.]+)/i.exec(message)?.[1] ?? null;
+  const limit = /Limit:\s*\$?([0-9.]+)/i.exec(message)?.[1] ?? null;
+  return new SpendLimitError(message || 'API key spend limit exceeded', spent, limit, body);
+}
+
 export interface NearUsage {
   promptTokens: number;
   completionTokens: number;
@@ -163,7 +212,15 @@ async function postPrepared(
       signal: controller.signal,
     });
     if (!res.ok) {
-      return fail(`HTTP ${res.status}: ${(await res.text().catch(() => '')).slice(0, 300)}`);
+      const body = await res.text().catch(() => '');
+      // 402 is the budget, not the call. Throwing aborts the run on the FIRST
+      // one instead of grinding through every remaining call to record the same
+      // refusal as data.
+      if (res.status === 402) {
+        const limitErr = parseSpendLimit(body);
+        if (limitErr) throw limitErr;
+      }
+      return fail(`HTTP ${res.status}: ${body.slice(0, 300)}`);
     }
     const json = (await res.json()) as RawResponse;
     const choice = json.choices?.[0];
@@ -193,6 +250,8 @@ async function postPrepared(
       error: null,
     };
   } catch (err) {
+    // A spend limit is not a transport failure to be recorded; let it out.
+    if (err instanceof SpendLimitError) throw err;
     return fail(err instanceof Error ? `${err.name}: ${err.message}` : String(err));
   } finally {
     clearTimeout(timer);

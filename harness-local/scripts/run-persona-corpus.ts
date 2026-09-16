@@ -27,8 +27,9 @@ import {
 import { createRunWriter } from '../lib/run-writer';
 import { createJsonlWriter, hashMessages, newRowId, type RowToolCall, type RunRow } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
+import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
-import { hasReasoningLeak, postBody } from '../lib/near-call';
+import { hasReasoningLeak, postBody, SpendLimitError } from '../lib/near-call';
 import {
   buildChatTurnBody,
   withContextOnLastUserTurn,
@@ -57,7 +58,7 @@ interface Args {
   cohorts: string[];
   models: string[];
   repeat: number;
-  variant: string;
+  variants: string[];
   dryRun: boolean;
   duplicateEvery: number;
 }
@@ -68,7 +69,7 @@ function parseArgs(argv: string[]): Args {
     cohorts: [...COHORTS],
     models: [BIG_MODEL],
     repeat: 3,
-    variant: 'baseline',
+    variants: ['baseline'],
     dryRun: false,
     duplicateEvery: 0,
   };
@@ -78,7 +79,9 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--cohorts') args.cohorts = (argv[++i] ?? '').split(',').filter(Boolean);
     else if (a === '--model' || a === '--arms') args.models = (argv[++i] ?? '').split(',').filter(Boolean);
     else if (a === '--repeat') args.repeat = Number(argv[++i]);
-    else if (a === '--variant') args.variant = argv[++i] ?? args.variant;
+    else if (a === '--variant') {
+      args.variants = (argv[++i] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+    }
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--duplicate-every') args.duplicateEvery = Number(argv[++i]);
   }
@@ -91,6 +94,7 @@ function parseArgs(argv: string[]): Args {
       `\n!!  --repeat ${args.repeat} does not measure a noise floor. One comparison per cell is a coin flip.\n`,
     );
   }
+  if (args.variants.length === 0) throw new Error('harness-local: --variant resolved to nothing.');
   const unknown = args.cohorts.filter((c) => !(COHORTS as readonly string[]).includes(c));
   if (unknown.length > 0) {
     throw new Error(`harness-local: unknown cohort(s): ${unknown.join(', ')}. Known: ${COHORTS.join(', ')}.`);
@@ -145,29 +149,46 @@ async function main(): Promise<number> {
   const rows = createJsonlWriter({ dir: run.dir });
   const runId = run.dir.split('/').pop() ?? args.label;
 
-  const catalog = args.dryRun
-    ? {}
-    : await fetchModelCatalog({ baseUrl: env.nearAiBaseUrl, apiKey: env.nearAiApiKey, runDir: run.dir });
-  const warnings = args.dryRun ? [] : rosterWarnings(catalog, args.models);
+  // Fetched even on a dry run: /v1/models is free, still answers on an
+  // exhausted key, and without it the cost estimate below cannot price
+  // anything. A failure is tolerated and named rather than silently producing
+  // a zero estimate.
+  let catalog: Awaited<ReturnType<typeof fetchModelCatalog>> = {};
+  let catalogError: string | null = null;
+  try {
+    catalog = await fetchModelCatalog({
+      baseUrl: env.nearAiBaseUrl,
+      apiKey: env.nearAiApiKey,
+      runDir: args.dryRun ? undefined : run.dir,
+    });
+  } catch (err) {
+    catalogError = err instanceof Error ? err.message : String(err);
+  }
+  const warnings = catalogError ? [`CATALOGUE UNAVAILABLE: ${catalogError}`] : rosterWarnings(catalog, args.models);
+  const planned: PlannedCall[] = [];
 
-  const systemPrompt = buildPersonaUpdateStaticPrompt({
-    surface: 'CONFIG',
-    includeToolFormat: false, // the cloud path uses native tool calling
-    languageName: 'English',
-    mode: 'CLOUD',
-    // VARIANT SEAM: add `promptVariant: args.variant` here the moment the chat
-    // scout's U5 lands it on this builder. Until then every run is baseline and
-    // the row records that, so no result is ever mislabelled as an arm.
-  });
+  // One system prompt per variant. An unknown id throws HERE, before any call.
+  const systemByVariant = new Map(
+    args.variants.map((v) => [
+      v,
+      buildPersonaUpdateStaticPrompt({
+        surface: 'CONFIG',
+        includeToolFormat: false, // the cloud path uses native tool calling
+        languageName: 'English',
+        mode: 'CLOUD',
+        promptVariant: v,
+      }),
+    ]),
+  );
   const tools = buildToolDefinitions('CONFIG');
   const toolNames = tools.map((t) => t.function.name);
 
   // eslint-disable-next-line no-console
   console.log(
-    `run      : ${runId}\ntarget   : ${env.target}` +
+    `run      : ${runId}\nrun dir  : ${run.dir}\ntarget   : ${env.target}` +
       `${overridden.length ? `\noverride : ${overridden.join(', ')}` : ''}` +
       `\ncohorts  : ${args.cohorts.join(', ')}\nmodels   : ${args.models.join(', ')}` +
-      `\nrepeat   : ${args.repeat}\nvariant  : ${args.variant}` +
+      `\nrepeat   : ${args.repeat}\nvariants : ${args.variants.join(', ')} (interleaved per turn)` +
       `\ncaps     : facts-in-context ${PROMPT_CAPS.maxFactsInContext}, history user turns ${PROMPT_CAPS.maxHistoryUserTurns}` +
       `\nmode     : ${args.dryRun ? 'DRY RUN, no calls' : 'live'}\n`,
   );
@@ -183,7 +204,11 @@ async function main(): Promise<number> {
   for (const cohortName of args.cohorts) {
     const cohort = loadCohort(cohortName);
     for (let rep = 0; rep < args.repeat; rep++) {
+      // Prompt variants interleave with models: both arms in one run and one
+      // time window, so between-run drift cannot be mistaken for a prompt effect.
+      for (const variantId of args.variants) {
       for (const model of args.models) {
+        const systemPrompt = systemByVariant.get(variantId) as string;
         // A repeat ALWAYS starts from the cohort's own state. Carrying the
         // previous repeat's mutations would make repeat 3 a different
         // experiment from repeat 1 while still reporting one floor.
@@ -198,6 +223,12 @@ async function main(): Promise<number> {
           const messages = withContextOnLastUserTurn(systemPrompt, context, history);
           const body = buildChatTurnBody({ model, messages, tools });
 
+          planned.push({
+            model,
+            systemChars: systemPrompt.length,
+            promptChars: messages.reduce((n, m) => n + m.content.length, 0) - systemPrompt.length,
+            maxOutputTokens: Number(body.max_tokens ?? 0),
+          });
           const result = args.dryRun
             ? {
                 content: `Dry run reply ${turn.index}.`,
@@ -214,9 +245,10 @@ async function main(): Promise<number> {
           const info = catalog[model];
           writeRow({
             rowId: newRowId(), dupOf: null, runId, repeat: rep,
-            cohort: cohortName, turnIndex: turn.index, arm: model, callType: 'chat-extraction',
+            cohort: cohortName, turnIndex: turn.index, arm: `${model}@${variantId}`,
+            callType: 'chat-extraction',
             interleaveGroup: `${cohortName}:${turn.index}`, lane: 'near', surface: 'CONFIG',
-            variant: args.variant,
+            variant: variantId,
             promptHash: hashMessages(messages),
             // Only turn 0 is fixture-determined. After that the prompt carries
             // what the model itself saved, so repeats diverge by design.
@@ -264,7 +296,13 @@ async function main(): Promise<number> {
           state = applied.state;
         }
       }
+      }
     }
+  }
+
+  if (args.dryRun) {
+    // eslint-disable-next-line no-console
+    console.log(`\n${formatCostEstimate(estimateRunCost(planned, catalog))}\n`);
   }
 
   await rows.close();
@@ -301,6 +339,20 @@ async function main(): Promise<number> {
 main().then(
   (code) => process.exit(code),
   (err) => {
+    // A spend limit ends the run on the FIRST refusal. Recording it as data
+    // produces a file full of empty rows that reads as a model failing, which
+    // is exactly what happened when the key hit its cap mid-run.
+    if (err instanceof SpendLimitError) {
+      // eslint-disable-next-line no-console
+      console.error(
+        `\nSPEND LIMIT REACHED, run aborted on the first refusal.\n` +
+          `  spent : $${err.spent ?? 'unknown'}\n` +
+          `  limit : $${err.limit ?? 'unknown'}\n` +
+          `  rows written so far are in the run directory printed above.\n` +
+          `  provider said: ${err.message}\n`,
+      );
+      process.exit(3);
+    }
     // eslint-disable-next-line no-console
     console.error(err);
     process.exit(1);
