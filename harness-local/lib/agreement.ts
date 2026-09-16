@@ -23,9 +23,18 @@ export function readJsonl(path: string): RunRow[] {
     .map((l) => JSON.parse(l) as RunRow);
 }
 
-/** One measured cell: everything held constant, repeats varying only by luck. */
+/**
+ * One measured cell: everything held constant, repeats varying only by luck.
+ *
+ * `callType` IS PART OF THE KEY. Without it a reason call at index 0 and a
+ * relevance call at chunk 0 land in the same cell, their prompts legitimately
+ * differ, and the integrity check reports a runner bug that is really just two
+ * different prompts sharing an index. Found by the first dry run.
+ */
 export function cellKey(row: RunRow): string {
-  return [row.cohort, row.turnIndex, row.arm, row.variant, row.lane, row.modelRequested].join(' | ');
+  return [
+    row.cohort, row.callType, row.turnIndex, row.arm, row.variant, row.lane, row.modelRequested,
+  ].join(' | ');
 }
 
 /** Flattens parsed tool arguments to comparable `path=value` leaves, so two
@@ -79,6 +88,13 @@ function quantile(sorted: number[], q: number): number {
 
 export interface CellAgreement {
   key: string;
+  /** Structured copies of the key's parts. The arm rollup filters on these:
+   *  matching the formatted key by substring broke the moment the key gained a
+   *  field, which is exactly the kind of silent mis-grouping this report exists
+   *  to catch in other people's code. */
+  arm: string;
+  model: string;
+  callType: CallType;
   repeats: number;
   /** MORE THAN ONE distinct hash in a cell is a RUNNER BUG, not model noise:
    *  the repeats were not given the same prompt, so their disagreement measures
@@ -222,6 +238,9 @@ export function computeAgreement(
 
     cells.push({
       key,
+      arm: cellRows[0].arm,
+      model: cellRows[0].modelRequested,
+      callType: cellRows[0].callType,
       repeats: cellRows.length,
       distinctPromptHashes: hashes.size,
       toolNameAgreement: nameAgree,
@@ -263,7 +282,7 @@ export function computeAgreement(
       usd += r.cost?.usd ?? (info ? costOf(info, r.usage) : 0);
     }
     const lat = armRows.map((r) => r.latencyMs).sort((a, b) => a - b);
-    const armCells = cells.filter((c) => c.key.includes(`| ${arm} |`) && c.key.endsWith(model));
+    const armCells = cells.filter((c) => c.arm === arm && c.model === model);
     const nameVals = armCells.map((c) => c.toolNameAgreement);
     const argVals = armCells.map((c) => c.toolArgJaccard);
     const exactVals = armCells.map((c) => c.exactOutputRate);

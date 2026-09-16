@@ -26,9 +26,11 @@
     "lib/model-catalog.ts",
     "lib/agreement.ts",
     "lib/run-writer.ts",
+    "lib/near-call.ts",
     "config/env.ts",
     "config/local-data.ts",
     "adapters/auth.ts",
-    "scripts/selftest.ts"
+    "scripts/selftest.ts",
+    "scripts/run-newsharness-corpus.ts"
   ]
 }
