@@ -174,14 +174,12 @@ export function applyToolCalls(
       const entries = asFactEntries(call.parsed);
       if (entries.length === 0) continue;
       // The app's own filter, against the facts already held.
-      // NORMALIZE FIRST. filterNewFacts builds its set from the strings it is
-      // GIVEN and then looks up `normalizeStatement(incoming)`, so a caller
-      // that passes raw statements loses duplicate detection entirely and
-      // silently: every capitalised fact slips through as new. The app's own
-      // caller normalizes (lib/chat-tools/tool-handlers.ts), so production is
-      // fine and this is a precondition of the API rather than a bug in it.
-      // This harness passed raw statements first and the confused cohort's
-      // duplicate case quietly stopped working, which is how it was found.
+      // Normalized here too, though filterNewFacts now normalizes on insert
+      // itself, so this is no longer required. Kept because normalizeStatement
+      // is idempotent, it costs nothing, and it makes this harness correct
+      // against either version of fact-rules rather than only the current one.
+      // The precondition it used to work around is documented in the self-test,
+      // which pins the fixed behaviour in both directions.
       const { groups, rejected } = filterFactChoiceGroups(
         entries,
         next.facts.map((f) => normalizeStatement(f.statement)),

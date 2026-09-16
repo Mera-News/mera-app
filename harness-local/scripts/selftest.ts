@@ -25,7 +25,7 @@ import {
   applyEndpointOverrides, isStagingHost, isProdMeraHost, STAGING_DEFAULTS,
 } from '../lib/staging-guard';
 import {
-  createJsonlWriter, hashMessages, newRowId, type RunRow,
+  createJsonlWriter, extractFenceNonce, hashMessages, newRowId, type RunRow,
 } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { hasReasoningLeak } from '../lib/near-call';
@@ -415,6 +415,18 @@ async function main(): Promise<number> {
         .includes('no row in this run reported cached prompt tokens'));
   }
 
+  // --- 11f. the fence nonce is READ BACK, not left null --------------------
+  // It was declared and never populated, which made one probe vacuous: a check
+  // that reads a field nobody fills can only ever pass.
+  {
+    const fenced = '===== Article 0 =====\n<<ARTICLE a1b2c3d4e5f6>>\nNews Title: x\n<</ARTICLE a1b2c3d4e5f6>>';
+    ck('nonce read back from a fenced prompt', extractFenceNonce(fenced) === 'a1b2c3d4e5f6', String(extractFenceNonce(fenced)));
+    ck('unfenced prompt reports null', extractFenceNonce('News Title: x') === null);
+    ck('a short id is not mistaken for a nonce', extractFenceNonce('<<ARTICLE abc>>') === null);
+    ck('two nonces in one prompt are both surfaced',
+      extractFenceNonce('<<ARTICLE aaaaaaaaaaaa>> <<ARTICLE bbbbbbbbbbbb>>') === 'aaaaaaaaaaaa,bbbbbbbbbbbb');
+  }
+
   console.log('\n== corpus ==');
   // --- 12. every cohort loads and is shaped as designed ---------------------
   const loaded = COHORTS.map((c) => loadCohort(c));
@@ -476,17 +488,20 @@ async function main(): Promise<number> {
   ck('restating a saved fact is rejected as duplicate',
     restated.delta.rejectedByRails.some((r) => r.startsWith('duplicate')), restated.delta.rejectedByRails.join('; '));
   ck('a rejected fact is NOT committed', restated.state.facts.length === 20, String(restated.state.facts.length));
-  // TRIPWIRE for the precondition that made the case above fail once already:
-  // filterNewFacts looks up normalizeStatement(incoming) in a set built from
-  // the strings it was GIVEN, so a caller passing RAW statements loses
-  // duplicate detection silently. If that is ever fixed upstream, this flips
-  // and points straight at the reason corpus.ts normalizes.
-  ck('raw existing statements still defeat dedup upstream',
-    filterNewFacts(['Lives in Rotterdam, Netherlands'], ['Lives in Rotterdam, Netherlands']).rejected.length === 0,
-    'if this fails, fact-rules now normalizes internally and corpus.ts can stop doing it');
-  ck('normalized existing statements are deduped',
+  // The tripwire fired and has been flipped. filterNewFacts now normalizes on
+  // INSERT as well as on lookup, so dedup works for ANY caller rather than only
+  // for one that had already normalized. Both directions are pinned so a
+  // regression to the old keying is caught immediately.
+  ck('dedup works on RAW existing statements (fixed upstream)',
+    filterNewFacts(['Lives in Rotterdam, Netherlands'], ['Lives in Rotterdam, Netherlands'])
+      .rejected[0]?.reason === 'duplicate',
+    'if this fails, fact-rules has regressed to keying its set on the caller\'s raw strings');
+  ck('dedup still works on pre-normalized statements',
     filterNewFacts(['Lives in Rotterdam, Netherlands'], [normalizeStatement('Lives in Rotterdam, Netherlands')])
       .rejected[0]?.reason === 'duplicate');
+  // and the fix did not start rejecting things it should accept
+  ck('an unrelated statement is still accepted',
+    filterNewFacts(['Enjoys sailing at weekends'], ['Lives in Rotterdam, Netherlands']).rejected.length === 0);
 
   // alternatives are OFFERED but only the first is committed
   const alts = applyToolCalls(heavy.persona,

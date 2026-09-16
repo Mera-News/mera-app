@@ -190,6 +190,30 @@ export function hashMessages(messages: { role: string; content: string }[]): str
   return `sha256:${createHash('sha256').update(canonical, 'utf8').digest('hex')}`;
 }
 
+/**
+ * Reads the fence nonce OUT of a built prompt.
+ *
+ * WHY OBSERVED RATHER THAN INJECTED. `buildScoreCallForChunk` does not thread a
+ * nonce through to `buildBatchScoringUserMessage`, so the only way to PIN one
+ * would be to stop calling the production builder and assemble the user message
+ * here instead. That trades a truthful record for a divergence from the path
+ * being measured, which is a bad trade. Reading the nonce back is exact, costs
+ * nothing, and keeps the builder call untouched.
+ *
+ * The field was previously declared and left null on every row, which made one
+ * probe vacuous: a check that reads a field nobody fills can only ever pass.
+ *
+ * Returns null when the prompt carries no fence, which is honest for the
+ * prompts that do not use one, and a joined list in the impossible case of a
+ * prompt built with more than one nonce, so that shows up rather than hiding.
+ */
+export function extractFenceNonce(prompt: string): string | null {
+  const found = new Set<string>();
+  for (const m of prompt.matchAll(/<<\/?ARTICLE ([a-f0-9]{12})>>/g)) found.add(m[1]);
+  if (found.size === 0) return null;
+  return [...found].sort().join(',');
+}
+
 export function newRowId(): string {
   return randomUUID();
 }

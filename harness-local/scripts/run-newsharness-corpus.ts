@@ -34,6 +34,7 @@ import {
 import { createRunWriter } from '../lib/run-writer';
 import {
   createJsonlWriter,
+  extractFenceNonce,
   newRowId,
   type CallType,
   type RunRow,
@@ -316,8 +317,11 @@ async function main(): Promise<number> {
           cohort: 'goldset', turnIndex: ci, arm: model, callType: 'relevance-batch',
           interleaveGroup: `chunk:${ci}`, lane: 'near', surface: 'SCORING',
           variant: args.variant, promptHash: hash,
-          // Stateless: the same chunk always builds the same prompt.
-          promptDeterministic: true, fenceNonce: null,
+          // Stateless: the same chunk always builds the same prompt, once the
+          // per-build fence nonce is normalised out (which promptHash does).
+          promptDeterministic: true,
+          // Read back from the prompt that was actually sent, not assumed.
+          fenceNonce: extractFenceNonce(built.prompt),
           modelRequested: model, modelSent: result.modelSent,
           fallbackFrom: null, hedged: false,
           input: {
@@ -399,7 +403,8 @@ async function main(): Promise<number> {
             interleaveGroup: `reason:${ri}`, lane: 'near', surface: 'SCORING',
             variant: args.variant,
             promptHash: promptHash(call.system ?? reasonSystem, call.prompt),
-            promptDeterministic: true, fenceNonce: null, modelRequested: model, modelSent: result.modelSent,
+            promptDeterministic: true,
+            fenceNonce: extractFenceNonce(call.prompt), modelRequested: model, modelSent: result.modelSent,
             fallbackFrom: null, hedged: false,
             input: {
               systemPrompt: call.system ?? reasonSystem,

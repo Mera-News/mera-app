@@ -1,7 +1,15 @@
 // harness-local — blind export of a run for the rater.
 //
 //   npx tsx --tsconfig harness-local/tsconfig.json \
-//     harness-local/scripts/rater-export.ts <runDir> [--seed 12345]
+//     harness-local/scripts/rater-export.ts <runDir> \
+//       [--seed 12345] [--repeat 0] [--include <rowId>,<rowId>]
+//
+// --repeat selects ONE repeat, which is what a floor run wants: the repeats are
+// there to measure the noise floor, and asking a rater to judge the same prompt
+// three times spends its budget on a number the runner already computed.
+// Duplicate rows are ALWAYS kept regardless of which repeat they copy, because
+// they are what intra-rater agreement is measured from. --include force-keeps
+// specific row ids that must be in the batch deliberately.
 //
 // WHAT BLIND MEANS HERE, and why each choice was made:
 //  - arm, modelRequested and modelSent are replaced by opaque labels (arm-A,
@@ -59,8 +67,50 @@ function main(): number {
   if (!Number.isFinite(seed)) throw new Error('harness-local: --seed must be a number.');
 
   const dir = resolve(runDir);
-  const rows = readJsonl(join(dir, 'rows.jsonl'));
-  if (rows.length === 0) throw new Error(`harness-local: no rows in ${dir}.`);
+  const all = readJsonl(join(dir, 'rows.jsonl'));
+  if (all.length === 0) throw new Error(`harness-local: no rows in ${dir}.`);
+
+  const repeatIdx = argv.indexOf('--repeat');
+  const repeat = repeatIdx === -1 ? null : Number(argv[repeatIdx + 1]);
+  if (repeatIdx !== -1 && !Number.isFinite(repeat)) {
+    throw new Error('harness-local: --repeat must be a number.');
+  }
+  const includeIdx = argv.indexOf('--include');
+  const forced = new Set(
+    includeIdx === -1 ? [] : (argv[includeIdx + 1] ?? '').split(',').map((x) => x.trim()).filter(Boolean),
+  );
+
+  const rows =
+    repeat === null
+      ? all
+      : all.filter((r) => r.repeat === repeat || r.dupOf !== null || forced.has(r.rowId));
+
+  // A forced id that is not in the run is a silent hole in a batch someone
+  // deliberately composed, so it fails instead.
+  const missing = [...forced].filter((id) => !rows.some((r) => r.rowId === id));
+  if (missing.length > 0) {
+    throw new Error(
+      `harness-local: --include named ${missing.length} row id(s) not present in this run: ${missing.join(', ')}.`,
+    );
+  }
+  if (rows.length === 0) {
+    throw new Error(`harness-local: --repeat ${repeat} selected no rows.`);
+  }
+
+  // JUDGEABILITY. The rubric's specificity and fact-linkage dimensions are
+  // unjudgeable without the article text and the facts the model saw, and every
+  // one of those lives in the materialised user message. A row that lost it
+  // would be scored on nothing, so the export refuses rather than shipping a
+  // batch that quietly cannot be rated.
+  const blank = rows.filter(
+    (r) => !r.input?.messages?.some((m) => typeof m.content === 'string' && m.content.trim().length > 0),
+  );
+  if (blank.length > 0) {
+    throw new Error(
+      `harness-local: ${blank.length} selected row(s) carry no materialised input, so nothing about them ` +
+        'is judgeable. First: ' + blank[0].rowId,
+    );
+  }
 
   // Stable label assignment: arms sorted, so the same run always relabels the
   // same way for a given seed and two exports can be compared.
@@ -87,6 +137,9 @@ function main(): number {
   // serialized rows, whatever field it hid in. This caught the count arm twice:
   // once inside `cohort`, once inside `interleaveGroup`.
   const serialized = JSON.stringify(blind);
+  // Matched on the FULL arm id, not a vendor substring: the goldset contains a
+  // real article about Alibaba unveiling a Qwen model, and treating that as a
+  // leak would refuse every honest export.
   const leaked = arms.filter((a) => serialized.includes(a));
   if (leaked.length > 0) {
     throw new Error(
@@ -107,6 +160,8 @@ function main(): number {
         _warning: 'DO NOT give this file to the rater. It is what de-blinds the export.',
         seed,
         rows: rows.length,
+        selectedRepeat: repeat,
+        forcedRowIds: [...forced],
         labels: Object.fromEntries([...label.entries()].map(([arm, l]) => [l, arm])),
         duplicates: rows.filter((r) => r.dupOf !== null).map((r) => ({ rowId: r.rowId, dupOf: r.dupOf })),
         variantByRowId: Object.fromEntries(rows.map((r) => [r.rowId, r.variant])),
@@ -118,9 +173,14 @@ function main(): number {
   );
 
   const dupCount = rows.filter((r) => r.dupOf !== null).length;
+  const uniqueCount = rows.length - dupCount;
   // eslint-disable-next-line no-console
   console.log(
-    `rows       : ${rows.length} (${dupCount} duplicate(s), indistinguishable in the export)\n` +
+    `rows       : ${rows.length} of ${all.length} in the run` +
+      `${repeat === null ? '' : ` (repeat ${repeat} only)`}\n` +
+      `unique     : ${uniqueCount}\n` +
+      `duplicates : ${dupCount}, indistinguishable in the export\n` +
+      `forced in  : ${forced.size}\n` +
       `arms       : ${arms.length} relabelled ${[...label.values()].join(', ')}\n` +
       `seed       : ${seed}\n` +
       `cohort     : VISIBLE (the rater is told which cohort it judges)\n` +
