@@ -1,0 +1,123 @@
+{
+  "_comment": "Input to _splice-fragments.mjs. Never edit the 20 dictionaries by hand. Two keys only, both for the publisher-subscribe affordance now shown on the publication history card and on the Sources publisher rows. COPY RULES for this namespace, which extend the ones in _publisher-subscriptions-fragments.json: (1) the reader is subscribing to a PUBLISHER, with their own money, on the publisher's own site, so the copy must never read like Mera's own paid plan. Every locale names the publisher in the action and says whose site opens. Do not translate either string with a generic verb that could be read as 'subscribe to Mera'. (2) 'opensPublisherSite' is used TWICE, as the visible sub-line under the action and as its accessibility hint, so it has to stand alone as a sentence fragment and must not repeat the word 'subscribe'. (3) {{publisher}} is an interpolation and is copied verbatim. (4) Register follows the existing subscriptions namespace exactly: de/es/it/nl/zh-CN informal, fr/tr/uk/ru/zh-TW/id formal. (5) No em dashes and no AI-sounding punctuation in any locale. The existing key subscriptions.iSubscribe is REUSED for the secondary action and is deliberately not restated here.",
+  "ar": {
+    "subscriptions": {
+      "subscribeAt": "اشترك في {{publisher}}",
+      "opensPublisherSite": "يفتح موقع {{publisher}} نفسه"
+    }
+  },
+  "de": {
+    "subscriptions": {
+      "subscribeAt": "{{publisher}} abonnieren",
+      "opensPublisherSite": "Öffnet die eigene Website von {{publisher}}"
+    }
+  },
+  "en": {
+    "subscriptions": {
+      "subscribeAt": "Subscribe at {{publisher}}",
+      "opensPublisherSite": "Opens {{publisher}}'s own site"
+    }
+  },
+  "es": {
+    "subscriptions": {
+      "subscribeAt": "Suscribirte a {{publisher}}",
+      "opensPublisherSite": "Abre el sitio del propio {{publisher}}"
+    }
+  },
+  "fr": {
+    "subscriptions": {
+      "subscribeAt": "S'abonner à {{publisher}}",
+      "opensPublisherSite": "Ouvre le site de {{publisher}}"
+    }
+  },
+  "hi": {
+    "subscriptions": {
+      "subscribeAt": "{{publisher}} की सदस्यता लें",
+      "opensPublisherSite": "{{publisher}} की अपनी साइट खुलती है"
+    }
+  },
+  "id": {
+    "subscriptions": {
+      "subscribeAt": "Berlangganan {{publisher}}",
+      "opensPublisherSite": "Membuka situs {{publisher}} sendiri"
+    }
+  },
+  "it": {
+    "subscriptions": {
+      "subscribeAt": "Abbonati a {{publisher}}",
+      "opensPublisherSite": "Apre il sito di {{publisher}}"
+    }
+  },
+  "ja": {
+    "subscriptions": {
+      "subscribeAt": "{{publisher}}を購読する",
+      "opensPublisherSite": "{{publisher}}の公式サイトを開きます"
+    }
+  },
+  "ko": {
+    "subscriptions": {
+      "subscribeAt": "{{publisher}} 구독하기",
+      "opensPublisherSite": "{{publisher}}의 공식 사이트를 엽니다"
+    }
+  },
+  "nl": {
+    "subscriptions": {
+      "subscribeAt": "Abonneren op {{publisher}}",
+      "opensPublisherSite": "Opent de eigen website van {{publisher}}"
+    }
+  },
+  "pl": {
+    "subscriptions": {
+      "subscribeAt": "Subskrybuj {{publisher}}",
+      "opensPublisherSite": "Otwiera własną stronę {{publisher}}"
+    }
+  },
+  "pt-BR": {
+    "subscriptions": {
+      "subscribeAt": "Assinar {{publisher}}",
+      "opensPublisherSite": "Abre o site do próprio {{publisher}}"
+    }
+  },
+  "ru": {
+    "subscriptions": {
+      "subscribeAt": "Подписаться на {{publisher}}",
+      "opensPublisherSite": "Откроется сайт {{publisher}}"
+    }
+  },
+  "th": {
+    "subscriptions": {
+      "subscribeAt": "สมัครสมาชิก {{publisher}}",
+      "opensPublisherSite": "เปิดเว็บไซต์ของ {{publisher}} เอง"
+    }
+  },
+  "tr": {
+    "subscriptions": {
+      "subscribeAt": "{{publisher}} aboneliği alın",
+      "opensPublisherSite": "{{publisher}} yayınının kendi sitesini açar"
+    }
+  },
+  "uk": {
+    "subscriptions": {
+      "subscribeAt": "Передплатити {{publisher}}",
+      "opensPublisherSite": "Відкриє сайт {{publisher}}"
+    }
+  },
+  "vi": {
+    "subscriptions": {
+      "subscribeAt": "Đăng ký {{publisher}}",
+      "opensPublisherSite": "Mở trang web của chính {{publisher}}"
+    }
+  },
+  "zh-CN": {
+    "subscriptions": {
+      "subscribeAt": "订阅 {{publisher}}",
+      "opensPublisherSite": "将打开 {{publisher}} 的官方网站"
+    }
+  },
+  "zh-TW": {
+    "subscriptions": {
+      "subscribeAt": "訂閱 {{publisher}}",
+      "opensPublisherSite": "將開啟 {{publisher}} 的官方網站"
+    }
+  }
+}

@@ -7,15 +7,15 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import type UserPublicationSubscriptionModel from '@/lib/database/models/UserPublicationSubscription';
 import { hapticLight } from '@/lib/haptics';
-import { openSubscribePage, onReturnFromBackground } from '@/lib/subscriptions/subscribe-flow';
 import { toastManager } from '@/lib/toast-manager';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import AddSubscriptionView from './AddSubscriptionView';
 import SubscribeConfirmDialog from './SubscribeConfirmDialog';
-import { useSubscriptions, type ChosenPublisher } from './use-subscriptions';
+import { useSubscribeFlow } from './use-subscribe-flow';
+import { type ChosenPublisher } from './use-subscriptions';
 
 /**
  * "Your subscriptions": the list, the `+` picker, and the confirm prompt.
@@ -26,83 +26,24 @@ import { useSubscriptions, type ChosenPublisher } from './use-subscriptions';
  */
 const SubscriptionsSection: React.FC = () => {
   const { t } = useTranslation();
-  const {
-    items,
-    isLoading,
-    busyId,
-    addSubscription,
-    removeSubscription,
-    declineSubscription,
-    hasAnsweredForPublisher,
-  } = useSubscriptions();
+  /**
+   * The open-page / detect-return / confirm / record machine lives in
+   * `use-subscribe-flow` now, shared with the publication-history card and
+   * both Sources publisher lists. It owns the `useSubscriptions()`
+   * observation too, so this screen must not open a second one.
+   */
+  const { subscriptions, begin, confirming, onYes, onNo } = useSubscribeFlow();
+  const { items, isLoading, busyId, removeSubscription } = subscriptions;
 
   const [picking, setPicking] = useState(false);
-  const [pendingConfirm, setPendingConfirm] = useState<ChosenPublisher | null>(null);
-  /** Who we sent to a subscribe page and are waiting to ask about on return. */
-  const awaitingReturnRef = useRef<ChosenPublisher | null>(null);
-
-  /**
-   * The prompt is armed by a background -> active transition, not by the
-   * browser's own result: `expo-web-browser` resolves `{type:'opened'}`
-   * immediately on Android and its cancel/dismiss types are iOS-only, so
-   * there is no cross-platform close signal. See `subscribe-flow.ts` for why
-   * it listens for `background` specifically and not `!== 'active'`.
-   */
-  useEffect(() => {
-    const unsubscribe = onReturnFromBackground(() => {
-      const pending = awaitingReturnRef.current;
-      if (!pending) return;
-      awaitingReturnRef.current = null;
-      void (async () => {
-        // Between opening the page and coming back, the user may have added
-        // this publisher another way, or declined it. Asking again would be
-        // asking a question already answered.
-        if (await hasAnsweredForPublisher(pending.publisherId)) return;
-        setPendingConfirm(pending);
-      })();
-    });
-    return unsubscribe;
-  }, [hasAnsweredForPublisher]);
 
   const handleChoose = useCallback(
     async (chosen: ChosenPublisher) => {
       setPicking(false);
-      void hapticLight();
-
-      // No subscribe page to send them to, so there is nothing to come back
-      // from: ask directly rather than showing a dead "Subscribe" affordance.
-      if (!chosen.subscriptionUri) {
-        setPendingConfirm(chosen);
-        return;
-      }
-
-      const opened = await openSubscribePage(chosen.subscriptionUri);
-      if (!opened) {
-        // A bad URI is a catalogue fault, not the user's problem. Fall back to
-        // asking directly so the flow still completes.
-        setPendingConfirm(chosen);
-        return;
-      }
-      awaitingReturnRef.current = chosen;
+      await begin(chosen);
     },
-    [],
+    [begin],
   );
-
-  const handleYes = useCallback(async () => {
-    const chosen = pendingConfirm;
-    setPendingConfirm(null);
-    if (!chosen) return;
-    const ok = await addSubscription(chosen);
-    if (ok) {
-      toastManager.showInfo(t('subscriptions.added', { publisher: chosen.publisherName }));
-    }
-  }, [pendingConfirm, addSubscription, t]);
-
-  const handleNo = useCallback(async () => {
-    const chosen = pendingConfirm;
-    setPendingConfirm(null);
-    if (chosen) await declineSubscription(chosen);
-  }, [pendingConfirm, declineSubscription]);
 
   const handleRemove = useCallback(
     async (row: UserPublicationSubscriptionModel) => {
@@ -176,9 +117,9 @@ const SubscriptionsSection: React.FC = () => {
       )}
 
       <SubscribeConfirmDialog
-        publisherName={pendingConfirm?.publisherName ?? null}
-        onYes={handleYes}
-        onNo={handleNo}
+        publisherName={confirming?.publisherName ?? null}
+        onYes={onYes}
+        onNo={onNo}
       />
     </VStack>
   );

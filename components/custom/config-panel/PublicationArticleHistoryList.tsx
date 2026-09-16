@@ -1,4 +1,7 @@
 import { ArticleStandaloneCompactCard } from '@/components/custom/cards/ArticleStandaloneCompactCard';
+import SubscribeAction from '@/components/custom/publication-preferences/SubscribeAction';
+import SubscribeConfirmDialog from '@/components/custom/publication-preferences/SubscribeConfirmDialog';
+import { useSubscribeFlow } from '@/components/custom/publication-preferences/use-subscribe-flow';
 import { Box } from '@/components/ui/box';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
@@ -10,6 +13,10 @@ import {
 import type { NewsArticle } from '@/lib/generated/graphql-types';
 import { useOpenArticle } from '@/lib/hooks/use-open-article';
 import logger from '@/lib/logger';
+import {
+    resolvePublisherForSourceName,
+    type ResolvedPublisher,
+} from '@/lib/subscriptions/publisher-lookup';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -81,6 +88,62 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
         setRefreshing(false);
     }, [load]);
 
+    // ---------------------------------------------------------------
+    // Subscribing to the PUBLISHER, from the screen where the reader is
+    // already looking at how much of this publication they read.
+    //
+    // This screen is backed by the local `publication_visits` table and makes
+    // no GraphQL call of its own, so all it holds is a SOURCE name and a
+    // country. `resolvePublisherForSourceName` turns that into a publisher
+    // and its own subscribe page, exactly once per session per name, and
+    // returns null rather than guessing. Everything below is gated on a real
+    // resolved URI, so a publication with no consumer subscription product,
+    // or one the catalogue does not know, renders this screen exactly as it
+    // rendered before.
+    // ---------------------------------------------------------------
+    const [publisher, setPublisher] = useState<ResolvedPublisher | null>(null);
+    const { begin, confirmDirectly, confirming, onYes, onNo, isSubscribed } = useSubscribeFlow();
+
+    useEffect(() => {
+        let cancelled = false;
+        void resolvePublisherForSourceName(publicationName, countryCode).then((resolved) => {
+            if (!cancelled) setPublisher(resolved);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, [publicationName, countryCode]);
+
+    // Three conditions, all required. No resolved publisher and no URI both
+    // mean there is nowhere honest to send anybody. An ACTIVE subscription
+    // means the reader has already answered this question, so the block is
+    // hidden rather than greyed: managing a subscription belongs on the
+    // settings screen, and a disabled control here would just be clutter the
+    // reader cannot act on.
+    const offerSubscribe =
+        publisher != null &&
+        publisher.subscriptionUri != null &&
+        !isSubscribed(publisher.publisherId);
+
+    // Deliberately carries NO count of articles read. `getVisitsForPublication`
+    // dedupes its rows, so `items.length` is distinct ARTICLES, while the one
+    // existing string for this shape (`publicationVisits.badge`) says
+    // "visited {{count}} times" and would therefore be a false claim in both
+    // the noun and the number. The list below is the evidence; it does not
+    // need a headline number, and it does not get an invented one.
+    const ListHeader =
+        offerSubscribe && publisher ? (
+            <Box className="mx-4 mt-3 mb-1 p-4 rounded-lg border border-gray-700">
+                <SubscribeAction
+                    publisherName={publisher.publisherName}
+                    variant="card"
+                    testID="publication-history-subscribe"
+                    onOpen={() => void begin(publisher)}
+                    onAlready={() => void confirmDirectly(publisher)}
+                />
+            </Box>
+        ) : null;
+
     // History rows go to the DETAIL screen, never straight to the publisher.
     // This list used to open the article URL on tap, which skipped the only
     // screen carrying the translate affordance — the reader landed on a page in
@@ -149,6 +212,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                     data={items}
                     renderItem={renderItem}
                     keyExtractor={keyExtractor}
+                    ListHeaderComponent={ListHeader}
                     contentContainerStyle={{ paddingTop: 12, paddingBottom: 20 }}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
@@ -161,6 +225,15 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                     }
                 />
             )}
+
+            {/* Asked on return from the publisher's page. Rendered outside
+                both list branches so a confirm armed before a refresh that
+                emptied the list still has somewhere to appear. */}
+            <SubscribeConfirmDialog
+                publisherName={confirming?.publisherName ?? null}
+                onYes={onYes}
+                onNo={onNo}
+            />
         </Box>
     );
 };
