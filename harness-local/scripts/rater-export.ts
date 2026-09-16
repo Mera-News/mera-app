@@ -3,7 +3,7 @@
 //   npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/rater-export.ts <runDir> \
 //       [--merge <runDir2>] [--seed 12345] [--repeat 0] [--call-type reason]
-//       [--duplicate 8] [--sample 80] [--include <rowId>,<rowId>]
+//       [--duplicate 8] [--sample 80] [--label-by variant] [--include <rowId>,<rowId>]
 //
 // --repeat selects ONE repeat, which is what a floor run wants: the repeats are
 // there to measure the noise floor, and asking a rater to judge the same prompt
@@ -38,6 +38,12 @@
 // extra rows would: the whole design rests on judging both arms in ONE
 // invocation so the pass-to-pass drift cancels, and splitting a batch to fit
 // re-exposes it. Forced ids are kept regardless of the sample.
+//
+// --label-by variant labels on the PROMPT VARIANT alone, collapsing runs and
+// models into one label per variant. Use it when the model is constant and the
+// only axis under test is the prompt: the default (run, arm) labelling would
+// otherwise split one variant across eight labels and tell the rater how the
+// runs were carved up.
 //
 // The key file is written SEPARATELY and must not be given to the rater. It is
 // what turns the blind scores back into a per-arm result.
@@ -232,7 +238,13 @@ function main(): number {
 
   // Label per (run, arm), sorted, so the same inputs always relabel the same way
   // and two runs of the SAME model under different prompt variants stay distinct.
-  const armKey = (r: RunRow): string => `${runOf.get(r.rowId)}::${r.arm}`;
+  const labelByIdx = argv.indexOf('--label-by');
+  const labelBy = labelByIdx === -1 ? 'run-arm' : (argv[labelByIdx + 1] ?? 'run-arm');
+  if (labelBy !== 'run-arm' && labelBy !== 'variant') {
+    throw new Error("harness-local: --label-by takes 'run-arm' or 'variant'.");
+  }
+  const armKey = (r: RunRow): string =>
+    labelBy === 'variant' ? `variant::${r.variant}` : `${runOf.get(r.rowId)}::${r.arm}`;
   const arms = [...new Set(rows.map(armKey))].sort();
   const label = new Map(arms.map((a, i) => [a, `arm-${String.fromCharCode(65 + i)}`]));
   // Raw strings the guard must never find in the export: both the composite
@@ -247,6 +259,12 @@ function main(): number {
     out.modelSent = r.modelSent === null ? null : lbl;
     // runId names the source run, and with --merge that IS the variant.
     out.runId = lbl;
+    // personaStateIn carries factsInPrompt, which differs between splits (6 for
+    // 3+1, 1 for 4+0) and would hand the rater the split. requestedCount is the
+    // same tell. Both are dropped; see the caveat the export prints, because
+    // the split is STILL readable in the prompt itself.
+    delete out.personaStateIn;
+    delete out.requestedCount;
     delete out.dupOf;
     delete out.variant;
     // interleaveGroup is a SCHEDULING key, not judgeable content, and the
@@ -291,11 +309,24 @@ function main(): number {
         samplePerArm: sampleN > 0 ? sampleN : null,
         duplicatesAddedAtExport: addedDuplicates,
         sources,
+        labelBy,
+        repeatByRowId: Object.fromEntries(rows.map((r) => [r.rowId, r.repeat])),
         labels: Object.fromEntries(
           [...label.entries()].map(([key, l]) => {
-            const [runName, arm] = key.split('::');
-            const sample = rows.find((r) => armKey(r) === key);
-            return [l, { run: runName, arm, variant: sample?.variant ?? null }];
+            const [head, tail] = key.split('::');
+            const members = rows.filter((r) => armKey(r) === key);
+            const sample = members[0];
+            return [
+              l,
+              labelBy === 'variant'
+                ? {
+                    variant: tail,
+                    models: [...new Set(members.map((r) => r.modelRequested))],
+                    arms: [...new Set(members.map((r) => r.arm))],
+                    runs: [...new Set(members.map((r) => runOf.get(r.rowId) as string))],
+                  }
+                : { run: head, arm: tail, variant: sample?.variant ?? null },
+            ];
           }),
         ),
         duplicates: rows.filter((r) => r.dupOf !== null).map((r) => ({ rowId: r.rowId, dupOf: r.dupOf })),
@@ -319,6 +350,7 @@ function main(): number {
       `call type  : ${callType ?? 'all'}\n` +
       `forced in  : ${forced.size}\n` +
       `${sampleN > 0 ? `sampled    : ${sampleN} per arm, ${sampledOut} row(s) dropped\n` : ''}` +
+      `labelled by: ${labelBy}\n` +
       `arms       : ${arms.length} relabelled ${[...label.values()].join(', ')}\n` +
       `seed       : ${seed}\n` +
       `cohort     : VISIBLE (the rater is told which cohort it judges)\n` +
