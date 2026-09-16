@@ -142,13 +142,27 @@ export interface RunRow {
   finishReason: string;
   truncated: boolean;
   /**
-   * `cachedTokens` is 0 on every NEAR response seen so far: the API returns
-   * `prompt_tokens_details: null`, so there is no cache breakdown to read. It
-   * is kept because the catalogue prices a cache-read rate and a future
-   * response may carry the field, but a zero here means NOT REPORTED, not
-   * "nothing was cached" — the summary says so rather than letting the column
-   * read as measured. `reasoningTokens` is the thinking trace, which the chat
-   * arm pays for inside its completion budget.
+   * The model returned a reasoning trace INSIDE `content` instead of in
+   * `reasoning_content`, detected with lib/llm/reasoning-leak. Recorded rather
+   * than stripped: on a measurement run the leak IS the result.
+   *
+   * It is not cosmetic. A leaked trace shares the output budget with the
+   * answer, so it shows up as `truncated` with a half-written JSON array, and
+   * `reasoningTokens` stays 0 because the provider never counted it as
+   * reasoning. Without this flag that reads as "the model cannot follow the
+   * output contract" when the real cause is that the thinking switch was not
+   * honoured.
+   */
+  reasoningLeak: boolean;
+  /**
+   * `cachedTokens` comes from `usage.prompt_tokens_details.cached_tokens` and
+   * is real: NEAR populates it once a prompt prefix has been seen before, so a
+   * corpus run, which repeats its prompts by construction, sees substantial
+   * hits and they are priced at the cached rate. A 0 on the FIRST call for a
+   * prefix means nothing was cached yet, not that the field is missing.
+   * `reasoningTokens` is the thinking trace, billed inside the completion
+   * budget. It can be 0 while a trace was still produced: a model that returns
+   * its trace inside `content` reports no reasoning tokens at all.
    */
   usage: {
     promptTokens: number;

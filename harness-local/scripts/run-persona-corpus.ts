@@ -28,7 +28,7 @@ import { createRunWriter } from '../lib/run-writer';
 import { createJsonlWriter, hashMessages, newRowId, type RowToolCall, type RunRow } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
-import { postBody } from '../lib/near-call';
+import { hasReasoningLeak, postBody } from '../lib/near-call';
 import {
   buildChatTurnBody,
   withContextOnLastUserTurn,
@@ -244,6 +244,7 @@ async function main(): Promise<number> {
               rejectedByRails: applied.delta.rejectedByRails,
             },
             finishReason: result.finishReason, truncated: result.truncated,
+            reasoningLeak: hasReasoningLeak(result.content),
             usage: result.usage,
             cost: result.usage && info
               ? {

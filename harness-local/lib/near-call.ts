@@ -1,3 +1,4 @@
+import { stripLeakedReasoning } from '../../lib/llm/reasoning-leak';
 // harness-local — the one place a runner posts a completion.
 //
 // Both runners and (from U5) replay-persona-chat.ts go through this, so a
@@ -12,11 +13,33 @@
 // envelope and a hedge, none of which change what the model sees but all of
 // which move latency, so mixing them in one number would be wrong.
 
+/**
+ * True when the model returned a reasoning trace inside `content` instead of
+ * `reasoning_content`. Delegates to the app's own stripper so the harness and
+ * the shipped decrypt sites agree on what a leak is.
+ *
+ * Detected, never stripped: on a measurement run the leak IS the result, and a
+ * trace inside content shares the output budget with the answer, which is how
+ * an arm ends up truncated with `reasoningTokens: 0`.
+ */
+export function hasReasoningLeak(content: string): boolean {
+  return content.length > 0 && stripLeakedReasoning(content) !== content;
+}
+
 export interface NearUsage {
   promptTokens: number;
   completionTokens: number;
-  /** NEAR returns `prompt_tokens_details: null` today, so this is 0 and means
-   *  NOT REPORTED rather than "nothing was cached". */
+  /** Prompt tokens served from NEAR's prefix cache, read from
+   *  `usage.prompt_tokens_details.cached_tokens`.
+   *
+   *  It is reported only once a prefix has been seen before: measured on two
+   *  back-to-back calls with an identical 1023-token system prompt, the first
+   *  returned `prompt_tokens_details: null` and the second
+   *  `{"cached_tokens": 960}`. So 0 on a FIRST call means nothing was cached
+   *  yet, while 0 across a whole run of repeated prompts means the field was
+   *  never populated. The report distinguishes the two rather than asserting
+   *  either. A corpus run repeats its prompts by construction, so real cache
+   *  hits are the expected case and they are priced at the cached rate. */
   cachedTokens: number;
   /** The thinking trace, billed inside the completion budget. */
   reasoningTokens: number;

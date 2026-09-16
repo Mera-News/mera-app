@@ -28,6 +28,7 @@ import {
   createJsonlWriter, hashMessages, newRowId, type RunRow,
 } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
+import { hasReasoningLeak } from '../lib/near-call';
 import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
 import { buildChatTurnBody, withContextOnLastUserTurn } from '../lib/chat-turn';
 import { filterNewFacts, normalizeStatement } from '../../lib/news-harness/persona-management/fact-rules';
@@ -62,7 +63,7 @@ function row(over: Partial<RunRow>): RunRow {
     personaStateIn: { factCount: 3, topicCount: 5, factsInPrompt: 3, turnsInPrompt: 1 },
     rawOutput: 'out', toolCalls: [], parsedSchema: null, items: null,
     requestedCount: null, returnedCount: null, personaStateDelta: null,
-    finishReason: 'stop', truncated: false,
+    finishReason: 'stop', truncated: false, reasoningLeak: false,
     usage: { promptTokens: 1000, completionTokens: 500, cachedTokens: 0, reasoningTokens: 0 },
     cost: null, latencyMs: 100, ttVisibleMs: null, error: null, ...over,
   };
@@ -303,7 +304,7 @@ async function main(): Promise<number> {
   {
     const rows = [0, 1, 2].map((i) => row({ repeat: i }));
     const rep = formatAgreementReport(computeAgreement(rows));
-    ck('absent cache breakdown is stated', rep.includes('NOT REPORTED'));
+    ck('absent cache breakdown is stated', rep.includes('no row in this run reported cached prompt tokens'));
     const cached = computeAgreement(rows.map((r) => ({
       ...r, usage: { promptTokens: 1000, completionTokens: 500, cachedTokens: 400, reasoningTokens: 0 },
     })));
@@ -368,6 +369,50 @@ async function main(): Promise<number> {
     const claimed = diverged.map((r) => ({ ...r, promptDeterministic: true }));
     ck('a fixture-determined cell with split prompts still fails',
       computeAgreement(claimed).integrityFailures.some((x) => x.startsWith('RUNNER BUG')));
+  }
+
+  // --- 11c. output damage is surfaced before any quality comparison --------
+  // The live baseline found GLM returning its trace inside content and
+  // truncating at the 320-token cap on every relevance batch, with
+  // reasoningTokens 0. An arm in that state produced NO answer, and reading it
+  // as "worse quality" or "cheaper" would be wrong on both counts.
+  {
+    const damaged = [0, 1, 2].map((i) => row({
+      repeat: i, arm: 'glm', modelRequested: 'z-ai/glm-5.3-flash', modelSent: 'z-ai/glm-5.3-flash',
+      finishReason: 'length', truncated: true, reasoningLeak: true,
+      usage: { promptTokens: 900, completionTokens: 320, cachedTokens: 0, reasoningTokens: 0 },
+    }));
+    const rep = formatAgreementReport(computeAgreement(damaged));
+    ck('truncation is reported per arm', rep.includes('truncated 3/3 (100.0%)'));
+    ck('the trace leak is reported', rep.includes('reasoning trace inside content 3/3'));
+    ck('finish_reason breakdown is shown', rep.includes('"length":3'));
+    ck('a mostly-truncated arm is called out', rep.includes('did not produce a usable answer'));
+    ck('the leak is named as the likely cause', rep.includes('shares the output budget'));
+    const clean = formatAgreementReport(computeAgreement([0, 1, 2].map((i) => row({ repeat: i }))));
+    ck('a healthy arm prints no damage block', !clean.includes('OUTPUT DAMAGE'));
+  }
+
+  // --- 11d. the leak detector agrees with the app's own stripper ------------
+  ck('a closed think block is a leak', hasReasoningLeak('<think>hmm</think>[0.4]'));
+  ck('a bare closer is a leak', hasReasoningLeak('thinking out loud</think>[0.4]'));
+  ck('clean JSON is not a leak', !hasReasoningLeak('[0.4,0.2]'));
+  ck('empty content is not a leak', !hasReasoningLeak(''));
+
+  // --- 11e. cached prompt tokens are priced, and the banner tells the truth --
+  {
+    const cachedRows = [0, 1, 2].map((i) => row({
+      repeat: i,
+      usage: { promptTokens: 5203, completionTokens: 100, cachedTokens: 4416, reasoningTokens: 0 },
+    }));
+    const r2 = computeAgreement(cachedRows);
+    ck('cached tokens are totalled', r2.cachedPromptTokens === 4416 * 3, String(r2.cachedPromptTokens));
+    ck('the absent-cache banner does NOT fire when cache is reported', r2.cacheBreakdownAbsent === false);
+    ck('the report says cached tokens were priced at the cached rate',
+      formatAgreementReport(r2).includes("prefix cache"));
+    // and the first-call case still says so honestly
+    ck('the absent-cache banner DOES fire when nothing was cached',
+      formatAgreementReport(computeAgreement([0, 1, 2].map((i) => row({ repeat: i }))))
+        .includes('no row in this run reported cached prompt tokens'));
   }
 
   console.log('\n== corpus ==');

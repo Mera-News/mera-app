@@ -156,6 +156,14 @@ export interface ArmRollup {
   model: string;
   calls: number;
   errors: number;
+  /** Hit the output cap. A truncated relevance batch loses its array and every
+   *  article in it falls back, so this is never a detail. */
+  truncatedCalls: number;
+  /** Returned a reasoning trace inside `content`. */
+  leakedCalls: number;
+  /** finish_reason -> count, so "stop" versus "length" is visible per arm
+   *  rather than averaged into a rate. */
+  finishReasons: Record<string, number>;
   promptTokens: number;
   completionTokens: number;
   usd: number;
@@ -180,10 +188,11 @@ export interface AgreementReport {
   cells: CellAgreement[];
   arms: ArmRollup[];
   callTypes: CallTypeRollup[];
-  /** True when NO row carried a cached-token count. NEAR returns
-   *  `prompt_tokens_details: null`, so this is the normal case, and the report
-   *  says it outright rather than letting a 0 cache column read as measured. */
+  /** True when no row in THIS RUN carried a cached-token count. NEAR
+   *  populates the field only once a prompt prefix has been seen before, so
+   *  this is expected on a first pass and is a finding on a repeated one. */
   cacheBreakdownAbsent: boolean;
+  cachedPromptTokens: number;
   reasoningTokens: number;
   /** Work units that not every arm completed. Their rows are excluded from the
    *  latency comparison and named here, because a silently smaller sample is
@@ -302,11 +311,18 @@ export function computeAgreement(
     const exactVals = armCells.map((c) => c.exactOutputRate);
     const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 1);
 
+    const finishReasons: Record<string, number> = {};
+    for (const r of armRows) {
+      finishReasons[r.finishReason] = (finishReasons[r.finishReason] ?? 0) + 1;
+    }
     arms.push({
       arm,
       model,
       calls: armRows.length,
       errors: armRows.filter((r) => r.error !== null).length,
+      truncatedCalls: armRows.filter((r) => r.truncated).length,
+      leakedCalls: armRows.filter((r) => r.reasoningLeak).length,
+      finishReasons,
       promptTokens,
       completionTokens,
       usd,
@@ -408,6 +424,10 @@ export function computeAgreement(
     nonInterleavedGroups,
     cacheBreakdownAbsent:
       withUsage.length > 0 && withUsage.every((r) => (r.usage as { cachedTokens: number }).cachedTokens === 0),
+    cachedPromptTokens: withUsage.reduce(
+      (n, r) => n + (r.usage as { cachedTokens: number }).cachedTokens,
+      0,
+    ),
     reasoningTokens: withUsage.reduce(
       (n, r) => n + ((r.usage as { reasoningTokens?: number }).reasoningTokens ?? 0),
       0,
@@ -453,6 +473,37 @@ export function formatAgreementReport(r: AgreementReport): string {
   }
   out.push('  tool-name / tool-args columns are the WORST cell in the arm, which is the floor.');
 
+  // Truncation and trace leaks get their own block rather than a column,
+  // because an arm that truncates most of its calls has not produced a slower
+  // or worse result, it has produced NO result, and that must not be read as a
+  // quality difference.
+  const damaged = r.arms.filter((a) => a.truncatedCalls > 0 || a.leakedCalls > 0);
+  if (damaged.length > 0) {
+    out.push('');
+    out.push('OUTPUT DAMAGE (read this BEFORE any quality or cost comparison)');
+    for (const a of damaged) {
+      const pctTrunc = a.calls > 0 ? (a.truncatedCalls / a.calls) * 100 : 0;
+      out.push(
+        `  ${`${a.arm} / ${a.model}`.padEnd(44).slice(0, 44)} ` +
+          `truncated ${a.truncatedCalls}/${a.calls} (${pctTrunc.toFixed(1)}%)` +
+          (a.leakedCalls > 0 ? `, reasoning trace inside content ${a.leakedCalls}/${a.calls}` : '') +
+          `, finish_reason ${JSON.stringify(a.finishReasons)}`,
+      );
+      if (pctTrunc >= 50) {
+        out.push(
+          '    ^ this arm did not produce a usable answer for most calls. Raise its budget with ' +
+            '--max-tokens <model>=<n> and re-run before comparing it to anything.',
+        );
+      }
+      if (a.leakedCalls > 0) {
+        out.push(
+          '    ^ a trace inside content shares the output budget with the answer, so the truncation ' +
+            'above is likely its consequence and not an output-contract failure.',
+        );
+      }
+    }
+  }
+
   out.push('');
   out.push('PER ARM AND CALL TYPE (latency from INTERLEAVED calls only, so both arms saw the same minute)');
   out.push(
@@ -474,13 +525,21 @@ export function formatAgreementReport(r: AgreementReport): string {
   }
   if (r.cacheBreakdownAbsent) {
     out.push(
-      '  NOTE: no row carried a cached-token count (NEAR returns prompt_tokens_details: null), ' +
-        'so the cache-read rate never applied. A zero here means NOT REPORTED, not "nothing was cached".',
+      '  NOTE: no row in this run reported cached prompt tokens, so the cache-read rate never applied. ' +
+        'NEAR populates prompt_tokens_details only once a prefix has been seen before, so this is ' +
+        'expected on a first pass and worth a look on a repeated one.',
+    );
+  } else if (r.cachedPromptTokens > 0) {
+    out.push(
+      `  NOTE: ${r.cachedPromptTokens} prompt token(s) came from NEAR's prefix cache and are priced at ` +
+        'the cached rate, a fraction of the full input rate. Repeated prompts are the norm here, so ' +
+        'ignoring this would overstate every cost in the table.',
     );
   }
   if (r.reasoningTokens > 0) {
     out.push(
-      `  NOTE: ${r.reasoningTokens} reasoning token(s) billed inside the completion totals above.`,
+      `  NOTE: ${r.reasoningTokens} reasoning token(s) billed inside the completion totals above. ` +
+        'An arm reporting 0 here while its output carries a trace leaked that trace into content instead.',
     );
   }
   const misrouted = r.callTypes.reduce((n, c) => n + c.misroutedCalls, 0);

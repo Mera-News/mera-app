@@ -40,7 +40,7 @@ import {
 } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { costOf, fetchModelCatalog, HARNESS_ARM_MODELS, rosterWarnings } from '../lib/model-catalog';
-import { postCompletion } from '../lib/near-call';
+import { hasReasoningLeak, postCompletion } from '../lib/near-call';
 import {
   buildReasonCallsForSubset,
   buildScoreCallForChunk,
@@ -83,6 +83,11 @@ interface Args {
   dryRun: boolean;
   reason: boolean;
   duplicateEvery: number;
+  /** Per-arm output budget, `<model>=<n>` pairs. An arm that truncates most of
+   *  its calls produced no result at all, so it needs its own budget before its
+   *  numbers mean anything, and a single global value would change the control
+   *  arm too. */
+  maxTokens: Record<string, number>;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -96,6 +101,7 @@ function parseArgs(argv: string[]): Args {
     dryRun: false,
     reason: true,
     duplicateEvery: 0,
+    maxTokens: {},
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -108,6 +114,19 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--no-reason') args.reason = false;
     else if (a === '--duplicate-every') args.duplicateEvery = Number(argv[++i]);
+    else if (a === '--max-tokens') {
+      for (const pair of (argv[++i] ?? '').split(',').filter(Boolean)) {
+        const eq = pair.lastIndexOf('=');
+        const model = eq === -1 ? '' : pair.slice(0, eq);
+        const n = Number(pair.slice(eq + 1));
+        if (!model || !Number.isFinite(n) || n <= 0) {
+          throw new Error(
+            `harness-local: --max-tokens takes <model>=<n> pairs, e.g. 'z-ai/glm-5.3-flash=1024' (got ${JSON.stringify(pair)}).`,
+          );
+        }
+        args.maxTokens[model] = n;
+      }
+    }
   }
   if (!Number.isFinite(args.repeat) || args.repeat < 1) {
     throw new Error('harness-local: --repeat must be 1 or more.');
@@ -270,7 +289,7 @@ async function main(): Promise<number> {
                 { role: 'user', content: built.prompt },
               ],
               temperature: config.scoreTemperature,
-              maxTokens: config.scoreBatchMaxTokens,
+              maxTokens: args.maxTokens[model] ?? config.scoreBatchMaxTokens,
               enableThinking: false,
             });
 
@@ -318,6 +337,7 @@ async function main(): Promise<number> {
           returnedCount: result.error ? null : scores.length,
           personaStateDelta: null,
           finishReason: result.finishReason, truncated: result.truncated,
+          reasoningLeak: hasReasoningLeak(result.content),
           usage: result.usage,
           cost: result.usage && info
             ? {
@@ -369,7 +389,7 @@ async function main(): Promise<number> {
                   { role: 'user', content: call.prompt },
                 ],
                 temperature: config.reasonTemperature,
-                maxTokens: config.reasonMaxTokens,
+                maxTokens: args.maxTokens[model] ?? config.reasonMaxTokens,
                 enableThinking: false,
               });
           const info = catalog[model];
@@ -402,6 +422,7 @@ async function main(): Promise<number> {
             items: reasonItems(call.id),
             requestedCount: null, returnedCount: null, personaStateDelta: null,
             finishReason: result.finishReason, truncated: result.truncated,
+            reasoningLeak: hasReasoningLeak(result.content),
             usage: result.usage,
             cost: result.usage && info
               ? {
