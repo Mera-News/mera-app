@@ -41,11 +41,21 @@ That's it — the first script you run auto-bootstraps `.local-test-data/`
 that it did so. Edit `.local-test-data/persona.json` afterwards to model the
 user you want to test with.
 
-All mutable harness state lives under `.local-test-data/` at the repo root
-(gitignored in full): your own persona fixture (`persona.json`), run output
-(`runs/`), and the cached auth session (`.auth-cache.json`). `harness-local/.env.harness`
-is separately gitignored and holds local secrets. `harness-local/fixtures/persona.example.json`
-is the only fixture tracked in git.
+All mutable harness state lives under `.local-test-data/` (gitignored in full):
+your own persona fixture (`persona.json`), run output (`runs/`), and the cached
+auth session, now `.auth-cache.<target>.json`, one per environment. That path
+resolves against `process.cwd()`, which for every wired npm script is
+`mera-app/`, this repo's root, not the `mera-news/` directory holding the seven
+repos.
+
+`harness-local/fixtures/**` IS tracked in git: `persona.example.json`, the
+`goldset-348` pair, `persona-chat/` and `persona-corpus/`. Only
+`harness-local/.env.harness` and `.local-test-data/` are ignored.
+
+**`harness-local/.env.harness.example` is NOT tracked either.** The repo's
+`.gitignore` carries a broad `.env.*` rule that swallows it, so a fresh
+checkout has neither file and the `cp` in Setup above cannot work. Write
+`.env.harness` by hand; every variable is listed under Environment below.
 
 ## Scripts
 
@@ -155,3 +165,90 @@ cap. Prefer `--articles-from <earlier-run-dir>` whenever you're just
 iterating on scoring/prompt config rather than testing fresh article
 discovery — it replays the previously-fetched article set with zero
 additional GraphQL calls to `articlesForTopicsByIds`.
+
+
+## Environment
+
+Every variable the harness reads, since the example file is not in git (see
+above).
+
+| Variable | Required | What |
+|---|---|---|
+| `NEWS_HARNESS_TARGET` | no, defaults `local` | `local` / `staging` / `prod`. `--target` on a staging-rail runner overrides it for the process. |
+| `NEWS_HARNESS_NEARAI_API_KEY` | no | NEAR AI key. Falls back to `NEAR_AI_DEVELOPMENT_KEY` in the repo-root `.env`. |
+| `NEWS_HARNESS_NEARAI_BASE_URL` | no | Defaults `https://cloud-api.near.ai/v1`. |
+| `NEWS_HARNESS_GRAPHQL_ENDPOINT` | yes off the rail | On the staging rail an unset value takes the staging default. |
+| `NEWS_HARNESS_AUTH_ENDPOINT` | yes for staging/prod | Same. |
+| `NEWS_HARNESS_INFERENCE_ENDPOINT` | no | E2EE gateway. Only the gateway lane needs it. |
+| `NEWS_HARNESS_AUTH_EMAIL` | yes off the rail | Email-OTP identity. Not needed on the staging rail, which can use the dev bypass. |
+| `NEWS_HARNESS_MODEL` | no | Overrides the default cloud model. |
+| `NEWS_HARNESS_DEBUG` | no | Verbose logging. |
+
+## The staging rail
+
+`.env.harness` on this machine is set to **prod**, with the live
+`graphql.mera.news` and `auth.mera.news` hosts. The loader passes a SET
+endpoint through untouched by design, so `--target staging` alone reaches the
+guard and fails with "is the PROD host". Pass the endpoints too. They are
+checked like any other value, so a flag pointed at prod is still refused.
+
+```bash
+npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/run-newsharness-corpus.ts \
+  --target staging \
+  --graphql-endpoint https://graphql.staging.mera.news/graphql \
+  --auth-endpoint https://auth.staging.mera.news \
+  --inference-endpoint https://inference.staging.mera.news \
+  --repeat 3 --limit 40 --label baseline
+```
+
+The runners refuse any host that is not a DNS-suffix match on
+`.staging.mera.news`, and refuse target `prod` outright. The four pre-existing
+scripts are deliberately NOT on the rail: they are the user's own tools and the
+instruments behind the `MODEL_FALLBACKS` table. They print a banner instead when
+pointed at prod.
+
+## The two corpus runners
+
+`run-newsharness-corpus.ts` runs the relevance and reason prompts over a fixed
+article set across model arms. `run-persona-corpus.ts` runs the persona-update
+prompt and tool schema through four scripted cohorts with state carried across
+turns. Both write one JSONL row per call to `.local-test-data/runs/<label>/`,
+which is the only thing a blind rater reads, plus `agreement.txt`,
+`summary.json` and, on a live run, `models.json`.
+
+Both take `--dry-run`, which proves the whole path with no calls and no spend.
+Start there.
+
+**No quota is spent by either.** The news-harness runner replays the tracked
+`fixtures/goldset-348.json`, which carries both a persona and 348 articles, so
+`articlesForTopicsByIds` is never called.
+
+Key flags: `--repeat N` (3 or more, or the number is not a floor), `--arms`,
+`--variant`, `--duplicate-every N` for rater duplicates, `--fixture`,
+`--cohorts`.
+
+### Reading the output
+
+- `integrity:` must say every cell held one prompt hash. Both runners exit 1 if
+  a fixture-determined cell did not.
+- `diverged=N/repeats` on a chat cell is not a fault. Stateful repeats drift
+  apart after turn 0 because each saved different facts; the number says how
+  far.
+- A band violation in the instruction-following block is a contract metric, not
+  a leak. `clampToStakeBand` already clamped the score.
+- A zero cache column means NOT REPORTED. NEAR returns
+  `prompt_tokens_details: null`, so the cache-read rate never applies.
+
+## Gates
+
+There is no jest here, and `tsc -p harness-local/tsconfig.json` pulls in the app
+tree, where roughly 1,700 errors pre-exist, so its exit code cannot tell a new
+mistake from the standing red. The two real gates:
+
+```bash
+npx tsc -p harness-local/tsconfig.lib.json        # scoped typecheck, add every new file
+npx tsx --tsconfig harness-local/tsconfig.json harness-local/scripts/selftest.ts
+```
+
+`tsconfig.lib.json` has an explicit `files` list. A new file that is not added
+to it is silently not covered while the gate still exits 0.
