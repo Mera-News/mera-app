@@ -10,6 +10,13 @@
 //
 // IMPORT SITES DID NOT CHANGE. `./prompts.ts` re-exports this whole module, so
 // the many existing importers of `../prompts/prompts` keep one import site.
+import {
+  BASELINE_VARIANT_ID,
+  resolvePromptVariant,
+  systemPromptForSlot,
+  type PromptSlot,
+  type PromptVariantId,
+} from './prompt-variants';
 // Import from here directly in new code; either path resolves to the same
 // symbols.
 
@@ -438,6 +445,11 @@ export function buildPersonaUpdateStaticPrompt(params: {
   /** item 13 — the user's "Web search in chat" toggle. CLOUD-only prose, and
    *  only when ON: an off toggle must cost zero prompt tokens. */
   webSearch?: boolean;
+  /** Experiment arm. Omitted or 'baseline' returns the shipped prompt BYTE FOR
+   *  BYTE; an unknown id throws rather than silently scoring the control. The
+   *  arm supplies a WHOLE replacement string, never a transform — see
+   *  prompt-variants.ts for why. */
+  promptVariant?: PromptVariantId;
 }): string {
   const {
     surface,
@@ -447,8 +459,17 @@ export function buildPersonaUpdateStaticPrompt(params: {
     filterTools = 'full',
     deepMode = false,
     webSearch = false,
+    promptVariant,
   } = params;
   const isOnboarding = surface === 'ONBOARDING';
+
+  // The arm's whole-string override, resolved once and applied to whichever
+  // mode's prompt is built below. Placed here rather than at each return so
+  // CLOUD and LOCAL cannot drift over which one honours an arm; `baseline`
+  // resolves to no override and both paths return their shipped bytes.
+  const variantSpec = resolvePromptVariant(promptVariant);
+  const armPrompt = variantSpec.systemPrompts?.personaStatic;
+  if (armPrompt !== undefined) return armPrompt;
 
   if (mode === 'LOCAL') {
     // `webSearch` is deliberately NOT forwarded: the LOCAL path carries neither
@@ -738,11 +759,11 @@ Fact: "Senior ML engineer at DeepMind" — Generate 5 topics
  * "no Other facts → full count" fallback and the "half-with, half-without"
  * split case.
  */
-export const CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics from one user fact. The exact count is specified in the user message. Output: JSON array of 1–5-word strings.
+export const CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics from one user fact. The count in the user message is a MAXIMUM — emitting fewer is correct. Output: JSON array of 1–5-word strings.
 
 ${CLOUD_TOPIC_GEN_RULES_SNIPPET}
 
-Output: JSON array of strings with exactly the requested count.`;
+Output: JSON array of strings, at most the requested count.`;
 
 /**
  * CLOUD combo topic-generation prompt — Qwen3-30B-A3B-Instruct-2507.
@@ -874,6 +895,30 @@ Generate at most 3 topics
 Output: JSON array of strings, AT MOST the requested count. Fewer is correct, \`[]\` is correct. Never pad.`;
 
 /**
+ * The cloud topic-generation system prompt for one call half, honouring an
+ * experiment arm.
+ *
+ * Exists so the two constants have a single resolution point: `baseline`
+ * returns the shipped constant by reference, an arm returns its whole
+ * replacement string, and an unknown id throws instead of quietly scoring the
+ * control. The constants stay exported because the golden pin asserts
+ * re-export identity BY REFERENCE and because `topic-generation.ts` still
+ * accepts them as an injected `systemPrompts` pair.
+ */
+export function buildTopicGenSystemPrompt(
+  kind: 'factOnly' | 'combo',
+  promptVariant: PromptVariantId = BASELINE_VARIANT_ID,
+): string {
+  const shipped =
+    kind === 'factOnly'
+      ? CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT
+      : CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT;
+  const slot: PromptSlot = kind === 'factOnly' ? 'topicGenFactOnly' : 'topicGenCombo';
+  return systemPromptForSlot(slot, shipped, resolvePromptVariant(promptVariant));
+}
+
+
+/**
  * Shared LOCAL fact-only rules + examples — single source of truth embedded
  * by `LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT` and the LOCAL noise prompt.
  * Trimmed examples vs. the cloud variant because the 4B starts duplicating
@@ -940,7 +985,7 @@ export const LOCAL_TOPIC_GENERATION_SYSTEM_PROMPT = `Generate news search topics
 
 ${LOCAL_TOPIC_GEN_RULES_SNIPPET}
 
-Output: JSON array of strings with exactly the requested count.`;
+Output: JSON array of strings, at most the requested count.`;
 
 /**
  * LOCAL combo topic-generation prompt — Qwen3.5-4B on-device. Mirrors the
