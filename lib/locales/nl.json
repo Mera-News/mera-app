@@ -2543,7 +2543,9 @@
     "iSubscribe": "Hierop ben ik geabonneerd",
     "added": "{{publisher}} toegevoegd aan je abonnementen",
     "removed": "{{publisher}} verwijderd uit je abonnementen",
-    "coversThisStory": "Je abonnement dekt dit nieuws."
+    "coversThisStory": "Je abonnement dekt dit nieuws.",
+    "subscribeAt": "Abonneren op {{publisher}}",
+    "opensPublisherSite": "Opent de eigen website van {{publisher}}"
   },
   "shareStats": {
     "entryA11y": "Deel je leesstatistieken",

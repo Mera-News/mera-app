@@ -2543,7 +2543,9 @@
     "iSubscribe": "I subscribe to this",
     "added": "Added {{publisher}} to your subscriptions",
     "removed": "Removed {{publisher}} from your subscriptions",
-    "coversThisStory": "Your subscription covers this story."
+    "coversThisStory": "Your subscription covers this story.",
+    "subscribeAt": "Subscribe at {{publisher}}",
+    "opensPublisherSite": "Opens {{publisher}}'s own site"
   },
   "shareStats": {
     "entryA11y": "Share your reading stats",

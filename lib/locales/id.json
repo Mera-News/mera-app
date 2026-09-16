@@ -2543,7 +2543,9 @@
     "iSubscribe": "Saya berlangganan ini",
     "added": "{{publisher}} ditambahkan ke langganan Anda",
     "removed": "{{publisher}} dihapus dari langganan Anda",
-    "coversThisStory": "Langganan Anda mencakup berita ini."
+    "coversThisStory": "Langganan Anda mencakup berita ini.",
+    "subscribeAt": "Berlangganan {{publisher}}",
+    "opensPublisherSite": "Membuka situs {{publisher}} sendiri"
   },
   "shareStats": {
     "entryA11y": "Bagikan statistik bacaan Anda",

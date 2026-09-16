@@ -2544,7 +2544,9 @@
     "iSubscribe": "Tôi có đăng ký báo này",
     "added": "Đã thêm {{publisher}} vào gói đăng ký của bạn",
     "removed": "Đã xóa {{publisher}} khỏi gói đăng ký của bạn",
-    "coversThisStory": "Gói đăng ký của bạn có tin này."
+    "coversThisStory": "Gói đăng ký của bạn có tin này.",
+    "subscribeAt": "Đăng ký {{publisher}}",
+    "opensPublisherSite": "Mở trang web của chính {{publisher}}"
   },
   "shareStats": {
     "entryA11y": "Chia sẻ thống kê đọc của bạn",

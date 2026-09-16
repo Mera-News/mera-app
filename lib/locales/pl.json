@@ -2579,7 +2579,9 @@
     "iSubscribe": "Mam subskrypcję tego tytułu",
     "added": "Dodano {{publisher}} do Twoich subskrypcji",
     "removed": "Usunięto {{publisher}} z Twoich subskrypcji",
-    "coversThisStory": "Twoja subskrypcja obejmuje ten temat."
+    "coversThisStory": "Twoja subskrypcja obejmuje ten temat.",
+    "subscribeAt": "Subskrybuj {{publisher}}",
+    "opensPublisherSite": "Otwiera własną stronę {{publisher}}"
   },
   "shareStats": {
     "entryA11y": "Udostępnij swoje statystyki czytania",

@@ -2543,7 +2543,9 @@
     "iSubscribe": "ฉันสมัครสมาชิกสำนักข่าวนี้",
     "added": "เพิ่ม {{publisher}} ในการสมัครสมาชิกของคุณแล้ว",
     "removed": "นำ {{publisher}} ออกจากการสมัครสมาชิกของคุณแล้ว",
-    "coversThisStory": "การสมัครสมาชิกของคุณครอบคลุมข่าวนี้"
+    "coversThisStory": "การสมัครสมาชิกของคุณครอบคลุมข่าวนี้",
+    "subscribeAt": "สมัครสมาชิก {{publisher}}",
+    "opensPublisherSite": "เปิดเว็บไซต์ของ {{publisher}} เอง"
   },
   "shareStats": {
     "entryA11y": "แชร์สถิติการอ่านของคุณ",

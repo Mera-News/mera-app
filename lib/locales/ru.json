@@ -2581,7 +2581,9 @@
     "iSubscribe": "Я подписан на это издание",
     "added": "{{publisher}} добавлено в ваши подписки",
     "removed": "{{publisher}} удалено из ваших подписок",
-    "coversThisStory": "Ваша подписка покрывает эту тему."
+    "coversThisStory": "Ваша подписка покрывает эту тему.",
+    "subscribeAt": "Подписаться на {{publisher}}",
+    "opensPublisherSite": "Откроется сайт {{publisher}}"
   },
   "shareStats": {
     "entryA11y": "Поделиться статистикой чтения",

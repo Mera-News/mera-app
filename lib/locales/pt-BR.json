@@ -2543,7 +2543,9 @@
     "iSubscribe": "Eu assino esta",
     "added": "{{publisher}} adicionada às suas assinaturas",
     "removed": "{{publisher}} removida das suas assinaturas",
-    "coversThisStory": "Sua assinatura cobre esta notícia."
+    "coversThisStory": "Sua assinatura cobre esta notícia.",
+    "subscribeAt": "Assinar {{publisher}}",
+    "opensPublisherSite": "Abre o site do próprio {{publisher}}"
   },
   "shareStats": {
     "entryA11y": "Compartilhe suas estatísticas de leitura",

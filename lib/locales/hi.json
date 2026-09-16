@@ -2545,7 +2545,9 @@
     "iSubscribe": "मेरी इसकी सदस्यता है",
     "added": "{{publisher}} आपकी सदस्यताओं में जोड़ा गया",
     "removed": "{{publisher}} आपकी सदस्यताओं से हटाया गया",
-    "coversThisStory": "आपकी सदस्यता इस ख़बर को कवर करती है।"
+    "coversThisStory": "आपकी सदस्यता इस ख़बर को कवर करती है।",
+    "subscribeAt": "{{publisher}} की सदस्यता लें",
+    "opensPublisherSite": "{{publisher}} की अपनी साइट खुलती है"
   },
   "shareStats": {
     "entryA11y": "अपने पढ़ने के आंकड़े साझा करें",

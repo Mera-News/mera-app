@@ -62,17 +62,9 @@ const SubscribeAction: React.FC<Props> = ({
   testID,
 }) => {
   const { t } = useTranslation();
-  // TEMPORARY, remove in this wave: `subscriptions.subscribeAt` and
-  // `subscriptions.opensPublisherSite` ship in
-  // `lib/locales/_subscribe-links-fragments.json` and are not spliced yet.
-  // i18n keys are typed off `en.json` with no codegen step, so a typed `t()`
-  // on either one does not compile until the splice lands. Convert both call
-  // sites below to `t()` the moment it does. `subscriptions.iSubscribe`
-  // already exists in all 20 dictionaries and is typed, so it uses `t()`.
-  const tAny = t as unknown as (key: string, opts?: object) => string;
 
-  const label = tAny('subscriptions.subscribeAt', { publisher: publisherName });
-  const hint = tAny('subscriptions.opensPublisherSite', { publisher: publisherName });
+  const label = t('subscriptions.subscribeAt', { publisher: publisherName });
+  const hint = t('subscriptions.opensPublisherSite', { publisher: publisherName });
 
   if (variant === 'inline') {
     return (

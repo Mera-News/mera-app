@@ -2543,7 +2543,9 @@
     "iSubscribe": "これを購読しています",
     "added": "{{publisher}}を購読中のメディアに追加しました",
     "removed": "{{publisher}}を購読中のメディアから削除しました",
-    "coversThisStory": "このニュースは購読でお読みいただけます。"
+    "coversThisStory": "このニュースは購読でお読みいただけます。",
+    "subscribeAt": "{{publisher}}を購読する",
+    "opensPublisherSite": "{{publisher}}の公式サイトを開きます"
   },
   "shareStats": {
     "entryA11y": "読書の記録を共有",

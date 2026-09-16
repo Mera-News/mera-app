@@ -2585,7 +2585,9 @@
     "iSubscribe": "Я передплачую це видання",
     "added": "{{publisher}} додано до ваших передплат",
     "removed": "{{publisher}} видалено з ваших передплат",
-    "coversThisStory": "Ваша передплата охоплює цю тему."
+    "coversThisStory": "Ваша передплата охоплює цю тему.",
+    "subscribeAt": "Передплатити {{publisher}}",
+    "opensPublisherSite": "Відкриє сайт {{publisher}}"
   },
   "shareStats": {
     "entryA11y": "Поділитися статистикою читання",

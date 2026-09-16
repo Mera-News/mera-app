@@ -2544,7 +2544,9 @@
     "iSubscribe": "我订阅了这家媒体",
     "added": "已将 {{publisher}} 添加到你的订阅",
     "removed": "已将 {{publisher}} 从你的订阅中移除",
-    "coversThisStory": "你的订阅涵盖这条新闻。"
+    "coversThisStory": "你的订阅涵盖这条新闻。",
+    "subscribeAt": "订阅 {{publisher}}",
+    "opensPublisherSite": "将打开 {{publisher}} 的官方网站"
   },
   "shareStats": {
     "entryA11y": "分享你的阅读统计",

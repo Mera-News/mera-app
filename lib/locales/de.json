@@ -2543,7 +2543,9 @@
     "iSubscribe": "Das habe ich abonniert",
     "added": "{{publisher}} zu deinen Abos hinzugefügt",
     "removed": "{{publisher}} aus deinen Abos entfernt",
-    "coversThisStory": "Dein Abo deckt diese Meldung ab."
+    "coversThisStory": "Dein Abo deckt diese Meldung ab.",
+    "subscribeAt": "{{publisher}} abonnieren",
+    "opensPublisherSite": "Öffnet die eigene Website von {{publisher}}"
   },
   "shareStats": {
     "entryA11y": "Deine Lesestatistik teilen",

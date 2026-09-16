@@ -2625,7 +2625,9 @@
     "iSubscribe": "أنا مشترك في هذا",
     "added": "تمت إضافة {{publisher}} إلى اشتراكاتك",
     "removed": "تمت إزالة {{publisher}} من اشتراكاتك",
-    "coversThisStory": "اشتراكك يغطي هذا الخبر."
+    "coversThisStory": "اشتراكك يغطي هذا الخبر.",
+    "subscribeAt": "اشترك في {{publisher}}",
+    "opensPublisherSite": "يفتح موقع {{publisher}} نفسه"
   },
   "shareStats": {
     "entryA11y": "شارك إحصاءات قراءتك",

@@ -2543,7 +2543,9 @@
     "iSubscribe": "Sono abbonato a questa",
     "added": "{{publisher}} aggiunto ai tuoi abbonamenti",
     "removed": "{{publisher}} rimosso dai tuoi abbonamenti",
-    "coversThisStory": "Il tuo abbonamento copre questa notizia."
+    "coversThisStory": "Il tuo abbonamento copre questa notizia.",
+    "subscribeAt": "Abbonati a {{publisher}}",
+    "opensPublisherSite": "Apre il sito di {{publisher}}"
   },
   "shareStats": {
     "entryA11y": "Condividi le tue statistiche di lettura",

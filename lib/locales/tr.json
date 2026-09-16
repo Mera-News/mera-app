@@ -2545,7 +2545,9 @@
     "iSubscribe": "Bu yayına aboneyim",
     "added": "{{publisher}} aboneliklerinize eklendi",
     "removed": "{{publisher}} aboneliklerinizden kaldırıldı",
-    "coversThisStory": "Aboneliğiniz bu haberi kapsıyor."
+    "coversThisStory": "Aboneliğiniz bu haberi kapsıyor.",
+    "subscribeAt": "{{publisher}} aboneliği alın",
+    "opensPublisherSite": "{{publisher}} yayınının kendi sitesini açar"
   },
   "shareStats": {
     "entryA11y": "Okuma istatistiklerini paylaş",
