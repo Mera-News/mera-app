@@ -50,17 +50,68 @@ export type ChatThreadItem =
    * Readings Mera is OFFERING for one extracted fact, awaiting a tap. Nothing
    * has been written when this renders — that is the whole point of it.
    * `resultKey` is `${messageId}::${toolCallIndex}`, the key the commit writes
-   * its rewritten tool result under.
+   * its resolution under.
+   *
+   * ONE CARD PER EXTRACTED FACT, and resolving one never touches a sibling:
+   * `groupId` addresses this group's own slot inside the shared tool result. Do
+   * NOT reintroduce a card that keys off the result as a whole — that is the
+   * exact shape that used to delete every sibling group on the first tap.
    */
   | {
       kind: 'fact-choice-card';
       key: string;
       resultKey: string;
       groupIndex: number;
+      /** Stable per-group identity — never the rendered array position. */
+      groupId: string;
       options: string[];
       questionnaireAttribute: string | null;
+      /** Set once the user skipped this group: renders the "Not saved" line
+       *  with Undo, in place, instead of the readings. */
+      dismissed: boolean;
       /** Derived from an earlier conversation: inert, and not counted by the gate. */
       stale: boolean;
+    }
+  /**
+   * "Add all (N)" / "Skip all" for one message's pending fact-choice group.
+   *
+   * Emitted INLINE, directly after the last pending card of its group, because
+   * the group belongs to one message — unlike TopicPlanSaveAllRow, which is
+   * thread-wide and therefore lives as fixed chrome above the composer.
+   * Rendered only while 2+ groups are pending; at 1 the card's own buttons are
+   * the sole affordance.
+   */
+  | {
+      kind: 'fact-choice-bulk-row';
+      key: string;
+      resultKey: string;
+      groups: {
+        groupId: string;
+        groupIndex: number;
+        options: string[];
+        questionnaireAttribute: string | null;
+      }[];
+    }
+  /**
+   * Topics minted for facts accepted IN CHAT, shown as removable chips.
+   *
+   * Distinct from `topic-plan-card` on purpose: these topics are already SAVED
+   * when the card appears (topic generation mints the rows), so the card
+   * confirms rather than asks. It carries no Save/Discard pair and — critically
+   * — it is NOT counted by the topic-plan composer gate. The composer is
+   * blocked only while a FACT card is pending.
+   *
+   * One entry per accepted fact. A single Add renders one entry in line under
+   * its own Saved card; "Add all" renders one merged card after the group, with
+   * a section per fact.
+   */
+  | {
+      kind: 'chat-topics-card';
+      key: string;
+      facts: { factId: string; factStatement: string }[];
+      /** True for the merged "Add all" card: shows a per-fact subtitle and
+       *  applies the group topic ceiling. */
+      merged: boolean;
     }
   // Wave 11 U-B1 — save-time fact-conflict resolution card.
   | { kind: 'conflict-card'; key: string; conflict: FactConflict }

@@ -76,6 +76,7 @@ import {
   MAX_FACT_LENGTH,
 } from '../tool-handlers';
 import { commitFactChoices } from '../fact-commit';
+import { factChoiceGroupId } from '../fact-choice-resolution';
 import {
   addFact,
   deleteFact,
@@ -166,6 +167,7 @@ describe('handleSaveExtractedFacts — OFFERS, never writes', () => {
       factsSaved: 0,
       savedFacts: [],
       conflicts: [],
+      groupResolutions: {},
       pendingFacts: [],
     });
     expect(mockAddFact).not.toHaveBeenCalled();
@@ -184,8 +186,17 @@ describe('handleSaveExtractedFacts — OFFERS, never writes', () => {
     expect(mockAddFact).not.toHaveBeenCalled();
     expect(runGeoDerivationSweep).not.toHaveBeenCalled();
     expect(result).toMatchObject({ staged: true, factsSaved: 0, savedFacts: [] });
+    // `groupId` is asserted against the SAME function the resolver recomputes
+    // with, not a literal: that round trip is what proves a resolution written
+    // for this group can still be found for it. A pin that only checked the
+    // field exists would pass for an id nothing can look up.
     expect(result.pendingFacts).toEqual([
-      { index: 0, options: ['Lives in Amsterdam'], questionnaireAttribute: null },
+      {
+        index: 0,
+        groupId: factChoiceGroupId(0, ['Lives in Amsterdam']),
+        options: ['Lives in Amsterdam'],
+        questionnaireAttribute: null,
+      },
     ]);
   });
 
@@ -214,6 +225,7 @@ describe('handleSaveExtractedFacts — OFFERS, never writes', () => {
     expect(result.pendingFacts).toEqual([
       {
         index: 0,
+        groupId: factChoiceGroupId(0, ['Senior ML engineer']),
         options: ['Senior ML engineer'],
         questionnaireAttribute: 'profession: job role and industry',
       },
@@ -233,6 +245,10 @@ describe('handleSaveExtractedFacts — OFFERS, never writes', () => {
     expect(result.pendingFacts).toEqual([
       {
         index: 0,
+        groupId: factChoiceGroupId(0, [
+          'Follows Sporting CP, the Portuguese football club',
+          'Interested in football clubs generally',
+        ]),
         options: [
           'Follows Sporting CP, the Portuguese football club',
           'Interested in football clubs generally',
@@ -299,8 +315,39 @@ describe('handleSaveExtractedFacts — OFFERS, never writes', () => {
     });
 
     expect(result.pendingFacts).toEqual([
-      { index: 0, options: ['Follows Sporting CP'], questionnaireAttribute: null },
+      {
+        index: 0,
+        groupId: factChoiceGroupId(0, ['Follows Sporting CP']),
+        options: ['Follows Sporting CP'],
+        questionnaireAttribute: null,
+      },
     ]);
+  });
+
+  // The schema marker is what lets deriveThreadItems tell a group-shaped result
+  // from one persisted by an older bundle, so it has to exist for the whole
+  // pending window — including a turn where nothing was extracted at all.
+  it('stamps the groupResolutions marker at staging time, even when empty', async () => {
+    const withFacts = await handleSaveExtractedFacts({
+      extracted_user_information: ['Lives in Amsterdam'],
+    });
+    expect(withFacts.groupResolutions).toEqual({});
+
+    const withNone = await handleSaveExtractedFacts({ extracted_user_information: [] });
+    expect(withNone.groupResolutions).toEqual({});
+  });
+
+  // Two facts in one turn are two groups with two DIFFERENT ids. A shared id
+  // would collapse them onto one resolution slot, which is the original defect
+  // wearing a new hat.
+  it('gives each extracted fact its own group id', async () => {
+    const result = await handleSaveExtractedFacts({
+      extracted_user_information: ['Lives in Hoorn, Netherlands', 'Works as a farmer'],
+    });
+    const groups = result.pendingFacts as { groupId: string; index: number }[];
+    expect(groups).toHaveLength(2);
+    expect(groups[0].groupId).not.toBe(groups[1].groupId);
+    expect(groups.map((g) => g.index)).toEqual([0, 1]);
   });
 });
 

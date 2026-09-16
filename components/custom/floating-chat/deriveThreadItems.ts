@@ -17,6 +17,11 @@ import {
   SUPPRESSION_KINDS,
   type SuppressionKindName,
 } from '@/lib/news-harness/core/types';
+import {
+  groupIdOf,
+  readGroupResolutions,
+  readPendingGroups,
+} from '@/lib/chat-tools/fact-choice-resolution';
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
@@ -94,6 +99,14 @@ function deriveCard(toolCall: ToolCallRecord): DerivedCard | null {
 
   switch (toolCall.name) {
     case 'saveExtractedFacts': {
+      // GROUP-SHAPED RESULT: the per-group loop in `emitMessage` owns every card
+      // this call produces, including one Saved card per accepted group. This
+      // legacy reader must stay silent or it emits a SECOND, aggregate fact-card
+      // alongside them — one that grows with every tap, which is precisely the
+      // "replaced in line, at its own position" requirement failing. Gated on
+      // the MARKER, not on whether anything is resolved yet, so a staged turn
+      // and a finished one behave the same way.
+      if (readGroupResolutions(result) !== null) return null;
       // Prefer the rich result shape when available.
       const fromResult = fromSavedFacts(result.savedFacts);
       if (fromResult) return fromResult;
@@ -553,6 +566,144 @@ function conflictsFromResult(result: Record<string, unknown>): FactConflict[] {
   return out;
 }
 
+/**
+ * Emit every card one group-shaped `saveExtractedFacts` call produces.
+ *
+ * The ORDER here is the product requirement, not an implementation detail. The
+ * staged `pendingFacts` array is walked in its staged order and each group emits
+ * whatever its own state calls for, so an accepted group's Saved card lands at
+ * exactly the position its question occupied and its still-pending siblings do
+ * not move. Nothing re-sorts and nothing is appended to a bucket, because both
+ * of those would decouple position from identity — which is the defect this
+ * whole path exists to fix.
+ *
+ * Three per-group states:
+ *   unresolved  -> the readings, still tappable
+ *   dismissed   -> a one-line "Not saved" with Undo, IN PLACE
+ *   saved       -> Saved card, then that group's conflict cards, then (single
+ *                  Add only) its own topics card
+ *
+ * Batch-accepted groups pool into ONE merged topics card after the group, so
+ * "Add all" does not stack N topic cards down the thread.
+ */
+function emitFactChoiceGroups(
+  cards: ChatThreadItem[],
+  messageId: string,
+  idx: number,
+  result: Record<string, unknown>,
+  resolutions: ReturnType<typeof readGroupResolutions> & object,
+  stale: boolean,
+): void {
+  const resultKey = `${messageId}::${idx}`;
+  const groups = readPendingGroups(result);
+  const pending: ChatThreadItem[] = [];
+  const batched: { factId: string; factStatement: string }[] = [];
+  let lastPendingAt = -1;
+
+  for (const group of groups) {
+    const groupId = groupIdOf(group);
+    const resolution = resolutions[groupId];
+
+    if (resolution === undefined) {
+      cards.push({
+        kind: 'fact-choice-card',
+        key: `fact-choice-${messageId}-${idx}-${groupId}`,
+        resultKey,
+        groupIndex: group.index,
+        groupId,
+        options: group.options,
+        questionnaireAttribute: group.questionnaireAttribute,
+        dismissed: false,
+        // A card derived from an EARLIER conversation can never be committed —
+        // its context is gone — so it renders inert and, crucially, is not
+        // counted by the composer gate. Revealing history must not re-block the
+        // input.
+        stale,
+      });
+      lastPendingAt = cards.length - 1;
+      pending.push(cards[cards.length - 1]);
+      continue;
+    }
+
+    if (resolution.status === 'dismissed') {
+      cards.push({
+        kind: 'fact-choice-card',
+        key: `fact-choice-${messageId}-${idx}-${groupId}`,
+        resultKey,
+        groupIndex: group.index,
+        groupId,
+        options: resolution.options,
+        questionnaireAttribute: resolution.questionnaireAttribute,
+        dismissed: true,
+        stale,
+      });
+      continue;
+    }
+
+    cards.push({
+      kind: 'fact-card',
+      key: `card-${messageId}-${idx}-${groupId}`,
+      action: 'saved',
+      statements: resolution.statements,
+      factIds: resolution.savedFacts.map((f) => f.id),
+    });
+    // This group's OWN conflicts, keyed under the group rather than the call, so
+    // two groups raising a conflict cannot collide on one key and so a conflict
+    // stays next to the fact that caused it.
+    resolution.conflicts.forEach((conflict, cIdx) => {
+      cards.push({
+        kind: 'conflict-card',
+        key: `conflict-${messageId}-${idx}-${groupId}-${cIdx}`,
+        conflict,
+      });
+    });
+
+    const facts = resolution.savedFacts.map((f) => ({
+      factId: f.id,
+      factStatement: f.statement,
+    }));
+    if (facts.length === 0) continue;
+    if (resolution.batch) {
+      batched.push(...facts);
+    } else {
+      cards.push({
+        kind: 'chat-topics-card',
+        key: `chat-topics-${messageId}-${idx}-${groupId}`,
+        facts,
+        merged: false,
+      });
+    }
+  }
+
+  // Bulk row: INLINE, immediately after the last pending card of this group, and
+  // only while 2+ remain pending. Spliced rather than appended so it cannot end
+  // up below an already-resolved group's cards.
+  if (pending.length >= 2 && !stale && lastPendingAt >= 0) {
+    cards.splice(lastPendingAt + 1, 0, {
+      kind: 'fact-choice-bulk-row',
+      key: `fact-choice-bulk-${messageId}-${idx}`,
+      resultKey,
+      groups: groups
+        .filter((g) => resolutions[groupIdOf(g)] === undefined)
+        .map((g) => ({
+          groupId: groupIdOf(g),
+          groupIndex: g.index,
+          options: g.options,
+          questionnaireAttribute: g.questionnaireAttribute,
+        })),
+    });
+  }
+
+  if (batched.length > 0) {
+    cards.push({
+      kind: 'chat-topics-card',
+      key: `chat-topics-merged-${messageId}-${idx}`,
+      facts: batched,
+      merged: true,
+    });
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Message → thread items
 // ---------------------------------------------------------------------------
@@ -612,39 +763,38 @@ function emitMessage(
       // fact-card behaviour above is unchanged.
       if (tc.status === 'done' && tc.name === 'saveExtractedFacts') {
         const result = tc.result ?? {};
-        conflictsFromResult(result).forEach((conflict, cIdx) => {
-          cards.push({
-            kind: 'conflict-card',
-            key: `conflict-${message.id}-${idx}-${cIdx}`,
-            conflict,
+        const resolutions = readGroupResolutions(result);
+        // The new path owns a blob that is group-shaped OR still has pending
+        // groups. The second half matters: a LEGACY PENDING blob (staged by an
+        // older bundle, so no marker) is still answerable, and routing it here
+        // means `groupIdOf` recomputes its ids and the first commit materialises
+        // the marker. Sending it down the legacy branch instead would render it
+        // with placeholder ids and write resolutions nothing could read back.
+        const pendingGroups = readPendingGroups(result);
+        if (resolutions !== null || pendingGroups.length > 0) {
+          emitFactChoiceGroups(cards, message.id, idx, result, resolutions ?? {}, stale);
+        } else {
+          // LEGACY blob (no `groupResolutions` marker): a result persisted by a
+          // pre-change bundle. Rendered exactly as it was — this is the whole
+          // reason the marker is written at staging time rather than on first
+          // commit, so "old shape" and "new shape" are decidable without
+          // guessing from which fields happen to be populated.
+          conflictsFromResult(result).forEach((conflict, cIdx) => {
+            cards.push({
+              kind: 'conflict-card',
+              key: `conflict-${message.id}-${idx}-${cIdx}`,
+              conflict,
+            });
           });
-        });
-        savedFactsWithIds(result).forEach((fact) => {
-          cards.push({
-            kind: 'topic-plan-card',
-            key: `topic-plan-${message.id}-${idx}-${fact.id}`,
-            factId: fact.id,
-            factStatement: fact.statement,
+          savedFactsWithIds(result).forEach((fact) => {
+            cards.push({
+              kind: 'topic-plan-card',
+              key: `topic-plan-${message.id}-${idx}-${fact.id}`,
+              factId: fact.id,
+              factStatement: fact.statement,
+            });
           });
-        });
-        // Propose-before-save: readings still awaiting a tap. Mutually exclusive
-        // with the topic-plan cards above — a result carries `pendingFacts`
-        // BEFORE the commit and `savedFacts` after it, never both.
-        pendingFactsFromResult(result).forEach((group) => {
-          cards.push({
-            kind: 'fact-choice-card',
-            key: `fact-choice-${message.id}-${idx}-${group.index}`,
-            resultKey: `${message.id}::${idx}`,
-            groupIndex: group.index,
-            options: group.options,
-            questionnaireAttribute: group.questionnaireAttribute,
-            // A card derived from an EARLIER conversation can never be committed
-            // — its context is gone — so it renders inert and, crucially, is not
-            // counted by the composer gate. Revealing history must not re-block
-            // the input.
-            stale,
-          });
-        });
+        }
       }
     });
   }

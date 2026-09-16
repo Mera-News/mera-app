@@ -22,6 +22,7 @@ import {
   type FactEntry,
 } from '@/lib/news-harness/persona-management/fact-rules';
 import { generateTopicsForFactsBatch } from '@/lib/news-harness/persona-management/topic-generation';
+import { factChoiceGroupId } from './fact-choice-resolution';
 import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import { syncLlmTopicsForFact } from '../database/services/topic-service';
@@ -127,7 +128,15 @@ export async function handleSaveExtractedFacts(
   const facts = args.extracted_user_information as FactEntry[] | undefined;
 
   if (!Array.isArray(facts) || facts.length === 0) {
-    return { success: true, staged: true, factsSaved: 0, savedFacts: [], conflicts: [], pendingFacts: [] };
+    return {
+      success: true,
+      staged: true,
+      factsSaved: 0,
+      savedFacts: [],
+      conflicts: [],
+      groupResolutions: {},
+      pendingFacts: [],
+    };
   }
 
   // Load existing facts for dedup — local LLMs often re-emit known facts, and a
@@ -162,8 +171,19 @@ export async function handleSaveExtractedFacts(
     factsSaved: 0,
     savedFacts: [],
     conflicts: [],
+    // `groupResolutions` is a SCHEMA MARKER written at staging time, NOT "has
+    // anyone committed yet". Its PRESENCE is what tells deriveThreadItems that
+    // this blob is group-shaped, so both legacy readers (deriveCard's aggregate
+    // fact-card and savedFactsWithIds) can be gated on its absence and a
+    // pre-change persisted result keeps rendering exactly as it does today.
+    // Writing it empty here rather than on first commit means the marker exists
+    // for the whole pending window, including a turn nobody ever answers.
+    groupResolutions: {},
     pendingFacts: groups.map((g, index) => ({
       index,
+      // Stamped now so identity is decided by the staging side once, rather
+      // than recomputed at every render from whatever survived validation.
+      groupId: factChoiceGroupId(index, g.options),
       options: g.options,
       questionnaireAttribute: g.questionnaire?.attribute ?? null,
     })),
