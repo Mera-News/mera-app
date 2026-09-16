@@ -29,6 +29,8 @@ import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard from './ProposalCard';
 import QuickFactCheckCard from './QuickFactCheckCard';
 import FactChoiceCard from './FactChoiceCard';
+import FactChoiceBulkRow from './FactChoiceBulkRow';
+import ChatTopicsCard from './ChatTopicsCard';
 import TopicPlanCard from './TopicPlanCard';
 import TopicPlanSaveAllRow from './TopicPlanSaveAllRow';
 import ConflictResolutionCard from './ConflictResolutionCard';
@@ -153,11 +155,19 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           <FactChoiceCard
             resultKey={item.resultKey}
             groupIndex={item.groupIndex}
+            groupId={item.groupId}
             options={item.options}
             questionnaireAttribute={item.questionnaireAttribute}
+            dismissed={item.dismissed}
             stale={item.stale}
           />
         );
+
+      case 'fact-choice-bulk-row':
+        return <FactChoiceBulkRow resultKey={item.resultKey} groups={item.groups} />;
+
+      case 'chat-topics-card':
+        return <ChatTopicsCard facts={item.facts} merged={item.merged} />;
 
       case 'conflict-card':
         return <ConflictResolutionCard conflict={item.conflict} />;

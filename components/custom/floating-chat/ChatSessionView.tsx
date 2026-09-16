@@ -212,15 +212,18 @@ export default function ChatSessionView({
   // STALE cards are excluded. A card derived from an EARLIER conversation can
   // never be committed, so counting it would let "View previous messages"
   // re-block the composer with no way to clear it.
+  // Counted from the card's OWN state, not from "is there a value at
+  // resultKey". That older test was shared by every sibling card of a tool
+  // call, so one tap cleared the gate for all of them — the same shape as the
+  // bug that made one tap delete every sibling card. A dismissed card is
+  // resolved and does not count; its Undo returns it to pending and re-blocks,
+  // which is correct because an unanswered question is unanswered again.
   const unresolvedFactChoices = useMemo(
     () =>
       items.filter(
-        (item) =>
-          item.kind === 'fact-choice-card'
-          && !item.stale
-          && toolCallResults[item.resultKey] === undefined,
+        (item) => item.kind === 'fact-choice-card' && !item.stale && !item.dismissed,
       ).length,
-    [items, toolCallResults],
+    [items],
   );
 
   const hasUnresolvedTopicPlans = unresolvedTopicPlans.length > 0 || unresolvedFactChoices > 0;

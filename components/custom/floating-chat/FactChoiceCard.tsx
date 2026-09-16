@@ -24,13 +24,18 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
-import { patchMessageToolCallResult } from '@/lib/database/services/conversation-service';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
-import { useFloatingChatStore } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  findNodeHandle,
+  Pressable,
+  StyleSheet,
+  View,
+} from 'react-native';
+import { resolveGroup } from './fact-choice-actions';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
@@ -49,11 +54,15 @@ function cardEntering() {
 }
 
 export interface FactChoiceCardProps {
-  /** `${messageId}::${toolCallIndex}` — where the commit writes its override. */
+  /** `${messageId}::${toolCallIndex}` — the tool result this group lives in. */
   resultKey: string;
   groupIndex: number;
+  /** This group's own slot inside that result. NOT the array position. */
+  groupId: string;
   options: string[];
   questionnaireAttribute: string | null;
+  /** The user skipped this group: render the one-line state with Undo. */
+  dismissed?: boolean;
   /** From an earlier conversation: render inert, never commit. */
   stale?: boolean;
 }
@@ -61,8 +70,10 @@ export interface FactChoiceCardProps {
 export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   resultKey,
   groupIndex,
+  groupId,
   options,
   questionnaireAttribute,
+  dismissed = false,
   stale = false,
 }) => {
   const { t } = useTranslation();
@@ -70,30 +81,24 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   // (one option) really is one tap.
   const [selected, setSelected] = useState(0);
   const [busy, setBusy] = useState(false);
-  const resolutions = useFloatingChatStore((s) => s.toolCallResults);
-  const resolved = resolutions[resultKey] as Record<string, unknown> | undefined;
+  const cardRef = useRef<View>(null);
 
-  // Once ANY group in this tool call has been committed or dismissed, the whole
-  // result has been rewritten and this card is answered.
-  const isResolved = resolved !== undefined;
+  // `dismissed` and the derived pending/saved split come from the DERIVER, which
+  // reads this group's own slot. This component deliberately no longer decides
+  // "am I answered" from the presence of a value at `resultKey`: that check was
+  // shared by every sibling card, so the first tap settled all of them.
   const single = options.length === 1;
 
-  const writeResult = async (result: Record<string, unknown>) => {
-    // In-memory override first: it is what makes the card react instantly and
-    // what every downstream card reads this render.
-    useFloatingChatStore.getState().setToolCallResult(resultKey, result);
-    // Durable half. A missing row is NOT an error — an assistant message
-    // persists only once the turn finalises, so a fast tap can land first;
-    // useChatPersistence merges the override in at write time for that race.
-    const [messageId, indexRaw] = resultKey.split('::');
-    const index = Number(indexRaw);
-    if (messageId && Number.isInteger(index)) {
-      void patchMessageToolCallResult(messageId, index, result).catch(() => false);
-    }
+  // Replacing a card in place moves content under the reader's finger, so the
+  // new state has to be announced rather than silently swapped. Focus lands on
+  // the card that changed, not on the list.
+  const announce = () => {
+    const node = findNodeHandle(cardRef.current);
+    if (node !== null) AccessibilityInfo.setAccessibilityFocus(node);
   };
 
   const handleAdd = async () => {
-    if (busy || stale || isResolved) return;
+    if (busy || stale || dismissed) return;
     setBusy(true);
     void hapticLight();
     try {
@@ -107,47 +112,74 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           questionnaire: questionnaireAttribute ? { attribute: questionnaireAttribute } : undefined,
         },
       ]);
-      await writeResult({
-        success: true,
-        factsSaved: savedFacts.length,
+      // Only THIS group's slot changes. Every sibling keeps its own state.
+      resolveGroup(resultKey, groupId, {
+        status: 'saved',
+        statements: [statement],
         savedFacts,
         conflicts,
       });
       void hapticSuccess();
+      announce();
     } catch (err) {
-      logger.error('[FactChoiceCard] commit failed', err, { resultKey, groupIndex });
+      logger.error('[FactChoiceCard] commit failed', err, { resultKey, groupId, groupIndex });
     } finally {
       setBusy(false);
     }
   };
 
-  const handleDismiss = async () => {
-    if (busy || stale || isResolved) return;
-    setBusy(true);
+  const handleDismiss = () => {
+    if (busy || stale || dismissed) return;
     void hapticLight();
-    try {
-      // Nothing was ever written, so there is nothing to undo — this only
-      // settles the card so the composer unblocks.
-      await writeResult({
-        success: true,
-        factsSaved: 0,
-        savedFacts: [],
-        conflicts: [],
-        dismissed: true,
-      });
-    } finally {
-      setBusy(false);
-    }
+    // Nothing was ever written, so there is nothing to undo in the DATA — this
+    // records the choice so the composer unblocks. The card keeps its options so
+    // Undo can restore it exactly.
+    resolveGroup(resultKey, groupId, {
+      status: 'dismissed',
+      options,
+      questionnaireAttribute,
+    });
+    announce();
   };
 
-  if (isResolved && (resolved as { dismissed?: boolean }).dismissed) {
+  const handleUndo = () => {
+    if (busy || stale) return;
+    void hapticLight();
+    // Removing the entry returns the group to pending, which re-blocks the
+    // composer — correct: an unanswered question is unanswered again.
+    resolveGroup(resultKey, groupId, undefined);
+    announce();
+  };
+
+  if (dismissed) {
     return (
-      <Animated.View entering={cardEntering} style={[styles.card, styles.cardSettled]}>
+      <Animated.View
+        ref={cardRef}
+        entering={cardEntering}
+        style={[styles.card, styles.cardSettled]}
+        accessible
+        accessibilityLiveRegion="polite"
+        testID={`fact-choice-dismissed-${groupIndex}`}
+      >
         <View style={styles.headerRow}>
           <MaterialIcons name="close" size={18} color={ACCENT} />
           <Text size="sm" bold style={styles.title}>
             {t('factChoice.dismissedTitle')}
           </Text>
+          {!stale && (
+            <Pressable
+              onPress={handleUndo}
+              hitSlop={12}
+              style={styles.undoButton}
+              accessibilityRole="button"
+              accessibilityLabel={t('topicPlan.undo')}
+              testID={`fact-choice-undo-${groupIndex}`}
+            >
+              <Text size="xs" bold style={styles.undoText}>
+                {t('topicPlan.undo')}
+              </Text>
+            </Pressable>
+          )}
         </View>
         <Text size="xs" style={styles.settledSub}>
           {t('factChoice.dismissedSummary')}
@@ -155,9 +187,6 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
       </Animated.View>
     );
   }
-  // A committed group is replaced by the fact + topic-plan cards the rewritten
-  // result now emits, so it renders nothing of its own.
-  if (isResolved) return null;
 
   return (
     <Animated.View entering={cardEntering} style={[styles.card, stale && styles.cardSettled]}>
@@ -238,10 +267,23 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
   },
-  cardSettled: { opacity: 0.75, gap: 6 },
+  // Opacity alone would drag the body text under 4.5:1 on the dark ground, so a
+  // settled card dims its CHROME and the text below keeps its own contrast.
+  cardSettled: { gap: 6, borderColor: 'rgba(231, 138, 83, 0.45)' },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  title: { color: ACCENT },
-  settledSub: { color: 'rgb(170, 170, 170)' },
+  title: { color: ACCENT, flex: 1 },
+  // 'rgb(170,170,170)' on this card's ground measures ~4.1:1 — under the 4.5:1
+  // floor for body text. This is the settled state's only prose, so it is the
+  // one place that mattered.
+  settledSub: { color: 'rgb(200, 200, 200)' },
+  undoButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: ACCENT,
+  },
+  undoText: { color: ACCENT },
   rows: { gap: 6 },
   optionRow: {
     flexDirection: 'row',
