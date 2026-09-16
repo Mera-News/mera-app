@@ -64,6 +64,9 @@ interface GoldsetArticle {
   description: string;
   countryCode: string | null;
   relatedFacts: string[];
+  /** Present on goldset-348, absent on the synthetic injected fixture. Carried
+   *  through to the row so the golden join needs no second lookup. */
+  verdict?: string | null;
 }
 interface Goldset {
   personaFacts: { statement: string }[];
@@ -165,6 +168,26 @@ async function main(): Promise<number> {
   const goldset = JSON.parse(readFileSync(args.fixture, 'utf8')) as Goldset;
   const factStatements = goldset.personaFacts.map((f) => f.statement);
   const candidates = toCandidates(goldset.articles).slice(0, args.limit);
+  // articleId -> fixture row, for the verdict column on each emitted row.
+  const verdictById = new Map<string, string | null>(
+    goldset.articles.map((a) => [a.articleId, a.verdict ?? null]),
+  );
+  const itemsFor = (cs: ScoringCandidate[]): { id: string; verdict?: string | null }[] =>
+    cs.map((c) => ({ id: c.id, verdict: verdictById.get(c.id) ?? null }));
+  const candidateIds = new Set(candidates.map((c) => c.id));
+  /** Resolves a `reason:<candidateId>` call id to its one item. A row whose
+   *  join cannot be resolved is worse than a missing row: it looks like data
+   *  and cannot be joined to a label, so this fails the run instead. */
+  const reasonItems = (callId: string): { id: string; verdict?: string | null }[] => {
+    const id = callId.startsWith('reason:') ? callId.slice('reason:'.length) : '';
+    if (!id || !candidateIds.has(id)) {
+      throw new Error(
+        `harness-local: cannot resolve a reason call id to an article (${callId}). ` +
+          'The id shape from buildReasonCallsForSubset has changed; fix the join rather than emitting unjoinable rows.',
+      );
+    }
+    return [{ id, verdict: verdictById.get(id) ?? null }];
+  };
   if (candidates.length === 0) throw new Error('harness-local: fixture yielded no candidates.');
 
   const run = createRunWriter({ label: args.label });
@@ -288,6 +311,7 @@ async function main(): Promise<number> {
           rawOutput: result.content,
           toolCalls: [],
           parsedSchema: scores,
+          items: itemsFor(chunkCandidates),
           requestedCount: chunkCandidates.length,
           returnedCount: result.error ? null : scores.length,
           personaStateDelta: null,
@@ -367,6 +391,13 @@ async function main(): Promise<number> {
             rawOutput: result.content,
             toolCalls: [],
             parsedSchema: result.error ? null : parseReasonResponse(result.content, call.id, call.prompt),
+            // The call id IS the join: buildReasonCallsForSubset builds
+            // `reason:<candidateId>` and ships chunkIdToCandidates EMPTY for
+            // reason bundles (verified in article-pipeline/scoring.ts), so the
+            // map lookup this used to do returned nothing and every reason row
+            // carried an empty items array. reasonItems throws on a miss rather
+            // than emitting a row the golden join cannot use.
+            items: reasonItems(call.id),
             requestedCount: null, returnedCount: null, personaStateDelta: null,
             finishReason: result.finishReason, truncated: result.truncated,
             usage: result.usage,

@@ -109,6 +109,13 @@ export interface RunRow {
   toolCalls: RowToolCall[];
   /** Parsed structured output for the non-tool prompts (scores, topics). */
   parsedSchema: unknown;
+  /**
+   * The items this call scored, IN THE SAME ORDER as `parsedSchema`, so a
+   * golden-label join is by key rather than by parsing titles back out of
+   * `input.messages`. One entry for a reason call, chunk-many for a relevance
+   * batch. Null for calls that score nothing, such as a chat turn.
+   */
+  items: { id: string; verdict?: string | null }[] | null;
   /** Count arms: what the prompt asked for vs what came back. A mechanical
    *  check that can actually fire, unlike a judgement about quality. */
   requestedCount: number | null;

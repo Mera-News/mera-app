@@ -1,0 +1,40 @@
+{
+  "turns": [
+    {
+      "index": 0,
+      "user": "I moved to Porto last year and I work on bridge inspections."
+    },
+    {
+      "index": 1,
+      "user": "Mostly the older road bridges over the Douro."
+    },
+    {
+      "index": 2,
+      "user": "I take the train in every morning from Vila Nova de Gaia."
+    },
+    {
+      "index": 3,
+      "user": "Any news about rail strikes would be useful."
+    },
+    {
+      "index": 4,
+      "user": "I also follow the national football team."
+    },
+    {
+      "index": 5,
+      "user": "My sister is visiting next month, she lives abroad."
+    },
+    {
+      "index": 6,
+      "user": "Can you show me more about bridge safety regulations in the EU?"
+    },
+    {
+      "index": 7,
+      "user": "That is helpful, thanks."
+    },
+    {
+      "index": 8,
+      "user": "One more thing, I am thinking about studying structural engineering part time."
+    }
+  ]
+}

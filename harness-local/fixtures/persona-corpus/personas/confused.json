@@ -1,0 +1,150 @@
+{
+  "_note": "Typos, vagueness, contradictions across turns, facts restated that are already saved, a six-fact dump in one message, and a language switch mid-conversation. Tests whether the prompt notices it already knows something.",
+  "cohort": "confused",
+  "facts": [
+    {
+      "id": "f01",
+      "statement": "Lives in Lyon, France",
+      "questionnaireAttribute": "location: residence",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000060000,
+      "metadata": {
+        "topics": [
+          "Lyon local news"
+        ]
+      }
+    },
+    {
+      "id": "f02",
+      "statement": "Works in logistics",
+      "questionnaireAttribute": "profession: job",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000120000,
+      "metadata": {
+        "topics": [
+          "Logistics industry"
+        ]
+      }
+    },
+    {
+      "id": "f03",
+      "statement": "Has two children in primary school",
+      "questionnaireAttribute": "family: children",
+      "questionnaireLevel": 2,
+      "questionnaireLevelCategory": "Family",
+      "weight": 1.0,
+      "createdAtMs": 1780000180000,
+      "metadata": {
+        "topics": [
+          "French schools"
+        ]
+      }
+    },
+    {
+      "id": "f04",
+      "statement": "Interested in cycling",
+      "questionnaireAttribute": "interest: topic",
+      "questionnaireLevel": 2,
+      "questionnaireLevelCategory": "Interests",
+      "weight": 1.0,
+      "createdAtMs": 1780000240000,
+      "metadata": {
+        "topics": [
+          "Cycling"
+        ]
+      }
+    },
+    {
+      "id": "f05",
+      "statement": "Originally from Lisbon, Portugal",
+      "questionnaireAttribute": "background: origin",
+      "questionnaireLevel": 2,
+      "questionnaireLevelCategory": "Background",
+      "weight": 1.0,
+      "createdAtMs": 1780000300000,
+      "metadata": {
+        "topics": [
+          "Portugal news"
+        ]
+      }
+    }
+  ],
+  "topics": [
+    {
+      "id": "t001",
+      "factId": "f01",
+      "text": "Lyon local news",
+      "normalizedText": "lyon local news",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000030000
+    },
+    {
+      "id": "t002",
+      "factId": "f02",
+      "text": "Logistics industry",
+      "normalizedText": "logistics industry",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000060000
+    },
+    {
+      "id": "t003",
+      "factId": "f03",
+      "text": "French schools",
+      "normalizedText": "french schools",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000090000
+    },
+    {
+      "id": "t004",
+      "factId": "f04",
+      "text": "Cycling",
+      "normalizedText": "cycling",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000120000
+    },
+    {
+      "id": "t005",
+      "factId": "f05",
+      "text": "Portugal news",
+      "normalizedText": "portugal news",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000150000
+    },
+    {
+      "id": "t006",
+      "factId": "f01",
+      "text": "France transport strikes",
+      "normalizedText": "france transport strikes",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000180000
+    },
+    {
+      "id": "t007",
+      "factId": "f02",
+      "text": "School holidays France",
+      "normalizedText": "school holidays france",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000210000
+    },
+    {
+      "id": "t008",
+      "factId": "f03",
+      "text": "Tour de France",
+      "normalizedText": "tour de france",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000240000
+    }
+  ]
+}

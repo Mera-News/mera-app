@@ -1,0 +1,52 @@
+{
+  "turns": [
+    {
+      "index": 0,
+      "user": "I moved from Rotterdam to Utrecht last month."
+    },
+    {
+      "index": 1,
+      "user": "I still work for the same shipping firm though."
+    },
+    {
+      "index": 2,
+      "user": "Actually my job title changed, I am a senior data analyst now."
+    },
+    {
+      "index": 3,
+      "user": "I am not vegetarian anymore, I eat fish now."
+    },
+    {
+      "index": 4,
+      "user": "I bought a second apartment as an investment."
+    },
+    {
+      "index": 5,
+      "user": "My mortgage moved to a fixed rate in January."
+    },
+    {
+      "index": 6,
+      "user": "I stopped running, my knee is bad. I swim instead."
+    },
+    {
+      "index": 7,
+      "user": "I speak Polish, Dutch, English and now some German."
+    },
+    {
+      "index": 8,
+      "user": "I started the part time masters, it is in logistics analytics."
+    },
+    {
+      "index": 9,
+      "user": "I follow Ajax now, not Feyenoord. Long story."
+    },
+    {
+      "index": 10,
+      "user": "My child moved to a Dutch language school, not bilingual."
+    },
+    {
+      "index": 11,
+      "user": "I travel to Poland four times a year now, not twice."
+    }
+  ]
+}

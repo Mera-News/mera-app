@@ -1,0 +1,120 @@
+{
+  "_note": "Clear, cooperative user. One to three facts a message, plausible follow-ups. This is the control: whatever a prompt cannot do here it cannot do anywhere.",
+  "cohort": "good",
+  "facts": [
+    {
+      "id": "f01",
+      "statement": "Lives in Porto, Portugal",
+      "questionnaireAttribute": "location: residence",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000060000,
+      "metadata": {
+        "topics": [
+          "Porto local news",
+          "Portugal politics"
+        ]
+      }
+    },
+    {
+      "id": "f02",
+      "statement": "Works as a civil engineer on bridge inspection",
+      "questionnaireAttribute": "profession: job",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000120000,
+      "metadata": {
+        "topics": [
+          "Civil engineering",
+          "Bridge safety"
+        ]
+      }
+    },
+    {
+      "id": "f03",
+      "statement": "Follows the Portuguese national football team",
+      "questionnaireAttribute": "interest: topic",
+      "questionnaireLevel": 2,
+      "questionnaireLevelCategory": "Interests",
+      "weight": 1.0,
+      "createdAtMs": 1780000180000,
+      "metadata": {
+        "topics": [
+          "Portugal football"
+        ]
+      }
+    },
+    {
+      "id": "f04",
+      "statement": "Commutes daily by train",
+      "questionnaireAttribute": "lifestyle: transport",
+      "questionnaireLevel": 2,
+      "questionnaireLevelCategory": "Lifestyle",
+      "weight": 1.0,
+      "createdAtMs": 1780000240000,
+      "metadata": {
+        "topics": [
+          "Portugal rail"
+        ]
+      }
+    }
+  ],
+  "topics": [
+    {
+      "id": "t001",
+      "factId": "f01",
+      "text": "Porto local news",
+      "normalizedText": "porto local news",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000030000
+    },
+    {
+      "id": "t002",
+      "factId": "f01",
+      "text": "Portugal politics",
+      "normalizedText": "portugal politics",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000060000
+    },
+    {
+      "id": "t003",
+      "factId": "f02",
+      "text": "Civil engineering",
+      "normalizedText": "civil engineering",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000090000
+    },
+    {
+      "id": "t004",
+      "factId": "f02",
+      "text": "Bridge safety",
+      "normalizedText": "bridge safety",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000120000
+    },
+    {
+      "id": "t005",
+      "factId": "f03",
+      "text": "Portugal football",
+      "normalizedText": "portugal football",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000150000
+    },
+    {
+      "id": "t006",
+      "factId": "f03",
+      "text": "Portugal rail",
+      "normalizedText": "portugal rail",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000180000
+    }
+  ]
+}

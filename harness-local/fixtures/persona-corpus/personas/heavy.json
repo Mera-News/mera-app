@@ -1,0 +1,608 @@
+{
+  "_note": "20 saved facts and 40 tracked topics before the first turn, then facts that overlap or conflict with what is already there. Starts two below MAX_FACTS_IN_CONTEXT (22) and crosses it mid-sequence, so prompt truncation is part of what this cohort measures. Run it before any slice(0,22) change so the baseline exists.",
+  "cohort": "heavy",
+  "facts": [
+    {
+      "id": "f01",
+      "statement": "Lives in Rotterdam, Netherlands",
+      "questionnaireAttribute": "location: residence",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000060000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f02",
+      "statement": "Works as a data analyst at a shipping firm",
+      "questionnaireAttribute": "profession: job",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000120000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f03",
+      "statement": "Originally from Gdansk, Poland",
+      "questionnaireAttribute": "background: origin",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000180000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f04",
+      "statement": "Speaks Polish, Dutch and English",
+      "questionnaireAttribute": "background: languages",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000240000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f05",
+      "statement": "Married with one child",
+      "questionnaireAttribute": "family: status",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000300000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f06",
+      "statement": "Child attends a bilingual primary school",
+      "questionnaireAttribute": "family: children",
+      "questionnaireLevel": 1,
+      "questionnaireLevelCategory": "Core",
+      "weight": 1.0,
+      "createdAtMs": 1780000360000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f07",
+      "statement": "Owns an apartment near the harbour",
+      "questionnaireAttribute": "property: home",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000420000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f08",
+      "statement": "Holds a mortgage with a variable rate",
+      "questionnaireAttribute": "finance: mortgage",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000480000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f09",
+      "statement": "Invests in index funds monthly",
+      "questionnaireAttribute": "finance: investing",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000540000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f10",
+      "statement": "Follows Dutch football, especially Feyenoord",
+      "questionnaireAttribute": "interest: sport",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000600000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f11",
+      "statement": "Runs three times a week",
+      "questionnaireAttribute": "lifestyle: exercise",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000660000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f12",
+      "statement": "Vegetarian since 2019",
+      "questionnaireAttribute": "lifestyle: diet",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000720000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f13",
+      "statement": "Commutes by bicycle year round",
+      "questionnaireAttribute": "lifestyle: transport",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000780000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f14",
+      "statement": "Volunteers at a Polish community centre",
+      "questionnaireAttribute": "community: volunteering",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000840000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f15",
+      "statement": "Reads about supply chain technology",
+      "questionnaireAttribute": "interest: topic",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000900000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f16",
+      "statement": "Worried about port automation and jobs",
+      "questionnaireAttribute": "concern: employment",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780000960000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f17",
+      "statement": "Plans to study part time for a masters",
+      "questionnaireAttribute": "education: plans",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780001020000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f18",
+      "statement": "Cares about air quality in the city",
+      "questionnaireAttribute": "concern: environment",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780001080000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f19",
+      "statement": "Travels to Poland twice a year",
+      "questionnaireAttribute": "travel: frequent",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780001140000,
+      "metadata": {
+        "topics": []
+      }
+    },
+    {
+      "id": "f20",
+      "statement": "Uses public transport when it rains",
+      "questionnaireAttribute": "lifestyle: transport",
+      "questionnaireLevel": 3,
+      "questionnaireLevelCategory": "Extended",
+      "weight": 1.0,
+      "createdAtMs": 1780001200000,
+      "metadata": {
+        "topics": []
+      }
+    }
+  ],
+  "topics": [
+    {
+      "id": "t001",
+      "factId": "f01",
+      "text": "Rotterdam local news",
+      "normalizedText": "rotterdam local news",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000030000
+    },
+    {
+      "id": "t002",
+      "factId": "f02",
+      "text": "Port of Rotterdam",
+      "normalizedText": "port of rotterdam",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000060000
+    },
+    {
+      "id": "t003",
+      "factId": "f03",
+      "text": "Dutch politics",
+      "normalizedText": "dutch politics",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000090000
+    },
+    {
+      "id": "t004",
+      "factId": "f04",
+      "text": "Shipping industry",
+      "normalizedText": "shipping industry",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000120000
+    },
+    {
+      "id": "t005",
+      "factId": "f05",
+      "text": "Data analyst careers",
+      "normalizedText": "data analyst careers",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000150000
+    },
+    {
+      "id": "t006",
+      "factId": "f06",
+      "text": "Poland news",
+      "normalizedText": "poland news",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000180000
+    },
+    {
+      "id": "t007",
+      "factId": "f07",
+      "text": "Gdansk local news",
+      "normalizedText": "gdansk local news",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000210000
+    },
+    {
+      "id": "t008",
+      "factId": "f08",
+      "text": "Polish diaspora Netherlands",
+      "normalizedText": "polish diaspora netherlands",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000240000
+    },
+    {
+      "id": "t009",
+      "factId": "f09",
+      "text": "Language education",
+      "normalizedText": "language education",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000270000
+    },
+    {
+      "id": "t010",
+      "factId": "f10",
+      "text": "Bilingual schooling",
+      "normalizedText": "bilingual schooling",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000300000
+    },
+    {
+      "id": "t011",
+      "factId": "f11",
+      "text": "Dutch housing market",
+      "normalizedText": "dutch housing market",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000330000
+    },
+    {
+      "id": "t012",
+      "factId": "f12",
+      "text": "Mortgage rates Netherlands",
+      "normalizedText": "mortgage rates netherlands",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000360000
+    },
+    {
+      "id": "t013",
+      "factId": "f13",
+      "text": "ECB interest rates",
+      "normalizedText": "ecb interest rates",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000390000
+    },
+    {
+      "id": "t014",
+      "factId": "f14",
+      "text": "Index fund investing",
+      "normalizedText": "index fund investing",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000420000
+    },
+    {
+      "id": "t015",
+      "factId": "f15",
+      "text": "Personal finance Netherlands",
+      "normalizedText": "personal finance netherlands",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000450000
+    },
+    {
+      "id": "t016",
+      "factId": "f16",
+      "text": "Feyenoord",
+      "normalizedText": "feyenoord",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000480000
+    },
+    {
+      "id": "t017",
+      "factId": "f17",
+      "text": "Eredivisie",
+      "normalizedText": "eredivisie",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000510000
+    },
+    {
+      "id": "t018",
+      "factId": "f18",
+      "text": "Dutch football",
+      "normalizedText": "dutch football",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000540000
+    },
+    {
+      "id": "t019",
+      "factId": "f19",
+      "text": "Running events Rotterdam",
+      "normalizedText": "running events rotterdam",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000570000
+    },
+    {
+      "id": "t020",
+      "factId": "f20",
+      "text": "Marathon training",
+      "normalizedText": "marathon training",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000600000
+    },
+    {
+      "id": "t021",
+      "factId": "f01",
+      "text": "Vegetarian food trends",
+      "normalizedText": "vegetarian food trends",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000630000
+    },
+    {
+      "id": "t022",
+      "factId": "f02",
+      "text": "Food prices Netherlands",
+      "normalizedText": "food prices netherlands",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000660000
+    },
+    {
+      "id": "t023",
+      "factId": "f03",
+      "text": "Cycling infrastructure",
+      "normalizedText": "cycling infrastructure",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000690000
+    },
+    {
+      "id": "t024",
+      "factId": "f04",
+      "text": "Bike theft Rotterdam",
+      "normalizedText": "bike theft rotterdam",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000720000
+    },
+    {
+      "id": "t025",
+      "factId": "f05",
+      "text": "Public transport NL",
+      "normalizedText": "public transport nl",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000750000
+    },
+    {
+      "id": "t026",
+      "factId": "f06",
+      "text": "Polish community events",
+      "normalizedText": "polish community events",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000780000
+    },
+    {
+      "id": "t027",
+      "factId": "f07",
+      "text": "Volunteering Netherlands",
+      "normalizedText": "volunteering netherlands",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000810000
+    },
+    {
+      "id": "t028",
+      "factId": "f08",
+      "text": "Supply chain technology",
+      "normalizedText": "supply chain technology",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000840000
+    },
+    {
+      "id": "t029",
+      "factId": "f09",
+      "text": "Port automation",
+      "normalizedText": "port automation",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000870000
+    },
+    {
+      "id": "t030",
+      "factId": "f10",
+      "text": "Dock worker unions",
+      "normalizedText": "dock worker unions",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000900000
+    },
+    {
+      "id": "t031",
+      "factId": "f11",
+      "text": "Logistics employment",
+      "normalizedText": "logistics employment",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000930000
+    },
+    {
+      "id": "t032",
+      "factId": "f12",
+      "text": "Part time masters programmes",
+      "normalizedText": "part time masters programmes",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000960000
+    },
+    {
+      "id": "t033",
+      "factId": "f13",
+      "text": "Dutch universities",
+      "normalizedText": "dutch universities",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780000990000
+    },
+    {
+      "id": "t034",
+      "factId": "f14",
+      "text": "Air quality Rotterdam",
+      "normalizedText": "air quality rotterdam",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780001020000
+    },
+    {
+      "id": "t035",
+      "factId": "f15",
+      "text": "Emissions policy",
+      "normalizedText": "emissions policy",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780001050000
+    },
+    {
+      "id": "t036",
+      "factId": "f16",
+      "text": "Climate policy Netherlands",
+      "normalizedText": "climate policy netherlands",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780001080000
+    },
+    {
+      "id": "t037",
+      "factId": "f17",
+      "text": "Rail travel to Poland",
+      "normalizedText": "rail travel to poland",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780001110000
+    },
+    {
+      "id": "t038",
+      "factId": "f18",
+      "text": "Flight prices Europe",
+      "normalizedText": "flight prices europe",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780001140000
+    },
+    {
+      "id": "t039",
+      "factId": "f19",
+      "text": "Rain forecast Netherlands",
+      "normalizedText": "rain forecast netherlands",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780001170000
+    },
+    {
+      "id": "t040",
+      "factId": "f20",
+      "text": "Commuter delays",
+      "normalizedText": "commuter delays",
+      "weight": 0.75,
+      "status": "active",
+      "lastSignalAtMs": 1780001200000
+    }
+  ]
+}

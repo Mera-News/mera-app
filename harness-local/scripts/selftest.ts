@@ -29,6 +29,10 @@ import {
 } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
+import {
+  COHORTS, applyToolCalls, freshState, loadCohort, measureFactsInPrompt,
+  measureTurnsInPrompt, renderKnownFacts, PROMPT_CAPS,
+} from '../lib/corpus';
 
 let f = 0;
 function ck(n: string, ok: boolean, d = ''): void {
@@ -53,7 +57,7 @@ function row(over: Partial<RunRow>): RunRow {
     fallbackFrom: null, hedged: false,
     input: { systemPrompt: 'S', messages: MSGS, toolSchemaNames: ['saveFact'] },
     personaStateIn: { factCount: 3, topicCount: 5, factsInPrompt: 3, turnsInPrompt: 1 },
-    rawOutput: 'out', toolCalls: [], parsedSchema: null,
+    rawOutput: 'out', toolCalls: [], parsedSchema: null, items: null,
     requestedCount: null, returnedCount: null, personaStateDelta: null,
     finishReason: 'stop', truncated: false,
     usage: { promptTokens: 1000, completionTokens: 500, cachedTokens: 0, reasoningTokens: 0 },
@@ -340,6 +344,68 @@ async function main(): Promise<number> {
     streamed.callTypes.every((c) => c.ttVisibleP50Ms !== null),
     JSON.stringify(streamed.callTypes.map((c) => c.ttVisibleP50Ms)));
   ck('time-to-first-visible null when nothing streamed', ctA?.ttVisibleP50Ms === null);
+
+  console.log('\n== corpus ==');
+  // --- 12. every cohort loads and is shaped as designed ---------------------
+  const loaded = COHORTS.map((c) => loadCohort(c));
+  ck('all four cohorts load', loaded.length === 4, loaded.map((c) => c.name).join(','));
+  ck('every cohort has turns', loaded.every((c) => c.turns.length >= 8),
+    loaded.map((c) => `${c.name}:${c.turns.length}`).join(' '));
+  const heavy = loaded.find((c) => c.name === 'heavy')!;
+  ck('heavy starts at 20 facts', heavy.persona.facts.length === 20, String(heavy.persona.facts.length));
+  ck('heavy starts at 40 topics', heavy.persona.topics.length === 40, String(heavy.persona.topics.length));
+  ck('heavy starts BELOW the context cap', heavy.persona.facts.length < PROMPT_CAPS.maxFactsInContext,
+    `${heavy.persona.facts.length} < ${PROMPT_CAPS.maxFactsInContext}`);
+  ck('heavy has enough turns to CROSS the cap',
+    heavy.persona.facts.length + heavy.turns.length > PROMPT_CAPS.maxFactsInContext,
+    `${heavy.persona.facts.length} + ${heavy.turns.length} > ${PROMPT_CAPS.maxFactsInContext}`);
+  ck('no em dash in any fixture turn',
+    loaded.every((c) => c.turns.every((t) => !t.user.includes('\u2014'))));
+
+  // --- 13. factsInPrompt is MEASURED, and the cap is observable -------------
+  ck('measured count matches a sub-cap persona',
+    measureFactsInPrompt(renderKnownFacts(heavy.persona)) === 20,
+    String(measureFactsInPrompt(renderKnownFacts(heavy.persona))));
+  const overCap = freshState(heavy.persona);
+  for (let i = 0; i < 10; i++) {
+    overCap.facts.push({ ...heavy.persona.facts[0], id: `x${i}`, statement: `Extra fact ${i}` });
+  }
+  const measuredOver = measureFactsInPrompt(renderKnownFacts(overCap));
+  ck('the cap is OBSERVED, not assumed', measuredOver === PROMPT_CAPS.maxFactsInContext,
+    `${overCap.facts.length} facts rendered as ${measuredOver}`);
+  ck('an empty persona measures 0', measureFactsInPrompt(renderKnownFacts({ ...heavy.persona, facts: [] })) === 0);
+  ck('turnsInPrompt counts user turns only',
+    measureTurnsInPrompt([{ role: 'system' }, { role: 'user' }, { role: 'assistant' }, { role: 'user' }]) === 2);
+
+  // --- 14. cross-turn state, with the detectors as the app wrote them -------
+  // POSITIVE CONTROL: a residence that replaces a known residence must be
+  // flagged. heavy fact 1 is "Lives in Rotterdam, Netherlands", and turn 0
+  // moves to Utrecht, which is the whole point of that cohort.
+  const moved = applyToolCalls(heavy.persona, [
+    { name: 'saveFact', parsed: { statement: 'Lives in Utrecht, Netherlands', attribute: 'location: residence' } },
+  ]);
+  ck('a saved fact lands in state', moved.state.facts.length === 21, String(moved.state.facts.length));
+  ck('a conflicting residence IS detected', moved.delta.conflicts.length > 0,
+    moved.delta.conflicts[0] ?? 'none');
+  // NEGATIVE CONTROL: an unrelated fact under a plural subject must NOT be
+  // flagged, or the detector is just saying yes to everything.
+  const unrelated = applyToolCalls(heavy.persona, [
+    { name: 'saveFact', parsed: { statement: 'Enjoys sailing at weekends', attribute: 'interest: topic' } },
+  ]);
+  ck('an unrelated fact is NOT flagged', unrelated.delta.conflicts.length === 0,
+    unrelated.delta.conflicts.join('; '));
+  ck('added is recorded', unrelated.delta.added.length === 1, unrelated.delta.added.join(''));
+  // state isolation: a repeat must not inherit the previous repeat's mutations
+  ck('the cohort fixture is not mutated', heavy.persona.facts.length === 20, String(heavy.persona.facts.length));
+  const deleted = applyToolCalls(heavy.persona, [{ name: 'deleteFact', parsed: { factId: 'f01' } }]);
+  ck('deleteFact removes exactly one', deleted.state.facts.length === 19, String(deleted.state.facts.length));
+  const updated = applyToolCalls(heavy.persona, [
+    { name: 'updateFact', parsed: { factId: 'f01', statement: 'Lives in Delft, Netherlands' } },
+  ]);
+  ck('updateFact replaces the statement',
+    updated.state.facts.find((x) => x.id === 'f01')?.statement === 'Lives in Delft, Netherlands');
+  ck('a tool call with no statement is ignored',
+    applyToolCalls(heavy.persona, [{ name: 'saveFact', parsed: {} }]).state.facts.length === 20);
 
   console.log(`\n${f === 0 ? 'ALL PASS' : f + ' FAILURE(S)'}`);
   return f === 0 ? 0 : 1;
