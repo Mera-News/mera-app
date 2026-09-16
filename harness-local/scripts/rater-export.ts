@@ -2,7 +2,7 @@
 //
 //   npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/rater-export.ts <runDir> \
-//       [--seed 12345] [--repeat 0] [--call-type reason]
+//       [--merge <runDir2>] [--seed 12345] [--repeat 0] [--call-type reason]
 //       [--duplicate 8] [--include <rowId>,<rowId>]
 //
 // --repeat selects ONE repeat, which is what a floor run wants: the repeats are
@@ -25,6 +25,13 @@
 //    and intra-rater agreement can be scored afterwards from the key.
 //  - rows are shuffled with a RECORDED seed, so the order carries no signal and
 //    the shuffle is reproducible.
+//
+// --merge pulls a second run into ONE batch, which is how two prompt variants
+// get judged against each other rather than in two sittings the rater cannot
+// compare. The opaque label is assigned per (run, arm) pair, NOT per arm: two
+// runs of the same model under different prompt variants would otherwise
+// collapse into one label and the comparison would vanish. The key maps each
+// label back to its run and variant.
 //
 // The key file is written SEPARATELY and must not be given to the rater. It is
 // what turns the blind scores back into a per-arm result.
@@ -68,7 +75,35 @@ function main(): number {
   if (!Number.isFinite(seed)) throw new Error('harness-local: --seed must be a number.');
 
   const dir = resolve(runDir);
-  const all = readJsonl(join(dir, 'rows.jsonl'));
+  // Every --merge occurrence adds a run. The first positional stays the primary,
+  // and the export is written into it.
+  const mergeDirs: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--merge') {
+      const d = argv[i + 1];
+      if (!d || d.startsWith('--')) throw new Error('harness-local: --merge needs a run directory.');
+      mergeDirs.push(resolve(d));
+    }
+  }
+
+  const sources = [dir, ...mergeDirs];
+  const runOf = new Map<string, string>();
+  const all: RunRow[] = [];
+  for (const src of sources) {
+    const part = readJsonl(join(src, 'rows.jsonl'));
+    if (part.length === 0) throw new Error(`harness-local: no rows in ${src}.`);
+    const name = src.split('/').filter(Boolean).pop() ?? src;
+    for (const r of part) {
+      if (runOf.has(r.rowId)) {
+        throw new Error(
+          `harness-local: row id ${r.rowId} appears in two runs. Refusing to merge, since a ` +
+            'duplicate id makes the rater scores unattributable.',
+        );
+      }
+      runOf.set(r.rowId, name);
+      all.push(r);
+    }
+  }
   if (all.length === 0) throw new Error(`harness-local: no rows in ${dir}.`);
 
   const repeatIdx = argv.indexOf('--repeat');
@@ -146,21 +181,38 @@ function main(): number {
     }
     for (const src of picked) {
       const copy = { ...src, rowId: newRowId(), dupOf: src.rowId };
+      // The copy needs its source's run registered against its NEW id, or
+      // armKey resolves to "undefined::<arm>" and every duplicate lands in a
+      // phantom arm of its own. That would both break the pairing and hand the
+      // rater a way to spot the duplicates, which is the one thing they must
+      // not be able to do.
+      const srcRun = runOf.get(src.rowId);
+      if (srcRun === undefined) {
+        throw new Error(`harness-local: no source run for row ${src.rowId}.`);
+      }
+      runOf.set(copy.rowId, srcRun);
       addedDuplicates.push({ rowId: copy.rowId, dupOf: src.rowId });
       rows.push(copy);
     }
   }
 
-  // Stable label assignment: arms sorted, so the same run always relabels the
-  // same way for a given seed and two exports can be compared.
-  const arms = [...new Set(rows.map((r) => r.arm))].sort();
+  // Label per (run, arm), sorted, so the same inputs always relabel the same way
+  // and two runs of the SAME model under different prompt variants stay distinct.
+  const armKey = (r: RunRow): string => `${runOf.get(r.rowId)}::${r.arm}`;
+  const arms = [...new Set(rows.map(armKey))].sort();
   const label = new Map(arms.map((a, i) => [a, `arm-${String.fromCharCode(65 + i)}`]));
+  // Raw strings the guard must never find in the export: both the composite
+  // keys and the bare arm ids they are built from.
+  const secrets = [...new Set([...arms, ...rows.map((r) => r.arm)])];
 
   const blind = shuffle(rows, mulberry32(seed)).map((r) => {
     const out: Record<string, unknown> = { ...r };
-    out.arm = label.get(r.arm);
-    out.modelRequested = label.get(r.arm);
-    out.modelSent = r.modelSent === null ? null : label.get(r.arm);
+    const lbl = label.get(armKey(r));
+    out.arm = lbl;
+    out.modelRequested = lbl;
+    out.modelSent = r.modelSent === null ? null : lbl;
+    // runId names the source run, and with --merge that IS the variant.
+    out.runId = lbl;
     delete out.dupOf;
     delete out.variant;
     // interleaveGroup is a SCHEDULING key, not judgeable content, and the
@@ -179,7 +231,7 @@ function main(): number {
   // Matched on the FULL arm id, not a vendor substring: the goldset contains a
   // real article about Alibaba unveiling a Qwen model, and treating that as a
   // leak would refuse every honest export.
-  const leaked = arms.filter((a) => serialized.includes(a));
+  const leaked = secrets.filter((a) => serialized.includes(a));
   if (leaked.length > 0) {
     throw new Error(
       `harness-local: refusing to write a rater export that still names its arms: ${leaked.join(', ')}. ` +
@@ -203,7 +255,14 @@ function main(): number {
         selectedCallType: callType,
         forcedRowIds: [...forced],
         duplicatesAddedAtExport: addedDuplicates,
-        labels: Object.fromEntries([...label.entries()].map(([arm, l]) => [l, arm])),
+        sources,
+        labels: Object.fromEntries(
+          [...label.entries()].map(([key, l]) => {
+            const [runName, arm] = key.split('::');
+            const sample = rows.find((r) => armKey(r) === key);
+            return [l, { run: runName, arm, variant: sample?.variant ?? null }];
+          }),
+        ),
         duplicates: rows.filter((r) => r.dupOf !== null).map((r) => ({ rowId: r.rowId, dupOf: r.dupOf })),
         variantByRowId: Object.fromEntries(rows.map((r) => [r.rowId, r.variant])),
       },
@@ -217,7 +276,8 @@ function main(): number {
   const uniqueCount = rows.length - dupCount;
   // eslint-disable-next-line no-console
   console.log(
-    `rows       : ${rows.length} of ${all.length} in the run` +
+    `sources    : ${sources.length} run(s): ${sources.map((x) => x.split('/').pop()).join(', ')}\n` +
+      `rows       : ${rows.length} of ${all.length} across the run(s)` +
       `${repeat === null ? '' : ` (repeat ${repeat} only)`}\n` +
       `unique     : ${uniqueCount}\n` +
       `duplicates : ${dupCount}, indistinguishable in the export\n` +
