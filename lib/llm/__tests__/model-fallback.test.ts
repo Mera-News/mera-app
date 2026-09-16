@@ -46,13 +46,23 @@ describe('model-fallback', () => {
 
   describe('MODEL_FALLBACKS wiring', () => {
     it('maps each primary to its class-appropriate TEE-served fallback', () => {
-      // BIG backs the persona chat, which needs FUNCTION TOOL CALLING — the
-      // 2026-09-11 probe showed GLM 5.3 Flash is the only other ready TEE model
-      // that returns schema-conformant tool arguments. SMALL runs JSON-shaped
-      // prompts with thinking off, where GLM 5.3 Flash parsed 52/52. Rationale
-      // and the full probe table live in constants.ts.
-      expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('z-ai/glm-5.3-flash');
-      expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('z-ai/glm-5.3-flash');
+      // 2026-09-16: GLM 5.3 Flash is CLOSED for both lanes (0/6 parse, a leaked
+      // reasoning trace on every call, and no way to switch thinking off). The
+      // two primaries now fall back to EACH OTHER: both are self-hosted tier,
+      // both attest, and BIG's needs tools, which Qwen3.6 has. Rationale and the
+      // measured figures live in constants.ts.
+      expect(MODEL_FALLBACKS[BIG_MODEL]).toBe('Qwen/Qwen3.6-35B-A3B-FP8');
+      expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe('Qwen/Qwen3.8-27B');
+    });
+
+    it('the two primaries fall back to each other, so no fallback is unwarmed', () => {
+      // A consequence worth stating: prewarmCloudChat attests BIG and SMALL
+      // only, so before this change a fallback was first touched at the moment
+      // it was needed and a dead one stayed silent until an outage. Now every
+      // fallback is also a primary, so it is attested every cold start and
+      // cannot rot unnoticed.
+      expect(MODEL_FALLBACKS[BIG_MODEL]).toBe(SMALL_MODEL);
+      expect(MODEL_FALLBACKS[SMALL_MODEL]).toBe(BIG_MODEL);
     });
 
     it('never falls back to a model that is its own primary', () => {

@@ -60,25 +60,46 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *   the prefill leak the local path already strips.
  *
  *   SMALL (scoring / topics / reasons) sends JSON-shaped prompts with thinking
- *   off, never function tools. GLM 5.3 Flash re-measured 2026-09-16 against the
- *   same shipped scoring prompt: 0/6 parsed, a leaked reasoning trace on EVERY
- *   call, and 320-2048 completion tokens where Qwen needs 89. The earlier 52/52
- *   figure does not reproduce under this model id. GLM cannot be told to stop
- *   thinking (`enable_thinking:false` is sent and ignored), its trace length
- *   varies run to run, and at the shipped `scoreBatchMaxTokens` = 320 the trace
- *   is cut before its own closing think tag, so lib/llm/reasoning-leak cannot
- *   rescue it and the decoder's regex path scrapes numbers out of the prose.
- *   Treat this fallback as UNVALIDATED for the scoring and reason paths.
- *   Qwen3.8 also parses (12/12) but
- *   advertises no json_mode and costs 3x on output. cloudComplete strips a
- *   leaked `…</think>` prefix defensively (lib/llm/reasoning-leak) because the
- *   short-prompt leak is real even though the shipped prompts did not trigger it.
+ *   off, never function tools.
+ *
+ *   z-ai/glm-5.3-flash is CLOSED, not merely replaced: re-measured 2026-09-16
+ *   against the same shipped scoring prompt it parsed 0/6 with a leaked
+ *   reasoning trace on EVERY call, and it cannot be told to stop thinking
+ *   (`enable_thinking:false` is sent and ignored). The 52/52 figure that
+ *   originally selected it does not reproduce under the same model id.
+ *
+ *   SMALL -> Qwen/Qwen3.8-27B. Screened on the article pipeline at production
+ *   budgets: 60/60 clean tiered parses, 0 band violations, 0 errors, 0 trace
+ *   leaks. Costs +93% and runs +25% slower on a projected sync, which is
+ *   acceptable for a path that only runs DURING AN OUTAGE. 262K context,
+ *   attested ed25519 on staging.
+ *   A vision-language candidate screened 36% cheaper and was rejected as the
+ *   text fallback by product decision, not by measurement.
+ *
+ *   BIG -> Qwen/Qwen3.6-35B-A3B-FP8, and this one is a DEGRADED fallback, not a
+ *   clean one. The chat path needs TOOLS, which rules out most of the
+ *   catalogue, and Qwen3.6 is the fleet's other proven self-hosted model. But
+ *   screened on the persona corpus at production budgets (good + adversarial,
+ *   19 turns) it returned `finish_reason: length` on 12 of 19, against 0 of 123
+ *   for the primary on the same prompts. Mechanism: Qwen3.6 is used as SMALL
+ *   with thinking OFF, while `cloudChatStream` hardcodes thinking ON, and its
+ *   trace does not fit CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS.
+ *   Tool arguments were well-formed on every call that produced them (0
+ *   malformed, 0 trace leaks), so what a truncated turn loses is the prose and
+ *   sometimes the tool call, not schema validity.
+ *   It is chosen because the alternatives are worse: GLM is closed outright, and
+ *   leaving a primary with NO fallback means a timeout has nowhere to go. Raising
+ *   the reasoning headroom for the fallback, or forcing thinking off on it, is
+ *   the open follow-up and needs its own measurement.
+ *
+ * The two primaries deliberately fall back to DIFFERENT models so one dead
+ * fallback cannot take out both lanes at once.
  *
  * This map is the single point to change if a different fallback is chosen.
  */
 export const MODEL_FALLBACKS: Record<string, string> = {
-  [BIG_MODEL]: 'z-ai/glm-5.3-flash',
-  [SMALL_MODEL]: 'z-ai/glm-5.3-flash',
+  [BIG_MODEL]: 'Qwen/Qwen3.6-35B-A3B-FP8',
+  [SMALL_MODEL]: 'Qwen/Qwen3.8-27B',
 };
 
 /**

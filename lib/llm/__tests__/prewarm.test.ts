@@ -91,17 +91,21 @@ describe('prewarmCloudChat', () => {
     expect(mockGetJwtToken).toHaveBeenCalled();
   });
 
-  it('does NOT warm the hedge fallbacks — they attest lazily on first use', async () => {
+  it('warms exactly the two primaries, which since 2026-09-16 IS both fallbacks', async () => {
     const prewarmCloudChat = loadPrewarm();
     prewarmCloudChat();
     await flush();
 
     const warmed = (mockFetchModelPublicKey.mock.calls as [string][]).map(([m]) => m);
-    // Only BIG's fallback is assertable this way: MODEL_FALLBACKS[SMALL_MODEL]
-    // IS BIG_MODEL in the current map, so "not warmed" could never hold for it
-    // and asserting it would be a check that can only fail.
-    expect(warmed).not.toContain(MODEL_FALLBACKS[BIG_MODEL]);
+    // This test used to assert the fallbacks are NOT warmed. That is no longer
+    // assertable in either direction: the primaries now fall back to each other,
+    // so both fallbacks ARE warmed, as a side effect of being primaries. Keeping
+    // the old assertion would have been a check that can only fail; inverting it
+    // to "fallbacks are warmed" would pin a coincidence rather than the
+    // behaviour. What prewarm actually guarantees is the exact set below, so
+    // that is what is pinned.
     expect(warmed).toEqual([BIG_MODEL, SMALL_MODEL]);
+    expect(warmed).toHaveLength(2);
   });
 
   it('warms the MODEL only for BIG_MODEL — no throwaway completion for the rest', async () => {

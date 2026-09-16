@@ -23,15 +23,37 @@ import {
   type PromptVariantId,
 } from './prompt-variants';
 import ARCHIVE from './prompt-archive-v1.json';
+import V2 from './prompt-experiments-v2.json';
 
 export const TOPICGEN_V1: PromptVariantId = 'topicgen-v1';
 export const PERSONA_V1: PromptVariantId = 'persona-v1';
+
+/**
+ * Candidate arm, NOT a control: the shipped topic prompts with the residence
+ * daily-life permission replaced by an explicit ban on the fixed
+ * local-government / transport / housing triad, plus a scope-preservation rule.
+ *
+ * Both target failures a blind rater found in BOTH existing arms, so they are
+ * not fixes for the v1-vs-baseline difference: the triad appeared identically
+ * for Tallinn, Lyon, Rotterdam and Porto (a softened mandate read as a
+ * template), and national-team facts drifted to clubs and leagues in every
+ * cohort. The scope drift is also why part of the measured near-duplicate rate
+ * is unreachable by the dedupe filter - "Primeira Liga transfers" shares no
+ * token with "Portugal football", so only the prompt can prevent it.
+ */
+export const TOPICGEN_V2: PromptVariantId = 'topicgen-v2';
 
 /** The archived texts, for pin tests and for callers that want the raw string. */
 export const PROMPT_ARCHIVE_V1 = ARCHIVE;
 
 /**
- * Register both v1 control arms.
+ * Register the wave's non-baseline arms: the two v1 CONTROLS and the
+ * topicgen-v2 CANDIDATE.
+ *
+ * All three live behind one entry point because the runners call it once at
+ * module scope; adding a second registration call would be a second thing to
+ * forget, and a missing arm surfaces as "Unknown prompt variant" only after the
+ * run starts.
  *
  * Idempotent-by-refusal is the underlying contract: `registerPromptVariant`
  * throws on a duplicate id and refuses to replace `baseline` at all, so a runner
@@ -59,6 +81,16 @@ export function registerV1ControlArms(options: { includeToolFormat?: boolean } =
     systemPrompts: {
       topicGenFactOnly: ARCHIVE.topicGenFactOnly,
       topicGenCombo: ARCHIVE.topicGenCombo,
+    },
+  });
+
+  registerPromptVariant({
+    id: TOPICGEN_V2,
+    description:
+      'Candidate: no fixed daily-life triad for residence facts, plus scope preservation (national team not clubs, company not sector).',
+    systemPrompts: {
+      topicGenFactOnly: V2.topicGenFactOnly,
+      topicGenCombo: V2.topicGenCombo,
     },
   });
 
