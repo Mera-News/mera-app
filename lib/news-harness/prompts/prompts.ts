@@ -659,6 +659,10 @@ function buildFencedArticleBlock(
     title: string;
     description: string;
     country?: string;
+    /** "Diario de Noticias (Portuguese)" — publisher and language, prebuilt by
+     *  the caller. Optional, and omitted from the block when absent, so a call
+     *  site that does not supply it produces the pre-change bytes exactly. */
+    publication?: string;
     relatedFacts?: string[];
   },
   index: number,
@@ -673,6 +677,13 @@ function buildFencedArticleBlock(
   const country = asUntrusted(article.country ?? '', 60);
   const hasCountry = country.length > 0 && country.toUpperCase() !== 'GLOBAL';
   const countryLine = hasCountry ? `\nArticle Country: ${country}` : '';
+  // WHY THIS LINE EXISTS. The article's own country column is nullable and is
+  // routinely 'GLOBAL', and when it is missing the model had NO geographic
+  // signal at all — measured, it then defaults to the reader's country on a
+  // strong fact match and scores a foreign story `home` 0.85. The publisher and
+  // its language are already on the suggestion row and were simply never sent.
+  const publication = asUntrusted(article.publication ?? '', 120);
+  const publicationLine = publication.length > 0 ? `\nPublication: ${publication}` : '';
   const related = (article.relatedFacts ?? [])
     .map((f) => asUntrusted(f, 200))
     .filter((f) => f.length > 0)
@@ -683,6 +694,7 @@ function buildFencedArticleBlock(
     `News Title: ${asUntrusted(article.title, textMaxLength)}`
     + `\nNews Description: ${asUntrusted(article.description, textMaxLength)}`
     + `${countryLine}`
+    + `${publicationLine}`
     + `\nRelated User Fact: ${related}`;
   return `===== Article ${index} =====\n${fenceArticleBlock(nonce, body)}`;
 }
@@ -854,6 +866,9 @@ export function buildReasonUserMessage(params: {
   /** Subset of user facts that triggered this article's retrieval. Surfaced so
    *  the reason generator can point at the exact connecting fact. */
   relatedFacts?: string[];
+  /** Publisher and language, e.g. "Diario de Noticias (Portuguese)". CLOUD
+   *  only; the local builder has no such parameter. */
+  publication?: string;
   /** See `buildBatchScoringUserMessage` — injectable for tests only. */
   nonce?: string;
   /** Experiment arm. Omitted or 'baseline' ⇒ byte-identical output.
@@ -872,6 +887,7 @@ export function buildReasonUserMessage(params: {
     relatedFacts,
     nonce,
     textMaxLength: articleTextMaxLength,
+    publication: params.publication,
   });
   return `Relevance Score: ${relevance}\n\nUser Context: ${userContext}\n\n${fenced}`;
 }
@@ -889,8 +905,12 @@ function buildFencedReasonBody(params: {
   relatedFacts?: string[];
   nonce: string;
   textMaxLength?: number;
+  /** See `buildFencedArticleBlock`. Passed by the CLOUD reason builder only;
+   *  `buildLocalReasonUserMessage` deliberately omits it, which is what keeps
+   *  the on-device prompt byte-identical. */
+  publication?: string;
 }): string {
-  const { articleTitle, articleDescription, articleCountry, relatedFacts, nonce, textMaxLength } = params;
+  const { articleTitle, articleDescription, articleCountry, relatedFacts, nonce, textMaxLength, publication: pubRaw } = params;
   // Omit the Article Country line entirely when the publication has no real
   // country scope — a missing value or a 'GLOBAL' placeholder carries no
   // location signal, and feeding it in just adds noise to the prompt.
@@ -903,10 +923,13 @@ function buildFencedReasonBody(params: {
     .map((f) => asUntrusted(f, 200))
     .filter((f) => f.length > 0)
     .join('; ') || 'none';
+  const publication = asUntrusted(pubRaw ?? '', 120);
+  const publicationLine = publication.length > 0 ? `\n\nPublication: ${publication}` : '';
   const body =
     `News Title: ${asUntrusted(articleTitle, textMaxLength)}`
     + `\n\nNews Description: ${asUntrusted(articleDescription, textMaxLength)}`
     + `${countryLine}`
+    + `${publicationLine}`
     + `\n\nRelated User Fact: ${related}`;
   return fenceArticleBlock(nonce, body);
 }

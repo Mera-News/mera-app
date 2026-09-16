@@ -9,6 +9,8 @@
 
 import countries from 'i18n-iso-countries';
 import en from 'i18n-iso-countries/langs/en.json';
+import languages from '@cospired/i18n-iso-languages';
+import langEn from '@cospired/i18n-iso-languages/langs/en.json';
 import {
   buildBatchScoringUserMessage,
   buildFeedVerifierUserMessage,
@@ -41,6 +43,51 @@ export type { CloudCallBundle, DecodedResults, ScoringResult, ScoringCandidate }
 const ARTICLE_CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
 
 countries.registerLocale(en);
+
+languages.registerLocale(langEn as Parameters<typeof languages.registerLocale>[0]);
+
+/**
+ * English name for a language tag, e.g. "pt-PT" -> "Portuguese".
+ *
+ * Only the `en` pack is registered: this feeds a PROMPT, which is always
+ * English, so the 17 other packs `lib/language-names.ts` carries would be ~100KB
+ * of dead weight in the harness bundle. That file is also app-land and imports
+ * `@/lib/language-codes`, which the harness may not reach.
+ *
+ * Reduces to the primary subtag because the pack is keyed on bare ISO-639-1:
+ * "pt-PT" and "zh-Hans" resolve only after the region or script is dropped.
+ */
+export function resolveLanguageName(
+  code: string | null | undefined,
+): string | undefined {
+  if (!code) return undefined;
+  const primary = String(code).split(/[-_]/)[0]?.toLowerCase();
+  if (!primary) return undefined;
+  return languages.getName(primary, 'en') || undefined;
+}
+
+/**
+ * The `Publication: ...` value for a prompt, or undefined when there is nothing
+ * worth saying.
+ *
+ * Shapes: "Diario de Noticias (Portuguese)", or the publisher alone when the
+ * language is unknown or English, or "(Portuguese)" alone when only the language
+ * is known. English is dropped deliberately: nearly every article reaching the
+ * scorer is English or translated into it, so naming it adds a token to every
+ * article and distinguishes nothing.
+ */
+export function buildPublicationLabel(
+  publicationName: string | null | undefined,
+  languageCode: string | null | undefined,
+): string | undefined {
+  const name = (publicationName ?? '').trim();
+  const lang = resolveLanguageName(languageCode);
+  const useLang = lang && lang.toLowerCase() !== 'english' ? lang : undefined;
+  if (name && useLang) return `${name} (${useLang})`;
+  if (name) return name;
+  if (useLang) return `(${useLang})`;
+  return undefined;
+}
 
 export function resolveCountryName(
   code: string | null | undefined,
@@ -273,6 +320,10 @@ export function buildScoreCallForChunk(
       title: c.titleEn ?? '',
       description: c.descriptionEn ?? '',
       country: resolveCountryName(c.countryCode),
+      publication: buildPublicationLabel(
+        c.publicationName ?? c.meta?.publicationName,
+        c.languageCode,
+      ),
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     })),
     promptVariant,
@@ -415,6 +466,10 @@ export function buildReasonCallsForSubset(
       articleCountry: resolveCountryName(c.countryCode),
       relevance: relevanceMap[c.id],
       relatedFacts: c.relatedFacts.map((f) => f.statement),
+      publication: buildPublicationLabel(
+        c.publicationName ?? c.meta?.publicationName,
+        c.languageCode,
+      ),
       promptVariant,
     });
     const reasonId = `reason:${c.id}`;

@@ -82,6 +82,14 @@ export interface ScoringCandidate {
   titleEn: string | null;
   descriptionEn: string | null;
   countryCode: string | null;
+  /** Publisher display name, e.g. "Diario de Noticias". Already stored on the
+   *  suggestion row; carried here so the scorer can tell where an article is
+   *  FROM when the article's own country column is absent or GLOBAL. */
+  publicationName?: string | null;
+  /** Article/publication language tag, e.g. "pt" or "pt-PT". Same purpose: a
+   *  Portuguese-language article from a Portuguese publisher is identifiable as
+   *  foreign even with no country field at all. */
+  languageCode?: string | null;
   userTopicIds: string[];
   relatedFacts: { id: string; statement: string }[];
   /** Already-persisted relevance. Populated only by the reason-retry query
