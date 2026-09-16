@@ -3,7 +3,7 @@
 //
 // Friction this removes: with `enable_thinking:false`, GLM 5.3 Flash on NEAR
 // still thinks and returns `trace</think>answer` as `content` (measured 2/2 on a
-// short prompt, 0/52 on the shipped scoring prompts). The non-streaming SMALL
+// short prompt). The non-streaming SMALL
 // path hands `content` straight to a JSON parser or, for reasons, to the UI, so
 // a leak is either a parse failure or a user reading the model's thoughts.
 // This is the same "prefill case" lib/llm/completeLocal.ts already handles for

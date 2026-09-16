@@ -60,9 +60,16 @@ export const SMALL_MODEL = 'Qwen/Qwen3.6-35B-A3B-FP8';
  *   the prefill leak the local path already strips.
  *
  *   SMALL (scoring / topics / reasons) sends JSON-shaped prompts with thinking
- *   off, never function tools. GLM 5.3 Flash replayed the article pipeline
- *   52/52 parsed, 0 failed, 0 leaked traces, ~50 completion tokens a call, at
- *   $0.50 output against the primary's $1.10. Qwen3.8 also parses (12/12) but
+ *   off, never function tools. GLM 5.3 Flash re-measured 2026-09-16 against the
+ *   same shipped scoring prompt: 0/6 parsed, a leaked reasoning trace on EVERY
+ *   call, and 320-2048 completion tokens where Qwen needs 89. The earlier 52/52
+ *   figure does not reproduce under this model id. GLM cannot be told to stop
+ *   thinking (`enable_thinking:false` is sent and ignored), its trace length
+ *   varies run to run, and at the shipped `scoreBatchMaxTokens` = 320 the trace
+ *   is cut before its own closing think tag, so lib/llm/reasoning-leak cannot
+ *   rescue it and the decoder's regex path scrapes numbers out of the prose.
+ *   Treat this fallback as UNVALIDATED for the scoring and reason paths.
+ *   Qwen3.8 also parses (12/12) but
  *   advertises no json_mode and costs 3x on output. cloudComplete strips a
  *   leaked `…</think>` prefix defensively (lib/llm/reasoning-leak) because the
  *   short-prompt leak is real even though the shipped prompts did not trigger it.
