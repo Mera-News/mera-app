@@ -76,3 +76,73 @@ export function assertNotBaseline(id: PromptVariantId): void {
     throw new Error('v1 control arms must not be registered as the baseline.');
   }
 }
+
+// ---------------------------------------------------------------------------
+// Capture guard
+// ---------------------------------------------------------------------------
+
+/**
+ * The parameter set `persona-v1` was actually captured under.
+ *
+ * `systemPrompts.personaStatic` is ONE string and the builder takes six
+ * parameters, so an arm answers with the same text for every surface, mode,
+ * language, filter rung and question bank. Asked for an ONBOARDING or LOCAL
+ * turn, `persona-v1` would return the CONFIG/CLOUD text and the run would report
+ * the difference as a model effect. A control that silently answers the wrong
+ * question is worse than no control, so the mismatch has to be an error.
+ */
+export const PERSONA_V1_CAPTURE = {
+  surface: 'CONFIG',
+  mode: 'CLOUD',
+  // The runner sends 'English'. The first capture omitted it, which selects a
+  // DIFFERENT language rule and a prompt 154 characters shorter - the control
+  // would have differed from baseline by language instruction as well as the
+  // edit under test.
+  languageName: 'English',
+  filterTools: 'full',
+  deepMode: false,
+} as const;
+
+export interface PersonaCaptureParams {
+  surface?: string;
+  mode?: string;
+  includeToolFormat?: boolean;
+  languageName?: string;
+  filterTools?: string;
+  deepMode?: boolean;
+}
+
+/**
+ * Throw unless `params` match the capture. Call it wherever `persona-v1` is
+ * resolved; `includeToolFormat` is excluded because BOTH captures exist and
+ * `registerV1ControlArms` picks between them.
+ *
+ * Returns void and throws rather than returning a boolean: a boolean invites a
+ * call site that ignores it, which is the failure this exists to prevent.
+ */
+export function assertPersonaV1Capture(params: PersonaCaptureParams): void {
+  const mismatches: string[] = [];
+  const check = (key: keyof typeof PERSONA_V1_CAPTURE, actual: unknown) => {
+    const expected = PERSONA_V1_CAPTURE[key];
+    // An omitted parameter takes the builder's default, which is what the
+    // capture recorded, so `undefined` matches.
+    if (actual !== undefined && actual !== expected) {
+      mismatches.push(`${key}: got ${String(actual)}, captured ${String(expected)}`);
+    }
+  };
+  check('surface', params.surface);
+  check('mode', params.mode);
+  check('languageName', params.languageName);
+  check('filterTools', params.filterTools);
+  check('deepMode', params.deepMode);
+
+  if (mismatches.length > 0) {
+    throw new Error(
+      `prompt variant '${PERSONA_V1}' was captured under ` +
+        `${JSON.stringify(PERSONA_V1_CAPTURE)} and cannot answer for a different ` +
+        `parameter set (${mismatches.join('; ')}). It is one fixed string, so it ` +
+        'would return the captured text and the run would read the difference as a ' +
+        'model effect. Capture a new arm for that parameter set instead.',
+    );
+  }
+}

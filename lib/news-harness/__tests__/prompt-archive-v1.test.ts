@@ -7,6 +7,7 @@
 
 import { estimateTokens } from '@/lib/llm/tokens';
 import {
+  assertPersonaV1Capture,
   PROMPT_ARCHIVE_V1,
   PERSONA_V1,
   TOPICGEN_V1,
@@ -26,8 +27,8 @@ describe('the archived v1 texts are the 68189e7 sizes', () => {
   it.each([
     ['topicGenFactOnly', 3167],
     ['topicGenCombo', 3113],
-    ['personaStaticConfigCloud', 2438],
-    ['personaStaticConfigCloudWithToolFormat', 2960],
+    ['personaStaticConfigCloud', 2477],
+    ['personaStaticConfigCloudWithToolFormat', 2998],
   ])('%s is %i tokens', (key, tokens) => {
     expect(estimateTokens((PROMPT_ARCHIVE_V1 as Record<string, string>)[key])).toBe(tokens);
   });
@@ -53,6 +54,38 @@ describe('v1 is genuinely DIFFERENT from the shipped prompts', () => {
     // Stated rather than assumed: the combo half was deliberately not edited, so
     // an arm that replaced it with different text would be a bug in the archive.
     expect(PROMPT_ARCHIVE_V1.topicGenCombo).toBe(CLOUD_FACT_COMBO_TOPIC_GENERATION_SYSTEM_PROMPT);
+  });
+});
+
+describe('the capture matches what run-persona-corpus.ts actually sends', () => {
+  // This is the check that caught a real defect: the first capture omitted
+  // languageName, and the runner sends 'English'. The two prompts differ by 154
+  // characters and carry DIFFERENT language rules, so the control arm would have
+  // differed from baseline by language instruction on top of the em-dash rule
+  // and the run would have attributed both to the prompt edit.
+  it('rejects a parameter set the arm was not captured under', () => {
+    expect(() => assertPersonaV1Capture({ surface: 'ONBOARDING' })).toThrow(/captured under/);
+    expect(() => assertPersonaV1Capture({ mode: 'LOCAL' })).toThrow(/captured under/);
+    expect(() => assertPersonaV1Capture({ languageName: 'Dutch' })).toThrow(/captured under/);
+    expect(() => assertPersonaV1Capture({ filterTools: 'compact' })).toThrow(/captured under/);
+    expect(() => assertPersonaV1Capture({ deepMode: true })).toThrow(/captured under/);
+  });
+
+  it('accepts the runner set, including the SILENT defaults', () => {
+    // filterTools and deepMode are the ones the runner never passes, so they are
+    // the ones a capture drifts on without anyone noticing.
+    expect(() =>
+      assertPersonaV1Capture({
+        surface: 'CONFIG',
+        mode: 'CLOUD',
+        includeToolFormat: false,
+        languageName: 'English',
+      }),
+    ).not.toThrow();
+  });
+
+  it('an omitted parameter matches the builder default it was captured with', () => {
+    expect(() => assertPersonaV1Capture({})).not.toThrow();
   });
 });
 

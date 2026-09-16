@@ -20,9 +20,15 @@
  *  a duplicate, and over-rejection is silent (the user just gets fewer topics). */
 const GENERIC_TOKENS = new Set([
   'news', 'update', 'updates', 'latest',
-  'policy', 'policies',
   'the', 'of', 'a', 'an', 'and', 'in', 'for', 'on', 'to', 'at', 'by',
 ]);
+// 'policy' is DELIBERATELY NOT here, though it looks generic. A round-3 device
+// capture returned "Alkmaar hospital news" and "Netherlands hospital policy" as
+// two good topics for one fact; with 'policy' stopped they both reduce to
+// {hospital} and the second is eaten. Hospital policy is not hospital news, and
+// "<place> <thing> policy" is the newsroom-shaped output the prompt work exists
+// to produce. On the rater's rows keeping it costs 4 fewer rejections and
+// changes neither the 10/11 caught nor the 0/5 protected.
 
 /**
  * How many NEW content words a proposal must add to a broader existing topic
@@ -138,10 +144,12 @@ export function ambientTokens(existing: readonly string[]): Set<string> {
 /**
  * Drop proposals that restate a topic the user already has.
  *
- * Order is preserved, and a proposal is compared against the ORIGINAL existing
- * list only — not against earlier survivors of the same batch — because the
- * caller already dedupes within a batch and doing it twice would silently
- * tighten this rule.
+ * Order is preserved, and each proposal is compared against the existing list
+ * AND against the proposals already kept from this same call. Within-call
+ * duplicates are real: a device capture returned "Netherlands sailing
+ * regulations" and "IJsselmeer sailing safety regulations" in one four-item
+ * answer, differing only by a scope word and a place. Earlier wins, because the
+ * model emits its best first and the list is ranked.
  *
  * Empty token sets on EITHER side are skipped. An existing topic that reduces to
  * nothing once its place and generic words are stripped ("Poland news" → {})
@@ -161,6 +169,8 @@ export function filterNearDuplicateTopics(
 
   const kept: string[] = [];
   const rejected: { topic: string; duplicateOf: string }[] = [];
+  // Grows as proposals survive, so the comparison set is existing + kept-so-far.
+  const comparisonSets = [...existingSets];
 
   for (const topic of proposed) {
     const tokens = contentTokens(topic, ambient);
@@ -168,7 +178,7 @@ export function filterNearDuplicateTopics(
       kept.push(topic);
       continue;
     }
-    const hit = existingSets.find(
+    const hit = comparisonSets.find(
       (e) =>
         // The proposal says nothing the existing topic does not already say.
         isSubset(tokens, e.tokens) ||
@@ -177,8 +187,12 @@ export function filterNearDuplicateTopics(
           e.tokens.size >= MIN_EXISTING_TOKENS_FOR_SUPERSET &&
           difference(tokens, e.tokens) <= MAX_QUALIFIER_TOKENS),
     );
-    if (hit) rejected.push({ topic, duplicateOf: hit.text });
-    else kept.push(topic);
+    if (hit) {
+      rejected.push({ topic, duplicateOf: hit.text });
+    } else {
+      kept.push(topic);
+      comparisonSets.push({ text: topic, tokens });
+    }
   }
 
   return { kept, rejected };
