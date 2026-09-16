@@ -31,15 +31,27 @@ export type PromptVariantId = string;
 export const BASELINE_VARIANT_ID: PromptVariantId = 'baseline';
 
 /**
- * The four system prompts an arm may replace. These are slots, not the prompts
- * themselves: which one a call uses is still decided by the existing
- * standard/headline routing (`ScoringVariant`), which this seam does not touch.
+ * The system prompts an arm may replace. These are slots, not the prompts
+ * themselves.
+ *
+ * The four scoring slots are still routed by the existing standard/headline
+ * routing (`ScoringVariant`), which this seam does not touch. The persona and
+ * topic-generation slots have no such routing: each names exactly one shipped
+ * prompt, and its builder resolves it directly.
  */
 export type PromptSlot =
   | 'relevance'
   | 'reason'
   | 'headlineRelevance'
-  | 'headlineReason';
+  | 'headlineReason'
+  // The persona-update system prompt and the two cloud topic-generation
+  // prompts, which live in ./persona-prompts and belong to the chat area. Same
+  // slot semantics as the four above: a whole replacement string, never a
+  // transform. `personaStatic` covers buildPersonaUpdateStaticPrompt's output
+  // for both its CLOUD and LOCAL modes, which that builder selects itself.
+  | 'personaStatic'
+  | 'topicGenFactOnly'
+  | 'topicGenCombo';
 
 export interface PromptVariantSpec {
   id: PromptVariantId;
