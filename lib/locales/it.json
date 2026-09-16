@@ -2522,7 +2522,11 @@
     "dismissedTitle": "Non aggiunto",
     "dismissedSummary": "Non è stato salvato nulla. Di' a Mera cosa intendevi e riproverà.",
     "expired": "Viene da una chat precedente, quindi non può più essere aggiunto.",
-    "resolveBeforeContinuing": "Scegli un'interpretazione o tocca Salta prima di continuare."
+    "resolveBeforeContinuing": "Scegli un'interpretazione o tocca Salta prima di continuare.",
+    "addAll": "Aggiungi tutto ({{count}})",
+    "skipAll": "Salta tutto",
+    "addAllA11y": "Aggiungi tutti i {{count}} suggerimenti",
+    "skipAllA11y": "Salta tutti i {{count}} suggerimenti"
   },
   "subscriptions": {
     "sectionTitle": "I tuoi abbonamenti",
@@ -2605,5 +2609,8 @@
     "sectionPace": "Come ti sono arrivate le notizie",
     "shareCard": "Condividi questa scheda",
     "loading": "Sto calcolando i tuoi numeri"
+  },
+  "chatTopics": {
+    "none": "Salvato. Al momento non ci sono argomenti da aggiungere."
   }
 }

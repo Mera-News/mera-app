@@ -35,10 +35,6 @@ import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)';
 
-/** New copy landing with this unit's locale fragment; cast removed after the
- *  splice, which is what makes the key's existence a compile-time check. */
-type PendingLocaleKey = 'topicPlan.title';
-
 /**
  * How many topics the MERGED card shows across all its facts.
  *
@@ -256,9 +252,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
       ) : showEmptyTerminal ? (
         <View style={styles.statusRow} testID="chat-topics-empty">
           <Text size="xs" style={styles.statusText}>
-            {t('chatTopics.none' as PendingLocaleKey, {
-              defaultValue: 'Saved. No topics to add right now.',
-            })}
+            {t('chatTopics.none')}
           </Text>
           <Pressable
             onPress={handleRetry}

@@ -2523,7 +2523,11 @@
     "dismissedTitle": "未添加",
     "dismissedSummary": "什么都没有保存。告诉 Mera 你的意思，它会再试一次。",
     "expired": "这条来自更早的对话，已经无法添加。",
-    "resolveBeforeContinuing": "继续之前，请选一个理解，或点跳过。"
+    "resolveBeforeContinuing": "继续之前，请选一个理解，或点跳过。",
+    "addAll": "全部添加（{{count}}）",
+    "skipAll": "全部跳过",
+    "addAllA11y": "添加全部 {{count}} 条建议",
+    "skipAllA11y": "跳过全部 {{count}} 条建议"
   },
   "subscriptions": {
     "sectionTitle": "你的订阅",
@@ -2605,5 +2609,8 @@
     "sectionPace": "新闻多久传到你这里",
     "shareCard": "分享这张卡片",
     "loading": "正在计算你的数据"
+  },
+  "chatTopics": {
+    "none": "已保存。目前没有可添加的主题。"
   }
 }

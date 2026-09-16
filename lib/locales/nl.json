@@ -2522,7 +2522,11 @@
     "dismissedTitle": "Niet toegevoegd",
     "dismissedSummary": "Er is niets opgeslagen. Vertel Mera wat je bedoelde, dan probeert het het opnieuw.",
     "expired": "Dit komt uit een eerdere chat en kan niet meer worden toegevoegd.",
-    "resolveBeforeContinuing": "Kies een lezing of tik op Overslaan voordat je verdergaat."
+    "resolveBeforeContinuing": "Kies een lezing of tik op Overslaan voordat je verdergaat.",
+    "addAll": "Alles toevoegen ({{count}})",
+    "skipAll": "Alles overslaan",
+    "addAllA11y": "Alle {{count}} suggesties toevoegen",
+    "skipAllA11y": "Alle {{count}} suggesties overslaan"
   },
   "subscriptions": {
     "sectionTitle": "Je abonnementen",
@@ -2605,5 +2609,8 @@
     "sectionPace": "Hoe het nieuws jou bereikte",
     "shareCard": "Deze kaart delen",
     "loading": "Je cijfers worden berekend"
+  },
+  "chatTopics": {
+    "none": "Opgeslagen. Er zijn nu geen onderwerpen om toe te voegen."
   }
 }

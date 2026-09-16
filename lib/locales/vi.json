@@ -2523,7 +2523,11 @@
     "dismissedTitle": "Chưa thêm",
     "dismissedSummary": "Không có gì được lưu. Hãy nói cho Mera biết ý bạn và Mera sẽ thử lại.",
     "expired": "Đây là từ cuộc trò chuyện trước, nên không thể thêm nữa.",
-    "resolveBeforeContinuing": "Chọn một cách hiểu, hoặc chạm Bỏ qua, trước khi tiếp tục."
+    "resolveBeforeContinuing": "Chọn một cách hiểu, hoặc chạm Bỏ qua, trước khi tiếp tục.",
+    "addAll": "Thêm tất cả ({{count}})",
+    "skipAll": "Bỏ qua tất cả",
+    "addAllA11y": "Thêm tất cả {{count}} gợi ý",
+    "skipAllA11y": "Bỏ qua tất cả {{count}} gợi ý"
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",
@@ -2605,5 +2609,8 @@
     "sectionPace": "Tin đến với bạn thế nào",
     "shareCard": "Chia sẻ thẻ này",
     "loading": "Đang tính các con số của bạn"
+  },
+  "chatTopics": {
+    "none": "Đã lưu. Hiện chưa có chủ đề nào để thêm."
   }
 }

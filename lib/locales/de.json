@@ -2522,7 +2522,11 @@
     "dismissedTitle": "Nicht hinzugefügt",
     "dismissedSummary": "Es wurde nichts gespeichert. Sag Mera, was du gemeint hast, dann versucht es Mera erneut.",
     "expired": "Das stammt aus einem früheren Chat und kann nicht mehr hinzugefügt werden.",
-    "resolveBeforeContinuing": "Wähle eine Lesart oder tippe auf Überspringen, bevor du fortfährst."
+    "resolveBeforeContinuing": "Wähle eine Lesart oder tippe auf Überspringen, bevor du fortfährst.",
+    "addAll": "Alle hinzufügen ({{count}})",
+    "skipAll": "Alle überspringen",
+    "addAllA11y": "Alle {{count}} Vorschläge hinzufügen",
+    "skipAllA11y": "Alle {{count}} Vorschläge überspringen"
   },
   "subscriptions": {
     "sectionTitle": "Deine Abos",
@@ -2605,5 +2609,8 @@
     "sectionPace": "Wie dich die Nachrichten erreichten",
     "shareCard": "Diese Karte teilen",
     "loading": "Deine Zahlen werden berechnet"
+  },
+  "chatTopics": {
+    "none": "Gespeichert. Gerade gibt es keine Themen zum Hinzufügen."
   }
 }

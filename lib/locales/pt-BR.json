@@ -2522,7 +2522,11 @@
     "dismissedTitle": "Não adicionado",
     "dismissedSummary": "Nada foi salvo. Diga à Mera o que você quis dizer e ela tentará de novo.",
     "expired": "Isto é de uma conversa anterior, então não pode mais ser adicionado.",
-    "resolveBeforeContinuing": "Escolha uma leitura ou toque em Pular antes de continuar."
+    "resolveBeforeContinuing": "Escolha uma leitura ou toque em Pular antes de continuar.",
+    "addAll": "Adicionar tudo ({{count}})",
+    "skipAll": "Pular tudo",
+    "addAllA11y": "Adicionar as {{count}} sugestões",
+    "skipAllA11y": "Pular as {{count}} sugestões"
   },
   "subscriptions": {
     "sectionTitle": "Suas assinaturas",
@@ -2605,5 +2609,8 @@
     "sectionPace": "Como as notícias chegaram até você",
     "shareCard": "Compartilhar este cartão",
     "loading": "Calculando seus números"
+  },
+  "chatTopics": {
+    "none": "Salvo. No momento não há temas para adicionar."
   }
 }

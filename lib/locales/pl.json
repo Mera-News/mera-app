@@ -2558,7 +2558,11 @@
     "dismissedTitle": "Nie dodano",
     "dismissedSummary": "Nic nie zostało zapisane. Powiedz Merze, o co ci chodziło, a spróbuje ponownie.",
     "expired": "To pochodzi z wcześniejszej rozmowy, więc nie można już tego dodać.",
-    "resolveBeforeContinuing": "Wybierz znaczenie lub dotknij Pomiń, zanim przejdziesz dalej."
+    "resolveBeforeContinuing": "Wybierz znaczenie lub dotknij Pomiń, zanim przejdziesz dalej.",
+    "addAll": "Dodaj wszystko ({{count}})",
+    "skipAll": "Pomiń wszystko",
+    "addAllA11y": "Dodaj wszystkie {{count}} propozycje",
+    "skipAllA11y": "Pomiń wszystkie {{count}} propozycje"
   },
   "subscriptions": {
     "sectionTitle": "Twoje subskrypcje",
@@ -2643,5 +2647,8 @@
     "sectionPace": "Jak wiadomości do ciebie docierały",
     "shareCard": "Udostępnij tę kartę",
     "loading": "Obliczanie twoich liczb"
+  },
+  "chatTopics": {
+    "none": "Zapisano. Na razie nie ma tematów do dodania."
   }
 }

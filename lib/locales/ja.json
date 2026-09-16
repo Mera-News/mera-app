@@ -2522,7 +2522,11 @@
     "dismissedTitle": "追加していません",
     "dismissedSummary": "何も保存していません。どういう意味だったか Mera に伝えると、もう一度試します。",
     "expired": "これは前のチャットのものなので、もう追加できません。",
-    "resolveBeforeContinuing": "続ける前に、どれか選ぶかスキップをタップしてください。"
+    "resolveBeforeContinuing": "続ける前に、どれか選ぶかスキップをタップしてください。",
+    "addAll": "すべて追加 ({{count}})",
+    "skipAll": "すべてスキップ",
+    "addAllA11y": "{{count}} 件の候補をすべて追加",
+    "skipAllA11y": "{{count}} 件の候補をすべてスキップ"
   },
   "subscriptions": {
     "sectionTitle": "購読中のメディア",
@@ -2604,5 +2608,8 @@
     "sectionPace": "ニュースが届くまで",
     "shareCard": "このカードを共有",
     "loading": "数字を計算しています"
+  },
+  "chatTopics": {
+    "none": "保存しました。今のところ追加できるトピックはありません。"
   }
 }

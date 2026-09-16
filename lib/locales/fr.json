@@ -2529,7 +2529,11 @@
     "dismissedTitle": "Non ajouté",
     "dismissedSummary": "Rien n'a été enregistré. Dis à Mera ce que tu voulais dire et il réessaiera.",
     "expired": "Cela vient d'une conversation précédente et ne peut plus être ajouté.",
-    "resolveBeforeContinuing": "Choisis une interprétation ou appuie sur Passer avant de continuer."
+    "resolveBeforeContinuing": "Choisis une interprétation ou appuie sur Passer avant de continuer.",
+    "addAll": "Tout ajouter ({{count}})",
+    "skipAll": "Tout passer",
+    "addAllA11y": "Ajouter les {{count}} suggestions",
+    "skipAllA11y": "Passer les {{count}} suggestions"
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",
@@ -2612,5 +2616,8 @@
     "sectionPace": "Comment les actualités vous sont parvenues",
     "shareCard": "Partager cette carte",
     "loading": "Calcul de vos chiffres"
+  },
+  "chatTopics": {
+    "none": "Enregistré. Aucun sujet à ajouter pour le moment."
   }
 }

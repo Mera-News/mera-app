@@ -26,11 +26,6 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { resolveGroups } from './fact-choice-actions';
 
-/** New copy landing with this unit's locale fragment. The cast goes once the
- *  splice lands — removing it is then self-verifying, because `tsc` only passes
- *  if the key is genuinely in the generated union. */
-type PendingLocaleKey = 'factChoice.add';
-
 export interface FactChoiceBulkRowProps {
   resultKey: string;
   /** The tool call's staged result. "Add all" is usually the FIRST resolution
@@ -139,13 +134,10 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
         // 44pt iOS / 48dp Android minimum, enforced here rather than inherited:
         // gluestack's `sm` pill is shorter than both.
         style={styles.tapTarget}
-        accessibilityLabel={t('factChoice.skipAllA11y' as PendingLocaleKey, {
-          count: groups.length,
-          defaultValue: `Skip all ${groups.length} suggestions`,
-        })}
+        accessibilityLabel={t('factChoice.skipAllA11y', { count: groups.length })}
       >
         <ButtonText className="text-typography-700 text-sm">
-          {t('factChoice.skipAll' as PendingLocaleKey, { defaultValue: 'Skip all' })}
+          {t('factChoice.skipAll')}
         </ButtonText>
       </Button>
       <Button
@@ -155,16 +147,10 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
         className="rounded-full bg-primary-400"
         size="sm"
         style={styles.tapTarget}
-        accessibilityLabel={t('factChoice.addAllA11y' as PendingLocaleKey, {
-          count: groups.length,
-          defaultValue: `Add all ${groups.length} suggestions`,
-        })}
+        accessibilityLabel={t('factChoice.addAllA11y', { count: groups.length })}
       >
         <ButtonText className="text-white text-sm">
-          {t('factChoice.addAll' as PendingLocaleKey, {
-            count: groups.length,
-            defaultValue: `Add all (${groups.length})`,
-          })}
+          {t('factChoice.addAll', { count: groups.length })}
         </ButtonText>
       </Button>
     </View>

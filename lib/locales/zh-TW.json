@@ -2523,7 +2523,11 @@
     "dismissedTitle": "未新增",
     "dismissedSummary": "什麼都沒有儲存。告訴 Mera 你的意思，它會再試一次。",
     "expired": "這條來自較早的對話，已經無法新增。",
-    "resolveBeforeContinuing": "繼續之前，請選一個理解，或點略過。"
+    "resolveBeforeContinuing": "繼續之前，請選一個理解，或點略過。",
+    "addAll": "全部新增（{{count}}）",
+    "skipAll": "全部略過",
+    "addAllA11y": "新增全部 {{count}} 則建議",
+    "skipAllA11y": "略過全部 {{count}} 則建議"
   },
   "subscriptions": {
     "sectionTitle": "您的訂閱",
@@ -2605,5 +2609,8 @@
     "sectionPace": "新聞多久傳到你這裡",
     "shareCard": "分享這張卡片",
     "loading": "正在計算你的數據"
+  },
+  "chatTopics": {
+    "none": "已儲存。目前沒有可新增的主題。"
   }
 }

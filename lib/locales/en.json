@@ -1459,7 +1459,11 @@
     "dismissedTitle": "Not added",
     "dismissedSummary": "Nothing was saved. Tell Mera what you meant and it will try again.",
     "expired": "This is from an earlier chat, so it can no longer be added.",
-    "resolveBeforeContinuing": "Pick a reading, or tap Skip, before continuing."
+    "resolveBeforeContinuing": "Pick a reading, or tap Skip, before continuing.",
+    "addAll": "Add all ({{count}})",
+    "skipAll": "Skip all",
+    "addAllA11y": "Add all {{count}} suggestions",
+    "skipAllA11y": "Skip all {{count}} suggestions"
   },
   "conflict": {
     "title": "Possible conflict",
@@ -2605,5 +2609,8 @@
     "sectionPace": "How the news reached you",
     "shareCard": "Share this card",
     "loading": "Working out your numbers"
+  },
+  "chatTopics": {
+    "none": "Saved. No topics to add right now."
   }
 }

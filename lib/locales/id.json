@@ -2522,7 +2522,11 @@
     "dismissedTitle": "Tidak ditambahkan",
     "dismissedSummary": "Tidak ada yang disimpan. Beri tahu Mera maksudmu dan Mera akan mencoba lagi.",
     "expired": "Ini dari obrolan sebelumnya, jadi tidak bisa ditambahkan lagi.",
-    "resolveBeforeContinuing": "Pilih satu makna, atau ketuk Lewati, sebelum lanjut."
+    "resolveBeforeContinuing": "Pilih satu makna, atau ketuk Lewati, sebelum lanjut.",
+    "addAll": "Tambahkan semua ({{count}})",
+    "skipAll": "Lewati semua",
+    "addAllA11y": "Tambahkan semua {{count}} saran",
+    "skipAllA11y": "Lewati semua {{count}} saran"
   },
   "subscriptions": {
     "sectionTitle": "Langganan Anda",
@@ -2604,5 +2608,8 @@
     "sectionPace": "Bagaimana berita sampai ke Anda",
     "shareCard": "Bagikan kartu ini",
     "loading": "Menghitung angka Anda"
+  },
+  "chatTopics": {
+    "none": "Tersimpan. Saat ini tidak ada topik untuk ditambahkan."
   }
 }

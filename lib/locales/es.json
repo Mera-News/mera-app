@@ -2522,7 +2522,11 @@
     "dismissedTitle": "No añadido",
     "dismissedSummary": "No se guardó nada. Dile a Mera qué querías decir y lo intentará de nuevo.",
     "expired": "Esto viene de un chat anterior, así que ya no se puede añadir.",
-    "resolveBeforeContinuing": "Elige una opción o toca Omitir antes de continuar."
+    "resolveBeforeContinuing": "Elige una opción o toca Omitir antes de continuar.",
+    "addAll": "Añadir todo ({{count}})",
+    "skipAll": "Omitir todo",
+    "addAllA11y": "Añadir las {{count}} sugerencias",
+    "skipAllA11y": "Omitir las {{count}} sugerencias"
   },
   "subscriptions": {
     "sectionTitle": "Tus suscripciones",
@@ -2605,5 +2609,8 @@
     "sectionPace": "Cómo te llegaron las noticias",
     "shareCard": "Compartir esta tarjeta",
     "loading": "Calculando tus números"
+  },
+  "chatTopics": {
+    "none": "Guardado. Ahora mismo no hay temas que añadir."
   }
 }

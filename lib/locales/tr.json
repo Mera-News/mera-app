@@ -2524,7 +2524,11 @@
     "dismissedTitle": "Eklenmedi",
     "dismissedSummary": "Hiçbir şey kaydedilmedi. Mera'ya ne demek istediğini söyle, tekrar denesin.",
     "expired": "Bu daha önceki bir sohbetten, bu yüzden artık eklenemez.",
-    "resolveBeforeContinuing": "Devam etmeden önce bir okuma seç ya da Atla'ya dokun."
+    "resolveBeforeContinuing": "Devam etmeden önce bir okuma seç ya da Atla'ya dokun.",
+    "addAll": "Tümünü ekle ({{count}})",
+    "skipAll": "Tümünü atla",
+    "addAllA11y": "{{count}} önerinin tümünü ekle",
+    "skipAllA11y": "{{count}} önerinin tümünü atla"
   },
   "subscriptions": {
     "sectionTitle": "Abonelikleriniz",
@@ -2607,5 +2611,8 @@
     "sectionPace": "Haberler sana nasıl ulaştı",
     "shareCard": "Bu kartı paylaş",
     "loading": "Sayıların hesaplanıyor"
+  },
+  "chatTopics": {
+    "none": "Kaydedildi. Şu anda eklenecek konu yok."
   }
 }
