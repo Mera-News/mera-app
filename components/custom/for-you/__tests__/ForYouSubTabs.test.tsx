@@ -77,6 +77,7 @@ describe('ForYouSubTabs', () => {
         expect(getByText('forYou.subTabStories')).toBeTruthy();
         expect(getByText('forYou.subTabSaved')).toBeTruthy();
         expect(getByText('forYou.subTabHistory')).toBeTruthy();
+        expect(getByText('forYou.subTabAnalytics')).toBeTruthy();
         expect(getByText('factCheck.dashboard.title')).toBeTruthy();
     });
 
@@ -100,7 +101,10 @@ describe('ForYouSubTabs', () => {
             React.Children.forEach(node.props?.children, walk);
         };
         walk(row);
-        expect(keys).toEqual(['feed', 'stories', 'saved', 'factChecks', 'history']);
+        expect(keys).toEqual(['feed', 'stories', 'saved', 'factChecks', 'history', 'analytics']);
+        // The assertion this test is actually ABOUT, restated so a future
+        // addition to the row cannot dilute it into a bare list comparison.
+        expect(keys.indexOf('factChecks')).toBeLessThan(keys.indexOf('history'));
     });
 
     it('fires onSelect with factChecks when the Fact checks pill is tapped', () => {
@@ -161,5 +165,40 @@ describe('ForYouSubTabs', () => {
         expect(getByLabelText('forYou.subTabSaved').props.accessibilityState).toMatchObject({
             selected: true,
         });
+    });
+});
+
+
+describe('the Analytics pill', () => {
+    it('is LAST, because the last pill is the one a reader must know is there', () => {
+        // This row scrolls horizontally. Fact checks was moved BEFORE History
+        // for this reason: a thing you are waiting on must not be the one that
+        // needs a fling to reach. Analytics is something you go and look at
+        // when curious, so it is the right pill to sit at the end.
+        const { getByTestId } = render(
+            <ForYouSubTabs activeSubTab="feed" onSelect={jest.fn()} />,
+        );
+        const row = getByTestId('dashboard-subtabs-row');
+        const keys: string[] = [];
+        const walk = (node: any) => {
+            if (!node || typeof node !== 'object') return;
+            const id = node.props?.testID;
+            if (typeof id === 'string' && /^dashboard-tab-[a-zA-Z]+$/.test(id)) {
+                keys.push(id.replace('dashboard-tab-', ''));
+            }
+            React.Children.forEach(node.props?.children, walk);
+        };
+        walk(row);
+        expect(keys[keys.length - 1]).toBe('analytics');
+    });
+
+    it('selects analytics without disturbing the other pills', () => {
+        const onSelect = jest.fn();
+        const { getByText } = render(
+            <ForYouSubTabs activeSubTab="feed" onSelect={onSelect} />,
+        );
+        fireEvent.press(getByText('forYou.subTabAnalytics'));
+        expect(onSelect).toHaveBeenCalledTimes(1);
+        expect(onSelect).toHaveBeenCalledWith('analytics');
     });
 });

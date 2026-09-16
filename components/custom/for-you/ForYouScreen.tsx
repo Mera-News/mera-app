@@ -22,6 +22,7 @@ import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCa
 import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
+import AnalyticsScreen from '@/components/custom/analytics/AnalyticsScreen';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
 import ImportanceFilterDropdown from '@/components/custom/ImportanceFilterDropdown';
 import { useImportanceFilterStore } from '@/lib/stores/importance-filter-store';
@@ -195,12 +196,14 @@ const MeraNewsScreen: React.FC = () => {
     const [savedVisited, setSavedVisited] = useState(false);
     const [historyVisited, setHistoryVisited] = useState(false);
     const [factChecksVisited, setFactChecksVisited] = useState(false);
+    const [analyticsVisited, setAnalyticsVisited] = useState(false);
     const selectSubTab = useCallback((tab: ForYouSubTab) => {
         setActiveSubTab(tab);
         if (tab === 'stories') setStoriesVisited(true);
         if (tab === 'saved') setSavedVisited(true);
         if (tab === 'history') setHistoryVisited(true);
         if (tab === 'factChecks') setFactChecksVisited(true);
+        if (tab === 'analytics') setAnalyticsVisited(true);
         // Always reveal the header on a sub-tab switch.
         reveal();
         // ...and drop the scroll baseline. All four panels stay mounted behind
@@ -579,6 +582,20 @@ const MeraNewsScreen: React.FC = () => {
                 {factChecksVisited && (
                     <View style={{ flex: 1, display: activeSubTab === 'factChecks' ? 'flex' : 'none' }} testID="dashboard-fact-checks-content">
                         <FactChecksPanel active={activeSubTab === 'factChecks'} scrollHandler={scrollHandler} headerHeight={headerHeight} />
+                    </View>
+                )}
+
+                {/* Analytics (lazy-mounted on first visit). This pane does NOT
+                    scroll vertically: it is a horizontal pager whose every page
+                    fits by construction, which is why it takes `headerHeight`
+                    as STATIC padding rather than threading `scrollHandler`.
+                    The warning above about padding a wrapper is about a
+                    SCROLLING pane, where static padding reserves the space and
+                    leaves nothing to scroll under; that does not apply here and
+                    the header simply stays put. */}
+                {analyticsVisited && (
+                    <View style={{ flex: 1, display: activeSubTab === 'analytics' ? 'flex' : 'none' }} testID="dashboard-analytics-content">
+                        <AnalyticsScreen headerHeight={headerHeight} />
                     </View>
                 )}
             </View>

@@ -9,7 +9,7 @@ import { ScrollView, View } from 'react-native';
 
 const ACCENT = 'rgb(231, 138, 83)'; // primary-400
 
-export type ForYouSubTab = 'feed' | 'stories' | 'saved' | 'history' | 'factChecks';
+export type ForYouSubTab = 'feed' | 'stories' | 'saved' | 'history' | 'factChecks' | 'analytics';
 
 interface ForYouSubTabsProps {
     readonly activeSubTab: ForYouSubTab;
@@ -40,6 +40,12 @@ const TABS: readonly TabDef[] = [
     // twin: the pill and the section it opens are the same noun.
     { key: 'factChecks', icon: 'fact-check', labelKey: 'factCheck.dashboard.title' },
     { key: 'history', icon: 'history', labelKey: 'forYou.subTabHistory' },
+    // Analytics goes LAST for the same reason Fact checks went before History:
+    // this row scrolls horizontally, so the last pill is the one a reader has
+    // to know is there before they can reach it. Analytics is something you go
+    // and look at when curious, never something you are waiting on, so it is
+    // the right pill to sit at the end rather than displacing one that is.
+    { key: 'analytics', icon: 'insights', labelKey: 'forYou.subTabAnalytics' },
 ];
 
 /**
