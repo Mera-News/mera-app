@@ -39,6 +39,7 @@ import { DEFAULT_HARNESS_CONFIG } from '@/lib/news-harness/core/config';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
 import {
   resolveCountryName,
+  buildPublicationLabel,
   buildUserContext,
   isEligible,
   isScorableCandidate,
@@ -144,6 +145,10 @@ function buildScoreCallForChunk(
       title: c.titleEn ?? '',
       description: c.descriptionEn ?? '',
       country: resolveCountryName(c.countryCode),
+      publication: buildPublicationLabel(
+        c.publicationName ?? c.meta?.publicationName,
+        c.languageCode,
+      ),
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     })),
   });
@@ -174,6 +179,10 @@ async function generateReasonForCandidate(
     articleTitle: candidate.titleEn ?? '',
     articleDescription: candidate.descriptionEn ?? '',
     articleCountry: resolveCountryName(candidate.countryCode),
+    publication: buildPublicationLabel(
+      candidate.publicationName ?? candidate.meta?.publicationName,
+      candidate.languageCode,
+    ),
     relevance,
     relatedFacts: candidate.relatedFacts.map((f) => f.statement),
   });
@@ -442,6 +451,10 @@ function buildReasonCallsForSurvivors(
       articleTitle: c.titleEn ?? '',
       articleDescription: c.descriptionEn ?? '',
       articleCountry: resolveCountryName(c.countryCode),
+      publication: buildPublicationLabel(
+        c.publicationName ?? c.meta?.publicationName,
+        c.languageCode,
+      ),
       relevance,
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     });
@@ -614,6 +627,10 @@ export async function buildReasonCallsForSubset(
       articleTitle: c.titleEn ?? '',
       articleDescription: c.descriptionEn ?? '',
       articleCountry: resolveCountryName(c.countryCode),
+      publication: buildPublicationLabel(
+        c.publicationName ?? c.meta?.publicationName,
+        c.languageCode,
+      ),
       relevance: relevanceMap[c.id],
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     });
@@ -923,6 +940,10 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
           articleTitle: candidate.titleEn ?? '',
           articleDescription: candidate.descriptionEn ?? '',
           articleCountry: resolveCountryName(candidate.countryCode),
+          publication: buildPublicationLabel(
+            candidate.publicationName ?? candidate.meta?.publicationName,
+            candidate.languageCode,
+          ),
           relevance: candidate.relevance ?? 0.7,
           relatedFacts: candidate.relatedFacts.map((f) => f.statement),
         });

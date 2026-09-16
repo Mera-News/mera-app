@@ -101,6 +101,31 @@ function candidate(id: string): ScoringCandidate {
   };
 }
 
+/**
+ * A candidate carrying a PUBLISHER and a non-English language, which the plain
+ * `candidate()` above does not.
+ *
+ * Its absence is how a real gap hid: the shim builds its own article block, and
+ * when `publicationName` was threaded into the harness but not the shim, this
+ * file still passed because BOTH sides omitted a line neither fixture asked
+ * for. A parity test whose fixture lacks the field cannot detect divergence in
+ * that field.
+ *
+ * It also pins the alpha-3 path on a second code. The stored codes are alpha-3
+ * (`NLD`, `PRT`, `ESP`), and `resolveCountryName` resolves them via the alias
+ * table, so "PRT" must reach the prompt as "Portugal" on BOTH sides. That
+ * matters beyond parity: an article whose country line goes missing is scored
+ * with no geographic signal at all.
+ */
+function publisherCandidate(id: string): ScoringCandidate {
+  return {
+    ...candidate(id),
+    countryCode: 'PRT',
+    publicationName: 'Diário de Notícias',
+    languageCode: 'pt',
+  };
+}
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetFacts.mockResolvedValue(
@@ -358,5 +383,44 @@ describe('golden — article fence', () => {
     // ...and the two are otherwise the same prompt, which is what makes the
     // normalisation in the identity tests above safe rather than permissive.
     expect(stripNonce(first.calls[0].prompt)).toBe(stripNonce(second.calls[0].prompt));
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Publisher + alpha-3 parity. See `publisherCandidate` for why the plain
+// fixture could not have caught the divergence this section pins.
+// ---------------------------------------------------------------------------
+describe('golden — publisher and alpha-3 country parity', () => {
+  it('shim and harness agree on a candidate carrying a publisher', async () => {
+    const cands = [publisherCandidate('p1'), publisherCandidate('p2')];
+    const shim = await shimBuildRelevanceCalls(cands);
+    const harness = harnessBuildRelevanceCalls(cands, FACT_STATEMENTS);
+    expect(stripNonces(harness.calls.map((c) => c.prompt))).toEqual(
+      stripNonces(shim.calls.map((c) => c.prompt)),
+    );
+  });
+
+  it('the SHIPPED path renders alpha-3 PRT as "Portugal"', async () => {
+    // This is the assertion that answers "did the model even see a country?".
+    // A missing or raw-code country line is the difference between scoring the
+    // article at 0.20 and scoring it 0.85 on a strong fact match.
+    const shim = await shimBuildRelevanceCalls([publisherCandidate('p1')]);
+    expect(shim.calls[0].prompt).toMatch(/Article Country: Portugal/);
+  });
+
+  it('the SHIPPED path carries the publisher and its language', async () => {
+    const shim = await shimBuildRelevanceCalls([publisherCandidate('p1')]);
+    expect(shim.calls[0].prompt).toMatch(/Publication: Diário de Notícias \(Portuguese\)/);
+  });
+
+  it('shim and harness agree on the REASON prompt for such a candidate', async () => {
+    const cands = [publisherCandidate('p1')];
+    const rel = { p1: 0.62 };
+    const shim = await shimBuildReasonCallsForSubset(cands, rel, 0.3);
+    const harness = harnessBuildReasonCallsForSubset(cands, rel, 0.3, FACT_STATEMENTS);
+    expect(stripNonces(harness.calls.map((c) => c.prompt))).toEqual(
+      stripNonces(shim.calls.map((c) => c.prompt)),
+    );
+    expect(shim.calls[0].prompt).toMatch(/Publication: Diário de Notícias \(Portuguese\)/);
   });
 });
