@@ -24,10 +24,13 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-/** The rubric dimensions, scored numerically. `hardFails` is a set and is
- *  compared for equality rather than distance. */
-const DIMENSIONS = ['specificity', 'linkage', 'calibration', 'voice'] as const;
-type Dimension = (typeof DIMENSIONS)[number];
+/** The REASON rubric's dimensions, used only as a fallback. Rubrics differ:
+ *  the topic rubric is specificity/novelty/relevance/useful, and hardcoding one
+ *  list meant the other silently scored n=0 on three of its four dimensions.
+ *  The dimensions are now DISCOVERED from the rater output, with --dims to
+ *  override. `hardFails` is a set and is compared for equality, not distance. */
+const FALLBACK_DIMENSIONS = ['specificity', 'linkage', 'calibration', 'voice'] as const;
+type Dimension = string;
 
 interface RaterRow {
   rowId: string;
@@ -69,6 +72,7 @@ function compare(
   a: Map<string, RaterRow>,
   b: Map<string, RaterRow>,
   pairs: [string, string][],
+  DIMENSIONS: readonly Dimension[],
 ): { dims: DimStat[]; hardFailExact: number; hardFailDiffs: string[]; skipped: string[] } {
   const dims: DimStat[] = [];
   const skipped: string[] = [];
@@ -173,7 +177,32 @@ function main(): number {
 
   if (pairs.length === 0) throw new Error('harness-local: no comparable pairs.');
 
-  const { dims, hardFailExact, hardFailDiffs, skipped } = compare(pass1, pass2, pairs);
+  // Dimensions present as numbers in BOTH files, so a rubric change cannot
+  // silently score a dimension that only one side has.
+  const dimsIdx = argv.indexOf('--dims');
+  const numericIn = (m: Map<string, RaterRow>): Set<string> => {
+    const out = new Set<string>();
+    for (const row of m.values()) {
+      for (const [k, v] of Object.entries(row)) if (typeof v === 'number') out.add(k);
+    }
+    return out;
+  };
+  const inA = numericIn(pass1);
+  const inB = numericIn(pass2);
+  const discovered = [...inA].filter((d) => inB.has(d)).sort();
+  const onlyOne = [...new Set([...inA, ...inB])].filter((d) => !(inA.has(d) && inB.has(d)));
+  if (onlyOne.length > 0) {
+    // eslint-disable-next-line no-console
+    console.warn(`!!  dimension(s) present in only one side and excluded: ${onlyOne.join(', ')}`);
+  }
+  const DIMENSIONS: readonly Dimension[] =
+    dimsIdx !== -1
+      ? (argv[dimsIdx + 1] ?? '').split(',').map((x) => x.trim()).filter(Boolean)
+      : discovered.length > 0
+        ? discovered
+        : FALLBACK_DIMENSIONS;
+
+  const { dims, hardFailExact, hardFailDiffs, skipped } = compare(pass1, pass2, pairs, DIMENSIONS);
 
   // eslint-disable-next-line no-console
   console.log(
