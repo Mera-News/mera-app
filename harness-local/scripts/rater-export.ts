@@ -2,7 +2,8 @@
 //
 //   npx tsx --tsconfig harness-local/tsconfig.json \
 //     harness-local/scripts/rater-export.ts <runDir> \
-//       [--seed 12345] [--repeat 0] [--include <rowId>,<rowId>]
+//       [--seed 12345] [--repeat 0] [--call-type reason]
+//       [--duplicate 8] [--include <rowId>,<rowId>]
 //
 // --repeat selects ONE repeat, which is what a floor run wants: the repeats are
 // there to measure the noise floor, and asking a rater to judge the same prompt
@@ -34,7 +35,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { readJsonl } from '../lib/agreement';
-import type { RunRow } from '../lib/jsonl-writer';
+import { newRowId, type RunRow } from '../lib/jsonl-writer';
 
 /** Deterministic PRNG, so a given seed always yields the same order. Math.random
  *  could not be reproduced, and an unreproducible shuffle makes a disputed
@@ -80,10 +81,28 @@ function main(): number {
     includeIdx === -1 ? [] : (argv[includeIdx + 1] ?? '').split(',').map((x) => x.trim()).filter(Boolean),
   );
 
-  const rows =
+  const callTypeIdx = argv.indexOf('--call-type');
+  const callType = callTypeIdx === -1 ? null : argv[callTypeIdx + 1];
+  const dupIdx = argv.indexOf('--duplicate');
+  const addDuplicates = dupIdx === -1 ? 0 : Number(argv[dupIdx + 1]);
+  if (dupIdx !== -1 && (!Number.isFinite(addDuplicates) || addDuplicates < 0)) {
+    throw new Error('harness-local: --duplicate must be a non-negative number.');
+  }
+
+  let rows =
     repeat === null
       ? all
       : all.filter((r) => r.repeat === repeat || r.dupOf !== null || forced.has(r.rowId));
+  if (callType) {
+    const before = rows.length;
+    rows = rows.filter((r) => r.callType === callType || forced.has(r.rowId));
+    if (rows.length === 0) {
+      throw new Error(
+        `harness-local: --call-type ${callType} selected no rows from ${before}. ` +
+          `Present: ${[...new Set(all.map((r) => r.callType))].join(', ')}.`,
+      );
+    }
+  }
 
   // A forced id that is not in the run is a silent hole in a batch someone
   // deliberately composed, so it fails instead.
@@ -110,6 +129,26 @@ function main(): number {
       `harness-local: ${blank.length} selected row(s) carry no materialised input, so nothing about them ` +
         'is judgeable. First: ' + blank[0].rowId,
     );
+  }
+
+  // Export-time duplication, drawn with the SAME seeded PRNG so a given seed
+  // reproduces the whole batch, duplicates included.
+  const dupRng = mulberry32(seed ^ 0x5bf03635);
+  const addedDuplicates: { rowId: string; dupOf: string }[] = [];
+  if (addDuplicates > 0) {
+    const pool = rows.filter((r) => r.dupOf === null);
+    const picked = shuffle(pool, dupRng).slice(0, Math.min(addDuplicates, pool.length));
+    if (picked.length < addDuplicates) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        `harness-local: asked for ${addDuplicates} duplicates but only ${pool.length} unique row(s) exist.`,
+      );
+    }
+    for (const src of picked) {
+      const copy = { ...src, rowId: newRowId(), dupOf: src.rowId };
+      addedDuplicates.push({ rowId: copy.rowId, dupOf: src.rowId });
+      rows.push(copy);
+    }
   }
 
   // Stable label assignment: arms sorted, so the same run always relabels the
@@ -161,7 +200,9 @@ function main(): number {
         seed,
         rows: rows.length,
         selectedRepeat: repeat,
+        selectedCallType: callType,
         forcedRowIds: [...forced],
+        duplicatesAddedAtExport: addedDuplicates,
         labels: Object.fromEntries([...label.entries()].map(([arm, l]) => [l, arm])),
         duplicates: rows.filter((r) => r.dupOf !== null).map((r) => ({ rowId: r.rowId, dupOf: r.dupOf })),
         variantByRowId: Object.fromEntries(rows.map((r) => [r.rowId, r.variant])),
@@ -180,6 +221,7 @@ function main(): number {
       `${repeat === null ? '' : ` (repeat ${repeat} only)`}\n` +
       `unique     : ${uniqueCount}\n` +
       `duplicates : ${dupCount}, indistinguishable in the export\n` +
+      `call type  : ${callType ?? 'all'}\n` +
       `forced in  : ${forced.size}\n` +
       `arms       : ${arms.length} relabelled ${[...label.values()].join(', ')}\n` +
       `seed       : ${seed}\n` +
