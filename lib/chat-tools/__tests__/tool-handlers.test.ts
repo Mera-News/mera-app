@@ -56,6 +56,9 @@ jest.mock('../../mera-protocol/topic-generation-service', () => ({
 }));
 jest.mock('../../database/services/topic-service', () => ({
   syncLlmTopicsForFact: jest.fn(() => Promise.resolve([])),
+  // The exclude-list read. Defaults to empty so every pre-existing test in this
+  // file keeps the behaviour it was written against.
+  getActive: jest.fn(() => Promise.resolve([])),
 }));
 jest.mock('../../mera-protocol/questionnaire-data', () => ({
   buildAttributeTextToIdMap: jest.fn(() => new Map()),
@@ -73,6 +76,7 @@ import {
   handleIssueWarning,
   isTopicGenerationInFlight,
   retryTopicGeneration,
+  startTopicGeneration,
   MAX_FACT_LENGTH,
 } from '../tool-handlers';
 import { commitFactChoices } from '../fact-commit';
@@ -1011,5 +1015,73 @@ describe('handleExplainMera', () => {
     expect(mockGetFacts).not.toHaveBeenCalled();
     expect(mockAddFact).not.toHaveBeenCalled();
     expect(mockUpdateFact).not.toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// U4 — what the chat accept path feeds topic generation
+// ---------------------------------------------------------------------------
+//
+// All three of these were fields the harness call-builder already read and the
+// batch flow simply never set, so the defect was invisible in the harness tests:
+// they exercised the builder, which was correct, not the adapter that calls it.
+
+describe('batchGenerateTopics inputs', () => {
+  const { buildCloudBatchCallsForFact } =
+    require('../../mera-protocol/topic-generation-service') as {
+      buildCloudBatchCallsForFact: jest.Mock;
+    };
+  const { getActive } = require('../../database/services/topic-service') as {
+    getActive: jest.Mock;
+  };
+  const { getFacts } = require('../../database/services/fact-service') as {
+    getFacts: jest.Mock;
+  };
+
+  beforeEach(() => {
+    (useMeraProtocolStore.getState as jest.Mock).mockReturnValue({ processingMode: 'CLOUD' });
+    buildCloudBatchCallsForFact.mockClear();
+    getActive.mockReset();
+    getActive.mockResolvedValue([]);
+  });
+
+  it('passes every ACTIVE topic text as excludeTopics, read once for the batch', async () => {
+    getActive.mockResolvedValue([
+      { id: 't1', text: 'Hoorn local government' },
+      { id: 't2', text: 'Netherlands rail strikes' },
+    ]);
+
+    await startTopicGeneration([{ id: 'u4a', statement: 'Lives in Hoorn' }]);
+
+    const calls = buildCloudBatchCallsForFact.mock.calls;
+    expect(calls.length).toBeGreaterThan(0);
+    expect(calls[0][0].excludeTopics).toEqual([
+      'Hoorn local government',
+      'Netherlands rail strikes',
+    ]);
+    // One table scan for the whole batch, not one per fact.
+    expect(getActive).toHaveBeenCalledTimes(1);
+  });
+
+  it('caps the count at 4, which is NOT the harness default of 10', async () => {
+    await startTopicGeneration([{ id: 'u4b', statement: 'Lives in Hoorn' }]);
+    expect(buildCloudBatchCallsForFact.mock.calls[0][0].totalCount).toBe(4);
+  });
+
+  it('bounds otherFacts so a large persona cannot grow the combo prompt forever', async () => {
+    getFacts.mockResolvedValue(
+      Array.from({ length: 30 }, (_, i) => ({ id: `of${i}`, statement: `Fact ${i}` })),
+    );
+    await startTopicGeneration([{ id: 'u4c', statement: 'Lives in Hoorn' }]);
+    const passed = buildCloudBatchCallsForFact.mock.calls[0][0].otherFacts as string[];
+    expect(passed.length).toBeLessThanOrEqual(8);
+  });
+
+  it('degrades to no exclusions when the topics read fails, rather than failing generation', async () => {
+    getActive.mockRejectedValue(new Error('db closed'));
+    await expect(
+      startTopicGeneration([{ id: 'u4d', statement: 'Lives in Hoorn' }]),
+    ).resolves.toBeUndefined();
+    expect(buildCloudBatchCallsForFact.mock.calls[0][0].excludeTopics).toEqual([]);
   });
 });

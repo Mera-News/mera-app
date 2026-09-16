@@ -25,7 +25,23 @@ import { generateTopicsForFactsBatch } from '@/lib/news-harness/persona-manageme
 import { factChoiceGroupId } from './fact-choice-resolution';
 import { buildCloudBatchCallsForFact } from '../mera-protocol/topic-generation-service';
 import { appHarnessLogger } from '@/lib/news-harness-app/logger-adapter';
-import { syncLlmTopicsForFact } from '../database/services/topic-service';
+import { getActive, syncLlmTopicsForFact } from '../database/services/topic-service';
+
+/**
+ * Topics proposed per fact accepted IN CHAT. A ceiling, not a quota: "up to 4,
+ * fewer when the fact supports fewer" — a residence fact earns 3-4, a hobby 1-2.
+ *
+ * The shipped default was 10, and branch (a-1) of the topic-gen prompt then
+ * spent 2 of those on a mandated transport topic and a mandated
+ * country-services topic, with filler making up much of the rest ("Hoorn
+ * safety", "Hoorn community events" on the device). Capping alone is not the
+ * whole fix — the prompt's residence rule has to relax in the same unit, or the
+ * mandated pair becomes 2 of 4 instead of 2 of 10.
+ */
+const CHAT_TOPIC_CEILING = 4;
+
+/** How many other facts the combo half may see. See the buildCalls comment. */
+const MAX_OTHER_FACTS_IN_COMBO = 8;
 
 // MAX_FACT_LENGTH's canonical home is the harness fact-rules module; re-exported
 // here so existing importers of it from tool-handlers keep working.
@@ -346,6 +362,25 @@ export async function retryTopicGeneration(
 async function batchGenerateTopics(
   factEntries: Array<{ id: string; statement: string }>,
 ): Promise<void> {
+  // Existing topic texts, read ONCE for the whole batch: this is a table scan
+  // and the exclude list is identical for every call in it.
+  //
+  // `getActive()`, NOT `getActiveTopicSnapshots()` — that snapshot type is
+  // { id, factId, weight, highPriority } and carries no `text` at all; it
+  // exists for the feed's fact-sectioned selector, not for prompt input.
+  //
+  // Best-effort. A failed topics read must not fail topic generation: the worst
+  // case of an empty list is exactly the behaviour that shipped before this,
+  // which is a safe direction to degrade in, unlike throwing.
+  let existingTopicTexts: string[] = [];
+  try {
+    existingTopicTexts = (await getActive()).map((t) => t.text);
+  } catch (err: unknown) {
+    logger.warn('[topicGen] could not read existing topics for exclusion', {
+      error: String(err),
+    });
+  }
+
   await generateTopicsForFactsBatch(
     {
       llm: {
@@ -380,8 +415,34 @@ async function batchGenerateTopics(
       },
       logger: appHarnessLogger,
       // Inject the topic-generation-service builder so the app keeps a single
-      // call-building seam (prompt constants + mocks) on the call path.
-      buildCalls: buildCloudBatchCallsForFact,
+      // call-building seam (prompt constants + mocks) on the call path, and
+      // shape its inputs here — all three fields are ones the harness builder
+      // already reads and the batch flow simply never set.
+      buildCalls: (inputs, idPrefix) =>
+        buildCloudBatchCallsForFact(
+          {
+            ...inputs,
+            // A CEILING for a fact accepted in chat, not a quota. Deliberately
+            // NOT DEFAULT_HARNESS_CONFIG.topicGen.totalCloud (10), which still
+            // governs the "generate more" top-up: proposing and topping up
+            // answer different questions, and one number for both either floods
+            // a first acceptance or starves a deliberate top-up.
+            totalCount: CHAT_TOPIC_CEILING,
+            // Bounded because the combo prompt's own stated failure mode is
+            // padding: the more unrelated facts it sees, the harder it reaches
+            // for a combination that does not exist. Newest-first, since
+            // getFacts() sorts created_at DESC, so this keeps what the user
+            // most recently said and drops the long tail.
+            otherFacts: inputs.otherFacts.slice(0, MAX_OTHER_FACTS_IN_COMBO),
+            // The whole point of this change. buildBaseUserPrompt has always had
+            // an excludeTopics branch ("Do NOT repeat these existing topics")
+            // and the production batch path never filled it, so every fact was
+            // generated against a model that could not see the topics the user
+            // already had. Only the "generate more" path was passing it.
+            excludeTopics: existingTopicTexts,
+          },
+          idPrefix,
+        ),
     },
     factEntries,
   );
