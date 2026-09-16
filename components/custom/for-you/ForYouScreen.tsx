@@ -19,6 +19,7 @@ import {
 } from '@/components/custom/GlassSurface';
 import NotificationBellButton from '@/components/custom/notifications/NotificationBellButton';
 import NoGeneratedInterestsCard from '@/components/custom/NoGeneratedInterestsCard';
+import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import OnboardingWaitingCard from '@/components/custom/for-you/OnboardingWaitingCard';
 import ForYouSubTabs, { type ForYouSubTab } from '@/components/custom/for-you/ForYouSubTabs';
@@ -502,11 +503,19 @@ const MeraNewsScreen: React.FC = () => {
         if (!hasGeneratedInterests) {
             return <NoGeneratedInterestsCard />;
         }
+        // Capped, with nothing in flight. Must come BEFORE the processing
+        // branch: `useFeedStatusMode` ranks processing above limited, so a real
+        // run still reports 'processing' and still reaches the card below. This
+        // catches the case that used to fall through and claim the feed was
+        // being prepared while the header indicator said the limit was reached.
+        if (statusMode === 'limited') {
+            return <DailyLimitCard />;
+        }
         if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
             return <FeedProcessingCard />;
         }
         return <AllCaughtUpCard />;
-    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, isFeedProcessing, lastProcessingRunFinishedAt]);
+    }, [showOnboardingWait, isLoading, hasGeneratedInterests, errorMessage, t, stuckOnEmpty, statusMode, isFeedProcessing, lastProcessingRunFinishedAt]);
 
     return (
         // No `bg-black`: the AbstractGradientBackdrop below is the page background.

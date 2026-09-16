@@ -86,6 +86,7 @@ import {
   GlassPlate,
 } from '@/components/custom/GlassSurface';
 import AllCaughtUpCard from '@/components/custom/AllCaughtUpCard';
+import DailyLimitCard from '@/components/custom/DailyLimitCard';
 import FeedProcessingCard from '@/components/custom/processing/FeedProcessingCard';
 import {
   useFeedSyncRefresh,
@@ -933,6 +934,17 @@ const FeedScreen: React.FC = () => {
     // sweep and NOT "has this device ever built a feed" — the latter also fires
     // on the morning cold start, where the overnight rows aged out of the
     // window and the running sync genuinely will bring content back.
+    // The cap comes BEFORE the processing branch, and the order is the whole
+    // point. `useFeedStatusMode` ranks processing above limited, so a run that
+    // is genuinely in flight still reports 'processing' and still reaches the
+    // card below. What this catches is the opposite case: capped with nothing
+    // running, which used to fall through to "Mera is preparing your feed"
+    // because the chain never looked at the status mode at all. That told a
+    // capped reader work was happening while the indicator in the same header
+    // told them the limit was reached.
+    if (statusMode === 'limited') {
+      return <DailyLimitCard />;
+    }
     if (isFeedProcessing || lastProcessingRunFinishedAt === null) {
       return <FeedProcessingCard />;
     }
