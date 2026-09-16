@@ -8,6 +8,7 @@
 // Static system prompt (cacheable by KV cache) + dynamic context (injected into user messages).
 
 import { asUntrusted, fenceArticleBlock, newPromptNonce } from './untrusted-text';
+import { resolvePromptVariant, type PromptVariantId } from './prompt-variants';
 
 // The boundary constructor and its brand are re-exported here so the many
 // existing importers of `../prompts/prompts` keep one import site.
@@ -27,6 +28,10 @@ export {
 // importer of `../prompts/prompts` still resolves the same symbols. New code
 // may import either path.
 export * from './persona-prompts';
+
+// The prompt-variant seam. Re-exported here for the same reason as the
+// untrusted-text boundary above: one import site for callers of this module.
+export * from './prompt-variants';
 
 // ============================================================
 // Scoring Prompts — On-device relevance scoring (two-pass)
@@ -591,6 +596,9 @@ function buildFencedArticleBlock(
   },
   index: number,
   nonce: string,
+  /** Publisher title/description cap. Undefined keeps `asUntrusted`'s 500-char
+   *  default, which is what every shipped call does. */
+  textMaxLength?: number,
 ): string {
   // Omit the Article Country line entirely when the publication has no real
   // country scope — a missing value or a 'GLOBAL' placeholder carries no
@@ -602,9 +610,11 @@ function buildFencedArticleBlock(
     .map((f) => asUntrusted(f, 200))
     .filter((f) => f.length > 0)
     .join('; ') || 'none';
+  // Passing `undefined` through hits asUntrusted's own default parameter, so
+  // the no-variant path is the same call it always was.
   const body =
-    `News Title: ${asUntrusted(article.title)}`
-    + `\nNews Description: ${asUntrusted(article.description)}`
+    `News Title: ${asUntrusted(article.title, textMaxLength)}`
+    + `\nNews Description: ${asUntrusted(article.description, textMaxLength)}`
     + `${countryLine}`
     + `\nRelated User Fact: ${related}`;
   return `===== Article ${index} =====\n${fenceArticleBlock(nonce, body)}`;
@@ -631,10 +641,15 @@ export function buildBatchScoringUserMessage(params: {
   /** Injectable so tests can pin the fence; production takes a fresh random
    *  token per build, which is what makes the close marker unforgeable. */
   nonce?: string;
+  /** Experiment arm. Omitted or 'baseline' ⇒ byte-identical output. */
+  promptVariant?: PromptVariantId;
 }): string {
   const { userContext, articles, v3 } = params;
   const nonce = params.nonce ?? newPromptNonce();
-  const blocks = articles.map((a, i) => buildFencedArticleBlock(a, i, nonce));
+  const { articleTextMaxLength } = resolvePromptVariant(params.promptVariant);
+  const blocks = articles.map((a, i) =>
+    buildFencedArticleBlock(a, i, nonce, articleTextMaxLength),
+  );
   const trailer = v3
     ? `Return a JSON array of ${articles.length} objects ({"i","rel","impact"}), one per article, in order.`
     : `Return a JSON array of ${articles.length} numbers (one per article, in order).`;
@@ -658,10 +673,15 @@ export function buildFeedVerifierUserMessage(params: {
   }[];
   /** See `buildBatchScoringUserMessage` — injectable for tests only. */
   nonce?: string;
+  /** Experiment arm. Omitted or 'baseline' ⇒ byte-identical output. */
+  promptVariant?: PromptVariantId;
 }): string {
   const { userContext, articles } = params;
   const nonce = params.nonce ?? newPromptNonce();
-  const blocks = articles.map((a, i) => buildFencedArticleBlock(a, i, nonce));
+  const { articleTextMaxLength } = resolvePromptVariant(params.promptVariant);
+  const blocks = articles.map((a, i) =>
+    buildFencedArticleBlock(a, i, nonce, articleTextMaxLength),
+  );
   return `User Context: ${userContext}\n\n${blocks.join('\n\n')}\n\nReturn a JSON array of ${articles.length} objects ({"v":"yes"} to keep or {"v":"no"} to demote), one per article, in order.`;
 }
 
@@ -769,15 +789,22 @@ export function buildReasonUserMessage(params: {
   relatedFacts?: string[];
   /** See `buildBatchScoringUserMessage` — injectable for tests only. */
   nonce?: string;
+  /** Experiment arm. Omitted or 'baseline' ⇒ byte-identical output.
+   *  Deliberately absent from `buildLocalReasonUserMessage`: the on-device
+   *  prompt family is out of scope for prompt experiments and must stay
+   *  byte-identical, so the seam stops at the cloud builder. */
+  promptVariant?: PromptVariantId;
 }): string {
   const { userContext, articleTitle, articleDescription, articleCountry, relevance, relatedFacts } = params;
   const nonce = params.nonce ?? newPromptNonce();
+  const { articleTextMaxLength } = resolvePromptVariant(params.promptVariant);
   const fenced = buildFencedReasonBody({
     articleTitle,
     articleDescription,
     articleCountry,
     relatedFacts,
     nonce,
+    textMaxLength: articleTextMaxLength,
   });
   return `Relevance Score: ${relevance}\n\nUser Context: ${userContext}\n\n${fenced}`;
 }
@@ -794,8 +821,9 @@ function buildFencedReasonBody(params: {
   articleCountry?: string;
   relatedFacts?: string[];
   nonce: string;
+  textMaxLength?: number;
 }): string {
-  const { articleTitle, articleDescription, articleCountry, relatedFacts, nonce } = params;
+  const { articleTitle, articleDescription, articleCountry, relatedFacts, nonce, textMaxLength } = params;
   // Omit the Article Country line entirely when the publication has no real
   // country scope — a missing value or a 'GLOBAL' placeholder carries no
   // location signal, and feeding it in just adds noise to the prompt.
@@ -809,8 +837,8 @@ function buildFencedReasonBody(params: {
     .filter((f) => f.length > 0)
     .join('; ') || 'none';
   const body =
-    `News Title: ${asUntrusted(articleTitle)}`
-    + `\n\nNews Description: ${asUntrusted(articleDescription)}`
+    `News Title: ${asUntrusted(articleTitle, textMaxLength)}`
+    + `\n\nNews Description: ${asUntrusted(articleDescription, textMaxLength)}`
     + `${countryLine}`
     + `\n\nRelated User Fact: ${related}`;
   return fenceArticleBlock(nonce, body);

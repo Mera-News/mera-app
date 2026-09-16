@@ -20,6 +20,11 @@ import {
   type ArticlePipelineConfig,
 } from '../core/config';
 import { NOOP_LOGGER, type HarnessLogger } from '../core/ports';
+import {
+  resolvePromptVariant,
+  systemPromptForSlot,
+  type PromptVariantId,
+} from '../prompts/prompt-variants';
 import type {
   BatchCall,
   BatchCompletionResult,
@@ -98,22 +103,50 @@ export function resolveScoringVariant(
   return candidates.every(isHeadlineCandidate) ? 'headline' : 'standard';
 }
 
+/**
+ * The relevance system prompt for a bundle.
+ *
+ * TWO INDEPENDENT AXES, and they are easy to confuse because both were once
+ * called "variant":
+ *  - `variant` (`ScoringVariant`) is LIVE PRODUCTION ROUTING — standard vs
+ *    headline, decided by where the candidates came from.
+ *  - `promptVariant` (`PromptVariantId`) is the EXPERIMENT ARM — which text to
+ *    send for whichever slot the routing picked. Omitted or 'baseline' ⇒ the
+ *    shipped prompt, unchanged.
+ * An arm may override the standard slot without touching the headline one, so
+ * the two must not be collapsed.
+ */
 export function relevanceSystemPromptFor(
   config: ArticlePipelineConfig,
   variant: ScoringVariant,
+  promptVariant?: PromptVariantId,
 ): string {
-  return variant === 'headline'
-    ? config.headlineRelevanceSystemPrompt
-    : config.relevanceSystemPrompt;
+  const shipped =
+    variant === 'headline'
+      ? config.headlineRelevanceSystemPrompt
+      : config.relevanceSystemPrompt;
+  return systemPromptForSlot(
+    variant === 'headline' ? 'headlineRelevance' : 'relevance',
+    shipped,
+    resolvePromptVariant(promptVariant),
+  );
 }
 
+/** See {@link relevanceSystemPromptFor} for the two-axis note. */
 export function reasonSystemPromptFor(
   config: ArticlePipelineConfig,
   variant: ScoringVariant,
+  promptVariant?: PromptVariantId,
 ): string {
-  return variant === 'headline'
-    ? config.headlineReasonSystemPrompt
-    : config.reasonSystemPrompt;
+  const shipped =
+    variant === 'headline'
+      ? config.headlineReasonSystemPrompt
+      : config.reasonSystemPrompt;
+  return systemPromptForSlot(
+    variant === 'headline' ? 'headlineReason' : 'reason',
+    shipped,
+    resolvePromptVariant(promptVariant),
+  );
 }
 
 export function scoreChunkSizeFor(
@@ -230,6 +263,8 @@ export function buildScoreCallForChunk(
    *  shipped default) the returned prompt is the SAME string this function has
    *  always produced, and `injectArticleMetadata` is never called. */
   config: ArticlePipelineConfig = ARTICLE_CFG,
+  /** Experiment arm. Omitted or 'baseline' ⇒ byte-identical output. */
+  promptVariant?: PromptVariantId,
 ): { prompt: string; system: string } {
   const userContext = buildUserContext(allFactStatements);
   const prompt = buildBatchScoringUserMessage({
@@ -240,6 +275,7 @@ export function buildScoreCallForChunk(
       country: resolveCountryName(c.countryCode),
       relatedFacts: c.relatedFacts.map((f) => f.statement),
     })),
+    promptVariant,
   });
   // The tag block is appended to the BUILT message rather than threaded through
   // `buildBatchScoringUserMessage`, so the pinned prompt builder is untouched
@@ -341,6 +377,8 @@ export function buildReasonCallsForSubset(
    * Defaults false, so every existing caller keeps the legacy behaviour.
    */
   v3 = false,
+  /** Experiment arm. Omitted or 'baseline' ⇒ byte-identical output. */
+  promptVariant?: PromptVariantId,
 ): CloudCallBundle {
   const eligible = candidates.filter((c) => {
     // isScorableCandidate: without it a factless headline that SCORED well gets
@@ -377,6 +415,7 @@ export function buildReasonCallsForSubset(
       articleCountry: resolveCountryName(c.countryCode),
       relevance: relevanceMap[c.id],
       relatedFacts: c.relatedFacts.map((f) => f.statement),
+      promptVariant,
     });
     const reasonId = `reason:${c.id}`;
     promptsById.set(reasonId, reasonPrompt);
@@ -388,7 +427,11 @@ export function buildReasonCallsForSubset(
       // which pass 1 has already settled by the time we get here.
       system: v3
         ? config.v3NoteSystemPrompt
-        : reasonSystemPromptFor(config, isHeadlineCandidate(c) ? 'headline' : 'standard'),
+        : reasonSystemPromptFor(
+            config,
+            isHeadlineCandidate(c) ? 'headline' : 'standard',
+            promptVariant,
+          ),
       prompt: reasonPrompt,
       temperature: config.reasonTemperature,
       maxTokens: v3 ? config.v3NoteMaxTokens : config.reasonMaxTokens,
