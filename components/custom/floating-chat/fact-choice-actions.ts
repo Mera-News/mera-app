@@ -39,10 +39,22 @@ export function resolveGroup(
   resultKey: string,
   groupId: string,
   resolution: FactChoiceResolution | undefined,
+  baseResult: Record<string, unknown>,
 ): Record<string, unknown> {
   const store = useFloatingChatStore.getState();
   // READ -> MERGE -> WRITE, synchronously. See the module header.
-  const current = store.toolCallResults[resultKey] as Record<string, unknown> | undefined;
+  //
+  // `baseResult` is the tool call's OWN staged result, and it is required, not a
+  // convenience. The store holds OVERRIDES ONLY: on the first tap of a turn
+  // there is no entry at `resultKey` at all, because the staged blob lives on
+  // `message.toolCalls[idx].result` and nothing has copied it across. Merging
+  // into `undefined` produced a blob whose spine was empty, the deriver applied
+  // it as the whole result, found no groups and emitted NO CARDS — every card in
+  // the turn vanished on the first tap, with the fact still saved because the
+  // commit had already run. Falling back to the staged result is what makes the
+  // first merge and every later one identical.
+  const current =
+    (store.toolCallResults[resultKey] as Record<string, unknown> | undefined) ?? baseResult;
   const next = mergeGroupResolution(current, groupId, resolution);
   store.setToolCallResult(resultKey, next);
 
@@ -73,9 +85,13 @@ export function resolveGroup(
 export function resolveGroups(
   resultKey: string,
   entries: { groupId: string; resolution: FactChoiceResolution | undefined }[],
+  baseResult: Record<string, unknown>,
 ): Record<string, unknown> {
   const store = useFloatingChatStore.getState();
-  let next = store.toolCallResults[resultKey] as Record<string, unknown> | undefined;
+  // Same required fallback as resolveGroup: "Add all" is usually the FIRST
+  // resolution of the turn, so the store entry is the one that does not exist.
+  let next =
+    (store.toolCallResults[resultKey] as Record<string, unknown> | undefined) ?? baseResult;
   for (const entry of entries) {
     next = mergeGroupResolution(next, entry.groupId, entry.resolution);
   }

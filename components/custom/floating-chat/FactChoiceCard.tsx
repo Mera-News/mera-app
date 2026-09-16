@@ -56,6 +56,9 @@ function cardEntering() {
 export interface FactChoiceCardProps {
   /** `${messageId}::${toolCallIndex}` — the tool result this group lives in. */
   resultKey: string;
+  /** The tool call's staged result. The store holds overrides only, so the
+   *  first tap of a turn has nothing to merge into without this. */
+  baseResult: Record<string, unknown>;
   groupIndex: number;
   /** This group's own slot inside that result. NOT the array position. */
   groupId: string;
@@ -69,6 +72,7 @@ export interface FactChoiceCardProps {
 
 export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   resultKey,
+  baseResult,
   groupIndex,
   groupId,
   options,
@@ -113,12 +117,12 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
         },
       ]);
       // Only THIS group's slot changes. Every sibling keeps its own state.
-      resolveGroup(resultKey, groupId, {
-        status: 'saved',
-        statements: [statement],
-        savedFacts,
-        conflicts,
-      });
+      resolveGroup(
+        resultKey,
+        groupId,
+        { status: 'saved', statements: [statement], savedFacts, conflicts },
+        baseResult,
+      );
       void hapticSuccess();
       announce();
     } catch (err) {
@@ -134,11 +138,12 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     // Nothing was ever written, so there is nothing to undo in the DATA — this
     // records the choice so the composer unblocks. The card keeps its options so
     // Undo can restore it exactly.
-    resolveGroup(resultKey, groupId, {
-      status: 'dismissed',
-      options,
-      questionnaireAttribute,
-    });
+    resolveGroup(
+      resultKey,
+      groupId,
+      { status: 'dismissed', options, questionnaireAttribute },
+      baseResult,
+    );
     announce();
   };
 
@@ -147,7 +152,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
     void hapticLight();
     // Removing the entry returns the group to pending, which re-blocks the
     // composer — correct: an unanswered question is unanswered again.
-    resolveGroup(resultKey, groupId, undefined);
+    resolveGroup(resultKey, groupId, undefined, baseResult);
     announce();
   };
 

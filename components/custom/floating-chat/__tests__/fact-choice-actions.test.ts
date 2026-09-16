@@ -30,6 +30,7 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
 import {
   factChoiceGroupId,
   readGroupResolutions,
+  readPendingGroups,
   unresolvedGroups,
 } from '@/lib/chat-tools/fact-choice-resolution';
 import { resolveGroup, resolveGroups } from '../fact-choice-actions';
@@ -37,23 +38,29 @@ import { resolveGroup, resolveGroups } from '../fact-choice-actions';
 const KEY = 'msg-1::0';
 const OPTIONS = [['Lives in Hoorn'], ['Works as a farmer'], ['Parents in Malaga']];
 
+// THE DEVICE CONDITION: the store starts EMPTY. The staged blob lives on
+// `message.toolCalls[idx].result`, and nothing copies it into `toolCallResults`
+// — that map holds OVERRIDES only. The original suite seeded the store with the
+// staged blob, which is why it stayed green while the device lost every card on
+// the first tap: merging into `undefined` produced an empty spine and the
+// deriver then emitted nothing at all.
+const STAGED: Record<string, unknown> = {
+  success: true,
+  staged: true,
+  factsSaved: 0,
+  savedFacts: [],
+  conflicts: [],
+  groupResolutions: {},
+  pendingFacts: OPTIONS.map((options, index) => ({
+    index,
+    groupId: factChoiceGroupId(index, options),
+    options,
+    questionnaireAttribute: null,
+  })),
+};
+
 function seed() {
-  mockStoreResults = {
-    [KEY]: {
-      success: true,
-      staged: true,
-      factsSaved: 0,
-      savedFacts: [],
-      conflicts: [],
-      groupResolutions: {},
-      pendingFacts: OPTIONS.map((options, index) => ({
-        index,
-        groupId: factChoiceGroupId(index, options),
-        options,
-        questionnaireAttribute: null,
-      })),
-    },
-  };
+  mockStoreResults = {};
 }
 
 const gid = (i: number) => factChoiceGroupId(i, OPTIONS[i]);
@@ -70,16 +77,55 @@ beforeEach(() => {
 });
 
 describe('resolveGroup', () => {
+  // The device failure, reduced. On the FIRST tap of a turn there is no entry at
+  // resultKey, so the merge has to fall back to the staged result. Without that
+  // it merged into `undefined`, computed an empty spine, and wrote back a blob
+  // with `pendingFacts: []` — which the deriver applies as the WHOLE result,
+  // finding zero groups and emitting zero cards. Every card in the turn vanished
+  // on one tap, and the fact was still saved because the commit ran first.
+  it('DEVICE REPRO: first tap on an EMPTY store keeps the whole spine', () => {
+    expect(mockStoreResults[KEY]).toBeUndefined();
+
+    resolveGroup(KEY, gid(1), saved(1), STAGED);
+
+    const blob = mockStoreResults[KEY];
+    expect(readPendingGroups(blob)).toHaveLength(3);
+    expect(unresolvedGroups(blob).map((g) => g.index)).toEqual([0, 2]);
+    expect(blob.pendingFacts).toHaveLength(3);
+  });
+
+  it('DEVICE REPRO: first Skip on an EMPTY store keeps the whole spine', () => {
+    resolveGroup(
+      KEY,
+      gid(0),
+      { status: 'dismissed', options: OPTIONS[0], questionnaireAttribute: null },
+      STAGED,
+    );
+    expect(readPendingGroups(mockStoreResults[KEY])).toHaveLength(3);
+    expect(unresolvedGroups(mockStoreResults[KEY]).map((g) => g.index)).toEqual([1, 2]);
+  });
+
+  it('DEVICE REPRO: first Add all on an EMPTY store resolves all three', () => {
+    resolveGroups(
+      KEY,
+      [0, 1, 2].map((i) => ({ groupId: gid(i), resolution: saved(i) })),
+      STAGED,
+    );
+    expect(readPendingGroups(mockStoreResults[KEY])).toHaveLength(3);
+    expect(unresolvedGroups(mockStoreResults[KEY])).toHaveLength(0);
+    expect(mockStoreResults[KEY].savedFacts).toHaveLength(3);
+  });
+
   it('resolves only the group it names', () => {
-    resolveGroup(KEY, gid(1), saved(1));
+    resolveGroup(KEY, gid(1), saved(1), STAGED);
     expect(unresolvedGroups(mockStoreResults[KEY]).map((g) => g.index)).toEqual([0, 2]);
   });
 
   it('CONCURRENCY: a second resolve keeps the first, reading the live store', () => {
     // Deliberately interleaved the way two taps interleave: each call re-reads
     // the store rather than a value captured before the first write.
-    resolveGroup(KEY, gid(0), saved(0));
-    resolveGroup(KEY, gid(2), saved(2));
+    resolveGroup(KEY, gid(0), saved(0), STAGED);
+    resolveGroup(KEY, gid(2), saved(2), STAGED);
 
     const resolutions = readGroupResolutions(mockStoreResults[KEY]) ?? {};
     expect(Object.keys(resolutions).sort()).toEqual([gid(0), gid(2)].sort());
@@ -87,7 +133,7 @@ describe('resolveGroup', () => {
   });
 
   it('writes the durable half once per call, at the right message and index', () => {
-    resolveGroup(KEY, gid(0), saved(0));
+    resolveGroup(KEY, gid(0), saved(0), STAGED);
     expect(mockPatch).toHaveBeenCalledTimes(1);
     expect(mockPatch.mock.calls[0][0]).toBe('msg-1');
     expect(mockPatch.mock.calls[0][1]).toBe(0);
@@ -97,7 +143,7 @@ describe('resolveGroup', () => {
 
   it('a rejected durable write never throws into the tap', () => {
     mockPatch.mockRejectedValueOnce(new Error('no row yet'));
-    expect(() => resolveGroup(KEY, gid(0), saved(0))).not.toThrow();
+    expect(() => resolveGroup(KEY, gid(0), saved(0), STAGED)).not.toThrow();
     // A missing message row is not an error: the assistant message persists only
     // when the turn finalises, so a fast tap legitimately lands first.
     expect(unresolvedGroups(mockStoreResults[KEY]).map((g) => g.index)).toEqual([1, 2]);
@@ -108,10 +154,10 @@ describe('resolveGroup', () => {
       status: 'dismissed',
       options: OPTIONS[0],
       questionnaireAttribute: null,
-    });
+    }, STAGED);
     expect(unresolvedGroups(mockStoreResults[KEY]).map((g) => g.index)).toEqual([1, 2]);
 
-    resolveGroup(KEY, gid(0), undefined);
+    resolveGroup(KEY, gid(0), undefined, STAGED);
     expect(unresolvedGroups(mockStoreResults[KEY]).map((g) => g.index)).toEqual([0, 1, 2]);
   });
 });
@@ -121,6 +167,7 @@ describe('resolveGroups', () => {
     resolveGroups(
       KEY,
       [0, 1, 2].map((i) => ({ groupId: gid(i), resolution: saved(i) })),
+      STAGED,
     );
     expect(unresolvedGroups(mockStoreResults[KEY])).toHaveLength(0);
     // N calls would be N patches and N re-renders for one tap.
@@ -131,6 +178,7 @@ describe('resolveGroups', () => {
     resolveGroups(
       KEY,
       [0, 1, 2].map((i) => ({ groupId: gid(i), resolution: saved(i) })),
+      STAGED,
     );
     const blob = mockStoreResults[KEY];
     // An older bundle after a rollback must read this as done, with nothing
@@ -151,6 +199,7 @@ describe('resolveGroups', () => {
           questionnaireAttribute: null,
         },
       })),
+      STAGED,
     );
     expect(unresolvedGroups(mockStoreResults[KEY])).toHaveLength(0);
     expect(mockStoreResults[KEY].factsSaved).toBe(0);
@@ -158,11 +207,12 @@ describe('resolveGroups', () => {
   });
 
   it('preserves a group resolved EARLIER by a single tap', () => {
-    resolveGroup(KEY, gid(1), saved(1));
+    resolveGroup(KEY, gid(1), saved(1), STAGED);
     // The bulk row only ever carries the groups still pending.
     resolveGroups(
       KEY,
       [0, 2].map((i) => ({ groupId: gid(i), resolution: saved(i) })),
+      STAGED,
     );
     const resolutions = readGroupResolutions(mockStoreResults[KEY]) ?? {};
     expect(Object.keys(resolutions)).toHaveLength(3);

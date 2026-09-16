@@ -154,6 +154,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         return (
           <FactChoiceCard
             resultKey={item.resultKey}
+            baseResult={item.baseResult}
             groupIndex={item.groupIndex}
             groupId={item.groupId}
             options={item.options}
@@ -164,7 +165,13 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         );
 
       case 'fact-choice-bulk-row':
-        return <FactChoiceBulkRow resultKey={item.resultKey} groups={item.groups} />;
+        return (
+          <FactChoiceBulkRow
+            resultKey={item.resultKey}
+            baseResult={item.baseResult}
+            groups={item.groups}
+          />
+        );
 
       case 'chat-topics-card':
         return <ChatTopicsCard facts={item.facts} merged={item.merged} />;

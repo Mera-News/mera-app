@@ -579,6 +579,7 @@ function emitFactChoiceGroups(
         kind: 'fact-choice-card',
         key: `fact-choice-${messageId}-${idx}-${groupId}`,
         resultKey,
+        baseResult: result,
         groupIndex: group.index,
         groupId,
         options: group.options,
@@ -600,6 +601,7 @@ function emitFactChoiceGroups(
         kind: 'fact-choice-card',
         key: `fact-choice-${messageId}-${idx}-${groupId}`,
         resultKey,
+        baseResult: result,
         groupIndex: group.index,
         groupId,
         options: resolution.options,
@@ -653,6 +655,7 @@ function emitFactChoiceGroups(
       kind: 'fact-choice-bulk-row',
       key: `fact-choice-bulk-${messageId}-${idx}`,
       resultKey,
+      baseResult: result,
       groups: groups
         .filter((g) => resolutions[groupIdOf(g)] === undefined)
         .map((g) => ({

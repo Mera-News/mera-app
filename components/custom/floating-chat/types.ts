@@ -61,6 +61,15 @@ export type ChatThreadItem =
       kind: 'fact-choice-card';
       key: string;
       resultKey: string;
+      /**
+       * The tool call's own staged result.
+       *
+       * Required by the commit: the store holds OVERRIDES ONLY, so on the first
+       * tap of a turn there is nothing at `resultKey` and the merge has no spine
+       * to preserve. Threading the staged blob down is what keeps the first
+       * resolution identical to every later one.
+       */
+      baseResult: Record<string, unknown>;
       groupIndex: number;
       /** Stable per-group identity — never the rendered array position. */
       groupId: string;
@@ -85,6 +94,8 @@ export type ChatThreadItem =
       kind: 'fact-choice-bulk-row';
       key: string;
       resultKey: string;
+      /** The tool call's own staged result — see `fact-choice-card`. */
+      baseResult: Record<string, unknown>;
       groups: {
         groupId: string;
         groupIndex: number;

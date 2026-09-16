@@ -33,6 +33,9 @@ type PendingLocaleKey = 'factChoice.add';
 
 export interface FactChoiceBulkRowProps {
   resultKey: string;
+  /** The tool call's staged result. "Add all" is usually the FIRST resolution
+   *  of the turn, which is exactly the case with no store entry yet. */
+  baseResult: Record<string, unknown>;
   groups: {
     groupId: string;
     groupIndex: number;
@@ -41,7 +44,11 @@ export interface FactChoiceBulkRowProps {
   }[];
 }
 
-const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({ resultKey, groups }) => {
+const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({
+  resultKey,
+  baseResult,
+  groups,
+}) => {
   const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
 
@@ -89,7 +96,7 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({ resultKey, groups
         };
         return { groupId: g.groupId, resolution };
       });
-      resolveGroups(resultKey, entries);
+      resolveGroups(resultKey, entries, baseResult);
     } catch (err) {
       logger.error('[FactChoiceBulkRow] add all failed', err, {
         resultKey,
@@ -117,6 +124,7 @@ const FactChoiceBulkRow: React.FC<FactChoiceBulkRowProps> = ({ resultKey, groups
           questionnaireAttribute: g.questionnaireAttribute,
         },
       })),
+      baseResult,
     );
   };
 
