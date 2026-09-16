@@ -28,10 +28,12 @@
     "lib/run-writer.ts",
     "lib/near-call.ts",
     "lib/corpus.ts",
+    "lib/chat-turn.ts",
     "config/env.ts",
     "config/local-data.ts",
     "adapters/auth.ts",
     "scripts/selftest.ts",
+    "scripts/replay-persona-chat.ts",
     "scripts/run-newsharness-corpus.ts"
   ]
 }

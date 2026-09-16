@@ -29,6 +29,8 @@ import {
 } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
+import { buildChatTurnBody, withContextOnLastUserTurn } from '../lib/chat-turn';
+import { CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '../../lib/llm/constants';
 import {
   COHORTS, applyToolCalls, freshState, loadCohort, measureFactsInPrompt,
   measureTurnsInPrompt, renderKnownFacts, PROMPT_CAPS,
@@ -406,6 +408,72 @@ async function main(): Promise<number> {
     updated.state.facts.find((x) => x.id === 'f01')?.statement === 'Lives in Delft, Netherlands');
   ck('a tool call with no statement is ignored',
     applyToolCalls(heavy.persona, [{ name: 'saveFact', parsed: {} }]).state.facts.length === 20);
+
+  console.log('\n== chat turn extraction ==');
+  // --- 15. the extracted body is BYTE-IDENTICAL to the literal it replaced ---
+  // This is the control R4 asked for. The right-hand side is a verbatim copy of
+  // the object replay-persona-chat.ts used to build inline, key order included,
+  // and it is compared on SERIALIZED BYTES, not on deep equality, because key
+  // order is what a request body actually is. If either side is edited without
+  // the other, this fails, which is the whole reason the copy is kept here.
+  {
+    const msgs = [
+      { role: 'system' as const, content: 'SYS' },
+      { role: 'user' as const, content: 'U1' },
+    ];
+    const tools = [{ type: 'function', function: { name: 'saveFact' } }];
+    for (const [label, thinking, stream, effort] of [
+      ['plain', true, false, undefined],
+      ['thinking off', false, false, undefined],
+      ['streaming', true, true, undefined],
+      ['with effort', true, true, 'none'],
+    ] as [string, boolean, boolean, string | undefined][]) {
+      const extracted = JSON.stringify(
+        buildChatTurnBody({ model: 'M', messages: msgs, tools, thinking, stream, effort }),
+      );
+      const original = JSON.stringify({
+        model: 'M',
+        messages: msgs,
+        tools,
+        tool_choice: 'auto',
+        max_tokens: CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
+        temperature: 0.4,
+        chat_template_kwargs: { enable_thinking: thinking },
+        ...(stream ? { stream: true, stream_options: { include_usage: true } } : {}),
+        ...(effort ? { reasoning_effort: effort } : {}),
+      });
+      ck(`request body byte-identical: ${label}`, extracted === original,
+        extracted === original ? '' : `\n    extracted: ${extracted}\n    original:  ${original}`);
+    }
+    // and the check itself can fail: a reordered body must NOT compare equal
+    const reordered = JSON.stringify({
+      messages: msgs, model: 'M', tools, tool_choice: 'auto',
+      max_tokens: CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
+      temperature: 0.4, chat_template_kwargs: { enable_thinking: true },
+    });
+    ck('the byte comparison can actually fail',
+      JSON.stringify(buildChatTurnBody({ model: 'M', messages: msgs, tools })) !== reordered);
+    ck('thinking defaults ON, the app chat gear',
+      (buildChatTurnBody({ model: 'M', messages: msgs, tools }).chat_template_kwargs as { enable_thinking: boolean }).enable_thinking === true);
+    ck('budget carries the reasoning headroom',
+      buildChatTurnBody({ model: 'M', messages: msgs, tools }).max_tokens ===
+        CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
+      String(buildChatTurnBody({ model: 'M', messages: msgs, tools }).max_tokens));
+  }
+
+  // --- 16. context lands on the LAST user turn and nothing is mutated -------
+  {
+    const wire = [
+      { role: 'user' as const, content: 'first' },
+      { role: 'assistant' as const, content: 'reply' },
+      { role: 'user' as const, content: 'last' },
+    ];
+    const out = withContextOnLastUserTurn('SYS', '<context>C</context>', wire);
+    ck('system prompt is first', out[0].role === 'system');
+    ck('context lands on the LAST user turn', out[3].content.startsWith('<context>C</context>'));
+    ck('earlier user turn is untouched', out[1].content === 'first');
+    ck('the input array is not mutated', wire[2].content === 'last');
+  }
 
   console.log(`\n${f === 0 ? 'ALL PASS' : f + ' FAILURE(S)'}`);
   return f === 0 ? 0 : 1;

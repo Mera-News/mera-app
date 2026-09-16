@@ -35,6 +35,7 @@ import {
   CHAT_MAX_OUTPUT_TOKENS,
   CHAT_REASONING_HEADROOM_TOKENS,
 } from '../../lib/llm/constants';
+import { buildChatTurnBody } from '../lib/chat-turn';
 
 interface WireMsg {
   role: 'user' | 'assistant';
@@ -158,6 +159,9 @@ async function runOnce(
   const carried = arm === 'before' ? fixture.wire.slice(-1) : fixture.wire;
 
   // <context> is injected onto the LAST user message, exactly as the app does.
+  // lib/chat-turn.ts exports withContextOnLastUserTurn, which does the same;
+  // this local copy stays so this script's behaviour is unchanged by the
+  // extraction, which was about the request BODY.
   const messages = [
     { role: 'system' as const, content: systemPrompt },
     ...carried.map((m, i) =>
@@ -168,27 +172,25 @@ async function runOnce(
   ];
 
   const startedAt = Date.now();
+  // The body is built by harness-local/lib/chat-turn.ts, which the corpus
+  // runner also uses, so the two cannot drift apart. It produces byte-identical
+  // output to the literal that used to sit here, pinned in scripts/selftest.ts.
   const res = await fetch(`${env.nearAiBaseUrl}/chat/completions`, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
       authorization: `Bearer ${env.nearAiApiKey}`,
     },
-    body: JSON.stringify({
-      model,
-      messages,
-      tools: buildToolDefinitions('CONFIG'),
-      tool_choice: 'auto',
-      // cloudChatStream adds the reasoning headroom on top of the answer budget.
-      max_tokens: CHAT_MAX_OUTPUT_TOKENS + CHAT_REASONING_HEADROOM_TOKENS,
-      temperature: 0.4,
-      // WIRE PARITY: cloudChatStream hardcodes thinking ON for chat turns. A
-      // reasoning model measured with thinking off is a different gear from the
-      // one the app ships, and the trace shares max_tokens with the answer.
-      chat_template_kwargs: { enable_thinking: thinking },
-      ...(stream ? { stream: true, stream_options: { include_usage: true } } : {}),
-      ...(effort ? { reasoning_effort: effort } : {}),
-    }),
+    body: JSON.stringify(
+      buildChatTurnBody({
+        model,
+        messages,
+        tools: buildToolDefinitions('CONFIG'),
+        thinking,
+        stream,
+        effort,
+      }),
+    ),
   });
 
   if (!res.ok) {
