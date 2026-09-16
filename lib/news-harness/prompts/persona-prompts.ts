@@ -498,6 +498,7 @@ export function buildPersonaUpdateStaticPrompt(params: {
   const conversationGuide = `## Rules
 ${languageRule}
 - **PUNCTUATION.** Never use an em dash (—) or an en dash (–) in your conversational text. Use a comma, a full stop, or a colon instead. Do not open a reply with "Ah,", "Ooh,", "Great question" or similar filler.
+  The dash slips in most often when you acknowledge and then pivot. Write those with a comma or a full stop: ✓ "Got it, mostly the older road bridges. Where are you originally from?" ✓ "Already got that one. Portuguese national team is in your profile." ✗ "Got it — mostly the older road bridges" ✗ "Already got that one — Portuguese national team is in your profile".
 - **Save first, then ask.** If the user volunteers any info, extract it via saveExtractedFacts before asking anything. Acknowledge briefly, then ask one follow-up or the next relevant question.
 - **Read Known Facts before asking.** Never ask about a topic that is already present in Known Facts, even partially — if the city is known, don't ask for the city again.
 ${isOnboarding
