@@ -123,6 +123,16 @@ export interface CellAgreement {
   /** Count arms only: fraction of repeats whose returned count respected the
    *  requested ceiling. Mechanical, so it can actually fire. */
   countRespected: number | null;
+  /**
+   * Spread of the per-repeat mean score, for cells whose parsedSchema is a
+   * numeric array. RANGE ALONE UNDER-STATES SPREAD at three repeats: a range is
+   * the gap between two draws and says nothing about how the middle sits, so a
+   * 0.95-point delta can look large against a narrow range while sitting well
+   * inside the standard deviation. Both are printed; judge on the SD.
+   */
+  scoreMean: number | null;
+  scoreSd: number | null;
+  scoreRange: number | null;
 }
 
 /**
@@ -277,8 +287,28 @@ export function computeAgreement(
         counted.length
       : null;
 
+    // Per-repeat scalar: the mean of each row's numeric parsedSchema. Absent
+    // for rows that do not carry one, which is most non-scoring call types.
+    const perRepeat = cellRows
+      .map((r) => {
+        const v = r.parsedSchema;
+        if (!Array.isArray(v)) return null;
+        const nums = v.filter((x): x is number => typeof x === 'number');
+        return nums.length > 0 ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+      })
+      .filter((x): x is number => x !== null);
+    const scoreMean = perRepeat.length > 0 ? perRepeat.reduce((a, b) => a + b, 0) / perRepeat.length : null;
+    const scoreSd =
+      perRepeat.length > 1 && scoreMean !== null
+        ? Math.sqrt(perRepeat.reduce((n, x) => n + (x - scoreMean) ** 2, 0) / perRepeat.length)
+        : null;
+    const scoreRange = perRepeat.length > 1 ? Math.max(...perRepeat) - Math.min(...perRepeat) : null;
+
     cells.push({
       key,
+      scoreMean,
+      scoreSd,
+      scoreRange,
       arm: cellRows[0].arm,
       model: cellRows[0].modelRequested,
       callType: cellRows[0].callType,
@@ -593,6 +623,15 @@ export function formatAgreementReport(r: AgreementReport): string {
 
   out.push('');
   out.push('PER CELL');
+  const withSd = r.cells.filter((c) => c.scoreSd !== null);
+  if (withSd.length > 0) {
+    const meanSd = withSd.reduce((n, c) => n + (c.scoreSd as number), 0) / withSd.length;
+    const meanRange = withSd.reduce((n, c) => n + (c.scoreRange as number), 0) / withSd.length;
+    out.push(
+      `  Across ${withSd.length} scoring cell(s): mean per-repeat SD ${meanSd.toFixed(3)}, mean range ${meanRange.toFixed(3)}. ` +
+        'At 3 repeats the RANGE is the gap between two draws and under-states spread; judge a delta against the SD.',
+    );
+  }
   for (const c of r.cells) {
     out.push(
       `  ${c.key.padEnd(58).slice(0, 58)} n=${c.repeats} ` +
@@ -600,6 +639,9 @@ export function formatAgreementReport(r: AgreementReport): string {
         (c.countRespected !== null ? ` count-ok=${pct(c.countRespected)}` : '') +
         (!c.promptDeterministic && c.distinctPrompts > 1
           ? ` diverged=${c.distinctPrompts}/${c.repeats}`
+          : '') +
+        (c.scoreSd !== null
+          ? ` score=${(c.scoreMean as number).toFixed(3)} sd=${c.scoreSd.toFixed(3)} range=${(c.scoreRange as number).toFixed(3)}`
           : '') +
         (c.errorRate > 0 ? ` err=${pct(c.errorRate)}` : '') +
         (c.truncatedRate > 0 ? ` TRUNCATED=${pct(c.truncatedRate)}` : ''),

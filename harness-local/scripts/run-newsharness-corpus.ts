@@ -446,6 +446,10 @@ async function main(): Promise<number> {
             systemChars: (call.system ?? '').length,
             promptChars: call.prompt.length,
             maxOutputTokens: args.maxTokens[model] ?? config.reasonMaxTokens,
+            // Only articles at or above reasonRelevanceThreshold get a reason
+            // call, and a dry run's scores are a stand-in, so this count is an
+            // upper bound rather than a prediction.
+            conditionalOn: `reasonRelevanceThreshold ${config.reasonRelevanceThreshold}`,
           });
           const result = args.dryRun
             ? {

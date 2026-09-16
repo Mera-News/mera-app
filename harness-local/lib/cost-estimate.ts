@@ -29,10 +29,29 @@ export interface PlannedCall {
   systemChars: number;
   promptChars: number;
   maxOutputTokens: number;
+  /**
+   * Set when this call only happens if an earlier call's OUTPUT clears a gate,
+   * naming the gate. Reason calls are the case: only articles scoring at or
+   * above `reasonRelevanceThreshold` get one, and a dry run cannot know how
+   * many will, because its scores are a stand-in.
+   *
+   * Counting these as certain over-provisioned a real run by 4x: 1590 calls
+   * predicted against 987 made, because only about 92 of 348 articles cleared
+   * the 0.4 gate. They are now reported separately as an UPPER BOUND.
+   */
+  conditionalOn?: string;
 }
 
 export interface CostEstimate {
   calls: number;
+  /** Calls that happen unconditionally. */
+  certainCalls: number;
+  /** Calls behind a gate, counted at their MAXIMUM. */
+  conditionalCalls: number;
+  conditionalGates: string[];
+  /** Cost with every gated call assumed NOT to happen. */
+  usdCertainFloor: number;
+  usdCertainCeiling: number;
   byModel: {
     model: string;
     calls: number;
@@ -48,13 +67,18 @@ export interface CostEstimate {
   unpriced: string[];
 }
 
-export function estimateRunCost(calls: PlannedCall[], catalog: ModelCatalog): CostEstimate {
+function groupOf(calls: PlannedCall[]): Map<string, PlannedCall[]> {
   const groups = new Map<string, PlannedCall[]>();
   for (const c of calls) {
     const list = groups.get(c.model);
     if (list) list.push(c);
     else groups.set(c.model, [c]);
   }
+  return groups;
+}
+
+export function estimateRunCost(calls: PlannedCall[], catalog: ModelCatalog): CostEstimate {
+  const groups = groupOf(calls);
 
   const byModel: CostEstimate['byModel'] = [];
   const unpriced: string[] = [];
@@ -88,7 +112,34 @@ export function estimateRunCost(calls: PlannedCall[], catalog: ModelCatalog): Co
   }
 
   byModel.sort((a, b) => b.usdCeiling - a.usdCeiling || a.model.localeCompare(b.model));
-  return { calls: calls.length, byModel, usdFloor, usdCeiling, unpriced };
+
+  // The same arithmetic over the unconditional calls only, so a reader can see
+  // the part of the bill that is certain separately from the part that depends
+  // on how many articles clear a gate.
+  const certain = calls.filter((c) => !c.conditionalOn);
+  let usdCertainFloor = 0;
+  let usdCertainCeiling = 0;
+  for (const [model, list] of groupOf(certain)) {
+    const info = catalog[model];
+    if (!info) continue;
+    const inTok = list.reduce((n, c) => n + Math.ceil((c.systemChars + c.promptChars) / CHARS_PER_TOKEN), 0);
+    const outTok = list.reduce((n, c) => n + c.maxOutputTokens, 0);
+    usdCertainFloor += costOf(info, { promptTokens: inTok, completionTokens: 0, cachedTokens: 0 });
+    usdCertainCeiling += costOf(info, { promptTokens: inTok, completionTokens: outTok, cachedTokens: 0 });
+  }
+
+  return {
+    calls: calls.length,
+    certainCalls: certain.length,
+    conditionalCalls: calls.length - certain.length,
+    conditionalGates: [...new Set(calls.map((c) => c.conditionalOn).filter((x): x is string => Boolean(x)))],
+    usdCertainFloor,
+    usdCertainCeiling,
+    byModel,
+    usdFloor,
+    usdCeiling,
+    unpriced,
+  };
 }
 
 export function formatCostEstimate(e: CostEstimate): string {
@@ -105,6 +156,21 @@ export function formatCostEstimate(e: CostEstimate): string {
     );
   }
   out.push(`  ${'TOTAL'.padEnd(32)}${String(e.calls).padStart(7)}${''.padStart(20)}${e.usdFloor.toFixed(4).padStart(12)}${e.usdCeiling.toFixed(4).padStart(13)}`);
+  if (e.conditionalCalls > 0) {
+    out.push('');
+    out.push(
+      `  UPPER BOUND: ${e.conditionalCalls} of ${e.calls} call(s) are GATED on an earlier call's output ` +
+        `(${e.conditionalGates.join(', ')}) and are counted here at their maximum.`,
+    );
+    out.push(
+      `  If NONE of them fire the run costs ${e.usdCertainFloor.toFixed(4)} to ${e.usdCertainCeiling.toFixed(4)}; ` +
+        'the truth is between that and the total above.',
+    );
+    out.push(
+      '  Measured once on the 348-article goldset: about 26% of articles cleared the 0.4 reason gate, ' +
+        'so the gated portion ran at roughly a quarter of this bound. Do not provision for the bound.',
+    );
+  }
   out.push('  Floor assumes no output at all, ceiling assumes every call hits max_tokens.');
   out.push('  Input tokens are estimated at 4 chars each, and no cache discount is assumed.');
   if (e.unpriced.length > 0) {
