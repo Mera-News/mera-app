@@ -58,6 +58,17 @@ registerPromptVariant({
  * without offering anywhere else to go would just move the tic somewhere else,
  * so the arm also asks for varied openings: a template is a shape, and you
  * replace a shape with another shape rather than with a prohibition.
+ *
+ * OUTCOME: REJECTED, and the reasoning above is the part that turned out wrong.
+ * A blind rater over 168 rows could not tell v3 from v2 on any dimension, and
+ * the opening-variety rule moved nothing at all (36 unique first words either
+ * way; measured independently as distinct two-word openings, 75.8% vs 76.2%).
+ * The place rule MAY have moved the stapling rate - three repeats of v3 all sat
+ * below three repeats of v2 on an automated proxy - but the gap was 7.8 points
+ * against a within-run floor of 8.3, so it did not clear the pre-registered bar
+ * and the rater saw no difference at all. Two lessons worth more than the arm:
+ * bundling two rules into one arm means a null result cannot be attributed, and
+ * an automated proxy disagreeing with a calibrated rater is the proxy's problem.
  */
 const REASON_V3_RULES = `
 ## Two more rules about how the sentence is built
@@ -82,8 +93,12 @@ Output: single plain string, no prefixes, no markdown.`;
 registerPromptVariant({
   id: REASON_V3_ID,
   description:
-    'v2 plus two sentence-construction rules, targeting the place-template pattern the rater '
-    + 'found unmoved at 47% then 39% of rows. Voice only; makes no claim about calibration or linkage.',
+    'v2 plus two sentence-construction rules, targeting the place-template pattern. '
+    + 'MEASURED AND REJECTED: behaviourally indistinguishable from v2 under a blind rater over 168 '
+    + 'rows (voice 3.06 vs 3.09, place-stapled 44% vs 45%, opening variety 36 vs 36, calibration '
+    + 'identical). Rule 5 (vary the openings) produced NO measurable change and should be dropped, '
+    + 'not reworded, if a v4 is ever authored. Kept registered so the question is reproducible, '
+    + 'NOT because it is a candidate.',
   systemPrompts: {
     // Built on the SHIPPED prompt, which is now v2. So v3 is strictly v2 plus
     // these two rules, and a v3-versus-v2 comparison isolates them.
