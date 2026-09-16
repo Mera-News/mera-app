@@ -229,7 +229,7 @@ export const CompactActionsSheet: React.FC<CompactActionsSheetProps> = ({
     >
       <HStack className="items-center px-4 py-3" space="md">
         {icon}
-        <Text className="flex-1 text-typography-0" style={{ fontSize: 15, fontWeight: '600' }}>
+        <Text className="flex-1 text-white" style={{ fontSize: 15, fontWeight: '600' }}>
           {label}
         </Text>
       </HStack>

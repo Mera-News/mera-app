@@ -22,6 +22,7 @@
 // names the reader just switched off.
 
 import ShareStatsCard, { hostSizeForScale } from '@/components/custom/share-stats/ShareStatsCard';
+import { ink } from '@/components/custom/share-stats/card-theme';
 import { captureAndShare } from '@/components/custom/share-stats/capture-and-share';
 import DrillDownHeader from '@/components/custom/config-panel/DrillDownHeader';
 import { Box } from '@/components/ui/box';
@@ -155,17 +156,17 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
       {isLoading ? (
         <Box className="flex-1 items-center justify-center">
           <Spinner size="large" />
-          <Text size="sm" className="text-gray-400 mt-3">
+          <Text size="sm" className="mt-3" style={ink('muted')}>
             {t('shareStats.preparing')}
           </Text>
         </Box>
       ) : !stats.hasAnyData ? (
         <VStack className="flex-1 items-center justify-center p-6" space="md">
           <MaterialIcons name="insights" size={48} color="#666666" />
-          <Text size="md" className="text-typography-0 text-center">
+          <Text size="md" className="text-white text-center">
             {t('shareStats.emptyTitle')}
           </Text>
-          <Text size="sm" className="text-gray-400 text-center">
+          <Text size="sm" className="text-center" style={ink('muted')}>
             {t('shareStats.emptyBody')}
           </Text>
         </VStack>
@@ -193,10 +194,10 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
           <VStack className="px-5 mt-5" space="md">
             <HStack className="items-center justify-between py-3 px-4 border border-gray-700 rounded-lg">
               <VStack className="flex-1 pr-3">
-                <Text className="text-base text-typography-0">
+                <Text className="text-base text-white">
                   {t('shareStats.nameToggleLabel')}
                 </Text>
-                <Text size="sm" className="text-gray-400 mt-0.5">
+                <Text size="sm" className="mt-0.5" style={ink('muted')}>
                   {t('shareStats.nameTogglePrivacy')}
                 </Text>
               </VStack>
@@ -218,7 +219,7 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
             >
               <HStack className="items-center" space="sm">
                 {pendingShare ? <Spinner size="small" /> : null}
-                <Text className="text-typography-0 font-semibold">
+                <Text className="text-white font-semibold">
                   {t('shareStats.shareAction')}
                 </Text>
               </HStack>
@@ -226,7 +227,7 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
 
             {/* Inline, never a silent no-op: a feature hides or it says why. */}
             {message !== null && (
-              <Text testID="share-stats-message" size="sm" className="text-gray-400 text-center">
+              <Text testID="share-stats-message" size="sm" className="text-center" style={ink('muted')}>
                 {message === 'unavailable'
                   ? t('shareStats.sharingUnavailable')
                   : t('shareStats.shareFailed')}

@@ -36,6 +36,26 @@
 // fixed-pixel raster, so OS Dynamic Type must not grow the copy past the edges
 // of a card nobody can scroll.
 //
+// ## Every colour comes from `ink()`, never from a palette class
+//
+// This card shipped its nine primary text nodes as `text-typography-0` and drew
+// them NEAR-BLACK. The Gluestack dark palette is an INVERSION of the light one,
+// so `typography-0` is the DARK end of the ramp (23 23 23) and `typography-950`
+// is the white end. The app mounts `mode="dark"`, so the card was always asking
+// for the dark end, on screen and in the PNG alike.
+//
+// It is worth being precise about what was and was not the cause, because the
+// capture is the natural suspect and is innocent: `react-native-view-shot`
+// snapshots the existing layer tree, it does not re-render, so a capture cannot
+// differ from the screen for a colour reason. The preview was black too. What
+// hid it was a component test asserting a CLASS NAME, which passes whatever the
+// class resolves to, because a class string carries no colour. Same shape as a
+// per-string size budget that cannot see a layout overflow.
+//
+// So colour lives in `style` beside `type()`, from `card-theme.ts`, and
+// `share-stats-card.test.tsx` reads this directory's source and fails on the
+// token itself. See card-theme.ts for the scale.
+//
 // ## What the card may and may not say
 //
 // Four figures, from `lib/stats/reading-stats.ts`, all computed on device from
@@ -52,6 +72,7 @@ import { Box } from '@/components/ui/box';
 import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { ink } from '@/components/custom/share-stats/card-theme';
 import { roundedAverageHours, type ReadingStats } from '@/lib/stats/reading-stats';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -222,16 +243,15 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
               <MeraLogo size={CARD_METRICS.logoSize * k} />
               <Text
                 allowFontScaling={false}
-                className="text-typography-0 font-semibold"
-                style={type(CARD_METRICS.wordmark, k, CARD_METRICS.numeralLeading)}
+                className="font-semibold"
+                style={[type(CARD_METRICS.wordmark, k, CARD_METRICS.numeralLeading), ink('primary')]}
               >
                 Mera News
               </Text>
             </HStack>
             <Text
               allowFontScaling={false}
-              className="text-gray-400"
-              style={[type(CARD_METRICS.title, k), { marginTop: CARD_METRICS.titleGap * k }]}
+              style={[type(CARD_METRICS.title, k), { marginTop: CARD_METRICS.titleGap * k }, ink('muted')]}
             >
               {t('shareStats.card.title')}
             </Text>
@@ -257,8 +277,8 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
           <Panel k={k} testID="share-stats-card-latency">
             <Text
               allowFontScaling={false}
-              className="text-typography-0 font-semibold"
-              style={type(averageHours === null ? CARD_METRICS.panelValueUnknown : CARD_METRICS.panelValue, k, CARD_METRICS.numeralLeading)}
+              className="font-semibold"
+              style={[type(averageHours === null ? CARD_METRICS.panelValueUnknown : CARD_METRICS.panelValue, k, CARD_METRICS.numeralLeading), ink('primary')]}
             >
               {averageHours === null
                 ? t('shareStats.card.latencyUnknown')
@@ -266,8 +286,7 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
             </Text>
             <Text
               allowFontScaling={false}
-              className="text-typography-0"
-              style={[type(CARD_METRICS.panelLabel, k), { marginTop: CARD_METRICS.panelLabelGap * k }]}
+              style={[type(CARD_METRICS.panelLabel, k), { marginTop: CARD_METRICS.panelLabelGap * k }, ink('secondary')]}
             >
               {t('shareStats.card.latencyLabel')}
             </Text>
@@ -277,8 +296,7 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
             {averageHours !== null && (
               <Text
                 allowFontScaling={false}
-                className="text-gray-400"
-                style={[type(CARD_METRICS.qualifier, k), { marginTop: CARD_METRICS.qualifierGap * k }]}
+                style={[type(CARD_METRICS.qualifier, k), { marginTop: CARD_METRICS.qualifierGap * k }, ink('muted')]}
               >
                 {t('shareStats.card.latencyCoverage', {
                   sampled: sampledArticles,
@@ -292,22 +310,20 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
           <Panel k={k} testID="share-stats-card-opened">
             <Text
               allowFontScaling={false}
-              className="text-typography-0 font-semibold"
-              style={type(CARD_METRICS.panelValue, k, CARD_METRICS.numeralLeading)}
+              className="font-semibold"
+              style={[type(CARD_METRICS.panelValue, k, CARD_METRICS.numeralLeading), ink('primary')]}
             >
               {String(stats.articlesOpened)}
             </Text>
             <Text
               allowFontScaling={false}
-              className="text-typography-0"
-              style={[type(CARD_METRICS.panelLabel, k), { marginTop: CARD_METRICS.panelLabelGap * k }]}
+              style={[type(CARD_METRICS.panelLabel, k), { marginTop: CARD_METRICS.panelLabelGap * k }, ink('secondary')]}
             >
               {t('shareStats.card.openedLabel')}
             </Text>
             <Text
               allowFontScaling={false}
-              className="text-gray-400"
-              style={[type(CARD_METRICS.qualifier, k), { marginTop: CARD_METRICS.qualifierGap * k }]}
+              style={[type(CARD_METRICS.qualifier, k), { marginTop: CARD_METRICS.qualifierGap * k }, ink('muted')]}
             >
               {t('shareStats.card.openedPartial')}
             </Text>
@@ -321,8 +337,7 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
             <VStack testID="share-stats-card-top-publications">
               <Text
                 allowFontScaling={false}
-                className="text-gray-400"
-                style={type(CARD_METRICS.topListTitle, k)}
+                style={[type(CARD_METRICS.topListTitle, k), ink('muted')]}
               >
                 {t('shareStats.card.topPublicationsTitle')}
               </Text>
@@ -335,8 +350,7 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
                   <SourceFlag countryCode={publication.countryCode} size="lg" />
                   <Text
                     allowFontScaling={false}
-                    className="text-typography-0"
-                    style={type(CARD_METRICS.topRowText, k)}
+                    style={[type(CARD_METRICS.topRowText, k), ink('primary')]}
                     numberOfLines={1}
                   >
                     {publication.publicationName}
@@ -355,15 +369,13 @@ const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function Shar
           <VStack>
             <Text
               allowFontScaling={false}
-              className="text-gray-400"
-              style={type(CARD_METRICS.qualifier, k)}
+              style={[type(CARD_METRICS.qualifier, k), ink('muted')]}
             >
               {t('shareStats.card.privacyLine')}
             </Text>
             <Text
               allowFontScaling={false}
-              className="text-typography-0"
-              style={[type(CARD_METRICS.footerDomain, k), { marginTop: CARD_METRICS.footerGap * k }]}
+              style={[type(CARD_METRICS.footerDomain, k), { marginTop: CARD_METRICS.footerGap * k }, ink('secondary')]}
             >
               mera.news
             </Text>
@@ -401,15 +413,14 @@ const CountTile: React.FC<{
   >
     <Text
       allowFontScaling={false}
-      className="text-typography-0 font-semibold"
-      style={type(CARD_METRICS.tileNumeral, k, CARD_METRICS.numeralLeading)}
+      className="font-semibold"
+      style={[type(CARD_METRICS.tileNumeral, k, CARD_METRICS.numeralLeading), ink('primary')]}
     >
       {String(value)}
     </Text>
     <Text
       allowFontScaling={false}
-      className="text-typography-0"
-      style={[type(CARD_METRICS.tileLabel, k), { marginTop: CARD_METRICS.tileLabelGap * k }]}
+      style={[type(CARD_METRICS.tileLabel, k), { marginTop: CARD_METRICS.tileLabelGap * k }, ink('secondary')]}
     >
       {label}
     </Text>
