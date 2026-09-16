@@ -52,7 +52,7 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
 
   const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
   const [isLoading, setIsLoading] = useState(true);
-  const [showNames, setShowNames] = useState(false);
+  const [showNames, setShowNames] = useState(true);
   const [pendingShare, setPendingShare] = useState(false);
   const [message, setMessage] = useState<ShareMessage>(null);
 

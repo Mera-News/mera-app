@@ -154,9 +154,18 @@ export const FlagGrid: React.FC<FlagGridProps> = ({
         >
           {/* SourceFlag falls back to an SVG globe for a code it does not know,
               which is the branch that is PROVEN to rasterise. The fixed cell
-              around it means either outcome occupies the same box. */}
-          <Text allowFontScaling={false} style={chartType(CHART_METRICS.flagGlyph, k, 1.15)}>
-            <SourceFlag countryCode={code} size="lg" />
+              around it means either outcome occupies the same box.
+
+              `iconClassName` is overridden because SourceFlag's default is
+              `text-typography-500`, a palette token: mid-ramp and legible, but
+              off-system on a card whose every other colour is white at a stated
+              opacity. The wrapper carries an explicit colour too, since a flag
+              emoji supplies its own but the globe and any tofu fallback do not. */}
+          <Text
+            allowFontScaling={false}
+            style={[chartType(CHART_METRICS.flagGlyph, k, 1.15), { color: inkColor('primary') }]}
+          >
+            <SourceFlag countryCode={code} size="lg" iconClassName="text-white" />
           </Text>
         </View>
       ))}

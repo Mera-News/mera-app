@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import React from 'react';
 import ShareStatsCard, {
   EXPORT_HEIGHT,
@@ -8,15 +8,13 @@ import ShareStatsCard, {
 import { toFileUri } from '../capture-and-share';
 import { emptyReadingStats, type ReadingStats } from '@/lib/stats/reading-stats';
 
-// MeraLogo pulls in reanimated + react-native-svg, which have no native side
-// under jest. Same stub the profile and card suites already use. That leaves
-// ONE thing this suite cannot answer: whether an SVG glyph actually rasterises
-// into a captureRef PNG. Nothing in P0 exercised react-native-svg either, so
-// the brand mark is a device-verification item, not a covered one.
-// AbstractGradientBackdrop drags in reanimated and react-native-svg, which have
-// no native side under jest. It has its own suite; here it is a prop recorder,
-// so the card's contract with it (seeded AND frame-pinned, or two shares of the
-// same stats produce different PNGs) is still asserted below.
+// MeraLogo and AbstractGradientBackdrop pull in reanimated and
+// react-native-svg, which have no native side under jest. The backdrop is a
+// prop recorder rather than a null, so the card's contract with it (seeded AND
+// frame-pinned, or two shares of the same stats produce different PNGs) is
+// still asserted below. That leaves ONE thing this suite cannot answer:
+// whether an SVG glyph, or a regional-indicator flag pair, actually rasterises
+// into a captureRef PNG. Both are device-verification items.
 jest.mock('@/components/custom/AbstractGradientBackdrop', () => {
   const { View } = require('react-native');
   return {
@@ -43,29 +41,33 @@ function stats(overrides: Partial<ReadingStats> = {}): ReadingStats {
   return {
     ...emptyReadingStats(),
     publicationCount: 17,
-    countryCount: 6,
+    countryCount: 3,
+    countries: [
+      { countryCode: 'IN', visitCount: 38 },
+      { countryCode: 'US', visitCount: 22 },
+      { countryCode: 'GB', visitCount: 14 },
+    ],
     articlesOpened: 58,
     publishToRead: { averageHours: 8.6, sampledArticles: 41, totalArticles: 58 },
+    keptNow: { savedArticles: 28, followedStories: 6 },
     hasAnyData: true,
     ...overrides,
   };
 }
 
 describe('hostSizeForScale', () => {
-  // This is the P0 finding, pinned. captureRef's width/height are POINTS that
-  // get multiplied by the device pixel ratio: a 1080x1920 request on a 3x
-  // device returned a 3240x5760 PNG. So the host must be laid out at
-  // EXPORT / scale points for the capture to land on the export size, and
-  // there is no post-capture resize to fall back on because
-  // expo-image-manipulator is not installed.
+  // captureRef's width/height are POINTS that get multiplied by the device
+  // pixel ratio: a 1080x1920 request on a 3x device returned a 3240x5760 PNG.
+  // So the host must be laid out at EXPORT / scale points for the capture to
+  // land on the export size, and there is no post-capture resize to fall back
+  // on because expo-image-manipulator is not installed.
   it('is the export size divided by the device scale', () => {
     expect(hostSizeForScale(3)).toEqual({ width: 360, height: 640 });
     expect(hostSizeForScale(2)).toEqual({ width: 540, height: 960 });
-    expect(hostSizeForScale(1)).toEqual({ width: EXPORT_WIDTH, height: EXPORT_HEIGHT });
   });
 
   it('multiplies back up to exactly the export size at every scale', () => {
-    for (const scale of [1, 2, 2.75, 3, 3.5]) {
+    for (const scale of [1, 1.5, 2, 2.75, 3]) {
       const host = hostSizeForScale(scale);
       expect(host.width * scale).toBeCloseTo(EXPORT_WIDTH, 6);
       expect(host.height * scale).toBeCloseTo(EXPORT_HEIGHT, 6);
@@ -83,143 +85,262 @@ describe('hostSizeForScale', () => {
 });
 
 describe('toFileUri', () => {
-  // captureRef returned bare absolute paths with no scheme on the simulator.
   it('adds the scheme to a bare path and leaves a real URI alone', () => {
-    expect(toFileUri('/var/tmp/ReactNative/x.png')).toBe('file:///var/tmp/ReactNative/x.png');
-    expect(toFileUri('file:///var/tmp/x.png')).toBe('file:///var/tmp/x.png');
+    expect(toFileUri('/var/mobile/x.png')).toBe('file:///var/mobile/x.png');
+    expect(toFileUri('file:///var/mobile/x.png')).toBe('file:///var/mobile/x.png');
   });
 });
 
-describe('ShareStatsCard', () => {
-  it('renders the four figures', () => {
-    render(<ShareStatsCard stats={stats()} showPublicationNames={false} pixelRatio={3} />);
+describe('the dispatcher', () => {
+  it('draws each card by id', () => {
+    for (const [card, testID] of [
+      ['reach', 'share-stats-card-reach'],
+      ['keep', 'share-stats-card-keep'],
+      ['pace', 'share-stats-card-pace'],
+    ] as const) {
+      const { getByTestId } = render(
+        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} />,
+      );
+      expect(getByTestId(testID)).toBeTruthy();
+    }
+  });
 
-    expect(screen.getByText('17')).toBeTruthy();
-    expect(screen.getByText('6')).toBeTruthy();
-    expect(screen.getByText('58')).toBeTruthy();
-    expect(screen.getByText('shareStats.card.latencyValue:{"count":9}')).toBeTruthy();
+  it('draws the reach card when no id is given, as the shipped deep link does', () => {
+    const { getByTestId } = render(<ShareStatsCard stats={stats()} pixelRatio={3} />);
+    expect(getByTestId('share-stats-card-reach')).toBeTruthy();
+  });
+
+  it('mounts the app backdrop SEEDED AND FRAME-PINNED on every card', () => {
+    // The seed alone is NOT enough. It fixes the colour SEQUENCE, while a
+    // module-level step advanced by a shared 45s interval picks the position in
+    // it, so a seeded-only backdrop drifts and two shares of the same stats
+    // produce different files.
+    for (const card of ['reach', 'keep', 'pace'] as const) {
+      const { getByTestId } = render(
+        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} />,
+      );
+      const backdrop = getByTestId('card-backdrop');
+      expect(backdrop.props.seed).toBe('mera-stats-card');
+      expect(backdrop.props.frame).toBe(0);
+    }
+  });
+});
+
+describe('each card states exactly ONE window', () => {
+  // Countries, publications, opened and publish-to-read are 30-day. Saved and
+  // followed are present tense. A card that mixed them would carry a heading
+  // true of neither, which is the overclaim this split exists to refuse.
+  it('puts the 30-day line on reach and pace', () => {
+    for (const card of ['reach', 'pace'] as const) {
+      const { getByTestId } = render(
+        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} />,
+      );
+      expect(getByTestId(`share-stats-card-${card}-window`).props.children).toBe(
+        'shareStats.screenSubtitle',
+      );
+    }
+  });
+
+  it('puts the present-tense line on keep, and never a 30-day claim', () => {
+    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} />);
+    expect(getByTestId('share-stats-card-keep-window').props.children).toBe(
+      'shareStats.card.windowNow',
+    );
+  });
+});
+
+describe('top publications', () => {
+  const withNames = stats({
+    topPublications: [
+      { publicationName: 'Le Monde', countryCode: 'FR', visitCount: 9 },
+      { publicationName: 'NHK', countryCode: 'JP', visitCount: 4 },
+    ],
+  });
+
+  it('is ON by default, without the reader turning anything on', () => {
+    const { getByText, getByTestId } = render(
+      <ShareStatsCard card="reach" stats={withNames} pixelRatio={3} />,
+    );
+    expect(getByTestId('share-stats-reach-top-publications')).toBeTruthy();
+    expect(getByText('Le Monde')).toBeTruthy();
+  });
+
+  it('can still be declined, and is then ABSENT rather than empty', () => {
+    // The control is deliberately kept. This card is made to be posted in
+    // public and publication names are revealing, so removing the only way to
+    // decline is a different decision from changing the default.
+    const { queryByText, queryByTestId } = render(
+      <ShareStatsCard card="reach" stats={withNames} showPublicationNames={false} pixelRatio={3} />,
+    );
+    expect(queryByTestId('share-stats-reach-top-publications')).toBeNull();
+    expect(queryByText('Le Monde')).toBeNull();
+  });
+
+  it('stays absent when the block is on but there is nothing to name', () => {
+    const { queryByTestId } = render(
+      <ShareStatsCard card="reach" stats={stats()} showPublicationNames pixelRatio={3} />,
+    );
+    expect(queryByTestId('share-stats-reach-top-publications')).toBeNull();
+  });
+
+  it('never appears on the other two cards, whatever the flag says', () => {
+    for (const card of ['keep', 'pace'] as const) {
+      const { queryByText } = render(
+        <ShareStatsCard card={card} stats={withNames} showPublicationNames pixelRatio={3} />,
+      );
+      expect(queryByText('Le Monde')).toBeNull();
+    }
+  });
+
+  it('cannot show an article title, because no card is given one', () => {
+    // The half of the old promise that is still true and must stay true, and
+    // it is STRUCTURAL rather than rendered. A render assertion would be the
+    // weaker check and, with a key-echoing t() mock, a misleading one: it
+    // matched "reachTitle" and passed for the wrong reason on the first
+    // attempt. The real guarantee is that ReadingStats carries no article text
+    // at all, so there is nothing for a card to leak however it is written.
+    const perPublication = withNames.topPublications[0];
+    expect(Object.keys(perPublication).sort()).toEqual([
+      'countryCode',
+      'publicationName',
+      'visitCount',
+    ]);
+    // And nothing anywhere in the payload is an article title.
+    const flat = JSON.stringify(withNames);
+    expect(flat).not.toContain('title');
+    expect(flat).not.toContain('articleId');
+  });
+});
+
+describe('ReachCard', () => {
+  it('renders both counts and a flag per country', () => {
+    const { getByTestId } = render(<ShareStatsCard card="reach" stats={stats()} pixelRatio={3} />);
+    expect(getByTestId('share-stats-reach-countries')).toBeTruthy();
+    expect(getByTestId('share-stats-reach-publications')).toBeTruthy();
+    expect(getByTestId('share-stats-reach-flags-cell-IN')).toBeTruthy();
+    expect(getByTestId('share-stats-reach-flags-cell-GB')).toBeTruthy();
+  });
+
+  it('weights the proportion bar by taps, with the leader in the accent', () => {
+    const { getByTestId } = render(<ShareStatsCard card="reach" stats={stats()} pixelRatio={3} />);
+    const lead = getByTestId('share-stats-reach-bar-segment-IN').props.style;
+    expect(lead.flex).toBeCloseTo(38 / 74, 6);
+    expect(lead.backgroundColor).toBe('rgb(231, 138, 83)');
+  });
+
+  it('omits the bar entirely when there is nothing to divide', () => {
+    const { queryByTestId } = render(
+      <ShareStatsCard card="reach" stats={emptyReadingStats()} pixelRatio={3} />,
+    );
+    expect(queryByTestId('share-stats-reach-bar')).toBeNull();
+  });
+});
+
+describe('KeepCard', () => {
+  it('renders a dot per saved article and a ring per followed story', () => {
+    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} />);
+    expect(getByTestId('share-stats-keep-saved-dots').children).toHaveLength(28);
+    expect(getByTestId('share-stats-keep-followed-dots').children).toHaveLength(6);
+  });
+
+  it('says the two are kept until removed, rather than implying a window', () => {
+    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} />);
+    expect(getByTestId('share-stats-keep-note')).toBeTruthy();
+  });
+});
+
+describe('PaceCard', () => {
+  it('labels the opened count partial, every time', () => {
+    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} />);
+    expect(getByTestId('share-stats-pace-opened-partial')).toBeTruthy();
   });
 
   it('always carries the coverage denominator beside the latency figure', () => {
-    render(<ShareStatsCard stats={stats()} showPublicationNames={false} pixelRatio={3} />);
+    // A bare average over the covered subset, presented as the whole, is the
+    // specific claim this line exists to refuse.
+    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} />);
+    expect(getByTestId('share-stats-pace-coverage').props.children).toContain('"sampled":41');
+    expect(getByTestId('share-stats-pace-coverage').props.children).toContain('"total":58');
+  });
 
-    expect(
-      screen.getByText('shareStats.card.latencyCoverage:{"sampled":41,"total":58}'),
-    ).toBeTruthy();
+  it('places the marker on the value against a 48h scale', () => {
+    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} />);
+    // 8.6 rounds to 9; 9/48 = 18.75%.
+    expect(getByTestId('share-stats-pace-scale-marker').props.style.left).toBe('18.75%');
   });
 
   it('says there is not enough data instead of showing a zero average', () => {
-    render(
+    // Null is NOT zero: zero would read as "instant".
+    const { getByTestId, queryByTestId } = render(
       <ShareStatsCard
-        stats={stats({ publishToRead: { averageHours: null, sampledArticles: 0, totalArticles: 58 } })}
-        showPublicationNames={false}
+        card="pace"
+        stats={stats({ publishToRead: { averageHours: null, sampledArticles: 0, totalArticles: 12 } })}
         pixelRatio={3}
       />,
     );
-
-    expect(screen.getByText('shareStats.card.latencyUnknown')).toBeTruthy();
-    // No denominator without an average: "based on 0 of 58" alongside no figure
-    // reads as a broken card rather than as missing data.
-    expect(screen.queryByText(/latencyCoverage/)).toBeNull();
+    expect(getByTestId('share-stats-pace-unknown')).toBeTruthy();
+    // And draws no scale: a marker with nothing to mark is worse than none.
+    expect(queryByTestId('share-stats-pace-scale')).toBeNull();
+    expect(queryByTestId('share-stats-pace-coverage')).toBeNull();
   });
+});
 
-  it('mounts the app backdrop SEEDED AND FRAME-PINNED', () => {
-    // Both halves are load-bearing. The seed fixes the colour sequence; the
-    // frame fixes the position in it, because the backdrop's step is a shared,
-    // time-driven global. Seed alone and two shares of identical stats 45
-    // seconds apart produce different PNGs.
-    render(<ShareStatsCard stats={stats()} showPublicationNames={false} pixelRatio={3} />);
+describe('every text node on every card', () => {
+  const flatten = (style: unknown): Record<string, unknown> =>
+    Array.isArray(style)
+      ? style.reduce<Record<string, unknown>>((acc, s) => ({ ...acc, ...flatten(s) }), {})
+      : ((style ?? {}) as Record<string, unknown>);
 
-    const backdrop = screen.getByTestId('card-backdrop');
-    expect(backdrop.props.seed).toBe('mera-stats-card');
-    expect(backdrop.props.frame).toBe(0);
-  });
-
-  it('labels the opened count partial, every time', () => {
-    render(<ShareStatsCard stats={stats()} showPublicationNames={false} pixelRatio={3} />);
-
-    expect(screen.getByText('shareStats.card.openedPartial')).toBeTruthy();
-  });
-
-  describe('the naming opt-in', () => {
-    const withPublications = stats({
-      topPublications: [
-        { publicationName: 'The Hindu', countryCode: 'IN', visitCount: 9 },
-        { publicationName: 'Le Monde', countryCode: 'FR', visitCount: 4 },
-      ],
-    });
-
-    it('omits the whole block when off, rather than rendering an empty one', () => {
-      render(
-        <ShareStatsCard stats={withPublications} showPublicationNames={false} pixelRatio={3} />,
-      );
-
-      expect(screen.queryByTestId('share-stats-card-top-publications')).toBeNull();
-      expect(screen.queryByText('The Hindu')).toBeNull();
-    });
-
-    it('names publications only when on', () => {
-      render(<ShareStatsCard stats={withPublications} showPublicationNames pixelRatio={3} />);
-
-      expect(screen.getByTestId('share-stats-card-top-publications')).toBeTruthy();
-      expect(screen.getByText('The Hindu')).toBeTruthy();
-      expect(screen.getByText('Le Monde')).toBeTruthy();
-    });
-
-    it('stays absent when the toggle is on but there is nothing to name', () => {
-      render(<ShareStatsCard stats={stats({ topPublications: [] })} showPublicationNames pixelRatio={3} />);
-
-      expect(screen.queryByTestId('share-stats-card-top-publications')).toBeNull();
-    });
-  });
-
-  it('gives every text node a lineHeight alongside its fontSize', () => {
-    // The P0 spike's other finding, and the reason `type()` exists.
-    // components/ui/text merges caller `style` AFTER its own size token, so an
-    // inline fontSize wins while the token's much smaller lineHeight survives,
-    // and React Native clips the glyph to that line box. A 96pt "42" under a
-    // 24pt line height rasterised as a dash and an underline stroke, and the
-    // same clipping ate the above-base matras off Devanagari at 22pt.
-    const tree = render(
-      <ShareStatsCard
-        stats={stats({
-          topPublications: [{ publicationName: 'NHK', countryCode: 'JP', visitCount: 2 }],
-        })}
-        showPublicationNames
-        pixelRatio={3}
-      />,
-    );
-
-    const flatten = (style: unknown): Record<string, unknown> =>
-      Array.isArray(style)
-        ? style.reduce<Record<string, unknown>>((acc, s) => ({ ...acc, ...flatten(s) }), {})
-        : ((style ?? {}) as Record<string, unknown>);
-
-    const texts = tree.UNSAFE_getAllByType(
+  function textNodes(card: 'reach' | 'keep' | 'pace') {
+    const tree = render(<ShareStatsCard card={card} stats={stats()} pixelRatio={3} />);
+    return tree.UNSAFE_getAllByType(
       require('react-native').Text as React.ComponentType<Record<string, unknown>>,
     );
+  }
+
+  it('gives every node a lineHeight alongside its fontSize', () => {
+    // components/ui/text merges caller style AFTER its own size token, so an
+    // inline fontSize wins while the token's much smaller lineHeight survives
+    // and React Native clips the glyph to that line box. A 96pt numeral
+    // rasterised as a dash and an underline stroke, and the same clipping ate
+    // the above-base matras off Devanagari at an ordinary 22pt.
     let checked = 0;
-    for (const node of texts) {
-      const style = flatten(node.props.style);
-      if (style.fontSize === undefined) continue;
-      checked += 1;
-      expect(typeof style.lineHeight).toBe('number');
-      expect(style.lineHeight as number).toBeGreaterThan(style.fontSize as number);
+    for (const card of ['reach', 'keep', 'pace'] as const) {
+      for (const node of textNodes(card)) {
+        const style = flatten(node.props.style);
+        if (style.fontSize === undefined) continue;
+        checked += 1;
+        expect(typeof style.lineHeight).toBe('number');
+        expect(style.lineHeight as number).toBeGreaterThan(style.fontSize as number);
+      }
     }
-    // Without this the loop above passes by skipping every node, which is
-    // exactly the shape of a check that cannot fail.
-    expect(checked).toBeGreaterThanOrEqual(11);
+    // Without this the loop passes by skipping every node, which is exactly the
+    // shape of a check that cannot fail.
+    expect(checked).toBeGreaterThanOrEqual(24);
+  });
+
+  it('gives every node an explicit colour, never an inherited one', () => {
+    // The invisible-card bug in its general form: a text node with no colour of
+    // its own inherits, and what it inherits on a fixed raster is not
+    // guaranteed to be legible on the gradient behind it.
+    let checked = 0;
+    for (const card of ['reach', 'keep', 'pace'] as const) {
+      for (const node of textNodes(card)) {
+        const style = flatten(node.props.style);
+        if (style.fontSize === undefined) continue;
+        checked += 1;
+        expect(typeof style.color).toBe('string');
+        expect(style.color).toMatch(/^(rgba?\()/);
+      }
+    }
+    expect(checked).toBeGreaterThanOrEqual(24);
   });
 
   it('turns OS Dynamic Type off on every line, because the card is a fixed raster', () => {
-    const tree = render(<ShareStatsCard stats={stats()} showPublicationNames={false} pixelRatio={3} />);
-
-    const texts = tree.UNSAFE_getAllByType(
-      require('react-native').Text as React.ComponentType<Record<string, unknown>>,
-    );
-
-    for (const node of texts) {
-      expect(node.props.allowFontScaling).toBe(false);
+    for (const card of ['reach', 'keep', 'pace'] as const) {
+      for (const node of textNodes(card)) {
+        expect(node.props.allowFontScaling).toBe(false);
+      }
     }
   });
 });

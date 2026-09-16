@@ -69,12 +69,18 @@ describe('share-stats ink', () => {
     // check that cannot fail.
     const files = sourceFiles();
     expect(files).toContain('ShareStatsCard.tsx');
+    expect(files).toContain('card-shell.tsx');
+    expect(files).toContain('stats-cards.tsx');
     expect(files).toContain('card-theme.ts');
-    expect(files.length).toBeGreaterThanOrEqual(4);
+    expect(files.length).toBeGreaterThanOrEqual(6);
 
-    const card = code(readFileSync(join(DIR, 'ShareStatsCard.tsx'), 'utf8'));
-    expect(card).toContain("ink('primary')");
-    expect(card.length).toBeGreaterThan(2000);
+    // Anchored on the SHELL, which is where colour is actually applied.
+    // ShareStatsCard.tsx is a dispatcher and holds no colour of its own, so
+    // asserting against it would go vacuous the moment the cards were split
+    // out — which is exactly what happened, and what this caught.
+    const shell = code(readFileSync(join(DIR, 'card-shell.tsx'), 'utf8'));
+    expect(shell).toContain("ink('primary')");
+    expect(shell.length).toBeGreaterThan(2000);
   });
 
   it('strips comments without stripping code', () => {
