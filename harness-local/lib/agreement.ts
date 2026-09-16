@@ -198,6 +198,10 @@ export interface ArmRollup {
   completionTokens: number;
   usd: number;
   usdPer100Calls: number;
+  /** Rows that actually carried a price. When 0, the USD column is UNKNOWN and
+   *  is printed as such: a run whose catalogue fetch failed, or whose model is
+   *  absent from it, would otherwise show 0.0000 and read as free. */
+  pricedCalls: number;
   latencyMedianMs: number;
   latencyP90Ms: number;
   /** The floor: the WORST cell, not the average, because a prompt change has
@@ -348,11 +352,16 @@ export function computeAgreement(
     let usd = 0;
     let promptTokens = 0;
     let completionTokens = 0;
+    let pricedCalls = 0;
     for (const r of armRows) {
       if (!r.usage) continue;
       promptTokens += r.usage.promptTokens;
       completionTokens += r.usage.completionTokens;
-      usd += r.cost?.usd ?? (info ? costOf(info, r.usage) : 0);
+      const rowUsd = r.cost?.usd ?? (info ? costOf(info, r.usage) : null);
+      if (rowUsd !== null) {
+        usd += rowUsd;
+        pricedCalls += 1;
+      }
     }
     const lat = armRows.map((r) => r.latencyMs).sort((a, b) => a - b);
     const armCells = cells.filter((c) => c.arm === arm && c.model === model);
@@ -381,6 +390,7 @@ export function computeAgreement(
       completionTokens,
       usd,
       usdPer100Calls: armRows.length ? (usd / armRows.length) * 100 : 0,
+      pricedCalls,
       latencyMedianMs: quantile(lat, 0.5),
       latencyP90Ms: quantile(lat, 0.9),
       minToolNameAgreement: nameVals.length ? Math.min(...nameVals) : 1,
@@ -446,6 +456,9 @@ export function computeAgreement(
       if (!r.usage) continue;
       promptTokens += r.usage.promptTokens;
       completionTokens += r.usage.completionTokens;
+      // No priced-call counter here: the per-arm table above already reports
+      // whether anything was priced, and duplicating the flag per call type
+      // would say the same thing four times.
       usd += r.cost?.usd ?? (info ? costOf(info, r.usage) : 0);
     }
 
@@ -522,7 +535,13 @@ export function formatAgreementReport(r: AgreementReport): string {
         `${String(a.calls).padStart(5)}  ${String(a.errors).padStart(3)}  ` +
         `${pct(a.minToolNameAgreement).padStart(9)}  ${pct(a.minToolArgJaccard).padStart(9)}  ` +
         `${pct(a.meanExactOutputRate).padStart(6)}  ${String(a.latencyMedianMs).padStart(6)}  ` +
-        `${String(a.latencyP90Ms).padStart(6)}  ${a.usd.toFixed(4).padStart(7)}  ${a.usdPer100Calls.toFixed(4).padStart(8)}`,
+        `${String(a.latencyP90Ms).padStart(6)}  ${(a.pricedCalls === 0 ? 'unpriced' : a.usd.toFixed(4)).padStart(8)}  ${(a.pricedCalls === 0 ? '-' : a.usdPer100Calls.toFixed(4)).padStart(8)}`,
+    );
+  }
+  if (r.arms.some((a) => a.pricedCalls === 0)) {
+    out.push(
+      '  UNPRICED means NO row carried a price, usually a catalogue fetch that failed or a model ' +
+        'absent from it. It is not zero, and the run still cost something.',
     );
   }
   out.push('  tool-name / tool-args columns are the WORST cell in the arm, which is the floor.');

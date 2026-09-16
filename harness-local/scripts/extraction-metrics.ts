@@ -89,18 +89,23 @@ function main(): number {
   // eslint-disable-next-line no-console
   console.log(`BANNED DASH RATE over assistant PROSE (think and tool payloads stripped), ${chat.length} row(s)`);
   // eslint-disable-next-line no-console
-  console.log(`  ${'variant | cohort'.padEnd(40)}${'turns'.padStart(7)}${'prose'.padStart(9)}${'stmts'.padStart(8)}${'bad stmts'.padStart(11)}`);
+  console.log(`  ${'variant | cohort'.padEnd(40)}${'turns'.padStart(7)}${'w/prose'.padStart(9)}${'prose'.padStart(9)}${'stmts'.padStart(8)}${'bad stmts'.padStart(11)}`);
   for (const v of variants) {
     for (const c of cohorts) {
       const rs = chat.filter((r) => r.variant === v && r.cohort === c);
       if (rs.length === 0) continue;
-      const bad = rs.filter((r) => hasBannedDash(proseOf(r))).length;
+      // Denominator is rows that HAVE prose. A turn whose reply was only a tool
+      // call has no prose and cannot violate a punctuation rule, so counting it
+      // dilutes the rate toward zero and makes two arms look closer than they
+      // are. The raw turn count is shown beside it so nothing is hidden.
+      const withProse = rs.filter((r) => proseOf(r).length > 0);
+      const bad = withProse.filter((r) => hasBannedDash(proseOf(r))).length;
       const stmts = rs.flatMap(statementsOf);
       const badStmts = stmts.filter((x) => hasBannedDash(x)).length;
       // eslint-disable-next-line no-console
       console.log(
-        `  ${`${v} | ${c}`.padEnd(40).slice(0, 40)}${String(rs.length).padStart(7)}${pct(bad, rs.length).padStart(9)}` +
-          `${String(stmts.length).padStart(8)}${pct(badStmts, stmts.length).padStart(11)}`,
+        `  ${`${v} | ${c}`.padEnd(40).slice(0, 40)}${String(rs.length).padStart(7)}${String(withProse.length).padStart(9)}` +
+          `${pct(bad, withProse.length).padStart(9)}${String(stmts.length).padStart(8)}${pct(badStmts, stmts.length).padStart(11)}`,
       );
     }
   }
@@ -108,14 +113,20 @@ function main(): number {
   console.log(`  ${'TOTAL per variant'.padEnd(40)}`);
   for (const v of variants) {
     const rs = chat.filter((r) => r.variant === v);
-    const bad = rs.filter((r) => hasBannedDash(proseOf(r))).length;
+    const withProse = rs.filter((r) => proseOf(r).length > 0);
+    const bad = withProse.filter((r) => hasBannedDash(proseOf(r))).length;
     const stmts = rs.flatMap(statementsOf);
     // eslint-disable-next-line no-console
     console.log(
-      `  ${v.padEnd(40).slice(0, 40)}${String(rs.length).padStart(7)}${pct(bad, rs.length).padStart(9)}` +
+      `  ${v.padEnd(40).slice(0, 40)}${String(rs.length).padStart(7)}${String(withProse.length).padStart(9)}` +
+        `${pct(bad, withProse.length).padStart(9)}` +
         `${String(stmts.length).padStart(8)}${pct(stmts.filter((x) => hasBannedDash(x)).length, stmts.length).padStart(11)}`,
     );
   }
+  // eslint-disable-next-line no-console
+  console.log('  w/prose = rows with any prose after stripping; the rate is over THOSE, since a');
+  // eslint-disable-next-line no-console
+  console.log('  tool-only reply cannot violate a punctuation rule and would dilute the rate.');
   // eslint-disable-next-line no-console
   console.log('  prose = what the user reads. stmts = the SAVED fact statements, also user-facing');
   // eslint-disable-next-line no-console
