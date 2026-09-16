@@ -33,6 +33,7 @@
     "config/env.ts",
     "config/local-data.ts",
     "adapters/auth.ts",
+    "adapters/gateway-e2ee-llm.ts",
     "scripts/selftest.ts",
     "scripts/replay-persona-chat.ts",
     "scripts/run-newsharness-corpus.ts",
@@ -41,6 +42,7 @@
     "scripts/fetch-staging-fixture.ts",
     "scripts/rater-export.ts",
     "scripts/rater-agreement.ts",
-    "scripts/rater-decode.ts"
+    "scripts/rater-decode.ts",
+    "scripts/probe-gateway.ts"
   ]
 }
