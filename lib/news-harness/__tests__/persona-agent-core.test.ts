@@ -127,18 +127,40 @@ describe('formatKnownFactsList', () => {
     expect(formatKnownFactsList(facts)).toBe("- 'other': fact");
   });
 
-  it('caps at MAX_FACTS_IN_CONTEXT, keeping the most recent entries', () => {
+  // ORDER CONTRACT. This function keeps the FIRST MAX_FACTS_IN_CONTEXT entries,
+  // and that is correct only because its one production caller — `getFacts()` —
+  // sorts `created_at DESC`, newest first. The previous version of this test
+  // built an ASCENDING fixture, asserted `slice(-22)` and called the result
+  // "the most recent entries", which is true of that fixture and false of every
+  // real call: off a newest-first list the tail is the OLDEST facts. So a heavy
+  // persona was told "never re-extract unchanged known facts" while being shown
+  // none of the facts it had most recently created.
+  //
+  // The fixture below is therefore NEWEST-FIRST, matching production, and the
+  // assertions name which end survives rather than which slice was used.
+  it('caps at MAX_FACTS_IN_CONTEXT, keeping the newest entries of a newest-first list', () => {
+    // index 0 = newest, index 29 = oldest, exactly as getFacts() returns them.
     const facts: ContextFact[] = Array.from({ length: 30 }, (_, i) => ({
       statement: `fact ${i}`,
       questionnaireAttribute: 'test',
     }));
     const result = formatKnownFactsList(facts);
-    const lines = result.split('\n');
-    expect(lines.length).toBe(MAX_FACTS_IN_CONTEXT);
-    // Keeps the tail (most recent), drops the head.
-    expect(result).not.toContain('fact 0');
-    expect(result).toContain('fact 29');
-    expect(result).toContain('fact 8'); // first kept index: 30 - 22 = 8
+    expect(result.split('\n').length).toBe(MAX_FACTS_IN_CONTEXT);
+    // The newest survives and the oldest is dropped.
+    expect(result).toContain('fact 0');
+    expect(result).toContain('fact 21'); // last kept index: 22 - 1
+    expect(result).not.toContain('fact 22');
+    expect(result).not.toContain('fact 29');
+  });
+
+  it('keeps the list in the order it was given, so <context> reads newest first', () => {
+    const facts: ContextFact[] = Array.from({ length: 25 }, (_, i) => ({
+      statement: `fact ${i}`,
+      questionnaireAttribute: 'test',
+    }));
+    const lines = formatKnownFactsList(facts).split('\n');
+    expect(lines[0]).toContain('fact 0');
+    expect(lines[lines.length - 1]).toContain('fact 21');
   });
 
   it('does not truncate when facts are at or below the cap (edge: exactly 22)', () => {

@@ -213,10 +213,18 @@ export type ContextFact = Pick<Fact, 'statement'> & {
  * Formats facts into the "- 'attr': statement" bullet list used in <context>,
  * capping to the most-recent MAX_FACTS_IN_CONTEXT entries. Pure — mirrors the
  * inline logic that used to live in PersonaUpdateAgent.buildContext.
+ *
+ * "Most-recent" depends on the CALLER's order, and the one production caller is
+ * `getFacts()`, which sorts `created_at DESC` — newest FIRST. This used to take
+ * `slice(-22)`, which off a newest-first list keeps the 22 OLDEST facts and
+ * drops every recent one: the exact opposite of what this comment claimed, and
+ * of what the prompt rule "never re-extract unchanged known facts" needs. A
+ * heavy persona was asked not to repeat itself while being shown none of the
+ * facts it had most recently created. Measured on the corpus: 31 held, 22 sent.
  */
 export function formatKnownFactsList(facts: ContextFact[]): string {
   const displayFacts =
-    facts.length > MAX_FACTS_IN_CONTEXT ? facts.slice(-MAX_FACTS_IN_CONTEXT) : facts;
+    facts.length > MAX_FACTS_IN_CONTEXT ? facts.slice(0, MAX_FACTS_IN_CONTEXT) : facts;
 
   if (displayFacts.length === 0) return 'Nothing yet.';
 
