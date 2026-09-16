@@ -423,3 +423,34 @@ export function countryBands(stats: ReadingStats, topN = 3): CountryBand[] {
   }
   return bands;
 }
+
+/**
+ * Which card a share deep link should open, given whatever arrived in the URL.
+ *
+ * `com.mera.news://logged-in/share-stats` ships with NO param and must keep
+ * working, so a missing param is the ordinary case rather than an error. A
+ * param that is present but not a known id is treated identically: a URL is
+ * untrusted input, its TypeScript type is a claim about nothing, and the only
+ * safe reading of `?card=foo` is that the caller did not name a card.
+ *
+ * A valid id for a card with nothing on it also falls through, because landing
+ * a share link on an empty card is the same dead end as landing on a crash,
+ * only quieter. Returns null when the device has no card at all, which is the
+ * screen's cue to show its empty state rather than an empty card.
+ */
+export function resolveStatsCardParam(
+  raw: unknown,
+  stats: ReadingStats,
+): StatsCardId | null {
+  const available = availableCards(stats);
+  if (available.length === 0) return null;
+
+  const asked = typeof raw === 'string' ? raw : undefined;
+  const named = STATS_CARD_IDS.find((id) => id === asked);
+  if (named && available.includes(named)) return named;
+
+  // The default first, so the shipped no-param link lands where it always did
+  // whenever that card has anything on it.
+  if (available.includes(DEFAULT_STATS_CARD)) return DEFAULT_STATS_CARD;
+  return available[0];
+}

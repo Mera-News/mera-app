@@ -73,11 +73,17 @@ describe('no native import sits at module scope anywhere in the share path', () 
 
   const NATIVE = ['expo-sharing', 'react-native-view-shot', 'expo-haptics', 'expo-file-system'];
 
+  // Every file in the share path, not a sample. A new file in this directory
+  // is reachable from the route the moment anything imports it, so the list has
+  // to grow with the directory or the guard quietly stops covering the feature
+  // it names.
   const FILES = [
     'app/logged-in/share-stats.tsx',
     'components/custom/share-stats/ShareStatsPreviewScreen.tsx',
     'components/custom/share-stats/ShareStatsCard.tsx',
     'components/custom/share-stats/capture-and-share.ts',
+    'components/custom/share-stats/card-charts.tsx',
+    'components/custom/share-stats/card-theme.ts',
   ];
 
   for (const relative of FILES) {
@@ -103,4 +109,32 @@ describe('no native import sits at module scope anywhere in the share path', () 
       }
     });
   }
+});
+
+
+describe('the file list covers the directory', () => {
+  // The guard above is only as good as its list, and a list maintained by hand
+  // silently stops covering the feature the moment someone adds a file. This
+  // fails when the directory grows and the list does not, which is the one
+  // failure the per-file tests cannot report on themselves.
+  const fs = require('node:fs') as typeof import('node:fs');
+  const path = require('node:path') as typeof import('node:path');
+
+  it('names every source file under share-stats', () => {
+    const dir = path.join(__dirname, '..');
+    const onDisk = fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith('.ts') || f.endsWith('.tsx'))
+      .sort();
+
+    const listed = [
+      'ShareStatsPreviewScreen.tsx',
+      'ShareStatsCard.tsx',
+      'capture-and-share.ts',
+      'card-charts.tsx',
+      'card-theme.ts',
+    ].sort();
+
+    expect(onDisk).toEqual(listed);
+  });
 });

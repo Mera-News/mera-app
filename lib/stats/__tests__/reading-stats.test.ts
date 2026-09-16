@@ -8,6 +8,7 @@ import {
   availableCards,
   cardHasData,
   countryBands,
+  resolveStatsCardParam,
   DEFAULT_STATS_CARD,
   STATS_CARD_IDS,
   type ReadingStats,
@@ -572,5 +573,50 @@ describe('countryBands', () => {
     const bands = countryBands(reach([['IN', 9], ['FR', 1]]));
     expect(bands[0].share).toBeCloseTo(0.9, 10);
     expect(bands[1].share).toBeCloseTo(0.1, 10);
+  });
+});
+
+describe('resolveStatsCardParam', () => {
+  const full: ReadingStats = {
+    ...emptyReadingStats(),
+    countries: [{ countryCode: 'IN', visitCount: 3 }],
+    countryCount: 1,
+    publicationCount: 2,
+    articlesOpened: 9,
+    keptNow: { savedArticles: 4, followedStories: 1 },
+  };
+
+  it('honours a named card', () => {
+    expect(resolveStatsCardParam('pace', full)).toBe('pace');
+    expect(resolveStatsCardParam('keep', full)).toBe('keep');
+  });
+
+  it('lands the shipped no-param deep link on the default', () => {
+    // com.mera.news://logged-in/share-stats carries no param and must keep
+    // working exactly as it did.
+    expect(resolveStatsCardParam(undefined, full)).toBe(DEFAULT_STATS_CARD);
+  });
+
+  it('treats garbage as "no card named" rather than trusting the URL', () => {
+    // A URL param's TypeScript type is a claim about nothing.
+    for (const raw of ['foo', '', '../reach', 42, null, {}, ['reach']]) {
+      expect(resolveStatsCardParam(raw, full)).toBe(DEFAULT_STATS_CARD);
+    }
+  });
+
+  it('falls through a valid id whose card is empty', () => {
+    // Landing a share link on a card of zeroes is the same dead end as landing
+    // on a crash, only quieter.
+    const keepOnly: ReadingStats = {
+      ...emptyReadingStats(),
+      keptNow: { savedArticles: 2, followedStories: 0 },
+    };
+    expect(resolveStatsCardParam('reach', keepOnly)).toBe('keep');
+    expect(resolveStatsCardParam('pace', keepOnly)).toBe('keep');
+  });
+
+  it('returns null only when the device has no card at all', () => {
+    expect(resolveStatsCardParam('reach', emptyReadingStats())).toBeNull();
+    expect(resolveStatsCardParam(undefined, emptyReadingStats())).toBeNull();
   });
 });
