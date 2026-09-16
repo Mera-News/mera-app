@@ -18,11 +18,26 @@ import { join } from 'node:path';
  *  requirement, so the roster here is not interchangeable with the one below. */
 export const CHAT_ARM_MODELS = ['Qwen/Qwen3.8-27B'] as const;
 
-/** Harness scoring, reasons and topic generation. JSON-shaped prompts, thinking
- *  off, never function tools. Qwen3.6 is the control (what ships today as
- *  SMALL_MODEL); GLM 5.3 Flash is the cheaper candidate at 0.5 against 1.1 per
- *  million output, which is the axis that decides this path. */
+/** Harness scoring and reasons. JSON-shaped prompts, thinking off, never
+ *  function tools. Qwen3.6 is the control (what ships today as SMALL_MODEL);
+ *  GLM 5.3 Flash is the cheaper candidate at 0.5 against 1.1 per million
+ *  output, which is the axis that decides this path. */
 export const HARNESS_ARM_MODELS = ['Qwen/Qwen3.6-35B-A3B-FP8', 'z-ai/glm-5.3-flash'] as const;
+
+/**
+ * Topic generation. ONE arm, deliberately.
+ *
+ * GLM 5.3 Flash is CLOSED for selection on this path: it returns its reasoning
+ * trace inside `content`, ignores `enable_thinking: false`, runs about 10x
+ * slower per call, and a bigger budget does not reliably fix it. That is not a
+ * quality verdict to be re-measured, it is a gear the model does not have, and
+ * topic-generation.ts runs thinking off for a documented reason.
+ *
+ * `--arms` and `--max-tokens <model>=<n>` stay available for a deliberate
+ * probe, so re-opening it is a decision someone types rather than a default
+ * nobody noticed.
+ */
+export const TOPICGEN_ARM_MODELS = ['Qwen/Qwen3.6-35B-A3B-FP8'] as const;
 
 export interface ModelPricing {
   /** USD per million tokens. */

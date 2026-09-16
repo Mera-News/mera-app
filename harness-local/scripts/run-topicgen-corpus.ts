@@ -21,6 +21,11 @@
 // supposed to prevent exactly that. It is counted per arm and printed, so it
 // can be compared between arms without a rater.
 //
+// ONE ARM BY DEFAULT. GLM 5.3 Flash is closed for selection here: it returns
+// its reasoning trace inside content, ignores enable_thinking:false, runs about
+// 10x slower per call, and a bigger budget does not reliably fix it. Pass
+// --arms to probe it anyway; that should be a decision someone types.
+//
 // GEAR. Thinking OFF, temperature 0.3, maxTokens max(cloudMaxTokens, total*30),
 // all of it read from the builder rather than restated here, so this cannot
 // drift from production. topic-generation.ts documents WHY thinking is off:
@@ -41,7 +46,7 @@ import {
 import { createRunWriter } from '../lib/run-writer';
 import { createJsonlWriter, hashMessages, newRowId, type CallType, type RunRow } from '../lib/jsonl-writer';
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
-import { costOf, fetchModelCatalog, HARNESS_ARM_MODELS, rosterWarnings } from '../lib/model-catalog';
+import { costOf, fetchModelCatalog, rosterWarnings, TOPICGEN_ARM_MODELS } from '../lib/model-catalog';
 import { hasReasoningLeak, postCompletion } from '../lib/near-call';
 import { COHORTS, loadCohort, type CorpusFact } from '../lib/corpus';
 import {
@@ -67,7 +72,7 @@ function parseArgs(argv: string[]): Args {
   const args: Args = {
     label: 'topicgen',
     cohort: 'heavy',
-    arms: [...HARNESS_ARM_MODELS],
+    arms: [...TOPICGEN_ARM_MODELS],
     totals: [10],
     accept: 6,
     repeat: 3,
@@ -119,12 +124,15 @@ function locationOf(facts: CorpusFact[]): string | null {
   return hit ? hit.statement : null;
 }
 
-function dryRunTopics(factIndex: number, count: number, kind: string, arm: string): string {
-  // Deterministic, and deliberately made to COLLIDE across facts on one arm, so
-  // the cross-fact duplicate detector is exercised by a dry run instead of only
-  // by a live one.
+function dryRunTopics(factIndex: number, count: number, kind: string, repeat: number): string {
+  // Deterministic, and deliberately made to COLLIDE across facts on REPEAT 0
+  // only. That keeps the dry run a real control in both directions whatever the
+  // arm roster is: repeat 0 must report the collision and repeats 1 and 2 must
+  // report none. A detector that has only ever printed "none" is not evidence
+  // of anything, and this used to be planted on the GLM arm, so it went silent
+  // and unnoticed the moment that arm was dropped from the default.
   const topics = Array.from({ length: count }, (_, i) =>
-    i === 0 && arm.startsWith('z-ai') ? 'Shared leaked topic' : `${kind} topic ${factIndex}-${i}`,
+    i === 0 && repeat === 0 ? 'Shared planted topic' : `${kind} topic ${factIndex}-${i}`,
   );
   return JSON.stringify(topics);
 }
@@ -206,7 +214,7 @@ async function main(): Promise<number> {
 
             const result = args.dryRun
               ? {
-                  content: dryRunTopics(fi, requested, kind, model),
+                  content: dryRunTopics(fi, requested, kind, rep),
                   toolCalls: [], finishReason: 'stop', truncated: false,
                   usage: { promptTokens: 700, completionTokens: 60, cachedTokens: 0, reasoningTokens: 0 },
                   modelSent: model, latencyMs: 12 + fi, error: null,

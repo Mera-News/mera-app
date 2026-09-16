@@ -188,9 +188,9 @@ export interface AgreementReport {
   cells: CellAgreement[];
   arms: ArmRollup[];
   callTypes: CallTypeRollup[];
-  /** True when no row in THIS RUN carried a cached-token count. NEAR
-   *  populates the field only once a prompt prefix has been seen before, so
-   *  this is expected on a first pass and is a finding on a repeated one. */
+  /** True when no row in THIS RUN carried a cached-token count. Live NEAR
+   *  responses do carry it once a prefix has been seen before, so this is the
+   *  normal state of a dry run and a finding on a live one. */
   cacheBreakdownAbsent: boolean;
   cachedPromptTokens: number;
   reasoningTokens: number;
@@ -526,8 +526,9 @@ export function formatAgreementReport(r: AgreementReport): string {
   if (r.cacheBreakdownAbsent) {
     out.push(
       '  NOTE: no row in this run reported cached prompt tokens, so the cache-read rate never applied. ' +
-        'NEAR populates prompt_tokens_details only once a prefix has been seen before, so this is ' +
-        'expected on a first pass and worth a look on a repeated one.',
+        'Live NEAR responses DO report them once a prompt prefix has been seen before, and a corpus ' +
+        'run repeats its prompts by construction, so this line is normal for a --dry-run (the ' +
+        'stand-in carries no usage detail) and worth a look on a live run.',
     );
   } else if (r.cachedPromptTokens > 0) {
     out.push(
