@@ -78,6 +78,20 @@ export interface RunRow {
    *  different hashes are a runner bug wearing noise as a costume, which is
    *  what makes the null experiment self-checking. */
   promptHash: string;
+  /**
+   * Whether this row's prompt is fully determined by the fixture.
+   *
+   * TRUE for every stateless call and for the FIRST turn of a stateful one:
+   * repeats must then produce an identical prompt, and any difference is a
+   * runner bug.
+   *
+   * FALSE once a prompt depends on what the model said earlier. In a stateful
+   * chat cohort the three repeats genuinely diverge after turn 0, because each
+   * saved a different set of facts, so their prompts differ BY DESIGN. Calling
+   * that a runner bug would fail every live run; measuring it is the useful
+   * thing, and the report counts distinct prompts per cell instead.
+   */
+  promptDeterministic: boolean;
   /** The pinned article-fence nonce, when the prompt under test uses one.
    *  Unpinned, two identical scoring runs build different prompts. */
   fenceNonce: string | null;

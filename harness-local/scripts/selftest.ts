@@ -55,7 +55,7 @@ function row(over: Partial<RunRow>): RunRow {
     rowId: newRowId(), dupOf: null, runId: 'r1', repeat: 0, cohort: 'good', turnIndex: 0,
     arm: 'control', callType: 'chat-extraction', interleaveGroup: 'g0',
     lane: 'near', surface: 'CONFIG', variant: 'baseline',
-    promptHash: hashMessages(MSGS), fenceNonce: 'N1',
+    promptHash: hashMessages(MSGS), promptDeterministic: true, fenceNonce: 'N1',
     modelRequested: 'Qwen/Qwen3.6-35B-A3B-FP8', modelSent: 'Qwen/Qwen3.6-35B-A3B-FP8',
     fallbackFrom: null, hedged: false,
     input: { systemPrompt: 'S', messages: MSGS, toolSchemaNames: ['saveFact'] },
@@ -347,6 +347,28 @@ async function main(): Promise<number> {
     streamed.callTypes.every((c) => c.ttVisibleP50Ms !== null),
     JSON.stringify(streamed.callTypes.map((c) => c.ttVisibleP50Ms)));
   ck('time-to-first-visible null when nothing streamed', ctA?.ttVisibleP50Ms === null);
+
+  // --- 11b. designed divergence is NOT a runner bug ------------------------
+  // A stateful chat cohort's repeats carry the conversation to different
+  // persona states, so their prompts differ on purpose after turn 0. Flagging
+  // that would fail every live run. The control pair: same divergence, one
+  // marked fixture-determined and one not.
+  {
+    const diverged = [
+      row({ repeat: 0, turnIndex: 4, promptDeterministic: false, promptHash: 'sha256:a' }),
+      row({ repeat: 1, turnIndex: 4, promptDeterministic: false, promptHash: 'sha256:b' }),
+      row({ repeat: 2, turnIndex: 4, promptDeterministic: false, promptHash: 'sha256:c' }),
+    ];
+    const rd = computeAgreement(diverged);
+    ck('state-dependent divergence is NOT a runner bug',
+      !rd.integrityFailures.some((x) => x.startsWith('RUNNER BUG')), rd.integrityFailures.join('; '));
+    ck('divergence is COUNTED instead', rd.cells[0].distinctPrompts === 3, String(rd.cells[0].distinctPrompts));
+    ck('the report shows the divergence', formatAgreementReport(rd).includes('diverged=3/3'));
+    // the same shape, but claiming to be fixture-determined, MUST still fail
+    const claimed = diverged.map((r) => ({ ...r, promptDeterministic: true }));
+    ck('a fixture-determined cell with split prompts still fails',
+      computeAgreement(claimed).integrityFailures.some((x) => x.startsWith('RUNNER BUG')));
+  }
 
   console.log('\n== corpus ==');
   // --- 12. every cohort loads and is shaped as designed ---------------------

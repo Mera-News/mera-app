@@ -296,7 +296,9 @@ async function main(): Promise<number> {
           rowId: newRowId(), dupOf: null, runId, repeat: rep,
           cohort: 'goldset', turnIndex: ci, arm: model, callType: 'relevance-batch',
           interleaveGroup: `chunk:${ci}`, lane: 'near', surface: 'SCORING',
-          variant: args.variant, promptHash: hash, fenceNonce: null,
+          variant: args.variant, promptHash: hash,
+          // Stateless: the same chunk always builds the same prompt.
+          promptDeterministic: true, fenceNonce: null,
           modelRequested: model, modelSent: result.modelSent,
           fallbackFrom: null, hedged: false,
           input: {
@@ -377,7 +379,7 @@ async function main(): Promise<number> {
             interleaveGroup: `reason:${ri}`, lane: 'near', surface: 'SCORING',
             variant: args.variant,
             promptHash: promptHash(call.system ?? reasonSystem, call.prompt),
-            fenceNonce: null, modelRequested: model, modelSent: result.modelSent,
+            promptDeterministic: true, fenceNonce: null, modelRequested: model, modelSent: result.modelSent,
             fallbackFrom: null, hedged: false,
             input: {
               systemPrompt: call.system ?? reasonSystem,

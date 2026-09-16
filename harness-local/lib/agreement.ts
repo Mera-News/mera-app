@@ -100,6 +100,12 @@ export interface CellAgreement {
    *  the repeats were not given the same prompt, so their disagreement measures
    *  nothing. This is the check that keeps the null experiment honest. */
   distinctPromptHashes: number;
+  /** How many distinct prompts the repeats saw. 1 everywhere for a stateless
+   *  runner. Above 1 in a stateful cohort it is the DIVERGENCE: the repeats
+   *  have carried the conversation to different persona states, which is worth
+   *  reading next to the agreement numbers rather than hidden behind them. */
+  distinctPrompts: number;
+  promptDeterministic: boolean;
   toolNameAgreement: number;
   toolArgJaccard: number;
   exactOutputRate: number;
@@ -205,11 +211,17 @@ export function computeAgreement(
 
   for (const [key, cellRows] of byCell) {
     const hashes = new Set(cellRows.map((r) => r.promptHash));
-    if (hashes.size > 1) {
+    // A cell is only required to hold ONE prompt when its prompt is fully
+    // determined by the fixture. Once a turn depends on what the model said
+    // earlier, the repeats diverge on purpose and the divergence is the
+    // measurement, not a defect.
+    const deterministic = cellRows.every((r) => r.promptDeterministic);
+    if (deterministic && hashes.size > 1) {
       integrityFailures.push(
-        `RUNNER BUG: cell "${key}" has ${hashes.size} distinct promptHash values across ${cellRows.length} repeats. ` +
+        `RUNNER BUG: cell "${key}" has ${hashes.size} distinct promptHash values across ${cellRows.length} repeats, ` +
+          'and its prompt is supposed to be fully determined by the fixture. ' +
           'The repeats were not given the same prompt, so their disagreement is not a noise floor. ' +
-          'Check the fence nonce is pinned and that persona state is rebuilt identically per repeat.',
+          'Check the fence nonce is pinned and that state is rebuilt identically per repeat.',
       );
     }
     const nonces = new Set(cellRows.map((r) => r.fenceNonce));
@@ -243,6 +255,8 @@ export function computeAgreement(
       callType: cellRows[0].callType,
       repeats: cellRows.length,
       distinctPromptHashes: hashes.size,
+      distinctPrompts: hashes.size,
+      promptDeterministic: deterministic,
       toolNameAgreement: nameAgree,
       toolArgJaccard: argAgree,
       exactOutputRate: exact,
@@ -483,6 +497,9 @@ export function formatAgreementReport(r: AgreementReport): string {
       `  ${c.key.padEnd(58).slice(0, 58)} n=${c.repeats} ` +
         `names=${pct(c.toolNameAgreement)} args=${pct(c.toolArgJaccard)} exact=${pct(c.exactOutputRate)}` +
         (c.countRespected !== null ? ` count-ok=${pct(c.countRespected)}` : '') +
+        (!c.promptDeterministic && c.distinctPrompts > 1
+          ? ` diverged=${c.distinctPrompts}/${c.repeats}`
+          : '') +
         (c.errorRate > 0 ? ` err=${pct(c.errorRate)}` : '') +
         (c.truncatedRate > 0 ? ` TRUNCATED=${pct(c.truncatedRate)}` : ''),
     );

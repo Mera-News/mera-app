@@ -77,11 +77,21 @@ interface RawResponse {
 
 const DEFAULT_TIMEOUT_MS = 120_000;
 
-export async function postCompletion(req: NearRequest): Promise<NearResult> {
-  const started = Date.now();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), req.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+/**
+ * Posts a PREBUILT body. The chat runner uses this with
+ * lib/chat-turn.ts's buildChatTurnBody, so the body it sends is the same
+ * object replay-persona-chat sends rather than a second reconstruction of it.
+ */
+export async function postBody(
+  baseUrl: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+): Promise<NearResult> {
+  return postPrepared(baseUrl, apiKey, body, timeoutMs);
+}
 
+export async function postCompletion(req: NearRequest): Promise<NearResult> {
   const body: Record<string, unknown> = {
     model: req.model,
     messages: req.messages,
@@ -97,6 +107,20 @@ export async function postCompletion(req: NearRequest): Promise<NearResult> {
     body.tool_choice = req.toolChoice ?? 'auto';
   }
 
+  return postPrepared(req.baseUrl, req.apiKey, body, req.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+}
+
+/** The single transport: one place that times, posts, parses and classifies. */
+async function postPrepared(
+  baseUrl: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+  timeoutMs: number,
+): Promise<NearResult> {
+  const started = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
   const fail = (error: string): NearResult => ({
     content: '',
     toolCalls: [],
@@ -109,9 +133,9 @@ export async function postCompletion(req: NearRequest): Promise<NearResult> {
   });
 
   try {
-    const res = await fetch(`${req.baseUrl}/chat/completions`, {
+    const res = await fetch(`${baseUrl}/chat/completions`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', authorization: `Bearer ${req.apiKey}` },
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
       body: JSON.stringify(body),
       signal: controller.signal,
     });
