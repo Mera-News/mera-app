@@ -1,0 +1,26 @@
+{
+  "_provenance": {
+    "capturedAt": "2026-09-16",
+    "run": "20260916-163741-v2-vs-baseline",
+    "model": "Qwen/Qwen3.6-35B-A3B-FP8",
+    "what": "Real reason outputs in which the model told the reader about the scoring system instead of the news.",
+    "why": "The shipped prompt bans this in words and the promoted v2 rules ban it again; it still happened in 10 of 567 reasons (1.8%). A blind rater flagged one per arm as a hard fail, but it only saw 80 rows per arm, so its count understates the population rate.",
+    "rateBaseline": "6 of 276 (2.2%)",
+    "rateReasonV2": "4 of 291 (1.4%)"
+  },
+  "withBareDecimal": [
+    "OpenAI's lab data leak affecting public services is a concrete event in your AI research domain, warranting a feed score of 0.68.",
+    "Trump's executive order on AI oversight is a structural platform ruling in your venture domain, warranting a 0.68 feed score."
+  ],
+  "withoutDecimal": [
+    "Severe drought measures in Amsterdam directly affect your city, warranting a high FEED score for immediate local relevance.",
+    "The OpenAI data leak directly impacts your AI research work, warranting a high-priority feed score.",
+    "A counter-terrorism operation in The Hague affects your home country, warranting a moderate feed score.",
+    "Dutch police counter-terrorism arrests in The Hague affect your home country's safety, warranting a feed score."
+  ],
+  "mustSurvive": [
+    "Dutch inflation eased 0.5% last month, which touches the Amsterdam rents you track.",
+    "The ECB cut rates by 0.25 percentage points, which reaches the mortgage you follow.",
+    "Rents rose over 2014-2016 in your city."
+  ]
+}

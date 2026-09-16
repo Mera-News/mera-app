@@ -1,121 +1,141 @@
-// The reason-v2 experiment arm.
+// The reason prompt after reason-v2 was promoted, plus the arms around it.
 //
-// An arm is only worth running if a difference in its result is attributable to
-// the thing it changed. That is what this file protects: the arm must be the
-// shipped prompt plus a named block, must move both reason slots and neither
-// scoring slot, and must not reach the on-device path at all.
+// A promotion is the moment a measurement can quietly stop being true: the
+// shipped prompt has to be the string that was actually rated, and the thing it
+// beat has to remain available or the comparison cannot be repeated. Both are
+// asserted here rather than trusted.
 import {
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
+  CLOUD_REASON_SYSTEM_PROMPT_V1,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
   LOCAL_REASON_SYSTEM_PROMPT,
   resolvePromptVariant,
   promptVariantIds,
-  REASON_V2_ID,
+  REASON_V1_ID,
+  REASON_V3_ID,
 } from '../index';
 import { relevanceSystemPromptFor, reasonSystemPromptFor } from '../article-pipeline/scoring';
 import { DEFAULT_HARNESS_CONFIG } from '../core/config';
 import { estimateTokens } from '@/lib/llm/tokens';
 
 const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
-const spec = () => resolvePromptVariant(REASON_V2_ID);
 
-describe('reason-v2 is the shipped prompt plus a named block', () => {
-  it('is registered by importing the barrel, with no explicit setup', () => {
-    // The registration is a side-effect import. If that ever gets tidied away
-    // as "unused", a runner selecting the arm by id starts throwing instead.
-    expect(promptVariantIds()).toContain(REASON_V2_ID);
-  });
-
-  it('starts with the shipped reason prompt, byte for byte', () => {
-    expect(spec().systemPrompts!.reason!.startsWith(CLOUD_REASON_SYSTEM_PROMPT)).toBe(true);
+describe('the promoted reason prompt', () => {
+  it('is the pre-promotion text plus the rules, in that order', () => {
+    // Byte-level, because "we promoted the arm" is only true if the shipped
+    // string is the one the rater scored. Rebuilding it by hand, or tidying the
+    // two halves into a single literal, would silently break that.
+    expect(CLOUD_REASON_SYSTEM_PROMPT.startsWith(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(true);
     expect(
-      spec().systemPrompts!.headlineReason!.startsWith(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT),
+      CLOUD_HEADLINE_REASON_SYSTEM_PROMPT.startsWith(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1),
     ).toBe(true);
   });
 
-  it('adds the same block to both reason slots', () => {
-    const a = spec().systemPrompts!.reason!.slice(CLOUD_REASON_SYSTEM_PROMPT.length);
-    const b = spec().systemPrompts!.headlineReason!.slice(
-      CLOUD_HEADLINE_REASON_SYSTEM_PROMPT.length,
+  it('adds the same block to both reason prompts', () => {
+    const a = CLOUD_REASON_SYSTEM_PROMPT.slice(CLOUD_REASON_SYSTEM_PROMPT_V1.length);
+    const b = CLOUD_HEADLINE_REASON_SYSTEM_PROMPT.slice(
+      CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1.length,
     );
     expect(a).toBe(b);
-    // Pinned so a later edit to the rules restates the cost on purpose. The
-    // reason pass sends one article per call, so this rides on every scored
-    // article that clears the gate.
-    expect(estimateTokens(a)).toBe(433);
   });
 
-  it('ends on the output contract, not on the new rules', () => {
-    // The base prompt ends with its own Output line, so the appended block
-    // restates it. This family is order-sensitive and the contract has to be
-    // the last thing the model reads.
-    for (const slot of ['reason', 'headlineReason'] as const) {
-      expect(spec().systemPrompts![slot]!.trimEnd()).toMatch(
-        /Output: single plain string, no prefixes, no markdown\.$/,
-      );
+  it('carries the three rules that were measured', () => {
+    for (const p of [CLOUD_REASON_SYSTEM_PROMPT, CLOUD_HEADLINE_REASON_SYSTEM_PROMPT]) {
+      expect(p).toMatch(/0\.6 and 0\.8/);
+      expect(p).toMatch(/Never describe the feed/);
+      expect(p).toMatch(/the connection is loose/);
     }
   });
 
-  it('writes its own rules without the punctuation the product bans', () => {
-    // The model imitates the prompt it is given, and this block is arguing
-    // about prose style, so it cannot itself contain an em or en dash.
-    const added = spec().systemPrompts!.reason!.slice(CLOUD_REASON_SYSTEM_PROMPT.length);
+  it('ends on the output contract', () => {
+    for (const p of [CLOUD_REASON_SYSTEM_PROMPT, CLOUD_HEADLINE_REASON_SYSTEM_PROMPT]) {
+      expect(p.trimEnd()).toMatch(/Output: single plain string, no prefixes, no markdown\.$/);
+    }
+  });
+
+  it('never reached the on-device prompt', () => {
+    // The promotion is cloud-only. LOCAL is built on a different base and states
+    // its voice rule inline, so nothing here can touch it, and nothing measures
+    // it either.
+    expect(LOCAL_REASON_SYSTEM_PROMPT).not.toMatch(/Three additional rules/);
+    expect(LOCAL_REASON_SYSTEM_PROMPT).not.toMatch(/Never describe the feed/);
+  });
+});
+
+describe('the arms around it', () => {
+  it('registers reason-v1 and reason-v3, and NOT reason-v2', () => {
+    // reason-v2 IS the default now, so an arm by that name would just be the
+    // shipped prompt under another id - the kind of thing that makes a later
+    // result impossible to interpret.
+    const ids = promptVariantIds();
+    expect(ids).toContain(REASON_V1_ID);
+    expect(ids).toContain(REASON_V3_ID);
+    expect(ids).not.toContain('reason-v2');
+  });
+
+  it('reason-v1 is the pre-promotion text, exactly', () => {
+    const v1 = resolvePromptVariant(REASON_V1_ID).systemPrompts!;
+    expect(v1.reason).toBe(CLOUD_REASON_SYSTEM_PROMPT_V1);
+    expect(v1.headlineReason).toBe(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1);
+    // And it is genuinely different from what ships, or it is not a control.
+    expect(v1.reason).not.toBe(CLOUD_REASON_SYSTEM_PROMPT);
+  });
+
+  it('reason-v3 is the SHIPPED prompt plus its own rules', () => {
+    // v3 must build on v2, not on v1, or a v3-vs-v2 comparison measures both
+    // changes at once.
+    const v3 = resolvePromptVariant(REASON_V3_ID).systemPrompts!;
+    expect(v3.reason!.startsWith(CLOUD_REASON_SYSTEM_PROMPT)).toBe(true);
+    expect(v3.headlineReason!.startsWith(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(true);
+    expect(v3.reason).toMatch(/A place belongs in the sentence only when the ARTICLE has an angle/);
+    expect(v3.reason).toMatch(/Vary how the sentence opens/);
+  });
+
+  it('neither arm touches scoring or the text cap', () => {
+    for (const id of [REASON_V1_ID, REASON_V3_ID]) {
+      expect(relevanceSystemPromptFor(CFG, 'standard', id)).toBe(CFG.relevanceSystemPrompt);
+      expect(relevanceSystemPromptFor(CFG, 'headline', id)).toBe(CFG.headlineRelevanceSystemPrompt);
+      expect(resolvePromptVariant(id).articleTextMaxLength).toBeUndefined();
+    }
+  });
+
+  it('routes the reason slots per arm', () => {
+    expect(reasonSystemPromptFor(CFG, 'standard')).toBe(CLOUD_REASON_SYSTEM_PROMPT);
+    expect(reasonSystemPromptFor(CFG, 'standard', REASON_V1_ID)).toBe(
+      CLOUD_REASON_SYSTEM_PROMPT_V1,
+    );
+    expect(reasonSystemPromptFor(CFG, 'headline', REASON_V1_ID)).toBe(
+      CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
+    );
+  });
+
+  it('writes its rules without the punctuation the product bans', () => {
+    const added = resolvePromptVariant(REASON_V3_ID).systemPrompts!.reason!.slice(
+      CLOUD_REASON_SYSTEM_PROMPT.length,
+    );
     expect(added).not.toMatch(/[—–―]/);
   });
 });
 
-describe('reason-v2 changes nothing it is not testing', () => {
-  it('leaves both scoring slots on the shipped prompts', () => {
-    // A reason arm that perturbed scoring would make its own retrieval numbers
-    // incomparable to the baseline's.
-    expect(relevanceSystemPromptFor(CFG, 'standard', REASON_V2_ID)).toBe(
-      CFG.relevanceSystemPrompt,
-    );
-    expect(relevanceSystemPromptFor(CFG, 'headline', REASON_V2_ID)).toBe(
-      CFG.headlineRelevanceSystemPrompt,
-    );
+describe('measured sizes after the promotion', () => {
+  // Restated on purpose: the reason pass sends one call per article that clears
+  // the gate, so these ride on every scored article.
+  it('pins the promoted prompts', () => {
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5271);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(8126);
   });
 
-  it('routes both reason slots to the arm', () => {
-    expect(reasonSystemPromptFor(CFG, 'standard', REASON_V2_ID)).toBe(
-      spec().systemPrompts!.reason,
-    );
-    expect(reasonSystemPromptFor(CFG, 'headline', REASON_V2_ID)).toBe(
-      spec().systemPrompts!.headlineReason,
-    );
+  it('pins the pre-promotion prompts, which are now the control arm', () => {
+    // These are the numbers golden-prompts.test.ts pinned before the promotion.
+    // They have not changed; they have been renamed.
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(4839);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1)).toBe(7693);
   });
 
-  it('cannot reach the on-device prompt', () => {
-    // LOCAL_REASON_SYSTEM_PROMPT is built on a different base and states its
-    // voice rule inline rather than sharing the cloud constant, so there is no
-    // path from this arm to it. Asserted because the absence is deliberate.
-    expect(LOCAL_REASON_SYSTEM_PROMPT).not.toContain('Three additional rules');
-    expect(spec().systemPrompts).not.toHaveProperty('local');
-  });
-
-  it('sets no article text cap, so it is not secretly a truncation arm', () => {
-    expect(spec().articleTextMaxLength).toBeUndefined();
-  });
-});
-
-describe('the rules name the patterns they were written for', () => {
-  // Cheap, but it is the difference between an arm that encodes the rater's
-  // three findings and an arm someone rewrote into something else while keeping
-  // the id. Each assertion is one finding.
-  const added = () => spec().systemPrompts!.reason!;
-
-  it('covers the middle-band register, with a worked example', () => {
-    expect(added()).toMatch(/0\.6 and 0\.8/);
-    expect(added()).toMatch(/Worked example/);
-  });
-
-  it('bans narrating the feed or its scoring', () => {
-    expect(added()).toMatch(/Never describe the feed/);
-    expect(added()).toMatch(/warranting a high-relevance feed score/);
-  });
-
-  it('requires an honest weak link instead of invented context', () => {
-    expect(added()).toMatch(/the connection is loose/);
-    expect(added()).toMatch(/Only name a city or country when THIS\s+article is about it/);
+  it('costs 432 tokens per reason call to have promoted it', () => {
+    expect(
+      estimateTokens(CLOUD_REASON_SYSTEM_PROMPT) - estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1),
+    ).toBe(432);
   });
 });

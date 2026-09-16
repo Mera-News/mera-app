@@ -1149,6 +1149,28 @@ function cutAtWordBoundary(text: string, max: number): string {
 const DELIBERATION_OPENER =
   /^(?:Let(?: me| us|'s) |First,? I |I(?:'ll| will| need to| am going to| should) |Okay,? |OK,? |Alright,? |Looking at (?:this|the) (?:article|user))/;
 
+/**
+ * A reason that tells the reader about the SCORING SYSTEM instead of the news.
+ *
+ * The shipped prompt bans it in words and the promoted v2 rules ban it again,
+ * and the model still does it: measured over 567 reasons in one interleaved
+ * run, 10 named a score ("warranting a high FEED score", "warranting a feed
+ * score of 0.68"). That is 1.8% overall, and it survived a prompt rule written
+ * specifically to stop it, which is the whole argument for enforcing it here:
+ * a prompt rule is advice, a decoder is not.
+ *
+ * THE BARE-DECIMAL CLAUSE IS THE RISKY ONE and it is deliberately narrow. A
+ * reason may legitimately carry a figure ("a 0.5% cut", "0.25 percentage
+ * points"), so a decimal is only treated as a leaked score when it is NOT
+ * followed by a percent sign or a unit word. That still leaves a real false
+ * positive available - a story about a 0.75 exchange rate - and that trade is
+ * accepted on frequency: a reason quoting a bare sub-1 decimal that is not a
+ * percentage is far rarer than the model narrating its own score, and the cost
+ * of the false positive is one missing note rather than a wrong one.
+ */
+const REASON_NAMES_A_SCORE =
+  /\b(?:feed score|relevance score|score of|priority score)\b|\b0\.\d{1,2}\b(?!\s*(?:%|percent|percentage|pp\b))/i;
+
 export function parseReasonResponse(
   output: string,
   id: string,
@@ -1211,6 +1233,23 @@ export function parseReasonResponse(
   text = replaceClauseDashes(text)
     .replace(/\s{2,}/g, ' ')
     .trim();
+
+  // The score guard runs HERE, after the echoed-label strip, not before it.
+  // The two cases look similar and are not: "Relevance Score: 0.62 Dutch tax
+  // vote affects your work." is the model echoing its own INPUT, and the strip
+  // above has always repaired it into a perfectly good sentence - rejecting
+  // that would cost the reader a note over a formatting slip. What this rejects
+  // is the model narrating a score TO THE READER, which no strip can repair
+  // because the score is load-bearing in the prose ("warranting a 0.68 feed
+  // score"). Checking before the strip conflated the two and threw away the
+  // repairable one; a test caught it.
+  if (REASON_NAMES_A_SCORE.test(text)) {
+    logger.warn('Reason generation: reason names the score to the reader', {
+      id,
+      output: text.slice(0, 120),
+    });
+    return '';
+  }
 
   if (text.length > 0) return cutAtWordBoundary(text, REASON_MAX_CHARS);
 

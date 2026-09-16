@@ -11,6 +11,7 @@
 // punctuation. Those are what a naive global replace gets wrong, and each of
 // them is a shape that really turns up in reasons.
 import { parseReasonResponse } from '../article-pipeline/scoring';
+import SCORE_FIXTURE from './fixtures/reason-names-score.json';
 
 const decode = (s: string) => parseReasonResponse(s, 'id');
 
@@ -163,5 +164,42 @@ describe('the pre-existing cleanup still works', () => {
     expect(decode('Dutch tax vote\n\naffects your work.')).toBe(
       'Dutch tax vote affects your work.',
     );
+  });
+});
+
+describe('a reason may not tell the reader about the score', () => {
+  // Real captured outputs. The prompt bans this in words, the promoted v2 rules
+  // ban it again, and it still happened in 10 of 567 reasons in one run. A
+  // prompt rule is advice; this is not.
+  it.each(SCORE_FIXTURE.withBareDecimal)('rejects %s', (text) => {
+    expect(decode(text)).toBe('');
+  });
+
+  it.each(SCORE_FIXTURE.withoutDecimal)('rejects %s', (text) => {
+    expect(decode(text)).toBe('');
+  });
+
+  it.each(SCORE_FIXTURE.mustSurvive)('keeps a legitimate figure: %s', (text) => {
+    // The bare-decimal clause is the risky half of the rule. A reason may carry
+    // a real number, and a percentage or a unit word is what separates one from
+    // a leaked score. These are the shapes that must NOT be swallowed.
+    expect(decode(text)).not.toBe('');
+  });
+
+  it('still repairs an ECHOED score label rather than rejecting it', () => {
+    // The distinction the guard turns on, and the one an earlier ordering got
+    // wrong: echoing the input prefix is a formatting slip the decoder has
+    // always repaired, and the sentence after it is good. Narrating a score to
+    // the reader is not repairable, because the score is load-bearing in the
+    // prose. Same words, opposite handling, on purpose.
+    expect(decode('Relevance Score: 0.62 Dutch tax vote affects your work.')).toBe(
+      'Dutch tax vote affects your work.',
+    );
+  });
+
+  it('is non-vacuous: the fixture really does contain what it claims', () => {
+    expect(SCORE_FIXTURE.withBareDecimal.length).toBeGreaterThan(0);
+    expect(SCORE_FIXTURE.withBareDecimal.every((t) => /0\.\d/.test(t))).toBe(true);
+    expect(SCORE_FIXTURE.withoutDecimal.every((t) => !/0\.\d/.test(t))).toBe(true);
   });
 });

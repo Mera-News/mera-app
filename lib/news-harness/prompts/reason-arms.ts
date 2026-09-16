@@ -1,93 +1,102 @@
 // Registered experiment arms for the REASON pass.
 //
-// WHY THIS IS ITS OWN FILE. The arms live where the truncation arms do in
-// spirit, but not in `prompt-variants.ts`: that module is imported BY
-// `prompts.ts`, so importing the shipped prompts back into it would close a
-// cycle. `prompts.ts` only calls `resolvePromptVariant` from inside functions,
-// so the cycle would not bite at import time today, but a v2 arm has to read
-// `CLOUD_REASON_SYSTEM_PROMPT` at MODULE INIT to compose itself, and that is
-// exactly the read that dies on a temporal-dead-zone error depending on which
-// module the bundler happens to load first. A third file that imports both and
-// is imported by neither cannot have that problem.
+// WHY THIS IS ITS OWN FILE. `prompt-variants.ts` is imported BY `prompts.ts`,
+// so importing the shipped prompts back into it would close a cycle. It would
+// not bite today (`prompts.ts` only calls `resolvePromptVariant` from inside
+// functions) but an arm composing itself from a shipped prompt has to read it
+// at MODULE INIT, which is exactly the read that dies on a temporal-dead-zone
+// error depending on which module the bundler loads first. A third file that
+// imports both and is imported by neither cannot have that problem.
 //
-// COMPOSED FROM THE SHIPPED CONSTANT, NOT COPIED. The seam's rule is "a whole
-// prompt string, never a transform", and this honours it: the arm IS a whole
-// string, built by concatenating the exported shipped prompt with an appended
-// block. That is different from the string surgery the seam exists to replace,
-// which regex-matched into the live file's text and broke whenever that text
-// moved. Concatenation keeps the arm in lockstep with the base, which is what
-// you want for an arm that might be PROMOTED into the base later.
-//
-// THE OUTPUT CONTRACT IS RESTATED LAST. The base prompt ends with its own
-// "Output:" line, so appending after it would leave three content rules as the
-// last thing the model reads. `prompts.ts` documents that this family is
-// sensitive to later-instruction-wins ordering, so the contract is repeated at
-// the end verbatim and the new rules sit before it.
+// WHAT CHANGED WHEN reason-v2 WAS PROMOTED. Its rules now live in `prompts.ts`
+// and ARE the shipped reason prompts, so there is no `reason-v2` arm any more:
+// selecting it would mean selecting the default. What is registered instead is
+// `reason-v1`, the text v2 beat. A promotion with no way back to the thing it
+// beat is not a measurement, and re-deriving the old prompt by subtracting the
+// rules from the new one would be exactly the string surgery this seam exists
+// to replace.
 
 import {
+  CLOUD_REASON_SYSTEM_PROMPT_V1,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
 } from './prompts';
 import { registerPromptVariant } from './prompt-variants';
 
+const REASON_V1_ID = 'reason-v1';
+const REASON_V3_ID = 'reason-v3';
+
 /**
- * The three rules, from a blind rater's read of 100 baseline reasons.
+ * The control: the reason prompt exactly as it shipped before promotion.
  *
- * Each one names a pattern the rater actually found, rather than a style
- * preference: calibration misses clustered entirely in the middle band, one
- * sentence skeleton bolted onto stories it did not fit, and invented context
- * whenever no listed fact bridged. Nothing here touches the low or high bands,
- * which the rater scored as correctly toned.
+ * Kept registered so any later arm can be measured against the pre-v2 text as
+ * well as the current one, and so the promotion itself stays falsifiable.
  */
-const REASON_V2_RULES = `
-## Three additional rules
-
-**1. The middle of the scale has its own register.** Between 0.6 and 0.8 the
-article genuinely touches something of yours, and it is not urgent. Say what the
-mechanism is and leave the temperature down. Do not reach for "directly affects"
-(that belongs above 0.9) and do not reach for "carries no direct stake" (that
-belongs below 0.4). Worked example, at 0.7: "New EU cloud rules will apply to
-the consumer apps you build, once they take effect next year." It names the real
-link, it commits to it, and it stays calm.
-
-**2. Never describe the feed or how this article was scored.** The reader sees a
-sentence about their news, not about the system showing it. Never write that
-something is relevant, highly relevant, a strong match, worth showing, or
-deserving of any score or priority. Wrong: "Drought measures in Amsterdam affect
-your home city, warranting a high-relevance feed score." Right: "Drought
-measures start in Amsterdam this week, where you live."
-
-**3. When no listed fact really bridges, say so plainly.** Name the closest fact
-you were given and state that the connection is loose. Never invent a detail the
-fact bank does not contain: not an employer, not a market, not a job, not a
-circumstance, and above all not a place. Only name a city or country when THIS
-article is about it. A story set in Washington, London or Berlin does not become
-an Amsterdam story because the reader lives there. Wrong, on a US court ruling:
-"US AI regulation may impact your consumer app development in Amsterdam."
-Right: "A US court ruling on AI training data is close to your AI research
-interest, though it applies only in the United States."
-
-Output: single plain string, no prefixes, no markdown.`;
-
-const REASON_V2_ID = 'reason-v2';
-
 registerPromptVariant({
-  id: REASON_V2_ID,
+  id: REASON_V1_ID,
   description:
-    'Reason prompt with a middle-band register, a ban on narrating the feed, and an honest-weak-link rule.',
+    'The reason prompt as it shipped BEFORE reason-v2 was promoted. Control arm; '
+    + 'v2 beat it on calibration 4.04 to 4.46 and linkage 4.73 to 4.98, blind rater, 80 rows per arm.',
   systemPrompts: {
-    // Both reason slots move together. They share a base and they write the
-    // same user-facing sentence, so fixing one and not the other would ship a
-    // feed whose prose depends on how the article was retrieved.
-    reason: `${CLOUD_REASON_SYSTEM_PROMPT}\n${REASON_V2_RULES}`,
-    headlineReason: `${CLOUD_HEADLINE_REASON_SYSTEM_PROMPT}\n${REASON_V2_RULES}`,
+    reason: CLOUD_REASON_SYSTEM_PROMPT_V1,
+    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
   },
 });
 
-// LOCAL IS DELIBERATELY UNTOUCHED. `LOCAL_REASON_SYSTEM_PROMPT` is built on a
-// different base and states its own voice rule inline rather than sharing the
-// cloud constant, so nothing here can reach the on-device path. That is the
-// intended scope, not an oversight: no runner exercises the local prompts, and
-// an unmeasured change is not an improvement.
+/**
+ * reason-v3: the ONE pattern v2 did not fix.
+ *
+ * The rater found the user's city stapled onto stories with no angle on it in
+ * 47% of pre-v2 rows and 39% after, essentially unmoved. v2's rule 3 already
+ * bans INVENTING a place, and the model obeys that: it is not fabricating a
+ * Dutch connection, it is ending almost every sentence with the same clause
+ * because the persona's city is the handiest thing to end on. So this is a
+ * VOICE problem, not a truthfulness one, and v2's rule cannot reach it.
+ *
+ * Two rules, and the second matters as much as the first. Banning the place
+ * without offering anywhere else to go would just move the tic somewhere else,
+ * so the arm also asks for varied openings: a template is a shape, and you
+ * replace a shape with another shape rather than with a prohibition.
+ */
+const REASON_V3_RULES = `
+## Two more rules about how the sentence is built
 
-export { REASON_V2_ID, REASON_V2_RULES };
+**4. A place belongs in the sentence only when the ARTICLE has an angle on it.**
+Ask whether this story would still be about that city or country if the reader
+lived somewhere else. If it would, name the place. If it would not, leave it out
+and make the link on the fact alone: the reader's profession, their field, their
+holding, their family, the thing they follow. "EU transparency rules will apply
+to the consumer apps you build" is complete. It does not need "in Amsterdam"
+bolted on, and adding it implies a local angle the article does not have.
+
+**5. Vary how the sentence opens.** Do not start every reason with the event and
+end every one with the reader. Some should open on the reader's stake and then
+name the event; some should open on the event; some should name the mechanism
+between them first. The reader sees a column of these one under another, and
+twenty sentences built to the same template read as generated even when each one
+is accurate on its own.
+
+Output: single plain string, no prefixes, no markdown.`;
+
+registerPromptVariant({
+  id: REASON_V3_ID,
+  description:
+    'v2 plus two sentence-construction rules, targeting the place-template pattern the rater '
+    + 'found unmoved at 47% then 39% of rows. Voice only; makes no claim about calibration or linkage.',
+  systemPrompts: {
+    // Built on the SHIPPED prompt, which is now v2. So v3 is strictly v2 plus
+    // these two rules, and a v3-versus-v2 comparison isolates them.
+    reason: `${CLOUD_REASON_SYSTEM_PROMPT}\n${REASON_V3_RULES}`,
+    headlineReason: `${CLOUD_HEADLINE_REASON_SYSTEM_PROMPT}\n${REASON_V3_RULES}`,
+  },
+});
+
+// LOCAL IS STILL UNTOUCHED, through the promotion as well as the arms.
+// `LOCAL_REASON_SYSTEM_PROMPT` is built on a different base and states its voice
+// rule inline rather than sharing the cloud constant, so neither the promoted
+// rules nor these reach the on-device path. That is the intended scope: no
+// runner exercises the local prompts, and an unmeasured change is not an
+// improvement.
+
+export { REASON_V1_ID, REASON_V3_ID, REASON_V3_RULES };

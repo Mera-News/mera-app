@@ -176,9 +176,14 @@ describe('golden — measured prompt sizes', () => {
     // `headlineArticlesPerScorePrompt` therefore stays 3 and no
     // DEFAULT_HARNESS_CONFIG literal changed.
     expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4454);
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(4839);
     expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7105);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7693);
+    // RE-PINNED when reason-v2 was promoted into the shipped reason prompts:
+    // 4839 -> 5271 and 7693 -> 7693+433 = 8126, the same 432-token rules block
+    // on both. The two RELEVANCE numbers are untouched, which matters because
+    // they are the inputs to the headlineArticlesPerScorePrompt derivation in
+    // core/config.ts; the reason prompts are not part of that arithmetic.
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5271);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(8126);
   });
 
   // The four above were the only pinned prompts. These four were not pinned by

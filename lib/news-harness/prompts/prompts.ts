@@ -227,7 +227,11 @@ Example for 3 articles: [{"k":"domain","s":0.62},{"k":"none","s":0.12},{"k":"int
  * alongside the score. That scorer is retired; this is the only reason prompt —
  * see `legacyNoteDemote` for the variant that may also demote.)
  */
-export const CLOUD_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
+/** The reason prompt AS IT SHIPPED BEFORE reason-v2 was promoted. Exported only
+ *  so `prompts/reason-arms.ts` can register it as the `reason-v1` control arm:
+ *  a promotion with no way back to the thing it beat is not a measurement. Not
+ *  referenced by any production path. */
+export const CLOUD_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT}
 
 ## Task
 Given the article + its **pre-computed score**, write ONE plain sentence (≤25 words) explaining the score. The score is authoritative — explain, don't re-judge.
@@ -386,7 +390,9 @@ Example for 3 articles: [{"k":"home","s":0.71},{"k":"none","s":0.13},{"k":"inter
  * visible defect; if the cap is ever raised past ~40 words, derive a separate
  * headlineReasonMaxTokens rather than letting it ride.
  */
-export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
+/** See {@link CLOUD_REASON_SYSTEM_PROMPT_V1}: the headline twin, pre-promotion,
+ *  kept for the same control arm. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT}
 
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 
@@ -412,6 +418,67 @@ Never fabricate a connection. Never echo "[User facts]", "Relevance Score:", "Wh
 Examples. High: "A fifth of the world's seaborne oil passes Hormuz, so a closure raises what you pay at the pump and for heating in Amsterdam." Low: "Chile's copper royalty is a small change in a well-supplied global market; it does not affect your costs in Amsterdam."
 
 Output: single plain string, no prefixes, no markdown.`;
+
+/**
+ * The three rules promoted into the shipped reason prompts, measured as the
+ * `reason-v2` arm against the previous text in one interleaved run
+ * (348 articles x 3 repeats, blind rater over 80 rows per arm).
+ *
+ * What moved: calibration 4.04 -> 4.46 and linkage 4.73 -> 4.98, both at or
+ * above the resolvable bar at n=80. Interest-to-profession inflation fell from
+ * 13% of rows to 1%, and medium-band overconfidence or denial from 43% to 18%.
+ * Specificity was already at 4.93 and did not move.
+ *
+ * What did NOT move, and is the reason a third arm exists: the "in Amsterdam"
+ * template stapled onto stories with no Dutch angle, 47% of rows before and 39%
+ * after. Rule 3 bans inventing a place and the model still reaches for the
+ * user's city as a sentence ending. That is a voice problem, not a fact problem.
+ */
+const REASON_V2_RULES = `
+## Three additional rules
+
+**1. The middle of the scale has its own register.** Between 0.6 and 0.8 the
+article genuinely touches something of yours, and it is not urgent. Say what the
+mechanism is and leave the temperature down. Do not reach for "directly affects"
+(that belongs above 0.9) and do not reach for "carries no direct stake" (that
+belongs below 0.4). Worked example, at 0.7: "New EU cloud rules will apply to
+the consumer apps you build, once they take effect next year." It names the real
+link, it commits to it, and it stays calm.
+
+**2. Never describe the feed or how this article was scored.** The reader sees a
+sentence about their news, not about the system showing it. Never write that
+something is relevant, highly relevant, a strong match, worth showing, or
+deserving of any score or priority. Wrong: "Drought measures in Amsterdam affect
+your home city, warranting a high-relevance feed score." Right: "Drought
+measures start in Amsterdam this week, where you live."
+
+**3. When no listed fact really bridges, say so plainly.** Name the closest fact
+you were given and state that the connection is loose. Never invent a detail the
+fact bank does not contain: not an employer, not a market, not a job, not a
+circumstance, and above all not a place. Only name a city or country when THIS
+article is about it. A story set in Washington, London or Berlin does not become
+an Amsterdam story because the reader lives there. Wrong, on a US court ruling:
+"US AI regulation may impact your consumer app development in Amsterdam."
+Right: "A US court ruling on AI training data is close to your AI research
+interest, though it applies only in the United States."
+
+Output: single plain string, no prefixes, no markdown.`;
+
+/**
+ * Pass 2 (cloud) — the SHIPPED reason prompt.
+ *
+ * `_V1` plus {@link REASON_V2_RULES}, concatenated in exactly the order the
+ * measured arm used, so the promoted prompt is byte-identical to the string the
+ * rater scored. Do not "tidy" this into one literal: keeping the two halves
+ * separate is what lets `reason-v1` stay registered as a control.
+ */
+export const CLOUD_REASON_SYSTEM_PROMPT = `${CLOUD_REASON_SYSTEM_PROMPT_V1}
+${REASON_V2_RULES}`;
+
+/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT}, same rules, same order. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1}
+${REASON_V2_RULES}`;
+
 
 // ---------------------------------------------------------------------------
 // (The RELEVANCE v3 two-axis score prompts — CLOUD_SCORE_V3_SYSTEM_PROMPT, its

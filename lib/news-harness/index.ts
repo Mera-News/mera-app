@@ -20,7 +20,7 @@ export * from './prompts/prompts';
 // prompt-variants.ts to avoid an import cycle with prompts.ts — see that file's
 // header.
 import './prompts/reason-arms';
-export { REASON_V2_ID } from './prompts/reason-arms';
+export { REASON_V1_ID, REASON_V3_ID } from './prompts/reason-arms';
 export * from './prompts/questionnaire-data';
 export * from './persona-management/fact-rules';
 export * from './persona-management/topic-generation';
