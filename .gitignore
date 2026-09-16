@@ -109,3 +109,5 @@ qa/**/*.txt
 
 # Simulator-harness screenshot dump — QA artifacts, not app assets.
 harness/out/
+# Python bytecode from scripts/animations
+__pycache__/
