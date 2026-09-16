@@ -40,6 +40,7 @@
     "scripts/run-topicgen-corpus.ts",
     "scripts/fetch-staging-fixture.ts",
     "scripts/rater-export.ts",
-    "scripts/rater-agreement.ts"
+    "scripts/rater-agreement.ts",
+    "scripts/rater-decode.ts"
   ]
 }
