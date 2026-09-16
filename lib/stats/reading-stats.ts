@@ -114,6 +114,44 @@ export interface CountryShare {
  * have not since removed" is not a fact about reading, it is an artefact of
  * intersecting two unrelated rules.
  */
+/**
+ * One language the reader read articles in, inside the window.
+ *
+ * A DIFFERENT fact from country, not a proxy for it: one publisher in
+ * Switzerland produces German, French and Italian rows, and that difference is
+ * the whole point of the metric. `language_code` is optional on the row, so
+ * rows without one are counted nowhere rather than bucketed as "unknown" —
+ * an unknown bucket in a proportion bar is a segment the reader cannot act on.
+ */
+export interface LanguageShare {
+  languageCode: string;
+  visitCount: number;
+}
+
+/**
+ * One day, and how many articles the reader read on it.
+ *
+ * `dateKey` is a LOCAL calendar date (YYYY-MM-DD in the device's timezone),
+ * never UTC. Same reasoning as the daily cap copy: a UTC date is simply the
+ * wrong day for a large share of readers, and this one is rendered as a grid
+ * cell the reader will check against their own memory of yesterday.
+ *
+ * NOT "days you opened the app". There is no app-open record, no session row
+ * and no launch counter anywhere in the schema, and there must not be one. What
+ * this counts is articles read, from visit rows the app already keeps to run
+ * the Sources tab. Labelling it "opened" would be false AND would invite the
+ * next person to add session tracking to make it true, which is exactly the
+ * instrumentation hard invariant 9 forbids.
+ */
+export interface DayRead {
+  dateKey: string;
+  /** Distinct articles visited that day. Zero for a day with no reading. */
+  count: number;
+  /** 0 = Monday .. 6 = Sunday. Precomputed so the grid can align its first row
+   *  to a weekday column without re-parsing the key at the render site. */
+  weekday: number;
+}
+
 export interface KeptNow {
   /** Rows in `saved_article_suggestions` that are real user saves. Retention
    *  rows (`origin` 'fact_check' or 'tracked_story') are excluded upstream by
@@ -142,6 +180,19 @@ export interface ReadingStats {
    * every future surface.
    */
   countries: CountryShare[];
+  /** Every language read in inside the window, most-read first. */
+  languages: LanguageShare[];
+  /** Distinct language codes inside the window. Exactly `languages.length`. */
+  languageCount: number;
+  /**
+   * One entry per day of the window, oldest first, INCLUDING days with no
+   * reading. A caller drawing a calendar grid needs the zeros to be present:
+   * skipping them would silently close the gaps and turn a patchy month into a
+   * solid one, which is the one thing this visual must not do.
+   */
+  days: DayRead[];
+  /** Days in `days` with a count above zero. */
+  daysReadCount: number;
   /**
    * Distinct articles OPENED inside the window. Partial by construction — see
    * the module header. Never label this "articles read".
@@ -236,6 +287,7 @@ export function computeReadingStats({
   const windowedVisits = visits.filter((v) => Number.isFinite(v.visitedAt) && v.visitedAt >= cutoff);
 
   const publications = new Set<string>();
+  const byLanguage = new Map<string, LanguageShare>();
   // Keyed by code so the reach card can weight its proportion bar by taps.
   // A Set would have answered `countryCount` and nothing else.
   const byCountry = new Map<string, CountryShare>();
@@ -253,6 +305,14 @@ export function computeReadingStats({
       if (seen) seen.visitCount += taps;
       else byCountry.set(country, { countryCode: country, visitCount: taps });
     }
+    const language = cleaned(visit.languageCode);
+    if (language) {
+      const taps = tapsOf(visit);
+      const seen = byLanguage.get(language);
+      if (seen) seen.visitCount += taps;
+      else byLanguage.set(language, { languageCode: language, visitCount: taps });
+    }
+
     if (!name) continue;
 
     publications.add(name);
@@ -274,6 +334,13 @@ export function computeReadingStats({
     if (b.visitCount !== a.visitCount) return b.visitCount - a.visitCount;
     return a.countryCode.localeCompare(b.countryCode);
   });
+
+  const languages = [...byLanguage.values()].sort((a, b) => {
+    if (b.visitCount !== a.visitCount) return b.visitCount - a.visitCount;
+    return a.languageCode.localeCompare(b.languageCode);
+  });
+
+  const days = dailyReads(windowedVisits, nowMs);
 
   const topPublications = [...byPublication.values()]
     .sort((a, b) => {
@@ -304,6 +371,10 @@ export function computeReadingStats({
     publicationCount: publications.size,
     countryCount: countries.length,
     countries,
+    languages,
+    languageCount: languages.length,
+    days,
+    daysReadCount: days.filter((d) => d.count > 0).length,
     articlesOpened: openedArticleIds.size,
     publishToRead,
     topPublications,
@@ -329,6 +400,10 @@ export function emptyReadingStats(): ReadingStats {
     publicationCount: 0,
     countryCount: 0,
     countries: [],
+    languages: [],
+    languageCount: 0,
+    days: [],
+    daysReadCount: 0,
     articlesOpened: 0,
     publishToRead: { averageHours: null, sampledArticles: 0, totalArticles: 0 },
     topPublications: [],
@@ -453,4 +528,86 @@ export function resolveStatsCardParam(
   // whenever that card has anything on it.
   if (available.includes(DEFAULT_STATS_CARD)) return DEFAULT_STATS_CARD;
   return available[0];
+}
+
+// --- daily reading, for the rhythm grid ------------------------------------
+
+/**
+ * A LOCAL calendar date key, `YYYY-MM-DD`, in the device's own timezone.
+ *
+ * `en-CA` is the shortest way to get ISO order out of the platform's own date
+ * formatter, which is what makes this timezone-correct without composing the
+ * string by hand or reaching for `toISOString` (which is UTC and would put a
+ * late-evening read on tomorrow for every reader east of Greenwich, and an
+ * early-morning one on yesterday for every reader west of it).
+ */
+export function localDateKey(ms: number): string {
+  return new Date(ms).toLocaleDateString('en-CA', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+}
+
+/** 0 = Monday .. 6 = Sunday. The week starts on Monday because the grid's
+ *  point is that a reader can SEE their weekends, and a Sunday-first week puts
+ *  the two weekend days at opposite ends of the row. */
+export function mondayIndex(ms: number): number {
+  return (new Date(ms).getDay() + 6) % 7;
+}
+
+/**
+ * One entry per day of the window, oldest first, zeros included.
+ *
+ * Counts DISTINCT ARTICLES per day. `getAllVisitedArticles` already dedupes a
+ * repeated visit to the same article into one row carrying a `visitCount`, so
+ * one row is one article and the row count per day is the article count. Using
+ * `visitCount` here instead would count re-opens and turn "articles you read
+ * that day" into "times you tapped", a different and less honest claim.
+ */
+export function dailyReads(
+  windowedVisits: VisitedArticle[],
+  nowMs: number,
+  days: number = WINDOW_DAYS,
+): DayRead[] {
+  const counts = new Map<string, number>();
+  for (const visit of windowedVisits) {
+    if (!Number.isFinite(visit.visitedAt)) continue;
+    const key = localDateKey(visit.visitedAt);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  // Walked back from today one calendar day at a time rather than by
+  // subtracting 86_400_000, because a DST boundary makes a local day 23 or 25
+  // hours long and fixed-millisecond arithmetic silently drops or repeats a day
+  // twice a year.
+  const out: DayRead[] = [];
+  const cursor = new Date(nowMs);
+  cursor.setHours(12, 0, 0, 0); // midday, so a DST shift cannot cross midnight
+  for (let i = 0; i < days; i += 1) {
+    const ms = cursor.getTime();
+    out.push({ dateKey: localDateKey(ms), count: counts.get(localDateKey(ms)) ?? 0, weekday: mondayIndex(ms) });
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return out.reverse();
+}
+
+/**
+ * How many rows a 7-column grid needs for these days.
+ *
+ * The first row is PADDED so day one lands in its own weekday column, so the
+ * row count is not `days / 7`: a 30-day window starting on a Saturday needs SIX
+ * rows, not five. Exported because the height budget has to model the worst
+ * case the UI can be asked to draw, and five rows is the lucky case.
+ */
+export function heatGridRows(days: DayRead[]): number {
+  if (days.length === 0) return 0;
+  return Math.ceil((days[0].weekday + days.length) / 7);
+}
+
+/** The most articles read on any one day, which is what the shading scale is
+ *  normalised against. Returns 0 for an empty or all-zero window, and callers
+ *  must treat 0 as "draw every cell at the empty tone" rather than dividing. */
+export function peakDayCount(days: DayRead[]): number {
+  return days.reduce((max, d) => Math.max(max, d.count), 0);
 }

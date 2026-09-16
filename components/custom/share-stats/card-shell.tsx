@@ -90,6 +90,10 @@ export const SHELL_METRICS = {
   titleGap: 5,
   windowLine: 9.5,
   windowGap: 2,
+  /** The made-on date, top right. Same size and tone family as the window
+   *  line, because it does the same job: it makes the card's claim checkable
+   *  by whoever sees it later instead of leaving it floating. */
+  stampDate: 9.5,
   qualifier: 8.5,
   qualifierGap: 2,
   footerGap: 4,
@@ -112,6 +116,31 @@ export function type(
   return { fontSize, lineHeight: Math.ceil(fontSize * leading) };
 }
 
+/**
+ * The date the card was MADE, formatted by the platform in the reader's own
+ * locale and timezone.
+ *
+ * No format string, no per-locale ordering table, no composed string: date
+ * order is not universal and `toLocaleDateString` already knows all twenty.
+ * Same approach the daily-cap copy takes for its reset time, and for the same
+ * reason a UTC date is wrong there, the DEVICE timezone is what is used here.
+ *
+ * Falls back to the ISO date rather than throwing: an exotic locale tag on a
+ * device with a thin ICU build can reject the options bag, and a card that
+ * renders without a date is better than a card that does not render.
+ */
+export function formatStampDate(ms: number, locale?: string): string {
+  try {
+    return new Date(ms).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch {
+    return new Date(ms).toLocaleDateString('en-CA');
+  }
+}
+
 export interface CardShellProps {
   /** The card's own heading. First person, matching the existing card. */
   title: string;
@@ -119,12 +148,21 @@ export interface CardShellProps {
   windowLine: string;
   privacyLine: string;
   pixelRatio: number;
+  /**
+   * When the card was made, epoch ms. INJECTED rather than read from the clock
+   * here, and on the share path it is stamped when the CAPTURE starts, not at
+   * mount: a card left on screen across midnight must not go out carrying
+   * yesterday.
+   */
+  stampedAtMs: number;
+  /** BCP-47 tag for the date format. Undefined means the platform default. */
+  locale?: string;
   testID: string;
   children: React.ReactNode;
 }
 
 const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
-  { title, windowLine, privacyLine, pixelRatio, testID, children },
+  { title, windowLine, privacyLine, pixelRatio, stampedAtMs, locale, testID, children },
   ref,
 ) {
   const host = hostSizeForScale(pixelRatio);
@@ -166,23 +204,44 @@ const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
       >
         <VStack className="flex-1 justify-between">
           <VStack>
-            <HStack className="items-center" style={{ columnGap: 8 * k }}>
-              <MeraLogo size={m.logoSize * k} />
+            {/* Two columns. The brand-and-title column is `flex: 1` and the
+                date column `flexShrink: 0`, so a long German title WRAPS
+                rather than pushing the date off the card. `alignItems` is
+                flex-start so the date sits on the wordmark's line whatever the
+                title does below it. */}
+            <HStack style={{ alignItems: 'flex-start', columnGap: 10 * k }}>
+              <VStack style={{ flex: 1 }}>
+                <HStack className="items-center" style={{ columnGap: 8 * k }}>
+                  <MeraLogo size={m.logoSize * k} />
+                  <Text
+                    allowFontScaling={false}
+                    className="font-semibold"
+                    style={[type(m.wordmark, k, m.numeralLeading), ink('primary')]}
+                  >
+                    Mera News
+                  </Text>
+                </HStack>
+                <Text
+                  allowFontScaling={false}
+                  className="font-semibold"
+                  style={[type(m.title, k), { marginTop: m.titleGap * k }, ink('primary')]}
+                >
+                  {title}
+                </Text>
+              </VStack>
               <Text
                 allowFontScaling={false}
-                className="font-semibold"
-                style={[type(m.wordmark, k, m.numeralLeading), ink('primary')]}
+                testID={`${testID}-stamp`}
+                numberOfLines={1}
+                style={[
+                  type(m.stampDate, k),
+                  { flexShrink: 0, marginTop: (m.logoSize - m.stampDate * 1.4) * 0.5 * k },
+                  ink('muted'),
+                ]}
               >
-                Mera News
+                {formatStampDate(stampedAtMs, locale)}
               </Text>
             </HStack>
-            <Text
-              allowFontScaling={false}
-              className="font-semibold"
-              style={[type(m.title, k), { marginTop: m.titleGap * k }, ink('primary')]}
-            >
-              {title}
-            </Text>
             {/* The window statement sits directly under the title, never in a
                 collected footnote, because a footnote is what a screenshot
                 crops off. Exactly one per card. */}

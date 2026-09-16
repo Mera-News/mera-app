@@ -95,6 +95,10 @@ export const PACE_METRICS = {
 export interface StatsCardProps {
   stats: ReadingStats;
   pixelRatio: number;
+  /** When the card was made. Stamped at CAPTURE time on the share path. */
+  stampedAtMs: number;
+  /** BCP-47 tag for the date. Undefined means the platform default. */
+  locale?: string;
   /**
    * Whether the reach card names the reader's top publications.
    *
@@ -149,7 +153,7 @@ const Figure: React.FC<{
 // --- 1. REACH --------------------------------------------------------------
 
 export const ReachCard = React.forwardRef<View, StatsCardProps>(function ReachCard(
-  { stats, pixelRatio, showPublicationNames = true },
+  { stats, pixelRatio, stampedAtMs, locale, showPublicationNames = true },
   ref,
 ) {
   const { t } = useTranslation();
@@ -177,6 +181,8 @@ export const ReachCard = React.forwardRef<View, StatsCardProps>(function ReachCa
       windowLine={t('shareStats.screenSubtitle')}
       privacyLine={t('shareStats.card.privacyLine')}
       pixelRatio={pixelRatio}
+      stampedAtMs={stampedAtMs}
+      locale={locale}
       testID="share-stats-card-reach"
     >
       <VStack style={{ rowGap: m.blockGap * k }}>
@@ -268,7 +274,7 @@ export const ReachCard = React.forwardRef<View, StatsCardProps>(function ReachCa
 // --- 2. KEEP ---------------------------------------------------------------
 
 export const KeepCard = React.forwardRef<View, StatsCardProps>(function KeepCard(
-  { stats, pixelRatio },
+  { stats, pixelRatio, stampedAtMs, locale },
   ref,
 ) {
   const { t } = useTranslation();
@@ -285,6 +291,8 @@ export const KeepCard = React.forwardRef<View, StatsCardProps>(function KeepCard
       windowLine={t('shareStats.card.windowNow')}
       privacyLine={t('shareStats.card.privacyLine')}
       pixelRatio={pixelRatio}
+      stampedAtMs={stampedAtMs}
+      locale={locale}
       testID="share-stats-card-keep"
     >
       <VStack style={{ rowGap: m.blockGap * k }}>
@@ -338,7 +346,7 @@ export const KeepCard = React.forwardRef<View, StatsCardProps>(function KeepCard
 // --- 3. PACE ---------------------------------------------------------------
 
 export const PaceCard = React.forwardRef<View, StatsCardProps>(function PaceCard(
-  { stats, pixelRatio },
+  { stats, pixelRatio, stampedAtMs, locale },
   ref,
 ) {
   const { t } = useTranslation();
@@ -355,6 +363,8 @@ export const PaceCard = React.forwardRef<View, StatsCardProps>(function PaceCard
       windowLine={t('shareStats.screenSubtitle')}
       privacyLine={t('shareStats.card.privacyLine')}
       pixelRatio={pixelRatio}
+      stampedAtMs={stampedAtMs}
+      locale={locale}
       testID="share-stats-card-pace"
     >
       <VStack style={{ rowGap: m.blockGap * k }}>

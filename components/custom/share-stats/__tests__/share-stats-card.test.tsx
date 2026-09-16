@@ -37,6 +37,10 @@ jest.mock('react-i18next', () => ({
   }),
 }));
 
+/** A fixed instant, so the date stamp is deterministic in every assertion.
+ *  15 Sep 2026, midday UTC. */
+const STAMP = Date.UTC(2026, 8, 15, 12, 0, 0);
+
 function stats(overrides: Partial<ReadingStats> = {}): ReadingStats {
   return {
     ...emptyReadingStats(),
@@ -99,14 +103,14 @@ describe('the dispatcher', () => {
       ['pace', 'share-stats-card-pace'],
     ] as const) {
       const { getByTestId } = render(
-        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} />,
+        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
       );
       expect(getByTestId(testID)).toBeTruthy();
     }
   });
 
   it('draws the reach card when no id is given, as the shipped deep link does', () => {
-    const { getByTestId } = render(<ShareStatsCard stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     expect(getByTestId('share-stats-card-reach')).toBeTruthy();
   });
 
@@ -117,7 +121,7 @@ describe('the dispatcher', () => {
     // produce different files.
     for (const card of ['reach', 'keep', 'pace'] as const) {
       const { getByTestId } = render(
-        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} />,
+        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
       );
       const backdrop = getByTestId('card-backdrop');
       expect(backdrop.props.seed).toBe('mera-stats-card');
@@ -133,7 +137,7 @@ describe('each card states exactly ONE window', () => {
   it('puts the 30-day line on reach and pace', () => {
     for (const card of ['reach', 'pace'] as const) {
       const { getByTestId } = render(
-        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} />,
+        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
       );
       expect(getByTestId(`share-stats-card-${card}-window`).props.children).toBe(
         'shareStats.screenSubtitle',
@@ -142,7 +146,7 @@ describe('each card states exactly ONE window', () => {
   });
 
   it('puts the present-tense line on keep, and never a 30-day claim', () => {
-    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     expect(getByTestId('share-stats-card-keep-window').props.children).toBe(
       'shareStats.card.windowNow',
     );
@@ -159,7 +163,7 @@ describe('top publications', () => {
 
   it('is ON by default, without the reader turning anything on', () => {
     const { getByText, getByTestId } = render(
-      <ShareStatsCard card="reach" stats={withNames} pixelRatio={3} />,
+      <ShareStatsCard card="reach" stats={withNames} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
     );
     expect(getByTestId('share-stats-reach-top-publications')).toBeTruthy();
     expect(getByText('Le Monde')).toBeTruthy();
@@ -170,7 +174,7 @@ describe('top publications', () => {
     // public and publication names are revealing, so removing the only way to
     // decline is a different decision from changing the default.
     const { queryByText, queryByTestId } = render(
-      <ShareStatsCard card="reach" stats={withNames} showPublicationNames={false} pixelRatio={3} />,
+      <ShareStatsCard card="reach" stats={withNames} showPublicationNames={false} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
     );
     expect(queryByTestId('share-stats-reach-top-publications')).toBeNull();
     expect(queryByText('Le Monde')).toBeNull();
@@ -178,7 +182,7 @@ describe('top publications', () => {
 
   it('stays absent when the block is on but there is nothing to name', () => {
     const { queryByTestId } = render(
-      <ShareStatsCard card="reach" stats={stats()} showPublicationNames pixelRatio={3} />,
+      <ShareStatsCard card="reach" stats={stats()} showPublicationNames pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
     );
     expect(queryByTestId('share-stats-reach-top-publications')).toBeNull();
   });
@@ -186,7 +190,7 @@ describe('top publications', () => {
   it('never appears on the other two cards, whatever the flag says', () => {
     for (const card of ['keep', 'pace'] as const) {
       const { queryByText } = render(
-        <ShareStatsCard card={card} stats={withNames} showPublicationNames pixelRatio={3} />,
+        <ShareStatsCard card={card} stats={withNames} showPublicationNames pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
       );
       expect(queryByText('Le Monde')).toBeNull();
     }
@@ -214,7 +218,7 @@ describe('top publications', () => {
 
 describe('ReachCard', () => {
   it('renders both counts and a flag per country', () => {
-    const { getByTestId } = render(<ShareStatsCard card="reach" stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard card="reach" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     expect(getByTestId('share-stats-reach-countries')).toBeTruthy();
     expect(getByTestId('share-stats-reach-publications')).toBeTruthy();
     expect(getByTestId('share-stats-reach-flags-cell-IN')).toBeTruthy();
@@ -222,7 +226,7 @@ describe('ReachCard', () => {
   });
 
   it('weights the proportion bar by taps, with the leader in the accent', () => {
-    const { getByTestId } = render(<ShareStatsCard card="reach" stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard card="reach" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     const lead = getByTestId('share-stats-reach-bar-segment-IN').props.style;
     expect(lead.flex).toBeCloseTo(38 / 74, 6);
     expect(lead.backgroundColor).toBe('rgb(231, 138, 83)');
@@ -230,7 +234,7 @@ describe('ReachCard', () => {
 
   it('omits the bar entirely when there is nothing to divide', () => {
     const { queryByTestId } = render(
-      <ShareStatsCard card="reach" stats={emptyReadingStats()} pixelRatio={3} />,
+      <ShareStatsCard card="reach" stats={emptyReadingStats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
     );
     expect(queryByTestId('share-stats-reach-bar')).toBeNull();
   });
@@ -238,33 +242,33 @@ describe('ReachCard', () => {
 
 describe('KeepCard', () => {
   it('renders a dot per saved article and a ring per followed story', () => {
-    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     expect(getByTestId('share-stats-keep-saved-dots').children).toHaveLength(28);
     expect(getByTestId('share-stats-keep-followed-dots').children).toHaveLength(6);
   });
 
   it('says the two are kept until removed, rather than implying a window', () => {
-    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard card="keep" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     expect(getByTestId('share-stats-keep-note')).toBeTruthy();
   });
 });
 
 describe('PaceCard', () => {
   it('labels the opened count partial, every time', () => {
-    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     expect(getByTestId('share-stats-pace-opened-partial')).toBeTruthy();
   });
 
   it('always carries the coverage denominator beside the latency figure', () => {
     // A bare average over the covered subset, presented as the whole, is the
     // specific claim this line exists to refuse.
-    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     expect(getByTestId('share-stats-pace-coverage').props.children).toContain('"sampled":41');
     expect(getByTestId('share-stats-pace-coverage').props.children).toContain('"total":58');
   });
 
   it('places the marker on the value against a 48h scale', () => {
-    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} />);
+    const { getByTestId } = render(<ShareStatsCard card="pace" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     // 8.6 rounds to 9; 9/48 = 18.75%.
     expect(getByTestId('share-stats-pace-scale-marker').props.style.left).toBe('18.75%');
   });
@@ -275,7 +279,7 @@ describe('PaceCard', () => {
       <ShareStatsCard
         card="pace"
         stats={stats({ publishToRead: { averageHours: null, sampledArticles: 0, totalArticles: 12 } })}
-        pixelRatio={3}
+        pixelRatio={3} stampedAtMs={STAMP} locale="en-GB"
       />,
     );
     expect(getByTestId('share-stats-pace-unknown')).toBeTruthy();
@@ -292,7 +296,7 @@ describe('every text node on every card', () => {
       : ((style ?? {}) as Record<string, unknown>);
 
   function textNodes(card: 'reach' | 'keep' | 'pace') {
-    const tree = render(<ShareStatsCard card={card} stats={stats()} pixelRatio={3} />);
+    const tree = render(<ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />);
     return tree.UNSAFE_getAllByType(
       require('react-native').Text as React.ComponentType<Record<string, unknown>>,
     );
@@ -342,5 +346,56 @@ describe('every text node on every card', () => {
         expect(node.props.allowFontScaling).toBe(false);
       }
     }
+  });
+});
+
+
+describe('the made-on date', () => {
+  it('sits in the top right of every card', () => {
+    for (const card of ['reach', 'keep', 'pace'] as const) {
+      const { getByTestId } = render(
+        <ShareStatsCard card={card} stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+      );
+      expect(getByTestId(`share-stats-card-${card}-stamp`)).toBeTruthy();
+    }
+  });
+
+  it('formats through the platform rather than a per-locale format string', () => {
+    // Date ORDER is not universal, so the only correct answer is to let
+    // toLocaleDateString decide. Asserting two locales that disagree on order
+    // is what proves no hardcoded order slipped in.
+    const gb = render(
+      <ShareStatsCard card="reach" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+    ).getByTestId('share-stats-card-reach-stamp').props.children as string;
+    const us = render(
+      <ShareStatsCard card="reach" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-US" />,
+    ).getByTestId('share-stats-card-reach-stamp').props.children as string;
+
+    expect(gb).toContain('2026');
+    expect(us).toContain('2026');
+    expect(gb.indexOf('15')).toBeLessThan(gb.indexOf('Sep'));
+    expect(us.indexOf('Sep')).toBeLessThan(us.indexOf('15'));
+  });
+
+  it('renders the instant it is given, so a capture-time stamp reaches the PNG', () => {
+    // The across-midnight case: the preview screen stamps this when the
+    // CAPTURE starts, not at mount, so a card sitting on screen since
+    // yesterday shares with today's date.
+    const nextDay = STAMP + 24 * 60 * 60 * 1000;
+    const { getByTestId } = render(
+      <ShareStatsCard card="reach" stats={stats()} pixelRatio={3} stampedAtMs={nextDay} locale="en-GB" />,
+    );
+    expect(getByTestId('share-stats-card-reach-stamp').props.children).toContain('16');
+  });
+
+  it('keeps its own column, so a long title cannot push it off', () => {
+    const stamp = render(
+      <ShareStatsCard card="reach" stats={stats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+    ).getByTestId('share-stats-card-reach-stamp');
+    // flexShrink 0 against a flex-1 title column is the shape that survives
+    // German. numberOfLines 1 is the backstop.
+    const style = (Array.isArray(stamp.props.style) ? Object.assign({}, ...stamp.props.style.flat(9)) : stamp.props.style);
+    expect(style.flexShrink).toBe(0);
+    expect(stamp.props.numberOfLines).toBe(1);
   });
 });

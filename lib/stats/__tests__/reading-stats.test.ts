@@ -9,6 +9,10 @@ import {
   cardHasData,
   countryBands,
   resolveStatsCardParam,
+  dailyReads,
+  heatGridRows,
+  mondayIndex,
+  peakDayCount,
   DEFAULT_STATS_CARD,
   STATS_CARD_IDS,
   type ReadingStats,
@@ -321,10 +325,34 @@ describe('computeReadingStats', () => {
 });
 
 describe('emptyReadingStats', () => {
-  it('matches what the core returns for empty input', () => {
-    expect(emptyReadingStats()).toEqual(
-      computeReadingStats({ visits: [], impressions: [], nowMs: NOW }),
-    );
+  it('matches the core on every field that does not need a clock', () => {
+    // `days` is a CALENDAR, and a calendar cannot exist without a clock. The
+    // empty shape is deliberately clock-free (it is the placeholder rendered
+    // before the first read resolves, and reading the clock there would make a
+    // pure constant impure), so it carries an empty calendar and the rhythm
+    // grid draws nothing until real data lands. That is correct behaviour, not
+    // a discrepancy: a grid of thirty zero-days flashed before load would be a
+    // claim about the reader, briefly, that the app has not yet checked.
+    const { days: _d, daysReadCount: _c, ...emptyRest } = emptyReadingStats();
+    const { days: _d2, daysReadCount: _c2, ...coreRest } = computeReadingStats({
+      visits: [],
+      impressions: [],
+      nowMs: NOW,
+    });
+    expect(emptyRest).toEqual(coreRest);
+  });
+
+  it('carries an EMPTY calendar, and the core a full one of zeros', () => {
+    // Pins the one difference above, in both directions, so neither side can
+    // drift without this failing. Without it, the destructure above would hide
+    // a future field that genuinely should have matched.
+    expect(emptyReadingStats().days).toEqual([]);
+    expect(emptyReadingStats().daysReadCount).toBe(0);
+
+    const core = computeReadingStats({ visits: [], impressions: [], nowMs: NOW });
+    expect(core.days).toHaveLength(WINDOW_DAYS);
+    expect(core.days.every((d) => d.count === 0)).toBe(true);
+    expect(core.daysReadCount).toBe(0);
   });
 });
 
@@ -618,5 +646,148 @@ describe('resolveStatsCardParam', () => {
   it('returns null only when the device has no card at all', () => {
     expect(resolveStatsCardParam('reach', emptyReadingStats())).toBeNull();
     expect(resolveStatsCardParam(undefined, emptyReadingStats())).toBeNull();
+  });
+});
+
+describe('languages', () => {
+  it('is a DIFFERENT fact from country, not a proxy for it', () => {
+    // One publisher in Switzerland produces German, French and Italian rows.
+    // If this collapsed to country the whole metric would be redundant.
+    const stats = computeReadingStats({
+      visits: [
+        visit({ articleId: 'a1', publicationName: 'SRF', countryCode: 'CH', languageCode: 'de' }),
+        visit({ articleId: 'a2', publicationName: 'SRF', countryCode: 'CH', languageCode: 'fr' }),
+        visit({ articleId: 'a3', publicationName: 'SRF', countryCode: 'CH', languageCode: 'it' }),
+      ],
+      impressions: [],
+      nowMs: NOW,
+    });
+
+    expect(stats.countryCount).toBe(1);
+    expect(stats.languageCount).toBe(3);
+  });
+
+  it('weights by taps and breaks ties on the code', () => {
+    const stats = computeReadingStats({
+      visits: [
+        visit({ articleId: 'a1', languageCode: 'en', visitCount: 4 }),
+        visit({ articleId: 'a2', languageCode: 'en', visitCount: 3 }),
+        visit({ articleId: 'a3', languageCode: 'hi', visitCount: 7 }),
+        visit({ articleId: 'a4', languageCode: 'fr', visitCount: 7 }),
+      ],
+      impressions: [],
+      nowMs: NOW,
+    });
+    expect(stats.languages).toEqual([
+      { languageCode: 'en', visitCount: 7 },
+      { languageCode: 'fr', visitCount: 7 },
+      { languageCode: 'hi', visitCount: 7 },
+    ]);
+  });
+
+  it('counts a row with no language nowhere, rather than as "unknown"', () => {
+    // An unknown bucket in a proportion bar is a segment the reader cannot act
+    // on. language_code is optional on the row, so this is the common case.
+    const stats = computeReadingStats({
+      visits: [
+        visit({ articleId: 'a1', languageCode: 'ja' }),
+        visit({ articleId: 'a2', languageCode: null }),
+        visit({ articleId: 'a3', languageCode: '  ' }),
+      ],
+      impressions: [],
+      nowMs: NOW,
+    });
+    expect(stats.languages).toEqual([{ languageCode: 'ja', visitCount: 1 }]);
+  });
+});
+
+describe('dailyReads', () => {
+  it('returns one entry per window day, oldest first, zeros INCLUDED', () => {
+    // The zeros are load-bearing. Skipping them would close the gaps and turn
+    // a patchy month into a solid one, which is the single thing this visual
+    // must not do.
+    const stats = computeReadingStats({
+      visits: [visit({ articleId: 'a1', visitedAt: NOW - 2 * DAY })],
+      impressions: [],
+      nowMs: NOW,
+    });
+    expect(stats.days).toHaveLength(WINDOW_DAYS);
+    expect(stats.days.filter((d) => d.count > 0)).toHaveLength(1);
+    expect(stats.daysReadCount).toBe(1);
+    // Oldest first.
+    expect(stats.days[0].dateKey < stats.days[stats.days.length - 1].dateKey).toBe(true);
+  });
+
+  it('counts DISTINCT ARTICLES, never re-opens', () => {
+    // getAllVisitedArticles already dedupes a repeated visit into one row with
+    // a visitCount, so one row is one article. Using visitCount here would turn
+    // "articles you read that day" into "times you tapped".
+    const stats = computeReadingStats({
+      visits: [
+        visit({ articleId: 'a1', visitedAt: NOW - DAY, visitCount: 9 }),
+        visit({ articleId: 'a2', visitedAt: NOW - DAY, visitCount: 1 }),
+      ],
+      impressions: [],
+      nowMs: NOW,
+    });
+    expect(stats.days.find((d) => d.count > 0)?.count).toBe(2);
+  });
+
+  it('walks calendar days, so a DST boundary neither drops nor repeats one', () => {
+    // Fixed-millisecond arithmetic breaks twice a year: a local day is 23 or 25
+    // hours long across a shift. Every key must be distinct and there must be
+    // exactly WINDOW_DAYS of them.
+    const marchDST = Date.UTC(2026, 2, 30, 12, 0, 0);
+    const days = dailyReads([], marchDST, 30);
+    expect(days).toHaveLength(30);
+    expect(new Set(days.map((d) => d.dateKey)).size).toBe(30);
+    const novemberDST = Date.UTC(2026, 10, 5, 12, 0, 0);
+    expect(new Set(dailyReads([], novemberDST, 30).map((d) => d.dateKey)).size).toBe(30);
+  });
+
+  it('labels weekdays Monday-first', () => {
+    // A Monday-first week keeps the two weekend days adjacent, which is most of
+    // what makes the grid readable at a glance.
+    const monday = Date.UTC(2026, 8, 14, 12, 0, 0);
+    expect(mondayIndex(monday)).toBe(0);
+    expect(mondayIndex(monday + 5 * DAY)).toBe(5);
+    expect(mondayIndex(monday + 6 * DAY)).toBe(6);
+  });
+});
+
+describe('heatGridRows', () => {
+  it('needs SIX rows when the window starts late in the week', () => {
+    // The row count is NOT days / 7: the first row is padded so day one lands
+    // in its own weekday column. Five rows is the lucky case, and a budget
+    // sized against it overflows.
+    const startingSaturday = dailyReads([], Date.UTC(2026, 9, 17, 12, 0, 0), 30);
+    const rows = heatGridRows(startingSaturday);
+    expect(rows).toBeGreaterThanOrEqual(5);
+    expect(rows).toBeLessThanOrEqual(6);
+  });
+
+  it('reaches six for at least one start weekday, and five for at least one', () => {
+    // Non-vacuity for the budget: if every start gave the same row count, the
+    // worst-case modelling above would be pointless.
+    const counts = new Set<number>();
+    for (let i = 0; i < 7; i += 1) {
+      counts.add(heatGridRows(dailyReads([], Date.UTC(2026, 8, 14 + i, 12, 0, 0), 30)));
+    }
+    expect(counts.has(5)).toBe(true);
+    expect(counts.has(6)).toBe(true);
+  });
+
+  it('is zero for an empty window rather than one empty row', () => {
+    expect(heatGridRows([])).toBe(0);
+  });
+});
+
+describe('peakDayCount', () => {
+  it('is the busiest day, and zero for an unread window', () => {
+    expect(peakDayCount([
+      { dateKey: '2026-09-01', count: 3, weekday: 1 },
+      { dateKey: '2026-09-02', count: 11, weekday: 2 },
+    ])).toBe(11);
+    expect(peakDayCount([])).toBe(0);
   });
 });

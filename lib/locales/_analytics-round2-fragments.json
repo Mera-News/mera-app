@@ -1,0 +1,303 @@
+{
+  "_comment": "analytics wave, round 2: the languages metric, the 30-day rhythm grid, and ONE OVERWRITE. shareStats.nameTogglePrivacy is retranslated in all 20 because it went FALSE the moment top publications became the default: it still said 'Off by default ... they only go on the card if you turn this on'. Run with --allow-overwrite shareStats.nameTogglePrivacy and NOTHING ELSE; every other key here is new and must still collide-fail if it is not. The new copy keeps the true half (article titles are never included) and states the control plainly, so it stays correct whether or not the toggle is later removed. rhythmWeekdays is a comma-separated list of SEVEN single-character initials, MONDAY FIRST, split at the render site: a Monday-first week keeps the two weekend days adjacent, which is most of what makes the grid readable at a glance. Duplicate initials within a locale are expected and fine (en T/T and S/S, de D/D and S/S) because position carries the meaning, not the letter. daysReadLabel deliberately says READ, never 'opened the app': there is no app-open record, session row or launch counter anywhere in the schema, so 'opened' would be a false claim AND would invite someone to add session tracking to make it true. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "shareStats": {
+      "nameTogglePrivacy": "Included by default. Publication names say a lot about you, so you can turn them off before you share. Article titles are never included.",
+      "card": {
+        "languagesLabel": "Languages you read in",
+        "topLanguagesTitle": "Mostly read in",
+        "rhythmTitle": "The days I read",
+        "daysReadLabel": "Days you read something",
+        "heatLegendLess": "less",
+        "heatLegendMore": "more",
+        "heatNote": "Shading is how many articles you read that day.",
+        "rhythmWeekdays": "M,T,W,T,F,S,S"
+      }
+    }
+  },
+  "de": {
+    "shareStats": {
+      "nameTogglePrivacy": "Standardmäßig enthalten. Publikationsnamen sagen viel über dich aus, also kannst du sie vor dem Teilen ausschalten. Artikeltitel sind nie enthalten.",
+      "card": {
+        "languagesLabel": "Sprachen, in denen du liest",
+        "topLanguagesTitle": "Meistens gelesen auf",
+        "rhythmTitle": "Die Tage, an denen ich gelesen habe",
+        "daysReadLabel": "Tage, an denen du etwas gelesen hast",
+        "heatLegendLess": "weniger",
+        "heatLegendMore": "mehr",
+        "heatNote": "Die Färbung zeigt, wie viele Artikel du an dem Tag gelesen hast.",
+        "rhythmWeekdays": "M,D,M,D,F,S,S"
+      }
+    }
+  },
+  "es": {
+    "shareStats": {
+      "nameTogglePrivacy": "Incluidos de forma predeterminada. Los nombres de las publicaciones dicen mucho de ti, así que puedes desactivarlos antes de compartir. Los títulos de los artículos nunca se incluyen.",
+      "card": {
+        "languagesLabel": "Idiomas en los que leíste",
+        "topLanguagesTitle": "Sobre todo leíste en",
+        "rhythmTitle": "Los días que leí",
+        "daysReadLabel": "Días que leíste algo",
+        "heatLegendLess": "menos",
+        "heatLegendMore": "más",
+        "heatNote": "El sombreado indica cuántos artículos leíste ese día.",
+        "rhythmWeekdays": "L,M,X,J,V,S,D"
+      }
+    }
+  },
+  "fr": {
+    "shareStats": {
+      "nameTogglePrivacy": "Inclus par défaut. Les noms des publications en disent long sur vous, vous pouvez donc les désactiver avant de partager. Les titres d'articles ne sont jamais inclus.",
+      "card": {
+        "languagesLabel": "Langues que vous avez lues",
+        "topLanguagesTitle": "Surtout lu en",
+        "rhythmTitle": "Les jours où j'ai lu",
+        "daysReadLabel": "Jours où vous avez lu quelque chose",
+        "heatLegendLess": "moins",
+        "heatLegendMore": "plus",
+        "heatNote": "La teinte indique combien d'articles vous avez lus ce jour-là.",
+        "rhythmWeekdays": "L,M,M,J,V,S,D"
+      }
+    }
+  },
+  "hi": {
+    "shareStats": {
+      "nameTogglePrivacy": "डिफ़ॉल्ट रूप से शामिल. प्रकाशनों के नाम आपके बारे में बहुत कुछ बताते हैं, इसलिए शेयर करने से पहले आप उन्हें बंद कर सकते हैं. लेखों के शीर्षक कभी शामिल नहीं होते.",
+      "card": {
+        "languagesLabel": "जिन भाषाओं में आपने पढ़ा",
+        "topLanguagesTitle": "ज़्यादातर पढ़ा",
+        "rhythmTitle": "जिन दिनों मैंने पढ़ा",
+        "daysReadLabel": "जिन दिनों आपने कुछ पढ़ा",
+        "heatLegendLess": "कम",
+        "heatLegendMore": "ज़्यादा",
+        "heatNote": "रंग बताता है कि उस दिन आपने कितने लेख पढ़े.",
+        "rhythmWeekdays": "सो,मं,बु,गु,शु,श,र"
+      }
+    }
+  },
+  "id": {
+    "shareStats": {
+      "nameTogglePrivacy": "Disertakan secara bawaan. Nama publikasi mengungkapkan banyak hal tentang Anda, jadi Anda bisa mematikannya sebelum berbagi. Judul artikel tidak pernah disertakan.",
+      "card": {
+        "languagesLabel": "Bahasa yang Anda baca",
+        "topLanguagesTitle": "Paling banyak dibaca dalam",
+        "rhythmTitle": "Hari-hari saya membaca",
+        "daysReadLabel": "Hari Anda membaca sesuatu",
+        "heatLegendLess": "sedikit",
+        "heatLegendMore": "banyak",
+        "heatNote": "Warna menunjukkan berapa artikel yang Anda baca hari itu.",
+        "rhythmWeekdays": "S,S,R,K,J,S,M"
+      }
+    }
+  },
+  "it": {
+    "shareStats": {
+      "nameTogglePrivacy": "Inclusi per impostazione predefinita. I nomi delle testate dicono molto di te, quindi puoi disattivarli prima di condividere. I titoli degli articoli non sono mai inclusi.",
+      "card": {
+        "languagesLabel": "Lingue in cui hai letto",
+        "topLanguagesTitle": "Letto soprattutto in",
+        "rhythmTitle": "I giorni in cui ho letto",
+        "daysReadLabel": "Giorni in cui hai letto qualcosa",
+        "heatLegendLess": "meno",
+        "heatLegendMore": "più",
+        "heatNote": "La tonalità indica quanti articoli hai letto quel giorno.",
+        "rhythmWeekdays": "L,M,M,G,V,S,D"
+      }
+    }
+  },
+  "ja": {
+    "shareStats": {
+      "nameTogglePrivacy": "既定で含まれます。発行元の名前はあなたのことを多く物語るので、共有する前にオフにできます。記事の見出しは含まれません。",
+      "card": {
+        "languagesLabel": "読んだ言語",
+        "topLanguagesTitle": "よく読んだ言語",
+        "rhythmTitle": "読んだ日",
+        "daysReadLabel": "何かを読んだ日数",
+        "heatLegendLess": "少ない",
+        "heatLegendMore": "多い",
+        "heatNote": "濃さはその日に読んだ記事の数です。",
+        "rhythmWeekdays": "月,火,水,木,金,土,日"
+      }
+    }
+  },
+  "ko": {
+    "shareStats": {
+      "nameTogglePrivacy": "기본으로 포함됩니다. 매체 이름은 당신에 대해 많은 것을 말해 주니, 공유하기 전에 끌 수 있어요. 기사 제목은 절대 포함되지 않습니다.",
+      "card": {
+        "languagesLabel": "읽은 언어",
+        "topLanguagesTitle": "주로 읽은 언어",
+        "rhythmTitle": "내가 읽은 날",
+        "daysReadLabel": "무언가를 읽은 날",
+        "heatLegendLess": "적음",
+        "heatLegendMore": "많음",
+        "heatNote": "색의 진하기는 그날 읽은 기사 수예요.",
+        "rhythmWeekdays": "월,화,수,목,금,토,일"
+      }
+    }
+  },
+  "nl": {
+    "shareStats": {
+      "nameTogglePrivacy": "Standaard inbegrepen. Namen van publicaties zeggen veel over je, dus je kunt ze uitzetten voor je deelt. Artikeltitels zitten er nooit bij.",
+      "card": {
+        "languagesLabel": "Talen waarin je las",
+        "topLanguagesTitle": "Meest gelezen in",
+        "rhythmTitle": "De dagen dat ik las",
+        "daysReadLabel": "Dagen dat je iets las",
+        "heatLegendLess": "minder",
+        "heatLegendMore": "meer",
+        "heatNote": "De kleur laat zien hoeveel artikelen je die dag las.",
+        "rhythmWeekdays": "M,D,W,D,V,Z,Z"
+      }
+    }
+  },
+  "pl": {
+    "shareStats": {
+      "nameTogglePrivacy": "Domyślnie uwzględnione. Nazwy wydawców mówią o tobie wiele, więc możesz je wyłączyć przed udostępnieniem. Tytuły artykułów nigdy nie są uwzględniane.",
+      "card": {
+        "languagesLabel": "Języki, w których czytasz",
+        "topLanguagesTitle": "Najczęściej czytane po",
+        "rhythmTitle": "Dni, w których czytałem",
+        "daysReadLabel": "Dni, w których coś przeczytałeś",
+        "heatLegendLess": "mniej",
+        "heatLegendMore": "więcej",
+        "heatNote": "Odcień pokazuje, ile artykułów przeczytałeś tego dnia.",
+        "rhythmWeekdays": "P,W,Ś,C,P,S,N"
+      }
+    }
+  },
+  "pt-BR": {
+    "shareStats": {
+      "nameTogglePrivacy": "Incluídos por padrão. Nomes de publicações dizem muito sobre você, então você pode desativá-los antes de compartilhar. Títulos de artigos nunca são incluídos.",
+      "card": {
+        "languagesLabel": "Idiomas em que você leu",
+        "topLanguagesTitle": "Leu principalmente em",
+        "rhythmTitle": "Os dias em que eu li",
+        "daysReadLabel": "Dias em que você leu algo",
+        "heatLegendLess": "menos",
+        "heatLegendMore": "mais",
+        "heatNote": "O tom mostra quantos artigos você leu naquele dia.",
+        "rhythmWeekdays": "S,T,Q,Q,S,S,D"
+      }
+    }
+  },
+  "ru": {
+    "shareStats": {
+      "nameTogglePrivacy": "Включены по умолчанию. Названия изданий многое о вас говорят, поэтому вы можете отключить их перед тем, как поделиться. Заголовки статей не включаются никогда.",
+      "card": {
+        "languagesLabel": "Языки, на которых вы читали",
+        "topLanguagesTitle": "Чаще всего читали на",
+        "rhythmTitle": "Дни, когда я читал",
+        "daysReadLabel": "Дни, когда вы что-то прочитали",
+        "heatLegendLess": "меньше",
+        "heatLegendMore": "больше",
+        "heatNote": "Насыщенность показывает, сколько статей вы прочитали в тот день.",
+        "rhythmWeekdays": "П,В,С,Ч,П,С,В"
+      }
+    }
+  },
+  "th": {
+    "shareStats": {
+      "nameTogglePrivacy": "รวมอยู่ด้วยตามค่าเริ่มต้น ชื่อสำนักข่าวบอกอะไรเกี่ยวกับคุณได้มาก คุณจึงปิดได้ก่อนแชร์ ส่วนชื่อบทความไม่เคยรวมอยู่ด้วย",
+      "card": {
+        "languagesLabel": "ภาษาที่คุณอ่าน",
+        "topLanguagesTitle": "ส่วนใหญ่อ่านเป็น",
+        "rhythmTitle": "วันที่ฉันอ่าน",
+        "daysReadLabel": "วันที่คุณได้อ่านอะไรบางอย่าง",
+        "heatLegendLess": "น้อย",
+        "heatLegendMore": "มาก",
+        "heatNote": "ความเข้มบอกว่าคุณอ่านกี่บทความในวันนั้น",
+        "rhythmWeekdays": "จ,อ,พ,พฤ,ศ,ส,อา"
+      }
+    }
+  },
+  "tr": {
+    "shareStats": {
+      "nameTogglePrivacy": "Varsayılan olarak dahil. Yayın adları senin hakkında çok şey söyler, bu yüzden paylaşmadan önce kapatabilirsin. Haber başlıkları hiçbir zaman dahil edilmez.",
+      "card": {
+        "languagesLabel": "Okuduğun diller",
+        "topLanguagesTitle": "En çok okuduğun dil",
+        "rhythmTitle": "Okuduğum günler",
+        "daysReadLabel": "Bir şeyler okuduğun günler",
+        "heatLegendLess": "az",
+        "heatLegendMore": "çok",
+        "heatNote": "Koyuluk o gün kaç haber okuduğunu gösterir.",
+        "rhythmWeekdays": "P,S,Ç,P,C,C,P"
+      }
+    }
+  },
+  "uk": {
+    "shareStats": {
+      "nameTogglePrivacy": "Увімкнено за замовчуванням. Назви видань багато про вас говорять, тож ви можете вимкнути їх перед тим, як поділитися. Заголовки статей ніколи не додаються.",
+      "card": {
+        "languagesLabel": "Мови, якими ви читали",
+        "topLanguagesTitle": "Найчастіше читали",
+        "rhythmTitle": "Дні, коли я читав",
+        "daysReadLabel": "Дні, коли ви щось прочитали",
+        "heatLegendLess": "менше",
+        "heatLegendMore": "більше",
+        "heatNote": "Насиченість показує, скільки статей ви прочитали того дня.",
+        "rhythmWeekdays": "П,В,С,Ч,П,С,Н"
+      }
+    }
+  },
+  "vi": {
+    "shareStats": {
+      "nameTogglePrivacy": "Được đưa vào theo mặc định. Tên tòa soạn nói lên nhiều điều về bạn, nên bạn có thể tắt trước khi chia sẻ. Tiêu đề bài viết không bao giờ được đưa vào.",
+      "card": {
+        "languagesLabel": "Ngôn ngữ bạn đã đọc",
+        "topLanguagesTitle": "Chủ yếu đọc bằng",
+        "rhythmTitle": "Những ngày tôi đọc",
+        "daysReadLabel": "Số ngày bạn đã đọc gì đó",
+        "heatLegendLess": "ít",
+        "heatLegendMore": "nhiều",
+        "heatNote": "Độ đậm cho biết bạn đã đọc bao nhiêu bài hôm đó.",
+        "rhythmWeekdays": "H,B,T,N,S,B,C"
+      }
+    }
+  },
+  "zh-CN": {
+    "shareStats": {
+      "nameTogglePrivacy": "默认包含。媒体名称能透露你很多信息，所以分享前你可以关掉。文章标题从不包含在内。",
+      "card": {
+        "languagesLabel": "你阅读的语言",
+        "topLanguagesTitle": "主要阅读语言",
+        "rhythmTitle": "我阅读的日子",
+        "daysReadLabel": "你读过内容的天数",
+        "heatLegendLess": "少",
+        "heatLegendMore": "多",
+        "heatNote": "颜色深浅表示你那天读了多少篇文章。",
+        "rhythmWeekdays": "一,二,三,四,五,六,日"
+      }
+    }
+  },
+  "zh-TW": {
+    "shareStats": {
+      "nameTogglePrivacy": "預設包含。媒體名稱能透露你很多資訊，所以分享前你可以關掉。文章標題從不包含在內。",
+      "card": {
+        "languagesLabel": "你閱讀的語言",
+        "topLanguagesTitle": "主要閱讀語言",
+        "rhythmTitle": "我閱讀的日子",
+        "daysReadLabel": "你讀過內容的天數",
+        "heatLegendLess": "少",
+        "heatLegendMore": "多",
+        "heatNote": "顏色深淺代表你那天讀了多少篇文章。",
+        "rhythmWeekdays": "一,二,三,四,五,六,日"
+      }
+    }
+  },
+  "ar": {
+    "shareStats": {
+      "nameTogglePrivacy": "مُضمَّنة افتراضيا. أسماء المصادر تقول الكثير عنك، لذا يمكنك إيقافها قبل المشاركة. عناوين المقالات لا تُضمَّن أبدا.",
+      "card": {
+        "languagesLabel": "اللغات التي قرأت بها",
+        "topLanguagesTitle": "قرأت غالبا بـ",
+        "rhythmTitle": "الأيام التي قرأت فيها",
+        "daysReadLabel": "أيام قرأت فيها شيئا",
+        "heatLegendLess": "أقل",
+        "heatLegendMore": "أكثر",
+        "heatNote": "درجة اللون تبين كم مقالا قرأت في ذلك اليوم.",
+        "rhythmWeekdays": "ن,ث,ر,خ,ج,س,ح"
+      }
+    }
+  }
+}

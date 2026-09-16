@@ -33,7 +33,13 @@ import { Switch } from '@/components/ui/switch';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import logger from '@/lib/logger';
-import { emptyReadingStats, type ReadingStats } from '@/lib/stats/reading-stats';
+import {
+  availableCards,
+  emptyReadingStats,
+  resolveStatsCardParam,
+  type ReadingStats,
+  type StatsCardId,
+} from '@/lib/stats/reading-stats';
 import { loadReadingStats } from '@/lib/stats/reading-stats-source';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -44,16 +50,28 @@ type ShareMessage = 'unavailable' | 'failed' | null;
 
 interface Props {
   readonly onBack: () => void;
+  /** Raw `card` param off the URL. Untrusted: validated against the known ids
+   *  and against what this device actually has, never used directly. */
+  readonly requestedCard?: unknown;
 }
 
-const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
-  const { t } = useTranslation();
+const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack, requestedCard }) => {
+  const { t, i18n } = useTranslation();
   const { width: screenWidth } = useWindowDimensions();
 
   const [stats, setStats] = useState<ReadingStats>(emptyReadingStats);
   const [isLoading, setIsLoading] = useState(true);
   const [showNames, setShowNames] = useState(true);
   const [pendingShare, setPendingShare] = useState(false);
+  /**
+   * When the card being captured was made.
+   *
+   * Stamped when the SHARE is pressed, not at mount, so a card left on screen
+   * across midnight goes out with today's date. The two animation frames the
+   * capture already waits for cover the re-render this causes, so it costs no
+   * extra delay and needs no extra frame.
+   */
+  const [stampedAtMs, setStampedAtMs] = useState(() => Date.now());
   const [message, setMessage] = useState<ShareMessage>(null);
 
   const captureHostRef = useRef<View>(null);
@@ -116,6 +134,9 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
 
   const onShare = useCallback(() => {
     setMessage(null);
+    // Same tick as the flag, so both land in one commit and the first of the
+    // two frames paints the card with the capture-moment date.
+    setStampedAtMs(Date.now());
     setPendingShare(true);
   }, []);
 
@@ -126,9 +147,22 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
     setMessage(null);
   }, []);
 
-  const card = (
-    <ShareStatsCard stats={stats} showPublicationNames={showNames} pixelRatio={pixelRatio} />
-  );
+  // Which card this screen is showing. Resolved against what the device
+  // ACTUALLY has, so a share link can never land on a card of zeroes, and null
+  // only when there is no card at all.
+  const cards = availableCards(stats);
+  const activeCard: StatsCardId | null = resolveStatsCardParam(requestedCard, stats);
+
+  const card = activeCard ? (
+    <ShareStatsCard
+      card={activeCard}
+      stats={stats}
+      showPublicationNames={showNames}
+      pixelRatio={pixelRatio}
+      stampedAtMs={stampedAtMs}
+      locale={i18n.language}
+    />
+  ) : null;
 
   return (
     <Box className="flex-1">
@@ -140,17 +174,29 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
 
       {/* The captured host. Off-screen and fully laid out. Rendered whatever
           the load state is, so a share pressed the instant the data lands has
-          a host to snapshot. */}
+          a host to snapshot.
+
+          The empty-state gate below is `availableCards`, NOT `hasAnyData`.
+          `hasAnyData` is keyed on visits alone so that Manage Data then Clear
+          viewing history visibly empties what it promised to; but a reader who
+          clears it still has real saved articles, and that action never
+          promised to touch those. Per-card availability keeps both claims true
+          at once, where the single screen-level flag could only keep one. */}
       <View
         style={{ position: 'absolute', left: -8000, top: 0, width: host.width, height: host.height }}
         pointerEvents="none"
       >
-        <ShareStatsCard
-          ref={captureHostRef}
-          stats={stats}
-          showPublicationNames={showNames}
-          pixelRatio={pixelRatio}
-        />
+        {activeCard ? (
+          <ShareStatsCard
+            ref={captureHostRef}
+            card={activeCard}
+            stats={stats}
+            showPublicationNames={showNames}
+            pixelRatio={pixelRatio}
+            stampedAtMs={stampedAtMs}
+            locale={i18n.language}
+          />
+        ) : null}
       </View>
 
       {isLoading ? (
@@ -160,7 +206,7 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack }) => {
             {t('shareStats.preparing')}
           </Text>
         </Box>
-      ) : !stats.hasAnyData ? (
+      ) : cards.length === 0 ? (
         <VStack className="flex-1 items-center justify-center p-6" space="md">
           <MaterialIcons name="insights" size={48} color="#666666" />
           <Text size="md" className="text-white text-center">

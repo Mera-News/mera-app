@@ -2,6 +2,10 @@ import { render } from '@testing-library/react-native';
 import React from 'react';
 import {
   CHART_METRICS,
+  HeatGrid,
+  heatLevel,
+  heatRows,
+  heatTone,
   DotArray,
   FlagGrid,
   ProportionBar,
@@ -277,5 +281,129 @@ describe('every chart text node', () => {
     }
     // Without this the loop passes by skipping every node.
     expect(checked).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('heatLevel', () => {
+  it('reserves level 0 for a genuine zero', () => {
+    // So an unread day is always visibly different from the quietest read day,
+    // however low the peak is. A continuous ramp would put a one-article day
+    // at an alpha indistinguishable from nothing for a light reader.
+    expect(heatLevel(0, 10)).toBe(0);
+    expect(heatLevel(1, 10)).toBe(1);
+    expect(heatLevel(1, 1)).toBe(4);
+  });
+
+  it('is five steps, because the eye cannot rank a continuous alpha here', () => {
+    const levels = [0, 1, 3, 6, 8, 10].map((c) => heatLevel(c, 10));
+    expect(new Set(levels).size).toBe(5);
+    expect(Math.max(...levels)).toBe(4);
+  });
+
+  it('never divides by a zero or nonsense peak', () => {
+    expect(heatLevel(5, 0)).toBe(1);
+    expect(heatLevel(5, Number.NaN)).toBe(1);
+    expect(heatLevel(Number.NaN, 10)).toBe(0);
+    expect(heatLevel(-3, 10)).toBe(0);
+  });
+
+  it('clamps a count above the peak rather than going off the scale', () => {
+    expect(heatLevel(999, 10)).toBe(4);
+  });
+});
+
+describe('heatRows', () => {
+  const day = (i: number, weekday: number, count = 0) => ({
+    dateKey: `2026-09-${String(i).padStart(2, '0')}`,
+    count,
+    weekday,
+  });
+
+  it('pads the first row so day one lands in its own weekday column', () => {
+    const rows = heatRows([day(1, 3), day(2, 4), day(3, 5)]);
+    expect(rows).toHaveLength(1);
+    expect(rows[0].slice(0, 3)).toEqual([null, null, null]);
+    expect(rows[0][3]?.dateKey).toBe('2026-09-01');
+  });
+
+  it('always returns full rows of seven', () => {
+    for (let weekday = 0; weekday < 7; weekday += 1) {
+      const days = Array.from({ length: 30 }, (_, i) => day(i + 1, (weekday + i) % 7));
+      const rows = heatRows(days);
+      for (const row of rows) expect(row).toHaveLength(7);
+      // Every real day survives the padding, exactly once.
+      const real = rows.flat().filter(Boolean);
+      expect(real).toHaveLength(30);
+    }
+  });
+
+  it('needs SIX rows for exactly one start weekday, and five for the rest', () => {
+    // ceil((weekday + 30) / 7): only a SUNDAY start (index 6) pushes to six.
+    // Worth pinning precisely rather than as a range, because the height
+    // budget is sized against the six-row case and the temptation on seeing
+    // five everywhere is to reclaim the row. One start weekday in seven is
+    // about four days a month where that reclaim would clip the card.
+    const from = (weekday: number) =>
+      heatRows(Array.from({ length: 30 }, (_, i) => day(i + 1, (weekday + i) % 7))).length;
+    for (const wd of [0, 1, 2, 3, 4, 5]) expect(from(wd)).toBe(5);
+    expect(from(6)).toBe(6);
+  });
+
+  it('is empty rather than one blank row for no days', () => {
+    expect(heatRows([])).toEqual([]);
+  });
+});
+
+describe('HeatGrid', () => {
+  const days = Array.from({ length: 30 }, (_, i) => ({
+    dateKey: `2026-09-${String(i + 1).padStart(2, '0')}`,
+    count: i % 4,
+    weekday: i % 7,
+  }));
+  const WD = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+  it('draws a cell per day, addressable by date', () => {
+    const { getByTestId } = render(
+      <HeatGrid days={days} peak={3} k={1} weekdayInitials={WD} legendLess="less" legendMore="more" testID="heat" />,
+    );
+    expect(getByTestId('heat-day-2026-09-01')).toBeTruthy();
+    expect(getByTestId('heat-day-2026-09-30')).toBeTruthy();
+  });
+
+  it('draws a pad cell as TRANSPARENT, not as an empty-tone day', () => {
+    // A padded slot is a day OUTSIDE the window. Drawing it at the unread tone
+    // would add days the card is not claiming to cover.
+    const late = days.map((d, i) => ({ ...d, weekday: (i + 5) % 7 }));
+    const { getByTestId } = render(
+      <HeatGrid days={late} peak={3} k={1} weekdayInitials={WD} legendLess="less" legendMore="more" testID="heat" />,
+    );
+    const first = getByTestId('heat-day-2026-09-01').props.style;
+    expect(first.backgroundColor).not.toBe('transparent');
+  });
+
+  it('gives every cell the same fixed box whatever its value', () => {
+    const { getByTestId } = render(
+      <HeatGrid days={days} peak={3} k={2} weekdayInitials={WD} legendLess="less" legendMore="more" testID="heat" />,
+    );
+    const zero = getByTestId('heat-day-2026-09-01').props.style;
+    const busy = getByTestId('heat-day-2026-09-04').props.style;
+    expect(zero.width).toBe(CHART_METRICS.heatCell * 2);
+    expect(busy.width).toBe(zero.width);
+    expect(busy.height).toBe(zero.height);
+  });
+
+  it('renders nothing rather than an empty grid', () => {
+    const { toJSON } = render(
+      <HeatGrid days={[]} peak={0} k={1} weekdayInitials={WD} legendLess="less" legendMore="more" testID="heat" />,
+    );
+    expect(toJSON()).toBeNull();
+  });
+
+  it('draws every cell at the empty tone when nothing was read', () => {
+    const none = days.map((d) => ({ ...d, count: 0 }));
+    const { getByTestId } = render(
+      <HeatGrid days={none} peak={0} k={1} weekdayInitials={WD} legendLess="less" legendMore="more" testID="heat" />,
+    );
+    expect(getByTestId('heat-day-2026-09-01').props.style.backgroundColor).toBe(heatTone(0));
   });
 });

@@ -77,6 +77,23 @@ export const CHART_METRICS = {
   dotsPerRow: 20,
   dotMax: 60,
 
+  /** HeatGrid. 7 columns is fixed (one per weekday); the CELL is 28, not the
+   *  34 the mockup was sized at, because the mockup assumed five rows and the
+   *  worst case is SIX: the first row is padded so day one lands in its own
+   *  weekday column, so a 30-day window starting late in the week needs an
+   *  extra row. At 34 the six-row card stacked to about 481pt in a 463pt band.
+   *  28 with a 5pt gap is 226pt wide and 193pt tall at six rows, which fits
+   *  with the margin intact, and is still far above the legibility floor at
+   *  capture scale and on a floor device. */
+  heatCell: 28,
+  heatGap: 5,
+  heatColumns: 7,
+  heatLabelSize: 8.5,
+  heatLabelGap: 5,
+  heatLegendSize: 8.5,
+  heatLegendTop: 8,
+  heatLegendSwatch: 9,
+
   scaleRule: 2,
   scaleTickHeight: 8,
   scaleMarker: 11,
@@ -418,4 +435,166 @@ export const RuledScale: React.FC<RuledScaleProps> = ({
   );
 };
 
-export default { FlagGrid, ProportionBar, DotArray, RuledScale };
+
+
+// --- HeatGrid --------------------------------------------------------------
+
+export interface HeatDay {
+  dateKey: string;
+  count: number;
+  /** 0 = Monday .. 6 = Sunday. */
+  weekday: number;
+}
+
+export interface HeatGridProps {
+  days: HeatDay[];
+  /** The busiest day in the window, which the shading is normalised against.
+   *  Zero means every cell draws at the empty tone. */
+  peak: number;
+  k: number;
+  /** Seven single-character weekday initials, Monday first, already localised
+   *  by the caller. Passing finished strings keeps i18n out of this file. */
+  weekdayInitials: string[];
+  legendLess: string;
+  legendMore: string;
+  testID?: string;
+}
+
+/**
+ * Which of five tones a day's count falls in.
+ *
+ * Five steps, not a continuous ramp: a contribution grid is read by COMPARING
+ * cells, and the eye cannot rank a continuous alpha at these sizes. Step 0 is
+ * reserved for a genuine zero so an unread day is always visibly different from
+ * the quietest read day, however low the peak is. That matters most for a light
+ * reader, where a linear ramp would put one-article days at an alpha
+ * indistinguishable from nothing.
+ */
+export function heatLevel(count: number, peak: number): 0 | 1 | 2 | 3 | 4 {
+  if (!Number.isFinite(count) || count <= 0) return 0;
+  if (!Number.isFinite(peak) || peak <= 0) return 1;
+  const ratio = Math.min(1, count / peak);
+  if (ratio <= 0.25) return 1;
+  if (ratio <= 0.5) return 2;
+  if (ratio <= 0.75) return 3;
+  return 4;
+}
+
+/** The tone for each level. Level 0 is an outlined empty cell rather than a
+ *  filled one, so "no reading" reads as absence and not as a dark value. */
+export function heatTone(level: 0 | 1 | 2 | 3 | 4): string {
+  return [
+    'rgba(255, 255, 255, 0.07)',
+    'rgba(231, 138, 83, 0.30)',
+    'rgba(231, 138, 83, 0.52)',
+    'rgba(231, 138, 83, 0.76)',
+    'rgb(231, 138, 83)',
+  ][level];
+}
+
+/**
+ * Lays days out into 7-column rows with the first row PADDED so day one sits in
+ * its own weekday column. Returns rows of `HeatDay | null`, null being a pad
+ * cell that draws nothing.
+ */
+export function heatRows(days: HeatDay[]): (HeatDay | null)[][] {
+  if (days.length === 0) return [];
+  const cells: (HeatDay | null)[] = [
+    ...Array.from({ length: days[0].weekday }, () => null),
+    ...days,
+  ];
+  while (cells.length % 7 !== 0) cells.push(null);
+  const rows: (HeatDay | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
+  return rows;
+}
+
+export const HeatGrid: React.FC<HeatGridProps> = ({
+  days,
+  peak,
+  k,
+  weekdayInitials,
+  legendLess,
+  legendMore,
+  testID,
+}) => {
+  const rows = heatRows(days);
+  if (rows.length === 0) return null;
+
+  const cell = CHART_METRICS.heatCell * k;
+  const gap = CHART_METRICS.heatGap * k;
+
+  return (
+    <View testID={testID}>
+      <HStack style={{ columnGap: gap, marginBottom: CHART_METRICS.heatLabelGap * k }}>
+        {weekdayInitials.slice(0, CHART_METRICS.heatColumns).map((initial, i) => (
+          <View key={i} style={{ width: cell, alignItems: 'center' }}>
+            <Text
+              allowFontScaling={false}
+              style={[
+                chartType(CHART_METRICS.heatLabelSize, k),
+                { color: inkColor('muted') },
+              ]}
+            >
+              {initial}
+            </Text>
+          </View>
+        ))}
+      </HStack>
+
+      <View style={{ rowGap: gap }}>
+        {rows.map((row, r) => (
+          <HStack key={r} style={{ columnGap: gap }}>
+            {row.map((day, c) => (
+              <View
+                key={day?.dateKey ?? `pad-${r}-${c}`}
+                testID={day ? `${testID}-day-${day.dateKey}` : undefined}
+                style={{
+                  width: cell,
+                  height: cell,
+                  borderRadius: 4 * k,
+                  // A pad cell draws NOTHING, not an empty-tone cell: a padded
+                  // slot is a day outside the window, and showing it at the
+                  // same tone as an unread day inside the window would add
+                  // days the card is not claiming to cover.
+                  backgroundColor: day ? heatTone(heatLevel(day.count, peak)) : 'transparent',
+                }}
+              />
+            ))}
+          </HStack>
+        ))}
+      </View>
+
+      <HStack
+        className="items-center"
+        style={{ columnGap: 4 * k, marginTop: CHART_METRICS.heatLegendTop * k }}
+      >
+        <Text
+          allowFontScaling={false}
+          style={[chartType(CHART_METRICS.heatLegendSize, k), { color: inkColor('muted') }]}
+        >
+          {legendLess}
+        </Text>
+        {([0, 1, 2, 3, 4] as const).map((level) => (
+          <View
+            key={level}
+            style={{
+              width: CHART_METRICS.heatLegendSwatch * k,
+              height: CHART_METRICS.heatLegendSwatch * k,
+              borderRadius: 2 * k,
+              backgroundColor: heatTone(level),
+            }}
+          />
+        ))}
+        <Text
+          allowFontScaling={false}
+          style={[chartType(CHART_METRICS.heatLegendSize, k), { color: inkColor('muted') }]}
+        >
+          {legendMore}
+        </Text>
+      </HStack>
+    </View>
+  );
+};
+
+export default { FlagGrid, ProportionBar, DotArray, RuledScale, HeatGrid };
