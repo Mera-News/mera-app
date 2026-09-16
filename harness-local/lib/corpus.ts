@@ -2,14 +2,22 @@
 // that makes two of them mean anything.
 //
 // WHOSE SEMANTICS THESE ARE. There is NO function in lib/news-harness that
-// takes a saveFact tool call and returns the next persona state. The rails are
-// DETECTORS and PROPOSERS: `detectFactConflicts` returns FactConflict[],
-// `analyzeHygiene` returns HygieneProposal[]. Neither mutates anything. So the
-// application below (append on save, remove on delete, replace on update) is
-// THIS FILE's definition, not the app's, and it is stated here and in the
-// report so nobody reads a cohort result as a claim about production
-// behaviour. What IS the app's is everything the detectors then say about the
-// result, which is recorded per turn.
+// takes a tool call and returns the next persona state. The rails are FILTERS,
+// DETECTORS and PROPOSERS: `filterFactChoiceGroups` returns offerable groups
+// plus rejections, `detectFactConflicts` returns FactConflict[]. Neither
+// mutates anything. So the COMMIT step below is this file's definition and
+// says so. Everything before it is the app's own code.
+//
+// WHAT THE TOOL ACTUALLY DOES. `saveExtractedFacts` does not save: it OFFERS
+// readings for the user to tap, and `filterFactChoiceGroups` decides what is
+// offerable. So the corpus runs the real filter, records what it rejected as
+// the rails' verdict, and then commits the FIRST option of each surviving
+// group, which is the reading the card presents by default. That is why a
+// rater scores the post-filter view: it is what a user would have been shown.
+//
+// TRAP. `deleteUserFacts.fact_ids` are QUESTIONNAIRE ATTRIBUTE STRINGS, not
+// fact ids, per the tool schema in prompts/persona-prompts.ts. Matching them
+// against `id` silently deletes nothing.
 //
 // WHY CROSS-TURN STATE AT ALL. The `confused` cohort restates facts that are
 // already saved and the `heavy` cohort adds facts that conflict with existing
@@ -41,6 +49,11 @@ import {
   type HygieneFactInput,
   type HygieneTopicInput,
 } from '../../lib/news-harness/persona-management/fact-hygiene';
+import {
+  filterFactChoiceGroups,
+  normalizeStatement,
+  type FactEntry,
+} from '../../lib/news-harness/persona-management/fact-rules';
 
 export const COHORTS = ['good', 'confused', 'adversarial', 'heavy'] as const;
 export type CohortName = (typeof COHORTS)[number];
@@ -103,9 +116,20 @@ export function freshState(persona: CorpusPersona): CorpusPersona {
 }
 
 export interface StateDelta {
+  /** Statements COMMITTED to state: the first option of each group that
+   *  survived the filter. */
   added: string[];
+  /** Every reading the model offered, including the alternatives the user
+   *  would have seen beside the committed one. */
+  offered: string[];
   conflicts: string[];
+  /** The app's own verdict, from filterFactChoiceGroups: empty, too-long,
+   *  meta-conversational, or duplicate of a fact already held. A confused
+   *  cohort restating a saved fact should land here. */
   rejectedByRails: string[];
+  /** Hygiene proposals the state would raise, kept separate from the
+   *  per-turn rejections so the two are never confused. */
+  hygieneProposals: string[];
 }
 
 interface ParsedToolCall {
@@ -113,21 +137,26 @@ interface ParsedToolCall {
   parsed: Record<string, unknown> | null;
 }
 
-function statementOf(parsed: Record<string, unknown> | null): string | null {
-  if (!parsed) return null;
-  for (const key of ['statement', 'fact', 'text', 'value']) {
-    const v = parsed[key];
-    if (typeof v === 'string' && v.trim().length > 0) return v.trim();
-  }
-  return null;
+function asFactEntries(parsed: Record<string, unknown> | null): FactEntry[] {
+  const raw = parsed?.extracted_user_information;
+  if (!Array.isArray(raw)) return [];
+  return raw.filter(
+    (e): e is FactEntry =>
+      typeof e === 'string' ||
+      (typeof e === 'object' && e !== null && typeof (e as { statement?: unknown }).statement === 'string'),
+  );
+}
+
+function asStringArray(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
 }
 
 /**
- * Applies one turn's tool calls, then runs the real detectors over the result.
+ * Applies one turn's tool calls through the real filter, then runs the real
+ * detectors over the result.
  *
- * Returns the NEXT state plus what the rails said about it. The conflicts and
- * the hygiene proposals are the app's own verdicts; the mutation is this
- * file's (see the header).
+ * Returns the NEXT state plus what the rails said. Only the commit step is
+ * this file's own (see the header).
  */
 export function applyToolCalls(
   state: CorpusPersona,
@@ -136,59 +165,86 @@ export function applyToolCalls(
 ): { state: CorpusPersona; delta: StateDelta } {
   const next = freshState(state);
   const added: string[] = [];
+  const offered: string[] = [];
+  const rejectedByRails: string[] = [];
 
   for (const call of calls) {
-    const name = call.name.toLowerCase();
-    const statement = statementOf(call.parsed);
-    if (name.includes('savefact') || name.includes('addfact')) {
-      if (!statement) continue;
-      const id = `new-${next.facts.length + 1}`;
-      next.facts.push({
-        id,
-        statement,
-        questionnaireAttribute:
-          typeof call.parsed?.attribute === 'string' ? call.parsed.attribute : 'other',
-        questionnaireLevel: 2,
-        questionnaireLevelCategory: 'Chat',
-        weight: 1,
-        createdAtMs: now,
-        metadata: { topics: [] },
-      });
-      added.push(statement);
-    } else if (name.includes('deletefact') || name.includes('removefact')) {
-      const target = typeof call.parsed?.factId === 'string' ? call.parsed.factId : null;
-      if (target) next.facts = next.facts.filter((f) => f.id !== target);
-    } else if (name.includes('updatefact') || name.includes('editfact')) {
-      const target = typeof call.parsed?.factId === 'string' ? call.parsed.factId : null;
-      const found = target ? next.facts.find((f) => f.id === target) : undefined;
-      if (found && statement) found.statement = statement;
+    const name = call.name;
+    if (name === 'saveExtractedFacts') {
+      const entries = asFactEntries(call.parsed);
+      if (entries.length === 0) continue;
+      // The app's own filter, against the facts already held.
+      // NORMALIZE FIRST. filterNewFacts builds its set from the strings it is
+      // GIVEN and then looks up `normalizeStatement(incoming)`, so a caller
+      // that passes raw statements loses duplicate detection entirely and
+      // silently: every capitalised fact slips through as new. The app's own
+      // caller normalizes (lib/chat-tools/tool-handlers.ts), so production is
+      // fine and this is a precondition of the API rather than a bug in it.
+      // This harness passed raw statements first and the confused cohort's
+      // duplicate case quietly stopped working, which is how it was found.
+      const { groups, rejected } = filterFactChoiceGroups(
+        entries,
+        next.facts.map((f) => normalizeStatement(f.statement)),
+      );
+      rejectedByRails.push(...rejected.map((r) => `${r.reason}: ${r.statement}`));
+      for (const g of groups) {
+        offered.push(...g.options);
+        const chosen = g.options[0];
+        if (!chosen) continue;
+        next.facts.push({
+          id: `new-${next.facts.length + 1}`,
+          statement: chosen,
+          questionnaireAttribute: g.questionnaire?.attribute ?? 'other',
+          questionnaireLevel: 2,
+          questionnaireLevelCategory: 'Chat',
+          weight: 1,
+          createdAtMs: now,
+          metadata: { topics: [] },
+        });
+        added.push(chosen);
+      }
+    } else if (name === 'deleteUserFacts') {
+      // ATTRIBUTE STRINGS, not ids. See the trap note in the header.
+      const attrs = new Set(asStringArray(call.parsed?.fact_ids));
+      if (attrs.size > 0) {
+        next.facts = next.facts.filter((fct) => !attrs.has(fct.questionnaireAttribute));
+      }
     }
   }
 
-  // The app's own detectors, over the result. Both are pure and read-only.
   const newFacts: FactForConflict[] = next.facts
-    .filter((f) => added.includes(f.statement))
-    .map((f) => ({ id: f.id, statement: f.statement, questionnaireAttribute: f.questionnaireAttribute }));
+    .filter((fct) => added.includes(fct.statement))
+    .map((fct) => ({
+      id: fct.id,
+      statement: fct.statement,
+      questionnaireAttribute: fct.questionnaireAttribute,
+    }));
   const existing: FactForConflict[] = next.facts
-    .filter((f) => !added.includes(f.statement))
-    .map((f) => ({ id: f.id, statement: f.statement, questionnaireAttribute: f.questionnaireAttribute }));
-
+    .filter((fct) => !added.includes(fct.statement))
+    .map((fct) => ({
+      id: fct.id,
+      statement: fct.statement,
+      questionnaireAttribute: fct.questionnaireAttribute,
+    }));
   const conflicts = detectFactConflicts(newFacts, existing).map(
     (c) => `${c.kind}: "${c.newStatement}" vs "${c.existingStatement}"`,
   );
 
-  const hygieneFacts: HygieneFactInput[] = next.facts.map((f) => ({
-    id: f.id, statement: f.statement, weight: f.weight, createdAtMs: f.createdAtMs,
+  const hygieneFacts: HygieneFactInput[] = next.facts.map((fct) => ({
+    id: fct.id, statement: fct.statement, weight: fct.weight, createdAtMs: fct.createdAtMs,
   }));
   const hygieneTopics: HygieneTopicInput[] = next.topics.map((t) => ({
     id: t.id, factId: t.factId, text: t.text, normalizedText: t.normalizedText,
     weight: t.weight, status: t.status, lastSignalAtMs: t.lastSignalAtMs,
   }));
-  const rejectedByRails = analyzeHygiene({ facts: hygieneFacts, topics: hygieneTopics, now })
-    .filter((p) => p.kind === 'duplicate_facts' || p.kind === 'too_broad_fact')
-    .map((p) => `${p.kind}: ${p.id}`);
+  const hygieneProposals = analyzeHygiene({ facts: hygieneFacts, topics: hygieneTopics, now })
+    .filter((pr) => pr.kind === 'duplicate_facts' || pr.kind === 'too_broad_fact')
+    .map((pr) => `${pr.kind}: ${pr.id}`);
 
-  return { state: next, delta: { added, conflicts, rejectedByRails } };
+  return {
+    state: next,
+    delta: { added, offered, conflicts, rejectedByRails, hygieneProposals },
+  };
 }
 
 /**

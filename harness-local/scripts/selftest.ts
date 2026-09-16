@@ -30,6 +30,7 @@ import {
 import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
 import { buildChatTurnBody, withContextOnLastUserTurn } from '../lib/chat-turn';
+import { filterNewFacts, normalizeStatement } from '../../lib/news-harness/persona-management/fact-rules';
 import { CHAT_MAX_OUTPUT_TOKENS, CHAT_REASONING_HEADROOM_TOKENS } from '../../lib/llm/constants';
 import {
   COHORTS, applyToolCalls, freshState, loadCohort, measureFactsInPrompt,
@@ -379,35 +380,67 @@ async function main(): Promise<number> {
   ck('turnsInPrompt counts user turns only',
     measureTurnsInPrompt([{ role: 'system' }, { role: 'user' }, { role: 'assistant' }, { role: 'user' }]) === 2);
 
-  // --- 14. cross-turn state, with the detectors as the app wrote them -------
-  // POSITIVE CONTROL: a residence that replaces a known residence must be
-  // flagged. heavy fact 1 is "Lives in Rotterdam, Netherlands", and turn 0
-  // moves to Utrecht, which is the whole point of that cohort.
-  const moved = applyToolCalls(heavy.persona, [
-    { name: 'saveFact', parsed: { statement: 'Lives in Utrecht, Netherlands', attribute: 'location: residence' } },
-  ]);
-  ck('a saved fact lands in state', moved.state.facts.length === 21, String(moved.state.facts.length));
-  ck('a conflicting residence IS detected', moved.delta.conflicts.length > 0,
-    moved.delta.conflicts[0] ?? 'none');
+  // --- 14. cross-turn state, through the REAL tool schema -------------------
+  // The tool is saveExtractedFacts and its payload is
+  // extracted_user_information, not a flat {statement}. An earlier version of
+  // this matched on 'saveFact' and would have produced empty deltas forever
+  // while every assertion about them still passed.
+  const save = (entries: unknown[]) => [
+    { name: 'saveExtractedFacts', parsed: { extracted_user_information: entries } },
+  ];
+
+  // POSITIVE CONTROL: a residence replacing a known residence must be flagged.
+  const moved = applyToolCalls(heavy.persona,
+    save([{ statement: 'Lives in Utrecht, Netherlands', questionnaire_attribute: 'location: residence' }]));
+  ck('an offered fact is committed', moved.state.facts.length === 21, String(moved.state.facts.length));
+  ck('a conflicting residence IS detected', moved.delta.conflicts.length > 0, moved.delta.conflicts[0] ?? 'none');
+
   // NEGATIVE CONTROL: an unrelated fact under a plural subject must NOT be
   // flagged, or the detector is just saying yes to everything.
-  const unrelated = applyToolCalls(heavy.persona, [
-    { name: 'saveFact', parsed: { statement: 'Enjoys sailing at weekends', attribute: 'interest: topic' } },
-  ]);
-  ck('an unrelated fact is NOT flagged', unrelated.delta.conflicts.length === 0,
-    unrelated.delta.conflicts.join('; '));
+  const unrelated = applyToolCalls(heavy.persona,
+    save([{ statement: 'Enjoys sailing at weekends', questionnaire_attribute: 'interest: topic' }]));
+  ck('an unrelated fact is NOT flagged', unrelated.delta.conflicts.length === 0, unrelated.delta.conflicts.join('; '));
   ck('added is recorded', unrelated.delta.added.length === 1, unrelated.delta.added.join(''));
-  // state isolation: a repeat must not inherit the previous repeat's mutations
+
+  // THE CONFUSED COHORT'S WHOLE POINT: restating a fact already held must be
+  // rejected by the app's own filter, as a duplicate.
+  const restated = applyToolCalls(heavy.persona,
+    save([{ statement: heavy.persona.facts[0].statement, questionnaire_attribute: 'location: residence' }]));
+  ck('restating a saved fact is rejected as duplicate',
+    restated.delta.rejectedByRails.some((r) => r.startsWith('duplicate')), restated.delta.rejectedByRails.join('; '));
+  ck('a rejected fact is NOT committed', restated.state.facts.length === 20, String(restated.state.facts.length));
+  // TRIPWIRE for the precondition that made the case above fail once already:
+  // filterNewFacts looks up normalizeStatement(incoming) in a set built from
+  // the strings it was GIVEN, so a caller passing RAW statements loses
+  // duplicate detection silently. If that is ever fixed upstream, this flips
+  // and points straight at the reason corpus.ts normalizes.
+  ck('raw existing statements still defeat dedup upstream',
+    filterNewFacts(['Lives in Rotterdam, Netherlands'], ['Lives in Rotterdam, Netherlands']).rejected.length === 0,
+    'if this fails, fact-rules now normalizes internally and corpus.ts can stop doing it');
+  ck('normalized existing statements are deduped',
+    filterNewFacts(['Lives in Rotterdam, Netherlands'], [normalizeStatement('Lives in Rotterdam, Netherlands')])
+      .rejected[0]?.reason === 'duplicate');
+
+  // alternatives are OFFERED but only the first is committed
+  const alts = applyToolCalls(heavy.persona,
+    save([{ statement: 'Supports Ajax', questionnaire_attribute: 'interest: sport', alternatives: ['Follows Ajax matches'] }]));
+  ck('every reading is recorded as offered', alts.delta.offered.length === 2, alts.delta.offered.join(' | '));
+  ck('only the first reading is committed', alts.delta.added.length === 1, alts.delta.added.join(''));
+
+  // deleteUserFacts takes ATTRIBUTE strings, not ids
+  const del = applyToolCalls(heavy.persona,
+    [{ name: 'deleteUserFacts', parsed: { fact_ids: ['location: residence'] } }]);
+  ck('deleteUserFacts matches on the ATTRIBUTE', del.state.facts.length === 19, String(del.state.facts.length));
+  const delById = applyToolCalls(heavy.persona,
+    [{ name: 'deleteUserFacts', parsed: { fact_ids: ['f01'] } }]);
+  ck('passing an id deletes nothing, as the schema implies',
+    delById.state.facts.length === 20, String(delById.state.facts.length));
+
   ck('the cohort fixture is not mutated', heavy.persona.facts.length === 20, String(heavy.persona.facts.length));
-  const deleted = applyToolCalls(heavy.persona, [{ name: 'deleteFact', parsed: { factId: 'f01' } }]);
-  ck('deleteFact removes exactly one', deleted.state.facts.length === 19, String(deleted.state.facts.length));
-  const updated = applyToolCalls(heavy.persona, [
-    { name: 'updateFact', parsed: { factId: 'f01', statement: 'Lives in Delft, Netherlands' } },
-  ]);
-  ck('updateFact replaces the statement',
-    updated.state.facts.find((x) => x.id === 'f01')?.statement === 'Lives in Delft, Netherlands');
-  ck('a tool call with no statement is ignored',
-    applyToolCalls(heavy.persona, [{ name: 'saveFact', parsed: {} }]).state.facts.length === 20);
+  ck('an empty extraction array is a no-op',
+    applyToolCalls(heavy.persona, save([])).state.facts.length === 20);
+  ck('an unknown tool name is ignored',
+    applyToolCalls(heavy.persona, [{ name: 'runCalibration', parsed: {} }]).state.facts.length === 20);
 
   console.log('\n== chat turn extraction ==');
   // --- 15. the extracted body is BYTE-IDENTICAL to the literal it replaced ---
