@@ -43,6 +43,7 @@
     "scripts/rater-export.ts",
     "scripts/rater-agreement.ts",
     "scripts/rater-decode.ts",
-    "scripts/probe-gateway.ts"
+    "scripts/probe-gateway.ts",
+    "scripts/extraction-metrics.ts"
   ]
 }

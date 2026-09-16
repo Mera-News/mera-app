@@ -56,6 +56,12 @@ import {
   splitCount,
 } from '../../lib/news-harness/persona-management/topic-generation';
 import { buildTopicGenSystemPrompt } from '../../lib/news-harness/prompts/persona-prompts';
+import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
+import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-archive-v1';
+
+// Once per process, before any variant resolves. See the note in
+// run-persona-corpus.ts; the topic-gen arms take no options.
+registerV1ControlArms();
 
 interface Args {
   label: string;
@@ -157,6 +163,23 @@ async function main(): Promise<number> {
   const args = parseArgs(argv);
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
+
+
+  // Resolve EVERY variant up front, before a single call is made. The builders
+  // resolve lazily inside their loops, which means an unknown id in the second
+  // or later position could otherwise throw partway through a PAID run, after
+  // the first variant had already been billed. Resolving here makes an unknown
+  // id a startup error in both dry and live modes.
+  for (const v of args.variants) {
+    try {
+      resolvePromptVariant(v);
+    } catch (err) {
+      throw new Error(
+        `harness-local: --variant '${v}' is not registered. Known: ${promptVariantIds().join(', ')}. ` +
+          `(${err instanceof Error ? err.message : String(err)})`,
+      );
+    }
+  }
 
   const cohort = loadCohort(args.cohort);
   const facts = cohort.persona.facts.slice(0, args.accept);

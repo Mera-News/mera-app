@@ -52,6 +52,19 @@ import {
   buildPersonaUpdateStaticPrompt,
   buildToolDefinitions,
 } from '../../lib/news-harness/prompts/persona-prompts';
+import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
+import { registerV1ControlArms } from '../../lib/news-harness/prompts/prompt-archive-v1';
+
+// ONCE PER PROCESS, before any variant resolves. The v1 control arms live in a
+// module nothing else imports, so without this --variant persona-v1 throws
+// "Unknown prompt variant". registerPromptVariant throws on a second
+// registration, so this must NOT move inside the cohort or variant loop.
+//
+// includeToolFormat MUST match what this runner sends to
+// buildPersonaUpdateStaticPrompt below, because it selects WHICH captured v1
+// text is registered. A mismatch would compare two different prompts and read
+// as a model effect.
+registerV1ControlArms({ includeToolFormat: false });
 
 interface Args {
   label: string;
@@ -144,6 +157,23 @@ async function main(): Promise<number> {
   const args = parseArgs(argv);
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
+
+
+  // Resolve EVERY variant up front, before a single call is made. The builders
+  // resolve lazily inside their loops, which means an unknown id in the second
+  // or later position could otherwise throw partway through a PAID run, after
+  // the first variant had already been billed. Resolving here makes an unknown
+  // id a startup error in both dry and live modes.
+  for (const v of args.variants) {
+    try {
+      resolvePromptVariant(v);
+    } catch (err) {
+      throw new Error(
+        `harness-local: --variant '${v}' is not registered. Known: ${promptVariantIds().join(', ')}. ` +
+          `(${err instanceof Error ? err.message : String(err)})`,
+      );
+    }
+  }
 
   const run = createRunWriter({ label: args.label });
   const rows = createJsonlWriter({ dir: run.dir });
