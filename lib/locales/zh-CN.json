@@ -2557,7 +2557,7 @@
     "emptyTitle": "暂时没有可显示的内容",
     "emptyBody": "读几篇文章，你的卡片就会慢慢填满。Mera 在这台设备上保留 30 天的阅读记录。",
     "nameToggleLabel": "显示我常读的媒体",
-    "nameTogglePrivacy": "默认关闭。媒体名称会透露不少关于你的信息，所以只有你打开时才会出现在卡片上。文章标题永远不会被加入。",
+    "nameTogglePrivacy": "默认包含。媒体名称能透露你很多信息，所以分享前你可以关掉。文章标题从不包含在内。",
     "shareAction": "分享",
     "shareDialogTitle": "我在 Mera 的阅读统计",
     "sharingUnavailable": "此设备不支持分享。",
@@ -2585,7 +2585,15 @@
       "countriesRest": "其余",
       "flagsMore": "还有 {{n}} 个",
       "paceScaleTitle": "从发布到阅读",
-      "hoursShort": "{{n}} 小时"
+      "hoursShort": "{{n}} 小时",
+      "languagesLabel": "你阅读的语言",
+      "topLanguagesTitle": "主要阅读语言",
+      "rhythmTitle": "我阅读的日子",
+      "daysReadLabel": "你读过内容的天数",
+      "heatLegendLess": "少",
+      "heatLegendMore": "多",
+      "heatNote": "颜色深浅表示你那天读了多少篇文章。",
+      "rhythmWeekdays": "一,二,三,四,五,六,日"
     }
   },
   "analytics": {

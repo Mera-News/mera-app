@@ -25,6 +25,7 @@ import {
   CHART_METRICS,
   DotArray,
   FlagGrid,
+  HeatGrid,
   ProportionBar,
   RuledScale,
 } from '@/components/custom/share-stats/card-charts';
@@ -41,8 +42,10 @@ import { HStack } from '@/components/ui/hstack';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { getFlagEmoji } from '@/lib/country-utils';
+import { getLocalizedLanguageName } from '@/lib/language-names';
 import {
   countryBands,
+  peakDayCount,
   roundedAverageHours,
   type ReadingStats,
 } from '@/lib/stats/reading-stats';
@@ -78,6 +81,30 @@ export const KEEP_METRICS = {
   numeralLabelGap: 3,
   blockGap: 22,
   dotsGap: 9,
+  note: 8.5,
+} as const;
+
+export const LANGUAGES_METRICS = {
+  numeral: 44,
+  numeralLabel: 11,
+  numeralLabelGap: 3,
+  blockGap: 22,
+  listTitle: 9.5,
+  listTitleGap: 8,
+  rowText: 11,
+  rowGap: 6,
+  rowPercent: 10,
+} as const;
+
+/** Languages named on the card. Beyond this the bar's remainder band carries
+ *  them, so the list never grows the card in a way the budget cannot model. */
+export const LANGUAGES_TOP_N = 4;
+
+export const RHYTHM_METRICS = {
+  numeral: 44,
+  numeralLabel: 11,
+  numeralLabelGap: 3,
+  blockGap: 18,
   note: 8.5,
 } as const;
 
@@ -343,7 +370,179 @@ export const KeepCard = React.forwardRef<View, StatsCardProps>(function KeepCard
   );
 });
 
-// --- 3. PACE ---------------------------------------------------------------
+// --- 3. LANGUAGES ----------------------------------------------------------
+
+export const LanguagesCard = React.forwardRef<View, StatsCardProps>(function LanguagesCard(
+  { stats, pixelRatio, stampedAtMs, locale },
+  ref,
+) {
+  const { t } = useTranslation();
+  const k = useK(pixelRatio);
+  const m = LANGUAGES_METRICS;
+
+  const total = stats.languages.reduce((sum, l) => sum + l.visitCount, 0);
+  const lead = stats.languages.slice(0, LANGUAGES_TOP_N);
+  const leadTotal = lead.reduce((sum, l) => sum + l.visitCount, 0);
+
+  const segments = total > 0
+    ? [
+        ...lead.map((language, index) => ({
+          id: language.languageCode,
+          share: language.visitCount / total,
+          accent: index === 0,
+          // The BAR's legend is codes, not names: four full language names in
+          // a row overflow in every locale, and the named list directly below
+          // already carries the words.
+          label: language.languageCode.toUpperCase(),
+        })),
+        ...(total - leadTotal > 0
+          ? [{ id: 'rest', share: (total - leadTotal) / total, label: t('shareStats.card.countriesRest') }]
+          : []),
+      ]
+    : [];
+
+  return (
+    <CardShell
+      ref={ref}
+      // The TITLE does this card's labelling work, so the figure below is a
+      // bare numeral. Minting a separate `languagesTitle` would have put
+      // "Languages you read in" on the card twice, two lines apart, and cost a
+      // third splice round for a string the reader would read as a mistake.
+      title={t('shareStats.card.languagesLabel')}
+      windowLine={t('shareStats.screenSubtitle')}
+      privacyLine={t('shareStats.card.privacyLine')}
+      pixelRatio={pixelRatio}
+      stampedAtMs={stampedAtMs}
+      locale={locale}
+      testID="share-stats-card-languages"
+    >
+      <VStack style={{ rowGap: m.blockGap * k }}>
+        <Text
+          allowFontScaling={false}
+          className="font-semibold"
+          testID="share-stats-languages-count"
+          style={[textType(m.numeral, k, SHELL_METRICS.numeralLeading), ink('primary')]}
+        >
+          {String(stats.languageCount)}
+        </Text>
+
+        {segments.length > 0 ? (
+          <VStack>
+            <Text
+              allowFontScaling={false}
+              style={[textType(m.listTitle, k), { marginBottom: m.listTitleGap * k }, ink('muted')]}
+            >
+              {t('shareStats.card.topLanguagesTitle')}
+            </Text>
+            <ProportionBar segments={segments} k={k} testID="share-stats-languages-bar" />
+          </VStack>
+        ) : null}
+
+        {lead.length > 0 ? (
+          <VStack testID="share-stats-languages-list">
+            {lead.map((language) => (
+              <HStack
+                key={language.languageCode}
+                className="items-center justify-between"
+                style={{ columnGap: 8 * k, marginTop: m.rowGap * k }}
+              >
+                {/* The name is resolved by lib/language-names.ts, which is
+                    already localised into all 20 app locales and carries an
+                    override table for the ones the CLDR pack gets wrong. No
+                    new copy, and no per-locale language list to maintain. */}
+                <Text
+                  allowFontScaling={false}
+                  style={[textType(m.rowText, k), { flex: 1 }, ink('primary')]}
+                  numberOfLines={1}
+                >
+                  {/* Resolved against the SHELL's `locale` prop, which the
+                      screen already threads for the date stamp, rather than
+                      reaching back into i18n: one source for "what language is
+                      this card written in" means the names and the date can
+                      never disagree. Falls back to the uppercased code, which
+                      is a real thing a reader can act on, never to a blank. */}
+                  {getLocalizedLanguageName(language.languageCode, locale ?? 'en')
+                    ?? language.languageCode.toUpperCase()}
+                </Text>
+                <Text
+                  allowFontScaling={false}
+                  style={[textType(m.rowPercent, k), { flexShrink: 0 }, ink('secondary')]}
+                >
+                  {`${Math.round((language.visitCount / Math.max(total, 1)) * 100)}%`}
+                </Text>
+              </HStack>
+            ))}
+          </VStack>
+        ) : null}
+      </VStack>
+    </CardShell>
+  );
+});
+
+// --- 4. RHYTHM -------------------------------------------------------------
+
+export const RhythmCard = React.forwardRef<View, StatsCardProps>(function RhythmCard(
+  { stats, pixelRatio, stampedAtMs, locale },
+  ref,
+) {
+  const { t } = useTranslation();
+  const k = useK(pixelRatio);
+  const m = RHYTHM_METRICS;
+
+  // Seven initials, Monday first, from ONE comma-separated key rather than
+  // seven keys. Duplicates within a locale are expected and correct (en T/T
+  // and S/S): position carries the meaning, not the letter.
+  const weekdays = t('shareStats.card.rhythmWeekdays').split(',').map((d) => d.trim());
+
+  return (
+    <CardShell
+      ref={ref}
+      title={t('shareStats.card.rhythmTitle')}
+      windowLine={t('shareStats.screenSubtitle')}
+      privacyLine={t('shareStats.card.privacyLine')}
+      pixelRatio={pixelRatio}
+      stampedAtMs={stampedAtMs}
+      locale={locale}
+      testID="share-stats-card-rhythm"
+    >
+      <VStack style={{ rowGap: m.blockGap * k }}>
+        <Figure
+          value={String(stats.daysReadCount)}
+          // "Days you READ something", never "days you opened Mera News".
+          // There is no app-open record, no session row and no launch counter
+          // anywhere in the schema, so "opened" would be a false claim AND
+          // would invite someone to add session tracking to make it true.
+          label={t('shareStats.card.daysReadLabel')}
+          k={k}
+          size={m.numeral}
+          labelSize={m.numeralLabel}
+          labelGap={m.numeralLabelGap}
+          testID="share-stats-rhythm-days"
+        />
+
+        <HeatGrid
+          days={stats.days}
+          peak={peakDayCount(stats.days)}
+          k={k}
+          weekdayInitials={weekdays}
+          legendLess={t('shareStats.card.heatLegendLess')}
+          legendMore={t('shareStats.card.heatLegendMore')}
+          testID="share-stats-rhythm-grid"
+        />
+
+        <Text
+          allowFontScaling={false}
+          testID="share-stats-rhythm-note"
+          style={[textType(m.note, k), ink('muted')]}
+        >
+          {t('shareStats.card.heatNote')}
+        </Text>
+      </VStack>
+    </CardShell>
+  );
+});
+
+// --- 5. PACE ---------------------------------------------------------------
 
 export const PaceCard = React.forwardRef<View, StatsCardProps>(function PaceCard(
   { stats, pixelRatio, stampedAtMs, locale },

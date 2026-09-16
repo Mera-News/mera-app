@@ -551,10 +551,32 @@ describe('cardHasData', () => {
     const stats = withStats({
       countries: [{ countryCode: 'IN', visitCount: 2 }],
       publicationCount: 1,
+      languages: [{ languageCode: 'en', visitCount: 2 }],
       articlesOpened: 5,
       keptNow: { savedArticles: 1, followedStories: 1 },
+      days: [{ dateKey: '2026-09-15', count: 2, weekday: 1 }],
+      daysReadCount: 1,
     });
-    expect(availableCards(stats)).toEqual(['reach', 'keep', 'pace']);
+    expect(availableCards(stats)).toEqual(['reach', 'languages', 'keep', 'pace', 'rhythm']);
+  });
+
+  it('offers rhythm only when a day was actually READ', () => {
+    // The calendar is always 30 cells long for any device with a clock, so
+    // keying on days.length would offer a card of empty squares to everyone.
+    const calendarButNoReading = withStats({
+      days: Array.from({ length: 30 }, (_, i) => ({
+        dateKey: `2026-09-${String(i + 1).padStart(2, '0')}`,
+        count: 0,
+        weekday: i % 7,
+      })),
+      daysReadCount: 0,
+    });
+    expect(availableCards(calendarButNoReading)).toEqual([]);
+  });
+
+  it('offers languages independently of countries', () => {
+    expect(availableCards(withStats({ languages: [{ languageCode: 'ta', visitCount: 1 }] })))
+      .toEqual(['languages']);
   });
 
   it('covers every id in the union, so a new card cannot be forgotten here', () => {
@@ -563,7 +585,7 @@ describe('cardHasData', () => {
     for (const id of STATS_CARD_IDS) {
       expect(typeof cardHasData(emptyReadingStats(), id)).toBe('boolean');
     }
-    expect(STATS_CARD_IDS).toHaveLength(3);
+    expect(STATS_CARD_IDS).toHaveLength(5);
     expect(STATS_CARD_IDS).toContain(DEFAULT_STATS_CARD);
   });
 });

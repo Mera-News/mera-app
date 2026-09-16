@@ -2556,7 +2556,7 @@
     "emptyTitle": "Nog niets te tonen",
     "emptyBody": "Lees een paar artikelen en je kaart vult zich vanzelf. Mera bewaart 30 dagen leesgeschiedenis op dit apparaat.",
     "nameToggleLabel": "Mijn meestgelezen bronnen tonen",
-    "nameTogglePrivacy": "Staat standaard uit. Namen van bronnen zeggen veel over je, dus ze komen alleen op de kaart als je dit aanzet. Artikeltitels staan er nooit op.",
+    "nameTogglePrivacy": "Standaard inbegrepen. Namen van publicaties zeggen veel over je, dus je kunt ze uitzetten voor je deelt. Artikeltitels zitten er nooit bij.",
     "shareAction": "Delen",
     "shareDialogTitle": "Mijn Mera-leesstatistieken",
     "sharingUnavailable": "Delen is niet beschikbaar op dit apparaat.",
@@ -2585,7 +2585,15 @@
       "countriesRest": "rest",
       "flagsMore": "+{{n}} meer",
       "paceScaleTitle": "Van publicatie tot lezen",
-      "hoursShort": "{{n}} u"
+      "hoursShort": "{{n}} u",
+      "languagesLabel": "Talen waarin je las",
+      "topLanguagesTitle": "Meest gelezen in",
+      "rhythmTitle": "De dagen dat ik las",
+      "daysReadLabel": "Dagen dat je iets las",
+      "heatLegendLess": "minder",
+      "heatLegendMore": "meer",
+      "heatNote": "De kleur laat zien hoeveel artikelen je die dag las.",
+      "rhythmWeekdays": "M,D,W,D,V,Z,Z"
     }
   },
   "analytics": {

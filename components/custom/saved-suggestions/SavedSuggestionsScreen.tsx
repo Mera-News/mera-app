@@ -23,7 +23,6 @@ import {
     type SavedItem,
 } from '@/lib/database/services/saved-article-suggestion-service';
 import logger from '@/lib/logger';
-import { EDGE_SWIPE_SAFE_RIGHT_INSET } from '@/lib/navigation/edge-swipe';
 import { TAB_BAR_HEIGHT } from '@/lib/navigation/tab-bar';
 import { MaterialIcons } from '@expo/vector-icons';
 import { router, useFocusEffect } from 'expo-router';
@@ -70,8 +69,20 @@ const itemId = (item: SavedItem): string =>
 // applies it only when it has no hero image.
 const DELETE_BUTTON_SIZE = 36; // p-2 (8px) × 2 + a 20px icon
 const DELETE_BUTTON_GAP = 8; // breathing room between the flag and the button
+/** Where the delete button sits, from the right edge.
+ *
+ *  It used to be pushed inward by EDGE_SWIPE_SAFE_RIGHT_INSET to clear the
+ *  Dashboard's right-edge swipe strip, which was drawn OVER this row and ate
+ *  every tap inside its band — at the old `right: 5%` the button's 34px
+ *  footprint spanned x 348..382 on a 402pt screen and was unpressable by
+ *  coordinate AND by accessibility ref. That strip is gone, so the clearance is
+ *  gone with it rather than surviving as a magic inset nobody can explain: an
+ *  inset that once meant "keep away from here" is worse than none once the
+ *  hazard is removed, because the next person preserves it for a reason that no
+ *  longer exists. */
+const DELETE_BUTTON_EDGE = 8;
 const DELETE_BUTTON_RESERVE =
-    EDGE_SWIPE_SAFE_RIGHT_INSET + DELETE_BUTTON_SIZE + DELETE_BUTTON_GAP;
+    DELETE_BUTTON_EDGE + DELETE_BUTTON_SIZE + DELETE_BUTTON_GAP;
 
 const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
     onBack,
@@ -183,11 +194,9 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                         flat
                     />
                 )}
-                {/* Delete affordance. Kept clear of the Dashboard's right-edge
-                    swipe strip (EDGE_SWIPE_SAFE_RIGHT_INSET): when this screen is
-                    embedded as the Saved sub-tab, that strip is drawn OVER this
-                    row and silently eats every tap inside its band — at the old
-                    `right: 5%` the button's centre sat inside it, which is why
+                {/* Delete affordance, at the right edge. It used to be inset to
+                    clear the Dashboard's right-edge swipe strip, which was drawn
+                    OVER this row and ate every tap inside its band — that is why
                     the control appeared completely dead. `right` is a fixed
                     inset, not a percentage, so the clearance can't drift with the
                     card's width; `hitSlop` grows the target everywhere EXCEPT
@@ -202,7 +211,7 @@ const SavedSuggestionsScreen: React.FC<SavedSuggestionsScreenProps> = ({
                     style={{
                         position: 'absolute',
                         top: 8,
-                        right: EDGE_SWIPE_SAFE_RIGHT_INSET,
+                        right: DELETE_BUTTON_EDGE,
                         zIndex: 10,
                     }}
                 >

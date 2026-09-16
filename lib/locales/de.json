@@ -2556,7 +2556,7 @@
     "emptyTitle": "Noch nichts zu zeigen",
     "emptyBody": "Lies ein paar Artikel, dann füllt sich deine Karte. Mera behält 30 Tage Leseverlauf auf diesem Gerät.",
     "nameToggleLabel": "Meine meistgelesenen Quellen zeigen",
-    "nameTogglePrivacy": "Standardmäßig aus. Quellennamen verraten viel über dich, deshalb landen sie nur auf der Karte, wenn du das einschaltest. Artikeltitel sind nie dabei.",
+    "nameTogglePrivacy": "Standardmäßig enthalten. Publikationsnamen sagen viel über dich aus, also kannst du sie vor dem Teilen ausschalten. Artikeltitel sind nie enthalten.",
     "shareAction": "Teilen",
     "shareDialogTitle": "Meine Mera-Lesestatistik",
     "sharingUnavailable": "Teilen ist auf diesem Gerät nicht verfügbar.",
@@ -2585,7 +2585,15 @@
       "countriesRest": "Rest",
       "flagsMore": "+{{n}} weitere",
       "paceScaleTitle": "Von der Veröffentlichung bis zum Lesen",
-      "hoursShort": "{{n}} Std."
+      "hoursShort": "{{n}} Std.",
+      "languagesLabel": "Sprachen, in denen du liest",
+      "topLanguagesTitle": "Meistens gelesen auf",
+      "rhythmTitle": "Die Tage, an denen ich gelesen habe",
+      "daysReadLabel": "Tage, an denen du etwas gelesen hast",
+      "heatLegendLess": "weniger",
+      "heatLegendMore": "mehr",
+      "heatNote": "Die Färbung zeigt, wie viele Artikel du an dem Tag gelesen hast.",
+      "rhythmWeekdays": "M,D,M,D,F,S,S"
     }
   },
   "analytics": {

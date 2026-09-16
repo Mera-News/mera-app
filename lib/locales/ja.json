@@ -2556,7 +2556,7 @@
     "emptyTitle": "まだ表示できるものがありません",
     "emptyBody": "記事をいくつか読むとカードが埋まります。Mera はこの端末に 30 日分の閲覧履歴を保存します。",
     "nameToggleLabel": "よく読む媒体を表示",
-    "nameTogglePrivacy": "初期設定ではオフです。媒体名はあなたについて多くを語るため、オンにしたときだけカードに載ります。記事の見出しが含まれることはありません。",
+    "nameTogglePrivacy": "既定で含まれます。発行元の名前はあなたのことを多く物語るので、共有する前にオフにできます。記事の見出しは含まれません。",
     "shareAction": "共有",
     "shareDialogTitle": "Mera の読書記録",
     "sharingUnavailable": "この端末では共有を利用できません。",
@@ -2584,7 +2584,15 @@
       "countriesRest": "その他",
       "flagsMore": "他 {{n}} 件",
       "paceScaleTitle": "公開から読むまで",
-      "hoursShort": "{{n}} 時間"
+      "hoursShort": "{{n}} 時間",
+      "languagesLabel": "読んだ言語",
+      "topLanguagesTitle": "よく読んだ言語",
+      "rhythmTitle": "読んだ日",
+      "daysReadLabel": "何かを読んだ日数",
+      "heatLegendLess": "少ない",
+      "heatLegendMore": "多い",
+      "heatNote": "濃さはその日に読んだ記事の数です。",
+      "rhythmWeekdays": "月,火,水,木,金,土,日"
     }
   },
   "analytics": {

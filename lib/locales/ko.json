@@ -2556,7 +2556,7 @@
     "emptyTitle": "아직 보여줄 것이 없어요",
     "emptyBody": "기사를 몇 개 읽으면 카드가 채워집니다. Mera는 이 기기에 30일간의 읽기 기록을 보관합니다.",
     "nameToggleLabel": "자주 읽는 매체 표시",
-    "nameTogglePrivacy": "기본값은 꺼짐입니다. 매체 이름은 당신에 대해 많은 것을 말해주므로, 켤 때만 카드에 표시됩니다. 기사 제목은 절대 포함되지 않습니다.",
+    "nameTogglePrivacy": "기본으로 포함됩니다. 매체 이름은 당신에 대해 많은 것을 말해 주니, 공유하기 전에 끌 수 있어요. 기사 제목은 절대 포함되지 않습니다.",
     "shareAction": "공유",
     "shareDialogTitle": "내 Mera 읽기 통계",
     "sharingUnavailable": "이 기기에서는 공유를 사용할 수 없습니다.",
@@ -2584,7 +2584,15 @@
       "countriesRest": "나머지",
       "flagsMore": "+{{n}}개 더",
       "paceScaleTitle": "발행부터 읽기까지",
-      "hoursShort": "{{n}}시간"
+      "hoursShort": "{{n}}시간",
+      "languagesLabel": "읽은 언어",
+      "topLanguagesTitle": "주로 읽은 언어",
+      "rhythmTitle": "내가 읽은 날",
+      "daysReadLabel": "무언가를 읽은 날",
+      "heatLegendLess": "적음",
+      "heatLegendMore": "많음",
+      "heatNote": "색의 진하기는 그날 읽은 기사 수예요.",
+      "rhythmWeekdays": "월,화,수,목,금,토,일"
     }
   },
   "analytics": {

@@ -2556,7 +2556,7 @@
     "emptyTitle": "Nothing to show yet",
     "emptyBody": "Read a few articles and your card will fill up. Mera keeps 30 days of reading history on this device.",
     "nameToggleLabel": "Show my top publications",
-    "nameTogglePrivacy": "Off by default. Publication names say a lot about you, so they only go on the card if you turn this on. Article titles are never included.",
+    "nameTogglePrivacy": "Included by default. Publication names say a lot about you, so you can turn them off before you share. Article titles are never included.",
     "shareAction": "Share",
     "shareDialogTitle": "My Mera reading stats",
     "sharingUnavailable": "Sharing isn't available on this device.",
@@ -2585,7 +2585,15 @@
       "countriesRest": "rest",
       "flagsMore": "+{{n}} more",
       "paceScaleTitle": "From published to read",
-      "hoursShort": "{{n}}h"
+      "hoursShort": "{{n}}h",
+      "languagesLabel": "Languages you read in",
+      "topLanguagesTitle": "Mostly read in",
+      "rhythmTitle": "The days I read",
+      "daysReadLabel": "Days you read something",
+      "heatLegendLess": "less",
+      "heatLegendMore": "more",
+      "heatNote": "Shading is how many articles you read that day.",
+      "rhythmWeekdays": "M,T,W,T,F,S,S"
     }
   },
   "analytics": {

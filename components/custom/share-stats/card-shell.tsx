@@ -66,15 +66,31 @@ export const DESIGN_HEIGHT = 640;
 export const SAFE_RESERVE_PX = 250;
 
 /**
- * Where the FIRST row of ink may start, in export pixels.
+ * The content box, DERIVED. 1080 x 1420 at 250 clear top and bottom.
  *
- * Measured on a real 1080x1920 capture the first ink row landed at 13.07% while
- * the reserve ends at 13.02%, grazing it by about 1.4px. The reserve is a
- * boundary, not a target: an SVG glyph fills its box, so the logo's ink starts
- * exactly at the padding edge with none of the leading that keeps a text run
- * clear. 280px is 14.58%.
+ * One constant for the export size, one for the reserve, and the box computed
+ * from them, so a change to either cannot leave the other stale.
  */
-export const TOP_INK_FLOOR_PX = 280;
+export const INK_BOX_HEIGHT_PX = EXPORT_HEIGHT - 2 * SAFE_RESERVE_PX;
+
+/**
+ * The logo's own top margin, INSIDE the ink box. Not a boundary.
+ *
+ * This number used to be folded into the top reserve as a 280px "ink floor",
+ * and that conflated two different things. The RESERVE is where the social
+ * chrome sits and nothing may cross it. This 30px is the leading an SVG
+ * wordmark does not have: a glyph fills its box, so the logo's ink starts
+ * exactly at the padding edge, and a first measured capture put the first ink
+ * row at 13.07% against a 13.02% reserve, grazing it by about 1.4px.
+ *
+ * Separating them is what makes the budget honest. With the two folded
+ * together the box measured 1390px while the stated reserve implied 1420, so
+ * the budget was 10pt stricter than the rule it claimed to enforce and the
+ * difference looked like free space. It was never free: it is this margin. The
+ * card renders identically either way; only the arithmetic now says what it
+ * means.
+ */
+export const LOGO_TOP_MARGIN_PX = 30;
 
 /** Sizes shared by all three cards. Per-card sizes live with their card. */
 export const SHELL_METRICS = {
@@ -167,8 +183,8 @@ const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
 ) {
   const host = hostSizeForScale(pixelRatio);
   const k = host.width / DESIGN_WIDTH;
-  const bottomReserve = (SAFE_RESERVE_PX / EXPORT_HEIGHT) * host.height;
-  const topInset = (TOP_INK_FLOOR_PX / EXPORT_HEIGHT) * host.height;
+  const reserve = (SAFE_RESERVE_PX / EXPORT_HEIGHT) * host.height;
+  const logoMargin = (LOGO_TOP_MARGIN_PX / EXPORT_HEIGHT) * host.height;
   const m = SHELL_METRICS;
 
   return (
@@ -196,8 +212,8 @@ const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
       <Box
         className="flex-1"
         style={{
-          paddingTop: topInset,
-          paddingBottom: bottomReserve,
+          paddingTop: reserve,
+          paddingBottom: reserve,
           paddingLeft: m.outerPadding * k,
           paddingRight: m.outerPadding * k,
         }}
@@ -209,7 +225,7 @@ const CardShell = React.forwardRef<View, CardShellProps>(function CardShell(
                 rather than pushing the date off the card. `alignItems` is
                 flex-start so the date sits on the wordmark's line whatever the
                 title does below it. */}
-            <HStack style={{ alignItems: 'flex-start', columnGap: 10 * k }}>
+            <HStack style={{ alignItems: 'flex-start', columnGap: 10 * k, marginTop: logoMargin }}>
               <VStack style={{ flex: 1 }}>
                 <HStack className="items-center" style={{ columnGap: 8 * k }}>
                   <MeraLogo size={m.logoSize * k} />

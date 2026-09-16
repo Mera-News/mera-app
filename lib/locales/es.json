@@ -2556,7 +2556,7 @@
     "emptyTitle": "Todavía no hay nada que mostrar",
     "emptyBody": "Lee algunos artículos y tu tarjeta se irá llenando. Mera guarda 30 días de historial de lectura en este dispositivo.",
     "nameToggleLabel": "Mostrar mis publicaciones principales",
-    "nameTogglePrivacy": "Desactivado por defecto. Los nombres de las publicaciones dicen mucho de ti, así que solo aparecen en la tarjeta si activas esto. Los títulos de los artículos nunca se incluyen.",
+    "nameTogglePrivacy": "Incluidos de forma predeterminada. Los nombres de las publicaciones dicen mucho de ti, así que puedes desactivarlos antes de compartir. Los títulos de los artículos nunca se incluyen.",
     "shareAction": "Compartir",
     "shareDialogTitle": "Mis estadísticas de lectura en Mera",
     "sharingUnavailable": "Compartir no está disponible en este dispositivo.",
@@ -2585,7 +2585,15 @@
       "countriesRest": "resto",
       "flagsMore": "+{{n}} más",
       "paceScaleTitle": "De la publicación a la lectura",
-      "hoursShort": "{{n}} h"
+      "hoursShort": "{{n}} h",
+      "languagesLabel": "Idiomas en los que leíste",
+      "topLanguagesTitle": "Sobre todo leíste en",
+      "rhythmTitle": "Los días que leí",
+      "daysReadLabel": "Días que leíste algo",
+      "heatLegendLess": "menos",
+      "heatLegendMore": "más",
+      "heatNote": "El sombreado indica cuántos artículos leíste ese día.",
+      "rhythmWeekdays": "L,M,X,J,V,S,D"
     }
   },
   "analytics": {

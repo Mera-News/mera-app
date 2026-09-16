@@ -2558,7 +2558,7 @@
     "emptyTitle": "Henüz gösterilecek bir şey yok",
     "emptyBody": "Birkaç haber oku, kartın dolmaya başlasın. Mera bu cihazda 30 günlük okuma geçmişi tutar.",
     "nameToggleLabel": "En çok okuduğum yayınları göster",
-    "nameTogglePrivacy": "Varsayılan olarak kapalı. Yayın adları senin hakkında çok şey söyler, bu yüzden yalnızca sen açarsan karta eklenir. Haber başlıkları hiçbir zaman yer almaz.",
+    "nameTogglePrivacy": "Varsayılan olarak dahil. Yayın adları senin hakkında çok şey söyler, bu yüzden paylaşmadan önce kapatabilirsin. Haber başlıkları hiçbir zaman dahil edilmez.",
     "shareAction": "Paylaş",
     "shareDialogTitle": "Mera okuma istatistiklerim",
     "sharingUnavailable": "Bu cihazda paylaşım kullanılamıyor.",
@@ -2587,7 +2587,15 @@
       "countriesRest": "geri kalan",
       "flagsMore": "+{{n}} daha",
       "paceScaleTitle": "Yayından okumaya",
-      "hoursShort": "{{n}} sa."
+      "hoursShort": "{{n}} sa.",
+      "languagesLabel": "Okuduğun diller",
+      "topLanguagesTitle": "En çok okuduğun dil",
+      "rhythmTitle": "Okuduğum günler",
+      "daysReadLabel": "Bir şeyler okuduğun günler",
+      "heatLegendLess": "az",
+      "heatLegendMore": "çok",
+      "heatNote": "Koyuluk o gün kaç haber okuduğunu gösterir.",
+      "rhythmWeekdays": "P,S,Ç,P,C,C,P"
     }
   },
   "analytics": {

@@ -36,11 +36,19 @@ jest.mock('@/components/custom/MeraLogo', () => ({ __esModule: true, default: ()
 import {
   EXPORT_HEIGHT,
   EXPORT_WIDTH,
+  INK_BOX_HEIGHT_PX,
+  LOGO_TOP_MARGIN_PX,
   SAFE_RESERVE_PX,
   SHELL_METRICS,
-  TOP_INK_FLOOR_PX,
 } from '../ShareStatsCard';
-import { KEEP_METRICS, PACE_METRICS, REACH_METRICS } from '../stats-cards';
+import {
+  KEEP_METRICS,
+  LANGUAGES_METRICS,
+  LANGUAGES_TOP_N,
+  PACE_METRICS,
+  REACH_METRICS,
+  RHYTHM_METRICS,
+} from '../stats-cards';
 import { CHART_METRICS } from '../card-charts';
 
 // Shell sizes under their old name, so the string-width half of this file reads
@@ -64,6 +72,12 @@ const CHART_DOT_MAX = CHART_METRICS.dotMax;
 const CHART_SCALE_MARKER = CHART_METRICS.scaleMarker;
 const CHART_SCALE_LABEL_TOP = CHART_METRICS.scaleLabelTop;
 const CHART_SCALE_LABEL_SIZE = CHART_METRICS.scaleLabelSize;
+const CHART_HEAT_CELL = CHART_METRICS.heatCell;
+const CHART_HEAT_GAP = CHART_METRICS.heatGap;
+const CHART_HEAT_LABEL_SIZE = CHART_METRICS.heatLabelSize;
+const CHART_HEAT_LABEL_GAP = CHART_METRICS.heatLabelGap;
+const CHART_HEAT_LEGEND_TOP = CHART_METRICS.heatLegendTop;
+const CHART_HEAT_LEGEND_SIZE = CHART_METRICS.heatLegendSize;
 
 const LOCALES = [
   'ar', 'de', 'en', 'es', 'fr', 'hi', 'id', 'it', 'ja', 'ko',
@@ -196,16 +210,6 @@ function interpolate(template: string, vars?: Record<string, string | number>): 
 }
 
 describe('share card copy fits the fixed 9:16 card in all 20 locales', () => {
-  it('has the band height the budgets were sized against', () => {
-    // If this moves, the maxLines above want revisiting rather than bumping.
-    const topInset = (TOP_INK_FLOOR_PX / EXPORT_HEIGHT) * DESIGN_HEIGHT;
-    const bottomReserve = (SAFE_RESERVE_PX / EXPORT_HEIGHT) * DESIGN_HEIGHT;
-    const band = DESIGN_HEIGHT - topInset - bottomReserve;
-
-    expect(EXPORT_WIDTH / EXPORT_HEIGHT).toBeCloseTo(DESIGN_WIDTH / DESIGN_HEIGHT, 6);
-    expect(Math.round(band)).toBe(463);
-  });
-
   for (const locale of LOCALES) {
     describe(locale, () => {
       // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -288,7 +292,12 @@ function shellHeight(dict: CardCopy, title: string, windowLine: string): number 
     textHeight(c.privacyLine, m.qualifier, CARD_INNER)
     + m.footerGap
     + Math.ceil(m.footerDomain * m.textLeading);
-  return header + footer;
+  // The logo's top margin is INSIDE the box and therefore inside the budget.
+  // It used to be folded into the reserve, which made the box read as 1390px
+  // while the stated rule said 1420 — the budget was stricter than the rule it
+  // claimed to enforce, and the 10pt difference looked like free space.
+  const logoMargin = (LOGO_TOP_MARGIN_PX / EXPORT_HEIGHT) * DESIGN_HEIGHT;
+  return logoMargin + header + footer;
 }
 
 /** One figure block: numeral line box plus its label. */
@@ -390,19 +399,71 @@ function paceHeight(dict: CardCopy): number {
   return shellHeight(dict, c.paceTitle, dict.card.__windowLast30 ?? '') + opened + scale + m.blockGap;
 }
 
-const BAND =
-  DESIGN_HEIGHT
-  - (TOP_INK_FLOOR_PX / EXPORT_HEIGHT) * DESIGN_HEIGHT
-  - (SAFE_RESERVE_PX / EXPORT_HEIGHT) * DESIGN_HEIGHT;
+/** The content box in design points, derived from the export constants rather
+ *  than restated. 1420px at 1920px tall on a 640pt grid is 473.33pt. */
+function languagesHeight(dict: CardCopy): number {
+  const m = LANGUAGES_METRICS;
+  const c = dict.card;
+  // The title does this card's labelling, so the figure is a bare numeral.
+  const figure = Math.ceil(m.numeral * CARD_METRICS.numeralLeading);
+  const bar =
+    textHeight(c.topLanguagesTitle, m.listTitle, CARD_INNER)
+    + m.listTitleGap
+    + CHART_BAR_HEIGHT
+    + CHART_BAR_LEGEND_TOP
+    + Math.ceil(CHART_BAR_LEGEND_SIZE * CARD_METRICS.textLeading);
+  // The named list at its CAP, which is why the cap exists: beyond it the bar's
+  // remainder band carries the rest and the card cannot grow past this.
+  const list = LANGUAGES_TOP_N * (m.rowGap + Math.ceil(m.rowText * CARD_METRICS.textLeading));
+  return (
+    shellHeight(dict, c.languagesLabel, dict.card.__windowLast30 ?? '')
+    + figure + bar + list + 2 * m.blockGap
+  );
+}
+
+/** SIX rows, not five. A 30-day window padded to weekday columns needs six
+ *  whenever it starts on a Sunday — about four days a month. Five is what you
+ *  see almost every day, which is exactly why the budget must not use it. */
+const HEAT_WORST_ROWS = 6;
+
+function rhythmHeight(dict: CardCopy): number {
+  const m = RHYTHM_METRICS;
+  const c = dict.card;
+  const figure =
+    figureHeight(c.daysReadLabel, m.numeral, m.numeralLabel, m.numeralLabelGap, CARD_INNER);
+  const grid =
+    Math.ceil(CHART_HEAT_LABEL_SIZE * CARD_METRICS.textLeading)
+    + CHART_HEAT_LABEL_GAP
+    + HEAT_WORST_ROWS * CHART_HEAT_CELL
+    + (HEAT_WORST_ROWS - 1) * CHART_HEAT_GAP
+    + CHART_HEAT_LEGEND_TOP
+    + Math.ceil(CHART_HEAT_LEGEND_SIZE * CARD_METRICS.textLeading);
+  return (
+    shellHeight(dict, c.rhythmTitle, dict.card.__windowLast30 ?? '')
+    + figure + grid
+    + textHeight(c.heatNote, m.note, CARD_INNER)
+    + 2 * m.blockGap
+  );
+}
+
+const BAND = (INK_BOX_HEIGHT_PX / EXPORT_HEIGHT) * DESIGN_HEIGHT;
 
 /** 8pt of margin rather than grazing the boundary. The reserve is a boundary,
  *  not a target: the last card to sit exactly on one grazed it by 1.4px. */
 const MARGIN = 8;
 
 describe('every card fits between the two Instagram reserves, in every locale', () => {
-  it('has the band height the budgets were sized against', () => {
+  it('has the content box the product owner stated, by arithmetic AND by number', () => {
+    // Derived from the export constants so a change to either cannot leave the
+    // other stale, and CHECKED against the stated 1080x1420 so the derivation
+    // cannot quietly drift into half a buffer. One without the other is how a
+    // correct formula ends up computing the wrong thing.
+    expect(INK_BOX_HEIGHT_PX).toBe(1420);
+    expect(EXPORT_HEIGHT - 2 * SAFE_RESERVE_PX).toBe(INK_BOX_HEIGHT_PX);
+    expect(EXPORT_WIDTH).toBe(1080);
     expect(EXPORT_WIDTH / EXPORT_HEIGHT).toBeCloseTo(DESIGN_WIDTH / DESIGN_HEIGHT, 6);
-    expect(Math.round(BAND)).toBe(463);
+    // 1420px of a 1920px export, on a 640pt grid.
+    expect(BAND).toBeCloseTo(473.333, 2);
   });
 
   for (const locale of LOCALES) {
@@ -426,6 +487,30 @@ describe('every card fits between the two Instagram reserves, in every locale', 
             + `band (budget ${Math.round(BAND - MARGIN)}pt with margin). Names ON, 3 rows, full `
             + `flag grid. Shorten a string or lower a size in REACH_METRICS; do NOT add `
             + `numberOfLines to a qualifier, they are the truth-bearing half of each figure.`,
+          );
+        }
+        expect(height).toBeLessThanOrEqual(BAND - MARGIN);
+      });
+
+      it('languages fits with the named list at its cap', () => {
+        const height = languagesHeight(copy);
+        if (height > BAND - MARGIN) {
+          throw new Error(
+            `${locale} languages card stacks to ${Math.round(height)}pt in a ${Math.round(BAND)}pt `
+            + `band (budget ${Math.round(BAND - MARGIN)}pt). ${LANGUAGES_TOP_N} named rows.`,
+          );
+        }
+        expect(height).toBeLessThanOrEqual(BAND - MARGIN);
+      });
+
+      it('rhythm fits with a SIX-row grid, not the five you usually see', () => {
+        const height = rhythmHeight(copy);
+        if (height > BAND - MARGIN) {
+          throw new Error(
+            `${locale} rhythm card stacks to ${Math.round(height)}pt in a ${Math.round(BAND)}pt `
+            + `band (budget ${Math.round(BAND - MARGIN)}pt) with ${HEAT_WORST_ROWS} heat rows at `
+            + `${CHART_HEAT_CELL}pt. Six rows happen whenever the window starts on a Sunday, about `
+            + `four days a month, so do NOT reclaim the row: shrink the cell or split the card.`,
           );
         }
         expect(height).toBeLessThanOrEqual(BAND - MARGIN);
@@ -465,5 +550,9 @@ describe('every card fits between the two Instagram reserves, in every locale', 
     };
     expect(reachHeight(copy, 3)).toBeGreaterThan(reachHeight(copy, 0));
     expect(reachHeight(copy, 3)).toBeGreaterThan(200);
+    // And the rhythm model must actually be using six rows: at five it would
+    // be a whole cell shorter, which is the difference the budget exists for.
+    expect(HEAT_WORST_ROWS).toBe(6);
+    expect(rhythmHeight(copy)).toBeGreaterThan(200);
   });
 });

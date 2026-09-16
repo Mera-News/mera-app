@@ -2557,7 +2557,7 @@
     "emptyTitle": "Chưa có gì để hiển thị",
     "emptyBody": "Đọc vài bài viết và thẻ của bạn sẽ đầy dần. Mera lưu 30 ngày lịch sử đọc trên thiết bị này.",
     "nameToggleLabel": "Hiển thị các báo tôi đọc nhiều nhất",
-    "nameTogglePrivacy": "Mặc định tắt. Tên báo nói lên nhiều điều về bạn, nên chúng chỉ xuất hiện trên thẻ nếu bạn bật lên. Tiêu đề bài viết không bao giờ được đưa vào.",
+    "nameTogglePrivacy": "Được đưa vào theo mặc định. Tên tòa soạn nói lên nhiều điều về bạn, nên bạn có thể tắt trước khi chia sẻ. Tiêu đề bài viết không bao giờ được đưa vào.",
     "shareAction": "Chia sẻ",
     "shareDialogTitle": "Thống kê đọc của tôi trên Mera",
     "sharingUnavailable": "Thiết bị này không hỗ trợ chia sẻ.",
@@ -2585,7 +2585,15 @@
       "countriesRest": "còn lại",
       "flagsMore": "+{{n}} nữa",
       "paceScaleTitle": "Từ lúc đăng đến lúc đọc",
-      "hoursShort": "{{n}} giờ"
+      "hoursShort": "{{n}} giờ",
+      "languagesLabel": "Ngôn ngữ bạn đã đọc",
+      "topLanguagesTitle": "Chủ yếu đọc bằng",
+      "rhythmTitle": "Những ngày tôi đọc",
+      "daysReadLabel": "Số ngày bạn đã đọc gì đó",
+      "heatLegendLess": "ít",
+      "heatLegendMore": "nhiều",
+      "heatNote": "Độ đậm cho biết bạn đã đọc bao nhiêu bài hôm đó.",
+      "rhythmWeekdays": "H,B,T,N,S,B,C"
     }
   },
   "analytics": {

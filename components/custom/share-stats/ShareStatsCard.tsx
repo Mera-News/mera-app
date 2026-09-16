@@ -16,8 +16,10 @@
 
 import {
   KeepCard,
+  LanguagesCard,
   PaceCard,
   ReachCard,
+  RhythmCard,
   type StatsCardProps,
 } from '@/components/custom/share-stats/stats-cards';
 import { DEFAULT_STATS_CARD, type StatsCardId } from '@/lib/stats/reading-stats';
@@ -29,9 +31,10 @@ export {
   DESIGN_WIDTH,
   EXPORT_HEIGHT,
   EXPORT_WIDTH,
+  INK_BOX_HEIGHT_PX,
+  LOGO_TOP_MARGIN_PX,
   SAFE_RESERVE_PX,
   SHELL_METRICS,
-  TOP_INK_FLOOR_PX,
   hostSizeForScale,
 } from '@/components/custom/share-stats/card-shell';
 
@@ -43,8 +46,10 @@ export interface ShareStatsCardProps extends StatsCardProps {
 
 const BY_ID = {
   reach: ReachCard,
+  languages: LanguagesCard,
   keep: KeepCard,
   pace: PaceCard,
+  rhythm: RhythmCard,
 } as const satisfies Record<StatsCardId, React.ComponentType<StatsCardProps & { ref?: React.Ref<View> }>>;
 
 const ShareStatsCard = React.forwardRef<View, ShareStatsCardProps>(function ShareStatsCard(

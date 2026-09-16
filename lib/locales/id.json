@@ -2556,7 +2556,7 @@
     "emptyTitle": "Belum ada yang bisa ditampilkan",
     "emptyBody": "Baca beberapa artikel dan kartu Anda akan terisi. Mera menyimpan riwayat bacaan 30 hari di perangkat ini.",
     "nameToggleLabel": "Tampilkan penerbit teratas saya",
-    "nameTogglePrivacy": "Nonaktif secara bawaan. Nama penerbit mengungkap banyak hal tentang Anda, jadi nama itu hanya muncul di kartu kalau Anda mengaktifkannya. Judul artikel tidak pernah disertakan.",
+    "nameTogglePrivacy": "Disertakan secara bawaan. Nama publikasi mengungkapkan banyak hal tentang Anda, jadi Anda bisa mematikannya sebelum berbagi. Judul artikel tidak pernah disertakan.",
     "shareAction": "Bagikan",
     "shareDialogTitle": "Statistik bacaan saya di Mera",
     "sharingUnavailable": "Berbagi tidak tersedia di perangkat ini.",
@@ -2584,7 +2584,15 @@
       "countriesRest": "sisanya",
       "flagsMore": "+{{n}} lagi",
       "paceScaleTitle": "Dari terbit sampai dibaca",
-      "hoursShort": "{{n}} jam"
+      "hoursShort": "{{n}} jam",
+      "languagesLabel": "Bahasa yang Anda baca",
+      "topLanguagesTitle": "Paling banyak dibaca dalam",
+      "rhythmTitle": "Hari-hari saya membaca",
+      "daysReadLabel": "Hari Anda membaca sesuatu",
+      "heatLegendLess": "sedikit",
+      "heatLegendMore": "banyak",
+      "heatNote": "Warna menunjukkan berapa artikel yang Anda baca hari itu.",
+      "rhythmWeekdays": "S,S,R,K,J,S,M"
     }
   },
   "analytics": {

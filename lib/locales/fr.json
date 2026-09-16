@@ -2563,7 +2563,7 @@
     "emptyTitle": "Rien à afficher pour l'instant",
     "emptyBody": "Lisez quelques articles et votre carte se remplira. Mera conserve 30 jours d'historique de lecture sur cet appareil.",
     "nameToggleLabel": "Afficher mes principales sources",
-    "nameTogglePrivacy": "Désactivé par défaut. Les noms des sources en disent long sur vous, ils n'apparaissent donc sur la carte que si vous activez cette option. Les titres d'articles ne sont jamais inclus.",
+    "nameTogglePrivacy": "Inclus par défaut. Les noms des publications en disent long sur vous, vous pouvez donc les désactiver avant de partager. Les titres d'articles ne sont jamais inclus.",
     "shareAction": "Partager",
     "shareDialogTitle": "Mes statistiques de lecture Mera",
     "sharingUnavailable": "Le partage n'est pas disponible sur cet appareil.",
@@ -2592,7 +2592,15 @@
       "countriesRest": "reste",
       "flagsMore": "+{{n}} autres",
       "paceScaleTitle": "De la publication à la lecture",
-      "hoursShort": "{{n}} h"
+      "hoursShort": "{{n}} h",
+      "languagesLabel": "Langues que vous avez lues",
+      "topLanguagesTitle": "Surtout lu en",
+      "rhythmTitle": "Les jours où j'ai lu",
+      "daysReadLabel": "Jours où vous avez lu quelque chose",
+      "heatLegendLess": "moins",
+      "heatLegendMore": "plus",
+      "heatNote": "La teinte indique combien d'articles vous avez lus ce jour-là.",
+      "rhythmWeekdays": "L,M,M,J,V,S,D"
     }
   },
   "analytics": {

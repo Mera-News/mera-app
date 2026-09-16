@@ -431,7 +431,7 @@ export function roundedAverageHours(stats: PublishToReadStats): number | null {
  * The ids are stable and reach the deep link as a param, so renaming one is a
  * URL change, not a refactor.
  */
-export const STATS_CARD_IDS = ['reach', 'keep', 'pace'] as const;
+export const STATS_CARD_IDS = ['reach', 'languages', 'keep', 'pace', 'rhythm'] as const;
 export type StatsCardId = (typeof STATS_CARD_IDS)[number];
 
 /** The card the share route falls back to when it is opened with no param, as
@@ -453,6 +453,13 @@ export function cardHasData(stats: ReadingStats, card: StatsCardId): boolean {
   switch (card) {
     case 'reach':
       return stats.countries.length > 0 || stats.publicationCount > 0;
+    case 'languages':
+      return stats.languages.length > 0;
+    case 'rhythm':
+      // Keyed on a day actually READ, not on the calendar existing: the grid is
+      // always 30 cells long, so `days.length` is never zero for a device with
+      // a clock and would offer a card of empty squares to everyone.
+      return stats.daysReadCount > 0;
     case 'keep':
       return stats.keptNow.savedArticles > 0 || stats.keptNow.followedStories > 0;
     case 'pace':

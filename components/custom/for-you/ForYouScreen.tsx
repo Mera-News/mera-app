@@ -58,7 +58,6 @@ import {
     useForYouDailyLimitResetAt,
     useForYouUnscoredCount,
 } from '@/lib/stores/selectors';
-import { EDGE_SWIPE_HITBOX_WIDTH } from '@/lib/navigation/edge-swipe';
 import {
     DASHBOARD_RESORT_INTERVAL_MS,
     msUntilResortDue,
@@ -76,17 +75,18 @@ import { useSectionVisitsStore } from '@/lib/stores/section-visits-store';
 import { useIsConnected } from '@/lib/stores/network-store';
 import { Icon, AlertCircleIcon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { router, useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useIsFocused } from '@react-navigation/native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, { runOnJS } from 'react-native-reanimated';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Profile is now a bottom tab — the right-edge swipe still opens it directly.
-const openConfigPanel = () => router.push('/logged-in/app_container/profile');
+// Profile is a bottom tab and is reached by tapping it. The right-edge swipe
+// that also opened it is GONE, and with it the 20pt hitbox strip that used to
+// be drawn over the top of every sub-tab's content. `openConfigPanel` went with
+// the gesture: the strip was its only caller.
 
 
 const MeraNewsScreen: React.FC = () => {
@@ -182,16 +182,6 @@ const MeraNewsScreen: React.FC = () => {
         const timer = setTimeout(() => applyResort('elapsed'), delay || DASHBOARD_RESORT_INTERVAL_MS);
         return () => clearTimeout(timer);
     }, [isFocused, sortSnapshot, applyResort]);
-
-    const edgeSwipeGesture = useMemo(() => Gesture.Pan()
-        .activeOffsetX(-20)
-        .failOffsetX(20)
-        .failOffsetY([-20, 20])
-        .onEnd((event) => {
-            if (event.translationX < -50) {
-                runOnJS(openConfigPanel)();
-            }
-        }), []);
 
     // Sub-tab state — Feed / Stories / Saved / History. All four are kept
     // mounted after their first visit (display-toggled) so scroll state
@@ -779,9 +769,6 @@ const MeraNewsScreen: React.FC = () => {
             </Animated.View>
 
             {/* Right edge swipe hitbox */}
-            <GestureDetector gesture={edgeSwipeGesture}>
-                <View style={styles.edgeSwipeHitbox} testID="dashboard-edge-swipe-hitbox" />
-            </GestureDetector>
 
             {/* Feed-status detail sheet. */}
             <FeedStatusSheet
@@ -796,20 +783,5 @@ const MeraNewsScreen: React.FC = () => {
     );
 };
 
-const styles = StyleSheet.create({
-    edgeSwipeHitbox: {
-        position: 'absolute',
-        right: 0,
-        top: 0,
-        bottom: 0,
-        // Rendered ON TOP of the sub-tab content, so every tap inside this band
-        // is swallowed (the pan never activates and RN's responder system does
-        // not fall through to the covered sibling). Width is shared via
-        // lib/navigation/edge-swipe.ts so controls pinned near the right edge —
-        // e.g. the Saved sub-tab's delete button, which this strip used to
-        // render completely unpressable — can derive their clearance from it.
-        width: EDGE_SWIPE_HITBOX_WIDTH,
-    },
-});
 
 export default MeraNewsScreen;

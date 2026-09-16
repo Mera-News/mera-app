@@ -399,3 +399,81 @@ describe('the made-on date', () => {
     expect(stamp.props.numberOfLines).toBe(1);
   });
 });
+
+describe('LanguagesCard', () => {
+  const withLanguages = stats({
+    languages: [
+      { languageCode: 'en', visitCount: 46 },
+      { languageCode: 'hi', visitCount: 21 },
+      { languageCode: 'fr', visitCount: 12 },
+      { languageCode: 'de', visitCount: 9 },
+      { languageCode: 'ta', visitCount: 12 },
+    ],
+    languageCount: 5,
+  });
+
+  it('renders the count and the proportion bar', () => {
+    const { getByTestId } = render(
+      <ShareStatsCard card="languages" stats={withLanguages} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+    );
+    expect(getByTestId('share-stats-languages-count').props.children).toBe('5');
+    expect(getByTestId('share-stats-languages-bar')).toBeTruthy();
+  });
+
+  it('caps the named list and lets the bar carry the remainder', () => {
+    const { getByTestId } = render(
+      <ShareStatsCard card="languages" stats={withLanguages} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+    );
+    // Four named rows, so the card cannot grow past what the budget models.
+    expect(getByTestId('share-stats-languages-list').children).toHaveLength(4);
+    expect(getByTestId('share-stats-languages-bar-segment-rest')).toBeTruthy();
+  });
+
+  it('draws no bar and no list when nothing has a language', () => {
+    const { queryByTestId } = render(
+      <ShareStatsCard card="languages" stats={emptyReadingStats()} pixelRatio={3} stampedAtMs={STAMP} locale="en-GB" />,
+    );
+    expect(queryByTestId('share-stats-languages-bar')).toBeNull();
+    expect(queryByTestId('share-stats-languages-list')).toBeNull();
+  });
+});
+
+describe('RhythmCard', () => {
+  const days = Array.from({ length: 30 }, (_, i) => ({
+    dateKey: `2026-09-${String(i + 1).padStart(2, '0')}`,
+    count: i % 5,
+    weekday: i % 7,
+  }));
+
+  it('renders the days-read figure and a cell per day', () => {
+    const { getByTestId } = render(
+      <ShareStatsCard
+        card="rhythm"
+        stats={stats({ days, daysReadCount: 24 })}
+        pixelRatio={3}
+        stampedAtMs={STAMP}
+        locale="en-GB"
+      />,
+    );
+    expect(getByTestId('share-stats-rhythm-days')).toBeTruthy();
+    expect(getByTestId('share-stats-rhythm-grid-day-2026-09-01')).toBeTruthy();
+    expect(getByTestId('share-stats-rhythm-grid-day-2026-09-30')).toBeTruthy();
+  });
+
+  it('says READ, never "opened the app"', () => {
+    // There is no app-open record, no session row and no launch counter in the
+    // schema. "Opened" would be a false claim AND would invite someone to add
+    // session tracking to make it true.
+    const { getByTestId } = render(
+      <ShareStatsCard
+        card="rhythm"
+        stats={stats({ days, daysReadCount: 24 })}
+        pixelRatio={3}
+        stampedAtMs={STAMP}
+        locale="en-GB"
+      />,
+    );
+    expect(getByTestId('share-stats-rhythm-days')).toBeTruthy();
+    expect(getByTestId('share-stats-rhythm-note')).toBeTruthy();
+  });
+});
