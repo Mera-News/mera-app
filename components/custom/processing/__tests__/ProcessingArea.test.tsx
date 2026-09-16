@@ -193,26 +193,25 @@ describe('ProcessingArea — the six-stage bar', () => {
   });
 });
 
-describe('ProcessingArea — chunk state', () => {
-  it('draws no strip at all before the first batch exists', () => {
-    render(<ProcessingArea snapshot={snap()} />);
+describe('ProcessingArea — the strip is NOT here', () => {
+  // Two progress bars on one card read as one control drawn twice. The
+  // six-stage bar stayed because it is the only element that says how far
+  // through the run you are; the strip's counts are already on the progress
+  // line in words. The strip itself still ships and is covered by
+  // ChunkStrip.test.tsx, where FeedStatusPanel still renders it.
+  it('draws no chunk strip, even with chunks in the snapshot', () => {
+    const chunks: ChunkState[] = ['ready', 'failed', 'in-flight', 'queued'];
+    render(<ProcessingArea snapshot={snap({ chunks, chunksReady: 1, chunksTotal: 4 })} />);
     expect(screen.queryByTestId('processing-chunk-strip')).toBeNull();
   });
 
-  it('draws one segment per chunk, in run order', () => {
-    const chunks: ChunkState[] = ['ready', 'failed', 'in-flight', 'queued'];
-    render(<ProcessingArea snapshot={snap({ chunks, chunksReady: 1, chunksTotal: 4 })} />);
-    expect(screen.getByTestId('processing-chunk-strip')).toBeTruthy();
-    expect(screen.getAllByTestId('processing-chunk-ready')).toHaveLength(1);
-    expect(screen.getAllByTestId('processing-chunk-failed')).toHaveLength(1);
-    expect(screen.getAllByTestId('processing-chunk-in-flight')).toHaveLength(1);
-    expect(screen.getAllByTestId('processing-chunk-queued')).toHaveLength(1);
-  });
-
-  it('draws every chunk ready', () => {
-    const chunks: ChunkState[] = ['ready', 'ready', 'ready'];
-    render(<ProcessingArea snapshot={snap({ chunks, chunksReady: 3, chunksTotal: 3 })} />);
-    expect(screen.getAllByTestId('processing-chunk-ready')).toHaveLength(3);
+  it('draws the six-stage bar and nothing else bar-shaped', () => {
+    const chunks: ChunkState[] = ['ready', 'in-flight'];
+    render(<ProcessingArea snapshot={snap({ chunks, chunksReady: 1, chunksTotal: 2 })} />);
+    // The bar that survived.
+    expect(screen.getAllByTestId('processing-stage-bar')).toHaveLength(1);
+    // And no second run of segments beneath it.
+    expect(screen.queryByTestId('processing-chunk-strip')).toBeNull();
   });
 });
 
@@ -237,10 +236,10 @@ describe('bucketChunks', () => {
 
 describe('ProcessingArea — the static configuration', () => {
   // Reduce Motion, or the app's "Static background", which already defaults ON
-  // below 6 GB of RAM. The scene freezes; the bar and the strip still update,
+  // below 6 GB of RAM. The scene freezes; the bar still updates,
   // because those are state changes rather than loops and progress is
   // information the reader needs whatever their motion preference is.
-  it('still draws the stage, the strip and the progress line when static', () => {
+  it('still draws the stage and the progress line when static', () => {
     render(
       <ProcessingArea
         snapshot={snap({
@@ -252,7 +251,6 @@ describe('ProcessingArea — the static configuration', () => {
       />,
     );
     expect(screen.getByTestId('processing-stage-label')).toBeTruthy();
-    expect(screen.getByTestId('processing-chunk-strip')).toBeTruthy();
     expect(screen.getByTestId('processing-fallback-analysing')).toBeTruthy();
   });
 

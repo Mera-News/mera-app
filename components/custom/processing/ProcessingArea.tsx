@@ -6,7 +6,6 @@ import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-na
 import MultiStepProgressBar from '@/components/custom/MultiStepProgressBar';
 import { Text } from '@/components/ui/text';
 
-import ChunkStrip from './ChunkStrip';
 import ProcessingStageAnimation from './ProcessingStageAnimation';
 import { FETCHING_SUBLINE_KEY, ON_DEVICE_HEADLINES_KEY, stageDef } from './processing-stages';
 import {
@@ -28,7 +27,8 @@ interface ProcessingAreaProps {
 
 /**
  * The processing area: scene, stage label, rotating headline, six-stage bar,
- * chunk strip, progress line.
+ * progress line. ONE bar, never two: see the note where the chunk strip used
+ * to sit.
  *
  * Presentational. Every value arrives in `snapshot`, produced by
  * `use-processing-snapshot.ts` and by nothing else, so this component holds no
@@ -186,18 +186,17 @@ const ProcessingArea: React.FC<ProcessingAreaProps> = ({ snapshot, onDevice = fa
                 />
             </View>
 
-            {/* Reserved whether or not a run exists yet, so the first batch
-                appearing cannot change the card's height. */}
-            <View style={{ width: '100%', height: M.stripHeight }}>
-                {snapshot.chunksTotal > 0 ? (
-                    <ChunkStrip
-                        chunks={snapshot.chunks}
-                        ready={snapshot.chunksReady}
-                        total={snapshot.chunksTotal}
-                        active={playing}
-                    />
-                ) : null}
-            </View>
+            {/* The chunk strip used to sit here, under the six-stage bar. Two
+                progress bars stacked on one card is not something a reader
+                parses as two different things; it reads as one control drawn
+                twice. The strip lost the argument rather than the bar because
+                the bar is the only element that says how far through the whole
+                run you are, while the strip's counts are already stated in
+                words on the progress line directly below it ("Analysing 8 of 51
+                articles"). The strip still exists and still renders in
+                FeedStatusPanel, where it is the only progress element and where
+                its one unique signal, a failed batch sitting behind ready ones,
+                has room to be read. */}
 
             <Text
                 testID="processing-progress-line"

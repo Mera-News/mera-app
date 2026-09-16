@@ -3,7 +3,6 @@ import React from 'react';
 import { View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
-import { CARDS_USE_GLASS, CardGlassPlate } from '@/components/custom/cards/CardGlassPlate';
 import { Box } from '@/components/ui/box';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -27,16 +26,17 @@ import { useProcessingSnapshot } from './use-processing-snapshot';
  * `numberOfLines` clamp on every string inside so the longest locale cannot
  * push it.
  *
- * ## What it inherits from the card it replaces
+ * ## It has no card chrome, deliberately
  *
- * The two nested Boxes, and the nesting is load-bearing: React Native drops a
- * view's shadow the moment that same view also sets `overflow: hidden`, so the
- * shadow lives on the outer, non-clipping Box and the rounded, clipped surface
- * is the inner one. The glass plate has to hang off an unpadded box and the
- * opaque background has to GO rather than sit under it, since a solid fill
- * painted over glass cancels the effect.
+ * No border, no radius, no shadow, no glass plate. It used to carry all four,
+ * inherited from the card it replaced, which meant an outlined plate floating
+ * alone on an otherwise empty page: that reads as a card that failed to load
+ * rather than as the page working. The two nested Boxes went with them, since
+ * their only job was that RN drops a view's shadow when the same view clips.
  *
- * It also keeps the `feed-preparing-card` and `feed-preparing-explore-cta`
+ * ## What it keeps
+ *
+ * It keeps the `feed-preparing-card` and `feed-preparing-explore-cta`
  * testIDs. Those are not legacy debt: the simulator harness and
  * `components/custom/__tests__/status-cards.test.tsx` both address this surface
  * by them, and renaming them would break a harness runbook for no gain.
@@ -84,18 +84,20 @@ const FeedProcessingCard: React.FC = () => {
         </Box>
     );
 
+    // No card chrome. This surface is not one item among many, it is the ONLY
+    // thing on the screen while a run is in flight, and an outlined plate
+    // floating on an empty page reads as a card that failed to fill rather than
+    // as the page itself working. So: no border, no radius, no shadow, and no
+    // glass plate, which exists to separate a card from the cards around it and
+    // has nothing to separate this from. The backdrop shows through directly.
+    //
+    // The height stays fixed and the `mb-4` stays with it. Both are about the
+    // list, not about the look: this renders inside a list under
+    // `maintainVisibleContentPosition`, where an item whose height moves as it
+    // loads re-opens a recorded pull-to-refresh bug.
     return (
-        <Box testID="feed-preparing-card" className="mb-4 rounded-2xl shadow-hard-2">
-            <Box
-                className={
-                    CARDS_USE_GLASS
-                        ? 'rounded-2xl overflow-hidden border border-white/10'
-                        : 'rounded-2xl overflow-hidden bg-background-0 border border-white/10'
-                }
-            >
-                <CardGlassPlate />
-                {inner}
-            </Box>
+        <Box testID="feed-preparing-card" className="mb-4">
+            {inner}
         </Box>
     );
 };

@@ -31,7 +31,7 @@ const PROCESSING_STAGE_COUNT = STAGE_IDS.length;
  * headline sits in a fixed two-line box: the longest locale must not be able to
  * grow it and the shortest must not be able to shrink it.
  */
-export const PROCESSING_CARD_HEIGHT = 300;
+export const PROCESSING_CARD_HEIGHT = 272;
 
 /**
  * Six, and every surface draws its bar from this rather than from a literal.
@@ -98,7 +98,6 @@ export const PROCESSING_CONTENT_HEIGHT =
   PROCESSING_METRICS.headlineLineHeight * PROCESSING_METRICS.headlineLines +
   PROCESSING_METRICS.barGap +
   PROCESSING_METRICS.barHeight +
-  PROCESSING_METRICS.stripHeight +
   PROCESSING_METRICS.progressLineHeight +
   PROCESSING_METRICS.ctaGap +
   PROCESSING_METRICS.ctaHeight;

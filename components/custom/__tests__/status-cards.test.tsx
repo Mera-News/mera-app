@@ -98,9 +98,10 @@ import FeedProcessingCard from '../processing/FeedProcessingCard';
 import NoGeneratedInterestsCard from '../NoGeneratedInterestsCard';
 import OnboardingWaitingCard from '../for-you/OnboardingWaitingCard';
 
+// FeedProcessingCard is deliberately NOT in this table any more. It no longer
+// carries card chrome at all: see its own describe at the bottom of this file.
 const CARDS: [string, React.FC, string][] = [
   ['NoGeneratedInterestsCard', NoGeneratedInterestsCard, 'no-interests-card'],
-  ['FeedProcessingCard', FeedProcessingCard, 'feed-preparing-card'],
   ['OnboardingWaitingCard', OnboardingWaitingCard, 'onboarding-waiting-card'],
 ];
 
@@ -156,5 +157,37 @@ describe.each(CARDS)('%s surface', (_name, Component, testID) => {
   it('keeps the glass plate hanging off the unpadded clipping box', () => {
     render(<Component />);
     expect(screen.getByTestId('glass-plate')).toBeTruthy();
+  });
+});
+
+describe('FeedProcessingCard is flush with the page, not a card on it', () => {
+  // It is the ONLY thing on screen while a run is in flight. An outlined plate
+  // floating alone on an empty page reads as a card that failed to fill rather
+  // than as the page working, so the border, radius, shadow and glass plate all
+  // went. The other two cards in this file keep theirs: they sit in a list.
+  const rootClass = () =>
+    screen.getByTestId('feed-preparing-card').props.className as string;
+
+  it('draws no border, no radius and no shadow', () => {
+    render(<FeedProcessingCard />);
+    expect(rootClass()).not.toContain('rounded-2xl');
+    expect(rootClass()).not.toContain('shadow-hard-2');
+    expect(rootClass()).not.toContain('border');
+  });
+
+  it('draws no glass plate, which exists to separate a card from its neighbours', () => {
+    render(<FeedProcessingCard />);
+    expect(screen.queryByTestId('glass-plate')).toBeNull();
+  });
+
+  it('keeps the row spacing, which is about the list rather than the look', () => {
+    render(<FeedProcessingCard />);
+    expect(rootClass()).toContain('mb-4');
+  });
+
+  it('keeps the testIDs the harness and the feed screens address it by', () => {
+    render(<FeedProcessingCard />);
+    expect(screen.getByTestId('feed-preparing-card')).toBeTruthy();
+    expect(screen.getByTestId('feed-preparing-explore-cta')).toBeTruthy();
   });
 });
