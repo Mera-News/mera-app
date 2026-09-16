@@ -82,8 +82,41 @@ const BASELINE: PromptVariantSpec = {
   description: 'The shipped prompts, unmodified. The control arm.',
 };
 
+/**
+ * TRUNCATION ARMS (U7).
+ *
+ * `asUntrusted`'s default cap is 500 characters and it applies to the RAW input
+ * before escaping. Measured on the tracked 348-article goldset, 63 descriptions
+ * (18.1%) exceed it and the longest is 26,067 characters, so on nearly one
+ * article in five the model is scoring a sentence that stops mid-thought.
+ * Titles never truncate (longest 170).
+ *
+ * These live in this file rather than being registered from a runner because
+ * their numbers are going into the wave report, and an arm whose result is
+ * quoted has to be reproducible from the repo alone.
+ *
+ * TWO THINGS TO HOLD WHEN READING THEIR RESULT.
+ *
+ * Cost is not neutral. At `articlesPerScorePrompt: 5` the scoring call's input
+ * grows by roughly 5 x (cap - 500) / 4 tokens, about +375 at 800 and +875 at
+ * 1200 against a 4,454-token system prompt. Under a selection rule that ranks on
+ * cost, an arm that ties on quality LOSES, and that is the correct outcome.
+ *
+ * They widen the injection surface. `inj-past-truncation` in the adversarial
+ * corpus places its payload deliberately between characters 500 and 1200, so
+ * these arms are exactly the ones that feed it to the model. U4 has to be re-run
+ * on each arm before it ships; a clean U4 at the 500 default says nothing about
+ * them.
+ */
+const TRUNCATION_ARMS: PromptVariantSpec[] = [800, 1200].map((cap) => ({
+  id: `trunc-${cap}`,
+  description: `Publisher title/description capped at ${cap} chars instead of the 500 default.`,
+  articleTextMaxLength: cap,
+}));
+
 const REGISTRY = new Map<PromptVariantId, PromptVariantSpec>([
   [BASELINE_VARIANT_ID, BASELINE],
+  ...TRUNCATION_ARMS.map((a) => [a.id, a] as const),
 ]);
 
 /** Every registered arm's id, baseline first. */
@@ -127,11 +160,20 @@ export function registerPromptVariant(spec: PromptVariantSpec): void {
   REGISTRY.set(spec.id, spec);
 }
 
-/** Test-only: drop every arm except the baseline. */
+/**
+ * Test-only: drop arms registered at RUNTIME, restoring the shipped set.
+ *
+ * Not "delete everything except baseline". The shipped arms are permanent
+ * registry members, so a reset that removed them would silently unregister
+ * `trunc-800` and `trunc-1200` for every test that ran after the first
+ * `afterEach` in a file — and the assertion that the registry starts clean
+ * would then pass for the wrong reason, which is exactly what it did when the
+ * truncation arms first landed.
+ */
 export function resetPromptVariantsForTest(): void {
-  for (const id of REGISTRY.keys()) {
-    if (id !== BASELINE_VARIANT_ID) REGISTRY.delete(id);
-  }
+  REGISTRY.clear();
+  REGISTRY.set(BASELINE_VARIANT_ID, BASELINE);
+  for (const arm of TRUNCATION_ARMS) REGISTRY.set(arm.id, arm);
 }
 
 /**

@@ -147,8 +147,24 @@ describe("'baseline' is a perfect no-op", () => {
 });
 
 describe('resolving an arm', () => {
-  it('starts with only the baseline registered', () => {
-    expect(promptVariantIds()).toEqual([BASELINE_VARIANT_ID]);
+  it('ships the baseline plus the committed truncation arms, and nothing else', () => {
+    // NOT "only the baseline": the truncation arms are permanent registry
+    // members. This assertion read `[BASELINE_VARIANT_ID]` when it was written
+    // and kept passing after they landed, because `afterEach` had already run
+    // a reset that deleted them — a green test measuring post-reset state
+    // instead of the shipped registry. The reset restores them now.
+    expect(promptVariantIds().sort()).toEqual(
+      [BASELINE_VARIANT_ID, 'trunc-1200', 'trunc-800'].sort(),
+    );
+  });
+
+  it('the truncation arms carry the caps their ids claim', () => {
+    expect(resolvePromptVariant('trunc-800').articleTextMaxLength).toBe(800);
+    expect(resolvePromptVariant('trunc-1200').articleTextMaxLength).toBe(1200);
+    // And they change nothing else, so a truncation result stays attributable
+    // to the cap rather than to a prompt edit riding along with it.
+    expect(resolvePromptVariant('trunc-800').systemPrompts).toBeUndefined();
+    expect(resolvePromptVariant('trunc-1200').systemPrompts).toBeUndefined();
   });
 
   it('undefined resolves to the baseline', () => {
