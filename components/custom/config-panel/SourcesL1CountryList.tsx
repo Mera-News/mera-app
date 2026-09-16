@@ -523,6 +523,7 @@ const SourcesL1CountryList: React.FC = () => {
                 publisherName={subscribeFlow.confirming?.publisherName ?? null}
                 onYes={subscribeFlow.onYes}
                 onNo={subscribeFlow.onNo}
+                onDismiss={subscribeFlow.onDismiss}
             />
         </Box>
     );

@@ -417,6 +417,7 @@ const SourcesL2PublisherList: React.FC<SourcesL2PublisherListProps> = ({ country
                 publisherName={subscribeFlow.confirming?.publisherName ?? null}
                 onYes={subscribeFlow.onYes}
                 onNo={subscribeFlow.onNo}
+                onDismiss={subscribeFlow.onDismiss}
             />
         </Box>
     );

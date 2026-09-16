@@ -114,6 +114,21 @@ export function useSubscribeFlow() {
   }, [confirming, declineSubscription]);
 
   /**
+   * A swipe-down or a hardware back. Closes and writes NOTHING.
+   *
+   * Deliberately not `onNo`. Declining is durable and permanent: it silences
+   * the prompt for that publisher for good. Dismissing a dialog is not an
+   * answer to the question it asked, and inferring one from it means a reader
+   * who swiped a sheet away can never be asked again. The re-prompt this is
+   * often feared to cause does not happen either: the prompt is only ever
+   * raised on a return from a subscribe page, behind a
+   * `hasAnsweredForPublisher` check.
+   */
+  const onDismiss = useCallback(() => {
+    setConfirming(null);
+  }, []);
+
+  /**
    * Whether an ACTIVE subscription row already exists for this publisher.
    *
    * Drives hiding the affordance entirely rather than greying it: a reader
@@ -125,5 +140,14 @@ export function useSubscribeFlow() {
     [subscriptions.items],
   );
 
-  return { subscriptions, begin, confirmDirectly, confirming, onYes, onNo, isSubscribed };
+  return {
+    subscriptions,
+    begin,
+    confirmDirectly,
+    confirming,
+    onYes,
+    onNo,
+    onDismiss,
+    isSubscribed,
+  };
 }

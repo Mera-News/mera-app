@@ -29,18 +29,45 @@ jest.mock('react-native', () => {
                 return ({ children, ...rest }: any) => ReactLib.createElement(actual.View, rest, children);
             }
             if (prop === 'FlatList') {
-                return ({ data, renderItem, keyExtractor }: any) =>
-                    ReactLib.createElement(
+                // Renders the header, footer AND empty slots, not just rows.
+                // A mock that destructures only {data, renderItem} silently
+                // drops every other prop, and an assertion over what one of
+                // them WOULD have rendered then passes because the mock never
+                // drew it - not because the component did not. That is not
+                // hypothetical: it hid three gating assertions on the
+                // publication-history subscribe card, and THIS file's mock was
+                // already dropping the load-more footer the component passes.
+                return ({
+                    data,
+                    renderItem,
+                    keyExtractor,
+                    ListHeaderComponent,
+                    ListFooterComponent,
+                    ListEmptyComponent,
+                }: any) => {
+                    const slot = (c: any) =>
+                        ReactLib.isValidElement(c)
+                            ? c
+                            : typeof c === 'function'
+                              ? ReactLib.createElement(c)
+                              : null;
+                    const rows = data ?? [];
+                    return ReactLib.createElement(
                         actual.View,
                         null,
-                        (data ?? []).map((item: any, index: number) =>
-                            ReactLib.createElement(
-                                ReactLib.Fragment,
-                                { key: keyExtractor ? keyExtractor(item) : index },
-                                renderItem({ item, index }),
-                            ),
-                        ),
+                        slot(ListHeaderComponent),
+                        rows.length === 0
+                            ? slot(ListEmptyComponent)
+                            : rows.map((item: any, index: number) =>
+                                  ReactLib.createElement(
+                                      ReactLib.Fragment,
+                                      { key: keyExtractor ? keyExtractor(item, index) : index },
+                                      renderItem({ item, index }),
+                                  ),
+                              ),
+                        slot(ListFooterComponent),
                     );
+                };
             }
             return (target as any)[prop];
         },

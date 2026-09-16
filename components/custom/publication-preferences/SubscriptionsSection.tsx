@@ -32,7 +32,7 @@ const SubscriptionsSection: React.FC = () => {
    * both Sources publisher lists. It owns the `useSubscriptions()`
    * observation too, so this screen must not open a second one.
    */
-  const { subscriptions, begin, confirming, onYes, onNo } = useSubscribeFlow();
+  const { subscriptions, begin, confirming, onYes, onNo, onDismiss } = useSubscribeFlow();
   const { items, isLoading, busyId, removeSubscription } = subscriptions;
 
   const [picking, setPicking] = useState(false);
@@ -120,6 +120,7 @@ const SubscriptionsSection: React.FC = () => {
         publisherName={confirming?.publisherName ?? null}
         onYes={onYes}
         onNo={onNo}
+        onDismiss={onDismiss}
       />
     </VStack>
   );

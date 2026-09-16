@@ -15,7 +15,10 @@ import { useTranslation } from 'react-i18next';
 interface Props {
   readonly publisherName: string | null;
   readonly onYes: () => void;
+  /** An explicit No. Persists a decline, so the prompt never fires again. */
   readonly onNo: () => void;
+  /** A swipe-down or a hardware back. Closes, and writes NOTHING. */
+  readonly onDismiss: () => void;
 }
 
 /**
@@ -28,18 +31,30 @@ interface Props {
  * Three things are deliberate:
  *  - The publisher NAME is in the title, so a screen reader announces which
  *    publisher is being asked about rather than "Did you subscribe?".
- *  - `onNo` is wired to BOTH the No button and `onClose`, so a swipe-down or a
- *    hardware back press counts as No. A dismissal is not an unanswered
- *    question: the user was asked and chose not to say yes, and treating that
- *    as "ask again later" is how a prompt becomes nagging.
+ *  - A DISMISSAL IS NOT A DECISION. `onClose` is wired to `onDismiss`, which
+ *    closes and writes nothing; only the No button reaches `onNo`, which
+ *    persists a decline and silences this publisher for good. The two used to
+ *    be the same callback, so a swipe-down or a hardware back press
+ *    permanently declined a publisher the user had not answered about. That
+ *    was already wrong when the settings picker was the only way to raise
+ *    this dialog; it just happened rarely. It is fixed HERE, in the dialog,
+ *    rather than at the call sites, so all three get it and a fourth cannot
+ *    reintroduce it. The nagging this coupling was guarding against is
+ *    handled properly elsewhere: `hasAnsweredForPublisher` is re-checked
+ *    before the prompt is ever raised.
  *  - No is one tap and carries no confirmation of its own.
  */
-const SubscribeConfirmDialog: React.FC<Props> = ({ publisherName, onYes, onNo }) => {
+const SubscribeConfirmDialog: React.FC<Props> = ({
+  publisherName,
+  onYes,
+  onNo,
+  onDismiss,
+}) => {
   const { t } = useTranslation();
   if (!publisherName) return null;
 
   return (
-    <Modal isOpen onClose={onNo} size="sm">
+    <Modal isOpen onClose={onDismiss} size="sm">
       <ModalBackdrop />
       <ModalContent
         // Keeps the screen reader inside the dialog while it is open, so the

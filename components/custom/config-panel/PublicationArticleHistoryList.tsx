@@ -102,7 +102,8 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
     // rendered before.
     // ---------------------------------------------------------------
     const [publisher, setPublisher] = useState<ResolvedPublisher | null>(null);
-    const { begin, confirmDirectly, confirming, onYes, onNo, isSubscribed } = useSubscribeFlow();
+    const { begin, confirmDirectly, confirming, onYes, onNo, onDismiss, isSubscribed } =
+        useSubscribeFlow();
 
     useEffect(() => {
         let cancelled = false;
@@ -233,6 +234,7 @@ const PublicationArticleHistoryList: React.FC<Props> = ({
                 publisherName={confirming?.publisherName ?? null}
                 onYes={onYes}
                 onNo={onNo}
+                onDismiss={onDismiss}
             />
         </Box>
     );
