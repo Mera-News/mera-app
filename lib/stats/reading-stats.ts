@@ -15,6 +15,27 @@
 // the skim-versus-read split and articles shared each need a recording that does
 // not exist and may not be added.
 //
+// ## Two windows, and why they are not reconciled
+//
+// Countries, publications, opened and publish-to-read are all 30-day. Saved and
+// followed are PRESENT TENSE and live in `keptNow` for exactly that reason:
+// both tables carry a timestamp that would let them be windowed, and windowing
+// them would produce a figure nobody asks for. "Articles you saved in the last
+// 30 days and have not since removed" is not a fact about reading, it is an
+// artefact of intersecting two unrelated rules. So the split is carried in the
+// TYPE and each surface states one window rather than averaging them into a
+// heading that is true of neither.
+//
+// ## There is no "articles analysed by AI" figure, and there cannot be
+//
+// Not a policy refusal, an absence. No device-local record of it exists: the
+// closest thing, `article_suggestions.relevance_generation_completed`, is a
+// genuine per-article record that the scoring pass ran, but its table is swept
+// at 48h, so a 30-day tally is unrecoverable and even a 48-hour one undercounts
+// by every row already swept. See `reading-stats-source.ts` for the other six
+// candidates and why each fails. The app keeps no running tally of its own work
+// because nothing in the product needs one to function.
+//
 // Three labelling rules are encoded in the SHAPE of what this returns, so a
 // caller cannot render an honest-looking number without its caveat:
 //
@@ -65,6 +86,45 @@ export interface TopPublication {
   visitCount: number;
 }
 
+/**
+ * One country the reader has seen news from, inside the window, with how many
+ * taps it accounted for.
+ *
+ * The COUNT is what makes the proportion bar on the reach card honest: shares
+ * are computed from these, not from the number of publications, so a country
+ * with one prolific publisher is not flattened to the same width as one with
+ * six occasional ones.
+ */
+export interface CountryShare {
+  countryCode: string;
+  /** Total taps on this country's articles inside the window. */
+  visitCount: number;
+}
+
+/**
+ * The two figures that are NOT windowed, kept in their own object so a caller
+ * cannot render them under a "last 30 days" heading by accident.
+ *
+ * This is the same trick `publishToRead` plays with its coverage denominator:
+ * the SHAPE carries the labelling rule, so the rule cannot be forgotten at a
+ * render site. Both are present tense by nature. "Saved" and "following" are
+ * states the reader is in right now, not events inside a window, and
+ * `saved_at` / `created_at` would let either be windowed but the result would
+ * answer a question nobody asks: "articles you saved in the last 30 days and
+ * have not since removed" is not a fact about reading, it is an artefact of
+ * intersecting two unrelated rules.
+ */
+export interface KeptNow {
+  /** Rows in `saved_article_suggestions` that are real user saves. Retention
+   *  rows (`origin` 'fact_check' or 'tracked_story') are excluded upstream by
+   *  `loadSavedItems`, so a followed story's members never inflate this and
+   *  never double-count against `followedStories`. */
+  savedArticles: number;
+  /** `tracked_stories` rows with `status = 'active'`. Unfollowing hard-deletes
+   *  the row, so there is no tombstone to over-count. */
+  followedStories: number;
+}
+
 export interface ReadingStats {
   /** Stated on the card. The card can never show more than this. */
   windowDays: number;
@@ -72,6 +132,16 @@ export interface ReadingStats {
   publicationCount: number;
   /** Distinct country codes visited inside the window. */
   countryCount: number;
+  /**
+   * Every country visited inside the window, most-visited first, then by code
+   * for a stable tie-break. `countryCount` is exactly its length.
+   *
+   * The full list, not a top-N: the reach card draws a flag for each and caps
+   * the GRID, which is a layout decision that belongs at the render site where
+   * the available width is known. Capping here would silently decide it for
+   * every future surface.
+   */
+  countries: CountryShare[];
   /**
    * Distinct articles OPENED inside the window. Partial by construction — see
    * the module header. Never label this "articles read".
@@ -84,6 +154,9 @@ export interface ReadingStats {
   /** Sorted by visitCount desc, then name asc for a stable tie-break. Only
    *  rendered when the naming opt-in is on. */
   topPublications: TopPublication[];
+  /** NOT windowed. See `KeptNow` for why, before rendering it under a heading
+   *  that mentions 30 days. */
+  keptNow: KeptNow;
   /**
    * False when there is nothing worth sharing, so the caller shows an empty
    * state instead of a card full of zeroes.
@@ -120,9 +193,22 @@ export interface ComputeReadingStatsInput {
   nowMs: number;
   /** How many rows the opt-in list may show. */
   topPublicationLimit?: number;
+  /**
+   * Present-tense counts, passed in rather than derived here because they come
+   * from tables this module deliberately does not import. Both default to 0 so
+   * an existing caller keeps working and gets an honest zero rather than a
+   * wrong number.
+   */
+  keptNow?: Partial<KeptNow>;
 }
 
 const DEFAULT_TOP_PUBLICATION_LIMIT = 3;
+
+/** A visit row's tap count, floored at 1. A row that exists was visited at
+ *  least once, whatever a malformed `visit_count` says. */
+function tapsOf(visit: VisitedArticle): number {
+  return Number.isFinite(visit.visitCount) && visit.visitCount > 0 ? visit.visitCount : 1;
+}
 
 function cleaned(value: string | null | undefined): string | null {
   const trimmed = (value ?? '').trim();
@@ -139,6 +225,7 @@ export function computeReadingStats({
   impressions,
   nowMs,
   topPublicationLimit = DEFAULT_TOP_PUBLICATION_LIMIT,
+  keptNow,
 }: ComputeReadingStatsInput): ReadingStats {
   const cutoff = nowMs - WINDOW_MS;
 
@@ -149,20 +236,30 @@ export function computeReadingStats({
   const windowedVisits = visits.filter((v) => Number.isFinite(v.visitedAt) && v.visitedAt >= cutoff);
 
   const publications = new Set<string>();
-  const countries = new Set<string>();
+  // Keyed by code so the reach card can weight its proportion bar by taps.
+  // A Set would have answered `countryCount` and nothing else.
+  const byCountry = new Map<string, CountryShare>();
   const byPublication = new Map<string, TopPublication>();
 
   for (const visit of windowedVisits) {
     const name = cleaned(visit.publicationName);
     const country = cleaned(visit.countryCode);
-    if (country) countries.add(country);
+    // Counted BEFORE the name guard, deliberately. A visit with a country but
+    // no publication name is still a country the reader saw news from, and
+    // dropping it would make the flag grid disagree with the Sources tab.
+    if (country) {
+      const taps = tapsOf(visit);
+      const seen = byCountry.get(country);
+      if (seen) seen.visitCount += taps;
+      else byCountry.set(country, { countryCode: country, visitCount: taps });
+    }
     if (!name) continue;
 
     publications.add(name);
     // Keyed on name AND country: the visits table itself is keyed that way,
     // because two publishers can share a name across markets.
     const key = `${name} ${country ?? ''}`;
-    const taps = Number.isFinite(visit.visitCount) && visit.visitCount > 0 ? visit.visitCount : 1;
+    const taps = tapsOf(visit);
     const existing = byPublication.get(key);
     if (existing) {
       existing.visitCount += taps;
@@ -170,6 +267,13 @@ export function computeReadingStats({
       byPublication.set(key, { publicationName: name, countryCode: country, visitCount: taps });
     }
   }
+
+  // Most-visited first, then by code: `localeCompare` on a country CODE is a
+  // stable tie-break and never reaches the user as text, so it needs no locale.
+  const countries = [...byCountry.values()].sort((a, b) => {
+    if (b.visitCount !== a.visitCount) return b.visitCount - a.visitCount;
+    return a.countryCode.localeCompare(b.countryCode);
+  });
 
   const topPublications = [...byPublication.values()]
     .sort((a, b) => {
@@ -198,12 +302,22 @@ export function computeReadingStats({
   return {
     windowDays: WINDOW_DAYS,
     publicationCount: publications.size,
-    countryCount: countries.size,
+    countryCount: countries.length,
+    countries,
     articlesOpened: openedArticleIds.size,
     publishToRead,
     topPublications,
+    keptNow: {
+      savedArticles: nonNegative(keptNow?.savedArticles),
+      followedStories: nonNegative(keptNow?.followedStories),
+    },
     hasAnyData: publications.size > 0,
   };
+}
+
+/** A count that is always a whole number at or above zero, whatever arrived. */
+function nonNegative(value: number | undefined): number {
+  return Number.isFinite(value) && (value as number) > 0 ? Math.floor(value as number) : 0;
 }
 
 /** The shape `computeReadingStats` returns for an empty device. Exported so the
@@ -214,9 +328,11 @@ export function emptyReadingStats(): ReadingStats {
     windowDays: WINDOW_DAYS,
     publicationCount: 0,
     countryCount: 0,
+    countries: [],
     articlesOpened: 0,
     publishToRead: { averageHours: null, sampledArticles: 0, totalArticles: 0 },
     topPublications: [],
+    keptNow: { savedArticles: 0, followedStories: 0 },
     hasAnyData: false,
   };
 }
@@ -229,4 +345,81 @@ export function emptyReadingStats(): ReadingStats {
 export function roundedAverageHours(stats: PublishToReadStats): number | null {
   if (stats.averageHours === null) return null;
   return Math.max(0, Math.round(stats.averageHours));
+}
+
+
+// --- per-card availability -------------------------------------------------
+
+/**
+ * The three share cards, by theme. Breadth, intent, reading.
+ *
+ * The ids are stable and reach the deep link as a param, so renaming one is a
+ * URL change, not a refactor.
+ */
+export const STATS_CARD_IDS = ['reach', 'keep', 'pace'] as const;
+export type StatsCardId = (typeof STATS_CARD_IDS)[number];
+
+/** The card the share route falls back to when it is opened with no param, as
+ *  the existing `com.mera.news://logged-in/share-stats` link always is. */
+export const DEFAULT_STATS_CARD: StatsCardId = 'reach';
+
+/**
+ * Does this card have anything on it?
+ *
+ * Per card rather than per screen, because the three draw on different tables
+ * and `hasAnyData` cannot answer for all of them. A reader who has saved
+ * articles but cleared their viewing history has a real `keep` card and an
+ * empty `reach` one, and offering a card of zeroes is worse than not offering
+ * it. `hasAnyData` stays what it was, the SCREEN-level gate keyed on visits
+ * alone, so Settings then Manage Data then Clear viewing history still visibly
+ * empties the surface it promised to empty.
+ */
+export function cardHasData(stats: ReadingStats, card: StatsCardId): boolean {
+  switch (card) {
+    case 'reach':
+      return stats.countries.length > 0 || stats.publicationCount > 0;
+    case 'keep':
+      return stats.keptNow.savedArticles > 0 || stats.keptNow.followedStories > 0;
+    case 'pace':
+      return stats.articlesOpened > 0 || stats.publishToRead.averageHours !== null;
+  }
+}
+
+/** The cards worth offering, in theme order. Empty for an empty device. */
+export function availableCards(stats: ReadingStats): StatsCardId[] {
+  return STATS_CARD_IDS.filter((card) => cardHasData(stats, card));
+}
+
+/**
+ * The reach card's proportion bar: the largest `topN` countries by taps, plus
+ * one remainder segment when anything is left over.
+ *
+ * Shares are fractions of the WINDOWED TOTAL, so they always sum to 1 and the
+ * bar can never leave a gap it does not explain. Returned as fractions rather
+ * than percentages because rounding for display is the render site's business,
+ * and rounding here would let three rounded values sum to 99.
+ */
+export interface CountryBand {
+  /** Null on the remainder band, which has no single country. */
+  countryCode: string | null;
+  share: number;
+}
+
+export function countryBands(stats: ReadingStats, topN = 3): CountryBand[] {
+  const total = stats.countries.reduce((sum, c) => sum + c.visitCount, 0);
+  if (total <= 0) return [];
+
+  const lead = stats.countries.slice(0, Math.max(0, topN));
+  const bands: CountryBand[] = lead.map((c) => ({
+    countryCode: c.countryCode,
+    share: c.visitCount / total,
+  }));
+
+  const leadTotal = lead.reduce((sum, c) => sum + c.visitCount, 0);
+  // Strictly greater, so a rounding residue of zero never draws a band the
+  // reader cannot see and the legend never names an empty "rest".
+  if (total - leadTotal > 0) {
+    bands.push({ countryCode: null, share: (total - leadTotal) / total });
+  }
+  return bands;
 }

@@ -5,6 +5,12 @@ import {
   computeReadingStats,
   emptyReadingStats,
   roundedAverageHours,
+  availableCards,
+  cardHasData,
+  countryBands,
+  DEFAULT_STATS_CARD,
+  STATS_CARD_IDS,
+  type ReadingStats,
   type StatsImpression,
 } from '../reading-stats';
 
@@ -334,5 +340,237 @@ describe('roundedAverageHours', () => {
     // A publish date in the future (a feed with a bad pubDate) would otherwise
     // render "minus 3 hours", which reads as a bug rather than as bad data.
     expect(roundedAverageHours({ averageHours: -3.2, sampledArticles: 1, totalArticles: 1 })).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The analytics-wave additions: the country list, the present-tense figures,
+// per-card availability and the proportion bands.
+// ---------------------------------------------------------------------------
+
+describe('the country list', () => {
+  it('weights countries by TAPS, not by how many publications they have', () => {
+    // The whole reason `countries` carries a count rather than being a Set.
+    // Two French publications read once each must NOT outrank one Indian
+    // publication read six times; a bar built off publication counts inverts
+    // them.
+    //
+    // Every country here is aggregated from MORE THAN ONE ROW, at counts above
+    // one. That is load-bearing and was got wrong first time: with one row per
+    // country, or with every visitCount at 1, `seen.visitCount += 1` passes
+    // this test identically to `+= taps` and the assertion proves nothing.
+    // FR's 4+3 is the pair that actually discriminates the two.
+    const stats = computeReadingStats({
+      visits: [
+        visit({ articleId: 'a1', publicationName: 'The Hindu', countryCode: 'IN', visitCount: 6 }),
+        visit({ articleId: 'a2', publicationName: 'The Hindu', countryCode: 'IN', visitCount: 2 }),
+        visit({ articleId: 'a3', publicationName: 'Le Monde', countryCode: 'FR', visitCount: 4 }),
+        visit({ articleId: 'a4', publicationName: 'Le Figaro', countryCode: 'FR', visitCount: 3 }),
+      ],
+      impressions: [],
+      nowMs: NOW,
+    });
+
+    expect(stats.countries).toEqual([
+      { countryCode: 'IN', visitCount: 8 },
+      { countryCode: 'FR', visitCount: 7 },
+    ]);
+    expect(stats.countryCount).toBe(2);
+    // Publication counts are EQUAL here, so this pair can only have been
+    // ordered by taps.
+    expect(stats.publicationCount).toBe(3);
+  });
+
+  it('floors a malformed tap count at one instead of dropping the row', () => {
+    const stats = computeReadingStats({
+      visits: [
+        visit({ articleId: 'a1', countryCode: 'IN', visitCount: 0 }),
+        visit({ articleId: 'a2', countryCode: 'IN', visitCount: Number.NaN }),
+      ],
+      impressions: [],
+      nowMs: NOW,
+    });
+
+    expect(stats.countries).toEqual([{ countryCode: 'IN', visitCount: 2 }]);
+  });
+
+  it('counts a country even when the visit has no publication name', () => {
+    // Counted before the name guard on purpose: a nameless visit is still a
+    // country the reader saw news from, and dropping it would make the flag
+    // grid disagree with the Sources tab.
+    //
+    // Blank rather than null: `VisitedArticle.publicationName` is typed
+    // non-nullable, so an empty string is the shape this actually arrives in
+    // and the one `cleaned()` exists to catch.
+    const stats = computeReadingStats({
+      visits: [visit({ publicationName: '  ', countryCode: 'JP' })],
+      impressions: [],
+      nowMs: NOW,
+    });
+
+    expect(stats.countries).toEqual([{ countryCode: 'JP', visitCount: 1 }]);
+    expect(stats.publicationCount).toBe(0);
+  });
+
+  it('honours the 30-day window and drops blank codes', () => {
+    const stats = computeReadingStats({
+      visits: [
+        visit({ articleId: 'a1', countryCode: 'IN' }),
+        visit({ articleId: 'a2', countryCode: 'BR', visitedAt: NOW - WINDOW_MS - DAY }),
+        visit({ articleId: 'a3', countryCode: '   ' }),
+        visit({ articleId: 'a4', countryCode: null }),
+      ],
+      impressions: [],
+      nowMs: NOW,
+    });
+
+    expect(stats.countries.map((c) => c.countryCode)).toEqual(['IN']);
+  });
+
+  it('breaks a tie on the code so two shares never reorder between renders', () => {
+    const stats = computeReadingStats({
+      visits: [
+        visit({ articleId: 'a1', countryCode: 'ZA', publicationName: 'P1' }),
+        visit({ articleId: 'a2', countryCode: 'AU', publicationName: 'P2' }),
+      ],
+      impressions: [],
+      nowMs: NOW,
+    });
+
+    expect(stats.countries.map((c) => c.countryCode)).toEqual(['AU', 'ZA']);
+  });
+
+  it('agrees with countryCount on an empty device', () => {
+    const empty = emptyReadingStats();
+    expect(empty.countries).toEqual([]);
+    expect(empty.countryCount).toBe(0);
+    expect(empty.keptNow).toEqual({ savedArticles: 0, followedStories: 0 });
+  });
+});
+
+describe('the present-tense figures', () => {
+  it('passes the injected counts straight through', () => {
+    const stats = computeReadingStats({
+      visits: [],
+      impressions: [],
+      nowMs: NOW,
+      keptNow: { savedArticles: 28, followedStories: 6 },
+    });
+
+    expect(stats.keptNow).toEqual({ savedArticles: 28, followedStories: 6 });
+  });
+
+  it('is NOT windowed, unlike everything beside it', () => {
+    // The point of the separate object. A caller that windowed these would be
+    // answering "saved in the last 30 days and not since removed", which is an
+    // artefact of two unrelated rules rather than a fact about reading.
+    const windowed = computeReadingStats({
+      visits: [visit({ visitedAt: NOW - WINDOW_MS - DAY })],
+      impressions: [],
+      nowMs: NOW,
+      keptNow: { savedArticles: 12, followedStories: 3 },
+    });
+
+    expect(windowed.publicationCount).toBe(0);
+    expect(windowed.keptNow).toEqual({ savedArticles: 12, followedStories: 3 });
+  });
+
+  it('floors nonsense to zero rather than rendering it', () => {
+    const stats = computeReadingStats({
+      visits: [],
+      impressions: [],
+      nowMs: NOW,
+      keptNow: { savedArticles: -4, followedStories: Number.NaN },
+    });
+
+    expect(stats.keptNow).toEqual({ savedArticles: 0, followedStories: 0 });
+  });
+
+  it('defaults to zero when a caller omits them entirely', () => {
+    const stats = computeReadingStats({ visits: [], impressions: [], nowMs: NOW });
+    expect(stats.keptNow).toEqual({ savedArticles: 0, followedStories: 0 });
+  });
+});
+
+describe('cardHasData', () => {
+  function withStats(overrides: Partial<ReadingStats>): ReadingStats {
+    return { ...emptyReadingStats(), ...overrides };
+  }
+
+  it('offers nothing on an empty device', () => {
+    expect(availableCards(emptyReadingStats())).toEqual([]);
+  });
+
+  it('offers keep from saved articles alone, with no visits at all', () => {
+    // The case hasAnyData cannot answer: a reader who cleared their viewing
+    // history still has a real keep card, and three of the other figures are
+    // genuinely gone.
+    const stats = withStats({ keptNow: { savedArticles: 3, followedStories: 0 } });
+
+    expect(availableCards(stats)).toEqual(['keep']);
+    expect(stats.hasAnyData).toBe(false);
+  });
+
+  it('offers pace from a latency average even when nothing was opened', () => {
+    const stats = withStats({
+      publishToRead: { averageHours: 9, sampledArticles: 4, totalArticles: 9 },
+    });
+    expect(availableCards(stats)).toEqual(['pace']);
+  });
+
+  it('keeps theme order rather than data order', () => {
+    const stats = withStats({
+      countries: [{ countryCode: 'IN', visitCount: 2 }],
+      publicationCount: 1,
+      articlesOpened: 5,
+      keptNow: { savedArticles: 1, followedStories: 1 },
+    });
+    expect(availableCards(stats)).toEqual(['reach', 'keep', 'pace']);
+  });
+
+  it('covers every id in the union, so a new card cannot be forgotten here', () => {
+    // Non-vacuity: if STATS_CARD_IDS grows and cardHasData does not, this fails
+    // rather than silently returning undefined for the new one.
+    for (const id of STATS_CARD_IDS) {
+      expect(typeof cardHasData(emptyReadingStats(), id)).toBe('boolean');
+    }
+    expect(STATS_CARD_IDS).toHaveLength(3);
+    expect(STATS_CARD_IDS).toContain(DEFAULT_STATS_CARD);
+  });
+});
+
+describe('countryBands', () => {
+  function reach(counts: [string, number][]): ReadingStats {
+    return {
+      ...emptyReadingStats(),
+      countries: counts.map(([countryCode, visitCount]) => ({ countryCode, visitCount })),
+      countryCount: counts.length,
+    };
+  }
+
+  it('returns fractions that sum to exactly one', () => {
+    const bands = countryBands(reach([['IN', 38], ['US', 22], ['GB', 14], ['DE', 16], ['FR', 10]]));
+
+    expect(bands.map((b) => b.countryCode)).toEqual(['IN', 'US', 'GB', null]);
+    const total = bands.reduce((sum, b) => sum + b.share, 0);
+    expect(total).toBeCloseTo(1, 10);
+  });
+
+  it('omits the remainder band when the top N is everything', () => {
+    // Strictly greater than zero, so the bar never draws a band the reader
+    // cannot see and the legend never names an empty "rest".
+    const bands = countryBands(reach([['IN', 5], ['US', 3]]));
+    expect(bands.map((b) => b.countryCode)).toEqual(['IN', 'US']);
+  });
+
+  it('returns nothing rather than dividing by zero', () => {
+    expect(countryBands(emptyReadingStats())).toEqual([]);
+    expect(countryBands(reach([['IN', 0]]))).toEqual([]);
+  });
+
+  it('is a fraction of TAPS, not of countries', () => {
+    const bands = countryBands(reach([['IN', 9], ['FR', 1]]));
+    expect(bands[0].share).toBeCloseTo(0.9, 10);
+    expect(bands[1].share).toBeCloseTo(0.1, 10);
   });
 });
