@@ -508,36 +508,6 @@ function savedFactsWithIds(result: Record<string, unknown>): Array<{ id: string;
   return out;
 }
 
-/**
- * Readings offered but not yet chosen — the seed for the fact-choice card.
- *
- * Validated field by field like every other result reader here: a malformed
- * group is dropped rather than rendered as an empty card the user cannot answer,
- * which would block the composer forever.
- */
-function pendingFactsFromResult(
-  result: Record<string, unknown>,
-): { index: number; options: string[]; questionnaireAttribute: string | null }[] {
-  const value = result.pendingFacts;
-  if (!Array.isArray(value)) return [];
-  const out: { index: number; options: string[]; questionnaireAttribute: string | null }[] = [];
-  value.forEach((entry, fallbackIndex) => {
-    const rec = asRecord(entry);
-    if (!rec) return;
-    const options = Array.isArray(rec.options)
-      ? rec.options.filter((o): o is string => typeof o === 'string' && o.trim().length > 0)
-      : [];
-    if (options.length === 0) return;
-    out.push({
-      index: typeof rec.index === 'number' ? rec.index : fallbackIndex,
-      options,
-      questionnaireAttribute:
-        typeof rec.questionnaireAttribute === 'string' ? rec.questionnaireAttribute : null,
-    });
-  });
-  return out;
-}
-
 /** Defensively validate the FactConflict[] echoed by the save result. */
 function conflictsFromResult(result: Record<string, unknown>): FactConflict[] {
   const value = result.conflicts;
