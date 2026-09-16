@@ -340,7 +340,19 @@ const ShareStatsPreviewScreen: React.FC<Props> = ({ onBack, requestedCard }) => 
 
             <HStack className="items-center justify-center px-5 mt-2" space="sm">
               {pendingShare ? <Spinner size="small" /> : null}
-              <Text size="sm" style={ink('muted')} numberOfLines={2}>
+              {/* `flex-1` is load-bearing, not tidiness. Without it this Text
+                  keeps its intrinsic width inside a centred row and spills past
+                  BOTH edges rather than wrapping, which is what the privacy
+                  line did the moment it was rewritten longer. `numberOfLines`
+                  does not save it: a clamp caps the number of lines, it does not
+                  make a single unconstrained line wrap. The longest locale is
+                  the real test, and German is longer than this again. */}
+              <Text
+                size="sm"
+                style={ink('muted')}
+                className="flex-1 text-center"
+                numberOfLines={3}
+              >
                 {message === null
                   ? t('shareStats.nameTogglePrivacy')
                   : message === 'unavailable'
