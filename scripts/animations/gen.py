@@ -1,10 +1,20 @@
 """
-The eighteen mera-news bodymovin pieces: six processing stages, twelve tutorial
-chapter heroes.
+The nineteen generated mera-news bodymovin pieces: six processing stages,
+twelve tutorial chapter heroes, and the card idle loop.
+
+`assets/animations/` holds MORE than this script writes. The seven
+`tutorial-hint-*` gesture loops and `game-mark-earn` arrived as finished files
+and have no generator function here, so a run of this script leaves them
+untouched. Do not read a missing PIECES entry as a missing asset, and do not
+assume a file in that directory can be regenerated from here.
 
 Run it, then run `validate.py` over the output directory. Nothing is drawn by
 hand and nothing is downloaded; every file is written straight against the
 bodymovin schema through `lib_bodymovin.py`.
+
+It takes the output directory as its one argument and defaults to `out`, so a
+run cannot overwrite the shipped assets by accident. Regenerate into a scratch
+directory, validate there, and copy across the file you actually changed.
 
 ── The house style, decided once and applied to all eighteen ────────────────
 
@@ -672,6 +682,53 @@ def protocol_one_screen():
     return TOTAL, layers
 
 
+# ── game-hud-idle · the rest state on AllCaughtUpCard ───────────────────────
+# "A slow calm watch": one point breathing, nothing arriving. It is what the
+# roomy AllCaughtUpCard draws when there is no sync in flight.
+#
+# Symmetric by construction: frame 0, the midpoint and frame N share the low
+# value, so the loop closes on every animated property AND frame 0 is genuinely
+# the calm frame rather than a mid-motion slice. That second half matters more
+# than it looks — `staticGradient` defaults ON below 6 GB of RAM, so a held
+# frame 0 is the NORMAL rendering on a large share of the fleet, not a rare
+# degradation. The face ring is constant across all 96 frames precisely so the
+# held frame is the complete composition at its resting brightness.
+#
+# ── Why the subject is 540 units and not 140 ────────────────────────────────
+# This piece began life as a header-HUD moment, drawn into a band a few points
+# tall, and its subject occupied 14% of the canvas. On the card it renders into
+# a 96pt box with `resizeMode="contain"`, where 14% put the ring at 13.4pt with
+# a 0.19pt stroke — 0.58 of a physical pixel at 3x, i.e. below the rendering
+# floor, in place of a 100pt logo.
+#
+# So the drawing is unchanged and the SCALE is not: every dimension is
+# multiplied so the subject occupies ~54% of the canvas, which is where the six
+# processing scenes it swaps with sit (47-66%). The two cards never render at
+# once, so matching their occupancy is what stops the swap from changing the
+# scene's weight. The ratio between the ring and the dot is preserved exactly
+# (0.4); the stroke is rounded up from 7.7 to a whole 8, which lands it at
+# 0.77pt, a visible hairline.
+#
+# The general lesson, and the reason this comment is long: canvas occupancy is
+# part of the contract even though `validate.py` does not check it. The
+# safe-area sweep only proves a subject is not too BIG.
+def game_hud_idle():
+    ind = Ind()
+    TOTAL = 96  # 3.2s at 30fps
+    layers = [
+        ring(ind(), "face", 540, WHITE, 8, stat([CX, CY, 0]), stat(14),
+             stroke_op=100, op=TOTAL),
+        dot(
+            ind(), "watch", 216, ACCENT, stat([CX, CY, 0]),
+            keys([(0, [58]), (48, [82]), (TOTAL, [58])]),
+            op=TOTAL,
+            scale=keys([(0, [100, 100, 100]), (48, [112, 112, 100]),
+                        (TOTAL, [100, 100, 100])], dim=3),
+        ),
+    ]
+    return TOTAL, layers
+
+
 PIECES = {
     "processing-fetching": processing_fetching,
     "processing-downloading": processing_downloading,
@@ -691,6 +748,7 @@ PIECES = {
     "signal-the-dial": signal_the_dial,
     "chat-where-mera-is": chat_where_mera_is,
     "protocol-one-screen": protocol_one_screen,
+    "game-hud-idle": game_hud_idle,
 }
 
 for name, builder in PIECES.items():

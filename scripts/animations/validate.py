@@ -11,6 +11,7 @@ Checks, in contract order:
   1  canvas 1000 x 1000
   2  transparent: no full-canvas background shape
   3  seamless loop, 2.0 to 4.0 s  (duration from op/fr; seam proved per property)
+     - or, for a DECLARED one-shot, 0.3 to 2.0 s with no seam requirement
   4  accent rgb(231,138,83) is the ONLY chromatic colour; everything else is
      greyscale, i.e. white at a reduced opacity
   5  <= 150 KB
@@ -24,6 +25,37 @@ it: the phone body first spanned 74% of canvas height and was shrunk from
 Usage:  python3 validate.py <dir-or-file> [...]
 Exit 0 iff every file passes every check.
 """
+# ── one-shot mode ───────────────────────────────────────────────────────────
+#
+# A one-shot plays once and stops, so two of the seven checks above do not
+# describe it: it has nothing to return to (seam), and holding it to a loop's
+# 2.0 s floor would forbid the short reward flourishes the contract wants.
+#
+# One-shot mode relaxes EXACTLY those two, and nothing else. Duration is
+# RE-BOUNDED to 0.3-2.0 s rather than removed, and seam closure is skipped.
+# Canvas, transparency, palette, size ceiling, vector-only and the middle-70%
+# sweep are unchanged in either mode. That is not a claim, it is proved by
+# `python3 scripts/animations/test_one_shot_mode.py`, which breaks a real
+# one-shot on each of those five dimensions in turn and asserts it still fails.
+#
+# This is an ALLOWLIST, not a flag, because the real gate
+# (`validate.py assets/animations`) takes one directory argument over a mixed
+# set of loop and one-shot files. A one-shot id NOT in this set is validated as
+# a loop by default and fails loud on duration - forgetting to register a new
+# one-shot cannot silently pass under the relaxed rules.
+#
+# Mirrored by ONE_SHOT_IDS in
+# components/custom/processing/__tests__/animation-assets.test.ts, which derives
+# its game half from GAME_REWARD_IDS. The two lists must move together; this is
+# the copy `tsc` cannot reach.
+#
+# It lists only ids whose FILE IS ON DISK here. An entry for an absent asset
+# would pre-authorise the relaxed band for a piece nobody has reviewed, which is
+# the same mistake as a registry entry without a file, one layer down.
+ONE_SHOT_IDS = {
+    "game-mark-earn",
+}
+ONE_SHOT_LO, ONE_SHOT_HI = 0.3, 2.0
 import json
 import math
 import os
@@ -245,7 +277,7 @@ def expression_problems(layer):
 
 # ── driver ──────────────────────────────────────────────────────────────────
 
-def validate(path):
+def validate(path, one_shot=False):
     problems = []
     size = os.path.getsize(path)
     with open(path, "r", encoding="utf-8") as fh:
@@ -260,7 +292,13 @@ def validate(path):
     fr = doc.get("fr") or 30
     total = doc.get("op", 0)
     duration = total / fr
-    if not (2.0 - EPS <= duration <= 4.0 + EPS):
+    if one_shot:
+        if not (ONE_SHOT_LO - EPS <= duration <= ONE_SHOT_HI + EPS):
+            problems.append(
+                f"one-shot duration {duration:.2f}s is outside the "
+                f"{ONE_SHOT_LO} to {ONE_SHOT_HI} s one-shot contract"
+            )
+    elif not (2.0 - EPS <= duration <= 4.0 + EPS):
         problems.append(f"duration {duration:.2f}s is outside the 2 to 4 s contract")
 
     if size > MAX_BYTES:
@@ -275,7 +313,8 @@ def validate(path):
         problems += colour_problems(layer)
         problems += background_problems(layer)
         problems += expression_problems(layer)
-        problems += seam_problems(layer, total)
+        if not one_shot:
+            problems += seam_problems(layer, total)
 
     lo_x = lo_y = float("inf")
     hi_x = hi_y = float("-inf")
@@ -300,21 +339,35 @@ def validate(path):
 
 def main(argv):
     targets = []
+    # `--one-shot` forces one-shot mode on every target named AFTER it, so a
+    # fixture that is deliberately NOT in ONE_SHOT_IDS can still be exercised
+    # under the relaxed rules. It is not how the real gate decides mode - see
+    # ONE_SHOT_IDS's own comment.
+    force_one_shot = False
     for arg in argv:
+        if arg == "--one-shot":
+            force_one_shot = True
+            continue
         if os.path.isdir(arg):
             targets += sorted(
-                os.path.join(arg, f) for f in os.listdir(arg) if f.endswith(".json")
+                (
+                    os.path.join(arg, f),
+                    force_one_shot or os.path.splitext(f)[0] in ONE_SHOT_IDS,
+                )
+                for f in os.listdir(arg)
+                if f.endswith(".json")
             )
         else:
-            targets.append(arg)
+            base = os.path.splitext(os.path.basename(arg))[0]
+            targets.append((arg, force_one_shot or base in ONE_SHOT_IDS))
     if not targets:
         print("no .json files given")
         return 1
 
     failed = 0
     print(f"{'file':<38} {'bytes':>7} {'secs':>5}  {'x range':>11} {'y range':>11}  result")
-    for path in targets:
-        size, info, problems = validate(path)
+    for path, one_shot in targets:
+        size, info, problems = validate(path, one_shot=one_shot)
         name = os.path.basename(path)
         if info and info[1]:
             dur, (lo_x, lo_y, hi_x, hi_y) = info

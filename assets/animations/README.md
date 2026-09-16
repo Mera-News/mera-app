@@ -25,18 +25,52 @@ so one channel serves every 1.3.1 device.
 |---|---|
 | Filename, tutorials | `<chapter>-<slide>.json` — exactly `animationIdFor()` in `lib/tutorials/keys.ts` |
 | Filename, processing | `processing-<stageId>.json` — the six ids in `components/custom/processing/types.ts` |
+| Filename, game | `game-<surface>-<moment>.json` — `components/custom/game-ui/animation-registry.ts` |
 | Format | bodymovin `.json`. **Not** `.lottie` — that needs a Metro `assetExts` change and a dotLottie runtime |
 | Canvas | 1000 × 1000, square |
 | Background | transparent — the app is `#000`, dark-only, and these play over the gradient backdrop |
 | Loop | 2–4s, seamless |
+| One-shot | 0.3–2.0s, no seam requirement — and only for an id DECLARED as one, see below |
 | Accent | `rgb(231, 138, 83)` (primary-400, `TUTORIAL_ACCENT`) — the ONLY chromatic colour. Everything secondary is white at a reduced opacity, never a second hue |
 | Size | ≤ 150 KB each. The largest here is 29 KB |
 | Contents | vector only — no embedded rasters, no expressions |
 | Subject | inside the middle 70%, i.e. 150..850 on both axes |
+| Occupancy | fill roughly half the canvas. Not machine-checked — see below |
 
 A scene block is `SCENE_HEIGHT` (200pt) tall and `contentFit`-style contained,
 so anything near the canvas edges is letterboxed. That is what the middle-70%
 line is for, and it is the line a piece most often fails.
+
+**Occupancy is the line the validator cannot hold for you.** The middle-70%
+sweep only proves a subject is not too BIG; nothing proves it is not too small,
+and a piece authored for a small host renders as a speck when it is dropped into
+a large one. `game-hud-idle` was authored at 14% occupancy for a header band and
+had to be rescaled to 54% for a 96pt card scene, where 14% had put its ring
+stroke at 0.58 of a physical pixel — below the rendering floor, so the piece was
+invisible while passing every check. The pieces here sit between 42% and 68%;
+match that band, and compare against the pieces yours renders beside rather than
+against the canvas.
+
+## One-shots
+
+A piece that plays once and stops has nothing to return to, so seam closure does
+not describe it, and the 2s loop floor would forbid a short flourish. One-shot
+mode relaxes **exactly those two** checks: duration is RE-BOUNDED to 0.3–2.0s
+rather than removed, and seam closure is skipped. Canvas, transparency, palette,
+size ceiling, vector-only and the middle-70% sweep all still apply.
+
+It is an **allowlist, not a flag**. The real gate runs over one directory holding
+both kinds, so a one-shot id must be declared in all three of:
+
+- `ONE_SHOT_IDS` in `scripts/animations/validate.py`
+- `GAME_REWARD_IDS` in `components/custom/game-ui/animation-registry.ts`
+- (the asset gate derives its own list from that array, so it needs no third edit)
+
+An id in none of them is validated as a loop and fails loud on duration. That is
+the designed failure: forgetting to declare a one-shot cannot silently pass under
+the relaxed band. `python3 scripts/animations/test_one_shot_mode.py` is the proof
+that the relaxation is narrow — it breaks a real one-shot on each of the five
+still-enforced dimensions in turn and asserts each one still fails.
 
 ## Validating one
 
@@ -63,8 +97,11 @@ The seam is already in place and nothing about it needs inventing.
 
 1. Drop `<id>.json` into this directory.
 2. Uncomment that id's line in the matching registry —
-   `components/custom/tutorials/animation-registry.ts` or
-   `components/custom/processing/animation-registry.ts`. **An entry may exist
+   `components/custom/tutorials/animation-registry.ts`,
+   `components/custom/processing/animation-registry.ts` or
+   `components/custom/game-ui/animation-registry.ts`. One family, one registry:
+   a second `require()` site for the same file is two homes for one thing.
+   **An entry may exist
    there only once its file is on disk**: Metro resolves `require()` at bundle
    time, so an entry pointing at a missing file is a build error no runtime
    guard can catch. That trap is the entire reason each registry is one file.

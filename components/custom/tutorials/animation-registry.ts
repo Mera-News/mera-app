@@ -35,7 +35,32 @@
 // this if it were dropped.
 
 /**
- * `animationIdFor(chapter, slide)` → the required asset module.
+ * Two families, one map, and the second one is NOT derived.
+ *
+ * Chapter heroes are keyed by `animationIdFor(chapter, slide)`. The seven
+ * `tutorial-hint-*` gesture loops are not slides, so there is no chapter and no
+ * slide to derive from. They carry EXPLICIT ids, listed in
+ * `EXPLICIT_ANIMATION_IDS` below.
+ *
+ * That is a deliberate choice against extending `animationIdFor`: a derivation
+ * that has to special-case a family is not a derivation any more, it is a
+ * lookup table with extra steps, and the next author would have to read the
+ * function to find out which ids are real.
+ *
+ * ── The hint loops have no renderer on this branch ──────────────────────────
+ * There are no gesture mechanics here, so nothing resolves a hint id today.
+ * They are claimed, resolvable assets and nothing more, which is a supported
+ * state: the entry is what stops the orphan gate reading the file as a stray,
+ * and it costs one `require()` each. The mechanic-kind → id resolver that
+ * belongs beside them is deliberately absent, because "mechanic kind" has no
+ * definition on this branch and a resolver over a domain that does not exist
+ * would be a claim about a system nobody built.
+ *
+ * ── The `game-` prefix means it is NOT this registry's ──────────────────────
+ * A `game-` piece belongs to `components/custom/game-ui/animation-registry.ts`.
+ * Two registries holding a `require()` for one file is two homes for one thing,
+ * which is how a missing asset becomes a build failure nobody can guard. Only
+ * `tutorial-` and derived hero ids belong here.
  *
  * `unknown` rather than a player-specific source type on purpose: the consumer
  * casts once at the render site, so swapping the player later is one file.
@@ -53,7 +78,37 @@ export const TUTORIAL_ANIMATIONS: Readonly<Record<string, unknown>> = {
   'signal-the-dial': require('@/assets/animations/signal-the-dial.json'),
   'chat-where-mera-is': require('@/assets/animations/chat-where-mera-is.json'),
   'protocol-one-screen': require('@/assets/animations/protocol-one-screen.json'),
+
+  // ── Gesture hint loops, explicit ids ───────────────────────────────────────
+  // One looping hint per mechanic kind. A loop SHOWS a gesture instead of
+  // describing it, which is why there is one per kind rather than one generic
+  // "drag something" loop. Nothing on this branch renders them yet.
+  'tutorial-hint-sweep': require('@/assets/animations/tutorial-hint-sweep.json'),
+  'tutorial-hint-sortdrag': require('@/assets/animations/tutorial-hint-sortdrag.json'),
+  'tutorial-hint-hold': require('@/assets/animations/tutorial-hint-hold.json'),
+  'tutorial-hint-swipe': require('@/assets/animations/tutorial-hint-swipe.json'),
+  'tutorial-hint-pullout': require('@/assets/animations/tutorial-hint-pullout.json'),
+  'tutorial-hint-flick': require('@/assets/animations/tutorial-hint-flick.json'),
+  'tutorial-hint-dragline': require('@/assets/animations/tutorial-hint-dragline.json'),
 };
+
+/**
+ * Ids that are NOT slide heroes, so nothing tries to derive them.
+ *
+ * The asset gate filters the map by this list before asserting one hero per
+ * chapter. Counting the whole map instead would mean editing the count every
+ * time a non-hero piece lands, which is how a count assertion stops meaning
+ * anything.
+ */
+export const EXPLICIT_ANIMATION_IDS = [
+  'tutorial-hint-sweep',
+  'tutorial-hint-sortdrag',
+  'tutorial-hint-hold',
+  'tutorial-hint-swipe',
+  'tutorial-hint-pullout',
+  'tutorial-hint-flick',
+  'tutorial-hint-dragline',
+] as const;
 
 /** The asset for an animation id, or `undefined` for a slide without one. */
 export function animationSourceFor(id: string | undefined): unknown {

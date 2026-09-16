@@ -3,8 +3,9 @@
 // `scripts/animations/validate.py` is the full check and it decides things this
 // cannot cheaply (the frame-by-frame bounding-box sweep, seam closure per
 // animated property). What lives here is the subset that must never regress
-// without a test going red: the files the two registries `require()` exist, and
-// every file in the directory still meets the mechanical lines of the contract.
+// without a test going red: the files the three registries `require()` exist,
+// and every file in the directory still meets the mechanical lines of the
+// contract.
 //
 // Metro resolves `require()` at BUNDLE time, so a registry entry pointing at a
 // missing file is a build error no runtime guard can catch. This turns that
@@ -13,7 +14,15 @@ import fs from 'fs';
 import path from 'path';
 
 import { PROCESSING_ANIMATIONS } from '../animation-registry';
-import { TUTORIAL_ANIMATIONS } from '@/components/custom/tutorials/animation-registry';
+import {
+  GAME_ANIMATIONS,
+  GAME_LOOP_IDS,
+  GAME_REWARD_IDS,
+} from '@/components/custom/game-ui/animation-registry';
+import {
+  EXPLICIT_ANIMATION_IDS,
+  TUTORIAL_ANIMATIONS,
+} from '@/components/custom/tutorials/animation-registry';
 import { PROCESSING_STAGES } from '../processing-stages';
 import { PROCESSING_STAGE_IDS } from '../types';
 
@@ -22,6 +31,22 @@ const ASSET_DIR = path.join(REPO_ROOT, 'assets/animations');
 
 const ACCENT = [231 / 255, 138 / 255, 83 / 255];
 const MAX_BYTES = 150 * 1024;
+
+// Mirrors ONE_SHOT_IDS in scripts/animations/validate.py. A one-shot plays once
+// and stops, so the loop contract's 2.0-4.0 s band does not describe it; it is
+// held to 0.3-2.0 s instead, checked separately below.
+//
+// DERIVED from the kit registry's `GAME_REWARD_IDS` rather than retyped,
+// because that array is also what the `GameRewardId` type is pinned to. One
+// list, three readers: the type, this gate, and validate.py. Only the Python
+// copy is a hand-kept mirror, and it is the one a `tsc` run cannot reach.
+//
+// An id in NEITHER list is validated as a loop and fails loud on duration, in
+// both languages. That is the designed failure: forgetting to declare a new
+// one-shot cannot silently pass under the relaxed band.
+const ONE_SHOT_IDS = new Set<string>(GAME_REWARD_IDS);
+const ONE_SHOT_LO = 0.3;
+const ONE_SHOT_HI = 2.0;
 
 interface Bodymovin {
   w: number;
@@ -53,18 +78,67 @@ describe('animation assets — the registries point at real files', () => {
     expect(fs.existsSync(path.join(ASSET_DIR, `processing-${stage}.json`))).toBe(true);
   });
 
-  it('has one tutorial hero per chapter, all twelve on disk', () => {
-    const ids = Object.keys(TUTORIAL_ANIMATIONS);
-    expect(ids).toHaveLength(12);
-    for (const id of ids) {
+  // The tutorials registry holds TWO families now: one derived hero per chapter
+  // (`<chapter>-<slide>`), and the gesture hint loops, which are not slides and
+  // so carry explicit ids. Counting the whole map would have to be edited every
+  // time a non-hero piece lands, which is how a count assertion stops meaning
+  // anything; the per-chapter rule is what matters and it is asserted directly.
+  it('has exactly one tutorial hero per chapter, all twelve on disk', () => {
+    const heroes = Object.keys(TUTORIAL_ANIMATIONS).filter(
+      (id) => !EXPLICIT_ANIMATION_IDS.includes(id as never),
+    );
+    expect(heroes).toHaveLength(12);
+    for (const id of heroes) {
       expect(fs.existsSync(path.join(ASSET_DIR, `${id}.json`))).toBe(true);
     }
+  });
+
+  it('has every explicitly-claimed tutorial piece on disk', () => {
+    expect(EXPLICIT_ANIMATION_IDS.length).toBeGreaterThan(0);
+    for (const id of EXPLICIT_ANIMATION_IDS) {
+      expect(fs.existsSync(path.join(ASSET_DIR, `${id}.json`))).toBe(true);
+    }
+  });
+
+  // Both directions, because each catches a different mistake. A missing FILE
+  // is a Metro build error at bundle time, which no runtime guard can catch. A
+  // missing ENTRY is quieter and worse: the asset ships in the bundle, nothing
+  // can resolve it, and it reads as a stray to the orphan check below.
+  it('has every game registry entry on disk', () => {
+    for (const id of Object.keys(GAME_ANIMATIONS)) {
+      expect(fs.existsSync(path.join(ASSET_DIR, `${id}.json`))).toBe(true);
+    }
+  });
+
+  it('claims every game- file on disk in the registry', () => {
+    const onDisk = assetFiles()
+      .filter((f) => f.startsWith('game-'))
+      .map((f) => f.replace(/\.json$/, ''));
+    expect(onDisk.sort()).toEqual(Object.keys(GAME_ANIMATIONS).sort());
+  });
+
+  // The reward/loop split is by MEASURED duration, and the one-shot band was
+  // written for a different reason (the asset contract) yet agrees with it
+  // independently. That agreement is what makes the split worth asserting
+  // rather than commenting: a loop routed through a one-shot host plays once,
+  // wrong.
+  it('splits reward ids from loop ids by measured duration, with no overlap', () => {
+    const rewards = new Set<string>(GAME_REWARD_IDS);
+    for (const id of GAME_LOOP_IDS) {
+      expect(rewards.has(id)).toBe(false);
+      const doc = read(`${id}.json`);
+      expect(doc.op / doc.fr).toBeGreaterThan(ONE_SHOT_HI);
+    }
+    expect([...GAME_REWARD_IDS, ...GAME_LOOP_IDS].sort()).toEqual(
+      Object.keys(GAME_ANIMATIONS).sort(),
+    );
   });
 
   it('leaves no orphan in the directory that no registry claims', () => {
     const claimed = new Set([
       ...PROCESSING_STAGE_IDS.map((s) => `processing-${s}.json`),
       ...Object.keys(TUTORIAL_ANIMATIONS).map((id) => `${id}.json`),
+      ...Object.keys(GAME_ANIMATIONS).map((id) => `${id}.json`),
     ]);
     expect(assetFiles().filter((f) => !claimed.has(f))).toEqual([]);
   });
@@ -84,10 +158,26 @@ describe('animation assets — the mechanical contract lines', () => {
 
   it('every loop is between 2 and 4 seconds', () => {
     for (const file of assetFiles()) {
+      const id = file.replace(/\.json$/, '');
+      if (ONE_SHOT_IDS.has(id)) continue; // checked separately, below
       const doc = read(file);
       const seconds = doc.op / doc.fr;
       expect(seconds).toBeGreaterThanOrEqual(2);
       expect(seconds).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it('every declared one-shot is between 0.3 and 2.0 seconds', () => {
+    // Non-vacuity: the band is only meaningful if something is in it. An empty
+    // ONE_SHOT_IDS would make the loop check above cover everything and this
+    // one assert nothing, which is the failure mode a skipped test hides.
+    const declared = assetFiles().filter((f) => ONE_SHOT_IDS.has(f.replace(/\.json$/, '')));
+    expect(declared.length).toBe(ONE_SHOT_IDS.size);
+    for (const file of declared) {
+      const doc = read(file);
+      const seconds = doc.op / doc.fr;
+      expect(seconds).toBeGreaterThanOrEqual(ONE_SHOT_LO);
+      expect(seconds).toBeLessThanOrEqual(ONE_SHOT_HI);
     }
   });
 
