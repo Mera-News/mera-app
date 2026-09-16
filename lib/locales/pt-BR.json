@@ -1028,7 +1028,8 @@
     "subTabStories": "Histórias",
     "subTabSaved": "Salvos",
     "subTabHistory": "Histórico",
-    "nextFactPrefix": "Próximo"
+    "nextFactPrefix": "Próximo",
+    "subTabAnalytics": "Análises"
   },
   "feedStatus": {
     "title": "Status do feed",
@@ -2572,7 +2573,29 @@
       "topPublicationsTitle": "Publicações principais",
       "privacyLine": "Calculado só no meu aparelho. Nada saiu dele.",
       "latencyValue_one": "{{count}} hora",
-      "latencyValue_other": "{{count}} horas"
+      "latencyValue_other": "{{count}} horas",
+      "reachTitle": "De onde vieram minhas notícias",
+      "keepTitle": "O que eu guardei",
+      "paceTitle": "Como as notícias chegaram até mim",
+      "windowNow": "Agora",
+      "savedLabel": "Artigos que você salvou",
+      "followedLabel": "Histórias que você segue",
+      "keepNote": "Continua neste aparelho. Artigos salvos e histórias seguidas ficam até você tirar.",
+      "topCountriesTitle": "A maior parte de",
+      "countriesRest": "resto",
+      "flagsMore": "+{{n}} mais",
+      "paceScaleTitle": "Da publicação à leitura",
+      "hoursShort": "{{n}} h"
     }
+  },
+  "analytics": {
+    "title": "Sua leitura",
+    "subtitle": "Calculado neste aparelho. Nada sai dele.",
+    "emptyBody": "Leia alguns artigos e esta página vai encher. O Mera guarda 30 dias de histórico de leitura neste aparelho.",
+    "sectionReach": "De onde vieram suas notícias",
+    "sectionKeep": "O que você guardou",
+    "sectionPace": "Como as notícias chegaram até você",
+    "shareCard": "Compartilhar este cartão",
+    "loading": "Calculando seus números"
   }
 }

@@ -1028,7 +1028,8 @@
     "subTabStories": "Storie",
     "subTabSaved": "Salvati",
     "subTabHistory": "Cronologia",
-    "nextFactPrefix": "Prossimo"
+    "nextFactPrefix": "Prossimo",
+    "subTabAnalytics": "Statistiche"
   },
   "feedStatus": {
     "title": "Stato del feed",
@@ -2572,7 +2573,29 @@
       "topPublicationsTitle": "Testate principali",
       "privacyLine": "Calcolato solo sul mio dispositivo. Non è uscito nulla.",
       "latencyValue_one": "{{count}} ora",
-      "latencyValue_other": "{{count}} ore"
+      "latencyValue_other": "{{count}} ore",
+      "reachTitle": "Da dove sono arrivate le mie notizie",
+      "keepTitle": "Quello che ho tenuto",
+      "paceTitle": "Come mi sono arrivate le notizie",
+      "windowNow": "Adesso",
+      "savedLabel": "Articoli che hai salvato",
+      "followedLabel": "Storie che segui",
+      "keepNote": "Resta su questo dispositivo. Gli articoli salvati e le storie seguite restano finché non li togli.",
+      "topCountriesTitle": "La maggior parte da",
+      "countriesRest": "resto",
+      "flagsMore": "+{{n}} altri",
+      "paceScaleTitle": "Dalla pubblicazione alla lettura",
+      "hoursShort": "{{n}} h"
     }
+  },
+  "analytics": {
+    "title": "Le tue letture",
+    "subtitle": "Calcolato su questo dispositivo. Non esce nulla.",
+    "emptyBody": "Leggi qualche articolo e questa pagina si riempirà. Mera tiene 30 giorni di cronologia di lettura su questo dispositivo.",
+    "sectionReach": "Da dove sono arrivate le tue notizie",
+    "sectionKeep": "Quello che hai tenuto",
+    "sectionPace": "Come ti sono arrivate le notizie",
+    "shareCard": "Condividi questa scheda",
+    "loading": "Sto calcolando i tuoi numeri"
   }
 }

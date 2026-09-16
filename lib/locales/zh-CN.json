@@ -1028,7 +1028,8 @@
     "headlineDenominatorNone_one": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
     "headlineDenominatorNone_other": "Mera 阅读了 {{count}} 条头条 · 今天没有相关的。",
     "subTabHistory": "历史",
-    "nextFactPrefix": "下一个"
+    "nextFactPrefix": "下一个",
+    "subTabAnalytics": "分析"
   },
   "feedStatus": {
     "title": "资讯状态",
@@ -2572,7 +2573,29 @@
       "openedPartial": "这是部分统计。Mera 只统计你在推荐卡片上的点按。",
       "topPublicationsTitle": "常读媒体",
       "privacyLine": "只在我的设备上统计，没有任何数据离开。",
-      "latencyValue_other": "{{count}} 小时"
+      "latencyValue_other": "{{count}} 小时",
+      "reachTitle": "我的新闻来自哪里",
+      "keepTitle": "我留下的内容",
+      "paceTitle": "新闻多久传到我这里",
+      "windowNow": "此刻",
+      "savedLabel": "你保存的文章",
+      "followedLabel": "你在关注的报道",
+      "keepNote": "仍在这台设备上。保存的文章和关注的报道会一直留着，直到你移除。",
+      "topCountriesTitle": "其中大部分来自",
+      "countriesRest": "其余",
+      "flagsMore": "还有 {{n}} 个",
+      "paceScaleTitle": "从发布到阅读",
+      "hoursShort": "{{n}} 小时"
     }
+  },
+  "analytics": {
+    "title": "你的阅读",
+    "subtitle": "在这台设备上统计，没有任何数据离开。",
+    "emptyBody": "读几篇文章，这一页就会填满。Mera 在这台设备上保留 30 天的阅读记录。",
+    "sectionReach": "你的新闻来自哪里",
+    "sectionKeep": "你留下的内容",
+    "sectionPace": "新闻多久传到你这里",
+    "shareCard": "分享这张卡片",
+    "loading": "正在计算你的数据"
   }
 }

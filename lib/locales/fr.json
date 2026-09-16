@@ -1034,7 +1034,8 @@
     "subTabStories": "Actualités",
     "subTabSaved": "Enregistrés",
     "subTabHistory": "Historique",
-    "nextFactPrefix": "Suivant"
+    "nextFactPrefix": "Suivant",
+    "subTabAnalytics": "Analyses"
   },
   "feedStatus": {
     "title": "État du fil",
@@ -2579,7 +2580,29 @@
       "topPublicationsTitle": "Principales sources",
       "privacyLine": "Calculé uniquement sur mon appareil. Rien n'en est sorti.",
       "latencyValue_one": "{{count}} heure",
-      "latencyValue_other": "{{count}} heures"
+      "latencyValue_other": "{{count}} heures",
+      "reachTitle": "D'où venaient mes actualités",
+      "keepTitle": "Ce que j'ai gardé",
+      "paceTitle": "Comment les actualités me sont parvenues",
+      "windowNow": "En ce moment",
+      "savedLabel": "Articles que vous avez enregistrés",
+      "followedLabel": "Actualités que vous suivez",
+      "keepNote": "Toujours sur cet appareil. Les articles enregistrés et les actualités suivies restent jusqu'à ce que vous les retiriez.",
+      "topCountriesTitle": "La plus grande partie vient de",
+      "countriesRest": "reste",
+      "flagsMore": "+{{n}} autres",
+      "paceScaleTitle": "De la publication à la lecture",
+      "hoursShort": "{{n}} h"
     }
+  },
+  "analytics": {
+    "title": "Votre lecture",
+    "subtitle": "Calculé sur cet appareil. Rien n'en sort.",
+    "emptyBody": "Lisez quelques articles et cette page se remplira. Mera conserve 30 jours d'historique de lecture sur cet appareil.",
+    "sectionReach": "D'où venaient vos actualités",
+    "sectionKeep": "Ce que vous avez gardé",
+    "sectionPace": "Comment les actualités vous sont parvenues",
+    "shareCard": "Partager cette carte",
+    "loading": "Calcul de vos chiffres"
   }
 }

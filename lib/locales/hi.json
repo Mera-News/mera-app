@@ -1028,7 +1028,8 @@
     "subTabStories": "स्टोरीज़",
     "subTabSaved": "सहेजे गए",
     "subTabHistory": "इतिहास",
-    "nextFactPrefix": "अगला"
+    "nextFactPrefix": "अगला",
+    "subTabAnalytics": "विश्लेषण"
   },
   "feedStatus": {
     "title": "फ़ीड स्थिति",
@@ -2574,7 +2575,29 @@
       "topPublicationsTitle": "प्रमुख प्रकाशन",
       "privacyLine": "सिर्फ़ मेरे डिवाइस पर गिना गया. कुछ भी बाहर नहीं गया.",
       "latencyValue_one": "{{count}} घंटा",
-      "latencyValue_other": "{{count}} घंटे"
+      "latencyValue_other": "{{count}} घंटे",
+      "reachTitle": "मेरी ख़बरें कहाँ से आईं",
+      "keepTitle": "मैंने क्या सहेजा",
+      "paceTitle": "ख़बरें मुझ तक कैसे पहुँचीं",
+      "windowNow": "अभी",
+      "savedLabel": "आपने जो लेख सहेजे",
+      "followedLabel": "जिन स्टोरीज़ को आप फ़ॉलो करते हैं",
+      "keepNote": "इसी डिवाइस पर है. सहेजे गए लेख और फ़ॉलो की गई स्टोरीज़ तब तक रहती हैं जब तक आप उन्हें हटा न दें.",
+      "topCountriesTitle": "ज़्यादातर यहाँ से",
+      "countriesRest": "बाक़ी",
+      "flagsMore": "+{{n}} और",
+      "paceScaleTitle": "छपने से पढ़ने तक",
+      "hoursShort": "{{n}} घं."
     }
+  },
+  "analytics": {
+    "title": "आपका पढ़ना",
+    "subtitle": "इसी डिवाइस पर गिना गया. कुछ भी बाहर नहीं जाता.",
+    "emptyBody": "कुछ लेख पढ़िए और यह पेज भर जाएगा. Mera इस डिवाइस पर 30 दिन का पढ़ने का इतिहास रखता है.",
+    "sectionReach": "आपकी ख़बरें कहाँ से आईं",
+    "sectionKeep": "आपने क्या सहेजा",
+    "sectionPace": "ख़बरें आप तक कैसे पहुँचीं",
+    "shareCard": "यह कार्ड शेयर करें",
+    "loading": "आपके आँकड़े निकाले जा रहे हैं"
   }
 }

@@ -1046,7 +1046,8 @@
     "subTabStories": "Історії",
     "subTabSaved": "Збережене",
     "subTabHistory": "Історія",
-    "nextFactPrefix": "Далі"
+    "nextFactPrefix": "Далі",
+    "subTabAnalytics": "Аналітика"
   },
   "feedStatus": {
     "title": "Стан стрічки",
@@ -2616,7 +2617,29 @@
       "latencyValue_one": "{{count}} година",
       "latencyValue_few": "{{count}} години",
       "latencyValue_many": "{{count}} годин",
-      "latencyValue_other": "{{count}} години"
+      "latencyValue_other": "{{count}} години",
+      "reachTitle": "Звідки приходили мої новини",
+      "keepTitle": "Що я зберіг",
+      "paceTitle": "Як новини доходили до мене",
+      "windowNow": "Зараз",
+      "savedLabel": "Статті, які ви зберегли",
+      "followedLabel": "Історії, за якими ви стежите",
+      "keepNote": "Досі на цьому пристрої. Збережені статті та відстежувані історії залишаються, доки ви їх не приберете.",
+      "topCountriesTitle": "Найбільше з",
+      "countriesRest": "решта",
+      "flagsMore": "+{{n}} ще",
+      "paceScaleTitle": "Від публікації до прочитання",
+      "hoursShort": "{{n}} год"
     }
+  },
+  "analytics": {
+    "title": "Ваше читання",
+    "subtitle": "Пораховано на цьому пристрої. Нічого його не покидає.",
+    "emptyBody": "Прочитайте кілька статей, і ця сторінка заповниться. Mera зберігає 30 днів історії читання на цьому пристрої.",
+    "sectionReach": "Звідки приходили ваші новини",
+    "sectionKeep": "Що ви зберегли",
+    "sectionPace": "Як новини доходили до вас",
+    "shareCard": "Поділитися карткою",
+    "loading": "Рахуємо ваші числа"
   }
 }

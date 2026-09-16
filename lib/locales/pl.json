@@ -1044,7 +1044,8 @@
     "subTabStories": "historie",
     "subTabSaved": "Zapisane",
     "subTabHistory": "Historia",
-    "nextFactPrefix": "Dalej"
+    "nextFactPrefix": "Dalej",
+    "subTabAnalytics": "Analiza"
   },
   "feedStatus": {
     "title": "Stan kanału",
@@ -2610,7 +2611,29 @@
       "latencyValue_one": "{{count}} godzina",
       "latencyValue_few": "{{count}} godziny",
       "latencyValue_many": "{{count}} godzin",
-      "latencyValue_other": "{{count}} godziny"
+      "latencyValue_other": "{{count}} godziny",
+      "reachTitle": "Skąd pochodziły moje wiadomości",
+      "keepTitle": "Co zachowałem",
+      "paceTitle": "Jak wiadomości do mnie docierały",
+      "windowNow": "Teraz",
+      "savedLabel": "Zapisane artykuły",
+      "followedLabel": "Historie, które śledzisz",
+      "keepNote": "Nadal na tym urządzeniu. Zapisane artykuły i śledzone historie zostają, dopóki ich nie usuniesz.",
+      "topCountriesTitle": "Najwięcej z",
+      "countriesRest": "reszta",
+      "flagsMore": "+{{n}} więcej",
+      "paceScaleTitle": "Od publikacji do przeczytania",
+      "hoursShort": "{{n}} godz."
     }
+  },
+  "analytics": {
+    "title": "Twoje czytanie",
+    "subtitle": "Policzone na tym urządzeniu. Nic go nie opuszcza.",
+    "emptyBody": "Przeczytaj kilka artykułów, a ta strona się zapełni. Mera trzyma 30 dni historii czytania na tym urządzeniu.",
+    "sectionReach": "Skąd pochodziły twoje wiadomości",
+    "sectionKeep": "Co zachowałeś",
+    "sectionPace": "Jak wiadomości do ciebie docierały",
+    "shareCard": "Udostępnij tę kartę",
+    "loading": "Obliczanie twoich liczb"
   }
 }

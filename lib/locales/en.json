@@ -508,7 +508,8 @@
     "subTabStories": "Stories",
     "subTabSaved": "Saved",
     "subTabHistory": "History",
-    "nextFactPrefix": "Next"
+    "nextFactPrefix": "Next",
+    "subTabAnalytics": "Analytics"
   },
   "feedStatus": {
     "title": "Feed status",
@@ -2572,7 +2573,29 @@
       "topPublicationsTitle": "Top publications",
       "privacyLine": "Counted on my device only. Nothing left it.",
       "latencyValue_one": "{{count}} hour",
-      "latencyValue_other": "{{count}} hours"
+      "latencyValue_other": "{{count}} hours",
+      "reachTitle": "Where my news came from",
+      "keepTitle": "What I held onto",
+      "paceTitle": "How the news reached me",
+      "windowNow": "Right now",
+      "savedLabel": "Articles you saved",
+      "followedLabel": "Stories you're following",
+      "keepNote": "Still on this device. Saved articles and followed stories stay until you remove them.",
+      "topCountriesTitle": "Most of it from",
+      "countriesRest": "rest",
+      "flagsMore": "+{{n}} more",
+      "paceScaleTitle": "From published to read",
+      "hoursShort": "{{n}}h"
     }
+  },
+  "analytics": {
+    "title": "Your reading",
+    "subtitle": "Counted on this device. Nothing leaves it.",
+    "emptyBody": "Read a few articles and this page fills up. Mera keeps 30 days of reading history on this device.",
+    "sectionReach": "Where your news came from",
+    "sectionKeep": "What you held onto",
+    "sectionPace": "How the news reached you",
+    "shareCard": "Share this card",
+    "loading": "Working out your numbers"
   }
 }

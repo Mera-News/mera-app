@@ -1028,7 +1028,8 @@
     "subTabStories": "Geschichten",
     "subTabSaved": "Gespeichert",
     "subTabHistory": "Verlauf",
-    "nextFactPrefix": "Nächste"
+    "nextFactPrefix": "Nächste",
+    "subTabAnalytics": "Analyse"
   },
   "feedStatus": {
     "title": "Feed-Status",
@@ -2572,7 +2573,29 @@
       "topPublicationsTitle": "Meistgelesene Quellen",
       "privacyLine": "Nur auf meinem Gerät gezählt. Nichts hat es verlassen.",
       "latencyValue_one": "{{count}} Stunde",
-      "latencyValue_other": "{{count}} Stunden"
+      "latencyValue_other": "{{count}} Stunden",
+      "reachTitle": "Woher meine Nachrichten kamen",
+      "keepTitle": "Was ich behalten habe",
+      "paceTitle": "Wie mich die Nachrichten erreichten",
+      "windowNow": "Gerade jetzt",
+      "savedLabel": "Artikel, die du gespeichert hast",
+      "followedLabel": "Geschichten, denen du folgst",
+      "keepNote": "Bleibt auf diesem Gerät. Gespeicherte Artikel und verfolgte Geschichten bleiben, bis du sie entfernst.",
+      "topCountriesTitle": "Das meiste davon aus",
+      "countriesRest": "Rest",
+      "flagsMore": "+{{n}} weitere",
+      "paceScaleTitle": "Von der Veröffentlichung bis zum Lesen",
+      "hoursShort": "{{n}} Std."
     }
+  },
+  "analytics": {
+    "title": "Dein Lesen",
+    "subtitle": "Auf diesem Gerät gezählt. Nichts verlässt es.",
+    "emptyBody": "Lies ein paar Artikel und diese Seite füllt sich. Mera behält 30 Tage Leseverlauf auf diesem Gerät.",
+    "sectionReach": "Woher deine Nachrichten kamen",
+    "sectionKeep": "Was du behalten hast",
+    "sectionPace": "Wie dich die Nachrichten erreichten",
+    "shareCard": "Diese Karte teilen",
+    "loading": "Deine Zahlen werden berechnet"
   }
 }

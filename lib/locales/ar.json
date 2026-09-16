@@ -1064,7 +1064,8 @@
     "subTabStories": "القصص",
     "subTabSaved": "المحفوظات",
     "subTabHistory": "السجل",
-    "nextFactPrefix": "التالي"
+    "nextFactPrefix": "التالي",
+    "subTabAnalytics": "تحليلات"
   },
   "feedStatus": {
     "title": "حالة الخلاصة",
@@ -2658,7 +2659,29 @@
       "latencyValue_two": "ساعتان",
       "latencyValue_few": "{{count}} ساعات",
       "latencyValue_many": "{{count}} ساعة",
-      "latencyValue_other": "{{count}} ساعة"
+      "latencyValue_other": "{{count}} ساعة",
+      "reachTitle": "من أين جاءت أخباري",
+      "keepTitle": "ما احتفظت به",
+      "paceTitle": "كيف وصلتني الأخبار",
+      "windowNow": "الآن",
+      "savedLabel": "المقالات التي حفظتها",
+      "followedLabel": "القصص التي تتابعها",
+      "keepNote": "ما زالت على هذا الجهاز. المقالات المحفوظة والقصص المتابَعة تبقى حتى تزيلها.",
+      "topCountriesTitle": "معظمها من",
+      "countriesRest": "الباقي",
+      "flagsMore": "+{{n}} أخرى",
+      "paceScaleTitle": "من النشر إلى القراءة",
+      "hoursShort": "{{n}} ساعة"
     }
+  },
+  "analytics": {
+    "title": "قراءتك",
+    "subtitle": "حُسبت على هذا الجهاز. لا يغادره شيء.",
+    "emptyBody": "اقرأ بضعة مقالات وستمتلئ هذه الصفحة. يحتفظ Mera بسجل قراءة 30 يوما على هذا الجهاز.",
+    "sectionReach": "من أين جاءت أخبارك",
+    "sectionKeep": "ما احتفظت به",
+    "sectionPace": "كيف وصلتك الأخبار",
+    "shareCard": "شارك هذه البطاقة",
+    "loading": "نحسب أرقامك"
   }
 }

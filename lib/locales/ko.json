@@ -1028,7 +1028,8 @@
     "headlineDenominatorNone_one": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
     "headlineDenominatorNone_other": "Mera가 {{count}}개의 뉴스를 읽었습니다 · 오늘은 관련된 것이 없습니다.",
     "subTabHistory": "기록",
-    "nextFactPrefix": "다음"
+    "nextFactPrefix": "다음",
+    "subTabAnalytics": "분석"
   },
   "feedStatus": {
     "title": "피드 상태",
@@ -2571,7 +2572,29 @@
       "openedPartial": "일부만 센 값입니다. Mera는 추천 카드를 누른 횟수만 셉니다.",
       "topPublicationsTitle": "자주 읽는 매체",
       "privacyLine": "내 기기에서만 계산했어요. 기기 밖으로 나간 것은 없습니다.",
-      "latencyValue_other": "{{count}}시간"
+      "latencyValue_other": "{{count}}시간",
+      "reachTitle": "내 뉴스가 온 곳",
+      "keepTitle": "내가 간직한 것",
+      "paceTitle": "뉴스가 나에게 닿기까지",
+      "windowNow": "지금",
+      "savedLabel": "저장한 기사",
+      "followedLabel": "팔로우 중인 스토리",
+      "keepNote": "이 기기에 그대로 있어요. 저장한 기사와 팔로우 중인 스토리는 지울 때까지 남습니다.",
+      "topCountriesTitle": "대부분 여기에서",
+      "countriesRest": "나머지",
+      "flagsMore": "+{{n}}개 더",
+      "paceScaleTitle": "발행부터 읽기까지",
+      "hoursShort": "{{n}}시간"
     }
+  },
+  "analytics": {
+    "title": "당신의 읽기",
+    "subtitle": "이 기기에서만 계산했어요. 밖으로 나가지 않습니다.",
+    "emptyBody": "기사를 몇 개 읽으면 이 페이지가 채워져요. Mera는 이 기기에 30일치 읽기 기록을 보관합니다.",
+    "sectionReach": "뉴스가 온 곳",
+    "sectionKeep": "간직한 것",
+    "sectionPace": "뉴스가 닿기까지",
+    "shareCard": "이 카드 공유",
+    "loading": "숫자를 계산하는 중"
   }
 }

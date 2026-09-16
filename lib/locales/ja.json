@@ -1028,7 +1028,8 @@
     "headlineDenominatorNone_one": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
     "headlineDenominatorNone_other": "Meraが{{count}}件のニュースを読みました。今日は関連するもの0件。",
     "subTabHistory": "履歴",
-    "nextFactPrefix": "次へ"
+    "nextFactPrefix": "次へ",
+    "subTabAnalytics": "分析"
   },
   "feedStatus": {
     "title": "フィードの状態",
@@ -2571,7 +2572,29 @@
       "openedPartial": "部分的な数です。Mera はおすすめカードのタップだけを数えます。",
       "topPublicationsTitle": "よく読む媒体",
       "privacyLine": "私の端末だけで数えました。外には何も出ていません。",
-      "latencyValue_other": "{{count}} 時間"
+      "latencyValue_other": "{{count}} 時間",
+      "reachTitle": "どこからニュースが届いたか",
+      "keepTitle": "とっておいたもの",
+      "paceTitle": "ニュースが届くまで",
+      "windowNow": "現在",
+      "savedLabel": "保存した記事",
+      "followedLabel": "フォロー中のストーリー",
+      "keepNote": "この端末に残っています。保存した記事とフォロー中のストーリーは、削除するまで残ります。",
+      "topCountriesTitle": "その多くはここから",
+      "countriesRest": "その他",
+      "flagsMore": "他 {{n}} 件",
+      "paceScaleTitle": "公開から読むまで",
+      "hoursShort": "{{n}} 時間"
     }
+  },
+  "analytics": {
+    "title": "あなたの読書",
+    "subtitle": "この端末で数えています。外には出ません。",
+    "emptyBody": "記事をいくつか読むと、このページが埋まります。Mera はこの端末に 30 日分の閲覧履歴を保持します。",
+    "sectionReach": "どこからニュースが届いたか",
+    "sectionKeep": "とっておいたもの",
+    "sectionPace": "ニュースが届くまで",
+    "shareCard": "このカードを共有",
+    "loading": "数字を計算しています"
   }
 }

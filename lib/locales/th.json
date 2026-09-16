@@ -1028,7 +1028,8 @@
     "subTabStories": "เรื่องราว",
     "subTabSaved": "บันทึกไว้",
     "subTabHistory": "ประวัติ",
-    "nextFactPrefix": "ถัดไป"
+    "nextFactPrefix": "ถัดไป",
+    "subTabAnalytics": "วิเคราะห์"
   },
   "feedStatus": {
     "title": "สถานะฟีด",
@@ -2571,7 +2572,29 @@
       "openedPartial": "เป็นตัวเลขบางส่วน Mera นับเฉพาะการแตะการ์ดแนะนำของคุณ",
       "topPublicationsTitle": "สำนักข่าวที่อ่านบ่อย",
       "privacyLine": "นับบนเครื่องของฉันเท่านั้น ไม่มีอะไรออกไปข้างนอก",
-      "latencyValue_other": "{{count}} ชั่วโมง"
+      "latencyValue_other": "{{count}} ชั่วโมง",
+      "reachTitle": "ข่าวของฉันมาจากไหน",
+      "keepTitle": "สิ่งที่ฉันเก็บไว้",
+      "paceTitle": "ข่าวมาถึงฉันอย่างไร",
+      "windowNow": "ตอนนี้",
+      "savedLabel": "บทความที่คุณบันทึกไว้",
+      "followedLabel": "เรื่องราวที่คุณติดตาม",
+      "keepNote": "ยังอยู่บนเครื่องนี้ บทความที่บันทึกและเรื่องราวที่ติดตามจะอยู่จนกว่าคุณจะลบออก",
+      "topCountriesTitle": "ส่วนใหญ่มาจาก",
+      "countriesRest": "ที่เหลือ",
+      "flagsMore": "+{{n}} เพิ่มเติม",
+      "paceScaleTitle": "จากตีพิมพ์ถึงอ่าน",
+      "hoursShort": "{{n}} ชม."
     }
+  },
+  "analytics": {
+    "title": "การอ่านของคุณ",
+    "subtitle": "นับบนเครื่องนี้ ไม่มีอะไรออกไปข้างนอก",
+    "emptyBody": "อ่านบทความสักสองสามชิ้นแล้วหน้านี้จะเต็มขึ้น Mera เก็บประวัติการอ่าน 30 วันไว้บนเครื่องนี้",
+    "sectionReach": "ข่าวของคุณมาจากไหน",
+    "sectionKeep": "สิ่งที่คุณเก็บไว้",
+    "sectionPace": "ข่าวมาถึงคุณอย่างไร",
+    "shareCard": "แชร์การ์ดนี้",
+    "loading": "กำลังคำนวณตัวเลขของคุณ"
   }
 }

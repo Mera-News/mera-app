@@ -1046,7 +1046,8 @@
     "subTabStories": "Истории",
     "subTabSaved": "Сохранённое",
     "subTabHistory": "История",
-    "nextFactPrefix": "Далее"
+    "nextFactPrefix": "Далее",
+    "subTabAnalytics": "Аналитика"
   },
   "feedStatus": {
     "title": "Статус ленты",
@@ -2612,7 +2613,29 @@
       "latencyValue_one": "{{count}} час",
       "latencyValue_few": "{{count}} часа",
       "latencyValue_many": "{{count}} часов",
-      "latencyValue_other": "{{count}} часа"
+      "latencyValue_other": "{{count}} часа",
+      "reachTitle": "Откуда приходили мои новости",
+      "keepTitle": "Что я сохранил",
+      "paceTitle": "Как новости доходили до меня",
+      "windowNow": "Сейчас",
+      "savedLabel": "Статьи, которые вы сохранили",
+      "followedLabel": "Истории, за которыми вы следите",
+      "keepNote": "Всё ещё на этом устройстве. Сохранённые статьи и отслеживаемые истории остаются, пока вы их не уберёте.",
+      "topCountriesTitle": "Больше всего из",
+      "countriesRest": "остальное",
+      "flagsMore": "+{{n}} ещё",
+      "paceScaleTitle": "От публикации до прочтения",
+      "hoursShort": "{{n}} ч"
     }
+  },
+  "analytics": {
+    "title": "Ваше чтение",
+    "subtitle": "Посчитано на этом устройстве. Ничего его не покидает.",
+    "emptyBody": "Прочитайте несколько статей, и эта страница заполнится. Mera хранит 30 дней истории чтения на этом устройстве.",
+    "sectionReach": "Откуда приходили ваши новости",
+    "sectionKeep": "Что вы сохранили",
+    "sectionPace": "Как новости доходили до вас",
+    "shareCard": "Поделиться карточкой",
+    "loading": "Считаем ваши числа"
   }
 }

@@ -1028,7 +1028,8 @@
     "subTabStories": "Cerita",
     "subTabSaved": "Tersimpan",
     "subTabHistory": "Riwayat",
-    "nextFactPrefix": "Berikutnya"
+    "nextFactPrefix": "Berikutnya",
+    "subTabAnalytics": "Analitik"
   },
   "feedStatus": {
     "title": "Status feed",
@@ -2571,7 +2572,29 @@
       "openedPartial": "Hitungan sebagian. Mera hanya menghitung ketukan pada kartu saran Anda.",
       "topPublicationsTitle": "Penerbit teratas",
       "privacyLine": "Dihitung hanya di perangkat saya. Tidak ada yang keluar.",
-      "latencyValue_other": "{{count}} jam"
+      "latencyValue_other": "{{count}} jam",
+      "reachTitle": "Dari mana berita saya datang",
+      "keepTitle": "Yang saya simpan",
+      "paceTitle": "Bagaimana berita sampai ke saya",
+      "windowNow": "Saat ini",
+      "savedLabel": "Artikel yang Anda simpan",
+      "followedLabel": "Cerita yang Anda ikuti",
+      "keepNote": "Masih di perangkat ini. Artikel tersimpan dan cerita yang diikuti tetap ada sampai Anda menghapusnya.",
+      "topCountriesTitle": "Sebagian besar dari",
+      "countriesRest": "sisanya",
+      "flagsMore": "+{{n}} lagi",
+      "paceScaleTitle": "Dari terbit sampai dibaca",
+      "hoursShort": "{{n}} jam"
     }
+  },
+  "analytics": {
+    "title": "Bacaan Anda",
+    "subtitle": "Dihitung di perangkat ini. Tidak ada yang keluar.",
+    "emptyBody": "Baca beberapa artikel dan halaman ini akan terisi. Mera menyimpan riwayat bacaan 30 hari di perangkat ini.",
+    "sectionReach": "Dari mana berita Anda datang",
+    "sectionKeep": "Yang Anda simpan",
+    "sectionPace": "Bagaimana berita sampai ke Anda",
+    "shareCard": "Bagikan kartu ini",
+    "loading": "Menghitung angka Anda"
   }
 }

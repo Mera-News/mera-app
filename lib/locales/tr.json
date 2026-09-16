@@ -1028,7 +1028,8 @@
     "subTabStories": "Haberler",
     "subTabSaved": "Kaydedilenler",
     "subTabHistory": "Geçmiş",
-    "nextFactPrefix": "Sonraki"
+    "nextFactPrefix": "Sonraki",
+    "subTabAnalytics": "Analiz"
   },
   "feedStatus": {
     "title": "Akış durumu",
@@ -2574,7 +2575,29 @@
       "topPublicationsTitle": "En çok okunan yayınlar",
       "privacyLine": "Yalnızca kendi cihazımda sayıldı. Hiçbir şey dışarı çıkmadı.",
       "latencyValue_one": "{{count}} saat",
-      "latencyValue_other": "{{count}} saat"
+      "latencyValue_other": "{{count}} saat",
+      "reachTitle": "Haberlerim nereden geldi",
+      "keepTitle": "Sakladıklarım",
+      "paceTitle": "Haberler bana nasıl ulaştı",
+      "windowNow": "Şu anda",
+      "savedLabel": "Kaydettiğin haberler",
+      "followedLabel": "Takip ettiğin gelişmeler",
+      "keepNote": "Hâlâ bu cihazda. Kaydettiğin haberler ve takip ettiğin gelişmeler, sen kaldırana kadar durur.",
+      "topCountriesTitle": "Çoğu buradan",
+      "countriesRest": "geri kalan",
+      "flagsMore": "+{{n}} daha",
+      "paceScaleTitle": "Yayından okumaya",
+      "hoursShort": "{{n}} sa."
     }
+  },
+  "analytics": {
+    "title": "Okumaların",
+    "subtitle": "Bu cihazda sayıldı. Hiçbir şey dışarı çıkmıyor.",
+    "emptyBody": "Birkaç haber oku, bu sayfa dolsun. Mera bu cihazda 30 günlük okuma geçmişi tutar.",
+    "sectionReach": "Haberlerin nereden geldi",
+    "sectionKeep": "Sakladıkların",
+    "sectionPace": "Haberler sana nasıl ulaştı",
+    "shareCard": "Bu kartı paylaş",
+    "loading": "Sayıların hesaplanıyor"
   }
 }

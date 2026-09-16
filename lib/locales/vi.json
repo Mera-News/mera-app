@@ -1028,7 +1028,8 @@
     "subTabStories": "Câu chuyện",
     "subTabSaved": "Đã lưu",
     "subTabHistory": "Lịch sử",
-    "nextFactPrefix": "Tiếp theo"
+    "nextFactPrefix": "Tiếp theo",
+    "subTabAnalytics": "Phân tích"
   },
   "feedStatus": {
     "title": "Trạng thái bản tin",
@@ -2572,7 +2573,29 @@
       "openedPartial": "Số đếm một phần. Mera chỉ đếm lượt chạm vào thẻ gợi ý của bạn.",
       "topPublicationsTitle": "Các báo đọc nhiều nhất",
       "privacyLine": "Chỉ đếm trên máy của tôi. Không có gì rời khỏi máy.",
-      "latencyValue_other": "{{count}} giờ"
+      "latencyValue_other": "{{count}} giờ",
+      "reachTitle": "Tin của tôi đến từ đâu",
+      "keepTitle": "Những gì tôi giữ lại",
+      "paceTitle": "Tin đến với tôi thế nào",
+      "windowNow": "Ngay bây giờ",
+      "savedLabel": "Bài viết bạn đã lưu",
+      "followedLabel": "Câu chuyện bạn đang theo dõi",
+      "keepNote": "Vẫn ở trên máy này. Bài viết đã lưu và câu chuyện đang theo dõi sẽ còn đó cho đến khi bạn gỡ đi.",
+      "topCountriesTitle": "Phần lớn đến từ",
+      "countriesRest": "còn lại",
+      "flagsMore": "+{{n}} nữa",
+      "paceScaleTitle": "Từ lúc đăng đến lúc đọc",
+      "hoursShort": "{{n}} giờ"
     }
+  },
+  "analytics": {
+    "title": "Việc đọc của bạn",
+    "subtitle": "Đếm trên máy này. Không có gì rời khỏi máy.",
+    "emptyBody": "Đọc vài bài viết và trang này sẽ đầy lên. Mera giữ 30 ngày lịch sử đọc trên máy này.",
+    "sectionReach": "Tin của bạn đến từ đâu",
+    "sectionKeep": "Những gì bạn giữ lại",
+    "sectionPace": "Tin đến với bạn thế nào",
+    "shareCard": "Chia sẻ thẻ này",
+    "loading": "Đang tính các con số của bạn"
   }
 }

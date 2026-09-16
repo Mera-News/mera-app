@@ -1028,7 +1028,8 @@
     "subTabStories": "Verhalen",
     "subTabSaved": "Opgeslagen",
     "subTabHistory": "Geschiedenis",
-    "nextFactPrefix": "Volgende"
+    "nextFactPrefix": "Volgende",
+    "subTabAnalytics": "Analyse"
   },
   "feedStatus": {
     "title": "Feedstatus",
@@ -2572,7 +2573,29 @@
       "topPublicationsTitle": "Meestgelezen bronnen",
       "privacyLine": "Alleen op mijn apparaat geteld. Er is niets weggegaan.",
       "latencyValue_one": "{{count}} uur",
-      "latencyValue_other": "{{count}} uur"
+      "latencyValue_other": "{{count}} uur",
+      "reachTitle": "Waar mijn nieuws vandaan kwam",
+      "keepTitle": "Wat ik heb bewaard",
+      "paceTitle": "Hoe het nieuws mij bereikte",
+      "windowNow": "Nu",
+      "savedLabel": "Artikelen die je opsloeg",
+      "followedLabel": "Verhalen die je volgt",
+      "keepNote": "Staat nog op dit apparaat. Opgeslagen artikelen en gevolgde verhalen blijven tot je ze weghaalt.",
+      "topCountriesTitle": "Het meeste komt uit",
+      "countriesRest": "rest",
+      "flagsMore": "+{{n}} meer",
+      "paceScaleTitle": "Van publicatie tot lezen",
+      "hoursShort": "{{n}} u"
     }
+  },
+  "analytics": {
+    "title": "Jouw lezen",
+    "subtitle": "Geteld op dit apparaat. Er gaat niets weg.",
+    "emptyBody": "Lees een paar artikelen en deze pagina vult zich. Mera bewaart 30 dagen leesgeschiedenis op dit apparaat.",
+    "sectionReach": "Waar jouw nieuws vandaan kwam",
+    "sectionKeep": "Wat je hebt bewaard",
+    "sectionPace": "Hoe het nieuws jou bereikte",
+    "shareCard": "Deze kaart delen",
+    "loading": "Je cijfers worden berekend"
   }
 }
