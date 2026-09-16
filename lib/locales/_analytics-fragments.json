@@ -1,0 +1,623 @@
+{
+  "_comment": "analytics wave: the Analytics tab on the Dashboard plus the three share cards it can hand to the share sheet. 12 new shareStats.card.* keys (three card titles, the present-tense window line, the saved and followed labels, the keep note, the country-proportion heading and its remainder segment, the flag-grid overflow chip, the pace scale heading and its hour tick), 8 new analytics.* keys for the screen chrome, and forYou.subTabAnalytics for the sub-tab. Pure ADD: every key is new, so no --allow-overwrite is needed. Nothing is renamed or removed, because the splice script only adds and a key that loses its consumer is a permanent orphan in all 20 dictionaries. The window line 'Last 30 days', the empty-state title and every figure label that already existed (countriesLabel, publicationsLabel, openedLabel, openedPartial, latency*, privacyLine) are reused rather than re-minted. flagsMore and hoursShort interpolate {{n}}, NOT {{count}}: neither is ever asked to render 1 (the overflow chip only appears at two or more, a single overflow renders its own flag, and the scale ticks are 0 and 48), so they stay out of i18next plural resolution and away from the six-category CLDR fan-out latencyValue needs. Never edit the 20 dictionaries by hand.",
+  "en": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Where my news came from",
+        "keepTitle": "What I held onto",
+        "paceTitle": "How the news reached me",
+        "windowNow": "Right now",
+        "savedLabel": "Articles you saved",
+        "followedLabel": "Stories you're following",
+        "keepNote": "Still on this device. Saved articles and followed stories stay until you remove them.",
+        "topCountriesTitle": "Most of it from",
+        "countriesRest": "rest",
+        "flagsMore": "+{{n}} more",
+        "paceScaleTitle": "From published to read",
+        "hoursShort": "{{n}}h"
+      }
+    },
+    "analytics": {
+      "title": "Your reading",
+      "subtitle": "Counted on this device. Nothing leaves it.",
+      "emptyBody": "Read a few articles and this page fills up. Mera keeps 30 days of reading history on this device.",
+      "sectionReach": "Where your news came from",
+      "sectionKeep": "What you held onto",
+      "sectionPace": "How the news reached you",
+      "shareCard": "Share this card",
+      "loading": "Working out your numbers"
+    },
+    "forYou": {
+      "subTabAnalytics": "Analytics"
+    }
+  },
+  "de": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Woher meine Nachrichten kamen",
+        "keepTitle": "Was ich behalten habe",
+        "paceTitle": "Wie mich die Nachrichten erreichten",
+        "windowNow": "Gerade jetzt",
+        "savedLabel": "Artikel, die du gespeichert hast",
+        "followedLabel": "Geschichten, denen du folgst",
+        "keepNote": "Bleibt auf diesem Gerät. Gespeicherte Artikel und verfolgte Geschichten bleiben, bis du sie entfernst.",
+        "topCountriesTitle": "Das meiste davon aus",
+        "countriesRest": "Rest",
+        "flagsMore": "+{{n}} weitere",
+        "paceScaleTitle": "Von der Veröffentlichung bis zum Lesen",
+        "hoursShort": "{{n}} Std."
+      }
+    },
+    "analytics": {
+      "title": "Dein Lesen",
+      "subtitle": "Auf diesem Gerät gezählt. Nichts verlässt es.",
+      "emptyBody": "Lies ein paar Artikel und diese Seite füllt sich. Mera behält 30 Tage Leseverlauf auf diesem Gerät.",
+      "sectionReach": "Woher deine Nachrichten kamen",
+      "sectionKeep": "Was du behalten hast",
+      "sectionPace": "Wie dich die Nachrichten erreichten",
+      "shareCard": "Diese Karte teilen",
+      "loading": "Deine Zahlen werden berechnet"
+    },
+    "forYou": {
+      "subTabAnalytics": "Analyse"
+    }
+  },
+  "es": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "De dónde vinieron mis noticias",
+        "keepTitle": "Lo que guardé",
+        "paceTitle": "Cómo me llegaron las noticias",
+        "windowNow": "Ahora mismo",
+        "savedLabel": "Artículos que guardaste",
+        "followedLabel": "Historias que sigues",
+        "keepNote": "Sigue en este dispositivo. Los artículos guardados y las historias que sigues se quedan hasta que los quites.",
+        "topCountriesTitle": "La mayor parte de",
+        "countriesRest": "resto",
+        "flagsMore": "+{{n}} más",
+        "paceScaleTitle": "De la publicación a la lectura",
+        "hoursShort": "{{n}} h"
+      }
+    },
+    "analytics": {
+      "title": "Tu lectura",
+      "subtitle": "Calculado en este dispositivo. Nada sale de él.",
+      "emptyBody": "Lee algunos artículos y esta página se irá llenando. Mera guarda 30 días de historial de lectura en este dispositivo.",
+      "sectionReach": "De dónde vinieron tus noticias",
+      "sectionKeep": "Lo que guardaste",
+      "sectionPace": "Cómo te llegaron las noticias",
+      "shareCard": "Compartir esta tarjeta",
+      "loading": "Calculando tus números"
+    },
+    "forYou": {
+      "subTabAnalytics": "Analíticas"
+    }
+  },
+  "fr": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "D'où venaient mes actualités",
+        "keepTitle": "Ce que j'ai gardé",
+        "paceTitle": "Comment les actualités me sont parvenues",
+        "windowNow": "En ce moment",
+        "savedLabel": "Articles que vous avez enregistrés",
+        "followedLabel": "Actualités que vous suivez",
+        "keepNote": "Toujours sur cet appareil. Les articles enregistrés et les actualités suivies restent jusqu'à ce que vous les retiriez.",
+        "topCountriesTitle": "La plus grande partie vient de",
+        "countriesRest": "reste",
+        "flagsMore": "+{{n}} autres",
+        "paceScaleTitle": "De la publication à la lecture",
+        "hoursShort": "{{n}} h"
+      }
+    },
+    "analytics": {
+      "title": "Votre lecture",
+      "subtitle": "Calculé sur cet appareil. Rien n'en sort.",
+      "emptyBody": "Lisez quelques articles et cette page se remplira. Mera conserve 30 jours d'historique de lecture sur cet appareil.",
+      "sectionReach": "D'où venaient vos actualités",
+      "sectionKeep": "Ce que vous avez gardé",
+      "sectionPace": "Comment les actualités vous sont parvenues",
+      "shareCard": "Partager cette carte",
+      "loading": "Calcul de vos chiffres"
+    },
+    "forYou": {
+      "subTabAnalytics": "Analyses"
+    }
+  },
+  "hi": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "मेरी ख़बरें कहाँ से आईं",
+        "keepTitle": "मैंने क्या सहेजा",
+        "paceTitle": "ख़बरें मुझ तक कैसे पहुँचीं",
+        "windowNow": "अभी",
+        "savedLabel": "आपने जो लेख सहेजे",
+        "followedLabel": "जिन स्टोरीज़ को आप फ़ॉलो करते हैं",
+        "keepNote": "इसी डिवाइस पर है. सहेजे गए लेख और फ़ॉलो की गई स्टोरीज़ तब तक रहती हैं जब तक आप उन्हें हटा न दें.",
+        "topCountriesTitle": "ज़्यादातर यहाँ से",
+        "countriesRest": "बाक़ी",
+        "flagsMore": "+{{n}} और",
+        "paceScaleTitle": "छपने से पढ़ने तक",
+        "hoursShort": "{{n}} घं."
+      }
+    },
+    "analytics": {
+      "title": "आपका पढ़ना",
+      "subtitle": "इसी डिवाइस पर गिना गया. कुछ भी बाहर नहीं जाता.",
+      "emptyBody": "कुछ लेख पढ़िए और यह पेज भर जाएगा. Mera इस डिवाइस पर 30 दिन का पढ़ने का इतिहास रखता है.",
+      "sectionReach": "आपकी ख़बरें कहाँ से आईं",
+      "sectionKeep": "आपने क्या सहेजा",
+      "sectionPace": "ख़बरें आप तक कैसे पहुँचीं",
+      "shareCard": "यह कार्ड शेयर करें",
+      "loading": "आपके आँकड़े निकाले जा रहे हैं"
+    },
+    "forYou": {
+      "subTabAnalytics": "विश्लेषण"
+    }
+  },
+  "id": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Dari mana berita saya datang",
+        "keepTitle": "Yang saya simpan",
+        "paceTitle": "Bagaimana berita sampai ke saya",
+        "windowNow": "Saat ini",
+        "savedLabel": "Artikel yang Anda simpan",
+        "followedLabel": "Cerita yang Anda ikuti",
+        "keepNote": "Masih di perangkat ini. Artikel tersimpan dan cerita yang diikuti tetap ada sampai Anda menghapusnya.",
+        "topCountriesTitle": "Sebagian besar dari",
+        "countriesRest": "sisanya",
+        "flagsMore": "+{{n}} lagi",
+        "paceScaleTitle": "Dari terbit sampai dibaca",
+        "hoursShort": "{{n}} jam"
+      }
+    },
+    "analytics": {
+      "title": "Bacaan Anda",
+      "subtitle": "Dihitung di perangkat ini. Tidak ada yang keluar.",
+      "emptyBody": "Baca beberapa artikel dan halaman ini akan terisi. Mera menyimpan riwayat bacaan 30 hari di perangkat ini.",
+      "sectionReach": "Dari mana berita Anda datang",
+      "sectionKeep": "Yang Anda simpan",
+      "sectionPace": "Bagaimana berita sampai ke Anda",
+      "shareCard": "Bagikan kartu ini",
+      "loading": "Menghitung angka Anda"
+    },
+    "forYou": {
+      "subTabAnalytics": "Analitik"
+    }
+  },
+  "it": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Da dove sono arrivate le mie notizie",
+        "keepTitle": "Quello che ho tenuto",
+        "paceTitle": "Come mi sono arrivate le notizie",
+        "windowNow": "Adesso",
+        "savedLabel": "Articoli che hai salvato",
+        "followedLabel": "Storie che segui",
+        "keepNote": "Resta su questo dispositivo. Gli articoli salvati e le storie seguite restano finché non li togli.",
+        "topCountriesTitle": "La maggior parte da",
+        "countriesRest": "resto",
+        "flagsMore": "+{{n}} altri",
+        "paceScaleTitle": "Dalla pubblicazione alla lettura",
+        "hoursShort": "{{n}} h"
+      }
+    },
+    "analytics": {
+      "title": "Le tue letture",
+      "subtitle": "Calcolato su questo dispositivo. Non esce nulla.",
+      "emptyBody": "Leggi qualche articolo e questa pagina si riempirà. Mera tiene 30 giorni di cronologia di lettura su questo dispositivo.",
+      "sectionReach": "Da dove sono arrivate le tue notizie",
+      "sectionKeep": "Quello che hai tenuto",
+      "sectionPace": "Come ti sono arrivate le notizie",
+      "shareCard": "Condividi questa scheda",
+      "loading": "Sto calcolando i tuoi numeri"
+    },
+    "forYou": {
+      "subTabAnalytics": "Statistiche"
+    }
+  },
+  "ja": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "どこからニュースが届いたか",
+        "keepTitle": "とっておいたもの",
+        "paceTitle": "ニュースが届くまで",
+        "windowNow": "現在",
+        "savedLabel": "保存した記事",
+        "followedLabel": "フォロー中のストーリー",
+        "keepNote": "この端末に残っています。保存した記事とフォロー中のストーリーは、削除するまで残ります。",
+        "topCountriesTitle": "その多くはここから",
+        "countriesRest": "その他",
+        "flagsMore": "他 {{n}} 件",
+        "paceScaleTitle": "公開から読むまで",
+        "hoursShort": "{{n}} 時間"
+      }
+    },
+    "analytics": {
+      "title": "あなたの読書",
+      "subtitle": "この端末で数えています。外には出ません。",
+      "emptyBody": "記事をいくつか読むと、このページが埋まります。Mera はこの端末に 30 日分の閲覧履歴を保持します。",
+      "sectionReach": "どこからニュースが届いたか",
+      "sectionKeep": "とっておいたもの",
+      "sectionPace": "ニュースが届くまで",
+      "shareCard": "このカードを共有",
+      "loading": "数字を計算しています"
+    },
+    "forYou": {
+      "subTabAnalytics": "分析"
+    }
+  },
+  "ko": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "내 뉴스가 온 곳",
+        "keepTitle": "내가 간직한 것",
+        "paceTitle": "뉴스가 나에게 닿기까지",
+        "windowNow": "지금",
+        "savedLabel": "저장한 기사",
+        "followedLabel": "팔로우 중인 스토리",
+        "keepNote": "이 기기에 그대로 있어요. 저장한 기사와 팔로우 중인 스토리는 지울 때까지 남습니다.",
+        "topCountriesTitle": "대부분 여기에서",
+        "countriesRest": "나머지",
+        "flagsMore": "+{{n}}개 더",
+        "paceScaleTitle": "발행부터 읽기까지",
+        "hoursShort": "{{n}}시간"
+      }
+    },
+    "analytics": {
+      "title": "당신의 읽기",
+      "subtitle": "이 기기에서만 계산했어요. 밖으로 나가지 않습니다.",
+      "emptyBody": "기사를 몇 개 읽으면 이 페이지가 채워져요. Mera는 이 기기에 30일치 읽기 기록을 보관합니다.",
+      "sectionReach": "뉴스가 온 곳",
+      "sectionKeep": "간직한 것",
+      "sectionPace": "뉴스가 닿기까지",
+      "shareCard": "이 카드 공유",
+      "loading": "숫자를 계산하는 중"
+    },
+    "forYou": {
+      "subTabAnalytics": "분석"
+    }
+  },
+  "nl": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Waar mijn nieuws vandaan kwam",
+        "keepTitle": "Wat ik heb bewaard",
+        "paceTitle": "Hoe het nieuws mij bereikte",
+        "windowNow": "Nu",
+        "savedLabel": "Artikelen die je opsloeg",
+        "followedLabel": "Verhalen die je volgt",
+        "keepNote": "Staat nog op dit apparaat. Opgeslagen artikelen en gevolgde verhalen blijven tot je ze weghaalt.",
+        "topCountriesTitle": "Het meeste komt uit",
+        "countriesRest": "rest",
+        "flagsMore": "+{{n}} meer",
+        "paceScaleTitle": "Van publicatie tot lezen",
+        "hoursShort": "{{n}} u"
+      }
+    },
+    "analytics": {
+      "title": "Jouw lezen",
+      "subtitle": "Geteld op dit apparaat. Er gaat niets weg.",
+      "emptyBody": "Lees een paar artikelen en deze pagina vult zich. Mera bewaart 30 dagen leesgeschiedenis op dit apparaat.",
+      "sectionReach": "Waar jouw nieuws vandaan kwam",
+      "sectionKeep": "Wat je hebt bewaard",
+      "sectionPace": "Hoe het nieuws jou bereikte",
+      "shareCard": "Deze kaart delen",
+      "loading": "Je cijfers worden berekend"
+    },
+    "forYou": {
+      "subTabAnalytics": "Analyse"
+    }
+  },
+  "pl": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Skąd pochodziły moje wiadomości",
+        "keepTitle": "Co zachowałem",
+        "paceTitle": "Jak wiadomości do mnie docierały",
+        "windowNow": "Teraz",
+        "savedLabel": "Zapisane artykuły",
+        "followedLabel": "Historie, które śledzisz",
+        "keepNote": "Nadal na tym urządzeniu. Zapisane artykuły i śledzone historie zostają, dopóki ich nie usuniesz.",
+        "topCountriesTitle": "Najwięcej z",
+        "countriesRest": "reszta",
+        "flagsMore": "+{{n}} więcej",
+        "paceScaleTitle": "Od publikacji do przeczytania",
+        "hoursShort": "{{n}} godz."
+      }
+    },
+    "analytics": {
+      "title": "Twoje czytanie",
+      "subtitle": "Policzone na tym urządzeniu. Nic go nie opuszcza.",
+      "emptyBody": "Przeczytaj kilka artykułów, a ta strona się zapełni. Mera trzyma 30 dni historii czytania na tym urządzeniu.",
+      "sectionReach": "Skąd pochodziły twoje wiadomości",
+      "sectionKeep": "Co zachowałeś",
+      "sectionPace": "Jak wiadomości do ciebie docierały",
+      "shareCard": "Udostępnij tę kartę",
+      "loading": "Obliczanie twoich liczb"
+    },
+    "forYou": {
+      "subTabAnalytics": "Analiza"
+    }
+  },
+  "pt-BR": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "De onde vieram minhas notícias",
+        "keepTitle": "O que eu guardei",
+        "paceTitle": "Como as notícias chegaram até mim",
+        "windowNow": "Agora",
+        "savedLabel": "Artigos que você salvou",
+        "followedLabel": "Histórias que você segue",
+        "keepNote": "Continua neste aparelho. Artigos salvos e histórias seguidas ficam até você tirar.",
+        "topCountriesTitle": "A maior parte de",
+        "countriesRest": "resto",
+        "flagsMore": "+{{n}} mais",
+        "paceScaleTitle": "Da publicação à leitura",
+        "hoursShort": "{{n}} h"
+      }
+    },
+    "analytics": {
+      "title": "Sua leitura",
+      "subtitle": "Calculado neste aparelho. Nada sai dele.",
+      "emptyBody": "Leia alguns artigos e esta página vai encher. O Mera guarda 30 dias de histórico de leitura neste aparelho.",
+      "sectionReach": "De onde vieram suas notícias",
+      "sectionKeep": "O que você guardou",
+      "sectionPace": "Como as notícias chegaram até você",
+      "shareCard": "Compartilhar este cartão",
+      "loading": "Calculando seus números"
+    },
+    "forYou": {
+      "subTabAnalytics": "Análises"
+    }
+  },
+  "ru": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Откуда приходили мои новости",
+        "keepTitle": "Что я сохранил",
+        "paceTitle": "Как новости доходили до меня",
+        "windowNow": "Сейчас",
+        "savedLabel": "Статьи, которые вы сохранили",
+        "followedLabel": "Истории, за которыми вы следите",
+        "keepNote": "Всё ещё на этом устройстве. Сохранённые статьи и отслеживаемые истории остаются, пока вы их не уберёте.",
+        "topCountriesTitle": "Больше всего из",
+        "countriesRest": "остальное",
+        "flagsMore": "+{{n}} ещё",
+        "paceScaleTitle": "От публикации до прочтения",
+        "hoursShort": "{{n}} ч"
+      }
+    },
+    "analytics": {
+      "title": "Ваше чтение",
+      "subtitle": "Посчитано на этом устройстве. Ничего его не покидает.",
+      "emptyBody": "Прочитайте несколько статей, и эта страница заполнится. Mera хранит 30 дней истории чтения на этом устройстве.",
+      "sectionReach": "Откуда приходили ваши новости",
+      "sectionKeep": "Что вы сохранили",
+      "sectionPace": "Как новости доходили до вас",
+      "shareCard": "Поделиться карточкой",
+      "loading": "Считаем ваши числа"
+    },
+    "forYou": {
+      "subTabAnalytics": "Аналитика"
+    }
+  },
+  "th": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "ข่าวของฉันมาจากไหน",
+        "keepTitle": "สิ่งที่ฉันเก็บไว้",
+        "paceTitle": "ข่าวมาถึงฉันอย่างไร",
+        "windowNow": "ตอนนี้",
+        "savedLabel": "บทความที่คุณบันทึกไว้",
+        "followedLabel": "เรื่องราวที่คุณติดตาม",
+        "keepNote": "ยังอยู่บนเครื่องนี้ บทความที่บันทึกและเรื่องราวที่ติดตามจะอยู่จนกว่าคุณจะลบออก",
+        "topCountriesTitle": "ส่วนใหญ่มาจาก",
+        "countriesRest": "ที่เหลือ",
+        "flagsMore": "+{{n}} เพิ่มเติม",
+        "paceScaleTitle": "จากตีพิมพ์ถึงอ่าน",
+        "hoursShort": "{{n}} ชม."
+      }
+    },
+    "analytics": {
+      "title": "การอ่านของคุณ",
+      "subtitle": "นับบนเครื่องนี้ ไม่มีอะไรออกไปข้างนอก",
+      "emptyBody": "อ่านบทความสักสองสามชิ้นแล้วหน้านี้จะเต็มขึ้น Mera เก็บประวัติการอ่าน 30 วันไว้บนเครื่องนี้",
+      "sectionReach": "ข่าวของคุณมาจากไหน",
+      "sectionKeep": "สิ่งที่คุณเก็บไว้",
+      "sectionPace": "ข่าวมาถึงคุณอย่างไร",
+      "shareCard": "แชร์การ์ดนี้",
+      "loading": "กำลังคำนวณตัวเลขของคุณ"
+    },
+    "forYou": {
+      "subTabAnalytics": "วิเคราะห์"
+    }
+  },
+  "tr": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Haberlerim nereden geldi",
+        "keepTitle": "Sakladıklarım",
+        "paceTitle": "Haberler bana nasıl ulaştı",
+        "windowNow": "Şu anda",
+        "savedLabel": "Kaydettiğin haberler",
+        "followedLabel": "Takip ettiğin gelişmeler",
+        "keepNote": "Hâlâ bu cihazda. Kaydettiğin haberler ve takip ettiğin gelişmeler, sen kaldırana kadar durur.",
+        "topCountriesTitle": "Çoğu buradan",
+        "countriesRest": "geri kalan",
+        "flagsMore": "+{{n}} daha",
+        "paceScaleTitle": "Yayından okumaya",
+        "hoursShort": "{{n}} sa."
+      }
+    },
+    "analytics": {
+      "title": "Okumaların",
+      "subtitle": "Bu cihazda sayıldı. Hiçbir şey dışarı çıkmıyor.",
+      "emptyBody": "Birkaç haber oku, bu sayfa dolsun. Mera bu cihazda 30 günlük okuma geçmişi tutar.",
+      "sectionReach": "Haberlerin nereden geldi",
+      "sectionKeep": "Sakladıkların",
+      "sectionPace": "Haberler sana nasıl ulaştı",
+      "shareCard": "Bu kartı paylaş",
+      "loading": "Sayıların hesaplanıyor"
+    },
+    "forYou": {
+      "subTabAnalytics": "Analiz"
+    }
+  },
+  "uk": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Звідки приходили мої новини",
+        "keepTitle": "Що я зберіг",
+        "paceTitle": "Як новини доходили до мене",
+        "windowNow": "Зараз",
+        "savedLabel": "Статті, які ви зберегли",
+        "followedLabel": "Історії, за якими ви стежите",
+        "keepNote": "Досі на цьому пристрої. Збережені статті та відстежувані історії залишаються, доки ви їх не приберете.",
+        "topCountriesTitle": "Найбільше з",
+        "countriesRest": "решта",
+        "flagsMore": "+{{n}} ще",
+        "paceScaleTitle": "Від публікації до прочитання",
+        "hoursShort": "{{n}} год"
+      }
+    },
+    "analytics": {
+      "title": "Ваше читання",
+      "subtitle": "Пораховано на цьому пристрої. Нічого його не покидає.",
+      "emptyBody": "Прочитайте кілька статей, і ця сторінка заповниться. Mera зберігає 30 днів історії читання на цьому пристрої.",
+      "sectionReach": "Звідки приходили ваші новини",
+      "sectionKeep": "Що ви зберегли",
+      "sectionPace": "Як новини доходили до вас",
+      "shareCard": "Поділитися карткою",
+      "loading": "Рахуємо ваші числа"
+    },
+    "forYou": {
+      "subTabAnalytics": "Аналітика"
+    }
+  },
+  "vi": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "Tin của tôi đến từ đâu",
+        "keepTitle": "Những gì tôi giữ lại",
+        "paceTitle": "Tin đến với tôi thế nào",
+        "windowNow": "Ngay bây giờ",
+        "savedLabel": "Bài viết bạn đã lưu",
+        "followedLabel": "Câu chuyện bạn đang theo dõi",
+        "keepNote": "Vẫn ở trên máy này. Bài viết đã lưu và câu chuyện đang theo dõi sẽ còn đó cho đến khi bạn gỡ đi.",
+        "topCountriesTitle": "Phần lớn đến từ",
+        "countriesRest": "còn lại",
+        "flagsMore": "+{{n}} nữa",
+        "paceScaleTitle": "Từ lúc đăng đến lúc đọc",
+        "hoursShort": "{{n}} giờ"
+      }
+    },
+    "analytics": {
+      "title": "Việc đọc của bạn",
+      "subtitle": "Đếm trên máy này. Không có gì rời khỏi máy.",
+      "emptyBody": "Đọc vài bài viết và trang này sẽ đầy lên. Mera giữ 30 ngày lịch sử đọc trên máy này.",
+      "sectionReach": "Tin của bạn đến từ đâu",
+      "sectionKeep": "Những gì bạn giữ lại",
+      "sectionPace": "Tin đến với bạn thế nào",
+      "shareCard": "Chia sẻ thẻ này",
+      "loading": "Đang tính các con số của bạn"
+    },
+    "forYou": {
+      "subTabAnalytics": "Phân tích"
+    }
+  },
+  "zh-CN": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "我的新闻来自哪里",
+        "keepTitle": "我留下的内容",
+        "paceTitle": "新闻多久传到我这里",
+        "windowNow": "此刻",
+        "savedLabel": "你保存的文章",
+        "followedLabel": "你在关注的报道",
+        "keepNote": "仍在这台设备上。保存的文章和关注的报道会一直留着，直到你移除。",
+        "topCountriesTitle": "其中大部分来自",
+        "countriesRest": "其余",
+        "flagsMore": "还有 {{n}} 个",
+        "paceScaleTitle": "从发布到阅读",
+        "hoursShort": "{{n}} 小时"
+      }
+    },
+    "analytics": {
+      "title": "你的阅读",
+      "subtitle": "在这台设备上统计，没有任何数据离开。",
+      "emptyBody": "读几篇文章，这一页就会填满。Mera 在这台设备上保留 30 天的阅读记录。",
+      "sectionReach": "你的新闻来自哪里",
+      "sectionKeep": "你留下的内容",
+      "sectionPace": "新闻多久传到你这里",
+      "shareCard": "分享这张卡片",
+      "loading": "正在计算你的数据"
+    },
+    "forYou": {
+      "subTabAnalytics": "分析"
+    }
+  },
+  "zh-TW": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "我的新聞來自哪裡",
+        "keepTitle": "我留下的內容",
+        "paceTitle": "新聞多久傳到我這裡",
+        "windowNow": "此刻",
+        "savedLabel": "你儲存的文章",
+        "followedLabel": "你在追蹤的報導",
+        "keepNote": "仍在這台裝置上。儲存的文章和追蹤的報導會一直留著，直到你移除。",
+        "topCountriesTitle": "其中大部分來自",
+        "countriesRest": "其餘",
+        "flagsMore": "還有 {{n}} 個",
+        "paceScaleTitle": "從發布到閱讀",
+        "hoursShort": "{{n}} 小時"
+      }
+    },
+    "analytics": {
+      "title": "你的閱讀",
+      "subtitle": "在這台裝置上統計，沒有任何資料離開。",
+      "emptyBody": "讀幾篇文章，這一頁就會填滿。Mera 在這台裝置上保留 30 天的閱讀紀錄。",
+      "sectionReach": "你的新聞來自哪裡",
+      "sectionKeep": "你留下的內容",
+      "sectionPace": "新聞多久傳到你這裡",
+      "shareCard": "分享這張卡片",
+      "loading": "正在計算你的數據"
+    },
+    "forYou": {
+      "subTabAnalytics": "分析"
+    }
+  },
+  "ar": {
+    "shareStats": {
+      "card": {
+        "reachTitle": "من أين جاءت أخباري",
+        "keepTitle": "ما احتفظت به",
+        "paceTitle": "كيف وصلتني الأخبار",
+        "windowNow": "الآن",
+        "savedLabel": "المقالات التي حفظتها",
+        "followedLabel": "القصص التي تتابعها",
+        "keepNote": "ما زالت على هذا الجهاز. المقالات المحفوظة والقصص المتابَعة تبقى حتى تزيلها.",
+        "topCountriesTitle": "معظمها من",
+        "countriesRest": "الباقي",
+        "flagsMore": "+{{n}} أخرى",
+        "paceScaleTitle": "من النشر إلى القراءة",
+        "hoursShort": "{{n}} ساعة"
+      }
+    },
+    "analytics": {
+      "title": "قراءتك",
+      "subtitle": "حُسبت على هذا الجهاز. لا يغادره شيء.",
+      "emptyBody": "اقرأ بضعة مقالات وستمتلئ هذه الصفحة. يحتفظ Mera بسجل قراءة 30 يوما على هذا الجهاز.",
+      "sectionReach": "من أين جاءت أخبارك",
+      "sectionKeep": "ما احتفظت به",
+      "sectionPace": "كيف وصلتك الأخبار",
+      "shareCard": "شارك هذه البطاقة",
+      "loading": "نحسب أرقامك"
+    },
+    "forYou": {
+      "subTabAnalytics": "تحليلات"
+    }
+  }
+}
