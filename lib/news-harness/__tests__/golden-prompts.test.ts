@@ -65,6 +65,10 @@ import {
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
+  CLOUD_V3_NOTE_SYSTEM_PROMPT,
+  CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  LOCAL_RELEVANCE_SYSTEM_PROMPT,
+  LOCAL_REASON_SYSTEM_PROMPT,
 } from '../prompts/prompts';
 import { estimateTokens } from '@/lib/llm/tokens';
 import { getFacts } from '@/lib/database/services/fact-service';
@@ -175,6 +179,51 @@ describe('golden — measured prompt sizes', () => {
     expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(4839);
     expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7105);
     expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(7693);
+  });
+
+  // The four above were the only pinned prompts. These four were not pinned by
+  // anything, and two of them are reachable from a single shared edit:
+  //
+  //   - CLOUD_V3_NOTE_SYSTEM_PROMPT and CLOUD_HEADLINE_REASON_SYSTEM_PROMPT both
+  //     embed CLOUD_REASON_VOICE_RULE, so a one-line change to that shared const
+  //     moves THREE prompts and only one of them used to notice.
+  //   - CLOUD_V3_NOTE_SYSTEM_PROMPT is built ON CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
+  //     so a verifier edit moves it transitively. Pinning the note alone would
+  //     say it moved without saying why; pinning both separates the two causes.
+  //   - The LOCAL pair is pinned because the on-device family is deliberately
+  //     OUT OF SCOPE for prompt experiments and nothing exercises it —
+  //     eval:golden scores relevance and never runs a reason prompt at all. An
+  //     unmeasured path with no pin is one where a change ships invisibly.
+  it('pins the estimated token size of the prompts nothing else guards', () => {
+    expect(estimateTokens(CLOUD_V3_NOTE_SYSTEM_PROMPT)).toBe(1903);
+    expect(estimateTokens(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT)).toBe(1539);
+    expect(estimateTokens(LOCAL_RELEVANCE_SYSTEM_PROMPT)).toBe(1104);
+    expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1445);
+  });
+
+  it('keeps the V3 note prompt built ON the verifier rather than restating it', () => {
+    // The note prompt's own header says it "REUSES CLOUD_FEED_VERIFIER_SYSTEM_PROMPT
+    // verbatim rather than restating its rules", because those NO-patterns were
+    // validated against the golden 1000-article run and a second copy would
+    // drift from them. This is that claim, asserted.
+    expect(CLOUD_V3_NOTE_SYSTEM_PROMPT.startsWith(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT)).toBe(
+      true,
+    );
+    expect(estimateTokens(CLOUD_V3_NOTE_SYSTEM_PROMPT)).toBeGreaterThan(
+      estimateTokens(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT),
+    );
+  });
+
+  it('keeps every LOCAL prompt smaller than its CLOUD counterpart', () => {
+    // The on-device model loses calibration on a prompt the cloud model holds
+    // fine, which is why the two families exist at all. A local prompt that grew
+    // past its cloud twin has lost the only reason it is a separate string.
+    expect(estimateTokens(LOCAL_RELEVANCE_SYSTEM_PROMPT)).toBeLessThan(
+      estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT),
+    );
+    expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBeLessThan(
+      estimateTokens(CLOUD_REASON_SYSTEM_PROMPT),
+    );
   });
 
   it('keeps the headline variants strictly additive over the live prompts', () => {
