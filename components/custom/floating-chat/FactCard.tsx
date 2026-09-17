@@ -55,14 +55,7 @@ const FactCard: React.FC<FactCardProps> = ({ action, statements }) => {
   const { t } = useTranslation();
 
   return (
-    <Animated.View
-      entering={factCardEntering}
-      style={styles.card}
-      // Addressable for device QA. Only chat-topics-card carried an id, so a
-      // capture could see the topics for an accepted fact but not the "Saved"
-      // card itself — which is the half that proves WHICH reading was saved.
-      testID={`fact-card-${action}`}
-    >
+    <Animated.View entering={factCardEntering} style={styles.card}>
       <View style={styles.headerRow}>
         <MaterialIcons name={ICON_BY_ACTION[action]} size={18} color={ACCENT} />
         <Text size="sm" bold style={styles.title}>
