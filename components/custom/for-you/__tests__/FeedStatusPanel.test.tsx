@@ -29,8 +29,24 @@ jest.mock('react-native-reanimated', () => {
         FadeIn: anim,
         FadeOut: anim,
         LinearTransition: {},
+        useReducedMotion: () => false,
     };
 });
+
+// `useProcessingSnapshot` reaches FeedSyncIndicator, which imports AppScheduler
+// and with it `lib/database/index.ts` — that module builds a real SQLiteAdapter
+// at import time and throws `initializeJSI` outside a native runtime. Stubbing
+// the indicator is the narrowest cut that keeps the snapshot hook itself real.
+jest.mock('@/components/custom/FeedSyncIndicator', () => ({
+    useFeedSyncRunning: () => false,
+    useIsFeedProcessing: () => false,
+}));
+
+// Same reason, second path in: the prefs store imports `setting-service`, which
+// imports the same database module.
+jest.mock('@/lib/stores/display-prefs-store', () => ({
+    useDisplayPrefsStore: (sel: any) => sel({ staticGradient: false }),
+}));
 
 jest.mock('@/components/ui/text', () => {
     const { Text: RNText } = require('react-native');
@@ -52,6 +68,13 @@ jest.mock('@/lib/stores/selectors', () => ({
         deviceProcessedCount: 0,
         deviceTotalCount: 0,
     }),
+    // `useProcessingSnapshot` reads five more selectors than this panel does
+    // directly. They are stubbed at rest: this file tests which lines the panel
+    // shows per mode, and the snapshot's own stage logic is covered by its tests.
+    useForYouSyncStatusMessage: () => null,
+    useForYouChunkStates: () => [],
+    useForYouHydrationProgress: () => ({ hydrationCompleted: 0, hydrationTotal: 0 }),
+    useForYouLastProcessingRunFinishedAt: () => null,
 }));
 jest.mock('@/lib/hooks/use-feed-counts', () => ({
     useFeedCounts: () => ({
