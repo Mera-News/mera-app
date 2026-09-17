@@ -48,6 +48,7 @@
     "scripts/rater-decode.ts",
     "scripts/probe-gateway.ts",
     "scripts/extraction-metrics.ts",
-    "scripts/run-agent-corpus.ts"
+    "scripts/run-agent-corpus.ts",
+    "scripts/probe-agent-contract.ts"
   ]
 }

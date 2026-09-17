@@ -303,8 +303,22 @@ interface StreamDeltaChoice {
   finish_reason?: string | null;
 }
 
-export function createStreamAccumulator(now: () => number = Date.now): StreamAccumulator {
-  const started = now();
+/**
+ * @param startedAtMs when the REQUEST was sent, not when this was constructed.
+ *
+ * THIS PARAMETER EXISTS BECAUSE ITS ABSENCE PRODUCED A MEANINGLESS COLUMN.
+ * The accumulator is built after `await fetch` resolves, so defaulting the
+ * start to construction time measures header-arrival-to-first-content rather
+ * than request-to-first-token. Live probe: it reported 0-3ms against total
+ * latencies of 543-858ms, a number that looks like a fast model and is really
+ * a clock started too late. TTFT is the whole point of this transport, so the
+ * caller passes the time it sent the request.
+ */
+export function createStreamAccumulator(
+  now: () => number = Date.now,
+  startedAtMs?: number,
+): StreamAccumulator {
+  const started = startedAtMs ?? now();
   let content = '';
   let reasoning = '';
   let finishReason = '-';
@@ -416,7 +430,7 @@ export async function postBodyStream(
     }
     if (!res.body) return fail('stream: response carried no body');
 
-    const acc = createStreamAccumulator();
+    const acc = createStreamAccumulator(Date.now, started);
     const decoder = new TextDecoder();
     // Lines can split across network chunks, so a partial tail is carried
     // forward rather than parsed. Feeding a half line to the accumulator
