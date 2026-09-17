@@ -10,10 +10,11 @@ when:
 outputs:
   - "a JSON array of 2-to-5-word topic strings, at most 10, nothing before or after it"
   - "at least one topic from the diaspora shapes"
-  - "origin rung then host rung FIRST in the array when the fact carries both"
+  - "origin rung, host rung, then the host bloc rung FIRST in the array when the fact carries both"
 examples:
   - "Philippines overseas voting"
   - "Ireland immigration law reform"
+  - "EU migration policy"
   - "Philippines passport renewal abroad"
   - "Philippines consular services Europe"
   - "Philippines remittance rules"
@@ -50,6 +51,13 @@ seven in ten.
 A composed fact that opens with two host-country topics has buried the half the user is least
 likely to find anywhere else.
 
+**Where the host country sits in a bloc, the host chain carries a bloc rung too, and it is
+mandatory.** It is the rung that gets dropped, and for a migrant it is rarely the least useful one:
+entry, residence and qualification rules are set above the host government as often as by it. Use
+the bloc shapes above, and prefer the ones that reach a migrant: "EU migration policy", "EEA
+residence rules", "Schengen entry rules", or the equivalent bloc for this host. It comes after the
+origin and host rungs and before the rest of the split.
+
 - Origin side: the rules above, the ones that reach citizens abroad.
 - Host side: host-country law affecting migrants of that origin. Immigration and residence-permit
   reform, integration and language requirements, recognition of foreign qualifications, housing and
@@ -76,12 +84,12 @@ Fact: "Expat from the Philippines living in Dublin, Leinster, Ireland, Europe"
 Other facts: "Works as a theatre nurse"
 Existing topics: none
 
-Origin and residence in one fact. The first two topics are the two rungs in order, origin then
-host, and the remaining six split roughly half and half. Eight is the honest length here; the
-ceiling of 10 is not a target.
+Origin and residence in one fact. The first three topics are the rungs in order: origin, host,
+then the host's bloc. The remaining six split roughly half and half. Nine here; the ceiling of 10
+is not a target.
 
 ```json
-["Philippines overseas voting", "Ireland immigration law reform", "Philippines passport renewal abroad", "Philippines consular services Europe", "Philippines remittance rules", "Philippines Ireland tax treaty", "Ireland residence permit rules", "Ireland qualification recognition"]
+["Philippines overseas voting", "Ireland immigration law reform", "EU migration policy", "Philippines passport renewal abroad", "Philippines consular services Europe", "Philippines remittance rules", "Philippines Ireland tax treaty", "Ireland residence permit rules", "Ireland qualification recognition"]
 ```
 
 Read the shapes, never the countries. A fact naming a different origin or a different host must

@@ -1,19 +1,13 @@
 ---
 id: topics/generic
 name: "Topic rules"
-description: "The shared rules every topic run follows, and the whole guideline for a plain interest fact."
+description: "The shared rules every topic run follows. Concatenated ahead of a topics leaf, never used alone."
 routable: false
 when:
   - "always, ahead of any topics leaf"
-  - "alone, when the fact is a hobby, sport, opinion, possession or media habit"
+  - "never alone: this is a preamble, not a destination"
 outputs:
   - "a JSON array of 2-to-5-word topic strings and nothing else"
-  - "at most 6 topics, all unanchored, when this runs alone"
-examples:
-  - "vinyl pressing shortage"
-  - "record label disputes"
-  - "streaming royalty rules"
-  - "record shop closures"
 ---
 
 You turn ONE user fact into news search topics. The fact, the persona's other facts, their existing
@@ -32,7 +26,13 @@ The bigger the place, the more specific the topic.
   have a press of its own.
 - Country: specific only. Policy, tax, elections, immigration, transport, energy, healthcare,
   housing, emergencies. Never a bare "<country> news".
-- Continent or bloc: specific only, such as "EU regulation" or "ASEAN trade". Never "Europe news".
+- Continent or bloc: specific only, and this is the rung that gets skipped, so here are shapes that
+  work. EU: "EU migration policy", "EU consumer rules", "EU energy prices", "EU digital regulation".
+  Non-EU Europe: "EEA residence rules", "Schengen entry rules". Elsewhere use the bloc that actually
+  legislates: "ASEAN trade talks", "GCC labour reform", "Mercosur tariff deal", "African Union free
+  trade". Where no bloc legislates for the user, the continent still carries real stories at that
+  scale: "West Africa power grid", "Andean migration corridor". Never "Europe news", never
+  "Asia news".
 - A country of a billion people or more gets no generic country topic at all.
 
 Bloc map: NL, DE and FR to the EU. US, CA and MX to North America. IN, JP and ID to Asia. BR and AR
@@ -80,18 +80,6 @@ one country's nationals identifies the reader.
 
 ## Punctuation
 No em dash and no en dash anywhere. No filler openers. Plain words.
-
-## A plain interest fact
-When the fact is a hobby, a sport, an opinion, a possession or a media habit, this guideline is the
-whole of it. Emit at most 6 topics and leave every one unanchored. Never attach the persona's home
-place to an interest that does not name a place: a fact naming no place produces topics naming no
-place.
-
-Fact: "Collects vinyl records"
-
-```json
-["vinyl pressing shortage", "record label disputes", "streaming royalty rules", "record shop closures"]
-```
 
 ## Output
 A JSON array of strings. Each topic is 2 to 5 words and reads the way a newsroom labels a desk.

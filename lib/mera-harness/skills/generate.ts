@@ -35,11 +35,13 @@ const SKILL_IDS = [
   'facts/origin',
   'facts/profession',
   'facts/family',
+  'facts/interest',
   'topics/generic',
   'topics/residence',
   'topics/origin',
   'topics/profession',
   'topics/family',
+  'topics/interest',
   'conversation/question',
   'conversation/correction',
 ] as const;
@@ -47,6 +49,13 @@ type SkillId = (typeof SKILL_IDS)[number];
 
 const BUDGET: Record<string, number> = { router: 1800 };
 const DEFAULT_BUDGET = 1200;
+
+/**
+ * The two preambles. They are concatenated ahead of a leaf and are never called
+ * alone, so they are not router destinations and there is nothing to score them
+ * against on their own.
+ */
+const PREAMBLE_IDS = new Set(['facts/generic', 'topics/generic']);
 
 /** Required section headings in each preamble. A leaf may restate none of these,
  *  so dropping one here strips it from four leaves at once with every file still
@@ -215,9 +224,11 @@ function readSkills(personaDir: string): Skill[] {
     // Declared in the file so a person reading it knows, and checked here so a
     // typo cannot silently drop a skill out of the router's index or push a
     // topics guideline into it.
-    const expectedRoutable = pathId.startsWith('facts/') || pathId.startsWith('conversation/');
+    const expectedRoutable =
+      !PREAMBLE_IDS.has(pathId) &&
+      (pathId.startsWith('facts/') || pathId.startsWith('conversation/'));
     if (parsed.routable !== expectedRoutable) {
-      fail(file, null, `routable is ${parsed.routable} but "${pathId}" must be ${expectedRoutable}: only facts/* and conversation/* are router destinations`);
+      fail(file, null, `routable is ${parsed.routable} but "${pathId}" must be ${expectedRoutable}: router destinations are facts/* and conversation/* EXCLUDING the preambles`);
     }
 
     const required = PREAMBLE_SECTIONS[pathId];
@@ -282,6 +293,7 @@ function validateExpectations(EXPECTATIONS: string, presentTopicIds: string[]): 
   }
 
   for (const id of presentTopicIds) {
+    if (PREAMBLE_IDS.has(id)) continue; // never called alone, so nothing to score
     const leaf = id.slice('topics/'.length);
     const mine = cases.filter((c) => c.id === leaf || String(c.id).startsWith(`${leaf}-`));
     if (mine.length < 3) {
