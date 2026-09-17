@@ -1,0 +1,142 @@
+import {
+  MAX_TOPICS_PER_FACT,
+  buildTopicUserMessage,
+  generateTopicsForFact,
+  parseTopics,
+} from '../topic-call';
+import type { AgentModelResult } from '../types';
+
+function res(content: string): AgentModelResult {
+  return {
+    content, toolCalls: [], finishReason: 'stop', truncated: false,
+    usage: null, modelSent: 'fake', latencyMs: 1, error: null,
+  };
+}
+
+type Req = { systemPrompt: string; role: string; enableThinking: boolean; maxTokens: number; messages: { content: string }[] };
+
+function depsReturning(content: string) {
+  const callModel = jest.fn(async (_req: Req) => res(content));
+  return { callModel, loadSkill: (id: string) => `SKILL:${id}` };
+}
+
+const FACT = { statement: 'Lives in Alkmaar, North Holland, Netherlands', questionnaireAttribute: 'location: residence' };
+
+describe('the terminal topic call', () => {
+  it('uses the composed guideline for the kind chosen UPSTREAM as the whole system prompt', async () => {
+    const deps = depsReturning('["Alkmaar housing", "Netherlands rail strikes"]');
+    await generateTopicsForFact({ fact: FACT, skillId: 'topics/residence', deps });
+    const req = deps.callModel.mock.calls[0][0];
+    expect(req.systemPrompt).toBe('SKILL:topics/residence');
+    expect(req.role).toBe('topicgen');
+    // Thinking OFF, measured: ON returned empty content on 8 of 10 probes.
+    expect(req.enableThinking).toBe(false);
+    expect(req.maxTokens).toBe(400);
+  });
+
+  it('an UNKNOWN skillId falls back to the group generic rather than failing', async () => {
+    // inference_jobs is durable: a job enqueued before an OTA outlives the
+    // build that named its skill.
+    const deps = { callModel: jest.fn(async (_req: Req) => res('["x y"]')), loadSkill: (id: string) => (id === 'topics/generic' ? 'GENERIC' : null) };
+    const out = await generateTopicsForFact({ fact: FACT, skillId: 'topics/from-the-future', deps });
+    const req = deps.callModel.mock.calls[0][0];
+    expect(req.systemPrompt).toBe('GENERIC');
+    expect(out.topics).toEqual(['x y']);
+  });
+
+  it('a MISSING skillId also falls back, with no throw', async () => {
+    const deps = { callModel: jest.fn(async (_req: Req) => res('["x y"]')), loadSkill: (id: string) => (id === 'topics/generic' ? 'GENERIC' : null) };
+    await expect(generateTopicsForFact({ fact: FACT, deps })).resolves.toBeDefined();
+  });
+});
+
+describe('exclusions reach the prompt', () => {
+  it('existing AND declined texts both land in the exclusion block', async () => {
+    const deps = depsReturning('[]');
+    await generateTopicsForFact({
+      fact: FACT,
+      skillId: 'topics/residence',
+      existingTopics: ['Alkmaar hospital news', 'Netherlands energy prices'],
+      declinedTopics: ['Alkmaar weather', 'Dutch football'],
+      deps,
+    });
+    const req = deps.callModel.mock.calls[0][0];
+    const body = req.messages[0].content;
+    for (const t of ['Alkmaar hospital news', 'Netherlands energy prices', 'Alkmaar weather', 'Dutch football']) {
+      expect(body).toContain(t);
+    }
+  });
+
+  it('emits NO exclusion block when there is nothing to exclude', () => {
+    const msg = buildTopicUserMessage({ fact: FACT, deps: { callModel: jest.fn() } } as never);
+    expect(msg).not.toContain('Do NOT repeat');
+  });
+});
+
+describe('THE VETO: the database is advisory, this is the guarantee', () => {
+  it('a declined text the model returns ANYWAY never reaches the caller', async () => {
+    // The failure this guards is precisely "the model ignored the prompt":
+    // shown an exclude list it still returns an existing topic with a scope
+    // word bolted on.
+    const deps = depsReturning('["Alkmaar weather", "Alkmaar housing pressure"]');
+    const out = await generateTopicsForFact({
+      fact: FACT,
+      skillId: 'topics/residence',
+      declinedTopics: ['Alkmaar weather'],
+      deps,
+    });
+    expect(out.topics).toEqual(['Alkmaar housing pressure']);
+    expect(out.dropped.veto).toBe(1);
+  });
+
+  it('matches on NORMALISED form, or the veto silently passes everything', async () => {
+    const deps = depsReturning('["  ALKMAAR   Weather  "]');
+    const out = await generateTopicsForFact({
+      fact: FACT, skillId: 'topics/residence', declinedTopics: ['alkmaar weather'], deps,
+    });
+    expect(out.topics).toEqual([]);
+    expect(out.dropped.veto).toBe(1);
+  });
+
+  it('reports veto and filter drops SEPARATELY so "done with zero" is explainable', async () => {
+    const deps = depsReturning('["Alkmaar weather", "Rotterdam port logistics", "Rotterdam logistics port"]');
+    const out = await generateTopicsForFact({
+      fact: FACT, skillId: 'topics/residence', declinedTopics: ['Alkmaar weather'], deps,
+    });
+    expect(out.dropped).toEqual({ veto: 1, filter: 1 });
+    expect(out.topics).toEqual(['Rotterdam port logistics']);
+    expect(out.filterDrops[0].duplicateOf).toBe('Rotterdam port logistics');
+  });
+});
+
+describe('ceiling and parsing', () => {
+  it('caps at MAX_TOPICS_PER_FACT and nowhere lower', async () => {
+    const many = Array.from({ length: 20 }, (_, i) => `subject${i} news item`);
+    const out = await generateTopicsForFact({
+      fact: FACT, skillId: 'topics/residence', deps: depsReturning(JSON.stringify(many)),
+    });
+    expect(out.topics).toHaveLength(MAX_TOPICS_PER_FACT);
+  });
+
+  it('honours a skill body asking for 10 without clamping to something smaller', async () => {
+    const ten = Array.from({ length: 10 }, (_, i) => `distinct${i} subject here`);
+    const out = await generateTopicsForFact({
+      fact: FACT, skillId: 'topics/residence', deps: depsReturning(JSON.stringify(ten)),
+    });
+    expect(out.topics).toHaveLength(10);
+  });
+
+  it('the dedupe arm can be switched OFF for measurement', async () => {
+    const dup = '["Rotterdam port logistics", "Rotterdam logistics port"]';
+    const on = await generateTopicsForFact({ fact: FACT, deps: depsReturning(dup) });
+    const off = await generateTopicsForFact({ fact: FACT, deps: depsReturning(dup), dedupe: 'off' });
+    expect(on.topics).toHaveLength(1);
+    expect(off.topics).toHaveLength(2);
+  });
+
+  it('recovers a JSON array embedded in prose, and returns [] on junk', () => {
+    expect(parseTopics('Sure! ["a b", "c d"] hope that helps')).toEqual(['a b', 'c d']);
+    expect(parseTopics('no json at all')).toEqual([]);
+    expect(parseTopics('')).toEqual([]);
+  });
+});
