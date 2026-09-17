@@ -23,6 +23,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
+import AgentStepsBox from './AgentStepsBox';
 import ArticleContextCard from './ArticleContextCard';
 import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
@@ -137,6 +138,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           inner
         );
       }
+
+      case 'agent-steps':
+        return (
+          <AgentStepsBox
+            steps={item.steps}
+            collapsed={item.collapsed}
+            doneCount={item.doneCount}
+            failedCount={item.failedCount}
+            legCapped={item.legCapped}
+            interrupted={item.interrupted}
+          />
+        );
 
       case 'fact-card':
         return <FactCard action={item.action} statements={item.statements} />;
