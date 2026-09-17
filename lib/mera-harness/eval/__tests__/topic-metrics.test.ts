@@ -178,6 +178,23 @@ describe('output integrity gate', () => {
     expect(r.passed).toBe(true);
   });
 
+  it('SEPARATES prose-instead-of-JSON from empty content, and gates on both', () => {
+    // The failure the pre-registered wording missed: bytes present, shape
+    // wrong, no usable topic set. Measured at 42% on an arm whose
+    // empty-content rate was 0.0%.
+    const sets: TopicSetInput[] = [
+      { ...BASE, topics: [], rawOutput: 'Here is my reasoning about the place chain...' },
+      { ...BASE, topics: ['Spain rail strikes'], rawOutput: '["Spain rail strikes"]' },
+    ];
+    const r = integrityReport(sets);
+    expect(r.emptyContent).toBe(0);
+    expect(r.emptyRate).toBe(0);
+    expect(r.passed).toBe(true);           // the gate AS AGREED still passes
+    expect(r.unparsedOutput).toBe(1);
+    expect(r.noUsableSetRate).toBe(0.5);
+    expect(r.passedOnUsableSets).toBe(false); // the stricter reading does not
+  });
+
   it('counts finish reasons, so a truncation is visible next to the empties', () => {
     const r = integrityReport([set('', 'length'), set('["a"]', 'stop')]);
     expect(r.finishReasons).toEqual({ length: 1, stop: 1 });

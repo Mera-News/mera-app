@@ -85,9 +85,27 @@ export interface IntegrityReport {
   calls: number;
   emptyContent: number;
   emptyRate: number;
+  /**
+   * NON-EMPTY output that yielded NO topics: the model wrote prose where the
+   * contract wants a bare JSON array.
+   *
+   * ADDED BECAUSE THE PRE-REGISTERED GATE MISSED IT. The gate was worded as an
+   * EMPTY-CONTENT rate, and measured 0.0% on an arm that was failing to
+   * produce a usable topic set on 42% of calls: the bytes were there, the
+   * shape was wrong. "Returned nothing" and "returned something unusable" are
+   * the same outcome downstream and only one of them was being counted.
+   */
+  unparsedOutput: number;
+  unparsedRate: number;
+  /** No usable set, by either route. This is the number that matters. */
+  noUsableSetRate: number;
   finishReasons: Record<string, number>;
-  /** Pre-registered: empty above 2% is a hard fail. */
+  /** The gate AS PRE-REGISTERED: empty content above 2%. Kept exactly as
+   *  agreed rather than silently widened, so the record stays honest. */
   passed: boolean;
+  /** The same bar applied to the stricter reading. Reported ALONGSIDE, never
+   *  instead of, `passed`. */
+  passedOnUsableSets: boolean;
 }
 
 export const EMPTY_CONTENT_GATE = 0.02;
@@ -95,17 +113,26 @@ export const EMPTY_CONTENT_GATE = 0.02;
 export function integrityReport(sets: readonly TopicSetInput[]): IntegrityReport {
   const finishReasons: Record<string, number> = {};
   let emptyContent = 0;
+  let unparsedOutput = 0;
   for (const s of sets) {
     finishReasons[s.finishReason] = (finishReasons[s.finishReason] ?? 0) + 1;
-    if (s.rawOutput.trim().length === 0) emptyContent += 1;
+    const blank = s.rawOutput.trim().length === 0;
+    if (blank) emptyContent += 1;
+    else if (s.topics.length === 0) unparsedOutput += 1;
   }
-  const emptyRate = sets.length === 0 ? 0 : emptyContent / sets.length;
+  const n = sets.length;
+  const emptyRate = n === 0 ? 0 : emptyContent / n;
+  const unparsedRate = n === 0 ? 0 : unparsedOutput / n;
   return {
-    calls: sets.length,
+    calls: n,
     emptyContent,
     emptyRate,
+    unparsedOutput,
+    unparsedRate,
+    noUsableSetRate: emptyRate + unparsedRate,
     finishReasons,
     passed: emptyRate <= EMPTY_CONTENT_GATE,
+    passedOnUsableSets: emptyRate + unparsedRate <= EMPTY_CONTENT_GATE,
   };
 }
 
