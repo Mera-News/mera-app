@@ -1,4 +1,6 @@
 import { recoverCycle } from '@/lib/services/cycle-state-machine';
+import { rescueStalePendingTopicFacts } from '@/lib/database/services/fact-service';
+import { flushPendingDeletes } from '@/lib/database/services/topic-decline-service';
 import { AppScheduler } from '../AppScheduler';
 
 AppScheduler.register({
@@ -21,5 +23,23 @@ AppScheduler.register({
   handler: async (_input, ctx) => {
     ctx.log('recovering cycle');
     await recoverCycle();
+
+    // Facts left 'pending' by a generation job that died. Deliberately here
+    // and not only on InferenceQueue.start(): that path is reached from
+    // useModelLifecycle and, in on-device mode, waits for the model to load,
+    // so a device whose model never loads would never sweep.
+    const rescued = await rescueStalePendingTopicFacts();
+    if (rescued > 0) ctx.log(`rescued ${rescued} stale pending facts`);
+
+    // Commit any topic delete staged before the app was killed or
+    // backgrounded. This is the "app start and every foreground" half of the
+    // flush contract — the service's 5s timer is only the fast path, and a
+    // component must never own it.
+    const committed = await flushPendingDeletes();
+    if (committed > 0) ctx.log(`committed ${committed} staged topic deletes`);
+
+    // No ctx.markNoOp(): "nothing to rescue, nothing staged" is the NORMAL
+    // state, and suppressing the lastRun stamp on a routine skip turns this
+    // into a silent 5s infinite loop.
   },
 });

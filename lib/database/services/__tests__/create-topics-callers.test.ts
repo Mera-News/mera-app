@@ -26,10 +26,14 @@ const CALL_SITES: Record<string, number> = {
   // appendTopupTopicsForFact + syncLlmTopicsForFact delegate here; the
   // declaration itself and the doc-comment mention are stripped below.
   'lib/database/services/topic-service.ts': 2,
+  // completeTopicGeneration. Passes a factId, so its topics DO reach the
+  // facts screen — which is correct: they are that fact's topics. Reviewed
+  // and intended, which is the decision this table exists to force.
+  'lib/database/services/topic-generation-status-service.ts': 1,
   'lib/inference/handlers/tracked-story-migrate-handler.ts': 1,
   'lib/tracking/track-actions.ts': 1,
 };
-const EXPECTED_TOTAL = 7;
+const EXPECTED_TOTAL = 8;
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
