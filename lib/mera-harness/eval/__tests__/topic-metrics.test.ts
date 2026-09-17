@@ -71,7 +71,7 @@ describe('S7 gate liveness', () => {
       'EU housing regulation',
       'Spain energy prices',
     ];
-    const kept = applyShippedFilter(topics, null).kept;
+    const kept = applyShippedFilter(topics).kept;
     expect(kept).toHaveLength(topics.length); // the filter let the pair through
     expect(s7Report({ ...BASE, topics }).postFilterRate).toBeGreaterThan(S7_GATE);
   });
@@ -151,7 +151,7 @@ describe('filter correctness', () => {
   });
 
   it('leaves the skill’s own worked example completely intact', () => {
-    const r = applyShippedFilter(WORKED_EXAMPLE, BARCELONA);
+    const r = applyShippedFilter(WORKED_EXAMPLE);
     expect(r.kept).toHaveLength(WORKED_EXAMPLE.length);
     expect(r.dropped).toHaveLength(0);
   });
