@@ -54,6 +54,9 @@ interface CapturedRequest {
   role: AgentModelRequest['role'];
   enableThinking: boolean | null;
   startedAtMs: number;
+  /** What this leg was OFFERED. Varies per leg: the loop withholds load_skill
+   *  once a skill is loaded, so a fixed list would misreport every later leg. */
+  toolNames: string[];
 }
 
 const ROLE_TO_CALL_TYPE: Record<string, EvalCallType> = {
@@ -96,10 +99,28 @@ function parseToolCall(name: string, argumentsRaw: string, knownTools: ReadonlyS
   return { name, argumentsRaw, parsed, schemaValid, unknownTool: !knownTools.has(name), result };
 }
 
+/**
+ * Names that are NOT an invented tool. Deliberately wider than what any one
+ * leg is offered: it exists only to classify a call as known or invented.
+ *
+ * DO NOT report this as the tool list the model saw. It is not. The row's
+ * `toolSchemaNames` now carries what the leg was ACTUALLY sent, because this
+ * constant said `saveExtractedFacts` was available on every row while the
+ * loop was never offering it, which is exactly the fact the rows were needed
+ * to establish.
+ */
 const KNOWN_TOOLS = new Set([
   'load_skill', 'find_similar_facts', 'findSimilarFacts', 'lookup_place', 'lookupPlace',
   'ask_choice', 'saveExtractedFacts', 'deleteUserFacts',
 ]);
+
+/** The tool names a request actually carried, read off the request itself. */
+function sentToolNames(tools: unknown): string[] {
+  if (!Array.isArray(tools)) return [];
+  return tools
+    .map((t) => (t as { function?: { name?: string } })?.function?.name)
+    .filter((n): n is string => typeof n === 'string');
+}
 
 /**
  * Why this does NOT read `state.turn.pendingChoice`.
@@ -167,6 +188,7 @@ export async function runAgentScript(
         role: req.role,
         enableThinking: req.enableThinking ?? null,
         startedAtMs: now(),
+        toolNames: sentToolNames(req.tools),
       });
       // Forwarded, never swallowed: an ignored onDelta means the core runs a
       // different path here than in the app, which is the one thing a
@@ -216,7 +238,7 @@ export async function runAgentScript(
         promptDeterministic: turn.index === 0 && leg.index === 0,
         systemPrompt: leg.systemPrompt,
         messages: leg.messages,
-        toolSchemaNames: [...KNOWN_TOOLS],
+        toolSchemaNames: cap?.toolNames ?? [],
         rawOutput: leg.rawOutput,
         toolCalls: leg.toolCalls.map((t) =>
           parseToolCall(t.name, t.argumentsRaw, KNOWN_TOOLS, toolResults.get(t.name) ?? null),
