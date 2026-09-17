@@ -738,6 +738,7 @@ export function decodeCloudBatchResults(
   const scoreMap = new Map<string, number>();
   const reasonMap = new Map<string, string>();
   const failedIds = new Set<string>();
+  const rescoreMap = new Map<string, number>();
 
   for (const result of batchResults) {
     if (result.id.startsWith('score:')) {
@@ -768,20 +769,19 @@ export function decodeCloudBatchResults(
       if (result.error) {
         reasonMap.set(serverId, '');
       } else {
-        reasonMap.set(
+        const { reason, rescore } = parseReasonResult(
+          result.output,
           serverId,
-          parseReasonResponse(
-            result.output,
-            serverId,
-            promptsById.get(result.id),
-            logger,
-          ),
+          promptsById.get(result.id),
+          logger,
         );
+        reasonMap.set(serverId, reason);
+        if (rescore) rescoreMap.set(serverId, rescore.score);
       }
     }
   }
 
-  return { scoreMap, reasonMap, failedIds };
+  return { scoreMap, reasonMap, failedIds, rescoreMap };
 }
 
 // --- Response parsing ---
@@ -1226,13 +1226,147 @@ const DELIBERATION_OPENER =
 const REASON_NAMES_A_SCORE =
   /\b(?:feed score|relevance score|score of|priority score)\b|\b0\.\d{1,2}\b(?!\s*(?:%|percent|percentage|pp\b))/i;
 
-export function parseReasonResponse(
+/**
+ * A pass-2 score, decoded from the reason call's `{"k","s","reason"}` object.
+ *
+ * WHY PASS 2 SCORES AT ALL. Pass 1 judges five articles in one batched call and
+ * is the cheap filter; pass 2 visits ONE article with the same rubric and the
+ * same facts, and can therefore see what a batch cannot. Measured n=9 on the
+ * Portuguese parental-leave story against a Dutch persona: pass 1 emitted
+ * `k:"home"` 6/9 even with the publication's country in the prompt, while the
+ * reason pass was already writing "foreign-domestic, no tie" and had no way to
+ * act on it, because its output was a bare string.
+ */
+export interface ReasonRescore {
+  /** The stake tag pass 2 chose. Always a key of {@link STAKE_SCORE_BANDS}: an
+   *  unrecognised tag yields no rescore at all, so an invented tag can never
+   *  skip the band discipline by falling back to a plain 0–1.1 clamp. */
+  k: string;
+  /** `s` exactly as the model emitted it, before any clamping. Kept so a
+   *  caller can see what the model said as well as what was used. */
+  s: number;
+  /** `s` clamped into the band `k` declares. THIS is the value that replaces
+   *  the pass-1 score. */
+  score: number;
+}
+
+/**
+ * Optional counters a CALLER may pass into {@link parseReasonResult}, in the
+ * same spirit and with the same non-instrumentation guarantee as
+ * {@link RelevanceDecodeStats}: they count properties of MODEL OUTPUT within one
+ * decode call, nothing is keyed to a reader, nothing is persisted, and
+ * production passes none.
+ *
+ * There is deliberately NO "band changed up/down" counter here. That metric
+ * compares the pass-2 band against the PASS-1 band, and the decoder never sees
+ * a pass-1 score — it decodes one response in isolation. Computing it here
+ * would mean inventing a baseline. It belongs to whoever holds both scores,
+ * which is the runner.
+ */
+export interface ReasonDecodeStats {
+  /** Responses that yielded a usable `k` + `s`. */
+  rescoreApplied: number;
+  /** Responses with no usable `k` + `s`: a legacy plain string, a `{reason}`
+   *  object, a truncated object that failed `JSON.parse`, a non-numeric `s`, or
+   *  a `k` that is not a known stake tag. Every one of these leaves the pass-1
+   *  score standing. */
+  rescoreUnparsed: number;
+  /** Rescores whose `s` fell outside the band its own `k` declares and was
+   *  clamped into it. The prompt states the band rule, so this is a free,
+   *  rater-free measure of how well the model held its own output contract —
+   *  exactly what `bandViolations` measures for pass 1. */
+  rescoreBandViolations: number;
+  /** Total absolute distance those violations were moved by the clamp. Divide
+   *  by `rescoreBandViolations` for the mean severity. */
+  rescoreBandViolationMass: number;
+}
+
+/** A zeroed accumulator. Callers that want stats create one and pass it in. */
+export function newReasonDecodeStats(): ReasonDecodeStats {
+  return {
+    rescoreApplied: 0,
+    rescoreUnparsed: 0,
+    rescoreBandViolations: 0,
+    rescoreBandViolationMass: 0,
+  };
+}
+
+/**
+ * A response wholly wrapped in a markdown code fence, unwrapped.
+ *
+ * The reason prompt says "no markdown", and for a plain-string answer the
+ * existing `[*#]` strip was enough. An OBJECT answer is different: ```` ```json ````
+ * is the single most common way a model dresses up JSON, and a fenced object
+ * fails `JSON.parse` outright, which would cost the rescore AND (via the
+ * bare-decimal rule seeing the raw `"s":0.62`) the reason too. Anchored at both
+ * ends so it can never bite a reason that merely contains a backtick.
+ */
+function stripCodeFence(text: string): string {
+  const m = /^```[a-zA-Z]*\s*\n?([\s\S]*?)\n?```$/.exec(text);
+  return m ? m[1].trim() : text;
+}
+
+/**
+ * Pull `{"k","s"}` out of an already-parsed pass-2 object, or nothing.
+ *
+ * FAILS OPEN, ALWAYS. Every rejection here means "the pass-1 score stands",
+ * never "demote" and never "throw". The one thing it will not do is accept a
+ * tag it does not recognise: `clampToStakeBand` falls back to a plain 0–1.1
+ * clamp on an unknown `k`, which would let an invented tag put any number it
+ * liked onto the row.
+ */
+function extractRescore(
+  parsed: Record<string, unknown>,
+  stats?: ReasonDecodeStats,
+): ReasonRescore | undefined {
+  const k = parsed.k;
+  const s = parsed.s;
+  if (typeof k !== 'string' || STAKE_SCORE_BANDS[k] === undefined) return undefined;
+  if (typeof s !== 'number' || !Number.isFinite(s)) return undefined;
+  const score = clampToStakeBand(s, k);
+  if (stats) {
+    const band = STAKE_SCORE_BANDS[k];
+    // Measured against the RAW value, not the 0–1.1 clamp, for the same reason
+    // `clampToStakeBand`'s own accounting is: a wild `s` should report its real
+    // distance rather than the distance left after another clamp hid most of it.
+    const distance = s < band[0] ? band[0] - s : s > band[1] ? s - band[1] : 0;
+    if (distance > 0) {
+      stats.rescoreBandViolations++;
+      stats.rescoreBandViolationMass += distance;
+    }
+  }
+  return { k, s, score };
+}
+
+/**
+ * Decode one pass-2 response into the reason the reader sees and, when the
+ * response carried one, the score that replaces pass 1's.
+ *
+ * THE TWO HALVES FAIL IN OPPOSITE DIRECTIONS, ON PURPOSE.
+ *  - The SCORE fails open: anything unparseable leaves the pass-1 score exactly
+ *    where it was. An unreadable answer is not evidence that an article should
+ *    move, in either direction.
+ *  - The REASON fails closed, exactly as it always has: the reasoning-trace
+ *    rejection, the deliberation-opener rejection and
+ *    {@link REASON_NAMES_A_SCORE} all still return an empty reason, and the row
+ *    stays `reason_pending` for the sweep.
+ *
+ * THE BARE-DECIMAL RULE IS NOT MOVED OFF THE RAW-TEXT PATH, and that is
+ * load-bearing. A TRUNCATED object — `{"k":"home","s":0.62,"reason":"Parliament's
+ * delay` — fails `JSON.parse`, so it arrives at that rule as raw text carrying a
+ * visible `0.62` and is rejected. Applying the rule only to an extracted
+ * `reason` FIELD would have let that same string through the strip chain and
+ * onto the card as the reader-facing note.
+ */
+export function parseReasonResult(
   output: string,
   id: string,
   prompt?: string,
   logger: HarnessLogger = NOOP_LOGGER,
-): string {
+  stats?: ReasonDecodeStats,
+): { reason: string; rescore?: ReasonRescore } {
   let text = output.trim();
+  let rescore: ReasonRescore | undefined;
 
   // A leaked reasoning trace, handled BEFORE anything else so no later step can
   // tidy one into something that reads like prose. Two shapes, both measured
@@ -1249,7 +1383,8 @@ export function parseReasonResponse(
     text = text.slice(lastCloser + '</think>'.length).trim();
   } else if (text.includes('<think>')) {
     logger.warn('Reason generation: unclosed reasoning trace — rejected', { id });
-    return '';
+    if (stats) stats.rescoreUnparsed++;
+    return { reason: '' };
   }
 
   if (DELIBERATION_OPENER.test(text)) {
@@ -1257,23 +1392,29 @@ export function parseReasonResponse(
       id,
       output: text.slice(0, 120),
     });
-    return '';
+    if (stats) stats.rescoreUnparsed++;
+    return { reason: '' };
   }
 
   try {
-    const parsed: unknown = JSON.parse(text);
+    const parsed: unknown = JSON.parse(stripCodeFence(text));
     if (typeof parsed === 'string' && parsed.length > 0) {
       text = parsed;
-    } else if (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      'reason' in parsed
-    ) {
-      const reason = (parsed as { reason: unknown }).reason;
-      if (typeof reason === 'string') text = reason;
+    } else if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      const obj = parsed as Record<string, unknown>;
+      rescore = extractRescore(obj, stats);
+      // `'reason' in obj` stays the guard for the TEXT half: an object carrying
+      // only `k`/`s` is a score with no note, which is a different state from a
+      // note that failed to parse, and `text` must keep its raw value so the
+      // existing failure logging still shows what arrived.
+      if (typeof obj.reason === 'string') text = obj.reason;
     }
   } catch {
     text = text.replace(/^["']|["']$/g, '');
+  }
+  if (stats) {
+    if (rescore) stats.rescoreApplied++;
+    else stats.rescoreUnparsed++;
   }
 
   text = text
@@ -1303,10 +1444,15 @@ export function parseReasonResponse(
       id,
       output: text.slice(0, 120),
     });
-    return '';
+    // The rescore SURVIVES a rejected reason. The two are separate judgements
+    // arriving in one response: the model narrating its score to the reader is
+    // a voice defect in the sentence, not evidence that the number is wrong.
+    return { reason: '', rescore };
   }
 
-  if (text.length > 0) return cutAtWordBoundary(text, REASON_MAX_CHARS);
+  if (text.length > 0) {
+    return { reason: cutAtWordBoundary(text, REASON_MAX_CHARS), rescore };
+  }
 
   logger.warn('Reason generation: failed to parse LLM output', {
     output: output.trim(),
@@ -1314,5 +1460,22 @@ export function parseReasonResponse(
     prompt,
   });
 
-  return '';
+  return { reason: '', rescore };
+}
+
+/**
+ * The reason half of {@link parseReasonResult}.
+ *
+ * Kept as the signature it has always had — `string` in, `string` out — because
+ * several call sites want only the sentence, and because harness-local runners
+ * compile against it. A caller that wants the pass-2 score calls
+ * `parseReasonResult` directly.
+ */
+export function parseReasonResponse(
+  output: string,
+  id: string,
+  prompt?: string,
+  logger: HarnessLogger = NOOP_LOGGER,
+): string {
+  return parseReasonResult(output, id, prompt, logger).reason;
 }

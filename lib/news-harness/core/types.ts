@@ -146,6 +146,19 @@ export interface DecodedResults {
   scoreMap: Map<string, number>;
   reasonMap: Map<string, string>;
   failedIds: Set<string>;
+  /**
+   * Pass-2 RAW scores, band-clamped, for the candidates whose reason response
+   * carried a parseable `{"k","s"}`. Entries are SPARSE by design: a legacy
+   * plain-string reason, a truncated object, or an unknown stake tag all leave
+   * the id absent, and an absent id means "the pass-1 score stands".
+   *
+   * RAW, not bucketed — the caller buckets, because the caller is the one that
+   * knows whether it is writing to a store that holds bucketed values (both app
+   * paths) or to a sink that holds both (the offline pipeline). `scoreMap` is
+   * NOT overwritten from this: pass 1's score is the only record of what the
+   * batched filter said, and the eval compares the two.
+   */
+  rescoreMap: Map<string, number>;
 }
 
 // ---------------------------------------------------------------------------
