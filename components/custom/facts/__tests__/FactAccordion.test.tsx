@@ -38,6 +38,15 @@ jest.mock('react-i18next', () => ({
     useTranslation: () => ({ t: (key: string, opts?: any) => (opts?.defaultValue ?? key) }),
 }));
 
+// For the "real observeFacts, not a hand-built DTO" reproduction only —
+// fact-service imports the real database singleton, which constructs a real
+// SQLite adapter under Jest. Everywhere else in this file `Fact` objects are
+// hand-built and never touch this.
+jest.mock('@/lib/database/index', () => {
+    const { makeDatabaseMock } = require('@/lib/__test-helpers__/mockDatabase');
+    return makeDatabaseMock();
+});
+
 jest.mock('@/components/custom/GlassSurface', () => {
     const { View } = require('react-native');
     return { __esModule: true, GlassPanel: (p: any) => <View {...p} /> };
@@ -181,6 +190,53 @@ describe('FactAccordion — the statement always renders, in every state', () =>
         );
         expect(getByText('Loves hiking in the mountains')).toBeTruthy();
         expect(getByText('configPanel.topicGenFailedGeneric')).toBeTruthy();
+    });
+
+    // Device check at d1196cd: a real pending fact (Rotterdam residence)
+    // rendered blank. Every other test in this file hand-builds its `Fact`
+    // fixture, which trivially always carries `.statement` — that can never
+    // catch a real mapping bug between the WatermelonDB record and the DTO.
+    // This one runs the REAL `toFact()` (via the real, exported
+    // `observeFacts()`, unmocked) against a fake WatermelonDB row, closing
+    // that blind spot.
+    it('a REAL pending fact, mapped through the real observeFacts()/toFact() (not a hand-built DTO), still renders its statement', async () => {
+        const database = require('@/lib/database/index').default;
+        const { makeRecord } = require('@/lib/__test-helpers__/mockDatabase');
+        const { of } = require('rxjs');
+
+        const record = makeRecord({
+            id: 'f-rotterdam',
+            statement: 'Lives in Rotterdam',
+            metadata: undefined,
+            weight: null,
+            questionnaireLevel: undefined,
+            questionnaireLevelCategory: undefined,
+            questionnaireAttribute: undefined,
+            topicsStatus: 'pending',
+            topicsUpdatedAt: null,
+            createdAt: new Date('2026-01-01T00:00:00Z'),
+            updatedAt: new Date('2026-01-01T00:00:00Z'),
+        });
+        const col = database.get('facts');
+        col.query = jest.fn(() => ({ observeWithColumns: () => of([record]) }));
+
+        const { observeFacts } = require('@/lib/database/services/fact-service');
+        const realFacts: any[] = await new Promise((resolve) => {
+            observeFacts().subscribe((facts: any[]) => resolve(facts));
+        });
+
+        expect(realFacts).toHaveLength(1);
+        const realFact = realFacts[0];
+        // The mapping itself, asserted directly — if this fails, the bug is
+        // in toFact()/observeFacts(), not in FactAccordion.
+        expect(realFact.statement).toBe('Lives in Rotterdam');
+        expect(realFact.topicsStatus).toBe('pending');
+
+        const { getByText, getByTestId } = render(
+            <FactAccordion {...baseProps} fact={realFact} isExpanded={false} />,
+        );
+        expect(getByText('Lives in Rotterdam')).toBeTruthy();
+        expect(getByTestId('fact-topics-pending-f-rotterdam')).toBeTruthy();
     });
 });
 
