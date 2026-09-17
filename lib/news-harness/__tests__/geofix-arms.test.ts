@@ -227,3 +227,34 @@ describe('null-control', () => {
     );
   });
 });
+
+describe('the output example must not answer the question', () => {
+  // A live probe on the DN matrix returned the wave's own bug case almost word
+  // for word, because the first draft of the object contract used that article
+  // as its worked example. The model was copying. Any measurement of that
+  // article under a rescore arm was therefore contaminated by the prompt.
+  it('never names the article the DN matrix tests', () => {
+    for (const id of [REASON_RESCORE_ID, REASON_RESCORE_PRIOR_ID, RESCORE_DEMOTE_ONLY_ID]) {
+      for (const slot of ['reason', 'headlineReason'] as PromptSlot[]) {
+        const p = armPrompt(id, slot);
+        expect(p).not.toMatch(/parental[- ]leave vote is a Portuguese/i);
+        expect(p).not.toMatch(/Portugal's parental/i);
+      }
+    }
+  });
+
+  it('shows one HIGH and one LOW, so neither verdict is the default', () => {
+    const p = armPrompt(REASON_RESCORE_ID, 'reason');
+    const examples = p.slice(p.indexOf('Examples of the SHAPE'));
+    expect(examples).toContain('"k":"home"');
+    expect(examples).toContain('"k":"none"');
+  });
+
+  it('introduces no sentence the shipped prompt does not already carry', () => {
+    // Both example reasons are lifted from the tone table, so the arm still
+    // differs from the shipped prompt in its output contract and nothing else.
+    const shipped = SHIPPED.reason;
+    expect(shipped).toContain('Evacuation ordered in Jordaan, where you live.');
+    expect(shipped).toContain("Manchester building fire is a UK-local emergency; you're in Amsterdam.");
+  });
+});
