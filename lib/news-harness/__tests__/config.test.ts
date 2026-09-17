@@ -26,7 +26,10 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.scoreBatchMaxTokens).toBe(320);
     expect(a.scoreTemperature).toBe(0.1);
     expect(a.reasonTemperature).toBe(0.2);
-    expect(a.reasonMaxTokens).toBe(64);
+    // 64 → 96 when pass 2 gained the `{"k","s","reason"}` object contract: the
+    // wrapper plus a 35-word headline reason does not fit in 64, and a
+    // truncation there costs the score AND the reason.
+    expect(a.reasonMaxTokens).toBe(96);
   });
 
   it('pins the relevance floors', () => {

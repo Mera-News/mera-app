@@ -75,6 +75,39 @@ export interface PromptVariantSpec {
    * where that ordering is load-bearing.
    */
   articleTextMaxLength?: number;
+  /**
+   * What the pass-2 USER message does with the pass-1 score.
+   *
+   *  - omitted (the shipped default) — `Relevance Score: 0.82` opens the
+   *    message, exactly as it always has.
+   *  - `'omit'` — the line is dropped entirely. Under the rescore contract pass
+   *    2 re-derives the score from scratch, and handing it the number it is
+   *    meant to re-derive is an anchor, not context.
+   *  - `'relabel'` — the line stays but reads "First-pass score (batched):
+   *    0.82". Same information, honestly labelled as a cheap batched filter's
+   *    opinion rather than as a given.
+   *
+   * `'omit'` and `'relabel'` exist as SEPARATE arms because the size of the
+   * anchoring effect is the thing in question. Shipping the drop and assuming
+   * it helped would be assuming the answer.
+   */
+  reasonPriorScoreLine?: 'omit' | 'relabel';
+  /**
+   * What a caller does with a pass-2 score once it has one.
+   *
+   *  - omitted (the default) — `'replace'`: the rescore wins in both
+   *    directions.
+   *  - `'demote-only'` — the rescore applies only when it is LOWER. The guard
+   *    against pass 2 inflating scores, measured alongside rather than assumed
+   *    away.
+   *
+   * NOT A PROMPT, and it sits here anyway for the same reason
+   * `articleTextMaxLength` does: it is a VALUE that an arm carries, the arms are
+   * selected by one `--variant` list, and an arm whose numbers get quoted has to
+   * be reproducible from the repo alone. Splitting it into a second registry
+   * keyed by the same ids would buy nothing but a second place to typo.
+   */
+  rescorePolicy?: 'replace' | 'demote-only';
 }
 
 const BASELINE: PromptVariantSpec = {

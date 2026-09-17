@@ -14,13 +14,20 @@ export * from './core/config';
 // through prompts/prompts, which re-exports it. Exporting the module here
 // as well would be a duplicate export of every one of its names.
 export * from './prompts/prompts';
-// Side-effect import: registers the REASON experiment arms. It is an import
-// rather than a re-export because the module's job is the registration, and it
-// has to run before a runner can select `reason-v2` by id. Kept out of
+// Side-effect import: registers the REASON and GEOFIX experiment arms. It is an
+// import rather than a re-export because the module's job is the registration,
+// and it has to run before a runner can select an arm by id. Kept out of
 // prompt-variants.ts to avoid an import cycle with prompts.ts — see that file's
 // header.
 import './prompts/reason-arms';
-export { REASON_V1_ID, REASON_V3_ID } from './prompts/reason-arms';
+export {
+  REASON_V1_ID,
+  REASON_V3_ID,
+  GEO_SCOPE_V1_ID,
+  REASON_RESCORE_ID,
+  REASON_RESCORE_PRIOR_ID,
+  RESCORE_DEMOTE_ONLY_ID,
+} from './prompts/reason-arms';
 export * from './prompts/questionnaire-data';
 export * from './persona-management/fact-rules';
 export * from './persona-management/topic-generation';

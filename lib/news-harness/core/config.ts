@@ -27,14 +27,23 @@ export interface ArticlePipelineConfig {
   /** Output token ceiling for one batched score call. */
   scoreBatchMaxTokens: number;
   /** Output ceiling for one NOTE call ({@link legacyNoteDemote}): one sentence
-   *  plus a tiny JSON wrapper. 96 is a ceiling 32 above `reasonMaxTokens`, and a
-   *  ceiling is not a spend. */
+   *  plus a tiny JSON wrapper. Equal to `reasonMaxTokens` since pass 2 gained
+   *  its own JSON wrapper, and a ceiling is not a spend. */
   v3NoteMaxTokens: number;
   /** Sampling temperature for relevance-score calls. */
   scoreTemperature: number;
   /** Sampling temperature for reason-generation calls. */
   reasonTemperature: number;
-  /** Output token ceiling for one reason call. */
+  /**
+   * Output token ceiling for one reason call.
+   *
+   * 96, not the 64 a bare sentence needed: pass 2 answers with
+   * `{"k":"…","s":0.00,"reason":"…"}` under the rescore contract, and the
+   * wrapper plus a 35-word headline reason does not fit in 64. A truncated
+   * response costs BOTH halves — `JSON.parse` fails, so the score is lost, and
+   * the raw text then trips the bare-decimal rule, so the reason is lost too.
+   * A ceiling is not a spend; a truncation is.
+   */
   reasonMaxTokens: number;
   /** Raw scores below this stay raw (not bucketed) — the DISCARD floor. */
   discardFloor: number;
@@ -77,8 +86,8 @@ export interface ArticlePipelineConfig {
    * this flag anyway, as an explicit owner decision to override a 0.1pp miss —
    * recorded here so the miss is never mistaken for a pass.
    *
-   * COST: zero net calls. `v3NoteMaxTokens` (96) is a ceiling 32 above
-   * `reasonMaxTokens` (64), and a ceiling is not a spend.
+   * COST: zero net calls. `v3NoteMaxTokens` and `reasonMaxTokens` are both 96,
+   * and a ceiling is not a spend.
    *
    * SUBMIT/DECODE CONSISTENCY: reading this literal at decode would be a bug —
    * a batch submitted with the legacy reason prompt must not be parsed by the
@@ -498,7 +507,7 @@ export const DEFAULT_HARNESS_CONFIG: HarnessConfig = {
     v3NoteMaxTokens: 96,
     scoreTemperature: 0.1,
     reasonTemperature: 0.2,
-    reasonMaxTokens: 64,
+    reasonMaxTokens: 96,
     discardFloor: 0.4,
     fallbackRelevance: 0.3,
     ineligibleRelevance: 0.2,

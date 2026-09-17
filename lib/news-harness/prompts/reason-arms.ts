@@ -21,11 +21,21 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
+  CLOUD_RELEVANCE_SYSTEM_PROMPT_GEO,
+  CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_GEO,
+  CLOUD_REASON_SYSTEM_PROMPT_GEO,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO,
+  CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
 } from './prompts';
 import { registerPromptVariant } from './prompt-variants';
 
 const REASON_V1_ID = 'reason-v1';
 const REASON_V3_ID = 'reason-v3';
+const GEO_SCOPE_V1_ID = 'geo-scope-v1';
+const REASON_RESCORE_ID = 'reason-rescore';
+const REASON_RESCORE_PRIOR_ID = 'reason-rescore-prior';
+const RESCORE_DEMOTE_ONLY_ID = 'rescore-demote-only';
 
 /**
  * The control: the reason prompt exactly as it shipped before promotion.
@@ -107,6 +117,108 @@ registerPromptVariant({
   },
 });
 
+// ---------------------------------------------------------------------------
+// THE GEOFIX ARMS (2026-09-17). Four arms answering one question each.
+//
+// THE BUG THEY EXIST FOR. A Diário de Notícias story about Portugal's
+// parental-leave vote rendered HIGH for a reader living in the Netherlands,
+// reasoned as "Parliament's delay on parental leave directly affects your
+// upcoming March birth in the Netherlands." The publication's country was in
+// the prompt for both passes and the residence fact was attached; measured n=9,
+// pass 1 still tagged it `home` 6 times out of 9. The reason pass was already
+// saying "foreign-domestic, no tie" in prose and had no field to say it in.
+//
+// So there are two independent candidate fixes and they are NOT bundled:
+// `geo-scope-v1` states the missing rule, `reason-rescore` gives pass 2 a score
+// to state it WITH. Bundling them would mean a null result could not be
+// attributed to either, which is what `reason-v3` above paid to learn.
+// ---------------------------------------------------------------------------
+
+/**
+ * The scoring base gains an article-scope rule: a story about a country in none
+ * of the user's facts can be anything EXCEPT `home` or `family`.
+ *
+ * Both passes, because the rule lives in the shared base. That is deliberate:
+ * a geography rule the score pass obeys and the reason pass does not would give
+ * a correctly-scored article an incorrectly-reasoned sentence.
+ */
+registerPromptVariant({
+  id: GEO_SCOPE_V1_ID,
+  description:
+    'The shared scoring base plus one article-scope rule: `home` and `family` require the story\'s '
+    + 'country to be one the user lives in or has family in, and a location-less article is about '
+    + 'the publication\'s country. Prompts only, no decode change.',
+  systemPrompts: {
+    relevance: CLOUD_RELEVANCE_SYSTEM_PROMPT_GEO,
+    headlineRelevance: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_GEO,
+    reason: CLOUD_REASON_SYSTEM_PROMPT_GEO,
+    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO,
+  },
+});
+
+/**
+ * Pass 2 answers `{"k","s","reason"}` and its score replaces pass 1's.
+ *
+ * The prior-score line is DROPPED from the user message. Pass 2 is being asked
+ * to re-derive the score, and handing it the number it is meant to re-derive is
+ * an anchor rather than context. How much that matters is measured by
+ * `reason-rescore-prior`, not assumed.
+ */
+registerPromptVariant({
+  id: REASON_RESCORE_ID,
+  description:
+    'Pass 2 runs the full stake procedure on its one article and emits {"k","s","reason"}; the '
+    + 'band-clamped `s` replaces the pass-1 score in BOTH directions. Prior-score line dropped '
+    + 'from the user message. Scoring base unchanged, so this is not confounded with geo-scope-v1.',
+  systemPrompts: {
+    reason: CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
+    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
+  },
+  reasonPriorScoreLine: 'omit',
+});
+
+/**
+ * `reason-rescore` with the prior score kept, relabelled for what it is.
+ *
+ * The ONLY difference from `reason-rescore` is that one line of the user
+ * message, so the pair isolates the anchoring effect exactly.
+ */
+registerPromptVariant({
+  id: REASON_RESCORE_PRIOR_ID,
+  description:
+    'reason-rescore with the pass-1 score kept in the user message, relabelled "First-pass score '
+    + '(batched): X". Identical system prompt, so the pair measures the anchoring effect of that '
+    + 'one line and nothing else.',
+  systemPrompts: {
+    reason: CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
+    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
+  },
+  reasonPriorScoreLine: 'relabel',
+});
+
+/**
+ * `reason-rescore`'s inflation guard: the rescore applies only when it LOWERS
+ * the score.
+ *
+ * Same prompt and the same dropped line as `reason-rescore` — the arms differ
+ * only in what the caller does with the number, which is why the policy is a
+ * field on the arm and not a second prompt. It is the arm to promote if the
+ * full rescore turns out to inflate.
+ */
+registerPromptVariant({
+  id: RESCORE_DEMOTE_ONLY_ID,
+  description:
+    'reason-rescore, except the pass-2 score applies only when it is LOWER than pass 1. Identical '
+    + 'prompt and user message to reason-rescore; the difference is the decode policy alone. The '
+    + 'guard against pass 2 inflating, measured rather than assumed away.',
+  systemPrompts: {
+    reason: CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
+    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
+  },
+  reasonPriorScoreLine: 'omit',
+  rescorePolicy: 'demote-only',
+});
+
 // LOCAL IS STILL UNTOUCHED, through the promotion as well as the arms.
 // `LOCAL_REASON_SYSTEM_PROMPT` is built on a different base and states its voice
 // rule inline rather than sharing the cloud constant, so neither the promoted
@@ -114,4 +226,12 @@ registerPromptVariant({
 // runner exercises the local prompts, and an unmeasured change is not an
 // improvement.
 
-export { REASON_V1_ID, REASON_V3_ID, REASON_V3_RULES };
+export {
+  REASON_V1_ID,
+  REASON_V3_ID,
+  REASON_V3_RULES,
+  GEO_SCOPE_V1_ID,
+  REASON_RESCORE_ID,
+  REASON_RESCORE_PRIOR_ID,
+  RESCORE_DEMOTE_ONLY_ID,
+};

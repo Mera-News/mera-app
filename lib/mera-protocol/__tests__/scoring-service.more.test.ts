@@ -328,12 +328,13 @@ describe('buildReasonCallsForSubset', () => {
     expect(result.calls).toHaveLength(0);
   });
 
-  it('each call has reason: prefix id, correct system, and maxTokens=64', async () => {
+  it('each call has reason: prefix id, correct system, and the reason token ceiling', async () => {
     const candidates = [makeCandidate('abc')];
     const result = await buildReasonCallsForSubset(candidates, { abc: 0.7 }, 0.3);
     const call = result.calls[0];
     expect(call.id).toBe('reason:abc');
-    expect(call.maxTokens).toBe(64);
+    // 96 since pass 2 gained the {"k","s","reason"} object contract.
+    expect(call.maxTokens).toBe(96);
     expect(call.temperature).toBe(0.2);
   });
 

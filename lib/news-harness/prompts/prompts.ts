@@ -185,6 +185,35 @@ City > region > country. Family locations: the named city only. Exact interest a
 const CLOUD_SCORING_BASE_PROMPT = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCORING_BASE_ANCHORS}${CLOUD_SCORING_BASE_POST_ANCHORS}`;
 
 /**
+ * The geography rule, for the `geo-scope-v1` arm. NOT in the shipped base yet.
+ *
+ * WHAT IT IS FOR. A Diário de Notícias story about Portugal's parental-leave
+ * vote scored HIGH for a reader living in the Netherlands, with the reason
+ * "Parliament's delay on parental leave directly affects your upcoming March
+ * birth in the Netherlands." Every ingredient of that sentence is in the facts;
+ * the only thing wrong is the country, and no rule in the base says a `home`
+ * stake needs one. The base tells the model to resolve places and not to let
+ * the publication's country override an explicit location, which is a rule
+ * about PRECEDENCE — it never states the floor underneath it.
+ *
+ * Measured n=9 before this existed: with the `Article Country` line AND the
+ * residence fact in the prompt, pass 1 still emitted `k:"home"` 6 times out of
+ * 9. So the country reaching the model was never the gap.
+ *
+ * Shared by BOTH passes because it is part of the base, which is what stops the
+ * score pass and the reason pass disagreeing about what a `home` story is.
+ */
+const CLOUD_SCORING_GEO_SCOPE_RULE = `## Article scope
+When the title and description name no location, the article is about the publication's country (the \`Article Country\` / \`Publication\` lines). A story about a country that appears in none of the user's facts can be \`domain\`, \`attend\`, \`travel\`, \`interest\` or \`none\`, but never \`home\` or \`family\`: those two require the story's country to be one the user lives in or has family in. A parental-leave vote in Portugal is not a Dutch reader's \`home\` story, however closely the subject matches their life.`;
+
+/** {@link CLOUD_SCORING_BASE_PROMPT} plus {@link CLOUD_SCORING_GEO_SCOPE_RULE}.
+ *  The rule lands after `## Critical` and before each prompt's `## Task`, so a
+ *  prompt built on it differs from the shipped one by exactly that section. */
+const CLOUD_SCORING_BASE_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_SCORING_GEO_SCOPE_RULE}`;
+
+/**
  * The second-person voice rule for every user-facing reason string.
  *
  * Extracted (byte-identical) out of CLOUD_REASON_SYSTEM_PROMPT so the headline
@@ -200,15 +229,14 @@ const CLOUD_SCORING_BASE_PROMPT = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCOR
 const CLOUD_REASON_VOICE_RULE = `Voice. The reason is read BY the user, so write it TO them — "you"/"your", never "the user", "User …", or any third person. This holds in EVERY band, low scores included. Wrong: "User follows Formula 1; the race matches this interest, no personal stake." Right: "The race matches your Formula 1 interest, but carries no personal stake."`;
 
 /**
- * Pass 1 — Relevance score only.
- * Returns a single number 0.0-1.1. No reason text, minimal output tokens.
- *
- * (Was marked DEPRECATE(v3) in favour of the single merged two-axis
- * score+reason call. That scorer is retired; this is the only pass-1 prompt.)
+ * The task half of pass 1, split out so an arm that changes only the BASE can
+ * recompose the SAME task against it. A value, not a transform — see
+ * `prompt-variants.ts`'s header for why arms are never derived by string
+ * surgery over a shipped constant. The split is byte-neutral: the shipped
+ * prompt below interpolates it back at exactly the offset it used to sit at,
+ * which `config.test.ts` and `golden-prompts.test.ts` both pin.
  */
-export const CLOUD_RELEVANCE_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
-
-## Task
+const CLOUD_RELEVANCE_TASK = `## Task
 You will be given N articles framed as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … For EACH article independently, run the decision procedure (Steps 1–4) and output one object \`{"k":"…","s":0.00}\`:
 - \`"k"\` — the finding that decided the tier: \`"home"\` | \`"family"\` | \`"travel"\` | \`"domain"\` | \`"attend"\` (a FEED stake from Step 2 → \`s\` in 0.40–1.10), \`"interest"\` (no stake, interest-category match from Step 3 → \`s\` in 0.25–0.39), or \`"none"\` (Step 4 → \`s\` in 0.05–0.24).
 - \`"s"\` — the score, which MUST lie inside the band of the \`"k"\` you chose. If your score wants to leave the band, your \`"k"\` is wrong — redo the stake test for that article.
@@ -218,25 +246,52 @@ Output: a JSON array of exactly N such objects, in input order. No prose, no ext
 Example for 3 articles: [{"k":"domain","s":0.62},{"k":"none","s":0.12},{"k":"interest","s":0.33}]`;
 
 /**
- * Pass 2 (cloud) — Reason generation for relevant articles (relevance > 0.3).
- * Generates a short user-facing "Why this matters to you" string.
- * Receives the relevance score in the user message — use the shared scale
- * above to calibrate tone and specificity.
+ * Pass 1 — Relevance score only.
+ * Returns a single number 0.0-1.1. No reason text, minimal output tokens.
  *
- * (Was marked DEPRECATE(v3) in favour of the merged call that emitted the reason
- * alongside the score. That scorer is retired; this is the only reason prompt —
- * see `legacyNoteDemote` for the variant that may also demote.)
+ * (Was marked DEPRECATE(v3) in favour of the single merged two-axis
+ * score+reason call. That scorer is retired; this is the only pass-1 prompt.)
  */
-/** The reason prompt AS IT SHIPPED BEFORE reason-v2 was promoted. Exported only
- *  so `prompts/reason-arms.ts` can register it as the `reason-v1` control arm:
- *  a promotion with no way back to the thing it beat is not a measurement. Not
- *  referenced by any production path. */
-export const CLOUD_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT}
+export const CLOUD_RELEVANCE_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
-## Task
-Given the article + its **pre-computed score**, write ONE plain sentence (≤25 words) explaining the score. The score is authoritative — explain, don't re-judge.
+${CLOUD_RELEVANCE_TASK}`;
 
-Every reason MUST contain all three: (a) a specific detail from the article (event, entity, place, policy, product) — not "this topic"; (b) the specific user fact creating the link (city / profession / employer / family location / investment / hobby) — not "your interests"; (c) tone matched to the score.
+/**
+ * THE THREE PARTS OF THE PASS-2 TASK BLOCK, and why it is cut here.
+ *
+ * The rescore arms change exactly two things about this task: what the model is
+ * asked to DO with the score (explain it, or re-derive it), and the shape it
+ * answers in. Everything between — the three mandatory ingredients, the score →
+ * tone table, the voice rule, the no-fabrication rule — is identical under both
+ * contracts and must STAY identical, or a rescore result stops being
+ * attributable to the rescore.
+ *
+ * So the block is cut at those two seams and nowhere else: OPENER, MIDDLE,
+ * OUTPUT. The shipped prompt interpolates all three back in their original
+ * order, byte for byte.
+ */
+const CLOUD_REASON_TASK_OPENER_V1 = `## Task
+Given the article + its **pre-computed score**, write ONE plain sentence (≤25 words) explaining the score. The score is authoritative — explain, don't re-judge.`;
+
+/**
+ * The rescore opener. Pass 2 stops being a caption and becomes a second, single
+ * article judgement.
+ *
+ * WHY IT IS ALLOWED TO OVERRULE PASS 1. Pass 1 scores five articles in one
+ * batched call; pass 2 sees one, with the same rubric and the same facts. The
+ * reason pass was ALREADY reaching the right answer on the foreign-domestic
+ * case and writing it into prose it had no way to act on. This gives it the
+ * field it was missing.
+ */
+const CLOUD_REASON_TASK_OPENER_RESCORE = `## Task
+Run the full decision procedure (Steps 1–4) on THIS ONE article, from scratch, and output one object \`{"k":"…","s":0.00,"reason":"…"}\`:
+- \`"k"\` — the finding that decided the tier, exactly as in the scoring rules above: \`"home"\` | \`"family"\` | \`"travel"\` | \`"domain"\` | \`"attend"\` (a FEED stake → \`s\` in 0.40–1.10), \`"interest"\` (no stake, interest-category match → \`s\` in 0.25–0.39), or \`"none"\` (Step 4 → \`s\` in 0.05–0.24).
+- \`"s"\` — your score, which MUST lie inside the band of the \`"k"\` you chose. If your score wants to leave the band, your \`"k"\` is wrong. Use fine-grained values, never rounded to .05/.10 increments.
+- \`"reason"\` — ONE plain sentence (≤25 words), with its tone matched to YOUR \`"s"\` on the table below, not to any score you were given.
+
+You are seeing one article on its own, so you can check what a batch cannot: resolve the story's country before you tag it, and let your \`"s"\` say what you actually found.`;
+
+const CLOUD_REASON_TASK_MIDDLE = `Every reason MUST contain all three: (a) a specific detail from the article (event, entity, place, policy, product) — not "this topic"; (b) the specific user fact creating the link (city / profession / employer / family location / investment / hobby) — not "your interests"; (c) tone matched to the score.
 
 Score → tone. Match your confidence to the score — a confident reason on a low score is wrong, and a hedging reason on a high score is also wrong.
 - **>0.9** — direct, no hedging. "Evacuation ordered in Jordaan, where you live."
@@ -248,9 +303,54 @@ Score → tone. Match your confidence to the score — a confident reason on a l
 
 ${CLOUD_REASON_VOICE_RULE}
 
-Never fabricate a connection. The reason must match the article — if the article is about holiday homes, the reason is about holiday homes, not the AI Act. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.
+Never fabricate a connection. The reason must match the article — if the article is about holiday homes, the reason is about holiday homes, not the AI Act. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.`;
 
-Output: single plain string, no prefixes, no markdown.`;
+/** The shipped output contract: the whole response IS the sentence. */
+const REASON_OUTPUT_STRING = `Output: single plain string, no prefixes, no markdown.`;
+
+/**
+ * The rescore output contract.
+ *
+ * "No prose" is not decoration. The decoder parses the WHOLE response as JSON;
+ * a model that writes a sentence before the object fails that parse, and the
+ * bare-decimal rule then rejects the reason as well, so the row costs a call
+ * and yields nothing. Naming the failure is cheaper than handling it.
+ */
+const REASON_OUTPUT_OBJECT = `Output: exactly ONE JSON object and nothing else. No prose before or after it, no markdown fence. Example: {"k":"none","s":0.16,"reason":"Portugal's parental-leave vote is a Portuguese domestic story, with no tie to where you live."}`;
+
+/** The shipped pass-2 task block: opener, middle, output, in that order. */
+const CLOUD_REASON_TASK_V1 = `${CLOUD_REASON_TASK_OPENER_V1}
+
+${CLOUD_REASON_TASK_MIDDLE}
+
+${REASON_OUTPUT_STRING}`;
+
+/** The same block under the object contract. Only the opener and the output
+ *  line differ from {@link CLOUD_REASON_TASK_V1}. */
+const CLOUD_REASON_TASK_RESCORE = `${CLOUD_REASON_TASK_OPENER_RESCORE}
+
+${CLOUD_REASON_TASK_MIDDLE}
+
+${REASON_OUTPUT_OBJECT}`;
+
+/**
+ * Pass 2 (cloud) — Reason generation for relevant articles (relevance > 0.3).
+ * Generates a short user-facing "Why this matters to you" string.
+ * Receives the relevance score in the user message — use the shared scale
+ * above to calibrate tone and specificity.
+ *
+ * (Was marked DEPRECATE(v3) in favour of the merged call that emitted the reason
+ * alongside the score. That scorer is retired; this is the only reason prompt —
+ * see `legacyNoteDemote` for the variant that may also demote.)
+ *
+ * The reason prompt AS IT SHIPPED BEFORE reason-v2 was promoted. Exported only
+ * so `prompts/reason-arms.ts` can register it as the `reason-v1` control arm:
+ * a promotion with no way back to the thing it beat is not a measurement. Not
+ * referenced by any production path.
+ */
+export const CLOUD_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_REASON_TASK_V1}`;
 
 // ---------------------------------------------------------------------------
 // HEADLINE variants — AUTHORED IN P4a, ROUTED SINCE P4b.
@@ -356,11 +456,8 @@ When the chain DOES hold, the article is a Home stake — the chain terminates a
  * DEPRECATE(v3): superseded by CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT. Kept for
  * the flag-off legacy path.
  */
-export const CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
-
-${CLOUD_HEADLINE_IMPACT_BLOCK}
-
-## Task
+/** The task half of headline pass 1. See {@link CLOUD_RELEVANCE_TASK}. */
+const CLOUD_HEADLINE_RELEVANCE_TASK = `## Task
 You will be given N top-headline articles framed as \`===== Article 0 =====\`, \`===== Article 1 =====\`, … For EACH article independently, run the decision procedure (Steps 1–4) WITH the headline override available at Step 2, and output one object \`{"k":"…","s":0.00}\`:
 - \`"k"\` — the finding that decided the tier: \`"home"\` | \`"family"\` | \`"travel"\` | \`"domain"\` | \`"attend"\` (a FEED stake → \`s\` in 0.40–1.10; a passed impact chain is \`"home"\`, since the chain ends at their household), \`"interest"\` (no stake, interest-category match → \`s\` in 0.25–0.39), or \`"none"\` (Step 4, INCLUDING every headline whose chain failed any of the four gates → \`s\` in 0.05–0.24).
 - \`"s"\` — the score, which MUST lie inside the band of the \`"k"\` you chose. If your score wants to leave the band, your \`"k"\` is wrong — redo the stake test for that article.
@@ -370,6 +467,12 @@ Before tagging \`"home"\` on an impact chain, check all four gates in order: cha
 Output: a JSON array of exactly N such objects, in input order. No prose, no extra fields. Use fine-grained values — never round to .05/.10 increments.
 
 Example for 3 articles: [{"k":"home","s":0.71},{"k":"none","s":0.13},{"k":"interest","s":0.33}]`;
+
+export const CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+${CLOUD_HEADLINE_RELEVANCE_TASK}`;
 
 /**
  * Headline Pass 2 — reason generation for TOP-HEADLINE articles.
@@ -383,23 +486,32 @@ Example for 3 articles: [{"k":"home","s":0.71},{"k":"none","s":0.13},{"k":"inter
  * DEPRECATE(v3): superseded by CLOUD_HEADLINE_SCORE_V3_SYSTEM_PROMPT, which
  * scores and (conditionally) reasons in one call. Kept for the legacy path.
  *
- * The wider cap still fits reasonMaxTokens (64) — measured, not assumed: the
- * worked positive example is 24 words / 32 est tokens (1.33 tok/word) and the
- * negative 20 words / 30 est (1.50), so 35 words ≈ 47–53 est tokens, ~17–27%
- * under the 64 ceiling. A reason is user-facing, so a truncation here is a
- * visible defect; if the cap is ever raised past ~40 words, derive a separate
- * headlineReasonMaxTokens rather than letting it ride.
+ * The wider cap still fits reasonMaxTokens — measured, not assumed: the worked
+ * positive example is 24 words / 32 est tokens (1.33 tok/word) and the negative
+ * 20 words / 30 est (1.50), so 35 words ≈ 47–53 est tokens. That fitted the old
+ * 64 ceiling with 17–27% to spare and fits today's 96 with far more, which is
+ * the headroom the object contract spends on its `{"k","s"}` wrapper. A reason
+ * is user-facing, so a truncation here is a visible defect; if the WORD cap is
+ * ever raised past ~40, derive a separate headlineReasonMaxTokens rather than
+ * letting it ride.
  */
-/** See {@link CLOUD_REASON_SYSTEM_PROMPT_V1}: the headline twin, pre-promotion,
- *  kept for the same control arm. */
-export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT}
+/** The headline twin of {@link CLOUD_REASON_TASK_OPENER_V1}, cut at the same
+ *  seam and for the same reason. */
+const CLOUD_HEADLINE_REASON_TASK_OPENER_V1 = `## Task
+Given a top-headline article + its **pre-computed score**, write ONE plain sentence (≤35 words) explaining the score. The score is authoritative — explain, don't re-judge.`;
 
-${CLOUD_HEADLINE_IMPACT_BLOCK}
+/** The headline twin of {@link CLOUD_REASON_TASK_OPENER_RESCORE}. The impact
+ *  chain's four gates are already stated in {@link CLOUD_HEADLINE_IMPACT_BLOCK}
+ *  above, so this only has to say which tag a passed chain carries. */
+const CLOUD_HEADLINE_REASON_TASK_OPENER_RESCORE = `## Task
+Run the full decision procedure (Steps 1–4) on THIS ONE top-headline article, from scratch and WITH the headline override available at Step 2, and output one object \`{"k":"…","s":0.00,"reason":"…"}\`:
+- \`"k"\` — the finding that decided the tier: \`"home"\` | \`"family"\` | \`"travel"\` | \`"domain"\` | \`"attend"\` (a FEED stake → \`s\` in 0.40–1.10; a passed impact chain is \`"home"\`, since the chain ends at their household), \`"interest"\` (no stake, interest-category match → \`s\` in 0.25–0.39), or \`"none"\` (Step 4, INCLUDING every headline whose chain failed any of the four gates → \`s\` in 0.05–0.24).
+- \`"s"\` — your score, which MUST lie inside the band of the \`"k"\` you chose. Use fine-grained values, never rounded to .05/.10 increments.
+- \`"reason"\` — ONE plain sentence (≤35 words), with its tone matched to YOUR \`"s"\`, not to any score you were given.
 
-## Task
-Given a top-headline article + its **pre-computed score**, write ONE plain sentence (≤35 words) explaining the score. The score is authoritative — explain, don't re-judge.
+Before tagging \`"home"\` on an impact chain, check all four gates in order: channel from the closed list → user exposed to it → magnitude passes → mechanism stated in the article. Any failure ⇒ \`"none"\`. Do not split the difference by scoring a failed chain into the interest band.`;
 
-When the score is a FEED score (≥0.40) reached through an impact chain, the sentence MUST: (a) name the MECHANISM in the article's own terms — the volume, share, route, halt, or price move the article actually states, never "global implications" or "economic impact"; (b) name at most 2–3 channels from the closed list, in plain words a reader uses ("what you pay at the pump", "grocery prices", "your electricity bill", "hiring in your field") — never the channel id itself, and never the rubric's OWN vocabulary: the words "channel", "chain", "magnitude", "absorbed", "propagate", "hop", "exposed", "exposure" and the phrase "universal household" describe how you decided and must never appear in the sentence a reader sees; (c) end at THIS user — their city, country, household, work, or trip.
+const CLOUD_HEADLINE_REASON_TASK_MIDDLE = `When the score is a FEED score (≥0.40) reached through an impact chain, the sentence MUST: (a) name the MECHANISM in the article's own terms — the volume, share, route, halt, or price move the article actually states, never "global implications" or "economic impact"; (b) name at most 2–3 channels from the closed list, in plain words a reader uses ("what you pay at the pump", "grocery prices", "your electricity bill", "hiring in your field") — never the channel id itself, and never the rubric's OWN vocabulary: the words "channel", "chain", "magnitude", "absorbed", "propagate", "hop", "exposed", "exposure" and the phrase "universal household" describe how you decided and must never appear in the sentence a reader sees; (c) end at THIS user — their city, country, household, work, or trip.
 
 Do NOT hedge. "May", "could", "might", "potentially", "possibly" are banned unless the article itself states the event is conditional or threatened rather than happening — the magnitude test already decided whether the effect is real, so hedging on top of a passed test misreports it. Never chain more than three links in the sentence; if it takes more, the score was wrong and you should be writing a no-effect reason instead.
 
@@ -415,9 +527,29 @@ ${CLOUD_REASON_VOICE_RULE}
 
 Never fabricate a connection. Never echo "[User facts]", "Relevance Score:", "Why this matters to you:", or any markdown (**, ##). Plain sentence only.
 
-Examples. High: "A fifth of the world's seaborne oil passes Hormuz, so a closure raises what you pay at the pump and for heating in Amsterdam." Low: "Chile's copper royalty is a small change in a well-supplied global market; it does not affect your costs in Amsterdam."
+Examples. High: "A fifth of the world's seaborne oil passes Hormuz, so a closure raises what you pay at the pump and for heating in Amsterdam." Low: "Chile's copper royalty is a small change in a well-supplied global market; it does not affect your costs in Amsterdam."`;
 
-Output: single plain string, no prefixes, no markdown.`;
+/** The shipped headline pass-2 task block. */
+const CLOUD_HEADLINE_REASON_TASK_V1 = `${CLOUD_HEADLINE_REASON_TASK_OPENER_V1}
+
+${CLOUD_HEADLINE_REASON_TASK_MIDDLE}
+
+${REASON_OUTPUT_STRING}`;
+
+/** The same block under the object contract. */
+const CLOUD_HEADLINE_REASON_TASK_RESCORE = `${CLOUD_HEADLINE_REASON_TASK_OPENER_RESCORE}
+
+${CLOUD_HEADLINE_REASON_TASK_MIDDLE}
+
+${REASON_OUTPUT_OBJECT}`;
+
+/** See {@link CLOUD_REASON_SYSTEM_PROMPT_V1}: the headline twin, pre-promotion,
+ *  kept for the same control arm. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+${CLOUD_HEADLINE_REASON_TASK_V1}`;
 
 /**
  * The three rules promoted into the shipped reason prompts, measured as the
@@ -434,7 +566,7 @@ Output: single plain string, no prefixes, no markdown.`;
  * after. Rule 3 bans inventing a place and the model still reaches for the
  * user's city as a sentence ending. That is a voice problem, not a fact problem.
  */
-const REASON_V2_RULES = `
+const REASON_V2_RULES_BODY = `
 ## Three additional rules
 
 **1. The middle of the scale has its own register.** Between 0.6 and 0.8 the
@@ -460,9 +592,26 @@ article is about it. A story set in Washington, London or Berlin does not become
 an Amsterdam story because the reader lives there. Wrong, on a US court ruling:
 "US AI regulation may impact your consumer app development in Amsterdam."
 Right: "A US court ruling on AI training data is close to your AI research
-interest, though it applies only in the United States."
+interest, though it applies only in the United States."`;
 
-Output: single plain string, no prefixes, no markdown.`;
+/**
+ * The promoted rules PLUS the shipped output contract, in the byte-exact order
+ * the rater scored.
+ *
+ * The output line has to be restated here and not only in the task block,
+ * because these rules are appended AFTER it and a model reads the last
+ * instruction on a subject as the live one. That is also why the rescore twin
+ * below exists: leaving the "single plain string" line as the final word of a
+ * prompt that asks for a JSON object would quietly undo the object contract.
+ */
+const REASON_V2_RULES = `${REASON_V2_RULES_BODY}
+
+${REASON_OUTPUT_STRING}`;
+
+/** {@link REASON_V2_RULES} with the object output contract as its last word. */
+const REASON_V2_RULES_RESCORE = `${REASON_V2_RULES_BODY}
+
+${REASON_OUTPUT_OBJECT}`;
 
 /**
  * Pass 2 (cloud) — the SHIPPED reason prompt.
@@ -478,6 +627,65 @@ ${REASON_V2_RULES}`;
 /** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT}, same rules, same order. */
 export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1}
 ${REASON_V2_RULES}`;
+
+// ---------------------------------------------------------------------------
+// ARM PROMPTS. Four whole strings, each the shipped prompt with ONE thing
+// changed, so a result is attributable to that one thing:
+//
+//   geo-scope-v1    the base gains the article-scope rule. Both passes, because
+//                   the base is shared — which is exactly what stops the score
+//                   pass and the reason pass disagreeing about what `home` means.
+//   reason-rescore  pass 2 answers with an object and re-derives the score. The
+//                   base is untouched, so a rescore result is not confounded
+//                   with a geography rule, and the promoted v2 rules are still
+//                   appended in the same order the rater scored them.
+//
+// They are separate arms on purpose: bundling two rules into one arm means a
+// null result cannot be attributed, which is the lesson `reason-v3` paid for.
+// ---------------------------------------------------------------------------
+
+/** Pass 1 on the geo-scoped base. `geo-scope-v1`. */
+export const CLOUD_RELEVANCE_SYSTEM_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT_GEO}
+
+${CLOUD_RELEVANCE_TASK}`;
+
+/** Headline pass 1 on the geo-scoped base. `geo-scope-v1`. */
+export const CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT_GEO}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+${CLOUD_HEADLINE_RELEVANCE_TASK}`;
+
+/** Pass 2 as shipped, on the geo-scoped base. `geo-scope-v1`. */
+export const CLOUD_REASON_SYSTEM_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT_GEO}
+
+${CLOUD_REASON_TASK_V1}
+${REASON_V2_RULES}`;
+
+/** Headline pass 2 as shipped, on the geo-scoped base. `geo-scope-v1`. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT_GEO}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+${CLOUD_HEADLINE_REASON_TASK_V1}
+${REASON_V2_RULES}`;
+
+/** Pass 2 under the object contract, on the SHIPPED base. `reason-rescore`,
+ *  `reason-rescore-prior` and `rescore-demote-only` all use this one string:
+ *  the first two differ only in the USER message, the third only in what the
+ *  caller does with the score. None of them changes the prompt again. */
+export const CLOUD_REASON_SYSTEM_PROMPT_RESCORE = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_REASON_TASK_RESCORE}
+${REASON_V2_RULES_RESCORE}`;
+
+/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT_RESCORE}. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE = `${CLOUD_SCORING_BASE_PROMPT}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+${CLOUD_HEADLINE_REASON_TASK_RESCORE}
+${REASON_V2_RULES_RESCORE}`;
 
 
 // ---------------------------------------------------------------------------
@@ -879,7 +1087,7 @@ export function buildReasonUserMessage(params: {
 }): string {
   const { userContext, articleTitle, articleDescription, articleCountry, relevance, relatedFacts } = params;
   const nonce = params.nonce ?? newPromptNonce();
-  const { articleTextMaxLength } = resolvePromptVariant(params.promptVariant);
+  const { articleTextMaxLength, reasonPriorScoreLine } = resolvePromptVariant(params.promptVariant);
   const fenced = buildFencedReasonBody({
     articleTitle,
     articleDescription,
@@ -889,7 +1097,16 @@ export function buildReasonUserMessage(params: {
     textMaxLength: articleTextMaxLength,
     publication: params.publication,
   });
-  return `Relevance Score: ${relevance}\n\nUser Context: ${userContext}\n\n${fenced}`;
+  // Absent ⇒ the shipped line, byte for byte. That is what keeps `baseline` a
+  // no-op and `golden-prompts.test.ts` pinning a real string rather than a
+  // branch that happens to agree today.
+  const priorLine =
+    reasonPriorScoreLine === 'omit'
+      ? ''
+      : reasonPriorScoreLine === 'relabel'
+        ? `First-pass score (batched): ${relevance}\n\n`
+        : `Relevance Score: ${relevance}\n\n`;
+  return `${priorLine}User Context: ${userContext}\n\n${fenced}`;
 }
 
 /**
