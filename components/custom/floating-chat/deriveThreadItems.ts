@@ -25,7 +25,12 @@ import {
 import type { FactConflict } from '@/lib/news-harness/persona-management/fact-conflict';
 import { resolveCountryScope } from '@/lib/news-harness/persona-management/persona-agent-core';
 import type { QuickFactCheckEntry } from '@/lib/stores/floating-chat-store';
-import type { ChatThreadItem, FactCardAction, PersistedMessage } from './types';
+import type { AgentStep, ChatThreadItem, FactCardAction, PersistedMessage } from './types';
+import {
+  changedDataFrom,
+  legStartStep,
+  stepsForMessage,
+} from './agent-step-labels';
 
 // ---------------------------------------------------------------------------
 // Fact-card derivation
@@ -678,6 +683,154 @@ function emitFactChoiceGroups(
 }
 
 // ---------------------------------------------------------------------------
+// Agent-steps boxes (pagent P2)
+// ---------------------------------------------------------------------------
+//
+// ONE BOX PER TURN, not per message. A turn is several legs and therefore
+// several assistant messages; a box per leg would flicker in and out as each
+// leg settled. There is no turn id anywhere in the tree (every leg gets its own
+// `asst-${Date.now()}-${rand}`), so a turn is derived from the sequence itself:
+// the run of assistant messages following a user message. That costs one
+// accumulator and keeps this module pure.
+//
+// The box is anchored AFTER the user message that opened the turn, so it never
+// moves as legs accumulate, and a leg's prose renders below it.
+
+type AgentStepsItem = Extract<ChatThreadItem, { kind: 'agent-steps' }>;
+
+interface TurnAccum {
+  anchorId: string;
+  firstAssistantId: string | null;
+  steps: AgentStep[];
+  toolStepCount: number;
+}
+
+interface SeqEntry {
+  message: ConversationMessage;
+}
+
+/**
+ * Build the per-turn boxes for one ordered message sequence.
+ *
+ * `turnActive` is the TURN-SCOPED flag from P1's agent turn state. It is
+ * deliberately not `status` / `isStreaming` / `isStreamingRef`: all three are
+ * named as though they were stream-scoped, behave turn-scoped nearly
+ * everywhere, and go idle EARLY during a forced-extraction pass
+ * (`useCloudPersonaChat` sets status idle unconditionally but releases
+ * `turnBusyRef` only when no forced pass is running). Keying on one of those
+ * paints a healthy turn as interrupted in that window, and P1's multi-leg loop
+ * widens it to every gap between legs.
+ *
+ * `undefined` means the flag is not wired yet. The fallback is deliberately the
+ * SAFE direction: collapse on "everything settled" (the old behaviour) and mark
+ * nothing interrupted unless it is stale. Under-reporting an interruption looks
+ * like today; over-reporting paints a live turn dead.
+ */
+function buildTurnBoxes(
+  seq: SeqEntry[],
+  stale: boolean,
+  turnActive: boolean | undefined,
+): Map<string, AgentStepsItem> {
+  const turns: TurnAccum[] = [];
+  let current: TurnAccum | null = null;
+
+  for (const { message } of seq) {
+    if (message.hidden) continue;
+    if (message.role === 'user') {
+      current = {
+        anchorId: message.id,
+        firstAssistantId: null,
+        steps: [],
+        toolStepCount: 0,
+      };
+      turns.push(current);
+      continue;
+    }
+    if (!current) {
+      // An assistant message with no user turn before it (a resumed thread that
+      // begins mid-turn). Anchor the box on the assistant message itself.
+      current = {
+        anchorId: message.id,
+        firstAssistantId: message.id,
+        steps: [],
+        toolStepCount: 0,
+      };
+      turns.push(current);
+    }
+    if (current.firstAssistantId === null) current.firstAssistantId = message.id;
+    const toolSteps = stepsForMessage(message.id, message.toolCalls, false);
+    current.steps.push(...toolSteps);
+    current.toolStepCount += toolSteps.length;
+  }
+
+  const withTools = turns.filter((t) => t.toolStepCount > 0);
+  const lastWithTools = withTools[withTools.length - 1];
+
+  const out = new Map<string, AgentStepsItem>();
+  for (const turn of withTools) {
+    const isLast = turn === lastWithTools;
+    // Only the LAST turn of the live sequence can still be running.
+    const active = !stale && isLast && turnActive === true;
+
+    const hasPending = turn.steps.some((s) => s.status === 'pending');
+    const allSettled = !hasPending;
+
+    // Without the flag, fall back to the old settled-based collapse.
+    const collapsed = turnActive === undefined ? allSettled : !active;
+    const interrupted =
+      turnActive === undefined ? stale && hasPending : !active && hasPending;
+
+    // Strand pending rows only once the turn really cannot settle them.
+    const steps = interrupted
+      ? turn.steps.map((step) =>
+          step.status === 'pending'
+            ? {
+                ...step,
+                status: 'error' as const,
+                consequenceKey: 'agentSteps.consequence.interrupted',
+              }
+            : step,
+        )
+      : turn.steps;
+
+    // The leg-start row is the box's first entry and always settled: the box
+    // only exists once a tool call has appeared, which means the thinking phase
+    // it describes is over. The live thinking window keeps its own indicator —
+    // see the typing note in deriveThreadItems.
+    const full: AgentStep[] = [
+      legStartStep(turn.firstAssistantId ?? turn.anchorId, true),
+      ...steps,
+    ];
+
+    out.set(turn.anchorId, {
+      kind: 'agent-steps',
+      key: `agent-steps-${turn.anchorId}`,
+      steps: full,
+      collapsed,
+      doneCount: full.filter((s) => s.status === 'done').length,
+      failedCount: full.filter((s) => s.status === 'error').length,
+      legCapped: false,
+      interrupted,
+      changedData: changedDataFrom(full),
+    });
+  }
+  return out;
+}
+
+/**
+ * Should this settled box survive in the thread?
+ *
+ * A turn that CHANGED DATA keeps its line; a pure-read turn does not. Facts are
+ * extracted on nearly every turn, so keeping every settled box would put a line
+ * under most bubbles in the thread. A failure is always kept: a failure the
+ * user never learns about is the case this surface exists to prevent.
+ */
+function keepBox(box: AgentStepsItem): boolean {
+  if (!box.collapsed) return true;
+  return box.changedData || box.failedCount > 0;
+}
+
+// ---------------------------------------------------------------------------
 // Message → thread items
 // ---------------------------------------------------------------------------
 
@@ -691,6 +844,7 @@ function emitMessage(
   keyPrefix: 'hist' | 'live',
   toolCallResults: Record<string, Record<string, unknown>> = {},
   stale = false,
+  boxes?: Map<string, AgentStepsItem>,
 ): void {
   // A hidden turn is the model's business only — it produces no bubble and no
   // cards. Filtered here rather than at the call sites so every source (live,
@@ -773,14 +927,32 @@ function emitMessage(
   }
 
   const hasContent = message.content.trim().length > 0;
-  // Skip empty assistant placeholders that produced no cards.
-  if (!hasContent && cards.length === 0 && message.role === 'assistant') {
+  const ownedBox = boxes?.get(message.id);
+  // Skip empty assistant placeholders that produced no cards AND own no steps
+  // box. The `ownedBox` clause is the fix: without it a content-less message
+  // whose tool calls are still pending returns here and its box never renders.
+  if (
+    !hasContent &&
+    cards.length === 0 &&
+    message.role === 'assistant' &&
+    !(ownedBox && keepBox(ownedBox))
+  ) {
     return;
   }
 
   if (hasContent || message.role === 'user') {
     out.push({ kind: 'message', key: `${keyPrefix}-${message.id}`, message });
   }
+
+  // The turn's steps box, anchored on the message that opened the turn. Pushed
+  // BEFORE this message's own cards so the narrative reads work-then-result,
+  // and — crucially — pushed outside the early return above, which drops an
+  // assistant message that has no content and produced no cards. A turn whose
+  // tool calls are all still `pending` is exactly that shape, which is why the
+  // thread was silent during tool execution before this existed.
+  const box = boxes?.get(message.id);
+  if (box && keepBox(box)) out.push(box);
+
   // Cards appear immediately after their parent message.
   out.push(...cards);
 }
@@ -838,6 +1010,18 @@ export function deriveThreadItems(opts: {
   quickFactChecks?: QuickFactCheckEntry[];
   /** Tool results rewritten by a card commit, keyed `${messageId}::${toolCallIndex}`. */
   toolCallResults?: Record<string, Record<string, unknown>>;
+  /**
+   * TURN-SCOPED: is a turn running right now? From P1's agent turn state.
+   *
+   * NOT `isStreaming` and not the store's `status`. Both read as stream-scoped,
+   * behave turn-scoped almost everywhere, and go idle early during a forced
+   * pass — which would paint a healthy turn interrupted in that window. See
+   * buildTurnBoxes.
+   *
+   * `undefined` while P1's state is unwired: the fallback collapses on
+   * "everything settled" and marks nothing interrupted unless it is stale.
+   */
+  turnActive?: boolean;
 }): ChatThreadItem[] {
   const { live, history, introMessage, isStreaming, earlierConversationLabel } = opts;
   const resume = opts.resume ?? [];
@@ -862,6 +1046,13 @@ export function deriveThreadItems(opts: {
 
   // --- History (re-sorted oldest-first) ---
   const sortedHistory = [...history].sort((a, b) => a.createdAt - b.createdAt);
+  // Turn boxes are computed per SEQUENCE so a turn never spans the
+  // "earlier conversation" divider. History is stale by definition.
+  const historyBoxes = buildTurnBoxes(
+    sortedHistory.map((m) => ({ message: toConversationMessage(m) })),
+    true,
+    opts.turnActive,
+  );
   let prevConversationId: string | null = null;
   for (const persisted of sortedHistory) {
     // Divider at every conversation boundary (not before the first message).
@@ -874,7 +1065,7 @@ export function deriveThreadItems(opts: {
     }
     prevConversationId = persisted.conversationId;
     // stale: true — an earlier conversation's card can never be committed.
-    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults, true);
+    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults, true, historyBoxes);
   }
 
   // --- Divider between OLDER conversations and the current one ---
@@ -885,10 +1076,24 @@ export function deriveThreadItems(opts: {
   // --- Resumed current-conversation messages (oldest-first, no divider) ---
   const sortedResume = [...resume].sort((a, b) => a.createdAt - b.createdAt);
   const resumeIds = new Set(sortedResume.map((m) => m.id));
+
+  // Resume and live are ONE sequence: a turn's legs can straddle them when
+  // persistence lands mid-turn, and splitting them would cut that turn in two.
+  // They are not stale — a resumed current-conversation turn is still the live
+  // one, which is why the discriminator here is `stale` and never the
+  // 'hist' | 'live' key prefix (resumed messages carry the 'hist' prefix).
+  const liveBoxes = buildTurnBoxes(
+    [
+      ...sortedResume.map((m) => ({ message: toConversationMessage(m) })),
+      ...live.filter((m) => !resumeIds.has(m.id)).map((message) => ({ message })),
+    ],
+    false,
+    opts.turnActive,
+  );
   for (const persisted of sortedResume) {
     // Resumed CURRENT-conversation messages are live for this purpose: their
     // cards are still answerable, so they are not stale.
-    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults);
+    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults, false, liveBoxes);
   }
 
   // --- Intro pseudo-message: suppressed once the conversation has resumed
@@ -905,13 +1110,22 @@ export function deriveThreadItems(opts: {
   // --- Live session (skip anything already rendered via resume) ---
   for (const message of live) {
     if (resumeIds.has(message.id)) continue;
-    emitMessage(out, message, 'live', toolCallResults);
+    emitMessage(out, message, 'live', toolCallResults, false, liveBoxes);
   }
 
   // --- Typing indicator ---
   const lastLive = live[live.length - 1];
+  // Exactly ONE liveness signal at a time. While a steps box has a pending TOOL
+  // row the box IS the signal, so the dots would be a second one saying the
+  // same thing. The dots keep the window they already owned — after the user
+  // sends and before any tool call exists — which is also where the shipped
+  // "Thinking…" caption lives, so nothing is lost by suppressing them later.
+  const stepsBoxIsLive = Array.from(liveBoxes.values()).some(
+    (box) => !box.collapsed && box.steps.some((s) => s.status === 'pending'),
+  );
   const showTyping =
     isStreaming &&
+    !stepsBoxIsLive &&
     (!lastLive ||
       lastLive.role === 'user' ||
       (lastLive.role === 'assistant' && lastLive.content.trim().length === 0));

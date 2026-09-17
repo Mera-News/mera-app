@@ -60,7 +60,14 @@ function itemsFor(result: Record<string, unknown>): ChatThreadItem[] {
   });
 }
 
-const kinds = (items: ChatThreadItem[]) => items.map((i) => i.kind);
+// `agent-steps` is filtered OUT of this helper on purpose. These suites assert
+// the SEQUENCE of cards a tool call produces; the per-turn steps box is a
+// different concern with its own suite (agentStepsDerivation.test.ts), and
+// leaving it in would make every card-ordering assertion here also an assertion
+// about a box it is not testing. Its presence is pinned separately below, so
+// filtering cannot hide the box disappearing.
+const kinds = (items: ChatThreadItem[]) =>
+  items.filter((i) => i.kind !== 'agent-steps').map((i) => i.kind);
 
 const saved = (statement: string, id: string, batch = false) => ({
   status: 'saved',

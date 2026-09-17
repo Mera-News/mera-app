@@ -46,6 +46,19 @@ function keys(items: ChatThreadItem[]): string[] {
   return items.map((i) => i.key);
 }
 
+/**
+ * Drop the per-turn steps box.
+ *
+ * These cases assert what a TOOL RESULT derives (fact cards, topic-plan cards)
+ * by position. The steps box derives from tool STATUS, is a separate concern
+ * with its own suite, and would otherwise shift every index here. Its presence
+ * is pinned directly in the cases below that care about it, so filtering it out
+ * cannot hide it going missing.
+ */
+function cards(items: ChatThreadItem[]): ChatThreadItem[] {
+  return items.filter((i) => i.kind !== 'agent-steps');
+}
+
 describe('deriveThreadItems', () => {
   it('maps a plain live conversation oldest-first, newest last', () => {
     const items = deriveThreadItems(
@@ -155,23 +168,28 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', 'Saved!', [tc])] }),
     );
 
+    // A saveExtractedFacts turn also emits a steps box: the turn changed data,
+    // so its settled line is kept. Pinned here rather than filtered blindly.
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
+
     // message + fact-card + one topic-plan-card per saved fact (Wave 11).
-    expect(items).toHaveLength(4);
-    expect(items[0]).toMatchObject({ kind: 'message', key: 'live-a1' });
-    expect(items[1]).toMatchObject({
+    const only = cards(items);
+    expect(only).toHaveLength(4);
+    expect(only[0]).toMatchObject({ kind: 'message', key: 'live-a1' });
+    expect(only[1]).toMatchObject({
       kind: 'fact-card',
       key: 'card-a1-0',
       action: 'saved',
       statements: ['Lives in Berlin', 'Likes cycling'],
       factIds: ['f1', 'f2'],
     });
-    expect(items[2]).toMatchObject({
+    expect(only[2]).toMatchObject({
       kind: 'topic-plan-card',
       key: 'topic-plan-a1-0-f1',
       factId: 'f1',
       factStatement: 'Lives in Berlin',
     });
-    expect(items[3]).toMatchObject({
+    expect(only[3]).toMatchObject({
       kind: 'topic-plan-card',
       key: 'topic-plan-a1-0-f2',
       factId: 'f2',
@@ -216,7 +234,10 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', 'Nothing new', [tc])] }),
     );
     expect(items.some((i) => i.kind === 'fact-card')).toBe(false);
-    expect(items).toHaveLength(1); // just the message
+    expect(cards(items)).toHaveLength(1); // just the message
+    // The turn still ran the tool, so the box stands and says so. "Saved
+    // nothing" is a RESULT; the box reports what was attempted.
+    expect(items.filter((i) => i.kind === 'agent-steps')).toHaveLength(1);
   });
 
   it('derives a deleted card, preferring result.deletedStatements', () => {
@@ -353,7 +374,10 @@ describe('deriveThreadItems', () => {
       base({ live: [assistantMsg('a1', '', [tc])] }),
     );
     // Message is skipped (empty content) but the fact-card + topic-plan survive.
-    expect(keys(items)).toEqual(['card-a1-0', 'topic-plan-a1-0-f1']);
+    expect(keys(cards(items))).toEqual(['card-a1-0', 'topic-plan-a1-0-f1']);
+    // …and the box rides with them, which is the whole point of pushing it
+    // past the "empty assistant message" guard.
+    expect(keys(items)).toContain('agent-steps-a1');
   });
 
   it('produces stable, unique keys across history and live', () => {
