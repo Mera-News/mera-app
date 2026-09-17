@@ -168,6 +168,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const REFRESH_TINT = '#EDA77E';
 
+/** Gap between the collapsing header's bottom edge and the first card.
+ *  Matches the Dashboard's (`DashboardSectionsFeed`, +12). */
+const CONTENT_TOP_GAP = 12;
+
 // ── Arrival transition ──────────────────────────────────────────────────────
 //
 // ENTERING ONLY. No `exiting` and no `layout` on a list item: a layout
@@ -1025,7 +1029,12 @@ const FeedScreen: React.FC = () => {
           />
         }
         contentContainerStyle={{
-          paddingTop: headerHeight,
+          // `headerHeight` alone puts the first card flush against the header's
+          // bottom edge — on a fresh launch the top card reads as if it is part
+          // of the header. The Dashboard (+12) and Explore (+8) already carry
+          // this gap; matching the Dashboard keeps the two reading surfaces
+          // identical at the top.
+          paddingTop: headerHeight + CONTENT_TOP_GAP,
           paddingHorizontal: 12,
           paddingBottom: insets.bottom + TAB_BAR_HEIGHT + 24,
           flexGrow: 1,
