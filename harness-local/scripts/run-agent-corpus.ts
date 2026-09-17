@@ -13,7 +13,7 @@
 //
 // Node-only: never imported by the app bundle.
 
-import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { createWriteStream, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { loadHarnessEnv } from '../config/env';
@@ -279,9 +279,20 @@ async function main(): Promise<number> {
   // Rows go to DISK as they arrive, not at the end. Accumulating and writing
   // after the loop means a 402 on call 400 of 624 loses all 399 rows that were
   // already paid for, which is the opposite of stopping and keeping them.
+  // A SECOND FILE, AT FULL FIDELITY. RunRow has nowhere to put the agent's own
+  // fields — endedOn, awaitingUser, factKind, topics, dropped — so the JSONL
+  // that the other three runners share silently loses them and a post-hoc
+  // re-read cannot recompute consecutive questions, leg verdicts or topic
+  // scoring. The live console blocks read the in-memory rows and are complete;
+  // this is what makes the RUN DIRECTORY complete too, which is the copy that
+  // outlives the process.
+  const evalRowsPath = join(run.dir, 'eval-rows.jsonl');
+  const evalRows = createWriteStream(evalRowsPath, { flags: 'a' });
+
   const emit = (row: EvalRow): void => {
     collected.push(row);
     rows.write(toRunRow(row, runId, catalog));
+    evalRows.write(`${JSON.stringify(row)}\n`);
   };
 
   try {
@@ -336,6 +347,7 @@ async function main(): Promise<number> {
     spendLimit = err;
   }
   await rows.close();
+  await new Promise<void>((res, rej) => evalRows.end((e?: Error | null) => (e ? rej(e) : res())));
 
   if (spendLimit) {
     // eslint-disable-next-line no-console
@@ -361,6 +373,7 @@ async function main(): Promise<number> {
   run.finish({
     args, target: env.target, rows: rows.path, agreement: report,
     rosterWarnings: warnings, spendLimited: spendLimit !== null,
+    evalRows: evalRowsPath,
   });
   writeFileSync(join(run.dir, 'agreement.txt'), `${text}\n`, 'utf8');
   if (spendLimit) return 3;
