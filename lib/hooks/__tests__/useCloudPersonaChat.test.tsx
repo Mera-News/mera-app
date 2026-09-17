@@ -11,6 +11,18 @@ jest.mock('../../llm/constants', () => ({
   CHAT_MAX_OUTPUT_TOKENS: 1024,
 }));
 
+// agent-device-port reaches fact-service -> lib/database/index, which builds a
+// real SQLiteAdapter at module scope and kills the suite at load with
+// `initializeJSI`. Mock the SERVICE MODULE at the boundary, not the adapter.
+const mockRunAgentLoopDeps = jest.fn();
+jest.mock('../../chat-tools/agent-device-port', () => ({
+  isPersonaAgent: (id: string) => id.startsWith('persona-'),
+  buildAgentPersona: jest.fn(async () => ({ facts: [], surface: 'CONFIG' })),
+  makeAgentDeps: (...a: unknown[]) => mockRunAgentLoopDeps(...(a as [])),
+  callModelViaCloud: jest.fn(),
+  makeAgentToolPort: jest.fn(),
+}));
+
 jest.mock('../../logger', () => ({
   __esModule: true,
   default: {
@@ -1746,5 +1758,67 @@ describe('turnActive', () => {
     await act(async () => { result.current.sendMessage('hi'); });
     await waitFor(() => expect(useCloudChatStore.getState().error).toBeTruthy(), { timeout: 3000 });
     expect(turnActive()).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// THE SHIPPED PATH runs the agent loop (pagent P1)
+//
+// This is the test whose absence let the device pass find the OLD single-shot
+// prompt still live: runAgentTurn existed, was fully unit-tested, and had zero
+// callers outside lib/mera-harness. Every other test in this file uses a
+// non-persona agent id, so none of them touch the loop.
+// ---------------------------------------------------------------------------
+describe('the shipped cloud path drives the agent loop', () => {
+  const personaAgent = () => makeAgent({ id: 'persona-u1-CONFIG' });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: jest.fn(),
+      tools: {},
+      loadSkill: () => null,
+      skillIds: () => [],
+    });
+  });
+
+  it('a `persona-*` agent goes through runAgentTurn, NOT runSingleShot', async () => {
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I moved to Alkmaar'); });
+
+    // The loop builds its own deps; the single-shot path never would.
+    await waitFor(() => expect(mockRunAgentLoopDeps).toHaveBeenCalled(), { timeout: 3000 });
+    // ...and the old path's stream is never opened by the loop itself.
+    expect(mockCloudChatStream).not.toHaveBeenCalled();
+  });
+
+  it('passes the USER MESSAGE to the port, which is what keeps it off the wire', async () => {
+    // find_similar_facts takes no statement argument precisely so the user's
+    // words stay out of a cleartext tool argument; the device supplies them.
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I moved to Alkmaar'); });
+    await waitFor(() => expect(mockRunAgentLoopDeps).toHaveBeenCalled(), { timeout: 3000 });
+    expect(mockRunAgentLoopDeps.mock.calls[0][0]).toBe('I moved to Alkmaar');
+  });
+
+  it('a NON-persona agent still takes the single-shot path, unchanged', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream([{ type: 'text-delta', delta: 'hi' }]));
+    const { result } = renderHook(() =>
+      useCloudPersonaChat(makeAgent({ id: 'article-feedback-1', getToolDefinitions: jest.fn().mockReturnValue([]) })),
+    );
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(() => expect(mockCloudChatStream).toHaveBeenCalled(), { timeout: 3000 });
+    expect(mockRunAgentLoopDeps).not.toHaveBeenCalled();
+  });
+
+  it('releases the turn when the loop finishes, so the composer unblocks', async () => {
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false),
+      { timeout: 3000 },
+    );
+    expect(useCloudChatStore.getState().status).toBe('idle');
   });
 });

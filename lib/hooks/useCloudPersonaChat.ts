@@ -10,7 +10,18 @@ import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
-import { createAgentTurnState } from '../mera-harness';
+import {
+  createAgentState,
+  createAgentTurnState,
+  runAgentTurn,
+  type AgentLeg,
+  type AgentState,
+} from '../mera-harness';
+import {
+  buildAgentPersona,
+  isPersonaAgent,
+  makeAgentDeps,
+} from '../chat-tools/agent-device-port';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { estimateTokens } from '../llm/tokens';
@@ -202,6 +213,110 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
 
   const agentRef = useRef(agent);
   agentRef.current = agent;
+
+  /** The loop's state, threaded turn to turn. In a ref rather than rebuilt per
+   *  turn: `pendingChoice` has to survive to the turn that answers it, or a tap
+   *  arrives as a bare display string and the place is looked up twice. */
+  const agentStateRef = useRef<AgentState | null>(null);
+
+  /**
+   * ONE TURN through the agent loop. This is the shipped cloud path for the
+   * persona agent; `runSingleShot` still serves every other agent.
+   *
+   * The loop lives in lib/mera-harness and is the SAME code the eval drives,
+   * which is the point: a harness green is evidence about the app rather than
+   * about a parallel implementation.
+   */
+  const runAgentLoopTurn = useCallback(
+    async (assistantId: string, userMessage: string): Promise<void> => {
+      const store = useCloudChatStore.getState();
+      const persona = await buildAgentPersona(agentRef.current.id);
+      if (!agentStateRef.current) agentStateRef.current = createAgentState(persona);
+      // Facts are re-read every turn; only the TURN half persists.
+      agentStateRef.current.persona = persona;
+
+      store.setMessages((prev) => [
+        ...prev,
+        { id: assistantId, role: 'assistant', content: '' } as ConversationMessage,
+      ]);
+
+      // Per-FRAME bubble writes, not per token: every delta is one token, and
+      // cloning the message array per token competes with the per-token
+      // decrypt for the same JS thread on a low-end device.
+      let acc = '';
+      let queued = false;
+      let armed = true;
+      const flush = () => {
+        queued = false;
+        if (!armed) return;
+        useCloudChatStore
+          .getState()
+          .setMessages((prev) =>
+            prev.map((m) => (m.id === assistantId ? { ...m, content: acc } : m)),
+          );
+      };
+      const schedule = () => {
+        if (queued) return;
+        queued = true;
+        scheduleFrame(flush);
+      };
+
+      const onLeg = (leg: AgentLeg) => {
+        // Live progress rows: the result only arrives at the end of a turn that
+        // can run ~10s, so the steps box would otherwise sit empty and then
+        // fill at once.
+        if (leg.toolCalls.length === 0) return;
+        const records: ToolCallRecord[] = leg.toolCalls.map((c, i) => ({
+          id: `leg${leg.index}-${i}`,
+          name: c.name,
+          input: leg.toolResults[i]?.result ?? null,
+          status: leg.toolResults[i] ? 'done' : 'pending',
+        }));
+        useCloudChatStore.getState().setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, toolCalls: [...(m.toolCalls ?? []), ...records] } : m,
+          ),
+        );
+      };
+
+      try {
+        const out = await runAgentTurn({
+          state: agentStateRef.current,
+          userMessage,
+          deps: makeAgentDeps(userMessage, (d) => {
+            if (d.reasoning !== undefined && acc === '') {
+              useCloudChatStore.getState().setThinking(true);
+              return;
+            }
+            if (d.content) {
+              useCloudChatStore.getState().setThinking(false);
+              acc += d.content;
+              schedule();
+            }
+          }),
+          onLeg,
+        });
+        if (queued) flush();
+        // The loop's reply is dash-cleaned; the streamed accumulation is not,
+        // so the final write is the authoritative one.
+        useCloudChatStore.getState().setMessages((prev) =>
+          prev.map((m) => (m.id === assistantId ? { ...m, content: out.reply } : m)),
+        );
+        store.setAgentTurnState({ ...agentStateRef.current.turn });
+        if (out.terminalReason !== 'settled' && out.terminalReason !== 'awaiting-user') {
+          logger.warn(`${TAG} agent turn ended abnormally`, {
+            reason: out.terminalReason,
+            unknownTools: out.unknownTools,
+            legs: out.legs.length,
+          });
+        }
+      } finally {
+        armed = false;
+        useCloudChatStore.getState().setThinking(false);
+      }
+    },
+    [],
+  );
 
   const runSingleShot = useCallback(
     async (
@@ -819,8 +934,16 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           useCloudChatStore.getState().pushWireMessage({ role: 'user', content: trimmed });
           logger.debug(`${TAG} starting runSingleShot`, { wireMessages: useCloudChatStore.getState().wireMessages.length });
 
-          await runSingleShot(systemPrompt, tools, assistantId, context);
-          logger.debug(`${TAG} runSingleShot completed`);
+          if (isPersonaAgent(agentRef.current.id)) {
+            // THE SHIPPED PATH for the persona agent. No flag: a loop behind a
+            // flag is a loop nobody runs, which is exactly how the device pass
+            // found the old single-shot prompt still live.
+            await runAgentLoopTurn(assistantId, trimmed);
+            logger.debug(`${TAG} agent loop completed`);
+          } else {
+            await runSingleShot(systemPrompt, tools, assistantId, context);
+            logger.debug(`${TAG} runSingleShot completed`);
+          }
         } catch (err) {
           const msg = `Cloud chat failed: ${(err as Error)?.message ?? String(err)}`;
           logger.error(`${TAG} sendMessage failed`, err, { stack: (err as Error)?.stack });
@@ -839,7 +962,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         }
       })();
     },
-    [runSingleShot, flushPendingHiddenTurn, setTurnBusy],
+    [runSingleShot, runAgentLoopTurn, flushPendingHiddenTurn, setTurnBusy],
   );
 
   startTurnRef.current = startTurn;

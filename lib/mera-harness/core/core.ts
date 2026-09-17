@@ -143,6 +143,11 @@ export interface RunAgentTurnParams {
   promptVariant?: string;
   model?: string;
   onDelta?: (d: { content?: string; reasoning?: string }) => void;
+  /** Called as each leg completes, so a UI can render tool-call progress while
+   *  the turn is still running. The result only arrives at the end, and a
+   *  three-leg turn takes ~10s: without this the steps box would sit empty for
+   *  the whole turn and then fill at once. */
+  onLeg?: (leg: AgentLeg) => void;
 }
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {
@@ -263,6 +268,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // let an offline device run four hedged legs for nothing.
     if (result.error) {
       terminalReason = 'transport-error';
+      params.onLeg?.(leg);
       break;
     }
 
@@ -393,6 +399,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       unknownTools.push(call.name);
       leg.toolResults.push({ name: call.name, result: { error: `unknown tool: ${call.name}` } });
     }
+
+    params.onLeg?.(leg);
 
     if (terminatedByChoice) {
       if (terminalReason === 'settled') terminalReason = 'awaiting-user';
