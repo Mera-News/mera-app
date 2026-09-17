@@ -126,6 +126,22 @@ export interface EvalRow {
   /** Set on the last leg of a turn; null on every earlier leg. */
   endedOn: TurnEnd | null;
   awaitingUser: boolean;
+  /**
+   * THE TURN'S ROUTING VERDICT, repeated on every leg of the turn.
+   *
+   * Without these the headline metric of the whole wave cannot be computed
+   * from a finished run at all: RunRow has no field for them either, so a
+   * completed corpus produced tool, latency and cost tables and NO router
+   * accuracy. Carried per leg rather than per turn because a row is the unit
+   * that survives to disk.
+   *
+   * `routeKind` is null when the decision did not parse, NEVER defaulted: a
+   * defaulted route scores as correct and inflates accuracy.
+   */
+  routeKind: string | null;
+  skillLoaded: string | null;
+  expectedRouteKind: string;
+  expectedSkill: string;
   /** Topic-gen rows only: the fact this call served, and the kind that selected
    *  its guideline. `items` mirrors the shape run-topicgen-corpus already uses,
    *  so a downstream join is by key rather than by parsing titles back out. */

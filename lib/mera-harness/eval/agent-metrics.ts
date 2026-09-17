@@ -77,6 +77,44 @@ export interface RouterReport {
   unparsed: number;
 }
 
+/** One outcome per TURN, read off its last leg. A turn is the unit that has a
+ *  route, not a leg, and every leg repeats the value. */
+export function routeOutcomes(turns: readonly TurnRows[]): RouteOutcome[] {
+  const out: RouteOutcome[] = [];
+  for (const t of turns) {
+    const last = t.legs[t.legs.length - 1];
+    if (!last) continue;
+    const actual = last.routeKind;
+    out.push({
+      cohort: t.cohort,
+      scriptId: t.scriptId,
+      turnIndex: t.turnIndex,
+      expected: last.expectedRouteKind,
+      // The core returns null for "no kind"; a fixture spells that `none`.
+      actual: actual ?? 'none',
+      correct: (actual ?? 'none') === last.expectedRouteKind,
+    });
+  }
+  return out;
+}
+
+/** One skill outcome per turn, likewise off its last leg. */
+export function skillOutcomes(
+  turns: readonly TurnRows[],
+): { expectedSkill: string; loaded: string | null; routeCorrect: boolean }[] {
+  const out: { expectedSkill: string; loaded: string | null; routeCorrect: boolean }[] = [];
+  for (const t of turns) {
+    const last = t.legs[t.legs.length - 1];
+    if (!last) continue;
+    out.push({
+      expectedSkill: last.expectedSkill,
+      loaded: last.skillLoaded,
+      routeCorrect: (last.routeKind ?? 'none') === last.expectedRouteKind,
+    });
+  }
+  return out;
+}
+
 export function routerReport(outcomes: readonly RouteOutcome[]): RouterReport {
   const byCohort: RouterReport['byCohort'] = {};
   const confusion: RouterReport['confusion'] = {};
@@ -358,7 +396,12 @@ export function inputTokenReport(turns: readonly TurnRows[]): InputTokenReport {
     let total = 0;
     let cached = 0;
     for (const l of [...t.legs, ...t.topicRows]) {
-      const n = l.inputTokens ?? l.usage?.promptTokens ?? 0;
+      // REAL first, estimate second. AgentLeg.inputTokens is a char-based
+      // estimate; usage.promptTokens is what the provider billed. Preferring
+      // the estimate produced a per-turn total of 918 against a CACHED figure
+      // of 2624 from the same rows - a total smaller than its own subset,
+      // which is incoherent on its face and was reported anyway.
+      const n = l.usage?.promptTokens ?? l.inputTokens ?? 0;
       (perLeg[t.arm] ??= []).push(n);
       total += n;
       cached += l.usage?.cachedTokens ?? 0;

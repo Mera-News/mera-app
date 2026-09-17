@@ -25,6 +25,7 @@ function row(over: Partial<EvalRow>): EvalRow {
     usage: { promptTokens: 100, completionTokens: 10, cachedTokens: 0, reasoningTokens: 0 },
     finishReason: 'stop', truncated: false, error: null,
     modelRequested: 'm', modelSent: 'm', endedOn: null, awaitingUser: false,
+    routeKind: null, skillLoaded: null, expectedRouteKind: 'none', expectedSkill: 'facts/generic',
     items: null, factKind: null, topics: null, dropped: null,
     ...over,
   };
@@ -191,6 +192,28 @@ describe('thinking gear', () => {
 });
 
 describe('input tokens', () => {
+  it('prefers the REAL prompt-token count over the char estimate', () => {
+    // The estimate and the billed number disagree by a lot. Preferring the
+    // estimate once produced a per-turn total smaller than its own cached
+    // subset, which is incoherent and was still reported.
+    const turns = groupTurns([
+      row({
+        legIndex: 0, inputTokens: 300,
+        usage: { promptTokens: 1000, completionTokens: 1, cachedTokens: 900, reasoningTokens: 0 },
+        endedOn: 'settled',
+      }),
+    ]);
+    const r = inputTokenReport(turns);
+    expect(r.perTurn.baseline).toEqual([1000]);
+    // The total can never be below its own cached figure.
+    expect(r.perTurn.baseline[0]).toBeGreaterThanOrEqual(r.cachedPerTurn.baseline[0]);
+  });
+
+  it('falls back to the estimate when the provider reported no usage', () => {
+    const turns = groupTurns([row({ legIndex: 0, inputTokens: 300, usage: null, endedOn: 'settled' })]);
+    expect(inputTokenReport(turns).perTurn.baseline).toEqual([300]);
+  });
+
   it('sums per turn across legs and keeps cached separate', () => {
     const turns = groupTurns([
       row({ legIndex: 0, inputTokens: 500, usage: { promptTokens: 500, completionTokens: 1, cachedTokens: 400, reasoningTokens: 0 } }),

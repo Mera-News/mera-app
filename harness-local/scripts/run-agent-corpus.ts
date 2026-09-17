@@ -46,6 +46,10 @@ import { parseScript } from '../../lib/mera-harness/eval/script';
 import { runAgentScript } from '../../lib/mera-harness/eval/run-agent-corpus';
 import {
   consecutiveQuestionReport,
+  routeOutcomes,
+  routerReport,
+  skillOutcomes,
+  skillReport,
   firstProseGate,
   firstProseReport,
   groupTurns,
@@ -398,6 +402,32 @@ function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismat
       'carry no prose, which is correct for them. The arm-level USABLE line above counts those as ' +
       'unusable and therefore under-reports every agent arm.',
   );
+
+  // THE HEADLINE METRIC, and it was implemented and left unwired for a whole
+  // completed run: the corpus produced tool, latency and cost tables and no
+  // router accuracy at all.
+  const rr = routerReport(routeOutcomes(turns));
+  out.push('\nROUTER DECISIONS (per cohort, never pooled: the adversarial cohort is noisy for reasons');
+  out.push('unconnected to any arm, and pooling hides which cohort moved)');
+  for (const [cohort, c] of Object.entries(rr.byCohort)) {
+    const rate = c.n === 0 ? '-' : `${((c.correct / c.n) * 100).toFixed(1)}%`;
+    // The three production cases are n=9 per arm; a percentage there is one
+    // decision wide, so they print as COUNTS.
+    const shown = c.n < 12 ? `${c.correct}/${c.n}` : `${c.correct}/${c.n}  ${rate}`;
+    out.push(`  ${cohort.padEnd(26)} ${shown}`);
+  }
+  out.push(`  routes that did not parse: ${rr.unparsed} (never defaulted to a kind)`);
+  for (const [exp, row] of Object.entries(rr.confusion)) {
+    const wrong = Object.entries(row).filter(([k]) => k !== exp);
+    if (wrong.length > 0) out.push(`  expected ${exp} -> ${wrong.map(([k, v]) => `${k} x${v}`).join(', ')}`);
+  }
+
+  const sr = skillReport(skillOutcomes(turns), PERSONA_SKILL_IDS);
+  out.push('\nSKILL LOADING (its own alphabet: 1-in-13 chance against the route block\u2019s 1-in-5,');
+  out.push('so the two percentages are not comparable to each other)');
+  out.push(`  correct ${sr.outcomes.correct}, wrong id ${sr.outcomes['wrong-id']}, ` +
+    `none loaded ${sr.outcomes['none-loaded']}, id that does not exist ${sr.outcomes['nonexistent-id']}`);
+  out.push(`  route correct but skill wrong: ${sr.routeCorrectSkillWrong}`);
 
   const tools = toolValidityReport(rows);
   out.push('\nTOOL CALLS (unparseable and schema-invalid are different findings, never one rate)');

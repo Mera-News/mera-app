@@ -101,13 +101,27 @@ const KNOWN_TOOLS = new Set([
   'ask_choice', 'saveExtractedFacts', 'deleteUserFacts',
 ]);
 
+/**
+ * Why this does NOT read `state.turn.pendingChoice`.
+ *
+ * pendingChoice PERSISTS across turns: the core clears it only when the next
+ * user message matches an offered option, so an unanswered question leaves it
+ * set forever and every later turn reports `awaiting_user`. Measured on the
+ * live run: 54 turns actually called ask_choice, and the consecutive-question
+ * metric reported 100 offending pairs out of 312 turns, which is more pairs
+ * than 54 asking turns can produce. That was the metric reading stale state,
+ * not the agent interrogating anyone.
+ *
+ * So the verdict comes from what THIS turn did: did one of its own legs call
+ * ask_choice.
+ */
 function endedOnFor(
-  turnState: AgentTurnState,
+  askedThisTurn: boolean,
   legBudgetHit: boolean,
   lastError: string | null,
 ): TurnEnd {
   if (lastError) return 'transport_error';
-  if (turnState.pendingChoice) return 'awaiting_user';
+  if (askedThisTurn) return 'awaiting_user';
   if (legBudgetHit) return 'leg_cap';
   return 'settled';
 }
@@ -178,7 +192,8 @@ export async function runAgentScript(
     });
 
     const lastError = result.legs.length > 0 ? result.legs[result.legs.length - 1].result.error : null;
-    const endedOn = endedOnFor(state.turn, result.legBudgetHit, lastError);
+    const askedThisTurn = result.legs.some((l) => l.toolCalls.some((t) => t.name === 'ask_choice'));
+    const endedOn = endedOnFor(askedThisTurn, result.legBudgetHit, lastError);
 
     result.legs.forEach((leg, i) => {
       const cap = captured[i];
@@ -220,6 +235,10 @@ export async function runAgentScript(
         modelSent: leg.result.modelSent,
         endedOn: isLast ? endedOn : null,
         awaitingUser: isLast && endedOn === 'awaiting_user',
+        routeKind: result.routeKind,
+        skillLoaded: result.skillLoaded,
+        expectedRouteKind: turn.expect.routeKind,
+        expectedSkill: turn.expect.skill,
         items: null,
         factKind: null,
         topics: null,
