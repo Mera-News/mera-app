@@ -250,7 +250,21 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
   };
 
   const empty = visible.length === 0;
-  const showRetry = status === 'error' || (status === 'pending' && offerRetry);
+
+  // TWO DIFFERENT "Try again"s, and they must not merge.
+  //  - error: the user has to act, so it stays visible while COLLAPSED.
+  //  - the 75s pending nudge: an escape hatch from a generation that is still
+  //    running, so it lives inside the expanded card only. Surfacing it
+  //    collapsed would turn a quiet "we're on it" into a demand for attention,
+  //    which is the whole thing this layout is trying not to do.
+  const showSlowRetry = status === 'pending' && offerRetry;
+
+  const statusWord =
+    status === 'pending'
+      ? t('chatTopics.pendingA11y')
+      : status === 'error'
+        ? t('chatTopics.failedA11y')
+        : t('chatTopics.readyA11y');
 
   // A fact that has been deleted takes its topics with it. A one-line
   // tombstone, never a card that silently disappears mid-scroll: an
@@ -275,7 +289,11 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
         style={styles.header}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
-        accessibilityLabel={expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')}
+        // The collapsed card is deliberately wordless about progress, so the
+        // state has to reach assistive tech here instead of from a spinner.
+        accessibilityLabel={`${statusWord}. ${
+          expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')
+        }`}
         testID={`chat-topics-header-${factId}`}
       >
         <View style={styles.headerRow}>
@@ -284,18 +302,29 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
             size={18}
             color={ACCENT}
           />
+
+          {/* While generating this reads as reassurance, not progress: no
+              spinner, no percentage, nothing to wait on. The point is that
+              the user keeps building their profile instead of watching a
+              loader finish. */}
           <Text size="sm" bold style={styles.title}>
-            {t('chatTopics.accordionTitle')}
+            {status === 'pending'
+              ? t('chatTopics.accordionTitlePending')
+              : t('chatTopics.accordionTitle')}
           </Text>
 
-          {/* Status is read out in WORDS as well as drawn, so the spinner and
-              the tick are never the only signal. */}
-          <StatusIndicator
-            status={status === 'error' ? 'error' : status === 'pending' ? 'pending' : 'done'}
-            testID={`chat-topics-status-${factId}`}
-          />
+          {/* Small and muted on purpose: a finished background job should be
+              confirmable at a glance, not announce itself. */}
+          {status === 'done' && (
+            <MaterialIcons
+              name="check"
+              size={14}
+              color="rgb(150, 150, 150)"
+              testID={`chat-topics-done-${factId}`}
+            />
+          )}
 
-          {showRetry && (
+          {status === 'error' && (
             <Pressable
               onPress={handleRetry}
               disabled={isRetrying}
@@ -322,8 +351,10 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
           numberOfLines={2}
         />
 
-        {/* A failure is stated while COLLAPSED too. A problem you have to open
-            a drawer to discover is one nobody sees. */}
+        {/* A failure is stated while COLLAPSED too, because the user has to do
+            something about it. A problem you must open a drawer to discover is
+            one nobody sees. Pending is the opposite case: nothing to act on,
+            so nothing is said until you look. */}
         {status === 'error' && (
           <Text size="xs" style={styles.statusText} numberOfLines={2}>
             {t('floatingChat.topicGenFailed')}
@@ -333,10 +364,39 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }
 
       {expanded && (
         <View style={styles.body}>
+          {/* The spinner and the words live ONLY here. Opening the card is the
+              user asking about progress; until then the work is quiet. */}
+          {status === 'pending' && (
+            <View style={styles.progressRow} testID="chat-topics-progress">
+              <StatusIndicator
+                status="pending"
+                label={t('chatTopics.finding')}
+                testID={`chat-topics-status-${factId}`}
+              />
+              {showSlowRetry && (
+                <Pressable
+                  onPress={handleRetry}
+                  disabled={isRetrying}
+                  hitSlop={16}
+                  style={styles.retryButton}
+                  accessibilityRole="button"
+                  accessibilityLabel={t('floatingChat.topicGenRetry')}
+                  testID="chat-topics-retry-slow"
+                >
+                  <Text size="xs" bold style={styles.retryText}>
+                    {t('floatingChat.topicGenRetry')}
+                  </Text>
+                </Pressable>
+              )}
+            </View>
+          )}
+
           {empty ? (
-            <Text size="xs" style={styles.statusText} testID="chat-topics-empty">
-              {status === 'pending' ? t('chatTopics.finding') : t('chatTopics.none')}
-            </Text>
+            status !== 'pending' && (
+              <Text size="xs" style={styles.statusText} testID="chat-topics-empty">
+                {t('chatTopics.none')}
+              </Text>
+            )
           ) : (
             <View style={styles.chips}>
               {visible.map((chip) => {
@@ -412,6 +472,7 @@ const styles = StyleSheet.create({
   header: { minHeight: 48, justifyContent: 'center', gap: 4 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   body: { gap: 10, paddingTop: 2 },
+  progressRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tombstone: {
     borderRadius: 12,
     borderWidth: StyleSheet.hairlineWidth,

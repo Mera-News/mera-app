@@ -2634,7 +2634,11 @@
     "findingMore": "खोजा जा रहा है",
     "goneTombstone": "यह जानकारी हटा दी गई, इसलिए इसके विषय भी हट गए।",
     "expandA11y": "विषय दिखाएँ",
-    "collapseA11y": "विषय छिपाएँ"
+    "collapseA11y": "विषय छिपाएँ",
+    "accordionTitlePending": "हम इसके लिए विषय खोजेंगे:",
+    "pendingA11y": "विषय खोजे जा रहे हैं",
+    "readyA11y": "विषय तैयार",
+    "failedA11y": "विषय नहीं मिल सके"
   },
   "agentSteps": {
     "legStart": "आपने जो कहा उस पर सोच रहे हैं",

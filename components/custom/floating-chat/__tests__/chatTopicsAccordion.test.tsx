@@ -102,24 +102,47 @@ describe('collapsed by default', () => {
   });
 });
 
-describe('status drives the header', () => {
-  it('spins while pending', () => {
-    const { getByTestId } = draw();
-    expect(getByTestId('chat-topics-status-f1-spinner')).toBeTruthy();
-  });
-
-  it('ticks when done', () => {
-    mockStatus = 'done';
-    const { queryByTestId } = draw();
+describe('the COLLAPSED card is quiet while generating', () => {
+  it('shows no spinner and no progress words, only the reassurance line', () => {
+    // The point of the whole layout: a user who has just added a fact should
+    // keep building their profile, not watch a loader finish.
+    const { getByText, queryByTestId } = draw();
+    expect(getByText('chatTopics.accordionTitlePending')).toBeTruthy();
     expect(queryByTestId('chat-topics-status-f1-spinner')).toBeNull();
+    expect(queryByTestId('chat-topics-progress')).toBeNull();
+    expect(queryByTestId('chat-topics-retry-slow')).toBeNull();
   });
 
-  it('offers Try again on error, and states the failure while COLLAPSED', () => {
+  it('still tells assistive tech the state, since nothing on screen does', () => {
+    const { getByTestId } = draw();
+    expect(getByTestId('chat-topics-header-f1').props.accessibilityLabel).toContain(
+      'chatTopics.pendingA11y',
+    );
+  });
+
+  it('switches to the plain title and a SMALL, MUTED tick when done', () => {
+    mockStatus = 'done';
+    const { getByText, getByTestId } = draw();
+    expect(getByText('chatTopics.accordionTitle')).toBeTruthy();
+    // Asserted on the glyph and its size/colour rather than a testID: a
+    // finished background job should be confirmable at a glance, not
+    // announce itself, and "small and muted" is the requirement.
+    const tick = getByTestId('icon-check');
+    expect(tick.props.size).toBe(14);
+    expect(tick.props.color).toBe('rgb(150, 150, 150)');
+    expect(getByTestId('chat-topics-header-f1').props.accessibilityLabel).toContain(
+      'chatTopics.readyA11y',
+    );
+  });
+
+  it('keeps the ERROR state visible while collapsed, because the user must act', () => {
     mockStatus = 'error';
     const { getByTestId, getByText } = draw();
     expect(getByTestId('chat-topics-retry')).toBeTruthy();
-    // A failure you must open a drawer to discover is one nobody sees.
     expect(getByText('floatingChat.topicGenFailed')).toBeTruthy();
+    expect(getByTestId('chat-topics-header-f1').props.accessibilityLabel).toContain(
+      'chatTopics.failedA11y',
+    );
   });
 
   it('renders a one-line tombstone when the fact is gone, never a blank card', () => {
@@ -130,32 +153,67 @@ describe('status drives the header', () => {
   });
 });
 
-describe('the Try again escape hatch', () => {
+const open = (getByTestId: (id: string) => unknown) =>
+  act(() => {
+    fireEvent.press(getByTestId('chat-topics-header-f1') as never);
+  });
+
+describe('the EXPANDED card is where progress lives', () => {
+  it('shows the spinner and the progress words once opened', () => {
+    const { getByTestId, getByText } = draw();
+    open(getByTestId);
+    expect(getByTestId('chat-topics-progress')).toBeTruthy();
+    expect(getByTestId('chat-topics-status-f1-spinner')).toBeTruthy();
+    expect(getByText('chatTopics.finding')).toBeTruthy();
+  });
+
+  it('shows no progress row once the status has settled', () => {
+    mockStatus = 'done';
+    const { getByTestId, queryByTestId } = draw();
+    open(getByTestId);
+    expect(queryByTestId('chat-topics-progress')).toBeNull();
+  });
+});
+
+describe('the 75s Try again is an EXPANDED-only escape hatch', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('appears after the wait WITHOUT the card becoming an error', () => {
-    const { getByTestId, queryByTestId } = draw();
+  it('never reaches the collapsed card, however long it waits', () => {
+    // Surfacing it collapsed would turn a quiet "we're on it" into a demand
+    // for attention, which is exactly what this layout avoids.
+    const { queryByTestId } = draw();
+    act(() => {
+      jest.advanceTimersByTime(OFFER_RETRY_AFTER_MS * 2);
+    });
+    expect(queryByTestId('chat-topics-retry-slow')).toBeNull();
     expect(queryByTestId('chat-topics-retry')).toBeNull();
+  });
+
+  it('appears inside the open card WITHOUT the card becoming an error', () => {
+    const { getByTestId, queryByTestId } = draw();
+    open(getByTestId);
+    expect(queryByTestId('chat-topics-retry-slow')).toBeNull();
 
     act(() => {
       jest.advanceTimersByTime(OFFER_RETRY_AFTER_MS + 100);
     });
 
-    expect(getByTestId('chat-topics-retry')).toBeTruthy();
-    // Still PENDING: the spinner keeps going and no failure line appears. This
-    // is what separates it from the old timeout, which decided the state.
+    expect(getByTestId('chat-topics-retry-slow')).toBeTruthy();
+    // Still PENDING: the spinner keeps going and no failure line appears.
+    // This is what separates it from the old timeout, which decided state.
     expect(getByTestId('chat-topics-status-f1-spinner')).toBeTruthy();
     expect(queryByTestId('chat-topics-gone')).toBeNull();
   });
 
   it('never appears once the status has settled', () => {
     mockStatus = 'done';
-    const { queryByTestId } = draw();
+    const { getByTestId, queryByTestId } = draw();
+    open(getByTestId);
     act(() => {
       jest.advanceTimersByTime(OFFER_RETRY_AFTER_MS * 3);
     });
-    expect(queryByTestId('chat-topics-retry')).toBeNull();
+    expect(queryByTestId('chat-topics-retry-slow')).toBeNull();
   });
 });
 

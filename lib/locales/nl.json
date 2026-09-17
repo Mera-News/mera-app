@@ -2632,7 +2632,11 @@
     "findingMore": "Bezig met zoeken",
     "goneTombstone": "Dit gegeven is verwijderd, dus de onderwerpen ervan ook.",
     "expandA11y": "Onderwerpen tonen",
-    "collapseA11y": "Onderwerpen verbergen"
+    "collapseA11y": "Onderwerpen verbergen",
+    "accordionTitlePending": "We zoeken onderwerpen voor:",
+    "pendingA11y": "Onderwerpen worden gezocht",
+    "readyA11y": "Onderwerpen klaar",
+    "failedA11y": "Onderwerpen konden niet worden gevonden"
   },
   "agentSteps": {
     "legStart": "Ik denk na over wat je zei",

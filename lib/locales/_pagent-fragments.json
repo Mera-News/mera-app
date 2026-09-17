@@ -46,7 +46,11 @@
       "findingMore": "Finding more",
       "goneTombstone": "This fact was removed, so its topics are gone too.",
       "expandA11y": "Show topics",
-      "collapseA11y": "Hide topics"
+      "collapseA11y": "Hide topics",
+      "accordionTitlePending": "We'll find topics for:",
+      "pendingA11y": "Topics are being found",
+      "readyA11y": "Topics ready",
+      "failedA11y": "Topics could not be found"
     },
     "factChoice": {
       "titleReplace": "Replace a fact you already have?",
@@ -108,7 +112,11 @@
       "findingMore": "Wird gesucht",
       "goneTombstone": "Diese Angabe wurde entfernt, damit sind auch ihre Themen weg.",
       "expandA11y": "Themen anzeigen",
-      "collapseA11y": "Themen ausblenden"
+      "collapseA11y": "Themen ausblenden",
+      "accordionTitlePending": "Wir finden Themen zu:",
+      "pendingA11y": "Themen werden gesucht",
+      "readyA11y": "Themen bereit",
+      "failedA11y": "Themen konnten nicht gefunden werden"
     },
     "factChoice": {
       "titleReplace": "Eine vorhandene Angabe ersetzen?",
@@ -170,7 +178,11 @@
       "findingMore": "Buscando más",
       "goneTombstone": "Este dato se eliminó, así que sus temas también.",
       "expandA11y": "Mostrar temas",
-      "collapseA11y": "Ocultar temas"
+      "collapseA11y": "Ocultar temas",
+      "accordionTitlePending": "Buscaremos temas sobre:",
+      "pendingA11y": "Se están buscando temas",
+      "readyA11y": "Temas listos",
+      "failedA11y": "No se pudieron encontrar temas"
     },
     "factChoice": {
       "titleReplace": "¿Reemplazar un dato que ya tienes?",
@@ -232,7 +244,11 @@
       "findingMore": "Recherche en cours",
       "goneTombstone": "Cette information a été supprimée, ses sujets aussi.",
       "expandA11y": "Afficher les sujets",
-      "collapseA11y": "Masquer les sujets"
+      "collapseA11y": "Masquer les sujets",
+      "accordionTitlePending": "Nous trouverons des sujets pour :",
+      "pendingA11y": "Des sujets sont en cours de recherche",
+      "readyA11y": "Sujets prêts",
+      "failedA11y": "Les sujets n'ont pas pu être trouvés"
     },
     "factChoice": {
       "titleReplace": "Remplacer une information existante ?",
@@ -294,7 +310,11 @@
       "findingMore": "Ricerca in corso",
       "goneTombstone": "Questa informazione è stata rimossa, quindi anche i suoi argomenti.",
       "expandA11y": "Mostra argomenti",
-      "collapseA11y": "Nascondi argomenti"
+      "collapseA11y": "Nascondi argomenti",
+      "accordionTitlePending": "Troveremo argomenti per:",
+      "pendingA11y": "Ricerca argomenti in corso",
+      "readyA11y": "Argomenti pronti",
+      "failedA11y": "Non è stato possibile trovare argomenti"
     },
     "factChoice": {
       "titleReplace": "Sostituire un'informazione esistente?",
@@ -356,7 +376,11 @@
       "findingMore": "Bezig met zoeken",
       "goneTombstone": "Dit gegeven is verwijderd, dus de onderwerpen ervan ook.",
       "expandA11y": "Onderwerpen tonen",
-      "collapseA11y": "Onderwerpen verbergen"
+      "collapseA11y": "Onderwerpen verbergen",
+      "accordionTitlePending": "We zoeken onderwerpen voor:",
+      "pendingA11y": "Onderwerpen worden gezocht",
+      "readyA11y": "Onderwerpen klaar",
+      "failedA11y": "Onderwerpen konden niet worden gevonden"
     },
     "factChoice": {
       "titleReplace": "Een bestaand gegeven vervangen?",
@@ -418,7 +442,11 @@
       "findingMore": "Procurando mais",
       "goneTombstone": "Essa informação foi removida, então os temas dela também.",
       "expandA11y": "Mostrar temas",
-      "collapseA11y": "Ocultar temas"
+      "collapseA11y": "Ocultar temas",
+      "accordionTitlePending": "Vamos achar temas sobre:",
+      "pendingA11y": "Temas sendo procurados",
+      "readyA11y": "Temas prontos",
+      "failedA11y": "Não foi possível achar temas"
     },
     "factChoice": {
       "titleReplace": "Substituir uma informação que você já tem?",
@@ -480,7 +508,11 @@
       "findingMore": "Szukam",
       "goneTombstone": "Ta informacja została usunięta, więc jej tematy też.",
       "expandA11y": "Pokaż tematy",
-      "collapseA11y": "Ukryj tematy"
+      "collapseA11y": "Ukryj tematy",
+      "accordionTitlePending": "Znajdziemy tematy do:",
+      "pendingA11y": "Trwa szukanie tematów",
+      "readyA11y": "Tematy gotowe",
+      "failedA11y": "Nie udało się znaleźć tematów"
     },
     "factChoice": {
       "titleReplace": "Zastąpić istniejącą informację?",
@@ -542,7 +574,11 @@
       "findingMore": "Ищем ещё",
       "goneTombstone": "Этот факт удалён, поэтому его темы тоже.",
       "expandA11y": "Показать темы",
-      "collapseA11y": "Скрыть темы"
+      "collapseA11y": "Скрыть темы",
+      "accordionTitlePending": "Мы подберём темы по:",
+      "pendingA11y": "Идёт подбор тем",
+      "readyA11y": "Темы готовы",
+      "failedA11y": "Не удалось подобрать темы"
     },
     "factChoice": {
       "titleReplace": "Заменить уже имеющийся факт?",
@@ -604,7 +640,11 @@
       "findingMore": "Шукаємо ще",
       "goneTombstone": "Цей факт видалено, тому його теми теж.",
       "expandA11y": "Показати теми",
-      "collapseA11y": "Сховати теми"
+      "collapseA11y": "Сховати теми",
+      "accordionTitlePending": "Ми підберемо теми за:",
+      "pendingA11y": "Триває добір тем",
+      "readyA11y": "Теми готові",
+      "failedA11y": "Не вдалося дібрати теми"
     },
     "factChoice": {
       "titleReplace": "Замінити наявний факт?",
@@ -666,7 +706,11 @@
       "findingMore": "Aranıyor",
       "goneTombstone": "Bu bilgi kaldırıldı, konuları da gitti.",
       "expandA11y": "Konuları göster",
-      "collapseA11y": "Konuları gizle"
+      "collapseA11y": "Konuları gizle",
+      "accordionTitlePending": "Şunun için konular bulacağız:",
+      "pendingA11y": "Konular bulunuyor",
+      "readyA11y": "Konular hazır",
+      "failedA11y": "Konular bulunamadı"
     },
     "factChoice": {
       "titleReplace": "Mevcut bir bilgiyi değiştirelim mi?",
@@ -728,7 +772,11 @@
       "findingMore": "جارٍ البحث",
       "goneTombstone": "تمت إزالة هذه المعلومة، لذلك اختفت مواضيعها أيضًا.",
       "expandA11y": "إظهار المواضيع",
-      "collapseA11y": "إخفاء المواضيع"
+      "collapseA11y": "إخفاء المواضيع",
+      "accordionTitlePending": "سنجد مواضيع عن:",
+      "pendingA11y": "جارٍ العثور على مواضيع",
+      "readyA11y": "المواضيع جاهزة",
+      "failedA11y": "تعذّر العثور على مواضيع"
     },
     "factChoice": {
       "titleReplace": "هل تريد استبدال معلومة موجودة؟",
@@ -790,7 +838,11 @@
       "findingMore": "खोजा जा रहा है",
       "goneTombstone": "यह जानकारी हटा दी गई, इसलिए इसके विषय भी हट गए।",
       "expandA11y": "विषय दिखाएँ",
-      "collapseA11y": "विषय छिपाएँ"
+      "collapseA11y": "विषय छिपाएँ",
+      "accordionTitlePending": "हम इसके लिए विषय खोजेंगे:",
+      "pendingA11y": "विषय खोजे जा रहे हैं",
+      "readyA11y": "विषय तैयार",
+      "failedA11y": "विषय नहीं मिल सके"
     },
     "factChoice": {
       "titleReplace": "पहले से मौजूद जानकारी बदलें?",
@@ -852,7 +904,11 @@
       "findingMore": "Mencari lagi",
       "goneTombstone": "Informasi ini dihapus, jadi topiknya juga hilang.",
       "expandA11y": "Tampilkan topik",
-      "collapseA11y": "Sembunyikan topik"
+      "collapseA11y": "Sembunyikan topik",
+      "accordionTitlePending": "Kami akan mencari topik untuk:",
+      "pendingA11y": "Topik sedang dicari",
+      "readyA11y": "Topik siap",
+      "failedA11y": "Topik tidak bisa ditemukan"
     },
     "factChoice": {
       "titleReplace": "Ganti informasi yang sudah ada?",
@@ -914,7 +970,11 @@
       "findingMore": "Đang tìm thêm",
       "goneTombstone": "Thông tin này đã bị xóa, nên các chủ đề của nó cũng mất.",
       "expandA11y": "Hiện chủ đề",
-      "collapseA11y": "Ẩn chủ đề"
+      "collapseA11y": "Ẩn chủ đề",
+      "accordionTitlePending": "Chúng tôi sẽ tìm chủ đề cho:",
+      "pendingA11y": "Đang tìm chủ đề",
+      "readyA11y": "Chủ đề đã sẵn sàng",
+      "failedA11y": "Không tìm được chủ đề"
     },
     "factChoice": {
       "titleReplace": "Thay thế một thông tin đã có?",
@@ -976,7 +1036,11 @@
       "findingMore": "กำลังค้นหาเพิ่ม",
       "goneTombstone": "ข้อมูลนี้ถูกลบแล้ว หัวข้อของมันจึงหายไปด้วย",
       "expandA11y": "แสดงหัวข้อ",
-      "collapseA11y": "ซ่อนหัวข้อ"
+      "collapseA11y": "ซ่อนหัวข้อ",
+      "accordionTitlePending": "เราจะหาหัวข้อสำหรับ:",
+      "pendingA11y": "กำลังค้นหาหัวข้อ",
+      "readyA11y": "หัวข้อพร้อมแล้ว",
+      "failedA11y": "ค้นหาหัวข้อไม่สำเร็จ"
     },
     "factChoice": {
       "titleReplace": "แทนที่ข้อมูลที่มีอยู่แล้วไหม",
@@ -1038,7 +1102,11 @@
       "findingMore": "検索中",
       "goneTombstone": "この情報は削除されたため、関連トピックもなくなりました。",
       "expandA11y": "トピックを表示",
-      "collapseA11y": "トピックを隠す"
+      "collapseA11y": "トピックを隠す",
+      "accordionTitlePending": "こちらのトピックを探します:",
+      "pendingA11y": "トピックを検索中",
+      "readyA11y": "トピックの準備ができました",
+      "failedA11y": "トピックが見つかりませんでした"
     },
     "factChoice": {
       "titleReplace": "既存の情報を置き換えますか？",
@@ -1100,7 +1168,11 @@
       "findingMore": "찾는 중",
       "goneTombstone": "이 정보가 삭제되어 관련 주제도 사라졌어요.",
       "expandA11y": "주제 보기",
-      "collapseA11y": "주제 숨기기"
+      "collapseA11y": "주제 숨기기",
+      "accordionTitlePending": "관련 주제를 찾아 둘게요:",
+      "pendingA11y": "주제를 찾는 중",
+      "readyA11y": "주제 준비 완료",
+      "failedA11y": "주제를 찾지 못했어요"
     },
     "factChoice": {
       "titleReplace": "기존 정보를 바꿀까요?",
@@ -1162,7 +1234,11 @@
       "findingMore": "正在查找",
       "goneTombstone": "这条信息已删除，相关主题也一并移除。",
       "expandA11y": "显示主题",
-      "collapseA11y": "隐藏主题"
+      "collapseA11y": "隐藏主题",
+      "accordionTitlePending": "我们会为这条找主题：",
+      "pendingA11y": "正在寻找主题",
+      "readyA11y": "主题已就绪",
+      "failedA11y": "未能找到主题"
     },
     "factChoice": {
       "titleReplace": "替换已有的一条信息？",
@@ -1224,7 +1300,11 @@
       "findingMore": "正在尋找",
       "goneTombstone": "這則資訊已刪除，相關主題也一併移除。",
       "expandA11y": "顯示主題",
-      "collapseA11y": "隱藏主題"
+      "collapseA11y": "隱藏主題",
+      "accordionTitlePending": "我們會為這則找主題：",
+      "pendingA11y": "正在尋找主題",
+      "readyA11y": "主題已就緒",
+      "failedA11y": "未能找到主題"
     },
     "factChoice": {
       "titleReplace": "替換已有的一則資訊？",

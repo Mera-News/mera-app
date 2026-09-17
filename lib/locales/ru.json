@@ -2672,7 +2672,11 @@
     "findingMore": "Ищем ещё",
     "goneTombstone": "Этот факт удалён, поэтому его темы тоже.",
     "expandA11y": "Показать темы",
-    "collapseA11y": "Скрыть темы"
+    "collapseA11y": "Скрыть темы",
+    "accordionTitlePending": "Мы подберём темы по:",
+    "pendingA11y": "Идёт подбор тем",
+    "readyA11y": "Темы готовы",
+    "failedA11y": "Не удалось подобрать темы"
   },
   "agentSteps": {
     "legStart": "Думаю над тем, что вы сказали",

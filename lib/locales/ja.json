@@ -2631,7 +2631,11 @@
     "findingMore": "検索中",
     "goneTombstone": "この情報は削除されたため、関連トピックもなくなりました。",
     "expandA11y": "トピックを表示",
-    "collapseA11y": "トピックを隠す"
+    "collapseA11y": "トピックを隠す",
+    "accordionTitlePending": "こちらのトピックを探します:",
+    "pendingA11y": "トピックを検索中",
+    "readyA11y": "トピックの準備ができました",
+    "failedA11y": "トピックが見つかりませんでした"
   },
   "agentSteps": {
     "legStart": "お話の内容を考えています",

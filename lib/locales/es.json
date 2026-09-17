@@ -2632,7 +2632,11 @@
     "findingMore": "Buscando más",
     "goneTombstone": "Este dato se eliminó, así que sus temas también.",
     "expandA11y": "Mostrar temas",
-    "collapseA11y": "Ocultar temas"
+    "collapseA11y": "Ocultar temas",
+    "accordionTitlePending": "Buscaremos temas sobre:",
+    "pendingA11y": "Se están buscando temas",
+    "readyA11y": "Temas listos",
+    "failedA11y": "No se pudieron encontrar temas"
   },
   "agentSteps": {
     "legStart": "Pensando en lo que dijiste",

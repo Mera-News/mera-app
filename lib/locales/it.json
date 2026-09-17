@@ -2632,7 +2632,11 @@
     "findingMore": "Ricerca in corso",
     "goneTombstone": "Questa informazione è stata rimossa, quindi anche i suoi argomenti.",
     "expandA11y": "Mostra argomenti",
-    "collapseA11y": "Nascondi argomenti"
+    "collapseA11y": "Nascondi argomenti",
+    "accordionTitlePending": "Troveremo argomenti per:",
+    "pendingA11y": "Ricerca argomenti in corso",
+    "readyA11y": "Argomenti pronti",
+    "failedA11y": "Non è stato possibile trovare argomenti"
   },
   "agentSteps": {
     "legStart": "Sto pensando a quello che hai detto",

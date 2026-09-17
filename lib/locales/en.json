@@ -2632,7 +2632,11 @@
     "findingMore": "Finding more",
     "goneTombstone": "This fact was removed, so its topics are gone too.",
     "expandA11y": "Show topics",
-    "collapseA11y": "Hide topics"
+    "collapseA11y": "Hide topics",
+    "accordionTitlePending": "We'll find topics for:",
+    "pendingA11y": "Topics are being found",
+    "readyA11y": "Topics ready",
+    "failedA11y": "Topics could not be found"
   },
   "agentSteps": {
     "legStart": "Thinking about what you said",

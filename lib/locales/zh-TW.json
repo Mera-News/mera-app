@@ -2632,7 +2632,11 @@
     "findingMore": "正在尋找",
     "goneTombstone": "這則資訊已刪除，相關主題也一併移除。",
     "expandA11y": "顯示主題",
-    "collapseA11y": "隱藏主題"
+    "collapseA11y": "隱藏主題",
+    "accordionTitlePending": "我們會為這則找主題：",
+    "pendingA11y": "正在尋找主題",
+    "readyA11y": "主題已就緒",
+    "failedA11y": "未能找到主題"
   },
   "agentSteps": {
     "legStart": "正在思考你說的內容",

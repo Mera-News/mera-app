@@ -2631,7 +2631,11 @@
     "findingMore": "찾는 중",
     "goneTombstone": "이 정보가 삭제되어 관련 주제도 사라졌어요.",
     "expandA11y": "주제 보기",
-    "collapseA11y": "주제 숨기기"
+    "collapseA11y": "주제 숨기기",
+    "accordionTitlePending": "관련 주제를 찾아 둘게요:",
+    "pendingA11y": "주제를 찾는 중",
+    "readyA11y": "주제 준비 완료",
+    "failedA11y": "주제를 찾지 못했어요"
   },
   "agentSteps": {
     "legStart": "말씀하신 내용을 생각하고 있어요",

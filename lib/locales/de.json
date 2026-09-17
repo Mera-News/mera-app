@@ -2632,7 +2632,11 @@
     "findingMore": "Wird gesucht",
     "goneTombstone": "Diese Angabe wurde entfernt, damit sind auch ihre Themen weg.",
     "expandA11y": "Themen anzeigen",
-    "collapseA11y": "Themen ausblenden"
+    "collapseA11y": "Themen ausblenden",
+    "accordionTitlePending": "Wir finden Themen zu:",
+    "pendingA11y": "Themen werden gesucht",
+    "readyA11y": "Themen bereit",
+    "failedA11y": "Themen konnten nicht gefunden werden"
   },
   "agentSteps": {
     "legStart": "Ich denke über deine Nachricht nach",

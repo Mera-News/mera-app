@@ -2632,7 +2632,11 @@
     "findingMore": "Đang tìm thêm",
     "goneTombstone": "Thông tin này đã bị xóa, nên các chủ đề của nó cũng mất.",
     "expandA11y": "Hiện chủ đề",
-    "collapseA11y": "Ẩn chủ đề"
+    "collapseA11y": "Ẩn chủ đề",
+    "accordionTitlePending": "Chúng tôi sẽ tìm chủ đề cho:",
+    "pendingA11y": "Đang tìm chủ đề",
+    "readyA11y": "Chủ đề đã sẵn sàng",
+    "failedA11y": "Không tìm được chủ đề"
   },
   "agentSteps": {
     "legStart": "Đang suy nghĩ về điều bạn nói",

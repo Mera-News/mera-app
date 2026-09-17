@@ -2639,7 +2639,11 @@
     "findingMore": "Recherche en cours",
     "goneTombstone": "Cette information a été supprimée, ses sujets aussi.",
     "expandA11y": "Afficher les sujets",
-    "collapseA11y": "Masquer les sujets"
+    "collapseA11y": "Masquer les sujets",
+    "accordionTitlePending": "Nous trouverons des sujets pour :",
+    "pendingA11y": "Des sujets sont en cours de recherche",
+    "readyA11y": "Sujets prêts",
+    "failedA11y": "Les sujets n'ont pas pu être trouvés"
   },
   "agentSteps": {
     "legStart": "Je réfléchis à ce que tu as dit",

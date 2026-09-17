@@ -2631,7 +2631,11 @@
     "findingMore": "Mencari lagi",
     "goneTombstone": "Informasi ini dihapus, jadi topiknya juga hilang.",
     "expandA11y": "Tampilkan topik",
-    "collapseA11y": "Sembunyikan topik"
+    "collapseA11y": "Sembunyikan topik",
+    "accordionTitlePending": "Kami akan mencari topik untuk:",
+    "pendingA11y": "Topik sedang dicari",
+    "readyA11y": "Topik siap",
+    "failedA11y": "Topik tidak bisa ditemukan"
   },
   "agentSteps": {
     "legStart": "Memikirkan apa yang kamu katakan",

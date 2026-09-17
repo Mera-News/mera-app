@@ -2670,7 +2670,11 @@
     "findingMore": "Szukam",
     "goneTombstone": "Ta informacja została usunięta, więc jej tematy też.",
     "expandA11y": "Pokaż tematy",
-    "collapseA11y": "Ukryj tematy"
+    "collapseA11y": "Ukryj tematy",
+    "accordionTitlePending": "Znajdziemy tematy do:",
+    "pendingA11y": "Trwa szukanie tematów",
+    "readyA11y": "Tematy gotowe",
+    "failedA11y": "Nie udało się znaleźć tematów"
   },
   "agentSteps": {
     "legStart": "Zastanawiam się nad tym, co napisałeś",

@@ -2634,7 +2634,11 @@
     "findingMore": "Aranıyor",
     "goneTombstone": "Bu bilgi kaldırıldı, konuları da gitti.",
     "expandA11y": "Konuları göster",
-    "collapseA11y": "Konuları gizle"
+    "collapseA11y": "Konuları gizle",
+    "accordionTitlePending": "Şunun için konular bulacağız:",
+    "pendingA11y": "Konular bulunuyor",
+    "readyA11y": "Konular hazır",
+    "failedA11y": "Konular bulunamadı"
   },
   "agentSteps": {
     "legStart": "Söylediklerini düşünüyorum",
