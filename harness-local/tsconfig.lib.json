@@ -49,6 +49,7 @@
     "scripts/probe-gateway.ts",
     "scripts/extraction-metrics.ts",
     "scripts/run-agent-corpus.ts",
-    "scripts/probe-agent-contract.ts"
+    "scripts/probe-agent-contract.ts",
+    "scripts/score-topic-run.ts"
   ]
 }
