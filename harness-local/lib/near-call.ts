@@ -257,3 +257,204 @@ async function postPrepared(
     clearTimeout(timer);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Streaming
+// ---------------------------------------------------------------------------
+
+/**
+ * The streaming accumulator, PURE so it can be pinned against a canned
+ * transcript with no network.
+ *
+ * TOOL-CALL DELTAS ARRIVE FRAGMENTED AND MUST BE ACCUMULATED BY `index`.
+ * A single call's `arguments` string is split across chunks, and when a model
+ * emits two calls their fragments INTERLEAVE. Concatenating in arrival order
+ * produces one corrupt argument string per call, which parses as invalid JSON
+ * and reads downstream as "the model cannot call tools" — a model fault for a
+ * decoder bug. The selftest pins this in both directions.
+ *
+ * `ttVisibleMs` is the time to the first CONTENT delta. A reasoning delta is
+ * not prose and must not start the clock, and a leg that emits no content at
+ * all (a tool-call-only leg) reports null rather than 0: averaging those in as
+ * zero is the same error as rating a punctuation rule over rows with no prose.
+ */
+export interface StreamAccumulator {
+  push(line: string): void;
+  done(): {
+    content: string;
+    reasoning: string;
+    toolCalls: NearToolCall[];
+    finishReason: string;
+    usage: NearUsage | null;
+    modelSent: string | null;
+    ttVisibleMs: number | null;
+  };
+}
+
+interface StreamDeltaChoice {
+  delta?: {
+    content?: string | null;
+    reasoning_content?: string | null;
+    tool_calls?: {
+      index?: number;
+      function?: { name?: string; arguments?: string };
+    }[];
+  };
+  finish_reason?: string | null;
+}
+
+export function createStreamAccumulator(now: () => number = Date.now): StreamAccumulator {
+  const started = now();
+  let content = '';
+  let reasoning = '';
+  let finishReason = '-';
+  let usage: NearUsage | null = null;
+  let modelSent: string | null = null;
+  let ttVisibleMs: number | null = null;
+  /** Keyed by the provider's `index`, never by arrival order. */
+  const toolsByIndex = new Map<number, { name: string; args: string }>();
+
+  return {
+    push(line: string): void {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) return;
+      const payload = trimmed.slice(5).trim();
+      if (payload === '' || payload === '[DONE]') return;
+      let json: {
+        model?: string;
+        choices?: StreamDeltaChoice[];
+        usage?: {
+          prompt_tokens?: number;
+          completion_tokens?: number;
+          reasoning_tokens?: number;
+          prompt_tokens_details?: { cached_tokens?: number } | null;
+        } | null;
+      };
+      try {
+        json = JSON.parse(payload);
+      } catch {
+        return; // a partial frame; the caller re-feeds complete lines only
+      }
+      if (json.model) modelSent = json.model;
+      if (json.usage) {
+        usage = {
+          promptTokens: json.usage.prompt_tokens ?? 0,
+          completionTokens: json.usage.completion_tokens ?? 0,
+          cachedTokens: json.usage.prompt_tokens_details?.cached_tokens ?? 0,
+          reasoningTokens: json.usage.reasoning_tokens ?? 0,
+        };
+      }
+      const choice = json.choices?.[0];
+      if (!choice) return;
+      if (choice.finish_reason) finishReason = choice.finish_reason;
+      const d = choice.delta;
+      if (!d) return;
+      if (typeof d.content === 'string' && d.content.length > 0) {
+        if (ttVisibleMs === null) ttVisibleMs = now() - started;
+        content += d.content;
+      }
+      if (typeof d.reasoning_content === 'string') reasoning += d.reasoning_content;
+      for (const tc of d.tool_calls ?? []) {
+        const idx = tc.index ?? 0;
+        const entry = toolsByIndex.get(idx) ?? { name: '', args: '' };
+        if (tc.function?.name) entry.name = tc.function.name;
+        if (tc.function?.arguments) entry.args += tc.function.arguments;
+        toolsByIndex.set(idx, entry);
+      }
+    },
+    done() {
+      const toolCalls = [...toolsByIndex.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([, v]) => ({ name: v.name || '?', argumentsRaw: v.args }));
+      return { content, reasoning, toolCalls, finishReason, usage, modelSent, ttVisibleMs };
+    },
+  };
+}
+
+export interface NearStreamResult extends NearResult {
+  ttVisibleMs: number | null;
+}
+
+/**
+ * Posts a prebuilt body with `stream: true` and decodes the SSE.
+ *
+ * STREAM EVERY LEG OF A RUN OR NONE. A run mixing streamed and non-streamed
+ * legs produces per-leg latencies that cannot be compared to each other.
+ */
+export async function postBodyStream(
+  baseUrl: string,
+  apiKey: string,
+  body: Record<string, unknown>,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+  onDelta?: (d: { content?: string; reasoning?: string }) => void,
+): Promise<NearStreamResult> {
+  const started = Date.now();
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  const fail = (error: string): NearStreamResult => ({
+    content: '', toolCalls: [], finishReason: '-', truncated: false, usage: null,
+    modelSent: null, latencyMs: Date.now() - started, ttVisibleMs: null, error,
+  });
+
+  try {
+    const res = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+      body: JSON.stringify({ ...body, stream: true, stream_options: { include_usage: true } }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      // 402 is the budget, not the call: it ends the run on the FIRST refusal
+      // rather than recording the same answer across every remaining call.
+      if (res.status === 402) {
+        const limitErr = parseSpendLimit(text);
+        if (limitErr) throw limitErr;
+      }
+      return fail(`HTTP ${res.status}: ${text.slice(0, 300)}`);
+    }
+    if (!res.body) return fail('stream: response carried no body');
+
+    const acc = createStreamAccumulator();
+    const decoder = new TextDecoder();
+    // Lines can split across network chunks, so a partial tail is carried
+    // forward rather than parsed. Feeding a half line to the accumulator
+    // silently drops a whole frame.
+    let buffered = '';
+    for await (const chunk of res.body as unknown as AsyncIterable<Uint8Array>) {
+      buffered += decoder.decode(chunk, { stream: true });
+      const lines = buffered.split('\n');
+      buffered = lines.pop() ?? '';
+      for (const line of lines) {
+        const before = acc.done();
+        acc.push(line);
+        if (onDelta) {
+          const after = acc.done();
+          const content = after.content.slice(before.content.length);
+          const reasoning = after.reasoning.slice(before.reasoning.length);
+          if (content || reasoning) onDelta({ content: content || undefined, reasoning: reasoning || undefined });
+        }
+      }
+    }
+    if (buffered.trim()) acc.push(buffered);
+
+    const out = acc.done();
+    return {
+      content: out.content || out.reasoning || '',
+      toolCalls: out.toolCalls,
+      finishReason: out.finishReason,
+      truncated: out.finishReason === 'length',
+      usage: out.usage,
+      modelSent: out.modelSent,
+      latencyMs: Date.now() - started,
+      ttVisibleMs: out.ttVisibleMs,
+      error: null,
+    };
+  } catch (err) {
+    if (err instanceof SpendLimitError) throw err;
+    return fail(err instanceof Error ? `${err.name}: ${err.message}` : String(err));
+  } finally {
+    clearTimeout(timer);
+  }
+}

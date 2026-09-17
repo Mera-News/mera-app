@@ -28,7 +28,7 @@ import {
   createJsonlWriter, extractFenceNonce, hashMessages, newRowId, type RunRow,
 } from '../lib/jsonl-writer';
 import { cellKey, computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
-import { hasReasoningLeak, parseSpendLimit, SpendLimitError } from '../lib/near-call';
+import { createStreamAccumulator, hasReasoningLeak, parseSpendLimit, SpendLimitError } from '../lib/near-call';
 import { estimateRunCost, formatCostEstimate } from '../lib/cost-estimate';
 import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
 import { buildChatTurnBody, withContextOnLastUserTurn } from '../lib/chat-turn';
@@ -923,6 +923,85 @@ async function main(): Promise<number> {
       'agreement: POSITIVE CONTROL, two REPEATS of one leg with different prompts DO fire',
       repeats.integrityFailures.some((x) => x.startsWith('RUNNER BUG')),
     );
+  }
+
+  // ---- streaming decode ----------------------------------------------------
+  //
+  // The whole risk of the streaming lane is here. Tool-call deltas arrive
+  // fragmented and INTERLEAVED across calls; concatenating in arrival order
+  // yields one corrupt argument string per call, which parses as invalid JSON
+  // and reads downstream as "the model cannot call tools". So the decoder is
+  // pinned against a canned transcript, WITH the wrong answer shown too.
+  {
+    // Two tool calls, arguments split across frames and INTERLEAVED, exactly
+    // as a provider emits them. Built with JSON.stringify rather than
+    // hand-escaped: a hand-written frame gets the backslashes wrong and the
+    // decoder then fails a test that is really testing the fixture.
+    const frame = (o: unknown): string => `data: ${JSON.stringify(o)}`;
+    const tc = (index: number, name: string | undefined, args: string) => ({
+      choices: [{ delta: { tool_calls: [{ index, function: { ...(name ? { name } : {}), arguments: args } }] } }],
+    });
+    const frames = [
+      frame({ model: 'm', ...tc(0, 'lookup_place', '{"qu') }),
+      frame(tc(1, 'find_similar_facts', '{"ki')),
+      frame(tc(0, undefined, 'ery":"Amsterdam"}')),
+      frame(tc(1, undefined, 'nd":"residence"}')),
+      frame({
+        choices: [{ delta: {}, finish_reason: 'tool_calls' }],
+        usage: { prompt_tokens: 120, completion_tokens: 18, prompt_tokens_details: { cached_tokens: 100 } },
+      }),
+      'data: [DONE]',
+    ];
+    const acc = createStreamAccumulator(() => 0);
+    for (const fr of frames) acc.push(fr);
+    const out = acc.done();
+
+    ck('stream: both interleaved tool calls are reassembled', out.toolCalls.length === 2);
+    ck(
+      'stream: call 0 arguments are valid JSON and complete',
+      out.toolCalls[0]?.argumentsRaw === '{"query":"Amsterdam"}',
+      out.toolCalls[0]?.argumentsRaw,
+    );
+    ck(
+      'stream: call 1 arguments are valid JSON and complete',
+      out.toolCalls[1]?.argumentsRaw === '{"kind":"residence"}',
+      out.toolCalls[1]?.argumentsRaw,
+    );
+    ck('stream: usage arrives on the final frame', out.usage?.promptTokens === 120);
+    ck('stream: cached tokens are read from the final frame', out.usage?.cachedTokens === 100);
+    ck('stream: finish_reason is captured', out.finishReason === 'tool_calls');
+
+    // NEGATIVE CONTROL: arrival-order concatenation, which is the bug. If this
+    // ever equals the correct string the transcript has stopped interleaving
+    // and the check above proves nothing.
+    let naive = '';
+    for (const fr of frames) {
+      if (!fr.startsWith('data: {')) continue;
+      const parsed = JSON.parse(fr.slice(6)) as {
+        choices?: { delta?: { tool_calls?: { function?: { arguments?: string } }[] } }[];
+      };
+      for (const t of parsed.choices?.[0]?.delta?.tool_calls ?? []) naive += t.function?.arguments ?? '';
+    }
+    ck(
+      'stream: POSITIVE CONTROL, index-less concatenation produces the WRONG string',
+      naive !== out.toolCalls[0]?.argumentsRaw && naive !== out.toolCalls[1]?.argumentsRaw,
+      naive.slice(0, 60),
+    );
+
+    // ttVisibleMs keys on CONTENT only.
+    const reasoningOnly = createStreamAccumulator(() => 5);
+    reasoningOnly.push('data: {"choices":[{"delta":{"reasoning_content":"thinking"}}]}');
+    ck(
+      'stream: a reasoning-only delta does NOT start the visible clock',
+      reasoningOnly.done().ttVisibleMs === null,
+    );
+    const toolOnly = createStreamAccumulator(() => 5);
+    toolOnly.push('data: {"choices":[{"delta":{"tool_calls":[{"index":0,"function":{"name":"x","arguments":"{}"}}]}}]}');
+    ck('stream: a tool-only leg reports ttVisibleMs null, never 0', toolOnly.done().ttVisibleMs === null);
+    let t = 0;
+    const withProse = createStreamAccumulator(() => (t += 7));
+    withProse.push('data: {"choices":[{"delta":{"content":"Hello"}}]}');
+    ck('stream: POSITIVE CONTROL, a content delta DOES set ttVisibleMs', withProse.done().ttVisibleMs !== null);
   }
 
   console.log(`\n${f === 0 ? 'ALL PASS' : f + ' FAILURE(S)'}`);
