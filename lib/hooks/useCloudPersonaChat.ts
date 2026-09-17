@@ -10,6 +10,7 @@ import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
 import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
 
 import type { ConversationMessage, IAgent, ToolCallRecord, ToolDefinition } from '../llm/types';
+import { createAgentTurnState } from '../mera-harness';
 import { useCloudChatStore } from '../stores/cloud-chat-store';
 import { useFloatingChatStore } from '../stores/floating-chat-store';
 import { estimateTokens } from '../llm/tokens';
@@ -156,6 +157,35 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
   const turnBusyRef = useRef(false);
   /** True while the forced pass owns the busy release. */
   const forcedPassRef = useRef(false);
+
+  /**
+   * Sets `turnBusyRef` AND mirrors it onto the store's `agentTurnState`, so the
+   * two cannot drift. Every write to `turnBusyRef` goes through here.
+   *
+   * `turnActive` must be true across every leg AND every gap between them --
+   * device tool execution and the fire-and-forget forced pass -- and false only
+   * at turn end or transport failure. That is `turnBusyRef`'s lifetime, NOT
+   * `isStreamingRef`'s and NOT `status`'s: `startForcedExtraction` dispatches
+   * with `void`, so the forced pass outlives `startTurn`'s `finally` and both
+   * of those read idle while real work is still in flight. Deriving the flag
+   * from streaming state renders a live turn as interrupted, which is exactly
+   * the failure the interruption state exists to report.
+   */
+  const setTurnBusy = useCallback((next: boolean) => {
+    if (turnBusyRef.current === next) return;
+    turnBusyRef.current = next;
+    const store = useCloudChatStore.getState();
+    const current = store.agentTurnState;
+    if (current) {
+      if (current.turnActive !== next) {
+        store.setAgentTurnState({ ...current, turnActive: next });
+      }
+      return;
+    }
+    // No loop state yet (a turn before the agent loop drives this hook). Mint
+    // the minimum the thread needs rather than leaving the flag unreadable.
+    store.setAgentTurnState({ ...createAgentTurnState(), turnActive: next });
+  }, []);
   /** A hidden turn that arrived mid-turn, waiting for the current one to settle. */
   const pendingHiddenTurnRef = useRef<string | null>(null);
 
@@ -664,7 +694,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           forcedPassRef.current = true;
           void runForcedExtraction(assistantId, forcedTools).finally(() => {
             forcedPassRef.current = false;
-            turnBusyRef.current = false;
+            setTurnBusy(false);
             flushPendingHiddenTurn();
           });
         } else {
@@ -715,7 +745,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
 
       if (needsForcedExtraction) startForcedExtraction();
     },
-    [flushPendingHiddenTurn],
+    [flushPendingHiddenTurn, setTurnBusy],
   );
 
   /**
@@ -757,7 +787,7 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         store.setMessages((prev) => [...prev, userMsg]);
       }
 
-      turnBusyRef.current = true;
+      setTurnBusy(true);
       isStreamingRef.current = true;
       store.setStatus('streaming');
 
@@ -801,14 +831,15 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
           isStreamingRef.current = false;
           useFloatingChatStore.getState().setTopicPlanTurnInFlight(false);
           // The forced pass, when one is running, owns the release instead.
+          // Runs on a throw too, so a transport failure ends the turn here.
           if (!forcedPassRef.current) {
-            turnBusyRef.current = false;
+            setTurnBusy(false);
             flushPendingHiddenTurn();
           }
         }
       })();
     },
-    [runSingleShot, flushPendingHiddenTurn],
+    [runSingleShot, flushPendingHiddenTurn, setTurnBusy],
   );
 
   startTurnRef.current = startTurn;

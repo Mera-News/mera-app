@@ -1649,3 +1649,102 @@ describe('per-promise tool-result write-back', () => {
     expect(JSON.parse(toolMsgs[1].content)).toEqual({ who: 'b' });
   });
 });
+
+// ---------------------------------------------------------------------------
+// turnActive (pagent P1)
+//
+// Must be true across every leg AND every gap between them -- tool execution,
+// and the fire-and-forget forced pass -- and false only at turn end or
+// transport failure. That is turnBusyRef's lifetime, and NOT `status`'s:
+// startForcedExtraction dispatches with `void`, so the forced pass outlives
+// startTurn's finally and `status` reads idle while real work is in flight.
+// The UI keys its interruption state on this, so a flag that goes false early
+// renders a live turn as interrupted.
+// ---------------------------------------------------------------------------
+describe('turnActive', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+  });
+
+  const turnActive = () => useCloudChatStore.getState().agentTurnState?.turnActive ?? false;
+
+  /** Every TRANSITION the flag makes, in order.
+   *
+   *  Seeded with the current value, because `subscribe` fires on every store
+   *  write and the first unrelated one would otherwise record the starting
+   *  `false` as a transition. */
+  function trackTurnActive(): boolean[] {
+    let last = turnActive();
+    const seen: boolean[] = [];
+    useCloudChatStore.subscribe((s) => {
+      const v = s.agentTurnState?.turnActive ?? false;
+      if (v !== last) {
+        last = v;
+        seen.push(v);
+      }
+    });
+    return seen;
+  }
+
+  it('toggles exactly ONCE per plain turn and ends false', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream([{ type: 'text-delta', delta: 'hello' }]));
+    const agent = makeAgent({
+      getToolDefinitions: jest.fn().mockReturnValue([]),
+      getForcedExtractionTools: jest.fn().mockReturnValue([]),
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+    const seen = trackTurnActive();
+
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(() => expect(turnActive()).toBe(false), { timeout: 3000 });
+
+    // ONE rise and ONE fall, no flicker in between.
+    expect(seen).toEqual([true, false]);
+  });
+
+  it('STAYS true across the fire-and-forget forced pass, after status goes idle', async () => {
+    // The turn returns prose and no tool call, so the forced pass fires. This
+    // is the case where `status` is already 'idle' while work continues.
+    let releaseTool: (() => void) | null = null;
+    mockCloudChatStream
+      .mockReturnValueOnce(makeSseStream([{ type: 'text-delta', delta: 'I live in Alkmaar' }]))
+      .mockReturnValueOnce(
+        makeSseStream([
+          { type: 'tool-call-delta', index: 0, id: 'tc-1', name: 'saveExtractedFacts', argumentsDelta: '{}' },
+        ]),
+      );
+    const agent = makeAgent({
+      executeTool: jest.fn(
+        () => new Promise((resolve) => { releaseTool = () => resolve({ result: { ok: true } }); }),
+      ),
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+    const seen = trackTurnActive();
+
+    await act(async () => { result.current.sendMessage('I live in Alkmaar'); });
+    await waitFor(() => expect(releaseTool).not.toBeNull(), { timeout: 3000 });
+
+    // status has settled, the forced pass has NOT.
+    expect(useCloudChatStore.getState().status).toBe('idle');
+    expect(turnActive()).toBe(true);
+
+    await act(async () => { releaseTool!(); });
+    await waitFor(() => expect(turnActive()).toBe(false), { timeout: 3000 });
+
+    // Still exactly one rise and one fall across the whole turn.
+    expect(seen).toEqual([true, false]);
+  });
+
+  it('goes false on a TRANSPORT FAILURE rather than staying armed', async () => {
+    mockCloudChatStream.mockImplementation(() => {
+      throw new Error('E2EE chat failed: 502');
+    });
+    const agent = makeAgent({ getToolDefinitions: jest.fn().mockReturnValue([]) });
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(() => expect(useCloudChatStore.getState().error).toBeTruthy(), { timeout: 3000 });
+    expect(turnActive()).toBe(false);
+  });
+});
