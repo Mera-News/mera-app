@@ -43,6 +43,16 @@ import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agree
 import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/cost-estimate';
 import { costOf, fetchModelCatalog, HARNESS_ARM_MODELS, rosterWarnings } from '../lib/model-catalog';
 import { hasReasoningLeak, postCompletion, SpendLimitError } from '../lib/near-call';
+import { decodeReason } from '../lib/reason-decode';
+import {
+  bandHistogram,
+  formatBandHistogram,
+  formatPrecisionRecall,
+  formatRescoreSummary,
+  gateCount,
+  precisionRecallAt,
+  rescoreSummary,
+} from '../lib/rescore-metrics';
 import {
   buildReasonCallsForSubset,
   buildScoreCallForChunk,
@@ -50,12 +60,12 @@ import {
   DEFAULT_HARNESS_CONFIG,
   newRelevanceDecodeStats,
   parseBatchRelevanceResponse,
-  parseReasonResponse,
   promptHash,
   relevanceSystemPromptFor,
   reasonSystemPromptFor,
   resolveScoringVariant,
   scoreChunkSizeFor,
+  type BatchCall,
   type RelevanceDecodeStats,
   type ScoringCandidate,
 } from '../../lib/news-harness';
@@ -76,6 +86,14 @@ interface GoldsetArticle {
   /** Present on goldset-348, absent on the synthetic injected fixture. Carried
    *  through to the row so the golden join needs no second lookup. */
   verdict?: string | null;
+  /** Publisher display name + language tag. Optional: older fixtures (and the
+   *  synthetic injected fixture) predate these fields. Absent here means the
+   *  built prompt carries no `Publication:` line at all — the same
+   *  no-signal path production takes for a row with no publisher metadata,
+   *  not a runner bug. See `fetch-staging-fixture.ts --merge-into` to add
+   *  them to an existing fixture. */
+  publicationName?: string | null;
+  languageCode?: string | null;
 }
 interface Goldset {
   personaFacts: { statement: string }[];
@@ -97,6 +115,13 @@ interface Args {
    *  numbers mean anything, and a single global value would change the control
    *  arm too. */
   maxTokens: Record<string, number>;
+  /** Empty string = off (today's behaviour: each arm's own pass-1 scores pick
+   *  its own reason subset). Set to a registered variant id to pin gate
+   *  membership to THAT variant's pass-1 scores, per (model, repeat) cell, and
+   *  reuse the same article set for every other variant in that cell — so a
+   *  rescore arm is judged on the same articles as baseline instead of
+   *  inheriting the ~8% membership churn a fresh gate decision carries. */
+  pinGate: string;
 }
 
 function parseArgs(argv: string[]): Args {
@@ -111,6 +136,7 @@ function parseArgs(argv: string[]): Args {
     reason: true,
     duplicateEvery: 0,
     maxTokens: {},
+    pinGate: '',
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -125,6 +151,7 @@ function parseArgs(argv: string[]): Args {
     else if (a === '--dry-run') args.dryRun = true;
     else if (a === '--no-reason') args.reason = false;
     else if (a === '--duplicate-every') args.duplicateEvery = Number(argv[++i]);
+    else if (a === '--pin-gate') args.pinGate = argv[++i] ?? args.pinGate;
     else if (a === '--max-tokens') {
       for (const pair of (argv[++i] ?? '').split(',').filter(Boolean)) {
         const eq = pair.lastIndexOf('=');
@@ -153,6 +180,12 @@ function parseArgs(argv: string[]): Args {
   }
   if (args.arms.length === 0) throw new Error('harness-local: --arms resolved to nothing.');
   if (args.variants.length === 0) throw new Error('harness-local: --variant resolved to nothing.');
+  if (args.pinGate && !args.variants.includes(args.pinGate)) {
+    throw new Error(
+      `harness-local: --pin-gate '${args.pinGate}' must be one of --variant's list (${args.variants.join(', ')}) ` +
+        'so its pass-1 scores are actually computed in this run.',
+    );
+  }
   return args;
 }
 
@@ -165,6 +198,14 @@ function toCandidates(articles: GoldsetArticle[]): ScoringCandidate[] {
     titleEn: a.title,
     descriptionEn: a.description,
     countryCode: a.countryCode,
+    // buildScoreCallForChunk / buildReasonCallsForSubset read these two off
+    // the candidate and run them through buildPublicationLabel themselves —
+    // there is nothing else to do here to get the `Publication: ...` prompt
+    // line production renders. Null on a fixture that predates these fields,
+    // which renders no Publication line at all (production's own no-signal
+    // path, not a gap this runner papers over).
+    publicationName: a.publicationName ?? null,
+    languageCode: a.languageCode ?? null,
     userTopicIds: [],
     relatedFacts: (a.relatedFacts ?? []).map((statement, i) => ({
       id: `${a.articleId}-f${i}`,
@@ -288,7 +329,23 @@ async function main(): Promise<number> {
   // One accumulator per (arm, repeat), so the instruction-following rate is
   // attributable to an arm rather than smeared across the run.
   const decodeStats = new Map<string, RelevanceDecodeStats>();
+  // Cumulative per-arm map: LAST repeat wins on a shared id (a pre-existing
+  // property of this map, kept as-is because it is what today's default
+  // reason-subset behaviour is keyed on — see the `--pin-gate` branch below
+  // for the per-repeat map that behaviour needs instead).
   const relevanceByArm = new Map<string, Record<string, number>>();
+  // Keyed `${model}@${variantId}::${rep}`, matching decodeStats' statsKey.
+  // Never overwritten across repeats, unlike relevanceByArm above — this is
+  // what makes `--pin-gate` (gate membership decided per repeat) and the
+  // pass-1-vs-final metrics report (below) correct across repeats.
+  const relevanceByArmRep = new Map<string, Record<string, number>>();
+  // Populated only when a reason row's decoded rescore actually parsed
+  // (`decodeReason(...).rescore`). Keyed the same as relevanceByArmRep; the
+  // inner map is articleId -> the rescore's band-clamped `score`. Reading a
+  // miss here means "no rescore for this id in this cell", which is exactly
+  // "final = pass-1" (join rule: the pass-2 score lives ONLY on the reason
+  // row's parsedSchema; score rows never carry it).
+  const rescoreByArmRep = new Map<string, Map<string, number>>();
   let emitted = 0;
 
   const writeRow = (row: RunRow): void => {
@@ -369,6 +426,10 @@ async function main(): Promise<number> {
           const map = relevanceByArm.get(armId) ?? {};
           chunkCandidates.forEach((c, i) => { map[c.id] = scores[i] ?? 0; });
           relevanceByArm.set(armId, map);
+          const repKey = `${armId}::${rep}`;
+          const repMap = relevanceByArmRep.get(repKey) ?? {};
+          chunkCandidates.forEach((c, i) => { repMap[c.id] = scores[i] ?? 0; });
+          relevanceByArmRep.set(repKey, repMap);
         }
 
         const info = catalog[model];
@@ -418,11 +479,175 @@ async function main(): Promise<number> {
     }
   }
 
-  // ---- reason, over each arm's OWN feed-tier subset -------------------------
-  // Deliberately each arm's own subset, not a shared one: the reason prompt is
-  // judged on the articles that arm actually promoted, which is the situation
-  // it faces in production.
-  if (args.reason) {
+  // One reason-call execution, shared by both branches below so the row shape
+  // and the rescore bookkeeping cannot drift apart between them.
+  const runReasonCall = async (p: {
+    call: BatchCall;
+    model: string;
+    variantId: string;
+    armId: string;
+    rep: number;
+    ri: number;
+    interleaveGroup: string;
+    /** The agreement report's CELL key (grouped with `arm`/`variant`). Must be
+     *  stable across repeats ONLY when the repeats truly share one prompt —
+     *  the default path's `reasonCalls` is built ONCE outside the repeat loop
+     *  so `ri` alone is stable and IS that key. Under `--pin-gate`, gate
+     *  membership is decided PER REPEAT (by design — a repeat's own pass-1
+     *  draw), so the prompt at "position ri" can legitimately differ between
+     *  repeats; folding `rep` into this key stops the agreement reporter from
+     *  reading that as `RUNNER BUG: repeats disagree on their prompt` (a
+     *  same-fixture-prompt violation) when it is really `n=1, nothing to
+     *  compare` (a thin cell, which is the true and correctly-reported
+     *  state). */
+    turnIndex: number;
+  }): Promise<void> => {
+    const { call, model, variantId, armId, rep, ri, interleaveGroup, turnIndex } = p;
+    planned.push({
+      model,
+      systemChars: (call.system ?? '').length,
+      promptChars: call.prompt.length,
+      maxOutputTokens: args.maxTokens[model] ?? config.reasonMaxTokens,
+      // Only articles at or above reasonRelevanceThreshold get a reason call
+      // (or, under --pin-gate, whatever the pinned variant gated in), and a
+      // dry run's scores are a stand-in, so this count is an upper bound
+      // rather than a prediction.
+      conditionalOn: `reasonRelevanceThreshold ${config.reasonRelevanceThreshold}`,
+    });
+    const result = args.dryRun
+      ? {
+          content: dryRunOutput('reason', 1, ri + rep),
+          toolCalls: [], finishReason: 'stop', truncated: false,
+          usage: { promptTokens: 400, completionTokens: 30, cachedTokens: 0, reasoningTokens: 0 },
+          modelSent: model, latencyMs: 8 + ri, error: null,
+        }
+      : await postCompletion({
+          baseUrl: env.nearAiBaseUrl, apiKey: env.nearAiApiKey, model,
+          messages: [
+            { role: 'system', content: call.system ?? (reasonSystemByVariant.get(variantId) as string) },
+            { role: 'user', content: call.prompt },
+          ],
+          temperature: config.reasonTemperature,
+          maxTokens: args.maxTokens[model] ?? config.reasonMaxTokens,
+          enableThinking: false,
+        });
+    const info = catalog[model];
+    const decoded = result.error ? null : decodeReason(result.content, call.id, call.prompt);
+    if (decoded?.rescore) {
+      // The call id IS the join (see the comment on `reasonItems`).
+      const joinedId = reasonItems(call.id)[0]?.id;
+      if (joinedId) {
+        const key = `${armId}::${rep}`;
+        const map = rescoreByArmRep.get(key) ?? new Map<string, number>();
+        map.set(joinedId, decoded.rescore.score);
+        rescoreByArmRep.set(key, map);
+      }
+    }
+    writeRow({
+      rowId: newRowId(), dupOf: null, runId, repeat: rep,
+      cohort: 'goldset', turnIndex, arm: armId, callType: 'reason',
+      interleaveGroup, lane: 'near', surface: 'SCORING',
+      variant: variantId,
+      promptHash: promptHash(call.system ?? (reasonSystemByVariant.get(variantId) as string), call.prompt),
+      promptDeterministic: true,
+      fenceNonce: extractFenceNonce(call.prompt), modelRequested: model, modelSent: result.modelSent,
+      fallbackFrom: null, hedged: false,
+      input: {
+        systemPrompt: call.system ?? (reasonSystemByVariant.get(variantId) as string),
+        messages: [{ role: 'user', content: call.prompt }],
+        toolSchemaNames: [],
+      },
+      personaStateIn: {
+        factCount: factStatements.length, topicCount: 0,
+        factsInPrompt: factStatements.length, turnsInPrompt: 1,
+      },
+      rawOutput: result.content,
+      toolCalls: [],
+      // {reason, k, s, score}: k/s/score are undefined whenever no rescore
+      // parsed. Pre-P2's decodeReason (lib/reason-decode.ts) never produces
+      // one, so every row is `{reason}` until that lands — the SAME shape a
+      // post-P2 unparsed row reports, which is the point of coding to this
+      // contract now rather than after the switch-over. The pass-2 score
+      // lives ONLY here: score rows never carry it (join rule below).
+      parsedSchema: decoded
+        ? { reason: decoded.reason, k: decoded.rescore?.k, s: decoded.rescore?.s, score: decoded.rescore?.score }
+        : null,
+      // The call id IS the join: buildReasonCallsForSubset builds
+      // `reason:<candidateId>` and ships chunkIdToCandidates EMPTY for
+      // reason bundles (verified in article-pipeline/scoring.ts), so the
+      // map lookup this used to do returned nothing and every reason row
+      // carried an empty items array. reasonItems throws on a miss rather
+      // than emitting a row the golden join cannot use.
+      items: reasonItems(call.id),
+      requestedCount: null, returnedCount: null, personaStateDelta: null,
+      finishReason: result.finishReason, truncated: result.truncated,
+      reasoningLeak: hasReasoningLeak(result.content),
+      usage: result.usage,
+      cost: result.usage && info
+        ? {
+            inputTokens: result.usage.promptTokens,
+            cachedInputTokens: result.usage.cachedTokens,
+            outputTokens: result.usage.completionTokens,
+            usd: costOf(info, result.usage),
+          }
+        : null,
+      latencyMs: result.latencyMs, ttVisibleMs: null, error: result.error,
+    });
+  };
+
+  if (args.reason && args.pinGate) {
+    // ---- reason, gate membership PINNED to one variant's pass-1 scores ------
+    // Decided per (model, repeat) cell from --pin-gate's own scores in that
+    // cell, then reused by every other variant in the SAME cell — so a
+    // rescore arm is judged on the same articles as the pin, not its own
+    // (~8% different) gate membership. Default is off; this branch only runs
+    // when the flag is passed.
+    for (let rep = 0; rep < args.repeat; rep++) {
+      for (const model of args.arms) {
+        const pinnedScores = relevanceByArmRep.get(`${model}@${args.pinGate}::${rep}`) ?? {};
+        const pinnedIds = new Set(
+          candidates
+            .filter((c) => (pinnedScores[c.id] ?? Number.NEGATIVE_INFINITY) >= config.reasonRelevanceThreshold)
+            .map((c) => c.id),
+        );
+        if (pinnedIds.size === 0) continue;
+        const pinnedCandidates = candidates.filter((c) => pinnedIds.has(c.id));
+        for (const variantId of args.variants) {
+          const armId = `${model}@${variantId}`;
+          const variantScores = relevanceByArmRep.get(`${armId}::${rep}`) ?? {};
+          const reasonBundle = buildReasonCallsForSubset(
+            pinnedCandidates,
+            variantScores,
+            // Membership is ALREADY decided (pinnedCandidates); this variant's
+            // own score never gates it back out, even if it sits below its
+            // own threshold — that is the whole point of pinning.
+            Number.NEGATIVE_INFINITY,
+            factStatements,
+            config,
+            undefined,
+            false,
+            variantId,
+          );
+          for (let ri = 0; ri < reasonBundle.calls.length; ri++) {
+            await runReasonCall({
+              call: reasonBundle.calls[ri],
+              model, variantId, armId, rep, ri,
+              interleaveGroup: `reason-pinned:${rep}:${ri}`,
+              // `rep` folded in: see the param doc on runReasonCall. Gate
+              // membership can legitimately differ per repeat under
+              // --pin-gate, so "position ri" is not the same prompt across
+              // reps here the way it is in the default path below.
+              turnIndex: rep * 100000 + ri,
+            });
+          }
+        }
+      }
+    }
+  } else if (args.reason) {
+    // ---- reason, over each arm's OWN feed-tier subset -------------------------
+    // Deliberately each arm's own subset, not a shared one: the reason prompt
+    // is judged on the articles that arm actually promoted, which is the
+    // situation it faces in production. (This is what --pin-gate replaces.)
     for (const armId of [...relevanceByArm.keys()].sort()) {
       const [model, variantId] = armId.split('@');
       const relevanceMap = relevanceByArm.get(armId) ?? {};
@@ -441,76 +666,7 @@ async function main(): Promise<number> {
       for (let ri = 0; ri < reasonCalls.length; ri++) {
         const call = reasonCalls[ri];
         for (let rep = 0; rep < args.repeat; rep++) {
-          planned.push({
-            model,
-            systemChars: (call.system ?? '').length,
-            promptChars: call.prompt.length,
-            maxOutputTokens: args.maxTokens[model] ?? config.reasonMaxTokens,
-            // Only articles at or above reasonRelevanceThreshold get a reason
-            // call, and a dry run's scores are a stand-in, so this count is an
-            // upper bound rather than a prediction.
-            conditionalOn: `reasonRelevanceThreshold ${config.reasonRelevanceThreshold}`,
-          });
-          const result = args.dryRun
-            ? {
-                content: dryRunOutput('reason', 1, ri + rep),
-                toolCalls: [], finishReason: 'stop', truncated: false,
-                usage: { promptTokens: 400, completionTokens: 30, cachedTokens: 0, reasoningTokens: 0 },
-                modelSent: model, latencyMs: 8 + ri, error: null,
-              }
-            : await postCompletion({
-                baseUrl: env.nearAiBaseUrl, apiKey: env.nearAiApiKey, model,
-                messages: [
-                  { role: 'system', content: call.system ?? (reasonSystemByVariant.get(variantId) as string) },
-                  { role: 'user', content: call.prompt },
-                ],
-                temperature: config.reasonTemperature,
-                maxTokens: args.maxTokens[model] ?? config.reasonMaxTokens,
-                enableThinking: false,
-              });
-          const info = catalog[model];
-          writeRow({
-            rowId: newRowId(), dupOf: null, runId, repeat: rep,
-            cohort: 'goldset', turnIndex: ri, arm: armId, callType: 'reason',
-            interleaveGroup: `reason:${ri}`, lane: 'near', surface: 'SCORING',
-            variant: variantId,
-            promptHash: promptHash(call.system ?? (reasonSystemByVariant.get(variantId) as string), call.prompt),
-            promptDeterministic: true,
-            fenceNonce: extractFenceNonce(call.prompt), modelRequested: model, modelSent: result.modelSent,
-            fallbackFrom: null, hedged: false,
-            input: {
-              systemPrompt: call.system ?? (reasonSystemByVariant.get(variantId) as string),
-              messages: [{ role: 'user', content: call.prompt }],
-              toolSchemaNames: [],
-            },
-            personaStateIn: {
-              factCount: factStatements.length, topicCount: 0,
-              factsInPrompt: factStatements.length, turnsInPrompt: 1,
-            },
-            rawOutput: result.content,
-            toolCalls: [],
-            parsedSchema: result.error ? null : parseReasonResponse(result.content, call.id, call.prompt),
-            // The call id IS the join: buildReasonCallsForSubset builds
-            // `reason:<candidateId>` and ships chunkIdToCandidates EMPTY for
-            // reason bundles (verified in article-pipeline/scoring.ts), so the
-            // map lookup this used to do returned nothing and every reason row
-            // carried an empty items array. reasonItems throws on a miss rather
-            // than emitting a row the golden join cannot use.
-            items: reasonItems(call.id),
-            requestedCount: null, returnedCount: null, personaStateDelta: null,
-            finishReason: result.finishReason, truncated: result.truncated,
-            reasoningLeak: hasReasoningLeak(result.content),
-            usage: result.usage,
-            cost: result.usage && info
-              ? {
-                  inputTokens: result.usage.promptTokens,
-                  cachedInputTokens: result.usage.cachedTokens,
-                  outputTokens: result.usage.completionTokens,
-                  usd: costOf(info, result.usage),
-                }
-              : null,
-            latencyMs: result.latencyMs, ttVisibleMs: null, error: result.error,
-          });
+          await runReasonCall({ call, model, variantId, armId, rep, ri, interleaveGroup: `reason:${ri}`, turnIndex: ri });
         }
       }
     }
@@ -545,6 +701,67 @@ async function main(): Promise<number> {
   console.log(
     '\nINSTRUCTION FOLLOWING (band violations are a contract metric, not a leak: the score was clamped)\n' +
       followLines.join('\n'),
+  );
+
+  // ---- rescore report, per model@variant -------------------------------------
+  // final = pass-1 unless a reason row in the SAME cell (arm, repeat) carries
+  // a parsed rescore (join rule: the pass-2 score lives only on the reason
+  // row's parsedSchema, never on the score row). Pooled across all repeats —
+  // n is printed on every figure below, since --limit defaults to 40 and a
+  // smoke run's numbers must never be misread as the 348-article goldset
+  // result.
+  const positiveMustShow = new Set(['must_show']);
+  const positiveMustShowOrNice = new Set(['must_show', 'nice_to_have']);
+  const rescoreLines: string[] = [];
+  for (const armId of [...relevanceByArm.keys()].sort()) {
+    const pairs: { id: string; pass1: number; final: number; verdict: string | null }[] = [];
+    for (let rep = 0; rep < args.repeat; rep++) {
+      const scoreMap = relevanceByArmRep.get(`${armId}::${rep}`);
+      if (!scoreMap) continue;
+      const rescoreMap = rescoreByArmRep.get(`${armId}::${rep}`);
+      for (const [id, pass1] of Object.entries(scoreMap)) {
+        const final = rescoreMap?.get(id) ?? pass1;
+        pairs.push({ id, pass1, final, verdict: verdictById.get(id) ?? null });
+      }
+    }
+    if (pairs.length === 0) continue;
+
+    const pass1Scores = pairs.map((p) => p.pass1);
+    const finalScores = pairs.map((p) => p.final);
+    const rescored = pairs
+      .filter((p) => p.final !== p.pass1)
+      .map((p) => ({ before: p.pass1, after: p.final }));
+
+    rescoreLines.push(
+      `\n${armId}\n` +
+        `  n scored (pooled over ${args.repeat} repeat(s)) : ${pairs.length}\n` +
+        `  gate >=${config.discardFloor} pass-1  : ${gateCount(pass1Scores, config.discardFloor)} of ${pairs.length}\n` +
+        `  gate >=${config.discardFloor} final   : ${gateCount(finalScores, config.discardFloor)} of ${pairs.length}\n` +
+        `  band histogram (final)   : ${formatBandHistogram(bandHistogram(finalScores))}\n` +
+        `  ${formatRescoreSummary(rescoreSummary(rescored))}\n` +
+        `  ${formatPrecisionRecall(
+          'pass-1 (positive=must_show)         ',
+          precisionRecallAt(pairs.map((p) => ({ score: p.pass1, verdict: p.verdict })), config.discardFloor, positiveMustShow),
+        )}\n` +
+        `  ${formatPrecisionRecall(
+          'final  (positive=must_show)         ',
+          precisionRecallAt(pairs.map((p) => ({ score: p.final, verdict: p.verdict })), config.discardFloor, positiveMustShow),
+        )}\n` +
+        `  ${formatPrecisionRecall(
+          'pass-1 (positive=must_show+nice_to_have)',
+          precisionRecallAt(pairs.map((p) => ({ score: p.pass1, verdict: p.verdict })), config.discardFloor, positiveMustShowOrNice),
+        )}\n` +
+        `  ${formatPrecisionRecall(
+          'final  (positive=must_show+nice_to_have)',
+          precisionRecallAt(pairs.map((p) => ({ score: p.final, verdict: p.verdict })), config.discardFloor, positiveMustShowOrNice),
+        )}`,
+    );
+  }
+  // eslint-disable-next-line no-console
+  console.log(
+    '\nRESCORE REPORT (band histogram collapses to 4 live bins by construction, not a distribution shape; ' +
+      'a fixture with no verdict field reports precision/recall as excluded=n)' +
+      rescoreLines.join('\n'),
   );
 
   run.finish({

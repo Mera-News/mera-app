@@ -38,6 +38,11 @@ import {
   COHORTS, applyToolCalls, freshState, loadCohort, measureFactsInPrompt,
   measureTurnsInPrompt, renderKnownFacts, PROMPT_CAPS,
 } from '../lib/corpus';
+import {
+  bandHistogram, gateCount, precisionRecallAt, rescoreSummary,
+} from '../lib/rescore-metrics';
+import { mergePublicationFields } from '../lib/fixture-merge';
+import { decodeReason } from '../lib/reason-decode';
 
 let f = 0;
 function ck(n: string, ok: boolean, d = ''): void {
@@ -674,6 +679,180 @@ async function main(): Promise<number> {
     ck('context lands on the LAST user turn', out[3].content.startsWith('<context>C</context>'));
     ck('earlier user turn is untouched', out[1].content === 'first');
     ck('the input array is not mutated', wire[2].content === 'last');
+  }
+
+  // --- 17. rescore metrics: every one shown failing on a planted input ------
+  console.log('\n== rescore metrics ==');
+  {
+    // bandHistogram: four live bins plus SUB_GATE, and it must actually
+    // discriminate — a flat input landing in one bin only is not a control.
+    const hist = bandHistogram([0.1, 0.39, 0.4, 0.6, 0.8, 1.01]);
+    ck('bandHistogram sorts below-discardFloor scores as SUB_GATE', hist.SUB_GATE === 2, JSON.stringify(hist));
+    ck('bandHistogram sorts LOW at 0.4-0.6', hist.LOW === 1, JSON.stringify(hist));
+    ck('bandHistogram sorts MEDIUM at 0.6-0.8', hist.MEDIUM === 1, JSON.stringify(hist));
+    ck('bandHistogram sorts HIGH at 0.8-1.0', hist.HIGH === 1, JSON.stringify(hist));
+    ck('bandHistogram sorts EMERGENCY above 1.0', hist.EMERGENCY === 1, JSON.stringify(hist));
+
+    const nullish = bandHistogram([null, undefined]);
+    ck(
+      'bandHistogram counts null/undefined as SUB_GATE, not dropped',
+      nullish.SUB_GATE === 2 &&
+        nullish.LOW + nullish.MEDIUM + nullish.HIGH + nullish.EMERGENCY === 0,
+      JSON.stringify(nullish),
+    );
+
+    ck('gateCount at the default 0.4 gate', gateCount([0.39, 0.4, 0.41, null]) === 2);
+    ck('gateCount at a caller-supplied threshold', gateCount([0.39, 0.4, 0.41, null], 0.41) === 1);
+
+    // precisionRecallAt: FAILURE-INJECTED. A known-negative (skip) scored high
+    // must drop precision below 1, and a known-positive (must_show) scored low
+    // must drop recall below 1 — a metric that stays at 1.0 on these inputs is
+    // not measuring anything.
+    const positiveMustShow = new Set(['must_show']);
+    const clean = precisionRecallAt(
+      [
+        { score: 0.9, verdict: 'must_show' },
+        { score: 0.1, verdict: 'skip' },
+      ],
+      0.4,
+      positiveMustShow,
+    );
+    ck('precisionRecallAt: clean input scores precision=1', clean.precision === 1, String(clean.precision));
+    ck('precisionRecallAt: clean input scores recall=1', clean.recall === 1, String(clean.recall));
+
+    const falsePositiveInjected = precisionRecallAt(
+      [
+        { score: 0.9, verdict: 'must_show' },
+        { score: 0.9, verdict: 'skip' }, // known-negative scored HIGH
+      ],
+      0.4,
+      positiveMustShow,
+    );
+    ck(
+      'precisionRecallAt: a known-negative scored 0.9 DROPS precision below 1',
+      falsePositiveInjected.precision !== null && falsePositiveInjected.precision < 1,
+      String(falsePositiveInjected.precision),
+    );
+
+    const falseNegativeInjected = precisionRecallAt(
+      [
+        { score: 0.1, verdict: 'must_show' }, // known-positive scored LOW
+        { score: 0.1, verdict: 'skip' },
+      ],
+      0.4,
+      positiveMustShow,
+    );
+    ck(
+      'precisionRecallAt: a known-positive scored 0.1 DROPS recall below 1',
+      falseNegativeInjected.recall !== null && falseNegativeInjected.recall < 1,
+      String(falseNegativeInjected.recall),
+    );
+
+    const excludedRow = precisionRecallAt(
+      [{ score: 0.9, verdict: null }, { score: 0.9, verdict: 'must_show' }],
+      0.4,
+      positiveMustShow,
+    );
+    ck('precisionRecallAt: a null verdict is excluded, not counted as negative', excludedRow.excluded === 1);
+    ck('precisionRecallAt: n excludes the excluded row', excludedRow.n === 1, String(excludedRow.n));
+
+    const noPositives = precisionRecallAt([{ score: 0.1, verdict: 'skip' }], 0.4, positiveMustShow);
+    ck('precisionRecallAt: no predicted-positive rows reports precision=null, not 0', noPositives.precision === null);
+    ck('precisionRecallAt: no actual-positive rows reports recall=null, not 0', noPositives.recall === null);
+
+    // rescoreSummary: FAILURE-INJECTED. One clear demote (band down exactly
+    // once) and one clear promote, so the signed mean must land strictly
+    // between them and take the sign of whichever moved further, not always
+    // read as "no change" or a fixed sign.
+    const mixed = rescoreSummary([
+      { before: 0.7, after: 0.3 }, // MEDIUM -> LOW: one band change down
+      { before: 0.5, after: 0.9 }, // LOW -> HIGH: one band change up
+    ]);
+    ck('rescoreSummary: exactly one band-down on a 0.7->0.3 pair', mixed.bandChangesDown === 1, JSON.stringify(mixed));
+    ck('rescoreSummary: exactly one band-up on a 0.5->0.9 pair', mixed.bandChangesUp === 1, JSON.stringify(mixed));
+    ck(
+      'rescoreSummary: mean signed delta is (+0.4-0.4)/2 = 0, not always negative',
+      Math.abs(mixed.meanSignedDelta) < 1e-9,
+      String(mixed.meanSignedDelta),
+    );
+
+    const netDemote = rescoreSummary([
+      { before: 0.8, after: 0.6 }, // -0.2
+      { before: 0.5, after: 0.1 }, // -0.4
+    ]);
+    ck(
+      'rescoreSummary: a net-demote set reports a NEGATIVE signed mean',
+      netDemote.meanSignedDelta < 0,
+      String(netDemote.meanSignedDelta),
+    );
+    ck('rescoreSummary: mean abs delta is always positive here', netDemote.meanAbsDelta > 0);
+    ck('rescoreSummary: n=0 on an empty set reports zeroed fields, not NaN', rescoreSummary([]).n === 0);
+    ck('rescoreSummary: n=0 mean is 0, not NaN', !Number.isNaN(rescoreSummary([]).meanSignedDelta));
+  }
+
+  // --- 18. fixture merge: throws rather than silently moving a label -------
+  console.log('\n== fixture merge ==');
+  {
+    const existing = [
+      { articleId: 'a1', verdict: 'must_show', jComp: 8, v1Relevance: 0.7 },
+      { articleId: 'a2', verdict: 'skip', jComp: 1, v1Relevance: 0.1 },
+      { articleId: 'a3', verdict: 'nice_to_have', jComp: 5, v1Relevance: 0.4 },
+    ];
+    const fetched = [
+      { articleId: 'a1', publicationName: 'Diario de Noticias', languageCode: 'pt' },
+      // a2 deliberately absent: simulates staging retention having aged it out.
+    ];
+    const result = mergePublicationFields(existing, fetched);
+    ck('mergePublicationFields: matched count excludes retention-aged ids', result.matched === 1, String(result.matched));
+    ck('mergePublicationFields: total is the full existing set', result.total === 3, String(result.total));
+    ck('mergePublicationFields: unmatched ids are reported, not silently dropped', result.unmatchedIds.join(',') === 'a2,a3');
+    ck('mergePublicationFields: a matched row gets publicationName', result.articles[0].publicationName === 'Diario de Noticias');
+    ck('mergePublicationFields: a matched row gets languageCode', result.articles[0].languageCode === 'pt');
+    ck('mergePublicationFields: an unmatched row is untouched (no null overwrite)', result.articles[1].publicationName === undefined);
+    ck('mergePublicationFields: never drops a row', result.articles.length === existing.length);
+    ck(
+      'mergePublicationFields: never changes a verdict',
+      result.articles.every((a, i) => a.verdict === existing[i].verdict),
+    );
+
+    // FAILURE-INJECTED: `FetchedPublicationInfo` has no `verdict` field, so a
+    // real caller cannot pass one — but if the merge were EVER refactored from
+    // its explicit `{ ...row, publicationName, languageCode }` pick to a
+    // wildcard `{ ...row, ...hit }`, a fetched row carrying a stray `verdict`
+    // (bypassing the type here, exactly as a JSON-sourced `fetched` array
+    // could in practice) would silently overwrite the label. This assertion
+    // fails the moment that regression lands; it is not testing today's
+    // (correct) behaviour in a way that can never go red.
+    const spoofed = mergePublicationFields(
+      [{ articleId: 'a1', verdict: 'must_show', jComp: 8, v1Relevance: 0.7 }],
+      [{ articleId: 'a1', publicationName: 'X', languageCode: 'en', verdict: 'skip' } as never],
+    );
+    ck(
+      'mergePublicationFields: a stray verdict on the fetched side never overwrites the label',
+      spoofed.articles[0].verdict === 'must_show',
+      String(spoofed.articles[0].verdict),
+    );
+
+    // The row-count / id-order / labelled-field invariants ARE real code
+    // paths (see lib/fixture-merge.ts) but are unreachable through this public
+    // function today, since `.map()` preserves length and order by
+    // construction and the merge touches no other field — asserting a throw
+    // here would test dead code, not behaviour. They stay as defence for a
+    // future rewrite, not as a selftest case.
+  }
+
+  // --- 19. reason decode adapter: shape-stable across the P2 switch-over ---
+  console.log('\n== reason decode ==');
+  {
+    const decoded = decodeReason('A plain reason sentence.', 'id-1');
+    ck('decodeReason: wraps a plain string as { reason }', decoded.reason === 'A plain reason sentence.');
+    ck('decodeReason: no rescore parses pre-P2 (fail open, not fabricated)', decoded.rescore === undefined);
+
+    const rejected = decodeReason('<think>unclosed', 'id-2');
+    ck(
+      'decodeReason: an unclosed think tag still decodes to an empty reason, not a throw',
+      rejected.reason === '',
+    );
   }
 
   console.log(`\n${f === 0 ? 'ALL PASS' : f + ' FAILURE(S)'}`);
