@@ -16,13 +16,51 @@
 // bought its pass by eating ladder rungs.
 
 import { filterNearDuplicates, type DedupeDrop, type DedupeResult } from '../core/topic-dedupe';
-import {
-  DETECT_JACCARD,
-  contentJaccard,
-  isSubsetTopic,
-  placeExclusionSet,
-} from '../core/topic-similarity';
+import { DETECT_JACCARD, contentJaccard, isSubsetTopic } from '../core/topic-similarity';
 import type { Place } from './contract';
+
+/**
+ * The eval's OWN place vocabulary, for the eval's own check.
+ *
+ * Deliberately not core's `placeExclusionSet`. Gate 2 asks whether the shipped
+ * filter damaged a ladder, and a check that borrows the filter's own notion of
+ * a place name stops being independent of the thing it audits — it would go
+ * quiet in exactly the case where the filter's definition is what is wrong.
+ * Derived structurally from the fact's resolved chain, never from
+ * capitalisation: this repo has already paid for that heuristic once, when it
+ * stripped "Port" out of "Port of Rotterdam" and missed "Polish".
+ */
+function evalTokens(text: string, exclude: ReadonlySet<string>): Set<string> {
+  const out = new Set<string>();
+  for (const w of (text ?? '').toLowerCase().split(/[^\p{L}\p{N}]+/u)) {
+    if (w && !exclude.has(w)) out.add(w);
+  }
+  return out;
+}
+
+/** Jaccard with an exclusion set. Core dropped its `exclude` parameter when the
+ *  place exclusion was removed from the shipped filter, but gate 2 still needs
+ *  to ask "are these identical ONCE place words are ignored?" to detect a lost
+ *  ladder rung. Eval-owned, for an eval-owned question. */
+function evalJaccard(a: string, b: string, exclude: ReadonlySet<string>): number {
+  const ta = evalTokens(a, exclude);
+  const tb = evalTokens(b, exclude);
+  if (ta.size === 0 || tb.size === 0) return 0;
+  let shared = 0;
+  for (const t of ta) if (tb.has(t)) shared++;
+  const union = ta.size + tb.size - shared;
+  return union === 0 ? 0 : shared / union;
+}
+
+function evalPlaceWords(place?: Place | null): ReadonlySet<string> {
+  const out = new Set<string>();
+  if (!place) return out;
+  for (const field of [place.neighbourhood, place.locality, place.admin1, place.countryName]) {
+    if (!field) continue;
+    for (const word of field.toLowerCase().split(/[^\p{L}\p{N}]+/u)) if (word) out.add(word);
+  }
+  return out;
+}
 import { hasBannedDash, topicWordCountOk } from './copy-rules';
 
 export interface TopicSetInput {
@@ -91,18 +129,20 @@ export interface FilterCorrectness {
    *  that with the exclusion removed the same pair DOES drop. */
   droppedOnPlaceNameAlone: FilterDrop[];
   /**
-   * THE NEW FILTER'S OWN FAILURE, and it is the INVERSE of the one above.
+   * THE INVERSE FAILURE, KEPT AS INSURANCE AND CURRENTLY UNREACHABLE.
    *
-   * Excluding place names collapses two topics that differ ONLY by their rung
-   * into the same token set. "Barcelona rail strikes" and "Spain rail strikes"
-   * both reduce to {rail, strikes}, Jaccard 1.000, so the filter drops the
-   * country rung — the exact ladder damage the exclusion was added to prevent,
-   * now caused by it. MEASURED, not hypothesised: see the fixture in
-   * __tests__/topic-metrics.test.ts.
+   * When the filter excluded place names, two topics differing ONLY by rung
+   * collapsed into one token set: "Barcelona rail strikes" and "Spain rail
+   * strikes" both became {rail, strikes}, Jaccard 1.000, and the country rung
+   * was dropped. That exclusion has been removed, so the pair now scores 0.5
+   * and both survive.
    *
-   * The residence guideline makes this reachable rather than exotic: it asks
-   * for a transport topic at the city rung AND one at the country rung, so a
-   * model that words them alike loses one while following the instruction.
+   * SAY PLAINLY WHAT THIS IS NOW. With no exclusion, a pair differing by one
+   * token each cannot reach 0.75 at any topic length the 2-to-5 word rule
+   * permits, so this list can no longer be produced by the shipped filter. It
+   * is NOT an active gate and must not be quoted as one. It stays because it
+   * costs nothing and because a reintroduced exclusion would revive the bug
+   * silently; `droppedOnPlaceNameAlone` is the direction that remains live.
    */
   droppedDifferingOnlyByPlace: FilterDrop[];
   passed: boolean;
@@ -112,8 +152,8 @@ export function filterCorrectness(
   topics: readonly string[],
   placeChain?: Place | null,
 ): FilterCorrectness {
-  const withExclusion = applyShippedFilter(topics, placeChain);
-  const placeWords = placeExclusionSet(placeChain ?? null);
+  const withExclusion = applyShippedFilter(topics);
+  const placeWords = evalPlaceWords(placeChain);
 
   const droppedOnPlaceNameAlone = withExclusion.dropped.filter(
     (d) => d.overlap.length > 0 && d.overlap.every((w) => placeWords.has(w)),
@@ -123,8 +163,8 @@ export function filterCorrectness(
   // rungs of one ladder and the filter could not tell them apart.
   const droppedDifferingOnlyByPlace = withExclusion.dropped.filter(
     (d) =>
-      contentJaccard(d.topic, d.duplicateOf, placeWords) === 1 &&
-      contentJaccard(d.topic, d.duplicateOf, new Set()) < 1,
+      evalJaccard(d.topic, d.duplicateOf, placeWords) === 1 &&
+      evalJaccard(d.topic, d.duplicateOf, new Set()) < 1,
   );
 
   return {
@@ -159,17 +199,14 @@ export interface S7Report {
 export const S7_GATE = 0.1;
 
 /** Fraction of topics that near-duplicate an EARLIER topic in the same set. */
-export function nearDuplicateRate(
-  topics: readonly string[],
-  exclude: ReadonlySet<string>,
-): { rate: number; flagged: number } {
+export function nearDuplicateRate(topics: readonly string[]): { rate: number; flagged: number } {
   let flagged = 0;
   for (let i = 0; i < topics.length; i++) {
     for (let j = 0; j < i; j++) {
       if (
-        contentJaccard(topics[i], topics[j], exclude) >= DETECT_JACCARD ||
-        isSubsetTopic(topics[i], topics[j], exclude) ||
-        isSubsetTopic(topics[j], topics[i], exclude)
+        contentJaccard(topics[i], topics[j]) >= DETECT_JACCARD ||
+        isSubsetTopic(topics[i], topics[j]) ||
+        isSubsetTopic(topics[j], topics[i])
       ) {
         flagged += 1;
         break;
@@ -180,10 +217,13 @@ export function nearDuplicateRate(
 }
 
 export function s7Report(set: TopicSetInput): S7Report {
-  const exclude = placeExclusionSet(set.placeChain ?? null);
-  const raw = nearDuplicateRate(set.topics, exclude);
-  const kept = applyShippedFilter(set.topics, set.placeChain).kept;
-  const post = nearDuplicateRate(kept, exclude);
+  // The detector judges two topics the way a READER sees them, and a place
+  // name is content to a reader. Core dropped its exclusion entirely, so the
+  // two now agree on tokens and differ only where they are meant to: the
+  // filter at 0.75 with no subset rule, the detector at 0.6 or on a subset.
+  const raw = nearDuplicateRate(set.topics);
+  const kept = applyShippedFilter(set.topics).kept;
+  const post = nearDuplicateRate(kept);
   return {
     postFilterRate: post.rate,
     postFilterFlagged: post.flagged,

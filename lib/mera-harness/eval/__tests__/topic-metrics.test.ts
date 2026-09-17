@@ -101,20 +101,45 @@ describe('filter correctness', () => {
     expect(r.passed).toBe(true);
   });
 
-  // MEASURED BUG, not a hypothetical. Excluding place names collapses two
-  // topics that differ ONLY by rung into one token set, so the filter eats the
-  // country rung — the inverse of the failure the exclusion was added to
-  // prevent. The residence guideline asks for a transport topic at the city
-  // rung AND one at the country rung, so a model wording them alike loses one
-  // while following the instruction.
-  it('FLAGS a drop where the two topics differ only by their rung', () => {
+  // THE BUG THIS ONCE CAUGHT IS FIXED, AND THE TEST NOW PINS THE FIX.
+  // Excluding place names collapsed two topics that differ only by rung into
+  // one token set: "Barcelona rail strikes" and "Spain rail strikes" both
+  // became {rail, strikes}, Jaccard 1.000, and the country rung was dropped.
+  // The exclusion was removed, so the pair scores 0.5 and both survive.
+  it('KEEPS two rungs that differ only by their place name', () => {
     const topics = ['Barcelona rail strikes', 'Spain rail strikes'];
-    expect(contentJaccard(topics[0], topics[1], new Set(['gràcia', 'barcelona', 'catalonia', 'spain']))).toBe(1);
+    expect(contentJaccard(topics[0], topics[1])).toBeCloseTo(0.5, 2);
 
+    const kept = applyShippedFilter(topics).kept;
+    expect(kept).toHaveLength(2);
+    expect(filterCorrectness(topics, BARCELONA).passed).toBe(true);
+  });
+
+  // THE INVARIANT, stated so it survives any future change to the filter:
+  // gate 2 passes exactly when the filter dropped nothing it should not have.
+  // A silent ladder loss can never slip through as a pass.
+  it('gate 2 passes if and only if nothing was wrongly dropped', () => {
+    for (const topics of [
+      ['Barcelona rail strikes', 'Spain rail strikes'],
+      ['Alkmaar hospital news', 'Alkmaar school closures'],
+      WORKED_EXAMPLE,
+      ['Spain energy prices', 'Spain energy price rises'],
+    ]) {
+      const r = filterCorrectness(topics, BARCELONA);
+      const wronglyDropped =
+        r.droppedOnPlaceNameAlone.length + r.droppedDifferingOnlyByPlace.length;
+      expect(r.passed).toBe(wronglyDropped === 0);
+    }
+  });
+
+  // STILL REACHABLE, and still the failure worth catching: a pair whose only
+  // shared content IS the place. Without an exclusion these share every token,
+  // so the filter drops one and gate 2 says so.
+  it('FLAGS a drop whose entire overlap is place words', () => {
+    const topics = ['Barcelona Catalonia Spain', 'Barcelona Catalonia Spain news'];
     const r = filterCorrectness(topics, BARCELONA);
     expect(r.dropped).toBe(1);
-    expect(r.droppedDifferingOnlyByPlace).toHaveLength(1);
-    expect(r.droppedDifferingOnlyByPlace[0].topic).toBe('Spain rail strikes');
+    expect(r.droppedOnPlaceNameAlone).toHaveLength(1);
     expect(r.passed).toBe(false);
   });
 
