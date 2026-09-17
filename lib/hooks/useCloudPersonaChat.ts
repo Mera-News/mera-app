@@ -366,36 +366,85 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
         );
       };
 
-      // Execute tool calls in parallel, render results into the bubble, and
-      // push tool result messages onto wire (preserving order).
+      // Execute tool calls in parallel, render each result into the bubble AS IT
+      // SETTLES, and push tool result messages onto wire (preserving order).
+      //
+      // TWO RULES, both load-bearing, both previously violated here:
+      //
+      //  1. WRITE BACK PER PROMISE, not once behind the slowest call. This used
+      //     to `await Promise.all(...)` and then write every record in ONE
+      //     setMessages, so the UI could never observe a staggered "2 done, 1
+      //     pending" state -- every row flipped at the same instant. The chat's
+      //     per-tool-call progress rows need the intermediate states.
+      //
+      //  2. Replace the record with a FRESH OBJECT at its ORIGINAL INDEX, never
+      //     mutate in place. The old code did `records[i].status = ...` and then
+      //     re-wrapped the same array, so a row memoized on its own `toolCall`
+      //     prop was blind to its own status changing. And the index must be the
+      //     call's own, never completion order: `fact-commit.ts` and
+      //     `deriveThreadItems.ts` key card identity on
+      //     `${messageId}::${toolCallIndex}`, so a result landing in the wrong
+      //     slot corrupts identity, not merely display order.
+      //
+      // useLocalLLM.ts already satisfies both by construction (sequential loop,
+      // fresh .map() each time); this parallel path is the one that needed them
+      // spelled out.
       const executeToolsAndPushResults = async (
         targetId: string,
         toolCalls: ReturnType<typeof finalizeToolCalls>,
       ) => {
-        const toolCallRecords: ToolCallRecord[] = toolCalls.map((tc) => ({
+        const pendingRecords: ToolCallRecord[] = toolCalls.map((tc) => ({
           id: tc.id,
           name: tc.name,
           input: tc.input,
           status: 'pending' as const,
         }));
         useCloudChatStore.getState().setMessages((prev) =>
-          prev.map((m) => m.id === targetId ? { ...m, toolCalls: toolCallRecords } : m),
+          prev.map((m) => m.id === targetId ? { ...m, toolCalls: pendingRecords } : m),
         );
+
+        // Settled payloads by ORIGINAL index, for the wire push below.
+        const settled = new Array<
+          { result: Record<string, unknown>; status: 'done' | 'error' } | undefined
+        >(toolCalls.length);
+
+        /** Commit ONE call's outcome at its own index, as a new record object.
+         *  Siblings keep their identity so an unsettled row does not re-render. */
+        const writeBack = (
+          index: number,
+          result: Record<string, unknown>,
+          status: 'done' | 'error',
+        ) => {
+          settled[index] = { result, status };
+          useCloudChatStore.getState().setMessages((prev) =>
+            prev.map((m) => {
+              if (m.id !== targetId) return m;
+              const current = m.toolCalls ?? pendingRecords;
+              return {
+                ...m,
+                toolCalls: current.map((rec, i) =>
+                  i === index ? { ...rec, result, status } : rec,
+                ),
+              };
+            }),
+          );
+        };
 
         const knownNames = (agentRef.current.getToolDefinitions?.() ?? []).map(
           (d) => d.function.name,
         );
 
-        const results = await Promise.all(
+        await Promise.all(
           toolCalls.map(async (tc, i) => {
             // Never execute a call whose arguments did not parse — surface it
             // as an error the user can see instead of running it with {}.
             if (tc.malformed) {
-              return {
-                index: i,
-                result: { error: 'malformed tool arguments — call was not executed' },
-                status: 'error' as const,
-              };
+              writeBack(
+                i,
+                { error: 'malformed tool arguments — call was not executed' },
+                'error',
+              );
+              return;
             }
             try {
               const resolved = normalizeToolName(tc.name, knownNames);
@@ -423,33 +472,30 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
                 useFloatingChatStore.getState().resolveProposal(sideEffects.proposalResolved);
               }
 
-              return { index: i, result, status: 'done' as const };
+              // Committed HERE, the moment this call settles — not after the
+              // slowest sibling.
+              writeBack(i, result, 'done');
             } catch (err) {
               logger.error(`${TAG} Tool execution failed`, undefined, { tool: tc.name, error: String(err) });
-              return { index: i, result: { error: String(err) }, status: 'error' as const };
+              writeBack(i, { error: String(err) }, 'error');
             }
           }),
         );
 
-        for (const r of results) {
-          toolCallRecords[r.index].result = r.result;
-          toolCallRecords[r.index].status = r.status;
-        }
-        useCloudChatStore.getState().setMessages((prev) =>
-          prev.map((m) => m.id === targetId ? { ...m, toolCalls: [...toolCallRecords] } : m),
-        );
-
-        // Only calls that made it onto the wire are owed a `tool` reply.
-        for (const tc of toolCalls) {
-          if (tc.malformed) continue;
-          const matched = toolCallRecords.find((r) => r.id === tc.id);
-          const resultPayload = matched?.result ?? { error: 'no result' };
+        // The WIRE push stays here, after every call has settled: the wire is
+        // ordered, and a `role:'tool'` message must follow its
+        // `assistant(tool_calls)` partner intact. Only calls that made it onto
+        // the wire are owed a reply. Indexed by the call's own position, never
+        // by id — local ids are `local-tc-${n}` and collide across messages.
+        toolCalls.forEach((tc, i) => {
+          if (tc.malformed) return;
+          const resultPayload = settled[i]?.result ?? { error: 'no result' };
           useCloudChatStore.getState().pushWireMessage({
             role: 'tool',
             tool_call_id: tc.id,
             content: JSON.stringify(resultPayload),
           });
-        }
+        });
       };
 
       // ---------- Forced extraction safety-net (GATED) ----------

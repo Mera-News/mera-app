@@ -1493,3 +1493,159 @@ describe('useCloudPersonaChat — knowledge tools, hard cases', () => {
     expect(secondArg.messages[toolIdx - 1].tool_calls).toBeDefined();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Per-promise tool-result write-back (pagent P1)
+//
+// Three properties, each of which FAILED on the previous implementation
+// (`await Promise.all(...)` -> in-place mutation -> one setMessages):
+//   (a) a slower sibling does not hide a finished call: the staggered
+//       "1 done, 1 pending" state must be observable;
+//   (b) a settled record is a NEW object, so a row memoized on its own
+//       `toolCall` prop sees its own status change;
+//   (c) the result lands at the CALL's index, never completion order --
+//       card identity is keyed `${messageId}::${toolCallIndex}`.
+// ---------------------------------------------------------------------------
+describe('per-promise tool-result write-back', () => {
+  // This describe is a SIBLING of the main one, so it does NOT inherit its
+  // beforeEach. Without this the wire accumulated across tests and the
+  // per-index assertions below read another test's messages.
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+  });
+
+  const TWO_CALL_STREAM: SseEvent[] = [
+    { type: 'tool-call-delta', index: 0, id: 'tc-a', name: 'toolA', argumentsDelta: '{}' },
+    { type: 'tool-call-delta', index: 1, id: 'tc-b', name: 'toolB', argumentsDelta: '{}' },
+    { type: 'text-delta', delta: 'working on it' },
+  ];
+
+  const TWO_TOOLS = ['toolA', 'toolB'].map((name) => ({
+    type: 'function' as const,
+    function: { name, description: name, parameters: { type: 'object' as const, properties: {} } },
+  }));
+
+  /** Resolvers keyed by tool name, so a test controls the settle ORDER. */
+  function makeDeferredAgent() {
+    const resolvers: Record<string, (r: ToolExecutionResult) => void> = {};
+    const agent = makeAgent({
+      getToolDefinitions: jest.fn().mockReturnValue(TWO_TOOLS),
+      getForcedExtractionTools: jest.fn().mockReturnValue([]),
+      executeTool: jest.fn(
+        (name: string) =>
+          new Promise<ToolExecutionResult>((resolve) => {
+            resolvers[name] = resolve;
+          }),
+      ),
+    });
+    return { agent, resolvers };
+  }
+
+  function currentToolCalls() {
+    const msgs = useCloudChatStore.getState().messages;
+    const withCalls = [...msgs].reverse().find((m) => m.toolCalls && m.toolCalls.length > 0);
+    return withCalls?.toolCalls ?? [];
+  }
+
+  it('(a) shows a staggered done/pending state instead of flipping both at once', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream(TWO_CALL_STREAM));
+    const { agent, resolvers } = makeDeferredAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => { result.current.sendMessage('hello'); });
+    await waitFor(() => expect(Object.keys(resolvers)).toHaveLength(2), { timeout: 3000 });
+
+    // Settle ONLY the first call. The second is still in flight.
+    await act(async () => { resolvers.toolA({ result: { ok: 'a' } }); });
+
+    await waitFor(() => expect(currentToolCalls()[0]?.status).toBe('done'), { timeout: 3000 });
+    const mid = currentToolCalls();
+    expect(mid.map((r) => r.status)).toEqual(['done', 'pending']);
+
+    await act(async () => { resolvers.toolB({ result: { ok: 'b' } }); });
+    await waitFor(
+      () => expect(currentToolCalls().map((r) => r.status)).toEqual(['done', 'done']),
+      { timeout: 3000 },
+    );
+  });
+
+  it('(b) replaces the settled record with a NEW object, leaving siblings identical', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream(TWO_CALL_STREAM));
+    const { agent, resolvers } = makeDeferredAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => { result.current.sendMessage('hello'); });
+    await waitFor(() => expect(Object.keys(resolvers)).toHaveLength(2), { timeout: 3000 });
+
+    const before = currentToolCalls();
+    expect(before).toHaveLength(2);
+
+    await act(async () => { resolvers.toolA({ result: { ok: 'a' } }); });
+    await waitFor(() => expect(currentToolCalls()[0]?.status).toBe('done'), { timeout: 3000 });
+    const after = currentToolCalls();
+
+    // The settled slot is a different object -- this is what an in-place
+    // mutation would break while every status assertion still passed.
+    expect(after[0]).not.toBe(before[0]);
+    // ...and the untouched sibling keeps its identity, so it does not re-render.
+    expect(after[1]).toBe(before[1]);
+
+    await act(async () => { resolvers.toolB({ result: { ok: 'b' } }); });
+  });
+
+  it('(c) writes a result at the CALL index even when the second call settles first', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream(TWO_CALL_STREAM));
+    const { agent, resolvers } = makeDeferredAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => { result.current.sendMessage('hello'); });
+    await waitFor(() => expect(Object.keys(resolvers)).toHaveLength(2), { timeout: 3000 });
+
+    // Reverse order: toolB (index 1) finishes FIRST.
+    await act(async () => { resolvers.toolB({ result: { who: 'b' } }); });
+    await waitFor(() => expect(currentToolCalls()[1]?.status).toBe('done'), { timeout: 3000 });
+
+    // Completion order would have put b's result at index 0.
+    expect(currentToolCalls()[0]?.status).toBe('pending');
+    expect(currentToolCalls()[1]?.result).toEqual({ who: 'b' });
+
+    await act(async () => { resolvers.toolA({ result: { who: 'a' } }); });
+    await waitFor(() => expect(currentToolCalls()[0]?.status).toBe('done'), { timeout: 3000 });
+
+    const final = currentToolCalls();
+    expect(final[0].name).toBe('toolA');
+    expect(final[0].result).toEqual({ who: 'a' });
+    expect(final[1].name).toBe('toolB');
+    expect(final[1].result).toEqual({ who: 'b' });
+  });
+
+  it('pushes each tool result onto the wire at its own index, after all settle', async () => {
+    mockCloudChatStream.mockReturnValue(makeSseStream(TWO_CALL_STREAM));
+    const { agent, resolvers } = makeDeferredAgent();
+    const { result } = renderHook(() => useCloudPersonaChat(agent));
+
+    act(() => { result.current.sendMessage('hello'); });
+    await waitFor(() => expect(Object.keys(resolvers)).toHaveLength(2), { timeout: 3000 });
+
+    await act(async () => { resolvers.toolB({ result: { who: 'b' } }); });
+    await act(async () => { resolvers.toolA({ result: { who: 'a' } }); });
+
+    await waitFor(() => {
+      const toolMsgs = useCloudChatStore
+        .getState()
+        .wireMessages.filter((m) => m.role === 'tool');
+      expect(toolMsgs).toHaveLength(2);
+    }, { timeout: 3000 });
+
+    const toolMsgs = useCloudChatStore
+      .getState()
+      .wireMessages.filter((m) => m.role === 'tool') as { tool_call_id: string; content: string }[];
+    // Wire order follows CALL order, not settle order, and each id carries its
+    // own result.
+    expect(toolMsgs[0].tool_call_id).toBe('tc-a');
+    expect(JSON.parse(toolMsgs[0].content)).toEqual({ who: 'a' });
+    expect(toolMsgs[1].tool_call_id).toBe('tc-b');
+    expect(JSON.parse(toolMsgs[1].content)).toEqual({ who: 'b' });
+  });
+});
