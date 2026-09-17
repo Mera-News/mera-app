@@ -186,6 +186,10 @@ export async function handleSaveExtractedFacts(
       groupId: factChoiceGroupId(index, g.options),
       options: g.options,
       questionnaireAttribute: g.questionnaire?.attribute ?? null,
+      // On the SPINE, so deriveThreadItems reads one structured field rather
+      // than re-parsing the raw tool arguments. Carried only -- whether it is
+      // HONOURED is decided at commit time against a confirmed choice.
+      ...(g.replaces ? { replaces: g.replaces } : {}),
     })),
   };
 }

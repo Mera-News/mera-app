@@ -13,7 +13,7 @@
 // cloud batch — the same round trip a multi-fact turn used to make — instead of
 // one batch per card.
 
-import { addFact, getFacts } from '../database/services/fact-service';
+import { addFact, getFacts, replaceFact } from '../database/services/fact-service';
 import { detectFactConflicts } from '@/lib/news-harness/persona-management/fact-conflict';
 import { normalizeStatement } from '@/lib/news-harness/persona-management/fact-rules';
 import { runGeoDerivationSweep } from '../database/services/geo-derivation-service';
@@ -25,6 +25,17 @@ export interface FactChoiceCommit {
   /** The reading the user tapped. */
   statement: string;
   questionnaire?: { level?: number; levelCategory?: string; attribute?: string };
+  /**
+   * The existing fact this one replaces. ONE transaction via `replaceFact`,
+   * never delete-then-add: the two-call form has a window where the old fact's
+   * topics are gone and the new fact does not exist, and a crash there loses
+   * the fact outright.
+   *
+   * A `replaces` pointing at a fact that no longer exists degrades to a plain
+   * ADD rather than throwing -- the recoverable direction, since a duplicate
+   * can be deleted and a lost fact cannot.
+   */
+  replaces?: string;
 }
 
 export interface FactCommitResult {
@@ -65,6 +76,9 @@ export async function commitFactChoices(
   const excluded = new Set(options.excludeFactIds ?? []);
 
   const savedFacts: { id: string; statement: string }[] = [];
+  /** Facts a replacement consumed. They join `excludeFactIds` so a replacement
+   *  cannot raise a conflict card against the very row it replaced. */
+  const replacedFactIds: string[] = [];
   // Enriched with the questionnaire attribute so conflict detection can match on
   // the attribute key (see detectFactConflicts).
   const savedForConflict: {
@@ -87,7 +101,21 @@ export async function commitFactChoices(
     // `choice.questionnaire` is passed through UNCHANGED. resolveUserLocationFact
     // keys on the attribute, so a residence fact that loses it here stops
     // anchoring every future topic run.
-    const saved = await addFact(statement, undefined, choice.questionnaire);
+    //
+    // `topicsStatus: 'pending'` is set AT COMMIT, before the job is enqueued:
+    // addFact otherwise leaves the column NULL, which renders as done, so a
+    // saved fact would flash done while its generation run is still ahead of
+    // it. This path always enqueues, so it always owns that status.
+    const saved = choice.replaces
+      ? await replaceFact(choice.replaces, {
+          statement,
+          questionnaire: choice.questionnaire,
+          topicsStatus: 'pending',
+        })
+      : await addFact(statement, undefined, choice.questionnaire, {
+          topicsStatus: 'pending',
+        });
+    if (choice.replaces) replacedFactIds.push(choice.replaces);
     savedFacts.push({ id: saved.id, statement });
     freshEntries.push({ id: saved.id, statement });
     savedForConflict.push({
@@ -100,7 +128,7 @@ export async function commitFactChoices(
   const conflicts = detectFactConflicts(
     savedForConflict,
     existingFacts
-      .filter((f) => !excluded.has(f.id))
+      .filter((f) => !excluded.has(f.id) && !replacedFactIds.includes(f.id))
       .map((f) => ({
         id: f.id,
         statement: f.statement,
