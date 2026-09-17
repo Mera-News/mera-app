@@ -56,6 +56,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
   starterChips,
   onChipPress,
   blockedMessage,
+  bannerBlocksInput,
   showUnblockControls,
   unblockPending,
   onRequestUnblock,
@@ -366,7 +367,11 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         ref={promptRef}
         onSubmit={onSend}
         placeholder={t('floatingChat.inputPlaceholder')}
-        disabled={isInputDisabled || blockedMessage !== null}
+        // NOT `blockedMessage !== null`. A transport error sets that banner
+        // too, and the error is only cleared by starting a turn — so gating on
+        // the banner meant a failed turn disabled the composer permanently,
+        // with the banner telling the user to try again.
+        disabled={isInputDisabled || bannerBlocksInput}
       />
     </Conversation>
   );

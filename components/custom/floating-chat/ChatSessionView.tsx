@@ -544,6 +544,11 @@ export default function ChatSessionView({
   // Ordering is deliberate: a server block outranks an inference error, and both
   // outrank the topic-plan gate — the gate is a soft "finish this first", not a
   // failure, so it must never mask a real error the user needs to see.
+  // Which of the banner's three causes may also gate the composer. A
+  // transport error is deliberately absent: it clears when a turn starts, so
+  // blocking the input on it is a deadlock, not a safeguard.
+  const bannerBlocksInput = effectiveBlocked || hasUnresolvedTopicPlans;
+
   const blockedMessage = effectiveBlocked
     ? effectiveBlockedReason ?? t('errors.accountRestricted')
     : error
@@ -590,6 +595,7 @@ export default function ChatSessionView({
         starterChips={starterChips}
         onChipPress={handleChipPress}
         blockedMessage={blockedMessage}
+        bannerBlocksInput={bannerBlocksInput}
         showUnblockControls={effectiveBlocked && !!userId}
         unblockPending={unblockPending}
         onRequestUnblock={() => setUnblockModalOpen(true)}

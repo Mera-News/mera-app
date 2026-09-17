@@ -260,8 +260,21 @@ export interface ChatThreadProps {
   /** Shown only when items contain no user/assistant messages. */
   starterChips: StarterChip[];
   onChipPress: (message: string) => void;
-  /** When set, show a banner and disable input. */
+  /** When set, show a banner. Does NOT by itself disable the input — see
+   *  `bannerBlocksInput`. */
   blockedMessage: string | null;
+  /**
+   * Whether the banner's cause also blocks sending.
+   *
+   * These are three different situations wearing one banner, and only two of
+   * them may gate the composer:
+   *   - a server block, and the topic-plan gate: yes, blocking is the point;
+   *   - a TRANSPORT ERROR: no. Its own copy says "try again in a moment",
+   *     and the error is cleared by starting a turn — so disabling the input
+   *     removed the only way out of the state and left the composer dead for
+   *     the rest of the session.
+   */
+  bannerBlocksInput: boolean;
   /**
    * True when the block is a server-authoritative LLM block (not a transient
    * inference error) — gates the unblock-request controls beside the banner.
