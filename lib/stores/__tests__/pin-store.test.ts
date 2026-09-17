@@ -13,6 +13,17 @@ jest.mock('../../security/app-lock-service', () => ({
   setAppLockEnabled: (...a: any[]) => mockSetAppLockEnabled(...a),
 }));
 
+// The one-shot PIN reset runs inside init(). It owns its own suite
+// (security/__tests__/pin-force-reset.test.ts); here it is stubbed so these
+// cases still describe init()'s LOCKING logic for a given stored state. Left
+// real, it clears the very flags every `lock on` case below sets up.
+const mockRunPinForceResetOnce = jest.fn((): Promise<void> => Promise.resolve());
+jest.mock('../../security/pin-force-reset', () => ({
+  // Takes no arguments, so the stub does not spread any — matching the real
+  // signature keeps `tsc` honest about the call site.
+  runPinForceResetOnce: () => mockRunPinForceResetOnce(),
+}));
+
 jest.mock('../../logger', () => ({
   __esModule: true,
   default: { captureException: jest.fn() },
@@ -43,6 +54,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockClearPin.mockResolvedValue(undefined);
   mockSetAppLockEnabled.mockResolvedValue(undefined);
+  mockRunPinForceResetOnce.mockResolvedValue(undefined);
   reset();
 });
 
@@ -84,6 +96,47 @@ describe('init', () => {
     expect(s.locked).toBe(true);
     expect(s.initialized).toBe(true);
     expect(mockClearPin).not.toHaveBeenCalled();
+  });
+
+  it('runs the one-shot PIN reset BEFORE reading the flags', async () => {
+    // Ordering is the whole point. app/index.tsx awaits init() before
+    // resolveLaunchRoute, so a device cleared by the reset must report
+    // lockEnabled:false on the very launch that clears it. Reading first would
+    // route that user to /pin-lock once more on the way through.
+    const order: string[] = [];
+    mockRunPinForceResetOnce.mockImplementation(() => {
+      order.push('reset');
+      return Promise.resolve();
+    });
+    mockIsPinSet.mockImplementation(() => {
+      order.push('isPinSet');
+      return Promise.resolve(false);
+    });
+    mockIsAppLockEnabled.mockImplementation(() => {
+      order.push('isAppLockEnabled');
+      return Promise.resolve(false);
+    });
+
+    await usePinStore.getState().init();
+
+    expect(order[0]).toBe('reset');
+    expect(order).toContain('isAppLockEnabled');
+  });
+
+  it('a throwing reset still leaves the gate OFF rather than blocking launch', async () => {
+    // runPinForceResetOnce is total by contract, but init()'s catch is the
+    // backstop: failing open is correct for a lock, failing closed strands the
+    // user on a screen no entry can satisfy.
+    mockRunPinForceResetOnce.mockRejectedValue(new Error('keychain'));
+    mockIsPinSet.mockResolvedValue(true);
+    mockIsAppLockEnabled.mockResolvedValue(true);
+
+    await usePinStore.getState().init();
+
+    const s = usePinStore.getState();
+    expect(s.locked).toBe(false);
+    expect(s.lockEnabled).toBe(false);
+    expect(s.initialized).toBe(true);
   });
 
   it('cold start with the lock off → not locked (the default for everyone)', async () => {

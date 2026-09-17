@@ -59,6 +59,7 @@ const SECURE_STORE_KEYS = [
   `${APP_SLUG}_pin_record`,
   `${APP_SLUG}_pin_attempts`,
   `${APP_SLUG}_app_lock_enabled`,
+  `${APP_SLUG}_pin_force_reset_v1`,
   `${APP_SLUG}_backup_key`,
   'async_pipeline_privkey',
   'async_inference_pending_job_privkey',

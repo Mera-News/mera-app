@@ -6,6 +6,7 @@ import {
   setAppLockEnabled as persistAppLockEnabled,
 } from '@/lib/security/app-lock-service';
 import { clearPin, isPinSet as readIsPinSet } from '@/lib/security/pin-service';
+import { runPinForceResetOnce } from '@/lib/security/pin-force-reset';
 
 // Re-lock the app when it returns to the foreground after more than this long
 // in the background. Cold start with the lock enabled always locks.
@@ -61,6 +62,12 @@ export const usePinStore = create<PinState>()((set, get) => ({
     let pinSet = false;
     let lockEnabled = false;
     try {
+      // One-shot PIN gate reset (see pin-force-reset.ts). Deliberately BEFORE the
+      // reads below: app/index.tsx awaits init() before resolveLaunchRoute, so a
+      // device cleared here reports lockEnabled:false on the very launch that
+      // clears it and cannot be routed to /pin-lock on the way through.
+      await runPinForceResetOnce();
+
       [pinSet, lockEnabled] = await Promise.all([readIsPinSet(), readIsAppLockEnabled()]);
 
       // Invariant: lock off ⇒ no PIN record. This is what disables the gate for

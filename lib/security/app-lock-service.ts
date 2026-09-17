@@ -9,10 +9,16 @@
 // ABSENT KEY ⇒ FALSE, deliberately. That default is what makes the lock opt-in
 // for users who already set a PIN under the old mandatory flow: they have a
 // record but no flag, so they read as "off" on the first launch after this
-// ships, with no migration step and no version marker to maintain. (Note this
-// is the opposite stance from a capability-style flag like biometrics, where an
-// absent key means "never asked, default on" — here an absent key means "never
-// opted in".)
+// ships. (Note this is the opposite stance from a capability-style flag like
+// biometrics, where an absent key means "never asked, default on" — here an
+// absent key means "never opted in".)
+//
+// That default handled the mandatory→opt-in transition with no migration step.
+// It could NOT handle the second one: pin-force-reset.ts clears this flag once
+// per install, because app/login.tsx had been enrolling users who never opted
+// in and a wrongly-set flag is indistinguishable from a deliberate one. So
+// there IS now exactly one version marker in this area — `_pin_force_reset_v1`
+// — and it is owned by that file. Do not add a second; extend the shape there.
 //
 // A read failure also resolves to false: the alternative is showing a PIN
 // screen to someone who may have no usable PIN, which is an unrecoverable
