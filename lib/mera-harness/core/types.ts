@@ -79,6 +79,28 @@ export type LookupPlaceResult =
   | { status: 'unavailable' }
   | { status: 'too_short'; minChars: 2 };
 
+/**
+ * The place a saved fact carries, as copied back by the model and reconciled
+ * against the candidates the port actually returned.
+ *
+ * An ALIAS of Place, deliberately, rather than a second shape: the chain the
+ * model hands back must be one of the candidates it was given, so a distinct
+ * type would only invite the two to drift.
+ */
+export type PlaceChain = Place;
+
+/** NO statement and NO query: tool arguments sit outside the E2EE envelope and
+ *  the device already holds the user's raw message. */
+export interface FindSimilarFactsArgs {
+  kind?: string;
+  limit?: number;
+}
+
+export interface LookupPlaceArgs {
+  query: string;
+  countryHint?: string;
+}
+
 export type AskChoiceResult =
   | { awaiting: 'user' }
   | { error: 'options must be 2 or 3' };
@@ -190,8 +212,8 @@ export interface AgentToolPort {
    * message, so sending it would only put persona text into a cleartext tool
    * argument for nothing. `kind` is optional; absent searches all kinds.
    */
-  findSimilarFacts(args: { kind?: string; limit?: number }): Promise<FindSimilarFactsResult>;
-  lookupPlace(args: { query: string; countryHint?: string }): Promise<LookupPlaceResult>;
+  findSimilarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult>;
+  lookupPlace(args: LookupPlaceArgs): Promise<LookupPlaceResult>;
   saveExtractedFacts(args: Record<string, unknown>): Promise<Record<string, unknown>>;
   deleteUserFacts(args: { fact_ids: string[] }): Promise<Record<string, unknown>>;
 }
