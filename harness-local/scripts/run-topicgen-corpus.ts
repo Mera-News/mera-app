@@ -218,7 +218,34 @@ async function main(): Promise<number> {
     : null;
   const facts = (stepAFacts ?? cohort.persona.facts).slice(0, args.accept);
   if (facts.length === 0) throw new Error('harness-local: --accept selected no facts.');
-  const userLocation = locationOf(stepAFacts ?? cohort.persona.facts);
+  const personaLocation = locationOf(stepAFacts ?? cohort.persona.facts);
+
+  /**
+   * THE LOCATION A FACT IS JUDGED AGAINST, PER FACT.
+   *
+   * A single persona-wide `userLocation` is wrong for this corpus and it
+   * produced a false finding. The Step A facts are fifteen INDEPENDENT cases,
+   * not one person: tf01 lives in Barcelona, tf05 is "living in Dublin", tf06
+   * is "living in Rotterdam". `locationOf` takes the FIRST location fact, so
+   * every call was told the user lives in Barcelona, including the two whose
+   * own statement names a different host.
+   *
+   * The skill guideline trusts the location it is handed; the one-shot prompt
+   * reads the host out of the fact. So the skill arm emitted "Spain
+   * immigration law reform" and "Poland Spain tax treaty" for facts about
+   * Dublin and Rotterdam, missed the `host` rung 6 times out of 6 against the
+   * control's 0, and that read as a skill defect. It was the corpus handing
+   * the two prompts contradictory inputs.
+   *
+   * A fact that carries its own resolved chain IS its own location.
+   */
+  const locationForFact = (f: CorpusFact & { placeChain?: { locality?: string; admin1?: string | null; countryName?: string } }): string | null => {
+    const pc = f.placeChain;
+    if (pc?.locality) {
+      return [pc.locality, pc.admin1, pc.countryName].filter(Boolean).join(', ');
+    }
+    return personaLocation;
+  };
   const existingTopics = stepAFacts ? [] : cohort.persona.topics.map((t) => t.text);
 
   const run = createRunWriter({ label: args.label });
@@ -315,7 +342,7 @@ async function main(): Promise<number> {
           const calls = buildCloudBatchCallsForFact(
             {
               factStatement: fact.statement,
-              userLocation,
+              userLocation: args.factsFile ? locationForFact(fact) : personaLocation,
               otherFacts,
               totalCount: total,
               excludeTopics,

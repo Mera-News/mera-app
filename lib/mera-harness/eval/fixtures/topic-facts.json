@@ -1,5 +1,5 @@
 {
-  "_note": "One fact per case in skills/persona/expectations/topics.json. The expectations file selects a case by factMatches (AND over lowercase substrings), so these statements are written to match exactly one case each; the runner reports ambiguousCaseMatch rather than guessing if that ever stops being true. placeChain is present only where lookup_place would really have resolved one: residence-capital carries a NULL admin1 and origin-only carries NO chain at all, so the two fallbacks the similarity module documents are exercised by the corpus rather than only by unit tests.",
+  "_note": "One fact per case in skills/persona/expectations/topics.json. The expectations file selects a case by factMatches (AND over lowercase substrings), so these statements are written to match exactly one case each; the runner reports ambiguousCaseMatch rather than guessing if that ever stops being true. placeChain is present only where lookup_place would really have resolved one: residence-capital carries a NULL admin1 and origin-only carries NO chain at all, so the two fallbacks the similarity module documents are exercised by the corpus rather than only by unit tests. PER-FACT LOCATION: these are fifteen INDEPENDENT cases, not one person - tf01 lives in Barcelona while tf05 and tf06 name Dublin and Rotterdam in their own statements. The runner therefore derives each fact's location from its OWN placeChain and falls back to the persona residence only for facts that carry none. A single persona-wide location told every call the user lives in Barcelona and produced a false host-rung failure.",
   "persona": {
     "residence": "Lives in Gràcia, Barcelona, Catalonia, Spain",
     "_why": "The generic cases assert that a hobby fact does not drag in the residence, so the corpus needs a residence for that assertion to mean anything."
@@ -12,8 +12,12 @@
       "questionnaireAttribute": "location: residence",
       "kind": "residence",
       "placeChain": {
-        "neighbourhood": "Gràcia", "locality": "Barcelona", "admin1": "Catalonia",
-        "countryCode": "ES", "countryName": "Spain", "bloc": "EU"
+        "neighbourhood": "Gràcia",
+        "locality": "Barcelona",
+        "admin1": "Catalonia",
+        "countryCode": "ES",
+        "countryName": "Spain",
+        "bloc": "EU"
       }
     },
     {
@@ -23,8 +27,11 @@
       "questionnaireAttribute": "location: residence",
       "kind": "residence",
       "placeChain": {
-        "locality": "Ballyvaughan", "admin1": "County Clare",
-        "countryCode": "IE", "countryName": "Ireland", "bloc": "EU"
+        "locality": "Ballyvaughan",
+        "admin1": "County Clare",
+        "countryCode": "IE",
+        "countryName": "Ireland",
+        "bloc": "EU"
       }
     },
     {
@@ -34,8 +41,11 @@
       "questionnaireAttribute": "location: residence",
       "kind": "residence",
       "placeChain": {
-        "locality": "Reykjavik", "admin1": null,
-        "countryCode": "IS", "countryName": "Iceland", "bloc": "EEA"
+        "locality": "Reykjavik",
+        "admin1": null,
+        "countryCode": "IS",
+        "countryName": "Iceland",
+        "bloc": "EEA"
       }
     },
     {
@@ -52,8 +62,11 @@
       "questionnaireAttribute": "location: origin",
       "kind": "origin",
       "placeChain": {
-        "locality": "Dublin", "admin1": null,
-        "countryCode": "IE", "countryName": "Ireland", "bloc": "EU"
+        "locality": "Dublin",
+        "admin1": null,
+        "countryCode": "IE",
+        "countryName": "Ireland",
+        "bloc": "EU"
       }
     },
     {
@@ -63,8 +76,11 @@
       "questionnaireAttribute": "location: origin",
       "kind": "origin",
       "placeChain": {
-        "locality": "Rotterdam", "admin1": "South Holland",
-        "countryCode": "NL", "countryName": "Netherlands", "bloc": "EU"
+        "locality": "Rotterdam",
+        "admin1": "South Holland",
+        "countryCode": "NL",
+        "countryName": "Netherlands",
+        "bloc": "EU"
       }
     },
     {
@@ -95,8 +111,11 @@
       "questionnaireAttribute": "family: relative",
       "kind": "family",
       "placeChain": {
-        "locality": "Bhopal", "admin1": "Madhya Pradesh",
-        "countryCode": "IN", "countryName": "India", "bloc": "Asia"
+        "locality": "Bhopal",
+        "admin1": "Madhya Pradesh",
+        "countryCode": "IN",
+        "countryName": "India",
+        "bloc": "Asia"
       }
     },
     {
@@ -106,8 +125,11 @@
       "questionnaireAttribute": "family: relative",
       "kind": "family",
       "placeChain": {
-        "locality": "Porto Santo", "admin1": "Madeira",
-        "countryCode": "PT", "countryName": "Portugal", "bloc": "EU"
+        "locality": "Porto Santo",
+        "admin1": "Madeira",
+        "countryCode": "PT",
+        "countryName": "Portugal",
+        "bloc": "EU"
       }
     },
     {
