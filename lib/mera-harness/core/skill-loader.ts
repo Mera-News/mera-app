@@ -53,6 +53,13 @@ export function hasSkill(id: string): boolean {
  * leaf leg carries roughly twice a leaf's own budget. A generic id loads ALONE,
  * with no preamble ahead of it.
  *
+ * Two ids load ALONE rather than composed, and both are correct:
+ *  - `router` has no group at all. It is not a leaf of anything.
+ *  - a leaf whose group ships no `<group>/generic` yet, which is
+ *    `conversation/*` today. Degrading to the bare body is the right
+ *    behaviour: a missing preamble should cost the shared rules, not the
+ *    guideline.
+ *
  * Returns null ONLY for an unknown id. An id that exists with an empty body
  * returns '' -- see skillIds().
  */

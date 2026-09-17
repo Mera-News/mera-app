@@ -48,11 +48,38 @@ describe('composition', () => {
     expect(generic!.split(marker).length - 1).toBe(1);
   });
 
-  it('every leaf composes to strictly more than its own body', () => {
-    for (const id of skillIds()) {
+  it('a leaf composes ONLY when its group actually has a preamble', () => {
+    // The real contract, and weaker than "every non-generic id composes":
+    //  - `router` is STANDALONE. It has no group, it is not a leaf of
+    //    anything, and composing it onto a preamble would be wrong.
+    //  - `conversation/*` currently ships with NO `conversation/generic`, so
+    //    those two load alone as well. The loader degrades to the bare body
+    //    rather than failing, which is the behaviour a group without a
+    //    preamble should get.
+    const ids = skillIds();
+    for (const id of ids) {
       if (isGenericId(id)) continue;
       const composed = loadSkill(id)!;
-      expect(composed.length).toBeGreaterThan(PERSONA_SKILLS[id].length);
+      const own = PERSONA_SKILLS[id].length;
+      const groupGeneric = id.includes('/') ? `${id.split('/')[0]}/generic` : null;
+      const hasPreamble = groupGeneric !== null && (ids as readonly string[]).includes(groupGeneric);
+      if (hasPreamble) expect(composed.length).toBeGreaterThan(own);
+      else expect(composed).toBe(PERSONA_SKILLS[id]);
+    }
+  });
+
+  it('`router` is standalone and is never composed onto anything', () => {
+    expect(loadSkill('router')).toBe(PERSONA_SKILLS.router);
+  });
+
+  it('every group preamble that EXISTS carries the ## Output contract', () => {
+    // The one structural check the loader relies on: it pins the JSON shape
+    // the decoder parses, so a preamble without it silently un-contracts every
+    // leaf in its group.
+    const preambles = skillIds().filter(isGenericId);
+    expect(preambles.length).toBeGreaterThan(0);
+    for (const id of preambles) {
+      expect(PERSONA_SKILLS[id]).toMatch(/^##\s+Output\b/m);
     }
   });
 });
