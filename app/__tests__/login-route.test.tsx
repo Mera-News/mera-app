@@ -25,7 +25,7 @@
 // The suppression MUST release. Outside reauth mode AuthScreen gets no
 // onLoginSuccess, so this Redirect is the ONLY thing that moves a freshly
 // logged-in user off the screen — a permanent suppression would strand them.
-import { render } from '@testing-library/react-native';
+import { act, render } from '@testing-library/react-native';
 import React from 'react';
 
 jest.mock('react-native-css-interop/jsx-runtime', () => {
@@ -38,10 +38,11 @@ jest.mock('react-native-css-interop/jsx-dev-runtime', () => {
 });
 
 const mockRedirect = jest.fn();
+const mockReplace = jest.fn();
 let mockParams: Record<string, string | undefined> = {};
 jest.mock('expo-router', () => ({
     Redirect: ({ href }: any) => { mockRedirect(href); return null; },
-    router: { replace: jest.fn() },
+    router: { replace: (href: string) => mockReplace(href) },
     useLocalSearchParams: () => mockParams,
 }));
 
@@ -51,16 +52,34 @@ jest.mock('@/lib/auth-client', () => ({
     authClient: { useSession: () => ({ data: mockSession, isPending: mockIsPending }) },
 }));
 
+// Capture onLoginSuccess so the reauth tests can drive the handler directly.
+// Outside reauth mode the route passes `undefined`, which is itself asserted.
+let mockOnLoginSuccess: ((userId: string) => void) | undefined;
 jest.mock('@/components/custom/auth/AuthScreen', () => {
     const { View } = require('react-native');
-    return { __esModule: true, default: () => <View testID="auth-screen" /> };
+    return {
+        __esModule: true,
+        default: (props: any) => {
+            mockOnLoginSuccess = props.onLoginSuccess;
+            return <View testID="auth-screen" />;
+        },
+    };
 });
 jest.mock('@/components/custom/ErrorBoundary', () => ({ __esModule: true, default: ({ children }: any) => children }));
 jest.mock('@/components/custom/ErrorFallback', () => ({ FullScreenErrorFallback: () => null }));
-jest.mock('@/lib/database/services/setting-service', () => ({ getSetting: jest.fn(async () => null) }));
-jest.mock('@/lib/security/pin-service', () => ({ clearPin: jest.fn(async () => {}) }));
+const mockGetSetting = jest.fn(async (_k: string): Promise<string | null> => null);
+jest.mock('@/lib/database/services/setting-service', () => ({ getSetting: (k: string) => mockGetSetting(k) }));
+
+// Stable across getState() calls — the old inline `jest.fn()` minted a fresh spy
+// per call, so nothing could be asserted about them.
+const mockClearPin = jest.fn(async () => {});
+const mockSetPinSet = jest.fn();
+const mockSetLockEnabled = jest.fn(async () => {});
+jest.mock('@/lib/security/pin-service', () => ({ clearPin: () => mockClearPin() }));
 jest.mock('@/lib/stores/pin-store', () => ({
-    usePinStore: { getState: () => ({ setPinSet: jest.fn(), setLockEnabled: jest.fn(async () => {}) }) },
+    usePinStore: {
+        getState: () => ({ setPinSet: mockSetPinSet, setLockEnabled: mockSetLockEnabled }),
+    },
 }));
 jest.mock('@/lib/logger', () => ({ __esModule: true, default: { debug: jest.fn() } }));
 
@@ -71,7 +90,18 @@ beforeEach(() => {
     mockParams = {};
     mockSession = null;
     mockIsPending = false;
+    mockOnLoginSuccess = undefined;
+    mockGetSetting.mockResolvedValue(null);
 });
+
+/** Render in reauth mode and fire a successful OTP verify for `userId`. */
+async function reauthWith(reauth: string, userId: string, cachedUserId: string | null) {
+    mockParams = { reauth };
+    mockGetSetting.mockResolvedValue(cachedUserId);
+    render(<LoginScreen />);
+    expect(mockOnLoginSuccess).toBeDefined();
+    await act(async () => { mockOnLoginSuccess!(userId); });
+}
 
 describe('login route — session shortcut', () => {
     it('a live session short-circuits to /logged-in — the gate, never past it', () => {
@@ -127,5 +157,88 @@ describe('login route — session shortcut', () => {
         mockSession = { user: { id: 'u2' } };
         rerender(<LoginScreen />);
         expect(mockRedirect).toHaveBeenCalledWith('/logged-in');
+    });
+});
+
+// ── The reauth destination (app/login.tsx handleReauthSuccess) ───────────────
+//
+// This branched on identity ALONE until 2026-09-17, so every same-user reauth
+// landed on /pin-setup. Only one of the four reauth producers is about the PIN:
+//
+//   app/pin-lock.tsx (Forgot PIN)                    → reauth=pin → /pin-setup
+//   components/custom/ReauthBanner.tsx               → reauth=1   → /logged-in
+//   app/logged-in/index.tsx (identity gate)          → reauth=1   → /logged-in
+//   .../onboarding/OnboardingScreen.tsx → onboarding → reauth=1   → /logged-in
+//
+// The three `reauth=1` producers enrolled users who had never opted into the
+// lock, and completing that setup persisted the opt-in so the launch gate then
+// locked them out on every cold start. mera-app-persona invariant 7.
+describe('login route — reauth destination', () => {
+    it('Forgot PIN (reauth=pin), same user → /pin-setup with the PIN cleared', async () => {
+        await reauthWith('pin', 'u1', 'u1');
+
+        expect(mockReplace).toHaveBeenCalledWith('/pin-setup');
+        expect(mockClearPin).toHaveBeenCalled();
+        expect(mockSetPinSet).toHaveBeenCalledWith(false);
+        // The opt-in stands — they chose the lock, they are replacing the PIN.
+        expect(mockSetLockEnabled).not.toHaveBeenCalled();
+    });
+
+    it('banner reauth (reauth=1), same user → /logged-in and the PIN is UNTOUCHED', async () => {
+        await reauthWith('1', 'u1', 'u1');
+
+        expect(mockReplace).toHaveBeenCalledWith('/logged-in');
+        // The regression. /pin-setup here is what enrolled users who never
+        // opted in, and it is also what completing setup made permanent.
+        expect(mockReplace).not.toHaveBeenCalledWith('/pin-setup');
+        // clearPin ran BEFORE the branch decision, so a user who genuinely had
+        // a PIN and then cancelled out of setup lost it silently. Both halves
+        // of "untouched" are pinned, because either one alone is still a bug.
+        expect(mockClearPin).not.toHaveBeenCalled();
+        expect(mockSetPinSet).not.toHaveBeenCalled();
+        expect(mockSetLockEnabled).not.toHaveBeenCalled();
+    });
+
+    it('a different user → /logged-in with the lock turned off first', async () => {
+        // clearAllStores does not touch the keychain, so without this the new
+        // user meets the previous user's PIN screen on the next cold start.
+        await reauthWith('1', 'u2', 'u1');
+
+        expect(mockSetLockEnabled).toHaveBeenCalledWith(false);
+        expect(mockReplace).toHaveBeenCalledWith('/logged-in');
+        expect(mockReplace).not.toHaveBeenCalledWith('/pin-setup');
+    });
+
+    it('a different user on reauth=pin also goes to /logged-in, never to setup', async () => {
+        // Identity is checked FIRST: arriving from Forgot PIN does not license
+        // resetting a PIN that belongs to whoever was signed in before.
+        await reauthWith('pin', 'u2', 'u1');
+
+        expect(mockSetLockEnabled).toHaveBeenCalledWith(false);
+        expect(mockReplace).toHaveBeenCalledWith('/logged-in');
+        expect(mockReplace).not.toHaveBeenCalledWith('/pin-setup');
+        expect(mockClearPin).not.toHaveBeenCalled();
+    });
+
+    it('no cached user at all → /logged-in, never to setup', async () => {
+        await reauthWith('1', 'u1', null);
+
+        expect(mockReplace).toHaveBeenCalledWith('/logged-in');
+        expect(mockReplace).not.toHaveBeenCalledWith('/pin-setup');
+    });
+
+    it('reauth=pin still counts as reauth mode, so the session shortcut stays off', () => {
+        // If reauthMode missed 'pin', the Redirect would fire on the live
+        // session and bounce Forgot PIN straight back into the app — the PIN
+        // would be unresettable. This is why reauthMode ORs the two values.
+        mockSession = { user: { id: 'u1' } };
+        mockParams = { reauth: 'pin' };
+        render(<LoginScreen />);
+        expect(mockRedirect).not.toHaveBeenCalled();
+    });
+
+    it('outside reauth mode AuthScreen gets no onLoginSuccess at all', () => {
+        render(<LoginScreen />);
+        expect(mockOnLoginSuccess).toBeUndefined();
     });
 });
