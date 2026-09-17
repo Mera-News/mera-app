@@ -1,0 +1,184 @@
+// The replacement disclosure. A `replaces` group destroys a fact and every
+// topic it owns, in one transaction, with no inverse — so the whole point of
+// this suite is that the accept cannot be tapped before the card can say what
+// disappears.
+
+/* eslint-disable @typescript-eslint/no-require-imports */
+import React from 'react';
+import { act, fireEvent, render } from '@testing-library/react-native';
+
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (k: string, o?: Record<string, unknown>) => (o ? `${k}:${JSON.stringify(o)}` : k),
+  }),
+}));
+jest.mock('@/components/ui/text', () => {
+  const { Text } = require('react-native');
+  return { Text };
+});
+jest.mock('@/components/ui/button', () => {
+  const R = require('react');
+  const RN = require('react-native');
+  return {
+    Button: (p: any) =>
+      R.createElement(
+        RN.Pressable,
+        { ...p, disabled: p.isDisabled, accessibilityState: { disabled: !!p.isDisabled } },
+        p.children,
+      ),
+    ButtonText: (p: any) => R.createElement(RN.Text, null, p.children),
+  };
+});
+jest.mock('@expo/vector-icons', () => {
+  const R = require('react');
+  const RN = require('react-native');
+  return { MaterialIcons: (p: any) => R.createElement(RN.View, { ...p, testID: `icon-${p.name}` }) };
+});
+jest.mock('react-native-reanimated', () => {
+  const R = require('react');
+  const RN = require('react-native');
+  return {
+    __esModule: true,
+    default: { View: (p: any) => R.createElement(RN.View, p) },
+    withTiming: (v: unknown) => v,
+  };
+});
+jest.mock('@/components/custom/TranslatableDynamic', () => {
+  const R = require('react');
+  const RN = require('react-native');
+  return { __esModule: true, default: (p: any) => R.createElement(RN.Text, null, p.text) };
+});
+jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn(), hapticSuccess: jest.fn() }));
+jest.mock('@/lib/logger', () => ({ __esModule: true, default: { error: jest.fn() } }));
+
+const mockCommit = jest.fn(async () => ({ savedFacts: [{ id: 'new', statement: 's' }], conflicts: [] }));
+jest.mock('@/lib/chat-tools/fact-commit', () => ({
+  commitFactChoices: (...a: unknown[]) => mockCommit(...(a as [])),
+}));
+jest.mock('../fact-choice-actions', () => ({ resolveGroup: jest.fn() }));
+
+let mockFacts: { id: string; statement: string }[] = [];
+let mockTopics: { id: string; status: string }[] = [];
+let mockFactsThrows = false;
+jest.mock('@/lib/database/services/fact-service', () => ({
+  getFacts: async () => {
+    if (mockFactsThrows) throw new Error('db down');
+    return mockFacts;
+  },
+}));
+jest.mock('@/lib/database/services/topic-service', () => ({
+  getByFact: async () => mockTopics,
+}));
+
+import { FactChoiceCard } from '../FactChoiceCard';
+
+const props = {
+  resultKey: 'm1::0',
+  baseResult: {},
+  groupIndex: 0,
+  groupId: 'g0',
+  options: ['I live in Nieuw-West, Amsterdam'],
+  questionnaireAttribute: null,
+};
+
+const drawReplace = () =>
+  render(<FactChoiceCard {...props} replacesFactId="old-1" />);
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockFactsThrows = false;
+  mockFacts = [{ id: 'old-1', statement: 'Lives in Amsterdam' }];
+  mockTopics = Array.from({ length: 8 }, (_, i) => ({ id: `t${i}`, status: 'active' }));
+});
+
+describe('before the disclosure resolves', () => {
+  it('DISABLES the accept, so a fast tap cannot destroy an unnamed fact', () => {
+    const { getByTestId } = drawReplace();
+    expect(getByTestId('fact-choice-add-0').props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('presses through to nothing while disabled', async () => {
+    const { getByTestId } = drawReplace();
+    await act(async () => {
+      fireEvent.press(getByTestId('fact-choice-add-0'));
+    });
+    expect(mockCommit).not.toHaveBeenCalled();
+  });
+});
+
+describe('once it resolves', () => {
+  it('names the fact and the topic count, and says there is no undo', async () => {
+    const { getByTestId, findByText } = drawReplace();
+    expect(await findByText('Lives in Amsterdam')).toBeTruthy();
+    expect(getByTestId('fact-choice-replaces-0')).toBeTruthy();
+    expect(await findByText('factChoice.replacesTopics:{"count":8}')).toBeTruthy();
+    expect(await findByText('factChoice.replacesNoUndo')).toBeTruthy();
+  });
+
+  it('enables the accept and labels it Replace, never Add', async () => {
+    const { getByTestId, findByText } = drawReplace();
+    await findByText('Lives in Amsterdam');
+    expect(getByTestId('fact-choice-add-0').props.accessibilityState.disabled).toBe(false);
+    expect(await findByText('factChoice.replace')).toBeTruthy();
+  });
+
+  it('commits with `replaces`, so one transaction replaces rather than adds', async () => {
+    const { getByTestId, findByText } = drawReplace();
+    await findByText('Lives in Amsterdam');
+    await act(async () => {
+      fireEvent.press(getByTestId('fact-choice-add-0'));
+    });
+    expect(mockCommit).toHaveBeenCalledWith([
+      expect.objectContaining({ replaces: 'old-1' }),
+    ]);
+  });
+
+  it('counts only ACTIVE topics', async () => {
+    mockTopics = [
+      { id: 'a', status: 'active' },
+      { id: 'b', status: 'retired' },
+    ];
+    const { findByText } = drawReplace();
+    expect(await findByText('factChoice.replacesTopics:{"count":1}')).toBeTruthy();
+  });
+});
+
+describe('when the lookup fails', () => {
+  it('KEEPS the accept disabled rather than falling back to a plain Add', async () => {
+    // Falling back would write a duplicate AND leave the old fact standing:
+    // a silent wrong outcome instead of a visible blocked one.
+    mockFactsThrows = true;
+    const { getByTestId, findByText } = drawReplace();
+    expect(await findByText('factChoice.replacesUnavailable')).toBeTruthy();
+    expect(getByTestId('fact-choice-add-0').props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('says so when the target fact is already gone', async () => {
+    mockFacts = [];
+    const { getByTestId, findByText } = drawReplace();
+    expect(await findByText('factChoice.replacesUnavailable')).toBeTruthy();
+    expect(getByTestId('fact-choice-add-0').props.accessibilityState.disabled).toBe(true);
+  });
+
+  it('Skip still works throughout', async () => {
+    mockFactsThrows = true;
+    const { getByTestId, findByText } = drawReplace();
+    await findByText('factChoice.replacesUnavailable');
+    const { resolveGroup } = require('../fact-choice-actions');
+    await act(async () => {
+      fireEvent.press(getByTestId('fact-choice-dismiss-0'));
+    });
+    expect(resolveGroup).toHaveBeenCalled();
+  });
+});
+
+describe('an ordinary ADD group is untouched', () => {
+  it('shows no disclosure and an enabled Add', () => {
+    const { getByTestId, queryByTestId, queryByText } = render(
+      <FactChoiceCard {...props} replacesFactId={null} />,
+    );
+    expect(queryByTestId('fact-choice-replaces-0')).toBeNull();
+    expect(queryByText('factChoice.replacesNoUndo')).toBeNull();
+    expect(getByTestId('fact-choice-add-0').props.accessibilityState.disabled).toBe(false);
+  });
+});

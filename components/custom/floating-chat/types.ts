@@ -110,6 +110,14 @@ export type ChatThreadItem =
       groupId: string;
       options: string[];
       questionnaireAttribute: string | null;
+      /**
+       * The existing fact this reading would REPLACE, or null to add.
+       *
+       * A replacement destroys the old fact and every topic it owns, in one
+       * transaction, with no inverse. The card must therefore name what would
+       * go BEFORE the tap, and its accept stays disabled until it can.
+       */
+      replacesFactId: string | null;
       /** Set once the user skipped this group: renders the "Not saved" line
        *  with Undo, in place, instead of the readings. */
       dismissed: boolean;
@@ -190,6 +198,25 @@ export type ChatThreadItem =
       interrupted: boolean;
       /** Turn touched persona data, so its settled line is kept in scroll-back. */
       changedData: boolean;
+    }
+  /**
+   * 2 or 3 tap chips from an `ask_choice` call.
+   *
+   * An OFFER, never a modal gate: the composer stays live, so typing past it
+   * is always possible. A tap sends the option text VERBATIM as the user's
+   * next message, and P1's loop reads the structured payload off the turn
+   * state — which is why this card must never write or clear that state.
+   */
+  | {
+      kind: 'ask-choice-card';
+      key: string;
+      /** Rendered only when the parent bubble has no text of its own: the
+       *  model often writes the question as prose AND calls the tool. */
+      question: string | null;
+      options: string[];
+      /** A later user message exists, so the offer is spent. Rendered inert
+       *  rather than removed, so the thread keeps what was offered. */
+      answered: boolean;
     }
   | { kind: 'divider'; key: string; label: string }
   | { kind: 'typing'; key: string };

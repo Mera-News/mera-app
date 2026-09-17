@@ -24,10 +24,12 @@ import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Button, ButtonText } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { commitFactChoices } from '@/lib/chat-tools/fact-commit';
+import { getFacts } from '@/lib/database/services/fact-service';
+import { getByFact } from '@/lib/database/services/topic-service';
 import { hapticLight, hapticSuccess } from '@/lib/haptics';
 import logger from '@/lib/logger';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
   findNodeHandle,
@@ -40,6 +42,9 @@ import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
 const ACCENT = 'rgb(231, 138, 83)';
+// The red already used by the blocked banner in ChatThread. Paired with the
+// word "Replace" and the no-undo sentence: never colour alone.
+const DESTRUCTIVE = '#F87171';
 
 function cardEntering() {
   'worklet';
@@ -68,6 +73,8 @@ export interface FactChoiceCardProps {
   dismissed?: boolean;
   /** From an earlier conversation: render inert, never commit. */
   stale?: boolean;
+  /** The existing fact this reading REPLACES, or null to add. */
+  replacesFactId?: string | null;
 }
 
 export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
@@ -79,6 +86,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   questionnaireAttribute,
   dismissed = false,
   stale = false,
+  replacesFactId = null,
 }) => {
   const { t } = useTranslation();
   // Index 0 is Mera's preferred reading, preselected — so the unambiguous case
@@ -86,6 +94,57 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   const [selected, setSelected] = useState(0);
   const [busy, setBusy] = useState(false);
   const cardRef = useRef<View>(null);
+
+  /**
+   * What a replacement would destroy.
+   *
+   * `null` while it is being read, and it STAYS null if the read fails. Accept
+   * is gated on it, so a card can never offer an irreversible destroy before
+   * it can name the target: a fast tapper would otherwise wipe a fact and its
+   * topics without ever seeing which.
+   */
+  const [replaces, setReplaces] = useState<{ statement: string; topicCount: number } | null>(
+    null,
+  );
+  const [replacesFailed, setReplacesFailed] = useState(false);
+
+  useEffect(() => {
+    if (!replacesFactId) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [facts, topics] = await Promise.all([
+          getFacts(),
+          getByFact(replacesFactId),
+        ]);
+        const target = facts.find((f) => f.id === replacesFactId);
+        if (cancelled) return;
+        if (!target) {
+          // The fact is already gone, so nothing would be destroyed and
+          // `commitFactChoices` degrades this to a plain add. Offering it as a
+          // replacement would name a fact that no longer exists.
+          setReplacesFailed(true);
+          return;
+        }
+        setReplaces({
+          statement: target.statement,
+          topicCount: topics.filter((t) => t.status === 'active').length,
+        });
+      } catch {
+        if (!cancelled) setReplacesFailed(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [replacesFactId]);
+
+  // The rule the whole disclosure turns on: no accept until the card can say
+  // what disappears. A failed read keeps it disabled rather than falling back
+  // to a plain Add, which would write a duplicate AND leave the old fact
+  // standing — a silent wrong outcome instead of a visible blocked one.
+  const isReplace = replacesFactId !== null;
+  const acceptBlocked = isReplace && replaces === null;
 
   // `dismissed` and the derived pending/saved split come from the DERIVER, which
   // reads this group's own slot. This component deliberately no longer decides
@@ -102,7 +161,7 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   };
 
   const handleAdd = async () => {
-    if (busy || stale || dismissed) return;
+    if (busy || stale || dismissed || acceptBlocked) return;
     setBusy(true);
     void hapticLight();
     try {
@@ -114,6 +173,8 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           // residence fact. Dropping it here would silently strip `userLocation`
           // from every future topic run.
           questionnaire: questionnaireAttribute ? { attribute: questionnaireAttribute } : undefined,
+          // ONE transaction in fact-commit, never delete-then-add.
+          ...(replacesFactId ? { replaces: replacesFactId } : {}),
         },
       ]);
       // Only THIS group's slot changes. Every sibling keeps its own state.
@@ -196,7 +257,11 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
   return (
     <Animated.View entering={cardEntering} style={[styles.card, stale && styles.cardSettled]}>
       <View style={styles.headerRow}>
-        <MaterialIcons name="help-outline" size={18} color={ACCENT} />
+        <MaterialIcons
+          name={isReplace ? 'swap-horiz' : 'help-outline'}
+          size={18}
+          color={ACCENT}
+        />
         <Text size="sm" bold style={styles.title}>
           {single ? t('factChoice.titleSingle') : t('factChoice.titleChoose')}
         </Text>
@@ -232,6 +297,45 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
         })}
       </View>
 
+      {/* THE DISCLOSURE. It names the fact and the topic count before the tap,
+          and says plainly that there is no undo — a replacement destroys the
+          old fact and every topic it owns in one transaction with no inverse.
+          The statement is its own node rather than an interpolation because it
+          goes through TranslatableDynamic, which returns a component. */}
+      {isReplace && !stale && (
+        <View style={styles.replaceBox} testID={`fact-choice-replaces-${groupIndex}`}>
+          <View style={styles.replaceHeader}>
+            <MaterialIcons name="warning-amber" size={16} color={DESTRUCTIVE} />
+            <Text size="xs" bold style={styles.replaceLabel}>
+              {replaces ? t('factChoice.replacesLabel') : null}
+            </Text>
+          </View>
+
+          {replaces ? (
+            <>
+              <TranslatableDynamic
+                text={replaces.statement}
+                size="xs"
+                style={styles.replaceStatement}
+                numberOfLines={2}
+              />
+              <Text size="xs" style={styles.replaceDetail} numberOfLines={2}>
+                {t('factChoice.replacesTopics', { count: replaces.topicCount })}
+              </Text>
+              <Text size="xs" style={styles.replaceWarning} numberOfLines={3}>
+                {t('factChoice.replacesNoUndo')}
+              </Text>
+            </>
+          ) : (
+            <Text size="xs" style={styles.replaceDetail} numberOfLines={3}>
+              {replacesFailed
+                ? t('factChoice.replacesUnavailable')
+                : t('factChoice.replacesLoading')}
+            </Text>
+          )}
+        </View>
+      )}
+
       {stale ? (
         <Text size="xs" style={styles.settledSub}>
           {t('factChoice.expired')}
@@ -250,11 +354,13 @@ export const FactChoiceCard: React.FC<FactChoiceCardProps> = ({
           <Button
             testID={`fact-choice-add-${groupIndex}`}
             onPress={handleAdd}
-            isDisabled={busy}
+            isDisabled={busy || acceptBlocked}
             className="flex-1 rounded-full bg-primary-400"
             size="sm"
           >
-            <ButtonText className="text-white text-sm">{t('factChoice.add')}</ButtonText>
+            <ButtonText className="text-white text-sm">
+              {isReplace ? t('factChoice.replace') : t('factChoice.add')}
+            </ButtonText>
           </Button>
         </View>
       )}
@@ -289,6 +395,17 @@ const styles = StyleSheet.create({
     borderColor: ACCENT,
   },
   undoText: { color: ACCENT },
+  replaceBox: {
+    gap: 3,
+    paddingTop: 8,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  replaceHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  replaceLabel: { color: DESTRUCTIVE },
+  replaceStatement: { color: 'rgb(210, 210, 210)', marginLeft: 22 },
+  replaceDetail: { color: 'rgb(190, 190, 190)', marginLeft: 22 },
+  replaceWarning: { color: DESTRUCTIVE, marginLeft: 22, marginTop: 2 },
   rows: { gap: 6 },
   optionRow: {
     flexDirection: 'row',

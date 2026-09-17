@@ -288,3 +288,45 @@ describe('fact-choice group derivation', () => {
     expect(kinds(items)).not.toContain('fact-choice-bulk-row');
   });
 });
+
+describe('replacement groups and the bulk row', () => {
+  // `THREE` above is scoped to its own describe; this block needs its own.
+  const TRIO = [['Lives in Hoorn'], ['Works as a farmer'], ['Parents in Malaga']];
+
+  it('EXCLUDES a replacement from "Add all", and from the count that shows it', () => {
+    // "Add all" performing an irreversible destroy on facts the user never
+    // looked at individually is consent fabricated in bulk. Two plain groups
+    // plus one replacement must offer the row over the two plain ones only.
+    const base = stagedResult(TRIO);
+    const groups = base.pendingFacts as { replaces?: string }[];
+    groups[2].replaces = 'old-1';
+
+    const items = itemsFor(base);
+    const bulk = items.find((i) => i.kind === 'fact-choice-bulk-row') as
+      | Extract<ChatThreadItem, { kind: 'fact-choice-bulk-row' }>
+      | undefined;
+
+    expect(bulk).toBeDefined();
+    expect(bulk?.groups).toHaveLength(2);
+    expect(bulk?.groups.map((g) => g.groupIndex)).toEqual([0, 1]);
+
+    // The replacement still gets its own card, carrying what it would destroy.
+    const cards = items.filter(
+      (i): i is Extract<ChatThreadItem, { kind: 'fact-choice-card' }> =>
+        i.kind === 'fact-choice-card',
+    );
+    expect(cards).toHaveLength(3);
+    expect(cards[2].replacesFactId).toBe('old-1');
+    expect(cards[0].replacesFactId).toBeNull();
+  });
+
+  it('emits NO bulk row when only one plain group is left beside replacements', () => {
+    // Below two bulkable groups the row is not worth its own risk surface.
+    const base = stagedResult(TRIO);
+    const groups = base.pendingFacts as { replaces?: string }[];
+    groups[1].replaces = 'old-1';
+    groups[2].replaces = 'old-2';
+
+    expect(kinds(itemsFor(base))).not.toContain('fact-choice-bulk-row');
+  });
+});

@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { PopoverPhaseContext } from './ChatPopover';
 import AgentStepsBox from './AgentStepsBox';
 import ArticleContextCard from './ArticleContextCard';
+import AskChoiceCard from './AskChoiceCard';
 import FactCard from './FactCard';
 import OptimisationPlanCard from './OptimisationPlanCard';
 import ProposalCard from './ProposalCard';
@@ -151,6 +152,18 @@ const ChatThread: React.FC<ChatThreadProps> = ({
           />
         );
 
+      case 'ask-choice-card':
+        return (
+          <AskChoiceCard
+            question={item.question}
+            options={item.options}
+            answered={item.answered}
+            // The thread's existing send, i.e. ChatSessionView.handleSend —
+            // the one funnel every gate already sits on.
+            onSend={onSend}
+          />
+        );
+
       case 'fact-card':
         return <FactCard action={item.action} statements={item.statements} />;
 
@@ -174,6 +187,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             questionnaireAttribute={item.questionnaireAttribute}
             dismissed={item.dismissed}
             stale={item.stale}
+            replacesFactId={item.replacesFactId}
           />
         );
 

@@ -568,7 +568,6 @@ function emitFactChoiceGroups(
 ): void {
   const resultKey = `${messageId}::${idx}`;
   const groups = readPendingGroups(result);
-  const pending: ChatThreadItem[] = [];
   let lastPendingAt = -1;
 
   for (const group of groups) {
@@ -585,6 +584,7 @@ function emitFactChoiceGroups(
         groupId,
         options: group.options,
         questionnaireAttribute: group.questionnaireAttribute,
+        replacesFactId: group.replaces ?? null,
         dismissed: false,
         // A card derived from an EARLIER conversation can never be committed —
         // its context is gone — so it renders inert and, crucially, is not
@@ -593,7 +593,6 @@ function emitFactChoiceGroups(
         stale,
       });
       lastPendingAt = cards.length - 1;
-      pending.push(cards[cards.length - 1]);
       continue;
     }
 
@@ -607,6 +606,7 @@ function emitFactChoiceGroups(
         groupId,
         options: resolution.options,
         questionnaireAttribute: resolution.questionnaireAttribute,
+        replacesFactId: group.replaces ?? null,
         dismissed: true,
         stale,
       });
@@ -648,20 +648,28 @@ function emitFactChoiceGroups(
   // Bulk row: INLINE, immediately after the last pending card of this group, and
   // only while 2+ remain pending. Spliced rather than appended so it cannot end
   // up below an already-resolved group's cards.
-  if (pending.length >= 2 && !stale && lastPendingAt >= 0) {
+  //
+  // A REPLACEMENT GROUP IS EXCLUDED, from the row and from the count that
+  // decides whether the row renders at all. "Add all" performing an
+  // irreversible destroy on facts the user never looked at individually is
+  // consent fabricated in bulk — the same shape as forcing a tool call the
+  // user never asked for. A replacement has to be tapped on its own card,
+  // where what it destroys is named.
+  const bulkable = groups.filter(
+    (g) => resolutions[groupIdOf(g)] === undefined && !g.replaces,
+  );
+  if (bulkable.length >= 2 && !stale && lastPendingAt >= 0) {
     cards.splice(lastPendingAt + 1, 0, {
       kind: 'fact-choice-bulk-row',
       key: `fact-choice-bulk-${messageId}-${idx}`,
       resultKey,
       baseResult: result,
-      groups: groups
-        .filter((g) => resolutions[groupIdOf(g)] === undefined)
-        .map((g) => ({
-          groupId: groupIdOf(g),
-          groupIndex: g.index,
-          options: g.options,
-          questionnaireAttribute: g.questionnaireAttribute,
-        })),
+      groups: bulkable.map((g) => ({
+        groupId: groupIdOf(g),
+        groupIndex: g.index,
+        options: g.options,
+        questionnaireAttribute: g.questionnaireAttribute,
+      })),
     });
   }
 
@@ -830,6 +838,7 @@ function emitMessage(
   toolCallResults: Record<string, Record<string, unknown>> = {},
   stale = false,
   boxes?: Map<string, AgentStepsItem>,
+  answeredAsk = false,
 ): void {
   // A hidden turn is the model's business only — it produces no bubble and no
   // cards. Filtered here rather than at the call sites so every source (live,
@@ -859,6 +868,28 @@ function emitMessage(
         });
         return;
       }
+      // ask_choice: chips under this bubble. Derived from the tool INPUT, and
+      // `answered` is decided by the caller, which is the only place that can
+      // see whether a later user message exists.
+      if (tc.name === 'ask_choice') {
+        const askInput = asRecord(tc.input) ?? {};
+        const options = toStringArray(askInput.options).slice(0, 3);
+        if (options.length >= 2) {
+          const question =
+            typeof askInput.question === 'string' ? askInput.question.trim() : '';
+          cards.push({
+            kind: 'ask-choice-card',
+            key: `ask-choice-${message.id}-${idx}`,
+            // Suppressed when the bubble already carries the question as
+            // prose, which the model commonly does alongside the call.
+            question: message.content.trim().length > 0 || !question ? null : question,
+            options,
+            answered: answeredAsk,
+          });
+        }
+        return;
+      }
+
       const card = deriveCard(tc);
       if (card) {
         cards.push({
@@ -1050,7 +1081,16 @@ export function deriveThreadItems(opts: {
     }
     prevConversationId = persisted.conversationId;
     // stale: true — an earlier conversation's card can never be committed.
-    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults, true, historyBoxes);
+    // An earlier conversation's offer can never be taken: always inert.
+    emitMessage(
+      out,
+      toConversationMessage(persisted),
+      'hist',
+      toolCallResults,
+      true,
+      historyBoxes,
+      true,
+    );
   }
 
   // --- Divider between OLDER conversations and the current one ---
@@ -1067,6 +1107,24 @@ export function deriveThreadItems(opts: {
   // They are not stale — a resumed current-conversation turn is still the live
   // one, which is why the discriminator here is `stale` and never the
   // 'hist' | 'live' key prefix (resumed messages carry the 'hist' prefix).
+  // Assistant messages that a later USER message follows. An ask_choice offer
+  // on one of these is spent: the user has moved on, by tapping a chip or by
+  // typing past it. Derived purely, so no store field records "answered".
+  const liveSequence = [
+    ...sortedResume.map((m) => toConversationMessage(m)),
+    ...live.filter((m) => !resumeIds.has(m.id)),
+  ];
+  const answeredAskIds = new Set<string>();
+  let sawLaterUser = false;
+  for (let i = liveSequence.length - 1; i >= 0; i--) {
+    const m = liveSequence[i];
+    if (m.role === 'user' && !m.hidden) {
+      sawLaterUser = true;
+      continue;
+    }
+    if (sawLaterUser) answeredAskIds.add(m.id);
+  }
+
   const liveBoxes = buildTurnBoxes(
     [
       ...sortedResume.map((m) => ({ message: toConversationMessage(m) })),
@@ -1078,7 +1136,15 @@ export function deriveThreadItems(opts: {
   for (const persisted of sortedResume) {
     // Resumed CURRENT-conversation messages are live for this purpose: their
     // cards are still answerable, so they are not stale.
-    emitMessage(out, toConversationMessage(persisted), 'hist', toolCallResults, false, liveBoxes);
+    emitMessage(
+      out,
+      toConversationMessage(persisted),
+      'hist',
+      toolCallResults,
+      false,
+      liveBoxes,
+      answeredAskIds.has(persisted.id),
+    );
   }
 
   // --- Intro pseudo-message: suppressed once the conversation has resumed
@@ -1095,7 +1161,15 @@ export function deriveThreadItems(opts: {
   // --- Live session (skip anything already rendered via resume) ---
   for (const message of live) {
     if (resumeIds.has(message.id)) continue;
-    emitMessage(out, message, 'live', toolCallResults, false, liveBoxes);
+    emitMessage(
+      out,
+      message,
+      'live',
+      toolCallResults,
+      false,
+      liveBoxes,
+      answeredAskIds.has(message.id),
+    );
   }
 
   // --- Typing indicator ---
