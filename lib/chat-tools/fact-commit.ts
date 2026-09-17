@@ -24,6 +24,10 @@ import { triggerTopicGeneration } from './tool-handlers';
 export interface FactChoiceCommit {
   /** The reading the user tapped. */
   statement: string;
+  /** The topic guideline the chat turn chose for this fact. Carried through to
+   *  the queued generation job so the guideline that shaped the fact also
+   *  shapes its topics. */
+  skillId?: string;
   questionnaire?: { level?: number; levelCategory?: string; attribute?: string };
   /**
    * The existing fact this one replaces. ONE transaction via `replaceFact`,
@@ -117,7 +121,7 @@ export async function commitFactChoices(
         });
     if (choice.replaces) replacedFactIds.push(choice.replaces);
     savedFacts.push({ id: saved.id, statement });
-    freshEntries.push({ id: saved.id, statement });
+    freshEntries.push({ id: saved.id, statement, ...(choice.skillId ? { skillId: choice.skillId } : {}) });
     savedForConflict.push({
       id: saved.id,
       statement,

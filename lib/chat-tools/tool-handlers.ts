@@ -226,8 +226,16 @@ export function isTopicGenerationInFlight(factId: string): boolean {
  * sequential llama.rn access. Fire-and-forget — errors are logged, never
  * thrown. Shared by chat fact-saving and the proposal executor.
  */
+export interface TopicGenEntry {
+  id: string;
+  statement: string;
+  /** The topic guideline the CHAT TURN chose for this fact, e.g.
+   *  `topics/residence`. Absent keeps the shipped prompt. */
+  skillId?: string;
+}
+
 export function triggerTopicGeneration(
-  savedFactEntries: Array<{ id: string; statement: string }>,
+  savedFactEntries: TopicGenEntry[],
 ): void {
   void startTopicGeneration(savedFactEntries);
 }
@@ -238,16 +246,47 @@ export function triggerTopicGeneration(
  * disabled for the real duration instead of guessing. Never rejects.
  */
 export async function startTopicGeneration(
-  savedFactEntries: Array<{ id: string; statement: string }>,
+  savedFactEntries: TopicGenEntry[],
 ): Promise<void> {
   if (savedFactEntries.length === 0) return;
 
   const useCloud =
     useMeraProtocolStore.getState().processingMode === ProcessingMode.Cloud;
 
+  // A fact whose kind the chat turn chose runs the SKILL-GUIDED path, and that
+  // path is queued rather than inline.
+  const skillGuided = savedFactEntries.filter((e) => useCloud && e.skillId);
+  const shipped = savedFactEntries.filter((e) => !(useCloud && e.skillId));
+
+  // ONE JOB PER FACT, on the PERSISTED queue. The cloud path used to make a
+  // single in-memory batch call inside the chat turn, so a generation started
+  // on an accept died with the app and left nothing to resume; a queued job
+  // survives, and InferenceQueue.start() already recovers crashed ones.
+  for (const entry of skillGuided) {
+    hasPendingJob('topic_gen', 'factId', entry.id)
+      .then((exists) => {
+        if (exists) return;
+        return enqueueJob('topic_gen', {
+          factId: entry.id,
+          factStatement: entry.statement,
+          useCloud: true,
+          skillId: entry.skillId,
+          // Deliberately NO excludeTopics: the handler reads the live lists at
+          // RUN time. A snapshot here is durable and stale by the time a
+          // sibling job has run.
+        }).then(() => inferenceQueue.notify());
+      })
+      .catch((err: unknown) =>
+        logger.warn('Failed to enqueue skill-guided topic gen', { error: String(err) }),
+      );
+  }
+
+  if (shipped.length === 0) return;
+
   if (useCloud) {
-    // Cloud path: single batch call for all facts, minus any already running.
-    const entries = claimTopicGen(savedFactEntries);
+    // Cloud path, shipped prompt: single batch call for all facts, minus any
+    // already running.
+    const entries = claimTopicGen(shipped);
     if (entries.length === 0) return;
     try {
       await batchGenerateTopics(entries);
@@ -263,7 +302,7 @@ export async function startTopicGeneration(
     }
   } else {
     // Local path: enqueue individual jobs for sequential llama.rn access
-    for (const entry of savedFactEntries) {
+    for (const entry of shipped) {
       hasPendingJob('topic_gen', 'factId', entry.id).then((exists) => {
         if (!exists) {
           enqueueJob('topic_gen', {
@@ -327,6 +366,7 @@ async function clearTopicGenError(factId: string): Promise<void> {
 export async function retryTopicGeneration(
   factId: string,
   factStatement: string,
+  skillId?: string,
 ): Promise<void> {
   if (inFlightCloudTopicGen.has(factId)) return; // fast path: already running
   try {
@@ -337,7 +377,7 @@ export async function retryTopicGeneration(
       error: String(err),
     });
   }
-  await startTopicGeneration([{ id: factId, statement: factStatement }]);
+  await startTopicGeneration([{ id: factId, statement: factStatement, skillId }]);
 }
 
 /**
