@@ -2,6 +2,7 @@
 id: topics/residence
 name: "Residence topics"
 description: "Turns a residence fact into news topics along its place chain, plus the daily round."
+routable: false
 when:
   - "the fact says where the user themselves lives"
   - "signal: the statement opens with Lives in / Moved to / Based in / Studies in"
@@ -90,3 +91,5 @@ moves to the region rung rather than being dropped.
 
 Read the shapes, not the places. A fact naming a different country must produce none of these
 strings.
+
+Reply with the JSON array and nothing else. No sentence before it, none after.

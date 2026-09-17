@@ -2,6 +2,7 @@
 id: topics/family
 name: "Family topics"
 description: "Turns a relative, household or life-event fact into topics that stay where the fact put them."
+routable: false
 when:
   - "the fact names a partner, child, parent, sibling or care duty"
   - "the fact says where a relative lives or is staying"
@@ -75,3 +76,5 @@ and power. Six is the honest length; the ceiling of 8 is not a target.
 ```
 
 Read the shape, not the place.
+
+Reply with the JSON array and nothing else. No sentence before it, none after.

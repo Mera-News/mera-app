@@ -2,6 +2,7 @@
 id: conversation/correction
 name: "Corrections"
 description: "Handles the user saying Mera got something wrong, and fixes exactly that one thing."
+routable: true
 when:
   - "router chose fact_update and the user is disputing what Mera produced"
   - "trigger phrases: no, that is not what I said / that is wrong / why did you save that / remove that / I did not mean that"

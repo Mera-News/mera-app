@@ -2,6 +2,7 @@
 id: facts/profession
 name: "Profession facts"
 description: "Extracts what the user does for a living, at the specificity that makes it retrievable."
+routable: true
 when:
   - "router chose new_fact or fact_update with subject profession"
   - "trigger phrases: I work / I am a / my job / my employer / I study / I am training as"

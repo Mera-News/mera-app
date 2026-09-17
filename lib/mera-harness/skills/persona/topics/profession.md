@@ -2,6 +2,7 @@
 id: topics/profession
 name: "Profession topics"
 description: "Turns a job, field or employer fact into field news, then its national and bloc flavours."
+routable: false
 when:
   - "the fact names what the user does for a living, their employer, field or industry"
   - "trigger phrases: works as / works at / senior / engineer / nurse / teacher / studying toward"
@@ -72,3 +73,5 @@ excluded, so the national band goes to pay and recruitment instead.
 ```
 
 Read the shapes, not the field. A software or legal fact must produce none of these strings.
+
+Reply with the JSON array and nothing else. No sentence before it, none after.

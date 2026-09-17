@@ -53,9 +53,17 @@ describe('index.generated.ts', () => {
       // caused by the edit and not by the copy.
       expect(before).toBe(fs.readFileSync(outFileFor(SKILLS_ROOT), 'utf8'));
 
+      // The edit must leave the skill VALID, so this test measures staleness and
+      // not validity. Appending at the end breaks the closing-line rule every
+      // topic body has to satisfy, and the generator then throws before it can
+      // compare anything. Insert above that line instead.
       const victim = path.join(personaDirFor(tmp), 'topics', 'family.md');
       const original = fs.readFileSync(victim, 'utf8');
-      fs.writeFileSync(victim, `${original}\nOne more sentence nobody regenerated.\n`, 'utf8');
+      const closer = 'Reply with the JSON array and nothing else.';
+      const at = original.lastIndexOf(closer);
+      expect(at).toBeGreaterThan(-1);
+      const edited = `${original.slice(0, at)}One more sentence nobody regenerated.\n\n${original.slice(at)}`;
+      fs.writeFileSync(victim, edited, 'utf8');
 
       const after = generateModuleText(tmp);
       expect(after).not.toBe(before);

@@ -2,6 +2,7 @@
 id: facts/origin
 name: "Origin facts"
 description: "Extracts where the user is from and composes it with where they live into one fact."
+routable: true
 when:
   - "router chose new_fact or fact_update with subject origin"
   - "trigger phrases: originally from / I am from / grew up in / my heritage / expat / migrant / moved here from"

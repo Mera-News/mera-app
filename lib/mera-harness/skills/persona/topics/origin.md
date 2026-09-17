@@ -2,6 +2,7 @@
 id: topics/origin
 name: "Origin topics"
 description: "Turns a country-of-origin or diaspora fact into topics that reach someone living elsewhere."
+routable: false
 when:
   - "the fact names where the user is from while they live somewhere else"
   - "trigger phrases: originally from / heritage / born in / expat from / diaspora / moved here from"
@@ -79,3 +80,5 @@ honest length here; the ceiling of 10 is not a target.
 
 Read the shapes, never the countries. A fact naming a different origin or a different host must
 produce none of these strings.
+
+Reply with the JSON array and nothing else. No sentence before it, none after.

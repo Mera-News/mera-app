@@ -2,6 +2,7 @@
 id: conversation/question
 name: "Questions and small talk"
 description: "Answers a question, or handles a greeting or an off-topic turn, without extracting anything."
+routable: true
 when:
   - "router chose question or chat"
   - "the turn asks about the news, about Mera itself, or about what Mera holds"

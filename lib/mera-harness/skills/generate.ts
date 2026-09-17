@@ -66,11 +66,19 @@ const DELIBERATION_BANNED = [
   'reason about', 'consider whether', 'think through', 'weigh whether', 'decide based on',
 ];
 
+/** Every topics/* body ends on this, verbatim. See the check in readSkills. */
+const TOPIC_CLOSING_LINE =
+  'Reply with the JSON array and nothing else. No sentence before it, none after.';
+
 const EM_DASH = '—';
 const EN_DASH = '–';
 
 interface Skill {
   id: SkillId;
+  /** Is this skill a destination the router may choose? True for facts/* and
+   *  conversation/*. False for the router itself and for every topics/* skill,
+   *  which are reached by the background topic call and never by a route. */
+  routable: boolean;
   name: string;
   description: string;
   when: string[];
@@ -98,7 +106,7 @@ function walk(dir: string): string[] {
  * Frontmatter reader. Deliberately NOT a YAML library and deliberately not a
  * split on every colon: `description` is a sentence and will contain one.
  */
-function parseFrontmatter(file: string, text: string): Omit<Skill, 'id' | 'body'> & { id: string; body: string } | null {
+function parseFrontmatter(file: string, text: string): Omit<Skill, 'id'> & { id: string } | null {
   if (!text.startsWith('---\n')) { fail(file, 1, 'file must open with a --- frontmatter fence'); return null; }
   const end = text.indexOf('\n---\n', 3);
   if (end === -1) { fail(file, 1, 'frontmatter fence is never closed'); return null; }
@@ -109,6 +117,7 @@ function parseFrontmatter(file: string, text: string): Omit<Skill, 'id' | 'body'
   const body = text.slice(end + 5);
 
   const scalars: Record<string, string> = {};
+  const bools: Record<string, boolean> = {};
   const lists: Record<string, string[]> = {};
   let current: string | null = null;
 
@@ -129,6 +138,10 @@ function parseFrontmatter(file: string, text: string): Omit<Skill, 'id' | 'body'
     }
     const listKey = /^(when|outputs|examples):$/.exec(raw);
     if (listKey) { current = listKey[1]; lists[current] = lists[current] ?? []; continue; }
+    const boolKey = /^routable: (true|false)$/.exec(raw);
+    if (boolKey) { current = null; bools.routable = boolKey[1] === 'true'; continue; }
+    if (/^routable:/.test(raw)) { fail(file, ln, 'routable must be exactly true or false'); current = null; continue; }
+
     const scalarKey = /^(id|name|description): (.*)$/.exec(raw);
     if (scalarKey) {
       current = null;
@@ -145,10 +158,12 @@ function parseFrontmatter(file: string, text: string): Omit<Skill, 'id' | 'body'
   }
 
   for (const k of ['id', 'name', 'description']) if (!scalars[k]) fail(file, null, `missing required key: ${k}`);
+  if (bools.routable === undefined) fail(file, null, 'missing required key: routable');
   for (const k of ['when', 'outputs']) if (!lists[k]?.length) fail(file, null, `missing or empty required list: ${k}`);
 
   return {
-    id: scalars.id ?? '', name: scalars.name ?? '', description: scalars.description ?? '',
+    id: scalars.id ?? '', routable: bools.routable ?? false,
+    name: scalars.name ?? '', description: scalars.description ?? '',
     when: lists.when ?? [], outputs: lists.outputs ?? [], examples: lists.examples ?? [], body,
   };
 }
@@ -197,6 +212,14 @@ function readSkills(personaDir: string): Skill[] {
       fail(file, null, 'has an examples list but no ```json worked example in the body');
     }
 
+    // Declared in the file so a person reading it knows, and checked here so a
+    // typo cannot silently drop a skill out of the router's index or push a
+    // topics guideline into it.
+    const expectedRoutable = pathId.startsWith('facts/') || pathId.startsWith('conversation/');
+    if (parsed.routable !== expectedRoutable) {
+      fail(file, null, `routable is ${parsed.routable} but "${pathId}" must be ${expectedRoutable}: only facts/* and conversation/* are router destinations`);
+    }
+
     const required = PREAMBLE_SECTIONS[pathId];
     if (required) for (const h of required) {
       if (!body.includes(`\n${h}`)) fail(file, null, `preamble is missing its required "${h}" section`);
@@ -208,6 +231,14 @@ function readSkills(personaDir: string): Skill[] {
       }
       const noFences = body.replace(/```[\s\S]*?```/g, '');
       if (noFences.includes('?')) fail(file, null, 'topic body asks a question outside a fenced example; a topic call has no reader to answer it');
+      // The leaf is concatenated AFTER the preamble, so the leaf's last line is
+      // the last thing the model reads before answering. Measured: reasoning
+      // prose wrapped the array in 42% of rows, which is unparseable rather
+      // than merely worse, so every topic body ends on the same closing line.
+      const lastLine = (body.trim().split('\n').filter((l) => l.trim()).pop() ?? '').trim();
+      if (lastLine !== TOPIC_CLOSING_LINE) {
+        fail(file, null, `topic body must end with the closing line, not ${JSON.stringify(lastLine.slice(0, 60))}`);
+      }
     }
     if (pathId === 'router' || pathId.startsWith('facts/')) {
       for (const w of DELIBERATION_BANNED) {
@@ -280,6 +311,7 @@ function render(skills: Skill[]): string {
     L.push('  {');
     L.push(`    id: ${JSON.stringify(s.id)},`);
     L.push(`    description: ${JSON.stringify(s.description)},`);
+    L.push(`    routable: ${s.routable},`);
     L.push(`    when: [${s.when.map((w) => JSON.stringify(w)).join(', ')}],`);
     L.push(`    examples: [${s.examples.map((e) => JSON.stringify(e)).join(', ')}],`);
     L.push('  },');

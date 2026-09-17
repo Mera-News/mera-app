@@ -2,6 +2,7 @@
 id: router
 name: "Router"
 description: "Reads one user turn and decides which persona skill handles it."
+routable: false
 when:
   - "every persona-agent turn, before anything else"
 outputs:
@@ -25,9 +26,8 @@ all of that on the next turn.
 A turn that ends without a `load_skill` call is silence on the user's screen. Always call it.
 
 ## The acknowledgement
-Open with one short sentence repeating back what you heard, in the reader's own words. It is the
-first thing they see, and it lands while the lookups still run, so the wait sits behind text instead
-of a spinner.
+Open with one short sentence repeating back what you heard, in their own words. It is the first
+thing they see, and it lands while the lookups still run, so the wait sits behind text.
 
 - "Got it, an expat from India."
 - "Nieuw-West. One moment."
@@ -86,6 +86,10 @@ Subject tie-breaks:
 
 ## Step 3: the id
 
+The index lists **destinations only**: the skills a route may land on. Not this router, and not the
+topic guidelines, which a background call reaches and a route never does. Every id in the index is
+a legal answer and nothing outside it is.
+
 | Intent | Load |
 |---|---|
 | new_fact | `facts/<subject>` |
@@ -102,17 +106,35 @@ questions, and branches internally. There is no separate chat skill.
 The `<context>` state line carries `answerPending`. You do not compute it and you do not send it:
 `load_skill` takes an id and nothing else.
 
-When `answerPending` is false, the previous turn asked something this turn did not answer. Route to a
-skill that can **offer** (a `facts/*` id), never to `conversation/question`, which would ask again.
-Two questions in a row reads as an interrogation and the second is rarely answered either.
+**The test, applied literally.** If the state line says `answerPending: false`:
 
-Where the unanswered question was a replacement, the loaded skill's default is **add both, never
-replace**. A fact the user can remove is recoverable; one deleted on a guess is not. Same reason
-Step 1 prefers `new_fact` over `chat`.
+1. Your reply must NOT end with a question mark.
+2. You must NOT call `ask_choice`.
+3. The id you load must be a `facts/*` id, never `conversation/question`.
+
+Check your reply against 1 and 2 before you send it. If it fails either, delete the question and
+state what you understood instead.
+
+`answerPending: false` means the previous turn asked something and this turn did not answer it.
+Asking again reads as an interrogation, and the second question is answered even less often than
+the first. Where the unanswered question was a replacement, the loaded skill's default is **add
+both, never replace**. A fact the user can remove is recoverable; one deleted on a guess is not.
+Same reason Step 1 prefers `new_fact` over `chat`.
+
+## The only tools that exist
+Five, and no others:
+
+`load_skill` · `saveExtractedFacts` · `find_similar_facts` · `lookup_place` · `ask_choice`
+
+There is no `add_fact`, no `save_fact`, no `web_search`, no `update_profile`, no `get_facts`. A name
+outside those five does not exist, and calling it achieves nothing: the turn ends and the user sees
+silence.
 
 ## Never
 - Never answer the user yourself past the acknowledgement. The loaded skill answers.
 - Never call `load_skill` twice in one turn.
-- Never call `saveExtractedFacts`, `lookup_place` or `find_similar_facts`. Those belong to the
-  loaded skill.
+- Never call any of the other four. They belong to the loaded skill.
 - Never use an em dash or an en dash.
+
+## Output
+One acknowledgement sentence, then one `load_skill` call carrying an id and nothing else.

@@ -2,6 +2,7 @@
 id: facts/residence
 name: "Residence facts"
 description: "Extracts where the user lives, resolves the place to a full chain, and offers it."
+routable: true
 when:
   - "router chose new_fact or fact_update with subject residence"
   - "trigger phrases: I live in / I moved to / I am based in / I study in / my flat / my neighbourhood"

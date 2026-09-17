@@ -2,6 +2,7 @@
 id: topics/generic
 name: "Topic rules"
 description: "The shared rules every topic run follows, and the whole guideline for a plain interest fact."
+routable: false
 when:
   - "always, ahead of any topics leaf"
   - "alone, when the fact is a hobby, sport, opinion, possession or media habit"
@@ -17,11 +18,6 @@ examples:
 
 You turn ONE user fact into news search topics. The fact, the persona's other facts, their existing
 topics and their declined topics all arrive in the message below. Your whole answer is a JSON array.
-
-## Output
-A JSON array of strings and nothing else. No prose before it, none after it, no code fence. Each
-topic is 2 to 5 words and reads the way a newsroom labels a desk. `[]` is a valid answer and is the
-right one whenever the fact yields nothing honest.
 
 ## The count is a ceiling
 The number you are given is the most you may emit, never a quota. Fewer is correct. None is correct.
@@ -96,3 +92,13 @@ Fact: "Collects vinyl records"
 ```json
 ["vinyl pressing shortage", "record label disputes", "streaming royalty rules", "record shop closures"]
 ```
+
+## Output
+A JSON array of strings. Each topic is 2 to 5 words and reads the way a newsroom labels a desk.
+`[]` is a valid answer and is the right one whenever the fact yields nothing honest.
+
+Do not explain your choices. Do not restate the fact, do not name the rules you applied, and do not
+wrap the array in a code fence. A sentence around the array makes the whole answer unparseable, and
+the run is discarded rather than degraded.
+
+Reply with the JSON array and nothing else. No sentence before it, none after.

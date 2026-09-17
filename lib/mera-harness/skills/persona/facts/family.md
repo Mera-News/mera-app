@@ -2,6 +2,7 @@
 id: facts/family
 name: "Family facts"
 description: "Extracts household, relatives and life events, keeping a relative's place separate from the user's."
+routable: true
 when:
   - "router chose new_fact or fact_update with subject family"
   - "trigger phrases: my partner / my kids / my parents / my sister / I look after / we are expecting"

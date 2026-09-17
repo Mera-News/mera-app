@@ -2,6 +2,7 @@
 id: facts/generic
 name: "Fact rules"
 description: "The shared rules every fact turn follows, and the whole guideline for an interest fact."
+routable: true
 when:
   - "always, ahead of any facts leaf"
   - "alone, when the user states a hobby, sport, interest, opinion, possession or media habit"
