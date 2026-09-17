@@ -37,12 +37,15 @@ export interface ArticlePipelineConfig {
   /**
    * Output token ceiling for one reason call.
    *
-   * 96, not the 64 a bare sentence needed: pass 2 answers with
-   * `{"k":"…","s":0.00,"reason":"…"}` under the rescore contract, and the
-   * wrapper plus a 35-word headline reason does not fit in 64. A truncated
-   * response costs BOTH halves — `JSON.parse` fails, so the score is lost, and
-   * the raw text then trips the bare-decimal rule, so the reason is lost too.
-   * A ceiling is not a spend; a truncation is.
+   * 96, not the 64 a bare sentence needed. The SHIPPED prompts ask for a plain
+   * string and fit in 64, so nothing in production spends the extra: this is
+   * held at 96 so the registered rescore arms run without a config change.
+   * Under their object contract pass 2 answers
+   * `{"k":"…","s":0.00,"reason":"…"}`, and the wrapper plus a 35-word headline
+   * reason does not fit in 64. A truncated response there costs BOTH halves —
+   * `JSON.parse` fails, so the score is lost, and the raw text then trips the
+   * bare-decimal rule, so the reason is lost too. A ceiling is not a spend; a
+   * truncation is.
    */
   reasonMaxTokens: number;
   /** Raw scores below this stay raw (not bucketed) — the DISCARD floor. */

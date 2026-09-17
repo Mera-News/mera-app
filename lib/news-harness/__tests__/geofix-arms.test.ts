@@ -1,17 +1,20 @@
-// The four geofix arms, and the property that makes their numbers mean
-// anything: each one differs from the shipped prompts in exactly ONE way.
+// The geofix arms, and the property that makes their numbers mean anything:
+// each one differs from the shipped prompts in exactly ONE way.
 //
 // `reason-v3` is the cautionary tale this file is written against. It bundled
 // two rules into one arm, came back null, and the null could not be attributed
-// to either rule — so the arm cost a paid run and settled nothing. These four
-// are deliberately not bundled: `geo-scope-v1` changes only the shared base,
+// to either rule — so the arm cost a paid run and settled nothing. These are
+// deliberately not bundled: `pre-geo-control` changes only the shared base,
 // `reason-rescore` changes only the pass-2 contract, `reason-rescore-prior`
 // changes only one line of the USER message, and `rescore-demote-only` changes
 // only the decode policy. The assertions below are what keeps that true as the
 // prompts are edited.
+//
+// The article-scope rule itself is no longer an arm: it was promoted into the
+// shared base, so the assertions that used to pin it onto an arm now pin it
+// onto the SHIPPED prompts, and `pre-geo-control` is the way back.
 import {
-  GEO_SCOPE_RESCORE_ID,
-  GEO_SCOPE_V1_ID,
+  PRE_GEO_CONTROL_ID,
   NULL_CONTROL_ID,
   REASON_RESCORE_ID,
   REASON_RESCORE_PRIOR_ID,
@@ -41,48 +44,54 @@ const SLOTS = Object.keys(SHIPPED) as PromptSlot[];
 const armPrompt = (id: string, slot: PromptSlot) =>
   systemPromptForSlot(slot, SHIPPED[slot], resolvePromptVariant(id));
 
-describe('geo-scope-v1', () => {
-  it('reaches ALL FOUR scoring slots', () => {
+describe('the promoted article-scope rule', () => {
+  it('is in ALL FOUR shipped scoring prompts', () => {
     // The rule lives in the shared base, so both passes see it. A geography
     // rule the score pass obeys and the reason pass does not would hand a
-    // correctly-scored article an incorrectly-reasoned sentence.
+    // correctly-scored article an incorrectly-reasoned sentence. The headline
+    // pair was NOT separately measured; it rides along because splitting the
+    // base is the failure this assertion exists to prevent.
     for (const slot of SLOTS) {
-      expect(armPrompt(GEO_SCOPE_V1_ID, slot)).toContain('## Article scope');
-    }
-  });
-
-  it('is the ONLY difference from the shipped prompt, in every slot', () => {
-    for (const slot of SLOTS) {
-      const arm = armPrompt(GEO_SCOPE_V1_ID, slot);
-      // Cut the inserted section back out and the shipped prompt must return
-      // byte for byte. This is what stops an unrelated prompt edit riding into
-      // the geo arm and being attributed to the geography rule.
-      const withoutRule = arm.replace(/\n\n## Article scope\n[^\n]*/, '');
-      expect(withoutRule).toBe(SHIPPED[slot]);
+      expect(SHIPPED[slot]).toContain('## Article scope');
     }
   });
 
   it('states the rule the base was missing', () => {
-    const p = armPrompt(GEO_SCOPE_V1_ID, 'relevance');
-    expect(p).toMatch(/never `home` or `family`/);
-    expect(p).toMatch(/lives in or has family in/);
+    expect(CLOUD_RELEVANCE_SYSTEM_PROMPT).toMatch(/never `home` or `family`/);
+    expect(CLOUD_RELEVANCE_SYSTEM_PROMPT).toMatch(/lives in or has family in/);
     // The worked example is the actual bug: a Portuguese story, a Dutch reader.
-    expect(p).toMatch(/parental-leave vote in Portugal/);
+    expect(CLOUD_RELEVANCE_SYSTEM_PROMPT).toMatch(/parental-leave vote in Portugal/);
   });
 
-  it('does not touch the pass-2 output contract', () => {
-    // geo-scope-v1 is a prompt-only arm. If it started asking for an object it
-    // would be two changes wearing one name.
-    expect(armPrompt(GEO_SCOPE_V1_ID, 'reason')).toContain(
+  it('did not touch the pass-2 output contract on the way in', () => {
+    expect(CLOUD_REASON_SYSTEM_PROMPT).toContain(
       'Output: single plain string, no prefixes, no markdown.',
     );
-    expect(resolvePromptVariant(GEO_SCOPE_V1_ID).rescorePolicy).toBeUndefined();
-    expect(resolvePromptVariant(GEO_SCOPE_V1_ID).reasonPriorScoreLine).toBeUndefined();
+  });
+});
+
+describe('pre-geo-control', () => {
+  it('is the shipped prompt MINUS the article-scope rule, in every slot', () => {
+    for (const slot of SLOTS) {
+      const arm = armPrompt(PRE_GEO_CONTROL_ID, slot);
+      expect(arm).not.toContain('## Article scope');
+      // Cut the promoted section out of the shipped prompt and the control must
+      // return byte for byte. This is what stops an unrelated prompt edit
+      // landing on one side only and being attributed to the geography rule.
+      const shippedWithoutRule = SHIPPED[slot].replace(/\n\n## Article scope\n[^\n]*/, '');
+      expect(arm).toBe(shippedWithoutRule);
+    }
   });
 
-  it('leaves the shipped prompts alone', () => {
-    expect(CLOUD_REASON_SYSTEM_PROMPT).not.toContain('## Article scope');
-    expect(CLOUD_RELEVANCE_SYSTEM_PROMPT).not.toContain('## Article scope');
+  it('carries no decode change, so the comparison is prompts only', () => {
+    expect(resolvePromptVariant(PRE_GEO_CONTROL_ID).rescorePolicy).toBeUndefined();
+    expect(resolvePromptVariant(PRE_GEO_CONTROL_ID).reasonPriorScoreLine).toBeUndefined();
+  });
+
+  it('keeps the pass-2 string contract, like the prompt it archives', () => {
+    expect(armPrompt(PRE_GEO_CONTROL_ID, 'reason')).toContain(
+      'Output: single plain string, no prefixes, no markdown.',
+    );
   });
 });
 
@@ -123,10 +132,13 @@ describe('the rescore arms', () => {
     }
   });
 
-  it('builds on the SHIPPED scoring base, not the geo one', () => {
-    // Otherwise a rescore result would be confounded with the geography rule
-    // and neither arm could be promoted on its own evidence.
-    expect(armPrompt(REASON_RESCORE_ID, 'reason')).not.toContain('## Article scope');
+  it('builds on the SHIPPED scoring base', () => {
+    // Since the promotion that base carries the article-scope rule, so a
+    // rescore arm is once again ONE change against the current default. The
+    // numbers in its description were measured that way.
+    expect(armPrompt(REASON_RESCORE_ID, 'reason')).toContain('## Article scope');
+    expect(armPrompt(REASON_RESCORE_ID, 'reason').replace(/\n\n## Article scope\n[^\n]*/, ''))
+      .not.toContain('## Article scope');
   });
 
   it('leaves the SCORE slots alone', () => {
@@ -257,47 +269,5 @@ describe('the output example must not answer the question', () => {
     const shipped = SHIPPED.reason;
     expect(shipped).toContain('Evacuation ordered in Jordaan, where you live.');
     expect(shipped).toContain("Manchester building fire is a UK-local emergency; you're in Amsterdam.");
-  });
-});
-
-describe('geo-scope-rescore — the union arm', () => {
-  it('carries the article-scope rule in all four slots', () => {
-    for (const slot of SLOTS) {
-      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).toContain('## Article scope');
-    }
-  });
-
-  it('carries the object contract in the reason slots only', () => {
-    for (const slot of ['reason', 'headlineReason'] as PromptSlot[]) {
-      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).toContain(
-        'Output: exactly ONE JSON object and nothing else.',
-      );
-      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).not.toContain('Output: single plain string');
-    }
-    // Pass 1 keeps its array contract; only the base changed there.
-    for (const slot of ['relevance', 'headlineRelevance'] as PromptSlot[]) {
-      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).toContain('a JSON array of exactly N');
-    }
-  });
-
-  it('is exactly geo-scope-v1 on the score slots', () => {
-    // The union must not quietly become a third score prompt, or a win could
-    // not be attributed to the rule the other arm carries.
-    for (const slot of ['relevance', 'headlineRelevance'] as PromptSlot[]) {
-      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).toBe(armPrompt(GEO_SCOPE_V1_ID, slot));
-    }
-  });
-
-  it('is exactly reason-rescore plus the rule on the reason slots', () => {
-    for (const slot of ['reason', 'headlineReason'] as PromptSlot[]) {
-      const union = armPrompt(GEO_SCOPE_RESCORE_ID, slot);
-      const rescoreOnly = armPrompt(REASON_RESCORE_ID, slot);
-      expect(union.replace(/\n\n## Article scope\n[^\n]*/, '')).toBe(rescoreOnly);
-    }
-  });
-
-  it('drops the prior-score line, like the arm it extends', () => {
-    expect(resolvePromptVariant(GEO_SCOPE_RESCORE_ID).reasonPriorScoreLine).toBe('omit');
-    expect(resolvePromptVariant(GEO_SCOPE_RESCORE_ID).rescorePolicy).toBeUndefined();
   });
 });

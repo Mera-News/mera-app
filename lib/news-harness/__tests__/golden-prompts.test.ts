@@ -194,21 +194,18 @@ describe('golden — measured prompt sizes', () => {
   // above are all identity checks against the same const, so a whitespace slip
   // during the extraction would have passed every existing test.
   it('pins the estimated token size of each cloud scoring prompt', () => {
-    // Re-measured when the nonce-fence sentence was added to the two shared
-    // base prompts. The sentence is byte-identical in every family, so all four
-    // moved by the same amount (+68/+69) and the derivation below is intact:
-    //   5 * (4454 / 7105) = 3.1344 -> 3   (was 5 * (4386 / 7036) = 3.1163 -> 3)
+    // RE-PINNED when the article-scope rule was promoted into the shared base.
+    // The rule is one section in ONE const, so all four prompts moved by the
+    // same +130 tokens and the derivation below is intact:
+    //   5 * (4584 / 7234) = 3.1685 -> 3   (was 5 * (4454 / 7105) = 3.1344 -> 3)
     // `headlineArticlesPerScorePrompt` therefore stays 3 and no
-    // DEFAULT_HARNESS_CONFIG literal changed.
-    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4454);
-    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7105);
-    // RE-PINNED when reason-v2 was promoted into the shipped reason prompts:
-    // 4839 -> 5271 and 7693 -> 7693+433 = 8126, the same 432-token rules block
-    // on both. The two RELEVANCE numbers are untouched, which matters because
-    // they are the inputs to the headlineArticlesPerScorePrompt derivation in
-    // core/config.ts; the reason prompts are not part of that arithmetic.
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5271);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(8126);
+    // DEFAULT_HARNESS_CONFIG literal changed. All four moving by the SAME
+    // amount is itself the assertion that the rule landed in the base and not
+    // in one prompt: a base edit that reached three of four would show here.
+    expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4584);
+    expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7234);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5401);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(8256);
   });
 
   // The four above were the only pinned prompts. These four were not pinned by
@@ -229,6 +226,42 @@ describe('golden — measured prompt sizes', () => {
     expect(estimateTokens(CLOUD_FEED_VERIFIER_SYSTEM_PROMPT)).toBe(1539);
     expect(estimateTokens(LOCAL_RELEVANCE_SYSTEM_PROMPT)).toBe(1104);
     expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1445);
+  });
+
+  // THE E2EE SHARED-SYSTEM BUDGET, which nothing else in this repo checks.
+  //
+  // Every call in a scoring or reason bundle carries the same system string, so
+  // `submitInferenceJob` hoists it into the job's `sharedSystem` field and
+  // encrypts it ONCE. The envelope is 32 B ephemeral pubkey + 24 B nonce +
+  // ciphertext + 16 B poly1305 tag, hex-encoded, so the wire size is exactly
+  // 2 * (utf8Bytes + 72) — and the gateway's DTO rejects a `sharedSystem`
+  // longer than MAX_SHARED_SYSTEM_BYTES = 65536 (class-validator @MaxLength, so
+  // characters of hex, which for hex equals bytes). Plaintext ceiling: 32696 B.
+  //
+  // KNOWN DEFECT, PRE-DATING THE ARTICLE-SCOPE PROMOTION: the two HEADLINE
+  // REASON prompts are already over it. Pre-geo the headline reason prompt was
+  // 32900 B -> 65944 on the wire, 408 over; with the rule it is 33419 B ->
+  // 66982, 1446 over. The rescore arm's headline twin is further over again.
+  // Nothing on the headline reason path can submit while that holds. The fix is
+  // the split this file's own base comment describes (PRE/ANCHORS/POST exists so
+  // a size-constrained variant can drop the worked-example anchor table), and it
+  // needs its own measurement, so these are PINNED rather than asserted under
+  // the cap: the numbers are the tripwire, the comment is the verdict.
+  it('pins the E2EE wire size of every hoisted system prompt', () => {
+    const wire = (p: string) => 2 * (Buffer.byteLength(p, 'utf8') + 72);
+    expect(wire(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(37322);
+    expect(wire(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(58816);
+    expect(wire(CLOUD_REASON_SYSTEM_PROMPT)).toBe(43884);
+    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(66982);
+    // The three that fit must keep fitting. The headline reason prompt is the
+    // one exception and is named above, not silently included here.
+    for (const p of [
+      CLOUD_RELEVANCE_SYSTEM_PROMPT,
+      CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
+      CLOUD_REASON_SYSTEM_PROMPT,
+    ]) {
+      expect(wire(p)).toBeLessThanOrEqual(65536);
+    }
   });
 
   it('keeps the V3 note prompt built ON the verifier rather than restating it', () => {

@@ -9,6 +9,8 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
   CLOUD_REASON_SYSTEM_PROMPT_V1,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
+  CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
   LOCAL_REASON_SYSTEM_PROMPT,
   resolvePromptVariant,
   promptVariantIds,
@@ -25,19 +27,37 @@ describe('the promoted reason prompt', () => {
   it('is the pre-promotion text plus the rules, in that order', () => {
     // Byte-level, because "we promoted the arm" is only true if the shipped
     // string is the one the rater scored. Rebuilding it by hand, or tidying the
-    // two halves into a single literal, would silently break that.
-    expect(CLOUD_REASON_SYSTEM_PROMPT.startsWith(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(true);
+    // halves into a single literal, would silently break that.
+    //
+    // Asserted against the `_PRE_GEO` composites, not the shipped ones: the
+    // article-scope promotion moved the shipped prompts onto a different base,
+    // and `_V1` is deliberately frozen on the base the rater actually saw.
+    expect(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO.startsWith(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(
+      true,
+    );
     expect(
-      CLOUD_HEADLINE_REASON_SYSTEM_PROMPT.startsWith(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1),
+      CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO.startsWith(
+        CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
+      ),
     ).toBe(true);
   });
 
   it('adds the same block to both reason prompts', () => {
-    const a = CLOUD_REASON_SYSTEM_PROMPT.slice(CLOUD_REASON_SYSTEM_PROMPT_V1.length);
-    const b = CLOUD_HEADLINE_REASON_SYSTEM_PROMPT.slice(
+    const a = CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO.slice(CLOUD_REASON_SYSTEM_PROMPT_V1.length);
+    const b = CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO.slice(
       CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1.length,
     );
     expect(a).toBe(b);
+  });
+
+  it('is the pre-geo text plus the article-scope rule, and nothing else', () => {
+    // The second promotion, asserted the same way as the first: cut the one
+    // section back out and the archived string must return byte for byte.
+    const cut = (p: string) => p.replace(/\n\n## Article scope\n[^\n]*/, '');
+    expect(cut(CLOUD_REASON_SYSTEM_PROMPT)).toBe(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO);
+    expect(cut(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(
+      CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
+    );
   });
 
   it('carries the three rules that were measured', () => {
@@ -122,20 +142,38 @@ describe('measured sizes after the promotion', () => {
   // Restated on purpose: the reason pass sends one call per article that clears
   // the gate, so these ride on every scored article.
   it('pins the promoted prompts', () => {
-    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5271);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(8126);
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5401);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(8256);
   });
 
-  it('pins the pre-promotion prompts, which are now the control arm', () => {
-    // These are the numbers golden-prompts.test.ts pinned before the promotion.
-    // They have not changed; they have been renamed.
+  it('pins the pre-promotion prompts, which are now the control arms', () => {
+    // reason-v1: the text reason-v2 beat, on the pre-geo base.
     expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1)).toBe(4839);
     expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1)).toBe(7693);
+    // pre-geo-control: v2's rules, on the pre-geo base. What ships today beat
+    // exactly these two strings.
+    expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(5271);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(8126);
   });
 
-  it('costs 432 tokens per reason call to have promoted it', () => {
+  it('costs 432 tokens per reason call to have promoted the v2 rules', () => {
     expect(
-      estimateTokens(CLOUD_REASON_SYSTEM_PROMPT) - estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1),
+      estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO)
+        - estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_V1),
     ).toBe(432);
+  });
+
+  it('costs 130 tokens per call to have promoted the article-scope rule', () => {
+    // The same 130 on all four prompts, because it is one section in the shared
+    // base. The reason pass sends one call per article that clears the gate, so
+    // this rides on every scored article, and pass 1 pays it per batch of five.
+    expect(
+      estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)
+        - estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO),
+    ).toBe(130);
+    expect(
+      estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)
+        - estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO),
+    ).toBe(130);
   });
 });

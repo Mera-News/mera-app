@@ -23,12 +23,11 @@ import './prompts/reason-arms';
 export {
   REASON_V1_ID,
   REASON_V3_ID,
-  GEO_SCOPE_V1_ID,
+  PRE_GEO_CONTROL_ID,
   REASON_RESCORE_ID,
   REASON_RESCORE_PRIOR_ID,
   RESCORE_DEMOTE_ONLY_ID,
   NULL_CONTROL_ID,
-  GEO_SCOPE_RESCORE_ID,
 } from './prompts/reason-arms';
 export * from './prompts/questionnaire-data';
 export * from './persona-management/fact-rules';

@@ -70,7 +70,8 @@ export * from './prompt-variants';
 // 65,536 chars and the hex envelope DOUBLES plaintext, so a system prompt
 // must stay under ~32.5KB. The v3 HEADLINE prompt (base+impact+two-axis)
 // was 35.1KB and every headline batch 400'd at submit (2026-08-05).
-// CLOUD_SCORING_BASE_PROMPT is the byte-identical reassembly.
+// CLOUD_SCORING_BASE_PROMPT_PRE_GEO is the byte-identical reassembly;
+// CLOUD_SCORING_BASE_PROMPT is that plus the article-scope rule.
 const CLOUD_SCORING_BASE_PRE_ANCHORS = `Score news relevance for one user. Every article lands in exactly one of three product tiers; the score encodes the tier and the strength within it.
 
 ## Product tiers (hard boundaries — the tier decision matters more than the exact value)
@@ -182,10 +183,17 @@ City > region > country. Family locations: the named city only. Exact interest a
 - Multi-location users count multiply ("from Johannesburg, now in London" = both matter; "parents in New York" = connected).
 - Tabloid/clickbait −0.1. Spam → EXCLUDE.`;
 
-const CLOUD_SCORING_BASE_PROMPT = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCORING_BASE_ANCHORS}${CLOUD_SCORING_BASE_POST_ANCHORS}`;
+/**
+ * The scoring base AS IT SHIPPED BEFORE the article-scope rule was promoted.
+ *
+ * Its own const so the four `*_PRE_GEO` prompts below stay byte-exact: a
+ * promotion with no way back to the thing it beat is not a measurement. No
+ * production path reads this; only the `pre-geo-control` arm does.
+ */
+const CLOUD_SCORING_BASE_PROMPT_PRE_GEO = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCORING_BASE_ANCHORS}${CLOUD_SCORING_BASE_POST_ANCHORS}`;
 
 /**
- * The geography rule, for the `geo-scope-v1` arm. NOT in the shipped base yet.
+ * The geography rule. SHIPPED IN THE BASE, promoted in geofix2.
  *
  * WHAT IT IS FOR. A Diário de Notícias story about Portugal's parental-leave
  * vote scored HIGH for a reader living in the Netherlands, with the reason
@@ -200,16 +208,31 @@ const CLOUD_SCORING_BASE_PROMPT = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCOR
  * residence fact in the prompt, pass 1 still emitted `k:"home"` 6 times out of
  * 9. So the country reaching the model was never the gap.
  *
+ * WHAT IT ACTUALLY BOUGHT, goldset-348 x 3 against a within-run null floor of
+ * 0.017 precision / 0.010 recall: broad-set recall 0.406 -> 0.459 at flat
+ * precision (+27 true positives for +8 false), and 8 of 9 DN cells below the
+ * gate with the Dutch control still HIGH 3 of 3. It did NOT reduce `home`
+ * tagging (+2 against a floor of 1); the mass it moved came out of `interest`
+ * (-64) into `none` (+29) and `domain` (+33, floor 11). `domain` is FEED-band,
+ * so the permitted-tag LIST partly reads as a menu. A restriction stated
+ * without enumerating the alternatives is the untested next shape.
+ *
  * Shared by BOTH passes because it is part of the base, which is what stops the
  * score pass and the reason pass disagreeing about what a `home` story is.
  */
 const CLOUD_SCORING_GEO_SCOPE_RULE = `## Article scope
 When the title and description name no location, the article is about the publication's country (the \`Article Country\` / \`Publication\` lines). A story about a country that appears in none of the user's facts can be \`domain\`, \`attend\`, \`travel\`, \`interest\` or \`none\`, but never \`home\` or \`family\`: those two require the story's country to be one the user lives in or has family in. A parental-leave vote in Portugal is not a Dutch reader's \`home\` story, however closely the subject matches their life.`;
 
-/** {@link CLOUD_SCORING_BASE_PROMPT} plus {@link CLOUD_SCORING_GEO_SCOPE_RULE}.
- *  The rule lands after `## Critical` and before each prompt's `## Task`, so a
- *  prompt built on it differs from the shipped one by exactly that section. */
-const CLOUD_SCORING_BASE_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT}
+/**
+ * THE SHIPPED SCORING BASE: {@link CLOUD_SCORING_BASE_PROMPT_PRE_GEO} plus
+ * {@link CLOUD_SCORING_GEO_SCOPE_RULE}.
+ *
+ * The rule lands after `## Critical` and before each prompt's `## Task`, so a
+ * prompt built on the pre-geo base differs from the shipped one by exactly that
+ * section. All four cloud scoring prompts are built from here, which is what
+ * stops the score pass and the reason pass disagreeing about what `home` means.
+ */
+const CLOUD_SCORING_BASE_PROMPT = `${CLOUD_SCORING_BASE_PROMPT_PRE_GEO}
 
 ${CLOUD_SCORING_GEO_SCOPE_RULE}`;
 
@@ -362,7 +385,7 @@ ${REASON_OUTPUT_OBJECT}`;
  * a promotion with no way back to the thing it beat is not a measurement. Not
  * referenced by any production path.
  */
-export const CLOUD_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT}
+export const CLOUD_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT_PRE_GEO}
 
 ${CLOUD_REASON_TASK_V1}`;
 
@@ -559,7 +582,7 @@ ${REASON_OUTPUT_OBJECT}`;
 
 /** See {@link CLOUD_REASON_SYSTEM_PROMPT_V1}: the headline twin, pre-promotion,
  *  kept for the same control arm. */
-export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT}
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1 = `${CLOUD_SCORING_BASE_PROMPT_PRE_GEO}
 
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 
@@ -630,64 +653,73 @@ ${REASON_OUTPUT_OBJECT}`;
 /**
  * Pass 2 (cloud) — the SHIPPED reason prompt.
  *
- * `_V1` plus {@link REASON_V2_RULES}, concatenated in exactly the order the
- * measured arm used, so the promoted prompt is byte-identical to the string the
- * rater scored. Do not "tidy" this into one literal: keeping the two halves
- * separate is what lets `reason-v1` stay registered as a control.
+ * The task block plus {@link REASON_V2_RULES} in exactly the order the rater
+ * scored, on the shipped base. Spelled out rather than built from `_V1`,
+ * because `_V1` is frozen on the PRE-GEO base: reusing it here would have
+ * silently kept the geography rule out of the reason pass while the score pass
+ * gained it, which is the exact split the shared base exists to prevent.
  */
-export const CLOUD_REASON_SYSTEM_PROMPT = `${CLOUD_REASON_SYSTEM_PROMPT_V1}
-${REASON_V2_RULES}`;
-
-/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT}, same rules, same order. */
-export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1}
-${REASON_V2_RULES}`;
-
-// ---------------------------------------------------------------------------
-// ARM PROMPTS. Four whole strings, each the shipped prompt with ONE thing
-// changed, so a result is attributable to that one thing:
-//
-//   geo-scope-v1    the base gains the article-scope rule. Both passes, because
-//                   the base is shared — which is exactly what stops the score
-//                   pass and the reason pass disagreeing about what `home` means.
-//   reason-rescore  pass 2 answers with an object and re-derives the score. The
-//                   base is untouched, so a rescore result is not confounded
-//                   with a geography rule, and the promoted v2 rules are still
-//                   appended in the same order the rater scored them.
-//
-// They are separate arms on purpose: bundling two rules into one arm means a
-// null result cannot be attributed, which is the lesson `reason-v3` paid for.
-// ---------------------------------------------------------------------------
-
-/** Pass 1 on the geo-scoped base. `geo-scope-v1`. */
-export const CLOUD_RELEVANCE_SYSTEM_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT_GEO}
-
-${CLOUD_RELEVANCE_TASK}`;
-
-/** Headline pass 1 on the geo-scoped base. `geo-scope-v1`. */
-export const CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT_GEO}
-
-${CLOUD_HEADLINE_IMPACT_BLOCK}
-
-${CLOUD_HEADLINE_RELEVANCE_TASK}`;
-
-/** Pass 2 as shipped, on the geo-scoped base. `geo-scope-v1`. */
-export const CLOUD_REASON_SYSTEM_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT_GEO}
+export const CLOUD_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
 ${CLOUD_REASON_TASK_V1}
 ${REASON_V2_RULES}`;
 
-/** Headline pass 2 as shipped, on the geo-scoped base. `geo-scope-v1`. */
-export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO = `${CLOUD_SCORING_BASE_PROMPT_GEO}
+/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT}, same rules, same order. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 
 ${CLOUD_HEADLINE_REASON_TASK_V1}
 ${REASON_V2_RULES}`;
 
-/** Pass 2 under the object contract, on the SHIPPED base. `reason-rescore`,
- *  `reason-rescore-prior` and `rescore-demote-only` all use this one string:
- *  the first two differ only in the USER message, the third only in what the
- *  caller does with the score. None of them changes the prompt again. */
+// ---------------------------------------------------------------------------
+// ARM PROMPTS. Whole strings, each the shipped prompt with ONE thing changed,
+// so a result is attributable to that one thing:
+//
+//   pre-geo-control  all four scoring prompts on the base as it stood BEFORE
+//                    the article-scope rule was promoted. The way back to the
+//                    text the rule beat, so the promotion stays falsifiable.
+//   reason-rescore   pass 2 answers with an object and re-derives the score,
+//                    on the current shipped base. MEASURED AND NOT PROMOTED.
+//
+// There is no `geo-scope-v1` arm any more: selecting it would mean selecting
+// the default. Its counterpart control is `pre-geo-control`, the same pattern
+// `reason-v1` follows for the reason rules.
+// ---------------------------------------------------------------------------
+
+/** Pass 1 on the pre-geo base. `pre-geo-control`. */
+export const CLOUD_RELEVANCE_SYSTEM_PROMPT_PRE_GEO = `${CLOUD_SCORING_BASE_PROMPT_PRE_GEO}
+
+${CLOUD_RELEVANCE_TASK}`;
+
+/** Headline pass 1 on the pre-geo base. `pre-geo-control`. */
+export const CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_PRE_GEO = `${CLOUD_SCORING_BASE_PROMPT_PRE_GEO}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+${CLOUD_HEADLINE_RELEVANCE_TASK}`;
+
+/** Pass 2 as shipped, on the pre-geo base. `pre-geo-control`. */
+export const CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO = `${CLOUD_REASON_SYSTEM_PROMPT_V1}
+${REASON_V2_RULES}`;
+
+/** Headline pass 2 as shipped, on the pre-geo base. `pre-geo-control`. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO = `${CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1}
+${REASON_V2_RULES}`;
+
+/**
+ * Pass 2 under the object contract, on the SHIPPED base. `reason-rescore`,
+ * `reason-rescore-prior` and `rescore-demote-only` all use this one string:
+ * the first two differ only in the USER message, the third only in what the
+ * caller does with the score. None of them changes the prompt again.
+ *
+ * MEASURED AND NOT PROMOTED. Pass 2, seeing one article, is systematically more
+ * conservative than the batched pass 1: every rescore arm deflated (mean signed
+ * delta -0.027 to -0.155, band-down 15 to 63 against band-up 0 to 7) and cut
+ * broad-set recall by roughly 0.08, which is eight times the null floor. The
+ * decode plumbing stays shipped and INERT: the shipped prompts never ask for an
+ * object, so `extractRescore` never fires outside these arms.
+ */
 export const CLOUD_REASON_SYSTEM_PROMPT_RESCORE = `${CLOUD_SCORING_BASE_PROMPT}
 
 ${CLOUD_REASON_TASK_RESCORE}
@@ -695,29 +727,6 @@ ${REASON_V2_RULES_RESCORE}`;
 
 /** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT_RESCORE}. */
 export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE = `${CLOUD_SCORING_BASE_PROMPT}
-
-${CLOUD_HEADLINE_IMPACT_BLOCK}
-
-${CLOUD_HEADLINE_REASON_TASK_RESCORE}
-${REASON_V2_RULES_RESCORE}`;
-
-/**
- * BOTH changes at once: the geo-scoped base AND the object contract.
- *
- * Registered as its own arm rather than assumed. A DN probe showed the two
- * doing different jobs — the geography rule moved pass 1 off `home` on the
- * production-shaped rows, and the rescore did not — so the union is the
- * candidate, and a candidate that is never measured is a guess. It sits
- * alongside the two single-change arms, not instead of them, so a win can still
- * be attributed.
- */
-export const CLOUD_REASON_SYSTEM_PROMPT_GEO_RESCORE = `${CLOUD_SCORING_BASE_PROMPT_GEO}
-
-${CLOUD_REASON_TASK_RESCORE}
-${REASON_V2_RULES_RESCORE}`;
-
-/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT_GEO_RESCORE}. */
-export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO_RESCORE = `${CLOUD_SCORING_BASE_PROMPT_GEO}
 
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 

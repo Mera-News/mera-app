@@ -21,25 +21,22 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_V1,
   CLOUD_REASON_SYSTEM_PROMPT,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT,
-  CLOUD_RELEVANCE_SYSTEM_PROMPT_GEO,
-  CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_GEO,
-  CLOUD_REASON_SYSTEM_PROMPT_GEO,
-  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO,
+  CLOUD_RELEVANCE_SYSTEM_PROMPT_PRE_GEO,
+  CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_PRE_GEO,
+  CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
   CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
-  CLOUD_REASON_SYSTEM_PROMPT_GEO_RESCORE,
-  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO_RESCORE,
 } from './prompts';
 import { registerPromptVariant } from './prompt-variants';
 
 const REASON_V1_ID = 'reason-v1';
 const REASON_V3_ID = 'reason-v3';
-const GEO_SCOPE_V1_ID = 'geo-scope-v1';
+const PRE_GEO_CONTROL_ID = 'pre-geo-control';
 const REASON_RESCORE_ID = 'reason-rescore';
 const REASON_RESCORE_PRIOR_ID = 'reason-rescore-prior';
 const RESCORE_DEMOTE_ONLY_ID = 'rescore-demote-only';
 const NULL_CONTROL_ID = 'null-control';
-const GEO_SCOPE_RESCORE_ID = 'geo-scope-rescore';
 
 /**
  * The control: the reason prompt exactly as it shipped before promotion.
@@ -122,7 +119,7 @@ registerPromptVariant({
 });
 
 // ---------------------------------------------------------------------------
-// THE GEOFIX ARMS (2026-09-17). Four arms answering one question each.
+// THE GEOFIX ARMS (2026-09-17). One promoted, three measured and kept.
 //
 // THE BUG THEY EXIST FOR. A Diário de Notícias story about Portugal's
 // parental-leave vote rendered HIGH for a reader living in the Netherlands,
@@ -132,31 +129,33 @@ registerPromptVariant({
 // pass 1 still tagged it `home` 6 times out of 9. The reason pass was already
 // saying "foreign-domestic, no tie" in prose and had no field to say it in.
 //
-// So there are two independent candidate fixes and they are NOT bundled:
-// `geo-scope-v1` states the missing rule, `reason-rescore` gives pass 2 a score
-// to state it WITH. Bundling them would mean a null result could not be
-// attributed to either, which is what `reason-v3` above paid to learn.
+// Two independent candidate fixes, deliberately NOT bundled: the article-scope
+// rule states the missing constraint, the rescore gives pass 2 a score to state
+// it WITH. Bundling them would mean a null result could not be attributed,
+// which is what `reason-v3` above paid to learn. The rule won and is now the
+// default; the rescore lost on recall and is kept registered, not shipped.
 // ---------------------------------------------------------------------------
 
 /**
- * The scoring base gains an article-scope rule: a story about a country in none
- * of the user's facts can be anything EXCEPT `home` or `family`.
+ * THE COUNTERPART CONTROL to the promoted article-scope rule: all four scoring
+ * prompts on the base as it stood BEFORE the rule.
  *
- * Both passes, because the rule lives in the shared base. That is deliberate:
- * a geography rule the score pass obeys and the reason pass does not would give
- * a correctly-scored article an incorrectly-reasoned sentence.
+ * Same reason `reason-v1` is registered. A promotion with no way back to the
+ * text it beat is not a measurement, and re-deriving the old base by deleting a
+ * section from the new one is exactly the string surgery this seam replaces.
  */
 registerPromptVariant({
-  id: GEO_SCOPE_V1_ID,
+  id: PRE_GEO_CONTROL_ID,
   description:
-    'The shared scoring base plus one article-scope rule: `home` and `family` require the story\'s '
-    + 'country to be one the user lives in or has family in, and a location-less article is about '
-    + 'the publication\'s country. Prompts only, no decode change.',
+    'The four cloud scoring prompts on the PRE-GEO base: no article-scope rule. Control for the '
+    + 'geofix2 promotion, which beat it on broad-set recall 0.459 to 0.406 at flat precision '
+    + '(+27 true positives for +8 false, null floor 0.010 recall / 0.017 precision, goldset-348 x 3) '
+    + 'and on the DN matrix 8 of 9 cells below the gate against 2 of 9.',
   systemPrompts: {
-    relevance: CLOUD_RELEVANCE_SYSTEM_PROMPT_GEO,
-    headlineRelevance: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_GEO,
-    reason: CLOUD_REASON_SYSTEM_PROMPT_GEO,
-    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO,
+    relevance: CLOUD_RELEVANCE_SYSTEM_PROMPT_PRE_GEO,
+    headlineRelevance: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_PRE_GEO,
+    reason: CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO,
+    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
   },
 });
 
@@ -173,7 +172,11 @@ registerPromptVariant({
   description:
     'Pass 2 runs the full stake procedure on its one article and emits {"k","s","reason"}; the '
     + 'band-clamped `s` replaces the pass-1 score in BOTH directions. Prior-score line dropped '
-    + 'from the user message. Scoring base unchanged, so this is not confounded with geo-scope-v1.',
+    + 'from the user message. MEASURED AND REJECTED, goldset-348 x 3 on the shipped base: it parsed '
+    + '259 of 259 and still cost recall, 0.703 against 0.784 at the 0.4 gate and 0.373 broad-set '
+    + 'against 0.459, erasing the whole gain of the article-scope rule it sits on. 208 of 259 rows '
+    + 'rescored, mean signed delta -0.102, band-down 63 against band-up 7. Kept registered so the '
+    + 'question is reproducible, NOT because it is a candidate.',
   systemPrompts: {
     reason: CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
     headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
@@ -192,7 +195,11 @@ registerPromptVariant({
   description:
     'reason-rescore with the pass-1 score kept in the user message, relabelled "First-pass score '
     + '(batched): X". Identical system prompt, so the pair measures the anchoring effect of that '
-    + 'one line and nothing else.',
+    + 'one line and nothing else. MEASURED on the PRE-GEO base: keeping the line more than halves '
+    + 'the deflation (mean signed delta -0.027 against -0.102) and recovers most of the recall '
+    + '(0.721 against 0.658), so the anchor is doing real work - but it still loses to not '
+    + 'rescoring at all. Its prompt has since been rebased onto the shipped base, so the numbers '
+    + 'above are not reproducible without `pre-geo-control`.',
   systemPrompts: {
     reason: CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
     headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
@@ -213,46 +220,19 @@ registerPromptVariant({
   id: RESCORE_DEMOTE_ONLY_ID,
   description:
     'reason-rescore, except the pass-2 score applies only when it is LOWER than pass 1. Identical '
-    + 'prompt and user message to reason-rescore; the difference is the decode policy alone. The '
-    + 'guard against pass 2 inflating, measured rather than assumed away.',
+    + 'prompt and user message to reason-rescore; the difference is the decode policy alone. '
+    + 'MEASURED: the guard pointed the WRONG WAY. Pass 2 deflates, it does not inflate, so the '
+    + 'policy had almost no work to do (140 of 259 rows moved, all downward). TRAP: neither the '
+    + 'corpus runner nor its RESCORE REPORT applies a demote-only policy - both store the raw '
+    + 'pass-2 score - so unless the analysis applies min(pass1, rescored) itself this arm is '
+    + 'scored as a plain replace and reads as a duplicate of reason-rescore. Its one upside is '
+    + 'that the duplication is a FREE second null-floor sample.',
   systemPrompts: {
     reason: CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
     headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
   },
   reasonPriorScoreLine: 'omit',
   rescorePolicy: 'demote-only',
-});
-
-/**
- * BOTH single-change arms at once.
- *
- * WHY IT IS NOT REDUNDANT WITH THE OTHER TWO. A DN probe (n=18 cells, 3
- * repeats) found them doing different jobs: `geo-scope-v1` moved pass 1 off
- * `home` on every production-shaped row (6 of 6 below the gate), while
- * `reason-rescore` alone left 11 of 15 foreign cells still tagged `home` or
- * `family`, because pass 2 was making the SAME mistake pass 1 made - reading a
- * location-less Portuguese story as a Dutch one. A rescore cannot correct a
- * judgement it shares.
- *
- * So the rescore needs the rule, and the rule may still want the rescore for
- * the rows where pass 1 gets it wrong anyway. That is a question, and this arm
- * is how it gets answered instead of assumed. It rides ALONGSIDE the two
- * single-change arms, never instead of them: keeping all three is what lets a
- * win be attributed to the rule, the contract, or only their combination.
- */
-registerPromptVariant({
-  id: GEO_SCOPE_RESCORE_ID,
-  description:
-    'geo-scope-v1 AND reason-rescore together: the article-scope rule in the shared base, and pass 2 '
-    + 'emitting {"k","s","reason"} whose score replaces pass 1. Measured alongside both single-change '
-    + 'arms so a win stays attributable.',
-  systemPrompts: {
-    relevance: CLOUD_RELEVANCE_SYSTEM_PROMPT_GEO,
-    headlineRelevance: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_GEO,
-    reason: CLOUD_REASON_SYSTEM_PROMPT_GEO_RESCORE,
-    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO_RESCORE,
-  },
-  reasonPriorScoreLine: 'omit',
 });
 
 /**
@@ -295,10 +275,9 @@ export {
   REASON_V1_ID,
   REASON_V3_ID,
   REASON_V3_RULES,
-  GEO_SCOPE_V1_ID,
+  PRE_GEO_CONTROL_ID,
   REASON_RESCORE_ID,
   REASON_RESCORE_PRIOR_ID,
   RESCORE_DEMOTE_ONLY_ID,
   NULL_CONTROL_ID,
-  GEO_SCOPE_RESCORE_ID,
 };
