@@ -36,6 +36,7 @@ const GEO_SCOPE_V1_ID = 'geo-scope-v1';
 const REASON_RESCORE_ID = 'reason-rescore';
 const REASON_RESCORE_PRIOR_ID = 'reason-rescore-prior';
 const RESCORE_DEMOTE_ONLY_ID = 'rescore-demote-only';
+const NULL_CONTROL_ID = 'null-control';
 
 /**
  * The control: the reason prompt exactly as it shipped before promotion.
@@ -219,6 +220,35 @@ registerPromptVariant({
   rescorePolicy: 'demote-only',
 });
 
+/**
+ * THE NULL FLOOR. Byte-identical to `baseline`, and registered anyway.
+ *
+ * Every acceptance bar in this wave is written as "at least baseline minus the
+ * floor", and a floor is a measured number, not a guess. One `baseline` arm
+ * gives one precision figure with nothing to subtract from it — so the run
+ * carries a second arm that cannot possibly differ from it, and whatever gap
+ * appears between the two IS the floor.
+ *
+ * It has to ride inside the SAME run. The measured trap this answers: a control
+ * arm that could not affect scoring, on byte-identical prompts, still moved its
+ * kept count by 7 between two runs half an hour apart, against a within-run
+ * floor of 4. A floor computed across runs is not a floor.
+ *
+ * NO `systemPrompts`, NO `reasonPriorScoreLine`, NO `rescorePolicy`, on
+ * purpose. `systemPromptForSlot` returns the shipped prompt for any slot an arm
+ * does not name, so "identical to baseline" holds by construction rather than
+ * by two strings being kept in sync. Do not give this arm a prompt, ever, not
+ * even one copied from the shipped constant: the moment it has its own copy it
+ * can drift, and a drifting floor is worse than no floor.
+ */
+registerPromptVariant({
+  id: NULL_CONTROL_ID,
+  description:
+    'Byte-identical to baseline, by construction: it overrides no slot and carries no policy. '
+    + 'Its gap against baseline within one run IS the noise floor every acceptance bar is judged '
+    + 'against. Never give it a prompt of its own.',
+});
+
 // LOCAL IS STILL UNTOUCHED, through the promotion as well as the arms.
 // `LOCAL_REASON_SYSTEM_PROMPT` is built on a different base and states its voice
 // rule inline rather than sharing the cloud constant, so neither the promoted
@@ -234,4 +264,5 @@ export {
   REASON_RESCORE_ID,
   REASON_RESCORE_PRIOR_ID,
   RESCORE_DEMOTE_ONLY_ID,
+  NULL_CONTROL_ID,
 };

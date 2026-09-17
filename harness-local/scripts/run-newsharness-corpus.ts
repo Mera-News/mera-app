@@ -410,6 +410,13 @@ async function main(): Promise<number> {
               enableThinking: false,
             });
 
+        // The pass-1 STAKE TAG, recorded alongside the score. Without it the
+        // foreign-domestic criterion has no baseline to drop from: `home`,
+        // `family`, `travel`, `domain` and `attend` all clamp into
+        // [0.40, 1.10], so no score can tell you which one the model chose.
+        // Sparse by construction — `null` for a legacy bare-number entry or an
+        // entry that failed to decode, always the same length as `scores`.
+        const stakeTags: (string | null)[] = [];
         const scores = result.error
           ? []
           : parseBatchRelevanceResponse(
@@ -420,6 +427,7 @@ async function main(): Promise<number> {
               config,
               undefined,
               stats,
+              stakeTags,
             );
         if (!result.error) {
           const armId = `${model}@${variantId}`;
@@ -456,7 +464,17 @@ async function main(): Promise<number> {
           },
           rawOutput: result.content,
           toolCalls: [],
-          parsedSchema: scores,
+          // Scores AND tags, per article, in input order. `scores` stays a
+          // bare array under `scores` so nothing reading the old shape breaks.
+          parsedSchema: {
+            scores,
+            k: stakeTags,
+            byId: chunkCandidates.map((c, i) => ({
+              articleId: c.id,
+              s: scores[i] ?? null,
+              k: stakeTags[i] ?? null,
+            })),
+          },
           items: itemsFor(chunkCandidates),
           requestedCount: chunkCandidates.length,
           returnedCount: result.error ? null : scores.length,

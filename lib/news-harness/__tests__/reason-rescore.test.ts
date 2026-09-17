@@ -24,6 +24,7 @@ import {
   bucketScores,
   decodeCloudBatchResults,
   newReasonDecodeStats,
+  parseBatchRelevanceResponse,
   parseReasonResponse,
   parseReasonResult,
 } from '../article-pipeline/scoring';
@@ -254,5 +255,51 @@ describe('bucketScore', () => {
   it('returns a sub-floor score untouched', () => {
     expect(bucketScore(0.16, cfg)).toBe(0.16);
     expect(bucketScore(0.39, cfg)).toBe(0.39);
+  });
+});
+
+describe('pass-1 stake tags', () => {
+  const CFG = DEFAULT_HARNESS_CONFIG.articlePipeline;
+  const decodeScores = (out: string, n: number, tags?: (string | null)[]) =>
+    parseBatchRelevanceResponse(out, n, 'id', undefined, CFG, undefined, undefined, tags);
+
+  it('reports the tag the model used, aligned with the scores', () => {
+    // THE MEASUREMENT THIS EXISTS FOR. `home`, `family`, `travel`, `domain` and
+    // `attend` all clamp into [0.40, 1.10], so "was this foreign-domestic story
+    // tagged `home`?" cannot be read off the score. Only `k` answers it.
+    const tags: (string | null)[] = [];
+    const scores = decodeScores(
+      '[{"k":"home","s":0.82},{"k":"none","s":0.12},{"k":"interest","s":0.33}]',
+      3,
+      tags,
+    );
+    expect(scores).toEqual([0.82, 0.12, 0.33]);
+    expect(tags).toEqual(['home', 'none', 'interest']);
+  });
+
+  it('reports null for a legacy bare-number entry, keeping the arrays aligned', () => {
+    const tags: (string | null)[] = [];
+    const scores = decodeScores('[0.82, 0.12]', 2, tags);
+    expect(scores).toHaveLength(2);
+    expect(tags).toEqual([null, null]);
+  });
+
+  it('never returns a tag array shorter or longer than the scores', () => {
+    for (const [output, n] of [
+      ['[{"k":"home","s":0.82}]', 3],
+      ['[{"k":"home","s":0.82},{"k":"none","s":0.1},{"k":"none","s":0.1},{"k":"none","s":0.1}]', 2],
+      ['not json at all', 4],
+    ] as const) {
+      const tags: (string | null)[] = [];
+      const scores = decodeScores(output, n, tags);
+      expect(tags).toHaveLength(scores.length);
+      expect(tags).toHaveLength(n);
+    }
+  });
+
+  it('is byte-neutral when no out-array is passed', () => {
+    // Every existing call site omits it, so the scores must be exactly what
+    // they were before the tags were surfaced.
+    expect(decodeScores('[{"k":"home","s":0.82},{"k":"none","s":0.12}]', 2)).toEqual([0.82, 0.12]);
   });
 });

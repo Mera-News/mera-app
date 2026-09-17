@@ -27,6 +27,7 @@ export {
   REASON_RESCORE_ID,
   REASON_RESCORE_PRIOR_ID,
   RESCORE_DEMOTE_ONLY_ID,
+  NULL_CONTROL_ID,
 } from './prompts/reason-arms';
 export * from './prompts/questionnaire-data';
 export * from './persona-management/fact-rules';

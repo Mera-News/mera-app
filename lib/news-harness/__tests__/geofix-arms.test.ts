@@ -11,6 +11,7 @@
 // prompts are edited.
 import {
   GEO_SCOPE_V1_ID,
+  NULL_CONTROL_ID,
   REASON_RESCORE_ID,
   REASON_RESCORE_PRIOR_ID,
   RESCORE_DEMOTE_ONLY_ID,
@@ -189,5 +190,40 @@ describe('buildReasonUserMessage — the prior-score line', () => {
     const msg = buildReasonUserMessage({ ...base, promptVariant: REASON_RESCORE_ID });
     expect(msg).toContain('Publication: Diario de Noticias (Portuguese)');
     expect(msg).toContain('Portugal');
+  });
+});
+
+describe('null-control', () => {
+  it('resolves to the SHIPPED prompt in every slot', () => {
+    // Not "equal to a copy of it" — it names no slot at all, so
+    // systemPromptForSlot hands back the shipped string itself and there is
+    // nothing that could drift.
+    for (const slot of SLOTS) {
+      expect(armPrompt(NULL_CONTROL_ID, slot)).toBe(SHIPPED[slot]);
+    }
+  });
+
+  it('carries no overrides and no policy', () => {
+    const spec = resolvePromptVariant(NULL_CONTROL_ID);
+    expect(spec.systemPrompts).toBeUndefined();
+    expect(spec.reasonPriorScoreLine).toBeUndefined();
+    expect(spec.rescorePolicy).toBeUndefined();
+    expect(spec.articleTextMaxLength).toBeUndefined();
+  });
+
+  it('builds the same user message as baseline, byte for byte', () => {
+    const base = {
+      userContext: 'Lives in Amsterdam.',
+      articleTitle: 'T',
+      articleDescription: 'D',
+      articleCountry: 'Portugal',
+      publication: 'Diario de Noticias (Portuguese)',
+      relevance: 0.82,
+      relatedFacts: ['f'],
+      nonce: 'aaaabbbbcccc',
+    };
+    expect(buildReasonUserMessage({ ...base, promptVariant: NULL_CONTROL_ID })).toBe(
+      buildReasonUserMessage(base),
+    );
   });
 });

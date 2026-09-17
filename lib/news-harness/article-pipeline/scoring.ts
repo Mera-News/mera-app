@@ -1002,6 +1002,70 @@ function looksLikeProse(text: string): boolean {
  * and the returned scores and every log line are byte-for-byte what they were
  * before the parameter existed.
  */
+
+/**
+ * One decoded pass-1 entry: the band-clamped score, and the stake tag the model
+ * used to reach it.
+ *
+ * THE TAG IS WHY THIS EXISTS. `k` was read purely to pick a clamp band and then
+ * thrown away, which is fine for the product and useless for measurement: the
+ * question "did a foreign-domestic story get tagged `home`?" cannot be answered
+ * from the score, because `home`, `family`, `travel`, `domain` and `attend` all
+ * share the band [0.40, 1.10]. Callers that want the tag pass an out-array;
+ * callers that do not are byte-identical to before.
+ *
+ * `null` for a legacy bare-number entry (no tag was sent) and for an entry that
+ * failed to decode, so the array always lines up index-for-index with the
+ * scores.
+ */
+function mapRelevanceEntries(
+  parsed: unknown[],
+  stats: RelevanceDecodeStats | undefined,
+): { numbers: number[]; tags: (string | null)[] } {
+  const numbers: number[] = [];
+  const tags: (string | null)[] = [];
+  for (const v of parsed) {
+    if (typeof v === 'number') {
+      if (stats) {
+        stats.entries++;
+        stats.legacyNumberEntries++;
+      }
+      numbers.push(clampRelevance(v));
+      tags.push(null);
+      continue;
+    }
+    if (
+      typeof v === 'object' &&
+      v !== null &&
+      typeof (v as { s?: unknown }).s === 'number'
+    ) {
+      if (stats) {
+        stats.entries++;
+        stats.tieredEntries++;
+      }
+      const k = (v as { k?: unknown }).k;
+      numbers.push(clampToStakeBand((v as { s: number }).s, k, stats));
+      tags.push(typeof k === 'string' ? k : null);
+      continue;
+    }
+    numbers.push(NaN);
+    tags.push(null);
+  }
+  return { numbers, tags };
+}
+
+/** Fill a caller's tag out-array so it lines up with the scores that are about
+ *  to be returned: same length, `null` where no tag was decoded. */
+function emitStakeTags(
+  out: (string | null)[] | undefined,
+  tags: (string | null)[],
+  count: number,
+): void {
+  if (!out) return;
+  out.length = 0;
+  for (let i = 0; i < count; i++) out.push(tags[i] ?? null);
+}
+
 export function parseBatchRelevanceResponse(
   output: string,
   expectedCount: number,
@@ -1010,40 +1074,23 @@ export function parseBatchRelevanceResponse(
   config: ArticlePipelineConfig = ARTICLE_CFG,
   logger: HarnessLogger = NOOP_LOGGER,
   stats?: RelevanceDecodeStats,
+  /** Optional out-array for the per-article stake tag (`k`). Filled to the
+   *  same length as the returned scores. Omit it and nothing changes. */
+  stakeTagsOut?: (string | null)[],
 ): number[] {
   const trimmed = output.trim();
+  emitStakeTags(stakeTagsOut, [], expectedCount);
 
   // Primary path: JSON array of numbers.
   try {
     const parsed: unknown = JSON.parse(trimmed);
     if (Array.isArray(parsed)) {
-      const numbers = parsed.map((v) => {
-        if (typeof v === 'number') {
-          if (stats) {
-            stats.entries++;
-            stats.legacyNumberEntries++;
-          }
-          return clampRelevance(v);
-        }
-        if (
-          typeof v === 'object' &&
-          v !== null &&
-          typeof (v as { s?: unknown }).s === 'number'
-        ) {
-          if (stats) {
-            stats.entries++;
-            stats.tieredEntries++;
-          }
-          return clampToStakeBand(
-            (v as { s: number }).s,
-            (v as { k?: unknown }).k,
-            stats,
-          );
-        }
-        return NaN;
-      });
+      const { numbers, tags } = mapRelevanceEntries(parsed, stats);
       if (numbers.every((n) => !isNaN(n))) {
-        if (numbers.length === expectedCount) return numbers;
+        if (numbers.length === expectedCount) {
+          emitStakeTags(stakeTagsOut, tags, expectedCount);
+          return numbers;
+        }
         if (stats) stats.lengthMismatches++;
         logger.warn(
           'Batch relevance: array length mismatch — padding with fallback',
@@ -1056,6 +1103,9 @@ export function parseBatchRelevanceResponse(
         const padded = numbers.slice(0, expectedCount);
         while (padded.length < expectedCount)
           padded.push(config.fallbackRelevance);
+        // Padded rows took `fallbackRelevance`, which no tag produced, so they
+        // read as `null` rather than borrowing a neighbour's tag.
+        emitStakeTags(stakeTagsOut, tags, expectedCount);
         return padded;
       }
     }
@@ -1074,33 +1124,12 @@ export function parseBatchRelevanceResponse(
     try {
       const parsed: unknown = JSON.parse(lastArray);
       if (Array.isArray(parsed)) {
-        const numbers = parsed.map((v) => {
-          if (typeof v === 'number') {
-            if (stats) {
-              stats.entries++;
-              stats.legacyNumberEntries++;
-            }
-            return clampRelevance(v);
-          }
-          if (
-            typeof v === 'object' &&
-            v !== null &&
-            typeof (v as { s?: unknown }).s === 'number'
-          ) {
-            if (stats) {
-              stats.entries++;
-              stats.tieredEntries++;
-            }
-            return clampToStakeBand(
-              (v as { s: number }).s,
-              (v as { k?: unknown }).k,
-              stats,
-            );
-          }
-          return NaN;
-        });
+        const { numbers, tags } = mapRelevanceEntries(parsed, stats);
         if (numbers.every((n) => !isNaN(n))) {
-          if (numbers.length === expectedCount) return numbers;
+          if (numbers.length === expectedCount) {
+            emitStakeTags(stakeTagsOut, tags, expectedCount);
+            return numbers;
+          }
           if (stats) stats.lengthMismatches++;
           logger.warn(
             'Batch relevance: recovered array length mismatch — padding with fallback',
@@ -1109,6 +1138,7 @@ export function parseBatchRelevanceResponse(
           const padded = numbers.slice(0, expectedCount);
           while (padded.length < expectedCount)
             padded.push(config.fallbackRelevance);
+          emitStakeTags(stakeTagsOut, tags, expectedCount);
           return padded;
         }
       }
