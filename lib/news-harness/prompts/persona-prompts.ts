@@ -581,7 +581,6 @@ function buildPersonaUpdateLocalPrompt(params: {
 
   const rulesSection = `## Rules
 - ${languageRule}
-- No em dash (—) or en dash (–) in your text: use a comma or a full stop.
 - **Save first, then ask.** Save anything the user volunteers before asking. Acknowledge briefly, then ask one follow-up or the next question.
 - **Read Known Facts before asking** — if the city is known, never ask for the city again.
 - **Off-script example.** "I'm an expat from India" + known "Lives in Amsterdam" → ONE fact \`{"statement": "Expat from India living in Amsterdam, Netherlands", "questionnaire_attribute": "background: origin+residence"}\`. City unknown → "Expat originally from India" + ask the city. Never two.${isOnboarding ? '\n- A welcome message was already shown — ask the first unanswered question below.' : ''}
@@ -667,13 +666,11 @@ export function buildPersonaUpdateContext(params: {
 // ============================================================
 
 /**
- * Shared CLOUD fact-only rules + examples. Anchoring, granularity, the
- * big-country exception and the worked examples live here and only here.
- *
- * Embedded by `CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT` ONLY. This comment used to
- * claim `NOISE_GENERATION_SYSTEM_PROMPT` embedded it too; it does not, and the
- * sizes say so plainly — this snippet is ~12.5k characters and the whole noise
- * prompt is ~4.4k, so it cannot contain this. The golden pin records both.
+ * Shared CLOUD fact-only rules + examples — single source of truth embedded
+ * by both `CLOUD_TOPIC_GENERATION_SYSTEM_PROMPT` (real fact-only generation)
+ * and `NOISE_GENERATION_SYSTEM_PROMPT` (which runs the same rules against a
+ * model-invented decoy fact). Anchoring, granularity, big-country exception,
+ * and examples live here and only here.
  */
 export const CLOUD_TOPIC_GEN_RULES_SNIPPET = `## Inputs
 1. **Fact** (primary) — every topic MUST be about this fact's subject only.
@@ -684,7 +681,7 @@ You will NEVER receive Other user facts in this prompt. A sibling prompt handles
 
 ## Step 1 — Anchoring (decide in order)
 - **(a-1)** Fact contains the USER's OWN location (lives/works/studies in X, expat in X) → anchor to THAT location, expand full chain (neighborhood → city → state/region → country → continent/bloc). Ignore User location.
-  **Practical daily life:** for this case ONLY, you MAY include up to ONE practical daily-life topic (city transport, or country-level public services/rail) when the place plausibly has that coverage — e.g. "Amsterdam public transport updates", "Netherlands rail strikes". This is a PERMISSION, not a quota: at a small requested count it must never crowd out topics that are actually specific to this fact, and a small town with no dedicated transport reporting should get none.
+  **Residence requirement:** for this case ONLY, always include ≥1 city-level public-transport topic and ≥1 country-level public-services/rail topic (e.g. "Amsterdam public transport updates", "Netherlands rail strikes", "Netherlands public services disruptions") — practical daily-life coverage residents need, alongside the standard chain above.
 - **(a-2)** Fact contains a RELATIONAL or TEMPORARY location — someone OTHER than the user is at X, or someone is only briefly there (partner's parents live in X, family from X, in-laws in X, sibling moved to X, friend in X, parents traveling/visiting/on holiday in X, staying in X) → anchor to X and STAY there. Do NOT ladder up to its state, country, or continent. Only that exact place matters. No "X-state politics", no "X-country news", no "X-continent regulation". "Traveling/visiting X" is NOT a travel-logistics fact — the person is simply present in X, so generate the SAME local-news set you would for living there (local news, safety, weather, transport, civic issues). Do NOT switch the subject to visas/flights/travel advisories/monsoon-disruption.
   - **Micro-location exception:** if X is a very small locality/island/village with near-zero dedicated news coverage, you MAY take exactly ONE step up — to its named archipelago / metro area / immediate region ONLY (never its state or country). E.g. Porto Santo (tiny island) → "Madeira news" / "Funchal news" OK, "Portugal news" ✗. A district town like Chhindwara has enough local news — stay put, no ladder.
 - **(a-3)** **THE FACT ITSELF** names the user's COUNTRY OF ORIGIN while they live somewhere else — "originally from X", "X heritage", "X-born", "expat from X", "X diaspora", "moved here from X" → anchor to X, but the user is NOT THERE. Origin mentioned in the **User location** line does NOT put a Fact on this branch: a work or interest Fact stays on (c)/(b) even when the user's residence statement says they are an expat. Generate DIASPORA-FACING shapes only: visa / entry / passport rule changes, consular services abroad, citizenship and overseas-citizen status, remittance rules, double-tax treaties, customs and travel rules, property and inheritance rules for citizens abroad, diaspora voting rights and diaspora-community news.
@@ -709,17 +706,13 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 - Expand region/category to specific entities: "Middle East conflicts" → "Israel Hamas war", "Iran Israel tensions", etc.
 - **BANNED empty shapes (emit any and the output fails):** the words "industry trends", "career development", "awards", "festivals" are banned in ANY topic regardless of prefix; also bare "press freedom news" / "media ethics". These name a field with no news hook. Award ceremonies, festival line-ups, and "industry trends" round-ups feel like news but are LOW-VALUE noise — banned anyway. ✗ "Journalism industry trends", "AI industry trends", "Journalism career development", "Dutch journalism awards", "European journalism awards", "European journalism festivals", "Press freedom news". Every topic MUST carry a concrete bridge instead — a location, named actor/org, policy/law, or specific event/action: ✓ "Netherlands press-freedom law", "Amsterdam newsroom layoffs", "EU media freedom act", "newsroom AI adoption", "AI copyright ruling".
 - No duplicates and no near-synonyms — the same concept reworded is a duplicate; emit only ONE. ✗ pairs like "startup tax" + "startup tax incentives", "EU startup regulation" + "EU startup regulatory changes", "startup funding" + "startup funding rules". No personal names — use roles. Identifier-only facts → \`[]\`.
-- The count in the user message is a CEILING, not a quota. Emit only topics that are genuinely specific to this Fact and stop as soon as you run out; returning fewer is CORRECT and preferred. Never invent a topic to reach the number — a padded topic permanently pollutes the feed with news the user never asked for. JSON array only, no prose.
-
-## Existing topics (when the user message lists them)
-The user already follows those topics. Do NOT emit one again, and do NOT emit a NEAR-duplicate: the same subject reworded, narrowed or widened is a duplicate. ✗ "Hoorn EV charging stations" when "Hoorn EV charging infrastructure" is listed.
-Avoiding a duplicate must never push you onto a different subject. If everything you would say about this Fact is already listed, return FEWER topics, or \`[]\`. A fresh-sounding topic about something the Fact does not mention is worse than an empty list.
+- Output EXACTLY the count specified in the user message. JSON array only, no prose.
 
 ## Examples
 
-Fact: "Lives in Nieuw-West, Amsterdam, Netherlands" — Generate at most 4 topics
-(residence. Each one names a concrete civic subject, not the place plus a generic noun. ✗ "Nieuw-West safety", "Amsterdam community news", "Amsterdam events" — those are the place with a category bolted on and they retrieve nothing specific.)
-["Amsterdam local government", "Amsterdam urban planning", "Amsterdam public transport updates", "Netherlands housing policy"]
+Fact: "Lives in Nieuw-West, Amsterdam, Netherlands" — Generate 18 topics
+(residence requirement — includes a city transit topic + a country public-services topic)
+["Nieuw-West Amsterdam news", "Amsterdam Nieuw-West events", "Nieuw-West safety", "Amsterdam local government", "Amsterdam urban planning", "Amsterdam community news", "Amsterdam public transport updates", "North Holland politics", "North Holland transport", "Randstad region updates", "Netherlands policy", "Netherlands tax law", "Netherlands elections", "Dutch immigration law", "Netherlands public services disruptions", "Netherlands weather emergencies", "EU regulation", "European policy"]
 
 Fact: "Lives in Bengaluru, India" — Generate 15 topics
 (RESIDENCE fact — branch (a-1). The India-domestic ladder below is correct HERE and ONLY here, because the user is IN India. An ORIGIN fact ("originally from India") takes branch (a-3) instead and must NOT reuse these; see the next example.)
@@ -953,7 +946,7 @@ Continent/bloc map: NL/DE/FR → Europe (EU); US/CA/MX → North America; IN/JP/
 - **Neutral group terms only** — no country-specific acronyms or nationality labels (NRI, OCI, PIO, H-1B). Use "expat", "diaspora", "overseas citizens", "non-residents".
 - **BANNED empty shapes:** the words "industry trends", "career development", "awards", "festivals" are banned in ANY topic; also bare "press freedom news" / "media ethics". Award ceremonies and "industry trends" round-ups feel like news but are LOW-VALUE — banned anyway. ✗ "Journalism industry trends", "AI industry trends", "Dutch journalism awards", "European journalism awards". Each topic needs a concrete bridge (location, named actor, policy, or specific event) ✓ "Netherlands press-freedom law", "newsroom AI adoption", "EU media freedom act", "AI copyright ruling".
 - No duplicates and no near-synonyms — emit only ONE per concept. ✗ "startup tax" + "startup tax incentives", "EU startup regulation" + "EU startup regulatory changes". No personal names — use roles. Identifier-only fact → \`[]\`.
-- The count in the user message is a CEILING, not a quota. Emit only topics that are genuinely specific to this Fact and stop as soon as you run out; returning fewer is CORRECT and preferred. Never invent a topic to reach the number — a padded topic permanently pollutes the feed with news the user never asked for. JSON array only, no prose.
+- Output EXACTLY the count specified in the user message. JSON array only, no prose.
 
 ## Examples
 
