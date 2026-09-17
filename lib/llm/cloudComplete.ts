@@ -1151,6 +1151,10 @@ export type WireMessage =
 
 export interface CloudChatStreamRequest {
   messages: WireMessage[];
+  /** Defaults to TRUE, which is what every pre-existing caller gets. The agent
+   *  loop passes false: measured, the trace buys nothing on a tool-routing leg
+   *  and costs the whole budget on the topic path. */
+  enableThinking?: boolean;
   tools?: ToolDefinition[];
   system?: string;
   model?: string;
@@ -1238,7 +1242,7 @@ export async function* cloudChatStream(
       // coexist — see cloudChatStream's doc comment.
       stream: true,
       model: sendModel,
-      chat_template_kwargs: { enable_thinking: true },
+      chat_template_kwargs: { enable_thinking: request.enableThinking ?? true },
     };
     if (request.tools && request.tools.length > 0) {
       body.tools = request.tools;

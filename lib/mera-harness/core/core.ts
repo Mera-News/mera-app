@@ -5,6 +5,7 @@
 // app rather than about a parallel implementation.
 
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
+import { cleanProse } from './prose';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import {
@@ -182,6 +183,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let skillLoaded: string | null = null;
   let reply = '';
   let legBudgetHit = false;
+  /** WHY the turn stopped. Counted, so a failure shows up in the rows rather
+   *  than as an ordinary settled turn that happened to do nothing. */
+  let terminalReason: AgentTurnResult['terminalReason'] = 'settled';
+  /** Tool names the model invented. `add_fact` and `update_fact` were observed;
+   *  they are not in the payload and executing nothing silently made them look
+   *  like a normal turn. */
+  const unknownTools: string[] = [];
   let placeCandidates: Place[] = [];
   let similarFactCount: number | null = null;
   const toolResultsThisTurn: { name: string; result: unknown }[] = [];
@@ -189,6 +197,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   for (let index = 0; ; index++) {
     if (index >= maxLegs) {
       legBudgetHit = true;
+      terminalReason = 'leg-cap';
       break;
     }
 
@@ -246,11 +255,16 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     };
     legs.push(leg);
 
-    if (result.content.trim()) reply = result.content.trim();
+    // Cleaned here too, not only at the end: the acknowledgement is the FIRST
+    // thing on screen and is exactly where the measured dashes appeared.
+    if (result.content.trim()) reply = cleanProse(result.content);
 
     // A leg that RESOLVED with a transport error is terminal: continuing would
     // let an offline device run four hedged legs for nothing.
-    if (result.error) break;
+    if (result.error) {
+      terminalReason = 'transport-error';
+      break;
+    }
 
     let sawContinuationTool = false;
     let terminatedByChoice = false;
@@ -316,6 +330,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           const out = { error: 'options must be 2 or 3' as const };
           leg.toolResults.push({ name: call.name, result: out });
           terminatedByChoice = true;
+          terminalReason = 'malformed-choice';
           break;
         }
         turn.pendingChoice = {
@@ -370,17 +385,29 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         continue;
       }
 
-      if (CONTINUATION_TOOLS.has(call.name)) sawContinuationTool = true;
+      // An INVENTED tool name. `add_fact` and `update_fact` were both observed
+      // on the corpus. Recorded and counted, never a silent no-op: an
+      // unrecognised call that produced an error nobody reads is
+      // indistinguishable from a turn that simply did nothing, which is how a
+      // model drifting off the declared payload stays invisible.
+      unknownTools.push(call.name);
       leg.toolResults.push({ name: call.name, result: { error: `unknown tool: ${call.name}` } });
     }
 
-    if (terminatedByChoice) break;
+    if (terminatedByChoice) {
+      if (terminalReason === 'settled') terminalReason = 'awaiting-user';
+      break;
+    }
     // A leg carrying an acknowledgement AND a forcing call must CONTINUE: the
     // `forced` check runs before the settled branch, or the preamble design
     // turns every fact turn into a one-leg turn with no skill loaded.
     if (sawContinuationTool) continue;
     if (!result.content.trim()) continue;
     break;
+  }
+
+  if (unknownTools.length > 0 && terminalReason === 'settled') {
+    terminalReason = 'unknown-tool';
   }
 
   turn.turnActive = false;
@@ -390,7 +417,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
   return {
     legs,
-    reply,
+    // Deterministic dash removal. Invariant 7 is unenforceable on model output
+    // by prompt alone: 25% of measured prose rows carried one despite the ban.
+    reply: cleanProse(reply),
+    terminalReason,
+    unknownTools,
     routeKind,
     skillLoaded,
     proposals,

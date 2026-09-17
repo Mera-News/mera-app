@@ -42,19 +42,32 @@ export function buildStateLine(input: StateLineInput): string {
   if (input.resolvedPlaces && input.resolvedPlaces.length > 0) {
     // Every interpolated value is escaped: the literal scaffolding is ours,
     // the values are not.
-    const rendered = input.resolvedPlaces
-      .map((p) =>
-        [p.neighbourhood, p.locality, p.admin1, p.countryName, p.bloc]
-          .filter(Boolean)
-          .map((s) => escapeUntrusted(String(s), 60))
-          .join(', '),
-      )
-      .join(' | ');
-    parts.push(
-      input.resolvedPlaces.length === 1
-        ? `Place resolved: ${rendered}.`
-        : `Place candidates (${input.resolvedPlaces.length}): ${rendered}.`,
-    );
+    const chain = (p: Place) =>
+      [p.neighbourhood, p.locality, p.admin1, p.countryName, p.bloc]
+        .filter(Boolean)
+        .map((v) => escapeUntrusted(String(v), 60))
+        .join(', ');
+
+    if (input.resolvedPlaces.length === 1) {
+      parts.push(`Place resolved: ${chain(input.resolvedPlaces[0])}.`);
+    } else {
+      // The LABELS, quoted and separately from the chains.
+      //
+      // This used to render only the comma-joined chains, and on the ambiguous
+      // fixture the model answered `ask_choice` with `options: []` in most
+      // repeats even though the candidates reached it twice over (here and in
+      // the tool result). Asking it to derive a <60-char chip label from
+      // "Amsterdam, North Holland, Netherlands, EU" is a transformation it was
+      // silently failing; handing it the exact strings removes the step.
+      const labels = input.resolvedPlaces
+        .map((p) => `"${escapeUntrusted(p.neighbourhood || p.locality, 60)}"`)
+        .join(', ');
+      parts.push(
+        `Place is AMBIGUOUS, ${input.resolvedPlaces.length} candidates. `
+        + `Call ask_choice with exactly these options: ${labels}. `
+        + `Full chains: ${input.resolvedPlaces.map(chain).join(' | ')}.`,
+      );
+    }
   }
 
   if (input.similarFactCount !== null) {

@@ -476,31 +476,81 @@ export async function handleDeleteUserFacts(
 
   // Resolve all facts to delete (by ID, attribute key, or statement text)
   const allFacts = await getFacts();
-  const factsByAttrMap = new Map(
-    allFacts
-      .filter(f => f.questionnaireAttribute)
-      .map(f => [f.questionnaireAttribute!.toLowerCase().trim(), f]),
-  );
   const factsByIdMap = new Map(allFacts.map(f => [f.id, f]));
-  const factsByTextMap = new Map(allFacts.map(f => [f.statement.toLowerCase().trim(), f]));
+
+  /**
+   * ALL facts sharing a key, not the last one to claim it.
+   *
+   * This used to be `new Map(allFacts.map(...))`, which is LAST-WINS, and the
+   * attribute lookup ran BEFORE the id lookup. A persona holding two
+   * location-ish facts therefore had one of them silently unreachable, and a
+   * delete naming that attribute removed whichever sat last in `getFacts()`
+   * order -- newest-first, so the OLDEST match. That is how "Expat from India
+   * living in Nieuw-West, Amsterdam" vanished while the user was replacing
+   * their residence: the origin fact was the oldest location-ish match and
+   * absorbed a delete aimed at the residence.
+   */
+  const groupBy = (key: (f: (typeof allFacts)[number]) => string | null) => {
+    const m = new Map<string, typeof allFacts>();
+    for (const f of allFacts) {
+      const k = key(f);
+      if (!k) continue;
+      const bucket = m.get(k);
+      if (bucket) bucket.push(f);
+      else m.set(k, [f]);
+    }
+    return m;
+  };
+  const byAttr = groupBy((f) => f.questionnaireAttribute?.toLowerCase().trim() ?? null);
+  const byText = groupBy((f) => f.statement.toLowerCase().trim());
 
   const factsToDelete: typeof allFacts = [];
   const seenIds = new Set<string>();
+  const ambiguous: { input: string; candidates: { id: string; statement: string }[] }[] = [];
+
   for (const rawId of factIds) {
     const trimmed = rawId.trim().replace(/^\[|\]$/g, '');
-    const fact =
-      factsByAttrMap.get(trimmed.toLowerCase())
-      ?? factsByIdMap.get(trimmed)
-      ?? factsByTextMap.get(trimmed.toLowerCase());
 
-    if (!fact) {
+    // ID FIRST. An id names exactly one fact; an attribute or a statement may
+    // name several, and resolving those before the unambiguous handle is what
+    // let a precise request be answered imprecisely.
+    const byId = factsByIdMap.get(trimmed);
+    const matches = byId
+      ? [byId]
+      : byAttr.get(trimmed.toLowerCase()) ?? byText.get(trimmed.toLowerCase()) ?? [];
+
+    if (matches.length === 0) {
       logger.warn('[deleteUserFacts] Fact not found', { input: trimmed });
       continue;
     }
+    if (matches.length > 1) {
+      // REFUSED, not guessed. Deleting a fact is irreversible and cascades to
+      // its topics, so an ambiguous handle is answered with the candidates and
+      // their ids rather than with a coin flip.
+      ambiguous.push({
+        input: trimmed,
+        candidates: matches.map((f) => ({ id: f.id, statement: f.statement })),
+      });
+      logger.warn('[deleteUserFacts] ambiguous handle, refusing', {
+        input: trimmed,
+        count: matches.length,
+      });
+      continue;
+    }
+    const fact = matches[0];
     if (!seenIds.has(fact.id)) {
       seenIds.add(fact.id);
       factsToDelete.push(fact);
     }
+  }
+
+  if (ambiguous.length > 0 && factsToDelete.length === 0) {
+    return {
+      error: 'ambiguous fact reference, pass an exact fact id',
+      ambiguous,
+      deletedCount: 0,
+      deletedStatements: [],
+    };
   }
 
   if (factsToDelete.length === 0) {

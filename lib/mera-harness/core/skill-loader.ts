@@ -99,6 +99,8 @@ export function skillIndexRows(): SkillIndexRow[] {
 /** One line per routable skill, for the router system prompt. */
 export function renderSkillIndex(): string {
   return skillIndexRows()
-    .map((row) => `- ${row.id} — ${row.when[0] ?? row.description}`)
+    // Colon, not an em dash: the router prompt bans the character, and 12 of
+    // them in its own skill index is the prompt modelling what it forbids.
+    .map((row) => `- ${row.id}: ${row.when[0] ?? row.description}`)
     .join('\n');
 }

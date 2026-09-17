@@ -269,6 +269,17 @@ export interface AgentTurnResult {
   proposals: AgentProposal[];
   /** True when the leg bound CLAMPED the loop. It clamps; it never throws. */
   legBudgetHit: boolean;
+  /** WHY the turn ended. Counted, so a failure appears in the rows instead of
+   *  looking like an ordinary settled turn that happened to do nothing. */
+  terminalReason:
+    | 'settled'
+    | 'awaiting-user'
+    | 'malformed-choice'
+    | 'unknown-tool'
+    | 'transport-error'
+    | 'leg-cap';
+  /** Tool names the model invented, e.g. `add_fact`. Empty on a clean turn. */
+  unknownTools: string[];
   /** Surfaced to the UI so a capped turn renders as capped, not as finished. */
   legCapped: boolean;
   state: AgentTurnState;

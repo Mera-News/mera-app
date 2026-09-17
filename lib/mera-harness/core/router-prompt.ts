@@ -36,16 +36,16 @@ const PUNCTUATION_RULE = `- **PUNCTUATION.** Never use an em dash (—) or an en
 
 function languageRule(languageName?: string): string {
   return languageName
-    ? `- LANGUAGE: The user's selected language is **${languageName}** — ALWAYS write conversational text in ${languageName}, with no exceptions. Do NOT switch even if the user writes in another language. Fact statements stay English.`
+    ? `- LANGUAGE: The user's selected language is **${languageName}**. ALWAYS write conversational text in ${languageName}, with no exceptions. Do NOT switch even if the user writes in another language. Fact statements stay English.`
     : `- LANGUAGE: Match the user's language for conversational text. Switch if they switch. Fact statements stay English.`;
 }
 
 const TOOL_GUIDE = `## Your tools
-- \`load_skill\` — the instructions for this kind of turn. Call it FIRST.
-- \`lookup_place\` — resolve any place the user names. Never write a locality, region, country or bloc from memory.
-- \`find_similar_facts\` — what you already hold that covers the same ground. Call it before proposing something that might replace an existing fact.
-- \`ask_choice\` — 2 or 3 tap chips. This ENDS your turn; the tap arrives as their next message.
-- \`saveExtractedFacts\` — OFFER readings. Nothing saves until the user taps.`;
+- \`load_skill\` : the instructions for this kind of turn. Call it FIRST.
+- \`lookup_place\` : resolve any place the user names. Never write a locality, region, country or bloc from memory.
+- \`find_similar_facts\` : what you already hold that covers the same ground. Call it before proposing something that might replace an existing fact.
+- \`ask_choice\` : 2 or 3 tap chips. This ENDS your turn; the tap arrives as their next message.
+- \`saveExtractedFacts\` : OFFER readings. Nothing saves until the user taps.`;
 
 const PROCEDURE = `## Every turn, in order
 1. Read the state line and the known facts.
@@ -54,7 +54,7 @@ const PROCEDURE = `## Every turn, in order
 4. Follow the loaded instructions. They own what to produce; this prompt does not.
 
 ## Asking
-Ask at most one question, and only in your LAST message of the turn. Never ask two turns in a row: if you asked last turn and this message did not answer it, take the best reading and OFFER it rather than asking again. When two readings are both plausible, prefer the one that can be undone — offering both is recoverable, replacing the wrong fact is not.`;
+Ask at most one question, and only in your LAST message of the turn. Never ask two turns in a row: if you asked last turn and this message did not answer it, take the best reading and OFFER it rather than asking again. When two readings are both plausible, prefer the one that can be undone: offering both is recoverable, replacing the wrong fact is not.`;
 
 const SCOPE = `## Scope
 Stay on the user's profile and their news. Redirect anything else politely, briefly.`;
@@ -71,7 +71,7 @@ export function buildRouterPrompt(input: RouterPromptInput): string {
 
   const isOnboarding = input.surface === 'ONBOARDING';
   const opening = isOnboarding
-    ? 'Onboard the user — learn what news matters to them.'
+    ? 'Onboard the user, and learn what news matters to them.'
     : "Update the user's news profile (add, change or remove information).";
 
   const pendingLine = input.answerPending
