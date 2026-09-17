@@ -163,12 +163,27 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                     <MaterialIcons name="delete-outline" size={20} color="#ef4444" />
                 </Pressable>
                 <Pressable onPress={() => onToggle(fact.id)} className="flex-1 mr-2">
+                    {/* The statement ALWAYS renders — pending/error never
+                        replace it, only add a secondary line beneath it. This
+                        is the one thing that must survive collapsed, not just
+                        expanded, since the row's whole identity is the fact
+                        phrase. */}
                     <TranslatableDynamic
                         text={fact.statement}
                         size="md"
                         className="text-white capitalize"
                         numberOfLines={2}
                     />
+                    {status === 'pending' && (
+                        <Text size="xs" className="text-typography-400 mt-0.5">
+                            {t('configPanel.generatingTopics')}
+                        </Text>
+                    )}
+                    {status === 'error' && (
+                        <Text size="xs" className="text-gray-500 mt-0.5">
+                            {t('configPanel.topicGenFailedGeneric')}
+                        </Text>
+                    )}
                 </Pressable>
                 <HStack space="xs" className="items-center">
                     {status === 'pending' && (
@@ -251,29 +266,27 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                         </HStack>
                     </HStack>
                     {status === 'error' ? (
-                        <VStack space="sm">
-                            <StatusIndicator
-                                status="error"
-                                errorText={t('configPanel.topicGenFailedGeneric')}
-                                testID={`fact-topics-retry-body-${fact.id}`}
-                            />
-                            <Pressable
-                                onPress={handleRetry}
-                                disabled={isRetrying}
-                                accessibilityRole="button"
-                                accessibilityLabel={t('configPanel.retryTopicGeneration')}
-                                accessibilityState={{ disabled: isRetrying }}
-                                testID={`fact-topics-retry-body-button-${fact.id}`}
-                            >
-                                <Text size="sm" className="text-blue-400">
-                                    {t('configPanel.retryTopicGeneration')}
-                                </Text>
-                            </Pressable>
-                        </VStack>
+                        // The consequence text now lives under the statement
+                        // in the header, always visible — not duplicated
+                        // here. This is just the larger, expanded-only retry
+                        // tap target.
+                        <Pressable
+                            onPress={handleRetry}
+                            disabled={isRetrying}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('configPanel.retryTopicGeneration')}
+                            accessibilityState={{ disabled: isRetrying }}
+                            testID={`fact-topics-retry-body-button-${fact.id}`}
+                        >
+                            <Text size="sm" className="text-blue-400">
+                                {t('configPanel.retryTopicGeneration')}
+                            </Text>
+                        </Pressable>
                     ) : status === 'pending' ? (
-                        <Text className="text-typography-400 text-sm">
-                            {t('configPanel.generatingTopics')}
-                        </Text>
+                        // Nothing here either — the "Generating topics…" line
+                        // is under the statement in the header, expanded or
+                        // not, so there is nothing left to say twice.
+                        null
                     ) : (
                         <VStack space="sm">
                             {activeTopics.map(topicRow => {

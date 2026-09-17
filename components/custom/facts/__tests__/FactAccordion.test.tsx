@@ -133,6 +133,57 @@ beforeEach(() => {
     mockTopicSubscribers = [];
 });
 
+describe('FactAccordion — the statement always renders, in every state', () => {
+    // Coordinator/user feedback: the pending state must never replace the
+    // fact phrase, collapsed or expanded — a secondary caption is added
+    // BESIDE it, never instead of it.
+    it.each(['pending', 'done', 'error'] as const)(
+        'renders the fact statement when topicsStatus is %s, collapsed',
+        (topicsStatus) => {
+            const fact = baseFact({
+                topicsStatus,
+                metadata: topicsStatus === 'error' ? { topicGenError: ['boom'] } : {},
+            });
+            const { getByText } = render(
+                <FactAccordion {...baseProps} fact={fact} isExpanded={false} />,
+            );
+            expect(getByText('Loves hiking in the mountains')).toBeTruthy();
+        },
+    );
+
+    it.each(['pending', 'done', 'error'] as const)(
+        'renders the fact statement when topicsStatus is %s, expanded',
+        (topicsStatus) => {
+            const fact = baseFact({
+                topicsStatus,
+                metadata: topicsStatus === 'error' ? { topicGenError: ['boom'] } : {},
+            });
+            const { getByText } = render(
+                <FactAccordion {...baseProps} fact={fact} isExpanded={true} />,
+            );
+            expect(getByText('Loves hiking in the mountains')).toBeTruthy();
+        },
+    );
+
+    it('the pending caption sits ALONGSIDE the statement, collapsed — not gated on being expanded', () => {
+        const fact = baseFact({ topicsStatus: 'pending' });
+        const { getByText } = render(
+            <FactAccordion {...baseProps} fact={fact} isExpanded={false} />,
+        );
+        expect(getByText('Loves hiking in the mountains')).toBeTruthy();
+        expect(getByText('configPanel.generatingTopics')).toBeTruthy();
+    });
+
+    it('the error consequence line sits ALONGSIDE the statement, collapsed — not gated on being expanded', () => {
+        const fact = baseFact({ topicsStatus: 'error', metadata: { topicGenError: ['boom'] } });
+        const { getByText } = render(
+            <FactAccordion {...baseProps} fact={fact} isExpanded={false} />,
+        );
+        expect(getByText('Loves hiking in the mountains')).toBeTruthy();
+        expect(getByText('configPanel.topicGenFailedGeneric')).toBeTruthy();
+    });
+});
+
 describe('FactAccordion — pending/done/error, driven by fact.topicsStatus (P3\'s DTO field)', () => {
     it('pending: header spinner, generating caption, no topic list, no retry', () => {
         const fact = baseFact({ topicsStatus: 'pending' });
