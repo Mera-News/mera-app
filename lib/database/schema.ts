@@ -1,7 +1,7 @@
 import { appSchema, tableSchema } from '@nozbe/watermelondb';
 
 export default appSchema({
-  version: 54,
+  version: 55,
   tables: [
     // ── On-Device Domain ──────────────────────────────────────────
 
@@ -17,6 +17,16 @@ export default appSchema({
         // treated as 1.0 by the scoring engine. Additive; the silent persona
         // migration sets this to 1.0 for existing facts.
         { name: 'weight', type: 'number', isOptional: true },
+        // Topic generation progress (schema v55). 'pending' | 'done' | 'error'.
+        // NULL is a real, common state meaning generation was never asked for:
+        // render it exactly like 'done', never as a spinner or an error. This
+        // column is the progress of the most recent RUN and is NOT authoritative
+        // over the `topics` table, which owns what actually exists — a fact can
+        // legitimately be 'pending' while already holding topics ("generate
+        // more"), or 'done' holding none. It must NEVER gate whether topics
+        // render, so any drift costs a stale spinner, not a hidden interest.
+        { name: 'topics_status', type: 'string', isOptional: true },
+        { name: 'topics_updated_at', type: 'number', isOptional: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],
@@ -329,6 +339,13 @@ export default appSchema({
         { name: 'high_priority', type: 'boolean' },
         { name: 'location_id', type: 'string', isOptional: true, isIndexed: true },
         { name: 'last_signal_at', type: 'number', isOptional: true },
+        // Staged for deletion (schema v55). Non-null ⇒ the row still EXISTS but
+        // no live read may return it, which is what lets a 5s undo survive the
+        // card unmounting, a tab switch and a process kill. Deliberately not a
+        // fourth `status`: staging is orthogonal to active/suppressed/retired,
+        // and folding it in would lose the status to restore on undo.
+        // getAllTopicIds() must keep returning these rows — see topic-service.
+        { name: 'pending_delete_at', type: 'number', isOptional: true, isIndexed: true },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
       ],
@@ -628,6 +645,28 @@ export default appSchema({
         { name: 'subscribed_at', type: 'number' },
         { name: 'created_at', type: 'number' },
         { name: 'updated_at', type: 'number' },
+      ],
+    }),
+
+    tableSchema({
+      name: 'declined_topics',
+      // Topics the user explicitly said No to (schema v55). User-owned,
+      // permanent, NEVER wiped: it is the record of a preference, and losing it
+      // means the agent re-proposes what the user already rejected.
+      //
+      // Device-only and never reported. No collection may link a user to a
+      // topic server-side, and this is product state, not instrumentation.
+      //
+      // `text` is the display form (original casing) and is what the "Topics you
+      // removed" list renders; `normalized_text` is the dedup + match key that
+      // topic generation filters against. Both are needed: keying only on the
+      // normalized form would show the user lowercased, whitespace-collapsed
+      // strings back.
+      columns: [
+        { name: 'text', type: 'string' },
+        { name: 'normalized_text', type: 'string', isIndexed: true },
+        { name: 'source_fact_id', type: 'string', isOptional: true, isIndexed: true },
+        { name: 'created_at', type: 'number', isIndexed: true },
       ],
     }),
   ],

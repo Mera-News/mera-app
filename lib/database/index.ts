@@ -29,6 +29,7 @@ import TrackedStory from './models/TrackedStory';
 import TranslationCache from './models/TranslationCache';
 import FactCheckRecord from './models/FactCheckRecord';
 import UserPublicationSubscription from './models/UserPublicationSubscription';
+import DeclinedTopic from './models/DeclinedTopic';
 
 const adapter = new SQLiteAdapter({
   schema,
@@ -70,6 +71,7 @@ const database = new Database({
     TranslationCache,
     FactCheckRecord,
     UserPublicationSubscription,
+    DeclinedTopic,
   ],
 });
 

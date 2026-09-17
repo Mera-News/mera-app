@@ -33,6 +33,16 @@ export default class Topic extends Model {
   @field('high_priority') highPriority!: boolean;
   @field('location_id') locationId!: string | null;
   @field('last_signal_at') lastSignalAt!: number | null;
+  /**
+   * Staged for deletion (v55). Non-null ⇒ the row still EXISTS but no live read
+   * may return it, which is what lets the 5s undo survive the card unmounting,
+   * a tab switch and a process kill.
+   *
+   * NOT a fourth `TopicStatus`: staging is orthogonal to
+   * active/suppressed/retired, and folding it in would lose the status the row
+   * must be restored to on undo.
+   */
+  @field('pending_delete_at') pendingDeleteAt!: number | null;
   @date('created_at') createdAt!: Date;
   @date('updated_at') updatedAt!: Date;
 }
