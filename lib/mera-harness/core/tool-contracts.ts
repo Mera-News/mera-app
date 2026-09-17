@@ -120,6 +120,91 @@ export const ASK_CHOICE_TOOL: ToolDefinition = {
   },
 };
 
+/**
+ * The ONE tool the forced-proposal leg may call, alongside ask_choice.
+ *
+ * Declared here rather than taken from the persona builder because the core
+ * imports nothing from news-harness, and because a forced payload must be
+ * exactly the tools whose call is a legitimate answer to "propose something
+ * now": offer a reading, or ask which reading. Nothing else.
+ */
+export const SAVE_FACTS_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'saveExtractedFacts',
+    description:
+      'OFFER facts from the user message for them to confirm. Nothing is saved until the user taps a reading on the card.',
+    parameters: {
+      type: 'object',
+      properties: {
+        extracted_user_information: {
+          type: 'array',
+          description: 'New facts from the user message.',
+          items: {
+            type: 'object',
+            properties: {
+              statement: { type: 'string' },
+              questionnaire_attribute: { type: 'string' },
+              alternatives: { type: 'array', items: { type: 'string' } },
+              replaces: { type: 'string' },
+              placeChain: { type: 'object', properties: {} },
+            },
+            required: ['statement'],
+          },
+        },
+      },
+      required: ['extracted_user_information'],
+    },
+  },
+};
+
+export const DELETE_FACTS_TOOL: ToolDefinition = {
+  type: 'function',
+  function: {
+    name: 'deleteUserFacts',
+    description:
+      'Remove facts the user asked you to remove. Pass EXACT fact ids from the existing-facts list, never an attribute or a statement. Ask with ask_choice and wait for the tap before calling this: it is irreversible and it deletes the topics too.',
+    parameters: {
+      type: 'object',
+      properties: {
+        fact_ids: { type: 'array', items: { type: 'string' }, description: 'Exact fact ids.' },
+      },
+      required: ['fact_ids'],
+    },
+  },
+};
+
+/**
+ * The tools a leg is offered, which is NOT one fixed list.
+ *
+ * WHY THIS EXISTS. `HARNESS_TOOLS` was the whole payload on every leg, and it
+ * holds only the four discovery tools: saveExtractedFacts and deleteUserFacts
+ * were never offered at all. Across 480 fact turns there was ONE save, and the
+ * invented names `add_fact`, `save_fact` and `update_fact` were the model
+ * reaching for a tool it could see the need for and could not see. No amount
+ * of prompting fixes a tool that is not in the payload.
+ *
+ *  - ROUTER leg (nothing loaded): the four discovery tools. Nothing to save
+ *    yet, and offering a writer here invites a save before the guideline that
+ *    shapes it has been read.
+ *  - FACTS leg: discovery minus load_skill, PLUS the two writers.
+ *  - ANY OTHER skill: discovery minus load_skill. A conversation turn has
+ *    nothing to write.
+ *  - FORCED leg: saveExtractedFacts and ask_choice only, the two calls that
+ *    answer "propose something now".
+ */
+export function toolsForLeg(opts: {
+  skillLoaded: string | null;
+  forcingProposal?: boolean;
+}): ToolDefinition[] {
+  if (opts.forcingProposal) return [SAVE_FACTS_TOOL, ASK_CHOICE_TOOL];
+  if (opts.skillLoaded === null) return [...HARNESS_TOOLS];
+  const discovery = HARNESS_TOOLS.filter((t) => t.function.name !== 'load_skill');
+  return opts.skillLoaded.startsWith('facts/')
+    ? [...discovery, SAVE_FACTS_TOOL, DELETE_FACTS_TOOL]
+    : discovery;
+}
+
 export const MIN_CHOICE_OPTIONS = 2;
 export const MAX_CHOICE_OPTIONS = 3;
 

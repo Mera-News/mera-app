@@ -42,12 +42,30 @@ const PERSONA: AgentPersona = {
 function scriptedDeps(
   script: AgentModelResult[],
   toolOver: Partial<AgentDeps['tools']> = {},
-): { deps: AgentDeps; calls: { systemPrompt: string; tools: unknown[] }[] } {
-  const calls: { systemPrompt: string; tools: unknown[] }[] = [];
+): {
+  deps: AgentDeps;
+  calls: {
+    systemPrompt: string;
+    tools: unknown[];
+    toolChoice?: string;
+    messages: { role: string; content: string }[];
+  }[];
+} {
+  const calls: {
+    systemPrompt: string;
+    tools: unknown[];
+    toolChoice?: string;
+    messages: { role: string; content: string }[];
+  }[] = [];
   let i = 0;
   const deps: AgentDeps = {
     callModel: async (req) => {
-      calls.push({ systemPrompt: req.systemPrompt, tools: (req.tools ?? []) as unknown[] });
+      calls.push({
+        systemPrompt: req.systemPrompt,
+        tools: (req.tools ?? []) as unknown[],
+        toolChoice: req.toolChoice,
+        messages: req.messages,
+      });
       return script[Math.min(i++, script.length - 1)];
     },
     tools: {
@@ -80,10 +98,16 @@ describe('the bounded loop', () => {
     // no skill loaded.
     const { deps, calls } = scriptedDeps([
       modelResult({ content: 'Nieuw-West, let me note that.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
-      modelResult({ content: 'Saved that one.' }),
+      modelResult({
+        content: 'Saved that one.',
+        toolCalls: [tc('saveExtractedFacts', {
+          extracted_user_information: [{ statement: 'Lives in Alkmaar' }],
+        })],
+      }),
     ]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'I moved', deps });
     expect(out.legs).toHaveLength(2);
+    expect(out.forcedProposal).toBe(false);
     expect(out.skillLoaded).toBe('facts/residence');
     expect(out.routeKind).toBe('residence');
     // The loaded body becomes the NEXT leg's system prompt.
@@ -116,16 +140,27 @@ describe('the bounded loop', () => {
         content: 'Nice hobby, chess!',
         toolCalls: [tc('load_skill', { id: 'facts/residence' })],
       }),
+      // The model calls it AGAIN even though the tool has left the payload:
+      // an undeclared call is still something a model emits.
+      modelResult({
+        content: 'Nice hobby, chess!',
+        toolCalls: [tc('load_skill', { id: 'facts/residence' })],
+      }),
+      modelResult({
+        content: 'Here it is.',
+        toolCalls: [tc('saveExtractedFacts', {
+          extracted_user_information: [{ statement: 'Plays chess' }],
+        })],
+      }),
     ]);
     const out = await runAgentTurn({
       state: createAgentState(PERSONA), userMessage: 'I enjoy playing chess', deps,
     });
-    // Leg 1 loads, leg 2 re-requests the same skill and SETTLES on its prose.
-    expect(out.legs).toHaveLength(2);
-    expect(calls).toHaveLength(2);
+    // Leg 1 loads, leg 2 re-requests the same skill without buying a leg and
+    // would settle on prose, leg 3 is the FORCED proposal.
+    expect(calls.length).toBeLessThanOrEqual(3);
     expect(out.legBudgetHit).toBe(false);
     expect(out.terminalReason).toBe('settled');
-    expect(out.reply).toBe('Nice hobby, chess!');
     expect(out.legs[1].toolResults[0].result).toEqual({
       id: 'facts/residence', alreadyLoaded: true, activeSkill: 'facts/residence',
     });
@@ -360,5 +395,199 @@ describe('bindChoicePayloads', () => {
   it('gives an unmatched option a null payload rather than a wrong one', () => {
     const bound = bindChoicePayloads(['Neither of those'], [AMS]);
     expect(bound[0].payload).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// A facts/* turn owes a PROPOSAL. Prose is not one. (pagent P1)
+//
+// Both device failures at 51750c7 were this: "I enjoy playing chess" loaded
+// facts/interest then produced two prose legs and NO card, and the residence
+// turn asked four prose questions and "confirmed" a stale Rotterdam fact.
+// ---------------------------------------------------------------------------
+describe('the forced proposal leg', () => {
+  const FACTS_DEPS = (script: AgentModelResult[]) =>
+    scriptedDeps(script).deps;
+
+  it('DEVICE CASE 1 (chess): prose after a fact skill forces one proposal leg', async () => {
+    const { deps, calls } = scriptedDeps([
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'Let me pull up the right steps.' }),
+      modelResult({
+        content: 'Here is what I have.',
+        toolCalls: [tc('saveExtractedFacts', {
+          extracted_user_information: [{ statement: 'Plays chess' }],
+        })],
+      }),
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I enjoy playing chess', deps,
+    });
+    expect(out.forcedProposal).toBe(true);
+    expect(out.proposals.map((p) => p.statement)).toEqual(['Plays chess']);
+    expect(out.terminalReason).toBe('settled');
+    // The forced leg is REQUIRED and carries only the two tools that answer
+    // "propose something now".
+    const forced = calls[calls.length - 1];
+    expect(forced.toolChoice).toBe('required');
+    const names = (forced.tools as { function: { name: string } }[]).map((t) => t.function.name);
+    expect(names.sort()).toEqual(['ask_choice', 'saveExtractedFacts']);
+  });
+
+  it('the forced leg is told plainly that nothing has been proposed', async () => {
+    const { deps, calls } = scriptedDeps([
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'thinking out loud' }),
+      modelResult({ content: 'done', toolCalls: [tc('saveExtractedFacts', {
+        extracted_user_information: [{ statement: 'Plays chess' }] })] }),
+    ]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'chess', deps });
+    const forcedMsgs = calls[calls.length - 1].messages.map((m) => m.content).join('\n');
+    expect(forcedMsgs).toContain('You have not proposed anything yet');
+  });
+
+  it('ask_choice ALSO discharges the debt, so a genuine question is not forced', async () => {
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({
+        content: 'Which one?',
+        toolCalls: [tc('ask_choice', { question: 'Which?', options: ['A', 'B'] })],
+      }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'x', deps });
+    expect(out.forcedProposal).toBe(false);
+    expect(out.terminalReason).toBe('awaiting-user');
+  });
+
+  it('a forced leg that STILL proposes nothing ends as no-proposal', async () => {
+    const deps = FACTS_DEPS([
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'still just talking' }),
+      modelResult({ content: 'still just talking' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'x', deps });
+    expect(out.forcedProposal).toBe(true);
+    expect(out.terminalReason).toBe('no-proposal');
+  });
+
+  it('a conversation/* turn owes NOTHING and settles on prose', async () => {
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      modelResult({ content: 'Mera keeps your topics on the device.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'how?', deps });
+    expect(out.forcedProposal).toBe(false);
+    expect(out.terminalReason).toBe('settled');
+  });
+});
+
+describe('existing facts are labelled, and re-proposals rejected', () => {
+  it('DEVICE CASE 2: a proposal equal to an EXISTING candidate is dropped', async () => {
+    const { deps } = scriptedDeps(
+      [
+        modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        modelResult({ content: 'ok', toolCalls: [tc('find_similar_facts', { kind: 'residence' })] }),
+        modelResult({
+          content: 'Confirming.',
+          toolCalls: [tc('saveExtractedFacts', {
+            // The model echoing back what it was just shown. On device this
+            // read as "confirming" a Rotterdam fact replaced two turns ago.
+            extracted_user_information: [{ statement: 'Lives in Rotterdam' }],
+          })],
+        }),
+      ],
+      {
+        findSimilarFacts: async () => ({
+          candidates: [{ factId: 'f9', statement: 'Lives in Rotterdam', attribute: null, overlap: 1 }],
+        }),
+      },
+    );
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'x', deps });
+    // At least one, and NOTHING proposed. The forced leg then fires precisely
+    // because nothing was proposed, and a model that echoes the same stale
+    // statement again is rejected again -- which is the behaviour we want.
+    expect(out.reProposals).toBeGreaterThanOrEqual(1);
+    expect(out.proposals).toEqual([]);
+    expect(out.terminalReason).toBe('no-proposal');
+  });
+
+  it('labels the candidates as EXISTING in the next leg state line', async () => {
+    const { deps, calls } = scriptedDeps(
+      [
+        modelResult({ content: 'ok', toolCalls: [tc('find_similar_facts', { kind: 'residence' })] }),
+        modelResult({ content: 'done' }),
+      ],
+      {
+        findSimilarFacts: async () => ({
+          candidates: [{ factId: 'f9', statement: 'Lives in Rotterdam', attribute: null, overlap: 1 }],
+        }),
+      },
+    );
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'x', deps });
+    const seen = calls[1].messages.map((m) => m.content).join('\n');
+    expect(seen).toContain('EXISTING facts already on file, never re-propose these');
+    expect(seen).toContain('[f9]');
+    expect(seen).toContain('set replaces to the matching id');
+  });
+
+  it('a genuinely NEW statement still proposes', async () => {
+    const { deps } = scriptedDeps(
+      [
+        modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+        modelResult({ content: 'ok', toolCalls: [tc('find_similar_facts', { kind: 'residence' })] }),
+        modelResult({ content: 'ok', toolCalls: [tc('saveExtractedFacts', {
+          extracted_user_information: [{ statement: 'Lives in Nieuw-West, Amsterdam' }] })] }),
+      ],
+      {
+        findSimilarFacts: async () => ({
+          candidates: [{ factId: 'f9', statement: 'Lives in Rotterdam', attribute: null, overlap: 1 }],
+        }),
+      },
+    );
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'x', deps });
+    expect(out.reProposals).toBe(0);
+    expect(out.proposals.map((p) => p.statement)).toEqual(['Lives in Nieuw-West, Amsterdam']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// THE PAYLOAD. saveExtractedFacts was never offered on any leg, which is why
+// 480 fact turns produced ONE save and the model invented add_fact /
+// save_fact / update_fact -- it could see the need and not the tool.
+// ---------------------------------------------------------------------------
+describe('per-leg tool payload', () => {
+  const names = (t: unknown[]) =>
+    (t as { function: { name: string } }[]).map((d) => d.function.name).sort();
+
+  it('the ROUTER leg offers the four discovery tools and NO writer', async () => {
+    const { deps, calls } = scriptedDeps([modelResult({ content: 'hi' })]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
+    expect(names(calls[0].tools)).toEqual([
+      'ask_choice', 'find_similar_facts', 'load_skill', 'lookup_place',
+    ]);
+    expect(names(calls[0].tools)).not.toContain('saveExtractedFacts');
+  });
+
+  it('a FACTS leg offers saveExtractedFacts and deleteUserFacts', async () => {
+    const { deps, calls } = scriptedDeps([
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'ok', toolCalls: [tc('saveExtractedFacts', {
+        extracted_user_information: [{ statement: 'Plays chess' }] })] }),
+    ]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'x', deps });
+    const leg2 = names(calls[1].tools);
+    expect(leg2).toContain('saveExtractedFacts');
+    expect(leg2).toContain('deleteUserFacts');
+    // load_skill is gone once a skill is loaded.
+    expect(leg2).not.toContain('load_skill');
+  });
+
+  it('a CONVERSATION leg offers no writer: there is nothing to save', async () => {
+    const { deps, calls } = scriptedDeps([
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
+      modelResult({ content: 'answer' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'how?', deps });
+    expect(names(calls[1].tools)).not.toContain('saveExtractedFacts');
   });
 });

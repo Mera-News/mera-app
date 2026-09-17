@@ -8,11 +8,7 @@ import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
 import { cleanProse } from './prose';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
-import {
-  CONTINUATION_TOOLS,
-  HARNESS_TOOLS,
-  validateChoiceOptions,
-} from './tool-contracts';
+import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
 import type {
   AgentDeps,
   AgentLeg,
@@ -128,6 +124,12 @@ export function bindChoicePayloads(
   });
 }
 
+/** Only a facts/* turn owes a proposal. A conversation/* turn legitimately
+ *  answers in prose and proposes nothing. */
+function isFactSkill(skillId: string | null): boolean {
+  return skillId !== null && skillId.startsWith('facts/');
+}
+
 function routeKindFromSkill(skillId: string): string | null {
   const slash = skillId.indexOf('/');
   if (slash === -1) return null;
@@ -216,6 +218,19 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** Attempts to load a skill after one was already loaded this turn. Counted
    *  so a prompt that keeps re-routing is visible rather than merely slow. */
   let rerouteAttempts = 0;
+  /** saveExtractedFacts / ask_choice / deleteUserFacts. A facts/* turn that
+   *  settles without ONE of these produced nothing the user can act on: no
+   *  card, no topics, no signal. Two device turns did exactly that. */
+  let proposedSomething = false;
+  let forcedProposal = false;
+  let reProposals = 0;
+  /** Statements find_similar_facts returned, normalised. A proposal equal to
+   *  one is a RE-proposal of a fact already on file, not a new fact. */
+  const existingStatements = new Set<string>();
+  let existingFacts: { factId: string; statement: string }[] = [];
+
+  /** True for the ONE forced leg. */
+  let forcingProposalNow = false;
 
   for (let index = 0; ; index++) {
     if (index >= maxLegs) {
@@ -230,6 +245,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       similarFactCount,
       answerPending,
       resolvedChoiceText: turn.resolvedChoice?.text ?? null,
+      existingFacts,
+      forcedProposal: forcingProposalNow,
     });
 
     // SLIM CONTEXT: system prompt, the user's message, the known facts, this
@@ -264,9 +281,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       // re-load at leg 3 after the other tools had already run. Withholding the
       // tool is stronger than answering it, because a tool the model cannot
       // see is one it cannot spend a leg on.
-      tools: (skillLoaded === null
-        ? HARNESS_TOOLS
-        : HARNESS_TOOLS.filter((t) => t.function.name !== 'load_skill')) as unknown[],
+      tools: toolsForLeg({ skillLoaded, forcingProposal: forcingProposalNow }) as unknown[],
+      toolChoice: forcingProposalNow ? 'required' : 'auto',
       // FALSE on every call: measured, thinking on returned empty content on 8
       // of 10 probes at 8-10s against 0.8-1.0s and a valid answer every time.
       enableThinking: false,
@@ -354,6 +370,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         const kind = typeof args.kind === 'string' ? args.kind : undefined;
         const out = await deps.tools.findSimilarFacts({ kind });
         similarFactCount = out.candidates.length;
+        existingFacts = out.candidates.map((c) => ({
+          factId: c.factId,
+          statement: c.statement,
+        }));
+        for (const c of out.candidates) {
+          existingStatements.add(c.statement.trim().toLowerCase());
+        }
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
         if (!isRepeat) {
@@ -389,6 +412,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           terminalReason = 'malformed-choice';
           break;
         }
+        proposedSomething = true;
         turn.pendingChoice = {
           question,
           options: bindChoicePayloads(args.options, placeCandidates),
@@ -405,6 +429,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         for (const entry of list) {
           const statement = typeof entry.statement === 'string' ? entry.statement.trim() : '';
           if (!statement) continue;
+          // A RE-PROPOSAL. find_similar_facts showed the model this exact
+          // statement as something already on file; offering it back is a
+          // duplicate card, and on device it read as a "confirmation" of a
+          // fact the user had already replaced.
+          if (existingStatements.has(statement.toLowerCase())) {
+            reProposals++;
+            continue;
+          }
           const place = reconcilePlaceChain(
             (entry.placeChain as Record<string, unknown> | undefined) ?? null,
             placeCandidates,
@@ -417,6 +449,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           const replaces = wantsReplace && turn.resolvedChoice ? wantsReplace : null;
           proposals.push({ statement, kind: routeKind, place, replaces });
         }
+        if (proposals.length > 0) proposedSomething = true;
         const out = await deps.tools.saveExtractedFacts({
           extracted_user_information: list,
           proposals,
@@ -435,6 +468,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           continue;
         }
         const ids = Array.isArray(args.fact_ids) ? (args.fact_ids as string[]) : [];
+        proposedSomething = true;
         const out = await deps.tools.deleteUserFacts({ fact_ids: ids });
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
@@ -461,6 +495,21 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // turns every fact turn into a one-leg turn with no skill loaded.
     if (sawContinuationTool) continue;
     if (!result.content.trim()) continue;
+
+    // A facts/* skill ran and the turn is about to settle having proposed
+    // NOTHING. On device that is exactly what happened twice: chess loaded
+    // facts/interest and then produced two legs of prose and no card, and the
+    // residence turn asked four prose questions and "confirmed" a stale fact.
+    // Prose is not a proposal, so one forced leg runs before settling.
+    if (isFactSkill(skillLoaded) && !proposedSomething && !forcingProposalNow) {
+      forcingProposalNow = true;
+      forcedProposal = true;
+      continue;
+    }
+    if (forcingProposalNow && !proposedSomething) {
+      terminalReason = 'no-proposal';
+      break;
+    }
     break;
   }
 
@@ -486,6 +535,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     legBudgetHit,
     legCapped: legBudgetHit,
     rerouteAttempts,
+    forcedProposal,
+    reProposals,
     state: turn,
   };
 }

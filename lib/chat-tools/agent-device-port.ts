@@ -185,7 +185,7 @@ export async function callModelViaCloud(req: AgentModelRequest): Promise<AgentMo
   const stream = cloudChatStream({
     messages,
     tools: req.tools as never,
-    toolChoice: 'auto',
+    toolChoice: req.toolChoice ?? 'auto',
     model: modelId,
     maxTokens: req.maxTokens ?? CHAT_MAX_OUTPUT_TOKENS,
     // Thinking OFF on every agent call. Measured: the trace buys nothing here

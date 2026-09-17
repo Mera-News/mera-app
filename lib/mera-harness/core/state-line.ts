@@ -28,6 +28,10 @@ export interface StateLineInput {
   answerPending: boolean;
   /** What the user tapped on the previous turn, if anything. */
   resolvedChoiceText: string | null;
+  /** Statements ALREADY on file that find_similar_facts returned this turn. */
+  existingFacts?: { factId: string; statement: string }[];
+  /** The forced-proposal leg. Says plainly that nothing has been proposed. */
+  forcedProposal?: boolean;
 }
 
 export function buildStateLine(input: StateLineInput): string {
@@ -70,16 +74,30 @@ export function buildStateLine(input: StateLineInput): string {
     }
   }
 
-  if (input.similarFactCount !== null) {
+  if (input.existingFacts && input.existingFacts.length > 0) {
+    // LABELLED, because the unlabelled list read as material to work from and
+    // the model echoed one back as its "new" fact, or narrated it as a
+    // confirmation. On device it "confirmed" a Rotterdam fact the user had
+    // replaced two turns earlier.
+    const rows = input.existingFacts
+      .map((f) => `[${escapeUntrusted(f.factId, 40)}] "${escapeUntrusted(f.statement, 160)}"`)
+      .join('; ');
     parts.push(
-      input.similarFactCount === 0
-        ? 'Similar facts: none.'
-        : `Similar facts: ${input.similarFactCount}.`,
+      `EXISTING facts already on file, never re-propose these: ${rows}. `
+      + 'To change one, propose the NEW statement and set replaces to the matching id.',
     );
+  } else if (input.similarFactCount !== null) {
+    parts.push('Similar facts: none.');
   }
 
   if (input.resolvedChoiceText) {
     parts.push(`They chose: ${escapeUntrusted(input.resolvedChoiceText, 80)}.`);
+  }
+
+  if (input.forcedProposal) {
+    parts.push(
+      'You have not proposed anything yet. Propose the fact now or ask one choice question.',
+    );
   }
 
   if (input.answerPending) {

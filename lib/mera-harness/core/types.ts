@@ -177,6 +177,9 @@ export interface AgentModelRequest {
   /** FALSE on every call this harness makes, topic generation included
    *  (measured: thinking on returned empty content 8 of 10). */
   enableThinking?: boolean;
+  /** 'required' obliges at least one call from the payload. Used ONLY by the
+   *  forced-proposal leg, where the payload is saveExtractedFacts alone. */
+  toolChoice?: 'auto' | 'required';
   /** Kept available per request so re-enabling thinking on fact legs does not
    *  silently restore the length-truncation condition the degraded fallback
    *  already demonstrates. */
@@ -277,12 +280,20 @@ export interface AgentTurnResult {
     | 'malformed-choice'
     | 'unknown-tool'
     | 'transport-error'
-    | 'leg-cap';
+    | 'leg-cap'
+    /** A fact skill ran, the forced leg ran, and still nothing was proposed. */
+    | 'no-proposal';
   /** Tool names the model invented, e.g. `add_fact`. Empty on a clean turn. */
   unknownTools: string[];
   /** Attempts to load a second skill after one was already loaded this turn.
    *  Every capped turn in the 312-turn corpus was one of these. */
   rerouteAttempts: number;
+  /** A fact skill was loaded and the turn was about to settle having proposed
+   *  nothing, so one forced leg ran. */
+  forcedProposal: boolean;
+  /** Proposals dropped because their statement repeated a fact already on
+   *  file. The model was shown them by find_similar_facts. */
+  reProposals: number;
   /** Surfaced to the UI so a capped turn renders as capped, not as finished. */
   legCapped: boolean;
   state: AgentTurnState;
