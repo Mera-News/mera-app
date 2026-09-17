@@ -298,9 +298,11 @@ export function recordAuthFailure(): void {
       // We never presented a credential, so nothing was proven. Pause the
       // poller (there is nothing to poll WITH) but assert nothing: no
       // needs_reauth, no Sentry event. Recovery needs no new machinery - the
-      // flag was never set, so onAppForeground / onNetworkReconnect do NOT
-      // early-return and re-ask once the latch releases; an 'alive' answer
-      // then closes the breaker and resumes feed-sync.
+      // flag was never set, so onAppForeground / onNetworkReconnect take their
+      // ordinary path and re-ask once the latch releases; an 'alive' answer
+      // then closes the breaker and resumes feed-sync. (Those two no longer
+      // bail out on a SET flag either - see maybeVerifyReauthState - but this
+      // outcome never sets one, so that path is not what saves it here.)
       if (outcome === 'no-credential') {
         logger.addBreadcrumb(
           'Auth breaker re-check had no credential to present',
