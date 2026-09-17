@@ -29,14 +29,16 @@ import { estimateRunCost, formatCostEstimate, type PlannedCall } from '../lib/co
 import { costOf, fetchModelCatalog, rosterWarnings } from '../lib/model-catalog';
 import { postBodyStream, SpendLimitError } from '../lib/near-call';
 import { BIG_MODEL } from '../../lib/llm/constants';
-import { promptVariantIds, resolvePromptVariant } from '../../lib/news-harness/prompts/prompt-variants';
-// SIDE-EFFECT IMPORT, and it is load-bearing. `null-control` (and the reason
-// arms) are registered by this module and by nothing else; importing
-// prompt-variants alone leaves the registry holding only baseline and the
-// truncation arms, and `--variant null-control` then dies at startup. It died
-// exactly that way once here. The assertion below stops it regressing
-// silently if someone tidies the import away as unused.
-import '../../lib/news-harness/prompts/reason-arms';
+// The AGENT's arms live in the harness's own module, not in
+// news-harness/prompts/prompt-variants: adding them there reddened a test
+// outside P1's write set, and they belong to the folder that is meant to lift
+// out as its own package.
+import { agentArmIds, resolveAgentArm } from '../../lib/mera-harness/core/arms';
+import { NULL_CONTROL_ARM, ensureNullControlArm } from '../../lib/mera-harness/eval/null-control';
+
+// ONCE, at module scope. registerAgentArm throws on a second registration, so
+// this must not move inside a loop.
+ensureNullControlArm();
 
 import { PERSONA_SKILL_IDS } from '../../lib/mera-harness/skills/index.generated';
 import { parseScript } from '../../lib/mera-harness/eval/script';
@@ -200,26 +202,27 @@ async function main(): Promise<number> {
   const env = loadHarnessEnv({ require: 'staging' });
   requireStagingTarget(env);
 
-  // The floor arm must exist before anything else is checked. Without the
-  // side-effect import above it does not, and a run that cannot measure its
-  // own noise floor is a run whose deltas are unfalsifiable.
-  if (!promptVariantIds().includes('null-control')) {
+  // The floor arm must exist before anything else is checked: every bar here
+  // is baseline minus the floor, and without the floor there is nothing to
+  // subtract from. ensureNullControlArm() at module scope puts it there; this
+  // catches a future tidy-away of that call.
+  if (!agentArmIds().includes(NULL_CONTROL_ARM)) {
     throw new Error(
-      "harness-local: 'null-control' is not registered, so the reason-arms side-effect import " +
-        'is missing. Every acceptance bar here is baseline minus the floor, and without the floor ' +
-        'there is nothing to subtract from.',
+      `harness-local: '${NULL_CONTROL_ARM}' is not registered, so ensureNullControlArm() did not ` +
+        'run. A run that cannot measure its own noise floor produces unfalsifiable deltas.',
     );
   }
 
-  // Resolve EVERY variant before a single call: the builders resolve lazily,
-  // so an unknown id in second position would otherwise throw partway through
-  // a PAID run with the first arm already billed.
+  // Resolve EVERY arm before a single call: an unknown id in second position
+  // would otherwise throw partway through a PAID run with the first arm
+  // already billed. A typo'd arm that quietly scored the baseline would be
+  // written up as a real result.
   for (const v of args.variants) {
     try {
-      resolvePromptVariant(v);
+      resolveAgentArm(v);
     } catch (err) {
       throw new Error(
-        `harness-local: --variant '${v}' is not registered. Known: ${promptVariantIds().join(', ')}. ` +
+        `harness-local: --variant '${v}' is not a registered agent arm. Known: ${agentArmIds().join(', ')}. ` +
           `(${err instanceof Error ? err.message : String(err)})`,
       );
     }
