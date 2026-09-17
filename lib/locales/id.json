@@ -644,7 +644,9 @@
     "gotItPromo": "Keren! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Penawaran peluncuran 🎊",
-    "resetsOn": "Direset"
+    "resetsOn": "Direset",
+    "retryTopicGeneration": "Coba Lagi",
+    "topicGenFailedGeneric": "Tidak dapat membuat topik untuk ini."
   },
   "errors": {
     "somethingWentWrong": "Terjadi kesalahan",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Apa yang Mera ketahui tentang Anda",
     "influence": "Pengaruh",
     "moreInfluence": "Pengaruh lebih besar",
-    "lessInfluence": "Pengaruh lebih kecil"
+    "lessInfluence": "Pengaruh lebih kecil",
+    "declinedTopicsTitle": "Topik yang Anda hapus",
+    "allowAgain": "Izinkan lagi",
+    "topicRemovalConsequence": "Topik yang dihapus tidak akan disarankan lagi kecuali Anda mengizinkannya kembali di Topik yang Anda hapus."
   },
   "publicationPrefs": {
     "title": "Preferensi sumber",

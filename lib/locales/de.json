@@ -644,7 +644,9 @@
     "gotItPromo": "Super! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Launch-Angebot 🎊",
-    "resetsOn": "Zurücksetzung"
+    "resetsOn": "Zurücksetzung",
+    "retryTopicGeneration": "Erneut versuchen",
+    "topicGenFailedGeneric": "Themen konnten nicht generiert werden."
   },
   "errors": {
     "somethingWentWrong": "Etwas ist schiefgelaufen",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Was Mera über Sie weiß",
     "influence": "Einfluss",
     "moreInfluence": "Mehr Einfluss",
-    "lessInfluence": "Weniger Einfluss"
+    "lessInfluence": "Weniger Einfluss",
+    "declinedTopicsTitle": "Entfernte Themen",
+    "allowAgain": "Wieder zulassen",
+    "topicRemovalConsequence": "Entfernte Themen werden nicht mehr vorgeschlagen, außer Sie lassen sie unter „Entfernte Themen“ wieder zu."
   },
   "publicationPrefs": {
     "title": "Quellenpräferenzen",

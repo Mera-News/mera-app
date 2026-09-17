@@ -656,7 +656,9 @@
     "gotItPromo": "Świetnie! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Oferta na start 🎊",
-    "resetsOn": "Resetuje się"
+    "resetsOn": "Resetuje się",
+    "retryTopicGeneration": "Ponów",
+    "topicGenFailedGeneric": "Nie udało się wygenerować tematy dla tego."
   },
   "errors": {
     "somethingWentWrong": "Coś poszło nie tak",
@@ -1515,7 +1517,10 @@
     "screenSubtitle": "Co Mera o Tobie wie",
     "influence": "Wpływ",
     "moreInfluence": "Większy wpływ",
-    "lessInfluence": "Mniejszy wpływ"
+    "lessInfluence": "Mniejszy wpływ",
+    "declinedTopicsTitle": "Usunięte przez Ciebie tematy",
+    "allowAgain": "Zezwól ponownie",
+    "topicRemovalConsequence": "Usunięte tematy nie będą ponownie sugerowane, chyba że zezwolisz na nie ponownie w sekcji Usunięte przez Ciebie tematy."
   },
   "publicationPrefs": {
     "title": "Preferencje źródeł",

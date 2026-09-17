@@ -644,7 +644,9 @@
     "gotItPromo": "太棒了！🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 上市優惠 🎊",
-    "resetsOn": "重設日"
+    "resetsOn": "重設日",
+    "retryTopicGeneration": "重試",
+    "topicGenFailedGeneric": "無法為此產生主題。"
   },
   "errors": {
     "somethingWentWrong": "發生錯誤",
@@ -1486,7 +1488,10 @@
     "screenSubtitle": "Mera 了解你的哪些資訊",
     "influence": "影響力",
     "moreInfluence": "更多影響",
-    "lessInfluence": "減少影響"
+    "lessInfluence": "減少影響",
+    "declinedTopicsTitle": "您移除的主題",
+    "allowAgain": "再次允許",
+    "topicRemovalConsequence": "移除的主題不會再被推薦，除非您在「您移除的主題」中再次允許。"
   },
   "publicationPrefs": {
     "title": "來源偏好",

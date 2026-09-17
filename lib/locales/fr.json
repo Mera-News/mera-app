@@ -649,7 +649,9 @@
     "gotItPromo": "Super ! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Offre de lancement 🎊",
-    "resetsOn": "Réinitialisation"
+    "resetsOn": "Réinitialisation",
+    "retryTopicGeneration": "Réessayer",
+    "topicGenFailedGeneric": "Impossible de générer les sujets."
   },
   "errors": {
     "somethingWentWrong": "Une erreur est survenue",
@@ -1492,7 +1494,10 @@
     "screenSubtitle": "Ce que Mera sait de vous",
     "influence": "Influence",
     "moreInfluence": "Plus d'influence",
-    "lessInfluence": "Moins d'influence"
+    "lessInfluence": "Moins d'influence",
+    "declinedTopicsTitle": "Sujets que vous avez supprimés",
+    "allowAgain": "Autoriser à nouveau",
+    "topicRemovalConsequence": "Les sujets supprimés ne seront plus suggérés, sauf si vous les autorisez à nouveau dans Sujets que vous avez supprimés."
   },
   "publicationPrefs": {
     "title": "Préférences de sources",

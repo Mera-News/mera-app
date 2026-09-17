@@ -644,7 +644,9 @@
     "gotItPromo": "Fantastico! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Offerta di lancio 🎊",
-    "resetsOn": "Si azzera"
+    "resetsOn": "Si azzera",
+    "retryTopicGeneration": "Riprova",
+    "topicGenFailedGeneric": "Impossibile generare gli argomenti."
   },
   "errors": {
     "somethingWentWrong": "Qualcosa è andato storto",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Cosa sa Mera di te",
     "influence": "Influenza",
     "moreInfluence": "Più influenza",
-    "lessInfluence": "Meno influenza"
+    "lessInfluence": "Meno influenza",
+    "declinedTopicsTitle": "Argomenti che hai rimosso",
+    "allowAgain": "Consenti di nuovo",
+    "topicRemovalConsequence": "Gli argomenti rimossi non verranno più suggeriti a meno che tu non li consenta di nuovo in Argomenti che hai rimosso."
   },
   "publicationPrefs": {
     "title": "Preferenze delle fonti",

@@ -644,7 +644,9 @@
     "gotItPromo": "Geweldig! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Lanceeraanbieding 🎊",
-    "resetsOn": "Reset"
+    "resetsOn": "Reset",
+    "retryTopicGeneration": "Opnieuw",
+    "topicGenFailedGeneric": "Kon geen onderwerpen voor dit genereren."
   },
   "errors": {
     "somethingWentWrong": "Er is iets misgegaan",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Wat Mera over jou weet",
     "influence": "Invloed",
     "moreInfluence": "Meer invloed",
-    "lessInfluence": "Minder invloed"
+    "lessInfluence": "Minder invloed",
+    "declinedTopicsTitle": "Onderwerpen die je verwijderd hebt",
+    "allowAgain": "Weer toestaan",
+    "topicRemovalConsequence": "Verwijderde onderwerpen worden niet meer voorgesteld, tenzij je ze weer toestaat bij Onderwerpen die je verwijderd hebt."
   },
   "publicationPrefs": {
     "title": "Bronvoorkeuren",

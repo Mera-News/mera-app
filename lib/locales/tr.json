@@ -644,7 +644,9 @@
     "gotItPromo": "Harika! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Lansman teklifi 🎊",
-    "resetsOn": "Sıfırlanma"
+    "resetsOn": "Sıfırlanma",
+    "retryTopicGeneration": "Tekrar Dene",
+    "topicGenFailedGeneric": "Bu için konular oluşturulamadı."
   },
   "errors": {
     "somethingWentWrong": "Bir şeyler yanlış gitti",
@@ -1487,7 +1489,10 @@
     "screenSubtitle": "Mera'nın senin hakkında bildikleri",
     "influence": "Etki",
     "moreInfluence": "Daha fazla etki",
-    "lessInfluence": "Daha az etki"
+    "lessInfluence": "Daha az etki",
+    "declinedTopicsTitle": "Kaldırdığın konular",
+    "allowAgain": "Tekrar izin ver",
+    "topicRemovalConsequence": "Kaldırılan konular, Kaldırdığın konular bölümünden tekrar izin vermediğin sürece bir daha önerilmez."
   },
   "publicationPrefs": {
     "title": "Kaynak tercihleri",

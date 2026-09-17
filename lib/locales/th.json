@@ -644,7 +644,9 @@
     "gotItPromo": "เยี่ยมไปเลย! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 ข้อเสนอเปิดตัว 🎊",
-    "resetsOn": "รีเซ็ต"
+    "resetsOn": "รีเซ็ต",
+    "retryTopicGeneration": "ลองใหม่",
+    "topicGenFailedGeneric": "ไม่สามารถสร้างหัวข้อได้"
   },
   "errors": {
     "somethingWentWrong": "เกิดข้อผิดพลาดบางอย่าง",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "สิ่งที่ Mera รู้เกี่ยวกับคุณ",
     "influence": "อิทธิพล",
     "moreInfluence": "อิทธิพลมากขึ้น",
-    "lessInfluence": "อิทธิพลน้อยลง"
+    "lessInfluence": "อิทธิพลน้อยลง",
+    "declinedTopicsTitle": "หัวข้อที่คุณลบ",
+    "allowAgain": "อนุญาตอีกครั้ง",
+    "topicRemovalConsequence": "หัวข้อที่ลบจะไม่ถูกแนะนำอีก เว้นแต่คุณจะอนุญาตอีกครั้งในหัวข้อที่คุณลบ"
   },
   "publicationPrefs": {
     "title": "การตั้งค่าแหล่งข่าว",

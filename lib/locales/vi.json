@@ -644,7 +644,9 @@
     "gotItPromo": "Tuyệt vời! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Ưu đãi ra mắt 🎊",
-    "resetsOn": "Đặt lại"
+    "resetsOn": "Đặt lại",
+    "retryTopicGeneration": "Thử lại",
+    "topicGenFailedGeneric": "Không thể tạo chủ đề cho điều này."
   },
   "errors": {
     "somethingWentWrong": "Đã xảy ra lỗi",
@@ -1486,7 +1488,10 @@
     "screenSubtitle": "Những gì Mera biết về bạn",
     "influence": "Ảnh hưởng",
     "moreInfluence": "Ảnh hưởng nhiều hơn",
-    "lessInfluence": "Ảnh hưởng ít hơn"
+    "lessInfluence": "Ảnh hưởng ít hơn",
+    "declinedTopicsTitle": "Chủ đề bạn đã xóa",
+    "allowAgain": "Cho phép lại",
+    "topicRemovalConsequence": "Các chủ đề đã xóa sẽ không được đề xuất lại trừ khi bạn cho phép lại trong mục Chủ đề bạn đã xóa."
   },
   "publicationPrefs": {
     "title": "Tùy chọn nguồn",

@@ -1042,7 +1042,9 @@
     "gotItPromo": "Awesome! 🎉",
     "starterPlan": "Starter Plan",
     "individualPlan": "Individual Plan",
-    "professionalPlan": "Professional Plan"
+    "professionalPlan": "Professional Plan",
+    "retryTopicGeneration": "Retry",
+    "topicGenFailedGeneric": "Couldn't generate topics for this."
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",
@@ -1689,7 +1691,10 @@
     "screenSubtitle": "What Mera knows about you",
     "influence": "Influence",
     "moreInfluence": "More influence",
-    "lessInfluence": "Less influence"
+    "lessInfluence": "Less influence",
+    "declinedTopicsTitle": "Topics you removed",
+    "allowAgain": "Allow this again",
+    "topicRemovalConsequence": "Removed topics won't be suggested again unless you allow them back in Topics you removed."
   },
   "publicationPrefs": {
     "title": "Source preferences",

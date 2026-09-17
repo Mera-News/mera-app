@@ -658,7 +658,9 @@
     "gotItPromo": "Отлично! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Предложение к запуску 🎊",
-    "resetsOn": "Сбрасывается"
+    "resetsOn": "Сбрасывается",
+    "retryTopicGeneration": "Повторить",
+    "topicGenFailedGeneric": "Не удалось сгенерировать темы для этого."
   },
   "errors": {
     "somethingWentWrong": "Что-то пошло не так",
@@ -1517,7 +1519,10 @@
     "screenSubtitle": "Что Mera знает о вас",
     "influence": "Влияние",
     "moreInfluence": "Больше влияния",
-    "lessInfluence": "Меньше влияния"
+    "lessInfluence": "Меньше влияния",
+    "declinedTopicsTitle": "Темы, которые вы удалили",
+    "allowAgain": "Разрешить снова",
+    "topicRemovalConsequence": "Удалённые темы больше не будут предлагаться, если вы не разрешите их снова в разделе «Темы, которые вы удалили»."
   },
   "publicationPrefs": {
     "title": "Настройки источников",

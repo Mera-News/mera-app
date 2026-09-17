@@ -658,7 +658,9 @@
     "gotItPromo": "Чудово! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Стартова пропозиція 🎊",
-    "resetsOn": "Скидається"
+    "resetsOn": "Скидається",
+    "retryTopicGeneration": "Повторити",
+    "topicGenFailedGeneric": "Не вдалося створити теми для цього."
   },
   "errors": {
     "somethingWentWrong": "Щось пішло не так",
@@ -1521,7 +1523,10 @@
     "screenSubtitle": "Що Mera знає про вас",
     "influence": "Вплив",
     "moreInfluence": "Більший вплив",
-    "lessInfluence": "Менший вплив"
+    "lessInfluence": "Менший вплив",
+    "declinedTopicsTitle": "Теми, які ви вилучили",
+    "allowAgain": "Дозволити знову",
+    "topicRemovalConsequence": "Вилучені теми більше не пропонуватимуться, якщо ви знову не дозволите їх у розділі «Теми, які ви вилучили»."
   },
   "publicationPrefs": {
     "title": "Налаштування джерел",

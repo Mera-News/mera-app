@@ -644,7 +644,9 @@
     "gotItPromo": "Incrível! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Oferta de lançamento 🎊",
-    "resetsOn": "Reinicia"
+    "resetsOn": "Reinicia",
+    "retryTopicGeneration": "Tentar novamente",
+    "topicGenFailedGeneric": "Não foi possível gerar tópicos para isso."
   },
   "errors": {
     "somethingWentWrong": "Algo deu errado",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "O que a Mera sabe sobre você",
     "influence": "Influência",
     "moreInfluence": "Mais influência",
-    "lessInfluence": "Menos influência"
+    "lessInfluence": "Menos influência",
+    "declinedTopicsTitle": "Tópicos que você removeu",
+    "allowAgain": "Permitir novamente",
+    "topicRemovalConsequence": "Tópicos removidos não serão mais sugeridos, a menos que você os permita novamente em Tópicos que você removeu."
   },
   "publicationPrefs": {
     "title": "Preferências de fontes",

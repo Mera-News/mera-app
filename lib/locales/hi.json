@@ -644,7 +644,9 @@
     "gotItPromo": "बढ़िया! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 लॉन्च ऑफर 🎊",
-    "resetsOn": "रीसेट होगा"
+    "resetsOn": "रीसेट होगा",
+    "retryTopicGeneration": "पुनः प्रयास करें",
+    "topicGenFailedGeneric": "इसके लिए विषय तैयार नहीं हो सके।"
   },
   "errors": {
     "somethingWentWrong": "कुछ गलत हो गया",
@@ -1487,7 +1489,10 @@
     "screenSubtitle": "Mera आपके बारे में क्या जानता है",
     "influence": "प्रभाव",
     "moreInfluence": "अधिक प्रभाव",
-    "lessInfluence": "कम प्रभाव"
+    "lessInfluence": "कम प्रभाव",
+    "declinedTopicsTitle": "आपके हटाए गए विषय",
+    "allowAgain": "फिर से अनुमति दें",
+    "topicRemovalConsequence": "हटाए गए विषय तब तक फिर से सुझाए नहीं जाएंगे जब तक आप उन्हें 'आपके हटाए गए विषय' में फिर से अनुमति न दें।"
   },
   "publicationPrefs": {
     "title": "स्रोत प्राथमिकताएं",

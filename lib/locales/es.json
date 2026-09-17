@@ -644,7 +644,9 @@
     "gotItPromo": "¡Genial! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 Oferta de lanzamiento 🎊",
-    "resetsOn": "Se reinicia"
+    "resetsOn": "Se reinicia",
+    "retryTopicGeneration": "Reintentar",
+    "topicGenFailedGeneric": "No se pudo generar temas."
   },
   "errors": {
     "somethingWentWrong": "Algo salió mal",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Lo que Mera sabe sobre ti",
     "influence": "Influencia",
     "moreInfluence": "Más influencia",
-    "lessInfluence": "Menos influencia"
+    "lessInfluence": "Menos influencia",
+    "declinedTopicsTitle": "Temas que quitaste",
+    "allowAgain": "Permitir de nuevo",
+    "topicRemovalConsequence": "Los temas que quitaste no se volverán a sugerir a menos que los permitas de nuevo en Temas que quitaste."
   },
   "publicationPrefs": {
     "title": "Preferencias de fuentes",

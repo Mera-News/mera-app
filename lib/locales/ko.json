@@ -644,7 +644,9 @@
     "gotItPromo": "좋아요! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 출시 기념 혜택 🎊",
-    "resetsOn": "초기화"
+    "resetsOn": "초기화",
+    "retryTopicGeneration": "재시도",
+    "topicGenFailedGeneric": "이 주제에 대한 토픽을 생성할 수 없습니다."
   },
   "errors": {
     "somethingWentWrong": "문제가 발생했습니다",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Mera가 회원님에 대해 알고 있는 것",
     "influence": "영향도",
     "moreInfluence": "더 큰 영향도",
-    "lessInfluence": "더 작은 영향도"
+    "lessInfluence": "더 작은 영향도",
+    "declinedTopicsTitle": "제거한 주제",
+    "allowAgain": "다시 허용",
+    "topicRemovalConsequence": "제거한 주제는 '제거한 주제'에서 다시 허용하지 않는 한 다시 추천되지 않습니다."
   },
   "publicationPrefs": {
     "title": "소스 선호도",

@@ -644,7 +644,9 @@
     "gotItPromo": "やった！ 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 ローンチ特典 🎊",
-    "resetsOn": "リセット"
+    "resetsOn": "リセット",
+    "retryTopicGeneration": "再試行",
+    "topicGenFailedGeneric": "このトピックを生成できませんでした。"
   },
   "errors": {
     "somethingWentWrong": "問題が発生しました",
@@ -1485,7 +1487,10 @@
     "screenSubtitle": "Meraがあなたについて知っていること",
     "influence": "影響",
     "moreInfluence": "より大きな影響",
-    "lessInfluence": "より小さな影響"
+    "lessInfluence": "より小さな影響",
+    "declinedTopicsTitle": "削除したトピック",
+    "allowAgain": "もう一度許可する",
+    "topicRemovalConsequence": "削除したトピックは、「削除したトピック」からもう一度許可しない限り、二度と提案されません。"
   },
   "publicationPrefs": {
     "title": "ソースの設定",

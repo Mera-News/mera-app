@@ -672,7 +672,9 @@
     "gotItPromo": "رائع! 🎉",
     "promoBanner": "🎉 ✨ 🎊 🥳 ✨ 🎉",
     "promoInfoTitleEmoji": "🎉 عرض الإطلاق 🎊",
-    "resetsOn": "يُعاد الضبط في"
+    "resetsOn": "يُعاد الضبط في",
+    "retryTopicGeneration": "إعادة المحاولة",
+    "topicGenFailedGeneric": "تعذّر إنشاء الموضوعات لهذا."
   },
   "errors": {
     "somethingWentWrong": "حدث خطأ ما",
@@ -1555,7 +1557,10 @@
     "screenSubtitle": "ما يعرفه Mera عنك",
     "influence": "التأثير",
     "moreInfluence": "تأثير أكثر",
-    "lessInfluence": "تأثير أقل"
+    "lessInfluence": "تأثير أقل",
+    "declinedTopicsTitle": "المواضيع التي أزلتها",
+    "allowAgain": "السماح بها مجددًا",
+    "topicRemovalConsequence": "لن تُقترح المواضيع المُزالة مرة أخرى ما لم تسمح بها ضمن «المواضيع التي أزلتها»."
   },
   "publicationPrefs": {
     "title": "تفضيلات المصادر",
