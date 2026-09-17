@@ -1,3 +1,4 @@
+import { StatusIndicator } from '@/components/custom/chat/StatusIndicator';
 import { GlassPanel } from '@/components/custom/GlassSurface';
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Box } from '@/components/ui/box';
@@ -7,6 +8,7 @@ import { Pressable } from '@/components/ui/pressable';
 import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
+import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
 import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
@@ -101,11 +103,38 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
     const factTopics = fact.metadata?.topics ?? [];
     const expectedTopicCount = factTopics.length;
     const topicGenError = fact.metadata?.topicGenError?.[0];
-    const topicsSettled = !!topicGenError || expectedTopicCount > 0;
     const totalCount = factTopics.reduce(
         (sum, topic) => sum + (articleCountByTopic.get(topic) ?? 0),
         0,
     );
+
+    // INTERIM derivation — becomes `fact.topicsStatus ?? 'done'` once P3's DTO
+    // commit lands (still gated: the field exists on the WatermelonDB model as
+    // of pagent P3's schema-v55 commit, but not yet on this `Fact` DTO). This
+    // re-expresses today's own heuristic as the three-value shape
+    // `StatusIndicator` expects, so nothing else in this file has to change
+    // again when the source swaps — only this one assignment does.
+    const status: 'pending' | 'done' | 'error' = topicGenError
+        ? 'error'
+        : expectedTopicCount > 0
+            ? 'done'
+            : 'pending';
+
+    // Busy state follows `status` leaving 'error', not the settled promise —
+    // retryTopicGeneration is an enqueue, not a completion (its on-device path
+    // resolves once the job is queued, before it runs), so a `finally` clear
+    // would race ahead of the actual outcome. See mera-app-persona's P4 plan.
+    const [isRetrying, setIsRetrying] = useState(false);
+    useEffect(() => {
+        if (status !== 'error') setIsRetrying(false);
+    }, [status]);
+
+    const handleRetry = useCallback(() => {
+        if (isRetrying) return;
+        setIsRetrying(true);
+        // Never rejects (see its own doc comment) — no catch/toast needed.
+        void retryTopicGeneration(fact.id, fact.statement);
+    }, [isRetrying, fact.id, fact.statement]);
 
     return (
         <GlassPanel className="mx-4 mb-3" fallbackClassName="bg-transparent">
@@ -123,8 +152,26 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                     />
                 </Pressable>
                 <HStack space="xs" className="items-center">
-                    {!topicsSettled && <Spinner size="small" />}
-                    {topicsSettled && totalCount > 0 && (
+                    {status === 'pending' && (
+                        <StatusIndicator status="pending" testID={`fact-topics-pending-${fact.id}`} />
+                    )}
+                    {status === 'error' && (
+                        <Pressable
+                            onPress={handleRetry}
+                            disabled={isRetrying}
+                            hitSlop={8}
+                            accessibilityRole="button"
+                            accessibilityLabel={t('configPanel.retryTopicGeneration')}
+                            accessibilityState={{ disabled: isRetrying }}
+                            testID={`fact-topics-retry-${fact.id}`}
+                        >
+                            <StatusIndicator
+                                status="error"
+                                label={t('configPanel.retryTopicGeneration')}
+                            />
+                        </Pressable>
+                    )}
+                    {status === 'done' && totalCount > 0 && (
                         <Button
                             variant="outline"
                             size="xs"
@@ -184,11 +231,27 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                             </Pressable>
                         </HStack>
                     </HStack>
-                    {topicGenError ? (
-                        <Text className="text-red-400 text-sm">
-                            {t('configPanel.topicGenFailed', { error: topicGenError })}
-                        </Text>
-                    ) : !topicsSettled ? (
+                    {status === 'error' ? (
+                        <VStack space="sm">
+                            <StatusIndicator
+                                status="error"
+                                errorText={t('configPanel.topicGenFailedGeneric')}
+                                testID={`fact-topics-retry-body-${fact.id}`}
+                            />
+                            <Pressable
+                                onPress={handleRetry}
+                                disabled={isRetrying}
+                                accessibilityRole="button"
+                                accessibilityLabel={t('configPanel.retryTopicGeneration')}
+                                accessibilityState={{ disabled: isRetrying }}
+                                testID={`fact-topics-retry-body-button-${fact.id}`}
+                            >
+                                <Text size="sm" className="text-blue-400">
+                                    {t('configPanel.retryTopicGeneration')}
+                                </Text>
+                            </Pressable>
+                        </VStack>
+                    ) : status === 'pending' ? (
                         <Text className="text-typography-400 text-sm">
                             {t('configPanel.generatingTopics')}
                         </Text>
