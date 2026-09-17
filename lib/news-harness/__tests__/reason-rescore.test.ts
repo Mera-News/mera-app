@@ -19,11 +19,15 @@
 // its punctuation, collapsed, and persisted as the card's "why this matters to
 // you". It reads almost like a sentence, which is what makes it dangerous.
 import {
+  applyRescorePolicy,
+  bucketScore,
+  bucketScores,
   decodeCloudBatchResults,
   newReasonDecodeStats,
   parseReasonResponse,
   parseReasonResult,
 } from '../article-pipeline/scoring';
+import { DEFAULT_HARNESS_CONFIG } from '../core/config';
 
 const decode = (out: string) => parseReasonResult(out, 'id');
 
@@ -216,5 +220,39 @@ describe('decodeCloudBatchResults', () => {
       ],
     });
     expect(scoreMap.size).toBe(0);
+  });
+});
+
+describe('applyRescorePolicy', () => {
+  it('replaces by default, in BOTH directions', () => {
+    // Pass 2 sees one article where pass 1 saw five, on the same rubric and the
+    // same facts. Its answer is the better-informed one whichever way it moves.
+    expect(applyRescorePolicy(0.8, 0.16)).toBe(0.16);
+    expect(applyRescorePolicy(0.42, 0.91)).toBe(0.91);
+  });
+
+  it('demote-only ignores an increase', () => {
+    expect(applyRescorePolicy(0.8, 0.16, 'demote-only')).toBe(0.16);
+    expect(applyRescorePolicy(0.42, 0.91, 'demote-only')).toBe(0.42);
+    // Equal is not an increase; either branch returns the same number.
+    expect(applyRescorePolicy(0.5, 0.5, 'demote-only')).toBe(0.5);
+  });
+});
+
+describe('bucketScore', () => {
+  const cfg = DEFAULT_HARNESS_CONFIG.articlePipeline;
+
+  it('agrees with bucketScores on every value', () => {
+    // The single-value form exists so the per-row rescore write does not need a
+    // second copy of the four cutoffs. It has to stay the same rule.
+    const values = [0, 0.16, 0.39, 0.4, 0.55, 0.6, 0.79, 0.8, 0.99, 1.0, 1.05, 1.1];
+    const map = new Map(values.map((v, i) => [String(i), v]));
+    bucketScores(map, cfg);
+    values.forEach((v, i) => expect(bucketScore(v, cfg)).toBe(map.get(String(i))));
+  });
+
+  it('returns a sub-floor score untouched', () => {
+    expect(bucketScore(0.16, cfg)).toBe(0.16);
+    expect(bucketScore(0.39, cfg)).toBe(0.39);
   });
 });

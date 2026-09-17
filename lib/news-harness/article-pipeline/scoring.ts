@@ -288,16 +288,46 @@ export function bucketScores(
   scoreMap: Map<string, number>,
   config: ArticlePipelineConfig = ARTICLE_CFG,
 ): void {
-  for (const [id, raw] of scoreMap) {
-    if (raw < config.discardFloor) continue;
-    if (raw > config.emergencyPriorityCutoff)
-      scoreMap.set(id, config.emergencyPriorityScore);
-    else if (raw >= config.highPriorityCutoff)
-      scoreMap.set(id, config.highPriorityScore);
-    else if (raw >= config.mediumPriorityCutoff)
-      scoreMap.set(id, config.mediumPriorityScore);
-    else scoreMap.set(id, config.lowPriorityScore);
-  }
+  for (const [id, raw] of scoreMap) scoreMap.set(id, bucketScore(raw, config));
+}
+
+/**
+ * {@link bucketScores} for ONE value.
+ *
+ * Extracted because the pass-2 rescore arrives per row, long after the batch
+ * was bucketed, and the alternative was a second copy of the four cutoffs at
+ * every write site. Same rule, same order, sub-floor scores returned untouched.
+ */
+export function bucketScore(
+  raw: number,
+  config: ArticlePipelineConfig = ARTICLE_CFG,
+): number {
+  if (raw < config.discardFloor) return raw;
+  if (raw > config.emergencyPriorityCutoff) return config.emergencyPriorityScore;
+  if (raw >= config.highPriorityCutoff) return config.highPriorityScore;
+  if (raw >= config.mediumPriorityCutoff) return config.mediumPriorityScore;
+  return config.lowPriorityScore;
+}
+
+/** What a caller does with a pass-2 score. See `PromptVariantSpec.rescorePolicy`. */
+export type RescorePolicy = 'replace' | 'demote-only';
+
+/**
+ * Combine a pass-1 RAW score with a pass-2 one.
+ *
+ * The shipped policy is `replace`, in both directions: pass 2 sees one article
+ * where pass 1 saw five, with the same rubric and the same facts, so its answer
+ * is the better-informed one whichever way it moves. `demote-only` is the guard
+ * against pass 2 inflating, kept as an arm rather than a belief.
+ *
+ * RAW in, RAW out. Bucketing is the caller's last step, after this.
+ */
+export function applyRescorePolicy(
+  pass1: number,
+  rescored: number,
+  policy: RescorePolicy = 'replace',
+): number {
+  return policy === 'demote-only' ? Math.min(pass1, rescored) : rescored;
 }
 
 // --- Batch scoring + reason generation ---

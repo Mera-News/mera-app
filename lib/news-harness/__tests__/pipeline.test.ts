@@ -52,6 +52,9 @@ function makeLlm(opts: {
   chunkSize: number;
   scoresById: Record<string, number>;
   reasonsById?: Record<string, string>;
+  /** Make a reason call answer with the pass-2 OBJECT contract instead of a
+   *  plain string, so the rescore path is exercised end to end. */
+  rescoreById?: Record<string, { k: string; s: number }>;
   failScoreChunks?: Set<number>;
 }): LlmPort & { batches: BatchCall[][] } {
   const batches: BatchCall[][] = [];
@@ -77,7 +80,13 @@ function makeLlm(opts: {
         // reason:<id>
         const cid = call.id.slice('reason:'.length);
         const reason = opts.reasonsById?.[cid] ?? `reason for ${cid}`;
-        return { id: call.id, output: JSON.stringify(reason) };
+        const rescore = opts.rescoreById?.[cid];
+        return {
+          id: call.id,
+          output: rescore
+            ? JSON.stringify({ ...rescore, reason })
+            : JSON.stringify(reason),
+        };
       });
     },
     async complete() {
@@ -438,5 +447,72 @@ describe('runArticlePipeline — no topics', () => {
     expect(sink.scores).toHaveLength(0);
     expect(sink.reasons).toHaveLength(0);
     expect(report.dailyLimitReached).toBe(false);
+  });
+});
+
+describe('runArticlePipeline — pass-2 rescore', () => {
+  it('re-saves the rescored row and reports it in its NEW band', async () => {
+    const { facts, idsResults, articlesById, eligibleIds } = happyFixture();
+    const llm = makeLlm({
+      eligibleIds,
+      chunkSize: ARTICLE_CFG.articlesPerScorePrompt,
+      // a1 clears pass 1 easily; pass 2, seeing it alone, finds a foreign
+      // domestic story with no tie to the reader. This is the geofix case.
+      scoresById: { a1: 0.85, a2: 0.5, a3: 0.2 },
+      reasonsById: { a1: 'A Portuguese domestic vote, no tie to where you live.' },
+      rescoreById: { a1: { k: 'none', s: 0.16 } },
+    });
+    const sink = makeSink();
+    const report = await runArticlePipeline({
+      llm,
+      newsApi: makeNewsApi({ idsResults, articlesById }),
+      personaStore: makePersonaStore(facts),
+      sink,
+    });
+
+    // Two writes for a1: pass 1's, then the rescore's. The second is what the
+    // row ends up at, and it goes through the SAME sink as the first.
+    const a1Writes = sink.scores.filter((s) => s.id === 'a1');
+    expect(a1Writes).toHaveLength(2);
+    expect(a1Writes[0].relevance).toBe(0.8);
+    expect(a1Writes[1]).toEqual({ id: 'a1', relevance: 0.16, rawScore: 0.16 });
+
+    const a1 = report.scores.find((s) => s.id === 'a1')!;
+    // Pass 1's score survives as the record of what the batched filter said.
+    expect(a1.rawScore).toBe(0.85);
+    expect(a1.finalRawScore).toBe(0.16);
+    // The band and the keep verdict follow the FINAL score, or the report would
+    // print a decision the run did not make.
+    expect(a1.bucket).toBe('DISCARD');
+    expect(a1.kept).toBe(false);
+    expect(report.buckets.HIGH).toBe(0);
+    expect(report.buckets.DISCARD).toBe(2);
+    // The reason is still written: a reader who opens the article from
+    // elsewhere still gets the sentence saying why it does not concern them.
+    expect(sink.reasons.find((r) => r.id === 'a1')?.reason).toBe(
+      'A Portuguese domestic vote, no tie to where you live.',
+    );
+  });
+
+  it('leaves a plain-string reason row exactly where pass 1 put it', async () => {
+    const { facts, idsResults, articlesById, eligibleIds } = happyFixture();
+    const llm = makeLlm({
+      eligibleIds,
+      chunkSize: ARTICLE_CFG.articlesPerScorePrompt,
+      scoresById: { a1: 0.85, a2: 0.5, a3: 0.2 },
+      reasonsById: { a1: 'AI matters to you' },
+    });
+    const sink = makeSink();
+    const report = await runArticlePipeline({
+      llm,
+      newsApi: makeNewsApi({ idsResults, articlesById }),
+      personaStore: makePersonaStore(facts),
+      sink,
+    });
+
+    expect(sink.scores.filter((s) => s.id === 'a1')).toHaveLength(1);
+    const a1 = report.scores.find((s) => s.id === 'a1')!;
+    expect(a1.finalRawScore).toBe(a1.rawScore);
+    expect(a1.bucket).toBe('HIGH');
   });
 });

@@ -29,7 +29,9 @@ import {
   buildFeedVerifierCalls,
   buildReasonCallsForSubset,
   buildRelevanceCalls,
+  bucketScore,
   bucketScores,
+  applyRescorePolicy,
   chunk,
   decodeCloudBatchResults,
   REASON_MIN_RAW_SCORE,
@@ -76,7 +78,12 @@ export type ScoreBucketName =
 export interface PipelineScoreRow {
   id: string;
   titleEn: string | null;
+  /** PASS 1's raw score. Never overwritten by a rescore: it is the only record
+   *  of what the batched filter said, and the eval's job is comparing the two. */
   rawScore: number | null;
+  /** The raw score after pass 2, when pass 2 returned one; otherwise equal to
+   *  `rawScore`. This is what `bucket` and `kept` are computed from. */
+  finalRawScore: number | null;
   bucketedScore: number | null;
   bucket: ScoreBucketName | null;
   /** raw score >= discardFloor (the plan's "kept" definition). */
@@ -337,6 +344,42 @@ export async function runArticlePipeline(
     config,
     logger,
   );
+  // --- pass-2 rescore -------------------------------------------------------
+  //
+  // The plan called for this "before bucketScores", which is not reachable: the
+  // batch was bucketed and saved ~60 lines above, and the reason responses only
+  // exist now. So it is applied the way the tag gate above it is — re-bucket,
+  // re-save through the SAME sink the pass-1 scores went through, and update
+  // both maps so the assembled report's band histogram describes the FINAL
+  // score rather than pass 1's.
+  //
+  // `rawRelevanceMap` is deliberately NOT overwritten. It is the only surviving
+  // record of what the batched filter said, and the eval's whole job is
+  // comparing the two.
+  const finalRawMap = new Map(rawScoreMap);
+  const rescoreEntries = [...decodedReasons.rescoreMap.entries()].filter(
+    ([id]) => !failedIds.has(id) && rawRelevanceMap[id] !== undefined,
+  );
+  if (rescoreEntries.length > 0) {
+    for (const [id, rescored] of rescoreEntries) {
+      const finalRaw = applyRescorePolicy(rawRelevanceMap[id], rescored);
+      const bucketed = bucketScore(finalRaw, config);
+      finalRawMap.set(id, finalRaw);
+      relevanceMap[id] = bucketed;
+      bucketedScoreMap.set(id, bucketed);
+    }
+    await ports.sink.saveScores(
+      rescoreEntries.map(([id]) => ({
+        id,
+        relevance: bucketedScoreMap.get(id) as number,
+        rawScore: finalRawMap.get(id) as number,
+      })),
+    );
+    logger.debug?.(
+      `pipeline: pass-2 rescored ${rescoreEntries.length}/${decodedReasons.reasonMap.size} rows`,
+    );
+  }
+
   // ADD 2's second half. `buildReasonCallsForSubset` only DECIDES; the outcome
   // has to be written or the gated rows keep their pass-1 score, stay above the
   // render gate and render with no note — the one outcome the feature must not
@@ -399,16 +442,21 @@ export async function runArticlePipeline(
   const scores: PipelineScoreRow[] = candidates.map((c) => {
     const failed = failedIds.has(c.id);
     const raw = rawScoreMap.has(c.id) ? (rawScoreMap.get(c.id) as number) : null;
+    const finalRaw = finalRawMap.has(c.id) ? (finalRawMap.get(c.id) as number) : null;
     const bucketed = bucketedScoreMap.has(c.id)
       ? (bucketedScoreMap.get(c.id) as number)
       : null;
-    const bucket = raw !== null ? bucketNameForRaw(raw, config) : null;
+    // The band and the keep/drop verdict come from the FINAL score, because
+    // that is the score the row ends up carrying. Reading them off pass 1 would
+    // print a histogram of a decision the run did not make.
+    const bucket = finalRaw !== null ? bucketNameForRaw(finalRaw, config) : null;
     if (bucket) buckets[bucket] += 1;
-    const kept = !failed && raw !== null && raw >= config.discardFloor;
+    const kept = !failed && finalRaw !== null && finalRaw >= config.discardFloor;
     return {
       id: c.id,
       titleEn: c.titleEn,
       rawScore: raw,
+      finalRawScore: finalRaw,
       bucketedScore: bucketed,
       bucket,
       kept,

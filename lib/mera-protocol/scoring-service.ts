@@ -44,8 +44,11 @@ import {
   isEligible,
   isScorableCandidate,
   chunk,
+  bucketScore,
   bucketScores,
-  parseReasonResponse,
+  parseReasonResult,
+  applyRescorePolicy,
+  type ReasonRescore,
   decodeCloudBatchResults as harnessDecodeCloudBatchResults,
   buildFeedVerifierCalls,
   applyFeedVerifierDecisions,
@@ -79,6 +82,7 @@ const isOnDeviceMode = () =>
 // --- Re-exports (canonical homes moved to the harness) ---
 
 export {
+  bucketScore,
   bucketScores,
   CLOUD_SCORE_CHUNK_SIZE,
   CLOUD_HEADLINE_SCORE_CHUNK_SIZE,
@@ -160,11 +164,21 @@ function buildScoreCallForChunk(
   };
 }
 
+/**
+ * ONE reason call for ONE candidate, on whichever lane this device is using.
+ *
+ * Returns the pass-2 score alongside the sentence on the CLOUD lane only. The
+ * on-device GGUF lane keeps its plain-string contract: `LOCAL_REASON_SYSTEM_PROMPT`
+ * is built on a different base, states its own voice rule, and is exercised by
+ * no runner, so giving it an unmeasured output contract would be a change
+ * nobody could check. `parseReasonResult` fails open on a plain string anyway,
+ * so this is belt and braces — and it is the braces that say so out loud.
+ */
 async function generateReasonForCandidate(
   candidate: ScoringCandidate,
   userContext: string,
   relevance: number,
-): Promise<string> {
+): Promise<{ reason: string; rescore?: ReasonRescore }> {
   const onDevice = isOnDeviceMode();
   // The two builders differ ONLY in field order. Local leads with `User Context`
   // so llama.cpp's prefix cache can reuse the fact bank across a batch instead
@@ -201,7 +215,8 @@ async function generateReasonForCandidate(
         temperature: ARTICLE_CFG.reasonTemperature,
         model: SMALL_MODEL,
       });
-  return parseReasonResponse(output, candidate.id, userMessage, appHarnessLogger);
+  const decoded = parseReasonResult(output, candidate.id, userMessage, appHarnessLogger);
+  return onDevice ? { reason: decoded.reason } : decoded;
 }
 
 /**
@@ -390,8 +405,13 @@ export async function batchScoreAndReason(
       for (const c of survivors) {
         const relevance = scoreMap.get(c.id)!;
         try {
-          const reason = await generateReasonForCandidate(c, fullUserContext, relevance);
+          const { reason, rescore } = await generateReasonForCandidate(
+            c,
+            fullUserContext,
+            relevance,
+          );
           if (reason) reasonMap.set(c.id, reason);
+          if (rescore) scoreMap.set(c.id, rescore.score);
         } catch (err) {
           logger.warn('[batchScoreAndReason] local reason failed', {
             id: c.id,
@@ -409,6 +429,14 @@ export async function batchScoreAndReason(
       });
       for (const [id, reason] of decodedReasons.reasonMap) reasonMap.set(id, reason);
       for (const id of decodedReasons.failedIds) failedIds.add(id);
+      // The pass-2 score replaces pass 1's, IN `scoreMap`, which is still raw
+      // here. `processAllUnscored` snapshots it as `raw_score` and buckets it
+      // into `relevance` immediately after this returns, so both columns end up
+      // describing the same judgement instead of two different ones.
+      for (const [id, rescored] of decodedReasons.rescoreMap) {
+        if (failedIds.has(id) || !scoreMap.has(id)) continue;
+        scoreMap.set(id, applyRescorePolicy(scoreMap.get(id)!, rescored));
+      }
     }
   }
 
@@ -898,6 +926,9 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
     if (batch.length === 0) break;
 
     const reasonMap = new Map<string, string>();
+    // Sparse: only rows whose pass-2 response carried a parseable score. An
+    // absent id means the row keeps the relevance it already had.
+    const rescoreMap = new Map<string, number>();
     const allFactStatements = await loadAllFactStatements();
     const fullUserContext = buildUserContext(allFactStatements);
 
@@ -911,12 +942,13 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
         if (!isScorableCandidate(candidate)) continue;
         const relevance = candidate.relevance ?? 0.7;
         try {
-          const reason = await generateReasonForCandidate(
+          const { reason, rescore } = await generateReasonForCandidate(
             candidate,
             fullUserContext,
             relevance,
           );
           if (reason) reasonMap.set(candidate.id, reason);
+          if (rescore) rescoreMap.set(candidate.id, rescore.score);
         } catch (err) {
           logger.warn('[retryMissingReasons] local reason generation failed', {
             id: candidate.id,
@@ -974,13 +1006,14 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
             });
             continue;
           }
-          const reason = parseReasonResponse(
+          const { reason, rescore } = parseReasonResult(
             result.output,
             serverId,
             promptsById.get(result.id),
             appHarnessLogger,
           );
           if (reason) reasonMap.set(serverId, reason);
+          if (rescore) rescoreMap.set(serverId, rescore.score);
         }
       } catch (err) {
         logger.captureException(err, {
@@ -992,10 +1025,25 @@ export async function retryMissingReasons(batchSize = 10): Promise<number> {
 
     // Persist whatever came back non-empty. Leave the empties alone — next sync
     // will pick them up again via the same query.
+    //
+    // A row whose pass-2 response also carried a SCORE is written through
+    // `saveScoringResult` instead, so the sentence and the score it explains
+    // land in one update. This sweep is the one path that can rescore a row
+    // scored by an older build, which is exactly what it is for: the row is
+    // here because its first reason attempt came back empty.
     await Promise.all(
       Array.from(reasonMap.entries()).map(async ([id, reason]) => {
         try {
-          await saveReason(id, reason);
+          const rescored = rescoreMap.get(id);
+          if (rescored !== undefined) {
+            await saveScoringResult(id, {
+              relevance: bucketScore(rescored),
+              reason,
+              reasonSkipped: false,
+            });
+          } else {
+            await saveReason(id, reason);
+          }
           totalRecovered += 1;
         } catch (err) {
           logger.error('[retryMissingReasons] saveReason failed', err, { id });

@@ -57,6 +57,7 @@ import {
 // relevanceBandRank so the cull can never disagree with the band a card prints.
 import { isCulledHeadlineRelevance } from '@/lib/feed-ordering/importance-filter';
 import {
+  bucketScore,
   bucketScores,
   buildReasonCallsForSubset,
   buildRelevanceCalls,
@@ -2000,6 +2001,11 @@ async function handleReasonResults(
 ): Promise<void> {
   const { batchResults } = await decodeBatch(batch, server);
 
+  // A working copy of the batch's stored relevance, so a pass-2 rescore can
+  // reach `discardLowRelevance` below. The stored map is left alone: it is the
+  // record of what pass 1 decided.
+  const reasonRelevanceMap: Record<string, number> = { ...(batch.relevanceMap ?? {}) };
+
   // The SAME predicate the reason-call builder used. A legacy batch submitted
   // with `legacyNoteDemote` sent the note prompt, so its answers are
   // `{"keep","why"}` verdicts and must go to the note applier — handing them to
@@ -2007,7 +2013,17 @@ async function handleReasonResults(
   if (usesNotePrompt(batch)) {
     await applyV3NoteResults(batch, batchResults);
   } else {
-    const { reasonMap, failedIds } = decodeResults({
+    // `rescoreMap` defaults rather than being read straight off the result: an
+    // older decoder — or a test double written against the previous shape —
+    // returns no such field, and `undefined.get(id)` inside the loop below is
+    // caught by the per-row catch and reported as a save failure, which reads
+    // as a database problem and is not one. Absent means "no rescores", which
+    // is the same fail-open the decoder itself uses.
+    const {
+      reasonMap,
+      failedIds,
+      rescoreMap = new Map<string, number>(),
+    } = decodeResults({
       batchResults,
       promptsById: new Map(),
       chunkIdToCandidates: new Map(),
@@ -2016,7 +2032,25 @@ async function handleReasonResults(
     for (const [id, reason] of reasonMap) {
       if (failedIds.has(id)) continue;
       try {
-        await saveReason(id, reason);
+        // A pass-2 score, when there is one, REPLACES pass 1's — so the reason
+        // and the score it explains are written in ONE update rather than a
+        // reason write racing a score write. `saveScoringResult` also stamps
+        // `scored_with_v3` from the same `isRelevanceV3Active()` the pass-1
+        // write used, so the row's render gate cannot change mid-life.
+        //
+        // A rescore BELOW the gate leaves the row `complete` and invisible:
+        // the card simply leaves the feed. That is the outcome this whole
+        // change exists for, and it is why the reason is still persisted — a
+        // reader opening the article from elsewhere still gets the sentence
+        // saying why it does not concern them.
+        const rescored = rescoreMap.get(id);
+        if (rescored !== undefined) {
+          const relevance = bucketScore(rescored);
+          reasonRelevanceMap[id] = relevance;
+          await saveScoringResult(id, { relevance, reason, reasonSkipped: false });
+        } else {
+          await saveReason(id, reason);
+        }
       } catch (err) {
         if (isRecordNotFoundError(err)) continue;
         logger.captureException(err, {
@@ -2025,11 +2059,20 @@ async function handleReasonResults(
         });
       }
     }
+    if (rescoreMap.size > 0) {
+      logger.debug(
+        `${TAG} batch ${batch.batchId} pass-2 rescored ${rescoreMap.size}/${reasonMap.size} rows`,
+      );
+    }
   }
 
+  // Rescored rows are handed to `discardLowRelevance` at their NEW score, not
+  // the one the batch was stored with. Otherwise a row rescored under the keep
+  // threshold would keep a `reason_pending`-shaped bookkeeping state that its
+  // persisted relevance already contradicts.
   const discarded = await discardLowRelevance(
     batch.candidateIds,
-    batch.relevanceMap ?? {},
+    reasonRelevanceMap,
   );
   await refreshUi();
   if (discarded > 0) {

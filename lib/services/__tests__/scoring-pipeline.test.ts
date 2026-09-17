@@ -181,7 +181,15 @@ jest.mock('@/lib/mera-protocol/stage-scoring', () => ({
   effectiveHarnessConfig: (...args: any[]) => mockEffectiveHarnessConfig(...args),
 }));
 
+// EVERY name scoring-pipeline imports from here must appear below. The module
+// is replaced wholesale, so an import this factory omits arrives as `undefined`
+// at the call site, and the per-row try/catch around the reason writes swallows
+// the resulting TypeError and reports it as a save failure. That is a whole
+// afternoon if you have not seen it before.
 jest.mock('@/lib/mera-protocol/scoring-service', () => ({
+  // The REAL bucketing, not a stub: these tests assert which band a rescore
+  // lands in, and a stubbed bucketer would be asserting the stub.
+  bucketScore: jest.requireActual('@/lib/news-harness/article-pipeline/scoring').bucketScore,
   bucketScores: (...args: any[]) => mockBucketScores(...args),
   buildRelevanceCalls: (...args: any[]) => mockBuildRelevanceCalls(...args),
   buildReasonCallsForSubset: (...args: any[]) => mockBuildReasonCallsForSubset(...args),
@@ -1309,6 +1317,7 @@ describe('reasons completion', () => {
       scoreMap: new Map(),
       reasonMap: new Map([['a0', 'because it matters']]),
       failedIds: new Set(),
+      rescoreMap: new Map(),
     });
     mockFetchResults.mockResolvedValueOnce({ requestId: reasonsBatch.requestId, results: [{ id: 'reason:a0', ok: true }] });
 
@@ -1318,6 +1327,125 @@ describe('reasons completion', () => {
     expect(mockDiscardLowRelevance).toHaveBeenCalled();
     // single batch → finalized + cleared
     expect(currentRun()).toBeNull();
+  });
+
+  // --- pass-2 rescore -------------------------------------------------------
+  //
+  // When pass 2 returns a score as well as a sentence, the two are written in
+  // ONE update through `saveScoringResult` rather than a reason write landing
+  // beside a score the reason contradicts. `saveScoringResult` also re-stamps
+  // `scored_with_v3` from the same predicate the pass-1 write used, so the
+  // row's render gate cannot change under it mid-life.
+
+  /** Drive one batch to `waiting-reasons` with `a0` scored 0.8. */
+  const toWaitingReasons = async () => {
+    await enqueueCandidates(['a0']);
+    const batch = currentRun().batches[0];
+    mockDecodeResults.mockReturnValueOnce({
+      scoreMap: new Map([['a0', 0.8]]),
+      reasonMap: new Map(),
+      failedIds: new Set(),
+      rescoreMap: new Map(),
+    });
+    mockGetScoredWithoutReasons.mockResolvedValue([
+      { ...candidate('a0'), relevance: 0.8 },
+    ]);
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: batch.requestId,
+      results: [{ id: 'score:0', ok: true }],
+    });
+    await handlePush(batch.requestId, 'foreground');
+    return currentRun().batches[0];
+  };
+
+  /** Complete the reason job with this decode. */
+  const completeReasons = async (
+    reasonsBatch: any,
+    decoded: { reasonMap: Map<string, string>; rescoreMap: Map<string, number> },
+  ) => {
+    mockDecodeResults.mockReturnValueOnce({
+      scoreMap: new Map(),
+      failedIds: new Set(),
+      ...decoded,
+    });
+    mockSaveScoringResult.mockClear();
+    mockSaveReason.mockClear();
+    mockDiscardLowRelevance.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: reasonsBatch.requestId,
+      results: [{ id: 'reason:a0', ok: true }],
+    });
+    await handlePush(reasonsBatch.requestId, 'foreground');
+  };
+
+  it('writes the reason AND the bucketed rescore in one saveScoringResult', async () => {
+    const reasonsBatch = await toWaitingReasons();
+    await completeReasons(reasonsBatch, {
+      reasonMap: new Map([['a0', 'A foreign domestic vote, no tie to your country.']]),
+      // 0.16 is `none` band: below the 0.4 discard floor, so it buckets to
+      // itself and the card leaves the feed.
+      rescoreMap: new Map([['a0', 0.16]]),
+    });
+
+    expect(mockSaveReason).not.toHaveBeenCalled();
+    expect(mockSaveScoringResult).toHaveBeenCalledWith('a0', {
+      relevance: 0.16,
+      reason: 'A foreign domestic vote, no tie to your country.',
+      reasonSkipped: false,
+    });
+  });
+
+  it('buckets an ABOVE-gate rescore instead of persisting the raw value', async () => {
+    const reasonsBatch = await toWaitingReasons();
+    await completeReasons(reasonsBatch, {
+      reasonMap: new Map([['a0', 'Drought rules start Monday, where you live.']]),
+      rescoreMap: new Map([['a0', 0.93]]),
+    });
+    // The feed renders four representative values, not a continuum, so a raw
+    // 0.93 has to arrive as the HIGH band's score like every other score does.
+    const [, params] = mockSaveScoringResult.mock.calls[0];
+    expect(params.relevance).toBe(0.8);
+    expect(params.reasonSkipped).toBe(false);
+  });
+
+  it('hands the NEW score to discardLowRelevance, not the stored one', async () => {
+    const reasonsBatch = await toWaitingReasons();
+    await completeReasons(reasonsBatch, {
+      reasonMap: new Map([['a0', 'A foreign domestic vote, no tie to your country.']]),
+      rescoreMap: new Map([['a0', 0.16]]),
+    });
+    // The batch was STORED at 0.8. Passing that map would leave the row's
+    // bookkeeping claiming a keep that its persisted relevance contradicts.
+    const [, relevanceMap] = mockDiscardLowRelevance.mock.calls[0];
+    expect(relevanceMap.a0).toBe(0.16);
+  });
+
+  it('falls back to saveReason when the response carried no score', async () => {
+    const reasonsBatch = await toWaitingReasons();
+    await completeReasons(reasonsBatch, {
+      reasonMap: new Map([['a0', 'because it matters']]),
+      rescoreMap: new Map(),
+    });
+    expect(mockSaveReason).toHaveBeenCalledWith('a0', 'because it matters');
+    expect(mockSaveScoringResult).not.toHaveBeenCalled();
+  });
+
+  it('survives a decode that predates rescoreMap entirely', async () => {
+    // A missing field must not become `undefined.get(id)` inside the per-row
+    // try/catch, where it would be swallowed and reported as a save failure.
+    const reasonsBatch = await toWaitingReasons();
+    mockDecodeResults.mockReturnValueOnce({
+      scoreMap: new Map(),
+      reasonMap: new Map([['a0', 'because it matters']]),
+      failedIds: new Set(),
+    });
+    mockSaveReason.mockClear();
+    mockFetchResults.mockResolvedValueOnce({
+      requestId: reasonsBatch.requestId,
+      results: [{ id: 'reason:a0', ok: true }],
+    });
+    await handlePush(reasonsBatch.requestId, 'foreground');
+    expect(mockSaveReason).toHaveBeenCalledWith('a0', 'because it matters');
   });
 
   it('marks the batch done (scores kept) when the reasons submit fails', async () => {
@@ -2485,6 +2613,7 @@ describe('legacyNoteDemote — the legacy path\'s keep/demote note pass', () => 
       scoreMap: new Map(),
       reasonMap: new Map([['a0', 'because it matters']]),
       failedIds: new Set(),
+      rescoreMap: new Map(),
     });
     mockSaveScoringResult.mockClear();
     mockFetchResults.mockResolvedValueOnce({
