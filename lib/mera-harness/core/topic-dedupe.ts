@@ -5,12 +5,7 @@
 // (the switch lives at the CALL SITE, so this function has exactly one
 // behaviour and the eval can apply it offline to collected output).
 
-import {
-  FILTER_DROP_JACCARD,
-  contentJaccard,
-  placeExclusionSet,
-  sharedTokens,
-} from './topic-similarity';
+import { FILTER_DROP_JACCARD, contentJaccard, sharedTokens } from './topic-similarity';
 
 export interface DedupeDrop {
   topic: string;
@@ -41,11 +36,7 @@ export interface DedupeResult {
  *
  * Fails OPEN: anything it cannot judge comes back whole.
  */
-export function filterNearDuplicates(
-  topics: readonly string[],
-  placeChain?: Parameters<typeof placeExclusionSet>[0],
-): DedupeResult {
-  const exclude = placeExclusionSet(placeChain);
+export function filterNearDuplicates(topics: readonly string[]): DedupeResult {
   const kept: string[] = [];
   const dropped: DedupeDrop[] = [];
 
@@ -54,7 +45,7 @@ export function filterNearDuplicates(
     if (!text) continue;
     let collidedWith: string | null = null;
     for (const earlier of kept) {
-      if (contentJaccard(text, earlier, exclude) >= FILTER_DROP_JACCARD) {
+      if (contentJaccard(text, earlier) >= FILTER_DROP_JACCARD) {
         collidedWith = earlier;
         break;
       }
@@ -63,7 +54,7 @@ export function filterNearDuplicates(
       dropped.push({
         topic: text,
         duplicateOf: collidedWith,
-        overlap: sharedTokens(text, collidedWith, exclude),
+        overlap: sharedTokens(text, collidedWith),
       });
     } else {
       kept.push(text);

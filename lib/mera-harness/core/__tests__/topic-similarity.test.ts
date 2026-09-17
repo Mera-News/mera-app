@@ -3,16 +3,8 @@ import {
   FILTER_DROP_JACCARD,
   contentJaccard,
   isSubsetTopic,
-  placeExclusionSet,
 } from '../topic-similarity';
 import { filterNearDuplicates } from '../topic-dedupe';
-
-const AMS = {
-  neighbourhood: 'Nieuw-West',
-  locality: 'Alkmaar',
-  admin1: 'North Holland',
-  countryName: 'Netherlands',
-};
 
 describe('thresholds', () => {
   it('the filter threshold is STRICTLY above the detector threshold', () => {
@@ -24,40 +16,41 @@ describe('thresholds', () => {
   });
 });
 
-describe('ladder rungs survive', () => {
-  it('WITH a placeChain, two topics sharing only a place name score 0', () => {
-    const ex = placeExclusionSet(AMS);
-    expect(contentJaccard('Alkmaar hospital news', 'Alkmaar school closures', ex)).toBe(0);
-    const { kept, dropped } = filterNearDuplicates(
-      ['Alkmaar hospital news', 'Alkmaar school closures'],
-      AMS,
-    );
+describe('the three ladder shapes the guidelines actually produce', () => {
+  // MEASURED by the eval scout against topics/residence, which asks for a city
+  // transport topic AND a country transport topic. An earlier place-name
+  // exclusion reduced the first pair to {rail, strikes} on both sides, scored
+  // 1.0 and dropped one -- it ate the ladder it was meant to protect. These
+  // three pairs are the regression.
+  it('city and country flavours of one subject BOTH survive', () => {
+    expect(contentJaccard('Barcelona rail strikes', 'Spain rail strikes')).toBeCloseTo(0.5, 3);
+    const { kept, dropped } = filterNearDuplicates(['Barcelona rail strikes', 'Spain rail strikes']);
     expect(kept).toHaveLength(2);
     expect(dropped).toHaveLength(0);
   });
 
-  it('WITHOUT a placeChain the exclusion set is EMPTY, and 0.75 is what keeps that safe', () => {
-    expect(placeExclusionSet(null).size).toBe(0);
-    expect(placeExclusionSet(undefined).size).toBe(0);
-
-    // Place names now count toward similarity. These are the worked worst
-    // cases; both must stay UNDER the filter threshold.
-    const loose = contentJaccard('Alkmaar hospital news', 'Alkmaar school closures');
-    const tight = contentJaccard('Alkmaar hospital news', 'Alkmaar hospital policy');
-    expect(loose).toBeCloseTo(0.25, 2);
-    expect(tight).toBeCloseTo(0.667, 2);
-    expect(tight).toBeLessThan(FILTER_DROP_JACCARD);
-
-    // ...so both pairs are still kept with no place chain at all.
+  it('two desks in one city BOTH survive', () => {
+    expect(contentJaccard('Alkmaar hospital news', 'Alkmaar school closures')).toBeCloseTo(0.2, 3);
     expect(filterNearDuplicates(['Alkmaar hospital news', 'Alkmaar school closures']).kept)
       .toHaveLength(2);
-    expect(filterNearDuplicates(['Alkmaar hospital news', 'Alkmaar hospital policy']).kept)
-      .toHaveLength(2);
+  });
 
-    // THE COUPLING, pinned: the tighter pair dies at the DETECTOR threshold.
-    // Anyone lowering FILTER_DROP_JACCARD toward 0.6 must re-derive these
-    // numbers first, and this assertion is what tells them so.
-    expect(tight).toBeGreaterThan(DETECT_JACCARD);
+  it('a bare topic and its "news" flavour BOTH survive', () => {
+    // This is why `news` is NOT a stopword: stopping it collapses these two to
+    // the same token set and one is dropped.
+    expect(contentJaccard('Amsterdam safety', 'Amsterdam safety news')).toBeCloseTo(0.667, 2);
+    expect(filterNearDuplicates(['Amsterdam safety', 'Amsterdam safety news']).kept)
+      .toHaveLength(2);
+  });
+
+  it('all three sit UNDER the filter threshold, which is what keeps 0.75 honest', () => {
+    for (const [a, b] of [
+      ['Barcelona rail strikes', 'Spain rail strikes'],
+      ['Alkmaar hospital news', 'Alkmaar school closures'],
+      ['Amsterdam safety', 'Amsterdam safety news'],
+    ]) {
+      expect(contentJaccard(a, b)).toBeLessThan(FILTER_DROP_JACCARD);
+    }
   });
 
   it('a subset never drives the FILTER, though the scorer flags it', () => {
@@ -70,7 +63,7 @@ describe('ladder rungs survive', () => {
 });
 
 describe('filterNearDuplicates', () => {
-  it('drops a near-identical restatement and reports what it collided on', () => {
+  it('still drops a genuine restatement, so the filter is not inert', () => {
     const { kept, dropped } = filterNearDuplicates([
       'Rotterdam port logistics',
       'Rotterdam logistics port',

@@ -159,7 +159,7 @@ export async function generateTopicsForFact(
   const deduped =
     params.dedupe === 'off'
       ? { kept, dropped: [] as DedupeDrop[] }
-      : filterNearDuplicates(kept, params.fact.placeChain ?? null);
+      : filterNearDuplicates(kept);
 
   return {
     topics: deduped.kept.slice(0, ceiling),

@@ -88,7 +88,6 @@ export {
   FILTER_DROP_JACCARD,
   contentJaccard,
   isSubsetTopic,
-  placeExclusionSet,
   sharedTokens,
 } from './core/topic-similarity';
 

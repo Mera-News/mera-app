@@ -21,77 +21,54 @@ export const DETECT_JACCARD = 0.6;
  * than two magic numbers drifting apart in two files.
  */
 
-/** Words that carry no topical signal. Kept deliberately small: over-stopping
- *  empties short topics and makes everything look similar. */
+/**
+ * FUNCTION WORDS ONLY.
+ *
+ * `news`, `update` and `latest` were in this list and had to come out: with
+ * `news` stopped, "Amsterdam safety" and "Amsterdam safety news" both reduce to
+ * {amsterdam, safety}, score 1.0 and one is dropped -- but they are two
+ * different desks, and the second is a legitimate rung. Over-stopping empties
+ * short topics and makes everything look alike, which is the failure mode this
+ * filter must not have.
+ */
 const STOPWORDS: ReadonlySet<string> = new Set([
   'a', 'an', 'and', 'as', 'at', 'by', 'for', 'from', 'in', 'of', 'on', 'or',
-  'the', 'to', 'with', 'news', 'update', 'updates', 'latest',
+  'the', 'to', 'with',
 ]);
 
-function tokenize(text: string, exclude: ReadonlySet<string>): Set<string> {
+function tokenize(text: string): Set<string> {
   const out = new Set<string>();
   for (const raw of (text ?? '').toLowerCase().split(/[^\p{L}\p{N}]+/u)) {
     if (!raw) continue;
     if (STOPWORDS.has(raw)) continue;
-    if (exclude.has(raw)) continue;
     out.add(raw);
   }
   return out;
 }
 
 /**
- * Build the place-name exclusion set from a fact's RESOLVED place chain.
+ * WHY THERE IS NO PLACE-NAME EXCLUSION.
  *
- * Structural, never a capitalisation heuristic: this repo has already paid for
- * that one, where it stripped "Port" out of "Port of Rotterdam" and missed
- * "Polish". `lookup_place` already resolved these, so they are known rather than
- * guessed.
+ * There was one, built from the fact's resolved place chain, on the reasoning
+ * that two topics sharing only a place name are not duplicates. Measured, it
+ * did the opposite of its purpose: "Barcelona rail strikes" and "Spain rail
+ * strikes" both reduce to {rail, strikes} once the places are stripped, score
+ * 1.0, and one is dropped -- and `topics/residence` asks for exactly that pair,
+ * a city transport topic and a country transport topic. The exclusion ate the
+ * ladder it was meant to protect.
  *
- * NO place chain => EMPTY set => place names stay in the token set, which
- * INFLATES similarity between two topics that share a place.
- *
- * THAT FALLBACK IS SAFE ONLY BECAUSE FILTER_DROP_JACCARD IS 0.75. Worked worst
- * cases with place names left in:
- *   "Alkmaar hospital news" vs "Alkmaar school closures"  -> 1/4 = 0.25
- *   "Alkmaar hospital news" vs "Alkmaar hospital policy"  -> 2/3 = 0.67
- * Both below 0.75, so an empty exclusion set drops nothing it should keep.
- *
- * LOWERING THE THRESHOLD COUPLES TO THIS. At 0.6 the second pair dies, and that
- * pair is a legitimate ladder rung. Anyone moving FILTER_DROP_JACCARD must
- * re-derive these numbers for the no-placeChain case first;
- * topic-similarity.test.ts pins both.
+ * Plain content-word Jaccard keeps all three shapes the guidelines produce:
+ *   "Barcelona rail strikes"  vs "Spain rail strikes"        2/4 = 0.50  kept
+ *   "Alkmaar hospital news"   vs "Alkmaar school closures"   1/5 = 0.20  kept
+ *   "Amsterdam safety"        vs "Amsterdam safety news"     2/3 = 0.67  kept
+ * All three sit under FILTER_DROP_JACCARD, and no subset rule means the third
+ * survives on that count too. The tests pin all three.
  */
-export function placeExclusionSet(placeChain?: {
-  neighbourhood?: string | null;
-  locality?: string | null;
-  admin1?: string | null;
-  countryName?: string | null;
-} | null): ReadonlySet<string> {
-  const out = new Set<string>();
-  if (!placeChain) return out;
-  for (const field of [
-    placeChain.neighbourhood,
-    placeChain.locality,
-    placeChain.admin1,
-    placeChain.countryName,
-  ]) {
-    if (!field) continue;
-    for (const word of field.toLowerCase().split(/[^\p{L}\p{N}]+/u)) {
-      if (word) out.add(word);
-    }
-  }
-  return out;
-}
 
-/** Jaccard over content words. Stopwords always excluded; place names excluded
- *  when the caller supplies a set (see placeExclusionSet). */
-export function contentJaccard(
-  a: string,
-  b: string,
-  exclude: ReadonlySet<string> = new Set(),
-): number {
-  const ta = tokenize(a, exclude);
-  const tb = tokenize(b, exclude);
+/** Jaccard over content words, stopwords removed. Nothing else is stripped. */
+export function contentJaccard(a: string, b: string): number {
+  const ta = tokenize(a);
+  const tb = tokenize(b);
   if (ta.size === 0 || tb.size === 0) return 0;
   let shared = 0;
   for (const t of ta) if (tb.has(t)) shared++;
@@ -101,13 +78,9 @@ export function contentJaccard(
 
 /** The shared content words between two topics — what a drop collided ON, so a
  *  drop can be read and argued with rather than trusted. */
-export function sharedTokens(
-  a: string,
-  b: string,
-  exclude: ReadonlySet<string> = new Set(),
-): string[] {
-  const tb = tokenize(b, exclude);
-  return [...tokenize(a, exclude)].filter((t) => tb.has(t));
+export function sharedTokens(a: string, b: string): string[] {
+  const tb = tokenize(b);
+  return [...tokenize(a)].filter((t) => tb.has(t));
 }
 
 /**
@@ -118,13 +91,9 @@ export function sharedTokens(
  * policy news"), so a subset rule in the filter eats the structure the skill
  * bodies exist to produce.
  */
-export function isSubsetTopic(
-  a: string,
-  b: string,
-  exclude: ReadonlySet<string> = new Set(),
-): boolean {
-  const ta = tokenize(a, exclude);
-  const tb = tokenize(b, exclude);
+export function isSubsetTopic(a: string, b: string): boolean {
+  const ta = tokenize(a);
+  const tb = tokenize(b);
   if (ta.size === 0 || tb.size === 0) return false;
   if (ta.size >= tb.size) return false;
   for (const t of ta) if (!tb.has(t)) return false;
