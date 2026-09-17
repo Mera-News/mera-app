@@ -19,7 +19,12 @@ jest.mock('@/components/custom/TranslatableDynamic', () => ({
 }));
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/chat-tools/tool-handlers', () => ({ retryTopicGeneration: jest.fn() }));
-jest.mock('@/lib/database/services/fact-service', () => ({ getFacts: jest.fn() }));
+jest.mock('@/lib/database/services/fact-service', () => ({
+  observeTopicsStatus: () => ({ subscribe: () => ({ unsubscribe: jest.fn() }) }),
+}));
+jest.mock('@/lib/database/services/topic-planning-service', () => ({
+  generateMoreTopicsForFact: jest.fn(),
+}));
 jest.mock('@/lib/database/services/topic-service', () => ({
   observeByFact: jest.fn(),
 }));

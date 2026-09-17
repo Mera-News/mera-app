@@ -2617,7 +2617,14 @@
   },
   "chatTopics": {
     "none": "已保存。目前没有可添加的主题。",
-    "removed": "已移除"
+    "removed": "已移除",
+    "accordionTitle": "相关主题：",
+    "finding": "正在寻找主题",
+    "findMore": "查找更多主题",
+    "findingMore": "正在查找",
+    "goneTombstone": "这条信息已删除，相关主题也一并移除。",
+    "expandA11y": "显示主题",
+    "collapseA11y": "隐藏主题"
   },
   "agentSteps": {
     "legStart": "正在思考你说的内容",

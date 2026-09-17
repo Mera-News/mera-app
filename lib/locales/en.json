@@ -2617,7 +2617,14 @@
   },
   "chatTopics": {
     "none": "Saved. No topics to add right now.",
-    "removed": "Removed"
+    "removed": "Removed",
+    "accordionTitle": "Topics for:",
+    "finding": "Finding topics",
+    "findMore": "Find more topics",
+    "findingMore": "Finding more",
+    "goneTombstone": "This fact was removed, so its topics are gone too.",
+    "expandA11y": "Show topics",
+    "collapseA11y": "Hide topics"
   },
   "agentSteps": {
     "legStart": "Thinking about what you said",

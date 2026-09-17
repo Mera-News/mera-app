@@ -2619,7 +2619,14 @@
   },
   "chatTopics": {
     "none": "Kaydedildi. Şu anda eklenecek konu yok.",
-    "removed": "Kaldırıldı"
+    "removed": "Kaldırıldı",
+    "accordionTitle": "Şunun konuları:",
+    "finding": "Konular bulunuyor",
+    "findMore": "Daha fazla konu bul",
+    "findingMore": "Aranıyor",
+    "goneTombstone": "Bu bilgi kaldırıldı, konuları da gitti.",
+    "expandA11y": "Konuları göster",
+    "collapseA11y": "Konuları gizle"
   },
   "agentSteps": {
     "legStart": "Söylediklerini düşünüyorum",

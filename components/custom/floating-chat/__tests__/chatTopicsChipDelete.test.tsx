@@ -41,7 +41,17 @@ jest.mock('@/components/custom/TranslatableDynamic', () => {
 });
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/chat-tools/tool-handlers', () => ({ retryTopicGeneration: jest.fn() }));
-jest.mock('@/lib/database/services/fact-service', () => ({ getFacts: jest.fn(async () => []) }));
+jest.mock('@/lib/database/services/fact-service', () => ({
+  observeTopicsStatus: () => ({
+    subscribe: (fn: (v: string) => void) => {
+      fn('done');
+      return { unsubscribe: jest.fn() };
+    },
+  }),
+}));
+jest.mock('@/lib/database/services/topic-planning-service', () => ({
+  generateMoreTopicsForFact: jest.fn(),
+}));
 jest.mock('@/lib/stores/floating-chat-store', () => ({
   useFloatingChatFactMutationVersion: () => 0,
 }));
@@ -80,6 +90,13 @@ import ChatTopicsCard from '../ChatTopicsCard';
 
 const facts = [{ factId: 'f1', factStatement: 'I moved to Nieuw-West' }];
 
+/** The accordion starts collapsed, so the chips are not mounted until the
+ *  header is tapped. Opening it is part of reaching the chip, not incidental. */
+const openAccordion = (getByTestId: (id: string) => unknown) =>
+  act(() => {
+    fireEvent.press(getByTestId('chat-topics-header-f1') as never);
+  });
+
 /** Stage a delete the way the service does: the row leaves the observable. */
 const rowLeavesObservable = () =>
   act(() => {
@@ -101,6 +118,7 @@ beforeEach(() => {
 describe('chip X stages a delete', () => {
   it('calls the service exactly once, with the default window', async () => {
     const { getByTestId } = render(<ChatTopicsCard facts={facts} merged={false} />);
+    openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
     });
@@ -112,6 +130,7 @@ describe('chip X stages a delete', () => {
     const { getByTestId, queryByTestId } = render(
       <ChatTopicsCard facts={facts} merged={false} />,
     );
+    openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
     });
@@ -127,6 +146,7 @@ describe('chip X stages a delete', () => {
     const { getByTestId, getAllByText } = render(
       <ChatTopicsCard facts={facts} merged={false} />,
     );
+    openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
     });
@@ -138,6 +158,7 @@ describe('chip X stages a delete', () => {
   it('asks for a 15s window when a screen reader is on', async () => {
     screenReader = true;
     const { getByTestId } = render(<ChatTopicsCard facts={facts} merged={false} />);
+    openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
     });
@@ -148,6 +169,7 @@ describe('chip X stages a delete', () => {
 describe('undo', () => {
   it('calls undoPendingDelete once and stages no second delete', async () => {
     const { getByTestId } = render(<ChatTopicsCard facts={facts} merged={false} />);
+    openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
     });
@@ -167,6 +189,7 @@ describe('undo', () => {
     const { getByTestId, queryByTestId } = render(
       <ChatTopicsCard facts={facts} merged={false} />,
     );
+    openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
     });
@@ -187,6 +210,7 @@ describe('the window closing', () => {
     const { getByTestId, queryByTestId } = render(
       <ChatTopicsCard facts={facts} merged={false} />,
     );
+    openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
     });

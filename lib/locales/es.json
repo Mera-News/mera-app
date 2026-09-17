@@ -2617,7 +2617,14 @@
   },
   "chatTopics": {
     "none": "Guardado. Ahora mismo no hay temas que añadir.",
-    "removed": "Eliminado"
+    "removed": "Eliminado",
+    "accordionTitle": "Temas de:",
+    "finding": "Buscando temas",
+    "findMore": "Buscar más temas",
+    "findingMore": "Buscando más",
+    "goneTombstone": "Este dato se eliminó, así que sus temas también.",
+    "expandA11y": "Mostrar temas",
+    "collapseA11y": "Ocultar temas"
   },
   "agentSteps": {
     "legStart": "Pensando en lo que dijiste",

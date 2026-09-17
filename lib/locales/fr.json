@@ -2624,7 +2624,14 @@
   },
   "chatTopics": {
     "none": "Enregistré. Aucun sujet à ajouter pour le moment.",
-    "removed": "Supprimé"
+    "removed": "Supprimé",
+    "accordionTitle": "Sujets pour :",
+    "finding": "Recherche de sujets",
+    "findMore": "Trouver plus de sujets",
+    "findingMore": "Recherche en cours",
+    "goneTombstone": "Cette information a été supprimée, ses sujets aussi.",
+    "expandA11y": "Afficher les sujets",
+    "collapseA11y": "Masquer les sujets"
   },
   "agentSteps": {
     "legStart": "Je réfléchis à ce que tu as dit",

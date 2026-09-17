@@ -2616,7 +2616,14 @@
   },
   "chatTopics": {
     "none": "保存しました。今のところ追加できるトピックはありません。",
-    "removed": "削除しました"
+    "removed": "削除しました",
+    "accordionTitle": "このトピック:",
+    "finding": "トピックを探しています",
+    "findMore": "トピックをもっと探す",
+    "findingMore": "検索中",
+    "goneTombstone": "この情報は削除されたため、関連トピックもなくなりました。",
+    "expandA11y": "トピックを表示",
+    "collapseA11y": "トピックを隠す"
   },
   "agentSteps": {
     "legStart": "お話の内容を考えています",

@@ -2617,7 +2617,14 @@
   },
   "chatTopics": {
     "none": "Đã lưu. Hiện chưa có chủ đề nào để thêm.",
-    "removed": "Đã xóa"
+    "removed": "Đã xóa",
+    "accordionTitle": "Chủ đề cho:",
+    "finding": "Đang tìm chủ đề",
+    "findMore": "Tìm thêm chủ đề",
+    "findingMore": "Đang tìm thêm",
+    "goneTombstone": "Thông tin này đã bị xóa, nên các chủ đề của nó cũng mất.",
+    "expandA11y": "Hiện chủ đề",
+    "collapseA11y": "Ẩn chủ đề"
   },
   "agentSteps": {
     "legStart": "Đang suy nghĩ về điều bạn nói",

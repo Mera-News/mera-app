@@ -1,5 +1,5 @@
 {
-  "_comment": "pagent wave P2: the agent-steps box (agentSteps.*), the plain-language skill phrases it renders instead of a skill id (skillPhrase.*), and the topic chip's removed state (chatTopics.removed). All keys are NEW, so no --allow-overwrite is needed and any collision is a real problem that must fail the run. Never edit the 20 dictionaries by hand.",
+  "_comment": "pagent wave P2: the agent-steps box (agentSteps.*), the plain-language skill phrases rendered instead of a skill id (skillPhrase.*), and the topics accordion (chatTopics.*). Re-run after the first splice to add the accordion keys, so the already-landed keys need --allow-overwrite; their values are unchanged, so the diff is additions only. Never edit the 20 dictionaries by hand.",
   "en": {
     "agentSteps": {
       "legStart": "Thinking about what you said",
@@ -39,7 +39,14 @@
       "topics": "your topics"
     },
     "chatTopics": {
-      "removed": "Removed"
+      "removed": "Removed",
+      "accordionTitle": "Topics for:",
+      "finding": "Finding topics",
+      "findMore": "Find more topics",
+      "findingMore": "Finding more",
+      "goneTombstone": "This fact was removed, so its topics are gone too.",
+      "expandA11y": "Show topics",
+      "collapseA11y": "Hide topics"
     }
   },
   "de": {
@@ -81,7 +88,14 @@
       "topics": "deine Themen"
     },
     "chatTopics": {
-      "removed": "Entfernt"
+      "removed": "Entfernt",
+      "accordionTitle": "Themen zu:",
+      "finding": "Themen werden gesucht",
+      "findMore": "Mehr Themen finden",
+      "findingMore": "Wird gesucht",
+      "goneTombstone": "Diese Angabe wurde entfernt, damit sind auch ihre Themen weg.",
+      "expandA11y": "Themen anzeigen",
+      "collapseA11y": "Themen ausblenden"
     }
   },
   "es": {
@@ -123,7 +137,14 @@
       "topics": "tus temas"
     },
     "chatTopics": {
-      "removed": "Eliminado"
+      "removed": "Eliminado",
+      "accordionTitle": "Temas de:",
+      "finding": "Buscando temas",
+      "findMore": "Buscar más temas",
+      "findingMore": "Buscando más",
+      "goneTombstone": "Este dato se eliminó, así que sus temas también.",
+      "expandA11y": "Mostrar temas",
+      "collapseA11y": "Ocultar temas"
     }
   },
   "fr": {
@@ -165,7 +186,14 @@
       "topics": "tes sujets"
     },
     "chatTopics": {
-      "removed": "Supprimé"
+      "removed": "Supprimé",
+      "accordionTitle": "Sujets pour :",
+      "finding": "Recherche de sujets",
+      "findMore": "Trouver plus de sujets",
+      "findingMore": "Recherche en cours",
+      "goneTombstone": "Cette information a été supprimée, ses sujets aussi.",
+      "expandA11y": "Afficher les sujets",
+      "collapseA11y": "Masquer les sujets"
     }
   },
   "it": {
@@ -207,7 +235,14 @@
       "topics": "i tuoi argomenti"
     },
     "chatTopics": {
-      "removed": "Rimosso"
+      "removed": "Rimosso",
+      "accordionTitle": "Argomenti per:",
+      "finding": "Ricerca argomenti",
+      "findMore": "Trova altri argomenti",
+      "findingMore": "Ricerca in corso",
+      "goneTombstone": "Questa informazione è stata rimossa, quindi anche i suoi argomenti.",
+      "expandA11y": "Mostra argomenti",
+      "collapseA11y": "Nascondi argomenti"
     }
   },
   "nl": {
@@ -249,7 +284,14 @@
       "topics": "je onderwerpen"
     },
     "chatTopics": {
-      "removed": "Verwijderd"
+      "removed": "Verwijderd",
+      "accordionTitle": "Onderwerpen voor:",
+      "finding": "Onderwerpen zoeken",
+      "findMore": "Meer onderwerpen zoeken",
+      "findingMore": "Bezig met zoeken",
+      "goneTombstone": "Dit gegeven is verwijderd, dus de onderwerpen ervan ook.",
+      "expandA11y": "Onderwerpen tonen",
+      "collapseA11y": "Onderwerpen verbergen"
     }
   },
   "pt-BR": {
@@ -291,7 +333,14 @@
       "topics": "seus temas"
     },
     "chatTopics": {
-      "removed": "Removido"
+      "removed": "Removido",
+      "accordionTitle": "Temas de:",
+      "finding": "Procurando temas",
+      "findMore": "Procurar mais temas",
+      "findingMore": "Procurando mais",
+      "goneTombstone": "Essa informação foi removida, então os temas dela também.",
+      "expandA11y": "Mostrar temas",
+      "collapseA11y": "Ocultar temas"
     }
   },
   "pl": {
@@ -333,7 +382,14 @@
       "topics": "twoje tematy"
     },
     "chatTopics": {
-      "removed": "Usunięto"
+      "removed": "Usunięto",
+      "accordionTitle": "Tematy do:",
+      "finding": "Szukam tematów",
+      "findMore": "Znajdź więcej tematów",
+      "findingMore": "Szukam",
+      "goneTombstone": "Ta informacja została usunięta, więc jej tematy też.",
+      "expandA11y": "Pokaż tematy",
+      "collapseA11y": "Ukryj tematy"
     }
   },
   "ru": {
@@ -375,7 +431,14 @@
       "topics": "ваши темы"
     },
     "chatTopics": {
-      "removed": "Удалено"
+      "removed": "Удалено",
+      "accordionTitle": "Темы по:",
+      "finding": "Подбираем темы",
+      "findMore": "Найти ещё темы",
+      "findingMore": "Ищем ещё",
+      "goneTombstone": "Этот факт удалён, поэтому его темы тоже.",
+      "expandA11y": "Показать темы",
+      "collapseA11y": "Скрыть темы"
     }
   },
   "uk": {
@@ -417,7 +480,14 @@
       "topics": "ваші теми"
     },
     "chatTopics": {
-      "removed": "Видалено"
+      "removed": "Видалено",
+      "accordionTitle": "Теми за:",
+      "finding": "Добираємо теми",
+      "findMore": "Знайти ще теми",
+      "findingMore": "Шукаємо ще",
+      "goneTombstone": "Цей факт видалено, тому його теми теж.",
+      "expandA11y": "Показати теми",
+      "collapseA11y": "Сховати теми"
     }
   },
   "tr": {
@@ -459,7 +529,14 @@
       "topics": "konularını"
     },
     "chatTopics": {
-      "removed": "Kaldırıldı"
+      "removed": "Kaldırıldı",
+      "accordionTitle": "Şunun konuları:",
+      "finding": "Konular bulunuyor",
+      "findMore": "Daha fazla konu bul",
+      "findingMore": "Aranıyor",
+      "goneTombstone": "Bu bilgi kaldırıldı, konuları da gitti.",
+      "expandA11y": "Konuları göster",
+      "collapseA11y": "Konuları gizle"
     }
   },
   "ar": {
@@ -501,7 +578,14 @@
       "topics": "مواضيعك"
     },
     "chatTopics": {
-      "removed": "تمت الإزالة"
+      "removed": "تمت الإزالة",
+      "accordionTitle": "مواضيع عن:",
+      "finding": "جارٍ البحث عن مواضيع",
+      "findMore": "ابحث عن مواضيع أخرى",
+      "findingMore": "جارٍ البحث",
+      "goneTombstone": "تمت إزالة هذه المعلومة، لذلك اختفت مواضيعها أيضًا.",
+      "expandA11y": "إظهار المواضيع",
+      "collapseA11y": "إخفاء المواضيع"
     }
   },
   "hi": {
@@ -543,7 +627,14 @@
       "topics": "आपके विषय"
     },
     "chatTopics": {
-      "removed": "हटाया गया"
+      "removed": "हटाया गया",
+      "accordionTitle": "इसके विषय:",
+      "finding": "विषय खोजे जा रहे हैं",
+      "findMore": "और विषय खोजें",
+      "findingMore": "खोजा जा रहा है",
+      "goneTombstone": "यह जानकारी हटा दी गई, इसलिए इसके विषय भी हट गए।",
+      "expandA11y": "विषय दिखाएँ",
+      "collapseA11y": "विषय छिपाएँ"
     }
   },
   "id": {
@@ -585,7 +676,14 @@
       "topics": "topikmu"
     },
     "chatTopics": {
-      "removed": "Dihapus"
+      "removed": "Dihapus",
+      "accordionTitle": "Topik untuk:",
+      "finding": "Mencari topik",
+      "findMore": "Cari topik lain",
+      "findingMore": "Mencari lagi",
+      "goneTombstone": "Informasi ini dihapus, jadi topiknya juga hilang.",
+      "expandA11y": "Tampilkan topik",
+      "collapseA11y": "Sembunyikan topik"
     }
   },
   "vi": {
@@ -627,7 +725,14 @@
       "topics": "chủ đề của bạn"
     },
     "chatTopics": {
-      "removed": "Đã xóa"
+      "removed": "Đã xóa",
+      "accordionTitle": "Chủ đề cho:",
+      "finding": "Đang tìm chủ đề",
+      "findMore": "Tìm thêm chủ đề",
+      "findingMore": "Đang tìm thêm",
+      "goneTombstone": "Thông tin này đã bị xóa, nên các chủ đề của nó cũng mất.",
+      "expandA11y": "Hiện chủ đề",
+      "collapseA11y": "Ẩn chủ đề"
     }
   },
   "th": {
@@ -669,7 +774,14 @@
       "topics": "หัวข้อของคุณ"
     },
     "chatTopics": {
-      "removed": "ลบแล้ว"
+      "removed": "ลบแล้ว",
+      "accordionTitle": "หัวข้อสำหรับ:",
+      "finding": "กำลังค้นหาหัวข้อ",
+      "findMore": "ค้นหาหัวข้อเพิ่ม",
+      "findingMore": "กำลังค้นหาเพิ่ม",
+      "goneTombstone": "ข้อมูลนี้ถูกลบแล้ว หัวข้อของมันจึงหายไปด้วย",
+      "expandA11y": "แสดงหัวข้อ",
+      "collapseA11y": "ซ่อนหัวข้อ"
     }
   },
   "ja": {
@@ -711,7 +823,14 @@
       "topics": "ご関心のトピック"
     },
     "chatTopics": {
-      "removed": "削除しました"
+      "removed": "削除しました",
+      "accordionTitle": "このトピック:",
+      "finding": "トピックを探しています",
+      "findMore": "トピックをもっと探す",
+      "findingMore": "検索中",
+      "goneTombstone": "この情報は削除されたため、関連トピックもなくなりました。",
+      "expandA11y": "トピックを表示",
+      "collapseA11y": "トピックを隠す"
     }
   },
   "ko": {
@@ -753,7 +872,14 @@
       "topics": "관심 주제"
     },
     "chatTopics": {
-      "removed": "삭제했어요"
+      "removed": "삭제했어요",
+      "accordionTitle": "관련 주제:",
+      "finding": "주제를 찾고 있어요",
+      "findMore": "주제 더 찾기",
+      "findingMore": "찾는 중",
+      "goneTombstone": "이 정보가 삭제되어 관련 주제도 사라졌어요.",
+      "expandA11y": "주제 보기",
+      "collapseA11y": "주제 숨기기"
     }
   },
   "zh-CN": {
@@ -795,7 +921,14 @@
       "topics": "你的主题"
     },
     "chatTopics": {
-      "removed": "已移除"
+      "removed": "已移除",
+      "accordionTitle": "相关主题：",
+      "finding": "正在寻找主题",
+      "findMore": "查找更多主题",
+      "findingMore": "正在查找",
+      "goneTombstone": "这条信息已删除，相关主题也一并移除。",
+      "expandA11y": "显示主题",
+      "collapseA11y": "隐藏主题"
     }
   },
   "zh-TW": {
@@ -837,7 +970,14 @@
       "topics": "你的主題"
     },
     "chatTopics": {
-      "removed": "已移除"
+      "removed": "已移除",
+      "accordionTitle": "相關主題：",
+      "finding": "正在尋找主題",
+      "findMore": "尋找更多主題",
+      "findingMore": "正在尋找",
+      "goneTombstone": "這則資訊已刪除，相關主題也一併移除。",
+      "expandA11y": "顯示主題",
+      "collapseA11y": "隱藏主題"
     }
   }
 }

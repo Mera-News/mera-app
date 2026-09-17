@@ -2616,7 +2616,14 @@
   },
   "chatTopics": {
     "none": "Tersimpan. Saat ini tidak ada topik untuk ditambahkan.",
-    "removed": "Dihapus"
+    "removed": "Dihapus",
+    "accordionTitle": "Topik untuk:",
+    "finding": "Mencari topik",
+    "findMore": "Cari topik lain",
+    "findingMore": "Mencari lagi",
+    "goneTombstone": "Informasi ini dihapus, jadi topiknya juga hilang.",
+    "expandA11y": "Tampilkan topik",
+    "collapseA11y": "Sembunyikan topik"
   },
   "agentSteps": {
     "legStart": "Memikirkan apa yang kamu katakan",

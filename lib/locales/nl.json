@@ -2617,7 +2617,14 @@
   },
   "chatTopics": {
     "none": "Opgeslagen. Er zijn nu geen onderwerpen om toe te voegen.",
-    "removed": "Verwijderd"
+    "removed": "Verwijderd",
+    "accordionTitle": "Onderwerpen voor:",
+    "finding": "Onderwerpen zoeken",
+    "findMore": "Meer onderwerpen zoeken",
+    "findingMore": "Bezig met zoeken",
+    "goneTombstone": "Dit gegeven is verwijderd, dus de onderwerpen ervan ook.",
+    "expandA11y": "Onderwerpen tonen",
+    "collapseA11y": "Onderwerpen verbergen"
   },
   "agentSteps": {
     "legStart": "Ik denk na over wat je zei",

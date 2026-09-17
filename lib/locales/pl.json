@@ -2655,7 +2655,14 @@
   },
   "chatTopics": {
     "none": "Zapisano. Na razie nie ma tematów do dodania.",
-    "removed": "Usunięto"
+    "removed": "Usunięto",
+    "accordionTitle": "Tematy do:",
+    "finding": "Szukam tematów",
+    "findMore": "Znajdź więcej tematów",
+    "findingMore": "Szukam",
+    "goneTombstone": "Ta informacja została usunięta, więc jej tematy też.",
+    "expandA11y": "Pokaż tematy",
+    "collapseA11y": "Ukryj tematy"
   },
   "agentSteps": {
     "legStart": "Zastanawiam się nad tym, co napisałeś",

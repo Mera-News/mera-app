@@ -2617,7 +2617,14 @@
   },
   "chatTopics": {
     "none": "已儲存。目前沒有可新增的主題。",
-    "removed": "已移除"
+    "removed": "已移除",
+    "accordionTitle": "相關主題：",
+    "finding": "正在尋找主題",
+    "findMore": "尋找更多主題",
+    "findingMore": "正在尋找",
+    "goneTombstone": "這則資訊已刪除，相關主題也一併移除。",
+    "expandA11y": "顯示主題",
+    "collapseA11y": "隱藏主題"
   },
   "agentSteps": {
     "legStart": "正在思考你說的內容",

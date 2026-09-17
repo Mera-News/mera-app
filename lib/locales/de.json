@@ -2617,7 +2617,14 @@
   },
   "chatTopics": {
     "none": "Gespeichert. Gerade gibt es keine Themen zum Hinzufügen.",
-    "removed": "Entfernt"
+    "removed": "Entfernt",
+    "accordionTitle": "Themen zu:",
+    "finding": "Themen werden gesucht",
+    "findMore": "Mehr Themen finden",
+    "findingMore": "Wird gesucht",
+    "goneTombstone": "Diese Angabe wurde entfernt, damit sind auch ihre Themen weg.",
+    "expandA11y": "Themen anzeigen",
+    "collapseA11y": "Themen ausblenden"
   },
   "agentSteps": {
     "legStart": "Ich denke über deine Nachricht nach",

@@ -28,17 +28,18 @@
 
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
+import StatusIndicator from '@/components/custom/chat/StatusIndicator';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
-import { getFacts } from '@/lib/database/services/fact-service';
+import { observeTopicsStatus } from '@/lib/database/services/fact-service';
 import {
   deleteTopicWithDecline,
   undoPendingDelete,
   UNDO_WINDOW_MS,
 } from '@/lib/database/services/topic-decline-service';
+import { generateMoreTopicsForFact } from '@/lib/database/services/topic-planning-service';
 import { observeByFact } from '@/lib/database/services/topic-service';
 import type TopicModel from '@/lib/database/models/Topic';
 import { hapticLight } from '@/lib/haptics';
-import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
@@ -61,15 +62,15 @@ const ACCENT = 'rgb(231, 138, 83)';
 export const MERGED_TOPIC_CEILING = 6;
 
 /**
- * How long a card waits for topics before it stops saying "finding" and offers
- * a retry.
+ * How long a still-PENDING generation runs before the card offers a way out.
  *
- * Generation is a cloud batch inside a live chat turn; the hedge plus the
- * model's own tail can legitimately take tens of seconds. This is well past
- * that, because the cost of being early (a retry button over a request that was
- * about to succeed) is worse than the cost of being late.
+ * This is NOT the old 60s timeout, which decided the card's state: it flipped a
+ * running generation to a terminal-looking one, which is exactly why "no rows
+ * yet" and "no rows ever" were indistinguishable. This decides nothing. The
+ * status stays `pending`, the spinner keeps spinning, and the only change is
+ * that a Try again appears beside it. Do not fold it back into a state machine.
  */
-const GENERATING_TIMEOUT_MS = 60_000;
+export const OFFER_RETRY_AFTER_MS = 75_000;
 
 function cardEntering() {
   'worklet';
@@ -134,9 +135,11 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
     { chip: Chip; index: number }[]
   >([]);
   const undoTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
-  const [genError, setGenError] = useState(false);
-  const [timedOut, setTimedOut] = useState(false);
+  const [status, setStatus] = useState<'pending' | 'done' | 'error' | 'gone'>('pending');
+  const [offerRetry, setOfferRetry] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isFindingMore, setIsFindingMore] = useState(false);
 
   // One live subscription per fact; rows are merged into a single list keyed by
   // fact so the round-robin below can see each fact's own order.
@@ -169,36 +172,43 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
     };
   }, []);
 
-  // `topicGenError` is the same metadata marker TopicPlanCard and FactAccordion
-  // read. Without it an empty card spins forever on a failed generation, because
-  // "no rows yet" and "no rows ever" look identical.
-  const factMutationVersion = useFloatingChatFactMutationVersion();
+  // Generation status, OBSERVED. This replaces a one-shot getFacts() keyed on
+  // a mutation nonce — a poll, not an observation: a generation that finished
+  // without bumping the counter never reached the card. Across several facts
+  // the card shows the least-settled state, so it never claims done while one
+  // fact is still generating.
+  const [statusByFact, setStatusByFact] = useState<Record<string, string>>({});
   useEffect(() => {
-    let cancelled = false;
-    getFacts()
-      .then((all) => {
-        if (cancelled) return;
-        setGenError(
-          factIds.some(
-            (id) => (all.find((f) => f.id === id)?.metadata?.topicGenError?.length ?? 0) > 0,
-          ),
-        );
-      })
-      .catch(() => {
-        /* keep the last known state */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [factIdKey, factIds, factMutationVersion]);
+    const subs = factIds.map((factId) =>
+      observeTopicsStatus(factId).subscribe((next) => {
+        setStatusByFact((prev) => (prev[factId] === next ? prev : { ...prev, [factId]: next }));
+      }),
+    );
+    return () => subs.forEach((sub) => sub.unsubscribe());
+  }, [factIdKey, factIds]);
 
-  // A generation that neither lands nor records an error would otherwise leave
-  // the card spinning for the life of the thread.
   useEffect(() => {
-    if (rows.length > 0) return;
-    const timer = setTimeout(() => setTimedOut(true), GENERATING_TIMEOUT_MS);
+    const seen = factIds.map((id) => statusByFact[id]).filter(Boolean);
+    if (seen.length === 0) return;
+    const next = seen.includes('pending')
+      ? 'pending'
+      : seen.includes('error')
+        ? 'error'
+        : seen.every((v) => v === 'gone')
+          ? 'gone'
+          : 'done';
+    setStatus(next as typeof status);
+  }, [statusByFact, factIdKey, factIds]);
+
+  // An escape hatch, not a state change: see OFFER_RETRY_AFTER_MS.
+  useEffect(() => {
+    if (status !== 'pending') {
+      setOfferRetry(false);
+      return;
+    }
+    const timer = setTimeout(() => setOfferRetry(true), OFFER_RETRY_AFTER_MS);
     return () => clearTimeout(timer);
-  }, [rows.length, isRetrying]);
+  }, [status, isRetrying]);
 
   const live = useMemo(
     () => (merged ? interleaveByFact(rows, factIds, MERGED_TOPIC_CEILING) : rows),
@@ -283,11 +293,21 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
     }
   };
 
+  const handleFindMore = async () => {
+    if (isFindingMore) return;
+    setIsFindingMore(true);
+    void hapticLight();
+    try {
+      for (const fact of facts) await generateMoreTopicsForFact(fact.factId, fact.factStatement);
+    } finally {
+      setIsFindingMore(false);
+    }
+  };
+
   const handleRetry = async () => {
     if (isRetrying) return;
     setIsRetrying(true);
-    setGenError(false);
-    setTimedOut(false);
+    setOfferRetry(false);
     void hapticLight();
     try {
       // Sequential: each call writes metadata and bumps the shared mutation
@@ -299,111 +319,165 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
   };
 
   const empty = visible.length === 0;
-  const showEmptyTerminal = empty && (genError || timedOut) && !isRetrying;
-  const showGenerating = empty && !showEmptyTerminal;
+  const showRetry = status === 'error' || (status === 'pending' && offerRetry);
+
+  // A fact that has been deleted takes its topics with it. A one-line
+  // tombstone, never a card that silently disappears mid-scroll: an
+  // unexplained gap is harder to read than a plain sentence.
+  if (status === 'gone') {
+    return (
+      <Animated.View entering={cardEntering} style={styles.tombstone} testID="chat-topics-gone">
+        <Text size="xs" style={styles.statusText}>
+          {t('chatTopics.goneTombstone')}
+        </Text>
+      </Animated.View>
+    );
+  }
 
   return (
     <Animated.View entering={cardEntering} style={styles.card} testID="chat-topics-card">
-      <View style={styles.headerRow}>
-        <MaterialIcons name="account-tree" size={18} color={ACCENT} />
-        <Text size="sm" bold style={styles.title}>
-          {t('topicPlan.title')}
-        </Text>
-      </View>
+      <Pressable
+        onPress={() => {
+          void hapticLight();
+          setExpanded((v) => !v);
+        }}
+        style={styles.header}
+        accessibilityRole="button"
+        accessibilityState={{ expanded }}
+        accessibilityLabel={expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')}
+        testID={`chat-topics-header-${factIds[0] ?? 'none'}`}
+      >
+        <View style={styles.headerRow}>
+          <MaterialIcons
+            name={expanded ? 'expand-more' : 'chevron-right'}
+            size={18}
+            color={ACCENT}
+          />
+          <Text size="sm" bold style={styles.title}>
+            {t('chatTopics.accordionTitle')}
+          </Text>
 
-      {showGenerating ? (
-        <View style={styles.statusRow}>
-          <ActivityIndicator size="small" color={ACCENT} />
-          <Text size="xs" style={styles.statusText}>
-            {t('topicPlan.generating')}
-          </Text>
+          {/* Status is read out in WORDS as well as drawn, so the spinner and
+              the tick are never the only signal. */}
+          <StatusIndicator
+            status={status === 'error' ? 'error' : status === 'pending' ? 'pending' : 'done'}
+            testID={`chat-topics-status-${factIds[0] ?? 'none'}`}
+          />
+
+          {showRetry && (
+            <Pressable
+              onPress={handleRetry}
+              disabled={isRetrying}
+              hitSlop={16}
+              style={styles.retryButton}
+              accessibilityRole="button"
+              accessibilityLabel={t('floatingChat.topicGenRetry')}
+              testID="chat-topics-retry"
+            >
+              <Text size="xs" bold style={styles.retryText}>
+                {t('floatingChat.topicGenRetry')}
+              </Text>
+            </Pressable>
+          )}
         </View>
-      ) : showEmptyTerminal ? (
-        <View style={styles.statusRow} testID="chat-topics-empty">
-          <Text size="xs" style={styles.statusText}>
-            {t('chatTopics.none')}
+
+        {/* The fact statement is its own node rather than an interpolation:
+            it goes through TranslatableDynamic, which returns a component. */}
+        <TranslatableDynamic
+          text={facts.map((f) => f.factStatement).join(' · ')}
+          size="xs"
+          italic
+          style={styles.factLine}
+          numberOfLines={2}
+        />
+
+        {/* A failure is stated while COLLAPSED too. A problem you have to open
+            a drawer to discover is one nobody sees. */}
+        {status === 'error' && (
+          <Text size="xs" style={styles.statusText} numberOfLines={2}>
+            {t('floatingChat.topicGenFailed')}
           </Text>
+        )}
+      </Pressable>
+
+      {expanded && (
+        <View style={styles.body}>
+          {empty ? (
+            <Text size="xs" style={styles.statusText} testID="chat-topics-empty">
+              {status === 'pending' ? t('chatTopics.finding') : t('chatTopics.none')}
+            </Text>
+          ) : (
+            facts.map((fact) => {
+              const chips = visible.filter((c) => c.factId === fact.factId);
+              if (chips.length === 0) return null;
+              return (
+                <View key={fact.factId} style={styles.section}>
+                  <View style={styles.chips}>
+                    {chips.map((chip) => {
+                      const removing = isPendingDelete(chip.id);
+                      return (
+                        <View
+                          key={chip.id}
+                          style={[styles.chip, removing && styles.chipRemoving]}
+                        >
+                          {/* The removed chip KEEPS its text, dimmed and
+                              struck. A blank "Removed" slot makes the user
+                              guess what they just deleted, at the one moment
+                              they may want it back. Topic texts are the
+                              RETRIEVAL keys: only the rendering is translated,
+                              and the text is never written back. */}
+                          <TranslatableDynamic
+                            text={chip.text}
+                            size="xs"
+                            style={{
+                              ...styles.chipText,
+                              ...(removing ? styles.chipTextRemoving : {}),
+                            }}
+                            numberOfLines={1}
+                          />
+                          <Pressable
+                            onPress={() =>
+                              removing ? handleUndoRemove(chip) : handleRemove(chip)
+                            }
+                            disabled={busyId === chip.id}
+                            hitSlop={16}
+                            style={styles.chipButton}
+                            accessibilityRole="button"
+                            accessibilityLabel={
+                              removing ? t('topicPlan.undo') : t('topicPlan.delete')
+                            }
+                            testID={`chat-topic-chip-${removing ? 'undo' : 'remove'}-${chip.id}`}
+                          >
+                            <MaterialIcons
+                              name={removing ? 'undo' : 'close'}
+                              size={14}
+                              color={removing ? ACCENT : 'rgb(190, 190, 190)'}
+                            />
+                          </Pressable>
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              );
+            })
+          )}
+
           <Pressable
-            onPress={handleRetry}
-            disabled={isRetrying}
+            onPress={handleFindMore}
+            disabled={isFindingMore}
             hitSlop={12}
-            style={styles.retryButton}
+            style={styles.moreButton}
             accessibilityRole="button"
-            accessibilityLabel={t('floatingChat.topicGenRetry')}
-            testID="chat-topics-retry"
+            accessibilityState={{ disabled: isFindingMore }}
+            accessibilityLabel={t('chatTopics.findMore')}
+            testID={`chat-topics-more-${factIds[0] ?? 'none'}`}
           >
             <Text size="xs" bold style={styles.retryText}>
-              {t('floatingChat.topicGenRetry')}
+              {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
             </Text>
           </Pressable>
         </View>
-      ) : (
-        facts.map((fact) => {
-          const chips = visible.filter((c) => c.factId === fact.factId);
-          if (chips.length === 0) return null;
-          return (
-            <View key={fact.factId} style={styles.section}>
-              {/* Only the MERGED card names its facts: a single-fact card sits
-                  directly under that fact's own Saved card, so repeating the
-                  statement would say the same thing twice in a row. */}
-              {merged && (
-                <TranslatableDynamic
-                  text={fact.factStatement}
-                  size="xs"
-                  italic
-                  style={styles.factLine}
-                  numberOfLines={2}
-                />
-              )}
-              <View style={styles.chips}>
-                {chips.map((chip) => {
-                  const removing = isPendingDelete(chip.id);
-                  return (
-                  <View
-                    key={chip.id}
-                    style={[styles.chip, removing && styles.chipRemoving]}
-                  >
-                    {/* Topic texts are the RETRIEVAL keys — English, sent to the
-                        server as-is. Only the RENDERING is translated; remove and
-                        undo act on `chip.id` and the text is never written back. */}
-                    {/* The removed chip KEEPS its text, dimmed and struck. A
-                        blank "Removed" slot makes the user guess what they
-                        just deleted, at the one moment they may want it back. */}
-                    <TranslatableDynamic
-                      text={chip.text}
-                      size="xs"
-                      style={{
-                        ...styles.chipText,
-                        ...(removing ? styles.chipTextRemoving : {}),
-                      }}
-                      numberOfLines={1}
-                    />
-                    <Pressable
-                      onPress={() =>
-                        removing ? handleUndoRemove(chip) : handleRemove(chip)
-                      }
-                      disabled={busyId === chip.id}
-                      hitSlop={16}
-                      style={styles.chipButton}
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        removing ? t('topicPlan.undo') : t('topicPlan.delete')
-                      }
-                      testID={`chat-topic-chip-${removing ? 'undo' : 'remove'}-${chip.id}`}
-                    >
-                      <MaterialIcons
-                        name={removing ? 'undo' : 'close'}
-                        size={14}
-                        color={removing ? ACCENT : 'rgb(190, 190, 190)'}
-                      />
-                    </Pressable>
-                  </View>
-                  );
-                })}
-              </View>
-            </View>
-          );
-        })
       )}
     </Animated.View>
   );
@@ -419,14 +493,33 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     gap: 10,
   },
+  // 48dp target on the header row.
+  header: { minHeight: 48, justifyContent: 'center', gap: 4 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  body: { gap: 10, paddingTop: 2 },
+  tombstone: {
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  moreButton: {
+    minHeight: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: ACCENT,
+    paddingHorizontal: 14,
+  },
   title: { color: ACCENT },
   factLine: { color: 'rgb(190, 190, 190)' },
   section: { gap: 6 },
   statusRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 4 },
   statusText: { flex: 1, color: 'rgb(200, 200, 200)' },
   retryButton: {
-    minHeight: 44,
+    minHeight: 48,
     justifyContent: 'center',
     paddingHorizontal: 14,
     borderRadius: 999,

@@ -2616,7 +2616,14 @@
   },
   "chatTopics": {
     "none": "저장했습니다. 지금은 추가할 주제가 없습니다.",
-    "removed": "삭제했어요"
+    "removed": "삭제했어요",
+    "accordionTitle": "관련 주제:",
+    "finding": "주제를 찾고 있어요",
+    "findMore": "주제 더 찾기",
+    "findingMore": "찾는 중",
+    "goneTombstone": "이 정보가 삭제되어 관련 주제도 사라졌어요.",
+    "expandA11y": "주제 보기",
+    "collapseA11y": "주제 숨기기"
   },
   "agentSteps": {
     "legStart": "말씀하신 내용을 생각하고 있어요",

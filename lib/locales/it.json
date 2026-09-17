@@ -2617,7 +2617,14 @@
   },
   "chatTopics": {
     "none": "Salvato. Al momento non ci sono argomenti da aggiungere.",
-    "removed": "Rimosso"
+    "removed": "Rimosso",
+    "accordionTitle": "Argomenti per:",
+    "finding": "Ricerca argomenti",
+    "findMore": "Trova altri argomenti",
+    "findingMore": "Ricerca in corso",
+    "goneTombstone": "Questa informazione è stata rimossa, quindi anche i suoi argomenti.",
+    "expandA11y": "Mostra argomenti",
+    "collapseA11y": "Nascondi argomenti"
   },
   "agentSteps": {
     "legStart": "Sto pensando a quello che hai detto",
