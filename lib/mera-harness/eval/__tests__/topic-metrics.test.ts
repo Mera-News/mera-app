@@ -4,6 +4,8 @@
 
 import {
   EMPTY_CONTENT_GATE,
+  NO_USABLE_SET_GATE,
+  countMatchedLadder,
   S7_GATE,
   applyShippedFilter,
   filterCorrectness,
@@ -198,6 +200,64 @@ describe('output integrity gate', () => {
   it('counts finish reasons, so a truncation is visible next to the empties', () => {
     const r = integrityReport([set('', 'length'), set('["a"]', 'stop')]);
     expect(r.finishReasons).toEqual({ length: 1, stop: 1 });
+  });
+});
+
+describe('count-matched ladder', () => {
+  // The bias this removes: an arm that returns nothing half the time is
+  // otherwise judged only on the half it managed, against a control judged on
+  // everything. Step A round 1 scored one arm over 33 rung-slots and the
+  // control over 63 and compared the percentages anyway.
+  const scoreOne = (set: TopicSetInput) => ({
+    rungsCovered: set.topics.length > 0 ? 1 : 0,
+    rungsTotal: 2,
+    fieldGenericPresent: set.topics.length > 0,
+  });
+  const entry = (arm: string, key: string, topics: string[]) => ({
+    arm, key, set: { ...BASE, topics },
+  });
+
+  it('EXCLUDES a cell where either arm returned nothing, and says who dropped', () => {
+    const r = countMatchedLadder(
+      [
+        entry('skill', 'f1|0', ['a topic here']),
+        entry('control', 'f1|0', ['another topic']),
+        entry('skill', 'f2|0', []), // the skill arm produced no set
+        entry('control', 'f2|0', ['control still managed one']),
+      ],
+      scoreOne,
+    );
+    expect(r.matchedCells).toBe(1);
+    expect(r.unmatchedCells).toBe(1);
+    expect(r.droppedByArm).toEqual({ skill: 1 });
+    // Both arms scored over the SAME denominator.
+    expect(r.perArm.skill.rungsTotal).toBe(r.perArm.control.rungsTotal);
+  });
+
+  it('POSITIVE CONTROL: with no dropout every cell is matched', () => {
+    const r = countMatchedLadder(
+      [
+        entry('skill', 'f1|0', ['x topic']),
+        entry('control', 'f1|0', ['y topic']),
+      ],
+      scoreOne,
+    );
+    expect(r.unmatchedCells).toBe(0);
+    expect(r.droppedByArm).toEqual({});
+  });
+});
+
+describe('gate 1b', () => {
+  it('is pre-registered at 5 percent and is stricter than the empty-content gate', () => {
+    expect(NO_USABLE_SET_GATE).toBe(0.05);
+    expect(NO_USABLE_SET_GATE).toBeGreaterThan(EMPTY_CONTENT_GATE);
+    // 4% unusable passes 1b; 6% does not.
+    const mk = (bad: number, total: number): TopicSetInput[] =>
+      Array.from({ length: total }, (_, i) => ({
+        ...BASE, topics: i < bad ? [] : ['a real topic'], rawOutput: 'prose, not an array',
+      }));
+    expect(integrityReport(mk(4, 100)).passedOnUsableSets).toBe(true);
+    expect(integrityReport(mk(6, 100)).passedOnUsableSets).toBe(false);
   });
 });
 

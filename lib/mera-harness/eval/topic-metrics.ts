@@ -103,12 +103,27 @@ export interface IntegrityReport {
   /** The gate AS PRE-REGISTERED: empty content above 2%. Kept exactly as
    *  agreed rather than silently widened, so the record stays honest. */
   passed: boolean;
-  /** The same bar applied to the stricter reading. Reported ALONGSIDE, never
-   *  instead of, `passed`. */
+  /** GATE 1b, at NO_USABLE_SET_GATE. Reported ALONGSIDE `passed`, never
+   *  instead of it: the original wording stays on the record as agreed. */
   passedOnUsableSets: boolean;
 }
 
 export const EMPTY_CONTENT_GATE = 0.02;
+
+/**
+ * GATE 1b, PRE-REGISTERED FOR THE RE-RUN: no usable topic set, at or below 5%.
+ *
+ * Promoted from a reported number to a gate because the original wording
+ * proved to be the wrong instrument: it asked for EMPTY CONTENT and read 0.0%
+ * on an arm that produced no usable set on 42% of calls, the model having
+ * written reasoning prose where the contract wants a bare JSON array. Empty
+ * and unusable are the same outcome downstream.
+ *
+ * 5% rather than the 2% of the empty-content gate: this one counts a
+ * strictly larger class of failure, and the number is fixed here BEFORE the
+ * re-run rather than chosen once its table is visible.
+ */
+export const NO_USABLE_SET_GATE = 0.05;
 
 export function integrityReport(sets: readonly TopicSetInput[]): IntegrityReport {
   const finishReasons: Record<string, number> = {};
@@ -132,7 +147,7 @@ export function integrityReport(sets: readonly TopicSetInput[]): IntegrityReport
     noUsableSetRate: emptyRate + unparsedRate,
     finishReasons,
     passed: emptyRate <= EMPTY_CONTENT_GATE,
-    passedOnUsableSets: emptyRate + unparsedRate <= EMPTY_CONTENT_GATE,
+    passedOnUsableSets: emptyRate + unparsedRate <= NO_USABLE_SET_GATE,
   };
 }
 
@@ -287,4 +302,88 @@ export function sharedRules(set: TopicSetInput): SharedRuleReport {
     wordCountViolations: set.topics.filter((t) => !topicWordCountOk(t)),
     bannedDash: set.topics.filter((t) => hasBannedDash(t)),
   };
+}
+
+
+// ---------------------------------------------------------------------------
+// Count-matched ladder comparison
+// ---------------------------------------------------------------------------
+
+/**
+ * Score the ladder on cells where EVERY compared arm returned a set.
+ *
+ * WHY, AND IT IS NOT A DETAIL. Scoring each arm over whatever it happened to
+ * produce gives the arms different denominators, and an arm that fails to
+ * return a set on half its calls is then judged on the half it managed. Step A
+ * round 1: the skill arm scored 33 rung-slots against one-shot's 63, so its
+ * 75.8% was measured over a remnant roughly half the size and was not
+ * comparable to the control's 88.9% at all.
+ *
+ * The dropout is itself a finding, which is what gate 1b is for. It must not
+ * ALSO be allowed to flatter the quality number, so the unmatched count is
+ * returned and the caller prints it beside the comparison.
+ */
+export interface ArmSetEntry {
+  arm: string;
+  /** Identifies the work unit, typically `${factId}|${repeat}`. */
+  key: string;
+  set: TopicSetInput;
+}
+
+export interface MatchedLadderReport {
+  matchedCells: number;
+  unmatchedCells: number;
+  /** Which arm dropped out on each unmatched cell, so the dropout stays
+   *  attributable rather than becoming a single excluded count. */
+  droppedByArm: Record<string, number>;
+  perArm: Record<
+    string,
+    { rungsCovered: number; rungsTotal: number; fieldGenericPresent: number; fieldGenericCases: number }
+  >;
+}
+
+export function countMatchedLadder(
+  entries: readonly ArmSetEntry[],
+  scoreOne: (set: TopicSetInput) => {
+    rungsCovered: number;
+    rungsTotal: number;
+    fieldGenericPresent: boolean | null;
+  } | null,
+): MatchedLadderReport {
+  const arms = [...new Set(entries.map((e) => e.arm))];
+  const byKey = new Map<string, Map<string, TopicSetInput>>();
+  for (const e of entries) {
+    const m = byKey.get(e.key) ?? new Map<string, TopicSetInput>();
+    m.set(e.arm, e.set);
+    byKey.set(e.key, m);
+  }
+
+  const perArm: MatchedLadderReport['perArm'] = {};
+  for (const a of arms) {
+    perArm[a] = { rungsCovered: 0, rungsTotal: 0, fieldGenericPresent: 0, fieldGenericCases: 0 };
+  }
+  const droppedByArm: Record<string, number> = {};
+  let matchedCells = 0;
+  let unmatchedCells = 0;
+
+  for (const [, m] of byKey) {
+    const missing = arms.filter((a) => (m.get(a)?.topics.length ?? 0) === 0);
+    if (missing.length > 0) {
+      unmatchedCells += 1;
+      for (const a of missing) droppedByArm[a] = (droppedByArm[a] ?? 0) + 1;
+      continue;
+    }
+    matchedCells += 1;
+    for (const a of arms) {
+      const scored = scoreOne(m.get(a) as TopicSetInput);
+      if (!scored) continue;
+      perArm[a].rungsCovered += scored.rungsCovered;
+      perArm[a].rungsTotal += scored.rungsTotal;
+      if (scored.fieldGenericPresent !== null) {
+        perArm[a].fieldGenericCases += 1;
+        if (scored.fieldGenericPresent) perArm[a].fieldGenericPresent += 1;
+      }
+    }
+  }
+  return { matchedCells, unmatchedCells, droppedByArm, perArm };
 }
