@@ -169,7 +169,7 @@ function coerceEventType(raw: unknown): string {
 
 // --- The call ---------------------------------------------------------------
 
-const MODELS = ['gemini-2.5-flash-lite', 'gemini-3.1-flash-lite'];
+const MODELS = ['gemini-3.1-flash-lite', 'gemini-3.5-flash-lite'];
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 const ATTENTION_CAP = 40; // PREPROCESS_ATTENTION_CAP
 const MAX_RETRIES = 3;

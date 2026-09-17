@@ -43,7 +43,7 @@ if (!API_KEY) {
   console.error('GEMINI_API_KEY not set (fetch via gcloud secrets)');
   process.exit(1);
 }
-const MODEL = process.env.GEMINI_TAGGING_MODEL || 'gemini-2.5-flash-lite';
+const MODEL = process.env.GEMINI_TAGGING_MODEL || 'gemini-3.1-flash-lite';
 const BASE_URL =
   process.env.GEMINI_BASE_URL ||
   'https://generativelanguage.googleapis.com/v1beta';
