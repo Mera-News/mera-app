@@ -132,7 +132,8 @@ async function runSkillGuided(
           {
             systemPrompt: req.systemPrompt,
             prompt: req.messages[0]?.content ?? '',
-            model: req.model,
+            // The core emits a tier label; only the app knows the id.
+            model: req.model === 'SMALL' || !req.model ? SMALL_MODEL : req.model,
             temperature: req.temperature,
             maxTokens: req.maxTokens,
           },

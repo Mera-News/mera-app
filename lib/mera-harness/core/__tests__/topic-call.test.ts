@@ -3,6 +3,7 @@ import {
   buildTopicUserMessage,
   generateTopicsForFact,
   parseTopics,
+  parseTopicsDetailed,
 } from '../topic-call';
 import type { AgentModelResult } from '../types';
 
@@ -31,7 +32,7 @@ describe('the terminal topic call', () => {
     expect(req.role).toBe('topicgen');
     // Thinking OFF, measured: ON returned empty content on 8 of 10 probes.
     expect(req.enableThinking).toBe(false);
-    expect(req.maxTokens).toBe(400);
+    expect(req.maxTokens).toBe(600);
   });
 
   it('an UNKNOWN skillId falls back to the group generic rather than failing', async () => {
@@ -138,5 +139,50 @@ describe('ceiling and parsing', () => {
     expect(parseTopics('Sure! ["a b", "c d"] hope that helps')).toEqual(['a b', 'c d']);
     expect(parseTopics('no json at all')).toEqual([]);
     expect(parseTopics('')).toEqual([]);
+  });
+});
+
+describe('decoding, with the discipline the scoring decoder uses', () => {
+  it('a BARE array parses and is not flagged as prose-wrapped', () => {
+    const d = parseTopicsDetailed('["a b", "c d"]');
+    expect(d.topics).toEqual(['a b', 'c d']);
+    expect(d.proseAroundArray).toBe(false);
+  });
+
+  it('recovers an array WRAPPED IN PROSE and flags it', () => {
+    // 42% of skill-arm rows looked like this and the old decoder scored them
+    // as no usable set.
+    const d = parseTopicsDetailed(
+      'Let me think about the ladder first.\n\nHere are the topics:\n["Alkmaar housing", "Spain rail strikes"]\n\nThat covers both rungs.',
+    );
+    expect(d.topics).toEqual(['Alkmaar housing', 'Spain rail strikes']);
+    expect(d.proseAroundArray).toBe(true);
+  });
+
+  it('takes the LAST array, not the first, when the model reasons out loud', () => {
+    // The old non-greedy regex matched the FIRST bracket run and returned the
+    // model's scratch list as if it were the answer.
+    const d = parseTopicsDetailed(
+      'I considered ["Alkmaar", "Hoorn"] but settled on ["Alkmaar housing", "Alkmaar transport"]',
+    );
+    expect(d.topics).toEqual(['Alkmaar housing', 'Alkmaar transport']);
+  });
+
+  it('FAILS CLOSED on a truncated array rather than returning a partial set', () => {
+    const d = parseTopicsDetailed('Here they are:\n["Alkmaar housing", "Spain rail str');
+    expect(d.topics).toEqual([]);
+    expect(d.proseAroundArray).toBe(false);
+  });
+
+  it('a bracket INSIDE a topic string does not unbalance the scan', () => {
+    const d = parseTopicsDetailed('Answer: ["housing [draft] rules", "rail strikes"]');
+    expect(d.topics).toEqual(['housing [draft] rules', 'rail strikes']);
+  });
+
+  it('surfaces proseAroundArray on the outcome so P6 can count it', async () => {
+    const deps = depsReturning('Thinking...\n["Alkmaar housing"]');
+    const out = await generateTopicsForFact({ fact: FACT, skillId: 'topics/residence', deps });
+    expect(out.proseAroundArray).toBe(true);
+    expect(out.topics).toEqual(['Alkmaar housing']);
   });
 });

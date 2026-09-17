@@ -1822,3 +1822,50 @@ describe('the shipped cloud path drives the agent loop', () => {
     expect(useCloudChatStore.getState().status).toBe('idle');
   });
 });
+
+// ---------------------------------------------------------------------------
+// A FAILED agent turn must not wedge the composer (pagent P1)
+// ---------------------------------------------------------------------------
+describe('agent loop failure recovery', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+  });
+
+  it('a throwing callModel leaves turnActive FALSE and the status idle', async () => {
+    // The device symptom: NEAR 503 on the first send, then "Please try again in
+    // a moment" forever -- only New chat recovered.
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: jest.fn(async () => { throw new Error("Provider error: Model 'BIG' not found"); }),
+      tools: {}, loadSkill: () => null, skillIds: () => [],
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(makeAgent({ id: 'persona-u1-CONFIG' })));
+
+    await act(async () => { result.current.sendMessage('hi'); });
+    await waitFor(() => expect(useCloudChatStore.getState().error).toBeTruthy(), { timeout: 3000 });
+
+    expect(useCloudChatStore.getState().status).toBe('idle');
+    expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false);
+  });
+
+  it('a SECOND send still works after a failed turn', async () => {
+    let calls = 0;
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: jest.fn(async () => {
+        calls += 1;
+        if (calls === 1) throw new Error('503');
+        return { content: 'ok now', toolCalls: [], finishReason: 'stop', truncated: false,
+          usage: null, modelSent: 'm', latencyMs: 1, error: null };
+      }),
+      tools: {}, loadSkill: () => null, skillIds: () => [],
+    });
+    const { result } = renderHook(() => useCloudPersonaChat(makeAgent({ id: 'persona-u1-CONFIG' })));
+
+    await act(async () => { result.current.sendMessage('first'); });
+    await waitFor(() => expect(useCloudChatStore.getState().error).toBeTruthy(), { timeout: 3000 });
+
+    await act(async () => { result.current.sendMessage('second'); });
+    await waitFor(() => expect(calls).toBe(2), { timeout: 3000 });
+    expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false);
+  });
+});

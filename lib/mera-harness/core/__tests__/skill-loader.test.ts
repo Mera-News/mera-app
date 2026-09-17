@@ -91,6 +91,34 @@ describe('index rendering', () => {
     expect(ids.every((id) => !isGenericId(id))).toBe(true);
   });
 
+  it('EXCLUDES `router`, which the model loaded on 112 of 312 turns', () => {
+    // It was row 1 of its own index, described as "reads one user turn and
+    // decides", so the model spent a whole leg fetching the instructions it
+    // was already following.
+    expect(skillIndexRows().map((r) => r.id)).not.toContain('router');
+    expect(renderSkillIndex()).not.toMatch(/(^|\s)-\s+router\b/m);
+  });
+
+  it('EXCLUDES every topics/* guideline: terminal, not a destination', () => {
+    const ids = skillIndexRows().map((r) => r.id);
+    expect(ids.filter((id) => id.startsWith('topics/'))).toEqual([]);
+    expect(renderSkillIndex()).not.toContain('topics/');
+  });
+
+  it('KEEPS facts/* and conversation/*, so the filter is not a blanket empty', () => {
+    const ids = skillIndexRows().map((r) => r.id);
+    expect(ids.some((id) => id.startsWith('facts/'))).toBe(true);
+    expect(ids.some((id) => id.startsWith('conversation/'))).toBe(true);
+    expect(ids.length).toBeGreaterThan(3);
+  });
+
+  it('an excluded id is still LOADABLE, it is only absent from the index', () => {
+    // The topic call loads topics/* directly by id; exclusion is about what a
+    // chat turn may route to, not about what exists.
+    expect(loadSkill('topics/residence')).not.toBeNull();
+    expect(loadSkill('router')).not.toBeNull();
+  });
+
   it('renders one line per routable skill', () => {
     const lines = renderSkillIndex().split('\n').filter(Boolean);
     expect(lines).toHaveLength(skillIndexRows().length);

@@ -22,7 +22,7 @@ export const MAX_TOPICS_PER_FACT = 12;
  *  and a valid answer every time with it off. 12 topics plus JSON is ~140
  *  tokens, so 400 is comfortable. Do not re-enable thinking without a fresh
  *  A/B. */
-export const TOPIC_CALL_MAX_TOKENS = 400;
+export const TOPIC_CALL_MAX_TOKENS = 600;
 export const TOPIC_CALL_TEMPERATURE = 0.3;
 
 export interface TopicCallFact {
@@ -70,6 +70,9 @@ export interface GenerateTopicsOutcome {
    *  is indistinguishable from a bad prompt. */
   dropped: { veto: number; filter: number };
   filterDrops: DedupeDrop[];
+  /** The model wrapped its array in prose rather than answering with the array.
+   *  Surfaced so the prompt fix is measurable. */
+  proseAroundArray: boolean;
 }
 
 const FALLBACK_SKILL = 'topics/generic';
@@ -101,19 +104,87 @@ export function buildTopicUserMessage(p: GenerateTopicsParams): string {
   return lines.join('\n');
 }
 
-export function parseTopics(output: string): string[] {
-  const attempt = (text: string): string[] | null => {
-    try {
-      const parsed: unknown = JSON.parse(text);
-      if (!Array.isArray(parsed)) return null;
-      return parsed
-        .filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
-        .map((s) => s.trim());
-    } catch {
-      return null;
+function asStringArray(parsed: unknown): string[] | null {
+  if (!Array.isArray(parsed)) return null;
+  return parsed
+    .filter((x): x is string => typeof x === 'string' && x.trim().length > 0)
+    .map((x) => x.trim());
+}
+
+function tryParse(text: string): string[] | null {
+  try {
+    return asStringArray(JSON.parse(text));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The LAST balanced top-level `[...]` in the text, or null.
+ *
+ * Scans with a depth counter and a string-literal state machine rather than a
+ * regex. The old `/\[[\s\S]*?\]/` was non-greedy, so on prose like
+ * "I considered [Alkmaar, Hoorn] and settled on: [\"a b\", \"c d\"]" it
+ * matched the FIRST bracket run and returned the wrong list; on a truncated
+ * answer it could match a fragment and return a partial set as if it were
+ * whole. LAST, because a model that reasons first puts its answer at the end.
+ *
+ * A bracket inside a string literal does not count, which is why the quote and
+ * escape states exist: a topic containing "[" would otherwise unbalance it.
+ */
+export function lastBalancedArray(text: string): string | null {
+  let start = -1;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let best: string | null = null;
+
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (c === '\\') escaped = true;
+      else if (c === '"') inString = false;
+      continue;
     }
-  };
-  return attempt(output) ?? attempt(output.match(/\[[\s\S]*?\]/)?.[0] ?? '') ?? [];
+    if (c === '"') { inString = true; continue; }
+    if (c === '[') {
+      if (depth === 0) start = i;
+      depth++;
+    } else if (c === ']') {
+      if (depth > 0) {
+        depth--;
+        // Only a CLOSED top-level array counts, so a truncated tail is never
+        // mistaken for a complete answer: it fails closed.
+        if (depth === 0 && start !== -1) best = text.slice(start, i + 1);
+      }
+    }
+  }
+  return best;
+}
+
+export interface ParsedTopics {
+  topics: string[];
+  /** True when the array was recovered from surrounding prose rather than being
+   *  the whole answer. 42% of skill-arm rows did this; counting it is how the
+   *  prompt fix gets measured instead of guessed at. */
+  proseAroundArray: boolean;
+}
+
+export function parseTopicsDetailed(output: string): ParsedTopics {
+  const whole = tryParse(output.trim());
+  if (whole) return { topics: whole, proseAroundArray: false };
+
+  const block = lastBalancedArray(output);
+  if (block) {
+    const recovered = tryParse(block);
+    if (recovered) return { topics: recovered, proseAroundArray: true };
+  }
+  return { topics: [], proseAroundArray: false };
+}
+
+export function parseTopics(output: string): string[] {
+  return parseTopicsDetailed(output).topics;
 }
 
 /**
@@ -143,7 +214,8 @@ export async function generateTopicsForFact(
     enableThinking: false,
   });
 
-  const raw = parseTopics(result.content);
+  const decoded = parseTopicsDetailed(result.content);
+  const raw = decoded.topics;
 
   const declined = new Set((params.declinedTopics ?? []).map(normalizeTopicText));
   const kept: string[] = [];
@@ -166,5 +238,6 @@ export async function generateTopicsForFact(
     result,
     dropped: { veto: vetoed, filter: deduped.dropped.length },
     filterDrops: deduped.dropped,
+    proseAroundArray: decoded.proseAroundArray,
   };
 }

@@ -82,14 +82,35 @@ export interface SkillIndexRow {
 }
 
 /**
- * The rows the router prompt renders.
+ * Groups a USER TURN can route to. Everything else is reachable, just not from
+ * the index.
  *
- * A `<group>/generic` skill is EXCLUDED: it is a preamble the loader composes
- * automatically, never something the router chooses. Offering it as a routable
- * destination would let the model load shared rules and no guideline.
+ *  - `router` is the prompt doing the choosing. It was row 1 of its own index,
+ *    described as "reads one user turn and decides", and the model duly loaded
+ *    it on 112 of 312 turns: a leg spent fetching the instructions it was
+ *    already following.
+ *  - `topics/*` are TERMINAL guidelines for the background topic call. They
+ *    are not tools and there is nothing for a chat turn to do with one.
+ */
+const ROUTABLE_GROUPS: ReadonlySet<string> = new Set(['facts', 'conversation']);
+
+export function isRoutableId(id: string): boolean {
+  if (isGenericId(id)) return false;
+  const slash = id.indexOf('/');
+  if (slash === -1) return false; // standalone, e.g. `router`
+  return ROUTABLE_GROUPS.has(id.slice(0, slash));
+}
+
+/**
+ * The rows the router prompt renders: loadable DESTINATIONS for a user turn,
+ * and nothing else.
+ *
+ * A `<group>/generic` is excluded because the loader composes it automatically,
+ * so offering it would let the model load shared rules and no guideline. See
+ * ROUTABLE_GROUPS for why `router` and `topics/*` are excluded too.
  */
 export function skillIndexRows(): SkillIndexRow[] {
-  return PERSONA_SKILL_INDEX.filter((e) => !isGenericId(e.id)).map((e) => ({
+  return PERSONA_SKILL_INDEX.filter((e) => isRoutableId(e.id)).map((e) => ({
     id: e.id,
     when: e.when,
     description: e.description,

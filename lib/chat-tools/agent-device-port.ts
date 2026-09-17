@@ -20,7 +20,7 @@ import { loadSkill, skillIds } from '@/lib/mera-harness';
 import { findSimilarFacts } from '../database/services/fact-similarity-service';
 import { lookupPlace } from '../place-service';
 import { cloudChatStream, type WireMessage } from '../llm/cloudComplete';
-import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS } from '../llm/constants';
+import { BIG_MODEL, CHAT_MAX_OUTPUT_TOKENS, SMALL_MODEL } from '../llm/constants';
 import { handleDeleteUserFacts, handleSaveExtractedFacts } from './tool-handlers';
 import { getFacts } from '../database/services/fact-service';
 import type { AgentPersona } from '@/lib/mera-harness';
@@ -71,8 +71,30 @@ export function makeAgentToolPort(userMessage: string): AgentToolPort {
  * THROWS PROPAGATE. The harness only captures a RESOLVED error into the leg; a
  * thrown one must end the turn, which is what the hook's own catch expects.
  */
+/**
+ * Turn the core's TIER LABEL into a real model id.
+ *
+ * The core is RN-free and must never know a model id, so it emits 'BIG' /
+ * 'SMALL'. The adapter is the only place that knows what those mean.
+ *
+ * This was `req.model || BIG_MODEL`, which looks like a fallback and is not:
+ * 'BIG' is truthy, so the tier word went on the wire and NEAR answered
+ * `503 Provider error: Model 'BIG' not found`. An unrecognised value is
+ * treated as a tier miss and resolved to BIG rather than forwarded, because a
+ * literal id would already have matched one of the two constants and anything
+ * else is a bug that must not reach the provider.
+ */
+export function resolveTierToModelId(tier: string | undefined): string {
+  if (tier === SMALL_MODEL || tier === BIG_MODEL) return tier;
+  if (tier === 'SMALL') return SMALL_MODEL;
+  if (tier === 'BIG' || !tier) return BIG_MODEL;
+  logger.warn(`${TAG} unrecognised model tier, defaulting to BIG`, { tier });
+  return BIG_MODEL;
+}
+
 export async function callModelViaCloud(req: AgentModelRequest): Promise<AgentModelResult> {
   const started = Date.now();
+  const modelId = resolveTierToModelId(req.model);
   let ttVisibleMs: number | null = null;
   let content = '';
   const byIndex = new Map<number, { name: string; args: string }>();
@@ -90,7 +112,7 @@ export async function callModelViaCloud(req: AgentModelRequest): Promise<AgentMo
     messages,
     tools: req.tools as never,
     toolChoice: 'auto',
-    model: req.model || BIG_MODEL,
+    model: modelId,
     maxTokens: req.maxTokens ?? CHAT_MAX_OUTPUT_TOKENS,
     // Thinking OFF on every agent call. Measured: the trace buys nothing here
     // and costs the whole budget on the topic path.
@@ -125,7 +147,7 @@ export async function callModelViaCloud(req: AgentModelRequest): Promise<AgentMo
     finishReason,
     truncated: finishReason === 'length',
     usage: null,
-    modelSent: req.model || BIG_MODEL,
+    modelSent: modelId,
     latencyMs: Date.now() - started,
     ttVisibleMs,
     error: null,
