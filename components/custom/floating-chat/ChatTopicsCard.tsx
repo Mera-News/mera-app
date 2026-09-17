@@ -12,24 +12,36 @@
 // of its life in a state ("finding topics", or a failed generation) where there
 // is nothing to act on at all.
 //
-// Removal routes through the SAME audited seam TopicPlanCard uses —
-// applyPersonaAction({ action_type: 'retire_topic' }) then revertChange for the
-// undo — so bulk and single behaviour cannot drift and the change log stays
-// honest.
+// Removal is a REAL DELETE with a short undo, not a retire. The chip X stages
+// the delete through topic-decline-service, which owns the window, the commit
+// and the decline row; this card owns only what is on screen. Two consequences
+// that are easy to get wrong:
+//
+//   - the row leaves `observeByFact` IMMEDIATELY on stage, so a card rendering
+//     straight off the observable would lose the chip the instant it is tapped
+//     and take the Undo with it. The chip is held in `pendingDelete` and
+//     re-inserted AT ITS OWN INDEX, so nothing reflows under the reader.
+//   - this card never owns the commit timer and never hardcodes the window.
+//     `UNDO_WINDOW_MS` is imported; the local timer only decides how long the
+//     Undo affordance is offered, and if it never fires the service still
+//     commits on its own clock, on app start and on foreground.
 
 import TranslatableDynamic from '@/components/custom/TranslatableDynamic';
 import { Text } from '@/components/ui/text';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
-import { applyPersonaAction } from '@/lib/database/services/persona-action-executor';
 import { getFacts } from '@/lib/database/services/fact-service';
-import { revertChange } from '@/lib/database/services/persona-change-log-service';
-import { observeByFact, reactivate } from '@/lib/database/services/topic-service';
+import {
+  deleteTopicWithDecline,
+  undoPendingDelete,
+  UNDO_WINDOW_MS,
+} from '@/lib/database/services/topic-decline-service';
+import { observeByFact } from '@/lib/database/services/topic-service';
 import type TopicModel from '@/lib/database/models/Topic';
 import { hapticLight } from '@/lib/haptics';
 import { useFloatingChatFactMutationVersion } from '@/lib/stores/floating-chat-store';
 import { MaterialIcons } from '@expo/vector-icons';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AccessibilityInfo, ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { withTiming } from 'react-native-reanimated';
 import { useTranslation } from 'react-i18next';
 
@@ -78,7 +90,6 @@ interface Chip {
   id: string;
   text: string;
   factId: string;
-  retired: boolean;
 }
 
 export interface ChatTopicsCardProps {
@@ -117,11 +128,15 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
 
   const [rows, setRows] = useState<Chip[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
+  /** Chips staged for deletion, still shown so the Undo is reachable. The
+   *  index is remembered so the chip stays in its own footprint. */
+  const [pendingDelete, setPendingDelete] = useState<
+    { chip: Chip; index: number }[]
+  >([]);
+  const undoTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const [genError, setGenError] = useState(false);
   const [timedOut, setTimedOut] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
-  // topicId -> change-log id of its retire, so Undo reverts the exact row.
-  const retireLogIds = useRef<Map<string, string>>(new Map());
 
   // One live subscription per fact; rows are merged into a single list keyed by
   // fact so the round-robin below can see each fact's own order.
@@ -131,20 +146,28 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
       observeByFact(factId).subscribe((models: TopicModel[]) => {
         perFact.set(
           factId,
+          // ACTIVE only. A staged delete leaves the observable at once and is
+          // re-inserted from `pendingDelete` below; `retired` is no longer a
+          // state this card can produce.
           models
-            .filter((m) => m.status === 'active' || m.status === 'retired')
-            .map((m) => ({
-              id: m.id,
-              text: m.text,
-              factId,
-              retired: m.status === 'retired',
-            })),
+            .filter((m) => m.status === 'active')
+            .map((m) => ({ id: m.id, text: m.text, factId })),
         );
         setRows(factIds.flatMap((id) => perFact.get(id) ?? []));
       }),
     );
     return () => subs.forEach((s) => s.unsubscribe());
   }, [factIdKey, factIds]);
+
+  // Only the DISPLAY timers. Dropping them on unmount cannot lose a delete:
+  // the service holds the staged row on disk and commits it regardless.
+  useEffect(() => {
+    const timers = undoTimers.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+      timers.clear();
+    };
+  }, []);
 
   // `topicGenError` is the same metadata marker TopicPlanCard and FactAccordion
   // read. Without it an empty card spins forever on a failed generation, because
@@ -177,21 +200,68 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
     return () => clearTimeout(timer);
   }, [rows.length, isRetrying]);
 
-  const visible = useMemo(
+  const live = useMemo(
     () => (merged ? interleaveByFact(rows, factIds, MERGED_TOPIC_CEILING) : rows),
     [rows, factIds, merged],
   );
+
+  /** Live chips plus the staged-for-deletion ones, each back at its own index
+   *  so removing a chip does not reflow the ones around it. */
+  const visible = useMemo(() => {
+    if (pendingDelete.length === 0) return live;
+    const out = [...live];
+    // Ascending, so each insertion lands before the next index is used.
+    for (const { chip, index } of [...pendingDelete].sort((a, b) => a.index - b.index)) {
+      if (out.some((c) => c.id === chip.id)) continue;
+      out.splice(Math.min(index, out.length), 0, chip);
+    }
+    return out;
+  }, [live, pendingDelete]);
+
+  // `handleRemove` needs the index a chip occupied at the moment it was
+  // tapped, and reading it from a ref keeps that handler out of the memo's
+  // dependency list.
+  const visibleRef = useRef<Chip[]>([]);
+  visibleRef.current = visible;
+
+  const isPendingDelete = useCallback(
+    (id: string) => pendingDelete.some((p) => p.chip.id === id),
+    [pendingDelete],
+  );
+
+  /** Stop offering Undo for one chip. Display only — the service commits on
+   *  its own clock whether or not this ever runs. */
+  const dropPending = useCallback((topicId: string) => {
+    const timer = undoTimers.current.get(topicId);
+    if (timer) clearTimeout(timer);
+    undoTimers.current.delete(topicId);
+    setPendingDelete((prev) => prev.filter((p) => p.chip.id !== topicId));
+  }, []);
 
   const handleRemove = async (chip: Chip) => {
     if (busyId) return;
     setBusyId(chip.id);
     void hapticLight();
     try {
-      const res = await applyPersonaAction(
-        { action_type: 'retire_topic', topicId: chip.id },
-        'user',
+      // A screen-reader user needs longer than 5s to hear the change, find the
+      // Undo and act on it. The service clamps whatever it is given, and the
+      // SAME value drives the display timer below so the affordance never
+      // outlives the window the service is actually honouring.
+      const screenReader = await AccessibilityInfo.isScreenReaderEnabled().catch(() => false);
+      const undoWindowMs = screenReader ? 15_000 : UNDO_WINDOW_MS;
+
+      const index = Math.max(
+        0,
+        visibleRef.current.findIndex((c) => c.id === chip.id),
       );
-      if (res.changeLogId) retireLogIds.current.set(chip.id, res.changeLogId);
+      await deleteTopicWithDecline(chip.id, { undoWindowMs });
+      setPendingDelete((prev) => [...prev, { chip, index }]);
+      AccessibilityInfo.announceForAccessibility(
+        `${t('chatTopics.removed' as 'topicPlan.undo')}. ${t('topicPlan.undo')}`,
+      );
+
+      const timer = setTimeout(() => dropPending(chip.id), undoWindowMs);
+      undoTimers.current.set(chip.id, timer);
     } finally {
       setBusyId(null);
     }
@@ -200,16 +270,15 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
   const handleUndoRemove = async (chip: Chip) => {
     if (busyId) return;
     setBusyId(chip.id);
+    void hapticLight();
     try {
-      const logId = retireLogIds.current.get(chip.id);
-      if (logId) {
-        await revertChange(logId);
-        retireLogIds.current.delete(chip.id);
-      } else {
-        // No logged retire to invert (a reopened thread) — reactivate directly.
-        await reactivate(chip.id);
-      }
+      // The boolean is informational: false means the window had already
+      // closed. Either way the chip stops showing its undo state and
+      // `observeByFact` is the authority on whether the row came back — so a
+      // lost race can never resurrect a chip whose row is really gone.
+      await undoPendingDelete(chip.id);
     } finally {
+      dropPending(chip.id);
       setBusyId(null);
     }
   };
@@ -287,44 +356,50 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
                 />
               )}
               <View style={styles.chips}>
-                {chips.map((chip) => (
+                {chips.map((chip) => {
+                  const removing = isPendingDelete(chip.id);
+                  return (
                   <View
                     key={chip.id}
-                    style={[styles.chip, chip.retired && styles.chipRetired]}
+                    style={[styles.chip, removing && styles.chipRemoving]}
                   >
                     {/* Topic texts are the RETRIEVAL keys — English, sent to the
                         server as-is. Only the RENDERING is translated; remove and
                         undo act on `chip.id` and the text is never written back. */}
+                    {/* The removed chip KEEPS its text, dimmed and struck. A
+                        blank "Removed" slot makes the user guess what they
+                        just deleted, at the one moment they may want it back. */}
                     <TranslatableDynamic
                       text={chip.text}
                       size="xs"
                       style={{
                         ...styles.chipText,
-                        ...(chip.retired ? styles.chipTextRetired : {}),
+                        ...(removing ? styles.chipTextRemoving : {}),
                       }}
                       numberOfLines={1}
                     />
                     <Pressable
                       onPress={() =>
-                        chip.retired ? handleUndoRemove(chip) : handleRemove(chip)
+                        removing ? handleUndoRemove(chip) : handleRemove(chip)
                       }
                       disabled={busyId === chip.id}
-                      hitSlop={12}
+                      hitSlop={16}
                       style={styles.chipButton}
                       accessibilityRole="button"
                       accessibilityLabel={
-                        chip.retired ? t('topicPlan.undo') : t('topicPlan.delete')
+                        removing ? t('topicPlan.undo') : t('topicPlan.delete')
                       }
-                      testID={`chat-topic-chip-${chip.retired ? 'undo' : 'remove'}-${chip.id}`}
+                      testID={`chat-topic-chip-${removing ? 'undo' : 'remove'}-${chip.id}`}
                     >
                       <MaterialIcons
-                        name={chip.retired ? 'undo' : 'close'}
+                        name={removing ? 'undo' : 'close'}
                         size={14}
-                        color={chip.retired ? ACCENT : 'rgb(190, 190, 190)'}
+                        color={removing ? ACCENT : 'rgb(190, 190, 190)'}
                       />
                     </Pressable>
                   </View>
-                ))}
+                  );
+                })}
               </View>
             </View>
           );
@@ -373,10 +448,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(231, 138, 83, 0.10)',
     maxWidth: '100%',
   },
-  chipRetired: { opacity: 0.6, borderStyle: 'dashed' },
+  chipRemoving: { opacity: 0.6, borderStyle: 'dashed' },
   chipText: { color: 'rgb(220, 220, 220)', flexShrink: 1 },
-  chipTextRetired: { textDecorationLine: 'line-through' },
-  chipButton: { padding: 6 },
+  chipTextRemoving: { textDecorationLine: 'line-through' },
+  // 16pt hitSlop around a 26pt box clears the 48dp target on both platforms.
+  chipButton: { padding: 6, minWidth: 26, minHeight: 26, alignItems: 'center', justifyContent: 'center' },
 });
 
 export default ChatTopicsCard;

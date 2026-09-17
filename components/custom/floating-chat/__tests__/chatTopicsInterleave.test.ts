@@ -19,16 +19,18 @@ jest.mock('@/components/custom/TranslatableDynamic', () => ({
 }));
 jest.mock('@/lib/haptics', () => ({ hapticLight: jest.fn() }));
 jest.mock('@/lib/chat-tools/tool-handlers', () => ({ retryTopicGeneration: jest.fn() }));
-jest.mock('@/lib/database/services/persona-action-executor', () => ({
-  applyPersonaAction: jest.fn(),
-}));
 jest.mock('@/lib/database/services/fact-service', () => ({ getFacts: jest.fn() }));
-jest.mock('@/lib/database/services/persona-change-log-service', () => ({
-  revertChange: jest.fn(),
-}));
 jest.mock('@/lib/database/services/topic-service', () => ({
   observeByFact: jest.fn(),
-  reactivate: jest.fn(),
+}));
+// topic-decline-service builds its collections at MODULE SCOPE, so importing
+// the card reaches SQLiteAdapter and dies on `initializeJSI` before any test
+// body runs. Mocked here rather than in the service, where module-scope
+// collections are the right call.
+jest.mock('@/lib/database/services/topic-decline-service', () => ({
+  deleteTopicWithDecline: jest.fn(),
+  undoPendingDelete: jest.fn(),
+  UNDO_WINDOW_MS: 5000,
 }));
 jest.mock('@/lib/stores/floating-chat-store', () => ({
   useFloatingChatFactMutationVersion: () => 0,
@@ -36,7 +38,7 @@ jest.mock('@/lib/stores/floating-chat-store', () => ({
 
 import { interleaveByFact, MERGED_TOPIC_CEILING } from '../ChatTopicsCard';
 
-const chip = (id: string, factId: string) => ({ id, text: id, factId, retired: false });
+const chip = (id: string, factId: string) => ({ id, text: id, factId });
 
 describe('interleaveByFact', () => {
   it('gives every fact a chip before any fact gets a second', () => {
