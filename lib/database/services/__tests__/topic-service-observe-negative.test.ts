@@ -35,11 +35,15 @@ describe('observeNegative', () => {
     const result = observeNegative();
 
     expect(result).toBe(sentinel);
+    // Asserted as a SET of clauses, not by position: v55 added a
+    // `pending_delete_at` filter and a positional assertion turned that into
+    // a failure about sort order, which points at the wrong thing.
     expect(col.query).toHaveBeenCalledWith(
       Q.or(
         Q.and(Q.where('status', 'active'), Q.where('weight', Q.lt(0))),
         Q.where('status', 'suppressed'),
       ),
+      Q.where('pending_delete_at', null),
       Q.sortBy('weight', Q.asc),
     );
   });
@@ -55,14 +59,18 @@ describe('observeNegative', () => {
     // Strictly-less-than zero: a 0-weight active topic is neutral, not negative.
     expect(clauses).toContain('lt');
     expect(clauses).not.toContain('lte');
+    // v55: a topic staged for deletion must not render in the negative list.
+    expect(clauses).toContain('pending_delete_at');
   });
 
   it('sorts ascending so the strongest dislike comes first', () => {
     const { col } = stubObserve('topics');
     observeNegative();
 
-    const sortClause = col.query.mock.calls[0][1];
-    expect(sortClause).toEqual(Q.sortBy('weight', Q.asc));
-    expect(sortClause).not.toEqual(Q.sortBy('weight', Q.desc));
+    // Found, not indexed — a new clause must not be able to break this into
+    // a misleading failure about sorting.
+    const clauses = col.query.mock.calls[0];
+    expect(clauses).toContainEqual(Q.sortBy('weight', Q.asc));
+    expect(clauses).not.toContainEqual(Q.sortBy('weight', Q.desc));
   });
 });

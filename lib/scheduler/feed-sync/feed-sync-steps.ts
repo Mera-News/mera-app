@@ -16,6 +16,7 @@ import {
 import { getFacts } from '@/lib/database/services/fact-service';
 import {
   getActive as getActiveTopics,
+  countActiveTopicsIncludingStaged,
   normalizeTopicText,
 } from '@/lib/database/services/topic-service';
 import { runPersonaMigrationIfNeeded } from '@/lib/services/persona-migration-service';
@@ -295,8 +296,18 @@ export async function stepFetchTopicIds(
   // one-time silent migration ran), use the privacy-lean persona retrieval;
   // until then fall back end-to-end to the legacy metadata.topics path so the
   // feed degrades gracefully on devices that haven't migrated yet.
+  //
+  // Branch on the UNFILTERED count, filter after. `getActiveTopics()` excludes
+  // rows staged for deletion (v55), so staging a user's last active topic
+  // would empty it and drop into the legacy path — which reads
+  // `fact.metadata.topics`, still holding that topic's text, and would
+  // re-retrieve the very topic they just deleted. The commit's suggestion
+  // purge cannot clean that up, because the legacy path leaves no topicId on
+  // the row and `purgeSuggestionsForDeadTopics` skips rows with no topic
+  // evidence. A filter that empties this set inverts into a total bypass of
+  // itself.
   const activeTopics = await getActiveTopics();
-  if (activeTopics.length === 0) {
+  if (activeTopics.length === 0 && (await countActiveTopicsIncludingStaged()) === 0) {
     return fetchTopicIdsLegacy(ctx);
   }
   return fetchTopicIdsPersona(activeTopics, ctx);

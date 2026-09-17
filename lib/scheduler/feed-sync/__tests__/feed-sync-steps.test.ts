@@ -20,6 +20,12 @@ const mockGateUnscoredForScoring = jest.fn();
 const mockLoadUserGeoLanguageContext = jest.fn();
 const mockLogInfo = jest.fn();
 const mockGetActive = jest.fn();
+// Defaults to whatever getActive returned, which is the pre-v55 behaviour:
+// the legacy branch is taken only when there are genuinely no active topics.
+const mockCountActiveIncludingStaged = jest.fn(async (..._args: any[]) => {
+  const rows = await mockGetActive();
+  return Array.isArray(rows) ? rows.length : 0;
+});
 const mockGetAllLocations = jest.fn();
 const mockGetHeadlineDepths = jest.fn();
 const mockReconcileTrackedStories = jest.fn();
@@ -34,6 +40,12 @@ jest.mock('@/lib/database/services/fact-service', () => ({
 
 jest.mock('@/lib/database/services/topic-service', () => ({
   getActive: (...args: any[]) => mockGetActive(...args),
+  // Must be named here: an explicit jest.mock factory that omits an export the
+  // source calls leaves `undefined` at the call site, and every legacy-path
+  // test dies on "not a function" rather than on an assertion. Defaults to
+  // agreeing with mockGetActive, so existing tests keep their meaning.
+  countActiveTopicsIncludingStaged: (...args: any[]) =>
+    mockCountActiveIncludingStaged(...args),
   // Real implementation, not a stub: the billing partition compares NORMALIZED
   // texts, so a mock that skipped normalization would make the collision tests
   // below pass for the wrong reason.
@@ -239,6 +251,26 @@ describe('stepFetchTopicIds', () => {
   it('throws "aborted" when signal is already aborted', async () => {
     const ctx = makeCtx(true);
     await expect(stepFetchTopicIds('p-1', ctx)).rejects.toThrow('aborted');
+    expect(mockGetFacts).not.toHaveBeenCalled();
+  });
+
+  it('does NOT fall back to legacy when the only active topic is STAGED for deletion', async () => {
+    // The bypass this branch exists to prevent. getActive() excludes rows
+    // staged for deletion (v55), so staging a user's last active topic empties
+    // it. Falling into fetchTopicIdsLegacy there would read
+    // `fact.metadata.topics` — which still holds the staged topic's text — and
+    // re-retrieve the very topic the user just deleted, seconds before the
+    // commit destroys it. The commit's purge cannot clean that up: the legacy
+    // path leaves no topicId on the row, and purgeSuggestionsForDeadTopics
+    // skips rows with no topic evidence.
+    mockGetActive.mockResolvedValueOnce([]); // every active topic is staged
+    mockCountActiveIncludingStaged.mockResolvedValueOnce(1); // but one exists
+    mockGetFacts.mockClear();
+
+    await stepFetchTopicIds('p-1', makeCtx()).catch(() => undefined);
+
+    // The legacy path reads facts; the persona path never does. Reaching it
+    // would mean the deleted topic's text went back to the server.
     expect(mockGetFacts).not.toHaveBeenCalled();
   });
 
