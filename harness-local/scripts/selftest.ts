@@ -841,18 +841,40 @@ async function main(): Promise<number> {
     // future rewrite, not as a selftest case.
   }
 
-  // --- 19. reason decode adapter: shape-stable across the P2 switch-over ---
+  // --- 19. reason decode: the SHIPPED pass-2 decoder, reached from here ---
+  //
+  // THE POSITIVE CONTROL IS THE POINT. The two negative checks below (a plain
+  // string and a rejected reason both yield no rescore) passed while this file
+  // was still wrapping `parseReasonResponse`, which could not produce a rescore
+  // at all. They would go on passing if the re-export ever silently fell back
+  // to the string decoder. Only the object case can tell the difference.
   console.log('\n== reason decode ==');
   {
     const decoded = decodeReason('A plain reason sentence.', 'id-1');
     ck('decodeReason: wraps a plain string as { reason }', decoded.reason === 'A plain reason sentence.');
-    ck('decodeReason: no rescore parses pre-P2 (fail open, not fabricated)', decoded.rescore === undefined);
+    ck('decodeReason: a plain string yields NO rescore (fail open, not fabricated)', decoded.rescore === undefined);
 
     const rejected = decodeReason('<think>unclosed', 'id-2');
     ck(
       'decodeReason: an unclosed think tag still decodes to an empty reason, not a throw',
       rejected.reason === '',
     );
+
+    const obj = decodeReason(
+      '{"k":"none","s":0.16,"reason":"A Portuguese domestic vote, no tie to where you live."}',
+      'id-3',
+    );
+    ck('decodeReason: POSITIVE CONTROL, the object contract yields a rescore', obj.rescore !== undefined);
+    ck('decodeReason: the object contract yields its k', obj.rescore?.k === 'none');
+    ck('decodeReason: the object contract yields its band-clamped score', obj.rescore?.score === 0.16);
+    ck(
+      'decodeReason: the object contract yields its sentence',
+      obj.reason === 'A Portuguese domestic vote, no tie to where you live.',
+    );
+
+    // `none` is [0.05, 0.24], so a self-contradicting 0.71 is clamped, not taken.
+    const clamped = decodeReason('{"k":"none","s":0.71,"reason":"x y z"}', 'id-4');
+    ck('decodeReason: clamps `s` into the band its own `k` declares', clamped.rescore?.score === 0.24);
   }
 
   console.log(`\n${f === 0 ? 'ALL PASS' : f + ' FAILURE(S)'}`);
