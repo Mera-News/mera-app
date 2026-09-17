@@ -27,6 +27,7 @@ import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import ChatThread from './ChatThread';
 import RequestUnblockModal from './RequestUnblockModal';
+import { useCloudChatStore } from '@/lib/stores/cloud-chat-store';
 import { deriveThreadItems } from './deriveThreadItems';
 import { decideTopicPlanTurn } from './topic-plan-turn';
 import { buildTopicPlanTurnBody } from '@/lib/news-harness/persona-management/topic-plan-notes';
@@ -84,6 +85,14 @@ export default function ChatSessionView({
 }: ChatSessionViewProps) {
   const { t } = useTranslation();
   const isStreaming = status === 'streaming';
+
+  // TURN-scoped, and deliberately not `status`. `status` goes idle EARLY
+  // during a forced-extraction pass (startTurn's finally releases it
+  // unconditionally while turnBusyRef is held), so a turn still running its
+  // tools would render as interrupted. Undefined until P1's loop writes the
+  // state, and the deriver's fallback errs safe: it marks nothing interrupted
+  // that is not from an earlier conversation.
+  const turnActive = useCloudChatStore((st) => st.agentTurnState?.turnActive);
   const resume = useMemo(() => resumeMessages ?? [], [resumeMessages]);
 
   // Intro copy depends on the context: the article-feedback surfaces open with a
@@ -172,6 +181,7 @@ export default function ChatSessionView({
         optimisationPlan,
         quickFactChecks,
         toolCallResults,
+        turnActive,
       }),
     [
       messages,
@@ -184,6 +194,7 @@ export default function ChatSessionView({
       optimisationPlan,
       quickFactChecks,
       toolCallResults,
+      turnActive,
     ],
   );
 
