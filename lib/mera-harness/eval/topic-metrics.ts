@@ -15,22 +15,21 @@
 // hardest, and reading it before filter correctness rewards a filter that
 // bought its pass by eating ladder rungs.
 
+import { filterNearDuplicates, type DedupeDrop, type DedupeResult } from '../core/topic-dedupe';
 import {
   DETECT_JACCARD,
-  FILTER_DROP_JACCARD,
   contentJaccard,
   isSubsetTopic,
   placeExclusionSet,
-  sharedTokens,
 } from '../core/topic-similarity';
-import type { PlaceChain } from './contract';
+import type { Place } from './contract';
 import { hasBannedDash, topicWordCountOk } from './copy-rules';
 
 export interface TopicSetInput {
   factId: string;
   factStatement: string;
   factKind: string;
-  placeChain?: PlaceChain | null;
+  placeChain?: Place | null;
   topics: string[];
   /** What the persona already holds, and what they have declined. Both are
    *  hard exclusions the skill bodies state explicitly. */
@@ -76,40 +75,12 @@ export function integrityReport(sets: readonly TopicSetInput[]): IntegrityReport
 // Gate 2: filter correctness
 // ---------------------------------------------------------------------------
 
-export interface FilterDrop {
-  topic: string;
-  duplicateOf: string;
-  overlap: string[];
-}
-
-export interface FilterResult {
-  kept: string[];
-  dropped: FilterDrop[];
-}
-
-/**
- * The SHIPPED filter, applied here so the eval measures what users get.
- *
- * Earlier-KEPT, not pairwise-any, so the first occurrence always survives and
- * the output is order-deterministic. Place names come out of the token set
- * structurally, from the fact's resolved chain — never a capitalisation
- * heuristic, which this repo has already paid for once when it stripped "Port"
- * out of "Port of Rotterdam" and missed "Polish".
- */
-export function applyShippedFilter(
-  topics: readonly string[],
-  placeChain?: PlaceChain | null,
-): FilterResult {
-  const exclude = placeExclusionSet(placeChain ?? null);
-  const kept: string[] = [];
-  const dropped: FilterDrop[] = [];
-  for (const t of topics) {
-    const hit = kept.find((k) => contentJaccard(t, k, exclude) >= FILTER_DROP_JACCARD);
-    if (hit) dropped.push({ topic: t, duplicateOf: hit, overlap: sharedTokens(t, hit, exclude) });
-    else kept.push(t);
-  }
-  return { kept, dropped };
-}
+/** P1's filter, re-exported rather than reimplemented. An eval that carries
+ *  its own copy of the rule it is measuring stops measuring the shipped one
+ *  the first time either side is edited. */
+export type FilterDrop = DedupeDrop;
+export type FilterResult = DedupeResult;
+export const applyShippedFilter = filterNearDuplicates;
 
 export interface FilterCorrectness {
   dropped: number;
@@ -139,7 +110,7 @@ export interface FilterCorrectness {
 
 export function filterCorrectness(
   topics: readonly string[],
-  placeChain?: PlaceChain | null,
+  placeChain?: Place | null,
 ): FilterCorrectness {
   const withExclusion = applyShippedFilter(topics, placeChain);
   const placeWords = placeExclusionSet(placeChain ?? null);

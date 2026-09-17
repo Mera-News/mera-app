@@ -225,7 +225,7 @@ export interface ScriptPersona {
     statement: string;
     questionnaireAttribute: string;
     kind?: FactKind;
-    placeChain?: import('./contract').PlaceChain;
+    placeChain?: import('./contract').Place;
   }[];
   topics: { id: string; text: string }[];
 }
@@ -268,5 +268,5 @@ export interface TopicFact {
   statement: string;
   questionnaireAttribute: string;
   kind: FactKind;
-  placeChain?: import('./contract').PlaceChain;
+  placeChain?: import('./contract').Place;
 }
