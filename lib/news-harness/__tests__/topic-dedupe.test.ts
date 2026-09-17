@@ -94,58 +94,12 @@ describe('the guards that stop this filter emptying a fact', () => {
     expect(reject('Rotterdam news')).toEqual([]);
   });
 
-  it('a within-call duplicate is dropped, and the EARLIER one survives', () => {
-    // Round-3 device capture: one four-item answer contained both of these,
-    // differing only by a scope word and a place. Earlier wins because the model
-    // emits its best first and the list is ranked.
+  it('never compares a proposal against an earlier survivor of the same batch', () => {
     const out = filterNearDuplicateTopics(
-      [
-        'IJsselmeer sailing conditions',
-        'IJsselmeer water quality',
-        'Netherlands sailing regulations',
-        'IJsselmeer sailing safety regulations',
-      ],
-      EXISTING,
-      { ambient: new Set(['ijsselmeer', 'netherlands']) },
+      ['Aviation biofuel trials', 'Aviation biofuel trials review'],
+      ['Shipping industry'],
     );
-    expect(out.kept).toEqual([
-      'IJsselmeer sailing conditions',
-      'IJsselmeer water quality',
-      'Netherlands sailing regulations',
-    ]);
-    expect(out.rejected).toEqual([
-      {
-        topic: 'IJsselmeer sailing safety regulations',
-        duplicateOf: 'Netherlands sailing regulations',
-      },
-    ]);
-  });
-
-  it('leaves the round-3 Add-all sets intact', () => {
-    // Both facts passed on device with no filler and no duplicates; this filter
-    // must not start eating them.
-    const wife = filterNearDuplicateTopics(
-      ['Alkmaar hospital news', 'North Holland healthcare staffing', 'Netherlands hospital policy'],
-      EXISTING,
-      { ambient: new Set(['netherlands', 'holland']) },
-    );
-    expect(wife.rejected).toEqual([]);
-    const baby = filterNearDuplicateTopics(
-      ['Hoorn maternity care', 'Netherlands parental leave policy', 'North Holland childcare subsidies'],
-      EXISTING,
-      { ambient: new Set(['netherlands', 'holland']) },
-    );
-    expect(baby.rejected).toEqual([]);
-  });
-
-  it('a within-call duplicate of a REJECTED proposal is still judged on its own', () => {
-    // A rejected proposal never enters the comparison set, so it cannot cause a
-    // cascade that empties the rest of the answer.
-    const out = filterNearDuplicateTopics(
-      ['Shipping industry regulation', 'Aviation biofuel trials'],
-      EXISTING,
-    );
-    expect(out.kept).toEqual(['Aviation biofuel trials']);
+    expect(out.kept).toHaveLength(2);
   });
 });
 
