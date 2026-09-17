@@ -555,11 +555,8 @@ function conflictsFromResult(result: Record<string, unknown>): FactConflict[] {
  * Three per-group states:
  *   unresolved  -> the readings, still tappable
  *   dismissed   -> a one-line "Not saved" with Undo, IN PLACE
- *   saved       -> Saved card, then that group's conflict cards, then (single
- *                  Add only) its own topics card
- *
- * Batch-accepted groups pool into ONE merged topics card after the group, so
- * "Add all" does not stack N topic cards down the thread.
+ *   saved       -> Saved card, then that group's conflict cards, then one
+ *                  topics accordion PER SAVED FACT
  */
 function emitFactChoiceGroups(
   cards: ChatThreadItem[],
@@ -572,7 +569,6 @@ function emitFactChoiceGroups(
   const resultKey = `${messageId}::${idx}`;
   const groups = readPendingGroups(result);
   const pending: ChatThreadItem[] = [];
-  const batched: { factId: string; factStatement: string }[] = [];
   let lastPendingAt = -1;
 
   for (const group of groups) {
@@ -635,19 +631,16 @@ function emitFactChoiceGroups(
       });
     });
 
-    const facts = resolution.savedFacts.map((f) => ({
-      factId: f.id,
-      factStatement: f.statement,
-    }));
-    if (facts.length === 0) continue;
-    if (resolution.batch) {
-      batched.push(...facts);
-    } else {
+    // ONE CARD PER FACT, batch or not. The merged "Add all" card is gone: a
+    // collapsed accordion is one line, so N of them no longer stack the chip
+    // wall that merging existed to avoid, and each fact keeps its own
+    // generation status in its own header.
+    for (const f of resolution.savedFacts) {
       cards.push({
         kind: 'chat-topics-card',
-        key: `chat-topics-${messageId}-${idx}-${groupId}`,
-        facts,
-        merged: false,
+        key: `chat-topics-${messageId}-${idx}-${groupId}-${f.id}`,
+        factId: f.id,
+        factStatement: f.statement,
       });
     }
   }
@@ -672,14 +665,6 @@ function emitFactChoiceGroups(
     });
   }
 
-  if (batched.length > 0) {
-    cards.push({
-      kind: 'chat-topics-card',
-      key: `chat-topics-merged-${messageId}-${idx}`,
-      facts: batched,
-      merged: true,
-    });
-  }
 }
 
 // ---------------------------------------------------------------------------

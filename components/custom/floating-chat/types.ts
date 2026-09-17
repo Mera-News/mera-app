@@ -147,17 +147,16 @@ export type ChatThreadItem =
    * — it is NOT counted by the topic-plan composer gate. The composer is
    * blocked only while a FACT card is pending.
    *
-   * One entry per accepted fact. A single Add renders one entry in line under
-   * its own Saved card; "Add all" renders one merged card after the group, with
-   * a section per fact.
+   * ONE CARD PER FACT, including under "Add all". Collapsed, each is a single
+   * line, so four accepted facts are four lines rather than the chip wall the
+   * old merged card existed to prevent — and a per-fact status cannot be shown
+   * in a header covering four facts with four different statuses.
    */
   | {
       kind: 'chat-topics-card';
       key: string;
-      facts: { factId: string; factStatement: string }[];
-      /** True for the merged "Add all" card: shows a per-fact subtitle and
-       *  applies the group topic ceiling. */
-      merged: boolean;
+      factId: string;
+      factStatement: string;
     }
   // Wave 11 U-B1 — save-time fact-conflict resolution card.
   | { kind: 'conflict-card'; key: string; conflict: FactConflict }

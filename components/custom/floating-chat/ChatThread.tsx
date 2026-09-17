@@ -187,7 +187,7 @@ const ChatThread: React.FC<ChatThreadProps> = ({
         );
 
       case 'chat-topics-card':
-        return <ChatTopicsCard facts={item.facts} merged={item.merged} />;
+        return <ChatTopicsCard factId={item.factId} factStatement={item.factStatement} />;
 
       case 'conflict-card':
         return <ConflictResolutionCard conflict={item.conflict} />;

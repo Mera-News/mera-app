@@ -71,7 +71,7 @@ jest.mock('@/lib/database/services/topic-service', () => ({
 import ChatTopicsCard, { OFFER_RETRY_AFTER_MS } from '../ChatTopicsCard';
 
 const facts = [{ factId: 'f1', factStatement: 'I moved to Nieuw-West' }];
-const draw = () => render(<ChatTopicsCard facts={facts} merged={false} />);
+const draw = () => render(<ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />);
 
 beforeEach(() => {
   jest.clearAllMocks();

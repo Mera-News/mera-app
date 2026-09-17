@@ -117,7 +117,7 @@ beforeEach(() => {
 
 describe('chip X stages a delete', () => {
   it('calls the service exactly once, with the default window', async () => {
-    const { getByTestId } = render(<ChatTopicsCard facts={facts} merged={false} />);
+    const { getByTestId } = render(<ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />);
     openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
@@ -128,7 +128,7 @@ describe('chip X stages a delete', () => {
 
   it('KEEPS the chip, in its undo state, after the row leaves the observable', async () => {
     const { getByTestId, queryByTestId } = render(
-      <ChatTopicsCard facts={facts} merged={false} />,
+      <ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />,
     );
     openAccordion(getByTestId);
     await act(async () => {
@@ -144,7 +144,7 @@ describe('chip X stages a delete', () => {
 
   it('keeps the removed chip IN PLACE, so nothing reflows', async () => {
     const { getByTestId, getAllByText } = render(
-      <ChatTopicsCard facts={facts} merged={false} />,
+      <ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />,
     );
     openAccordion(getByTestId);
     await act(async () => {
@@ -157,7 +157,7 @@ describe('chip X stages a delete', () => {
 
   it('asks for a 15s window when a screen reader is on', async () => {
     screenReader = true;
-    const { getByTestId } = render(<ChatTopicsCard facts={facts} merged={false} />);
+    const { getByTestId } = render(<ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />);
     openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
@@ -168,7 +168,7 @@ describe('chip X stages a delete', () => {
 
 describe('undo', () => {
   it('calls undoPendingDelete once and stages no second delete', async () => {
-    const { getByTestId } = render(<ChatTopicsCard facts={facts} merged={false} />);
+    const { getByTestId } = render(<ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />);
     openAccordion(getByTestId);
     await act(async () => {
       fireEvent.press(getByTestId('chat-topic-chip-remove-t1'));
@@ -187,7 +187,7 @@ describe('undo', () => {
     // whether the row came back, so the chip must not reappear from our map.
     mockUndoPendingDelete.mockResolvedValue(false);
     const { getByTestId, queryByTestId } = render(
-      <ChatTopicsCard facts={facts} merged={false} />,
+      <ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />,
     );
     openAccordion(getByTestId);
     await act(async () => {
@@ -208,7 +208,7 @@ describe('the window closing', () => {
 
   it('drops the chip and makes NO second service call', async () => {
     const { getByTestId, queryByTestId } = render(
-      <ChatTopicsCard facts={facts} merged={false} />,
+      <ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />,
     );
     openAccordion(getByTestId);
     await act(async () => {
@@ -234,7 +234,7 @@ describe('Android back', () => {
     // trapped the user. Staging in the service made that unnecessary.
     const { BackHandler } = require('react-native');
     const spy = jest.spyOn(BackHandler, 'addEventListener');
-    render(<ChatTopicsCard facts={facts} merged={false} />);
+    render(<ChatTopicsCard factId="f1" factStatement="I moved to Nieuw-West" />);
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });

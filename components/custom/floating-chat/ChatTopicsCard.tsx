@@ -49,19 +49,6 @@ import { useTranslation } from 'react-i18next';
 const ACCENT = 'rgb(231, 138, 83)';
 
 /**
- * How many topics the MERGED card shows across all its facts.
- *
- * A group ceiling, not a per-fact one: "Add all" over four facts would otherwise
- * stack twenty-odd chips into a chat bubble nobody reads. Filled ROUND-ROBIN so
- * every accepted fact is represented before any fact gets a second chip — taking
- * the first N in fact order would silently give the whole budget to fact one.
- *
- * Display only. Every generated topic is saved and active regardless; this
- * bounds what the card draws, never what the feed uses.
- */
-export const MERGED_TOPIC_CEILING = 6;
-
-/**
  * How long a still-PENDING generation runs before the card offers a way out.
  *
  * This is NOT the old 60s timeout, which decided the card's state: it flipped a
@@ -94,38 +81,12 @@ interface Chip {
 }
 
 export interface ChatTopicsCardProps {
-  facts: { factId: string; factStatement: string }[];
-  merged: boolean;
+  factId: string;
+  factStatement: string;
 }
 
-/** Round-robin across facts, preserving each fact's own ranked order. */
-export function interleaveByFact(rows: Chip[], factOrder: string[], ceiling: number): Chip[] {
-  const byFact = new Map<string, Chip[]>();
-  for (const id of factOrder) byFact.set(id, []);
-  for (const row of rows) byFact.get(row.factId)?.push(row);
-
-  const out: Chip[] = [];
-  let depth = 0;
-  let added = true;
-  while (out.length < ceiling && added) {
-    added = false;
-    for (const id of factOrder) {
-      const bucket = byFact.get(id);
-      const row = bucket?.[depth];
-      if (!row) continue;
-      out.push(row);
-      added = true;
-      if (out.length >= ceiling) break;
-    }
-    depth += 1;
-  }
-  return out;
-}
-
-const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
+const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ factId, factStatement }) => {
   const { t } = useTranslation();
-  const factIds = useMemo(() => facts.map((f) => f.factId), [facts]);
-  const factIdKey = factIds.join(',');
 
   const [rows, setRows] = useState<Chip[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -144,23 +105,18 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
   // One live subscription per fact; rows are merged into a single list keyed by
   // fact so the round-robin below can see each fact's own order.
   useEffect(() => {
-    const perFact = new Map<string, Chip[]>();
-    const subs = factIds.map((factId) =>
-      observeByFact(factId).subscribe((models: TopicModel[]) => {
-        perFact.set(
-          factId,
-          // ACTIVE only. A staged delete leaves the observable at once and is
-          // re-inserted from `pendingDelete` below; `retired` is no longer a
-          // state this card can produce.
-          models
-            .filter((m) => m.status === 'active')
-            .map((m) => ({ id: m.id, text: m.text, factId })),
-        );
-        setRows(factIds.flatMap((id) => perFact.get(id) ?? []));
-      }),
-    );
-    return () => subs.forEach((s) => s.unsubscribe());
-  }, [factIdKey, factIds]);
+    // ACTIVE only. A staged delete leaves the observable at once and is
+    // re-inserted from `pendingDelete` below; `retired` is no longer a state
+    // this card can produce.
+    const sub = observeByFact(factId).subscribe((models: TopicModel[]) => {
+      setRows(
+        models
+          .filter((m) => m.status === 'active')
+          .map((m) => ({ id: m.id, text: m.text, factId })),
+      );
+    });
+    return () => sub.unsubscribe();
+  }, [factId]);
 
   // Only the DISPLAY timers. Dropping them on unmount cannot lose a delete:
   // the service holds the staged row on disk and commits it regardless.
@@ -174,31 +130,11 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
 
   // Generation status, OBSERVED. This replaces a one-shot getFacts() keyed on
   // a mutation nonce — a poll, not an observation: a generation that finished
-  // without bumping the counter never reached the card. Across several facts
-  // the card shows the least-settled state, so it never claims done while one
-  // fact is still generating.
-  const [statusByFact, setStatusByFact] = useState<Record<string, string>>({});
+  // without bumping the counter never reached the card.
   useEffect(() => {
-    const subs = factIds.map((factId) =>
-      observeTopicsStatus(factId).subscribe((next) => {
-        setStatusByFact((prev) => (prev[factId] === next ? prev : { ...prev, [factId]: next }));
-      }),
-    );
-    return () => subs.forEach((sub) => sub.unsubscribe());
-  }, [factIdKey, factIds]);
-
-  useEffect(() => {
-    const seen = factIds.map((id) => statusByFact[id]).filter(Boolean);
-    if (seen.length === 0) return;
-    const next = seen.includes('pending')
-      ? 'pending'
-      : seen.includes('error')
-        ? 'error'
-        : seen.every((v) => v === 'gone')
-          ? 'gone'
-          : 'done';
-    setStatus(next as typeof status);
-  }, [statusByFact, factIdKey, factIds]);
+    const sub = observeTopicsStatus(factId).subscribe((next) => setStatus(next));
+    return () => sub.unsubscribe();
+  }, [factId]);
 
   // An escape hatch, not a state change: see OFFER_RETRY_AFTER_MS.
   useEffect(() => {
@@ -210,10 +146,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
     return () => clearTimeout(timer);
   }, [status, isRetrying]);
 
-  const live = useMemo(
-    () => (merged ? interleaveByFact(rows, factIds, MERGED_TOPIC_CEILING) : rows),
-    [rows, factIds, merged],
-  );
+  const live = rows;
 
   /** Live chips plus the staged-for-deletion ones, each back at its own index
    *  so removing a chip does not reflow the ones around it. */
@@ -298,7 +231,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
     setIsFindingMore(true);
     void hapticLight();
     try {
-      for (const fact of facts) await generateMoreTopicsForFact(fact.factId, fact.factStatement);
+      await generateMoreTopicsForFact(factId, factStatement);
     } finally {
       setIsFindingMore(false);
     }
@@ -310,9 +243,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
     setOfferRetry(false);
     void hapticLight();
     try {
-      // Sequential: each call writes metadata and bumps the shared mutation
-      // counter, and tool-handlers drops a retry for a fact already in flight.
-      for (const fact of facts) await retryTopicGeneration(fact.factId, fact.factStatement);
+      await retryTopicGeneration(factId, factStatement);
     } finally {
       setIsRetrying(false);
     }
@@ -345,7 +276,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
         accessibilityRole="button"
         accessibilityState={{ expanded }}
         accessibilityLabel={expanded ? t('chatTopics.collapseA11y') : t('chatTopics.expandA11y')}
-        testID={`chat-topics-header-${factIds[0] ?? 'none'}`}
+        testID={`chat-topics-header-${factId}`}
       >
         <View style={styles.headerRow}>
           <MaterialIcons
@@ -361,7 +292,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
               the tick are never the only signal. */}
           <StatusIndicator
             status={status === 'error' ? 'error' : status === 'pending' ? 'pending' : 'done'}
-            testID={`chat-topics-status-${factIds[0] ?? 'none'}`}
+            testID={`chat-topics-status-${factId}`}
           />
 
           {showRetry && (
@@ -384,7 +315,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
         {/* The fact statement is its own node rather than an interpolation:
             it goes through TranslatableDynamic, which returns a component. */}
         <TranslatableDynamic
-          text={facts.map((f) => f.factStatement).join(' · ')}
+          text={factStatement}
           size="xs"
           italic
           style={styles.factLine}
@@ -407,60 +338,44 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
               {status === 'pending' ? t('chatTopics.finding') : t('chatTopics.none')}
             </Text>
           ) : (
-            facts.map((fact) => {
-              const chips = visible.filter((c) => c.factId === fact.factId);
-              if (chips.length === 0) return null;
-              return (
-                <View key={fact.factId} style={styles.section}>
-                  <View style={styles.chips}>
-                    {chips.map((chip) => {
-                      const removing = isPendingDelete(chip.id);
-                      return (
-                        <View
-                          key={chip.id}
-                          style={[styles.chip, removing && styles.chipRemoving]}
-                        >
-                          {/* The removed chip KEEPS its text, dimmed and
-                              struck. A blank "Removed" slot makes the user
-                              guess what they just deleted, at the one moment
-                              they may want it back. Topic texts are the
-                              RETRIEVAL keys: only the rendering is translated,
-                              and the text is never written back. */}
-                          <TranslatableDynamic
-                            text={chip.text}
-                            size="xs"
-                            style={{
-                              ...styles.chipText,
-                              ...(removing ? styles.chipTextRemoving : {}),
-                            }}
-                            numberOfLines={1}
-                          />
-                          <Pressable
-                            onPress={() =>
-                              removing ? handleUndoRemove(chip) : handleRemove(chip)
-                            }
-                            disabled={busyId === chip.id}
-                            hitSlop={16}
-                            style={styles.chipButton}
-                            accessibilityRole="button"
-                            accessibilityLabel={
-                              removing ? t('topicPlan.undo') : t('topicPlan.delete')
-                            }
-                            testID={`chat-topic-chip-${removing ? 'undo' : 'remove'}-${chip.id}`}
-                          >
-                            <MaterialIcons
-                              name={removing ? 'undo' : 'close'}
-                              size={14}
-                              color={removing ? ACCENT : 'rgb(190, 190, 190)'}
-                            />
-                          </Pressable>
-                        </View>
-                      );
-                    })}
+            <View style={styles.chips}>
+              {visible.map((chip) => {
+                const removing = isPendingDelete(chip.id);
+                return (
+                  <View key={chip.id} style={[styles.chip, removing && styles.chipRemoving]}>
+                    {/* The removed chip KEEPS its text, dimmed and struck. A
+                        blank "Removed" slot makes the user guess what they
+                        just deleted, at the one moment they may want it back.
+                        Topic texts are the RETRIEVAL keys: only the rendering
+                        is translated, and the text is never written back. */}
+                    <TranslatableDynamic
+                      text={chip.text}
+                      size="xs"
+                      style={{
+                        ...styles.chipText,
+                        ...(removing ? styles.chipTextRemoving : {}),
+                      }}
+                      numberOfLines={1}
+                    />
+                    <Pressable
+                      onPress={() => (removing ? handleUndoRemove(chip) : handleRemove(chip))}
+                      disabled={busyId === chip.id}
+                      hitSlop={16}
+                      style={styles.chipButton}
+                      accessibilityRole="button"
+                      accessibilityLabel={removing ? t('topicPlan.undo') : t('topicPlan.delete')}
+                      testID={`chat-topic-chip-${removing ? 'undo' : 'remove'}-${chip.id}`}
+                    >
+                      <MaterialIcons
+                        name={removing ? 'undo' : 'close'}
+                        size={14}
+                        color={removing ? ACCENT : 'rgb(190, 190, 190)'}
+                      />
+                    </Pressable>
                   </View>
-                </View>
-              );
-            })
+                );
+              })}
+            </View>
           )}
 
           <Pressable
@@ -471,7 +386,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
             accessibilityRole="button"
             accessibilityState={{ disabled: isFindingMore }}
             accessibilityLabel={t('chatTopics.findMore')}
-            testID={`chat-topics-more-${factIds[0] ?? 'none'}`}
+            testID={`chat-topics-more-${factId}`}
           >
             <Text size="xs" bold style={styles.retryText}>
               {isFindingMore ? t('chatTopics.findingMore') : t('chatTopics.findMore')}
