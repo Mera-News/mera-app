@@ -9,6 +9,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "skills:generate": "tsx lib/mera-harness/skills/generate.ts",
     "codegen": "graphql-codegen",
     "codegen:watch": "graphql-codegen --watch",
     "check:animations": "python3 scripts/animations/validate.py assets/animations",
