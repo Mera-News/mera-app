@@ -1869,3 +1869,40 @@ describe('agent loop failure recovery', () => {
     expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false);
   });
 });
+
+describe('a new conversation drops stale turn state', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useCloudChatStore.getState().reset();
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: jest.fn(async () => ({
+        content: 'ok', toolCalls: [], finishReason: 'stop', truncated: false,
+        usage: null, modelSent: 'm', latencyMs: 1, error: null,
+      })),
+      tools: {}, loadSkill: () => null, skillIds: () => [],
+    });
+  });
+
+  it('a reset between turns means the next turn starts with NO pendingChoice', async () => {
+    // The device failure: a fresh "Yes" in a NEW chat was matched to a stale
+    // choice about a wife's hospital in Alkmaar.
+    const { result } = renderHook(() => useCloudPersonaChat(makeAgent({ id: 'persona-u1-CONFIG' })));
+    await act(async () => { result.current.sendMessage('first'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState).not.toBeNull(),
+      { timeout: 3000 },
+    );
+
+    // What New chat does.
+    act(() => { useCloudChatStore.getState().reset(); });
+    expect(useCloudChatStore.getState().agentTurnState).toBeNull();
+
+    await act(async () => { result.current.sendMessage('Yes'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState).not.toBeNull(),
+      { timeout: 3000 },
+    );
+    expect(useCloudChatStore.getState().agentTurnState?.pendingChoice).toBeNull();
+    expect(useCloudChatStore.getState().agentTurnState?.resolvedChoice).toBeNull();
+  });
+});

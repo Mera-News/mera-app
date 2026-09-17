@@ -42,12 +42,12 @@ const PERSONA: AgentPersona = {
 function scriptedDeps(
   script: AgentModelResult[],
   toolOver: Partial<AgentDeps['tools']> = {},
-): { deps: AgentDeps; calls: { systemPrompt: string }[] } {
-  const calls: { systemPrompt: string }[] = [];
+): { deps: AgentDeps; calls: { systemPrompt: string; tools: unknown[] }[] } {
+  const calls: { systemPrompt: string; tools: unknown[] }[] = [];
   let i = 0;
   const deps: AgentDeps = {
     callModel: async (req) => {
-      calls.push({ systemPrompt: req.systemPrompt });
+      calls.push({ systemPrompt: req.systemPrompt, tools: (req.tools ?? []) as unknown[] });
       return script[Math.min(i++, script.length - 1)];
     },
     tools: {
@@ -91,14 +91,70 @@ describe('the bounded loop', () => {
     expect(calls[1].systemPrompt).toBe('RESIDENCE SKILL BODY');
   });
 
-  it('CLAMPS at the leg bound, sets legBudgetHit, and never throws', async () => {
+  it('CLAMPS at the leg bound on DISTINCT forcing calls, and never throws', async () => {
+    // Distinct arguments, because an identical repeat no longer buys a leg.
     const { deps } = scriptedDeps([
-      modelResult({ content: 'x', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'a', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'b', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
+      modelResult({ content: 'c', toolCalls: [tc('lookup_place', { query: 'Hoorn' })] }),
+      modelResult({ content: 'd', toolCalls: [tc('lookup_place', { query: 'Utrecht' })] }),
     ]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
     expect(out.legs).toHaveLength(MAX_AGENT_LEGS);
     expect(out.legBudgetHit).toBe(true);
     expect(out.legCapped).toBe(true);
+    expect(out.terminalReason).toBe('leg-cap');
+  });
+
+  it('a REPEATED load_skill of the ALREADY-LOADED skill settles instead of spinning', async () => {
+    // The device failure, exactly: "I enjoy playing chess" produced four legs
+    // of ~1s, messageCount 4,5,6,7, reason leg-cap, and one sentence of prose.
+    // The model re-loaded facts/generic every leg; each call forced a
+    // continuation, so the prose-settles rule was never reached.
+    const { deps, calls } = scriptedDeps([
+      modelResult({
+        content: 'Nice hobby, chess!',
+        toolCalls: [tc('load_skill', { id: 'facts/residence' })],
+      }),
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I enjoy playing chess', deps,
+    });
+    // Leg 1 loads, leg 2 re-requests the same skill and SETTLES on its prose.
+    expect(out.legs).toHaveLength(2);
+    expect(calls).toHaveLength(2);
+    expect(out.legBudgetHit).toBe(false);
+    expect(out.terminalReason).toBe('settled');
+    expect(out.reply).toBe('Nice hobby, chess!');
+    expect(out.legs[1].toolResults[0].result).toEqual({
+      id: 'facts/residence', alreadyLoaded: true, activeSkill: 'facts/residence',
+    });
+    expect(out.rerouteAttempts).toBe(1);
+  });
+
+  it('WITHHOLDS load_skill from the payload once a skill is loaded', async () => {
+    // Stronger than answering the call: a tool the model cannot see is one it
+    // cannot spend a leg on. Every capped turn in the 312-turn corpus was a
+    // repeated load_skill.
+    const { deps, calls } = scriptedDeps([
+      modelResult({ content: 'a', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'b' }),
+    ]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
+    const names = (t: unknown[]) =>
+      (t as { function: { name: string } }[]).map((d) => d.function.name);
+    expect(names(calls[0].tools)).toContain('load_skill');
+    expect(names(calls[1].tools)).not.toContain('load_skill');
+  });
+
+  it('an identical REPEAT of any forcing call does not buy another leg', async () => {
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'a', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
+      modelResult({ content: 'b', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
+    expect(out.legs).toHaveLength(2);
+    expect(out.legBudgetHit).toBe(false);
   });
 
   it('populates legs even when a leg carries a transport error', async () => {

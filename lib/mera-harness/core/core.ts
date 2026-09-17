@@ -161,6 +161,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   // next leg save the chosen place without a second lookup.
   const turn = state.turn;
   if (turn.pendingChoice) {
+    // EXACT match only, and the chips are the only thing that can consume a
+    // pending choice. Anything else is a new turn, and the stale choice is
+    // dropped rather than carried: a bare "Yes" typed into a fresh thread must
+    // never be read as the answer to a question from another conversation.
     const tapped = turn.pendingChoice.options.find(
       (o) => o.text.trim().toLowerCase() === userMessage.trim().toLowerCase(),
     );
@@ -198,6 +202,20 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let placeCandidates: Place[] = [];
   let similarFactCount: number | null = null;
   const toolResultsThisTurn: { name: string; result: unknown }[] = [];
+  /**
+   * Continuation calls already made this turn, keyed name+arguments.
+   *
+   * A forcing tool repeated with IDENTICAL arguments has nothing new to tell
+   * the model, so it must not buy another leg. Measured on device: asked "I
+   * enjoy playing chess", the model called `load_skill('facts/generic')` on
+   * every leg, each one forced a continuation, and the turn burned all four
+   * legs and ended at the cap having produced one sentence and no fact. The
+   * prose-settles rule was never reached because a forcing tool outranks it.
+   */
+  const continuationsSeen = new Set<string>();
+  /** Attempts to load a skill after one was already loaded this turn. Counted
+   *  so a prompt that keeps re-routing is visible rather than merely slow. */
+  let rerouteAttempts = 0;
 
   for (let index = 0; ; index++) {
     if (index >= maxLegs) {
@@ -240,7 +258,15 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       model,
       systemPrompt,
       messages,
-      tools: HARNESS_TOOLS as unknown[],
+      // STRUCTURAL: once a skill is loaded, `load_skill` leaves the payload for
+      // the rest of the turn. Measured across 312 corpus turns, every one of
+      // the 16 capped turns was a repeated load_skill -- three in a row, or a
+      // re-load at leg 3 after the other tools had already run. Withholding the
+      // tool is stronger than answering it, because a tool the model cannot
+      // see is one it cannot spend a leg on.
+      tools: (skillLoaded === null
+        ? HARNESS_TOOLS
+        : HARNESS_TOOLS.filter((t) => t.function.name !== 'load_skill')) as unknown[],
       // FALSE on every call: measured, thinking on returned empty content on 8
       // of 10 probes at 8-10s against 0.8-1.0s and a valid answer every time.
       enableThinking: false,
@@ -284,8 +310,23 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         continue;
       }
 
+      const callKey = `${call.name}:${call.argumentsRaw}`;
+      const isRepeat = continuationsSeen.has(callKey);
+
       if (call.name === 'load_skill') {
         const id = typeof args.id === 'string' ? args.id : '';
+        // ALREADY ACTIVE: answer, but do not buy a leg. Re-loading the skill
+        // the loop is already running is a no-op, and treating it as progress
+        // is what let the loop spin to the cap.
+        if (skillLoaded !== null) {
+          // Belt to the payload's braces: a model can still emit a call for a
+          // tool that is no longer declared.
+          rerouteAttempts++;
+          const out = { id, alreadyLoaded: true, activeSkill: skillLoaded };
+          leg.toolResults.push({ name: call.name, result: out });
+          toolResultsThisTurn.push({ name: call.name, result: out });
+          continue;
+        }
         const body = loadSkillFn(id);
         if (body === null) {
           const out = { error: 'unknown skill id', availableSkills: [...deps.skillIds()] };
@@ -302,7 +343,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
           leg.toolResults.push({ name: call.name, result: out });
           toolResultsThisTurn.push({ name: call.name, result: out });
         }
-        sawContinuationTool = true;
+        if (!isRepeat) {
+          sawContinuationTool = true;
+          continuationsSeen.add(callKey);
+        }
         continue;
       }
 
@@ -312,7 +356,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         similarFactCount = out.candidates.length;
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
-        sawContinuationTool = true;
+        if (!isRepeat) {
+          sawContinuationTool = true;
+          continuationsSeen.add(callKey);
+        }
         continue;
       }
 
@@ -323,7 +370,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
         placeCandidates = out.status === 'resolved' ? out.places : [];
         leg.toolResults.push({ name: call.name, result: out });
         toolResultsThisTurn.push({ name: call.name, result: out });
-        sawContinuationTool = true;
+        if (!isRepeat) {
+          sawContinuationTool = true;
+          continuationsSeen.add(callKey);
+        }
         continue;
       }
 
@@ -435,6 +485,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     proposals,
     legBudgetHit,
     legCapped: legBudgetHit,
+    rerouteAttempts,
     state: turn,
   };
 }

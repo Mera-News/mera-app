@@ -35,6 +35,82 @@ const TAG = '[AgentPort]';
  * of a cleartext tool argument; the raw turn text is supplied here, on-device,
  * where it never leaves the phone.
  */
+/**
+ * The query forms to try, most specific first.
+ *
+ * `placeSearch` is an anchored PREFIX match over a GeoNames-seeded collection,
+ * so a whole phrase like "Nieuw-West Amsterdam" matches nothing: no row begins
+ * with it. On device that surfaced as "I'm having trouble verifying that
+ * neighbourhood" and a prose question instead of the chips, even though both
+ * "Amsterdam" and "Nieuw-West" resolve on their own.
+ *
+ * Order matters and is deliberate:
+ *  1. the whole query, so an exact single-token place still wins outright;
+ *  2. comma or space segments FROM THE END, because a place phrase runs
+ *     narrow-to-wide ("Nieuw-West, Amsterdam") and the widest tail is the one
+ *     a prefix index actually holds;
+ *  3. any hyphenated token, which is the neighbourhood form GeoNames does
+ *     carry ("Nieuw-West") and which segment 2 would otherwise skip past.
+ *
+ * Deterministic and deduped, so the same input always tries the same forms in
+ * the same order.
+ */
+export function placeQueryForms(query: string): string[] {
+  const raw = query.trim();
+  if (!raw) return [];
+  const forms: string[] = [raw];
+
+  const segments = raw
+    .split(/[,]/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  // Narrow to wide, so the widest tail is tried before the narrowest head.
+  for (let i = segments.length - 1; i >= 0; i--) forms.push(segments[i]);
+
+  const words = raw.split(/\s+/).filter(Boolean);
+  for (let i = words.length - 1; i >= 0; i--) forms.push(words[i]);
+
+  for (const w of words) if (w.includes('-')) forms.push(w);
+
+  const seen = new Set<string>();
+  return forms.filter((f) => {
+    const k = f.toLowerCase();
+    if (!f || k.length < 2 || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+}
+
+/**
+ * Try each form and return the FIRST non-empty ranked result, recording which
+ * form matched.
+ *
+ * `unavailable` short-circuits: the lookup FAILED, and retrying a narrower
+ * form would turn a transport failure into a confident "no such place".
+ */
+export async function lookupPlaceWithFallback(
+  args: LookupPlaceArgs,
+): Promise<LookupPlaceResult> {
+  const forms = placeQueryForms(args.query);
+  let last: LookupPlaceResult = { status: 'no_match', query: args.query };
+
+  for (const form of forms) {
+    const out = await lookupPlace(form, args.countryHint);
+    if (out.status === 'unavailable') return out;
+    if (out.status === 'resolved' && out.places.length > 0) {
+      if (form !== args.query) {
+        logger.debug(`${TAG} place resolved on a fallback form`, {
+          asked: args.query,
+          matched: form,
+        });
+      }
+      return out;
+    }
+    if (out.status !== 'too_short') last = out;
+  }
+  return last;
+}
+
 export function makeAgentToolPort(userMessage: string): AgentToolPort {
   return {
     async findSimilarFacts(args: FindSimilarFactsArgs): Promise<FindSimilarFactsResult> {
@@ -48,9 +124,7 @@ export function makeAgentToolPort(userMessage: string): AgentToolPort {
         })),
       };
     },
-    lookupPlace(args: LookupPlaceArgs): Promise<LookupPlaceResult> {
-      return lookupPlace(args.query, args.countryHint);
-    },
+    lookupPlace: (args: LookupPlaceArgs) => lookupPlaceWithFallback(args),
     saveExtractedFacts(args) {
       return handleSaveExtractedFacts(args);
     },

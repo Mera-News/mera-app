@@ -231,6 +231,12 @@ export function useCloudPersonaChat(agent: IAgent): UseCloudPersonaChatResult {
     async (assistantId: string, userMessage: string): Promise<void> => {
       const store = useCloudChatStore.getState();
       const persona = await buildAgentPersona(agentRef.current.id);
+      // NEW CHAT clears the store's agentTurnState, and this ref has to follow
+      // it or the loop keeps a pendingChoice from the previous conversation.
+      // On device a fresh "Yes" was matched to a stale choice about a wife's
+      // hospital in Alkmaar, because the ref outlived the thread that asked.
+      // The store is the authority on "is this the same conversation".
+      if (store.agentTurnState === null) agentStateRef.current = null;
       if (!agentStateRef.current) agentStateRef.current = createAgentState(persona);
       // Facts are re-read every turn; only the TURN half persists.
       agentStateRef.current.persona = persona;

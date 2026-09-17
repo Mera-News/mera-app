@@ -280,6 +280,9 @@ export interface AgentTurnResult {
     | 'leg-cap';
   /** Tool names the model invented, e.g. `add_fact`. Empty on a clean turn. */
   unknownTools: string[];
+  /** Attempts to load a second skill after one was already loaded this turn.
+   *  Every capped turn in the 312-turn corpus was one of these. */
+  rerouteAttempts: number;
   /** Surfaced to the UI so a capped turn renders as capped, not as finished. */
   legCapped: boolean;
   state: AgentTurnState;
