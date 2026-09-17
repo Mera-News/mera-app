@@ -229,3 +229,44 @@ export interface ScriptPersona {
   }[];
   topics: { id: string; text: string }[];
 }
+
+// ---------------------------------------------------------------------------
+// Topic expectations (P5's file)
+// ---------------------------------------------------------------------------
+
+export interface TopicExpectationCase {
+  id: string;
+  /** AND over lowercase substrings: EVERY term must appear in the fact. Cases
+   *  are mutually exclusive, enforced statically at load and again at match
+   *  time, so a composed origin-plus-residence fact is never scored against
+   *  two ladders. */
+  factMatches: string[];
+  countRange: [number, number] | null;
+  /** PER CASE, and rung names differ between cases (neighbourhood/city/... for
+   *  a residence, origin/host/diaspora for an origin, a single `exact` for a
+   *  family relative). A pooled rung percentage across cases would sum
+   *  different denominators, so the block prints per case. */
+  ladder: Record<string, string[]>;
+  /** AT-LEAST-ONE. Null means the case does not test it; only the profession
+   *  cases do. */
+  fieldGeneric: string[] | null;
+  /** PRESENCE per pair only. No rate, no cap, no ratio. */
+  crossProducts: { a: string[]; b: string[] }[];
+  mustNotContain: string[];
+}
+
+export interface TopicExpectations {
+  version: number;
+  cases: TopicExpectationCase[];
+}
+
+/** One fact backing one expectation case. The expectations file selects by
+ *  factMatches, so a case with no fact behind it scores nothing at all. */
+export interface TopicFact {
+  caseId: string;
+  id: string;
+  statement: string;
+  questionnaireAttribute: string;
+  kind: FactKind;
+  placeChain?: import('./contract').PlaceChain;
+}
