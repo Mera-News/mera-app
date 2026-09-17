@@ -272,7 +272,19 @@ async function main(): Promise<number> {
 
   const collected: EvalRow[] = [];
   const mismatches: string[] = [];
+  /** Set when a 402 ended the run. The partial rows are still reported: the
+   *  instruction is to stop on a spend limit and KEEP what was collected. */
+  let spendLimit: SpendLimitError | null = null;
 
+  // Rows go to DISK as they arrive, not at the end. Accumulating and writing
+  // after the loop means a 402 on call 400 of 624 loses all 399 rows that were
+  // already paid for, which is the opposite of stopping and keeping them.
+  const emit = (row: EvalRow): void => {
+    collected.push(row);
+    rows.write(toRunRow(row, runId, catalog));
+  };
+
+  try {
   for (let rep = 0; rep < args.repeat; rep++) {
     // Variants interleave with models so both arms sit in one run and one time
     // window: NEAR drifts enough between runs that a control arm which could
@@ -303,7 +315,7 @@ async function main(): Promise<number> {
         for (const script of scripts) {
           await runAgentScript(script, {
             callModel,
-            sink: (row) => collected.push(row),
+            sink: emit,
             arm: `${model}@${variant}`,
             variant,
             model,
@@ -317,8 +329,23 @@ async function main(): Promise<number> {
     }
   }
 
-  for (const e of collected) rows.write(toRunRow(e, runId, catalog));
+  } catch (err) {
+    // A spend limit ends the run here rather than at the top level, so the
+    // writer is closed and everything already paid for survives.
+    if (!(err instanceof SpendLimitError)) throw err;
+    spendLimit = err;
+  }
   await rows.close();
+
+  if (spendLimit) {
+    // eslint-disable-next-line no-console
+    console.error(
+      `\n!!  SPEND LIMIT REACHED after ${collected.length} row(s). The run stopped on the FIRST\n` +
+        `    refusal and KEPT what it had; the report below covers the partial corpus only and\n` +
+        `    its arms are NOT count-matched, so no arm comparison in it is valid.\n` +
+        `    spent : $${spendLimit.spent ?? 'unknown'}\n    limit : $${spendLimit.limit ?? 'unknown'}\n`,
+    );
+  }
 
   if (args.dryRun) {
     // eslint-disable-next-line no-console
@@ -331,8 +358,12 @@ async function main(): Promise<number> {
   console.log(`\n${text}`);
   printAgentBlocks(collected, args.oneShotVariant, mismatches);
 
-  run.finish({ args, target: env.target, rows: rows.path, agreement: report, rosterWarnings: warnings });
+  run.finish({
+    args, target: env.target, rows: rows.path, agreement: report,
+    rosterWarnings: warnings, spendLimited: spendLimit !== null,
+  });
   writeFileSync(join(run.dir, 'agreement.txt'), `${text}\n`, 'utf8');
+  if (spendLimit) return 3;
   return report.integrityFailures.some((f) => f.startsWith('RUNNER BUG')) ? 1 : 0;
 }
 
