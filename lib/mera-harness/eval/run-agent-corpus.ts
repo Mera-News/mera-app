@@ -59,7 +59,10 @@ interface CapturedRequest {
 const ROLE_TO_CALL_TYPE: Record<string, EvalCallType> = {
   route: 'agent-route',
   tool: 'agent-tool',
-  reply: 'agent-reply',
+  // No `reply` entry: the core does not emit that role, and reply prose rides
+  // the last tool leg. An unmapped role falls through to 'agent-tool' below,
+  // so a future core that DID emit one would be visible as a mapping gap
+  // rather than silently creating a category nothing else knows about.
   topicgen: 'agent-topicgen',
 };
 

@@ -34,7 +34,7 @@ describe('turn grouping', () => {
   it('keeps the terminal topic call out of the leg count', () => {
     const turns = groupTurns([
       row({ legIndex: 0, callType: 'agent-route' }),
-      row({ legIndex: 1, callType: 'agent-reply', endedOn: 'settled' }),
+      row({ legIndex: 1, callType: 'agent-tool', endedOn: 'settled' }),
       row({ legIndex: 2, callType: 'agent-topicgen' }),
     ]);
     expect(turns).toHaveLength(1);
@@ -50,7 +50,7 @@ describe('time to first prose', () => {
     const turns = groupTurns([
       row({ legIndex: 0, turnStartedAtMs: 1000, legStartedAtMs: 1000, ttVisibleMs: null }),
       row({ legIndex: 1, turnStartedAtMs: 1000, legStartedAtMs: 3000, ttVisibleMs: null, callType: 'agent-tool' }),
-      row({ legIndex: 2, turnStartedAtMs: 1000, legStartedAtMs: 5000, ttVisibleMs: 200, callType: 'agent-reply', endedOn: 'settled' }),
+      row({ legIndex: 2, turnStartedAtMs: 1000, legStartedAtMs: 5000, ttVisibleMs: 200, callType: 'agent-tool', endedOn: 'settled' }),
     ]);
     const r = firstProseReport(turns);
     expect(r.byArm.baseline).toEqual([4200]); // 5000 + 200 - 1000
@@ -59,7 +59,7 @@ describe('time to first prose', () => {
 
   it('a one-leg turn equals its own ttVisibleMs', () => {
     const turns = groupTurns([
-      row({ legIndex: 0, turnStartedAtMs: 1000, legStartedAtMs: 1000, ttVisibleMs: 350, callType: 'agent-reply', endedOn: 'settled' }),
+      row({ legIndex: 0, turnStartedAtMs: 1000, legStartedAtMs: 1000, ttVisibleMs: 350, callType: 'agent-tool', endedOn: 'settled' }),
     ]);
     expect(firstProseReport(turns).byArm.baseline).toEqual([350]);
   });

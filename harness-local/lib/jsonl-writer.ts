@@ -50,7 +50,9 @@ export type CallType =
   // arm-level average hides that.
   | 'agent-route'
   | 'agent-tool'
-  | 'agent-reply'
+  // No 'agent-reply': the agent core never emits that leg role. Reply prose
+  // rides the last 'agent-tool' leg, and a call type nothing produces is a
+  // selectable filter that yields an empty batch.
   | 'agent-topicgen'
   | 'other';
 

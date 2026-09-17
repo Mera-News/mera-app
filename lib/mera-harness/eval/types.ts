@@ -71,7 +71,13 @@ export type RowSink = (row: EvalRow) => void;
 // Rows
 // ---------------------------------------------------------------------------
 
-export type EvalCallType = 'agent-route' | 'agent-tool' | 'agent-reply' | 'agent-topicgen';
+/**
+ * `agent-reply` DELETED. The core never emitted it: reply prose rides the LAST
+ * leg, which is a `tool` leg, and that is correct rather than a gap. Keeping a
+ * member nothing produces let a rater batch be selected on it and come back
+ * empty, which is an empty result wearing the shape of a real one.
+ */
+export type EvalCallType = 'agent-route' | 'agent-tool' | 'agent-topicgen';
 
 export type TurnEnd = 'settled' | 'awaiting_user' | 'transport_error' | 'leg_cap';
 
