@@ -1,0 +1,58 @@
+{
+  "id": "real-software-engineer",
+  "cohort": "production",
+  "note": "Production case. A profession is unanchored by default, so this is where a field-generic topic must appear and where the residence must NOT become the subject.",
+  "persona": {
+    "facts": [
+      { "id": "f1", "statement": "Lives in Amsterdam, North Holland, Netherlands", "questionnaireAttribute": "location: residence", "kind": "residence" }
+    ],
+    "topics": []
+  },
+  "declinedTopics": [],
+  "turns": [
+    {
+      "index": 0,
+      "user": "I am a software engineer",
+      "expect": {
+        "routeKind": "profession",
+        "skill": "facts/profession",
+        "tools": ["load_skill", "find_similar_facts", "saveExtractedFacts"],
+        "legs": 3,
+        "proposals": [
+          { "statementMatches": ["software", "engineer"], "kind": "profession", "placeChain": null, "replaces": null }
+        ]
+      },
+      "fakeTools": {
+        "find_similar_facts": [{ "kind": "profession", "returns": { "candidates": [] } }]
+      }
+    },
+    {
+      "index": 1,
+      "user": "Mostly backend, at a small startup",
+      "expect": {
+        "routeKind": "profession",
+        "skill": "facts/profession",
+        "tools": ["load_skill", "find_similar_facts"],
+        "legs": 3,
+        "proposals": [
+          { "statementMatches": ["backend"], "kind": "profession", "placeChain": null, "replaces": "f_prev" }
+        ]
+      },
+      "fakeTools": {
+        "find_similar_facts": [
+          { "kind": "profession", "returns": { "candidates": [{ "factId": "f_prev", "statement": "Works as a software engineer", "attribute": "profession: job", "overlap": 0.62 }] } }
+        ]
+      }
+    },
+    {
+      "index": 2,
+      "user": "Thanks, that is all",
+      "expect": {
+        "routeKind": "none",
+        "skill": "facts/generic",
+        "tools": [],
+        "legs": 1
+      }
+    }
+  ]
+}

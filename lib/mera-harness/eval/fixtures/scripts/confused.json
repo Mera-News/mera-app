@@ -1,0 +1,30 @@
+{
+  "id": "confused",
+  "cohort": "confused",
+  "note": "Restates facts already held, then contradicts itself. The rails should reject the restatements as duplicates and the correction skill should handle the reversal; neither is a fact-capture turn.",
+  "persona": {
+    "facts": [
+      { "id": "f1", "statement": "Lives in Porto, Porto District, Portugal", "questionnaireAttribute": "location: residence", "kind": "residence" },
+      { "id": "f2", "statement": "Works as a civil engineer on bridge inspection", "questionnaireAttribute": "profession: job", "kind": "profession" }
+    ],
+    "topics": [{ "id": "t1", "text": "Portugal rail strikes" }]
+  },
+  "declinedTopics": [],
+  "turns": [
+    { "index": 0, "user": "I live in Porto",
+      "expect": { "routeKind": "residence", "skill": "facts/residence", "tools": ["load_skill", "find_similar_facts"], "legs": 3 },
+      "fakeTools": { "find_similar_facts": [{ "kind": "residence", "returns": { "candidates": [{ "factId": "f1", "statement": "Lives in Porto, Porto District, Portugal", "attribute": "location: residence", "overlap": 0.91 }] } }] } },
+    { "index": 1, "user": "Wait, no, I moved to Lisbon actually",
+      "expect": { "routeKind": "correction", "skill": "conversation/correction", "tools": ["load_skill", "lookup_place", "find_similar_facts"], "legs": 3,
+        "proposals": [{ "statementMatches": ["lisbon"], "kind": "residence", "placeChain": "required", "replaces": "f1" }] },
+      "fakeTools": {
+        "lookup_place": [{ "query": "Lisbon", "returns": { "status": "resolved", "places": [ { "locality": "Lisbon", "admin1": "Lisbon District", "countryCode": "PT", "countryName": "Portugal", "bloc": "EU" } ] } }],
+        "find_similar_facts": [{ "kind": "residence", "returns": { "candidates": [{ "factId": "f1", "statement": "Lives in Porto, Porto District, Portugal", "attribute": "location: residence", "overlap": 0.74 }] } }]
+      } },
+    { "index": 2, "user": "Do I work in engineering?",
+      "expect": { "routeKind": "question", "skill": "conversation/question", "tools": ["load_skill"], "legs": 2 } },
+    { "index": 3, "user": "Forget the Lisbon thing, Porto was right",
+      "expect": { "routeKind": "correction", "skill": "conversation/correction", "tools": ["load_skill", "find_similar_facts"], "legs": 3 },
+      "fakeTools": { "find_similar_facts": [{ "kind": "residence", "returns": { "candidates": [{ "factId": "f1", "statement": "Lives in Lisbon, Lisbon District, Portugal", "attribute": "location: residence", "overlap": 0.68 }] } }] } }
+  ]
+}

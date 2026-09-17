@@ -41,6 +41,7 @@ import { NULL_CONTROL_ARM, ensureNullControlArm } from '../../lib/mera-harness/e
 ensureNullControlArm();
 
 import { PERSONA_SKILL_IDS } from '../../lib/mera-harness/skills/index.generated';
+import { routeKindsFor } from '../../lib/mera-harness/eval/contract';
 import { parseScript } from '../../lib/mera-harness/eval/script';
 import { runAgentScript } from '../../lib/mera-harness/eval/run-agent-corpus';
 import {
@@ -56,10 +57,16 @@ import {
 } from '../../lib/mera-harness/eval/agent-metrics';
 import type { AgentScript, EvalModelRequest, EvalModelResult, EvalRow } from '../../lib/mera-harness/eval/types';
 
-/** Route kinds the fixture loader validates against. Read from the core's own
- *  router prompt module when it exports them; until then this list is the one
- *  place to change, and an unknown id in a fixture throws at LOAD. */
-const ROUTE_KINDS = ['fact_capture', 'fact_update', 'question', 'chat', 'refuse'] as const;
+/**
+ * Route kinds a fixture may name, derived from the skill library.
+ *
+ * `routeKindsFor` mirrors the core's own private mapping: the LEAF of the
+ * skill id, with `generic` and a slash-less id (`router`) both meaning no
+ * kind, spelled `none` in a fixture. My first version sliced the id blindly
+ * and produced `router` where the core produces null, which would have scored
+ * every such turn wrong.
+ */
+const ROUTE_KINDS: readonly string[] = routeKindsFor(PERSONA_SKILL_IDS);
 
 interface Args {
   label: string;
@@ -158,7 +165,13 @@ function toRunRow(e: EvalRow, runId: string, catalog: Awaited<ReturnType<typeof 
   const info = catalog[e.modelRequested];
   return {
     rowId: newRowId(), dupOf: null, runId, repeat: e.repeat,
-    cohort: e.cohort, turnIndex: e.turnIndex, legIndex: e.legIndex,
+    // THE SCRIPT ID, not the cohort. cellKey identifies a cell by cohort, and
+    // three production scripts share the cohort "production": their turn-0
+    // leg-0 rows then collapse into ONE cell holding three different prompts
+    // and the integrity check reports a RUNNER BUG that is really a key
+    // collision. The G0 dry run caught exactly that. The script id is also a
+    // better rater label, since it still says "adversarial" where it matters.
+    cohort: e.scriptId, turnIndex: e.turnIndex, legIndex: e.legIndex,
     arm: e.arm, callType: e.callType as CallType,
     interleaveGroup: e.interleaveGroup, lane: 'near', surface: 'AGENT', variant: e.variant,
     promptHash: hashMessages([{ role: 'system', content: e.systemPrompt }, ...e.messages]),
@@ -327,6 +340,20 @@ async function main(): Promise<number> {
 function printAgentBlocks(rows: EvalRow[], oneShotVariant: string | null, mismatches: string[]): void {
   const turns = groupTurns(rows);
   const out: string[] = [];
+
+  // READ THIS BEFORE THE USABLE LINE ABOVE. `usable` counts an empty content
+  // field as unusable, which is right for a single-call runner and WRONG for a
+  // routing leg: that leg's whole job is to emit tool calls and no prose, so
+  // roughly half of an agent run is empty BY DESIGN and the arm-level usable
+  // rate floors near 50%. Do not read a low usable rate here as a failing arm
+  // without splitting it by call type first.
+  const routeLegs = rows.filter((r) => r.callType === 'agent-route');
+  const emptyRouteLegs = routeLegs.filter((r) => r.rawOutput.trim() === '').length;
+  out.push(
+    `\nUSABLE, CORRECTED FOR ROUTING LEGS: ${emptyRouteLegs} of ${routeLegs.length} agent-route rows ` +
+      'carry no prose, which is correct for them. The arm-level USABLE line above counts those as ' +
+      'unusable and therefore under-reports every agent arm.',
+  );
 
   const tools = toolValidityReport(rows);
   out.push('\nTOOL CALLS (unparseable and schema-invalid are different findings, never one rate)');

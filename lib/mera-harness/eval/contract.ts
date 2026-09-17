@@ -69,3 +69,30 @@ export type FactKind = (typeof FACT_KINDS)[number];
 export function expectedTopicSkillFor(kind: FactKind): string {
   return `topics/${kind}`;
 }
+
+/**
+ * The route kind the core derives from a loaded skill id.
+ *
+ * MIRRORS `routeKindFromSkill` in core/core.ts, which is module-private. Kept
+ * in step with it by `contract.test.ts`, which drives the real loop and
+ * compares. The rule: the LEAF of the id, with `generic` and an id carrying no
+ * slash both meaning "no kind".
+ *
+ * A fixture says `"none"` where the core returns null, because a JSON fixture
+ * cannot carry the distinction between absent and null usefully and a silent
+ * mismatch there would score every generic turn as wrong.
+ */
+export const NO_ROUTE_KIND = 'none';
+
+export function routeKindForSkill(skillId: string): string {
+  const slash = skillId.indexOf('/');
+  if (slash === -1) return NO_ROUTE_KIND;
+  const leaf = skillId.slice(slash + 1);
+  return leaf && leaf !== 'generic' ? leaf : NO_ROUTE_KIND;
+}
+
+/** Every route kind a fixture may name, derived from the skill library rather
+ *  than listed: a hand-written list drifts the moment a subject is added. */
+export function routeKindsFor(skillIds: readonly string[]): string[] {
+  return [...new Set(skillIds.map(routeKindForSkill))];
+}
