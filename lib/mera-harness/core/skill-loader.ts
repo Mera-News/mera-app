@@ -92,13 +92,26 @@ export interface SkillIndexRow {
  *  - `topics/*` are TERMINAL guidelines for the background topic call. They
  *    are not tools and there is nothing for a chat turn to do with one.
  */
-const ROUTABLE_GROUPS: ReadonlySet<string> = new Set(['facts', 'conversation']);
-
+/**
+ * TWO conditions, and both are needed.
+ *
+ * `routable` is DECLARED per skill by its author, which is better than
+ * inferring it from an id convention here: the owner of the body decides
+ * whether a turn can route to it, and adding a group no longer means editing
+ * this file.
+ *
+ * The generic exclusion still applies on top, because `facts/generic` is
+ * flagged routable and must NOT appear: it is a preamble the loader composes
+ * onto every leaf in its group, so offering it as a destination would let the
+ * model load the shared rules and no guideline at all. The flag answers "may a
+ * turn route to this group"; composition answers "is this a whole skill".
+ */
 export function isRoutableId(id: string): boolean {
   if (isGenericId(id)) return false;
-  const slash = id.indexOf('/');
-  if (slash === -1) return false; // standalone, e.g. `router`
-  return ROUTABLE_GROUPS.has(id.slice(0, slash));
+  const entry = PERSONA_SKILL_INDEX.find((e) => e.id === id) as
+    | { routable?: boolean }
+    | undefined;
+  return entry?.routable === true;
 }
 
 /**

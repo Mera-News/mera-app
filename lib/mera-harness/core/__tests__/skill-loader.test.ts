@@ -105,6 +105,13 @@ describe('index rendering', () => {
     expect(renderSkillIndex()).not.toContain('topics/');
   });
 
+  it('EXCLUDES facts/generic even though it is flagged routable', () => {
+    // The flag says "a turn may route to this group"; composition says "this
+    // is a whole skill". A preamble is neither, and offering it would load the
+    // shared rules with no guideline behind them.
+    expect(skillIndexRows().map((r) => r.id)).not.toContain('facts/generic');
+  });
+
   it('KEEPS facts/* and conversation/*, so the filter is not a blanket empty', () => {
     const ids = skillIndexRows().map((r) => r.id);
     expect(ids.some((id) => id.startsWith('facts/'))).toBe(true);
