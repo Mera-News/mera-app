@@ -2531,7 +2531,15 @@
     "addAll": "모두 추가 ({{count}})",
     "skipAll": "모두 건너뛰기",
     "addAllA11y": "{{count}}개 제안 모두 추가",
-    "skipAllA11y": "{{count}}개 제안 모두 건너뛰기"
+    "skipAllA11y": "{{count}}개 제안 모두 건너뛰기",
+    "titleReplace": "기존 정보를 바꿀까요?",
+    "replace": "바꾸기",
+    "replacesLabel": "대체 대상",
+    "replacesTopics_one": "및 관련 주제 1개",
+    "replacesTopics_other": "및 관련 주제 {{count}}개",
+    "replacesNoUndo": "이전 정보와 관련 주제가 완전히 삭제돼요. 되돌릴 수 없어요.",
+    "replacesLoading": "무엇이 바뀌는지 확인하고 있어요",
+    "replacesUnavailable": "지금은 무엇이 삭제될지 보여드릴 수 없어요. 잠시 후 다시 시도해 주세요."
   },
   "subscriptions": {
     "sectionTitle": "구독 중인 매체",
@@ -2661,5 +2669,8 @@
     "family": "가족",
     "newFact": "새로운 정보",
     "topics": "관심 주제"
+  },
+  "askChoice": {
+    "answeredA11y": "이미 답변함"
   }
 }

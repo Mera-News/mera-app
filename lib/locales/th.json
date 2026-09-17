@@ -2531,7 +2531,15 @@
     "addAll": "เพิ่มทั้งหมด ({{count}})",
     "skipAll": "ข้ามทั้งหมด",
     "addAllA11y": "เพิ่มข้อเสนอทั้ง {{count}} รายการ",
-    "skipAllA11y": "ข้ามข้อเสนอทั้ง {{count}} รายการ"
+    "skipAllA11y": "ข้ามข้อเสนอทั้ง {{count}} รายการ",
+    "titleReplace": "แทนที่ข้อมูลที่มีอยู่แล้วไหม",
+    "replace": "แทนที่",
+    "replacesLabel": "แทนที่",
+    "replacesTopics_one": "และ 1 หัวข้อของมัน",
+    "replacesTopics_other": "และ {{count}} หัวข้อของมัน",
+    "replacesNoUndo": "ข้อมูลเดิมและหัวข้อของมันจะถูกลบถาวร ย้อนกลับไม่ได้",
+    "replacesLoading": "กำลังตรวจสอบว่าจะแทนที่อะไร",
+    "replacesUnavailable": "ตอนนี้ Mera แสดงไม่ได้ว่าจะลบอะไร ลองอีกครั้งในอีกสักครู่"
   },
   "subscriptions": {
     "sectionTitle": "การสมัครสมาชิกของคุณ",
@@ -2661,5 +2669,8 @@
     "family": "ครอบครัวของคุณ",
     "newFact": "ข้อมูลใหม่",
     "topics": "หัวข้อของคุณ"
+  },
+  "askChoice": {
+    "answeredA11y": "ตอบแล้ว"
   }
 }

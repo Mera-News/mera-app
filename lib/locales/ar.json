@@ -2613,7 +2613,15 @@
     "addAll": "إضافة الكل ({{count}})",
     "skipAll": "تخطي الكل",
     "addAllA11y": "إضافة كل الاقتراحات الـ {{count}}",
-    "skipAllA11y": "تخطي كل الاقتراحات الـ {{count}}"
+    "skipAllA11y": "تخطي كل الاقتراحات الـ {{count}}",
+    "titleReplace": "هل تريد استبدال معلومة موجودة؟",
+    "replace": "استبدال",
+    "replacesLabel": "يستبدل",
+    "replacesTopics_one": "وموضوعها الواحد",
+    "replacesTopics_other": "و{{count}} من مواضيعها",
+    "replacesNoUndo": "ستُحذف المعلومة القديمة ومواضيعها نهائيًا. لا يمكن التراجع عن ذلك.",
+    "replacesLoading": "أتحقق مما سيُستبدل",
+    "replacesUnavailable": "لا تستطيع Mera عرض ما سيُحذف الآن. حاول بعد قليل."
   },
   "subscriptions": {
     "sectionTitle": "اشتراكاتك",
@@ -2748,5 +2756,8 @@
     "family": "عائلتك",
     "newFact": "معلومة جديدة",
     "topics": "مواضيعك"
+  },
+  "askChoice": {
+    "answeredA11y": "تمت الإجابة بالفعل"
   }
 }

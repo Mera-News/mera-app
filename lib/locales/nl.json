@@ -2531,7 +2531,15 @@
     "addAll": "Alles toevoegen ({{count}})",
     "skipAll": "Alles overslaan",
     "addAllA11y": "Alle {{count}} suggesties toevoegen",
-    "skipAllA11y": "Alle {{count}} suggesties overslaan"
+    "skipAllA11y": "Alle {{count}} suggesties overslaan",
+    "titleReplace": "Een bestaand gegeven vervangen?",
+    "replace": "Vervangen",
+    "replacesLabel": "Vervangt",
+    "replacesTopics_one": "en het 1 onderwerp",
+    "replacesTopics_other": "en de {{count}} onderwerpen ervan",
+    "replacesNoUndo": "Het oude gegeven en de onderwerpen ervan worden definitief verwijderd. Dit kun je niet ongedaan maken.",
+    "replacesLoading": "Ik kijk wat dit vervangt",
+    "replacesUnavailable": "Mera kan nu niet tonen wat er verwijderd zou worden. Probeer het zo nog eens."
   },
   "subscriptions": {
     "sectionTitle": "Je abonnementen",
@@ -2662,5 +2670,8 @@
     "family": "je gezin",
     "newFact": "een nieuw gegeven",
     "topics": "je onderwerpen"
+  },
+  "askChoice": {
+    "answeredA11y": "al beantwoord"
   }
 }

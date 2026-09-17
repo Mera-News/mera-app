@@ -2532,7 +2532,15 @@
     "addAll": "Thêm tất cả ({{count}})",
     "skipAll": "Bỏ qua tất cả",
     "addAllA11y": "Thêm tất cả {{count}} gợi ý",
-    "skipAllA11y": "Bỏ qua tất cả {{count}} gợi ý"
+    "skipAllA11y": "Bỏ qua tất cả {{count}} gợi ý",
+    "titleReplace": "Thay thế một thông tin đã có?",
+    "replace": "Thay thế",
+    "replacesLabel": "Thay cho",
+    "replacesTopics_one": "và 1 chủ đề của nó",
+    "replacesTopics_other": "và {{count}} chủ đề của nó",
+    "replacesNoUndo": "Thông tin cũ và các chủ đề của nó bị xóa vĩnh viễn. Bạn không thể hoàn tác.",
+    "replacesLoading": "Đang kiểm tra cái gì sẽ bị thay",
+    "replacesUnavailable": "Mera chưa hiển thị được những gì sẽ bị xóa. Hãy thử lại sau giây lát."
   },
   "subscriptions": {
     "sectionTitle": "Gói đăng ký của bạn",
@@ -2662,5 +2670,8 @@
     "family": "gia đình bạn",
     "newFact": "một thông tin mới",
     "topics": "chủ đề của bạn"
+  },
+  "askChoice": {
+    "answeredA11y": "đã trả lời"
   }
 }

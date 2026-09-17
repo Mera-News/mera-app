@@ -2533,7 +2533,15 @@
     "addAll": "सभी जोड़ें ({{count}})",
     "skipAll": "सभी छोड़ें",
     "addAllA11y": "सभी {{count}} सुझाव जोड़ें",
-    "skipAllA11y": "सभी {{count}} सुझाव छोड़ें"
+    "skipAllA11y": "सभी {{count}} सुझाव छोड़ें",
+    "titleReplace": "पहले से मौजूद जानकारी बदलें?",
+    "replace": "बदलें",
+    "replacesLabel": "इसे बदलेगा",
+    "replacesTopics_one": "और इसका 1 विषय",
+    "replacesTopics_other": "और इसके {{count}} विषय",
+    "replacesNoUndo": "पुरानी जानकारी और उसके विषय हमेशा के लिए हट जाएँगे। इसे पहले जैसा नहीं किया जा सकता।",
+    "replacesLoading": "क्या बदला जाएगा, यह देख रहे हैं",
+    "replacesUnavailable": "Mera अभी नहीं दिखा सकता कि क्या हटेगा। थोड़ी देर में फिर कोशिश करें।"
   },
   "subscriptions": {
     "sectionTitle": "आपकी सदस्यताएँ",
@@ -2664,5 +2672,8 @@
     "family": "आपका परिवार",
     "newFact": "एक नई जानकारी",
     "topics": "आपके विषय"
+  },
+  "askChoice": {
+    "answeredA11y": "पहले ही उत्तर दिया गया"
   }
 }

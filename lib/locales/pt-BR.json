@@ -2531,7 +2531,15 @@
     "addAll": "Adicionar tudo ({{count}})",
     "skipAll": "Pular tudo",
     "addAllA11y": "Adicionar as {{count}} sugestões",
-    "skipAllA11y": "Pular as {{count}} sugestões"
+    "skipAllA11y": "Pular as {{count}} sugestões",
+    "titleReplace": "Substituir uma informação que você já tem?",
+    "replace": "Substituir",
+    "replacesLabel": "Substitui",
+    "replacesTopics_one": "e seu 1 tema",
+    "replacesTopics_other": "e seus {{count}} temas",
+    "replacesNoUndo": "A informação antiga e os temas dela são removidos de vez. Isso não dá para desfazer.",
+    "replacesLoading": "Verificando o que isso substitui",
+    "replacesUnavailable": "A Mera não consegue mostrar agora o que seria removido. Tente de novo em instantes."
   },
   "subscriptions": {
     "sectionTitle": "Suas assinaturas",
@@ -2662,5 +2670,8 @@
     "family": "sua família",
     "newFact": "uma informação nova",
     "topics": "seus temas"
+  },
+  "askChoice": {
+    "answeredA11y": "já respondido"
   }
 }

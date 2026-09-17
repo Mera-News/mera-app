@@ -2532,7 +2532,15 @@
     "addAll": "全部新增（{{count}}）",
     "skipAll": "全部略過",
     "addAllA11y": "新增全部 {{count}} 則建議",
-    "skipAllA11y": "略過全部 {{count}} 則建議"
+    "skipAllA11y": "略過全部 {{count}} 則建議",
+    "titleReplace": "替換已有的一則資訊？",
+    "replace": "替換",
+    "replacesLabel": "將替換",
+    "replacesTopics_one": "以及它的 1 個主題",
+    "replacesTopics_other": "以及它的 {{count}} 個主題",
+    "replacesNoUndo": "原有資訊及其主題將被永久刪除，無法復原。",
+    "replacesLoading": "正在確認會替換什麼",
+    "replacesUnavailable": "Mera 暫時無法顯示會刪除哪些內容。請稍後再試。"
   },
   "subscriptions": {
     "sectionTitle": "您的訂閱",
@@ -2662,5 +2670,8 @@
     "family": "你的家人",
     "newFact": "一項新資訊",
     "topics": "你的主題"
+  },
+  "askChoice": {
+    "answeredA11y": "已回答"
   }
 }

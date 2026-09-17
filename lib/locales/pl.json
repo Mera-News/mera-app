@@ -2567,7 +2567,15 @@
     "addAll": "Dodaj wszystko ({{count}})",
     "skipAll": "Pomiń wszystko",
     "addAllA11y": "Dodaj wszystkie {{count}} propozycje",
-    "skipAllA11y": "Pomiń wszystkie {{count}} propozycje"
+    "skipAllA11y": "Pomiń wszystkie {{count}} propozycje",
+    "titleReplace": "Zastąpić istniejącą informację?",
+    "replace": "Zastąp",
+    "replacesLabel": "Zastępuje",
+    "replacesTopics_one": "i jej 1 temat",
+    "replacesTopics_other": "i jej {{count}} tematów",
+    "replacesNoUndo": "Stara informacja i jej tematy zostaną usunięte na stałe. Tego nie można cofnąć.",
+    "replacesLoading": "Sprawdzam, co to zastąpi",
+    "replacesUnavailable": "Mera nie może teraz pokazać, co zostałoby usunięte. Spróbuj za chwilę."
   },
   "subscriptions": {
     "sectionTitle": "Twoje subskrypcje",
@@ -2700,5 +2708,8 @@
     "family": "twoją rodzinę",
     "newFact": "nową informację",
     "topics": "twoje tematy"
+  },
+  "askChoice": {
+    "answeredA11y": "już odpowiedziano"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "_comment": "pagent wave P2: the agent-steps box (agentSteps.*), the plain-language skill phrases rendered instead of a skill id (skillPhrase.*), and the topics accordion (chatTopics.*). Re-run after the first splice to add the accordion keys, so the already-landed keys need --allow-overwrite; their values are unchanged, so the diff is additions only. Never edit the 20 dictionaries by hand.",
+  "_comment": "pagent wave P2: the agent-steps box (agentSteps.*), the plain skill phrases it renders instead of a skill id (skillPhrase.*), the topics accordion (chatTopics.*), the replacement disclosure on the fact-choice card (factChoice.replaces*/titleReplace/replace) and the ask_choice chips (askChoice.*). Spliced in stages, so keys landed by an earlier run need --allow-overwrite; their values are unchanged, so each run adds only. Never hand-edit the 20 dictionaries.",
   "en": {
     "agentSteps": {
       "legStart": "Thinking about what you said",
@@ -47,6 +47,19 @@
       "goneTombstone": "This fact was removed, so its topics are gone too.",
       "expandA11y": "Show topics",
       "collapseA11y": "Hide topics"
+    },
+    "factChoice": {
+      "titleReplace": "Replace a fact you already have?",
+      "replace": "Replace",
+      "replacesLabel": "Replaces",
+      "replacesTopics_one": "and its 1 topic",
+      "replacesTopics_other": "and its {{count}} topics",
+      "replacesNoUndo": "The old fact and its topics are removed for good. You can't undo this.",
+      "replacesLoading": "Checking what this replaces",
+      "replacesUnavailable": "Mera can't show what this would remove right now. Try again in a moment."
+    },
+    "askChoice": {
+      "answeredA11y": "already answered"
     }
   },
   "de": {
@@ -96,6 +109,19 @@
       "goneTombstone": "Diese Angabe wurde entfernt, damit sind auch ihre Themen weg.",
       "expandA11y": "Themen anzeigen",
       "collapseA11y": "Themen ausblenden"
+    },
+    "factChoice": {
+      "titleReplace": "Eine vorhandene Angabe ersetzen?",
+      "replace": "Ersetzen",
+      "replacesLabel": "Ersetzt",
+      "replacesTopics_one": "und ihr 1 Thema",
+      "replacesTopics_other": "und ihre {{count}} Themen",
+      "replacesNoUndo": "Die alte Angabe und ihre Themen werden endgültig entfernt. Das lässt sich nicht rückgängig machen.",
+      "replacesLoading": "Ich prüfe, was ersetzt wird",
+      "replacesUnavailable": "Mera kann gerade nicht anzeigen, was entfernt würde. Versuch es gleich noch einmal."
+    },
+    "askChoice": {
+      "answeredA11y": "bereits beantwortet"
     }
   },
   "es": {
@@ -145,6 +171,19 @@
       "goneTombstone": "Este dato se eliminó, así que sus temas también.",
       "expandA11y": "Mostrar temas",
       "collapseA11y": "Ocultar temas"
+    },
+    "factChoice": {
+      "titleReplace": "¿Reemplazar un dato que ya tienes?",
+      "replace": "Reemplazar",
+      "replacesLabel": "Reemplaza a",
+      "replacesTopics_one": "y su 1 tema",
+      "replacesTopics_other": "y sus {{count}} temas",
+      "replacesNoUndo": "El dato anterior y sus temas se eliminan definitivamente. Esto no se puede deshacer.",
+      "replacesLoading": "Comprobando qué reemplaza",
+      "replacesUnavailable": "Mera no puede mostrar ahora qué se eliminaría. Inténtalo en un momento."
+    },
+    "askChoice": {
+      "answeredA11y": "ya respondido"
     }
   },
   "fr": {
@@ -194,6 +233,19 @@
       "goneTombstone": "Cette information a été supprimée, ses sujets aussi.",
       "expandA11y": "Afficher les sujets",
       "collapseA11y": "Masquer les sujets"
+    },
+    "factChoice": {
+      "titleReplace": "Remplacer une information existante ?",
+      "replace": "Remplacer",
+      "replacesLabel": "Remplace",
+      "replacesTopics_one": "et son 1 sujet",
+      "replacesTopics_other": "et ses {{count}} sujets",
+      "replacesNoUndo": "L'ancienne information et ses sujets sont supprimés définitivement. C'est irréversible.",
+      "replacesLoading": "Je vérifie ce que cela remplace",
+      "replacesUnavailable": "Mera ne peut pas afficher ce qui serait supprimé pour l'instant. Réessaie dans un instant."
+    },
+    "askChoice": {
+      "answeredA11y": "déjà répondu"
     }
   },
   "it": {
@@ -243,6 +295,19 @@
       "goneTombstone": "Questa informazione è stata rimossa, quindi anche i suoi argomenti.",
       "expandA11y": "Mostra argomenti",
       "collapseA11y": "Nascondi argomenti"
+    },
+    "factChoice": {
+      "titleReplace": "Sostituire un'informazione esistente?",
+      "replace": "Sostituisci",
+      "replacesLabel": "Sostituisce",
+      "replacesTopics_one": "e il suo 1 argomento",
+      "replacesTopics_other": "e i suoi {{count}} argomenti",
+      "replacesNoUndo": "L'informazione precedente e i suoi argomenti vengono rimossi definitivamente. Non è reversibile.",
+      "replacesLoading": "Controllo che cosa sostituisce",
+      "replacesUnavailable": "Mera non può mostrare ora che cosa verrebbe rimosso. Riprova tra poco."
+    },
+    "askChoice": {
+      "answeredA11y": "già risposto"
     }
   },
   "nl": {
@@ -292,6 +357,19 @@
       "goneTombstone": "Dit gegeven is verwijderd, dus de onderwerpen ervan ook.",
       "expandA11y": "Onderwerpen tonen",
       "collapseA11y": "Onderwerpen verbergen"
+    },
+    "factChoice": {
+      "titleReplace": "Een bestaand gegeven vervangen?",
+      "replace": "Vervangen",
+      "replacesLabel": "Vervangt",
+      "replacesTopics_one": "en het 1 onderwerp",
+      "replacesTopics_other": "en de {{count}} onderwerpen ervan",
+      "replacesNoUndo": "Het oude gegeven en de onderwerpen ervan worden definitief verwijderd. Dit kun je niet ongedaan maken.",
+      "replacesLoading": "Ik kijk wat dit vervangt",
+      "replacesUnavailable": "Mera kan nu niet tonen wat er verwijderd zou worden. Probeer het zo nog eens."
+    },
+    "askChoice": {
+      "answeredA11y": "al beantwoord"
     }
   },
   "pt-BR": {
@@ -341,6 +419,19 @@
       "goneTombstone": "Essa informação foi removida, então os temas dela também.",
       "expandA11y": "Mostrar temas",
       "collapseA11y": "Ocultar temas"
+    },
+    "factChoice": {
+      "titleReplace": "Substituir uma informação que você já tem?",
+      "replace": "Substituir",
+      "replacesLabel": "Substitui",
+      "replacesTopics_one": "e seu 1 tema",
+      "replacesTopics_other": "e seus {{count}} temas",
+      "replacesNoUndo": "A informação antiga e os temas dela são removidos de vez. Isso não dá para desfazer.",
+      "replacesLoading": "Verificando o que isso substitui",
+      "replacesUnavailable": "A Mera não consegue mostrar agora o que seria removido. Tente de novo em instantes."
+    },
+    "askChoice": {
+      "answeredA11y": "já respondido"
     }
   },
   "pl": {
@@ -390,6 +481,19 @@
       "goneTombstone": "Ta informacja została usunięta, więc jej tematy też.",
       "expandA11y": "Pokaż tematy",
       "collapseA11y": "Ukryj tematy"
+    },
+    "factChoice": {
+      "titleReplace": "Zastąpić istniejącą informację?",
+      "replace": "Zastąp",
+      "replacesLabel": "Zastępuje",
+      "replacesTopics_one": "i jej 1 temat",
+      "replacesTopics_other": "i jej {{count}} tematów",
+      "replacesNoUndo": "Stara informacja i jej tematy zostaną usunięte na stałe. Tego nie można cofnąć.",
+      "replacesLoading": "Sprawdzam, co to zastąpi",
+      "replacesUnavailable": "Mera nie może teraz pokazać, co zostałoby usunięte. Spróbuj za chwilę."
+    },
+    "askChoice": {
+      "answeredA11y": "już odpowiedziano"
     }
   },
   "ru": {
@@ -439,6 +543,19 @@
       "goneTombstone": "Этот факт удалён, поэтому его темы тоже.",
       "expandA11y": "Показать темы",
       "collapseA11y": "Скрыть темы"
+    },
+    "factChoice": {
+      "titleReplace": "Заменить уже имеющийся факт?",
+      "replace": "Заменить",
+      "replacesLabel": "Заменяет",
+      "replacesTopics_one": "и её 1 тему",
+      "replacesTopics_other": "и её {{count}} тем",
+      "replacesNoUndo": "Прежний факт и его темы удаляются навсегда. Отменить это нельзя.",
+      "replacesLoading": "Проверяю, что будет заменено",
+      "replacesUnavailable": "Mera сейчас не может показать, что будет удалено. Попробуйте через минуту."
+    },
+    "askChoice": {
+      "answeredA11y": "уже отвечено"
     }
   },
   "uk": {
@@ -488,6 +605,19 @@
       "goneTombstone": "Цей факт видалено, тому його теми теж.",
       "expandA11y": "Показати теми",
       "collapseA11y": "Сховати теми"
+    },
+    "factChoice": {
+      "titleReplace": "Замінити наявний факт?",
+      "replace": "Замінити",
+      "replacesLabel": "Замінює",
+      "replacesTopics_one": "і її 1 тему",
+      "replacesTopics_other": "і її {{count}} тем",
+      "replacesNoUndo": "Попередній факт і його теми видаляються назавжди. Скасувати це не можна.",
+      "replacesLoading": "Перевіряю, що буде замінено",
+      "replacesUnavailable": "Mera зараз не може показати, що буде видалено. Спробуйте за хвилину."
+    },
+    "askChoice": {
+      "answeredA11y": "уже відповіли"
     }
   },
   "tr": {
@@ -537,6 +667,19 @@
       "goneTombstone": "Bu bilgi kaldırıldı, konuları da gitti.",
       "expandA11y": "Konuları göster",
       "collapseA11y": "Konuları gizle"
+    },
+    "factChoice": {
+      "titleReplace": "Mevcut bir bilgiyi değiştirelim mi?",
+      "replace": "Değiştir",
+      "replacesLabel": "Şunu değiştirir",
+      "replacesTopics_one": "ve 1 konusunu",
+      "replacesTopics_other": "ve {{count}} konusunu",
+      "replacesNoUndo": "Eski bilgi ve konuları kalıcı olarak silinir. Bu geri alınamaz.",
+      "replacesLoading": "Neyin değişeceğini kontrol ediyorum",
+      "replacesUnavailable": "Mera şu anda neyin kaldırılacağını gösteremiyor. Birazdan tekrar dene."
+    },
+    "askChoice": {
+      "answeredA11y": "zaten yanıtlandı"
     }
   },
   "ar": {
@@ -586,6 +729,19 @@
       "goneTombstone": "تمت إزالة هذه المعلومة، لذلك اختفت مواضيعها أيضًا.",
       "expandA11y": "إظهار المواضيع",
       "collapseA11y": "إخفاء المواضيع"
+    },
+    "factChoice": {
+      "titleReplace": "هل تريد استبدال معلومة موجودة؟",
+      "replace": "استبدال",
+      "replacesLabel": "يستبدل",
+      "replacesTopics_one": "وموضوعها الواحد",
+      "replacesTopics_other": "و{{count}} من مواضيعها",
+      "replacesNoUndo": "ستُحذف المعلومة القديمة ومواضيعها نهائيًا. لا يمكن التراجع عن ذلك.",
+      "replacesLoading": "أتحقق مما سيُستبدل",
+      "replacesUnavailable": "لا تستطيع Mera عرض ما سيُحذف الآن. حاول بعد قليل."
+    },
+    "askChoice": {
+      "answeredA11y": "تمت الإجابة بالفعل"
     }
   },
   "hi": {
@@ -635,6 +791,19 @@
       "goneTombstone": "यह जानकारी हटा दी गई, इसलिए इसके विषय भी हट गए।",
       "expandA11y": "विषय दिखाएँ",
       "collapseA11y": "विषय छिपाएँ"
+    },
+    "factChoice": {
+      "titleReplace": "पहले से मौजूद जानकारी बदलें?",
+      "replace": "बदलें",
+      "replacesLabel": "इसे बदलेगा",
+      "replacesTopics_one": "और इसका 1 विषय",
+      "replacesTopics_other": "और इसके {{count}} विषय",
+      "replacesNoUndo": "पुरानी जानकारी और उसके विषय हमेशा के लिए हट जाएँगे। इसे पहले जैसा नहीं किया जा सकता।",
+      "replacesLoading": "क्या बदला जाएगा, यह देख रहे हैं",
+      "replacesUnavailable": "Mera अभी नहीं दिखा सकता कि क्या हटेगा। थोड़ी देर में फिर कोशिश करें।"
+    },
+    "askChoice": {
+      "answeredA11y": "पहले ही उत्तर दिया गया"
     }
   },
   "id": {
@@ -684,6 +853,19 @@
       "goneTombstone": "Informasi ini dihapus, jadi topiknya juga hilang.",
       "expandA11y": "Tampilkan topik",
       "collapseA11y": "Sembunyikan topik"
+    },
+    "factChoice": {
+      "titleReplace": "Ganti informasi yang sudah ada?",
+      "replace": "Ganti",
+      "replacesLabel": "Mengganti",
+      "replacesTopics_one": "dan 1 topiknya",
+      "replacesTopics_other": "dan {{count}} topiknya",
+      "replacesNoUndo": "Informasi lama dan topiknya dihapus permanen. Ini tidak bisa dibatalkan.",
+      "replacesLoading": "Memeriksa apa yang akan diganti",
+      "replacesUnavailable": "Mera belum bisa menampilkan apa yang akan dihapus. Coba lagi sebentar."
+    },
+    "askChoice": {
+      "answeredA11y": "sudah dijawab"
     }
   },
   "vi": {
@@ -733,6 +915,19 @@
       "goneTombstone": "Thông tin này đã bị xóa, nên các chủ đề của nó cũng mất.",
       "expandA11y": "Hiện chủ đề",
       "collapseA11y": "Ẩn chủ đề"
+    },
+    "factChoice": {
+      "titleReplace": "Thay thế một thông tin đã có?",
+      "replace": "Thay thế",
+      "replacesLabel": "Thay cho",
+      "replacesTopics_one": "và 1 chủ đề của nó",
+      "replacesTopics_other": "và {{count}} chủ đề của nó",
+      "replacesNoUndo": "Thông tin cũ và các chủ đề của nó bị xóa vĩnh viễn. Bạn không thể hoàn tác.",
+      "replacesLoading": "Đang kiểm tra cái gì sẽ bị thay",
+      "replacesUnavailable": "Mera chưa hiển thị được những gì sẽ bị xóa. Hãy thử lại sau giây lát."
+    },
+    "askChoice": {
+      "answeredA11y": "đã trả lời"
     }
   },
   "th": {
@@ -782,6 +977,19 @@
       "goneTombstone": "ข้อมูลนี้ถูกลบแล้ว หัวข้อของมันจึงหายไปด้วย",
       "expandA11y": "แสดงหัวข้อ",
       "collapseA11y": "ซ่อนหัวข้อ"
+    },
+    "factChoice": {
+      "titleReplace": "แทนที่ข้อมูลที่มีอยู่แล้วไหม",
+      "replace": "แทนที่",
+      "replacesLabel": "แทนที่",
+      "replacesTopics_one": "และ 1 หัวข้อของมัน",
+      "replacesTopics_other": "และ {{count}} หัวข้อของมัน",
+      "replacesNoUndo": "ข้อมูลเดิมและหัวข้อของมันจะถูกลบถาวร ย้อนกลับไม่ได้",
+      "replacesLoading": "กำลังตรวจสอบว่าจะแทนที่อะไร",
+      "replacesUnavailable": "ตอนนี้ Mera แสดงไม่ได้ว่าจะลบอะไร ลองอีกครั้งในอีกสักครู่"
+    },
+    "askChoice": {
+      "answeredA11y": "ตอบแล้ว"
     }
   },
   "ja": {
@@ -831,6 +1039,19 @@
       "goneTombstone": "この情報は削除されたため、関連トピックもなくなりました。",
       "expandA11y": "トピックを表示",
       "collapseA11y": "トピックを隠す"
+    },
+    "factChoice": {
+      "titleReplace": "既存の情報を置き換えますか？",
+      "replace": "置き換える",
+      "replacesLabel": "置き換える対象",
+      "replacesTopics_one": "と、その 1 件のトピック",
+      "replacesTopics_other": "と、その {{count}} 件のトピック",
+      "replacesNoUndo": "以前の情報と関連トピックは完全に削除されます。元には戻せません。",
+      "replacesLoading": "何が置き換わるか確認しています",
+      "replacesUnavailable": "削除される内容を今は表示できません。少し後にもう一度お試しください。"
+    },
+    "askChoice": {
+      "answeredA11y": "回答済み"
     }
   },
   "ko": {
@@ -880,6 +1101,19 @@
       "goneTombstone": "이 정보가 삭제되어 관련 주제도 사라졌어요.",
       "expandA11y": "주제 보기",
       "collapseA11y": "주제 숨기기"
+    },
+    "factChoice": {
+      "titleReplace": "기존 정보를 바꿀까요?",
+      "replace": "바꾸기",
+      "replacesLabel": "대체 대상",
+      "replacesTopics_one": "및 관련 주제 1개",
+      "replacesTopics_other": "및 관련 주제 {{count}}개",
+      "replacesNoUndo": "이전 정보와 관련 주제가 완전히 삭제돼요. 되돌릴 수 없어요.",
+      "replacesLoading": "무엇이 바뀌는지 확인하고 있어요",
+      "replacesUnavailable": "지금은 무엇이 삭제될지 보여드릴 수 없어요. 잠시 후 다시 시도해 주세요."
+    },
+    "askChoice": {
+      "answeredA11y": "이미 답변함"
     }
   },
   "zh-CN": {
@@ -929,6 +1163,19 @@
       "goneTombstone": "这条信息已删除，相关主题也一并移除。",
       "expandA11y": "显示主题",
       "collapseA11y": "隐藏主题"
+    },
+    "factChoice": {
+      "titleReplace": "替换已有的一条信息？",
+      "replace": "替换",
+      "replacesLabel": "将替换",
+      "replacesTopics_one": "以及它的 1 个主题",
+      "replacesTopics_other": "以及它的 {{count}} 个主题",
+      "replacesNoUndo": "原有信息及其主题将被永久删除，无法撤销。",
+      "replacesLoading": "正在确认会替换什么",
+      "replacesUnavailable": "Mera 暂时无法显示会删除哪些内容。请稍后再试。"
+    },
+    "askChoice": {
+      "answeredA11y": "已回答"
     }
   },
   "zh-TW": {
@@ -978,6 +1225,19 @@
       "goneTombstone": "這則資訊已刪除，相關主題也一併移除。",
       "expandA11y": "顯示主題",
       "collapseA11y": "隱藏主題"
+    },
+    "factChoice": {
+      "titleReplace": "替換已有的一則資訊？",
+      "replace": "替換",
+      "replacesLabel": "將替換",
+      "replacesTopics_one": "以及它的 1 個主題",
+      "replacesTopics_other": "以及它的 {{count}} 個主題",
+      "replacesNoUndo": "原有資訊及其主題將被永久刪除，無法復原。",
+      "replacesLoading": "正在確認會替換什麼",
+      "replacesUnavailable": "Mera 暫時無法顯示會刪除哪些內容。請稍後再試。"
+    },
+    "askChoice": {
+      "answeredA11y": "已回答"
     }
   }
 }

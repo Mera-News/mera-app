@@ -2538,7 +2538,15 @@
     "addAll": "Tout ajouter ({{count}})",
     "skipAll": "Tout passer",
     "addAllA11y": "Ajouter les {{count}} suggestions",
-    "skipAllA11y": "Passer les {{count}} suggestions"
+    "skipAllA11y": "Passer les {{count}} suggestions",
+    "titleReplace": "Remplacer une information existante ?",
+    "replace": "Remplacer",
+    "replacesLabel": "Remplace",
+    "replacesTopics_one": "et son 1 sujet",
+    "replacesTopics_other": "et ses {{count}} sujets",
+    "replacesNoUndo": "L'ancienne information et ses sujets sont supprimés définitivement. C'est irréversible.",
+    "replacesLoading": "Je vérifie ce que cela remplace",
+    "replacesUnavailable": "Mera ne peut pas afficher ce qui serait supprimé pour l'instant. Réessaie dans un instant."
   },
   "subscriptions": {
     "sectionTitle": "Vos abonnements",
@@ -2669,5 +2677,8 @@
     "family": "ta famille",
     "newFact": "une nouvelle information",
     "topics": "tes sujets"
+  },
+  "askChoice": {
+    "answeredA11y": "déjà répondu"
   }
 }

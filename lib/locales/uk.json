@@ -2573,7 +2573,15 @@
     "addAll": "Додати всі ({{count}})",
     "skipAll": "Пропустити всі",
     "addAllA11y": "Додати всі {{count}} пропозиції",
-    "skipAllA11y": "Пропустити всі {{count}} пропозиції"
+    "skipAllA11y": "Пропустити всі {{count}} пропозиції",
+    "titleReplace": "Замінити наявний факт?",
+    "replace": "Замінити",
+    "replacesLabel": "Замінює",
+    "replacesTopics_one": "і її 1 тему",
+    "replacesTopics_other": "і її {{count}} тем",
+    "replacesNoUndo": "Попередній факт і його теми видаляються назавжди. Скасувати це не можна.",
+    "replacesLoading": "Перевіряю, що буде замінено",
+    "replacesUnavailable": "Mera зараз не може показати, що буде видалено. Спробуйте за хвилину."
   },
   "subscriptions": {
     "sectionTitle": "Ваші передплати",
@@ -2706,5 +2714,8 @@
     "family": "вашу сім'ю",
     "newFact": "новий факт",
     "topics": "ваші теми"
+  },
+  "askChoice": {
+    "answeredA11y": "уже відповіли"
   }
 }

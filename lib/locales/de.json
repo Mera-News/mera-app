@@ -2531,7 +2531,15 @@
     "addAll": "Alle hinzufügen ({{count}})",
     "skipAll": "Alle überspringen",
     "addAllA11y": "Alle {{count}} Vorschläge hinzufügen",
-    "skipAllA11y": "Alle {{count}} Vorschläge überspringen"
+    "skipAllA11y": "Alle {{count}} Vorschläge überspringen",
+    "titleReplace": "Eine vorhandene Angabe ersetzen?",
+    "replace": "Ersetzen",
+    "replacesLabel": "Ersetzt",
+    "replacesTopics_one": "und ihr 1 Thema",
+    "replacesTopics_other": "und ihre {{count}} Themen",
+    "replacesNoUndo": "Die alte Angabe und ihre Themen werden endgültig entfernt. Das lässt sich nicht rückgängig machen.",
+    "replacesLoading": "Ich prüfe, was ersetzt wird",
+    "replacesUnavailable": "Mera kann gerade nicht anzeigen, was entfernt würde. Versuch es gleich noch einmal."
   },
   "subscriptions": {
     "sectionTitle": "Deine Abos",
@@ -2662,5 +2670,8 @@
     "family": "deine Familie",
     "newFact": "eine neue Angabe",
     "topics": "deine Themen"
+  },
+  "askChoice": {
+    "answeredA11y": "bereits beantwortet"
   }
 }

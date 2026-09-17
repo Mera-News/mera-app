@@ -2531,7 +2531,15 @@
     "addAll": "Tambahkan semua ({{count}})",
     "skipAll": "Lewati semua",
     "addAllA11y": "Tambahkan semua {{count}} saran",
-    "skipAllA11y": "Lewati semua {{count}} saran"
+    "skipAllA11y": "Lewati semua {{count}} saran",
+    "titleReplace": "Ganti informasi yang sudah ada?",
+    "replace": "Ganti",
+    "replacesLabel": "Mengganti",
+    "replacesTopics_one": "dan 1 topiknya",
+    "replacesTopics_other": "dan {{count}} topiknya",
+    "replacesNoUndo": "Informasi lama dan topiknya dihapus permanen. Ini tidak bisa dibatalkan.",
+    "replacesLoading": "Memeriksa apa yang akan diganti",
+    "replacesUnavailable": "Mera belum bisa menampilkan apa yang akan dihapus. Coba lagi sebentar."
   },
   "subscriptions": {
     "sectionTitle": "Langganan Anda",
@@ -2661,5 +2669,8 @@
     "family": "keluargamu",
     "newFact": "informasi baru",
     "topics": "topikmu"
+  },
+  "askChoice": {
+    "answeredA11y": "sudah dijawab"
   }
 }

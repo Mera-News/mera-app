@@ -1465,7 +1465,15 @@
     "addAll": "Add all ({{count}})",
     "skipAll": "Skip all",
     "addAllA11y": "Add all {{count}} suggestions",
-    "skipAllA11y": "Skip all {{count}} suggestions"
+    "skipAllA11y": "Skip all {{count}} suggestions",
+    "titleReplace": "Replace a fact you already have?",
+    "replace": "Replace",
+    "replacesLabel": "Replaces",
+    "replacesTopics_one": "and its 1 topic",
+    "replacesTopics_other": "and its {{count}} topics",
+    "replacesNoUndo": "The old fact and its topics are removed for good. You can't undo this.",
+    "replacesLoading": "Checking what this replaces",
+    "replacesUnavailable": "Mera can't show what this would remove right now. Try again in a moment."
   },
   "conflict": {
     "title": "Possible conflict",
@@ -2662,5 +2670,8 @@
     "family": "your family",
     "newFact": "a new fact",
     "topics": "your topics"
+  },
+  "askChoice": {
+    "answeredA11y": "already answered"
   }
 }

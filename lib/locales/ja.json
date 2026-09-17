@@ -2531,7 +2531,15 @@
     "addAll": "すべて追加 ({{count}})",
     "skipAll": "すべてスキップ",
     "addAllA11y": "{{count}} 件の候補をすべて追加",
-    "skipAllA11y": "{{count}} 件の候補をすべてスキップ"
+    "skipAllA11y": "{{count}} 件の候補をすべてスキップ",
+    "titleReplace": "既存の情報を置き換えますか？",
+    "replace": "置き換える",
+    "replacesLabel": "置き換える対象",
+    "replacesTopics_one": "と、その 1 件のトピック",
+    "replacesTopics_other": "と、その {{count}} 件のトピック",
+    "replacesNoUndo": "以前の情報と関連トピックは完全に削除されます。元には戻せません。",
+    "replacesLoading": "何が置き換わるか確認しています",
+    "replacesUnavailable": "削除される内容を今は表示できません。少し後にもう一度お試しください。"
   },
   "subscriptions": {
     "sectionTitle": "購読中のメディア",
@@ -2661,5 +2669,8 @@
     "family": "ご家族",
     "newFact": "新しい情報",
     "topics": "ご関心のトピック"
+  },
+  "askChoice": {
+    "answeredA11y": "回答済み"
   }
 }

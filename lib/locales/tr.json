@@ -2533,7 +2533,15 @@
     "addAll": "Tümünü ekle ({{count}})",
     "skipAll": "Tümünü atla",
     "addAllA11y": "{{count}} önerinin tümünü ekle",
-    "skipAllA11y": "{{count}} önerinin tümünü atla"
+    "skipAllA11y": "{{count}} önerinin tümünü atla",
+    "titleReplace": "Mevcut bir bilgiyi değiştirelim mi?",
+    "replace": "Değiştir",
+    "replacesLabel": "Şunu değiştirir",
+    "replacesTopics_one": "ve 1 konusunu",
+    "replacesTopics_other": "ve {{count}} konusunu",
+    "replacesNoUndo": "Eski bilgi ve konuları kalıcı olarak silinir. Bu geri alınamaz.",
+    "replacesLoading": "Neyin değişeceğini kontrol ediyorum",
+    "replacesUnavailable": "Mera şu anda neyin kaldırılacağını gösteremiyor. Birazdan tekrar dene."
   },
   "subscriptions": {
     "sectionTitle": "Abonelikleriniz",
@@ -2664,5 +2672,8 @@
     "family": "aileni",
     "newFact": "yeni bir bilgiyi",
     "topics": "konularını"
+  },
+  "askChoice": {
+    "answeredA11y": "zaten yanıtlandı"
   }
 }

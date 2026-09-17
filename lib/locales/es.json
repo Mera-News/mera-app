@@ -2531,7 +2531,15 @@
     "addAll": "Añadir todo ({{count}})",
     "skipAll": "Omitir todo",
     "addAllA11y": "Añadir las {{count}} sugerencias",
-    "skipAllA11y": "Omitir las {{count}} sugerencias"
+    "skipAllA11y": "Omitir las {{count}} sugerencias",
+    "titleReplace": "¿Reemplazar un dato que ya tienes?",
+    "replace": "Reemplazar",
+    "replacesLabel": "Reemplaza a",
+    "replacesTopics_one": "y su 1 tema",
+    "replacesTopics_other": "y sus {{count}} temas",
+    "replacesNoUndo": "El dato anterior y sus temas se eliminan definitivamente. Esto no se puede deshacer.",
+    "replacesLoading": "Comprobando qué reemplaza",
+    "replacesUnavailable": "Mera no puede mostrar ahora qué se eliminaría. Inténtalo en un momento."
   },
   "subscriptions": {
     "sectionTitle": "Tus suscripciones",
@@ -2662,5 +2670,8 @@
     "family": "tu familia",
     "newFact": "un dato nuevo",
     "topics": "tus temas"
+  },
+  "askChoice": {
+    "answeredA11y": "ya respondido"
   }
 }

@@ -2569,7 +2569,15 @@
     "addAll": "Добавить все ({{count}})",
     "skipAll": "Пропустить все",
     "addAllA11y": "Добавить все {{count}} предложения",
-    "skipAllA11y": "Пропустить все {{count}} предложения"
+    "skipAllA11y": "Пропустить все {{count}} предложения",
+    "titleReplace": "Заменить уже имеющийся факт?",
+    "replace": "Заменить",
+    "replacesLabel": "Заменяет",
+    "replacesTopics_one": "и её 1 тему",
+    "replacesTopics_other": "и её {{count}} тем",
+    "replacesNoUndo": "Прежний факт и его темы удаляются навсегда. Отменить это нельзя.",
+    "replacesLoading": "Проверяю, что будет заменено",
+    "replacesUnavailable": "Mera сейчас не может показать, что будет удалено. Попробуйте через минуту."
   },
   "subscriptions": {
     "sectionTitle": "Ваши подписки",
@@ -2702,5 +2710,8 @@
     "family": "вашу семью",
     "newFact": "новый факт",
     "topics": "ваши темы"
+  },
+  "askChoice": {
+    "answeredA11y": "уже отвечено"
   }
 }

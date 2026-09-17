@@ -2531,7 +2531,15 @@
     "addAll": "Aggiungi tutto ({{count}})",
     "skipAll": "Salta tutto",
     "addAllA11y": "Aggiungi tutti i {{count}} suggerimenti",
-    "skipAllA11y": "Salta tutti i {{count}} suggerimenti"
+    "skipAllA11y": "Salta tutti i {{count}} suggerimenti",
+    "titleReplace": "Sostituire un'informazione esistente?",
+    "replace": "Sostituisci",
+    "replacesLabel": "Sostituisce",
+    "replacesTopics_one": "e il suo 1 argomento",
+    "replacesTopics_other": "e i suoi {{count}} argomenti",
+    "replacesNoUndo": "L'informazione precedente e i suoi argomenti vengono rimossi definitivamente. Non è reversibile.",
+    "replacesLoading": "Controllo che cosa sostituisce",
+    "replacesUnavailable": "Mera non può mostrare ora che cosa verrebbe rimosso. Riprova tra poco."
   },
   "subscriptions": {
     "sectionTitle": "I tuoi abbonamenti",
@@ -2662,5 +2670,8 @@
     "family": "la tua famiglia",
     "newFact": "una nuova informazione",
     "topics": "i tuoi argomenti"
+  },
+  "askChoice": {
+    "answeredA11y": "già risposto"
   }
 }
