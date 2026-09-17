@@ -105,11 +105,19 @@ describe('index rendering', () => {
     expect(renderSkillIndex()).not.toContain('topics/');
   });
 
-  it('EXCLUDES facts/generic even though it is flagged routable', () => {
-    // The flag says "a turn may route to this group"; composition says "this
-    // is a whole skill". A preamble is neither, and offering it would load the
-    // shared rules with no guideline behind them.
-    expect(skillIndexRows().map((r) => r.id)).not.toContain('facts/generic');
+  it('EXCLUDES both generic preambles, which are flagged routable: false', () => {
+    // Offering a preamble as a destination would load the shared rules with no
+    // guideline behind them. The flag now says so; this asserts the outcome
+    // rather than the mechanism, so it holds either way.
+    const ids = skillIndexRows().map((r) => r.id);
+    expect(ids).not.toContain('facts/generic');
+    expect(ids).not.toContain('topics/generic');
+  });
+
+  it('routes a plain interest somewhere: facts/interest is a destination', () => {
+    // Its absence is why "I enjoy playing chess" had nowhere to go and the
+    // router re-routed until the leg cap.
+    expect(skillIndexRows().map((r) => r.id)).toContain('facts/interest');
   });
 
   it('KEEPS facts/* and conversation/*, so the filter is not a blanket empty', () => {

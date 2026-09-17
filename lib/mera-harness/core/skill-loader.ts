@@ -93,21 +93,21 @@ export interface SkillIndexRow {
  *    are not tools and there is nothing for a chat turn to do with one.
  */
 /**
- * TWO conditions, and both are needed.
+ * ONE condition: the flag, declared per skill by the author of the body.
  *
- * `routable` is DECLARED per skill by its author, which is better than
- * inferring it from an id convention here: the owner of the body decides
- * whether a turn can route to it, and adding a group no longer means editing
- * this file.
+ * There was a by-name generic exclusion here too, because `facts/generic` was
+ * briefly flagged routable while being a preamble the loader composes. Both
+ * preambles are now `routable: false`, so the flag alone is correct and the
+ * name check would be a second rule saying the same thing in a different
+ * vocabulary -- exactly the kind of duplicate that drifts when a group is
+ * added. `isGenericId` still governs COMPOSITION, which is a different
+ * question: "is this a whole skill", not "may a turn route to it".
  *
- * The generic exclusion still applies on top, because `facts/generic` is
- * flagged routable and must NOT appear: it is a preamble the loader composes
- * onto every leaf in its group, so offering it as a destination would let the
- * model load the shared rules and no guideline at all. The flag answers "may a
- * turn route to this group"; composition answers "is this a whole skill".
+ * The tests still assert by NAME that `router` and every `topics/*` stay out
+ * of the index. That is deliberate: the flag is the mechanism, and those
+ * assertions are the guard that catches a mis-set flag.
  */
 export function isRoutableId(id: string): boolean {
-  if (isGenericId(id)) return false;
   const entry = PERSONA_SKILL_INDEX.find((e) => e.id === id) as
     | { routable?: boolean }
     | undefined;
