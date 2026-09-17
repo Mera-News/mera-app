@@ -26,6 +26,11 @@ const AUTH_FAILURE_THRESHOLD = 3;
 // this, so we don't hammer getSession while offline.
 const RECHECK_COOLDOWN_MS = 60_000;
 
+// A device already flagged needs_reauth gets a VERIFICATION, not a resume, and
+// far less often: the flag is sticky by design, so this only has to catch a
+// wrong verdict eventually, not fast.
+const REAUTH_RECHECK_COOLDOWN_MS = 10 * 60_000;
+
 const FEED_SYNC_TASK = 'feed-sync';
 
 // NOT counting a failure while the auth-read quarantine is engaged was tried
@@ -45,6 +50,7 @@ let consecutiveFailures = 0;
 let breakerOpen = false;
 let pendingRecheck: Promise<RecheckOutcome> | null = null;
 let lastRecheckAt = 0;
+let lastReauthVerifyAt = 0;
 // Monotonic — deliberately NOT reset by _resetForTests, so an abandoned run can
 // never collide with the token of the run that replaced it.
 let recheckToken = 0;
@@ -53,8 +59,8 @@ let recheckToken = 0;
 // RecheckOutcome a single value that callers can compare.
 let lastRecheckDetail: {
   deadReason?: DeadReason;
-  credentialState: CredentialState;
-} = { credentialState: 'unknown' };
+  recheckBasis: RecheckBasis;
+} = { recheckBasis: 'unknown' };
 
 // What the server-truth re-check concluded. Returned (rather than inferred
 // from breakerOpen) so callers can't confuse "session proved alive" with
@@ -76,7 +82,21 @@ type DeadReason = 'rejected' | 'no-session';
 
 // Diagnostic only - never gates a verdict. Answers "which of the cookie-less
 // causes was this" on the Sentry event.
-type CredentialState =
+// What we actually had to present when the re-check went out.
+//
+// NAMED FOR SENTRY, not for elegance. This was `credentialState` until
+// 2026-09-17, and it arrived on every event as "[Filtered]" — Sentry's default
+// PII rules scrub extras whose KEY looks sensitive, and `credential` is on that
+// list (so is `auth`, which is why `runtime_endpoints.auth` is redacted too).
+// The VALUE here has always been safe: readRecheckBasis derives a six-way enum
+// and never returns or logs the cookie itself. It was scrubbed on the name
+// alone, which made the one field built to triage this class of bug useless for
+// its entire life — the persona skill's "triage by credentialState" advice was
+// dead on arrival. Do not rename this back, and do not reach for the project's
+// scrubbing settings to fix it: weakening those to surface one field is the
+// wrong trade. Avoid `credential`, `auth`, `token`, `secret`, `password` and
+// `cookie` in any extra key added here.
+type RecheckBasis =
   | 'present'      // getCookie() returned something: the server really saw it
   | 'expired'      // nothing sent, but the keychain holds entries - better-auth
                    // filters expired cookies client-side, so this is a real lapse
@@ -202,10 +222,10 @@ function isQuarantineActive(): boolean {
  * rejection from it is a genuinely unreadable keychain. Never returns or logs
  * the cookie VALUE, only the derived state.
  */
-async function readCredentialState(
+async function readRecheckBasis(
   cookieAtRequest: string,
   quarantinedAtRequest: boolean,
-): Promise<CredentialState> {
+): Promise<RecheckBasis> {
   if (cookieAtRequest) return 'present';
   if (quarantinedAtRequest) return 'quarantined';
 
@@ -285,7 +305,7 @@ export function recordAuthFailure(): void {
         logger.addBreadcrumb(
           'Auth breaker re-check had no credential to present',
           'auth-breaker',
-          { credentialState: lastRecheckDetail.credentialState },
+          { recheckBasis: lastRecheckDetail.recheckBasis },
           'warning',
         );
         pauseFeedSync();
@@ -305,7 +325,7 @@ export function recordAuthFailure(): void {
           // Which branch produced the verdict, and what we actually held at
           // the time. Without these, unrelated causes are one opaque string.
           deadReason: lastRecheckDetail.deadReason,
-          credentialState: lastRecheckDetail.credentialState,
+          recheckBasis: lastRecheckDetail.recheckBasis,
           repeat: alreadyDead,
         },
         // This message is emitted from a .then() callback, so its stack is
@@ -371,12 +391,35 @@ export function recordAuthSuccess(): void {
  * re-check is fired and the resume happens from its callback.
  */
 export function onAppForeground(): void {
-  if (!breakerOpen && consecutiveFailures === 0) return;
+  // A flagged device asks the server again — but does NOT resume anything.
+  //
+  // This used to be a bare `if (getNeedsReauth()) return;` placed below the
+  // guard on the next line, which made needs_reauth permanent: nothing else
+  // clears it. recordAuthSuccess only clears when safeGetCookie() is non-empty
+  // (6c056e3, correctly — an error-free response for an operation that carried
+  // no credential proves nothing), hydrateFromDb only ever restores `true`, and
+  // the one path that CAN clear it is triggerRecheck's 'alive' branch, which
+  // this early return made unreachable. So a single wrong verdict survived
+  // every cold start and every OTA until the user signed in by hand.
+  //
+  // The old comment's reasoning was sound but conflated two things: do not
+  // RESUME THE POLLER on a dead session (true — that buys
+  // AUTH_FAILURE_THRESHOLD more 401s and an immediate re-trip, which is what a
+  // 324-event Sentry issue looks like) with do not ASK THE SERVER (not true —
+  // one bounded getSession is not a storm). triggerRecheck resumes only on
+  // 'alive'; its 'dead' and 'inconclusive' branches resume nothing. So asking
+  // is safe and resuming is still forbidden.
+  //
+  // Placed ABOVE the guard below on purpose: module state dies with the
+  // process, so after a cold start breakerOpen is false and consecutiveFailures
+  // is 0 while the VERDICT persists in the needs_reauth row. Below that guard
+  // this would never run for the one device that needs it.
+  if (getNeedsReauth()) {
+    maybeVerifyReauthState();
+    return;
+  }
 
-  // A confirmed-dead session does not heal on its own. ReauthBanner is the
-  // recovery path, and re-login clears the flag; resuming here would only buy
-  // AUTH_FAILURE_THRESHOLD more 401s and an immediate re-trip.
-  if (getNeedsReauth()) return;
+  if (!breakerOpen && consecutiveFailures === 0) return;
 
   const wasOpen = breakerOpen;
   consecutiveFailures = 0;
@@ -405,6 +448,25 @@ export function onAppForeground(): void {
 }
 
 /**
+ * One bounded server-truth check for a device that is already flagged
+ * needs_reauth, so a WRONG verdict can heal without the user signing in.
+ *
+ * Deliberately does none of what the non-flagged path does: it does not clear
+ * consecutiveFailures, does not reset the recheck cooldown, does not close the
+ * breaker and does not resume feed-sync. Only triggerRecheck's 'alive' branch
+ * may do any of that, and only it may clear the flag.
+ *
+ * Its own cooldown, separate from RECHECK_COOLDOWN_MS: a genuinely signed-out
+ * device will answer 'dead' every time, and one wasted getSession per ten
+ * minutes of foregrounding is the price of the ones that answer 'alive'.
+ */
+function maybeVerifyReauthState(): void {
+  if (Date.now() - lastReauthVerifyAt < REAUTH_RECHECK_COOLDOWN_MS) return;
+  lastReauthVerifyAt = Date.now();
+  void triggerRecheck();
+}
+
+/**
  * Connectivity just came back. If the breaker had tripped on failures we could
  * NOT conclude anything from — offline or 5xx, i.e. 'inconclusive' — this is the
  * moment to re-ask the server.
@@ -422,8 +484,15 @@ export function onAppForeground(): void {
  * that state.
  */
 export function onNetworkReconnect(): void {
+  // Same split as onAppForeground, and for the same reason: verify, never
+  // resume. Also above the breakerOpen guard, since a flagged device that cold
+  // started has no open breaker to speak of.
+  if (getNeedsReauth()) {
+    maybeVerifyReauthState();
+    return;
+  }
+
   if (!breakerOpen) return;
-  if (getNeedsReauth()) return;
 
   // Abandon rather than join any in-flight re-check: one started before the
   // outage may never settle, and an explicit reconnect should not be subject to
@@ -464,7 +533,7 @@ function triggerRecheck(): Promise<RecheckOutcome> {
     // out without one - reproducing the false 'dead' this exists to remove.
     const cookieAtRequest = safeGetCookie();
     const quarantinedAtRequest = isQuarantineActive();
-    lastRecheckDetail = { credentialState: 'unknown' };
+    lastRecheckDetail = { recheckBasis: 'unknown' };
 
     try {
       // disableCookieCache forces a server round-trip instead of trusting the
@@ -494,17 +563,32 @@ function triggerRecheck(): Promise<RecheckOutcome> {
         // (better-auth's expo client also drops EXPIRED cookies client-side, so
         // a real lapse arrives here too, with the latch inactive - that one is
         // a genuine 'dead' and still flags for re-auth.)
-        if (!cookieAtRequest && quarantinedAtRequest) {
-          lastRecheckDetail = { credentialState: 'quarantined' };
+        const basis = await readRecheckBasis(
+          cookieAtRequest,
+          quarantinedAtRequest,
+        );
+
+        // Two ways to have provably sent nothing while the credential is still
+        // THERE: the install-boundary latch was hiding the keychain, or the
+        // keychain could not be read at all (a post-reboot background wake
+        // before first unlock — secure-store-adapter's sync getItem swallows
+        // and returns null). Both recover with no user action, so neither is a
+        // verdict about the session. 'unreadable' used to fall through and set
+        // needs_reauth permanently on a transient read failure.
+        //
+        // 'expired' deliberately does NOT join them, even though it also means
+        // we sent nothing: a client-filtered expired cookie cannot recover
+        // without signing in, so 'dead' is the correct verdict and the banner
+        // is the only way out. Silencing it would leave the user permanently
+        // unsynced with nothing on screen to explain why. The fix for THAT
+        // case is the one-year session lifetime on the server, not a softer
+        // verdict here.
+        if (basis === 'quarantined' || basis === 'unreadable') {
+          lastRecheckDetail = { recheckBasis: basis };
           return 'no-credential';
         }
-        lastRecheckDetail = {
-          deadReason: 'no-session',
-          credentialState: await readCredentialState(
-            cookieAtRequest,
-            quarantinedAtRequest,
-          ),
-        };
+
+        lastRecheckDetail = { deadReason: 'no-session', recheckBasis: basis };
         // Past the gate above, a credential really was available, so "no
         // session" IS the server's verdict on it: genuinely logged out. Flag
         // for re-auth instead of ejecting; keep the breaker open so feed-sync
@@ -519,7 +603,7 @@ function triggerRecheck(): Promise<RecheckOutcome> {
         // this branch is NOT gated on the credential state.
         lastRecheckDetail = {
           deadReason: 'rejected',
-          credentialState: await readCredentialState(
+          recheckBasis: await readRecheckBasis(
             cookieAtRequest,
             quarantinedAtRequest,
           ),
@@ -538,7 +622,7 @@ function triggerRecheck(): Promise<RecheckOutcome> {
         'warning',
       );
       lastRecheckDetail = {
-        credentialState: await readCredentialState(
+        recheckBasis: await readRecheckBasis(
           cookieAtRequest,
           quarantinedAtRequest,
         ),
@@ -553,7 +637,7 @@ function triggerRecheck(): Promise<RecheckOutcome> {
         'warning',
       );
       lastRecheckDetail = {
-        credentialState: await readCredentialState(
+        recheckBasis: await readRecheckBasis(
           cookieAtRequest,
           quarantinedAtRequest,
         ),
@@ -577,7 +661,8 @@ export function _resetForTests(): void {
   breakerOpen = false;
   pendingRecheck = null;
   lastRecheckAt = 0;
-  lastRecheckDetail = { credentialState: 'unknown' };
+  lastReauthVerifyAt = 0;
+  lastRecheckDetail = { recheckBasis: 'unknown' };
 }
 
 /** Test-only / diagnostics: current breaker state snapshot. */

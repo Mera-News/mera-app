@@ -399,7 +399,12 @@ describe('onAppForeground', () => {
     expect(_getBreakerState().breakerOpen).toBe(true);
   });
 
-  it('does nothing when needsReauth is already set — the banner is the recovery path', async () => {
+  it('VERIFIES but does not resume when needsReauth is set, and clears on alive', async () => {
+    // Was "does nothing" until 2026-09-17, which is what made needs_reauth
+    // permanent: recordAuthSuccess only clears with a non-empty cookie,
+    // hydrateFromDb only ever restores `true`, and the sole path that CAN
+    // clear it — triggerRecheck's 'alive' branch — sat behind this guard. A
+    // single wrong verdict then survived every cold start and every OTA.
     mockGetSession.mockResolvedValueOnce({ data: null }); // dead
     recordAuthFailure();
     recordAuthFailure();
@@ -409,12 +414,59 @@ describe('onAppForeground', () => {
     mockNeedsReauth = true;
     jest.clearAllMocks();
 
+    // The session was fine all along (e.g. the cookie had lapsed client-side
+    // against a live server session, then a fresh one was minted).
+    mockGetSession.mockResolvedValueOnce({ data: { session: { id: 's1' } } });
     onAppForeground();
     await flush();
 
-    expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockGetSession).toHaveBeenCalled();
+    expect(mockSetNeedsReauth).toHaveBeenCalledWith(false);
+    expect(_getBreakerState().breakerOpen).toBe(false);
+  });
+
+  it('a still-dead session stays flagged and resumes NOTHING', async () => {
+    // The half the old guard got right, and the reason it may only verify:
+    // resuming the poller on a dead session buys AUTH_FAILURE_THRESHOLD more
+    // 401s and an immediate re-trip (a 324-event Sentry issue).
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+    mockNeedsReauth = true;
+    jest.clearAllMocks();
+
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    onAppForeground();
+    await flush();
+
+    expect(mockGetSession).toHaveBeenCalled();
     expect(mockResumeTask).not.toHaveBeenCalled();
-    expect(_getBreakerState().breakerOpen).toBe(true);
+    expect(mockSetNeedsReauth).not.toHaveBeenCalledWith(false);
+  });
+
+  it('bounds the verification by its own cooldown', async () => {
+    // A genuinely signed-out device answers 'dead' every time; one wasted
+    // getSession per ten minutes of foregrounding is the price of the ones
+    // that answer 'alive'.
+    mockGetSession.mockResolvedValue({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+    mockNeedsReauth = true;
+    jest.clearAllMocks();
+
+    onAppForeground();
+    await flush();
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
+
+    onAppForeground();
+    await flush();
+    onAppForeground();
+    await flush();
+    expect(mockGetSession).toHaveBeenCalledTimes(1);
   });
 
   it('resets the counter without a round-trip when the breaker never opened', async () => {
@@ -478,17 +530,18 @@ describe('onNetworkReconnect', () => {
     expect(_getBreakerState().breakerOpen).toBe(true);
   });
 
-  it('refuses to self-heal a CONFIRMED-dead session', async () => {
-    // Same guard as onAppForeground: resuming here would only buy
-    // AUTH_FAILURE_THRESHOLD more 401s and an immediate re-trip. ReauthBanner is
-    // the only way out of this state.
+  it('verifies a flagged session on reconnect but never resumes it', async () => {
+    // Same split as onAppForeground: asking is one bounded request, resuming
+    // on a dead session buys AUTH_FAILURE_THRESHOLD more 401s and a re-trip.
     await tripInconclusive();
     mockNeedsReauth = true;
+    jest.clearAllMocks();
+    mockGetSession.mockResolvedValueOnce({ data: null });
 
     onNetworkReconnect();
     await flush();
 
-    expect(mockGetSession).not.toHaveBeenCalled();
+    expect(mockGetSession).toHaveBeenCalled();
     expect(mockResumeTask).not.toHaveBeenCalled();
     mockNeedsReauth = false;
   });
@@ -674,8 +727,31 @@ describe('the event says WHICH cause it was', () => {
     await flush();
 
     const extra = mockCaptureMessage.mock.calls[0][1].extra;
-    expect(extra.credentialState).toBe('expired');
+    expect(extra.recheckBasis).toBe('expired');
+    // STILL dead, deliberately, and this is the half that is easy to "fix"
+    // wrongly. An expired cookie also means we sent nothing — but unlike
+    // 'quarantined' and 'unreadable' it cannot recover without the user
+    // signing in, so the banner is the only way out and silencing it would
+    // leave them permanently unsynced with nothing on screen. The real fix for
+    // this case is the one-year session lifetime on the server.
     expect(extra.recheck).toBe('dead');
+  });
+
+  it('emits recheckBasis, NOT credentialState — Sentry scrubs the old key', async () => {
+    // Sentry's default PII rules filter extras whose KEY looks sensitive, and
+    // `credential` is on that list. The field arrived as "[Filtered]" on every
+    // event it ever appeared on, including the one that diagnosed this bug
+    // (MERA-APP-75), which made the skill's "triage by credentialState" advice
+    // dead on arrival. The value was always safe; the name was the problem.
+    mockGetSession.mockResolvedValueOnce({ data: null });
+    recordAuthFailure();
+    recordAuthFailure();
+    recordAuthFailure();
+    await flush();
+
+    const extra = mockCaptureMessage.mock.calls[0][1].extra;
+    expect(extra).toHaveProperty('recheckBasis');
+    expect(extra).not.toHaveProperty('credentialState');
   });
 
   it('reports absent when the keychain holds nothing', async () => {
@@ -688,12 +764,16 @@ describe('the event says WHICH cause it was', () => {
     recordAuthFailure();
     await flush();
 
-    expect(mockCaptureMessage.mock.calls[0][1].extra.credentialState).toBe('absent');
+    expect(mockCaptureMessage.mock.calls[0][1].extra.recheckBasis).toBe('absent');
   });
 
-  it('reports unreadable when the keychain read rejects', async () => {
-    // A locked keychain still falls through to dead (closing that needs an
-    // adapter-side signal), but it no longer does so anonymously.
+  it('an unreadable keychain is no-credential, NOT dead', async () => {
+    // Changed 2026-09-17. A locked keychain used to fall through to 'dead' and
+    // set needs_reauth permanently — on a read failure that recovers by itself
+    // at the device's first unlock. secure-store-adapter's sync getItem
+    // swallows the throw, so the app sends nothing and every request 401s; the
+    // credential is still THERE. Same treatment as 'quarantined': pause, assert
+    // nothing, report nothing.
     mockGetCookie.mockReturnValue('');
     mockQuarantineActive = false;
     mockGetItemAsync.mockRejectedValue(new Error('keychain locked'));
@@ -703,7 +783,9 @@ describe('the event says WHICH cause it was', () => {
     recordAuthFailure();
     await flush();
 
-    expect(mockCaptureMessage.mock.calls[0][1].extra.credentialState).toBe('unreadable');
+    expect(mockSetNeedsReauth).not.toHaveBeenCalledWith(true);
+    expect(mockCaptureMessage).not.toHaveBeenCalled();
+    expect(mockPauseTask).toHaveBeenCalled();
   });
 
   it('keeps the pinned fingerprint', async () => {

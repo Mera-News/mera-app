@@ -6,7 +6,8 @@ import { Text } from '@/components/ui/text';
 import { authClient } from '@/lib/auth-client';
 import { setSetting } from '@/lib/database/services/setting-service';
 import logger from '@/lib/logger';
-import { recordAuthenticatedUser } from '@/lib/security/identity-gate';
+import { useUserStore } from '@/lib/stores/user-store';
+import { clearIdentityFault, recordAuthenticatedUser } from '@/lib/security/identity-gate';
 import { silentlyAcceptLegal } from './legal-consent';
 import { router } from 'expo-router';
 import { useEffect, useRef } from 'react';
@@ -48,6 +49,17 @@ export default function DeepLinkVerifyScreen({ otp, email, type }: Props) {
                     // state and not a route param.
                     recordAuthenticatedUser(data.user.id);
                     setSetting('cached_user_email', email).catch(() => {});
+                    // A successful sign-in resolves any pending re-auth prompt
+                    // and any identity fault, exactly as OTPVerificationView
+                    // and AuthScreen's device sign-in do. This doorway did
+                    // NEITHER until 2026-09-17, so a user who re-authenticated
+                    // from the emailed link landed in the shell with the "Sign
+                    // in again to sync" banner still up and feed-sync still
+                    // paused — having just done the only thing that was ever
+                    // going to fix it. Nothing downstream clears the flag:
+                    // hydrateFromDb only ever restores `true`.
+                    useUserStore.getState().setNeedsReauth(false);
+                    clearIdentityFault().catch(() => {});
                     // Email users accepted the terms at their original
                     // sign-up — stamp the current versions silently so the
                     // consent surfaces never prompt them. Mirrored from
