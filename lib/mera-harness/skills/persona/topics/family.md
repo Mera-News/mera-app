@@ -9,7 +9,7 @@ when:
   - "the fact names a life event: a birth, a marriage, moving in together, a bereavement, a retirement, a diagnosis"
 outputs:
   - "a JSON array of 2-to-5-word topic strings, at most 8, nothing before or after it"
-  - "every place-bearing topic names the exact place the fact named, and no larger one"
+  - "the exact place FIRST in the array, and every place-bearing topic names it and no larger one"
   - "[] when the fact supports nothing honest"
 examples:
   - "Chhindwara news"
@@ -23,9 +23,10 @@ examples:
 Someone other than the user is somewhere, or something has changed in the household. Emit at most 8.
 
 ## Stay exactly where the fact put you
-When the fact names a place, every place-bearing topic names THAT place and no other. Do not ladder
-to its region, its country or its continent. The user does not live there and the relative does not
-read the national press about themselves.
+When the fact names a place it has exactly ONE rung, and that rung is mandatory: the FIRST topic in
+the array names that place. Every other place-bearing topic names it too, and no other place. Do
+not ladder to its region, its country or its continent. The user does not live there and the
+relative does not read the national press about themselves.
 
 - Good, for parents in Chhindwara: "Chhindwara news", "Chhindwara hospital capacity".
 - Bad: "Madhya Pradesh politics", "India elections", "India monsoon", "Asia news".
@@ -67,9 +68,10 @@ Fact: "Parents are currently travelling in Chhindwara, India"
 Other facts: "Works in logistics"; "Lives in Gràcia, Barcelona, Catalonia, Spain, Europe"
 Existing topics: none
 
-Relational and temporary, so the same set as living there, and no ladder. No Madhya Pradesh, no
-India, no Asia, and nothing about the logistics job or Barcelona. Two daily-life topics, weather
-and power. Six is the honest length; the ceiling of 8 is not a target.
+Relational and temporary, so the same set as living there, and no ladder. One rung, so the array
+opens on it. No Madhya Pradesh, no India, no Asia, and nothing about the logistics job or
+Barcelona. Two daily-life topics, weather and power. Six is the honest length; the ceiling of 8 is
+not a target.
 
 ```json
 ["Chhindwara news", "Chhindwara safety", "Chhindwara weather", "Chhindwara hospital capacity", "Chhindwara civic issues", "Chhindwara power supply"]

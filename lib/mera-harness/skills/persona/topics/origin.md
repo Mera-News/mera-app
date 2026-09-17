@@ -10,14 +10,14 @@ when:
 outputs:
   - "a JSON array of 2-to-5-word topic strings, at most 10, nothing before or after it"
   - "at least one topic from the diaspora shapes"
-  - "both sides represented when the fact carries origin and residence together"
+  - "origin rung then host rung FIRST in the array when the fact carries both"
 examples:
   - "Philippines overseas voting"
+  - "Ireland immigration law reform"
   - "Philippines passport renewal abroad"
   - "Philippines consular services Europe"
   - "Philippines remittance rules"
   - "Philippines Ireland tax treaty"
-  - "Ireland immigration law reform"
   - "Ireland residence permit rules"
   - "Ireland qualification recognition"
 ---
@@ -42,8 +42,13 @@ citizens abroad, diaspora voting rights, diaspora community news.
 Emit at most 10, and at least one from this list. Fewer is correct.
 
 ## When the fact carries origin AND residence
-Split the output roughly in half and emit at least one of each. Neither side may take more than
-about seven in ten.
+Two rungs exist, and both are MANDATORY and come FIRST, in this order: one topic naming the origin
+country, then one naming the host country. Emit those two before anything else. Only then split the
+rest of the output roughly in half between the two sides, with neither side taking more than about
+seven in ten.
+
+A composed fact that opens with two host-country topics has buried the half the user is least
+likely to find anywhere else.
 
 - Origin side: the rules above, the ones that reach citizens abroad.
 - Host side: host-country law affecting migrants of that origin. Immigration and residence-permit
@@ -71,11 +76,12 @@ Fact: "Expat from the Philippines living in Dublin, Leinster, Ireland, Europe"
 Other facts: "Works as a theatre nurse"
 Existing topics: none
 
-Origin and residence in one fact, so roughly half and half with both sides present. Eight is the
-honest length here; the ceiling of 10 is not a target.
+Origin and residence in one fact. The first two topics are the two rungs in order, origin then
+host, and the remaining six split roughly half and half. Eight is the honest length here; the
+ceiling of 10 is not a target.
 
 ```json
-["Philippines overseas voting", "Philippines passport renewal abroad", "Philippines consular services Europe", "Philippines remittance rules", "Philippines Ireland tax treaty", "Ireland immigration law reform", "Ireland residence permit rules", "Ireland qualification recognition"]
+["Philippines overseas voting", "Ireland immigration law reform", "Philippines passport renewal abroad", "Philippines consular services Europe", "Philippines remittance rules", "Philippines Ireland tax treaty", "Ireland residence permit rules", "Ireland qualification recognition"]
 ```
 
 Read the shapes, never the countries. A fact naming a different origin or a different host must
