@@ -27,6 +27,8 @@ import {
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO,
   CLOUD_REASON_SYSTEM_PROMPT_RESCORE,
   CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE,
+  CLOUD_REASON_SYSTEM_PROMPT_GEO_RESCORE,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO_RESCORE,
 } from './prompts';
 import { registerPromptVariant } from './prompt-variants';
 
@@ -37,6 +39,7 @@ const REASON_RESCORE_ID = 'reason-rescore';
 const REASON_RESCORE_PRIOR_ID = 'reason-rescore-prior';
 const RESCORE_DEMOTE_ONLY_ID = 'rescore-demote-only';
 const NULL_CONTROL_ID = 'null-control';
+const GEO_SCOPE_RESCORE_ID = 'geo-scope-rescore';
 
 /**
  * The control: the reason prompt exactly as it shipped before promotion.
@@ -221,6 +224,38 @@ registerPromptVariant({
 });
 
 /**
+ * BOTH single-change arms at once.
+ *
+ * WHY IT IS NOT REDUNDANT WITH THE OTHER TWO. A DN probe (n=18 cells, 3
+ * repeats) found them doing different jobs: `geo-scope-v1` moved pass 1 off
+ * `home` on every production-shaped row (6 of 6 below the gate), while
+ * `reason-rescore` alone left 11 of 15 foreign cells still tagged `home` or
+ * `family`, because pass 2 was making the SAME mistake pass 1 made - reading a
+ * location-less Portuguese story as a Dutch one. A rescore cannot correct a
+ * judgement it shares.
+ *
+ * So the rescore needs the rule, and the rule may still want the rescore for
+ * the rows where pass 1 gets it wrong anyway. That is a question, and this arm
+ * is how it gets answered instead of assumed. It rides ALONGSIDE the two
+ * single-change arms, never instead of them: keeping all three is what lets a
+ * win be attributed to the rule, the contract, or only their combination.
+ */
+registerPromptVariant({
+  id: GEO_SCOPE_RESCORE_ID,
+  description:
+    'geo-scope-v1 AND reason-rescore together: the article-scope rule in the shared base, and pass 2 '
+    + 'emitting {"k","s","reason"} whose score replaces pass 1. Measured alongside both single-change '
+    + 'arms so a win stays attributable.',
+  systemPrompts: {
+    relevance: CLOUD_RELEVANCE_SYSTEM_PROMPT_GEO,
+    headlineRelevance: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_GEO,
+    reason: CLOUD_REASON_SYSTEM_PROMPT_GEO_RESCORE,
+    headlineReason: CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO_RESCORE,
+  },
+  reasonPriorScoreLine: 'omit',
+});
+
+/**
  * THE NULL FLOOR. Byte-identical to `baseline`, and registered anyway.
  *
  * Every acceptance bar in this wave is written as "at least baseline minus the
@@ -265,4 +300,5 @@ export {
   REASON_RESCORE_PRIOR_ID,
   RESCORE_DEMOTE_ONLY_ID,
   NULL_CONTROL_ID,
+  GEO_SCOPE_RESCORE_ID,
 };

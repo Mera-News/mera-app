@@ -10,6 +10,7 @@
 // only the decode policy. The assertions below are what keeps that true as the
 // prompts are edited.
 import {
+  GEO_SCOPE_RESCORE_ID,
   GEO_SCOPE_V1_ID,
   NULL_CONTROL_ID,
   REASON_RESCORE_ID,
@@ -256,5 +257,47 @@ describe('the output example must not answer the question', () => {
     const shipped = SHIPPED.reason;
     expect(shipped).toContain('Evacuation ordered in Jordaan, where you live.');
     expect(shipped).toContain("Manchester building fire is a UK-local emergency; you're in Amsterdam.");
+  });
+});
+
+describe('geo-scope-rescore — the union arm', () => {
+  it('carries the article-scope rule in all four slots', () => {
+    for (const slot of SLOTS) {
+      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).toContain('## Article scope');
+    }
+  });
+
+  it('carries the object contract in the reason slots only', () => {
+    for (const slot of ['reason', 'headlineReason'] as PromptSlot[]) {
+      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).toContain(
+        'Output: exactly ONE JSON object and nothing else.',
+      );
+      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).not.toContain('Output: single plain string');
+    }
+    // Pass 1 keeps its array contract; only the base changed there.
+    for (const slot of ['relevance', 'headlineRelevance'] as PromptSlot[]) {
+      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).toContain('a JSON array of exactly N');
+    }
+  });
+
+  it('is exactly geo-scope-v1 on the score slots', () => {
+    // The union must not quietly become a third score prompt, or a win could
+    // not be attributed to the rule the other arm carries.
+    for (const slot of ['relevance', 'headlineRelevance'] as PromptSlot[]) {
+      expect(armPrompt(GEO_SCOPE_RESCORE_ID, slot)).toBe(armPrompt(GEO_SCOPE_V1_ID, slot));
+    }
+  });
+
+  it('is exactly reason-rescore plus the rule on the reason slots', () => {
+    for (const slot of ['reason', 'headlineReason'] as PromptSlot[]) {
+      const union = armPrompt(GEO_SCOPE_RESCORE_ID, slot);
+      const rescoreOnly = armPrompt(REASON_RESCORE_ID, slot);
+      expect(union.replace(/\n\n## Article scope\n[^\n]*/, '')).toBe(rescoreOnly);
+    }
+  });
+
+  it('drops the prior-score line, like the arm it extends', () => {
+    expect(resolvePromptVariant(GEO_SCOPE_RESCORE_ID).reasonPriorScoreLine).toBe('omit');
+    expect(resolvePromptVariant(GEO_SCOPE_RESCORE_ID).rescorePolicy).toBeUndefined();
   });
 });

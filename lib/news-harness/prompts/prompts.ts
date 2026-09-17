@@ -701,6 +701,29 @@ ${CLOUD_HEADLINE_IMPACT_BLOCK}
 ${CLOUD_HEADLINE_REASON_TASK_RESCORE}
 ${REASON_V2_RULES_RESCORE}`;
 
+/**
+ * BOTH changes at once: the geo-scoped base AND the object contract.
+ *
+ * Registered as its own arm rather than assumed. A DN probe showed the two
+ * doing different jobs — the geography rule moved pass 1 off `home` on the
+ * production-shaped rows, and the rescore did not — so the union is the
+ * candidate, and a candidate that is never measured is a guess. It sits
+ * alongside the two single-change arms, not instead of them, so a win can still
+ * be attributed.
+ */
+export const CLOUD_REASON_SYSTEM_PROMPT_GEO_RESCORE = `${CLOUD_SCORING_BASE_PROMPT_GEO}
+
+${CLOUD_REASON_TASK_RESCORE}
+${REASON_V2_RULES_RESCORE}`;
+
+/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT_GEO_RESCORE}. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_GEO_RESCORE = `${CLOUD_SCORING_BASE_PROMPT_GEO}
+
+${CLOUD_HEADLINE_IMPACT_BLOCK}
+
+${CLOUD_HEADLINE_REASON_TASK_RESCORE}
+${REASON_V2_RULES_RESCORE}`;
+
 
 // ---------------------------------------------------------------------------
 // (The RELEVANCE v3 two-axis score prompts — CLOUD_SCORE_V3_SYSTEM_PROMPT, its
