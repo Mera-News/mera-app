@@ -17,7 +17,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 import { readJsonl } from '../lib/agreement';
-import { parseExpectations, scoreCase, selectCase } from '../../lib/mera-harness/eval/expectations';
+import { ladderOrder, parseExpectations, scoreCase, selectCase } from '../../lib/mera-harness/eval/expectations';
 import {
   EMPTY_CONTENT_GATE,
   NO_USABLE_SET_GATE,
@@ -61,6 +61,7 @@ function main(): number {
 
   const arms = [...new Set(rows.map((r) => r.variant))];
   const entries: ArmSetEntry[] = [];
+  const order: Record<string, { ordered: number; cases: number; prefix: number; rungs: number }> = {};
   let failures = 0;
 
   for (const arm of arms) {
@@ -80,6 +81,19 @@ function main(): number {
         finishReason: r.finishReason,
       };
       entries.push({ arm, key: `${fid}|${r.repeat}`, set });
+      if (set.topics.length > 0) {
+        const sel = selectCase(set.factStatement, exp.cases);
+        if (sel.kind === 'one') {
+          const lo = ladderOrder(set.topics, sel.case);
+          if (lo.rungs > 0) {
+            const o = (order[arm] ??= { ordered: 0, cases: 0, prefix: 0, rungs: 0 });
+            o.cases += 1;
+            o.prefix += lo.matchedPrefix;
+            o.rungs += lo.rungs;
+            if (lo.ordered) o.ordered += 1;
+          }
+        }
+      }
       return set;
     });
 
@@ -151,6 +165,18 @@ function main(): number {
       `  ${arm.padEnd(16)} ladder ${a.rungsCovered}/${a.rungsTotal} ${ladder}   ` +
         `fieldGeneric ${a.fieldGenericPresent}/${a.fieldGenericCases} ${fg}   ` +
         `topics/set mean ${mean.toFixed(1)} median ${median}${vs}`,
+    );
+  }
+  lines.push(
+    '\nRUNG ORDER (REPORTED, NOT GATED): do the first K topics match the K ordering rungs in',
+    'declaration order? `diaspora` is excluded, being a shape category in the origin guideline',
+    'rather than a rung of a place ladder. A fixed position is a strong demand on a generative',
+    'output, so this is watched before it is enforced.',
+  );
+  for (const [arm, o] of Object.entries(order)) {
+    lines.push(
+      `  ${arm.padEnd(16)} fully ordered ${o.ordered}/${o.cases} ${pct(o.ordered, o.cases)}   ` +
+        `rungs in position ${o.prefix}/${o.rungs} ${pct(o.prefix, o.rungs)}`,
     );
   }
   // eslint-disable-next-line no-console

@@ -137,6 +137,48 @@ export function selectCase(
   return { kind: 'one', case: hits[0] };
 }
 
+/**
+ * Rungs that participate in the ORDERING requirement.
+ *
+ * `diaspora` is excluded deliberately: it is a SHAPE category in the origin
+ * guideline ("visa rules, consular services, remittances"), not a rung of a
+ * place ladder, so demanding it appear at a fixed position would score a
+ * correct output as wrong.
+ */
+const NON_ORDERING_RUNGS = new Set(['diaspora']);
+
+export interface LadderOrder {
+  /** How many rungs the ordering applies to. */
+  rungs: number;
+  /** How many leading topics matched their rung, in declaration order, before
+   *  the first miss. */
+  matchedPrefix: number;
+  /** The full prefix matched. REPORTED, never gated: P5 asked for a number,
+   *  and a positional rule is the kind of thing that is right to watch before
+   *  it is right to enforce. */
+  ordered: boolean;
+}
+
+/**
+ * Do the first K topics match the K ordering rungs, in declaration order?
+ *
+ * Reported rather than gated. A fixed position is a strong demand on a
+ * generative output, and the honest first step is to see how often it already
+ * holds.
+ */
+export function ladderOrder(topics: readonly string[], c: TopicExpectationCase): LadderOrder {
+  const rungs = Object.entries(c.ladder).filter(([k]) => !NON_ORDERING_RUNGS.has(k));
+  let matchedPrefix = 0;
+  for (let i = 0; i < rungs.length; i++) {
+    const t = topics[i];
+    if (t === undefined) break;
+    const [, pats] = rungs[i];
+    if (!pats.some((p) => t.trim().toLowerCase().includes(p))) break;
+    matchedPrefix += 1;
+  }
+  return { rungs: rungs.length, matchedPrefix, ordered: rungs.length > 0 && matchedPrefix === rungs.length };
+}
+
 export interface CaseScore {
   caseId: string;
   topicCount: number;
