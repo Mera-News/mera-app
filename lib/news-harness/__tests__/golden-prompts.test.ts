@@ -228,33 +228,37 @@ describe('golden — measured prompt sizes', () => {
     expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1445);
   });
 
-  // THE E2EE SHARED-SYSTEM BUDGET, which nothing else in this repo checks.
+  // THE E2EE WIRE SIZE, which nothing else in this repo checks.
   //
-  // Every call in a scoring or reason bundle carries the same system string, so
-  // `submitInferenceJob` hoists it into the job's `sharedSystem` field and
-  // encrypts it ONCE. The envelope is 32 B ephemeral pubkey + 24 B nonce +
-  // ciphertext + 16 B poly1305 tag, hex-encoded, so the wire size is exactly
-  // 2 * (utf8Bytes + 72) — and the gateway's DTO rejects a `sharedSystem`
-  // longer than MAX_SHARED_SYSTEM_BYTES = 65536 (class-validator @MaxLength, so
-  // characters of hex, which for hex equals bytes). Plaintext ceiling: 32696 B.
+  // A system string is encrypted into 32 B ephemeral pubkey + 24 B nonce +
+  // ciphertext + 16 B poly1305 tag, hex-encoded, so its wire size is exactly
+  // 2 * (utf8Bytes + 72). Note BYTES, not characters: these prompts are full of
+  // em dashes and arrows, so the byte length runs about 1.2% above `.length`.
   //
-  // KNOWN DEFECT, PRE-DATING THE ARTICLE-SCOPE PROMOTION: the two HEADLINE
-  // REASON prompts are already over it. Pre-geo the headline reason prompt was
-  // 32900 B -> 65944 on the wire, 408 over; with the rule it is 33419 B ->
-  // 66982, 1446 over. The rescore arm's headline twin is further over again.
-  // Nothing on the headline reason path can submit while that holds. The fix is
-  // the split this file's own base comment describes (PRE/ANCHORS/POST exists so
-  // a size-constrained variant can drop the worked-example anchor table), and it
-  // needs its own measurement, so these are PINNED rather than asserted under
-  // the cap: the numbers are the tripwire, the comment is the verdict.
-  it('pins the E2EE wire size of every hoisted system prompt', () => {
+  // THE CAP THAT COULD BIND, AND WHY IT DOES NOT TODAY. `submitInferenceJob`
+  // hoists a system shared by every call in a bundle into the job's
+  // `sharedSystem` field, and the gateway's DTO rejects that field over
+  // MAX_SHARED_SYSTEM_BYTES = 65536, i.e. a plaintext ceiling of 32696 B. The
+  // headline reason prompt is 33419 B, 66982 on the wire, 1446 over — and it
+  // was ALREADY 408 over before the article-scope rule added 519. But the
+  // scoring and reason passes do not use that path: they go through
+  // `cloudBatchComplete`, which encrypts each call's system separately and
+  // sends no `sharedSystem` at all, and `submitInferenceJob` currently has NO
+  // production caller. So this is LATENT, not live. It becomes live the moment
+  // anything hoists a shared system on the reason path.
+  //
+  // Pinned rather than asserted under the cap, because the fix (the PRE/ANCHORS/
+  // POST split exists so a size-constrained variant can drop the worked-example
+  // anchor table) needs its own measurement. The numbers are the tripwire.
+  it('pins the E2EE wire size of every cloud scoring prompt', () => {
     const wire = (p: string) => 2 * (Buffer.byteLength(p, 'utf8') + 72);
     expect(wire(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(37322);
     expect(wire(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(58816);
     expect(wire(CLOUD_REASON_SYSTEM_PROMPT)).toBe(43884);
     expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(66982);
-    // The three that fit must keep fitting. The headline reason prompt is the
-    // one exception and is named above, not silently included here.
+    // The three that fit under the hoisted-system cap must keep fitting. The
+    // headline reason prompt is the one exception and is named above, not
+    // silently included here.
     for (const p of [
       CLOUD_RELEVANCE_SYSTEM_PROMPT,
       CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
