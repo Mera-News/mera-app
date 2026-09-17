@@ -27,7 +27,7 @@ import {
 import {
   createJsonlWriter, extractFenceNonce, hashMessages, newRowId, type RunRow,
 } from '../lib/jsonl-writer';
-import { computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
+import { cellKey, computeAgreement, formatAgreementReport, readJsonl } from '../lib/agreement';
 import { hasReasoningLeak, parseSpendLimit, SpendLimitError } from '../lib/near-call';
 import { estimateRunCost, formatCostEstimate } from '../lib/cost-estimate';
 import { costOf, rosterWarnings, type ModelCatalog } from '../lib/model-catalog';
@@ -59,7 +59,7 @@ const MSGS = [{ role: 'system', content: 'S' }, { role: 'user', content: 'U' }];
 
 function row(over: Partial<RunRow>): RunRow {
   return {
-    rowId: newRowId(), dupOf: null, runId: 'r1', repeat: 0, cohort: 'good', turnIndex: 0,
+    rowId: newRowId(), dupOf: null, runId: 'r1', repeat: 0, cohort: 'good', turnIndex: 0, legIndex: null,
     arm: 'control', callType: 'chat-extraction', interleaveGroup: 'g0',
     lane: 'near', surface: 'CONFIG', variant: 'baseline',
     promptHash: hashMessages(MSGS), promptDeterministic: true, fenceNonce: 'N1',
@@ -875,6 +875,54 @@ async function main(): Promise<number> {
     // `none` is [0.05, 0.24], so a self-contradicting 0.71 is clamped, not taken.
     const clamped = decodeReason('{"k":"none","s":0.71,"reason":"x y z"}', 'id-4');
     ck('decodeReason: clamps `s` into the band its own `k` declares', clamped.rescore?.score === 0.24);
+  }
+
+  // ---- legIndex in cellKey (agent legs) ------------------------------------
+  //
+  // THE REGRESSION GUARD ON THREE RUNNERS THIS WAVE DOES NOT TOUCH. Legs of one
+  // turn are not repeats of each other, so the key has to separate them; but a
+  // row written before the field existed must still group exactly as it did.
+  {
+    const base = row({ repeat: 0 });
+    // An OLD-SHAPED row: the property is genuinely absent, not set to null.
+    const old = { ...base } as Partial<RunRow>;
+    delete old.legIndex;
+    ck(
+      'cellKey: an old row with NO legIndex keys identically to legIndex null',
+      cellKey(old as RunRow) === cellKey({ ...base, legIndex: null }),
+      cellKey(old as RunRow),
+    );
+    ck(
+      'cellKey: POSITIVE CONTROL, a real leg index changes the key',
+      cellKey({ ...base, legIndex: 2 }) !== cellKey({ ...base, legIndex: null }),
+    );
+    ck(
+      'cellKey: two legs of one turn land in DIFFERENT cells',
+      cellKey({ ...base, legIndex: 0 }) !== cellKey({ ...base, legIndex: 1 }),
+    );
+
+    // Two legs of one turn, different prompts, both fixture-determined. Before
+    // legIndex this raised a false RUNNER BUG on every multi-leg turn.
+    const legs = computeAgreement([
+      { ...base, legIndex: 0, callType: 'agent-route', promptHash: 'sha256:aaa' },
+      { ...base, legIndex: 1, callType: 'agent-route', promptHash: 'sha256:bbb' },
+    ]);
+    ck(
+      'agreement: two LEGS with different prompts are not a runner bug',
+      !legs.integrityFailures.some((x) => x.startsWith('RUNNER BUG')),
+      legs.integrityFailures.join(' / ').slice(0, 90),
+    );
+
+    // The control, and the reason the check above is not simply disabled:
+    // two REPEATS of the SAME leg with different prompts still must fire.
+    const repeats = computeAgreement([
+      { ...base, repeat: 0, legIndex: 0, callType: 'agent-route', promptHash: 'sha256:aaa' },
+      { ...base, repeat: 1, legIndex: 0, callType: 'agent-route', promptHash: 'sha256:bbb' },
+    ]);
+    ck(
+      'agreement: POSITIVE CONTROL, two REPEATS of one leg with different prompts DO fire',
+      repeats.integrityFailures.some((x) => x.startsWith('RUNNER BUG')),
+    );
   }
 
   console.log(`\n${f === 0 ? 'ALL PASS' : f + ' FAILURE(S)'}`);

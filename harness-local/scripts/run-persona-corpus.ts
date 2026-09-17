@@ -274,7 +274,7 @@ async function main(): Promise<number> {
 
           const info = catalog[model];
           writeRow({
-            rowId: newRowId(), dupOf: null, runId, repeat: rep,
+            rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
             cohort: cohortName, turnIndex: turn.index, arm: `${model}@${variantId}`,
             callType: 'chat-extraction',
             interleaveGroup: `${cohortName}:${turn.index}`, lane: 'near', surface: 'CONFIG',

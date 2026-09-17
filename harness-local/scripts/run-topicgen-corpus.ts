@@ -330,7 +330,7 @@ async function main(): Promise<number> {
 
             const info = catalog[model];
             writeRow({
-              rowId: newRowId(), dupOf: null, runId, repeat: rep,
+              rowId: newRowId(), dupOf: null, legIndex: null, runId, repeat: rep,
               // COHORT STAYS THE COHORT. The count arm lives in `arm` only,
               // never here: rater-export.ts keeps `cohort` visible on purpose
               // (the adversarial hard fails are unjudgeable without it) and

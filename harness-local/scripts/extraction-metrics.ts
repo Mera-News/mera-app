@@ -23,34 +23,13 @@
 import { join, resolve } from 'node:path';
 import { readJsonl } from '../lib/agreement';
 import type { RunRow } from '../lib/jsonl-writer';
+import { hasBannedDash, proseOf } from '../../lib/mera-harness/eval/copy-rules';
 
-/** The characters the invariant bans from user-facing copy.
- *
- *  The en dash counts ONLY when used AS a dash, that is with a non-digit on at
- *  least one side. "2019-2024" is a range and legitimate; "the plan - and then"
- *  is the tell. Counting every en dash would score date ranges as violations
- *  and make the rate useless on news text, which is full of them. */
-const EM_DASH = /—/;
-const EN_DASH_AS_DASH = /(^|[^0-9])–|–([^0-9]|$)/;
-function hasBannedDash(text: string): boolean {
-  return EM_DASH.test(text) || EN_DASH_AS_DASH.test(text);
-}
-
-/**
- * The assistant PROSE, which is what a user actually reads. A reasoning trace
- * and any tool-call payload are stripped first: a dash inside a think block or
- * inside JSON arguments never reaches the user, and counting it would blame a
- * prompt for a violation it did not produce.
- */
-function proseOf(row: RunRow): string {
-  let text = row.rawOutput;
-  text = text.replace(/<think>[\s\S]*?<\/think>/gi, '');
-  const lastCloser = text.lastIndexOf('</think>');
-  if (lastCloser !== -1) text = text.slice(lastCloser + '</think>'.length);
-  text = text.replace(/```[\s\S]*?```/g, '');
-  text = text.replace(/\{[\s\S]*?"extracted_user_information"[\s\S]*?\}\s*\}/g, '');
-  return text.trim();
-}
+// The dash rule lives in lib/mera-harness/eval/copy-rules.ts, imported rather
+// than copied. It carries a subtlety that took a measurement to get right (an
+// en dash counts only when used AS a dash, so "2019-2024" is a range and not a
+// violation), and a second copy would be re-guessed wrong by whoever wrote it.
+// harness-local may import mera-harness; the reverse never happens.
 
 function statementsOf(row: RunRow): string[] {
   const out: string[] = [];
@@ -98,8 +77,8 @@ function main(): number {
       // call has no prose and cannot violate a punctuation rule, so counting it
       // dilutes the rate toward zero and makes two arms look closer than they
       // are. The raw turn count is shown beside it so nothing is hidden.
-      const withProse = rs.filter((r) => proseOf(r).length > 0);
-      const bad = withProse.filter((r) => hasBannedDash(proseOf(r))).length;
+      const withProse = rs.filter((r) => proseOf(r.rawOutput).length > 0);
+      const bad = withProse.filter((r) => hasBannedDash(proseOf(r.rawOutput))).length;
       const stmts = rs.flatMap(statementsOf);
       const badStmts = stmts.filter((x) => hasBannedDash(x)).length;
       // eslint-disable-next-line no-console
@@ -113,8 +92,8 @@ function main(): number {
   console.log(`  ${'TOTAL per variant'.padEnd(40)}`);
   for (const v of variants) {
     const rs = chat.filter((r) => r.variant === v);
-    const withProse = rs.filter((r) => proseOf(r).length > 0);
-    const bad = withProse.filter((r) => hasBannedDash(proseOf(r))).length;
+    const withProse = rs.filter((r) => proseOf(r.rawOutput).length > 0);
+    const bad = withProse.filter((r) => hasBannedDash(proseOf(r.rawOutput))).length;
     const stmts = rs.flatMap(statementsOf);
     // eslint-disable-next-line no-console
     console.log(
