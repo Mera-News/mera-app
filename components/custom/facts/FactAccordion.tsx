@@ -9,6 +9,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { retryTopicGeneration } from '@/lib/chat-tools/tool-handlers';
+import { observeByFact } from '@/lib/database/services/topic-service';
 import { nudgeFactWeight } from '@/lib/database/services/mutation-rails-service';
 import { hapticLight } from '@/lib/haptics';
 import logger from '@/lib/logger';
@@ -38,7 +39,7 @@ interface FactAccordionProps {
     readonly onDeletePress: (fact: Fact) => void;
     readonly onFactArticles: (fact: Fact) => void;
     readonly onTopicPress: (topicText: string) => void;
-    readonly onDeleteTopic: (fact: Fact, topicText: string) => void;
+    readonly onDeleteTopic: (fact: Fact, topicRow: { id: string; text: string }) => void;
     readonly onAddTopic: (fact: Fact) => void;
     readonly onGenerateMore: (fact: Fact) => void;
 }
@@ -100,25 +101,43 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
         [influence, fact.id],
     );
 
-    const factTopics = fact.metadata?.topics ?? [];
-    const expectedTopicCount = factTopics.length;
-    const topicGenError = fact.metadata?.topicGenError?.[0];
-    const totalCount = factTopics.reduce(
-        (sum, topic) => sum + (articleCountByTopic.get(topic) ?? 0),
+    // B3 — the topic LIST renders from the `topics` table, the same source
+    // `TopicPlanCard` (chat) reads via `observeByFact`, not from
+    // `fact.metadata.topics`. Before this, a topic deleted in chat stayed on
+    // this screen forever: two readers, two lists, no way for either delete
+    // path to reach the other's. `fact.metadata.topics` is still read below,
+    // ONLY for the interim status heuristic (pending P3's DTO field) — never
+    // for what's rendered.
+    const [activeTopics, setActiveTopics] = useState<{ id: string; text: string }[]>([]);
+    useEffect(() => {
+        const sub = observeByFact(fact.id).subscribe((rows) => {
+            // No undo-chip UI exists on this screen (unlike the chat chip), so
+            // 'retired' rows — a permanent status from persona-change-log
+            // reverts / article feedback, NOT the same thing as a staged
+            // pending_delete_at row — are not shown; there is nothing here for
+            // the user to undo them from. A staged row is already excluded by
+            // `observeByFact` itself.
+            setActiveTopics(
+                rows
+                    .filter((r) => r.status === 'active')
+                    .map((r) => ({ id: r.id, text: r.text })),
+            );
+        });
+        return () => sub.unsubscribe();
+    }, [fact.id]);
+
+    const totalCount = activeTopics.reduce(
+        (sum, topic) => sum + (articleCountByTopic.get(topic.text) ?? 0),
         0,
     );
 
-    // INTERIM derivation — becomes `fact.topicsStatus ?? 'done'` once P3's DTO
-    // commit lands (still gated: the field exists on the WatermelonDB model as
-    // of pagent P3's schema-v55 commit, but not yet on this `Fact` DTO). This
-    // re-expresses today's own heuristic as the three-value shape
-    // `StatusIndicator` expects, so nothing else in this file has to change
-    // again when the source swaps — only this one assignment does.
-    const status: 'pending' | 'done' | 'error' = topicGenError
-        ? 'error'
-        : expectedTopicCount > 0
-            ? 'done'
-            : 'pending';
+    // P3's DTO commit landed: NULL means "generation never asked for" and
+    // renders exactly like done, never as a spinner — never branch on null.
+    // This is independent of `activeTopics` above: topics_status drives only
+    // the progress affordance, the topic list always renders from the table
+    // regardless of status, so drift between them costs a stale spinner, not
+    // a hidden interest (P3's plan, §4.1).
+    const status: 'pending' | 'done' | 'error' = fact.topicsStatus ?? 'done';
 
     // Busy state follows `status` leaving 'error', not the settled promise —
     // retryTopicGeneration is an enqueue, not a completion (its on-device path
@@ -257,14 +276,14 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                         </Text>
                     ) : (
                         <VStack space="sm">
-                            {factTopics.map(topicText => {
-                                const count = articleCountByTopic.get(topicText) ?? 0;
+                            {activeTopics.map(topicRow => {
+                                const count = articleCountByTopic.get(topicRow.text) ?? 0;
                                 return (
-                                    <HStack key={topicText} className="items-center">
-                                        <Pressable className="flex-1" onPress={() => onTopicPress(topicText)}>
+                                    <HStack key={topicRow.id} className="items-center">
+                                        <Pressable className="flex-1" onPress={() => onTopicPress(topicRow.text)}>
                                             <HStack className="items-center justify-between flex-1 mr-3">
                                                 <TranslatableDynamic
-                                                    text={topicText}
+                                                    text={topicRow.text}
                                                     size="sm"
                                                     className="text-gray-200 flex-1 mr-2 capitalize"
                                                     numberOfLines={2}
@@ -275,16 +294,28 @@ const FactAccordion: React.FC<FactAccordionProps> = ({
                                             </HStack>
                                         </Pressable>
                                         <Pressable
-                                            onPress={() => onDeleteTopic(fact, topicText)}
-                                           
+                                            onPress={() => onDeleteTopic(fact, topicRow)}
                                             hitSlop={8}
                                             className="ml-1"
+                                            testID={`topic-delete-${topicRow.id}`}
                                         >
                                             <MaterialIcons name="delete-outline" size={16} color="#6b7280" />
                                         </Pressable>
                                     </HStack>
                                 );
                             })}
+                            {activeTopics.length > 0 && (
+                                // Round-2 review item (10): a delete here now
+                                // records a PERMANENT decline (B3 routes it
+                                // through the same primitive as the chat
+                                // chip's staged delete), not a quiet local
+                                // edit — name the consequence and where the
+                                // way back is, once per fact rather than once
+                                // per row.
+                                <Text size="xs" className="text-gray-500">
+                                    {t('facts.topicRemovalConsequence')}
+                                </Text>
+                            )}
                             <Pressable onPress={() => onAddTopic(fact)} className="mt-1">
                                 <HStack className="items-center" space="xs">
                                     <MaterialIcons name="add" size={16} color="#60a5fa" />

@@ -9,6 +9,8 @@ import { Text } from '@/components/ui/text';
 import { VStack } from '@/components/ui/vstack';
 import { authClient } from '@/lib/auth-client';
 import { PRIVACY_URL } from '@/lib/config/branding';
+import { createTopics } from '@/lib/database/services/topic-service';
+import { listDeclinedTopics, removeDecline } from '@/lib/database/services/topic-decline-service';
 import { useIsOnDeviceProcessing } from '@/lib/stores/mera-protocol-store';
 import { useUserStore } from '@/lib/stores/user-store';
 import { notifyScrollTick } from '@/lib/visibility-tick';
@@ -17,6 +19,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { RefreshControl, ScrollView } from 'react-native';
+import DeclinedTopicsSection, { type DeclinedTopicItem } from './DeclinedTopicsSection';
 import FactsList, { type FactsListHandle } from './FactsList';
 import type { Fact } from '@/lib/mera-protocol-toolkit/types';
 
@@ -54,12 +57,40 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
     const [refreshing, setRefreshing] = useState(false);
     const [screenFacts, setScreenFacts] = useState<Fact[] | null>(null);
     const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
+    const [declinedTopics, setDeclinedTopics] = useState<DeclinedTopicItem[]>([]);
 
     const factsListRef = useRef<FactsListHandle>(null);
 
     useEffect(() => {
         if (userId) fetchUserPersona(userId).catch(() => { /* offline */ });
     }, [userId, fetchUserPersona]);
+
+    // "Topics you removed" — live, newest first. Round-2 review item (10):
+    // this ships in the same commit as the facts-screen delete-topic wiring
+    // (FactsList.tsx / FactAccordion.tsx), because that delete now records a
+    // PERMANENT decline (B3) and this is the only visible way back.
+    useEffect(() => {
+        const sub = listDeclinedTopics().subscribe((rows) => {
+            setDeclinedTopics(
+                rows.map((r) => ({ id: r.id, text: r.text, sourceFactId: r.sourceFactId })),
+            );
+        });
+        return () => sub.unsubscribe();
+    }, []);
+
+    const handleAllowAgain = useCallback(async (item: DeclinedTopicItem) => {
+        // Forgets the decline only — the underlying topic row was already
+        // destroyed when the delete committed, so there is nothing to
+        // restore by forgetting alone (topic-decline-service's own doc
+        // comment). Re-minting immediately when we CAN is this screen's own
+        // choice, not a side effect of removeDecline: without it, "Allow
+        // this again" would only ever remove a row from this list and change
+        // nothing else visible, which reads as broken.
+        await removeDecline(item.id);
+        if (item.sourceFactId) {
+            await createTopics([{ factId: item.sourceFactId, text: item.text }]);
+        }
+    }, []);
 
     // The facts reload is unconditional — it reads the local DB and owes the
     // server nothing. Only the persona refresh needs an id, so an unknown
@@ -136,6 +167,7 @@ const FactsScreen: React.FC<FactsScreenProps> = ({ onBack }) => {
                     </HStack>
 
                     <FactsList ref={factsListRef} onFactsChange={setScreenFacts} />
+                    <DeclinedTopicsSection items={declinedTopics} onAllowAgain={handleAllowAgain} />
                 </ScrollView>
             </Box>
 

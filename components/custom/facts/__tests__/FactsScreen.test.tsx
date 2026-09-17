@@ -95,6 +95,24 @@ jest.mock('../FactsList', () => {
     return { __esModule: true, default: Stub };
 });
 
+// "Topics you removed" — its own component, its own test file. Stubbed here
+// as a no-op the same way DrillDownHeader is: this suite is about the
+// screen's offline/refresh contract, not the decline list's rendering.
+jest.mock('../DeclinedTopicsSection', () => ({ __esModule: true, default: () => null }));
+
+// Importing the real modules constructs WatermelonDB's SQLite adapter at
+// import time, which has no native module under Jest — same reason
+// FactsList.test.tsx and FactAccordion.test.tsx mock these.
+const mockListDeclinedTopics = jest.fn(() => ({ subscribe: () => ({ unsubscribe: () => {} }) }));
+const mockRemoveDecline = jest.fn().mockResolvedValue(undefined);
+jest.mock('@/lib/database/services/topic-decline-service', () => ({
+    listDeclinedTopics: () => mockListDeclinedTopics(),
+    removeDecline: (...a: unknown[]) => mockRemoveDecline(...a),
+}));
+jest.mock('@/lib/database/services/topic-service', () => ({
+    createTopics: jest.fn().mockResolvedValue([]),
+}));
+
 const mockSessionRef = { current: { user: { id: 'u1' } } as { user: { id: string } } | null };
 jest.mock('@/lib/auth-client', () => ({
     authClient: { useSession: () => ({ data: mockSessionRef.current }) },
