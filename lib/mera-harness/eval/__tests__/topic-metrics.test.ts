@@ -234,6 +234,24 @@ describe('count-matched ladder', () => {
     expect(r.perArm.skill.rungsTotal).toBe(r.perArm.control.rungsTotal);
   });
 
+  it('counts topics per set on the MATCHED cells, answering the "too few" complaint', () => {
+    const r = countMatchedLadder(
+      [
+        entry('thin', 'f1|0', ['one topic only']),
+        entry('rich', 'f1|0', ['topic one here', 'topic two here', 'topic three here']),
+        entry('thin', 'f2|0', ['another single topic']),
+        entry('rich', 'f2|0', ['topic four here', 'topic five here']),
+      ],
+      scoreOne,
+    );
+    expect(r.perArm.thin.topicsTotal).toBe(2);
+    expect(r.perArm.rich.topicsTotal).toBe(5);
+    // Same denominator: the arms are compared over the same work.
+    expect(r.perArm.thin.cells).toBe(r.perArm.rich.cells);
+    // An arm can cover every rung and still be thin, which is the whole point.
+    expect(r.perArm.thin.rungsCovered).toBe(r.perArm.rich.rungsCovered);
+  });
+
   it('POSITIVE CONTROL: with no dropout every cell is matched', () => {
     const r = countMatchedLadder(
       [

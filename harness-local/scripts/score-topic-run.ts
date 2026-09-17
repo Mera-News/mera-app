@@ -126,6 +126,9 @@ function main(): number {
 
   const lines = [
     '\nSYMPTOM FLOORS, COUNT-MATCHED (only cells where EVERY arm returned a set).',
+    'topics/set answers the "too few" half of the original complaint, which the ladder and',
+    'field-generic checks say nothing about: an arm can cover every rung with one topic each',
+    'and still leave a thin feed. Median as well as mean, because one long set moves a mean.',
     'Scoring each arm over whatever it produced gives them different denominators, and an arm',
     'that returns nothing half the time is then judged on the half it managed.',
     `  matched cells ${matched.matchedCells}, EXCLUDED ${matched.unmatchedCells}`,
@@ -141,9 +144,13 @@ function main(): number {
       ctrl && arm !== control
         ? `  vs control ladder ${pct(ctrl.rungsCovered, ctrl.rungsTotal)} / fieldGeneric ${pct(ctrl.fieldGenericPresent, ctrl.fieldGenericCases)}`
         : '';
+    const sorted = [...a.perCellCounts].sort((x, y) => x - y);
+    const mean = a.cells === 0 ? 0 : a.topicsTotal / a.cells;
+    const median = sorted.length === 0 ? 0 : sorted[Math.floor(sorted.length / 2)];
     lines.push(
       `  ${arm.padEnd(16)} ladder ${a.rungsCovered}/${a.rungsTotal} ${ladder}   ` +
-        `fieldGeneric ${a.fieldGenericPresent}/${a.fieldGenericCases} ${fg}${vs}`,
+        `fieldGeneric ${a.fieldGenericPresent}/${a.fieldGenericCases} ${fg}   ` +
+        `topics/set mean ${mean.toFixed(1)} median ${median}${vs}`,
     );
   }
   // eslint-disable-next-line no-console

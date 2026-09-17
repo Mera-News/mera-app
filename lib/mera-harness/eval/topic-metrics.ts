@@ -338,7 +338,29 @@ export interface MatchedLadderReport {
   droppedByArm: Record<string, number>;
   perArm: Record<
     string,
-    { rungsCovered: number; rungsTotal: number; fieldGenericPresent: number; fieldGenericCases: number }
+    {
+      rungsCovered: number;
+      rungsTotal: number;
+      fieldGenericPresent: number;
+      fieldGenericCases: number;
+      /**
+       * HOW MANY TOPICS THE ARM ACTUALLY PRODUCED, on the matched cells.
+       *
+       * The original user complaint was "too few, too local, no ladder, no
+       * field-generic", and the first three gates and both floors measure the
+       * last three while saying NOTHING about the first. An arm can cover
+       * every rung with one topic each and still leave a thin feed.
+       *
+       * Counted on the MATCHED cells only, like everything else here, so the
+       * arms are compared over the same work. A mean over whatever each arm
+       * returned would reward the arm that skipped the hard facts.
+       */
+      topicsTotal: number;
+      cells: number;
+      /** Per-cell counts, kept so a median can be taken: a mean over topic
+       *  counts is pulled around by one long set. */
+      perCellCounts: number[];
+    }
   >;
 }
 
@@ -360,7 +382,10 @@ export function countMatchedLadder(
 
   const perArm: MatchedLadderReport['perArm'] = {};
   for (const a of arms) {
-    perArm[a] = { rungsCovered: 0, rungsTotal: 0, fieldGenericPresent: 0, fieldGenericCases: 0 };
+    perArm[a] = {
+      rungsCovered: 0, rungsTotal: 0, fieldGenericPresent: 0, fieldGenericCases: 0,
+      topicsTotal: 0, cells: 0, perCellCounts: [],
+    };
   }
   const droppedByArm: Record<string, number> = {};
   let matchedCells = 0;
@@ -375,7 +400,11 @@ export function countMatchedLadder(
     }
     matchedCells += 1;
     for (const a of arms) {
-      const scored = scoreOne(m.get(a) as TopicSetInput);
+      const set = m.get(a) as TopicSetInput;
+      perArm[a].topicsTotal += set.topics.length;
+      perArm[a].cells += 1;
+      perArm[a].perCellCounts.push(set.topics.length);
+      const scored = scoreOne(set);
       if (!scored) continue;
       perArm[a].rungsCovered += scored.rungsCovered;
       perArm[a].rungsTotal += scored.rungsTotal;
