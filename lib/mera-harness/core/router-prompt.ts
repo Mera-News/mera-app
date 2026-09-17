@@ -5,6 +5,7 @@
 // anchoring, identity composition and the question bank lives in a skill body,
 // which is the whole point of the split.
 
+import { resolveAgentArm } from './arms';
 import { renderSkillIndex } from './skill-loader';
 
 export type PersonaSurface = 'ONBOARDING' | 'CONFIG';
@@ -16,6 +17,9 @@ export interface RouterPromptInput {
   /** Computed by the LOOP from turn state, never reported by the model: the
    *  previous turn asked something and this message did not answer it. */
   answerPending?: boolean;
+  /** Experiment arm. Omitted or 'baseline' returns the shipped prompt BYTE FOR
+   *  BYTE; an unknown id throws rather than quietly scoring the control. */
+  arm?: string;
 }
 
 /**
@@ -56,6 +60,15 @@ const SCOPE = `## Scope
 Stay on the user's profile and their news. Redirect anything else politely, briefly.`;
 
 export function buildRouterPrompt(input: RouterPromptInput): string {
+  // Resolved FIRST and applied to whichever surface is built below, so the two
+  // cannot drift over whether an arm is honoured.
+  const armPrompt = resolveAgentArm(input.arm).routerPrompt;
+  if (armPrompt !== undefined) {
+    return input.answerPending
+      ? `${armPrompt}\n\n**They did NOT answer your last question.** Offer, do not ask again.`
+      : armPrompt;
+  }
+
   const isOnboarding = input.surface === 'ONBOARDING';
   const opening = isOnboarding
     ? 'Onboard the user — learn what news matters to them.'

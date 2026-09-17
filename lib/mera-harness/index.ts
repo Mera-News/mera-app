@@ -68,6 +68,18 @@ export {
 } from './core/tool-contracts';
 
 export {
+  BASELINE_ARM,
+  agentArmIds,
+  dedupeModeFor,
+  personaPromptFor,
+  registerAgentArm,
+  resetAgentArmsForTest,
+  resolveAgentArm,
+  topicPromptFor,
+  type AgentArm,
+} from './core/arms';
+
+export {
   buildRouterPrompt,
   type PersonaSurface,
   type RouterPromptInput,
