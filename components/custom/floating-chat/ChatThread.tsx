@@ -4,7 +4,8 @@
 // fetching, no stores.
 
 import AiDisclosureCaption from '@/components/custom/AiDisclosureCaption';
-import StreamingIndicator from '@/components/custom/chat/StreamingIndicator';
+import MeraStreamAvatar from '@/components/custom/chat/MeraStreamAvatar';
+import StreamingWord from '@/components/custom/chat/StreamingWord';
 import { Text } from '@/components/ui/text';
 import {
   Conversation,
@@ -127,6 +128,10 @@ const ChatThread: React.FC<ChatThreadProps> = ({
             </Message>
           ) : (
             <Message role="assistant">
+              {/* Stays beside the bubble for the LIVE message while it
+                  streams, so the mark does not blink out the instant the
+                  first token lands and back in on the next turn. */}
+              {item.streaming === true && <MeraStreamAvatar />}
               <MessageContent role="assistant">
                 <MessageResponse>{message.content}</MessageResponse>
               </MessageContent>
@@ -223,12 +228,20 @@ const ChatThread: React.FC<ChatThreadProps> = ({
       case 'typing':
         return (
           <Message role="assistant">
+            {/* Messenger-style gutter. The mark is present for the whole wait
+                and for the streaming bubble that follows, then goes when the
+                turn settles. */}
+            <MeraStreamAvatar />
             <MessageContent role="assistant">
-              {/* "Thinking…" while the model's reasoning trace streams and
-                  nothing visible has arrived (3-12s on the BIG primary); bare
-                  dots once the first token is due. The trace itself is never
-                  rendered — the store carries only the boolean. */}
-              <StreamingIndicator dotsOnly label={isThinking ? t('floatingChat.thinking') : undefined} />
+              {/* A rotating word, not dots. While the model streams a
+                  reasoning trace and nothing visible has arrived (3-12s on the
+                  BIG primary) the same bubble holds a FIXED "Thinking…"
+                  instead: the trace itself is never rendered, the store
+                  carries only the boolean, and a wandering word would suggest
+                  variety where there is one known state. */}
+              <StreamingWord
+                fixedLabel={isThinking ? t('floatingChat.thinking') : undefined}
+              />
             </MessageContent>
           </Message>
         );

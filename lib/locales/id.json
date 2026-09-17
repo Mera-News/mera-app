@@ -2676,5 +2676,22 @@
   },
   "askChoice": {
     "answeredA11y": "sudah dijawab"
+  },
+  "streamingWords": {
+    "w1": "Berpikir",
+    "w2": "Menganalisis",
+    "w3": "Merenung",
+    "w4": "Menimbang",
+    "w5": "Mengunyah ide",
+    "w6": "Mengutak-atik",
+    "w7": "Mendiamkan dulu",
+    "w8": "Menalar",
+    "w9": "Membobot",
+    "w10": "Menyaring",
+    "w11": "Menghubungkan",
+    "w12": "Menyusun",
+    "w13": "Menyetel",
+    "w14": "Memoles",
+    "w15": "Meramu"
   }
 }

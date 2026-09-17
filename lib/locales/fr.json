@@ -2684,5 +2684,22 @@
   },
   "askChoice": {
     "answeredA11y": "déjà répondu"
+  },
+  "streamingWords": {
+    "w1": "Réflexion",
+    "w2": "Analyse",
+    "w3": "Contemplation",
+    "w4": "Méditation",
+    "w5": "Rumination",
+    "w6": "Mijotage",
+    "w7": "Macération",
+    "w8": "Raisonnement",
+    "w9": "Pesée",
+    "w10": "Tri",
+    "w11": "Connexion",
+    "w12": "Rédaction",
+    "w13": "Bricolage",
+    "w14": "Peaufinage",
+    "w15": "Infusion"
   }
 }

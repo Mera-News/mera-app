@@ -66,7 +66,15 @@ export type ChatThreadItem =
       suggestionId?: string;
       title: string;
     }
-  | { kind: 'message'; key: string; message: ConversationMessage; pending?: boolean }
+  | {
+      kind: 'message';
+      key: string;
+      message: ConversationMessage;
+      pending?: boolean;
+      /** The live assistant message currently streaming: keeps the Mera mark
+       *  in the left gutter until the turn settles. */
+      streaming?: boolean;
+    }
   | {
       kind: 'fact-card';
       key: string;

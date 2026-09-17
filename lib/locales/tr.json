@@ -2679,5 +2679,22 @@
   },
   "askChoice": {
     "answeredA11y": "zaten yanıtlandı"
+  },
+  "streamingWords": {
+    "w1": "Düşünüyorum",
+    "w2": "Çözümlüyorum",
+    "w3": "Derinleşiyorum",
+    "w4": "Kafa yoruyorum",
+    "w5": "Evirip çeviriyorum",
+    "w6": "Kurcalıyorum",
+    "w7": "Demleniyorum",
+    "w8": "Muhakeme ediyorum",
+    "w9": "Tartıyorum",
+    "w10": "Eliyorum",
+    "w11": "Bağlantı kuruyorum",
+    "w12": "Kaleme alıyorum",
+    "w13": "Ayarlıyorum",
+    "w14": "İnce işçilik",
+    "w15": "Mayalanıyor"
   }
 }

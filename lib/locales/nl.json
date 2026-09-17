@@ -2677,5 +2677,22 @@
   },
   "askChoice": {
     "answeredA11y": "al beantwoord"
+  },
+  "streamingWords": {
+    "w1": "Denken",
+    "w2": "Analyseren",
+    "w3": "Overwegen",
+    "w4": "Peinzen",
+    "w5": "Herkauwen",
+    "w6": "Puzzelen",
+    "w7": "Laten bezinken",
+    "w8": "Doordenken",
+    "w9": "Afwegen",
+    "w10": "Ziften",
+    "w11": "Verbinden",
+    "w12": "Opstellen",
+    "w13": "Sleutelen",
+    "w14": "Bijschaven",
+    "w15": "Broeden"
   }
 }

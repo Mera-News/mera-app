@@ -2677,5 +2677,22 @@
   },
   "askChoice": {
     "answeredA11y": "já respondido"
+  },
+  "streamingWords": {
+    "w1": "Pensando",
+    "w2": "Analisando",
+    "w3": "Contemplando",
+    "w4": "Refletindo",
+    "w5": "Ruminando",
+    "w6": "Matutando",
+    "w7": "Macerando",
+    "w8": "Raciocinando",
+    "w9": "Ponderando",
+    "w10": "Peneirando",
+    "w11": "Conectando",
+    "w12": "Redigindo",
+    "w13": "Ajustando",
+    "w14": "Lapidando",
+    "w15": "Fermentando"
   }
 }

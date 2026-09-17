@@ -2715,5 +2715,22 @@
   },
   "askChoice": {
     "answeredA11y": "już odpowiedziano"
+  },
+  "streamingWords": {
+    "w1": "Myślę",
+    "w2": "Analizuję",
+    "w3": "Rozważam",
+    "w4": "Zastanawiam się",
+    "w5": "Przetrawiam",
+    "w6": "Dłubię",
+    "w7": "Odstawiam",
+    "w8": "Przemyśliwam",
+    "w9": "Ważę",
+    "w10": "Przesiewam",
+    "w11": "Łączę",
+    "w12": "Redaguję",
+    "w13": "Dopasowuję",
+    "w14": "Dopieszczam",
+    "w15": "Warzę"
   }
 }

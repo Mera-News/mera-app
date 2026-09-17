@@ -64,6 +64,23 @@
     },
     "askChoice": {
       "answeredA11y": "already answered"
+    },
+    "streamingWords": {
+      "w1": "Thinking",
+      "w2": "Analyzing",
+      "w3": "Contemplating",
+      "w4": "Pondering",
+      "w5": "Mulling",
+      "w6": "Noodling",
+      "w7": "Percolating",
+      "w8": "Cogitating",
+      "w9": "Weighing",
+      "w10": "Sifting",
+      "w11": "Connecting",
+      "w12": "Composing",
+      "w13": "Finagling",
+      "w14": "Tinkering",
+      "w15": "Brewing"
     }
   },
   "de": {
@@ -130,6 +147,23 @@
     },
     "askChoice": {
       "answeredA11y": "bereits beantwortet"
+    },
+    "streamingWords": {
+      "w1": "Denken",
+      "w2": "Analysieren",
+      "w3": "Betrachten",
+      "w4": "Grübeln",
+      "w5": "Abwägen",
+      "w6": "Tüfteln",
+      "w7": "Sacken lassen",
+      "w8": "Durchdenken",
+      "w9": "Gewichten",
+      "w10": "Sichten",
+      "w11": "Verknüpfen",
+      "w12": "Formulieren",
+      "w13": "Basteln",
+      "w14": "Feilen",
+      "w15": "Ausbrüten"
     }
   },
   "es": {
@@ -196,6 +230,23 @@
     },
     "askChoice": {
       "answeredA11y": "ya respondido"
+    },
+    "streamingWords": {
+      "w1": "Pensando",
+      "w2": "Analizando",
+      "w3": "Contemplando",
+      "w4": "Reflexionando",
+      "w5": "Rumiando",
+      "w6": "Cavilando",
+      "w7": "Macerando",
+      "w8": "Razonando",
+      "w9": "Sopesando",
+      "w10": "Filtrando",
+      "w11": "Conectando",
+      "w12": "Redactando",
+      "w13": "Ajustando",
+      "w14": "Puliendo",
+      "w15": "Cociendo"
     }
   },
   "fr": {
@@ -262,6 +313,23 @@
     },
     "askChoice": {
       "answeredA11y": "déjà répondu"
+    },
+    "streamingWords": {
+      "w1": "Réflexion",
+      "w2": "Analyse",
+      "w3": "Contemplation",
+      "w4": "Méditation",
+      "w5": "Rumination",
+      "w6": "Mijotage",
+      "w7": "Macération",
+      "w8": "Raisonnement",
+      "w9": "Pesée",
+      "w10": "Tri",
+      "w11": "Connexion",
+      "w12": "Rédaction",
+      "w13": "Bricolage",
+      "w14": "Peaufinage",
+      "w15": "Infusion"
     }
   },
   "it": {
@@ -328,6 +396,23 @@
     },
     "askChoice": {
       "answeredA11y": "già risposto"
+    },
+    "streamingWords": {
+      "w1": "Pensando",
+      "w2": "Analizzando",
+      "w3": "Contemplando",
+      "w4": "Riflettendo",
+      "w5": "Rimuginando",
+      "w6": "Armeggiando",
+      "w7": "Macerando",
+      "w8": "Ragionando",
+      "w9": "Soppesando",
+      "w10": "Setacciando",
+      "w11": "Collegando",
+      "w12": "Componendo",
+      "w13": "Aggiustando",
+      "w14": "Rifinendo",
+      "w15": "Sobbollendo"
     }
   },
   "nl": {
@@ -394,6 +479,23 @@
     },
     "askChoice": {
       "answeredA11y": "al beantwoord"
+    },
+    "streamingWords": {
+      "w1": "Denken",
+      "w2": "Analyseren",
+      "w3": "Overwegen",
+      "w4": "Peinzen",
+      "w5": "Herkauwen",
+      "w6": "Puzzelen",
+      "w7": "Laten bezinken",
+      "w8": "Doordenken",
+      "w9": "Afwegen",
+      "w10": "Ziften",
+      "w11": "Verbinden",
+      "w12": "Opstellen",
+      "w13": "Sleutelen",
+      "w14": "Bijschaven",
+      "w15": "Broeden"
     }
   },
   "pt-BR": {
@@ -460,6 +562,23 @@
     },
     "askChoice": {
       "answeredA11y": "já respondido"
+    },
+    "streamingWords": {
+      "w1": "Pensando",
+      "w2": "Analisando",
+      "w3": "Contemplando",
+      "w4": "Refletindo",
+      "w5": "Ruminando",
+      "w6": "Matutando",
+      "w7": "Macerando",
+      "w8": "Raciocinando",
+      "w9": "Ponderando",
+      "w10": "Peneirando",
+      "w11": "Conectando",
+      "w12": "Redigindo",
+      "w13": "Ajustando",
+      "w14": "Lapidando",
+      "w15": "Fermentando"
     }
   },
   "pl": {
@@ -526,6 +645,23 @@
     },
     "askChoice": {
       "answeredA11y": "już odpowiedziano"
+    },
+    "streamingWords": {
+      "w1": "Myślę",
+      "w2": "Analizuję",
+      "w3": "Rozważam",
+      "w4": "Zastanawiam się",
+      "w5": "Przetrawiam",
+      "w6": "Dłubię",
+      "w7": "Odstawiam",
+      "w8": "Przemyśliwam",
+      "w9": "Ważę",
+      "w10": "Przesiewam",
+      "w11": "Łączę",
+      "w12": "Redaguję",
+      "w13": "Dopasowuję",
+      "w14": "Dopieszczam",
+      "w15": "Warzę"
     }
   },
   "ru": {
@@ -592,6 +728,23 @@
     },
     "askChoice": {
       "answeredA11y": "уже отвечено"
+    },
+    "streamingWords": {
+      "w1": "Думаю",
+      "w2": "Анализирую",
+      "w3": "Обдумываю",
+      "w4": "Размышляю",
+      "w5": "Взвешиваю",
+      "w6": "Кумекаю",
+      "w7": "Настаиваю",
+      "w8": "Соображаю",
+      "w9": "Оцениваю",
+      "w10": "Просеиваю",
+      "w11": "Связываю",
+      "w12": "Составляю",
+      "w13": "Подгоняю",
+      "w14": "Шлифую",
+      "w15": "Завариваю"
     }
   },
   "uk": {
@@ -658,6 +811,23 @@
     },
     "askChoice": {
       "answeredA11y": "уже відповіли"
+    },
+    "streamingWords": {
+      "w1": "Думаю",
+      "w2": "Аналізую",
+      "w3": "Обмірковую",
+      "w4": "Розмірковую",
+      "w5": "Зважую",
+      "w6": "Кумекаю",
+      "w7": "Настоюю",
+      "w8": "Міркую",
+      "w9": "Оцінюю",
+      "w10": "Просіюю",
+      "w11": "Пов'язую",
+      "w12": "Складаю",
+      "w13": "Підганяю",
+      "w14": "Шліфую",
+      "w15": "Заварюю"
     }
   },
   "tr": {
@@ -724,6 +894,23 @@
     },
     "askChoice": {
       "answeredA11y": "zaten yanıtlandı"
+    },
+    "streamingWords": {
+      "w1": "Düşünüyorum",
+      "w2": "Çözümlüyorum",
+      "w3": "Derinleşiyorum",
+      "w4": "Kafa yoruyorum",
+      "w5": "Evirip çeviriyorum",
+      "w6": "Kurcalıyorum",
+      "w7": "Demleniyorum",
+      "w8": "Muhakeme ediyorum",
+      "w9": "Tartıyorum",
+      "w10": "Eliyorum",
+      "w11": "Bağlantı kuruyorum",
+      "w12": "Kaleme alıyorum",
+      "w13": "Ayarlıyorum",
+      "w14": "İnce işçilik",
+      "w15": "Mayalanıyor"
     }
   },
   "ar": {
@@ -790,6 +977,23 @@
     },
     "askChoice": {
       "answeredA11y": "تمت الإجابة بالفعل"
+    },
+    "streamingWords": {
+      "w1": "أفكر",
+      "w2": "أحلل",
+      "w3": "أتأمل",
+      "w4": "أتدبر",
+      "w5": "أقلب الفكرة",
+      "w6": "أعبث بالفكرة",
+      "w7": "أترك الفكرة تنضج",
+      "w8": "أستنتج",
+      "w9": "أوازن",
+      "w10": "أغربل",
+      "w11": "أربط",
+      "w12": "أصوغ",
+      "w13": "أضبط",
+      "w14": "أنقّح",
+      "w15": "أختمر"
     }
   },
   "hi": {
@@ -856,6 +1060,23 @@
     },
     "askChoice": {
       "answeredA11y": "पहले ही उत्तर दिया गया"
+    },
+    "streamingWords": {
+      "w1": "सोच रहे हैं",
+      "w2": "विश्लेषण कर रहे हैं",
+      "w3": "विचार कर रहे हैं",
+      "w4": "मनन कर रहे हैं",
+      "w5": "तौल रहे हैं",
+      "w6": "खंगाल रहे हैं",
+      "w7": "पका रहे हैं",
+      "w8": "तर्क लगा रहे हैं",
+      "w9": "आँक रहे हैं",
+      "w10": "छान रहे हैं",
+      "w11": "जोड़ रहे हैं",
+      "w12": "लिख रहे हैं",
+      "w13": "सुलझा रहे हैं",
+      "w14": "सँवार रहे हैं",
+      "w15": "तैयार कर रहे हैं"
     }
   },
   "id": {
@@ -922,6 +1143,23 @@
     },
     "askChoice": {
       "answeredA11y": "sudah dijawab"
+    },
+    "streamingWords": {
+      "w1": "Berpikir",
+      "w2": "Menganalisis",
+      "w3": "Merenung",
+      "w4": "Menimbang",
+      "w5": "Mengunyah ide",
+      "w6": "Mengutak-atik",
+      "w7": "Mendiamkan dulu",
+      "w8": "Menalar",
+      "w9": "Membobot",
+      "w10": "Menyaring",
+      "w11": "Menghubungkan",
+      "w12": "Menyusun",
+      "w13": "Menyetel",
+      "w14": "Memoles",
+      "w15": "Meramu"
     }
   },
   "vi": {
@@ -988,6 +1226,23 @@
     },
     "askChoice": {
       "answeredA11y": "đã trả lời"
+    },
+    "streamingWords": {
+      "w1": "Đang nghĩ",
+      "w2": "Đang phân tích",
+      "w3": "Đang ngẫm",
+      "w4": "Đang suy xét",
+      "w5": "Đang cân nhắc",
+      "w6": "Đang mày mò",
+      "w7": "Đang ủ ý",
+      "w8": "Đang lập luận",
+      "w9": "Đang đong đếm",
+      "w10": "Đang sàng lọc",
+      "w11": "Đang kết nối",
+      "w12": "Đang soạn",
+      "w13": "Đang chỉnh",
+      "w14": "Đang gọt giũa",
+      "w15": "Đang pha trộn"
     }
   },
   "th": {
@@ -1054,6 +1309,23 @@
     },
     "askChoice": {
       "answeredA11y": "ตอบแล้ว"
+    },
+    "streamingWords": {
+      "w1": "กำลังคิด",
+      "w2": "กำลังวิเคราะห์",
+      "w3": "กำลังใคร่ครวญ",
+      "w4": "กำลังไตร่ตรอง",
+      "w5": "กำลังชั่งใจ",
+      "w6": "กำลังลองเล่นดู",
+      "w7": "กำลังบ่มความคิด",
+      "w8": "กำลังใช้เหตุผล",
+      "w9": "กำลังประเมิน",
+      "w10": "กำลังคัดกรอง",
+      "w11": "กำลังเชื่อมโยง",
+      "w12": "กำลังเรียบเรียง",
+      "w13": "กำลังปรับ",
+      "w14": "กำลังขัดเกลา",
+      "w15": "กำลังปรุง"
     }
   },
   "ja": {
@@ -1120,6 +1392,23 @@
     },
     "askChoice": {
       "answeredA11y": "回答済み"
+    },
+    "streamingWords": {
+      "w1": "考え中",
+      "w2": "分析中",
+      "w3": "熟考中",
+      "w4": "思案中",
+      "w5": "吟味中",
+      "w6": "いじくり中",
+      "w7": "寝かせ中",
+      "w8": "推論中",
+      "w9": "比較中",
+      "w10": "ふるい分け中",
+      "w11": "つなぎ合わせ中",
+      "w12": "文章化中",
+      "w13": "調整中",
+      "w14": "仕上げ中",
+      "w15": "仕込み中"
     }
   },
   "ko": {
@@ -1186,6 +1475,23 @@
     },
     "askChoice": {
       "answeredA11y": "이미 답변함"
+    },
+    "streamingWords": {
+      "w1": "생각 중",
+      "w2": "분석 중",
+      "w3": "숙고 중",
+      "w4": "궁리 중",
+      "w5": "저울질 중",
+      "w6": "만지작거리는 중",
+      "w7": "묵히는 중",
+      "w8": "추론 중",
+      "w9": "가늠하는 중",
+      "w10": "추리는 중",
+      "w11": "연결하는 중",
+      "w12": "정리하는 중",
+      "w13": "손보는 중",
+      "w14": "다듬는 중",
+      "w15": "우려내는 중"
     }
   },
   "zh-CN": {
@@ -1252,6 +1558,23 @@
     },
     "askChoice": {
       "answeredA11y": "已回答"
+    },
+    "streamingWords": {
+      "w1": "思考中",
+      "w2": "分析中",
+      "w3": "琢磨中",
+      "w4": "斟酌中",
+      "w5": "权衡中",
+      "w6": "捣鼓中",
+      "w7": "沉淀中",
+      "w8": "推敲中",
+      "w9": "比较中",
+      "w10": "筛选中",
+      "w11": "串联中",
+      "w12": "组织语言",
+      "w13": "调整中",
+      "w14": "打磨中",
+      "w15": "酝酿中"
     }
   },
   "zh-TW": {
@@ -1318,6 +1641,23 @@
     },
     "askChoice": {
       "answeredA11y": "已回答"
+    },
+    "streamingWords": {
+      "w1": "思考中",
+      "w2": "分析中",
+      "w3": "琢磨中",
+      "w4": "斟酌中",
+      "w5": "權衡中",
+      "w6": "擺弄中",
+      "w7": "沉澱中",
+      "w8": "推敲中",
+      "w9": "比較中",
+      "w10": "篩選中",
+      "w11": "串聯中",
+      "w12": "組織語句",
+      "w13": "調整中",
+      "w14": "打磨中",
+      "w15": "醞釀中"
     }
   }
 }

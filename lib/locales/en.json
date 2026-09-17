@@ -2677,5 +2677,22 @@
   },
   "askChoice": {
     "answeredA11y": "already answered"
+  },
+  "streamingWords": {
+    "w1": "Thinking",
+    "w2": "Analyzing",
+    "w3": "Contemplating",
+    "w4": "Pondering",
+    "w5": "Mulling",
+    "w6": "Noodling",
+    "w7": "Percolating",
+    "w8": "Cogitating",
+    "w9": "Weighing",
+    "w10": "Sifting",
+    "w11": "Connecting",
+    "w12": "Composing",
+    "w13": "Finagling",
+    "w14": "Tinkering",
+    "w15": "Brewing"
   }
 }

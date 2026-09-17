@@ -2677,5 +2677,22 @@
   },
   "askChoice": {
     "answeredA11y": "bereits beantwortet"
+  },
+  "streamingWords": {
+    "w1": "Denken",
+    "w2": "Analysieren",
+    "w3": "Betrachten",
+    "w4": "Grübeln",
+    "w5": "Abwägen",
+    "w6": "Tüfteln",
+    "w7": "Sacken lassen",
+    "w8": "Durchdenken",
+    "w9": "Gewichten",
+    "w10": "Sichten",
+    "w11": "Verknüpfen",
+    "w12": "Formulieren",
+    "w13": "Basteln",
+    "w14": "Feilen",
+    "w15": "Ausbrüten"
   }
 }

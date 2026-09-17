@@ -2677,5 +2677,22 @@
   },
   "askChoice": {
     "answeredA11y": "đã trả lời"
+  },
+  "streamingWords": {
+    "w1": "Đang nghĩ",
+    "w2": "Đang phân tích",
+    "w3": "Đang ngẫm",
+    "w4": "Đang suy xét",
+    "w5": "Đang cân nhắc",
+    "w6": "Đang mày mò",
+    "w7": "Đang ủ ý",
+    "w8": "Đang lập luận",
+    "w9": "Đang đong đếm",
+    "w10": "Đang sàng lọc",
+    "w11": "Đang kết nối",
+    "w12": "Đang soạn",
+    "w13": "Đang chỉnh",
+    "w14": "Đang gọt giũa",
+    "w15": "Đang pha trộn"
   }
 }

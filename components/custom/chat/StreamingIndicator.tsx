@@ -52,28 +52,11 @@ interface StreamingIndicatorProps {
     compact?: boolean;
     /** Overrides both label and dot color (defaults: gray label, orange dots). */
     color?: string;
-    /**
-     * Dots only, no cycling label — no label state, no crossfade timers at all.
-     * Used by the chat typing bubble, where the real reply text replaces the
-     * indicator as soon as it arrives, so a rotating status label never has
-     * time to mean anything and only makes the content-sized bubble resize on
-     * every swap.
-     */
-    dotsOnly?: boolean;
-    /**
-     * Static caption before the dots, no crossfade, no cycling. Only read with
-     * `dotsOnly`: the chat typing bubble sets it to "Thinking…" while a
-     * reasoning model streams its trace (3-12s on the BIG primary before the
-     * first visible token), so the wait reads as work rather than a stall.
-     */
-    label?: string;
 }
 
 const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
     compact = false,
     color,
-    dotsOnly = false,
-    label,
 }) => {
     const { t } = useTranslation();
     const [labelIndex, setLabelIndex] = useState(0);
@@ -82,11 +65,10 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
 
     // Cycle through labels — fade the single caption out, swap the text while it
     // is invisible, fade it back in. One mounted label, one visible caption.
-    // Skipped entirely when dotsOnly: no interval, no swap timeout, no re-render
-    // churn from the label ever gets scheduled.
+    // The rotating caption. Chat no longer uses this component at all — see
+    // StreamingWord — so there is no caller that wants the dots without it.
     const labelOpacity = useSharedValue(1);
     useEffect(() => {
-        if (dotsOnly) return;
         let swapTimer: ReturnType<typeof setTimeout> | undefined;
         const interval = setInterval(() => {
             labelOpacity.value = withTiming(0, { duration: LABEL_FADE_MS });
@@ -99,7 +81,7 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
             clearInterval(interval);
             if (swapTimer) clearTimeout(swapTimer);
         };
-    }, [labelOpacity, dotsOnly]);
+    }, [labelOpacity]);
 
     const labelStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.value }));
 
@@ -137,26 +119,15 @@ const StreamingIndicator: React.FC<StreamingIndicatorProps> = ({
                 {/* Only the WORD crossfades. The dots stay at full opacity: they
                     are the liveness signal, and the fade trough would otherwise
                     blank the whole indicator for a beat every cycle. */}
-                {dotsOnly && label ? (
+                <Animated.View style={labelStyle}>
                     <Text
                         testID="streaming-caption"
                         size="sm"
                         style={[streamingIndicatorStyles.label, { color: labelColor }]}
                     >
-                        {label}
+                        {t(STREAMING_LABEL_KEYS[labelIndex])}
                     </Text>
-                ) : null}
-                {!dotsOnly && (
-                    <Animated.View style={labelStyle}>
-                        <Text
-                            testID="streaming-caption"
-                            size="sm"
-                            style={[streamingIndicatorStyles.label, { color: labelColor }]}
-                        >
-                            {t(STREAMING_LABEL_KEYS[labelIndex])}
-                        </Text>
-                    </Animated.View>
-                )}
+                </Animated.View>
                 <View style={streamingIndicatorStyles.dotsRow}>
                     <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot1Style]} />
                     <Animated.View style={[streamingIndicatorStyles.dot, { backgroundColor: dotColor }, dot2Style]} />

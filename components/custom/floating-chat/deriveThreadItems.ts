@@ -839,6 +839,7 @@ function emitMessage(
   stale = false,
   boxes?: Map<string, AgentStepsItem>,
   answeredAsk = false,
+  streamingMessageId: string | null = null,
 ): void {
   // A hidden turn is the model's business only — it produces no bubble and no
   // cards. Filtered here rather than at the call sites so every source (live,
@@ -957,7 +958,14 @@ function emitMessage(
   }
 
   if (hasContent || message.role === 'user') {
-    out.push({ kind: 'message', key: `${keyPrefix}-${message.id}`, message });
+    out.push({
+      kind: 'message',
+      key: `${keyPrefix}-${message.id}`,
+      message,
+      // The Mera mark rides the live streaming bubble, so it does not blink
+      // out the moment the first token lands.
+      ...(streamingMessageId === message.id ? { streaming: true } : {}),
+    });
   }
 
   // The turn's steps box, anchored on the message that opened the turn. Pushed
@@ -1158,6 +1166,13 @@ export function deriveThreadItems(opts: {
     });
   }
 
+  // The assistant message currently being streamed into: the LAST live one,
+  // and only while the turn is running. Tracked here rather than in the
+  // component because only the deriver sees the whole ordered list.
+  const lastLiveMsg = live[live.length - 1];
+  const streamingMessageId =
+    isStreaming && lastLiveMsg?.role === 'assistant' ? lastLiveMsg.id : null;
+
   // --- Live session (skip anything already rendered via resume) ---
   for (const message of live) {
     if (resumeIds.has(message.id)) continue;
@@ -1169,6 +1184,7 @@ export function deriveThreadItems(opts: {
       false,
       liveBoxes,
       answeredAskIds.has(message.id),
+      streamingMessageId,
     );
   }
 
