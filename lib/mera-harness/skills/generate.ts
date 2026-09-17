@@ -10,9 +10,13 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-const SKILLS_DIR = path.join(__dirname, 'persona');
-const OUT_FILE = path.join(__dirname, 'index.generated.ts');
-const EXPECTATIONS = path.join(SKILLS_DIR, 'expectations', 'topics.json');
+/** The real tree. Parameterised throughout so the freshness test can point the
+ *  same code at a temp copy and prove the comparison can actually fail. */
+export const SKILLS_ROOT = __dirname;
+export const personaDirFor = (root: string): string => path.join(root, 'persona');
+export const outFileFor = (root: string): string => path.join(root, 'index.generated.ts');
+const expectationsFor = (root: string): string =>
+  path.join(personaDirFor(root), 'expectations', 'topics.json');
 
 /**
  * Canonical emission order. Every markdown file's id MUST appear here, which is
@@ -151,12 +155,12 @@ function parseFrontmatter(file: string, text: string): Omit<Skill, 'id' | 'body'
 
 function estimateTokens(s: string): number { return Math.ceil(s.length / 4); }
 
-function readSkills(): Skill[] {
-  const files = walk(SKILLS_DIR);
+function readSkills(personaDir: string): Skill[] {
+  const files = walk(personaDir);
   const byId = new Map<string, Skill>();
 
   for (const file of files) {
-    const rel = path.relative(SKILLS_DIR, file).replace(/\\/g, '/');
+    const rel = path.relative(personaDir, file).replace(/\\/g, '/');
     const pathId = rel.replace(/\.md$/, '');
     const text = fs.readFileSync(file, 'utf8');
     const parsed = parseFrontmatter(file, text);
@@ -215,11 +219,11 @@ function readSkills(): Skill[] {
     byId.set(pathId, { ...parsed, id: pathId as SkillId });
   }
 
-  if (byId.size === 0) fail(SKILLS_DIR, null, 'no skill markdown found');
+  if (byId.size === 0) fail(personaDir, null, 'no skill markdown found');
   return SKILL_IDS.filter((id) => byId.has(id)).map((id) => byId.get(id)!);
 }
 
-function validateExpectations(presentTopicIds: string[]): void {
+function validateExpectations(EXPECTATIONS: string, presentTopicIds: string[]): void {
   if (!fs.existsSync(EXPECTATIONS)) { fail(EXPECTATIONS, null, 'expectations file is missing'); return; }
   const raw = fs.readFileSync(EXPECTATIONS, 'utf8');
   if (raw.includes(EM_DASH) || raw.includes(EN_DASH)) fail(EXPECTATIONS, null, 'contains an em dash or en dash');
@@ -299,42 +303,73 @@ function render(skills: Skill[]): string {
   return L.join('\n');
 }
 
-function main(): void {
-  const check = process.argv.includes('--check');
-  const skills = readSkills();
-  validateExpectations(skills.map((s) => s.id).filter((id) => id.startsWith('topics/')));
+/** Thrown instead of exiting, so an importing test reports rather than kills the runner. */
+export class SkillGenerationError extends Error {
+  constructor(public readonly problems: string[]) {
+    super(`${problems.length} problem(s):\n  ${problems.join('\n  ')}`);
+    this.name = 'SkillGenerationError';
+  }
+}
 
+/**
+ * The whole pipeline, in memory. This is what the freshness test calls, so the
+ * test and the CLI can never disagree about what "fresh" means.
+ */
+export function generateModuleText(root: string = SKILLS_ROOT): string {
+  errors.length = 0;
+  const skills = readSkills(personaDirFor(root));
+  validateExpectations(
+    expectationsFor(root),
+    skills.map((s) => s.id).filter((id) => id.startsWith('topics/')),
+  );
   const out = render(skills);
   if (/^\s*(import|const .*= require\()/m.test(out)) errors.push('rendered module contains an import or require; it must stay dependency-free');
   if (/PERSONA_SKILL_INDEX\s*:/.test(out)) errors.push('rendered module annotates PERSONA_SKILL_INDEX, which erases as const and collapses PersonaSkillId to string');
+  if (errors.length) throw new SkillGenerationError([...errors]);
+  return out;
+}
 
-  if (errors.length) {
-    console.error(`\n${errors.length} problem(s):\n`);
-    for (const e of errors) console.error(`  ${e}`);
-    console.error('');
-    process.exit(1);
+export function firstDifference(a: string, b: string): string | null {
+  if (a === b) return null;
+  const x = a.split('\n'); const y = b.split('\n');
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if (x[i] !== y[i]) return `line ${i + 1}\n  on disk: ${String(x[i]).slice(0, 110)}\n  fresh:   ${String(y[i]).slice(0, 110)}`;
+  }
+  return 'trailing content differs';
+}
+
+function main(): void {
+  const check = process.argv.includes('--check');
+  let out: string;
+  try {
+    out = generateModuleText();
+  } catch (e) {
+    if (e instanceof SkillGenerationError) {
+      console.error(`\n${e.problems.length} problem(s):\n`);
+      for (const p of e.problems) console.error(`  ${p}`);
+      console.error('');
+      process.exit(1);
+    }
+    throw e;
   }
 
-  const existing = fs.existsSync(OUT_FILE) ? fs.readFileSync(OUT_FILE, 'utf8') : null;
+  const outFile = outFileFor(SKILLS_ROOT);
+  const existing = fs.existsSync(outFile) ? fs.readFileSync(outFile, 'utf8') : null;
   if (check) {
     if (existing !== out) {
       console.error('index.generated.ts is stale. Run: npm run skills:generate');
-      if (existing !== null) {
-        const a = existing.split('\n'); const b = out.split('\n');
-        for (let i = 0; i < Math.max(a.length, b.length); i++) {
-          if (a[i] !== b[i]) { console.error(`  first difference at line ${i + 1}:\n    on disk: ${String(a[i]).slice(0, 110)}\n    fresh:   ${String(b[i]).slice(0, 110)}`); break; }
-        }
-      }
+      const d = existing === null ? 'file is missing' : firstDifference(existing, out);
+      if (d) console.error(`  first difference at ${d}`);
       process.exit(1);
     }
-    console.log(`index.generated.ts is up to date (${skills.length} skills).`);
+    console.log('index.generated.ts is up to date.');
     return;
   }
 
-  if (existing !== out) fs.writeFileSync(OUT_FILE, out, 'utf8');
-  const largest = skills.reduce((a, b) => (estimateTokens(a.body) > estimateTokens(b.body) ? a : b));
-  const total = skills.reduce((n, s) => n + estimateTokens(s.body), 0);
-  console.log(`${skills.length} skills, ${total} tokens total, largest ${estimateTokens(largest.body)} (${largest.id})${existing === out ? ' [unchanged]' : ''}`);
+  if (existing !== out) fs.writeFileSync(outFile, out, 'utf8');
+  const n = (out.match(/^    id: /gm) ?? []).length;
+  console.log(`${n} skills, ${out.length} bytes${existing === out ? ' [unchanged]' : ''}`);
 }
 
-main();
+// Only when run as a script. An importing test must not trip process.exit.
+if (require.main === module) main();
