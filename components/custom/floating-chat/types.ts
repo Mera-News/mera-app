@@ -21,6 +21,35 @@ export type { PersistedMessage } from '@/lib/database/services/conversation-serv
 
 export type FactCardAction = 'saved' | 'deleted' | 'updated';
 
+// ---------------------------------------------------------------------------
+// Agent steps (pagent P2)
+// ---------------------------------------------------------------------------
+
+export type AgentStepStatus = 'pending' | 'done' | 'error';
+
+/**
+ * One row in the agent-steps box: a leg beginning, or one tool call.
+ *
+ * Derived from `ToolCallRecord.status`, which is the ONLY item kind here that
+ * reads a tool call's status rather than its result. That is why it can render
+ * while work is still in flight, and why `deriveThreadItems` has to push it
+ * before the "empty assistant message with no cards" guard.
+ */
+export interface AgentStep {
+  /** `${messageId}::${toolCallIndex}` for a tool, `${messageId}::leg` for a leg
+   *  start. Same keying rule as `toolCallResults` — never `tc.id`, which is
+   *  `local-tc-${n}` on the local engine and collides across messages. */
+  id: string;
+  kind: 'leg-start' | 'tool';
+  toolName?: string;
+  /** Directly rendered, so a locale KEY (model-rendered text takes English). */
+  labelKey: string;
+  labelValues?: Record<string, string>;
+  status: AgentStepStatus;
+  /** On an errored step: what the failure COST the user, never the raw error. */
+  consequenceKey?: string;
+}
+
 export type ChatThreadItem =
   // Pinned article card at the TOP of an article-suggestion chat thread — the
   // subject of the conversation, always the first item (Round-4 P4 handoff).
@@ -131,6 +160,32 @@ export type ChatThreadItem =
   // optimisation plan) rather than derived from a tool call: no model turn
   // produces it, and it is deliberately never persisted.
   | { kind: 'quick-fact-check-card'; key: string; entry: QuickFactCheckEntry }
+  /**
+   * What the agent is doing, for ONE TURN — not one message.
+   *
+   * A turn is several legs (several assistant messages), and a box per leg
+   * would flicker in and out as each one settles. Keyed to the turn, the box is
+   * emitted once, accumulates every leg's rows, and collapses once at the end.
+   *
+   * `collapsed` derives from STATUS (every step settled), never from whether
+   * the assistant has started writing: the cloud loop streams a leg's text
+   * BEFORE its tools run, so a content-based rule would collapse the box
+   * before any row had been seen.
+   */
+  | {
+      kind: 'agent-steps';
+      key: string;
+      steps: AgentStep[];
+      collapsed: boolean;
+      doneCount: number;
+      failedCount: number;
+      /** P1's leg bound was hit: render the cap sentence, not a summary. */
+      legCapped: boolean;
+      /** The turn ended without settling (backgrounded, transport failure). */
+      interrupted: boolean;
+      /** Turn touched persona data, so its settled line is kept in scroll-back. */
+      changedData: boolean;
+    }
   | { kind: 'divider'; key: string; label: string }
   | { kind: 'typing'; key: string };
 
