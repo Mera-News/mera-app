@@ -128,13 +128,23 @@ describe('DEFAULT_HARNESS_CONFIG.articlePipeline', () => {
     expect(a.headlineRelevanceSystemPrompt).toBe(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT);
     expect(a.headlineReasonSystemPrompt).toBe(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT);
     // The headline variants must stay VARIANTS: same base prompt, so tiers,
-    // FEED gates, anchors and the {"k","s"} contract cannot drift from live.
+    // FEED gates and the {"k","s"} contract cannot drift from live.
     // (The base is module-private; these are load-bearing excerpts of it.)
     for (const p of [a.headlineRelevanceSystemPrompt, a.headlineReasonSystemPrompt]) {
       expect(p).toContain('## Product tiers (hard boundaries');
       expect(p).toContain('**FEED — 0.40 to 1.10.**');
       expect(p).toContain('## FEED gates (within 0.40–1.10; each band needs its named evidence)');
-      expect(p).toContain('## Anchors (example user: software engineer in Amsterdam');
+    }
+    // THE ANCHOR TABLE IS THE ONE EXCEPTION, and only on the reason pass. It is
+    // 47 worked examples of which story scores what — calibration for a pass
+    // that CHOOSES a score. The headline reason prompt is handed its score and
+    // does not fit under the gateway's sharedSystem cap while carrying them;
+    // see golden-prompts.test.ts, which owns that guard.
+    expect(a.headlineRelevanceSystemPrompt).toContain(
+      '## Anchors (example user: software engineer in Amsterdam',
+    );
+    expect(a.headlineReasonSystemPrompt).not.toContain('## Anchors (example user');
+    for (const p of [a.headlineRelevanceSystemPrompt, a.headlineReasonSystemPrompt]) {
     }
     // Output contract: no new `k` value. A passed impact chain is tagged
     // "home", which STAKE_SCORE_BANDS (article-pipeline/scoring.ts) already

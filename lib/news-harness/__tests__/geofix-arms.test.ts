@@ -71,16 +71,38 @@ describe('the promoted article-scope rule', () => {
 });
 
 describe('pre-geo-control', () => {
-  it('is the shipped prompt MINUS the article-scope rule, in every slot', () => {
+  it('is the shipped prompt MINUS the article-scope rule, in every slot but one', () => {
     for (const slot of SLOTS) {
       const arm = armPrompt(PRE_GEO_CONTROL_ID, slot);
       expect(arm).not.toContain('## Article scope');
+      if (slot === 'headlineReason') continue;
       // Cut the promoted section out of the shipped prompt and the control must
       // return byte for byte. This is what stops an unrelated prompt edit
       // landing on one side only and being attributed to the geography rule.
       const shippedWithoutRule = SHIPPED[slot].replace(/\n\n## Article scope\n[^\n]*/, '');
       expect(arm).toBe(shippedWithoutRule);
     }
+  });
+
+  it('differs from the shipped headline reason prompt by TWO things, named', () => {
+    // The exception above, spelled out rather than waved through. The shipped
+    // headline reason prompt also dropped the anchor table to fit the gateway
+    // wire cap, so this arm carries the article-scope rule's ABSENCE and the
+    // anchors' PRESENCE. Anyone running it on a headline bundle gets a 400,
+    // because the archived string is 65944 on the wire against a 65536 cap —
+    // which is exactly the bug this arm archives.
+    const arm = armPrompt(PRE_GEO_CONTROL_ID, 'headlineReason');
+    expect(arm).toContain('## Anchors (example user');
+    expect(SHIPPED.headlineReason).not.toContain('## Anchors (example user');
+    // Put the anchors back and take the rule out, and the two must meet.
+    const anchors = arm.slice(
+      arm.indexOf('## Anchors (example user'),
+      arm.indexOf('## Priority'),
+    );
+    const shippedWithAnchorsNoRule = SHIPPED.headlineReason
+      .replace(/\n\n## Article scope\n[^\n]*/, '')
+      .replace('## Priority', `${anchors}## Priority`);
+    expect(arm).toBe(shippedWithAnchorsNoRule);
   });
 
   it('carries no decode change, so the comparison is prompts only', () => {

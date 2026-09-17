@@ -69,8 +69,13 @@ import {
   CLOUD_FEED_VERIFIER_SYSTEM_PROMPT,
   LOCAL_RELEVANCE_SYSTEM_PROMPT,
   LOCAL_REASON_SYSTEM_PROMPT,
+  CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
 } from '../prompts/prompts';
 import { estimateTokens } from '@/lib/llm/tokens';
+// The REAL encrypt path, so the wire-size formula below is proved, not assumed.
+// `e2ee-crypto` is the Node-importable half of the E2EE module on purpose.
+import { ed25519 } from '@noble/curves/ed25519.js';
+import { encryptContent, bytesToHex } from '@/lib/e2ee/e2ee-crypto';
 import { getFacts } from '@/lib/database/services/fact-service';
 import type { ScoringCandidate } from '../core/types';
 
@@ -194,18 +199,21 @@ describe('golden — measured prompt sizes', () => {
   // above are all identity checks against the same const, so a whitespace slip
   // during the extraction would have passed every existing test.
   it('pins the estimated token size of each cloud scoring prompt', () => {
-    // RE-PINNED when the article-scope rule was promoted into the shared base.
-    // The rule is one section in ONE const, so all four prompts moved by the
-    // same +130 tokens and the derivation below is intact:
+    // RE-PINNED when the article-scope rule was promoted into the shared base:
+    // one section in ONE const, so every prompt built on it moved by the same
+    // +130 tokens, and the derivation below is intact:
     //   5 * (4584 / 7234) = 3.1685 -> 3   (was 5 * (4454 / 7105) = 3.1344 -> 3)
     // `headlineArticlesPerScorePrompt` therefore stays 3 and no
-    // DEFAULT_HARNESS_CONFIG literal changed. All four moving by the SAME
-    // amount is itself the assertion that the rule landed in the base and not
-    // in one prompt: a base edit that reached three of four would show here.
+    // DEFAULT_HARNESS_CONFIG literal changed. Only the two RELEVANCE numbers
+    // feed that arithmetic.
+    //
+    // RE-PINNED AGAIN when the headline reason prompt dropped the anchor table
+    // to fit the gateway wire cap: 8256 -> 6958, a 1298-token cut that no other
+    // prompt takes. See the wire-cap block below for why.
     expect(estimateTokens(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(4584);
     expect(estimateTokens(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(7234);
     expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5401);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(8256);
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(6958);
   });
 
   // The four above were the only pinned prompts. These four were not pinned by
@@ -228,44 +236,105 @@ describe('golden — measured prompt sizes', () => {
     expect(estimateTokens(LOCAL_REASON_SYSTEM_PROMPT)).toBe(1445);
   });
 
-  // THE E2EE WIRE SIZE, which nothing else in this repo checks.
+  // THE GATEWAY WIRE CAP. A PROD 400 lives behind these numbers.
   //
-  // A system string is encrypted into 32 B ephemeral pubkey + 24 B nonce +
-  // ciphertext + 16 B poly1305 tag, hex-encoded, so its wire size is exactly
-  // 2 * (utf8Bytes + 72). Note BYTES, not characters: these prompts are full of
-  // em dashes and arrows, so the byte length runs about 1.2% above `.length`.
+  // Every call in a bundle carries the same system string, so
+  // `submitInferenceJob` hoists it into the job's `sharedSystem` and encrypts it
+  // ONCE (`lib/services/scoring-pipeline.ts` is the caller, through
+  // `sendInferenceRequest`). The gateway's DTO rejects that field over
+  // MAX_SHARED_SYSTEM_BYTES = 65536. On 2026-09-17 prod returned
+  //   400 "sharedSystem must be shorter than or equal to 65536 characters"
+  // on a live scoring job, because CLOUD_HEADLINE_REASON_SYSTEM_PROMPT was
+  // 66982 on the wire. It had been over the cap by 408 BEFORE the article-scope
+  // rule was promoted, so reverting a prompt rule would not have fixed it: the
+  // headline reason prompt now drops the anchor table, which is pass-1
+  // calibration and dead weight in a pass that is handed its score.
   //
-  // THE CAP THAT COULD BIND, AND WHY IT DOES NOT TODAY. `submitInferenceJob`
-  // hoists a system shared by every call in a bundle into the job's
-  // `sharedSystem` field, and the gateway's DTO rejects that field over
-  // MAX_SHARED_SYSTEM_BYTES = 65536, i.e. a plaintext ceiling of 32696 B. The
-  // headline reason prompt is 33419 B, 66982 on the wire, 1446 over — and it
-  // was ALREADY 408 over before the article-scope rule added 519. But the
-  // scoring and reason passes do not use that path: they go through
-  // `cloudBatchComplete`, which encrypts each call's system separately and
-  // sends no `sharedSystem` at all, and `submitInferenceJob` currently has NO
-  // production caller. So this is LATENT, not live. It becomes live the moment
-  // anything hoists a shared system on the reason path.
-  //
-  // Pinned rather than asserted under the cap, because the fix (the PRE/ANCHORS/
-  // POST split exists so a size-constrained variant can drop the worked-example
-  // anchor table) needs its own measurement. The numbers are the tripwire.
-  it('pins the E2EE wire size of every cloud scoring prompt', () => {
-    const wire = (p: string) => 2 * (Buffer.byteLength(p, 'utf8') + 72);
-    expect(wire(CLOUD_RELEVANCE_SYSTEM_PROMPT)).toBe(37322);
-    expect(wire(CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT)).toBe(58816);
-    expect(wire(CLOUD_REASON_SYSTEM_PROMPT)).toBe(43884);
-    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(66982);
-    // The three that fit under the hoisted-system cap must keep fitting. The
-    // headline reason prompt is the one exception and is named above, not
-    // silently included here.
-    for (const p of [
-      CLOUD_RELEVANCE_SYSTEM_PROMPT,
-      CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT,
-      CLOUD_REASON_SYSTEM_PROMPT,
-    ]) {
-      expect(wire(p)).toBeLessThanOrEqual(65536);
+  // BYTES, NOT CHARACTERS. These prompts are full of em dashes and arrows, so
+  // the utf8 length runs about 1.2% above `.length` — 400 bytes on the headline
+  // prompts, which is the difference between passing and not.
+  const CAP = 65536;
+  const wire = (p: string) => 2 * (Buffer.byteLength(p, 'utf8') + 72);
+
+  // Only prompts that are actually SENT. The `_V1` and `_PRE_GEO` composites
+  // are archives of what shipped and must never be "fixed" to fit; see the
+  // over-cap assertion below, which pins that they are over and arm-only.
+  const SHIPPED_SYSTEM_PROMPTS: [string, string][] = [
+    ['CLOUD_RELEVANCE_SYSTEM_PROMPT', CLOUD_RELEVANCE_SYSTEM_PROMPT],
+    ['CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT', CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT],
+    ['CLOUD_REASON_SYSTEM_PROMPT', CLOUD_REASON_SYSTEM_PROMPT],
+    ['CLOUD_HEADLINE_REASON_SYSTEM_PROMPT', CLOUD_HEADLINE_REASON_SYSTEM_PROMPT],
+    ['CLOUD_FEED_VERIFIER_SYSTEM_PROMPT', CLOUD_FEED_VERIFIER_SYSTEM_PROMPT],
+    ['CLOUD_V3_NOTE_SYSTEM_PROMPT', CLOUD_V3_NOTE_SYSTEM_PROMPT],
+    ['LOCAL_RELEVANCE_SYSTEM_PROMPT', LOCAL_RELEVANCE_SYSTEM_PROMPT],
+    ['LOCAL_REASON_SYSTEM_PROMPT', LOCAL_REASON_SYSTEM_PROMPT],
+  ];
+
+  it('proves the wire formula against the REAL encryptContent, not a guess', () => {
+    // 32 B ephemeral pubkey + 24 B nonce + ciphertext + 16 B poly1305 tag, hex.
+    // Asserted rather than assumed, because every number below is computed from
+    // this formula and a wrong constant would make the whole guard decorative.
+    const sk = ed25519.utils.randomSecretKey();
+    const ctx = {
+      modelPubKeyHex: bytesToHex(ed25519.getPublicKey(sk)),
+      privateKey: sk,
+      clientPubKeyHex: '',
+      algo: 'ed25519' as const,
+      headers: {} as never,
+    };
+    for (const [, p] of SHIPPED_SYSTEM_PROMPTS) {
+      expect(encryptContent(p, ctx).length).toBe(wire(p));
     }
+  });
+
+  it.each(SHIPPED_SYSTEM_PROMPTS)(
+    '%s fits the gateway cap with at least 10%% to spare',
+    (_name, prompt) => {
+      // 0.9 * CAP, not CAP. A prompt sitting at 99% of the limit is one edit
+      // from a prod 400, and the edit that breaks it is usually in the SHARED
+      // base, so its author is not looking at this prompt at all.
+      expect(wire(prompt)).toBeLessThanOrEqual(0.9 * CAP);
+    },
+  );
+
+  it('pins the wire size of every shipped system prompt', () => {
+    // The tripwire. A number moving here means a prompt grew; check it against
+    // the cap above before re-pinning.
+    expect(SHIPPED_SYSTEM_PROMPTS.map(([n, p]) => `${n} ${wire(p)}`)).toEqual([
+      'CLOUD_RELEVANCE_SYSTEM_PROMPT 37322',
+      'CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT 58816',
+      'CLOUD_REASON_SYSTEM_PROMPT 43884',
+      'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT 56398',
+      'CLOUD_FEED_VERIFIER_SYSTEM_PROMPT 12528',
+      'CLOUD_V3_NOTE_SYSTEM_PROMPT 15460',
+      'LOCAL_RELEVANCE_SYSTEM_PROMPT 9106',
+      'LOCAL_REASON_SYSTEM_PROMPT 11886',
+    ]);
+  });
+
+  it('records that the pre-geo headline reason ARCHIVE is over the cap', () => {
+    // Deliberate, and the reason `pre-geo-control` must never be run on a
+    // headline bundle: this string is the byte-exact record of what shipped,
+    // and what shipped was already 408 over. Fixing it would destroy the
+    // archive; the arm's description carries the warning.
+    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBe(65944);
+    expect(wire(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)).toBeGreaterThan(CAP);
+  });
+
+  it('keeps the headline reason prompt as the ONLY shipped one without anchors', () => {
+    // The cut is surgical on purpose. Anything that CHOOSES a score keeps its
+    // 47 calibration examples; only the pass that is handed one loses them.
+    expect(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT).not.toContain('## Anchors (example user');
+    for (const [name, p] of SHIPPED_SYSTEM_PROMPTS) {
+      if (name === 'CLOUD_HEADLINE_REASON_SYSTEM_PROMPT') continue;
+      if (!name.startsWith('CLOUD_') || name.includes('VERIFIER') || name.includes('V3_NOTE')) continue;
+      expect(p).toContain('## Anchors (example user');
+    }
+    // What replaces it for pass 2: the score-to-tone table and the impact
+    // block's own worked examples, both still present.
+    expect(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT).toContain('### Worked examples');
+    expect(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT).toContain('## Priority');
+    expect(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT).toContain('## Article scope');
   });
 
   it('keeps the V3 note prompt built ON the verifier rather than restating it', () => {

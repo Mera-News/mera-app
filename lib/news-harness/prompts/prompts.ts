@@ -237,6 +237,32 @@ const CLOUD_SCORING_BASE_PROMPT = `${CLOUD_SCORING_BASE_PROMPT_PRE_GEO}
 ${CLOUD_SCORING_GEO_SCOPE_RULE}`;
 
 /**
+ * THE SHIPPED BASE WITHOUT THE ANCHOR TABLE, for the headline REASON prompt.
+ *
+ * Not a style choice: a hard wire limit. Every call in a bundle shares one
+ * system string, so `submitInferenceJob` hoists it into the job's
+ * `sharedSystem` and encrypts it ONCE; the gateway's DTO rejects that field
+ * over MAX_SHARED_SYSTEM_BYTES = 65536, and an encrypted string is exactly
+ * `2 * (utf8Bytes + 72)` hex chars. The headline reason prompt was 33419 B =
+ * 66982 on the wire, and PROD returned
+ * `400 "sharedSystem must be shorter than or equal to 65536 characters"` on a
+ * live scoring job. It was already 408 over before the article-scope rule, so
+ * reverting that rule would not have fixed it.
+ *
+ * The anchor table is what the cut takes, and only from PASS 2, because there
+ * it is dead weight: 47 worked examples of WHICH STORY SCORES WHAT calibrate a
+ * scorer, and pass 2 is handed the score. What pass 2 needs is the score-to-
+ * TONE table in {@link CLOUD_HEADLINE_REASON_TASK_MIDDLE} and the impact
+ * block's own three worked examples, both of which it keeps. Every pass-1
+ * prompt keeps its anchors, so nothing that chooses a score lost calibration.
+ *
+ * This is why the base is split PRE/ANCHORS/POST at all.
+ */
+const CLOUD_SCORING_BASE_PROMPT_NO_ANCHORS = `${CLOUD_SCORING_BASE_PRE_ANCHORS}${CLOUD_SCORING_BASE_POST_ANCHORS}
+
+${CLOUD_SCORING_GEO_SCOPE_RULE}`;
+
+/**
  * The second-person voice rule for every user-facing reason string.
  *
  * Extracted (byte-identical) out of CLOUD_REASON_SYSTEM_PROMPT so the headline
@@ -664,8 +690,15 @@ export const CLOUD_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
 ${CLOUD_REASON_TASK_V1}
 ${REASON_V2_RULES}`;
 
-/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT}, same rules, same order. */
-export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT}
+/**
+ * The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT}: same rules, same
+ * order, on {@link CLOUD_SCORING_BASE_PROMPT_NO_ANCHORS}.
+ *
+ * The ONLY shipped prompt that drops the anchor table, and only because it is
+ * the only one that does not fit under the gateway's wire cap with it. See that
+ * const for the arithmetic and the prod 400 that forced it.
+ */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT = `${CLOUD_SCORING_BASE_PROMPT_NO_ANCHORS}
 
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 
@@ -725,8 +758,11 @@ export const CLOUD_REASON_SYSTEM_PROMPT_RESCORE = `${CLOUD_SCORING_BASE_PROMPT}
 ${CLOUD_REASON_TASK_RESCORE}
 ${REASON_V2_RULES_RESCORE}`;
 
-/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT_RESCORE}. */
-export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE = `${CLOUD_SCORING_BASE_PROMPT}
+/** The headline twin of {@link CLOUD_REASON_SYSTEM_PROMPT_RESCORE}. On the
+ *  no-anchors base for the same wire-cap reason as the shipped headline reason
+ *  prompt: with anchors it is 70058 on the wire and could never be submitted,
+ *  so the arm would have been unrunnable rather than merely unmeasured. */
+export const CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_RESCORE = `${CLOUD_SCORING_BASE_PROMPT_NO_ANCHORS}
 
 ${CLOUD_HEADLINE_IMPACT_BLOCK}
 

@@ -150,7 +150,10 @@ registerPromptVariant({
     'The four cloud scoring prompts on the PRE-GEO base: no article-scope rule. Control for the '
     + 'geofix2 promotion, which beat it on broad-set recall 0.459 to 0.406 at flat precision '
     + '(+27 true positives for +8 false, null floor 0.010 recall / 0.017 precision, goldset-348 x 3) '
-    + 'and on the DN matrix 8 of 9 cells below the gate against 2 of 9.',
+    + 'and on the DN matrix 8 of 9 cells below the gate against 2 of 9. WARNING: its headlineReason '
+    + 'string is the byte-exact archive of a prompt that was ALREADY over the gateway wire cap '
+    + '(65944 against 65536), so running this arm on a headline bundle returns a 400. Do not "fix" '
+    + 'it: being over the cap is part of what it records.',
   systemPrompts: {
     relevance: CLOUD_RELEVANCE_SYSTEM_PROMPT_PRE_GEO,
     headlineRelevance: CLOUD_HEADLINE_RELEVANCE_SYSTEM_PROMPT_PRE_GEO,

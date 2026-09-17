@@ -55,7 +55,12 @@ describe('the promoted reason prompt', () => {
     // section back out and the archived string must return byte for byte.
     const cut = (p: string) => p.replace(/\n\n## Article scope\n[^\n]*/, '');
     expect(cut(CLOUD_REASON_SYSTEM_PROMPT)).toBe(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO);
-    expect(cut(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(
+    // NOT asserted for the headline twin: it took a SECOND change after the
+    // promotion, dropping the anchor table to fit the gateway wire cap. Its
+    // two-difference shape is pinned in geofix-arms.test.ts instead, where the
+    // anchors can be named. Asserting one difference here would go green again
+    // the day someone put the anchors back and blew the cap.
+    expect(cut(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).not.toBe(
       CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO,
     );
   });
@@ -143,7 +148,10 @@ describe('measured sizes after the promotion', () => {
   // the gate, so these ride on every scored article.
   it('pins the promoted prompts', () => {
     expect(estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)).toBe(5401);
-    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(8256);
+    // Smaller than its pre-promotion twin, not larger: the headline reason
+    // prompt gained the 130-token rule and then dropped the 1428-token anchor
+    // table to fit the gateway wire cap. golden-prompts.test.ts owns that guard.
+    expect(estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)).toBe(6958);
   });
 
   it('pins the pre-promotion prompts, which are now the control arms', () => {
@@ -164,16 +172,20 @@ describe('measured sizes after the promotion', () => {
   });
 
   it('costs 130 tokens per call to have promoted the article-scope rule', () => {
-    // The same 130 on all four prompts, because it is one section in the shared
-    // base. The reason pass sends one call per article that clears the gate, so
+    // One section in the shared base, so the same 130 on every prompt built on
+    // it. The reason pass sends one call per article that clears the gate, so
     // this rides on every scored article, and pass 1 pays it per batch of five.
     expect(
       estimateTokens(CLOUD_REASON_SYSTEM_PROMPT)
         - estimateTokens(CLOUD_REASON_SYSTEM_PROMPT_PRE_GEO),
     ).toBe(130);
+    // The headline reason prompt is NOT comparable this way: it also lost the
+    // anchor table to the wire cap, so its delta is the sum of two changes.
+    // Asserting 130 here would silently pin that second change as if it were
+    // part of the promotion.
     expect(
-      estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT)
-        - estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO),
-    ).toBe(130);
+      estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT_PRE_GEO)
+        - estimateTokens(CLOUD_HEADLINE_REASON_SYSTEM_PROMPT),
+    ).toBe(1168);
   });
 });
