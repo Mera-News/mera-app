@@ -2654,6 +2654,44 @@
     "loading": "Obliczanie twoich liczb"
   },
   "chatTopics": {
-    "none": "Zapisano. Na razie nie ma tematów do dodania."
+    "none": "Zapisano. Na razie nie ma tematów do dodania.",
+    "removed": "Usunięto"
+  },
+  "agentSteps": {
+    "legStart": "Zastanawiam się nad tym, co napisałeś",
+    "loadSkill": "Sprawdzam, jak potraktować {{topic}}",
+    "loadSkillGeneric": "Sprawdzam, jak to potraktować",
+    "findSimilarFacts": "Szukam tego, co już mi powiedziałeś",
+    "lookupPlace": "Sprawdzam okolicę: {{query}}",
+    "writeUp": "Spisuję to, żebyś mógł sprawdzić",
+    "removing": "Usuwam to, o co prosiłeś",
+    "asking": "Zadaję ci pytanie",
+    "working": "Pracuję nad tym",
+    "slow": "Wciąż trwa, wolne połączenie",
+    "legCapSentence": "To wymagało więcej kroków, niż Mera może wykonać naraz. Zapytaj ponownie, aby kontynuować.",
+    "interrupted": "To zostało przerwane. Zapytaj ponownie, aby kontynuować.",
+    "summaryDone": "Gotowe",
+    "summaryFailed": "Coś nie zadziałało",
+    "statePending": "w toku",
+    "stateDone": "gotowe",
+    "stateError": "niepowodzenie",
+    "consequence": {
+      "generic": "Ten krok się nie zakończył",
+      "interrupted": "To się nie zakończyło",
+      "lookupPlace": "Nie udało się sprawdzić okolicy, więc Mera użyła tego, co już wiedziała",
+      "findSimilarFacts": "Nie mogłam sprawdzić, co już mi powiedziałeś, więc coś może się powtórzyć",
+      "loadSkill": "Nie udało się wczytać wskazówek, więc Mera użyła ogólnego podejścia",
+      "writeUp": "Nie udało się tego spisać, więc nic nie zostało dodane",
+      "removing": "Nie udało się tego usunąć, więc nadal tam jest"
+    }
+  },
+  "skillPhrase": {
+    "residence": "miejsce, w którym mieszkasz",
+    "work": "twoją pracę",
+    "interests": "twoje zainteresowania",
+    "origin": "skąd pochodzisz",
+    "family": "twoją rodzinę",
+    "newFact": "nową informację",
+    "topics": "twoje tematy"
   }
 }

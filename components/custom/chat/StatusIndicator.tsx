@@ -23,14 +23,6 @@ const ACCENT = 'rgb(231, 138, 83)';
 const FAILED = '#F87171';
 const BODY = 'rgb(200, 200, 200)';
 
-// PENDING SPLICE: these keys land with lib/locales/_pagent-fragments.json.
-// `t()`'s overloads are generated from en.json, so until the splice they are
-// not in the union. DELETE `PendingKey` and every `k(...)` in the same commit
-// as the splice — tsc then proves the keys are really there, which eyeballing
-// a dictionary cannot. Leaving it behind silences exactly that check.
-type PendingKey = 'floatingChat.thinking';
-const k = (key: string) => key as PendingKey;
-
 export type IndicatorStatus = 'pending' | 'done' | 'error';
 
 export interface StatusIndicatorProps {
@@ -43,12 +35,6 @@ export interface StatusIndicatorProps {
   testID?: string;
 }
 
-const STATE_KEY: Record<IndicatorStatus, string> = {
-  pending: 'agentSteps.statePending',
-  done: 'agentSteps.stateDone',
-  error: 'agentSteps.stateError',
-};
-
 export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   status,
   label,
@@ -59,12 +45,21 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   const { t } = useTranslation();
   const glyph = size === 'md' ? 18 : 16;
 
+  // Literal keys, so tsc checks each one against the union generated from
+  // en.json. A key that never reached the dictionaries is a build error here
+  // rather than a dot-path read out to a screen-reader user.
+  const stateWord =
+    status === 'pending'
+      ? t('agentSteps.statePending')
+      : status === 'done'
+        ? t('agentSteps.stateDone')
+        : t('agentSteps.stateError');
+
   // An error always says something. Callers that forget still cannot ship a
   // blank failure.
   const failureLine =
-    status === 'error' ? (errorText ?? t(k('agentSteps.consequence.generic'))) : undefined;
+    status === 'error' ? (errorText ?? t('agentSteps.consequence.generic')) : undefined;
 
-  const stateWord = t(k(STATE_KEY[status]));
   const a11y = label ? `${label}, ${stateWord}` : stateWord;
 
   return (

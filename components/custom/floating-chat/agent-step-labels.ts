@@ -63,9 +63,9 @@ const CONSEQUENCE_KEY: Record<string, string> = {
   deleteUserFacts: 'agentSteps.consequence.removing',
 };
 
-export const GENERIC_LABEL_KEY = 'agentSteps.working';
-export const GENERIC_CONSEQUENCE_KEY = 'agentSteps.consequence.generic';
-export const INTERRUPTED_CONSEQUENCE_KEY = 'agentSteps.consequence.interrupted';
+export const GENERIC_LABEL_KEY = 'agentSteps.working' as const;
+export const GENERIC_CONSEQUENCE_KEY = 'agentSteps.consequence.generic' as const;
+export const INTERRUPTED_CONSEQUENCE_KEY = 'agentSteps.consequence.interrupted' as const;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === 'object' ? (value as Record<string, unknown>) : null;

@@ -2616,6 +2616,44 @@
     "loading": "Đang tính các con số của bạn"
   },
   "chatTopics": {
-    "none": "Đã lưu. Hiện chưa có chủ đề nào để thêm."
+    "none": "Đã lưu. Hiện chưa có chủ đề nào để thêm.",
+    "removed": "Đã xóa"
+  },
+  "agentSteps": {
+    "legStart": "Đang suy nghĩ về điều bạn nói",
+    "loadSkill": "Đang xem cách xử lý {{topic}}",
+    "loadSkillGeneric": "Đang xem cách xử lý việc này",
+    "findSimilarFacts": "Đang tìm những điều bạn đã kể",
+    "lookupPlace": "Đang kiểm tra khu vực: {{query}}",
+    "writeUp": "Đang viết lại để bạn kiểm tra",
+    "removing": "Đang xóa những gì bạn yêu cầu",
+    "asking": "Đang đặt một câu hỏi cho bạn",
+    "working": "Đang xử lý",
+    "slow": "Vẫn đang chạy, kết nối chậm",
+    "legCapSentence": "Việc này cần nhiều bước hơn mức Mera làm được một lần. Hãy hỏi lại để tiếp tục.",
+    "interrupted": "Việc này đã bị gián đoạn. Hãy hỏi lại để tiếp tục.",
+    "summaryDone": "Xong",
+    "summaryFailed": "Có phần chưa thực hiện được",
+    "statePending": "đang chạy",
+    "stateDone": "xong",
+    "stateError": "thất bại",
+    "consequence": {
+      "generic": "Bước này chưa hoàn tất",
+      "interrupted": "Việc này chưa hoàn tất",
+      "lookupPlace": "Không kiểm tra được khu vực đó, nên Mera dùng thông tin đã có",
+      "findSimilarFacts": "Không kiểm tra được những điều bạn đã kể, nên có thể bị trùng",
+      "loadSkill": "Không tải được hướng dẫn, nên Mera dùng cách xử lý chung",
+      "writeUp": "Không ghi lại được, nên chưa thêm gì cả",
+      "removing": "Không xóa được, nên vẫn còn đó"
+    }
+  },
+  "skillPhrase": {
+    "residence": "nơi bạn sống",
+    "work": "công việc của bạn",
+    "interests": "sở thích của bạn",
+    "origin": "nơi bạn đến từ",
+    "family": "gia đình bạn",
+    "newFact": "một thông tin mới",
+    "topics": "chủ đề của bạn"
   }
 }

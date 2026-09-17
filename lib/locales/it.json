@@ -2616,6 +2616,44 @@
     "loading": "Sto calcolando i tuoi numeri"
   },
   "chatTopics": {
-    "none": "Salvato. Al momento non ci sono argomenti da aggiungere."
+    "none": "Salvato. Al momento non ci sono argomenti da aggiungere.",
+    "removed": "Rimosso"
+  },
+  "agentSteps": {
+    "legStart": "Sto pensando a quello che hai detto",
+    "loadSkill": "Controllo come gestire {{topic}}",
+    "loadSkillGeneric": "Controllo come gestire questo",
+    "findSimilarFacts": "Cerco quello che mi hai già detto",
+    "lookupPlace": "Controllo la zona: {{query}}",
+    "writeUp": "Lo sto scrivendo perché tu lo controlli",
+    "removing": "Rimuovo quello che mi hai chiesto",
+    "asking": "Ti faccio una domanda",
+    "working": "Ci sto lavorando",
+    "slow": "Ancora in corso, connessione lenta",
+    "legCapSentence": "Ci sono voluti più passaggi di quanti Mera possa farne in una volta. Chiedi di nuovo per continuare.",
+    "interrupted": "È stato interrotto. Chiedi di nuovo per continuare.",
+    "summaryDone": "Fatto",
+    "summaryFailed": "Qualcosa non ha funzionato",
+    "statePending": "in corso",
+    "stateDone": "fatto",
+    "stateError": "non riuscito",
+    "consequence": {
+      "generic": "Questo passaggio non è stato completato",
+      "interrupted": "Non è stato completato",
+      "lookupPlace": "Non è stato possibile controllare la zona, così Mera ha usato quello che già sapeva",
+      "findSimilarFacts": "Non ho potuto controllare quello che mi avevi già detto, potrebbe esserci un doppione",
+      "loadSkill": "Non è stato possibile caricare le indicazioni, così Mera ha usato l'approccio generale",
+      "writeUp": "Non è stato possibile scriverlo, quindi non è stato aggiunto nulla",
+      "removing": "Non è stato possibile rimuoverlo, quindi è ancora presente"
+    }
+  },
+  "skillPhrase": {
+    "residence": "dove vivi",
+    "work": "il tuo lavoro",
+    "interests": "i tuoi interessi",
+    "origin": "da dove vieni",
+    "family": "la tua famiglia",
+    "newFact": "una nuova informazione",
+    "topics": "i tuoi argomenti"
   }
 }

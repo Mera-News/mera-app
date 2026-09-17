@@ -2616,6 +2616,44 @@
     "loading": "正在計算你的數據"
   },
   "chatTopics": {
-    "none": "已儲存。目前沒有可新增的主題。"
+    "none": "已儲存。目前沒有可新增的主題。",
+    "removed": "已移除"
+  },
+  "agentSteps": {
+    "legStart": "正在思考你說的內容",
+    "loadSkill": "正在確認如何處理{{topic}}",
+    "loadSkillGeneric": "正在確認如何處理這件事",
+    "findSimilarFacts": "正在尋找你之前告訴我的內容",
+    "lookupPlace": "正在確認地區：{{query}}",
+    "writeUp": "正在整理，供你確認",
+    "removing": "正在刪除你要求刪除的內容",
+    "asking": "正在向你提問",
+    "working": "正在處理",
+    "slow": "仍在處理，網路較慢",
+    "legCapSentence": "這超出了 Mera 一次能完成的步驟數。再問一次即可繼續。",
+    "interrupted": "這次處理中斷了。再問一次即可繼續。",
+    "summaryDone": "已完成",
+    "summaryFailed": "有一項沒有成功",
+    "statePending": "進行中",
+    "stateDone": "已完成",
+    "stateError": "失敗",
+    "consequence": {
+      "generic": "這一步沒有完成",
+      "interrupted": "這項沒有完成",
+      "lookupPlace": "無法確認該地區，Mera 使用了已知的資訊",
+      "findSimilarFacts": "無法核對你之前告訴我的內容，可能會重複",
+      "loadSkill": "無法載入相關指引，Mera 採用了通用做法",
+      "writeUp": "無法整理這項內容，因此沒有新增任何內容",
+      "removing": "無法刪除這項，它仍然在"
+    }
+  },
+  "skillPhrase": {
+    "residence": "你居住的地方",
+    "work": "你的工作",
+    "interests": "你的興趣",
+    "origin": "你來自哪裡",
+    "family": "你的家人",
+    "newFact": "一項新資訊",
+    "topics": "你的主題"
   }
 }

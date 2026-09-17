@@ -2616,6 +2616,44 @@
     "loading": "Deine Zahlen werden berechnet"
   },
   "chatTopics": {
-    "none": "Gespeichert. Gerade gibt es keine Themen zum Hinzufügen."
+    "none": "Gespeichert. Gerade gibt es keine Themen zum Hinzufügen.",
+    "removed": "Entfernt"
+  },
+  "agentSteps": {
+    "legStart": "Ich denke über deine Nachricht nach",
+    "loadSkill": "Ich prüfe, wie ich mit {{topic}} umgehe",
+    "loadSkillGeneric": "Ich prüfe, wie ich damit umgehe",
+    "findSimilarFacts": "Ich suche nach dem, was du mir schon gesagt hast",
+    "lookupPlace": "Ich prüfe die Gegend: {{query}}",
+    "writeUp": "Ich schreibe es auf, damit du es prüfen kannst",
+    "removing": "Ich entferne, worum du gebeten hast",
+    "asking": "Ich stelle dir eine Frage",
+    "working": "Ich arbeite daran",
+    "slow": "Läuft noch, langsame Verbindung",
+    "legCapSentence": "Das waren mehr Schritte, als Mera auf einmal schafft. Frag noch einmal, um fortzufahren.",
+    "interrupted": "Das wurde unterbrochen. Frag noch einmal, um fortzufahren.",
+    "summaryDone": "Fertig",
+    "summaryFailed": "Etwas hat nicht geklappt",
+    "statePending": "läuft",
+    "stateDone": "fertig",
+    "stateError": "fehlgeschlagen",
+    "consequence": {
+      "generic": "Dieser Schritt wurde nicht beendet",
+      "interrupted": "Das wurde nicht beendet",
+      "lookupPlace": "Die Gegend ließ sich nicht prüfen, also hat Mera das Bekannte genutzt",
+      "findSimilarFacts": "Ich konnte Bekanntes nicht prüfen, es kann also zu einer Wiederholung kommen",
+      "loadSkill": "Die Anleitung ließ sich nicht laden, also hat Mera allgemein gearbeitet",
+      "writeUp": "Das ließ sich nicht aufschreiben, es wurde nichts hinzugefügt",
+      "removing": "Das ließ sich nicht entfernen, es ist noch da"
+    }
+  },
+  "skillPhrase": {
+    "residence": "deinen Wohnort",
+    "work": "deine Arbeit",
+    "interests": "deine Interessen",
+    "origin": "deine Herkunft",
+    "family": "deine Familie",
+    "newFact": "eine neue Angabe",
+    "topics": "deine Themen"
   }
 }

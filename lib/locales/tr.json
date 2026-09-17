@@ -2618,6 +2618,44 @@
     "loading": "Sayıların hesaplanıyor"
   },
   "chatTopics": {
-    "none": "Kaydedildi. Şu anda eklenecek konu yok."
+    "none": "Kaydedildi. Şu anda eklenecek konu yok.",
+    "removed": "Kaldırıldı"
+  },
+  "agentSteps": {
+    "legStart": "Söylediklerini düşünüyorum",
+    "loadSkill": "{{topic}} nasıl ele alınır, kontrol ediyorum",
+    "loadSkillGeneric": "Bunu nasıl ele alacağımı kontrol ediyorum",
+    "findSimilarFacts": "Bana daha önce söylediklerini arıyorum",
+    "lookupPlace": "Bölgeyi kontrol ediyorum: {{query}}",
+    "writeUp": "Kontrol edebilmen için yazıyorum",
+    "removing": "İstediğin şeyi kaldırıyorum",
+    "asking": "Sana bir soru soruyorum",
+    "working": "Üzerinde çalışıyorum",
+    "slow": "Hâlâ sürüyor, bağlantı yavaş",
+    "legCapSentence": "Bu, Mera'nın bir seferde yapabileceğinden fazla adım gerektirdi. Devam etmek için tekrar sor.",
+    "interrupted": "Bu yarıda kaldı. Devam etmek için tekrar sor.",
+    "summaryDone": "Tamam",
+    "summaryFailed": "Bir şey çalışmadı",
+    "statePending": "sürüyor",
+    "stateDone": "tamam",
+    "stateError": "başarısız",
+    "consequence": {
+      "generic": "Bu adım tamamlanmadı",
+      "interrupted": "Bu tamamlanmadı",
+      "lookupPlace": "Bölge kontrol edilemedi, bu yüzden Mera bildiklerini kullandı",
+      "findSimilarFacts": "Daha önce söylediklerini kontrol edemedim, tekrar olabilir",
+      "loadSkill": "Yönergesi yüklenemedi, bu yüzden Mera genel yaklaşımı kullandı",
+      "writeUp": "Bu yazılamadı, bu yüzden hiçbir şey eklenmedi",
+      "removing": "Bu kaldırılamadı, hâlâ duruyor"
+    }
+  },
+  "skillPhrase": {
+    "residence": "yaşadığın yeri",
+    "work": "işini",
+    "interests": "ilgi alanlarını",
+    "origin": "nereli olduğunu",
+    "family": "aileni",
+    "newFact": "yeni bir bilgiyi",
+    "topics": "konularını"
   }
 }

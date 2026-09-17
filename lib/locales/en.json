@@ -2616,6 +2616,44 @@
     "loading": "Working out your numbers"
   },
   "chatTopics": {
-    "none": "Saved. No topics to add right now."
+    "none": "Saved. No topics to add right now.",
+    "removed": "Removed"
+  },
+  "agentSteps": {
+    "legStart": "Thinking about what you said",
+    "loadSkill": "Checking how to handle {{topic}}",
+    "loadSkillGeneric": "Checking how to handle this",
+    "findSimilarFacts": "Looking for things you've already told me",
+    "lookupPlace": "Checking the area: {{query}}",
+    "writeUp": "Writing it up for you to check",
+    "removing": "Removing what you asked me to remove",
+    "asking": "Putting a question to you",
+    "working": "Working on it",
+    "slow": "Still working, slow connection",
+    "legCapSentence": "That took more steps than Mera can do at once. Ask again to carry on.",
+    "interrupted": "This was interrupted. Ask again to carry on.",
+    "summaryDone": "Done",
+    "summaryFailed": "Something didn't work",
+    "statePending": "in progress",
+    "stateDone": "done",
+    "stateError": "failed",
+    "consequence": {
+      "generic": "That step didn't finish",
+      "interrupted": "This didn't finish",
+      "lookupPlace": "Couldn't check that area, so Mera used what it already knew",
+      "findSimilarFacts": "Couldn't check what you'd already told me, so there may be a repeat",
+      "loadSkill": "Couldn't load its guidance, so Mera used its general approach",
+      "writeUp": "Couldn't write that up, so nothing was added",
+      "removing": "Couldn't remove that, so it's still there"
+    }
+  },
+  "skillPhrase": {
+    "residence": "where you live",
+    "work": "your work",
+    "interests": "your interests",
+    "origin": "where you're from",
+    "family": "your family",
+    "newFact": "a new fact",
+    "topics": "your topics"
   }
 }

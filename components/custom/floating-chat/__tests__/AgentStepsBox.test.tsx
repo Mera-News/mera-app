@@ -175,7 +175,7 @@ describe('collapsed', () => {
       <AgentStepsBox {...props({ collapsed: true, failedCount: 1, doneCount: 2 })} />,
     );
     expect(getByTestId('agent-steps-summary').props.accessibilityLabel).toContain(
-      't:agentSteps.summaryOneFailed',
+      't:agentSteps.summaryFailed',
     );
   });
 

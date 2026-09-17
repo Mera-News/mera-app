@@ -2623,6 +2623,44 @@
     "loading": "Calcul de vos chiffres"
   },
   "chatTopics": {
-    "none": "Enregistré. Aucun sujet à ajouter pour le moment."
+    "none": "Enregistré. Aucun sujet à ajouter pour le moment.",
+    "removed": "Supprimé"
+  },
+  "agentSteps": {
+    "legStart": "Je réfléchis à ce que tu as dit",
+    "loadSkill": "Je vérifie comment traiter {{topic}}",
+    "loadSkillGeneric": "Je vérifie comment traiter ceci",
+    "findSimilarFacts": "Je cherche ce que tu m'as déjà dit",
+    "lookupPlace": "Je vérifie le secteur : {{query}}",
+    "writeUp": "Je le rédige pour que tu vérifies",
+    "removing": "Je supprime ce que tu as demandé",
+    "asking": "Je te pose une question",
+    "working": "Je m'en occupe",
+    "slow": "Toujours en cours, connexion lente",
+    "legCapSentence": "Cela a demandé plus d'étapes que Mera peut faire d'un coup. Repose la question pour continuer.",
+    "interrupted": "Cela a été interrompu. Repose la question pour continuer.",
+    "summaryDone": "Terminé",
+    "summaryFailed": "Quelque chose n'a pas marché",
+    "statePending": "en cours",
+    "stateDone": "terminé",
+    "stateError": "échec",
+    "consequence": {
+      "generic": "Cette étape n'a pas abouti",
+      "interrupted": "Cela n'a pas abouti",
+      "lookupPlace": "Le secteur n'a pas pu être vérifié, donc Mera a utilisé ce qu'elle savait déjà",
+      "findSimilarFacts": "Je n'ai pas pu vérifier ce que tu m'avais déjà dit, il peut y avoir un doublon",
+      "loadSkill": "Les consignes n'ont pas pu être chargées, donc Mera a procédé de façon générale",
+      "writeUp": "Cela n'a pas pu être rédigé, donc rien n'a été ajouté",
+      "removing": "Cela n'a pas pu être supprimé, c'est toujours là"
+    }
+  },
+  "skillPhrase": {
+    "residence": "l'endroit où tu vis",
+    "work": "ton travail",
+    "interests": "tes centres d'intérêt",
+    "origin": "d'où tu viens",
+    "family": "ta famille",
+    "newFact": "une nouvelle information",
+    "topics": "tes sujets"
   }
 }

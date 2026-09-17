@@ -2615,6 +2615,44 @@
     "loading": "Menghitung angka Anda"
   },
   "chatTopics": {
-    "none": "Tersimpan. Saat ini tidak ada topik untuk ditambahkan."
+    "none": "Tersimpan. Saat ini tidak ada topik untuk ditambahkan.",
+    "removed": "Dihapus"
+  },
+  "agentSteps": {
+    "legStart": "Memikirkan apa yang kamu katakan",
+    "loadSkill": "Memeriksa cara menangani {{topic}}",
+    "loadSkillGeneric": "Memeriksa cara menangani ini",
+    "findSimilarFacts": "Mencari hal yang sudah kamu ceritakan",
+    "lookupPlace": "Memeriksa wilayah: {{query}}",
+    "writeUp": "Menuliskannya untuk kamu periksa",
+    "removing": "Menghapus yang kamu minta",
+    "asking": "Mengajukan pertanyaan untukmu",
+    "working": "Sedang dikerjakan",
+    "slow": "Masih berjalan, koneksi lambat",
+    "legCapSentence": "Itu butuh lebih banyak langkah daripada yang bisa Mera lakukan sekaligus. Tanya lagi untuk melanjutkan.",
+    "interrupted": "Ini terhenti. Tanya lagi untuk melanjutkan.",
+    "summaryDone": "Selesai",
+    "summaryFailed": "Ada yang tidak berhasil",
+    "statePending": "sedang berjalan",
+    "stateDone": "selesai",
+    "stateError": "gagal",
+    "consequence": {
+      "generic": "Langkah itu tidak selesai",
+      "interrupted": "Ini tidak selesai",
+      "lookupPlace": "Wilayah itu tidak bisa diperiksa, jadi Mera memakai yang sudah diketahui",
+      "findSimilarFacts": "Tidak bisa memeriksa yang sudah kamu ceritakan, jadi mungkin ada pengulangan",
+      "loadSkill": "Panduannya tidak bisa dimuat, jadi Mera memakai pendekatan umum",
+      "writeUp": "Ini tidak bisa dituliskan, jadi tidak ada yang ditambahkan",
+      "removing": "Ini tidak bisa dihapus, jadi masih ada"
+    }
+  },
+  "skillPhrase": {
+    "residence": "tempat tinggalmu",
+    "work": "pekerjaanmu",
+    "interests": "minatmu",
+    "origin": "asalmu",
+    "family": "keluargamu",
+    "newFact": "informasi baru",
+    "topics": "topikmu"
   }
 }

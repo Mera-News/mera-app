@@ -24,15 +24,14 @@ import type { AgentStep } from './types';
  */
 export const SLOW_STEP_MS = 8_000;
 
-// PENDING SPLICE: every agentSteps.* / skillPhrase.* key below lands with
-// lib/locales/_pagent-fragments.json.
+// THIS FILE IS THE ONE PLACE A STEP KEY BECOMES TEXT.
 //
-// `t()`'s overloads are generated from en.json and pin the OPTION SHAPE per
-// key, so a key-cast cannot carry interpolation — hence one narrow cast of the
-// function itself rather than a cast at each call. DELETE `tx` and use `t`
-// directly in the same commit as the splice: tsc then checks every key AND
-// every variable name against the generated union, which is the check this
-// stands in for. Leaving it behind silences exactly that check.
+// Every key below is a LITERAL inside a `t()` call, so tsc checks it against
+// the union generated from en.json: a key that never reached the dictionaries
+// is a build error, not a raw dot-path rendered at a user. That is also why
+// the key tables live here rather than in the pure label module — `t()`'s
+// overloads pin the option shape per key, so a key held in a variable cannot
+// be passed to it at all.
 
 function boxEntering() {
   'worklet';
@@ -64,7 +63,38 @@ export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
   interrupted,
 }) => {
   const { t } = useTranslation();
-  const tx = t as unknown as (key: string, options?: Record<string, unknown>) => string;
+
+  /** Step labels with no interpolation. A key absent here renders the generic
+   *  line, which is what keeps an unmapped tool from showing a dot-path. */
+  const PLAIN_LABEL: Record<string, string> = {
+    'agentSteps.legStart': t('agentSteps.legStart'),
+    'agentSteps.loadSkillGeneric': t('agentSteps.loadSkillGeneric'),
+    'agentSteps.findSimilarFacts': t('agentSteps.findSimilarFacts'),
+    'agentSteps.writeUp': t('agentSteps.writeUp'),
+    'agentSteps.removing': t('agentSteps.removing'),
+    'agentSteps.asking': t('agentSteps.asking'),
+    'agentSteps.working': t('agentSteps.working'),
+  };
+
+  const SKILL_PHRASE: Record<string, string> = {
+    'skillPhrase.residence': t('skillPhrase.residence'),
+    'skillPhrase.work': t('skillPhrase.work'),
+    'skillPhrase.interests': t('skillPhrase.interests'),
+    'skillPhrase.origin': t('skillPhrase.origin'),
+    'skillPhrase.family': t('skillPhrase.family'),
+    'skillPhrase.newFact': t('skillPhrase.newFact'),
+    'skillPhrase.topics': t('skillPhrase.topics'),
+  };
+
+  const CONSEQUENCE: Record<string, string> = {
+    'agentSteps.consequence.generic': t('agentSteps.consequence.generic'),
+    'agentSteps.consequence.interrupted': t('agentSteps.consequence.interrupted'),
+    'agentSteps.consequence.lookupPlace': t('agentSteps.consequence.lookupPlace'),
+    'agentSteps.consequence.findSimilarFacts': t('agentSteps.consequence.findSimilarFacts'),
+    'agentSteps.consequence.loadSkill': t('agentSteps.consequence.loadSkill'),
+    'agentSteps.consequence.writeUp': t('agentSteps.consequence.writeUp'),
+    'agentSteps.consequence.removing': t('agentSteps.consequence.removing'),
+  };
 
   // Gates the one-shot COLLAPSE/entry transition only. Deliberately not the
   // pending spinner: `use-is-focused-safe`'s own docstring says this hook must
@@ -89,22 +119,29 @@ export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
     return () => clearTimeout(timer);
   }, [pendingId]);
 
-  /** A step's label, resolving the nested skill phrase when there is one. */
+  /** A step's label. The two interpolating keys are handled explicitly; every
+   *  other key comes from the table, and an unknown one falls back rather than
+   *  rendering its own name. */
   const labelFor = (step: AgentStep): string => {
     const values = step.labelValues;
-    if (values?.topicKey) {
-      return tx(step.labelKey, { topic: tx(values.topicKey) });
+    if (step.labelKey === 'agentSteps.loadSkill' && values?.topicKey) {
+      const phrase = SKILL_PHRASE[values.topicKey];
+      if (phrase) return t('agentSteps.loadSkill', { topic: phrase });
+      return PLAIN_LABEL['agentSteps.loadSkillGeneric'];
     }
-    return values ? tx(step.labelKey, values) : tx(step.labelKey);
+    if (step.labelKey === 'agentSteps.lookupPlace' && values?.query) {
+      return t('agentSteps.lookupPlace', { query: values.query });
+    }
+    return PLAIN_LABEL[step.labelKey] ?? PLAIN_LABEL['agentSteps.working'];
   };
 
   const summary = legCapped
-    ? tx('agentSteps.legCapSentence')
+    ? t('agentSteps.legCapSentence')
     : interrupted
-      ? tx('agentSteps.interrupted')
+      ? t('agentSteps.interrupted')
       : failedCount > 0
-        ? tx('agentSteps.summaryOneFailed', { count: failedCount })
-        : tx('agentSteps.summaryDone', { count: doneCount });
+        ? t('agentSteps.summaryFailed')
+        : t('agentSteps.summaryDone');
 
   const body = collapsed ? (
     <StatusIndicator
@@ -119,12 +156,17 @@ export const AgentStepsBox: React.FC<AgentStepsBoxProps> = ({
           <StatusIndicator
             status={step.status}
             label={labelFor(step)}
-            errorText={step.consequenceKey ? tx(step.consequenceKey) : undefined}
+            errorText={
+              step.consequenceKey
+                ? (CONSEQUENCE[step.consequenceKey] ??
+                  CONSEQUENCE['agentSteps.consequence.generic'])
+                : undefined
+            }
             testID={`agent-step-${step.id}`}
           />
           {slow && step.id === pendingId && (
             <Text size="xs" style={styles.slow} testID="agent-steps-slow" numberOfLines={2}>
-              {tx('agentSteps.slow')}
+              {t('agentSteps.slow')}
             </Text>
           )}
         </View>

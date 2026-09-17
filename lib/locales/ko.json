@@ -2615,6 +2615,44 @@
     "loading": "숫자를 계산하는 중"
   },
   "chatTopics": {
-    "none": "저장했습니다. 지금은 추가할 주제가 없습니다."
+    "none": "저장했습니다. 지금은 추가할 주제가 없습니다.",
+    "removed": "삭제했어요"
+  },
+  "agentSteps": {
+    "legStart": "말씀하신 내용을 생각하고 있어요",
+    "loadSkill": "{{topic}} 처리 방법을 확인하고 있어요",
+    "loadSkillGeneric": "이 내용을 어떻게 처리할지 확인하고 있어요",
+    "findSimilarFacts": "이미 알려주신 내용을 찾고 있어요",
+    "lookupPlace": "지역을 확인하고 있어요: {{query}}",
+    "writeUp": "확인하실 수 있도록 정리하고 있어요",
+    "removing": "요청하신 내용을 삭제하고 있어요",
+    "asking": "질문을 드리고 있어요",
+    "working": "처리하고 있어요",
+    "slow": "아직 진행 중이에요. 연결이 느립니다",
+    "legCapSentence": "한 번에 처리할 수 있는 단계를 넘었어요. 계속하려면 다시 물어봐 주세요.",
+    "interrupted": "중간에 중단됐어요. 계속하려면 다시 물어봐 주세요.",
+    "summaryDone": "완료했어요",
+    "summaryFailed": "일부가 처리되지 않았어요",
+    "statePending": "진행 중",
+    "stateDone": "완료",
+    "stateError": "실패",
+    "consequence": {
+      "generic": "이 단계가 끝나지 않았어요",
+      "interrupted": "끝나지 않았어요",
+      "lookupPlace": "그 지역을 확인하지 못해 이미 알고 있던 정보를 사용했어요",
+      "findSimilarFacts": "이미 알려주신 내용을 확인하지 못해 중복될 수 있어요",
+      "loadSkill": "안내를 불러오지 못해 일반적인 방식으로 처리했어요",
+      "writeUp": "정리하지 못해 아무것도 추가되지 않았어요",
+      "removing": "삭제하지 못해 아직 남아 있어요"
+    }
+  },
+  "skillPhrase": {
+    "residence": "사는 곳",
+    "work": "직업",
+    "interests": "관심사",
+    "origin": "출신지",
+    "family": "가족",
+    "newFact": "새로운 정보",
+    "topics": "관심 주제"
   }
 }

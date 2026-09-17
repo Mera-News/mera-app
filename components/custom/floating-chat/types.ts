@@ -34,6 +34,12 @@ export type AgentStepStatus = 'pending' | 'done' | 'error';
  * reads a tool call's status rather than its result. That is why it can render
  * while work is still in flight, and why `deriveThreadItems` has to push it
  * before the "empty assistant message with no cards" guard.
+ *
+ * `labelKey` and `consequenceKey` are plain strings, not literal unions. The
+ * literals live at the ONE place they are resolved — AgentStepsBox's key
+ * tables — because `t()`'s generated overloads pin the option shape per key,
+ * so a union of keys cannot be passed to it. Putting the literals in the
+ * `t()` calls is what makes tsc prove every key reached the dictionaries.
  */
 export interface AgentStep {
   /** `${messageId}::${toolCallIndex}` for a tool, `${messageId}::leg` for a leg
@@ -42,7 +48,7 @@ export interface AgentStep {
   id: string;
   kind: 'leg-start' | 'tool';
   toolName?: string;
-  /** Directly rendered, so a locale KEY (model-rendered text takes English). */
+  /** Resolved to text by AgentStepsBox's key table, never rendered raw. */
   labelKey: string;
   labelValues?: Record<string, string>;
   status: AgentStepStatus;

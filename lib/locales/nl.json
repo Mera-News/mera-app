@@ -2616,6 +2616,44 @@
     "loading": "Je cijfers worden berekend"
   },
   "chatTopics": {
-    "none": "Opgeslagen. Er zijn nu geen onderwerpen om toe te voegen."
+    "none": "Opgeslagen. Er zijn nu geen onderwerpen om toe te voegen.",
+    "removed": "Verwijderd"
+  },
+  "agentSteps": {
+    "legStart": "Ik denk na over wat je zei",
+    "loadSkill": "Ik kijk hoe ik omga met {{topic}}",
+    "loadSkillGeneric": "Ik kijk hoe ik hiermee omga",
+    "findSimilarFacts": "Ik zoek naar wat je me al verteld hebt",
+    "lookupPlace": "Ik controleer de omgeving: {{query}}",
+    "writeUp": "Ik schrijf het op zodat je het kunt nakijken",
+    "removing": "Ik verwijder wat je gevraagd hebt",
+    "asking": "Ik stel je een vraag",
+    "working": "Ik ben ermee bezig",
+    "slow": "Nog bezig, trage verbinding",
+    "legCapSentence": "Dat kostte meer stappen dan Mera in één keer aankan. Vraag het opnieuw om verder te gaan.",
+    "interrupted": "Dit is onderbroken. Vraag het opnieuw om verder te gaan.",
+    "summaryDone": "Klaar",
+    "summaryFailed": "Iets is niet gelukt",
+    "statePending": "bezig",
+    "stateDone": "klaar",
+    "stateError": "mislukt",
+    "consequence": {
+      "generic": "Deze stap is niet afgerond",
+      "interrupted": "Dit is niet afgerond",
+      "lookupPlace": "De omgeving kon niet worden gecontroleerd, dus Mera gebruikte wat het al wist",
+      "findSimilarFacts": "Ik kon niet nagaan wat je me al verteld had, dus er kan iets dubbel staan",
+      "loadSkill": "De richtlijn kon niet worden geladen, dus Mera werkte op de algemene manier",
+      "writeUp": "Dit kon niet worden opgeschreven, dus er is niets toegevoegd",
+      "removing": "Dit kon niet worden verwijderd, dus het staat er nog"
+    }
+  },
+  "skillPhrase": {
+    "residence": "waar je woont",
+    "work": "je werk",
+    "interests": "je interesses",
+    "origin": "waar je vandaan komt",
+    "family": "je gezin",
+    "newFact": "een nieuw gegeven",
+    "topics": "je onderwerpen"
   }
 }

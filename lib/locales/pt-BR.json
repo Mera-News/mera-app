@@ -2616,6 +2616,44 @@
     "loading": "Calculando seus números"
   },
   "chatTopics": {
-    "none": "Salvo. No momento não há temas para adicionar."
+    "none": "Salvo. No momento não há temas para adicionar.",
+    "removed": "Removido"
+  },
+  "agentSteps": {
+    "legStart": "Pensando no que você disse",
+    "loadSkill": "Verificando como lidar com {{topic}}",
+    "loadSkillGeneric": "Verificando como lidar com isso",
+    "findSimilarFacts": "Procurando o que você já me contou",
+    "lookupPlace": "Verificando a região: {{query}}",
+    "writeUp": "Escrevendo para você conferir",
+    "removing": "Removendo o que você pediu",
+    "asking": "Preparando uma pergunta para você",
+    "working": "Trabalhando nisso",
+    "slow": "Ainda em andamento, conexão lenta",
+    "legCapSentence": "Isso exigiu mais etapas do que a Mera faz de uma vez. Pergunte de novo para continuar.",
+    "interrupted": "Isso foi interrompido. Pergunte de novo para continuar.",
+    "summaryDone": "Pronto",
+    "summaryFailed": "Algo não funcionou",
+    "statePending": "em andamento",
+    "stateDone": "pronto",
+    "stateError": "falhou",
+    "consequence": {
+      "generic": "Essa etapa não terminou",
+      "interrupted": "Isso não terminou",
+      "lookupPlace": "Não deu para verificar a região, então a Mera usou o que já sabia",
+      "findSimilarFacts": "Não consegui conferir o que você já tinha contado, então pode haver repetição",
+      "loadSkill": "Não deu para carregar a orientação, então a Mera usou a abordagem geral",
+      "writeUp": "Não deu para escrever, então nada foi adicionado",
+      "removing": "Não deu para remover, então continua lá"
+    }
+  },
+  "skillPhrase": {
+    "residence": "onde você mora",
+    "work": "seu trabalho",
+    "interests": "seus interesses",
+    "origin": "de onde você é",
+    "family": "sua família",
+    "newFact": "uma informação nova",
+    "topics": "seus temas"
   }
 }

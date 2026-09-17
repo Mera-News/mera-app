@@ -257,7 +257,7 @@ const ChatTopicsCard: React.FC<ChatTopicsCardProps> = ({ facts, merged }) => {
       await deleteTopicWithDecline(chip.id, { undoWindowMs });
       setPendingDelete((prev) => [...prev, { chip, index }]);
       AccessibilityInfo.announceForAccessibility(
-        `${t('chatTopics.removed' as 'topicPlan.undo')}. ${t('topicPlan.undo')}`,
+        `${t('chatTopics.removed')}. ${t('topicPlan.undo')}`,
       );
 
       const timer = setTimeout(() => dropPending(chip.id), undoWindowMs);
