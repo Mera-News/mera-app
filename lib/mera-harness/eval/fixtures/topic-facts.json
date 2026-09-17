@@ -140,25 +140,25 @@
       "kind": "family"
     },
     {
-      "caseId": "generic-hobby",
+      "caseId": "interest-chess",
       "id": "tf13",
-      "statement": "Collects vinyl records",
+      "statement": "Plays chess",
       "questionnaireAttribute": "interest: hobby",
-      "kind": "generic"
+      "kind": "interest"
     },
     {
-      "caseId": "generic-sport",
+      "caseId": "interest-genre",
       "id": "tf14",
-      "statement": "Follows cricket",
-      "questionnaireAttribute": "interest: sport",
-      "kind": "generic"
+      "statement": "Listens to drum and bass",
+      "questionnaireAttribute": "interest: music",
+      "kind": "interest"
     },
     {
-      "caseId": "generic-opinion",
+      "caseId": "interest-team",
       "id": "tf15",
-      "statement": "Has strong views on nuclear power",
-      "questionnaireAttribute": "interest: opinion",
-      "kind": "generic"
+      "statement": "Supports Feyenoord",
+      "questionnaireAttribute": "interest: sport",
+      "kind": "interest"
     }
   ]
 }

@@ -151,6 +151,12 @@ function parseArgs(argv: string[]): Args {
 
 /** The user's location fact, which the builder takes separately. Matched on the
  *  attribute rather than the text, the same key the app's own resolver uses. */
+interface PlaceChainLite {
+  locality?: string;
+  admin1?: string | null;
+  countryName?: string;
+}
+
 function locationOf(facts: CorpusFact[]): string | null {
   const hit = facts.find((f) => f.questionnaireAttribute.toLowerCase().startsWith('location'));
   return hit ? hit.statement : null;
@@ -201,9 +207,12 @@ async function main(): Promise<number> {
   // STEP A drives the kind-bearing corpus: the cohort personas carry no
   // `kind`, and without one there is no guideline to select, so the
   // skill-guided arm would have nothing to be skill-guided BY.
-  const stepAFacts: (CorpusFact & { kind?: string })[] | null = args.factsFile
+  const stepAFacts: (CorpusFact & { kind?: string; placeChain?: PlaceChainLite })[] | null = args.factsFile
     ? (JSON.parse(readFileSync(resolve(args.factsFile), 'utf8')) as {
-        facts: { id: string; statement: string; questionnaireAttribute: string; kind: string }[];
+        facts: {
+          id: string; statement: string; questionnaireAttribute: string; kind: string;
+          placeChain?: PlaceChainLite;
+        }[];
       }).facts.map((f) => ({
         id: f.id,
         statement: f.statement,
@@ -214,6 +223,10 @@ async function main(): Promise<number> {
         createdAtMs: 0,
         metadata: { topics: [] },
         kind: f.kind,
+        // CARRIED, and it was not before. locationForFact reads this; without
+        // it every fact silently fell back to the persona residence and the
+        // per-fact-location fix was dead on arrival while looking applied.
+        placeChain: f.placeChain,
       }))
     : null;
   const facts = (stepAFacts ?? cohort.persona.facts).slice(0, args.accept);
@@ -239,7 +252,7 @@ async function main(): Promise<number> {
    *
    * A fact that carries its own resolved chain IS its own location.
    */
-  const locationForFact = (f: CorpusFact & { placeChain?: { locality?: string; admin1?: string | null; countryName?: string } }): string | null => {
+  const locationForFact = (f: CorpusFact & { placeChain?: PlaceChainLite }): string | null => {
     const pc = f.placeChain;
     if (pc?.locality) {
       return [pc.locality, pc.admin1, pc.countryName].filter(Boolean).join(', ');

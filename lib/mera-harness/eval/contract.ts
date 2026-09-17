@@ -61,7 +61,7 @@ export {
  * mean the eval asserting a mapping it also owns, which is a tautology rather
  * than a check.
  */
-export const FACT_KINDS = ['residence', 'origin', 'profession', 'family', 'generic'] as const;
+export const FACT_KINDS = ['residence', 'origin', 'profession', 'family', 'interest', 'generic'] as const;
 export type FactKind = (typeof FACT_KINDS)[number];
 
 /** The topic skill a fact kind should select. Asserted against the id the

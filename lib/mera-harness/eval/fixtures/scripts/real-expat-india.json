@@ -4,11 +4,23 @@
   "note": "Production case. Origin plus residence in one statement, which is where the origin guideline must split its output rather than running the domestic ladder of a country the user LEFT.",
   "persona": {
     "facts": [
-      { "id": "f1", "statement": "Lives in Amsterdam, North Holland, Netherlands", "questionnaireAttribute": "location: residence", "kind": "residence" }
+      {
+        "id": "f1",
+        "statement": "Lives in Amsterdam, North Holland, Netherlands",
+        "questionnaireAttribute": "location: residence",
+        "kind": "residence"
+      }
     ],
-    "topics": [{ "id": "t1", "text": "Netherlands immigration policy" }]
+    "topics": [
+      {
+        "id": "t1",
+        "text": "Netherlands immigration policy"
+      }
+    ]
   },
-  "declinedTopics": ["Bollywood gossip"],
+  "declinedTopics": [
+    "Bollywood gossip"
+  ],
   "turns": [
     {
       "index": 0,
@@ -16,14 +28,32 @@
       "expect": {
         "routeKind": "origin",
         "skill": "facts/origin",
-        "tools": ["load_skill", "find_similar_facts", "saveExtractedFacts"],
+        "tools": [
+          "load_skill",
+          "find_similar_facts",
+          "saveExtractedFacts"
+        ],
         "legs": 3,
         "proposals": [
-          { "statementMatches": ["india"], "kind": "origin", "placeChain": null, "replaces": null }
+          {
+            "statementMatches": [
+              "india"
+            ],
+            "kind": "origin",
+            "placeChain": null,
+            "replaces": null
+          }
         ]
       },
       "fakeTools": {
-        "find_similar_facts": [{ "kind": "origin", "returns": { "candidates": [] } }]
+        "find_similar_facts": [
+          {
+            "kind": "origin",
+            "returns": {
+              "candidates": []
+            }
+          }
+        ]
       }
     },
     {
@@ -32,7 +62,9 @@
       "expect": {
         "routeKind": "origin",
         "skill": "facts/origin",
-        "tools": ["load_skill"],
+        "tools": [
+          "load_skill"
+        ],
         "legs": 2
       }
     },
@@ -40,9 +72,11 @@
       "index": 2,
       "user": "Do not show me anything about Bollywood",
       "expect": {
-        "routeKind": "none",
-        "skill": "facts/generic",
-        "tools": ["load_skill"],
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "tools": [
+          "load_skill"
+        ],
         "legs": 2
       }
     }

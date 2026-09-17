@@ -4,7 +4,12 @@
   "note": "Production case. A profession is unanchored by default, so this is where a field-generic topic must appear and where the residence must NOT become the subject.",
   "persona": {
     "facts": [
-      { "id": "f1", "statement": "Lives in Amsterdam, North Holland, Netherlands", "questionnaireAttribute": "location: residence", "kind": "residence" }
+      {
+        "id": "f1",
+        "statement": "Lives in Amsterdam, North Holland, Netherlands",
+        "questionnaireAttribute": "location: residence",
+        "kind": "residence"
+      }
     ],
     "topics": []
   },
@@ -16,14 +21,33 @@
       "expect": {
         "routeKind": "profession",
         "skill": "facts/profession",
-        "tools": ["load_skill", "find_similar_facts", "saveExtractedFacts"],
+        "tools": [
+          "load_skill",
+          "find_similar_facts",
+          "saveExtractedFacts"
+        ],
         "legs": 3,
         "proposals": [
-          { "statementMatches": ["software", "engineer"], "kind": "profession", "placeChain": null, "replaces": null }
+          {
+            "statementMatches": [
+              "software",
+              "engineer"
+            ],
+            "kind": "profession",
+            "placeChain": null,
+            "replaces": null
+          }
         ]
       },
       "fakeTools": {
-        "find_similar_facts": [{ "kind": "profession", "returns": { "candidates": [] } }]
+        "find_similar_facts": [
+          {
+            "kind": "profession",
+            "returns": {
+              "candidates": []
+            }
+          }
+        ]
       }
     },
     {
@@ -32,15 +56,37 @@
       "expect": {
         "routeKind": "profession",
         "skill": "facts/profession",
-        "tools": ["load_skill", "find_similar_facts"],
+        "tools": [
+          "load_skill",
+          "find_similar_facts"
+        ],
         "legs": 3,
         "proposals": [
-          { "statementMatches": ["backend"], "kind": "profession", "placeChain": null, "replaces": "f_prev" }
+          {
+            "statementMatches": [
+              "backend"
+            ],
+            "kind": "profession",
+            "placeChain": null,
+            "replaces": "f_prev"
+          }
         ]
       },
       "fakeTools": {
         "find_similar_facts": [
-          { "kind": "profession", "returns": { "candidates": [{ "factId": "f_prev", "statement": "Works as a software engineer", "attribute": "profession: job", "overlap": 0.62 }] } }
+          {
+            "kind": "profession",
+            "returns": {
+              "candidates": [
+                {
+                  "factId": "f_prev",
+                  "statement": "Works as a software engineer",
+                  "attribute": "profession: job",
+                  "overlap": 0.62
+                }
+              ]
+            }
+          }
         ]
       }
     },
@@ -48,8 +94,8 @@
       "index": 2,
       "user": "Thanks, that is all",
       "expect": {
-        "routeKind": "none",
-        "skill": "facts/generic",
+        "routeKind": "interest",
+        "skill": "facts/interest",
         "tools": [],
         "legs": 1
       }

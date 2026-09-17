@@ -2,23 +2,125 @@
   "id": "good",
   "cohort": "good",
   "note": "The control cohort. Clear, cooperative, one to three facts a message. Whatever a prompt cannot do here it cannot do anywhere.",
-  "persona": { "facts": [], "topics": [] },
+  "persona": {
+    "facts": [],
+    "topics": []
+  },
   "declinedTopics": [],
   "turns": [
-    { "index": 0, "user": "I moved to Porto last year and I work on bridge inspections",
-      "expect": { "routeKind": "residence", "skill": "facts/residence", "tools": ["load_skill", "lookup_place", "saveExtractedFacts"], "legs": 3,
-        "proposals": [{ "statementMatches": ["porto"], "kind": "residence", "placeChain": "required", "replaces": null }] },
-      "fakeTools": { "lookup_place": [{ "query": "Porto", "returns": { "status": "resolved", "places": [ { "locality": "Porto", "admin1": "Porto District", "countryCode": "PT", "countryName": "Portugal", "bloc": "EU" } ] } }] } },
-    { "index": 1, "user": "Mostly the older road bridges over the Douro",
-      "expect": { "routeKind": "profession", "skill": "facts/profession", "tools": ["load_skill"], "legs": 2 } },
-    { "index": 2, "user": "I take the train in every morning from Vila Nova de Gaia",
-      "expect": { "routeKind": "none", "skill": "facts/generic", "tools": ["load_skill"], "legs": 2 } },
-    { "index": 3, "user": "I also follow the national football team",
-      "expect": { "routeKind": "none", "skill": "facts/generic", "tools": ["load_skill", "saveExtractedFacts"], "legs": 2,
-        "proposals": [{ "statementMatches": ["football"], "kind": null, "placeChain": "forbidden", "replaces": null }] } },
-    { "index": 4, "user": "My sister is visiting next month, she lives abroad",
-      "expect": { "routeKind": "family", "skill": "facts/family", "tools": ["load_skill"], "legs": 2 } },
-    { "index": 5, "user": "Any news about rail strikes would be useful",
-      "expect": { "routeKind": "question", "skill": "conversation/question", "tools": ["load_skill"], "legs": 2 } }
+    {
+      "index": 0,
+      "user": "I moved to Porto last year and I work on bridge inspections",
+      "expect": {
+        "routeKind": "residence",
+        "skill": "facts/residence",
+        "tools": [
+          "load_skill",
+          "lookup_place",
+          "saveExtractedFacts"
+        ],
+        "legs": 3,
+        "proposals": [
+          {
+            "statementMatches": [
+              "porto"
+            ],
+            "kind": "residence",
+            "placeChain": "required",
+            "replaces": null
+          }
+        ]
+      },
+      "fakeTools": {
+        "lookup_place": [
+          {
+            "query": "Porto",
+            "returns": {
+              "status": "resolved",
+              "places": [
+                {
+                  "locality": "Porto",
+                  "admin1": "Porto District",
+                  "countryCode": "PT",
+                  "countryName": "Portugal",
+                  "bloc": "EU"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "index": 1,
+      "user": "Mostly the older road bridges over the Douro",
+      "expect": {
+        "routeKind": "profession",
+        "skill": "facts/profession",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2
+      }
+    },
+    {
+      "index": 2,
+      "user": "I take the train in every morning from Vila Nova de Gaia",
+      "expect": {
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2
+      }
+    },
+    {
+      "index": 3,
+      "user": "I also follow the national football team",
+      "expect": {
+        "routeKind": "interest",
+        "skill": "facts/interest",
+        "tools": [
+          "load_skill",
+          "saveExtractedFacts"
+        ],
+        "legs": 2,
+        "proposals": [
+          {
+            "statementMatches": [
+              "football"
+            ],
+            "kind": null,
+            "placeChain": "forbidden",
+            "replaces": null
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "user": "My sister is visiting next month, she lives abroad",
+      "expect": {
+        "routeKind": "family",
+        "skill": "facts/family",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2
+      }
+    },
+    {
+      "index": 5,
+      "user": "Any news about rail strikes would be useful",
+      "expect": {
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2
+      }
+    }
   ]
 }
