@@ -101,12 +101,16 @@ there is always one that fits.
 | new_fact | `facts/<subject>` |
 | fact_update, the user restating the world ("I moved to Berlin", "I left Google") | `facts/<subject>` |
 | fact_update, the user disputing what Mera produced ("no, that is not what I said", "delete that", "why did you save that") | `conversation/correction` |
-| topic_request | `topics/<subject>` |
+| topic_request | `conversation/question` |
 | question | `conversation/question` |
 | chat | `conversation/question` |
 
 `conversation/question` also handles greetings, navigation and off-topic redirects, branching
 internally. There is no separate chat skill.
+
+A topic request loads `conversation/question`, not a `topics/` id. The `topics/` guidelines are
+reached only by the background generation call and are not in the index, so routing to one loads
+nothing and the turn is spent. This row used to say `topics/<subject>` and could not be obeyed.
 
 ## Step 4: the no-second-question rule
 The loop computes this, not you. You never send it: `load_skill` takes an id and nothing else.
