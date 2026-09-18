@@ -28,6 +28,10 @@ export interface StateLineInput {
   answerPending: boolean;
   /** What the user tapped on the previous turn, if anything. */
   resolvedChoiceText: string | null;
+  /** The question the PREVIOUS turn ended on. Present whenever there was one,
+   *  answered or not: this message is most likely its answer, and without the
+   *  text the model is classifying a fragment. See AgentTurnState.lastQuestion. */
+  lastQuestion?: string | null;
   /** Statements ALREADY on file that find_similar_facts returned this turn. */
   existingFacts?: { factId: string; statement: string }[];
   /** The forced-proposal leg. Says plainly that nothing has been proposed. */
@@ -100,7 +104,21 @@ export function buildStateLine(input: StateLineInput): string {
     );
   }
 
-  if (input.answerPending) {
+  // THE PREVIOUS QUESTION, and the answer-pending guard, as ONE block.
+  //
+  // They were two lines and the second asserted something the loop cannot know.
+  // `answerPending` is true for any turn that is not a chip tap, so a typed
+  // answer was announced to the model as "they did not answer", while the
+  // question itself was never sent at all. Stating the question and leaving the
+  // reading to the model is both true and the thing that was missing; the
+  // do-not-repeat half of the guard is kept verbatim, because that half works.
+  if (input.lastQuestion) {
+    parts.push(
+      `Your last turn asked: "${escapeUntrusted(input.lastQuestion, 160)}". `
+      + 'This message is most likely its answer, so read it that way if it can be. '
+      + 'Never ask that question again.',
+    );
+  } else if (input.answerPending) {
     parts.push('They did not answer your last question. Offer, do not ask again.');
   }
 

@@ -58,3 +58,20 @@ export function cleanProse(text: string): string {
   if (!text) return text;
   return replaceClauseDashes(text).replace(/[ \t]{2,}/g, ' ').trim();
 }
+
+/**
+ * The trailing question of a reply, or null.
+ *
+ * A reply is usually an acknowledgement plus a question ("Got it, Nieuw-West.
+ * What do you do for work?"), and only the question is worth carrying into the
+ * next turn: the acknowledgement is about the turn that just ended. Splits on
+ * sentence ends and takes the last sentence, which must itself be a question.
+ */
+export function trailingQuestion(text: string): string | null {
+  const trimmed = (text ?? '').trim();
+  if (!trimmed.endsWith('?')) return null;
+  // Split AFTER . ! ? so the question mark stays with its own sentence.
+  const sentences = trimmed.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 0);
+  const last = sentences[sentences.length - 1]?.trim() ?? '';
+  return last.endsWith('?') ? last : null;
+}

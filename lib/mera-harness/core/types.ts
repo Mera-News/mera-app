@@ -147,6 +147,19 @@ export interface AgentTurnState {
 
   /** Drives the no-two-consecutive-questions rule across a close-and-reopen. */
   lastTurnAskedQuestion: boolean;
+  /**
+   * The QUESTION ITSELF, not just that there was one.
+   *
+   * A boolean is enough to stop the agent asking twice and useless for reading
+   * the answer. Measured on G3: "Mostly the older road bridges over the Douro"
+   * followed "you work on bridge inspections. Is that correct?" and routed to
+   * `facts/interest` instead of `facts/profession`; "Try P" followed "a sister
+   * in Porto! Let me save that for you." Both are answers whose referent the
+   * loop held and never sent, so the model was classifying a sentence fragment
+   * with no subject. Slim context drops prior HISTORY, which is the ruling; it
+   * was never meant to drop the question the user is answering.
+   */
+  lastQuestion: string | null;
   lastRoute: string | null;
   lastSkill: string | null;
 }
@@ -157,6 +170,7 @@ export function createAgentTurnState(): AgentTurnState {
     resolvedChoice: null,
     turnActive: false,
     lastTurnAskedQuestion: false,
+    lastQuestion: null,
     lastRoute: null,
     lastSkill: null,
   };

@@ -6,7 +6,7 @@
 
 import { resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
-import { cleanProse } from './prose';
+import { cleanProse, trailingQuestion } from './prose';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
@@ -217,6 +217,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
   }
   const answerPending = turn.lastTurnAskedQuestion && turn.resolvedChoice === null;
+  // Read BEFORE the turn overwrites it at the end, and held for every leg: the
+  // question belongs to the turn being answered, not to the one being written.
+  const lastQuestion = turn.lastQuestion;
 
   turn.turnActive = true;
 
@@ -295,6 +298,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       resolvedChoiceText: turn.resolvedChoice?.text ?? null,
       existingFacts,
       forcedProposal: forcingProposalNow,
+      lastQuestion,
     });
 
     // SLIM CONTEXT: system prompt, the user's message, the known facts, this
@@ -592,6 +596,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
 
   turn.turnActive = false;
   turn.lastTurnAskedQuestion = turn.pendingChoice !== null || /\?\s*$/.test(reply);
+  // The chip question wins over the prose one: when both exist the chips are
+  // what is on screen, so they are what the next message answers.
+  turn.lastQuestion = turn.pendingChoice
+    ? turn.pendingChoice.question
+    : trailingQuestion(cleanProse(reply));
   turn.lastRoute = routeKind;
   turn.lastSkill = skillLoaded;
 

@@ -152,6 +152,47 @@ describe('the bounded loop', () => {
     expect(out.legBudgetHit).toBe(false);
   });
 
+  // THE DROPPED REFERENT. Measured on G3: an answer to the previous turn's
+  // question arrived with the question nowhere in context, so the model was
+  // classifying a fragment. These assert the text makes the round trip.
+  it('carries the previous turn\'s question into the next turn\'s state line', async () => {
+    const state = createAgentState(PERSONA);
+
+    const first = scriptedDeps([
+      modelResult({ content: 'Got it, Porto. Is that correct?' }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'I moved to Porto', deps: first.deps });
+    expect(state.turn.lastQuestion).toBe('Is that correct?');
+
+    const second = scriptedDeps([modelResult({ content: 'ok' })]);
+    await runAgentTurn({
+      state,
+      userMessage: 'Mostly the older road bridges over the Douro',
+      deps: second.deps,
+    });
+    const stateMsg = second.calls[0].messages.find((m) => m.content.startsWith('<state>'));
+    expect(stateMsg?.content).toContain('Is that correct?');
+    // The false assertion is gone: the loop cannot tell a typed answer from a
+    // non-answer, so it no longer claims one.
+    expect(stateMsg?.content).not.toContain('They did not answer');
+  });
+
+  it('keeps only the trailing question, not the acknowledgement before it', async () => {
+    const state = createAgentState(PERSONA);
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'Nieuw-West, noted. What do you do for work?' }),
+    ]);
+    await runAgentTurn({ state, userMessage: 'I live in Nieuw-West', deps });
+    expect(state.turn.lastQuestion).toBe('What do you do for work?');
+  });
+
+  it('records no question when the turn did not ask one', async () => {
+    const state = createAgentState(PERSONA);
+    const { deps } = scriptedDeps([modelResult({ content: 'Saved that for you.' })]);
+    await runAgentTurn({ state, userMessage: 'I live in Porto', deps });
+    expect(state.turn.lastQuestion).toBeNull();
+  });
+
   // A CONTROL THAT HAS BEEN TIDIED UP MEASURES NOTHING. These assert that
   // `pre-enforcement` really is the configuration the 38% and the 99 no-route
   // legs came from, not a partly-fixed version of it wearing the label.
