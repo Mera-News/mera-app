@@ -193,6 +193,72 @@ describe('the bounded loop', () => {
     expect(state.turn.lastQuestion).toBeNull();
   });
 
+  // RUNNING OUT OF LEGS IS NOT FAILING. G3 labelled 16 of 18 finished turns as
+  // capped because the proposal landed on the last leg and said nothing.
+  it('a turn that proposed and then ran out of legs is settled, not capped', async () => {
+    const save = modelResult({
+      toolCalls: [
+        {
+          name: 'saveExtractedFacts',
+          argumentsRaw: JSON.stringify({
+            extracted_user_information: [{ statement: 'Lives in Porto' }],
+          }),
+        },
+      ],
+    });
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'Porto, one moment.',
+        toolCalls: [
+          { name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) },
+        ],
+      }),
+      save,
+      save,
+      save,
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: 'I moved to Porto',
+      deps,
+    });
+
+    expect(out.terminalReason).toBe('settled');
+    // The UI must not show a cap message for a turn that did its work.
+    expect(out.legCapped).toBe(false);
+    // One closing-sentence leg after the proposal, never a stream of them.
+    expect(out.legs.length).toBeLessThan(MAX_AGENT_LEGS);
+  });
+
+  it('a turn that proposed nothing and ran out of legs is still a cap', async () => {
+    const spin = modelResult({
+      toolCalls: [
+        { name: 'lookup_place', argumentsRaw: JSON.stringify({ query: 'Porto' }) },
+      ],
+    });
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'Porto, one moment.',
+        toolCalls: [
+          { name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) },
+        ],
+      }),
+      spin,
+      spin,
+      spin,
+      spin,
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: 'I moved to Porto',
+      deps,
+    });
+
+    expect(out.terminalReason).toBe('leg-cap');
+    expect(out.legCapped).toBe(true);
+    expect(out.legBudgetHit).toBe(true);
+  });
+
   // A CONTROL THAT HAS BEEN TIDIED UP MEASURES NOTHING. These assert that
   // `pre-enforcement` really is the configuration the 38% and the 99 no-route
   // legs came from, not a partly-fixed version of it wearing the label.

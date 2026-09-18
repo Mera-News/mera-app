@@ -239,6 +239,8 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let skillLoaded: string | null = null;
   let reply = '';
   let legBudgetHit = false;
+  /** One closing-sentence leg is allowed after a proposal, never a stream. */
+  let silentLegAfterProposal = false;
   /** WHY the turn stopped. Counted, so a failure shows up in the rows rather
    *  than as an ordinary settled turn that happened to do nothing. */
   let terminalReason: AgentTurnResult['terminalReason'] = 'settled';
@@ -286,7 +288,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   for (let index = 0; ; index++) {
     if (index >= maxLegs + formatRetries) {
       legBudgetHit = true;
-      terminalReason = 'leg-cap';
+      // RUNNING OUT OF LEGS IS NOT THE SAME AS FAILING. Measured on G3: 16 of
+      // the 18 baseline turns labelled `leg-cap` had already called
+      // saveExtractedFacts, and the commonest "capped" shape was
+      // load_skill > find_similar_facts > lookup_place > saveExtractedFacts,
+      // which is a correct residence turn. What that turn is missing is a
+      // closing sentence, not its work. Reporting it as a cap failure inflated
+      // the rate to 23% and buried the ~2 in 18 that are real.
+      terminalReason = proposedSomething ? 'settled' : 'leg-cap';
       break;
     }
 
@@ -571,7 +580,18 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     }
 
     if (sawContinuationTool) continue;
-    if (!result.content.trim()) continue;
+    if (!result.content.trim()) {
+      // A leg that acted and said nothing owes the user a closing sentence, and
+      // is given exactly ONE leg to write it. Unbounded, this is how a finished
+      // turn walks to the cap: the proposal lands, the leg is silent, the loop
+      // buys another leg, and the turn is charged for a sentence the model was
+      // never going to add.
+      if (proposedSomething) {
+        if (silentLegAfterProposal) break;
+        silentLegAfterProposal = true;
+      }
+      continue;
+    }
 
     // A facts/* skill ran and the turn is about to settle having proposed
     // NOTHING. On device that is exactly what happened twice: chess loaded
@@ -615,7 +635,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     skillLoaded,
     proposals,
     legBudgetHit,
-    legCapped: legBudgetHit,
+    // WHAT THE UI SHOWS. `legBudgetHit` is the raw budget signal the eval reads;
+    // `legCapped` is the failure, and a turn that proposed is not one.
+    legCapped: legBudgetHit && !proposedSomething,
     rerouteAttempts,
     forcedProposal,
     formatRetries,

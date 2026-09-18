@@ -152,7 +152,11 @@ function endedOnFor(
 ): TurnEnd {
   if (lastError) return 'transport_error';
   if (askedThisTurn) return 'awaiting_user';
-  if (legBudgetHit) return 'leg_cap';
+  // `legBudgetHit` ALONE over-reported this by an order of magnitude: on G3, 16
+  // of 18 turns it called capped had already proposed a fact, so the rate read
+  // 23% when the real failures were about 2 in 18. The loop now distinguishes
+  // the two, and the verdict follows the loop rather than the raw budget flag.
+  if (legBudgetHit && terminalReason === 'leg-cap') return 'leg_cap';
   // BEFORE the settled default, never after: a turn that routed nothing is the
   // failure this run exists to measure, and folding it into `settled` is what
   // made it invisible for three runs.
