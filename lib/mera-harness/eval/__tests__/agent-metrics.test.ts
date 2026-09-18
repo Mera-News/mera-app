@@ -18,7 +18,7 @@ function row(over: Partial<EvalRow>): EvalRow {
   return {
     scriptId: 's1', cohort: 'good', turnIndex: 0, legIndex: 0, repeat: 0,
     arm: 'baseline', variant: 'baseline', callType: 'agent-route',
-    interleaveGroup: 's1:0', promptDeterministic: true,
+    interleaveGroup: 's1:0', promptDeterministic: true, formatRetries: null,
     systemPrompt: 'S', messages: [], toolSchemaNames: [], rawOutput: '',
     toolCalls: [], turnStartedAtMs: 1000, legStartedAtMs: 1000,
     latencyMs: 10, ttVisibleMs: null, thinkingRequested: false, inputTokens: 100,

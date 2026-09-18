@@ -37,6 +37,7 @@ import { useCloudChatStore } from '../../stores/cloud-chat-store';
 import type { IAgent, ToolExecutionResult } from '../../llm/types';
 import type { SseEvent } from '../../llm/cloudComplete';
 import { MERA_EXPLAINER_SECTIONS } from '../../chat-tools/mera-explainer-content';
+import { MAX_FORMAT_RETRIES } from '../../mera-harness/core/core';
 
 // ---- Helpers ----
 
@@ -1865,7 +1866,11 @@ describe('agent loop failure recovery', () => {
     await waitFor(() => expect(useCloudChatStore.getState().error).toBeTruthy(), { timeout: 3000 });
 
     await act(async () => { result.current.sendMessage('second'); });
-    await waitFor(() => expect(calls).toBe(2), { timeout: 3000 });
+    // 1 failed call, then the second send: its route leg returns prose and this
+    // fixture's loadSkill knows no ids, so the loop re-asks MAX_FORMAT_RETRIES
+    // times before ending on no-route rather than accepting the prose. Exact
+    // rather than "> 1", so a change to the retry budget shows up here.
+    await waitFor(() => expect(calls).toBe(2 + MAX_FORMAT_RETRIES), { timeout: 3000 });
     expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false);
   });
 });

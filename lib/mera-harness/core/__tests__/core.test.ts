@@ -1,5 +1,6 @@
 import {
   MAX_AGENT_LEGS,
+  MAX_FORMAT_RETRIES,
   bindChoicePayloads,
   createAgentState,
   reconcilePlaceChain,
@@ -75,11 +76,21 @@ function scriptedDeps(
       deleteUserFacts: async () => ({ deleted: [] }),
       ...toolOver,
     },
-    loadSkill: (id) => (id === 'facts/residence' ? 'RESIDENCE SKILL BODY' : null),
-    skillIds: () => ['facts/residence'],
+    loadSkill: (id) => (SKILLS[id] ?? null),
+    skillIds: () => Object.keys(SKILLS),
   };
   return { deps, calls };
 }
+
+/** The fixture library. It held ONE id, so every test routing anywhere else
+ *  silently produced "no skill loaded" and was really exercising a load
+ *  failure. */
+const SKILLS: Record<string, string> = {
+  'facts/residence': 'RESIDENCE SKILL BODY',
+  'facts/interest': 'INTEREST SKILL BODY',
+  'conversation/question': 'QUESTION SKILL BODY',
+  'conversation/correction': 'CORRECTION SKILL BODY',
+};
 
 const tc = (name: string, args: unknown) => ({ name, argumentsRaw: JSON.stringify(args) });
 
@@ -121,12 +132,34 @@ describe('the arm reaches the leg it claims to change', () => {
 });
 
 describe('the bounded loop', () => {
-  it('a text-only turn is exactly ONE leg', async () => {
-    const { deps } = scriptedDeps([modelResult({ content: 'Hello there.' })]);
+  // THIS TEST USED TO ASSERT THE BUG. "A text-only turn is exactly ONE leg"
+  // described a route leg answering in prose and ending the turn, which is what
+  // 90 of 308 G2d route legs did: the user's message landed, nothing routed,
+  // nothing was proposed, and the row read as settled. Prose is not a route.
+  it('a route leg that answers in prose is RE-ASKED, not accepted', async () => {
+    const { deps, calls } = scriptedDeps([modelResult({ content: 'Hello there.' })]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
-    expect(out.legs).toHaveLength(1);
-    expect(out.reply).toBe('Hello there.');
+
+    expect(out.formatRetries).toBe(MAX_FORMAT_RETRIES);
+    expect(out.legs).toHaveLength(1 + MAX_FORMAT_RETRIES);
+    expect(out.terminalReason).toBe('no-route');
+    // The re-ask names the violation and the legal ids, in the same
+    // conversation, the way mini-swe-agent appends its FormatError.
+    const retryNote = calls[1].messages[calls[1].messages.length - 1].content;
+    expect(retryNote).toContain('routed nothing');
+    expect(retryNote).toContain('facts/interest');
+    // A re-ask must not cost the turn a leg of real work.
     expect(out.legBudgetHit).toBe(false);
+  });
+
+  it('prose settles normally ONCE a skill is loaded', async () => {
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'ok', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: 'Hello there.' }),
+    ]);
+    const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
+    expect(out.formatRetries).toBe(0);
+    expect(out.reply).toBe('Hello there.');
   });
 
   it('a preamble PLUS load_skill continues; it does not settle on leg 1', async () => {
@@ -220,12 +253,16 @@ describe('the bounded loop', () => {
   });
 
   it('an identical REPEAT of any forcing call does not buy another leg', async () => {
+    // Routes FIRST: `lookup_place` is not on the route leg's payload any more,
+    // so a turn that opens with one is exercising the no-route path instead of
+    // the repeat rule this test is about.
     const { deps } = scriptedDeps([
+      modelResult({ content: 'r', toolCalls: [tc('load_skill', { id: 'conversation/question' })] }),
       modelResult({ content: 'a', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
       modelResult({ content: 'b', toolCalls: [tc('lookup_place', { query: 'Alkmaar' })] }),
     ]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
-    expect(out.legs).toHaveLength(2);
+    expect(out.legs).toHaveLength(3);
     expect(out.legBudgetHit).toBe(false);
   });
 
@@ -275,14 +312,16 @@ describe('the bounded loop', () => {
     expect(out.legs[0].inputTokens).toBeGreaterThan(0);
   });
 
-  it('a malformed tool call is neither executed nor forcing', async () => {
+  it('a malformed tool call is never executed', async () => {
     const { deps } = scriptedDeps([
       modelResult({ content: 'text', toolCalls: [{ name: 'load_skill', argumentsRaw: '{"id":' }] }),
     ]);
     const out = await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
-    // Not forcing => settles on leg 1 rather than burning the cap retrying.
-    expect(out.legs).toHaveLength(1);
     expect(out.legs[0].toolResults[0].result).toEqual({ error: 'malformed arguments' });
+    // An unparseable route and an absent route are the same thing from the
+    // loop's side: the leg was asked for a route and did not produce one.
+    expect(out.formatRetries).toBe(MAX_FORMAT_RETRIES);
+    expect(out.terminalReason).toBe('no-route');
   });
 });
 
@@ -381,7 +420,10 @@ describe('destructive and place guards', () => {
     };
     expect(state.turn.turnActive).toBe(false);
     await runAgentTurn({ state, userMessage: 'hi', deps });
-    expect(seen).toEqual([true]);          // true for the whole of every leg
+    // TRUE FOR THE WHOLE OF EVERY LEG, however many legs the turn takes. The
+    // count is not the invariant; never being false mid-turn is.
+    expect(seen.length).toBeGreaterThan(0);
+    expect(seen.every((v) => v === true)).toBe(true);
     expect(state.turn.turnActive).toBe(false);
   });
 });
@@ -596,13 +638,13 @@ describe('per-leg tool payload', () => {
   const names = (t: unknown[]) =>
     (t as { function: { name: string } }[]).map((d) => d.function.name).sort();
 
-  it('the ROUTER leg offers the four discovery tools and NO writer', async () => {
+  // The route leg used to carry all four discovery tools, and 9 of G2d's 99
+  // no-route legs discharged "call a tool" with one of the other three. The
+  // route leg has one job, so it gets one tool.
+  it('the ROUTER leg offers load_skill and NOTHING else', async () => {
     const { deps, calls } = scriptedDeps([modelResult({ content: 'hi' })]);
     await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps });
-    expect(names(calls[0].tools)).toEqual([
-      'ask_choice', 'find_similar_facts', 'load_skill', 'lookup_place',
-    ]);
-    expect(names(calls[0].tools)).not.toContain('saveExtractedFacts');
+    expect(names(calls[0].tools)).toEqual(['load_skill']);
   });
 
   it('a FACTS leg offers saveExtractedFacts and deleteUserFacts', async () => {

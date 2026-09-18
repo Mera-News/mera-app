@@ -23,6 +23,38 @@ import { createAgentTurnState } from './types';
  *  a throw ends an eval run and loses every later script. */
 export const MAX_AGENT_LEGS = 4;
 
+/**
+ * Re-asks allowed when a route leg comes back with no route.
+ *
+ * mini-swe-agent's `max_consecutive_format_errors`, and its separation from
+ * `step_limit` is copied too: a re-ask raises the leg ceiling for this turn
+ * rather than spending one of the four legs the real work needs. A format
+ * error is the model failing to answer the question, so charging the turn for
+ * it would punish the turn for the model's mistake.
+ */
+export const MAX_FORMAT_RETRIES = 2;
+
+/**
+ * Sent back when a route leg produced no usable `load_skill` call.
+ *
+ * THE POINT: the turn does not end here. mini-swe-agent raises `FormatError`,
+ * appends the error to the SAME conversation and asks again, and its whole
+ * loop rests on the model never being able to finish by talking. Ours could:
+ * prose plus `finish_reason: stop` fell through to `break`, and 90 of 308 G2d
+ * route legs ended that way. A dropped turn looked exactly like a finished one,
+ * on screen and in the rows.
+ */
+export function routeFormatError(availableSkills: readonly string[]): string {
+  return (
+    'Your last reply routed nothing, so the user saw their message land and nothing happen. '
+    + 'Every turn ends in exactly one load_skill call, and answering in prose is not one of '
+    + 'the options. Pick the closest id from the skill index; if nothing obviously fits, load '
+    + 'facts/interest, which is the catch-all and a real destination. '
+    + `Legal ids: ${availableSkills.join(', ')}. `
+    + 'Reply with your one short acknowledgement sentence and the load_skill call.'
+  );
+}
+
 /** Mirrors lib/llm/tokens.ts::estimateTokens; inlined so this folder imports
  *  nothing from the app. */
 export function estimateTokens(text: string): number {
@@ -237,8 +269,14 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   /** True for the ONE forced leg. */
   let forcingProposalNow = false;
 
+  /** Route legs re-asked after producing no route. Raises this turn's leg
+   *  ceiling so a re-ask does not cost the turn a leg of real work. */
+  let formatRetries = 0;
+  /** The violation named back to the model, consumed by the next leg. */
+  let formatErrorNote: string | null = null;
+
   for (let index = 0; ; index++) {
-    if (index >= maxLegs) {
+    if (index >= maxLegs + formatRetries) {
       legBudgetHit = true;
       terminalReason = 'leg-cap';
       break;
@@ -261,6 +299,13 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       { role: 'user', content: `<known_facts>\n${formatKnownFacts(state.persona.facts)}\n</known_facts>` },
       { role: 'user', content: escapeUntrusted(userMessage, 2000) },
     ];
+    // LAST, so it is the final thing read before the model answers. Not
+    // escaped: the harness wrote it, and it is the one message in the turn that
+    // is not user or tool content.
+    if (formatErrorNote !== null) {
+      messages.push({ role: 'user', content: formatErrorNote });
+      formatErrorNote = null;
+    }
     for (const tr of toolResultsThisTurn) {
       messages.push({
         role: 'tool',
@@ -498,6 +543,20 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     // A leg carrying an acknowledgement AND a forcing call must CONTINUE: the
     // `forced` check runs before the settled branch, or the preamble design
     // turns every fact turn into a one-leg turn with no skill loaded.
+    // NO ROUTE YET. Re-ask rather than end the turn: this is mini-swe-agent's
+    // FormatError, and it covers every shape of the failure at once, including
+    // an unparseable or unknown id, because from the loop's side they are the
+    // same thing -- the leg was asked for a route and did not produce one.
+    if (skillLoaded === null && !forcingProposalNow) {
+      if (formatRetries < MAX_FORMAT_RETRIES) {
+        formatRetries++;
+        formatErrorNote = routeFormatError(deps.skillIds());
+        continue;
+      }
+      terminalReason = 'no-route';
+      break;
+    }
+
     if (sawContinuationTool) continue;
     if (!result.content.trim()) continue;
 
@@ -541,6 +600,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     legCapped: legBudgetHit,
     rerouteAttempts,
     forcedProposal,
+    formatRetries,
     reProposals,
     state: turn,
   };

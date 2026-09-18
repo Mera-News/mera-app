@@ -79,7 +79,16 @@ export type RowSink = (row: EvalRow) => void;
  */
 export type EvalCallType = 'agent-route' | 'agent-tool' | 'agent-topicgen';
 
-export type TurnEnd = 'settled' | 'awaiting_user' | 'transport_error' | 'leg_cap';
+export type TurnEnd =
+  | 'settled'
+  | 'awaiting_user'
+  | 'transport_error'
+  | 'leg_cap'
+  /** The route leg never produced a route, even after its re-asks. Reported
+   *  separately from `settled` because the two used to be indistinguishable:
+   *  90 of 308 G2d route legs ended in prose with no skill loaded and were
+   *  counted as settled turns. */
+  | 'no_route';
 
 export interface EvalRow {
   scriptId: string;
@@ -125,6 +134,8 @@ export interface EvalRow {
   modelSent: string | null;
   /** Set on the last leg of a turn; null on every earlier leg. */
   endedOn: TurnEnd | null;
+  /** Route legs re-asked this turn after producing no route. */
+  formatRetries: number | null;
   awaitingUser: boolean;
   /**
    * THE TURN'S ROUTING VERDICT, repeated on every leg of the turn.

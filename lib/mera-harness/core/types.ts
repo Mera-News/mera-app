@@ -282,7 +282,12 @@ export interface AgentTurnResult {
     | 'transport-error'
     | 'leg-cap'
     /** A fact skill ran, the forced leg ran, and still nothing was proposed. */
-    | 'no-proposal';
+    | 'no-proposal'
+    /** The route leg produced no `load_skill` call, and still none after its
+     *  format-error retries. The turn ends VISIBLY rather than as a settled
+     *  turn that silently did nothing, which is how 90 of 308 G2d route legs
+     *  ended. */
+    | 'no-route';
   /** Tool names the model invented, e.g. `add_fact`. Empty on a clean turn. */
   unknownTools: string[];
   /** Attempts to load a second skill after one was already loaded this turn.
@@ -291,6 +296,11 @@ export interface AgentTurnResult {
   /** A fact skill was loaded and the turn was about to settle having proposed
    *  nothing, so one forced leg ran. */
   forcedProposal: boolean;
+  /** Route legs re-asked because they came back with no `load_skill` call.
+   *  mini-swe-agent's FormatError, which is the mechanism this copies: the
+   *  violation is named back to the model in a user message and the loop asks
+   *  again rather than ending the turn. */
+  formatRetries: number;
   /** Proposals dropped because their statement repeated a fact already on
    *  file. The model was shown them by find_similar_facts. */
   reProposals: number;

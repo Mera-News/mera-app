@@ -141,10 +141,15 @@ function endedOnFor(
   askedThisTurn: boolean,
   legBudgetHit: boolean,
   lastError: string | null,
+  terminalReason: string,
 ): TurnEnd {
   if (lastError) return 'transport_error';
   if (askedThisTurn) return 'awaiting_user';
   if (legBudgetHit) return 'leg_cap';
+  // BEFORE the settled default, never after: a turn that routed nothing is the
+  // failure this run exists to measure, and folding it into `settled` is what
+  // made it invisible for three runs.
+  if (terminalReason === 'no-route') return 'no_route';
   return 'settled';
 }
 
@@ -229,7 +234,7 @@ export async function runAgentScript(
 
     const lastError = result.legs.length > 0 ? result.legs[result.legs.length - 1].result.error : null;
     const askedThisTurn = result.legs.some((l) => l.toolCalls.some((t) => t.name === 'ask_choice'));
-    const endedOn = endedOnFor(askedThisTurn, result.legBudgetHit, lastError);
+    const endedOn = endedOnFor(askedThisTurn, result.legBudgetHit, lastError, result.terminalReason);
 
     result.legs.forEach((leg, i) => {
       const cap = captured[i];
@@ -270,6 +275,7 @@ export async function runAgentScript(
         modelRequested: opts.model,
         modelSent: leg.result.modelSent,
         endedOn: isLast ? endedOn : null,
+        formatRetries: isLast ? result.formatRetries : null,
         awaitingUser: isLast && endedOn === 'awaiting_user',
         routeKind: result.routeKind,
         skillLoaded: result.skillLoaded,

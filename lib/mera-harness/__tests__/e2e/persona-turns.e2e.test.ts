@@ -32,6 +32,7 @@ const call = (name: string, args: unknown) => ({ name, argumentsRaw: JSON.string
 const SKILLS: Record<string, string> = {
   'facts/generic': 'GENERIC FACT RULES',
   'facts/residence': 'RESIDENCE FACT RULES',
+  'conversation/correction': 'CORRECTION RULES',
   'topics/generic': 'GENERIC TOPIC RULES',
   'topics/residence': 'RESIDENCE TOPIC RULES',
 };
@@ -214,6 +215,7 @@ describe('conversation 2: an ambiguous place', () => {
 describe('conversation 3: a correction', () => {
   it('REFUSES an unconfirmed delete, and allows it after a real tap', async () => {
     const r = makeDeps([
+      res({ content: 'ok', toolCalls: [call('load_skill', { id: 'conversation/correction' })] }),
       res({ content: 'ok', toolCalls: [call('deleteUserFacts', { fact_ids: ['f1'] })] }),
     ]);
     const state = createAgentState(PERSONA);
@@ -223,6 +225,7 @@ describe('conversation 3: a correction', () => {
     // Now a confirmed choice exists.
     state.turn.resolvedChoice = { question: 'Remove it?', text: 'Yes, remove it', payload: 'f1' };
     const r2 = makeDeps([
+      res({ content: 'ok', toolCalls: [call('load_skill', { id: 'conversation/correction' })] }),
       res({ content: 'Removed.', toolCalls: [call('deleteUserFacts', { fact_ids: ['f1'] })] }),
     ]);
     await runAgentTurn({ state, userMessage: 'Yes, remove it', deps: r2.deps });

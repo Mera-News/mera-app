@@ -198,7 +198,19 @@ export function toolsForLeg(opts: {
   forcingProposal?: boolean;
 }): ToolDefinition[] {
   if (opts.forcingProposal) return [SAVE_FACTS_TOOL, ASK_CHOICE_TOOL];
-  if (opts.skillLoaded === null) return [...HARNESS_TOOLS];
+  // THE ROUTE LEG GETS ONE TOOL.
+  //
+  // It used to get all four, and the route leg has exactly one job. Of the 99
+  // G2d route legs that loaded no skill, 9 discharged "call a tool" with a
+  // discovery tool instead of routing: `find_similar_facts` and `lookup_place`
+  // belong to the loaded skill, which has the guideline that says what to do
+  // with the answer. A tool the model cannot see is one it cannot spend a leg
+  // on, which is the same reasoning that took `load_skill` off every leg after
+  // the first.
+  //
+  // mini-swe-agent runs its whole loop on ONE action for this reason: the
+  // narrower the action space, the less there is to get wrong.
+  if (opts.skillLoaded === null) return [LOAD_SKILL_TOOL];
   const discovery = HARNESS_TOOLS.filter((t) => t.function.name !== 'load_skill');
   return opts.skillLoaded.startsWith('facts/')
     ? [...discovery, SAVE_FACTS_TOOL, DELETE_FACTS_TOOL]
