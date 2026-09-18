@@ -136,6 +136,11 @@ export interface EvalRow {
   endedOn: TurnEnd | null;
   /** Route legs re-asked this turn after producing no route. */
   formatRetries: number | null;
+  /** Reply-gate counters, on the turn's LAST row only. Null on every other row,
+   *  so a per-leg sum cannot silently multiply a per-turn event. */
+  replyRetries: number | null;
+  replyClaimUnfixed: boolean | null;
+  replyLeakUnfixed: boolean | null;
   awaitingUser: boolean;
   /**
    * THE TURN'S ROUTING VERDICT, repeated on every leg of the turn.

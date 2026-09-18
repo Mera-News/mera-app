@@ -1,6 +1,8 @@
 import {
   MAX_AGENT_LEGS,
   MAX_FORMAT_RETRIES,
+  MAX_REPLY_RETRIES,
+  REPLY_LEAK_FALLBACK,
   bindChoicePayloads,
   createAgentState,
   reconcilePlaceChain,
@@ -259,6 +261,118 @@ describe('the bounded loop', () => {
     expect(out.legBudgetHit).toBe(true);
   });
 
+  // ---- THE REPLY GATE --------------------------------------------------
+  // Measured on G4: 10% of turns told the user something was saved while a card
+  // was still waiting to be tapped, and 4.3% put the state block, a tool name or
+  // third-person narration into the bubble.
+  const SAVE_TOOL = tc('saveExtractedFacts', {
+    extracted_user_information: [{ statement: 'Lives in Porto' }],
+  });
+
+  function claimingTurn(finalReplies: string[]) {
+    return scriptedDeps([
+      modelResult({ content: 'Porto, one moment.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: '', toolCalls: [SAVE_TOOL] }),
+      ...finalReplies.map((content) => modelResult({ content })),
+    ]);
+  }
+
+  it('re-asks once when the final reply claims a save, and keeps the corrected one', async () => {
+    const { deps, calls } = claimingTurn([
+      "Got it, I've noted that.",
+      'Got it, Porto. What do you do for work?',
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
+    });
+
+    expect(out.replyRetries).toBe(1);
+    expect(out.replyClaimUnfixed).toBe(false);
+    expect(out.reply).toBe('Got it, Porto. What do you do for work?');
+    expect(out.terminalReason).toBe('settled');
+    // The correction is named back in the SAME conversation, mini-swe-agent's
+    // FormatError shape, and it must say what was wrong.
+    const note = calls[calls.length - 1].messages.map((m) => m.content).join(' ');
+    expect(note).toContain('Nothing is saved until the user taps');
+    // A wording mistake must not cost the turn a leg of real work.
+    expect(out.legBudgetHit).toBe(false);
+    expect(out.proposals).toHaveLength(1);
+  });
+
+  it('keeps a save claim that survives its correction, and counts it', async () => {
+    const { deps } = claimingTurn(["Got it, I've noted that.", 'Noted, all done.']);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
+    });
+
+    expect(out.replyRetries).toBe(MAX_REPLY_RETRIES);
+    expect(out.replyClaimUnfixed).toBe(true);
+    // KEPT, not rewritten: a slightly wrong word beside a visible card beats a
+    // mangled sentence, and the residue stays measurable.
+    expect(out.reply).toBe('Noted, all done.');
+    expect(out.proposals).toHaveLength(1);
+  });
+
+  it('replaces a leak that survives its correction, because scaffolding must not ship', async () => {
+    const leak = "I'll extract the fact about their residence from your message.";
+    const { deps } = claimingTurn([leak, leak]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
+    });
+
+    expect(out.replyLeakUnfixed).toBe(true);
+    expect(out.reply).toBe(REPLY_LEAK_FALLBACK);
+    expect(out.reply).not.toContain('their residence');
+  });
+
+  it('does not gate an intermediate leg, whose prose the user never sees', async () => {
+    // The ROUTER ACKNOWLEDGEMENT claims a save and is then overwritten by the
+    // final reply. Gating it would spend a leg correcting discarded text, and
+    // the gate sits at the settle decision precisely so it cannot.
+    const { deps } = scriptedDeps([
+      modelResult({
+        content: 'Noted, Porto.',
+        toolCalls: [tc('load_skill', { id: 'facts/residence' })],
+      }),
+      modelResult({ content: '', toolCalls: [SAVE_TOOL] }),
+      modelResult({ content: 'Got it, Porto. What do you do for work?' }),
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
+    });
+
+    expect(out.replyRetries).toBe(0);
+    expect(out.reply).toBe('Got it, Porto. What do you do for work?');
+  });
+
+  it('spends no retry on a clean reply', async () => {
+    const { deps } = claimingTurn(['Got it, Porto. What do you do for work?']);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
+    });
+    expect(out.replyRetries).toBe(0);
+    expect(out.replyClaimUnfixed).toBe(false);
+    expect(out.replyLeakUnfixed).toBe(false);
+  });
+
+  it('keeps its budget separate from the route budget', async () => {
+    // A turn that burned both route retries must still be able to fix its reply.
+    const { deps } = scriptedDeps([
+      modelResult({ content: 'Hmm.' }),
+      modelResult({ content: 'Still hmm.' }),
+      modelResult({ content: 'Porto.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
+      modelResult({ content: '', toolCalls: [SAVE_TOOL] }),
+      modelResult({ content: "I've noted that." }),
+      modelResult({ content: 'Got it, Porto.' }),
+    ]);
+    const out = await runAgentTurn({
+      state: createAgentState(PERSONA), userMessage: 'I moved to Porto', deps,
+    });
+    expect(out.formatRetries).toBe(MAX_FORMAT_RETRIES);
+    expect(out.replyRetries).toBe(1);
+    expect(out.reply).toBe('Got it, Porto.');
+  });
+
   // A CONTROL THAT HAS BEEN TIDIED UP MEASURES NOTHING. These assert that
   // `pre-enforcement` really is the configuration the 38% and the 99 no-route
   // legs came from, not a partly-fixed version of it wearing the label.
@@ -304,7 +418,9 @@ describe('the bounded loop', () => {
     const { deps, calls } = scriptedDeps([
       modelResult({ content: 'Nieuw-West, let me note that.', toolCalls: [tc('load_skill', { id: 'facts/residence' })] }),
       modelResult({
-        content: 'Saved that one.',
+        // Not "Saved that one." on purpose: that trips the reply gate and buys a
+        // correction leg, which would make this ordering test measure the gate.
+        content: 'That one is on a card for you.',
         toolCalls: [tc('saveExtractedFacts', {
           extracted_user_information: [{ statement: 'Lives in Alkmaar' }],
         })],

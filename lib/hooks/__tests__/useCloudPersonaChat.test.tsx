@@ -1813,6 +1813,47 @@ describe('the shipped cloud path drives the agent loop', () => {
     expect(mockRunAgentLoopDeps).not.toHaveBeenCalled();
   });
 
+  // THE REPLY GATE, THROUGH THE SHIPPED PATH. The core's own tests prove the
+  // gate works; they proved nothing about the app reaching it, which is exactly
+  // how the old prompt stayed live and how `legCapped` stayed hardcoded false.
+  it('a final reply claiming a save is corrected before it reaches the store', async () => {
+    const model = jest.fn();
+    const res = (content: string) => ({
+      content, toolCalls: [], finishReason: 'stop', truncated: false,
+      usage: null, modelSent: 'fake', latencyMs: 1, error: null,
+    });
+    // Leg 0 must actually ROUTE, or the route enforcement fires first and this
+    // test measures that instead of the reply gate.
+    model
+      .mockResolvedValueOnce({
+        ...res('Porto, one moment.'),
+        toolCalls: [{ name: 'load_skill', argumentsRaw: JSON.stringify({ id: 'facts/residence' }) }],
+      })
+      .mockResolvedValueOnce(res("Got it, I've noted that."))
+      .mockResolvedValue(res('Got it, Porto. What do you do for work?'));
+    mockRunAgentLoopDeps.mockReturnValue({
+      callModel: model,
+      tools: {},
+      loadSkill: (id: string) => (id === 'facts/residence' ? 'RESIDENCE BODY' : null),
+      skillIds: () => ['facts/residence'],
+    });
+
+    const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
+    await act(async () => { result.current.sendMessage('I moved to Porto'); });
+    await waitFor(
+      () => expect(useCloudChatStore.getState().agentTurnState?.turnActive).toBe(false),
+      { timeout: 3000 },
+    );
+
+    // route leg + claiming reply + the one correction the gate bought.
+    expect(model).toHaveBeenCalledTimes(3);
+    // ...and the claim never reached the bubble.
+    const assistant = useCloudChatStore.getState().messages.filter((m) => m.role === 'assistant');
+    const text = assistant.map((m) => m.content).join(' ');
+    expect(text).toContain('What do you do for work?');
+    expect(text).not.toContain("I've noted that");
+  });
+
   it('releases the turn when the loop finishes, so the composer unblocks', async () => {
     const { result } = renderHook(() => useCloudPersonaChat(personaAgent()));
     await act(async () => { result.current.sendMessage('hi'); });

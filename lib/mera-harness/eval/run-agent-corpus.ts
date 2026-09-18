@@ -287,6 +287,10 @@ export async function runAgentScript(
         modelSent: leg.result.modelSent,
         endedOn: isLast ? endedOn : null,
         formatRetries: isLast ? result.formatRetries : null,
+        // Per TURN, on its last row: the gate acts once, at the settle decision.
+        replyRetries: isLast ? result.replyRetries : null,
+        replyClaimUnfixed: isLast ? result.replyClaimUnfixed : null,
+        replyLeakUnfixed: isLast ? result.replyLeakUnfixed : null,
         awaitingUser: isLast && endedOn === 'awaiting_user',
         routeKind: result.routeKind,
         skillLoaded: result.skillLoaded,

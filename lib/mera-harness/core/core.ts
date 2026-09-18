@@ -6,7 +6,7 @@
 
 import { resolveAgentArm, routeEnforcementFor } from './arms';
 import { buildRouterPrompt, type PersonaSurface } from './router-prompt';
-import { cleanProse, trailingQuestion } from './prose';
+import { claimsSaveHappened, cleanProse, leaksInternals, trailingQuestion } from './prose';
 import { buildStateLine, escapeUntrusted } from './state-line';
 import { loadSkill as defaultLoadSkill } from './skill-loader';
 import { CONTINUATION_TOOLS, toolsForLeg, validateChoiceOptions } from './tool-contracts';
@@ -55,6 +55,52 @@ export function routeFormatError(availableSkills: readonly string[]): string {
     + 'Reply with your one short acknowledgement sentence and the load_skill call.'
   );
 }
+
+/**
+ * Re-asks allowed when the FINAL reply fails the reply gate.
+ *
+ * Its own budget, separate from `MAX_FORMAT_RETRIES`. Sharing the route budget
+ * would leave a leaking reply with no correction on a turn that also had to
+ * re-route, and the two failures are unrelated. One is enough: the route re-ask
+ * succeeded on its first attempt every time it fired.
+ */
+export const MAX_REPLY_RETRIES = 1;
+
+/**
+ * Sent back when the reply that is about to reach the user is not shippable.
+ *
+ * Same shape as `routeFormatError`, and for the same measured reason: on this
+ * model a rule in the system prompt is advice it can decline. `facts/generic.md`
+ * has forbidden the save wording since the skill was written, and 10% of G4
+ * turns used it anyway.
+ */
+export function replyFormatError(kind: 'save-claim' | 'leak'): string {
+  if (kind === 'save-claim') {
+    return (
+      'Your reply says you saved, noted or recorded something. Nothing is saved until the user '
+      + 'taps the card, so that is not true yet and it is the one thing you must never claim. '
+      + 'Rewrite the reply: say what you understood, and let the card do the rest. Keep your '
+      + 'question if you had one. Do not mention saving, noting, recording or storing at all.'
+    );
+  }
+  return (
+    'Your reply exposed the scaffolding. The state block, the known-facts block, the tool names '
+    + 'and the skill ids are yours to work from and the user must never see them, and never write '
+    + 'about the user in the third person. Rewrite the reply as one or two plain sentences spoken '
+    + 'directly to them, about what they just told you.'
+  );
+}
+
+/**
+ * Shown when a leaking reply survives its re-ask.
+ *
+ * A leak is REPLACED rather than trimmed: showing a user `<state>` or a tool
+ * name is worse than showing a generic line, and surgery on arbitrary prose is
+ * how a sentence gets mangled. A false save claim is NOT replaced, because a
+ * slightly wrong word beside a visible card beats a mangled sentence; it is
+ * counted instead.
+ */
+export const REPLY_LEAK_FALLBACK = 'Got it. Anything else you would like to add?';
 
 /** Mirrors lib/llm/tokens.ts::estimateTokens; inlined so this folder imports
  *  nothing from the app. */
@@ -187,7 +233,7 @@ export interface RunAgentTurnParams {
 
 export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTurnResult> {
   const { state, userMessage, deps } = params;
-  const maxLegs = params.maxLegs ?? MAX_AGENT_LEGS;
+  let maxLegsThisTurn = params.maxLegs ?? MAX_AGENT_LEGS;
   const model = params.model ?? 'BIG';
   const loadSkillFn = deps.loadSkill ?? defaultLoadSkill;
   /** OFF only on the `pre-enforcement` control arm, which reproduces the loop
@@ -241,6 +287,10 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let legBudgetHit = false;
   /** One closing-sentence leg is allowed after a proposal, never a stream. */
   let silentLegAfterProposal = false;
+  /** Reply-gate budget and residue, reported so the rate stays measurable. */
+  let replyRetries = 0;
+  let replyClaimUnfixed = false;
+  let replyLeakUnfixed = false;
   /** WHY the turn stopped. Counted, so a failure shows up in the rows rather
    *  than as an ordinary settled turn that happened to do nothing. */
   let terminalReason: AgentTurnResult['terminalReason'] = 'settled';
@@ -286,7 +336,7 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
   let formatErrorNote: string | null = null;
 
   for (let index = 0; ; index++) {
-    if (index >= maxLegs + formatRetries) {
+    if (index >= maxLegsThisTurn + formatRetries) {
       legBudgetHit = true;
       // RUNNING OUT OF LEGS IS NOT THE SAME AS FAILING. Measured on G3: 16 of
       // the 18 baseline turns labelled `leg-cap` had already called
@@ -607,6 +657,41 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
       terminalReason = 'no-proposal';
       break;
     }
+
+    // ---- THE REPLY GATE -------------------------------------------------
+    // Runs HERE and only here, so it sees the FINAL reply. An intermediate
+    // leg's prose is overwritten by the next leg that produces content: 12 of
+    // the G4 occurrences were on legs no user ever saw, and correcting those
+    // would spend legs rewriting discarded text.
+    //
+    // On CLEANED text, because that is what reaches the bubble.
+    const finalReply = cleanProse(reply);
+    const gateKind = leaksInternals(finalReply)
+      ? ('leak' as const)
+      : claimsSaveHappened(finalReply)
+        ? ('save-claim' as const)
+        : null;
+    if (gateKind !== null) {
+      if (replyRetries < MAX_REPLY_RETRIES) {
+        replyRetries++;
+        formatErrorNote = replyFormatError(gateKind);
+        // Like the route re-ask, this raises the ceiling rather than spending a
+        // leg of real work: the turn should not lose a proposal to a wording
+        // mistake. `legBudgetHit` therefore stays untouched.
+        maxLegsThisTurn++;
+        continue;
+      }
+      // It survived its correction. A leak is REPLACED, because showing the
+      // user the scaffolding is worse than showing a generic line. A save
+      // claim is KEPT and counted: a slightly wrong word beside a visible card
+      // beats a mangled sentence, and the residue stays measurable.
+      if (gateKind === 'leak') {
+        reply = REPLY_LEAK_FALLBACK;
+        replyLeakUnfixed = true;
+      } else {
+        replyClaimUnfixed = true;
+      }
+    }
     break;
   }
 
@@ -641,6 +726,9 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     rerouteAttempts,
     forcedProposal,
     formatRetries,
+    replyRetries,
+    replyClaimUnfixed,
+    replyLeakUnfixed,
     reProposals,
     state: turn,
   };

@@ -315,6 +315,18 @@ export interface AgentTurnResult {
    *  violation is named back to the model in a user message and the loop asks
    *  again rather than ending the turn. */
   formatRetries: number;
+  /** FINAL replies re-asked because they failed the reply gate: a false claim
+   *  that something was saved, or loop internals exposed in the bubble. Its own
+   *  budget, never shared with `formatRetries`, because a turn that had to
+   *  re-route must still be able to correct its reply. */
+  replyRetries: number;
+  /** A save claim that survived its correction. Kept on screen deliberately and
+   *  counted, rather than rewritten: a slightly wrong word beside a visible
+   *  card beats a mangled sentence. */
+  replyClaimUnfixed: boolean;
+  /** A leak that survived its correction. The reply IS replaced in this case,
+   *  because showing a user the scaffolding is worse than a generic line. */
+  replyLeakUnfixed: boolean;
   /** Proposals dropped because their statement repeated a fact already on
    *  file. The model was shown them by find_similar_facts. */
   reProposals: number;
