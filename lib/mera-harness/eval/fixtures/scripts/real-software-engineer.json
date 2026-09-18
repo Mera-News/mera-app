@@ -94,10 +94,12 @@
       "index": 2,
       "user": "Thanks, that is all",
       "expect": {
-        "routeKind": "interest",
-        "skill": "facts/interest",
-        "tools": [],
-        "legs": 1
+        "routeKind": "question",
+        "skill": "conversation/question",
+        "tools": [
+          "load_skill"
+        ],
+        "legs": 2
       }
     }
   ]

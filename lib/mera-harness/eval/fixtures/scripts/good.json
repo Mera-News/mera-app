@@ -67,8 +67,8 @@
       "index": 2,
       "user": "I take the train in every morning from Vila Nova de Gaia",
       "expect": {
-        "routeKind": "interest",
-        "skill": "facts/interest",
+        "routeKind": "residence",
+        "skill": "facts/residence",
         "tools": [
           "load_skill"
         ],
