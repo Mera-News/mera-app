@@ -47,7 +47,12 @@ const SKILL_IDS = [
 ] as const;
 type SkillId = (typeof SKILL_IDS)[number];
 
-const BUDGET: Record<string, number> = { router: 1800 };
+// The router's budget was raised 1,800 -> 2,000 by the standing ruling that the
+// next router change buys tokens rather than trimming the tie-break ladder,
+// which is the part doing the work with thinking off. It rose because the body
+// is now actually SENT: for three corpus runs it was generated and never
+// reached a model, so its size cost nothing and bought nothing.
+const BUDGET: Record<string, number> = { router: 2000 };
 const DEFAULT_BUDGET = 1200;
 
 /**
@@ -70,6 +75,24 @@ const TERMINAL_BANNED = [
   'load_skill', 'find_similar_facts', 'lookup_place', 'ask_choice',
   'saveExtractedFacts', 'router', 'you were given',
 ];
+/**
+ * Phrasings that let the ROUTER end a turn without routing.
+ *
+ * The four-line procedure this body replaced ended "No row matches: answer
+ * briefly and stop", and 90 of 308 route legs in G2d did exactly that: prose,
+ * `finish_reason: stop`, no skill loaded, a turn that reads as settled and did
+ * nothing. The model was obeying the prompt. Every turn now ends in a route,
+ * `facts/interest` is the catch-all, and the loop re-asks when no call arrives,
+ * so a sentence reopening the escape hatch contradicts all three.
+ */
+const ROUTER_ESCAPE_HATCH = [
+  'answer briefly and stop',
+  'no row matches',
+  'without calling load_skill',
+  'you may answer directly',
+  'skip the load_skill',
+];
+
 /** Router and fact skills run thinking off, so no phrasing that invites a trace. */
 const DELIBERATION_BANNED = [
   'reason about', 'consider whether', 'think through', 'weigh whether', 'decide based on',
@@ -196,6 +219,15 @@ function readSkills(personaDir: string): Skill[] {
     const { body } = parsed;
     if (text.includes(EM_DASH) || text.includes(EN_DASH)) fail(file, null, 'contains an em dash or en dash');
     for (const m of ['TODO', 'FIXME', 'XXX']) if (body.includes(m)) fail(file, null, `body contains ${m}`);
+
+    if (pathId === 'router') {
+      const lower = body.toLowerCase();
+      for (const phrase of ROUTER_ESCAPE_HATCH) {
+        if (lower.includes(phrase)) {
+          fail(file, null, `router body reopens the escape hatch: "${phrase}"`);
+        }
+      }
+    }
 
     const budget = BUDGET[pathId] ?? DEFAULT_BUDGET;
     const tokens = estimateTokens(body);

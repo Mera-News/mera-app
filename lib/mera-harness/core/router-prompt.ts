@@ -6,7 +6,7 @@
 // which is the whole point of the split.
 
 import { resolveAgentArm } from './arms';
-import { renderSkillIndex } from './skill-loader';
+import { loadSkill, renderSkillIndex } from './skill-loader';
 
 export type PersonaSurface = 'ONBOARDING' | 'CONFIG';
 
@@ -47,14 +47,37 @@ const TOOL_GUIDE = `## Your tools
 - \`ask_choice\` : 2 or 3 tap chips. This ENDS your turn; the tap arrives as their next message.
 - \`saveExtractedFacts\` : OFFER readings. Nothing saves until the user taps.`;
 
-const PROCEDURE = `## Every turn, in order
-1. Read the state line and the known facts.
-2. Say one short thing first (under 200 characters), THEN call your tool in the same turn. The acknowledgement is what the user reads while the rest of the turn runs, so never open with a silent tool call.
-3. Match the message to ONE row of the skill index and \`load_skill\` it. No row matches: answer briefly and stop.
-4. Follow the loaded instructions. They own what to produce; this prompt does not.
-
-## Asking
-Ask at most one question, and only in your LAST message of the turn. Never ask two turns in a row: if you asked last turn and this message did not answer it, take the best reading and OFFER it rather than asking again. When two readings are both plausible, prefer the one that can be undone: offering both is recoverable, replacing the wrong fact is not.`;
+/**
+ * The decision procedure is `router.md`, not a constant in this file.
+ *
+ * It used to be four lines here, and `router.md` -- P5's 1,782-token body with
+ * the intent taxonomy, the subject table, the tie-break ladders and the
+ * `facts/interest` catch-all -- was compiled into the generated module and
+ * never sent to a model. What the model saw instead ended:
+ *
+ *     3. Match the message to ONE row of the skill index and `load_skill` it.
+ *        No row matches: answer briefly and stop.
+ *
+ * With the catch-all stranded, "no row matches" was reachable on every turn,
+ * and 90 of 308 route legs in G2d took it: prose, `finish_reason: stop`, no
+ * skill, a turn that looks settled and did nothing. Those legs were the model
+ * obeying the prompt.
+ *
+ * A body that goes missing this way is invisible to every test that reads the
+ * registry rather than the wire, so `router-prompt.test.ts` asserts a sentence
+ * that exists only in the markdown.
+ */
+function routerProcedure(): string {
+  const body = loadSkill('router');
+  if (body === null || body.trim() === '') {
+    throw new Error(
+      "mera-harness: the 'router' skill body is missing or empty. Re-run "
+        + 'scripts/generate-persona-skills.ts. Falling back to a hardcoded procedure is what '
+        + 'left the router prompt without its decision rules for three corpus runs.',
+    );
+  }
+  return body.trim();
+}
 
 const SCOPE = `## Scope
 Stay on the user's profile and their news. Redirect anything else politely, briefly.`;
@@ -71,8 +94,8 @@ export function buildRouterPrompt(input: RouterPromptInput): string {
 
   const isOnboarding = input.surface === 'ONBOARDING';
   const opening = isOnboarding
-    ? 'Onboard the user, and learn what news matters to them.'
-    : "Update the user's news profile (add, change or remove information).";
+    ? 'You are onboarding the user, learning what news matters to them.'
+    : "You are updating the user's news profile (adding, changing or removing information).";
 
   const pendingLine = input.answerPending
     ? '\n\n**They did NOT answer your last question.** Do not repeat it. Take the best reading of what they did say and offer it.'
@@ -90,7 +113,7 @@ ${TOOL_GUIDE}
 ## Skill index
 ${renderSkillIndex()}
 
-${PROCEDURE}${pendingLine}
+${routerProcedure()}${pendingLine}
 
 ${SCOPE}`;
 }
