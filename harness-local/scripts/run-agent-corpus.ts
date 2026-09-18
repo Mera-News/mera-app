@@ -368,6 +368,12 @@ async function main(): Promise<number> {
     console.log(`\n${formatCostEstimate(estimateRunCost(planned, catalog))}\n`);
   }
 
+  const armFailures = armDistinctnessFailures(collected);
+  if (armFailures.length > 0) {
+    // eslint-disable-next-line no-console
+    console.error(`\n${armFailures.join('\n')}\n`);
+  }
+
   const report = computeAgreement(readJsonl(rows.path), catalog);
   const text = formatAgreementReport(report);
   // eslint-disable-next-line no-console
@@ -381,7 +387,50 @@ async function main(): Promise<number> {
   });
   writeFileSync(join(run.dir, 'agreement.txt'), `${text}\n`, 'utf8');
   if (spendLimit) return 3;
+  if (armFailures.length > 0) return 1;
   return report.integrityFailures.some((f) => f.startsWith('RUNNER BUG')) ? 1 : 0;
+}
+
+/**
+ * THE ARM MUST CHANGE THE LEG IT CLAIMS TO CHANGE.
+ *
+ * g2b, G2c and G2d each ran four "arms" that sent a byte-identical leg-0 system
+ * prompt, so 2,101 rows of routing data were the shipped configuration compared
+ * against itself. `arms.ts` declared `router-v1.routerPrompt` and
+ * `oneshot-prod.personaPrompt`, `arms.test.ts` asserted the VALUES differed, and
+ * nothing asserted the runner applied them. It did not: `promptVariant` reached
+ * `runAgentTurn` and was read nowhere.
+ *
+ * A unit test on the registry cannot catch that, because the defect is in the
+ * wiring rather than in the value. This check reads what actually went on the
+ * wire, which is the only thing that can.
+ *
+ * `null-control` is the deliberate exception: it is the baseline's twin and
+ * MUST be identical, because their spread is the run's noise floor.
+ */
+export function armDistinctnessFailures(rows: EvalRow[]): string[] {
+  const TWINS = new Set(['baseline', 'null-control']);
+  const byPrompt = new Map<string, Set<string>>();
+  for (const r of rows) {
+    if (r.legIndex !== 0) continue;
+    const key = `${r.scriptId}:${r.turnIndex}:${hashMessages([{ role: 'system', content: r.systemPrompt }])}`;
+    let seen = byPrompt.get(key);
+    if (!seen) byPrompt.set(key, (seen = new Set()));
+    seen.add(r.variant);
+  }
+  const collisions = new Set<string>();
+  for (const variants of byPrompt.values()) {
+    if (variants.size < 2) continue;
+    if ([...variants].every((v) => TWINS.has(v))) continue;
+    collisions.add([...variants].sort().join(' == '));
+  }
+  if (collisions.size === 0) return [];
+  return [
+    'RUNNER BUG: two arms sent the SAME leg-0 system prompt, so they are not arms.',
+    ...[...collisions].sort().map((c) => `  ${c}`),
+    '  Every routing number in this run compares a configuration against itself.',
+    '  Fix the wiring before reading anything below.',
+  ];
 }
 
 /** Damage before quality, quality before cost. */

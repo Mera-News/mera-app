@@ -189,6 +189,11 @@ export async function runAgentTurn(params: RunAgentTurnParams): Promise<AgentTur
     surface: state.persona.surface,
     languageName: state.persona.languageName,
     answerPending,
+    // THE ARM, APPLIED. Omitting this made every agent arm send a byte-identical
+    // leg-0 prompt, so g2b, G2c and G2d each compared the shipped configuration
+    // against itself across four "arms". `promptVariant` was declared on the
+    // params, passed by the eval runner, and read nowhere.
+    arm: params.promptVariant,
   });
   let routeKind: string | null = null;
   let skillLoaded: string | null = null;

@@ -7,6 +7,7 @@
 // what lets this same loop run under a CLI, under jest, or against a fake
 // model for free.
 
+import { personaPromptFor, resolveAgentArm } from '../core/arms';
 import { createAgentState, runAgentTurn, type AgentPersona, type AgentState } from '../core/core';
 import type { AgentDeps, AgentModelRequest, AgentModelResult, AgentTurnState } from './contract';
 import { createFakeTools, type FakeToolsHandle } from './fake-tools';
@@ -203,6 +204,19 @@ export async function runAgentScript(
       skillIds: () => skillIds,
       now,
     };
+
+    // THE ONE-SHOT PERSONA CONTROL IS NOT IMPLEMENTED HERE, so an arm asking
+    // for it must stop the run rather than quietly receive the router. That is
+    // exactly what happened: `oneshot-prod` ran the router loop for three full
+    // corpus runs and was written up as the production control.
+    // `personaPromptFor` had no caller at all outside its own unit test.
+    if (personaPromptFor(resolveAgentArm(opts.promptVariant)) === 'oneshot') {
+      throw new Error(
+        `mera-harness/eval: arm '${opts.promptVariant}' asks for the one-shot persona prompt, `
+          + 'which this runner cannot build (it lives in news-harness and this folder imports '
+          + 'nothing from there). Running it as the router would measure the control twice.',
+      );
+    }
 
     const result = await runAgentTurn({
       state,

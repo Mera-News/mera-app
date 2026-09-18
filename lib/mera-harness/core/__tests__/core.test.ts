@@ -83,6 +83,43 @@ function scriptedDeps(
 
 const tc = (name: string, args: unknown) => ({ name, argumentsRaw: JSON.stringify(args) });
 
+describe('the arm reaches the leg it claims to change', () => {
+  // THE DEFECT THIS EXISTS FOR. `arms.test.ts` asserted that `router-v1` carried
+  // a different `routerPrompt` VALUE, and it did. Nothing asserted that the
+  // value reached the model, and it did not: `promptVariant` was declared on
+  // RunAgentTurnParams, passed by the eval runner, and never read. Three corpus
+  // runs (g2b, G2c, G2d, 2,101 rows) compared the shipped configuration against
+  // itself under four arm names.
+  //
+  // So this test reads the OUTGOING request, not the registry.
+  it('a routerPrompt arm changes the leg-0 system prompt', async () => {
+    const base = scriptedDeps([modelResult({ content: 'ok' })]);
+    await runAgentTurn({ state: createAgentState(PERSONA), userMessage: 'hi', deps: base.deps });
+
+    const armed = scriptedDeps([modelResult({ content: 'ok' })]);
+    await runAgentTurn({
+      state: createAgentState(PERSONA),
+      userMessage: 'hi',
+      deps: armed.deps,
+      promptVariant: 'router-v1',
+    });
+
+    expect(base.calls[0].systemPrompt).not.toBe(armed.calls[0].systemPrompt);
+  });
+
+  it('an UNKNOWN arm throws rather than quietly scoring the control', async () => {
+    const { deps } = scriptedDeps([modelResult({ content: 'ok' })]);
+    await expect(
+      runAgentTurn({
+        state: createAgentState(PERSONA),
+        userMessage: 'hi',
+        deps,
+        promptVariant: 'no-such-arm',
+      }),
+    ).rejects.toThrow(/Unknown agent arm/);
+  });
+});
+
 describe('the bounded loop', () => {
   it('a text-only turn is exactly ONE leg', async () => {
     const { deps } = scriptedDeps([modelResult({ content: 'Hello there.' })]);
