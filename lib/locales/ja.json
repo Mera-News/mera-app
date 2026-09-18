@@ -2663,7 +2663,10 @@
       "loadSkill": "ガイドを読み込めなかったため、一般的な方法で対応しました",
       "writeUp": "書き留められなかったため、何も追加されていません",
       "removing": "削除できなかったため、まだ残っています"
-    }
+    },
+    "noRouteSentence": "内容を読み取れませんでした。別の言い方でお試しください。",
+    "noProposalSentence": "ここから追加できるものは見つかりませんでした。",
+    "unknownToolSentence": "Mera 側で問題が発生しました。続けるにはもう一度お尋ねください。"
   },
   "skillPhrase": {
     "residence": "お住まいの場所",

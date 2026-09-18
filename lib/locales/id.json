@@ -2663,7 +2663,10 @@
       "loadSkill": "Panduannya tidak bisa dimuat, jadi Mera memakai pendekatan umum",
       "writeUp": "Ini tidak bisa dituliskan, jadi tidak ada yang ditambahkan",
       "removing": "Ini tidak bisa dihapus, jadi masih ada"
-    }
+    },
+    "noRouteSentence": "Mera tidak bisa menangkap ini tentang apa. Coba katakan dengan cara lain.",
+    "noProposalSentence": "Mera tidak menemukan apa pun untuk ditambahkan dari ini.",
+    "unknownToolSentence": "Ada yang bermasalah di sisi Mera. Tanya lagi untuk melanjutkan."
   },
   "skillPhrase": {
     "residence": "tempat tinggalmu",

@@ -2666,7 +2666,10 @@
       "loadSkill": "Yönergesi yüklenemedi, bu yüzden Mera genel yaklaşımı kullandı",
       "writeUp": "Bu yazılamadı, bu yüzden hiçbir şey eklenmedi",
       "removing": "Bu kaldırılamadı, hâlâ duruyor"
-    }
+    },
+    "noRouteSentence": "Mera bunun neyle ilgili olduğunu anlayamadı. Başka türlü söylemeyi dene.",
+    "noProposalSentence": "Mera bundan ekleyecek bir şey bulamadı.",
+    "unknownToolSentence": "Mera tarafında bir şeyler ters gitti. Devam etmek için tekrar sor."
   },
   "skillPhrase": {
     "residence": "yaşadığın yeri",

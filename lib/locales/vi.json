@@ -2664,7 +2664,10 @@
       "loadSkill": "Không tải được hướng dẫn, nên Mera dùng cách xử lý chung",
       "writeUp": "Không ghi lại được, nên chưa thêm gì cả",
       "removing": "Không xóa được, nên vẫn còn đó"
-    }
+    },
+    "noRouteSentence": "Mera chưa hiểu việc này nói về điều gì. Hãy thử diễn đạt cách khác.",
+    "noProposalSentence": "Mera không tìm thấy gì để thêm từ việc này.",
+    "unknownToolSentence": "Có lỗi xảy ra ở phía Mera. Hãy hỏi lại để tiếp tục."
   },
   "skillPhrase": {
     "residence": "nơi bạn sống",

@@ -2664,7 +2664,10 @@
       "loadSkill": "No se pudo cargar su guía, así que Mera usó su enfoque general",
       "writeUp": "No se pudo redactar, así que no se añadió nada",
       "removing": "No se pudo eliminar, así que sigue ahí"
-    }
+    },
+    "noRouteSentence": "Mera no supo de qué se trataba. Prueba a decirlo de otra manera.",
+    "noProposalSentence": "Mera no encontró nada que añadir de eso.",
+    "unknownToolSentence": "Algo falló por parte de Mera. Pregunta otra vez para continuar."
   },
   "skillPhrase": {
     "residence": "dónde vives",

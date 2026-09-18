@@ -2664,7 +2664,10 @@
       "loadSkill": "Non è stato possibile caricare le indicazioni, così Mera ha usato l'approccio generale",
       "writeUp": "Non è stato possibile scriverlo, quindi non è stato aggiunto nulla",
       "removing": "Non è stato possibile rimuoverlo, quindi è ancora presente"
-    }
+    },
+    "noRouteSentence": "Mera non ha capito di cosa si trattava. Prova a dirlo in un altro modo.",
+    "noProposalSentence": "Mera non ha trovato nulla da aggiungere da questo.",
+    "unknownToolSentence": "Qualcosa è andato storto da parte di Mera. Chiedi di nuovo per continuare."
   },
   "skillPhrase": {
     "residence": "dove vivi",

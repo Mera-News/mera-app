@@ -2664,7 +2664,10 @@
       "loadSkill": "無法載入相關指引，Mera 採用了通用做法",
       "writeUp": "無法整理這項內容，因此沒有新增任何內容",
       "removing": "無法刪除這項，它仍然在"
-    }
+    },
+    "noRouteSentence": "Mera 沒能判斷這是關於什麼的。換個說法再試試。",
+    "noProposalSentence": "Mera 沒有從中找到可以新增的內容。",
+    "unknownToolSentence": "Mera 這邊出了點問題。再問一次即可繼續。"
   },
   "skillPhrase": {
     "residence": "你居住的地方",

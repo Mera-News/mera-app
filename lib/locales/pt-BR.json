@@ -2664,7 +2664,10 @@
       "loadSkill": "Não deu para carregar a orientação, então a Mera usou a abordagem geral",
       "writeUp": "Não deu para escrever, então nada foi adicionado",
       "removing": "Não deu para remover, então continua lá"
-    }
+    },
+    "noRouteSentence": "A Mera não entendeu do que se tratava. Tente dizer de outro jeito.",
+    "noProposalSentence": "A Mera não encontrou nada para adicionar a partir disso.",
+    "unknownToolSentence": "Algo deu errado do lado da Mera. Pergunte de novo para continuar."
   },
   "skillPhrase": {
     "residence": "onde você mora",

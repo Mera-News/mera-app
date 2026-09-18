@@ -2702,7 +2702,10 @@
       "loadSkill": "Nie udało się wczytać wskazówek, więc Mera użyła ogólnego podejścia",
       "writeUp": "Nie udało się tego spisać, więc nic nie zostało dodane",
       "removing": "Nie udało się tego usunąć, więc nadal tam jest"
-    }
+    },
+    "noRouteSentence": "Mera nie rozpoznała, czego to dotyczyło. Spróbuj powiedzieć to inaczej.",
+    "noProposalSentence": "Mera nie znalazła w tym nic do dodania.",
+    "unknownToolSentence": "Coś poszło nie tak po stronie Mery. Zapytaj ponownie, aby kontynuować."
   },
   "skillPhrase": {
     "residence": "miejsce, w którym mieszkasz",

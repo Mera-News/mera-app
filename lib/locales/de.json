@@ -2664,7 +2664,10 @@
       "loadSkill": "Die Anleitung ließ sich nicht laden, also hat Mera allgemein gearbeitet",
       "writeUp": "Das ließ sich nicht aufschreiben, es wurde nichts hinzugefügt",
       "removing": "Das ließ sich nicht entfernen, es ist noch da"
-    }
+    },
+    "noRouteSentence": "Mera konnte nicht erkennen, worum es dabei ging. Sag es gern anders.",
+    "noProposalSentence": "Mera hat daraus nichts zum Hinzufügen gefunden.",
+    "unknownToolSentence": "Auf Meras Seite ist etwas schiefgelaufen. Frag noch einmal, um fortzufahren."
   },
   "skillPhrase": {
     "residence": "deinen Wohnort",

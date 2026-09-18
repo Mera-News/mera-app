@@ -1,0 +1,143 @@
+{
+  "_comment": "pagent phase 2: the three turn-terminal sentences the agent-steps box renders when a turn stops for a reason the user must be told about (no-route, no-proposal, unknown-tool). legCapSentence and interrupted already shipped in _pagent-fragments.json; these three had no rendering at all until the terminal was plumbed through. Each locale reuses its OWN existing 'ask again to carry on' clause from legCapSentence verbatim, so the four terminal sentences read as one voice. no-proposal is deliberately not an apology: Mera understood the turn and had nothing to add, which is a normal answer.",
+  "en": {
+    "agentSteps": {
+      "noRouteSentence": "Mera couldn't tell what that was about. Try saying it another way.",
+      "noProposalSentence": "Mera didn't find anything to add from that.",
+      "unknownToolSentence": "Something went wrong on Mera's side. Ask again to carry on."
+    }
+  },
+  "de": {
+    "agentSteps": {
+      "noRouteSentence": "Mera konnte nicht erkennen, worum es dabei ging. Sag es gern anders.",
+      "noProposalSentence": "Mera hat daraus nichts zum Hinzufügen gefunden.",
+      "unknownToolSentence": "Auf Meras Seite ist etwas schiefgelaufen. Frag noch einmal, um fortzufahren."
+    }
+  },
+  "es": {
+    "agentSteps": {
+      "noRouteSentence": "Mera no supo de qué se trataba. Prueba a decirlo de otra manera.",
+      "noProposalSentence": "Mera no encontró nada que añadir de eso.",
+      "unknownToolSentence": "Algo falló por parte de Mera. Pregunta otra vez para continuar."
+    }
+  },
+  "fr": {
+    "agentSteps": {
+      "noRouteSentence": "Mera n'a pas compris de quoi il s'agissait. Essaie de le dire autrement.",
+      "noProposalSentence": "Mera n'a rien trouvé à ajouter à partir de cela.",
+      "unknownToolSentence": "Quelque chose a échoué du côté de Mera. Repose la question pour continuer."
+    }
+  },
+  "it": {
+    "agentSteps": {
+      "noRouteSentence": "Mera non ha capito di cosa si trattava. Prova a dirlo in un altro modo.",
+      "noProposalSentence": "Mera non ha trovato nulla da aggiungere da questo.",
+      "unknownToolSentence": "Qualcosa è andato storto da parte di Mera. Chiedi di nuovo per continuare."
+    }
+  },
+  "nl": {
+    "agentSteps": {
+      "noRouteSentence": "Mera kon niet opmaken waar dit over ging. Zeg het gerust anders.",
+      "noProposalSentence": "Mera heeft hier niets uit gevonden om toe te voegen.",
+      "unknownToolSentence": "Er ging iets mis aan Mera's kant. Vraag het opnieuw om verder te gaan."
+    }
+  },
+  "pt-BR": {
+    "agentSteps": {
+      "noRouteSentence": "A Mera não entendeu do que se tratava. Tente dizer de outro jeito.",
+      "noProposalSentence": "A Mera não encontrou nada para adicionar a partir disso.",
+      "unknownToolSentence": "Algo deu errado do lado da Mera. Pergunte de novo para continuar."
+    }
+  },
+  "pl": {
+    "agentSteps": {
+      "noRouteSentence": "Mera nie rozpoznała, czego to dotyczyło. Spróbuj powiedzieć to inaczej.",
+      "noProposalSentence": "Mera nie znalazła w tym nic do dodania.",
+      "unknownToolSentence": "Coś poszło nie tak po stronie Mery. Zapytaj ponownie, aby kontynuować."
+    }
+  },
+  "ru": {
+    "agentSteps": {
+      "noRouteSentence": "Mera не поняла, о чём это. Попробуйте сказать иначе.",
+      "noProposalSentence": "Mera не нашла, что из этого добавить.",
+      "unknownToolSentence": "Что-то пошло не так на стороне Mera. Спросите снова, чтобы продолжить."
+    }
+  },
+  "uk": {
+    "agentSteps": {
+      "noRouteSentence": "Mera не зрозуміла, про що це. Спробуйте сказати інакше.",
+      "noProposalSentence": "Mera не знайшла, що з цього додати.",
+      "unknownToolSentence": "Щось пішло не так на боці Mera. Запитайте знову, щоб продовжити."
+    }
+  },
+  "tr": {
+    "agentSteps": {
+      "noRouteSentence": "Mera bunun neyle ilgili olduğunu anlayamadı. Başka türlü söylemeyi dene.",
+      "noProposalSentence": "Mera bundan ekleyecek bir şey bulamadı.",
+      "unknownToolSentence": "Mera tarafında bir şeyler ters gitti. Devam etmek için tekrar sor."
+    }
+  },
+  "ar": {
+    "agentSteps": {
+      "noRouteSentence": "لم تفهم Mera موضوع هذا. جرّب صياغته بطريقة أخرى.",
+      "noProposalSentence": "لم تجد Mera شيئًا لإضافته من هذا.",
+      "unknownToolSentence": "حدث خطأ من جهة Mera. اسأل مرة أخرى للمتابعة."
+    }
+  },
+  "hi": {
+    "agentSteps": {
+      "noRouteSentence": "Mera समझ नहीं पाई कि यह किस बारे में है। इसे किसी और तरह से कहकर देखें।",
+      "noProposalSentence": "Mera को इसमें जोड़ने लायक कुछ नहीं मिला।",
+      "unknownToolSentence": "Mera की तरफ़ से कुछ गड़बड़ हो गई। आगे बढ़ने के लिए फिर पूछें।"
+    }
+  },
+  "id": {
+    "agentSteps": {
+      "noRouteSentence": "Mera tidak bisa menangkap ini tentang apa. Coba katakan dengan cara lain.",
+      "noProposalSentence": "Mera tidak menemukan apa pun untuk ditambahkan dari ini.",
+      "unknownToolSentence": "Ada yang bermasalah di sisi Mera. Tanya lagi untuk melanjutkan."
+    }
+  },
+  "vi": {
+    "agentSteps": {
+      "noRouteSentence": "Mera chưa hiểu việc này nói về điều gì. Hãy thử diễn đạt cách khác.",
+      "noProposalSentence": "Mera không tìm thấy gì để thêm từ việc này.",
+      "unknownToolSentence": "Có lỗi xảy ra ở phía Mera. Hãy hỏi lại để tiếp tục."
+    }
+  },
+  "th": {
+    "agentSteps": {
+      "noRouteSentence": "Mera ไม่เข้าใจว่าเรื่องนี้เกี่ยวกับอะไร ลองพูดใหม่อีกแบบ",
+      "noProposalSentence": "Mera ไม่พบสิ่งที่จะเพิ่มจากเรื่องนี้",
+      "unknownToolSentence": "มีบางอย่างผิดพลาดทางฝั่ง Mera ถามอีกครั้งเพื่อดำเนินการต่อ"
+    }
+  },
+  "ja": {
+    "agentSteps": {
+      "noRouteSentence": "内容を読み取れませんでした。別の言い方でお試しください。",
+      "noProposalSentence": "ここから追加できるものは見つかりませんでした。",
+      "unknownToolSentence": "Mera 側で問題が発生しました。続けるにはもう一度お尋ねください。"
+    }
+  },
+  "ko": {
+    "agentSteps": {
+      "noRouteSentence": "무엇에 대한 내용인지 파악하지 못했어요. 다르게 말해 봐 주세요.",
+      "noProposalSentence": "여기에서 추가할 만한 내용을 찾지 못했어요.",
+      "unknownToolSentence": "Mera 쪽에서 문제가 생겼어요. 계속하려면 다시 물어봐 주세요."
+    }
+  },
+  "zh-CN": {
+    "agentSteps": {
+      "noRouteSentence": "Mera 没能判断这是关于什么的。换个说法再试试。",
+      "noProposalSentence": "Mera 没有从中找到可以添加的内容。",
+      "unknownToolSentence": "Mera 这边出了点问题。再问一次即可继续。"
+    }
+  },
+  "zh-TW": {
+    "agentSteps": {
+      "noRouteSentence": "Mera 沒能判斷這是關於什麼的。換個說法再試試。",
+      "noProposalSentence": "Mera 沒有從中找到可以新增的內容。",
+      "unknownToolSentence": "Mera 這邊出了點問題。再問一次即可繼續。"
+    }
+  }
+}

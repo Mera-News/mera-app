@@ -2663,7 +2663,10 @@
       "loadSkill": "안내를 불러오지 못해 일반적인 방식으로 처리했어요",
       "writeUp": "정리하지 못해 아무것도 추가되지 않았어요",
       "removing": "삭제하지 못해 아직 남아 있어요"
-    }
+    },
+    "noRouteSentence": "무엇에 대한 내용인지 파악하지 못했어요. 다르게 말해 봐 주세요.",
+    "noProposalSentence": "여기에서 추가할 만한 내용을 찾지 못했어요.",
+    "unknownToolSentence": "Mera 쪽에서 문제가 생겼어요. 계속하려면 다시 물어봐 주세요."
   },
   "skillPhrase": {
     "residence": "사는 곳",

@@ -2671,7 +2671,10 @@
       "loadSkill": "Les consignes n'ont pas pu être chargées, donc Mera a procédé de façon générale",
       "writeUp": "Cela n'a pas pu être rédigé, donc rien n'a été ajouté",
       "removing": "Cela n'a pas pu être supprimé, c'est toujours là"
-    }
+    },
+    "noRouteSentence": "Mera n'a pas compris de quoi il s'agissait. Essaie de le dire autrement.",
+    "noProposalSentence": "Mera n'a rien trouvé à ajouter à partir de cela.",
+    "unknownToolSentence": "Quelque chose a échoué du côté de Mera. Repose la question pour continuer."
   },
   "skillPhrase": {
     "residence": "l'endroit où tu vis",
